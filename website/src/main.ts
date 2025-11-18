@@ -1,17 +1,19 @@
-import { createApp } from 'vue'
-import App from './App.vue'
+import { createApp } from "vue";
+import App from "./App.vue";
+import "./style.css";
+import router from "./router";
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
+  ArcElement,
   BarElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LinearScale,
   LineElement,
   PointElement,
-  ArcElement,
   Title,
   Tooltip,
-  Legend,
-} from 'chart.js'
+} from "chart.js";
 
 ChartJS.register(
   CategoryScale,
@@ -22,7 +24,9 @@ ChartJS.register(
   ArcElement,
   Title,
   Tooltip,
-  Legend
-)
+  Legend,
+);
 
-createApp(App).mount('#app')
+const app = createApp(App);
+app.use(router);
+app.mount("#app");

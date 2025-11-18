@@ -1,7 +1,15 @@
 <template>
   <div class="w-full flex flex-col min-h-screen">
     <header class="bg-blue-600 text-white p-4">
-      <h1 class="text-2xl font-bold">Dashboard</h1>
+      <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold">Dashboard</h1>
+        <router-link
+          to="/voice-actor-spreadsheet"
+          class="px-4 py-2 bg-white text-blue-600 rounded-md font-medium text-sm"
+        >
+          Voice Actor Spreadsheet
+        </router-link>
+      </div>
     </header>
     <main class="flex-1 p-4 space-y-4 overflow-x-hidden">
       <!-- Loading state -->

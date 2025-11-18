@@ -14,7 +14,7 @@ Deno.serve(async (req) => {
 
     let queryBuilder = supabase
       .from('voice_actors')
-      .select('id, firstname, lastname');
+      .select('*');
 
     // Apply filtering if query is provided
     if (query && typeof query === 'string' && query.trim()) {

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import Dashboard from './views/Dashboard.vue'
+// Router view will render the matched component
 </script>
 
 <template>
-  <Dashboard />
+  <router-view />
 </template>
 
 <style scoped>
