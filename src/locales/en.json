@@ -139,5 +139,11 @@
     "tvdbDescription": "Television data and images provided by The TV Database (TVDB). Visit them at thetvdb.com for more information.",
     "tmdbTitle": "The Movie Database (TMDB)",
     "tmdbDescription": "Movie and television data provided by The Movie Database (TMDB). Visit them at themoviedb.org for more information."
+  },
+  "dashboard": {
+    "title": "Supabase Dashboard",
+    "graph1Placeholder": "Graph Component 1 Placeholder",
+    "graph2Placeholder": "Graph Component 2 Placeholder",
+    "graph3Placeholder": "Graph Component 3 Placeholder"
   }
 }

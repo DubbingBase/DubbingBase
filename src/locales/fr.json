@@ -139,5 +139,11 @@
     "tvdbDescription": "Données et images de télévision fournies par The TV Database (TVDB). Visitez-les sur thetvdb.com pour plus d'informations.",
     "tmdbTitle": "The Movie Database (TMDB)",
     "tmdbDescription": "Données de films et de télévision fournies par The Movie Database (TMDB). Visitez-les sur themoviedb.org pour plus d'informations."
+  },
+  "dashboard": {
+    "title": "Tableau de Bord Supabase",
+    "graph1Placeholder": "Espace réservé pour le graphique 1",
+    "graph2Placeholder": "Espace réservé pour le graphique 2",
+    "graph3Placeholder": "Espace réservé pour le graphique 3"
   }
 }
