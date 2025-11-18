@@ -190,10 +190,10 @@ const findCharacter = (
   const roleName = role.character.toLowerCase();
 
   const allNames = characterName.split("/").map((name) => name.trim());
-  console.log("allNames", allNames);
+  // console.log("allNames", allNames);
 
   const allRoleNames = roleName.split("/").map((name) => name.trim());
-  console.log("allRoleNames", allRoleNames);
+  // console.log("allRoleNames", allRoleNames);
 
   // Loop through allNames and allRoleNames to find at least one correspondence
   for (const name of allNames) {
@@ -224,14 +224,14 @@ const findCharacter = (
     }
   }
 
-  console.log("characterName", characterName);
-  console.log("roleName", roleName);
+  // console.log("characterName", characterName);
+  // console.log("roleName", roleName);
 
   const simplifiedName = characterName.replace(/(.*)( '?.*' ?)(.*)/, "$1 $3");
-  console.log("simplifiedName", simplifiedName);
+  // console.log("simplifiedName", simplifiedName);
 
   const simplifiedRoleName = roleName.replace(/(.*)( '?.*' ?)(.*)/, "$1 $3");
-  console.log("simplifiedRoleName", simplifiedRoleName);
+  // console.log("simplifiedRoleName", simplifiedRoleName);
 
   return (
     characterName.includes(roleName) ||
@@ -255,9 +255,11 @@ const actors = computed(() => {
     }
     console.log("person.roles", person.roles);
 
-    person.roles = person.roles?.filter((role, index, self) =>
-      index === self.findIndex(r => r.image === role.image)
-    ) ?? [];
+    person.roles =
+      person.roles?.filter(
+        (role, index, self) =>
+          index === self.findIndex((r) => r.image === role.image)
+      ) ?? [];
 
     return person;
   });

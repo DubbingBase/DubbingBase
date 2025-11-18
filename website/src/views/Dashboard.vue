@@ -36,6 +36,14 @@
         <!-- Voice Actor Growth Line Chart -->
         <div class="bg-white p-4 rounded-lg shadow max-w-full">
           <h2 class="text-lg font-semibold mb-2">Voice Actor Growth</h2>
+          <div class="mb-4">
+            <label for="time-unit" class="block text-sm font-medium text-gray-700 mb-1">Time Unit</label>
+            <select id="time-unit" v-model="selectedUnit" class="w-full p-2 border border-gray-300 rounded-md">
+              <option value="day">Day</option>
+              <option value="week">Week</option>
+              <option value="month">Month</option>
+            </select>
+          </div>
           <LineChart :data="voiceActorGrowthData" :options="lineChartOptions" />
         </div>
 
@@ -50,7 +58,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { supabase } from "@/lib/supabase";
 import BarChart from "@/components/charts/BarChart.vue";
 import LineChart from "@/components/charts/LineChart.vue";
@@ -65,6 +73,40 @@ const voiceActorCount = ref(0);
 const userRegistrations = ref<any[]>([]);
 const voiceActorGrowth = ref<any[]>([]);
 const topVoiceActors = ref<any[]>([]);
+const selectedUnit = ref('day');
+
+// Utility functions
+function getISOWeek(date: Date): number {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+  const yearStart = new Date(d.getFullYear(), 0, 1);
+  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+}
+
+function aggregateData(data: { date: string; count: number }[], unit: string) {
+  if (unit === 'day') {
+    return data.map(item => ({ period: item.date, count: item.count })).sort((a, b) => a.period.localeCompare(b.period));
+  } else if (unit === 'month') {
+    const grouped = data.reduce((acc, item) => {
+      const month = item.date.slice(0, 7); // YYYY-MM
+      acc[month] = (acc[month] || 0) + item.count;
+      return acc;
+    }, {} as Record<string, number>);
+    return Object.entries(grouped).map(([period, count]) => ({ period, count })).sort((a, b) => a.period.localeCompare(b.period));
+  } else if (unit === 'week') {
+    const grouped = data.reduce((acc, item) => {
+      const date = new Date(item.date);
+      const year = date.getFullYear();
+      const week = getISOWeek(date);
+      const key = `${year}-W${week.toString().padStart(2, '0')}`;
+      acc[key] = (acc[key] || 0) + item.count;
+      return acc;
+    }, {} as Record<string, number>);
+    return Object.entries(grouped).map(([period, count]) => ({ period, count })).sort((a, b) => a.period.localeCompare(b.period));
+  }
+  return [];
+}
 
 // Chart data
 const userRegistrationsData = ref<ChartData>({
@@ -78,15 +120,29 @@ const userRegistrationsData = ref<ChartData>({
   }]
 });
 
-const voiceActorGrowthData = ref<ChartData>({
-  labels: [],
-  datasets: [{
-    label: 'Voice Actor Links',
-    data: [],
-    borderColor: 'rgba(75, 192, 192, 1)',
-    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-    tension: 0.1
-  }]
+const voiceActorGrowthData = computed<ChartData>(() => {
+  const aggregated = aggregateData(voiceActorGrowth.value, selectedUnit.value);
+  const cumulative = aggregated.reduce((acc, item, index) => {
+    const prev = index > 0 ? acc[index - 1] : 0;
+    acc.push(prev + item.count);
+    return acc;
+  }, [] as number[]);
+  return {
+    labels: aggregated.map(item => item.period),
+    datasets: [{
+      label: 'Voice Actor Links',
+      data: aggregated.map(item => item.count),
+      borderColor: 'rgba(75, 192, 192, 1)',
+      backgroundColor: 'rgba(75, 192, 192, 0.2)',
+      tension: 0.1
+    }, {
+      label: 'Cumulative Voice Actors',
+      data: cumulative,
+      borderColor: 'rgba(0, 128, 128, 1)',
+      backgroundColor: 'rgba(0, 128, 128, 0.2)',
+      tension: 0.1
+    }]
+  };
 });
 
 const topVoiceActorsData = ref<ChartData>({
@@ -131,7 +187,7 @@ const lineChartOptions: ChartOptions = {
   maintainAspectRatio: false,
   plugins: {
     legend: {
-      display: false
+      display: true
     }
   },
   scales: {
@@ -185,18 +241,7 @@ const fetchDashboardData = async () => {
     userRegistrationsData.value.labels = userRegistrations.value.map(item => item.month);
     userRegistrationsData.value.datasets[0].data = userRegistrations.value.map(item => item.count);
 
-    // Group voice actor growth by month
-    const vaGrouped = stats.voiceActorGrowth.reduce((acc: any, item) => {
-      const month = item.date.slice(0, 7); // YYYY-MM
-      acc[month] = (acc[month] || 0) + item.count;
-      return acc;
-    }, {});
-
-    voiceActorGrowth.value = Object.entries(vaGrouped).map(([month, count]) => ({ month, count }));
-
-    // Update voice actor growth chart data
-    voiceActorGrowthData.value.labels = voiceActorGrowth.value.map(item => item.month);
-    voiceActorGrowthData.value.datasets[0].data = voiceActorGrowth.value.map(item => item.count);
+    voiceActorGrowth.value = stats.voiceActorGrowth;
 
     topVoiceActors.value = stats.topVoiceActors;
 

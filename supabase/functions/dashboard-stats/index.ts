@@ -51,20 +51,28 @@ async function getUserGrowth(): Promise<{ date: string; count: number }[]> {
 async function getVoiceActorGrowth(): Promise<
   { date: string; count: number }[]
 > {
-  const { data, error } = await supabaseAdmin
-    .from("voice_actors")
-    // .select("created_at")
-    // .order("created_at");
-    .select("*");
+  let allData: any[] = [];
+  let from = 0;
+  const chunkSize = 1000;
 
-  if (error) throw error;
+  while (true) {
+    const { data, error } = await supabaseAdmin
+      .from("voice_actors")
+      .select("created_at")
+      .range(from, from + chunkSize - 1);
 
-  // console.log("data", data);
+    if (error) throw error;
 
-  const grouped = (data || []).reduce((acc, va) => {
+    allData = allData.concat(data);
+
+    if (data.length < chunkSize) break;
+
+    from += chunkSize;
+  }
+
+  const grouped = (allData || []).reduce((acc, va) => {
     const d = va?.created_at;
     const a = d ? new Date(d) : new Date();
-    console.log("a", a);
     const date = a.toISOString().split("T")[0];
     acc[date] = (acc[date] || 0) + 1;
     return acc;

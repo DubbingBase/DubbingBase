@@ -145,16 +145,16 @@ const findCharacter = (
   character: UnwrapRef<typeof characterProfilePictures>[number],
   role: Role
 ) => {
-  console.log("character", character);
-  console.log("role", role);
+  // console.log("character", character);
+  // console.log("role", role);
   const characterName = character.name?.toLowerCase();
   const roleName = role.character.toLowerCase();
 
   const allNames = characterName?.split("/").map((name) => name.trim());
-  console.log("allNames", allNames);
+  // console.log("allNames", allNames);
 
   const allRoleNames = roleName.split("/").map((name) => name.trim());
-  console.log("allRoleNames", allRoleNames);
+  // console.log("allRoleNames", allRoleNames);
 
   // Loop through allNames and allRoleNames to find at least one correspondence
   for (const name of allNames ?? []) {
@@ -185,14 +185,14 @@ const findCharacter = (
     }
   }
 
-  console.log("characterName", characterName);
-  console.log("roleName", roleName);
+  // console.log("characterName", characterName);
+  // console.log("roleName", roleName);
 
   const simplifiedName = characterName?.replace(/(.*)( '?.*' ?)(.*)/, "$1 $3");
-  console.log("simplifiedName", simplifiedName);
+  // console.log("simplifiedName", simplifiedName);
 
   const simplifiedRoleName = roleName.replace(/(.*)( '?.*' ?)(.*)/, "$1 $3");
-  console.log("simplifiedRoleName", simplifiedRoleName);
+  // console.log("simplifiedRoleName", simplifiedRoleName);
 
   return (
     characterName?.includes(roleName) ||
@@ -204,7 +204,7 @@ const findCharacter = (
 
 const actors = computed(() => {
   return movie.value?.credits.cast.map((cast) => {
-    console.log("cast", cast);
+    // console.log("cast", cast);
     const person = actorToPersonData(cast);
 
     for (const role of person.roles ?? []) {

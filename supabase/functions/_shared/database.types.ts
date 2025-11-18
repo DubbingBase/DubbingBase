@@ -59,31 +59,37 @@ export type Database = {
         Row: {
           bio: string | null
           created_at: string | null
+          created_by: string | null
           date_of_birth: string | null
           id: string
           nationality: string | null
           social_media_links: Json | null
           updated_at: string | null
+          updated_by: string | null
           user_id: string
         }
         Insert: {
           bio?: string | null
           created_at?: string | null
+          created_by?: string | null
           date_of_birth?: string | null
           id?: string
           nationality?: string | null
           social_media_links?: Json | null
           updated_at?: string | null
+          updated_by?: string | null
           user_id: string
         }
         Update: {
           bio?: string | null
           created_at?: string | null
+          created_by?: string | null
           date_of_birth?: string | null
           id?: string
           nationality?: string | null
           social_media_links?: Json | null
           updated_at?: string | null
+          updated_by?: string | null
           user_id?: string
         }
         Relationships: []
@@ -91,19 +97,28 @@ export type Database = {
       user_voice_actor_links: {
         Row: {
           created_at: string | null
+          created_by: string | null
           id: string
+          updated_at: string | null
+          updated_by: string | null
           user_id: string
           voice_actor_id: number
         }
         Insert: {
           created_at?: string | null
+          created_by?: string | null
           id?: string
+          updated_at?: string | null
+          updated_by?: string | null
           user_id: string
           voice_actor_id: number
         }
         Update: {
           created_at?: string | null
+          created_by?: string | null
           id?: string
+          updated_at?: string | null
+          updated_by?: string | null
           user_id?: string
           voice_actor_id?: number
         }
@@ -121,6 +136,8 @@ export type Database = {
         Row: {
           awards: string | null
           bio: string | null
+          created_at: string | null
+          created_by: string | null
           date_of_birth: string | null
           firstname: string
           id: number
@@ -128,7 +145,10 @@ export type Database = {
           nationality: string | null
           profile_picture: string | null
           social_media_links: Json | null
+          status: Database["public"]["Enums"]["voice_actor_status"] | null
           tmdb_id: number | null
+          updated_at: string | null
+          updated_by: string | null
           wikidata_id: string | null
           years_active: string | null
           voice_actor_name: string | null
@@ -136,6 +156,8 @@ export type Database = {
         Insert: {
           awards?: string | null
           bio?: string | null
+          created_at?: string | null
+          created_by?: string | null
           date_of_birth?: string | null
           firstname: string
           id?: number
@@ -143,13 +165,18 @@ export type Database = {
           nationality?: string | null
           profile_picture?: string | null
           social_media_links?: Json | null
+          status?: Database["public"]["Enums"]["voice_actor_status"] | null
           tmdb_id?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
           wikidata_id?: string | null
           years_active?: string | null
         }
         Update: {
           awards?: string | null
           bio?: string | null
+          created_at?: string | null
+          created_by?: string | null
           date_of_birth?: string | null
           firstname?: string
           id?: number
@@ -157,7 +184,10 @@ export type Database = {
           nationality?: string | null
           profile_picture?: string | null
           social_media_links?: Json | null
+          status?: Database["public"]["Enums"]["voice_actor_status"] | null
           tmdb_id?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
           wikidata_id?: string | null
           years_active?: string | null
         }
@@ -200,6 +230,8 @@ export type Database = {
           actor_id: number
           content_id: number
           content_type: string | null
+          created_at: string | null
+          created_by: string | null
           highlight: boolean | null
           id: number
           performance: string | null
@@ -207,12 +239,16 @@ export type Database = {
           source_id: number | null
           status: string | null
           suggestions: string | null
+          updated_at: string | null
+          updated_by: string | null
           voice_actor_id: number | null
         }
         Insert: {
           actor_id: number
           content_id: number
           content_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
           highlight?: boolean | null
           id?: number
           performance?: string | null
@@ -220,12 +256,16 @@ export type Database = {
           source_id?: number | null
           status?: string | null
           suggestions?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
           voice_actor_id?: number | null
         }
         Update: {
           actor_id?: number
           content_id?: number
           content_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
           highlight?: boolean | null
           id?: number
           performance?: string | null
@@ -233,6 +273,8 @@ export type Database = {
           source_id?: number | null
           status?: string | null
           suggestions?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
           voice_actor_id?: number | null
         }
         Relationships: [
@@ -278,7 +320,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      voice_actor_status: "active" | "not contacted" | "not answered"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -408,7 +450,9 @@ export const Constants = {
     Enums: {},
   },
   public: {
-    Enums: {},
+    Enums: {
+      voice_actor_status: ["active", "not contacted", "not answered"],
+    },
   },
 } as const
 
