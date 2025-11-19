@@ -1,0 +1,12 @@
+[build]
+base = "."
+command = "pnpm run build"
+publish = "dist"
+
+# important: fully disable workspace installer
+packageDir = ""
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
