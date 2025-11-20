@@ -49,11 +49,12 @@ jobs:
 
       - name: Setup Android signing - Capacitor
         run: |
-          base64 -d <<< "${{ secrets.KEYSTORE_FILE }}" > ./android/dubbing-base-keystore.jks
+          base64 -d <<< "${{ secrets.KEYSTORE_FILE }}" > ./apps/mobile/android/dubbing-base-keystore.jks
 
       - name: Build Android Release
         if: github.event_name != 'pull_request'
         timeout-minutes: 20
+        working-directory: apps/mobile
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
@@ -75,7 +76,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: android-app-bundle
-          path: android/app/build/outputs/bundle/release/app-release-signed.aab
+          path: apps/mobile/android/app/build/outputs/bundle/release/app-release-signed.aab
           # path: src-tauri/gen/android/app/build/outputs/bundle/universalRelease/app-universal-release.aab
           retention-days: 30
         continue-on-error: false
@@ -85,7 +86,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: android-apk-release
-          path: android/app/build/outputs/apk/release/app-release-signed.apk
+          path: apps/mobile/android/app/build/outputs/apk/release/app-release-signed.apk
           # path: src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk
           retention-days: 30
         continue-on-error: false
