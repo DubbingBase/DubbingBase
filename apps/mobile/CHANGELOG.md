@@ -1,5 +1,13 @@
 # @app/mobile
 
+## 1.0.20
+
+### Patch Changes
+
+- de7584a: fix netlify builds
+- Updated dependencies [de7584a]
+  - @app/supabase@0.0.5
+
 ## 1.0.19
 
 ### Patch Changes
