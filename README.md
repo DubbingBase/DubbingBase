@@ -1,18 +1,63 @@
-# Vue 3 + TypeScript + Vite
+# DubbingBase
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+DubbingBase is a comprehensive platform dedicated to tracking and managing dubbing information for movies and TV shows. It serves as a database for voice actors, their roles, and the productions they are involved in.
 
-## Recommended IDE Setup
+## 🏗 Architecture
 
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
+This project is a **Monorepo** managed by [Turbo Repo](https://turbo.build/) and [pnpm](https://pnpm.io/). It consists of the following main applications:
 
-## Type Support For `.vue` Imports in TS
+*   **Mobile App (`apps/mobile`)**: A cross-platform mobile application built with Ionic and Capacitor, allowing users to browse the database, view actor profiles, and manage their own lists.
+*   **Website (`apps/website`)**: A web interface for the platform, featuring data grids and analytics.
+*   **Supabase Backend (`packages/supabase`)**: The backend infrastructure including database schemas, edge functions, and migrations.
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin) to make the TypeScript language service aware of `.vue` types.
+## 🚀 Getting Started
 
-If the standalone TypeScript plugin doesn't feel fast enough to you, Volar has also implemented a [Take Over Mode](https://github.com/johnsoncodehk/volar/discussions/471#discussioncomment-1361669) that is more performant. You can enable it by the following steps:
+### Prerequisites
+*   Node.js (Latest LTS recommended)
+*   pnpm (`npm install -g pnpm`)
 
-1. Disable the built-in TypeScript Extension
-   1. Run `Extensions: Show Built-in Extensions` from VSCode's command palette
-   2. Find `TypeScript and JavaScript Language Features`, right click and select `Disable (Workspace)`
-2. Reload the VSCode window by running `Developer: Reload Window` from the command palette.
+### Installation
+
+1.  Clone the repository:
+    ```bash
+    git clone <repository-url>
+    cd DubbingBase
+    ```
+
+2.  Install dependencies:
+    ```bash
+    pnpm install
+    ```
+
+### Running the Project
+
+To run the development servers for all apps simultaneously:
+
+```bash
+pnpm dev
+```
+
+Or run specific apps:
+
+*   **Mobile**: `cd apps/mobile && pnpm dev`
+*   **Website**: `cd apps/website && pnpm dev`
+
+### Building
+
+To build all applications:
+
+```bash
+pnpm build
+```
+
+## 📂 Project Structure
+
+```
+├── apps/
+│   ├── mobile/       # Ionic/Capacitor mobile application
+│   └── website/      # Vue/Tailwind web application
+├── packages/
+│   └── supabase/     # Supabase configurations and functions
+├── package.json      # Root configuration
+└── turbo.json        # Turbo Repo configuration
+```

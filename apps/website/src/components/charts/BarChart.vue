@@ -1,0 +1,25 @@
+<template>
+  <div class="h-50">
+    <Bar :data="data" :options="mergedOptions" />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { Bar } from 'vue-chartjs'
+import { ChartData, ChartOptions } from 'chart.js'
+import { computed } from 'vue'
+
+interface Props {
+  data: ChartData<any>
+  options: ChartOptions<any>
+}
+
+const props = defineProps<Props>()
+
+const mergedOptions = computed(() => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  height: 200,
+  ...props.options
+}))
+</script>

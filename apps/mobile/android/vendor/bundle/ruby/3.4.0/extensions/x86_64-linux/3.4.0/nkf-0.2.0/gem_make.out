@@ -1,0 +1,18 @@
+current directory: /run/media/armaldio/SSD/Projects/DubbingBase/App/android/vendor/bundle/ruby/3.4.0/gems/nkf-0.2.0/ext/nkf
+/usr/bin/ruby extconf.rb
+creating Makefile
+
+current directory: /run/media/armaldio/SSD/Projects/DubbingBase/App/android/vendor/bundle/ruby/3.4.0/gems/nkf-0.2.0/ext/nkf
+make DESTDIR\= sitearchdir\=./.gem.20250930-310032-3xkxxc sitelibdir\=./.gem.20250930-310032-3xkxxc clean
+
+current directory: /run/media/armaldio/SSD/Projects/DubbingBase/App/android/vendor/bundle/ruby/3.4.0/gems/nkf-0.2.0/ext/nkf
+make DESTDIR\= sitearchdir\=./.gem.20250930-310032-3xkxxc sitelibdir\=./.gem.20250930-310032-3xkxxc
+compiling nkf.c
+linking shared-object nkf.so
+
+current directory: /run/media/armaldio/SSD/Projects/DubbingBase/App/android/vendor/bundle/ruby/3.4.0/gems/nkf-0.2.0/ext/nkf
+make DESTDIR\= sitearchdir\=./.gem.20250930-310032-3xkxxc sitelibdir\=./.gem.20250930-310032-3xkxxc install
+/usr/bin/install -c -m 0755 nkf.so ./.gem.20250930-310032-3xkxxc
+
+current directory: /run/media/armaldio/SSD/Projects/DubbingBase/App/android/vendor/bundle/ruby/3.4.0/gems/nkf-0.2.0/ext/nkf
+make DESTDIR\= sitearchdir\=./.gem.20250930-310032-3xkxxc sitelibdir\=./.gem.20250930-310032-3xkxxc clean
