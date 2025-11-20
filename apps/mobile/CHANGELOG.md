@@ -1,5 +1,13 @@
 # @app/mobile
 
+## 1.0.19
+
+### Patch Changes
+
+- f93f962: "merge mono repo"
+- Updated dependencies [f93f962]
+  - @app/supabase@0.0.4
+
 ## 1.0.18
 
 ### Patch Changes

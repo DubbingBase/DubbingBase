@@ -1,5 +1,11 @@
 # @app/supabase
 
+## 0.0.4
+
+### Patch Changes
+
+- f93f962: "merge mono repo"
+
 ## 0.0.3
 
 ### Patch Changes
