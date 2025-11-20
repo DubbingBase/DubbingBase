@@ -35,7 +35,7 @@ export default ({ mode }) => {
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
-        "@app/supabase": path.resolve(__dirname, "../../packages/supabase"),
+        "@app/supabase": path.resolve(__dirname, "../../packages/database"),
       },
     },
     test: {

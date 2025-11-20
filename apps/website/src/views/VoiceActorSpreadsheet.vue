@@ -89,8 +89,8 @@
           toast.type === 'success'
             ? 'bg-green-100 text-green-800'
             : toast.type === 'error'
-            ? 'bg-red-100 text-red-800'
-            : 'bg-blue-100 text-blue-800'
+              ? 'bg-red-100 text-red-800'
+              : 'bg-blue-100 text-blue-800'
         "
       >
         <p>{{ toast.message }}</p>
@@ -102,7 +102,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import Revogrid from "@revolist/vue3-datagrid";
-import type { Tables } from "../../../../packages/supabase/functions/_shared/database.types";
+import type { Tables } from "../../../../packages/database/functions/_shared/database.types";
 import { supabase } from "@/lib/supabase";
 
 // Types
@@ -319,7 +319,7 @@ async function handleBulkSave() {
 
 function showToast(
   message: string,
-  type: "success" | "error" | "info" = "info"
+  type: "success" | "error" | "info" = "info",
 ) {
   toast.value = { show: true, message, type };
   setTimeout(() => {

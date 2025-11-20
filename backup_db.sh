@@ -21,19 +21,19 @@ echo "Starting database backup to $BACKUP_DIR"
 
 # Run supabase dump commands
 echo "Dumping roles..."
-if ! pnpm supabase db dump --db-url "$CONNECTION_STRING" -f "$BACKUP_DIR/roles.sql" --role-only; then
+if ! cd packages/database && supabase db dump --db-url "$CONNECTION_STRING" -f "../../$BACKUP_DIR/roles.sql" --role-only; then
     echo "Error: Failed to dump roles"
     exit 1
 fi
 
 echo "Dumping schema..."
-if ! pnpm supabase db dump --db-url "$CONNECTION_STRING" -f "$BACKUP_DIR/schema.sql"; then
+if ! cd packages/database && supabase db dump --db-url "$CONNECTION_STRING" -f "../../$BACKUP_DIR/schema.sql"; then
     echo "Error: Failed to dump schema"
     exit 1
 fi
 
 echo "Dumping data..."
-if ! pnpm supabase db dump --db-url "$CONNECTION_STRING" -f "$BACKUP_DIR/data.sql" --use-copy --data-only; then
+if ! cd packages/database && supabase db dump --db-url "$CONNECTION_STRING" -f "../../$BACKUP_DIR/data.sql" --use-copy --data-only; then
     echo "Error: Failed to dump data"
     exit 1
 fi

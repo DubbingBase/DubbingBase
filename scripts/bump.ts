@@ -2,7 +2,7 @@ import fs from "fs";
 import { execSync } from "child_process";
 
 const args = process.argv.slice(2);
-const shouldPush = args.includes('--push');
+const shouldPush = args.includes("--push");
 
 console.log(`🔧 Bumping versions...`);
 
@@ -22,17 +22,19 @@ if (fs.existsSync(mobilePkgPath)) {
   const gradlePath = "apps/mobile/android/app/build.gradle";
   if (fs.existsSync(gradlePath)) {
     let gradleContent = fs.readFileSync(gradlePath, "utf8");
-    const [major, minor, patch] = version.split('.').map(Number);
+    const [major, minor, patch] = version.split(".").map(Number);
     const newVersionCode = major * 1000000 + minor * 1000 + patch;
     gradleContent = gradleContent.replace(
       /versionCode\s+\d+/,
-      `versionCode ${newVersionCode}`
+      `versionCode ${newVersionCode}`,
     ).replace(
       /versionName\s+".*"/,
-      `versionName "${version}"`
+      `versionName "${version}"`,
     );
     fs.writeFileSync(gradlePath, gradleContent);
-    console.log(`   Updated Capacitor versionCode to ${newVersionCode} and versionName to "${version}"`);
+    console.log(
+      `   Updated Capacitor versionCode to ${newVersionCode} and versionName to "${version}"`,
+    );
   }
 
   // 2.2 Update Tauri config
@@ -50,14 +52,21 @@ if (fs.existsSync(mobilePkgPath)) {
     const cargoToml = fs.readFileSync(cargoPath, "utf8");
     const updatedToml = cargoToml.replace(
       /version\s*=\s*".*"/,
-      `version = "${version}"`
+      `version = "${version}"`,
     );
     fs.writeFileSync(cargoPath, updatedToml);
 
     // 2.4 Update Cargo.lock
     console.log("   Updating Cargo.lock...");
-    execSync("cargo metadata --manifest-path apps/mobile/src-tauri/Cargo.toml > /dev/null", { stdio: "inherit" });
+    execSync(
+      "cargo metadata --manifest-path apps/mobile/src-tauri/Cargo.toml > /dev/null",
+      { stdio: "inherit" },
+    );
   }
+} else {
+  console.warn(
+    `⚠️  Mobile package.json not found at ${mobilePkgPath}, skipping mobile version sync.`,
+  );
 }
 
 console.log(`✅ Bumped versions`);
@@ -66,14 +75,14 @@ console.log(`✅ Bumped versions`);
 if (shouldPush) {
   execSync(`git add .`, { stdio: "inherit" });
   execSync(`git commit -m "chore: bump versions"`, { stdio: "inherit" });
-  
+
   if (version) {
-      execSync(`git tag v${version}`, { stdio: "inherit" });
-      console.log(`🏷️  Created tag v${version}`);
-      execSync(`git push && git push origin v${version}`, { stdio: "inherit" });
-      console.log(`🚀 Published tag v${version} to remote`);
+    execSync(`git tag v${version}`, { stdio: "inherit" });
+    console.log(`🏷️  Created tag v${version}`);
+    execSync(`git push && git push origin v${version}`, { stdio: "inherit" });
+    console.log(`🚀 Published tag v${version} to remote`);
   } else {
-      execSync(`git push`, { stdio: "inherit" });
-      console.log(`🚀 Published to remote`);
+    execSync(`git push`, { stdio: "inherit" });
+    console.log(`🚀 Published to remote`);
   }
 }

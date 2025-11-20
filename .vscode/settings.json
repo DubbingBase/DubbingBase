@@ -7,8 +7,9 @@
   },
   "deno.enable": true,
   "deno.enablePaths": [
-    "supabase/functions"
+    "./packages/database/functions"
   ],
+  "deno.importMap": "./packages/database/functions/import_map.json",
   "deno.lint": true,
   "deno.path": "/home/armaldio/.local/share/mise/shims/deno",
   "deno.unstable": [

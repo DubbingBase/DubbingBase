@@ -3,7 +3,7 @@ name: Publish on Netlify and Supabase
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
     branches:
       - main
 
@@ -57,4 +57,4 @@ jobs:
         with:
           version: latest
 
-      - run: supabase functions deploy --project-ref $PROJECT_ID --workdir packages/supabase
+      - run: supabase functions deploy --project-ref $PROJECT_ID --workdir packages/database

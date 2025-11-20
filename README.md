@@ -8,7 +8,7 @@ This project is a **Monorepo** managed by [Turbo Repo](https://turbo.build/) and
 
 *   **Mobile App (`apps/mobile`)**: A cross-platform mobile application built with Ionic and Capacitor, allowing users to browse the database, view actor profiles, and manage their own lists.
 *   **Website (`apps/website`)**: A web interface for the platform, featuring data grids and analytics.
-*   **Supabase Backend (`packages/supabase`)**: The backend infrastructure including database schemas, edge functions, and migrations.
+*   **Supabase Backend (`packages/database`)**: The backend infrastructure including database schemas, edge functions, and migrations.
 
 ## 🚀 Getting Started
 

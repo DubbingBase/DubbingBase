@@ -13,17 +13,22 @@ run = "pnpm install"
 [tasks.backend]
 description = "Starts the Supabase backend"
 depends = ["install"]
-run = "pnpm supabase start"
+run = "pnpm supabase start --workdir packages/database"
+
+[tasks.backend-stop]
+description = "Stop the Supabase backend"
+depends = ["install"]
+run = "pnpm supabase stop --workdir packages/database"
 
 [tasks.functions]
 description = "Starts the Supabase functions"
 depends = ["install"]
-run = "pnpm supabase functions serve"
+run = "pnpm supabase functions serve --workdir packages/database"
 
 [tasks.function-deploy]
 description = "Deploys the Supabase functions"
 depends = ["install"]
-run = "pnpm supabase functions deploy"
+run = "pnpm supabase functions deploy --workdir packages/database"
 
 [tasks.dev]
 description = "Runs the development server"
@@ -33,7 +38,7 @@ run = "pnpm run dev"
 [tasks.sync]
 description = "Sync capacitor assets"
 depends = ["build-web"]
-run = "pnpm cap sync"
+run = "cd apps/mobile && pnpm cap sync"
 
 [tasks.build-web]
 description = "Builds the web app"
@@ -43,22 +48,22 @@ run = "pnpm build"
 [tasks.migrate-up]
 description = "Runs the database migration"
 depends = ["install"]
-run = "pnpm supabase migration up"
+run = "cd packages/database && supabase migration up"
 
 [tasks.migrate-down]
 description = "Reverts the database migration"
 depends = ["install"]
-run = "pnpm supabase migration down"
+run = "cd packages/database && supabase migration down"
 
 [tasks.pull-production]
 description = "Pulls the production database"
 depends = ["install"]
-run = "pnpm supabase db dump -f supabase/seed.sql --data-only --linked"
+run = "cd packages/database && supabase db dump -f supabase/seed.sql --data-only --linked"
 
 [tasks.db-reset]
 description = "Resets the database migration"
 depends = ["pull-production"]
-run = "pnpm supabase db reset --local"
+run = "cd packages/database && supabase db reset --local"
 
 [tasks.backup-db]
 description = "Backups the database"
@@ -68,23 +73,31 @@ run = "./backup_db.sh"
 [tasks.start-emulator]
 description = "Starts the Android emulator"
 depends = ["install"]
-run = "$ANDROID_HOME/emulator/emulator -list-avds"
-# run = "$ANDROID_HOME/emulator/emulator -avd Medium_Phone_API_36.0"
+run = "$ANDROID_HOME/emulator/emulator -avd Medium_Phone_API_36.0"
 
 [tasks.android-dev]
-description = "Builds the Android app"
+description = "Runs the Android app in development"
 depends = ["install", "start-emulator"]
-run = "pnpm tauri android dev"
+run = "cd apps/mobile && pnpm cap run android"
 env = { "VITE_SUPABASE_URL" = "http://10.0.2.2:55321" }
 
 [tasks.android-build-prod]
-description = "Builds the Android app"
+description = "Builds the Android app for production"
 depends = ["install", "sync", "build-web"]
-run = "pnpm cap build android"
+run = "cd apps/mobile && pnpm cap build android"
 env = { VITE_SUPABASE_URL = "https://rrjgbneefiwoqvsjwzrz.supabase.co", VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyamdibmVlZml3b3F2c2p3enJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIwODUxMDAsImV4cCI6MjA0NzY2MTEwMH0.ywaUYwXnXF555i4dUCCl4gvcTZR1Ct6n0ptheJCdIVw" }
 
 [tasks.android-app-install]
-description = "Builds the Android app"
+description = "Installs the Android app"
 depends = ["android-build-prod"]
-run = "adb install -r ./src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk"
-# run = "adb install -r ./src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk"
+run = "adb install -r apps/mobile/android/app/build/outputs/apk/universal/release/app-universal-release.apk"
+
+[tasks.app]
+description = "Starts the mobile app in web mode"
+depends = ["install"]
+run = "cd apps/mobile && pnpm dev"
+
+[tasks.website]
+description = "Runs the website"
+depends = ["install"]
+run = "cd apps/website && pnpm dev"
