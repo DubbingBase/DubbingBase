@@ -1,5 +1,13 @@
 # @app/mobile
 
+## 1.0.21
+
+### Patch Changes
+
+- 17e2571: Improvements
+- Updated dependencies [17e2571]
+  - @app/supabase@0.0.6
+
 ## 1.0.20
 
 ### Patch Changes
