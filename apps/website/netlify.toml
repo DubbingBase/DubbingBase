@@ -1,7 +1,6 @@
 [build]
-base = "."
-command = "pnpm run build"
 publish = "dist"
+command = "pnpm run build:website"
 
 [[redirects]]
 from = "/*"
