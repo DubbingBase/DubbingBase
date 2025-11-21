@@ -5,11 +5,25 @@ interface FeatureFlagOptions {
 }
 
 export function usePostHog() {
-  posthog.init('phc_me2esmRfMkokDSbTzKQfNHaUZgpBOAqgi2921wCYOtP', {
-    api_host: 'https://eu.i.posthog.com',
-    defaults: '2025-05-24',
-    person_profiles: 'identified_only',
-  })
+  if (import.meta.env.DEV) {
+    // Initialize in development with tracking disabled but feature flags enabled
+    posthog.init('phc_me2esmRfMkokDSbTzKQfNHaUZgpBOAqgi2921wCYOtP', {
+      api_host: 'https://eu.i.posthog.com',
+      defaults: '2025-05-24',
+      person_profiles: 'identified_only',
+      capture_pageview: false,
+      disable_session_recording: true,
+      autocapture: false,
+      persistence: 'memory',
+    })
+  } else {
+    // Production initialization
+    posthog.init('phc_me2esmRfMkokDSbTzKQfNHaUZgpBOAqgi2921wCYOtP', {
+      api_host: 'https://eu.i.posthog.com',
+      defaults: '2025-05-24',
+      person_profiles: 'identified_only',
+    })
+  }
 
   const isFeatureEnabled = (key: string, options?: FeatureFlagOptions): boolean => {
     try {

@@ -157,12 +157,12 @@ watch(
       refreshVotes(workIds);
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 console.log(
   "[ActorWithVoiceActors] canAccess add_voice_actors:",
-  hasPermission("add_voice_actors")
+  hasPermission("add_voice_actors"),
 );
 
 const shouldShowVoiceActors = computed(() => {
@@ -209,7 +209,7 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
           // Force a refresh of the component to show updated status
           location.reload();
         },
-      }
+      },
     );
   }
 
@@ -229,7 +229,7 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
         })`,
         icon: thumbsDownOutline,
         handler: () => castVote(voiceActor.id, "down"),
-      }
+      },
     );
   }
 
