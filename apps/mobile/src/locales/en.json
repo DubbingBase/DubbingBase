@@ -3,6 +3,7 @@
     "title": "Dubbing Database",
     "description": "Discover voice actors and their works"
   },
+  "newVoiceActorsAdded": "new voice actor added | new voice actors added",
   "navigation": {
     "home": "Home",
     "search": "Search",
@@ -29,7 +30,9 @@
     "rejected": "Rejected",
     "upvote": "Upvote",
     "downvote": "Downvote",
-    "setStatus": "Set Status"
+    "setStatus": "Set Status",
+    "newVoiceActorsAdded": "{count} new voice actors added",
+    "noNewChangesFound": "No new changes found"
   },
   "profile": {
     "userProfile": "My User Profile",

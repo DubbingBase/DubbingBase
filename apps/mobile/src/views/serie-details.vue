@@ -43,6 +43,21 @@
           </ion-segment-button>
         </ion-segment>
         <ion-segment-view>
+          <ion-segment-content class="segmented-content" id="peoples">
+            <ActorList
+              :actors="actors"
+              :voice-actors="voiceActors"
+              :is-admin="isAdmin"
+              :get-voice-actor-by-tmdb-id="getVoiceActorByTmdbId"
+              :go-to-actor="goToActor"
+              :go-to-voice-actor="goToVoiceActor"
+              :edit-voice-actor-link="editVoiceActorLink"
+              :confirm-delete-voice-actor-link="confirmDeleteVoiceActorLink"
+              :open-voice-actor-search="openVoiceActorSearch"
+              :loading="isLoading"
+              :mediaLanguage="show?.original_language"
+            />
+          </ion-segment-content>
           <ion-segment-content class="segmented-content" id="seasons">
             <div class="seasons" v-if="show">
               <div
@@ -63,21 +78,6 @@
               </div>
             </div>
           </ion-segment-content>
-          <ion-segment-content class="segmented-content" id="peoples">
-            <ActorList
-              :actors="actors"
-              :voice-actors="voiceActors"
-              :is-admin="isAdmin"
-              :get-voice-actor-by-tmdb-id="getVoiceActorByTmdbId"
-              :go-to-actor="goToActor"
-              :go-to-voice-actor="goToVoiceActor"
-              :edit-voice-actor-link="editVoiceActorLink"
-              :confirm-delete-voice-actor-link="confirmDeleteVoiceActorLink"
-              :open-voice-actor-search="openVoiceActorSearch"
-              :loading="isLoading"
-              :mediaLanguage="show?.original_language"
-            />
-          </ion-segment-content>
         </ion-segment-view>
       </div>
 
@@ -86,6 +86,7 @@
         :has-data="hasData"
         :is-fetching="isFetching"
         :is-scanning="isScanning"
+        :fetch-error="fetchError"
         @fetch-infos="fetchInfos"
         @take-photo="takePhoto"
       />
@@ -145,16 +146,19 @@ import { supabase } from "@/api/supabase";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { actorToPersonData, voiceActorToPersonData } from "@/utils/convert";
 import { Role } from "@/components/PersonItem.vue";
+import { useI18n } from "vue-i18n";
 
 const authStore = useAuthStore();
 const { isAdmin } = storeToRefs(authStore);
 
 const route = useRoute();
 const ionRouter = useIonRouter();
+const { t } = useI18n();
 
 const show = ref<any>(null);
 const isLoading = ref(true);
 const isFetching = ref(false);
+const fetchError = ref("");
 const error = ref("");
 
 const characterProfilePictures = ref<
@@ -184,7 +188,7 @@ const {
 
 const findCharacter = (
   character: UnwrapRef<typeof characterProfilePictures>[number],
-  role: Role
+  role: Role,
 ) => {
   const characterName = character.name.toLowerCase();
   const roleName = role.character.toLowerCase();
@@ -211,7 +215,7 @@ const findCharacter = (
       const simplifiedName = name.replace(/(.*)( '?.*' ?)(.*)/, "$1 $3");
       const simplifiedRoleName = roleName.replace(
         /(.*)( '?.*' ?)(.*)/,
-        "$1 $3"
+        "$1 $3",
       );
 
       if (
@@ -249,7 +253,7 @@ const actors = computed(() => {
 
     for (const role of person.roles ?? []) {
       const image = characterProfilePictures.value.find((character) =>
-        findCharacter(character, role)
+        findCharacter(character, role),
       )?.image;
       role.image = image ?? "";
     }
@@ -258,7 +262,7 @@ const actors = computed(() => {
     person.roles =
       person.roles?.filter(
         (role, index, self) =>
-          index === self.findIndex((r) => r.image === role.image)
+          index === self.findIndex((r) => r.image === role.image),
       ) ?? [];
 
     return person;
@@ -338,6 +342,34 @@ const getSerie = async (id: string) => {
   }
 };
 
+const fetchSerieData = async () => {
+  const id = route.params.id;
+  try {
+    const response = await getSerie(id as string);
+    show.value = response.data.serie || response.data.show; // Handle both response formats
+    show.value.credits = response.data.aggregateCredits;
+    // Load voice actors for this serie
+    if (response.data.voiceActors) {
+      voiceActors.value = response.data.voiceActors.map((va) =>
+        voiceActorToPersonData(
+          va.voiceActorDetails,
+          va.performance,
+          va.actor_id,
+          va.reviewed_status,
+          va.id,
+        ),
+      );
+    }
+    if (response.data.characterProfilePictures) {
+      characterProfilePictures.value = response.data.characterProfilePictures;
+    }
+  } catch (e: any) {
+    console.error("Error fetching serie data:", e);
+    error.value = "Failed to load serie details.";
+    throw e;
+  }
+};
+
 const fetchInfos = async () => {
   const id = wikiDataId.value;
 
@@ -357,8 +389,31 @@ const fetchInfos = async () => {
   const data = showResponseRaw.data;
 
   console.log("data", data);
+
   if (data.ok) {
-    location.reload();
+    let toastMessage = "";
+    let toastColor = "success";
+    if (data.changes > 0) {
+      toastMessage = t("common.newVoiceActorsAdded", { count: data.changes });
+    } else if (data.changes === 0) {
+      toastMessage = t("common.noNewChangesFound");
+      toastColor = "primary";
+    }
+    const toast = await toastController.create({
+      message: toastMessage,
+      duration: 2000,
+      position: "top",
+      color: toastColor,
+    });
+    await toast.present();
+    try {
+      await fetchSerieData();
+    } catch (error) {
+      console.error("Error fetching serie data:", error);
+      fetchError.value = "Failed to load serie details.";
+    } finally {
+      isFetching.value = false;
+    }
   } else {
     toastController
       .create({
@@ -371,32 +426,16 @@ const fetchInfos = async () => {
         toast.present();
       });
     isFetching.value = false;
+    fetchError.value = data.error;
     isLoading.value = false;
   }
 };
 
 onMounted(async () => {
   isLoading.value = true;
-  const id = route.params.id;
+  error.value = "";
   try {
-    const response = await getSerie(id as string);
-    show.value = response.data.serie || response.data.show; // Handle both response formats
-    show.value.credits = response.data.aggregateCredits;
-    // Load voice actors for this serie
-    if (response.data.voiceActors) {
-      voiceActors.value = response.data.voiceActors.map((va) =>
-        voiceActorToPersonData(
-          va.voiceActorDetails,
-          va.performance,
-          va.actor_id,
-          va.reviewed_status,
-          va.id
-        )
-      );
-    }
-    if (response.data.characterProfilePictures) {
-      characterProfilePictures.value = response.data.characterProfilePictures;
-    }
+    await fetchSerieData();
   } catch (err) {
     console.error("Error fetching serie:", err);
     error.value = "Failed to load serie details";

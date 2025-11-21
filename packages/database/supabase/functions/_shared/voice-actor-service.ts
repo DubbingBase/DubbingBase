@@ -2,6 +2,15 @@ import { supabase } from './database.ts';
 
 export class VoiceActorService {
   async upsertVoiceActor(firstName: string, lastName: string) {
+    // Check if voice actor already exists
+    const { data: existing } = await supabase.from('voice_actors')
+      .select('id')
+      .eq('firstname', firstName)
+      .eq('lastname', lastName)
+      .single();
+
+    const inserted = !existing;
+
     const { data, error } = await supabase.from('voice_actors')
       .upsert({ firstname: firstName, lastname: lastName }, {
         onConflict: 'firstname,lastname'
@@ -9,7 +18,7 @@ export class VoiceActorService {
       .select();
 
     if (error) throw error;
-    return data[0];
+    return { data: data[0], inserted };
   }
 
   async upsertWork(voiceActorId: number, contentId: number, actorId: number, contentType: string, performance?: string) {
@@ -30,7 +39,8 @@ export class VoiceActorService {
   }
 
   async insertVoiceActorAndWork(firstName: string, lastName: string, contentId: number, actorId: number, contentType: string, performance?: string) {
-    const voiceActor = await this.upsertVoiceActor(firstName, lastName);
-    return this.upsertWork(voiceActor.id, contentId, actorId, contentType, performance);
+    const voiceActorResult = await this.upsertVoiceActor(firstName, lastName);
+    const workResult = await this.upsertWork(voiceActorResult.data.id, contentId, actorId, contentType, performance);
+    return { voiceActorResult, workResult };
   }
 }

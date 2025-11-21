@@ -29,7 +29,9 @@
     "rejected": "Rejeté",
     "upvote": "Vote positif",
     "downvote": "Vote négatif",
-    "setStatus": "Définir le statut"
+    "setStatus": "Définir le statut",
+    "newVoiceActorsAdded": "{count} nouveaux doubleurs ajoutés",
+    "noNewChangesFound": "Aucun nouveau changement trouvé"
   },
   "profile": {
     "userProfile": "Mon profil utilisateur",

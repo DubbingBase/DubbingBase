@@ -103,12 +103,14 @@ import MediaItem from "@/components/MediaItem.vue";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { actorToPersonData, voiceActorToPersonData } from "@/utils/convert";
 import { Role } from "@/components/PersonItem.vue";
+import { useI18n } from "vue-i18n";
 
 const authStore = useAuthStore();
 const { isAdmin } = storeToRefs(authStore);
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
 // Initialize voice actor management
 const {
@@ -143,7 +145,7 @@ const characterProfilePictures = ref<
 
 const findCharacter = (
   character: UnwrapRef<typeof characterProfilePictures>[number],
-  role: Role
+  role: Role,
 ) => {
   // console.log("character", character);
   // console.log("role", role);
@@ -172,7 +174,7 @@ const findCharacter = (
       const simplifiedName = name.replace(/(.*)( '?.*' ?)(.*)/, "$1 $3");
       const simplifiedRoleName = roleName.replace(
         /(.*)( '?.*' ?)(.*)/,
-        "$1 $3"
+        "$1 $3",
       );
 
       if (
@@ -209,7 +211,7 @@ const actors = computed(() => {
 
     for (const role of person.roles ?? []) {
       const image = characterProfilePictures.value.find((character) =>
-        findCharacter(character, role)
+        findCharacter(character, role),
       )?.image;
       role.image = image ?? "";
     }
@@ -217,7 +219,7 @@ const actors = computed(() => {
     person.roles =
       person.roles?.filter(
         (role, index, self) =>
-          index === self.findIndex((r) => r.image === role.image)
+          index === self.findIndex((r) => r.image === role.image),
       ) ?? [];
 
     return person;
@@ -298,7 +300,29 @@ const fetchInfos = async () => {
   console.log("data", data);
 
   if (data.ok) {
-    location.reload();
+    let toastMessage = "";
+    let toastColor = "success";
+    if (data.changes > 0) {
+      toastMessage = t("common.newVoiceActorsAdded", { count: data.changes });
+    } else if (data.changes === 0) {
+      toastMessage = t("common.noNewChangesFound");
+      toastColor = "primary";
+    }
+    const toast = await toastController.create({
+      message: toastMessage,
+      duration: 2000,
+      position: "top",
+      color: toastColor,
+    });
+    await toast.present();
+    try {
+      await fetchMovieData();
+    } catch (error) {
+      console.error("Error fetching movie data:", error);
+      fetchError.value = "Failed to load movie details.";
+    } finally {
+      isFetching.value = false;
+    }
   } else {
     toastController
       .create({
@@ -331,8 +355,8 @@ const fetchMovieData = async () => {
         va.performance,
         va.actor_id,
         va.reviewed_status,
-        va.id
-      )
+        va.id,
+      ),
     );
     if (data.characterProfilePictures) {
       characterProfilePictures.value = data.characterProfilePictures;

@@ -117,6 +117,8 @@ Deno.serve(async (req) => {
     },
   );
 
+  let newVoiceActorsCount = 0;
+
   for (const section of sectionIds) {
     console.log("section", section);
 
@@ -177,7 +179,7 @@ Deno.serve(async (req) => {
 
         const { id: actorId } = foundActor;
 
-        await voiceActorService.insertVoiceActorAndWork(
+        const result = await voiceActorService.insertVoiceActorAndWork(
           voiceActorFirstname,
           voiceActorName,
           tmdbId,
@@ -185,15 +187,19 @@ Deno.serve(async (req) => {
           type,
           entry.performance,
         );
+
+        if (result.voiceActorResult.inserted) {
+          newVoiceActorsCount++;
+        }
       } else {
         console.error("mistral missing structure", entry);
       }
     }
   }
 
-  console.log("done");
+  console.log(`Processing complete. Added ${newVoiceActorsCount} new voice actors.`);
 
-  const result = { ok: true };
+  const result = { ok: true, changes: newVoiceActorsCount };
   return Response.json(result, {
     headers: {
       ...corsHeaders,
