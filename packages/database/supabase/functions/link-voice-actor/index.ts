@@ -81,11 +81,11 @@ Deno.serve(async (req) => {
     }
 
     // Validate media_type
-    const validMediaTypes = ["movie", "serie"];
+    const validMediaTypes = ["movie", "tv"];
     if (!validMediaTypes.includes(media_type)) {
       return new Response(
         JSON.stringify({
-          error: "Invalid media_type. Must be one of: movie, serie",
+          error: "Invalid media_type. Must be one of: movie, tv",
         }),
         {
           status: 400,
