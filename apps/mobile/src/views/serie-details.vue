@@ -7,6 +7,9 @@
         </ion-buttons>
         <ion-title>{{ show?.name || "Détails de la série" }}</ion-title>
         <ion-buttons slot="end">
+          <ion-button @click="handleRequestDubbing" :disabled="isRequesting">
+            Request Dubbing
+          </ion-button>
           <ion-button fill="clear" aria-label="Paramètres">
             <SolarSettingsMinimalisticOutline />
           </ion-button>
@@ -141,6 +144,7 @@ import { useVoiceActorManagement } from "@/composables/useVoiceActorManagement";
 import SolarSettingsMinimalisticOutline from "~icons/solar/settings-minimalistic-outline";
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
+import { useDubbingRequest } from "@/composables/useDubbingRequest";
 import { supabase } from "@/api/supabase";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { actorToPersonData, voiceActorToPersonData } from "@/utils/convert";
@@ -148,9 +152,20 @@ import { Role } from "@/components/PersonItem.vue";
 
 const authStore = useAuthStore();
 const { isAdmin } = storeToRefs(authStore);
+const { requestDubbing, isRequesting } = useDubbingRequest();
 
 const route = useRoute();
 const ionRouter = useIonRouter();
+
+const handleRequestDubbing = () => {
+  if (show.value) {
+    // Note: The API likely expects 'tv' or 'serie' depending on how normalization works.
+    // The composable takes what we give it.
+    // Our Supabase function normalizes 'movie' -> 'movie', everything else -> 'serie' for links.
+    // But for the email text "Type: ...", let's pass 'serie' or 'tv'.
+    requestDubbing("serie", show.value.id, show.value.name);
+  }
+};
 
 const show = ref<any>(null);
 const isLoading = ref(true);

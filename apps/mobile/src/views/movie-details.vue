@@ -6,8 +6,11 @@
           <ion-back-button :default-href="{ name: 'Home' }" />
         </ion-buttons>
         <ion-title>{{ movie?.title ?? "" }}</ion-title>
-        <ion-buttons slot="end" v-if="isAdmin">
-          <ion-button @click="goToEditPage">
+        <ion-buttons slot="end">
+          <ion-button @click="handleRequestDubbing" :disabled="isRequesting">
+            Request Dubbing
+          </ion-button>
+          <ion-button v-if="isAdmin" @click="goToEditPage">
             <ion-icon :icon="pencil"></ion-icon>
           </ion-button>
         </ion-buttons>
@@ -96,6 +99,7 @@ import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
 import MediaInfoCard from "@/components/MediaInfoCard.vue";
 import ActorList from "@/components/ActorList.vue";
+import { useDubbingRequest } from "@/composables/useDubbingRequest";
 import ActionButtons from "@/components/ActionButtons.vue";
 import VoiceActorSearchModal from "@/components/VoiceActorSearchModal.vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
@@ -106,9 +110,16 @@ import { Role } from "@/components/PersonItem.vue";
 
 const authStore = useAuthStore();
 const { isAdmin } = storeToRefs(authStore);
+const { requestDubbing, isRequesting } = useDubbingRequest();
 
 const route = useRoute();
 const router = useRouter();
+
+const handleRequestDubbing = () => {
+  if (movie.value) {
+    requestDubbing("movie", movie.value.id, movie.value.title);
+  }
+};
 
 // Initialize voice actor management
 const {
