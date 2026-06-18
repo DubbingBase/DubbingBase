@@ -25,8 +25,8 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import MediaThumbnail from "@/components/MediaThumbnail.vue";
-import type { Movie as MovieModel } from "../../supabase/functions/_shared/movie";
-import type { Serie as SerieModel } from "../../supabase/functions/_shared/serie";
+import type { Movie as MovieModel } from "@supabase/functions/_shared/movie";
+import type { Serie as SerieModel } from "@supabase/functions/_shared/serie";
 
 type Props = {
   media: MovieModel | SerieModel;

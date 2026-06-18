@@ -32,3 +32,4 @@ apps/mobile/android/Gemfile.lock
 target/**
 *.jks
 .turbo
+supabase/.temp/

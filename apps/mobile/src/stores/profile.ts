@@ -1,9 +1,9 @@
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 import { supabase } from "@/api/supabase";
-import type { Tables } from "@app/supabase/functions/_shared/database.types";
-import type { Movie } from "@app/supabase/functions/_shared/movie";
-import type { Serie } from "@app/supabase/functions/_shared/serie";
+import type { Tables } from "@/utils/database";
+import type { Movie } from "@supabase/functions/_shared/movie";
+import type { Serie } from "@supabase/functions/_shared/serie";
 
 type VoiceActor = Tables<"voice_actors">;
 type UserProfile = Tables<"user_profiles">;
@@ -43,37 +43,29 @@ export const useProfileStore = defineStore("profile", () => {
   const workEntries = ref<WorkEntry[]>([]);
   const isLoading = ref(false);
   const isUpdating = ref(false);
-  const error = ref<
-    {
-      type:
-        | "fetch"
-        | "update"
-        | "select"
-        | "add"
-        | "remove"
-        | "create"
-        | "other";
-      message: string;
-    } | null
-  >(null);
+  const error = ref<{
+    type: "fetch" | "update" | "select" | "add" | "remove" | "create" | "other";
+    message: string;
+  } | null>(null);
 
   // Getters
-  const hasProfile = computed(() =>
-    voiceActors.value.length > 0 || !!userProfile.value
+  const hasProfile = computed(
+    () => voiceActors.value.length > 0 || !!userProfile.value,
   );
   const currentProfileType = computed(() => profileType.value);
   const allVoiceActors = computed(() => voiceActors.value);
   const currentVoiceActor = computed<VoiceActor | null>(() => {
     if (impersonatedVoiceActor.value) return impersonatedVoiceActor.value;
     if (!currentVoiceActorId.value) return null;
-    return voiceActors.value.find((va) =>
-      va.id === currentVoiceActorId.value
-    ) || null;
+    return (
+      voiceActors.value.find((va) => va.id === currentVoiceActorId.value) ||
+      null
+    );
   });
   const hasMultipleVoiceActors = computed(() => voiceActors.value.length > 1);
   const isImpersonating = computed(() => impersonatedVoiceActor.value !== null);
-  const userProfileData = computed(() =>
-    userProfile.value || defaultUserProfile
+  const userProfileData = computed(
+    () => userProfile.value || defaultUserProfile,
   );
   const isLoadingProfile = computed(() => isLoading.value);
   const profileError = computed(() => error.value);
@@ -124,17 +116,17 @@ export const useProfileStore = defineStore("profile", () => {
   };
 
   // Actions
-  const fetchProfile = async (
-    params: { voiceActorId?: number; targetUserId?: string },
-  ) => {
+  const fetchProfile = async (params: {
+    voiceActorId?: number;
+    targetUserId?: string;
+  }) => {
     console.log("Profile store: fetchProfile called with params:", params);
     try {
       isLoading.value = true;
       error.value = null;
 
-      const { data, error: fetchError } = await supabase.functions.invoke(
-        "get-user-profile",
-      );
+      const { data, error: fetchError } =
+        await supabase.functions.invoke("get-user-profile");
 
       console.log("Profile store: fetchProfile response:", {
         data,
@@ -149,8 +141,10 @@ export const useProfileStore = defineStore("profile", () => {
 
       // Set current voice actor ID
       if (voiceActors.value.length > 0) {
-        currentVoiceActorId.value = params.voiceActorId ||
-          primaryVoiceActorId.value || voiceActors.value[0].id;
+        currentVoiceActorId.value =
+          params.voiceActorId ||
+          primaryVoiceActorId.value ||
+          voiceActors.value[0].id;
       } else {
         currentVoiceActorId.value = null;
       }
@@ -161,9 +155,8 @@ export const useProfileStore = defineStore("profile", () => {
         userProfile.value = null;
         // Set work entries from current voice actor data
         const currentVA = currentVoiceActor.value;
-        workEntries.value = currentVA && "medias" in currentVA
-          ? (currentVA as any).medias
-          : [];
+        workEntries.value =
+          currentVA && "medias" in currentVA ? (currentVA as any).medias : [];
       } else if (data?.user_profile) {
         profileType.value = "user_profile";
         userProfile.value = data.user_profile;
@@ -197,9 +190,8 @@ export const useProfileStore = defineStore("profile", () => {
       profileType.value = "voice_actor";
       // Set work entries from the selected voice actor data
       const selectedVA = voiceActors.value.find((va) => va.id === voiceActorId);
-      workEntries.value = selectedVA && "medias" in selectedVA
-        ? (selectedVA as any).medias
-        : [];
+      workEntries.value =
+        selectedVA && "medias" in selectedVA ? (selectedVA as any).medias : [];
     } catch (err: any) {
       error.value = {
         type: "select",
@@ -216,9 +208,11 @@ export const useProfileStore = defineStore("profile", () => {
     workEntries.value = [];
   };
 
-  const fetchAllVoiceActors = async (
-    params: { page?: number; limit?: number; targetUserId?: string },
-  ) => {
+  const fetchAllVoiceActors = async (params: {
+    page?: number;
+    limit?: number;
+    targetUserId?: string;
+  }) => {
     try {
       isLoading.value = true;
       error.value = null;
@@ -271,8 +265,8 @@ export const useProfileStore = defineStore("profile", () => {
           "update-voice-actor",
           {
             body: {
-              voice_actor_id: identifiers.voiceActorId ||
-                currentVoiceActor.value.id,
+              voice_actor_id:
+                identifiers.voiceActorId || currentVoiceActor.value.id,
               updates: voiceActorUpdates,
               targetUserId: identifiers.targetUserId,
             },
@@ -289,8 +283,8 @@ export const useProfileStore = defineStore("profile", () => {
 
         // Update in the array if it's not impersonated
         if (!impersonatedVoiceActor.value) {
-          const index = voiceActors.value.findIndex((va) =>
-            va.id === currentVoiceActor.value!.id
+          const index = voiceActors.value.findIndex(
+            (va) => va.id === currentVoiceActor.value!.id,
           );
           if (index !== -1) {
             voiceActors.value[index] = updatedVA;
@@ -392,8 +386,8 @@ export const useProfileStore = defineStore("profile", () => {
       if (removeError) throw removeError;
 
       // Remove from local state
-      workEntries.value = workEntries.value.filter((entry) =>
-        entry.id !== workEntryId
+      workEntries.value = workEntries.value.filter(
+        (entry) => entry.id !== workEntryId,
       );
     } catch (err: any) {
       error.value = {
@@ -462,14 +456,13 @@ export const useProfileStore = defineStore("profile", () => {
       if (removeError) throw removeError;
 
       // Remove from local state
-      voiceActors.value = voiceActors.value.filter((va) =>
-        va.id !== voiceActorId
+      voiceActors.value = voiceActors.value.filter(
+        (va) => va.id !== voiceActorId,
       );
       if (currentVoiceActorId.value === voiceActorId) {
         // Select another voice actor or set to null
-        currentVoiceActorId.value = voiceActors.value.length > 0
-          ? voiceActors.value[0].id
-          : null;
+        currentVoiceActorId.value =
+          voiceActors.value.length > 0 ? voiceActors.value[0].id : null;
         workEntries.value = [];
       }
     } catch (err: any) {
@@ -484,9 +477,11 @@ export const useProfileStore = defineStore("profile", () => {
     }
   };
 
-  const createUserProfile = async (
-    profileData: { bio?: string; date_of_birth?: string; nationality?: string },
-  ) => {
+  const createUserProfile = async (profileData: {
+    bio?: string;
+    date_of_birth?: string;
+    nationality?: string;
+  }) => {
     try {
       isUpdating.value = true;
       error.value = null;
@@ -539,19 +534,17 @@ export const useProfileStore = defineStore("profile", () => {
     impersonatedTargetUserId.value = targetUserId || null;
     if (voiceActor) {
       profileType.value = "voice_actor";
-      workEntries.value = "medias" in voiceActor
-        ? (voiceActor as any).medias
-        : [];
+      workEntries.value =
+        "medias" in voiceActor ? (voiceActor as any).medias : [];
     } else {
       // Clear impersonation
       impersonatedTargetUserId.value = null;
       if (currentVoiceActorId.value) {
-        const currentVA = voiceActors.value.find((va) =>
-          va.id === currentVoiceActorId.value
+        const currentVA = voiceActors.value.find(
+          (va) => va.id === currentVoiceActorId.value,
         );
-        workEntries.value = currentVA && "medias" in currentVA
-          ? (currentVA as any).medias
-          : [];
+        workEntries.value =
+          currentVA && "medias" in currentVA ? (currentVA as any).medias : [];
       } else {
         workEntries.value = [];
       }

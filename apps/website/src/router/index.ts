@@ -1,23 +1,23 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import Dashboard from '../views/Dashboard.vue'
-import VoiceActorSpreadsheet from '../views/VoiceActorSpreadsheet.vue'
+import { createRouter, createWebHistory } from "vue-router";
+import Dashboard from "../views/Dashboard.vue";
+import VoiceActorSpreadsheet from "../views/VoiceActorSpreadsheet.vue";
 
 const routes = [
   {
-    path: '/',
-    name: 'Dashboard',
-    component: Dashboard
+    path: "/",
+    name: "Dashboard",
+    component: Dashboard,
   },
   {
-    path: '/voice-actor-spreadsheet',
-    name: 'VoiceActorSpreadsheet',
-    component: VoiceActorSpreadsheet
-  }
-]
+    path: "/voice-actor-spreadsheet",
+    name: "VoiceActorSpreadsheet",
+    component: VoiceActorSpreadsheet,
+  },
+];
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
-})
+  routes,
+});
 
-export default router
+export default router;

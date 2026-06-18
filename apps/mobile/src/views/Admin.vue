@@ -6,46 +6,51 @@
       </ion-toolbar>
     </ion-header>
     <ion-content>
-      <ion-tabs>
-        <ion-router-outlet></ion-router-outlet>
-        <ion-tab-bar slot="top">
-          <ion-tab-button tab="duplicates" @click="activeTab = 'duplicates'">
-            <ion-label>Doublons VA</ion-label>
-          </ion-tab-button>
-          <ion-tab-button tab="users" @click="activeTab = 'users'">
-            <ion-label>Utilisateurs</ion-label>
-          </ion-tab-button>
-          <ion-tab-button tab="work" @click="activeTab = 'work'">
-            <ion-label>Doublons Work</ion-label>
-          </ion-tab-button>
-          <ion-tab-button tab="voice-actors" @click="activeTab = 'voice-actors'">
-            <ion-icon :icon="micOutline"></ion-icon>
-            <ion-label>Voice Actors</ion-label>
-          </ion-tab-button>
-          <ion-tab-button tab="link-user-to-va" @click="activeTab = 'user-va-profiles'">
-            <ion-icon :icon="micOutline"></ion-icon>
-            <ion-label>User -- VA </ion-label>
-          </ion-tab-button>
-        </ion-tab-bar>
-        <div v-if="activeTab === 'duplicates'">
-          <DuplicateVATool />
-        </div>
-        <div v-if="activeTab === 'users'">
-          <UserManagement />
-        </div>
-        <div v-if="activeTab === 'work'">
-          <DuplicateWork />
-        </div>
-        <div v-if="activeTab === 'voice-actors'" class="ion-padding">
-          <ion-button expand="block" @click="navigateToNewVoiceActor" class="new-voice-actor-btn">
-            <ion-icon :icon="addCircleOutline" slot="start"></ion-icon>
-            New Voice Actor
-          </ion-button>
-        </div>
-        <div v-if="activeTab === 'user-va-profiles'" class="ion-padding">
-          <LinkUserVoiceActor />
-        </div>
-      </ion-tabs>
+      <ion-segment v-model="activeTab" scrollable class="admin-segment">
+        <ion-segment-button value="duplicates">
+          <ion-label>Doublons VA</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="users">
+          <ion-label>Utilisateurs</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="work">
+          <ion-label>Doublons Work</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="voice-actors">
+          <ion-icon :icon="micOutline"></ion-icon>
+          <ion-label>Voice Actors</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="user-va-profiles">
+          <ion-icon :icon="micOutline"></ion-icon>
+          <ion-label>User -- VA</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="queue">
+          <ion-icon :icon="listOutline"></ion-icon>
+          <ion-label>Queue</ion-label>
+        </ion-segment-button>
+      </ion-segment>
+
+      <div v-if="activeTab === 'duplicates'">
+        <DuplicateVATool />
+      </div>
+      <div v-if="activeTab === 'users'">
+        <UserManagement />
+      </div>
+      <div v-if="activeTab === 'work'">
+        <DuplicateWork />
+      </div>
+      <div v-if="activeTab === 'voice-actors'" class="ion-padding">
+        <ion-button expand="block" @click="navigateToNewVoiceActor" class="new-voice-actor-btn">
+          <ion-icon :icon="addCircleOutline" slot="start"></ion-icon>
+          New Voice Actor
+        </ion-button>
+      </div>
+      <div v-if="activeTab === 'user-va-profiles'" class="ion-padding">
+        <LinkUserVoiceActor />
+      </div>
+      <div v-if="activeTab === 'queue'">
+        <QueueManagement />
+      </div>
     </ion-content>
   </ion-page>
 </template>
@@ -56,23 +61,21 @@ import { useIonRouter } from '@ionic/vue';
 import {
   IonPage,
   IonHeader,
-  IonRouterOutlet,
   IonToolbar,
   IonTitle,
   IonContent,
-  IonTabs,
-  IonTabBar,
-  IonTabButton,
+  IonSegment,
+  IonSegmentButton,
   IonLabel,
   IonButton,
-  IonBackButton,
   IonIcon
 } from '@ionic/vue';
-import { addCircleOutline, micOutline } from 'ionicons/icons';
+import { addCircleOutline, micOutline, listOutline } from 'ionicons/icons';
 import DuplicateVATool from '@/components/admin/DuplicateVATool.vue';
 import UserManagement from '@/components/admin/UserManagement.vue';
 import DuplicateWork from '@/components/admin/DuplicateWork.vue';
 import LinkUserVoiceActor from './admin/LinkUserVoiceActor.vue';
+import QueueManagement from '@/components/admin/QueueManagement.vue';
 
 const ionRouter = useIonRouter();
 const activeTab = ref('duplicates');

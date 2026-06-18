@@ -43,7 +43,7 @@
 import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 // Admin check: get user from supabase.auth and check for admin role
-import type { Serie as SerieModel } from "../../supabase/functions/_shared/serie";
+import type { Serie as SerieModel } from "@supabase/functions/_shared/serie";
 import {
   IonPage,
   IonButton,
@@ -54,7 +54,7 @@ import {
   IonContent,
   IonHeader,
 } from "@ionic/vue";
-import type { Movie as MovieModel } from "../../supabase/functions/_shared/movie";
+import type { Movie as MovieModel } from "@supabase/functions/_shared/movie";
 import { supabase } from "../api/supabase";
 import VoiceActorHeader from "@/components/VoiceActorHeader.vue";
 import VoiceActorBio from "@/components/VoiceActorBio.vue";
@@ -63,7 +63,7 @@ import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import { storeToRefs } from 'pinia';
 import { useAuthStore } from '@/stores/auth';
 import { PersonData } from "@/components/PersonItem.vue";
-import { Actor } from "../../supabase/functions/_shared/types";
+import { Actor } from "@supabase/functions/_shared/types";
 import { actorToPersonData } from "@/utils/convert";
 
 const authStore = useAuthStore();

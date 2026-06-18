@@ -4,7 +4,9 @@ export interface RecursiveSection extends Section {
   sections?: RecursiveSection[];
 }
 
-export const flatTocToTree = (sections: Section[]): Map<string, RecursiveSection> => {
+export const flatTocToTree = (
+  sections: Section[],
+): Map<string, RecursiveSection> => {
   const newSections: Map<string, RecursiveSection> = new Map<
     string,
     RecursiveSection
@@ -28,18 +30,18 @@ export const flatTocToTree = (sections: Section[]): Map<string, RecursiveSection
 
     // manage path
     if (section.toclevel > level) {
-    //   console.log("pushing path", section.index);
+      //   console.log("pushing path", section.index);
       path.push(section.index);
     } else if (section.toclevel < level) {
-    //   console.log(
-    //     "removing",
-    //     difference,
-    //     "element from path and including",
-    //     section.index
-    //   );
+      //   console.log(
+      //     "removing",
+      //     difference,
+      //     "element from path and including",
+      //     section.index
+      //   );
       path = [...path.slice(0, -(difference + 1)), section.index];
     } else if (section.toclevel === level) {
-    //   console.log("same level, replacing last one with", section.index);
+      //   console.log("same level, replacing last one with", section.index);
       path = [...path.slice(0, -1), section.index];
     }
     // console.log("new path", path);
@@ -64,7 +66,7 @@ export const flatTocToTree = (sections: Section[]): Map<string, RecursiveSection
     // console.log("");
   }
 
-//   console.log(JSON.stringify([...newSections.values()]));
+  //   console.log(JSON.stringify([...newSections.values()]));
 
-  return newSections
+  return newSections;
 };

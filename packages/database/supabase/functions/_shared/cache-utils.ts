@@ -1,16 +1,20 @@
-import { IRedisClient } from './interfaces.ts';
-import { SimpleKeyBuilder, CACHE_KEYS, SimpleKeyValidator } from './cache-constants.ts';
+import { IRedisClient } from "./interfaces.ts";
+import {
+  SimpleKeyBuilder,
+  CACHE_KEYS,
+  SimpleKeyValidator,
+} from "./cache-constants.ts";
 
 // Debug logging function
 function debugLog(message: string, data?: any) {
-  console.log(`[CACHE] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+  console.log(`[CACHE] ${message}`, data ? JSON.stringify(data, null, 2) : "");
 }
 
 // Simplified TTL presets in seconds
 export const CACHE_TTL = {
-  SHORT: 60 * 60,      // 1 hour
+  SHORT: 60 * 60, // 1 hour
   MEDIUM: 6 * 60 * 60, // 6 hours
-  LONG: 24 * 60 * 60,  // 24 hours
+  LONG: 24 * 60 * 60, // 24 hours
   EXTENDED: 7 * 24 * 60 * 60, // 7 days
 } as const;
 
@@ -38,7 +42,8 @@ export class SimpleCache {
       debugLog(`Cache hit for key: ${key}`);
       return parsed;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       debugLog(`Cache get failed for key ${key}`, { error: errorMessage });
       return null;
     }
@@ -47,12 +52,20 @@ export class SimpleCache {
   /**
    * Simple cache set with TTL preset and error handling
    */
-  async set<T>(key: string, data: T, ttl: CacheTTLPreset = 'MEDIUM'): Promise<boolean> {
+  async set<T>(
+    key: string,
+    data: T,
+    ttl: CacheTTLPreset = "MEDIUM",
+  ): Promise<boolean> {
     try {
       const sanitizedKey = SimpleKeyValidator.sanitizeKey(key);
       const serialized = JSON.stringify(data);
       const ttlSeconds = CACHE_TTL[ttl];
-      const success = await this.redisClient.setex(sanitizedKey, ttlSeconds, serialized);
+      const success = await this.redisClient.setex(
+        sanitizedKey,
+        ttlSeconds,
+        serialized,
+      );
 
       if (success) {
         debugLog(`Cache set for key: ${key}`, { ttl: ttlSeconds });
@@ -62,7 +75,8 @@ export class SimpleCache {
 
       return success;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       debugLog(`Cache set failed for key ${key}`, { error: errorMessage });
       return false;
     }
@@ -79,7 +93,8 @@ export class SimpleCache {
       debugLog(`Cache delete for key: ${key}`, { success, deleted });
       return success;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       debugLog(`Cache delete failed for key ${key}`, { error: errorMessage });
       return false;
     }
@@ -93,8 +108,11 @@ export class SimpleCache {
       const sanitizedKey = SimpleKeyValidator.sanitizeKey(key);
       return await this.redisClient.exists(sanitizedKey);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      debugLog(`Cache exists check failed for key ${key}`, { error: errorMessage });
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      debugLog(`Cache exists check failed for key ${key}`, {
+        error: errorMessage,
+      });
       return false;
     }
   }
@@ -108,14 +126,20 @@ export class SimpleCache {
       debugLog(`Cache health check`, { healthy: pingResult });
       return pingResult;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       debugLog(`Cache health check failed`, { error: errorMessage });
       return false;
     }
   }
 
   // Key generation methods using the simple key builder
-  generateKey(api: string, type: string, id: string | number, suffix?: string): string {
+  generateKey(
+    api: string,
+    type: string,
+    id: string | number,
+    suffix?: string,
+  ): string {
     return SimpleKeyBuilder.key(api, type, id, suffix);
   }
 
@@ -138,4 +162,4 @@ export class SimpleCache {
 }
 
 // Re-export key builder and constants for convenience
-export { SimpleKeyBuilder, CACHE_KEYS } from './cache-constants.ts';
+export { SimpleKeyBuilder, CACHE_KEYS } from "./cache-constants.ts";

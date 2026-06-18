@@ -1,10 +1,9 @@
-import { ITVDBClient } from './interfaces.ts';
-import { SimpleCache, CacheTTLPreset } from './cache-utils.ts';
-import { IRedisClient } from './interfaces.ts';
+import { ITVDBClient } from "./interfaces.ts";
+import { SimpleCache } from "./cache-utils.ts";
 
 // Debug logging function
 function debugLog(message: string, data?: any) {
-  console.log(`[TVDB] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+  console.log(`[TVDB] ${message}`, data ? JSON.stringify(data, null, 2) : "");
 }
 
 export class TVDBClient implements ITVDBClient {
@@ -15,13 +14,13 @@ export class TVDBClient implements ITVDBClient {
   private cache: SimpleCache;
 
   constructor(cache: SimpleCache) {
-    this.apiKey = Deno.env.get('TVDB_API_KEY')!;
-    this.baseUrl = 'https://api4.thetvdb.com/v4';
+    this.apiKey = Deno.env.get("TVDB_API_KEY")!;
+    this.baseUrl = "https://api4.thetvdb.com/v4";
     this.cache = cache;
-    debugLog('TVDB Client initialized', {
+    debugLog("TVDB Client initialized", {
       hasApiKey: !!this.apiKey,
       baseUrl: this.baseUrl,
-      hasCache: true
+      hasCache: true,
     });
   }
 
@@ -30,16 +29,16 @@ export class TVDBClient implements ITVDBClient {
       return this.token;
     }
 
-    debugLog('Authenticating with TVDB API');
+    debugLog("Authenticating with TVDB API");
 
     const response = await fetch(`${this.baseUrl}/login`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
+        "Content-Type": "application/json",
+        Accept: "application/json",
       },
       body: JSON.stringify({
-        apikey: this.apiKey
+        apikey: this.apiKey,
       }),
     });
 
@@ -52,9 +51,9 @@ export class TVDBClient implements ITVDBClient {
     // Token expires in 24 hours, set expiry to 23 hours for safety margin
     this.tokenExpiry = new Date(Date.now() + 23 * 60 * 60 * 1000);
 
-    debugLog('TVDB authentication successful', {
+    debugLog("TVDB authentication successful", {
       hasToken: !!this.token,
-      expiresAt: this.tokenExpiry
+      expiresAt: this.tokenExpiry,
     });
 
     return this.token!;
@@ -73,8 +72,8 @@ export class TVDBClient implements ITVDBClient {
 
     const response = await fetch(url.toString(), {
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/json',
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
       },
     });
 
@@ -85,36 +84,56 @@ export class TVDBClient implements ITVDBClient {
     return response.json();
   }
 
-  async getSeriesById(seriesId: number, extended?: { meta?: "episodes" | 'translations', short?: boolean }): Promise<any> {
-    const cacheKey = this.cache.tvdbKey('series', seriesId, extended ? `extended:${extended.meta || 'none'}:${extended.short}` : undefined);
+  async getSeriesById(
+    seriesId: number,
+    extended?: { meta?: "episodes" | "translations"; short?: boolean },
+  ): Promise<any> {
+    const cacheKey = this.cache.tvdbKey(
+      "series",
+      seriesId,
+      extended
+        ? `extended:${extended.meta || "none"}:${extended.short}`
+        : undefined,
+    );
 
     // Try cache first
     const cached = await this.cache.get(cacheKey);
     if (cached) {
-      debugLog(`TVDB cache hit for series ${seriesId}`, { extended: !!extended });
+      debugLog(`TVDB cache hit for series ${seriesId}`, {
+        extended: !!extended,
+      });
       return cached;
     }
 
     // Cache miss - fetch from API
     let result: any;
     if (extended) {
-       result = await this.get(`series/${seriesId}/extended`, {
-         extended: extended.meta || '',
-         short: extended.short?.toString() || ''
-       });
+      result = await this.get(`series/${seriesId}/extended`, {
+        extended: extended.meta || "",
+        short: extended.short?.toString() || "",
+      });
     } else {
-       result = await this.get(`series/${seriesId}`);
+      result = await this.get(`series/${seriesId}`);
     }
 
     // Cache the result with SHORT TTL (2 hours for series data)
-    await this.cache.set(cacheKey, result, 'SHORT');
+    await this.cache.set(cacheKey, result, "SHORT");
     debugLog(`TVDB cache set for series ${seriesId}`, { extended: !!extended });
 
     return result;
   }
 
-  async getMovieById(movieId: number, extended?: { meta?: 'translations', short?: boolean }): Promise<any> {
-    const cacheKey = this.cache.tvdbKey('movie', movieId, extended ? `extended:${extended.meta || 'none'}:${extended.short}` : undefined);
+  async getMovieById(
+    movieId: number,
+    extended?: { meta?: "translations"; short?: boolean },
+  ): Promise<any> {
+    const cacheKey = this.cache.tvdbKey(
+      "movie",
+      movieId,
+      extended
+        ? `extended:${extended.meta || "none"}:${extended.short}`
+        : undefined,
+    );
 
     // Try cache first
     const cached = await this.cache.get(cacheKey);
@@ -126,16 +145,16 @@ export class TVDBClient implements ITVDBClient {
     // Cache miss - fetch from API
     let result: any;
     if (extended) {
-       result = await this.get(`movies/${movieId}/extended`, {
-         extended: extended.meta || '',
-         short: extended.short?.toString() || ''
-       });
+      result = await this.get(`movies/${movieId}/extended`, {
+        extended: extended.meta || "",
+        short: extended.short?.toString() || "",
+      });
     } else {
-       result = await this.get(`movies/${movieId}`);
+      result = await this.get(`movies/${movieId}`);
     }
 
     // Cache the result with SHORT TTL (2 hours for movie data)
-    await this.cache.set(cacheKey, result, 'SHORT');
+    await this.cache.set(cacheKey, result, "SHORT");
     debugLog(`TVDB cache set for movie ${movieId}`, { extended: !!extended });
 
     return result;
@@ -153,7 +172,7 @@ export class TVDBClient implements ITVDBClient {
   }
 
   async getCharactersBySeries(seriesId: number): Promise<any> {
-    const cacheKey = this.cache.tvdbKey('series', seriesId, 'characters');
+    const cacheKey = this.cache.tvdbKey("series", seriesId, "characters");
 
     // Try cache first
     const cached = await this.cache.get(cacheKey);
@@ -166,13 +185,13 @@ export class TVDBClient implements ITVDBClient {
     const result = await this.get(`series/${seriesId}/characters`);
 
     // Cache the result with SHORT TTL (2 hours for character data)
-    await this.cache.set(cacheKey, result, 'SHORT');
+    await this.cache.set(cacheKey, result, "SHORT");
     debugLog(`TVDB cache set for series characters ${seriesId}`);
 
     return result;
   }
   async getCharactersByMovie(movieId: number): Promise<any> {
-    const cacheKey = this.cache.tvdbKey('movie', movieId, 'characters');
+    const cacheKey = this.cache.tvdbKey("movie", movieId, "characters");
 
     // Try cache first
     const cached = await this.cache.get(cacheKey);
@@ -185,7 +204,7 @@ export class TVDBClient implements ITVDBClient {
     const result = await this.get(`movies/${movieId}/characters`);
 
     // Cache the result with SHORT TTL (2 hours for character data)
-    await this.cache.set(cacheKey, result, 'SHORT');
+    await this.cache.set(cacheKey, result, "SHORT");
     debugLog(`TVDB cache set for movie characters ${movieId}`);
 
     return result;
@@ -196,7 +215,11 @@ export class TVDBClient implements ITVDBClient {
   }
 
   async searchSeries(query: string): Promise<any> {
-    const cacheKey = this.cache.generateKey('tvdb', 'search', query.toLowerCase().trim());
+    const cacheKey = this.cache.generateKey(
+      "tvdb",
+      "search",
+      query.toLowerCase().trim(),
+    );
 
     // Try cache first
     const cached = await this.cache.get(cacheKey);
@@ -206,10 +229,10 @@ export class TVDBClient implements ITVDBClient {
     }
 
     // Cache miss - fetch from API
-    const result = await this.get('search', { query });
+    const result = await this.get("search", { query });
 
     // Cache the result with MEDIUM TTL (6 hours for search results)
-    await this.cache.set(cacheKey, result, 'MEDIUM');
+    await this.cache.set(cacheKey, result, "MEDIUM");
     debugLog(`TVDB cache set for search query: ${query}`);
 
     return result;

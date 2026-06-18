@@ -1,6 +1,6 @@
-import { useIonRouter } from '@ionic/vue';
+import { useIonRouter } from "@ionic/vue";
 
-type DeepLinkType = 'movie' | 'show';
+type DeepLinkType = "movie" | "show";
 
 interface DeepLink {
   type: DeepLinkType;
@@ -10,18 +10,19 @@ interface DeepLink {
 export function parseDeepLink(url: string): DeepLink | null {
   try {
     // Handle both dubbingbase:// and dubbingbase:/ formats
-    const match = url.match(/^dubbingbase:\/\/(movie|show)\/(\d+)/i) || 
-                 url.match(/^dubbingbase:\/(movie|show)\/(\d+)/i);
-    
+    const match =
+      url.match(/^dubbingbase:\/\/(movie|show)\/(\d+)/i) ||
+      url.match(/^dubbingbase:\/(movie|show)\/(\d+)/i);
+
     if (match) {
       return {
         type: match[1].toLowerCase() as DeepLinkType,
-        id: match[2]
+        id: match[2],
       };
     }
     return null;
   } catch (error) {
-    console.error('Error parsing deep link:', error);
+    console.error("Error parsing deep link:", error);
     return null;
   }
 }
@@ -34,13 +35,13 @@ export function useDeepLinkHandler() {
     if (!deepLink) return false;
 
     const { type, id } = deepLink;
-    
+
     switch (type) {
-      case 'movie':
-        router.push({ name: 'MovieDetails', params: { id } });
+      case "movie":
+        router.push({ name: "MovieDetails", params: { id } });
         return true;
-      case 'show':
-        router.push({ name: 'SerieDetails', params: { id } });
+      case "show":
+        router.push({ name: "SerieDetails", params: { id } });
         return true;
       default:
         return false;
@@ -48,6 +49,6 @@ export function useDeepLinkHandler() {
   };
 
   return {
-    handleDeepLink
+    handleDeepLink,
   };
 }

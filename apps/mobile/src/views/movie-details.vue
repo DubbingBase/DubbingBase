@@ -49,6 +49,8 @@
         :is-fetching="isFetching"
         :is-scanning="isScanning"
         :fetch-error="fetchError"
+        :queue-status="queueStatus"
+        :queue-error-message="queueErrorMessage"
         @fetch-infos="fetchInfos"
         @take-photo="takePhoto"
       />
@@ -86,10 +88,10 @@ import {
   toastController,
   IonToast,
 } from "@ionic/vue";
-import { computed, onMounted, ref, UnwrapRef } from "vue";
+import { computed, onMounted, onUnmounted, ref, UnwrapRef } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { pencil } from "ionicons/icons";
-import { MovieResponse } from "../../supabase/functions/_shared/movie";
+import { MovieResponse } from "@supabase/functions/_shared/movie";
 import { supabase } from "../api/supabase";
 import { useVoiceActorManagement } from "@/composables/useVoiceActorManagement";
 import { storeToRefs } from "pinia";
@@ -132,6 +134,8 @@ const {
 } = useVoiceActorManagement("movie");
 
 const movie = ref<MovieResponse["movie"] | undefined>();
+const queueStatus = ref<string | null>(null);
+const queueErrorMessage = ref<string | null>(null);
 
 const characterProfilePictures = ref<
   {
@@ -246,6 +250,27 @@ const showScanResult = ref(false);
 const isFetching = ref(false);
 const fetchError = ref("");
 
+const fetchQueueStatus = async () => {
+  try {
+    const { data, error } = await supabase
+      .rpc("get_media_queue_status", {
+        p_tmdb_id: Number(route.params.id),
+        p_media_type: "movie"
+      });
+    if (error) throw error;
+    const statusData = data as { status: string | null; error_message: string | null } | null;
+    if (statusData) {
+      queueStatus.value = statusData.status;
+      queueErrorMessage.value = statusData.error_message;
+    } else {
+      queueStatus.value = null;
+      queueErrorMessage.value = null;
+    }
+  } catch (err) {
+    console.error("Error fetching queue status:", err);
+  }
+};
+
 const takePhoto = async () => {
   try {
     isScanning.value = true;
@@ -279,6 +304,55 @@ const takePhoto = async () => {
   }
 };
 
+let pollingInterval: any = null;
+
+const stopQueuePolling = () => {
+  if (pollingInterval) {
+    clearInterval(pollingInterval);
+    pollingInterval = null;
+  }
+};
+
+const startQueuePolling = () => {
+  if (pollingInterval) return;
+
+  isFetching.value = true;
+  pollingInterval = setInterval(async () => {
+    await fetchQueueStatus();
+
+    if (queueStatus.value === "completed") {
+      stopQueuePolling();
+      const toast = await toastController.create({
+        message: "Voice cast updated successfully!",
+        duration: 2000,
+        position: "top",
+        color: "success",
+      });
+      await toast.present();
+
+      try {
+        await fetchMovieData();
+      } catch (error) {
+        console.error("Error fetching movie data:", error);
+      } finally {
+        isFetching.value = false;
+      }
+    } else if (queueStatus.value === "failed") {
+      stopQueuePolling();
+      const errorMsg = queueErrorMessage.value || "Fetch failed.";
+      const toast = await toastController.create({
+        message: errorMsg,
+        duration: 2000,
+        position: "top",
+        color: "danger",
+      });
+      await toast.present();
+      fetchError.value = errorMsg;
+      isFetching.value = false;
+    }
+  }, 5000);
+};
+
 const fetchInfos = async () => {
   const id = wikiDataId.value;
 
@@ -289,83 +363,53 @@ const fetchInfos = async () => {
 
   console.log("id", id);
   isFetching.value = true;
-  const movieResponseRaw = await supabase.functions.invoke("prepare_movie", {
-    body: {
-      tmdbId: route.params.id,
-      type: "movie",
-    },
-  });
-  const data = movieResponseRaw.data;
+  fetchError.value = "";
 
-  console.log("data", data);
-
-  if (data.ok) {
-    let toastMessage = "";
-    let toastColor = "success";
-    if (data.changes > 0) {
-      toastMessage = t("common.newVoiceActorsAdded", { count: data.changes });
-    } else if (data.changes === 0) {
-      toastMessage = t("common.noNewChangesFound");
-      toastColor = "primary";
-    }
-    const toast = await toastController.create({
-      message: toastMessage,
-      duration: 2000,
-      position: "top",
-      color: toastColor,
-    });
-    await toast.present();
-    try {
-      await fetchMovieData();
-    } catch (error) {
-      console.error("Error fetching movie data:", error);
-      fetchError.value = "Failed to load movie details.";
-    } finally {
-      isFetching.value = false;
-    }
-  } else {
-    toastController
-      .create({
-        message: data.error,
-        duration: 2000,
-        position: "top",
-        color: "danger",
-      })
-      .then((toast) => {
-        toast.present();
+  // Insert request into fetch_queue
+  try {
+    const { error: insertError } = await supabase
+      .rpc("enqueue_media_fetch", {
+        p_tmdb_id: Number(route.params.id),
+        p_media_type: "movie"
       });
+    if (insertError) throw insertError;
+    queueStatus.value = "pending";
+    startQueuePolling();
+  } catch (err) {
+    console.error("Error adding request to queue:", err);
+    fetchError.value = "Failed to add request to queue.";
     isFetching.value = false;
-    fetchError.value = data.error;
-    isLoading.value = false;
   }
 };
 
 const fetchMovieData = async () => {
   const id = route.params.id;
   try {
-    const movieResponseRaw = await supabase.functions.invoke("movie", {
+    const movieResponseRaw = await supabase.functions.invoke<MovieResponse>("movie", {
       body: { id },
     });
-    const data = movieResponseRaw.data as MovieResponse;
-    movie.value = data.movie;
-    console.log("data.voiceActors", data.voiceActors);
-    voiceActors.value = data.voiceActors.map((va) =>
-      voiceActorToPersonData(
-        va.voiceActorDetails,
-        va.performance,
-        va.actor_id,
-        va.reviewed_status,
-        va.id,
-      ),
-    );
-    if (data.characterProfilePictures) {
-      characterProfilePictures.value = data.characterProfilePictures;
-    }
+    const data = movieResponseRaw.data;
+    if (data) {
+      movie.value = data.movie;
+      console.log("data.voiceActors", data.voiceActors);
+      voiceActors.value = data.voiceActors.map((va) =>
+        voiceActorToPersonData(
+          va.voiceActorDetails,
+          va.performance,
+          va.actor_id,
+          va.reviewed_status,
+          va.id,
+        ),
+      );
+      if (data.characterProfilePictures) {
+        characterProfilePictures.value = data.characterProfilePictures;
+      }
 
-    // Refresh votes after loading voice actors
-    if (voiceActors.value.length > 0) {
-      const workIds = voiceActors.value.map((va) => va.id);
-      await refreshVotes(workIds);
+      // Refresh votes after loading voice actors
+      if (voiceActors.value.length > 0) {
+        const workIds = voiceActors.value.map((va) => va.work_id).filter((id): id is number => !!id);
+        await refreshVotes(workIds);
+      }
     }
   } catch (e: any) {
     console.error("Error fetching movie data:", e);
@@ -449,17 +493,26 @@ const goToEditPage = () => {
 //   }
 // };
 
-// Check admin status when component mounts
 onMounted(async () => {
   isLoading.value = true;
   fetchError.value = "";
   try {
-    await fetchMovieData();
+    await Promise.all([
+      fetchMovieData(),
+      fetchQueueStatus(),
+    ]);
+    if (queueStatus.value === "pending" || queueStatus.value === "processing") {
+      startQueuePolling();
+    }
   } catch (e: any) {
     console.error("Error fetching movie data:", e);
     fetchError.value = "Failed to load movie details.";
   } finally {
     isLoading.value = false;
   }
+});
+
+onUnmounted(() => {
+  stopQueuePolling();
 });
 </script>

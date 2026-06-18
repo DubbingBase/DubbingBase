@@ -1,5 +1,12 @@
 {
   "name": "@app/supabase",
   "version": "0.0.6",
-  "private": true
+  "private": true,
+  "scripts": {
+    "dev": "supabase functions serve --env-file supabase/functions/.env",
+    "typecheck": "find supabase/functions -name \"index.ts\" | xargs deno check"
+  },
+  "devDependencies": {
+    "supabase": "^2.106.0"
+  }
 }

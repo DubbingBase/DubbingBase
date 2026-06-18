@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "function": "supabase functions serve hello-world --no-verify-jwt",
-    "sup:types": "npx supabase gen types --lang=typescript --local > ../../packages/database/functions/_shared/database.types.ts"
+    "sup:types": "npx supabase gen types --lang=typescript --local > ../../packages/database/functions/_shared/database.types.ts",
+    "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {
     "@app/supabase": "workspace:*",

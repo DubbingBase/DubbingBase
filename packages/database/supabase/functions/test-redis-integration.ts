@@ -1,9 +1,8 @@
-import { RedisClient } from './_shared/redis.ts';
-import { SimpleCache, CACHE_TTL } from './_shared/cache-utils.ts';
-import { TMDBClient } from './_shared/tmdb.ts';
-import { TVDBClient } from './_shared/tvdb.ts';
-import { WikipediaCache } from './_shared/wikipedia-cache.ts';
-import { CACHE_KEYS, SimpleKeyBuilder } from './_shared/cache-constants.ts';
+import { RedisClient } from "./_shared/redis.ts";
+import { SimpleCache } from "./_shared/cache-utils.ts";
+import { TMDBClient } from "./_shared/tmdb.ts";
+import { TVDBClient } from "./_shared/tvdb.ts";
+import { WikipediaCache } from "./_shared/wikipedia-cache.ts";
 
 // Test result interface
 interface TestResult {
@@ -28,7 +27,7 @@ const TEST_CONFIG = {
   PERFORMANCE_ITERATIONS: 10,
   CACHE_TEST_TTL: 300, // 5 minutes for test data
   SAMPLE_MOVIE_ID: 550, // Fight Club - well known movie
-  SAMPLE_TV_ID: 1399,   // Game of Thrones - well known series
+  SAMPLE_TV_ID: 1399, // Game of Thrones - well known series
   SAMPLE_TVDB_SERIES_ID: 121361, // Breaking Bad
   WIKIPEDIA_TEST_ENTITY: "Q7747", // Sample Wikidata entity
 };
@@ -57,7 +56,9 @@ export class RedisIntegrationTestSuite {
    * Run all tests and return comprehensive results
    */
   async runAllTests(): Promise<TestSuiteResults> {
-    console.log('[REDIS TEST SUITE] Starting comprehensive Redis integration tests...');
+    console.log(
+      "[REDIS TEST SUITE] Starting comprehensive Redis integration tests...",
+    );
 
     const startTime = Date.now();
 
@@ -70,15 +71,19 @@ export class RedisIntegrationTestSuite {
       await this.testWikipediaCaching();
       await this.testErrorHandling();
       await this.testPerformance();
-
     } catch (error) {
-      console.error('[REDIS TEST SUITE] Test suite failed:', error);
-      this.addResult('test-suite-overall', false, Date.now() - startTime, String(error));
+      console.error("[REDIS TEST SUITE] Test suite failed:", error);
+      this.addResult(
+        "test-suite-overall",
+        false,
+        Date.now() - startTime,
+        String(error),
+      );
     }
 
     const totalDuration = Date.now() - startTime;
-    const passedTests = this.results.filter(r => r.passed).length;
-    const failedTests = this.results.filter(r => !r.passed).length;
+    const passedTests = this.results.filter((r) => r.passed).length;
+    const failedTests = this.results.filter((r) => !r.passed).length;
 
     const suiteResults: TestSuiteResults = {
       totalTests: this.results.length,
@@ -88,7 +93,7 @@ export class RedisIntegrationTestSuite {
       results: this.results,
     };
 
-    console.log('[REDIS TEST SUITE] Test suite completed:', suiteResults);
+    console.log("[REDIS TEST SUITE] Test suite completed:", suiteResults);
     return suiteResults;
   }
 
@@ -96,7 +101,7 @@ export class RedisIntegrationTestSuite {
    * Test Redis connection and basic connectivity
    */
   private async testRedisConnection(): Promise<void> {
-    const testName = 'redis-connection';
+    const testName = "redis-connection";
     const startTime = Date.now();
 
     try {
@@ -105,20 +110,20 @@ export class RedisIntegrationTestSuite {
       // Test ping
       const pingResult = await this.redisClient.ping();
       if (!pingResult) {
-        throw new Error('Redis ping failed');
+        throw new Error("Redis ping failed");
       }
 
       // Test basic set/get
-      const testKey = 'test:connection';
-      const testValue = 'test-value';
+      const testKey = "test:connection";
+      const testValue = "test-value";
       const setResult = await this.redisClient.set(testKey, testValue);
       if (!setResult) {
-        throw new Error('Redis set operation failed');
+        throw new Error("Redis set operation failed");
       }
 
       const getResult = await this.redisClient.get(testKey);
       if (getResult !== testValue) {
-        throw new Error('Redis get operation returned incorrect value');
+        throw new Error("Redis get operation returned incorrect value");
       }
 
       // Cleanup
@@ -129,7 +134,6 @@ export class RedisIntegrationTestSuite {
         setResult,
         getResult,
       });
-
     } catch (error) {
       this.addResult(testName, false, Date.now() - startTime, String(error));
     }
@@ -139,49 +143,53 @@ export class RedisIntegrationTestSuite {
    * Test basic cache operations (get, set, delete, exists, ttl)
    */
   private async testBasicCacheOperations(): Promise<void> {
-    const testName = 'basic-cache-operations';
+    const testName = "basic-cache-operations";
     const startTime = Date.now();
 
     try {
       console.log(`[REDIS TEST] Testing basic cache operations...`);
 
-      const testKey = 'test:cache:operations';
-      const testData = { message: 'test data', timestamp: Date.now() };
+      const testKey = "test:cache:operations";
+      const testData = { message: "test data", timestamp: Date.now() };
 
       // Test set operation
-      const setResult = await this.cache.set(testKey, testData, 'SHORT');
+      const setResult = await this.cache.set(testKey, testData, "SHORT");
       if (!setResult) {
-        throw new Error('Cache set operation failed');
+        throw new Error("Cache set operation failed");
       }
 
       // Test exists operation
       const existsResult = await this.cache.exists(testKey);
       if (!existsResult) {
-        throw new Error('Cache exists check failed');
+        throw new Error("Cache exists check failed");
       }
 
       // Test get operation
-      const getResult = await this.cache.get(testKey) as typeof testData | null;
+      const getResult = (await this.cache.get(testKey)) as
+        | typeof testData
+        | null;
       if (!getResult || getResult.message !== testData.message) {
-        throw new Error('Cache get operation failed or returned incorrect data');
+        throw new Error(
+          "Cache get operation failed or returned incorrect data",
+        );
       }
 
       // Test TTL operation
       const ttlResult = await this.redisClient.ttl(testKey);
       if (ttlResult <= 0) {
-        throw new Error('Cache TTL check failed');
+        throw new Error("Cache TTL check failed");
       }
 
       // Test delete operation
       const delResult = await this.cache.del(testKey);
       if (!delResult) {
-        throw new Error('Cache delete operation failed');
+        throw new Error("Cache delete operation failed");
       }
 
       // Verify deletion
       const existsAfterDelete = await this.cache.exists(testKey);
       if (existsAfterDelete) {
-        throw new Error('Cache key still exists after deletion');
+        throw new Error("Cache key still exists after deletion");
       }
 
       this.addResult(testName, true, Date.now() - startTime, undefined, {
@@ -192,7 +200,6 @@ export class RedisIntegrationTestSuite {
         delResult,
         existsAfterDelete,
       });
-
     } catch (error) {
       this.addResult(testName, false, Date.now() - startTime, String(error));
     }
@@ -202,45 +209,62 @@ export class RedisIntegrationTestSuite {
    * Test TMDB API caching functionality
    */
   private async testTmdbCaching(): Promise<void> {
-    const testName = 'tmdb-api-caching';
+    const testName = "tmdb-api-caching";
     const startTime = Date.now();
 
     try {
       console.log(`[REDIS TEST] Testing TMDB API caching...`);
 
       // Test cache key generation
-      const movieKey = this.cache.tmdbKey('movie', TEST_CONFIG.SAMPLE_MOVIE_ID, 'details');
-      const tvKey = this.cache.tmdbKey('tv', TEST_CONFIG.SAMPLE_TV_ID, 'details');
+      const movieKey = this.cache.tmdbKey(
+        "movie",
+        TEST_CONFIG.SAMPLE_MOVIE_ID,
+        "details",
+      );
+      const tvKey = this.cache.tmdbKey(
+        "tv",
+        TEST_CONFIG.SAMPLE_TV_ID,
+        "details",
+      );
 
-      if (!movieKey.startsWith('tmdb:movie:550')) {
-        throw new Error('TMDB movie cache key generation failed');
+      if (!movieKey.startsWith("tmdb:movie:550")) {
+        throw new Error("TMDB movie cache key generation failed");
       }
 
-      if (!tvKey.startsWith('tmdb:tv:1399')) {
-        throw new Error('TMDB TV cache key generation failed');
+      if (!tvKey.startsWith("tmdb:tv:1399")) {
+        throw new Error("TMDB TV cache key generation failed");
       }
 
       // Test movie details caching (using mock data to avoid real API calls)
       const mockMovieData = {
         id: TEST_CONFIG.SAMPLE_MOVIE_ID,
-        title: 'Test Movie',
-        overview: 'Test overview',
+        title: "Test Movie",
+        overview: "Test overview",
       };
 
-      const cacheSetResult = await this.cache.set(movieKey, mockMovieData, 'MEDIUM');
+      const cacheSetResult = await this.cache.set(
+        movieKey,
+        mockMovieData,
+        "MEDIUM",
+      );
       if (!cacheSetResult) {
-        throw new Error('TMDB movie cache set failed');
+        throw new Error("TMDB movie cache set failed");
       }
 
-      const cacheGetResult = await this.cache.get(movieKey) as { id: number } | null;
-      if (!cacheGetResult || cacheGetResult.id !== TEST_CONFIG.SAMPLE_MOVIE_ID) {
-        throw new Error('TMDB movie cache get failed');
+      const cacheGetResult = (await this.cache.get(movieKey)) as {
+        id: number;
+      } | null;
+      if (
+        !cacheGetResult ||
+        cacheGetResult.id !== TEST_CONFIG.SAMPLE_MOVIE_ID
+      ) {
+        throw new Error("TMDB movie cache get failed");
       }
 
       // Test cache hit scenario
       const cacheHitResult = await this.cache.get(movieKey);
       if (!cacheHitResult) {
-        throw new Error('TMDB cache hit scenario failed');
+        throw new Error("TMDB cache hit scenario failed");
       }
 
       // Cleanup
@@ -254,7 +278,6 @@ export class RedisIntegrationTestSuite {
         cacheGetResult,
         cacheHitResult,
       });
-
     } catch (error) {
       this.addResult(testName, false, Date.now() - startTime, String(error));
     }
@@ -264,50 +287,66 @@ export class RedisIntegrationTestSuite {
    * Test TVDB API caching functionality
    */
   private async testTvdbCaching(): Promise<void> {
-    const testName = 'tvdb-api-caching';
+    const testName = "tvdb-api-caching";
     const startTime = Date.now();
 
     try {
       console.log(`[REDIS TEST] Testing TVDB API caching...`);
 
       // Test cache key generation
-      const seriesKey = this.cache.tvdbKey('series', TEST_CONFIG.SAMPLE_TVDB_SERIES_ID);
-      const searchKey = this.cache.generateKey('tvdb', 'search', 'test-query');
+      const seriesKey = this.cache.tvdbKey(
+        "series",
+        TEST_CONFIG.SAMPLE_TVDB_SERIES_ID,
+      );
+      const searchKey = this.cache.generateKey("tvdb", "search", "test-query");
 
-      if (!seriesKey.startsWith('tvdb:series:121361')) {
-        throw new Error('TVDB series cache key generation failed');
+      if (!seriesKey.startsWith("tvdb:series:121361")) {
+        throw new Error("TVDB series cache key generation failed");
       }
 
-      if (!searchKey.startsWith('tvdb:search:test-query')) {
-        throw new Error('TVDB search cache key generation failed');
+      if (!searchKey.startsWith("tvdb:search:test-query")) {
+        throw new Error("TVDB search cache key generation failed");
       }
 
       // Test series data caching (using mock data)
       const mockSeriesData = {
         id: TEST_CONFIG.SAMPLE_TVDB_SERIES_ID,
-        name: 'Test Series',
-        overview: 'Test overview',
+        name: "Test Series",
+        overview: "Test overview",
       };
 
-      const cacheSetResult = await this.cache.set(seriesKey, mockSeriesData, 'SHORT');
+      const cacheSetResult = await this.cache.set(
+        seriesKey,
+        mockSeriesData,
+        "SHORT",
+      );
       if (!cacheSetResult) {
-        throw new Error('TVDB series cache set failed');
+        throw new Error("TVDB series cache set failed");
       }
 
-      const cacheGetResult = await this.cache.get(seriesKey) as { id: number } | null;
-      if (!cacheGetResult || cacheGetResult.id !== TEST_CONFIG.SAMPLE_TVDB_SERIES_ID) {
-        throw new Error('TVDB series cache get failed');
+      const cacheGetResult = (await this.cache.get(seriesKey)) as {
+        id: number;
+      } | null;
+      if (
+        !cacheGetResult ||
+        cacheGetResult.id !== TEST_CONFIG.SAMPLE_TVDB_SERIES_ID
+      ) {
+        throw new Error("TVDB series cache get failed");
       }
 
       // Test search caching
       const mockSearchData = {
-        query: 'test-query',
-        results: [{ id: 1, name: 'Test Result' }],
+        query: "test-query",
+        results: [{ id: 1, name: "Test Result" }],
       };
 
-      const searchSetResult = await this.cache.set(searchKey, mockSearchData, 'MEDIUM');
+      const searchSetResult = await this.cache.set(
+        searchKey,
+        mockSearchData,
+        "MEDIUM",
+      );
       if (!searchSetResult) {
-        throw new Error('TVDB search cache set failed');
+        throw new Error("TVDB search cache set failed");
       }
 
       // Cleanup
@@ -321,7 +360,6 @@ export class RedisIntegrationTestSuite {
         cacheGetResult,
         searchSetResult,
       });
-
     } catch (error) {
       this.addResult(testName, false, Date.now() - startTime, String(error));
     }
@@ -331,49 +369,69 @@ export class RedisIntegrationTestSuite {
    * Test Wikipedia API caching functionality
    */
   private async testWikipediaCaching(): Promise<void> {
-    const testName = 'wikipedia-api-caching';
+    const testName = "wikipedia-api-caching";
     const startTime = Date.now();
 
     try {
       console.log(`[REDIS TEST] Testing Wikipedia API caching...`);
 
       // Test cache key generation
-      const entityKey = this.cache.wikipediaKey('entity', TEST_CONFIG.WIKIPEDIA_TEST_ENTITY);
-      const searchKey = this.cache.generateKey('wikipedia', 'search', 'test-search');
+      const entityKey = this.cache.wikipediaKey(
+        "entity",
+        TEST_CONFIG.WIKIPEDIA_TEST_ENTITY,
+      );
+      const searchKey = this.cache.generateKey(
+        "wikipedia",
+        "search",
+        "test-search",
+      );
 
-      if (!entityKey.startsWith('wikipedia:entity:Q7747')) {
-        throw new Error('Wikipedia entity cache key generation failed');
+      if (!entityKey.startsWith("wikipedia:entity:Q7747")) {
+        throw new Error("Wikipedia entity cache key generation failed");
       }
 
-      if (!searchKey.startsWith('wikipedia:search:test-search')) {
-        throw new Error('Wikipedia search cache key generation failed');
+      if (!searchKey.startsWith("wikipedia:search:test-search")) {
+        throw new Error("Wikipedia search cache key generation failed");
       }
 
       // Test entity data caching (using mock data)
       const mockEntityData = {
         id: TEST_CONFIG.WIKIPEDIA_TEST_ENTITY,
-        labels: { en: { value: 'Test Entity' } },
+        labels: { en: { value: "Test Entity" } },
       };
 
-      const cacheSetResult = await this.cache.set(entityKey, mockEntityData, 'EXTENDED');
+      const cacheSetResult = await this.cache.set(
+        entityKey,
+        mockEntityData,
+        "EXTENDED",
+      );
       if (!cacheSetResult) {
-        throw new Error('Wikipedia entity cache set failed');
+        throw new Error("Wikipedia entity cache set failed");
       }
 
-      const cacheGetResult = await this.cache.get(entityKey) as { id: string } | null;
-      if (!cacheGetResult || cacheGetResult.id !== TEST_CONFIG.WIKIPEDIA_TEST_ENTITY) {
-        throw new Error('Wikipedia entity cache get failed');
+      const cacheGetResult = (await this.cache.get(entityKey)) as {
+        id: string;
+      } | null;
+      if (
+        !cacheGetResult ||
+        cacheGetResult.id !== TEST_CONFIG.WIKIPEDIA_TEST_ENTITY
+      ) {
+        throw new Error("Wikipedia entity cache get failed");
       }
 
       // Test search caching
       const mockSearchData = {
-        query: 'test-search',
-        results: [{ id: 'Q1', label: 'Test Result' }],
+        query: "test-search",
+        results: [{ id: "Q1", label: "Test Result" }],
       };
 
-      const searchSetResult = await this.cache.set(searchKey, mockSearchData, 'MEDIUM');
+      const searchSetResult = await this.cache.set(
+        searchKey,
+        mockSearchData,
+        "MEDIUM",
+      );
       if (!searchSetResult) {
-        throw new Error('Wikipedia search cache set failed');
+        throw new Error("Wikipedia search cache set failed");
       }
 
       // Cleanup
@@ -387,7 +445,6 @@ export class RedisIntegrationTestSuite {
         cacheGetResult,
         searchSetResult,
       });
-
     } catch (error) {
       this.addResult(testName, false, Date.now() - startTime, String(error));
     }
@@ -397,30 +454,30 @@ export class RedisIntegrationTestSuite {
    * Test error handling scenarios
    */
   private async testErrorHandling(): Promise<void> {
-    const testName = 'error-handling';
+    const testName = "error-handling";
     const startTime = Date.now();
 
     try {
       console.log(`[REDIS TEST] Testing error handling scenarios...`);
 
       // Test cache operations with invalid keys
-      const invalidKey = 'test:invalid:key:with:special:chars:🚫';
+      const invalidKey = "test:invalid:key:with:special:chars:🚫";
 
       // These should not throw errors but handle gracefully
       const getResult = await this.cache.get(invalidKey);
-      const setResult = await this.cache.set(invalidKey, { test: 'data' });
+      const setResult = await this.cache.set(invalidKey, { test: "data" });
       const existsResult = await this.cache.exists(invalidKey);
       const delResult = await this.cache.del(invalidKey);
 
       // Test Redis operations with malformed data
-      const malformedData = { test: 'data', invalid: undefined };
+      const malformedData = { test: "data", invalid: undefined };
 
       try {
-        await this.cache.set('test:malformed', malformedData);
+        await this.cache.set("test:malformed", malformedData);
         // Test passed - cache handled the data
       } catch (error) {
         // Expected for some malformed data
-        console.log('[REDIS TEST] Malformed data handled as expected');
+        console.log("[REDIS TEST] Malformed data handled as expected");
       }
 
       // Test cache health check
@@ -434,7 +491,6 @@ export class RedisIntegrationTestSuite {
         delResult,
         healthResult,
       });
-
     } catch (error) {
       this.addResult(testName, false, Date.now() - startTime, String(error));
     }
@@ -444,17 +500,17 @@ export class RedisIntegrationTestSuite {
    * Test cache performance vs direct operations
    */
   private async testPerformance(): Promise<void> {
-    const testName = 'performance';
+    const testName = "performance";
     const startTime = Date.now();
 
     try {
       console.log(`[REDIS TEST] Testing cache performance...`);
 
-      const testKey = 'test:performance';
+      const testKey = "test:performance";
       const testData = {
-        large: 'x'.repeat(1000), // 1KB of data
-        nested: { data: 'x'.repeat(500) },
-        array: new Array(100).fill('test-data'),
+        large: "x".repeat(1000), // 1KB of data
+        nested: { data: "x".repeat(500) },
+        array: new Array(100).fill("test-data"),
       };
 
       // Test cache write performance
@@ -505,7 +561,6 @@ export class RedisIntegrationTestSuite {
         performanceRatio,
         dataSize: JSON.stringify(testData).length,
       });
-
     } catch (error) {
       this.addResult(testName, false, Date.now() - startTime, String(error));
     }
@@ -519,7 +574,7 @@ export class RedisIntegrationTestSuite {
     passed: boolean,
     duration: number,
     error?: string,
-    details?: any
+    details?: any,
   ): void {
     this.results.push({
       testName,
@@ -529,7 +584,7 @@ export class RedisIntegrationTestSuite {
       details,
     });
 
-    const status = passed ? 'PASSED' : 'FAILED';
+    const status = passed ? "PASSED" : "FAILED";
     console.log(`[REDIS TEST] ${testName}: ${status} (${duration}ms)`);
 
     if (error) {

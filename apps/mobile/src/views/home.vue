@@ -149,9 +149,9 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import type { TrendingResponse } from "../../supabase/functions/_shared/movie";
-import type { TrendingResponse as SerieTrendingResponse } from "../../supabase/functions/_shared/serie";
-import type { Tables } from "../../supabase/functions/_shared/database.types";
+import type { TrendingResponse } from "@supabase/functions/_shared/movie";
+import type { TrendingResponse as SerieTrendingResponse } from "@supabase/functions/_shared/serie";
+import type { Tables } from "@/utils/database";
 import MediaItem from "../components/MediaItem.vue";
 import { supabase } from "../api/supabase";
 import { IonPage, IonContent, IonHeader, IonTitle, IonToolbar } from "@ionic/vue";

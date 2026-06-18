@@ -9,7 +9,15 @@
       </ion-toolbar>
     </ion-header>
     <ion-content>
-      <ActionButtons :hasWikidataId="hasWikidataId" :hasData="hasData" :isFetching="isFetching" :isScanning="false" @fetch-infos="fetchEpisodeInfos" />
+      <ActionButtons
+        :hasWikidataId="hasWikidataId"
+        :hasData="hasData"
+        :isFetching="isFetching"
+        :isScanning="false"
+        :queue-status="queueStatus"
+        :queue-error-message="queueErrorMessage"
+        @fetch-infos="fetchEpisodeInfos"
+      />
       <LoadingSpinner v-if="isLoading" name="crescent" />
       <div v-if="error" class="error">{{ error }}</div>
       <div v-if="episode && !isLoading" class="episode-detail">
@@ -24,7 +32,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, onUnmounted, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { IonPage, IonHeader, IonToolbar, IonButtons, IonBackButton, IonTitle, IonContent, toastController } from "@ionic/vue";
 import LoadingSpinner from "../components/common/LoadingSpinner.vue";
@@ -44,10 +52,83 @@ const wikiDataId = computed(() => episode.value?.external_ids?.wikidata_id);
 const hasWikidataId = computed(() => !!wikiDataId.value);
 const hasData = computed(() => dbVoiceActors.value.length > 0);
 const isFetching = ref(false);
+const queueStatus = ref<string | null>(null);
+const queueErrorMessage = ref<string | null>(null);
 
 const backHref = computed(() => {
   return router.resolve({ name: 'SeasonDetails', params: { id: route.params.id, season: route.params.season } }).href;
 });
+
+const fetchQueueStatus = async () => {
+  try {
+    const { data, error: queueErr } = await supabase
+      .rpc("get_media_queue_status", {
+        p_tmdb_id: Number(route.params.id),
+        p_media_type: "episode",
+        p_season_number: Number(route.params.season),
+        p_episode_number: Number(route.params.episode),
+      });
+    if (queueErr) throw queueErr;
+    const statusData = data as { status: string | null; error_message: string | null } | null;
+    if (statusData) {
+      queueStatus.value = statusData.status;
+      queueErrorMessage.value = statusData.error_message;
+    } else {
+      queueStatus.value = null;
+      queueErrorMessage.value = null;
+    }
+  } catch (err) {
+    console.error("Error fetching queue status:", err);
+  }
+};
+
+let pollingInterval: any = null;
+
+function stopQueuePolling() {
+  if (pollingInterval) {
+    clearInterval(pollingInterval);
+    pollingInterval = null;
+  }
+}
+
+function startQueuePolling() {
+  if (pollingInterval) return;
+
+  isFetching.value = true;
+  pollingInterval = setInterval(async () => {
+    await fetchQueueStatus();
+
+    if (queueStatus.value === "completed") {
+      stopQueuePolling();
+      const toast = await toastController.create({
+        message: "Voice cast updated successfully!",
+        duration: 2000,
+        position: "top",
+        color: "success",
+      });
+      await toast.present();
+
+      try {
+        await fetchEpisodeData();
+      } catch (error) {
+        console.error("Error fetching episode data:", error);
+      } finally {
+        isFetching.value = false;
+      }
+    } else if (queueStatus.value === "failed") {
+      stopQueuePolling();
+      const errorMsg = queueErrorMessage.value || "Fetch failed.";
+      const toast = await toastController.create({
+        message: errorMsg,
+        duration: 2000,
+        position: "top",
+        color: "danger",
+      });
+      await toast.present();
+      isFetching.value = false;
+    }
+  }, 5000);
+}
 
 async function fetchEpisodeInfos() {
   const id = wikiDataId.value;
@@ -56,33 +137,21 @@ async function fetchEpisodeInfos() {
     return;
   }
   isFetching.value = true;
+  
+  // Insert request into queue
   try {
-    const data = await supabase.functions.invoke("prepare_movie", {
-      body: {
-        tmdbId: route.params.id,
-        type: "episode",
-        seasonNumber: route.params.season,
-        episodeNumber: episode.value.episode_number,
-      },
-    });
-    if (data.ok) {
-    location.reload();
-  } else {
-    toastController.create({
-      message: data.error,
-      duration: 2000,
-      position: 'top',
-      color: 'danger',
-    }).then((toast) => {
-      toast.present();
-    });
-    isFetching.value = false;
-    isLoading.value = false;
-
-  }
-  } catch (e) {
-    console.error(e);
-  } finally {
+    const { error: insertError } = await supabase
+      .rpc("enqueue_media_fetch", {
+        p_tmdb_id: Number(route.params.id),
+        p_media_type: "episode",
+        p_season_number: Number(route.params.season),
+        p_episode_number: Number(episode.value.episode_number),
+      });
+    if (insertError) throw insertError;
+    queueStatus.value = "pending";
+    startQueuePolling();
+  } catch (err) {
+    console.error("Error adding request to queue:", err);
     isFetching.value = false;
   }
 }
@@ -107,22 +176,40 @@ function confirmDeleteVoiceActorLink(item: any) {}
 
 function openVoiceActorSearch(actor: any) {}
 
+async function fetchEpisodeData() {
+  const serieId = route.params.id;
+  const seasonNumber = route.params.season;
+  const episodeNumber = route.params.episode;
+  
+  const [episodeResponse] = await Promise.all([
+    supabase.functions.invoke("episode", { body: { id: serieId, season_number: seasonNumber, episode_number: episodeNumber } }),
+    fetchQueueStatus(),
+  ]);
+
+  const data = episodeResponse.data;
+  episode.value = data.episode;
+  dbVoiceActors.value = data.db_voice_actors || [];
+  if (!episode.value) error.value = "Épisode introuvable.";
+
+  if (queueStatus.value === "pending" || queueStatus.value === "processing") {
+    startQueuePolling();
+  }
+}
+
 onMounted(async () => {
   isLoading.value = true;
   error.value = "";
   try {
-    const serieId = route.params.id;
-    const seasonNumber = route.params.season;
-    const episodeNumber = route.params.episode;
-    const { data } = await supabase.functions.invoke("episode", { body: { id: serieId, season_number: seasonNumber, episode_number: episodeNumber } });
-    episode.value = data.episode;
-    dbVoiceActors.value = data.db_voice_actors || [];
-    if (!episode.value) error.value = "Épisode introuvable.";
+    await fetchEpisodeData();
   } catch (e: any) {
     error.value = e.message || "Erreur lors du chargement.";
   } finally {
     isLoading.value = false;
   }
+});
+
+onUnmounted(() => {
+  stopQueuePolling();
 });
 </script>
 

@@ -1,4 +1,4 @@
-import { createPinia } from 'pinia';
+import { createPinia } from "pinia";
 
 export const pinia = createPinia();
 
@@ -7,4 +7,4 @@ export const setupStores = () => {
   // Any store initialization logic can go here
 };
 
-export * from './auth';
+export * from "./auth";

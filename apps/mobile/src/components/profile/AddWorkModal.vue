@@ -93,8 +93,8 @@ import { modalController, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { useProfileStore } from '@/stores/profile'
 import { supabase } from '@/api/supabase'
-import type { Movie, CastMember as MovieCastMember } from '../../../supabase/functions/_shared/movie'
-import type { Serie, CastMember as SerieCastMember } from '../../../supabase/functions/_shared/serie'
+import type { Movie, CastMember as MovieCastMember } from '@supabase/functions/_shared/movie'
+import type { Serie, CastMember as SerieCastMember } from '@supabase/functions/_shared/serie'
 
 const profileStore = useProfileStore()
 const emit = defineEmits<{ (e: 'close'): void }>()

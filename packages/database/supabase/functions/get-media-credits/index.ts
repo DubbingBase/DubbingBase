@@ -1,47 +1,45 @@
-import "jsr:@supabase/functions-js/edge-runtime.d.ts"
-import { corsHeaders } from "../_shared/http-utils.ts"
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { withSupabase } from "npm:@supabase/server@^1";
+import { Database } from "../_shared/database.types.ts";
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
+export default {
+  fetch: withSupabase<Database>(
+    { auth: "publishable:*" },
+    async (req, _ctx) => {
+      try {
+        const { media_type, media_id } = await req.json();
 
-  const { media_type, media_id } = await req.json()
+        if (!media_type || !media_id) {
+          return Response.json(
+            { error: "media_type and media_id are required" },
+            { status: 400 },
+          );
+        }
 
-  if (!media_type || !media_id) {
-    return new Response(
-      JSON.stringify({ error: 'media_type and media_id are required' }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400
+        const response = await fetch(
+          `https://api.themoviedb.org/3/${media_type}/${media_id}/credits?language=fr-FR`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${Deno.env.get("TMDB_API_KEY")}`,
+              Accept: "application/json",
+            },
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch from TMDB: status ${response.status}`,
+          );
+        }
+
+        const data = await response.json();
+
+        return Response.json(data);
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        return Response.json({ error: errorMsg }, { status: 500 });
       }
-    )
-  }
-
-  try {
-    const response = await fetch(`https://api.themoviedb.org/3/${media_type}/${media_id}/credits?language=fr-FR`, {
-      headers: {
-        "Content-Type": "application/json",
-        'Authorization': `Bearer ${Deno.env.get('TMDB_API_KEY')}`,
-        'Accept': 'application/json',
-      },
-    })
-
-    const data = await response.json()
-
-    return new Response(
-      JSON.stringify(data),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      }
-    )
-  } catch (error) {
-    return new Response(
-      JSON.stringify({ error: 'Failed to fetch credits' }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500
-      }
-    )
-  }
-})
+    },
+  ),
+};

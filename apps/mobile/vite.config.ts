@@ -20,10 +20,10 @@ export default ({ mode }) => {
       strictPort: true,
       hmr: host
         ? {
-          protocol: "ws",
-          host,
-          port: 1421,
-        }
+            protocol: "ws",
+            host,
+            port: 1421,
+          }
         : undefined,
     },
     plugins: [
@@ -36,6 +36,10 @@ export default ({ mode }) => {
       alias: {
         "@": path.resolve(__dirname, "./src"),
         "@app/supabase": path.resolve(__dirname, "../../packages/database"),
+        "@supabase/functions": path.resolve(
+          __dirname,
+          "../../packages/database/supabase/functions",
+        ),
       },
     },
     test: {

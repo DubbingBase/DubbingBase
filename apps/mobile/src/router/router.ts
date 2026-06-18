@@ -5,8 +5,7 @@ import type {
   RouteRecordRaw,
 } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
-import { usePostHog } from '@/composables/usePostHog'
-
+import { usePostHog } from "@/composables/usePostHog";
 
 // Import your custom route meta types
 import Home from "../views/home.vue";
@@ -145,4 +144,4 @@ router.afterEach((to) => {
   console.log("Navigated to:", to.path);
 });
 
-const { posthog } = usePostHog()
+const { posthog } = usePostHog();

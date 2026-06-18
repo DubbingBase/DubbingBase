@@ -107,7 +107,7 @@ import WorkList from '@/components/profile/WorkList.vue';
 import AddWorkModal from '@/components/profile/AddWorkModal.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import { alertCircle, personCircle, refresh, add, eye } from 'ionicons/icons';
-import type { Tables } from '../../supabase/functions/_shared/database.types';
+import type { Tables } from '@/utils/database';
 
 type VoiceActor = Tables<'voice_actors'>;
 

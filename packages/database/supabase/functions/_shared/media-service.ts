@@ -1,29 +1,37 @@
-import { IDatabaseClient } from './interfaces.ts';
-import { ITMDBClient } from './interfaces.ts';
-import { buildSupabaseImageUrl, processVoiceActor, STORAGE_BUCKETS } from './supabase-urls.ts';
-import { processMedia } from './tmdb-urls.ts';
+import { IDatabaseClient } from "./interfaces.ts";
+import { ITMDBClient } from "./interfaces.ts";
+import { processVoiceActor } from "./supabase-urls.ts";
+import { processMedia } from "./tmdb-urls.ts";
+
+import { SupabaseContext } from "npm:@supabase/server@^1";
+import { Database } from "./database.types.ts";
 
 export class MediaService {
   constructor(
     private databaseClient: IDatabaseClient,
-    private tmdbClient: ITMDBClient
+    private tmdbClient: ITMDBClient,
+    private ctx: SupabaseContext<Database>,
   ) {}
 
   async getVoiceActorWithWorkAndMedia(voiceActorId: number) {
-    const voiceActor = await this.databaseClient.getVoiceActorWithWork(voiceActorId);
+    const voiceActor =
+      await this.databaseClient.getVoiceActorWithWork(voiceActorId);
 
-    console.log('voiceActor', voiceActor)
+    console.log("voiceActor", voiceActor);
 
-    const voiceActorWithImages = processVoiceActor(voiceActor);
+    const voiceActorWithImages = processVoiceActor(this.ctx, voiceActor);
 
-    console.log('voiceActorWithImages', voiceActorWithImages)
+    console.log("voiceActorWithImages", voiceActorWithImages);
 
     // Fetch TMDB details for each work item
     const medias = [];
     for (const work of voiceActor.work) {
-      const tmdbMedia = await this.tmdbClient.get(`${work.content_type}/${work.content_id}`, {
-        append_to_response: 'credits,external_ids'
-      });
+      const tmdbMedia = await this.tmdbClient.get(
+        `${work.content_type}/${work.content_id}`,
+        {
+          append_to_response: "credits,external_ids",
+        },
+      );
 
       const processedMedia = processMedia(tmdbMedia);
 
@@ -33,9 +41,16 @@ export class MediaService {
     return { voiceActor: voiceActorWithImages, medias };
   }
 
-  async getMediaWithVoiceActors(contentType: 'movie' | 'tv', contentId: number) {
-    const media = await this.tmdbClient.getMediaWithCredits(contentType, contentId);
-    const voiceActors = await this.databaseClient.getWorkWithVoiceActors(contentId);
+  async getMediaWithVoiceActors(
+    contentType: "movie" | "tv",
+    contentId: number,
+  ) {
+    const media = await this.tmdbClient.getMediaWithCredits(
+      contentType,
+      contentId,
+    );
+    const voiceActors =
+      await this.databaseClient.getWorkWithVoiceActors(contentId);
 
     // Process image URLs in the media data
     const processedMedia = processMedia(media);
@@ -44,29 +59,37 @@ export class MediaService {
   }
 
   async getMediaWithVoiceActorsExtended(
-    contentType: 'movie' | 'tv' | 'season' | 'episode',
+    contentType: "movie" | "tv" | "season" | "episode",
     id: number,
     seasonNumber?: number,
-    episodeNumber?: number
+    episodeNumber?: number,
   ) {
     let media;
 
     switch (contentType) {
-      case 'movie':
-        media = await this.tmdbClient.getMediaWithCredits('movie', id);
+      case "movie":
+        media = await this.tmdbClient.getMediaWithCredits("movie", id);
         break;
-      case 'tv':
-        media = await this.tmdbClient.getMediaWithCredits('tv', id);
+      case "tv":
+        media = await this.tmdbClient.getMediaWithCredits("tv", id);
         break;
-      case 'season':
-        if (!seasonNumber) throw new Error('seasonNumber required for season contentType');
+      case "season":
+        if (!seasonNumber) {
+          throw new Error("seasonNumber required for season contentType");
+        }
         media = await this.tmdbClient.getSeasonWithCredits(id, seasonNumber);
         break;
-      case 'episode':
+      case "episode":
         if (!seasonNumber || !episodeNumber) {
-          throw new Error('seasonNumber and episodeNumber required for episode contentType');
+          throw new Error(
+            "seasonNumber and episodeNumber required for episode contentType",
+          );
         }
-        media = await this.tmdbClient.getEpisodeWithCredits(id, seasonNumber, episodeNumber);
+        media = await this.tmdbClient.getEpisodeWithCredits(
+          id,
+          seasonNumber,
+          episodeNumber,
+        );
         break;
     }
 

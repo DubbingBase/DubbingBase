@@ -6,10 +6,10 @@ export interface ResponseParseWikiText {
 
 export interface ResponseSearchEntities {
   search: Array<{
-    id: string
-    title: string
-    concepturi: string
-  }>
+    id: string;
+    title: string;
+    concepturi: string;
+  }>;
 }
 
 export interface ResponseFetchFile {
@@ -18,12 +18,12 @@ export interface ResponseFetchFile {
       [index: number]: {
         imageinfo: {
           [index: number]: {
-            url: string
-          }
-        }
-      }
-    }
-  }
+            url: string;
+          };
+        };
+      };
+    };
+  };
 }
 
 export interface ResponseGetEntity {
@@ -34,23 +34,23 @@ export interface ResponseGetEntity {
         P18: Array<{
           mainsnak: {
             datavalue: {
-              value: string
-            }
-          }
-        }>
+              value: string;
+            };
+          };
+        }>;
         /** Birth date */
         P569: Array<{
           mainsnak: {
             datavalue: {
               value: {
-                time: string
-              }
-            }
-          }
-        }>
-      }
-    }
-  }
+                time: string;
+              };
+            };
+          };
+        }>;
+      };
+    };
+  };
 }
 
 export interface ParseWikiText {
@@ -114,16 +114,16 @@ export interface Categorymember {
   title: string;
 }
 
-export type ElementType = 'movie' | 'show' | 'videogame' | 'generic'
+export type ElementType = "movie" | "show" | "videogame" | "generic";
 
-export type LineType = 'multiline' | 'single'
+export type LineType = "multiline" | "single";
 
 export interface FakeMatchedGroups {
   groups: {
     actor_link: string | undefined;
     actor_name: string | undefined;
     year: string | undefined;
-    apparitions: string | undefined
+    apparitions: string | undefined;
     media_title: string | undefined;
   };
 }
@@ -131,57 +131,57 @@ export interface FakeMatchedGroups {
 export interface FullElement {
   pageId: number;
   title: string;
-  profilePictureFileId: string | undefined
-  birthDate: string
+  profilePictureFileId: string | undefined;
+  birthDate: string;
   html: string;
   wiki: string;
-  type: ElementType
+  type: ElementType;
 }
 
 export type QueueElement = string;
 
 export interface MovieElement {
-  voiceActorName: string
+  voiceActorName: string;
 
-  actorName?: string
-  movieName: string
+  actorName?: string;
+  movieName: string;
 
-  movieId?: string
-  actorId?: string
+  movieId?: string;
+  actorId?: string;
 
-  year?: string
-  type: 'movie'
-  origin?: Origin
+  year?: string;
+  type: "movie";
+  origin?: Origin;
 }
 
 export interface ApparitionEpisode {
-  type: 'episode'
-  season: number
-  episode: number
+  type: "episode";
+  season: number;
+  episode: number;
 }
 
 export interface ApparitionSeason {
-  type: 'season'
-  season: number
+  type: "season";
+  season: number;
 }
 
 export interface ApparitionSeasonRange {
-  type: 'season-range'
-  fromSeason: number
-  toSeason: number
+  type: "season-range";
+  fromSeason: number;
+  toSeason: number;
 }
 
 export interface ApparitionEpisodeRange {
-  type: 'episode-range'
-  season: number
-  fromEpisode: number
-  toEpisode: number
+  type: "episode-range";
+  season: number;
+  fromEpisode: number;
+  toEpisode: number;
 }
 
 export interface ApparitionYearRange {
-  type: 'year-range'
-  fromYear: number
-  toYear: number
+  type: "year-range";
+  fromYear: number;
+  toYear: number;
 }
 
 export type Apparition =
@@ -189,68 +189,66 @@ export type Apparition =
   | ApparitionSeason
   | ApparitionSeasonRange
   | ApparitionEpisodeRange
-  | ApparitionYearRange
+  | ApparitionYearRange;
 
 export interface Origin {
-  source: string
-  acceptedRegex: string
-  regexList: any
-  lineType: string
-  parent?: string
+  source: string;
+  acceptedRegex: string;
+  regexList: any;
+  lineType: string;
+  parent?: string;
 }
 
 export type ElementMatches = { [key in RegexGroupKeys]: string };
 
 export interface ShowElement {
-  voiceActorName: string
+  voiceActorName: string;
 
-  actorName?: string
-  actorId?: string
+  actorName?: string;
+  actorId?: string;
 
-  showName: string
-  showId?: string
+  showName: string;
+  showId?: string;
 
-  apparitions: Array<Apparition>
-  year?: string
-  type: 'show'
-  origin?: Origin
+  apparitions: Array<Apparition>;
+  year?: string;
+  type: "show";
+  origin?: Origin;
 }
 
 export interface VideoGameElement {
-  voiceActorName: string
+  voiceActorName: string;
 
-  actorName: string
-  actorId?: string
+  actorName: string;
+  actorId?: string;
 
-  videoGameName: string
-  videoGameId?: string
+  videoGameName: string;
+  videoGameId?: string;
 
-  year: string
-  type: 'videogame'
-  origin?: Origin
+  year: string;
+  type: "videogame";
+  origin?: Origin;
 }
 
 export interface GenericElement {
-  voiceActorName: string
+  voiceActorName: string;
 
-  actorName: string
-  actorId? :string
+  actorName: string;
+  actorId?: string;
 
-  mediaName: string
-  mediaId?: string
+  mediaName: string;
+  mediaId?: string;
 
-  year: string
-  type: 'generic'
-  origin?: Origin
+  year: string;
+  type: "generic";
+  origin?: Origin;
 }
 
-export type JSONElement =
-  | MovieElement
-  | ShowElement
-  // | VideoGameElement
-  // | GenericElement
+export type JSONElement = MovieElement | ShowElement;
+// | VideoGameElement
+// | GenericElement
 
-export type JSONElementBase = Omit<JSONElement, 'origin'>
+export type JSONElementBase = Omit<JSONElement, "origin">;
 
 export type Match = {
   keysMatched: number;

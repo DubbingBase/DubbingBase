@@ -1,23 +1,25 @@
-// supabase/functions/delete_user/index.ts
-import { corsHeaders } from "../_shared/http-utils.ts"
-import { supabase, supabaseAdmin } from "../_shared/database.ts"
+import { withSupabase } from "npm:@supabase/server@^1";
+import { Database } from "../_shared/database.types.ts";
 
-Deno.serve(async (req) => {
-    if (req.method === 'OPTIONS') {
-        return new Response('ok', { headers: corsHeaders })
+export default {
+  fetch: withSupabase<Database>({ auth: "secret:*" }, async (req, ctx) => {
+    try {
+      const body = await req.json();
+      const { userId } = body;
+      if (!userId) {
+        return Response.json({ error: "Missing userId" }, { status: 400 });
       }
 
-  const body = await req.json()
-  const { userId } = body
-  if (!userId) {
-    return new Response('Missing userId', { status: 400, headers: corsHeaders })
-  }
-
-  const { error } = await supabaseAdmin.auth.admin.deleteUser(userId)
-  if (error) {
-    return new Response(JSON.stringify({ error }), { status: 500, headers: corsHeaders })
-  }
-  return new Response(JSON.stringify({ success: true }), {
-    headers: { 'Content-Type': 'application/json', ...corsHeaders },
-  })
-})
+      const { error } = await ctx.supabaseAdmin.auth.admin.deleteUser(userId);
+      if (error) {
+        return Response.json({ error }, { status: 500 });
+      }
+      return Response.json({ success: true });
+    } catch (err) {
+      return Response.json(
+        { error: err instanceof Error ? err.message : String(err) },
+        { status: 500 },
+      );
+    }
+  }),
+};

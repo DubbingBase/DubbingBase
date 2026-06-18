@@ -11,17 +11,19 @@
   </ion-button>
 
   <ion-button
-    :disabled="isFetching"
-    v-if="hasWikidataId && !hasData && hasPermission('admin_fetch')"
+    :disabled="isFetching || queueStatus === 'pending' || queueStatus === 'processing'"
+    v-if="hasWikidataId && !hasData"
     class="fab-btn"
     @click="handleFetchInfos"
     :aria-label="t('common.fetchInfos')"
   >
-    <LoadingSpinner v-if="isFetching" :inline="true"></LoadingSpinner>
+    <LoadingSpinner v-if="isFetching || queueStatus === 'pending' || queueStatus === 'processing'" :inline="true"></LoadingSpinner>
     <ion-icon v-else :icon="informationCircleOutline"></ion-icon>
   </ion-button>
 
-  <div v-if="fetchError" class="fetch-error">{{ fetchError }}</div>
+  <div v-if="fetchError || (queueStatus === 'failed' && queueErrorMessage)" class="fetch-error">
+    {{ fetchError || queueErrorMessage }}
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -43,6 +45,8 @@ const props = defineProps<{
   isFetching: boolean;
   isScanning: boolean;
   fetchError?: string;
+  queueStatus?: string | null;
+  queueErrorMessage?: string | null;
 }>();
 
 const emit = defineEmits<{
@@ -62,8 +66,9 @@ console.log("ActionButtons props:", {
   isFetching: props.isFetching,
   isScanning: props.isScanning,
   fetchError: props.fetchError,
+  queueStatus: props.queueStatus,
+  queueErrorMessage: props.queueErrorMessage,
 });
-console.log("FAB button should render:", props.hasWikidataId && !props.hasData);
 </script>
 
 <style scoped lang="scss">

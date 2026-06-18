@@ -45,9 +45,9 @@ import { computed } from "vue";
 import { RouterLink } from "vue-router";
 import MovieCard from "@/components/MovieCard.vue";
 import PersonItem, { PersonData } from "@/components/PersonItem.vue";
-import type { Movie as MovieModel } from "../../supabase/functions/_shared/movie";
-import type { Serie as SerieModel } from "../../supabase/functions/_shared/serie";
-import { Actor } from "../../supabase/functions/_shared/types";
+import type { Movie as MovieModel } from "@supabase/functions/_shared/movie";
+import type { Serie as SerieModel } from "@supabase/functions/_shared/serie";
+import { Actor } from "@supabase/functions/_shared/types";
 
 type EnhancedWorkItem = {
   media: MovieModel | SerieModel;

@@ -13,7 +13,8 @@
     "skipLibCheck": true,
     "noEmit": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@supabase/functions/*": ["../../packages/database/supabase/functions/*"]
     },
     "types": [
       "unplugin-icons/types/vue",

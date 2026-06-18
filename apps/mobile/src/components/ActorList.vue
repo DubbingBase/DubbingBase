@@ -31,7 +31,7 @@
 import ActorWithVoiceActors from "./ActorWithVoiceActors.vue";
 import NoActors from "./NoActors.vue";
 import { PersonData } from "./PersonItem.vue";
-import { VoiceActorDetails } from "../../supabase/functions/_shared/types";
+import { VoiceActorDetails } from "@supabase/functions/_shared/types";
 
 // Props
 const props = defineProps<{

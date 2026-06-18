@@ -2,14 +2,26 @@ export interface IDatabaseClient {
   getWorkWithVoiceActors(contentId: number): Promise<any>;
   getVoiceActorWithWork(voiceActorId: number): Promise<any>;
   getWorkByActor(actorId: number): Promise<any>;
-  getWorkVotes(workIds: number[], userId?: string): Promise<Record<number, { up_count: number; down_count: number; user_vote: string | null }>>;
+  getWorkVotes(
+    workIds: number[],
+    userId?: string,
+  ): Promise<
+    Record<
+      number,
+      { up_count: number; down_count: number; user_vote: string | null }
+    >
+  >;
 }
 
 export interface ITMDBClient {
   get(endpoint: string, params?: Record<string, string>): Promise<any>;
-  getMediaWithCredits(contentType: 'movie' | 'tv', id: number): Promise<any>;
+  getMediaWithCredits(contentType: "movie" | "tv", id: number): Promise<any>;
   getSeasonWithCredits(seriesId: number, seasonNumber: number): Promise<any>;
-  getEpisodeWithCredits(seriesId: number, seasonNumber: number, episodeNumber: number): Promise<any>;
+  getEpisodeWithCredits(
+    seriesId: number,
+    seasonNumber: number,
+    episodeNumber: number,
+  ): Promise<any>;
   fetchMediaDetails(contentId: number, contentType: string): Promise<any>;
   fetchMediaCredits(mediaType: string, mediaId: number): Promise<any>;
   getCached?(endpoint: string, params?: Record<string, string>): Promise<any>;

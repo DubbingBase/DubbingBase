@@ -100,7 +100,7 @@ import { useI18n } from "vue-i18n";
 import {
   Actor,
   VoiceActorDetails,
-} from "../../supabase/functions/_shared/types";
+} from "@supabase/functions/_shared/types";
 
 export interface ActorWithVoiceActorsProps {
   actor: PersonData<Actor>;
@@ -144,17 +144,25 @@ const { t } = useI18n();
 const { castVote, votes, refreshVotes, updateReviewStatus } =
   useVoiceActorManagement(props.workType);
 
-// Watch for voice actors changes to refresh votes
+// Watch for voice actors changes by watching a serialized string of their IDs.
+// This prevents redundant/infinite API calls when the parent passes a new array reference on render.
 watch(
-  () => props.voiceActors,
-  (newVoiceActors) => {
+  () => props.voiceActors?.map((va) => va.id).join(","),
+  (newVal, oldVal) => {
     if (
-      newVoiceActors &&
-      newVoiceActors.length > 0 &&
+      props.voiceActors &&
+      props.voiceActors.length > 0 &&
+      newVal !== oldVal &&
       authStore.isAuthenticated
     ) {
-      const workIds = newVoiceActors.map((va) => va.id);
-      refreshVotes(workIds);
+      // Only request votes for work entries that are not already loaded in the shared votes state
+      const missingWorkIds = props.voiceActors
+        .map((va) => va.id)
+        .filter((id) => !votes.value[id]);
+
+      if (missingWorkIds.length > 0) {
+        refreshVotes(missingWorkIds);
+      }
     }
   },
   { immediate: true },
@@ -240,10 +248,7 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
       icon: createOutline,
       handler: () => {
         props.editVoiceActorLink &&
-          props.editVoiceActorLink({
-            id: props.actor.id,
-            voiceActorDetails: voiceActor,
-          });
+          props.editVoiceActorLink(voiceActor);
       },
     });
   }
@@ -255,10 +260,7 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
       role: "destructive",
       handler: () => {
         props.confirmDeleteVoiceActorLink &&
-          props.confirmDeleteVoiceActorLink({
-            id: props.actor.id,
-            voiceActorDetails: voiceActor,
-          });
+          props.confirmDeleteVoiceActorLink(voiceActor);
       },
     });
   }

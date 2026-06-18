@@ -14,6 +14,8 @@ import {
 import { buildSupabaseImageUrl } from "../_shared/supabase-urls.ts";
 import { buildTmdbImageUrl } from "../_shared/tmdb-urls.ts";
 import { cacheUtils } from "../_shared/index.ts";
+import { SupabaseContext } from "npm:@supabase/server@^1";
+import { Database } from "../_shared/database.types.ts";
 
 async function getActor(actorId: number, tmdbClient: TMDBClient) {
   try {
@@ -43,10 +45,11 @@ async function fetchMediaDetails(
 
 // Get voice roles for an actor
 async function getVoiceRoles(
+  ctx: SupabaseContext<Database>,
   actorId: number,
   tmdbClient: TMDBClient,
   dbClient: DatabaseClient,
-): Promise<VoiceRole[]> {
+): Promise<any[]> {
   try {
     // TODO: rework
 
@@ -69,7 +72,7 @@ async function getVoiceRoles(
       .map(([id]) => parseInt(id, 10));
 
     // Map data to output format, add highlight if in top3
-    const voiceRoles = await Promise.all(
+    const voiceRoles = (await Promise.all(
       workData.map(async (row) => {
         const { voice_actors, ...work } = row;
         let mediaDetails = null;
@@ -84,33 +87,38 @@ async function getVoiceRoles(
 
         return {
           ...work,
-          highlight: top3.includes(work.voice_actor_id),
+          highlight: work.voice_actor_id
+            ? top3.includes(work.voice_actor_id)
+            : false,
           voice_actors: voice_actors
-            ? [{
-              ...voice_actors,
-              profile_picture: buildSupabaseImageUrl(
-                voice_actors.profile_picture,
-                "voice_actor_profile_pictures",
-                "500",
-              ),
-            }]
+            ? [
+                {
+                  ...voice_actors,
+                  profile_picture: buildSupabaseImageUrl(
+                    ctx,
+                    voice_actors.profile_picture,
+                    "voice_actor_profile_pictures",
+                    "500",
+                  ),
+                },
+              ]
             : [],
           mediaDetails: mediaDetails
             ? {
-              id: mediaDetails.id,
-              title: mediaDetails.title || mediaDetails.name,
-              original_title: mediaDetails.original_title ||
-                mediaDetails.original_name,
-              poster_path: buildTmdbImageUrl(mediaDetails.poster_path),
-              release_date: mediaDetails.release_date ||
-                mediaDetails.first_air_date,
-              media_type: work.content_type || "",
-              overview: mediaDetails.overview,
-            }
+                id: mediaDetails.id,
+                title: mediaDetails.title || mediaDetails.name,
+                original_title:
+                  mediaDetails.original_title || mediaDetails.original_name,
+                poster_path: buildTmdbImageUrl(mediaDetails.poster_path),
+                release_date:
+                  mediaDetails.release_date || mediaDetails.first_air_date,
+                media_type: work.content_type || "",
+                overview: mediaDetails.overview,
+              }
             : null,
         };
       }),
-    ) as VoiceRole[];
+    )) as any[];
 
     return voiceRoles;
   } catch (e) {
@@ -119,73 +127,72 @@ async function getVoiceRoles(
   }
 }
 
+import { withSupabase } from "npm:@supabase/server@^1";
+
 // Main request handler
-Deno.serve(async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    return handleOptions();
-  }
+export default {
+  fetch: withSupabase<Database>({ auth: "publishable:*" }, async (req, ctx) => {
+    try {
+      const { id } = await req.json();
 
-  try {
-    const { id } = await req.json();
+      if (!id) {
+        return createErrorResponse("Missing id parameter", 400);
+      }
 
-    if (!id) {
-      return createErrorResponse("Missing id parameter", 400);
-    }
+      const actorId = parseInt(id, 10);
+      if (isNaN(actorId)) {
+        return createErrorResponse("Invalid id parameter", 400);
+      }
 
-    const actorId = parseInt(id, 10);
-    if (isNaN(actorId)) {
-      return createErrorResponse("Invalid id parameter", 400);
-    }
+      // Initialize shared clients
+      const tmdbClient = new TMDBClient(cacheUtils);
+      const dbClient = new DatabaseClient(ctx);
 
-    // Initialize shared clients
-    const tmdbClient = new TMDBClient(cacheUtils);
-    const dbClient = new DatabaseClient();
+      const [actor, voiceRoles] = await Promise.all([
+        getActor(actorId, tmdbClient),
+        getVoiceRoles(ctx, actorId, tmdbClient, dbClient),
+      ]);
 
-    const [actor, voiceRoles] = await Promise.all([
-      getActor(actorId, tmdbClient),
-      getVoiceRoles(actorId, tmdbClient, dbClient),
-    ]);
+      if (!actor) {
+        return createErrorResponse("Actor not found", 404);
+      }
 
-    if (!actor) {
-      return createErrorResponse("Actor not found", 404);
-    }
+      const actorCredits = [
+        ...actor.movie_credits.cast.map((x: any) => ({
+          ...x,
+          media_type: "movie",
+        })),
+        ...actor.tv_credits.cast.map((x: any) => ({
+          ...x,
+          media_type: "tv",
+        })),
+      ].map((castMember: any) => ({
+        ...castMember,
+        profile_path: buildTmdbImageUrl(castMember.profile_path),
+        poster_path: buildTmdbImageUrl(castMember.poster_path),
+        backdrop_path: buildTmdbImageUrl(castMember.backdrop_path),
+      }));
 
-    const actorCredits = [
-      ...actor.movie_credits.cast.map((x) => ({
-        ...x,
-        media_type: "movie",
-      })),
-      ...actor.tv_credits.cast.map((x) => ({
-        ...x,
-        media_type: "tv",
-      })),
-    ].map((castMember: any) => ({
-      ...castMember,
-      profile_path: buildTmdbImageUrl(castMember.profile_path),
-      poster_path: buildTmdbImageUrl(castMember.poster_path),
-      backdrop_path: buildTmdbImageUrl(castMember.backdrop_path),
-    }));
+      console.log("actorCredits", actorCredits);
 
-    console.log("actorCredits", actorCredits);
-
-    const result = {
-      actor: {
-        ...actor,
-        profile_path: buildTmdbImageUrl(actor.profile_path),
-        credits: {
-          cast: actorCredits,
+      const result = {
+        actor: {
+          ...actor,
+          profile_path: buildTmdbImageUrl(actor.profile_path),
+          credits: {
+            cast: actorCredits,
+          },
+          voice_roles: voiceRoles,
         },
-        voice_roles: voiceRoles,
-      },
-      voiceActors: voiceRoles,
-    };
+        voiceActors: voiceRoles,
+      };
 
-    return createResponse(result);
-  } catch (error) {
-    console.error("Error in actor function:", error);
-    return createErrorResponse(
-      error instanceof Error ? error.message : "An unknown error occurred",
-    );
-  }
-});
+      return createResponse(result);
+    } catch (error) {
+      console.error("Error in actor function:", error);
+      return createErrorResponse(
+        error instanceof Error ? error.message : "An unknown error occurred",
+      );
+    }
+  }),
+};

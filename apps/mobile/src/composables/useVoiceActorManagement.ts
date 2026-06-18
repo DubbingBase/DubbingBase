@@ -4,6 +4,9 @@ import { alertController } from "@ionic/vue";
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
 import { supabase } from "@/api/supabase";
+import type { PersonData } from "@/components/PersonItem.vue";
+import { voiceActorToPersonData } from "@/utils/convert";
+import type { VoiceActorDetails } from "@supabase/functions/_shared/types";
 
 export interface VoiceActor {
   id: number;
@@ -21,6 +24,14 @@ export interface WorkAndVoiceActor {
   voiceActorDetails: VoiceActor;
 }
 
+// Shared voting state across the app to prevent duplicate/redundant fetches for the same work entries
+const votes = ref<
+  Record<
+    number,
+    { up_count: number; down_count: number; user_vote: string | null }
+  >
+>({});
+
 export function useVoiceActorManagement(
   workType: "movie" | "tv" | "season" | "episode",
 ) {
@@ -37,22 +48,23 @@ export function useVoiceActorManagement(
   const selectedActor = ref<number>();
 
   // Voice actors data
-  const voiceActors = ref<WorkAndVoiceActor[]>([]);
+  const voiceActors = ref<PersonData<VoiceActorDetails>[]>([]);
   const isLoading = ref(false);
   const error = ref("");
 
   // Voting state
-  const votes = ref<Record<number, { up_count: number; down_count: number; user_vote: string | null }>>({});
   const isVoting = ref(false);
   const votingError = ref("");
 
   // Search timer for debouncing
   let searchTimer: NodeJS.Timeout | null = null;
 
-  const getVoiceActorByTmdbId = (tmdbId: number): WorkAndVoiceActor[] => {
+  const getVoiceActorByTmdbId = (
+    tmdbId: number,
+  ): PersonData<VoiceActorDetails>[] => {
     console.log("tmdbId", tmdbId);
     console.log("voiceActors.value", voiceActors.value);
-    return voiceActors.value.filter((va) => va.voice_actor_id === tmdbId);
+    return voiceActors.value.filter((va) => va.tmdb_id === tmdbId);
   };
 
   const openVoiceActorSearch = (actor: any) => {
@@ -102,10 +114,15 @@ export function useVoiceActorManagement(
       });
 
       // Add the new voice actor to the list
-      voiceActors.value.push({
-        ...response.data,
-        voiceActorDetails: voiceActor,
-      });
+      voiceActors.value.push(
+        voiceActorToPersonData(
+          voiceActor as VoiceActorDetails,
+          response.data.performance || "dialogues",
+          response.data.actor_id,
+          response.data.status,
+          response.data.id,
+        ),
+      );
 
       // Close the modal
       showVoiceActorSearch.value = false;
@@ -120,7 +137,7 @@ export function useVoiceActorManagement(
     }
   };
 
-  const editVoiceActorLink = async (workItem: WorkAndVoiceActor) => {
+  const editVoiceActorLink = async (person: PersonData<VoiceActorDetails>) => {
     const alert = await alertController.create({
       header: "Edit Performance",
       inputs: [
@@ -128,7 +145,7 @@ export function useVoiceActorManagement(
           name: "performance",
           type: "text",
           placeholder: "Performance type (e.g., Voice, ADR, etc.)",
-          value: workItem.performance || "Voice",
+          value: person.performance || "Voice",
         },
       ],
       buttons: [
@@ -139,7 +156,9 @@ export function useVoiceActorManagement(
         {
           text: "Save",
           handler: async (data) => {
-            await updateVoiceActorLink(workItem.id, data.performance);
+            if (person.work_id) {
+              await updateVoiceActorLink(person.work_id, data.performance);
+            }
           },
         },
       ],
@@ -161,7 +180,7 @@ export function useVoiceActorManagement(
       );
 
       // Update the local state
-      const index = voiceActors.value.findIndex((va) => va.id === workId);
+      const index = voiceActors.value.findIndex((va) => va.work_id === workId);
       if (index !== -1) {
         voiceActors.value[index].performance = response.data.performance;
       }
@@ -176,12 +195,13 @@ export function useVoiceActorManagement(
     }
   };
 
-  const confirmDeleteVoiceActorLink = async (workItem: WorkAndVoiceActor) => {
-    console.log("workItem", workItem);
+  const confirmDeleteVoiceActorLink = async (
+    person: PersonData<VoiceActorDetails>,
+  ) => {
+    console.log("person", person);
     const alert = await alertController.create({
       header: "Confirm Delete",
-      message:
-        `Are you sure you want to remove ${workItem.voiceActorDetails.firstname} ${workItem.voiceActorDetails.lastname}?`,
+      message: `Are you sure you want to remove ${person.name}?`,
       buttons: [
         {
           text: "Cancel",
@@ -190,7 +210,11 @@ export function useVoiceActorManagement(
         {
           text: "Delete",
           role: "destructive",
-          handler: () => deleteVoiceActorLink(workItem.id),
+          handler: () => {
+            if (person.work_id) {
+              deleteVoiceActorLink(person.work_id);
+            }
+          },
         },
       ],
     });
@@ -206,7 +230,9 @@ export function useVoiceActorManagement(
       });
 
       // Remove from local state
-      voiceActors.value = voiceActors.value.filter((va) => va.id !== workId);
+      voiceActors.value = voiceActors.value.filter(
+        (va) => va.work_id !== workId,
+      );
     } catch (error) {
       console.error("Error deleting voice actor link:", error);
       const alert = await alertController.create({
@@ -232,7 +258,10 @@ export function useVoiceActorManagement(
     });
   };
 
-  const updateReviewStatus = async (workId: number, status: 'waiting' | 'accepted' | 'rejected') => {
+  const updateReviewStatus = async (
+    workId: number,
+    status: "waiting" | "accepted" | "rejected",
+  ) => {
     if (!authStore.user) {
       console.error("User not authenticated");
       return;
@@ -262,7 +291,7 @@ export function useVoiceActorManagement(
     }
   };
 
-  const castVote = async (workId: number, voteType: 'up' | 'down') => {
+  const castVote = async (workId: number, voteType: "up" | "down") => {
     if (!authStore.user) {
       votingError.value = "You must be logged in to vote.";
       return;
@@ -274,10 +303,18 @@ export function useVoiceActorManagement(
 
     // Optimistic update
     const newUserVote = previousVote === voteType ? null : voteType;
-    const newUpCount = previousVote === 'up' && voteType === 'up' ? previousUpCount - 1 :
-                      previousVote !== 'up' && voteType === 'up' ? previousUpCount + 1 : previousUpCount;
-    const newDownCount = previousVote === 'down' && voteType === 'down' ? previousDownCount - 1 :
-                        previousVote !== 'down' && voteType === 'down' ? previousDownCount + 1 : previousDownCount;
+    const newUpCount =
+      previousVote === "up" && voteType === "up"
+        ? previousUpCount - 1
+        : previousVote !== "up" && voteType === "up"
+          ? previousUpCount + 1
+          : previousUpCount;
+    const newDownCount =
+      previousVote === "down" && voteType === "down"
+        ? previousDownCount - 1
+        : previousVote !== "down" && voteType === "down"
+          ? previousDownCount + 1
+          : previousDownCount;
 
     votes.value[workId] = {
       up_count: newUpCount,

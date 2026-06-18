@@ -171,7 +171,7 @@ import {
   IonButton,
 } from "@ionic/vue";
 import { alertCircle } from "ionicons/icons";
-import type { Actor } from "../../supabase/functions/_shared/types";
+import type { Actor } from "@supabase/functions/_shared/types";
 import { supabase } from "../api/supabase";
 import { actorToPersonData, voiceActorToPersonData } from "@/utils/convert";
 import { PersonData } from "@/components/PersonItem.vue";

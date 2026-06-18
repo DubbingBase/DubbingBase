@@ -87,6 +87,8 @@
         :is-fetching="isFetching"
         :is-scanning="isScanning"
         :fetch-error="fetchError"
+        :queue-status="queueStatus"
+        :queue-error-message="queueErrorMessage"
         @fetch-infos="fetchInfos"
         @take-photo="takePhoto"
       />
@@ -126,7 +128,7 @@ import {
   IonButton,
   IonToast,
 } from "@ionic/vue";
-import { ref, computed, onMounted, UnwrapRef } from "vue";
+import { ref, computed, onMounted, onUnmounted, UnwrapRef } from "vue";
 import { useRoute } from "vue-router";
 import { useIonRouter } from "@ionic/vue";
 import { format } from "date-fns";
@@ -147,6 +149,7 @@ import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { actorToPersonData, voiceActorToPersonData } from "@/utils/convert";
 import { Role } from "@/components/PersonItem.vue";
 import { useI18n } from "vue-i18n";
+import type { ShowResponse } from "@supabase/functions/_shared/types";
 
 const authStore = useAuthStore();
 const { isAdmin } = storeToRefs(authStore);
@@ -160,6 +163,8 @@ const isLoading = ref(true);
 const isFetching = ref(false);
 const fetchError = ref("");
 const error = ref("");
+const queueStatus = ref<string | null>(null);
+const queueErrorMessage = ref<string | null>(null);
 
 const characterProfilePictures = ref<
   {
@@ -331,7 +336,7 @@ const takePhoto = async () => {
 
 const getSerie = async (id: string) => {
   try {
-    const response = await supabase.functions.invoke("show", {
+    const response = await supabase.functions.invoke<ShowResponse>("show", {
       body: { id },
     });
     return response;
@@ -346,28 +351,100 @@ const fetchSerieData = async () => {
   const id = route.params.id;
   try {
     const response = await getSerie(id as string);
-    show.value = response.data.serie || response.data.show; // Handle both response formats
-    show.value.credits = response.data.aggregateCredits;
-    // Load voice actors for this serie
-    if (response.data.voiceActors) {
-      voiceActors.value = response.data.voiceActors.map((va) =>
-        voiceActorToPersonData(
-          va.voiceActorDetails,
-          va.performance,
-          va.actor_id,
-          va.reviewed_status,
-          va.id,
-        ),
-      );
-    }
-    if (response.data.characterProfilePictures) {
-      characterProfilePictures.value = response.data.characterProfilePictures;
+    if (response.data) {
+      show.value = response.data.serie || response.data.show; // Handle both response formats
+      show.value.credits = response.data.aggregateCredits;
+      // Load voice actors for this serie
+      if (response.data.voiceActors) {
+        voiceActors.value = response.data.voiceActors.map((va) =>
+          voiceActorToPersonData(
+            va.voiceActorDetails,
+            va.performance,
+            va.actor_id,
+            va.reviewed_status,
+            va.id,
+          ),
+        );
+      }
+      if (response.data.characterProfilePictures) {
+        characterProfilePictures.value = response.data.characterProfilePictures;
+      }
     }
   } catch (e: any) {
     console.error("Error fetching serie data:", e);
     error.value = "Failed to load serie details.";
     throw e;
   }
+};
+
+const fetchQueueStatus = async () => {
+  try {
+    const { data, error } = await supabase
+      .rpc("get_media_queue_status", {
+        p_tmdb_id: Number(route.params.id),
+        p_media_type: "tv"
+      });
+    if (error) throw error;
+    const statusData = data as { status: string | null; error_message: string | null } | null;
+    if (statusData) {
+      queueStatus.value = statusData.status;
+      queueErrorMessage.value = statusData.error_message;
+    } else {
+      queueStatus.value = null;
+      queueErrorMessage.value = null;
+    }
+  } catch (err) {
+    console.error("Error fetching queue status:", err);
+  }
+};
+
+let pollingInterval: any = null;
+
+const stopQueuePolling = () => {
+  if (pollingInterval) {
+    clearInterval(pollingInterval);
+    pollingInterval = null;
+  }
+};
+
+const startQueuePolling = () => {
+  if (pollingInterval) return;
+
+  isFetching.value = true;
+  pollingInterval = setInterval(async () => {
+    await fetchQueueStatus();
+
+    if (queueStatus.value === "completed") {
+      stopQueuePolling();
+      const toast = await toastController.create({
+        message: "Voice cast updated successfully!",
+        duration: 2000,
+        position: "top",
+        color: "success",
+      });
+      await toast.present();
+
+      try {
+        await fetchSerieData();
+      } catch (error) {
+        console.error("Error fetching serie data:", error);
+      } finally {
+        isFetching.value = false;
+      }
+    } else if (queueStatus.value === "failed") {
+      stopQueuePolling();
+      const errorMsg = queueErrorMessage.value || "Fetch failed.";
+      const toast = await toastController.create({
+        message: errorMsg,
+        duration: 2000,
+        position: "top",
+        color: "danger",
+      });
+      await toast.present();
+      fetchError.value = errorMsg;
+      isFetching.value = false;
+    }
+  }, 5000);
 };
 
 const fetchInfos = async () => {
@@ -380,54 +457,22 @@ const fetchInfos = async () => {
 
   console.log("id", id);
   isFetching.value = true;
-  const showResponseRaw = await supabase.functions.invoke("prepare_movie", {
-    body: {
-      tmdbId: route.params.id,
-      type: "tv",
-    },
-  });
-  const data = showResponseRaw.data;
+  fetchError.value = "";
 
-  console.log("data", data);
-
-  if (data.ok) {
-    let toastMessage = "";
-    let toastColor = "success";
-    if (data.changes > 0) {
-      toastMessage = t("common.newVoiceActorsAdded", { count: data.changes });
-    } else if (data.changes === 0) {
-      toastMessage = t("common.noNewChangesFound");
-      toastColor = "primary";
-    }
-    const toast = await toastController.create({
-      message: toastMessage,
-      duration: 2000,
-      position: "top",
-      color: toastColor,
-    });
-    await toast.present();
-    try {
-      await fetchSerieData();
-    } catch (error) {
-      console.error("Error fetching serie data:", error);
-      fetchError.value = "Failed to load serie details.";
-    } finally {
-      isFetching.value = false;
-    }
-  } else {
-    toastController
-      .create({
-        message: data.error,
-        duration: 2000,
-        position: "top",
-        color: "danger",
-      })
-      .then((toast) => {
-        toast.present();
+  // Insert request into fetch_queue
+  try {
+    const { error: insertError } = await supabase
+      .rpc("enqueue_media_fetch", {
+        p_tmdb_id: Number(route.params.id),
+        p_media_type: "tv"
       });
+    if (insertError) throw insertError;
+    queueStatus.value = "pending";
+    startQueuePolling();
+  } catch (err) {
+    console.error("Error adding request to queue:", err);
+    fetchError.value = "Failed to add request to queue.";
     isFetching.value = false;
-    fetchError.value = data.error;
-    isLoading.value = false;
   }
 };
 
@@ -435,13 +480,23 @@ onMounted(async () => {
   isLoading.value = true;
   error.value = "";
   try {
-    await fetchSerieData();
+    await Promise.all([
+      fetchSerieData(),
+      fetchQueueStatus(),
+    ]);
+    if (queueStatus.value === "pending" || queueStatus.value === "processing") {
+      startQueuePolling();
+    }
   } catch (err) {
     console.error("Error fetching serie:", err);
     error.value = "Failed to load serie details";
   } finally {
     isLoading.value = false;
   }
+});
+
+onUnmounted(() => {
+  stopQueuePolling();
 });
 
 // Navigation methods

@@ -1,6 +1,6 @@
-import { computed } from 'vue';
-import type { FeatureFlag }  from '@/types/permissions';
-import { usePostHog } from './usePostHog';
+import { computed } from "vue";
+import type { FeatureFlag } from "@/types/permissions";
+import { usePostHog } from "./usePostHog";
 
 export function useFeatureFlags() {
   const { posthog } = usePostHog();
@@ -9,7 +9,7 @@ export function useFeatureFlags() {
     return posthog.isFeatureEnabled(permission);
   };
 
-  const hasAiScanner = computed(() => hasFeatureFlag('ai-scanner'));
+  const hasAiScanner = computed(() => hasFeatureFlag("ai-scanner"));
 
   return {
     hasFeatureFlag,

@@ -7,7 +7,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 function usageAndExit() {
-  console.log("Usage: deno run --allow-env --allow-net update_user_role.ts <user_id> <new_role>");
+  console.log(
+    "Usage: deno run --allow-env --allow-net update_user_role.ts <user_id> <new_role>",
+  );
   Deno.exit(1);
 }
 
@@ -18,17 +20,17 @@ if (Deno.args.length !== 2) {
 const [userId, newRole] = Deno.args;
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+const SUPABASE_SECRET_KEY = Deno.env.get("SUPABASE_SECRET_KEY");
 
 console.log("SUPABASE_URL", SUPABASE_URL);
-console.log("SERVICE_ROLE_KEY", SERVICE_ROLE_KEY);
+console.log("SUPABASE_SECRET_KEY resolved:", !!SUPABASE_SECRET_KEY);
 
-if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
-  console.error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in environment variables.");
+if (!SUPABASE_URL || !SUPABASE_SECRET_KEY) {
+  console.error("Missing SUPABASE_URL or SUPABASE_SECRET_KEY.");
   Deno.exit(1);
 }
 
-const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 

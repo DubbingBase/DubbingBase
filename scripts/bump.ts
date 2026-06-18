@@ -24,13 +24,9 @@ if (fs.existsSync(mobilePkgPath)) {
     let gradleContent = fs.readFileSync(gradlePath, "utf8");
     const [major, minor, patch] = version.split(".").map(Number);
     const newVersionCode = major * 1000000 + minor * 1000 + patch;
-    gradleContent = gradleContent.replace(
-      /versionCode\s+\d+/,
-      `versionCode ${newVersionCode}`,
-    ).replace(
-      /versionName\s+".*"/,
-      `versionName "${version}"`,
-    );
+    gradleContent = gradleContent
+      .replace(/versionCode\s+\d+/, `versionCode ${newVersionCode}`)
+      .replace(/versionName\s+".*"/, `versionName "${version}"`);
     fs.writeFileSync(gradlePath, gradleContent);
     console.log(
       `   Updated Capacitor versionCode to ${newVersionCode} and versionName to "${version}"`,

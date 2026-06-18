@@ -102,7 +102,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import Revogrid from "@revolist/vue3-datagrid";
-import type { Tables } from "../../../../packages/database/functions/_shared/database.types";
+import type { Tables } from "../../../../packages/database/supabase/functions/_shared/database.types";
 import { supabase } from "@/lib/supabase";
 
 // Types

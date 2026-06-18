@@ -29,7 +29,7 @@
 
 <script lang="ts" setup>
 import { computed } from "vue";
-import { WorkAndVoiceActor } from "../../supabase/functions/_shared/movie";
+import { WorkAndVoiceActor } from "@supabase/functions/_shared/movie";
 
 const props = defineProps<{
   modelValue: WorkAndVoiceActor | undefined;
