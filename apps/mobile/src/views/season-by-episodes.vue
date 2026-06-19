@@ -37,6 +37,7 @@ import { useRoute, useRouter } from "vue-router";
 import { IonPage, IonHeader, IonToolbar, IonButtons, IonBackButton, IonTitle, IonContent, toastController } from "@ionic/vue";
 import LoadingSpinner from "../components/common/LoadingSpinner.vue";
 import { supabase } from "../api/supabase";
+import { enqueueAndProcessMedia } from "../api/mediaQueue";
 import ActionButtons from "../components/ActionButtons.vue";
 import EpisodeBanner from "../components/EpisodeBanner.vue";
 import ActorList from "../components/ActorList.vue";
@@ -138,16 +139,14 @@ async function fetchEpisodeInfos() {
   }
   isFetching.value = true;
   
-  // Insert request into queue
+  // Insert request into queue and trigger processing
   try {
-    const { error: insertError } = await supabase
-      .rpc("enqueue_media_fetch", {
-        p_tmdb_id: Number(route.params.id),
-        p_media_type: "episode",
-        p_season_number: Number(route.params.season),
-        p_episode_number: Number(episode.value.episode_number),
-      });
-    if (insertError) throw insertError;
+    await enqueueAndProcessMedia({
+      tmdbId: Number(route.params.id),
+      mediaType: "episode",
+      seasonNumber: Number(route.params.season),
+      episodeNumber: Number(episode.value.episode_number),
+    });
     queueStatus.value = "pending";
     startQueuePolling();
   } catch (err) {

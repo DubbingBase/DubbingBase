@@ -93,6 +93,7 @@ import {
   playOutline,
 } from "ionicons/icons";
 import { supabase } from "@/api/supabase";
+import { enqueueAndProcessMedia } from "@/api/mediaQueue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import { formatDistanceToNow } from "date-fns";
 
@@ -272,15 +273,12 @@ const retryFetch = async (item: QueueItem) => {
     });
     await toast.present();
 
-    const { error: rpcError } = await supabase
-      .rpc("enqueue_media_fetch", {
-        p_tmdb_id: item.tmdb_id,
-        p_media_type: item.media_type,
-        p_season_number: item.season_number ?? undefined,
-        p_episode_number: item.episode_number ?? undefined,
-      });
-
-    if (rpcError) throw rpcError;
+    await enqueueAndProcessMedia({
+      tmdbId: item.tmdb_id,
+      mediaType: item.media_type,
+      seasonNumber: item.season_number,
+      episodeNumber: item.episode_number,
+    });
 
     const successToast = await toastController.create({
       message: "Request successfully re-enqueued.",

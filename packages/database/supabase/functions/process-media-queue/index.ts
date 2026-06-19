@@ -3,7 +3,7 @@ import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
 
 export default {
-  fetch: withSupabase<Database>({ auth: "secret:*" }, async (req, ctx) => {
+  fetch: withSupabase<Database>({ auth: "user" }, async (req, ctx) => {
     try {
       const results = [];
       const SUPABASE_SECRET_KEY =

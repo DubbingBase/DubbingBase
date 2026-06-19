@@ -75,6 +75,7 @@ import {
   toastController,
 } from "@ionic/vue";
 import { supabase } from "../api/supabase";
+import { enqueueAndProcessMedia } from "../api/mediaQueue";
 import SeasonBanner from "../components/SeasonBanner.vue";
 import EpisodesList from "../components/EpisodesList.vue";
 import ActionButtons from "../components/ActionButtons.vue";
@@ -199,15 +200,13 @@ async function fetchInfos() {
   }
   isFetching.value = true;
   
-  // Insert request into queue
+  // Insert request into queue and trigger processing
   try {
-    const { error: insertError } = await supabase
-      .rpc("enqueue_media_fetch", {
-        p_tmdb_id: Number(route.params.id),
-        p_media_type: "season",
-        p_season_number: Number(route.params.season),
-      });
-    if (insertError) throw insertError;
+    await enqueueAndProcessMedia({
+      tmdbId: Number(route.params.id),
+      mediaType: "season",
+      seasonNumber: Number(route.params.season),
+    });
     queueStatus.value = "pending";
     startQueuePolling();
   } catch (err) {

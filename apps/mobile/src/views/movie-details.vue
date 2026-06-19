@@ -93,6 +93,7 @@ import { useRoute, useRouter } from "vue-router";
 import { pencil } from "ionicons/icons";
 import { MovieResponse } from "@supabase/functions/_shared/movie";
 import { supabase } from "../api/supabase";
+import { enqueueAndProcessMedia } from "../api/mediaQueue";
 import { useVoiceActorManagement } from "@/composables/useVoiceActorManagement";
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
@@ -365,14 +366,12 @@ const fetchInfos = async () => {
   isFetching.value = true;
   fetchError.value = "";
 
-  // Insert request into fetch_queue
+  // Insert request into fetch_queue and trigger processing
   try {
-    const { error: insertError } = await supabase
-      .rpc("enqueue_media_fetch", {
-        p_tmdb_id: Number(route.params.id),
-        p_media_type: "movie"
-      });
-    if (insertError) throw insertError;
+    await enqueueAndProcessMedia({
+      tmdbId: Number(route.params.id),
+      mediaType: "movie",
+    });
     queueStatus.value = "pending";
     startQueuePolling();
   } catch (err) {

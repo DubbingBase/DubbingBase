@@ -145,6 +145,7 @@ import SolarSettingsMinimalisticOutline from "~icons/solar/settings-minimalistic
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
 import { supabase } from "@/api/supabase";
+import { enqueueAndProcessMedia } from "@/api/mediaQueue";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { actorToPersonData, voiceActorToPersonData } from "@/utils/convert";
 import { Role } from "@/components/PersonItem.vue";
@@ -459,14 +460,12 @@ const fetchInfos = async () => {
   isFetching.value = true;
   fetchError.value = "";
 
-  // Insert request into fetch_queue
+  // Insert request into fetch_queue and trigger processing
   try {
-    const { error: insertError } = await supabase
-      .rpc("enqueue_media_fetch", {
-        p_tmdb_id: Number(route.params.id),
-        p_media_type: "tv"
-      });
-    if (insertError) throw insertError;
+    await enqueueAndProcessMedia({
+      tmdbId: Number(route.params.id),
+      mediaType: "tv",
+    });
     queueStatus.value = "pending";
     startQueuePolling();
   } catch (err) {
