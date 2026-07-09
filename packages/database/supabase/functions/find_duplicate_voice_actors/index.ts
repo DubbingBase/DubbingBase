@@ -35,8 +35,28 @@ function processActorsBatch(
 }
 
 export default {
-  fetch: withSupabase<Database>({ auth: "secret:*" }, async (req, ctx) => {
+  fetch: withSupabase<Database>({ auth: "user" }, async (req, ctx) => {
     try {
+      const user = ctx.userClaims;
+      if (!user) {
+        return Response.json(
+          { error: "Unauthorized" },
+          { status: 401 },
+        );
+      }
+
+      const isAdmin =
+        user.appMetadata?.role === "admin" ||
+        user.userMetadata?.role === "admin" ||
+        user.role === "admin";
+
+      if (!isAdmin) {
+        return Response.json(
+          { error: "Unauthorized: Admin access required" },
+          { status: 403 },
+        );
+      }
+
       const BATCH_SIZE = 1000;
       let cursor = 0;
       let hasMore = true;

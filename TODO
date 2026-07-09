@@ -1,3 +1,4 @@
+filter bar to search inside the movie cast to search for "woody" or "tom hanks" or "richard darbois"
 fix search
 fix seqrch populqrity
 add pull to refresh
@@ -13,3 +14,4 @@ remove ion router
 implement view transitions
 remove ionic entirely
 make things fast
+suivre un doubleur (notifications)

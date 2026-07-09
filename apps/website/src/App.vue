@@ -1,5 +1,10 @@
 <script setup lang="ts">
-// Router view will render the matched component
+import { onMounted } from "vue";
+import { initializeAuth } from "@/lib/auth";
+
+onMounted(() => {
+  initializeAuth();
+});
 </script>
 
 <template>
@@ -7,5 +12,5 @@
 </template>
 
 <style scoped>
-/* Mobile-only styles */
+/* App wide custom layouts */
 </style>

@@ -14,6 +14,9 @@
       </ion-toolbar>
     </ion-header>
     <ion-content>
+      <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
+        <ion-refresher-content></ion-refresher-content>
+      </ion-refresher>
       <!-- Banner with backdrop and metadata -->
       <div class="banner" v-if="show">
         <MediaItem
@@ -127,8 +130,11 @@ import {
   IonTitle,
   IonButton,
   IonToast,
+  onIonViewDidEnter,
+  IonRefresher,
+  IonRefresherContent,
 } from "@ionic/vue";
-import { ref, computed, onMounted, onUnmounted, UnwrapRef } from "vue";
+import { ref, computed, UnwrapRef } from "vue";
 import { useRoute } from "vue-router";
 import { useIonRouter } from "@ionic/vue";
 import { format } from "date-fns";
@@ -399,53 +405,17 @@ const fetchQueueStatus = async () => {
   }
 };
 
-let pollingInterval: any = null;
-
-const stopQueuePolling = () => {
-  if (pollingInterval) {
-    clearInterval(pollingInterval);
-    pollingInterval = null;
-  }
-};
-
-const startQueuePolling = () => {
-  if (pollingInterval) return;
-
-  isFetching.value = true;
-  pollingInterval = setInterval(async () => {
-    await fetchQueueStatus();
-
-    if (queueStatus.value === "completed") {
-      stopQueuePolling();
-      const toast = await toastController.create({
-        message: "Voice cast updated successfully!",
-        duration: 2000,
-        position: "top",
-        color: "success",
-      });
-      await toast.present();
-
-      try {
-        await fetchSerieData();
-      } catch (error) {
-        console.error("Error fetching serie data:", error);
-      } finally {
-        isFetching.value = false;
-      }
-    } else if (queueStatus.value === "failed") {
-      stopQueuePolling();
-      const errorMsg = queueErrorMessage.value || "Fetch failed.";
-      const toast = await toastController.create({
-        message: errorMsg,
-        duration: 2000,
-        position: "top",
-        color: "danger",
-      });
-      await toast.present();
-      fetchError.value = errorMsg;
-      isFetching.value = false;
+const handleRefresh = async (event: any) => {
+  try {
+    await fetchSerieData();
+    if (!hasData.value && hasWikidataId.value) {
+      await fetchQueueStatus();
     }
-  }, 5000);
+  } catch (error) {
+    console.error("Error refreshing serie data:", error);
+  } finally {
+    event.target.complete();
+  }
 };
 
 const fetchInfos = async () => {
@@ -467,24 +437,28 @@ const fetchInfos = async () => {
       mediaType: "tv",
     });
     queueStatus.value = "pending";
-    startQueuePolling();
+    const toast = await toastController.create({
+      message: "Import started! The voice cast will be updated shortly.",
+      duration: 3000,
+      position: "top",
+      color: "info",
+    });
+    await toast.present();
   } catch (err) {
     console.error("Error adding request to queue:", err);
     fetchError.value = "Failed to add request to queue.";
+  } finally {
     isFetching.value = false;
   }
 };
 
-onMounted(async () => {
+onIonViewDidEnter(async () => {
   isLoading.value = true;
   error.value = "";
   try {
-    await Promise.all([
-      fetchSerieData(),
-      fetchQueueStatus(),
-    ]);
-    if (queueStatus.value === "pending" || queueStatus.value === "processing") {
-      startQueuePolling();
+    await fetchSerieData();
+    if (!hasData.value && hasWikidataId.value) {
+      await fetchQueueStatus();
     }
   } catch (err) {
     console.error("Error fetching serie:", err);
@@ -492,10 +466,6 @@ onMounted(async () => {
   } finally {
     isLoading.value = false;
   }
-});
-
-onUnmounted(() => {
-  stopQueuePolling();
 });
 
 // Navigation methods

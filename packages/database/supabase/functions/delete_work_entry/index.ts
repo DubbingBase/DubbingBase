@@ -2,8 +2,28 @@ import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
 
 export default {
-  fetch: withSupabase<Database>({ auth: "secret:*" }, async (req, ctx) => {
+  fetch: withSupabase<Database>({ auth: "user" }, async (req, ctx) => {
     try {
+      const user = ctx.userClaims;
+      if (!user) {
+        return Response.json(
+          { error: "Unauthorized" },
+          { status: 401 },
+        );
+      }
+
+      const isAdmin =
+        user.appMetadata?.role === "admin" ||
+        user.userMetadata?.role === "admin" ||
+        user.role === "admin";
+
+      if (!isAdmin) {
+        return Response.json(
+          { error: "Unauthorized: Admin access required" },
+          { status: 403 },
+        );
+      }
+
       const body = await req.json();
       const { id } = body;
       if (!id) {

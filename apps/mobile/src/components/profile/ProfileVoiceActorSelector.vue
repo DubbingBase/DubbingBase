@@ -60,15 +60,7 @@
             </ion-item>
           </template>
 
-          <!-- Add New Voice Actor Option (Admin only) -->
-          <ion-item
-            v-if="authStore.isAdmin"
-            button
-            @click="addNewVoiceActor"
-          >
-            <ion-label>+ {{ $t('profile.addNewVoiceActor') }}</ion-label>
-            <ion-icon slot="end" :icon="add" />
-          </ion-item>
+
         </ion-list>
 
         <LoadingSpinner v-if="isLoading" />
@@ -198,10 +190,7 @@ const selectVoiceActor = async (voiceActor: any) => {
   }
 }
 
-const addNewVoiceActor = () => {
-  closeModal()
-  router.push({ name: 'AddVoiceCast', params: { id: 'new' } })
-}
+
 
 const loadAllVoiceActors = async (query?: string) => {
   if (!authStore.isAdmin) return

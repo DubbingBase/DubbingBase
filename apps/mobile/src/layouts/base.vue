@@ -77,15 +77,6 @@ const items = computed(() => {
     },
   ];
 
-  if (authStore.isAdmin) {
-    items.push({
-      label: "Admin",
-      icon: SolarSettingsLinear,
-      route: "Admin",
-      href: "/tabs/admin",
-    });
-  }
-
   if (authStore.isAuthenticated && !authStore.isAnonymous) {
     items.push({
       label: "Profil",

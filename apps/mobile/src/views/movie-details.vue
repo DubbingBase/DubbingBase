@@ -6,14 +6,13 @@
           <ion-back-button :default-href="{ name: 'Home' }" />
         </ion-buttons>
         <ion-title>{{ movie?.title ?? "" }}</ion-title>
-        <ion-buttons slot="end" v-if="isAdmin">
-          <ion-button @click="goToEditPage">
-            <ion-icon :icon="pencil"></ion-icon>
-          </ion-button>
-        </ion-buttons>
+
       </ion-toolbar>
     </ion-header>
     <ion-content>
+      <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
+        <ion-refresher-content></ion-refresher-content>
+      </ion-refresher>
       <!--
       <div class="background" v-if="movie">
         <img
@@ -87,8 +86,11 @@ import {
   IonIcon,
   toastController,
   IonToast,
+  onIonViewDidEnter,
+  IonRefresher,
+  IonRefresherContent,
 } from "@ionic/vue";
-import { computed, onMounted, onUnmounted, ref, UnwrapRef } from "vue";
+import { computed, ref, UnwrapRef } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { pencil } from "ionicons/icons";
 import { MovieResponse } from "@supabase/functions/_shared/movie";
@@ -305,53 +307,17 @@ const takePhoto = async () => {
   }
 };
 
-let pollingInterval: any = null;
-
-const stopQueuePolling = () => {
-  if (pollingInterval) {
-    clearInterval(pollingInterval);
-    pollingInterval = null;
-  }
-};
-
-const startQueuePolling = () => {
-  if (pollingInterval) return;
-
-  isFetching.value = true;
-  pollingInterval = setInterval(async () => {
-    await fetchQueueStatus();
-
-    if (queueStatus.value === "completed") {
-      stopQueuePolling();
-      const toast = await toastController.create({
-        message: "Voice cast updated successfully!",
-        duration: 2000,
-        position: "top",
-        color: "success",
-      });
-      await toast.present();
-
-      try {
-        await fetchMovieData();
-      } catch (error) {
-        console.error("Error fetching movie data:", error);
-      } finally {
-        isFetching.value = false;
-      }
-    } else if (queueStatus.value === "failed") {
-      stopQueuePolling();
-      const errorMsg = queueErrorMessage.value || "Fetch failed.";
-      const toast = await toastController.create({
-        message: errorMsg,
-        duration: 2000,
-        position: "top",
-        color: "danger",
-      });
-      await toast.present();
-      fetchError.value = errorMsg;
-      isFetching.value = false;
+const handleRefresh = async (event: any) => {
+  try {
+    await fetchMovieData();
+    if (!hasData.value && hasWikidataId.value) {
+      await fetchQueueStatus();
     }
-  }, 5000);
+  } catch (error) {
+    console.error("Error refreshing movie data:", error);
+  } finally {
+    event.target.complete();
+  }
 };
 
 const fetchInfos = async () => {
@@ -373,10 +339,17 @@ const fetchInfos = async () => {
       mediaType: "movie",
     });
     queueStatus.value = "pending";
-    startQueuePolling();
+    const toast = await toastController.create({
+      message: "Import started! The voice cast will be updated shortly.",
+      duration: 3000,
+      position: "top",
+      color: "info",
+    });
+    await toast.present();
   } catch (err) {
     console.error("Error adding request to queue:", err);
     fetchError.value = "Failed to add request to queue.";
+  } finally {
     isFetching.value = false;
   }
 };
@@ -416,15 +389,7 @@ const fetchMovieData = async () => {
   }
 };
 
-// Navigate to edit page
-const goToEditPage = () => {
-  if (movie.value?.id) {
-    router.push({
-      name: "AddVoiceCast",
-      params: { id: movie.value.id },
-    });
-  }
-};
+
 
 // // Edit voice actor link
 // const editVoiceActorLink = (workItem: any) => {
@@ -492,16 +457,13 @@ const goToEditPage = () => {
 //   }
 // };
 
-onMounted(async () => {
+onIonViewDidEnter(async () => {
   isLoading.value = true;
   fetchError.value = "";
   try {
-    await Promise.all([
-      fetchMovieData(),
-      fetchQueueStatus(),
-    ]);
-    if (queueStatus.value === "pending" || queueStatus.value === "processing") {
-      startQueuePolling();
+    await fetchMovieData();
+    if (!hasData.value && hasWikidataId.value) {
+      await fetchQueueStatus();
     }
   } catch (e: any) {
     console.error("Error fetching movie data:", e);
@@ -509,9 +471,5 @@ onMounted(async () => {
   } finally {
     isLoading.value = false;
   }
-});
-
-onUnmounted(() => {
-  stopQueuePolling();
 });
 </script>

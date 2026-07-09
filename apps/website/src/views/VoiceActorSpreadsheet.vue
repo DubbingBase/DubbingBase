@@ -1,101 +1,115 @@
 <template>
-  <div class="w-full flex flex-col min-h-screen bg-gray-50">
-    <!-- Header -->
-    <header class="bg-blue-600 text-white p-4 shadow-sm">
-      <div class="flex justify-between items-center">
-        <router-link
-          to="/"
-          class="px-4 py-2 bg-white text-blue-600 rounded-md font-medium text-sm"
-        >
-          ← Back to Dashboard
-        </router-link>
-        <h1 class="text-xl font-bold">Voice Actor Spreadsheet</h1>
-        <div></div>
-        <!-- Spacer for centering -->
-      </div>
-    </header>
-
-    <main class="flex-1 p-4 space-y-4 overflow-x-hidden">
-      <!-- Toolbar with search -->
-      <div class="bg-white p-4 rounded-lg shadow-sm">
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Search voice actors..."
-          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          @input="handleSearch"
-        />
-      </div>
-
-      <!-- Loading indicator -->
-      <div
-        v-if="isLoading"
-        class="flex items-center justify-center h-64 bg-white rounded-lg shadow-sm"
-      >
-        <div
-          class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"
-        ></div>
-        <p class="ml-2 text-gray-500">Loading voice actors...</p>
-      </div>
-
-      <!-- Error message -->
-      <div v-else-if="error" class="bg-red-100 p-4 rounded-lg shadow-sm">
-        <p class="text-red-700">{{ error }}</p>
-        <button
-          @click="fetchVoiceActors"
-          class="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-        >
-          Retry
-        </button>
-      </div>
-
-      <!-- Revogrid container -->
-      <div v-else class="bg-white p-4 rounded-lg shadow-sm">
-        <div class="spreadsheet-container">
-          <revogrid
-            ref="revoGridRef"
-            :source="tableData"
-            :columns="revoColumns"
-            :theme="'material'"
-            height="100%"
-            width="100%"
-            @celleditapply="handleCellEditApply"
+  <div class="space-y-6">
+    <!-- Toolbar with search -->
+    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="flex-1 max-w-md">
+        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Search Directory</label>
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </span>
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search voice actors..."
+            class="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 placeholder-slate-500 text-sm transition-all duration-150"
+            @input="handleSearch"
           />
         </div>
       </div>
-
-      <!-- Floating save button -->
-      <div class="fixed bottom-6 right-6">
-        <button
-          @click="handleBulkSave"
-          :disabled="pendingChanges.size === 0 || isBulkSaving"
-          class="bg-blue-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center space-x-2"
+      <div class="flex flex-wrap items-center gap-3 shrink-0">
+        <router-link
+          to="/voice-actors/new"
+          class="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-4 rounded-xl text-sm transition-all duration-150 flex items-center space-x-2 shrink-0 shadow-lg shadow-blue-500/10 border border-blue-500/20"
         >
-          <span
-            v-if="isBulkSaving"
-            class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"
-          ></span>
-          <span>{{
-            isBulkSaving ? "Saving..." : `Save All (${pendingChanges.size})`
-          }}</span>
-        </button>
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          <span>Add Voice Actor</span>
+        </router-link>
+        <div class="flex items-center space-x-2 text-xs text-slate-400 bg-slate-950 border border-slate-800/80 px-4 py-2.5 rounded-xl shrink-0">
+          <span class="h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
+          <span>Auto-saves changes on edit</span>
+        </div>
       </div>
+    </div>
 
-      <!-- Toast notifications -->
-      <div
-        v-if="toast.show"
-        class="fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm"
-        :class="
-          toast.type === 'success'
-            ? 'bg-green-100 text-green-800'
-            : toast.type === 'error'
-              ? 'bg-red-100 text-red-800'
-              : 'bg-blue-100 text-blue-800'
-        "
-      >
-        <p>{{ toast.message }}</p>
+    <!-- Loading indicator -->
+    <div
+      v-if="isLoading"
+      class="flex flex-col items-center justify-center py-24 space-y-3 bg-slate-900/40 border border-slate-800/60 rounded-2xl"
+    >
+      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+      <p class="text-slate-400 text-sm">Loading voice actors...</p>
+    </div>
+
+    <!-- Error message -->
+    <div v-else-if="error" class="p-4 bg-red-950/30 border border-red-900/50 rounded-xl flex items-center justify-between text-red-200 text-sm">
+      <div class="flex items-center space-x-3">
+        <svg class="h-5 w-5 text-red-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <span>{{ error }}</span>
       </div>
-    </main>
+      <button
+        @click="fetchVoiceActors"
+        class="py-1.5 px-3 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-semibold transition-all"
+      >
+        Retry
+      </button>
+    </div>
+
+    <!-- Revogrid container -->
+    <div v-else class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl">
+      <div class="spreadsheet-container rounded-xl overflow-hidden border border-slate-800/50">
+        <revogrid
+          ref="revoGridRef"
+          :source="tableData"
+          :columns="revoColumns"
+          :theme="'darkMaterial'"
+          height="100%"
+          width="100%"
+          @celleditapply="handleCellEditApply"
+        />
+      </div>
+    </div>
+
+    <!-- Floating save button -->
+    <div class="fixed bottom-8 right-8 z-40">
+      <button
+        @click="handleBulkSave"
+        :disabled="pendingChanges.size === 0 || isBulkSaving"
+        class="bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 disabled:border-slate-800 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:scale-[1.02] active:scale-[0.98] border border-blue-500/20 transition-all duration-150 flex items-center space-x-2.5"
+      >
+        <span
+          v-if="isBulkSaving"
+          class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"
+        ></span>
+        <svg v-else class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+        </svg>
+        <span>{{
+          isBulkSaving ? "Saving changes..." : `Save All Changes (${pendingChanges.size})`
+        }}</span>
+      </button>
+    </div>
+
+    <!-- Toast notifications -->
+    <div
+      v-if="toast.show"
+      class="fixed top-6 right-6 z-50 p-4 rounded-xl border shadow-2xl text-sm max-w-sm flex items-center space-x-3 transition-all duration-300"
+      :class="
+        toast.type === 'success'
+          ? 'bg-green-950/40 border-green-900/60 text-green-200'
+          : toast.type === 'error'
+          ? 'bg-red-950/40 border-red-900/60 text-red-200'
+          : 'bg-slate-900 border-slate-800 text-slate-200'
+      "
+    >
+      <span>{{ toast.message }}</span>
+    </div>
   </div>
 </template>
 

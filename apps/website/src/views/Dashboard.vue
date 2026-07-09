@@ -1,59 +1,61 @@
 <template>
-  <div class="w-full flex flex-col min-h-screen">
-    <header class="bg-blue-600 text-white p-4">
-      <div class="flex justify-between items-center">
-        <h1 class="text-2xl font-bold">Dashboard</h1>
-        <router-link
-          to="/voice-actor-spreadsheet"
-          class="px-4 py-2 bg-white text-blue-600 rounded-md font-medium text-sm"
-        >
-          Voice Actor Spreadsheet
-        </router-link>
+  <div class="space-y-6">
+    <!-- Loading state -->
+    <div v-if="loading" class="flex flex-col items-center justify-center py-24 space-y-3 bg-slate-900/40 border border-slate-800/60 rounded-2xl">
+      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+      <p class="text-slate-400 text-sm">Loading dashboard data...</p>
+    </div>
+
+    <!-- Error state -->
+    <div v-else-if="error" class="p-4 bg-red-950/30 border border-red-900/50 rounded-xl flex items-center justify-between text-red-200 text-sm">
+      <div class="flex items-center space-x-3">
+        <svg class="h-5 w-5 text-red-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <span>{{ error }}</span>
       </div>
-    </header>
-    <main class="flex-1 p-4 space-y-4 overflow-x-hidden">
-      <!-- Loading state -->
-      <div v-if="loading" class="flex items-center justify-center h-64">
-        <p class="text-gray-500">Loading dashboard data...</p>
+      <button
+        @click="fetchDashboardData"
+        class="py-1.5 px-3 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-semibold transition-all"
+      >
+        Retry
+      </button>
+    </div>
+
+    <!-- Charts Grid Layout -->
+    <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- User Registrations Bar Chart -->
+      <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl max-w-full lg:col-span-2">
+        <h2 class="text-lg font-bold text-white mb-4">User Registrations Over Time</h2>
+        <BarChart :data="userRegistrationsData" :options="barChartOptions" />
       </div>
 
-      <!-- Error state -->
-      <div v-else-if="error" class="bg-red-100 p-4 rounded-lg">
-        <p class="text-red-700">{{ error }}</p>
-        <button @click="fetchDashboardData" class="mt-2 px-4 py-2 bg-red-600 text-white rounded">
-          Retry
-        </button>
-      </div>
-
-      <!-- Charts -->
-      <div v-else class="space-y-4">
-        <!-- User Registrations Bar Chart -->
-        <div class="bg-white p-4 rounded-lg shadow max-w-full">
-          <h2 class="text-lg font-semibold mb-2">User Registrations Over Time</h2>
-          <BarChart :data="userRegistrationsData" :options="barChartOptions" />
-        </div>
-
-        <!-- Voice Actor Growth Line Chart -->
-        <div class="bg-white p-4 rounded-lg shadow max-w-full">
-          <h2 class="text-lg font-semibold mb-2">Voice Actor Growth</h2>
-          <div class="mb-4">
-            <label for="time-unit" class="block text-sm font-medium text-gray-700 mb-1">Time Unit</label>
-            <select id="time-unit" v-model="selectedUnit" class="w-full p-2 border border-gray-300 rounded-md">
+      <!-- Voice Actor Growth Line Chart -->
+      <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl max-w-full">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <h2 class="text-lg font-bold text-white">Voice Actor Growth</h2>
+          <div class="flex items-center space-x-2">
+            <label for="time-unit" class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Time Unit:</label>
+            <select
+              id="time-unit"
+              v-model="selectedUnit"
+              class="bg-slate-950 border border-slate-800 text-slate-200 text-xs font-medium rounded-xl py-1.5 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-150"
+            >
               <option value="day">Day</option>
               <option value="week">Week</option>
               <option value="month">Month</option>
             </select>
           </div>
-          <LineChart :data="voiceActorGrowthData" :options="lineChartOptions" />
         </div>
-
-        <!-- Top Voice Actors Pie Chart -->
-        <div class="bg-white p-4 rounded-lg shadow max-w-full">
-          <h2 class="text-lg font-semibold mb-2">Top Voice Actors</h2>
-          <PieChart :data="topVoiceActorsData" :options="pieChartOptions" />
-        </div>
+        <LineChart :data="voiceActorGrowthData" :options="lineChartOptions" />
       </div>
-    </main>
+
+      <!-- Top Voice Actors Pie Chart -->
+      <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl max-w-full">
+        <h2 class="text-lg font-bold text-white mb-4">Top Voice Actors</h2>
+        <PieChart :data="topVoiceActorsData" :options="pieChartOptions" />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -108,15 +110,20 @@ function aggregateData(data: { date: string; count: number }[], unit: string) {
   return [];
 }
 
+// Chart text and grid styling constants for dark mode
+const chartTextColor = '#94a3b8'; // slate-400
+const chartGridColor = '#1e293b'; // slate-800
+
 // Chart data
 const userRegistrationsData = ref<ChartData>({
   labels: [],
   datasets: [{
     label: 'User Registrations',
     data: [],
-    backgroundColor: 'rgba(54, 162, 235, 0.6)',
-    borderColor: 'rgba(54, 162, 235, 1)',
-    borderWidth: 1
+    backgroundColor: 'rgba(59, 130, 246, 0.25)', // blue-500 with opacity
+    borderColor: 'rgb(59, 130, 246)',
+    borderWidth: 1.5,
+    borderRadius: 6
   }]
 });
 
@@ -130,17 +137,19 @@ const voiceActorGrowthData = computed<ChartData>(() => {
   return {
     labels: aggregated.map(item => item.period),
     datasets: [{
-      label: 'Voice Actor Links',
+      label: 'New Voice Actors',
       data: aggregated.map(item => item.count),
-      borderColor: 'rgba(75, 192, 192, 1)',
-      backgroundColor: 'rgba(75, 192, 192, 0.2)',
-      tension: 0.1
+      borderColor: 'rgb(168, 85, 247)', // purple-500
+      backgroundColor: 'rgba(168, 85, 247, 0.1)',
+      tension: 0.4,
+      fill: true
     }, {
       label: 'Cumulative Voice Actors',
       data: cumulative,
-      borderColor: 'rgba(0, 128, 128, 1)',
-      backgroundColor: 'rgba(0, 128, 128, 0.2)',
-      tension: 0.1
+      borderColor: 'rgb(236, 72, 153)', // pink-500
+      backgroundColor: 'rgba(236, 72, 153, 0.1)',
+      tension: 0.4,
+      fill: true
     }]
   };
 });
@@ -151,23 +160,24 @@ const topVoiceActorsData = ref<ChartData>({
     label: 'Roles',
     data: [],
     backgroundColor: [
-      'rgba(255, 99, 132, 0.6)',
-      'rgba(54, 162, 235, 0.6)',
-      'rgba(255, 205, 86, 0.6)',
-      'rgba(75, 192, 192, 0.6)',
-      'rgba(153, 102, 255, 0.6)',
-      'rgba(255, 159, 64, 0.6)',
-      'rgba(199, 199, 199, 0.6)',
-      'rgba(83, 102, 255, 0.6)',
-      'rgba(255, 99, 255, 0.6)',
-      'rgba(99, 255, 132, 0.6)'
+      'rgba(59, 130, 246, 0.8)',   // blue-500
+      'rgba(168, 85, 247, 0.8)',  // purple-500
+      'rgba(236, 72, 153, 0.8)',   // pink-500
+      'rgba(244, 63, 94, 0.8)',    // rose-500
+      'rgba(249, 115, 22, 0.8)',   // orange-500
+      'rgba(234, 179, 8, 0.8)',    // yellow-500
+      'rgba(34, 197, 94, 0.8)',    // green-500
+      'rgba(20, 184, 166, 0.8)',   // teal-500
+      'rgba(6, 182, 212, 0.8)',    // cyan-500
+      'rgba(99, 102, 241, 0.8)'    // indigo-500
     ],
-    borderWidth: 1
+    borderColor: '#0f172a', // slate-900 to separate segments cleanly
+    borderWidth: 2
   }]
 });
 
 // Chart options
-const barChartOptions: ChartOptions = {
+const barChartOptions = computed<ChartOptions>(() => ({
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
@@ -176,36 +186,94 @@ const barChartOptions: ChartOptions = {
     }
   },
   scales: {
+    x: {
+      grid: {
+        color: chartGridColor
+      },
+      ticks: {
+        color: chartTextColor,
+        font: {
+          family: 'Inter, sans-serif',
+          size: 11
+        }
+      }
+    },
     y: {
-      beginAtZero: true
+      beginAtZero: true,
+      grid: {
+        color: chartGridColor
+      },
+      ticks: {
+        color: chartTextColor,
+        font: {
+          family: 'Inter, sans-serif',
+          size: 11
+        }
+      }
     }
   }
-};
+}));
 
-const lineChartOptions: ChartOptions = {
+const lineChartOptions = computed<ChartOptions>(() => ({
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
     legend: {
-      display: true
+      display: true,
+      labels: {
+        color: chartTextColor,
+        font: {
+          family: 'Inter, sans-serif',
+          size: 11
+        }
+      }
     }
   },
   scales: {
+    x: {
+      grid: {
+        color: chartGridColor
+      },
+      ticks: {
+        color: chartTextColor,
+        font: {
+          family: 'Inter, sans-serif',
+          size: 11
+        }
+      }
+    },
     y: {
-      beginAtZero: true
+      beginAtZero: true,
+      grid: {
+        color: chartGridColor
+      },
+      ticks: {
+        color: chartTextColor,
+        font: {
+          family: 'Inter, sans-serif',
+          size: 11
+        }
+      }
     }
   }
-};
+}));
 
-const pieChartOptions: ChartOptions = {
+const pieChartOptions = computed<ChartOptions>(() => ({
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
     legend: {
-      position: 'bottom'
+      position: 'bottom',
+      labels: {
+        color: chartTextColor,
+        font: {
+          family: 'Inter, sans-serif',
+          size: 11
+        }
+      }
     }
   }
-};
+}));
 
 // Data fetching function
 const fetchDashboardData = async () => {

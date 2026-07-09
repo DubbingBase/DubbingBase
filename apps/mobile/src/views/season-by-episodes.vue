@@ -9,6 +9,9 @@
       </ion-toolbar>
     </ion-header>
     <ion-content>
+      <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
+        <ion-refresher-content></ion-refresher-content>
+      </ion-refresher>
       <ActionButtons
         :hasWikidataId="hasWikidataId"
         :hasData="hasData"
@@ -32,9 +35,21 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, onUnmounted, computed } from "vue";
+import { ref, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { IonPage, IonHeader, IonToolbar, IonButtons, IonBackButton, IonTitle, IonContent, toastController } from "@ionic/vue";
+import {
+  IonPage,
+  IonHeader,
+  IonToolbar,
+  IonButtons,
+  IonBackButton,
+  IonTitle,
+  IonContent,
+  toastController,
+  onIonViewDidEnter,
+  IonRefresher,
+  IonRefresherContent,
+} from "@ionic/vue";
 import LoadingSpinner from "../components/common/LoadingSpinner.vue";
 import { supabase } from "../api/supabase";
 import { enqueueAndProcessMedia } from "../api/mediaQueue";
@@ -92,44 +107,15 @@ function stopQueuePolling() {
   }
 }
 
-function startQueuePolling() {
-  if (pollingInterval) return;
-
-  isFetching.value = true;
-  pollingInterval = setInterval(async () => {
-    await fetchQueueStatus();
-
-    if (queueStatus.value === "completed") {
-      stopQueuePolling();
-      const toast = await toastController.create({
-        message: "Voice cast updated successfully!",
-        duration: 2000,
-        position: "top",
-        color: "success",
-      });
-      await toast.present();
-
-      try {
-        await fetchEpisodeData();
-      } catch (error) {
-        console.error("Error fetching episode data:", error);
-      } finally {
-        isFetching.value = false;
-      }
-    } else if (queueStatus.value === "failed") {
-      stopQueuePolling();
-      const errorMsg = queueErrorMessage.value || "Fetch failed.";
-      const toast = await toastController.create({
-        message: errorMsg,
-        duration: 2000,
-        position: "top",
-        color: "danger",
-      });
-      await toast.present();
-      isFetching.value = false;
-    }
-  }, 5000);
-}
+const handleRefresh = async (event: any) => {
+  try {
+    await fetchEpisodeData();
+  } catch (error) {
+    console.error("Error refreshing episode data:", error);
+  } finally {
+    event.target.complete();
+  }
+};
 
 async function fetchEpisodeInfos() {
   const id = wikiDataId.value;
@@ -148,9 +134,16 @@ async function fetchEpisodeInfos() {
       episodeNumber: Number(episode.value.episode_number),
     });
     queueStatus.value = "pending";
-    startQueuePolling();
+    const toast = await toastController.create({
+      message: "Import started! The voice cast will be updated shortly.",
+      duration: 3000,
+      position: "top",
+      color: "info",
+    });
+    await toast.present();
   } catch (err) {
     console.error("Error adding request to queue:", err);
+  } finally {
     isFetching.value = false;
   }
 }
@@ -180,22 +173,21 @@ async function fetchEpisodeData() {
   const seasonNumber = route.params.season;
   const episodeNumber = route.params.episode;
   
-  const [episodeResponse] = await Promise.all([
-    supabase.functions.invoke("episode", { body: { id: serieId, season_number: seasonNumber, episode_number: episodeNumber } }),
-    fetchQueueStatus(),
-  ]);
+  const episodeResponse = await supabase.functions.invoke("episode", {
+    body: { id: serieId, season_number: seasonNumber, episode_number: episodeNumber }
+  });
 
   const data = episodeResponse.data;
   episode.value = data.episode;
   dbVoiceActors.value = data.db_voice_actors || [];
   if (!episode.value) error.value = "Épisode introuvable.";
 
-  if (queueStatus.value === "pending" || queueStatus.value === "processing") {
-    startQueuePolling();
+  if (!hasData.value && hasWikidataId.value) {
+    await fetchQueueStatus();
   }
 }
 
-onMounted(async () => {
+onIonViewDidEnter(async () => {
   isLoading.value = true;
   error.value = "";
   try {
@@ -205,10 +197,6 @@ onMounted(async () => {
   } finally {
     isLoading.value = false;
   }
-});
-
-onUnmounted(() => {
-  stopQueuePolling();
 });
 </script>
 

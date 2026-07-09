@@ -6,11 +6,7 @@
           <ion-back-button :default-href="{ name: 'Home' }" />
         </ion-buttons>
         <ion-title>Voix</ion-title>
-        <ion-buttons slot="end" v-if="isAdmin">
-          <router-link :to="{ name: 'EditVoiceActor', params: { id: voiceActor?.id } }">
-            <ion-button size="small" color="primary">Edit</ion-button>
-          </router-link>
-        </ion-buttons>
+
       </ion-toolbar>
     </ion-header>
     <ion-content>

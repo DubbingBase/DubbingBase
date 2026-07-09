@@ -18,9 +18,6 @@ import Search from "../views/search.vue";
 import SeasonDetails from "@/views/season-details.vue";
 import SeasonByEpisode from "@/views/season-by-episodes.vue";
 import Login from "../views/login.vue";
-import AddVoiceCast from "@/views/admin/AddVoiceCast.vue";
-import EditVoiceActor from "@/views/admin/EditVoiceActor.vue";
-import Admin from "../views/Admin.vue";
 
 const routes: readonly RouteRecordRaw[] = [
   {
@@ -57,24 +54,6 @@ const routes: readonly RouteRecordRaw[] = [
         name: "VoiceActorProfile",
         path: "/tabs/voice-actor-profile/:id",
         component: () => import("../views/voice-actor-profile.vue"),
-      },
-      {
-        name: "Admin",
-        path: "/tabs/admin",
-        component: Admin,
-        meta: { requiresAdmin: true },
-      },
-      {
-        name: "AddVoiceCast",
-        path: "/tabs/admin/add-voice-cast/:id",
-        component: AddVoiceCast,
-        meta: { requiresAdmin: true },
-      },
-      {
-        name: "EditVoiceActor",
-        path: "/tabs/admin/edit-voice-actor/:id",
-        component: EditVoiceActor,
-        meta: { requiresAdmin: true },
       },
     ],
   },

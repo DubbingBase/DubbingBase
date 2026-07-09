@@ -9,6 +9,9 @@
       </ion-toolbar>
     </ion-header>
     <ion-content>
+      <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
+        <ion-refresher-content></ion-refresher-content>
+      </ion-refresher>
       <ActionButtons
         :hasWikidataId="hasWikidataId"
         :hasData="hasData"
@@ -60,7 +63,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, onUnmounted, computed, watch } from "vue";
+import { ref, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
   IonPage,
@@ -73,6 +76,9 @@ import {
   IonSegment,
   IonSegmentButton,
   toastController,
+  onIonViewDidEnter,
+  IonRefresher,
+  IonRefresherContent,
 } from "@ionic/vue";
 import { supabase } from "../api/supabase";
 import { enqueueAndProcessMedia } from "../api/mediaQueue";
@@ -144,53 +150,15 @@ const fetchQueueStatus = async () => {
   }
 };
 
-let pollingInterval: any = null;
-
-function stopQueuePolling() {
-  if (pollingInterval) {
-    clearInterval(pollingInterval);
-    pollingInterval = null;
+const handleRefresh = async (event: any) => {
+  try {
+    await fetchData();
+  } catch (error) {
+    console.error("Error refreshing season data:", error);
+  } finally {
+    event.target.complete();
   }
-}
-
-function startQueuePolling() {
-  if (pollingInterval) return;
-
-  isFetching.value = true;
-  pollingInterval = setInterval(async () => {
-    await fetchQueueStatus();
-
-    if (queueStatus.value === "completed") {
-      stopQueuePolling();
-      const toast = await toastController.create({
-        message: "Voice cast updated successfully!",
-        duration: 2000,
-        position: "top",
-        color: "success",
-      });
-      await toast.present();
-
-      try {
-        await fetchData();
-      } catch (error) {
-        console.error("Error fetching season data:", error);
-      } finally {
-        isFetching.value = false;
-      }
-    } else if (queueStatus.value === "failed") {
-      stopQueuePolling();
-      const errorMsg = queueErrorMessage.value || "Fetch failed.";
-      const toast = await toastController.create({
-        message: errorMsg,
-        duration: 2000,
-        position: "top",
-        color: "danger",
-      });
-      await toast.present();
-      isFetching.value = false;
-    }
-  }, 5000);
-}
+};
 
 async function fetchInfos() {
   const id = wikiDataId.value;
@@ -208,9 +176,16 @@ async function fetchInfos() {
       seasonNumber: Number(route.params.season),
     });
     queueStatus.value = "pending";
-    startQueuePolling();
+    const toast = await toastController.create({
+      message: "Import started! The voice cast will be updated shortly.",
+      duration: 3000,
+      position: "top",
+      color: "info",
+    });
+    await toast.present();
   } catch (err) {
     console.error("Error adding request to queue:", err);
+  } finally {
     isFetching.value = false;
   }
 }
@@ -265,20 +240,17 @@ async function fetchData() {
     const serieId = route.params.id;
     const seasonNumber = route.params.season;
     
-    const [seasonResponse] = await Promise.all([
-      supabase.functions.invoke("season", {
-        body: { id: serieId, season_number: seasonNumber },
-      }),
-      fetchQueueStatus(),
-    ]);
+    const seasonResponse = await supabase.functions.invoke("season", {
+      body: { id: serieId, season_number: seasonNumber },
+    });
 
     const data = seasonResponse.data;
     season.value = data.season;
     dbVoiceActors.value = data.db_voice_actors || [];
     if (!season.value) error.value = "Saison introuvable.";
 
-    if (queueStatus.value === "pending" || queueStatus.value === "processing") {
-      startQueuePolling();
+    if (!hasData.value && hasWikidataId.value) {
+      await fetchQueueStatus();
     }
   } catch (e: any) {
     error.value = e.message || "Erreur lors du chargement.";
@@ -287,11 +259,8 @@ async function fetchData() {
   }
 }
 
-onMounted(fetchData);
+onIonViewDidEnter(fetchData);
 watch(() => route.query.episode, fetchData);
-onUnmounted(() => {
-  stopQueuePolling();
-});
 </script>
 
 <style lang="scss" scoped>
