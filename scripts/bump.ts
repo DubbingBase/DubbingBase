@@ -12,6 +12,7 @@ execSync(`pnpm changeset version`, { stdio: "inherit" });
 // 2. Sync Mobile App Version to Native Files
 const mobilePkgPath = "apps/mobile/package.json";
 let version = "";
+const modifiedFiles: string[] = [];
 
 if (fs.existsSync(mobilePkgPath)) {
   const pkg = JSON.parse(fs.readFileSync(mobilePkgPath, "utf8"));
@@ -36,6 +37,7 @@ if (fs.existsSync(mobilePkgPath)) {
     }
 
     fs.writeFileSync(gradlePath, gradleContent);
+    modifiedFiles.push(gradlePath);
     console.log(
       `   Updated Capacitor versionCode to ${newVersionCode} and versionName to "${version}"`,
     );
@@ -47,6 +49,7 @@ if (fs.existsSync(mobilePkgPath)) {
     const tauriConf = JSON.parse(fs.readFileSync(tauriConfPath, "utf8"));
     tauriConf.version = version;
     fs.writeFileSync(tauriConfPath, JSON.stringify(tauriConf, null, 2));
+    modifiedFiles.push(tauriConfPath);
     console.log(`   Updated Tauri config version`);
   }
 
@@ -59,6 +62,7 @@ if (fs.existsSync(mobilePkgPath)) {
       `version = "${version}"`,
     );
     fs.writeFileSync(cargoPath, updatedToml);
+    modifiedFiles.push(cargoPath);
 
     // 2.4 Update Cargo.lock
     console.log("   Updating Cargo.lock...");
@@ -66,6 +70,7 @@ if (fs.existsSync(mobilePkgPath)) {
       "cargo metadata --manifest-path apps/mobile/src-tauri/Cargo.toml > /dev/null",
       { stdio: "inherit" },
     );
+    modifiedFiles.push("apps/mobile/src-tauri/Cargo.lock");
   }
 } else {
   console.warn(
@@ -77,8 +82,20 @@ console.log(`✅ Bumped versions`);
 
 // 3. Commit and tag
 if (shouldPush) {
-  execSync(`git add .`, { stdio: "inherit" });
-  execSync(`git commit -m "chore: bump versions"`, { stdio: "inherit" });
+  // Stage only the files updated by this sync script
+  for (const file of modifiedFiles) {
+    if (fs.existsSync(file)) {
+      execSync(`git add ${file}`, { stdio: "inherit" });
+    }
+  }
+
+  // Commit only if there are actually version sync files staged
+  try {
+    execSync(`git diff --cached --quiet`);
+    console.log("   No native version changes to commit");
+  } catch (error) {
+    execSync(`git commit -m "chore: sync native versions"`, { stdio: "inherit" });
+  }
 
   execSync(`pnpm changeset tag`, { stdio: "inherit" });
   console.log(`🏷️  Created changeset tags`);
