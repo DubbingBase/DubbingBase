@@ -133,3 +133,8 @@ pnpm changeset tag
 git push && git push origin --tags
 """
 
+[tasks.check-functions]
+description = "Verifies all Edge Functions are configured in supabase/config.toml"
+dir = "packages/database"
+run = "./check-functions.sh"
+
