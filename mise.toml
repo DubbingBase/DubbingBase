@@ -121,6 +121,11 @@ run = "pnpm changeset"
 [tasks.bump]
 description = "Consumes changesets, bumps versions, commits, tags, and pushes to remote"
 run = """
+if [ "$(git branch --show-current)" != "main" ]; then
+  echo "❌ Error: You can only run 'mise run bump' on the 'main' branch (current: $(git branch --show-current))!"
+  exit 1
+fi
+
 pnpm changeset version
 git add .
 git diff --cached --quiet || git commit -m "chore: version packages"
