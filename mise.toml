@@ -119,9 +119,11 @@ description = "Create a new changeset to describe package changes"
 run = "pnpm changeset"
 
 [tasks.bump]
-description = "Consumes changesets, bumps versions, tags, and pushes to remote"
+description = "Consumes changesets, bumps versions, commits, tags, and pushes to remote"
 run = """
 pnpm changeset version
+git add .
+git diff --cached --quiet || git commit -m "chore: version packages"
 pnpm changeset tag
 git push && git push origin --tags
 """
