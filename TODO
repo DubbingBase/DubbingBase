@@ -1,6 +1,7 @@
 filter bar to search inside the movie cast to search for "woody" or "tom hanks" or "richard darbois"
 fix search
 fix seqrch populqrity
+fix linking voice actor from a show (check if it works for movie first)
 add pull to refresh
 fix profiles
 add gamification
