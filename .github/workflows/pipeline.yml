@@ -120,6 +120,9 @@ jobs:
         run: pnpm install
 
       - name: Build website
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
         run: pnpm --filter=@app/website build
 
       - name: Deploy to Netlify
