@@ -29,10 +29,13 @@
       ]"
     >
       <!-- Sidebar Header -->
-      <div class="h-16 flex items-center px-6 border-b border-slate-800 shrink-0">
+      <div class="h-16 flex items-center justify-between px-6 border-b border-slate-800 shrink-0">
         <h1 class="text-2xl font-black tracking-tight text-white bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-400">
           DubbingBase
         </h1>
+        <span class="text-[10px] px-2 py-0.5 bg-slate-800 text-slate-400 rounded-full font-mono font-semibold border border-slate-700/50">
+          v{{ version }}
+        </span>
       </div>
 
       <!-- Navigation Links -->
@@ -97,7 +100,9 @@
 import { ref, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { user, signOut } from "@/lib/auth";
+import pkg from "../../package.json";
 
+const version = pkg.version;
 const route = useRoute();
 const router = useRouter();
 const isSidebarOpen = ref(false);

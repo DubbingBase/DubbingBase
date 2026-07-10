@@ -65,8 +65,8 @@ export function useVoiceActorManagement(
     return voiceActors.value.filter((va) => va.tmdb_id === tmdbId);
   };
 
-  const openVoiceActorSearch = (actor: any) => {
-    selectedActor.value = actor;
+  const openVoiceActorSearch = (actorId: number) => {
+    selectedActor.value = actorId;
     searchTerm.value = "";
     searchResults.value = [];
     showVoiceActorSearch.value = true;

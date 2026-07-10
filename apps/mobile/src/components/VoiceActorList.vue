@@ -42,7 +42,7 @@ const props = defineProps<{
   goToVoiceActor: (id: number) => void;
   editVoiceActorLink?: (item: any) => void;
   confirmDeleteVoiceActorLink?: (item: any) => void;
-  openVoiceActorSearch?: (actor: any) => void;
+  openVoiceActorSearch?: (actorId: number) => void;
 }>();
 
 const handlePersonClick = (person: any) => {

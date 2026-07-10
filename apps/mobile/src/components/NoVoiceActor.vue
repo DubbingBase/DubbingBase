@@ -9,7 +9,7 @@
           <span class="ellipsis label">
             No voice actor found.
           </span>
-          <ion-button v-if="isAdmin" fill="clear" size="small" @click.stop="openVoiceActorSearch(actor)" class="add-voice-actor-btn">
+          <ion-button v-if="isAdmin" fill="clear" size="small" @click.stop="openVoiceActorSearch(actor.id)" class="add-voice-actor-btn">
             <ion-icon :icon="personAddOutline" slot="start"></ion-icon>
             Add
           </ion-button>

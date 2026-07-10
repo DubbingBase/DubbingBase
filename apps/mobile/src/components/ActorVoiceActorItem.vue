@@ -120,7 +120,7 @@ const props = defineProps<{
   isAdmin?: boolean;
   editVoiceActorLink?: (item: any) => void;
   confirmDeleteVoiceActorLink?: (item: any) => void;
-  openVoiceActorSearch?: (actor: any) => void;
+  openVoiceActorSearch?: (actorId: number) => void;
   voiceActors?: any[];
 }>();
 

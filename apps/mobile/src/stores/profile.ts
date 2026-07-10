@@ -340,6 +340,7 @@ export const useProfileStore = defineStore("profile", () => {
         {
           body: {
             ...workEntry,
+            media_type: workEntry.media_type === "serie" ? "tv" : workEntry.media_type,
             voice_actor_id: currentVoiceActor.value.id,
             targetUserId: identifiers.targetUserId,
           },
