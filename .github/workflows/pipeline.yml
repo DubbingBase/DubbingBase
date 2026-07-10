@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - "**"
-    tags:
-      - "@app/**"
   workflow_dispatch:
 
 # Prevent concurrent deployments from clashing (especially on db push)
@@ -13,7 +11,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
-# Grant permissions required for posting deployments, comments, and statuses
+# Grant permissions required for posting Netlify deployments, comments, and statuses
 permissions:
   contents: write
   deployments: write
@@ -25,10 +23,9 @@ jobs:
   detect:
     runs-on: ubuntu-latest
     outputs:
-      database: ${{ steps.determine.outputs.database }}
-      mobile: ${{ steps.determine.outputs.mobile }}
-      website: ${{ steps.determine.outputs.website }}
-      is_release: ${{ steps.determine.outputs.is_release }}
+      database: ${{ steps.filter.outputs.database }}
+      mobile: ${{ steps.filter.outputs.mobile }}
+      website: ${{ steps.filter.outputs.website }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -45,34 +42,10 @@ jobs:
             website:
               - 'apps/website/**'
 
-      - name: Determine targets
-        id: determine
-        run: |
-          DATABASE="${{ steps.filter.outputs.database }}"
-          MOBILE="${{ steps.filter.outputs.mobile }}"
-          WEBSITE="${{ steps.filter.outputs.website }}"
-          IS_RELEASE="false"
-
-          if [[ "${{ github.ref }}" == refs/tags/@app/supabase@* ]]; then
-            DATABASE="true"
-            IS_RELEASE="true"
-          elif [[ "${{ github.ref }}" == refs/tags/@app/mobile@* ]]; then
-            MOBILE="true"
-            IS_RELEASE="true"
-          elif [[ "${{ github.ref }}" == refs/tags/@app/website@* ]]; then
-            WEBSITE="true"
-            IS_RELEASE="true"
-          fi
-
-          echo "database=$DATABASE" >> $GITHUB_OUTPUT
-          echo "mobile=$MOBILE" >> $GITHUB_OUTPUT
-          echo "website=$WEBSITE" >> $GITHUB_OUTPUT
-          echo "is_release=$IS_RELEASE" >> $GITHUB_OUTPUT
-
-  # Job 2: Deploy Supabase (runs first if database needs updating)
+  # Job 2: Deploy Supabase (runs first if database needs updating on main)
   deploy-supabase:
     needs: detect
-    if: needs.detect.outputs.database == 'true'
+    if: github.ref == 'refs/heads/main' && needs.detect.outputs.database == 'true'
     runs-on: ubuntu-latest
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
@@ -116,12 +89,13 @@ jobs:
         run: supabase functions deploy --project-ref $PROJECT_ID
         working-directory: packages/database
 
-  # Job 3: Deploy Website (runs after deploy-supabase if both triggered)
+  # Job 3: Deploy Website (runs after deploy-supabase on main)
   deploy-website:
     needs: [detect, deploy-supabase]
-    # Run if website has changes, and if database job succeeded (or wasn't needed)
+    # Run if on main, website has changes, and if database job succeeded (or wasn't needed)
     if: |
       always() && 
+      github.ref == 'refs/heads/main' &&
       needs.detect.outputs.website == 'true' && 
       (needs.deploy-supabase.result == 'success' || needs.deploy-supabase.result == 'skipped')
     runs-on: ubuntu-latest
@@ -158,7 +132,7 @@ jobs:
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
 
-  # Job 4: Build Android app (runs after deploy-supabase if both triggered)
+  # Job 4: Build Android app (runs on any branch if mobile has changes)
   build-android:
     needs: [detect, deploy-supabase]
     # Run if mobile has changes, and if database job succeeded (or wasn't needed)
@@ -197,7 +171,7 @@ jobs:
           base64 -d <<< "${{ secrets.KEYSTORE_FILE }}" > ./apps/mobile/android/dubbing-base-keystore.jks
 
       - name: Set Android dev version name
-        if: "!startsWith(github.ref, 'refs/tags/@app/mobile@')"
+        if: "github.ref != 'refs/heads/main'"
         run: |
           VERSION=$(node -p "require('./apps/mobile/package.json').version")
           echo "ANDROID_VERSION_NAME=${VERSION}-build.${GITHUB_RUN_NUMBER}" >> $GITHUB_ENV
@@ -237,12 +211,13 @@ jobs:
           path: apps/mobile/android/app/build/outputs/apk/release/app-release-signed.apk
           retention-days: 30
 
-  # Job 5: Upload AAB to Play Store (runs only on mobile release tag)
+  # Job 5: Upload AAB to Play Store (runs only on main branch pushes)
   upload-play-store:
     needs: [detect, build-android]
     if: |
       github.event_name != 'pull_request' && 
-      startsWith(github.ref, 'refs/tags/@app/mobile@') && 
+      github.ref == 'refs/heads/main' &&
+      needs.detect.outputs.mobile == 'true' &&
       needs.build-android.result == 'success'
     runs-on: ubuntu-latest
     steps:
