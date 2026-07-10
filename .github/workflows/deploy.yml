@@ -51,8 +51,10 @@ jobs:
       # Step 2: Run migrations. GHA will immediately abort the run if any migration fails,
       # preventing broken functions from being deployed.
       - name: Run database migrations
-        run: supabase db push --project-ref $PROJECT_ID --workdir packages/database
+        run: supabase db push --project-ref $PROJECT_ID
+        working-directory: packages/database
 
       # Step 3: Deploy all functions only if migrations were fully successful
       - name: Deploy Supabase functions
-        run: supabase functions deploy --project-ref $PROJECT_ID --workdir packages/database
+        run: supabase functions deploy --project-ref $PROJECT_ID
+        working-directory: packages/database

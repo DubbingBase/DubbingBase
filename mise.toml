@@ -119,6 +119,10 @@ description = "Create a new changeset to describe package changes"
 run = "pnpm changeset"
 
 [tasks.bump]
-description = "Consumes changesets, syncs native versions, commits, tags, and pushes to remote"
-run = "npx tsx scripts/bump.ts --push"
+description = "Consumes changesets, bumps versions, tags, and pushes to remote"
+run = """
+pnpm changeset version
+pnpm changeset tag
+git push && git push origin --tags
+"""
 
