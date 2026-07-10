@@ -1,5 +1,13 @@
 # @app/mobile
 
+## 1.0.30
+
+### Patch Changes
+
+- acafc69: sd
+- Updated dependencies [acafc69]
+  - @app/supabase@0.0.15
+
 ## 1.0.29
 
 ### Patch Changes
