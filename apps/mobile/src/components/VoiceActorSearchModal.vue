@@ -20,19 +20,26 @@
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
-      <ion-list v-if="searchResults.length > 0">
-        <ion-item v-if="isSearching" class="ion-text-center">
-          <LoadingSpinner></LoadingSpinner>
-        </ion-item>
-        <ion-item v-else-if="searchError" class="ion-text-center">
-          <ion-text color="danger">{{ searchError }}</ion-text>
-        </ion-item>
-        <ion-item
-          v-else-if="!searchResults.length && searchTerm"
-          class="ion-text-center"
-        >
-          <ion-text>No voice actors found</ion-text>
-        </ion-item>
+      <!-- Loading state -->
+      <ion-item v-if="isSearching" class="ion-text-center">
+        <LoadingSpinner></LoadingSpinner>
+      </ion-item>
+
+      <!-- Error state -->
+      <ion-item v-else-if="searchError" class="ion-text-center">
+        <ion-text color="danger">{{ searchError }}</ion-text>
+      </ion-item>
+
+      <!-- No results state -->
+      <ion-item
+        v-else-if="!searchResults.length && searchTerm"
+        class="ion-text-center"
+      >
+        <ion-text>No voice actors found</ion-text>
+      </ion-item>
+
+      <!-- Results list -->
+      <ion-list v-else-if="searchResults.length > 0">
         <ion-item
           v-for="va in searchResults"
           :key="va.id"
@@ -64,6 +71,7 @@
     </ion-content>
   </ion-modal>
 </template>
+
 
 <script setup lang="ts">
 import {

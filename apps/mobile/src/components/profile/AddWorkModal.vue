@@ -31,7 +31,7 @@
               <ion-thumbnail slot="start">
                 <img
                   v-if="result.poster_path"
-                  :src="`https://image.tmdb.org/t/p/w92${result.poster_path}`"
+                  :src="result.poster_path"
                   :alt="getMediaTitle(result)"
                 />
               </ion-thumbnail>

@@ -19,16 +19,16 @@
           <ion-list v-if="matches.length > 0">
             <SearchResultItem
               v-for="match in matches"
-              :key="match.id"
+              :key="`${match.media_type}:${match.id}`"
               :match="match"
             />
           </ion-list>
         </transition-group>
-        <p v-if="!isLoading && matches.length === 0 && trimmedQuery.length >= 3" class="empty-state">No results found</p>
-        <p v-if="!isLoading && matches.length === 0 && trimmedQuery.length < 3" class="empty-state">Start typing to search...</p>
+        <p v-if="!isLoading && matches.length === 0 && trimmedQuery.length >= 2" class="empty-state">No results found</p>
+        <p v-if="!isLoading && matches.length === 0 && trimmedQuery.length < 2" class="empty-state">Start typing to search...</p>
       </div>
       <LoadingSpinner v-if="isLoading" :overlay="true" />
-      <ion-toast :is-open="!!error" :message="error" @didDismiss="error=''"></ion-toast>
+      <ion-toast :is-open="!!errorMessage" :message="errorMessage" @didDismiss="errorMessage=''"></ion-toast>
     </ion-content>
   </ion-page>
 </template>
@@ -50,28 +50,15 @@ import { IonSearchbarCustomEvent } from "@ionic/core";
 import SearchResultItem from "@/components/SearchResultItem.vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import { supabase } from '@/api/supabase';
-
-type SearchResult = {
-  id: number;
-  media_type: "movie" | "tv" | "person" | "voice_actor";
-  poster_path?: string;
-  profile_path?: string;
-  title?: string;
-  name?: string;
-  firstname?: string;
-  lastname?: string;
-  release_date?: string;
-  first_air_date?: string;
-};
+import type { SearchResult } from "@/types/search";
 
 const matches = ref<SearchResult[]>([]);
 const isLoading = ref(false);
-const error = ref('');
+// Renamed to avoid shadowing the destructured `error` from supabase calls
+const errorMessage = ref('');
 const query = ref('');
 const trimmedQuery = computed(() => query.value.trim());
 let abortController: AbortController | null = null;
-
-const priority = { voice_actor: 1, movie: 2, tv: 3, person: 4,  };
 
 const search = async (
   event: IonSearchbarCustomEvent<SearchbarInputEventDetail>
@@ -90,20 +77,20 @@ const search = async (
 
   abortController = new AbortController();
   isLoading.value = true;
-  error.value = '';
+  errorMessage.value = '';
 
   try {
-    const { data, error } = await supabase.functions.invoke('search', {
+    const { data, error: supaError } = await supabase.functions.invoke('search', {
       body: { query: trimmedQuery.value },
+      signal: abortController.signal,
     });
 
-    if (error) throw error;
+    if (supaError) throw supaError;
 
     matches.value = data || [];
-    // matches.value.sort((a, b) => priority[a.media_type] - priority[b.media_type]);
   } catch (err: any) {
-    if (err.name !== 'AbortError') {
-      error.value = err.message || 'Search failed';
+    if (err?.name !== 'AbortError') {
+      errorMessage.value = err?.message || 'Search failed';
     }
   } finally {
     isLoading.value = false;
@@ -127,4 +114,3 @@ const search = async (
   position: relative;
 }
 </style>
-

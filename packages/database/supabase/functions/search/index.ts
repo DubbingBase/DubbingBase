@@ -2,6 +2,53 @@ import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
 import { processMedia } from "../_shared/tmdb-urls.ts";
 
+/**
+ * Sanitize a user query for use in PostgreSQL full-text search.
+ * Escapes special tsquery characters to prevent syntax errors.
+ */
+function sanitizeForTextSearch(query: string): string {
+  // Remove characters that have special meaning in tsquery
+  return query.replace(/[&|!():*<>@\\'"]/g, " ").trim();
+}
+
+/**
+ * Build a tsquery-compatible OR query from individual words.
+ */
+function buildTextSearchQuery(query: string): string {
+  const sanitized = sanitizeForTextSearch(query);
+  const words = sanitized
+    .split(/\s+/)
+    .filter((w) => w.length > 0)
+    .map((w) => `'${w}'`);
+  if (words.length === 0) return "";
+  return words.join(" | ");
+}
+
+// Scoring function combining popularity, vote_average, vote_count, and recency
+function calculateScore(item: any): number {
+  let score = 0;
+
+  // Popularity weight: 0.5 (higher popularity increases score)
+  score += (item.popularity || 0) * 0.5;
+
+  // Vote average weight: 0.1 (normalized 0-10 scale)
+  score += (item.vote_average || 0) * 0.1;
+
+  // Vote count weight: 0.25 (normalized by dividing by 3000, higher vote count means more popular)
+  score += ((item.vote_count || 0) / 3000) * 0.25;
+
+  // Recency weight: 0.15 (newer items get higher score)
+  const date = item.release_date || item.first_air_date;
+  if (date) {
+    const daysSinceRelease =
+      (Date.now() - new Date(date).getTime()) / (1000 * 60 * 60 * 24);
+    // Use a base score of 1000 and subtract days to favor recency
+    score += (1000 - daysSinceRelease) * 0.0015;
+  }
+
+  return score;
+}
+
 export default {
   fetch: withSupabase<Database>({ auth: "publishable:*" }, async (req, ctx) => {
     try {
@@ -11,102 +58,145 @@ export default {
 
       const trimmedQuery = query.trim();
 
-      let resp = [];
+      if (!trimmedQuery || trimmedQuery.length < 2) {
+        return Response.json([]);
+      }
 
+      let resp: any[] = [];
+
+      // Fetch first 2 TMDB pages in parallel (40 results, enough for relevance)
       try {
-        const results = [];
-        for (let page = 1; page <= 3; page++) {
-          const response = await fetch(
-            `https://api.themoviedb.org/3/search/multi?query=${trimmedQuery}&page=${page}&language=fr-FR`,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${Deno.env.get("TMDB_API_KEY")}`,
-                Accept: "application/json",
+        const pageResponses = await Promise.all(
+          [1, 2].map((page) =>
+            fetch(
+              `https://api.themoviedb.org/3/search/multi?query=${encodeURIComponent(trimmedQuery)}&page=${page}&language=fr-FR`,
+              {
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${Deno.env.get("TMDB_API_KEY")}`,
+                  Accept: "application/json",
+                },
               },
-            },
-          );
+            )
+          ),
+        );
+
+        const results: any[] = [];
+        for (const response of pageResponses) {
           const res = await response.json();
-          const withImages = res.results.map((x: any) => processMedia(x));
-          results.push(...withImages);
+          if (res.results && Array.isArray(res.results)) {
+            const withImages = res.results
+              .filter((x: any) => x !== null)
+              .map((x: any) => processMedia(x));
+            results.push(...withImages);
+          }
         }
         resp.push(...results);
       } catch (e) {
-        console.error("e", e);
+        console.error("TMDB fetch error:", e);
       }
 
+      // Voice actor search — use unaccent-aware ilike for robustness
       try {
-        const supabaseQuery = trimmedQuery
-          .split(" ")
-          .map((x: string) => `'${x}'`)
-          .join(" | ");
-        console.log("supabaseQuery", supabaseQuery);
-        const { data, error } = await ctx.supabase
+        const searchQuery = buildTextSearchQuery(trimmedQuery);
+        console.log("supabaseQuery", searchQuery);
+
+        let voiceActorResults: any[] = [];
+
+        if (searchQuery) {
+          // Primary: full-text search on computed voice_actor_name column
+          const { data: ftsData, error: ftsError } = await ctx.supabase
+            .from("voice_actors")
+            .select()
+            .textSearch("voice_actor_name", searchQuery);
+
+          if (!ftsError && ftsData && Array.isArray(ftsData)) {
+            voiceActorResults = ftsData;
+          }
+        }
+
+        // Fallback / supplement: accent-insensitive ilike search on individual fields
+        const { data: ilikeData, error: ilikeError } = await ctx.supabase
           .from("voice_actors")
           .select()
-          .textSearch("voice_actor_name", supabaseQuery);
-        console.log("data", data);
-        console.log("error", error);
-        if (data && Array.isArray(data)) {
-          // Create a map for resp to handle merging and deduplication
-          const respMap = new Map();
+          .or(
+            `firstname.ilike.%${trimmedQuery}%,lastname.ilike.%${trimmedQuery}%`,
+          )
+          .limit(20);
+
+        if (!ilikeError && ilikeData && Array.isArray(ilikeData)) {
+          // Merge ilike results into voiceActorResults, avoiding duplicates
+          const seenIds = new Set(voiceActorResults.map((va) => va.id));
+          for (const va of ilikeData) {
+            if (!seenIds.has(va.id)) {
+              voiceActorResults.push(va);
+              seenIds.add(va.id);
+            }
+          }
+        }
+
+        console.log("voice actor results count:", voiceActorResults.length);
+
+        if (voiceActorResults.length > 0) {
+          // Build a map keyed by media_type:id to avoid cross-type collisions
+          const respMap = new Map<string, any>();
           resp.forEach((item) => {
-            respMap.set(item.id, item);
+            if (item && item.id != null) {
+              const key = `${item.media_type ?? "unknown"}:${item.id}`;
+              respMap.set(key, item);
+            }
           });
-          // Process voice_actors
-          data.forEach((voiceActor) => {
-            const key = voiceActor.tmdb_id;
-            if (respMap.has(key)) {
-              const person = respMap.get(key);
-              respMap.set(key, {
-                ...voiceActor,
-                actor: person,
-                profile_path: person.profile_path,
-                popularity: person.popularity,
-                media_type: "voice_actor",
-              });
+
+          // Process voice_actors — merge with TMDB person if tmdb_id matches
+          voiceActorResults.forEach((voiceActor) => {
+            const vaKey = `voice_actor:${voiceActor.id}`;
+            if (voiceActor.tmdb_id != null) {
+              // Look for a matching TMDB person entry by tmdb_id
+              const tmdbKey = `person:${voiceActor.tmdb_id}`;
+              if (respMap.has(tmdbKey)) {
+                const person = respMap.get(tmdbKey);
+                // Replace the raw TMDB person with the enriched voice actor
+                respMap.delete(tmdbKey);
+                respMap.set(vaKey, {
+                  ...voiceActor,
+                  actor: person,
+                  profile_path: voiceActor.profile_picture ?? person.profile_path,
+                  popularity: person.popularity ?? 50,
+                  media_type: "voice_actor",
+                });
+              } else {
+                // Voice actor with tmdb_id but no TMDB result — use moderate base score
+                respMap.set(vaKey, {
+                  ...voiceActor,
+                  profile_path: voiceActor.profile_picture,
+                  media_type: "voice_actor",
+                  popularity: 50,
+                  known_for_department: "Dubbing",
+                });
+              }
             } else {
-              respMap.set(key, {
+              // Voice actor with no tmdb_id — use a low base popularity so they
+              // rank naturally alongside other content by relevance
+              respMap.set(vaKey, {
                 ...voiceActor,
+                profile_path: voiceActor.profile_picture,
                 media_type: "voice_actor",
-                popularity: 9999,
+                popularity: 30,
                 known_for_department: "Dubbing",
               });
             }
           });
-          // Update resp with deduplicated results
+
           resp = Array.from(respMap.values());
         }
       } catch (e) {
-        console.log("e", e);
+        console.error("Voice actor search error:", e);
       }
 
-      // Scoring function combining popularity, vote_average, vote_count, and recency
-      function calculateScore(item: any): number {
-        let score = 0;
-
-        // Popularity weight: 0.5 (higher popularity increases score)
-        score += (item.popularity || 0) * 0.5;
-
-        // Vote average weight: 0.1 (normalized 0-10 scale)
-        score += (item.vote_average || 0) * 0.1;
-
-        // Vote count weight: 0.25 (normalized by dividing by 3000, higher vote count means more popular)
-        score += ((item.vote_count || 0) / 3000) * 0.25;
-
-        // Recency weight: 0.15 (newer items get higher score)
-        const date = item.release_date || item.first_air_date;
-        if (date) {
-          const daysSinceRelease =
-            (Date.now() - new Date(date).getTime()) / (1000 * 60 * 60 * 24);
-          // Use a base score of 1000 and subtract days to favor recency
-          score += (1000 - daysSinceRelease) * 0.0015;
-        }
-
-        return score;
-      }
-
-      resp = resp.sort((a, b) => calculateScore(b) - calculateScore(a));
+      // Sort by composite score
+      resp = resp
+        .filter((item) => item != null)
+        .sort((a, b) => calculateScore(b) - calculateScore(a));
 
       // Add score to each item for debugging/transparency
       resp = resp.map((item) => ({ ...item, score: calculateScore(item) }));

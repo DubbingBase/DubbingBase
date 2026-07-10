@@ -5,6 +5,11 @@ on:
     tags:
       - "v*.*.*"
 
+# Prevent concurrent deployments from clashing (especially on db push)
+concurrency:
+  group: deploy-supabase
+  cancel-in-progress: false
+
 jobs:
   deploy-supabase:
     runs-on: ubuntu-latest
@@ -15,9 +20,39 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Deploy to Supabase
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2.0.5
+        with:
+          deno-version: "2.1.9"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
         with:
           version: latest
 
-      - run: supabase functions deploy --project-ref $PROJECT_ID --workdir packages/database
+      # Step 1: Pre-verify edge functions compile & pass typecheck
+      - name: Typecheck Edge Functions
+        run: |
+          cd packages/database
+          pnpm run typecheck
+
+      # Step 2: Run migrations. GHA will immediately abort the run if any migration fails,
+      # preventing broken functions from being deployed.
+      - name: Run database migrations
+        run: supabase db push --project-ref $PROJECT_ID --workdir packages/database
+
+      # Step 3: Deploy all functions only if migrations were fully successful
+      - name: Deploy Supabase functions
+        run: supabase functions deploy --project-ref $PROJECT_ID --workdir packages/database

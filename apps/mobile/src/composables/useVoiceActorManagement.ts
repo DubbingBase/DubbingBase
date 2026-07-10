@@ -56,8 +56,6 @@ export function useVoiceActorManagement(
   const isVoting = ref(false);
   const votingError = ref("");
 
-  // Search timer for debouncing
-  let searchTimer: NodeJS.Timeout | null = null;
 
   const getVoiceActorByTmdbId = (
     tmdbId: number,
@@ -370,21 +368,15 @@ export function useVoiceActorManagement(
     }
   };
 
-  // Watch for search term changes and trigger search with debouncing
-  watch(searchTerm, (newTerm) => {
-    if (searchTimer) {
-      clearTimeout(searchTimer);
-    }
-    searchTimer = setTimeout(() => {
-      searchVoiceActors();
-    }, 300); // 300ms debounce
+  // Watch for search term changes and trigger search immediately
+  // (debouncing is handled by ion-searchbar's :debounce prop)
+  watch(searchTerm, () => {
+    searchVoiceActors();
   });
 
-  // Cleanup timer on unmount
+  // Cleanup on unmount
   onUnmounted(() => {
-    if (searchTimer) {
-      clearTimeout(searchTimer);
-    }
+    // nothing to clean up
   });
 
   watch(voiceActors, (newVal) => {

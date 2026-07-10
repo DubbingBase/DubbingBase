@@ -30,23 +30,7 @@ import {
 } from "@ionic/vue";
 import { format, parseISO } from 'date-fns';
 import MediaThumbnail from "@/components/MediaThumbnail.vue";
-
-type SearchResult = {
-  id: number;
-  media_type: "movie" | "tv" | "person" | "voice_actor";
-  poster_path?: string;
-  profile_path?: string;
-  title?: string;
-  name?: string;
-  firstname?: string;
-  lastname?: string;
-  release_date?: string;
-  first_air_date?: string;
-  known_for_department?: string;
-  nationality?: string;
-  years_active?: string;
-  awards?: string;
-};
+import type { SearchResult } from "@/types/search";
 
 interface Props {
   match: SearchResult;

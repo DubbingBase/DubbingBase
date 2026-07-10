@@ -140,7 +140,8 @@ language plpgsql
 security definer
 as $$
 begin
-  return query select * from pgmq.pop('media_queue', p_vt_seconds);
+  -- pgmq.read(queue_name, vt, qty) - read 1 message with a visibility timeout
+  return query select * from pgmq.read('media_queue', p_vt_seconds, 1);
 end;
 $$;
 
