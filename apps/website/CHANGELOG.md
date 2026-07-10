@@ -1,5 +1,11 @@
 # @app/website
 
+## 0.0.7
+
+### Patch Changes
+
+- 3a4a5a8: update
+
 ## 0.0.6
 
 ### Patch Changes
