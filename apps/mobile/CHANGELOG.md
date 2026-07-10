@@ -1,5 +1,12 @@
 # @app/mobile
 
+## 1.0.29
+
+### Patch Changes
+
+- Updated dependencies [4eb9f83]
+  - @app/supabase@0.0.14
+
 ## 1.0.28
 
 ### Patch Changes
