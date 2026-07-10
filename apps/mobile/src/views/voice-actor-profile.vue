@@ -30,31 +30,35 @@
         <div v-if="profileStore.hasProfile && editableProfile">
           <ion-list>
             <ion-item>
-              <ion-input label="First name" label-placement="stacked" v-model="(editableProfile as any).firstname"></ion-input>
+              <ion-input label="First name" label-placement="stacked" v-model="(editableProfile as any).firstname" :readonly="!canEdit"></ion-input>
             </ion-item>
             <ion-item>
-              <ion-input label="Last name" label-placement="stacked" v-model="(editableProfile as any).lastname"></ion-input>
+              <ion-input label="Last name" label-placement="stacked" v-model="(editableProfile as any).lastname" :readonly="!canEdit"></ion-input>
             </ion-item>
             <ion-item>
-              <ion-textarea label="Biography" label-placement="stacked" v-model="editableProfile.bio" :auto-grow="true"></ion-textarea>
+              <ion-textarea label="Biography" label-placement="stacked" v-model="editableProfile.bio" :auto-grow="true" :readonly="!canEdit"></ion-textarea>
             </ion-item>
             <ion-item>
-              <ion-input label="Nationality" label-placement="stacked" v-model="editableProfile.nationality"></ion-input>
+              <ion-input label="Nationality" label-placement="stacked" v-model="editableProfile.nationality" :readonly="!canEdit"></ion-input>
             </ion-item>
             <ion-item>
-              <ion-input type="date" label="Date of birth" label-placement="stacked" v-model="editableProfile.date_of_birth"></ion-input>
+              <ion-input type="date" label="Date of birth" label-placement="stacked" v-model="editableProfile.date_of_birth" :readonly="!canEdit"></ion-input>
             </ion-item>
             <ion-item>
-              <ion-input label="Awards" label-placement="stacked" v-model="(editableProfile as any).awards"></ion-input>
+              <ion-input label="Awards" label-placement="stacked" v-model="(editableProfile as any).awards" :readonly="!canEdit"></ion-input>
             </ion-item>
             <ion-item>
-              <ion-input label="Years active" label-placement="stacked" v-model="(editableProfile as any).years_active"></ion-input>
+              <ion-input label="Years active" label-placement="stacked" v-model="(editableProfile as any).years_active" :readonly="!canEdit"></ion-input>
             </ion-item>
           </ion-list>
 
-          <ion-button expand="block" @click="handleSave" :disabled="profileStore.isUpdating">
+          <ion-button v-if="canEdit" expand="block" @click="handleSave" :disabled="profileStore.isUpdating">
             <LoadingSpinner v-if="profileStore.isUpdating" name="crescent" inline />
             Save changes
+          </ion-button>
+          <ion-button v-else expand="block" fill="outline" disabled>
+            <!-- TODO: Implement Suggest Changes feature -->
+            {{ $t('common.suggestChanges') }}
           </ion-button>
 
           <div class="work-section">
@@ -64,7 +68,7 @@
                 <ion-icon slot="icon-only" :icon="add"></ion-icon>
               </ion-button>
             </div>
-            <WorkList @delete="handleDeleteWork" />
+            <WorkList :can-edit="canEdit" @delete="handleDeleteWork" />
           </div>
         </div>
 
@@ -128,7 +132,7 @@ const voiceActorId = computed(() => {
 })
 
 const canEdit = computed(() => {
-  return authStore.isAdmin || true // Voice actor profiles can be edited by their owners
+  return authStore.isAdmin || profileStore.voiceActors.some((va: any) => va.id === voiceActorId.value)
 })
 
 

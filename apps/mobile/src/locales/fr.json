@@ -31,7 +31,8 @@
     "downvote": "Vote négatif",
     "setStatus": "Définir le statut",
     "newVoiceActorsAdded": "{count} nouveaux doubleurs ajoutés",
-    "noNewChangesFound": "Aucun nouveau changement trouvé"
+    "noNewChangesFound": "Aucun nouveau changement trouvé",
+    "suggestChanges": "Suggérer des modifications (Bientôt disponible)"
   },
   "profile": {
     "userProfile": "Mon profil utilisateur",
