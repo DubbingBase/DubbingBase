@@ -3,7 +3,7 @@ name: Publish on Netlify and Supabase
 on:
   push:
     tags:
-      - "v*.*.*"
+      - "@app/supabase@*"
 
 # Prevent concurrent deployments from clashing (especially on db push)
 concurrency:

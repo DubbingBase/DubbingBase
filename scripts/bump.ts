@@ -80,13 +80,9 @@ if (shouldPush) {
   execSync(`git add .`, { stdio: "inherit" });
   execSync(`git commit -m "chore: bump versions"`, { stdio: "inherit" });
 
-  if (version) {
-    execSync(`git tag v${version}`, { stdio: "inherit" });
-    console.log(`🏷️  Created tag v${version}`);
-    execSync(`git push && git push origin v${version}`, { stdio: "inherit" });
-    console.log(`🚀 Published tag v${version} to remote`);
-  } else {
-    execSync(`git push`, { stdio: "inherit" });
-    console.log(`🚀 Published to remote`);
-  }
+  execSync(`pnpm changeset tag`, { stdio: "inherit" });
+  console.log(`🏷️  Created changeset tags`);
+  execSync(`git push && git push origin --tags`, { stdio: "inherit" });
+  console.log(`🚀 Published commits and tags to remote`);
 }
+
