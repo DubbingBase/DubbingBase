@@ -23,20 +23,25 @@ export class MediaService {
 
     console.log("voiceActorWithImages", voiceActorWithImages);
 
-    // Fetch TMDB details for each work item
-    const medias = [];
-    for (const work of voiceActor.work) {
-      const tmdbMedia = await this.tmdbClient.get(
-        `${work.content_type}/${work.content_id}`,
-        {
-          append_to_response: "credits,external_ids",
-        },
-      );
+    // Fetch TMDB details for each work item in parallel, using cached getMediaWithCredits
+    const mediaPromises = (voiceActor.work || []).map(async (work: any) => {
+      try {
+        const tmdbMedia = await this.tmdbClient.getMediaWithCredits(
+          work.content_type as "movie" | "tv",
+          work.content_id,
+        );
+        return processMedia(tmdbMedia);
+      } catch (err) {
+        console.error(
+          `Failed to fetch TMDB info for ${work.content_type} ${work.content_id}:`,
+          err,
+        );
+        return null;
+      }
+    });
 
-      const processedMedia = processMedia(tmdbMedia);
-
-      medias.push(processedMedia);
-    }
+    const results = await Promise.all(mediaPromises);
+    const medias = results.filter(Boolean);
 
     return { voiceActor: voiceActorWithImages, medias };
   }
