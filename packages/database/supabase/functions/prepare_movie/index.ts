@@ -7,7 +7,7 @@ import { VoiceActorService } from "../_shared/voice-actor-service.ts";
 import { Database } from "../_shared/database.types.ts";
 
 export default {
-  fetch: withSupabase<Database>({ auth: "secret:*" }, async (req, ctx) => {
+  fetch: withSupabase<Database>({ auth: "publishable:*" }, async (req, ctx) => {
     const voiceActorService = new VoiceActorService(ctx.supabaseAdmin);
     const lang = "fr";
 

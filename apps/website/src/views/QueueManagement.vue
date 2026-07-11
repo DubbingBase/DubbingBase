@@ -308,10 +308,10 @@ const deleteRequest = async (id: number) => {
 
 const retryFetch = async (item: QueueItem) => {
   retrying.value[item.id] = true;
-  showToast("Re-enqueuing fetch request...", "info");
+  showToast("Processing media import request...", "info");
 
   try {
-    // Delete the old request first to avoid 'Request is already in the queue' errors
+    // Delete the old request first since it is being re-run
     const { error: delErr } = await supabase.rpc("delete_media_queue_item", { p_id: item.id });
     if (delErr) {
       console.warn("Could not delete old queue item, proceeding anyway:", delErr);
@@ -324,10 +324,10 @@ const retryFetch = async (item: QueueItem) => {
       episodeNumber: item.episode_number,
     });
 
-    showToast("Request successfully re-enqueued.", "success");
+    showToast("Import completed successfully!", "success");
   } catch (err: any) {
     console.error("Error retrying fetch:", err);
-    showToast(err.message || "Failed to re-enqueue request.", "error");
+    showToast(err.message || "Failed to import media.", "error");
   } finally {
     retrying.value[item.id] = false;
     await fetchQueueAndUsers();

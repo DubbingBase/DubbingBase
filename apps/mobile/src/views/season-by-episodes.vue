@@ -125,7 +125,7 @@ async function fetchEpisodeInfos() {
   }
   isFetching.value = true;
   
-  // Insert request into queue and trigger processing
+  // Fetch details and trigger processing directly
   try {
     await enqueueAndProcessMedia({
       tmdbId: Number(route.params.id),
@@ -133,16 +133,24 @@ async function fetchEpisodeInfos() {
       seasonNumber: Number(route.params.season),
       episodeNumber: Number(episode.value.episode_number),
     });
-    queueStatus.value = "pending";
+    // Immediately fetch updated data to display changes
+    await fetchEpisodeData();
     const toast = await toastController.create({
-      message: "Import started! The voice cast will be updated shortly.",
+      message: "Import completed successfully! The voice cast has been updated.",
       duration: 3000,
       position: "top",
-      color: "info",
+      color: "success",
     });
     await toast.present();
   } catch (err) {
-    console.error("Error adding request to queue:", err);
+    console.error("Error fetching episode data:", err);
+    const toast = await toastController.create({
+      message: "Import failed. Please try again.",
+      duration: 3000,
+      position: "top",
+      color: "danger",
+    });
+    await toast.present();
   } finally {
     isFetching.value = false;
   }

@@ -332,23 +332,31 @@ const fetchInfos = async () => {
   isFetching.value = true;
   fetchError.value = "";
 
-  // Insert request into fetch_queue and trigger processing
+  // Fetch details and trigger processing directly
   try {
     await enqueueAndProcessMedia({
       tmdbId: Number(route.params.id),
       mediaType: "movie",
     });
-    queueStatus.value = "pending";
+    // Immediately fetch updated movie data to display changes
+    await fetchMovieData();
     const toast = await toastController.create({
-      message: "Import started! The voice cast will be updated shortly.",
+      message: "Import completed successfully! The voice cast has been updated.",
       duration: 3000,
       position: "top",
-      color: "info",
+      color: "success",
     });
     await toast.present();
   } catch (err) {
-    console.error("Error adding request to queue:", err);
-    fetchError.value = "Failed to add request to queue.";
+    console.error("Error fetching movie data:", err);
+    fetchError.value = "Failed to fetch media details.";
+    const toast = await toastController.create({
+      message: "Import failed. Please try again.",
+      duration: 3000,
+      position: "top",
+      color: "danger",
+    });
+    await toast.present();
   } finally {
     isFetching.value = false;
   }
