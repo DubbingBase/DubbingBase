@@ -27,7 +27,13 @@ export default {
       if (error) {
         return Response.json({ error }, { status: 500 });
       }
-      return Response.json({ users: data.users });
+
+      // Exclude anonymous users (those flagged is_anonymous or without an email)
+      const registeredUsers = data.users.filter(
+        (u) => !u.is_anonymous && u.email
+      );
+
+      return Response.json({ users: registeredUsers });
     } catch (e: any) {
       return Response.json({ error: e.message }, { status: 500 });
     }
