@@ -1,5 +1,13 @@
 # @app/mobile
 
+## 1.0.32
+
+### Patch Changes
+
+- a8c5189: improvements
+- Updated dependencies [a8c5189]
+  - @app/supabase@0.0.17
+
 ## 1.0.31
 
 ### Patch Changes
