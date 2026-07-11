@@ -171,7 +171,7 @@ const errorSeries = ref("");
 const errorVoiceActors = ref("");
 const errorTopVoiceActors = ref("");
 
-onMounted(async () => {
+onMounted(() => {
   isLoadingMovies.value = true;
   isLoadingSeries.value = true;
   isLoadingVoiceActors.value = true;
@@ -180,49 +180,62 @@ onMounted(async () => {
   errorSeries.value = "";
   errorVoiceActors.value = "";
   errorTopVoiceActors.value = "";
-  try {
-    const trendingMovieResponseRaw = await supabase.functions.invoke("trending-movies");
-    if (trendingMovieResponseRaw.error) throw new Error(trendingMovieResponseRaw.error.message || "Erreur inconnue");
-    trendingMovies.value = trendingMovieResponseRaw.data.results || [];
-  } catch (e: any) {
-    errorMovies.value = e.message || "Erreur lors du chargement des films.";
-    trendingMovies.value = [];
-  } finally {
-    isLoadingMovies.value = false;
-  }
 
-  try {
-    const trendingSeriesResponseRaw = await supabase.functions.invoke("trending-shows");
-    if (trendingSeriesResponseRaw.error) throw new Error(trendingSeriesResponseRaw.error.message || "Erreur inconnue");
-    trendingSeries.value = trendingSeriesResponseRaw.data.results || [];
-  } catch (e: any) {
-    errorSeries.value = e.message || "Erreur lors du chargement des séries.";
-    trendingSeries.value = [];
-  } finally {
-    isLoadingSeries.value = false;
-  }
+  // Fetch movies in parallel
+  supabase.functions.invoke("trending-movies")
+    .then((res) => {
+      if (res.error) throw new Error(res.error.message || "Erreur inconnue");
+      trendingMovies.value = res.data.results || [];
+    })
+    .catch((e) => {
+      errorMovies.value = e.message || "Erreur lors du chargement des films.";
+      trendingMovies.value = [];
+    })
+    .finally(() => {
+      isLoadingMovies.value = false;
+    });
 
-  try {
-    const recentVoiceActorsResponseRaw = await supabase.functions.invoke("recent-voice-actors", { body: { limit: 10 } });
-    if (recentVoiceActorsResponseRaw.error) throw new Error(recentVoiceActorsResponseRaw.error.message || "Erreur inconnue");
-    recentVoiceActors.value = recentVoiceActorsResponseRaw.data || [];
-  } catch (e: any) {
-    errorVoiceActors.value = e.message || "Erreur lors du chargement des voix récentes.";
-    recentVoiceActors.value = [];
-  } finally {
-    isLoadingVoiceActors.value = false;
-  }
+  // Fetch series in parallel
+  supabase.functions.invoke("trending-shows")
+    .then((res) => {
+      if (res.error) throw new Error(res.error.message || "Erreur inconnue");
+      trendingSeries.value = res.data.results || [];
+    })
+    .catch((e) => {
+      errorSeries.value = e.message || "Erreur lors du chargement des séries.";
+      trendingSeries.value = [];
+    })
+    .finally(() => {
+      isLoadingSeries.value = false;
+    });
 
-  try {
-    const topVoiceActorsResponseRaw = await supabase.functions.invoke("top-voice-actors", { body: { limit: 10 } });
-    if (topVoiceActorsResponseRaw.error) throw new Error(topVoiceActorsResponseRaw.error.message || "Erreur inconnue");
-    topVoiceActors.value = topVoiceActorsResponseRaw.data || [];
-  } catch (e: any) {
-    errorTopVoiceActors.value = e.message || "Erreur lors du chargement des top doubleurs.";
-    topVoiceActors.value = [];
-  } finally {
-    isLoadingTopVoiceActors.value = false;
-  }
+  // Fetch recent voice actors in parallel
+  supabase.functions.invoke("recent-voice-actors", { body: { limit: 10 } })
+    .then((res) => {
+      if (res.error) throw new Error(res.error.message || "Erreur inconnue");
+      recentVoiceActors.value = res.data || [];
+    })
+    .catch((e) => {
+      errorVoiceActors.value = e.message || "Erreur lors du chargement des voix récentes.";
+      recentVoiceActors.value = [];
+    })
+    .finally(() => {
+      isLoadingVoiceActors.value = false;
+    });
+
+  // Fetch top voice actors in parallel
+  supabase.functions.invoke("top-voice-actors", { body: { limit: 10 } })
+    .then((res) => {
+      if (res.error) throw new Error(res.error.message || "Erreur inconnue");
+      topVoiceActors.value = res.data || [];
+    })
+    .catch((e) => {
+      errorTopVoiceActors.value = e.message || "Erreur lors du chargement des top doubleurs.";
+      topVoiceActors.value = [];
+    })
+    .finally(() => {
+      isLoadingTopVoiceActors.value = false;
+    });
 });
 </script>
 

@@ -61,7 +61,7 @@ export default {
 
       // Process all records in batches
       while (hasMore) {
-        const { data: batch, error } = await ctx.supabaseAdmin
+        const { data: batch, error } = await ctx.supabase
           .from("voice_actors")
           .select("id, firstname, lastname")
           .order("id", { ascending: true })
