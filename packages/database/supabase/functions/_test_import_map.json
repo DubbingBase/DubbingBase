@@ -1,0 +1,5 @@
+{
+  "imports": {
+    "npm:@supabase/server@^1": "./_shared/test/mock_supabase_server.ts"
+  }
+}

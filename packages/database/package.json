@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "supabase functions serve --env-file supabase/functions/.env",
-    "typecheck": "find supabase/functions -name \"index.ts\" | xargs deno check"
+    "typecheck": "find supabase/functions -name \"index.ts\" | xargs deno check",
+    "test": "deno test --allow-none --import-map=supabase/functions/_test_import_map.json supabase/functions/**/*.test.ts"
   },
   "devDependencies": {
     "supabase": "^2.106.0"
