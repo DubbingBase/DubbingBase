@@ -172,7 +172,9 @@ const fetchDuplicates = async () => {
     successMsg.value = "";
     duplicates.value = [];
 
-    const { data, error: funcError } = await supabase.functions.invoke("find_duplicate_work");
+    const { data, error: funcError } = await supabase.functions.invoke("find_duplicate_work", {
+      method: "GET"
+    });
 
     if (funcError) throw funcError;
 

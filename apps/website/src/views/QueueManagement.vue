@@ -271,6 +271,7 @@ const fetchQueueAndUsers = async () => {
     const session = sessionData.session;
     if (session) {
       const { data: userData, error: userErr } = await supabase.functions.invoke("list_users", {
+        method: "GET",
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (!userErr && userData?.users) {

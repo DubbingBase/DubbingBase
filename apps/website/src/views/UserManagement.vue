@@ -185,6 +185,7 @@ const fetchUsers = async () => {
     if (!session) throw new Error("No active session found");
 
     const { data, error: funcError } = await supabase.functions.invoke("list_users", {
+      method: "GET",
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
 
