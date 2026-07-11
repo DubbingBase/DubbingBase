@@ -23,6 +23,7 @@
     </ion-label>
 
     <ion-button
+      v-if="canEdit"
       slot="end"
       fill="clear"
       size="small"
@@ -32,6 +33,7 @@
     </ion-button>
 
     <ion-button
+      v-if="canEdit"
       slot="end"
       fill="clear"
       size="small"
@@ -57,9 +59,12 @@ import { trash, create } from 'ionicons/icons';
 
 interface Props {
   workEntry: WorkEntry
+  canEdit?: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  canEdit: true
+})
 
 onMounted(() => {
     console.log('props.workEntry', props.workEntry)
