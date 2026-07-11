@@ -9,7 +9,7 @@ export default {
     try {
       const user = ctx.userClaims;
       if (!user) {
-        return createErrorResponse("Unauthorized", 401);
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
       }
 
       const { work_id, vote_type } = await req.json();

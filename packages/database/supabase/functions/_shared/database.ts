@@ -90,29 +90,15 @@ export class DatabaseClient implements IDatabaseClient {
       { up_count: number; down_count: number; user_vote: string | null }
     >
   > {
-    // Get vote counts for the specified work entries
+    // Get all votes for the specified work entries, including user_id to map user's specific vote
     const { data: votes, error } = await this.ctx.supabase
       .from("votes")
-      .select("work_id, vote_type")
+      .select("work_id, vote_type, user_id")
       .in("work_id", workIds);
 
     if (error) throw error;
 
-    // Get user's specific votes if userId provided
-    let userVotes: any[] = [];
-    if (userId) {
-      const { data: userVotesData, error: userVotesError } =
-        await this.ctx.supabase
-          .from("votes")
-          .select("work_id, vote_type")
-          .eq("user_id", userId)
-          .in("work_id", workIds);
-
-      if (userVotesError) throw userVotesError;
-      userVotes = userVotesData || [];
-    }
-
-    // Aggregate vote counts
+    // Aggregate vote counts and user's specific vote in a single loop
     const voteCounts: Record<
       number,
       { up_count: number; down_count: number; user_vote: string | null }
@@ -123,18 +109,20 @@ export class DatabaseClient implements IDatabaseClient {
       voteCounts[workId] = { up_count: 0, down_count: 0, user_vote: null };
     });
 
-    // Count all votes
+    // Process all votes in a single pass
     votes.forEach((vote) => {
-      if (vote.vote_type === "up") {
-        voteCounts[vote.work_id].up_count++;
-      } else if (vote.vote_type === "down") {
-        voteCounts[vote.work_id].down_count++;
+      const counts = voteCounts[vote.work_id];
+      if (counts) {
+        if (vote.vote_type === "up") {
+          counts.up_count++;
+        } else if (vote.vote_type === "down") {
+          counts.down_count++;
+        }
+        // If this vote belongs to the requested user, mark it
+        if (userId && vote.user_id === userId) {
+          counts.user_vote = vote.vote_type;
+        }
       }
-    });
-
-    // Set user's vote
-    userVotes.forEach((vote) => {
-      voteCounts[vote.work_id].user_vote = vote.vote_type;
     });
 
     return voteCounts;

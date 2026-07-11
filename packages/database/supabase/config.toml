@@ -335,61 +335,61 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 verify_jwt = false
 
 [functions.cast-vote]
-verify_jwt = false
+verify_jwt = true
 
 [functions.create-user-profile]
-verify_jwt = false
+verify_jwt = true
 
 [functions.dashboard-stats]
-verify_jwt = false
+verify_jwt = true
 
 [functions.delete-voice-actor-link]
-verify_jwt = false
+verify_jwt = true
 
 [functions.delete_user]
-verify_jwt = false
+verify_jwt = true
 
 [functions.delete_work_entry]
-verify_jwt = false
+verify_jwt = true
 
 [functions.episode]
 verify_jwt = false
 
 [functions.find_duplicate_voice_actors]
-verify_jwt = false
+verify_jwt = true
 
 [functions.find_duplicate_work]
-verify_jwt = false
+verify_jwt = true
 
 [functions.get-media-credits]
 verify_jwt = false
 
 [functions.get-user-profile]
-verify_jwt = false
+verify_jwt = true
 
 [functions.get-user-voice-actor]
-verify_jwt = false
+verify_jwt = true
 
 [functions.get-user-voice-actors]
-verify_jwt = false
+verify_jwt = true
 
 [functions.get-work-votes]
 verify_jwt = false
 
 [functions.link-user-voice-actor]
-verify_jwt = false
+verify_jwt = true
 
 [functions.link-voice-actor]
-verify_jwt = false
+verify_jwt = true
 
 [functions.list-voice-actors]
 verify_jwt = false
 
 [functions.list_users]
-verify_jwt = false
+verify_jwt = true
 
 [functions.merge_voice_actor_duplicates]
-verify_jwt = false
+verify_jwt = true
 
 [functions.movie]
 verify_jwt = false
@@ -440,19 +440,19 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.update-review-status]
-verify_jwt = false
+verify_jwt = true
 
 [functions.update-user-profile]
-verify_jwt = false
+verify_jwt = true
 
 [functions.update-voice-actor]
-verify_jwt = false
+verify_jwt = true
 
 [functions.update_user_role]
-verify_jwt = false
+verify_jwt = true
 
 [functions.upload_profile_picture]
-verify_jwt = false
+verify_jwt = true
 
 [functions.voice-actor]
 verify_jwt = false

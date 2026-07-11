@@ -29,6 +29,19 @@ export class TVDBClient implements ITVDBClient {
       return this.token;
     }
 
+    const cacheKey = "tvdb:auth_token";
+    try {
+      const cachedToken = await this.cache.get<string>(cacheKey);
+      if (cachedToken) {
+        debugLog("TVDB auth token cache hit");
+        this.token = cachedToken;
+        this.tokenExpiry = new Date(Date.now() + 5 * 60 * 60 * 1000); // 5 hours buffer
+        return this.token;
+      }
+    } catch (cacheErr) {
+      debugLog("Failed to read TVDB token from cache:", cacheErr);
+    }
+
     debugLog("Authenticating with TVDB API");
 
     const response = await fetch(`${this.baseUrl}/login`, {
@@ -55,6 +68,11 @@ export class TVDBClient implements ITVDBClient {
       hasToken: !!this.token,
       expiresAt: this.tokenExpiry,
     });
+
+    // Cache the token in Redis with MEDIUM TTL (6 hours)
+    this.cache.set(cacheKey, this.token, "MEDIUM").catch((err) =>
+      debugLog("Failed to cache TVDB auth token:", err)
+    );
 
     return this.token!;
   }

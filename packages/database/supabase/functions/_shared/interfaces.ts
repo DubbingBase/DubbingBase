@@ -32,9 +32,14 @@ export interface ITMDBClient {
 export interface ITVDBClient {
   get(endpoint: string, params?: Record<string, string>): Promise<any>;
   getSeriesById(seriesId: number): Promise<any>;
+  getMovieById(
+    movieId: number,
+    extended?: { meta?: "translations"; short?: boolean },
+  ): Promise<any>;
   getEpisodesBySeries(seriesId: number, season?: number): Promise<any>;
   getCharacterById(characterId: number): Promise<any>;
   getCharactersBySeries(seriesId: number): Promise<any>;
+  getCharactersByMovie(movieId: number): Promise<any>;
   getPersonById(personId: number): Promise<any>;
   searchSeries(query: string): Promise<any>;
   getCached?(endpoint: string, params?: Record<string, string>): Promise<any>;
