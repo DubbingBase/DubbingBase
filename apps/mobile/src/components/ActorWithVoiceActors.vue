@@ -187,8 +187,11 @@ function handleLongPress(voiceActor: PersonData) {
 const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
   const buttons: any[] = [];
 
-  // Review status actions if user has permission
-  const canUpdateReviewStatus = hasPermission("admin_fetch");
+  // A user is the owner if their linked voice_actor_id matches this voice actor's profile ID
+  const isOwner = authStore.user?.user_metadata?.voice_actor_id === voiceActor.id;
+
+  // Review status actions if admin or owner
+  const canUpdateReviewStatus = authStore.isAdmin || isOwner;
   if (canUpdateReviewStatus) {
     buttons.push(
       {
@@ -241,8 +244,9 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
     );
   }
 
-  // Admin actions
-  if (hasPermission("edit_voice_actor_link")) {
+  // Admin or Owner actions
+  const canEdit = authStore.isAdmin || (hasPermission("edit_voice_actor_link") && isOwner);
+  if (canEdit) {
     buttons.push({
       text: t("common.edit"),
       icon: createOutline,
@@ -253,7 +257,8 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
     });
   }
 
-  if (hasPermission("delete_voice_actor_link")) {
+  const canDelete = authStore.isAdmin || (hasPermission("delete_voice_actor_link") && isOwner);
+  if (canDelete) {
     buttons.push({
       text: t("common.delete"),
       icon: trashOutline,

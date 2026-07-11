@@ -451,6 +451,9 @@ verify_jwt = true
 [functions.update_user_role]
 verify_jwt = true
 
+[functions.update_voice_actor_link]
+verify_jwt = true
+
 [functions.upload_profile_picture]
 verify_jwt = true
 
