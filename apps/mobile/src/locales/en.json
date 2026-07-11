@@ -79,7 +79,15 @@
     "noUserProfile": "No user profile created yet",
     "createUserProfileHint": "Create a user profile to get started",
     "voiceActorProfiles": "Voice Actor Profiles",
-    "adminSearch": "Admin Search"
+    "adminSearch": "Admin Search",
+    "areYouAVoiceActor": "Are you a voice actor?",
+    "requestVoiceActorDesc": "If you are a professional voice actor and don't have a dedicated page in our database yet, you can request one.",
+    "requestVoiceActorBtn": "Request a voice actor page",
+    "requestVoiceActorTitle": "Request voice actor page",
+    "requestDetailsPlaceholder": "Provide any additional details (e.g. links to your work, TMDB page, agency...)",
+    "submitRequest": "Submit request",
+    "requestSuccessMessage": "Your request has been successfully submitted!",
+    "details": "Details"
   },
   "voiceActor": {
     "name": "Name",

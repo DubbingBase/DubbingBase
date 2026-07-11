@@ -12,7 +12,8 @@ export default {
         );
       }
 
-      const isAdmin = user.appMetadata?.role === "admin" ||
+      const isAdmin =
+        user.appMetadata?.role === "admin" ||
         user.userMetadata?.role === "admin" ||
         user.role === "admin";
 
@@ -30,7 +31,7 @@ export default {
 
       // Exclude anonymous users (those flagged is_anonymous or without an email)
       const registeredUsers = data.users.filter(
-        (u) => !u.is_anonymous && u.email
+        (u) => !u.is_anonymous && u.email,
       );
 
       return Response.json({ users: registeredUsers });

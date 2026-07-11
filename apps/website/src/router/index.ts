@@ -12,7 +12,7 @@ const routes = [
     path: "/login",
     name: "Login",
     component: Login,
-    meta: { guestOnly: true }
+    meta: { guestOnly: true },
   },
   {
     path: "/",
@@ -59,12 +59,15 @@ const routes = [
         name: "CreateVoiceActor",
         component: () => import("../views/EditVoiceActor.vue"),
         beforeEnter: (to, from, next) => {
-          if (from.name === "VoiceActorSpreadsheet" || from.path === "/voice-actor-spreadsheet") {
+          if (
+            from.name === "VoiceActorSpreadsheet" ||
+            from.path === "/voice-actor-spreadsheet"
+          ) {
             next();
           } else {
             next("/voice-actor-spreadsheet");
           }
-        }
+        },
       },
       {
         path: "voice-actors/edit/:id",
@@ -76,8 +79,8 @@ const routes = [
         name: "AddVoiceCast",
         component: () => import("../views/AddVoiceCast.vue"),
       },
-    ]
-  }
+    ],
+  },
 ];
 
 const router = createRouter({

@@ -23,10 +23,12 @@ export const signIn = async (email: string, password: string) => {
     isLoading.value = true;
     error.value = null;
 
-    const { data, error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { data, error: signInError } = await supabase.auth.signInWithPassword(
+      {
+        email,
+        password,
+      },
+    );
 
     if (signInError) throw signInError;
 
@@ -61,7 +63,9 @@ export const signOut = async () => {
 export const initializeAuth = async () => {
   try {
     isLoading.value = true;
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     user.value = session?.user || null;
 
     supabase.auth.onAuthStateChange((event, session) => {

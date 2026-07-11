@@ -20,7 +20,10 @@ const searchVoiceActors = async (
     if (words.length === 0) return [];
 
     // Find the most specific word (longest word) to query the database
-    const longestWord = words.reduce((a, b) => a.length > b.length ? a : b, "");
+    const longestWord = words.reduce(
+      (a, b) => (a.length > b.length ? a : b),
+      "",
+    );
 
     // Query database with a larger limit to prevent truncation of alphabetical sorting
     const { data, error } = await ctx.supabase
@@ -31,7 +34,7 @@ const searchVoiceActors = async (
 
     if (error) throw error;
 
-    const lowerWords = words.map(w => w.toLowerCase());
+    const lowerWords = words.map((w) => w.toLowerCase());
 
     // Filter in JS: must match ALL search words in either first or last name
     const matches = data.filter((actor) => {
@@ -39,8 +42,11 @@ const searchVoiceActors = async (
       const last = (actor.lastname || "").toLowerCase();
       const fullName = `${first} ${last}`;
 
-      return lowerWords.every(word => 
-        first.includes(word) || last.includes(word) || fullName.includes(word)
+      return lowerWords.every(
+        (word) =>
+          first.includes(word) ||
+          last.includes(word) ||
+          fullName.includes(word),
       );
     });
 
@@ -48,7 +54,7 @@ const searchVoiceActors = async (
     const scored = matches.map((actor) => {
       const first = (actor.firstname || "").toLowerCase();
       const last = (actor.lastname || "").toLowerCase();
-      
+
       let score = 0;
       const primaryQuery = lowerWords[0];
 
@@ -57,7 +63,10 @@ const searchVoiceActors = async (
         score += 100;
       }
       // Prefix matches (starts with) get high priority
-      else if (first.startsWith(primaryQuery) || last.startsWith(primaryQuery)) {
+      else if (
+        first.startsWith(primaryQuery) ||
+        last.startsWith(primaryQuery)
+      ) {
         score += 50;
       }
       // Substring match gets normal priority
@@ -81,7 +90,7 @@ const searchVoiceActors = async (
       return lastA.localeCompare(lastB);
     });
 
-    return scored.slice(0, limit).map(s => s.actor);
+    return scored.slice(0, limit).map((s) => s.actor);
   } catch (error) {
     console.error("Error searching voice actors:", error);
     throw error;

@@ -24,9 +24,7 @@ async function fetchMovieAndTVDBData(movieId: number) {
     // Cache the result for future requests
     cacheUtils
       .set(`tmdb:movie:${movieId}`, movie, "MEDIUM")
-      .catch((err) =>
-        console.error("Failed to cache TMDB movie data:", err),
-      );
+      .catch((err) => console.error("Failed to cache TMDB movie data:", err));
   } else {
     console.log(`Cache hit for TMDB movie ${movieId}`);
   }
@@ -56,9 +54,7 @@ async function fetchMovieAndTVDBData(movieId: number) {
                 series.name
                   ?.toLowerCase()
                   .includes(searchQuery.toLowerCase()) ||
-                searchQuery
-                  .toLowerCase()
-                  .includes(series.name?.toLowerCase()),
+                searchQuery.toLowerCase().includes(series.name?.toLowerCase()),
             ) || searchResults.data[0];
           tvdbSeriesId = bestMatch?.tvdb_id;
           console.log(`Found TVDB series ID from search: ${tvdbSeriesId}`);
@@ -78,13 +74,10 @@ async function fetchMovieAndTVDBData(movieId: number) {
         console.log(
           `Cache miss for TVDB movie characters ${tvdbSeriesId}, fetching from API`,
         );
-        const charactersResponse = await tvdbClient.getMovieById(
-          tvdbSeriesId,
-          {
-            meta: "translations",
-            short: false,
-          },
-        );
+        const charactersResponse = await tvdbClient.getMovieById(tvdbSeriesId, {
+          meta: "translations",
+          short: false,
+        });
         const characters = charactersResponse.data.characters;
         if (characters && characters.length > 0) {
           characterProfilePictures = characters
@@ -103,10 +96,7 @@ async function fetchMovieAndTVDBData(movieId: number) {
           cacheUtils
             .set(cacheKey, characterProfilePictures, "SHORT")
             .catch((err) =>
-              console.error(
-                "Failed to cache TVDB movie character data:",
-                err,
-              ),
+              console.error("Failed to cache TVDB movie character data:", err),
             );
         }
       }

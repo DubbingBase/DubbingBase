@@ -18,7 +18,10 @@ export default {
       // Validate required fields
       if (!work_id || !performance) {
         return Response.json(
-          { error: "Missing required fields: work_id and performance are required" },
+          {
+            error:
+              "Missing required fields: work_id and performance are required",
+          },
           { status: 400 },
         );
       }

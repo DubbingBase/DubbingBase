@@ -459,3 +459,7 @@ verify_jwt = true
 
 [functions.voice-actor]
 verify_jwt = false
+
+[functions.request-voice-actor-page]
+verify_jwt = true
+

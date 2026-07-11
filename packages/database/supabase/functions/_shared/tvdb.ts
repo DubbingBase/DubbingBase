@@ -70,9 +70,9 @@ export class TVDBClient implements ITVDBClient {
     });
 
     // Cache the token in Redis with MEDIUM TTL (6 hours)
-    this.cache.set(cacheKey, this.token, "MEDIUM").catch((err) =>
-      debugLog("Failed to cache TVDB auth token:", err)
-    );
+    this.cache
+      .set(cacheKey, this.token, "MEDIUM")
+      .catch((err) => debugLog("Failed to cache TVDB auth token:", err));
 
     return this.token!;
   }

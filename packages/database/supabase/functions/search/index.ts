@@ -77,7 +77,7 @@ export default {
                   Accept: "application/json",
                 },
               },
-            )
+            ),
           ),
         );
 
@@ -160,7 +160,8 @@ export default {
                 respMap.set(vaKey, {
                   ...voiceActor,
                   actor: person,
-                  profile_path: voiceActor.profile_picture ?? person.profile_path,
+                  profile_path:
+                    voiceActor.profile_picture ?? person.profile_path,
                   popularity: person.popularity ?? 50,
                   media_type: "voice_actor",
                 });

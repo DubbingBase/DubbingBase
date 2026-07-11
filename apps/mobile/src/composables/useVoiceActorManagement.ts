@@ -56,7 +56,6 @@ export function useVoiceActorManagement(
   const isVoting = ref(false);
   const votingError = ref("");
 
-
   const getVoiceActorByTmdbId = (
     tmdbId: number,
   ): PersonData<VoiceActorDetails>[] => {

@@ -23,7 +23,9 @@ export default {
         );
 
         if (popError) {
-          throw new Error(`RPC pop_media_queue_message failed: ${JSON.stringify(popError)}`);
+          throw new Error(
+            `RPC pop_media_queue_message failed: ${JSON.stringify(popError)}`,
+          );
         }
 
         // If no message is returned, break (queue is empty)
@@ -118,7 +120,12 @@ export default {
 
       return Response.json({ ok: true, processed: results.length, results });
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : (typeof error === "object" && error !== null ? JSON.stringify(error) : String(error));
+      const errorMsg =
+        error instanceof Error
+          ? error.message
+          : typeof error === "object" && error !== null
+            ? JSON.stringify(error)
+            : String(error);
       console.error("[QUEUE] Uncaught error in process-media-queue:", errorMsg);
 
       return Response.json({ ok: false, error: errorMsg }, { status: 500 });

@@ -8,18 +8,19 @@
 
 Migrate from the current ad-hoc role system to Supabase's standard RBAC pattern:
 
-| | Current | Target |
-|---|---|---|
-| **Where roles live** | `app_metadata.role` (set via admin API) | `user_roles` table + injected into JWT via Auth Hook |
-| **Where permissions live** | Hardcoded in `types/permissions.ts` | `role_permissions` table in database |
-| **Server enforcement** | Manual `if (isAdmin)` in each edge function | RLS policies on every table + `authorize()` SQL function |
-| **Client enforcement** | `authStore.isAdmin` reads `app_metadata` | Decode `user_role` from JWT `access_token` |
+|                            | Current                                     | Target                                                   |
+| -------------------------- | ------------------------------------------- | -------------------------------------------------------- |
+| **Where roles live**       | `app_metadata.role` (set via admin API)     | `user_roles` table + injected into JWT via Auth Hook     |
+| **Where permissions live** | Hardcoded in `types/permissions.ts`         | `role_permissions` table in database                     |
+| **Server enforcement**     | Manual `if (isAdmin)` in each edge function | RLS policies on every table + `authorize()` SQL function |
+| **Client enforcement**     | `authStore.isAdmin` reads `app_metadata`    | Decode `user_role` from JWT `access_token`               |
 
 ---
 
 ## Current Inventory
 
 ### Roles (2 total)
+
 - `admin` — full access
 - (implicit) regular user — limited access
 
@@ -27,44 +28,45 @@ Migrate from the current ad-hoc role system to Supabase's standard RBAC pattern:
 
 From [permissions.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/types/permissions.ts):
 
-| Permission Key | Who Has It | What It Does |
-|---|---|---|
-| `add_voice_actors` | All authenticated users | Can suggest voice actor links |
-| `admin_fetch` | Admin only | Can trigger prepare_movie, trending etc. |
-| `edit_voice_actor_link` | All authenticated users | Can edit voice actor links |
-| `delete_voice_actor_link` | All authenticated users | Can delete voice actor links |
+| Permission Key            | Who Has It              | What It Does                             |
+| ------------------------- | ----------------------- | ---------------------------------------- |
+| `add_voice_actors`        | All authenticated users | Can suggest voice actor links            |
+| `admin_fetch`             | Admin only              | Can trigger prepare_movie, trending etc. |
+| `edit_voice_actor_link`   | All authenticated users | Can edit voice actor links               |
+| `delete_voice_actor_link` | All authenticated users | Can delete voice actor links             |
 
 ### Edge Functions With Manual Role Checks (5 files)
 
-| File | What `isAdmin` controls |
-|---|---|
-| [update-review-status/index.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/packages/database/supabase/functions/update-review-status/index.ts#L43-L46) | Admin can review any work entry |
-| [link-voice-actor/index.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/packages/database/supabase/functions/link-voice-actor/index.ts#L36-L41) | Admin can impersonate (targetUserId) |
-| [link-user-voice-actor/index.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/packages/database/supabase/functions/link-user-voice-actor/index.ts#L22-L26) | Admin-only endpoint |
-| [delete-voice-actor-link/index.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/packages/database/supabase/functions/delete-voice-actor-link/index.ts#L27-L32) | Admin can delete any user's link |
-| [get-user-voice-actor/index.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/packages/database/supabase/functions/get-user-voice-actor/index.ts#L28-L33) | Admin can view any user's voice actor |
+| File                                                                                                                                                                      | What `isAdmin` controls               |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| [update-review-status/index.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/packages/database/supabase/functions/update-review-status/index.ts#L43-L46)       | Admin can review any work entry       |
+| [link-voice-actor/index.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/packages/database/supabase/functions/link-voice-actor/index.ts#L36-L41)               | Admin can impersonate (targetUserId)  |
+| [link-user-voice-actor/index.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/packages/database/supabase/functions/link-user-voice-actor/index.ts#L22-L26)     | Admin-only endpoint                   |
+| [delete-voice-actor-link/index.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/packages/database/supabase/functions/delete-voice-actor-link/index.ts#L27-L32) | Admin can delete any user's link      |
+| [get-user-voice-actor/index.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/packages/database/supabase/functions/get-user-voice-actor/index.ts#L28-L33)       | Admin can view any user's voice actor |
 
 ### Client-Side `isAdmin` Usage (~20 locations)
 
-| File | Usage |
-|---|---|
-| [auth.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/stores/auth.ts#L16-L21) | `isAdmin` computed from `app_metadata.role` |
-| [usePermissions.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/composables/usePermissions.ts) | `hasPermission()` checks `isAdmin` for `admin_fetch` |
-| [useVoiceActorManagement.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/composables/useVoiceActorManagement.ts#L40) | Exposes `isAdmin` ref |
-| [base.vue](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/layouts/base.vue#L80) | Shows admin nav items |
-| [router.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/router/router.ts#L130) | Route guard for admin pages |
-| [movie-details.vue](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/views/movie-details.vue#L9) | Admin toolbar buttons |
-| [serie-details.vue](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/views/serie-details.vue#L50) | `:is-admin` prop |
-| [voice-actor-details.vue](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/views/voice-actor-details.vue#L9) | Admin toolbar buttons |
-| [profile.vue](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/views/profile.vue#L6) | Admin settings button, impersonation UI |
-| [ProfileVoiceActorSelector.vue](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/components/profile/ProfileVoiceActorSelector.vue#L51) | Admin-only UI (5 locations) |
-| [UserManagement.vue](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/components/admin/UserManagement.vue#L55) | Reads `app_metadata.role` |
-| [ActorItem.vue](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/components/ActorItem.vue#L41) | `:isAdmin` prop |
-| [ActorVoiceActorItem.vue](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/components/ActorVoiceActorItem.vue#L79) | Admin action buttons |
-| [NoVoiceActor.vue](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/components/NoVoiceActor.vue#L12) | Admin add button |
-| [VoiceActorList.vue](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/components/VoiceActorList.vue#L12) | Admin actions slot |
+| File                                                                                                                                                          | Usage                                                |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| [auth.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/stores/auth.ts#L16-L21)                                                     | `isAdmin` computed from `app_metadata.role`          |
+| [usePermissions.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/composables/usePermissions.ts)                                    | `hasPermission()` checks `isAdmin` for `admin_fetch` |
+| [useVoiceActorManagement.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/composables/useVoiceActorManagement.ts#L40)              | Exposes `isAdmin` ref                                |
+| [base.vue](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/layouts/base.vue#L80)                                                      | Shows admin nav items                                |
+| [router.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/router/router.ts#L130)                                                    | Route guard for admin pages                          |
+| [movie-details.vue](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/views/movie-details.vue#L9)                                       | Admin toolbar buttons                                |
+| [serie-details.vue](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/views/serie-details.vue#L50)                                      | `:is-admin` prop                                     |
+| [voice-actor-details.vue](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/views/voice-actor-details.vue#L9)                           | Admin toolbar buttons                                |
+| [profile.vue](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/views/profile.vue#L6)                                                   | Admin settings button, impersonation UI              |
+| [ProfileVoiceActorSelector.vue](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/components/profile/ProfileVoiceActorSelector.vue#L51) | Admin-only UI (5 locations)                          |
+| [UserManagement.vue](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/components/admin/UserManagement.vue#L55)                         | Reads `app_metadata.role`                            |
+| [ActorItem.vue](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/components/ActorItem.vue#L41)                                         | `:isAdmin` prop                                      |
+| [ActorVoiceActorItem.vue](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/components/ActorVoiceActorItem.vue#L79)                     | Admin action buttons                                 |
+| [NoVoiceActor.vue](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/components/NoVoiceActor.vue#L12)                                   | Admin add button                                     |
+| [VoiceActorList.vue](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/components/VoiceActorList.vue#L12)                               | Admin actions slot                                   |
 
 ### Role Assignment
+
 - [update_user_role/index.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/packages/database/supabase/functions/update_user_role/index.ts) — Sets `app_metadata.role` via admin API
 - [update_user_role.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/packages/database/update_user_role.ts) — CLI script
 
@@ -254,14 +256,14 @@ From [permissions.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/ap
   - Decode `access_token` to get `user_role` claim:
     ```typescript
     import { jwtDecode } from 'jwt-decode';
-    
+
     const userRole = computed(() => {
       const session = /* get current session */;
       if (!session?.access_token) return null;
       const jwt = jwtDecode<{ user_role?: string }>(session.access_token);
       return jwt.user_role;
     });
-    
+
     const isAdmin = computed(() => userRole.value === 'admin');
     ```
   - Remove triple-check on `app_metadata/user_metadata/role`
