@@ -1,0 +1,35 @@
+language: "en-US"
+reviews:
+  profile: "chill"
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: true
+  review_status: true
+  review_details: true
+  collapse_walkthrough: true
+  changed_files_summary: true
+  sequence_diagrams: true
+  estimate_code_review_effort: true
+  assess_linked_issues: true
+  related_issues: true
+  related_prs: true
+  suggested_labels: true
+  suggested_reviewers: true
+  auto_review:
+    enabled: true
+    drafts: false
+  path_filters:
+    - "!dist/**"
+    - "!dist-ssr/**"
+    - "!node_modules/**"
+    - "!logs/**"
+    - "!**/*.log"
+    - "!supabase/.temp/**"
+    - "!target/**"
+    - "!apps/mobile/android/.bundle/**"
+    - "!apps/mobile/android/vendor/**"
+    - "!backup_*/**"
+    - "!**/*.jks"
+    - "!**/.env*"
+chat:
+  auto_reply: true
