@@ -36,10 +36,6 @@ function processActorsBatch(
 
 export default {
   fetch: withSupabase<Database>({ auth: "user" }, async (req, ctx) => {
-    if (req.method !== "GET" && req.method !== "POST") {
-      return Response.json({ error: "Method not allowed" }, { status: 405 });
-    }
-
     try {
       const user = ctx.userClaims;
       if (!user) {

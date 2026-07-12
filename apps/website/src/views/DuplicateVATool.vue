@@ -212,9 +212,7 @@ const fetchDuplicates = async () => {
     error.value = "";
     duplicates.value = [];
 
-    const { data, error: funcError } = await supabase.functions.invoke("find_duplicate_voice_actors", {
-      method: "GET"
-    });
+    const { data, error: funcError } = await supabase.functions.invoke("find_duplicate_voice_actors");
 
     if (funcError) throw funcError;
 

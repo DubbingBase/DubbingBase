@@ -267,20 +267,13 @@ const fetchQueueAndUsers = async () => {
     queueItems.value = queueData || [];
 
     // 2. Fetch users to map user_id -> email
-    const { data: sessionData } = await supabase.auth.getSession();
-    const session = sessionData.session;
-    if (session) {
-      const { data: userData, error: userErr } = await supabase.functions.invoke("list_users", {
-        method: "GET",
-        headers: { Authorization: `Bearer ${session.access_token}` },
+    const { data: userData, error: userErr } = await supabase.functions.invoke("list_users");
+    if (!userErr && userData?.users) {
+      const tempMap: Record<string, string> = {};
+      userData.users.forEach((u: any) => {
+        tempMap[u.id] = u.email;
       });
-      if (!userErr && userData?.users) {
-        const tempMap: Record<string, string> = {};
-        userData.users.forEach((u: any) => {
-          tempMap[u.id] = u.email;
-        });
-        usersMap.value = tempMap;
-      }
+      usersMap.value = tempMap;
     }
   } catch (err: any) {
     console.error("Error fetching queue or users:", err);
