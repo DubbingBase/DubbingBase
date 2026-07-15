@@ -21,6 +21,17 @@
       />
 
       <div v-if="!loading && voiceActor" class="actor">
+        <!-- Request Linkage Card -->
+        <div v-if="isAuthenticated && !isLinked" class="request-profile-card">
+          <div class="banner-content">
+            <h3>{{ t("profile.areYouAVoiceActor", { name: `${voiceActor.firstname} ${voiceActor.lastname}` }) }}</h3>
+            <p>{{ t("profile.requestVoiceActorDesc") }}</p>
+          </div>
+          <button type="button" class="request-btn" @click="openRequestModal">
+            {{ t("profile.requestVoiceActorBtn") }}
+          </button>
+        </div>
+
         <VoiceActorHeader
           :voiceActor="voiceActor"
           :profilePicture="profilePicture"
@@ -30,15 +41,6 @@
         <VoiceActorBio :bio="voiceActor.bio" />
 
         <VoiceActorWorksGrouped :works="enhancedWork" />
-
-        <!-- Request Linkage Card -->
-        <div v-if="isAuthenticated && !isLinked" class="request-profile-card">
-          <h3>{{ t("profile.areYouAVoiceActor") }}</h3>
-          <p>{{ t("profile.requestVoiceActorDesc") }}</p>
-          <button type="button" class="request-btn" @click="openRequestModal">
-            {{ t("profile.requestVoiceActorBtn") }}
-          </button>
-        </div>
       </div>
 
       <!-- Request Voice Actor Linkage Modal -->
@@ -170,6 +172,7 @@ type VoiceActorResponse = {
 
 const voiceActor = ref<VoiceActorResponse["voiceActor"] | undefined>();
 const medias = ref<VoiceActorResponse["medias"]>([]);
+const characterProfilePictures = ref<any[]>([]);
 const profilePicture = ref<string | null | undefined>();
 const loading = ref<boolean>(true);
 
@@ -179,6 +182,7 @@ type EnhancedWorkItem = {
   work: { id: number; actor_id: number; content_id: number };
   data: {
     character: string | undefined;
+    characterImage?: string;
     actor: PersonData<Actor>;
   };
   sortDate: string;
@@ -220,8 +224,22 @@ const baseEnhancedWork = computed<EnhancedWorkItem[]>(() => {
       }
 
       const character = actor.character;
+      let characterImage: string | undefined;
+      
+      if (characterProfilePictures.value.length > 0) {
+        // TMDB cast name might differ slightly from TVDB, but a direct lowercase match often works.
+        const pic = characterProfilePictures.value.find((cp: any) => 
+          (cp.movieId === media.id || cp.showId === media.id) && 
+          cp.name && character && cp.name.toLowerCase() === character.toLowerCase()
+        );
+        if (pic) {
+          characterImage = pic.image;
+        }
+      }
+
       const data = {
         character,
+        characterImage,
         actor: actorToPersonData(actor),
       };
 
@@ -388,6 +406,7 @@ onMounted(async () => {
 
   voiceActor.value = voiceActorResponse.voiceActor;
   medias.value = voiceActorResponse.medias;
+  characterProfilePictures.value = (voiceActorResponse as any).characterProfilePictures || [];
 
   profilePicture.value = voiceActorResponse.voiceActor.profile_picture;
 
@@ -561,43 +580,64 @@ onMounted(async () => {
 
 /* Card Styles */
 .request-profile-card {
-  margin-top: 2.5rem;
-  padding: 1.5rem;
-  background-color: var(--ion-color-light, #0f172a);
-  border: 1px solid var(--ion-color-light-shade, #334155);
-  border-radius: 14px;
-  text-align: center;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  margin-top: 0;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background-color: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  text-align: left;
+}
+
+@media (max-width: 500px) {
+  .request-profile-card {
+    flex-wrap: wrap;
+  }
+}
+
+.request-profile-card .banner-content {
+  flex: 1;
 }
 
 .request-profile-card h3 {
-  margin-top: 0;
-  margin-bottom: 0.5rem;
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: var(--ion-text-color, #ffffff);
+  margin: 0 0 0.25rem 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ion-color-primary, #3b82f6);
 }
 
 .request-profile-card p {
-  margin-top: 0;
-  margin-bottom: 1.5rem;
-  font-size: 0.85rem;
+  margin: 0;
+  font-size: 0.8rem;
   color: var(--ion-color-medium, #94a3b8);
-  line-height: 1.5;
+  line-height: 1.3;
 }
 
 .request-btn {
-  width: 100%;
+  width: auto;
   background-color: var(--ion-color-primary, #3b82f6);
   color: #ffffff;
   border: none;
-  border-radius: 10px;
-  padding: 0.8rem;
-  font-size: 0.9rem;
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
-  box-shadow: 0 4px 6px -1px rgb(59 130 246 / 0.2);
+  box-shadow: 0 2px 4px -1px rgb(59 130 246 / 0.2);
+  white-space: nowrap;
+}
+
+@media (max-width: 500px) {
+  .request-btn {
+    width: 100%;
+    text-align: center;
+  }
 }
 
 .request-btn:hover {

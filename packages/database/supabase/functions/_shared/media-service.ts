@@ -2,6 +2,8 @@ import { IDatabaseClient } from "./interfaces.ts";
 import { ITMDBClient } from "./interfaces.ts";
 import { processVoiceActor } from "./supabase-urls.ts";
 import { processMedia } from "./tmdb-urls.ts";
+import { TVDBClient } from "./tvdb.ts";
+import { cacheUtils } from "./index.ts";
 
 import { SupabaseContext } from "npm:@supabase/server@^1";
 import { Database } from "./database.types.ts";
@@ -23,17 +25,24 @@ export class MediaService {
 
     console.log("voiceActorWithImages", voiceActorWithImages);
 
-    // Fetch TMDB details for each work item in parallel, using cached getMediaWithCredits
+    // Fetch TMDB details and TVDB characters for each work item in parallel
     const mediaPromises = (voiceActor.work || []).map(async (work: any) => {
       try {
+        const contentType = work.content_type as "movie" | "tv";
         const tmdbMedia = await this.tmdbClient.getMediaWithCredits(
-          work.content_type as "movie" | "tv",
+          contentType,
           work.content_id,
         );
-        return processMedia(tmdbMedia);
+        
+        const characterProfilePictures = await this.getCharacterProfilePictures(contentType, work.content_id, tmdbMedia);
+        
+        return { 
+          media: processMedia(tmdbMedia),
+          characterProfilePictures 
+        };
       } catch (err) {
         console.error(
-          `Failed to fetch TMDB info for ${work.content_type} ${work.content_id}:`,
+          `Failed to fetch TMDB/TVDB info for ${work.content_type} ${work.content_id}:`,
           err,
         );
         return null;
@@ -41,9 +50,73 @@ export class MediaService {
     });
 
     const results = await Promise.all(mediaPromises);
-    const medias = results.filter(Boolean);
+    const validResults = results.filter(Boolean) as { media: any, characterProfilePictures: any[] }[];
+    
+    const medias = validResults.map(r => r.media);
+    const characterProfilePictures = validResults.flatMap(r => r.characterProfilePictures);
 
-    return { voiceActor: voiceActorWithImages, medias };
+    return { voiceActor: voiceActorWithImages, medias, characterProfilePictures };
+  }
+
+  private async getCharacterProfilePictures(contentType: "movie" | "tv", contentId: number, tmdbMedia: any): Promise<any[]> {
+    const tvdbClient = new TVDBClient(cacheUtils);
+    let characterProfilePictures: any[] = [];
+    
+    try {
+      let tvdbId: number | null = null;
+      if (tmdbMedia.external_ids?.tvdb_id) {
+        tvdbId = tmdbMedia.external_ids.tvdb_id;
+      } else {
+        const searchQuery = tmdbMedia.title || tmdbMedia.name || tmdbMedia.original_title || tmdbMedia.original_name;
+        if (searchQuery) {
+          const searchResults = await tvdbClient.searchSeries(searchQuery);
+          if (searchResults.data && searchResults.data.length > 0) {
+            const bestMatch = searchResults.data.find((item: any) =>
+              item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              searchQuery.toLowerCase().includes(item.name?.toLowerCase())
+            ) || searchResults.data[0];
+            tvdbId = contentType === 'movie' ? (bestMatch?.tvdb_id || bestMatch?.id) : bestMatch?.id;
+          }
+        }
+      }
+
+      if (tvdbId) {
+        const cacheKey = `tvdb:${contentType}:characters:${tvdbId}`;
+        const cachedCharacters = await cacheUtils.get(cacheKey);
+        
+        if (cachedCharacters) {
+          return cachedCharacters as any[];
+        }
+
+        let characters: any[] = [];
+        if (contentType === 'movie') {
+          const res = await tvdbClient.getMovieById(tvdbId, { meta: "translations", short: false });
+          characters = res.data.characters || [];
+        } else {
+          const res = await tvdbClient.getSeriesById(tvdbId, { meta: "episodes", short: false });
+          characters = res.data.characters || [];
+        }
+
+        if (characters && characters.length > 0) {
+          characterProfilePictures = characters
+            .filter((character: any) => character.image)
+            .map((character: any) => ({
+              id: character.id,
+              name: character.name,
+              image: character.image,
+              tvdbPeopleId: character.peopleId,
+              movieId: contentType === 'movie' ? contentId : undefined,
+              showId: contentType === 'tv' ? contentId : undefined,
+            }));
+            
+          cacheUtils.set(cacheKey, characterProfilePictures, "SHORT").catch(() => {});
+        }
+      }
+    } catch (e) {
+      console.error(`Error fetching character profile pictures for ${contentType} ${contentId}:`, e);
+    }
+    
+    return characterProfilePictures;
   }
 
   async getMediaWithVoiceActors(

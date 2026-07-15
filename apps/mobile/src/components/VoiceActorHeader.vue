@@ -4,12 +4,16 @@
       <MediaThumbnail
         v-if="profilePicture"
         :path="profilePicture"
+        :width="60"
+        :height="80"
         @click="uploadImage"
       />
       <MediaThumbnail
         v-else
         @click="uploadImage"
         :path="`https://api.dicebear.com/9.x/initials/svg?scale=50&backgroundColor=212121&seed=${voiceActor.firstname} ${voiceActor.lastname}`"
+        :width="60"
+        :height="80"
       />
     </div>
     <div class="actor-info">
@@ -110,9 +114,9 @@ const uploadImage = async () => {
 .voice-actor-header {
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
-  padding: 12px;
+  padding: 10px;
   background: var(--ion-color-card);
   border-radius: 8px;
   margin-bottom: 8px;
@@ -120,9 +124,8 @@ const uploadImage = async () => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 
   @media (max-width: 768px) {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
+    padding: 8px;
+    gap: 10px;
   }
 
   .profile-picture {
@@ -143,8 +146,8 @@ const uploadImage = async () => {
       box-shadow: var(--thumbnail-box-shadow);
 
       @media (max-width: 768px) {
-        height: 100px;
-        width: 75px;
+        height: 80px;
+        width: 60px;
       }
     }
   }
@@ -157,13 +160,13 @@ const uploadImage = async () => {
   }
 
   .actor-name {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     font-weight: 700;
     line-height: 1.2;
     margin: 0;
 
     @media (max-width: 768px) {
-      font-size: 1.5rem;
+      font-size: 1.3rem;
     }
   }
 
@@ -194,7 +197,7 @@ const uploadImage = async () => {
       align-self: flex-start;
 
       @media (max-width: 768px) {
-        align-self: center;
+        align-self: flex-start;
       }
     }
   }

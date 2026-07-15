@@ -30,6 +30,7 @@
               <MovieCard
                 :media="work.media"
                 :character="work.data.character || ''"
+                :character-image="work.data.characterImage"
                 :media-type="work.media.media_type === 'movie' ? 'movie' : 'serie'"
               />
             </RouterLink>
@@ -54,6 +55,7 @@ type EnhancedWorkItem = {
   work: { id: number; actor_id: number; content_id: number };
   data: {
     character: string | undefined;
+    characterImage?: string;
     actor: PersonData<Actor>;
   };
   sortDate: string;

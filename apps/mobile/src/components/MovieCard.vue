@@ -19,6 +19,10 @@
         </span>
       </div>
     </div>
+
+    <div v-if="characterImage" class="character-right">
+      <MediaThumbnail :path="characterImage" :radius="'8px'" :width="45" :height="60" />
+    </div>
   </div>
 </template>
 
@@ -31,6 +35,7 @@ import type { Serie as SerieModel } from "@supabase/functions/_shared/serie";
 type Props = {
   media: MovieModel | SerieModel;
   character: string;
+  characterImage?: string;
   mediaType: "movie" | "serie";
 };
 
@@ -100,6 +105,29 @@ const releaseDate = computed(() => {
       .date-value {
         color: var(--ion-color-text-secondary);
       }
+    }
+  }
+
+  .character-right {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    flex-shrink: 0;
+    margin-left: auto;
+    text-align: center;
+    max-width: 80px;
+
+    .character-name {
+      font-size: 0.75rem;
+      color: var(--ion-color-text-secondary);
+      font-style: italic;
+      line-height: 1.1;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
   }
 }
