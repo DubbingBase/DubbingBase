@@ -317,6 +317,10 @@ export type Database = {
         }
         Returns: number
       }
+      find_duplicate_voice_actors_rpc: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_media_queue_items: {
         Args: never
         Returns: {

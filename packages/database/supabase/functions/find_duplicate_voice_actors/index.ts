@@ -28,7 +28,7 @@ export default {
         throw error;
       }
 
-      const formattedData = data?.map((group: any) => ({
+      const formattedData = (data as any[])?.map((group: any) => ({
         ...group,
         actors: group.actors.map((actor: any) => ({
           ...actor,
