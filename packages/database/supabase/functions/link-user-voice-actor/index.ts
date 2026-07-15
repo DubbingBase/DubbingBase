@@ -31,8 +31,16 @@ export default {
       }
 
       // Parse request body
-      const { user_id, voice_actor_id }: LinkUserVoiceActorRequest =
-        await req.json();
+      const body = await req.json();
+      const user_id = body.user_id || body.targetUserId || user.id;
+      const voice_actor_id = body.voice_actor_id;
+
+      if (!user_id || !voice_actor_id) {
+        return Response.json(
+          { error: "Missing user_id or voice_actor_id" },
+          { status: 400 },
+        );
+      }
 
       // Verify voice actor exists
       const { data: voiceActor, error: vaError } = await ctx.supabase

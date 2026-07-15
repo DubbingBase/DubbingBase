@@ -180,13 +180,7 @@ const fetchUsers = async () => {
     loading.value = true;
     error.value = null;
 
-    const { data: sessionData } = await supabase.auth.getSession();
-    const session = sessionData.session;
-    if (!session) throw new Error("No active session found");
-
-    const { data, error: funcError } = await supabase.functions.invoke("list_users", {
-      headers: { Authorization: `Bearer ${session.access_token}` },
-    });
+    const { data, error: funcError } = await supabase.functions.invoke("list_users");
 
     if (funcError) throw funcError;
 
@@ -216,13 +210,8 @@ const updateRole = async (userObj: User) => {
   updatingRole.value[userObj.id] = true;
 
   try {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const session = sessionData.session;
-    if (!session) throw new Error("No active session found");
-
     const { error: funcError } = await supabase.functions.invoke("update_user_role", {
       body: { userId: userObj.id, role },
-      headers: { Authorization: `Bearer ${session.access_token}` },
     });
 
     if (funcError) throw funcError;
@@ -246,13 +235,8 @@ const deleteUser = async () => {
   deleting.value = true;
 
   try {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const session = sessionData.session;
-    if (!session) throw new Error("No active session found");
-
     const { error: funcError } = await supabase.functions.invoke("delete_user", {
       body: { userId: userToDelete.value.id },
-      headers: { Authorization: `Bearer ${session.access_token}` },
     });
 
     if (funcError) throw funcError;
