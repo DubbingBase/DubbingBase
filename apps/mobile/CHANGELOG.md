@@ -1,5 +1,14 @@
 # @app/mobile
 
+## 1.0.33
+
+### Patch Changes
+
+- 611b697: improvements
+- Updated dependencies [611b697]
+  - @app/supabase@0.0.18
+  - @app/locales@0.0.1
+
 ## 1.0.32
 
 ### Patch Changes
