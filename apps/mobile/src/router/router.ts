@@ -50,12 +50,12 @@ const routes: readonly RouteRecordRaw[] = [
         path: "/tabs/about",
         component: () => import("../views/about.vue"),
       },
-      {
-        name: "VoiceActorProfile",
-        path: "/tabs/voice-actor-profile/:id",
-        component: () => import("../views/voice-actor-profile.vue"),
-      },
     ],
+  },
+  {
+    name: "VoiceActorProfile",
+    path: "/voice-actor-profile/:id",
+    component: () => import("../views/voice-actor-profile.vue"),
   },
   {
     name: "MovieDetails",

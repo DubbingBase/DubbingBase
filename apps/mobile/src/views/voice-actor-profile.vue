@@ -2,6 +2,9 @@
   <ion-page>
     <ion-header>
       <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-back-button default-href="/tabs/search"></ion-back-button>
+        </ion-buttons>
         <ion-title>{{ $t('profile.voiceActorProfile') }}</ion-title>
         <ion-buttons slot="end">
           <ion-button @click="openPublicProfile">
@@ -103,7 +106,8 @@ import {
   IonInput,
   IonTextarea,
   IonModal,
-  IonButtons
+  IonButtons,
+  IonBackButton
 } from '@ionic/vue'
 import { useProfileStore } from '@/stores/profile'
 import { useAuthStore } from '@/stores/auth'
@@ -112,6 +116,7 @@ import AddWorkModal from '@/components/profile/AddWorkModal.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import { alertCircle, personCircle, refresh, add, eye } from 'ionicons/icons';
 import type { Tables } from '@/utils/database';
+import { supabase } from '@/api/supabase';
 
 type VoiceActor = Tables<'voice_actors'>;
 
@@ -144,13 +149,63 @@ const handleDeleteWork = async (workEntryId: number) => {
   await profileStore.removeWorkEntry(workEntryId, { voiceActorId: voiceActorId.value });
 };
 
-onMounted(async () => {
+const loadProfileData = async () => {
+  console.log("[loadProfileData] Starting fetchProfile for voiceActorId:", voiceActorId.value);
   await profileStore.fetchProfile({ voiceActorId: voiceActorId.value })
-})
+  
+  console.log("[loadProfileData] currentVoiceActor.id:", profileStore.currentVoiceActor?.id);
+  
+  if (profileStore.currentVoiceActor?.id !== voiceActorId.value) {
+    console.log("[loadProfileData] Voice actor mismatch, fetching directly via 'voice-actor' function");
+    try {
+      const { data, error } = await supabase.functions.invoke("voice-actor", {
+        body: { id: voiceActorId.value },
+      });
+      console.log("[loadProfileData] voice-actor response:", { data, error });
+      if (data && data.voiceActor) {
+        // The edge function returns work rows in data.voiceActor.work and medias in data.medias
+        const medias = data.medias || [];
+        const mappedWorks = (data.voiceActor.work || []).map((work: any) => {
+          const media = medias.find((m: any) => m.id === work.content_id);
+          
+          let character_name = '';
+          if (media && media.credits && media.credits.cast) {
+            const actor = media.credits.cast.find((c: any) => c.id === work.actor_id);
+            if (actor) {
+              character_name = actor.character;
+            }
+          }
+          
+          return {
+            id: work.id,
+            voice_actor_id: work.voice_actor_id,
+            media_type: work.content_type === 'tv' ? 'serie' : work.content_type,
+            media_id: work.content_id,
+            character_name: character_name,
+            performance: work.performance,
+            media: media,
+            actor_id: work.actor_id
+          };
+        });
 
-watch(() => route.params.id, async (newId) => {
-  await profileStore.fetchProfile({ voiceActorId: parseInt(newId as string, 10) })
-})
+        const voiceActorWithWorks = {
+          ...data.voiceActor,
+          medias: mappedWorks
+        };
+        profileStore.impersonateVoiceActor(voiceActorWithWorks);
+        console.log("[loadProfileData] impersonated voice actor set successfully with works:", voiceActorWithWorks.medias.length);
+      }
+    } catch (e) {
+      console.error("[loadProfileData] Error fetching specific voice actor:", e);
+    }
+  } else {
+    console.log("[loadProfileData] Voice actor matched, no need to impersonate");
+  }
+}
+
+onMounted(loadProfileData)
+
+watch(() => route.params.id, loadProfileData)
 
 watch(() => profileStore.voiceActor, (newProfile) => {
   if (newProfile && profileStore.currentProfileType === 'voice_actor') {

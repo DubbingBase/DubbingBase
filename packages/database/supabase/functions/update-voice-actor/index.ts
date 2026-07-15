@@ -29,19 +29,26 @@ export default {
       // Determine which user to check permissions for
       const userIdToCheck = targetUserId || user.id;
 
-      // Check if the user has permission to update this voice actor
-      const { data: linkData, error: linkError } = await ctx.supabase
-        .from("user_voice_actor_links")
-        .select("voice_actor_id")
-        .eq("user_id", userIdToCheck)
-        .eq("voice_actor_id", voice_actor_id)
-        .single();
+      const isAdmin =
+        user.appMetadata?.role === "admin" ||
+        user.userMetadata?.role === "admin" ||
+        user.role === "admin";
 
-      if (linkError || !linkData) {
-        return Response.json(
-          { error: "Unauthorized to update this voice actor" },
-          { status: 403 },
-        );
+      if (!isAdmin) {
+        // Check if the user has permission to update this voice actor
+        const { data: linkData, error: linkError } = await ctx.supabase
+          .from("user_voice_actor_links")
+          .select("voice_actor_id")
+          .eq("user_id", userIdToCheck)
+          .eq("voice_actor_id", voice_actor_id)
+          .single();
+
+        if (linkError || !linkData) {
+          return Response.json(
+            { error: "Unauthorized to update this voice actor" },
+            { status: 403 },
+          );
+        }
       }
 
       // Prepare update data
