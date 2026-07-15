@@ -5,6 +5,7 @@
         v-for="workEntry in workEntries"
         :key="workEntry.id"
         :work-entry="workEntry"
+        :can-edit="canEdit"
         @edit="handleEditWork"
         @delete="handleDeleteWork"
       />
@@ -20,6 +21,10 @@ import WorkItem from './WorkItem.vue'
 import type { WorkEntry } from '@/stores/profile'
 
 const profileStore = useProfileStore()
+
+const props = defineProps<{
+  canEdit?: boolean
+}>()
 
 const workEntries = computed(() => profileStore.workEntries)
 

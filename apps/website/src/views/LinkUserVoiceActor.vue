@@ -234,13 +234,7 @@ const fetchUsersList = async () => {
   userLoading.value = true;
 
   try {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const session = sessionData.session;
-    if (!session) throw new Error("No active session found");
-
-    const { data, error } = await supabase.functions.invoke("list_users", {
-      headers: { Authorization: `Bearer ${session.access_token}` },
-    });
+    const { data, error } = await supabase.functions.invoke("list_users");
 
     if (error) throw error;
     allUsers.value = data?.users || [];

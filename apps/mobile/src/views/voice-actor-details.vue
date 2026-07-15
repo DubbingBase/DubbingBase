@@ -6,7 +6,11 @@
           <ion-back-button :default-href="{ name: 'Home' }" />
         </ion-buttons>
         <ion-title>Voix</ion-title>
-
+        <ion-buttons slot="end">
+          <ion-button @click="openEditProfile">
+            <ion-icon :icon="create" slot="icon-only"></ion-icon>
+          </ion-button>
+        </ion-buttons>
       </ion-toolbar>
     </ion-header>
     <ion-content>
@@ -37,7 +41,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 // Admin check: get user from supabase.auth and check for admin role
 import type { Serie as SerieModel } from "@supabase/functions/_shared/serie";
 import {
@@ -49,7 +53,9 @@ import {
   IonToolbar,
   IonContent,
   IonHeader,
+  IonIcon
 } from "@ionic/vue";
+import { create } from 'ionicons/icons';
 import type { Movie as MovieModel } from "@supabase/functions/_shared/movie";
 import { supabase } from "../api/supabase";
 import VoiceActorHeader from "@/components/VoiceActorHeader.vue";
@@ -64,6 +70,7 @@ import { actorToPersonData } from "@/utils/convert";
 
 const authStore = useAuthStore();
 const route = useRoute();
+const router = useRouter();
 
 // Local admin check using Supabase auth
 
@@ -161,6 +168,11 @@ const baseEnhancedWork = computed<EnhancedWorkItem[]>(() => {
 
   return result;
 });
+
+const openEditProfile = () => {
+  const id = route.params.id;
+  router.push({ name: 'VoiceActorProfile', params: { id } });
+};
 
 // For chronological view
 const enhancedWork = computed(() => {

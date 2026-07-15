@@ -32,7 +32,8 @@
     "downvote": "Downvote",
     "setStatus": "Set Status",
     "newVoiceActorsAdded": "{count} new voice actors added",
-    "noNewChangesFound": "No new changes found"
+    "noNewChangesFound": "No new changes found",
+    "suggestChanges": "Suggest changes (Coming soon)"
   },
   "profile": {
     "userProfile": "My User Profile",

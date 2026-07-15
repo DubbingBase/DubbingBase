@@ -58,7 +58,7 @@ const routes = [
         path: "voice-actors/new",
         name: "CreateVoiceActor",
         component: () => import("../views/EditVoiceActor.vue"),
-        beforeEnter: (to, from, next) => {
+        beforeEnter: (_to: any, from: any, next: any) => {
           if (
             from.name === "VoiceActorSpreadsheet" ||
             from.path === "/voice-actor-spreadsheet"
