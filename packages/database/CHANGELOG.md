@@ -1,5 +1,11 @@
 # @app/supabase
 
+## 0.0.21
+
+### Patch Changes
+
+- ca3c691: sd
+
 ## 0.0.20
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @app/mobile
 
+## 1.0.36
+
+### Patch Changes
+
+- ca3c691: sd
+- Updated dependencies [ca3c691]
+  - @app/supabase@0.0.21
+  - @app/locales@0.0.3
+
 ## 1.0.35
 
 ### Patch Changes
