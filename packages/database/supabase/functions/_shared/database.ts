@@ -48,7 +48,7 @@ export class DatabaseClient implements IDatabaseClient {
 
     const { data, error } = await this.ctx.supabase
       .from("voice_actors")
-      .select(`*, work (*)`)
+      .select(`*, work (*), user_voice_actor_links(id)`)
       .eq("id", voiceActorId)
       .single();
 

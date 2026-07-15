@@ -8,10 +8,10 @@
     "build": "vite build",
     "preview": "vite preview",
     "function": "supabase functions serve hello-world --no-verify-jwt",
-    "sup:types": "npx supabase gen types --lang=typescript --local > ../../packages/database/functions/_shared/database.types.ts",
     "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {
+    "@app/locales": "workspace:*",
     "@app/supabase": "workspace:*",
     "@capacitor/android": "^7.4.3",
     "@capacitor/app": "^7.1.0",

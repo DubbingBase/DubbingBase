@@ -138,3 +138,8 @@ description = "Verifies all Edge Functions are configured in supabase/config.tom
 dir = "packages/database"
 run = "./check-functions.sh"
 
+[tasks.gen-types]
+description = "Generates database types from Supabase"
+depends = ["install", "backend"]
+dir = "packages/database"
+run = "npx supabase gen types --lang=typescript --local > supabase/functions/_shared/database.types.ts"

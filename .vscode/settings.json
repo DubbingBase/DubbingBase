@@ -27,7 +27,9 @@
     "net"
   ],
   "i18n-ally.localesPaths": [
-    "src/i18n",
-    "src/locales"
+    "packages/locales"
+  ],
+  "i18n-ally.enabledFrameworks": [
+    "vue"
   ]
 }

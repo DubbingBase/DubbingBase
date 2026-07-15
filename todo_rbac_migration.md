@@ -135,6 +135,7 @@ From [permissions.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/ap
 ### Phase 2: Auth Hook
 
 - `[ ]` Create the `custom_access_token_hook` function:
+
   ```sql
   CREATE OR REPLACE FUNCTION public.custom_access_token_hook(event jsonb)
   RETURNS jsonb LANGUAGE plpgsql STABLE AS $$
@@ -159,7 +160,9 @@ From [permissions.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/ap
   END;
   $$;
   ```
+
 - `[ ]` Grant permissions for the hook:
+
   ```sql
   GRANT USAGE ON SCHEMA public TO supabase_auth_admin;
   GRANT EXECUTE ON FUNCTION public.custom_access_token_hook TO supabase_auth_admin;
@@ -171,6 +174,7 @@ From [permissions.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/ap
     ON public.user_roles AS PERMISSIVE FOR SELECT
     TO supabase_auth_admin USING (true);
   ```
+
 - `[ ]` Enable the hook in **Supabase Dashboard → Authentication → Hooks → Custom Access Token**
 - `[ ]` For local dev: add hook config to `supabase/config.toml`:
   ```toml
@@ -254,6 +258,7 @@ From [permissions.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/ap
 - `[ ]` Install `jwt-decode` package: `npm install jwt-decode`
 - `[ ]` Update [auth.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/stores/auth.ts):
   - Decode `access_token` to get `user_role` claim:
+
     ```typescript
     import { jwtDecode } from 'jwt-decode';
 
@@ -266,7 +271,9 @@ From [permissions.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/ap
 
     const isAdmin = computed(() => userRole.value === 'admin');
     ```
+
   - Remove triple-check on `app_metadata/user_metadata/role`
+
 - `[ ]` Update [permissions.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/types/permissions.ts):
   - Align permission keys with database enum values
 - `[ ]` Update [usePermissions.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/apps/mobile/src/composables/usePermissions.ts):

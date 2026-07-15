@@ -166,7 +166,8 @@ export class RedisIntegrationTestSuite {
 
       // Test get operation
       const getResult = (await this.cache.get(testKey)) as
-        typeof testData | null;
+        | typeof testData
+        | null;
       if (!getResult || getResult.message !== testData.message) {
         throw new Error(
           "Cache get operation failed or returned incorrect data",

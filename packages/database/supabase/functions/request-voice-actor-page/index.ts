@@ -12,7 +12,7 @@ export default {
       }
 
       const body = await req.json().catch(() => ({}));
-      const { firstname, lastname, details } = body;
+      const { firstname, lastname, details, voice_actor_id } = body;
 
       if (!firstname || !lastname) {
         return createErrorResponse(
@@ -35,10 +35,14 @@ export default {
       const fromEmail =
         Deno.env.get("RESEND_FROM_EMAIL") || "onboarding@resend.dev";
 
-      const subject = `New Voice Actor Page Request: ${firstname} ${lastname}`;
+      const isLinkageRequest = !!voice_actor_id;
+      const subject = isLinkageRequest
+        ? `Voice Actor Linkage Request: ${firstname} ${lastname}`
+        : `New Voice Actor Page Request: ${firstname} ${lastname}`;
+
       const htmlContent = `
         <div style="font-family: sans-serif; padding: 20px; color: #1e293b; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
-          <h2 style="color: #2563eb; margin-top: 0; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">Voice Actor Page Request</h2>
+          <h2 style="color: #2563eb; margin-top: 0; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">${isLinkageRequest ? "Voice Actor Linkage Request" : "Voice Actor Page Request"}</h2>
           
           <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
             <tr>
@@ -49,6 +53,16 @@ export default {
               <td style="padding: 8px 0; font-weight: bold; color: #64748b;">Actor Name:</td>
               <td style="padding: 8px 0; font-weight: bold; color: #0f172a;">${firstname} ${lastname}</td>
             </tr>
+            ${
+              isLinkageRequest
+                ? `
+            <tr>
+              <td style="padding: 8px 0; font-weight: bold; color: #64748b;">Voice Actor ID:</td>
+              <td style="padding: 8px 0; font-weight: bold; color: #0f172a;">${voice_actor_id}</td>
+            </tr>
+            `
+                : ""
+            }
           </table>
           
           <div style="margin-top: 20px; background-color: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #f1f5f9;">
