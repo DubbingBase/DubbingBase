@@ -46,7 +46,7 @@ export function buildSupabaseImageUrl(
     console.log("Replacing supabase url with localhost");
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     if (supabaseUrl) {
-      url = url.replace(supabaseUrl, "http://localhost:55321");
+      url = url.replace(supabaseUrl, "http://127.0.0.1:55321");
     }
   }
 

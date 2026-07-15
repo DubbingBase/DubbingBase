@@ -37,23 +37,15 @@ export default {
           message: "No duplicates to merge.",
         });
       }
+      // Call the RPC to merge safely and bypass any pagination limits
+      const { error: rpcError } = await ctx.supabaseAdmin
+        .rpc("merge_voice_actors", {
+          p_keep_id: keepId,
+          p_other_ids: otherIds,
+        });
 
-      // 1. Update all 'work' records to point to keepId
-      const { error: updateError } = await ctx.supabaseAdmin
-        .from("work")
-        .update({ voice_actor_id: keepId })
-        .in("voice_actor_id", otherIds);
-      if (updateError) {
-        return Response.json({ error: updateError }, { status: 500 });
-      }
-
-      // 2. Delete the duplicate voice_actors
-      const { error: deleteError } = await ctx.supabaseAdmin
-        .from("voice_actors")
-        .delete()
-        .in("id", otherIds);
-      if (deleteError) {
-        return Response.json({ error: deleteError }, { status: 500 });
+      if (rpcError) {
+        return Response.json({ error: rpcError }, { status: 500 });
       }
 
       return Response.json({ success: true });

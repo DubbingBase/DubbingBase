@@ -60,71 +60,98 @@
           </span>
         </div>
 
-        <!-- Comparative Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div
-            v-for="actor in group.actors"
-            :key="actor.id"
-            :class="[
-              'p-5 rounded-xl border transition-all duration-200 cursor-pointer flex flex-col justify-between space-y-4 select-none',
-              group.selectedId === actor.id
-                ? 'bg-blue-600/5 border-blue-500 ring-2 ring-blue-500/20'
-                : 'bg-slate-950/40 border-slate-800/60 hover:bg-slate-900/60 hover:border-slate-700'
-            ]"
-            @click="group.selectedId = actor.id"
-          >
-            <div class="space-y-4">
-              <!-- Avatar & Name row -->
-              <div class="flex items-center space-x-3.5">
-                <div class="h-12 w-12 rounded-full overflow-hidden shrink-0 border border-slate-800 bg-slate-900 flex items-center justify-center text-slate-500">
-                  <img
-                    v-if="actor.profile_picture"
-                    :src="actor.profile_picture"
-                    class="h-full w-full object-cover"
-                    alt="Actor Avatar"
-                  />
-                  <svg v-else class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                </div>
-                <div class="min-w-0">
-                  <h5 class="font-bold text-white text-sm truncate">{{ actor.firstname }} {{ actor.lastname }}</h5>
-                  <p class="text-xs text-slate-500 font-mono mt-0.5">ID: {{ actor.id }}</p>
-                </div>
-              </div>
-
-              <!-- Meta specs -->
-              <div class="text-xs space-y-2 border-t border-slate-800/60 pt-3 text-slate-350">
-                <p v-if="actor.nationality" class="truncate">
-                  <span class="text-slate-500">Nationality:</span> {{ actor.nationality }}
-                </p>
-                <p v-if="actor.date_of_birth">
-                  <span class="text-slate-500">Born:</span> {{ formatDate(actor.date_of_birth) }}
-                </p>
-                <p v-if="actor.tmdb_id">
-                  <span class="text-slate-500">TMDB ID:</span> {{ actor.tmdb_id }}
-                </p>
-                <p v-if="actor.wikidata_id" class="truncate font-mono">
-                  <span class="text-slate-500">Wikidata:</span> {{ actor.wikidata_id }}
-                </p>
-                <p v-if="actor.bio" class="text-slate-400 text-xs line-clamp-3 leading-relaxed mt-2 border-t border-slate-800/40 pt-2 italic">
-                  "{{ actor.bio }}"
-                </p>
-              </div>
-            </div>
-
-            <!-- Keep Radio Option -->
-            <div class="flex items-center space-x-2 border-t border-slate-800/60 pt-3 mt-auto shrink-0">
-              <input
-                type="radio"
-                :name="'group-' + idx"
-                :value="actor.id"
-                v-model="group.selectedId"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 bg-slate-900 border-slate-800"
-              />
-              <span class="text-xs font-semibold text-slate-300">Keep this profile</span>
-            </div>
-          </div>
+        <!-- Comparative Table -->
+        <div class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/40">
+          <table class="w-full text-sm text-left">
+            <thead>
+              <tr>
+                <th class="p-4 bg-slate-900/80 border-b border-slate-800 w-32 text-slate-400 font-semibold uppercase tracking-wider text-xs">Field</th>
+                <th v-for="actor in group.actors" :key="'h-'+actor.id" class="p-4 bg-slate-900/80 border-b border-l border-slate-800 min-w-[280px]" :class="group.selectedId === actor.id ? 'bg-blue-900/10' : ''">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                      <div class="h-10 w-10 rounded-full overflow-hidden shrink-0 border border-slate-800 bg-slate-900 flex items-center justify-center text-slate-500">
+                        <img
+                          v-if="actor.profile_picture"
+                          :src="actor.profile_picture"
+                          class="h-full w-full object-cover"
+                          alt="Actor Avatar"
+                        />
+                        <svg v-else class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      </div>
+                      <div class="min-w-0">
+                        <h5 class="font-bold text-white text-base">Candidate</h5>
+                        <p class="text-xs text-slate-400 font-mono mt-0.5">ID: {{ actor.id }}</p>
+                      </div>
+                    </div>
+                  </div>
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/60">
+              <!-- Name Row -->
+              <tr>
+                <td class="p-4 text-slate-400 font-medium bg-slate-900/30">Name</td>
+                <td v-for="actor in group.actors" :key="'n-'+actor.id" class="p-4 border-l border-slate-800" :class="getNameDiffClass(group.actors)">
+                  {{ actor.firstname }} {{ actor.lastname }}
+                </td>
+              </tr>
+              <!-- Nationality Row -->
+              <tr v-if="hasAny(group.actors, 'nationality')">
+                <td class="p-4 text-slate-400 font-medium bg-slate-900/30">Nationality</td>
+                <td v-for="actor in group.actors" :key="'nat-'+actor.id" class="p-4 border-l border-slate-800" :class="getDiffClass(group.actors, 'nationality')">
+                  {{ actor.nationality || '-' }}
+                </td>
+              </tr>
+              <!-- Born Row -->
+              <tr v-if="hasAny(group.actors, 'date_of_birth')">
+                <td class="p-4 text-slate-400 font-medium bg-slate-900/30">Born</td>
+                <td v-for="actor in group.actors" :key="'dob-'+actor.id" class="p-4 border-l border-slate-800" :class="getDiffClass(group.actors, 'date_of_birth')">
+                  {{ actor.date_of_birth ? formatDate(actor.date_of_birth) : '-' }}
+                </td>
+              </tr>
+              <!-- TMDB Row -->
+              <tr v-if="hasAny(group.actors, 'tmdb_id')">
+                <td class="p-4 text-slate-400 font-medium bg-slate-900/30">TMDB ID</td>
+                <td v-for="actor in group.actors" :key="'tmd-'+actor.id" class="p-4 border-l border-slate-800" :class="getDiffClass(group.actors, 'tmdb_id')">
+                  {{ actor.tmdb_id || '-' }}
+                </td>
+              </tr>
+              <!-- Wikidata Row -->
+              <tr v-if="hasAny(group.actors, 'wikidata_id')">
+                <td class="p-4 text-slate-400 font-medium bg-slate-900/30">Wikidata</td>
+                <td v-for="actor in group.actors" :key="'wik-'+actor.id" class="p-4 border-l border-slate-800 font-mono text-xs break-all" :class="getDiffClass(group.actors, 'wikidata_id')">
+                  {{ actor.wikidata_id || '-' }}
+                </td>
+              </tr>
+              <!-- Bio Row -->
+              <tr v-if="hasAny(group.actors, 'bio')">
+                <td class="p-4 text-slate-400 font-medium bg-slate-900/30 align-top">Bio</td>
+                <td v-for="actor in group.actors" :key="'bio-'+actor.id" class="p-4 border-l border-slate-800 align-top max-w-xs" :class="getDiffClass(group.actors, 'bio')">
+                  <div class="line-clamp-4 italic text-xs leading-relaxed" :class="actor.bio ? '' : 'text-slate-600'">
+                    {{ actor.bio || '-' }}
+                  </div>
+                </td>
+              </tr>
+              <!-- Action Row -->
+              <tr>
+                <td class="p-4 text-slate-400 font-medium bg-slate-900/30">Action</td>
+                <td v-for="actor in group.actors" :key="'sel-'+actor.id" class="p-0 border-l border-slate-800 bg-slate-900/50 transition-colors" :class="group.selectedId === actor.id ? 'bg-blue-900/20 shadow-inner' : 'hover:bg-slate-800'">
+                  <label class="flex items-center space-x-3 cursor-pointer w-full h-full p-4">
+                    <input
+                      type="radio"
+                      :name="'group-' + idx"
+                      :value="actor.id"
+                      v-model="group.selectedId"
+                      class="h-5 w-5 text-blue-500 focus:ring-blue-500 focus:ring-offset-slate-900 bg-slate-950 border-slate-700"
+                    />
+                    <span class="text-sm font-bold" :class="group.selectedId === actor.id ? 'text-blue-400' : 'text-slate-300'">Keep ID #{{ actor.id }}</span>
+                  </label>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
         <!-- Group Merge Action Bar -->
@@ -206,6 +233,67 @@ const showToast = (message: string, type: "success" | "error" | "info" = "info")
   }, 3000);
 };
 
+const isDifferent = (actors: VoiceActorCandidate[], field: keyof VoiceActorCandidate) => {
+  if (!actors || actors.length < 2) return false;
+  const firstVal = actors[0][field];
+  return actors.some((a) => a[field] !== firstVal);
+};
+
+const isDifferentName = (actors: VoiceActorCandidate[]) => {
+  if (!actors || actors.length < 2) return false;
+  const firstName = actors[0].firstname + " " + actors[0].lastname;
+  return actors.some((a) => a.firstname + " " + a.lastname !== firstName);
+};
+
+const getDiffClass = (actors: VoiceActorCandidate[], field: keyof VoiceActorCandidate) => {
+  return isDifferent(actors, field)
+    ? "text-amber-300 font-bold bg-amber-900/30 shadow-[inset_0_0_0_1px_rgba(217,119,6,0.5)]"
+    : "text-slate-300";
+};
+
+const getNameDiffClass = (actors: VoiceActorCandidate[]) => {
+  return isDifferentName(actors)
+    ? "text-amber-300 font-bold bg-amber-900/30 shadow-[inset_0_0_0_1px_rgba(217,119,6,0.5)]"
+    : "text-slate-200 font-semibold";
+};
+
+const hasAny = (actors: VoiceActorCandidate[], field: keyof VoiceActorCandidate) => {
+  return actors.some((a) => a[field] !== null && a[field] !== undefined && a[field] !== "");
+};
+
+const calculateScore = (actor: VoiceActorCandidate) => {
+  let score = 0;
+  if (actor.bio) score += 1;
+  if (actor.nationality) score += 1;
+  if (actor.date_of_birth) score += 1;
+  if (actor.tmdb_id) score += 2;
+  if (actor.wikidata_id) score += 2;
+  if (actor.profile_picture) score += 2;
+  return score;
+};
+
+const preselectBest = (actors: VoiceActorCandidate[]) => {
+  if (!actors || actors.length === 0) return null;
+  
+  let bestActor = actors[0];
+  let bestScore = calculateScore(bestActor);
+  
+  for (let i = 1; i < actors.length; i++) {
+    const score = calculateScore(actors[i]);
+    if (score > bestScore) {
+      bestScore = score;
+      bestActor = actors[i];
+    } else if (score === bestScore) {
+      // Prefer the oldest record in case of a tie
+      if (actors[i].id < bestActor.id) {
+        bestActor = actors[i];
+      }
+    }
+  }
+  
+  return bestActor.id;
+};
+
 const fetchDuplicates = async () => {
   try {
     loading.value = true;
@@ -218,7 +306,7 @@ const fetchDuplicates = async () => {
 
     duplicates.value = (data || []).map((group: any) => ({
       actors: group.actors || [],
-      selectedId: null
+      selectedId: preselectBest(group.actors || [])
     }));
   } catch (err: any) {
     console.error("Error fetching voice actor duplicates:", err);

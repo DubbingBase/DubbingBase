@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex bg-slate-950 text-slate-100">
+  <div class="h-screen w-full flex bg-slate-950 text-slate-100 overflow-hidden">
     <!-- Mobile Navigation Bar -->
     <header class="lg:hidden fixed top-0 left-0 right-0 h-16 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-4 z-40">
       <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-400">
@@ -77,7 +77,7 @@
     </aside>
 
     <!-- Main Content Wrapper -->
-    <div class="flex-1 flex flex-col min-h-screen overflow-x-hidden pt-16 lg:pt-0">
+    <div class="flex-1 flex flex-col h-full overflow-y-auto overflow-x-hidden pt-16 lg:pt-0">
       <!-- Top header on desktop -->
       <header class="hidden lg:flex h-16 border-b border-slate-800 items-center justify-between px-8 bg-slate-900/40 backdrop-blur-md sticky top-0 z-35">
         <h2 class="text-lg font-bold text-white">{{ currentSectionName }}</h2>

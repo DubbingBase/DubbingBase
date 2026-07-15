@@ -23,8 +23,8 @@
         <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block self-start">Profile Photo</label>
         <div class="relative h-44 w-44 rounded-full overflow-hidden border-2 border-slate-800 bg-slate-950 flex items-center justify-center text-slate-500 shadow-inner group">
           <img
-            v-if="previewImage || profilePicture"
-            :src="previewImage || profilePicture"
+            v-if="profilePicture"
+            :src="profilePicture"
             class="h-full w-full object-cover"
             alt="Profile Picture"
           />

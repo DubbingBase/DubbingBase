@@ -143,3 +143,21 @@ description = "Generates database types from Supabase"
 depends = ["install", "backend"]
 dir = "packages/database"
 run = "npx supabase gen types --lang=typescript --local > supabase/functions/_shared/database.types.ts"
+
+[tasks.fetch-seed]
+description = "Fetches seed data from the remote database"
+depends = ["install"]
+dir = "packages/database"
+run = "npx supabase db dump --data-only -f supabase/seed.sql --linked"
+
+[tasks.sync-storage]
+description = "Fetches storage buckets from the remote database and uploads them locally"
+depends = ["fetch-seed"]
+dir = "packages/database"
+run = "./sync-storage.sh"
+
+[tasks.reseed]
+description = "Fetches seed data and storage from remote and resets local database"
+depends = ["sync-storage"]
+dir = "packages/database"
+run = "npx supabase db reset --local"

@@ -348,6 +348,10 @@ export type Database = {
           voice_actor: Json
         }[]
       }
+      merge_voice_actors: {
+        Args: { p_keep_id: number; p_other_ids: number[] }
+        Returns: undefined
+      }
       pop_media_queue_message: {
         Args: { p_vt_seconds?: number }
         Returns: {
