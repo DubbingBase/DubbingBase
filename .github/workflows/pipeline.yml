@@ -145,7 +145,53 @@ jobs:
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
 
-  # Job 4: Build Android app (runs on any branch if mobile has changes)
+  # Job 4: Deploy Mobile App as Website
+  deploy-mobile-web:
+    needs: [detect, deploy-supabase]
+    # Run if mobile has changes, and if database job succeeded (or wasn't needed)
+    if: |
+      always() && 
+      needs.detect.outputs.mobile == 'true' && 
+      (needs.deploy-supabase.result == 'success' || needs.deploy-supabase.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build mobile website
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: pnpm --filter=@app/mobile build
+
+      - name: Deploy to Netlify
+        if: github.ref == 'refs/heads/main'
+        uses: nwtgck/actions-netlify@v3.0
+        with:
+          publish-dir: "./apps/mobile/dist"
+          production-branch: main
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "Deploy Mobile Web from GitHub Actions"
+          enable-pull-request-comment: false
+          enable-commit-comment: true
+          overwrites-pull-request-comment: true
+        env:
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_MOBILE_SITE_ID }}
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+
+  # Job 5: Build Android app (runs on any branch if mobile has changes)
   build-android:
     needs: [detect, deploy-supabase]
     # Run if mobile has changes, and if database job succeeded (or wasn't needed)
@@ -224,7 +270,7 @@ jobs:
           path: apps/mobile/android/app/build/outputs/apk/release/app-release-signed.apk
           retention-days: 30
 
-  # Job 5: Upload AAB to Play Store (runs only on main branch pushes)
+  # Job 6: Upload AAB to Play Store (runs only on main branch pushes)
   upload-play-store:
     needs: [detect, build-android]
     if: |
