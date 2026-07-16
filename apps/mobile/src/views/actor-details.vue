@@ -3,9 +3,7 @@
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <button @click="router.back()" class="custom-back-button">
-            &larr;
-          </button>
+          <AppBackButton />
         </ion-buttons>
         <ion-title>{{ t("actor.title") }}</ion-title>
       </ion-toolbar>
@@ -197,6 +195,7 @@ import AlertCircle from '~icons/lucide/alert-circle';
 import AppSpinner from '@/components/common/AppSpinner.vue';
 import AppSkeleton from '@/components/common/AppSkeleton.vue';
 import { computed, onMounted, ref, watch, nextTick } from "vue";
+import AppBackButton from "@/components/common/AppBackButton.vue";
 import { useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { IonPage, IonButtons, IonTitle, IonToolbar, IonHeader, IonChip, IonSegment, IonSegmentButton, IonSegmentView, IonSegmentContent, IonContent, IonRefresher, IonRefresherContent, IonButton, IonSearchbar, IonItem, IonToggle } from '@ionic/vue';
@@ -461,16 +460,7 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
-.custom-back-button {
-  background: transparent;
-  color: white;
-  border: none;
-  font-size: 24px;
-  padding: 0 16px;
-  cursor: pointer;
-}
-</style>
+
 <style scoped lang="scss">
 .actor {
   padding: 0;
