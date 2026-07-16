@@ -1,12 +1,11 @@
-remove ion router
-implement view transitions
 remove ionic entirely
-make things fast
-suivre un doubleur (notifications)
-how do i push notifications
-when loading fast, images have a white border/outline
+implement view transitions
 voice actor request is very slow: it's because there is a tmdb outage
 add votes to trust work
 add "untrusted" work
 add gamification
 add skeleton loaders
+suivre un doubleur (notifications)
+how do i push notifications
+standardize back button or find an alternative
+navigate routes by name , not by path

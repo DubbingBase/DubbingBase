@@ -19,18 +19,6 @@
       <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
         <ion-refresher-content></ion-refresher-content>
       </ion-refresher>
-      <!-- Banner with backdrop and metadata -->
-      <div class="banner" v-if="show">
-        <MediaItem
-          v-if="show.backdrop_path"
-          :imagePath="show.backdrop_path"
-          :title="show.name"
-          :routeName="'SerieDetails'"
-          :routeParams="{ id: show.id }"
-          class="banner-backdrop"
-        />
-        <div class="banner-overlay"></div>
-      </div>
 
       <MediaInfoCard :media="show" />
 

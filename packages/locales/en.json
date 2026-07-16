@@ -13,6 +13,7 @@
     "logout": "Logout"
   },
   "common": {
+    "actions": "Actions",
     "loading": "Loading...",
     "error": "Error",
     "save": "Save",

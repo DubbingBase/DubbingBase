@@ -12,6 +12,7 @@
     "logout": "Déconnexion"
   },
   "common": {
+    "actions": "Actions",
     "loading": "Chargement...",
     "error": "Erreur",
     "save": "Enregistrer",

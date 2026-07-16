@@ -15,16 +15,6 @@
       <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
         <ion-refresher-content></ion-refresher-content>
       </ion-refresher>
-      <!--
-      <div class="background" v-if="movie">
-        <img
-          width="100%"
-          v-if="movie"
-          :src="movie.backdrop_path"
-          alt="Movie background image"
-        />
-      </div>
-      -->
 
       <MediaInfoCard :media="movie" />
 

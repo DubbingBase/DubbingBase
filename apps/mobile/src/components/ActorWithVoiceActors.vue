@@ -47,7 +47,7 @@
               :to="{ name: 'VoiceActorDetails', params: { id: voiceActor.id } }"
             >
               <PersonItem
-                v-on-long-press.prevent="() => handleLongPress(voiceActor)"
+                @contextmenu.prevent="handleLongPress(voiceActor)"
                 class="voice-actor-item"
                 :person="voiceActor"
                 type="voice-actor"
@@ -90,7 +90,6 @@ import {
 } from "ionicons/icons";
 import { useLanguagePreference } from "@/composables/useLanguagePreference";
 import { computed, watch } from "vue";
-import { vOnLongPress } from "@vueuse/components";
 
 import { IonIcon, IonButton, actionSheetController } from "@ionic/vue";
 import { usePermissions } from "@/composables/usePermissions";
