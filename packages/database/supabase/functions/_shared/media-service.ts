@@ -3,7 +3,7 @@ import { ITMDBClient } from "./interfaces.ts";
 import { processVoiceActor } from "./supabase-urls.ts";
 import { processMedia } from "./tmdb-urls.ts";
 import { TVDBClient } from "./tvdb.ts";
-import { cacheUtils } from "./index.ts";
+import { cacheUtils, wikipediaCache } from "./index.ts";
 
 import { SupabaseContext } from "npm:@supabase/server@^1";
 import { Database } from "./database.types.ts";
@@ -45,7 +45,20 @@ export class MediaService {
           `Failed to fetch TMDB/TVDB info for ${work.content_type} ${work.content_id}:`,
           err,
         );
-        return null;
+        return {
+          media: {
+            id: work.content_id,
+            title: "Information indisponible (Timeout)",
+            name: "Information indisponible (Timeout)",
+            poster_path: null,
+            backdrop_path: null,
+            overview: "Ce contenu n'a pas pu être chargé car les serveurs TMDB sont inaccessibles.",
+            credits: { cast: [] },
+            release_date: "1970-01-01",
+            first_air_date: "1970-01-01"
+          },
+          characterProfilePictures: []
+        };
       }
     });
 
@@ -55,7 +68,27 @@ export class MediaService {
     const medias = validResults.map(r => r.media);
     const characterProfilePictures = validResults.flatMap(r => r.characterProfilePictures);
 
-    return { voiceActor: voiceActorWithImages, medias, characterProfilePictures };
+    let potentialWikipediaUrl = null;
+    if (!voiceActor.tmdb_id) {
+      try {
+        const name = `${voiceActor.firstname} ${voiceActor.lastname}`.trim();
+        const searchData = await wikipediaCache.searchWikidataEntities(name);
+        
+        if (searchData.search && searchData.search.length > 0) {
+          const bestMatch = searchData.search[0];
+          const entityData = await wikipediaCache.getWikidataEntity(bestMatch.id);
+          
+          if (entityData.entities[bestMatch.id]?.sitelinks?.frwiki?.title) {
+            const title = entityData.entities[bestMatch.id].sitelinks.frwiki.title;
+            potentialWikipediaUrl = `https://fr.wikipedia.org/wiki/${encodeURI(title.replace(/ /g, "_"))}`;
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch potential Wikipedia URL:", e);
+      }
+    }
+
+    return { voiceActor: voiceActorWithImages, medias, characterProfilePictures, potentialWikipediaUrl };
   }
 
   private async getCharacterProfilePictures(contentType: "movie" | "tv", contentId: number, tmdbMedia: any): Promise<any[]> {

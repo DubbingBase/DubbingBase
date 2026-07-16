@@ -25,25 +25,55 @@ function buildTextSearchQuery(query: string): string {
 }
 
 // Scoring function combining popularity, vote_average, vote_count, and recency
-function calculateScore(item: any): number {
+function calculateScore(item: any, trimmedQuery: string): number {
   let score = 0;
 
-  // Popularity weight: 0.5 (higher popularity increases score)
-  score += (item.popularity || 0) * 0.5;
+  // Exact match bonus
+  const queryLower = trimmedQuery.toLowerCase();
+  
+  // Construct full name properly, especially for Voice Actors from DB
+  let itemDisplayName = item.title || item.name || item.voice_actor_name || "";
+  if (!itemDisplayName && item.firstname && item.lastname) {
+    itemDisplayName = `${item.firstname} ${item.lastname}`;
+  }
+  const itemName = itemDisplayName.toLowerCase();
 
-  // Vote average weight: 0.1 (normalized 0-10 scale)
+  if (itemName === queryLower) {
+    score += 50; // Huge boost for exact match
+  } else if (itemName.includes(queryLower)) {
+    // If it's a partial match that starts with the query, give more points
+    if (itemName.startsWith(queryLower)) {
+      score += 20;
+    } else {
+      score += 10;
+    }
+  }
+
+  // Popularity weight: TMDB popularity is very important to the user.
+  // We use a square root curve instead of log10 so that differences in high popularity 
+  // still matter, but don't completely dwarf exact matches.
+  // A popularity of 100 -> ~20 points. Popularity of 400 -> ~40 points.
+  const pop = item.popularity || 0;
+  score += Math.sqrt(pop) * 2; 
+
+  // Vote average weight: max 1.0 (normalized 0-10 scale)
   score += (item.vote_average || 0) * 0.1;
 
-  // Vote count weight: 0.25 (normalized by dividing by 3000, higher vote count means more popular)
-  score += ((item.vote_count || 0) / 3000) * 0.25;
+  // Vote count weight: log scale
+  const vc = item.vote_count || 0;
+  score += Math.log10(vc + 1);
 
-  // Recency weight: 0.15 (newer items get higher score)
+  // Recency weight: favor newer items but don't heavily penalize classics
   const date = item.release_date || item.first_air_date;
   if (date) {
-    const daysSinceRelease =
-      (Date.now() - new Date(date).getTime()) / (1000 * 60 * 60 * 24);
-    // Use a base score of 1000 and subtract days to favor recency
-    score += (1000 - daysSinceRelease) * 0.0015;
+    const yearsSinceRelease = (Date.now() - new Date(date).getTime()) / (1000 * 60 * 60 * 24 * 365);
+    // Decay based on years, capped so old movies don't go too negative
+    score += Math.max(-5, 5 - yearsSinceRelease * 0.2);
+  }
+
+  // Boost voice actors slightly so they don't get buried under movies
+  if (item.media_type === "voice_actor") {
+    score += 15; // Higher boost to ensure they appear if there's a name match
   }
 
   return score;
@@ -83,12 +113,22 @@ export default {
 
         const results: any[] = [];
         for (const response of pageResponses) {
-          const res = await response.json();
-          if (res.results && Array.isArray(res.results)) {
-            const withImages = res.results
-              .filter((x: any) => x !== null)
-              .map((x: any) => processMedia(x));
-            results.push(...withImages);
+          if (!response.ok) {
+            console.error(`TMDB fetch failed with status: ${response.status} ${response.statusText}`);
+            const text = await response.text();
+            console.error("Response body:", text.substring(0, 200));
+            continue;
+          }
+          try {
+            const res = await response.json();
+            if (res.results && Array.isArray(res.results)) {
+              const withImages = res.results
+                .filter((x: any) => x !== null)
+                .map((x: any) => processMedia(x));
+              results.push(...withImages);
+            }
+          } catch (err) {
+            console.error("Error parsing TMDB response:", err);
           }
         }
         resp.push(...results);
@@ -197,10 +237,10 @@ export default {
       // Sort by composite score
       resp = resp
         .filter((item) => item != null)
-        .sort((a, b) => calculateScore(b) - calculateScore(a));
+        .sort((a, b) => calculateScore(b, trimmedQuery) - calculateScore(a, trimmedQuery));
 
       // Add score to each item for debugging/transparency
-      resp = resp.map((item) => ({ ...item, score: calculateScore(item) }));
+      resp = resp.map((item) => ({ ...item, score: calculateScore(item, trimmedQuery) }));
 
       return Response.json(resp);
     } catch (error) {

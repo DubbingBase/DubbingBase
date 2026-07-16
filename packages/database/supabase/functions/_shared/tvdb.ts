@@ -88,18 +88,27 @@ export class TVDBClient implements ITVDBClient {
       });
     }
 
-    const response = await fetch(url.toString(), {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-      },
-    });
+    try {
+      const response = await fetch(url.toString(), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+        signal: AbortSignal.timeout(5000), // 5 seconds timeout
+      });
 
-    if (!response.ok) {
-      throw new Error(`TVDB API error: ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`TVDB API error: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (e: any) {
+      if (e.name === 'TimeoutError' || e.name === 'AbortError') {
+         console.warn(`[TVDB] Request timed out for ${endpoint}`);
+         throw new Error(`TVDB API timeout: ${endpoint}`);
+      }
+      throw e;
     }
-
-    return response.json();
   }
 
   async getSeriesById(

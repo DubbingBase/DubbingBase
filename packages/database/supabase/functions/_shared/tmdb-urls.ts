@@ -46,6 +46,6 @@ export const processMedia = (media: any) => {
           ...season,
           poster_path: buildTmdbImageUrl(season.poster_path),
         }))
-      : {},
+      : [],
   };
 };

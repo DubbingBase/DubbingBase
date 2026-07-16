@@ -259,7 +259,7 @@ const findCharacter = (
 };
 
 const actors = computed(() => {
-  return show.value?.credits.cast.map((cast) => {
+  return show.value?.credits?.cast?.map((cast: any) => {
     const person = actorToPersonData(cast);
 
     console.log("person.roles", person.roles);
@@ -299,7 +299,7 @@ const hasData = computed(() => {
 const formattedSeasons = computed(() => {
   if (!show.value?.seasons) return [];
 
-  return show.value.seasons.map((season: any) => ({
+  return show.value?.seasons?.map((season: any) => ({
     ...season,
     formatted_air_date: season.air_date
       ? format(new Date(season.air_date), "MMM dd, yyyy")

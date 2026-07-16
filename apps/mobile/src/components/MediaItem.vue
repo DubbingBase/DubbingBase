@@ -11,7 +11,8 @@
     <div class="poster">
       <img
         v-if="!loading"
-        :src="imagePath ?? fallbackImagePath"
+        :src="hasError ? fallbackImagePath : (imagePath ?? fallbackImagePath)"
+        @error="onImageError"
         alt=""
         :style="{ width: widthStyle, height: heightStyle }"
       />
@@ -48,7 +49,7 @@ import {
   MEDIA_ITEM_DEFAULT_WIDTH,
   MEDIA_ITEM_DEFAULT_HEIGHT,
 } from "@/constants/thumbnails";
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 
 interface Props {
   imagePath: string | undefined;
@@ -71,6 +72,19 @@ const heightStyle = computed(() => {
 const widthStyle = computed(() => {
   return `${props.width ?? MEDIA_ITEM_DEFAULT_WIDTH}px`;
 });
+
+const hasError = ref(false);
+
+watch(
+  () => props.imagePath,
+  () => {
+    hasError.value = false;
+  }
+);
+
+const onImageError = () => {
+  hasError.value = true;
+};
 </script>
 <style lang="scss" scoped>
 .media-item {
@@ -99,6 +113,11 @@ const widthStyle = computed(() => {
       max-width: 100%;
       max-height: 100%;
       object-fit: cover;
+      
+      border: none;
+      outline: none;
+      color: transparent;
+      background: var(--ion-color-step-100, #1e1e1e);
 
       display: flex;
       flex-direction: column;

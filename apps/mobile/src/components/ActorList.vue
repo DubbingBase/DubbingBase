@@ -5,8 +5,14 @@
         <!-- Don't show anything while loading -->
       </template>
       <template v-else-if="actors && actors.length">
+        <ion-searchbar
+          v-model="searchQuery"
+          :placeholder="t('common.search', 'Search...')"
+          animated
+          class="custom-searchbar"
+        ></ion-searchbar>
         <ActorWithVoiceActors
-          v-for="actor in actors"
+          v-for="actor in filteredActors"
           :key="actor.id"
           :actor="actor"
           :voiceActors="getVoiceActorsForActor(actor.id)"
@@ -31,11 +37,17 @@
 import ActorWithVoiceActors from "./ActorWithVoiceActors.vue";
 import NoActors from "./NoActors.vue";
 import { PersonData } from "./PersonItem.vue";
-import { VoiceActorDetails } from "@supabase/functions/_shared/types";
+import { VoiceActorDetails, Actor } from "@supabase/functions/_shared/types";
+import { IonSearchbar } from "@ionic/vue";
+import { ref, computed } from "vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
+const searchQuery = ref("");
 
 // Props
 const props = defineProps<{
-  actors?: PersonData[];
+  actors?: PersonData<any>[];
   voiceActors?: PersonData<VoiceActorDetails>[];
   goToActor: (id: number) => void;
   goToVoiceActor: (id: number) => void;
@@ -57,6 +69,29 @@ const getVoiceActorsForActor = (actorId: number) => {
   // console.log('props.voiceActors', props.voiceActors)
   return props.voiceActors.filter((item) => item.tmdb_id === actorId);
 };
+
+const filteredActors = computed(() => {
+  if (!props.actors) return [];
+  if (!searchQuery.value) return props.actors;
+  
+  const query = searchQuery.value.toLowerCase();
+  
+  return props.actors.filter((actor) => {
+    const actorName = (actor.name || "").toLowerCase();
+    if (actorName.includes(query)) return true;
+    
+    if (actor.roles && actor.roles.some((role) => (role.character || "").toLowerCase().includes(query))) {
+      return true;
+    }
+    
+    const voiceActors = getVoiceActorsForActor(actor.id);
+    if (voiceActors.some((va) => (va.name || "").toLowerCase().includes(query))) {
+      return true;
+    }
+    
+    return false;
+  });
+});
 
 // Wrapper functions to handle prop type requirements
 const handleActorClick = (actor: any) => {
@@ -96,6 +131,12 @@ const handleVoiceActorClick = (voiceActor: any) => {
     p {
       margin: 0;
     }
+  }
+
+  .custom-searchbar {
+    --box-shadow: none;
+    --background: var(--ion-color-light);
+    padding: 0 0 16px 0;
   }
 }
 </style>

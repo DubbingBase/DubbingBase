@@ -22,15 +22,7 @@
 
       <div v-if="!loading && voiceActor" class="actor">
         <!-- Request Linkage Card -->
-        <div v-if="isAuthenticated && !isLinked" class="request-profile-card">
-          <div class="banner-content">
-            <h3>{{ t("profile.areYouAVoiceActor", { name: `${voiceActor.firstname} ${voiceActor.lastname}` }) }}</h3>
-            <p>{{ t("profile.requestVoiceActorDesc") }}</p>
-          </div>
-          <button type="button" class="request-btn" @click="openRequestModal">
-            {{ t("profile.requestVoiceActorBtn") }}
-          </button>
-        </div>
+        <RequestVoiceActorCard v-if="isAuthenticated && !isLinked" :voiceActor="voiceActor" />
 
         <VoiceActorHeader
           :voiceActor="voiceActor"
@@ -40,63 +32,33 @@
 
         <VoiceActorBio :bio="voiceActor.bio" />
 
-        <VoiceActorWorksGrouped :works="enhancedWork" />
+        <ion-searchbar
+          v-model="searchQuery"
+          :placeholder="t('common.search', 'Search...')"
+          animated
+          class="custom-searchbar"
+        ></ion-searchbar>
+
+        <VoiceActorWorksGrouped :works="filteredEnhancedWork" />
       </div>
 
-      <!-- Request Voice Actor Linkage Modal -->
-      <div
-        v-if="isRequestModalOpen"
-        class="modal-backdrop"
-        @click="closeRequestModal"
-      >
-        <div class="modal-content" @click.stop>
-          <div class="modal-header">
-            <h2>{{ t("profile.requestVoiceActorTitle") }}</h2>
-            <button class="close-btn" @click="closeRequestModal">
-              &times;
-            </button>
-          </div>
-          <div class="modal-body">
-            <form @submit.prevent="submitRequest">
-              <div class="form-group">
-                <label for="req-details">{{ t("profile.details") }}</label>
-                <textarea
-                  id="req-details"
-                  v-model="requestForm.details"
-                  rows="4"
-                  :placeholder="$t('profile.requestDetailsPlaceholder')"
-                ></textarea>
-              </div>
+      <!-- Voice Actor Fetch Modal for Admin -->
+      <VoiceActorFetchModal
+        :is-open="isFetchModalOpen"
+        :voice-actor="voiceActor"
+        :potential-wikipedia-url="potentialWikipediaUrl"
+        @close="isFetchModalOpen = false"
+        @saved="handleFetchModalSaved"
+      />
 
-              <div v-if="requestError" class="modal-error">
-                {{ requestError }}
-              </div>
-              <div v-if="requestSuccess" class="modal-success">
-                {{ t("profile.requestSuccessMessage") }}
-              </div>
-
-              <div class="modal-actions">
-                <button
-                  type="button"
-                  class="btn-secondary"
-                  @click="closeRequestModal"
-                  :disabled="isSubmittingRequest"
-                >
-                  {{ t("common.cancel") }}
-                </button>
-                <button
-                  type="submit"
-                  class="btn-primary"
-                  :disabled="isSubmittingRequest || requestSuccess"
-                >
-                  <span v-if="isSubmittingRequest" class="spinner"></span>
-                  {{ t("profile.submitRequest") }}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
+      <ion-fab slot="fixed" vertical="bottom" horizontal="end" v-if="isAdmin">
+        <ion-fab-button
+          @click="isFetchModalOpen = true"
+          :aria-label="t('common.fetchInfos')"
+        >
+          <ion-icon :icon="globeOutline"></ion-icon>
+        </ion-fab-button>
+      </ion-fab>
     </ion-content>
   </ion-page>
 </template>
@@ -116,14 +78,19 @@ import {
   IonContent,
   IonHeader,
   IonIcon,
+  IonSearchbar,
+  IonFab,
+  IonFabButton,
 } from "@ionic/vue";
-import { create } from "ionicons/icons";
+import { create, globeOutline } from "ionicons/icons";
 import type { Movie as MovieModel } from "@supabase/functions/_shared/movie";
 import { supabase } from "../api/supabase";
 import VoiceActorHeader from "@/components/VoiceActorHeader.vue";
 import VoiceActorBio from "@/components/VoiceActorBio.vue";
 import VoiceActorWorksGrouped from "@/components/VoiceActorWorksGrouped.vue";
+import RequestVoiceActorCard from "@/components/RequestVoiceActorCard.vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
+import VoiceActorFetchModal from "@/components/VoiceActorFetchModal.vue";
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
 import { PersonData } from "@/components/PersonItem.vue";
@@ -168,6 +135,7 @@ type VoiceActorResponse = {
     }[];
   };
   medias: (MovieModel | SerieModel)[];
+  potentialWikipediaUrl?: string | null;
 };
 
 const voiceActor = ref<VoiceActorResponse["voiceActor"] | undefined>();
@@ -175,6 +143,35 @@ const medias = ref<VoiceActorResponse["medias"]>([]);
 const characterProfilePictures = ref<any[]>([]);
 const profilePicture = ref<string | null | undefined>();
 const loading = ref<boolean>(true);
+const searchQuery = ref("");
+const potentialWikipediaUrl = ref<string | null>(null);
+
+const isFetchModalOpen = ref(false);
+const handleFetchModalSaved = async () => {
+  // Reload the voice actor data to reflect the newly saved updates
+  const id = route.params.id;
+  loading.value = true;
+
+  try {
+    const voiceActorResponseRaw = await supabase.functions.invoke(
+      "voice-actor",
+      {
+        body: { id },
+      },
+    );
+
+    const voiceActorResponse =
+      (await voiceActorResponseRaw.data) as VoiceActorResponse;
+    if (voiceActorResponse) {
+      voiceActor.value = voiceActorResponse.voiceActor;
+      profilePicture.value = voiceActorResponse.voiceActor.profile_picture;
+    }
+  } catch (err) {
+    console.error("Error refreshing voice actor after fetch:", err);
+  } finally {
+    loading.value = false;
+  }
+};
 
 // Define a type for our enhanced work item
 type EnhancedWorkItem = {
@@ -225,12 +222,15 @@ const baseEnhancedWork = computed<EnhancedWorkItem[]>(() => {
 
       const character = actor.character;
       let characterImage: string | undefined;
-      
+
       if (characterProfilePictures.value.length > 0) {
         // TMDB cast name might differ slightly from TVDB, but a direct lowercase match often works.
-        const pic = characterProfilePictures.value.find((cp: any) => 
-          (cp.movieId === media.id || cp.showId === media.id) && 
-          cp.name && character && cp.name.toLowerCase() === character.toLowerCase()
+        const pic = characterProfilePictures.value.find(
+          (cp: any) =>
+            (cp.movieId === media.id || cp.showId === media.id) &&
+            cp.name &&
+            character &&
+            cp.name.toLowerCase() === character.toLowerCase(),
         );
         if (pic) {
           characterImage = pic.image;
@@ -267,59 +267,13 @@ const isLinked = computed(() => {
   return (voiceActor.value?.user_voice_actor_links?.length ?? 0) > 0;
 });
 
-const isRequestModalOpen = ref(false);
-const isSubmittingRequest = ref(false);
-const requestError = ref<string | null>(null);
-const requestSuccess = ref(false);
-const requestForm = ref({
-  details: "",
-});
 
-const openRequestModal = () => {
-  isRequestModalOpen.value = true;
-  requestError.value = null;
-  requestSuccess.value = false;
-  requestForm.value = {
-    details: "",
-  };
-};
 
-const closeRequestModal = () => {
-  if (isSubmittingRequest.value) return;
-  isRequestModalOpen.value = false;
-};
 
-const submitRequest = async () => {
-  isSubmittingRequest.value = true;
-  requestError.value = null;
 
-  try {
-    const { data, error } = await supabase.functions.invoke(
-      "request-voice-actor-page",
-      {
-        body: {
-          firstname: voiceActor.value?.firstname,
-          lastname: voiceActor.value?.lastname,
-          details: requestForm.value.details.trim(),
-          voice_actor_id: voiceActor.value?.id,
-        },
-      },
-    );
 
-    if (error) throw error;
 
-    requestSuccess.value = true;
-    setTimeout(() => {
-      isRequestModalOpen.value = false;
-    }, 2000);
-  } catch (err: any) {
-    console.error("Error requesting voice actor linkage:", err);
-    requestError.value =
-      err.message || "Failed to submit request. Please try again.";
-  } finally {
-    isSubmittingRequest.value = false;
-  }
-};
+
 
 // For chronological view
 const enhancedWork = computed(() => {
@@ -328,6 +282,27 @@ const enhancedWork = computed(() => {
   return [...baseEnhancedWork.value].sort((a, b) => {
     if (!a || !b) return 0;
     return a.sortDate > b.sortDate ? -1 : 1; // Newest first
+  });
+});
+
+const filteredEnhancedWork = computed(() => {
+  const query = searchQuery.value.toLowerCase();
+  if (!query) return enhancedWork.value;
+
+  return enhancedWork.value.filter((item) => {
+    const title = (
+      (item.media as any).title ||
+      (item.media as any).name ||
+      ""
+    ).toLowerCase();
+    const character = (item.data.character || "").toLowerCase();
+    const actorName = (item.data.actor?.name || "").toLowerCase();
+
+    return (
+      title.includes(query) ||
+      character.includes(query) ||
+      actorName.includes(query)
+    );
   });
 });
 
@@ -406,7 +381,10 @@ onMounted(async () => {
 
   voiceActor.value = voiceActorResponse.voiceActor;
   medias.value = voiceActorResponse.medias;
-  characterProfilePictures.value = (voiceActorResponse as any).characterProfilePictures || [];
+  characterProfilePictures.value =
+    (voiceActorResponse as any).characterProfilePictures || [];
+  potentialWikipediaUrl.value =
+    voiceActorResponse.potentialWikipediaUrl || null;
 
   profilePicture.value = voiceActorResponse.voiceActor.profile_picture;
 
@@ -421,6 +399,7 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
+
 .actor {
   padding: 16px;
   margin: 0 auto;
@@ -686,5 +665,12 @@ onMounted(async () => {
   to {
     transform: rotate(360deg);
   }
+}
+
+.custom-searchbar {
+  --box-shadow: none;
+  --background: var(--ion-color-light);
+  padding: 8px 0;
+  margin-top: 8px;
 }
 </style>

@@ -60,7 +60,7 @@ export interface PersonData<T = unknown | undefined> {
   character?: string;
   // TODO: remove this as it's only for voice actors
   reviewed_status?: string | null;
-  work_id: number;
+  work_id?: number;
 }
 
 const props = withDefaults(

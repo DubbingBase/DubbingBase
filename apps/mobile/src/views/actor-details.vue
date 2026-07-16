@@ -16,7 +16,7 @@
         </div>
 
         <div class="body" v-if="actor && !loading">
-          <ion-segment scrollable>
+          <ion-segment scrollable v-model="selectedSegment">
             <ion-segment-button value="about" content-id="about">
               <ion-label>{{ t("actor.about") }}</ion-label>
             </ion-segment-button>
@@ -27,6 +27,14 @@
               <ion-label>{{ t("actor.voiceActors") }}</ion-label>
             </ion-segment-button>
           </ion-segment>
+
+          <ion-searchbar
+            v-if="selectedSegment !== 'about'"
+            v-model="searchQuery"
+            :placeholder="t('common.search', 'Search...')"
+            animated
+            class="custom-searchbar"
+          ></ion-searchbar>
 
           <ion-segment-view>
             <ion-segment-content id="about">
@@ -66,7 +74,7 @@
 
                 <div class="grouped-roles-list">
                   <div
-                    v-for="group in groupedRolesToShow"
+                    v-for="group in filteredRolesToShow"
                     :key="`${group.mediaId}-${group.mediaType}`"
                     class="media-group"
                   >
@@ -121,7 +129,7 @@
             <ion-segment-content id="voiceActors">
               <div class="voice-actors-wrapper">
                 <PersonItem
-                  v-for="voiceActor in groupedVoiceActors"
+                  v-for="voiceActor in filteredVoiceActors"
                   :key="voiceActor.id"
                   :person="voiceActor"
                   type="voice-actor"
@@ -169,6 +177,7 @@ import {
   IonContent,
   IonSpinner,
   IonButton,
+  IonSearchbar,
 } from "@ionic/vue";
 import { alertCircle } from "ionicons/icons";
 import type { Actor } from "@supabase/functions/_shared/types";
@@ -187,6 +196,8 @@ const voiceActors = ref<any[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const showDubbedOnly = ref<"true" | "false">("true");
+const searchQuery = ref("");
+const selectedSegment = ref("about");
 
 const tmdbRoles = computed(() => {
   if (!actor.value?.data?.credits?.cast) return [];
@@ -253,6 +264,27 @@ const groupedRolesToShow = computed(() => {
   return groupedTmdbRoles.value;
 });
 
+const filteredRolesToShow = computed(() => {
+  const query = searchQuery.value.toLowerCase();
+  if (!query) return groupedRolesToShow.value;
+  
+  return groupedRolesToShow.value.map((group) => {
+    const titleMatch = (group.title || "").toLowerCase().includes(query);
+    const rolesMatch = group.roles.filter((r: any) => (r.character || "").toLowerCase().includes(query));
+    const vaMatch = group.voice_actors.filter((va: any) => 
+      `${va.firstname} ${va.lastname}`.toLowerCase().includes(query)
+    );
+    
+    if (titleMatch || rolesMatch.length > 0 || vaMatch.length > 0) {
+      return {
+        ...group,
+        // If the title matches, show everything. Otherwise, only show matched roles/VA (or maybe keep all roles if matched? Let's just return the whole group if any matches)
+      };
+    }
+    return null;
+  }).filter(Boolean);
+});
+
 const mediaIdsWithDubs = computed(() => {
   return new Set(
     voiceActors.value.map((va: any) => va.mediaDetails?.id).filter(Boolean)
@@ -301,6 +333,16 @@ const groupedVoiceActors = computed(() => {
     tags: voiceActor.is_official ? ["official"] : [],
     data: voiceActor,
   }));
+});
+
+const filteredVoiceActors = computed(() => {
+  const query = searchQuery.value.toLowerCase();
+  if (!query) return groupedVoiceActors.value;
+  
+  return groupedVoiceActors.value.filter((va) => 
+    (va.name || "").toLowerCase().includes(query) || 
+    (va.performance || "").toLowerCase().includes(query)
+  );
 });
 
 const roleCount = computed(() => {
@@ -609,5 +651,11 @@ onMounted(() => {
       --inner-padding-end: 1rem;
     }
   }
+}
+
+.custom-searchbar {
+  --box-shadow: none;
+  --background: var(--ion-color-light);
+  padding: 8px 16px;
 }
 </style>

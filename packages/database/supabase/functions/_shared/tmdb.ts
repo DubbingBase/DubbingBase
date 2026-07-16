@@ -32,18 +32,27 @@ export class TMDBClient implements ITMDBClient {
       });
     }
 
-    const response = await fetch(url.toString(), {
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        Accept: "application/json",
-      },
-    });
+    try {
+      const response = await fetch(url.toString(), {
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          Accept: "application/json",
+        },
+        signal: AbortSignal.timeout(5000), // 5 seconds timeout
+      });
 
-    if (!response.ok) {
-      throw new Error(`TMDB API error: ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`TMDB API error: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (e: any) {
+      if (e.name === 'TimeoutError' || e.name === 'AbortError') {
+         console.warn(`[TMDB] Request timed out for ${endpoint}`);
+         throw new Error(`TMDB API timeout: ${endpoint}`);
+      }
+      throw e;
     }
-
-    return response.json();
   }
 
   async getMediaWithCredits(contentType: "movie" | "tv", id: number) {

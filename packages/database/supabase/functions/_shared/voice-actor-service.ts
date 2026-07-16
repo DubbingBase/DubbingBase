@@ -43,42 +43,57 @@ export class VoiceActorService {
     lastName: string,
     tmdbId?: number | null,
   ) {
-    // Check if voice actor already exists
-    const { data: existing } = await this.supabase
-      .from("voice_actors")
-      .select("id, tmdb_id")
-      .eq("firstname", firstName)
-      .eq("lastname", lastName)
-      .single();
+    // Check if voice actor already exists using the robust RPC
+    const { data: existingRecords, error: rpcError } = await this.supabase
+      .rpc("match_voice_actor", {
+        p_firstname: firstName,
+        p_lastname: lastName,
+      });
 
+    if (rpcError) {
+      console.error("RPC match_voice_actor failed:", rpcError);
+    }
+
+    const existing = existingRecords && existingRecords.length > 0 ? existingRecords[0] : null;
     const inserted = !existing;
 
-    // If we have a tmdb_id to set, or the existing record is missing one, include it
+    // Use the existing exact spelling if found, to preserve original proper casing/accents
+    const finalFirstName = existing ? existing.firstname : firstName;
+    const finalLastName = existing ? existing.lastname : lastName;
+
     const upsertData: Record<string, any> = {
-      firstname: firstName,
-      lastname: lastName,
+      firstname: finalFirstName,
+      lastname: finalLastName,
     };
+
+    if (existing) {
+      upsertData.id = existing.id;
+    }
 
     if (tmdbId) {
       upsertData.tmdb_id = tmdbId;
     } else if (existing && !existing.tmdb_id) {
       // Existing record has no tmdb_id — try to resolve it
-      const resolvedId = await searchTmdbPerson(`${firstName} ${lastName}`);
+      const resolvedId = await searchTmdbPerson(`${finalFirstName} ${finalLastName}`);
       if (resolvedId) {
         upsertData.tmdb_id = resolvedId;
       }
     } else if (!existing) {
       // New record — try to resolve tmdb_id
-      const resolvedId = await searchTmdbPerson(`${firstName} ${lastName}`);
+      const resolvedId = await searchTmdbPerson(`${finalFirstName} ${finalLastName}`);
       if (resolvedId) {
         upsertData.tmdb_id = resolvedId;
       }
     }
 
+    // If we matched an existing record, we upsert on its id to avoid unique constraint violations
+    // on firstname,lastname. If it's a completely new record, we use firstname,lastname.
+    const onConflictColumn = existing ? "id" : "firstname,lastname";
+
     const { data, error } = await this.supabase
       .from("voice_actors")
       .upsert(upsertData, {
-        onConflict: "firstname,lastname",
+        onConflict: onConflictColumn,
       })
       .select();
 

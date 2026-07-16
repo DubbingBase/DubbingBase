@@ -5,7 +5,7 @@ type VoiceActor = Database["public"]["Tables"]["voice_actors"]["Row"];
 
 export default {
   fetch: withSupabase<Database>({ auth: "user" }, async (req, ctx) => {
-    if (req.method !== "PUT" && req.method !== "PATCH") {
+    if (req.method !== "PUT" && req.method !== "PATCH" && req.method !== "POST") {
       return Response.json({ error: "Method not allowed" }, { status: 405 });
     }
 
@@ -54,6 +54,39 @@ export default {
       // Prepare update data
       const updateData: any = { ...updates };
       updateData.updated_at = new Date().toISOString();
+      
+      if (typeof updateData.profile_picture === 'string' && updateData.profile_picture.startsWith("http")) {
+        // Only attempt to process if it looks like an external URL
+        const supabaseUrl = Deno.env.get("SUPABASE_URL") || "127.0.0.1";
+        if (!updateData.profile_picture.includes(supabaseUrl) && !updateData.profile_picture.includes("supabase.co")) {
+          try {
+            const imgRes = await fetch(updateData.profile_picture);
+            if (imgRes.ok) {
+              const arrayBuffer = await imgRes.arrayBuffer();
+              
+              // Generate a unique path
+              const ext = updateData.profile_picture.split(".").pop()?.split("?")[0] || "jpg";
+              const path = `${voice_actor_id}-${Date.now()}.${ext}`;
+              
+              const { error: uploadError } = await ctx.supabase.storage
+                .from("voice_actor_profile_pictures")
+                .upload(path, arrayBuffer, {
+                  contentType: imgRes.headers.get("content-type") || "image/jpeg",
+                  upsert: true,
+                });
+
+              if (!uploadError) {
+                // Save just the path so buildSupabaseImageUrl handles it correctly
+                updateData.profile_picture = path;
+              } else {
+                console.error("Failed to upload image to storage:", uploadError);
+              }
+            }
+          } catch (e) {
+            console.error("Error downloading external image:", e);
+          }
+        }
+      }
 
       // Update voice actor
       const { data: voiceActorData, error: vaError } = await ctx.supabase

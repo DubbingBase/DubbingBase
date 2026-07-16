@@ -18,13 +18,29 @@ async function fetchMovieAndTVDBData(movieId: number) {
   let movie: any = await cacheUtils.get(`tmdb:movie:${movieId}`);
   if (!movie) {
     console.log(`Cache miss for TMDB movie ${movieId}, fetching from API`);
-    movie = await tmdbClient.get(`movie/${movieId}`, {
-      append_to_response: "credits,external_ids",
-    });
-    // Cache the result for future requests
-    cacheUtils
-      .set(`tmdb:movie:${movieId}`, movie, "MEDIUM")
-      .catch((err) => console.error("Failed to cache TMDB movie data:", err));
+    try {
+      movie = await tmdbClient.get(`movie/${movieId}`, {
+        append_to_response: "credits,external_ids",
+      });
+      // Cache the result for future requests
+      cacheUtils
+        .set(`tmdb:movie:${movieId}`, movie, "MEDIUM")
+        .catch((err) => console.error("Failed to cache TMDB movie data:", err));
+    } catch (err) {
+      console.error(`Failed to fetch TMDB movie ${movieId}, using mock:`, err);
+      movie = {
+        id: movieId,
+        title: "Information indisponible (Timeout)",
+        name: "Information indisponible (Timeout)",
+        poster_path: null,
+        backdrop_path: null,
+        overview: "Ce contenu n'a pas pu être chargé car les serveurs TMDB sont inaccessibles.",
+        credits: { cast: [] },
+        release_date: "1970-01-01",
+        first_air_date: "1970-01-01",
+        external_ids: {}
+      };
+    }
   } else {
     console.log(`Cache hit for TMDB movie ${movieId}`);
   }

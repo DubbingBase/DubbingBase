@@ -9,7 +9,8 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "typecheck": "turbo run typecheck"
+    "typecheck": "turbo run typecheck",
+    "discover:media": "npx --yes tsx --env-file=.env.development scripts/discover-media.ts"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.7",

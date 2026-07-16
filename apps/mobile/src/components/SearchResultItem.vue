@@ -16,6 +16,7 @@
           <ion-chip v-for="chip in chips" :key="chip">{{ chip }}</ion-chip>
         </div>
       </div>
+      <ion-icon v-if="mediaIcon" :icon="mediaIcon" :color="iconColor" class="type-icon"></ion-icon>
     </ion-card-content>
   </ion-card>
   </router-link>
@@ -27,7 +28,9 @@ import {
   IonCard,
   IonCardContent,
   IonChip,
+  IonIcon,
 } from "@ionic/vue";
+import { tvOutline, personOutline, micOutline, filmOutline } from "ionicons/icons";
 import { format, parseISO } from 'date-fns';
 import MediaThumbnail from "@/components/MediaThumbnail.vue";
 import type { SearchResult } from "@/types/search";
@@ -69,20 +72,29 @@ const routeName = computed(() => {
   }
 });
 
+const mediaIcon = computed(() => {
+  switch (props.match.media_type) {
+    case "movie": return filmOutline;
+    case "tv": return tvOutline;
+    case "person": return personOutline;
+    case "voice_actor": return micOutline;
+    default: return undefined;
+  }
+});
+
+const iconColor = computed(() => {
+  switch (props.match.media_type) {
+    case "movie": return "danger";
+    case "tv": return "primary";
+    case "person": return "warning";
+    case "voice_actor": return "success";
+    default: return "medium";
+  }
+});
+
 const chips = computed(() => {
   const result: string[] = [];
   switch (props.match.media_type) {
-    case "movie":
-      result.push("Movie");
-      break;
-    case "tv":
-      result.push("TV");
-      break;
-    case "person":
-      if (props.match.known_for_department) {
-        result.push(props.match.known_for_department);
-      }
-      break;
     case "voice_actor":
       if (props.match.nationality) {
         result.push(props.match.nationality);
@@ -105,6 +117,13 @@ const chips = computed(() => {
   margin: 8px 0;
   border-radius: 12px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.type-icon {
+  flex-shrink: 0;
+  font-size: 22px;
+  margin-left: 8px;
+  align-self: center;
 }
 
 .card-content {

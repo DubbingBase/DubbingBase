@@ -192,13 +192,14 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
 
   // Review status actions if admin or owner
   const canUpdateReviewStatus = authStore.isAdmin || isOwner;
-  if (canUpdateReviewStatus) {
+  if (canUpdateReviewStatus && voiceActor.work_id !== undefined) {
+    const workId = voiceActor.work_id;
     buttons.push(
       {
         text: `${t("common.setStatus")} - ${t("common.waiting")}`,
         icon: timeOutline,
         handler: async () => {
-          await updateReviewStatus(voiceActor.work_id, "waiting");
+          await updateReviewStatus(workId, "waiting");
           // Force a refresh of the component to show updated status
           location.reload();
         },
@@ -207,7 +208,7 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
         text: `${t("common.setStatus")} - ${t("common.accepted")}`,
         icon: checkmarkCircleOutline,
         handler: async () => {
-          await updateReviewStatus(voiceActor.work_id, "accepted");
+          await updateReviewStatus(workId, "accepted");
           // Force a refresh of the component to show updated status
           location.reload();
         },
@@ -216,7 +217,7 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
         text: `${t("common.setStatus")} - ${t("common.rejected")}`,
         icon: closeCircleOutline,
         handler: async () => {
-          await updateReviewStatus(voiceActor.work_id, "rejected");
+          await updateReviewStatus(workId, "rejected");
           // Force a refresh of the component to show updated status
           location.reload();
         },

@@ -10,6 +10,7 @@ import {
   parseDubberPageAsWikitext,
   searchEntities,
   wikipediaPageFindSections,
+  WIKIPEDIA_USER_AGENT,
 } from "./extract/constants.ts";
 
 /**
@@ -152,7 +153,11 @@ export class WikipediaCache {
       `[WIKIPEDIA CACHE] Miss for key: ${cacheKey}, fetching from API`,
     );
     try {
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        headers: {
+          "User-Agent": WIKIPEDIA_USER_AGENT,
+        },
+      });
       if (!response.ok) {
         throw new Error(
           `Wikipedia API error: ${response.status} ${response.statusText}`,

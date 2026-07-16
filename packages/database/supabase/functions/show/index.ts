@@ -59,6 +59,21 @@ export default {
                   console.error("Failed to cache TMDB TV show data:", err),
                 );
               return serieData;
+            })
+            .catch((err) => {
+              console.error(`Failed to fetch TMDB show ${showId}, using mock:`, err);
+              return {
+                id: showId,
+                title: "Information indisponible (Timeout)",
+                name: "Information indisponible (Timeout)",
+                poster_path: null,
+                backdrop_path: null,
+                overview: "Ce contenu n'a pas pu être chargé car les serveurs TMDB sont inaccessibles.",
+                credits: { cast: [] },
+                release_date: "1970-01-01",
+                first_air_date: "1970-01-01",
+                external_ids: {}
+              };
             });
         }),
         // Try cache first for aggregate credits, fallback to API
@@ -73,24 +88,19 @@ export default {
               `Cache miss for TMDB TV aggregate credits ${showId}, fetching from API`,
             );
             return tmdbClient
-              .get(`tv/${showId}/aggregate_credits`)
-              .then((creditsData) => {
-                // Cache the result for future requests
-                cache
-                  .set(
-                    `tmdb:tv:${showId}:aggregate_credits`,
-                    creditsData,
-                    "MEDIUM",
-                  )
-                  .catch((err) =>
-                    console.error(
-                      "Failed to cache TMDB TV aggregate credits:",
-                      err,
-                    ),
-                  );
-                return creditsData;
-              })
-              .catch(() => null); // Aggregate credits might not be available for all shows
+            .get(`tv/${showId}/aggregate_credits`)
+            .then((creditsData) => {
+              cache
+                .set(`tmdb:tv:${showId}:aggregate_credits`, creditsData, "MEDIUM")
+                .catch((err) =>
+                  console.error("Failed to cache TMDB TV aggregate credits:", err),
+                );
+              return creditsData;
+            })
+            .catch((err) => {
+              console.error(`Failed to fetch TMDB show credits ${showId}, using mock:`, err);
+              return { cast: [] };
+            });
           }),
       ])) as [any, any];
       const serieWithImageUrls = processMedia(serie);

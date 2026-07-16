@@ -213,7 +213,7 @@ const findCharacter = (
 };
 
 const actors = computed(() => {
-  return movie.value?.credits.cast.map((cast) => {
+  return movie.value?.credits?.cast?.map((cast) => {
     // console.log("cast", cast);
     const person = actorToPersonData(cast);
 

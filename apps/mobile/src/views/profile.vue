@@ -161,89 +161,8 @@
               </ion-button>
 
               <!-- Request a Voice Actor Page -->
-              <div class="request-profile-card">
-                <h3>{{ $t('profile.areYouAVoiceActor') }}</h3>
-                <p>{{ $t('profile.requestVoiceActorDesc') }}</p>
-                <button
-                  type="button"
-                  class="request-btn"
-                  @click="openRequestModal"
-                >
-                  {{ $t('profile.requestVoiceActorBtn') }}
-                </button>
-              </div>
-            </div>
+              <RequestVoiceActorCard /></div>
           </div>
-
-          <!-- Request Voice Actor Page Modal -->
-          <div v-if="isRequestModalOpen" class="modal-backdrop" @click="closeRequestModal">
-            <div class="modal-content" @click.stop>
-              <div class="modal-header">
-                <h2>{{ $t('profile.requestVoiceActorTitle') }}</h2>
-                <button class="close-btn" @click="closeRequestModal">&times;</button>
-              </div>
-              <div class="modal-body">
-                <form @submit.prevent="submitRequest">
-                  <div class="form-group">
-                    <label for="req-firstname">{{ $t('profile.firstName') }} *</label>
-                    <input
-                      id="req-firstname"
-                      v-model="requestForm.firstname"
-                      type="text"
-                      required
-                      :placeholder="$t('profile.firstName')"
-                    />
-                  </div>
-                  <div class="form-group">
-                    <label for="req-lastname">{{ $t('profile.lastName') }} *</label>
-                    <input
-                      id="req-lastname"
-                      v-model="requestForm.lastname"
-                      type="text"
-                      required
-                      :placeholder="$t('profile.lastName')"
-                    />
-                  </div>
-                  <div class="form-group">
-                    <label for="req-details">{{ $t('profile.details') }}</label>
-                    <textarea
-                      id="req-details"
-                      v-model="requestForm.details"
-                      rows="4"
-                      :placeholder="$t('profile.requestDetailsPlaceholder')"
-                    ></textarea>
-                  </div>
-                  
-                  <div v-if="requestError" class="modal-error">
-                    {{ requestError }}
-                  </div>
-                  <div v-if="requestSuccess" class="modal-success">
-                    {{ $t('profile.requestSuccessMessage') }}
-                  </div>
-
-                  <div class="modal-actions">
-                    <button
-                      type="button"
-                      class="btn-secondary"
-                      @click="closeRequestModal"
-                      :disabled="isSubmittingRequest"
-                    >
-                      {{ $t('common.cancel') }}
-                    </button>
-                    <button
-                      type="submit"
-                      class="btn-primary"
-                      :disabled="isSubmittingRequest || requestSuccess"
-                    >
-                      <span v-if="isSubmittingRequest" class="spinner"></span>
-                      {{ $t('profile.submitRequest') }}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-
 
           <!-- Voice Actor Profile Tabs -->
            <div
@@ -379,6 +298,7 @@ import {
 } from "@ionic/vue";
 import { useProfileStore } from "@/stores/profile";
 import { useAuthStore } from "@/stores/auth";
+import RequestVoiceActorCard from "@/components/RequestVoiceActorCard.vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import { refresh, search, person } from "ionicons/icons";
 import { supabase } from "@/api/supabase";
@@ -393,64 +313,7 @@ const adminSearchQuery = ref<string>("");
 const adminSearchResults = ref<any[]>([]);
 const showAdminSearch = ref<boolean>(false);
 
-// Request Voice Actor Page State
-const isRequestModalOpen = ref(false);
-const isSubmittingRequest = ref(false);
-const requestError = ref<string | null>(null);
-const requestSuccess = ref(false);
-const requestForm = ref({
-  firstname: "",
-  lastname: "",
-  details: ""
-});
 
-const openRequestModal = () => {
-  isRequestModalOpen.value = true;
-  requestError.value = null;
-  requestSuccess.value = false;
-  requestForm.value = {
-    firstname: "",
-    lastname: "",
-    details: ""
-  };
-};
-
-const closeRequestModal = () => {
-  if (isSubmittingRequest.value) return;
-  isRequestModalOpen.value = false;
-};
-
-const submitRequest = async () => {
-  if (!requestForm.value.firstname.trim() || !requestForm.value.lastname.trim()) {
-    requestError.value = "First name and last name are required";
-    return;
-  }
-
-  isSubmittingRequest.value = true;
-  requestError.value = null;
-
-  try {
-    const { data, error } = await supabase.functions.invoke("request-voice-actor-page", {
-      body: {
-        firstname: requestForm.value.firstname.trim(),
-        lastname: requestForm.value.lastname.trim(),
-        details: requestForm.value.details.trim()
-      }
-    });
-
-    if (error) throw error;
-
-    requestSuccess.value = true;
-    setTimeout(() => {
-      isRequestModalOpen.value = false;
-    }, 2000);
-  } catch (err: any) {
-    console.error("Error requesting voice actor page:", err);
-    requestError.value = err.message || "Failed to submit request. Please try again.";
-  } finally {
-    isSubmittingRequest.value = false;
-  }
-};
 
 // Validation errors
 const userProfileErrors = ref<string[]>([]);
