@@ -1,24 +1,24 @@
 <template>
   <div v-if="props.overlay" class="loading-overlay">
     <div class="loading-container" :class="{ 'inline': props.inline }">
-      <ion-spinner
-        :name="props.name"
+      <AppSpinner :name="props.name"
         :color="props.color"
         :size="props.size"
-      ></ion-spinner>
+      ></AppSpinner>
     </div>
   </div>
   <div v-else class="loading-container" :class="{ 'inline': props.inline }">
-    <ion-spinner
-      :name="props.name"
+    <AppSpinner :name="props.name"
       :color="props.color"
       :size="props.size"
-    ></ion-spinner>
+    ></AppSpinner>
   </div>
 </template>
 
 <script setup lang="ts">
-import { IonSpinner } from '@ionic/vue'
+import AppSpinner from '@/components/common/AppSpinner.vue';
+import AppSkeleton from '@/components/common/AppSkeleton.vue';
+
 
 interface Props {
   name?: 'crescent' | 'bubbles' | 'circles' | 'circular' | 'dots' | 'lines' | 'lines-small' | 'lines-sharp' | 'lines-sharp-small'

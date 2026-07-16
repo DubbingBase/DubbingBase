@@ -151,13 +151,14 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
+defineOptions({ name: 'Home' });
 import { useI18n } from "vue-i18n";
 import type { TrendingResponse } from "@supabase/functions/_shared/movie";
 import type { TrendingResponse as SerieTrendingResponse } from "@supabase/functions/_shared/serie";
 import type { Tables } from "@/utils/database";
 import MediaItem from "../components/MediaItem.vue";
 import { supabase } from "../api/supabase";
-import { IonPage, IonContent, IonHeader, IonTitle, IonToolbar, IonRefresher, IonRefresherContent } from "@ionic/vue";
+import { IonPage, IonContent, IonHeader, IonTitle, IonToolbar, IonRefresher, IonRefresherContent } from '@ionic/vue';
 
 const { t } = useI18n();
 

@@ -10,7 +10,7 @@
         <ion-title>Voix</ion-title>
         <ion-buttons slot="end">
           <ion-button @click="openEditProfile">
-            <ion-icon :icon="create" slot="icon-only"></ion-icon>
+            <Pencil class="app-icon" />
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
@@ -60,7 +60,7 @@
           @click="isFetchModalOpen = true"
           :aria-label="t('common.fetchInfos')"
         >
-          <ion-icon :icon="globeOutline"></ion-icon>
+          <Globe class="app-icon" />
         </ion-fab-button>
       </ion-fab>
     </ion-content>
@@ -68,27 +68,14 @@
 </template>
 
 <script setup lang="ts">
+import Pencil from '~icons/lucide/pencil';
+import Globe from '~icons/lucide/globe';
 import { computed, onMounted, ref, getCurrentInstance } from "vue";
 import { useRoute, useRouter } from "vue-router";
 // Admin check: get user from supabase.auth and check for admin role
 import type { Serie as SerieModel } from "@supabase/functions/_shared/serie";
-import {
-  IonPage,
-  IonButton,
+import { IonPage, IonButton, IonButtons, IonTitle, IonToolbar, IonContent, IonHeader, IonSearchbar, IonFab, IonFabButton, IonRefresher, IonRefresherContent } from '@ionic/vue';
 
-  IonButtons,
-  IonTitle,
-  IonToolbar,
-  IonContent,
-  IonHeader,
-  IonIcon,
-  IonSearchbar,
-  IonFab,
-  IonFabButton,
-  IonRefresher,
-  IonRefresherContent,
-} from "@ionic/vue";
-import { create, globeOutline } from "ionicons/icons";
 import type { Movie as MovieModel } from "@supabase/functions/_shared/movie";
 import { supabase } from "../api/supabase";
 import VoiceActorHeader from "@/components/VoiceActorHeader.vue";

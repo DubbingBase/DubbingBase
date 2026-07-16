@@ -38,11 +38,13 @@ export default {
         });
       }
       // Call the RPC to merge safely and bypass any pagination limits
-      const { error: rpcError } = await ctx.supabaseAdmin
-        .rpc("merge_voice_actors", {
+      const { error: rpcError } = await ctx.supabaseAdmin.rpc(
+        "merge_voice_actors",
+        {
           p_keep_id: keepId,
           p_other_ids: otherIds,
-        });
+        },
+      );
 
       if (rpcError) {
         return Response.json({ error: rpcError }, { status: 500 });

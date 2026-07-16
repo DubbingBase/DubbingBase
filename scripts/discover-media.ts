@@ -6,11 +6,16 @@ import { DatabaseSync } from "node:sqlite";
 
 // Initialize Supabase Client
 const supabaseUrl = process.env.SUPABASE_URL || "http://localhost:54321";
-const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
+const supabaseKey =
+  process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
-  console.error("Missing SUPABASE_URL or SUPABASE_SECRET_KEY environment variables.");
-  console.error("Please run with: tsx --env-file=.env.development scripts/discover-media.ts");
+  console.error(
+    "Missing SUPABASE_URL or SUPABASE_SECRET_KEY environment variables.",
+  );
+  console.error(
+    "Please run with: tsx --env-file=.env.development scripts/discover-media.ts",
+  );
   process.exit(1);
 }
 
@@ -26,7 +31,7 @@ async function getState() {
     if (err.code === "ENOENT") {
       const defaultState = {
         // Start scrape from the beginning of Wikipedia
-        last_fetched_at: "2001-01-01T00:00:00Z"
+        last_fetched_at: "2001-01-01T00:00:00Z",
       };
       await saveState(defaultState);
       return defaultState;
@@ -41,7 +46,11 @@ async function saveState(state: any) {
 }
 
 // SQLite Cache to prevent duplicate checks
-const CACHE_DB_FILE = path.join(process.cwd(), "scripts", ".scraping_cache.sqlite");
+const CACHE_DB_FILE = path.join(
+  process.cwd(),
+  "scripts",
+  ".scraping_cache.sqlite",
+);
 const db = new DatabaseSync(CACHE_DB_FILE);
 
 db.exec(`
@@ -52,7 +61,9 @@ db.exec(`
 `);
 
 function getLastChecked(tmdbId: number): number | null {
-  const stmt = db.prepare("SELECT last_checked FROM checked_media WHERE tmdb_id = ?");
+  const stmt = db.prepare(
+    "SELECT last_checked FROM checked_media WHERE tmdb_id = ?",
+  );
   const row = stmt.get(tmdbId) as { last_checked: number } | undefined;
   return row ? row.last_checked : null;
 }
@@ -66,33 +77,43 @@ function markAsChecked(tmdbId: number) {
   stmt.run(tmdbId, Date.now());
 }
 
-const WIKIPEDIA_USER_AGENT = "DubbingBase/1.0 (https://github.com/armaldio/dubbingbase; armaldio@gmail.com)";
+const WIKIPEDIA_USER_AGENT =
+  "DubbingBase/1.0 (https://github.com/armaldio/dubbingbase; armaldio@gmail.com)";
 
 // Wikipedia API helper
-async function checkWikipediaBatchForDubbing(titles: string[], retryCount = 0): Promise<Record<string, boolean>> {
+async function checkWikipediaBatchForDubbing(
+  titles: string[],
+  retryCount = 0,
+): Promise<Record<string, boolean>> {
   if (titles.length === 0) return {};
   try {
     const titlesParam = encodeURIComponent(titles.join("|"));
     const url = `https://fr.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content&rvslots=main&format=json&titles=${titlesParam}`;
     const response = await fetch(url, {
-      headers: { "User-Agent": WIKIPEDIA_USER_AGENT }
+      headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
     });
-    
+
     if (response.status === 429) {
       const retryAfter = response.headers.get("retry-after") || "10";
       const delayMs = (parseInt(retryAfter, 10) || 10) * 1000;
-      console.warn(`[WIKIPEDIA API ERROR] 429 Rate Limit hit! Wikipedia says wait ${retryAfter}s. Sleeping...`);
-      await new Promise(resolve => setTimeout(resolve, delayMs));
-      
+      console.warn(
+        `[WIKIPEDIA API ERROR] 429 Rate Limit hit! Wikipedia says wait ${retryAfter}s. Sleeping...`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+
       if (retryCount < 3) {
         return checkWikipediaBatchForDubbing(titles, retryCount + 1);
       } else {
-        throw new Error(`Max retries reached for Wikipedia batch of ${titles.length} titles`);
+        throw new Error(
+          `Max retries reached for Wikipedia batch of ${titles.length} titles`,
+        );
       }
     }
 
     if (!response.ok) {
-      console.warn(`[WIKIPEDIA API ERROR] Failed to fetch batch (${response.status})`);
+      console.warn(
+        `[WIKIPEDIA API ERROR] Failed to fetch batch (${response.status})`,
+      );
       return {};
     }
 
@@ -123,7 +144,8 @@ async function checkWikipediaBatchForDubbing(titles: string[], retryCount = 0): 
       const page = pagesByTitle[normTitle];
       let hasDubbing = false;
       if (page && page.revisions && page.revisions.length > 0) {
-        const wikitext = page.revisions[0].slots?.main?.["*"] || page.revisions[0]["*"] || "";
+        const wikitext =
+          page.revisions[0].slots?.main?.["*"] || page.revisions[0]["*"] || "";
         if (wikitext.match(/==\s*(distribution|doublage|voix)[^=]*==/i)) {
           hasDubbing = true;
         }
@@ -149,12 +171,19 @@ async function enqueueMedia(tmdbId: number, type: string) {
 
     if (error) {
       if (error.message && error.message.includes("already in the queue")) {
-        console.log(`[SKIP] TMDB ${tmdbId} (${type}) is already in the queue. Avoiding duplicates.`);
+        console.log(
+          `[SKIP] TMDB ${tmdbId} (${type}) is already in the queue. Avoiding duplicates.`,
+        );
       } else {
-        console.error(`[PGMQ ERROR] Failed to enqueue TMDB ${tmdbId} into Supabase:`, error.message);
+        console.error(
+          `[PGMQ ERROR] Failed to enqueue TMDB ${tmdbId} into Supabase:`,
+          error.message,
+        );
       }
     } else {
-      console.log(`[ENQUEUED] TMDB ${tmdbId} (${type}) successfully added to pgmq.media_queue`);
+      console.log(
+        `[ENQUEUED] TMDB ${tmdbId} (${type}) successfully added to pgmq.media_queue`,
+      );
     }
   } catch (err) {
     console.error(`[ERROR] Exception while enqueueing TMDB ${tmdbId}:`, err);
@@ -164,7 +193,7 @@ async function enqueueMedia(tmdbId: number, type: string) {
 // Perform a single SPARQL discovery batch
 async function performDiscoveryBatch(state: any) {
   const lastFetchedAt = state.last_fetched_at || "2001-01-01T00:00:00Z";
-  
+
   console.log(`Fetching items modified since: ${lastFetchedAt}`);
 
   const query = `
@@ -192,20 +221,22 @@ async function performDiscoveryBatch(state: any) {
   `;
 
   const wikidataUrl = "https://query.wikidata.org/sparql";
-  
+
   try {
     const response = await fetch(wikidataUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        "Accept": "application/sparql-results+json",
-        "User-Agent": WIKIPEDIA_USER_AGENT
+        Accept: "application/sparql-results+json",
+        "User-Agent": WIKIPEDIA_USER_AGENT,
       },
       body: newSearchParams({ query }), // wait, new URLSearchParams
     });
 
     if (!response.ok) {
-      console.error(`Wikidata SPARQL query failed: ${response.status} ${response.statusText}`);
+      console.error(
+        `Wikidata SPARQL query failed: ${response.status} ${response.statusText}`,
+      );
       return false; // Yield on failure
     }
 
@@ -230,13 +261,13 @@ async function performDiscoveryBatch(state: any) {
 
       // Skip if checked within the last 7 days
       const lastChecked = getLastChecked(tmdbId);
-      if (lastChecked && (Date.now() - lastChecked) < SEVEN_DAYS_MS) {
+      if (lastChecked && Date.now() - lastChecked < SEVEN_DAYS_MS) {
         continue;
       }
 
       const titleMatch = articleUrl.match(/wiki\/(.+)$/);
       if (!titleMatch) continue;
-      
+
       const pageTitle = decodeURIComponent(titleMatch[1]);
       itemsToProcess.push({ tmdbId, type, pageTitle });
     }
@@ -244,10 +275,10 @@ async function performDiscoveryBatch(state: any) {
     const BATCH_SIZE = 50;
     for (let i = 0; i < itemsToProcess.length; i += BATCH_SIZE) {
       const batch = itemsToProcess.slice(i, i + BATCH_SIZE);
-      const titles = batch.map(item => item.pageTitle);
-      
+      const titles = batch.map((item) => item.pageTitle);
+
       const results = await checkWikipediaBatchForDubbing(titles);
-      
+
       for (const item of batch) {
         // Mark as checked to avoid re-checking too soon
         markAsChecked(item.tmdbId);
@@ -256,20 +287,22 @@ async function performDiscoveryBatch(state: any) {
         if (hasSection) {
           await enqueueMedia(item.tmdbId, item.type);
         } else {
-          console.log(`[IGNORE] TMDB ${item.tmdbId} (${item.type}) - No "distribution", "doublage" or "voix" section found on Wikipedia page: ${item.pageTitle}`);
+          console.log(
+            `[IGNORE] TMDB ${item.tmdbId} (${item.type}) - No "distribution", "doublage" or "voix" section found on Wikipedia page: ${item.pageTitle}`,
+          );
         }
       }
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
     if (bindings.length > 0) {
       state.last_fetched_at = highestModifiedDate;
       await saveState(state);
       console.log(`Updated pointer to ${highestModifiedDate}`);
-      
+
       // If we got exactly 500 results, there are probably more right behind it.
-      return bindings.length === 500; 
+      return bindings.length === 500;
     }
 
     return false; // No more results
@@ -287,17 +320,19 @@ async function runScraper() {
   console.log("Starting media discovery scrape...");
   const state = await getState();
 
-  console.log(`Resuming scrape from: ${state.last_fetched_at || "2001-01-01T00:00:00Z"}`);
-  
+  console.log(
+    `Resuming scrape from: ${state.last_fetched_at || "2001-01-01T00:00:00Z"}`,
+  );
+
   while (true) {
     const hasMore = await performDiscoveryBatch(state);
     if (!hasMore) {
-       console.log("Scrape completed! Reached the present day.");
-       break;
+      console.log("Scrape completed! Reached the present day.");
+      break;
     }
 
     // Sleep 1 second before next batch
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 }
 

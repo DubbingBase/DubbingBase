@@ -2,31 +2,31 @@
   <div class="no-voice-actor">
     <div class="voice-actor-container">
       <div class="voice-actor">
-        <ion-thumbnail class="avatar">
+        <AppImage class="app-thumbnail" class="avatar">
           <img src="https://placehold.co/48x72?text=?" alt="No photo" />
-        </ion-thumbnail>
-        <ion-label class="line-label">
+        </AppImage>
+        <AppText class="line-label">
           <span class="ellipsis label">
             No voice actor found.
           </span>
           <ion-button v-if="isAdmin" fill="clear" size="small" @click.stop="openVoiceActorSearch(actor.id)" class="add-voice-actor-btn">
-            <ion-icon :icon="personAddOutline" slot="start"></ion-icon>
+            <UserPlus class="app-icon" />
             Add
           </ion-button>
-        </ion-label>
+        </AppText>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import {
-  IonThumbnail,
-  IonLabel,
-  IonButton,
-  IonIcon,
-} from "@ionic/vue";
-import { personAddOutline } from 'ionicons/icons';
+import AppImage from '@/components/common/AppImage.vue';
+import AppText from '@/components/common/AppText.vue';
+import UserPlus from '~icons/lucide/user-plus';
+import AppSpinner from '@/components/common/AppSpinner.vue';
+import AppSkeleton from '@/components/common/AppSkeleton.vue';
+import { IonButton } from '@ionic/vue';
+
 
 // Props
 defineProps<{
@@ -94,7 +94,7 @@ defineProps<{
   margin-top: 4px;
 }
 
-.add-voice-actor-btn ion-icon {
+.add-voice-actor-btn .app-icon {
   margin-right: 4px;
 }
 </style>

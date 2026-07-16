@@ -37,17 +37,8 @@
 
 <script lang="ts" setup>
 import { ref, computed } from "vue";
-import {
-  IonHeader,
-  IonSearchbar,
-  IonTitle,
-  IonContent,
-  IonList,
-  IonToolbar,
-  IonPage,
-  IonToast,
-  SearchbarInputEventDetail,
-} from "@ionic/vue";
+defineOptions({ name: 'Search' });
+import { IonHeader, IonSearchbar, IonTitle, IonContent, IonList, IonToolbar, IonPage, IonToast, SearchbarInputEventDetail } from '@ionic/vue';
 import { IonSearchbarCustomEvent } from "@ionic/core";
 import SearchResultItem from "@/components/SearchResultItem.vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";

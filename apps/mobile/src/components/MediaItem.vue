@@ -16,8 +16,7 @@
         alt=""
         :style="{ width: widthStyle, height: heightStyle }"
       />
-      <ion-skeleton-text
-        :animated="true"
+      <AppSkeleton :animated="true"
         v-else
         :style="{
           width: widthStyle,
@@ -25,12 +24,11 @@
           borderRadius: '12px',
           margin: 0,
         }"
-      ></ion-skeleton-text>
+      ></AppSkeleton>
     </div>
     <div class="caption" v-if="title">
       <template v-if="!loading">{{ title }}</template>
-      <ion-skeleton-text
-        :animated="true"
+      <AppSkeleton :animated="true"
         v-else
         :style="{
           width: '100%',
@@ -38,13 +36,13 @@
           borderRadius: '4px',
           margin: 0,
         }"
-      ></ion-skeleton-text>
+      ></AppSkeleton>
     </div>
   </router-link>
 </template>
 
 <script lang="ts" setup>
-import { IonSkeletonText } from "@ionic/vue";
+
 import {
   MEDIA_ITEM_DEFAULT_WIDTH,
   MEDIA_ITEM_DEFAULT_HEIGHT,

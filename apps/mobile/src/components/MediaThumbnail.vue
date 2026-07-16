@@ -11,7 +11,7 @@
 
 <script lang="ts" setup>
 import { computed, toRefs, ref, watch } from "vue";
-import { IonImg } from "@ionic/vue";
+
 import { THUMBNAIL_DEFAULT_WIDTH, THUMBNAIL_DEFAULT_HEIGHT } from '@/constants/thumbnails';
 
 const props = defineProps({

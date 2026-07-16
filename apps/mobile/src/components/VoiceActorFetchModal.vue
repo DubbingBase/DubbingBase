@@ -7,18 +7,18 @@
         }}</ion-title>
         <ion-buttons slot="end">
           <ion-button @click="handleDismiss">
-            <ion-icon :icon="closeCircle"></ion-icon>
+            <XCircle class="app-icon" />
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
-      <div v-if="step === 'input'" class="step-container">
+      <div class="step-container">
         <p class="description">
           {{
             t(
               "voiceActor.enterWikipediaUrlDesc",
-              "Enter a Wikipedia URL to fetch the voice actor's biography, name, and profile picture.",
+              "Enter a Wikipedia URL to fetch the voice actor's biography, name, and profile picture. You can also manually fill the details below.",
             )
           }}
         </p>
@@ -34,34 +34,21 @@
             @click="openLink"
             class="open-link-btn"
           >
-            <ion-icon slot="icon-only" :icon="openOutline"></ion-icon>
+            <ExternalLink class="app-icon" />
           </ion-button>
-        </div>
-
-        <div v-if="error" class="error-message">
-          {{ error }}
         </div>
 
         <ion-button
           expand="block"
           @click="fetchData"
           :disabled="!wikipediaUrl || isFetching"
-          class="ion-margin-top"
+          class="ion-margin-top ion-margin-bottom"
         >
           <LoadingSpinner v-if="isFetching" :inline="true" />
-          <span v-else>{{ t("common.fetch", "Fetch") }}</span>
+          <span v-else>{{ t("common.fetch", "Fetch & Override") }}</span>
         </ion-button>
-      </div>
 
-      <div v-else-if="step === 'diff'" class="step-container">
-        <p class="description">
-          {{
-            t(
-              "voiceActor.reviewChangesDesc",
-              "Review and edit the fetched information before saving.",
-            )
-          }}
-        </p>
+
 
         <ion-list class="diff-list" lines="none">
           <!-- Firstname -->
@@ -73,7 +60,7 @@
                         <div class="input-with-action">
               <ion-input v-model="fetchedData.firstname" class="styled-input"></ion-input>
               <ion-button fill="clear" @click="fetchedData.firstname = voiceActor?.firstname || ''">
-                <ion-icon :icon="arrowUndoOutline" slot="icon-only"></ion-icon>
+                <Undo2 class="app-icon" />
               </ion-button>
             </div>
           </div>
@@ -87,7 +74,7 @@
                         <div class="input-with-action">
               <ion-input v-model="fetchedData.lastname" class="styled-input"></ion-input>
               <ion-button fill="clear" @click="fetchedData.lastname = voiceActor?.lastname || ''">
-                <ion-icon :icon="arrowUndoOutline" slot="icon-only"></ion-icon>
+                <Undo2 class="app-icon" />
               </ion-button>
             </div>
           </div>
@@ -101,7 +88,7 @@
                         <div class="input-with-action">
               <ion-input v-model="fetchedData.date_of_birth" class="styled-input"></ion-input>
               <ion-button fill="clear" @click="fetchedData.date_of_birth = voiceActor?.date_of_birth || ''">
-                <ion-icon :icon="arrowUndoOutline" slot="icon-only"></ion-icon>
+                <Undo2 class="app-icon" />
               </ion-button>
             </div>
           </div>
@@ -115,10 +102,10 @@
                         <div class="input-with-action">
               <ion-input v-model="fetchedData.tmdb_id" type="number" class="styled-input"></ion-input>
               <ion-button fill="clear" @click="fetchedData.tmdb_id = voiceActor?.tmdb_id || null">
-                <ion-icon :icon="arrowUndoOutline" slot="icon-only"></ion-icon>
+                <Undo2 class="app-icon" />
               </ion-button>
               <ion-button fill="clear" :href="fetchedData.tmdb_id ? `https://www.themoviedb.org/person/${fetchedData.tmdb_id}` : undefined" target="_blank" :disabled="!fetchedData.tmdb_id">
-                <ion-icon :icon="openOutline" slot="icon-only"></ion-icon>
+                <ExternalLink class="app-icon" />
               </ion-button>
             </div>
           </div>
@@ -132,7 +119,7 @@
             <div class="input-with-action bio-action">
               <ion-textarea v-model="fetchedData.bio" auto-grow :rows="4" class="styled-input"></ion-textarea>
               <ion-button fill="clear" @click="fetchedData.bio = voiceActor?.bio || ''" class="align-top-btn">
-                <ion-icon :icon="arrowUndoOutline" slot="icon-only"></ion-icon>
+                <Undo2 class="app-icon" />
               </ion-button>
             </div>
           </div>
@@ -149,7 +136,7 @@
                   <img v-if="voiceActor?.profile_picture && voiceActor.profile_picture.trim() !== ''" :src="voiceActor.profile_picture" />
                   <div v-else class="no-image">No Image</div>
                 </div>
-                <ion-icon :icon="arrowForward" class="diff-arrow-stacked"></ion-icon>
+                <ArrowRight class="app-icon" />
                 <div class="img-preview new-img-preview">
                   <span class="preview-label">New</span>
                   <img v-if="fetchedData.profile_picture && fetchedData.profile_picture.trim() !== ''" :src="fetchedData.profile_picture" />
@@ -158,7 +145,7 @@
               </div>
               <div style="display: flex; justify-content: center; width: 100%;">
                 <ion-button fill="clear" @click="fetchedData.profile_picture = voiceActor?.profile_picture || ''">
-                  <ion-icon :icon="arrowUndoOutline" slot="start"></ion-icon>
+                  <Undo2 class="app-icon" />
                   Keep Current Image
                 </ion-button>
               </div>
@@ -174,10 +161,10 @@
           <ion-button
             fill="outline"
             color="medium"
-            @click="step = 'input'"
+            @click="handleDismiss"
             :disabled="isSaving"
           >
-            {{ t("common.back", "Back") }}
+            {{ t("common.cancel", "Cancel") }}
           </ion-button>
           <ion-button @click="saveData" :disabled="isSaving">
             <LoadingSpinner v-if="isSaving" :inline="true" />
@@ -190,29 +177,13 @@
 </template>
 
 <script setup lang="ts">
+import Undo2 from '~icons/lucide/undo2';
+import ArrowRight from '~icons/lucide/arrow-right';
+import XCircle from '~icons/lucide/x-circle';
+import ExternalLink from '~icons/lucide/external-link';
 import { ref, watch } from "vue";
-import {
-  IonModal,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonButtons,
-  IonButton,
-  IonIcon,
-  IonContent,
-  IonInput,
-  IonTextarea,
-  IonList,
-  IonItem,
-  IonLabel,
-} from "@ionic/vue";
-import {
-  closeCircle,
-  openOutline,
-  arrowForward,
-  arrowDown,
-  arrowUndoOutline,
-} from "ionicons/icons";
+import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonInput, IonTextarea, IonList, IonItem } from '@ionic/vue';
+
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import { supabase } from "@/api/supabase";
 import { useI18n } from "vue-i18n";
@@ -230,7 +201,6 @@ const emit = defineEmits<{
   saved: [];
 }>();
 
-const step = ref<"input" | "diff">("input");
 const wikipediaUrl = ref("");
 const isFetching = ref(false);
 const isSaving = ref(false);
@@ -241,10 +211,17 @@ watch(
   () => props.isOpen,
   (newVal) => {
     if (newVal) {
-      step.value = "input";
       wikipediaUrl.value = props.potentialWikipediaUrl || "";
       error.value = "";
-      fetchedData.value = {};
+      fetchedData.value = {
+        firstname: props.voiceActor?.firstname || "",
+        lastname: props.voiceActor?.lastname || "",
+        bio: props.voiceActor?.bio || "",
+        profile_picture: props.voiceActor?.profile_picture || "",
+        date_of_birth: props.voiceActor?.date_of_birth || "",
+        wikidata_id: props.voiceActor?.wikidata_id || null,
+        tmdb_id: props.voiceActor?.tmdb_id || null,
+      };
     }
   },
 );
@@ -260,6 +237,8 @@ const openLink = () => {
     window.open(wikipediaUrl.value, "_blank");
   }
 };
+
+
 
 const fetchData = async () => {
   if (!wikipediaUrl.value) return;
@@ -293,8 +272,6 @@ const fetchData = async () => {
       tmdb_id:
         data.result.tmdb_id || props.voiceActor?.tmdb_id || null,
     };
-
-    step.value = "diff";
   } catch (err: any) {
     console.error("Error fetching wikipedia data:", err);
     error.value = err.message || "An error occurred while fetching data.";

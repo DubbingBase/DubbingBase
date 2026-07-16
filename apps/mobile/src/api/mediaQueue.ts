@@ -53,8 +53,8 @@ export async function enqueueMedia(params: {
     throw error;
   }
 
-  // In development mode (where there is no pg_cron), manually trigger the 
-  // queue processor so the item is picked up right away. We do this as a 
+  // In development mode (where there is no pg_cron), manually trigger the
+  // queue processor so the item is picked up right away. We do this as a
   // fire-and-forget call to avoid blocking the UI.
   if (import.meta.env.DEV) {
     supabase.functions.invoke("process-media-queue").catch((err) => {

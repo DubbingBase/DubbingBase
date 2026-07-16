@@ -1,17 +1,17 @@
 <template>
   <ion-item>
-    <ion-thumbnail slot="start">
+    <AppImage class="app-thumbnail" slot="start">
       <img
         v-if="workEntry.media?.poster_path"
         :src="`https://image.tmdb.org/t/p/w92${workEntry.media.poster_path}`"
         :alt="getMediaTitle(workEntry.media)"
       />
       <div v-else class="placeholder">
-        <ion-icon name="film"></ion-icon>
+        <Film class="app-icon"  />
       </div>
-    </ion-thumbnail>
+    </AppImage>
 
-    <ion-label>
+    <AppText>
       <h2>{{ getMediaTitle(workEntry.media) }}</h2>
       <p v-if="workEntry.character_name">{{ workEntry.character_name }} ({{ workEntry.performance }})</p>
       <p class="media-type">
@@ -20,7 +20,7 @@
           • {{ new Date(workEntry.media.release_date).getFullYear() }}
         </span>
       </p>
-    </ion-label>
+    </AppText>
 
     <ion-button
       v-if="canEdit"
@@ -29,7 +29,7 @@
       size="small"
       @click="handleEdit"
     >
-      <ion-icon :name="create" color="primary"></ion-icon>
+      <Pencil class="app-icon" />
     </ion-button>
 
     <ion-button
@@ -39,23 +39,20 @@
       size="small"
       @click="confirmDelete"
     >
-      <ion-icon :name="trash" color="danger"></ion-icon>
+      <Trash2 class="app-icon" />
     </ion-button>
   </ion-item>
 </template>
 
 <script setup lang="ts">
-import {
-  IonItem,
-  IonThumbnail,
-  IonLabel,
-  IonButton,
-  IonIcon,
-  alertController
-} from '@ionic/vue'
+import AppImage from '@/components/common/AppImage.vue';
+import AppText from '@/components/common/AppText.vue';
+import AppSpinner from '@/components/common/AppSpinner.vue';
+import AppSkeleton from '@/components/common/AppSkeleton.vue';
+import { IonItem, IonButton, alertController } from '@ionic/vue';
 import type { WorkEntry } from '@/stores/profile'
 import { onMounted } from 'vue';
-import { trash, create } from 'ionicons/icons';
+
 
 interface Props {
   workEntry: WorkEntry
@@ -117,7 +114,7 @@ const confirmDelete = async () => {
   border-radius: 4px;
 }
 
-.placeholder ion-icon {
+.placeholder .app-icon {
   font-size: 2rem;
   color: var(--ion-color-medium);
 }

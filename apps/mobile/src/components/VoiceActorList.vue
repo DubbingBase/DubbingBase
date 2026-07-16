@@ -11,10 +11,10 @@
         >
           <template #actions v-if="isAdmin">
             <ion-button fill="clear" size="small" @click.stop="editVoiceActorLink && editVoiceActorLink(item)">
-              <ion-icon :icon="createOutline"></ion-icon>
+              <Pencil class="app-icon" />
             </ion-button>
             <ion-button fill="clear" size="small" @click.stop="confirmDeleteVoiceActorLink && confirmDeleteVoiceActorLink(item)" color="danger">
-              <ion-icon :icon="trashOutline"></ion-icon>
+              <Trash2 class="app-icon" />
             </ion-button>
           </template>
         </PersonItem>
@@ -30,8 +30,10 @@
 </template>
 
 <script setup lang="ts">
-import { IonButton, IonIcon } from "@ionic/vue";
-import { createOutline, trashOutline } from 'ionicons/icons';
+import Pencil from '~icons/lucide/pencil';
+import Trash2 from '~icons/lucide/trash2';
+import { IonButton } from '@ionic/vue';
+
 import PersonItem from "@/components/PersonItem.vue";
 import NoVoiceActor from "@/components/NoVoiceActor.vue";
 

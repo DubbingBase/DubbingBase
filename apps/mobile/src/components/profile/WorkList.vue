@@ -15,7 +15,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { IonList } from '@ionic/vue'
+import { IonList } from '@ionic/vue';
 import { useProfileStore } from '@/stores/profile'
 import WorkItem from './WorkItem.vue'
 import type { WorkEntry } from '@/stores/profile'

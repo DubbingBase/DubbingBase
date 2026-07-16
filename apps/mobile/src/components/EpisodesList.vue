@@ -14,18 +14,18 @@
         :routeParams="{id: ep.id, season: ep.season_number, episode: ep.episode_number}"
         :loading="false"
       />
-      <ion-label>
+      <AppText>
         <h2>{{ ep.episode_number }}. {{ ep.name }}</h2>
         <p v-if="ep.air_date">Diffusé le {{ ep.air_date }}</p>
         <p v-if="ep.overview">{{ ep.overview }}</p>
-      </ion-label>
+      </AppText>
     </ion-item>
   </ion-list>
   <div v-else>Aucun épisode trouvé.</div>
 </template>
 
 <script lang="ts" setup>
-import { IonList, IonItem, IonLabel } from "@ionic/vue";
+import { IonList, IonItem } from '@ionic/vue';
 import MediaItem from "@/components/MediaItem.vue";
 
 interface Props {

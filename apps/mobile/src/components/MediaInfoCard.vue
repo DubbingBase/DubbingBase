@@ -24,7 +24,7 @@
           
           <div class="primary-meta">
             <div v-if="media.vote_average" class="rating-pill">
-              <ion-icon :icon="star" class="star-icon"></ion-icon>
+              <Star class="app-icon" />
               <span>{{ media.vote_average.toFixed(1) }}</span>
             </div>
             <div v-if="(media as SerieType).status" class="meta-badge">
@@ -54,7 +54,7 @@
           target="_blank" 
           class="meta-pill link-pill tmdb-pill"
         >
-          <ion-icon :icon="openOutline"></ion-icon>
+          <ExternalLink class="app-icon" />
           <span>TMDB</span>
         </a>
 
@@ -64,7 +64,7 @@
           target="_blank" 
           class="meta-pill link-pill imdb-pill"
         >
-          <ion-icon :icon="openOutline"></ion-icon>
+          <ExternalLink class="app-icon" />
           <span>IMDb</span>
         </a>
 
@@ -74,7 +74,7 @@
           target="_blank" 
           class="meta-pill link-pill wikidata-pill"
         >
-          <ion-icon :icon="bookOutline"></ion-icon>
+          <Book class="app-icon" />
           <span>Wikipedia</span>
         </a>
       </div>
@@ -96,9 +96,12 @@
 </template>
 
 <script setup lang="ts">
+import Star from '~icons/lucide/star';
+import ExternalLink from '~icons/lucide/external-link';
+import Book from '~icons/lucide/book';
 import { ref, onMounted, watch, nextTick } from 'vue';
-import { IonIcon } from '@ionic/vue';
-import { timeOutline, globeOutline, calendarOutline, bookOutline, star, informationCircleOutline, albumsOutline, openOutline } from 'ionicons/icons';
+
+
 import { useI18n } from 'vue-i18n';
 import { format } from 'date-fns';
 import MediaItem from './MediaItem.vue';
@@ -376,7 +379,7 @@ onMounted(checkOverviewTruncation);
   white-space: nowrap;
   flex-shrink: 0;
 
-  ion-icon {
+  .app-icon {
     font-size: 1.1rem;
   }
 }

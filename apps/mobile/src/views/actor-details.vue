@@ -30,10 +30,10 @@
         <div class="body" v-if="actor && !loading">
           <ion-segment scrollable v-model="selectedSegment">
             <ion-segment-button value="about" content-id="about">
-              <ion-label>{{ t("actor.about") }}</ion-label>
+              <AppText>{{ t("actor.about") }}</AppText>
             </ion-segment-button>
             <ion-segment-button value="roles" content-id="roles">
-              <ion-label>{{ t("actor.roles") }}</ion-label>
+              <AppText>{{ t("actor.roles") }}</AppText>
             </ion-segment-button>
           </ion-segment>
 
@@ -182,7 +182,7 @@
 
       <!-- Error State -->
       <div v-if="error && !loading" class="error-container">
-        <ion-icon :icon="alertCircle" size="large" color="danger"></ion-icon>
+        <AlertCircle class="app-icon" />
         <h3>{{ t("common.error") }}</h3>
         <p>{{ error }}</p>
         <ion-button @click="retryLoad">{{ t("common.retry") }}</ion-button>
@@ -192,31 +192,15 @@
 </template>
 
 <script setup lang="ts">
+import AppText from '@/components/common/AppText.vue';
+import AlertCircle from '~icons/lucide/alert-circle';
+import AppSpinner from '@/components/common/AppSpinner.vue';
+import AppSkeleton from '@/components/common/AppSkeleton.vue';
 import { computed, onMounted, ref, watch, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
-import {
-  IonPage,
-  IonButtons,
-  IonTitle,
-  IonToolbar,
-  IonHeader,
-  IonChip,
-  IonIcon,
-  IonSegment,
-  IonSegmentButton,
-  IonSegmentView,
-  IonSegmentContent,
-  IonContent,
-  IonRefresher,
-  IonRefresherContent,
-  IonButton,
-  IonSearchbar,
-  IonItem,
-  IonLabel,
-  IonToggle,
-} from "@ionic/vue";
-import { alertCircle } from "ionicons/icons";
+import { IonPage, IonButtons, IonTitle, IonToolbar, IonHeader, IonChip, IonSegment, IonSegmentButton, IonSegmentView, IonSegmentContent, IonContent, IonRefresher, IonRefresherContent, IonButton, IonSearchbar, IonItem, IonToggle } from '@ionic/vue';
+
 import type { Actor } from "@supabase/functions/_shared/types";
 import { supabase } from "../api/supabase";
 import { actorToPersonData, voiceActorToPersonData } from "@/utils/convert";
@@ -638,7 +622,7 @@ onMounted(() => {
     border-radius: 50%;
     color: var(--ion-color-medium);
 
-    ion-icon {
+    .app-icon {
       font-size: 1.5rem;
     }
   }
@@ -657,7 +641,7 @@ onMounted(() => {
     font-size: 0.85rem;
     color: var(--ion-color-medium);
 
-    ion-icon {
+    .app-icon {
       margin-right: 0.25rem;
       vertical-align: middle;
     }

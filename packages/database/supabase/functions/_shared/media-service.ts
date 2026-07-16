@@ -33,12 +33,16 @@ export class MediaService {
           contentType,
           work.content_id,
         );
-        
-        const characterProfilePictures = await this.getCharacterProfilePictures(contentType, work.content_id, tmdbMedia);
-        
-        return { 
+
+        const characterProfilePictures = await this.getCharacterProfilePictures(
+          contentType,
+          work.content_id,
+          tmdbMedia,
+        );
+
+        return {
           media: processMedia(tmdbMedia),
-          characterProfilePictures 
+          characterProfilePictures,
         };
       } catch (err) {
         console.error(
@@ -52,34 +56,43 @@ export class MediaService {
             name: "Information indisponible (Timeout)",
             poster_path: null,
             backdrop_path: null,
-            overview: "Ce contenu n'a pas pu être chargé car les serveurs TMDB sont inaccessibles.",
+            overview:
+              "Ce contenu n'a pas pu être chargé car les serveurs TMDB sont inaccessibles.",
             credits: { cast: [] },
             release_date: "1970-01-01",
-            first_air_date: "1970-01-01"
+            first_air_date: "1970-01-01",
           },
-          characterProfilePictures: []
+          characterProfilePictures: [],
         };
       }
     });
 
     const results = await Promise.all(mediaPromises);
-    const validResults = results.filter(Boolean) as { media: any, characterProfilePictures: any[] }[];
-    
-    const medias = validResults.map(r => r.media);
-    const characterProfilePictures = validResults.flatMap(r => r.characterProfilePictures);
+    const validResults = results.filter(Boolean) as {
+      media: any;
+      characterProfilePictures: any[];
+    }[];
+
+    const medias = validResults.map((r) => r.media);
+    const characterProfilePictures = validResults.flatMap(
+      (r) => r.characterProfilePictures,
+    );
 
     let potentialWikipediaUrl = null;
     if (!voiceActor.tmdb_id) {
       try {
         const name = `${voiceActor.firstname} ${voiceActor.lastname}`.trim();
         const searchData = await wikipediaCache.searchWikidataEntities(name);
-        
+
         if (searchData.search && searchData.search.length > 0) {
           const bestMatch = searchData.search[0];
-          const entityData = await wikipediaCache.getWikidataEntity(bestMatch.id);
-          
+          const entityData = await wikipediaCache.getWikidataEntity(
+            bestMatch.id,
+          );
+
           if (entityData.entities[bestMatch.id]?.sitelinks?.frwiki?.title) {
-            const title = entityData.entities[bestMatch.id].sitelinks.frwiki.title;
+            const title =
+              entityData.entities[bestMatch.id].sitelinks.frwiki.title;
             potentialWikipediaUrl = `https://fr.wikipedia.org/wiki/${encodeURI(title.replace(/ /g, "_"))}`;
           }
         }
@@ -88,27 +101,47 @@ export class MediaService {
       }
     }
 
-    return { voiceActor: voiceActorWithImages, medias, characterProfilePictures, potentialWikipediaUrl };
+    return {
+      voiceActor: voiceActorWithImages,
+      medias,
+      characterProfilePictures,
+      potentialWikipediaUrl,
+    };
   }
 
-  private async getCharacterProfilePictures(contentType: "movie" | "tv", contentId: number, tmdbMedia: any): Promise<any[]> {
+  private async getCharacterProfilePictures(
+    contentType: "movie" | "tv",
+    contentId: number,
+    tmdbMedia: any,
+  ): Promise<any[]> {
     const tvdbClient = new TVDBClient(cacheUtils);
     let characterProfilePictures: any[] = [];
-    
+
     try {
       let tvdbId: number | null = null;
       if (tmdbMedia.external_ids?.tvdb_id) {
         tvdbId = tmdbMedia.external_ids.tvdb_id;
       } else {
-        const searchQuery = tmdbMedia.title || tmdbMedia.name || tmdbMedia.original_title || tmdbMedia.original_name;
+        const searchQuery =
+          tmdbMedia.title ||
+          tmdbMedia.name ||
+          tmdbMedia.original_title ||
+          tmdbMedia.original_name;
         if (searchQuery) {
           const searchResults = await tvdbClient.searchSeries(searchQuery);
           if (searchResults.data && searchResults.data.length > 0) {
-            const bestMatch = searchResults.data.find((item: any) =>
-              item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-              searchQuery.toLowerCase().includes(item.name?.toLowerCase())
-            ) || searchResults.data[0];
-            tvdbId = contentType === 'movie' ? (bestMatch?.tvdb_id || bestMatch?.id) : bestMatch?.id;
+            const bestMatch =
+              searchResults.data.find(
+                (item: any) =>
+                  item.name
+                    ?.toLowerCase()
+                    .includes(searchQuery.toLowerCase()) ||
+                  searchQuery.toLowerCase().includes(item.name?.toLowerCase()),
+              ) || searchResults.data[0];
+            tvdbId =
+              contentType === "movie"
+                ? bestMatch?.tvdb_id || bestMatch?.id
+                : bestMatch?.id;
           }
         }
       }
@@ -116,17 +149,23 @@ export class MediaService {
       if (tvdbId) {
         const cacheKey = `tvdb:${contentType}:characters:${tvdbId}`;
         const cachedCharacters = await cacheUtils.get(cacheKey);
-        
+
         if (cachedCharacters) {
           return cachedCharacters as any[];
         }
 
         let characters: any[] = [];
-        if (contentType === 'movie') {
-          const res = await tvdbClient.getMovieById(tvdbId, { meta: "translations", short: false });
+        if (contentType === "movie") {
+          const res = await tvdbClient.getMovieById(tvdbId, {
+            meta: "translations",
+            short: false,
+          });
           characters = res.data.characters || [];
         } else {
-          const res = await tvdbClient.getSeriesById(tvdbId, { meta: "episodes", short: false });
+          const res = await tvdbClient.getSeriesById(tvdbId, {
+            meta: "episodes",
+            short: false,
+          });
           characters = res.data.characters || [];
         }
 
@@ -138,17 +177,22 @@ export class MediaService {
               name: character.name,
               image: character.image,
               tvdbPeopleId: character.peopleId,
-              movieId: contentType === 'movie' ? contentId : undefined,
-              showId: contentType === 'tv' ? contentId : undefined,
+              movieId: contentType === "movie" ? contentId : undefined,
+              showId: contentType === "tv" ? contentId : undefined,
             }));
-            
-          cacheUtils.set(cacheKey, characterProfilePictures, "SHORT").catch(() => {});
+
+          cacheUtils
+            .set(cacheKey, characterProfilePictures, "SHORT")
+            .catch(() => {});
         }
       }
     } catch (e) {
-      console.error(`Error fetching character profile pictures for ${contentType} ${contentId}:`, e);
+      console.error(
+        `Error fetching character profile pictures for ${contentType} ${contentId}:`,
+        e,
+      );
     }
-    
+
     return characterProfilePictures;
   }
 

@@ -30,7 +30,7 @@ function calculateScore(item: any, trimmedQuery: string): number {
 
   // Exact match bonus
   const queryLower = trimmedQuery.toLowerCase();
-  
+
   // Construct full name properly, especially for Voice Actors from DB
   let itemDisplayName = item.title || item.name || item.voice_actor_name || "";
   if (!itemDisplayName && item.firstname && item.lastname) {
@@ -50,11 +50,11 @@ function calculateScore(item: any, trimmedQuery: string): number {
   }
 
   // Popularity weight: TMDB popularity is very important to the user.
-  // We use a square root curve instead of log10 so that differences in high popularity 
+  // We use a square root curve instead of log10 so that differences in high popularity
   // still matter, but don't completely dwarf exact matches.
   // A popularity of 100 -> ~20 points. Popularity of 400 -> ~40 points.
   const pop = item.popularity || 0;
-  score += Math.sqrt(pop) * 2; 
+  score += Math.sqrt(pop) * 2;
 
   // Vote average weight: max 1.0 (normalized 0-10 scale)
   score += (item.vote_average || 0) * 0.1;
@@ -66,7 +66,8 @@ function calculateScore(item: any, trimmedQuery: string): number {
   // Recency weight: favor newer items but don't heavily penalize classics
   const date = item.release_date || item.first_air_date;
   if (date) {
-    const yearsSinceRelease = (Date.now() - new Date(date).getTime()) / (1000 * 60 * 60 * 24 * 365);
+    const yearsSinceRelease =
+      (Date.now() - new Date(date).getTime()) / (1000 * 60 * 60 * 24 * 365);
     // Decay based on years, capped so old movies don't go too negative
     score += Math.max(-5, 5 - yearsSinceRelease * 0.2);
   }
@@ -114,7 +115,9 @@ export default {
         const results: any[] = [];
         for (const response of pageResponses) {
           if (!response.ok) {
-            console.error(`TMDB fetch failed with status: ${response.status} ${response.statusText}`);
+            console.error(
+              `TMDB fetch failed with status: ${response.status} ${response.statusText}`,
+            );
             const text = await response.text();
             console.error("Response body:", text.substring(0, 200));
             continue;
@@ -237,10 +240,16 @@ export default {
       // Sort by composite score
       resp = resp
         .filter((item) => item != null)
-        .sort((a, b) => calculateScore(b, trimmedQuery) - calculateScore(a, trimmedQuery));
+        .sort(
+          (a, b) =>
+            calculateScore(b, trimmedQuery) - calculateScore(a, trimmedQuery),
+        );
 
       // Add score to each item for debugging/transparency
-      resp = resp.map((item) => ({ ...item, score: calculateScore(item, trimmedQuery) }));
+      resp = resp.map((item) => ({
+        ...item,
+        score: calculateScore(item, trimmedQuery),
+      }));
 
       return Response.json(resp);
     } catch (error) {

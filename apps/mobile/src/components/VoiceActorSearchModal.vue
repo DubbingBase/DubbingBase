@@ -5,7 +5,7 @@
         <ion-title>Select Voice Actor</ion-title>
         <ion-buttons slot="end">
           <ion-button @click="$emit('close')">
-            <ion-icon :icon="closeCircle"></ion-icon>
+            <XCircle class="app-icon" />
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
@@ -27,7 +27,7 @@
 
       <!-- Error state -->
       <ion-item v-else-if="searchError" class="ion-text-center">
-        <ion-text color="danger">{{ searchError }}</ion-text>
+        <AppText color="danger">{{ searchError }}</AppText>
       </ion-item>
 
       <!-- No results state -->
@@ -35,7 +35,7 @@
         v-else-if="!searchResults.length && searchTerm"
         class="ion-text-center"
       >
-        <ion-text>No voice actors found</ion-text>
+        <AppText>No voice actors found</AppText>
       </ion-item>
 
       <!-- Results list -->
@@ -62,10 +62,10 @@
               :alt="va.firstname + ' ' + va.lastname"
             />
           </ion-avatar>
-          <ion-label>
+          <AppText>
             <h3>{{ va.firstname }} {{ va.lastname }}</h3>
             <p v-if="va.nationality">{{ va.nationality }}</p>
-          </ion-label>
+          </AppText>
         </ion-item>
       </ion-list>
     </ion-content>
@@ -74,34 +74,13 @@
 
 
 <script setup lang="ts">
-import {
-  IonModal,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonButtons,
-  IonButton,
-  IonIcon,
-  IonSearchbar,
-  IonContent,
-  IonList,
-  IonItem,
-  IonText,
-  IonAvatar,
-  IonLabel,
-} from "@ionic/vue";
+import AppText from '@/components/common/AppText.vue';
+import XCircle from '~icons/lucide/x-circle';
+import AppSpinner from '@/components/common/AppSpinner.vue';
+import AppSkeleton from '@/components/common/AppSkeleton.vue';
+import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonSearchbar, IonContent, IonList, IonItem, IonAvatar } from '@ionic/vue';
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
-import { useVoiceActorManagement } from "@/composables/useVoiceActorManagement";
-import { closeCircle } from "ionicons/icons";
-
-interface VoiceActor {
-  id: number;
-  firstname: string;
-  lastname: string;
-  profile_picture?: string;
-  nationality?: string;
-}
-
+import { useVoiceActorManagement, type VoiceActor } from "@/composables/useVoiceActorManagement";
 const props = defineProps<{
   isOpen: boolean;
   mediaId: string;

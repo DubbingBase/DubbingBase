@@ -22,19 +22,22 @@ export default {
         );
       }
 
-      const { data, error } = await ctx.supabase.rpc("find_duplicate_voice_actors_rpc");
+      const { data, error } = await ctx.supabase.rpc(
+        "find_duplicate_voice_actors_rpc",
+      );
 
       if (error) {
         throw error;
       }
 
-      const formattedData = (data as any[])?.map((group: any) => ({
-        ...group,
-        actors: group.actors.map((actor: any) => ({
-          ...actor,
-          profile_picture: buildSupabaseImageUrl(ctx, actor.profile_picture)
-        }))
-      })) || [];
+      const formattedData =
+        (data as any[])?.map((group: any) => ({
+          ...group,
+          actors: group.actors.map((actor: any) => ({
+            ...actor,
+            profile_picture: buildSupabaseImageUrl(ctx, actor.profile_picture),
+          })),
+        })) || [];
 
       return Response.json(formattedData);
     } catch (error) {

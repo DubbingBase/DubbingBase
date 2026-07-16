@@ -12,13 +12,16 @@ export default {
 
       // 1. Fetch trending movies and tv shows in parallel
       const [moviesResponse, showsResponse] = await Promise.all([
-        fetch("https://api.themoviedb.org/3/trending/movie/day?language=fr-FR", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${tmdbApiKey}`,
-            Accept: "application/json",
+        fetch(
+          "https://api.themoviedb.org/3/trending/movie/day?language=fr-FR",
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${tmdbApiKey}`,
+              Accept: "application/json",
+            },
           },
-        }),
+        ),
         fetch("https://api.themoviedb.org/3/trending/tv/day?language=fr-FR", {
           headers: {
             "Content-Type": "application/json",
@@ -51,8 +54,12 @@ export default {
       }));
 
       // Sort by popularity and take the top 10 of each
-      const topMovies = movies.sort((a: any, b: any) => b.popularity - a.popularity).slice(0, 10);
-      const topShows = shows.sort((a: any, b: any) => b.popularity - a.popularity).slice(0, 10);
+      const topMovies = movies
+        .sort((a: any, b: any) => b.popularity - a.popularity)
+        .slice(0, 10);
+      const topShows = shows
+        .sort((a: any, b: any) => b.popularity - a.popularity)
+        .slice(0, 10);
       const itemsToProcess = [...topMovies, ...topShows];
 
       let enqueuedCount = 0;
@@ -67,7 +74,10 @@ export default {
         });
 
         if (error) {
-          if (error.message && error.message.includes("Request is already in the queue")) {
+          if (
+            error.message &&
+            error.message.includes("Request is already in the queue")
+          ) {
             alreadyInQueueCount++;
           } else {
             console.error(`Error enqueueing ${media.type} ${media.id}:`, error);
@@ -81,7 +91,7 @@ export default {
       // 3. Send compact ntfy notification
       const ntfyTopic = "Armaldio_DubbingBaseTrendingSummary";
       const summaryMessage = `Enqueued ${enqueuedCount} items.\nSkipped ${alreadyInQueueCount} already in queue.\nFailed to enqueue ${failedCount} items.`;
-      
+
       try {
         await fetch(`https://ntfy.sh/${ntfyTopic}`, {
           method: "POST",
@@ -101,10 +111,11 @@ export default {
           enqueued: enqueuedCount,
           alreadyInQueue: alreadyInQueueCount,
           failed: failedCount,
-        }
+        },
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
       console.error("Trending media queuing failed:", errorMessage);
 
       try {
@@ -119,10 +130,7 @@ export default {
         // Ignore secondary notification errors
       }
 
-      return Response.json(
-        { ok: false, error: errorMessage },
-        { status: 500 },
-      );
+      return Response.json({ ok: false, error: errorMessage }, { status: 500 });
     }
   }),
 };

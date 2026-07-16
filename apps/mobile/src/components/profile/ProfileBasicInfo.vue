@@ -10,17 +10,17 @@
 
     <div class="stats">
       <div class="stat-item">
-        <ion-icon name="film" color="primary"></ion-icon>
+        <Film class="app-icon"  color="primary" />
         <span>{{ workEntries.length }} projets</span>
       </div>
 
       <div v-if="voiceActor?.nationality" class="stat-item">
-        <ion-icon name="flag" color="primary"></ion-icon>
+        <Flag class="app-icon"  color="primary" />
         <span>{{ voiceActor.nationality }}</span>
       </div>
 
       <div v-if="voiceActor?.years_active" class="stat-item">
-        <ion-icon name="calendar" color="primary"></ion-icon>
+        <Calendar class="app-icon"  color="primary" />
         <span>{{ voiceActor.years_active }}</span>
       </div>
     </div>
@@ -33,7 +33,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { IonIcon } from '@ionic/vue'
+
 import { useProfileStore } from '@/stores/profile'
 
 const profileStore = useProfileStore()
@@ -77,7 +77,7 @@ const workEntries = computed(() => profileStore.workEntries)
   color: var(--ion-color-dark);
 }
 
-.stat-item ion-icon {
+.stat-item .app-icon {
   font-size: 1rem;
 }
 

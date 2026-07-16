@@ -1,4 +1,5 @@
-export const WIKIPEDIA_USER_AGENT = "DubbingBase/1.0 (https://github.com/armaldio/dubbingbase; armaldio@gmail.com)";
+export const WIKIPEDIA_USER_AGENT =
+  "DubbingBase/1.0 (https://github.com/armaldio/dubbingbase; armaldio@gmail.com)";
 
 export const frenchMaleDubber = (cmContinue = "") =>
   `https://fr.wikipedia.org/w/api.php?action=query&list=categorymembers&cmtitle=Category:Acteur_fran%C3%A7ais_de_doublage&cmlimit=100&format=json&cmcontinue=${cmContinue}`;

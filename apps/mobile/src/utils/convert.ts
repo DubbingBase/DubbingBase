@@ -8,7 +8,7 @@ export const actorToPersonData = <
     profile_path?: string | null;
     roles?: { character: string; [key: string]: any }[];
     character?: string;
-  }
+  },
 >(
   actor: T,
 ): PersonData<T> => {

@@ -44,17 +44,20 @@ export class VoiceActorService {
     tmdbId?: number | null,
   ) {
     // Check if voice actor already exists using the robust RPC
-    const { data: existingRecords, error: rpcError } = await this.supabase
-      .rpc("match_voice_actor", {
+    const { data: existingRecords, error: rpcError } = await this.supabase.rpc(
+      "match_voice_actor",
+      {
         p_firstname: firstName,
         p_lastname: lastName,
-      });
+      },
+    );
 
     if (rpcError) {
       console.error("RPC match_voice_actor failed:", rpcError);
     }
 
-    const existing = existingRecords && existingRecords.length > 0 ? existingRecords[0] : null;
+    const existing =
+      existingRecords && existingRecords.length > 0 ? existingRecords[0] : null;
     const inserted = !existing;
 
     // Use the existing exact spelling if found, to preserve original proper casing/accents
@@ -74,13 +77,17 @@ export class VoiceActorService {
       upsertData.tmdb_id = tmdbId;
     } else if (existing && !existing.tmdb_id) {
       // Existing record has no tmdb_id — try to resolve it
-      const resolvedId = await searchTmdbPerson(`${finalFirstName} ${finalLastName}`);
+      const resolvedId = await searchTmdbPerson(
+        `${finalFirstName} ${finalLastName}`,
+      );
       if (resolvedId) {
         upsertData.tmdb_id = resolvedId;
       }
     } else if (!existing) {
       // New record — try to resolve tmdb_id
-      const resolvedId = await searchTmdbPerson(`${finalFirstName} ${finalLastName}`);
+      const resolvedId = await searchTmdbPerson(
+        `${finalFirstName} ${finalLastName}`,
+      );
       if (resolvedId) {
         upsertData.tmdb_id = resolvedId;
       }

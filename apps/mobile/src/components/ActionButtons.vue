@@ -7,7 +7,7 @@
     :aria-label="t('common.scan')"
   >
     <LoadingSpinner v-if="isScanning" :inline="true"></LoadingSpinner>
-    <ion-icon v-else :icon="cameraOutline"></ion-icon>
+    <Camera class="app-icon" />
   </ion-button>
 
   <ion-button
@@ -17,7 +17,7 @@
     @click="handleEnqueue"
     :aria-label="t('common.enqueue')"
   >
-    <ion-icon slot="icon-only" :icon="listOutline"></ion-icon>
+    <List class="app-icon" />
   </ion-button>
 
   <ion-button
@@ -28,7 +28,7 @@
     :aria-label="t('common.fetchInfos')"
   >
     <LoadingSpinner v-if="isFetching || queueStatus === 'pending' || queueStatus === 'processing'" :inline="true"></LoadingSpinner>
-    <ion-icon slot="icon-only" v-else :icon="informationCircleOutline"></ion-icon>
+    <Info class="app-icon" />
   </ion-button>
 
   <div v-if="fetchError || (queueStatus === 'failed' && queueErrorMessage)" class="fetch-error">
@@ -37,9 +37,12 @@
 </template>
 
 <script setup lang="ts">
-import { IonButton, IonIcon } from "@ionic/vue";
+import Camera from '~icons/lucide/camera';
+import List from '~icons/lucide/list';
+import Info from '~icons/lucide/info';
+import { IonButton } from '@ionic/vue';
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
-import { cameraOutline, informationCircleOutline, listOutline } from "ionicons/icons";
+
 import { useI18n } from "vue-i18n";
 import { usePermissions } from "@/composables/usePermissions";
 import { computed } from "vue";

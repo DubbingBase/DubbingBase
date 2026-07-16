@@ -34,11 +34,12 @@ async function fetchMovieAndTVDBData(movieId: number) {
         name: "Information indisponible (Timeout)",
         poster_path: null,
         backdrop_path: null,
-        overview: "Ce contenu n'a pas pu être chargé car les serveurs TMDB sont inaccessibles.",
+        overview:
+          "Ce contenu n'a pas pu être chargé car les serveurs TMDB sont inaccessibles.",
         credits: { cast: [] },
         release_date: "1970-01-01",
         first_air_date: "1970-01-01",
-        external_ids: {}
+        external_ids: {},
       };
     }
   } else {

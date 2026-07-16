@@ -103,9 +103,9 @@ export class TVDBClient implements ITVDBClient {
 
       return await response.json();
     } catch (e: any) {
-      if (e.name === 'TimeoutError' || e.name === 'AbortError') {
-         console.warn(`[TVDB] Request timed out for ${endpoint}`);
-         throw new Error(`TVDB API timeout: ${endpoint}`);
+      if (e.name === "TimeoutError" || e.name === "AbortError") {
+        console.warn(`[TVDB] Request timed out for ${endpoint}`);
+        throw new Error(`TVDB API timeout: ${endpoint}`);
       }
       throw e;
     }

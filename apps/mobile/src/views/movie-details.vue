@@ -67,25 +67,10 @@
 </template>
 
 <script setup lang="ts">
-import {
-  IonPage,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonContent,
-  IonBackButton,
-  IonButtons,
-  IonButton,
-  IonIcon,
-  toastController,
-  IonToast,
-
-  IonRefresher,
-  IonRefresherContent,
-} from "@ionic/vue";
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons, IonButton, toastController, IonToast, IonRefresher, IonRefresherContent } from '@ionic/vue';
 import { computed, ref, UnwrapRef, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { pencil } from "ionicons/icons";
+
 import { MovieResponse } from "@supabase/functions/_shared/movie";
 import { supabase } from "../api/supabase";
 import { enqueueAndProcessMedia, enqueueMedia } from "../api/mediaQueue";

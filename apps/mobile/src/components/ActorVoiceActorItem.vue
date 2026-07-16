@@ -28,9 +28,9 @@
         />
       </div>
 
-      <ion-label class="line-label">
+      <AppText class="line-label">
         <span class="ellipsis label actor">{{ actor.name }}</span>
-      </ion-label>
+      </AppText>
     </div>
     <VoiceActorList
       v-if="voiceActors"
@@ -64,7 +64,7 @@
       />
       <MediaThumbnail v-else :path="undefined" />
 
-      <ion-label class="line-label">
+      <AppText class="line-label">
         <span class="ellipsis label name">
           {{ getDisplayName() }}
         </span>
@@ -74,7 +74,7 @@
         <span v-if="item.performance" class="ellipsis label performance">
           {{ item.performance }}
         </span>
-      </ion-label>
+      </AppText>
 
       <div class="voice-actor-actions" v-if="isAdmin">
         <ion-button
@@ -83,7 +83,7 @@
           @click.stop="editVoiceActorLink && editVoiceActorLink(item)"
           aria-label="Edit voice actor link"
         >
-          <ion-icon :icon="createOutline"></ion-icon>
+          <Pencil class="app-icon" />
         </ion-button>
         <ion-button
           fill="clear"
@@ -94,7 +94,7 @@
           color="danger"
           aria-label="Delete voice actor link"
         >
-          <ion-icon :icon="trashOutline"></ion-icon>
+          <Trash2 class="app-icon" />
         </ion-button>
       </div>
     </div>
@@ -102,8 +102,13 @@
 </template>
 
 <script setup lang="ts">
-import { IonLabel, IonButton, IonIcon } from "@ionic/vue";
-import { createOutline, trashOutline } from "ionicons/icons";
+import AppText from '@/components/common/AppText.vue';
+import Pencil from '~icons/lucide/pencil';
+import Trash2 from '~icons/lucide/trash2';
+import AppSpinner from '@/components/common/AppSpinner.vue';
+import AppSkeleton from '@/components/common/AppSkeleton.vue';
+import { IonButton } from '@ionic/vue';
+
 import MediaItem from "@/components/MediaItem.vue";
 import MediaThumbnail from "@/components/MediaThumbnail.vue";
 import VoiceActorList from "@/components/VoiceActorList.vue";

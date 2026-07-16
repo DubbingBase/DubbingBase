@@ -10,7 +10,7 @@
         <ion-title>{{ $t('profile.voiceActorProfile') }}</ion-title>
         <ion-buttons slot="end">
           <ion-button @click="openPublicProfile">
-            <ion-icon :icon="eye" slot="icon-only"></ion-icon>
+            <Eye class="app-icon" />
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
@@ -22,11 +22,11 @@
       </div>
 
       <div v-else-if="profileStore.profileError" class="error-container">
-        <ion-icon :icon="alertCircle" color="danger" size="large"></ion-icon>
+        <AlertCircle class="app-icon" />
         <h3>Error loading profile</h3>
         <p>{{ profileStore.profileError }}</p>
         <ion-button @click="retryLoadProfile" fill="outline">
-          <ion-icon slot="start" :icon="refresh"></ion-icon>
+          <RefreshCw class="app-icon" />
           Retry
         </ion-button>
       </div>
@@ -70,7 +70,7 @@
             <div class="work-header">
               <h3>Filmography</h3>
               <ion-button v-if="canEdit" @click="isAddWorkModalOpen = true">
-                <ion-icon slot="icon-only" :icon="add"></ion-icon>
+                <Plus class="app-icon" />
               </ion-button>
             </div>
             <WorkList :can-edit="canEdit" @delete="handleDeleteWork" />
@@ -78,7 +78,7 @@
         </div>
 
         <div v-else class="no-profile-container">
-          <ion-icon :icon="personCircle" size="large" color="medium"></ion-icon>
+          <UserCircle class="app-icon" />
           <h3>Voice actor profile not found</h3>
           <p>This voice actor profile could not be loaded.</p>
         </div>
@@ -93,30 +93,20 @@
 </template>
 
 <script setup lang="ts">
+import Eye from '~icons/lucide/eye';
+import AlertCircle from '~icons/lucide/alert-circle';
+import RefreshCw from '~icons/lucide/refresh-cw';
+import Plus from '~icons/lucide/plus';
+import UserCircle from '~icons/lucide/user-circle';
 import { onMounted, watch, computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import {
-  IonPage,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonContent,
-  IonIcon,
-  IonButton,
-  IonList,
-  IonItem,
-  IonInput,
-  IonTextarea,
-  IonModal,
-  IonButtons,
-
-} from '@ionic/vue'
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonList, IonItem, IonInput, IonTextarea, IonModal, IonButtons } from '@ionic/vue';
 import { useProfileStore } from '@/stores/profile'
 import { useAuthStore } from '@/stores/auth'
 import WorkList from '@/components/profile/WorkList.vue';
 import AddWorkModal from '@/components/profile/AddWorkModal.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
-import { alertCircle, personCircle, refresh, add, eye } from 'ionicons/icons';
+
 import type { Tables } from '@/utils/database';
 import { supabase } from '@/api/supabase';
 
@@ -263,8 +253,8 @@ const openPublicProfile = () => {
   padding: 2rem;
 }
 
-.error-container ion-icon,
-.no-profile-container ion-icon {
+.error-container .app-icon,
+.no-profile-container .app-icon {
   margin-bottom: 1rem;
   font-size: 3rem;
 }

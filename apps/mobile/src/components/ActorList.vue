@@ -38,7 +38,7 @@ import ActorWithVoiceActors from "./ActorWithVoiceActors.vue";
 import NoActors from "./NoActors.vue";
 import { PersonData } from "./PersonItem.vue";
 import { VoiceActorDetails, Actor } from "@supabase/functions/_shared/types";
-import { IonSearchbar } from "@ionic/vue";
+import { IonSearchbar } from '@ionic/vue';
 import { ref, computed } from "vue";
 import { useI18n } from "vue-i18n";
 

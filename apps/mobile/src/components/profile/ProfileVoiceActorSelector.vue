@@ -1,7 +1,7 @@
 <template>
   <div class="profile-voice-actor-selector">
     <ion-item>
-      <ion-label position="stacked">{{ $t('profile.selectedProfile') }}</ion-label>
+      <AppText position="stacked">{{ $t('profile.selectedProfile') }}</AppText>
       <ion-input
         :value="selectedProfileName"
         readonly
@@ -32,8 +32,8 @@
             button
             @click="selectUserProfile"
           >
-            <ion-label>{{ $t('profile.userProfile') }}</ion-label>
-            <ion-icon slot="end" :icon="person" />
+            <AppText>{{ $t('profile.userProfile') }}</AppText>
+            <User class="app-icon" />
           </ion-item>
 
           <!-- User's Voice Actor Profiles -->
@@ -43,8 +43,8 @@
             button
             @click="selectVoiceActor(voiceActor)"
           >
-            <ion-label>{{ voiceActor.firstname }} {{ voiceActor.lastname }} - {{ $t('profile.voiceActorProfile') }}</ion-label>
-            <ion-icon slot="end" :icon="mic" />
+            <AppText>{{ voiceActor.firstname }} {{ voiceActor.lastname }} - {{ $t('profile.voiceActorProfile') }}</AppText>
+            <Mic class="app-icon" />
           </ion-item>
 
           <!-- All Voice Actors (Admin only) -->
@@ -55,8 +55,8 @@
               button
               @click="selectVoiceActor(voiceActor)"
             >
-              <ion-label>{{ voiceActor.firstname }} {{ voiceActor.lastname }} - {{ $t('profile.adminVoiceActor') }}</ion-label>
-              <ion-icon slot="end" :icon="mic" />
+              <AppText>{{ voiceActor.firstname }} {{ voiceActor.lastname }} - {{ $t('profile.adminVoiceActor') }}</AppText>
+              <Mic class="app-icon" />
             </ion-item>
           </template>
 
@@ -77,32 +77,21 @@
 </template>
 
 <script setup lang="ts">
+import AppText from '@/components/common/AppText.vue';
+import User from '~icons/lucide/user';
+import Mic from '~icons/lucide/mic';
+import AppSpinner from '@/components/common/AppSpinner.vue';
+import AppSkeleton from '@/components/common/AppSkeleton.vue';
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import {
-  IonItem,
-  IonLabel,
-  IonInput,
-  IonModal,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonButtons,
-  IonButton,
-  IonContent,
-  IonSearchbar,
-  IonList,
-  IonIcon,
-  IonLoading,
-  alertController
-} from '@ionic/vue'
+import { IonItem, IonInput, IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonSearchbar, IonList, IonLoading, alertController } from '@ionic/vue';
 import { useProfileStore } from '@/stores/profile'
 import { useAuthStore } from '@/stores/auth'
 import { supabase } from '@/api/supabase'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import ErrorMessage from '@/components/common/ErrorMessage.vue'
-import { person, mic, add } from 'ionicons/icons'
+
 
 const { t } = useI18n()
 
@@ -309,7 +298,7 @@ ion-item:last-child {
   --border-width: 0;
 }
 
-ion-icon {
+.app-icon {
   color: var(--ion-color-primary);
   margin-left: 0.5rem;
 }

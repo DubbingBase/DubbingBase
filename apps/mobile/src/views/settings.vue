@@ -8,28 +8,31 @@
     <ion-content class="ion-padding">
       <ion-list v-if="user?.is_anonymous === false">
         <ion-item lines="full">
-          <ion-label>{{ t('settings.email') }}</ion-label>
-          <ion-text>{{ user?.email }}</ion-text>
+          <AppText>{{ t('settings.email') }}</AppText>
+          <AppText>{{ user?.email }}</AppText>
         </ion-item>
         <ion-item button @click="navigateToAbout">
-          <ion-label>{{ t('settings.about') }}</ion-label>
+          <AppText>{{ t('settings.about') }}</AppText>
         </ion-item>
         <ion-item button @click="logout">
-          <ion-label color="danger">{{ t('settings.logout') }}</ion-label>
+          <AppText color="danger">{{ t('settings.logout') }}</AppText>
         </ion-item>
       </ion-list>
-      <ion-text color="medium" v-else>
+      <AppText color="medium" v-else>
         <ion-button @click="login">{{ t('settings.login') }}</ion-button>
-      </ion-text>
+      </AppText>
     </ion-content>
   </ion-page>
 </template>
 
 <script setup lang="ts">
+import AppText from '@/components/common/AppText.vue';
+import AppSpinner from '@/components/common/AppSpinner.vue';
+import AppSkeleton from '@/components/common/AppSkeleton.vue';
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonLabel, IonText, IonButton } from '@ionic/vue';
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonButton } from '@ionic/vue';
 import { supabase } from '@/api/supabase';
 
 const user = ref<any>(null);

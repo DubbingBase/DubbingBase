@@ -9,7 +9,7 @@
 </template>
 
 <script setup lang="ts">
-import { IonAlert } from '@ionic/vue'
+import { IonAlert } from '@ionic/vue';
 import { computed } from 'vue'
 
 interface Props {

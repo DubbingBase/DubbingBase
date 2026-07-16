@@ -16,7 +16,7 @@
           <ion-chip v-for="chip in chips" :key="chip">{{ chip }}</ion-chip>
         </div>
       </div>
-      <ion-icon v-if="mediaIcon" :icon="mediaIcon" :color="iconColor" class="type-icon"></ion-icon>
+      <component v-if="mediaIcon" :is="mediaIcon" :color="iconColor" class="type-icon"></component>
     </ion-card-content>
   </ion-card>
   </router-link>
@@ -24,16 +24,14 @@
 
 <script lang="ts" setup>
 import { computed } from "vue";
-import {
-  IonCard,
-  IonCardContent,
-  IonChip,
-  IonIcon,
-} from "@ionic/vue";
-import { tvOutline, personOutline, micOutline, filmOutline } from "ionicons/icons";
-import { format, parseISO } from 'date-fns';
+import { format, parseISO } from "date-fns";
+import { IonCard, IonCardContent, IonChip } from "@ionic/vue";
 import MediaThumbnail from "@/components/MediaThumbnail.vue";
 import type { SearchResult } from "@/types/search";
+import Film from '~icons/lucide/film';
+import Tv from '~icons/lucide/tv';
+import User from '~icons/lucide/user';
+import Mic from '~icons/lucide/mic';
 
 interface Props {
   match: SearchResult;
@@ -74,10 +72,10 @@ const routeName = computed(() => {
 
 const mediaIcon = computed(() => {
   switch (props.match.media_type) {
-    case "movie": return filmOutline;
-    case "tv": return tvOutline;
-    case "person": return personOutline;
-    case "voice_actor": return micOutline;
+    case "movie": return Film;
+    case "tv": return Tv;
+    case "person": return User;
+    case "voice_actor": return Mic;
     default: return undefined;
   }
 });

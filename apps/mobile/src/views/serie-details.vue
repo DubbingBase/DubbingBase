@@ -10,7 +10,7 @@
         <ion-title>{{ show?.name || "Détails de la série" }}</ion-title>
         <ion-buttons slot="end">
           <ion-button fill="clear" aria-label="Paramètres">
-            <SolarSettingsMinimalisticOutline />
+            <Settings class="app-icon" />
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
@@ -27,11 +27,11 @@
       <div class="tabs" v-show="!isLoading">
         <ion-segment scrollable>
           <ion-segment-button value="peoples" content-id="peoples">
-            <!-- <ion-icon :icon="search" /> -->
+            <!-- <Search class="app-icon" /> -->
             Personnes
           </ion-segment-button>
           <ion-segment-button value="seasons" content-id="seasons">
-            <!-- <ion-icon :icon="radio" /> -->
+            <!-- <Radio class="app-icon" /> -->
             Saisons
           </ion-segment-button>
         </ion-segment>
@@ -106,25 +106,9 @@
 </template>
 
 <script setup lang="ts">
-import {
-  IonPage,
-  IonContent,
-  IonSegment,
-  IonHeader,
-  IonToolbar,
-  IonButtons,
-  IonBackButton,
-  IonSegmentButton,
-  IonSegmentContent,
-  IonSegmentView,
-  toastController,
-  IonTitle,
-  IonButton,
-  IonToast,
-
-  IonRefresher,
-  IonRefresherContent,
-} from "@ionic/vue";
+import Search from '~icons/lucide/search';
+import Radio from '~icons/lucide/radio';
+import { IonPage, IonContent, IonSegment, IonHeader, IonToolbar, IonButtons, IonBackButton, IonSegmentButton, IonSegmentContent, IonSegmentView, toastController, IonTitle, IonButton, IonToast, IonRefresher, IonRefresherContent } from '@ionic/vue';
 import { ref, computed, UnwrapRef, watch } from "vue";
 import { useRoute } from "vue-router";
 import { useRouter } from "vue-router";
@@ -138,7 +122,7 @@ import VoiceActorSearchModal from "@/components/VoiceActorSearchModal.vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import { useVoiceActorManagement } from "@/composables/useVoiceActorManagement";
 // Removed unused imports
-import SolarSettingsMinimalisticOutline from "~icons/solar/settings-minimalistic-outline";
+import Settings from '~icons/lucide/settings';
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
 import { supabase } from "@/api/supabase";

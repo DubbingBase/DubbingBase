@@ -21,9 +21,9 @@
     </router-link>
   </div>
   <div v-else class="va-actor">
-    <ion-thumbnail class="avatar" slot="start">
+    <AppImage class="app-thumbnail" class="avatar" slot="start">
       <img src="https://placehold.co/48x72?text=?" />
-    </ion-thumbnail>
+    </AppImage>
   </div>
 </template>
 

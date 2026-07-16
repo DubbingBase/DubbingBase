@@ -8,7 +8,7 @@
         class="profile-picture"
       />
       <div v-else class="placeholder-picture">
-        <ion-icon name="person-circle" size="large"></ion-icon>
+        <UserCircle class="app-icon"  size="large" />
       </div>
 
       <ion-button
@@ -17,7 +17,7 @@
         class="edit-button"
         @click="triggerFileInput"
       >
-        <ion-icon name="camera" slot="icon-only"></ion-icon>
+        <Camera class="app-icon"  slot="icon-only" />
       </ion-button>
     </div>
 
@@ -37,7 +37,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { IonButton, IonIcon } from '@ionic/vue'
+import { IonButton } from '@ionic/vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { useProfileStore } from '@/stores/profile'
 import { supabase } from '@/api/supabase'

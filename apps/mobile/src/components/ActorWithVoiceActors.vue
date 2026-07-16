@@ -28,7 +28,7 @@
             "
             aria-label="Add voice actor link"
           >
-            <ion-icon :icon="addCircle"></ion-icon>
+            <PlusCircle class="app-icon" />
           </ion-button>
         </template>
       </PersonItem>
@@ -54,18 +54,8 @@
               >
                 <template #actions>
                   <!-- Status Indicators -->
-                  <ion-icon
-                    v-if="voiceActor.reviewed_status === 'accepted'"
-                    :icon="checkmarkCircleOutline"
-                    class="status-icon accepted"
-                    size="small"
-                  ></ion-icon>
-                  <ion-icon
-                    v-if="voiceActor.reviewed_status === 'waiting'"
-                    :icon="timeOutline"
-                    class="status-icon waiting"
-                    size="small"
-                  ></ion-icon>
+                  <CheckCircle2 class="app-icon" />
+                  <Clock class="app-icon" />
                 </template>
               </PersonItem>
             </router-link>
@@ -77,21 +67,16 @@
 </template>
 
 <script setup lang="ts">
+import PlusCircle from '~icons/lucide/plus-circle';
+import CheckCircle2 from '~icons/lucide/check-circle-2';
+import Clock from '~icons/lucide/clock';
 import PersonItem, { PersonData } from "./PersonItem.vue";
-import {
-  createOutline,
-  trashOutline,
-  addCircle,
-  thumbsUpOutline,
-  thumbsDownOutline,
-  timeOutline,
-  checkmarkCircleOutline,
-  closeCircleOutline,
-} from "ionicons/icons";
+
 import { useLanguagePreference } from "@/composables/useLanguagePreference";
 import { computed, watch } from "vue";
 
-import { IonIcon, IonButton, actionSheetController } from "@ionic/vue";
+import { IonButton, actionSheetController } from "@ionic/vue";
+import { timeOutline, checkmarkCircleOutline, closeCircleOutline, thumbsUpOutline, thumbsDownOutline, createOutline, trashOutline } from "ionicons/icons";
 import { usePermissions } from "@/composables/usePermissions";
 import { useVoiceActorManagement } from "@/composables/useVoiceActorManagement";
 import { useAuthStore } from "@/stores/auth";

@@ -1,7 +1,11 @@
 <template>
   <div class="base-layout">
     <div class="content">
-      <router-view />
+      <router-view v-slot="{ Component }">
+        <keep-alive include="Home,Search">
+          <component :is="Component" />
+        </keep-alive>
+      </router-view>
     </div>
     <div class="bottom-tab-bar">
       <router-link
@@ -21,11 +25,11 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
-import SolarTvLinear from "~icons/solar/tv-linear";
-import SolarMagniferLinear from "~icons/solar/magnifer-linear";
-import SolarHome2Linear from "~icons/solar/home-2-linear";
-import SolarSettingsLinear from "~icons/solar/settings-linear";
-import SolarUserLinear from "~icons/solar/user-linear";
+import Tv from '~icons/lucide/tv';
+import Search from '~icons/lucide/search';
+import Home from '~icons/lucide/home';
+import Settings from '~icons/lucide/settings';
+import User from '~icons/lucide/user';
 import { useAuthStore } from "@/stores/auth";
 
 interface TabItem {
@@ -44,19 +48,19 @@ const items = computed(() => {
   const items = [
     {
       label: "Accueil",
-      icon: SolarHome2Linear,
+      icon: Home,
       route: "Home",
       href: "/tabs/home",
     },
     {
       label: "Recherche",
-      icon: SolarMagniferLinear,
+      icon: Search,
       route: "Search",
       href: "/tabs/search",
     },
     {
       label: "Parametres",
-      icon: SolarSettingsLinear,
+      icon: Settings,
       route: "Settings",
       href: "/tabs/settings",
     },
@@ -65,7 +69,7 @@ const items = computed(() => {
   if (authStore.isAuthenticated && !authStore.isAnonymous) {
     items.push({
       label: "Profil",
-      icon: SolarUserLinear,
+      icon: User,
       route: "Profile",
       href: "/tabs/profile",
     });

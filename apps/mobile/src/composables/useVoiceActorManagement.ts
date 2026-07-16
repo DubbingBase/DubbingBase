@@ -13,6 +13,7 @@ export interface VoiceActor {
   firstname: string;
   lastname: string;
   profile_picture?: string;
+  nationality?: string;
 }
 
 export interface WorkAndVoiceActor {

@@ -50,7 +50,10 @@ export const useProfileStore = defineStore("profile", () => {
 
   // Getters
   const hasProfile = computed(
-    () => voiceActors.value.length > 0 || !!userProfile.value || !!impersonatedVoiceActor.value,
+    () =>
+      voiceActors.value.length > 0 ||
+      !!userProfile.value ||
+      !!impersonatedVoiceActor.value,
   );
   const currentProfileType = computed(() => profileType.value);
   const allVoiceActors = computed(() => voiceActors.value);

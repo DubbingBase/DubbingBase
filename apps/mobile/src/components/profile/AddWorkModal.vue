@@ -12,7 +12,7 @@
     <form @submit.prevent="handleSubmit">
       <ion-list>
         <ion-item>
-          <ion-label position="stacked">Titre du média *</ion-label>
+          <AppText position="stacked">Titre du média *</AppText>
           <ion-searchbar
             v-model="formData.media_title"
             placeholder="Rechercher un film ou une série..."
@@ -28,24 +28,24 @@
               button
               @click="selectMedia(result)"
             >
-              <ion-thumbnail slot="start">
+              <AppImage class="app-thumbnail" slot="start">
                 <img
                   v-if="result.poster_path"
                   :src="result.poster_path"
                   :alt="getMediaTitle(result)"
                 />
-              </ion-thumbnail>
-              <ion-label>
+              </AppImage>
+              <AppText>
                 <h3>{{ getMediaTitle(result) }}</h3>
                 <p>{{ getMediaYear(result) }}</p>
-              </ion-label>
+              </AppText>
             </ion-item>
           </ion-list>
         </div>
 
         <div v-if="selectedMedia">
           <ion-item>
-            <ion-label position="stacked">Personnage / Acteur Original *</ion-label>
+            <AppText position="stacked">Personnage / Acteur Original *</AppText>
             <ion-searchbar
               v-model="characterSearchQuery"
               placeholder="Rechercher un personnage ou acteur"
@@ -62,10 +62,10 @@
                 button
                 @click="selectCastMember(member)"
               >
-                <ion-label>
+                <AppText>
                   <h3>{{ member.name }}</h3>
                   <p>{{ member.character }}</p>
-                </ion-label>
+                </AppText>
               </ion-item>
             </ion-list>
           </div>
@@ -88,8 +88,12 @@
 </template>
 
 <script setup lang="ts">
+import AppImage from '@/components/common/AppImage.vue';
+import AppText from '@/components/common/AppText.vue';
+import AppSpinner from '@/components/common/AppSpinner.vue';
+import AppSkeleton from '@/components/common/AppSkeleton.vue';
 import { ref, computed } from 'vue'
-import { modalController, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonList, IonItem, IonSearchbar, IonThumbnail, IonLabel } from '@ionic/vue'
+import { modalController, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonList, IonItem, IonSearchbar } from '@ionic/vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { useProfileStore } from '@/stores/profile'
 import { supabase } from '@/api/supabase'

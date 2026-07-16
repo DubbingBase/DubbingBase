@@ -31,9 +31,9 @@
           :routeParams="{ id: actor.id }"
         />
       </div>
-      <ion-label class="line-label">
+      <AppText class="line-label">
         <span class="ellipsis label actor">{{ actor.name }}</span>
-      </ion-label>
+      </AppText>
     </div>
     <VoiceActorList
       :voiceActors="voiceActors"
@@ -48,7 +48,10 @@
 </template>
 
 <script setup lang="ts">
-import { IonLabel } from "@ionic/vue";
+import AppText from '@/components/common/AppText.vue';
+import AppSpinner from '@/components/common/AppSpinner.vue';
+import AppSkeleton from '@/components/common/AppSkeleton.vue';
+
 import MediaItem from "@/components/MediaItem.vue";
 import VoiceActorList from "@/components/VoiceActorList.vue";
 import { PersonData } from "./PersonItem.vue";

@@ -1,10 +1,11 @@
 <template>
   <div class="error-container" :class="{ 'inline': inline }">
-    <ion-icon
-      :name="icon"
+    <component
+      :is="icon"
+      class="app-icon"
       :color="color"
       :size="size"
-    ></ion-icon>
+    />
     <div class="error-content">
       <h4 v-if="title" class="error-title">{{ title }}</h4>
       <p class="error-text">{{ message }}</p>
@@ -14,7 +15,7 @@
         size="small"
         @click="$emit('retry')"
       >
-        <ion-icon slot="start" name="refresh"></ion-icon>
+        <RefreshCw class="app-icon" slot="start"  />
         Réessayer
       </ion-button>
     </div>
@@ -22,12 +23,15 @@
 </template>
 
 <script setup lang="ts">
-import { IonIcon, IonButton } from '@ionic/vue'
+import { IonButton } from '@ionic/vue';
+import type { Component } from 'vue';
+import AlertCircle from '~icons/lucide/alert-circle';
+import RefreshCw from '~icons/lucide/refresh-cw';
 
 interface Props {
   message: string
   title?: string
-  icon?: string
+  icon?: Component
   color?: string
   size?: string
   inline?: boolean
@@ -36,7 +40,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   title: '',
-  icon: 'alert-circle',
+  icon: () => AlertCircle,
   color: 'danger',
   size: 'large',
   inline: false,

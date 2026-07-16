@@ -3,7 +3,7 @@
     <div v-if="!isEditing" class="display-mode" @click="startEditing">
       <span class="field-value">{{ displayValue || placeholder }}</span>
       <ion-button fill="clear" size="small">
-        <ion-icon name="create" color="medium"></ion-icon>
+        <Pencil class="app-icon"  color="medium" />
       </ion-button>
     </div>
 
@@ -18,10 +18,10 @@
       ></ion-input>
       <div class="edit-actions">
         <ion-button fill="clear" size="small" @click="save">
-          <ion-icon name="checkmark" color="success"></ion-icon>
+          <Check class="app-icon"  color="success" />
         </ion-button>
         <ion-button fill="clear" size="small" @click="cancel">
-          <ion-icon name="close" color="danger"></ion-icon>
+          <X class="app-icon"  color="danger" />
         </ion-button>
       </div>
     </div>
@@ -30,7 +30,7 @@
 
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
-import { IonInput, IonButton, IonIcon } from '@ionic/vue'
+import { IonInput, IonButton } from '@ionic/vue';
 
 interface Props {
   modelValue: string

@@ -67,21 +67,7 @@
 <script lang="ts" setup>
 import { ref, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import {
-  IonPage,
-  IonHeader,
-  IonToolbar,
-  IonButtons,
-  IonBackButton,
-  IonTitle,
-  IonContent,
-  IonSegment,
-  IonSegmentButton,
-  toastController,
-
-  IonRefresher,
-  IonRefresherContent,
-} from "@ionic/vue";
+import { IonPage, IonHeader, IonToolbar, IonButtons, IonBackButton, IonTitle, IonContent, IonSegment, IonSegmentButton, toastController, IonRefresher, IonRefresherContent } from '@ionic/vue';
 import { supabase } from "../api/supabase";
 import { enqueueAndProcessMedia } from "../api/mediaQueue";
 import SeasonBanner from "../components/SeasonBanner.vue";

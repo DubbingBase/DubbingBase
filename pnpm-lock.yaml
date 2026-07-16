@@ -108,6 +108,9 @@ importers:
       '@capacitor/cli':
         specifier: ^7.4.3
         version: 7.4.3
+      '@iconify-json/lucide':
+        specifier: ^1.2.117
+        version: 1.2.117
       '@iconify-json/solar':
         specifier: ^1.2.4
         version: 1.2.4
@@ -1065,6 +1068,9 @@ packages:
   '@hutson/parse-repository-url@3.0.2':
     resolution: {integrity: sha512-H9XAx3hc0BQHY6l+IFSWHDySypcXsvsuLhgYLUGywmJ5pswRVQJUHpOsobnLYp2ZUaUlKiKDrgWWhosOwAEM8Q==}
     engines: {node: '>=6.9.0'}
+
+  '@iconify-json/lucide@1.2.117':
+    resolution: {integrity: sha512-7isYKJKWRZ8NfLNSY8pIYmRWiMBkopL4/X22gZfFmePFhc7az0hQ5biqBLG6vdDEvMctFu2suZB3yQ29RL+8tA==}
 
   '@iconify-json/solar@1.2.4':
     resolution: {integrity: sha512-ruAh+bbYimlzqXW6MtqmvWlfatvFjE7o1fZWieps1h42Dx7AaHu4Z/dgOYSO1RR4MIhNzD+2xgEbFjASgBcEyg==}
@@ -6095,6 +6101,10 @@ snapshots:
   '@humanwhocodes/object-schema@2.0.3': {}
 
   '@hutson/parse-repository-url@3.0.2': {}
+
+  '@iconify-json/lucide@1.2.117':
+    dependencies:
+      '@iconify/types': 2.0.0
 
   '@iconify-json/solar@1.2.4':
     dependencies:

@@ -5,7 +5,7 @@
         <ion-title>{{ $t("profile.userProfile") }}</ion-title>
         <ion-buttons slot="end" v-if="authStore.isAdmin">
           <ion-button @click="showAdminSearch = true">
-            <ion-icon :icon="search"></ion-icon>
+            <Search class="app-icon" />
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
@@ -23,11 +23,11 @@
       </div>
 
       <div v-else-if="profileStore.profileError" class="error-container">
-        <ion-icon :icon="refresh" color="danger" size="large"></ion-icon>
+        <RefreshCw class="app-icon" />
         <h3>{{ getErrorTitle(profileStore.profileError.type) }}</h3>
         <p>{{ profileStore.profileError.message }}</p>
         <ion-button v-if="profileStore.profileError.type === 'fetch'" @click="retryLoadProfile" fill="outline">
-          <ion-icon slot="start" :icon="refresh"></ion-icon>
+          <RefreshCw class="app-icon" />
           {{ $t("profile.retry") }}
         </ion-button>
       </div>
@@ -40,7 +40,7 @@
           class="profile-tabs"
         >
           <ion-segment-button value="user-profile">
-            <ion-label>{{ $t("profile.myProfile") }}</ion-label>
+            <AppText>{{ $t("profile.myProfile") }}</AppText>
           </ion-segment-button>
 
           <ion-segment-button
@@ -48,9 +48,7 @@
             :key="voiceActor.id"
             :value="`voice-actor-${voiceActor.id}`"
           >
-            <ion-label
-              >{{ voiceActor.firstname }} {{ voiceActor.lastname }}</ion-label
-            >
+            <AppText>{{ voiceActor.firstname }} {{ voiceActor.lastname }}</AppText>
           </ion-segment-button>
         </ion-segment>
 
@@ -85,10 +83,10 @@
                     @click="impersonateVoiceActor(result)"
                     class="search-result-item"
                   >
-                    <ion-label>
+                    <AppText>
                       <h3>{{ result.firstname }} {{ result.lastname }}</h3>
                       <p>{{ result.bio?.substring(0, 100) }}...</p>
-                    </ion-label>
+                    </AppText>
                   </ion-item>
                 </ion-list>
               </div>
@@ -179,11 +177,11 @@
                 class="impersonation-notice"
               >
                 <ion-item color="warning">
-                  <ion-icon :icon="person" slot="start"></ion-icon>
-                  <ion-label>
+                  <User class="app-icon" />
+                  <AppText>
                     <h3>{{ $t("profile.impersonatingUser") }}</h3>
                     <p>{{ profileStore.currentVoiceActor?.firstname }} {{ profileStore.currentVoiceActor?.lastname }}</p>
-                  </ion-label>
+                  </AppText>
                   <ion-button
                     slot="end"
                     fill="clear"
@@ -278,35 +276,19 @@
 </template>
 
 <script setup lang="ts">
+import Search from '~icons/lucide/search';
+import AppText from '@/components/common/AppText.vue';
+import RefreshCw from '~icons/lucide/refresh-cw';
+import User from '~icons/lucide/user';
+import AppSpinner from '@/components/common/AppSpinner.vue';
+import AppSkeleton from '@/components/common/AppSkeleton.vue';
 import { onMounted, watch, ref, getCurrentInstance } from "vue";
-import {
-  IonPage,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonContent,
-  IonIcon,
-  IonButton,
-  IonList,
-  IonItem,
-  IonInput,
-  IonTextarea,
-  IonSegment,
-  IonSegmentButton,
-  IonLabel,
-  IonSearchbar,
-  IonModal,
-  IonButtons,
-  IonNote,
-  IonSelectOption,
-  IonRefresher,
-  IonRefresherContent,
-} from "@ionic/vue";
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonList, IonItem, IonInput, IonTextarea, IonSegment, IonSegmentButton, IonSearchbar, IonModal, IonButtons, IonNote, IonSelectOption, IonRefresher, IonRefresherContent } from '@ionic/vue';
 import { useProfileStore } from "@/stores/profile";
 import { useAuthStore } from "@/stores/auth";
 import RequestVoiceActorCard from "@/components/RequestVoiceActorCard.vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
-import { refresh, search, person } from "ionicons/icons";
+
 import { supabase } from "@/api/supabase";
 
 const profileStore = useProfileStore();
@@ -485,9 +467,9 @@ const handleSave = async () => {
   padding: 2rem;
 }
 
-.error-container ion-icon,
-.no-profile-container ion-icon,
-.no-data-container ion-icon {
+.error-container .app-icon,
+.no-profile-container .app-icon,
+.no-data-container .app-icon {
   margin-bottom: 1rem;
   font-size: 3rem;
 }
