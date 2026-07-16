@@ -144,6 +144,9 @@ const uploadImage = async () => {
       border-radius: var(--thumbnail-border-radius);
       border: var(--thumbnail-border);
       box-shadow: var(--thumbnail-box-shadow);
+      color: transparent;
+      outline: none;
+      background: var(--ion-color-step-100, #1e1e1e);
 
       @media (max-width: 768px) {
         height: 80px;

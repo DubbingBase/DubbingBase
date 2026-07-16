@@ -27,13 +27,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { useIonRouter } from '@ionic/vue';
+import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonLabel, IonText, IonButton } from '@ionic/vue';
 import { supabase } from '@/api/supabase';
 
 const user = ref<any>(null);
-const ionRouter = useIonRouter();
+const router = useRouter();
 const { t } = useI18n();
 
 const fetchUser = async () => {
@@ -45,15 +45,15 @@ onMounted(fetchUser);
 
 const logout = async () => {
   await supabase.auth.signOut();
-  ionRouter.push('/login');
+  router.push('/login');
 };
 
 const login = () => {
-  ionRouter.push('/login');
+  router.push('/login');
 };
 
 const navigateToAbout = () => {
-  ionRouter.push('/tabs/about');
+  router.push('/tabs/about');
 };
 </script>
 

@@ -3,7 +3,9 @@
     <ion-header class="header">
       <ion-toolbar class="toolbar">
         <ion-buttons slot="start">
-          <ion-back-button :default-href="{ name: 'Home' }" />
+          <button @click="router.back()" class="custom-back-button">
+            &larr;
+          </button>
         </ion-buttons>
         <ion-title>{{ show?.name || "Détails de la série" }}</ion-title>
         <ion-buttons slot="end">
@@ -131,13 +133,13 @@ import {
   IonTitle,
   IonButton,
   IonToast,
-  onIonViewDidEnter,
+
   IonRefresher,
   IonRefresherContent,
 } from "@ionic/vue";
-import { ref, computed, UnwrapRef } from "vue";
+import { ref, computed, UnwrapRef, watch } from "vue";
 import { useRoute } from "vue-router";
-import { useIonRouter } from "@ionic/vue";
+import { useRouter } from "vue-router";
 import { format } from "date-fns";
 import MediaThumbnail from "@/components/MediaThumbnail.vue";
 import MediaInfoCard from "@/components/MediaInfoCard.vue";
@@ -163,7 +165,7 @@ const authStore = useAuthStore();
 const { isAdmin } = storeToRefs(authStore);
 
 const route = useRoute();
-const ionRouter = useIonRouter();
+const router = useRouter();
 const { t } = useI18n();
 
 const show = ref<any>(null);
@@ -503,7 +505,8 @@ const fetchInfos = async () => {
   }
 };
 
-onIonViewDidEnter(async () => {
+watch(() => route.params.id, async (newId) => {
+  if (!newId) return;
   isLoading.value = true;
   error.value = "";
   try {
@@ -517,11 +520,11 @@ onIonViewDidEnter(async () => {
   } finally {
     isLoading.value = false;
   }
-});
+}, { immediate: true });
 
 // Navigation methods
 const goToSeason = (id: number, seasonNumber: number) => {
-  ionRouter.push({
+  router.push({
     name: "SeasonDetails",
     params: {
       id: id,
@@ -531,12 +534,23 @@ const goToSeason = (id: number, seasonNumber: number) => {
 };
 
 const goToActor = (id: number) => {
-  ionRouter.push({
+  router.push({
     name: "ActorDetails",
     params: { id },
   });
 };
 </script>
+
+<style scoped>
+.custom-back-button {
+  background: transparent;
+  color: white;
+  border: none;
+  font-size: 24px;
+  padding: 0 16px;
+  cursor: pointer;
+}
+</style>
 
 <style scoped lang="scss">
 $coverHeight: 150px;

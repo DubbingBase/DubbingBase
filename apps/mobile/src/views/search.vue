@@ -4,12 +4,14 @@
       <ion-toolbar>
         <ion-title>Search</ion-title>
       </ion-toolbar>
-      <ion-toolbar>
+      <ion-toolbar style="--background: transparent;">
         <ion-searchbar
           v-model="query"
           :debounce="300"
           @ionInput="search($event)"
           show-clear-button="always"
+          class="custom-searchbar"
+          style="padding: 0 8px;"
         ></ion-searchbar>
       </ion-toolbar>
     </ion-header>

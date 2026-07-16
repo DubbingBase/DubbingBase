@@ -132,11 +132,5 @@ const handleVoiceActorClick = (voiceActor: any) => {
       margin: 0;
     }
   }
-
-  .custom-searchbar {
-    --box-shadow: none;
-    --background: var(--ion-color-light);
-    padding: 0 0 16px 0;
-  }
 }
 </style>

@@ -180,8 +180,8 @@ const submitRequest = async () => {
 }
 
 .request-profile-card {
-  margin: 20px;
-  padding: 24px;
+  margin: 12px;
+  padding: 16px;
   background: linear-gradient(135deg, var(--ion-color-primary) 0%, #2a3a5c 100%);
   border-radius: 16px;
   display: flex;
@@ -198,27 +198,27 @@ const submitRequest = async () => {
 }
 
 .request-profile-card h3 {
-  margin: 0 0 8px 0;
+  margin: 0 0 4px 0;
   color: white;
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 600;
 }
 
 .request-profile-card p {
   margin: 0;
   color: rgba(255, 255, 255, 0.9);
-  font-size: 0.95rem;
-  line-height: 1.4;
+  font-size: 0.85rem;
+  line-height: 1.3;
 }
 
 .request-btn {
   background: white;
   color: var(--ion-color-primary);
   border: none;
-  padding: 12px 24px;
+  padding: 8px 16px;
   border-radius: 8px;
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 0.9rem;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
   white-space: nowrap;

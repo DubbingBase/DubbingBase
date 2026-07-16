@@ -1,5 +1,5 @@
 import { onUnmounted, ref, watch } from "vue";
-import { useIonRouter } from "@ionic/vue";
+import { useRouter } from "vue-router";
 import { alertController } from "@ionic/vue";
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
@@ -35,7 +35,7 @@ const votes = ref<
 export function useVoiceActorManagement(
   workType: "movie" | "tv" | "season" | "episode",
 ) {
-  const ionRouter = useIonRouter();
+  const router = useRouter();
   const authStore = useAuthStore();
   const { isAdmin } = storeToRefs(authStore);
 
@@ -242,14 +242,14 @@ export function useVoiceActorManagement(
   };
 
   const goToVoiceActor = (id: number) => {
-    ionRouter.push({
+    router.push({
       name: "VoiceActorDetails",
       params: { id },
     });
   };
 
   const goToActor = (id: number) => {
-    ionRouter.push({
+    router.push({
       name: "ActorDetails",
       params: { id },
     });

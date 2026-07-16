@@ -3,7 +3,9 @@
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-back-button :default-href="{ name: 'Home' }" />
+          <button @click="router.back()" class="custom-back-button">
+            &larr;
+          </button>
         </ion-buttons>
         <ion-title>{{ season?.name || "Détails de la saison" }}</ion-title>
       </ion-toolbar>
@@ -76,7 +78,7 @@ import {
   IonSegment,
   IonSegmentButton,
   toastController,
-  onIonViewDidEnter,
+
   IonRefresher,
   IonRefresherContent,
 } from "@ionic/vue";
@@ -267,9 +269,16 @@ async function fetchData() {
   }
 }
 
-onIonViewDidEnter(fetchData);
-watch(() => route.query.episode, fetchData);
+watch(() => route.params.season, fetchData, { immediate: true });
 </script>
 
 <style lang="scss" scoped>
+.custom-back-button {
+  background: transparent;
+  color: white;
+  border: none;
+  font-size: 24px;
+  padding: 0 16px;
+  cursor: pointer;
+}
 </style>

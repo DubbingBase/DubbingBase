@@ -131,6 +131,9 @@ const uploadProfilePicture = async (file: File) => {
   border-radius: 50%;
   object-fit: cover;
   border: 3px solid var(--ion-color-primary);
+  color: transparent;
+  outline: none;
+  background: var(--ion-color-step-100, #1e1e1e);
 }
 
 .placeholder-picture {

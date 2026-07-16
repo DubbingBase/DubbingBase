@@ -13,3 +13,28 @@
     text-decoration: none !important;
     color: inherit !important;
 }
+img {
+    color: transparent !important;
+    outline: none !important;
+}
+
+ion-img::part(image) {
+    color: transparent !important;
+    outline: none !important;
+}
+
+/* Modern Global Searchbar */
+ion-searchbar.custom-searchbar {
+    padding-left: 0;
+    padding-right: 0;
+    --background: rgba(20, 20, 20, 0.95);
+    --border-radius: 12px;
+    --box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    --placeholder-color: var(--ion-color-medium);
+    --icon-color: var(--ion-color-medium);
+    --color: var(--ion-text-color);
+}
+
+ion-searchbar.custom-searchbar::part(searchbar-input) {
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}

@@ -3,7 +3,9 @@
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-back-button :default-href="{ name: 'Home' }" />
+          <button @click="router.back()" class="custom-back-button">
+            &larr;
+          </button>
         </ion-buttons>
         <ion-title>Voix</ion-title>
         <ion-buttons slot="end">
@@ -73,7 +75,7 @@ import type { Serie as SerieModel } from "@supabase/functions/_shared/serie";
 import {
   IonPage,
   IonButton,
-  IonBackButton,
+
   IonButtons,
   IonTitle,
   IonToolbar,
@@ -416,6 +418,17 @@ const loadVoiceActorData = async () => {
 };
 </script>
 
+<style scoped>
+.custom-back-button {
+  background: transparent;
+  color: white;
+  border: none;
+  font-size: 24px;
+  padding: 0 16px;
+  cursor: pointer;
+}
+</style>
+
 <style scoped lang="scss">
 
 .actor {
@@ -683,12 +696,5 @@ const loadVoiceActorData = async () => {
   to {
     transform: rotate(360deg);
   }
-}
-
-.custom-searchbar {
-  --box-shadow: none;
-  --background: var(--ion-color-light);
-  padding: 8px 0;
-  margin-top: 8px;
 }
 </style>

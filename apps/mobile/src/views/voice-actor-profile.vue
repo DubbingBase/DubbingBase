@@ -3,7 +3,9 @@
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-back-button default-href="/tabs/search"></ion-back-button>
+          <button @click="router.back()" class="custom-back-button">
+            &larr;
+          </button>
         </ion-buttons>
         <ion-title>{{ $t('profile.voiceActorProfile') }}</ion-title>
         <ion-buttons slot="end">
@@ -107,7 +109,7 @@ import {
   IonTextarea,
   IonModal,
   IonButtons,
-  IonBackButton
+
 } from '@ionic/vue'
 import { useProfileStore } from '@/stores/profile'
 import { useAuthStore } from '@/stores/auth'
@@ -241,6 +243,14 @@ const openPublicProfile = () => {
 </script>
 
 <style scoped>
+.custom-back-button {
+  background: transparent;
+  color: white;
+  border: none;
+  font-size: 24px;
+  padding: 0 16px;
+  cursor: pointer;
+}
 .loading-container,
 .error-container,
 .no-profile-container {

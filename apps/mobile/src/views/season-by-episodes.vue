@@ -3,7 +3,9 @@
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-back-button :default-href="backHref" />
+          <button @click="router.back()" class="custom-back-button">
+            &larr;
+          </button>
         </ion-buttons>
         <ion-title>{{ episode?.name || 'Détail de l\'épisode' }}</ion-title>
       </ion-toolbar>
@@ -35,7 +37,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
   IonPage,
@@ -46,7 +48,6 @@ import {
   IonTitle,
   IonContent,
   toastController,
-  onIonViewDidEnter,
   IonRefresher,
   IonRefresherContent,
 } from "@ionic/vue";
@@ -195,7 +196,8 @@ async function fetchEpisodeData() {
   }
 }
 
-onIonViewDidEnter(async () => {
+watch(() => route.params.episode, async (newEpisode) => {
+  if (!newEpisode) return;
   isLoading.value = true;
   error.value = "";
   try {
@@ -205,10 +207,18 @@ onIonViewDidEnter(async () => {
   } finally {
     isLoading.value = false;
   }
-});
+}, { immediate: true });
 </script>
 
 <style lang="scss" scoped>
+.custom-back-button {
+  background: transparent;
+  color: white;
+  border: none;
+  font-size: 24px;
+  padding: 0 16px;
+  cursor: pointer;
+}
 .voices {
   margin-top: 1.5rem;
   h3 {

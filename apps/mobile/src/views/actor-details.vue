@@ -3,7 +3,9 @@
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-back-button :default-href="{ name: 'Home' }" />
+          <button @click="router.back()" class="custom-back-button">
+            &larr;
+          </button>
         </ion-buttons>
         <ion-title>{{ t("actor.title") }}</ion-title>
       </ion-toolbar>
@@ -13,9 +15,16 @@
         <ion-refresher-content></ion-refresher-content>
       </ion-refresher>
       <div class="actor">
-        <div class="header" v-if="actor">
-          <img :src="actor.profile_picture" alt="" />
-          <div class="actor-name">{{ actor.name }}</div>
+        <div class="header-immersive" v-if="actor">
+          <div
+            class="header-backdrop"
+            :style="{ backgroundImage: `url(${actor.profile_picture})` }"
+          ></div>
+          <div class="header-overlay"></div>
+          <div class="header-content">
+            <img :src="actor.profile_picture" class="main-avatar" alt="" />
+            <div class="actor-name">{{ actor.name }}</div>
+          </div>
         </div>
 
         <div class="body" v-if="actor && !loading">
@@ -26,46 +35,77 @@
             <ion-segment-button value="roles" content-id="roles">
               <ion-label>{{ t("actor.roles") }}</ion-label>
             </ion-segment-button>
-            <ion-segment-button value="voiceActors" content-id="voiceActors">
-              <ion-label>{{ t("actor.voiceActors") }}</ion-label>
-            </ion-segment-button>
           </ion-segment>
 
-          <ion-searchbar
-            v-if="selectedSegment !== 'about'"
-            v-model="searchQuery"
-            :placeholder="t('common.search', 'Search...')"
-            animated
-            class="custom-searchbar"
-          ></ion-searchbar>
-
-          <ion-segment-view>
+          <ion-segment-view :style="{ height: segmentViewHeight, transition: 'height 0.3s ease' }">
             <ion-segment-content id="about">
-              <div class="about-section">
-                <div class="info-item" v-if="actor.data.birthday">
-                  <strong>{{ t("actor.birthdate") }}:</strong>
-                  {{ formatDate(actor.data.birthday) }}
+              <div class="about-section" ref="aboutSectionRef">
+                <div class="info-card" v-if="actor.data.birthday">
+                  <div class="info-label">{{ t("actor.birthdate") }}</div>
+                  <div class="info-value">
+                    {{ formatDate(actor.data.birthday) }}
+                  </div>
                 </div>
-                <div class="biography" v-if="actor.data.biography">
-                  <strong>{{ t("actor.biography") }}:</strong>
-                  <p>{{ actor.data.biography }}</p>
+
+                <div
+                  class="info-card biography-card"
+                  v-if="actor.data.biography"
+                  @click="isBiographyExpanded = !isBiographyExpanded"
+                >
+                  <div class="info-label">{{ t("actor.biography") }}</div>
+                  <div
+                    class="info-value biography-text"
+                    :class="{ clamped: !isBiographyExpanded }"
+                  >
+                    {{ actor.data.biography }}
+                  </div>
+                  <div
+                    class="read-more-hint"
+                    v-if="actor.data.biography.length > 150"
+                  >
+                    {{
+                      isBiographyExpanded
+                        ? t("common.showLess", "Show less")
+                        : t("common.readMore", "Read more")
+                    }}
+                  </div>
+                </div>
+
+                <div
+                  class="voice-actors-section"
+                  v-if="filteredVoiceActors.length > 0"
+                >
+                  <h3 class="section-title">{{ t("actor.voiceActors") }}</h3>
+                  <div class="voice-actors-scroller">
+                    <div
+                      class="voice-actor-card"
+                      v-for="voiceActor in filteredVoiceActors"
+                      :key="voiceActor.id"
+                    >
+                      <PersonItem :person="voiceActor" type="voice-actor" />
+                    </div>
+                  </div>
                 </div>
               </div>
             </ion-segment-content>
             <ion-segment-content id="roles">
-              <div class="voice-roles-section">
-                <ion-segment
-                  scrollable
-                  class="role-toggle"
-                  v-model="showDubbedOnly"
-                >
-                  <ion-segment-button value="true">
-                    <ion-label>{{ t("actor.dubbedOnly") }}</ion-label>
-                  </ion-segment-button>
-                  <ion-segment-button value="false">
-                    <ion-label>{{ t("actor.allRoles") }}</ion-label>
-                  </ion-segment-button>
-                </ion-segment>
+              <div class="voice-roles-section" ref="rolesSectionRef">
+                <ion-searchbar
+                  v-model="searchQuery"
+                  :placeholder="t('common.search', 'Search...')"
+                  animated
+                  class="custom-searchbar"
+                  style="margin-bottom: 1rem;"
+                ></ion-searchbar>
+                
+                <div class="filters-row">
+                  <span class="filter-label">{{ showDubbedOnly === 'true' ? t("actor.dubbedOnly") : t("actor.allRoles") }}</span>
+                  <ion-toggle
+                    :checked="showDubbedOnly === 'true'"
+                    @ionChange="showDubbedOnly = $event.detail.checked ? 'true' : 'false'"
+                    class="sleek-toggle"
+                  />
+                </div>
 
                 <div class="section-header">
                   <h2>{{ t("actor.roles") }}</h2>
@@ -93,7 +133,12 @@
                     >
                       <MovieCard
                         :media="group"
-                        :character="group.roles.map((r: any) => r.character).filter(Boolean).join(', ')"
+                        :character="
+                          group.roles
+                            .map((r: any) => r.character)
+                            .filter(Boolean)
+                            .join(', ')
+                        "
                         :media-type="group.mediaType"
                       />
                     </router-link>
@@ -118,7 +163,7 @@
                             voiceActorToPersonData(
                               va,
                               va.performance,
-                              va.actor_id
+                              va.actor_id,
                             )
                           "
                           type="voice-actor"
@@ -127,16 +172,6 @@
                     </div>
                   </div>
                 </div>
-              </div>
-            </ion-segment-content>
-            <ion-segment-content id="voiceActors">
-              <div class="voice-actors-wrapper">
-                <PersonItem
-                  v-for="voiceActor in filteredVoiceActors"
-                  :key="voiceActor.id"
-                  :person="voiceActor"
-                  type="voice-actor"
-                />
               </div>
             </ion-segment-content>
           </ion-segment-view>
@@ -157,12 +192,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
-import { useRoute } from "vue-router";
+import { computed, onMounted, ref, watch, nextTick } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import {
   IonPage,
-  IonBackButton,
   IonButtons,
   IonTitle,
   IonToolbar,
@@ -178,6 +212,9 @@ import {
   IonRefresherContent,
   IonButton,
   IonSearchbar,
+  IonItem,
+  IonLabel,
+  IonToggle,
 } from "@ionic/vue";
 import { alertCircle } from "ionicons/icons";
 import type { Actor } from "@supabase/functions/_shared/types";
@@ -191,6 +228,7 @@ import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 const { t } = useI18n();
 
 const route = useRoute();
+const router = useRouter();
 
 const actor = ref<PersonData<Actor>>();
 const voiceActors = ref<any[]>([]);
@@ -199,6 +237,26 @@ const error = ref<string | null>(null);
 const showDubbedOnly = ref<"true" | "false">("true");
 const searchQuery = ref("");
 const selectedSegment = ref("about");
+const isBiographyExpanded = ref(false);
+
+const segmentViewHeight = ref("auto");
+const aboutSectionRef = ref<HTMLElement | null>(null);
+const rolesSectionRef = ref<HTMLElement | null>(null);
+
+const updateSegmentHeight = async () => {
+  await nextTick();
+  // Small delay to let the DOM settle before measuring
+  setTimeout(() => {
+    if (selectedSegment.value === 'about' && aboutSectionRef.value) {
+      segmentViewHeight.value = `${aboutSectionRef.value.scrollHeight}px`;
+    } else if (selectedSegment.value === 'roles' && rolesSectionRef.value) {
+      segmentViewHeight.value = `${rolesSectionRef.value.scrollHeight}px`;
+    }
+  }, 50);
+};
+
+watch(selectedSegment, updateSegmentHeight);
+watch(isBiographyExpanded, updateSegmentHeight);
 
 const tmdbRoles = computed(() => {
   if (!actor.value?.data?.credits?.cast) return [];
@@ -259,7 +317,7 @@ const groupedTmdbRoles = computed(() => {
 const groupedRolesToShow = computed(() => {
   if (showDubbedOnly.value === "true") {
     return groupedTmdbRoles.value.filter((group) =>
-      mediaIdsWithDubs.value.has(group.mediaId)
+      mediaIdsWithDubs.value.has(group.mediaId),
     );
   }
   return groupedTmdbRoles.value;
@@ -268,27 +326,31 @@ const groupedRolesToShow = computed(() => {
 const filteredRolesToShow = computed(() => {
   const query = searchQuery.value.toLowerCase();
   if (!query) return groupedRolesToShow.value;
-  
-  return groupedRolesToShow.value.map((group) => {
-    const titleMatch = (group.title || "").toLowerCase().includes(query);
-    const rolesMatch = group.roles.filter((r: any) => (r.character || "").toLowerCase().includes(query));
-    const vaMatch = group.voice_actors.filter((va: any) => 
-      `${va.firstname} ${va.lastname}`.toLowerCase().includes(query)
-    );
-    
-    if (titleMatch || rolesMatch.length > 0 || vaMatch.length > 0) {
-      return {
-        ...group,
-        // If the title matches, show everything. Otherwise, only show matched roles/VA (or maybe keep all roles if matched? Let's just return the whole group if any matches)
-      };
-    }
-    return null;
-  }).filter(Boolean);
+
+  return groupedRolesToShow.value
+    .map((group) => {
+      const titleMatch = (group.title || "").toLowerCase().includes(query);
+      const rolesMatch = group.roles.filter((r: any) =>
+        (r.character || "").toLowerCase().includes(query),
+      );
+      const vaMatch = group.voice_actors.filter((va: any) =>
+        `${va.firstname} ${va.lastname}`.toLowerCase().includes(query),
+      );
+
+      if (titleMatch || rolesMatch.length > 0 || vaMatch.length > 0) {
+        return {
+          ...group,
+          // If the title matches, show everything. Otherwise, only show matched roles/VA (or maybe keep all roles if matched? Let's just return the whole group if any matches)
+        };
+      }
+      return null;
+    })
+    .filter(Boolean);
 });
 
 const mediaIdsWithDubs = computed(() => {
   return new Set(
-    voiceActors.value.map((va: any) => va.mediaDetails?.id).filter(Boolean)
+    voiceActors.value.map((va: any) => va.mediaDetails?.id).filter(Boolean),
   );
 });
 
@@ -318,7 +380,7 @@ const sortedVoiceActors = computed(() => {
 
   // Convert to array and sort by role count descending
   return Array.from(voiceActorMap.values()).sort(
-    (a, b) => b.roleCount - a.roleCount
+    (a, b) => b.roleCount - a.roleCount,
   );
 });
 
@@ -339,10 +401,11 @@ const groupedVoiceActors = computed(() => {
 const filteredVoiceActors = computed(() => {
   const query = searchQuery.value.toLowerCase();
   if (!query) return groupedVoiceActors.value;
-  
-  return groupedVoiceActors.value.filter((va) => 
-    (va.name || "").toLowerCase().includes(query) || 
-    (va.performance || "").toLowerCase().includes(query)
+
+  return groupedVoiceActors.value.filter(
+    (va) =>
+      (va.name || "").toLowerCase().includes(query) ||
+      (va.performance || "").toLowerCase().includes(query),
   );
 });
 
@@ -383,6 +446,9 @@ async function loadActorData() {
     console.log("Converted actor data:", actor.value);
     voiceActors.value = actorResponse.voiceActors || [];
     console.log("Voice actors:", voiceActors.value);
+    
+    // Initial height calculation
+    updateSegmentHeight();
   } catch (err) {
     console.error("Error fetching actor data:", err);
     error.value =
@@ -411,6 +477,16 @@ onMounted(() => {
 });
 </script>
 
+<style scoped>
+.custom-back-button {
+  background: transparent;
+  color: white;
+  border: none;
+  font-size: 24px;
+  padding: 0 16px;
+  cursor: pointer;
+}
+</style>
 <style scoped lang="scss">
 .actor {
   padding: 0;
@@ -419,29 +495,88 @@ onMounted(() => {
 
 .about-section {
   padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 
-  .info-item {
-    margin-bottom: 1rem;
-    font-size: 1rem;
+  .info-card {
+    background: rgba(20, 20, 20, 0.95);
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
 
-    strong {
-      color: var(--ion-color-primary);
+    .info-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--ion-color-medium);
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    .info-value {
+      font-size: 1.1rem;
+      color: var(--ion-text-color);
+    }
+
+    &.biography-card {
+      cursor: pointer;
+
+      .biography-text {
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: var(--ion-color-step-800, #ddd);
+        transition: max-height 0.3s ease;
+
+        &.clamped {
+          display: -webkit-box;
+          -webkit-line-clamp: 4;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+      }
+
+      .read-more-hint {
+        margin-top: 8px;
+        font-size: 0.85rem;
+        color: var(--ion-color-primary);
+        font-weight: 600;
+        text-align: right;
+      }
     }
   }
 
-  .biography {
-    margin-top: 1.5rem;
+  .voice-actors-section {
+    margin-top: 1rem;
 
-    strong {
-      color: var(--ion-color-primary);
-      display: block;
-      margin-bottom: 0.5rem;
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin: 0 0 1rem 0;
+      padding-left: 0.5rem;
+      color: var(--ion-text-color);
     }
 
-    p {
-      margin: 0;
-      line-height: 1.6;
-      color: var(--ion-text-color);
+    .voice-actors-scroller {
+      display: flex;
+      overflow-x: auto;
+      gap: 12px;
+      padding-bottom: 1rem;
+      scroll-snap-type: x mandatory;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+
+      .voice-actor-card {
+        scroll-snap-align: start;
+        flex: 0 0 280px;
+        background: rgba(20, 20, 20, 0.95);
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
     }
   }
 }
@@ -534,38 +669,102 @@ onMounted(() => {
   }
 }
 
-.header {
+.header-immersive {
+  position: relative;
+  width: 100%;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 1rem 0;
-  background: linear-gradient(
-    to bottom,
-    var(--ion-color-light) 0%,
-    transparent 100%
-  );
-  margin-bottom: 1rem;
+  justify-content: center;
+  padding: 3rem 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
 
-  img {
-    height: 200px;
-    width: 160px;
-    object-fit: cover;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    margin-bottom: 1rem;
+  .header-backdrop {
+    position: absolute;
+    top: -10%;
+    left: -10%;
+    right: -10%;
+    bottom: -10%;
+    background-size: cover;
+    background-position: center;
+    filter: blur(20px);
+    z-index: 0;
+    opacity: 0.6;
   }
 
-  .actor-name {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--ion-text-color);
-    text-align: center;
+  .header-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.2) 0%,
+      var(--ion-background-color, #121212) 100%
+    );
+    z-index: 1;
+  }
+
+  .header-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+
+    .main-avatar {
+      height: 180px;
+      width: 180px;
+      object-fit: cover;
+      border-radius: 50%;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      margin-bottom: 1rem;
+      border: 3px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .actor-name {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #fff;
+      text-align: center;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
   }
 }
 
+ion-segment-view, ion-segment-content {
+  overflow-y: hidden;
+}
+
 .voice-roles-section {
-  margin: 1.5rem 0;
-  padding: 0 1rem;
+  padding: 1.5rem 1rem;
+
+  .filters-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(20, 20, 20, 0.95);
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+
+    .filter-label {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--ion-text-color);
+    }
+
+    .sleek-toggle {
+      --background: rgba(255, 255, 255, 0.1);
+      --handle-background: var(--ion-color-medium);
+      --background-checked: var(--ion-color-primary);
+      --handle-background-checked: #fff;
+      padding: 0;
+    }
+  }
 
   .role-toggle {
     margin-bottom: 1rem;
@@ -591,13 +790,6 @@ onMounted(() => {
   }
 }
 
-.voice-actors-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.5rem;
-}
-
 .grouped-roles-list {
   display: flex;
   flex-direction: column;
@@ -608,7 +800,9 @@ onMounted(() => {
     border-radius: 8px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     overflow: hidden;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
 
     &:active {
       transform: translateY(1px);
@@ -664,9 +858,4 @@ onMounted(() => {
   }
 }
 
-.custom-searchbar {
-  --box-shadow: none;
-  --background: var(--ion-color-light);
-  padding: 8px 16px;
-}
 </style>

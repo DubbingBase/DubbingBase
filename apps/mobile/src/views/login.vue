@@ -4,7 +4,9 @@
       <ion-toolbar color="primary">
         <ion-title>{{ isRegister ? 'Créer un compte' : 'Connexion' }}</ion-title>
         <ion-buttons slot="start">
-          <ion-back-button :default-href="{ name: 'Home' }" />
+          <button @click="router.back()" class="custom-back-button">
+            &larr;
+          </button>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
@@ -36,9 +38,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { useIonRouter } from '@ionic/vue';
-import { useRoute } from 'vue-router';
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonLabel, IonInput, IonButton, IonText, IonButtons, IonBackButton, toastController } from '@ionic/vue';
+import { useRouter, useRoute } from 'vue-router';
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonLabel, IonInput, IonButton, IonText, IonButtons, toastController } from '@ionic/vue';
 import { useAuthStore } from '@/stores/auth';
 
 const email = ref('');
@@ -48,7 +49,7 @@ const loading = ref(false);
 const isRegister = ref(false);
 
 const authStore = useAuthStore();
-const ionRouter = useIonRouter();
+const router = useRouter();
 const route = useRoute();
 
 // Handle redirect after successful login
@@ -59,9 +60,9 @@ const handleSuccessfulAuth = () => {
 
   // Ensure we don't redirect back to login
   if (redirectPath === '/login') {
-    ionRouter.push('/tabs/home');
+    router.push('/tabs/home');
   } else {
-    ionRouter.push(redirectPath);
+    router.push(redirectPath as string);
   }
 };
 
@@ -127,6 +128,15 @@ const register = async () => {
 
 
 <style scoped>
+.custom-back-button {
+  background: transparent;
+  color: white;
+  border: none;
+  font-size: 24px;
+  padding: 0 16px;
+  cursor: pointer;
+}
+
 .ion-padding {
   padding: 2rem;
 }

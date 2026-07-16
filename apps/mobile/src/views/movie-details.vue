@@ -3,7 +3,9 @@
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-back-button :default-href="{ name: 'Home' }" />
+          <button @click="router.back()" class="custom-back-button">
+            &larr;
+          </button>
         </ion-buttons>
         <ion-title>{{ movie?.title ?? "" }}</ion-title>
 
@@ -87,11 +89,11 @@ import {
   IonIcon,
   toastController,
   IonToast,
-  onIonViewDidEnter,
+
   IonRefresher,
   IonRefresherContent,
 } from "@ionic/vue";
-import { computed, ref, UnwrapRef } from "vue";
+import { computed, ref, UnwrapRef, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { pencil } from "ionicons/icons";
 import { MovieResponse } from "@supabase/functions/_shared/movie";
@@ -508,7 +510,8 @@ const fetchMovieData = async () => {
 //   }
 // };
 
-onIonViewDidEnter(async () => {
+watch(() => route.params.id, async (newId) => {
+  if (!newId) return;
   isLoading.value = true;
   fetchError.value = "";
   try {
@@ -522,5 +525,15 @@ onIonViewDidEnter(async () => {
   } finally {
     isLoading.value = false;
   }
-});
+}, { immediate: true });
 </script>
+<style scoped>
+.custom-back-button {
+  background: transparent;
+  color: white;
+  border: none;
+  font-size: 24px;
+  padding: 0 16px;
+  cursor: pointer;
+}
+</style>
