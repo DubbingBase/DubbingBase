@@ -1,5 +1,13 @@
 # @app/website
 
+## 0.0.21
+
+### Patch Changes
+
+- sd
+- Updated dependencies
+  - @app/locales@0.0.4
+
 ## 0.0.20
 
 ### Patch Changes
