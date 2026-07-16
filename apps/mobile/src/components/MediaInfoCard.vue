@@ -24,6 +24,14 @@
         <span v-if="(media as MovieType).runtime && !(media as SerieType).first_air_date">⏱ {{ (media as MovieType).runtime }} min</span>
         <span v-if="media.original_language">🌐 {{ media.original_language.toUpperCase() }}</span>
         <span v-if="media.release_date || (media as SerieType).first_air_date">📅 {{ media.release_date || (media as SerieType).first_air_date }}</span>
+        <a 
+          v-if="media.external_ids?.wikidata_id" 
+          :href="`https://hub.toolforge.org/${media.external_ids.wikidata_id}?site=enwiki`" 
+          target="_blank" 
+          class="wikidata-link"
+        >
+          📖 {{ media.external_ids.wikidata_id }}
+        </a>
       </div>
     </div>
   </div>
@@ -44,6 +52,7 @@ type MovieType = {
   release_date?: string;
   runtime?: number;
   genres?: { id: number; name: string }[];
+  external_ids?: { wikidata_id?: string };
 };
 
 type SerieType = {
@@ -153,5 +162,17 @@ defineProps<Props>();
   gap: 18px;
   color: #aaa;
   font-size: 0.95rem;
+}
+
+.wikidata-link {
+  color: #3880ff;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.wikidata-link:hover {
+  text-decoration: underline;
 }
 </style>

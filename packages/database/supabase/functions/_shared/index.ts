@@ -40,19 +40,3 @@ export type {
 export { CACHE_TTL } from "./cache-utils.ts";
 export { CACHE_KEYS, SimpleKeyBuilder } from "./cache-constants.ts";
 
-// Export trending processor utilities
-export {
-  fetchTrendingMedia,
-  generateSummary,
-  processMediaItems,
-  processTrendingMedia,
-  sendNotification,
-  validateEnvironment,
-} from "./trending-processor.ts";
-
-export type {
-  MediaItem,
-  ProcessingResult,
-  TrendingProcessorConfig,
-  TrendingProcessorResult,
-} from "./trending-processor.ts";

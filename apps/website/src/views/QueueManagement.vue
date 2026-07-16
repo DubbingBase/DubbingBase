@@ -305,12 +305,6 @@ const retryFetch = async (item: QueueItem) => {
   showToast("Processing media import request...", "info");
 
   try {
-    // Delete the old request first since it is being re-run
-    const { error: delErr } = await supabase.rpc("delete_media_queue_item", { p_id: item.id });
-    if (delErr) {
-      console.warn("Could not delete old queue item, proceeding anyway:", delErr);
-    }
-
     await enqueueAndProcessMedia({
       tmdbId: item.tmdb_id,
       mediaType: item.media_type,
@@ -318,8 +312,20 @@ const retryFetch = async (item: QueueItem) => {
       episodeNumber: item.episode_number,
     });
 
+    // Update the old request status to completed
+    const { error: updErr } = await supabase.rpc("update_media_queue_item_status", { p_msg_id: item.id });
+    if (updErr) {
+      console.warn("Could not update queue item status:", updErr);
+    }
+
     showToast("Import completed successfully!", "success");
   } catch (err: any) {
+    // Update the old request status to failed with the new error message
+    const { error: updErr } = await supabase.rpc("update_media_queue_item_status", { p_msg_id: item.id, p_error: err.message || "Unknown error" });
+    if (updErr) {
+      console.warn("Could not update queue item status:", updErr);
+    }
+
     console.error("Error retrying fetch:", err);
     showToast(err.message || "Failed to import media.", "error");
   } finally {

@@ -93,6 +93,7 @@
         :queue-status="queueStatus"
         :queue-error-message="queueErrorMessage"
         @fetch-infos="fetchInfos"
+        @enqueue="handleEnqueue"
         @take-photo="takePhoto"
       />
 
@@ -151,7 +152,7 @@ import SolarSettingsMinimalisticOutline from "~icons/solar/settings-minimalistic
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
 import { supabase } from "@/api/supabase";
-import { enqueueAndProcessMedia } from "@/api/mediaQueue";
+import { enqueueAndProcessMedia, enqueueMedia } from "@/api/mediaQueue";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { actorToPersonData, voiceActorToPersonData } from "@/utils/convert";
 import { Role } from "@/components/PersonItem.vue";
@@ -415,6 +416,48 @@ const handleRefresh = async (event: any) => {
     console.error("Error refreshing serie data:", error);
   } finally {
     event.target.complete();
+  }
+};
+
+const handleEnqueue = async () => {
+  console.log("handleEnqueue called in serie-details");
+  if (!wikiDataId.value) {
+    console.log("wikiDataId is null, returning early");
+    return;
+  }
+
+  isFetching.value = true;
+  fetchError.value = "";
+  console.log("Calling enqueueMedia for TMDB ID", route.params.id);
+
+  try {
+    await enqueueMedia({
+      tmdbId: Number(route.params.id),
+      mediaType: "tv",
+    });
+    
+    // Refresh queue status to show it's pending
+    await fetchQueueStatus();
+    
+    const toast = await toastController.create({
+      message: "Added to processing queue! It will be processed automatically.",
+      duration: 3000,
+      position: "top",
+      color: "success",
+    });
+    await toast.present();
+  } catch (err) {
+    console.error("Error enqueuing media:", err);
+    fetchError.value = "Failed to add to queue.";
+    const toast = await toastController.create({
+      message: "Queue addition failed. Please try again.",
+      duration: 3000,
+      position: "top",
+      color: "danger",
+    });
+    await toast.present();
+  } finally {
+    isFetching.value = false;
   }
 };
 

@@ -397,10 +397,7 @@ verify_jwt = false
 [functions.prepare-trending-media]
 verify_jwt = false
 
-[functions.prepare-trending-shows]
-verify_jwt = false
-
-[functions.prepare_movie]
+[functions.prepare_media]
 verify_jwt = false
 
 [functions.prepare_voice_actor]

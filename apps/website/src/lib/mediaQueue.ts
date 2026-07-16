@@ -9,7 +9,7 @@ export async function enqueueAndProcessMedia(params: {
   seasonNumber?: number | null;
   episodeNumber?: number | null;
 }): Promise<void> {
-  const { data, error } = await supabase.functions.invoke("prepare_movie", {
+  const { data, error } = await supabase.functions.invoke("prepare_media", {
     body: {
       tmdbId: params.tmdbId,
       type: params.mediaType,

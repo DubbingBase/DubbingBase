@@ -14,7 +14,7 @@ export async function enqueueAndProcessMedia(params: {
   seasonNumber?: number | null;
   episodeNumber?: number | null;
 }): Promise<void> {
-  const { data, error } = await supabase.functions.invoke("prepare_movie", {
+  const { data, error } = await supabase.functions.invoke("prepare_media", {
     body: {
       tmdbId: params.tmdbId,
       type: params.mediaType,
@@ -29,5 +29,36 @@ export async function enqueueAndProcessMedia(params: {
 
   if (data && !data.ok) {
     throw new Error(data.error || "Failed to prepare media");
+  }
+}
+
+/**
+ * Enqueue a media fetch request without processing it immediately.
+ * The background cron worker will pick it up later.
+ */
+export async function enqueueMedia(params: {
+  tmdbId: number;
+  mediaType: string;
+  seasonNumber?: number | null;
+  episodeNumber?: number | null;
+}): Promise<void> {
+  const { error } = await supabase.rpc("enqueue_media_fetch", {
+    p_tmdb_id: params.tmdbId,
+    p_media_type: params.mediaType,
+    p_season_number: params.seasonNumber ?? undefined,
+    p_episode_number: params.episodeNumber ?? undefined,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  // In development mode (where there is no pg_cron), manually trigger the 
+  // queue processor so the item is picked up right away. We do this as a 
+  // fire-and-forget call to avoid blocking the UI.
+  if (import.meta.env.DEV) {
+    supabase.functions.invoke("process-media-queue").catch((err) => {
+      console.error("Failed to trigger process-media-queue in dev:", err);
+    });
   }
 }
