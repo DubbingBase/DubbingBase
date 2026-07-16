@@ -14,10 +14,12 @@
       </ion-toolbar>
     </ion-header>
     <ion-content>
+      <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
+        <ion-refresher-content></ion-refresher-content>
+      </ion-refresher>
       <LoadingSpinner
         v-if="loading"
         :overlay="true"
-        text="Loading voice actor..."
       />
 
       <div v-if="!loading && voiceActor" class="actor">
@@ -81,6 +83,8 @@ import {
   IonSearchbar,
   IonFab,
   IonFabButton,
+  IonRefresher,
+  IonRefresherContent,
 } from "@ionic/vue";
 import { create, globeOutline } from "ionicons/icons";
 import type { Movie as MovieModel } from "@supabase/functions/_shared/movie";
@@ -321,6 +325,20 @@ const onProfilePictureChanged = (newImagePath: string) => {
 };
 
 onMounted(async () => {
+  await loadVoiceActorData();
+});
+
+const handleRefresh = async (event: any) => {
+  try {
+    await loadVoiceActorData();
+  } catch (error) {
+    console.error("Error refreshing data:", error);
+  } finally {
+    event.target.complete();
+  }
+};
+
+const loadVoiceActorData = async () => {
   loading.value = true;
 
   const id = route.params.id;
@@ -395,7 +413,7 @@ onMounted(async () => {
     console.log("baseEnhancedWork after update:", baseEnhancedWork.value);
     console.log("enhancedWork after update:", enhancedWork.value);
   }, 100);
-});
+};
 </script>
 
 <style scoped lang="scss">

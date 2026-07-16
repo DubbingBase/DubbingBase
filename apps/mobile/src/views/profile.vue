@@ -12,11 +12,14 @@
     </ion-header>
 
     <ion-content :fullscreen="true">
+      <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
+        <ion-refresher-content></ion-refresher-content>
+      </ion-refresher>
       <div
         v-if="profileStore.isLoadingProfile && !profileStore.isUpdating"
         class="loading-container"
       >
-        <LoadingSpinner name="crescent" text="Chargement du profil..." />
+        <LoadingSpinner name="crescent" />
       </div>
 
       <div v-else-if="profileStore.profileError" class="error-container">
@@ -295,6 +298,9 @@ import {
   IonModal,
   IonButtons,
   IonNote,
+  IonSelectOption,
+  IonRefresher,
+  IonRefresherContent,
 } from "@ionic/vue";
 import { useProfileStore } from "@/stores/profile";
 import { useAuthStore } from "@/stores/auth";
@@ -420,6 +426,16 @@ onMounted(async () => {
   // Set default tab to user profile
   selectedTab.value = "user-profile";
 });
+
+const handleRefresh = async (event: any) => {
+  try {
+    await profileStore.fetchProfile({});
+  } catch (error) {
+    console.error("Error refreshing profile:", error);
+  } finally {
+    event.target.complete();
+  }
+};
 
 watch(
   () => profileStore.voiceActors,

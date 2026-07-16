@@ -6,7 +6,6 @@
         :color="props.color"
         :size="props.size"
       ></ion-spinner>
-      <span v-if="props.text" class="loading-text">{{ props.text }}</span>
     </div>
   </div>
   <div v-else class="loading-container" :class="{ 'inline': props.inline }">
@@ -15,7 +14,6 @@
       :color="props.color"
       :size="props.size"
     ></ion-spinner>
-    <span v-if="props.text" class="loading-text">{{ props.text }}</span>
   </div>
 </template>
 
@@ -26,7 +24,6 @@ interface Props {
   name?: 'crescent' | 'bubbles' | 'circles' | 'circular' | 'dots' | 'lines' | 'lines-small' | 'lines-sharp' | 'lines-sharp-small'
   color?: string
   size?: string
-  text?: string
   inline?: boolean
   overlay?: boolean
 }
@@ -35,7 +32,6 @@ const props = withDefaults(defineProps<Props>(), {
   name: 'crescent',
   color: 'primary',
   size: undefined,
-  text: '',
   inline: false,
   overlay: false
 })
@@ -66,6 +62,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 .loading-container.inline {
   flex-direction: row;
+  min-height: auto;
   gap: 0.5rem;
 }
 

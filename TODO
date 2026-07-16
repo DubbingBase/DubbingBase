@@ -1,19 +1,12 @@
-filter bar to search inside the movie cast to search for "woody" or "tom hanks" or "richard darbois"
-fix search
-fix seqrch populqrity
-fix linking voice actor from a show (check if it works for movie first)
-add pull to refresh
-fix profiles
-add gamification
-add "untrusted" work
-add votes to trust work
-remove all text with loading indicators
-add skeleton loaders
-center loading indicators
-ensure cache is working
 remove ion router
 implement view transitions
 remove ionic entirely
 make things fast
 suivre un doubleur (notifications)
 how do i push notifications
+when loading fast, images have a white border/outline
+voice actor request is very slow: it's because there is a tmdb outage
+add votes to trust work
+add "untrusted" work
+add gamification
+add skeleton loaders

@@ -16,7 +16,7 @@
 
     <ion-content :fullscreen="true">
       <div v-if="profileStore.isLoadingProfile && !profileStore.isUpdating" class="loading-container">
-        <LoadingSpinner name="crescent" text="Loading voice actor profile..." />
+        <LoadingSpinner name="crescent" />
       </div>
 
       <div v-else-if="profileStore.profileError" class="error-container">

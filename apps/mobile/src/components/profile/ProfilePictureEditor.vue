@@ -30,7 +30,7 @@
     />
 
     <div v-if="isUploading" class="upload-status">
-      <LoadingSpinner name="crescent" size="small" text="Upload en cours..." :inline="true"></LoadingSpinner>
+      <LoadingSpinner name="crescent" size="small" :inline="true"></LoadingSpinner>
     </div>
   </div>
 </template>

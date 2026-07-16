@@ -6,6 +6,9 @@
       </ion-toolbar>
     </ion-header>
     <ion-content :fullscreen="true">
+      <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
+        <ion-refresher-content></ion-refresher-content>
+      </ion-refresher>
       <ion-header collapse="condense">
         <ion-toolbar>
           <ion-title size="large">{{ t('home.welcome') }}</ion-title>
@@ -154,7 +157,7 @@ import type { TrendingResponse as SerieTrendingResponse } from "@supabase/functi
 import type { Tables } from "@/utils/database";
 import MediaItem from "../components/MediaItem.vue";
 import { supabase } from "../api/supabase";
-import { IonPage, IonContent, IonHeader, IonTitle, IonToolbar } from "@ionic/vue";
+import { IonPage, IonContent, IonHeader, IonTitle, IonToolbar, IonRefresher, IonRefresherContent } from "@ionic/vue";
 
 const { t } = useI18n();
 
@@ -171,7 +174,7 @@ const errorSeries = ref("");
 const errorVoiceActors = ref("");
 const errorTopVoiceActors = ref("");
 
-onMounted(() => {
+const loadHomeData = async () => {
   isLoadingMovies.value = true;
   isLoadingSeries.value = true;
   isLoadingVoiceActors.value = true;
@@ -181,62 +184,73 @@ onMounted(() => {
   errorVoiceActors.value = "";
   errorTopVoiceActors.value = "";
 
-  // Fetch movies in parallel
-  supabase.functions.invoke("trending-movies")
-    .then((res) => {
-      if (res.error) throw new Error(res.error.message || "Erreur inconnue");
-      trendingMovies.value = res.data.results || [];
-    })
-    .catch((e) => {
-      errorMovies.value = e.message || "Erreur lors du chargement des films.";
-      trendingMovies.value = [];
-    })
-    .finally(() => {
-      isLoadingMovies.value = false;
-    });
+  await Promise.allSettled([
+    // Fetch movies in parallel
+    supabase.functions.invoke("trending-movies")
+      .then((res) => {
+        if (res.error) throw new Error(res.error.message || "Erreur inconnue");
+        trendingMovies.value = res.data.results || [];
+      })
+      .catch((e) => {
+        errorMovies.value = e.message || "Erreur lors du chargement des films.";
+        trendingMovies.value = [];
+      })
+      .finally(() => {
+        isLoadingMovies.value = false;
+      }),
 
-  // Fetch series in parallel
-  supabase.functions.invoke("trending-shows")
-    .then((res) => {
-      if (res.error) throw new Error(res.error.message || "Erreur inconnue");
-      trendingSeries.value = res.data.results || [];
-    })
-    .catch((e) => {
-      errorSeries.value = e.message || "Erreur lors du chargement des séries.";
-      trendingSeries.value = [];
-    })
-    .finally(() => {
-      isLoadingSeries.value = false;
-    });
+    // Fetch series in parallel
+    supabase.functions.invoke("trending-shows")
+      .then((res) => {
+        if (res.error) throw new Error(res.error.message || "Erreur inconnue");
+        trendingSeries.value = res.data.results || [];
+      })
+      .catch((e) => {
+        errorSeries.value = e.message || "Erreur lors du chargement des séries.";
+        trendingSeries.value = [];
+      })
+      .finally(() => {
+        isLoadingSeries.value = false;
+      }),
 
-  // Fetch recent voice actors in parallel
-  supabase.functions.invoke("recent-voice-actors", { body: { limit: 10 } })
-    .then((res) => {
-      if (res.error) throw new Error(res.error.message || "Erreur inconnue");
-      recentVoiceActors.value = res.data || [];
-    })
-    .catch((e) => {
-      errorVoiceActors.value = e.message || "Erreur lors du chargement des voix récentes.";
-      recentVoiceActors.value = [];
-    })
-    .finally(() => {
-      isLoadingVoiceActors.value = false;
-    });
+    // Fetch recent voice actors in parallel
+    supabase.functions.invoke("recent-voice-actors", { body: { limit: 10 } })
+      .then((res) => {
+        if (res.error) throw new Error(res.error.message || "Erreur inconnue");
+        recentVoiceActors.value = res.data || [];
+      })
+      .catch((e) => {
+        errorVoiceActors.value = e.message || "Erreur lors du chargement des voix récentes.";
+        recentVoiceActors.value = [];
+      })
+      .finally(() => {
+        isLoadingVoiceActors.value = false;
+      }),
 
-  // Fetch top voice actors in parallel
-  supabase.functions.invoke("top-voice-actors", { body: { limit: 10 } })
-    .then((res) => {
-      if (res.error) throw new Error(res.error.message || "Erreur inconnue");
-      topVoiceActors.value = res.data || [];
-    })
-    .catch((e) => {
-      errorTopVoiceActors.value = e.message || "Erreur lors du chargement des top doubleurs.";
-      topVoiceActors.value = [];
-    })
-    .finally(() => {
-      isLoadingTopVoiceActors.value = false;
-    });
+    // Fetch top voice actors in parallel
+    supabase.functions.invoke("top-voice-actors", { body: { limit: 10 } })
+      .then((res) => {
+        if (res.error) throw new Error(res.error.message || "Erreur inconnue");
+        topVoiceActors.value = res.data || [];
+      })
+      .catch((e) => {
+        errorTopVoiceActors.value = e.message || "Erreur lors du chargement des top doubleurs.";
+        topVoiceActors.value = [];
+      })
+      .finally(() => {
+        isLoadingTopVoiceActors.value = false;
+      })
+  ]);
+};
+
+onMounted(() => {
+  loadHomeData();
 });
+
+const handleRefresh = async (event: any) => {
+  await loadHomeData();
+  event.target.complete();
+};
 </script>
 
 <style scoped lang="scss">

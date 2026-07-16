@@ -9,6 +9,9 @@
       </ion-toolbar>
     </ion-header>
     <ion-content>
+      <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
+        <ion-refresher-content></ion-refresher-content>
+      </ion-refresher>
       <div class="actor">
         <div class="header" v-if="actor">
           <img :src="actor.profile_picture" alt="" />
@@ -140,11 +143,7 @@
         </div>
       </div>
 
-      <!-- Loading State -->
-      <div v-if="loading" class="loading-container">
-        <ion-spinner name="crescent"></ion-spinner>
-        <p>{{ t("common.loading") }}</p>
-      </div>
+      <LoadingSpinner v-if="loading" />
 
       <!-- Error State -->
       <div v-if="error && !loading" class="error-container">
@@ -175,7 +174,8 @@ import {
   IonSegmentView,
   IonSegmentContent,
   IonContent,
-  IonSpinner,
+  IonRefresher,
+  IonRefresherContent,
   IonButton,
   IonSearchbar,
 } from "@ionic/vue";
@@ -186,6 +186,7 @@ import { actorToPersonData, voiceActorToPersonData } from "@/utils/convert";
 import { PersonData } from "@/components/PersonItem.vue";
 import PersonItem from "@/components/PersonItem.vue";
 import MovieCard from "@/components/MovieCard.vue";
+import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 
 const { t } = useI18n();
 
@@ -390,6 +391,16 @@ async function loadActorData() {
     loading.value = false;
   }
 }
+
+const handleRefresh = async (event: any) => {
+  try {
+    await loadActorData();
+  } catch (err) {
+    console.error("Error refreshing data:", err);
+  } finally {
+    event.target.complete();
+  }
+};
 
 function retryLoad() {
   loadActorData();
