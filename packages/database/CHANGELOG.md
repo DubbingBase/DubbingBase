@@ -1,5 +1,11 @@
 # @app/supabase
 
+## 0.0.23
+
+### Patch Changes
+
+- 1438dc4: sd
+
 ## 0.0.22
 
 ### Patch Changes

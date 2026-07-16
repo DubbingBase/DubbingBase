@@ -1,5 +1,11 @@
 # @app/locales
 
+## 0.0.5
+
+### Patch Changes
+
+- 1438dc4: sd
+
 ## 0.0.4
 
 ### Patch Changes
