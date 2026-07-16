@@ -3,9 +3,7 @@
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <button @click="router.back()" class="custom-back-button">
-            &larr;
-          </button>
+          <AppBackButton />
         </ion-buttons>
         <ion-title>Voix</ion-title>
         <ion-buttons slot="end">
@@ -71,6 +69,7 @@
 import Pencil from '~icons/lucide/pencil';
 import Globe from '~icons/lucide/globe';
 import { computed, onMounted, ref, getCurrentInstance } from "vue";
+import AppBackButton from "@/components/common/AppBackButton.vue";
 import { useRoute, useRouter } from "vue-router";
 // Admin check: get user from supabase.auth and check for admin role
 import type { Serie as SerieModel } from "@supabase/functions/_shared/serie";
@@ -405,16 +404,7 @@ const loadVoiceActorData = async () => {
 };
 </script>
 
-<style scoped>
-.custom-back-button {
-  background: transparent;
-  color: white;
-  border: none;
-  font-size: 24px;
-  padding: 0 16px;
-  cursor: pointer;
-}
-</style>
+
 
 <style scoped lang="scss">
 

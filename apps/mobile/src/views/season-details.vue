@@ -3,9 +3,7 @@
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <button @click="router.back()" class="custom-back-button">
-            &larr;
-          </button>
+          <AppBackButton />
         </ion-buttons>
         <ion-title>{{ season?.name || "Détails de la saison" }}</ion-title>
       </ion-toolbar>
@@ -66,6 +64,7 @@
 
 <script lang="ts" setup>
 import { ref, computed, watch } from "vue";
+import AppBackButton from "@/components/common/AppBackButton.vue";
 import { useRoute, useRouter } from "vue-router";
 import { IonPage, IonHeader, IonToolbar, IonButtons, IonBackButton, IonTitle, IonContent, IonSegment, IonSegmentButton, toastController, IonRefresher, IonRefresherContent } from '@ionic/vue';
 import { supabase } from "../api/supabase";
@@ -258,13 +257,4 @@ async function fetchData() {
 watch(() => route.params.season, fetchData, { immediate: true });
 </script>
 
-<style lang="scss" scoped>
-.custom-back-button {
-  background: transparent;
-  color: white;
-  border: none;
-  font-size: 24px;
-  padding: 0 16px;
-  cursor: pointer;
-}
-</style>
+

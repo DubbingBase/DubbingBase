@@ -3,9 +3,7 @@
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <button @click="router.back()" class="custom-back-button">
-            &larr;
-          </button>
+          <AppBackButton />
         </ion-buttons>
         <ion-title>{{ $t('profile.voiceActorProfile') }}</ion-title>
         <ion-buttons slot="end">
@@ -99,6 +97,7 @@ import RefreshCw from '~icons/lucide/refresh-cw';
 import Plus from '~icons/lucide/plus';
 import UserCircle from '~icons/lucide/user-circle';
 import { onMounted, watch, computed, ref } from 'vue'
+import AppBackButton from '@/components/common/AppBackButton.vue'
 import { useRoute, useRouter } from 'vue-router'
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonList, IonItem, IonInput, IonTextarea, IonModal, IonButtons } from '@ionic/vue';
 import { useProfileStore } from '@/stores/profile'
@@ -233,14 +232,7 @@ const openPublicProfile = () => {
 </script>
 
 <style scoped>
-.custom-back-button {
-  background: transparent;
-  color: white;
-  border: none;
-  font-size: 24px;
-  padding: 0 16px;
-  cursor: pointer;
-}
+
 .loading-container,
 .error-container,
 .no-profile-container {

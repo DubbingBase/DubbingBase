@@ -3,9 +3,7 @@
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <button @click="router.back()" class="custom-back-button">
-            &larr;
-          </button>
+          <AppBackButton />
         </ion-buttons>
         <ion-title>{{ movie?.title ?? "" }}</ion-title>
 
@@ -69,6 +67,7 @@
 <script setup lang="ts">
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons, IonButton, toastController, IonToast, IonRefresher, IonRefresherContent } from '@ionic/vue';
 import { computed, ref, UnwrapRef, watch } from "vue";
+import AppBackButton from "@/components/common/AppBackButton.vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { MovieResponse } from "@supabase/functions/_shared/movie";
@@ -502,13 +501,4 @@ watch(() => route.params.id, async (newId) => {
   }
 }, { immediate: true });
 </script>
-<style scoped>
-.custom-back-button {
-  background: transparent;
-  color: white;
-  border: none;
-  font-size: 24px;
-  padding: 0 16px;
-  cursor: pointer;
-}
-</style>
+

@@ -3,9 +3,7 @@
     <ion-header class="header">
       <ion-toolbar class="toolbar">
         <ion-buttons slot="start">
-          <button @click="router.back()" class="custom-back-button">
-            &larr;
-          </button>
+          <AppBackButton />
         </ion-buttons>
         <ion-title>{{ show?.name || "Détails de la série" }}</ion-title>
         <ion-buttons slot="end">
@@ -111,6 +109,7 @@ import Radio from '~icons/lucide/radio';
 import { IonPage, IonContent, IonSegment, IonHeader, IonToolbar, IonButtons, IonBackButton, IonSegmentButton, IonSegmentContent, IonSegmentView, toastController, IonTitle, IonButton, IonToast, IonRefresher, IonRefresherContent } from '@ionic/vue';
 import { ref, computed, UnwrapRef, watch } from "vue";
 import { useRoute } from "vue-router";
+import AppBackButton from "@/components/common/AppBackButton.vue";
 import { useRouter } from "vue-router";
 import { format } from "date-fns";
 import MediaThumbnail from "@/components/MediaThumbnail.vue";
@@ -513,16 +512,7 @@ const goToActor = (id: number) => {
 };
 </script>
 
-<style scoped>
-.custom-back-button {
-  background: transparent;
-  color: white;
-  border: none;
-  font-size: 24px;
-  padding: 0 16px;
-  cursor: pointer;
-}
-</style>
+
 
 <style scoped lang="scss">
 $coverHeight: 150px;

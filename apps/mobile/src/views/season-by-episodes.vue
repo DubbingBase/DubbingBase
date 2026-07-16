@@ -3,9 +3,7 @@
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <button @click="router.back()" class="custom-back-button">
-            &larr;
-          </button>
+          <AppBackButton />
         </ion-buttons>
         <ion-title>{{ episode?.name || 'Détail de l\'épisode' }}</ion-title>
       </ion-toolbar>
@@ -38,6 +36,7 @@
 
 <script lang="ts" setup>
 import { ref, computed, watch } from "vue";
+import AppBackButton from "@/components/common/AppBackButton.vue";
 import { useRoute, useRouter } from "vue-router";
 import { IonPage, IonHeader, IonToolbar, IonButtons, IonBackButton, IonTitle, IonContent, toastController, IonRefresher, IonRefresherContent } from '@ionic/vue';
 import LoadingSpinner from "../components/common/LoadingSpinner.vue";
@@ -200,14 +199,7 @@ watch(() => route.params.episode, async (newEpisode) => {
 </script>
 
 <style lang="scss" scoped>
-.custom-back-button {
-  background: transparent;
-  color: white;
-  border: none;
-  font-size: 24px;
-  padding: 0 16px;
-  cursor: pointer;
-}
+
 .voices {
   margin-top: 1.5rem;
   h3 {
