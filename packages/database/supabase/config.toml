@@ -460,3 +460,5 @@ verify_jwt = false
 [functions.request-voice-actor-page]
 verify_jwt = true
 
+[functions.extract-voice-actor-info]
+verify_jwt = false
