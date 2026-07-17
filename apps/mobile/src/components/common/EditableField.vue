@@ -2,35 +2,37 @@
   <div class="editable-field">
     <div v-if="!isEditing" class="display-mode" @click="startEditing">
       <span class="field-value">{{ displayValue || placeholder }}</span>
-      <ion-button fill="clear" size="small">
+      <AppButton fill="clear" size="small">
         <Pencil class="app-icon"  color="medium" />
-      </ion-button>
+      </AppButton>
     </div>
 
     <div v-else class="edit-mode">
-      <ion-input
+      <AppInput
         ref="inputRef"
         v-model="editValue"
         :type="type"
         :placeholder="placeholder"
         @keyup.enter="save"
         @keyup.escape="cancel"
-      ></ion-input>
+      ></AppInput>
       <div class="edit-actions">
-        <ion-button fill="clear" size="small" @click="save">
+        <AppButton fill="clear" size="small" @click="save">
           <Check class="app-icon"  color="success" />
-        </ion-button>
-        <ion-button fill="clear" size="small" @click="cancel">
+        </AppButton>
+        <AppButton fill="clear" size="small" @click="cancel">
           <X class="app-icon"  color="danger" />
-        </ion-button>
+        </AppButton>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import AppButton from '@/components/common/AppButton.vue';
+import AppInput from '@/components/common/AppInput.vue';
 import { ref, computed, nextTick } from 'vue'
-import { IonInput, IonButton } from '@ionic/vue';
+
 
 interface Props {
   modelValue: string

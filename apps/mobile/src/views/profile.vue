@@ -4,9 +4,9 @@
       <ion-toolbar>
         <ion-title>{{ $t("profile.userProfile") }}</ion-title>
         <ion-buttons slot="end" v-if="authStore.isAdmin">
-          <ion-button @click="showAdminSearch = true">
+          <AppButton @click="showAdminSearch = true">
             <Search class="app-icon" />
-          </ion-button>
+          </AppButton>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
@@ -26,10 +26,10 @@
         <RefreshCw class="app-icon" />
         <h3>{{ getErrorTitle(profileStore.profileError.type) }}</h3>
         <p>{{ profileStore.profileError.message }}</p>
-        <ion-button v-if="profileStore.profileError.type === 'fetch'" @click="retryLoadProfile" fill="outline">
+        <AppButton v-if="profileStore.profileError.type === 'fetch'" @click="retryLoadProfile" fill="outline">
           <RefreshCw class="app-icon" />
           {{ $t("profile.retry") }}
-        </ion-button>
+        </AppButton>
       </div>
 
       <div v-else class="profile-content">
@@ -61,19 +61,19 @@
             <ion-toolbar>
               <ion-title>{{ $t("profile.adminSearch") }}</ion-title>
               <ion-buttons slot="end">
-                <ion-button @click="showAdminSearch = false">{{
+                <AppButton @click="showAdminSearch = false">{{
                   $t("common.close")
-                }}</ion-button>
+                }}</AppButton>
               </ion-buttons>
             </ion-toolbar>
           </ion-header>
           <ion-content>
             <div class="admin-search">
-              <ion-searchbar
+              <AppSearchbar
                 v-model="adminSearchQuery"
                 :placeholder="$t('profile.searchVoiceActorPlaceholder')"
                 @ionInput="handleAdminSearch"
-              ></ion-searchbar>
+              ></AppSearchbar>
 
               <div v-if="adminSearchResults.length > 0" class="search-results">
                 <ion-list>
@@ -113,42 +113,42 @@
             <div class="user-profile-form">
               <ion-list>
                 <ion-item>
-                  <ion-textarea
+                  <AppTextarea
                     :label="$t('profile.biography')"
                     label-placement="stacked"
                     v-model="profileStore.userProfileData.bio"
                     :auto-grow="true"
                     :placeholder="$t('profile.tellUsAboutYourself')"
-                  ></ion-textarea>
+                  ></AppTextarea>
                 </ion-item>
                 <ion-item v-if="userProfileErrors.includes('Bio must be less than 1000 characters')" class="validation-error">
                   <ion-note color="danger">{{ $t("profile.bioTooLong") }}</ion-note>
                 </ion-item>
                 <ion-item>
-                  <ion-input
+                  <AppInput
                     :label="$t('profile.nationality')"
                     label-placement="stacked"
                     v-model="profileStore.userProfileData.nationality"
                     :placeholder="$t('profile.exFrench')"
-                  ></ion-input>
+                  ></AppInput>
                 </ion-item>
                 <ion-item v-if="userProfileErrors.includes('Nationality must contain only letters and spaces')" class="validation-error">
                   <ion-note color="danger">{{ $t("profile.nationalityInvalid") }}</ion-note>
                 </ion-item>
                 <ion-item>
-                  <ion-input
+                  <AppInput
                     type="date"
                     :label="$t('profile.dateOfBirth')"
                     label-placement="stacked"
                     v-model="profileStore.userProfileData.date_of_birth"
-                  ></ion-input>
+                  ></AppInput>
                 </ion-item>
                 <ion-item v-if="userProfileErrors.includes('Date of birth must be in YYYY-MM-DD format')" class="validation-error">
                   <ion-note color="danger">{{ $t("profile.dateOfBirthInvalid") }}</ion-note>
                 </ion-item>
               </ion-list>
 
-              <ion-button
+              <AppButton
                 expand="block"
                 @click="handleSave()"
                 :disabled="profileStore.isUpdating"
@@ -159,7 +159,7 @@
                   inline
                 />
                 {{ $t("profile.saveChanges") }}
-              </ion-button>
+              </AppButton>
 
               <!-- Request a Voice Actor Page -->
               <RequestVoiceActorCard /></div>
@@ -182,80 +182,80 @@
                     <h3>{{ $t("profile.impersonatingUser") }}</h3>
                     <p>{{ profileStore.currentVoiceActor?.firstname }} {{ profileStore.currentVoiceActor?.lastname }}</p>
                   </AppText>
-                  <ion-button
+                  <AppButton
                     slot="end"
                     fill="clear"
                     @click="exitImpersonation"
                   >
                     {{ $t("profile.exitImpersonation") }}
-                  </ion-button>
+                  </AppButton>
                 </ion-item>
               </div>
 
               <ion-list>
                 <ion-item>
-                  <ion-input
+                  <AppInput
                     :label="$t('profile.firstName')"
                     label-placement="stacked"
                     v-model="profileStore.currentVoiceActor.firstname"
-                  ></ion-input>
+                  ></AppInput>
                 </ion-item>
                 <ion-item>
-                  <ion-input
+                  <AppInput
                     :label="$t('profile.lastName')"
                     label-placement="stacked"
                     v-model="profileStore.currentVoiceActor.lastname"
-                  ></ion-input>
+                  ></AppInput>
                 </ion-item>
                 <ion-item>
-                  <ion-textarea
+                  <AppTextarea
                     :label="$t('profile.biography')"
                     label-placement="stacked"
                     v-model="profileStore.currentVoiceActor.bio"
                     :auto-grow="true"
-                  ></ion-textarea>
+                  ></AppTextarea>
                 </ion-item>
                 <ion-item v-if="voiceActorErrors.includes('Bio must be less than 1000 characters')" class="validation-error">
                   <ion-note color="danger">{{ $t("profile.bioTooLong") }}</ion-note>
                 </ion-item>
                 <ion-item>
-                  <ion-input
+                  <AppInput
                     :label="$t('profile.nationality')"
                     label-placement="stacked"
                     v-model="profileStore.currentVoiceActor.nationality"
-                  ></ion-input>
+                  ></AppInput>
                 </ion-item>
                 <ion-item v-if="voiceActorErrors.includes('Nationality must contain only letters and spaces')" class="validation-error">
                   <ion-note color="danger">{{ $t("profile.nationalityInvalid") }}</ion-note>
                 </ion-item>
                 <ion-item>
-                  <ion-input
+                  <AppInput
                     type="date"
                     :label="$t('profile.dateOfBirth')"
                     label-placement="stacked"
                     v-model="profileStore.currentVoiceActor.date_of_birth"
-                  ></ion-input>
+                  ></AppInput>
                 </ion-item>
                 <ion-item v-if="voiceActorErrors.includes('Date of birth must be in YYYY-MM-DD format')" class="validation-error">
                   <ion-note color="danger">{{ $t("profile.dateOfBirthInvalid") }}</ion-note>
                 </ion-item>
                 <ion-item>
-                  <ion-input
+                  <AppInput
                     :label="$t('profile.awards')"
                     label-placement="stacked"
                     v-model="profileStore.currentVoiceActor.awards"
-                  ></ion-input>
+                  ></AppInput>
                 </ion-item>
                 <ion-item>
-                  <ion-input
+                  <AppInput
                     :label="$t('profile.yearsActive')"
                     label-placement="stacked"
                     v-model="profileStore.currentVoiceActor.years_active"
-                  ></ion-input>
+                  ></AppInput>
                 </ion-item>
               </ion-list>
 
-              <ion-button
+              <AppButton
                 expand="block"
                 @click="handleVoiceActorSave"
                 :disabled="profileStore.isUpdating"
@@ -266,7 +266,7 @@
                   inline
                 />
                 {{ $t("profile.saveChanges") }}
-              </ion-button>
+              </AppButton>
             </div>
           </div>
         </div>
@@ -276,6 +276,10 @@
 </template>
 
 <script setup lang="ts">
+import AppButton from '@/components/common/AppButton.vue';
+import AppInput from '@/components/common/AppInput.vue';
+import AppTextarea from '@/components/common/AppTextarea.vue';
+import AppSearchbar from '@/components/common/AppSearchbar.vue';
 import Search from '~icons/lucide/search';
 import AppText from '@/components/common/AppText.vue';
 import RefreshCw from '~icons/lucide/refresh-cw';
@@ -283,7 +287,7 @@ import User from '~icons/lucide/user';
 import AppSpinner from '@/components/common/AppSpinner.vue';
 import AppSkeleton from '@/components/common/AppSkeleton.vue';
 import { onMounted, watch, ref, getCurrentInstance } from "vue";
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonList, IonItem, IonInput, IonTextarea, IonSegment, IonSegmentButton, IonSearchbar, IonModal, IonButtons, IonNote, IonSelectOption, IonRefresher, IonRefresherContent } from '@ionic/vue';
+import { IonButtons,  IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonSegment, IonSegmentButton, IonModal, IonNote, IonSelectOption, IonRefresher, IonRefresherContent } from '@ionic/vue';
 import { useProfileStore } from "@/stores/profile";
 import { useAuthStore } from "@/stores/auth";
 import RequestVoiceActorCard from "@/components/RequestVoiceActorCard.vue";
@@ -349,8 +353,7 @@ const handleAdminSearch = async () => {
     const { data, error } = await supabase.functions.invoke(
       "search-voice-actors",
       {
-        body: { query: adminSearchQuery.value },
-      }
+        body: { query: adminSearchQuery.value }}
     );
 
     if (error) throw error;
@@ -392,8 +395,7 @@ const handleVoiceActorSave = async () => {
     if (Object.keys(current).length > 0) {
       await profileStore.updateProfile(current, {
         voiceActorId: profileStore.currentVoiceActor.id,
-        targetUserId: profileStore.isImpersonating ? profileStore.impersonatedTargetUserId || undefined : undefined,
-      });
+        targetUserId: profileStore.isImpersonating ? profileStore.impersonatedTargetUserId || undefined : undefined});
     }
     // Clear validation errors on success
     voiceActorErrors.value = [];

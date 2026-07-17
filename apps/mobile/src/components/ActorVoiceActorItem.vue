@@ -77,15 +77,15 @@
       </AppText>
 
       <div class="voice-actor-actions" v-if="isAdmin">
-        <ion-button
+        <AppButton
           fill="clear"
           size="small"
           @click.stop="editVoiceActorLink && editVoiceActorLink(item)"
           aria-label="Edit voice actor link"
         >
           <Pencil class="app-icon" />
-        </ion-button>
-        <ion-button
+        </AppButton>
+        <AppButton
           fill="clear"
           size="small"
           @click.stop="
@@ -95,19 +95,20 @@
           aria-label="Delete voice actor link"
         >
           <Trash2 class="app-icon" />
-        </ion-button>
+        </AppButton>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import AppButton from '@/components/common/AppButton.vue';
 import AppText from '@/components/common/AppText.vue';
 import Pencil from '~icons/lucide/pencil';
 import Trash2 from '~icons/lucide/trash2';
 import AppSpinner from '@/components/common/AppSpinner.vue';
 import AppSkeleton from '@/components/common/AppSkeleton.vue';
-import { IonButton } from '@ionic/vue';
+
 
 import MediaItem from "@/components/MediaItem.vue";
 import MediaThumbnail from "@/components/MediaThumbnail.vue";

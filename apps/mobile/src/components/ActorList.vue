@@ -5,12 +5,12 @@
         <!-- Don't show anything while loading -->
       </template>
       <template v-else-if="actors && actors.length">
-        <ion-searchbar
+        <AppSearchbar
           v-model="searchQuery"
           :placeholder="t('common.search', 'Search...')"
           animated
           class="custom-searchbar"
-        ></ion-searchbar>
+        ></AppSearchbar>
         <ActorWithVoiceActors
           v-for="actor in filteredActors"
           :key="actor.id"
@@ -34,11 +34,12 @@
 </template>
 
 <script setup lang="ts">
+import AppSearchbar from '@/components/common/AppSearchbar.vue';
 import ActorWithVoiceActors from "./ActorWithVoiceActors.vue";
 import NoActors from "./NoActors.vue";
 import { PersonData } from "./PersonItem.vue";
 import { VoiceActorDetails, Actor } from "@supabase/functions/_shared/types";
-import { IonSearchbar } from '@ionic/vue';
+
 import { ref, computed } from "vue";
 import { useI18n } from "vue-i18n";
 

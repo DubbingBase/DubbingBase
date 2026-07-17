@@ -11,14 +11,14 @@
         <UserCircle class="app-icon"  size="large" />
       </div>
 
-      <ion-button
+      <AppButton
         fill="clear"
         size="small"
         class="edit-button"
         @click="triggerFileInput"
       >
         <Camera class="app-icon"  slot="icon-only" />
-      </ion-button>
+      </AppButton>
     </div>
 
     <input
@@ -36,8 +36,9 @@
 </template>
 
 <script setup lang="ts">
+import AppButton from '@/components/common/AppButton.vue';
 import { ref, computed } from 'vue'
-import { IonButton } from '@ionic/vue';
+
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { useProfileStore } from '@/stores/profile'
 import { supabase } from '@/api/supabase'

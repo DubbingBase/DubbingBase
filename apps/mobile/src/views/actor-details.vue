@@ -88,17 +88,17 @@
             </ion-segment-content>
             <ion-segment-content id="roles">
               <div class="voice-roles-section" ref="rolesSectionRef">
-                <ion-searchbar
+                <AppSearchbar
                   v-model="searchQuery"
                   :placeholder="t('common.search', 'Search...')"
                   animated
                   class="custom-searchbar"
                   style="margin-bottom: 1rem;"
-                ></ion-searchbar>
+                ></AppSearchbar>
                 
                 <div class="filters-row">
                   <span class="filter-label">{{ showDubbedOnly === 'true' ? t("actor.dubbedOnly") : t("actor.allRoles") }}</span>
-                  <ion-toggle
+                  <AppToggle
                     :checked="showDubbedOnly === 'true'"
                     @ionChange="showDubbedOnly = $event.detail.checked ? 'true' : 'false'"
                     class="sleek-toggle"
@@ -125,8 +125,7 @@
                           group.mediaType === 'movie'
                             ? `MovieDetails`
                             : `SerieDetails`,
-                        params: { id: group.mediaId },
-                      }"
+                        params: { id: group.mediaId }}"
                       class="no-link"
                     >
                       <MovieCard
@@ -183,13 +182,16 @@
         <AlertCircle class="app-icon" />
         <h3>{{ t("common.error") }}</h3>
         <p>{{ error }}</p>
-        <ion-button @click="retryLoad">{{ t("common.retry") }}</ion-button>
+        <AppButton @click="retryLoad">{{ t("common.retry") }}</AppButton>
       </div>
     </ion-content>
   </ion-page>
 </template>
 
 <script setup lang="ts">
+import AppButton from '@/components/common/AppButton.vue';
+import AppSearchbar from '@/components/common/AppSearchbar.vue';
+import AppToggle from '@/components/common/AppToggle.vue';
 import AppText from '@/components/common/AppText.vue';
 import AlertCircle from '~icons/lucide/alert-circle';
 import AppSpinner from '@/components/common/AppSpinner.vue';
@@ -198,7 +200,7 @@ import { computed, onMounted, ref, watch, nextTick } from "vue";
 import AppBackButton from "@/components/common/AppBackButton.vue";
 import { useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
-import { IonPage, IonButtons, IonTitle, IonToolbar, IonHeader, IonChip, IonSegment, IonSegmentButton, IonSegmentView, IonSegmentContent, IonContent, IonRefresher, IonRefresherContent, IonButton, IonSearchbar, IonItem, IonToggle } from '@ionic/vue';
+import { IonButtons,  IonPage, IonTitle, IonToolbar, IonHeader, IonChip, IonSegment, IonSegmentButton, IonSegmentView, IonSegmentContent, IonContent, IonRefresher, IonRefresherContent, IonItem} from '@ionic/vue';
 
 import type { Actor } from "@supabase/functions/_shared/types";
 import { supabase } from "../api/supabase";
@@ -260,8 +262,7 @@ const tmdbRoles = computed(() => {
       mediaType: credit.media_type,
       poster_path: credit.poster_path,
       release_date: credit.release_date,
-      first_air_date: credit.first_air_date,
-    };
+      first_air_date: credit.first_air_date};
   });
 });
 
@@ -281,13 +282,11 @@ const groupedTmdbRoles = computed(() => {
         release_date: role.release_date,
         first_air_date: role.first_air_date,
         roles: [],
-        voice_actors: voiceActorsByMediaId.value.get(role.mediaId) || [],
-      });
+        voice_actors: voiceActorsByMediaId.value.get(role.mediaId) || []});
     }
     groups.get(key).roles.push({
       character: role.character,
-      id: role.id,
-    });
+      id: role.id});
   });
 
   return Array.from(groups.values()).sort((a, b) => {
@@ -354,8 +353,7 @@ const sortedVoiceActors = computed(() => {
       if (!voiceActorMap.has(va.id)) {
         voiceActorMap.set(va.id, {
           ...va,
-          roleCount: 0,
-        });
+          roleCount: 0});
       }
       voiceActorMap.get(va.id).roleCount += 1;
     });
@@ -377,8 +375,7 @@ const groupedVoiceActors = computed(() => {
       voiceActor.roleCount > 1 ? t("actor.roles") : t("actor.role")
     }`,
     tags: voiceActor.is_official ? ["official"] : [],
-    data: voiceActor,
-  }));
+    data: voiceActor}));
 });
 
 const filteredVoiceActors = computed(() => {
@@ -413,8 +410,7 @@ async function loadActorData() {
   try {
     console.log('Invoking Supabase function "actor" with id:', id);
     const actorResponseRaw = await supabase.functions.invoke("actor", {
-      body: { id },
-    });
+      body: { id }});
     console.log("Raw Supabase response:", actorResponseRaw);
     const actorResponse = (await actorResponseRaw.data) as {
       actor: Actor;

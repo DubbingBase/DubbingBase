@@ -22,7 +22,7 @@
       </p>
     </AppText>
 
-    <ion-button
+    <AppButton
       v-if="canEdit"
       slot="end"
       fill="clear"
@@ -30,9 +30,9 @@
       @click="handleEdit"
     >
       <Pencil class="app-icon" />
-    </ion-button>
+    </AppButton>
 
-    <ion-button
+    <AppButton
       v-if="canEdit"
       slot="end"
       fill="clear"
@@ -40,16 +40,17 @@
       @click="confirmDelete"
     >
       <Trash2 class="app-icon" />
-    </ion-button>
+    </AppButton>
   </ion-item>
 </template>
 
 <script setup lang="ts">
+import AppButton from '@/components/common/AppButton.vue';
 import AppImage from '@/components/common/AppImage.vue';
 import AppText from '@/components/common/AppText.vue';
 import AppSpinner from '@/components/common/AppSpinner.vue';
 import AppSkeleton from '@/components/common/AppSkeleton.vue';
-import { IonItem, IonButton, alertController } from '@ionic/vue';
+import { IonItem, alertController } from '@ionic/vue';
 import type { WorkEntry } from '@/stores/profile'
 import { onMounted } from 'vue';
 

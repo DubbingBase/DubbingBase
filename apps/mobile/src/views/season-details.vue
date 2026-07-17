@@ -66,7 +66,7 @@
 import { ref, computed, watch } from "vue";
 import AppBackButton from "@/components/common/AppBackButton.vue";
 import { useRoute, useRouter } from "vue-router";
-import { IonPage, IonHeader, IonToolbar, IonButtons, IonBackButton, IonTitle, IonContent, IonSegment, IonSegmentButton, toastController, IonRefresher, IonRefresherContent } from '@ionic/vue';
+import { IonButtons,  IonPage, IonHeader, IonToolbar, IonBackButton, IonTitle, IonContent, IonSegment, IonSegmentButton, toastController, IonRefresher, IonRefresherContent } from '@ionic/vue';
 import { supabase } from "../api/supabase";
 import { enqueueAndProcessMedia } from "../api/mediaQueue";
 import SeasonBanner from "../components/SeasonBanner.vue";

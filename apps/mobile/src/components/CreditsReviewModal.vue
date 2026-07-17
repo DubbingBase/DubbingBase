@@ -4,9 +4,9 @@
       <ion-toolbar>
         <ion-title>Review Credits</ion-title>
         <ion-buttons slot="end">
-          <ion-button @click="closeModal">
+          <AppButton @click="closeModal">
             <XCircle class="app-icon" />
-          </ion-button>
+          </AppButton>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
@@ -37,26 +37,26 @@
                 </ion-badge>
               </p>
             </ion-label>
-            <ion-button
+            <AppButton
               slot="end"
               fill="clear"
               color="danger"
               @click="removeCredit(index)"
             >
               <Trash2 class="app-icon" />
-            </ion-button>
+            </AppButton>
           </ion-item>
         </ion-list>
 
         <div class="ion-padding-top">
-          <ion-button
+          <AppButton
             expand="block"
             :disabled="isSaving || processedCredits.length === 0"
             @click="saveAll"
           >
             <LoadingSpinner v-if="isSaving" :inline="true" />
             Save {{ processedCredits.length }} Credits
-          </ion-button>
+          </AppButton>
         </div>
       </div>
     </ion-content>
@@ -64,21 +64,19 @@
 </template>
 
 <script setup lang="ts">
+import AppButton from '@/components/common/AppButton.vue';
 import { ref, watch } from "vue";
-import {
+import { IonButtons, 
   IonModal,
   IonHeader,
   IonToolbar,
   IonTitle,
-  IonButtons,
-  IonButton,
   IonContent,
   IonList,
   IonItem,
   IonLabel,
   IonBadge,
-  toastController,
-} from "@ionic/vue";
+  toastController} from '@ionic/vue';
 import XCircle from "~icons/lucide/x-circle";
 import Trash2 from "~icons/lucide/trash-2";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
@@ -174,8 +172,7 @@ const processExtractedCredits = async () => {
       ...credit,
       matchedVoiceActor,
       matchedActorId,
-      matchedActorName,
-    });
+      matchedActorName});
   }
 
   isProcessing.value = false;
@@ -221,9 +218,7 @@ const saveAll = async () => {
             media_type: props.workType,
             voice_actor_id: vaId,
             performance: credit.role || "dialogues",
-            media_id: props.mediaId,
-          },
-        },
+            media_id: props.mediaId}},
       );
 
       if (!linkError) {
@@ -235,8 +230,7 @@ const saveAll = async () => {
       message: `Successfully saved ${successCount} voice actors!`,
       duration: 3000,
       color: "success",
-      position: "top",
-    });
+      position: "top"});
     await toast.present();
 
     emit("refresh");
@@ -247,8 +241,7 @@ const saveAll = async () => {
       message: "An error occurred while saving credits.",
       duration: 3000,
       color: "danger",
-      position: "top",
-    });
+      position: "top"});
     await toast.present();
   } finally {
     isSaving.value = false;

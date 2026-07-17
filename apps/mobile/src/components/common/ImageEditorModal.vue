@@ -3,11 +3,11 @@
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-button @click="cancel">{{ $t('common.cancel', 'Annuler') }}</ion-button>
+          <AppButton @click="cancel">{{ $t('common.cancel', 'Annuler') }}</AppButton>
         </ion-buttons>
         <ion-title>{{ $t('common.editImage', 'Modifier l\'image') }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button :strong="true" @click="save">{{ $t('common.save', 'Enregistrer') }}</ion-button>
+          <AppButton :strong="true" @click="save">{{ $t('common.save', 'Enregistrer') }}</AppButton>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
@@ -25,8 +25,9 @@
 </template>
 
 <script setup lang="ts">
+import AppButton from '@/components/common/AppButton.vue';
 import { ref, watch, onUnmounted } from 'vue';
-import { IonModal, IonHeader, IonToolbar, IonButtons, IonButton, IonTitle, IonContent } from '@ionic/vue';
+import { IonButtons,  IonModal, IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/vue';
 import { Cropper } from 'vue-advanced-cropper';
 import 'vue-advanced-cropper/dist/style.css';
 

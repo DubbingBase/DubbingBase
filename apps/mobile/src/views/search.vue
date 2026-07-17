@@ -5,14 +5,14 @@
         <ion-title>Search</ion-title>
       </ion-toolbar>
       <ion-toolbar style="--background: transparent;">
-        <ion-searchbar
+        <AppSearchbar
           v-model="query"
           :debounce="300"
           @ionInput="search($event)"
           show-clear-button="always"
           class="custom-searchbar"
           style="padding: 0 8px;"
-        ></ion-searchbar>
+        ></AppSearchbar>
       </ion-toolbar>
     </ion-header>
     <ion-content>
@@ -36,10 +36,11 @@
 </template>
 
 <script lang="ts" setup>
+import AppSearchbar from '@/components/common/AppSearchbar.vue';
 import { ref, computed } from "vue";
 defineOptions({ name: 'Search' });
-import { IonHeader, IonSearchbar, IonTitle, IonContent, IonList, IonToolbar, IonPage, IonToast, SearchbarInputEventDetail } from '@ionic/vue';
-import { IonSearchbarCustomEvent } from "@ionic/core";
+import { IonHeader, IonTitle, IonContent, IonList, IonToolbar, IonPage, IonToast, SearchbarInputEventDetail } from '@ionic/vue';
+
 import SearchResultItem from "@/components/SearchResultItem.vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import { supabase } from '@/api/supabase';
@@ -53,9 +54,7 @@ const query = ref('');
 const trimmedQuery = computed(() => query.value.trim());
 let abortController: AbortController | null = null;
 
-const search = async (
-  event: IonSearchbarCustomEvent<SearchbarInputEventDetail>
-) => {
+const search = async (event: { target: { value: string } }) => {
   query.value = event.target.value || '';
 
   if (trimmedQuery.value.length < 2) {
@@ -75,8 +74,7 @@ const search = async (
   try {
     const { data, error: supaError } = await supabase.functions.invoke('search', {
       body: { query: trimmedQuery.value },
-      signal: abortController.signal,
-    });
+      signal: abortController.signal});
 
     if (supaError) throw supaError;
 

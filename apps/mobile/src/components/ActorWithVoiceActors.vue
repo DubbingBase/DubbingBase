@@ -15,7 +15,7 @@
     <div class="main-actor">
       <PersonItem :person="actor" type="actor">
         <template #actions>
-          <ion-button
+          <AppButton
             v-if="
               voiceActors.length === 0 &&
               shouldShowVoiceActors &&
@@ -29,7 +29,7 @@
             aria-label="Add voice actor link"
           >
             <PlusCircle class="app-icon" />
-          </ion-button>
+          </AppButton>
         </template>
       </PersonItem>
     </div>
@@ -67,6 +67,7 @@
 </template>
 
 <script setup lang="ts">
+import AppButton from '@/components/common/AppButton.vue';
 import PlusCircle from '~icons/lucide/plus-circle';
 import CheckCircle2 from '~icons/lucide/check-circle-2';
 import Clock from '~icons/lucide/clock';
@@ -75,7 +76,7 @@ import PersonItem, { PersonData } from "./PersonItem.vue";
 import { useLanguagePreference } from "@/composables/useLanguagePreference";
 import { computed, watch } from "vue";
 
-import { IonButton, actionSheetController } from "@ionic/vue";
+import { actionSheetController } from "@ionic/vue";
 import { timeOutline, checkmarkCircleOutline, closeCircleOutline, thumbsUpOutline, thumbsDownOutline, createOutline, trashOutline } from "ionicons/icons";
 import { usePermissions } from "@/composables/usePermissions";
 import { useVoiceActorManagement } from "@/composables/useVoiceActorManagement";
@@ -83,8 +84,7 @@ import { useAuthStore } from "@/stores/auth";
 import { useI18n } from "vue-i18n";
 import {
   Actor,
-  VoiceActorDetails,
-} from "@supabase/functions/_shared/types";
+  VoiceActorDetails} from "@supabase/functions/_shared/types";
 
 export interface ActorWithVoiceActorsProps {
   actor: PersonData<Actor>;
@@ -109,8 +109,7 @@ const props = withDefaults(defineProps<ActorWithVoiceActorsProps>(), {
   confirmDeleteVoiceActorLink: undefined,
   openVoiceActorSearch: undefined,
   workType: () => "movie",
-  contentId: () => "",
-});
+  contentId: () => ""});
 
 // Use language preference composable
 const { preferredLanguage } = useLanguagePreference();
@@ -186,8 +185,7 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
           await updateReviewStatus(workId, "waiting");
           // Force a refresh of the component to show updated status
           location.reload();
-        },
-      },
+        }},
       {
         text: `${t("common.setStatus")} - ${t("common.accepted")}`,
         icon: checkmarkCircleOutline,
@@ -195,8 +193,7 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
           await updateReviewStatus(workId, "accepted");
           // Force a refresh of the component to show updated status
           location.reload();
-        },
-      },
+        }},
       {
         text: `${t("common.setStatus")} - ${t("common.rejected")}`,
         icon: closeCircleOutline,
@@ -204,8 +201,7 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
           await updateReviewStatus(workId, "rejected");
           // Force a refresh of the component to show updated status
           location.reload();
-        },
-      },
+        }},
     );
   }
 
@@ -219,8 +215,7 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
         icon: thumbsUpOutline,
         handler: () => {
           if (voiceActor.work_id) castVote(voiceActor.work_id, "up");
-        },
-      },
+        }},
       {
         text: `${t("common.downvote")} (${
           (voiceActor.work_id ? votes.value[voiceActor.work_id]?.down_count : 0) || 0
@@ -228,8 +223,7 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
         icon: thumbsDownOutline,
         handler: () => {
           if (voiceActor.work_id) castVote(voiceActor.work_id, "down");
-        },
-      },
+        }},
     );
   }
 
@@ -242,8 +236,7 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
       handler: () => {
         props.editVoiceActorLink &&
           props.editVoiceActorLink(voiceActor);
-      },
-    });
+      }});
   }
 
   const canDelete = authStore.isAdmin || (hasPermission("delete_voice_actor_link") && isOwner);
@@ -255,20 +248,17 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
       handler: () => {
         props.confirmDeleteVoiceActorLink &&
           props.confirmDeleteVoiceActorLink(voiceActor);
-      },
-    });
+      }});
   }
 
   // Cancel button
   buttons.push({
     text: t("common.cancel"),
-    role: "cancel",
-  });
+    role: "cancel"});
 
   const actionSheet = await actionSheetController.create({
     header: t("common.actions"),
-    buttons,
-  });
+    buttons});
   await actionSheet.present();
 };
 </script>

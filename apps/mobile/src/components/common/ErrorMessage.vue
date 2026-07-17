@@ -9,7 +9,7 @@
     <div class="error-content">
       <h4 v-if="title" class="error-title">{{ title }}</h4>
       <p class="error-text">{{ message }}</p>
-      <ion-button
+      <AppButton
         v-if="retry"
         fill="outline"
         size="small"
@@ -17,13 +17,14 @@
       >
         <RefreshCw class="app-icon" slot="start"  />
         Réessayer
-      </ion-button>
+      </AppButton>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { IonButton } from '@ionic/vue';
+import AppButton from '@/components/common/AppButton.vue';
+
 import type { Component } from 'vue';
 import AlertCircle from '~icons/lucide/alert-circle';
 import RefreshCw from '~icons/lucide/refresh-cw';

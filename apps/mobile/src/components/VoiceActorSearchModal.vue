@@ -4,19 +4,19 @@
       <ion-toolbar>
         <ion-title>Select Voice Actor</ion-title>
         <ion-buttons slot="end">
-          <ion-button @click="$emit('close')">
+          <AppButton @click="$emit('close')">
             <XCircle class="app-icon" />
-          </ion-button>
+          </AppButton>
         </ion-buttons>
       </ion-toolbar>
       <ion-toolbar>
-        <ion-searchbar
+        <AppSearchbar
           v-model="searchTerm"
           @ionInput="handleSearchInput"
           placeholder="Search voice actors..."
           animated
           :debounce="300"
-        ></ion-searchbar>
+        ></AppSearchbar>
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
@@ -74,11 +74,13 @@
 
 
 <script setup lang="ts">
+import AppButton from '@/components/common/AppButton.vue';
+import AppSearchbar from '@/components/common/AppSearchbar.vue';
 import AppText from '@/components/common/AppText.vue';
 import XCircle from '~icons/lucide/x-circle';
 import AppSpinner from '@/components/common/AppSpinner.vue';
 import AppSkeleton from '@/components/common/AppSkeleton.vue';
-import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonSearchbar, IonContent, IonList, IonItem, IonAvatar } from '@ionic/vue';
+import { IonButtons,  IonModal, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonAvatar } from '@ionic/vue';
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import { useVoiceActorManagement, type VoiceActor } from "@/composables/useVoiceActorManagement";
 const props = defineProps<{

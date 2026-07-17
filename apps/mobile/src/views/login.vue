@@ -13,19 +13,19 @@
         <ion-list>
           <ion-item>
             <AppText position="floating">Email</AppText>
-            <ion-input v-model="email" type="email" required></ion-input>
+            <AppInput v-model="email" type="email" required></AppInput>
           </ion-item>
           <ion-item>
             <AppText position="floating">Mot de passe</AppText>
-            <ion-input v-model="password" type="password" required></ion-input>
+            <AppInput v-model="password" type="password" required></AppInput>
           </ion-item>
         </ion-list>
-        <ion-button expand="block" type="submit" :disabled="loading">
+        <AppButton expand="block" type="submit" :disabled="loading">
           {{ loading ? (isRegister ? 'Création...' : 'Connexion...') : (isRegister ? 'Créer un compte' : 'Se connecter') }}
-        </ion-button>
-        <ion-button expand="block" fill="clear" type="button" @click="isRegister = !isRegister">
+        </AppButton>
+        <AppButton expand="block" fill="clear" type="button" @click="isRegister = !isRegister">
           {{ isRegister ? 'Déjà un compte ? Se connecter' : "Pas de compte ? S'inscrire" }}
-        </ion-button>
+        </AppButton>
         <AppText color="danger" v-if="error" class="error-message">
   <p>{{ error }}</p>
 </AppText>
@@ -35,13 +35,15 @@
 </template>
 
 <script setup lang="ts">
+import AppButton from '@/components/common/AppButton.vue';
+import AppInput from '@/components/common/AppInput.vue';
 import AppText from '@/components/common/AppText.vue';
 import AppSpinner from '@/components/common/AppSpinner.vue';
 import AppSkeleton from '@/components/common/AppSkeleton.vue';
 import { ref, onMounted } from 'vue';
 import AppBackButton from "@/components/common/AppBackButton.vue";
 import { useRouter, useRoute } from 'vue-router';
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonInput, IonButton, IonButtons, toastController } from '@ionic/vue';
+import { IonButtons,  IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, toastController } from '@ionic/vue';
 import { useAuthStore } from '@/stores/auth';
 
 const email = ref('');

@@ -9,10 +9,10 @@
           <span class="ellipsis label">
             No voice actor found.
           </span>
-          <ion-button v-if="isAdmin" fill="clear" size="small" @click.stop="openVoiceActorSearch(actor.id)" class="add-voice-actor-btn">
+          <AppButton v-if="isAdmin" fill="clear" size="small" @click.stop="openVoiceActorSearch(actor.id)" class="add-voice-actor-btn">
             <UserPlus class="app-icon" />
             Add
-          </ion-button>
+          </AppButton>
         </AppText>
       </div>
     </div>
@@ -20,12 +20,13 @@
 </template>
 
 <script setup lang="ts">
+import AppButton from '@/components/common/AppButton.vue';
 import AppImage from '@/components/common/AppImage.vue';
 import AppText from '@/components/common/AppText.vue';
 import UserPlus from '~icons/lucide/user-plus';
 import AppSpinner from '@/components/common/AppSpinner.vue';
 import AppSkeleton from '@/components/common/AppSkeleton.vue';
-import { IonButton } from '@ionic/vue';
+
 
 
 // Props

@@ -7,9 +7,9 @@
         </ion-buttons>
         <ion-title>{{ $t('profile.voiceActorProfile') }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button @click="openPublicProfile">
+          <AppButton @click="openPublicProfile">
             <Eye class="app-icon" />
-          </ion-button>
+          </AppButton>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
@@ -23,53 +23,53 @@
         <AlertCircle class="app-icon" />
         <h3>Error loading profile</h3>
         <p>{{ profileStore.profileError }}</p>
-        <ion-button @click="retryLoadProfile" fill="outline">
+        <AppButton @click="retryLoadProfile" fill="outline">
           <RefreshCw class="app-icon" />
           Retry
-        </ion-button>
+        </AppButton>
       </div>
 
       <div v-else class="profile-content">
         <div v-if="profileStore.hasProfile && editableProfile">
           <ion-list>
             <ion-item>
-              <ion-input label="First name" label-placement="stacked" v-model="(editableProfile as any).firstname" :readonly="!canEdit"></ion-input>
+              <AppInput label="First name" label-placement="stacked" v-model="(editableProfile as any).firstname" :readonly="!canEdit"></AppInput>
             </ion-item>
             <ion-item>
-              <ion-input label="Last name" label-placement="stacked" v-model="(editableProfile as any).lastname" :readonly="!canEdit"></ion-input>
+              <AppInput label="Last name" label-placement="stacked" v-model="(editableProfile as any).lastname" :readonly="!canEdit"></AppInput>
             </ion-item>
             <ion-item>
-              <ion-textarea label="Biography" label-placement="stacked" v-model="editableProfile.bio" :auto-grow="true" :readonly="!canEdit"></ion-textarea>
+              <AppTextarea label="Biography" label-placement="stacked" v-model="editableProfile.bio" :auto-grow="true" :readonly="!canEdit"></AppTextarea>
             </ion-item>
             <ion-item>
-              <ion-input label="Nationality" label-placement="stacked" v-model="editableProfile.nationality" :readonly="!canEdit"></ion-input>
+              <AppInput label="Nationality" label-placement="stacked" v-model="editableProfile.nationality" :readonly="!canEdit"></AppInput>
             </ion-item>
             <ion-item>
-              <ion-input type="date" label="Date of birth" label-placement="stacked" v-model="editableProfile.date_of_birth" :readonly="!canEdit"></ion-input>
+              <AppInput type="date" label="Date of birth" label-placement="stacked" v-model="editableProfile.date_of_birth" :readonly="!canEdit"></AppInput>
             </ion-item>
             <ion-item>
-              <ion-input label="Awards" label-placement="stacked" v-model="(editableProfile as any).awards" :readonly="!canEdit"></ion-input>
+              <AppInput label="Awards" label-placement="stacked" v-model="(editableProfile as any).awards" :readonly="!canEdit"></AppInput>
             </ion-item>
             <ion-item>
-              <ion-input label="Years active" label-placement="stacked" v-model="(editableProfile as any).years_active" :readonly="!canEdit"></ion-input>
+              <AppInput label="Years active" label-placement="stacked" v-model="(editableProfile as any).years_active" :readonly="!canEdit"></AppInput>
             </ion-item>
           </ion-list>
 
-          <ion-button v-if="canEdit" expand="block" @click="handleSave" :disabled="profileStore.isUpdating">
+          <AppButton v-if="canEdit" expand="block" @click="handleSave" :disabled="profileStore.isUpdating">
             <LoadingSpinner v-if="profileStore.isUpdating" name="crescent" inline />
             Save changes
-          </ion-button>
-          <ion-button v-else expand="block" fill="outline" disabled>
+          </AppButton>
+          <AppButton v-else expand="block" fill="outline" disabled>
             <!-- TODO: Implement Suggest Changes feature -->
             {{ $t('common.suggestChanges') }}
-          </ion-button>
+          </AppButton>
 
           <div class="work-section">
             <div class="work-header">
               <h3>Filmography</h3>
-              <ion-button v-if="canEdit" @click="isAddWorkModalOpen = true">
+              <AppButton v-if="canEdit" @click="isAddWorkModalOpen = true">
                 <Plus class="app-icon" />
-              </ion-button>
+              </AppButton>
             </div>
             <WorkList :can-edit="canEdit" @delete="handleDeleteWork" />
           </div>
@@ -91,6 +91,9 @@
 </template>
 
 <script setup lang="ts">
+import AppButton from '@/components/common/AppButton.vue';
+import AppInput from '@/components/common/AppInput.vue';
+import AppTextarea from '@/components/common/AppTextarea.vue';
 import Eye from '~icons/lucide/eye';
 import AlertCircle from '~icons/lucide/alert-circle';
 import RefreshCw from '~icons/lucide/refresh-cw';
@@ -99,7 +102,7 @@ import UserCircle from '~icons/lucide/user-circle';
 import { onMounted, watch, computed, ref } from 'vue'
 import AppBackButton from '@/components/common/AppBackButton.vue'
 import { useRoute, useRouter } from 'vue-router'
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonList, IonItem, IonInput, IonTextarea, IonModal, IonButtons } from '@ionic/vue';
+import { IonButtons,  IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonModal } from '@ionic/vue';
 import { useProfileStore } from '@/stores/profile'
 import { useAuthStore } from '@/stores/auth'
 import WorkList from '@/components/profile/WorkList.vue';
@@ -150,8 +153,7 @@ const loadProfileData = async () => {
     console.log("[loadProfileData] Voice actor mismatch, fetching directly via 'voice-actor' function");
     try {
       const { data, error } = await supabase.functions.invoke("voice-actor", {
-        body: { id: voiceActorId.value },
-      });
+        body: { id: voiceActorId.value }});
       console.log("[loadProfileData] voice-actor response:", { data, error });
       if (data && data.voiceActor) {
         // The edge function returns work rows in data.voiceActor.work and medias in data.medias

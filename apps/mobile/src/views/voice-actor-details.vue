@@ -7,9 +7,9 @@
         </ion-buttons>
         <ion-title>Voix</ion-title>
         <ion-buttons slot="end">
-          <ion-button @click="openEditProfile">
+          <AppButton @click="openEditProfile">
             <Pencil class="app-icon" />
-          </ion-button>
+          </AppButton>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
@@ -34,12 +34,12 @@
 
         <VoiceActorBio :bio="voiceActor.bio" />
 
-        <ion-searchbar
+        <AppSearchbar
           v-model="searchQuery"
           :placeholder="t('common.search', 'Search...')"
           animated
           class="custom-searchbar"
-        ></ion-searchbar>
+        ></AppSearchbar>
 
         <VoiceActorWorksGrouped :works="filteredEnhancedWork" />
       </div>
@@ -66,6 +66,8 @@
 </template>
 
 <script setup lang="ts">
+import AppButton from '@/components/common/AppButton.vue';
+import AppSearchbar from '@/components/common/AppSearchbar.vue';
 import Pencil from '~icons/lucide/pencil';
 import Globe from '~icons/lucide/globe';
 import { computed, onMounted, ref, getCurrentInstance } from "vue";
@@ -73,7 +75,7 @@ import AppBackButton from "@/components/common/AppBackButton.vue";
 import { useRoute, useRouter } from "vue-router";
 // Admin check: get user from supabase.auth and check for admin role
 import type { Serie as SerieModel } from "@supabase/functions/_shared/serie";
-import { IonPage, IonButton, IonButtons, IonTitle, IonToolbar, IonContent, IonHeader, IonSearchbar, IonFab, IonFabButton, IonRefresher, IonRefresherContent } from '@ionic/vue';
+import { IonButtons,  IonPage, IonTitle, IonToolbar, IonContent, IonHeader, IonFab, IonFabButton, IonRefresher, IonRefresherContent } from '@ionic/vue';
 
 import type { Movie as MovieModel } from "@supabase/functions/_shared/movie";
 import { supabase } from "../api/supabase";
@@ -151,8 +153,7 @@ const handleFetchModalSaved = async () => {
     const voiceActorResponseRaw = await supabase.functions.invoke(
       "voice-actor",
       {
-        body: { id },
-      },
+        body: { id }},
     );
 
     const voiceActorResponse =
@@ -235,8 +236,7 @@ const baseEnhancedWork = computed<EnhancedWorkItem[]>(() => {
       const data = {
         character,
         characterImage,
-        actor: actorToPersonData(actor),
-      };
+        actor: actorToPersonData(actor)};
 
       return {
         media,
@@ -337,8 +337,7 @@ const loadVoiceActorData = async () => {
   console.log("Fetching voice actor with ID:", id);
 
   const voiceActorResponseRaw = await supabase.functions.invoke("voice-actor", {
-    body: { id },
-  });
+    body: { id }});
 
   const voiceActorResponse =
     (await voiceActorResponseRaw.data) as VoiceActorResponse;
@@ -377,14 +376,11 @@ const loadVoiceActorData = async () => {
               cast: (m as any).credits.cast?.slice(0, 3).map((c: any) => ({
                 id: c.id,
                 name: c.name,
-                character: c.character,
-              })),
+                character: c.character})),
               crew: (m as any).credits.crew
                 ?.slice(0, 3)
-                .map((c: any) => ({ id: c.id, name: c.name, job: c.job })),
-            }
-          : "No credits",
-      })),
+                .map((c: any) => ({ id: c.id, name: c.name, job: c.job }))}
+          : "No credits"})),
     );
   }
 

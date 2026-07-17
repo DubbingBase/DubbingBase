@@ -1,5 +1,5 @@
 <template>
-  <ion-button
+  <AppButton
     :disabled="isScanning"
     v-if="!hasData && isScannerEnabled"
     class="scan-fab-btn"
@@ -8,9 +8,9 @@
   >
     <LoadingSpinner v-if="isScanning" :inline="true"></LoadingSpinner>
     <Camera class="app-icon" />
-  </ion-button>
+  </AppButton>
 
-  <ion-button
+  <AppButton
     :disabled="isFetching || queueStatus === 'pending' || queueStatus === 'processing'"
     v-if="hasWikidataId && !hasData"
     class="enqueue-fab-btn"
@@ -18,9 +18,9 @@
     :aria-label="t('common.enqueue')"
   >
     <List class="app-icon" />
-  </ion-button>
+  </AppButton>
 
-  <ion-button
+  <AppButton
     :disabled="isFetching || queueStatus === 'pending' || queueStatus === 'processing'"
     v-if="hasWikidataId && !hasData"
     class="fab-btn"
@@ -29,7 +29,7 @@
   >
     <LoadingSpinner v-if="isFetching || queueStatus === 'pending' || queueStatus === 'processing'" :inline="true"></LoadingSpinner>
     <Info class="app-icon" />
-  </ion-button>
+  </AppButton>
 
   <div v-if="fetchError || (queueStatus === 'failed' && queueErrorMessage)" class="fetch-error">
     {{ fetchError || queueErrorMessage }}
@@ -37,10 +37,11 @@
 </template>
 
 <script setup lang="ts">
+import AppButton from '@/components/common/AppButton.vue';
 import Camera from '~icons/lucide/camera';
 import List from '~icons/lucide/list';
 import Info from '~icons/lucide/info';
-import { IonButton } from '@ionic/vue';
+
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 
 import { useI18n } from "vue-i18n";

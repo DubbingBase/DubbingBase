@@ -7,12 +7,12 @@
         </ion-buttons>
         <ion-title>{{ show?.name || "Détails de la série" }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button fill="clear" @click="shareMedia" aria-label="Share">
+          <AppButton fill="clear" @click="shareMedia" aria-label="Share">
             <Share2 class="app-icon" />
-          </ion-button>
-          <ion-button fill="clear" aria-label="Paramètres">
+          </AppButton>
+          <AppButton fill="clear" aria-label="Paramètres">
             <Settings class="app-icon" />
-          </ion-button>
+          </AppButton>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
@@ -117,9 +117,10 @@
 </template>
 
 <script setup lang="ts">
+import AppButton from '@/components/common/AppButton.vue';
 import Search from '~icons/lucide/search';
 import Radio from '~icons/lucide/radio';
-import { IonPage, IonContent, IonSegment, IonHeader, IonToolbar, IonButtons, IonBackButton, IonSegmentButton, IonSegmentContent, IonSegmentView, toastController, IonTitle, IonButton, IonToast, IonRefresher, IonRefresherContent } from '@ionic/vue';
+import { IonButtons,  IonPage, IonContent, IonSegment, IonHeader, IonToolbar, IonBackButton, IonSegmentButton, IonSegmentContent, IonSegmentView, toastController, IonTitle, IonToast, IonRefresher, IonRefresherContent } from '@ionic/vue';
 import { ref, computed, UnwrapRef, watch } from "vue";
 import { useRoute } from "vue-router";
 import AppBackButton from "@/components/common/AppBackButton.vue";
@@ -186,8 +187,7 @@ const {
   linkVoiceActor,
   editVoiceActorLink,
   confirmDeleteVoiceActorLink,
-  goToVoiceActor,
-} = useVoiceActorManagement("tv");
+  goToVoiceActor} = useVoiceActorManagement("tv");
 
 const findCharacter = (
   character: UnwrapRef<typeof characterProfilePictures>[number],
@@ -293,8 +293,7 @@ const formattedSeasons = computed(() => {
     ...season,
     formatted_air_date: season.air_date
       ? format(new Date(season.air_date), "MMM dd, yyyy")
-      : "TBA",
-  }));
+      : "TBA"}));
 });
 
 // Scan functionality
@@ -311,8 +310,7 @@ const shareMedia = async () => {
     title: show.value.name || "DubbingBase",
     text: `Check out ${show.value.name} on DubbingBase!`,
     url: `dubbingbase://serie/${show.value.id}`,
-    dialogTitle: 'Share Series',
-  });
+    dialogTitle: 'Share Series'});
 };
 
 const takePhoto = async () => {
@@ -352,13 +350,11 @@ const takePhoto = async () => {
     const simplifiedActors = actors.value?.map((a: any) => ({
       id: a.id,
       name: a.name,
-      roles: a.roles?.map((r: any) => r.character) || [],
-    })) || [];
+      roles: a.roles?.map((r: any) => r.character) || []})) || [];
     formData.append("actors", JSON.stringify(simplifiedActors));
 
     const response = await supabase.functions.invoke("extract-credits-from-image", {
-      body: formData,
-    });
+      body: formData});
 
     if (response.data.ok) {
       extractedCredits.value = response.data.result || [];
@@ -381,8 +377,7 @@ const takePhoto = async () => {
 const getSerie = async (id: string) => {
   try {
     const response = await supabase.functions.invoke<ShowResponse>("show", {
-      body: { id },
-    });
+      body: { id }});
     return response;
   } catch (e: any) {
     console.error("Error fetching series data:", e);
@@ -472,8 +467,7 @@ const handleEnqueue = async () => {
   try {
     await enqueueMedia({
       tmdbId: Number(route.params.id),
-      mediaType: "tv",
-    });
+      mediaType: "tv"});
     
     // Refresh queue status to show it's pending
     await fetchQueueStatus();
@@ -482,8 +476,7 @@ const handleEnqueue = async () => {
       message: "Added to processing queue! It will be processed automatically.",
       duration: 3000,
       position: "top",
-      color: "success",
-    });
+      color: "success"});
     await toast.present();
   } catch (err) {
     console.error("Error enqueuing media:", err);
@@ -492,8 +485,7 @@ const handleEnqueue = async () => {
       message: "Queue addition failed. Please try again.",
       duration: 3000,
       position: "top",
-      color: "danger",
-    });
+      color: "danger"});
     await toast.present();
   } finally {
     isFetching.value = false;
@@ -516,16 +508,14 @@ const fetchInfos = async () => {
   try {
     await enqueueAndProcessMedia({
       tmdbId: Number(route.params.id),
-      mediaType: "tv",
-    });
+      mediaType: "tv"});
     // Immediately fetch updated series data to display changes
     await fetchSerieData();
     const toast = await toastController.create({
       message: "Import completed successfully! The voice cast has been updated.",
       duration: 3000,
       position: "top",
-      color: "success",
-    });
+      color: "success"});
     await toast.present();
   } catch (err) {
     console.error("Error fetching series data:", err);
@@ -534,8 +524,7 @@ const fetchInfos = async () => {
       message: "Import failed. Please try again.",
       duration: 3000,
       position: "top",
-      color: "danger",
-    });
+      color: "danger"});
     await toast.present();
   } finally {
     isFetching.value = false;
@@ -565,16 +554,13 @@ const goToSeason = (id: number, seasonNumber: number) => {
     name: "SeasonDetails",
     params: {
       id: id,
-      season: seasonNumber,
-    },
-  });
+      season: seasonNumber}});
 };
 
 const goToActor = (id: number) => {
   router.push({
     name: "ActorDetails",
-    params: { id },
-  });
+    params: { id }});
 };
 </script>
 

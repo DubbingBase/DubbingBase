@@ -3,7 +3,7 @@
     <ion-toolbar>
       <ion-title>Ajouter un projet</ion-title>
       <ion-buttons slot="end">
-        <ion-button @click="closeModal">Fermer</ion-button>
+        <AppButton @click="closeModal">Fermer</AppButton>
       </ion-buttons>
     </ion-toolbar>
   </ion-header>
@@ -13,11 +13,11 @@
       <ion-list>
         <ion-item>
           <AppText position="stacked">Titre du média *</AppText>
-          <ion-searchbar
+          <AppSearchbar
             v-model="formData.media_title"
             placeholder="Rechercher un film ou une série..."
             @ionInput="searchMedia"
-          ></ion-searchbar>
+          ></AppSearchbar>
         </ion-item>
 
         <div v-if="searchResults.length > 0" class="search-results">
@@ -46,12 +46,12 @@
         <div v-if="selectedMedia">
           <ion-item>
             <AppText position="stacked">Personnage / Acteur Original *</AppText>
-            <ion-searchbar
+            <AppSearchbar
               v-model="characterSearchQuery"
               placeholder="Rechercher un personnage ou acteur"
               @ionInput="onCharacterSearch"
               :disabled="!cast.length"
-            ></ion-searchbar>
+            ></AppSearchbar>
           </ion-item>
 
           <div v-if="characterSearchResults.length > 0" class="search-results">
@@ -74,26 +74,28 @@
       </ion-list>
 
       <div class="form-actions">
-        <ion-button
+        <AppButton
           type="submit"
           :disabled="!isFormValid || isSubmitting"
           expand="block"
         >
           <LoadingSpinner v-if="isSubmitting" slot="start" :inline="true"></LoadingSpinner>
           Ajouter le projet
-        </ion-button>
+        </AppButton>
       </div>
     </form>
   </ion-content>
 </template>
 
 <script setup lang="ts">
+import AppButton from '@/components/common/AppButton.vue';
+import AppSearchbar from '@/components/common/AppSearchbar.vue';
 import AppImage from '@/components/common/AppImage.vue';
 import AppText from '@/components/common/AppText.vue';
 import AppSpinner from '@/components/common/AppSpinner.vue';
 import AppSkeleton from '@/components/common/AppSkeleton.vue';
 import { ref, computed } from 'vue'
-import { modalController, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonList, IonItem, IonSearchbar } from '@ionic/vue';
+import { IonButtons,  modalController, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem} from '@ionic/vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { useProfileStore } from '@/stores/profile'
 import { supabase } from '@/api/supabase'
@@ -107,8 +109,7 @@ const profileStore = useProfileStore()
 const emit = defineEmits<{ (e: 'close'): void }>()
 
 const formData = ref({
-  media_title: '',
-})
+  media_title: ''})
 
 const searchResults = ref<(Movie | Serie)[]>([])
 const selectedMedia = ref<(Movie | Serie) | null>(null)
@@ -129,8 +130,8 @@ const getMediaYear = (media: Movie | Serie) => {
 
 const closeModal = () => modalController.dismiss()
 
-const searchMedia = (event: Event) => {
-  const query = (event.target as HTMLInputElement).value.toLowerCase()
+const searchMedia = (event: { target: { value: string } }) => {
+  const query = event.target.value.toLowerCase()
   if (searchTimeout) clearTimeout(searchTimeout)
   searchTimeout = setTimeout(async () => {
     if (query.length < 2) {
@@ -161,8 +162,8 @@ const selectMedia = async (media: Movie | Serie) => {
   characterSearchResults.value = cast.value.slice(0, 10)
 }
 
-const onCharacterSearch = (event: Event) => {
-  const query = (event.target as HTMLInputElement).value
+const onCharacterSearch = (event: { target: { value: string } }) => {
+  const query = event.target.value
   characterSearchQuery.value = query
 
   if (selectedCastId.value) {
@@ -201,8 +202,7 @@ const handleSubmit = async () => {
       voice_actor_id: profileStore.voiceActor!.id,
       media_type: selectedMedia.value.media_type === 'tv' ? 'serie' : 'movie',
       media_id: selectedMedia.value.id,
-      actor_id: selectedCastId.value,
-    }, { voiceActorId: profileStore.voiceActor!.id })
+      actor_id: selectedCastId.value}, { voiceActorId: profileStore.voiceActor!.id })
     closeModal()
   } catch (err) {
     console.error(err)

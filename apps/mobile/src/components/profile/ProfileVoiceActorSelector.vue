@@ -2,7 +2,7 @@
   <div class="profile-voice-actor-selector">
     <ion-item>
       <AppText position="stacked">{{ $t('profile.selectedProfile') }}</AppText>
-      <ion-input
+      <AppInput
         :value="selectedProfileName"
         readonly
         :placeholder="$t('profile.selectProfilePlaceholder')"
@@ -15,11 +15,11 @@
         <ion-toolbar>
           <ion-title>{{ $t('profile.selectProfile') }}</ion-title>
           <ion-buttons slot="end">
-            <ion-button @click="closeModal">{{ $t('profile.close') }}</ion-button>
+            <AppButton @click="closeModal">{{ $t('profile.close') }}</AppButton>
           </ion-buttons>
         </ion-toolbar>
         <ion-toolbar>
-          <ion-searchbar
+          <AppSearchbar
             v-model="searchTerm"
             :placeholder="$t('profile.searchPlaceholder')"
           />
@@ -77,6 +77,9 @@
 </template>
 
 <script setup lang="ts">
+import AppButton from '@/components/common/AppButton.vue';
+import AppInput from '@/components/common/AppInput.vue';
+import AppSearchbar from '@/components/common/AppSearchbar.vue';
 import AppText from '@/components/common/AppText.vue';
 import User from '~icons/lucide/user';
 import Mic from '~icons/lucide/mic';
@@ -85,7 +88,7 @@ import AppSkeleton from '@/components/common/AppSkeleton.vue';
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { IonItem, IonInput, IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonSearchbar, IonList, IonLoading, alertController } from '@ionic/vue';
+import { IonButtons,  IonItem, IonModal, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonLoading, alertController } from '@ionic/vue';
 import { useProfileStore } from '@/stores/profile'
 import { useAuthStore } from '@/stores/auth'
 import { supabase } from '@/api/supabase'

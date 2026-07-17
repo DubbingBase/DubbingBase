@@ -6,9 +6,9 @@
           t("voiceActor.fetchWikipedia", "Fetch Wikipedia")
         }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button @click="handleDismiss">
+          <AppButton @click="handleDismiss">
             <XCircle class="app-icon" />
-          </ion-button>
+          </AppButton>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
@@ -23,22 +23,22 @@
           }}
         </p>
         <div class="input-group">
-          <ion-input
+          <AppInput
             v-model="wikipediaUrl"
             :placeholder="t('voiceActor.wikipediaUrl', 'Wikipedia URL')"
             class="url-input"
-          ></ion-input>
-          <ion-button
+          ></AppInput>
+          <AppButton
             v-if="wikipediaUrl"
             fill="clear"
             @click="openLink"
             class="open-link-btn"
           >
             <ExternalLink class="app-icon" />
-          </ion-button>
+          </AppButton>
         </div>
 
-        <ion-button
+        <AppButton
           expand="block"
           @click="fetchData"
           :disabled="!wikipediaUrl || isFetching"
@@ -46,7 +46,7 @@
         >
           <LoadingSpinner v-if="isFetching" :inline="true" />
           <span v-else>{{ t("common.fetch", "Fetch & Override") }}</span>
-        </ion-button>
+        </AppButton>
 
 
 
@@ -58,10 +58,10 @@
                 <span class="old-value-hint">Current: {{ voiceActor?.firstname || 'None' }}</span>
               </div>
                         <div class="input-with-action">
-              <ion-input v-model="fetchedData.firstname" class="styled-input"></ion-input>
-              <ion-button fill="clear" @click="fetchedData.firstname = voiceActor?.firstname || ''">
+              <AppInput v-model="fetchedData.firstname" class="styled-input"></AppInput>
+              <AppButton fill="clear" @click="fetchedData.firstname = voiceActor?.firstname || ''">
                 <Undo2 class="app-icon" />
-              </ion-button>
+              </AppButton>
             </div>
           </div>
 
@@ -72,10 +72,10 @@
                 <span class="old-value-hint">Current: {{ voiceActor?.lastname || 'None' }}</span>
               </div>
                         <div class="input-with-action">
-              <ion-input v-model="fetchedData.lastname" class="styled-input"></ion-input>
-              <ion-button fill="clear" @click="fetchedData.lastname = voiceActor?.lastname || ''">
+              <AppInput v-model="fetchedData.lastname" class="styled-input"></AppInput>
+              <AppButton fill="clear" @click="fetchedData.lastname = voiceActor?.lastname || ''">
                 <Undo2 class="app-icon" />
-              </ion-button>
+              </AppButton>
             </div>
           </div>
 
@@ -86,10 +86,10 @@
                 <span class="old-value-hint">Current: {{ voiceActor?.date_of_birth || 'None' }}</span>
               </div>
                         <div class="input-with-action">
-              <ion-input v-model="fetchedData.date_of_birth" class="styled-input"></ion-input>
-              <ion-button fill="clear" @click="fetchedData.date_of_birth = voiceActor?.date_of_birth || ''">
+              <AppInput v-model="fetchedData.date_of_birth" class="styled-input"></AppInput>
+              <AppButton fill="clear" @click="fetchedData.date_of_birth = voiceActor?.date_of_birth || ''">
                 <Undo2 class="app-icon" />
-              </ion-button>
+              </AppButton>
             </div>
           </div>
 
@@ -100,13 +100,13 @@
                 <span class="old-value-hint">Current: {{ voiceActor?.tmdb_id || 'None' }}</span>
               </div>
                         <div class="input-with-action">
-              <ion-input v-model="fetchedData.tmdb_id" type="number" class="styled-input"></ion-input>
-              <ion-button fill="clear" @click="fetchedData.tmdb_id = voiceActor?.tmdb_id || null">
+              <AppInput v-model="fetchedData.tmdb_id" type="number" class="styled-input"></AppInput>
+              <AppButton fill="clear" @click="fetchedData.tmdb_id = voiceActor?.tmdb_id || null">
                 <Undo2 class="app-icon" />
-              </ion-button>
-              <ion-button fill="clear" :href="fetchedData.tmdb_id ? `https://www.themoviedb.org/person/${fetchedData.tmdb_id}` : undefined" target="_blank" :disabled="!fetchedData.tmdb_id">
+              </AppButton>
+              <AppButton fill="clear" :href="fetchedData.tmdb_id ? `https://www.themoviedb.org/person/${fetchedData.tmdb_id}` : undefined" target="_blank" :disabled="!fetchedData.tmdb_id">
                 <ExternalLink class="app-icon" />
-              </ion-button>
+              </AppButton>
             </div>
           </div>
 
@@ -117,10 +117,10 @@
               </div>
                         <div class="old-bio-hint" v-if="voiceActor?.bio">Current: {{ voiceActor.bio }}</div>
             <div class="input-with-action bio-action">
-              <ion-textarea v-model="fetchedData.bio" auto-grow :rows="4" class="styled-input"></ion-textarea>
-              <ion-button fill="clear" @click="fetchedData.bio = voiceActor?.bio || ''" class="align-top-btn">
+              <AppTextarea v-model="fetchedData.bio" auto-grow :rows="4" class="styled-input"></AppTextarea>
+              <AppButton fill="clear" @click="fetchedData.bio = voiceActor?.bio || ''" class="align-top-btn">
                 <Undo2 class="app-icon" />
-              </ion-button>
+              </AppButton>
             </div>
           </div>
 
@@ -144,17 +144,17 @@
                 </div>
               </div>
               <div style="display: flex; justify-content: center; width: 100%;">
-                <ion-button fill="clear" @click="fetchedData.profile_picture = voiceActor?.profile_picture || ''">
+                <AppButton fill="clear" @click="fetchedData.profile_picture = voiceActor?.profile_picture || ''">
                   <Undo2 class="app-icon" />
                   Keep Current Image
-                </ion-button>
+                </AppButton>
               </div>
             </div>
             <div class="input-with-action ion-margin-top">
-              <ion-input v-model="fetchedData.profile_picture" placeholder="Image URL" class="styled-input"></ion-input>
-              <ion-button fill="clear" @click="fetchedData.profile_picture = ''">
+              <AppInput v-model="fetchedData.profile_picture" placeholder="Image URL" class="styled-input"></AppInput>
+              <AppButton fill="clear" @click="fetchedData.profile_picture = ''">
                 <XCircle class="app-icon" />
-              </ion-button>
+              </AppButton>
             </div>
           </div>
         </ion-list>
@@ -164,18 +164,18 @@
         </div>
 
         <div class="action-buttons ion-margin-top ion-padding-bottom">
-          <ion-button
+          <AppButton
             fill="outline"
             color="medium"
             @click="handleDismiss"
             :disabled="isSaving"
           >
             {{ t("common.cancel", "Cancel") }}
-          </ion-button>
-          <ion-button @click="saveData" :disabled="isSaving">
+          </AppButton>
+          <AppButton @click="saveData" :disabled="isSaving">
             <LoadingSpinner v-if="isSaving" :inline="true" />
             <span v-else>{{ t("common.save", "Save") }}</span>
-          </ion-button>
+          </AppButton>
         </div>
       </div>
     </ion-content>
@@ -183,12 +183,15 @@
 </template>
 
 <script setup lang="ts">
+import AppButton from '@/components/common/AppButton.vue';
+import AppInput from '@/components/common/AppInput.vue';
+import AppTextarea from '@/components/common/AppTextarea.vue';
 import Undo2 from '~icons/lucide/undo2';
 import ArrowRight from '~icons/lucide/arrow-right';
 import XCircle from '~icons/lucide/x-circle';
 import ExternalLink from '~icons/lucide/external-link';
 import { ref, watch } from "vue";
-import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonInput, IonTextarea, IonList, IonItem } from '@ionic/vue';
+import { IonButtons,  IonModal, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem } from '@ionic/vue';
 
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import { supabase } from "@/api/supabase";
@@ -226,8 +229,7 @@ watch(
         profile_picture: props.voiceActor?.profile_picture || "",
         date_of_birth: props.voiceActor?.date_of_birth || "",
         wikidata_id: props.voiceActor?.wikidata_id || null,
-        tmdb_id: props.voiceActor?.tmdb_id || null,
-      };
+        tmdb_id: props.voiceActor?.tmdb_id || null};
     }
   },
 );
@@ -256,8 +258,7 @@ const fetchData = async () => {
     const { data, error: funcError } = await supabase.functions.invoke(
       "extract-voice-actor-info",
       {
-        body: { wikipediaUrl: wikipediaUrl.value },
-      },
+        body: { wikipediaUrl: wikipediaUrl.value }},
     );
 
     if (funcError) throw funcError;
@@ -276,8 +277,7 @@ const fetchData = async () => {
       wikidata_id:
         data.result.wikidata_id || props.voiceActor?.wikidata_id || null,
       tmdb_id:
-        data.result.tmdb_id || props.voiceActor?.tmdb_id || null,
-    };
+        data.result.tmdb_id || props.voiceActor?.tmdb_id || null};
   } catch (err: any) {
     console.error("Error fetching wikipedia data:", err);
     error.value = err.message || "An error occurred while fetching data.";
@@ -300,17 +300,14 @@ const saveData = async () => {
       profile_picture: fetchedData.value.profile_picture,
       date_of_birth: fetchedData.value.date_of_birth || null,
       wikidata_id: fetchedData.value.wikidata_id,
-      tmdb_id: fetchedData.value.tmdb_id,
-    };
+      tmdb_id: fetchedData.value.tmdb_id};
 
     const { data, error: updateError } = await supabase.functions.invoke(
       "update-voice-actor",
       {
         body: {
           voice_actor_id: props.voiceActor.id,
-          updates,
-        },
-      },
+          updates}},
     );
 
     if (updateError) throw updateError;

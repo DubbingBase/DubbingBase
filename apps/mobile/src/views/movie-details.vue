@@ -7,9 +7,9 @@
         </ion-buttons>
         <ion-title>{{ movie?.title ?? "" }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button fill="clear" @click="shareMedia" aria-label="Share">
+          <AppButton fill="clear" @click="shareMedia" aria-label="Share">
             <Share2 class="app-icon" />
-          </ion-button>
+          </AppButton>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
@@ -79,7 +79,8 @@
 </template>
 
 <script setup lang="ts">
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons, IonButton, toastController, IonToast, IonRefresher, IonRefresherContent } from '@ionic/vue';
+import AppButton from '@/components/common/AppButton.vue';
+import { IonButtons,  IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, toastController, IonToast, IonRefresher, IonRefresherContent } from '@ionic/vue';
 import { computed, ref, UnwrapRef, watch } from "vue";
 import AppBackButton from "@/components/common/AppBackButton.vue";
 import { useRoute, useRouter } from "vue-router";
@@ -128,8 +129,7 @@ const {
   goToVoiceActor,
   goToActor,
   castVote,
-  refreshVotes,
-} = useVoiceActorManagement("movie");
+  refreshVotes} = useVoiceActorManagement("movie");
 
 const movie = ref<MovieResponse["movie"] | undefined>();
 const queueStatus = ref<string | null>(null);
@@ -278,8 +278,7 @@ const shareMedia = async () => {
     title: movie.value.title || "DubbingBase",
     text: `Check out ${movie.value.title} on DubbingBase!`,
     url: `dubbingbase://movie/${movie.value.id}`,
-    dialogTitle: 'Share Movie',
-  });
+    dialogTitle: 'Share Movie'});
 };
 
 const takePhoto = async () => {
@@ -319,13 +318,11 @@ const takePhoto = async () => {
     const simplifiedActors = actors.value?.map((a: any) => ({
       id: a.id,
       name: a.name,
-      roles: a.roles?.map((r: any) => r.character) || [],
-    })) || [];
+      roles: a.roles?.map((r: any) => r.character) || []})) || [];
     formData.append("actors", JSON.stringify(simplifiedActors));
 
     const response = await supabase.functions.invoke("extract-credits-from-image", {
-      body: formData,
-    });
+      body: formData});
 
     if (response.data.ok) {
       extractedCredits.value = response.data.result || [];
@@ -372,8 +369,7 @@ const handleEnqueue = async () => {
   try {
     await enqueueMedia({
       tmdbId: Number(route.params.id),
-      mediaType: "movie",
-    });
+      mediaType: "movie"});
     
     // Refresh queue status to show it's pending
     await fetchQueueStatus();
@@ -382,8 +378,7 @@ const handleEnqueue = async () => {
       message: "Added to processing queue! It will be processed automatically.",
       duration: 3000,
       position: "top",
-      color: "success",
-    });
+      color: "success"});
     await toast.present();
   } catch (err) {
     console.error("Error enqueuing media:", err);
@@ -392,8 +387,7 @@ const handleEnqueue = async () => {
       message: "Queue addition failed. Please try again.",
       duration: 3000,
       position: "top",
-      color: "danger",
-    });
+      color: "danger"});
     await toast.present();
   } finally {
     isFetching.value = false;
@@ -416,16 +410,14 @@ const fetchInfos = async () => {
   try {
     await enqueueAndProcessMedia({
       tmdbId: Number(route.params.id),
-      mediaType: "movie",
-    });
+      mediaType: "movie"});
     // Immediately fetch updated movie data to display changes
     await fetchMovieData();
     const toast = await toastController.create({
       message: "Import completed successfully! The voice cast has been updated.",
       duration: 3000,
       position: "top",
-      color: "success",
-    });
+      color: "success"});
     await toast.present();
   } catch (err) {
     console.error("Error fetching movie data:", err);
@@ -434,8 +426,7 @@ const fetchInfos = async () => {
       message: "Import failed. Please try again.",
       duration: 3000,
       position: "top",
-      color: "danger",
-    });
+      color: "danger"});
     await toast.present();
   } finally {
     isFetching.value = false;
@@ -446,8 +437,7 @@ const fetchMovieData = async () => {
   const id = route.params.id;
   try {
     const movieResponseRaw = await supabase.functions.invoke<MovieResponse>("movie", {
-      body: { id },
-    });
+      body: { id }});
     const data = movieResponseRaw.data;
     if (data) {
       movie.value = data.movie;
