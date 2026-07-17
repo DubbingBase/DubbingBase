@@ -45,13 +45,14 @@
 </template>
 
 <script setup lang="ts">
+import { alertController } from '@/composables/useAlert';
 import AppListItem from '@/components/common/AppListItem.vue';
 import AppButton from '@/components/common/AppButton.vue';
 import AppImage from '@/components/common/AppImage.vue';
 import AppText from '@/components/common/AppText.vue';
 import AppSpinner from '@/components/common/AppSpinner.vue';
 import AppSkeleton from '@/components/common/AppSkeleton.vue';
-import { alertController } from '@ionic/vue';
+
 import type { WorkEntry } from '@/stores/profile'
 import { onMounted } from 'vue';
 

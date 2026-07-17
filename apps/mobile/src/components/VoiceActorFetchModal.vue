@@ -1,5 +1,5 @@
 <template>
-  <ion-modal :is-open="isOpen" @didDismiss="handleDismiss">
+  <AppModal :is-open="isOpen" @didDismiss="handleDismiss">
     <ion-header>
       <ion-toolbar>
         <ion-title>{{
@@ -179,10 +179,11 @@
         </div>
       </div>
     </ion-content>
-  </ion-modal>
+  </AppModal>
 </template>
 
 <script setup lang="ts">
+import AppModal from '@/components/common/AppModal.vue';
 import AppList from '@/components/common/AppList.vue';
 import AppButton from '@/components/common/AppButton.vue';
 import AppInput from '@/components/common/AppInput.vue';
@@ -192,7 +193,7 @@ import ArrowRight from '~icons/lucide/arrow-right';
 import XCircle from '~icons/lucide/x-circle';
 import ExternalLink from '~icons/lucide/external-link';
 import { ref, watch } from "vue";
-import { IonButtons,  IonModal, IonHeader, IonToolbar, IonTitle, IonContent, } from '@ionic/vue';
+import { IonButtons,   IonHeader, IonToolbar, IonTitle, IonContent, } from '@ionic/vue';
 
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import { supabase } from "@/api/supabase";

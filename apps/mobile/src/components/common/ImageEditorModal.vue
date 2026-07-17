@@ -1,5 +1,5 @@
 <template>
-  <ion-modal :is-open="isOpen" @didDismiss="cancel">
+  <AppModal :is-open="isOpen" @didDismiss="cancel">
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
@@ -21,13 +21,14 @@
         }"
       />
     </ion-content>
-  </ion-modal>
+  </AppModal>
 </template>
 
 <script setup lang="ts">
+import AppModal from '@/components/common/AppModal.vue';
 import AppButton from '@/components/common/AppButton.vue';
 import { ref, watch, onUnmounted } from 'vue';
-import { IonButtons,  IonModal, IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/vue';
+import { IonButtons,   IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/vue';
 import { Cropper } from 'vue-advanced-cropper';
 import 'vue-advanced-cropper/dist/style.css';
 

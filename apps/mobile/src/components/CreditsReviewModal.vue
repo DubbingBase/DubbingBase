@@ -1,5 +1,5 @@
 <template>
-  <ion-modal :is-open="isOpen" @didDismiss="closeModal">
+  <AppModal :is-open="isOpen" @didDismiss="closeModal">
     <ion-header>
       <ion-toolbar>
         <ion-title>Review Credits</ion-title>
@@ -60,23 +60,25 @@
         </div>
       </div>
     </ion-content>
-  </ion-modal>
+  </AppModal>
 </template>
 
 <script setup lang="ts">
+import { toastController } from '@/composables/useToast';
+import AppModal from '@/components/common/AppModal.vue';
 import AppList from '@/components/common/AppList.vue';
 import AppListItem from '@/components/common/AppListItem.vue';
 import AppLabel from '@/components/common/AppLabel.vue';
 import AppButton from '@/components/common/AppButton.vue';
 import { ref, watch } from "vue";
 import { IonButtons, 
-  IonModal,
+  
   IonHeader,
   IonToolbar,
   IonTitle,
   IonContent,
   IonBadge,
-  toastController} from '@ionic/vue';
+  } from '@ionic/vue';
 import XCircle from "~icons/lucide/x-circle";
 import Trash2 from "~icons/lucide/trash-2";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";

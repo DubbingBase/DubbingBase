@@ -1,6 +1,8 @@
+
+import { alertController } from '@/composables/useAlert';
 import { onUnmounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
-import { alertController } from "@ionic/vue";
+
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
 import { supabase } from "@/api/supabase";
@@ -142,20 +144,20 @@ export function useVoiceActorManagement(
       header: "Edit Performance",
       inputs: [
         {
-          name: "performance",
-          type: "text",
-          placeholder: "Performance type (e.g., Voice, ADR, etc.)",
-          value: person.performance || "Voice",
-        },
+          name: 'performance',
+          type: 'text',
+          placeholder: 'e.g., Lead Role, Narrator, etc.',
+          value: person.performance || ''
+        }
       ],
       buttons: [
         {
-          text: "Cancel",
-          role: "cancel",
+          text: t('common.cancel'),
+          role: 'cancel'
         },
         {
-          text: "Save",
-          handler: async (data) => {
+          text: t('common.save'),
+          handler: async (data: any) => {
             if (person.work_id) {
               await updateVoiceActorLink(person.work_id, data.performance);
             }

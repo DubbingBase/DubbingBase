@@ -79,8 +79,10 @@
 </template>
 
 <script setup lang="ts">
+import { toastController } from '@/composables/useToast';
+import { alertController } from '@/composables/useAlert';
 import AppButton from '@/components/common/AppButton.vue';
-import { IonButtons,  IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, toastController, IonToast, IonRefresher, IonRefresherContent } from '@ionic/vue';
+import { IonButtons,  IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonToast, IonRefresher, IonRefresherContent } from '@ionic/vue';
 import { computed, ref, UnwrapRef, watch } from "vue";
 import AppBackButton from "@/components/common/AppBackButton.vue";
 import { useRoute, useRouter } from "vue-router";

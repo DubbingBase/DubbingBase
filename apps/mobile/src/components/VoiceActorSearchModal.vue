@@ -1,5 +1,5 @@
 <template>
-  <ion-modal :is-open="isOpen" @didDismiss="$emit('close')">
+  <AppModal :is-open="isOpen" @didDismiss="$emit('close')">
     <ion-header>
       <ion-toolbar>
         <ion-title>Select Voice Actor</ion-title>
@@ -69,11 +69,12 @@
         </AppListItem>
       </AppList>
     </ion-content>
-  </ion-modal>
+  </AppModal>
 </template>
 
 
 <script setup lang="ts">
+import AppModal from '@/components/common/AppModal.vue';
 import AppList from '@/components/common/AppList.vue';
 import AppListItem from '@/components/common/AppListItem.vue';
 import AppAvatar from '@/components/common/AppAvatar.vue';
@@ -83,7 +84,7 @@ import AppText from '@/components/common/AppText.vue';
 import XCircle from '~icons/lucide/x-circle';
 import AppSpinner from '@/components/common/AppSpinner.vue';
 import AppSkeleton from '@/components/common/AppSkeleton.vue';
-import { IonButtons,  IonModal, IonHeader, IonToolbar, IonTitle, IonContent, } from '@ionic/vue';
+import { IonButtons,   IonHeader, IonToolbar, IonTitle, IonContent, } from '@ionic/vue';
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import { useVoiceActorManagement, type VoiceActor } from "@/composables/useVoiceActorManagement";
 const props = defineProps<{

@@ -117,10 +117,11 @@
 </template>
 
 <script setup lang="ts">
+import { toastController } from '@/composables/useToast';
 import AppButton from '@/components/common/AppButton.vue';
 import Search from '~icons/lucide/search';
 import Radio from '~icons/lucide/radio';
-import { IonButtons,  IonPage, IonContent, IonSegment, IonHeader, IonToolbar, IonBackButton, IonSegmentButton, IonSegmentContent, IonSegmentView, toastController, IonTitle, IonToast, IonRefresher, IonRefresherContent } from '@ionic/vue';
+import { IonButtons,  IonPage, IonContent, IonSegment, IonHeader, IonToolbar, IonBackButton, IonSegmentButton, IonSegmentContent, IonSegmentView, IonTitle, IonToast, IonRefresher, IonRefresherContent } from '@ionic/vue';
 import { ref, computed, UnwrapRef, watch } from "vue";
 import { useRoute } from "vue-router";
 import AppBackButton from "@/components/common/AppBackButton.vue";

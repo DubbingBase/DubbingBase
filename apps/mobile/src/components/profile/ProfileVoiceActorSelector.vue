@@ -10,7 +10,7 @@
       />
     </AppListItem>
 
-    <ion-modal :is-open="isModalOpen" @didDismiss="closeModal">
+    <AppModal :is-open="isModalOpen" @didDismiss="closeModal">
       <ion-header>
         <ion-toolbar>
           <ion-title>{{ $t('profile.selectProfile') }}</ion-title>
@@ -66,7 +66,7 @@
         <LoadingSpinner v-if="isLoading" />
         <ErrorMessage v-if="errorMessage" :message="errorMessage" />
       </ion-content>
-    </ion-modal>
+    </AppModal>
 
     <ion-loading
       :is-open="isSwitching"
@@ -77,6 +77,8 @@
 </template>
 
 <script setup lang="ts">
+import { alertController } from '@/composables/useAlert';
+import AppModal from '@/components/common/AppModal.vue';
 import AppList from '@/components/common/AppList.vue';
 import AppListItem from '@/components/common/AppListItem.vue';
 import AppButton from '@/components/common/AppButton.vue';
@@ -90,7 +92,7 @@ import AppSkeleton from '@/components/common/AppSkeleton.vue';
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { IonButtons,  IonModal, IonHeader, IonToolbar, IonTitle, IonContent, IonLoading, alertController } from '@ionic/vue';
+import { IonButtons,   IonHeader, IonToolbar, IonTitle, IonContent, IonLoading, } from '@ionic/vue';
 import { useProfileStore } from '@/stores/profile'
 import { useAuthStore } from '@/stores/auth'
 import { supabase } from '@/api/supabase'

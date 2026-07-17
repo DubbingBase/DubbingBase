@@ -5,11 +5,15 @@
         <component :is="Component" :key="route.fullPath" />
       </keep-alive>
     </router-view>
+    <AppToastContainer />
+    <AppAlertContainer />
   </ion-app>
 </template>
 
 <script setup lang="ts">
 import { IonApp } from "@ionic/vue";
+import AppToastContainer from "@/components/common/AppToastContainer.vue";
+import AppAlertContainer from "@/components/common/AppAlertContainer.vue";
 import { useAuthStore } from "@/stores/auth";
 import { useDeepLinkHandler } from "@/utils/deepLinks";
 import { onMounted, ref } from "vue";

@@ -53,7 +53,7 @@
         </ion-segment>
 
         <!-- Admin Search Modal -->
-        <ion-modal
+        <AppModal
           :is-open="showAdminSearch"
           @will-dismiss="showAdminSearch = false"
         >
@@ -100,7 +100,7 @@
               </div>
             </div>
           </ion-content>
-        </ion-modal>
+        </AppModal>
 
 
         <!-- Content based on selected tab -->
@@ -276,6 +276,7 @@
 </template>
 
 <script setup lang="ts">
+import AppModal from '@/components/common/AppModal.vue';
 import AppList from '@/components/common/AppList.vue';
 import AppListItem from '@/components/common/AppListItem.vue';
 import AppButton from '@/components/common/AppButton.vue';
@@ -289,7 +290,7 @@ import User from '~icons/lucide/user';
 import AppSpinner from '@/components/common/AppSpinner.vue';
 import AppSkeleton from '@/components/common/AppSkeleton.vue';
 import { onMounted, watch, ref, getCurrentInstance } from "vue";
-import { IonButtons,  IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonSegment, IonSegmentButton, IonModal, IonNote, IonSelectOption, IonRefresher, IonRefresherContent } from '@ionic/vue';
+import { IonButtons,  IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonSegment, IonSegmentButton,  IonNote, IonSelectOption, IonRefresher, IonRefresherContent } from '@ionic/vue';
 import { useProfileStore } from "@/stores/profile";
 import { useAuthStore } from "@/stores/auth";
 import RequestVoiceActorCard from "@/components/RequestVoiceActorCard.vue";

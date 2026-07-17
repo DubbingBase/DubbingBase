@@ -35,6 +35,7 @@
 </template>
 
 <script setup lang="ts">
+import { toastController } from '@/composables/useToast';
 import AppList from '@/components/common/AppList.vue';
 import AppListItem from '@/components/common/AppListItem.vue';
 import AppButton from '@/components/common/AppButton.vue';
@@ -45,7 +46,7 @@ import AppSkeleton from '@/components/common/AppSkeleton.vue';
 import { ref, onMounted } from 'vue';
 import AppBackButton from "@/components/common/AppBackButton.vue";
 import { useRouter, useRoute } from 'vue-router';
-import { IonButtons,  IonPage, IonHeader, IonToolbar, IonTitle, IonContent, toastController } from '@ionic/vue';
+import { IonButtons,  IonPage, IonHeader, IonToolbar, IonTitle, IonContent, } from '@ionic/vue';
 import { useAuthStore } from '@/stores/auth';
 
 const email = ref('');

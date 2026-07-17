@@ -82,15 +82,16 @@
         </div>
       </div>
 
-      <ion-modal :is-open="isAddWorkModalOpen" @didDismiss="isAddWorkModalOpen = false">
+      <AppModal :is-open="isAddWorkModalOpen" @didDismiss="isAddWorkModalOpen = false">
         <AddWorkModal @close="isAddWorkModalOpen = false" />
-      </ion-modal>
+      </AppModal>
 
     </ion-content>
   </ion-page>
 </template>
 
 <script setup lang="ts">
+import AppModal from '@/components/common/AppModal.vue';
 import AppList from '@/components/common/AppList.vue';
 import AppListItem from '@/components/common/AppListItem.vue';
 import AppButton from '@/components/common/AppButton.vue';
@@ -104,7 +105,7 @@ import UserCircle from '~icons/lucide/user-circle';
 import { onMounted, watch, computed, ref } from 'vue'
 import AppBackButton from '@/components/common/AppBackButton.vue'
 import { useRoute, useRouter } from 'vue-router'
-import { IonButtons,  IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonModal } from '@ionic/vue';
+import { IonButtons,  IonPage, IonHeader, IonToolbar, IonTitle, IonContent,  } from '@ionic/vue';
 import { useProfileStore } from '@/stores/profile'
 import { useAuthStore } from '@/stores/auth'
 import WorkList from '@/components/profile/WorkList.vue';
