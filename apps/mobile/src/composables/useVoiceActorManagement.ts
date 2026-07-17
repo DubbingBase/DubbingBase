@@ -1,5 +1,4 @@
-
-import { alertController } from '@/composables/useAlert';
+import { alertController } from "@/composables/useAlert";
 import { onUnmounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 
@@ -144,19 +143,19 @@ export function useVoiceActorManagement(
       header: "Edit Performance",
       inputs: [
         {
-          name: 'performance',
-          type: 'text',
-          placeholder: 'e.g., Lead Role, Narrator, etc.',
-          value: person.performance || ''
-        }
+          name: "performance",
+          type: "text",
+          placeholder: "e.g., Lead Role, Narrator, etc.",
+          value: person.performance || "",
+        },
       ],
       buttons: [
         {
-          text: t('common.cancel'),
-          role: 'cancel'
+          text: t("common.cancel"),
+          role: "cancel",
         },
         {
-          text: t('common.save'),
+          text: t("common.save"),
           handler: async (data: any) => {
             if (person.work_id) {
               await updateVoiceActorLink(person.work_id, data.performance);
@@ -203,7 +202,10 @@ export function useVoiceActorManagement(
     console.log("person", person);
     const alert = await alertController.create({
       header: t("common.confirmUnlinkTitle", "Délier ce comédien"),
-      message: t("common.confirmUnlinkMessage", `Êtes-vous sûr de vouloir délier ${person.name} de ce rôle ?`),
+      message: t(
+        "common.confirmUnlinkMessage",
+        `Êtes-vous sûr de vouloir délier ${person.name} de ce rôle ?`,
+      ),
       buttons: [
         {
           text: t("common.cancel", "Annuler"),

@@ -1,5 +1,4 @@
-
-import type { AlertOptions } from '@/components/common/AppAlertContainer.vue';
+import type { AlertOptions } from "@/components/common/AppAlertContainer.vue";
 
 class Alert {
   private onDismissResolve: ((data: any) => void) | null = null;
@@ -12,25 +11,25 @@ class Alert {
   }
 
   async present() {
-    if (typeof window !== 'undefined' && (window as any).__addAlert) {
+    if (typeof window !== "undefined" && (window as any).__addAlert) {
       const options: AlertOptions = {
         header: this.options.header,
         message: this.options.message,
         inputs: this.options.inputs,
         buttons: this.options.buttons,
-        backdropDismiss: this.options.backdropDismiss
+        backdropDismiss: this.options.backdropDismiss,
       };
-      
+
       (window as any).__addAlert(options, (data: any) => {
         if (this.onDismissResolve) {
           this.onDismissResolve(data);
         }
       });
     } else {
-      console.warn('AppAlertContainer not mounted. Fallback to native alert.');
+      console.warn("AppAlertContainer not mounted. Fallback to native alert.");
       alert(this.options.message || this.options.header);
       if (this.onDismissResolve) {
-        this.onDismissResolve({ role: 'cancel' });
+        this.onDismissResolve({ role: "cancel" });
       }
     }
   }
@@ -43,5 +42,5 @@ class Alert {
 export const alertController = {
   async create(options: any) {
     return new Alert(options);
-  }
+  },
 };

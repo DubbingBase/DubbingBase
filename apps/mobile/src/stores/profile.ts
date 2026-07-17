@@ -60,10 +60,13 @@ export const useProfileStore = defineStore("profile", () => {
   const currentProfileType = computed(() => profileType.value);
   const allVoiceActors = computed(() => voiceActors.value);
   const currentVoiceActor = computed(() => {
-    if (impersonatedVoiceActor.value) return impersonatedVoiceActor.value as any;
+    if (impersonatedVoiceActor.value)
+      return impersonatedVoiceActor.value as any;
     if (!currentVoiceActorId.value) return null;
     const currentId = currentVoiceActorId.value;
-    const found = (voiceActors.value as any[]).find((va) => va.id === currentId);
+    const found = (voiceActors.value as any[]).find(
+      (va) => va.id === currentId,
+    );
     return found ? (found as any) : null;
   });
   const hasMultipleVoiceActors = computed(() => voiceActors.value.length > 1);
@@ -193,7 +196,9 @@ export const useProfileStore = defineStore("profile", () => {
       currentVoiceActorId.value = voiceActorId;
       profileType.value = "voice_actor";
       // Set work entries from the selected voice actor data
-      const selectedVA = (voiceActors.value as any[]).find((va) => va.id === voiceActorId);
+      const selectedVA = (voiceActors.value as any[]).find(
+        (va) => va.id === voiceActorId,
+      );
       workEntries.value =
         selectedVA && "medias" in selectedVA ? (selectedVA as any).medias : [];
     } catch (err: any) {
@@ -309,7 +314,11 @@ export const useProfileStore = defineStore("profile", () => {
         if (updateError) throw updateError;
 
         // Update local state
-        userProfile.value = Object.assign({}, userProfile.value, userProfileUpdates) as any;
+        userProfile.value = Object.assign(
+          {},
+          userProfile.value,
+          userProfileUpdates,
+        ) as any;
       } else {
         throw new Error("Invalid profile type for update");
       }

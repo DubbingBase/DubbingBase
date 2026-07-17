@@ -58,7 +58,7 @@ export default {
       // Prepare update data
       const updateData: any = { ...updates };
       updateData.updated_at = new Date().toISOString();
-      
+
       if (updateData.date_of_birth === "") {
         updateData.date_of_birth = null;
       }
