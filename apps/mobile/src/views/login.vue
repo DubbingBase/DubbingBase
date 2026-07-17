@@ -10,16 +10,16 @@
     </ion-header>
     <ion-content class="ion-padding">
       <form @submit.prevent="isRegister ? register() : login()">
-        <ion-list>
-          <ion-item>
+        <AppList>
+          <AppListItem>
             <AppText position="floating">Email</AppText>
             <AppInput v-model="email" type="email" required></AppInput>
-          </ion-item>
-          <ion-item>
+          </AppListItem>
+          <AppListItem>
             <AppText position="floating">Mot de passe</AppText>
             <AppInput v-model="password" type="password" required></AppInput>
-          </ion-item>
-        </ion-list>
+          </AppListItem>
+        </AppList>
         <AppButton expand="block" type="submit" :disabled="loading">
           {{ loading ? (isRegister ? 'Création...' : 'Connexion...') : (isRegister ? 'Créer un compte' : 'Se connecter') }}
         </AppButton>
@@ -35,6 +35,8 @@
 </template>
 
 <script setup lang="ts">
+import AppList from '@/components/common/AppList.vue';
+import AppListItem from '@/components/common/AppListItem.vue';
 import AppButton from '@/components/common/AppButton.vue';
 import AppInput from '@/components/common/AppInput.vue';
 import AppText from '@/components/common/AppText.vue';
@@ -43,7 +45,7 @@ import AppSkeleton from '@/components/common/AppSkeleton.vue';
 import { ref, onMounted } from 'vue';
 import AppBackButton from "@/components/common/AppBackButton.vue";
 import { useRouter, useRoute } from 'vue-router';
-import { IonButtons,  IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, toastController } from '@ionic/vue';
+import { IonButtons,  IonPage, IonHeader, IonToolbar, IonTitle, IonContent, toastController } from '@ionic/vue';
 import { useAuthStore } from '@/stores/auth';
 
 const email = ref('');

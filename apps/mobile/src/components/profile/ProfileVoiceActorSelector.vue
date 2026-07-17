@@ -1,6 +1,6 @@
 <template>
   <div class="profile-voice-actor-selector">
-    <ion-item>
+    <AppListItem>
       <AppText position="stacked">{{ $t('profile.selectedProfile') }}</AppText>
       <AppInput
         :value="selectedProfileName"
@@ -8,7 +8,7 @@
         :placeholder="$t('profile.selectProfilePlaceholder')"
         @click="openModal"
       />
-    </ion-item>
+    </AppListItem>
 
     <ion-modal :is-open="isModalOpen" @didDismiss="closeModal">
       <ion-header>
@@ -26,18 +26,18 @@
         </ion-toolbar>
       </ion-header>
       <ion-content>
-        <ion-list>
+        <AppList>
           <!-- User Profile Option -->
-          <ion-item
+          <AppListItem
             button
             @click="selectUserProfile"
           >
             <AppText>{{ $t('profile.userProfile') }}</AppText>
             <User class="app-icon" />
-          </ion-item>
+          </AppListItem>
 
           <!-- User's Voice Actor Profiles -->
-          <ion-item
+          <AppListItem
             v-for="voiceActor in userVoiceActors"
             :key="`user-va-${voiceActor.id}`"
             button
@@ -45,11 +45,11 @@
           >
             <AppText>{{ voiceActor.firstname }} {{ voiceActor.lastname }} - {{ $t('profile.voiceActorProfile') }}</AppText>
             <Mic class="app-icon" />
-          </ion-item>
+          </AppListItem>
 
           <!-- All Voice Actors (Admin only) -->
           <template v-if="authStore.isAdmin">
-            <ion-item
+            <AppListItem
               v-for="voiceActor in allVoiceActors"
               :key="`admin-va-${voiceActor.id}`"
               button
@@ -57,11 +57,11 @@
             >
               <AppText>{{ voiceActor.firstname }} {{ voiceActor.lastname }} - {{ $t('profile.adminVoiceActor') }}</AppText>
               <Mic class="app-icon" />
-            </ion-item>
+            </AppListItem>
           </template>
 
 
-        </ion-list>
+        </AppList>
 
         <LoadingSpinner v-if="isLoading" />
         <ErrorMessage v-if="errorMessage" :message="errorMessage" />
@@ -77,6 +77,8 @@
 </template>
 
 <script setup lang="ts">
+import AppList from '@/components/common/AppList.vue';
+import AppListItem from '@/components/common/AppListItem.vue';
 import AppButton from '@/components/common/AppButton.vue';
 import AppInput from '@/components/common/AppInput.vue';
 import AppSearchbar from '@/components/common/AppSearchbar.vue';
@@ -88,7 +90,7 @@ import AppSkeleton from '@/components/common/AppSkeleton.vue';
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { IonButtons,  IonItem, IonModal, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonLoading, alertController } from '@ionic/vue';
+import { IonButtons,  IonModal, IonHeader, IonToolbar, IonTitle, IonContent, IonLoading, alertController } from '@ionic/vue';
 import { useProfileStore } from '@/stores/profile'
 import { useAuthStore } from '@/stores/auth'
 import { supabase } from '@/api/supabase'

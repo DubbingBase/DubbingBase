@@ -1,6 +1,6 @@
 <template>
-  <ion-list v-if="episodes && episodes.length">
-    <ion-item
+  <AppList v-if="episodes && episodes.length">
+    <AppListItem
       v-for="ep in episodes"
       :key="ep.id"
       class="episode-item"
@@ -19,13 +19,15 @@
         <p v-if="ep.air_date">Diffusé le {{ ep.air_date }}</p>
         <p v-if="ep.overview">{{ ep.overview }}</p>
       </AppText>
-    </ion-item>
-  </ion-list>
+    </AppListItem>
+  </AppList>
   <div v-else>Aucun épisode trouvé.</div>
 </template>
 
 <script lang="ts" setup>
-import { IonList, IonItem } from '@ionic/vue';
+import AppList from '@/components/common/AppList.vue';
+import AppListItem from '@/components/common/AppListItem.vue';
+
 import MediaItem from "@/components/MediaItem.vue";
 
 interface Props {

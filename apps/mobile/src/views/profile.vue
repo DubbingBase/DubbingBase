@@ -76,8 +76,8 @@
               ></AppSearchbar>
 
               <div v-if="adminSearchResults.length > 0" class="search-results">
-                <ion-list>
-                  <ion-item
+                <AppList>
+                  <AppListItem
                     v-for="result in adminSearchResults"
                     :key="result.id"
                     @click="impersonateVoiceActor(result)"
@@ -87,8 +87,8 @@
                       <h3>{{ result.firstname }} {{ result.lastname }}</h3>
                       <p>{{ result.bio?.substring(0, 100) }}...</p>
                     </AppText>
-                  </ion-item>
-                </ion-list>
+                  </AppListItem>
+                </AppList>
               </div>
               <div
                 v-else-if="
@@ -111,8 +111,8 @@
             class="user-profile-content"
           >
             <div class="user-profile-form">
-              <ion-list>
-                <ion-item>
+              <AppList>
+                <AppListItem>
                   <AppTextarea
                     :label="$t('profile.biography')"
                     label-placement="stacked"
@@ -120,33 +120,33 @@
                     :auto-grow="true"
                     :placeholder="$t('profile.tellUsAboutYourself')"
                   ></AppTextarea>
-                </ion-item>
-                <ion-item v-if="userProfileErrors.includes('Bio must be less than 1000 characters')" class="validation-error">
+                </AppListItem>
+                <AppListItem v-if="userProfileErrors.includes('Bio must be less than 1000 characters')" class="validation-error">
                   <ion-note color="danger">{{ $t("profile.bioTooLong") }}</ion-note>
-                </ion-item>
-                <ion-item>
+                </AppListItem>
+                <AppListItem>
                   <AppInput
                     :label="$t('profile.nationality')"
                     label-placement="stacked"
                     v-model="profileStore.userProfileData.nationality"
                     :placeholder="$t('profile.exFrench')"
                   ></AppInput>
-                </ion-item>
-                <ion-item v-if="userProfileErrors.includes('Nationality must contain only letters and spaces')" class="validation-error">
+                </AppListItem>
+                <AppListItem v-if="userProfileErrors.includes('Nationality must contain only letters and spaces')" class="validation-error">
                   <ion-note color="danger">{{ $t("profile.nationalityInvalid") }}</ion-note>
-                </ion-item>
-                <ion-item>
+                </AppListItem>
+                <AppListItem>
                   <AppInput
                     type="date"
                     :label="$t('profile.dateOfBirth')"
                     label-placement="stacked"
                     v-model="profileStore.userProfileData.date_of_birth"
                   ></AppInput>
-                </ion-item>
-                <ion-item v-if="userProfileErrors.includes('Date of birth must be in YYYY-MM-DD format')" class="validation-error">
+                </AppListItem>
+                <AppListItem v-if="userProfileErrors.includes('Date of birth must be in YYYY-MM-DD format')" class="validation-error">
                   <ion-note color="danger">{{ $t("profile.dateOfBirthInvalid") }}</ion-note>
-                </ion-item>
-              </ion-list>
+                </AppListItem>
+              </AppList>
 
               <AppButton
                 expand="block"
@@ -176,7 +176,7 @@
                 v-if="authStore.isAdmin && profileStore.isImpersonating"
                 class="impersonation-notice"
               >
-                <ion-item color="warning">
+                <AppListItem color="warning">
                   <User class="app-icon" />
                   <AppText>
                     <h3>{{ $t("profile.impersonatingUser") }}</h3>
@@ -189,71 +189,71 @@
                   >
                     {{ $t("profile.exitImpersonation") }}
                   </AppButton>
-                </ion-item>
+                </AppListItem>
               </div>
 
-              <ion-list>
-                <ion-item>
+              <AppList>
+                <AppListItem>
                   <AppInput
                     :label="$t('profile.firstName')"
                     label-placement="stacked"
                     v-model="profileStore.currentVoiceActor.firstname"
                   ></AppInput>
-                </ion-item>
-                <ion-item>
+                </AppListItem>
+                <AppListItem>
                   <AppInput
                     :label="$t('profile.lastName')"
                     label-placement="stacked"
                     v-model="profileStore.currentVoiceActor.lastname"
                   ></AppInput>
-                </ion-item>
-                <ion-item>
+                </AppListItem>
+                <AppListItem>
                   <AppTextarea
                     :label="$t('profile.biography')"
                     label-placement="stacked"
                     v-model="profileStore.currentVoiceActor.bio"
                     :auto-grow="true"
                   ></AppTextarea>
-                </ion-item>
-                <ion-item v-if="voiceActorErrors.includes('Bio must be less than 1000 characters')" class="validation-error">
+                </AppListItem>
+                <AppListItem v-if="voiceActorErrors.includes('Bio must be less than 1000 characters')" class="validation-error">
                   <ion-note color="danger">{{ $t("profile.bioTooLong") }}</ion-note>
-                </ion-item>
-                <ion-item>
+                </AppListItem>
+                <AppListItem>
                   <AppInput
                     :label="$t('profile.nationality')"
                     label-placement="stacked"
                     v-model="profileStore.currentVoiceActor.nationality"
                   ></AppInput>
-                </ion-item>
-                <ion-item v-if="voiceActorErrors.includes('Nationality must contain only letters and spaces')" class="validation-error">
+                </AppListItem>
+                <AppListItem v-if="voiceActorErrors.includes('Nationality must contain only letters and spaces')" class="validation-error">
                   <ion-note color="danger">{{ $t("profile.nationalityInvalid") }}</ion-note>
-                </ion-item>
-                <ion-item>
+                </AppListItem>
+                <AppListItem>
                   <AppInput
                     type="date"
                     :label="$t('profile.dateOfBirth')"
                     label-placement="stacked"
                     v-model="profileStore.currentVoiceActor.date_of_birth"
                   ></AppInput>
-                </ion-item>
-                <ion-item v-if="voiceActorErrors.includes('Date of birth must be in YYYY-MM-DD format')" class="validation-error">
+                </AppListItem>
+                <AppListItem v-if="voiceActorErrors.includes('Date of birth must be in YYYY-MM-DD format')" class="validation-error">
                   <ion-note color="danger">{{ $t("profile.dateOfBirthInvalid") }}</ion-note>
-                </ion-item>
-                <ion-item>
+                </AppListItem>
+                <AppListItem>
                   <AppInput
                     :label="$t('profile.awards')"
                     label-placement="stacked"
                     v-model="profileStore.currentVoiceActor.awards"
                   ></AppInput>
-                </ion-item>
-                <ion-item>
+                </AppListItem>
+                <AppListItem>
                   <AppInput
                     :label="$t('profile.yearsActive')"
                     label-placement="stacked"
                     v-model="profileStore.currentVoiceActor.years_active"
                   ></AppInput>
-                </ion-item>
-              </ion-list>
+                </AppListItem>
+              </AppList>
 
               <AppButton
                 expand="block"
@@ -276,6 +276,8 @@
 </template>
 
 <script setup lang="ts">
+import AppList from '@/components/common/AppList.vue';
+import AppListItem from '@/components/common/AppListItem.vue';
 import AppButton from '@/components/common/AppButton.vue';
 import AppInput from '@/components/common/AppInput.vue';
 import AppTextarea from '@/components/common/AppTextarea.vue';
@@ -287,7 +289,7 @@ import User from '~icons/lucide/user';
 import AppSpinner from '@/components/common/AppSpinner.vue';
 import AppSkeleton from '@/components/common/AppSkeleton.vue';
 import { onMounted, watch, ref, getCurrentInstance } from "vue";
-import { IonButtons,  IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonSegment, IonSegmentButton, IonModal, IonNote, IonSelectOption, IonRefresher, IonRefresherContent } from '@ionic/vue';
+import { IonButtons,  IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonSegment, IonSegmentButton, IonModal, IonNote, IonSelectOption, IonRefresher, IonRefresherContent } from '@ionic/vue';
 import { useProfileStore } from "@/stores/profile";
 import { useAuthStore } from "@/stores/auth";
 import RequestVoiceActorCard from "@/components/RequestVoiceActorCard.vue";

@@ -1,5 +1,5 @@
 <template>
-  <ion-item>
+  <AppListItem>
     <AppImage class="app-thumbnail" slot="start">
       <img
         v-if="workEntry.media?.poster_path"
@@ -41,16 +41,17 @@
     >
       <Trash2 class="app-icon" />
     </AppButton>
-  </ion-item>
+  </AppListItem>
 </template>
 
 <script setup lang="ts">
+import AppListItem from '@/components/common/AppListItem.vue';
 import AppButton from '@/components/common/AppButton.vue';
 import AppImage from '@/components/common/AppImage.vue';
 import AppText from '@/components/common/AppText.vue';
 import AppSpinner from '@/components/common/AppSpinner.vue';
 import AppSkeleton from '@/components/common/AppSkeleton.vue';
-import { IonItem, alertController } from '@ionic/vue';
+import { alertController } from '@ionic/vue';
 import type { WorkEntry } from '@/stores/profile'
 import { onMounted } from 'vue';
 

@@ -21,26 +21,26 @@
     </ion-header>
     <ion-content class="ion-padding">
       <!-- Loading state -->
-      <ion-item v-if="isSearching" class="ion-text-center">
+      <AppListItem v-if="isSearching" class="ion-text-center">
         <LoadingSpinner></LoadingSpinner>
-      </ion-item>
+      </AppListItem>
 
       <!-- Error state -->
-      <ion-item v-else-if="searchError" class="ion-text-center">
+      <AppListItem v-else-if="searchError" class="ion-text-center">
         <AppText color="danger">{{ searchError }}</AppText>
-      </ion-item>
+      </AppListItem>
 
       <!-- No results state -->
-      <ion-item
+      <AppListItem
         v-else-if="!searchResults.length && searchTerm"
         class="ion-text-center"
       >
         <AppText>No voice actors found</AppText>
-      </ion-item>
+      </AppListItem>
 
       <!-- Results list -->
-      <ion-list v-else-if="searchResults.length > 0">
-        <ion-item
+      <AppList v-else-if="searchResults.length > 0">
+        <AppListItem
           v-for="va in searchResults"
           :key="va.id"
           button
@@ -50,37 +50,40 @@
             }
           "
         >
-          <ion-avatar slot="start" v-if="va.profile_picture">
+          <AppAvatar slot="start" v-if="va.profile_picture">
             <img
               :src="va.profile_picture"
               :alt="va.firstname + ' ' + va.lastname"
             />
-          </ion-avatar>
-          <ion-avatar slot="start" v-else>
+          </AppAvatar>
+          <AppAvatar slot="start" v-else>
             <img
               src="https://placehold.co/40?text=VA"
               :alt="va.firstname + ' ' + va.lastname"
             />
-          </ion-avatar>
+          </AppAvatar>
           <AppText>
             <h3>{{ va.firstname }} {{ va.lastname }}</h3>
             <p v-if="va.nationality">{{ va.nationality }}</p>
           </AppText>
-        </ion-item>
-      </ion-list>
+        </AppListItem>
+      </AppList>
     </ion-content>
   </ion-modal>
 </template>
 
 
 <script setup lang="ts">
+import AppList from '@/components/common/AppList.vue';
+import AppListItem from '@/components/common/AppListItem.vue';
+import AppAvatar from '@/components/common/AppAvatar.vue';
 import AppButton from '@/components/common/AppButton.vue';
 import AppSearchbar from '@/components/common/AppSearchbar.vue';
 import AppText from '@/components/common/AppText.vue';
 import XCircle from '~icons/lucide/x-circle';
 import AppSpinner from '@/components/common/AppSpinner.vue';
 import AppSkeleton from '@/components/common/AppSkeleton.vue';
-import { IonButtons,  IonModal, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonAvatar } from '@ionic/vue';
+import { IonButtons,  IonModal, IonHeader, IonToolbar, IonTitle, IonContent, } from '@ionic/vue';
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import { useVoiceActorManagement, type VoiceActor } from "@/composables/useVoiceActorManagement";
 const props = defineProps<{

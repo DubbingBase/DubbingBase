@@ -3,11 +3,11 @@
       name: routeName,
       params: { id: match.id },
     }">
-  <ion-card
+  <AppCard
     class="search-result-card"
     button
   >
-    <ion-card-content class="card-content">
+    <AppCardContent class="card-content">
       <MediaThumbnail :path="image ?? `https://api.dicebear.com/9.x/initials/svg?scale=50&backgroundColor=212121&seed=${name}`" class="thumbnail" />
       <div class="info">
         <h3 class="title">{{ name }}</h3>
@@ -17,15 +17,17 @@
         </div>
       </div>
       <component v-if="mediaIcon" :is="mediaIcon" :color="iconColor" class="type-icon"></component>
-    </ion-card-content>
-  </ion-card>
+    </AppCardContent>
+  </AppCard>
   </router-link>
 </template>
 
 <script lang="ts" setup>
+import AppCard from '@/components/common/AppCard.vue';
+import AppCardContent from '@/components/common/AppCardContent.vue';
 import { computed } from "vue";
 import { format, parseISO } from "date-fns";
-import { IonCard, IonCardContent, IonChip } from "@ionic/vue";
+import { IonChip } from "@ionic/vue";
 import MediaThumbnail from "@/components/MediaThumbnail.vue";
 import type { SearchResult } from "@/types/search";
 import Film from '~icons/lucide/film';

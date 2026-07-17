@@ -10,19 +10,19 @@
 
   <ion-content>
     <form @submit.prevent="handleSubmit">
-      <ion-list>
-        <ion-item>
+      <AppList>
+        <AppListItem>
           <AppText position="stacked">Titre du média *</AppText>
           <AppSearchbar
             v-model="formData.media_title"
             placeholder="Rechercher un film ou une série..."
             @ionInput="searchMedia"
           ></AppSearchbar>
-        </ion-item>
+        </AppListItem>
 
         <div v-if="searchResults.length > 0" class="search-results">
-          <ion-list>
-            <ion-item
+          <AppList>
+            <AppListItem
               v-for="result in searchResults"
               :key="result.id"
               button
@@ -39,12 +39,12 @@
                 <h3>{{ getMediaTitle(result) }}</h3>
                 <p>{{ getMediaYear(result) }}</p>
               </AppText>
-            </ion-item>
-          </ion-list>
+            </AppListItem>
+          </AppList>
         </div>
 
         <div v-if="selectedMedia">
-          <ion-item>
+          <AppListItem>
             <AppText position="stacked">Personnage / Acteur Original *</AppText>
             <AppSearchbar
               v-model="characterSearchQuery"
@@ -52,11 +52,11 @@
               @ionInput="onCharacterSearch"
               :disabled="!cast.length"
             ></AppSearchbar>
-          </ion-item>
+          </AppListItem>
 
           <div v-if="characterSearchResults.length > 0" class="search-results">
-            <ion-list>
-              <ion-item
+            <AppList>
+              <AppListItem
                 v-for="member in characterSearchResults"
                 :key="member.id"
                 button
@@ -66,12 +66,12 @@
                   <h3>{{ member.name }}</h3>
                   <p>{{ member.character }}</p>
                 </AppText>
-              </ion-item>
-            </ion-list>
+              </AppListItem>
+            </AppList>
           </div>
         </div>
 
-      </ion-list>
+      </AppList>
 
       <div class="form-actions">
         <AppButton
@@ -88,6 +88,8 @@
 </template>
 
 <script setup lang="ts">
+import AppList from '@/components/common/AppList.vue';
+import AppListItem from '@/components/common/AppListItem.vue';
 import AppButton from '@/components/common/AppButton.vue';
 import AppSearchbar from '@/components/common/AppSearchbar.vue';
 import AppImage from '@/components/common/AppImage.vue';
@@ -95,7 +97,7 @@ import AppText from '@/components/common/AppText.vue';
 import AppSpinner from '@/components/common/AppSpinner.vue';
 import AppSkeleton from '@/components/common/AppSkeleton.vue';
 import { ref, computed } from 'vue'
-import { IonButtons,  modalController, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem} from '@ionic/vue';
+import { IonButtons,  modalController, IonHeader, IonToolbar, IonTitle, IonContent, } from '@ionic/vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { useProfileStore } from '@/stores/profile'
 import { supabase } from '@/api/supabase'

@@ -18,13 +18,13 @@
     <ion-content>
       <div class="content-wrapper">
         <transition-group name="fade" tag="div">
-          <ion-list v-if="matches.length > 0">
+          <AppList v-if="matches.length > 0">
             <SearchResultItem
               v-for="match in matches"
               :key="`${match.media_type}:${match.id}`"
               :match="match"
             />
-          </ion-list>
+          </AppList>
         </transition-group>
         <p v-if="!isLoading && matches.length === 0 && trimmedQuery.length >= 2" class="empty-state">No results found</p>
         <p v-if="!isLoading && matches.length === 0 && trimmedQuery.length < 2" class="empty-state">Start typing to search...</p>
@@ -36,10 +36,11 @@
 </template>
 
 <script lang="ts" setup>
+import AppList from '@/components/common/AppList.vue';
 import AppSearchbar from '@/components/common/AppSearchbar.vue';
 import { ref, computed } from "vue";
 defineOptions({ name: 'Search' });
-import { IonHeader, IonTitle, IonContent, IonList, IonToolbar, IonPage, IonToast, SearchbarInputEventDetail } from '@ionic/vue';
+import { IonHeader, IonTitle, IonContent, IonToolbar, IonPage, IonToast, SearchbarInputEventDetail } from '@ionic/vue';
 
 import SearchResultItem from "@/components/SearchResultItem.vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";

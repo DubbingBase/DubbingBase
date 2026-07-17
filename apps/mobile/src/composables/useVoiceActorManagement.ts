@@ -225,7 +225,7 @@ export function useVoiceActorManagement(
     try {
       await supabase.functions.invoke("delete-voice-actor-link", {
         body: {
-          work_id: workId,
+          id: workId,
         },
       });
 

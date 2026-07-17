@@ -50,7 +50,7 @@
 
 
 
-        <ion-list class="diff-list" lines="none">
+        <AppList class="diff-list" lines="none">
           <!-- Firstname -->
           <div class="diff-item">
                           <div class="label-header">
@@ -157,7 +157,7 @@
               </AppButton>
             </div>
           </div>
-        </ion-list>
+        </AppList>
 
         <div v-if="error" class="error-message ion-margin-top">
           {{ error }}
@@ -183,6 +183,7 @@
 </template>
 
 <script setup lang="ts">
+import AppList from '@/components/common/AppList.vue';
 import AppButton from '@/components/common/AppButton.vue';
 import AppInput from '@/components/common/AppInput.vue';
 import AppTextarea from '@/components/common/AppTextarea.vue';
@@ -191,7 +192,7 @@ import ArrowRight from '~icons/lucide/arrow-right';
 import XCircle from '~icons/lucide/x-circle';
 import ExternalLink from '~icons/lucide/external-link';
 import { ref, watch } from "vue";
-import { IonButtons,  IonModal, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem } from '@ionic/vue';
+import { IonButtons,  IonModal, IonHeader, IonToolbar, IonTitle, IonContent, } from '@ionic/vue';
 
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import { supabase } from "@/api/supabase";

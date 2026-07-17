@@ -1,6 +1,6 @@
 <template>
   <div class="work-list">
-    <ion-list>
+    <AppList>
       <WorkItem
         v-for="workEntry in workEntries"
         :key="workEntry.id"
@@ -9,13 +9,14 @@
         @edit="handleEditWork"
         @delete="handleDeleteWork"
       />
-    </ion-list>
+    </AppList>
   </div>
 </template>
 
 <script setup lang="ts">
+import AppList from '@/components/common/AppList.vue';
 import { computed } from 'vue'
-import { IonList } from '@ionic/vue';
+
 import { useProfileStore } from '@/stores/profile'
 import WorkItem from './WorkItem.vue'
 import type { WorkEntry } from '@/stores/profile'

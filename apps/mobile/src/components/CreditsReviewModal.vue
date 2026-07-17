@@ -16,9 +16,9 @@
         <p>Auto-matching with database...</p>
       </div>
       <div v-else>
-        <ion-list>
-          <ion-item v-for="(credit, index) in processedCredits" :key="index">
-            <ion-label class="ion-text-wrap">
+        <AppList>
+          <AppListItem v-for="(credit, index) in processedCredits" :key="index">
+            <AppLabel class="ion-text-wrap">
               <h2>
                 <strong>Actor:</strong> 
                 {{ credit.matchedActorName || credit.actor || 'Not found' }}
@@ -36,7 +36,7 @@
                   {{ credit.matchedVoiceActor ? "Matched" : "New" }}
                 </ion-badge>
               </p>
-            </ion-label>
+            </AppLabel>
             <AppButton
               slot="end"
               fill="clear"
@@ -45,8 +45,8 @@
             >
               <Trash2 class="app-icon" />
             </AppButton>
-          </ion-item>
-        </ion-list>
+          </AppListItem>
+        </AppList>
 
         <div class="ion-padding-top">
           <AppButton
@@ -64,6 +64,9 @@
 </template>
 
 <script setup lang="ts">
+import AppList from '@/components/common/AppList.vue';
+import AppListItem from '@/components/common/AppListItem.vue';
+import AppLabel from '@/components/common/AppLabel.vue';
 import AppButton from '@/components/common/AppButton.vue';
 import { ref, watch } from "vue";
 import { IonButtons, 
@@ -72,9 +75,6 @@ import { IonButtons,
   IonToolbar,
   IonTitle,
   IonContent,
-  IonList,
-  IonItem,
-  IonLabel,
   IonBadge,
   toastController} from '@ionic/vue';
 import XCircle from "~icons/lucide/x-circle";

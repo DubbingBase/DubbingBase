@@ -31,29 +31,29 @@
 
       <div v-else class="profile-content">
         <div v-if="profileStore.hasProfile && editableProfile">
-          <ion-list>
-            <ion-item>
+          <AppList>
+            <AppListItem>
               <AppInput label="First name" label-placement="stacked" v-model="(editableProfile as any).firstname" :readonly="!canEdit"></AppInput>
-            </ion-item>
-            <ion-item>
+            </AppListItem>
+            <AppListItem>
               <AppInput label="Last name" label-placement="stacked" v-model="(editableProfile as any).lastname" :readonly="!canEdit"></AppInput>
-            </ion-item>
-            <ion-item>
+            </AppListItem>
+            <AppListItem>
               <AppTextarea label="Biography" label-placement="stacked" v-model="editableProfile.bio" :auto-grow="true" :readonly="!canEdit"></AppTextarea>
-            </ion-item>
-            <ion-item>
+            </AppListItem>
+            <AppListItem>
               <AppInput label="Nationality" label-placement="stacked" v-model="editableProfile.nationality" :readonly="!canEdit"></AppInput>
-            </ion-item>
-            <ion-item>
+            </AppListItem>
+            <AppListItem>
               <AppInput type="date" label="Date of birth" label-placement="stacked" v-model="editableProfile.date_of_birth" :readonly="!canEdit"></AppInput>
-            </ion-item>
-            <ion-item>
+            </AppListItem>
+            <AppListItem>
               <AppInput label="Awards" label-placement="stacked" v-model="(editableProfile as any).awards" :readonly="!canEdit"></AppInput>
-            </ion-item>
-            <ion-item>
+            </AppListItem>
+            <AppListItem>
               <AppInput label="Years active" label-placement="stacked" v-model="(editableProfile as any).years_active" :readonly="!canEdit"></AppInput>
-            </ion-item>
-          </ion-list>
+            </AppListItem>
+          </AppList>
 
           <AppButton v-if="canEdit" expand="block" @click="handleSave" :disabled="profileStore.isUpdating">
             <LoadingSpinner v-if="profileStore.isUpdating" name="crescent" inline />
@@ -91,6 +91,8 @@
 </template>
 
 <script setup lang="ts">
+import AppList from '@/components/common/AppList.vue';
+import AppListItem from '@/components/common/AppListItem.vue';
 import AppButton from '@/components/common/AppButton.vue';
 import AppInput from '@/components/common/AppInput.vue';
 import AppTextarea from '@/components/common/AppTextarea.vue';
@@ -102,7 +104,7 @@ import UserCircle from '~icons/lucide/user-circle';
 import { onMounted, watch, computed, ref } from 'vue'
 import AppBackButton from '@/components/common/AppBackButton.vue'
 import { useRoute, useRouter } from 'vue-router'
-import { IonButtons,  IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonModal } from '@ionic/vue';
+import { IonButtons,  IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonModal } from '@ionic/vue';
 import { useProfileStore } from '@/stores/profile'
 import { useAuthStore } from '@/stores/auth'
 import WorkList from '@/components/profile/WorkList.vue';
