@@ -7,6 +7,9 @@
         </ion-buttons>
         <ion-title>{{ show?.name || "Détails de la série" }}</ion-title>
         <ion-buttons slot="end">
+          <ion-button fill="clear" @click="shareMedia" aria-label="Share">
+            <Share2 class="app-icon" />
+          </ion-button>
           <ion-button fill="clear" aria-label="Paramètres">
             <Settings class="app-icon" />
           </ion-button>
@@ -99,6 +102,16 @@
         :link-voice-actor="linkVoiceActor"
         @close="showVoiceActorSearch = false"
       />
+
+      <CreditsReviewModal
+        :is-open="showCreditsReview"
+        :extracted-credits="extractedCredits"
+        :movie-actors="actors"
+        :media-id="route.params.id as string"
+        :work-type="'tv'"
+        @close="showCreditsReview = false"
+        @refresh="handleRefresh"
+      />
     </ion-content>
   </ion-page>
 </template>
@@ -116,10 +129,13 @@ import MediaThumbnail from "@/components/MediaThumbnail.vue";
 import MediaInfoCard from "@/components/MediaInfoCard.vue";
 import MediaItem from "@/components/MediaItem.vue";
 import ActorList from "@/components/ActorList.vue";
-import ActionButtons from "@/components/ActionButtons.vue";
 import VoiceActorSearchModal from "@/components/VoiceActorSearchModal.vue";
+import CreditsReviewModal from "@/components/CreditsReviewModal.vue";
+import ActionButtons from "@/components/ActionButtons.vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import { useVoiceActorManagement } from "@/composables/useVoiceActorManagement";
+import Share2 from '~icons/lucide/share-2';
+import { Share } from '@capacitor/share';
 // Removed unused imports
 import Settings from '~icons/lucide/settings';
 import { storeToRefs } from "pinia";
@@ -286,27 +302,73 @@ const isScanning = ref(false);
 const scanResult = ref("");
 const showScanResult = ref(false);
 
+const showCreditsReview = ref(false);
+const extractedCredits = ref<Array<{actor: string, role: string, voiceActor: string, matchedActorId?: number | null}>>([]);
+
+const shareMedia = async () => {
+  if (!show.value) return;
+  await Share.share({
+    title: show.value.name || "DubbingBase",
+    text: `Check out ${show.value.name} on DubbingBase!`,
+    url: `dubbingbase://serie/${show.value.id}`,
+    dialogTitle: 'Share Series',
+  });
+};
+
 const takePhoto = async () => {
   try {
     isScanning.value = true;
-    await Camera.getPhoto({
-      quality: 90,
-      allowEditing: false,
-      resultType: CameraResultType.Base64,
-      source: CameraSource.Prompt,
+
+    const file = await new Promise<File | null>((resolve) => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+      
+      input.onchange = (e) => {
+        const target = e.target as HTMLInputElement;
+        resolve(target.files?.[0] || null);
+      };
+      
+      input.addEventListener("cancel", () => resolve(null));
+      
+      window.addEventListener("focus", () => {
+        setTimeout(() => {
+          if (!input.value) resolve(null);
+        }, 1000);
+      }, { once: true });
+      
+      input.click();
     });
 
-    // Here you would typically send the image to your vision API
-    // For now, we'll just show a success message
-    scanResult.value = "Image captured successfully! Processing...";
-    showScanResult.value = true;
+    if (!file) {
+      isScanning.value = false;
+      return;
+    }
 
-    // Simulate API call
-    setTimeout(() => {
-      // TODO: Replace with actual API call to your vision LLM
-      scanResult.value = "Processing complete! Ready to add voice actors.";
-      // Here you would process the response and potentially auto-fill the voice actor form
-    }, 2000);
+    const formData = new FormData();
+    formData.append("image", file, file.name || "image.jpg");
+    
+    // Provide known actors to the AI
+    const simplifiedActors = actors.value?.map((a: any) => ({
+      id: a.id,
+      name: a.name,
+      roles: a.roles?.map((r: any) => r.character) || [],
+    })) || [];
+    formData.append("actors", JSON.stringify(simplifiedActors));
+
+    const response = await supabase.functions.invoke("extract-credits-from-image", {
+      body: formData,
+    });
+
+    if (response.data.ok) {
+      extractedCredits.value = response.data.result || [];
+      showCreditsReview.value = true;
+      scanResult.value = "Credits extracted successfully!";
+      showScanResult.value = true;
+    } else {
+      scanResult.value = response.data.error || "Error extracting credits.";
+      showScanResult.value = true;
+    }
   } catch (error) {
     console.error("Error taking photo:", error);
     scanResult.value = "Error capturing image. Please try again.";
@@ -334,16 +396,16 @@ const fetchSerieData = async () => {
   try {
     const response = await getSerie(id as string);
     if (response.data) {
-      show.value = response.data.serie || response.data.show; // Handle both response formats
+      show.value = response.data.serie || (response.data as any).show; // Handle both response formats
       show.value.credits = response.data.aggregateCredits;
       // Load voice actors for this serie
       if (response.data.voiceActors) {
         voiceActors.value = response.data.voiceActors.map((va) =>
           voiceActorToPersonData(
             va.voiceActorDetails,
-            va.performance,
+            va.performance || "",
             va.actor_id,
-            va.reviewed_status,
+            (va as any).reviewed_status,
             va.id,
           ),
         );
@@ -383,7 +445,7 @@ const fetchQueueStatus = async () => {
   }
 };
 
-const handleRefresh = async (event: any) => {
+const handleRefresh = async (event?: any) => {
   try {
     await fetchSerieData();
     if (!hasData.value && hasWikidataId.value) {
@@ -392,7 +454,7 @@ const handleRefresh = async (event: any) => {
   } catch (error) {
     console.error("Error refreshing serie data:", error);
   } finally {
-    event.target.complete();
+    event?.target?.complete();
   }
 };
 

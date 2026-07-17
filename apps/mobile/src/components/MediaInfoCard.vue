@@ -49,34 +49,31 @@
 
       <div class="metadata-row">
         <!-- External Services -->
-        <a 
-          :href="`https://www.themoviedb.org/${media.title ? 'movie' : 'tv'}/${media.id}`" 
-          target="_blank" 
+        <button 
+          @click="openExternalLink(`https://www.themoviedb.org/${media.title ? 'movie' : 'tv'}/${media.id}`)"
           class="meta-pill link-pill tmdb-pill"
         >
           <ExternalLink class="app-icon" />
           <span>TMDB</span>
-        </a>
+        </button>
 
-        <a 
+        <button 
           v-if="media.external_ids?.imdb_id" 
-          :href="`https://www.imdb.com/title/${media.external_ids.imdb_id}`" 
-          target="_blank" 
+          @click="openExternalLink(`https://www.imdb.com/title/${media.external_ids.imdb_id}`)"
           class="meta-pill link-pill imdb-pill"
         >
           <ExternalLink class="app-icon" />
           <span>IMDb</span>
-        </a>
+        </button>
 
-        <a 
+        <button 
           v-if="media.external_ids?.wikidata_id" 
-          :href="`https://hub.toolforge.org/${media.external_ids.wikidata_id}?site=enwiki`" 
-          target="_blank" 
+          @click="openExternalLink(`https://hub.toolforge.org/${media.external_ids.wikidata_id}?site=enwiki`)"
           class="meta-pill link-pill wikidata-pill"
         >
           <Book class="app-icon" />
           <span>Wikipedia</span>
-        </a>
+        </button>
       </div>
 
       <div class="overview-card" v-if="media.overview">
@@ -105,8 +102,13 @@ import { ref, onMounted, watch, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { format } from 'date-fns';
 import MediaItem from './MediaItem.vue';
+import { Browser } from '@capacitor/browser';
 
 const { t } = useI18n();
+
+const openExternalLink = async (url: string) => {
+  await Browser.open({ url });
+};
 
 const formatDate = (dateString?: string) => {
   if (!dateString) return '';

@@ -72,7 +72,7 @@
               :key="show.id"
               v-for="show in trendingSeries"
               :imagePath="show.poster_path"
-              :title="show.name"
+              :title="show.title || (show as any).name"
               routeName="SerieDetails"
               :routeParams="{ id: show.id }"
             ></MediaItem>

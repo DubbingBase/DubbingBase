@@ -1,7 +1,10 @@
 <template>
   <ion-page>
     <ion-header>
-      <ion-toolbar color="primary">
+      <ion-toolbar>
+        <ion-buttons slot="start">
+          <AppBackButton />
+        </ion-buttons>
         <ion-title>{{ $t('about.title') }}</ion-title>
       </ion-toolbar>
     </ion-header>
@@ -29,7 +32,8 @@
 </template>
 
 <script setup lang="ts">
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/vue';
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons } from '@ionic/vue';
+import AppBackButton from "@/components/common/AppBackButton.vue";
 </script>
 
 <style scoped>
@@ -39,7 +43,7 @@ import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/vue
 }
 
 .about-container h2 {
-  color: var(--ion-color-primary);
+  color: #e0e0e0;
   margin-bottom: 1.5rem;
   font-size: 1.5rem;
   font-weight: 600;
@@ -48,20 +52,21 @@ import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/vue
 .attribution-section {
   margin-bottom: 2rem;
   padding: 1rem;
-  background: var(--ion-color-light);
+  background: #1d1d1d;
   border-radius: 8px;
-  border-left: 4px solid var(--ion-color-primary);
+  border: 1px solid #2a2a2a;
+  border-left: 4px solid #4da8ff;
 }
 
 .attribution-section h3 {
-  color: var(--ion-color-primary);
+  color: #e0e0e0;
   margin-bottom: 0.5rem;
   font-size: 1.1rem;
   font-weight: 600;
 }
 
 .attribution-section p {
-  color: var(--ion-color-medium);
+  color: #a0a0a0;
   line-height: 1.6;
   margin: 0;
 }

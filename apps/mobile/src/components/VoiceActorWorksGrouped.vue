@@ -97,11 +97,7 @@ const groupedWorks = computed(() => {
 
 <style scoped lang="scss">
 .voice-actor-works-grouped {
-  padding: 12px;
-  background: var(--ion-color-card);
-  border-radius: 8px;
-  border: 1px solid var(--ion-color-border);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  padding: 12px 0;
 
   h3 {
     margin: 0 0 12px 0;
@@ -128,16 +124,16 @@ const groupedWorks = computed(() => {
   }
 
   .actor-group {
-    background: var(--ion-color-surface);
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    background: #1d1d1d;
+    border-radius: 12px;
+    border: 1px solid #2a2a2a;
+    margin-bottom: 24px;
     overflow: hidden;
-    border: 1px solid var(--ion-color-border);
 
     .actor-header {
-      padding: 8px;
-      background: var(--ion-color-surface);
-      border-bottom: 1px solid var(--ion-color-border);
+      padding: 4px 8px;
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid #2a2a2a;
     }
 
     .works-list {
@@ -146,8 +142,9 @@ const groupedWorks = computed(() => {
       gap: 8px;
       padding: 8px;
 
-      .work-item {
-        /* MovieCard component handles its own styling */
+      :deep(.movie-card) {
+        background: transparent !important;
+        padding: 4px 8px;
       }
     }
   }

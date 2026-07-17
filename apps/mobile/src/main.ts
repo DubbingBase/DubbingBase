@@ -43,6 +43,8 @@ import "./theme/variables.css";
 import { supabase } from "@/api/supabase";
 import { useAuthStore } from "@/stores/auth";
 
+import { SplashScreen } from '@capacitor/splash-screen';
+
 const app = createApp(App)
   .use(IonicVue)
   .use(router)
@@ -63,4 +65,7 @@ router.isReady().then(async () => {
   }
 
   app.mount("#app");
+  
+  // Hide splash screen after app is mounted
+  await SplashScreen.hide();
 });

@@ -16,7 +16,7 @@ export const parseDubberPageAsWikitext = (pageId: number, sectionId: string) =>
   `https://fr.wikipedia.org/w/api.php?action=parse&format=json&pageid=${pageId}&prop=wikitext&formatversion=2&section=${sectionId}`;
 
 export const searchEntities = (search: string) => {
-  return `https://wikidata.org/w/api.php?action=wbsearchentities&format=json&search=${encodeURI(search)}&language=fr`;
+  return `https://wikidata.org/w/api.php?action=wbsearchentities&format=json&search=${encodeURIComponent(search)}&language=fr`;
 };
 
 /** Get wikidata entity by id */
@@ -32,10 +32,10 @@ export const getWikipediaPageSectionAsWikitext = (
   `https://fr.wikipedia.org/w/api.php?action=parse&format=json&pageid=${pageId}&prop=wikitext&formatversion=2&section=${sectionId}`;
 
 export const getWikipediaPage = (title: string, language = "fr") =>
-  `https://${language}.wikipedia.org/w/api.php?action=query&prop=pageprops&format=json&titles=${encodeURI(title)}`;
+  `https://${language}.wikipedia.org/w/api.php?action=query&prop=pageprops&format=json&titles=${encodeURIComponent(title)}`;
 
 export const getImageFromFilename = (filename: string) => {
-  return `https://fr.wikipedia.org/w/api.php?action=query&titles=File:${encodeURI(filename)}&prop=imageinfo&iiprop=url&format=json`;
+  return `https://fr.wikipedia.org/w/api.php?action=query&titles=File:${encodeURIComponent(filename)}&prop=imageinfo&iiprop=url&format=json`;
 };
 
 export const categories = [frenchMaleDubber, frenchFemaleDubber];

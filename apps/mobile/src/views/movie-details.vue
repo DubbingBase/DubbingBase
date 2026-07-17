@@ -6,7 +6,11 @@
           <AppBackButton />
         </ion-buttons>
         <ion-title>{{ movie?.title ?? "" }}</ion-title>
-
+        <ion-buttons slot="end">
+          <ion-button fill="clear" @click="shareMedia" aria-label="Share">
+            <Share2 class="app-icon" />
+          </ion-button>
+        </ion-buttons>
       </ion-toolbar>
     </ion-header>
     <ion-content>
@@ -61,6 +65,16 @@
       :link-voice-actor="linkVoiceActor"
       @close="showVoiceActorSearch = false"
     />
+
+    <CreditsReviewModal
+      :is-open="showCreditsReview"
+      :extracted-credits="extractedCredits"
+      :movie-actors="actors"
+      :media-id="route.params.id as string"
+      :work-type="'movie'"
+      @close="showCreditsReview = false"
+      @refresh="handleRefresh"
+    />
   </ion-page>
 </template>
 
@@ -69,6 +83,8 @@ import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, Io
 import { computed, ref, UnwrapRef, watch } from "vue";
 import AppBackButton from "@/components/common/AppBackButton.vue";
 import { useRoute, useRouter } from "vue-router";
+import Share2 from '~icons/lucide/share-2';
+import { Share } from '@capacitor/share';
 
 import { MovieResponse } from "@supabase/functions/_shared/movie";
 import { supabase } from "../api/supabase";
@@ -80,6 +96,7 @@ import MediaInfoCard from "@/components/MediaInfoCard.vue";
 import ActorList from "@/components/ActorList.vue";
 import ActionButtons from "@/components/ActionButtons.vue";
 import VoiceActorSearchModal from "@/components/VoiceActorSearchModal.vue";
+import CreditsReviewModal from "@/components/CreditsReviewModal.vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import MediaItem from "@/components/MediaItem.vue";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
@@ -252,28 +269,71 @@ const fetchQueueStatus = async () => {
   }
 };
 
+const showCreditsReview = ref(false);
+const extractedCredits = ref<Array<{actor: string, role: string, voiceActor: string, matchedActorId?: number | null}>>([]);
+
+const shareMedia = async () => {
+  if (!movie.value) return;
+  await Share.share({
+    title: movie.value.title || "DubbingBase",
+    text: `Check out ${movie.value.title} on DubbingBase!`,
+    url: `dubbingbase://movie/${movie.value.id}`,
+    dialogTitle: 'Share Movie',
+  });
+};
+
 const takePhoto = async () => {
   try {
     isScanning.value = true;
-    const image = await Camera.getPhoto({
-      quality: 90,
-      allowEditing: false,
-      resultType: CameraResultType.Base64,
-      source: CameraSource.Prompt,
+
+    const file = await new Promise<File | null>((resolve) => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+      
+      input.onchange = (e) => {
+        const target = e.target as HTMLInputElement;
+        resolve(target.files?.[0] || null);
+      };
+      
+      input.addEventListener("cancel", () => resolve(null));
+      
+      window.addEventListener("focus", () => {
+        setTimeout(() => {
+          if (!input.value) resolve(null);
+        }, 1000);
+      }, { once: true });
+      
+      input.click();
     });
 
-    const response = await supabase.functions.invoke("process_image", {
-      body: {
-        image: image.base64String,
-        mediaId: parseInt(route.params.id as string),
-      },
+    if (!file) {
+      isScanning.value = false;
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("image", file, file.name || "image.jpg");
+    
+    // Provide known actors to the AI
+    const simplifiedActors = actors.value?.map((a: any) => ({
+      id: a.id,
+      name: a.name,
+      roles: a.roles?.map((r: any) => r.character) || [],
+    })) || [];
+    formData.append("actors", JSON.stringify(simplifiedActors));
+
+    const response = await supabase.functions.invoke("extract-credits-from-image", {
+      body: formData,
     });
 
     if (response.data.ok) {
-      scanResult.value = "Image processed successfully!";
+      extractedCredits.value = response.data.result || [];
+      showCreditsReview.value = true;
+      scanResult.value = "Credits extracted successfully!";
       showScanResult.value = true;
     } else {
-      scanResult.value = response.data.error || "Error processing image.";
+      scanResult.value = response.data.error || "Error extracting credits.";
       showScanResult.value = true;
     }
   } catch (error) {
@@ -285,7 +345,7 @@ const takePhoto = async () => {
   }
 };
 
-const handleRefresh = async (event: any) => {
+const handleRefresh = async (event?: any) => {
   try {
     await fetchMovieData();
     if (!hasData.value && hasWikidataId.value) {
@@ -294,7 +354,7 @@ const handleRefresh = async (event: any) => {
   } catch (error) {
     console.error("Error refreshing movie data:", error);
   } finally {
-    event.target.complete();
+    event?.target?.complete();
   }
 };
 
@@ -395,9 +455,9 @@ const fetchMovieData = async () => {
       voiceActors.value = data.voiceActors.map((va) =>
         voiceActorToPersonData(
           va.voiceActorDetails,
-          va.performance,
+          va.performance || "",
           va.actor_id,
-          va.reviewed_status,
+          (va as any).reviewed_status,
           va.id,
         ),
       );

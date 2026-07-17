@@ -1,7 +1,7 @@
 {
   "name": "@app/mobile",
   "private": true,
-  "version": "1.0.41",
+  "version": "1.0.42",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -15,10 +15,13 @@
     "@app/supabase": "workspace:*",
     "@capacitor/android": "^7.4.3",
     "@capacitor/app": "^7.1.0",
+    "@capacitor/browser": "^7.0.5",
     "@capacitor/camera": "^7.0.2",
     "@capacitor/core": "^7.4.3",
     "@capacitor/haptics": "^7.0.2",
     "@capacitor/keyboard": "^7.0.3",
+    "@capacitor/share": "^7.0.4",
+    "@capacitor/splash-screen": "^7.0.5",
     "@capacitor/status-bar": "^7.0.3",
     "@capgo/capacitor-transitions": "^8.1.9",
     "@ionic/core": "^8.7.3",
@@ -36,6 +39,7 @@
     "posthog-js": "^1.283.0",
     "vite-plugin-deadfile": "^1.4.0",
     "vue": "^3.5.21",
+    "vue-advanced-cropper": "^2.8.9",
     "vue-i18n": "^11.1.12",
     "vue-router": "^4.5.1"
   },

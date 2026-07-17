@@ -13,7 +13,7 @@
 
     <AppText>
       <h2>{{ getMediaTitle(workEntry.media) }}</h2>
-      <p v-if="workEntry.character_name">{{ workEntry.character_name }} ({{ workEntry.performance }})</p>
+      <p v-if="workEntry.character_name">{{ workEntry.character_name }} ({{ (workEntry as any).performance }})</p>
       <p class="media-type">
         <span>{{ workEntry.media_type === 'movie' ? 'Film' : 'Série' }}</span>
         <span v-if="workEntry.media?.release_date">

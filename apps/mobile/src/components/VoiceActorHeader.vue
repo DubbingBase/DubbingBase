@@ -37,13 +37,21 @@
         }}</span>
       </div>
     </div>
+    <ImageEditorModal
+      :is-open="isEditorOpen"
+      :image-file="selectedImageFile"
+      @cancel="cancelCrop"
+      @save="uploadCroppedImage"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from "vue";
 import MediaThumbnail from "@/components/MediaThumbnail.vue";
 import { useFileDialog } from "@vueuse/core";
 import { supabase } from "../api/supabase";
+import ImageEditorModal from "@/components/common/ImageEditorModal.vue";
 
 interface VoiceActor {
   id: number;
@@ -70,19 +78,33 @@ const emit = defineEmits<{
   profilePictureChanged: [value: string];
 }>();
 
-const { open, onChange } = useFileDialog({
+const isEditorOpen = ref(false);
+const selectedImageFile = ref<File | null>(null);
+
+const { open, onChange, reset } = useFileDialog({
   accept: "image/*",
   directory: false,
 });
 
-onChange(async (files) => {
+onChange((files) => {
   const file = files?.[0];
   if (!file) {
     return;
   }
+  selectedImageFile.value = file;
+  isEditorOpen.value = true;
+});
 
+const cancelCrop = () => {
+  isEditorOpen.value = false;
+  selectedImageFile.value = null;
+  reset();
+};
+
+const uploadCroppedImage = async (blob: Blob, originalFile: File) => {
   const formData = new FormData();
-  formData.append("file", file);
+  // Append the cropped blob as a file
+  formData.append("file", blob, originalFile.name);
   if (props.voiceActor?.id) {
     formData.append("voice_actor_id", props.voiceActor.id.toString());
   }
@@ -102,8 +124,12 @@ onChange(async (files) => {
     }
   } catch (error) {
     console.error("Error uploading profile picture:", error);
+  } finally {
+    isEditorOpen.value = false;
+    selectedImageFile.value = null;
+    reset();
   }
-});
+};
 
 const uploadImage = async () => {
   open();
@@ -116,12 +142,8 @@ const uploadImage = async () => {
   flex-direction: row;
   align-items: center;
   gap: 12px;
-  padding: 10px;
-  background: var(--ion-color-card);
-  border-radius: 8px;
+  padding: 10px 0;
   margin-bottom: 8px;
-  border: 1px solid var(--ion-color-border);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 
   @media (max-width: 768px) {
     padding: 8px;

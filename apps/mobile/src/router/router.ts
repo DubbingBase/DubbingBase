@@ -22,7 +22,7 @@ import Login from "../views/login.vue";
 const routes: readonly RouteRecordRaw[] = [
   {
     path: "/",
-    redirect: "/tabs/home",
+    redirect: { name: "Home" },
   },
   {
     path: "/login",
@@ -45,12 +45,12 @@ const routes: readonly RouteRecordRaw[] = [
         path: "/tabs/profile",
         component: () => import("../views/profile.vue"),
       },
-      {
-        name: "About",
-        path: "/tabs/about",
-        component: () => import("../views/about.vue"),
-      },
     ],
+  },
+  {
+    name: "About",
+    path: "/about",
+    component: () => import("../views/about.vue"),
   },
   {
     name: "VoiceActorProfile",
@@ -108,7 +108,7 @@ router.beforeEach(
     if (to.meta.requiresAdmin) {
       if (!authStore.isAdmin) {
         // User is not an admin, redirect to home
-        return next("/tabs/home");
+        return next({ name: "Home" });
       }
     }
 

@@ -55,9 +55,10 @@ _(This command is defined in `apps/mobile/package.json` and outputs types to `pa
 
 ### 1. Global / Front-end (Common Rules)
 
-- **Strict TypeScript**: Always type variables, function signatures, and props. Avoid using `any`.
+- **Strict TypeScript**: Always type variables, function signatures, and props. Types should strictly follow database types. Never cast using `as` and never use `any`.
 - **Vue 3**: Use the **Composition API** exclusively with `<script setup lang="ts">` syntax.
 - **Formatting**: Always run `pnpm format` to format code with Prettier before committing.
+- **Design & Theme**: The app follows a premium dark theme. Ensure consistent UI/UX when creating or modifying components. Avoid using default Ionic variables if they result in poor contrast. Instead, explicitly use the established dark theme colors (e.g., `#1d1d1d` for card backgrounds, `#e0e0e0` for primary text, `#a0a0a0` for secondary text, `#2a2a2a` for borders) or the app's custom CSS variables to maintain a cohesive design.
 
 ### 2. Mobile Application (`apps/mobile`)
 
@@ -69,6 +70,9 @@ _(This command is defined in `apps/mobile/package.json` and outputs types to `pa
   - Keep Capacitor for native features/APIs (Camera, Haptics, Keyboard, StatusBar, etc.).
 - **State Management**: Use **Pinia** for all global stores.
 - **Styles**: Use scoped SCSS (`<style scoped lang="scss">`) or Tailwind CSS.
+- **Translations/i18n**: All new user-facing strings must be localized using `vue-i18n`. Use the `useI18n` composable and the `t()` function rather than hardcoding text in templates. Do NOT use fallback strings in the `t()` function; you must implement actual translations in the locale files.
+- **Feature Flags & Permissions**: Use `useFeatureFlags` for PostHog-driven feature toggles. Use `usePermissions` and `authStore` for role-based access control.
+- **Browser APIs over Plugins**: Prefer standard HTML5/Browser APIs over Capacitor plugins where applicable (e.g., standard `<input type="file">` over the Capacitor Camera plugin) to ensure seamless cross-platform functionality on the web.
 
 ### 3. Web Application (`apps/website`)
 

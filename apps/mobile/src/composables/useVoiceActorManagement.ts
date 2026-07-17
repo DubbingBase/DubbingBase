@@ -4,6 +4,7 @@ import { alertController } from "@ionic/vue";
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
 import { supabase } from "@/api/supabase";
+import { useI18n } from "vue-i18n";
 import type { PersonData } from "@/components/PersonItem.vue";
 import { voiceActorToPersonData } from "@/utils/convert";
 import type { VoiceActorDetails } from "@supabase/functions/_shared/types";
@@ -39,6 +40,7 @@ export function useVoiceActorManagement(
   const router = useRouter();
   const authStore = useAuthStore();
   const { isAdmin } = storeToRefs(authStore);
+  const { t } = useI18n();
 
   // Search modal state
   const showVoiceActorSearch = ref(false);
@@ -198,15 +200,15 @@ export function useVoiceActorManagement(
   ) => {
     console.log("person", person);
     const alert = await alertController.create({
-      header: "Confirm Delete",
-      message: `Are you sure you want to remove ${person.name}?`,
+      header: t("common.confirmUnlinkTitle", "Délier ce comédien"),
+      message: t("common.confirmUnlinkMessage", `Êtes-vous sûr de vouloir délier ${person.name} de ce rôle ?`),
       buttons: [
         {
-          text: "Cancel",
+          text: t("common.cancel", "Annuler"),
           role: "cancel",
         },
         {
-          text: "Delete",
+          text: t("common.unlink", "Délier"),
           role: "destructive",
           handler: () => {
             if (person.work_id) {

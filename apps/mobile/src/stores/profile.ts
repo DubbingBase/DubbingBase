@@ -32,6 +32,8 @@ export const useProfileStore = defineStore("profile", () => {
     social_media_links: {},
     created_at: null,
     updated_at: null,
+    created_by: null,
+    updated_by: null,
   };
   const voiceActors = ref<VoiceActor[]>([]);
   const currentVoiceActorId = ref<number | null>(null);
@@ -57,18 +59,17 @@ export const useProfileStore = defineStore("profile", () => {
   );
   const currentProfileType = computed(() => profileType.value);
   const allVoiceActors = computed(() => voiceActors.value);
-  const currentVoiceActor = computed<VoiceActor | null>(() => {
-    if (impersonatedVoiceActor.value) return impersonatedVoiceActor.value;
+  const currentVoiceActor = computed(() => {
+    if (impersonatedVoiceActor.value) return impersonatedVoiceActor.value as any;
     if (!currentVoiceActorId.value) return null;
-    return (
-      voiceActors.value.find((va) => va.id === currentVoiceActorId.value) ||
-      null
-    );
+    const currentId = currentVoiceActorId.value;
+    const found = (voiceActors.value as any[]).find((va) => va.id === currentId);
+    return found ? (found as any) : null;
   });
   const hasMultipleVoiceActors = computed(() => voiceActors.value.length > 1);
   const isImpersonating = computed(() => impersonatedVoiceActor.value !== null);
   const userProfileData = computed(
-    () => userProfile.value || defaultUserProfile,
+    () => (userProfile.value as any) || (defaultUserProfile as any),
   );
   const isLoadingProfile = computed(() => isLoading.value);
   const profileError = computed(() => error.value);
@@ -185,14 +186,14 @@ export const useProfileStore = defineStore("profile", () => {
     voiceActorId: number,
     identifiers: { targetUserId?: string },
   ) => {
-    if (!voiceActors.value.find((va) => va.id === voiceActorId)) {
+    if (!(voiceActors.value as any[]).find((va) => va.id === voiceActorId)) {
       throw new Error("Voice actor not found");
     }
     try {
       currentVoiceActorId.value = voiceActorId;
       profileType.value = "voice_actor";
       // Set work entries from the selected voice actor data
-      const selectedVA = voiceActors.value.find((va) => va.id === voiceActorId);
+      const selectedVA = (voiceActors.value as any[]).find((va) => va.id === voiceActorId);
       workEntries.value =
         selectedVA && "medias" in selectedVA ? (selectedVA as any).medias : [];
     } catch (err: any) {
@@ -286,11 +287,11 @@ export const useProfileStore = defineStore("profile", () => {
 
         // Update in the array if it's not impersonated
         if (!impersonatedVoiceActor.value) {
-          const index = voiceActors.value.findIndex(
+          const index = (voiceActors.value as any[]).findIndex(
             (va) => va.id === currentVoiceActor.value!.id,
           );
           if (index !== -1) {
-            voiceActors.value[index] = updatedVA;
+            (voiceActors.value as any[])[index] = updatedVA;
           }
         } else {
           // Update the impersonated actor
@@ -308,7 +309,7 @@ export const useProfileStore = defineStore("profile", () => {
         if (updateError) throw updateError;
 
         // Update local state
-        userProfile.value = { ...userProfile.value, ...userProfileUpdates };
+        userProfile.value = Object.assign({}, userProfile.value, userProfileUpdates) as any;
       } else {
         throw new Error("Invalid profile type for update");
       }
@@ -461,9 +462,9 @@ export const useProfileStore = defineStore("profile", () => {
       if (removeError) throw removeError;
 
       // Remove from local state
-      voiceActors.value = voiceActors.value.filter(
+      voiceActors.value = (voiceActors.value as any[]).filter(
         (va) => va.id !== voiceActorId,
-      );
+      ) as any;
       if (currentVoiceActorId.value === voiceActorId) {
         // Select another voice actor or set to null
         currentVoiceActorId.value =
@@ -545,7 +546,7 @@ export const useProfileStore = defineStore("profile", () => {
       // Clear impersonation
       impersonatedTargetUserId.value = null;
       if (currentVoiceActorId.value) {
-        const currentVA = voiceActors.value.find(
+        const currentVA = (voiceActors.value as any[]).find(
           (va) => va.id === currentVoiceActorId.value,
         );
         workEntries.value =

@@ -97,8 +97,11 @@ import { modalController, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { useProfileStore } from '@/stores/profile'
 import { supabase } from '@/api/supabase'
-import type { Movie, CastMember as MovieCastMember } from '@supabase/functions/_shared/movie'
-import type { Serie, CastMember as SerieCastMember } from '@supabase/functions/_shared/serie'
+import type { Movie } from '@supabase/functions/_shared/movie'
+import type { Serie } from '@supabase/functions/_shared/serie'
+import type { Cast } from '@supabase/functions/_shared/types'
+type MovieCastMember = Cast;
+type SerieCastMember = Cast;
 
 const profileStore = useProfileStore()
 const emit = defineEmits<{ (e: 'close'): void }>()
@@ -108,7 +111,7 @@ const formData = ref({
 })
 
 const searchResults = ref<(Movie | Serie)[]>([])
-const selectedMedia = ref<(Movie | Serie | any) | null>(null)
+const selectedMedia = ref<(Movie | Serie) | null>(null)
 const cast = ref<(MovieCastMember | SerieCastMember)[]>([])
 const selectedCastId = ref<number | null>(null)
 const characterSearchQuery = ref('')
@@ -118,13 +121,16 @@ let searchTimeout: any = null
 
 const isFormValid = computed(() => !!selectedMedia.value && !!selectedCastId.value)
 
-const getMediaTitle = (media: any) => media?.title || media?.name
-const getMediaYear = (media: any) => new Date(media?.release_date || media?.first_air_date).getFullYear()
+const getMediaTitle = (media: Movie | Serie) => ('title' in media) ? media.title : media.name
+const getMediaYear = (media: Movie | Serie) => {
+  const dateStr = media.release_date || (media as any).first_air_date
+  return new Date(dateStr || '').getFullYear()
+}
 
 const closeModal = () => modalController.dismiss()
 
-const searchMedia = (event: any) => {
-  const query = event.target.value.toLowerCase()
+const searchMedia = (event: Event) => {
+  const query = (event.target as HTMLInputElement).value.toLowerCase()
   if (searchTimeout) clearTimeout(searchTimeout)
   searchTimeout = setTimeout(async () => {
     if (query.length < 2) {
@@ -136,11 +142,11 @@ const searchMedia = (event: any) => {
       console.error(error)
       return
     }
-    searchResults.value = data.filter((r: any) => r.media_type === 'movie' || r.media_type === 'tv')
+    searchResults.value = data.filter((r: Movie | Serie) => r.media_type === 'movie' || r.media_type === 'tv')
   }, 300)
 }
 
-const selectMedia = async (media: Movie | Serie | any) => {
+const selectMedia = async (media: Movie | Serie) => {
   selectedMedia.value = media
   formData.value.media_title = getMediaTitle(media)
   searchResults.value = []
@@ -155,12 +161,12 @@ const selectMedia = async (media: Movie | Serie | any) => {
   characterSearchResults.value = cast.value.slice(0, 10)
 }
 
-const onCharacterSearch = (event: any) => {
-  const query = event.target.value
+const onCharacterSearch = (event: Event) => {
+  const query = (event.target as HTMLInputElement).value
   characterSearchQuery.value = query
 
   if (selectedCastId.value) {
-    const selectedMember = cast.value.find(c => c.id === selectedCastId.value)
+    const selectedMember = cast.value.find((c: Cast) => c.id === selectedCastId.value)
     if (selectedMember) {
       const selectedText = `${selectedMember.name} (${selectedMember.character})`
       if (query !== selectedText) {
@@ -175,7 +181,7 @@ const onCharacterSearch = (event: any) => {
     return
   }
 
-  characterSearchResults.value = cast.value.filter(member =>
+  characterSearchResults.value = cast.value.filter((member: Cast) =>
     member.name.toLowerCase().includes(lowerCaseQuery) ||
     (member.character && member.character.toLowerCase().includes(lowerCaseQuery))
   )
@@ -193,7 +199,7 @@ const handleSubmit = async () => {
   try {
     await profileStore.addWorkEntry({
       voice_actor_id: profileStore.voiceActor!.id,
-      media_type: selectedMedia.value.media_type,
+      media_type: selectedMedia.value.media_type === 'tv' ? 'serie' : 'movie',
       media_id: selectedMedia.value.id,
       actor_id: selectedCastId.value,
     }, { voiceActorId: profileStore.voiceActor!.id })

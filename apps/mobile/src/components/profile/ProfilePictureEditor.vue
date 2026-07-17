@@ -99,7 +99,7 @@ const uploadProfilePicture = async (file: File) => {
     // Update voice actor profile
     await profileStore.updateProfile({
       profile_picture: publicUrl
-    })
+    }, {})
 
   } catch (error: any) {
     console.error('Error uploading profile picture:', error)

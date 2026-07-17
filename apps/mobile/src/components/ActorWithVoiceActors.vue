@@ -54,8 +54,8 @@
               >
                 <template #actions>
                   <!-- Status Indicators -->
-                  <CheckCircle2 v-if="voiceActor.status === 'accepted'" class="app-icon status-icon accepted" />
-                  <Clock v-if="!voiceActor.status || voiceActor.status === 'waiting'" class="app-icon status-icon waiting" />
+                  <CheckCircle2 v-if="(voiceActor as any).status === 'accepted'" class="app-icon status-icon accepted" />
+                  <Clock v-if="!(voiceActor as any).status || (voiceActor as any).status === 'waiting'" class="app-icon status-icon waiting" />
                 </template>
               </PersonItem>
             </router-link>
@@ -163,7 +163,7 @@ const shouldShowVoiceActors = computed(() => {
   );
 });
 
-function handleLongPress(voiceActor: PersonData) {
+function handleLongPress(voiceActor: PersonData<VoiceActorDetails>) {
   openActionSheet(voiceActor);
 }
 
@@ -249,7 +249,7 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
   const canDelete = authStore.isAdmin || (hasPermission("delete_voice_actor_link") && isOwner);
   if (canDelete) {
     buttons.push({
-      text: t("common.delete"),
+      text: t("common.unlinkVoiceActor", "Délier ce comédien"),
       icon: trashOutline,
       role: "destructive",
       handler: () => {

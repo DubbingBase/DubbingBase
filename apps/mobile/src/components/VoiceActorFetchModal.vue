@@ -150,6 +150,12 @@
                 </ion-button>
               </div>
             </div>
+            <div class="input-with-action ion-margin-top">
+              <ion-input v-model="fetchedData.profile_picture" placeholder="Image URL" class="styled-input"></ion-input>
+              <ion-button fill="clear" @click="fetchedData.profile_picture = ''">
+                <XCircle class="app-icon" />
+              </ion-button>
+            </div>
           </div>
         </ion-list>
 
@@ -292,7 +298,7 @@ const saveData = async () => {
       lastname: fetchedData.value.lastname,
       bio: fetchedData.value.bio,
       profile_picture: fetchedData.value.profile_picture,
-      date_of_birth: fetchedData.value.date_of_birth,
+      date_of_birth: fetchedData.value.date_of_birth || null,
       wikidata_id: fetchedData.value.wikidata_id,
       tmdb_id: fetchedData.value.tmdb_id,
     };

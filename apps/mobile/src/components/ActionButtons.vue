@@ -1,7 +1,7 @@
 <template>
   <ion-button
     :disabled="isScanning"
-    v-if="hasWikidataId && !hasData && isScannerEnabled"
+    v-if="!hasData && isScannerEnabled"
     class="scan-fab-btn"
     @click="$emit('take-photo')"
     :aria-label="t('common.scan')"
@@ -44,13 +44,15 @@ import { IonButton } from '@ionic/vue';
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 
 import { useI18n } from "vue-i18n";
-import { usePermissions } from "@/composables/usePermissions";
-import { computed } from "vue";
+import { useAuthStore } from "@/stores/auth";
+import { watchEffect } from "vue";
+import { storeToRefs } from "pinia";
 
 const { t } = useI18n();
-const { hasPermission } = usePermissions();
+const authStore = useAuthStore();
+const { isAdmin } = storeToRefs(authStore);
 
-const isScannerEnabled = computed(() => hasPermission("ai-scanner"));
+const isScannerEnabled = isAdmin;
 
 const props = defineProps<{
   hasWikidataId: boolean;
@@ -79,14 +81,16 @@ const handleEnqueue = () => {
 };
 
 // Debug logging
-console.log("ActionButtons props:", {
-  hasWikidataId: props.hasWikidataId,
-  hasData: props.hasData,
-  isFetching: props.isFetching,
-  isScanning: props.isScanning,
-  fetchError: props.fetchError,
-  queueStatus: props.queueStatus,
-  queueErrorMessage: props.queueErrorMessage,
+watchEffect(() => {
+  console.log("ActionButtons state:", {
+    hasWikidataId: props.hasWikidataId,
+    hasData: props.hasData,
+    isScannerEnabled: isScannerEnabled.value,
+    isScanning: props.isScanning,
+    isFetching: props.isFetching,
+    queueStatus: props.queueStatus,
+    scannerButtonVisible: !props.hasData && isScannerEnabled.value
+  });
 });
 </script>
 
