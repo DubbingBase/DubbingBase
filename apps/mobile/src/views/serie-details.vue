@@ -162,6 +162,7 @@ const {
   // State
   showVoiceActorSearch,
   voiceActors,
+  votes: sharedVotes,
 
   // Methods
   getVoiceActorByTmdbId,
@@ -349,6 +350,9 @@ const fetchSerieData = async () => {
       }
       if (response.data.characterProfilePictures) {
         characterProfilePictures.value = response.data.characterProfilePictures;
+      }
+      if ((response.data as any).votes) {
+        sharedVotes.value = { ...sharedVotes.value, ...(response.data as any).votes };
       }
     }
   } catch (e: any) {

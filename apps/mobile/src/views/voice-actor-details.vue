@@ -89,6 +89,7 @@ import { PersonData } from "@/components/PersonItem.vue";
 import { Actor } from "@supabase/functions/_shared/types";
 import { actorToPersonData } from "@/utils/convert";
 import { useI18n } from "vue-i18n";
+import { useVoiceActorManagement } from "@/composables/useVoiceActorManagement";
 
 const authStore = useAuthStore();
 const route = useRoute();
@@ -98,6 +99,7 @@ const { t } = useI18n();
 // Local admin check using Supabase auth
 
 const { isAdmin, isAuthenticated } = storeToRefs(authStore);
+const { votes: sharedVotes } = useVoiceActorManagement("movie");
 
 type VoiceActorResponse = {
   voiceActor: {
@@ -128,6 +130,7 @@ type VoiceActorResponse = {
   };
   medias: (MovieModel | SerieModel)[];
   potentialWikipediaUrl?: string | null;
+  votes?: Record<number, { up_count: number; down_count: number; user_vote: string | null }>;
 };
 
 const voiceActor = ref<VoiceActorResponse["voiceActor"] | undefined>();
@@ -393,6 +396,10 @@ const loadVoiceActorData = async () => {
     voiceActorResponse.potentialWikipediaUrl || null;
 
   profilePicture.value = voiceActorResponse.voiceActor.profile_picture;
+
+  if (voiceActorResponse.votes) {
+    sharedVotes.value = { ...sharedVotes.value, ...voiceActorResponse.votes };
+  }
 
   loading.value = false;
 

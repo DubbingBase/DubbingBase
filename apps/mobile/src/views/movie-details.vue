@@ -100,6 +100,7 @@ const {
   showVoiceActorSearch,
   voiceActors,
   isLoading,
+  votes: sharedVotes,
 
   // Methods
   getVoiceActorByTmdbId,
@@ -404,10 +405,9 @@ const fetchMovieData = async () => {
         characterProfilePictures.value = data.characterProfilePictures;
       }
 
-      // Refresh votes after loading voice actors
-      if (voiceActors.value.length > 0) {
-        const workIds = voiceActors.value.map((va) => va.work_id).filter((id): id is number => !!id);
-        await refreshVotes(workIds);
+      // Hydrate shared votes store
+      if ((data as any).votes) {
+        sharedVotes.value = { ...sharedVotes.value, ...(data as any).votes };
       }
     }
   } catch (e: any) {

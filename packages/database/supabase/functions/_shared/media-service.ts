@@ -101,11 +101,25 @@ export class MediaService {
       }
     }
 
+    let votes = {};
+    const workIds = (voiceActor.work || []).map((w: any) => w.id);
+    if (workIds.length > 0) {
+      try {
+        votes = await this.databaseClient.getWorkVotes(
+          workIds,
+          this.ctx.userClaims?.id,
+        );
+      } catch (e) {
+        console.error("Error fetching votes for voice actor works:", e);
+      }
+    }
+
     return {
       voiceActor: voiceActorWithImages,
       medias,
       characterProfilePictures,
       potentialWikipediaUrl,
+      votes,
     };
   }
 
@@ -210,7 +224,20 @@ export class MediaService {
     // Process image URLs in the media data
     const processedMedia = processMedia(media);
 
-    return { media: processedMedia, voice_actors: voiceActors };
+    let votes = {};
+    const workIds = voiceActors?.map((w: any) => w.id) || [];
+    if (workIds.length > 0) {
+      try {
+        votes = await this.databaseClient.getWorkVotes(
+          workIds,
+          this.ctx.userClaims?.id,
+        );
+      } catch (e) {
+        console.error("Error fetching votes for media voice actors:", e);
+      }
+    }
+
+    return { media: processedMedia, voice_actors: voiceActors, votes };
   }
 
   async getMediaWithVoiceActorsExtended(
@@ -252,6 +279,19 @@ export class MediaService {
     const processedMedia = processMedia(media);
     const voiceActors = await this.databaseClient.getWorkWithVoiceActors(id);
 
-    return { media: processedMedia, voice_actors: voiceActors };
+    let votes = {};
+    const workIds = voiceActors?.map((w: any) => w.id) || [];
+    if (workIds.length > 0) {
+      try {
+        votes = await this.databaseClient.getWorkVotes(
+          workIds,
+          this.ctx.userClaims?.id,
+        );
+      } catch (e) {
+        console.error("Error fetching votes for extended media:", e);
+      }
+    }
+
+    return { media: processedMedia, voice_actors: voiceActors, votes };
   }
 }

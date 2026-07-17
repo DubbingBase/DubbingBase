@@ -54,8 +54,8 @@
               >
                 <template #actions>
                   <!-- Status Indicators -->
-                  <CheckCircle2 class="app-icon" />
-                  <Clock class="app-icon" />
+                  <CheckCircle2 v-if="voiceActor.status === 'accepted'" class="app-icon status-icon accepted" />
+                  <Clock v-if="!voiceActor.status || voiceActor.status === 'waiting'" class="app-icon status-icon waiting" />
                 </template>
               </PersonItem>
             </router-link>
@@ -141,8 +141,8 @@ watch(
     ) {
       // Only request votes for work entries that are not already loaded in the shared votes state
       const missingWorkIds = props.voiceActors
-        .map((va) => va.id)
-        .filter((id) => !votes.value[id]);
+        .map((va) => va.work_id)
+        .filter((id): id is number => id !== undefined && !votes.value[id]);
 
       if (missingWorkIds.length > 0) {
         refreshVotes(missingWorkIds);
@@ -214,17 +214,21 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
     buttons.push(
       {
         text: `${t("common.upvote")} (${
-          votes.value[voiceActor.id]?.up_count || 0
+          (voiceActor.work_id ? votes.value[voiceActor.work_id]?.up_count : 0) || 0
         })`,
         icon: thumbsUpOutline,
-        handler: () => castVote(voiceActor.id, "up"),
+        handler: () => {
+          if (voiceActor.work_id) castVote(voiceActor.work_id, "up");
+        },
       },
       {
         text: `${t("common.downvote")} (${
-          votes.value[voiceActor.id]?.down_count || 0
+          (voiceActor.work_id ? votes.value[voiceActor.work_id]?.down_count : 0) || 0
         })`,
         icon: thumbsDownOutline,
-        handler: () => castVote(voiceActor.id, "down"),
+        handler: () => {
+          if (voiceActor.work_id) castVote(voiceActor.work_id, "down");
+        },
       },
     );
   }
