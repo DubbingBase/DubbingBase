@@ -76,7 +76,7 @@ const clearInput = () => {
 
 <style scoped lang="scss">
 .app-searchbar {
-  padding: 8px 12px;
+  padding: 8px 0;
   width: 100%;
   
   &.is-disabled {

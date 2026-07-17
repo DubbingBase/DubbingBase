@@ -1,88 +1,88 @@
 <template>
-  <AppPage>
-    <AppHeader>
-      <AppToolbar>
-        <template #start >
-          <AppBackButton />
-        </template>
-        <AppTitle>{{ movie?.title ?? "" }}</AppTitle>
-        <template #end >
-          <AppButton fill="clear" @click="shareMedia" aria-label="Share">
-            <Share2 class="app-icon" />
-          </AppButton>
-        </template>
-      </AppToolbar>
-    </AppHeader>
-    <AppContent>
-      
+  <cap-page>
+    <AppPage>
+      <AppHeader>
+        <AppToolbar>
+          <template #start>
+            <AppBackButton />
+          </template>
+          <AppTitle>{{ movie?.title ?? "" }}</AppTitle>
+          <template #end>
+            <AppButton fill="clear" @click="shareMedia" aria-label="Share">
+              <Share2 class="app-icon" />
+            </AppButton>
+          </template>
+        </AppToolbar>
+      </AppHeader>
+      <AppContent>
+        <MediaInfoCard :media="movie" />
 
-      <MediaInfoCard :media="movie" />
+        <ActorList
+          :actors="actors"
+          :voice-actors="voiceActors"
+          :is-admin="isAdmin"
+          :get-voice-actor-by-tmdb-id="getVoiceActorByTmdbId"
+          :go-to-actor="goToActor"
+          :go-to-voice-actor="goToVoiceActor"
+          :edit-voice-actor-link="editVoiceActorLink"
+          :confirm-delete-voice-actor-link="confirmDeleteVoiceActorLink"
+          :open-voice-actor-search="openVoiceActorSearch"
+          :loading="isLoading"
+          :mediaLanguage="movie?.original_language"
+          :workType="'movie'"
+          :contentId="route.params.id as string"
+        />
 
-      <ActorList
-        :actors="actors"
-        :voice-actors="voiceActors"
-        :is-admin="isAdmin"
-        :get-voice-actor-by-tmdb-id="getVoiceActorByTmdbId"
-        :go-to-actor="goToActor"
-        :go-to-voice-actor="goToVoiceActor"
-        :edit-voice-actor-link="editVoiceActorLink"
-        :confirm-delete-voice-actor-link="confirmDeleteVoiceActorLink"
-        :open-voice-actor-search="openVoiceActorSearch"
-        :loading="isLoading"
-        :mediaLanguage="movie?.original_language"
-        :workType="'movie'"
-        :contentId="route.params.id as string"
+        <ActionButtons
+          :has-wikidata-id="hasWikidataId"
+          :has-data="hasData"
+          :is-fetching="isFetching"
+          :is-scanning="isScanning"
+          :fetch-error="fetchError"
+          :queue-status="queueStatus"
+          :queue-error-message="queueErrorMessage"
+          @fetch-infos="fetchInfos"
+          @enqueue="handleEnqueue"
+          @take-photo="takePhoto"
+        />
+        <LoadingSpinner v-if="isLoading" />
+      </AppContent>
+
+      <VoiceActorSearchModal
+        :is-open="showVoiceActorSearch"
+        :media-id="route.params.id as string"
+        :work-type="'movie'"
+        :link-voice-actor="linkVoiceActor"
+        @close="showVoiceActorSearch = false"
       />
 
-      <ActionButtons
-        :has-wikidata-id="hasWikidataId"
-        :has-data="hasData"
-        :is-fetching="isFetching"
-        :is-scanning="isScanning"
-        :fetch-error="fetchError"
-        :queue-status="queueStatus"
-        :queue-error-message="queueErrorMessage"
-        @fetch-infos="fetchInfos"
-        @enqueue="handleEnqueue"
-        @take-photo="takePhoto"
+      <CreditsReviewModal
+        :is-open="showCreditsReview"
+        :extracted-credits="extractedCredits"
+        :movie-actors="actors"
+        :media-id="route.params.id as string"
+        :work-type="'movie'"
+        @close="showCreditsReview = false"
+        @refresh="handleRefresh"
       />
-      <LoadingSpinner v-if="isLoading" />
-    </AppContent>
-
-    <VoiceActorSearchModal
-      :is-open="showVoiceActorSearch"
-      :media-id="route.params.id as string"
-      :work-type="'movie'"
-      :link-voice-actor="linkVoiceActor"
-      @close="showVoiceActorSearch = false"
-    />
-
-    <CreditsReviewModal
-      :is-open="showCreditsReview"
-      :extracted-credits="extractedCredits"
-      :movie-actors="actors"
-      :media-id="route.params.id as string"
-      :work-type="'movie'"
-      @close="showCreditsReview = false"
-      @refresh="handleRefresh"
-    />
-  </AppPage>
+    </AppPage>
+  </cap-page>
 </template>
 
 <script setup lang="ts">
-import AppPage from '@/components/common/layout/AppPage.vue';
-import AppHeader from '@/components/common/layout/AppHeader.vue';
-import AppToolbar from '@/components/common/layout/AppToolbar.vue';
-import AppTitle from '@/components/common/layout/AppTitle.vue';
-import AppContent from '@/components/common/layout/AppContent.vue';
-import { toastController, useToast } from '@/composables/useToast';
-import { alertController } from '@/composables/useAlert';
-import AppButton from '@/components/common/AppButton.vue';
-import { computed, ref, UnwrapRef, watch } from "vue";
+import AppPage from "@/components/common/layout/AppPage.vue";
+import AppHeader from "@/components/common/layout/AppHeader.vue";
+import AppToolbar from "@/components/common/layout/AppToolbar.vue";
+import AppTitle from "@/components/common/layout/AppTitle.vue";
+import AppContent from "@/components/common/layout/AppContent.vue";
+import { toastController, useToast } from "@/composables/useToast";
+import { alertController } from "@/composables/useAlert";
+import AppButton from "@/components/common/AppButton.vue";
+import { computed, ref, UnwrapRef, onMounted, watch } from "vue";
 import AppBackButton from "@/components/common/AppBackButton.vue";
 import { useRoute, useRouter } from "vue-router";
-import Share2 from '~icons/lucide/share-2';
-import { Share } from '@capacitor/share';
+import Share2 from "~icons/lucide/share-2";
+import { Share } from "@capacitor/share";
 
 import { MovieResponse } from "@supabase/functions/_shared/movie";
 import { supabase } from "../api/supabase";
@@ -128,7 +128,8 @@ const {
   goToVoiceActor,
   goToActor,
   castVote,
-  refreshVotes} = useVoiceActorManagement("movie");
+  refreshVotes,
+} = useVoiceActorManagement("movie");
 
 const movie = ref<MovieResponse["movie"] | undefined>();
 const queueStatus = ref<string | null>(null);
@@ -256,13 +257,15 @@ const fetchError = ref("");
 
 const fetchQueueStatus = async () => {
   try {
-    const { data, error } = await supabase
-      .rpc("get_media_queue_status", {
-        p_tmdb_id: Number(route.params.id),
-        p_media_type: "movie"
-      });
+    const { data, error } = await supabase.rpc("get_media_queue_status", {
+      p_tmdb_id: Number(route.params.id),
+      p_media_type: "movie",
+    });
     if (error) throw error;
-    const statusData = data as { status: string | null; error_message: string | null } | null;
+    const statusData = data as {
+      status: string | null;
+      error_message: string | null;
+    } | null;
     if (statusData) {
       queueStatus.value = statusData.status;
       queueErrorMessage.value = statusData.error_message;
@@ -276,7 +279,14 @@ const fetchQueueStatus = async () => {
 };
 
 const showCreditsReview = ref(false);
-const extractedCredits = ref<Array<{actor: string, role: string, voiceActor: string, matchedActorId?: number | null}>>([]);
+const extractedCredits = ref<
+  Array<{
+    actor: string;
+    role: string;
+    voiceActor: string;
+    matchedActorId?: number | null;
+  }>
+>([]);
 
 const shareMedia = async () => {
   if (!movie.value) return;
@@ -284,7 +294,8 @@ const shareMedia = async () => {
     title: movie.value.title || "DubbingBase",
     text: `Check out ${movie.value.title} on DubbingBase!`,
     url: `dubbingbase://movie/${movie.value.id}`,
-    dialogTitle: 'Share Movie'});
+    dialogTitle: "Share Movie",
+  });
 };
 
 const takePhoto = async () => {
@@ -295,20 +306,24 @@ const takePhoto = async () => {
       const input = document.createElement("input");
       input.type = "file";
       input.accept = "image/*";
-      
+
       input.onchange = (e) => {
         const target = e.target as HTMLInputElement;
         resolve(target.files?.[0] || null);
       };
-      
+
       input.addEventListener("cancel", () => resolve(null));
-      
-      window.addEventListener("focus", () => {
-        setTimeout(() => {
-          if (!input.value) resolve(null);
-        }, 1000);
-      }, { once: true });
-      
+
+      window.addEventListener(
+        "focus",
+        () => {
+          setTimeout(() => {
+            if (!input.value) resolve(null);
+          }, 1000);
+        },
+        { once: true },
+      );
+
       input.click();
     });
 
@@ -319,16 +334,22 @@ const takePhoto = async () => {
 
     const formData = new FormData();
     formData.append("image", file, file.name || "image.jpg");
-    
+
     // Provide known actors to the AI
-    const simplifiedActors = actors.value?.map((a: any) => ({
-      id: a.id,
-      name: a.name,
-      roles: a.roles?.map((r: any) => r.character) || []})) || [];
+    const simplifiedActors =
+      actors.value?.map((a: any) => ({
+        id: a.id,
+        name: a.name,
+        roles: a.roles?.map((r: any) => r.character) || [],
+      })) || [];
     formData.append("actors", JSON.stringify(simplifiedActors));
 
-    const response = await supabase.functions.invoke("extract-credits-from-image", {
-      body: formData});
+    const response = await supabase.functions.invoke(
+      "extract-credits-from-image",
+      {
+        body: formData,
+      },
+    );
 
     if (response.data.ok) {
       extractedCredits.value = response.data.result || [];
@@ -375,16 +396,18 @@ const handleEnqueue = async () => {
   try {
     await enqueueMedia({
       tmdbId: Number(route.params.id),
-      mediaType: "movie"});
-    
+      mediaType: "movie",
+    });
+
     // Refresh queue status to show it's pending
     await fetchQueueStatus();
-    
+
     const toast = await toastController.create({
       message: "Added to processing queue! It will be processed automatically.",
       duration: 3000,
       position: "top",
-      color: "success"});
+      color: "success",
+    });
     await toast.present();
   } catch (err) {
     console.error("Error enqueuing media:", err);
@@ -393,7 +416,8 @@ const handleEnqueue = async () => {
       message: "Queue addition failed. Please try again.",
       duration: 3000,
       position: "top",
-      color: "danger"});
+      color: "danger",
+    });
     await toast.present();
   } finally {
     isFetching.value = false;
@@ -416,14 +440,17 @@ const fetchInfos = async () => {
   try {
     await enqueueAndProcessMedia({
       tmdbId: Number(route.params.id),
-      mediaType: "movie"});
+      mediaType: "movie",
+    });
     // Immediately fetch updated movie data to display changes
     await fetchMovieData();
     const toast = await toastController.create({
-      message: "Import completed successfully! The voice cast has been updated.",
+      message:
+        "Import completed successfully! The voice cast has been updated.",
       duration: 3000,
       position: "top",
-      color: "success"});
+      color: "success",
+    });
     await toast.present();
   } catch (err) {
     console.error("Error fetching movie data:", err);
@@ -432,7 +459,8 @@ const fetchInfos = async () => {
       message: "Import failed. Please try again.",
       duration: 3000,
       position: "top",
-      color: "danger"});
+      color: "danger",
+    });
     await toast.present();
   } finally {
     isFetching.value = false;
@@ -442,8 +470,12 @@ const fetchInfos = async () => {
 const fetchMovieData = async () => {
   const id = route.params.id;
   try {
-    const movieResponseRaw = await supabase.functions.invoke<MovieResponse>("movie", {
-      body: { id }});
+    const movieResponseRaw = await supabase.functions.invoke<MovieResponse>(
+      "movie",
+      {
+        body: { id },
+      },
+    );
     const data = movieResponseRaw.data;
     if (data) {
       movie.value = data.movie;
@@ -471,8 +503,6 @@ const fetchMovieData = async () => {
     fetchError.value = "Failed to load movie details.";
   }
 };
-
-
 
 // // Edit voice actor link
 // const editVoiceActorLink = (workItem: any) => {
@@ -540,7 +570,8 @@ const fetchMovieData = async () => {
 //   }
 // };
 
-watch(() => route.params.id, async (newId) => {
+onMounted(async () => {
+  const newId = route.params.id;
   if (!newId) return;
   isLoading.value = true;
   fetchError.value = "";
@@ -555,6 +586,5 @@ watch(() => route.params.id, async (newId) => {
   } finally {
     isLoading.value = false;
   }
-}, { immediate: true });
+});
 </script>
-

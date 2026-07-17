@@ -1,4 +1,5 @@
 <template>
+  <cap-page>
   <AppPage>
     <AppHeader>
       <AppToolbar>
@@ -88,6 +89,7 @@
 
     </AppContent>
   </AppPage>
+  </cap-page>
 </template>
 
 <script setup lang="ts">

@@ -1,4 +1,5 @@
 <template>
+  <cap-page>
   <AppPage>
     <AppHeader>
       <AppToolbar>
@@ -58,6 +59,7 @@
       </div>
     </AppContent>
   </AppPage>
+  </cap-page>
 </template>
 
 <script lang="ts" setup>
@@ -69,7 +71,7 @@ import AppContent from '@/components/common/layout/AppContent.vue';
 import AppSegment from '@/components/common/layout/AppSegment.vue';
 import AppSegmentButton from '@/components/common/layout/AppSegmentButton.vue';
 import { toastController } from '@/composables/useToast';
-import { ref, computed, watch } from "vue";
+import { ref, computed, onMounted } from "vue";
 import AppBackButton from "@/components/common/AppBackButton.vue";
 import { useRoute, useRouter } from "vue-router";
 import { supabase } from "../api/supabase";
@@ -259,7 +261,9 @@ async function fetchData() {
   }
 }
 
-watch(() => route.params.season, fetchData, { immediate: true });
+onMounted(async () => {
+  await fetchData();
+});
 </script>
 
 

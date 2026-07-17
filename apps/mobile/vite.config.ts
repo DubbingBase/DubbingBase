@@ -17,7 +17,13 @@ export default ({ mode }) => {
       strictPort: true,
     },
     plugins: [
-      vue(),
+      vue({
+        template: {
+          compilerOptions: {
+            isCustomElement: (tag) => tag.startsWith("cap-"),
+          },
+        },
+      }),
       // legacy(),
       Icons({ compiler: "vue3" }),
       vueDevTools(),

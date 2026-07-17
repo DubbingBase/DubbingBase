@@ -1,8 +1,9 @@
 <template>
-  <div class="base-layout">
+  <cap-page>
+    <div class="base-layout">
     <div class="content">
       <router-view v-slot="{ Component }">
-        <keep-alive include="Home,Search">
+        <keep-alive>
           <component :is="Component" />
         </keep-alive>
       </router-view>
@@ -19,11 +20,13 @@
         <span class="tab-label">{{ item.label }}</span>
       </router-link>
     </div>
-  </div>
+    </div>
+  </cap-page>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onUnmounted } from "vue";
+defineOptions({ name: 'TabsPage' });
 import { useRouter } from "vue-router";
 import Tv from '~icons/lucide/tv';
 import Search from '~icons/lucide/search';

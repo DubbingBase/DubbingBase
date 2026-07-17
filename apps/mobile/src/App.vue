@@ -1,10 +1,12 @@
 <template>
   <div id="app-root" class="app-root">
-    <router-view v-slot="{ Component, route }">
-      <keep-alive :max="10">
-        <component :is="Component" :key="route.fullPath" />
-      </keep-alive>
-    </router-view>
+    <cap-router-outlet platform="auto" ref="outletRef">
+      <router-view v-slot="{ Component, route }">
+        <keep-alive :max="10">
+          <component :is="Component" :key="route.path.startsWith('/tabs') ? '/tabs' : route.fullPath" />
+        </keep-alive>
+      </router-view>
+    </cap-router-outlet>
     <AppToastContainer />
     <AppAlertContainer />
   </div>
@@ -19,14 +21,22 @@ import { useDeepLinkHandler } from "@/utils/deepLinks";
 import { onMounted, ref } from "vue";
 import { App, URLOpenListenerEvent } from "@capacitor/app";
 import { useRouter } from "vue-router";
+import '@capgo/capacitor-transitions';
+import { initTransitions, setupRouterOutlet, setDirection } from '@capgo/capacitor-transitions/vue';
 
 const router = useRouter();
 
 const authStore = useAuthStore();
 const { handleDeepLink } = useDeepLinkHandler();
+const outletRef = ref<HTMLElement | null>(null);
+
+initTransitions({ platform: 'auto' });
 
 // Initialize auth and handle deep links
 onMounted(async () => {
+  if (outletRef.value) {
+    setupRouterOutlet(outletRef.value);
+  }
   // Handle deep links when app is already open
   App.addListener("appUrlOpen", (event: URLOpenListenerEvent) => {
     // Extract the URL from the event
@@ -47,6 +57,7 @@ onMounted(async () => {
   // Handle Android hardware back button / edge swipe
   App.addListener("backButton", ({ canGoBack }) => {
     if (canGoBack) {
+      setDirection('back');
       router.back();
     } else {
       App.exitApp();

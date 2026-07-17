@@ -4,14 +4,14 @@
       <AppToolbar>
         <AppTitle>Search</AppTitle>
       </AppToolbar>
-      <AppToolbar style="--background: transparent;">
+      <AppToolbar style="--background: transparent">
         <AppSearchbar
           v-model="query"
           :debounce="300"
           @ionInput="search($event)"
           show-clear-button="always"
           class="custom-searchbar"
-          style="padding: 0 8px;"
+          style="padding: 0 8px"
         ></AppSearchbar>
       </AppToolbar>
     </AppHeader>
@@ -26,8 +26,18 @@
             />
           </AppList>
         </transition-group>
-        <p v-if="!isLoading && matches.length === 0 && trimmedQuery.length >= 2" class="empty-state">No results found</p>
-        <p v-if="!isLoading && matches.length === 0 && trimmedQuery.length < 2" class="empty-state">Start typing to search...</p>
+        <p
+          v-if="!isLoading && matches.length === 0 && trimmedQuery.length >= 2"
+          class="empty-state"
+        >
+          No results found
+        </p>
+        <p
+          v-if="!isLoading && matches.length === 0 && trimmedQuery.length < 2"
+          class="empty-state"
+        >
+          Start typing to search...
+        </p>
       </div>
       <LoadingSpinner v-if="isLoading" :overlay="true" />
     </AppContent>
@@ -35,20 +45,20 @@
 </template>
 
 <script lang="ts" setup>
-import AppPage from '@/components/common/layout/AppPage.vue';
-import AppHeader from '@/components/common/layout/AppHeader.vue';
-import AppToolbar from '@/components/common/layout/AppToolbar.vue';
-import AppTitle from '@/components/common/layout/AppTitle.vue';
-import AppContent from '@/components/common/layout/AppContent.vue';
-import AppList from '@/components/common/AppList.vue';
-import AppSearchbar from '@/components/common/AppSearchbar.vue';
-import { ref, computed, watch } from 'vue';
-import { useToast } from '@/composables/useToast';
-defineOptions({ name: 'Search' });
+import AppPage from "@/components/common/layout/AppPage.vue";
+import AppHeader from "@/components/common/layout/AppHeader.vue";
+import AppToolbar from "@/components/common/layout/AppToolbar.vue";
+import AppTitle from "@/components/common/layout/AppTitle.vue";
+import AppContent from "@/components/common/layout/AppContent.vue";
+import AppList from "@/components/common/AppList.vue";
+import AppSearchbar from "@/components/common/AppSearchbar.vue";
+import { ref, computed, watch, onUnmounted } from "vue";
+import { useToast } from "@/composables/useToast";
 
+defineOptions({ name: "Search" });
 import SearchResultItem from "@/components/SearchResultItem.vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
-import { supabase } from '@/api/supabase';
+import { supabase } from "@/api/supabase";
 import type { SearchResult } from "@/types/search";
 
 const { showToast } = useToast();
@@ -60,17 +70,17 @@ const errorMessage = ref("");
 
 watch(errorMessage, (newVal) => {
   if (newVal) {
-    showToast(newVal, 2000, 'danger');
+    showToast(newVal, 2000, "danger");
     errorMessage.value = "";
   }
 });
 
-const query = ref('');
+const query = ref("");
 const trimmedQuery = computed(() => query.value.trim());
 let abortController: AbortController | null = null;
 
 const search = async (event: { target: { value: string } }) => {
-  query.value = event.target.value || '';
+  query.value = event.target.value || "";
 
   if (trimmedQuery.value.length < 2) {
     matches.value = [];
@@ -84,19 +94,23 @@ const search = async (event: { target: { value: string } }) => {
 
   abortController = new AbortController();
   isLoading.value = true;
-  errorMessage.value = '';
+  errorMessage.value = "";
 
   try {
-    const { data, error: supaError } = await supabase.functions.invoke('search', {
-      body: { query: trimmedQuery.value },
-      signal: abortController.signal});
+    const { data, error: supaError } = await supabase.functions.invoke(
+      "search",
+      {
+        body: { query: trimmedQuery.value },
+        signal: abortController.signal,
+      },
+    );
 
     if (supaError) throw supaError;
 
     matches.value = data || [];
   } catch (err: any) {
-    if (err?.name !== 'AbortError') {
-      errorMessage.value = err?.message || 'Search failed';
+    if (err?.name !== "AbortError") {
+      errorMessage.value = err?.message || "Search failed";
     }
   } finally {
     isLoading.value = false;
@@ -105,10 +119,12 @@ const search = async (event: { target: { value: string } }) => {
 </script>
 
 <style scoped>
-.fade-enter-active, .fade-leave-active {
+.fade-enter-active,
+.fade-leave-active {
   transition: opacity 0.5s;
 }
-.fade-enter-from, .fade-leave-to {
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
 }
 .empty-state {

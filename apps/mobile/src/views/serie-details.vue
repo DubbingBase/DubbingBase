@@ -1,129 +1,127 @@
 <template>
-  <AppPage>
-    <AppHeader class="header">
-      <AppToolbar class="toolbar">
-        <template #start >
-          <AppBackButton />
-        </template>
-        <AppTitle>{{ show?.name || "Détails de la série" }}</AppTitle>
-        <template #end >
-          <AppButton fill="clear" @click="shareMedia" aria-label="Share">
-            <Share2 class="app-icon" />
-          </AppButton>
-          <AppButton fill="clear" aria-label="Paramètres">
-            <Settings class="app-icon" />
-          </AppButton>
-        </template>
-      </AppToolbar>
-    </AppHeader>
-    <AppContent>
-      
+  <cap-page>
+    <AppPage>
+      <AppHeader class="header">
+        <AppToolbar class="toolbar">
+          <template #start>
+            <AppBackButton />
+          </template>
+          <AppTitle>{{ show?.name || "Détails de la série" }}</AppTitle>
+          <template #end>
+            <AppButton fill="clear" @click="shareMedia" aria-label="Share">
+              <Share2 class="app-icon" />
+            </AppButton>
+            <AppButton fill="clear" aria-label="Paramètres">
+              <Settings class="app-icon" />
+            </AppButton>
+          </template>
+        </AppToolbar>
+      </AppHeader>
+      <AppContent>
+        <MediaInfoCard :media="show" />
 
-      <MediaInfoCard :media="show" />
+        <LoadingSpinner v-if="isLoading" />
 
-      <LoadingSpinner v-if="isLoading" />
-
-      <div class="tabs" v-show="!isLoading">
-        <AppSegment scrollable>
-          <AppSegmentButton value="peoples" content-id="peoples">
-            <!-- <Search class="app-icon" /> -->
-            Personnes
-          </AppSegmentButton>
-          <AppSegmentButton value="seasons" content-id="seasons">
-            <!-- <Radio class="app-icon" /> -->
-            Saisons
-          </AppSegmentButton>
-        </AppSegment>
-        <AppSegmentView>
-          <AppSegmentContent class="segmented-content" id="peoples">
-            <ActorList
-              :actors="actors"
-              :voice-actors="voiceActors"
-              :is-admin="isAdmin"
-              :get-voice-actor-by-tmdb-id="getVoiceActorByTmdbId"
-              :go-to-actor="goToActor"
-              :go-to-voice-actor="goToVoiceActor"
-              :edit-voice-actor-link="editVoiceActorLink"
-              :confirm-delete-voice-actor-link="confirmDeleteVoiceActorLink"
-              :open-voice-actor-search="openVoiceActorSearch"
-              :loading="isLoading"
-              :mediaLanguage="show?.original_language"
-            />
-          </AppSegmentContent>
-          <AppSegmentContent class="segmented-content" id="seasons">
-            <div class="seasons" v-if="show">
-              <div
-                expand="block"
-                @click="goToSeason(show.id, season.season_number)"
-                class="season"
-                v-for="season in formattedSeasons"
-                :key="season.id"
-              >
-                <MediaThumbnail :path="season.poster_path"></MediaThumbnail>
-                <div class="text">
-                  <div class="season-title">{{ season.name }}</div>
-                  <div class="season-subtitle">
-                    {{ season.formatted_air_date }} &sdot;
-                    {{ season.episode_count }} épisodes
+        <div class="tabs" v-show="!isLoading">
+          <AppSegment scrollable>
+            <AppSegmentButton value="peoples" content-id="peoples">
+              <!-- <Search class="app-icon" /> -->
+              Personnes
+            </AppSegmentButton>
+            <AppSegmentButton value="seasons" content-id="seasons">
+              <!-- <Radio class="app-icon" /> -->
+              Saisons
+            </AppSegmentButton>
+          </AppSegment>
+          <AppSegmentView>
+            <AppSegmentContent class="segmented-content" id="peoples">
+              <ActorList
+                :actors="actors"
+                :voice-actors="voiceActors"
+                :is-admin="isAdmin"
+                :get-voice-actor-by-tmdb-id="getVoiceActorByTmdbId"
+                :go-to-actor="goToActor"
+                :go-to-voice-actor="goToVoiceActor"
+                :edit-voice-actor-link="editVoiceActorLink"
+                :confirm-delete-voice-actor-link="confirmDeleteVoiceActorLink"
+                :open-voice-actor-search="openVoiceActorSearch"
+                :loading="isLoading"
+                :mediaLanguage="show?.original_language"
+              />
+            </AppSegmentContent>
+            <AppSegmentContent class="segmented-content" id="seasons">
+              <div class="seasons" v-if="show">
+                <div
+                  expand="block"
+                  @click="goToSeason(show.id, season.season_number)"
+                  class="season"
+                  v-for="season in formattedSeasons"
+                  :key="season.id"
+                >
+                  <MediaThumbnail :path="season.poster_path"></MediaThumbnail>
+                  <div class="text">
+                    <div class="season-title">{{ season.name }}</div>
+                    <div class="season-subtitle">
+                      {{ season.formatted_air_date }} &sdot;
+                      {{ season.episode_count }} épisodes
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </AppSegmentContent>
-        </AppSegmentView>
-      </div>
+            </AppSegmentContent>
+          </AppSegmentView>
+        </div>
 
-      <ActionButtons
-        :has-wikidata-id="hasWikidataId"
-        :has-data="hasData"
-        :is-fetching="isFetching"
-        :is-scanning="isScanning"
-        :fetch-error="fetchError"
-        :queue-status="queueStatus"
-        :queue-error-message="queueErrorMessage"
-        @fetch-infos="fetchInfos"
-        @enqueue="handleEnqueue"
-        @take-photo="takePhoto"
-      />
+        <ActionButtons
+          :has-wikidata-id="hasWikidataId"
+          :has-data="hasData"
+          :is-fetching="isFetching"
+          :is-scanning="isScanning"
+          :fetch-error="fetchError"
+          :queue-status="queueStatus"
+          :queue-error-message="queueErrorMessage"
+          @fetch-infos="fetchInfos"
+          @enqueue="handleEnqueue"
+          @take-photo="takePhoto"
+        />
 
+        <VoiceActorSearchModal
+          :is-open="showVoiceActorSearch"
+          :media-id="route.params.id as string"
+          :work-type="'tv'"
+          :link-voice-actor="linkVoiceActor"
+          @close="showVoiceActorSearch = false"
+        />
 
-
-      <VoiceActorSearchModal
-        :is-open="showVoiceActorSearch"
-        :media-id="route.params.id as string"
-        :work-type="'tv'"
-        :link-voice-actor="linkVoiceActor"
-        @close="showVoiceActorSearch = false"
-      />
-
-      <CreditsReviewModal
-        :is-open="showCreditsReview"
-        :extracted-credits="extractedCredits"
-        :movie-actors="actors"
-        :media-id="route.params.id as string"
-        :work-type="'tv'"
-        @close="showCreditsReview = false"
-        @refresh="handleRefresh"
-      />
-    </AppContent>
-  </AppPage>
+        <CreditsReviewModal
+          :is-open="showCreditsReview"
+          :extracted-credits="extractedCredits"
+          :movie-actors="actors"
+          :media-id="route.params.id as string"
+          :work-type="'tv'"
+          @close="showCreditsReview = false"
+          @refresh="handleRefresh"
+        />
+      </AppContent>
+    </AppPage>
+  </cap-page>
 </template>
 
 <script setup lang="ts">
-import AppPage from '@/components/common/layout/AppPage.vue';
-import AppHeader from '@/components/common/layout/AppHeader.vue';
-import AppToolbar from '@/components/common/layout/AppToolbar.vue';
-import AppTitle from '@/components/common/layout/AppTitle.vue';
-import AppContent from '@/components/common/layout/AppContent.vue';
-import AppSegment from '@/components/common/layout/AppSegment.vue';
-import AppSegmentButton from '@/components/common/layout/AppSegmentButton.vue';
-import AppSegmentView from '@/components/common/layout/AppSegmentView.vue';
-import AppSegmentContent from '@/components/common/layout/AppSegmentContent.vue';
-import { toastController, useToast } from '@/composables/useToast';
-import AppButton from '@/components/common/AppButton.vue';
-import Search from '~icons/lucide/search';
-import Radio from '~icons/lucide/radio';
-import { ref, computed, UnwrapRef, watch } from "vue";
+import AppPage from "@/components/common/layout/AppPage.vue";
+import AppHeader from "@/components/common/layout/AppHeader.vue";
+import AppToolbar from "@/components/common/layout/AppToolbar.vue";
+import AppTitle from "@/components/common/layout/AppTitle.vue";
+import AppContent from "@/components/common/layout/AppContent.vue";
+import AppSegment from "@/components/common/layout/AppSegment.vue";
+import AppSegmentButton from "@/components/common/layout/AppSegmentButton.vue";
+import AppSegmentView from "@/components/common/layout/AppSegmentView.vue";
+import AppSegmentContent from "@/components/common/layout/AppSegmentContent.vue";
+import { toastController, useToast } from "@/composables/useToast";
+import AppButton from "@/components/common/AppButton.vue";
+import Search from "~icons/lucide/search";
+import Radio from "~icons/lucide/radio";
+import { ref, computed, UnwrapRef, onMounted, watch } from "vue";
 import { useRoute } from "vue-router";
 import AppBackButton from "@/components/common/AppBackButton.vue";
 import { useRouter } from "vue-router";
@@ -137,10 +135,10 @@ import CreditsReviewModal from "@/components/CreditsReviewModal.vue";
 import ActionButtons from "@/components/ActionButtons.vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import { useVoiceActorManagement } from "@/composables/useVoiceActorManagement";
-import Share2 from '~icons/lucide/share-2';
-import { Share } from '@capacitor/share';
+import Share2 from "~icons/lucide/share-2";
+import { Share } from "@capacitor/share";
 // Removed unused imports
-import Settings from '~icons/lucide/settings';
+import Settings from "~icons/lucide/settings";
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
 import { supabase } from "@/api/supabase";
@@ -191,7 +189,8 @@ const {
   linkVoiceActor,
   editVoiceActorLink,
   confirmDeleteVoiceActorLink,
-  goToVoiceActor} = useVoiceActorManagement("tv");
+  goToVoiceActor,
+} = useVoiceActorManagement("tv");
 
 const findCharacter = (
   character: UnwrapRef<typeof characterProfilePictures>[number],
@@ -297,7 +296,8 @@ const formattedSeasons = computed(() => {
     ...season,
     formatted_air_date: season.air_date
       ? format(new Date(season.air_date), "MMM dd, yyyy")
-      : "TBA"}));
+      : "TBA",
+  }));
 });
 
 // Scan functionality
@@ -313,7 +313,14 @@ watch(showScanResult, (newVal) => {
 });
 
 const showCreditsReview = ref(false);
-const extractedCredits = ref<Array<{actor: string, role: string, voiceActor: string, matchedActorId?: number | null}>>([]);
+const extractedCredits = ref<
+  Array<{
+    actor: string;
+    role: string;
+    voiceActor: string;
+    matchedActorId?: number | null;
+  }>
+>([]);
 
 const shareMedia = async () => {
   if (!show.value) return;
@@ -321,7 +328,8 @@ const shareMedia = async () => {
     title: show.value.name || "DubbingBase",
     text: `Check out ${show.value.name} on DubbingBase!`,
     url: `dubbingbase://serie/${show.value.id}`,
-    dialogTitle: 'Share Series'});
+    dialogTitle: "Share Series",
+  });
 };
 
 const takePhoto = async () => {
@@ -332,20 +340,24 @@ const takePhoto = async () => {
       const input = document.createElement("input");
       input.type = "file";
       input.accept = "image/*";
-      
+
       input.onchange = (e) => {
         const target = e.target as HTMLInputElement;
         resolve(target.files?.[0] || null);
       };
-      
+
       input.addEventListener("cancel", () => resolve(null));
-      
-      window.addEventListener("focus", () => {
-        setTimeout(() => {
-          if (!input.value) resolve(null);
-        }, 1000);
-      }, { once: true });
-      
+
+      window.addEventListener(
+        "focus",
+        () => {
+          setTimeout(() => {
+            if (!input.value) resolve(null);
+          }, 1000);
+        },
+        { once: true },
+      );
+
       input.click();
     });
 
@@ -356,16 +368,22 @@ const takePhoto = async () => {
 
     const formData = new FormData();
     formData.append("image", file, file.name || "image.jpg");
-    
+
     // Provide known actors to the AI
-    const simplifiedActors = actors.value?.map((a: any) => ({
-      id: a.id,
-      name: a.name,
-      roles: a.roles?.map((r: any) => r.character) || []})) || [];
+    const simplifiedActors =
+      actors.value?.map((a: any) => ({
+        id: a.id,
+        name: a.name,
+        roles: a.roles?.map((r: any) => r.character) || [],
+      })) || [];
     formData.append("actors", JSON.stringify(simplifiedActors));
 
-    const response = await supabase.functions.invoke("extract-credits-from-image", {
-      body: formData});
+    const response = await supabase.functions.invoke(
+      "extract-credits-from-image",
+      {
+        body: formData,
+      },
+    );
 
     if (response.data.ok) {
       extractedCredits.value = response.data.result || [];
@@ -388,7 +406,8 @@ const takePhoto = async () => {
 const getSerie = async (id: string) => {
   try {
     const response = await supabase.functions.invoke<ShowResponse>("show", {
-      body: { id }});
+      body: { id },
+    });
     return response;
   } catch (e: any) {
     console.error("Error fetching series data:", e);
@@ -420,7 +439,10 @@ const fetchSerieData = async () => {
         characterProfilePictures.value = response.data.characterProfilePictures;
       }
       if ((response.data as any).votes) {
-        sharedVotes.value = { ...sharedVotes.value, ...(response.data as any).votes };
+        sharedVotes.value = {
+          ...sharedVotes.value,
+          ...(response.data as any).votes,
+        };
       }
     }
   } catch (e: any) {
@@ -432,13 +454,15 @@ const fetchSerieData = async () => {
 
 const fetchQueueStatus = async () => {
   try {
-    const { data, error } = await supabase
-      .rpc("get_media_queue_status", {
-        p_tmdb_id: Number(route.params.id),
-        p_media_type: "tv"
-      });
+    const { data, error } = await supabase.rpc("get_media_queue_status", {
+      p_tmdb_id: Number(route.params.id),
+      p_media_type: "tv",
+    });
     if (error) throw error;
-    const statusData = data as { status: string | null; error_message: string | null } | null;
+    const statusData = data as {
+      status: string | null;
+      error_message: string | null;
+    } | null;
     if (statusData) {
       queueStatus.value = statusData.status;
       queueErrorMessage.value = statusData.error_message;
@@ -478,16 +502,18 @@ const handleEnqueue = async () => {
   try {
     await enqueueMedia({
       tmdbId: Number(route.params.id),
-      mediaType: "tv"});
-    
+      mediaType: "tv",
+    });
+
     // Refresh queue status to show it's pending
     await fetchQueueStatus();
-    
+
     const toast = await toastController.create({
       message: "Added to processing queue! It will be processed automatically.",
       duration: 3000,
       position: "top",
-      color: "success"});
+      color: "success",
+    });
     await toast.present();
   } catch (err) {
     console.error("Error enqueuing media:", err);
@@ -496,7 +522,8 @@ const handleEnqueue = async () => {
       message: "Queue addition failed. Please try again.",
       duration: 3000,
       position: "top",
-      color: "danger"});
+      color: "danger",
+    });
     await toast.present();
   } finally {
     isFetching.value = false;
@@ -519,14 +546,17 @@ const fetchInfos = async () => {
   try {
     await enqueueAndProcessMedia({
       tmdbId: Number(route.params.id),
-      mediaType: "tv"});
+      mediaType: "tv",
+    });
     // Immediately fetch updated series data to display changes
     await fetchSerieData();
     const toast = await toastController.create({
-      message: "Import completed successfully! The voice cast has been updated.",
+      message:
+        "Import completed successfully! The voice cast has been updated.",
       duration: 3000,
       position: "top",
-      color: "success"});
+      color: "success",
+    });
     await toast.present();
   } catch (err) {
     console.error("Error fetching series data:", err);
@@ -535,14 +565,16 @@ const fetchInfos = async () => {
       message: "Import failed. Please try again.",
       duration: 3000,
       position: "top",
-      color: "danger"});
+      color: "danger",
+    });
     await toast.present();
   } finally {
     isFetching.value = false;
   }
 };
 
-watch(() => route.params.id, async (newId) => {
+onMounted(async () => {
+  const newId = route.params.id;
   if (!newId) return;
   isLoading.value = true;
   error.value = "";
@@ -557,7 +589,7 @@ watch(() => route.params.id, async (newId) => {
   } finally {
     isLoading.value = false;
   }
-}, { immediate: true });
+});
 
 // Navigation methods
 const goToSeason = (id: number, seasonNumber: number) => {
@@ -565,17 +597,18 @@ const goToSeason = (id: number, seasonNumber: number) => {
     name: "SeasonDetails",
     params: {
       id: id,
-      season: seasonNumber}});
+      season: seasonNumber,
+    },
+  });
 };
 
 const goToActor = (id: number) => {
   router.push({
     name: "ActorDetails",
-    params: { id }});
+    params: { id },
+  });
 };
 </script>
-
-
 
 <style scoped lang="scss">
 $coverHeight: 150px;

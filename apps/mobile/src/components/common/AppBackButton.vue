@@ -1,14 +1,20 @@
 <template>
-  <button @click="router.back()" class="app-back-button">
+  <button @click="handleBack" class="app-back-button">
     <ChevronLeft class="app-back-icon" />
   </button>
 </template>
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
+import { setDirection } from '@capgo/capacitor-transitions/vue';
 import ChevronLeft from '~icons/lucide/chevron-left';
 
 const router = useRouter();
+
+const handleBack = () => {
+  setDirection('back');
+  router.back();
+};
 </script>
 
 <style scoped>

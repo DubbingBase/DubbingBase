@@ -1,4 +1,5 @@
 <template>
+  
   <AppPage>
     <AppHeader>
       <AppToolbar>
@@ -50,6 +51,7 @@
       </div>
     </AppContent>
   </AppPage>
+  
 </template>
 
 <script setup lang="ts">

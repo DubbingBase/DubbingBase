@@ -2,19 +2,12 @@
   <AppPage>
     <AppHeader>
       <AppToolbar>
-        <AppTitle>{{ t('navigation.home') }}</AppTitle>
+        <AppTitle>{{ t("navigation.home") }}</AppTitle>
       </AppToolbar>
     </AppHeader>
     <AppContent :fullscreen="true">
-      
-      <AppHeader collapse="condense">
-        <AppToolbar>
-          <AppTitle size="large">{{ t('home.welcome') }}</AppTitle>
-        </AppToolbar>
-      </AppHeader>
-
       <div class="trending-movies">
-        <div class="list-header">{{ t('home.trendingMovies') }}</div>
+        <div class="list-header">{{ t("home.trendingMovies") }}</div>
         <div class="movies">
           <template v-if="isLoadingMovies">
             <MediaItem
@@ -28,10 +21,10 @@
             />
           </template>
           <template v-else-if="errorMovies">
-            <div class="error-message">{{ t('home.moviesError') }}</div>
+            <div class="error-message">{{ t("home.moviesError") }}</div>
           </template>
           <template v-else-if="trendingMovies.length === 0">
-            <div class="empty-message">{{ t('home.moviesEmpty') }}</div>
+            <div class="empty-message">{{ t("home.moviesEmpty") }}</div>
           </template>
           <template v-else>
             <MediaItem
@@ -46,7 +39,7 @@
         </div>
       </div>
       <div class="trending-series">
-        <div class="list-header">{{ t('home.trendingSeries') }}</div>
+        <div class="list-header">{{ t("home.trendingSeries") }}</div>
         <div class="series">
           <template v-if="isLoadingSeries">
             <MediaItem
@@ -60,10 +53,10 @@
             />
           </template>
           <template v-else-if="errorSeries">
-            <div class="error-message">{{ t('home.seriesError') }}</div>
+            <div class="error-message">{{ t("home.seriesError") }}</div>
           </template>
           <template v-else-if="trendingSeries.length === 0">
-            <div class="empty-message">{{ t('home.seriesEmpty') }}</div>
+            <div class="empty-message">{{ t("home.seriesEmpty") }}</div>
           </template>
           <template v-else>
             <MediaItem
@@ -78,7 +71,7 @@
         </div>
       </div>
       <div class="recent-voice-actors">
-        <div class="list-header">{{ t('home.recentVoiceActors') }}</div>
+        <div class="list-header">{{ t("home.recentVoiceActors") }}</div>
         <div class="voice-actors">
           <template v-if="isLoadingVoiceActors">
             <MediaItem
@@ -92,10 +85,10 @@
             />
           </template>
           <template v-else-if="errorVoiceActors">
-            <div class="error-message">{{ t('home.voiceActorsError') }}</div>
+            <div class="error-message">{{ t("home.voiceActorsError") }}</div>
           </template>
           <template v-else-if="recentVoiceActors.length === 0">
-            <div class="empty-message">{{ t('home.voiceActorsEmpty') }}</div>
+            <div class="empty-message">{{ t("home.voiceActorsEmpty") }}</div>
           </template>
           <template v-else>
             <MediaItem
@@ -111,7 +104,7 @@
         </div>
       </div>
       <div class="top-voice-actors">
-        <div class="list-header">{{ t('home.topVoiceActors') }}</div>
+        <div class="list-header">{{ t("home.topVoiceActors") }}</div>
         <div class="voice-actors">
           <template v-if="isLoadingTopVoiceActors">
             <MediaItem
@@ -125,10 +118,10 @@
             />
           </template>
           <template v-else-if="errorTopVoiceActors">
-            <div class="error-message">{{ t('home.topVoiceActorsError') }}</div>
+            <div class="error-message">{{ t("home.topVoiceActorsError") }}</div>
           </template>
           <template v-else-if="topVoiceActors.length === 0">
-            <div class="empty-message">{{ t('home.topVoiceActorsEmpty') }}</div>
+            <div class="empty-message">{{ t("home.topVoiceActorsEmpty") }}</div>
           </template>
           <template v-else>
             <MediaItem
@@ -148,13 +141,13 @@
 </template>
 
 <script setup lang="ts">
-import AppPage from '@/components/common/layout/AppPage.vue';
-import AppHeader from '@/components/common/layout/AppHeader.vue';
-import AppToolbar from '@/components/common/layout/AppToolbar.vue';
-import AppTitle from '@/components/common/layout/AppTitle.vue';
-import AppContent from '@/components/common/layout/AppContent.vue';
+import AppPage from "@/components/common/layout/AppPage.vue";
+import AppHeader from "@/components/common/layout/AppHeader.vue";
+import AppToolbar from "@/components/common/layout/AppToolbar.vue";
+import AppTitle from "@/components/common/layout/AppTitle.vue";
+import AppContent from "@/components/common/layout/AppContent.vue";
 import { onMounted, ref } from "vue";
-defineOptions({ name: 'Home' });
+defineOptions({ name: "Home" });
 import { useI18n } from "vue-i18n";
 import type { TrendingResponse } from "@supabase/functions/_shared/movie";
 import type { TrendingResponse as SerieTrendingResponse } from "@supabase/functions/_shared/serie";
@@ -162,13 +155,12 @@ import type { Tables } from "@/utils/database";
 import MediaItem from "../components/MediaItem.vue";
 import { supabase } from "../api/supabase";
 
-
 const { t } = useI18n();
 
 const trendingMovies = ref<TrendingResponse["results"]>([]);
 const trendingSeries = ref<SerieTrendingResponse["results"]>([]);
-const recentVoiceActors = ref<Tables<'voice_actors'>[]>([]);
-const topVoiceActors = ref<Tables<'voice_actors'>[]>([]);
+const recentVoiceActors = ref<Tables<"voice_actors">[]>([]);
+const topVoiceActors = ref<Tables<"voice_actors">[]>([]);
 const isLoadingMovies = ref(true);
 const isLoadingSeries = ref(true);
 const isLoadingVoiceActors = ref(true);
@@ -190,7 +182,8 @@ const loadHomeData = async () => {
 
   await Promise.allSettled([
     // Fetch movies in parallel
-    supabase.functions.invoke("trending-movies")
+    supabase.functions
+      .invoke("trending-movies")
       .then((res) => {
         if (res.error) throw new Error(res.error.message || "Erreur inconnue");
         trendingMovies.value = res.data.results || [];
@@ -204,13 +197,15 @@ const loadHomeData = async () => {
       }),
 
     // Fetch series in parallel
-    supabase.functions.invoke("trending-shows")
+    supabase.functions
+      .invoke("trending-shows")
       .then((res) => {
         if (res.error) throw new Error(res.error.message || "Erreur inconnue");
         trendingSeries.value = res.data.results || [];
       })
       .catch((e) => {
-        errorSeries.value = e.message || "Erreur lors du chargement des séries.";
+        errorSeries.value =
+          e.message || "Erreur lors du chargement des séries.";
         trendingSeries.value = [];
       })
       .finally(() => {
@@ -218,13 +213,15 @@ const loadHomeData = async () => {
       }),
 
     // Fetch recent voice actors in parallel
-    supabase.functions.invoke("recent-voice-actors", { body: { limit: 10 } })
+    supabase.functions
+      .invoke("recent-voice-actors", { body: { limit: 10 } })
       .then((res) => {
         if (res.error) throw new Error(res.error.message || "Erreur inconnue");
         recentVoiceActors.value = res.data || [];
       })
       .catch((e) => {
-        errorVoiceActors.value = e.message || "Erreur lors du chargement des voix récentes.";
+        errorVoiceActors.value =
+          e.message || "Erreur lors du chargement des voix récentes.";
         recentVoiceActors.value = [];
       })
       .finally(() => {
@@ -232,18 +229,20 @@ const loadHomeData = async () => {
       }),
 
     // Fetch top voice actors in parallel
-    supabase.functions.invoke("top-voice-actors", { body: { limit: 10 } })
+    supabase.functions
+      .invoke("top-voice-actors", { body: { limit: 10 } })
       .then((res) => {
         if (res.error) throw new Error(res.error.message || "Erreur inconnue");
         topVoiceActors.value = res.data || [];
       })
       .catch((e) => {
-        errorTopVoiceActors.value = e.message || "Erreur lors du chargement des top doubleurs.";
+        errorTopVoiceActors.value =
+          e.message || "Erreur lors du chargement des top doubleurs.";
         topVoiceActors.value = [];
       })
       .finally(() => {
         isLoadingTopVoiceActors.value = false;
-      })
+      }),
   ]);
 };
 
@@ -270,8 +269,10 @@ const handleRefresh = async (event: any) => {
   // height: 263px;
 }
 
-
-.trending-movies, .trending-series, .recent-voice-actors, .top-voice-actors {
+.trending-movies,
+.trending-series,
+.recent-voice-actors,
+.top-voice-actors {
   margin-bottom: 32px;
   padding-left: 12px;
   margin-top: 32px;
@@ -297,5 +298,4 @@ const handleRefresh = async (event: any) => {
   font-style: italic;
   margin: 8px 0;
 }
-
 </style>

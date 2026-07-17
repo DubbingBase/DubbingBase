@@ -462,3 +462,6 @@ verify_jwt = true
 
 [functions.extract-voice-actor-info]
 verify_jwt = false
+
+[functions.extract-credits-from-image]
+verify_jwt = false

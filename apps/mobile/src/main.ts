@@ -17,10 +17,7 @@ import { useAuthStore } from "@/stores/auth";
 
 import { SplashScreen } from "@capacitor/splash-screen";
 
-const app = createApp(App)
-  .use(createPinia())
-  .use(router)
-  .use(i18n);
+const app = createApp(App).use(createPinia()).use(router).use(i18n);
 
 router.isReady().then(async () => {
   const authStore = useAuthStore();

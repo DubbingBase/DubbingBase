@@ -1,4 +1,5 @@
 <template>
+  <cap-page>
   <AppPage>
     <AppHeader>
       <AppToolbar>
@@ -7,6 +8,9 @@
         </template>
         <AppTitle>Voix</AppTitle>
         <template #end >
+          <AppButton @click="isFetchModalOpen = true" v-if="isAdmin">
+            <RefreshCw class="app-icon" />
+          </AppButton>
           <AppButton @click="openEditProfile">
             <Pencil class="app-icon" />
           </AppButton>
@@ -51,18 +55,9 @@
         @saved="handleFetchModalSaved"
       />
 
-      <div class="fixed bottom-6 right-6 z-50" v-if="isAdmin">
-        <AppButton
-          @click="isFetchModalOpen = true"
-          color="primary"
-          shape="circle"
-          class="w-14 h-14 shadow-lg flex items-center justify-center"
-        >
-          <RefreshCw class="w-6 h-6 text-white" />
-        </AppButton>
-      </div>
     </AppContent>
   </AppPage>
+  </cap-page>
 </template>
 
 <script setup lang="ts">
