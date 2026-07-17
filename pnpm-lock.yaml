@@ -50,6 +50,9 @@ importers:
       '@capacitor/status-bar':
         specifier: ^7.0.3
         version: 7.0.3(@capacitor/core@7.4.3)
+      '@capgo/capacitor-transitions':
+        specifier: ^8.1.9
+        version: 8.1.9(vue@3.5.21(typescript@5.9.2))
       '@ionic/core':
         specifier: ^8.7.3
         version: 8.7.3
@@ -826,6 +829,29 @@ packages:
     resolution: {integrity: sha512-JyRpVnKwHij9hgPWolF6PK+HT3e2HSPjN11/h2OmKxq8GAdPGARFLv+97eZl0pvuvm0Kka/LpiLb5whXISBg7Q==}
     peerDependencies:
       '@capacitor/core': '>=7.0.0'
+
+  '@capgo/capacitor-transitions@8.1.9':
+    resolution: {integrity: sha512-qw9gs97CuVmnH05iXtsNyH+LSi7m/0T++vpGrAnYYnFQddOXtlbGbdEw6xznOz+3G6YQEnk6PqqJOkStYm69lQ==}
+    peerDependencies:
+      '@angular/core': '>=17.0.0'
+      react: '>=18.0.0'
+      react-dom: '>=18.0.0'
+      solid-js: '>=1.0.0'
+      svelte: '>=4.0.0'
+      vue: '>=3.0.0'
+    peerDependenciesMeta:
+      '@angular/core':
+        optional: true
+      react:
+        optional: true
+      react-dom:
+        optional: true
+      solid-js:
+        optional: true
+      svelte:
+        optional: true
+      vue:
+        optional: true
 
   '@changesets/apply-release-plan@7.0.13':
     resolution: {integrity: sha512-BIW7bofD2yAWoE8H4V40FikC+1nNFEKBisMECccS16W1rt6qqhNTBDmIw5HaqmMgtLNz9e7oiALiEUuKrQ4oHg==}
@@ -5840,6 +5866,10 @@ snapshots:
   '@capacitor/status-bar@7.0.3(@capacitor/core@7.4.3)':
     dependencies:
       '@capacitor/core': 7.4.3
+
+  '@capgo/capacitor-transitions@8.1.9(vue@3.5.21(typescript@5.9.2))':
+    optionalDependencies:
+      vue: 3.5.21(typescript@5.9.2)
 
   '@changesets/apply-release-plan@7.0.13':
     dependencies:

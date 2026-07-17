@@ -26,12 +26,12 @@
             :key="work.media.id"
             class="work-item"
           >
-            <RouterLink :to="{ name: work.media.media_type === 'movie' ? 'MovieDetails' : 'SerieDetails', params: { id: work.media.id } }">
+            <RouterLink :to="{ name: work.work.content_type === 'movie' ? 'MovieDetails' : 'SerieDetails', params: { id: work.media.id } }">
               <MovieCard
                 :media="work.media"
                 :character="work.data.character || ''"
                 :character-image="work.data.characterImage"
-                :media-type="work.media.media_type === 'movie' ? 'movie' : 'serie'"
+                :media-type="work.work.content_type === 'movie' ? 'movie' : 'serie'"
               />
             </RouterLink>
           </div>
@@ -52,7 +52,7 @@ import { Actor } from "@supabase/functions/_shared/types";
 
 type EnhancedWorkItem = {
   media: MovieModel | SerieModel;
-  work: { id: number; actor_id: number; content_id: number };
+  work: { id: number; actor_id: number; content_id: number; content_type: string | null };
   data: {
     character: string | undefined;
     characterImage?: string;

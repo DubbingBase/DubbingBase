@@ -168,7 +168,7 @@ const handleFetchModalSaved = async () => {
 // Define a type for our enhanced work item
 type EnhancedWorkItem = {
   media: MovieModel | SerieModel;
-  work: { id: number; actor_id: number; content_id: number };
+  work: { id: number; actor_id: number; content_id: number; content_type: string | null };
   data: {
     character: string | undefined;
     characterImage?: string;

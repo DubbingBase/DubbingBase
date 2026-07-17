@@ -1,6 +1,10 @@
 <template>
   <ion-app>
-    <router-view />
+    <router-view v-slot="{ Component, route }">
+      <keep-alive :max="10">
+        <component :is="Component" :key="route.fullPath" />
+      </keep-alive>
+    </router-view>
   </ion-app>
 </template>
 

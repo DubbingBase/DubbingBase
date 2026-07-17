@@ -34,6 +34,10 @@ export function buildSupabaseImageUrl(
 ): string | null {
   if (!imagePath) return null;
 
+  if (imagePath.startsWith("http")) {
+    return imagePath;
+  }
+
   const { data: publicUrlData } = ctx.supabase.storage
     .from(bucket)
     .getPublicUrl(imagePath);

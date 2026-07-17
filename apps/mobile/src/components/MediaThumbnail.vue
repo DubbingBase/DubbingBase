@@ -1,16 +1,17 @@
 <template>
-  <div class="avatar">
+  <div class="avatar" :style="{ width: widthStyle, height: heightStyle }">
     <IonImg 
       class="avatar-image" 
-      v-if="path" 
       :src="imgSrc" 
       @ionError="handleImageError"
+      :style="{ width: widthStyle, height: heightStyle }"
     />
   </div>
 </template>
 
 <script lang="ts" setup>
 import { computed, toRefs, ref, watch } from "vue";
+import { IonImg } from "@ionic/vue";
 
 import { THUMBNAIL_DEFAULT_WIDTH, THUMBNAIL_DEFAULT_HEIGHT } from '@/constants/thumbnails';
 
@@ -49,7 +50,7 @@ const defaultSrc = computed(() => {
 });
 
 const imgSrc = computed(() => {
-  return hasError.value ? defaultSrc.value : props.path;
+  return (hasError.value || !props.path) ? defaultSrc.value : props.path;
 });
 
 const handleImageError = () => {

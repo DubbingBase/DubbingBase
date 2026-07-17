@@ -1,5 +1,5 @@
 remove ionic entirely
-implement view transitions
+implement view transitions using @capgo/capacitor-transitions (do this AFTER removing ionic entirely)
 voice actor request is very slow: it's because there is a tmdb outage
 add votes to trust work
 add "untrusted" work
