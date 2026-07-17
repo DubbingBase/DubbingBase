@@ -1,43 +1,41 @@
 <template>
-  <ion-page>
-    <ion-header class="header">
-      <ion-toolbar class="toolbar">
-        <ion-buttons slot="start">
+  <AppPage>
+    <AppHeader class="header">
+      <AppToolbar class="toolbar">
+        <template #start >
           <AppBackButton />
-        </ion-buttons>
-        <ion-title>{{ show?.name || "Détails de la série" }}</ion-title>
-        <ion-buttons slot="end">
+        </template>
+        <AppTitle>{{ show?.name || "Détails de la série" }}</AppTitle>
+        <template #end >
           <AppButton fill="clear" @click="shareMedia" aria-label="Share">
             <Share2 class="app-icon" />
           </AppButton>
           <AppButton fill="clear" aria-label="Paramètres">
             <Settings class="app-icon" />
           </AppButton>
-        </ion-buttons>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content>
-      <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
-        <ion-refresher-content></ion-refresher-content>
-      </ion-refresher>
+        </template>
+      </AppToolbar>
+    </AppHeader>
+    <AppContent>
+      
 
       <MediaInfoCard :media="show" />
 
       <LoadingSpinner v-if="isLoading" />
 
       <div class="tabs" v-show="!isLoading">
-        <ion-segment scrollable>
-          <ion-segment-button value="peoples" content-id="peoples">
+        <AppSegment scrollable>
+          <AppSegmentButton value="peoples" content-id="peoples">
             <!-- <Search class="app-icon" /> -->
             Personnes
-          </ion-segment-button>
-          <ion-segment-button value="seasons" content-id="seasons">
+          </AppSegmentButton>
+          <AppSegmentButton value="seasons" content-id="seasons">
             <!-- <Radio class="app-icon" /> -->
             Saisons
-          </ion-segment-button>
-        </ion-segment>
-        <ion-segment-view>
-          <ion-segment-content class="segmented-content" id="peoples">
+          </AppSegmentButton>
+        </AppSegment>
+        <AppSegmentView>
+          <AppSegmentContent class="segmented-content" id="peoples">
             <ActorList
               :actors="actors"
               :voice-actors="voiceActors"
@@ -51,8 +49,8 @@
               :loading="isLoading"
               :mediaLanguage="show?.original_language"
             />
-          </ion-segment-content>
-          <ion-segment-content class="segmented-content" id="seasons">
+          </AppSegmentContent>
+          <AppSegmentContent class="segmented-content" id="seasons">
             <div class="seasons" v-if="show">
               <div
                 expand="block"
@@ -71,8 +69,8 @@
                 </div>
               </div>
             </div>
-          </ion-segment-content>
-        </ion-segment-view>
+          </AppSegmentContent>
+        </AppSegmentView>
       </div>
 
       <ActionButtons
@@ -88,12 +86,7 @@
         @take-photo="takePhoto"
       />
 
-      <ion-toast
-        :is-open="showScanResult"
-        :message="scanResult"
-        :duration="3000"
-        @didDismiss="showScanResult = false"
-      ></ion-toast>
+
 
       <VoiceActorSearchModal
         :is-open="showVoiceActorSearch"
@@ -112,16 +105,24 @@
         @close="showCreditsReview = false"
         @refresh="handleRefresh"
       />
-    </ion-content>
-  </ion-page>
+    </AppContent>
+  </AppPage>
 </template>
 
 <script setup lang="ts">
-import { toastController } from '@/composables/useToast';
+import AppPage from '@/components/common/layout/AppPage.vue';
+import AppHeader from '@/components/common/layout/AppHeader.vue';
+import AppToolbar from '@/components/common/layout/AppToolbar.vue';
+import AppTitle from '@/components/common/layout/AppTitle.vue';
+import AppContent from '@/components/common/layout/AppContent.vue';
+import AppSegment from '@/components/common/layout/AppSegment.vue';
+import AppSegmentButton from '@/components/common/layout/AppSegmentButton.vue';
+import AppSegmentView from '@/components/common/layout/AppSegmentView.vue';
+import AppSegmentContent from '@/components/common/layout/AppSegmentContent.vue';
+import { toastController, useToast } from '@/composables/useToast';
 import AppButton from '@/components/common/AppButton.vue';
 import Search from '~icons/lucide/search';
 import Radio from '~icons/lucide/radio';
-import { IonButtons,  IonPage, IonContent, IonSegment, IonHeader, IonToolbar, IonBackButton, IonSegmentButton, IonSegmentContent, IonSegmentView, IonTitle, IonToast, IonRefresher, IonRefresherContent } from '@ionic/vue';
 import { ref, computed, UnwrapRef, watch } from "vue";
 import { useRoute } from "vue-router";
 import AppBackButton from "@/components/common/AppBackButton.vue";
@@ -153,9 +154,11 @@ import type { ShowResponse } from "@supabase/functions/_shared/types";
 const authStore = useAuthStore();
 const { isAdmin } = storeToRefs(authStore);
 
+const { t } = useI18n();
+const { showToast } = useToast();
+
 const route = useRoute();
 const router = useRouter();
-const { t } = useI18n();
 
 const show = ref<any>(null);
 const isLoading = ref(true);
@@ -301,6 +304,13 @@ const formattedSeasons = computed(() => {
 const isScanning = ref(false);
 const scanResult = ref("");
 const showScanResult = ref(false);
+
+watch(showScanResult, (newVal) => {
+  if (newVal) {
+    showToast(scanResult.value, 3000);
+    showScanResult.value = false;
+  }
+});
 
 const showCreditsReview = ref(false);
 const extractedCredits = ref<Array<{actor: string, role: string, voiceActor: string, matchedActorId?: number | null}>>([]);
@@ -634,7 +644,7 @@ $border: #1b1b1b;
   background-color: #{$block};
 }
 
-ion-segment {
+AppSegment {
   --background: #{$block};
   border-radius: 0;
 }

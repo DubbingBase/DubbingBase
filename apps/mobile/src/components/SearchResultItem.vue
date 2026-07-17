@@ -13,7 +13,7 @@
         <h3 class="title">{{ name }}</h3>
         <p class="subtitle">{{ formattedDate }}</p>
         <div v-if="chips.length" class="chips">
-          <ion-chip v-for="chip in chips" :key="chip">{{ chip }}</ion-chip>
+          <AppChip v-for="chip in chips" :key="chip">{{ chip }}</AppChip>
         </div>
       </div>
       <component v-if="mediaIcon" :is="mediaIcon" :color="iconColor" class="type-icon"></component>
@@ -27,7 +27,7 @@ import AppCard from '@/components/common/AppCard.vue';
 import AppCardContent from '@/components/common/AppCardContent.vue';
 import { computed } from "vue";
 import { format, parseISO } from "date-fns";
-import { IonChip } from "@ionic/vue";
+import AppChip from '@/components/common/AppChip.vue';
 import MediaThumbnail from "@/components/MediaThumbnail.vue";
 import type { SearchResult } from "@/types/search";
 import Film from '~icons/lucide/film';

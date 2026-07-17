@@ -59,7 +59,7 @@ const releaseDate = computed(() => {
   display: flex;
   gap: 12px;
   padding: 8px;
-  background: var(--ion-color-card);
+  background: var(--app-color-card);
 
   @media (max-width: 768px) {
     flex-direction: row;
@@ -82,12 +82,12 @@ const releaseDate = computed(() => {
       font-weight: 600;
 
       .title-link {
-        color: var(--ion-color-text-secondary);
+        color: var(--app-color-text-secondary);
         text-decoration: none;
         transition: color 0.2s ease;
 
         &:hover {
-          color: var(--ion-color-text-muted);
+          color: var(--app-color-text-muted);
           text-decoration: underline;
         }
       }
@@ -98,12 +98,12 @@ const releaseDate = computed(() => {
       font-size: 0.85rem;
 
       .character-name {
-        color: var(--ion-color-text-secondary);
+        color: var(--app-color-text-secondary);
         font-style: italic;
       }
 
       .date-value {
-        color: var(--ion-color-text-secondary);
+        color: var(--app-color-text-secondary);
       }
     }
   }
@@ -121,7 +121,7 @@ const releaseDate = computed(() => {
 
     .character-name {
       font-size: 0.75rem;
-      color: var(--ion-color-text-secondary);
+      color: var(--app-color-text-secondary);
       font-style: italic;
       line-height: 1.1;
       display: -webkit-box;

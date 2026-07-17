@@ -1,15 +1,15 @@
 <template>
   <AppModal :is-open="isOpen" @didDismiss="$emit('close')">
-    <ion-header>
-      <ion-toolbar>
-        <ion-title>Select Voice Actor</ion-title>
-        <ion-buttons slot="end">
+    <AppHeader>
+      <AppToolbar>
+        <AppTitle>Select Voice Actor</AppTitle>
+        <template #end >
           <AppButton @click="$emit('close')">
             <XCircle class="app-icon" />
           </AppButton>
-        </ion-buttons>
-      </ion-toolbar>
-      <ion-toolbar>
+        </template>
+      </AppToolbar>
+      <AppToolbar>
         <AppSearchbar
           v-model="searchTerm"
           @ionInput="handleSearchInput"
@@ -17,9 +17,9 @@
           animated
           :debounce="300"
         ></AppSearchbar>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content class="ion-padding">
+      </AppToolbar>
+    </AppHeader>
+    <AppContent class="ion-padding">
       <!-- Loading state -->
       <AppListItem v-if="isSearching" class="ion-text-center">
         <LoadingSpinner></LoadingSpinner>
@@ -68,12 +68,16 @@
           </AppText>
         </AppListItem>
       </AppList>
-    </ion-content>
+    </AppContent>
   </AppModal>
 </template>
 
 
 <script setup lang="ts">
+import AppHeader from '@/components/common/layout/AppHeader.vue';
+import AppToolbar from '@/components/common/layout/AppToolbar.vue';
+import AppTitle from '@/components/common/layout/AppTitle.vue';
+import AppContent from '@/components/common/layout/AppContent.vue';
 import AppModal from '@/components/common/AppModal.vue';
 import AppList from '@/components/common/AppList.vue';
 import AppListItem from '@/components/common/AppListItem.vue';
@@ -84,7 +88,6 @@ import AppText from '@/components/common/AppText.vue';
 import XCircle from '~icons/lucide/x-circle';
 import AppSpinner from '@/components/common/AppSpinner.vue';
 import AppSkeleton from '@/components/common/AppSkeleton.vue';
-import { IonButtons,   IonHeader, IonToolbar, IonTitle, IonContent, } from '@ionic/vue';
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import { useVoiceActorManagement, type VoiceActor } from "@/composables/useVoiceActorManagement";
 const props = defineProps<{

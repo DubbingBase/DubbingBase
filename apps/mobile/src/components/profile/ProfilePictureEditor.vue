@@ -131,18 +131,18 @@ const uploadProfilePicture = async (file: File) => {
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid var(--ion-color-primary);
+  border: 3px solid var(--app-color-primary);
   color: transparent;
   outline: none;
-  background: var(--ion-color-step-100, #1e1e1e);
+  background: var(--app-color-step-100, #1e1e1e);
 }
 
 .placeholder-picture {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--ion-color-light);
-  color: var(--ion-color-medium);
+  background-color: var(--app-color-light);
+  color: var(--app-color-medium);
 }
 
 .edit-button {
@@ -153,7 +153,7 @@ const uploadProfilePicture = async (file: File) => {
   width: 32px;
   height: 32px;
   min-width: 32px;
-  --background: var(--ion-color-primary);
+  --background: var(--app-color-primary);
   --color: white;
 }
 
@@ -162,6 +162,6 @@ const uploadProfilePicture = async (file: File) => {
   align-items: center;
   gap: 0.5rem;
   font-size: 0.875rem;
-  color: var(--ion-color-primary);
+  color: var(--app-color-primary);
 }
 </style>

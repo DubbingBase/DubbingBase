@@ -91,13 +91,13 @@ const cancel = () => {
 }
 
 .display-mode:hover {
-  border-color: var(--ion-color-light-shade);
-  background-color: var(--ion-color-light);
+  border-color: var(--app-color-light-shade);
+  background-color: var(--app-color-light);
 }
 
 .field-value {
   flex: 1;
-  color: var(--ion-text-color);
+  color: var(--app-text-color);
 }
 
 .edit-mode {

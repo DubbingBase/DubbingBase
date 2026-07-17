@@ -1,22 +1,20 @@
 <template>
-  <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-buttons slot="start">
+  <AppPage>
+    <AppHeader>
+      <AppToolbar>
+        <template #start >
           <AppBackButton />
-        </ion-buttons>
-        <ion-title>Voix</ion-title>
-        <ion-buttons slot="end">
+        </template>
+        <AppTitle>Voix</AppTitle>
+        <template #end >
           <AppButton @click="openEditProfile">
             <Pencil class="app-icon" />
           </AppButton>
-        </ion-buttons>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content>
-      <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
-        <ion-refresher-content></ion-refresher-content>
-      </ion-refresher>
+        </template>
+      </AppToolbar>
+    </AppHeader>
+    <AppContent>
+      
       <LoadingSpinner
         v-if="loading"
         :overlay="true"
@@ -53,29 +51,35 @@
         @saved="handleFetchModalSaved"
       />
 
-      <ion-fab slot="fixed" vertical="bottom" horizontal="end" v-if="isAdmin">
-        <ion-fab-button
+      <div class="fixed bottom-6 right-6 z-50" v-if="isAdmin">
+        <AppButton
           @click="isFetchModalOpen = true"
-          :aria-label="t('common.fetchInfos')"
+          color="primary"
+          shape="circle"
+          class="w-14 h-14 shadow-lg flex items-center justify-center"
         >
-          <Globe class="app-icon" />
-        </ion-fab-button>
-      </ion-fab>
-    </ion-content>
-  </ion-page>
+          <RefreshCw class="w-6 h-6 text-white" />
+        </AppButton>
+      </div>
+    </AppContent>
+  </AppPage>
 </template>
 
 <script setup lang="ts">
+import AppPage from '@/components/common/layout/AppPage.vue';
+import AppHeader from '@/components/common/layout/AppHeader.vue';
+import AppToolbar from '@/components/common/layout/AppToolbar.vue';
+import AppTitle from '@/components/common/layout/AppTitle.vue';
+import AppContent from '@/components/common/layout/AppContent.vue';
 import AppButton from '@/components/common/AppButton.vue';
 import AppSearchbar from '@/components/common/AppSearchbar.vue';
 import Pencil from '~icons/lucide/pencil';
-import Globe from '~icons/lucide/globe';
+import RefreshCw from '~icons/lucide/refresh-cw';
 import { computed, onMounted, ref, getCurrentInstance } from "vue";
 import AppBackButton from "@/components/common/AppBackButton.vue";
 import { useRoute, useRouter } from "vue-router";
 // Admin check: get user from supabase.auth and check for admin role
 import type { Serie as SerieModel } from "@supabase/functions/_shared/serie";
-import { IonButtons,  IonPage, IonTitle, IonToolbar, IonContent, IonHeader, IonFab, IonFabButton, IonRefresher, IonRefresherContent } from '@ionic/vue';
 
 import type { Movie as MovieModel } from "@supabase/functions/_shared/movie";
 import { supabase } from "../api/supabase";
@@ -433,8 +437,8 @@ const loadVoiceActorData = async () => {
 }
 
 .modal-content {
-  background-color: var(--ion-background-color, #1e293b);
-  border: 1px solid var(--ion-color-light-shade, #334155);
+  background-color: var(--app-background-color, #1e293b);
+  border: 1px solid var(--app-color-light-shade, #334155);
   border-radius: 16px;
   width: 100%;
   max-width: 450px;
@@ -448,7 +452,7 @@ const loadVoiceActorData = async () => {
 
 .modal-header {
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--ion-color-light-shade, #334155);
+  border-bottom: 1px solid var(--app-color-light-shade, #334155);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -458,14 +462,14 @@ const loadVoiceActorData = async () => {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--ion-text-color, #ffffff);
+  color: var(--app-text-color, #ffffff);
 }
 
 .close-btn {
   background: none;
   border: none;
   font-size: 1.75rem;
-  color: var(--ion-color-medium, #94a3b8);
+  color: var(--app-color-medium, #94a3b8);
   cursor: pointer;
   padding: 0;
   line-height: 1;
@@ -473,7 +477,7 @@ const loadVoiceActorData = async () => {
 }
 
 .close-btn:hover {
-  color: var(--ion-text-color, #ffffff);
+  color: var(--app-text-color, #ffffff);
 }
 
 .modal-body {
@@ -490,18 +494,18 @@ const loadVoiceActorData = async () => {
   font-size: 0.85rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
-  color: var(--ion-color-medium, #94a3b8);
+  color: var(--app-color-medium, #94a3b8);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .form-group input,
 .form-group textarea {
-  background-color: var(--ion-color-light, #0f172a);
-  border: 1px solid var(--ion-color-light-shade, #334155);
+  background-color: var(--app-color-light, #0f172a);
+  border: 1px solid var(--app-color-light-shade, #334155);
   border-radius: 10px;
   padding: 0.75rem;
-  color: var(--ion-text-color, #ffffff);
+  color: var(--app-text-color, #ffffff);
   font-size: 0.9rem;
   outline: none;
   transition: all 0.15s ease;
@@ -509,7 +513,7 @@ const loadVoiceActorData = async () => {
 
 .form-group input:focus,
 .form-group textarea:focus {
-  border-color: var(--ion-color-primary, #3b82f6);
+  border-color: var(--app-color-primary, #3b82f6);
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
@@ -531,7 +535,7 @@ const loadVoiceActorData = async () => {
 }
 
 .btn-primary {
-  background-color: var(--ion-color-primary, #3b82f6);
+  background-color: var(--app-color-primary, #3b82f6);
   color: #ffffff;
   border: none;
   box-shadow: 0 4px 6px -1px rgb(59 130 246 / 0.2);
@@ -555,12 +559,12 @@ const loadVoiceActorData = async () => {
 
 .btn-secondary {
   background-color: transparent;
-  color: var(--ion-text-color, #ffffff);
-  border: 1px solid var(--ion-color-light-shade, #334155);
+  color: var(--app-text-color, #ffffff);
+  border: 1px solid var(--app-color-light-shade, #334155);
 }
 
 .btn-secondary:hover {
-  background-color: var(--ion-color-light, #0f172a);
+  background-color: var(--app-color-light, #0f172a);
 }
 
 .btn-secondary:disabled {
@@ -598,19 +602,19 @@ const loadVoiceActorData = async () => {
   margin: 0 0 0.25rem 0;
   font-size: 0.95rem;
   font-weight: 600;
-  color: var(--ion-color-primary, #3b82f6);
+  color: var(--app-color-primary, #3b82f6);
 }
 
 .request-profile-card p {
   margin: 0;
   font-size: 0.8rem;
-  color: var(--ion-color-medium, #94a3b8);
+  color: var(--app-color-medium, #94a3b8);
   line-height: 1.3;
 }
 
 .request-btn {
   width: auto;
-  background-color: var(--ion-color-primary, #3b82f6);
+  background-color: var(--app-color-primary, #3b82f6);
   color: #ffffff;
   border: none;
   border-radius: 8px;

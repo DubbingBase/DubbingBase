@@ -16,12 +16,12 @@ const props = withDefaults(defineProps<{
   name: 'crescent'
 });
 
-const isIonicColor = computed(() => {
+const isThemeColor = computed(() => {
   return ['primary', 'secondary', 'tertiary', 'success', 'warning', 'danger', 'light', 'medium', 'dark'].includes(props.color || '');
 });
 
 const colorClass = computed(() => {
-  return isIonicColor.value ? `ion-color-${props.color}` : '';
+  return isThemeColor.value ? `app-color-${props.color}` : '';
 });
 </script>
 

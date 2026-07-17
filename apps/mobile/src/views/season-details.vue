@@ -1,17 +1,15 @@
 <template>
-  <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-buttons slot="start">
+  <AppPage>
+    <AppHeader>
+      <AppToolbar>
+        <template #start >
           <AppBackButton />
-        </ion-buttons>
-        <ion-title>{{ season?.name || "Détails de la saison" }}</ion-title>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content>
-      <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
-        <ion-refresher-content></ion-refresher-content>
-      </ion-refresher>
+        </template>
+        <AppTitle>{{ season?.name || "Détails de la saison" }}</AppTitle>
+      </AppToolbar>
+    </AppHeader>
+    <AppContent>
+      
       <ActionButtons
         :hasWikidataId="hasWikidataId"
         :hasData="hasData"
@@ -24,11 +22,11 @@
       <LoadingSpinner v-if="isLoading" name="crescent" />
       <div v-if="season && !isLoading" class="season-details">
         <SeasonBanner :season="season" :serieId="Number(route.params.id)" :seasonNumber="Number(route.params.season)" />
-        <ion-segment scrollable v-model="activeTab" class="season-tabs">
-          <ion-segment-button value="details">Détails</ion-segment-button>
-          <ion-segment-button value="episodes">Épisodes</ion-segment-button>
-          <ion-segment-button value="voices">Voix FR</ion-segment-button>
-        </ion-segment>
+        <AppSegment scrollable v-model="activeTab" class="season-tabs">
+          <AppSegmentButton value="details">Détails</AppSegmentButton>
+          <AppSegmentButton value="episodes">Épisodes</AppSegmentButton>
+          <AppSegmentButton value="voices">Voix FR</AppSegmentButton>
+        </AppSegment>
         <div v-if="activeTab === 'details'">
           <!-- Details Tab Content -->
           <div class="details-content">
@@ -58,16 +56,22 @@
           />
         </div>
       </div>
-    </ion-content>
-  </ion-page>
+    </AppContent>
+  </AppPage>
 </template>
 
 <script lang="ts" setup>
+import AppPage from '@/components/common/layout/AppPage.vue';
+import AppHeader from '@/components/common/layout/AppHeader.vue';
+import AppToolbar from '@/components/common/layout/AppToolbar.vue';
+import AppTitle from '@/components/common/layout/AppTitle.vue';
+import AppContent from '@/components/common/layout/AppContent.vue';
+import AppSegment from '@/components/common/layout/AppSegment.vue';
+import AppSegmentButton from '@/components/common/layout/AppSegmentButton.vue';
 import { toastController } from '@/composables/useToast';
 import { ref, computed, watch } from "vue";
 import AppBackButton from "@/components/common/AppBackButton.vue";
 import { useRoute, useRouter } from "vue-router";
-import { IonButtons,  IonPage, IonHeader, IonToolbar, IonBackButton, IonTitle, IonContent, IonSegment, IonSegmentButton, IonRefresher, IonRefresherContent } from '@ionic/vue';
 import { supabase } from "../api/supabase";
 import { enqueueAndProcessMedia } from "../api/mediaQueue";
 import SeasonBanner from "../components/SeasonBanner.vue";

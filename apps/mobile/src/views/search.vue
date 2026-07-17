@@ -1,10 +1,10 @@
 <template>
-  <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-title>Search</ion-title>
-      </ion-toolbar>
-      <ion-toolbar style="--background: transparent;">
+  <AppPage>
+    <AppHeader>
+      <AppToolbar>
+        <AppTitle>Search</AppTitle>
+      </AppToolbar>
+      <AppToolbar style="--background: transparent;">
         <AppSearchbar
           v-model="query"
           :debounce="300"
@@ -13,9 +13,9 @@
           class="custom-searchbar"
           style="padding: 0 8px;"
         ></AppSearchbar>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content>
+      </AppToolbar>
+    </AppHeader>
+    <AppContent>
       <div class="content-wrapper">
         <transition-group name="fade" tag="div">
           <AppList v-if="matches.length > 0">
@@ -30,27 +30,41 @@
         <p v-if="!isLoading && matches.length === 0 && trimmedQuery.length < 2" class="empty-state">Start typing to search...</p>
       </div>
       <LoadingSpinner v-if="isLoading" :overlay="true" />
-      <ion-toast :is-open="!!errorMessage" :message="errorMessage" @didDismiss="errorMessage=''"></ion-toast>
-    </ion-content>
-  </ion-page>
+    </AppContent>
+  </AppPage>
 </template>
 
 <script lang="ts" setup>
+import AppPage from '@/components/common/layout/AppPage.vue';
+import AppHeader from '@/components/common/layout/AppHeader.vue';
+import AppToolbar from '@/components/common/layout/AppToolbar.vue';
+import AppTitle from '@/components/common/layout/AppTitle.vue';
+import AppContent from '@/components/common/layout/AppContent.vue';
 import AppList from '@/components/common/AppList.vue';
 import AppSearchbar from '@/components/common/AppSearchbar.vue';
-import { ref, computed } from "vue";
+import { ref, computed, watch } from 'vue';
+import { useToast } from '@/composables/useToast';
 defineOptions({ name: 'Search' });
-import { IonHeader, IonTitle, IonContent, IonToolbar, IonPage, IonToast, SearchbarInputEventDetail } from '@ionic/vue';
 
 import SearchResultItem from "@/components/SearchResultItem.vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import { supabase } from '@/api/supabase';
 import type { SearchResult } from "@/types/search";
 
+const { showToast } = useToast();
+
 const matches = ref<SearchResult[]>([]);
 const isLoading = ref(false);
 // Renamed to avoid shadowing the destructured `error` from supabase calls
-const errorMessage = ref('');
+const errorMessage = ref("");
+
+watch(errorMessage, (newVal) => {
+  if (newVal) {
+    showToast(newVal, 2000, 'danger');
+    errorMessage.value = "";
+  }
+});
+
 const query = ref('');
 const trimmedQuery = computed(() => query.value.trim());
 let abortController: AbortController | null = null;

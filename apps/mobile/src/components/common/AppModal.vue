@@ -17,7 +17,6 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, nextTick } from 'vue';
 import { BottomSheet } from '@balalarast/vue-bottom-sheet';
-import '@balalarast/vue-bottom-sheet/dist/style.css';
 
 const props = withDefaults(defineProps<{
   isOpen: boolean;
@@ -71,14 +70,14 @@ onMounted(() => {
 .app-modal-content {
   width: 100%;
   height: 100%;
-  background: var(--ion-color-step-50, #1e1e1e);
-  color: var(--ion-color-text-primary, #fff);
+  background: var(--app-color-step-50, #1e1e1e);
+  color: var(--app-color-text-primary, #fff);
   display: flex;
   flex-direction: column;
 }
 
 :deep(.bottom-sheet__card) {
-  background: var(--ion-color-step-50, #1e1e1e) !important;
+  background: var(--app-color-step-50, #1e1e1e) !important;
   border-top-left-radius: 16px !important;
   border-top-right-radius: 16px !important;
   overflow: hidden;
@@ -92,7 +91,7 @@ onMounted(() => {
 }
 
 :deep(.bottom-sheet__bar) {
-  background: var(--ion-color-step-300, #4a4a4a) !important;
+  background: var(--app-color-step-300, #4a4a4a) !important;
   width: 40px !important;
   height: 4px !important;
 }

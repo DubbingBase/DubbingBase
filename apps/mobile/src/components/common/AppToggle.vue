@@ -65,7 +65,7 @@ const colorClass = computed(() => `color-${props.color}`);
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: var(--ion-color-border, #333333);
+  background-color: var(--app-color-border, #333333);
   transition: .3s;
   border-radius: 32px;
 
@@ -83,13 +83,13 @@ const colorClass = computed(() => `color-${props.color}`);
   }
   
   /* Color variants */
-  &.color-primary { --active-color: var(--ion-color-primary, #4a90e2); }
-  &.color-danger { --active-color: var(--ion-color-danger, #f44336); }
-  &.color-success { --active-color: var(--ion-color-success, #4caf50); }
-  &.color-warning { --active-color: var(--ion-color-warning, #ff9800); }
-  &.color-medium { --active-color: var(--ion-color-medium, #424242); }
-  &.color-light { --active-color: var(--ion-color-light, #2d2d2d); }
-  &.color-dark { --active-color: var(--ion-color-dark, #1a1a1a); }
+  &.color-primary { --active-color: var(--app-color-primary, #4a90e2); }
+  &.color-danger { --active-color: var(--app-color-danger, #f44336); }
+  &.color-success { --active-color: var(--app-color-success, #4caf50); }
+  &.color-warning { --active-color: var(--app-color-warning, #ff9800); }
+  &.color-medium { --active-color: var(--app-color-medium, #424242); }
+  &.color-light { --active-color: var(--app-color-light, #2d2d2d); }
+  &.color-dark { --active-color: var(--app-color-dark, #1a1a1a); }
 }
 
 .app-toggle-input:checked + .app-toggle-slider {

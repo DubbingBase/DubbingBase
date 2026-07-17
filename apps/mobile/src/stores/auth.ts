@@ -1,7 +1,6 @@
 import { defineStore } from "pinia";
 import { ref, computed, onUnmounted } from "vue";
 import { supabase } from "@/api/supabase";
-import { useIonRouter } from "@ionic/vue";
 import type { User } from "@supabase/supabase-js";
 import type { Permission } from "@/types/permissions";
 

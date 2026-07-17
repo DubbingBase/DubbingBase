@@ -1,17 +1,17 @@
 <template>
   <AppModal :is-open="isOpen" @didDismiss="cancel">
-    <ion-header>
-      <ion-toolbar>
-        <ion-buttons slot="start">
+    <AppHeader>
+      <AppToolbar>
+        <template #start >
           <AppButton @click="cancel">{{ $t('common.cancel', 'Annuler') }}</AppButton>
-        </ion-buttons>
-        <ion-title>{{ $t('common.editImage', 'Modifier l\'image') }}</ion-title>
-        <ion-buttons slot="end">
+        </template>
+        <AppTitle>{{ $t('common.editImage', 'Modifier l\'image') }}</AppTitle>
+        <template #end >
           <AppButton :strong="true" @click="save">{{ $t('common.save', 'Enregistrer') }}</AppButton>
-        </ion-buttons>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content class="cropper-content">
+        </template>
+      </AppToolbar>
+    </AppHeader>
+    <AppContent class="cropper-content">
       <cropper
         ref="cropperRef"
         class="cropper"
@@ -20,15 +20,18 @@
           aspectRatio: aspectRatio
         }"
       />
-    </ion-content>
+    </AppContent>
   </AppModal>
 </template>
 
 <script setup lang="ts">
+import AppHeader from '@/components/common/layout/AppHeader.vue';
+import AppToolbar from '@/components/common/layout/AppToolbar.vue';
+import AppTitle from '@/components/common/layout/AppTitle.vue';
+import AppContent from '@/components/common/layout/AppContent.vue';
 import AppModal from '@/components/common/AppModal.vue';
 import AppButton from '@/components/common/AppButton.vue';
 import { ref, watch, onUnmounted } from 'vue';
-import { IonButtons,   IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/vue';
 import { Cropper } from 'vue-advanced-cropper';
 import 'vue-advanced-cropper/dist/style.css';
 

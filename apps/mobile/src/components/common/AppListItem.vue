@@ -79,7 +79,7 @@ const onClick = (event: Event) => {
   padding: 0;
   margin: 0;
   background: transparent;
-  color: var(--ion-color-text-primary, #ffffff);
+  color: var(--app-color-text-primary, #ffffff);
   border: none;
   text-align: left;
   font-family: inherit;
@@ -104,7 +104,7 @@ const onClick = (event: Event) => {
   
   /* Lines styling */
   &.lines-full {
-    border-bottom: 1px solid var(--ion-color-step-150, #2a2a2a);
+    border-bottom: 1px solid var(--app-color-step-150, #2a2a2a);
   }
   
   &.lines-none {
@@ -130,7 +130,7 @@ const onClick = (event: Event) => {
 
 /* For inset lines, we apply border to the inner wrapper, but exclude the start padding */
 .lines-inset .item-inner {
-  border-bottom: 1px solid var(--ion-color-step-150, #2a2a2a);
+  border-bottom: 1px solid var(--app-color-step-150, #2a2a2a);
   margin-left: 16px;
   padding-left: 0;
   width: calc(100% - 16px);
@@ -165,7 +165,7 @@ const onClick = (event: Event) => {
 
 .item-detail-icon {
   margin-left: 8px;
-  color: var(--ion-color-step-400, #999999);
+  color: var(--app-color-step-400, #999999);
   display: flex;
   align-items: center;
   

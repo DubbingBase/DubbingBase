@@ -17,7 +17,7 @@ defineProps<{
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--ion-color-step-100, #2a2a2a);
+  background: var(--app-color-step-100, #2a2a2a);
   flex-shrink: 0;
 
   width: 48px;

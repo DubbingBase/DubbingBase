@@ -62,10 +62,9 @@ _(This command is defined in `apps/mobile/package.json` and outputs types to `pa
 
 ### 2. Mobile Application (`apps/mobile`)
 
-- **Transitioning Away from Ionic**:
-  - **IMPORTANT**: The project is migrating **away from Ionic**. Do NOT introduce new Ionic components (`ion-*`) or Ionic router (`ion-router`).
+- **UI Framework (No Ionic)**:
+  - **IMPORTANT**: The project has fully migrated away from Ionic. Do NOT introduce new Ionic components (`ion-*`) or Ionic router (`ion-router`).
   - Use standard HTML/Vue elements styled with Tailwind CSS or Sass for new features.
-  - When editing existing screens, progressively refactor Ionic components into standard Vue/Tailwind components.
 - **Capacitor**:
   - Keep Capacitor for native features/APIs (Camera, Haptics, Keyboard, StatusBar, etc.).
 - **State Management**: Use **Pinia** for all global stores.

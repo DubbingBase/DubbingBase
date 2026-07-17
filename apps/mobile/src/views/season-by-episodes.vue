@@ -1,17 +1,15 @@
 <template>
-  <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-buttons slot="start">
+  <AppPage>
+    <AppHeader>
+      <AppToolbar>
+        <template #start >
           <AppBackButton />
-        </ion-buttons>
-        <ion-title>{{ episode?.name || 'Détail de l\'épisode' }}</ion-title>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content>
-      <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
-        <ion-refresher-content></ion-refresher-content>
-      </ion-refresher>
+        </template>
+        <AppTitle>{{ episode?.name || 'Détail de l\'épisode' }}</AppTitle>
+      </AppToolbar>
+    </AppHeader>
+    <AppContent>
+      
       <ActionButtons
         :hasWikidataId="hasWikidataId"
         :hasData="hasData"
@@ -30,16 +28,20 @@
           <ActorList :actors="episode?.credits?.cast || []" :voiceActors="[]" :getVoiceActorByTmdbId="getVoiceActorByTmdbId" :goToActor="goToActor" :goToVoiceActor="goToVoiceActor" :isAdmin="false" :editVoiceActorLink="editVoiceActorLink" :confirmDeleteVoiceActorLink="confirmDeleteVoiceActorLink" :openVoiceActorSearch="openVoiceActorSearch" :loading="isLoading" />
         </div>
       </div>
-    </ion-content>
-  </ion-page>
+    </AppContent>
+  </AppPage>
 </template>
 
 <script lang="ts" setup>
+import AppPage from '@/components/common/layout/AppPage.vue';
+import AppHeader from '@/components/common/layout/AppHeader.vue';
+import AppToolbar from '@/components/common/layout/AppToolbar.vue';
+import AppTitle from '@/components/common/layout/AppTitle.vue';
+import AppContent from '@/components/common/layout/AppContent.vue';
 import { toastController } from '@/composables/useToast';
 import { ref, computed, watch } from "vue";
 import AppBackButton from "@/components/common/AppBackButton.vue";
 import { useRoute, useRouter } from "vue-router";
-import { IonButtons,  IonPage, IonHeader, IonToolbar, IonBackButton, IonTitle, IonContent, IonRefresher, IonRefresherContent } from '@ionic/vue';
 import LoadingSpinner from "../components/common/LoadingSpinner.vue";
 import { supabase } from "../api/supabase";
 import { enqueueAndProcessMedia } from "../api/mediaQueue";

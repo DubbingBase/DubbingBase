@@ -1,18 +1,18 @@
 <template>
   <AppModal :is-open="isOpen" @didDismiss="handleDismiss">
-    <ion-header>
-      <ion-toolbar>
-        <ion-title>{{
+    <AppHeader>
+      <AppToolbar>
+        <AppTitle>{{
           t("voiceActor.fetchWikipedia", "Fetch Wikipedia")
-        }}</ion-title>
-        <ion-buttons slot="end">
+        }}</AppTitle>
+        <template #end >
           <AppButton @click="handleDismiss">
             <XCircle class="app-icon" />
           </AppButton>
-        </ion-buttons>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content class="ion-padding">
+        </template>
+      </AppToolbar>
+    </AppHeader>
+    <AppContent class="ion-padding">
       <div class="step-container">
         <p class="description">
           {{
@@ -178,11 +178,15 @@
           </AppButton>
         </div>
       </div>
-    </ion-content>
+    </AppContent>
   </AppModal>
 </template>
 
 <script setup lang="ts">
+import AppHeader from '@/components/common/layout/AppHeader.vue';
+import AppToolbar from '@/components/common/layout/AppToolbar.vue';
+import AppTitle from '@/components/common/layout/AppTitle.vue';
+import AppContent from '@/components/common/layout/AppContent.vue';
 import AppModal from '@/components/common/AppModal.vue';
 import AppList from '@/components/common/AppList.vue';
 import AppButton from '@/components/common/AppButton.vue';
@@ -193,7 +197,6 @@ import ArrowRight from '~icons/lucide/arrow-right';
 import XCircle from '~icons/lucide/x-circle';
 import ExternalLink from '~icons/lucide/external-link';
 import { ref, watch } from "vue";
-import { IonButtons,   IonHeader, IonToolbar, IonTitle, IonContent, } from '@ionic/vue';
 
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import { supabase } from "@/api/supabase";
@@ -333,7 +336,7 @@ const saveData = async () => {
 }
 
 .description {
-  color: var(--ion-text-color);
+  color: var(--app-text-color);
   opacity: 0.7;
   font-size: 0.95rem;
   margin-bottom: 1.5rem;
@@ -342,7 +345,7 @@ const saveData = async () => {
 .input-group {
   display: flex;
   align-items: center;
-  background: var(--ion-color-light, #f4f5f8);
+  background: var(--app-color-light, #f4f5f8);
   border-radius: 8px;
 
   .url-input {
@@ -358,10 +361,10 @@ const saveData = async () => {
 }
 
 .error-message {
-  color: var(--ion-color-danger);
+  color: var(--app-color-danger);
   margin-top: 1rem;
   font-size: 0.9rem;
-  background: rgba(var(--ion-color-danger-rgb), 0.1);
+  background: rgba(var(--app-color-danger-rgb), 0.1);
   padding: 8px 12px;
   border-radius: 6px;
 }
@@ -372,7 +375,7 @@ const saveData = async () => {
 }
 
 .diff-item {
-  background: var(--ion-color-light);
+  background: var(--app-color-light);
   border-radius: 12px;
   margin-bottom: 16px;
   padding: 12px 16px 16px 16px;
@@ -388,13 +391,13 @@ const saveData = async () => {
   font-size: 0.85rem;
   letter-spacing: 0.05em;
   font-weight: 700;
-  color: var(--ion-color-primary);
+  color: var(--app-color-primary);
   margin-bottom: 8px;
 }
 
 .old-value-hint {
   font-size: 0.75rem;
-  color: var(--ion-color-medium);
+  color: var(--app-color-medium);
   font-weight: 500;
   text-transform: none;
   opacity: 1;
@@ -405,7 +408,7 @@ const saveData = async () => {
 
 .old-bio-hint {
   font-size: 0.8rem;
-  color: var(--ion-color-medium);
+  color: var(--app-color-medium);
   margin-bottom: 8px;
   opacity: 0.8;
   font-style: italic;
@@ -415,8 +418,8 @@ const saveData = async () => {
   display: flex;
   align-items: center;
   width: 100%;
-  background: var(--ion-background-color, #fff);
-  border: 1px solid var(--ion-color-primary);
+  background: var(--app-background-color, #fff);
+  border: 1px solid var(--app-color-primary);
   border-radius: 8px;
   padding-right: 4px;
   overflow: hidden;
@@ -461,32 +464,32 @@ const saveData = async () => {
     height: 90px;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid var(--ion-color-step-100, rgba(0,0,0,0.05));
+    border: 3px solid var(--app-color-step-100, rgba(0,0,0,0.05));
   }
   .no-image {
-    background: var(--ion-color-step-100, rgba(0,0,0,0.05));
+    background: var(--app-color-step-100, rgba(0,0,0,0.05));
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 0.8rem;
-    color: var(--ion-color-medium);
+    color: var(--app-color-medium);
   }
 }
 
 .new-img-preview img {
-  border-color: var(--ion-color-primary);
+  border-color: var(--app-color-primary);
 }
 
 .preview-label {
   font-size: 0.8rem;
   font-weight: 600;
   text-transform: uppercase;
-  color: var(--ion-color-medium);
+  color: var(--app-color-medium);
 }
 
 .diff-arrow-stacked {
   font-size: 1.5rem;
-  color: var(--ion-color-medium);
+  color: var(--app-color-medium);
   opacity: 0.5;
 }
 

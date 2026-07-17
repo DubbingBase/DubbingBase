@@ -1,19 +1,17 @@
 <template>
-  <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-title>{{ t('navigation.home') }}</ion-title>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content :fullscreen="true">
-      <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
-        <ion-refresher-content></ion-refresher-content>
-      </ion-refresher>
-      <ion-header collapse="condense">
-        <ion-toolbar>
-          <ion-title size="large">{{ t('home.welcome') }}</ion-title>
-        </ion-toolbar>
-      </ion-header>
+  <AppPage>
+    <AppHeader>
+      <AppToolbar>
+        <AppTitle>{{ t('navigation.home') }}</AppTitle>
+      </AppToolbar>
+    </AppHeader>
+    <AppContent :fullscreen="true">
+      
+      <AppHeader collapse="condense">
+        <AppToolbar>
+          <AppTitle size="large">{{ t('home.welcome') }}</AppTitle>
+        </AppToolbar>
+      </AppHeader>
 
       <div class="trending-movies">
         <div class="list-header">{{ t('home.trendingMovies') }}</div>
@@ -145,11 +143,16 @@
           </template>
         </div>
       </div>
-    </ion-content>
-  </ion-page>
+    </AppContent>
+  </AppPage>
 </template>
 
 <script setup lang="ts">
+import AppPage from '@/components/common/layout/AppPage.vue';
+import AppHeader from '@/components/common/layout/AppHeader.vue';
+import AppToolbar from '@/components/common/layout/AppToolbar.vue';
+import AppTitle from '@/components/common/layout/AppTitle.vue';
+import AppContent from '@/components/common/layout/AppContent.vue';
 import { onMounted, ref } from "vue";
 defineOptions({ name: 'Home' });
 import { useI18n } from "vue-i18n";
@@ -158,7 +161,7 @@ import type { TrendingResponse as SerieTrendingResponse } from "@supabase/functi
 import type { Tables } from "@/utils/database";
 import MediaItem from "../components/MediaItem.vue";
 import { supabase } from "../api/supabase";
-import { IonPage, IonContent, IonHeader, IonTitle, IonToolbar, IonRefresher, IonRefresherContent } from '@ionic/vue';
+
 
 const { t } = useI18n();
 

@@ -77,7 +77,7 @@ onUnmounted(() => {
 }
 
 .app-toast {
-  background: var(--ion-color-step-150, #3a3a3a);
+  background: var(--app-color-step-150, #3a3a3a);
   color: white;
   padding: 12px 16px;
   border-radius: 8px;
@@ -89,20 +89,20 @@ onUnmounted(() => {
   max-width: 90vw;
   
   &.toast-success {
-    background: var(--ion-color-success, #2fdf75);
-    color: var(--ion-color-success-contrast, #fff);
+    background: var(--app-color-success, #2fdf75);
+    color: var(--app-color-success-contrast, #fff);
   }
   &.toast-danger {
-    background: var(--ion-color-danger, #ff4961);
-    color: var(--ion-color-danger-contrast, #fff);
+    background: var(--app-color-danger, #ff4961);
+    color: var(--app-color-danger-contrast, #fff);
   }
   &.toast-warning {
-    background: var(--ion-color-warning, #ffd534);
-    color: var(--ion-color-warning-contrast, #000);
+    background: var(--app-color-warning, #ffd534);
+    color: var(--app-color-warning-contrast, #000);
   }
   &.toast-primary {
-    background: var(--ion-color-primary, #3880ff);
-    color: var(--ion-color-primary-contrast, #fff);
+    background: var(--app-color-primary, #3880ff);
+    color: var(--app-color-primary-contrast, #fff);
   }
 }
 

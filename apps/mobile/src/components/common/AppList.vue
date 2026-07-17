@@ -15,7 +15,7 @@ defineProps<{
   display: flex;
   flex-direction: column;
   width: 100%;
-  background: var(--ion-color-step-50, #1e1e1e);
+  background: var(--app-color-step-50, #1e1e1e);
   
   &.app-list-inset {
     border-radius: 8px;

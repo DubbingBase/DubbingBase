@@ -11,21 +11,21 @@
     </AppListItem>
 
     <AppModal :is-open="isModalOpen" @didDismiss="closeModal">
-      <ion-header>
-        <ion-toolbar>
-          <ion-title>{{ $t('profile.selectProfile') }}</ion-title>
-          <ion-buttons slot="end">
+      <AppHeader>
+        <AppToolbar>
+          <AppTitle>{{ $t('profile.selectProfile') }}</AppTitle>
+          <template #end >
             <AppButton @click="closeModal">{{ $t('profile.close') }}</AppButton>
-          </ion-buttons>
-        </ion-toolbar>
-        <ion-toolbar>
+          </template>
+        </AppToolbar>
+        <AppToolbar>
           <AppSearchbar
             v-model="searchTerm"
             :placeholder="$t('profile.searchPlaceholder')"
           />
-        </ion-toolbar>
-      </ion-header>
-      <ion-content>
+        </AppToolbar>
+      </AppHeader>
+      <AppContent>
         <AppList>
           <!-- User Profile Option -->
           <AppListItem
@@ -65,18 +65,22 @@
 
         <LoadingSpinner v-if="isLoading" />
         <ErrorMessage v-if="errorMessage" :message="errorMessage" />
-      </ion-content>
+      </AppContent>
     </AppModal>
 
-    <ion-loading
-      :is-open="isSwitching"
+    <LoadingSpinner
+      v-if="isSwitching"
+      overlay
       :message="$t('profile.switchingProfile')"
-      spinner="crescent"
     />
   </div>
 </template>
 
 <script setup lang="ts">
+import AppHeader from '@/components/common/layout/AppHeader.vue';
+import AppToolbar from '@/components/common/layout/AppToolbar.vue';
+import AppTitle from '@/components/common/layout/AppTitle.vue';
+import AppContent from '@/components/common/layout/AppContent.vue';
 import { alertController } from '@/composables/useAlert';
 import AppModal from '@/components/common/AppModal.vue';
 import AppList from '@/components/common/AppList.vue';
@@ -92,7 +96,6 @@ import AppSkeleton from '@/components/common/AppSkeleton.vue';
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { IonButtons,   IonHeader, IonToolbar, IonTitle, IonContent, IonLoading, } from '@ionic/vue';
 import { useProfileStore } from '@/stores/profile'
 import { useAuthStore } from '@/stores/auth'
 import { supabase } from '@/api/supabase'
@@ -267,8 +270,8 @@ onMounted(() => {
 <style scoped>
 .profile-voice-actor-selector {
   padding: 1rem;
-  border-bottom: 1px solid var(--ion-color-light-shade);
-  background-color: var(--ion-color-light);
+  border-bottom: 1px solid var(--app-color-light-shade);
+  background-color: var(--app-color-light);
 }
 
 ion-item {
@@ -278,7 +281,7 @@ ion-item {
 }
 
 ion-input {
-  --background: var(--ion-color-light-tint);
+  --background: var(--app-color-light-tint);
   --border-radius: 8px;
   --padding-start: 12px;
   --padding-end: 12px;
@@ -297,7 +300,7 @@ ion-list {
 
 ion-item {
   --background: transparent;
-  --border-color: var(--ion-color-light-shade);
+  --border-color: var(--app-color-light-shade);
   --border-width: 0 0 1px 0;
 }
 
@@ -306,7 +309,7 @@ ion-item:last-child {
 }
 
 .app-icon {
-  color: var(--ion-color-primary);
+  color: var(--app-color-primary);
   margin-left: 0.5rem;
 }
 

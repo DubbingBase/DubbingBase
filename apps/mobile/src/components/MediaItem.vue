@@ -3,9 +3,9 @@
     class="media-item"
     :to="{ name: routeName, params: routeParams }"
     :style="{
-      flexBasis: widthStyle ,
-      minWidth: widthStyle ,
-      maxWidth: widthStyle ,
+      flexBasis: widthStyle,
+      minWidth: widthStyle,
+      maxWidth: widthStyle,
     }"
   >
     <div class="poster">
@@ -16,7 +16,8 @@
         alt=""
         :style="{ width: widthStyle, height: heightStyle }"
       />
-      <AppSkeleton :animated="true"
+      <AppSkeleton
+        :animated="true"
         v-else
         :style="{
           width: widthStyle,
@@ -28,7 +29,8 @@
     </div>
     <div class="caption" v-if="title">
       <template v-if="!loading">{{ title }}</template>
-      <AppSkeleton :animated="true"
+      <AppSkeleton
+        :animated="true"
         v-else
         :style="{
           width: '100%',
@@ -42,7 +44,7 @@
 </template>
 
 <script lang="ts" setup>
-
+import AppSkeleton from "@/components/common/AppSkeleton.vue";
 import {
   MEDIA_ITEM_DEFAULT_WIDTH,
   MEDIA_ITEM_DEFAULT_HEIGHT,
@@ -77,7 +79,7 @@ watch(
   () => props.imagePath,
   () => {
     hasError.value = false;
-  }
+  },
 );
 
 const onImageError = () => {
@@ -111,11 +113,11 @@ const onImageError = () => {
       max-width: 100%;
       max-height: 100%;
       object-fit: cover;
-      
+
       border: none;
       outline: none;
       color: transparent;
-      background: var(--ion-color-step-100, #1e1e1e);
+      background: var(--app-color-step-100, #1e1e1e);
 
       display: flex;
       flex-direction: column;

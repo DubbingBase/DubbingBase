@@ -1,60 +1,51 @@
 <template>
-  <ion-alert
-    :is-open="isOpen"
-    :header="header"
-    :message="message"
-    :buttons="alertButtons"
-    @will-dismiss="handleDismiss"
-  ></ion-alert>
+  <!-- ConfirmDialog uses native Capacitor Dialog API -->
 </template>
 
 <script setup lang="ts">
-import { IonAlert } from '@ionic/vue';
-import { computed } from 'vue'
+import { Dialog } from '@capacitor/dialog';
+import { watch } from 'vue';
 
 interface Props {
-  isOpen: boolean
-  header: string
-  message: string
-  confirmText?: string
-  cancelText?: string
-  confirmColor?: string
+  isOpen: boolean;
+  header: string;
+  message: string;
+  confirmText?: string;
+  cancelText?: string;
+  confirmColor?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   confirmText: 'Confirmer',
   cancelText: 'Annuler',
   confirmColor: 'danger'
-})
+});
 
 const emit = defineEmits<{
-  confirm: []
-  cancel: []
-  dismiss: []
-}>()
+  confirm: [];
+  cancel: [];
+  dismiss: [];
+}>();
 
-const alertButtons = computed(() => [
-  {
-    text: props.cancelText,
-    role: 'cancel',
-    handler: () => emit('cancel')
-  },
-  {
-    text: props.confirmText,
-    role: 'destructive',
-    cssClass: `confirm-button-${props.confirmColor}`,
-    handler: () => emit('confirm')
+const showDialog = async () => {
+  const { value } = await Dialog.confirm({
+    title: props.header,
+    message: props.message,
+    okButtonTitle: props.confirmText,
+    cancelButtonTitle: props.cancelText
+  });
+
+  if (value) {
+    emit('confirm');
+  } else {
+    emit('cancel');
   }
-])
+  emit('dismiss');
+};
 
-const handleDismiss = () => {
-  emit('dismiss')
-}
+watch(() => props.isOpen, (newVal) => {
+  if (newVal) {
+    showDialog();
+  }
+});
 </script>
-
-<style scoped>
-.confirm-button-danger {
-  --background: var(--ion-color-danger);
-  --color: white;
-}
-</style>

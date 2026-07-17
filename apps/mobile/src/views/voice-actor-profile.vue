@@ -1,20 +1,20 @@
 <template>
-  <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-buttons slot="start">
+  <AppPage>
+    <AppHeader>
+      <AppToolbar>
+        <template #start >
           <AppBackButton />
-        </ion-buttons>
-        <ion-title>{{ $t('profile.voiceActorProfile') }}</ion-title>
-        <ion-buttons slot="end">
+        </template>
+        <AppTitle>{{ $t('profile.voiceActorProfile') }}</AppTitle>
+        <template #end >
           <AppButton @click="openPublicProfile">
             <Eye class="app-icon" />
           </AppButton>
-        </ion-buttons>
-      </ion-toolbar>
-    </ion-header>
+        </template>
+      </AppToolbar>
+    </AppHeader>
 
-    <ion-content :fullscreen="true">
+    <AppContent :fullscreen="true">
       <div v-if="profileStore.isLoadingProfile && !profileStore.isUpdating" class="loading-container">
         <LoadingSpinner name="crescent" />
       </div>
@@ -86,11 +86,16 @@
         <AddWorkModal @close="isAddWorkModalOpen = false" />
       </AppModal>
 
-    </ion-content>
-  </ion-page>
+    </AppContent>
+  </AppPage>
 </template>
 
 <script setup lang="ts">
+import AppPage from '@/components/common/layout/AppPage.vue';
+import AppHeader from '@/components/common/layout/AppHeader.vue';
+import AppToolbar from '@/components/common/layout/AppToolbar.vue';
+import AppTitle from '@/components/common/layout/AppTitle.vue';
+import AppContent from '@/components/common/layout/AppContent.vue';
 import AppModal from '@/components/common/AppModal.vue';
 import AppList from '@/components/common/AppList.vue';
 import AppListItem from '@/components/common/AppListItem.vue';
@@ -105,7 +110,6 @@ import UserCircle from '~icons/lucide/user-circle';
 import { onMounted, watch, computed, ref } from 'vue'
 import AppBackButton from '@/components/common/AppBackButton.vue'
 import { useRoute, useRouter } from 'vue-router'
-import { IonButtons,  IonPage, IonHeader, IonToolbar, IonTitle, IonContent,  } from '@ionic/vue';
 import { useProfileStore } from '@/stores/profile'
 import { useAuthStore } from '@/stores/auth'
 import WorkList from '@/components/profile/WorkList.vue';
@@ -259,13 +263,13 @@ const openPublicProfile = () => {
 .error-container h3,
 .no-profile-container h3 {
   margin: 1rem 0 0.5rem 0;
-  color: var(--ion-color-primary);
+  color: var(--app-color-primary);
 }
 
 .error-container p,
 .no-profile-container p {
   margin: 0.5rem 0;
-  color: var(--ion-text-color);
+  color: var(--app-text-color);
   opacity: 0.7;
 }
 

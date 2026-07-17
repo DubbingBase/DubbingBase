@@ -375,7 +375,7 @@ onMounted(checkOverviewTruncation);
   padding: 6px 14px;
   border-radius: 12px;
   font-size: 0.9rem;
-  color: var(--ion-color-medium-tint);
+  color: var(--app-color-medium-tint);
   border: 1px solid rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(8px);
   white-space: nowrap;
@@ -417,12 +417,12 @@ onMounted(checkOverviewTruncation);
 }
 
 .wikidata-pill {
-  color: var(--ion-color-primary-tint);
-  background: rgba(var(--ion-color-primary-rgb), 0.1);
-  border-color: rgba(var(--ion-color-primary-rgb), 0.2);
+  color: var(--app-color-primary-tint);
+  background: rgba(var(--app-color-primary-rgb), 0.1);
+  border-color: rgba(var(--app-color-primary-rgb), 0.2);
 
   &:hover {
-    background: rgba(var(--ion-color-primary-rgb), 0.2);
+    background: rgba(var(--app-color-primary-rgb), 0.2);
   }
 }
 
@@ -455,7 +455,7 @@ onMounted(checkOverviewTruncation);
 .toggle-overview-btn {
   background: transparent;
   border: none;
-  color: var(--ion-color-primary);
+  color: var(--app-color-primary);
   font-weight: 600;
   padding: 8px 0 0 0;
   margin-top: 4px;

@@ -168,7 +168,7 @@ const uploadImage = async () => {
       box-shadow: var(--thumbnail-box-shadow);
       color: transparent;
       outline: none;
-      background: var(--ion-color-step-100, #1e1e1e);
+      background: var(--app-color-step-100, #1e1e1e);
 
       @media (max-width: 768px) {
         height: 80px;
@@ -205,14 +205,14 @@ const uploadImage = async () => {
       margin-bottom: 2px;
 
       .detail-value {
-        color: var(--ion-color-text-secondary);
+        color: var(--app-color-text-secondary);
         font-weight: 400;
       }
     }
 
     .nationality-tag {
       display: inline-block;
-      background: var(--ion-color-primary);
+      background: var(--app-color-primary);
       color: white;
       padding: 0.25rem 0.75rem;
       border-radius: 12px;

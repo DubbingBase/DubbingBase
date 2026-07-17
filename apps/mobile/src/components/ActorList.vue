@@ -125,7 +125,7 @@ const handleVoiceActorClick = (voiceActor: any) => {
 
   .no-items {
     text-align: center;
-    color: var(--ion-color-medium);
+    color: var(--app-color-medium);
     font-style: italic;
     padding: 20px;
 

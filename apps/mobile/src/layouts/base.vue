@@ -84,7 +84,7 @@ const items = computed(() => {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: var(--ion-background-color, rgb(28, 28, 29));
+  background-color: var(--app-background-color, rgb(28, 28, 29));
 }
 
 .content {
@@ -97,7 +97,7 @@ const items = computed(() => {
   display: flex;
   justify-content: space-around;
   align-items: center;
-  background-color: var(--ion-tab-bar-background, rgb(28, 28, 29));
+  background-color: var(--app-tab-bar-background, rgb(28, 28, 29));
   padding: 8px 0;
   padding-bottom: env(safe-area-inset-bottom, 8px);
   border-top: 1px solid rgba(255, 255, 255, 0.05);
@@ -109,13 +109,13 @@ const items = computed(() => {
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  color: var(--ion-tab-bar-color, #999);
+  color: var(--app-tab-bar-color, #999);
   flex: 1;
   transition: color 0.2s;
 }
 
 .active-tab {
-  color: var(--ion-tab-bar-color-selected, #428cff);
+  color: var(--app-tab-bar-color-selected, #428cff);
 }
 
 .tab-icon {

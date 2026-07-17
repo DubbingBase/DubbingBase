@@ -50,13 +50,13 @@ const onInput = (event: Event) => {
 .app-textarea-container {
   display: flex;
   flex-direction: column;
-  background: var(--ion-color-card, #1e1e1e);
+  background: var(--app-color-card, #1e1e1e);
   padding: 10px 16px;
-  border-bottom: 1px solid var(--ion-color-border, #333333);
+  border-bottom: 1px solid var(--app-color-border, #333333);
   transition: border-bottom-color 0.2s ease;
 
   &.has-focus {
-    border-bottom-color: var(--ion-color-primary, #4a90e2);
+    border-bottom-color: var(--app-color-primary, #4a90e2);
   }
 
   &.is-disabled {
@@ -67,14 +67,14 @@ const onInput = (event: Event) => {
 
 .app-textarea-label {
   font-size: 13px;
-  color: var(--ion-color-text-primary, #ffffff);
+  color: var(--app-color-text-primary, #ffffff);
   margin-bottom: 4px;
 }
 
 .app-textarea-field {
   background: transparent;
   border: none;
-  color: var(--ion-color-text-secondary, #b3b3b3);
+  color: var(--app-color-text-secondary, #b3b3b3);
   font-size: 16px;
   padding: 4px 0;
   width: 100%;
@@ -83,7 +83,7 @@ const onInput = (event: Event) => {
   font-family: inherit;
 
   &::placeholder {
-    color: var(--ion-color-text-muted, #8e8e8e);
+    color: var(--app-color-text-muted, #8e8e8e);
   }
 }
 </style>

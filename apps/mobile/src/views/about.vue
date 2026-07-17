@@ -1,14 +1,14 @@
 <template>
-  <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-buttons slot="start">
+  <AppPage>
+    <AppHeader>
+      <AppToolbar>
+        <template #start >
           <AppBackButton />
-        </ion-buttons>
-        <ion-title>{{ $t('about.title') }}</ion-title>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content class="ion-padding">
+        </template>
+        <AppTitle>{{ $t('about.title') }}</AppTitle>
+      </AppToolbar>
+    </AppHeader>
+    <AppContent class="ion-padding">
       <div class="about-container">
         <h2>{{ $t('about.attributions') }}</h2>
 
@@ -27,12 +27,16 @@
           <p>{{ $t('about.tmdbDescription') }}</p>
         </div>
       </div>
-    </ion-content>
-  </ion-page>
+    </AppContent>
+  </AppPage>
 </template>
 
 <script setup lang="ts">
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons } from '@ionic/vue';
+import AppPage from '@/components/common/layout/AppPage.vue';
+import AppHeader from '@/components/common/layout/AppHeader.vue';
+import AppToolbar from '@/components/common/layout/AppToolbar.vue';
+import AppTitle from '@/components/common/layout/AppTitle.vue';
+import AppContent from '@/components/common/layout/AppContent.vue';
 import AppBackButton from "@/components/common/AppBackButton.vue";
 </script>
 
@@ -71,7 +75,7 @@ import AppBackButton from "@/components/common/AppBackButton.vue";
   margin: 0;
 }
 
-.ion-padding {
+.app-padding {
   padding: 1rem;
 }
 
@@ -81,7 +85,7 @@ import AppBackButton from "@/components/common/AppBackButton.vue";
     max-width: 600px;
   }
 
-  .ion-padding {
+  .app-padding {
     padding: 2rem;
   }
 }

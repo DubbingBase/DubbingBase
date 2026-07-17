@@ -14,16 +14,16 @@ const props = withDefaults(defineProps<{
   tag: 'span'
 });
 
-const isIonicColor = computed(() => {
+const isThemeColor = computed(() => {
   return ['primary', 'secondary', 'tertiary', 'success', 'warning', 'danger', 'light', 'medium', 'dark'].includes(props.color || '');
 });
 
 const colorClass = computed(() => {
-  return isIonicColor.value ? `ion-color-${props.color}` : '';
+  return isThemeColor.value ? `app-color-${props.color}` : '';
 });
 
 const customColorStyle = computed(() => {
-  return props.color && !isIonicColor.value ? { color: props.color } : {};
+  return props.color && !isThemeColor.value ? { color: props.color } : {};
 });
 </script>
 

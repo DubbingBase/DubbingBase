@@ -43,13 +43,13 @@ const onClick = (event: Event) => {
   margin: 16px;
   width: calc(100% - 32px);
   border-radius: 12px;
-  background: var(--ion-color-step-50, #1e1e1e);
+  background: var(--app-color-step-50, #1e1e1e);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   overflow: hidden;
   text-align: left;
-  border: 1px solid var(--ion-color-step-100, #2a2a2a);
+  border: 1px solid var(--app-color-step-100, #2a2a2a);
   padding: 0;
-  color: var(--ion-color-text-primary, #ffffff);
+  color: var(--app-color-text-primary, #ffffff);
   font-family: inherit;
   transition: transform 0.2s ease, background-color 0.2s ease;
   
@@ -57,7 +57,7 @@ const onClick = (event: Event) => {
     cursor: pointer;
     
     &:hover {
-      background: var(--ion-color-step-100, #2a2a2a);
+      background: var(--app-color-step-100, #2a2a2a);
     }
     &:active {
       transform: scale(0.98);

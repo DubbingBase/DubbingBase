@@ -22,14 +22,14 @@ defineProps<Props>();
     margin: 0 0 8px 0;
     font-size: 1.2rem;
     font-weight: 600;
-    color: var(--ion-color-primary);
+    color: var(--app-color-primary);
   }
 
   p {
     margin: 0;
     line-height: 1.6;
     font-size: 0.95rem;
-    color: var(--ion-color-text-secondary);
+    color: var(--app-color-text-secondary);
     text-align: left;
   }
 }

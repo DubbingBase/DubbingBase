@@ -104,7 +104,7 @@ watchEffect(() => {
   --border-radius: 50%;
   width: 56px;
   height: 56px;
-  --background: var(--ion-color-secondary);
+  --background: var(--app-color-secondary);
   --color: white;
   --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
@@ -117,7 +117,7 @@ watchEffect(() => {
   --border-radius: 50%;
   width: 56px;
   height: 56px;
-  --background: var(--ion-color-primary);
+  --background: var(--app-color-primary);
   --color: white;
   --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
@@ -130,7 +130,7 @@ watchEffect(() => {
   --border-radius: 50%;
   width: 56px;
   height: 56px;
-  --background: var(--ion-color-tertiary, #9c27b0);
+  --background: var(--app-color-tertiary, #9c27b0);
   --color: white;
   --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }

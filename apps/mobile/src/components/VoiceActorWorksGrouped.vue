@@ -103,13 +103,13 @@ const groupedWorks = computed(() => {
     margin: 0 0 12px 0;
     font-size: 1.2rem;
     font-weight: 600;
-    color: var(--ion-color-text-secondary);
+    color: var(--app-color-text-secondary);
   }
 
   .no-works {
     text-align: center;
     padding: 2rem 1rem;
-    color: var(--ion-color-text-muted);
+    color: var(--app-color-text-muted);
 
     p {
       margin: 0;

@@ -1,22 +1,20 @@
 <template>
-  <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-buttons slot="start">
+  <AppPage>
+    <AppHeader>
+      <AppToolbar>
+        <template #start >
           <AppBackButton />
-        </ion-buttons>
-        <ion-title>{{ movie?.title ?? "" }}</ion-title>
-        <ion-buttons slot="end">
+        </template>
+        <AppTitle>{{ movie?.title ?? "" }}</AppTitle>
+        <template #end >
           <AppButton fill="clear" @click="shareMedia" aria-label="Share">
             <Share2 class="app-icon" />
           </AppButton>
-        </ion-buttons>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content>
-      <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
-        <ion-refresher-content></ion-refresher-content>
-      </ion-refresher>
+        </template>
+      </AppToolbar>
+    </AppHeader>
+    <AppContent>
+      
 
       <MediaInfoCard :media="movie" />
 
@@ -49,14 +47,7 @@
         @take-photo="takePhoto"
       />
       <LoadingSpinner v-if="isLoading" />
-    </ion-content>
-
-    <ion-toast
-      :is-open="showScanResult"
-      :message="scanResult"
-      :duration="3000"
-      @didDismiss="showScanResult = false"
-    ></ion-toast>
+    </AppContent>
 
     <VoiceActorSearchModal
       :is-open="showVoiceActorSearch"
@@ -75,14 +66,18 @@
       @close="showCreditsReview = false"
       @refresh="handleRefresh"
     />
-  </ion-page>
+  </AppPage>
 </template>
 
 <script setup lang="ts">
-import { toastController } from '@/composables/useToast';
+import AppPage from '@/components/common/layout/AppPage.vue';
+import AppHeader from '@/components/common/layout/AppHeader.vue';
+import AppToolbar from '@/components/common/layout/AppToolbar.vue';
+import AppTitle from '@/components/common/layout/AppTitle.vue';
+import AppContent from '@/components/common/layout/AppContent.vue';
+import { toastController, useToast } from '@/composables/useToast';
 import { alertController } from '@/composables/useAlert';
 import AppButton from '@/components/common/AppButton.vue';
-import { IonButtons,  IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonToast, IonRefresher, IonRefresherContent } from '@ionic/vue';
 import { computed, ref, UnwrapRef, watch } from "vue";
 import AppBackButton from "@/components/common/AppBackButton.vue";
 import { useRoute, useRouter } from "vue-router";
@@ -110,9 +105,11 @@ import { useI18n } from "vue-i18n";
 const authStore = useAuthStore();
 const { isAdmin } = storeToRefs(authStore);
 
+const { t } = useI18n();
+const { showToast } = useToast();
+
 const route = useRoute();
 const router = useRouter();
-const { t } = useI18n();
 
 // Initialize voice actor management
 const {
@@ -246,6 +243,13 @@ const hasData = computed(() => {
 const isScanning = ref(false);
 const scanResult = ref("");
 const showScanResult = ref(false);
+
+watch(showScanResult, (newVal) => {
+  if (newVal) {
+    showToast(scanResult.value, 3000);
+    showScanResult.value = false;
+  }
+});
 
 const isFetching = ref(false);
 const fetchError = ref("");

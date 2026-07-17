@@ -182,7 +182,7 @@ const submitRequest = async () => {
 .request-profile-card {
   margin: 12px;
   padding: 16px;
-  background: linear-gradient(135deg, var(--ion-color-primary) 0%, #2a3a5c 100%);
+  background: linear-gradient(135deg, var(--app-color-primary) 0%, #2a3a5c 100%);
   border-radius: 16px;
   display: flex;
   justify-content: space-between;
@@ -213,7 +213,7 @@ const submitRequest = async () => {
 
 .request-btn {
   background: white;
-  color: var(--ion-color-primary);
+  color: var(--app-color-primary);
   border: none;
   padding: 8px 16px;
   border-radius: 8px;
@@ -244,7 +244,7 @@ const submitRequest = async () => {
 }
 
 .modal-content {
-  background: var(--ion-background-color, #1e1e1e);
+  background: var(--app-background-color, #1e1e1e);
   border-radius: 16px;
   width: 90%;
   max-width: 500px;
@@ -255,7 +255,7 @@ const submitRequest = async () => {
 
 .modal-header {
   padding: 20px 24px;
-  border-bottom: 1px solid var(--ion-border-color, #333);
+  border-bottom: 1px solid var(--app-border-color, #333);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -265,14 +265,14 @@ const submitRequest = async () => {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--ion-text-color, #fff);
+  color: var(--app-text-color, #fff);
 }
 
 .close-btn {
   background: none;
   border: none;
   font-size: 1.5rem;
-  color: var(--ion-color-medium);
+  color: var(--app-color-medium);
   cursor: pointer;
   padding: 0;
   line-height: 1;
@@ -290,7 +290,7 @@ const submitRequest = async () => {
   display: block;
   margin-bottom: 8px;
   font-size: 0.9rem;
-  color: var(--ion-text-color, #fff);
+  color: var(--app-text-color, #fff);
   font-weight: 500;
 }
 
@@ -299,21 +299,21 @@ const submitRequest = async () => {
   width: 100%;
   padding: 12px;
   border-radius: 8px;
-  border: 1px solid var(--ion-border-color, #333);
-  background: var(--ion-color-step-50, #2a2a2a);
-  color: var(--ion-text-color, #fff);
+  border: 1px solid var(--app-border-color, #333);
+  background: var(--app-color-step-50, #2a2a2a);
+  color: var(--app-text-color, #fff);
   font-size: 1rem;
 }
 
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: var(--ion-color-primary);
+  border-color: var(--app-color-primary);
 }
 
 .modal-error {
-  background: rgba(var(--ion-color-danger-rgb, 235, 68, 90), 0.1);
-  color: var(--ion-color-danger, #eb445a);
+  background: rgba(var(--app-color-danger-rgb, 235, 68, 90), 0.1);
+  color: var(--app-color-danger, #eb445a);
   padding: 12px;
   border-radius: 8px;
   margin-bottom: 20px;
@@ -321,8 +321,8 @@ const submitRequest = async () => {
 }
 
 .modal-success {
-  background: rgba(var(--ion-color-success-rgb, 45, 211, 111), 0.1);
-  color: var(--ion-color-success, #2dd36f);
+  background: rgba(var(--app-color-success-rgb, 45, 211, 111), 0.1);
+  color: var(--app-color-success, #2dd36f);
   padding: 12px;
   border-radius: 8px;
   margin-bottom: 20px;
@@ -351,11 +351,11 @@ const submitRequest = async () => {
 
 .btn-secondary {
   background: transparent;
-  color: var(--ion-color-medium);
+  color: var(--app-color-medium);
 }
 
 .btn-primary {
-  background: var(--ion-color-primary);
+  background: var(--app-color-primary);
   color: white;
 }
 

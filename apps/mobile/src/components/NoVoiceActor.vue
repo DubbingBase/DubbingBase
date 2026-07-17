@@ -74,7 +74,7 @@ defineProps<{
 }
 
 .no-voice-actor {
-  color: var(--ion-color-medium);
+  color: var(--app-color-medium);
   font-style: italic;
   text-align: center;
   display: flex;

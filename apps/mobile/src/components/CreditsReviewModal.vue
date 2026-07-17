@@ -1,16 +1,16 @@
 <template>
   <AppModal :is-open="isOpen" @didDismiss="closeModal">
-    <ion-header>
-      <ion-toolbar>
-        <ion-title>Review Credits</ion-title>
-        <ion-buttons slot="end">
+    <AppHeader>
+      <AppToolbar>
+        <AppTitle>Review Credits</AppTitle>
+        <template #end >
           <AppButton @click="closeModal">
             <XCircle class="app-icon" />
           </AppButton>
-        </ion-buttons>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content class="ion-padding">
+        </template>
+      </AppToolbar>
+    </AppHeader>
+    <AppContent class="ion-padding">
       <div v-if="isProcessing" class="ion-text-center">
         <LoadingSpinner />
         <p>Auto-matching with database...</p>
@@ -22,19 +22,20 @@
               <h2>
                 <strong>Actor:</strong> 
                 {{ credit.matchedActorName || credit.actor || 'Not found' }}
-                <ion-badge :color="credit.matchedActorId ? 'success' : 'warning'" v-if="credit.actor">
+                <AppBadge :color="credit.matchedActorId ? 'success' : 'warning'" v-if="credit.actor">
                   {{ credit.matchedActorId ? "Matched" : "Unmatched" }}
-                </ion-badge>
+                </AppBadge>
               </h2>
               <p><strong>Role:</strong> {{ credit.role || 'Unspecified' }}</p>
               <p>
                 <strong>Voice Actor:</strong> 
                 {{ credit.matchedVoiceActor ? `${credit.matchedVoiceActor.firstname} ${credit.matchedVoiceActor.lastname}` : credit.voiceActor }}
-                <ion-badge
+                <AppBadge
                   :color="credit.matchedVoiceActor ? 'success' : 'warning'"
+                  v-if="credit.voiceActor"
                 >
-                  {{ credit.matchedVoiceActor ? "Matched" : "New" }}
-                </ion-badge>
+                  {{ credit.matchedVoiceActor ? "Matched" : "Unmatched" }}
+                </AppBadge>
               </p>
             </AppLabel>
             <AppButton
@@ -59,26 +60,23 @@
           </AppButton>
         </div>
       </div>
-    </ion-content>
+    </AppContent>
   </AppModal>
 </template>
 
 <script setup lang="ts">
+import AppHeader from '@/components/common/layout/AppHeader.vue';
+import AppToolbar from '@/components/common/layout/AppToolbar.vue';
+import AppTitle from '@/components/common/layout/AppTitle.vue';
+import AppContent from '@/components/common/layout/AppContent.vue';
 import { toastController } from '@/composables/useToast';
 import AppModal from '@/components/common/AppModal.vue';
 import AppList from '@/components/common/AppList.vue';
 import AppListItem from '@/components/common/AppListItem.vue';
 import AppLabel from '@/components/common/AppLabel.vue';
 import AppButton from '@/components/common/AppButton.vue';
+import AppBadge from '@/components/common/AppBadge.vue';
 import { ref, watch } from "vue";
-import { IonButtons, 
-  
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonContent,
-  IonBadge,
-  } from '@ionic/vue';
 import XCircle from "~icons/lucide/x-circle";
 import Trash2 from "~icons/lucide/trash-2";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";

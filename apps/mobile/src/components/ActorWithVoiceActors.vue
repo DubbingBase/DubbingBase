@@ -63,6 +63,12 @@
         </div>
       </div>
     </div>
+    <!-- Action Sheet -->
+    <AppActionSheet
+      v-model:is-open="isActionSheetOpen"
+      :header="t('common.actions')"
+      :buttons="actionSheetButtons"
+    />
   </div>
 </template>
 
@@ -72,15 +78,20 @@ import PlusCircle from '~icons/lucide/plus-circle';
 import CheckCircle2 from '~icons/lucide/check-circle-2';
 import Clock from '~icons/lucide/clock';
 import PersonItem, { PersonData } from "./PersonItem.vue";
-
 import { useLanguagePreference } from "@/composables/useLanguagePreference";
-import { computed, watch } from "vue";
+import { computed, ref, watch } from "vue";
 
-import { actionSheetController } from "@ionic/vue";
-import { timeOutline, checkmarkCircleOutline, closeCircleOutline, thumbsUpOutline, thumbsDownOutline, createOutline, trashOutline } from "ionicons/icons";
+import AppActionSheet, { ActionSheetButton } from '@/components/common/AppActionSheet.vue';
 import { usePermissions } from "@/composables/usePermissions";
 import { useVoiceActorManagement } from "@/composables/useVoiceActorManagement";
 import { useAuthStore } from "@/stores/auth";
+import ClockIcon from '~icons/lucide/clock';
+import CheckCircle2Icon from '~icons/lucide/check-circle-2';
+import XCircleIcon from '~icons/lucide/x-circle';
+import ThumbsUpIcon from '~icons/lucide/thumbs-up';
+import ThumbsDownIcon from '~icons/lucide/thumbs-down';
+import Edit3Icon from '~icons/lucide/edit-3';
+import Trash2Icon from '~icons/lucide/trash-2';
 import { useI18n } from "vue-i18n";
 import {
   Actor,
@@ -166,9 +177,12 @@ function handleLongPress(voiceActor: PersonData<VoiceActorDetails>) {
   openActionSheet(voiceActor);
 }
 
+const isActionSheetOpen = ref(false);
+const actionSheetButtons = ref<ActionSheetButton[]>([]);
+
 // Open comprehensive action sheet
 const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
-  const buttons: any[] = [];
+  const buttons: ActionSheetButton[] = [];
 
   // A user is the owner if their linked voice_actor_id matches this voice actor's profile ID
   const isOwner = authStore.user?.user_metadata?.voice_actor_id === voiceActor.id;
@@ -180,7 +194,7 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
     buttons.push(
       {
         text: `${t("common.setStatus")} - ${t("common.waiting")}`,
-        icon: timeOutline,
+        icon: ClockIcon,
         handler: async () => {
           await updateReviewStatus(workId, "waiting");
           // Force a refresh of the component to show updated status
@@ -188,7 +202,7 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
         }},
       {
         text: `${t("common.setStatus")} - ${t("common.accepted")}`,
-        icon: checkmarkCircleOutline,
+        icon: CheckCircle2Icon,
         handler: async () => {
           await updateReviewStatus(workId, "accepted");
           // Force a refresh of the component to show updated status
@@ -196,7 +210,7 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
         }},
       {
         text: `${t("common.setStatus")} - ${t("common.rejected")}`,
-        icon: closeCircleOutline,
+        icon: XCircleIcon,
         handler: async () => {
           await updateReviewStatus(workId, "rejected");
           // Force a refresh of the component to show updated status
@@ -212,7 +226,7 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
         text: `${t("common.upvote")} (${
           (voiceActor.work_id ? votes.value[voiceActor.work_id]?.up_count : 0) || 0
         })`,
-        icon: thumbsUpOutline,
+        icon: ThumbsUpIcon,
         handler: () => {
           if (voiceActor.work_id) castVote(voiceActor.work_id, "up");
         }},
@@ -220,7 +234,7 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
         text: `${t("common.downvote")} (${
           (voiceActor.work_id ? votes.value[voiceActor.work_id]?.down_count : 0) || 0
         })`,
-        icon: thumbsDownOutline,
+        icon: ThumbsDownIcon,
         handler: () => {
           if (voiceActor.work_id) castVote(voiceActor.work_id, "down");
         }},
@@ -232,7 +246,7 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
   if (canEdit) {
     buttons.push({
       text: t("common.edit"),
-      icon: createOutline,
+      icon: Edit3Icon,
       handler: () => {
         props.editVoiceActorLink &&
           props.editVoiceActorLink(voiceActor);
@@ -243,8 +257,8 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
   if (canDelete) {
     buttons.push({
       text: t("common.unlinkVoiceActor", "Délier ce comédien"),
-      icon: trashOutline,
       role: "destructive",
+      icon: Trash2Icon,
       handler: () => {
         props.confirmDeleteVoiceActorLink &&
           props.confirmDeleteVoiceActorLink(voiceActor);
@@ -256,10 +270,8 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
     text: t("common.cancel"),
     role: "cancel"});
 
-  const actionSheet = await actionSheetController.create({
-    header: t("common.actions"),
-    buttons});
-  await actionSheet.present();
+  actionSheetButtons.value = buttons;
+  isActionSheetOpen.value = true;
 };
 </script>
 
@@ -374,11 +386,11 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
   opacity: 0.7;
 
   &.accepted {
-    color: var(--ion-color-success);
+    color: var(--app-color-success);
   }
 
   &.waiting {
-    color: var(--ion-color-warning);
+    color: var(--app-color-warning);
   }
 }
 </style>

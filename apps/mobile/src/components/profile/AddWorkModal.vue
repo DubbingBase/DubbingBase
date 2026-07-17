@@ -1,14 +1,14 @@
 <template>
-  <ion-header>
-    <ion-toolbar>
-      <ion-title>Ajouter un projet</ion-title>
-      <ion-buttons slot="end">
+  <AppHeader>
+    <AppToolbar>
+      <AppTitle>Ajouter un projet</AppTitle>
+      <template #end >
         <AppButton @click="closeModal">Fermer</AppButton>
-      </ion-buttons>
-    </ion-toolbar>
-  </ion-header>
+      </template>
+    </AppToolbar>
+  </AppHeader>
 
-  <ion-content>
+  <AppContent>
     <form @submit.prevent="handleSubmit">
       <AppList>
         <AppListItem>
@@ -84,10 +84,14 @@
         </AppButton>
       </div>
     </form>
-  </ion-content>
+  </AppContent>
 </template>
 
 <script setup lang="ts">
+import AppHeader from '@/components/common/layout/AppHeader.vue';
+import AppToolbar from '@/components/common/layout/AppToolbar.vue';
+import AppTitle from '@/components/common/layout/AppTitle.vue';
+import AppContent from '@/components/common/layout/AppContent.vue';
 import AppList from '@/components/common/AppList.vue';
 import AppListItem from '@/components/common/AppListItem.vue';
 import AppButton from '@/components/common/AppButton.vue';
@@ -97,7 +101,6 @@ import AppText from '@/components/common/AppText.vue';
 import AppSpinner from '@/components/common/AppSpinner.vue';
 import AppSkeleton from '@/components/common/AppSkeleton.vue';
 import { ref, computed } from 'vue'
-import { IonButtons,  modalController, IonHeader, IonToolbar, IonTitle, IonContent, } from '@ionic/vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { useProfileStore } from '@/stores/profile'
 import { supabase } from '@/api/supabase'
@@ -130,7 +133,7 @@ const getMediaYear = (media: Movie | Serie) => {
   return new Date(dateStr || '').getFullYear()
 }
 
-const closeModal = () => modalController.dismiss()
+const closeModal = () => emit('close');
 
 const searchMedia = (event: { target: { value: string } }) => {
   const query = event.target.value.toLowerCase()

@@ -1,5 +1,5 @@
 <template>
-  <ion-app>
+  <div id="app-root" class="app-root">
     <router-view v-slot="{ Component, route }">
       <keep-alive :max="10">
         <component :is="Component" :key="route.fullPath" />
@@ -7,11 +7,11 @@
     </router-view>
     <AppToastContainer />
     <AppAlertContainer />
-  </ion-app>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { IonApp } from "@ionic/vue";
+
 import AppToastContainer from "@/components/common/AppToastContainer.vue";
 import AppAlertContainer from "@/components/common/AppAlertContainer.vue";
 import { useAuthStore } from "@/stores/auth";

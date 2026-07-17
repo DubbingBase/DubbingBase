@@ -52,12 +52,12 @@ const workEntries = computed(() => profileStore.workEntries)
   font-size: 1.5rem;
   font-weight: 600;
   margin: 0 0 0.5rem 0;
-  color: var(--ion-color-primary);
+  color: var(--app-color-primary);
 }
 
 .stage-name {
   font-size: 0.875rem;
-  color: var(--ion-color-medium);
+  color: var(--app-color-medium);
   margin-bottom: 1rem;
 }
 
@@ -74,7 +74,7 @@ const workEntries = computed(() => profileStore.workEntries)
   align-items: center;
   gap: 0.25rem;
   font-size: 0.875rem;
-  color: var(--ion-color-dark);
+  color: var(--app-color-dark);
 }
 
 .stat-item .app-icon {
@@ -89,7 +89,7 @@ const workEntries = computed(() => profileStore.workEntries)
 .bio p {
   margin: 0;
   line-height: 1.5;
-  color: var(--ion-text-color);
+  color: var(--app-text-color);
 }
 
 @media (min-width: 768px) {

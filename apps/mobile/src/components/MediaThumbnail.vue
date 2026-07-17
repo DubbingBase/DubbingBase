@@ -1,9 +1,9 @@
 <template>
   <div class="avatar" :style="{ width: widthStyle, height: heightStyle }">
-    <IonImg 
+    <img 
       class="avatar-image" 
       :src="imgSrc" 
-      @ionError="handleImageError"
+      @error="handleImageError"
       :style="{ width: widthStyle, height: heightStyle }"
     />
   </div>
@@ -11,7 +11,6 @@
 
 <script lang="ts" setup>
 import { computed, toRefs, ref, watch } from "vue";
-import { IonImg } from "@ionic/vue";
 
 import { THUMBNAIL_DEFAULT_WIDTH, THUMBNAIL_DEFAULT_HEIGHT } from '@/constants/thumbnails';
 
@@ -66,7 +65,7 @@ const widthStyle = computed(() => {
 </script>
 
 <style lang="scss" scoped>
-.avatar-image::part(image) {
+.avatar-image {
   display: block;
   overflow: hidden;
   object-fit: cover;
@@ -77,6 +76,6 @@ const widthStyle = computed(() => {
   box-shadow: var(--thumbnail-box-shadow-small);
   color: transparent;
   outline: none;
-  background: var(--ion-color-step-100, #1e1e1e);
+  background: var(--app-color-step-100, #1e1e1e);
 }
 </style>

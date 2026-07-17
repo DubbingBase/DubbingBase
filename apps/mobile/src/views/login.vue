@@ -1,14 +1,14 @@
 <template>
-  <ion-page>
-    <ion-header>
-      <ion-toolbar color="primary">
-        <ion-title>{{ isRegister ? 'Créer un compte' : 'Connexion' }}</ion-title>
-        <ion-buttons slot="start">
+  <AppPage>
+    <AppHeader>
+      <AppToolbar color="primary">
+        <AppTitle>{{ isRegister ? 'Créer un compte' : 'Connexion' }}</AppTitle>
+        <template #start >
           <AppBackButton />
-        </ion-buttons>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content class="ion-padding">
+        </template>
+      </AppToolbar>
+    </AppHeader>
+    <AppContent class="ion-padding">
       <form @submit.prevent="isRegister ? register() : login()">
         <AppList>
           <AppListItem>
@@ -30,11 +30,16 @@
   <p>{{ error }}</p>
 </AppText>
       </form>
-    </ion-content>
-  </ion-page>
+    </AppContent>
+  </AppPage>
 </template>
 
 <script setup lang="ts">
+import AppPage from '@/components/common/layout/AppPage.vue';
+import AppHeader from '@/components/common/layout/AppHeader.vue';
+import AppToolbar from '@/components/common/layout/AppToolbar.vue';
+import AppTitle from '@/components/common/layout/AppTitle.vue';
+import AppContent from '@/components/common/layout/AppContent.vue';
 import { toastController } from '@/composables/useToast';
 import AppList from '@/components/common/AppList.vue';
 import AppListItem from '@/components/common/AppListItem.vue';
@@ -46,7 +51,6 @@ import AppSkeleton from '@/components/common/AppSkeleton.vue';
 import { ref, onMounted } from 'vue';
 import AppBackButton from "@/components/common/AppBackButton.vue";
 import { useRouter, useRoute } from 'vue-router';
-import { IonButtons,  IonPage, IonHeader, IonToolbar, IonTitle, IonContent, } from '@ionic/vue';
 import { useAuthStore } from '@/stores/auth';
 
 const email = ref('');
@@ -137,7 +141,7 @@ const register = async () => {
 <style scoped>
 
 
-.ion-padding {
+.app-padding {
   padding: 2rem;
 }
 
@@ -148,7 +152,7 @@ const register = async () => {
   font-size: 0.9rem;
   line-height: 1.4;
   padding: 0.5rem;
-  background-color: rgba(var(--ion-color-danger-rgb), 0.1);
+  background-color: rgba(var(--app-color-danger-rgb), 0.1);
   border-radius: 4px;
 }
 </style>

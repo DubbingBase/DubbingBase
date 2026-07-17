@@ -79,12 +79,12 @@ defineEmits<{
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
-  color: var(--ion-color-danger);
+  color: var(--app-color-danger);
 }
 
 .error-text {
   margin: 0;
-  color: var(--ion-text-color);
+  color: var(--app-text-color);
   opacity: 0.8;
 }
 </style>

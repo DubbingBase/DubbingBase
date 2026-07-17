@@ -88,7 +88,7 @@ const clearInput = () => {
 .searchbar-input-container {
   display: flex;
   align-items: center;
-  background: var(--ion-color-step-100, #1e1e1e);
+  background: var(--app-color-step-100, #1e1e1e);
   border-radius: 12px; /* Increased to match screenshot */
   padding: 0 16px;
   height: 44px; /* Increased to match screenshot */
@@ -97,7 +97,7 @@ const clearInput = () => {
 .search-icon {
   width: 18px;
   height: 18px;
-  color: var(--ion-color-text-muted, #8e8e8e);
+  color: var(--app-color-text-muted, #8e8e8e);
   margin-right: 12px;
   flex-shrink: 0;
 }
@@ -106,7 +106,7 @@ const clearInput = () => {
   flex: 1;
   background: transparent;
   border: none;
-  color: var(--ion-color-text-primary, #ffffff);
+  color: var(--app-color-text-primary, #ffffff);
   font-size: 16px;
   height: 100%;
   outline: none;
@@ -115,7 +115,7 @@ const clearInput = () => {
   font-family: inherit;
 
   &::placeholder {
-    color: var(--ion-color-text-muted, #8e8e8e);
+    color: var(--app-color-text-muted, #8e8e8e);
   }
   
   /* Hide default clear button on webkit */
@@ -135,7 +135,7 @@ const clearInput = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--ion-color-text-muted, #8e8e8e);
+  color: var(--app-color-text-muted, #8e8e8e);
   cursor: pointer;
   border-radius: 50%;
   

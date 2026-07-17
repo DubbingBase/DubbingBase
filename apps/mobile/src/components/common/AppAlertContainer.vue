@@ -164,7 +164,7 @@ onUnmounted(() => {
 
 .app-alert {
   position: relative;
-  background: var(--ion-color-step-50, #1e1e1e);
+  background: var(--app-color-step-50, #1e1e1e);
   width: 85%;
   max-width: 320px;
   border-radius: 12px;
@@ -184,7 +184,7 @@ onUnmounted(() => {
 .alert-message {
   padding: 16px 24px 24px;
   font-size: 14px;
-  color: var(--ion-color-step-300, #b3b3b3);
+  color: var(--app-color-step-300, #b3b3b3);
   text-align: center;
   line-height: 1.5;
 }
@@ -195,8 +195,8 @@ onUnmounted(() => {
 
 .alert-input {
   width: 100%;
-  background: var(--ion-color-step-100, #2a2a2a);
-  border: 1px solid var(--ion-color-step-200, #3a3a3a);
+  background: var(--app-color-step-100, #2a2a2a);
+  border: 1px solid var(--app-color-step-200, #3a3a3a);
   color: white;
   padding: 12px;
   border-radius: 8px;
@@ -207,21 +207,21 @@ onUnmounted(() => {
   
   &:focus {
     outline: none;
-    border-color: var(--ion-color-primary, #3880ff);
+    border-color: var(--app-color-primary, #3880ff);
   }
 }
 
 .alert-buttons {
   display: flex;
-  border-top: 1px solid var(--ion-color-step-150, #2a2a2a);
+  border-top: 1px solid var(--app-color-step-150, #2a2a2a);
 }
 
 .alert-button {
   flex: 1;
   background: transparent;
-  color: var(--ion-color-primary, #3880ff);
+  color: var(--app-color-primary, #3880ff);
   border: none;
-  border-right: 1px solid var(--ion-color-step-150, #2a2a2a);
+  border-right: 1px solid var(--app-color-step-150, #2a2a2a);
   padding: 16px;
   font-size: 16px;
   font-weight: 500;
@@ -241,11 +241,11 @@ onUnmounted(() => {
   
   &.role-cancel {
     font-weight: 400;
-    color: var(--ion-color-step-400, #999);
+    color: var(--app-color-step-400, #999);
   }
   
   &.role-destructive {
-    color: var(--ion-color-danger, #ff4961);
+    color: var(--app-color-danger, #ff4961);
   }
 }
 

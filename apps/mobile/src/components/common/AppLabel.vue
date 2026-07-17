@@ -14,7 +14,7 @@ defineProps<{
 .app-label {
   display: block;
   font-size: 16px;
-  color: var(--ion-color-text-primary, #ffffff);
+  color: var(--app-color-text-primary, #ffffff);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

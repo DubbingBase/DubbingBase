@@ -1,20 +1,18 @@
 <template>
-  <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-title>{{ $t("profile.userProfile") }}</ion-title>
-        <ion-buttons slot="end" v-if="authStore.isAdmin">
+  <AppPage>
+    <AppHeader>
+      <AppToolbar>
+        <AppTitle>{{ $t("profile.userProfile") }}</AppTitle>
+        <template #end  v-if="authStore.isAdmin">
           <AppButton @click="showAdminSearch = true">
             <Search class="app-icon" />
           </AppButton>
-        </ion-buttons>
-      </ion-toolbar>
-    </ion-header>
+        </template>
+      </AppToolbar>
+    </AppHeader>
 
-    <ion-content :fullscreen="true">
-      <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
-        <ion-refresher-content></ion-refresher-content>
-      </ion-refresher>
+    <AppContent :fullscreen="true">
+      
       <div
         v-if="profileStore.isLoadingProfile && !profileStore.isUpdating"
         class="loading-container"
@@ -34,40 +32,40 @@
 
       <div v-else class="profile-content">
         <!-- Tab Segments for Profile Navigation -->
-        <ion-segment
+        <AppSegment
           v-model="selectedTab"
           @ionChange="handleTabChange"
           class="profile-tabs"
         >
-          <ion-segment-button value="user-profile">
+          <AppSegmentButton value="user-profile">
             <AppText>{{ $t("profile.myProfile") }}</AppText>
-          </ion-segment-button>
+          </AppSegmentButton>
 
-          <ion-segment-button
+          <AppSegmentButton
             v-for="voiceActor in profileStore.voiceActors"
             :key="voiceActor.id"
             :value="`voice-actor-${voiceActor.id}`"
           >
             <AppText>{{ voiceActor.firstname }} {{ voiceActor.lastname }}</AppText>
-          </ion-segment-button>
-        </ion-segment>
+          </AppSegmentButton>
+        </AppSegment>
 
         <!-- Admin Search Modal -->
         <AppModal
           :is-open="showAdminSearch"
           @will-dismiss="showAdminSearch = false"
         >
-          <ion-header>
-            <ion-toolbar>
-              <ion-title>{{ $t("profile.adminSearch") }}</ion-title>
-              <ion-buttons slot="end">
+          <AppHeader>
+            <AppToolbar>
+              <AppTitle>{{ $t("profile.adminSearch") }}</AppTitle>
+              <template #end >
                 <AppButton @click="showAdminSearch = false">{{
                   $t("common.close")
                 }}</AppButton>
-              </ion-buttons>
-            </ion-toolbar>
-          </ion-header>
-          <ion-content>
+              </template>
+            </AppToolbar>
+          </AppHeader>
+          <AppContent>
             <div class="admin-search">
               <AppSearchbar
                 v-model="adminSearchQuery"
@@ -99,7 +97,7 @@
                 <p>{{ $t("profile.noSearchResults") }}</p>
               </div>
             </div>
-          </ion-content>
+          </AppContent>
         </AppModal>
 
 
@@ -122,7 +120,7 @@
                   ></AppTextarea>
                 </AppListItem>
                 <AppListItem v-if="userProfileErrors.includes('Bio must be less than 1000 characters')" class="validation-error">
-                  <ion-note color="danger">{{ $t("profile.bioTooLong") }}</ion-note>
+                  <span class="text-red-500 text-sm">{{ $t("profile.bioTooLong") }}</span>
                 </AppListItem>
                 <AppListItem>
                   <AppInput
@@ -133,7 +131,7 @@
                   ></AppInput>
                 </AppListItem>
                 <AppListItem v-if="userProfileErrors.includes('Nationality must contain only letters and spaces')" class="validation-error">
-                  <ion-note color="danger">{{ $t("profile.nationalityInvalid") }}</ion-note>
+                  <span class="text-red-500 text-sm">{{ $t("profile.nationalityInvalid") }}</span>
                 </AppListItem>
                 <AppListItem>
                   <AppInput
@@ -144,7 +142,7 @@
                   ></AppInput>
                 </AppListItem>
                 <AppListItem v-if="userProfileErrors.includes('Date of birth must be in YYYY-MM-DD format')" class="validation-error">
-                  <ion-note color="danger">{{ $t("profile.dateOfBirthInvalid") }}</ion-note>
+                  <span class="text-red-500 text-sm">{{ $t("profile.dateOfBirthInvalid") }}</span>
                 </AppListItem>
               </AppList>
 
@@ -216,7 +214,7 @@
                   ></AppTextarea>
                 </AppListItem>
                 <AppListItem v-if="voiceActorErrors.includes('Bio must be less than 1000 characters')" class="validation-error">
-                  <ion-note color="danger">{{ $t("profile.bioTooLong") }}</ion-note>
+                  <span class="text-red-500 text-sm">{{ $t("profile.bioTooLong") }}</span>
                 </AppListItem>
                 <AppListItem>
                   <AppInput
@@ -226,7 +224,7 @@
                   ></AppInput>
                 </AppListItem>
                 <AppListItem v-if="voiceActorErrors.includes('Nationality must contain only letters and spaces')" class="validation-error">
-                  <ion-note color="danger">{{ $t("profile.nationalityInvalid") }}</ion-note>
+                  <span class="text-red-500 text-sm">{{ $t("profile.nationalityInvalid") }}</span>
                 </AppListItem>
                 <AppListItem>
                   <AppInput
@@ -237,7 +235,7 @@
                   ></AppInput>
                 </AppListItem>
                 <AppListItem v-if="voiceActorErrors.includes('Date of birth must be in YYYY-MM-DD format')" class="validation-error">
-                  <ion-note color="danger">{{ $t("profile.dateOfBirthInvalid") }}</ion-note>
+                  <span class="text-red-500 text-sm">{{ $t("profile.dateOfBirthInvalid") }}</span>
                 </AppListItem>
                 <AppListItem>
                   <AppInput
@@ -271,11 +269,18 @@
           </div>
         </div>
       </div>
-    </ion-content>
-  </ion-page>
+    </AppContent>
+  </AppPage>
 </template>
 
 <script setup lang="ts">
+import AppPage from '@/components/common/layout/AppPage.vue';
+import AppHeader from '@/components/common/layout/AppHeader.vue';
+import AppToolbar from '@/components/common/layout/AppToolbar.vue';
+import AppTitle from '@/components/common/layout/AppTitle.vue';
+import AppContent from '@/components/common/layout/AppContent.vue';
+import AppSegment from '@/components/common/layout/AppSegment.vue';
+import AppSegmentButton from '@/components/common/layout/AppSegmentButton.vue';
 import AppModal from '@/components/common/AppModal.vue';
 import AppList from '@/components/common/AppList.vue';
 import AppListItem from '@/components/common/AppListItem.vue';
@@ -290,7 +295,6 @@ import User from '~icons/lucide/user';
 import AppSpinner from '@/components/common/AppSpinner.vue';
 import AppSkeleton from '@/components/common/AppSkeleton.vue';
 import { onMounted, watch, ref, getCurrentInstance } from "vue";
-import { IonButtons,  IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonSegment, IonSegmentButton,  IonNote, IonSelectOption, IonRefresher, IonRefresherContent } from '@ionic/vue';
 import { useProfileStore } from "@/stores/profile";
 import { useAuthStore } from "@/stores/auth";
 import RequestVoiceActorCard from "@/components/RequestVoiceActorCard.vue";
@@ -483,18 +487,18 @@ const handleSave = async () => {
 .no-profile-container h3,
 .no-data-container h3 {
   margin: 1rem 0 0.5rem 0;
-  color: var(--ion-color-primary);
+  color: var(--app-color-primary);
 }
 
 .error-container {
-  border: 1px solid var(--ion-color-danger);
+  border: 1px solid var(--app-color-danger);
   border-radius: 8px;
-  background-color: var(--ion-color-danger-tint);
+  background-color: var(--app-color-danger-tint);
   padding: 1rem;
 }
 
 .validation-error {
-  color: var(--ion-color-danger);
+  color: var(--app-color-danger);
   font-size: 0.875rem;
   margin-top: 0.25rem;
   display: block;
@@ -504,7 +508,7 @@ const handleSave = async () => {
 .no-profile-container p,
 .no-data-container p {
   margin: 0.5rem 0;
-  color: var(--ion-text-color);
+  color: var(--app-text-color);
   opacity: 0.7;
 }
 
@@ -540,8 +544,8 @@ const handleSave = async () => {
 }
 
 .modal-content {
-  background-color: var(--ion-background-color, #1e293b);
-  border: 1px solid var(--ion-color-light-shade, #334155);
+  background-color: var(--app-background-color, #1e293b);
+  border: 1px solid var(--app-color-light-shade, #334155);
   border-radius: 16px;
   width: 100%;
   max-width: 450px;
@@ -553,7 +557,7 @@ const handleSave = async () => {
 
 .modal-header {
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--ion-color-light-shade, #334155);
+  border-bottom: 1px solid var(--app-color-light-shade, #334155);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -563,14 +567,14 @@ const handleSave = async () => {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--ion-text-color, #ffffff);
+  color: var(--app-text-color, #ffffff);
 }
 
 .close-btn {
   background: none;
   border: none;
   font-size: 1.75rem;
-  color: var(--ion-color-medium, #94a3b8);
+  color: var(--app-color-medium, #94a3b8);
   cursor: pointer;
   padding: 0;
   line-height: 1;
@@ -578,7 +582,7 @@ const handleSave = async () => {
 }
 
 .close-btn:hover {
-  color: var(--ion-text-color, #ffffff);
+  color: var(--app-text-color, #ffffff);
 }
 
 .modal-body {
@@ -595,18 +599,18 @@ const handleSave = async () => {
   font-size: 0.85rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
-  color: var(--ion-color-medium, #94a3b8);
+  color: var(--app-color-medium, #94a3b8);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .form-group input,
 .form-group textarea {
-  background-color: var(--ion-color-light, #0f172a);
-  border: 1px solid var(--ion-color-light-shade, #334155);
+  background-color: var(--app-color-light, #0f172a);
+  border: 1px solid var(--app-color-light-shade, #334155);
   border-radius: 10px;
   padding: 0.75rem;
-  color: var(--ion-text-color, #ffffff);
+  color: var(--app-text-color, #ffffff);
   font-size: 0.9rem;
   outline: none;
   transition: all 0.15s ease;
@@ -614,7 +618,7 @@ const handleSave = async () => {
 
 .form-group input:focus,
 .form-group textarea:focus {
-  border-color: var(--ion-color-primary, #3b82f6);
+  border-color: var(--app-color-primary, #3b82f6);
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
@@ -636,7 +640,7 @@ const handleSave = async () => {
 }
 
 .btn-primary {
-  background-color: var(--ion-color-primary, #3b82f6);
+  background-color: var(--app-color-primary, #3b82f6);
   color: #ffffff;
   border: none;
   box-shadow: 0 4px 6px -1px rgb(59 130 246 / 0.2);
@@ -660,12 +664,12 @@ const handleSave = async () => {
 
 .btn-secondary {
   background-color: transparent;
-  color: var(--ion-text-color, #ffffff);
-  border: 1px solid var(--ion-color-light-shade, #334155);
+  color: var(--app-text-color, #ffffff);
+  border: 1px solid var(--app-color-light-shade, #334155);
 }
 
 .btn-secondary:hover {
-  background-color: var(--ion-color-light, #0f172a);
+  background-color: var(--app-color-light, #0f172a);
 }
 
 .btn-secondary:disabled {
@@ -677,8 +681,8 @@ const handleSave = async () => {
 .request-profile-card {
   margin-top: 2.5rem;
   padding: 1.5rem;
-  background-color: var(--ion-color-light, #0f172a);
-  border: 1px solid var(--ion-color-light-shade, #334155);
+  background-color: var(--app-color-light, #0f172a);
+  border: 1px solid var(--app-color-light-shade, #334155);
   border-radius: 14px;
   text-align: center;
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
@@ -689,20 +693,20 @@ const handleSave = async () => {
   margin-bottom: 0.5rem;
   font-size: 1.15rem;
   font-weight: 700;
-  color: var(--ion-text-color, #ffffff);
+  color: var(--app-text-color, #ffffff);
 }
 
 .request-profile-card p {
   margin-top: 0;
   margin-bottom: 1.5rem;
   font-size: 0.85rem;
-  color: var(--ion-color-medium, #94a3b8);
+  color: var(--app-color-medium, #94a3b8);
   line-height: 1.5;
 }
 
 .request-btn {
   width: 100%;
-  background-color: var(--ion-color-primary, #3b82f6);
+  background-color: var(--app-color-primary, #3b82f6);
   color: #ffffff;
   border: none;
   border-radius: 10px;

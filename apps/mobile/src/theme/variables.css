@@ -1,31 +1,28 @@
-/* For information on how to create your own theme, please see:
-http://ionicframework.com/docs/theming/ */
-
 :root {
   /* Base colors */
-  --ion-color-primary: #4a90e2;
-  --ion-color-secondary: #8e9aaf;
-  --ion-color-tertiary: #6b7c93;
-  --ion-color-success: #4caf50;
-  --ion-color-warning: #ff9800;
-  --ion-color-danger: #f44336;
-  --ion-color-dark: #1a1a1a;
-  --ion-color-medium: #424242;
-  --ion-color-light: #2d2d2d;
+  --app-color-primary: #4a90e2;
+  --app-color-secondary: #8e9aaf;
+  --app-color-tertiary: #6b7c93;
+  --app-color-success: #4caf50;
+  --app-color-warning: #ff9800;
+  --app-color-danger: #f44336;
+  --app-color-dark: #1a1a1a;
+  --app-color-medium: #424242;
+  --app-color-light: #2d2d2d;
 
   /* Background colors */
-  --ion-color-background: #121212;
-  --ion-color-surface: #1e1e1e;
-  --ion-color-card: #1e1e1e;
+  --app-color-background: #121212;
+  --app-color-surface: #1e1e1e;
+  --app-color-card: #1e1e1e;
 
   /* Text colors */
-  --ion-color-text-primary: #ffffff;
-  --ion-color-text-secondary: #b3b3b3;
-  --ion-color-text-muted: #8e8e8e;
+  --app-color-text-primary: #ffffff;
+  --app-color-text-secondary: #b3b3b3;
+  --app-color-text-muted: #8e8e8e;
 
   /* Border colors */
-  --ion-color-border: #333333;
-  --ion-color-border-light: #2d2d2d;
+  --app-color-border: #333333;
+  --app-color-border-light: #2d2d2d;
 
   /* Thumbnail styling */
   --thumbnail-border-radius: 8px;

@@ -1,11 +1,11 @@
 <template>
-  <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-title>{{ t('settings.title') }}</ion-title>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content class="ion-padding">
+  <AppPage>
+    <AppHeader>
+      <AppToolbar>
+        <AppTitle>{{ t('settings.title') }}</AppTitle>
+      </AppToolbar>
+    </AppHeader>
+    <AppContent class="ion-padding">
       <div class="settings-container">
         <template v-if="user && user.is_anonymous === false">
           <div class="settings-section">
@@ -48,16 +48,21 @@
           </div>
         </template>
       </div>
-    </ion-content>
-  </ion-page>
+    </AppContent>
+  </AppPage>
 </template>
 
 <script setup lang="ts">
+import AppPage from '@/components/common/layout/AppPage.vue';
+import AppHeader from '@/components/common/layout/AppHeader.vue';
+import AppToolbar from '@/components/common/layout/AppToolbar.vue';
+import AppTitle from '@/components/common/layout/AppTitle.vue';
+import AppContent from '@/components/common/layout/AppContent.vue';
 import ChevronRight from '~icons/lucide/chevron-right';
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/vue';
+
 import { supabase } from '@/api/supabase';
 
 const user = ref<any>(null);
@@ -171,7 +176,7 @@ const navigateToAbout = () => {
   margin-bottom: 1.5rem;
 }
 
-.ion-padding {
+.app-padding {
   padding: 1rem;
 }
 
@@ -181,7 +186,7 @@ const navigateToAbout = () => {
     max-width: 600px;
   }
 
-  .ion-padding {
+  .app-padding {
     padding: 2rem;
   }
 }

@@ -1,17 +1,15 @@
 <template>
-  <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-buttons slot="start">
+  <AppPage>
+    <AppHeader>
+      <AppToolbar>
+        <template #start >
           <AppBackButton />
-        </ion-buttons>
-        <ion-title>{{ t("actor.title") }}</ion-title>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content>
-      <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
-        <ion-refresher-content></ion-refresher-content>
-      </ion-refresher>
+        </template>
+        <AppTitle>{{ t("actor.title") }}</AppTitle>
+      </AppToolbar>
+    </AppHeader>
+    <AppContent>
+      
       <div class="actor">
         <div class="header-immersive" v-if="actor">
           <div
@@ -26,17 +24,17 @@
         </div>
 
         <div class="body" v-if="actor && !loading">
-          <ion-segment scrollable v-model="selectedSegment">
-            <ion-segment-button value="about" content-id="about">
+          <AppSegment scrollable v-model="selectedSegment">
+            <AppSegmentButton value="about" content-id="about">
               <AppText>{{ t("actor.about") }}</AppText>
-            </ion-segment-button>
-            <ion-segment-button value="roles" content-id="roles">
+            </AppSegmentButton>
+            <AppSegmentButton value="roles" content-id="roles">
               <AppText>{{ t("actor.roles") }}</AppText>
-            </ion-segment-button>
-          </ion-segment>
+            </AppSegmentButton>
+          </AppSegment>
 
-          <ion-segment-view :style="{ height: segmentViewHeight, transition: 'height 0.3s ease' }">
-            <ion-segment-content id="about">
+          <AppSegmentView :style="{ height: segmentViewHeight, transition: 'height 0.3s ease' }">
+            <AppSegmentContent id="about">
               <div class="about-section" ref="aboutSectionRef">
                 <div class="info-card" v-if="actor.data.birthday">
                   <div class="info-label">{{ t("actor.birthdate") }}</div>
@@ -85,8 +83,8 @@
                   </div>
                 </div>
               </div>
-            </ion-segment-content>
-            <ion-segment-content id="roles">
+            </AppSegmentContent>
+            <AppSegmentContent id="roles">
               <div class="voice-roles-section" ref="rolesSectionRef">
                 <AppSearchbar
                   v-model="searchQuery"
@@ -105,12 +103,12 @@
                   />
                 </div>
 
-                <div class="section-header">
+                <div class="header-with-action">
                   <h2>{{ t("actor.roles") }}</h2>
-                  <ion-chip outline color="primary" class="role-count">
+                  <AppChip outline color="primary" class="role-count">
                     {{ roleCount }}
                     {{ roleCount > 1 ? t("actor.roles") : t("actor.role") }}
-                  </ion-chip>
+                  </AppChip>
                 </div>
 
                 <div class="grouped-roles-list">
@@ -170,8 +168,8 @@
                   </div>
                 </div>
               </div>
-            </ion-segment-content>
-          </ion-segment-view>
+            </AppSegmentContent>
+          </AppSegmentView>
         </div>
       </div>
 
@@ -184,11 +182,20 @@
         <p>{{ error }}</p>
         <AppButton @click="retryLoad">{{ t("common.retry") }}</AppButton>
       </div>
-    </ion-content>
-  </ion-page>
+    </AppContent>
+  </AppPage>
 </template>
 
 <script setup lang="ts">
+import AppPage from '@/components/common/layout/AppPage.vue';
+import AppHeader from '@/components/common/layout/AppHeader.vue';
+import AppToolbar from '@/components/common/layout/AppToolbar.vue';
+import AppTitle from '@/components/common/layout/AppTitle.vue';
+import AppContent from '@/components/common/layout/AppContent.vue';
+import AppSegment from '@/components/common/layout/AppSegment.vue';
+import AppSegmentButton from '@/components/common/layout/AppSegmentButton.vue';
+import AppSegmentView from '@/components/common/layout/AppSegmentView.vue';
+import AppSegmentContent from '@/components/common/layout/AppSegmentContent.vue';
 import AppButton from '@/components/common/AppButton.vue';
 import AppSearchbar from '@/components/common/AppSearchbar.vue';
 import AppToggle from '@/components/common/AppToggle.vue';
@@ -200,7 +207,7 @@ import { computed, onMounted, ref, watch, nextTick } from "vue";
 import AppBackButton from "@/components/common/AppBackButton.vue";
 import { useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
-import { IonButtons,  IonPage, IonTitle, IonToolbar, IonHeader, IonChip, IonSegment, IonSegmentButton, IonSegmentView, IonSegmentContent, IonContent, IonRefresher, IonRefresherContent, IonItem} from '@ionic/vue';
+import AppChip from '@/components/common/AppChip.vue';
 
 import type { Actor } from "@supabase/functions/_shared/types";
 import { supabase } from "../api/supabase";
@@ -480,14 +487,14 @@ onMounted(() => {
       font-size: 0.8rem;
       text-transform: uppercase;
       letter-spacing: 1px;
-      color: var(--ion-color-medium);
+      color: var(--app-color-medium);
       margin-bottom: 0.5rem;
       font-weight: 600;
     }
 
     .info-value {
       font-size: 1.1rem;
-      color: var(--ion-text-color);
+      color: var(--app-text-color);
     }
 
     &.biography-card {
@@ -496,7 +503,7 @@ onMounted(() => {
       .biography-text {
         font-size: 0.95rem;
         line-height: 1.6;
-        color: var(--ion-color-step-800, #ddd);
+        color: var(--app-color-step-800, #ddd);
         transition: max-height 0.3s ease;
 
         &.clamped {
@@ -510,7 +517,7 @@ onMounted(() => {
       .read-more-hint {
         margin-top: 8px;
         font-size: 0.85rem;
-        color: var(--ion-color-primary);
+        color: var(--app-color-primary);
         font-weight: 600;
         text-align: right;
       }
@@ -525,7 +532,7 @@ onMounted(() => {
       font-weight: 600;
       margin: 0 0 1rem 0;
       padding-left: 0.5rem;
-      color: var(--ion-text-color);
+      color: var(--app-text-color);
     }
 
     .voice-actors-scroller {
@@ -553,7 +560,7 @@ onMounted(() => {
 
 .media-voice-roles {
   margin-bottom: 2rem;
-  background: var(--ion-color-light);
+  background: var(--app-color-light);
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -567,12 +574,12 @@ onMounted(() => {
   display: flex;
   padding: 1rem;
   width: 100%;
-  background: var(--ion-color-light-shade);
+  background: var(--app-color-light-shade);
 }
 
 .voice-roles-list {
   padding: 0.5rem 0;
-  background: var(--ion-color-light);
+  background: var(--app-color-light);
 
   .voice-role-item {
     --padding-start: 1rem;
@@ -604,9 +611,9 @@ onMounted(() => {
     justify-content: center;
     width: 100%;
     height: 100%;
-    background: var(--ion-color-light-shade);
+    background: var(--app-color-light-shade);
     border-radius: 50%;
-    color: var(--ion-color-medium);
+    color: var(--app-color-medium);
 
     .app-icon {
       font-size: 1.5rem;
@@ -619,13 +626,13 @@ onMounted(() => {
     margin: 0 0 0.25rem;
     font-size: 1rem;
     font-weight: 500;
-    color: var(--ion-color-dark);
+    color: var(--app-color-dark);
   }
 
   p {
     margin: 0;
     font-size: 0.85rem;
-    color: var(--ion-color-medium);
+    color: var(--app-color-medium);
 
     .app-icon {
       margin-right: 0.25rem;
@@ -635,7 +642,7 @@ onMounted(() => {
 
   .voice-role-performance {
     font-weight: 500;
-    color: var(--ion-color-primary);
+    color: var(--app-color-primary);
   }
 }
 
@@ -670,7 +677,7 @@ onMounted(() => {
     background: linear-gradient(
       to bottom,
       rgba(0, 0, 0, 0.2) 0%,
-      var(--ion-background-color, #121212) 100%
+      var(--app-background-color, #121212) 100%
     );
     z-index: 1;
   }
@@ -703,7 +710,7 @@ onMounted(() => {
   }
 }
 
-ion-segment-view, ion-segment-content {
+AppSegmentView, AppSegmentContent {
   overflow-y: hidden;
 }
 
@@ -724,13 +731,13 @@ ion-segment-view, ion-segment-content {
     .filter-label {
       font-size: 0.95rem;
       font-weight: 500;
-      color: var(--ion-text-color);
+      color: var(--app-text-color);
     }
 
     .sleek-toggle {
       --background: rgba(255, 255, 255, 0.1);
-      --handle-background: var(--ion-color-medium);
-      --background-checked: var(--ion-color-primary);
+      --handle-background: var(--app-color-medium);
+      --background-checked: var(--app-color-primary);
       --handle-background-checked: #fff;
       padding: 0;
     }
@@ -749,7 +756,7 @@ ion-segment-view, ion-segment-content {
       margin: 0;
       font-size: 1.25rem;
       font-weight: 600;
-      color: var(--ion-text-color);
+      color: var(--app-text-color);
     }
 
     .role-count {
@@ -766,7 +773,7 @@ ion-segment-view, ion-segment-content {
   gap: 1rem;
 
   .media-group {
-    background: var(--ion-item-background);
+    background: var(--app-item-background);
     border-radius: 8px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     overflow: hidden;
@@ -781,27 +788,27 @@ ion-segment-view, ion-segment-content {
 
     .roles-list {
       padding: 0.5rem 1rem;
-      border-top: 1px solid var(--ion-color-light-shade);
-      background: var(--ion-color-light);
+      border-top: 1px solid var(--app-color-light-shade);
+      background: var(--app-color-light);
 
       .role-detail {
         padding: 0.25rem 0;
 
         &:not(:last-child) {
-          border-bottom: 1px solid var(--ion-color-light-shade);
+          border-bottom: 1px solid var(--app-color-light-shade);
         }
 
         .character-name {
           font-size: 0.85rem;
-          color: var(--ion-color-medium);
+          color: var(--app-color-medium);
           font-style: italic;
         }
       }
     }
 
     .voice-actors-section {
-      border-top: 1px solid var(--ion-color-light-shade);
-      background: var(--ion-color-light);
+      border-top: 1px solid var(--app-color-light-shade);
+      background: var(--app-color-light);
 
       .voice-actors-list {
         display: flex;

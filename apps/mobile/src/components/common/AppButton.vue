@@ -71,32 +71,32 @@ defineEmits<{
 
   /* Colors */
   &.color-primary {
-    --btn-color: var(--ion-color-primary, #4a90e2);
+    --btn-color: var(--app-color-primary, #4a90e2);
     --btn-color-hover: color-mix(in srgb, var(--btn-color) 85%, black);
     --btn-text: #ffffff;
   }
   &.color-danger {
-    --btn-color: var(--ion-color-danger, #f44336);
+    --btn-color: var(--app-color-danger, #f44336);
     --btn-color-hover: color-mix(in srgb, var(--btn-color) 85%, black);
     --btn-text: #ffffff;
   }
   &.color-success {
-    --btn-color: var(--ion-color-success, #4caf50);
+    --btn-color: var(--app-color-success, #4caf50);
     --btn-color-hover: color-mix(in srgb, var(--btn-color) 85%, black);
     --btn-text: #ffffff;
   }
   &.color-medium {
-    --btn-color: var(--ion-color-medium, #424242);
+    --btn-color: var(--app-color-medium, #424242);
     --btn-color-hover: color-mix(in srgb, var(--btn-color) 85%, black);
     --btn-text: #ffffff;
   }
   &.color-light {
-    --btn-color: var(--ion-color-light, #2d2d2d);
+    --btn-color: var(--app-color-light, #2d2d2d);
     --btn-color-hover: color-mix(in srgb, var(--btn-color) 85%, black);
     --btn-text: #ffffff;
   }
   &.color-dark {
-    --btn-color: var(--ion-color-dark, #1a1a1a);
+    --btn-color: var(--app-color-dark, #1a1a1a);
     --btn-color-hover: color-mix(in srgb, var(--btn-color) 85%, black);
     --btn-text: #ffffff;
   }

@@ -113,18 +113,18 @@ const confirmDelete = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--ion-color-light);
+  background-color: var(--app-color-light);
   border-radius: 4px;
 }
 
 .placeholder .app-icon {
   font-size: 2rem;
-  color: var(--ion-color-medium);
+  color: var(--app-color-medium);
 }
 
 .media-type {
   font-size: 0.875rem;
-  color: var(--ion-color-medium);
+  color: var(--app-color-medium);
   margin: 0.25rem 0 0 0;
 }
 </style>
