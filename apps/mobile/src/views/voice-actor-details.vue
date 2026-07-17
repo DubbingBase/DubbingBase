@@ -8,11 +8,8 @@
         </template>
         <AppTitle>Voix</AppTitle>
         <template #end >
-          <AppButton @click="isFetchModalOpen = true" v-if="isAdmin">
-            <RefreshCw class="app-icon" />
-          </AppButton>
-          <AppButton @click="openEditProfile">
-            <Pencil class="app-icon" />
+          <AppButton fill="clear" @click="isActionSheetOpen = true" aria-label="Menu">
+            <EllipsisVertical class="app-icon" />
           </AppButton>
         </template>
       </AppToolbar>
@@ -26,7 +23,7 @@
 
       <div v-if="!loading && voiceActor" class="actor">
         <!-- Request Linkage Card -->
-        <RequestVoiceActorCard v-if="isAuthenticated && !isLinked" :voiceActor="voiceActor" />
+        <RequestVoiceActorCard ref="requestCardRef" :hideCard="true" v-if="isAuthenticated && !isLinked" :voiceActor="voiceActor" />
 
         <VoiceActorHeader
           :voiceActor="voiceActor"
@@ -55,6 +52,10 @@
         @saved="handleFetchModalSaved"
       />
 
+      <AppActionSheet
+        v-model:is-open="isActionSheetOpen"
+        :buttons="actionSheetButtons"
+      />
     </AppContent>
   </AppPage>
   </cap-page>
@@ -70,8 +71,11 @@ import AppButton from '@/components/common/AppButton.vue';
 import AppSearchbar from '@/components/common/AppSearchbar.vue';
 import Pencil from '~icons/lucide/pencil';
 import RefreshCw from '~icons/lucide/refresh-cw';
+import EllipsisVertical from "~icons/lucide/ellipsis-vertical";
+import UserCheck from "~icons/lucide/user-check";
 import { computed, onMounted, ref, getCurrentInstance } from "vue";
 import AppBackButton from "@/components/common/AppBackButton.vue";
+import AppActionSheet, { ActionSheetButton } from "@/components/common/AppActionSheet.vue";
 import { useRoute, useRouter } from "vue-router";
 // Admin check: get user from supabase.auth and check for admin role
 import type { Serie as SerieModel } from "@supabase/functions/_shared/serie";
@@ -143,6 +147,45 @@ const searchQuery = ref("");
 const potentialWikipediaUrl = ref<string | null>(null);
 
 const isFetchModalOpen = ref(false);
+const isActionSheetOpen = ref(false);
+const requestCardRef = ref<any>(null);
+
+const actionSheetButtons = computed<ActionSheetButton[]>(() => {
+  const buttons: ActionSheetButton[] = [
+    {
+      text: t('common.editProfile', 'Modifier le profil'),
+      icon: Pencil,
+      handler: () => openEditProfile(),
+    }
+  ];
+
+  if (isAuthenticated.value && !isLinked.value) {
+    buttons.unshift({
+      text: t('profile.requestVoiceActorBtn', 'Revendiquer ce profil'),
+      icon: UserCheck,
+      handler: () => {
+        requestCardRef.value?.openRequestModal();
+      },
+    });
+  }
+
+  if (isAdmin.value) {
+    buttons.unshift({
+      text: t('common.refresh', 'Actualiser'),
+      icon: RefreshCw,
+      handler: () => {
+        isFetchModalOpen.value = true;
+      },
+    });
+  }
+
+  buttons.push({
+    text: t('common.cancel', 'Annuler'),
+    role: 'cancel',
+  });
+
+  return buttons;
+});
 const handleFetchModalSaved = async () => {
   // Reload the voice actor data to reflect the newly saved updates
   const id = route.params.id;

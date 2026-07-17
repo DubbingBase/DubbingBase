@@ -1,17 +1,13 @@
 <template>
   <AppPage>
     <AppHeader>
-      <AppToolbar>
-        <AppTitle>Search</AppTitle>
-      </AppToolbar>
       <AppToolbar style="--background: transparent">
         <AppSearchbar
           v-model="query"
           :debounce="300"
           @ionInput="search($event)"
-          show-clear-button="always"
+          placeholder="Movies, actors, shows..."
           class="custom-searchbar"
-          style="padding: 0 8px"
         ></AppSearchbar>
       </AppToolbar>
     </AppHeader>
@@ -26,18 +22,20 @@
             />
           </AppList>
         </transition-group>
-        <p
+        <div
           v-if="!isLoading && matches.length === 0 && trimmedQuery.length >= 2"
           class="empty-state"
         >
-          No results found
-        </p>
-        <p
+          <SearchIcon class="empty-icon" />
+          <p class="empty-text">No results found</p>
+        </div>
+        <div
           v-if="!isLoading && matches.length === 0 && trimmedQuery.length < 2"
           class="empty-state"
         >
-          Start typing to search...
-        </p>
+          <SearchIcon class="empty-icon" />
+          <p class="empty-text">What are you looking for?</p>
+        </div>
       </div>
       <LoadingSpinner v-if="isLoading" :overlay="true" />
     </AppContent>
@@ -58,6 +56,7 @@ import { useToast } from "@/composables/useToast";
 defineOptions({ name: "Search" });
 import SearchResultItem from "@/components/SearchResultItem.vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
+import SearchIcon from "~icons/lucide/search";
 import { supabase } from "@/api/supabase";
 import type { SearchResult } from "@/types/search";
 
@@ -121,18 +120,34 @@ const search = async (event: { target: { value: string } }) => {
 <style scoped>
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.5s;
+  transition: opacity 0.4s ease;
 }
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
 }
 .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: var(--app-color-text-muted, #8e8e8e);
   text-align: center;
-  padding: 20px;
-  color: #666;
+  margin-top: 20px;
+}
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+.empty-text {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0;
 }
 .content-wrapper {
   position: relative;
+  height: 100%;
 }
 </style>

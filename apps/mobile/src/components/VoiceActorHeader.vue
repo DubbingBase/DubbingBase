@@ -40,6 +40,7 @@
     <ImageEditorModal
       :is-open="isEditorOpen"
       :image-file="selectedImageFile"
+      :aspect-ratio="THUMBNAIL_DEFAULT_WIDTH / THUMBNAIL_DEFAULT_HEIGHT"
       @cancel="cancelCrop"
       @save="uploadCroppedImage"
     />
@@ -52,6 +53,7 @@ import MediaThumbnail from "@/components/MediaThumbnail.vue";
 import { useFileDialog } from "@vueuse/core";
 import { supabase } from "../api/supabase";
 import ImageEditorModal from "@/components/common/ImageEditorModal.vue";
+import { THUMBNAIL_DEFAULT_WIDTH, THUMBNAIL_DEFAULT_HEIGHT } from "@/constants/thumbnails";
 
 interface VoiceActor {
   id: number;

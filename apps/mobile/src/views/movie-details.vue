@@ -8,8 +8,8 @@
           </template>
           <AppTitle>{{ movie?.title ?? "" }}</AppTitle>
           <template #end>
-            <AppButton fill="clear" @click="shareMedia" aria-label="Share">
-              <Share2 class="app-icon" />
+            <AppButton fill="clear" @click="isActionSheetOpen = true" aria-label="Menu">
+              <EllipsisVertical class="app-icon" />
             </AppButton>
           </template>
         </AppToolbar>
@@ -33,19 +33,10 @@
           :contentId="route.params.id as string"
         />
 
-        <ActionButtons
-          :has-wikidata-id="hasWikidataId"
-          :has-data="hasData"
-          :is-fetching="isFetching"
-          :is-scanning="isScanning"
-          :fetch-error="fetchError"
-          :queue-status="queueStatus"
-          :queue-error-message="queueErrorMessage"
-          @fetch-infos="fetchInfos"
-          @enqueue="handleEnqueue"
-          @take-photo="takePhoto"
-        />
         <LoadingSpinner v-if="isLoading" />
+        <div v-if="fetchError || (queueStatus === 'failed' && queueErrorMessage)" class="text-center text-red-500 mt-4">
+          {{ fetchError || queueErrorMessage }}
+        </div>
       </AppContent>
 
       <VoiceActorSearchModal
@@ -65,6 +56,11 @@
         @close="showCreditsReview = false"
         @refresh="handleRefresh"
       />
+
+      <AppActionSheet
+        v-model:is-open="isActionSheetOpen"
+        :buttons="actionSheetButtons"
+      />
     </AppPage>
   </cap-page>
 </template>
@@ -82,7 +78,12 @@ import { computed, ref, UnwrapRef, onMounted, watch } from "vue";
 import AppBackButton from "@/components/common/AppBackButton.vue";
 import { useRoute, useRouter } from "vue-router";
 import Share2 from "~icons/lucide/share-2";
+import Camera from '~icons/lucide/camera';
+import List from '~icons/lucide/list';
+import Info from '~icons/lucide/info';
+import EllipsisVertical from "~icons/lucide/ellipsis-vertical";
 import { Share } from "@capacitor/share";
+import AppActionSheet, { ActionSheetButton } from "@/components/common/AppActionSheet.vue";
 
 import { MovieResponse } from "@supabase/functions/_shared/movie";
 import { supabase } from "../api/supabase";
@@ -92,12 +93,11 @@ import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
 import MediaInfoCard from "@/components/MediaInfoCard.vue";
 import ActorList from "@/components/ActorList.vue";
-import ActionButtons from "@/components/ActionButtons.vue";
 import VoiceActorSearchModal from "@/components/VoiceActorSearchModal.vue";
 import CreditsReviewModal from "@/components/CreditsReviewModal.vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import MediaItem from "@/components/MediaItem.vue";
-import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
+
 import { actorToPersonData, voiceActorToPersonData } from "@/utils/convert";
 import { Role } from "@/components/PersonItem.vue";
 import { useI18n } from "vue-i18n";
@@ -110,6 +110,45 @@ const { showToast } = useToast();
 
 const route = useRoute();
 const router = useRouter();
+
+const isActionSheetOpen = ref(false);
+const actionSheetButtons = computed<ActionSheetButton[]>(() => {
+  const buttons: ActionSheetButton[] = [
+    {
+      text: t('common.share', 'Partager'),
+      icon: Share2,
+      handler: () => shareMedia(),
+    },
+  ];
+
+  if (isAdmin.value && !hasData.value) {
+    buttons.push({
+      text: t('common.scan', 'Scanner'),
+      icon: Camera,
+      handler: () => takePhoto(),
+    });
+  }
+
+  if (hasWikidataId.value && !hasData.value) {
+    buttons.push({
+      text: t('common.enqueue', 'Mettre en file d\'attente'),
+      icon: List,
+      handler: () => handleEnqueue(),
+    });
+    buttons.push({
+      text: t('common.fetchInfos', 'Récupérer les infos'),
+      icon: Info,
+      handler: () => fetchInfos(),
+    });
+  }
+
+  buttons.push({
+    text: t('common.cancel', 'Annuler'),
+    role: 'cancel',
+  });
+
+  return buttons;
+});
 
 // Initialize voice actor management
 const {

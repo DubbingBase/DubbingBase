@@ -7,19 +7,18 @@
           <AppBackButton />
         </template>
         <AppTitle>{{ season?.name || "Détails de la saison" }}</AppTitle>
+        <template #end>
+          <AppButton fill="clear" @click="isActionSheetOpen = true" aria-label="Menu">
+            <EllipsisVertical class="app-icon" />
+          </AppButton>
+        </template>
       </AppToolbar>
     </AppHeader>
     <AppContent>
       
-      <ActionButtons
-        :hasWikidataId="hasWikidataId"
-        :hasData="hasData"
-        :isFetching="isFetching"
-        :isScanning="false"
-        :queue-status="queueStatus"
-        :queue-error-message="queueErrorMessage"
-        @fetch-infos="fetchInfos"
-      />
+      <div v-if="fetchError || (queueStatus === 'failed' && queueErrorMessage)" class="text-center text-red-500 mt-4">
+        {{ fetchError || queueErrorMessage }}
+      </div>
       <LoadingSpinner v-if="isLoading" name="crescent" />
       <div v-if="season && !isLoading" class="season-details">
         <SeasonBanner :season="season" :serieId="Number(route.params.id)" :seasonNumber="Number(route.params.season)" />
@@ -57,6 +56,11 @@
           />
         </div>
       </div>
+
+      <AppActionSheet
+        v-model:is-open="isActionSheetOpen"
+        :buttons="actionSheetButtons"
+      />
     </AppContent>
   </AppPage>
   </cap-page>
@@ -76,11 +80,14 @@ import AppBackButton from "@/components/common/AppBackButton.vue";
 import { useRoute, useRouter } from "vue-router";
 import { supabase } from "../api/supabase";
 import { enqueueAndProcessMedia } from "../api/mediaQueue";
+import LoadingSpinner from "../components/common/LoadingSpinner.vue";
+import EllipsisVertical from "~icons/lucide/ellipsis-vertical";
+import Info from "~icons/lucide/info";
+import AppActionSheet, { ActionSheetButton } from "@/components/common/AppActionSheet.vue";
 import SeasonBanner from "../components/SeasonBanner.vue";
 import EpisodesList from "../components/EpisodesList.vue";
-import ActionButtons from "../components/ActionButtons.vue";
 import ActorList from "../components/ActorList.vue";
-import LoadingSpinner from "../components/common/LoadingSpinner.vue";
+import AppButton from "@/components/common/AppButton.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -101,6 +108,27 @@ const hasData = computed(() => {
 const isFetching = ref(false);
 const queueStatus = ref<string | null>(null);
 const queueErrorMessage = ref<string | null>(null);
+const fetchError = ref("");
+
+const isActionSheetOpen = ref(false);
+const actionSheetButtons = computed<ActionSheetButton[]>(() => {
+  const buttons: ActionSheetButton[] = [];
+
+  if (hasWikidataId.value && !hasData.value) {
+    buttons.push({
+      text: 'Récupérer les infos',
+      icon: Info,
+      handler: () => fetchInfos(),
+    });
+  }
+
+  buttons.push({
+    text: 'Annuler',
+    role: 'cancel',
+  });
+
+  return buttons;
+});
 
 const normalizedActors = computed(() => {
   if (activeTab.value === 'voices') {

@@ -75,29 +75,14 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
 }
+</style>
 
-:deep(.bottom-sheet__card) {
-  background: var(--app-color-step-50, #1e1e1e) !important;
-  border-top-left-radius: 16px !important;
-  border-top-right-radius: 16px !important;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-:deep(.bottom-sheet__pan) {
-  padding-top: 12px;
-  padding-bottom: 12px;
-}
-
-:deep(.bottom-sheet__bar) {
-  background: var(--app-color-step-300, #4a4a4a) !important;
-  width: 40px !important;
-  height: 4px !important;
-}
-
-:deep(.bottom-sheet__content) {
-  flex: 1;
-  overflow-y: auto;
+<style lang="scss">
+:root {
+  --ba-bs-bg: var(--app-color-step-50, #1e1e1e);
+  --ba-bs-bg-dark: var(--app-color-step-50, #1e1e1e);
+  --ba-bs-handle-color: var(--app-color-step-300, #4a4a4a);
+  --ba-bs-handle-color-dark: var(--app-color-step-300, #4a4a4a);
+  --ba-bs-radius: 16px;
 }
 </style>

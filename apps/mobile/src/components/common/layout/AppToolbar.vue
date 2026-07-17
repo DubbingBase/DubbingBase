@@ -1,12 +1,12 @@
 <template>
   <div class="app-toolbar">
-    <div class="toolbar-start">
+    <div class="toolbar-start" v-if="$slots.start">
       <slot name="start"></slot>
     </div>
     <div class="toolbar-content">
       <slot></slot>
     </div>
-    <div class="toolbar-end">
+    <div class="toolbar-end" v-if="$slots.end">
       <slot name="end"></slot>
     </div>
   </div>

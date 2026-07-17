@@ -8,11 +8,12 @@
           </template>
           <AppTitle>{{ show?.name || "Détails de la série" }}</AppTitle>
           <template #end>
-            <AppButton fill="clear" @click="shareMedia" aria-label="Share">
-              <Share2 class="app-icon" />
-            </AppButton>
-            <AppButton fill="clear" aria-label="Paramètres">
-              <Settings class="app-icon" />
+            <AppButton
+              fill="clear"
+              @click="isActionSheetOpen = true"
+              aria-label="Menu"
+            >
+              <EllipsisVertical class="app-icon" />
             </AppButton>
           </template>
         </AppToolbar>
@@ -23,7 +24,7 @@
         <LoadingSpinner v-if="isLoading" />
 
         <div class="tabs" v-show="!isLoading">
-          <AppSegment scrollable>
+          <AppSegment v-model="selectedSegment" scrollable>
             <AppSegmentButton value="peoples" content-id="peoples">
               <!-- <Search class="app-icon" /> -->
               Personnes
@@ -33,7 +34,7 @@
               Saisons
             </AppSegmentButton>
           </AppSegment>
-          <AppSegmentView>
+          <AppSegmentView v-model:active-segment="selectedSegment">
             <AppSegmentContent class="segmented-content" id="peoples">
               <ActorList
                 :actors="actors"
@@ -72,18 +73,13 @@
           </AppSegmentView>
         </div>
 
-        <ActionButtons
-          :has-wikidata-id="hasWikidataId"
-          :has-data="hasData"
-          :is-fetching="isFetching"
-          :is-scanning="isScanning"
-          :fetch-error="fetchError"
-          :queue-status="queueStatus"
-          :queue-error-message="queueErrorMessage"
-          @fetch-infos="fetchInfos"
-          @enqueue="handleEnqueue"
-          @take-photo="takePhoto"
-        />
+        <LoadingSpinner v-if="isLoading" />
+        <div
+          v-if="fetchError || (queueStatus === 'failed' && queueErrorMessage)"
+          class="text-center text-red-500 mt-4"
+        >
+          {{ fetchError || queueErrorMessage }}
+        </div>
 
         <VoiceActorSearchModal
           :is-open="showVoiceActorSearch"
@@ -98,9 +94,14 @@
           :extracted-credits="extractedCredits"
           :movie-actors="actors"
           :media-id="route.params.id as string"
-          :work-type="'tv'"
+          :work-type="'serie'"
           @close="showCreditsReview = false"
           @refresh="handleRefresh"
+        />
+
+        <AppActionSheet
+          v-model:is-open="isActionSheetOpen"
+          :buttons="actionSheetButtons"
         />
       </AppContent>
     </AppPage>
@@ -119,12 +120,18 @@ import AppSegmentView from "@/components/common/layout/AppSegmentView.vue";
 import AppSegmentContent from "@/components/common/layout/AppSegmentContent.vue";
 import { toastController, useToast } from "@/composables/useToast";
 import AppButton from "@/components/common/AppButton.vue";
-import Search from "~icons/lucide/search";
-import Radio from "~icons/lucide/radio";
+import Settings from "~icons/lucide/settings";
+import CameraIcon from "~icons/lucide/camera";
+import List from "~icons/lucide/list";
+import Info from "~icons/lucide/info";
+import EllipsisVertical from "~icons/lucide/ellipsis-vertical";
+import { Share } from "@capacitor/share";
+import AppActionSheet, {
+  ActionSheetButton,
+} from "@/components/common/AppActionSheet.vue";
 import { ref, computed, UnwrapRef, onMounted, watch } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import AppBackButton from "@/components/common/AppBackButton.vue";
-import { useRouter } from "vue-router";
 import { format } from "date-fns";
 import MediaThumbnail from "@/components/MediaThumbnail.vue";
 import MediaInfoCard from "@/components/MediaInfoCard.vue";
@@ -132,13 +139,10 @@ import MediaItem from "@/components/MediaItem.vue";
 import ActorList from "@/components/ActorList.vue";
 import VoiceActorSearchModal from "@/components/VoiceActorSearchModal.vue";
 import CreditsReviewModal from "@/components/CreditsReviewModal.vue";
-import ActionButtons from "@/components/ActionButtons.vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import { useVoiceActorManagement } from "@/composables/useVoiceActorManagement";
 import Share2 from "~icons/lucide/share-2";
-import { Share } from "@capacitor/share";
 // Removed unused imports
-import Settings from "~icons/lucide/settings";
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
 import { supabase } from "@/api/supabase";
@@ -157,6 +161,49 @@ const { showToast } = useToast();
 
 const route = useRoute();
 const router = useRouter();
+
+const isActionSheetOpen = ref(false);
+const actionSheetButtons = computed<ActionSheetButton[]>(() => {
+  const buttons: ActionSheetButton[] = [
+    {
+      text: t("common.share", "Partager"),
+      icon: Share2,
+      handler: () => shareMedia(),
+    },
+    {
+      text: t("common.settings", "Paramètres"),
+      icon: Settings,
+    },
+  ];
+
+  if (isAdmin.value && !hasData.value) {
+    buttons.push({
+      text: t("common.scan", "Scanner"),
+      icon: CameraIcon,
+      handler: () => takePhoto(),
+    });
+  }
+
+  if (hasWikidataId.value && !hasData.value) {
+    buttons.push({
+      text: t("common.enqueue", "Mettre en file d'attente"),
+      icon: List,
+      handler: () => handleEnqueue(),
+    });
+    buttons.push({
+      text: t("common.fetchInfos", "Récupérer les infos"),
+      icon: Info,
+      handler: () => fetchInfos(),
+    });
+  }
+
+  buttons.push({
+    text: t("common.cancel", "Annuler"),
+    role: "cancel",
+  });
+
+  return buttons;
+});
 
 const show = ref<any>(null);
 const isLoading = ref(true);
@@ -474,6 +521,10 @@ const fetchQueueStatus = async () => {
     console.error("Error fetching queue status:", err);
   }
 };
+
+
+
+const selectedSegment = ref('peoples');
 
 const handleRefresh = async (event?: any) => {
   try {

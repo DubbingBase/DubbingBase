@@ -8,8 +8,8 @@
         </template>
         <AppTitle>{{ $t('profile.voiceActorProfile') }}</AppTitle>
         <template #end >
-          <AppButton @click="openPublicProfile">
-            <Eye class="app-icon" />
+          <AppButton fill="clear" @click="isActionSheetOpen = true" aria-label="Menu">
+            <EllipsisVertical class="app-icon" />
           </AppButton>
         </template>
       </AppToolbar>
@@ -87,6 +87,10 @@
         <AddWorkModal @close="isAddWorkModalOpen = false" />
       </AppModal>
 
+      <AppActionSheet
+        v-model:is-open="isActionSheetOpen"
+        :buttons="actionSheetButtons"
+      />
     </AppContent>
   </AppPage>
   </cap-page>
@@ -98,6 +102,8 @@ import AppHeader from '@/components/common/layout/AppHeader.vue';
 import AppToolbar from '@/components/common/layout/AppToolbar.vue';
 import AppTitle from '@/components/common/layout/AppTitle.vue';
 import AppContent from '@/components/common/layout/AppContent.vue';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 import AppModal from '@/components/common/AppModal.vue';
 import AppList from '@/components/common/AppList.vue';
 import AppListItem from '@/components/common/AppListItem.vue';
@@ -109,8 +115,10 @@ import AlertCircle from '~icons/lucide/alert-circle';
 import RefreshCw from '~icons/lucide/refresh-cw';
 import Plus from '~icons/lucide/plus';
 import UserCircle from '~icons/lucide/user-circle';
+import EllipsisVertical from "~icons/lucide/ellipsis-vertical";
 import { onMounted, watch, computed, ref } from 'vue'
 import AppBackButton from '@/components/common/AppBackButton.vue'
+import AppActionSheet, { ActionSheetButton } from "@/components/common/AppActionSheet.vue";
 import { useRoute, useRouter } from 'vue-router'
 import { useProfileStore } from '@/stores/profile'
 import { useAuthStore } from '@/stores/auth'
@@ -133,6 +141,21 @@ const authStore = useAuthStore()
 
 const editableProfile = ref<Partial<VoiceActor>>({});
 const isAddWorkModalOpen = ref(false);
+const isActionSheetOpen = ref(false);
+
+const actionSheetButtons = computed<ActionSheetButton[]>(() => {
+  return [
+    {
+      text: t('common.publicProfile', 'Profil public'),
+      icon: Eye,
+      handler: () => openPublicProfile(),
+    },
+    {
+      text: t('common.cancel', 'Annuler'),
+      role: 'cancel',
+    },
+  ];
+});
 
 const voiceActorId = computed(() => {
   const id = route.params.id as string

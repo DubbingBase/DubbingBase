@@ -78,6 +78,7 @@ const clearInput = () => {
 .app-searchbar {
   padding: 8px 0;
   width: 100%;
+  box-sizing: border-box;
   
   &.is-disabled {
     opacity: 0.5;
@@ -88,18 +89,34 @@ const clearInput = () => {
 .searchbar-input-container {
   display: flex;
   align-items: center;
-  background: var(--app-color-step-100, #1e1e1e);
-  border-radius: 12px; /* Increased to match screenshot */
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
   padding: 0 16px;
-  height: 44px; /* Increased to match screenshot */
+  height: 48px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:focus-within {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    
+    .search-icon {
+      color: var(--app-color-text-primary, #ffffff);
+    }
+  }
 }
 
 .search-icon {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   color: var(--app-color-text-muted, #8e8e8e);
   margin-right: 12px;
   flex-shrink: 0;
+  transition: color 0.3s ease;
 }
 
 .searchbar-input {
@@ -108,6 +125,7 @@ const clearInput = () => {
   border: none;
   color: var(--app-color-text-primary, #ffffff);
   font-size: 16px;
+  font-weight: 500;
   height: 100%;
   outline: none;
   padding: 0;
@@ -116,6 +134,7 @@ const clearInput = () => {
 
   &::placeholder {
     color: var(--app-color-text-muted, #8e8e8e);
+    font-weight: 400;
   }
   
   /* Hide default clear button on webkit */

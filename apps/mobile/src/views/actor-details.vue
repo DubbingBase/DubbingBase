@@ -33,8 +33,7 @@
               <AppText>{{ t("actor.roles") }}</AppText>
             </AppSegmentButton>
           </AppSegment>
-
-          <AppSegmentView :style="{ height: segmentViewHeight, transition: 'height 0.3s ease' }">
+          <AppSegmentView v-model:active-segment="selectedSegment" :style="{ height: segmentViewHeight, transition: 'height 0.3s ease' }">
             <AppSegmentContent id="about">
               <div class="about-section" ref="aboutSectionRef">
                 <div class="info-card" v-if="actor.data.birthday">

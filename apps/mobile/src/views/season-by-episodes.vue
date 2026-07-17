@@ -1,53 +1,83 @@
 <template>
   <cap-page>
-  <AppPage>
-    <AppHeader>
-      <AppToolbar>
-        <template #start >
-          <AppBackButton />
-        </template>
-        <AppTitle>{{ episode?.name || 'Détail de l\'épisode' }}</AppTitle>
-      </AppToolbar>
-    </AppHeader>
-    <AppContent>
-      
-      <ActionButtons
-        :hasWikidataId="hasWikidataId"
-        :hasData="hasData"
-        :isFetching="isFetching"
-        :isScanning="false"
-        :queue-status="queueStatus"
-        :queue-error-message="queueErrorMessage"
-        @fetch-infos="fetchEpisodeInfos"
-      />
-      <LoadingSpinner v-if="isLoading" name="crescent" />
-      <div v-if="error" class="error">{{ error }}</div>
-      <div v-if="episode && !isLoading" class="episode-detail">
-        <EpisodeBanner :episode="episode" :serieId="Number(route.params.id)" :seasonNumber="Number(route.params.season)" />
-        <div class="voices">
-          <h3>Distribution originale et voix françaises</h3>
-          <ActorList :actors="episode?.credits?.cast || []" :voiceActors="[]" :getVoiceActorByTmdbId="getVoiceActorByTmdbId" :goToActor="goToActor" :goToVoiceActor="goToVoiceActor" :isAdmin="false" :editVoiceActorLink="editVoiceActorLink" :confirmDeleteVoiceActorLink="confirmDeleteVoiceActorLink" :openVoiceActorSearch="openVoiceActorSearch" :loading="isLoading" />
+    <AppPage>
+      <AppHeader>
+        <AppToolbar>
+          <template #start>
+            <AppBackButton />
+          </template>
+          <AppTitle>{{ episode?.name || "Détail de l'épisode" }}</AppTitle>
+          <template #end>
+            <AppButton
+              fill="clear"
+              @click="isActionSheetOpen = true"
+              aria-label="Menu"
+            >
+              <EllipsisVertical class="app-icon" />
+            </AppButton>
+          </template>
+        </AppToolbar>
+      </AppHeader>
+      <AppContent>
+        <div
+          v-if="fetchError || (queueStatus === 'failed' && queueErrorMessage)"
+          class="text-center text-red-500 mt-4"
+        >
+          {{ fetchError || queueErrorMessage }}
         </div>
-      </div>
-    </AppContent>
-  </AppPage>
+        <LoadingSpinner v-if="isLoading" name="crescent" />
+        <div v-if="error" class="error">{{ error }}</div>
+        <div v-if="episode && !isLoading" class="episode-detail">
+          <EpisodeBanner
+            :episode="episode"
+            :serieId="Number(route.params.id)"
+            :seasonNumber="Number(route.params.season)"
+          />
+          <div class="voices">
+            <h3>Distribution originale et voix françaises</h3>
+            <ActorList
+              :actors="episode?.credits?.cast || []"
+              :voiceActors="[]"
+              :getVoiceActorByTmdbId="getVoiceActorByTmdbId"
+              :goToActor="goToActor"
+              :goToVoiceActor="goToVoiceActor"
+              :isAdmin="false"
+              :editVoiceActorLink="editVoiceActorLink"
+              :confirmDeleteVoiceActorLink="confirmDeleteVoiceActorLink"
+              :openVoiceActorSearch="openVoiceActorSearch"
+              :loading="isLoading"
+            />
+          </div>
+        </div>
+
+        <AppActionSheet
+          v-model:is-open="isActionSheetOpen"
+          :buttons="actionSheetButtons"
+        />
+      </AppContent>
+    </AppPage>
   </cap-page>
 </template>
 
 <script lang="ts" setup>
-import AppPage from '@/components/common/layout/AppPage.vue';
-import AppHeader from '@/components/common/layout/AppHeader.vue';
-import AppToolbar from '@/components/common/layout/AppToolbar.vue';
-import AppTitle from '@/components/common/layout/AppTitle.vue';
-import AppContent from '@/components/common/layout/AppContent.vue';
-import { toastController } from '@/composables/useToast';
+import AppPage from "@/components/common/layout/AppPage.vue";
+import AppHeader from "@/components/common/layout/AppHeader.vue";
+import AppToolbar from "@/components/common/layout/AppToolbar.vue";
+import AppTitle from "@/components/common/layout/AppTitle.vue";
+import AppContent from "@/components/common/layout/AppContent.vue";
+import { toastController } from "@/composables/useToast";
 import { ref, computed, watch } from "vue";
 import AppBackButton from "@/components/common/AppBackButton.vue";
 import { useRoute, useRouter } from "vue-router";
 import LoadingSpinner from "../components/common/LoadingSpinner.vue";
 import { supabase } from "../api/supabase";
 import { enqueueAndProcessMedia } from "../api/mediaQueue";
-import ActionButtons from "../components/ActionButtons.vue";
+import EllipsisVertical from "~icons/lucide/ellipsis-vertical";
+import Info from "~icons/lucide/info";
+import AppActionSheet, {
+  ActionSheetButton,
+} from "@/components/common/AppActionSheet.vue";
+import AppButton from "@/components/common/AppButton.vue";
 import EpisodeBanner from "../components/EpisodeBanner.vue";
 import ActorList from "../components/ActorList.vue";
 
@@ -64,22 +94,51 @@ const hasData = computed(() => dbVoiceActors.value.length > 0);
 const isFetching = ref(false);
 const queueStatus = ref<string | null>(null);
 const queueErrorMessage = ref<string | null>(null);
+const fetchError = ref("");
+
+const isActionSheetOpen = ref(false);
+const actionSheetButtons = computed<ActionSheetButton[]>(() => {
+  const buttons: ActionSheetButton[] = [];
+
+  if (hasWikidataId.value && !hasData.value) {
+    buttons.push({
+      text: "Récupérer les infos",
+      icon: Info,
+      handler: () => fetchEpisodeInfos(),
+    });
+  }
+
+  buttons.push({
+    text: "Annuler",
+    role: "cancel",
+  });
+
+  return buttons;
+});
 
 const backHref = computed(() => {
-  return router.resolve({ name: 'SeasonDetails', params: { id: route.params.id, season: route.params.season } }).href;
+  return router.resolve({
+    name: "SeasonDetails",
+    params: { id: route.params.id, season: route.params.season },
+  }).href;
 });
 
 const fetchQueueStatus = async () => {
   try {
-    const { data, error: queueErr } = await supabase
-      .rpc("get_media_queue_status", {
+    const { data, error: queueErr } = await supabase.rpc(
+      "get_media_queue_status",
+      {
         p_tmdb_id: Number(route.params.id),
         p_media_type: "episode",
         p_season_number: Number(route.params.season),
         p_episode_number: Number(route.params.episode),
-      });
+      },
+    );
     if (queueErr) throw queueErr;
-    const statusData = data as { status: string | null; error_message: string | null } | null;
+    const statusData = data as {
+      status: string | null;
+      error_message: string | null;
+    } | null;
     if (statusData) {
       queueStatus.value = statusData.status;
       queueErrorMessage.value = statusData.error_message;
@@ -118,7 +177,7 @@ async function fetchEpisodeInfos() {
     return;
   }
   isFetching.value = true;
-  
+
   // Fetch details and trigger processing directly
   try {
     await enqueueAndProcessMedia({
@@ -130,7 +189,8 @@ async function fetchEpisodeInfos() {
     // Immediately fetch updated data to display changes
     await fetchEpisodeData();
     const toast = await toastController.create({
-      message: "Import completed successfully! The voice cast has been updated.",
+      message:
+        "Import completed successfully! The voice cast has been updated.",
       duration: 3000,
       position: "top",
       color: "success",
@@ -151,17 +211,20 @@ async function fetchEpisodeInfos() {
 }
 
 function goToVoiceActor(id: number) {
-  router.push({ name: 'VoiceActorDetails', params: { id } });
+  router.push({ name: "VoiceActorDetails", params: { id } });
 }
 
 function getVoiceActorByTmdbId(tmdbId: number) {
   return dbVoiceActors.value.filter(
-    va => va.actor_id === tmdbId || va.original_actor_id === tmdbId || va.actorId === tmdbId
+    (va) =>
+      va.actor_id === tmdbId ||
+      va.original_actor_id === tmdbId ||
+      va.actorId === tmdbId,
   );
 }
 
 function goToActor(id: number) {
-  router.push({ name: 'ActorDetails', params: { id } });
+  router.push({ name: "ActorDetails", params: { id } });
 }
 
 function editVoiceActorLink(item: any) {}
@@ -174,9 +237,13 @@ async function fetchEpisodeData() {
   const serieId = route.params.id;
   const seasonNumber = route.params.season;
   const episodeNumber = route.params.episode;
-  
+
   const episodeResponse = await supabase.functions.invoke("episode", {
-    body: { id: serieId, season_number: seasonNumber, episode_number: episodeNumber }
+    body: {
+      id: serieId,
+      season_number: seasonNumber,
+      episode_number: episodeNumber,
+    },
   });
 
   const data = episodeResponse.data;
@@ -189,22 +256,25 @@ async function fetchEpisodeData() {
   }
 }
 
-watch(() => route.params.episode, async (newEpisode) => {
-  if (!newEpisode) return;
-  isLoading.value = true;
-  error.value = "";
-  try {
-    await fetchEpisodeData();
-  } catch (e: any) {
-    error.value = e.message || "Erreur lors du chargement.";
-  } finally {
-    isLoading.value = false;
-  }
-}, { immediate: true });
+watch(
+  () => route.params.episode,
+  async (newEpisode) => {
+    if (!newEpisode) return;
+    isLoading.value = true;
+    error.value = "";
+    try {
+      await fetchEpisodeData();
+    } catch (e: any) {
+      error.value = e.message || "Erreur lors du chargement.";
+    } finally {
+      isLoading.value = false;
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <style lang="scss" scoped>
-
 .voices {
   margin-top: 1.5rem;
   h3 {

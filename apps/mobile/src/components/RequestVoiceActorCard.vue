@@ -1,6 +1,6 @@
 <template>
   <div class="request-profile-wrapper">
-    <div class="request-profile-card">
+    <div v-if="!hideCard" class="request-profile-card">
       <div class="banner-content">
         <h3 v-if="voiceActor">
           {{
@@ -101,6 +101,7 @@ import { supabase } from "@/api/supabase";
 
 const props = defineProps<{
   voiceActor?: any;
+  hideCard?: boolean;
 }>();
 
 const { t } = useI18n();
@@ -131,6 +132,10 @@ const closeRequestModal = () => {
   if (isSubmittingRequest.value) return;
   isRequestModalOpen.value = false;
 };
+
+defineExpose({
+  openRequestModal,
+});
 
 const submitRequest = async () => {
   if (!props.voiceActor && (!requestForm.value.firstname.trim() || !requestForm.value.lastname.trim())) {

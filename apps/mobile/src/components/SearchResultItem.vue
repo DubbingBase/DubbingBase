@@ -114,50 +114,66 @@ const chips = computed(() => {
 
 <style lang="scss" scoped>
 .search-result-card {
-  margin: 8px 0;
-  border-radius: 12px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin: 6px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease, background 0.2s ease;
+  
+  &:active {
+    transform: scale(0.98);
+    background: rgba(255, 255, 255, 0.06);
+  }
 }
 
 .type-icon {
   flex-shrink: 0;
-  font-size: 22px;
-  margin-left: 8px;
+  font-size: 18px;
+  margin-left: 10px;
   align-self: center;
+  opacity: 0.6;
 }
 
 .card-content {
-  padding: 16px;
+  padding: 10px 14px;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
 }
 
 .thumbnail {
   flex-shrink: 0;
-  width: 80px;
-  height: 80px;
-  border-radius: 8px;
+  width: 48px;
+  height: 48px;
+  border-radius: 24px; /* Circle */
   object-fit: cover;
+  background-color: var(--app-color-step-100, #1e1e1e);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 .info {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .title {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 600;
-  margin: 0 0 4px 0;
+  margin: 0 0 2px 0;
+  color: var(--app-color-text-primary, #ffffff);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .subtitle {
-  font-size: 14px;
-  margin: 0 0 8px 0;
+  font-size: 12px;
+  color: var(--app-color-text-muted, #8e8e8e);
+  margin: 0;
 }
 
 .chips {
@@ -171,21 +187,21 @@ const chips = computed(() => {
 // Responsive design
 @media (max-width: 576px) {
   .card-content {
-    padding: 12px;
+    padding: 10px 12px;
     gap: 12px;
   }
 
   .thumbnail {
-    width: 60px;
-    height: 60px;
+    width: 48px;
+    height: 48px;
   }
 
   .title {
-    font-size: 16px;
+    font-size: 15px;
   }
 
   .subtitle {
-    font-size: 13px;
+    font-size: 12px;
   }
 
   .chips {

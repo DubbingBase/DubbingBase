@@ -4,9 +4,9 @@
     <AppHeader>
       <AppToolbar>
         <AppTitle>{{ $t("profile.userProfile") }}</AppTitle>
-        <template #end  v-if="authStore.isAdmin">
-          <AppButton @click="showAdminSearch = true">
-            <Search class="app-icon" />
+        <template #end v-if="authStore.isAdmin">
+          <AppButton fill="clear" @click="isActionSheetOpen = true" aria-label="Menu">
+            <EllipsisVertical class="app-icon" />
           </AppButton>
         </template>
       </AppToolbar>
@@ -270,6 +270,10 @@
           </div>
         </div>
       </div>
+      <AppActionSheet
+        v-model:is-open="isActionSheetOpen"
+        :buttons="actionSheetButtons"
+      />
     </AppContent>
   </AppPage>
   
@@ -291,14 +295,17 @@ import AppInput from '@/components/common/AppInput.vue';
 import AppTextarea from '@/components/common/AppTextarea.vue';
 import AppSearchbar from '@/components/common/AppSearchbar.vue';
 import Search from '~icons/lucide/search';
-import AppText from '@/components/common/AppText.vue';
-import RefreshCw from '~icons/lucide/refresh-cw';
 import User from '~icons/lucide/user';
+import RefreshCw from '~icons/lucide/refresh-cw';
+import EllipsisVertical from "~icons/lucide/ellipsis-vertical";
+import AppText from '@/components/common/AppText.vue';
 import AppSpinner from '@/components/common/AppSpinner.vue';
 import AppSkeleton from '@/components/common/AppSkeleton.vue';
-import { onMounted, watch, ref, getCurrentInstance } from "vue";
+import { onMounted, watch, ref, computed, getCurrentInstance } from "vue";
+import AppActionSheet, { type ActionSheetButton } from "@/components/common/AppActionSheet.vue";
 import { useProfileStore } from "@/stores/profile";
 import { useAuthStore } from "@/stores/auth";
+import { useI18n } from "vue-i18n";
 import RequestVoiceActorCard from "@/components/RequestVoiceActorCard.vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 
@@ -306,13 +313,31 @@ import { supabase } from "@/api/supabase";
 
 const profileStore = useProfileStore();
 const authStore = useAuthStore();
+const { t } = useI18n();
 const { $t } = getCurrentInstance()!.proxy!;
 
 // Reactive variables
 const selectedTab = ref<string>("user-profile");
 const adminSearchQuery = ref<string>("");
 const adminSearchResults = ref<any[]>([]);
+const isActionSheetOpen = ref(false);
 const showAdminSearch = ref<boolean>(false);
+
+const actionSheetButtons = computed<ActionSheetButton[]>(() => {
+  return [
+    {
+      text: t('profile.adminSearch', 'Recherche admin'),
+      icon: Search,
+      handler: () => {
+        showAdminSearch.value = true;
+      },
+    },
+    {
+      text: t('common.cancel', 'Annuler'),
+      role: 'cancel',
+    },
+  ];
+});
 
 
 
