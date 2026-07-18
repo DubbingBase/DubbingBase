@@ -36,9 +36,10 @@
           </AppSegment>
           <AppSegmentView v-model:active-segment="selectedSegment">
             <AppSegmentContent class="segmented-content" id="peoples">
-              <ActorList
+              <DubbingProjectsView
+                :contentId="route.params.id as string"
+                contentType="tv"
                 :actors="actors"
-                :voice-actors="voiceActors"
                 :is-admin="isAdmin"
                 :get-voice-actor-by-tmdb-id="getVoiceActorByTmdbId"
                 :go-to-actor="goToActor"
@@ -46,8 +47,8 @@
                 :edit-voice-actor-link="editVoiceActorLink"
                 :confirm-delete-voice-actor-link="confirmDeleteVoiceActorLink"
                 :open-voice-actor-search="openVoiceActorSearch"
-                :loading="isLoading"
                 :mediaLanguage="show?.original_language"
+                :externalVoiceActors="voiceActors"
               />
             </AppSegmentContent>
             <AppSegmentContent class="segmented-content" id="seasons">
@@ -136,7 +137,7 @@ import { format } from "date-fns";
 import MediaThumbnail from "@/components/MediaThumbnail.vue";
 import MediaInfoCard from "@/components/MediaInfoCard.vue";
 import MediaItem from "@/components/MediaItem.vue";
-import ActorList from "@/components/ActorList.vue";
+import DubbingProjectsView from "@/components/DubbingProjectsView.vue";
 import VoiceActorSearchModal from "@/components/VoiceActorSearchModal.vue";
 import CreditsReviewModal from "@/components/CreditsReviewModal.vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
