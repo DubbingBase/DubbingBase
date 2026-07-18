@@ -28,11 +28,25 @@ CREATE POLICY "Allow public read access" ON "public"."dubbing_projects"
 
 CREATE POLICY "Allow authenticated insert access" ON "public"."dubbing_projects"
     FOR INSERT
-    WITH CHECK (auth.role() = 'authenticated');
+    WITH CHECK (
+        auth.role() = 'authenticated' AND
+        (
+            auth.jwt()->>'role' IN ('admin', 'editor') OR
+            (auth.jwt()->'user_metadata'->>'role') IN ('admin', 'editor') OR
+            (auth.jwt()->'app_metadata'->>'role') IN ('admin', 'editor')
+        )
+    );
 
 CREATE POLICY "Allow individual update access" ON "public"."dubbing_projects"
     FOR UPDATE
-    USING (auth.role() = 'authenticated');
+    USING (
+        auth.role() = 'authenticated' AND
+        (
+            auth.jwt()->>'role' IN ('admin', 'editor') OR
+            (auth.jwt()->'user_metadata'->>'role') IN ('admin', 'editor') OR
+            (auth.jwt()->'app_metadata'->>'role') IN ('admin', 'editor')
+        )
+    );
 
 -- 3. Modify the existing work table to add dubbing_project_id
 ALTER TABLE "public"."work"
