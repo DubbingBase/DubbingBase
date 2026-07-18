@@ -194,18 +194,21 @@ async function performSmartSync(ctx: SupabaseContext<Database>) {
 import { createErrorResponse, createResponse } from "../_shared/http-utils.ts";
 
 export default {
-  fetch: withSupabase<Database>({ auth: "secret:*" }, async (req, ctx) => {
-    try {
-      await performSmartSync(ctx);
+  fetch: withSupabase<Database>(
+    { auth: ["user", "secret"] },
+    async (req, ctx) => {
+      try {
+        await performSmartSync(ctx);
 
-      return createResponse({
-        status: "success",
-      });
-    } catch (error) {
-      console.error("❌ Unhandled Error:", error);
-      return createErrorResponse(
-        error instanceof Error ? error.message : "An unknown error occurred",
-      );
-    }
-  }),
+        return createResponse({
+          status: "success",
+        });
+      } catch (error) {
+        console.error("❌ Unhandled Error:", error);
+        return createErrorResponse(
+          error instanceof Error ? error.message : "An unknown error occurred",
+        );
+      }
+    },
+  ),
 };
