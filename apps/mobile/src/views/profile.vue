@@ -1,4 +1,5 @@
 <template>
+  <ion-page>
   
   <AppPage>
     <AppHeader>
@@ -277,9 +278,11 @@
     </AppContent>
   </AppPage>
   
+  </ion-page>
 </template>
 
 <script setup lang="ts">
+import { IonPage } from "@ionic/vue";
 import AppPage from '@/components/common/layout/AppPage.vue';
 import AppHeader from '@/components/common/layout/AppHeader.vue';
 import AppToolbar from '@/components/common/layout/AppToolbar.vue';

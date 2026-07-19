@@ -1,5 +1,5 @@
 <template>
-  <cap-page>
+  <ion-page>
     <AppPage>
       <AppHeader>
         <AppToolbar>
@@ -56,10 +56,11 @@
         />
       </AppContent>
     </AppPage>
-  </cap-page>
+  </ion-page>
 </template>
 
 <script lang="ts" setup>
+import { IonPage } from "@ionic/vue";
 import AppPage from "@/components/common/layout/AppPage.vue";
 import AppHeader from "@/components/common/layout/AppHeader.vue";
 import AppToolbar from "@/components/common/layout/AppToolbar.vue";
@@ -68,7 +69,7 @@ import AppContent from "@/components/common/layout/AppContent.vue";
 import { toastController } from "@/composables/useToast";
 import { ref, computed, watch } from "vue";
 import AppBackButton from "@/components/common/AppBackButton.vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute, useRouter } from 'vue-router';
 import LoadingSpinner from "../components/common/LoadingSpinner.vue";
 import { supabase } from "../api/supabase";
 import { enqueueAndProcessMedia } from "../api/mediaQueue";

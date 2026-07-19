@@ -1,5 +1,5 @@
 <template>
-  <cap-page>
+  <ion-page>
   <AppPage>
     <AppHeader>
       <AppToolbar>
@@ -184,10 +184,11 @@
       </div>
     </AppContent>
   </AppPage>
-  </cap-page>
+  </ion-page>
 </template>
 
 <script setup lang="ts">
+import { IonPage } from "@ionic/vue";
 import AppPage from '@/components/common/layout/AppPage.vue';
 import AppHeader from '@/components/common/layout/AppHeader.vue';
 import AppToolbar from '@/components/common/layout/AppToolbar.vue';
@@ -206,7 +207,7 @@ import AppSpinner from '@/components/common/AppSpinner.vue';
 import AppSkeleton from '@/components/common/AppSkeleton.vue';
 import { computed, onMounted, ref, watch, nextTick } from "vue";
 import AppBackButton from "@/components/common/AppBackButton.vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from "vue-i18n";
 import AppChip from '@/components/common/AppChip.vue';
 

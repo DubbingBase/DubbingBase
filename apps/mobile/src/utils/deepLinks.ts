@@ -1,4 +1,4 @@
-import { useRouter } from "vue-router";
+import { useRouter } from 'vue-router';
 
 type DeepLinkType = "movie" | "show";
 
