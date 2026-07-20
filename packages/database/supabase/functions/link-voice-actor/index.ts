@@ -73,19 +73,25 @@ export default {
         );
       }
 
+      const dubbing_project_id = await findOrCreateDubbingProject(
+        ctx.supabase,
+        media_id,
+        media_type
+      );
+
       // Check if the link already exists
-      const query = ctx.supabase
+      let query = ctx.supabase
         .from("work")
         .select("*")
         .eq("voice_actor_id", voice_actor_id)
-        .eq("content_type", media_type)
-        .eq("content_id", media_id);
+        .eq("dubbing_project_id", dubbing_project_id);
 
       if (actor_id) {
-        query.eq("actor_id", actor_id);
+        query = query.eq("actor_id", actor_id);
       } else {
-        query.is("actor_id", null);
+        query = query.is("actor_id", null);
       }
+      
       const { data: existingLink, error: linkCheckError } =
         await query.maybeSingle();
 
@@ -99,17 +105,9 @@ export default {
       if (existingLink) {
         result = existingLink;
       } else {
-        const dubbing_project_id = await findOrCreateDubbingProject(
-          ctx.supabase,
-          media_id,
-          media_type
-        );
-
         // Create new link
         const insertData = {
           voice_actor_id,
-          content_type: media_type,
-          content_id: media_id,
           performance: character_name || role || "dialogues",
           status: "user",
           actor_id: actor_id || null,

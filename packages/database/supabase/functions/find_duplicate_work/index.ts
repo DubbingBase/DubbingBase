@@ -3,17 +3,16 @@ import { Database } from "../_shared/database.types.ts";
 
 interface Work {
   id: number;
-  content_id: number;
+  dubbing_project_id: number;
   actor_id: number;
   voice_actor_id: number | null;
   status?: string;
   performance?: string;
-  content_type?: string;
 }
 
 // Utility to create a key for duplicate detection
 function duplicateKey(row: Work): string {
-  return `${row.content_id}|${row.actor_id}|${row.voice_actor_id ?? "null"}`;
+  return `${row.dubbing_project_id}|${row.actor_id}|${row.voice_actor_id ?? "null"}`;
 }
 
 // Process a batch of works and update the groups
@@ -62,7 +61,7 @@ export default {
         const { data: batch, error } = await ctx.supabase
           .from("work")
           .select(
-            "id, content_id, actor_id, voice_actor_id, status, performance, content_type",
+            "id, dubbing_project_id, actor_id, voice_actor_id, status, performance",
           )
           .order("id", { ascending: true })
           .range(cursor, cursor + BATCH_SIZE - 1);
@@ -92,12 +91,11 @@ export default {
         .map((works) => ({
           works: works.map((work) => ({
             id: work.id,
-            content_id: work.content_id,
+            dubbing_project_id: work.dubbing_project_id,
             actor_id: work.actor_id,
             voice_actor_id: work.voice_actor_id,
             status: work.status,
             performance: work.performance,
-            content_type: work.content_type,
           })),
         }));
 

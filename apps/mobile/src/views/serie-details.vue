@@ -170,7 +170,10 @@ const router = useRouter();
 const isActionSheetOpen = ref(false);
 
 const goToAddProject = () => {
-  router.push(`/edit-dubbing-project/new?contentId=${route.params.id}`);
+  router.push({
+    path: '/edit-dubbing-project/new',
+    query: { contentId: route.params.id }
+  });
 };
 
 const actionSheetButtons = computed<ActionSheetButton[]>(() => {

@@ -228,7 +228,7 @@
           <tbody class="divide-y divide-slate-800/60">
             <tr v-for="work in linkedWorks" :key="work.id" class="hover:bg-slate-950/50 transition-colors">
               <td class="px-4 py-3 font-mono text-xs text-slate-400">#{{ work.id }}</td>
-              <td class="px-4 py-3 font-mono text-xs text-blue-400">TMDB #{{ work.content_id }}</td>
+              <td class="px-4 py-3 font-mono text-xs text-blue-400">Project #{{ work.dubbing_project_id }}</td>
               <td class="px-4 py-3 uppercase text-[10px] font-bold tracking-wider text-slate-400">
                 <span class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700">{{ work.content_type || 'movie' }}</span>
               </td>
@@ -236,7 +236,7 @@
               <td class="px-4 py-3 text-xs text-slate-400">{{ work.performance || 'dialogues' }}</td>
               <td class="px-4 py-3 text-right">
                 <router-link
-                  :to="`/movies/edit/${work.dubbing_project_id || work.content_id}`"
+                  :to="`/movies/edit/${work.dubbing_project_id}`"
                   class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-blue-400 hover:text-blue-300 text-xs font-semibold rounded-lg border border-slate-700 transition-all inline-flex items-center space-x-1"
                 >
                   <span>Edit Movie</span>

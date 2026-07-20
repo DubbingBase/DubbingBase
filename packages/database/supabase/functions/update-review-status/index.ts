@@ -110,7 +110,7 @@ export default {
         .from("work")
         .update({ reviewed_status })
         .eq("id", work_id)
-        .select()
+        .select("*, dubbing_projects(*)")
         .single();
 
       if (error) {
@@ -128,8 +128,8 @@ export default {
       try {
         const cache = new SimpleCache(new RedisClient());
         // Use data from the update response which includes content_id and content_type
-        const contentId = data.content_id;
-        const contentType = data.content_type || "movie";
+        const contentId = data.dubbing_projects?.content_id;
+        const contentType = data.dubbing_projects?.content_type || "movie";
 
         if (contentId) {
           const cacheKey = `tmdb:${contentType}:${contentId}`;

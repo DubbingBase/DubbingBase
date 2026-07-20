@@ -97,15 +97,15 @@
             <div class="segment-content">
               <div
                 v-if="
-                  project.studio ||
+                  project.studio_data?.name ||
                   (project.crew && project.crew.length > 0)
                 "
                 class="technical-team-card"
               >
                 <div class="technical-team-grid">
-                  <div v-if="project.studio || project.studio_data" class="info-item full-width-item mb-4">
-                    <StudioCard 
-                      :studio="project.studio_data || { id: project.studio_id, name: project.studio }"
+                  <div v-if="project.studio_data" class="info-item full-width-item mb-4">
+                    <StudioCard
+                      :studio="project.studio_data"
                     />
                   </div>
 
@@ -183,14 +183,12 @@ export interface VoiceActor {
 
 export interface WorkPerformance {
   id: number;
-  content_id: number;
   actor_id: number;
   voice_actor_id: number;
   highlight: boolean;
   suggestions: string;
   status: string;
   source_id: number;
-  content_type: string;
   performance: string;
   dubbing_project_id: number;
   voice_actor: VoiceActor;
@@ -201,7 +199,6 @@ export interface DubbingProject {
   content_id: number;
   content_type: string;
   language: string;
-  studio: string;
   studio_id: number | null;
   studio_data?: any;
   status: string;

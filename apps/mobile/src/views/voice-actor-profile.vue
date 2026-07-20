@@ -192,7 +192,7 @@ const loadProfileData = async () => {
         // The edge function returns work rows in data.voiceActor.work and medias in data.medias
         const medias = data.medias || [];
         const mappedWorks = (data.voiceActor.work || []).map((work: any) => {
-          const media = medias.find((m: any) => m.id === work.content_id);
+          const media = medias.find((m: any) => m.id === work.dubbing_projects?.content_id);
           
           let character_name = '';
           if (media && media.credits && media.credits.cast) {
@@ -206,7 +206,7 @@ const loadProfileData = async () => {
             id: work.id,
             voice_actor_id: work.voice_actor_id,
             media_type: work.content_type === 'tv' ? 'serie' : work.content_type,
-            media_id: work.content_id,
+            media_id: work.dubbing_projects?.content_id,
             character_name: character_name,
             performance: work.performance,
             media: media,

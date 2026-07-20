@@ -383,23 +383,42 @@ const saveVoiceCast = async () => {
 
   isSaving.value = true;
   try {
+    // Ensure we have a dubbing project first
+    let { data: project } = await supabase
+      .from("dubbing_projects")
+      .select("id")
+      .eq("content_id", movieId.value)
+      .eq("content_type", "movie")
+      .single();
+
+    let projectId = project?.id;
+
+    if (!projectId) {
+      const { data: newProject, error: insertErr } = await supabase
+        .from("dubbing_projects")
+        .insert([{ content_id: movieId.value, content_type: "movie", status: "validated", language: "fr" }])
+        .select()
+        .single();
+      if (insertErr) throw insertErr;
+      projectId = newProject.id;
+    }
+
     // 1. Gather all voice actor mappings
     const assignments = Object.entries(voiceActorAssignments.value)
       .filter(([_, voiceActorId]) => voiceActorId !== null)
       .map(([actorId, voiceActorId]) => ({
         actor_id: Number(actorId),
         voice_actor_id: voiceActorId,
-        content_id: movieId.value,
-        content_type: "movie",
-        performance: "voice"
+        dubbing_project_id: projectId,
+        performance: "voice",
+        status: "validated"
       }));
 
     // 2. Clear previous mapping records for this movie
     const { error: deleteError } = await supabase
       .from("work")
       .delete()
-      .eq("content_id", movieId.value)
-      .eq("content_type", "movie");
+      .eq("dubbing_project_id", projectId);
 
     if (deleteError) throw deleteError;
 

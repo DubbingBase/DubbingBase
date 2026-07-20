@@ -101,7 +101,11 @@ export default {
           .select(
             `*,
             work (
-              *
+              *,
+              dubbing_projects (
+                content_id,
+                content_type
+              )
             )`,
           )
           .eq("id", vaId)
@@ -123,7 +127,7 @@ export default {
         for (const work of workEntries) {
           try {
             const response = await fetch(
-              `https://api.themoviedb.org/3/${work.content_type}/${work.content_id}?append_to_response=credits,external_ids&language=fr-FR`,
+              `https://api.themoviedb.org/3/${work.dubbing_projects?.content_type}/${work.dubbing_projects?.content_id}?append_to_response=credits,external_ids&language=fr-FR`,
               {
                 headers: {
                   "Content-Type": "application/json",

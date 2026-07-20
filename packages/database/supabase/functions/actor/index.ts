@@ -77,10 +77,10 @@ async function getVoiceRoles(
         const { voice_actors, ...work } = row;
         let mediaDetails = null;
 
-        if (work.content_id && work.content_type) {
+        if (work.dubbing_projects?.content_id && work.dubbing_projects?.content_type) {
           mediaDetails = await fetchMediaDetails(
-            work.content_id,
-            work.content_type,
+            work.dubbing_projects.content_id,
+            work.dubbing_projects.content_type,
             tmdbClient,
           );
         }
@@ -112,7 +112,7 @@ async function getVoiceRoles(
                 poster_path: buildTmdbImageUrl(mediaDetails.poster_path),
                 release_date:
                   mediaDetails.release_date || mediaDetails.first_air_date,
-                media_type: work.content_type || "",
+                media_type: work.dubbing_projects?.content_type || "",
                 overview: mediaDetails.overview,
               }
             : null,

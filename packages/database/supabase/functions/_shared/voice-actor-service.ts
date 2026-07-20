@@ -127,19 +127,12 @@ export class VoiceActorService {
 
     const { data, error } = await this.supabase
       .from("work")
-      .upsert(
-        {
-          voice_actor_id: voiceActorId,
-          content_id: contentId,
-          actor_id: actorId,
-          content_type: contentType,
-          performance,
-          dubbing_project_id,
-        },
-        {
-          onConflict: "voice_actor_id,content_id,actor_id,content_type",
-        },
-      )
+      .upsert({
+        voice_actor_id: voiceActorId,
+        actor_id: actorId,
+        performance,
+        dubbing_project_id,
+      })
       .select();
 
     if (error) throw error;

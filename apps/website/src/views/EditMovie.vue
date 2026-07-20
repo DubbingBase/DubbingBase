@@ -704,7 +704,6 @@ const saveMovieProject = async () => {
       content_id: contentId.value,
       content_type: contentType.value,
       language: language.value || "fr",
-      studio: studio.value || null,
       studio_id: selectedStudioId.value || null,
       artistic_director: artisticDirector.value || null,
       adaptation: adaptation.value || null,
@@ -741,8 +740,6 @@ const saveMovieProject = async () => {
         if (!row.actor_id) continue;
         const workPayload: any = {
           dubbing_project_id: projectId,
-          content_id: contentId.value,
-          content_type: contentType.value,
           actor_id: row.actor_id,
           voice_actor_id: row.voice_actor_id || null,
           suggestions: row.character_name || null,

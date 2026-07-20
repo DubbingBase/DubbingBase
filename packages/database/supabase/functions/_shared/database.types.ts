@@ -88,7 +88,6 @@ export type Database = {
           id: number
           language: string | null
           status: string | null
-          studio: string | null
           studio_id: number | null
           updated_at: string | null
         }
@@ -99,7 +98,6 @@ export type Database = {
           id?: number
           language?: string | null
           status?: string | null
-          studio?: string | null
           studio_id?: number | null
           updated_at?: string | null
         }
@@ -110,7 +108,6 @@ export type Database = {
           id?: number
           language?: string | null
           status?: string | null
-          studio?: string | null
           studio_id?: number | null
           updated_at?: string | null
         }
@@ -372,8 +369,6 @@ export type Database = {
       work: {
         Row: {
           actor_id: number
-          content_id: number
-          content_type: string | null
           created_at: string | null
           created_by: string | null
           dubbing_project_id: number
@@ -390,8 +385,6 @@ export type Database = {
         }
         Insert: {
           actor_id: number
-          content_id: number
-          content_type?: string | null
           created_at?: string | null
           created_by?: string | null
           dubbing_project_id: number
@@ -408,8 +401,6 @@ export type Database = {
         }
         Update: {
           actor_id?: number
-          content_id?: number
-          content_type?: string | null
           created_at?: string | null
           created_by?: string | null
           dubbing_project_id?: number

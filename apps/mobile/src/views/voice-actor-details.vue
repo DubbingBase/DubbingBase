@@ -124,8 +124,10 @@ type VoiceActorResponse = {
     work: {
       id: number;
       actor_id: number;
+    dubbing_projects?: {
       content_id: number;
       content_type: string | null;
+    };
       highlight: boolean | null;
       performance: string | null;
       source_id: number | null;
@@ -215,7 +217,7 @@ const handleFetchModalSaved = async () => {
 // Define a type for our enhanced work item
 type EnhancedWorkItem = {
   media: MovieModel | SerieModel;
-  work: { id: number; actor_id: number; content_id: number; content_type: string | null };
+  work: { id: number; actor_id: number; dubbing_projects?: { content_id: number; content_type: string | null } };
   data: {
     character: string | undefined;
     characterImage?: string;
@@ -233,11 +235,11 @@ const baseEnhancedWork = computed<EnhancedWorkItem[]>(() => {
 
   const result = voiceActor.value.work
     .map((work) => {
-      const media = medias.value.find((media) => media.id === work.content_id);
+      const media = medias.value.find((media) => media.id === work.dubbing_projects?.content_id);
 
       if (!media) {
         console.warn(
-          `No media found for work with content_id: ${work.content_id}`,
+          `No media found for work with content_id: ${work.dubbing_projects?.content_id}`,
         );
         return null;
       }

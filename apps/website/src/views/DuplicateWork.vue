@@ -63,7 +63,7 @@
             <span>Duplicate Work Group</span>
           </h4>
           <span class="text-xs text-slate-400 font-mono">
-            Shared properties (Content ID: {{ group.works[0]?.content_id }} | Actor ID: {{ group.works[0]?.actor_id }})
+            Shared properties (Project ID: {{ group.works[0]?.dubbing_project_id }} | Actor ID: {{ group.works[0]?.actor_id }})
           </span>
         </div>
 
@@ -146,7 +146,7 @@ import { supabase } from "@/lib/supabase";
 
 interface WorkEntry {
   id: number;
-  content_id: number;
+  dubbing_project_id: number;
   actor_id: number;
   voice_actor_id: number;
   status: string | null;

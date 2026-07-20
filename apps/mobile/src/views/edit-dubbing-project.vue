@@ -6,7 +6,9 @@
           <template #start>
             <AppBackButton />
           </template>
-          <AppTitle>{{ isEditMode ? 'Edit Dubbing Project' : 'Create Dubbing Project' }}</AppTitle>
+          <AppTitle>{{
+            isEditMode ? "Edit Dubbing Project" : "Create Dubbing Project"
+          }}</AppTitle>
         </AppToolbar>
       </AppHeader>
 
@@ -33,17 +35,33 @@
             </div>
 
             <div class="space-y-3">
-              <div class="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4 flex items-center justify-between">
+              <div
+                class="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4 flex items-center justify-between"
+              >
                 <div>
                   <div class="text-sm font-bold text-white">
-                    {{ mediaTitle || 'Loading media title...' }}
+                    {{ mediaTitle || "Loading media title..." }}
                   </div>
-                  <div class="flex flex-wrap items-center gap-3 mt-2 text-xs text-[#a0a0a0]">
-                    <span class="px-2 py-0.5 bg-[#2a2a2a] rounded uppercase font-bold text-[10px] text-blue-400">
+                  <div
+                    class="flex flex-wrap items-center gap-3 mt-2 text-xs text-[#a0a0a0]"
+                  >
+                    <span
+                      class="px-2 py-0.5 bg-[#2a2a2a] rounded uppercase font-bold text-[10px] text-blue-400"
+                    >
                       {{ contentType }}
                     </span>
-                    <span>TMDB ID: <strong class="text-white">{{ contentId || id }}</strong></span>
-                    <span>Language: <strong class="text-white">{{ language || 'fr' }}</strong></span>
+                    <span
+                      >TMDB ID:
+                      <strong class="text-white">{{
+                        contentId || id
+                      }}</strong></span
+                    >
+                    <span
+                      >Language:
+                      <strong class="text-white">{{
+                        language || "fr"
+                      }}</strong></span
+                    >
                   </div>
                 </div>
                 <button
@@ -91,13 +109,18 @@
                 >
                   <div class="flex items-center gap-2 truncate">
                     <Building2 class="w-4 h-4 text-blue-400 flex-shrink-0" />
-                    <span v-if="studio" class="truncate font-semibold text-white">{{ studio }}</span>
-                    <span v-else class="text-slate-400">-- Select Studio --</span>
+                    <span
+                      v-if="studio"
+                      class="truncate font-semibold text-white"
+                      >{{ studio }}</span
+                    >
+                    <span v-else class="text-slate-400"
+                      >-- Select Studio --</span
+                    >
                   </div>
                   <ChevronRight class="w-4 h-4 text-slate-500 flex-shrink-0" />
                 </button>
               </div>
-
             </div>
           </div>
 
@@ -106,11 +129,7 @@
             <div class="card-header-flex">
               <h3 class="card-title no-border">Dubbing Project Crew</h3>
               <div class="action-buttons">
-                <button
-                  type="button"
-                  @click="addCrewRow"
-                  class="btn-primary"
-                >
+                <button type="button" @click="addCrewRow" class="btn-primary">
                   + Add Crew Row
                 </button>
               </div>
@@ -138,7 +157,11 @@
                     <label class="form-label">Job Role *</label>
                     <select v-model="row.job_id" class="form-select">
                       <option disabled :value="null">-- Select Job --</option>
-                      <option v-for="j in availableJobs" :key="j.id" :value="j.id">
+                      <option
+                        v-for="j in availableJobs"
+                        :key="j.id"
+                        :value="j.id"
+                      >
                         {{ j.name }}
                       </option>
                     </select>
@@ -154,12 +177,19 @@
                       >
                         <div class="flex items-center gap-2 truncate">
                           <User class="w-4 h-4 text-blue-400 flex-shrink-0" />
-                          <span v-if="row.person_id" class="truncate font-semibold text-white">
+                          <span
+                            v-if="row.person_id"
+                            class="truncate font-semibold text-white"
+                          >
                             {{ getCrewDisplayName(row) }}
                           </span>
-                          <span v-else class="text-slate-400">-- Select Person --</span>
+                          <span v-else class="text-slate-400"
+                            >-- Select Person --</span
+                          >
                         </div>
-                        <ChevronRight class="w-4 h-4 text-slate-500 flex-shrink-0" />
+                        <ChevronRight
+                          class="w-4 h-4 text-slate-500 flex-shrink-0"
+                        />
                       </button>
                     </div>
                   </div>
@@ -167,7 +197,8 @@
               </div>
 
               <div v-if="dubbingCrew.length === 0" class="empty-cast">
-                No crew mapped yet. Click "+ Add Crew Row" to assign crew members.
+                No crew mapped yet. Click "+ Add Crew Row" to assign crew
+                members.
               </div>
             </div>
           </div>
@@ -184,11 +215,7 @@
                 >
                   + New VA
                 </button>
-                <button
-                  type="button"
-                  @click="addCastRow"
-                  class="btn-primary"
-                >
+                <button type="button" @click="addCastRow" class="btn-primary">
                   + Add Row
                 </button>
               </div>
@@ -214,7 +241,9 @@
                 <div class="grid-2">
                   <!-- TMDB Cast Member Picker -->
                   <div class="form-group">
-                    <label class="form-label">Original TMDB Cast Member *</label>
+                    <label class="form-label"
+                      >Original TMDB Cast Member *</label
+                    >
                     <button
                       type="button"
                       @click="openCastPicker(index)"
@@ -222,12 +251,19 @@
                     >
                       <div class="flex items-center gap-2 truncate">
                         <User class="w-4 h-4 text-indigo-400 flex-shrink-0" />
-                        <span v-if="row.actor_id" class="truncate font-semibold text-white">
+                        <span
+                          v-if="row.actor_id"
+                          class="truncate font-semibold text-white"
+                        >
                           {{ getActorDisplayName(row) }}
                         </span>
-                        <span v-else class="text-slate-400">-- Select Cast --</span>
+                        <span v-else class="text-slate-400"
+                          >-- Select Cast --</span
+                        >
                       </div>
-                      <ChevronRight class="w-4 h-4 text-slate-500 flex-shrink-0" />
+                      <ChevronRight
+                        class="w-4 h-4 text-slate-500 flex-shrink-0"
+                      />
                     </button>
                   </div>
 
@@ -242,12 +278,19 @@
                       >
                         <div class="flex items-center gap-2 truncate">
                           <Mic class="w-4 h-4 text-blue-400 flex-shrink-0" />
-                          <span v-if="row.voice_actor_id" class="truncate font-semibold text-white">
+                          <span
+                            v-if="row.voice_actor_id"
+                            class="truncate font-semibold text-white"
+                          >
                             {{ getVoiceActorDisplayName(row) }}
                           </span>
-                          <span v-else class="text-slate-400">-- Select VA --</span>
+                          <span v-else class="text-slate-400"
+                            >-- Select VA --</span
+                          >
                         </div>
-                        <ChevronRight class="w-4 h-4 text-slate-500 flex-shrink-0" />
+                        <ChevronRight
+                          class="w-4 h-4 text-slate-500 flex-shrink-0"
+                        />
                       </button>
                       <router-link
                         v-if="row.voice_actor_id"
@@ -289,19 +332,18 @@
 
           <!-- Submit Button -->
           <div class="submit-bar">
-            <AppButton
-              expand="block"
-              type="submit"
-              :disabled="isSaving"
-            >
+            <AppButton expand="block" type="submit" :disabled="isSaving">
               <LoadingSpinner v-if="isSaving" name="crescent" inline />
-              {{ isSaving ? 'Saving Project...' : 'Save Dubbing Project' }}
+              {{ isSaving ? "Saving Project..." : "Save Dubbing Project" }}
             </AppButton>
           </div>
         </form>
 
         <!-- TMDB Media Search Modal -->
-        <AppModal :is-open="showMediaSearchModal" @didDismiss="showMediaSearchModal = false">
+        <AppModal
+          :is-open="showMediaSearchModal"
+          @didDismiss="showMediaSearchModal = false"
+        >
           <div class="modal-body">
             <h3 class="modal-title">Search TMDB Media</h3>
             <div class="form-group">
@@ -313,7 +355,11 @@
                 @keyup.enter="searchMedia"
               />
             </div>
-            <button type="button" @click="searchMedia" class="btn-primary w-full py-2">
+            <button
+              type="button"
+              @click="searchMedia"
+              class="btn-primary w-full py-2"
+            >
               Search TMDB
             </button>
 
@@ -321,14 +367,19 @@
               <LoadingSpinner name="crescent" />
             </div>
 
-            <div v-else-if="mediaSearchResults.length > 0" class="search-results-list max-h-60 overflow-y-auto space-y-2 pt-2">
+            <div
+              v-else-if="mediaSearchResults.length > 0"
+              class="search-results-list max-h-60 overflow-y-auto space-y-2 pt-2"
+            >
               <div
                 v-for="item in mediaSearchResults"
                 :key="item.id"
                 @click="selectMedia(item)"
                 class="search-result-card flex items-center gap-3 p-2.5 bg-[#141414] hover:bg-[#252525] border border-[#2a2a2a] rounded-xl cursor-pointer"
               >
-                <div class="w-10 h-14 bg-[#2a2a2a] rounded overflow-hidden flex-shrink-0">
+                <div
+                  class="w-10 h-14 bg-[#2a2a2a] rounded overflow-hidden flex-shrink-0"
+                >
                   <img
                     v-if="item.poster_path"
                     :src="`https://image.tmdb.org/t/p/w92${item.poster_path}`"
@@ -336,23 +387,37 @@
                   />
                 </div>
                 <div class="flex-1 min-w-0">
-                  <div class="text-xs font-bold text-white truncate">{{ item.title || item.name }}</div>
-                  <div class="text-[10px] text-[#a0a0a0] flex items-center gap-2 mt-1">
-                    <span class="px-1.5 py-0.5 bg-[#2a2a2a] rounded uppercase font-semibold text-[9px]">{{ item.media_type }}</span>
+                  <div class="text-xs font-bold text-white truncate">
+                    {{ item.title || item.name }}
+                  </div>
+                  <div
+                    class="text-[10px] text-[#a0a0a0] flex items-center gap-2 mt-1"
+                  >
+                    <span
+                      class="px-1.5 py-0.5 bg-[#2a2a2a] rounded uppercase font-semibold text-[9px]"
+                      >{{ item.media_type }}</span
+                    >
                     <span>ID: {{ item.id }}</span>
                     <span v-if="item.release_date || item.first_air_date">
-                      ({{ (item.release_date || item.first_air_date).slice(0, 4) }})
+                      ({{
+                        (item.release_date || item.first_air_date).slice(0, 4)
+                      }})
                     </span>
                   </div>
                 </div>
-                <span class="text-xs text-blue-400 font-semibold">Select ↵</span>
+                <span class="text-xs text-blue-400 font-semibold"
+                  >Select ↵</span
+                >
               </div>
             </div>
           </div>
         </AppModal>
 
         <!-- Studio Search Picker Modal -->
-        <AppModal :is-open="showStudioSearchModal" @didDismiss="showStudioSearchModal = false">
+        <AppModal
+          :is-open="showStudioSearchModal"
+          @didDismiss="showStudioSearchModal = false"
+        >
           <div class="modal-body">
             <h3 class="modal-title">Select Dubbing Studio</h3>
             <div class="form-group">
@@ -369,7 +434,10 @@
               <LoadingSpinner name="crescent" />
             </div>
 
-            <div v-else-if="studioSearchResults.length > 0" class="search-results-list max-h-60 overflow-y-auto space-y-2 pt-2">
+            <div
+              v-else-if="studioSearchResults.length > 0"
+              class="search-results-list max-h-60 overflow-y-auto space-y-2 pt-2"
+            >
               <div
                 v-for="s in studioSearchResults"
                 :key="s.id"
@@ -380,12 +448,17 @@
                   <Building2 class="w-4 h-4 text-blue-400" />
                   <div>
                     <div class="text-xs font-bold text-white">{{ s.name }}</div>
-                    <div v-if="s.city || s.country" class="text-[10px] text-[#a0a0a0]">
-                      {{ [s.city, s.country].filter(Boolean).join(', ') }}
+                    <div
+                      v-if="s.city || s.country"
+                      class="text-[10px] text-[#a0a0a0]"
+                    >
+                      {{ [s.city, s.country].filter(Boolean).join(", ") }}
                     </div>
                   </div>
                 </div>
-                <span class="text-xs text-blue-400 font-semibold">Select ↵</span>
+                <span class="text-xs text-blue-400 font-semibold"
+                  >Select ↵</span
+                >
               </div>
             </div>
 
@@ -408,26 +481,45 @@
           :is-open="showVoiceActorSearchModal"
           @close="showVoiceActorSearchModal = false"
           @select="selectVoiceActor"
-          @create-new="showCreatePersonModal = true; showVoiceActorSearchModal = false"
+          @create-new="
+            showCreatePersonModal = true;
+            showVoiceActorSearchModal = false;
+          "
         />
 
         <!-- Inline Create Person Modal -->
-        <AppModal :is-open="showCreatePersonModal" @didDismiss="showCreatePersonModal = false">
+        <AppModal
+          :is-open="showCreatePersonModal"
+          @didDismiss="showCreatePersonModal = false"
+        >
           <div class="modal-body">
             <h3 class="modal-title">Create New Person</h3>
             <div class="space-y-4">
               <div class="form-group">
                 <label class="form-label">First Name *</label>
-                <input v-model="newPersonFirstname" placeholder="First Name" class="form-input" />
+                <input
+                  v-model="newPersonFirstname"
+                  placeholder="First Name"
+                  class="form-input"
+                />
               </div>
               <div class="form-group">
                 <label class="form-label">Last Name *</label>
-                <input v-model="newPersonLastname" placeholder="Last Name" class="form-input" />
+                <input
+                  v-model="newPersonLastname"
+                  placeholder="Last Name"
+                  class="form-input"
+                />
               </div>
             </div>
             <div class="modal-actions">
-              <AppButton fill="outline" @click="showCreatePersonModal = false">Cancel</AppButton>
-              <AppButton @click="quickCreateVoiceActor" :disabled="!newPersonFirstname || !newPersonLastname">
+              <AppButton fill="outline" @click="showCreatePersonModal = false"
+                >Cancel</AppButton
+              >
+              <AppButton
+                @click="quickCreateVoiceActor"
+                :disabled="!newPersonFirstname || !newPersonLastname"
+              >
                 Save & Assign
               </AppButton>
             </div>
@@ -450,6 +542,8 @@ import AppButton from "@/components/common/AppButton.vue";
 import AppModal from "@/components/common/AppModal.vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import TmdbPersonSearchModal from "@/components/TmdbPersonSearchModal.vue";
+import { PersonData } from "@/components/PersonItem.vue";
+import { enqueueAndProcessMedia } from "@/api/mediaQueue";
 import PersonSearchModal from "@/components/PersonSearchModal.vue";
 
 import Search from "~icons/lucide/search";
@@ -458,14 +552,15 @@ import User from "~icons/lucide/user";
 import Mic from "~icons/lucide/mic";
 import ChevronRight from "~icons/lucide/chevron-right";
 
-import { ref, onMounted, computed } from "vue";
+import { ref, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { supabase } from "@/api/supabase";
+import { onIonViewWillEnter } from "@ionic/vue";
 
 const route = useRoute();
 const router = useRouter();
-const id = route.params.id as string | undefined;
-const isEditMode = computed(() => !!id && id !== "new");
+const id = computed(() => (route.params.id as string) || (route.path.endsWith('/new') ? 'new' : undefined));
+const isEditMode = computed(() => !!id.value && id.value !== "new");
 
 // Form state
 const dbProjectId = ref<number | null>(null);
@@ -497,12 +592,16 @@ const openCrewPicker = (index: number) => {
 
 const getCrewDisplayName = (row: any) => {
   if (row.firstname && row.lastname) return `${row.firstname} ${row.lastname}`;
-  const match = voiceActorsList.value.find((va) => Number(va.id) === Number(row.person_id));
+  const match = voiceActorsList.value.find(
+    (va) => Number(va.id) === Number(row.person_id),
+  );
   if (match) return `${match.firstname} ${match.lastname}`;
   return `Person #${row.person_id}`;
 };
 
-const voiceActorsList = ref<Array<{ id: number; firstname: string; lastname: string }>>([]);
+const voiceActorsList = ref<
+  Array<{ id: number; firstname: string; lastname: string }>
+>([]);
 
 interface TmdbCastMember {
   id: number;
@@ -558,7 +657,10 @@ const openStudioPicker = () => {
 const searchStudios = async () => {
   isSearchingStudios.value = true;
   try {
-    let query = supabase.from("studios").select("*").order("name", { ascending: true });
+    let query = supabase
+      .from("studios")
+      .select("*")
+      .order("name", { ascending: true });
     if (studioSearchQuery.value.trim()) {
       query = query.ilike("name", `%${studioSearchQuery.value.trim()}%`);
     }
@@ -584,13 +686,20 @@ const openVoiceActorPicker = (index: number) => {
 };
 
 const selectVoiceActor = (va: any) => {
-  if (activeCrewRowIndex.value !== null && dubbingCrew.value[activeCrewRowIndex.value]) {
+  if (
+    activeCrewRowIndex.value !== null &&
+    dubbingCrew.value[activeCrewRowIndex.value]
+  ) {
     dubbingCrew.value[activeCrewRowIndex.value].person_id = va.id;
     dubbingCrew.value[activeCrewRowIndex.value].firstname = va.firstname;
     dubbingCrew.value[activeCrewRowIndex.value].lastname = va.lastname;
-  } else if (activeCastRowIndexForVa.value !== null && castRows.value[activeCastRowIndexForVa.value]) {
+  } else if (
+    activeCastRowIndexForVa.value !== null &&
+    castRows.value[activeCastRowIndexForVa.value]
+  ) {
     castRows.value[activeCastRowIndexForVa.value].voice_actor_id = va.id;
-    castRows.value[activeCastRowIndexForVa.value].voice_actor_name = `${va.firstname} ${va.lastname}`;
+    castRows.value[activeCastRowIndexForVa.value].voice_actor_name =
+      `${va.firstname} ${va.lastname}`;
   }
   showVoiceActorSearchModal.value = false;
 };
@@ -601,10 +710,14 @@ const openCastPicker = (index: number) => {
 };
 
 const selectTmdbCastMember = (c: any) => {
-  if (activeCastRowIndexForCast.value !== null && castRows.value[activeCastRowIndexForCast.value]) {
+  if (
+    activeCastRowIndexForCast.value !== null &&
+    castRows.value[activeCastRowIndexForCast.value]
+  ) {
     castRows.value[activeCastRowIndexForCast.value].actor_id = c.id;
     castRows.value[activeCastRowIndexForCast.value].actor_name = c.name;
-    castRows.value[activeCastRowIndexForCast.value].character_name = c.character;
+    castRows.value[activeCastRowIndexForCast.value].character_name =
+      c.character;
   }
   showCastSearchModal.value = false;
 };
@@ -613,7 +726,9 @@ const getActorDisplayName = (row: CastRow) => {
   if (row.actor_name && row.character_name) {
     return `${row.actor_name} (as ${row.character_name})`;
   }
-  const match = tmdbCastList.value.find((c) => Number(c.id) === Number(row.actor_id));
+  const match = tmdbCastList.value.find(
+    (c) => Number(c.id) === Number(row.actor_id),
+  );
   if (match) {
     return `${match.name} (as ${match.character})`;
   }
@@ -622,7 +737,9 @@ const getActorDisplayName = (row: CastRow) => {
 
 const getVoiceActorDisplayName = (row: CastRow) => {
   if (row.voice_actor_name) return row.voice_actor_name;
-  const match = voiceActorsList.value.find((va) => Number(va.id) === Number(row.voice_actor_id));
+  const match = voiceActorsList.value.find(
+    (va) => Number(va.id) === Number(row.voice_actor_id),
+  );
   if (match) return `${match.firstname} ${match.lastname}`;
   if (row.voice_actor_id) return `Voice Actor #${row.voice_actor_id}`;
   return "-- Select VA --";
@@ -669,18 +786,19 @@ const fetchVoiceActors = async () => {
 
 const fetchTmdbCast = async (tmdbId: number, targetType?: string) => {
   const currentType = targetType || contentType.value;
-  const isShow = currentType === "tv" || currentType === "show" || currentType === "serie";
+  const isShow =
+    currentType === "tv" || currentType === "show" || currentType === "serie";
   let functionName = isShow ? "show" : "movie";
 
   try {
     let { data } = await supabase.functions.invoke(functionName, {
-      body: { id: tmdbId }
+      body: { id: tmdbId },
     });
 
     if (!data?.movie && !data?.serie) {
       const altFunctionName = functionName === "show" ? "movie" : "show";
       const altRes = await supabase.functions.invoke(altFunctionName, {
-        body: { id: tmdbId }
+        body: { id: tmdbId },
       });
       if (altRes.data && (altRes.data.movie || altRes.data.serie)) {
         data = altRes.data;
@@ -693,16 +811,17 @@ const fetchTmdbCast = async (tmdbId: number, targetType?: string) => {
     if (data) {
       const mediaObj = data.serie || data.movie || data;
       if (mediaObj?.name || mediaObj?.title || data?.title || data?.name) {
-        mediaTitle.value = mediaObj?.name || mediaObj?.title || data?.title || data?.name;
+        mediaTitle.value =
+          mediaObj?.name || mediaObj?.title || data?.title || data?.name;
       }
 
       const rawCast = data.serie
-        ? (data.aggregateCredits?.cast || mediaObj?.credits?.cast || [])
-        : (mediaObj?.credits?.cast || []);
+        ? data.aggregateCredits?.cast || mediaObj?.credits?.cast || []
+        : mediaObj?.credits?.cast || [];
 
       const rawCrew = data.serie
-        ? (data.aggregateCredits?.crew || mediaObj?.credits?.crew || [])
-        : (mediaObj?.credits?.crew || []);
+        ? data.aggregateCredits?.crew || mediaObj?.credits?.crew || []
+        : mediaObj?.credits?.crew || [];
 
       const mappedCast = rawCast.map((c: any) => ({
         id: c.id,
@@ -726,15 +845,16 @@ const fetchTmdbCast = async (tmdbId: number, targetType?: string) => {
 };
 
 const searchMedia = async () => {
-  if (!mediaSearchQuery.value.trim() || mediaSearchQuery.value.length < 2) return;
+  if (!mediaSearchQuery.value.trim() || mediaSearchQuery.value.length < 2)
+    return;
   isSearchingMedia.value = true;
   try {
     const { data } = await supabase.functions.invoke("search", {
-      body: { query: mediaSearchQuery.value.trim() }
+      body: { query: mediaSearchQuery.value.trim() },
     });
     if (data?.results) {
       mediaSearchResults.value = data.results.filter(
-        (r: any) => r.media_type === "movie" || r.media_type === "tv"
+        (r: any) => r.media_type === "movie" || r.media_type === "tv",
       );
     }
   } catch (err) {
@@ -755,7 +875,9 @@ const selectMedia = async (media: any) => {
 const updateCastRowsActorNames = () => {
   for (const row of castRows.value) {
     if (row.actor_id) {
-      const match = tmdbCastList.value.find((c) => Number(c.id) === Number(row.actor_id));
+      const match = tmdbCastList.value.find(
+        (c) => Number(c.id) === Number(row.actor_id),
+      );
       if (match) {
         row.actor_name = match.name;
         row.character_name = match.character;
@@ -767,7 +889,9 @@ const updateCastRowsActorNames = () => {
 const updateCastRowsVoiceActorNames = () => {
   for (const row of castRows.value) {
     if (row.voice_actor_id && !row.voice_actor_name) {
-      const match = voiceActorsList.value.find((va) => Number(va.id) === Number(row.voice_actor_id));
+      const match = voiceActorsList.value.find(
+        (va) => Number(va.id) === Number(row.voice_actor_id),
+      );
       if (match) {
         row.voice_actor_name = `${match.firstname} ${match.lastname}`;
       }
@@ -776,10 +900,10 @@ const updateCastRowsVoiceActorNames = () => {
 };
 
 const fetchProjectDetails = async () => {
-  if (!id || (id === "new" && !route.query.contentId)) return;
+  if (!id.value || (id.value === "new" && !route.query.contentId)) return;
   isLoading.value = true;
   try {
-    const numericId = Number(id);
+    const numericId = Number(id.value);
     let project = null;
 
     if (!isNaN(numericId)) {
@@ -795,13 +919,12 @@ const fetchProjectDetails = async () => {
 
     if (project) {
       dbProjectId.value = project.id;
-      if (Number(id) !== project.id) {
+      if (Number(id.value) !== project.id) {
         router.replace(`/edit-dubbing-project/${project.id}`);
       }
       contentId.value = project.content_id;
       contentType.value = project.content_type || "movie";
       language.value = project.language || "fr";
-      studio.value = project.studio || "";
       selectedStudioId.value = project.studio_id || null;
 
       // Fetch dubbing crew
@@ -811,43 +934,33 @@ const fetchProjectDetails = async () => {
         .eq("dubbing_project_id", project.id);
 
       if (crewData) {
-        dubbingCrew.value = crewData.map(c => ({
+        dubbingCrew.value = crewData.map((c) => ({
           job_id: c.job_id,
           person_id: c.person_id,
           firstname: c.voice_actors?.firstname,
-          lastname: c.voice_actors?.lastname
+          lastname: c.voice_actors?.lastname,
         }));
       }
 
-      if (selectedStudioId.value && !studio.value) {
-        const found = studiosList.value.find((s) => s.id === selectedStudioId.value);
+      if (selectedStudioId.value) {
+        const found = studiosList.value.find(
+          (s) => s.id === selectedStudioId.value,
+        );
         if (found) studio.value = found.name;
-      } else if (!selectedStudioId.value && studio.value) {
-        const found = studiosList.value.find((s) => s.name.toLowerCase() === studio.value.toLowerCase());
-        if (found) selectedStudioId.value = found.id;
       }
     } else if (!isNaN(numericId)) {
       // If no project exists yet in DB for this TMDB ID, treat as project for this contentId
       contentId.value = numericId;
-    } else if (id === "new" && route.query.contentId) {
+    } else if (id.value === "new" && route.query.contentId) {
       contentId.value = Number(route.query.contentId);
     }
 
-    // Fetch works for either project.id or contentId.value
-    if (project?.id || contentId.value) {
-      let filterStr = "";
-      if (project?.id && contentId.value) {
-        filterStr = `dubbing_project_id.eq.${project.id},content_id.eq.${contentId.value}`;
-      } else if (project?.id) {
-        filterStr = `dubbing_project_id.eq.${project.id}`;
-      } else {
-        filterStr = `content_id.eq.${contentId.value}`;
-      }
-
+    // Fetch works for project.id
+    if (project?.id) {
       const { data: works } = await supabase
         .from("work")
         .select("*, voice_actors(id, firstname, lastname)")
-        .or(filterStr);
+        .eq("dubbing_project_id", project.id);
 
       if (works) {
         castRows.value = works.map((w: any) => ({
@@ -858,7 +971,7 @@ const fetchProjectDetails = async () => {
             ? `${w.voice_actors.firstname} ${w.voice_actors.lastname}`
             : undefined,
           performance: w.performance || "dialogues",
-          highlight: w.highlight || false
+          highlight: w.highlight || false,
         }));
       }
     }
@@ -881,7 +994,7 @@ const addCastRow = () => {
     actor_id: 0,
     voice_actor_id: null,
     performance: "dialogues",
-    highlight: false
+    highlight: false,
   });
 };
 
@@ -897,8 +1010,8 @@ const quickCreateVoiceActor = async () => {
       .insert([
         {
           firstname: newPersonFirstname.value.trim(),
-          lastname: newPersonLastname.value.trim()
-        }
+          lastname: newPersonLastname.value.trim(),
+        },
       ])
       .select()
       .single();
@@ -924,32 +1037,53 @@ const saveProject = async () => {
       content_id: contentId.value,
       content_type: contentType.value,
       language: language.value || "fr",
-      studio: studio.value || null,
       studio_id: selectedStudioId.value || null,
-      status: "validated"
+      status: "validated",
     };
 
     let projectId = dbProjectId.value;
 
     if (projectId) {
-      await supabase.from("dubbing_projects").update(projectPayload).eq("id", projectId);
+      const { error } = await supabase
+        .from("dubbing_projects")
+        .update(projectPayload)
+        .eq("id", projectId);
+      if (error) throw error;
     } else {
-      const { data: newProj } = await supabase
+      // Ensure the media exists in our database before creating a foreign key to it
+      try {
+        await enqueueAndProcessMedia({
+          tmdbId: contentId.value,
+          mediaType: contentType.value,
+        });
+      } catch (mediaErr: any) {
+        console.warn(
+          "Media might already exist or error preparing media:",
+          mediaErr,
+        );
+        // We continue in case it already exists and the error is just a unique constraint violation
+      }
+
+      const { data: newProj, error } = await supabase
         .from("dubbing_projects")
         .insert([projectPayload])
         .select()
         .single();
+      if (error) throw error;
       if (newProj) projectId = newProj.id;
     }
 
     if (projectId) {
       // Save Dubbing Crew
-      await supabase.from("dubbing_project_crew").delete().eq("dubbing_project_id", projectId);
+      await supabase
+        .from("dubbing_project_crew")
+        .delete()
+        .eq("dubbing_project_id", projectId);
       if (dubbingCrew.value.length > 0) {
-        const crewPayloads = dubbingCrew.value.map(c => ({
+        const crewPayloads = dubbingCrew.value.map((c) => ({
           dubbing_project_id: projectId,
           person_id: c.person_id,
-          job_id: c.job_id
+          job_id: c.job_id,
         }));
         await supabase.from("dubbing_project_crew").insert(crewPayloads);
       }
@@ -960,13 +1094,11 @@ const saveProject = async () => {
         if (!row.actor_id) continue;
         const workPayload: any = {
           dubbing_project_id: projectId,
-          content_id: contentId.value,
-          content_type: contentType.value,
           actor_id: row.actor_id,
           voice_actor_id: row.voice_actor_id || null,
           performance: row.performance || "dialogues",
           highlight: row.highlight || false,
-          status: "validated"
+          status: "validated",
         };
         if (row.id) workPayload.id = row.id;
 
@@ -975,14 +1107,26 @@ const saveProject = async () => {
     }
 
     router.back();
-  } catch (err) {
+  } catch (err: any) {
     console.error("Error saving dubbing project:", err);
+    alert(err.message || "Error saving dubbing project");
   } finally {
     isSaving.value = false;
   }
 };
 
-onMounted(async () => {
+onIonViewWillEnter(async () => {
+  // Reset critical form state when entering the page
+  dbProjectId.value = null;
+  contentId.value = null;
+  mediaTitle.value = "";
+  contentType.value = "movie";
+  language.value = "fr";
+  studio.value = "";
+  selectedStudioId.value = null;
+  dubbingCrew.value = [];
+  castRows.value = [];
+  
   await fetchJobs();
   await fetchStudios();
   await fetchVoiceActors();
@@ -1110,7 +1254,9 @@ onMounted(async () => {
   color: #ffffff;
   font-size: 14px;
   outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 
   &:focus {
     border-color: #3b82f6;
@@ -1137,7 +1283,8 @@ onMounted(async () => {
   cursor: pointer;
   transition: all 0.2s ease;
 
-  &:hover, &:focus {
+  &:hover,
+  &:focus {
     border-color: #3b82f6;
     background-color: #171717;
   }

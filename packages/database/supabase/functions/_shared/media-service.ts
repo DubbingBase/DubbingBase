@@ -27,16 +27,20 @@ export class MediaService {
 
     // Fetch TMDB details and TVDB characters for each work item in parallel
     const mediaPromises = (voiceActor.work || []).map(async (work: any) => {
+      const contentId = work.dubbing_projects?.content_id;
+      const contentType = work.dubbing_projects?.content_type as "movie" | "tv";
+      
+      if (!contentId || !contentType) return null;
+
       try {
-        const contentType = work.content_type as "movie" | "tv";
         const tmdbMedia = await this.tmdbClient.getMediaWithCredits(
           contentType,
-          work.content_id,
+          contentId,
         );
 
         const characterProfilePictures = await this.getCharacterProfilePictures(
           contentType,
-          work.content_id,
+          contentId,
           tmdbMedia,
         );
 
@@ -46,12 +50,12 @@ export class MediaService {
         };
       } catch (err) {
         console.error(
-          `Failed to fetch TMDB/TVDB info for ${work.content_type} ${work.content_id}:`,
+          `Failed to fetch TMDB/TVDB info for ${contentType} ${contentId}:`,
           err,
         );
         return {
           media: {
-            id: work.content_id,
+            id: contentId,
             title: "Information indisponible (Timeout)",
             name: "Information indisponible (Timeout)",
             poster_path: null,

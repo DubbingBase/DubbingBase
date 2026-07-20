@@ -116,7 +116,10 @@ const route = useRoute();
 const router = useRouter();
 
 const goToAddProject = () => {
-  router.push(`/edit-dubbing-project/new?contentId=${route.params.id}`);
+  router.push({
+    path: '/edit-dubbing-project/new',
+    query: { contentId: route.params.id }
+  });
 };
 
 const isActionSheetOpen = ref(false);

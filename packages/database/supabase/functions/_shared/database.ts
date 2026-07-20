@@ -25,8 +25,8 @@ export class DatabaseClient implements IDatabaseClient {
 
     const { data, error } = await this.ctx.supabaseAdmin
       .from("work")
-      .select(`*, voiceActorDetails:voice_actors (*)`)
-      .eq("content_id", contentId);
+      .select(`*, voiceActorDetails:voice_actors (*), dubbing_projects!inner(*)`)
+      .eq("dubbing_projects.content_id", contentId);
 
     if (error) {
       debugLog("Error fetching work with voice actors", {
@@ -48,7 +48,7 @@ export class DatabaseClient implements IDatabaseClient {
 
     const { data, error } = await this.ctx.supabase
       .from("voice_actors")
-      .select(`*, work (*), user_voice_actor_links(id)`)
+      .select(`*, work (*, dubbing_projects(*)), user_voice_actor_links(id)`)
       .eq("id", voiceActorId)
       .single();
 
@@ -71,7 +71,8 @@ export class DatabaseClient implements IDatabaseClient {
       .select(
         `
         *,
-        voice_actors (*)
+        voice_actors (*),
+        dubbing_projects (*)
       `,
       )
       .eq("actor_id", actorId);

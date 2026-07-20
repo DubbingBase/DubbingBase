@@ -24,7 +24,7 @@ The project is structured as a **Monorepo** managed by `pnpm workspaces` and `tu
 
 ## 🛠️ Development Commands (via `mise`)
 
-All development tasks should ideally be run via **Mise** to ensure environment consistency:
+All development tasks MUST be run via **Mise** to ensure environment consistency. Always check `mise.toml` first to see if a command exists before attempting to run raw bash commands or `pnpm` scripts directly. If a task is defined in `mise.toml` (e.g. `gen-types`), you must run it using `mise run <task>`.
 
 | Command                 | Description                                                                           |
 | :---------------------- | :------------------------------------------------------------------------------------ |
@@ -44,10 +44,10 @@ All development tasks should ideally be run via **Mise** to ensure environment c
 After making any database schema changes, run the following command to update TypeScript types in the app:
 
 ```bash
-pnpm sup:types
+mise run gen-types
 ```
 
-_(This command is defined in `apps/mobile/package.json` and outputs types to `packages/database/functions/_shared/database.types.ts`)._
+_(This command generates types to `packages/database/supabase/functions/_shared/database.types.ts`)._
 
 ---
 
