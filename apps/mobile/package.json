@@ -13,7 +13,6 @@
   "dependencies": {
     "@app/locales": "workspace:*",
     "@app/supabase": "workspace:*",
-    "@balalarast/vue-bottom-sheet": "^0.4.1",
     "@capacitor/action-sheet": "^8.1.1",
     "@capacitor/android": "^7.4.3",
     "@capacitor/app": "^7.1.0",
@@ -27,7 +26,8 @@
     "@capacitor/splash-screen": "^7.0.5",
     "@capacitor/status-bar": "^7.0.3",
     "@capacitor/toast": "^8.0.1",
-    "@capgo/capacitor-transitions": "^8.1.9",
+    "@ionic/vue": "^8.8.14",
+    "@ionic/vue-router": "^8.8.14",
     "@supabase/supabase-js": "^2.57.4",
     "@types/node": "^24.9.1",
     "@vueuse/components": "^14.0.0",

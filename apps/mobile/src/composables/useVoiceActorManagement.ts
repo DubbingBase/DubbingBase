@@ -1,6 +1,6 @@
 import { alertController } from "@/composables/useAlert";
 import { onUnmounted, ref, watch } from "vue";
-import { useRouter } from "vue-router";
+import { useRouter } from 'vue-router';
 
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";

@@ -1,5 +1,5 @@
 <template>
-  <cap-page>
+  <ion-page>
     <AppPage>
       <AppHeader>
         <AppToolbar>
@@ -61,10 +61,11 @@
         :buttons="actionSheetButtons"
       />
     </AppPage>
-  </cap-page>
+  </ion-page>
 </template>
 
 <script setup lang="ts">
+import { IonPage } from "@ionic/vue";
 import AppPage from "@/components/common/layout/AppPage.vue";
 import AppHeader from "@/components/common/layout/AppHeader.vue";
 import AppToolbar from "@/components/common/layout/AppToolbar.vue";
@@ -75,11 +76,12 @@ import { alertController } from "@/composables/useAlert";
 import AppButton from "@/components/common/AppButton.vue";
 import { computed, ref, UnwrapRef, onMounted, watch } from "vue";
 import AppBackButton from "@/components/common/AppBackButton.vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute, useRouter } from 'vue-router';
 import Share2 from "~icons/lucide/share-2";
 import Camera from '~icons/lucide/camera';
 import List from '~icons/lucide/list';
 import Info from '~icons/lucide/info';
+import RefreshCw from '~icons/lucide/refresh-cw';
 import EllipsisVertical from "~icons/lucide/ellipsis-vertical";
 import { Share } from "@capacitor/share";
 import AppActionSheet, { ActionSheetButton } from "@/components/common/AppActionSheet.vue";
@@ -121,6 +123,16 @@ const actionSheetButtons = computed<ActionSheetButton[]>(() => {
   ];
 
   if (isAdmin.value && !hasData.value) {
+    buttons.push({
+      text: t('movie.updateCredits', 'Update Credits (Admin)'),
+      icon: RefreshCw,
+      handler: () => {
+        showCreditsReview.value = true;
+      },
+    });
+  }
+
+  if (isAdmin.value) {
     buttons.push({
       text: t('common.scan', 'Scanner'),
       icon: Camera,

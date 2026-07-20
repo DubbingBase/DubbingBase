@@ -17,7 +17,14 @@ import { useAuthStore } from "@/stores/auth";
 
 import { SplashScreen } from "@capacitor/splash-screen";
 
-const app = createApp(App).use(createPinia()).use(router).use(i18n);
+import { IonicVue } from "@ionic/vue";
+import "@ionic/vue/css/core.css";
+// Basic Ionic styles for components
+import "@ionic/vue/css/normalize.css";
+import "@ionic/vue/css/structure.css";
+import "@ionic/vue/css/typography.css";
+
+const app = createApp(App).use(createPinia()).use(IonicVue).use(router).use(i18n);
 
 router.isReady().then(async () => {
   const authStore = useAuthStore();

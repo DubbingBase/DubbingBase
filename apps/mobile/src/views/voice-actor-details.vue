@@ -1,5 +1,5 @@
 <template>
-  <cap-page>
+  <ion-page>
   <AppPage>
     <AppHeader>
       <AppToolbar>
@@ -58,10 +58,11 @@
       />
     </AppContent>
   </AppPage>
-  </cap-page>
+  </ion-page>
 </template>
 
 <script setup lang="ts">
+import { IonPage } from "@ionic/vue";
 import AppPage from '@/components/common/layout/AppPage.vue';
 import AppHeader from '@/components/common/layout/AppHeader.vue';
 import AppToolbar from '@/components/common/layout/AppToolbar.vue';
@@ -76,7 +77,7 @@ import UserCheck from "~icons/lucide/user-check";
 import { computed, onMounted, ref, getCurrentInstance } from "vue";
 import AppBackButton from "@/components/common/AppBackButton.vue";
 import AppActionSheet, { ActionSheetButton } from "@/components/common/AppActionSheet.vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute, useRouter } from 'vue-router';
 // Admin check: get user from supabase.auth and check for admin role
 import type { Serie as SerieModel } from "@supabase/functions/_shared/serie";
 

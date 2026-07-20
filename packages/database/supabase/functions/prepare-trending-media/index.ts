@@ -3,134 +3,147 @@ import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
 
 export default {
-  fetch: withSupabase<Database>({ auth: "secret:*" }, async (_req, ctx) => {
-    try {
-      const tmdbApiKey = Deno.env.get("TMDB_API_KEY");
-      if (!tmdbApiKey) {
-        throw new Error("TMDB_API_KEY environment variable is not set");
-      }
+  fetch: withSupabase<Database>(
+    { auth: ["user", "secret"] },
+    async (_req, ctx) => {
+      try {
+        const tmdbApiKey = Deno.env.get("TMDB_API_KEY");
+        if (!tmdbApiKey) {
+          throw new Error("TMDB_API_KEY environment variable is not set");
+        }
 
-      // 1. Fetch trending movies and tv shows in parallel
-      const [moviesResponse, showsResponse] = await Promise.all([
-        fetch(
-          "https://api.themoviedb.org/3/trending/movie/day?language=fr-FR",
-          {
+        // 1. Fetch trending movies and tv shows in parallel
+        const [moviesResponse, showsResponse] = await Promise.all([
+          fetch(
+            "https://api.themoviedb.org/3/trending/movie/day?language=fr-FR",
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${tmdbApiKey}`,
+                Accept: "application/json",
+              },
+            },
+          ),
+          fetch("https://api.themoviedb.org/3/trending/tv/day?language=fr-FR", {
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${tmdbApiKey}`,
               Accept: "application/json",
             },
-          },
-        ),
-        fetch("https://api.themoviedb.org/3/trending/tv/day?language=fr-FR", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${tmdbApiKey}`,
-            Accept: "application/json",
-          },
-        }),
-      ]);
+          }),
+        ]);
 
-      if (!moviesResponse.ok) {
-        throw new Error(`Movies API request failed: ${moviesResponse.status}`);
-      }
-      if (!showsResponse.ok) {
-        throw new Error(`TV Shows API request failed: ${showsResponse.status}`);
-      }
-
-      const [moviesData, showsData] = await Promise.all([
-        moviesResponse.json(),
-        showsResponse.json(),
-      ]);
-
-      const movies = (moviesData.results || []).map((item: any) => ({
-        ...item,
-        type: "movie" as const,
-      }));
-
-      const shows = (showsData.results || []).map((item: any) => ({
-        ...item,
-        type: "tv" as const,
-      }));
-
-      // Sort by popularity and take the top 10 of each
-      const topMovies = movies
-        .sort((a: any, b: any) => b.popularity - a.popularity)
-        .slice(0, 10);
-      const topShows = shows
-        .sort((a: any, b: any) => b.popularity - a.popularity)
-        .slice(0, 10);
-      const itemsToProcess = [...topMovies, ...topShows];
-
-      let enqueuedCount = 0;
-      let alreadyInQueueCount = 0;
-      let failedCount = 0;
-
-      // 2. Enqueue items
-      for (const media of itemsToProcess) {
-        const { error } = await ctx.supabaseAdmin.rpc("enqueue_media_fetch", {
-          p_tmdb_id: media.id,
-          p_media_type: media.type,
-        });
-
-        if (error) {
-          if (
-            error.message &&
-            error.message.includes("Request is already in the queue")
-          ) {
-            alreadyInQueueCount++;
-          } else {
-            console.error(`Error enqueueing ${media.type} ${media.id}:`, error);
-            failedCount++;
-          }
-        } else {
-          enqueuedCount++;
+        if (!moviesResponse.ok) {
+          throw new Error(
+            `Movies API request failed: ${moviesResponse.status}`,
+          );
         }
-      }
+        if (!showsResponse.ok) {
+          throw new Error(
+            `TV Shows API request failed: ${showsResponse.status}`,
+          );
+        }
 
-      // 3. Send compact ntfy notification
-      const ntfyTopic = "Armaldio_DubbingBaseTrendingSummary";
-      const summaryMessage = `Enqueued ${enqueuedCount} items.\nSkipped ${alreadyInQueueCount} already in queue.\nFailed to enqueue ${failedCount} items.`;
+        const [moviesData, showsData] = await Promise.all([
+          moviesResponse.json(),
+          showsResponse.json(),
+        ]);
 
-      try {
-        await fetch(`https://ntfy.sh/${ntfyTopic}`, {
-          method: "POST",
-          body: summaryMessage,
-          headers: {
-            Title: "DubbingBase Trending Media Report",
+        const movies = (moviesData.results || []).map((item: any) => ({
+          ...item,
+          type: "movie" as const,
+        }));
+
+        const shows = (showsData.results || []).map((item: any) => ({
+          ...item,
+          type: "tv" as const,
+        }));
+
+        // Sort by popularity and take the top 10 of each
+        const topMovies = movies
+          .sort((a: any, b: any) => b.popularity - a.popularity)
+          .slice(0, 10);
+        const topShows = shows
+          .sort((a: any, b: any) => b.popularity - a.popularity)
+          .slice(0, 10);
+        const itemsToProcess = [...topMovies, ...topShows];
+
+        let enqueuedCount = 0;
+        let alreadyInQueueCount = 0;
+        let failedCount = 0;
+
+        // 2. Enqueue items
+        for (const media of itemsToProcess) {
+          const { error } = await ctx.supabaseAdmin.rpc("enqueue_media_fetch", {
+            p_tmdb_id: media.id,
+            p_media_type: media.type,
+          });
+
+          if (error) {
+            if (
+              error.message &&
+              error.message.includes("Request is already in the queue")
+            ) {
+              alreadyInQueueCount++;
+            } else {
+              console.error(
+                `Error enqueueing ${media.type} ${media.id}:`,
+                error,
+              );
+              failedCount++;
+            }
+          } else {
+            enqueuedCount++;
+          }
+        }
+
+        // 3. Send compact ntfy notification
+        const ntfyTopic = "Armaldio_DubbingBaseTrendingSummary";
+        const summaryMessage = `Enqueued ${enqueuedCount} items.\nSkipped ${alreadyInQueueCount} already in queue.\nFailed to enqueue ${failedCount} items.`;
+
+        try {
+          await fetch(`https://ntfy.sh/${ntfyTopic}`, {
+            method: "POST",
+            body: summaryMessage,
+            headers: {
+              Title: "DubbingBase Trending Media Report",
+            },
+          });
+        } catch (notifyError) {
+          console.error("Failed to send ntfy notification:", notifyError);
+        }
+
+        return Response.json({
+          ok: true,
+          message: "Trending media successfully enqueued.",
+          stats: {
+            enqueued: enqueuedCount,
+            alreadyInQueue: alreadyInQueueCount,
+            failed: failedCount,
           },
         });
-      } catch (notifyError) {
-        console.error("Failed to send ntfy notification:", notifyError);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error occurred";
+        console.error("Trending media queuing failed:", errorMessage);
+
+        try {
+          await fetch(`https://ntfy.sh/Armaldio_DubbingBaseTrendingSummary`, {
+            method: "POST",
+            body: `Critical failure in prepare-trending-media: ${errorMessage}`,
+            headers: {
+              Title: "Trending Media Job FAILED",
+            },
+          });
+        } catch (_) {
+          // Ignore secondary notification errors
+        }
+
+        return Response.json(
+          { ok: false, error: errorMessage },
+          { status: 500 },
+        );
       }
-
-      return Response.json({
-        ok: true,
-        message: "Trending media successfully enqueued.",
-        stats: {
-          enqueued: enqueuedCount,
-          alreadyInQueue: alreadyInQueueCount,
-          failed: failedCount,
-        },
-      });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error occurred";
-      console.error("Trending media queuing failed:", errorMessage);
-
-      try {
-        await fetch(`https://ntfy.sh/Armaldio_DubbingBaseTrendingSummary`, {
-          method: "POST",
-          body: `Critical failure in prepare-trending-media: ${errorMessage}`,
-          headers: {
-            Title: "Trending Media Job FAILED",
-          },
-        });
-      } catch (_) {
-        // Ignore secondary notification errors
-      }
-
-      return Response.json({ ok: false, error: errorMessage }, { status: 500 });
-    }
-  }),
+    },
+  ),
 };
