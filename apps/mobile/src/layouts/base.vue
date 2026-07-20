@@ -1,12 +1,8 @@
 <template>
-  <cap-page>
+  <ion-page>
     <div class="base-layout">
     <div class="content">
-      <router-view v-slot="{ Component }">
-        <keep-alive>
-          <component :is="Component" />
-        </keep-alive>
-      </router-view>
+      <ion-router-outlet />
     </div>
     <div class="bottom-tab-bar">
       <router-link
@@ -21,13 +17,14 @@
       </router-link>
     </div>
     </div>
-  </cap-page>
+  </ion-page>
 </template>
 
 <script setup lang="ts">
+import { IonPage, IonRouterOutlet } from "@ionic/vue";
 import { ref, computed, onUnmounted } from "vue";
 defineOptions({ name: 'TabsPage' });
-import { useRouter } from "vue-router";
+import { useRouter } from 'vue-router';
 import Tv from '~icons/lucide/tv';
 import Search from '~icons/lucide/search';
 import Home from '~icons/lucide/home';

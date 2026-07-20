@@ -1,4 +1,5 @@
 <template>
+  <ion-page>
   <AppPage>
     <AppHeader>
       <AppToolbar style="--background: transparent">
@@ -40,9 +41,11 @@
       <LoadingSpinner v-if="isLoading" :overlay="true" />
     </AppContent>
   </AppPage>
+  </ion-page>
 </template>
 
 <script lang="ts" setup>
+import { IonPage } from "@ionic/vue";
 import AppPage from "@/components/common/layout/AppPage.vue";
 import AppHeader from "@/components/common/layout/AppHeader.vue";
 import AppToolbar from "@/components/common/layout/AppToolbar.vue";

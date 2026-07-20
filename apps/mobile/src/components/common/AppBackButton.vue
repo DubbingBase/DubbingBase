@@ -5,15 +5,13 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router';
-import { setDirection } from '@capgo/capacitor-transitions/vue';
+import { useIonRouter } from '@ionic/vue';
 import ChevronLeft from '~icons/lucide/chevron-left';
 
-const router = useRouter();
+const ionRouter = useIonRouter();
 
 const handleBack = () => {
-  setDirection('back');
-  router.back();
+  ionRouter.back();
 };
 </script>
 
