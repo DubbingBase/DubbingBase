@@ -4,26 +4,29 @@
       <AppHeader>
         <AppToolbar>
           <div class="home-header">
-            <div class="fake-searchbar" @click="router.push('/tabs/search')">
-              <SearchIcon class="search-icon" />
-              <span class="search-placeholder">Search...</span>
-            </div>
+            <h1 class="app-title">DubbingBase</h1>
             <div class="header-actions">
               <router-link
                 v-if="authStore.isAuthenticated && !authStore.isAnonymous"
-                to="/tabs/profile"
+                to="/profile"
                 class="header-icon-btn"
               >
                 <UserIcon />
               </router-link>
-              <router-link to="/tabs/settings" class="header-icon-btn">
+              <router-link to="/settings" class="header-icon-btn">
                 <SettingsIcon />
               </router-link>
             </div>
           </div>
         </AppToolbar>
       </AppHeader>
-      <AppContent :fullscreen="true">
+      <AppContent>
+        <div class="search-section">
+          <div class="fake-searchbar" @click="router.push('/search')">
+            <SearchIcon class="search-icon" />
+            <span class="search-placeholder">Search...</span>
+          </div>
+        </div>
         <div class="trending-movies">
           <div class="list-header">{{ t("home.trendingMovies") }}</div>
           <div class="movies">
@@ -290,9 +293,23 @@ const handleRefresh = async (event: any) => {
 .home-header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
   width: 100%;
-  padding: 4px 0;
+  padding: 8px 16px;
+}
+
+.app-title {
+  font-size: 24px;
+  font-weight: 800;
+  margin: 0;
+  background: linear-gradient(135deg, #fff 0%, #a0a0a0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+}
+
+.search-section {
+  padding: 16px 16px 0 16px;
 }
 
 .fake-searchbar {

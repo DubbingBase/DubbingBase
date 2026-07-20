@@ -100,3 +100,4 @@ _(This command is defined in `apps/mobile/package.json` and outputs types to `pa
 2. **Preserve Comments**: Keep existing comments and docstrings unless explicitly told to remove them.
 3. **Precise Code Changes**: Make targeted edits instead of rewriting large files.
 4. **Validation**: Test compilation and run formatter tools before completing your turn.
+5. **Local Environment Only**: NEVER execute or run production environment commands or actions (e.g., production database pushes, live deployments, remote mutations). Only target local development environments, and do NOT suggest production actions unless strictly and explicitly asked by the user.

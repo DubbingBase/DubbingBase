@@ -54,7 +54,7 @@ provide('updateSegment', (value: string) => {
   background: var(--app-color-step-100, #1e1e1e);
   border-radius: 8px;
   padding: 4px;
-  margin: 8px 16px;
+  margin: 0 16px;
   width: calc(100% - 32px); /* 100% minus horizontal margins */
   box-sizing: border-box;
   --background: var(--app-color-step-100, #1e1e1e);

@@ -198,6 +198,62 @@
       </form>
     </div>
 
+    <!-- Linked Works & Filmography (Bidirectional Linking) -->
+    <div v-if="isEditMode" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <div>
+          <h4 class="text-base font-bold text-white">Linked Works & Filmography</h4>
+          <p class="text-xs text-slate-400">All dubbing credits linked to this voice actor profile.</p>
+        </div>
+        <router-link
+          :to="`/add-voice-cast/${id}`"
+          class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-xs shadow-md transition-all flex items-center space-x-1"
+        >
+          <span>+ Link New Work</span>
+        </router-link>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-slate-300">
+          <thead class="bg-slate-950 text-xs font-semibold uppercase text-slate-400 border-b border-slate-800">
+            <tr>
+              <th class="px-4 py-3">Work ID</th>
+              <th class="px-4 py-3">Media / Content ID</th>
+              <th class="px-4 py-3">Type</th>
+              <th class="px-4 py-3">Character</th>
+              <th class="px-4 py-3">Performance</th>
+              <th class="px-4 py-3 text-right">Edit Project</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60">
+            <tr v-for="work in linkedWorks" :key="work.id" class="hover:bg-slate-950/50 transition-colors">
+              <td class="px-4 py-3 font-mono text-xs text-slate-400">#{{ work.id }}</td>
+              <td class="px-4 py-3 font-mono text-xs text-blue-400">TMDB #{{ work.content_id }}</td>
+              <td class="px-4 py-3 uppercase text-[10px] font-bold tracking-wider text-slate-400">
+                <span class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700">{{ work.content_type || 'movie' }}</span>
+              </td>
+              <td class="px-4 py-3 font-medium text-white">{{ work.suggestions || 'Character' }}</td>
+              <td class="px-4 py-3 text-xs text-slate-400">{{ work.performance || 'dialogues' }}</td>
+              <td class="px-4 py-3 text-right">
+                <router-link
+                  :to="`/movies/edit/${work.dubbing_project_id || work.content_id}`"
+                  class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-blue-400 hover:text-blue-300 text-xs font-semibold rounded-lg border border-slate-700 transition-all inline-flex items-center space-x-1"
+                >
+                  <span>Edit Movie</span>
+                  <span>↗</span>
+                </router-link>
+              </td>
+            </tr>
+            <tr v-if="linkedWorks.length === 0">
+              <td colspan="6" class="text-center py-6 text-slate-500 text-xs">
+                No linked works recorded for this voice actor yet.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- Toast Notifications -->
     <div
       v-if="toast.show"
@@ -300,6 +356,22 @@ const uploadProfilePicture = async (voiceActorId: string | number) => {
   return profilePicture.value;
 };
 
+const linkedWorks = ref<any[]>([]);
+
+const fetchLinkedWorks = async () => {
+  if (!isEditMode.value || !id) return;
+  try {
+    const { data, error } = await supabase
+      .from("work")
+      .select("*")
+      .eq("voice_actor_id", id);
+    if (error) throw error;
+    linkedWorks.value = data || [];
+  } catch (err) {
+    console.error("Error loading linked works:", err);
+  }
+};
+
 const fetchVoiceActor = async () => {
   if (!isEditMode.value || !id) return;
 
@@ -324,6 +396,7 @@ const fetchVoiceActor = async () => {
       profilePicture.value = data.profile_picture || "";
       wikidataId.value = data.wikidata_id || "";
     }
+    await fetchLinkedWorks();
   } catch (err: any) {
     console.error("Error loading voice actor profile:", err);
     showToast("Failed to load voice actor data from database.", "error");

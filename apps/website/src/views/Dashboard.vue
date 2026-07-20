@@ -1,5 +1,27 @@
 <template>
   <div class="space-y-6">
+    <!-- Quick Actions Header -->
+    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex flex-wrap items-center justify-between gap-4 shadow-xl">
+      <div>
+        <h2 class="text-xl font-bold text-white">Dashboard Overview</h2>
+        <p class="text-xs text-slate-400 mt-0.5">Manage dubbing projects, voice actors, and system statistics.</p>
+      </div>
+      <div class="flex items-center space-x-3">
+        <router-link
+          to="/movies/new"
+          class="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl shadow-lg transition-all flex items-center space-x-1.5"
+        >
+          <span>+ Create Movie / Dubbing Project</span>
+        </router-link>
+        <router-link
+          to="/voice-actors/new"
+          class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white text-xs font-semibold rounded-xl border border-slate-700 transition-all flex items-center space-x-1.5"
+        >
+          <span>+ Create Voice Actor</span>
+        </router-link>
+      </div>
+    </div>
+
     <!-- Loading state -->
     <div v-if="loading" class="flex flex-col items-center justify-center py-24 space-y-3 bg-slate-900/40 border border-slate-800/60 rounded-2xl">
       <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>

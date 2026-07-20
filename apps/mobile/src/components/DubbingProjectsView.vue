@@ -30,20 +30,24 @@
     </div>
 
     <div v-else class="flex flex-col h-full">
-      <!-- Only show segment header if we have more than 1 project -->
-      <div
-        v-if="projects.length > 1"
-        class="px-4 py-2 bg-gray-100 dark:bg-gray-800"
-      >
-        <AppSegment v-model="activeProjectId">
-          <AppSegmentButton
+      <!-- Show segment header for all projects -->
+      <div class="px-4 py-2 w-full flex items-center gap-2">
+        <select
+          v-model="activeProjectId"
+          class="project-select flex-1"
+        >
+          <option
             v-for="project in projects"
             :key="project.id"
             :value="project.id.toString()"
           >
             {{ project.language.toUpperCase() }}
-          </AppSegmentButton>
-        </AppSegment>
+          </option>
+        </select>
+        
+        <AppButton v-if="isAdmin && activeProjectId" fill="clear" @click="goToEditProject" aria-label="Edit Dubbing Project">
+          <Pencil class="w-5 h-5 text-gray-400" />
+        </AppButton>
       </div>
 
       <AppSegmentView
@@ -94,71 +98,23 @@
               <div
                 v-if="
                   project.studio ||
-                  project.artistic_director ||
-                  project.adaptation ||
-                  project.recording ||
-                  project.editing ||
-                  project.mixing ||
-                  project.project_manager ||
-                  project.creative_supervision
+                  (project.crew && project.crew.length > 0)
                 "
                 class="technical-team-card"
               >
                 <div class="technical-team-grid">
-                  <div v-if="project.studio" class="info-item">
-                    <span class="info-label">{{
-                      t("dubbing.studio", "Studio")
-                    }}</span>
-                    <span class="info-value">{{ project.studio }}</span>
+                  <div v-if="project.studio || project.studio_data" class="info-item full-width-item mb-4">
+                    <StudioCard 
+                      :studio="project.studio_data || { id: project.studio_id, name: project.studio }"
+                    />
                   </div>
-                  <div v-if="project.artistic_director" class="info-item">
-                    <span class="info-label">{{
-                      t("dubbing.artisticDirector", "Direction artistique")
-                    }}</span>
-                    <span class="info-value">{{
-                      project.artistic_director
-                    }}</span>
+
+                  <!-- Dynamic Crew display -->
+                  <div class="full-width-item">
+                    <CrewList :groupedCrew="groupCrewByJob(project.crew)" />
                   </div>
-                  <div v-if="project.adaptation" class="info-item">
-                    <span class="info-label">{{
-                      t("dubbing.adaptation", "Adaptation")
-                    }}</span>
-                    <span class="info-value">{{ project.adaptation }}</span>
-                  </div>
-                  <div v-if="project.recording" class="info-item">
-                    <span class="info-label">{{
-                      t("dubbing.recording", "Enregistrement")
-                    }}</span>
-                    <span class="info-value">{{ project.recording }}</span>
-                  </div>
-                  <div v-if="project.editing" class="info-item">
-                    <span class="info-label">{{
-                      t("dubbing.editing", "Montage")
-                    }}</span>
-                    <span class="info-value">{{ project.editing }}</span>
-                  </div>
-                  <div v-if="project.mixing" class="info-item">
-                    <span class="info-label">{{
-                      t("dubbing.mixing", "Mixage")
-                    }}</span>
-                    <span class="info-value">{{ project.mixing }}</span>
-                  </div>
-                  <div v-if="project.project_manager" class="info-item">
-                    <span class="info-label">{{
-                      t("dubbing.projectManager", "Chargée de projet")
-                    }}</span>
-                    <span class="info-value">{{
-                      project.project_manager
-                    }}</span>
-                  </div>
-                  <div v-if="project.creative_supervision" class="info-item">
-                    <span class="info-label">{{
-                      t("dubbing.creativeSupervision", "Supervision créative")
-                    }}</span>
-                    <span class="info-value">{{
-                      project.creative_supervision
-                    }}</span>
-                  </div>
+
+
                 </div>
               </div>
               <div v-else class="technical-team-empty">
@@ -177,15 +133,20 @@ import { ref, onMounted, computed, watch } from "vue";
 import { supabase } from "@/api/supabase";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import EmptyState from "@/components/common/EmptyState.vue";
-import AppSegment from "@/components/common/layout/AppSegment.vue";
-import AppSegmentButton from "@/components/common/layout/AppSegmentButton.vue";
+
 import AppSegmentView from "@/components/common/layout/AppSegmentView.vue";
 import AppSegmentContent from "@/components/common/layout/AppSegmentContent.vue";
+import CrewList from "./CrewList.vue";
+import StudioCard from "./StudioCard.vue";
 import ActorList from "@/components/ActorList.vue";
 import { useI18n } from "vue-i18n";
 import { PersonData } from "@/components/PersonItem.vue";
+import AppButton from "@/components/common/AppButton.vue";
+import Pencil from '~icons/lucide/pencil';
+import { useRouter } from "vue-router";
 
 const { t } = useI18n();
+const router = useRouter();
 
 const props = defineProps<{
   contentId: string | number;
@@ -241,20 +202,22 @@ export interface DubbingProject {
   content_type: string;
   language: string;
   studio: string;
-  artistic_director: string;
-  adaptation: string;
-  recording: string;
-  editing: string;
-  mixing: string;
-  project_manager: string;
-  creative_supervision: string;
+  studio_id: number | null;
+  studio_data?: any;
   status: string;
   works: WorkPerformance[];
+  crew: any[];
 }
 
 const projects = ref<DubbingProject[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
+
+const goToEditProject = () => {
+  if (activeProjectId.value) {
+    router.push(`/edit-dubbing-project/${activeProjectId.value}`);
+  }
+};
 const activeProjectId = ref<string>("");
 
 const isFullyLoading = computed(() => loading.value || props.parentLoading);
@@ -269,9 +232,17 @@ const fetchDubbingProjects = async () => {
       .select(
         `
         *,
+        studio_data:studios(*),
         works:work(
           *,
           voice_actor:voice_actors(*)
+        ),
+        crew:dubbing_project_crew(
+          id,
+          person_id,
+          job_id,
+          job:jobs(*),
+          person:voice_actors(*)
         )
       `,
       )
@@ -282,11 +253,8 @@ const fetchDubbingProjects = async () => {
 
     projects.value = projectsData as any;
 
-    if (projects.value.length > 0) {
+    if (projects.value.length > 0 && !activeProjectId.value) {
       activeProjectId.value = projects.value[0].id.toString();
-    } else {
-      // If no dubbing project exists, we can fallback to raw works or show empty.
-      // The migration ensures all existing works got a project, so we are good.
     }
   } catch (err: any) {
     console.error("Error fetching dubbing projects:", err);
@@ -303,6 +271,8 @@ const getVoiceActorsForProject = (project: DubbingProject) => {
   return project.works.map((work) => {
     return {
       id: work.voice_actor_id,
+      tmdb_id: Number(work.actor_id),
+      actor_id: Number(work.actor_id),
       name: `${work.voice_actor?.firstname || ""} ${work.voice_actor?.lastname || ""}`.trim(),
       image: work.voice_actor?.profile_picture,
       role: {
@@ -311,12 +281,21 @@ const getVoiceActorsForProject = (project: DubbingProject) => {
         credit_id: work.id.toString(),
       },
       // Important fields used by ActorList logic:
-      actor_id: work.actor_id,
       voiceActorDetails: work.voice_actor,
       work_id: work.id,
       status: work.status,
     };
   }) as any[];
+};
+
+const groupCrewByJob = (crew: any[]) => {
+  if (!crew) return {};
+  return crew.reduce((acc: any, member: any) => {
+    const jobName = member.job?.name || "Unknown Job";
+    if (!acc[jobName]) acc[jobName] = [];
+    acc[jobName].push(member);
+    return acc;
+  }, {});
 };
 
 onMounted(() => {
@@ -353,9 +332,30 @@ watch(
 .segment-title {
   font-size: 18px;
   font-weight: 700;
-  margin-bottom: 12px;
   margin-top: 8px;
+  margin-bottom: 8px;
   color: #e0e0e0;
+}
+
+.edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 8px;
+  color: #a0a0a0;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+
+  &:hover, &:active {
+    background: #383838;
+    color: #ffffff;
+    border-color: #4a4a4a;
+  }
 }
 
 .segment-content {
@@ -367,20 +367,20 @@ watch(
 }
 
 .technical-team-card {
-  padding: 12px;
+  padding: 0;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.02);
+  background: transparent;
 }
 
 .technical-team-grid {
-  display: grid;
-  grid-template-columns: repeat(1, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 16px;
   font-size: 14px;
+}
 
-  @media (min-width: 768px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.full-width-item {
+  width: 100%;
 }
 
 .info-item {
@@ -400,6 +400,30 @@ watch(
 }
 
 .crew-cast-segment {
-  background-color: #121212;
+  height: 100%;
+}
+
+.project-select {
+  background: var(--ion-color-step-100, #1e1e1e);
+  color: var(--ion-color-step-850, #e0e0e0);
+  border: 1px solid var(--ion-color-step-150, #2c2c2c);
+  border-radius: 8px;
+  padding: 8px 36px 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  outline: none;
+  width: 100%;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a0a0a0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover, &:focus {
+    border-color: var(--ion-color-step-300, #4a4a4a);
+  }
 }
 </style>

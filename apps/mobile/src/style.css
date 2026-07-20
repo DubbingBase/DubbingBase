@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 /* Global font settings */
 *, *::before, *::after {
     box-sizing: border-box;

@@ -83,7 +83,7 @@
           {{ fetchError || queueErrorMessage }}
         </div>
 
-        <VoiceActorSearchModal
+        <PersonSearchModal
           :is-open="showVoiceActorSearch"
           :media-id="route.params.id as string"
           :work-type="'tv'"
@@ -128,6 +128,8 @@ import CameraIcon from "~icons/lucide/camera";
 import List from "~icons/lucide/list";
 import Info from "~icons/lucide/info";
 import EllipsisVertical from "~icons/lucide/ellipsis-vertical";
+import Pencil from "~icons/lucide/pencil";
+import Plus from "~icons/lucide/plus";
 import { Share } from "@capacitor/share";
 import AppActionSheet, {
   ActionSheetButton,
@@ -140,7 +142,7 @@ import MediaThumbnail from "@/components/MediaThumbnail.vue";
 import MediaInfoCard from "@/components/MediaInfoCard.vue";
 import MediaItem from "@/components/MediaItem.vue";
 import DubbingProjectsView from "@/components/DubbingProjectsView.vue";
-import VoiceActorSearchModal from "@/components/VoiceActorSearchModal.vue";
+import PersonSearchModal from "@/components/PersonSearchModal.vue";
 import CreditsReviewModal from "@/components/CreditsReviewModal.vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import { useVoiceActorManagement } from "@/composables/useVoiceActorManagement";
@@ -166,6 +168,11 @@ const route = useRoute();
 const router = useRouter();
 
 const isActionSheetOpen = ref(false);
+
+const goToAddProject = () => {
+  router.push(`/edit-dubbing-project/new?contentId=${route.params.id}`);
+};
+
 const actionSheetButtons = computed<ActionSheetButton[]>(() => {
   const buttons: ActionSheetButton[] = [
     {
@@ -178,6 +185,14 @@ const actionSheetButtons = computed<ActionSheetButton[]>(() => {
       icon: Settings,
     },
   ];
+
+  if (isAdmin.value) {
+    buttons.push({
+      text: t("movie.addDubbingProject", "Add Dubbing Project"),
+      icon: Plus,
+      handler: goToAddProject,
+    });
+  }
 
   if (isAdmin.value && !hasData.value) {
     buttons.push({
@@ -374,12 +389,29 @@ const extractedCredits = ref<
 
 const shareMedia = async () => {
   if (!show.value) return;
-  await Share.share({
-    title: show.value.name || "DubbingBase",
-    text: `Check out ${show.value.name} on DubbingBase!`,
-    url: `dubbingbase://serie/${show.value.id}`,
-    dialogTitle: "Share Series",
-  });
+  const url = `dubbingbase://serie/${show.value.id}`;
+  try {
+    await Share.share({
+      title: show.value.name || "DubbingBase",
+      text: `Check out ${show.value.name} on DubbingBase!`,
+      url: url,
+      dialogTitle: "Share Series",
+    });
+  } catch (err) {
+    console.error("Error sharing:", err);
+    try {
+      await navigator.clipboard.writeText(url);
+      const toast = await toastController.create({
+        message: "Link copied to clipboard!",
+        duration: 2000,
+        position: "top",
+        color: "success"
+      });
+      await toast.present();
+    } catch (clipboardErr) {
+      console.error("Clipboard copy failed:", clipboardErr);
+    }
+  }
 };
 
 const takePhoto = async () => {

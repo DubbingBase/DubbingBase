@@ -4,6 +4,7 @@ import vue from "@vitejs/plugin-vue";
 import path from "path";
 import { defineConfig, loadEnv } from "vite";
 import Icons from "unplugin-icons/vite";
+import tailwindcss from "@tailwindcss/vite";
 import vueDevTools from "vite-plugin-vue-devtools";
 
 // https://vitejs.dev/config/
@@ -25,6 +26,7 @@ export default ({ mode }) => {
         },
       }),
       // legacy(),
+      tailwindcss(),
       Icons({ compiler: "vue3" }),
       vueDevTools(),
     ],

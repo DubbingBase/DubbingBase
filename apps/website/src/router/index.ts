@@ -58,21 +58,31 @@ const routes = [
         path: "voice-actors/new",
         name: "CreateVoiceActor",
         component: () => import("../views/EditVoiceActor.vue"),
-        beforeEnter: (_to: any, from: any, next: any) => {
-          if (
-            from.name === "VoiceActorSpreadsheet" ||
-            from.path === "/voice-actor-spreadsheet"
-          ) {
-            next();
-          } else {
-            next("/voice-actor-spreadsheet");
-          }
-        },
       },
       {
         path: "voice-actors/edit/:id",
         name: "EditVoiceActor",
         component: () => import("../views/EditVoiceActor.vue"),
+      },
+      {
+        path: "movies/new",
+        name: "CreateMovie",
+        component: () => import("../views/EditMovie.vue"),
+      },
+      {
+        path: "movies/edit/:id",
+        name: "EditMovie",
+        component: () => import("../views/EditMovie.vue"),
+      },
+      {
+        path: "studios/new",
+        name: "CreateStudio",
+        component: () => import("../views/EditStudio.vue"),
+      },
+      {
+        path: "studios/edit/:id",
+        name: "EditStudio",
+        component: () => import("../views/EditStudio.vue"),
       },
       {
         path: "add-voice-cast/:id",

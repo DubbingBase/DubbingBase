@@ -2,7 +2,7 @@
   <AppModal :is-open="isOpen" @didDismiss="$emit('close')">
     <AppHeader>
       <AppToolbar>
-        <AppTitle>Select Voice Actor</AppTitle>
+        <AppTitle>Select Person</AppTitle>
         <template #end >
           <AppButton @click="$emit('close')">
             <XCircle class="app-icon" />
@@ -13,7 +13,7 @@
         <AppSearchbar
           v-model="searchTerm"
           @ionInput="handleSearchInput"
-          placeholder="Search voice actors..."
+          placeholder="Search persons..."
           animated
           :debounce="300"
         ></AppSearchbar>
@@ -31,12 +31,15 @@
       </AppListItem>
 
       <!-- No results state -->
-      <AppListItem
+      <div
         v-else-if="!searchResults.length && searchTerm"
-        class="ion-text-center"
+        class="ion-text-center py-8"
       >
-        <AppText>No voice actors found</AppText>
-      </AppListItem>
+        <AppText class="block mb-4">No persons found</AppText>
+        <AppButton fill="outline" @click="$emit('create-new')">
+          Create New Person
+        </AppButton>
+      </div>
 
       <!-- Results list -->
       <AppList v-else-if="searchResults.length > 0">
@@ -46,7 +49,8 @@
           button
           @click="
             () => {
-              if (linkVoiceActor) linkVoiceActor(va, mediaId);
+              if (linkVoiceActor && mediaId) linkVoiceActor(va, mediaId);
+              $emit('select', va);
             }
           "
         >
@@ -68,6 +72,11 @@
           </AppText>
         </AppListItem>
       </AppList>
+      <div v-if="!isSearching && !searchError && searchResults.length > 0" class="ion-padding-top ion-text-center border-t border-slate-700/50 mt-4">
+        <AppButton fill="clear" @click="$emit('create-new')" class="w-full text-blue-400">
+          + Create New Person
+        </AppButton>
+      </div>
     </AppContent>
   </AppModal>
 </template>
@@ -90,14 +99,16 @@ import AppSpinner from '@/components/common/AppSpinner.vue';
 import AppSkeleton from '@/components/common/AppSkeleton.vue';
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import { useVoiceActorManagement, type VoiceActor } from "@/composables/useVoiceActorManagement";
+const emit = defineEmits(['close', 'select', 'create-new']);
+
 const props = defineProps<{
   isOpen: boolean;
-  mediaId: string;
-  workType: "movie" | "tv" | "season" | "episode";
-  linkVoiceActor: (va: VoiceActor, mediaId: string) => void;
+  mediaId?: string;
+  workType?: "movie" | "tv" | "season" | "episode";
+  linkVoiceActor?: (va: VoiceActor, mediaId: string) => void;
 }>();
 
-const { searchTerm, searchResults, isSearching, searchError } = useVoiceActorManagement(props.workType);
+const { searchTerm, searchResults, isSearching, searchError } = useVoiceActorManagement(props.workType || "movie");
 
 const handleSearchInput = (event: any) => {
   const value = event.target.value;

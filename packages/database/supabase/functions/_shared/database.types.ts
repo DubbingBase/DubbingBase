@@ -34,57 +34,111 @@ export type Database = {
   }
   public: {
     Tables: {
+      dubbing_project_crew: {
+        Row: {
+          created_at: string | null
+          dubbing_project_id: number
+          id: number
+          job_id: number
+          person_id: number
+        }
+        Insert: {
+          created_at?: string | null
+          dubbing_project_id: number
+          id?: number
+          job_id: number
+          person_id: number
+        }
+        Update: {
+          created_at?: string | null
+          dubbing_project_id?: number
+          id?: number
+          job_id?: number
+          person_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dubbing_project_crew_dubbing_project_id_fkey"
+            columns: ["dubbing_project_id"]
+            isOneToOne: false
+            referencedRelation: "dubbing_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dubbing_project_crew_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dubbing_project_crew_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "voice_actors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dubbing_projects: {
         Row: {
-          adaptation: string | null
-          artistic_director: string | null
           content_id: number
           content_type: string
           created_at: string | null
-          creative_supervision: string | null
-          editing: string | null
           id: number
           language: string | null
-          mixing: string | null
-          project_manager: string | null
-          recording: string | null
           status: string | null
           studio: string | null
+          studio_id: number | null
           updated_at: string | null
         }
         Insert: {
-          adaptation?: string | null
-          artistic_director?: string | null
           content_id: number
           content_type: string
           created_at?: string | null
-          creative_supervision?: string | null
-          editing?: string | null
           id?: number
           language?: string | null
-          mixing?: string | null
-          project_manager?: string | null
-          recording?: string | null
           status?: string | null
           studio?: string | null
+          studio_id?: number | null
           updated_at?: string | null
         }
         Update: {
-          adaptation?: string | null
-          artistic_director?: string | null
           content_id?: number
           content_type?: string
           created_at?: string | null
-          creative_supervision?: string | null
-          editing?: string | null
           id?: number
           language?: string | null
-          mixing?: string | null
-          project_manager?: string | null
-          recording?: string | null
           status?: string | null
           studio?: string | null
+          studio_id?: number | null
           updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dubbing_projects_studio_id_fkey"
+            columns: ["studio_id"]
+            isOneToOne: false
+            referencedRelation: "studios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jobs: {
+        Row: {
+          created_at: string | null
+          id: number
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          name?: string
         }
         Relationships: []
       }
@@ -106,6 +160,42 @@ export type Database = {
           name?: string | null
           suggested_at?: string | null
           user_id?: number | null
+        }
+        Relationships: []
+      }
+      studios: {
+        Row: {
+          city: string | null
+          country: string | null
+          created_at: string | null
+          description: string | null
+          id: number
+          logo_url: string | null
+          name: string
+          updated_at: string | null
+          website_url: string | null
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          logo_url?: string | null
+          name: string
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          logo_url?: string | null
+          name?: string
+          updated_at?: string | null
+          website_url?: string | null
         }
         Relationships: []
       }

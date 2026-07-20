@@ -9,7 +9,7 @@ import { usePostHog } from "@/composables/usePostHog";
 
 // Import your custom route meta types
 import Home from "../views/home.vue";
-import TabsPage from "../layouts/base.vue";
+
 import MovieDetails from "../views/movie-details.vue";
 import ActorDetails from "../views/actor-details.vue";
 import SerieDetails from "../views/serie-details.vue";
@@ -29,23 +29,17 @@ const routes: readonly RouteRecordRaw[] = [
     name: "Login",
     component: Login,
   },
+  { path: "/home", name: "Home", component: Home },
+  { name: "Search", path: "/search", component: Search },
   {
-    path: "/tabs",
-    component: TabsPage,
-    children: [
-      { path: "/tabs/home", name: "Home", component: Home },
-      { name: "Search", path: "/tabs/search", component: Search },
-      {
-        name: "Settings",
-        path: "/tabs/settings",
-        component: () => import("../views/settings.vue"),
-      },
-      {
-        name: "Profile",
-        path: "/tabs/profile",
-        component: () => import("../views/profile.vue"),
-      },
-    ],
+    name: "Settings",
+    path: "/settings",
+    component: () => import("../views/settings.vue"),
+  },
+  {
+    name: "Profile",
+    path: "/profile",
+    component: () => import("../views/profile.vue"),
   },
   {
     name: "About",
@@ -56,6 +50,21 @@ const routes: readonly RouteRecordRaw[] = [
     name: "VoiceActorProfile",
     path: "/voice-actor-profile/:id",
     component: () => import("../views/voice-actor-profile.vue"),
+  },
+  {
+    name: "VoiceActorCreate",
+    path: "/voice-actor-profile/new",
+    component: () => import("../views/voice-actor-profile.vue"),
+  },
+  {
+    name: "MediaEdit",
+    path: "/edit-dubbing-project/:id",
+    component: () => import("../views/edit-dubbing-project.vue"),
+  },
+  {
+    name: "MediaCreate",
+    path: "/edit-dubbing-project/new",
+    component: () => import("../views/edit-dubbing-project.vue"),
   },
   {
     name: "MovieDetails",
@@ -76,6 +85,21 @@ const routes: readonly RouteRecordRaw[] = [
     name: "VoiceActorDetails",
     path: "/voice-actor/:id",
     component: VoiceActorDetails,
+  },
+  {
+    name: "StudioDetails",
+    path: "/studio/:id",
+    component: () => import("../views/studio-details.vue"),
+  },
+  {
+    name: "StudioEdit",
+    path: "/studio-edit/:id",
+    component: () => import("../views/edit-studio.vue"),
+  },
+  {
+    name: "StudioCreate",
+    path: "/studio-edit/new",
+    component: () => import("../views/edit-studio.vue"),
   },
   {
     name: "SeasonDetails",

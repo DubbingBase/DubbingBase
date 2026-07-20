@@ -3,6 +3,9 @@
   <AppPage>
     <AppHeader>
       <AppToolbar style="--background: transparent">
+        <template #start>
+          <AppBackButton />
+        </template>
         <AppSearchbar
           ref="searchbarRef"
           v-model="query"
@@ -50,6 +53,7 @@ import { IonPage, onIonViewDidEnter } from "@ionic/vue";
 import AppPage from "@/components/common/layout/AppPage.vue";
 import AppHeader from "@/components/common/layout/AppHeader.vue";
 import AppToolbar from "@/components/common/layout/AppToolbar.vue";
+import AppBackButton from "@/components/common/AppBackButton.vue";
 import AppTitle from "@/components/common/layout/AppTitle.vue";
 import AppContent from "@/components/common/layout/AppContent.vue";
 import AppList from "@/components/common/AppList.vue";

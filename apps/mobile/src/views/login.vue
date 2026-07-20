@@ -70,11 +70,11 @@ const route = useRoute();
 const handleSuccessfulAuth = () => {
   const redirectPath = Array.isArray(route.query.redirect)
     ? route.query.redirect[0]
-    : route.query.redirect || '/tabs/home';
+    : route.query.redirect || '/home';
 
   // Ensure we don't redirect back to login
   if (redirectPath === '/login') {
-    router.push('/tabs/home');
+    router.push('/home');
   } else {
     router.push(redirectPath as string);
   }

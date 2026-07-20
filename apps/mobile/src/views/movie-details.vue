@@ -39,7 +39,7 @@
         </div>
       </AppContent>
 
-      <VoiceActorSearchModal
+      <PersonSearchModal
         :is-open="showVoiceActorSearch"
         :media-id="route.params.id as string"
         :work-type="'movie'"
@@ -82,8 +82,10 @@ import Share2 from "~icons/lucide/share-2";
 import Camera from '~icons/lucide/camera';
 import List from '~icons/lucide/list';
 import Info from '~icons/lucide/info';
-import RefreshCw from '~icons/lucide/refresh-cw';
+import Pencil from '~icons/lucide/pencil';
+import Plus from '~icons/lucide/plus';
 import EllipsisVertical from "~icons/lucide/ellipsis-vertical";
+import RefreshCw from "~icons/lucide/refresh-cw";
 import { Share } from "@capacitor/share";
 import AppActionSheet, { ActionSheetButton } from "@/components/common/AppActionSheet.vue";
 
@@ -95,7 +97,7 @@ import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
 import MediaInfoCard from "@/components/MediaInfoCard.vue";
 import DubbingProjectsView from "@/components/DubbingProjectsView.vue";
-import VoiceActorSearchModal from "@/components/VoiceActorSearchModal.vue";
+import PersonSearchModal from "@/components/PersonSearchModal.vue";
 import CreditsReviewModal from "@/components/CreditsReviewModal.vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import MediaItem from "@/components/MediaItem.vue";
@@ -113,6 +115,10 @@ const { showToast } = useToast();
 const route = useRoute();
 const router = useRouter();
 
+const goToAddProject = () => {
+  router.push(`/edit-dubbing-project/new?contentId=${route.params.id}`);
+};
+
 const isActionSheetOpen = ref(false);
 const actionSheetButtons = computed<ActionSheetButton[]>(() => {
   const buttons: ActionSheetButton[] = [
@@ -122,6 +128,14 @@ const actionSheetButtons = computed<ActionSheetButton[]>(() => {
       handler: () => shareMedia(),
     },
   ];
+
+  if (isAdmin.value) {
+    buttons.push({
+      text: t('movie.addDubbingProject', 'Add Dubbing Project'),
+      icon: Plus,
+      handler: goToAddProject,
+    });
+  }
 
   if (isAdmin.value && !hasData.value) {
     buttons.push({
@@ -341,12 +355,29 @@ const extractedCredits = ref<
 
 const shareMedia = async () => {
   if (!movie.value) return;
-  await Share.share({
-    title: movie.value.title || "DubbingBase",
-    text: `Check out ${movie.value.title} on DubbingBase!`,
-    url: `dubbingbase://movie/${movie.value.id}`,
-    dialogTitle: "Share Movie",
-  });
+  const url = `dubbingbase://movie/${movie.value.id}`;
+  try {
+    await Share.share({
+      title: movie.value.title || "DubbingBase",
+      text: `Check out ${movie.value.title} on DubbingBase!`,
+      url: url,
+      dialogTitle: "Share Movie",
+    });
+  } catch (err) {
+    console.error("Error sharing:", err);
+    try {
+      await navigator.clipboard.writeText(url);
+      const toast = await toastController.create({
+        message: "Link copied to clipboard!",
+        duration: 2000,
+        position: "top",
+        color: "success"
+      });
+      await toast.present();
+    } catch (clipboardErr) {
+      console.error("Clipboard copy failed:", clipboardErr);
+    }
+  }
 };
 
 const takePhoto = async () => {

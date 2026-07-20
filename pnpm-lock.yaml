@@ -77,6 +77,9 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.57.4
         version: 2.83.0
+      '@tailwindcss/vite':
+        specifier: ^4.1.17
+        version: 4.1.17(vite@5.4.20(@types/node@24.9.1)(lightningcss@1.30.2)(sass@1.92.1)(terser@5.44.0))
       '@types/node':
         specifier: ^24.9.1
         version: 24.9.1
@@ -101,6 +104,9 @@ importers:
       posthog-js:
         specifier: ^1.283.0
         version: 1.283.0
+      tailwindcss:
+        specifier: ^4.1.17
+        version: 4.1.17
       vite-plugin-deadfile:
         specifier: ^1.4.0
         version: 1.4.0(vite@5.4.20(@types/node@24.9.1)(lightningcss@1.30.2)(sass@1.92.1)(terser@5.44.0))
@@ -2189,7 +2195,7 @@ packages:
   '@xmldom/xmldom@0.7.13':
     resolution: {integrity: sha512-lm2GW5PkosIzccsaZIz7tp8cPADSIlIHWDFTR1N0SzfinhhYgeIQjFMz4rYzanCScr3DqQLeomUDArp6MWKm+g==}
     engines: {node: '>=10.0.0'}
-    deprecated: this version has critical issues, please update to the latest version
+    deprecated: this version is no longer supported, please update to at least 0.8.*
 
   '@xmldom/xmldom@0.8.11':
     resolution: {integrity: sha512-cQzWCtO6C8TQiYl1ruKNn2U6Ao4o4WBBcbL61yJl84x+j5sOWWFU9X7DpND8XZG3daDppSsigMdfAIl2upQBRw==}

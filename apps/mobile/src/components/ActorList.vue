@@ -67,8 +67,11 @@ console.log("voiceActors", props.voiceActors);
 // Filter voice actors for a specific actor
 const getVoiceActorsForActor = (actorId: number) => {
   if (!props.voiceActors) return [];
-  // console.log('props.voiceActors', props.voiceActors)
-  return props.voiceActors.filter((item) => item.tmdb_id === actorId);
+  return props.voiceActors.filter(
+    (item) =>
+      Number(item.tmdb_id) === Number(actorId) ||
+      Number((item as any).actor_id) === Number(actorId)
+  );
 };
 
 const filteredActors = computed(() => {
