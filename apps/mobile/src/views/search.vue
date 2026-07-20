@@ -4,6 +4,7 @@
     <AppHeader>
       <AppToolbar style="--background: transparent">
         <AppSearchbar
+          ref="searchbarRef"
           v-model="query"
           :debounce="300"
           @ionInput="search($event)"
@@ -45,7 +46,7 @@
 </template>
 
 <script lang="ts" setup>
-import { IonPage } from "@ionic/vue";
+import { IonPage, onIonViewDidEnter } from "@ionic/vue";
 import AppPage from "@/components/common/layout/AppPage.vue";
 import AppHeader from "@/components/common/layout/AppHeader.vue";
 import AppToolbar from "@/components/common/layout/AppToolbar.vue";
@@ -64,6 +65,12 @@ import { supabase } from "@/api/supabase";
 import type { SearchResult } from "@/types/search";
 
 const { showToast } = useToast();
+
+const searchbarRef = ref<InstanceType<typeof AppSearchbar> | null>(null);
+
+onIonViewDidEnter(() => {
+  searchbarRef.value?.focus();
+});
 
 const matches = ref<SearchResult[]>([]);
 const isLoading = ref(false);
