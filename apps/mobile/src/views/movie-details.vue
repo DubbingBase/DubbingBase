@@ -30,6 +30,7 @@
           :open-voice-actor-search="openVoiceActorSearch"
           :mediaLanguage="movie?.original_language"
           :externalVoiceActors="voiceActors"
+          :parentLoading="isLoading"
         />
 
         <LoadingSpinner v-if="isLoading" />

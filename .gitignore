@@ -33,3 +33,4 @@ target/**
 *.jks
 .turbo
 supabase/.temp/
+.playwright-mcp/

@@ -4,6 +4,7 @@
     :scrollable="scrollable"
     @ionChange="onChange"
     class="app-segment"
+    :style="bgColor ? { '--background': bgColor, background: bgColor } : {}"
   >
     <slot></slot>
   </ion-segment>
@@ -16,6 +17,7 @@ import { provide, computed, ref, watch, onMounted } from 'vue';
 const props = defineProps<{
   modelValue?: string;
   scrollable?: boolean;
+  bgColor?: string;
 }>();
 
 const emit = defineEmits<{
@@ -52,7 +54,7 @@ provide('updateSegment', (value: string) => {
   background: var(--app-color-step-100, #1e1e1e);
   border-radius: 8px;
   padding: 4px;
-  margin: 16px;
+  margin: 8px 16px;
   width: calc(100% - 32px); /* 100% minus horizontal margins */
   box-sizing: border-box;
   --background: var(--app-color-step-100, #1e1e1e);

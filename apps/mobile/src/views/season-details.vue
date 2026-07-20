@@ -53,6 +53,7 @@
             :editVoiceActorLink="editVoiceActorLink"
             :confirmDeleteVoiceActorLink="confirmDeleteVoiceActorLink"
             :openVoiceActorSearch="openVoiceActorSearch"
+            :parentLoading="isLoading"
           />
         </div>
       </div>

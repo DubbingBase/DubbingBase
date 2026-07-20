@@ -49,6 +49,7 @@
                 :open-voice-actor-search="openVoiceActorSearch"
                 :mediaLanguage="show?.original_language"
                 :externalVoiceActors="voiceActors"
+                :parentLoading="isLoading"
               />
             </AppSegmentContent>
             <AppSegmentContent class="segmented-content" id="seasons">
