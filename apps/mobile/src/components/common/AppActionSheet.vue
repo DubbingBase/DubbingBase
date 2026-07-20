@@ -1,36 +1,16 @@
 <template>
-  <AppModal
-    v-model:is-open="isOpen"
-    :can-swipe="true"
-    :overlay="true"
-  >
-    <div class="action-sheet-container">
-      <div v-if="header" class="action-sheet-header">
-        <AppText class="header-text">{{ header }}</AppText>
-      </div>
-      
-      <div class="action-sheet-buttons">
-        <button
-          v-for="(btn, index) in buttons"
-          :key="index"
-          class="action-sheet-button"
-          :class="[btn.role ? `role-${btn.role}` : '']"
-          @click="handleButton(btn)"
-        >
-          <div v-if="btn.icon" class="button-icon-wrapper">
-            <component :is="btn.icon" class="button-icon" />
-          </div>
-          <AppText class="button-text">{{ btn.text }}</AppText>
-        </button>
-      </div>
-    </div>
-  </AppModal>
+  <ion-action-sheet
+    :is-open="isOpen"
+    :header="header"
+    :buttons="formattedButtons"
+    css-class="custom-dark-action-sheet"
+    @didDismiss="isOpen = false"
+  ></ion-action-sheet>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import AppModal from './AppModal.vue';
-import AppText from './AppText.vue';
+import { computed, h, render } from 'vue';
+import { IonActionSheet } from '@ionic/vue';
 
 export interface ActionSheetButton {
   text: string;
@@ -58,96 +38,65 @@ const isOpen = computed({
   }
 });
 
-const handleButton = (btn: ActionSheetButton) => {
-  if (btn.handler) {
-    btn.handler();
+const getSvgStringFromComponent = (component: any) => {
+  if (!component) return undefined;
+  if (typeof component === 'string') return component; // Already an SVG string or icon name
+
+  try {
+    const div = document.createElement('div');
+    const vnode = h(component, {
+      width: '24px',
+      height: '24px',
+      stroke: 'currentColor'
+    });
+    render(vnode, div);
+    let svgString = div.innerHTML.replace(/currentColor/g, '#ffffff');
+    if (!svgString.includes('xmlns=')) {
+      svgString = svgString.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+    }
+    return `data:image/svg+xml;utf8,${svgString}`;
+  } catch (e) {
+    console.error('Failed to convert Vue component to SVG string', e);
+    return undefined;
   }
-  isOpen.value = false;
 };
+
+const formattedButtons = computed(() => {
+  const finalButtons: any[] = props.buttons.map(btn => ({
+    text: btn.text,
+    role: btn.role,
+    icon: getSvgStringFromComponent(btn.icon),
+    handler: btn.handler
+  }));
+
+  // Add a cancel button if not explicitly provided
+  if (!finalButtons.some(b => b.role === 'cancel')) {
+    finalButtons.push({
+      text: 'Cancel',
+      role: 'cancel'
+    });
+  }
+
+  return finalButtons;
+});
 </script>
 
-<style scoped>
-.action-sheet-container {
-  padding: 16px;
-  padding-bottom: env(safe-area-inset-bottom, 24px);
-  padding-top: 0;
-  display: flex;
-  flex-direction: column;
+<style>
+.custom-dark-action-sheet {
+  --background: var(--app-color-step-50, #1e1e1e);
+  --button-background: var(--app-color-step-100, #2d2d2d);
+  --button-background-selected: var(--app-color-step-200, #3d3d3d);
+  --button-color: var(--app-color-text-primary, #ffffff);
+  --color: var(--app-color-medium, #92949c);
 }
 
-.action-sheet-header {
-  padding: 16px;
-  text-align: center;
-  border-bottom: 1px solid var(--app-color-step-100, #2d2d2d);
-  margin-bottom: 8px;
-}
-
-.header-text {
+.custom-dark-action-sheet .action-sheet-cancel {
+  --button-background: var(--app-color-step-200, #3d3d3d);
+  --button-color: var(--app-color-text-primary, #ffffff);
   font-weight: 600;
-  color: var(--app-color-medium, #92949c);
-  font-size: 14px;
 }
 
-.action-sheet-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.action-sheet-button {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  background: var(--app-color-step-100, #2d2d2d);
-  border: none;
-  border-radius: 12px;
-  padding: 16px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.action-sheet-button:active {
-  background: var(--app-color-step-200, #3d3d3d);
-}
-
-.button-icon-wrapper {
-  margin-right: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.button-icon {
-  width: 24px;
-  height: 24px;
-  color: var(--app-color-text-primary, #ffffff);
-}
-
-.button-text {
-  font-size: 16px;
-  color: var(--app-color-text-primary, #ffffff);
-  font-weight: 500;
-  text-align: left;
-  flex: 1;
-}
-
-.role-destructive .button-text,
-.role-destructive .button-icon {
-  color: var(--app-color-danger, #ef4444);
-}
-
-.role-cancel {
-  background: var(--app-color-step-200, #3d3d3d);
-  justify-content: center;
-  margin-top: 8px;
-}
-
-.role-cancel .button-icon-wrapper {
-  display: none;
-}
-
-.role-cancel .button-text {
-  text-align: center;
-  font-weight: 600;
+.custom-dark-action-sheet .action-sheet-destructive {
+  --button-color: var(--app-color-danger, #ef4444);
 }
 </style>

@@ -1,3 +1,7 @@
+import { SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { Database } from "./database.types.ts";
+import { findOrCreateDubbingProject } from "./dubbing-project.ts";
+
 /**
  * Search TMDB for a person by name and return the best match's ID, or null.
  */
@@ -32,9 +36,9 @@ async function searchTmdbPerson(fullName: string): Promise<number | null> {
 }
 
 export class VoiceActorService {
-  private supabase: any;
+  private supabase: SupabaseClient<Database>;
 
-  constructor(supabaseClient: any) {
+  constructor(supabaseClient: SupabaseClient<Database>) {
     this.supabase = supabaseClient;
   }
 
@@ -64,7 +68,7 @@ export class VoiceActorService {
     const finalFirstName = existing ? existing.firstname : firstName;
     const finalLastName = existing ? existing.lastname : lastName;
 
-    const upsertData: Record<string, any> = {
+    const upsertData: Database["public"]["Tables"]["voice_actors"]["Insert"] = {
       firstname: finalFirstName,
       lastname: finalLastName,
     };
@@ -115,6 +119,12 @@ export class VoiceActorService {
     contentType: string,
     performance?: string,
   ) {
+    const dubbing_project_id = await findOrCreateDubbingProject(
+      this.supabase,
+      contentId,
+      contentType
+    );
+
     const { data, error } = await this.supabase
       .from("work")
       .upsert(
@@ -124,6 +134,7 @@ export class VoiceActorService {
           actor_id: actorId,
           content_type: contentType,
           performance,
+          dubbing_project_id,
         },
         {
           onConflict: "voice_actor_id,content_id,actor_id,content_type",

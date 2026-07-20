@@ -1,5 +1,6 @@
 import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
+import { findOrCreateDubbingProject } from "../_shared/dubbing-project.ts";
 
 console.log("link-voice-actor function started");
 
@@ -98,6 +99,12 @@ export default {
       if (existingLink) {
         result = existingLink;
       } else {
+        const dubbing_project_id = await findOrCreateDubbingProject(
+          ctx.supabase,
+          media_id,
+          media_type
+        );
+
         // Create new link
         const insertData = {
           voice_actor_id,
@@ -106,6 +113,7 @@ export default {
           performance: character_name || role || "dialogues",
           status: "user",
           actor_id: actor_id || null,
+          dubbing_project_id,
         };
 
         const { data, error } = await ctx.supabase

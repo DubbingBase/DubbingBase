@@ -17,9 +17,10 @@
       <AppContent>
         <MediaInfoCard :media="movie" />
 
-        <ActorList
+        <DubbingProjectsView
+          :contentId="route.params.id as string"
+          contentType="movie"
           :actors="actors"
-          :voice-actors="voiceActors"
           :is-admin="isAdmin"
           :get-voice-actor-by-tmdb-id="getVoiceActorByTmdbId"
           :go-to-actor="goToActor"
@@ -27,10 +28,9 @@
           :edit-voice-actor-link="editVoiceActorLink"
           :confirm-delete-voice-actor-link="confirmDeleteVoiceActorLink"
           :open-voice-actor-search="openVoiceActorSearch"
-          :loading="isLoading"
           :mediaLanguage="movie?.original_language"
-          :workType="'movie'"
-          :contentId="route.params.id as string"
+          :externalVoiceActors="voiceActors"
+          :parentLoading="isLoading"
         />
 
         <LoadingSpinner v-if="isLoading" />
@@ -82,6 +82,7 @@ import Share2 from "~icons/lucide/share-2";
 import Camera from '~icons/lucide/camera';
 import List from '~icons/lucide/list';
 import Info from '~icons/lucide/info';
+import RefreshCw from '~icons/lucide/refresh-cw';
 import EllipsisVertical from "~icons/lucide/ellipsis-vertical";
 import { Share } from "@capacitor/share";
 import AppActionSheet, { ActionSheetButton } from "@/components/common/AppActionSheet.vue";
@@ -93,7 +94,7 @@ import { useVoiceActorManagement } from "@/composables/useVoiceActorManagement";
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
 import MediaInfoCard from "@/components/MediaInfoCard.vue";
-import ActorList from "@/components/ActorList.vue";
+import DubbingProjectsView from "@/components/DubbingProjectsView.vue";
 import VoiceActorSearchModal from "@/components/VoiceActorSearchModal.vue";
 import CreditsReviewModal from "@/components/CreditsReviewModal.vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
@@ -123,6 +124,16 @@ const actionSheetButtons = computed<ActionSheetButton[]>(() => {
   ];
 
   if (isAdmin.value && !hasData.value) {
+    buttons.push({
+      text: t('movie.updateCredits', 'Update Credits (Admin)'),
+      icon: RefreshCw,
+      handler: () => {
+        showCreditsReview.value = true;
+      },
+    });
+  }
+
+  if (isAdmin.value) {
     buttons.push({
       text: t('common.scan', 'Scanner'),
       icon: Camera,

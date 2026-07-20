@@ -406,9 +406,6 @@ verify_jwt = false
 [functions.process-media-queue]
 verify_jwt = false
 
-[functions.process_image]
-verify_jwt = false
-
 [functions.recent-voice-actors]
 verify_jwt = false
 

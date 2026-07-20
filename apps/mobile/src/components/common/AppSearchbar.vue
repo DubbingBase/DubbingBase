@@ -6,6 +6,7 @@
         <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" d="M338.29 338.29L448 448"/>
       </svg>
       <input
+        ref="inputRef"
         type="search"
         class="searchbar-input"
         :placeholder="placeholder"
@@ -48,6 +49,14 @@ const emit = defineEmits<{
   (e: 'ionBlur', event: Event): void;
   (e: 'ionClear'): void;
 }>();
+
+const inputRef = ref<HTMLInputElement | null>(null);
+
+defineExpose({
+  focus: () => {
+    inputRef.value?.focus();
+  }
+});
 
 let debounceTimeout: any = null;
 

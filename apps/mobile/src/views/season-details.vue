@@ -42,9 +42,10 @@
         <div v-else-if="activeTab === 'voices'">
           <!-- Voices Tab Content -->
           <h3>{{ activeTab === 'voices' && season?.credits?.cast ? 'Voix françaises de la saison' : 'Voix françaises de l\'épisode' }}</h3>
-          <ActorList
+          <DubbingProjectsView
+            :contentId="route.params.seasonId as string"
+            contentType="season"
             :actors="normalizedActors"
-            :voiceActors="[]"
             :isAdmin="false"
             :getVoiceActorByTmdbId="getVoiceActorByTmdbId"
             :goToActor="goToActor"
@@ -52,7 +53,7 @@
             :editVoiceActorLink="editVoiceActorLink"
             :confirmDeleteVoiceActorLink="confirmDeleteVoiceActorLink"
             :openVoiceActorSearch="openVoiceActorSearch"
-            :loading="isLoading"
+            :parentLoading="isLoading"
           />
         </div>
       </div>
@@ -87,7 +88,7 @@ import Info from "~icons/lucide/info";
 import AppActionSheet, { ActionSheetButton } from "@/components/common/AppActionSheet.vue";
 import SeasonBanner from "../components/SeasonBanner.vue";
 import EpisodesList from "../components/EpisodesList.vue";
-import ActorList from "../components/ActorList.vue";
+import DubbingProjectsView from "@/components/DubbingProjectsView.vue";
 import AppButton from "@/components/common/AppButton.vue";
 
 const route = useRoute();
