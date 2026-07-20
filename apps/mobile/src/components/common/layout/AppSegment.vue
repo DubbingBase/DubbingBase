@@ -1,11 +1,17 @@
 <template>
-  <div class="app-segment">
+  <ion-segment
+    ref="segmentEl"
+    :scrollable="scrollable"
+    @ionChange="onChange"
+    class="app-segment"
+  >
     <slot></slot>
-  </div>
+  </ion-segment>
 </template>
 
 <script setup lang="ts">
-import { provide, computed, ref, watch } from 'vue';
+import { IonSegment } from '@ionic/vue';
+import { provide, computed, ref, watch, onMounted } from 'vue';
 
 const props = defineProps<{
   modelValue?: string;
@@ -16,37 +22,39 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void;
 }>();
 
-const internalValue = ref(props.modelValue || '');
+const segmentEl = ref<any>(null);
 
 watch(() => props.modelValue, (newVal) => {
-  if (newVal !== undefined) {
-    internalValue.value = newVal;
+  if (segmentEl.value?.$el && newVal !== undefined) {
+    segmentEl.value.$el.value = newVal;
   }
 });
 
-const activeSegment = computed(() => props.modelValue !== undefined ? props.modelValue : internalValue.value);
+onMounted(() => {
+  if (props.modelValue !== undefined && segmentEl.value?.$el) {
+    segmentEl.value.$el.value = props.modelValue;
+  }
+});
 
-provide('segmentValue', activeSegment);
+const onChange = (e: any) => {
+  emit('update:modelValue', e.detail.value);
+};
+
+// Provide updateSegment just in case any custom logic needs it
+provide('segmentValue', computed(() => props.modelValue || ''));
 provide('updateSegment', (value: string) => {
-  internalValue.value = value;
   emit('update:modelValue', value);
 });
 </script>
 
 <style scoped>
 .app-segment {
-  display: flex;
   background: var(--app-color-step-100, #1e1e1e);
   border-radius: 8px;
   padding: 4px;
   margin: 16px;
-  overflow-x: auto;
   width: calc(100% - 32px); /* 100% minus horizontal margins */
   box-sizing: border-box;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none;  /* Internet Explorer 10+ */
-}
-.app-segment::-webkit-scrollbar { 
-  display: none;  /* Safari and Chrome */
+  --background: var(--app-color-step-100, #1e1e1e);
 }
 </style>

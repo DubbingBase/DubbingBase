@@ -82,6 +82,7 @@ import Share2 from "~icons/lucide/share-2";
 import Camera from '~icons/lucide/camera';
 import List from '~icons/lucide/list';
 import Info from '~icons/lucide/info';
+import RefreshCw from '~icons/lucide/refresh-cw';
 import EllipsisVertical from "~icons/lucide/ellipsis-vertical";
 import { Share } from "@capacitor/share";
 import AppActionSheet, { ActionSheetButton } from "@/components/common/AppActionSheet.vue";
@@ -123,6 +124,16 @@ const actionSheetButtons = computed<ActionSheetButton[]>(() => {
   ];
 
   if (isAdmin.value && !hasData.value) {
+    buttons.push({
+      text: t('movie.updateCredits', 'Update Credits (Admin)'),
+      icon: RefreshCw,
+      handler: () => {
+        showCreditsReview.value = true;
+      },
+    });
+  }
+
+  if (isAdmin.value) {
     buttons.push({
       text: t('common.scan', 'Scanner'),
       icon: Camera,
