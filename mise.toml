@@ -175,5 +175,4 @@ run = "npx --yes tsx scripts/fetch_wikipedia_dubbing.ts"
 [tasks.fetch-dubbing-prod]
 description = "PROD: Fetches dubbing data and enqueues to PRODUCTION Supabase"
 depends = ["install"]
-env_file = ".env.production"
 run = "./scripts/fetch-dubbing-prod.sh"

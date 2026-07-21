@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 
+if [ -f ".env.production" ]; then
+  set -a
+  source .env.production
+  set +a
+else
+  echo "❌ Error: .env.production file not found in the root directory!"
+  exit 1
+fi
+
 echo -e "\033[0;31m========================================================================\033[0m"
 echo -e "\033[1;31m⚠️  WARNING: YOU ARE ABOUT TO ENQUEUE DATA INTO THE PRODUCTION DATABASE! ⚠️\033[0m"
 echo -e "\033[0;31m========================================================================\033[0m"
