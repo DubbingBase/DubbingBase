@@ -4,9 +4,10 @@ import { Database } from "../_shared/database.types.ts";
 
 export default {
   fetch: withSupabase<Database>(
-    { auth: ["user", "secret"] },
+    { auth: ["secret", "user"] },
     async (req, ctx) => {
       try {
+        console.log(`[QUEUE] Function booted. Processing request... method=${req.method}`);
         const results = [];
         let isSingle = false;
         let isForce = false;
@@ -22,11 +23,15 @@ export default {
             }
           }
         } catch (e) {
+          console.warn(`[QUEUE] Could not parse request body:`, e);
           // Ignore parse errors
         }
 
+        console.log(`[QUEUE] Request config: isSingle=${isSingle}, isForce=${isForce}`);
+
         // Watchdog mode: if not explicitly forced or single, ensure no other worker is currently running
         if (!isForce && !isSingle) {
+          console.log(`[QUEUE] Checking watchdog status...`);
           const { data: lockedCount, error: lockedErr } = await ctx.supabaseAdmin.rpc("get_media_queue_locked_count");
           if (lockedErr) {
             console.error("[QUEUE] Failed to check locked count:", lockedErr);
@@ -37,6 +42,7 @@ export default {
         }
 
         // Process exactly 1 item per invocation to guarantee we never hit function timeouts
+        console.log(`[QUEUE] Popping next message from queue...`);
         const { data, error: popError } = await ctx.supabaseAdmin.rpc(
           "pop_media_queue_message",
           {
@@ -52,6 +58,7 @@ export default {
 
         // If no message is returned, queue is empty
         if (!data || data.length === 0) {
+          console.log(`[QUEUE] Queue is empty. Exiting normally.`);
           return Response.json({ ok: true, processed: 0, results: [] });
         }
 
@@ -189,6 +196,7 @@ export default {
         // Check if there are more items in the queue and self-trigger to drain it.
         // This avoids timeout risk (we always process 1 item per invocation) while
         // ensuring the entire queue is drained without requiring a cron job.
+        console.log(`[QUEUE] Checking if we need to self-trigger...`);
         if (!isSingle) {
           const { data: queueDepth } = await ctx.supabaseAdmin.rpc(
             "get_media_queue_depth",
@@ -199,8 +207,11 @@ export default {
               `[QUEUE] ${queueDepth} more item(s) in queue, self-triggering another invocation.`,
             );
             // Fire-and-forget another invocation to process the next item
+            console.log(`[QUEUE] Initiating fetch for self-trigger...`);
             ctx.supabaseAdmin.functions.invoke("process-media-queue", {
               body: { force: true }
+            }).then(() => {
+              console.log(`[QUEUE] Self-trigger fetch completed successfully.`);
             }).catch(
               (err) => {
                 console.error(
@@ -209,11 +220,14 @@ export default {
                 );
               },
             );
+          } else {
+            console.log(`[QUEUE] queueDepth is 0 or invalid. Stopping loop.`);
           }
         } else {
           console.log(`[QUEUE] Single mode enabled. Skipping self-trigger.`);
         }
 
+        console.log(`[QUEUE] Invocation finished. Returning results.`);
         return Response.json({ ok: true, processed: results.length, results });
       } catch (error) {
         const errorMsg = error instanceof Error
