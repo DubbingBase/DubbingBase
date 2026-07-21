@@ -7,7 +7,7 @@ export const frenchFemaleDubber = (cmContinue = "") =>
   `https://fr.wikipedia.org/w/api.php?action=query&list=categorymembers&cmtitle=Catégorie:Actrice_française_de_doublage&cmlimit=100&format=json&cmcontinue=${cmContinue}`;
 
 export const wikipediaPageFindSections = (pageId: number) =>
-  `https://fr.wikipedia.org/w/api.php?action=parse&format=json&pageid=${pageId}&prop=sections&formatversion=2`;
+  `https://fr.wikipedia.org/w/api.php?action=parse&format=json&pageid=${pageId}&prop=tocdata&formatversion=2`;
 
 export const parseDubberPageAsHTML = (pageId: number, sectionId: string) =>
   `https://fr.wikipedia.org/w/api.php?action=parse&format=json&pageid=${pageId}&prop=text&formatversion=2&section=${sectionId}`;

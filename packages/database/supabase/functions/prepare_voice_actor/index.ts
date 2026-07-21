@@ -39,7 +39,7 @@ export default {
         console.error("wikipediaPageTitle is undefined");
         return Response.json({
           ok: false,
-          error: "wikipediaPageTitle is undefined",
+          error: "Pas de page Wikipédia en français pour ce média.",
         });
       }
 
@@ -60,7 +60,11 @@ export default {
 
       let sectionFound = false;
       let results: any[] = [];
-      const toc = flatTocToTree(wikipediaPageSections.parse.sections);
+      const sections =
+        wikipediaPageSections.parse.tocdata?.sections ||
+        wikipediaPageSections.parse.sections ||
+        [];
+      const toc = flatTocToTree(sections);
       for (const [sectionId, section] of toc) {
         // find dubbing section
         if (dubbingTerm.some((rx) => rx.test(section.line))) {

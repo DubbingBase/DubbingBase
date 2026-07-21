@@ -1,12 +1,12 @@
 import { supabase } from "./supabase";
 
 /**
- * Enqueue a media fetch request and immediately trigger the queue processor.
+ * Enqueue a media fetch request and fire-and-forget the queue processor.
  *
- * This is needed because the `process-media-queue` edge function is not
- * triggered automatically (no cron job or database trigger). After inserting
- * a message into the pgmq queue via `enqueue_media_fetch`, we fire-and-forget
- * an invocation of the processor so the item gets picked up right away.
+ * The item is inserted into the pgmq queue via `enqueue_media_fetch`, which
+ * ensures it is visible in the Admin Queue Management UI and can be retried.
+ * The processor is then triggered asynchronously so the caller does not need
+ * to wait for completion.
  */
 export async function enqueueAndProcessMedia(params: {
   tmdbId: number;
@@ -14,22 +14,14 @@ export async function enqueueAndProcessMedia(params: {
   seasonNumber?: number | null;
   episodeNumber?: number | null;
 }): Promise<void> {
-  const { data, error } = await supabase.functions.invoke("prepare_media", {
-    body: {
-      tmdbId: params.tmdbId,
-      type: params.mediaType,
-      seasonNumber: params.seasonNumber ?? undefined,
-      episodeNumber: params.episodeNumber ?? undefined,
-    },
+  // Enqueue the item so it is tracked in the queue
+  await enqueueMedia(params);
+
+  // Fire-and-forget: trigger the processor to pick it up immediately.
+  // We do not await so the UI is not blocked waiting for the import to finish.
+  supabase.functions.invoke("process-media-queue").catch((err) => {
+    console.error("Failed to trigger process-media-queue:", err);
   });
-
-  if (error) {
-    throw error;
-  }
-
-  if (data && !data.ok) {
-    throw new Error(data.error || "Failed to prepare media");
-  }
 }
 
 /**

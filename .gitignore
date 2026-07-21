@@ -24,6 +24,7 @@ dist-ssr
 *.sln
 *.sw?
 .env*
+!.env.example
 supabase/seed.sql
 backup_*/**
 apps/mobile/android/.bundle/
@@ -34,3 +35,4 @@ target/**
 .turbo
 supabase/.temp/
 .playwright-mcp/
+scripts/progress.json

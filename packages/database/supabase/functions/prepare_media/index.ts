@@ -78,7 +78,7 @@ export default {
         console.log("wikipediaPageTitle", wikipediaPageTitle);
 
         if (!wikipediaPageTitle) {
-          throw new Error("wikipediaPageTitle is undefined");
+          throw new Error("Pas de page Wikipédia en français pour ce média.");
         }
 
         // Use cached Wikipedia page info fetch
@@ -99,7 +99,12 @@ export default {
           await wikipediaCache.getPageSections(wikipediaLangPageId);
 
         console.log("wikipediaPageSections", wikipediaPageSections);
-        const sectionIds = wikipediaPageSections.parse.sections.filter(
+        const sections =
+          wikipediaPageSections.parse.tocdata?.sections ||
+          wikipediaPageSections.parse.sections ||
+          [];
+
+        const sectionIds = sections.filter(
           (section: { line: string; index: number }) => {
             return section.line.match(/distribution/i);
           },
@@ -156,7 +161,16 @@ export default {
           console.log("movie", movie);
 
           for (const entry of mistralSuggestionJSON?.items ?? []) {
-            const { actor, voiceActorFirstname, voiceActorName } = entry;
+            let { actor, voiceActorFirstname, voiceActorName } = entry;
+            const { voiceActor } = entry as any;
+
+            if (voiceActor && !voiceActorFirstname && !voiceActorName) {
+              const parts = voiceActor.trim().split(" ");
+              if (parts.length > 0) {
+                voiceActorFirstname = parts[0];
+                voiceActorName = parts.slice(1).join(" ");
+              }
+            }
 
             if (actor && voiceActorFirstname && voiceActorName) {
               // get actor id from the movie cast

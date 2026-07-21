@@ -179,7 +179,8 @@ async function fetchEpisodeInfos() {
   }
   isFetching.value = true;
 
-  // Fetch details and trigger processing directly
+  // Enqueue and fire-and-forget: the processor will pick it up in the background.
+  // The user is informed via a toast and can refresh the page later to see results.
   try {
     await enqueueAndProcessMedia({
       tmdbId: Number(route.params.id),
@@ -187,20 +188,19 @@ async function fetchEpisodeInfos() {
       seasonNumber: Number(route.params.season),
       episodeNumber: Number(episode.value.episode_number),
     });
-    // Immediately fetch updated data to display changes
-    await fetchEpisodeData();
+    // Refresh queue status so the UI reflects the pending state
+    await fetchQueueStatus();
     const toast = await toastController.create({
-      message:
-        "Import completed successfully! The voice cast has been updated.",
-      duration: 3000,
+      message: "Added to queue! Check back in a moment to see the updated voice cast.",
+      duration: 4000,
       position: "top",
       color: "success",
     });
     await toast.present();
   } catch (err) {
-    console.error("Error fetching episode data:", err);
+    console.error("Error enqueueing episode:", err);
     const toast = await toastController.create({
-      message: "Import failed. Please try again.",
+      message: "Failed to add to queue. Please try again.",
       duration: 3000,
       position: "top",
       color: "danger",

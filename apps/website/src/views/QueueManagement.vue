@@ -1,61 +1,138 @@
 <template>
   <div class="space-y-6">
     <!-- Header Card -->
-    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div
+      class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+    >
       <div>
         <h3 class="text-lg font-bold text-white">Import Queue Management</h3>
-        <p class="text-sm text-slate-400">Monitor TMDb media import requests, retry failed jobs, or clean up the queue.</p>
+        <p class="text-sm text-slate-400">
+          Monitor TMDb media import requests, retry failed jobs, or clean up the
+          queue.
+        </p>
       </div>
-      <button
-        @click="fetchQueueAndUsers"
-        :disabled="isLoading"
-        class="py-2.5 px-5 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 text-white font-semibold rounded-xl shadow-lg transition-all duration-150 hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center shrink-0"
-      >
-        <span v-if="isLoading" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
-        <span>Refresh Queue</span>
-      </button>
+      <div class="flex items-center space-x-3">
+        <button
+          v-if="isDev"
+          @click="clearQueue"
+          :disabled="isClearing || isLoading"
+          class="py-2.5 px-5 bg-red-600 hover:bg-red-500 disabled:bg-slate-800 disabled:text-slate-500 text-white font-semibold rounded-xl shadow-lg transition-all duration-150 hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center shrink-0"
+        >
+          <span
+            v-if="isClearing"
+            class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"
+          ></span>
+          <span>Clear Queue</span>
+        </button>
+        <button
+          @click="startProcessing"
+          :disabled="isProcessing || isLoading"
+          class="py-2.5 px-5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-500 text-white font-semibold rounded-xl shadow-lg transition-all duration-150 hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center shrink-0"
+        >
+          <span
+            v-if="isProcessing"
+            class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"
+          ></span>
+          <span>Start Processing</span>
+        </button>
+        <button
+          @click="fetchQueueAndUsers"
+          :disabled="isLoading"
+          class="py-2.5 px-5 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 text-white font-semibold rounded-xl shadow-lg transition-all duration-150 hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center shrink-0"
+        >
+          <span
+            v-if="isLoading"
+            class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"
+          ></span>
+          <span>Refresh Queue</span>
+        </button>
+      </div>
     </div>
 
     <!-- Error Alert -->
-    <div v-if="error" class="p-4 bg-red-950/30 border border-red-900/50 rounded-xl flex items-center space-x-3 text-red-200 text-sm">
-      <svg class="h-5 w-5 text-red-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    <div
+      v-if="error"
+      class="p-4 bg-red-950/30 border border-red-900/50 rounded-xl flex items-center space-x-3 text-red-200 text-sm"
+    >
+      <svg
+        class="h-5 w-5 text-red-400 shrink-0"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+        />
       </svg>
       <span>{{ error }}</span>
     </div>
 
     <!-- Queue Loading State -->
-    <div v-if="isLoading" class="flex flex-col items-center justify-center py-24 space-y-3 bg-slate-900/40 border border-slate-800/60 rounded-2xl">
-      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+    <div
+      v-if="isLoading"
+      class="flex flex-col items-center justify-center py-24 space-y-3 bg-slate-900/40 border border-slate-800/60 rounded-2xl"
+    >
+      <div
+        class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"
+      ></div>
       <p class="text-slate-400 text-sm">Loading media import queue...</p>
     </div>
 
     <!-- Empty State -->
-    <div v-else-if="queueItems.length === 0" class="text-center py-20 bg-slate-900/20 border border-slate-850 rounded-2xl space-y-2">
-      <div class="h-12 w-12 rounded-full bg-slate-900 flex items-center justify-center text-slate-500 mx-auto">
-        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    <div
+      v-else-if="queueItems.length === 0"
+      class="text-center py-20 bg-slate-900/20 border border-slate-850 rounded-2xl space-y-2"
+    >
+      <div
+        class="h-12 w-12 rounded-full bg-slate-900 flex items-center justify-center text-slate-500 mx-auto"
+      >
+        <svg
+          class="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
         </svg>
       </div>
-      <p class="text-slate-400 font-semibold">No media fetch requests in queue</p>
+      <p class="text-slate-400 font-semibold">
+        No media fetch requests in queue
+      </p>
       <p class="text-xs text-slate-500">Queue is completely empty.</p>
     </div>
 
     <!-- Queue Grid / Table -->
-    <div v-else class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+    <div
+      v-else
+      class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl"
+    >
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse text-sm">
           <thead>
-            <tr class="bg-slate-900/50 border-b border-slate-800 text-xs font-semibold text-slate-450 uppercase tracking-wider">
+            <tr
+              class="bg-slate-900/50 border-b border-slate-800 text-xs font-semibold text-slate-450 uppercase tracking-wider"
+            >
               <th class="py-4 px-6">Media details</th>
               <th class="py-4 px-6">Requested by</th>
               <th class="py-4 px-6">Status</th>
               <th class="py-4 px-6">Errors</th>
-              <th class="py-4 px-6 text-right">Actions</th>
+              <th class="py-4 px-6 w-16 text-right">Actions</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-800/50">
-            <tr v-for="item in queueItems" :key="item.id" class="hover:bg-slate-800/10 transition-colors">
+            <tr
+              v-for="item in queueItems"
+              :key="item.id"
+              class="hover:bg-slate-800/10 transition-colors"
+            >
               <!-- Media details column -->
               <td class="py-4 px-6">
                 <div class="flex items-center space-x-2.5">
@@ -65,13 +142,40 @@
                   >
                     {{ item.media_type }}
                   </span>
-                  <span class="text-xs font-semibold text-slate-400">TMDB: {{ item.tmdb_id }}</span>
+                  <div class="flex items-center space-x-3">
+                    <a
+                      :href="`https://www.themoviedb.org/${item.media_type === 'tv' || item.media_type === 'season' || item.media_type === 'episode' ? 'tv' : 'movie'}/${item.tmdb_id}`"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-xs font-semibold text-blue-400 hover:text-blue-300 hover:underline flex items-center"
+                      title="Voir sur TMDB"
+                    >
+                      <span>TMDB: {{ item.tmdb_id }}</span>
+                      <svg class="w-3 h-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                    </a>
+                    <a
+                      :href="`https://hub.toolforge.org/${item.media_type === 'tv' || item.media_type === 'season' || item.media_type === 'episode' ? 'P4983' : 'P4947'}:${item.tmdb_id}?lang=fr`"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-xs font-semibold text-slate-400 hover:text-slate-300 hover:underline flex items-center"
+                      title="Voir sur Wikipédia FR (redirection via Wikidata)"
+                    >
+                      <span>Wikipédia</span>
+                      <svg class="w-3 h-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                    </a>
+                  </div>
                 </div>
                 <div class="mt-1 flex items-center space-x-2">
-                  <span v-if="item.season_number !== null" class="text-xs px-2 py-0.5 bg-slate-950 border border-slate-800 text-slate-300 rounded font-bold">
+                  <span
+                    v-if="item.season_number !== null"
+                    class="text-xs px-2 py-0.5 bg-slate-950 border border-slate-800 text-slate-300 rounded font-bold"
+                  >
                     Season {{ item.season_number }}
                   </span>
-                  <span v-if="item.episode_number !== null" class="text-xs px-2 py-0.5 bg-slate-950 border border-slate-800 text-slate-300 rounded font-bold">
+                  <span
+                    v-if="item.episode_number !== null"
+                    class="text-xs px-2 py-0.5 bg-slate-950 border border-slate-800 text-slate-300 rounded font-bold"
+                  >
                     Episode {{ item.episode_number }}
                   </span>
                 </div>
@@ -79,8 +183,14 @@
 
               <!-- Requester column -->
               <td class="py-4 px-6">
-                <div class="font-medium text-slate-200 text-sm truncate max-w-xs">{{ getUserEmail(item.user_id) }}</div>
-                <div class="text-xs text-slate-500 mt-0.5">{{ formatTime(item.created_at) }}</div>
+                <div
+                  class="font-medium text-slate-200 text-sm truncate max-w-xs"
+                >
+                  {{ getUserEmail(item.user_id) }}
+                </div>
+                <div class="text-xs text-slate-500 mt-0.5">
+                  {{ formatTime(item.created_at) }}
+                </div>
               </td>
 
               <!-- Status column -->
@@ -90,7 +200,10 @@
                     class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase border flex items-center space-x-1.5"
                     :class="getStatusClass(item.status)"
                   >
-                    <span v-if="item.status === 'processing'" class="h-2 w-2 rounded-full bg-blue-400 animate-pulse"></span>
+                    <span
+                      v-if="item.status === 'processing'"
+                      class="h-2 w-2 rounded-full bg-blue-400 animate-pulse"
+                    ></span>
                     <span>{{ item.status }}</span>
                   </span>
                 </div>
@@ -98,7 +211,10 @@
 
               <!-- Errors column -->
               <td class="py-4 px-6">
-                <div v-if="item.error_message" class="text-xs text-red-400 max-w-sm line-clamp-2 leading-relaxed bg-red-950/20 border border-red-900/30 rounded-xl p-2.5 font-mono">
+                <div
+                  v-if="item.error_message"
+                  class="text-xs text-red-400 max-w-sm line-clamp-2 leading-relaxed bg-red-950/20 border border-red-900/30 rounded-xl p-2.5 font-mono"
+                >
                   {{ item.error_message }}
                 </div>
                 <div v-else class="text-xs text-slate-550 italic">—</div>
@@ -106,35 +222,96 @@
 
               <!-- Actions column -->
               <td class="py-4 px-6 text-right">
-                <div class="flex items-center justify-end space-x-2">
-                  <!-- Retry button -->
+                <div class="flex items-center justify-end space-x-1">
                   <button
-                    v-if="item.status === 'failed' || item.status === 'pending'"
-                    @click="retryFetch(item)"
-                    :disabled="retrying[item.id]"
-                    class="p-2 bg-blue-950/40 hover:bg-blue-950/60 text-blue-400 border border-blue-900/30 rounded-xl transition-all disabled:opacity-50"
-                    title="Retry request"
+                    v-if="
+                      item.status === 'failed' || item.status === 'completed'
+                    "
+                    @click="reEnqueueItem(item)"
+                    :disabled="
+                      reEnqueuingId === item.id || deletingId === item.id
+                    "
+                    title="Re-enqueue item"
+                    class="p-2 text-slate-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors disabled:opacity-50"
                   >
-                    <svg v-if="retrying[item.id]" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89H18" />
+                    <svg
+                      v-if="reEnqueuingId === item.id"
+                      class="w-4 h-4 animate-spin text-blue-400"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        class="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="4"
+                      ></circle>
+                      <path
+                        class="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
-                    <svg v-else class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    <svg
+                      v-else
+                      class="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                      />
                     </svg>
                   </button>
-
-                  <!-- Delete button -->
                   <button
-                    @click="deleteRequest(item.id)"
-                    :disabled="deleting[item.id]"
-                    class="p-2 bg-red-950/20 hover:bg-red-950/40 text-red-400 border border-red-900/25 rounded-xl transition-all disabled:opacity-50"
-                    title="Delete request"
+                    @click="deleteItem(item.id)"
+                    :disabled="
+                      deletingId === item.id || reEnqueuingId === item.id
+                    "
+                    title="Delete item"
+                    class="p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
                   >
-                    <svg v-if="deleting[item.id]" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89H18" />
+                    <svg
+                      v-if="deletingId === item.id"
+                      class="w-4 h-4 animate-spin text-red-400"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        class="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="4"
+                      ></circle>
+                      <path
+                        class="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
-                    <svg v-else class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    <svg
+                      v-else
+                      class="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -153,8 +330,8 @@
         toast.type === 'success'
           ? 'bg-green-950/40 border-green-900/60 text-green-200'
           : toast.type === 'error'
-          ? 'bg-red-950/40 border-red-900/60 text-red-200'
-          : 'bg-slate-900 border-slate-800 text-slate-200'
+            ? 'bg-red-950/40 border-red-900/60 text-red-200'
+            : 'bg-slate-900 border-slate-800 text-slate-200'
       "
     >
       <span>{{ toast.message }}</span>
@@ -165,7 +342,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { supabase } from "@/lib/supabase";
-import { enqueueAndProcessMedia } from "@/lib/mediaQueue";
 
 interface QueueItem {
   id: number;
@@ -183,18 +359,23 @@ interface QueueItem {
 const queueItems = ref<QueueItem[]>([]);
 const usersMap = ref<Record<string, string>>({});
 const isLoading = ref(true);
+const isProcessing = ref(false);
+const isClearing = ref(false);
+const deletingId = ref<number | null>(null);
+const reEnqueuingId = ref<number | null>(null);
 const error = ref("");
-
-const retrying = ref<Record<number, boolean>>({});
-const deleting = ref<Record<number, boolean>>({});
+const isDev = import.meta.env.DEV;
 
 const toast = ref({
   show: false,
   message: "",
-  type: "info"
+  type: "info",
 });
 
-const showToast = (message: string, type: "success" | "error" | "info" = "info") => {
+const showToast = (
+  message: string,
+  type: "success" | "error" | "info" = "info",
+) => {
   toast.value = { show: true, message, type };
   setTimeout(() => {
     toast.value.show = false;
@@ -261,13 +442,16 @@ const fetchQueueAndUsers = async () => {
     error.value = "";
 
     // 1. Fetch queue items via RPC
-    const { data: queueData, error: queueErr } = await supabase.rpc("get_media_queue_items");
+    const { data: queueData, error: queueErr } = await supabase.rpc(
+      "get_media_queue_items",
+    );
 
     if (queueErr) throw queueErr;
     queueItems.value = queueData || [];
 
     // 2. Fetch users to map user_id -> email
-    const { data: userData, error: userErr } = await supabase.functions.invoke("list_users");
+    const { data: userData, error: userErr } =
+      await supabase.functions.invoke("list_users");
     if (!userErr && userData?.users) {
       const tempMap: Record<string, string> = {};
       userData.users.forEach((u: any) => {
@@ -283,54 +467,105 @@ const fetchQueueAndUsers = async () => {
   }
 };
 
-const deleteRequest = async (id: number) => {
-  deleting.value[id] = true;
+const startProcessing = async () => {
+  isProcessing.value = true;
+  showToast("Starting queue processor...", "info");
+
   try {
-    const { error: delErr } = await supabase.rpc("delete_media_queue_item", { p_id: id });
+    const { error: invokeErr } = await supabase.functions.invoke(
+      "process-media-queue",
+      {
+        body: { single: true },
+      },
+    );
+    if (invokeErr) throw invokeErr;
 
-    if (delErr) throw delErr;
-
-    queueItems.value = queueItems.value.filter(item => item.id !== id);
-    showToast("Request removed from queue.", "success");
+    showToast(
+      "Queue processor started! It will run in the background.",
+      "success",
+    );
   } catch (err: any) {
-    console.error("Error deleting queue request:", err);
-    showToast(err.message || "Failed to delete request.", "error");
+    console.error("Error starting queue processor:", err);
+    showToast(err.message || "Failed to start processing.", "error");
   } finally {
-    deleting.value[id] = false;
+    isProcessing.value = false;
+    await fetchQueueAndUsers();
   }
 };
 
-const retryFetch = async (item: QueueItem) => {
-  retrying.value[item.id] = true;
-  showToast("Processing media import request...", "info");
+const clearQueue = async () => {
+  if (
+    !confirm(
+      "Are you sure you want to completely clear the queue? This will delete all pending and archived items.",
+    )
+  )
+    return;
+
+  isClearing.value = true;
+  showToast("Clearing queue...", "info");
 
   try {
-    await enqueueAndProcessMedia({
-      tmdbId: item.tmdb_id,
-      mediaType: item.media_type,
-      seasonNumber: item.season_number,
-      episodeNumber: item.episode_number,
-    });
-
-    // Update the old request status to completed
-    const { error: updErr } = await supabase.rpc("update_media_queue_item_status", { p_msg_id: item.id });
-    if (updErr) {
-      console.warn("Could not update queue item status:", updErr);
-    }
-
-    showToast("Import completed successfully!", "success");
+    const { error: clearErr } = await supabase.rpc("clear_media_queue");
+    if (clearErr) throw clearErr;
+    showToast("Queue cleared successfully!", "success");
   } catch (err: any) {
-    // Update the old request status to failed with the new error message
-    const { error: updErr } = await supabase.rpc("update_media_queue_item_status", { p_msg_id: item.id, p_error: err.message || "Unknown error" });
-    if (updErr) {
-      console.warn("Could not update queue item status:", updErr);
-    }
-
-    console.error("Error retrying fetch:", err);
-    showToast(err.message || "Failed to import media.", "error");
+    console.error("Error clearing queue:", err);
+    showToast(err.message || "Failed to clear queue.", "error");
   } finally {
-    retrying.value[item.id] = false;
+    isClearing.value = false;
     await fetchQueueAndUsers();
+  }
+};
+
+const deleteItem = async (id: number) => {
+  if (!confirm("Are you sure you want to delete this item?")) return;
+
+  deletingId.value = id;
+  try {
+    const { error: err } = await supabase.rpc("delete_media_queue_item", {
+      p_id: id,
+    });
+    if (err) throw err;
+    showToast("Item deleted successfully", "success");
+    await fetchQueueAndUsers();
+  } catch (err: any) {
+    console.error("Error deleting item:", err);
+    showToast(err.message || "Failed to delete item", "error");
+  } finally {
+    deletingId.value = null;
+  }
+};
+
+const reEnqueueItem = async (item: QueueItem) => {
+  if (
+    !confirm(
+      "Are you sure you want to re-enqueue this item? This will add it back to the active queue and delete the archived record.",
+    )
+  )
+    return;
+
+  reEnqueuingId.value = item.id;
+  try {
+    const { error: enqueueErr } = await supabase.rpc("enqueue_media_fetch", {
+      p_tmdb_id: item.tmdb_id,
+      p_media_type: item.media_type,
+      p_season_number: item.season_number,
+      p_episode_number: item.episode_number,
+    });
+    if (enqueueErr) throw enqueueErr;
+
+    const { error: delErr } = await supabase.rpc("delete_media_queue_item", {
+      p_id: item.id,
+    });
+    if (delErr) console.warn("Failed to delete old archived item:", delErr);
+
+    showToast("Item re-enqueued successfully", "success");
+    await fetchQueueAndUsers();
+  } catch (err: any) {
+    console.error("Error re-enqueuing item:", err);
+    showToast(err.message || "Failed to re-enqueue item", "error");
+  } finally {
+    reEnqueuingId.value = null;
   }
 };
 

@@ -3,10 +3,10 @@
   "version": "0.0.30",
   "private": true,
   "scripts": {
-    "dev": "supabase functions serve --env-file supabase/functions/.env",
+    "dev": "supabase functions serve --env-file ../../.env.development",
     "typecheck": "find supabase/functions -name \"index.ts\" | xargs deno check"
   },
   "devDependencies": {
-    "supabase": "^2.106.0"
+    "supabase": "^2.109.1"
   }
 }

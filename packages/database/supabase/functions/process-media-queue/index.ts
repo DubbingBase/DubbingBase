@@ -8,11 +8,33 @@ export default {
     async (req, ctx) => {
       try {
         const results = [];
-        const SUPABASE_SECRET_KEY =
-          Deno.env.get("SUPABASE_SECRET_KEY") ||
-          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ||
-          "";
-        const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+        let isSingle = false;
+        let isForce = false;
+
+        try {
+          // Read request body to check for "single" mode
+          if (req.method !== "GET" && req.method !== "HEAD") {
+            const bodyText = await req.text();
+            if (bodyText) {
+              const reqBody = JSON.parse(bodyText);
+              isSingle = reqBody?.single === true;
+              isForce = reqBody?.force === true;
+            }
+          }
+        } catch (e) {
+          // Ignore parse errors
+        }
+
+        // Watchdog mode: if not explicitly forced or single, ensure no other worker is currently running
+        if (!isForce && !isSingle) {
+          const { data: lockedCount, error: lockedErr } = await ctx.supabaseAdmin.rpc("get_media_queue_locked_count");
+          if (lockedErr) {
+            console.error("[QUEUE] Failed to check locked count:", lockedErr);
+          } else if ((lockedCount as number) > 0) {
+            console.log(`[QUEUE] Watchdog: ${lockedCount} item(s) are already locked/processing. Exiting to prevent concurrent workers.`);
+            return Response.json({ ok: true, processed: 0, results: [], reason: "already_running" });
+          }
+        }
 
         // Process exactly 1 item per invocation to guarantee we never hit function timeouts
         const { data, error: popError } = await ctx.supabaseAdmin.rpc(
@@ -49,33 +71,46 @@ export default {
         console.log(`[QUEUE] Popped message ID ${msgId}:`, payload);
 
         try {
-          // Invoke prepare_media for this queue item
-          const response = await fetch(
-            `${SUPABASE_URL}/functions/v1/prepare_media`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${SUPABASE_SECRET_KEY}`,
-              },
-              body: JSON.stringify({
-                tmdbId: payload.tmdb_id,
-                type: payload.media_type,
-                seasonNumber: payload.season_number,
-                episodeNumber: payload.episode_number,
-              }),
-            },
+          console.log(
+            `[QUEUE] Calling prepare_media via supabase.functions.invoke...`,
           );
 
-          if (!response.ok) {
-            const errorBody = await response.text();
-            throw new Error(`HTTP status ${response.status}: ${errorBody}`);
+          // Invoke prepare_media for this queue item
+          const { data: responseData, error: invokeError } = await ctx
+            .supabaseAdmin.functions.invoke(
+              "prepare_media",
+              {
+                body: {
+                  tmdbId: payload.tmdb_id,
+                  type: payload.media_type,
+                  seasonNumber: payload.season_number,
+                  episodeNumber: payload.episode_number,
+                },
+              },
+            );
+
+          if (invokeError) {
+            console.error(`[QUEUE] prepare_media invoke error:`, invokeError);
+            throw new Error(
+              `Edge Function prepare_media failed: ${
+                invokeError.message || JSON.stringify(invokeError)
+              }`,
+            );
           }
 
-          const responseData = await response.json();
+          console.log(
+            `[QUEUE] prepare_media parsed JSON response:`,
+            responseData,
+          );
 
-          if (!responseData.ok) {
-            throw new Error(responseData.error || "Unknown preparation error");
+          if (!responseData || !responseData.ok) {
+            const errorInfo = responseData?.error ||
+              "Unknown preparation error";
+            console.error(
+              `[QUEUE] prepare_media returned ok: false. Error info:`,
+              errorInfo,
+            );
+            throw new Error(errorInfo);
           }
 
           // Archive message upon success
@@ -93,12 +128,34 @@ export default {
           console.log(
             `[QUEUE] Successfully processed and archived message ID ${msgId}.`,
           );
+
+          try {
+            await fetch(`https://ntfy.sh/Armaldio_DubbingBaseQueue`, {
+              method: "POST",
+              body:
+                `Successfully processed ${payload.media_type} with TMDB ID ${payload.tmdb_id}${
+                  payload.season_number
+                    ? ` (Season ${payload.season_number})`
+                    : ""
+                }${
+                  payload.episode_number
+                    ? ` (Episode ${payload.episode_number})`
+                    : ""
+                }. Changes: ${responseData.changes ?? 0}`,
+              headers: {
+                Title: "Queue Item Processed",
+                Tags: "white_check_mark",
+              },
+            });
+          } catch (_) {}
         } catch (err) {
           const errMsg = err instanceof Error ? err.message : String(err);
+          const fullErr = err instanceof Error ? err.stack : err;
           console.error(
             `[QUEUE] Error processing message ID ${msgId}:`,
             errMsg,
           );
+          console.error(`[QUEUE] Full error stack trace:`, fullErr);
 
           // Archive message with error attached to archived payload so status helper can retrieve it
           await ctx.supabaseAdmin.rpc(
@@ -115,20 +172,74 @@ export default {
             changes: 0,
             error: errMsg,
           });
+
+          try {
+            await fetch(`https://ntfy.sh/Armaldio_DubbingBaseQueue`, {
+              method: "POST",
+              body:
+                `Failed to process ${payload.media_type} with TMDB ID ${payload.tmdb_id}: ${errMsg}`,
+              headers: {
+                Title: "Queue Item Failed",
+                Tags: "warning",
+              },
+            });
+          } catch (_) {}
+        }
+
+        // Check if there are more items in the queue and self-trigger to drain it.
+        // This avoids timeout risk (we always process 1 item per invocation) while
+        // ensuring the entire queue is drained without requiring a cron job.
+        if (!isSingle) {
+          const { data: queueDepth } = await ctx.supabaseAdmin.rpc(
+            "get_media_queue_depth",
+          );
+
+          if (queueDepth && (queueDepth as number) > 0) {
+            console.log(
+              `[QUEUE] ${queueDepth} more item(s) in queue, self-triggering another invocation.`,
+            );
+            // Fire-and-forget another invocation to process the next item
+            ctx.supabaseAdmin.functions.invoke("process-media-queue", {
+              body: { force: true }
+            }).catch(
+              (err) => {
+                console.error(
+                  "[QUEUE] Failed to self-trigger next invocation:",
+                  err,
+                );
+              },
+            );
+          }
+        } else {
+          console.log(`[QUEUE] Single mode enabled. Skipping self-trigger.`);
         }
 
         return Response.json({ ok: true, processed: results.length, results });
       } catch (error) {
-        const errorMsg =
-          error instanceof Error
-            ? error.message
-            : typeof error === "object" && error !== null
-              ? JSON.stringify(error)
-              : String(error);
+        const errorMsg = error instanceof Error
+          ? error.message
+          : typeof error === "object" && error !== null
+          ? JSON.stringify(error)
+          : String(error);
         console.error(
           "[QUEUE] Uncaught error in process-media-queue:",
           errorMsg,
         );
+        console.error(
+          "[QUEUE] Uncaught error full trace:",
+          error instanceof Error ? error.stack : error,
+        );
+
+        try {
+          await fetch(`https://ntfy.sh/Armaldio_DubbingBaseQueue`, {
+            method: "POST",
+            body: `Critical failure in process-media-queue: ${errorMsg}`,
+            headers: {
+              Title: "Queue Processor FAILED",
+              Tags: "rotating_light",
+            },
+          });
+        } catch (_) {}
 
         return Response.json({ ok: false, error: errorMsg }, { status: 500 });
       }

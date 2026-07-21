@@ -13,11 +13,14 @@
     "discover:media": "npx --yes tsx --env-file=.env.development scripts/discover-media.ts"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.29.7",
+    "@changesets/cli": "^2.31.1",
     "@types/node": "^24.9.1",
     "prettier": "^3.0.0",
-    "turbo": "^2.0.0"
+    "turbo": "^2.10.5"
   },
   "packageManager": "pnpm@9.14.2",
-  "workspaces": ["apps/*", "packages/*"]
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
 }

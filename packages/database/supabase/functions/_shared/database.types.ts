@@ -452,6 +452,7 @@ export type Database = {
         Args: { p_error: string; p_msg_id: number }
         Returns: boolean
       }
+      clear_media_queue: { Args: never; Returns: boolean }
       delete_media_queue_item: { Args: { p_id: number }; Returns: boolean }
       enqueue_media_fetch: {
         Args: {
@@ -463,6 +464,7 @@ export type Database = {
         Returns: number
       }
       find_duplicate_voice_actors_rpc: { Args: never; Returns: Json }
+      get_media_queue_depth: { Args: never; Returns: number }
       get_media_queue_items: {
         Args: never
         Returns: {
@@ -478,6 +480,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_media_queue_locked_count: { Args: never; Returns: number }
       get_media_queue_status: {
         Args: {
           p_episode_number?: number
