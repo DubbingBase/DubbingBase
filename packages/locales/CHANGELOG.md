@@ -1,5 +1,11 @@
 # @app/locales
 
+## 0.0.15
+
+### Patch Changes
+
+- dc
+
 ## 0.0.14
 
 ### Patch Changes
