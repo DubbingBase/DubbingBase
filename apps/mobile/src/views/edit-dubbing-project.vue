@@ -154,7 +154,16 @@
 
                 <div class="grid-2">
                   <div class="form-group">
-                    <label class="form-label">Job Role *</label>
+                    <div class="flex items-center justify-between mb-1">
+                      <label class="form-label !mb-0">Job Role *</label>
+                      <button
+                        type="button"
+                        @click="openCreateJobModal(index)"
+                        class="text-xs text-blue-400 hover:text-blue-300 font-semibold"
+                      >
+                        + New
+                      </button>
+                    </div>
                     <select v-model="row.job_id" class="form-select">
                       <option disabled :value="null">-- Select Job --</option>
                       <option
@@ -525,6 +534,38 @@
             </div>
           </div>
         </AppModal>
+
+        <!-- Inline Create Job Modal -->
+        <AppModal
+          :is-open="showCreateJobModal"
+          @didDismiss="showCreateJobModal = false"
+        >
+          <div class="modal-body">
+            <h3 class="modal-title">Create New Job Role</h3>
+            <div class="space-y-4">
+              <div class="form-group">
+                <label class="form-label">Job Name *</label>
+                <input
+                  v-model="newJobName"
+                  placeholder="Job Name (e.g. Director)"
+                  class="form-input"
+                  @keyup.enter="quickCreateJob"
+                />
+              </div>
+            </div>
+            <div class="modal-actions">
+              <AppButton fill="outline" @click="showCreateJobModal = false"
+                >Cancel</AppButton
+              >
+              <AppButton
+                @click="quickCreateJob"
+                :disabled="!newJobName"
+              >
+                Save & Assign
+              </AppButton>
+            </div>
+          </div>
+        </AppModal>
       </AppContent>
     </AppPage>
   </ion-page>
@@ -647,6 +688,16 @@ const isSaving = ref(false);
 const showCreatePersonModal = ref(false);
 const newPersonFirstname = ref("");
 const newPersonLastname = ref("");
+
+// Create Job Modal State
+const showCreateJobModal = ref(false);
+const newJobName = ref("");
+const activeJobRowIndex = ref<number | null>(null);
+
+const openCreateJobModal = (index: number) => {
+  activeJobRowIndex.value = index;
+  showCreateJobModal.value = true;
+};
 
 const openStudioPicker = () => {
   studioSearchQuery.value = "";
@@ -953,6 +1004,9 @@ const fetchProjectDetails = async () => {
       contentId.value = numericId;
     } else if (id.value === "new" && route.query.contentId) {
       contentId.value = Number(route.query.contentId);
+      if (route.query.contentType) {
+        contentType.value = route.query.contentType as string;
+      }
     }
 
     // Fetch works for project.id
@@ -1026,6 +1080,30 @@ const quickCreateVoiceActor = async () => {
     }
   } catch (err) {
     console.error("Error quick creating voice actor:", err);
+  }
+};
+
+const quickCreateJob = async () => {
+  if (!newJobName.value) return;
+  try {
+    const { data, error } = await supabase
+      .from("jobs")
+      .insert([{ name: newJobName.value.trim() }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    if (data) {
+      await fetchJobs();
+      if (activeJobRowIndex.value !== null && activeJobRowIndex.value >= 0) {
+        dubbingCrew.value[activeJobRowIndex.value].job_id = data.id;
+      }
+      showCreateJobModal.value = false;
+      newJobName.value = "";
+      activeJobRowIndex.value = null;
+    }
+  } catch (err) {
+    console.error("Error quick creating job:", err);
   }
 };
 

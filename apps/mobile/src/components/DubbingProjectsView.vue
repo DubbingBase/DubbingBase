@@ -24,7 +24,7 @@
           :loading="isFullyLoading"
           :mediaLanguage="mediaLanguage"
           :workType="contentType === 'season' ? 'tv' : contentType"
-          :contentId="contentId.toString()"
+          :contentId="contentId?.toString() || ''"
         />
       </div>
     </div>
@@ -82,7 +82,7 @@
               :loading="isFullyLoading"
               :mediaLanguage="mediaLanguage"
               :workType="contentType === 'season' ? 'tv' : contentType"
-              :contentId="contentId.toString()"
+              :contentId="contentId?.toString() || ''"
             />
           </div>
 
@@ -220,6 +220,10 @@ const activeProjectId = ref<string>("");
 const isFullyLoading = computed(() => loading.value || props.parentLoading);
 
 const fetchDubbingProjects = async () => {
+  if (!props.contentId || isNaN(Number(props.contentId))) {
+    loading.value = false;
+    return;
+  }
   loading.value = true;
   error.value = null;
 
