@@ -108,7 +108,7 @@ file_size_limit = "50MiB"
 
 # Uncomment to configure local storage buckets
 [storage.buckets.voice_actor_profile_pictures]
-public = false
+public = true
 file_size_limit = "50MiB"
 allowed_mime_types = ["image/*"]
 objects_path = "./buckets/voice_actor_profile_pictures"

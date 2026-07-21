@@ -37,3 +37,4 @@ supabase/.temp/
 .playwright-mcp/
 scripts/progress.json
 packages/database/supabase/seed.sql
+packages/database/supabase/buckets
