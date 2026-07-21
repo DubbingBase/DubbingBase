@@ -1,6 +1,3 @@
-Does the edge function pop the queue ?
-Faire fonctionner la queue
-Scroll horizontal dans acteur 
 Image point interrogation dans série 
 Rechargement des le lancement de création de projet de doublage 
 Nouvelle personne ne remplis pas les champs 
@@ -9,6 +6,7 @@ Nouveau projet: mauvais id. On sais pas si tv ou film
 Plus de pull to refresh 
 Les boutons actions sheets pas réactif pas feedback 
 Image pas trouvée dans listingais ok dans page doubleur  
+confirm queue send a ntfy every time something is processed either fail or done
 
 implement view transitions
 voice actor request is very slow: it's because there is a tmdb outage

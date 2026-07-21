@@ -150,17 +150,17 @@ depends = ["install"]
 dir = "packages/database"
 run = "npx supabase db dump --data-only -f supabase/seed.sql --linked"
 
-[tasks.sync-storage]
-description = "Fetches storage buckets from the remote database and uploads them locally"
+[tasks.prepare-seed]
+description = "Creates required folders and removes .keep files to avoid mime-type errors during seed"
 depends = ["fetch-seed"]
 dir = "packages/database"
-run = "./sync-storage.sh"
+run = "./prepare-seed.sh"
 
 [tasks.reseed]
 description = "Fetches seed data and storage from remote and resets local database"
-depends = ["sync-storage"]
+depends = ["prepare-seed"]
 dir = "packages/database"
-run = "npx supabase db reset --local"
+run = "npx supabase db reset --local --yes"
 
 [tasks.typecheck]
 description = "Run TypeScript type checking across all workspaces"

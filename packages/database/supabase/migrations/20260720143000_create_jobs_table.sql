@@ -8,14 +8,15 @@ CREATE TABLE IF NOT EXISTS "public"."jobs" (
 ALTER TABLE "public"."jobs" OWNER TO "postgres";
 
 -- 2. Insert default jobs
-INSERT INTO "public"."jobs" ("name") VALUES 
-  ('Direction Artistique'),
-  ('Adaptation'),
-  ('Enregistrement'),
-  ('Montage'),
-  ('Mixage'),
-  ('Chargé de projet'),
-  ('Creative Supervision');
+-- Data insertion is handled by seed.sql to prevent unique constraint violations on db reset.
+-- INSERT INTO "public"."jobs" ("name") VALUES 
+--   ('Direction Artistique'),
+--   ('Adaptation'),
+--   ('Enregistrement'),
+--   ('Montage'),
+--   ('Mixage'),
+--   ('Chargé de projet'),
+--   ('Creative Supervision');
 
 -- 3. Enable RLS and add basic policies for jobs
 ALTER TABLE "public"."jobs" ENABLE ROW LEVEL SECURITY;
