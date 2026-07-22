@@ -237,7 +237,13 @@ watch(() => profileStore.voiceActor, (newProfile) => {
   if (newProfile && profileStore.currentProfileType === 'voice_actor') {
     editableProfile.value = newProfile;
   } else if (!profileStore.hasProfile) {
-    editableProfile.value = {} as Partial<VoiceActor>;
+    const initialProfile: Partial<VoiceActor> = {};
+    if (route.query.name) {
+      const parts = (route.query.name as string).trim().split(" ");
+      initialProfile.firstname = parts[0] || "";
+      initialProfile.lastname = parts.slice(1).join(" ") || "";
+    }
+    editableProfile.value = initialProfile;
   }
 }, { immediate: true });
 

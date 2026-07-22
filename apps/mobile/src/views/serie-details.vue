@@ -89,6 +89,7 @@
           :work-type="'tv'"
           :link-voice-actor="linkVoiceActor"
           @close="showVoiceActorSearch = false"
+          @create-new="(query) => router.push({ path: '/voice-actor-profile/new', query: { name: query } })"
         />
 
         <CreditsReviewModal

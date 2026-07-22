@@ -37,7 +37,7 @@
             :key="project.id"
             :value="project.id.toString()"
           >
-            {{ project.language?.toUpperCase() || '' }}
+            {{ getLanguageDisplayName(project.language || '', locale) }}
           </option>
         </select>
 
@@ -51,15 +51,11 @@
         </AppButton>
       </div>
 
-      <AppSegmentView
-        :activeSegment="activeProjectId"
-        @update:activeSegment="activeProjectId = $event"
-        class="flex-1"
-      >
-        <AppSegmentContent
+      <div class="flex-1 mt-4">
+        <div
           v-for="project in projects"
           :key="project.id"
-          :id="project.id.toString()"
+          v-show="project.id.toString() === activeProjectId"
           class="crew-cast-segment"
         >
           <!-- Cast Segment -->
@@ -122,8 +118,8 @@
               </div>
             </div>
           </div>
-        </AppSegmentContent>
-      </AppSegmentView>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -134,8 +130,7 @@ import { ref, onMounted, computed, watch } from "vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import EmptyState from "@/components/common/EmptyState.vue";
 
-import AppSegmentView from "@/components/common/layout/AppSegmentView.vue";
-import AppSegmentContent from "@/components/common/layout/AppSegmentContent.vue";
+
 import CrewList from "./CrewList.vue";
 import StudioCard from "./StudioCard.vue";
 import ActorList from "@/components/ActorList.vue";
@@ -144,8 +139,9 @@ import { PersonData } from "@/components/PersonItem.vue";
 import AppButton from "@/components/common/AppButton.vue";
 import Pencil from "~icons/lucide/pencil";
 import { useRouter } from "vue-router";
+import { getLanguageDisplayName } from "@/utils/language";
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const router = useRouter();
 
 const props = defineProps<{

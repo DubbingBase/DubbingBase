@@ -36,7 +36,7 @@
         class="ion-text-center py-8"
       >
         <AppText class="block mb-4">No persons found</AppText>
-        <AppButton fill="outline" @click="$emit('create-new')">
+        <AppButton fill="outline" @click="$emit('create-new', searchTerm)">
           Create New Person
         </AppButton>
       </div>
@@ -73,7 +73,7 @@
         </AppListItem>
       </AppList>
       <div v-if="!isSearching && !searchError && searchResults.length > 0" class="ion-padding-top ion-text-center border-t border-slate-700/50 mt-4">
-        <AppButton fill="clear" @click="$emit('create-new')" class="w-full text-blue-400">
+        <AppButton fill="clear" @click="$emit('create-new', searchTerm)" class="w-full text-blue-400">
           + Create New Person
         </AppButton>
       </div>
@@ -99,7 +99,11 @@ import AppSpinner from '@/components/common/AppSpinner.vue';
 import AppSkeleton from '@/components/common/AppSkeleton.vue';
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import { useVoiceActorManagement, type VoiceActor } from "@/composables/useVoiceActorManagement";
-const emit = defineEmits(['close', 'select', 'create-new']);
+const emit = defineEmits<{
+  (e: 'close'): void;
+  (e: 'select', actor: VoiceActor): void;
+  (e: 'create-new', searchTerm?: string): void;
+}>();
 
 const props = defineProps<{
   isOpen: boolean;

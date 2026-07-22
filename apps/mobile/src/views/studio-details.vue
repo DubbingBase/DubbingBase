@@ -81,7 +81,7 @@
                   <div class="text-xs font-semibold text-white">Media ID #{{ project.content_id }}</div>
                   <div class="text-[10px] text-[#a0a0a0] uppercase flex items-center gap-2 mt-0.5">
                     <span class="px-1.5 py-0.5 bg-[#2a2a2a] rounded font-bold">{{ project.content_type }}</span>
-                    <span>Lang: {{ project.language || 'fr' }}</span>
+                    <span>Lang: {{ project.language || 'fr-FR' }}</span>
                   </div>
                 </div>
                 <span class="text-xs text-blue-400 font-semibold">View Details ↗</span>

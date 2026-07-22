@@ -1,4 +1,9 @@
 {
   "nodeModulesDir": "none",
-  "lock": false
+  "lock": false,
+  "fmt": {
+    "exclude": [
+      "packages/database/supabase/functions/_shared/database.types.ts"
+    ]
+  }
 }

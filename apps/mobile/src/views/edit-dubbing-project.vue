@@ -59,7 +59,7 @@
                     <span
                       >Language:
                       <strong class="text-white">{{
-                        language || "fr"
+                        getLanguageDisplayName(language || 'fr-FR', locale)
                       }}</strong></span
                     >
                   </div>
@@ -490,10 +490,7 @@
           :is-open="showVoiceActorSearchModal"
           @close="showVoiceActorSearchModal = false"
           @select="selectVoiceActor"
-          @create-new="
-            showCreatePersonModal = true;
-            showVoiceActorSearchModal = false;
-          "
+          @create-new="handleCreateNewPerson"
         />
 
         <!-- Inline Create Person Modal -->
@@ -597,7 +594,10 @@ import { ref, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { supabase } from "@/api/supabase";
 import { onIonViewWillEnter } from "@ionic/vue";
+import { useI18n } from "vue-i18n";
+import { getLanguageDisplayName } from "@/utils/language";
 
+const { t, locale } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const id = computed(() => (route.params.id as string) || (route.path.endsWith('/new') ? 'new' : undefined));
@@ -608,7 +608,7 @@ const dbProjectId = ref<number | null>(null);
 const contentId = ref<number | null>(null);
 const mediaTitle = ref("");
 const contentType = ref("movie");
-const language = ref("fr");
+const language = ref("fr-FR");
 const studio = ref("");
 const selectedStudioId = ref<number | null>(null);
 const studiosList = ref<Array<{ id: number; name: string }>>([]);
@@ -975,7 +975,7 @@ const fetchProjectDetails = async () => {
       }
       contentId.value = project.content_id;
       contentType.value = project.content_type || "movie";
-      language.value = project.language || "fr";
+      language.value = project.language || "fr-FR";
       selectedStudioId.value = project.studio_id || null;
 
       // Fetch dubbing crew
@@ -1083,6 +1083,24 @@ const quickCreateVoiceActor = async () => {
   }
 };
 
+const handleCreateNewPerson = (query?: string) => {
+  showVoiceActorSearchModal.value = false;
+  
+  if (query) {
+    const parts = query.trim().split(" ");
+    newPersonFirstname.value = parts[0] || "";
+    newPersonLastname.value = parts.slice(1).join(" ") || "";
+  } else {
+    newPersonFirstname.value = "";
+    newPersonLastname.value = "";
+  }
+
+  // Delay opening the new modal to allow the previous modal's close animation to finish
+  setTimeout(() => {
+    showCreatePersonModal.value = true;
+  }, 350);
+};
+
 const quickCreateJob = async () => {
   if (!newJobName.value) return;
   try {
@@ -1114,7 +1132,7 @@ const saveProject = async () => {
     const projectPayload = {
       content_id: contentId.value,
       content_type: contentType.value,
-      language: language.value || "fr",
+      language: language.value || "fr-FR",
       studio_id: selectedStudioId.value || null,
       status: "validated",
     };
@@ -1199,7 +1217,7 @@ onIonViewWillEnter(async () => {
   contentId.value = null;
   mediaTitle.value = "";
   contentType.value = "movie";
-  language.value = "fr";
+  language.value = "fr-FR";
   studio.value = "";
   selectedStudioId.value = null;
   dubbingCrew.value = [];
