@@ -137,7 +137,7 @@ export default {
           );
 
           try {
-            await fetch(`https://ntfy.sh/Armaldio_DubbingBaseQueue`, {
+            const ntfyRes = await fetch(`https://ntfy.sh/Armaldio_DubbingBaseQueue`, {
               method: "POST",
               body:
                 `Successfully processed ${payload.media_type} with TMDB ID ${payload.tmdb_id}${
@@ -154,7 +154,14 @@ export default {
                 Tags: "white_check_mark",
               },
             });
-          } catch (_) {}
+            if (!ntfyRes.ok) {
+              console.error("[QUEUE] ntfy error (success branch):", ntfyRes.status, await ntfyRes.text());
+            } else {
+              await ntfyRes.text();
+            }
+          } catch (e) {
+            console.error("[QUEUE] ntfy exception (success branch):", e);
+          }
         } catch (err) {
           const errMsg = err instanceof Error ? err.message : String(err);
           const fullErr = err instanceof Error ? err.stack : err;
@@ -181,7 +188,7 @@ export default {
           });
 
           try {
-            await fetch(`https://ntfy.sh/Armaldio_DubbingBaseQueue`, {
+            const ntfyRes = await fetch(`https://ntfy.sh/Armaldio_DubbingBaseQueue`, {
               method: "POST",
               body:
                 `Failed to process ${payload.media_type} with TMDB ID ${payload.tmdb_id}: ${errMsg}`,
@@ -190,7 +197,14 @@ export default {
                 Tags: "warning",
               },
             });
-          } catch (_) {}
+            if (!ntfyRes.ok) {
+              console.error("[QUEUE] ntfy error (fail branch):", ntfyRes.status, await ntfyRes.text());
+            } else {
+              await ntfyRes.text();
+            }
+          } catch (e) {
+            console.error("[QUEUE] ntfy exception (fail branch):", e);
+          }
         }
 
         // Check if there are more items in the queue and self-trigger to drain it.
@@ -245,7 +259,7 @@ export default {
         );
 
         try {
-          await fetch(`https://ntfy.sh/Armaldio_DubbingBaseQueue`, {
+          const ntfyRes = await fetch(`https://ntfy.sh/Armaldio_DubbingBaseQueue`, {
             method: "POST",
             body: `Critical failure in process-media-queue: ${errorMsg}`,
             headers: {
@@ -253,7 +267,14 @@ export default {
               Tags: "rotating_light",
             },
           });
-        } catch (_) {}
+          if (!ntfyRes.ok) {
+            console.error("[QUEUE] ntfy error (critical branch):", ntfyRes.status, await ntfyRes.text());
+          } else {
+            await ntfyRes.text();
+          }
+        } catch (e) {
+          console.error("[QUEUE] ntfy exception (critical branch):", e);
+        }
 
         return Response.json({ ok: false, error: errorMsg }, { status: 500 });
       }
