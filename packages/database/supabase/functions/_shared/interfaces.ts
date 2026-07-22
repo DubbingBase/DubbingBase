@@ -1,5 +1,4 @@
 export interface IDatabaseClient {
-  getWorkWithVoiceActors(contentId: number): Promise<any>;
   getVoiceActorWithWork(voiceActorId: number): Promise<any>;
   getWorkByActor(actorId: number): Promise<any>;
   getWorkVotes(

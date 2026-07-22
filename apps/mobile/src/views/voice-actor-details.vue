@@ -62,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import { IonPage } from "@ionic/vue";
+import { IonPage, toastController } from "@ionic/vue";
 import AppPage from '@/components/common/layout/AppPage.vue';
 import AppHeader from '@/components/common/layout/AppHeader.vue';
 import AppToolbar from '@/components/common/layout/AppToolbar.vue';
@@ -176,6 +176,7 @@ const actionSheetButtons = computed<ActionSheetButton[]>(() => {
     buttons.unshift({
       text: t('common.refresh', 'Actualiser'),
       icon: RefreshCw,
+      cssClass: 'action-sheet-admin',
       handler: () => {
         isFetchModalOpen.value = true;
       },
@@ -206,9 +207,24 @@ const handleFetchModalSaved = async () => {
     if (voiceActorResponse) {
       voiceActor.value = voiceActorResponse.voiceActor;
       profilePicture.value = voiceActorResponse.voiceActor.profile_picture;
+      
+      const toast = await toastController.create({
+        message: t('common.success', 'Actualisé avec succès !'),
+        duration: 2000,
+        position: 'bottom',
+        color: 'success'
+      });
+      await toast.present();
     }
   } catch (err) {
     console.error("Error refreshing voice actor after fetch:", err);
+    const toast = await toastController.create({
+      message: t('common.error', 'Erreur lors de l\'actualisation.'),
+      duration: 3000,
+      position: 'bottom',
+      color: 'danger'
+    });
+    await toast.present();
   } finally {
     loading.value = false;
   }

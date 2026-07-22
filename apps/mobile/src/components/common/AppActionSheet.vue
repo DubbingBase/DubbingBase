@@ -16,6 +16,7 @@ export interface ActionSheetButton {
   text: string;
   icon?: any;
   role?: 'destructive' | 'cancel' | string;
+  cssClass?: string;
   handler?: () => void;
 }
 
@@ -65,6 +66,7 @@ const formattedButtons = computed(() => {
   const finalButtons: any[] = props.buttons.map(btn => ({
     text: btn.text,
     role: btn.role,
+    cssClass: btn.cssClass,
     icon: getSvgStringFromComponent(btn.icon),
     handler: btn.handler
   }));
@@ -86,6 +88,8 @@ const formattedButtons = computed(() => {
   --background: var(--app-color-step-50, #1e1e1e);
   --button-background: var(--app-color-step-100, #2d2d2d);
   --button-background-selected: var(--app-color-step-200, #3d3d3d);
+  --button-background-activated: var(--app-color-step-200, #3d3d3d);
+  --button-background-hover: var(--app-color-step-200, #3d3d3d);
   --button-color: var(--app-color-text-primary, #ffffff);
   --color: var(--app-color-medium, #92949c);
 }
@@ -98,5 +102,9 @@ const formattedButtons = computed(() => {
 
 .custom-dark-action-sheet .action-sheet-destructive {
   --button-color: var(--app-color-danger, #ef4444);
+}
+
+.custom-dark-action-sheet .action-sheet-admin {
+  --button-color: var(--app-color-warning, #eab308);
 }
 </style>

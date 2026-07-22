@@ -311,6 +311,7 @@ import { useAuthStore } from "@/stores/auth";
 import { useI18n } from "vue-i18n";
 import RequestVoiceActorCard from "@/components/RequestVoiceActorCard.vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
+import { toastController } from "@/composables/useToast";
 
 import { supabase } from "@/api/supabase";
 
@@ -331,6 +332,7 @@ const actionSheetButtons = computed<ActionSheetButton[]>(() => {
     {
       text: t('profile.adminSearch', 'Recherche admin'),
       icon: Search,
+      cssClass: 'action-sheet-admin',
       handler: () => {
         showAdminSearch.value = true;
       },
@@ -399,6 +401,13 @@ const handleAdminSearch = async () => {
   } catch (error) {
     console.error("Error searching voice actors:", error);
     adminSearchResults.value = [];
+    const toast = await toastController.create({
+      message: $t('common.error', 'Erreur lors de la recherche.'),
+      duration: 3000,
+      position: 'bottom',
+      color: 'danger'
+    });
+    await toast.present();
   }
 };
 

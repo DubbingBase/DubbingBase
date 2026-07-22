@@ -1,11 +1,8 @@
 Rechargement des le lancement de création de projet de doublage 
-Sauvegarde projet ne fonctionne pas 
 Nouveau projet: mauvais id. On sais pas si tv ou film
 Plus de pull to refresh 
-Les boutons actions sheets pas réactif pas feedback 
-Admin actions should be orange 
-Changer de projet ne change pas les va
-
++ new buttons should be inside the pickers when no match found instead of inline in the view
+use a picker instead of a select for job picking
 implement view transitions
 voice actor request is very slow: it's because there is a tmdb outage
 add votes to trust work

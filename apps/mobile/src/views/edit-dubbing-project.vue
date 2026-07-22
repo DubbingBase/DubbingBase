@@ -581,7 +581,12 @@ import AppModal from "@/components/common/AppModal.vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import TmdbPersonSearchModal from "@/components/TmdbPersonSearchModal.vue";
 import { PersonData } from "@/components/PersonItem.vue";
-import { enqueueAndProcessMedia } from "@/api/mediaQueue";
+import {
+
+  createOutline,
+  closeOutline,
+  personAddOutline,
+} from "ionicons/icons";
 import PersonSearchModal from "@/components/PersonSearchModal.vue";
 
 import Search from "~icons/lucide/search";
@@ -798,12 +803,9 @@ const getVoiceActorDisplayName = (row: CastRow) => {
 
 const fetchJobs = async () => {
   try {
-    const { data, error } = await supabase
-      .from("jobs")
-      .select("id, name")
-      .order("name", { ascending: true });
+    const { data, error } = await supabase.functions.invoke("get-metadata", { body: { type: "jobs" } });
     if (error) throw error;
-    availableJobs.value = data || [];
+    availableJobs.value = data?.data || [];
   } catch (err) {
     console.error("Error fetching jobs list:", err);
   }
@@ -811,12 +813,9 @@ const fetchJobs = async () => {
 
 const fetchStudios = async () => {
   try {
-    const { data, error } = await supabase
-      .from("studios")
-      .select("id, name")
-      .order("name", { ascending: true });
+    const { data, error } = await supabase.functions.invoke("get-metadata", { body: { type: "studios" } });
     if (error) throw error;
-    studiosList.value = data || [];
+    studiosList.value = data?.data || [];
   } catch (err) {
     console.error("Error fetching studios list:", err);
   }
@@ -824,12 +823,9 @@ const fetchStudios = async () => {
 
 const fetchVoiceActors = async () => {
   try {
-    const { data, error } = await supabase
-      .from("voice_actors")
-      .select("id, firstname, lastname")
-      .order("lastname", { ascending: true });
+    const { data, error } = await supabase.functions.invoke("get-metadata", { body: { type: "voice_actors" } });
     if (error) throw error;
-    voiceActorsList.value = data || [];
+    voiceActorsList.value = data?.data || [];
   } catch (err) {
     console.error("Error fetching voice actors list:", err);
   }
@@ -958,75 +954,84 @@ const fetchProjectDetails = async () => {
     let project = null;
 
     if (!isNaN(numericId)) {
-      const { data: projects } = await supabase
-        .from("dubbing_projects")
-        .select("*")
-        .or(`id.eq.${numericId},content_id.eq.${numericId}`)
-        .limit(1);
-      if (projects && projects.length > 0) {
-        project = projects[0];
+      const { data, error } = await supabase.functions.invoke("get-dubbing-project", {
+        body: { numericId },
+      });
+
+      if (error) throw error;
+
+      if (data) {
+        project = data.project;
+
+        if (data.metadata) {
+          availableJobs.value = data.metadata.jobs;
+          studiosList.value = data.metadata.studios;
+          voiceActorsList.value = data.metadata.voiceActors;
+        }
+
+        if (project) {
+          dbProjectId.value = project.id;
+          if (Number(id.value) !== project.id) {
+            router.replace(`/edit-dubbing-project/${project.id}`);
+          }
+          contentId.value = project.content_id;
+          contentType.value = project.content_type || "movie";
+          language.value = project.language || "fr-FR";
+          selectedStudioId.value = project.studio_id || null;
+
+          if (data.crewData) {
+            dubbingCrew.value = data.crewData.map((c: any) => ({
+              job_id: c.job_id,
+              person_id: c.person_id,
+              firstname: c.voice_actors?.firstname,
+              lastname: c.voice_actors?.lastname,
+            }));
+          }
+
+          if (selectedStudioId.value) {
+            const found = studiosList.value.find(
+              (s) => s.id === selectedStudioId.value,
+            );
+            if (found) studio.value = found.name;
+          }
+
+          if (data.worksData) {
+            castRows.value = data.worksData.map((w: any) => ({
+              id: w.id,
+              actor_id: w.actor_id,
+              voice_actor_id: w.voice_actor_id,
+              voice_actor_name: w.voice_actors
+                ? `${w.voice_actors.firstname} ${w.voice_actors.lastname}`
+                : undefined,
+              performance: w.performance || "dialogues",
+              highlight: w.highlight || false,
+            }));
+          }
+        }
       }
     }
 
-    if (project) {
-      dbProjectId.value = project.id;
-      if (Number(id.value) !== project.id) {
-        router.replace(`/edit-dubbing-project/${project.id}`);
+    if (!project) {
+      if (!isNaN(numericId)) {
+        // If no project exists yet in DB for this TMDB ID, treat as project for this contentId
+        contentId.value = numericId;
+      } else if (id.value === "new" && route.query.contentId) {
+        contentId.value = Number(route.query.contentId);
+        if (route.query.contentType) {
+          contentType.value = route.query.contentType as string;
+        }
       }
-      contentId.value = project.content_id;
-      contentType.value = project.content_type || "movie";
-      language.value = project.language || "fr-FR";
-      selectedStudioId.value = project.studio_id || null;
-
-      // Fetch dubbing crew
-      const { data: crewData } = await supabase
-        .from("dubbing_project_crew")
-        .select("*, voice_actors(firstname, lastname)")
-        .eq("dubbing_project_id", project.id);
-
-      if (crewData) {
-        dubbingCrew.value = crewData.map((c) => ({
-          job_id: c.job_id,
-          person_id: c.person_id,
-          firstname: c.voice_actors?.firstname,
-          lastname: c.voice_actors?.lastname,
-        }));
-      }
-
-      if (selectedStudioId.value) {
-        const found = studiosList.value.find(
-          (s) => s.id === selectedStudioId.value,
-        );
-        if (found) studio.value = found.name;
-      }
-    } else if (!isNaN(numericId)) {
-      // If no project exists yet in DB for this TMDB ID, treat as project for this contentId
-      contentId.value = numericId;
-    } else if (id.value === "new" && route.query.contentId) {
-      contentId.value = Number(route.query.contentId);
-      if (route.query.contentType) {
-        contentType.value = route.query.contentType as string;
-      }
-    }
-
-    // Fetch works for project.id
-    if (project?.id) {
-      const { data: works } = await supabase
-        .from("work")
-        .select("*, voice_actors(id, firstname, lastname)")
-        .eq("dubbing_project_id", project.id);
-
-      if (works) {
-        castRows.value = works.map((w: any) => ({
-          id: w.id,
-          actor_id: w.actor_id,
-          voice_actor_id: w.voice_actor_id,
-          voice_actor_name: w.voice_actors
-            ? `${w.voice_actors.firstname} ${w.voice_actors.lastname}`
-            : undefined,
-          performance: w.performance || "dialogues",
-          highlight: w.highlight || false,
-        }));
+      
+      // We still need metadata if creating a new project
+      if (id.value === "new") {
+        const { data: metaData } = await supabase.functions.invoke("get-metadata", {
+          body: { type: "all" },
+        });
+        if (metaData) {
+          availableJobs.value = metaData.jobs;
+          studiosList.value = metaData.studios;
+          voiceActorsList.value = metaData.voiceActors;
+        }
       }
     }
 
@@ -1059,21 +1064,20 @@ const removeCastRow = (index: number) => {
 const quickCreateVoiceActor = async () => {
   if (!newPersonFirstname.value || !newPersonLastname.value) return;
   try {
-    const { data, error } = await supabase
-      .from("voice_actors")
-      .insert([
-        {
+    const { data, error } = await supabase.functions.invoke("save-metadata", {
+      body: {
+        type: "voice_actor",
+        payload: {
           firstname: newPersonFirstname.value.trim(),
           lastname: newPersonLastname.value.trim(),
-        },
-      ])
-      .select()
-      .single();
+        }
+      }
+    });
 
     if (error) throw error;
-    if (data) {
+    if (data?.data) {
       await fetchVoiceActors();
-      selectVoiceActor(data); // Auto-assign using the existing selection logic!
+      selectVoiceActor(data.data); // Auto-assign using the existing selection logic!
       showCreatePersonModal.value = false;
       newPersonFirstname.value = "";
       newPersonLastname.value = "";
@@ -1104,17 +1108,18 @@ const handleCreateNewPerson = (query?: string) => {
 const quickCreateJob = async () => {
   if (!newJobName.value) return;
   try {
-    const { data, error } = await supabase
-      .from("jobs")
-      .insert([{ name: newJobName.value.trim() }])
-      .select()
-      .single();
+    const { data, error } = await supabase.functions.invoke("save-metadata", {
+      body: {
+        type: "job",
+        payload: { name: newJobName.value.trim() }
+      }
+    });
 
     if (error) throw error;
-    if (data) {
+    if (data?.data) {
       await fetchJobs();
       if (activeJobRowIndex.value !== null && activeJobRowIndex.value >= 0) {
-        dubbingCrew.value[activeJobRowIndex.value].job_id = data.id;
+        dubbingCrew.value[activeJobRowIndex.value].job_id = data.data.id;
       }
       showCreateJobModal.value = false;
       newJobName.value = "";
@@ -1139,68 +1144,16 @@ const saveProject = async () => {
 
     let projectId = dbProjectId.value;
 
-    if (projectId) {
-      const { error } = await supabase
-        .from("dubbing_projects")
-        .update(projectPayload)
-        .eq("id", projectId);
-      if (error) throw error;
-    } else {
-      // Ensure the media exists in our database before creating a foreign key to it
-      try {
-        await enqueueAndProcessMedia({
-          tmdbId: contentId.value,
-          mediaType: contentType.value,
-        });
-      } catch (mediaErr: any) {
-        console.warn(
-          "Media might already exist or error preparing media:",
-          mediaErr,
-        );
-        // We continue in case it already exists and the error is just a unique constraint violation
+    const { data, error } = await supabase.functions.invoke("save-dubbing-project", {
+      body: {
+        projectId,
+        projectPayload,
+        dubbingCrew: dubbingCrew.value,
+        castRows: castRows.value
       }
+    });
 
-      const { data: newProj, error } = await supabase
-        .from("dubbing_projects")
-        .insert([projectPayload])
-        .select()
-        .single();
-      if (error) throw error;
-      if (newProj) projectId = newProj.id;
-    }
-
-    if (projectId) {
-      // Save Dubbing Crew
-      await supabase
-        .from("dubbing_project_crew")
-        .delete()
-        .eq("dubbing_project_id", projectId);
-      if (dubbingCrew.value.length > 0) {
-        const crewPayloads = dubbingCrew.value.map((c) => ({
-          dubbing_project_id: projectId,
-          person_id: c.person_id,
-          job_id: c.job_id,
-        }));
-        await supabase.from("dubbing_project_crew").insert(crewPayloads);
-      }
-    }
-
-    if (projectId && contentId.value) {
-      for (const row of castRows.value) {
-        if (!row.actor_id) continue;
-        const workPayload: any = {
-          dubbing_project_id: projectId,
-          actor_id: row.actor_id,
-          voice_actor_id: row.voice_actor_id || null,
-          performance: row.performance || "dialogues",
-          highlight: row.highlight || false,
-          status: "validated",
-        };
-        if (row.id) workPayload.id = row.id;
-
-        await supabase.from("work").upsert([workPayload]);
-      }
-    }
+    if (error) throw error;
 
     router.back();
   } catch (err: any) {

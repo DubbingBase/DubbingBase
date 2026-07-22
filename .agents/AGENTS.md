@@ -63,8 +63,8 @@ _(This command generates types to `packages/database/supabase/functions/_shared/
 ### 2. Mobile Application (`apps/mobile`)
 
 - **Strict Edge Function Data Fetching**: NEVER perform inline Supabase database fetches (e.g. `supabase.from(...)`) directly from Vue components. All data fetching logic MUST go through centralized Supabase Edge Functions. Components should only call edge functions or receive data via props/Pinia stores. If an edge function does not return the data you need, update the edge function instead.
-- **UI Framework (No Ionic)**:
-  - **IMPORTANT**: The project has fully migrated away from Ionic. Do NOT introduce new Ionic components (`ion-*`) or Ionic router (`ion-router`).
+- **UI Framework**:
+  - **IMPORTANT**: The project is migrating away from Ionic, but **keep Ionic for the router (`ion-router`) and action sheets (`ion-action-sheet`)**. Do not introduce other new Ionic components (`ion-*`).
   - Use standard HTML/Vue elements styled with Tailwind CSS or Sass for new features.
 - **Capacitor**:
   - Keep Capacitor for native features/APIs (Camera, Haptics, Keyboard, StatusBar, etc.).
@@ -86,6 +86,12 @@ _(This command generates types to `packages/database/supabase/functions/_shared/
   - Never modify the local/remote schema directly. All database schema changes must go through a migration file.
   - To create a new migration: Run `pnpm supabase migration new <migration_name>` in the appropriate directory.
   - Migration files are stored in `packages/database/supabase/migrations`.
+- **Querying Local Database**:
+  - The local Supabase database runs on port `55322` (you can verify this by running `npx supabase status`).
+  - To query the local DB from the terminal, use: `PGPASSWORD=postgres psql -h 127.0.0.1 -p 55322 -U postgres -d postgres -c "<query>"`.
+- **Schema Cache (PostgREST)**:
+  - If you encounter a `PGRST` error (e.g., "Could not find a relationship in the schema cache") when developing Edge Functions, it means the PostgREST cache is stale.
+  - To reload the schema cache locally, run: `PGPASSWORD=postgres psql -h 127.0.0.1 -p 55322 -U postgres -d postgres -c "NOTIFY pgrst, 'reload schema';"`.
 - **Seed Data**:
   - Keep `packages/database/supabase/seed.sql` up to date if you add new tables or reference data.
 - **Edge Functions (Deno)**:
@@ -102,3 +108,4 @@ _(This command generates types to `packages/database/supabase/functions/_shared/
 3. **Precise Code Changes**: Make targeted edits instead of rewriting large files.
 4. **Validation**: Test compilation and run formatter tools before completing your turn.
 5. **Local Environment Only**: NEVER execute or run production environment commands or actions (e.g., production database pushes, live deployments, remote mutations). Only target local development environments, and do NOT suggest production actions unless strictly and explicitly asked by the user.
+6. **Token Saving**: Use `rtk` (binary) (https://github.com/rtk-ai/rtk) to save tokens whenever possible.

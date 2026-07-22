@@ -138,6 +138,7 @@ const actionSheetButtons = computed<ActionSheetButton[]>(() => {
       text: t('movie.addDubbingProject', 'Add Dubbing Project'),
       icon: Plus,
       handler: goToAddProject,
+      cssClass: 'action-sheet-admin',
     });
   }
 
@@ -148,6 +149,7 @@ const actionSheetButtons = computed<ActionSheetButton[]>(() => {
       handler: () => {
         showCreditsReview.value = true;
       },
+      cssClass: 'action-sheet-admin',
     });
   }
 
@@ -156,15 +158,11 @@ const actionSheetButtons = computed<ActionSheetButton[]>(() => {
       text: t('common.scan', 'Scanner'),
       icon: Camera,
       handler: () => takePhoto(),
+      cssClass: 'action-sheet-admin',
     });
   }
 
   if (hasWikidataId.value && !hasData.value) {
-    buttons.push({
-      text: t('common.enqueue', 'Mettre en file d\'attente'),
-      icon: List,
-      handler: () => handleEnqueue(),
-    });
     buttons.push({
       text: t('common.fetchInfos', 'Récupérer les infos'),
       icon: Info,
@@ -327,10 +325,15 @@ const fetchError = ref("");
 
 const fetchQueueStatus = async () => {
   try {
-    const { data, error } = await supabase.rpc("get_media_queue_status", {
-      p_tmdb_id: Number(route.params.id),
-      p_media_type: "movie",
+    const { data: funcData, error } = await supabase.functions.invoke("media-queue", {
+      body: {
+        action: "status",
+        mediaId: Number(route.params.id),
+        mediaType: "movie",
+      }
     });
+    
+    const data = funcData?.data;
     if (error) throw error;
     const statusData = data as {
       status: string | null;
@@ -380,7 +383,14 @@ const shareMedia = async () => {
       });
       await toast.present();
     } catch (clipboardErr) {
-      console.error("Clipboard copy failed:", clipboardErr);
+      console.error("Failed to copy to clipboard:", clipboardErr);
+      const errToast = await toastController.create({
+        message: "Failed to copy link.",
+        duration: 2000,
+        position: "top",
+        color: "danger",
+      });
+      await errToast.present();
     }
   }
 };

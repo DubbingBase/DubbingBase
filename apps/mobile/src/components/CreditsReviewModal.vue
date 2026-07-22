@@ -124,6 +124,8 @@ const processExtractedCredits = async () => {
   isProcessing.value = true;
   processedCredits.value = [];
 
+  const tempCredits = [];
+
   for (const credit of props.extractedCredits) {
     // 1. Try to find the original actor ID from props.movieActors
     let matchedActorId: number | null = null;
@@ -148,31 +150,31 @@ const processExtractedCredits = async () => {
       }
     }
 
-    // 2. Try to find the voice actor in DB
-    let matchedVoiceActor = null;
-    if (credit.voiceActor && credit.voiceActor.trim() !== "") {
-      const parts = credit.voiceActor.trim().split(" ");
-      const firstname = parts[0];
-      const lastname = parts.slice(1).join(" ");
-
-      const { data, error } = await supabase
-        .from("voice_actors")
-        .select("id, firstname, lastname")
-        .ilike("firstname", firstname)
-        .ilike("lastname", lastname || "%")
-        .limit(1)
-        .maybeSingle();
-
-      if (!error && data) {
-        matchedVoiceActor = data;
-      }
-    }
-
-    processedCredits.value.push({
+    tempCredits.push({
       ...credit,
-      matchedVoiceActor,
       matchedActorId,
-      matchedActorName});
+      matchedActorName,
+    });
+  }
+
+  // 2. Try to find the voice actor in DB via Edge Function
+  try {
+    const { data, error } = await supabase.functions.invoke("process-credits", {
+      body: {
+        action: "match",
+        credits: tempCredits
+      }
+    });
+
+    if (error) throw error;
+    if (data && data.credits) {
+      processedCredits.value = data.credits;
+    } else {
+      processedCredits.value = tempCredits.map(c => ({ ...c, matchedVoiceActor: null }));
+    }
+  } catch (err) {
+    console.error("Error matching voice actors via edge function:", err);
+    processedCredits.value = tempCredits.map(c => ({ ...c, matchedVoiceActor: null }));
   }
 
   isProcessing.value = false;
@@ -184,47 +186,20 @@ const removeCredit = (index: number) => {
 
 const saveAll = async () => {
   isSaving.value = true;
-  let successCount = 0;
-
+  
   try {
-    for (const credit of processedCredits.value) {
-      let vaId = credit.matchedVoiceActor?.id;
-
-      // Create voice actor if not matched
-      if (!vaId) {
-        const parts = credit.voiceActor.trim().split(" ");
-        const firstname = parts[0];
-        const lastname = parts.slice(1).join(" ");
-
-        const { data: newVa, error: vaError } = await supabase
-          .from("voice_actors")
-          .insert({ firstname, lastname })
-          .select("id")
-          .single();
-
-        if (vaError) {
-          console.error("Failed to create voice actor:", vaError);
-          continue;
-        }
-        vaId = newVa.id;
+    const { data, error } = await supabase.functions.invoke("process-credits", {
+      body: {
+        action: "save",
+        credits: processedCredits.value,
+        mediaType: props.workType,
+        mediaId: props.mediaId
       }
+    });
 
-      // Link voice actor
-      const { error: linkError } = await supabase.functions.invoke(
-        "link-voice-actor",
-        {
-          body: {
-            actor_id: credit.matchedActorId || null,
-            media_type: props.workType,
-            voice_actor_id: vaId,
-            performance: credit.role || "dialogues",
-            media_id: props.mediaId}},
-      );
-
-      if (!linkError) {
-        successCount++;
-      }
-    }
+    if (error) throw error;
+    
+    const successCount = data?.successCount || 0;
 
     const toast = await toastController.create({
       message: `Successfully saved ${successCount} voice actors!`,

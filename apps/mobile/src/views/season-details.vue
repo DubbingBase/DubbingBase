@@ -146,12 +146,16 @@ const normalizedActors = computed(() => {
 
 const fetchQueueStatus = async () => {
   try {
-    const { data, error: queueErr } = await supabase
-      .rpc("get_media_queue_status", {
-        p_tmdb_id: Number(route.params.id),
-        p_media_type: "season",
-        p_season_number: Number(route.params.season),
-      });
+    const { data: funcData, error: queueErr } = await supabase.functions.invoke("media-queue", {
+      body: {
+        action: "status",
+        mediaId: Number(route.params.id),
+        mediaType: "season",
+        seasonNumber: Number(route.params.season)
+      }
+    });
+    
+    const data = funcData?.data;
     if (queueErr) throw queueErr;
     const statusData = data as { status: string | null; error_message: string | null } | null;
     if (statusData) {

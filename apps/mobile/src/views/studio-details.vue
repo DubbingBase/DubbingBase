@@ -158,52 +158,19 @@ const fetchStudioDetails = async () => {
   isLoading.value = true;
   error.value = null;
   try {
-    // 1. Fetch Studio info by ID or Name
-    let query = supabase.from("studios").select("*");
-    if (!isNaN(Number(studioId))) {
-      query = query.eq("id", Number(studioId));
-    } else {
-      query = query.ilike("name", studioId);
-    }
-
-    const { data: studioData, error: studioErr } = await query.maybeSingle();
-    if (studioErr) throw studioErr;
-
-    if (!studioData) {
-      // Fallback: create mock studio object if ID doesn't exist yet
-      studio.value = { id: studioId, name: studioId };
-    } else {
-      studio.value = studioData;
-    }
-
-    // 2. Fetch dubbed projects by studio_id or studio name
-    let projQuery = supabase.from("dubbing_projects").select("*");
-    if (studio.value?.id && !isNaN(Number(studio.value.id))) {
-      projQuery = projQuery.or(`studio_id.eq.${studio.value.id},studio.ilike.${studio.value.name}`);
-    } else if (studio.value?.name) {
-      projQuery = projQuery.ilike("studio", studio.value.name);
-    }
-    const { data: projects } = await projQuery;
-    dubbedProjects.value = projects || [];
-
-    // 3. Fetch linked voice actors from work table
-    if (dubbedProjects.value.length > 0) {
-      const projectIds = dubbedProjects.value.map((p) => p.id);
-      const { data: works } = await supabase
-        .from("work")
-        .select("voice_actor_id")
-        .in("dubbing_project_id", projectIds)
-        .not("voice_actor_id", "is", null);
-
-      if (works && works.length > 0) {
-        const vaIds = Array.from(new Set(works.map((w) => w.voice_actor_id).filter((id): id is number => id !== null)));
-        const { data: vaData } = await supabase
-          .from("voice_actors")
-          .select("id, firstname, lastname, profile_picture")
-          .in("id", vaIds);
-
-        voiceActorsRoster.value = vaData || [];
+    const { data, error: funcError } = await supabase.functions.invoke(
+      "get-studio-details",
+      {
+        body: { studioId },
       }
+    );
+
+    if (funcError) throw funcError;
+
+    if (data) {
+      studio.value = data.studio;
+      dubbedProjects.value = data.dubbedProjects;
+      voiceActorsRoster.value = data.voiceActorsRoster;
     }
   } catch (err: any) {
     console.error("Error fetching studio details:", err);

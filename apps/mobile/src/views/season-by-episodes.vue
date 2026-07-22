@@ -126,15 +126,17 @@ const backHref = computed(() => {
 
 const fetchQueueStatus = async () => {
   try {
-    const { data, error: queueErr } = await supabase.rpc(
-      "get_media_queue_status",
-      {
-        p_tmdb_id: Number(route.params.id),
-        p_media_type: "episode",
-        p_season_number: Number(route.params.season),
-        p_episode_number: Number(route.params.episode),
-      },
-    );
+    const { data: funcData, error: queueErr } = await supabase.functions.invoke("media-queue", {
+      body: {
+        action: "status",
+        mediaId: Number(route.params.id),
+        mediaType: "episode",
+        seasonNumber: Number(route.params.season),
+        episodeNumber: Number(route.params.episode)
+      }
+    });
+    
+    const data = funcData?.data;
     if (queueErr) throw queueErr;
     const statusData = data as {
       status: string | null;

@@ -34,11 +34,14 @@ export async function enqueueMedia(params: {
   seasonNumber?: number | null;
   episodeNumber?: number | null;
 }): Promise<void> {
-  const { error } = await supabase.rpc("enqueue_media_fetch", {
-    p_tmdb_id: params.tmdbId,
-    p_media_type: params.mediaType,
-    p_season_number: params.seasonNumber ?? undefined,
-    p_episode_number: params.episodeNumber ?? undefined,
+  const { error } = await supabase.functions.invoke("media-queue", {
+    body: {
+      action: "enqueue",
+      tmdbId: params.tmdbId,
+      mediaType: params.mediaType,
+      seasonNumber: params.seasonNumber ?? undefined,
+      episodeNumber: params.episodeNumber ?? undefined,
+    },
   });
 
   if (error) {

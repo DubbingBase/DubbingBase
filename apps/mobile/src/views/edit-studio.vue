@@ -136,13 +136,13 @@ const fetchStudioDetails = async () => {
   if (!isEditMode.value || !id) return;
   isLoading.value = true;
   try {
-    const { data, error } = await supabase
-      .from("studios")
-      .select("*")
-      .eq("id", Number(id))
-      .single();
+    const { data: funcData, error } = await supabase.functions.invoke("get-studio-details", {
+      body: { studioId: id },
+    });
 
     if (error) throw error;
+    
+    const data = funcData?.studio;
 
     if (data) {
       name.value = data.name || "";
@@ -173,18 +173,15 @@ const saveStudio = async () => {
       logo_url: logoUrl.value.trim() || null,
     };
 
-    if (isEditMode.value && id) {
-      const { error } = await supabase
-        .from("studios")
-        .update(studioPayload)
-        .eq("id", Number(id));
-      if (error) throw error;
-    } else {
-      const { error } = await supabase
-        .from("studios")
-        .insert([studioPayload]);
-      if (error) throw error;
-    }
+    const { error: saveErr } = await supabase.functions.invoke("save-studio", {
+      body: {
+        id: isEditMode.value ? id : null,
+        updates: studioPayload,
+        isEditMode: isEditMode.value,
+      },
+    });
+
+    if (saveErr) throw saveErr;
 
     router.back();
   } catch (err) {
