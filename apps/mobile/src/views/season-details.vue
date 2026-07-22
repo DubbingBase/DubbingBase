@@ -45,9 +45,9 @@
           <DubbingProjectsView
             :contentId="route.params.seasonId as string"
             contentType="season"
+            :projects="dubbingProjects"
             :actors="normalizedActors"
             :isAdmin="false"
-            :getVoiceActorByTmdbId="getVoiceActorByTmdbId"
             :goToActor="goToActor"
             :goToVoiceActor="goToVoiceActor"
             :editVoiceActorLink="editVoiceActorLink"
@@ -96,7 +96,7 @@ const router = useRouter();
 const isLoading = ref(true);
 const error = ref("");
 const season = ref<any>(null);
-const dbVoiceActors = ref<any[]>([]);
+const dubbingProjects = ref<any[]>([]);
 const episodeCredits = ref<any>(null);
 const activeTab = ref("details");
 
@@ -105,7 +105,7 @@ const wikiDataId = computed(() => {
 });
 const hasWikidataId = computed(() => !!wikiDataId.value);
 const hasData = computed(() => {
-  return dbVoiceActors.value.length > 0;
+  return dubbingProjects.value.some((p: any) => p.works && p.works.length > 0);
 });
 const isFetching = ref(false);
 const queueStatus = ref<string | null>(null);
@@ -143,14 +143,6 @@ const normalizedActors = computed(() => {
   return [];
 });
 
-const getVoiceActorByTmdbId = (tmdbId: number) => {
-  return dbVoiceActors.value.filter(
-    (va) =>
-      va.actor_id === tmdbId ||
-      va.original_actor_id === tmdbId ||
-      va.actorId === tmdbId
-  );
-};
 
 const fetchQueueStatus = async () => {
   try {
@@ -279,7 +271,7 @@ async function fetchData() {
 
     const data = seasonResponse.data;
     season.value = data.season;
-    dbVoiceActors.value = data.db_voice_actors || [];
+    dubbingProjects.value = data.dubbingProjects || [];
     if (!season.value) error.value = "Saison introuvable.";
 
     if (!hasData.value && hasWikidataId.value) {

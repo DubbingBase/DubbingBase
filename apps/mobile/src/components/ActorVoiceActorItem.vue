@@ -62,7 +62,7 @@
         :path="getProfilePicture()"
         from-storage
       />
-      <MediaThumbnail v-else :path="undefined" />
+      <MediaThumbnail v-else :path="undefined" :fallbackPath="getAvatarFallbackUrl(getDisplayName())" />
 
       <AppText class="line-label">
         <span class="ellipsis label name">
@@ -114,6 +114,7 @@ import MediaItem from "@/components/MediaItem.vue";
 import MediaThumbnail from "@/components/MediaThumbnail.vue";
 import VoiceActorList from "@/components/VoiceActorList.vue";
 import { PersonData } from "./PersonItem.vue";
+import { getAvatarFallbackUrl } from "@/utils/image";
 
 export type ItemType = "actor" | "voice-actor";
 

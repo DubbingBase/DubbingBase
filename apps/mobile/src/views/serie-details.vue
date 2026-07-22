@@ -39,6 +39,7 @@
               <DubbingProjectsView
                 :contentId="route.params.id as string"
                 contentType="tv"
+                :projects="dubbingProjects"
                 :actors="actors"
                 :is-admin="isAdmin"
                 :get-voice-actor-by-tmdb-id="getVoiceActorByTmdbId"
@@ -48,7 +49,6 @@
                 :confirm-delete-voice-actor-link="confirmDeleteVoiceActorLink"
                 :open-voice-actor-search="openVoiceActorSearch"
                 :mediaLanguage="show?.original_language"
-                :externalVoiceActors="voiceActors"
                 :parentLoading="isLoading"
               />
             </AppSegmentContent>
@@ -156,7 +156,7 @@ import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { actorToPersonData, voiceActorToPersonData } from "@/utils/convert";
 import { Role } from "@/components/PersonItem.vue";
 import { useI18n } from "vue-i18n";
-import type { ShowResponse } from "@supabase/functions/_shared/types";
+import { ShowResponse } from "@supabase/functions/_shared/types";
 
 const authStore = useAuthStore();
 const { isAdmin } = storeToRefs(authStore);
@@ -226,7 +226,8 @@ const actionSheetButtons = computed<ActionSheetButton[]>(() => {
   return buttons;
 });
 
-const show = ref<any>(null);
+const show = ref<ShowResponse["serie"] | any>();
+const dubbingProjects = ref<any[]>([]);
 const isLoading = ref(true);
 const isFetching = ref(false);
 const fetchError = ref("");
@@ -354,7 +355,7 @@ const hasWikidataId = computed(() => {
 });
 
 const hasData = computed(() => {
-  return voiceActors.value.length > 0;
+  return dubbingProjects.value.some((p: any) => p.works && p.works.length > 0);
 });
 
 const formattedSeasons = computed(() => {
@@ -508,21 +509,10 @@ const fetchSerieData = async () => {
     if (response.data) {
       show.value = response.data.serie || (response.data as any).show; // Handle both response formats
       show.value.credits = response.data.aggregateCredits;
-      // Load voice actors for this serie
-      if (response.data.voiceActors) {
-        voiceActors.value = response.data.voiceActors.map((va) =>
-          voiceActorToPersonData(
-            va.voiceActorDetails,
-            va.performance || "",
-            va.actor_id,
-            (va as any).reviewed_status,
-            va.id,
-          ),
-        );
-      }
       if (response.data.characterProfilePictures) {
         characterProfilePictures.value = response.data.characterProfilePictures;
       }
+      dubbingProjects.value = response.data.dubbingProjects || [];
       if ((response.data as any).votes) {
         sharedVotes.value = {
           ...sharedVotes.value,

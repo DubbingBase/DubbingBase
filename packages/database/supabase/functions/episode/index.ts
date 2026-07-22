@@ -24,16 +24,35 @@ export default {
       const databaseClient = new DatabaseClient(ctx);
       const mediaService = new MediaService(databaseClient, tmdbClient, ctx);
 
-      const result = await mediaService.getMediaWithVoiceActorsExtended(
-        "episode",
-        id,
-        season_number,
-        episode_number,
-      );
+      const [result, dubbingProjects] = await Promise.all([
+        mediaService.getMediaWithVoiceActorsExtended(
+          "episode",
+          id,
+          season_number,
+          episode_number,
+        ),
+        databaseClient.getDubbingProjects(id, "episode"),
+      ]);
+
+      const workIds = dubbingProjects.flatMap((p: any) => p.works?.map((w: any) => w.id) || []);
+      let voteData = {};
+      if (workIds.length > 0) {
+        try {
+          const user = ctx.userClaims;
+          if (user) {
+            voteData = await databaseClient.getWorkVotes(workIds, user.id);
+          } else {
+            voteData = await databaseClient.getWorkVotes(workIds);
+          }
+        } catch (voteError) {
+          console.error("Error fetching vote data:", voteError);
+        }
+      }
 
       return Response.json({
         episode: result.media,
-        db_voice_actors: result.voice_actors,
+        dubbingProjects: dubbingProjects,
+        votes: voteData,
       });
     } catch (error) {
       console.error("Error fetching episode:", error);

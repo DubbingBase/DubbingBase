@@ -35,6 +35,11 @@ const props = defineProps({
     required: false,
     default: '0',
   },
+  fallbackPath: {
+    type: String,
+    required: false,
+    default: undefined,
+  },
 });
 
 const { height, width } = toRefs(props);
@@ -45,7 +50,7 @@ watch(() => props.path, () => {
 });
 
 const defaultSrc = computed(() => {
-  return `https://placehold.co/${width.value}x${height.value}?text=?`;
+  return props.fallbackPath || `https://placehold.co/${width.value}x${height.value}?text=?`;
 });
 
 const imgSrc = computed(() => {

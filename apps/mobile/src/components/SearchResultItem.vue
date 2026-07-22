@@ -8,7 +8,7 @@
     button
   >
     <AppCardContent class="card-content">
-      <MediaThumbnail :path="image ?? `https://api.dicebear.com/9.x/initials/svg?scale=50&backgroundColor=212121&seed=${name}`" class="thumbnail" />
+      <MediaThumbnail :path="image" :fallbackPath="getAvatarFallbackUrl(name)" class="thumbnail" />
       <div class="info">
         <h3 class="title">{{ name }}</h3>
         <p class="subtitle">{{ formattedDate }}</p>
@@ -34,6 +34,7 @@ import Film from '~icons/lucide/film';
 import Tv from '~icons/lucide/tv';
 import User from '~icons/lucide/user';
 import Mic from '~icons/lucide/mic';
+import { getAvatarFallbackUrl } from '@/utils/image';
 
 interface Props {
   match: SearchResult;

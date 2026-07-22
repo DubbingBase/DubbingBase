@@ -11,7 +11,7 @@
       <MediaThumbnail
         v-else
         @click="uploadImage"
-        :path="`https://api.dicebear.com/9.x/initials/svg?scale=50&backgroundColor=212121&seed=${voiceActor.firstname} ${voiceActor.lastname}`"
+        :path="getAvatarFallbackUrl(`${voiceActor.firstname} ${voiceActor.lastname}`)"
         :width="60"
         :height="80"
       />
@@ -54,6 +54,7 @@ import { useFileDialog } from "@vueuse/core";
 import { supabase } from "../api/supabase";
 import ImageEditorModal from "@/components/common/ImageEditorModal.vue";
 import { THUMBNAIL_DEFAULT_WIDTH, THUMBNAIL_DEFAULT_HEIGHT } from "@/constants/thumbnails";
+import { getAvatarFallbackUrl } from "@/utils/image";
 
 interface VoiceActor {
   id: number;

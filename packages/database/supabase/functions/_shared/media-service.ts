@@ -222,26 +222,11 @@ export class MediaService {
       contentType,
       contentId,
     );
-    const voiceActors =
-      await this.databaseClient.getWorkWithVoiceActors(contentId);
 
     // Process image URLs in the media data
     const processedMedia = processMedia(media);
 
-    let votes = {};
-    const workIds = voiceActors?.map((w: any) => w.id) || [];
-    if (workIds.length > 0) {
-      try {
-        votes = await this.databaseClient.getWorkVotes(
-          workIds,
-          this.ctx.userClaims?.id,
-        );
-      } catch (e) {
-        console.error("Error fetching votes for media voice actors:", e);
-      }
-    }
-
-    return { media: processedMedia, voice_actors: voiceActors, votes };
+    return { media: processedMedia };
   }
 
   async getMediaWithVoiceActorsExtended(
@@ -281,21 +266,7 @@ export class MediaService {
 
     // Process image URLs in the media data
     const processedMedia = processMedia(media);
-    const voiceActors = await this.databaseClient.getWorkWithVoiceActors(id);
 
-    let votes = {};
-    const workIds = voiceActors?.map((w: any) => w.id) || [];
-    if (workIds.length > 0) {
-      try {
-        votes = await this.databaseClient.getWorkVotes(
-          workIds,
-          this.ctx.userClaims?.id,
-        );
-      } catch (e) {
-        console.error("Error fetching votes for extended media:", e);
-      }
-    }
-
-    return { media: processedMedia, voice_actors: voiceActors, votes };
+    return { media: processedMedia };
   }
 }

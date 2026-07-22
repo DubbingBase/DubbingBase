@@ -62,6 +62,7 @@ _(This command generates types to `packages/database/supabase/functions/_shared/
 
 ### 2. Mobile Application (`apps/mobile`)
 
+- **Strict Edge Function Data Fetching**: NEVER perform inline Supabase database fetches (e.g. `supabase.from(...)`) directly from Vue components. All data fetching logic MUST go through centralized Supabase Edge Functions. Components should only call edge functions or receive data via props/Pinia stores. If an edge function does not return the data you need, update the edge function instead.
 - **UI Framework (No Ionic)**:
   - **IMPORTANT**: The project has fully migrated away from Ionic. Do NOT introduce new Ionic components (`ion-*`) or Ionic router (`ion-router`).
   - Use standard HTML/Vue elements styled with Tailwind CSS or Sass for new features.

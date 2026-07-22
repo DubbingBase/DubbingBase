@@ -52,7 +52,6 @@ export interface WorkAndVoiceActor {
 
 export interface MovieResponse {
   movie: Movie & WithCast & WithExtrernalIds;
-  voiceActors: Array<WorkAndVoiceActor>;
   characterProfilePictures?: Array<{
     id: number;
     name: string;
@@ -60,6 +59,8 @@ export interface MovieResponse {
     tvdbPeopleId: number;
     showId: number;
   }>;
+  dubbingProjects?: any[];
+  votes?: Record<number, any>;
 }
 
 // Series-related types
@@ -102,12 +103,11 @@ export interface SerieTrendingResponse {
 
 export interface SerieResponse {
   serie: Serie & WithCast & WithExtrernalIds;
-  voiceActors: Array<WorkAndVoiceActor>;
+  votes?: Record<number, any>;
 }
 
 export interface ShowResponse {
   serie: Serie & WithCast & WithExtrernalIds;
-  voiceActors: Array<WorkAndVoiceActor>;
   aggregateCredits?: any;
   characterProfilePictures?: Array<{
     id: number;
@@ -116,6 +116,8 @@ export interface ShowResponse {
     tvdbPeopleId: number;
     showId: number;
   }>;
+  dubbingProjects?: any[];
+  votes?: Record<number, any>;
 }
 
 // Actor-related types

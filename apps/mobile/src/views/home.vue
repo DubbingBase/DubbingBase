@@ -119,7 +119,7 @@
                 :title="`${va.firstname} ${va.lastname}`"
                 routeName="VoiceActorDetails"
                 :routeParams="{ id: va.id }"
-                :fallbackImagePath="`https://api.dicebear.com/9.x/initials/svg?scale=50&backgroundColor=212121&seed=${va.firstname} ${va.lastname}`"
+                :fallbackImagePath="getAvatarFallbackUrl(`${va.firstname} ${va.lastname}`)"
               ></MediaItem>
             </template>
           </div>
@@ -156,7 +156,7 @@
                 :title="`${va.firstname} ${va.lastname}`"
                 routeName="VoiceActorDetails"
                 :routeParams="{ id: va.id }"
-                :fallbackImagePath="`https://api.dicebear.com/9.x/initials/svg?scale=50&backgroundColor=212121&seed=${va.firstname} ${va.lastname}`"
+                :fallbackImagePath="getAvatarFallbackUrl(`${va.firstname} ${va.lastname}`)"
               ></MediaItem>
             </template>
           </div>
@@ -179,7 +179,8 @@ import { useI18n } from "vue-i18n";
 import type { TrendingResponse } from "@supabase/functions/_shared/movie";
 import type { TrendingResponse as SerieTrendingResponse } from "@supabase/functions/_shared/serie";
 import type { Tables } from "@/utils/database";
-import MediaItem from "../components/MediaItem.vue";
+import MediaItem from "@/components/MediaItem.vue";
+import { getAvatarFallbackUrl } from "@/utils/image";
 import { supabase } from "../api/supabase";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";

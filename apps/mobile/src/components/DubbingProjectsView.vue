@@ -13,7 +13,6 @@
       <div>
         <ActorList
           :actors="actors"
-          :voice-actors="externalVoiceActors"
           :is-admin="isAdmin"
           :get-voice-actor-by-tmdb-id="getVoiceActorByTmdbId"
           :go-to-actor="goToActor"
@@ -32,20 +31,22 @@
     <div v-else class="flex flex-col h-full">
       <!-- Show segment header for all projects -->
       <div class="px-4 py-2 w-full flex items-center gap-2">
-        <select
-          v-model="activeProjectId"
-          class="project-select flex-1"
-        >
+        <select v-model="activeProjectId" class="project-select flex-1">
           <option
             v-for="project in projects"
             :key="project.id"
             :value="project.id.toString()"
           >
-            {{ project.language.toUpperCase() }}
+            {{ project.language?.toUpperCase() || '' }}
           </option>
         </select>
-        
-        <AppButton v-if="isAdmin && activeProjectId" fill="clear" @click="goToEditProject" aria-label="Edit Dubbing Project">
+
+        <AppButton
+          v-if="isAdmin && activeProjectId"
+          fill="clear"
+          @click="goToEditProject"
+          aria-label="Edit Dubbing Project"
+        >
           <Pencil class="w-5 h-5 text-gray-400" />
         </AppButton>
       </div>
@@ -103,18 +104,17 @@
                 class="technical-team-card"
               >
                 <div class="technical-team-grid">
-                  <div v-if="project.studio_data" class="info-item full-width-item mb-4">
-                    <StudioCard
-                      :studio="project.studio_data"
-                    />
+                  <div
+                    v-if="project.studio_data"
+                    class="info-item full-width-item mb-4"
+                  >
+                    <StudioCard :studio="project.studio_data" />
                   </div>
 
                   <!-- Dynamic Crew display -->
                   <div class="full-width-item">
                     <CrewList :groupedCrew="groupCrewByJob(project.crew)" />
                   </div>
-
-
                 </div>
               </div>
               <div v-else class="technical-team-empty">
@@ -130,7 +130,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from "vue";
-import { supabase } from "@/api/supabase";
+
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import EmptyState from "@/components/common/EmptyState.vue";
 
@@ -142,7 +142,7 @@ import ActorList from "@/components/ActorList.vue";
 import { useI18n } from "vue-i18n";
 import { PersonData } from "@/components/PersonItem.vue";
 import AppButton from "@/components/common/AppButton.vue";
-import Pencil from '~icons/lucide/pencil';
+import Pencil from "~icons/lucide/pencil";
 import { useRouter } from "vue-router";
 
 const { t } = useI18n();
@@ -151,6 +151,7 @@ const router = useRouter();
 const props = defineProps<{
   contentId: string | number;
   contentType: "movie" | "tv" | "season";
+  projects?: DubbingProject[];
 
   // Dependencies required by ActorList
   actors?: PersonData<any>[];
@@ -162,7 +163,6 @@ const props = defineProps<{
   confirmDeleteVoiceActorLink?: (person: any) => void;
   openVoiceActorSearch?: (actorId: number) => void;
   mediaLanguage?: string;
-  externalVoiceActors?: any[]; // To fallback if local fetch isn't integrated yet
   parentLoading?: boolean;
 }>();
 
@@ -170,44 +170,43 @@ export interface VoiceActor {
   id: number;
   firstname: string;
   lastname: string;
-  profile_picture?: string;
-  bio?: string;
-  nationality?: string;
-  date_of_birth?: string;
-  awards?: string;
-  years_active?: string;
+  profile_picture?: string | null;
+  bio?: string | null;
+  nationality?: string | null;
+  date_of_birth?: string | null;
+  awards?: string | null;
+  years_active?: string | null;
   social_media_links?: any;
-  tmdb_id?: number;
-  wikidata_id?: string;
+  tmdb_id?: number | null;
+  wikidata_id?: string | null;
 }
 
 export interface WorkPerformance {
   id: number;
   actor_id: number;
-  voice_actor_id: number;
-  highlight: boolean;
-  suggestions: string;
-  status: string;
-  source_id: number;
-  performance: string;
+  voice_actor_id: number | null;
+  highlight: boolean | null;
+  suggestions: string | null;
+  status: string | null;
+  source_id: number | null;
+  performance: string | null;
   dubbing_project_id: number;
-  voice_actor: VoiceActor;
+  voice_actor: VoiceActor | null;
 }
 
 export interface DubbingProject {
   id: number;
   content_id: number;
   content_type: string;
-  language: string;
+  language: string | null;
   studio_id: number | null;
   studio_data?: any;
-  status: string;
+  status: string | null;
   works: WorkPerformance[];
   crew: any[];
 }
 
-const projects = ref<DubbingProject[]>([]);
-const loading = ref(true);
+const projects = computed(() => props.projects || []);
 const error = ref<string | null>(null);
 
 const goToEditProject = () => {
@@ -217,76 +216,61 @@ const goToEditProject = () => {
 };
 const activeProjectId = ref<string>("");
 
-const isFullyLoading = computed(() => loading.value || props.parentLoading);
+const isFullyLoading = computed(() => !!props.parentLoading);
 
-const fetchDubbingProjects = async () => {
-  if (!props.contentId || isNaN(Number(props.contentId))) {
-    loading.value = false;
-    return;
-  }
-  loading.value = true;
-  error.value = null;
-
-  try {
-    const { data: projectsData, error: projectsError } = await supabase
-      .from("dubbing_projects")
-      .select(
-        `
-        *,
-        studio_data:studios(*),
-        works:work(
-          *,
-          voice_actor:voice_actors(*)
-        ),
-        crew:dubbing_project_crew(
-          id,
-          person_id,
-          job_id,
-          job:jobs(*),
-          person:voice_actors(*)
-        )
-      `,
-      )
-      .eq("content_id", Number(props.contentId))
-      .eq("content_type", props.contentType);
-
-    if (projectsError) throw projectsError;
-
-    projects.value = projectsData as any;
-
-    if (projects.value.length > 0 && !activeProjectId.value) {
-      activeProjectId.value = projects.value[0].id.toString();
-    }
-  } catch (err: any) {
-    console.error("Error fetching dubbing projects:", err);
-    error.value = err.message || t("common.error", "Une erreur est survenue");
-  } finally {
-    loading.value = false;
+const updateActiveProject = () => {
+  if (projects.value.length > 0 && !activeProjectId.value) {
+    activeProjectId.value = projects.value[0].id.toString();
+  } else if (projects.value.length === 0) {
+    activeProjectId.value = "";
   }
 };
+
+watch(
+  () => projects.value,
+  () => {
+    updateActiveProject();
+  },
+  { immediate: true, deep: true }
+);
 
 // Map WorkPerformance -> VoiceActor details matching what ActorList expects
 const getVoiceActorsForProject = (project: DubbingProject) => {
   if (!project || !project.works) return [];
 
-  return project.works.map((work) => {
+  const validWorks = project.works.filter(w => w.voice_actor && w.voice_actor_id !== null);
+
+  return validWorks.map((work) => {
+    const voiceActor = work.voice_actor!;
     return {
-      id: work.voice_actor_id,
+      id: work.voice_actor_id!,
       tmdb_id: Number(work.actor_id),
       actor_id: Number(work.actor_id),
-      name: `${work.voice_actor?.firstname || ""} ${work.voice_actor?.lastname || ""}`.trim(),
-      image: work.voice_actor?.profile_picture,
+      name: `${voiceActor.firstname || ""} ${voiceActor.lastname || ""}`.trim(),
+      profile_picture: voiceActor.profile_picture ?? undefined,
       role: {
         character: work.performance,
         // In ActorList, we also need to link this back to actor_id so ActorList can group them
         credit_id: work.id.toString(),
       },
       // Important fields used by ActorList logic:
-      voiceActorDetails: work.voice_actor,
+      data: {
+        id: voiceActor.id,
+        bio: voiceActor.bio ?? null,
+        awards: voiceActor.awards ?? null,
+        lastname: voiceActor.lastname,
+        firstname: voiceActor.firstname,
+        nationality: voiceActor.nationality ?? null,
+        years_active: voiceActor.years_active ?? null,
+        date_of_birth: voiceActor.date_of_birth ?? null,
+        social_media_links: voiceActor.social_media_links ?? null,
+        profile_picture: voiceActor.profile_picture ?? undefined,
+      },
+      voiceActorDetails: voiceActor,
       work_id: work.id,
       status: work.status,
     };
-  }) as any[];
+  });
 };
 
 const groupCrewByJob = (crew: any[]) => {
@@ -299,16 +283,7 @@ const groupCrewByJob = (crew: any[]) => {
   }, {});
 };
 
-onMounted(() => {
-  fetchDubbingProjects();
-});
 
-watch(
-  () => props.contentId,
-  () => {
-    fetchDubbingProjects();
-  },
-);
 </script>
 
 <style scoped lang="scss">
@@ -352,7 +327,8 @@ watch(
   text-decoration: none;
   transition: all 0.2s ease;
 
-  &:hover, &:active {
+  &:hover,
+  &:active {
     background: #383838;
     color: #ffffff;
     border-color: #4a4a4a;
@@ -421,9 +397,12 @@ watch(
   background-size: 16px;
   cursor: pointer;
   text-align: center;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 
-  &:hover, &:focus {
+  &:hover,
+  &:focus {
     border-color: var(--ion-color-step-300, #4a4a4a);
   }
 }

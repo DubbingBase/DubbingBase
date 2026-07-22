@@ -8,11 +8,7 @@
         },
       }"
     >
-      <img
-        class="profile-img"
-        :src="`https://api.dicebear.com/7.x/initials/svg?seed=${fullName}`"
-        alt=""
-      />
+      <img class="profile-img" :src="getAvatarFallbackUrl(fullName)" alt="" />
       <div>
         {{ firstname }}
         {{ lastname }}
@@ -21,8 +17,8 @@
     </router-link>
   </div>
   <div v-else class="va-actor">
-    <AppImage class="app-thumbnail" class="avatar" slot="start">
-      <img src="https://placehold.co/48x72?text=?" />
+    <AppImage class="app-thumbnail avatar" slot="start">
+      <img :src="getAvatarFallbackUrl('Unknown')" />
     </AppImage>
   </div>
 </template>
@@ -30,6 +26,7 @@
 <script lang="ts" setup>
 import { computed } from "vue";
 import { WorkAndVoiceActor } from "@supabase/functions/_shared/movie";
+import { getAvatarFallbackUrl } from "@/utils/image";
 
 const props = defineProps<{
   modelValue: WorkAndVoiceActor | undefined;

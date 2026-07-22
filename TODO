@@ -6,7 +6,10 @@ Nouveau projet: mauvais id. On sais pas si tv ou film
 Plus de pull to refresh 
 Les boutons actions sheets pas réactif pas feedback 
 Image pas trouvée dans listingais ok dans page doubleur  
-confirm queue send a ntfy every time something is processed either fail or done
+Admin actions should be orange 
+Nommer les projets (VF, Vfq) choisir la langue 
+Créer une personne ne fonctionne pas toujours 
+Changer de projet ne change pas les va
 
 implement view transitions
 voice actor request is very slow: it's because there is a tmdb outage

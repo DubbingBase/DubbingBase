@@ -46,11 +46,15 @@ export function buildSupabaseImageUrl(
   console.log("Deno.env.get(NODE_ENV)", Deno.env.get("NODE_ENV"));
 
   let url = publicUrlData.publicUrl;
-  if (Deno.env.get("NODE_ENV") === "developement") {
+  if (Deno.env.get("NODE_ENV") === "development") {
     console.log("Replacing supabase url with localhost");
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    if (supabaseUrl) {
-      url = url.replace(supabaseUrl, "http://127.0.0.1:55321");
+    try {
+      const urlObj = new URL(url);
+      urlObj.protocol = "http:";
+      urlObj.host = "127.0.0.1:55321";
+      url = urlObj.toString();
+    } catch (e) {
+      console.error("Failed to parse and replace URL:", e);
     }
   }
 

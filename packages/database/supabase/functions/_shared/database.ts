@@ -1,6 +1,7 @@
 import { SupabaseContext } from "npm:@supabase/server@^1";
 import { Database } from "./database.types.ts";
 import { IDatabaseClient } from "./interfaces.ts";
+import { processVoiceActor } from "./supabase-urls.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_PUBLISHABLE_KEY = Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!;
@@ -20,28 +21,7 @@ export class DatabaseClient implements IDatabaseClient {
     this.ctx = ctx;
   }
 
-  async getWorkWithVoiceActors(contentId: number) {
-    debugLog("Fetching work with voice actors", { contentId });
 
-    const { data, error } = await this.ctx.supabaseAdmin
-      .from("work")
-      .select(`*, voiceActorDetails:voice_actors (*), dubbing_projects!inner(*)`)
-      .eq("dubbing_projects.content_id", contentId);
-
-    if (error) {
-      debugLog("Error fetching work with voice actors", {
-        error: error.message,
-      });
-      throw error;
-    }
-
-    debugLog("Work data retrieved", {
-      count: data?.length || 0,
-      sample: data?.[0],
-    });
-
-    return data;
-  }
 
   async getVoiceActorWithWork(voiceActorId: number) {
     debugLog("Fetching voice actor with work", { voiceActorId });
@@ -127,5 +107,47 @@ export class DatabaseClient implements IDatabaseClient {
     });
 
     return voteCounts;
+  }
+  async getDubbingProjects(contentId: number, contentType: string) {
+    debugLog("Fetching dubbing projects", { contentId, contentType });
+
+    const { data, error } = await this.ctx.supabase
+      .from("dubbing_projects")
+      .select(`
+        *,
+        studio_data:studios(*),
+        works:work(
+          *,
+          voice_actor:voice_actors(*)
+        ),
+        crew:dubbing_project_crew(
+          id,
+          person_id,
+          job_id,
+          job:jobs(*),
+          person:voice_actors(*)
+        )
+      `)
+      .eq("content_id", contentId)
+      .eq("content_type", contentType);
+
+    if (error) {
+      debugLog("Error fetching dubbing projects", { error: error.message });
+      throw error;
+    }
+
+    const processedData = data?.map((project: any) => ({
+      ...project,
+      works: project.works?.map((work: any) => ({
+        ...work,
+        voice_actor: processVoiceActor(this.ctx, work.voice_actor),
+      })),
+      crew: project.crew?.map((member: any) => ({
+        ...member,
+        person: processVoiceActor(this.ctx, member.person),
+      })),
+    }));
+
+    return processedData;
   }
 }

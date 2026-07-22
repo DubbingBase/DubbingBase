@@ -7,7 +7,7 @@
         :route-params="routeParams"
         :width="THUMBNAIL_DEFAULT_WIDTH"
         :height="THUMBNAIL_DEFAULT_HEIGHT"
-        :fallbackImagePath="`https://api.dicebear.com/9.x/initials/svg?scale=50&backgroundColor=212121&seed=${displayName}`"
+        :fallbackImagePath="getAvatarFallbackUrl(displayName)"
       />
 
       <MediaItem
@@ -42,6 +42,7 @@ import {
   THUMBNAIL_DEFAULT_HEIGHT,
   THUMBNAIL_DEFAULT_WIDTH,
 } from "@/constants/thumbnails";
+import { getAvatarFallbackUrl } from "@/utils/image";
 
 export interface Role {
   character: string;

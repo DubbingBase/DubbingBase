@@ -20,6 +20,7 @@
         <DubbingProjectsView
           :contentId="route.params.id as string"
           contentType="movie"
+          :projects="dubbingProjects"
           :actors="actors"
           :is-admin="isAdmin"
           :get-voice-actor-by-tmdb-id="getVoiceActorByTmdbId"
@@ -29,7 +30,6 @@
           :confirm-delete-voice-actor-link="confirmDeleteVoiceActorLink"
           :open-voice-actor-search="openVoiceActorSearch"
           :mediaLanguage="movie?.original_language"
-          :externalVoiceActors="voiceActors"
           :parentLoading="isLoading"
         />
 
@@ -200,6 +200,7 @@ const {
 } = useVoiceActorManagement("movie");
 
 const movie = ref<MovieResponse["movie"] | undefined>();
+const dubbingProjects = ref<any[]>([]);
 const queueStatus = ref<string | null>(null);
 const queueErrorMessage = ref<string | null>(null);
 
@@ -305,7 +306,7 @@ const hasWikidataId = computed(() => {
 });
 
 const hasData = computed(() => {
-  return voiceActors.value.length > 0;
+  return dubbingProjects.value.some((p: any) => p.works && p.works.length > 0);
 });
 
 // Scan functionality
@@ -563,16 +564,7 @@ const fetchMovieData = async () => {
     const data = movieResponseRaw.data;
     if (data) {
       movie.value = data.movie;
-      console.log("data.voiceActors", data.voiceActors);
-      voiceActors.value = data.voiceActors.map((va) =>
-        voiceActorToPersonData(
-          va.voiceActorDetails,
-          va.performance || "",
-          va.actor_id,
-          (va as any).reviewed_status,
-          va.id,
-        ),
-      );
+      dubbingProjects.value = data.dubbingProjects || [];
       if (data.characterProfilePictures) {
         characterProfilePictures.value = data.characterProfilePictures;
       }

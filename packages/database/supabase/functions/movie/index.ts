@@ -160,15 +160,15 @@ export default {
       const dbClient = new DatabaseClient(ctx);
 
       // Run TVDB/TMDB queries and Database queries concurrently
-      const [apiData, voiceActors] = await Promise.all([
+      const [apiData, dubbingProjects] = await Promise.all([
         fetchMovieAndTVDBData(movieId),
-        dbClient.getWorkWithVoiceActors(movieId),
+        dbClient.getDubbingProjects(movieId, "movie"),
       ]);
 
       const { movieWithImageUrls, characterProfilePictures } = apiData;
 
       // Get work IDs for vote fetching
-      const workIds = voiceActors.map((va) => va.id);
+      const workIds = dubbingProjects.flatMap((p: any) => p.works?.map((w: any) => w.id) || []);
 
       // Get vote data if there are work entries. Use ctx.userClaims directly for authentication check.
       let voteData: Record<
@@ -188,18 +188,11 @@ export default {
         }
       }
 
-      const voiceActorsWithImages = voiceActors.map((va) => ({
-        ...va,
-        voiceActorDetails: processVoiceActor(ctx, va.voiceActorDetails),
-        up_votes: voteData[va.id]?.up_count || 0,
-        down_votes: voteData[va.id]?.down_count || 0,
-        user_vote: voteData[va.id]?.user_vote || null,
-      }));
-
       const result = {
         movie: movieWithImageUrls,
-        voiceActors: voiceActorsWithImages,
         characterProfilePictures: characterProfilePictures,
+        dubbingProjects: dubbingProjects,
+        votes: voteData,
       };
 
       return Response.json(result);

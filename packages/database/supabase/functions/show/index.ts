@@ -230,21 +230,33 @@ export default {
 
       // Use shared DatabaseClient for database queries, initialized with context clients
       const dbClient = new DatabaseClient(ctx);
-      const voiceActors = await dbClient.getWorkWithVoiceActors(showId);
-      const voiceActorsWithImages = voiceActors.map((va) => ({
-        ...va,
-        voiceActorDetails: processVoiceActor(ctx, va.voiceActorDetails),
-      }));
+      const dubbingProjects = await dbClient.getDubbingProjects(showId, "tv");
 
       const creditsWithImages = processMedia({
         credits: aggregateCredits,
       });
 
+      const workIds = dubbingProjects.flatMap((p: any) => p.works?.map((w: any) => w.id) || []);
+      let voteData = {};
+      if (workIds.length > 0) {
+        try {
+          const user = ctx.userClaims;
+          if (user) {
+            voteData = await dbClient.getWorkVotes(workIds, user.id);
+          } else {
+            voteData = await dbClient.getWorkVotes(workIds);
+          }
+        } catch (voteError) {
+          console.error("Error fetching vote data:", voteError);
+        }
+      }
+
       const result = {
         serie: serieWithImageUrls,
-        voiceActors: voiceActorsWithImages,
         aggregateCredits: creditsWithImages.credits,
         characterProfilePictures: characterProfilePictures,
+        dubbingProjects: dubbingProjects,
+        votes: voteData,
       };
 
       return Response.json(result);

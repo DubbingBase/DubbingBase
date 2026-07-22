@@ -11,7 +11,7 @@
     <div class="poster">
       <img
         v-if="!loading"
-        :src="hasError ? fallbackImagePath : (imagePath ?? fallbackImagePath)"
+        :src="hasError ? fallbackImagePath : (imagePath || fallbackImagePath)"
         @error="onImageError"
         alt=""
         :style="{ width: widthStyle, height: heightStyle }"
