@@ -77,7 +77,10 @@ async function getVoiceRoles(
         const { voice_actors, ...work } = row;
         let mediaDetails = null;
 
-        if (work.dubbing_projects?.content_id && work.dubbing_projects?.content_type) {
+        if (
+          work.dubbing_projects?.content_id &&
+          work.dubbing_projects?.content_type
+        ) {
           mediaDetails = await fetchMediaDetails(
             work.dubbing_projects.content_id,
             work.dubbing_projects.content_type,

@@ -76,7 +76,7 @@ export default {
       const dubbing_project_id = await findOrCreateDubbingProject(
         ctx.supabase,
         media_id,
-        media_type
+        media_type,
       );
 
       // Check if the link already exists
@@ -91,7 +91,7 @@ export default {
       } else {
         query = query.is("actor_id", null);
       }
-      
+
       const { data: existingLink, error: linkCheckError } =
         await query.maybeSingle();
 

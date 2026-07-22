@@ -7,7 +7,9 @@ export default {
     { auth: ["secret", "user"] },
     async (req, ctx) => {
       try {
-        console.log(`[QUEUE] Function booted. Processing request... method=${req.method}`);
+        console.log(
+          `[QUEUE] Function booted. Processing request... method=${req.method}`,
+        );
         const results = [];
         let isSingle = false;
         let isForce = false;
@@ -27,17 +29,27 @@ export default {
           // Ignore parse errors
         }
 
-        console.log(`[QUEUE] Request config: isSingle=${isSingle}, isForce=${isForce}`);
+        console.log(
+          `[QUEUE] Request config: isSingle=${isSingle}, isForce=${isForce}`,
+        );
 
         // Watchdog mode: if not explicitly forced or single, ensure no other worker is currently running
         if (!isForce && !isSingle) {
           console.log(`[QUEUE] Checking watchdog status...`);
-          const { data: lockedCount, error: lockedErr } = await ctx.supabaseAdmin.rpc("get_media_queue_locked_count");
+          const { data: lockedCount, error: lockedErr } =
+            await ctx.supabaseAdmin.rpc("get_media_queue_locked_count");
           if (lockedErr) {
             console.error("[QUEUE] Failed to check locked count:", lockedErr);
           } else if ((lockedCount as number) > 0) {
-            console.log(`[QUEUE] Watchdog: ${lockedCount} item(s) are already locked/processing. Exiting to prevent concurrent workers.`);
-            return Response.json({ ok: true, processed: 0, results: [], reason: "already_running" });
+            console.log(
+              `[QUEUE] Watchdog: ${lockedCount} item(s) are already locked/processing. Exiting to prevent concurrent workers.`,
+            );
+            return Response.json({
+              ok: true,
+              processed: 0,
+              results: [],
+              reason: "already_running",
+            });
           }
         }
 
@@ -83,18 +95,15 @@ export default {
           );
 
           // Invoke prepare_media for this queue item
-          const { data: responseData, error: invokeError } = await ctx
-            .supabaseAdmin.functions.invoke(
-              "prepare_media",
-              {
-                body: {
-                  tmdbId: payload.tmdb_id,
-                  type: payload.media_type,
-                  seasonNumber: payload.season_number,
-                  episodeNumber: payload.episode_number,
-                },
+          const { data: responseData, error: invokeError } =
+            await ctx.supabaseAdmin.functions.invoke("prepare_media", {
+              body: {
+                tmdbId: payload.tmdb_id,
+                type: payload.media_type,
+                seasonNumber: payload.season_number,
+                episodeNumber: payload.episode_number,
               },
-            );
+            });
 
           if (invokeError) {
             console.error(`[QUEUE] prepare_media invoke error:`, invokeError);
@@ -111,8 +120,8 @@ export default {
           );
 
           if (!responseData || !responseData.ok) {
-            const errorInfo = responseData?.error ||
-              "Unknown preparation error";
+            const errorInfo =
+              responseData?.error || "Unknown preparation error";
             console.error(
               `[QUEUE] prepare_media returned ok: false. Error info:`,
               errorInfo,
@@ -137,10 +146,11 @@ export default {
           );
 
           try {
-            const ntfyRes = await fetch(`https://ntfy.sh/Armaldio_DubbingBaseQueue`, {
-              method: "POST",
-              body:
-                `Successfully processed ${payload.media_type} with TMDB ID ${payload.tmdb_id}${
+            const ntfyRes = await fetch(
+              `https://ntfy.sh/Armaldio_DubbingBaseQueue`,
+              {
+                method: "POST",
+                body: `Successfully processed ${payload.media_type} with TMDB ID ${payload.tmdb_id}${
                   payload.season_number
                     ? ` (Season ${payload.season_number})`
                     : ""
@@ -149,13 +159,18 @@ export default {
                     ? ` (Episode ${payload.episode_number})`
                     : ""
                 }. Changes: ${responseData.changes ?? 0}`,
-              headers: {
-                Title: "Queue Item Processed",
-                Tags: "white_check_mark",
+                headers: {
+                  Title: "Queue Item Processed",
+                  Tags: "white_check_mark",
+                },
               },
-            });
+            );
             if (!ntfyRes.ok) {
-              console.error("[QUEUE] ntfy error (success branch):", ntfyRes.status, await ntfyRes.text());
+              console.error(
+                "[QUEUE] ntfy error (success branch):",
+                ntfyRes.status,
+                await ntfyRes.text(),
+              );
             } else {
               await ntfyRes.text();
             }
@@ -188,17 +203,23 @@ export default {
           });
 
           try {
-            const ntfyRes = await fetch(`https://ntfy.sh/Armaldio_DubbingBaseQueue`, {
-              method: "POST",
-              body:
-                `Failed to process ${payload.media_type} with TMDB ID ${payload.tmdb_id}: ${errMsg}`,
-              headers: {
-                Title: "Queue Item Failed",
-                Tags: "warning",
+            const ntfyRes = await fetch(
+              `https://ntfy.sh/Armaldio_DubbingBaseQueue`,
+              {
+                method: "POST",
+                body: `Failed to process ${payload.media_type} with TMDB ID ${payload.tmdb_id}: ${errMsg}`,
+                headers: {
+                  Title: "Queue Item Failed",
+                  Tags: "warning",
+                },
               },
-            });
+            );
             if (!ntfyRes.ok) {
-              console.error("[QUEUE] ntfy error (fail branch):", ntfyRes.status, await ntfyRes.text());
+              console.error(
+                "[QUEUE] ntfy error (fail branch):",
+                ntfyRes.status,
+                await ntfyRes.text(),
+              );
             } else {
               await ntfyRes.text();
             }
@@ -222,18 +243,21 @@ export default {
             );
             // Fire-and-forget another invocation to process the next item
             console.log(`[QUEUE] Initiating fetch for self-trigger...`);
-            ctx.supabaseAdmin.functions.invoke("process-media-queue", {
-              body: { force: true }
-            }).then(() => {
-              console.log(`[QUEUE] Self-trigger fetch completed successfully.`);
-            }).catch(
-              (err) => {
+            ctx.supabaseAdmin.functions
+              .invoke("process-media-queue", {
+                body: { force: true },
+              })
+              .then(() => {
+                console.log(
+                  `[QUEUE] Self-trigger fetch completed successfully.`,
+                );
+              })
+              .catch((err) => {
                 console.error(
                   "[QUEUE] Failed to self-trigger next invocation:",
                   err,
                 );
-              },
-            );
+              });
           } else {
             console.log(`[QUEUE] queueDepth is 0 or invalid. Stopping loop.`);
           }
@@ -244,11 +268,12 @@ export default {
         console.log(`[QUEUE] Invocation finished. Returning results.`);
         return Response.json({ ok: true, processed: results.length, results });
       } catch (error) {
-        const errorMsg = error instanceof Error
-          ? error.message
-          : typeof error === "object" && error !== null
-          ? JSON.stringify(error)
-          : String(error);
+        const errorMsg =
+          error instanceof Error
+            ? error.message
+            : typeof error === "object" && error !== null
+              ? JSON.stringify(error)
+              : String(error);
         console.error(
           "[QUEUE] Uncaught error in process-media-queue:",
           errorMsg,
@@ -259,16 +284,23 @@ export default {
         );
 
         try {
-          const ntfyRes = await fetch(`https://ntfy.sh/Armaldio_DubbingBaseQueue`, {
-            method: "POST",
-            body: `Critical failure in process-media-queue: ${errorMsg}`,
-            headers: {
-              Title: "Queue Processor FAILED",
-              Tags: "rotating_light",
+          const ntfyRes = await fetch(
+            `https://ntfy.sh/Armaldio_DubbingBaseQueue`,
+            {
+              method: "POST",
+              body: `Critical failure in process-media-queue: ${errorMsg}`,
+              headers: {
+                Title: "Queue Processor FAILED",
+                Tags: "rotating_light",
+              },
             },
-          });
+          );
           if (!ntfyRes.ok) {
-            console.error("[QUEUE] ntfy error (critical branch):", ntfyRes.status, await ntfyRes.text());
+            console.error(
+              "[QUEUE] ntfy error (critical branch):",
+              ntfyRes.status,
+              await ntfyRes.text(),
+            );
           } else {
             await ntfyRes.text();
           }

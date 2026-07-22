@@ -29,7 +29,7 @@ export class MediaService {
     const mediaPromises = (voiceActor.work || []).map(async (work: any) => {
       const contentId = work.dubbing_projects?.content_id;
       const contentType = work.dubbing_projects?.content_type as "movie" | "tv";
-      
+
       if (!contentId || !contentType) return null;
 
       try {

@@ -24,7 +24,11 @@ import "@ionic/vue/css/normalize.css";
 import "@ionic/vue/css/structure.css";
 import "@ionic/vue/css/typography.css";
 
-const app = createApp(App).use(createPinia()).use(IonicVue).use(router).use(i18n);
+const app = createApp(App)
+  .use(createPinia())
+  .use(IonicVue)
+  .use(router)
+  .use(i18n);
 
 router.isReady().then(async () => {
   const authStore = useAuthStore();

@@ -168,7 +168,9 @@ export default {
       const { movieWithImageUrls, characterProfilePictures } = apiData;
 
       // Get work IDs for vote fetching
-      const workIds = dubbingProjects.flatMap((p: any) => p.works?.map((w: any) => w.id) || []);
+      const workIds = dubbingProjects.flatMap(
+        (p: any) => p.works?.map((w: any) => w.id) || [],
+      );
 
       // Get vote data if there are work entries. Use ctx.userClaims directly for authentication check.
       let voteData: Record<

@@ -17,8 +17,8 @@ const EXCLUDE_KEYWORDS = [/voix qu[éèe]b[éèe]coises?/i, /vfq/i];
 
 // Initialize Supabase Client
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SECRET_KEY ||
-  process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseKey =
+  process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
   console.error(
@@ -77,9 +77,9 @@ async function fetchMoviesFromWikidata(
     OFFSET ${offset}
   `;
 
-  const url = `https://query.wikidata.org/sparql?query=${
-    encodeURIComponent(sparqlQuery)
-  }&format=json`;
+  const url = `https://query.wikidata.org/sparql?query=${encodeURIComponent(
+    sparqlQuery,
+  )}&format=json`;
 
   const response = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
 
@@ -110,24 +110,30 @@ async function fetchMoviesFromWikidata(
   });
 }
 
-async function checkDubbingSectionsBatch(pageTitles: string[]): Promise<Record<string, boolean>> {
+async function checkDubbingSectionsBatch(
+  pageTitles: string[],
+): Promise<Record<string, boolean>> {
   if (pageTitles.length === 0) return {};
-  
+
   const titlesParam = pageTitles.map(encodeURIComponent).join("|");
   const url = `https://fr.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content&rvslots=main&titles=${titlesParam}&format=json`;
 
   try {
-    const response = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
+    const response = await fetch(url, {
+      headers: { "User-Agent": USER_AGENT },
+    });
 
     if (!response.ok) {
       if (response.status === 429) {
         const retryAfter = response.headers.get("Retry-After");
         const waitTime = retryAfter ? parseInt(retryAfter, 10) * 1000 : 5000;
-        console.warn(`[Wikipedia 429] Rate limited in batch. Waiting ${waitTime}ms...`);
+        console.warn(
+          `[Wikipedia 429] Rate limited in batch. Waiting ${waitTime}ms...`,
+        );
         await delay(waitTime);
         return checkDubbingSectionsBatch(pageTitles); // Retry
       }
-      return Object.fromEntries(pageTitles.map(t => [t, false]));
+      return Object.fromEntries(pageTitles.map((t) => [t, false]));
     }
 
     const data = await response.json();
@@ -139,15 +145,15 @@ async function checkDubbingSectionsBatch(pageTitles: string[]): Promise<Record<s
     for (const pageId in pages) {
       const page = pages[pageId];
       if (page.missing !== undefined) {
-         results[page.title] = false;
-         continue;
+        results[page.title] = false;
+        continue;
       }
       const wikitext = page.revisions?.[0]?.slots?.main?.["*"] || "";
-      
+
       let hasMatch = false;
       let hasExclude = false;
       let match;
-      
+
       while ((match = headerRegex.exec(wikitext)) !== null) {
         const headerTitle = match[1].toLowerCase();
         if (EXCLUDE_KEYWORDS.some((r) => r.test(headerTitle))) {
@@ -158,7 +164,7 @@ async function checkDubbingSectionsBatch(pageTitles: string[]): Promise<Record<s
           hasMatch = true;
         }
       }
-      
+
       results[page.title] = hasMatch && !hasExclude;
     }
 
@@ -172,16 +178,16 @@ async function checkDubbingSectionsBatch(pageTitles: string[]): Promise<Record<s
     }
 
     for (const [title, result] of Object.entries(results)) {
-       const originalTitle = normalizations[title] || title;
-       // Map both spaced and underscored versions for safety
-       finalResults[originalTitle.replace(/ /g, "_")] = result;
-       finalResults[originalTitle] = result;
+      const originalTitle = normalizations[title] || title;
+      // Map both spaced and underscored versions for safety
+      finalResults[originalTitle.replace(/ /g, "_")] = result;
+      finalResults[originalTitle] = result;
     }
 
     return finalResults;
   } catch (err) {
     console.error("[Batch Dubbing Check Error]", err);
-    return Object.fromEntries(pageTitles.map(t => [t, false]));
+    return Object.fromEntries(pageTitles.map((t) => [t, false]));
   }
 }
 
@@ -203,27 +209,30 @@ async function run() {
     }
 
     // Batch check all Wikipedia pages in one API call
-    console.log(`[Batch] Fetching dubbing sections for ${batch.length} movies/shows...`);
-    const batchTitles = batch.map(b => b.title);
+    console.log(
+      `[Batch] Fetching dubbing sections for ${batch.length} movies/shows...`,
+    );
+    const batchTitles = batch.map((b) => b.title);
     const dubbingResults = await checkDubbingSectionsBatch(batchTitles);
 
     for (let i = 0; i < batch.length; i++) {
       const item = batch[i];
       const humanTitle = item.title.replace(/_/g, " ");
-      const hasDubbing = dubbingResults[item.title] || dubbingResults[humanTitle] || false;
+      const hasDubbing =
+        dubbingResults[item.title] || dubbingResults[humanTitle] || false;
 
       console.log(
         `[${
           currentOffset + i
-        }] 🔍 Checked: "${humanTitle}" (TMDB: ${item.tmdbId} - ${item.mediaType}) -> ${hasDubbing ? '✅ Match' : '❌ No'}`,
+        }] 🔍 Checked: "${humanTitle}" (TMDB: ${item.tmdbId} - ${item.mediaType}) -> ${hasDubbing ? "✅ Match" : "❌ No"}`,
       );
       console.log(`      Wiki: https://fr.wikipedia.org/wiki/${item.title}`);
-      console.log(`      TMDB: https://www.themoviedb.org/${item.mediaType === "tv" ? "tv" : "movie"}/${item.tmdbId}`);
+      console.log(
+        `      TMDB: https://www.themoviedb.org/${item.mediaType === "tv" ? "tv" : "movie"}/${item.tmdbId}`,
+      );
 
       if (hasDubbing) {
-        console.log(
-          `  ✅ Enqueuing to pgmq...`,
-        );
+        console.log(`  ✅ Enqueuing to pgmq...`);
 
         // Enqueue to supabase
         const { error } = await supabase.rpc("enqueue_media_fetch", {

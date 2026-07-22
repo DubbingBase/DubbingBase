@@ -21,8 +21,6 @@ export class DatabaseClient implements IDatabaseClient {
     this.ctx = ctx;
   }
 
-
-
   async getVoiceActorWithWork(voiceActorId: number) {
     debugLog("Fetching voice actor with work", { voiceActorId });
 
@@ -113,7 +111,8 @@ export class DatabaseClient implements IDatabaseClient {
 
     const { data, error } = await this.ctx.supabase
       .from("dubbing_projects")
-      .select(`
+      .select(
+        `
         *,
         studio_data:studios(*),
         works:work(
@@ -127,7 +126,8 @@ export class DatabaseClient implements IDatabaseClient {
           job:jobs(*),
           person:voice_actors(*)
         )
-      `)
+      `,
+      )
       .eq("content_id", contentId)
       .eq("content_type", contentType);
 

@@ -122,7 +122,7 @@ export class VoiceActorService {
     const dubbing_project_id = await findOrCreateDubbingProject(
       this.supabase,
       contentId,
-      contentType
+      contentType,
     );
 
     const { data, error } = await this.supabase

@@ -236,7 +236,9 @@ export default {
         credits: aggregateCredits,
       });
 
-      const workIds = dubbingProjects.flatMap((p: any) => p.works?.map((w: any) => w.id) || []);
+      const workIds = dubbingProjects.flatMap(
+        (p: any) => p.works?.map((w: any) => w.id) || [],
+      );
       let voteData = {};
       if (workIds.length > 0) {
         try {
