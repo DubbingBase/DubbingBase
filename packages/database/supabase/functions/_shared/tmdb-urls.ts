@@ -16,6 +16,7 @@ export function buildTmdbImageUrl(
   size: string = TMDB_CONFIG.defaultSize,
 ): string | null {
   if (!imagePath) return null;
+  if (imagePath.startsWith("http")) return imagePath;
 
   // Remove leading slash if present
   const cleanPath = imagePath.startsWith("/") ? imagePath.slice(1) : imagePath;

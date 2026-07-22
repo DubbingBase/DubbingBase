@@ -1,6 +1,7 @@
 import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
-import { processMedia } from "../_shared/tmdb-urls.ts";
+import { processMedia, buildTmdbImageUrl } from "../_shared/tmdb-urls.ts";
+import { buildSupabaseImageUrl } from "../_shared/supabase-urls.ts";
 
 /**
  * Sanitize a user query for use in PostgreSQL full-text search.
@@ -204,7 +205,7 @@ export default {
                   ...voiceActor,
                   actor: person,
                   profile_path:
-                    voiceActor.profile_picture ?? person.profile_path,
+                    buildSupabaseImageUrl(ctx, voiceActor.profile_picture) ?? person.profile_path,
                   popularity: person.popularity ?? 50,
                   media_type: "voice_actor",
                 });
@@ -212,7 +213,7 @@ export default {
                 // Voice actor with tmdb_id but no TMDB result — use moderate base score
                 respMap.set(vaKey, {
                   ...voiceActor,
-                  profile_path: voiceActor.profile_picture,
+                  profile_path: buildSupabaseImageUrl(ctx, voiceActor.profile_picture),
                   media_type: "voice_actor",
                   popularity: 50,
                   known_for_department: "Dubbing",
@@ -223,7 +224,7 @@ export default {
               // rank naturally alongside other content by relevance
               respMap.set(vaKey, {
                 ...voiceActor,
-                profile_path: voiceActor.profile_picture,
+                profile_path: buildSupabaseImageUrl(ctx, voiceActor.profile_picture),
                 media_type: "voice_actor",
                 popularity: 30,
                 known_for_department: "Dubbing",
