@@ -40,6 +40,8 @@ export default {
         );
       }
 
+      let mediaTitle = "Unknown title";
+
       try {
         // Map 'season' and 'episode' to 'tv' for the TMDB api call
         const tmdbType = type === "season" || type === "episode" ? "tv" : type;
@@ -62,6 +64,7 @@ export default {
         }
 
         const movie = (await response.json()) as any;
+        mediaTitle = movie.title || movie.name || "Unknown title";
         const wikiId = movie.external_ids?.wikidata_id;
 
         if (!wikiId) {
@@ -209,14 +212,14 @@ export default {
           `Processing complete. Added ${newVoiceActorsCount} new voice actors.`,
         );
 
-        const result = { ok: true, changes: newVoiceActorsCount };
+        const result = { ok: true, changes: newVoiceActorsCount, title: mediaTitle };
         return Response.json(result);
       } catch (error) {
         console.error("Error processing fetch request:", error);
 
         const errorMsg = error instanceof Error ? error.message : String(error);
 
-        return Response.json({ ok: false, error: errorMsg });
+        return Response.json({ ok: false, error: errorMsg, title: mediaTitle });
       }
     },
   ),

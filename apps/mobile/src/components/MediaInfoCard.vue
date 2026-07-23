@@ -254,7 +254,7 @@ onMounted(checkOverviewTruncation);
   width: 130px;
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--app-overlay-10);
   overflow: hidden;
 
   :deep(ion-img::part(image)),
@@ -304,20 +304,20 @@ onMounted(checkOverviewTruncation);
 }
 
 .year-pill {
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--app-color-text-secondary);
   font-size: 1.1rem;
   font-weight: 600;
 }
 
 .meta-badge {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.9);
+  background: var(--app-overlay-10);
+  color: var(--app-color-text-primary);
   padding: 4px 10px;
   border-radius: 6px;
   font-size: 0.85rem;
   font-weight: 600;
   backdrop-filter: blur(4px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--app-overlay-5);
 }
 
 .media-genres {
@@ -338,14 +338,14 @@ onMounted(checkOverviewTruncation);
 }
 
 .media-genre-chip {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.9);
+  background: var(--app-overlay-10);
+  color: var(--app-color-text-primary);
   padding: 4px 12px;
   border-radius: 16px;
   font-size: 0.85rem;
   font-weight: 500;
   backdrop-filter: blur(4px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--app-overlay-5);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -376,7 +376,7 @@ onMounted(checkOverviewTruncation);
   border-radius: 12px;
   font-size: 0.9rem;
   color: var(--app-color-medium-tint);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--app-overlay-5);
   backdrop-filter: blur(8px);
   white-space: nowrap;
   flex-shrink: 0;
@@ -427,10 +427,10 @@ onMounted(checkOverviewTruncation);
 }
 
 .overview-card {
-  background: rgba(20, 20, 20, 0.6);
+  background: var(--app-color-step-100);
   border-radius: 16px;
   padding: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--app-color-border-light);
   backdrop-filter: blur(10px);
 }
 
@@ -438,7 +438,7 @@ onMounted(checkOverviewTruncation);
   margin: 0;
   font-size: 0.95rem;
   line-height: 1.5;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--app-color-text-secondary);
   
   display: -webkit-box;
   -webkit-box-orient: vertical;

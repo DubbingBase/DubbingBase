@@ -31,15 +31,15 @@
     <div v-else class="flex flex-col h-full">
       <!-- Show segment header for all projects -->
       <div class="px-4 py-2 w-full flex items-center gap-2">
-        <select v-model="activeProjectId" class="project-select flex-1">
-          <option
+        <ion-select v-model="activeProjectId" class="project-select flex-1" interface="action-sheet" placeholder="Select Language">
+          <ion-select-option
             v-for="project in projects"
             :key="project.id"
             :value="project.id.toString()"
           >
             {{ getLanguageDisplayName(project.language || '', locale) }}
-          </option>
-        </select>
+          </ion-select-option>
+        </ion-select>
 
         <AppButton
           v-if="isAdmin && activeProjectId"
@@ -126,7 +126,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from "vue";
-
+import { IonSelect, IonSelectOption } from "@ionic/vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import EmptyState from "@/components/common/EmptyState.vue";
 
@@ -306,7 +306,7 @@ const groupCrewByJob = (crew: any[]) => {
   font-weight: 700;
   margin-top: 8px;
   margin-bottom: 8px;
-  color: #e0e0e0;
+  color: var(--app-color-text-primary);
 }
 
 .edit-btn {
@@ -314,10 +314,10 @@ const groupCrewByJob = (crew: any[]) => {
   align-items: center;
   gap: 6px;
   padding: 4px 10px;
-  background: #2a2a2a;
+  background: var(--app-color-step-200);
   border: 1px solid #3a3a3a;
   border-radius: 8px;
-  color: #a0a0a0;
+  color: var(--app-color-text-secondary);
   font-size: 12px;
   font-weight: 600;
   text-decoration: none;
@@ -377,9 +377,9 @@ const groupCrewByJob = (crew: any[]) => {
 }
 
 .project-select {
-  background: var(--ion-color-step-100, #1e1e1e);
-  color: var(--ion-color-step-850, #e0e0e0);
-  border: 1px solid var(--ion-color-step-150, #2c2c2c);
+  background: var(--app-color-step-100);
+  color: var(--app-color-text-primary);
+  border: 1px solid var(--app-color-border);
   border-radius: 8px;
   padding: 8px 36px 8px 16px;
   font-size: 14px;
@@ -399,7 +399,7 @@ const groupCrewByJob = (crew: any[]) => {
 
   &:hover,
   &:focus {
-    border-color: var(--ion-color-step-300, #4a4a4a);
+    border-color: var(--app-color-primary);
   }
 }
 </style>

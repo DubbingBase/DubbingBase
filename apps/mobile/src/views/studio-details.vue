@@ -11,7 +11,7 @@
             <router-link
               v-if="studio?.id"
               :to="`/studio-edit/${studio.id}`"
-              class="p-2 text-[#a0a0a0] hover:text-white transition-colors"
+              class="p-2 text-[var(--app-color-text-secondary)] hover:text-[var(--app-color-text-primary)] transition-colors"
               aria-label="Edit Studio"
             >
               <Pencil class="h-5 w-5" />
@@ -32,15 +32,15 @@
 
         <div v-else-if="studio" class="space-y-6">
           <!-- Studio Profile Card -->
-          <div class="bg-[#1d1d1d] border border-[#2a2a2a] rounded-2xl p-5 space-y-4">
+          <div class="bg-[var(--app-color-step-100)] border border-[var(--app-color-border)] rounded-2xl p-5 space-y-4">
             <div class="flex items-center space-x-4">
-              <div class="h-16 w-16 rounded-2xl bg-[#121212] border border-[#2a2a2a] flex items-center justify-center overflow-hidden shrink-0">
+              <div class="h-16 w-16 rounded-2xl bg-[var(--app-color-step-50)] border border-[var(--app-color-border)] flex items-center justify-center overflow-hidden shrink-0">
                 <img v-if="studio.logo_url" :src="studio.logo_url" class="h-full w-full object-cover" :alt="studio.name" />
                 <span v-else class="text-2xl font-bold text-blue-500">{{ studio.name.charAt(0) }}</span>
               </div>
               <div>
-                <h2 class="text-lg font-bold text-white">{{ studio.name }}</h2>
-                <p v-if="studio.city || studio.country" class="text-xs text-[#a0a0a0] flex items-center gap-1 mt-0.5">
+                <h2 class="text-lg font-bold text-[var(--app-color-text-primary)]">{{ studio.name }}</h2>
+                <p v-if="studio.city || studio.country" class="text-xs text-[var(--app-color-text-secondary)] flex items-center gap-1 mt-0.5">
                   <span>📍 {{ [studio.city, studio.country].filter(Boolean).join(', ') }}</span>
                 </p>
                 <a
@@ -54,19 +54,19 @@
               </div>
             </div>
 
-            <p v-if="studio.description" class="text-xs text-[#e0e0e0] leading-relaxed border-t border-[#2a2a2a] pt-3">
+            <p v-if="studio.description" class="text-xs text-[var(--app-color-text-primary)] leading-relaxed border-t border-[var(--app-color-border)] pt-3">
               {{ studio.description }}
             </p>
           </div>
 
           <!-- Dubbed Media Catalog -->
           <div class="space-y-3">
-            <h3 class="text-sm font-bold text-white uppercase tracking-wider flex items-center justify-between border-b border-[#2a2a2a] pb-2">
+            <h3 class="text-sm font-bold text-[var(--app-color-text-primary)] uppercase tracking-wider flex items-center justify-between border-b border-[var(--app-color-border)] pb-2">
               <span>Dubbed Media Catalog</span>
               <span class="text-xs text-blue-400 font-normal">({{ dubbedProjects.length }})</span>
             </h3>
 
-            <div v-if="dubbedProjects.length === 0" class="text-center py-6 text-xs text-[#a0a0a0]">
+            <div v-if="dubbedProjects.length === 0" class="text-center py-6 text-xs text-[var(--app-color-text-secondary)]">
               No dubbed media recorded for this studio yet.
             </div>
 
@@ -75,12 +75,12 @@
                 v-for="project in dubbedProjects"
                 :key="project.id"
                 :to="project.content_type === 'movie' ? `/movie/${project.content_id}` : `/serie/${project.content_id}`"
-                class="bg-[#1d1d1d] hover:bg-[#252525] border border-[#2a2a2a] rounded-xl p-3 flex items-center justify-between transition-colors"
+                class="bg-[var(--app-color-step-100)] hover:bg-[var(--app-color-step-200)] border border-[var(--app-color-border)] rounded-xl p-3 flex items-center justify-between transition-colors"
               >
                 <div>
-                  <div class="text-xs font-semibold text-white">Media ID #{{ project.content_id }}</div>
-                  <div class="text-[10px] text-[#a0a0a0] uppercase flex items-center gap-2 mt-0.5">
-                    <span class="px-1.5 py-0.5 bg-[#2a2a2a] rounded font-bold">{{ project.content_type }}</span>
+                  <div class="text-xs font-semibold text-[var(--app-color-text-primary)]">Media ID #{{ project.content_id }}</div>
+                  <div class="text-[10px] text-[var(--app-color-text-secondary)] uppercase flex items-center gap-2 mt-0.5">
+                    <span class="px-1.5 py-0.5 bg-[var(--app-color-step-200)] rounded font-bold">{{ project.content_type }}</span>
                     <span>Lang: {{ project.language || 'fr-FR' }}</span>
                   </div>
                 </div>
@@ -91,12 +91,12 @@
 
           <!-- Voice Actors Roster -->
           <div class="space-y-3">
-            <h3 class="text-sm font-bold text-white uppercase tracking-wider flex items-center justify-between border-b border-[#2a2a2a] pb-2">
+            <h3 class="text-sm font-bold text-[var(--app-color-text-primary)] uppercase tracking-wider flex items-center justify-between border-b border-[var(--app-color-border)] pb-2">
               <span>Voice Actor Roster</span>
               <span class="text-xs text-blue-400 font-normal">({{ voiceActorsRoster.length }})</span>
             </h3>
 
-            <div v-if="voiceActorsRoster.length === 0" class="text-center py-6 text-xs text-[#a0a0a0]">
+            <div v-if="voiceActorsRoster.length === 0" class="text-center py-6 text-xs text-[var(--app-color-text-secondary)]">
               No voice actors linked to this studio yet.
             </div>
 
@@ -105,15 +105,15 @@
                 v-for="va in voiceActorsRoster"
                 :key="va.id"
                 :to="`/voice-actor-profile/${va.id}`"
-                class="bg-[#1d1d1d] hover:bg-[#252525] border border-[#2a2a2a] rounded-xl p-3 flex items-center space-x-3 transition-colors"
+                class="bg-[var(--app-color-step-100)] hover:bg-[var(--app-color-step-200)] border border-[var(--app-color-border)] rounded-xl p-3 flex items-center space-x-3 transition-colors"
               >
-                <div class="h-10 w-10 rounded-full bg-[#121212] border border-[#2a2a2a] flex items-center justify-center font-bold text-xs text-blue-400 overflow-hidden shrink-0">
+                <div class="h-10 w-10 rounded-full bg-[var(--app-color-step-50)] border border-[var(--app-color-border)] flex items-center justify-center font-bold text-xs text-blue-400 overflow-hidden shrink-0">
                   <img v-if="va.profile_picture" :src="getProfileUrl(va.profile_picture)" class="h-full w-full object-cover" />
                   <span v-else>{{ va.firstname.charAt(0) }}{{ va.lastname.charAt(0) }}</span>
                 </div>
                 <div>
-                  <div class="text-xs font-semibold text-white">{{ va.firstname }} {{ va.lastname }}</div>
-                  <div class="text-[10px] text-[#a0a0a0]">Voice Actor</div>
+                  <div class="text-xs font-semibold text-[var(--app-color-text-primary)]">{{ va.firstname }} {{ va.lastname }}</div>
+                  <div class="text-[10px] text-[var(--app-color-text-secondary)]">Voice Actor</div>
                 </div>
               </router-link>
             </div>

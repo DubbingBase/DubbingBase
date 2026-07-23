@@ -1,4 +1,4 @@
-:root {
+:root, body.theme-dark {
   /* Base colors */
   --app-color-primary: #4a90e2;
   --app-color-secondary: #8e9aaf;
@@ -6,23 +6,44 @@
   --app-color-success: #4caf50;
   --app-color-warning: #ff9800;
   --app-color-danger: #f44336;
-  --app-color-dark: #1a1a1a;
-  --app-color-medium: #424242;
-  --app-color-light: #2d2d2d;
 
-  /* Background colors */
-  --app-color-background: #121212;
-  --app-color-surface: #1e1e1e;
-  --app-color-card: #1e1e1e;
+  /* Step Colors for Dark Mode */
+  --app-color-step-50: #121212;
+  --app-color-step-100: #1e1e1e;
+  --app-color-step-200: #2a2a2a;
+  --app-color-step-300: #3a3a3a;
+  --app-color-step-400: #4a4a4a;
+  --app-color-step-500: #888888;
+  --app-color-step-600: #a0a0a0;
+  --app-color-step-700: #c0c0c0;
+  --app-color-step-800: #e0e0e0;
+  --app-color-step-900: #ffffff;
+
+  /* App semantic colors */
+  --app-color-background: var(--app-color-step-50);
+  --app-color-surface: var(--app-color-step-100);
+  --app-color-card: var(--app-color-step-100);
 
   /* Text colors */
-  --app-color-text-primary: #ffffff;
-  --app-color-text-secondary: #b3b3b3;
-  --app-color-text-muted: #8e8e8e;
+  --app-color-text-primary: var(--app-color-step-900);
+  --app-color-text-secondary: var(--app-color-step-600);
+  --app-color-text-muted: var(--app-color-step-500);
 
   /* Border colors */
-  --app-color-border: #333333;
-  --app-color-border-light: #2d2d2d;
+  --app-color-border: var(--app-color-step-300);
+  --app-color-border-light: var(--app-color-step-200);
+
+  /* Backwards compatibility */
+  --ion-color-step-50: var(--app-color-step-100);
+  --ion-color-step-100: var(--app-color-step-200);
+  --app-background-color: var(--app-color-background);
+
+  /* Dynamic Overlays (White in Dark Mode) */
+  --app-overlay-2: rgba(255, 255, 255, 0.02);
+  --app-overlay-5: rgba(255, 255, 255, 0.05);
+  --app-overlay-10: rgba(255, 255, 255, 0.1);
+  --app-overlay-20: rgba(255, 255, 255, 0.2);
+  --app-overlay-30: rgba(255, 255, 255, 0.3);
 
   /* Thumbnail styling */
   --thumbnail-border-radius: 8px;
@@ -33,4 +54,39 @@
   /* Thumbnail dimensions */
   --thumbnail-width: 80px;
   --thumbnail-height: 120px;
+}
+
+body.theme-light {
+  /* Step Colors for Light Mode (Inverted) */
+  --app-color-step-50: #f5f5f5;
+  --app-color-step-100: #ffffff;
+  --app-color-step-200: #e0e0e0;
+  --app-color-step-300: #cccccc;
+  --app-color-step-400: #b3b3b3;
+  --app-color-step-500: #888888;
+  --app-color-step-600: #666666;
+  --app-color-step-700: #4a4a4a;
+  --app-color-step-800: #2a2a2a;
+  --app-color-step-900: #121212;
+
+  /* App semantic colors */
+  --app-color-background: var(--app-color-step-50);
+  --app-color-surface: var(--app-color-step-100);
+  --app-color-card: var(--app-color-step-100);
+
+  /* Text colors */
+  --app-color-text-primary: var(--app-color-step-900);
+  --app-color-text-secondary: var(--app-color-step-600);
+  --app-color-text-muted: var(--app-color-step-500);
+
+  /* Border colors */
+  --app-color-border: var(--app-color-step-300);
+  --app-color-border-light: var(--app-color-step-200);
+
+  /* Dynamic Overlays (Black in Light Mode) */
+  --app-overlay-2: rgba(0, 0, 0, 0.02);
+  --app-overlay-5: rgba(0, 0, 0, 0.05);
+  --app-overlay-10: rgba(0, 0, 0, 0.1);
+  --app-overlay-20: rgba(0, 0, 0, 0.2);
+  --app-overlay-30: rgba(0, 0, 0, 0.3);
 }

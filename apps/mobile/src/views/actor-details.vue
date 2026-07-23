@@ -10,6 +10,9 @@
       </AppToolbar>
     </AppHeader>
     <AppContent>
+      <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
+        <ion-refresher-content></ion-refresher-content>
+      </ion-refresher>
       
       <div class="actor">
         <div class="header-immersive" v-if="actor">
@@ -188,6 +191,7 @@
 </template>
 
 <script setup lang="ts">
+import { IonRefresher, IonRefresherContent } from "@ionic/vue";
 import { IonPage } from "@ionic/vue";
 import AppPage from '@/components/common/layout/AppPage.vue';
 import AppHeader from '@/components/common/layout/AppHeader.vue';
@@ -483,7 +487,7 @@ onMounted(() => {
     border-radius: 12px;
     padding: 1.25rem;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--app-overlay-5);
 
     .info-label {
       font-size: 0.8rem;
@@ -554,7 +558,7 @@ onMounted(() => {
         background: rgba(20, 20, 20, 0.95);
         border-radius: 12px;
         overflow: hidden;
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--app-overlay-5);
       }
     }
   }
@@ -699,7 +703,7 @@ onMounted(() => {
       border-radius: 50%;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
       margin-bottom: 1rem;
-      border: 3px solid rgba(255, 255, 255, 0.1);
+      border: 3px solid var(--app-overlay-10);
     }
 
     .actor-name {
@@ -728,7 +732,7 @@ AppSegmentView, AppSegmentContent {
     padding: 0.75rem 1rem;
     margin-bottom: 1rem;
     box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--app-overlay-5);
 
     .filter-label {
       font-size: 0.95rem;
@@ -737,7 +741,7 @@ AppSegmentView, AppSegmentContent {
     }
 
     .sleek-toggle {
-      --background: rgba(255, 255, 255, 0.1);
+      --background: var(--app-overlay-10);
       --handle-background: var(--app-color-medium);
       --background-checked: var(--app-color-primary);
       --handle-background-checked: #fff;

@@ -185,52 +185,73 @@ const submitRequest = async () => {
 }
 
 .request-profile-card {
-  margin: 12px;
-  padding: 16px;
-  background: linear-gradient(135deg, var(--app-color-primary) 0%, #2a3a5c 100%);
-  border-radius: 16px;
+  margin: 16px 0;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
   gap: 20px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  flex-wrap: wrap;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  text-align: center;
+}
+
+.request-profile-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--app-color-primary, #3b82f6), transparent);
+  opacity: 0.8;
 }
 
 .banner-content {
   flex: 1;
-  min-width: 250px;
+  width: 100%;
 }
 
 .request-profile-card h3 {
-  margin: 0 0 4px 0;
-  color: white;
-  font-size: 1.1rem;
-  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: var(--app-color-text-primary, #ffffff);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .request-profile-card p {
   margin: 0;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 0.85rem;
-  line-height: 1.3;
+  color: var(--app-color-text-muted, #94a3b8);
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
 .request-btn {
-  background: white;
-  color: var(--app-color-primary);
+  background: linear-gradient(135deg, var(--app-color-primary, #3b82f6) 0%, #2563eb 100%);
+  color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
+  width: 100%;
+  padding: 12px 20px;
+  border-radius: 12px;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  white-space: nowrap;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.request-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
 }
 
 .request-btn:active {
-  transform: scale(0.98);
+  transform: translateY(0);
 }
 
 /* Modal Styles */
@@ -372,7 +393,7 @@ const submitRequest = async () => {
 .spinner {
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid var(--app-overlay-30);
   border-radius: 50%;
   border-top-color: white;
   animation: spin 1s linear infinite;

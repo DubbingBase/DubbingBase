@@ -19,6 +19,9 @@
         </AppToolbar>
       </AppHeader>
       <AppContent>
+      <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
+        <ion-refresher-content></ion-refresher-content>
+      </ion-refresher>
         <div
           v-if="fetchError || (queueStatus === 'failed' && queueErrorMessage)"
           class="text-center text-red-500 mt-4"
@@ -69,10 +72,10 @@ import AppContent from "@/components/common/layout/AppContent.vue";
 import { toastController } from "@/composables/useToast";
 import { ref, computed, watch } from "vue";
 import AppBackButton from "@/components/common/AppBackButton.vue";
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute, useRouter } from "vue-router";
 import LoadingSpinner from "../components/common/LoadingSpinner.vue";
 import { supabase } from "../api/supabase";
-import { enqueueAndProcessMedia } from "../api/mediaQueue";
+import { enqueueMedia } from "../api/mediaQueue";
 import EllipsisVertical from "~icons/lucide/ellipsis-vertical";
 import Info from "~icons/lucide/info";
 import AppActionSheet, {
@@ -103,7 +106,7 @@ const actionSheetButtons = computed<ActionSheetButton[]>(() => {
 
   if (hasWikidataId.value && !hasData.value) {
     buttons.push({
-      text: "Récupérer les infos",
+      text: "Rajouter à la queue",
       icon: Info,
       handler: () => fetchEpisodeInfos(),
     });
@@ -126,16 +129,19 @@ const backHref = computed(() => {
 
 const fetchQueueStatus = async () => {
   try {
-    const { data: funcData, error: queueErr } = await supabase.functions.invoke("media-queue", {
-      body: {
-        action: "status",
-        mediaId: Number(route.params.id),
-        mediaType: "episode",
-        seasonNumber: Number(route.params.season),
-        episodeNumber: Number(route.params.episode)
-      }
-    });
-    
+    const { data: funcData, error: queueErr } = await supabase.functions.invoke(
+      "media-queue",
+      {
+        body: {
+          action: "status",
+          mediaId: Number(route.params.id),
+          mediaType: "episode",
+          seasonNumber: Number(route.params.season),
+          episodeNumber: Number(route.params.episode),
+        },
+      },
+    );
+
     const data = funcData?.data;
     if (queueErr) throw queueErr;
     const statusData = data as {
@@ -174,9 +180,8 @@ const handleRefresh = async (event: any) => {
 };
 
 async function fetchEpisodeInfos() {
-  const id = wikiDataId.value;
-  if (!id || !episode.value) {
-    console.error("id or episode is undefined");
+  if (!episode.value) {
+    console.error("episode is undefined");
     return;
   }
   isFetching.value = true;
@@ -184,7 +189,7 @@ async function fetchEpisodeInfos() {
   // Enqueue and fire-and-forget: the processor will pick it up in the background.
   // The user is informed via a toast and can refresh the page later to see results.
   try {
-    await enqueueAndProcessMedia({
+    await enqueueMedia({
       tmdbId: Number(route.params.id),
       mediaType: "episode",
       seasonNumber: Number(route.params.season),
@@ -193,7 +198,8 @@ async function fetchEpisodeInfos() {
     // Refresh queue status so the UI reflects the pending state
     await fetchQueueStatus();
     const toast = await toastController.create({
-      message: "Added to queue! Check back in a moment to see the updated voice cast.",
+      message:
+        "Added to queue! Check back in a moment to see the updated voice cast.",
       duration: 4000,
       position: "top",
       color: "success",

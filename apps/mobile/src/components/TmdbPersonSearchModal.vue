@@ -4,7 +4,7 @@
       <AppToolbar>
         <AppTitle>Select TMDB Person</AppTitle>
         <template #end>
-          <AppButton @click="$emit('close')">
+          <AppButton fill="clear" color="text" @click="$emit('close')">
             <XCircle class="app-icon" />
           </AppButton>
         </template>

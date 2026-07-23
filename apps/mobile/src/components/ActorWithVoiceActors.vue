@@ -281,12 +281,12 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
   flex-direction: column;
   padding: 12px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--app-overlay-2);
 
   .character-name {
     font-size: 16px;
     font-weight: 600;
-    color: #e0e0e0;
+    color: var(--app-color-text-primary);
     margin-bottom: 8px;
     padding: 4px 8px;
     border-radius: 8px;
@@ -313,7 +313,7 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
     .voice-actors-label {
       font-size: 14px;
       font-weight: 600;
-      color: #e0e0e0;
+      color: var(--app-color-text-primary);
       margin-bottom: 4px;
     }
 
@@ -321,7 +321,7 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
       overflow-x: auto;
       overflow-y: hidden;
       scrollbar-width: thin;
-      scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+      scrollbar-color: var(--app-overlay-20) transparent;
 
       &::-webkit-scrollbar {
         height: 4px;
@@ -332,11 +332,11 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
       }
 
       &::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.2);
+        background: var(--app-overlay-20);
         border-radius: 2px;
 
         &:hover {
-          background: rgba(255, 255, 255, 0.3);
+          background: var(--app-overlay-30);
         }
       }
     }
@@ -353,12 +353,12 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
         border-radius: 8px;
         cursor: pointer;
         transition: all 0.3s ease;
-        background-color: rgba(255, 255, 255, 0.02);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background-color: var(--app-overlay-2);
+        border: 1px solid var(--app-overlay-10);
 
         &:hover {
-          background-color: rgba(255, 255, 255, 0.05);
-          border-color: rgba(255, 255, 255, 0.2);
+          background-color: var(--app-overlay-5);
+          border-color: var(--app-overlay-20);
         }
 
         .himself-content {
@@ -368,7 +368,7 @@ const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
           .himself-text {
             font-size: 14px;
             font-weight: 600;
-            color: #e0e0e0;
+            color: var(--app-color-text-primary);
             line-height: 1.4;
           }
         }

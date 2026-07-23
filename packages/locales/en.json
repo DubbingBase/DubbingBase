@@ -25,7 +25,7 @@
     "sort": "Sort",
     "himself": "Himself",
     "scan": "Scan",
-    "fetchInfos": "Fetch information",
+    "fetchInfos": "Add to queue",
     "waiting": "Waiting",
     "accepted": "Accepted",
     "rejected": "Rejected",
@@ -142,6 +142,7 @@
   },
   "settings": {
     "title": "Settings",
+    "theme": "Theme",
     "about": "About",
     "email": "Email",
     "logout": "Logout",

@@ -89,6 +89,8 @@ export default {
 
         console.log(`[QUEUE] Popped message ID ${msgId}:`, payload);
 
+        let mediaTitle = "Unknown title";
+
         try {
           console.log(
             `[QUEUE] Calling prepare_media via supabase.functions.invoke...`,
@@ -118,6 +120,10 @@ export default {
             `[QUEUE] prepare_media parsed JSON response:`,
             responseData,
           );
+
+          if (responseData && responseData.title) {
+            mediaTitle = responseData.title;
+          }
 
           if (!responseData || !responseData.ok) {
             const errorInfo =
@@ -150,7 +156,7 @@ export default {
               `https://ntfy.sh/Armaldio_DubbingBaseQueue`,
               {
                 method: "POST",
-                body: `Successfully processed ${payload.media_type} with TMDB ID ${payload.tmdb_id}${
+                body: `Successfully processed ${mediaTitle}${
                   payload.season_number
                     ? ` (Season ${payload.season_number})`
                     : ""
@@ -158,7 +164,7 @@ export default {
                   payload.episode_number
                     ? ` (Episode ${payload.episode_number})`
                     : ""
-                }. Changes: ${responseData.changes ?? 0}`,
+                }. Added ${responseData.changes ?? 0} new voice actors.`,
                 headers: {
                   Title: "Queue Item Processed",
                   Tags: "white_check_mark",
@@ -178,7 +184,16 @@ export default {
             console.error("[QUEUE] ntfy exception (success branch):", e);
           }
         } catch (err) {
-          const errMsg = err instanceof Error ? err.message : String(err);
+          let errMsg = "";
+          if (err instanceof Error) {
+            errMsg = err.message;
+          } else {
+            try {
+              errMsg = typeof err === "object" ? JSON.stringify(err) : String(err);
+            } catch {
+              errMsg = String(err);
+            }
+          }
           const fullErr = err instanceof Error ? err.stack : err;
           console.error(
             `[QUEUE] Error processing message ID ${msgId}:`,
@@ -207,7 +222,7 @@ export default {
               `https://ntfy.sh/Armaldio_DubbingBaseQueue`,
               {
                 method: "POST",
-                body: `Failed to process ${payload.media_type} with TMDB ID ${payload.tmdb_id}: ${errMsg}`,
+                body: `Failed to process ${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type} (TMDB ID ${payload.tmdb_id}): ${errMsg}`,
                 headers: {
                   Title: "Queue Item Failed",
                   Tags: "warning",

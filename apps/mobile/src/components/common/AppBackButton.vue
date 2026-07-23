@@ -11,14 +11,18 @@ import ChevronLeft from '~icons/lucide/chevron-left';
 const ionRouter = useIonRouter();
 
 const handleBack = () => {
-  ionRouter.back();
+  if (ionRouter.canGoBack()) {
+    ionRouter.back();
+  } else {
+    ionRouter.navigate('/home', 'back', 'replace');
+  }
 };
 </script>
 
 <style scoped>
 .app-back-button {
   background: transparent;
-  color: white;
+  color: var(--app-color-text-primary);
   border: none;
   padding: 8px;
   cursor: pointer;
@@ -30,7 +34,7 @@ const handleBack = () => {
 }
 
 .app-back-button:active {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--app-overlay-10);
 }
 
 .app-back-icon {

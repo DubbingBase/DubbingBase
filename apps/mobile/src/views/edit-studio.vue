@@ -103,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import { IonPage } from "@ionic/vue";
+import { IonPage, useIonRouter } from "@ionic/vue";
 import AppPage from "@/components/common/layout/AppPage.vue";
 import AppHeader from "@/components/common/layout/AppHeader.vue";
 import AppToolbar from "@/components/common/layout/AppToolbar.vue";
@@ -119,6 +119,7 @@ import { supabase } from "@/api/supabase";
 
 const route = useRoute();
 const router = useRouter();
+const ionRouter = useIonRouter();
 const id = route.params.id as string | undefined;
 const isEditMode = computed(() => !!id && id !== "new");
 
@@ -183,7 +184,11 @@ const saveStudio = async () => {
 
     if (saveErr) throw saveErr;
 
-    router.back();
+    if (ionRouter.canGoBack()) {
+      ionRouter.back();
+    } else {
+      ionRouter.navigate('/home', 'back', 'replace');
+    }
   } catch (err) {
     console.error("Error saving studio:", err);
   } finally {
@@ -199,7 +204,7 @@ onMounted(() => {
 <style scoped lang="scss">
 .edit-studio-page {
   padding: 16px;
-  background-color: #121212;
+  background-color: var(--app-color-step-50);
 }
 
 .loading-state {
@@ -212,7 +217,7 @@ onMounted(() => {
 
 .loading-text {
   font-size: 12px;
-  color: #a0a0a0;
+  color: var(--app-color-text-secondary);
   margin-top: 12px;
 }
 
@@ -223,8 +228,8 @@ onMounted(() => {
 }
 
 .form-card {
-  background: #1d1d1d;
-  border: 1px solid #2a2a2a;
+  background: var(--app-color-step-100);
+  border: 1px solid var(--app-color-border);
   border-radius: 16px;
   padding: 20px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
@@ -252,14 +257,14 @@ onMounted(() => {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #a0a0a0;
+  color: var(--app-color-text-secondary);
 }
 
 .form-input {
   width: 100%;
   padding: 10px 14px;
-  background-color: #121212;
-  border: 1px solid #2a2a2a;
+  background-color: var(--app-color-step-50);
+  border: 1px solid var(--app-color-border);
   border-radius: 12px;
   color: #ffffff;
   font-size: 14px;

@@ -14,7 +14,7 @@ withDefaults(defineProps<{
 
 <style scoped>
 .app-skeleton {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--app-overlay-10);
   border-radius: 4px;
   min-height: 1em;
   width: 100%;

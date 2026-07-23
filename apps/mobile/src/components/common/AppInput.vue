@@ -50,13 +50,17 @@ const onInput = (event: Event) => {
 .app-input-container {
   display: flex;
   flex-direction: column;
-  background: var(--app-color-card, #1e1e1e);
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--app-color-border, #333333);
-  transition: border-bottom-color 0.2s ease;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 12px 16px;
+  border: 1px solid var(--app-color-border, #2a2a2a);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  margin-bottom: 4px;
 
   &.has-focus {
-    border-bottom-color: var(--app-color-primary, #4a90e2);
+    border-color: var(--app-color-primary, #3b82f6);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    background: rgba(255, 255, 255, 0.05);
   }
 
   &.is-disabled {
@@ -66,15 +70,23 @@ const onInput = (event: Event) => {
 }
 
 .app-input-label {
-  font-size: 13px;
-  color: var(--app-color-text-primary, #ffffff);
-  margin-bottom: 4px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  color: var(--app-color-text-muted, #888888);
+  margin-bottom: 6px;
+  transition: color 0.2s ease;
+}
+
+.app-input-container.has-focus .app-input-label {
+  color: var(--app-color-primary, #3b82f6);
 }
 
 .app-input-field {
   background: transparent;
   border: none;
-  color: var(--app-color-text-secondary, #b3b3b3);
+  color: var(--app-color-text-primary, #ffffff);
   font-size: 16px;
   padding: 4px 0;
   width: 100%;
@@ -82,7 +94,7 @@ const onInput = (event: Event) => {
   font-family: inherit;
 
   &::placeholder {
-    color: var(--app-color-text-muted, #8e8e8e);
+    color: var(--app-color-text-muted, #6b7280);
   }
 }
 </style>

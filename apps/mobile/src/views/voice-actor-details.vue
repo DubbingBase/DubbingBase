@@ -1,83 +1,94 @@
 <template>
   <ion-page>
-  <AppPage>
-    <AppHeader>
-      <AppToolbar>
-        <template #start >
-          <AppBackButton />
-        </template>
-        <AppTitle>Voix</AppTitle>
-        <template #end >
-          <AppButton fill="clear" @click="isActionSheetOpen = true" aria-label="Menu">
-            <EllipsisVertical class="app-icon" />
-          </AppButton>
-        </template>
-      </AppToolbar>
-    </AppHeader>
-    <AppContent>
-      
-      <LoadingSpinner
-        v-if="loading"
-        :overlay="true"
-      />
+    <AppPage>
+      <AppHeader>
+        <AppToolbar>
+          <template #start>
+            <AppBackButton />
+          </template>
+          <AppTitle>Voix</AppTitle>
+          <template #end>
+            <AppButton
+              fill="clear"
+              @click="isActionSheetOpen = true"
+              aria-label="Menu"
+            >
+              <EllipsisVertical class="app-icon" />
+            </AppButton>
+          </template>
+        </AppToolbar>
+      </AppHeader>
+      <AppContent>
+      <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
+        <ion-refresher-content></ion-refresher-content>
+      </ion-refresher>
+        <LoadingSpinner v-if="loading" :overlay="true" />
 
-      <div v-if="!loading && voiceActor" class="actor">
-        <!-- Request Linkage Card -->
-        <RequestVoiceActorCard ref="requestCardRef" :hideCard="true" v-if="isAuthenticated && !isLinked" :voiceActor="voiceActor" />
+        <div v-if="!loading && voiceActor" class="actor">
+          <!-- Request Linkage Card -->
+          <RequestVoiceActorCard
+            ref="requestCardRef"
+            :hideCard="true"
+            v-if="isAuthenticated && !isLinked"
+            :voiceActor="voiceActor"
+          />
 
-        <VoiceActorHeader
-          :voiceActor="voiceActor"
-          :profilePicture="profilePicture"
-          @profile-picture-changed="onProfilePictureChanged"
+          <VoiceActorHeader
+            :voiceActor="voiceActor"
+            :profilePicture="profilePicture"
+            @profile-picture-changed="onProfilePictureChanged"
+          />
+
+          <VoiceActorBio :bio="voiceActor.bio" />
+
+          <AppSearchbar
+            v-model="searchQuery"
+            :placeholder="t('common.search', 'Search...')"
+            animated
+            class="custom-searchbar"
+          ></AppSearchbar>
+
+          <VoiceActorWorksGrouped :works="filteredEnhancedWork" />
+        </div>
+
+        <!-- Voice Actor Fetch Modal for Admin -->
+        <VoiceActorFetchModal
+          :is-open="isFetchModalOpen"
+          :voice-actor="voiceActor"
+          :potential-wikipedia-url="potentialWikipediaUrl"
+          @close="isFetchModalOpen = false"
+          @saved="handleFetchModalSaved"
         />
 
-        <VoiceActorBio :bio="voiceActor.bio" />
-
-        <AppSearchbar
-          v-model="searchQuery"
-          :placeholder="t('common.search', 'Search...')"
-          animated
-          class="custom-searchbar"
-        ></AppSearchbar>
-
-        <VoiceActorWorksGrouped :works="filteredEnhancedWork" />
-      </div>
-
-      <!-- Voice Actor Fetch Modal for Admin -->
-      <VoiceActorFetchModal
-        :is-open="isFetchModalOpen"
-        :voice-actor="voiceActor"
-        :potential-wikipedia-url="potentialWikipediaUrl"
-        @close="isFetchModalOpen = false"
-        @saved="handleFetchModalSaved"
-      />
-
-      <AppActionSheet
-        v-model:is-open="isActionSheetOpen"
-        :buttons="actionSheetButtons"
-      />
-    </AppContent>
-  </AppPage>
+        <AppActionSheet
+          v-model:is-open="isActionSheetOpen"
+          :buttons="actionSheetButtons"
+        />
+      </AppContent>
+    </AppPage>
   </ion-page>
 </template>
 
 <script setup lang="ts">
+import { IonRefresher, IonRefresherContent } from "@ionic/vue";
 import { IonPage, toastController } from "@ionic/vue";
-import AppPage from '@/components/common/layout/AppPage.vue';
-import AppHeader from '@/components/common/layout/AppHeader.vue';
-import AppToolbar from '@/components/common/layout/AppToolbar.vue';
-import AppTitle from '@/components/common/layout/AppTitle.vue';
-import AppContent from '@/components/common/layout/AppContent.vue';
-import AppButton from '@/components/common/AppButton.vue';
-import AppSearchbar from '@/components/common/AppSearchbar.vue';
-import Pencil from '~icons/lucide/pencil';
-import RefreshCw from '~icons/lucide/refresh-cw';
+import AppPage from "@/components/common/layout/AppPage.vue";
+import AppHeader from "@/components/common/layout/AppHeader.vue";
+import AppToolbar from "@/components/common/layout/AppToolbar.vue";
+import AppTitle from "@/components/common/layout/AppTitle.vue";
+import AppContent from "@/components/common/layout/AppContent.vue";
+import AppButton from "@/components/common/AppButton.vue";
+import AppSearchbar from "@/components/common/AppSearchbar.vue";
+import Pencil from "~icons/lucide/pencil";
+import RefreshCw from "~icons/lucide/refresh-cw";
 import EllipsisVertical from "~icons/lucide/ellipsis-vertical";
 import UserCheck from "~icons/lucide/user-check";
 import { computed, onMounted, ref, getCurrentInstance } from "vue";
 import AppBackButton from "@/components/common/AppBackButton.vue";
-import AppActionSheet, { ActionSheetButton } from "@/components/common/AppActionSheet.vue";
-import { useRoute, useRouter } from 'vue-router';
+import AppActionSheet, {
+  ActionSheetButton,
+} from "@/components/common/AppActionSheet.vue";
+import { useRoute, useRouter } from "vue-router";
 // Admin check: get user from supabase.auth and check for admin role
 import type { Serie as SerieModel } from "@supabase/functions/_shared/serie";
 
@@ -124,10 +135,10 @@ type VoiceActorResponse = {
     work: {
       id: number;
       actor_id: number;
-    dubbing_projects?: {
-      content_id: number;
-      content_type: string | null;
-    };
+      dubbing_projects?: {
+        content_id: number;
+        content_type: string | null;
+      };
       highlight: boolean | null;
       performance: string | null;
       source_id: number | null;
@@ -138,7 +149,10 @@ type VoiceActorResponse = {
   };
   medias: (MovieModel | SerieModel)[];
   potentialWikipediaUrl?: string | null;
-  votes?: Record<number, { up_count: number; down_count: number; user_vote: string | null }>;
+  votes?: Record<
+    number,
+    { up_count: number; down_count: number; user_vote: string | null }
+  >;
 };
 
 const voiceActor = ref<VoiceActorResponse["voiceActor"] | undefined>();
@@ -156,15 +170,15 @@ const requestCardRef = ref<any>(null);
 const actionSheetButtons = computed<ActionSheetButton[]>(() => {
   const buttons: ActionSheetButton[] = [
     {
-      text: t('common.editProfile', 'Modifier le profil'),
+      text: t("common.editProfile", "Modifier le profil"),
       icon: Pencil,
       handler: () => openEditProfile(),
-    }
+    },
   ];
 
   if (isAuthenticated.value && !isLinked.value) {
     buttons.unshift({
-      text: t('profile.requestVoiceActorBtn', 'Revendiquer ce profil'),
+      text: t("profile.requestVoiceActorBtn", "Revendiquer ce profil"),
       icon: UserCheck,
       handler: () => {
         requestCardRef.value?.openRequestModal();
@@ -174,9 +188,9 @@ const actionSheetButtons = computed<ActionSheetButton[]>(() => {
 
   if (isAdmin.value) {
     buttons.unshift({
-      text: t('common.refresh', 'Actualiser'),
+      text: t("common.refresh", "Récupérer les infos"),
       icon: RefreshCw,
-      cssClass: 'action-sheet-admin',
+      cssClass: "action-sheet-admin",
       handler: () => {
         isFetchModalOpen.value = true;
       },
@@ -184,8 +198,8 @@ const actionSheetButtons = computed<ActionSheetButton[]>(() => {
   }
 
   buttons.push({
-    text: t('common.cancel', 'Annuler'),
-    role: 'cancel',
+    text: t("common.cancel", "Annuler"),
+    role: "cancel",
   });
 
   return buttons;
@@ -199,7 +213,8 @@ const handleFetchModalSaved = async () => {
     const voiceActorResponseRaw = await supabase.functions.invoke(
       "voice-actor",
       {
-        body: { id }},
+        body: { id },
+      },
     );
 
     const voiceActorResponse =
@@ -207,22 +222,22 @@ const handleFetchModalSaved = async () => {
     if (voiceActorResponse) {
       voiceActor.value = voiceActorResponse.voiceActor;
       profilePicture.value = voiceActorResponse.voiceActor.profile_picture;
-      
+
       const toast = await toastController.create({
-        message: t('common.success', 'Actualisé avec succès !'),
+        message: t("common.success", "Actualisé avec succès !"),
         duration: 2000,
-        position: 'bottom',
-        color: 'success'
+        position: "bottom",
+        color: "success",
       });
       await toast.present();
     }
   } catch (err) {
     console.error("Error refreshing voice actor after fetch:", err);
     const toast = await toastController.create({
-      message: t('common.error', 'Erreur lors de l\'actualisation.'),
+      message: t("common.error", "Erreur lors de l'actualisation."),
       duration: 3000,
-      position: 'bottom',
-      color: 'danger'
+      position: "bottom",
+      color: "danger",
     });
     await toast.present();
   } finally {
@@ -233,7 +248,11 @@ const handleFetchModalSaved = async () => {
 // Define a type for our enhanced work item
 type EnhancedWorkItem = {
   media: MovieModel | SerieModel;
-  work: { id: number; actor_id: number; dubbing_projects?: { content_id: number; content_type: string | null } };
+  work: {
+    id: number;
+    actor_id: number;
+    dubbing_projects?: { content_id: number; content_type: string | null };
+  };
   data: {
     character: string | undefined;
     characterImage?: string;
@@ -251,7 +270,9 @@ const baseEnhancedWork = computed<EnhancedWorkItem[]>(() => {
 
   const result = voiceActor.value.work
     .map((work) => {
-      const media = medias.value.find((media) => media.id === work.dubbing_projects?.content_id);
+      const media = medias.value.find(
+        (media) => media.id === work.dubbing_projects?.content_id,
+      );
 
       if (!media) {
         console.warn(
@@ -297,7 +318,8 @@ const baseEnhancedWork = computed<EnhancedWorkItem[]>(() => {
       const data = {
         character,
         characterImage,
-        actor: actorToPersonData(actor)};
+        actor: actorToPersonData(actor),
+      };
 
       return {
         media,
@@ -322,14 +344,6 @@ const openEditProfile = () => {
 const isLinked = computed(() => {
   return (voiceActor.value?.user_voice_actor_links?.length ?? 0) > 0;
 });
-
-
-
-
-
-
-
-
 
 // For chronological view
 const enhancedWork = computed(() => {
@@ -398,7 +412,8 @@ const loadVoiceActorData = async () => {
   console.log("Fetching voice actor with ID:", id);
 
   const voiceActorResponseRaw = await supabase.functions.invoke("voice-actor", {
-    body: { id }});
+    body: { id },
+  });
 
   const voiceActorResponse =
     (await voiceActorResponseRaw.data) as VoiceActorResponse;
@@ -437,11 +452,14 @@ const loadVoiceActorData = async () => {
               cast: (m as any).credits.cast?.slice(0, 3).map((c: any) => ({
                 id: c.id,
                 name: c.name,
-                character: c.character})),
+                character: c.character,
+              })),
               crew: (m as any).credits.crew
                 ?.slice(0, 3)
-                .map((c: any) => ({ id: c.id, name: c.name, job: c.job }))}
-          : "No credits"})),
+                .map((c: any) => ({ id: c.id, name: c.name, job: c.job })),
+            }
+          : "No credits",
+      })),
     );
   }
 
@@ -468,10 +486,7 @@ const loadVoiceActorData = async () => {
 };
 </script>
 
-
-
 <style scoped lang="scss">
-
 .actor {
   padding: 16px;
   margin: 0 auto;
@@ -726,7 +741,7 @@ const loadVoiceActorData = async () => {
   display: inline-block;
   width: 12px;
   height: 12px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid var(--app-overlay-30);
   border-radius: 50%;
   border-top-color: #fff;
   animation: spin 1s ease-in-out infinite;

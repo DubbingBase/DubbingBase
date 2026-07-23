@@ -34,7 +34,7 @@ defineProps<{
   padding: 24px;
   margin: 8px 0;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--app-overlay-2);
   transition: all 0.2s ease-in-out;
   text-align: center;
 }

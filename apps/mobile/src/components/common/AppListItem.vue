@@ -89,11 +89,11 @@ const onClick = (event: Event) => {
     cursor: pointer;
     
     &:hover {
-      background: rgba(255, 255, 255, 0.05);
+      background: var(--app-overlay-5);
     }
     
     &:active {
-      background: rgba(255, 255, 255, 0.1);
+      background: var(--app-overlay-10);
     }
   }
   

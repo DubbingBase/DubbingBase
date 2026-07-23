@@ -36,29 +36,29 @@
 
             <div class="space-y-3">
               <div
-                class="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4 flex items-center justify-between"
+                class="bg-[var(--app-color-step-50)] border border-[var(--app-color-border)] rounded-xl p-4 flex items-center justify-between"
               >
                 <div>
-                  <div class="text-sm font-bold text-white">
+                  <div class="text-sm font-bold text-[var(--app-color-text-primary)]">
                     {{ mediaTitle || "Loading media title..." }}
                   </div>
                   <div
-                    class="flex flex-wrap items-center gap-3 mt-2 text-xs text-[#a0a0a0]"
+                    class="flex flex-wrap items-center gap-3 mt-2 text-xs text-[var(--app-color-text-secondary)]"
                   >
                     <span
-                      class="px-2 py-0.5 bg-[#2a2a2a] rounded uppercase font-bold text-[10px] text-blue-400"
+                      class="px-2 py-0.5 bg-[var(--app-color-step-200)] rounded uppercase font-bold text-[10px] text-blue-400"
                     >
                       {{ contentType }}
                     </span>
                     <span
                       >TMDB ID:
-                      <strong class="text-white">{{
+                      <strong class="text-[var(--app-color-text-primary)]">{{
                         contentId || id
                       }}</strong></span
                     >
                     <span
                       >Language:
-                      <strong class="text-white">{{
+                      <strong class="text-[var(--app-color-text-primary)]">{{
                         getLanguageDisplayName(language || 'fr-FR', locale)
                       }}</strong></span
                     >
@@ -86,12 +86,6 @@
                   <label class="form-label">Dubbing Studio</label>
                   <div class="flex items-center gap-3">
                     <router-link
-                      :to="`/studio-edit/new`"
-                      class="text-xs text-blue-400 font-semibold hover:underline flex items-center gap-1"
-                    >
-                      <span>+ New Studio</span>
-                    </router-link>
-                    <router-link
                       v-if="selectedStudioId"
                       :to="`/studio/${selectedStudioId}`"
                       class="text-xs text-blue-400 font-semibold hover:underline flex items-center gap-1"
@@ -111,7 +105,7 @@
                     <Building2 class="w-4 h-4 text-blue-400 flex-shrink-0" />
                     <span
                       v-if="studio"
-                      class="truncate font-semibold text-white"
+                      class="truncate font-semibold text-[var(--app-color-text-primary)]"
                       >{{ studio }}</span
                     >
                     <span v-else class="text-slate-400"
@@ -156,24 +150,27 @@
                   <div class="form-group">
                     <div class="flex items-center justify-between mb-1">
                       <label class="form-label !mb-0">Job Role *</label>
-                      <button
-                        type="button"
-                        @click="openCreateJobModal(index)"
-                        class="text-xs text-blue-400 hover:text-blue-300 font-semibold"
-                      >
-                        + New
-                      </button>
                     </div>
-                    <select v-model="row.job_id" class="form-select">
-                      <option disabled :value="null">-- Select Job --</option>
-                      <option
-                        v-for="j in availableJobs"
-                        :key="j.id"
-                        :value="j.id"
-                      >
-                        {{ j.name }}
-                      </option>
-                    </select>
+                    <button
+                      type="button"
+                      @click="openJobPicker(index)"
+                      class="picker-button"
+                    >
+                      <div class="flex items-center gap-2 truncate">
+                        <span
+                          v-if="row.job_id"
+                          class="truncate font-semibold text-[var(--app-color-text-primary)]"
+                        >
+                          {{ getJobDisplayName(row.job_id) }}
+                        </span>
+                        <span v-else class="text-slate-400"
+                          >-- Select Job --</span
+                        >
+                      </div>
+                      <ChevronRight
+                        class="w-4 h-4 text-slate-500 flex-shrink-0"
+                      />
+                    </button>
                   </div>
 
                   <div class="form-group">
@@ -188,7 +185,7 @@
                           <User class="w-4 h-4 text-blue-400 flex-shrink-0" />
                           <span
                             v-if="row.person_id"
-                            class="truncate font-semibold text-white"
+                            class="truncate font-semibold text-[var(--app-color-text-primary)]"
                           >
                             {{ getCrewDisplayName(row) }}
                           </span>
@@ -217,13 +214,6 @@
             <div class="card-header-flex">
               <h3 class="card-title no-border">Voice Actor Credits</h3>
               <div class="action-buttons">
-                <button
-                  type="button"
-                  @click="showCreatePersonModal = true"
-                  class="btn-secondary"
-                >
-                  + New VA
-                </button>
                 <button type="button" @click="addCastRow" class="btn-primary">
                   + Add Row
                 </button>
@@ -262,7 +252,7 @@
                         <User class="w-4 h-4 text-indigo-400 flex-shrink-0" />
                         <span
                           v-if="row.actor_id"
-                          class="truncate font-semibold text-white"
+                          class="truncate font-semibold text-[var(--app-color-text-primary)]"
                         >
                           {{ getActorDisplayName(row) }}
                         </span>
@@ -289,7 +279,7 @@
                           <Mic class="w-4 h-4 text-blue-400 flex-shrink-0" />
                           <span
                             v-if="row.voice_actor_id"
-                            class="truncate font-semibold text-white"
+                            class="truncate font-semibold text-[var(--app-color-text-primary)]"
                           >
                             {{ getVoiceActorDisplayName(row) }}
                           </span>
@@ -315,11 +305,11 @@
                 <div class="row-footer">
                   <div class="form-group flex-1">
                     <label class="form-label">Performance</label>
-                    <select v-model="row.performance" class="form-select">
-                      <option value="dialogues">Dialogues</option>
-                      <option value="chant">Chant</option>
-                      <option value="ambiances">Ambiances</option>
-                    </select>
+                    <ion-select v-model="row.performance" class="form-select" interface="action-sheet" placeholder="-- Select Performance --">
+                      <ion-select-option value="dialogues">Dialogues</ion-select-option>
+                      <ion-select-option value="chant">Chant</ion-select-option>
+                      <ion-select-option value="ambiances">Ambiances</ion-select-option>
+                    </ion-select>
                   </div>
 
                   <label class="checkbox-label">
@@ -384,10 +374,10 @@
                 v-for="item in mediaSearchResults"
                 :key="item.id"
                 @click="selectMedia(item)"
-                class="search-result-card flex items-center gap-3 p-2.5 bg-[#141414] hover:bg-[#252525] border border-[#2a2a2a] rounded-xl cursor-pointer"
+                class="search-result-card flex items-center gap-3 p-2.5 bg-[var(--app-color-step-50)] hover:bg-[var(--app-color-step-200)] border border-[var(--app-color-border)] rounded-xl cursor-pointer"
               >
                 <div
-                  class="w-10 h-14 bg-[#2a2a2a] rounded overflow-hidden flex-shrink-0"
+                  class="w-10 h-14 bg-[var(--app-color-step-200)] rounded overflow-hidden flex-shrink-0"
                 >
                   <img
                     v-if="item.poster_path"
@@ -396,14 +386,14 @@
                   />
                 </div>
                 <div class="flex-1 min-w-0">
-                  <div class="text-xs font-bold text-white truncate">
+                  <div class="text-xs font-bold text-[var(--app-color-text-primary)] truncate">
                     {{ item.title || item.name }}
                   </div>
                   <div
-                    class="text-[10px] text-[#a0a0a0] flex items-center gap-2 mt-1"
+                    class="text-[10px] text-[var(--app-color-text-secondary)] flex items-center gap-2 mt-1"
                   >
                     <span
-                      class="px-1.5 py-0.5 bg-[#2a2a2a] rounded uppercase font-semibold text-[9px]"
+                      class="px-1.5 py-0.5 bg-[var(--app-color-step-200)] rounded uppercase font-semibold text-[9px]"
                       >{{ item.media_type }}</span
                     >
                     <span>ID: {{ item.id }}</span>
@@ -423,59 +413,21 @@
         </AppModal>
 
         <!-- Studio Search Picker Modal -->
-        <AppModal
+        <StudioSearchModal
           :is-open="showStudioSearchModal"
-          @didDismiss="showStudioSearchModal = false"
-        >
-          <div class="modal-body">
-            <h3 class="modal-title">Select Dubbing Studio</h3>
-            <div class="form-group">
-              <input
-                v-model="studioSearchQuery"
-                type="text"
-                placeholder="Search studio by name..."
-                class="form-input"
-                @input="searchStudios"
-              />
-            </div>
+          @close="showStudioSearchModal = false"
+          @select="selectStudio"
+          @create-new="handleCreateNewStudio"
+        />
 
-            <div v-if="isSearchingStudios" class="py-6 text-center">
-              <LoadingSpinner name="crescent" />
-            </div>
-
-            <div
-              v-else-if="studioSearchResults.length > 0"
-              class="search-results-list max-h-60 overflow-y-auto space-y-2 pt-2"
-            >
-              <div
-                v-for="s in studioSearchResults"
-                :key="s.id"
-                @click="selectStudio(s)"
-                class="search-result-card flex items-center justify-between p-3 bg-[#141414] hover:bg-[#252525] border border-[#2a2a2a] rounded-xl cursor-pointer"
-              >
-                <div class="flex items-center gap-3">
-                  <Building2 class="w-4 h-4 text-blue-400" />
-                  <div>
-                    <div class="text-xs font-bold text-white">{{ s.name }}</div>
-                    <div
-                      v-if="s.city || s.country"
-                      class="text-[10px] text-[#a0a0a0]"
-                    >
-                      {{ [s.city, s.country].filter(Boolean).join(", ") }}
-                    </div>
-                  </div>
-                </div>
-                <span class="text-xs text-blue-400 font-semibold"
-                  >Select ↵</span
-                >
-              </div>
-            </div>
-
-            <div v-else class="py-6 text-center text-xs text-slate-500">
-              No studios found.
-            </div>
-          </div>
-        </AppModal>
+        <!-- Job Search Picker Modal -->
+        <JobSearchModal
+          :is-open="showJobSearchModal"
+          :jobs="availableJobs"
+          @close="showJobSearchModal = false"
+          @select="selectJob"
+          @create-new="handleCreateNewJob"
+        />
 
         <!-- TMDB Cast Search Picker Modal -->
         <TmdbPersonSearchModal
@@ -569,7 +521,7 @@
 </template>
 
 <script setup lang="ts">
-import { IonPage } from "@ionic/vue";
+import { IonPage, useIonRouter } from "@ionic/vue";
 import AppPage from "@/components/common/layout/AppPage.vue";
 import AppHeader from "@/components/common/layout/AppHeader.vue";
 import AppToolbar from "@/components/common/layout/AppToolbar.vue";
@@ -588,6 +540,9 @@ import {
   personAddOutline,
 } from "ionicons/icons";
 import PersonSearchModal from "@/components/PersonSearchModal.vue";
+import StudioSearchModal from "@/components/StudioSearchModal.vue";
+import JobSearchModal from "@/components/JobSearchModal.vue";
+import { IonSelect, IonSelectOption } from "@ionic/vue";
 
 import Search from "~icons/lucide/search";
 import Building2 from "~icons/lucide/building-2";
@@ -605,6 +560,7 @@ import { getLanguageDisplayName } from "@/utils/language";
 const { t, locale } = useI18n();
 const route = useRoute();
 const router = useRouter();
+const ionRouter = useIonRouter();
 const id = computed(() => (route.params.id as string) || (route.path.endsWith('/new') ? 'new' : undefined));
 const isEditMode = computed(() => !!id.value && id.value !== "new");
 
@@ -664,9 +620,9 @@ const isSearchingMedia = ref(false);
 
 // Studio Search Picker Modal State
 const showStudioSearchModal = ref(false);
-const studioSearchQuery = ref("");
-const studioSearchResults = ref<any[]>([]);
-const isSearchingStudios = ref(false);
+
+// Job Search Picker Modal State
+const showJobSearchModal = ref(false);
 
 // TMDB Cast Search Picker Modal State
 const showCastSearchModal = ref(false);
@@ -705,34 +661,44 @@ const openCreateJobModal = (index: number) => {
 };
 
 const openStudioPicker = () => {
-  studioSearchQuery.value = "";
-  searchStudios();
   showStudioSearchModal.value = true;
-};
-
-const searchStudios = async () => {
-  isSearchingStudios.value = true;
-  try {
-    let query = supabase
-      .from("studios")
-      .select("*")
-      .order("name", { ascending: true });
-    if (studioSearchQuery.value.trim()) {
-      query = query.ilike("name", `%${studioSearchQuery.value.trim()}%`);
-    }
-    const { data } = await query.limit(25);
-    studioSearchResults.value = data || [];
-  } catch (err) {
-    console.error("Error searching studios:", err);
-  } finally {
-    isSearchingStudios.value = false;
-  }
 };
 
 const selectStudio = (s: any) => {
   selectedStudioId.value = s.id;
   studio.value = s.name;
   showStudioSearchModal.value = false;
+};
+
+const handleCreateNewStudio = (query?: string) => {
+  showStudioSearchModal.value = false;
+  router.push('/studio-edit/new');
+};
+
+const openJobPicker = (index: number) => {
+  activeJobRowIndex.value = index;
+  showJobSearchModal.value = true;
+};
+
+const selectJob = (job: { id: number; name: string }) => {
+  if (activeJobRowIndex.value !== null && dubbingCrew.value[activeJobRowIndex.value]) {
+    dubbingCrew.value[activeJobRowIndex.value].job_id = job.id;
+  }
+  showJobSearchModal.value = false;
+};
+
+const handleCreateNewJob = (query: string) => {
+  showJobSearchModal.value = false;
+  newJobName.value = query;
+  setTimeout(() => {
+    showCreateJobModal.value = true;
+  }, 350);
+};
+
+const getJobDisplayName = (jobId: number | null) => {
+  if (!jobId) return "";
+  const match = availableJobs.value.find((j) => Number(j.id) === Number(jobId));
+  return match ? match.name : `Job #${jobId}`;
 };
 
 const openVoiceActorPicker = (index: number) => {
@@ -1155,7 +1121,11 @@ const saveProject = async () => {
 
     if (error) throw error;
 
-    router.back();
+    if (ionRouter.canGoBack()) {
+      ionRouter.back();
+    } else {
+      ionRouter.navigate('/home', 'back', 'replace');
+    }
   } catch (err: any) {
     console.error("Error saving dubbing project:", err);
     alert(err.message || "Error saving dubbing project");
@@ -1186,7 +1156,7 @@ onIonViewWillEnter(async () => {
 <style scoped lang="scss">
 .edit-dubbing-project-page {
   padding: 16px;
-  background-color: #121212;
+  background-color: var(--app-color-step-50);
 }
 
 .loading-state {
@@ -1199,7 +1169,7 @@ onIonViewWillEnter(async () => {
 
 .loading-text {
   font-size: 12px;
-  color: #a0a0a0;
+  color: var(--app-color-text-secondary);
   margin-top: 12px;
 }
 
@@ -1210,8 +1180,8 @@ onIonViewWillEnter(async () => {
 }
 
 .form-card {
-  background: #1d1d1d;
-  border: 1px solid #2a2a2a;
+  background: var(--app-color-step-100);
+  border: 1px solid var(--app-color-border);
   border-radius: 16px;
   padding: 20px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
@@ -1266,7 +1236,7 @@ onIonViewWillEnter(async () => {
 }
 
 .btn-secondary {
-  background: #2a2a2a;
+  background: var(--app-color-step-200);
   color: #60a5fa;
   font-size: 12px;
   font-weight: 600;
@@ -1291,14 +1261,14 @@ onIonViewWillEnter(async () => {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #a0a0a0;
+  color: var(--app-color-text-secondary);
 }
 
 .form-input {
   width: 100%;
   padding: 10px 14px;
-  background-color: #121212;
-  border: 1px solid #2a2a2a;
+  background-color: var(--app-color-step-50);
+  border: 1px solid var(--app-color-border);
   border-radius: 12px;
   color: #ffffff;
   font-size: 14px;
@@ -1323,8 +1293,8 @@ onIonViewWillEnter(async () => {
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  background-color: #121212;
-  border: 1px solid #2a2a2a;
+  background-color: var(--app-color-step-50);
+  border: 1px solid var(--app-color-border);
   border-radius: 12px;
   color: #ffffff;
   font-size: 14px;
@@ -1342,8 +1312,8 @@ onIonViewWillEnter(async () => {
 .form-select {
   width: 100%;
   padding: 10px 36px 10px 14px;
-  background-color: #121212;
-  border: 1px solid #2a2a2a;
+  background-color: var(--app-color-step-50);
+  border: 1px solid var(--app-color-border);
   border-radius: 12px;
   color: #ffffff;
   font-size: 14px;
@@ -1424,7 +1394,7 @@ onIonViewWillEnter(async () => {
   align-items: center;
   justify-content: center;
   padding: 8px 12px;
-  background: #2a2a2a;
+  background: var(--app-color-step-200);
   border: 1px solid #3a3a3a;
   border-radius: 10px;
   color: #60a5fa;
@@ -1444,7 +1414,7 @@ onIonViewWillEnter(async () => {
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: #a0a0a0;
+  color: var(--app-color-text-secondary);
   cursor: pointer;
   padding-bottom: 10px;
 }

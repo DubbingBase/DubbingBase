@@ -117,14 +117,14 @@ const chips = computed(() => {
 .search-result-card {
   margin: 6px 12px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--app-overlay-2);
+  border: 1px solid var(--app-overlay-5);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   transition: transform 0.2s ease, background 0.2s ease;
   
   &:active {
     transform: scale(0.98);
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--app-overlay-5);
   }
 }
 

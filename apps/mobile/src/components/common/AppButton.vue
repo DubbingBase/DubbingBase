@@ -20,7 +20,7 @@
 withDefaults(defineProps<{
   fill?: 'solid' | 'outline' | 'clear';
   expand?: 'block';
-  color?: 'primary' | 'danger' | 'success' | 'warning' | 'medium' | 'light' | 'dark';
+  color?: 'primary' | 'danger' | 'success' | 'warning' | 'medium' | 'light' | 'dark' | 'text';
   shape?: 'round' | 'circle';
   disabled?: boolean;
   type?: 'button' | 'submit' | 'reset';
@@ -100,18 +100,27 @@ defineEmits<{
     --btn-color-hover: color-mix(in srgb, var(--btn-color) 85%, black);
     --btn-text: #ffffff;
   }
+  &.color-text {
+    --btn-color: var(--app-color-text-primary);
+    --btn-color-hover: color-mix(in srgb, var(--btn-color) 85%, black);
+    --btn-text: var(--app-color-background);
+  }
 
   /* Fills */
   &.fill-solid {
-    background: var(--btn-color);
+    background: linear-gradient(135deg, var(--btn-color) 0%, color-mix(in srgb, var(--btn-color) 80%, black) 100%);
     color: var(--btn-text);
     border: none;
+    box-shadow: 0 4px 12px -2px color-mix(in srgb, var(--btn-color) 40%, transparent);
 
     &:hover:not(.is-disabled) {
-      background: var(--btn-color-hover);
+      background: linear-gradient(135deg, color-mix(in srgb, var(--btn-color) 90%, white) 0%, color-mix(in srgb, var(--btn-color) 70%, black) 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px -2px color-mix(in srgb, var(--btn-color) 50%, transparent);
     }
     &:active:not(.is-disabled) {
-      transform: scale(0.98);
+      transform: translateY(0);
+      box-shadow: 0 2px 6px -2px color-mix(in srgb, var(--btn-color) 40%, transparent);
     }
   }
 
@@ -121,10 +130,10 @@ defineEmits<{
     border: 2px solid var(--btn-color);
 
     &:hover:not(.is-disabled) {
-      background: rgba(255, 255, 255, 0.05);
+      background: var(--app-overlay-5);
     }
     &:active:not(.is-disabled) {
-      background: rgba(255, 255, 255, 0.1);
+      background: var(--app-overlay-10);
     }
   }
 
@@ -135,10 +144,10 @@ defineEmits<{
     padding: 8px;
 
     &:hover:not(.is-disabled) {
-      background: rgba(255, 255, 255, 0.05);
+      background: var(--app-overlay-5);
     }
     &:active:not(.is-disabled) {
-      background: rgba(255, 255, 255, 0.1);
+      background: var(--app-overlay-10);
     }
   }
 }

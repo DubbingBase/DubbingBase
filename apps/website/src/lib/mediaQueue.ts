@@ -8,7 +8,7 @@ import { supabase } from "./supabase";
  * The processor is then triggered asynchronously so the caller does not need
  * to wait for completion.
  */
-export async function enqueueAndProcessMedia(params: {
+export async function enqueueMedia(params: {
   tmdbId: number;
   mediaType: string;
   seasonNumber?: number | null;
@@ -25,9 +25,4 @@ export async function enqueueAndProcessMedia(params: {
   if (error) {
     throw error;
   }
-
-  // Fire-and-forget: trigger the processor to pick it up immediately.
-  supabase.functions.invoke("process-media-queue").catch((err) => {
-    console.error("Failed to trigger process-media-queue:", err);
-  });
 }

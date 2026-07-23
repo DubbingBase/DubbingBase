@@ -45,6 +45,11 @@ const routes = [
         component: () => import("../views/DuplicateVATool.vue"),
       },
       {
+        path: "manual-merge-va",
+        name: "ManualMergeVATool",
+        component: () => import("../views/ManualMergeVATool.vue"),
+      },
+      {
         path: "duplicates-work",
         name: "DuplicateWork",
         component: () => import("../views/DuplicateWork.vue"),

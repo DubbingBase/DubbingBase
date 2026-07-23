@@ -21,7 +21,7 @@
   background: #16213e;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--app-overlay-10);
   font-size: 14px;
   font-weight: 500;
 

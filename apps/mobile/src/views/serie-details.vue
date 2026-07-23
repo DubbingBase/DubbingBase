@@ -10,6 +10,7 @@
           <template #end>
             <AppButton
               fill="clear"
+              color="text"
               @click="isActionSheetOpen = true"
               aria-label="Menu"
             >
@@ -19,6 +20,9 @@
         </AppToolbar>
       </AppHeader>
       <AppContent>
+      <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
+        <ion-refresher-content></ion-refresher-content>
+      </ion-refresher>
         <MediaInfoCard :media="show" />
 
         <LoadingSpinner v-if="isLoading" />
@@ -89,7 +93,13 @@
           :work-type="'tv'"
           :link-voice-actor="linkVoiceActor"
           @close="showVoiceActorSearch = false"
-          @create-new="(query) => router.push({ path: '/voice-actor-profile/new', query: { name: query } })"
+          @create-new="
+            (query) =>
+              router.push({
+                path: '/voice-actor-profile/new',
+                query: { name: query },
+              })
+          "
         />
 
         <CreditsReviewModal
@@ -112,6 +122,7 @@
 </template>
 
 <script setup lang="ts">
+import { IonRefresher, IonRefresherContent } from "@ionic/vue";
 import { IonPage } from "@ionic/vue";
 import AppPage from "@/components/common/layout/AppPage.vue";
 import AppHeader from "@/components/common/layout/AppHeader.vue";
@@ -136,7 +147,7 @@ import AppActionSheet, {
   ActionSheetButton,
 } from "@/components/common/AppActionSheet.vue";
 import { ref, computed, UnwrapRef, onMounted, watch } from "vue";
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute, useRouter } from "vue-router";
 import AppBackButton from "@/components/common/AppBackButton.vue";
 import { format } from "date-fns";
 import MediaThumbnail from "@/components/MediaThumbnail.vue";
@@ -152,7 +163,7 @@ import Share2 from "~icons/lucide/share-2";
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
 import { supabase } from "@/api/supabase";
-import { enqueueAndProcessMedia, enqueueMedia } from "@/api/mediaQueue";
+import { enqueueMedia } from "@/api/mediaQueue";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { actorToPersonData, voiceActorToPersonData } from "@/utils/convert";
 import { Role } from "@/components/PersonItem.vue";
@@ -172,8 +183,8 @@ const isActionSheetOpen = ref(false);
 
 const goToAddProject = () => {
   router.push({
-    path: '/edit-dubbing-project/new',
-    query: { contentId: route.params.id, contentType: 'tv' }
+    path: "/edit-dubbing-project/new",
+    query: { contentId: route.params.id, contentType: "tv" },
   });
 };
 
@@ -188,7 +199,7 @@ const actionSheetButtons = computed<ActionSheetButton[]>(() => {
 
   if (isAdmin.value) {
     buttons.push({
-      text: t("movie.addDubbingProject", "Add Dubbing Project"),
+      text: t("movie.addDubbingProject", "Create Dubbing Project"),
       icon: Plus,
       handler: goToAddProject,
       cssClass: "action-sheet-admin",
@@ -206,7 +217,7 @@ const actionSheetButtons = computed<ActionSheetButton[]>(() => {
 
   if (hasWikidataId.value && !hasData.value) {
     buttons.push({
-      text: t("common.fetchInfos", "Récupérer les infos"),
+      text: t("common.fetchInfos", "Rajouter à la queue"),
       icon: Info,
       handler: () => fetchInfos(),
     });
@@ -403,7 +414,7 @@ const shareMedia = async () => {
         message: "Link copied to clipboard!",
         duration: 2000,
         position: "top",
-        color: "success"
+        color: "success",
       });
       await toast.present();
     } catch (clipboardErr) {
@@ -530,13 +541,16 @@ const fetchSerieData = async () => {
 
 const fetchQueueStatus = async () => {
   try {
-    const { data: funcData, error } = await supabase.functions.invoke("media-queue", {
-      body: {
-        action: "status",
-        mediaId: Number(route.params.id),
-        mediaType: "tv",
-      }
-    });
+    const { data: funcData, error } = await supabase.functions.invoke(
+      "media-queue",
+      {
+        body: {
+          action: "status",
+          mediaId: Number(route.params.id),
+          mediaType: "tv",
+        },
+      },
+    );
 
     const data = funcData?.data;
     if (error) throw error;
@@ -556,9 +570,7 @@ const fetchQueueStatus = async () => {
   }
 };
 
-
-
-const selectedSegment = ref('peoples');
+const selectedSegment = ref("peoples");
 
 const handleRefresh = async (event?: any) => {
   try {
@@ -575,10 +587,6 @@ const handleRefresh = async (event?: any) => {
 
 const handleEnqueue = async () => {
   console.log("handleEnqueue called in serie-details");
-  if (!wikiDataId.value) {
-    console.log("wikiDataId is null, returning early");
-    return;
-  }
 
   isFetching.value = true;
   fetchError.value = "";
@@ -616,27 +624,21 @@ const handleEnqueue = async () => {
 };
 
 const fetchInfos = async () => {
-  const id = wikiDataId.value;
-
-  if (!id) {
-    console.error("id is undefined");
-    return;
-  }
-
   isFetching.value = true;
   fetchError.value = "";
 
   // Enqueue and fire-and-forget: the processor will pick it up in the background.
   // The user is informed via a toast and can refresh the page later to see results.
   try {
-    await enqueueAndProcessMedia({
+    await enqueueMedia({
       tmdbId: Number(route.params.id),
       mediaType: "tv",
     });
     // Refresh queue status so the UI reflects the pending state
     await fetchQueueStatus();
     const toast = await toastController.create({
-      message: "Added to queue! Check back in a moment to see the updated voice cast.",
+      message:
+        "Added to queue! Check back in a moment to see the updated voice cast.",
       duration: 4000,
       position: "top",
       color: "success",

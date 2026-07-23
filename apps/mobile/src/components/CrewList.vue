@@ -82,12 +82,12 @@ const toPersonData = (person: any, jobName: string): PersonData => {
   flex-direction: column;
   padding: 12px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--app-overlay-2);
 
   .character-name {
     font-size: 16px;
     font-weight: 600;
-    color: #e0e0e0;
+    color: var(--app-color-text-primary);
     margin-bottom: 8px;
     padding: 4px 8px;
     border-radius: 8px;

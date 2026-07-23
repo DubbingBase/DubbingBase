@@ -1,30 +1,28 @@
 <template>
-  <cap-content ref="contentRef" class="app-content" :class="{ 'fullscreen': fullscreen }" @scroll.passive="onScroll">
+  <ion-content ref="contentRef" class="app-content" :class="{ 'fullscreen': fullscreen }" :scroll-events="true" @ionScroll="onScroll">
     <slot></slot>
-  </cap-content>
+  </ion-content>
 </template>
 
 <script setup lang="ts">
 import { ref, onActivated, onDeactivated } from 'vue';
+import { IonContent } from '@ionic/vue';
 
 defineProps<{
   fullscreen?: boolean;
 }>();
 
-const contentRef = ref<HTMLElement | null>(null);
+const contentRef = ref<any>(null);
 let savedScrollTop = 0;
 
-const onScroll = (e: Event) => {
-  const target = e.target as HTMLElement;
-  if (target.scrollTop > 0) {
-    savedScrollTop = target.scrollTop;
+const onScroll = (e: any) => {
+  if (e.detail && e.detail.scrollTop > 0) {
+    savedScrollTop = e.detail.scrollTop;
   }
 };
 
 onDeactivated(() => {
-  if (contentRef.value && contentRef.value.scrollTop > 0) {
-    savedScrollTop = contentRef.value.scrollTop;
-  }
+  // Rely on the savedScrollTop continuously updated by onScroll
 });
 
 onActivated(() => {
@@ -32,13 +30,8 @@ onActivated(() => {
     // Delay slightly to ensure cap-router-outlet has unhidden the DOM
     setTimeout(() => {
       requestAnimationFrame(() => {
-        if (contentRef.value) {
-          const el = contentRef.value as any;
-          if (typeof el.restoreScrollPosition === 'function') {
-            el.restoreScrollPosition({ x: 0, y: savedScrollTop });
-          } else {
-            contentRef.value!.scrollTop = savedScrollTop;
-          }
+        if (contentRef.value && typeof contentRef.value.$el?.scrollToPoint === 'function') {
+          contentRef.value.$el.scrollToPoint(0, savedScrollTop, 0);
         }
       });
     }, 50);
@@ -48,13 +41,7 @@ onActivated(() => {
 
 <style scoped>
 .app-content {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: env(safe-area-inset-bottom);
-  position: relative;
-  background: var(--app-color-step-50, #121212);
+  --background: var(--app-color-step-50, #121212);
 }
 
 .app-content.fullscreen {

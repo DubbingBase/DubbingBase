@@ -4,7 +4,7 @@
       <AppToolbar>
         <AppTitle>Select Person</AppTitle>
         <template #end >
-          <AppButton @click="$emit('close')">
+          <AppButton fill="clear" color="text" @click="$emit('close')">
             <XCircle class="app-icon" />
           </AppButton>
         </template>
@@ -33,11 +33,10 @@
       <!-- No results state -->
       <div
         v-else-if="!searchResults.length && searchTerm"
-        class="ion-text-center py-8"
+        class="flex flex-col items-center text-center py-8"
       >
-        <AppText class="block mb-4">No persons found</AppText>
         <AppButton fill="outline" @click="$emit('create-new', searchTerm)">
-          Create New Person
+          Create Person '{{ searchTerm }}'
         </AppButton>
       </div>
 

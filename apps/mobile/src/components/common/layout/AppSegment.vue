@@ -51,12 +51,13 @@ provide('updateSegment', (value: string) => {
 
 <style scoped>
 .app-segment {
-  background: var(--app-color-step-100, #1e1e1e);
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
   padding: 4px;
-  margin: 0 16px;
+  margin: 16px;
   width: calc(100% - 32px); /* 100% minus horizontal margins */
   box-sizing: border-box;
-  --background: var(--app-color-step-100, #1e1e1e);
+  --background: transparent;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 </style>

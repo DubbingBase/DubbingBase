@@ -50,7 +50,7 @@ import AppBackButton from "@/components/common/AppBackButton.vue";
 }
 
 .about-container h2 {
-  color: #e0e0e0;
+  color: var(--app-color-text-primary);
   margin-bottom: 1.5rem;
   font-size: 1.5rem;
   font-weight: 600;
@@ -59,21 +59,21 @@ import AppBackButton from "@/components/common/AppBackButton.vue";
 .attribution-section {
   margin-bottom: 2rem;
   padding: 1rem;
-  background: #1d1d1d;
+  background: var(--app-color-step-100);
   border-radius: 8px;
-  border: 1px solid #2a2a2a;
+  border: 1px solid var(--app-color-border);
   border-left: 4px solid #4da8ff;
 }
 
 .attribution-section h3 {
-  color: #e0e0e0;
+  color: var(--app-color-text-primary);
   margin-bottom: 0.5rem;
   font-size: 1.1rem;
   font-weight: 600;
 }
 
 .attribution-section p {
-  color: #a0a0a0;
+  color: var(--app-color-text-secondary);
   line-height: 1.6;
   margin: 0;
 }

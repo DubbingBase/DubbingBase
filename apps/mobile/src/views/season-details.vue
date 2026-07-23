@@ -1,91 +1,116 @@
 <template>
   <ion-page>
-  <AppPage>
-    <AppHeader>
-      <AppToolbar>
-        <template #start >
-          <AppBackButton />
-        </template>
-        <AppTitle>{{ season?.name || "Détails de la saison" }}</AppTitle>
-        <template #end>
-          <AppButton fill="clear" @click="isActionSheetOpen = true" aria-label="Menu">
-            <EllipsisVertical class="app-icon" />
-          </AppButton>
-        </template>
-      </AppToolbar>
-    </AppHeader>
-    <AppContent>
-      
-      <div v-if="fetchError || (queueStatus === 'failed' && queueErrorMessage)" class="text-center text-red-500 mt-4">
-        {{ fetchError || queueErrorMessage }}
-      </div>
-      <LoadingSpinner v-if="isLoading" name="crescent" />
-      <div v-if="season && !isLoading" class="season-details">
-        <SeasonBanner :season="season" :serieId="Number(route.params.id)" :seasonNumber="Number(route.params.season)" />
-        <AppSegment scrollable v-model="activeTab" class="season-tabs">
-          <AppSegmentButton value="details">Détails</AppSegmentButton>
-          <AppSegmentButton value="episodes">Épisodes</AppSegmentButton>
-          <AppSegmentButton value="voices">Voix FR</AppSegmentButton>
-        </AppSegment>
-        <div v-if="activeTab === 'details'">
-          <!-- Details Tab Content -->
-          <div class="details-content">
-            <div class="overview" v-if="season.overview">
-              {{ season.overview }}
+    <AppPage>
+      <AppHeader>
+        <AppToolbar>
+          <template #start>
+            <AppBackButton />
+          </template>
+          <AppTitle>{{ season?.name || "Détails de la saison" }}</AppTitle>
+          <template #end>
+            <AppButton
+              fill="clear"
+              color="text"
+              @click="isActionSheetOpen = true"
+              aria-label="Menu"
+            >
+              <EllipsisVertical class="app-icon" />
+            </AppButton>
+          </template>
+        </AppToolbar>
+      </AppHeader>
+      <AppContent>
+      <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
+        <ion-refresher-content></ion-refresher-content>
+      </ion-refresher>
+        <div
+          v-if="fetchError || (queueStatus === 'failed' && queueErrorMessage)"
+          class="text-center text-red-500 mt-4"
+        >
+          {{ fetchError || queueErrorMessage }}
+        </div>
+        <LoadingSpinner v-if="isLoading" name="crescent" />
+        <div v-if="season && !isLoading" class="season-details">
+          <SeasonBanner
+            :season="season"
+            :serieId="Number(route.params.id)"
+            :seasonNumber="Number(route.params.season)"
+          />
+          <AppSegment scrollable v-model="activeTab" class="season-tabs">
+            <AppSegmentButton value="details">Détails</AppSegmentButton>
+            <AppSegmentButton value="episodes">Épisodes</AppSegmentButton>
+            <AppSegmentButton value="voices">Voix FR</AppSegmentButton>
+          </AppSegment>
+          <div v-if="activeTab === 'details'">
+            <!-- Details Tab Content -->
+            <div class="details-content">
+              <div class="overview" v-if="season.overview">
+                {{ season.overview }}
+              </div>
             </div>
           </div>
+          <div v-else-if="activeTab === 'episodes'">
+            <!-- Episodes Tab Content -->
+            <EpisodesList
+              :episodes="season.episodes"
+              :goToEpisode="goToEpisode"
+            />
+          </div>
+          <div v-else-if="activeTab === 'voices'">
+            <!-- Voices Tab Content -->
+            <h3>
+              {{
+                activeTab === "voices" && season?.credits?.cast
+                  ? "Voix françaises de la saison"
+                  : "Voix françaises de l'épisode"
+              }}
+            </h3>
+            <DubbingProjectsView
+              :contentId="route.params.seasonId as string"
+              contentType="season"
+              :projects="dubbingProjects"
+              :actors="normalizedActors"
+              :isAdmin="false"
+              :goToActor="goToActor"
+              :goToVoiceActor="goToVoiceActor"
+              :editVoiceActorLink="editVoiceActorLink"
+              :confirmDeleteVoiceActorLink="confirmDeleteVoiceActorLink"
+              :openVoiceActorSearch="openVoiceActorSearch"
+              :parentLoading="isLoading"
+            />
+          </div>
         </div>
-        <div v-else-if="activeTab === 'episodes'">
-          <!-- Episodes Tab Content -->
-          <EpisodesList :episodes="season.episodes" :goToEpisode="goToEpisode" />
-        </div>
-        <div v-else-if="activeTab === 'voices'">
-          <!-- Voices Tab Content -->
-          <h3>{{ activeTab === 'voices' && season?.credits?.cast ? 'Voix françaises de la saison' : 'Voix françaises de l\'épisode' }}</h3>
-          <DubbingProjectsView
-            :contentId="route.params.seasonId as string"
-            contentType="season"
-            :projects="dubbingProjects"
-            :actors="normalizedActors"
-            :isAdmin="false"
-            :goToActor="goToActor"
-            :goToVoiceActor="goToVoiceActor"
-            :editVoiceActorLink="editVoiceActorLink"
-            :confirmDeleteVoiceActorLink="confirmDeleteVoiceActorLink"
-            :openVoiceActorSearch="openVoiceActorSearch"
-            :parentLoading="isLoading"
-          />
-        </div>
-      </div>
 
-      <AppActionSheet
-        v-model:is-open="isActionSheetOpen"
-        :buttons="actionSheetButtons"
-      />
-    </AppContent>
-  </AppPage>
+        <AppActionSheet
+          v-model:is-open="isActionSheetOpen"
+          :buttons="actionSheetButtons"
+        />
+      </AppContent>
+    </AppPage>
   </ion-page>
 </template>
 
 <script lang="ts" setup>
 import { IonPage } from "@ionic/vue";
-import AppPage from '@/components/common/layout/AppPage.vue';
-import AppHeader from '@/components/common/layout/AppHeader.vue';
-import AppToolbar from '@/components/common/layout/AppToolbar.vue';
-import AppTitle from '@/components/common/layout/AppTitle.vue';
-import AppContent from '@/components/common/layout/AppContent.vue';
-import AppSegment from '@/components/common/layout/AppSegment.vue';
-import AppSegmentButton from '@/components/common/layout/AppSegmentButton.vue';
-import { toastController } from '@/composables/useToast';
+import AppPage from "@/components/common/layout/AppPage.vue";
+import AppHeader from "@/components/common/layout/AppHeader.vue";
+import AppToolbar from "@/components/common/layout/AppToolbar.vue";
+import AppTitle from "@/components/common/layout/AppTitle.vue";
+import AppContent from "@/components/common/layout/AppContent.vue";
+import AppSegment from "@/components/common/layout/AppSegment.vue";
+import AppSegmentButton from "@/components/common/layout/AppSegmentButton.vue";
+import { toastController } from "@/composables/useToast";
 import { ref, computed, onMounted } from "vue";
 import AppBackButton from "@/components/common/AppBackButton.vue";
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute, useRouter } from "vue-router";
 import { supabase } from "../api/supabase";
-import { enqueueAndProcessMedia } from "../api/mediaQueue";
+import { enqueueMedia } from "../api/mediaQueue";
 import LoadingSpinner from "../components/common/LoadingSpinner.vue";
 import EllipsisVertical from "~icons/lucide/ellipsis-vertical";
 import Info from "~icons/lucide/info";
-import AppActionSheet, { ActionSheetButton } from "@/components/common/AppActionSheet.vue";
+import AppActionSheet, {
+  ActionSheetButton,
+} from "@/components/common/AppActionSheet.vue";
 import SeasonBanner from "../components/SeasonBanner.vue";
 import EpisodesList from "../components/EpisodesList.vue";
 import DubbingProjectsView from "@/components/DubbingProjectsView.vue";
@@ -118,22 +143,22 @@ const actionSheetButtons = computed<ActionSheetButton[]>(() => {
 
   if (hasWikidataId.value && !hasData.value) {
     buttons.push({
-      text: 'Récupérer les infos',
+      text: "Rajouter à la queue",
       icon: Info,
       handler: () => fetchInfos(),
     });
   }
 
   buttons.push({
-    text: 'Annuler',
-    role: 'cancel',
+    text: "Annuler",
+    role: "cancel",
   });
 
   return buttons;
 });
 
 const normalizedActors = computed(() => {
-  if (activeTab.value === 'voices') {
+  if (activeTab.value === "voices") {
     if (season.value?.credits?.cast) {
       return season.value.credits.cast;
     } else if (episodeCredits.value?.cast) {
@@ -143,21 +168,26 @@ const normalizedActors = computed(() => {
   return [];
 });
 
-
 const fetchQueueStatus = async () => {
   try {
-    const { data: funcData, error: queueErr } = await supabase.functions.invoke("media-queue", {
-      body: {
-        action: "status",
-        mediaId: Number(route.params.id),
-        mediaType: "season",
-        seasonNumber: Number(route.params.season)
-      }
-    });
-    
+    const { data: funcData, error: queueErr } = await supabase.functions.invoke(
+      "media-queue",
+      {
+        body: {
+          action: "status",
+          mediaId: Number(route.params.id),
+          mediaType: "season",
+          seasonNumber: Number(route.params.season),
+        },
+      },
+    );
+
     const data = funcData?.data;
     if (queueErr) throw queueErr;
-    const statusData = data as { status: string | null; error_message: string | null } | null;
+    const statusData = data as {
+      status: string | null;
+      error_message: string | null;
+    } | null;
     if (statusData) {
       queueStatus.value = statusData.status;
       queueErrorMessage.value = statusData.error_message;
@@ -181,17 +211,12 @@ const handleRefresh = async (event: any) => {
 };
 
 async function fetchInfos() {
-  const id = wikiDataId.value;
-  if (!id) {
-    console.error("id is undefined");
-    return;
-  }
   isFetching.value = true;
 
   // Enqueue and fire-and-forget: the processor will pick it up in the background.
   // The user is informed via a toast and can refresh the page later to see results.
   try {
-    await enqueueAndProcessMedia({
+    await enqueueMedia({
       tmdbId: Number(route.params.id),
       mediaType: "season",
       seasonNumber: Number(route.params.season),
@@ -199,7 +224,8 @@ async function fetchInfos() {
     // Refresh queue status so the UI reflects the pending state
     await fetchQueueStatus();
     const toast = await toastController.create({
-      message: "Added to queue! Check back in a moment to see the updated voice cast.",
+      message:
+        "Added to queue! Check back in a moment to see the updated voice cast.",
       duration: 4000,
       position: "top",
       color: "success",
@@ -218,7 +244,6 @@ async function fetchInfos() {
     isFetching.value = false;
   }
 }
-
 
 function goToVoiceActor(id: number) {
   router.push({ name: "VoiceActorDetails", params: { id } });
@@ -258,7 +283,7 @@ function frenchActors(cast: any[]) {
   return cast.filter(
     (a) =>
       a.known_for_department === "Acting" &&
-      (!a.original_language || a.original_language === "fr")
+      (!a.original_language || a.original_language === "fr"),
   );
 }
 
@@ -268,7 +293,7 @@ async function fetchData() {
   try {
     const serieId = route.params.id;
     const seasonNumber = route.params.season;
-    
+
     const seasonResponse = await supabase.functions.invoke("season", {
       body: { id: serieId, season_number: seasonNumber },
     });
@@ -292,5 +317,3 @@ onMounted(async () => {
   await fetchData();
 });
 </script>
-
-

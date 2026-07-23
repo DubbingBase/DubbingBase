@@ -141,7 +141,7 @@ const routeParams = computed(() => {
   .person-name {
     font-size: 14px;
     font-weight: 600;
-    color: #e0e0e0;
+    color: var(--app-color-text-primary);
     line-height: 1.4;
     margin-bottom: 2px;
   }

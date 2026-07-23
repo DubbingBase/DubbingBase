@@ -99,8 +99,8 @@ const clearInput = () => {
   display: flex;
   align-items: center;
   box-sizing: border-box;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--app-overlay-5);
+  border: 1px solid var(--app-overlay-10);
   border-radius: 16px;
   padding: 0 16px;
   height: 48px;
@@ -109,8 +109,8 @@ const clearInput = () => {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   
   &:focus-within {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
+    background: var(--app-overlay-10);
+    border-color: var(--app-overlay-20);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     
     .search-icon {
@@ -168,7 +168,7 @@ const clearInput = () => {
   border-radius: 50%;
   
   &:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--app-overlay-10);
   }
 
   svg {

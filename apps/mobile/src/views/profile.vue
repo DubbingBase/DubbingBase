@@ -4,6 +4,9 @@
   <AppPage>
     <AppHeader>
       <AppToolbar>
+        <template #start>
+          <AppBackButton />
+        </template>
         <AppTitle>{{ $t("profile.userProfile") }}</AppTitle>
         <template #end v-if="authStore.isAdmin">
           <AppButton fill="clear" @click="isActionSheetOpen = true" aria-label="Menu">
@@ -13,7 +16,7 @@
       </AppToolbar>
     </AppHeader>
 
-    <AppContent :fullscreen="true">
+    <AppContent>
       
       <div
         v-if="profileStore.isLoadingProfile && !profileStore.isUpdating"
@@ -68,6 +71,9 @@
             </AppToolbar>
           </AppHeader>
           <AppContent>
+      <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
+        <ion-refresher-content></ion-refresher-content>
+      </ion-refresher>
             <div class="admin-search">
               <AppSearchbar
                 v-model="adminSearchQuery"
@@ -282,12 +288,14 @@
 </template>
 
 <script setup lang="ts">
+import { IonRefresher, IonRefresherContent } from "@ionic/vue";
 import { IonPage } from "@ionic/vue";
 import AppPage from '@/components/common/layout/AppPage.vue';
 import AppHeader from '@/components/common/layout/AppHeader.vue';
 import AppToolbar from '@/components/common/layout/AppToolbar.vue';
 import AppTitle from '@/components/common/layout/AppTitle.vue';
 import AppContent from '@/components/common/layout/AppContent.vue';
+import AppBackButton from '@/components/common/AppBackButton.vue';
 import AppSegment from '@/components/common/layout/AppSegment.vue';
 import AppSegmentButton from '@/components/common/layout/AppSegmentButton.vue';
 import AppModal from '@/components/common/AppModal.vue';
@@ -792,7 +800,7 @@ const handleSave = async () => {
   display: inline-block;
   width: 12px;
   height: 12px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid var(--app-overlay-30);
   border-radius: 50%;
   border-top-color: #fff;
   animation: spin 1s ease-in-out infinite;

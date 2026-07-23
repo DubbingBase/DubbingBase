@@ -95,7 +95,7 @@ defineProps<{
   .label {
     width: 100%;
     display: block;
-    color: #e0e0e0;
+    color: var(--app-color-text-primary);
     font-size: 14px;
     line-height: 1.4;
   }

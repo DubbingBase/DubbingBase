@@ -124,15 +124,15 @@ const groupedWorks = computed(() => {
   }
 
   .actor-group {
-    background: #1d1d1d;
+    background: var(--app-color-step-100);
     border-radius: 12px;
-    border: 1px solid #2a2a2a;
+    border: 1px solid var(--app-color-border);
     margin-bottom: 24px;
     overflow: hidden;
 
     .actor-header {
       padding: 4px 8px;
-      background: rgba(255, 255, 255, 0.02);
+      background: var(--app-overlay-2);
       border-bottom: 1px solid #2a2a2a;
     }
 

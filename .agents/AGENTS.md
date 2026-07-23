@@ -56,16 +56,15 @@ _(This command generates types to `packages/database/supabase/functions/_shared/
 ### 1. Global / Front-end (Common Rules)
 
 - **Strict TypeScript**: Always type variables, function signatures, and props. Types should strictly follow database types. Never cast using `as` and never use `any`.
+- **Strict Edge Function Data Fetching**: NEVER perform inline Supabase database fetches (e.g. `supabase.from(...)`) directly from Vue components. All data fetching logic MUST go through centralized Supabase Edge Functions. Components should only call edge functions or receive data via props/Pinia stores. If an edge function does not return the data you need, update the edge function instead.
 - **Vue 3**: Use the **Composition API** exclusively with `<script setup lang="ts">` syntax.
 - **Formatting**: Always run `pnpm format` to format code with Prettier before committing.
 - **Design & Theme**: The app follows a premium dark theme. Ensure consistent UI/UX when creating or modifying components. Avoid using default Ionic variables if they result in poor contrast. Instead, explicitly use the established dark theme colors (e.g., `#1d1d1d` for card backgrounds, `#e0e0e0` for primary text, `#a0a0a0` for secondary text, `#2a2a2a` for borders) or the app's custom CSS variables to maintain a cohesive design.
 
 ### 2. Mobile Application (`apps/mobile`)
-
-- **Strict Edge Function Data Fetching**: NEVER perform inline Supabase database fetches (e.g. `supabase.from(...)`) directly from Vue components. All data fetching logic MUST go through centralized Supabase Edge Functions. Components should only call edge functions or receive data via props/Pinia stores. If an edge function does not return the data you need, update the edge function instead.
 - **UI Framework**:
-  - **IMPORTANT**: The project is migrating away from Ionic, but **keep Ionic for the router (`ion-router`) and action sheets (`ion-action-sheet`)**. Do not introduce other new Ionic components (`ion-*`).
-  - Use standard HTML/Vue elements styled with Tailwind CSS or Sass for new features.
+  - **IMPORTANT**: The project is migrating away from Ionic, but **it is OK to use basic Ionic components** (like `ion-content`, `ion-refresher`, `ion-router`, `ion-action-sheet`, etc.). Avoid introducing or relying heavily on complex Ionic components.
+  - Use standard HTML/Vue elements styled with Tailwind CSS or Sass where possible for new UI features.
 - **Capacitor**:
   - Keep Capacitor for native features/APIs (Camera, Haptics, Keyboard, StatusBar, etc.).
 - **State Management**: Use **Pinia** for all global stores.

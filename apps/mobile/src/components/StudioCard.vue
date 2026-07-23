@@ -69,7 +69,7 @@ defineProps<{
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #2a2a2a;
+  background: var(--app-color-step-200);
   flex-shrink: 0;
   margin-right: 16px;
 

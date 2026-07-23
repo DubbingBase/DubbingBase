@@ -21,6 +21,9 @@
         </AppToolbar>
       </AppHeader>
       <AppContent>
+      <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
+        <ion-refresher-content></ion-refresher-content>
+      </ion-refresher>
         <div class="search-section">
           <div class="fake-searchbar" @click="router.push('/search')">
             <SearchIcon class="search-icon" />
@@ -167,6 +170,7 @@
 </template>
 
 <script setup lang="ts">
+import { IonRefresher, IonRefresherContent } from "@ionic/vue";
 import { IonPage } from "@ionic/vue";
 import AppPage from "@/components/common/layout/AppPage.vue";
 import AppHeader from "@/components/common/layout/AppHeader.vue";
@@ -296,7 +300,7 @@ const handleRefresh = async (event: any) => {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 8px 16px;
+  padding: 0;
 }
 
 .app-title {
@@ -317,8 +321,8 @@ const handleRefresh = async (event: any) => {
   flex: 1;
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--app-overlay-5);
+  border: 1px solid var(--app-overlay-10);
   border-radius: 16px;
   padding: 0 16px;
   height: 44px;
@@ -353,8 +357,8 @@ const handleRefresh = async (event: any) => {
   height: 40px;
   border-radius: 50%;
   color: var(--app-color-text-primary, #ffffff);
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--app-overlay-5);
+  border: 1px solid var(--app-overlay-10);
   text-decoration: none;
 }
 
@@ -372,6 +376,7 @@ const handleRefresh = async (event: any) => {
   padding: 8px 0 16px 0;
   overflow-x: auto;
   scroll-padding: 16px;
+  color: var(--app-color-text-primary, #ffffff);
   // height: 263px;
 }
 
@@ -389,6 +394,7 @@ const handleRefresh = async (event: any) => {
   font-weight: bold;
   font-size: 1.15em;
   letter-spacing: 0.02em;
+  color: var(--app-color-text-primary, #ffffff);
 }
 
 .error-message {
@@ -400,7 +406,7 @@ const handleRefresh = async (event: any) => {
 }
 
 .empty-message {
-  color: #777;
+  color: var(--app-color-text-muted, #8e8e8e);
   font-style: italic;
   margin: 8px 0;
 }

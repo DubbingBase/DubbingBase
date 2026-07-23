@@ -8,13 +8,21 @@
           </template>
           <AppTitle>{{ movie?.title ?? "" }}</AppTitle>
           <template #end>
-            <AppButton fill="clear" @click="isActionSheetOpen = true" aria-label="Menu">
+            <AppButton
+              fill="clear"
+              color="text"
+              @click="isActionSheetOpen = true"
+              aria-label="Menu"
+            >
               <EllipsisVertical class="app-icon" />
             </AppButton>
           </template>
         </AppToolbar>
       </AppHeader>
       <AppContent>
+      <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
+        <ion-refresher-content></ion-refresher-content>
+      </ion-refresher>
         <MediaInfoCard :media="movie" />
 
         <DubbingProjectsView
@@ -34,7 +42,10 @@
         />
 
         <LoadingSpinner v-if="isLoading" />
-        <div v-if="fetchError || (queueStatus === 'failed' && queueErrorMessage)" class="text-center text-red-500 mt-4">
+        <div
+          v-if="fetchError || (queueStatus === 'failed' && queueErrorMessage)"
+          class="text-center text-red-500 mt-4"
+        >
           {{ fetchError || queueErrorMessage }}
         </div>
       </AppContent>
@@ -45,7 +56,13 @@
         :work-type="'movie'"
         :link-voice-actor="linkVoiceActor"
         @close="showVoiceActorSearch = false"
-        @create-new="(query) => router.push({ path: '/voice-actor-profile/new', query: { name: query } })"
+        @create-new="
+          (query) =>
+            router.push({
+              path: '/voice-actor-profile/new',
+              query: { name: query },
+            })
+        "
       />
 
       <CreditsReviewModal
@@ -67,6 +84,7 @@
 </template>
 
 <script setup lang="ts">
+import { IonRefresher, IonRefresherContent } from "@ionic/vue";
 import { IonPage } from "@ionic/vue";
 import AppPage from "@/components/common/layout/AppPage.vue";
 import AppHeader from "@/components/common/layout/AppHeader.vue";
@@ -78,21 +96,23 @@ import { alertController } from "@/composables/useAlert";
 import AppButton from "@/components/common/AppButton.vue";
 import { computed, ref, UnwrapRef, onMounted, watch } from "vue";
 import AppBackButton from "@/components/common/AppBackButton.vue";
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute, useRouter } from "vue-router";
 import Share2 from "~icons/lucide/share-2";
-import Camera from '~icons/lucide/camera';
-import List from '~icons/lucide/list';
-import Info from '~icons/lucide/info';
-import Pencil from '~icons/lucide/pencil';
-import Plus from '~icons/lucide/plus';
+import Camera from "~icons/lucide/camera";
+import List from "~icons/lucide/list";
+import Info from "~icons/lucide/info";
+import Pencil from "~icons/lucide/pencil";
+import Plus from "~icons/lucide/plus";
 import EllipsisVertical from "~icons/lucide/ellipsis-vertical";
 import RefreshCw from "~icons/lucide/refresh-cw";
 import { Share } from "@capacitor/share";
-import AppActionSheet, { ActionSheetButton } from "@/components/common/AppActionSheet.vue";
+import AppActionSheet, {
+  ActionSheetButton,
+} from "@/components/common/AppActionSheet.vue";
 
 import { MovieResponse } from "@supabase/functions/_shared/movie";
 import { supabase } from "../api/supabase";
-import { enqueueAndProcessMedia, enqueueMedia } from "../api/mediaQueue";
+import { enqueueMedia } from "../api/mediaQueue";
 import { useVoiceActorManagement } from "@/composables/useVoiceActorManagement";
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
@@ -118,8 +138,8 @@ const router = useRouter();
 
 const goToAddProject = () => {
   router.push({
-    path: '/edit-dubbing-project/new',
-    query: { contentId: route.params.id, contentType: 'movie' }
+    path: "/edit-dubbing-project/new",
+    query: { contentId: route.params.id, contentType: "movie" },
   });
 };
 
@@ -127,7 +147,7 @@ const isActionSheetOpen = ref(false);
 const actionSheetButtons = computed<ActionSheetButton[]>(() => {
   const buttons: ActionSheetButton[] = [
     {
-      text: t('common.share', 'Partager'),
+      text: t("common.share", "Partager"),
       icon: Share2,
       handler: () => shareMedia(),
     },
@@ -135,44 +155,33 @@ const actionSheetButtons = computed<ActionSheetButton[]>(() => {
 
   if (isAdmin.value) {
     buttons.push({
-      text: t('movie.addDubbingProject', 'Add Dubbing Project'),
+      text: t("movie.addDubbingProject", "Create Dubbing Project"),
       icon: Plus,
       handler: goToAddProject,
-      cssClass: 'action-sheet-admin',
-    });
-  }
-
-  if (isAdmin.value && !hasData.value) {
-    buttons.push({
-      text: t('movie.updateCredits', 'Update Credits (Admin)'),
-      icon: RefreshCw,
-      handler: () => {
-        showCreditsReview.value = true;
-      },
-      cssClass: 'action-sheet-admin',
+      cssClass: "action-sheet-admin",
     });
   }
 
   if (isAdmin.value) {
     buttons.push({
-      text: t('common.scan', 'Scanner'),
+      text: t("common.scan", "Scanner"),
       icon: Camera,
       handler: () => takePhoto(),
-      cssClass: 'action-sheet-admin',
+      cssClass: "action-sheet-admin",
     });
   }
 
   if (hasWikidataId.value && !hasData.value) {
     buttons.push({
-      text: t('common.fetchInfos', 'Récupérer les infos'),
+      text: t("common.fetchInfos", "Rajouter à la queue"),
       icon: Info,
       handler: () => fetchInfos(),
     });
   }
 
   buttons.push({
-    text: t('common.cancel', 'Annuler'),
-    role: 'cancel',
+    text: t("common.cancel", "Annuler"),
+    role: "cancel",
   });
 
   return buttons;
@@ -325,14 +334,17 @@ const fetchError = ref("");
 
 const fetchQueueStatus = async () => {
   try {
-    const { data: funcData, error } = await supabase.functions.invoke("media-queue", {
-      body: {
-        action: "status",
-        mediaId: Number(route.params.id),
-        mediaType: "movie",
-      }
-    });
-    
+    const { data: funcData, error } = await supabase.functions.invoke(
+      "media-queue",
+      {
+        body: {
+          action: "status",
+          mediaId: Number(route.params.id),
+          mediaType: "movie",
+        },
+      },
+    );
+
     const data = funcData?.data;
     if (error) throw error;
     const statusData = data as {
@@ -379,7 +391,7 @@ const shareMedia = async () => {
         message: "Link copied to clipboard!",
         duration: 2000,
         position: "top",
-        color: "success"
+        color: "success",
       });
       await toast.present();
     } catch (clipboardErr) {
@@ -481,10 +493,6 @@ const handleRefresh = async (event?: any) => {
 
 const handleEnqueue = async () => {
   console.log("handleEnqueue called in movie-details");
-  if (!wikiDataId.value) {
-    console.log("wikiDataId is null, returning early");
-    return;
-  }
 
   isFetching.value = true;
   fetchError.value = "";
@@ -522,27 +530,21 @@ const handleEnqueue = async () => {
 };
 
 const fetchInfos = async () => {
-  const id = wikiDataId.value;
-
-  if (!id) {
-    console.error("id is undefined");
-    return;
-  }
-
   isFetching.value = true;
   fetchError.value = "";
 
   // Enqueue and fire-and-forget: the processor will pick it up in the background.
   // The user is informed via a toast and can refresh the page later to see results.
   try {
-    await enqueueAndProcessMedia({
+    await enqueueMedia({
       tmdbId: Number(route.params.id),
       mediaType: "movie",
     });
     // Refresh queue status so the UI reflects the pending state
     await fetchQueueStatus();
     const toast = await toastController.create({
-      message: "Added to queue! Check back in a moment to see the updated voice cast.",
+      message:
+        "Added to queue! Check back in a moment to see the updated voice cast.",
       duration: 4000,
       position: "top",
       color: "success",

@@ -24,7 +24,7 @@
     "sort": "Trier",
     "himself": "Lui-même",
     "scan": "Scanner",
-    "fetchInfos": "Récupérer les informations",
+    "fetchInfos": "Rajouter à la queue",
     "waiting": "En attente",
     "accepted": "Accepté",
     "rejected": "Rejeté",
@@ -141,6 +141,7 @@
   },
   "settings": {
     "title": "Paramètres",
+    "theme": "Thème",
     "about": "À propos",
     "email": "Email",
     "logout": "Se déconnecter",
