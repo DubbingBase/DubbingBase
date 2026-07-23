@@ -33,19 +33,32 @@ export const processMedia = (media: any) => {
     backdrop_path: buildTmdbImageUrl(media.backdrop_path),
     poster_path: buildTmdbImageUrl(media.poster_path),
     profile_path: buildTmdbImageUrl(media.profile_path),
+    still_path: buildTmdbImageUrl(media.still_path),
     credits: media.credits
       ? {
           ...media.credits,
-          cast: media.credits.cast.map((castMember: any) => ({
+          cast: media.credits.cast?.map((castMember: any) => ({
             ...castMember,
             profile_path: buildTmdbImageUrl(castMember.profile_path),
           })),
         }
       : {},
+    guest_stars: media.guest_stars
+      ? media.guest_stars.map((guest: any) => ({
+          ...guest,
+          profile_path: buildTmdbImageUrl(guest.profile_path),
+        }))
+      : [],
     seasons: media.seasons
       ? (media.seasons ?? []).map((season: any) => ({
           ...season,
           poster_path: buildTmdbImageUrl(season.poster_path),
+        }))
+      : [],
+    episodes: media.episodes
+      ? (media.episodes ?? []).map((episode: any) => ({
+          ...episode,
+          still_path: buildTmdbImageUrl(episode.still_path),
         }))
       : [],
   };

@@ -104,7 +104,7 @@
                     v-if="project.studio_data"
                     class="info-item full-width-item mb-4"
                   >
-                    <StudioCard :studio="project.studio_data" />
+                    <StudioCard :studio="project.studio_data as any" />
                   </div>
 
                   <!-- Dynamic Crew display -->
@@ -150,7 +150,7 @@ const props = defineProps<{
   projects?: DubbingProject[];
 
   // Dependencies required by ActorList
-  actors?: unknown[];
+  actors?: PersonData[];
   isAdmin?: boolean;
   getVoiceActorByTmdbId?: (tmdbId: number) => void;
   goToActor: (id: number) => void;
@@ -196,7 +196,7 @@ export interface DubbingProject {
   content_type: string;
   language: string | null;
   studio_id: number | null;
-  studio_data?: Record<string, unknown>;
+  studio_data?: Record<string, any>;
   status: string | null;
   works: WorkPerformance[];
   crew: CrewMember[];

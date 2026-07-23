@@ -25,7 +25,7 @@
                     v-if="member.person?.id"
                     class="voice-actor-item no-link"
                     :to="{
-                      name: 'actor-details',
+                      name: 'ActorDetails',
                       params: { id: member.person.id },
                     }"
                   >

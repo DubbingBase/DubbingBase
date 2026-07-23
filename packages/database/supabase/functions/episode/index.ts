@@ -24,14 +24,16 @@ export default {
       const databaseClient = new DatabaseClient(ctx);
       const mediaService = new MediaService(databaseClient, tmdbClient, ctx);
 
-      const [result, dubbingProjects] = await Promise.all([
-        mediaService.getMediaWithVoiceActorsExtended(
-          "episode",
-          id,
-          season_number,
-          episode_number,
-        ),
-        databaseClient.getDubbingProjects(id, "episode"),
+      const result = await mediaService.getMediaWithVoiceActorsExtended(
+        "episode",
+        id,
+        season_number,
+        episode_number,
+      );
+
+      const [dubbingProjects, characterProfilePictures] = await Promise.all([
+        databaseClient.getDubbingProjects(id, "tv"),
+        mediaService.getCharacterProfilePictures("tv", id, result.media)
       ]);
 
       const workIds = dubbingProjects.flatMap(
@@ -54,6 +56,7 @@ export default {
       return Response.json({
         episode: result.media,
         dubbingProjects: dubbingProjects,
+        characterProfilePictures: characterProfilePictures,
         votes: voteData,
       });
     } catch (error) {

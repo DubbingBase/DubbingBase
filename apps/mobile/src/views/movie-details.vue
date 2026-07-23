@@ -226,12 +226,12 @@ const findCharacter = (
   character: UnwrapRef<typeof characterProfilePictures>[number],
   role: Role,
 ) => {
-  // console.log("character", character);
-  // console.log("role", role);
-  const characterName = character.name?.toLowerCase();
+  if (!character.name || !role.character) return false;
+
+  const characterName = character.name.toLowerCase();
   const roleName = role.character.toLowerCase();
 
-  const allNames = characterName?.split("/").map((name) => name.trim());
+  const allNames = characterName.split("/").map((name) => name.trim());
   // console.log("allNames", allNames);
 
   const allRoleNames = roleName.split("/").map((name) => name.trim());

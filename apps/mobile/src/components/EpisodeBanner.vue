@@ -7,6 +7,8 @@
       :routeName="'SeasonByEpisodes'"
       :routeParams="{id: serieId, season: seasonNumber, episode: episode.episode_number}"
       :loading="false"
+      :width="284"
+      :height="160"
     />
     <div class="meta">
       <h2>Episode {{ episode.episode_number }}: {{ episode.name }}</h2>

@@ -55,7 +55,7 @@ export interface PersonData<T = unknown | undefined> {
   firstname?: string;
   lastname?: string;
   roles?: Role[];
-  profile_picture?: string;
+  profile_picture?: string | null;
   profile_path?: string;
   performance?: string;
   tags?: string[] | string;
@@ -83,7 +83,7 @@ const displayName = computed(() => {
 });
 
 const image = computed(() => {
-  return props.person.profile_picture;
+  return props.person.profile_picture || undefined;
 });
 
 const subtitle = computed(() => {
@@ -114,12 +114,12 @@ const tags = computed(() => {
 });
 
 const routeName = computed(() => {
-  return props.type === "actor" ? "actor-details" : "voice-actor-details";
+  return props.type === "actor" ? "ActorDetails" : "voice-actor-details";
 });
 
 const routeParams = computed(() => {
   const id = props.type === "actor" ? props.person.tmdb_id : props.person.id;
-  return { id };
+  return { id: id ?? props.person.id };
 });
 </script>
 

@@ -127,7 +127,7 @@ export class MediaService {
     };
   }
 
-  private async getCharacterProfilePictures(
+  public async getCharacterProfilePictures(
     contentType: "movie" | "tv",
     contentId: number,
     tmdbMedia: any,

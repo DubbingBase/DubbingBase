@@ -37,48 +37,34 @@
             :seasonNumber="Number(route.params.season)"
           />
           <AppSegment scrollable v-model="activeTab" class="season-tabs">
-            <AppSegmentButton value="details">Détails</AppSegmentButton>
-            <AppSegmentButton value="episodes">Épisodes</AppSegmentButton>
-            <AppSegmentButton value="voices">Voix FR</AppSegmentButton>
+            <AppSegmentButton value="episodes" content-id="episodes">Épisodes</AppSegmentButton>
+            <AppSegmentButton value="voices" content-id="voices">Voix</AppSegmentButton>
           </AppSegment>
-          <div v-if="activeTab === 'details'">
-            <!-- Details Tab Content -->
-            <div class="details-content">
-              <div class="overview" v-if="season.overview">
-                {{ season.overview }}
-              </div>
-            </div>
-          </div>
-          <div v-else-if="activeTab === 'episodes'">
-            <!-- Episodes Tab Content -->
-            <EpisodesList
-              :episodes="season.episodes"
-              :goToEpisode="goToEpisode"
-            />
-          </div>
-          <div v-else-if="activeTab === 'voices'">
-            <!-- Voices Tab Content -->
-            <h3>
-              {{
-                activeTab === "voices" && season?.credits?.cast
-                  ? "Voix françaises de la saison"
-                  : "Voix françaises de l'épisode"
-              }}
-            </h3>
-            <DubbingProjectsView
-              :contentId="route.params.seasonId as string"
-              contentType="season"
-              :projects="dubbingProjects"
-              :actors="normalizedActors"
-              :isAdmin="false"
-              :goToActor="goToActor"
-              :goToVoiceActor="goToVoiceActor"
-              :editVoiceActorLink="editVoiceActorLink"
-              :confirmDeleteVoiceActorLink="confirmDeleteVoiceActorLink"
-              :openVoiceActorSearch="openVoiceActorSearch"
-              :parentLoading="isLoading"
-            />
-          </div>
+          <AppSegmentView v-model:active-segment="activeTab">
+            <AppSegmentContent class="segmented-content" id="episodes">
+              <!-- Episodes Tab Content -->
+              <EpisodesList
+                :episodes="season.episodes"
+                :goToEpisode="goToEpisode"
+              />
+            </AppSegmentContent>
+            <AppSegmentContent class="segmented-content" id="voices">
+              <!-- Voices Tab Content -->
+              <DubbingProjectsView
+                :contentId="route.params.id as string"
+                contentType="tv"
+                :projects="dubbingProjects"
+                :actors="normalizedActors"
+                :isAdmin="false"
+                :goToActor="goToActor"
+                :goToVoiceActor="goToVoiceActor"
+                :editVoiceActorLink="editVoiceActorLink"
+                :confirmDeleteVoiceActorLink="confirmDeleteVoiceActorLink"
+                :openVoiceActorSearch="openVoiceActorSearch"
+                :parentLoading="isLoading"
+              />
+            </AppSegmentContent>
+          </AppSegmentView>
         </div>
 
         <AppActionSheet
@@ -99,6 +85,8 @@ import AppTitle from "@/components/common/layout/AppTitle.vue";
 import AppContent from "@/components/common/layout/AppContent.vue";
 import AppSegment from "@/components/common/layout/AppSegment.vue";
 import AppSegmentButton from "@/components/common/layout/AppSegmentButton.vue";
+import AppSegmentView from "@/components/common/layout/AppSegmentView.vue";
+import AppSegmentContent from "@/components/common/layout/AppSegmentContent.vue";
 import { toastController } from "@/composables/useToast";
 import { ref, computed, onMounted } from "vue";
 import AppBackButton from "@/components/common/AppBackButton.vue";
@@ -115,6 +103,8 @@ import SeasonBanner from "../components/SeasonBanner.vue";
 import EpisodesList from "../components/EpisodesList.vue";
 import DubbingProjectsView from "@/components/DubbingProjectsView.vue";
 import AppButton from "@/components/common/AppButton.vue";
+import { actorToPersonData } from "@/utils/convert";
+import { findCharacter } from "@/utils/character";
 
 const route = useRoute();
 const router = useRouter();
@@ -122,8 +112,9 @@ const isLoading = ref(true);
 const error = ref("");
 const season = ref<{ name?: string; episodes?: unknown[] } | null>(null);
 const dubbingProjects = ref<Array<{ id: number; works?: unknown[] }>>([]);
+const characterProfilePictures = ref<any[]>([]);
 const episodeCredits = ref<{ cast?: Array<{ id: number; name: string; character?: string }> } | null>(null);
-const activeTab = ref("details");
+const activeTab = ref("episodes");
 
 const wikiDataId = computed(() => {
   return season.value?.external_ids?.wikidata_id;
@@ -159,11 +150,24 @@ const actionSheetButtons = computed<ActionSheetButton[]>(() => {
 
 const normalizedActors = computed(() => {
   if (activeTab.value === "voices") {
+    let castToMap: any[] = [];
     if (season.value?.credits?.cast) {
-      return season.value.credits.cast;
+      castToMap = season.value.credits.cast;
     } else if (episodeCredits.value?.cast) {
-      return frenchActors(episodeCredits.value.cast);
+      castToMap = frenchActors(episodeCredits.value.cast);
     }
+    const mapped = castToMap.map((cast: any) => actorToPersonData(cast));
+
+    for (const person of mapped) {
+      for (const role of person.roles ?? []) {
+        const image = characterProfilePictures.value.find((character) =>
+          findCharacter(character, role),
+        )?.image;
+        role.image = image ?? "";
+      }
+    }
+
+    return mapped;
   }
   return [];
 });
@@ -268,7 +272,7 @@ function openVoiceActorSearch() {
 
 function goToEpisode(episodeNumber: number) {
   // Navigate to the dedicated episode route, or update the query param
-  router.replace({
+  router.push({
     name: "SeasonByEpisodes",
     params: {
       id: route.params.id,
@@ -301,6 +305,7 @@ async function fetchData() {
     const data = seasonResponse.data;
     season.value = data.season;
     dubbingProjects.value = data.dubbingProjects || [];
+    characterProfilePictures.value = data.characterProfilePictures || [];
     if (!season.value) error.value = "Saison introuvable.";
 
     if (!hasData.value && hasWikidataId.value) {

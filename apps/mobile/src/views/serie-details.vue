@@ -270,6 +270,8 @@ const findCharacter = (
   character: UnwrapRef<typeof characterProfilePictures>[number],
   role: Role,
 ) => {
+  if (!character.name || !role.character) return false;
+
   const characterName = character.name.toLowerCase();
   const roleName = role.character.toLowerCase();
 
@@ -779,13 +781,6 @@ AppSegment {
   gap: 8px;
 
   .season {
-    --background: #{$block};
-    --color: #000;
-    --padding-bottom: 0;
-    --padding-top: 0;
-    --padding-end: 0;
-    --padding-start: 0;
-
     display: flex;
     flex-direction: row;
     gap: 16px;
@@ -793,11 +788,29 @@ AppSegment {
     border-radius: 8px;
     border: 2px solid #{$border};
     padding: 8px;
+    color: var(--app-color-text-primary, #ffffff);
+    cursor: pointer;
+    transition: background-color 0.2s;
 
-    &::part(native) {
-      .button-inner {
-        width: 100%;
-      }
+    &:active {
+      background-color: var(--app-overlay-5);
+    }
+
+    .text {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .season-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .season-subtitle {
+      font-size: 14px;
+      color: var(--app-color-text-muted, #8e8e8e);
     }
   }
 }

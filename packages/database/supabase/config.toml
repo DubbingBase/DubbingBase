@@ -462,3 +462,30 @@ verify_jwt = false
 
 [functions.extract-credits-from-image]
 verify_jwt = false
+
+[functions.get-studio-details]
+verify_jwt = false
+
+[functions.save-studio]
+verify_jwt = false
+
+[functions.save-dubbing-project]
+verify_jwt = false
+
+[functions.process-credits]
+verify_jwt = false
+
+[functions.media-queue]
+verify_jwt = false
+
+[functions.get-dubbing-project]
+verify_jwt = false
+
+[functions.get-metadata]
+verify_jwt = false
+
+[functions.save-metadata]
+verify_jwt = false
+
+[functions.count-voice-actor-works]
+verify_jwt = false

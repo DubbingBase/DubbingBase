@@ -176,3 +176,8 @@ run = "npx --yes tsx scripts/fetch_wikipedia_dubbing.ts"
 description = "PROD: Fetches dubbing data and enqueues to PRODUCTION Supabase"
 depends = ["install"]
 run = "./scripts/fetch-dubbing-prod.sh"
+
+[tasks.check]
+description = "Run all checks that currently block deployment in CI"
+depends = ["install", "check-functions"]
+run = "pnpm --filter=@app/supabase typecheck && pnpm build"

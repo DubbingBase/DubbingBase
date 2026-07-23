@@ -36,19 +36,19 @@
             :serieId="Number(route.params.id)"
             :seasonNumber="Number(route.params.season)"
           />
-          <div class="voices">
-            <h3>Distribution originale et voix françaises</h3>
-            <ActorList
-              :actors="episode?.credits?.cast || []"
-              :voiceActors="[]"
-              :getVoiceActorByTmdbId="getVoiceActorByTmdbId"
+          <div class="voices mt-4">
+            <DubbingProjectsView
+              :contentId="route.params.id as string"
+              contentType="tv"
+              :projects="dubbingProjects"
+              :actors="normalizedActors"
+              :isAdmin="false"
               :goToActor="goToActor"
               :goToVoiceActor="goToVoiceActor"
-              :isAdmin="false"
               :editVoiceActorLink="editVoiceActorLink"
               :confirmDeleteVoiceActorLink="confirmDeleteVoiceActorLink"
               :openVoiceActorSearch="openVoiceActorSearch"
-              :loading="isLoading"
+              :parentLoading="isLoading"
             />
           </div>
         </div>
@@ -83,18 +83,23 @@ import AppActionSheet, {
 } from "@/components/common/AppActionSheet.vue";
 import AppButton from "@/components/common/AppButton.vue";
 import EpisodeBanner from "../components/EpisodeBanner.vue";
-import ActorList from "../components/ActorList.vue";
+import DubbingProjectsView from "@/components/DubbingProjectsView.vue";
+import { actorToPersonData } from "@/utils/convert";
+import { findCharacter } from "@/utils/character";
 
 const route = useRoute();
 const router = useRouter();
 const isLoading = ref(true);
 const error = ref("");
-const episode = ref<{ episode_number?: number; name?: string; air_date?: string; overview?: string; still_path?: string } | null>(null);
-const dbVoiceActors = ref<Array<{ id: number; firstname?: string; lastname?: string; profile_picture?: string; }>>([]);
+const episode = ref<{ episode_number?: number; name?: string; air_date?: string; overview?: string; still_path?: string; credits?: any } | null>(null);
+const dubbingProjects = ref<Array<{ id: number; works?: unknown[] }>>([]);
+const characterProfilePictures = ref<any[]>([]);
 
 const wikiDataId = computed(() => episode.value?.external_ids?.wikidata_id);
 const hasWikidataId = computed(() => !!wikiDataId.value);
-const hasData = computed(() => dbVoiceActors.value.length > 0);
+const hasData = computed(() => {
+  return dubbingProjects.value.some((p: { works?: unknown[] }) => p.works && p.works.length > 0);
+});
 const isFetching = ref(false);
 const queueStatus = ref<string | null>(null);
 const queueErrorMessage = ref<string | null>(null);
@@ -224,13 +229,31 @@ function goToVoiceActor(id: number) {
 }
 
 function getVoiceActorByTmdbId(tmdbId: number) {
-  return dbVoiceActors.value.filter(
-    (va) =>
-      va.actor_id === tmdbId ||
-      va.original_actor_id === tmdbId ||
-      va.actorId === tmdbId,
-  );
+  // handled by DubbingProjectsView
+  return [];
 }
+
+const normalizedActors = computed(() => {
+  let castToMap: any[] = [];
+  if (episode.value?.credits?.cast) {
+    castToMap = [...episode.value.credits.cast];
+  }
+  if ((episode.value as any)?.guest_stars) {
+    castToMap = [...castToMap, ...(episode.value as any).guest_stars];
+  }
+  const mapped = castToMap.map((cast: any) => actorToPersonData(cast));
+
+  for (const person of mapped) {
+    for (const role of person.roles ?? []) {
+      const image = characterProfilePictures.value.find((character) =>
+        findCharacter(character, role),
+      )?.image;
+      role.image = image ?? "";
+    }
+  }
+
+  return mapped;
+});
 
 function goToActor(id: number) {
   router.push({ name: "ActorDetails", params: { id } });
@@ -257,7 +280,8 @@ async function fetchEpisodeData() {
 
   const data = episodeResponse.data;
   episode.value = data.episode;
-  dbVoiceActors.value = data.db_voice_actors || [];
+  dubbingProjects.value = data.dubbingProjects || [];
+  characterProfilePictures.value = data.characterProfilePictures || [];
   if (!episode.value) error.value = "Épisode introuvable.";
 
   if (!hasData.value && hasWikidataId.value) {

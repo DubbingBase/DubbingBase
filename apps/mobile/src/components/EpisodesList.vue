@@ -1,6 +1,6 @@
 <template>
-  <AppList v-if="episodes && episodes.length">
-    <AppListItem
+  <div class="episodes-list" v-if="episodes && episodes.length">
+    <div
       v-for="ep in episodes"
       :key="ep.id"
       class="episode-item"
@@ -8,26 +8,24 @@
     >
       <MediaItem
         v-if="ep.still_path"
-        :imagePath="ep.still_path"
-        :title="ep.name"
-        :routeName="'SeasonByEpisodes'"
-        :routeParams="{id: ep.id, season: ep.season_number, episode: ep.episode_number}"
+        :imagePath="getTmdbImageUrl(ep.still_path)"
         :loading="false"
+        :width="142"
+        :height="80"
+        class="episode-thumbnail"
       />
-      <AppText>
-        <h2>{{ ep.episode_number }}. {{ ep.name }}</h2>
-        <p v-if="ep.air_date">Diffusé le {{ ep.air_date }}</p>
-        <p v-if="ep.overview">{{ ep.overview }}</p>
-      </AppText>
-    </AppListItem>
-  </AppList>
-  <div v-else>Aucun épisode trouvé.</div>
+      <div class="episode-info">
+        <div class="episode-name">{{ ep.episode_number }}. {{ ep.name }}</div>
+        <div class="episode-subtitle" v-if="ep.air_date">Diffusé le {{ formatDate(ep.air_date) }}</div>
+        <div class="episode-overview" v-if="ep.overview">{{ ep.overview }}</div>
+      </div>
+    </div>
+  </div>
+  <div v-else class="empty-state">Aucun épisode trouvé.</div>
 </template>
 
 <script lang="ts" setup>
-import AppList from '@/components/common/AppList.vue';
-import AppListItem from '@/components/common/AppListItem.vue';
-
+import { format } from "date-fns";
 import MediaItem from "@/components/MediaItem.vue";
 
 interface Props {
@@ -44,10 +42,85 @@ interface Props {
 }
 
 defineProps<Props>();
+
+const formatDate = (dateString?: string) => {
+  if (!dateString) return '';
+  try {
+    return format(new Date(dateString), "MMM dd, yyyy");
+  } catch (e) {
+    return dateString;
+  }
+};
+
+const getTmdbImageUrl = (path: string | undefined, size = 'w500') => {
+  if (!path) return undefined;
+  if (path.startsWith('http')) return path;
+  return `https://image.tmdb.org/t/p/${size}${path}`;
+};
 </script>
 
 <style lang="scss" scoped>
+.episodes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+}
+
 .episode-item {
-  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px;
+  border-radius: 8px;
+  background: var(--app-overlay-2);
+  transition: all 0.3s ease;
+  cursor: pointer;
+
+  &:active {
+    background: var(--app-overlay-5);
+  }
+}
+
+.episode-thumbnail {
+  flex-shrink: 0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.episode-info {
+  flex: 1;
+  min-width: 0;
+
+  .episode-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--app-color-text-primary);
+    line-height: 1.4;
+    margin-bottom: 2px;
+  }
+
+  .episode-subtitle {
+    font-size: 12px;
+    color: var(--app-color-text-muted, #b0b0b0);
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+
+  .episode-overview {
+    font-size: 11px;
+    color: var(--app-color-text-secondary, #8e8e8e);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+.empty-state {
+  padding: 16px;
+  text-align: center;
+  color: var(--app-color-text-muted);
 }
 </style>

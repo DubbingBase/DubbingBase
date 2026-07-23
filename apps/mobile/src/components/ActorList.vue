@@ -49,8 +49,8 @@ const searchQuery = ref("");
 
 // Props
 const props = defineProps<{
-  actors?: Array<{ id: number; name: string; profile_path?: string; roles?: Array<{ character?: string }>; character?: string }>;
-  voiceActors?: Array<VoiceActorInfo>;
+  actors?: Array<PersonData>;
+  voiceActors?: Array<VoiceActorInfo & { tmdb_id?: number; actor_id?: number; name?: string }>;
   goToActor: (id: number) => void;
   goToVoiceActor: (id: number) => void;
   loading?: boolean;
@@ -99,7 +99,7 @@ const filteredActors = computed(() => {
 });
 
 // Wrapper functions to handle prop type requirements
-const handleActorClick = (actor: PersonData<Actor>) => {
+const handleActorClick = (actor: PersonData) => {
   props.goToActor(actor.id);
 };
 

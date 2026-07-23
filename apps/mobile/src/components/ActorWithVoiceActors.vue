@@ -99,14 +99,14 @@ import {
 import type { VoiceActorInfo } from "@/types/models";
 
 export interface ActorWithVoiceActorsProps {
-  actor: PersonData<Actor>;
+  actor: PersonData;
   voiceActors?: Array<VoiceActorInfo>;
-  onActorClick?: (actor: PersonData<Actor>) => void;
+  onActorClick?: (actor: PersonData) => void;
   onVoiceActorClick?: (voiceActor: { id: number }) => void;
   mediaLanguage?: string;
   editVoiceActorLink?: (workItem: Pick<VoiceActorInfo, 'work_id' | 'performance'>) => void;
   confirmDeleteVoiceActorLink?: (workItem: Pick<VoiceActorInfo, 'work_id'>) => void;
-  addVoiceActorLink?: (actor: PersonData<Actor>) => void;
+  addVoiceActorLink?: (actor: PersonData) => void;
   openVoiceActorSearch?: (actorId: number) => void;
   workType?: "movie" | "tv" | "season" | "episode";
   contentId?: string;
@@ -182,7 +182,7 @@ const isActionSheetOpen = ref(false);
 const actionSheetButtons = ref<ActionSheetButton[]>([]);
 
 // Open comprehensive action sheet
-const openActionSheet = async (voiceActor: { id: number }) => {
+const openActionSheet = async (voiceActor: VoiceActorInfo) => {
   const buttons: ActionSheetButton[] = [];
 
   // A user is the owner if their linked voice_actor_id matches this voice actor's profile ID
