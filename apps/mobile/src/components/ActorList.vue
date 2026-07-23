@@ -38,7 +38,8 @@ import AppSearchbar from '@/components/common/AppSearchbar.vue';
 import ActorWithVoiceActors from "./ActorWithVoiceActors.vue";
 import NoActors from "./NoActors.vue";
 import { PersonData } from "./PersonItem.vue";
-import { VoiceActorDetails, Actor } from "@supabase/functions/_shared/types";
+import { Actor } from "@supabase/functions/_shared/types";
+import type { VoiceActorInfo } from "@/types/models";
 
 import { ref, computed } from "vue";
 import { useI18n } from "vue-i18n";
@@ -48,14 +49,14 @@ const searchQuery = ref("");
 
 // Props
 const props = defineProps<{
-  actors?: PersonData<any>[];
-  voiceActors?: PersonData<VoiceActorDetails>[];
+  actors?: Array<{ id: number; name: string; profile_path?: string; roles?: Array<{ character?: string }>; character?: string }>;
+  voiceActors?: Array<VoiceActorInfo>;
   goToActor: (id: number) => void;
   goToVoiceActor: (id: number) => void;
   loading?: boolean;
   mediaLanguage?: string;
-  editVoiceActorLink?: (workItem: any) => void;
-  confirmDeleteVoiceActorLink?: (workItem: any) => void;
+  editVoiceActorLink?: (workItem: Pick<VoiceActorInfo, 'work_id' | 'performance'>) => void;
+  confirmDeleteVoiceActorLink?: (workItem: Pick<VoiceActorInfo, 'work_id'>) => void;
   openVoiceActorSearch?: (actorId: number) => void;
   workType?: "movie" | "tv" | "season" | "episode";
   contentId?: string;
@@ -70,7 +71,7 @@ const getVoiceActorsForActor = (actorId: number) => {
   return props.voiceActors.filter(
     (item) =>
       Number(item.tmdb_id) === Number(actorId) ||
-      Number((item as any).actor_id) === Number(actorId)
+      Number(('actor_id' in item ? item.actor_id : null)) === Number(actorId)
   );
 };
 
@@ -84,7 +85,7 @@ const filteredActors = computed(() => {
     const actorName = (actor.name || "").toLowerCase();
     if (actorName.includes(query)) return true;
     
-    if (actor.roles && actor.roles.some((role) => (role.character || "").toLowerCase().includes(query))) {
+    if (actor.roles && actor.roles.some((role: { character?: string }) => (role.character || "").toLowerCase().includes(query))) {
       return true;
     }
     
@@ -98,11 +99,11 @@ const filteredActors = computed(() => {
 });
 
 // Wrapper functions to handle prop type requirements
-const handleActorClick = (actor: any) => {
+const handleActorClick = (actor: PersonData<Actor>) => {
   props.goToActor(actor.id);
 };
 
-const handleVoiceActorClick = (voiceActor: any) => {
+const handleVoiceActorClick = (voiceActor: { id: number }) => {
   props.goToVoiceActor(voiceActor.id);
 };
 </script>

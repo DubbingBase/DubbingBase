@@ -6,8 +6,8 @@ interface Work {
   dubbing_project_id: number;
   actor_id: number;
   voice_actor_id: number | null;
-  status?: string;
-  performance?: string;
+  status?: string | null;
+  performance?: string | null;
 }
 
 // Utility to create a key for duplicate detection
@@ -72,7 +72,7 @@ export default {
           hasMore = false;
         } else {
           // Cast the batch to Work[] to handle Supabase's return type
-          groups = processWorksBatch(batch as unknown as Work[], groups);
+          groups = processWorksBatch(batch as Work[], groups);
           cursor += batch.length;
 
           // If we got fewer records than requested, we've reached the end

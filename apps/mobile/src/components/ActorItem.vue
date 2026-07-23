@@ -55,15 +55,17 @@ import AppSkeleton from '@/components/common/AppSkeleton.vue';
 import MediaItem from "@/components/MediaItem.vue";
 import VoiceActorList from "@/components/VoiceActorList.vue";
 import { PersonData } from "./PersonItem.vue";
+import type { VoiceActorInfo } from "@/types/models";
+
 
 defineProps<{
   actor: PersonData;
-  voiceActors: any[];
+  voiceActors: Array<VoiceActorInfo>;
   isAdmin: boolean;
   goToActor: (id: number) => void;
   goToVoiceActor: (id: number) => void;
-  editVoiceActorLink: (item: any) => void;
-  confirmDeleteVoiceActorLink: (item: any) => void;
+  editVoiceActorLink: (item: Pick<VoiceActorInfo, 'work_id' | 'performance'>) => void;
+  confirmDeleteVoiceActorLink: (item: Pick<VoiceActorInfo, 'work_id'>) => void;
   openVoiceActorSearch: (actorId: number) => void;
 }>();
 </script>

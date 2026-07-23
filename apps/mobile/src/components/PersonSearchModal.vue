@@ -113,12 +113,14 @@ const props = defineProps<{
 
 const { searchTerm, searchResults, isSearching, searchError } = useVoiceActorManagement(props.workType || "movie");
 
-const handleSearchInput = (event: any) => {
-  const value = event.target.value;
-  searchTerm.value = value;
+const handleSearchInput = (event: CustomEvent) => {
+  const target = event.target as HTMLInputElement | null;
+  if (target) {
+    searchTerm.value = target.value;
+  }
 };
 </script>
 
 <style scoped lang="scss">
-// Add any specific styles if needed
+// Add unknown specific styles if needed
 </style>

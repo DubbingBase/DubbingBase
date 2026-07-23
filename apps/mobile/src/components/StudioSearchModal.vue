@@ -70,12 +70,12 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   close: [];
-  select: [studio: any];
+  select: [studio: { id: number; name: string }];
   "create-new": [query: string];
 }>();
 
 const searchTerm = ref("");
-const searchResults = ref<any[]>([]);
+const searchResults = ref<{ id: number; name: string }[]>([]);
 const isSearching = ref(false);
 
 const searchStudios = async () => {

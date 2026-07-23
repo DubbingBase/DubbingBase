@@ -31,7 +31,15 @@ import AppListItem from '@/components/common/AppListItem.vue';
 import MediaItem from "@/components/MediaItem.vue";
 
 interface Props {
-  episodes: any[];
+  episodes: {
+    id: number;
+    episode_number: number;
+    season_number: number;
+    name: string;
+    air_date?: string;
+    overview?: string;
+    still_path?: string;
+  }[];
   goToEpisode: (episodeNumber: number) => void;
 }
 

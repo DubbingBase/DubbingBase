@@ -30,7 +30,7 @@ export interface Studio {
   city?: string;
   country?: string;
   logo_url?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 defineProps<{

@@ -67,7 +67,7 @@ const routeName = computed(() => {
     case "person":
       return "ActorDetails";
     case "voice_actor":
-      return "VoiceActorDetails";
+      return "voice-actor-details";
     default:
       return "home";
   }

@@ -574,7 +574,7 @@ const studio = ref("");
 const selectedStudioId = ref<number | null>(null);
 const studiosList = ref<Array<{ id: number; name: string }>>([]);
 
-const dubbingCrew = ref<any[]>([]);
+const dubbingCrew = ref<Array<{ id: number; name: string; job: string }>>([]);
 const availableJobs = ref<Array<{ id: number; name: string }>>([]);
 const activeCrewRowIndex = ref<number | null>(null);
 
@@ -592,7 +592,7 @@ const openCrewPicker = (index: number) => {
   showVoiceActorSearchModal.value = true;
 };
 
-const getCrewDisplayName = (row: any) => {
+const getCrewDisplayName = (row: { name: string; job: string }) => {
   if (row.firstname && row.lastname) return `${row.firstname} ${row.lastname}`;
   const match = voiceActorsList.value.find(
     (va) => Number(va.id) === Number(row.person_id),
@@ -615,7 +615,7 @@ const tmdbCastList = ref<TmdbCastMember[]>([]);
 // Media Search Modal State
 const showMediaSearchModal = ref(false);
 const mediaSearchQuery = ref("");
-const mediaSearchResults = ref<any[]>([]);
+const mediaSearchResults = ref<Array<{ id: number; title?: string; name?: string; media_type?: string }>>([]);
 const isSearchingMedia = ref(false);
 
 // Studio Search Picker Modal State
@@ -664,7 +664,7 @@ const openStudioPicker = () => {
   showStudioSearchModal.value = true;
 };
 
-const selectStudio = (s: any) => {
+const selectStudio = (s: { id: number; name: string }) => {
   selectedStudioId.value = s.id;
   studio.value = s.name;
   showStudioSearchModal.value = false;
@@ -707,7 +707,7 @@ const openVoiceActorPicker = (index: number) => {
   showVoiceActorSearchModal.value = true;
 };
 
-const selectVoiceActor = (va: any) => {
+const selectVoiceActor = (va: { id: number; firstname: string; lastname: string }) => {
   if (
     activeCrewRowIndex.value !== null &&
     dubbingCrew.value[activeCrewRowIndex.value]
@@ -731,7 +731,7 @@ const openCastPicker = (index: number) => {
   showCastSearchModal.value = true;
 };
 
-const selectTmdbCastMember = (c: any) => {
+const selectTmdbCastMember = (c: TmdbCastMember) => {
   if (
     activeCastRowIndexForCast.value !== null &&
     castRows.value[activeCastRowIndexForCast.value]
@@ -836,14 +836,14 @@ const fetchTmdbCast = async (tmdbId: number, targetType?: string) => {
         ? data.aggregateCredits?.crew || mediaObj?.credits?.crew || []
         : mediaObj?.credits?.crew || [];
 
-      const mappedCast = rawCast.map((c: any) => ({
+      const mappedCast = rawCast.map((c: { id: number; character?: string; name?: string; job?: string }) => ({
         id: c.id,
         name: c.name,
         character: c.character || (c.roles && c.roles[0]?.character) || "Role",
         isCrew: false,
       }));
 
-      const mappedCrew = rawCrew.map((c: any) => ({
+      const mappedCrew = rawCrew.map((c: { id: number; character?: string; name?: string; job?: string }) => ({
         id: c.id,
         name: c.name,
         character: c.job || (c.jobs && c.jobs[0]?.job) || "Crew",
@@ -867,7 +867,7 @@ const searchMedia = async () => {
     });
     if (data?.results) {
       mediaSearchResults.value = data.results.filter(
-        (r: any) => r.media_type === "movie" || r.media_type === "tv",
+        (r: { character?: string }) => r.media_type === "movie" || r.media_type === "tv",
       );
     }
   } catch (err) {
@@ -877,7 +877,7 @@ const searchMedia = async () => {
   }
 };
 
-const selectMedia = async (media: any) => {
+const selectMedia = async (media: { id: number; title?: string; name?: string; media_type?: string }) => {
   contentId.value = media.id;
   mediaTitle.value = media.title || media.name || "";
   contentType.value = media.media_type === "tv" ? "tv" : "movie";
@@ -946,7 +946,7 @@ const fetchProjectDetails = async () => {
           selectedStudioId.value = project.studio_id || null;
 
           if (data.crewData) {
-            dubbingCrew.value = data.crewData.map((c: any) => ({
+            dubbingCrew.value = data.crewData.map((c: { id: number; character?: string; name?: string; job?: string }) => ({
               job_id: c.job_id,
               person_id: c.person_id,
               firstname: c.voice_actors?.firstname,
@@ -962,7 +962,7 @@ const fetchProjectDetails = async () => {
           }
 
           if (data.worksData) {
-            castRows.value = data.worksData.map((w: any) => ({
+            castRows.value = data.worksData.map((w: { character?: string }) => ({
               id: w.id,
               actor_id: w.actor_id,
               voice_actor_id: w.voice_actor_id,
@@ -1126,7 +1126,7 @@ const saveProject = async () => {
     } else {
       ionRouter.navigate('/home', 'back', 'replace');
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error saving dubbing project:", err);
     alert(err.message || "Error saving dubbing project");
   } finally {

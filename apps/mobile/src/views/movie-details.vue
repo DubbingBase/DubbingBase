@@ -208,7 +208,7 @@ const {
 } = useVoiceActorManagement("movie");
 
 const movie = ref<MovieResponse["movie"] | undefined>();
-const dubbingProjects = ref<any[]>([]);
+const dubbingProjects = ref<Array<{ id: number; works?: unknown[] }>>([]);
 const queueStatus = ref<string | null>(null);
 const queueErrorMessage = ref<string | null>(null);
 
@@ -314,7 +314,7 @@ const hasWikidataId = computed(() => {
 });
 
 const hasData = computed(() => {
-  return dubbingProjects.value.some((p: any) => p.works && p.works.length > 0);
+  return dubbingProjects.value.some((p: { works?: unknown[] }) => p.works && p.works.length > 0);
 });
 
 // Scan functionality
@@ -446,10 +446,10 @@ const takePhoto = async () => {
 
     // Provide known actors to the AI
     const simplifiedActors =
-      actors.value?.map((a: any) => ({
+      actors.value?.map((a: { id?: number; name?: string; roles?: { character?: string }[] }) => ({
         id: a.id,
         name: a.name,
-        roles: a.roles?.map((r: any) => r.character) || [],
+        roles: a.roles?.map((r: { character?: string }) => r.character) || [],
       })) || [];
     formData.append("actors", JSON.stringify(simplifiedActors));
 
@@ -478,7 +478,7 @@ const takePhoto = async () => {
   }
 };
 
-const handleRefresh = async (event?: any) => {
+const handleRefresh = async (event: RefresherCustomEvent) => {
   try {
     await fetchMovieData();
     if (!hasData.value && hasWikidataId.value) {
@@ -487,7 +487,7 @@ const handleRefresh = async (event?: any) => {
   } catch (error) {
     console.error("Error refreshing movie data:", error);
   } finally {
-    event?.target?.complete();
+    event.target.complete();
   }
 };
 
@@ -583,18 +583,18 @@ const fetchMovieData = async () => {
       }
 
       // Hydrate shared votes store
-      if ((data as any).votes) {
-        sharedVotes.value = { ...sharedVotes.value, ...(data as any).votes };
+      if ((data as { votes?: Record<string, number> }).votes) {
+        sharedVotes.value = { ...sharedVotes.value, ...(data as { votes?: Record<string, number> }).votes };
       }
     }
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error("Error fetching movie data:", e);
     fetchError.value = "Failed to load movie details.";
   }
 };
 
 // // Edit voice actor link
-// const editVoiceActorLink = (workItem: any) => {
+// const editVoiceActorLink = (workItem: { work_id?: number; name?: string }) => {
 //   if (!movie.value?.id) return;
 
 //   router.push({
@@ -608,7 +608,7 @@ const fetchMovieData = async () => {
 // };
 
 // Confirm before deleting a voice actor link
-// const confirmDeleteVoiceActorLink = async (workItem: any) => {
+// const confirmDeleteVoiceActorLink = async (workItem: { work_id?: number; name?: string }) => {
 //   const alert = await alertController.create({
 //     header: 'Confirm Delete',
 //     message: `Are you sure you want to remove ${workItem.voiceActorDetails.firstname} ${workItem.voiceActorDetails.lastname} as the voice for ${workItem.character}?`,
@@ -669,7 +669,7 @@ onMounted(async () => {
     if (!hasData.value && hasWikidataId.value) {
       await fetchQueueStatus();
     }
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error("Error fetching movie data:", e);
     fetchError.value = "Failed to load movie details.";
   } finally {

@@ -24,7 +24,13 @@
 import MediaItem from "@/components/MediaItem.vue";
 
 interface Props {
-  episode: any;
+  episode: {
+    episode_number: number;
+    name: string;
+    air_date?: string;
+    overview?: string;
+    still_path?: string;
+  };
   serieId: number;
   seasonNumber: number;
 }

@@ -13,11 +13,11 @@
 
     <AppText>
       <h2>{{ getMediaTitle(workEntry.media) }}</h2>
-      <p v-if="workEntry.character_name">{{ workEntry.character_name }} ({{ (workEntry as any).performance }})</p>
+      <p v-if="workEntry.character_name">{{ workEntry.character_name }} <template v-if="getPerformance(workEntry)">({{ getPerformance(workEntry) }})</template></p>
       <p class="media-type">
         <span>{{ workEntry.media_type === 'movie' ? 'Film' : 'Série' }}</span>
-        <span v-if="workEntry.media?.release_date">
-          • {{ new Date(workEntry.media.release_date).getFullYear() }}
+        <span v-if="getMediaYear(workEntry.media)">
+          • {{ getMediaYear(workEntry.media) }}
         </span>
       </p>
     </AppText>
@@ -75,8 +75,17 @@ const emit = defineEmits<{
   delete: [workEntryId: number]
 }>()
 
-const getMediaTitle = (media: any) => {
+const getMediaTitle = (media: { title?: string; name?: string } | null | undefined) => {
   return media?.title || media?.name || 'Titre inconnu'
+}
+
+const getMediaYear = (media: { release_date?: string; first_air_date?: string } | null | undefined) => {
+  const dateStr = media?.release_date || media?.first_air_date;
+  return dateStr ? new Date(dateStr).getFullYear() : null;
+}
+
+const getPerformance = (workEntry: WorkEntry) => {
+  return 'performance' in workEntry && typeof workEntry.performance === 'string' ? workEntry.performance : '';
 }
 
 const handleEdit = () => {

@@ -8,7 +8,7 @@ import { supabase } from "@/api/supabase";
 import { useI18n } from "vue-i18n";
 import type { PersonData } from "@/components/PersonItem.vue";
 import { voiceActorToPersonData } from "@/utils/convert";
-import type { VoiceActorDetails } from "@supabase/functions/_shared/types";
+
 
 export interface VoiceActor {
   id: number;
@@ -52,7 +52,7 @@ export function useVoiceActorManagement(
   const selectedActor = ref<number>();
 
   // Voice actors data
-  const voiceActors = ref<PersonData<VoiceActorDetails>[]>([]);
+  const voiceActors = ref<Array<{ id: number; firstname?: string; lastname?: string; profile_picture?: string; work_id?: number }>>([]);
   const isLoading = ref(false);
   const error = ref("");
 
@@ -62,7 +62,7 @@ export function useVoiceActorManagement(
 
   const getVoiceActorByTmdbId = (
     tmdbId: number,
-  ): PersonData<VoiceActorDetails>[] => {
+  ): Array<{ id: number; firstname?: string; lastname?: string; profile_picture?: string; work_id?: number }> => {
     console.log("tmdbId", tmdbId);
     console.log("voiceActors.value", voiceActors.value);
     return voiceActors.value.filter((va) => va.tmdb_id === tmdbId);
@@ -117,7 +117,7 @@ export function useVoiceActorManagement(
       // Add the new voice actor to the list
       voiceActors.value.push(
         voiceActorToPersonData(
-          voiceActor as VoiceActorDetails,
+          voiceActor,
           response.data.performance || "dialogues",
           response.data.actor_id,
           response.data.status,
@@ -138,7 +138,7 @@ export function useVoiceActorManagement(
     }
   };
 
-  const editVoiceActorLink = async (person: PersonData<VoiceActorDetails>) => {
+  const editVoiceActorLink = async (person: { work_id?: number; name?: string }) => {
     const alert = await alertController.create({
       header: "Edit Performance",
       inputs: [
@@ -156,7 +156,7 @@ export function useVoiceActorManagement(
         },
         {
           text: t("common.save"),
-          handler: async (data: any) => {
+          handler: async (data?: { performance?: string }) => {
             if (person.work_id) {
               await updateVoiceActorLink(person.work_id, data.performance);
             }
@@ -197,7 +197,7 @@ export function useVoiceActorManagement(
   };
 
   const confirmDeleteVoiceActorLink = async (
-    person: PersonData<VoiceActorDetails>,
+    person: { work_id?: number; name?: string },
   ) => {
     console.log("person", person);
     const alert = await alertController.create({
@@ -250,7 +250,7 @@ export function useVoiceActorManagement(
 
   const goToVoiceActor = (id: number) => {
     router.push({
-      name: "VoiceActorDetails",
+      name: "voice-actor-details",
       params: { id },
     });
   };

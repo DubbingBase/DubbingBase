@@ -60,6 +60,7 @@ _(This command generates types to `packages/database/supabase/functions/_shared/
 - **Vue 3**: Use the **Composition API** exclusively with `<script setup lang="ts">` syntax.
 - **Formatting**: Always run `pnpm format` to format code with Prettier before committing.
 - **Design & Theme**: The app follows a premium dark theme. Ensure consistent UI/UX when creating or modifying components. Avoid using default Ionic variables if they result in poor contrast. Instead, explicitly use the established dark theme colors (e.g., `#1d1d1d` for card backgrounds, `#e0e0e0` for primary text, `#a0a0a0` for secondary text, `#2a2a2a` for borders) or the app's custom CSS variables to maintain a cohesive design.
+- **Presentation Layer Unified Types**: Create unified interfaces for display purposes (e.g., `DisplayMedia`, `DisplayVoiceActor`) instead of passing raw, complex database types (like union types such as `Movie | Serie`) directly to UI components. This allows the presentation layer to have unified and clean types, and isolates UI templates from underlying database schema complexities.
 
 ### 2. Mobile Application (`apps/mobile`)
 - **UI Framework**:

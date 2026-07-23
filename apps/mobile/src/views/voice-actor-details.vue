@@ -128,7 +128,7 @@ type VoiceActorResponse = {
     date_of_birth: string | null;
     awards: string | null;
     years_active: string | null;
-    social_media_links: any | null;
+    social_media_links: Record<string, string> | null;
     profile_picture: string | null;
     voice_actor_name: string | null;
     user_voice_actor_links?: { id: string }[];
@@ -157,7 +157,7 @@ type VoiceActorResponse = {
 
 const voiceActor = ref<VoiceActorResponse["voiceActor"] | undefined>();
 const medias = ref<VoiceActorResponse["medias"]>([]);
-const characterProfilePictures = ref<any[]>([]);
+const characterProfilePictures = ref<Array<{ work_id: number; profile_path: string | null }>>([]);
 const profilePicture = ref<string | null | undefined>();
 const loading = ref<boolean>(true);
 const searchQuery = ref("");
@@ -165,7 +165,7 @@ const potentialWikipediaUrl = ref<string | null>(null);
 
 const isFetchModalOpen = ref(false);
 const isActionSheetOpen = ref(false);
-const requestCardRef = ref<any>(null);
+const requestCardRef = ref<HTMLElement | null>(null);
 
 const actionSheetButtons = computed<ActionSheetButton[]>(() => {
   const buttons: ActionSheetButton[] = [
@@ -282,13 +282,13 @@ const baseEnhancedWork = computed<EnhancedWorkItem[]>(() => {
       }
 
       // Ensure credits exist and has cast
-      if (!(media as any).credits?.cast) {
+      if (!(media as { credits?: { cast?: Array<{ id: number; character: string }> } }).credits?.cast) {
         console.warn(`No credits.cast found for media ${media.id}`);
         return null;
       }
 
-      const actor = (media as any).credits.cast.find(
-        (cast: any) => cast.id === work.actor_id,
+      const actor = (media as { credits?: { cast?: Array<{ id: number; character: string }> } }).credits?.cast?.find(
+        (cast: { id: number }) => cast.id === work.actor_id,
       );
 
       if (!actor) {
@@ -304,7 +304,7 @@ const baseEnhancedWork = computed<EnhancedWorkItem[]>(() => {
       if (characterProfilePictures.value.length > 0) {
         // TMDB cast name might differ slightly from TVDB, but a direct lowercase match often works.
         const pic = characterProfilePictures.value.find(
-          (cp: any) =>
+          (cp: { work_id: number; profile_path: string }) =>
             (cp.movieId === media.id || cp.showId === media.id) &&
             cp.name &&
             character &&
@@ -326,8 +326,8 @@ const baseEnhancedWork = computed<EnhancedWorkItem[]>(() => {
         work,
         data,
         sortDate:
-          (media as any).release_date ||
-          (media as any).first_air_date ||
+          (media as { release_date?: string }).release_date ||
+          (media as { first_air_date?: string }).first_air_date ||
           "9999-12-31", // Fallback for missing dates
       };
     })
@@ -361,8 +361,8 @@ const filteredEnhancedWork = computed(() => {
 
   return enhancedWork.value.filter((item) => {
     const title = (
-      (item.media as any).title ||
-      (item.media as any).name ||
+      (item.media as { title?: string }).title ||
+      (item.media as { name?: string }).name ||
       ""
     ).toLowerCase();
     const character = (item.data.character || "").toLowerCase();
@@ -394,7 +394,7 @@ onMounted(async () => {
   await loadVoiceActorData();
 });
 
-const handleRefresh = async (event: any) => {
+const handleRefresh = async (event: RefresherCustomEvent) => {
   try {
     await loadVoiceActorData();
   } catch (error) {
@@ -446,17 +446,17 @@ const loadVoiceActorData = async () => {
       "First 3 medias:",
       voiceActorResponse.medias.slice(0, 3).map((m) => ({
         id: m.id,
-        title: (m as any).title || (m as any).name,
-        credits: (m as any).credits
+        title: (m as { title?: string }).title || (m as { name?: string }).name,
+        credits: (m as { credits?: { cast?: Array<{ id: number; character: string }>, crew?: Array<{ id: number; name: string; job: string }> } }).credits
           ? {
-              cast: (m as any).credits.cast?.slice(0, 3).map((c: any) => ({
+              cast: (m as { credits?: { cast?: Array<{ id: number; character: string }> } }).credits?.cast?.slice(0, 3).map((c: { id: number; character?: string; name?: string; job?: string }) => ({
                 id: c.id,
                 name: c.name,
                 character: c.character,
               })),
-              crew: (m as any).credits.crew
+              crew: (m as { credits?: { crew?: Array<{ id: number; name: string; job: string }> } }).credits?.crew
                 ?.slice(0, 3)
-                .map((c: any) => ({ id: c.id, name: c.name, job: c.job })),
+                .map((c: { id: number; character?: string; name?: string; job?: string }) => ({ id: c.id, name: c.name, job: c.job })),
             }
           : "No credits",
       })),
@@ -466,7 +466,7 @@ const loadVoiceActorData = async () => {
   voiceActor.value = voiceActorResponse.voiceActor;
   medias.value = voiceActorResponse.medias;
   characterProfilePictures.value =
-    (voiceActorResponse as any).characterProfilePictures || [];
+    (voiceActorResponse as { characterProfilePictures?: Array<{ work_id: number; profile_path: string | null }> }).characterProfilePictures || [];
   potentialWikipediaUrl.value =
     voiceActorResponse.potentialWikipediaUrl || null;
 

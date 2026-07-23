@@ -81,11 +81,12 @@ import XCircle from "~icons/lucide/x-circle";
 import Trash2 from "~icons/lucide/trash-2";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import { supabase } from "@/api/supabase";
+import { Actor } from "@supabase/functions/_shared/types";
 
 const props = defineProps<{
   isOpen: boolean;
   extractedCredits: Array<{ actor: string; role: string; voiceActor: string; matchedActorId?: number | null }>;
-  movieActors?: Array<any>;
+  movieActors?: Array<Actor>;
   mediaId: string;
   workType: string;
 }>();
@@ -102,7 +103,7 @@ interface ProcessedCredit {
   actor: string;
   role: string;
   voiceActor: string;
-  matchedVoiceActor: any | null;
+  matchedVoiceActor: Record<string, unknown> | null;
   matchedActorId: number | null;
   matchedActorName: string | null;
 }

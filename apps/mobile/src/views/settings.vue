@@ -108,7 +108,7 @@ import { useTheme } from '@/composables/useTheme';
 
 import { supabase } from '@/api/supabase';
 
-const user = ref<any>(null);
+const user = ref<{ is_anonymous?: boolean; email?: string } | null>(null);
 const router = useRouter();
 const { t } = useI18n();
 const { currentTheme, toggleTheme } = useTheme();

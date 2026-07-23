@@ -1,7 +1,14 @@
 import { toast } from 'vue-sonner';
 
+interface ToastOptions {
+  message: string;
+  duration?: number | "short" | "long";
+  color?: string;
+  position?: "top" | "bottom" | "middle";
+}
+
 export const toastController = {
-  create: async (options: any) => {
+  create: async (options: ToastOptions) => {
     return {
       present: async () => {
         const durationMs = options.duration === "long" ? 3500 : options.duration === "short" ? 2000 : options.duration || 2000;

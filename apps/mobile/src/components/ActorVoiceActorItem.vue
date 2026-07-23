@@ -114,6 +114,8 @@ import MediaItem from "@/components/MediaItem.vue";
 import MediaThumbnail from "@/components/MediaThumbnail.vue";
 import VoiceActorList from "@/components/VoiceActorList.vue";
 import { PersonData } from "./PersonItem.vue";
+import type { VoiceActorInfo } from "@/types/models";
+
 import { getAvatarFallbackUrl } from "@/utils/image";
 
 export type ItemType = "actor" | "voice-actor";
@@ -121,14 +123,14 @@ export type ItemType = "actor" | "voice-actor";
 const props = defineProps<{
   type: ItemType;
   actor?: PersonData;
-  item?: any;
+  item?: (PersonData & { profile_picture?: string; character?: string }) | (VoiceActorInfo & { tags?: string | string[]; dialogue?: boolean; songs?: boolean });
   goToActor?: (id: number) => void;
   goToVoiceActor: (id: number) => void;
   isAdmin?: boolean;
-  editVoiceActorLink?: (item: any) => void;
-  confirmDeleteVoiceActorLink?: (item: any) => void;
+  editVoiceActorLink?: (item: Pick<VoiceActorInfo, 'work_id' | 'performance'>) => void;
+  confirmDeleteVoiceActorLink?: (item: Pick<VoiceActorInfo, 'work_id'>) => void;
   openVoiceActorSearch?: (actorId: number) => void;
-  voiceActors?: any[];
+  voiceActors?: VoiceActorInfo[];
 }>();
 
 const getDisplayName = (): string => {

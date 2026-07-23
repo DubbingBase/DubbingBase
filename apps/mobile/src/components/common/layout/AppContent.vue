@@ -12,10 +12,10 @@ defineProps<{
   fullscreen?: boolean;
 }>();
 
-const contentRef = ref<any>(null);
+const contentRef = ref<InstanceType<typeof IonContent> | null>(null);
 let savedScrollTop = 0;
 
-const onScroll = (e: any) => {
+const onScroll = (e: CustomEvent) => {
   if (e.detail && e.detail.scrollTop > 0) {
     savedScrollTop = e.detail.scrollTop;
   }

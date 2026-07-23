@@ -25,7 +25,7 @@
                     v-if="member.person?.id"
                     class="voice-actor-item no-link"
                     :to="{
-                      name: 'VoiceActorDetails',
+                      name: 'actor-details',
                       params: { id: member.person.id },
                     }"
                   >
@@ -49,11 +49,22 @@
 import NoActors from "./NoActors.vue";
 import PersonItem, { PersonData } from "./PersonItem.vue";
 
+export interface CrewMember {
+  id?: number;
+  job?: { name: string };
+  person?: {
+    id: number;
+    firstname: string;
+    lastname: string;
+    profile_picture?: string;
+  };
+}
+
 const props = defineProps<{
-  groupedCrew: Record<string, any[]>;
+  groupedCrew: Record<string, CrewMember[]>;
 }>();
 
-const toPersonData = (person: any, jobName: string): PersonData => {
+const toPersonData = (person: Exclude<CrewMember["person"], undefined>, jobName: string): PersonData => {
   return {
     id: person.id,
     tmdb_id: 0,

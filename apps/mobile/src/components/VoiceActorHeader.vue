@@ -65,7 +65,7 @@ interface VoiceActor {
   date_of_birth: string | null;
   awards: string | null;
   years_active: string | null;
-  social_media_links: any | null;
+  social_media_links: Record<string, unknown> | null;
   profile_picture: string | null;
   voice_actor_name: string | null;
 }

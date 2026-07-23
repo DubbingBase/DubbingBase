@@ -131,7 +131,7 @@ import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import EmptyState from "@/components/common/EmptyState.vue";
 
 
-import CrewList from "./CrewList.vue";
+import CrewList, { CrewMember } from "./CrewList.vue";
 import StudioCard from "./StudioCard.vue";
 import ActorList from "@/components/ActorList.vue";
 import { useI18n } from "vue-i18n";
@@ -150,13 +150,13 @@ const props = defineProps<{
   projects?: DubbingProject[];
 
   // Dependencies required by ActorList
-  actors?: PersonData<any>[];
+  actors?: unknown[];
   isAdmin?: boolean;
   getVoiceActorByTmdbId?: (tmdbId: number) => void;
   goToActor: (id: number) => void;
   goToVoiceActor: (id: number) => void;
-  editVoiceActorLink?: (va: any) => void;
-  confirmDeleteVoiceActorLink?: (person: any) => void;
+  editVoiceActorLink?: (va: unknown) => void;
+  confirmDeleteVoiceActorLink?: (person: unknown) => void;
   openVoiceActorSearch?: (actorId: number) => void;
   mediaLanguage?: string;
   parentLoading?: boolean;
@@ -172,7 +172,7 @@ export interface VoiceActor {
   date_of_birth?: string | null;
   awards?: string | null;
   years_active?: string | null;
-  social_media_links?: any;
+  social_media_links?: Record<string, string>;
   tmdb_id?: number | null;
   wikidata_id?: string | null;
 }
@@ -196,10 +196,10 @@ export interface DubbingProject {
   content_type: string;
   language: string | null;
   studio_id: number | null;
-  studio_data?: any;
+  studio_data?: Record<string, unknown>;
   status: string | null;
   works: WorkPerformance[];
-  crew: any[];
+  crew: CrewMember[];
 }
 
 const projects = computed(() => props.projects || []);
@@ -269,9 +269,9 @@ const getVoiceActorsForProject = (project: DubbingProject) => {
   });
 };
 
-const groupCrewByJob = (crew: any[]) => {
+const groupCrewByJob = (crew: CrewMember[]) => {
   if (!crew) return {};
-  return crew.reduce((acc: any, member: any) => {
+  return crew.reduce((acc: Record<string, CrewMember[]>, member: CrewMember) => {
     const jobName = member.job?.name || "Unknown Job";
     if (!acc[jobName]) acc[jobName] = [];
     acc[jobName].push(member);

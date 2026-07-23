@@ -1,12 +1,12 @@
 import { PersonData, Role } from "@/components/PersonItem.vue";
-import { Actor, VoiceActorDetails } from "@supabase/functions/_shared/types";
+import { Actor } from "@supabase/functions/_shared/types";
 
 export const actorToPersonData = <
   T extends {
     id: number;
     name: string;
     profile_path?: string | null;
-    roles?: { character: string; [key: string]: any }[];
+    roles?: { character: string; [key: string]: unknown }[];
     character?: string;
   },
 >(
@@ -44,12 +44,12 @@ export const actorToPersonData = <
 };
 
 export const voiceActorToPersonData = (
-  va: VoiceActorDetails,
+  va: { id: number; firstname?: string; lastname?: string; profile_picture?: string },
   performance: string,
   actorId: number,
   reviewedStatus?: string,
   workId?: number,
-): PersonData<VoiceActorDetails> => {
+): PersonData<{ id: number; firstname?: string; lastname?: string; profile_picture?: string }> => {
   return {
     id: va.id,
     name: va.firstname + " " + va.lastname,

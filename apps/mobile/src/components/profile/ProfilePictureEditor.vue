@@ -102,7 +102,7 @@ const uploadProfilePicture = async (file: File) => {
       profile_picture: publicUrl
     }, {})
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error uploading profile picture:', error)
     alert('Erreur lors du téléchargement de l\'image.')
   } finally {

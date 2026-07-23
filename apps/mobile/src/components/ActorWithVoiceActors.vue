@@ -44,7 +44,7 @@
           <template v-for="voiceActor in voiceActors" :key="voiceActor.id">
             <router-link
               class="voice-actor-item no-link"
-              :to="{ name: 'VoiceActorDetails', params: { id: voiceActor.id } }"
+              :to="{ name: 'voice-actor-details', params: { id: voiceActor.id } }"
             >
               <PersonItem
                 @contextmenu.prevent="handleLongPress(voiceActor)"
@@ -54,8 +54,8 @@
               >
                 <template #actions>
                   <!-- Status Indicators -->
-                  <CheckCircle2 v-if="(voiceActor as any).status === 'accepted'" class="app-icon status-icon accepted" />
-                  <Clock v-if="!(voiceActor as any).status || (voiceActor as any).status === 'waiting'" class="app-icon status-icon waiting" />
+                  <CheckCircle2 v-if="voiceActor.status === 'accepted'" class="app-icon status-icon accepted" />
+                  <Clock v-if="!voiceActor.status || voiceActor.status === 'waiting'" class="app-icon status-icon waiting" />
                 </template>
               </PersonItem>
             </router-link>
@@ -95,16 +95,17 @@ import Trash2Icon from '~icons/lucide/trash-2';
 import { useI18n } from "vue-i18n";
 import {
   Actor,
-  VoiceActorDetails} from "@supabase/functions/_shared/types";
+  } from "@supabase/functions/_shared/types";
+import type { VoiceActorInfo } from "@/types/models";
 
 export interface ActorWithVoiceActorsProps {
   actor: PersonData<Actor>;
-  voiceActors?: PersonData<VoiceActorDetails>[];
+  voiceActors?: Array<VoiceActorInfo>;
   onActorClick?: (actor: PersonData<Actor>) => void;
-  onVoiceActorClick?: (voiceActor: PersonData<VoiceActorDetails>) => void;
+  onVoiceActorClick?: (voiceActor: { id: number }) => void;
   mediaLanguage?: string;
-  editVoiceActorLink?: (workItem: any) => void;
-  confirmDeleteVoiceActorLink?: (workItem: any) => void;
+  editVoiceActorLink?: (workItem: Pick<VoiceActorInfo, 'work_id' | 'performance'>) => void;
+  confirmDeleteVoiceActorLink?: (workItem: Pick<VoiceActorInfo, 'work_id'>) => void;
   addVoiceActorLink?: (actor: PersonData<Actor>) => void;
   openVoiceActorSearch?: (actorId: number) => void;
   workType?: "movie" | "tv" | "season" | "episode";
@@ -173,7 +174,7 @@ const shouldShowVoiceActors = computed(() => {
   );
 });
 
-function handleLongPress(voiceActor: PersonData<VoiceActorDetails>) {
+function handleLongPress(voiceActor: { id: number }) {
   openActionSheet(voiceActor);
 }
 
@@ -181,7 +182,7 @@ const isActionSheetOpen = ref(false);
 const actionSheetButtons = ref<ActionSheetButton[]>([]);
 
 // Open comprehensive action sheet
-const openActionSheet = async (voiceActor: PersonData<VoiceActorDetails>) => {
+const openActionSheet = async (voiceActor: { id: number }) => {
   const buttons: ActionSheetButton[] = [];
 
   // A user is the owner if their linked voice_actor_id matches this voice actor's profile ID

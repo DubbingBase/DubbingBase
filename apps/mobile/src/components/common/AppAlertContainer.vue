@@ -49,7 +49,7 @@ export interface AlertInput {
 export interface AlertButton {
   text: string;
   role?: string;
-  handler?: (data?: any) => boolean | void | Promise<boolean | void>;
+  handler?: (data?: unknown) => boolean | void | Promise<boolean | void>;
 }
 
 export interface AlertOptions {
@@ -62,21 +62,21 @@ export interface AlertOptions {
 
 export interface AlertInstance extends AlertOptions {
   id: number;
-  onDidDismissResolve: ((data: { role?: string, data?: any }) => void) | null;
+  onDidDismissResolve: ((data: { role?: string, data?: unknown }) => void) | null;
 }
 
 const alerts = ref<AlertInstance[]>([]);
 let nextId = 0;
 
 // State for inputs: map of alertId -> map of inputName -> value
-const inputValues = reactive<Record<number, Record<string, any>>>({});
+const inputValues = reactive<Record<number, string | number>>({});
 
 const normalizedButtons = (buttons?: (string | AlertButton)[]): AlertButton[] => {
   if (!buttons || buttons.length === 0) return [{ text: 'OK' }];
   return buttons.map(b => typeof b === 'string' ? { text: b } : b);
 };
 
-const addAlert = (options: AlertOptions, resolveCallback: (data: any) => void) => {
+const addAlert = (options: AlertOptions, resolveCallback: (data: unknown) => void) => {
   const id = nextId++;
   
   inputValues[id] = {};
@@ -128,13 +128,13 @@ const handleBackdropClick = () => {
 
 onMounted(() => {
   if (typeof window !== 'undefined') {
-    (window as any).__addAlert = addAlert;
+    (window as unknown as { __addAlert: typeof addAlert }).__addAlert = addAlert;
   }
 });
 
 onUnmounted(() => {
   if (typeof window !== 'undefined') {
-    delete (window as any).__addAlert;
+    delete (window as unknown as { __addAlert?: typeof addAlert }).__addAlert;
   }
 });
 </script>

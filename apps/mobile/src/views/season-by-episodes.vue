@@ -89,8 +89,8 @@ const route = useRoute();
 const router = useRouter();
 const isLoading = ref(true);
 const error = ref("");
-const episode = ref<any>(null);
-const dbVoiceActors = ref<any[]>([]);
+const episode = ref<{ episode_number?: number; name?: string; air_date?: string; overview?: string; still_path?: string } | null>(null);
+const dbVoiceActors = ref<Array<{ id: number; firstname?: string; lastname?: string; profile_picture?: string; }>>([]);
 
 const wikiDataId = computed(() => episode.value?.external_ids?.wikidata_id);
 const hasWikidataId = computed(() => !!wikiDataId.value);
@@ -160,7 +160,7 @@ const fetchQueueStatus = async () => {
   }
 };
 
-let pollingInterval: any = null;
+let pollingInterval: ReturnType<typeof setInterval> | null = null;
 
 function stopQueuePolling() {
   if (pollingInterval) {
@@ -169,7 +169,7 @@ function stopQueuePolling() {
   }
 }
 
-const handleRefresh = async (event: any) => {
+const handleRefresh = async (event: RefresherCustomEvent) => {
   try {
     await fetchEpisodeData();
   } catch (error) {
@@ -220,7 +220,7 @@ async function fetchEpisodeInfos() {
 }
 
 function goToVoiceActor(id: number) {
-  router.push({ name: "VoiceActorDetails", params: { id } });
+  router.push({ name: "voice-actor-details", params: { id } });
 }
 
 function getVoiceActorByTmdbId(tmdbId: number) {
@@ -236,11 +236,11 @@ function goToActor(id: number) {
   router.push({ name: "ActorDetails", params: { id } });
 }
 
-function editVoiceActorLink(item: any) {}
+function editVoiceActorLink(item: { work_id?: number }) {}
 
-function confirmDeleteVoiceActorLink(item: any) {}
+function confirmDeleteVoiceActorLink(item: { work_id?: number }) {}
 
-function openVoiceActorSearch(actor: any) {}
+function openVoiceActorSearch(actor: { id: number }) {}
 
 async function fetchEpisodeData() {
   const serieId = route.params.id;
@@ -273,8 +273,8 @@ watch(
     error.value = "";
     try {
       await fetchEpisodeData();
-    } catch (e: any) {
-      error.value = e.message || "Erreur lors du chargement.";
+    } catch (e: unknown) {
+      error.value = (e as { message?: string })?.message || "Erreur lors du chargement.";
     } finally {
       isLoading.value = false;
     }

@@ -57,7 +57,7 @@ interface Props {
   /** @deprecated */
   routeName: string;
   /** @deprecated */
-  routeParams: Record<string, any>;
+  routeParams: Record<string, string | number>;
   loading?: boolean;
   fallbackImagePath?: string;
   height?: number;

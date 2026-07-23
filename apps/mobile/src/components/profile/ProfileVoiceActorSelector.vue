@@ -120,7 +120,7 @@ const authStore = useAuthStore()
 const isModalOpen = ref(false)
 const isSwitching = ref(false)
 const searchTerm = ref('')
-const allVoiceActors = ref<any[]>([])
+const allVoiceActors = ref<{ id: number; firstname: string; lastname: string }[]>([])
 const isLoading = ref(false)
 const errorMessage = ref('')
 
@@ -170,7 +170,7 @@ const selectUserProfile = async () => {
   }
 }
 
-const selectVoiceActor = async (voiceActor: any) => {
+const selectVoiceActor = async (voiceActor: { id: number }) => {
   if (props.hasUnsavedChanges) {
     const shouldProceed = await confirmSwitch()
     if (!shouldProceed) return
@@ -232,7 +232,7 @@ const confirmSwitch = async (): Promise<boolean> => {
 
   await alert.present()
   const result = await alert.onDidDismiss()
-  return result.role !== 'cancel'
+  return (result as { role?: string }).role !== 'cancel'
 }
 
 const showError = (message: string) => {

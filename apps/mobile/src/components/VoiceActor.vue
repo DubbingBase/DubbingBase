@@ -2,7 +2,7 @@
   <div class="va-actor" v-if="modelValue">
     <router-link
       :to="{
-        name: 'VoiceActorDetails',
+        name: 'voice-actor-details',
         params: {
           id: voiceActorId,
         },

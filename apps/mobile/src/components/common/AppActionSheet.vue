@@ -14,7 +14,7 @@ import { IonActionSheet } from '@ionic/vue';
 
 export interface ActionSheetButton {
   text: string;
-  icon?: any;
+  icon?: import('vue').Component | string;
   role?: 'destructive' | 'cancel' | string;
   cssClass?: string;
   handler?: () => void;
@@ -39,7 +39,7 @@ const isOpen = computed({
   }
 });
 
-const getSvgStringFromComponent = (component: any) => {
+const getSvgStringFromComponent = (component: import('vue').Component | string | undefined) => {
   if (!component) return undefined;
   if (typeof component === 'string') return component; // Already an SVG string or icon name
 
@@ -63,7 +63,7 @@ const getSvgStringFromComponent = (component: any) => {
 };
 
 const formattedButtons = computed(() => {
-  const finalButtons: any[] = props.buttons.map(btn => ({
+  const finalButtons: ActionSheetButton[] = props.buttons.map(btn => ({
     text: btn.text,
     role: btn.role,
     cssClass: btn.cssClass,

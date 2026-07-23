@@ -47,7 +47,7 @@ const emit = defineEmits<{
 }>();
 
 const imageUrl = ref<string | null>(null);
-const cropperRef = ref<any>(null);
+const cropperRef = ref<InstanceType<typeof Cropper> | null>(null);
 
 // Create object URL when a new file is provided
 watch(() => props.imageFile, (newFile) => {

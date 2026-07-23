@@ -469,6 +469,27 @@ const fetchQueueAndUsers = async () => {
 
 
 
+const startProcessing = async () => {
+  isProcessing.value = true;
+  showToast("Processing started...", "info");
+  try {
+    const { error: processErr } = await supabase.functions.invoke(
+      "process-media-queue",
+      {
+        body: {},
+      }
+    );
+    if (processErr) throw processErr;
+    showToast("Processing completed successfully!", "success");
+  } catch (err: any) {
+    console.error("Error processing queue:", err);
+    showToast(err.message || "Failed to process queue.", "error");
+  } finally {
+    isProcessing.value = false;
+    await fetchQueueAndUsers();
+  }
+};
+
 const clearQueue = async () => {
   if (
     !confirm(

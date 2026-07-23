@@ -52,16 +52,20 @@ export interface Role {
 export interface PersonData<T = unknown | undefined> {
   id: number;
   name?: string;
+  firstname?: string;
+  lastname?: string;
   roles?: Role[];
   profile_picture?: string;
+  profile_path?: string;
   performance?: string;
   tags?: string[] | string;
-  tmdb_id: number;
-  data: T;
+  tmdb_id?: number;
+  data?: T;
   character?: string;
   // TODO: remove this as it's only for voice actors
   reviewed_status?: string | null;
   work_id?: number;
+  status?: string | null;
 }
 
 const props = withDefaults(
@@ -110,7 +114,7 @@ const tags = computed(() => {
 });
 
 const routeName = computed(() => {
-  return props.type === "actor" ? "ActorDetails" : "VoiceActorDetails";
+  return props.type === "actor" ? "actor-details" : "voice-actor-details";
 });
 
 const routeParams = computed(() => {

@@ -58,10 +58,11 @@ defineExpose({
   }
 });
 
-let debounceTimeout: any = null;
+let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
 
 const onInput = (event: Event) => {
-  const target = event.target as HTMLInputElement;
+  if (!(event.target instanceof HTMLInputElement)) return;
+  const target = event.target;
   const value = target.value;
   
   if (props.debounce > 0) {

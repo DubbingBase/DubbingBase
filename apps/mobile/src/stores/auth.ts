@@ -32,7 +32,7 @@ export const useAuthStore = defineStore("auth", () => {
   });
 
   // Actions
-  const setUser = (userData: any) => {
+  const setUser = (userData: User | null) => {
     user.value = userData;
   };
 
@@ -55,8 +55,8 @@ export const useAuthStore = defineStore("auth", () => {
 
       user.value = data.user;
       return { user: data.user, error: null };
-    } catch (err: any) {
-      const errorMessage = err.message || "Failed to sign in";
+    } catch (err: unknown) {
+      const errorMessage = (err as Error).message || "Failed to sign in";
       error.value = errorMessage;
       return { user: null, error: new Error(errorMessage) };
     } finally {
@@ -91,8 +91,8 @@ export const useAuthStore = defineStore("auth", () => {
       }
 
       return { user: data.user, error: null };
-    } catch (err: any) {
-      const errorMessage = err.message || "Failed to sign up";
+    } catch (err: unknown) {
+      const errorMessage = (err as Error).message || "Failed to sign up";
       error.value = errorMessage;
       return { user: null, error: new Error(errorMessage) };
     } finally {
@@ -109,8 +109,8 @@ export const useAuthStore = defineStore("auth", () => {
       if (signOutError) throw signOutError;
 
       clearUser();
-    } catch (err: any) {
-      error.value = err.message || "Failed to sign out";
+    } catch (err: unknown) {
+      error.value = (err as Error).message || "An error occurred during sign in";
       throw err;
     } finally {
       isLoading.value = false;
@@ -126,14 +126,14 @@ export const useAuthStore = defineStore("auth", () => {
         user.value = session.user;
       }
       return session?.user || null;
-    } catch (err: any) {
-      error.value = err.message || "Failed to check authentication status";
+    } catch (err: unknown) {
+      error.value = (err as Error).message || "Failed to check authentication status";
       return null;
     }
   };
 
   // Initialize auth state
-  let authListener: { subscription: any } = { subscription: null };
+  let authListener: { subscription: { unsubscribe: () => void } | null } = { subscription: null };
 
   const initialize = async () => {
     try {

@@ -331,7 +331,7 @@ const { $t } = getCurrentInstance()!.proxy!;
 // Reactive variables
 const selectedTab = ref<string>("user-profile");
 const adminSearchQuery = ref<string>("");
-const adminSearchResults = ref<any[]>([]);
+const adminSearchResults = ref<Array<{ id: number; firstname?: string; lastname?: string; profile_picture?: string }>>([]);
 const isActionSheetOpen = ref(false);
 const showAdminSearch = ref<boolean>(false);
 
@@ -377,7 +377,7 @@ const retryLoadProfile = async () => {
   await profileStore.fetchProfile({});
 };
 
-const handleTabChange = (event: any) => {
+const handleTabChange = (event: CustomEvent) => {
   selectedTab.value = event.detail.value;
   if (event.detail.value.startsWith('voice-actor-')) {
     const voiceActorId = parseInt(event.detail.value.split('-')[2]);
@@ -419,7 +419,7 @@ const handleAdminSearch = async () => {
   }
 };
 
-const impersonateVoiceActor = async (voiceActor: any) => {
+const impersonateVoiceActor = async (voiceActor: { id: number; firstname?: string; lastname?: string; profile_picture?: string; }) => {
   profileStore.impersonateVoiceActor(voiceActor);
   selectedTab.value = `voice-actor-${voiceActor.id}`;
   adminSearchQuery.value = "";
@@ -465,7 +465,7 @@ onMounted(async () => {
   selectedTab.value = "user-profile";
 });
 
-const handleRefresh = async (event: any) => {
+const handleRefresh = async (event: RefresherCustomEvent) => {
   try {
     await profileStore.fetchProfile({});
   } catch (error) {
@@ -477,7 +477,7 @@ const handleRefresh = async (event: any) => {
 
 watch(
   () => profileStore.voiceActors,
-  (newVoiceActors: any[]) => {
+  (newVoiceActors: Array<{ id: number; firstname?: string; lastname?: string; profile_picture?: string }>) => {
     if (
       newVoiceActors.length === 0 &&
       selectedTab.value.startsWith("voice-actor-")

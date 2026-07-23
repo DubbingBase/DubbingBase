@@ -231,8 +231,8 @@ const actionSheetButtons = computed<ActionSheetButton[]>(() => {
   return buttons;
 });
 
-const show = ref<ShowResponse["serie"] | any>();
-const dubbingProjects = ref<any[]>([]);
+const show = ref<ShowResponse["serie"] | undefined>();
+const dubbingProjects = ref<Array<{ id: number; works?: unknown[] }>>([]);
 const isLoading = ref(true);
 const isFetching = ref(false);
 const fetchError = ref("");
@@ -326,7 +326,7 @@ const findCharacter = (
 };
 
 const actors = computed(() => {
-  return show.value?.credits?.cast?.map((cast: any) => {
+  return show.value?.credits?.cast?.map((cast: { id: number }) => {
     const person = actorToPersonData(cast);
 
     console.log("person.roles", person.roles);
@@ -360,13 +360,13 @@ const hasWikidataId = computed(() => {
 });
 
 const hasData = computed(() => {
-  return dubbingProjects.value.some((p: any) => p.works && p.works.length > 0);
+  return dubbingProjects.value.some((p: { works?: unknown[] }) => p.works && p.works.length > 0);
 });
 
 const formattedSeasons = computed(() => {
   if (!show.value?.seasons) return [];
 
-  return show.value?.seasons?.map((season: any) => ({
+  return show.value?.seasons?.map((season: { season_number: number; name: string }) => ({
     ...season,
     formatted_air_date: season.air_date
       ? format(new Date(season.air_date), "MMM dd, yyyy")
@@ -469,10 +469,10 @@ const takePhoto = async () => {
 
     // Provide known actors to the AI
     const simplifiedActors =
-      actors.value?.map((a: any) => ({
+      actors.value?.map((a: { id?: number; name?: string; roles?: { character?: string }[] }) => ({
         id: a.id,
         name: a.name,
-        roles: a.roles?.map((r: any) => r.character) || [],
+        roles: a.roles?.map((r: { character?: string }) => r.character) || [],
       })) || [];
     formData.append("actors", JSON.stringify(simplifiedActors));
 
@@ -507,7 +507,7 @@ const getSerie = async (id: string) => {
       body: { id },
     });
     return response;
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error("Error fetching series data:", e);
     error.value = "Failed to load series details.";
     throw e;
@@ -519,20 +519,20 @@ const fetchSerieData = async () => {
   try {
     const response = await getSerie(id as string);
     if (response.data) {
-      show.value = response.data.serie || (response.data as any).show; // Handle both response formats
+      show.value = response.data.serie || (response.data as { show?: unknown }).show; // Handle both response formats
       show.value.credits = response.data.aggregateCredits;
       if (response.data.characterProfilePictures) {
         characterProfilePictures.value = response.data.characterProfilePictures;
       }
       dubbingProjects.value = response.data.dubbingProjects || [];
-      if ((response.data as any).votes) {
+      if ((response.data as { votes?: Record<string, number> }).votes) {
         sharedVotes.value = {
           ...sharedVotes.value,
-          ...(response.data as any).votes,
+          ...(response.data as { votes?: Record<string, number> }).votes,
         };
       }
     }
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error("Error fetching serie data:", e);
     error.value = "Failed to load serie details.";
     throw e;
@@ -572,7 +572,7 @@ const fetchQueueStatus = async () => {
 
 const selectedSegment = ref("peoples");
 
-const handleRefresh = async (event?: any) => {
+const handleRefresh = async (event: RefresherCustomEvent) => {
   try {
     await fetchSerieData();
     if (!hasData.value && hasWikidataId.value) {
@@ -581,7 +581,7 @@ const handleRefresh = async (event?: any) => {
   } catch (error) {
     console.error("Error refreshing serie data:", error);
   } finally {
-    event?.target?.complete();
+    event.target.complete();
   }
 };
 

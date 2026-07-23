@@ -142,9 +142,9 @@ import { supabase } from "@/api/supabase";
 const route = useRoute();
 const studioId = route.params.id as string;
 
-const studio = ref<any>(null);
-const dubbedProjects = ref<any[]>([]);
-const voiceActorsRoster = ref<any[]>([]);
+const studio = ref<{ id: number; name: string; logo_path?: string } | null>(null);
+const dubbedProjects = ref<Array<{ id: number }>>([]);
+const voiceActorsRoster = ref<Array<{ id: number }>>([]);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
 
@@ -172,9 +172,9 @@ const fetchStudioDetails = async () => {
       dubbedProjects.value = data.dubbedProjects;
       voiceActorsRoster.value = data.voiceActorsRoster;
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error fetching studio details:", err);
-    error.value = err.message || "Failed to load studio details";
+    error.value = (err as { message?: string })?.message || "Failed to load studio details";
   } finally {
     isLoading.value = false;
   }

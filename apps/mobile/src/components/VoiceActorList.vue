@@ -4,9 +4,9 @@
       <div class="voice-actor-container">
         <PersonItem
           v-for="item in voiceActors"
-          :key="item.voiceActorDetails.id"
+          :key="item.id"
           type="voice-actor"
-          :person="item.voiceActorDetails"
+          :person="item"
           @click="handlePersonClick"
         >
           <template #actions v-if="isAdmin">
@@ -37,18 +37,20 @@ import Trash2 from '~icons/lucide/trash2';
 
 import PersonItem from "@/components/PersonItem.vue";
 import NoVoiceActor from "@/components/NoVoiceActor.vue";
+import type { VoiceActorInfo } from "@/types/models";
+import type { PersonData } from "@/components/PersonItem.vue";
 
 const props = defineProps<{
-  voiceActors: any[];
-  actor: any;
+  voiceActors: VoiceActorInfo[];
+  actor: PersonData;
   isAdmin?: boolean;
   goToVoiceActor: (id: number) => void;
-  editVoiceActorLink?: (item: any) => void;
-  confirmDeleteVoiceActorLink?: (item: any) => void;
+  editVoiceActorLink?: (item: Pick<VoiceActorInfo, 'work_id' | 'performance'>) => void;
+  confirmDeleteVoiceActorLink?: (item: Pick<VoiceActorInfo, 'work_id'>) => void;
   openVoiceActorSearch?: (actorId: number) => void;
 }>();
 
-const handlePersonClick = (person: any) => {
+const handlePersonClick = (person: { id: number }) => {
   props.goToVoiceActor(person.id);
 };
 </script>

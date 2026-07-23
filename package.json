@@ -7,7 +7,7 @@
     "build:mobile": "turbo run build --filter=@app/mobile",
     "build:website": "turbo run build --filter=@app/website",
     "dev": "turbo run dev",
-    "lint": "turbo run lint",
+    "lint": "oxlint -c .oxlintrc.json",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "typecheck": "turbo run typecheck",
     "discover:media": "npx --yes tsx --env-file=.env.development scripts/discover-media.ts"
@@ -15,6 +15,7 @@
   "devDependencies": {
     "@changesets/cli": "^2.31.1",
     "@types/node": "^24.9.1",
+    "oxlint": "^1.75.0",
     "prettier": "^3.0.0",
     "turbo": "^2.10.5"
   },

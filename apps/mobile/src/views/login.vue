@@ -104,7 +104,7 @@ const login = async () => {
 
     // If no error, proceed with successful auth
     handleSuccessfulAuth();
-  } catch (err: any) {
+  } catch (err: unknown) {
     // Handle unexpected errors
     console.error('Unexpected login error:', err);
     error.value = 'Une erreur inattendue est survenue';
@@ -131,8 +131,8 @@ const register = async () => {
     await toast.present();
     error.value = '';
     isRegister.value = false;
-  } catch (err: any) {
-    error.value = err.message || "Échec de la création du compte";
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : "Échec de la création du compte";
     console.error('Registration error:', err);
   } finally {
     loading.value = false;

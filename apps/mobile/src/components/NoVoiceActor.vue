@@ -31,9 +31,9 @@ import AppSkeleton from '@/components/common/AppSkeleton.vue';
 
 // Props
 defineProps<{
-  actor: any;
+  actor: { id: number };
   isAdmin: boolean;
-  openVoiceActorSearch: (actor: any) => void;
+  openVoiceActorSearch: (actorId: number) => void;
 }>();
 </script>
 

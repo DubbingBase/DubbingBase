@@ -87,7 +87,7 @@
                 :key="show.id"
                 v-for="show in trendingSeries"
                 :imagePath="show.poster_path"
-                :title="show.title || (show as any).name"
+                :title="getShowTitle(show)"
                 routeName="SerieDetails"
                 :routeParams="{ id: show.id }"
               ></MediaItem>
@@ -120,7 +120,7 @@
                 v-for="va in recentVoiceActors"
                 :imagePath="va.profile_picture ?? undefined"
                 :title="`${va.firstname} ${va.lastname}`"
-                routeName="VoiceActorDetails"
+                routeName="voice-actor-details"
                 :routeParams="{ id: va.id }"
                 :fallbackImagePath="getAvatarFallbackUrl(`${va.firstname} ${va.lastname}`)"
               ></MediaItem>
@@ -157,7 +157,7 @@
                 v-for="va in topVoiceActors"
                 :imagePath="va.profile_picture ?? undefined"
                 :title="`${va.firstname} ${va.lastname}`"
-                routeName="VoiceActorDetails"
+                routeName="voice-actor-details"
                 :routeParams="{ id: va.id }"
                 :fallbackImagePath="getAvatarFallbackUrl(`${va.firstname} ${va.lastname}`)"
               ></MediaItem>
@@ -284,11 +284,15 @@ const loadHomeData = async () => {
   ]);
 };
 
+const getShowTitle = (show: { title?: string; name?: string }) => {
+  return show.title || show.name || "";
+};
+
 onMounted(() => {
   loadHomeData();
 });
 
-const handleRefresh = async (event: any) => {
+const handleRefresh = async (event: RefresherCustomEvent) => {
   await loadHomeData();
   event.target.complete();
 };

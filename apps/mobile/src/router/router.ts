@@ -82,7 +82,7 @@ const routes: readonly RouteRecordRaw[] = [
     component: SerieDetails,
   },
   {
-    name: "VoiceActorDetails",
+    name: "voice-actor-details",
     path: "/voice-actor/:id",
     component: VoiceActorDetails,
   },

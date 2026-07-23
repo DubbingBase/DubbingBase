@@ -133,7 +133,7 @@
                         :media="group"
                         :character="
                           group.roles
-                            .map((r: any) => r.character)
+                            .map(r => r.character)
                             .filter(Boolean)
                             .join(', ')
                         "
@@ -229,7 +229,8 @@ const route = useRoute();
 const router = useRouter();
 
 const actor = ref<PersonData<Actor>>();
-const voiceActors = ref<any[]>([]);
+type VoiceActorData = { id: number; firstname: string; lastname: string; profile_picture: string; is_official?: boolean; mediaDetails?: { id: number }; voice_actors?: VoiceActorData[] };
+const voiceActors = ref<VoiceActorData[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const showDubbedOnly = ref<"true" | "false">("true");
@@ -259,7 +260,7 @@ watch(isBiographyExpanded, updateSegmentHeight);
 const tmdbRoles = computed(() => {
   if (!actor.value?.data?.credits?.cast) return [];
 
-  return actor.value.data.credits.cast.map((credit: any) => {
+  return actor.value.data.credits.cast.map((credit: { id: number; character: string; title?: string; name?: string; release_date?: string; first_air_date?: string; media_type?: string; poster_path?: string; roles?: Array<{ character?: string }> }) => {
     const title = credit.title || credit.name;
     const releaseDate = credit.release_date || credit.first_air_date;
     const releaseYear = releaseDate
@@ -325,10 +326,10 @@ const filteredRolesToShow = computed(() => {
   return groupedRolesToShow.value
     .map((group) => {
       const titleMatch = (group.title || "").toLowerCase().includes(query);
-      const rolesMatch = group.roles.filter((r: any) =>
+      const rolesMatch = group.roles.filter((r: { character?: string }) =>
         (r.character || "").toLowerCase().includes(query),
       );
-      const vaMatch = group.voice_actors.filter((va: any) =>
+      const vaMatch = group.voice_actors.filter((va: VoiceActorData) =>
         `${va.firstname} ${va.lastname}`.toLowerCase().includes(query),
       );
 
@@ -345,14 +346,14 @@ const filteredRolesToShow = computed(() => {
 
 const mediaIdsWithDubs = computed(() => {
   return new Set(
-    voiceActors.value.map((va: any) => va.mediaDetails?.id).filter(Boolean),
+    voiceActors.value.map((va: VoiceActorData) => va.mediaDetails?.id).filter(Boolean),
   );
 });
 
 const voiceActorsByMediaId = computed(() => {
   const map = new Map();
-  voiceActors.value.forEach((va: any) => {
-    map.set(va.mediaDetails.id, va.voice_actors);
+  voiceActors.value.forEach((va: VoiceActorData) => {
+    map.set(va.mediaDetails?.id, va.voice_actors);
   });
   return map;
 });
@@ -361,8 +362,8 @@ const sortedVoiceActors = computed(() => {
   const voiceActorMap = new Map();
 
   // Aggregate voice actors and count their roles
-  voiceActors.value.forEach((role: any) => {
-    role.voice_actors.forEach((va: any) => {
+  voiceActors.value.forEach((role: VoiceActorData) => {
+    role.voice_actors?.forEach((va: VoiceActorData) => {
       if (!voiceActorMap.has(va.id)) {
         voiceActorMap.set(va.id, {
           ...va,
@@ -379,7 +380,7 @@ const sortedVoiceActors = computed(() => {
 });
 
 const groupedVoiceActors = computed(() => {
-  return sortedVoiceActors.value.map((voiceActor: any) => ({
+  return sortedVoiceActors.value.map((voiceActor: VoiceActorData & { roleCount: number }) => ({
     id: voiceActor.id,
     name: `${voiceActor.firstname} ${voiceActor.lastname}`,
     tmdb_id: voiceActor.id,
@@ -425,10 +426,7 @@ async function loadActorData() {
     const actorResponseRaw = await supabase.functions.invoke("actor", {
       body: { id }});
     console.log("Raw Supabase response:", actorResponseRaw);
-    const actorResponse = (await actorResponseRaw.data) as {
-      actor: Actor;
-      voiceActors?: any[];
-    };
+    const actorResponse: { data?: { credits?: { cast?: Array<{ id: number; character: string; title?: string; name?: string; release_date?: string; first_air_date?: string; media_type?: string; poster_path?: string }> } } } = await actorResponseRaw.data;
     console.log("Parsed actor response:", actorResponse);
 
     // Fix: Properly assign actor data including all required fields
@@ -450,13 +448,13 @@ async function loadActorData() {
   }
 }
 
-const handleRefresh = async (event: any) => {
+const handleRefresh = async (event: CustomEvent) => {
   try {
     await loadActorData();
   } catch (err) {
     console.error("Error refreshing data:", err);
   } finally {
-    event.target.complete();
+    (event.target)?.complete();
   }
 };
 

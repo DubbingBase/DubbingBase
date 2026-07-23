@@ -123,13 +123,13 @@ const selectedCastId = ref<number | null>(null)
 const characterSearchQuery = ref('')
 const characterSearchResults = ref<(MovieCastMember | SerieCastMember)[]>([])
 const isSubmitting = ref(false)
-let searchTimeout: any = null
+let searchTimeout: ReturnType<typeof setTimeout> | null = null
 
 const isFormValid = computed(() => !!selectedMedia.value && !!selectedCastId.value)
 
 const getMediaTitle = (media: Movie | Serie) => ('title' in media) ? media.title : media.name
 const getMediaYear = (media: Movie | Serie) => {
-  const dateStr = media.release_date || (media as any).first_air_date
+  const dateStr = 'release_date' in media ? media.release_date : ('first_air_date' in media ? media.first_air_date : undefined)
   return new Date(dateStr || '').getFullYear()
 }
 

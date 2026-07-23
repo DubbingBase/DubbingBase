@@ -100,7 +100,7 @@ import { useI18n } from "vue-i18n";
 import { supabase } from "@/api/supabase";
 
 const props = defineProps<{
-  voiceActor?: any;
+  voiceActor?: { id: number; firstname: string; lastname: string };
   hideCard?: boolean;
 }>();
 
@@ -170,9 +170,9 @@ const submitRequest = async () => {
     setTimeout(() => {
       isRequestModalOpen.value = false;
     }, 2000);
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error submitting request:", err);
-    requestError.value = err.message || "Failed to submit request. Please try again.";
+    requestError.value = err instanceof Error ? err.message : "Failed to submit request. Please try again.";
   } finally {
     isSubmittingRequest.value = false;
   }

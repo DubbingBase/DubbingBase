@@ -34,10 +34,10 @@
         <div v-if="profileStore.hasProfile && editableProfile">
           <AppList>
             <AppListItem>
-              <AppInput label="First name" label-placement="stacked" v-model="(editableProfile as any).firstname" :readonly="!canEdit"></AppInput>
+              <AppInput label="First name" label-placement="stacked" v-model="editableProfile.firstname" :readonly="!canEdit"></AppInput>
             </AppListItem>
             <AppListItem>
-              <AppInput label="Last name" label-placement="stacked" v-model="(editableProfile as any).lastname" :readonly="!canEdit"></AppInput>
+              <AppInput label="Last name" label-placement="stacked" v-model="editableProfile.lastname" :readonly="!canEdit"></AppInput>
             </AppListItem>
             <AppListItem>
               <AppTextarea label="Biography" label-placement="stacked" v-model="editableProfile.bio" :auto-grow="true" :readonly="!canEdit"></AppTextarea>
@@ -49,10 +49,10 @@
               <AppInput type="date" label="Date of birth" label-placement="stacked" v-model="editableProfile.date_of_birth" :readonly="!canEdit"></AppInput>
             </AppListItem>
             <AppListItem>
-              <AppInput label="Awards" label-placement="stacked" v-model="(editableProfile as any).awards" :readonly="!canEdit"></AppInput>
+              <AppInput label="Awards" label-placement="stacked" v-model="editableProfile.awards" :readonly="!canEdit"></AppInput>
             </AppListItem>
             <AppListItem>
-              <AppInput label="Years active" label-placement="stacked" v-model="(editableProfile as any).years_active" :readonly="!canEdit"></AppInput>
+              <AppInput label="Years active" label-placement="stacked" v-model="editableProfile.years_active" :readonly="!canEdit"></AppInput>
             </AppListItem>
           </AppList>
 
@@ -133,7 +133,7 @@ import { supabase } from '@/api/supabase';
 type VoiceActor = Tables<'voice_actors'>;
 
 // Use any for editable profile to avoid deep type instantiation issues
-type EditableVoiceActor = any;
+
 
 const route = useRoute()
 const router = useRouter()
@@ -164,7 +164,7 @@ const voiceActorId = computed(() => {
 })
 
 const canEdit = computed(() => {
-  return authStore.isAdmin || profileStore.voiceActors.some((va: any) => va.id === voiceActorId.value)
+  return authStore.isAdmin || profileStore.voiceActors.some((va: { id: number }) => va.id === voiceActorId.value)
 })
 
 
@@ -191,12 +191,12 @@ const loadProfileData = async () => {
       if (data && data.voiceActor) {
         // The edge function returns work rows in data.voiceActor.work and medias in data.medias
         const medias = data.medias || [];
-        const mappedWorks = (data.voiceActor.work || []).map((work: any) => {
-          const media = medias.find((m: any) => m.id === work.dubbing_projects?.content_id);
+        const mappedWorks = (data.voiceActor.work || []).map((work: Tables<'work'> & { dubbing_projects?: { content_id: number } }) => {
+          const media = medias.find((m: { id: number }) => m.id === work.dubbing_projects?.content_id);
           
           let character_name = '';
           if (media && media.credits && media.credits.cast) {
-            const actor = media.credits.cast.find((c: any) => c.id === work.actor_id);
+            const actor = media.credits.cast.find((c: { id: number, character: string }) => c.id === work.actor_id);
             if (actor) {
               character_name = actor.character;
             }
@@ -249,9 +249,9 @@ watch(() => profileStore.voiceActor, (newProfile) => {
 
 const handleSave = async () => {
   if (profileStore.currentProfileType === 'voice_actor' && profileStore.voiceActor) {
-    const updates: { [key: string]: any } = {};
-    const editable = editableProfile.value as { [key: string]: any };
-    const current = profileStore.voiceActor as { [key: string]: any };
+    const updates: Partial<VoiceActor> = {};
+    const editable = editableProfile.value as Partial<VoiceActor>;
+    const current = profileStore.voiceActor;
 
     for (const key in editable) {
       if (editable[key] !== current[key]) {
@@ -267,7 +267,7 @@ const handleSave = async () => {
 
 const openPublicProfile = () => {
   if (profileStore.voiceActor) {
-    router.push({ name: 'VoiceActorDetails', params: { id: profileStore.voiceActor.id } })
+    router.push({ name: 'voice-actor-details', params: { id: profileStore.voiceActor.id } })
   }
 }
 </script>

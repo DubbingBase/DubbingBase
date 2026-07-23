@@ -206,7 +206,7 @@ const { t } = useI18n();
 
 const props = defineProps<{
   isOpen: boolean;
-  voiceActor: any;
+  voiceActor: { id: number; firstname?: string; lastname?: string };
   potentialWikipediaUrl: string | null;
 }>();
 
@@ -219,7 +219,7 @@ const wikipediaUrl = ref("");
 const isFetching = ref(false);
 const isSaving = ref(false);
 const error = ref("");
-const fetchedData = ref<any>({});
+const fetchedData = ref<Record<string, string | number>>({});
 
 watch(
   () => props.isOpen,
@@ -283,9 +283,9 @@ const fetchData = async () => {
         data.result.wikidata_id || props.voiceActor?.wikidata_id || null,
       tmdb_id:
         data.result.tmdb_id || props.voiceActor?.tmdb_id || null};
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error fetching wikipedia data:", err);
-    error.value = err.message || "An error occurred while fetching data.";
+    error.value = err instanceof Error ? err.message : "An error occurred while fetching data.";
   } finally {
     isFetching.value = false;
   }
@@ -319,9 +319,9 @@ const saveData = async () => {
 
     emit("saved");
     emit("close");
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error saving voice actor:", err);
-    error.value = err.message || "An error occurred while saving.";
+    error.value = err instanceof Error ? err.message : "An error occurred while saving.";
   } finally {
     isSaving.value = false;
   }

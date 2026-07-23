@@ -92,7 +92,7 @@ const query = ref("");
 const trimmedQuery = computed(() => query.value.trim());
 let abortController: AbortController | null = null;
 
-const search = async (event: { target: { value: string } }) => {
+const search = async (event: CustomEvent) => {
   query.value = event.target.value || "";
 
   if (trimmedQuery.value.length < 2) {
@@ -121,9 +121,10 @@ const search = async (event: { target: { value: string } }) => {
     if (supaError) throw supaError;
 
     matches.value = data || [];
-  } catch (err: any) {
-    if (err?.name !== "AbortError") {
-      errorMessage.value = err?.message || "Search failed";
+  } catch (err: unknown) {
+    const errorObj = err as { name?: string; message?: string };
+    if (errorObj?.name !== "AbortError") {
+      errorMessage.value = errorObj?.message || "Search failed";
     }
   } finally {
     isLoading.value = false;

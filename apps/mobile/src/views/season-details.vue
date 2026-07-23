@@ -120,9 +120,9 @@ const route = useRoute();
 const router = useRouter();
 const isLoading = ref(true);
 const error = ref("");
-const season = ref<any>(null);
-const dubbingProjects = ref<any[]>([]);
-const episodeCredits = ref<any>(null);
+const season = ref<{ name?: string; episodes?: unknown[] } | null>(null);
+const dubbingProjects = ref<Array<{ id: number; works?: unknown[] }>>([]);
+const episodeCredits = ref<{ cast?: Array<{ id: number; name: string; character?: string }> } | null>(null);
 const activeTab = ref("details");
 
 const wikiDataId = computed(() => {
@@ -130,7 +130,7 @@ const wikiDataId = computed(() => {
 });
 const hasWikidataId = computed(() => !!wikiDataId.value);
 const hasData = computed(() => {
-  return dubbingProjects.value.some((p: any) => p.works && p.works.length > 0);
+  return dubbingProjects.value.some((p: { works?: unknown[] }) => p.works && p.works.length > 0);
 });
 const isFetching = ref(false);
 const queueStatus = ref<string | null>(null);
@@ -200,7 +200,7 @@ const fetchQueueStatus = async () => {
   }
 };
 
-const handleRefresh = async (event: any) => {
+const handleRefresh = async (event: RefresherCustomEvent) => {
   try {
     await fetchData();
   } catch (error) {
@@ -246,7 +246,7 @@ async function fetchInfos() {
 }
 
 function goToVoiceActor(id: number) {
-  router.push({ name: "VoiceActorDetails", params: { id } });
+  router.push({ name: "voice-actor-details", params: { id } });
 }
 
 function goToActor(id: number) {
@@ -278,7 +278,7 @@ function goToEpisode(episodeNumber: number) {
   });
 }
 
-function frenchActors(cast: any[]) {
+function frenchActors(cast: Array<{ id: number; name: string; roles?: Array<{ character?: string }> }>) {
   // Filter for French voice actors (dub), fallback to all if language not available
   return cast.filter(
     (a) =>
@@ -306,8 +306,8 @@ async function fetchData() {
     if (!hasData.value && hasWikidataId.value) {
       await fetchQueueStatus();
     }
-  } catch (e: any) {
-    error.value = e.message || "Erreur lors du chargement.";
+  } catch (e: unknown) {
+    error.value = (e as { message?: string })?.message || "Erreur lors du chargement.";
   } finally {
     isLoading.value = false;
   }

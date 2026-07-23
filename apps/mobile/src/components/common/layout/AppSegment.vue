@@ -24,7 +24,7 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void;
 }>();
 
-const segmentEl = ref<any>(null);
+const segmentEl = ref<InstanceType<typeof IonSegment> | null>(null);
 
 watch(() => props.modelValue, (newVal) => {
   if (segmentEl.value?.$el && newVal !== undefined) {
@@ -38,7 +38,7 @@ onMounted(() => {
   }
 });
 
-const onChange = (e: any) => {
+const onChange = (e: CustomEvent) => {
   emit('update:modelValue', e.detail.value);
 };
 

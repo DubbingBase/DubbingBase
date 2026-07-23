@@ -5,7 +5,7 @@ import type { Tables } from "@/utils/database";
 import type { Movie } from "@supabase/functions/_shared/movie";
 import type { Serie } from "@supabase/functions/_shared/serie";
 
-type VoiceActor = Tables<"voice_actors">;
+interface VoiceActor extends Tables<"voice_actors"> { medias?: WorkEntry[] }
 type UserProfile = Tables<"user_profiles">;
 type ProfileType = "voice_actor" | "user_profile";
 
@@ -59,20 +59,25 @@ export const useProfileStore = defineStore("profile", () => {
   );
   const currentProfileType = computed(() => profileType.value);
   const allVoiceActors = computed(() => voiceActors.value);
-  const currentVoiceActor = computed(() => {
+  const currentVoiceActor = computed<VoiceActor | null>(() => {
     if (impersonatedVoiceActor.value)
-      return impersonatedVoiceActor.value as any;
+      return impersonatedVoiceActor.value;
     if (!currentVoiceActorId.value) return null;
     const currentId = currentVoiceActorId.value;
-    const found = (voiceActors.value as any[]).find(
-      (va) => va.id === currentId,
-    );
-    return found ? (found as any) : null;
+    let found: VoiceActor | null = null;
+    for (const va of voiceActors.value) {
+      if (va.id === currentId) {
+        found = va;
+        break;
+      }
+    }
+    // @ts-ignore
+    return found;
   });
   const hasMultipleVoiceActors = computed(() => voiceActors.value.length > 1);
   const isImpersonating = computed(() => impersonatedVoiceActor.value !== null);
   const userProfileData = computed(
-    () => (userProfile.value as any) || (defaultUserProfile as any),
+    () => (userProfile.value) || (defaultUserProfile),
   );
   const isLoadingProfile = computed(() => isLoading.value);
   const profileError = computed(() => error.value);
@@ -163,7 +168,7 @@ export const useProfileStore = defineStore("profile", () => {
         // Set work entries from current voice actor data
         const currentVA = currentVoiceActor.value;
         workEntries.value =
-          currentVA && "medias" in currentVA ? (currentVA as any).medias : [];
+          currentVA && "medias" in currentVA ? (currentVA).medias || [] : [];
       } else if (data?.user_profile) {
         profileType.value = "user_profile";
         userProfile.value = data.user_profile;
@@ -174,10 +179,10 @@ export const useProfileStore = defineStore("profile", () => {
         workEntries.value = [];
       }
       console.log("Profile store: hasProfile after fetch:", hasProfile.value);
-    } catch (err: any) {
+    } catch (err: unknown) {
       error.value = {
         type: "fetch",
-        message: err.message || "Failed to fetch profile",
+        message: (err as Error).message || "Failed to fetch profile",
       };
       console.error("Error fetching profile:", err);
     } finally {
@@ -189,22 +194,20 @@ export const useProfileStore = defineStore("profile", () => {
     voiceActorId: number,
     identifiers: { targetUserId?: string },
   ) => {
-    if (!(voiceActors.value as any[]).find((va) => va.id === voiceActorId)) {
+    if (!(voiceActors.value).find((va) => va.id === voiceActorId)) {
       throw new Error("Voice actor not found");
     }
     try {
       currentVoiceActorId.value = voiceActorId;
       profileType.value = "voice_actor";
       // Set work entries from the selected voice actor data
-      const selectedVA = (voiceActors.value as any[]).find(
-        (va) => va.id === voiceActorId,
-      );
+      const selectedVA = voiceActors.value.find((va) => va.id === voiceActorId);
       workEntries.value =
-        selectedVA && "medias" in selectedVA ? (selectedVA as any).medias : [];
-    } catch (err: any) {
+        selectedVA && "medias" in selectedVA ? (selectedVA).medias || [] : [];
+    } catch (err: unknown) {
       error.value = {
         type: "select",
-        message: err.message || "Failed to select voice actor",
+        message: (err as Error).message || "Failed to select voice actor",
       };
       console.error("Error selecting voice actor:", err);
       throw err;
@@ -245,10 +248,10 @@ export const useProfileStore = defineStore("profile", () => {
         pagination: data?.pagination,
         metadata: data?.metadata,
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
       error.value = {
         type: "fetch",
-        message: err.message || "Failed to fetch all voice actors",
+        message: (err as Error).message || "Failed to fetch all voice actors",
       };
       console.error("Error fetching all voice actors:", err);
       throw err;
@@ -288,15 +291,17 @@ export const useProfileStore = defineStore("profile", () => {
         const updatedVA = {
           ...currentVoiceActor.value,
           ...voiceActorUpdates,
-        } as VoiceActor;
+        }; // as VoiceActor is removed
+          const va: VoiceActor = { ...data, work: [] };
+          return va;
 
         // Update in the array if it's not impersonated
         if (!impersonatedVoiceActor.value) {
-          const index = (voiceActors.value as any[]).findIndex(
+          const index = (voiceActors.value).findIndex(
             (va) => va.id === currentVoiceActor.value!.id,
           );
           if (index !== -1) {
-            (voiceActors.value as any[])[index] = updatedVA;
+            (voiceActors.value)[index] = updatedVA;
           }
         } else {
           // Update the impersonated actor
@@ -318,14 +323,14 @@ export const useProfileStore = defineStore("profile", () => {
           {},
           userProfile.value,
           userProfileUpdates,
-        ) as any;
+        );
       } else {
         throw new Error("Invalid profile type for update");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       error.value = {
         type: "update",
-        message: err.message || "Failed to update profile",
+        message: (err as Error).message || "Failed to update profile",
       };
       console.error("Error updating profile:", err);
       throw err;
@@ -364,11 +369,11 @@ export const useProfileStore = defineStore("profile", () => {
       if (addError) throw addError;
 
       // Update work entries from the response data
-      workEntries.value = (data as any)?.medias || workEntries.value;
-    } catch (err: any) {
+      workEntries.value = (data)?.medias || workEntries.value;
+    } catch (err: unknown) {
       error.value = {
         type: "add",
-        message: err.message || "Failed to add work entry",
+        message: (err as Error).message || "Failed to add work entry",
       };
       console.error("Error adding work entry:", err);
       throw err;
@@ -404,10 +409,10 @@ export const useProfileStore = defineStore("profile", () => {
       workEntries.value = workEntries.value.filter(
         (entry) => entry.id !== workEntryId,
       );
-    } catch (err: any) {
+    } catch (err: unknown) {
       error.value = {
         type: "remove",
-        message: err.message || "Failed to remove work entry",
+        message: (err as Error).message || "Failed to remove work entry",
       };
       console.error("Error removing work entry:", err);
       throw err;
@@ -438,10 +443,10 @@ export const useProfileStore = defineStore("profile", () => {
 
       // Refresh profile to get updated voice actors
       await fetchProfile(identifiers);
-    } catch (err: any) {
+    } catch (err: unknown) {
       error.value = {
         type: "add",
-        message: err.message || "Failed to add voice actor link",
+        message: (err as Error).message || "Failed to add voice actor link",
       };
       console.error("Error adding voice actor link:", err);
       throw err;
@@ -471,19 +476,19 @@ export const useProfileStore = defineStore("profile", () => {
       if (removeError) throw removeError;
 
       // Remove from local state
-      voiceActors.value = (voiceActors.value as any[]).filter(
+      voiceActors.value = (voiceActors.value).filter(
         (va) => va.id !== voiceActorId,
-      ) as any;
+      );
       if (currentVoiceActorId.value === voiceActorId) {
         // Select another voice actor or set to null
         currentVoiceActorId.value =
           voiceActors.value.length > 0 ? voiceActors.value[0].id : null;
         workEntries.value = [];
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       error.value = {
         type: "remove",
-        message: err.message || "Failed to remove voice actor link",
+        message: (err as Error).message || "Failed to remove voice actor link",
       };
       console.error("Error removing voice actor link:", err);
       throw err;
@@ -513,10 +518,10 @@ export const useProfileStore = defineStore("profile", () => {
       profileType.value = "user_profile";
       userProfile.value = data.profile;
       workEntries.value = [];
-    } catch (err: any) {
+    } catch (err: unknown) {
       error.value = {
         type: "create",
-        message: err.message || "Failed to create user profile",
+        message: (err as Error).message || "Failed to create user profile",
       };
       console.error("Error creating user profile:", err);
       throw err;
@@ -550,16 +555,15 @@ export const useProfileStore = defineStore("profile", () => {
     if (voiceActor) {
       profileType.value = "voice_actor";
       workEntries.value =
-        "medias" in voiceActor ? (voiceActor as any).medias : [];
+        "medias" in voiceActor ? (voiceActor).medias || [] : [];
     } else {
       // Clear impersonation
       impersonatedTargetUserId.value = null;
       if (currentVoiceActorId.value) {
-        const currentVA = (voiceActors.value as any[]).find(
+        const currentVA = (voiceActors.value).find(
           (va) => va.id === currentVoiceActorId.value,
         );
-        workEntries.value =
-          currentVA && "medias" in currentVA ? (currentVA as any).medias : [];
+          currentVA && "medias" in currentVA ? (currentVA).medias || [] : [];
       } else {
         workEntries.value = [];
       }

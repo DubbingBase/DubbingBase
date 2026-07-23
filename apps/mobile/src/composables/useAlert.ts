@@ -1,17 +1,17 @@
 import type { AlertOptions } from "@/components/common/AppAlertContainer.vue";
 
 class Alert {
-  private onDismissResolve: ((data: any) => void) | null = null;
-  private onDismissPromise: Promise<any>;
+  private onDismissResolve: ((data: unknown) => void) | null = null;
+  private onDismissPromise: Promise<unknown>;
 
-  constructor(private options: any) {
+  constructor(private options: AlertOptions) {
     this.onDismissPromise = new Promise((resolve) => {
       this.onDismissResolve = resolve;
     });
   }
 
   async present() {
-    if (typeof window !== "undefined" && (window as any).__addAlert) {
+    if (typeof window !== "undefined" && (window as unknown as { __addAlert: (opts: AlertOptions, callback: (data: unknown) => void) => void }).__addAlert) {
       const options: AlertOptions = {
         header: this.options.header,
         message: this.options.message,
@@ -20,7 +20,7 @@ class Alert {
         backdropDismiss: this.options.backdropDismiss,
       };
 
-      (window as any).__addAlert(options, (data: any) => {
+      (window as unknown as { __addAlert: (opts: AlertOptions, callback: (data: unknown) => void) => void }).__addAlert(options, (data: unknown) => {
         if (this.onDismissResolve) {
           this.onDismissResolve(data);
         }
@@ -40,7 +40,7 @@ class Alert {
 }
 
 export const alertController = {
-  async create(options: any) {
+  async create(options: AlertOptions) {
     return new Alert(options);
   },
 };

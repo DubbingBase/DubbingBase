@@ -42,12 +42,17 @@ type Props = {
 const props = defineProps<Props>();
 
 const title = computed(() => {
-  return (props.media as any).title ?? (props.media as any).name;
+  if ("title" in props.media) {
+    return (props.media as MovieModel).title;
+  }
+  return (props.media as SerieModel).name;
 });
 
 const releaseDate = computed(() => {
   const date =
-    (props.media as any).release_date || (props.media as any).first_air_date;
+    "release_date" in props.media
+      ? (props.media as MovieModel).release_date
+      : ('first_air_date' in props.media ? props.media.first_air_date : undefined);
   return date
     ? new Date(date).toLocaleDateString(navigator.language, { year: "numeric" })
     : "";

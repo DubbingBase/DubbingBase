@@ -9,9 +9,9 @@ const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 
 const originalInvoke = supabase.functions.invoke.bind(supabase.functions);
 
-supabase.functions.invoke = async <T = any>(
+supabase.functions.invoke = async <T = unknown>(
   functionName: string,
-  options?: any,
+  options?: Parameters<typeof originalInvoke>[1],
 ) => {
   try {
     const result = await originalInvoke<T>(functionName, options);
@@ -25,7 +25,7 @@ supabase.functions.invoke = async <T = any>(
       toast.present();
     }
     return result;
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error(`Edge function exception (${functionName}):`, err);
     const toast = await toastController.create({
       message: `Failed to execute ${functionName}: ${err.message || "Unknown error"}`,

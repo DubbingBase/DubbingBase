@@ -156,9 +156,9 @@ type SerieType = {
   last_air_date?: string;
   genres?: { id: number; name: string }[];
   status?: string;
-  seasons?: any[];
+  seasons?: unknown[];
   external_ids?: ExternalIds;
-  credits?: { cast?: any[] };
+  credits?: { cast?: unknown[] };
 };
 
 type MediaType = MovieType | SerieType;
