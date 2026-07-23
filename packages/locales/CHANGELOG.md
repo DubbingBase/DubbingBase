@@ -4,7 +4,11 @@
 
 ### Patch Changes
 
+<<<<<<< HEAD
 - sd
+=======
+- jf
+>>>>>>> d13a6ac8f35cb10e5b8171c5a008f3601b7cf1fc
 
 ## 0.0.16
 

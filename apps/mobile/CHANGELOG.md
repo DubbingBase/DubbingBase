@@ -4,7 +4,11 @@
 
 ### Patch Changes
 
+<<<<<<< HEAD
 - sd
+=======
+- jf
+>>>>>>> d13a6ac8f35cb10e5b8171c5a008f3601b7cf1fc
 - Updated dependencies
   - @app/supabase@0.0.35
   - @app/locales@0.0.17

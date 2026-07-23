@@ -355,13 +355,28 @@ verify_jwt = true
 [functions.episode]
 verify_jwt = false
 
+[functions.extract-credits-from-image]
+verify_jwt = false
+
+[functions.extract-voice-actor-info]
+verify_jwt = false
+
 [functions.find_duplicate_voice_actors]
 verify_jwt = true
 
 [functions.find_duplicate_work]
 verify_jwt = true
 
+[functions.get-dubbing-project]
+verify_jwt = false
+
 [functions.get-media-credits]
+verify_jwt = false
+
+[functions.get-metadata]
+verify_jwt = false
+
+[functions.get-studio-details]
 verify_jwt = false
 
 [functions.get-user-profile]
@@ -388,6 +403,9 @@ verify_jwt = false
 [functions.list_users]
 verify_jwt = true
 
+[functions.media-queue]
+verify_jwt = false
+
 [functions.merge_voice_actor_duplicates]
 verify_jwt = true
 
@@ -403,10 +421,25 @@ verify_jwt = false
 [functions.prepare_voice_actor]
 verify_jwt = false
 
+[functions.process-credits]
+verify_jwt = false
+
 [functions.process-media-queue]
 verify_jwt = false
 
 [functions.recent-voice-actors]
+verify_jwt = false
+
+[functions.request-voice-actor-page]
+verify_jwt = true
+
+[functions.save-dubbing-project]
+verify_jwt = false
+
+[functions.save-metadata]
+verify_jwt = false
+
+[functions.save-studio]
 verify_jwt = false
 
 [functions.search]
@@ -454,6 +487,7 @@ verify_jwt = true
 [functions.voice-actor]
 verify_jwt = false
 
+<<<<<<< HEAD
 [functions.request-voice-actor-page]
 verify_jwt = true
 
@@ -489,3 +523,5 @@ verify_jwt = false
 
 [functions.count-voice-actor-works]
 verify_jwt = false
+=======
+>>>>>>> d13a6ac8f35cb10e5b8171c5a008f3601b7cf1fc
