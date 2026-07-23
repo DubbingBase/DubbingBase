@@ -1,5 +1,11 @@
 # @app/locales
 
+## 0.0.18
+
+### Patch Changes
+
+- bhh
+
 ## 0.0.17
 
 ### Patch Changes
