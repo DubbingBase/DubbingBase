@@ -40,6 +40,26 @@ export default {
       const dbClient = new DatabaseClient(ctx);
       const mediaService = new MediaService(dbClient, tmdbClient, ctx);
 
+      // Fetch aggregate credits concurrently
+      const aggregateCreditsPromise = (async () => {
+        const cacheKey = CACHE_KEYS.TMDB_TV(Number(showId), "aggregate_credits");
+        const cachedCredits = await cacheUtils.get(cacheKey);
+        if (cachedCredits) {
+          console.log(`Cache hit for TMDB TV aggregate credits ${showId}`);
+          return cachedCredits;
+        } else {
+          console.log(`Cache miss for TMDB TV aggregate credits ${showId}, fetching from API`);
+          try {
+            const credits = await tmdbClient.get(`tv/${showId}/aggregate_credits`);
+            await cacheUtils.set(cacheKey, credits, "MEDIUM");
+            return credits;
+          } catch (err) {
+            console.error(`Failed to fetch TMDB show credits ${showId}:`, err);
+            return { cast: [] };
+          }
+        }
+      })();
+
       // Create promise for external API data using unified cache flows
       const apiDataPromise = mediaService
         .getMediaWithVoiceActors("tv", showId)
@@ -51,25 +71,7 @@ export default {
               result.media,
             );
 
-          let aggregateCredits = result.media.aggregate_credits;
-          if (!aggregateCredits) {
-            // Try cache first for aggregate credits, fallback to API
-            const cacheKey = CACHE_KEYS.TMDB_TV(Number(showId), "aggregate_credits");
-            const cachedCredits = await cacheUtils.get(cacheKey);
-            if (cachedCredits) {
-              console.log(`Cache hit for TMDB TV aggregate credits ${showId}`);
-              aggregateCredits = cachedCredits;
-            } else {
-              console.log(`Cache miss for TMDB TV aggregate credits ${showId}, fetching from API`);
-              try {
-                aggregateCredits = await tmdbClient.get(`tv/${showId}/aggregate_credits`);
-                await cacheUtils.set(cacheKey, aggregateCredits, "MEDIUM");
-              } catch (err) {
-                console.error(`Failed to fetch TMDB show credits ${showId}:`, err);
-                aggregateCredits = { cast: [] };
-              }
-            }
-          }
+          let aggregateCredits = result.media.aggregate_credits || await aggregateCreditsPromise;
           
           // Match by character name since aggregated credits doesn't have external_ids
           if (aggregateCredits && aggregateCredits.cast) {

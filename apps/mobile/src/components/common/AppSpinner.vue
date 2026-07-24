@@ -32,6 +32,16 @@ const colorClass = computed(() => {
   height: 28px;
   color: currentColor;
 }
+
+.app-color-primary { color: var(--app-color-primary, #3b82f6); }
+.app-color-secondary { color: var(--app-color-secondary, #10b981); }
+.app-color-tertiary { color: var(--app-color-tertiary, #8b5cf6); }
+.app-color-success { color: var(--app-color-success, #22c55e); }
+.app-color-warning { color: var(--app-color-warning, #f59e0b); }
+.app-color-danger { color: var(--app-color-danger, #ef4444); }
+.app-color-light { color: var(--app-color-light, #f3f4f6); }
+.app-color-medium { color: var(--app-color-medium, #9ca3af); }
+.app-color-dark { color: var(--app-color-dark, #1f2937); }
 .spinner-svg {
   animation: rotate 2s linear infinite;
   width: 100%;
