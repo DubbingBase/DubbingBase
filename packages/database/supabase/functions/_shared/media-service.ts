@@ -1,4 +1,4 @@
-import { IDatabaseClient } from "./interfaces.ts";
+import { DatabaseClient } from "./database.ts";
 import { ITMDBClient } from "./interfaces.ts";
 import { processVoiceActor } from "./supabase-urls.ts";
 import { processMedia } from "./tmdb-urls.ts";
@@ -10,23 +10,25 @@ import { Database } from "./database.types.ts";
 
 export class MediaService {
   constructor(
-    private databaseClient: IDatabaseClient,
+    private databaseClient: DatabaseClient,
     private tmdbClient: ITMDBClient,
     private ctx: SupabaseContext<Database>,
   ) {}
 
   async getVoiceActorWithWorkAndMedia(voiceActorId: number) {
-    const voiceActor =
-      await this.databaseClient.getVoiceActorWithWork(voiceActorId);
+    const voiceActor = await this.databaseClient.getVoiceActorWithWork(
+      voiceActorId,
+    );
 
-    console.log("voiceActor", voiceActor);
+    console.log("voiceActor fetched:", voiceActor?.id);
 
     const voiceActorWithImages = processVoiceActor(this.ctx, voiceActor);
 
-    console.log("voiceActorWithImages", voiceActorWithImages);
+    const workItems = voiceActor.work || [];
+    const workIds = workItems.map((w) => w.id);
 
-    // Fetch TMDB details and TVDB characters for each work item in parallel
-    const mediaPromises = (voiceActor.work || []).map(async (work: any) => {
+    // 1. Fetch TMDB details and TVDB characters for each work item
+    const mediaPromises = workItems.map(async (work) => {
       const contentId = work.dubbing_projects?.content_id;
       const contentType = work.dubbing_projects?.content_type as "movie" | "tv";
 
@@ -71,8 +73,60 @@ export class MediaService {
       }
     });
 
-    const results = await Promise.all(mediaPromises);
-    const validResults = results.filter(Boolean) as {
+    // 2. Fetch Wikipedia URL
+    const wikiPromise = (async () => {
+      let potentialWikipediaUrl = null;
+      if (!voiceActor.tmdb_id) {
+        try {
+          const name = `${voiceActor.firstname} ${voiceActor.lastname}`.trim();
+          const searchData = await wikipediaCache.searchWikidataEntities(name);
+
+          if (searchData.search && searchData.search.length > 0) {
+            const bestMatch = searchData.search[0];
+            const entityData = await wikipediaCache.getWikidataEntity(
+              bestMatch.id,
+            );
+
+            if (entityData.entities[bestMatch.id]?.sitelinks?.frwiki?.title) {
+              const title =
+                entityData.entities[bestMatch.id].sitelinks.frwiki.title;
+              potentialWikipediaUrl = `https://fr.wikipedia.org/wiki/${
+                encodeURI(title.replace(/ /g, "_"))
+              }`;
+            }
+          }
+        } catch (e) {
+          console.error("Failed to fetch potential Wikipedia URL:", e);
+        }
+      }
+      return potentialWikipediaUrl;
+    })();
+
+    // 3. Fetch Votes
+    const votesPromise = (async () => {
+      if (workIds.length > 0) {
+        try {
+          return await this.databaseClient.getWorkVotes(
+            workIds,
+            this.ctx.userClaims?.id,
+          );
+        } catch (e) {
+          console.error("Error fetching votes for voice actor works:", e);
+        }
+      }
+      return {};
+    })();
+
+    // Wait for all three tracks in parallel
+    const [mediaResultsArray, potentialWikipediaUrl, votes] = await Promise.all(
+      [
+        Promise.all(mediaPromises),
+        wikiPromise,
+        votesPromise,
+      ],
+    );
+
+    const validResults = mediaResultsArray.filter(Boolean) as {
       media: any;
       characterProfilePictures: any[];
     }[];
@@ -81,42 +135,6 @@ export class MediaService {
     const characterProfilePictures = validResults.flatMap(
       (r) => r.characterProfilePictures,
     );
-
-    let potentialWikipediaUrl = null;
-    if (!voiceActor.tmdb_id) {
-      try {
-        const name = `${voiceActor.firstname} ${voiceActor.lastname}`.trim();
-        const searchData = await wikipediaCache.searchWikidataEntities(name);
-
-        if (searchData.search && searchData.search.length > 0) {
-          const bestMatch = searchData.search[0];
-          const entityData = await wikipediaCache.getWikidataEntity(
-            bestMatch.id,
-          );
-
-          if (entityData.entities[bestMatch.id]?.sitelinks?.frwiki?.title) {
-            const title =
-              entityData.entities[bestMatch.id].sitelinks.frwiki.title;
-            potentialWikipediaUrl = `https://fr.wikipedia.org/wiki/${encodeURI(title.replace(/ /g, "_"))}`;
-          }
-        }
-      } catch (e) {
-        console.error("Failed to fetch potential Wikipedia URL:", e);
-      }
-    }
-
-    let votes = {};
-    const workIds = (voiceActor.work || []).map((w: any) => w.id);
-    if (workIds.length > 0) {
-      try {
-        votes = await this.databaseClient.getWorkVotes(
-          workIds,
-          this.ctx.userClaims?.id,
-        );
-      } catch (e) {
-        console.error("Error fetching votes for voice actor works:", e);
-      }
-    }
 
     return {
       voiceActor: voiceActorWithImages,
@@ -134,44 +152,42 @@ export class MediaService {
   ): Promise<any[]> {
     const tvdbClient = new TVDBClient(cacheUtils);
     let characterProfilePictures: any[] = [];
+    const cacheKey = `tvdb:${contentType}:characters_by_tmdb:${contentId}`;
 
     try {
+      // 1. Try Cache First using TMDB ID
+      const cachedCharacters = await cacheUtils.get(cacheKey);
+      if (cachedCharacters) {
+        return cachedCharacters as any[];
+      }
+
+      // 2. Fetch from TVDB API
       let tvdbId: number | null = null;
       if (tmdbMedia.external_ids?.tvdb_id) {
         tvdbId = tmdbMedia.external_ids.tvdb_id;
       } else {
-        const searchQuery =
-          tmdbMedia.title ||
+        const searchQuery = tmdbMedia.title ||
           tmdbMedia.name ||
           tmdbMedia.original_title ||
           tmdbMedia.original_name;
         if (searchQuery) {
           const searchResults = await tvdbClient.searchSeries(searchQuery);
           if (searchResults.data && searchResults.data.length > 0) {
-            const bestMatch =
-              searchResults.data.find(
-                (item: any) =>
-                  item.name
-                    ?.toLowerCase()
-                    .includes(searchQuery.toLowerCase()) ||
-                  searchQuery.toLowerCase().includes(item.name?.toLowerCase()),
-              ) || searchResults.data[0];
-            tvdbId =
-              contentType === "movie"
-                ? bestMatch?.tvdb_id || bestMatch?.id
-                : bestMatch?.id;
+            const bestMatch = searchResults.data.find(
+              (item: any) =>
+                item.name
+                  ?.toLowerCase()
+                  .includes(searchQuery.toLowerCase()) ||
+                searchQuery.toLowerCase().includes(item.name?.toLowerCase()),
+            ) || searchResults.data[0];
+            tvdbId = contentType === "movie"
+              ? bestMatch?.tvdb_id || bestMatch?.id
+              : bestMatch?.id;
           }
         }
       }
 
       if (tvdbId) {
-        const cacheKey = `tvdb:${contentType}:characters:${tvdbId}`;
-        const cachedCharacters = await cacheUtils.get(cacheKey);
-
-        if (cachedCharacters) {
-          return cachedCharacters as any[];
-        }
-
         let characters: any[] = [];
         if (contentType === "movie") {
           const res = await tvdbClient.getMovieById(tvdbId, {
@@ -198,12 +214,13 @@ export class MediaService {
               movieId: contentType === "movie" ? contentId : undefined,
               showId: contentType === "tv" ? contentId : undefined,
             }));
-
-          cacheUtils
-            .set(cacheKey, characterProfilePictures, "SHORT")
-            .catch(() => {});
         }
       }
+
+      // 3. Cache the result (even if empty) to prevent redundant API queries
+      cacheUtils
+        .set(cacheKey, characterProfilePictures, "SHORT")
+        .catch(() => {});
     } catch (e) {
       console.error(
         `Error fetching character profile pictures for ${contentType} ${contentId}:`,

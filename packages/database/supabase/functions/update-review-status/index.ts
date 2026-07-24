@@ -1,7 +1,7 @@
 import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
 import { createErrorResponse, createResponse } from "../_shared/http-utils.ts";
-import { SimpleCache } from "../_shared/cache-utils.ts";
+import { SimpleCache, CACHE_KEYS } from "../_shared/cache-utils.ts";
 import { RedisClient } from "../_shared/redis.ts";
 
 export default {
@@ -132,13 +132,19 @@ export default {
         const contentType = data.dubbing_projects?.content_type || "movie";
 
         if (contentId) {
-          const cacheKey = `tmdb:${contentType}:${contentId}`;
+          const cacheKey =
+            contentType === "movie"
+              ? CACHE_KEYS.TMDB_MOVIE(contentId)
+              : CACHE_KEYS.TMDB_TV(contentId);
           console.log("Invalidating cache for key:", cacheKey);
           await cache.del(cacheKey);
 
           // Also invalidate aggregate credits cache if it's a TV show
           if (contentType === "tv") {
-            const aggregateCacheKey = `tmdb:tv:${contentId}:aggregate_credits`;
+            const aggregateCacheKey = CACHE_KEYS.TMDB_TV(
+              contentId,
+              "aggregate_credits",
+            );
             console.log(
               "Invalidating aggregate credits cache for key:",
               aggregateCacheKey,

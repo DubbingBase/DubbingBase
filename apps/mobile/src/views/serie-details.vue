@@ -20,9 +20,9 @@
         </AppToolbar>
       </AppHeader>
       <AppContent>
-      <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
-        <ion-refresher-content></ion-refresher-content>
-      </ion-refresher>
+        <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
+          <ion-refresher-content></ion-refresher-content>
+        </ion-refresher>
         <MediaInfoCard :media="show" />
 
         <LoadingSpinner v-if="isLoading" />
@@ -34,12 +34,15 @@
               Personnes
             </AppSegmentButton>
             <AppSegmentButton value="seasons" content-id="seasons">
-              <!-- <Radio class="app-icon" /> -->
               Saisons
             </AppSegmentButton>
           </AppSegment>
           <AppSegmentView v-model:active-segment="selectedSegment">
-            <AppSegmentContent class="segmented-content" id="peoples">
+            <AppSegmentContent
+              class="segmented-content"
+              id="peoples"
+              :class="{ 'is-active': selectedSegment === 'peoples' }"
+            >
               <DubbingProjectsView
                 :contentId="route.params.id as string"
                 contentType="tv"
@@ -56,21 +59,27 @@
                 :parentLoading="isLoading"
               />
             </AppSegmentContent>
-            <AppSegmentContent class="segmented-content" id="seasons">
-              <div class="seasons" v-if="show">
-                <div
-                  expand="block"
-                  @click="goToSeason(show.id, season.season_number)"
-                  class="season"
-                  v-for="season in formattedSeasons"
-                  :key="season.id"
-                >
-                  <MediaThumbnail :path="season.poster_path"></MediaThumbnail>
-                  <div class="text">
-                    <div class="season-title">{{ season.name }}</div>
-                    <div class="season-subtitle">
-                      {{ season.formatted_air_date }} &sdot;
-                      {{ season.episode_count }} épisodes
+            <AppSegmentContent
+              class="segmented-content"
+              id="seasons"
+              :class="{ 'is-active': selectedSegment === 'seasons' }"
+            >
+              <div class="seasons-section" v-if="show">
+                <div class="seasons">
+                  <div
+                    expand="block"
+                    @click="goToSeason(show.id, season.season_number)"
+                    class="season"
+                    v-for="season in formattedSeasons"
+                    :key="season.id"
+                  >
+                    <MediaThumbnail :path="season.poster_path"></MediaThumbnail>
+                    <div class="text">
+                      <div class="season-title">{{ season.name }}</div>
+                      <div class="season-subtitle">
+                        {{ season.formatted_air_date }} &sdot;
+                        {{ season.episode_count }} épisodes
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -362,18 +371,22 @@ const hasWikidataId = computed(() => {
 });
 
 const hasData = computed(() => {
-  return dubbingProjects.value.some((p: { works?: unknown[] }) => p.works && p.works.length > 0);
+  return dubbingProjects.value.some(
+    (p: { works?: unknown[] }) => p.works && p.works.length > 0,
+  );
 });
 
 const formattedSeasons = computed(() => {
   if (!show.value?.seasons) return [];
 
-  return show.value?.seasons?.map((season: { season_number: number; name: string }) => ({
-    ...season,
-    formatted_air_date: season.air_date
-      ? format(new Date(season.air_date), "MMM dd, yyyy")
-      : "TBA",
-  }));
+  return show.value?.seasons?.map(
+    (season: { season_number: number; name: string }) => ({
+      ...season,
+      formatted_air_date: season.air_date
+        ? format(new Date(season.air_date), "MMM dd, yyyy")
+        : "TBA",
+    }),
+  );
 });
 
 // Scan functionality
@@ -471,11 +484,17 @@ const takePhoto = async () => {
 
     // Provide known actors to the AI
     const simplifiedActors =
-      actors.value?.map((a: { id?: number; name?: string; roles?: { character?: string }[] }) => ({
-        id: a.id,
-        name: a.name,
-        roles: a.roles?.map((r: { character?: string }) => r.character) || [],
-      })) || [];
+      actors.value?.map(
+        (a: {
+          id?: number;
+          name?: string;
+          roles?: { character?: string }[];
+        }) => ({
+          id: a.id,
+          name: a.name,
+          roles: a.roles?.map((r: { character?: string }) => r.character) || [],
+        }),
+      ) || [];
     formData.append("actors", JSON.stringify(simplifiedActors));
 
     const response = await supabase.functions.invoke(
@@ -511,7 +530,7 @@ const getSerie = async (id: string) => {
     return response;
   } catch (e: unknown) {
     console.error("Error fetching series data:", e);
-    error.value = "Failed to load series details.";
+    fetchError.value = "Failed to load series details.";
     throw e;
   }
 };
@@ -521,7 +540,8 @@ const fetchSerieData = async () => {
   try {
     const response = await getSerie(id as string);
     if (response.data) {
-      show.value = response.data.serie || (response.data as { show?: unknown }).show; // Handle both response formats
+      show.value =
+        response.data.serie || (response.data as { show?: unknown }).show; // Handle both response formats
       show.value.credits = response.data.aggregateCredits;
       if (response.data.characterProfilePictures) {
         characterProfilePictures.value = response.data.characterProfilePictures;
@@ -536,7 +556,7 @@ const fetchSerieData = async () => {
     }
   } catch (e: unknown) {
     console.error("Error fetching serie data:", e);
-    error.value = "Failed to load serie details.";
+    fetchError.value = "Failed to load serie details.";
     throw e;
   }
 };
@@ -665,7 +685,7 @@ onMounted(async () => {
   const newId = route.params.id;
   if (!newId) return;
   isLoading.value = true;
-  error.value = "";
+  fetchError.value = "";
   try {
     await fetchSerieData();
     if (!hasData.value && hasWikidataId.value) {
@@ -673,7 +693,7 @@ onMounted(async () => {
     }
   } catch (err) {
     console.error("Error fetching serie:", err);
-    error.value = "Failed to load serie details";
+    fetchError.value = "Failed to load serie details";
   } finally {
     isLoading.value = false;
   }
@@ -773,6 +793,8 @@ AppSegment {
 .segmented-content {
   background-color: #{$background};
 }
+
+
 
 .seasons {
   margin: 8px;

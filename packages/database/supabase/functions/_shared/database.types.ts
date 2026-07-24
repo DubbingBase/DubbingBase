@@ -497,6 +497,15 @@ export type Database = {
           voice_actor: Json
         }[]
       }
+      get_work_votes_with_user: {
+        Args: { p_user_id?: string; p_work_ids: number[] }
+        Returns: {
+          down_count: number
+          up_count: number
+          user_vote: string
+          work_id: number
+        }[]
+      }
       match_voice_actor: {
         Args: { p_firstname: string; p_lastname: string }
         Returns: {

@@ -24,39 +24,50 @@ export default {
       const databaseClient = new DatabaseClient(ctx);
       const mediaService = new MediaService(databaseClient, tmdbClient, ctx);
 
-      const result = await mediaService.getMediaWithVoiceActorsExtended(
-        "season",
-        id,
-        season_number,
-      );
+      const apiDataPromise = mediaService
+        .getMediaWithVoiceActorsExtended("season", id, season_number)
+        .then(async (result) => {
+          const characterProfilePictures =
+            await mediaService.getCharacterProfilePictures(
+              "tv",
+              id,
+              result.media,
+            );
+          return { season: result.media, characterProfilePictures };
+        });
 
-      const [dubbingProjects, characterProfilePictures] = await Promise.all([
-        databaseClient.getDubbingProjects(id, "tv"),
-        mediaService.getCharacterProfilePictures("tv", id, result.media)
+      const dbDataPromise = databaseClient
+        .getDubbingProjects(id, "tv")
+        .then(async (dubbingProjects) => {
+          const workIds = dubbingProjects.flatMap(
+            (p: any) => p.works?.map((w: any) => w.id) || [],
+          );
+          let voteData = {};
+          if (workIds.length > 0) {
+            try {
+              const user = ctx.userClaims;
+              if (user) {
+                voteData = await databaseClient.getWorkVotes(workIds, user.id);
+              } else {
+                voteData = await databaseClient.getWorkVotes(workIds);
+              }
+            } catch (voteError) {
+              console.error("Error fetching vote data:", voteError);
+            }
+          }
+          return { dubbingProjects, voteData };
+        });
+
+      const [apiData, dbData] = await Promise.all([
+        apiDataPromise,
+        dbDataPromise,
       ]);
 
-      const workIds = dubbingProjects.flatMap(
-        (p: any) => p.works?.map((w: any) => w.id) || [],
-      );
-      let voteData = {};
-      if (workIds.length > 0) {
-        try {
-          const user = ctx.userClaims;
-          if (user) {
-            voteData = await databaseClient.getWorkVotes(workIds, user.id);
-          } else {
-            voteData = await databaseClient.getWorkVotes(workIds);
-          }
-        } catch (voteError) {
-          console.error("Error fetching vote data:", voteError);
-        }
-      }
-
       return Response.json({
-        season: result.media,
-        dubbingProjects: dubbingProjects,
-        characterProfilePictures: characterProfilePictures,
-        votes: voteData,
+        season: apiData.season,
+        dubbingProjects: dbData.dubbingProjects,
+        characterProfilePictures: apiData.characterProfilePictures,
+        votes: dbData.voteData,
       });
     } catch (error) {
       console.error("Error fetching season:", error);

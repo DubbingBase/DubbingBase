@@ -149,27 +149,24 @@ const actionSheetButtons = computed<ActionSheetButton[]>(() => {
 });
 
 const normalizedActors = computed(() => {
-  if (activeTab.value === "voices") {
-    let castToMap: any[] = [];
-    if (season.value?.credits?.cast) {
-      castToMap = season.value.credits.cast;
-    } else if (episodeCredits.value?.cast) {
-      castToMap = frenchActors(episodeCredits.value.cast);
-    }
-    const mapped = castToMap.map((cast: any) => actorToPersonData(cast));
-
-    for (const person of mapped) {
-      for (const role of person.roles ?? []) {
-        const image = characterProfilePictures.value.find((character) =>
-          findCharacter(character, role),
-        )?.image;
-        role.image = image ?? "";
-      }
-    }
-
-    return mapped;
+  let castToMap: any[] = [];
+  if (season.value?.credits?.cast) {
+    castToMap = season.value.credits.cast;
+  } else if (episodeCredits.value?.cast) {
+    castToMap = frenchActors(episodeCredits.value.cast);
   }
-  return [];
+  const mapped = castToMap.map((cast: any) => actorToPersonData(cast));
+
+  for (const person of mapped) {
+    for (const role of person.roles ?? []) {
+      const image = characterProfilePictures.value.find((character) =>
+        findCharacter(character, role),
+      )?.image;
+      role.image = image ?? "";
+    }
+  }
+
+  return mapped;
 });
 
 const fetchQueueStatus = async () => {

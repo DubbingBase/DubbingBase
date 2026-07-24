@@ -1,5 +1,5 @@
 import { ITVDBClient } from "./interfaces.ts";
-import { SimpleCache } from "./cache-utils.ts";
+import { SimpleCache, CACHE_KEYS } from "./cache-utils.ts";
 
 // Debug logging function
 function debugLog(message: string, data?: any) {
@@ -29,7 +29,7 @@ export class TVDBClient implements ITVDBClient {
       return this.token;
     }
 
-    const cacheKey = "tvdb:auth_token";
+    const cacheKey = CACHE_KEYS.TVDB_AUTH_TOKEN();
     try {
       const cachedToken = await this.cache.get<string>(cacheKey);
       if (cachedToken) {
@@ -115,8 +115,7 @@ export class TVDBClient implements ITVDBClient {
     seriesId: number,
     extended?: { meta?: "episodes" | "translations"; short?: boolean },
   ): Promise<any> {
-    const cacheKey = this.cache.tvdbKey(
-      "series",
+    const cacheKey = CACHE_KEYS.TVDB_SERIES(
       seriesId,
       extended
         ? `extended:${extended.meta || "none"}:${extended.short}`
@@ -154,8 +153,7 @@ export class TVDBClient implements ITVDBClient {
     movieId: number,
     extended?: { meta?: "translations"; short?: boolean },
   ): Promise<any> {
-    const cacheKey = this.cache.tvdbKey(
-      "movie",
+    const cacheKey = CACHE_KEYS.TVDB_MOVIE(
       movieId,
       extended
         ? `extended:${extended.meta || "none"}:${extended.short}`
@@ -199,7 +197,7 @@ export class TVDBClient implements ITVDBClient {
   }
 
   async getCharactersBySeries(seriesId: number): Promise<any> {
-    const cacheKey = this.cache.tvdbKey("series", seriesId, "characters");
+    const cacheKey = CACHE_KEYS.TVDB_SERIES(seriesId, "characters");
 
     // Try cache first
     const cached = await this.cache.get(cacheKey);
@@ -218,7 +216,7 @@ export class TVDBClient implements ITVDBClient {
     return result;
   }
   async getCharactersByMovie(movieId: number): Promise<any> {
-    const cacheKey = this.cache.tvdbKey("movie", movieId, "characters");
+    const cacheKey = CACHE_KEYS.TVDB_MOVIE(movieId, "characters");
 
     // Try cache first
     const cached = await this.cache.get(cacheKey);
@@ -242,11 +240,7 @@ export class TVDBClient implements ITVDBClient {
   }
 
   async searchSeries(query: string): Promise<any> {
-    const cacheKey = this.cache.generateKey(
-      "tvdb",
-      "search",
-      query.toLowerCase().trim(),
-    );
+    const cacheKey = CACHE_KEYS.TVDB_SEARCH(query.toLowerCase().trim());
 
     // Try cache first
     const cached = await this.cache.get(cacheKey);

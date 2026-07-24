@@ -30,7 +30,6 @@ export { MediaService } from "./media-service.ts";
 
 // Export interfaces
 export type {
-  IDatabaseClient,
   IRedisClient,
   ITMDBClient,
   ITVDBClient,

@@ -95,137 +95,140 @@ export default {
       }
 
       let resp: any[] = [];
+      let voiceActorResults: any[] = [];
 
-      // Fetch first 2 TMDB pages in parallel (40 results, enough for relevance)
-      try {
-        const pageResponses = await Promise.all(
-          [1, 2].map((page) =>
-            fetch(
-              `https://api.themoviedb.org/3/search/multi?query=${encodeURIComponent(trimmedQuery)}&page=${page}&language=fr-FR`,
-              {
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${Deno.env.get("TMDB_API_KEY")}`,
-                  Accept: "application/json",
-                },
-              },
-            ),
-          ),
-        );
-
+      // 1. Define the TMDB Search Promise
+      const tmdbSearchPromise = (async () => {
         const results: any[] = [];
-        for (const response of pageResponses) {
-          if (!response.ok) {
-            console.error(
-              `TMDB fetch failed with status: ${response.status} ${response.statusText}`,
-            );
-            const text = await response.text();
-            console.error("Response body:", text.substring(0, 200));
-            continue;
-          }
-          try {
-            const res = await response.json();
-            if (res.results && Array.isArray(res.results)) {
-              const withImages = res.results
-                .filter((x: any) => x !== null)
-                .map((x: any) => processMedia(x));
-              results.push(...withImages);
+        try {
+          const pageResponses = await Promise.all(
+            [1, 2].map((page) =>
+              fetch(
+                `https://api.themoviedb.org/3/search/multi?query=${encodeURIComponent(trimmedQuery)}&page=${page}&language=fr-FR`,
+                {
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${Deno.env.get("TMDB_API_KEY")}`,
+                    Accept: "application/json",
+                  },
+                },
+              ),
+            ),
+          );
+
+          for (const response of pageResponses) {
+            if (!response.ok) {
+              console.error(
+                `TMDB fetch failed with status: ${response.status} ${response.statusText}`,
+              );
+              const text = await response.text();
+              console.error("Response body:", text.substring(0, 200));
+              continue;
             }
-          } catch (err) {
-            console.error("Error parsing TMDB response:", err);
+            try {
+              const res = await response.json();
+              if (res.results && Array.isArray(res.results)) {
+                const withImages = res.results
+                  .filter((x: any) => x !== null)
+                  .map((x: any) => processMedia(x));
+                results.push(...withImages);
+              }
+            } catch (err) {
+              console.error("Error parsing TMDB response:", err);
+            }
           }
+        } catch (e) {
+          console.error("TMDB fetch error:", e);
         }
-        resp.push(...results);
-      } catch (e) {
-        console.error("TMDB fetch error:", e);
-      }
+        return results;
+      })();
 
-      // Voice actor search — use unaccent-aware ilike for robustness
-      try {
-        const searchQuery = buildTextSearchQuery(trimmedQuery);
-        console.log("supabaseQuery", searchQuery);
+      // 2. Define the Voice Actor DB Search Promise
+      const voiceActorSearchPromise = (async () => {
+        const results: any[] = [];
+        try {
+          const searchQuery = buildTextSearchQuery(trimmedQuery);
+          console.log("supabaseQuery", searchQuery);
 
-        let voiceActorResults: any[] = [];
+          if (searchQuery) {
+            // Primary: full-text search on computed voice_actor_name column
+            const { data: ftsData, error: ftsError } = await ctx.supabase
+              .from("voice_actors")
+              .select()
+              .textSearch("voice_actor_name", searchQuery);
 
-        if (searchQuery) {
-          // Primary: full-text search on computed voice_actor_name column
-          const { data: ftsData, error: ftsError } = await ctx.supabase
+            if (!ftsError && ftsData && Array.isArray(ftsData)) {
+              results.push(...ftsData);
+            }
+          }
+
+          // Fallback / supplement: accent-insensitive ilike search on individual fields
+          const { data: ilikeData, error: ilikeError } = await ctx.supabase
             .from("voice_actors")
             .select()
-            .textSearch("voice_actor_name", searchQuery);
+            .or(
+              `firstname.ilike.%${trimmedQuery}%,lastname.ilike.%${trimmedQuery}%`,
+            )
+            .limit(20);
 
-          if (!ftsError && ftsData && Array.isArray(ftsData)) {
-            voiceActorResults = ftsData;
-          }
-        }
-
-        // Fallback / supplement: accent-insensitive ilike search on individual fields
-        const { data: ilikeData, error: ilikeError } = await ctx.supabase
-          .from("voice_actors")
-          .select()
-          .or(
-            `firstname.ilike.%${trimmedQuery}%,lastname.ilike.%${trimmedQuery}%`,
-          )
-          .limit(20);
-
-        if (!ilikeError && ilikeData && Array.isArray(ilikeData)) {
-          // Merge ilike results into voiceActorResults, avoiding duplicates
-          const seenIds = new Set(voiceActorResults.map((va) => va.id));
-          for (const va of ilikeData) {
-            if (!seenIds.has(va.id)) {
-              voiceActorResults.push(va);
-              seenIds.add(va.id);
-            }
-          }
-        }
-
-        console.log("voice actor results count:", voiceActorResults.length);
-
-        if (voiceActorResults.length > 0) {
-          // Build a map keyed by media_type:id to avoid cross-type collisions
-          const respMap = new Map<string, any>();
-          resp.forEach((item) => {
-            if (item && item.id != null) {
-              const key = `${item.media_type ?? "unknown"}:${item.id}`;
-              respMap.set(key, item);
-            }
-          });
-
-          // Process voice_actors — merge with TMDB person if tmdb_id matches
-          voiceActorResults.forEach((voiceActor) => {
-            const vaKey = `voice_actor:${voiceActor.id}`;
-            if (voiceActor.tmdb_id != null) {
-              // Look for a matching TMDB person entry by tmdb_id
-              const tmdbKey = `person:${voiceActor.tmdb_id}`;
-              if (respMap.has(tmdbKey)) {
-                const person = respMap.get(tmdbKey);
-                // Replace the raw TMDB person with the enriched voice actor
-                respMap.delete(tmdbKey);
-                respMap.set(vaKey, {
-                  ...voiceActor,
-                  actor: person,
-                  profile_path:
-                    buildSupabaseImageUrl(ctx, voiceActor.profile_picture) ??
-                    person.profile_path,
-                  popularity: person.popularity ?? 50,
-                  media_type: "voice_actor",
-                });
-              } else {
-                // Voice actor with tmdb_id but no TMDB result — use moderate base score
-                respMap.set(vaKey, {
-                  ...voiceActor,
-                  profile_path: buildSupabaseImageUrl(
-                    ctx,
-                    voiceActor.profile_picture,
-                  ),
-                  media_type: "voice_actor",
-                  popularity: 50,
-                  known_for_department: "Dubbing",
-                });
+          if (!ilikeError && ilikeData && Array.isArray(ilikeData)) {
+            // Merge ilike results into voiceActorResults, avoiding duplicates
+            const seenIds = new Set(results.map((va) => va.id));
+            for (const va of ilikeData) {
+              if (!seenIds.has(va.id)) {
+                results.push(va);
+                seenIds.add(va.id);
               }
+            }
+          }
+        } catch (e) {
+          console.error("Voice actor search error:", e);
+        }
+        return results;
+      })();
+
+      // 3. Execute Both Tracks Concurrently
+      const [tmdbResults, dbVoiceActorResults] = await Promise.all([
+        tmdbSearchPromise,
+        voiceActorSearchPromise,
+      ]);
+
+      resp.push(...tmdbResults);
+      voiceActorResults.push(...dbVoiceActorResults);
+      console.log("voice actor results count:", voiceActorResults.length);
+
+      // 4. Merge Voice Actors with TMDB Entities
+      if (voiceActorResults.length > 0) {
+        // Build a map keyed by media_type:id to avoid cross-type collisions
+        const respMap = new Map<string, any>();
+        resp.forEach((item) => {
+          if (item && item.id != null) {
+            const key = `${item.media_type ?? "unknown"}:${item.id}`;
+            respMap.set(key, item);
+          }
+        });
+
+        // Process voice_actors — merge with TMDB person if tmdb_id matches
+        voiceActorResults.forEach((voiceActor) => {
+          const vaKey = `voice_actor:${voiceActor.id}`;
+          if (voiceActor.tmdb_id != null) {
+            // Look for a matching TMDB person entry by tmdb_id
+            const tmdbKey = `person:${voiceActor.tmdb_id}`;
+            if (respMap.has(tmdbKey)) {
+              const person = respMap.get(tmdbKey);
+              // Replace the raw TMDB person with the enriched voice actor
+              respMap.delete(tmdbKey);
+              respMap.set(vaKey, {
+                ...voiceActor,
+                actor: person,
+                profile_path:
+                  buildSupabaseImageUrl(ctx, voiceActor.profile_picture) ??
+                  person.profile_path,
+                popularity: person.popularity ?? 50,
+                media_type: "voice_actor",
+              });
             } else {
-              // Voice actor with no tmdb_id — use a low base popularity so they
-              // rank naturally alongside other content by relevance
+              // Voice actor with tmdb_id but no TMDB result — use moderate base score
               respMap.set(vaKey, {
                 ...voiceActor,
                 profile_path: buildSupabaseImageUrl(
@@ -233,16 +236,27 @@ export default {
                   voiceActor.profile_picture,
                 ),
                 media_type: "voice_actor",
-                popularity: 30,
+                popularity: 50,
                 known_for_department: "Dubbing",
               });
             }
-          });
+          } else {
+            // Voice actor with no tmdb_id — use a low base popularity so they
+            // rank naturally alongside other content by relevance
+            respMap.set(vaKey, {
+              ...voiceActor,
+              profile_path: buildSupabaseImageUrl(
+                ctx,
+                voiceActor.profile_picture,
+              ),
+              media_type: "voice_actor",
+              popularity: 30,
+              known_for_department: "Dubbing",
+            });
+          }
+        });
 
-          resp = Array.from(respMap.values());
-        }
-      } catch (e) {
-        console.error("Voice actor search error:", e);
+        resp = Array.from(respMap.values());
       }
 
       // Sort by composite score

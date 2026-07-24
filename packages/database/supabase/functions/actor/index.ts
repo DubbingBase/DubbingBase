@@ -4,6 +4,7 @@
 
 // Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { CACHE_KEYS, CACHE_TTL } from "../_shared/cache-utils.ts";
 import { TMDBClient } from "../_shared/tmdb.ts";
 import { DatabaseClient } from "../_shared/database.ts";
 import {
@@ -18,27 +19,26 @@ import { SupabaseContext } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
 
 async function getActor(actorId: number, tmdbClient: TMDBClient) {
+  const cacheKey = CACHE_KEYS.TMDB_PERSON(actorId);
+  
+  // Try cache first
+  const cached = await cacheUtils.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   try {
     // Use shared TMDBClient for API calls
-    return await tmdbClient.get(`person/${actorId}`, {
+    const actorData = await tmdbClient.get(`person/${actorId}`, {
       append_to_response: "tv_credits,movie_credits,external_ids",
     });
+    
+    // Cache the result
+    cacheUtils.set(cacheKey, actorData, "MEDIUM").catch(() => {});
+    
+    return actorData;
   } catch (e) {
     console.error("Error fetching actor details:", e);
-    return null;
-  }
-}
-
-async function fetchMediaDetails(
-  contentId: number,
-  contentType: string,
-  tmdbClient: TMDBClient,
-) {
-  try {
-    // Use shared TMDBClient for API calls
-    return await tmdbClient.get(`${contentType}/${contentId}`);
-  } catch (e) {
-    console.error("Error fetching media details:", e);
     return null;
   }
 }
@@ -81,10 +81,9 @@ async function getVoiceRoles(
           work.dubbing_projects?.content_id &&
           work.dubbing_projects?.content_type
         ) {
-          mediaDetails = await fetchMediaDetails(
+          mediaDetails = await tmdbClient.fetchMediaDetails(
             work.dubbing_projects.content_id,
-            work.dubbing_projects.content_type,
-            tmdbClient,
+            work.dubbing_projects.content_type
           );
         }
 

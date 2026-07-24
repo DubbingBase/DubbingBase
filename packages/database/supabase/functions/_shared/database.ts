@@ -1,11 +1,6 @@
 import { SupabaseContext } from "npm:@supabase/server@^1";
 import { Database } from "./database.types.ts";
-import { IDatabaseClient } from "./interfaces.ts";
 import { processVoiceActor } from "./supabase-urls.ts";
-
-const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-const SUPABASE_PUBLISHABLE_KEY = Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!;
-const SUPABASE_SECRET_KEY = Deno.env.get("SUPABASE_SECRET_KEY")!;
 
 function debugLog(message: string, data?: any) {
   console.log(
@@ -14,7 +9,7 @@ function debugLog(message: string, data?: any) {
   );
 }
 
-export class DatabaseClient implements IDatabaseClient {
+export class DatabaseClient {
   private ctx: SupabaseContext<Database>;
 
   constructor(ctx: SupabaseContext<Database>) {
@@ -69,15 +64,21 @@ export class DatabaseClient implements IDatabaseClient {
       { up_count: number; down_count: number; user_vote: string | null }
     >
   > {
-    // Get all votes for the specified work entries, including user_id to map user's specific vote
-    const { data: votes, error } = await this.ctx.supabase
-      .from("votes")
-      .select("work_id, vote_type, user_id")
-      .in("work_id", workIds);
+    if (workIds.length === 0) return {};
 
-    if (error) throw error;
+    const { data: votes, error } = await this.ctx.supabase.rpc(
+      "get_work_votes_with_user",
+      {
+        p_work_ids: workIds,
+        p_user_id: userId,
+      },
+    );
 
-    // Aggregate vote counts and user's specific vote in a single loop
+    if (error) {
+      console.error("Error calling get_work_votes_with_user RPC:", error);
+      throw error;
+    }
+
     const voteCounts: Record<
       number,
       { up_count: number; down_count: number; user_vote: string | null }
@@ -88,21 +89,17 @@ export class DatabaseClient implements IDatabaseClient {
       voteCounts[workId] = { up_count: 0, down_count: 0, user_vote: null };
     });
 
-    // Process all votes in a single pass
-    votes.forEach((vote) => {
-      const counts = voteCounts[vote.work_id];
-      if (counts) {
-        if (vote.vote_type === "up") {
-          counts.up_count++;
-        } else if (vote.vote_type === "down") {
-          counts.down_count++;
-        }
-        // If this vote belongs to the requested user, mark it
-        if (userId && vote.user_id === userId) {
-          counts.user_vote = vote.vote_type;
-        }
-      }
-    });
+    if (votes) {
+      votes.forEach(
+        (vote) => {
+          voteCounts[vote.work_id] = {
+            up_count: vote.up_count,
+            down_count: vote.down_count,
+            user_vote: vote.user_vote,
+          };
+        },
+      );
+    }
 
     return voteCounts;
   }
@@ -136,13 +133,13 @@ export class DatabaseClient implements IDatabaseClient {
       throw error;
     }
 
-    const processedData = data?.map((project: any) => ({
+    const processedData = data?.map((project) => ({
       ...project,
-      works: project.works?.map((work: any) => ({
+      works: project.works?.map((work) => ({
         ...work,
         voice_actor: processVoiceActor(this.ctx, work.voice_actor),
       })),
-      crew: project.crew?.map((member: any) => ({
+      crew: project.crew?.map((member) => ({
         ...member,
         person: processVoiceActor(this.ctx, member.person),
       })),

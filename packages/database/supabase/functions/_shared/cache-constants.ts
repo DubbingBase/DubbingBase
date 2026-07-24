@@ -49,14 +49,14 @@ export class SimpleKeyBuilder {
   /**
    * Generate TMDB-specific keys
    */
-  static tmdb(type: string, id: number, suffix?: string): string {
+  static tmdb(type: string, id: string | number, suffix?: string): string {
     return this.key(API_PREFIXES.TMDB, type, id, suffix);
   }
 
   /**
    * Generate TVDB-specific keys
    */
-  static tvdb(type: string, id: number, suffix?: string): string {
+  static tvdb(type: string, id: string | number, suffix?: string): string {
     return this.key(API_PREFIXES.TVDB, type, id, suffix);
   }
 
@@ -86,16 +86,27 @@ export const CACHE_KEYS = {
     SimpleKeyBuilder.tmdb(CONTENT_TYPES.TV, id, suffix),
   TMDB_EPISODE: (id: number, suffix?: string) =>
     SimpleKeyBuilder.tmdb(CONTENT_TYPES.EPISODE, id, suffix),
+  TMDB_PERSON: (id: number, suffix?: string) =>
+    SimpleKeyBuilder.tmdb(CONTENT_TYPES.PERSON, id, suffix),
+  TMDB_TRENDING_MOVIES: () =>
+    SimpleKeyBuilder.tmdb(CONTENT_TYPES.TRENDING, "movies"),
+  TMDB_TRENDING_SHOWS: () =>
+    SimpleKeyBuilder.tmdb(CONTENT_TYPES.TRENDING, "shows"),
 
   // TVDB patterns
+  TVDB_AUTH_TOKEN: () => "tvdb:auth_token",
   TVDB_SERIES: (id: number, suffix?: string) =>
     SimpleKeyBuilder.tvdb(CONTENT_TYPES.SERIES, id, suffix),
+  TVDB_MOVIE: (id: number, suffix?: string) =>
+    SimpleKeyBuilder.tvdb(CONTENT_TYPES.MOVIE, id, suffix),
   TVDB_EPISODE: (id: number, suffix?: string) =>
     SimpleKeyBuilder.tvdb(CONTENT_TYPES.EPISODE, id, suffix),
   TVDB_PERSON: (id: number, suffix?: string) =>
     SimpleKeyBuilder.tvdb(CONTENT_TYPES.PERSON, id, suffix),
   TVDB_CHARACTER: (id: number, suffix?: string) =>
     SimpleKeyBuilder.tvdb(CONTENT_TYPES.CHARACTER, id, suffix),
+  TVDB_SEARCH: (query: string, suffix?: string) =>
+    SimpleKeyBuilder.tvdb(CONTENT_TYPES.SEARCH, query, suffix),
 
   // Wikipedia patterns
   WIKIPEDIA_VOICE_ACTOR: (id: string, suffix?: string) =>

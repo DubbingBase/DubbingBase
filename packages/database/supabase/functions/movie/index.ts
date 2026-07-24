@@ -7,130 +7,9 @@ import {
   tmdbClient,
   tvdbClient,
   DatabaseClient,
+  MediaService,
 } from "../_shared/index.ts";
 import { Database } from "../_shared/database.types.ts";
-
-/**
- * Helper to fetch TMDB movie details and TMDB/TVDB character images.
- */
-async function fetchMovieAndTVDBData(movieId: number) {
-  // Try cache first for movie data, fallback to API
-  let movie: any = await cacheUtils.get(`tmdb:movie:${movieId}`);
-  if (!movie) {
-    console.log(`Cache miss for TMDB movie ${movieId}, fetching from API`);
-    try {
-      movie = await tmdbClient.get(`movie/${movieId}`, {
-        append_to_response: "credits,external_ids",
-      });
-      // Cache the result for future requests
-      cacheUtils
-        .set(`tmdb:movie:${movieId}`, movie, "MEDIUM")
-        .catch((err) => console.error("Failed to cache TMDB movie data:", err));
-    } catch (err) {
-      console.error(`Failed to fetch TMDB movie ${movieId}, using mock:`, err);
-      movie = {
-        id: movieId,
-        title: "Information indisponible (Timeout)",
-        name: "Information indisponible (Timeout)",
-        poster_path: null,
-        backdrop_path: null,
-        overview:
-          "Ce contenu n'a pas pu être chargé car les serveurs TMDB sont inaccessibles.",
-        credits: { cast: [] },
-        release_date: "1970-01-01",
-        first_air_date: "1970-01-01",
-        external_ids: {},
-      };
-    }
-  } else {
-    console.log(`Cache hit for TMDB movie ${movieId}`);
-  }
-  const movieWithImageUrls = processMedia(movie);
-
-  let characterProfilePictures: any[] = [];
-  try {
-    // Try to find TheTVDB series ID from TMDB external_ids first
-    let tvdbSeriesId: number | null = null;
-
-    if (movie.external_ids?.tvdb_id) {
-      tvdbSeriesId = movie.external_ids.tvdb_id;
-      console.log(
-        `Found TVDB series ID from TMDB external_ids: ${tvdbSeriesId}`,
-      );
-    } else {
-      // Fallback to search if no direct external_id
-      console.log("No direct TVDB external_id found, searching...");
-      const searchQuery = movie.title || movie.original_title;
-      if (searchQuery) {
-        const searchResults = await tvdbClient.searchSeries(searchQuery);
-        if (searchResults.data && searchResults.data.length > 0) {
-          // Find the best match (could be improved with more sophisticated matching)
-          const bestMatch =
-            searchResults.data.find(
-              (series: any) =>
-                series.name
-                  ?.toLowerCase()
-                  .includes(searchQuery.toLowerCase()) ||
-                searchQuery.toLowerCase().includes(series.name?.toLowerCase()),
-            ) || searchResults.data[0];
-          tvdbSeriesId = bestMatch?.tvdb_id;
-          console.log(`Found TVDB series ID from search: ${tvdbSeriesId}`);
-        }
-      }
-    }
-
-    // Get character profile pictures if we found a TVDB series ID
-    if (tvdbSeriesId) {
-      const cacheKey = `tvdb:movie:characters:${tvdbSeriesId}`;
-      const cachedCharacters = await cacheUtils.get(cacheKey);
-
-      if (cachedCharacters) {
-        console.log(`Cache hit for TVDB movie characters ${tvdbSeriesId}`);
-        characterProfilePictures = cachedCharacters as any[];
-      } else {
-        console.log(
-          `Cache miss for TVDB movie characters ${tvdbSeriesId}, fetching from API`,
-        );
-        const charactersResponse = await tvdbClient.getMovieById(tvdbSeriesId, {
-          meta: "translations",
-          short: false,
-        });
-        const characters = charactersResponse.data.characters;
-        if (characters && characters.length > 0) {
-          characterProfilePictures = characters
-            .filter((character: any) => character.image)
-            .map((character: any) => ({
-              id: character.id,
-              name: character.name,
-              image: character.image,
-              movieId: movieId,
-            }));
-          console.log(
-            `Found ${characterProfilePictures.length} character profile pictures`,
-          );
-
-          // Cache the character data with shorter TTL since character data can be more dynamic
-          cacheUtils
-            .set(cacheKey, characterProfilePictures, "SHORT")
-            .catch((err) =>
-              console.error("Failed to cache TVDB movie character data:", err),
-            );
-        }
-      }
-    } else {
-      console.log(
-        "No TVDB series ID found, skipping character profile pictures",
-      );
-    }
-  } catch (tvdbError) {
-    console.error(
-      "Error fetching character profile pictures from TVDB:",
-      tvdbError,
-    );
-  }
-
-  return { movieWithImageUrls, characterProfilePictures };
-}
 
 export default {
   fetch: withSupabase<Database>({ auth: "publishable:*" }, async (req, ctx) => {
@@ -158,37 +37,83 @@ export default {
 
       // Use shared DatabaseClient for database queries, initialized with context clients
       const dbClient = new DatabaseClient(ctx);
+      const mediaService = new MediaService(dbClient, tmdbClient, ctx);
+
+      // Create promise for external API data using unified cache flows
+      const apiDataPromise = mediaService
+        .getMediaWithVoiceActors("movie", movieId)
+        .then(async (result) => {
+          const characterProfilePictures =
+            await mediaService.getCharacterProfilePictures(
+              "movie",
+              movieId,
+              result.media,
+            );
+          return {
+            movieWithImageUrls: result.media,
+            characterProfilePictures,
+          };
+        })
+        .catch((err) => {
+          console.error(
+            `Failed to fetch TMDB movie ${movieId}, using mock:`,
+            err,
+          );
+          const mockMovie = {
+            id: movieId,
+            title: "Information indisponible (Timeout)",
+            name: "Information indisponible (Timeout)",
+            poster_path: null,
+            backdrop_path: null,
+            overview:
+              "Ce contenu n'a pas pu être chargé car les serveurs TMDB sont inaccessibles.",
+            credits: { cast: [] },
+            release_date: "1970-01-01",
+            first_air_date: "1970-01-01",
+            external_ids: {},
+          };
+          return {
+            movieWithImageUrls: processMedia(mockMovie),
+            characterProfilePictures: [],
+          };
+        });
+
+      // Create promise chain for database queries
+      const dbDataPromise = dbClient
+        .getDubbingProjects(movieId, "movie")
+        .then(async (dubbingProjects) => {
+          // Get work IDs for vote fetching
+          const workIds = dubbingProjects.flatMap(
+            (p: any) => p.works?.map((w: any) => w.id) || [],
+          );
+
+          // Get vote data if there are work entries. Use ctx.userClaims directly for authentication check.
+          let voteData: Record<
+            number,
+            { up_count: number; down_count: number; user_vote: string | null }
+          > = {};
+          if (workIds.length > 0) {
+            try {
+              const user = ctx.userClaims;
+              if (user) {
+                voteData = await dbClient.getWorkVotes(workIds, user.id);
+              } else {
+                voteData = await dbClient.getWorkVotes(workIds);
+              }
+            } catch (voteError) {
+              console.error("Error fetching vote data:", voteError);
+            }
+          }
+          return { dubbingProjects, voteData };
+        });
 
       // Run TVDB/TMDB queries and Database queries concurrently
-      const [apiData, dubbingProjects] = await Promise.all([
-        fetchMovieAndTVDBData(movieId),
-        dbClient.getDubbingProjects(movieId, "movie"),
+      const [apiData, { dubbingProjects, voteData }] = await Promise.all([
+        apiDataPromise,
+        dbDataPromise,
       ]);
 
       const { movieWithImageUrls, characterProfilePictures } = apiData;
-
-      // Get work IDs for vote fetching
-      const workIds = dubbingProjects.flatMap(
-        (p: any) => p.works?.map((w: any) => w.id) || [],
-      );
-
-      // Get vote data if there are work entries. Use ctx.userClaims directly for authentication check.
-      let voteData: Record<
-        number,
-        { up_count: number; down_count: number; user_vote: string | null }
-      > = {};
-      if (workIds.length > 0) {
-        try {
-          const user = ctx.userClaims;
-          if (user) {
-            voteData = await dbClient.getWorkVotes(workIds, user.id);
-          } else {
-            voteData = await dbClient.getWorkVotes(workIds);
-          }
-        } catch (voteError) {
-          console.error("Error fetching vote data:", voteError);
-        }
-      }
 
       const result = {
         movie: movieWithImageUrls,

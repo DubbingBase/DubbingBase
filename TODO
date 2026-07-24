@@ -1,6 +1,5 @@
 Rechargement des le lancement de création de projet de doublage
 implement view transitions
-voice actor request is very slow: it's because there is a tmdb outage
 add votes to trust work
 add "untrusted" work
 add gamification

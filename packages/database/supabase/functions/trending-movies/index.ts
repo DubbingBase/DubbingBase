@@ -2,10 +2,9 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
 import { buildTmdbImageUrl } from "../_shared/tmdb-urls.ts";
-import { SimpleCache } from "../_shared/cache-utils.ts";
-import { RedisClient } from "../_shared/redis.ts";
+import { SimpleCache, redisClient, CACHE_KEYS } from "../_shared/index.ts";
 
-const cacheKey = "tmdb:trending:movies";
+const cacheKey = CACHE_KEYS.TMDB_TRENDING_MOVIES();
 
 export default {
   fetch: withSupabase<Database>(
