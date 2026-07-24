@@ -240,10 +240,27 @@ export class MediaService {
       contentId,
     );
 
+    let collection = null;
+    if (contentType === "movie" && media.belongs_to_collection?.id) {
+      const collectionData = await this.tmdbClient.getCollection(media.belongs_to_collection.id);
+      if (collectionData) {
+        collection = {
+          ...collectionData,
+          backdrop_path: collectionData.backdrop_path ? `https://image.tmdb.org/t/p/w500${collectionData.backdrop_path}` : null,
+          poster_path: collectionData.poster_path ? `https://image.tmdb.org/t/p/w500${collectionData.poster_path}` : null,
+          parts: collectionData.parts ? collectionData.parts.map((part: any) => ({
+            ...part,
+            backdrop_path: part.backdrop_path ? `https://image.tmdb.org/t/p/w500${part.backdrop_path}` : null,
+            poster_path: part.poster_path ? `https://image.tmdb.org/t/p/w500${part.poster_path}` : null,
+          })) : []
+        };
+      }
+    }
+
     // Process image URLs in the media data
     const processedMedia = processMedia(media);
 
-    return { media: processedMedia };
+    return { media: processedMedia, collection };
   }
 
   async getMediaWithVoiceActorsExtended(

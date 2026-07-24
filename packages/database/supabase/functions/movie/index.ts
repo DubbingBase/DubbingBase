@@ -52,6 +52,7 @@ export default {
           return {
             movieWithImageUrls: result.media,
             characterProfilePictures,
+            collection: result.collection,
           };
         })
         .catch((err) => {
@@ -75,6 +76,7 @@ export default {
           return {
             movieWithImageUrls: processMedia(mockMovie),
             characterProfilePictures: [],
+            collection: null,
           };
         });
 
@@ -113,13 +115,14 @@ export default {
         dbDataPromise,
       ]);
 
-      const { movieWithImageUrls, characterProfilePictures } = apiData;
+      const { movieWithImageUrls, characterProfilePictures, collection } = apiData;
 
       const result = {
         movie: movieWithImageUrls,
         characterProfilePictures: characterProfilePictures,
         dubbingProjects: dubbingProjects,
         votes: voteData,
+        collection: collection,
       };
 
       return Response.json(result);

@@ -169,4 +169,24 @@ export class TMDBClient implements ITMDBClient {
   async fetchMediaCredits(mediaType: string, mediaId: number) {
     return await this.get(`${mediaType}/${mediaId}/credits`);
   }
+
+  async getCollection(collectionId: number) {
+    const cacheKey = this.cache.tmdbKey('collection', collectionId, "details");
+
+    // Try cache first
+    const cached = await this.cache.get(cacheKey);
+    if (cached) {
+      debugLog(`TMDB cache hit for collection ${collectionId}`);
+      return cached;
+    }
+
+    // Cache miss - fetch from API
+    const result = await this.get(`collection/${collectionId}`);
+
+    // Cache the result with MEDIUM TTL (6 hours for media details)
+    await this.cache.set(cacheKey, result, "MEDIUM");
+    debugLog(`TMDB cache set for collection ${collectionId}`);
+
+    return result;
+  }
 }
