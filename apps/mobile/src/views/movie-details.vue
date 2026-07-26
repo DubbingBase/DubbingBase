@@ -25,6 +25,8 @@
         </ion-refresher>
         <MediaInfoCard :media="movie" />
 
+        <CollectionCard v-if="collection" :collection="collection" />
+
         <DubbingProjectsView
           :contentId="route.params.id as string"
           contentType="movie"
@@ -119,6 +121,7 @@ import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
 import MediaInfoCard from "@/components/MediaInfoCard.vue";
 import DubbingProjectsView from "@/components/DubbingProjectsView.vue";
+import CollectionCard from "@/components/CollectionCard.vue";
 import PersonSearchModal from "@/components/PersonSearchModal.vue";
 import CreditsReviewModal from "@/components/CreditsReviewModal.vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
@@ -208,6 +211,7 @@ const {
 } = useVoiceActorManagement("movie");
 
 const movie = ref<MovieResponse["movie"] | undefined>();
+const collection = ref<MovieResponse["collection"] | null>(null);
 const dubbingProjects = ref<Array<{ id: number; works?: unknown[] }>>([]);
 const queueStatus = ref<string | null>(null);
 const queueErrorMessage = ref<string | null>(null);
@@ -511,6 +515,9 @@ const fetchMovieData = async () => {
       dubbingProjects.value = data.dubbingProjects || [];
       if (data.characterProfilePictures) {
         characterProfilePictures.value = data.characterProfilePictures;
+      }
+      if (data.collection) {
+        collection.value = data.collection;
       }
 
       // Hydrate shared votes store

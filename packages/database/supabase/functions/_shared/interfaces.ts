@@ -9,6 +9,7 @@ export interface ITMDBClient {
   ): Promise<any>;
   fetchMediaDetails(contentId: number, contentType: string): Promise<any>;
   fetchMediaCredits(mediaType: string, mediaId: number): Promise<any>;
+  getCollection(collectionId: number): Promise<any>;
   getCached?(endpoint: string, params?: Record<string, string>): Promise<any>;
   setCache?(key: string, data: any, ttl: string): Promise<void>;
   clearCache?(key: string): Promise<void>;
