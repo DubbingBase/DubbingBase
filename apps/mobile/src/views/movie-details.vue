@@ -20,9 +20,9 @@
         </AppToolbar>
       </AppHeader>
       <AppContent>
-      <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
-        <ion-refresher-content></ion-refresher-content>
-      </ion-refresher>
+        <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
+          <ion-refresher-content></ion-refresher-content>
+        </ion-refresher>
         <MediaInfoCard :media="movie" />
 
         <DubbingProjectsView
@@ -114,6 +114,7 @@ import { MovieResponse } from "@supabase/functions/_shared/movie";
 import { supabase } from "../api/supabase";
 import { enqueueMedia } from "../api/mediaQueue";
 import { useVoiceActorManagement } from "@/composables/useVoiceActorManagement";
+import { useDeferredCharacters } from "@/composables/useDeferredCharacters";
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
 import MediaInfoCard from "@/components/MediaInfoCard.vue";
@@ -121,7 +122,6 @@ import DubbingProjectsView from "@/components/DubbingProjectsView.vue";
 import PersonSearchModal from "@/components/PersonSearchModal.vue";
 import CreditsReviewModal from "@/components/CreditsReviewModal.vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
-import MediaItem from "@/components/MediaItem.vue";
 
 import { actorToPersonData, voiceActorToPersonData } from "@/utils/convert";
 import { Role } from "@/components/PersonItem.vue";
@@ -222,88 +222,11 @@ const characterProfilePictures = ref<
   }[]
 >([]);
 
-const findCharacter = (
-  character: UnwrapRef<typeof characterProfilePictures>[number],
-  role: Role,
-) => {
-  if (!character.name || !role.character) return false;
-
-  const characterName = character.name.toLowerCase();
-  const roleName = role.character.toLowerCase();
-
-  const allNames = characterName.split("/").map((name) => name.trim());
-  // console.log("allNames", allNames);
-
-  const allRoleNames = roleName.split("/").map((name) => name.trim());
-  // console.log("allRoleNames", allRoleNames);
-
-  // Loop through allNames and allRoleNames to find at least one correspondence
-  for (const name of allNames ?? []) {
-    for (const roleName of allRoleNames) {
-      // Direct name matching
-      if (
-        name === roleName ||
-        name.includes(roleName) ||
-        roleName.includes(name)
-      ) {
-        return true;
-      }
-
-      // Simplified name matching for current pair
-      const simplifiedName = name.replace(/(.*)( '?.*' ?)(.*)/, "$1 $3");
-      const simplifiedRoleName = roleName.replace(
-        /(.*)( '?.*' ?)(.*)/,
-        "$1 $3",
-      );
-
-      if (
-        simplifiedName.includes(roleName) ||
-        name.includes(simplifiedRoleName) ||
-        simplifiedName.includes(simplifiedRoleName)
-      ) {
-        return true;
-      }
-    }
-  }
-
-  // console.log("characterName", characterName);
-  // console.log("roleName", roleName);
-
-  const simplifiedName = characterName?.replace(/(.*)( '?.*' ?)(.*)/, "$1 $3");
-  // console.log("simplifiedName", simplifiedName);
-
-  const simplifiedRoleName = roleName.replace(/(.*)( '?.*' ?)(.*)/, "$1 $3");
-  // console.log("simplifiedRoleName", simplifiedRoleName);
-
-  return (
-    characterName?.includes(roleName) ||
-    simplifiedName?.includes(roleName) ||
-    characterName?.includes(simplifiedRoleName) ||
-    simplifiedName?.includes(simplifiedRoleName)
-  );
-};
-
-const actors = computed(() => {
-  return movie.value?.credits?.cast?.map((cast) => {
-    // console.log("cast", cast);
-    const person = actorToPersonData(cast);
-
-    for (const role of person.roles ?? []) {
-      const image = characterProfilePictures.value.find((character) =>
-        findCharacter(character, role),
-      )?.image;
-      role.image = image ?? "";
-    }
-
-    person.roles =
-      person.roles?.filter(
-        (role, index, self) =>
-          index === self.findIndex((r) => r.image === role.image),
-      ) ?? [];
-
-    return person;
-  });
-});
+const { actors } = useDeferredCharacters(
+  () => movie.value?.credits?.cast,
+  characterProfilePictures,
+  { deduplicateRolesByImage: true },
+);
 
 const wikiDataId = computed(() => {
   return movie.value?.external_ids?.wikidata_id;
@@ -314,7 +237,9 @@ const hasWikidataId = computed(() => {
 });
 
 const hasData = computed(() => {
-  return dubbingProjects.value.some((p: { works?: unknown[] }) => p.works && p.works.length > 0);
+  return dubbingProjects.value.some(
+    (p: { works?: unknown[] }) => p.works && p.works.length > 0,
+  );
 });
 
 // Scan functionality
@@ -446,11 +371,17 @@ const takePhoto = async () => {
 
     // Provide known actors to the AI
     const simplifiedActors =
-      actors.value?.map((a: { id?: number; name?: string; roles?: { character?: string }[] }) => ({
-        id: a.id,
-        name: a.name,
-        roles: a.roles?.map((r: { character?: string }) => r.character) || [],
-      })) || [];
+      actors.value?.map(
+        (a: {
+          id?: number;
+          name?: string;
+          roles?: { character?: string }[];
+        }) => ({
+          id: a.id,
+          name: a.name,
+          roles: a.roles?.map((r: { character?: string }) => r.character) || [],
+        }),
+      ) || [];
     formData.append("actors", JSON.stringify(simplifiedActors));
 
     const response = await supabase.functions.invoke(
@@ -584,7 +515,10 @@ const fetchMovieData = async () => {
 
       // Hydrate shared votes store
       if ((data as { votes?: Record<string, number> }).votes) {
-        sharedVotes.value = { ...sharedVotes.value, ...(data as { votes?: Record<string, number> }).votes };
+        sharedVotes.value = {
+          ...sharedVotes.value,
+          ...(data as { votes?: Record<string, number> }).votes,
+        };
       }
     }
   } catch (e: unknown) {

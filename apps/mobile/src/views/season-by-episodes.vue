@@ -19,9 +19,9 @@
         </AppToolbar>
       </AppHeader>
       <AppContent>
-      <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
-        <ion-refresher-content></ion-refresher-content>
-      </ion-refresher>
+        <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
+          <ion-refresher-content></ion-refresher-content>
+        </ion-refresher>
         <div
           v-if="fetchError || (queueStatus === 'failed' && queueErrorMessage)"
           class="text-center text-red-500 mt-4"
@@ -85,20 +85,29 @@ import AppButton from "@/components/common/AppButton.vue";
 import EpisodeBanner from "../components/EpisodeBanner.vue";
 import DubbingProjectsView from "@/components/DubbingProjectsView.vue";
 import { actorToPersonData } from "@/utils/convert";
-import { findCharacter } from "@/utils/character";
+import { useDeferredCharacters } from "@/composables/useDeferredCharacters";
 
 const route = useRoute();
 const router = useRouter();
 const isLoading = ref(true);
 const error = ref("");
-const episode = ref<{ episode_number?: number; name?: string; air_date?: string; overview?: string; still_path?: string; credits?: any } | null>(null);
+const episode = ref<{
+  episode_number?: number;
+  name?: string;
+  air_date?: string;
+  overview?: string;
+  still_path?: string;
+  credits?: any;
+} | null>(null);
 const dubbingProjects = ref<Array<{ id: number; works?: unknown[] }>>([]);
 const characterProfilePictures = ref<any[]>([]);
 
 const wikiDataId = computed(() => episode.value?.external_ids?.wikidata_id);
 const hasWikidataId = computed(() => !!wikiDataId.value);
 const hasData = computed(() => {
-  return dubbingProjects.value.some((p: { works?: unknown[] }) => p.works && p.works.length > 0);
+  return dubbingProjects.value.some(
+    (p: { works?: unknown[] }) => p.works && p.works.length > 0,
+  );
 });
 const isFetching = ref(false);
 const queueStatus = ref<string | null>(null);
@@ -233,27 +242,20 @@ function getVoiceActorByTmdbId(tmdbId: number) {
   return [];
 }
 
-const normalizedActors = computed(() => {
-  let castToMap: any[] = [];
-  if (episode.value?.credits?.cast) {
-    castToMap = [...episode.value.credits.cast];
-  }
-  if ((episode.value as any)?.guest_stars) {
-    castToMap = [...castToMap, ...(episode.value as any).guest_stars];
-  }
-  const mapped = castToMap.map((cast: any) => actorToPersonData(cast));
-
-  for (const person of mapped) {
-    for (const role of person.roles ?? []) {
-      const image = characterProfilePictures.value.find((character) =>
-        findCharacter(character, role),
-      )?.image;
-      role.image = image ?? "";
+const { actors: normalizedActors } = useDeferredCharacters(
+  () => {
+    let castToMap: any[] = [];
+    if (episode.value?.credits?.cast) {
+      castToMap = [...episode.value.credits.cast];
     }
-  }
-
-  return mapped;
-});
+    if (episode.value?.guest_stars) {
+      castToMap = [...castToMap, ...episode.value?.guest_stars];
+    }
+    return castToMap;
+  },
+  characterProfilePictures,
+  { deduplicateRolesByImage: false },
+);
 
 function goToActor(id: number) {
   router.push({ name: "ActorDetails", params: { id } });
@@ -298,7 +300,8 @@ watch(
     try {
       await fetchEpisodeData();
     } catch (e: unknown) {
-      error.value = (e as { message?: string })?.message || "Erreur lors du chargement.";
+      error.value =
+        (e as { message?: string })?.message || "Erreur lors du chargement.";
     } finally {
       isLoading.value = false;
     }

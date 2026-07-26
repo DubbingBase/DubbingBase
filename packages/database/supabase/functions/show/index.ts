@@ -73,21 +73,7 @@ export default {
 
           let aggregateCredits = result.media.aggregate_credits || await aggregateCreditsPromise;
           
-          // Match by character name since aggregated credits doesn't have external_ids
-          if (aggregateCredits && aggregateCredits.cast) {
-            for (const character of characterProfilePictures) {
-              const match = aggregateCredits.cast.find(
-                (credit: any) =>
-                  credit.roles &&
-                  credit.roles.some(
-                    (role: any) => role.character === character.name,
-                  ),
-              );
-              if (match) {
-                character.peopleId = match.id;
-              }
-            }
-          }
+          // Removed backend matching logic as the frontend handles image matching reactively
 
           const creditsWithImages = processMedia({ credits: aggregateCredits });
           return {

@@ -20,9 +20,9 @@
         </AppToolbar>
       </AppHeader>
       <AppContent>
-      <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
-        <ion-refresher-content></ion-refresher-content>
-      </ion-refresher>
+        <ion-refresher slot="fixed" @ionRefresh="handleRefresh($event)">
+          <ion-refresher-content></ion-refresher-content>
+        </ion-refresher>
         <div
           v-if="fetchError || (queueStatus === 'failed' && queueErrorMessage)"
           class="text-center text-red-500 mt-4"
@@ -37,8 +37,12 @@
             :seasonNumber="Number(route.params.season)"
           />
           <AppSegment scrollable v-model="activeTab" class="season-tabs">
-            <AppSegmentButton value="episodes" content-id="episodes">Épisodes</AppSegmentButton>
-            <AppSegmentButton value="voices" content-id="voices">Voix</AppSegmentButton>
+            <AppSegmentButton value="episodes" content-id="episodes"
+              >Épisodes</AppSegmentButton
+            >
+            <AppSegmentButton value="voices" content-id="voices"
+              >Voix</AppSegmentButton
+            >
           </AppSegment>
           <AppSegmentView v-model:active-segment="activeTab">
             <AppSegmentContent class="segmented-content" id="episodes">
@@ -104,7 +108,7 @@ import EpisodesList from "../components/EpisodesList.vue";
 import DubbingProjectsView from "@/components/DubbingProjectsView.vue";
 import AppButton from "@/components/common/AppButton.vue";
 import { actorToPersonData } from "@/utils/convert";
-import { findCharacter } from "@/utils/character";
+import { useDeferredCharacters } from "@/composables/useDeferredCharacters";
 
 const route = useRoute();
 const router = useRouter();
@@ -113,7 +117,9 @@ const error = ref("");
 const season = ref<{ name?: string; episodes?: unknown[] } | null>(null);
 const dubbingProjects = ref<Array<{ id: number; works?: unknown[] }>>([]);
 const characterProfilePictures = ref<any[]>([]);
-const episodeCredits = ref<{ cast?: Array<{ id: number; name: string; character?: string }> } | null>(null);
+const episodeCredits = ref<{
+  cast?: Array<{ id: number; name: string; character?: string }>;
+} | null>(null);
 const activeTab = ref("episodes");
 
 const wikiDataId = computed(() => {
@@ -121,7 +127,9 @@ const wikiDataId = computed(() => {
 });
 const hasWikidataId = computed(() => !!wikiDataId.value);
 const hasData = computed(() => {
-  return dubbingProjects.value.some((p: { works?: unknown[] }) => p.works && p.works.length > 0);
+  return dubbingProjects.value.some(
+    (p: { works?: unknown[] }) => p.works && p.works.length > 0,
+  );
 });
 const isFetching = ref(false);
 const queueStatus = ref<string | null>(null);
@@ -148,26 +156,13 @@ const actionSheetButtons = computed<ActionSheetButton[]>(() => {
   return buttons;
 });
 
-const normalizedActors = computed(() => {
-  let castToMap: any[] = [];
-  if (season.value?.credits?.cast) {
-    castToMap = season.value.credits.cast;
-  } else if (episodeCredits.value?.cast) {
-    castToMap = frenchActors(episodeCredits.value.cast);
-  }
-  const mapped = castToMap.map((cast: any) => actorToPersonData(cast));
-
-  for (const person of mapped) {
-    for (const role of person.roles ?? []) {
-      const image = characterProfilePictures.value.find((character) =>
-        findCharacter(character, role),
-      )?.image;
-      role.image = image ?? "";
-    }
-  }
-
-  return mapped;
-});
+const { actors: normalizedActors } = useDeferredCharacters(
+  () =>
+    season.value?.credits?.cast ||
+    (episodeCredits.value?.cast ? frenchActors(episodeCredits.value.cast) : []),
+  characterProfilePictures,
+  { deduplicateRolesByImage: false },
+);
 
 const fetchQueueStatus = async () => {
   try {
@@ -279,7 +274,13 @@ function goToEpisode(episodeNumber: number) {
   });
 }
 
-function frenchActors(cast: Array<{ id: number; name: string; roles?: Array<{ character?: string }> }>) {
+function frenchActors(
+  cast: Array<{
+    id: number;
+    name: string;
+    roles?: Array<{ character?: string }>;
+  }>,
+) {
   // Filter for French voice actors (dub), fallback to all if language not available
   return cast.filter(
     (a) =>
@@ -309,7 +310,8 @@ async function fetchData() {
       await fetchQueueStatus();
     }
   } catch (e: unknown) {
-    error.value = (e as { message?: string })?.message || "Erreur lors du chargement.";
+    error.value =
+      (e as { message?: string })?.message || "Erreur lors du chargement.";
   } finally {
     isLoading.value = false;
   }

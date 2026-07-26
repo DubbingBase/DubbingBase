@@ -1,53 +1,44 @@
 import { Role } from "@/components/PersonItem.vue";
 
+export const normalizeCharacterName = (name: string): string => {
+  if (!name) return "";
+  return name
+    .toLowerCase()
+    .replace(/\([^)]*\)/g, "") // Remove text in parentheses (...)
+    .replace(/["'][^"']*["']/g, "") // Remove text in quotes '...' or "..."
+    .replace(/\s+/g, " ") // Normalize spaces
+    .trim();
+};
+
 export const findCharacter = (
   character: { name: string; [key: string]: any },
   role: Role,
-) => {
+): boolean => {
   if (!character.name || !role.character) return false;
 
-  const characterName = character.name.toLowerCase();
-  const roleName = role.character.toLowerCase();
+  const charNames = character.name.split("/").map(normalizeCharacterName).filter(Boolean);
+  const roleNames = role.character.split("/").map(normalizeCharacterName).filter(Boolean);
 
-  const allNames = characterName.split("/").map((name) => name.trim());
-  const allRoleNames = roleName.split("/").map((name) => name.trim());
-
-  // Loop through allNames and allRoleNames to find at least one correspondence
-  for (const name of allNames) {
-    for (const rName of allRoleNames) {
-      // Direct name matching
-      if (
-        name === rName ||
-        name.includes(rName) ||
-        rName.includes(name)
-      ) {
+  for (const cName of charNames) {
+    for (const rName of roleNames) {
+      // Fast exact match
+      if (cName === rName) {
         return true;
       }
-
-      // Simplified name matching for current pair
-      const simplifiedName = name.replace(/(.*)( '?.*' ?)(.*)/, "$1 $3");
-      const simplifiedRoleName = rName.replace(
-        /(.*)( '?.*' ?)(.*)/,
-        "$1 $3",
-      );
-
-      if (
-        simplifiedName.includes(rName) ||
-        name.includes(simplifiedRoleName) ||
-        simplifiedName.includes(simplifiedRoleName)
-      ) {
-        return true;
+      
+      // Word-boundary partial matching (to prevent "Sam" matching "Samantha")
+      // We check if the shorter name is a full word inside the longer name
+      if (cName.length > 0 && rName.length > 0) {
+        const cWords = cName.split(" ");
+        const rWords = rName.split(" ");
+        
+        // If all words in cName exist in rName, or vice-versa
+        if (cWords.every(w => rWords.includes(w)) || rWords.every(w => cWords.includes(w))) {
+          return true;
+        }
       }
     }
   }
 
-  const simplifiedName = characterName.replace(/(.*)( '?.*' ?)(.*)/, "$1 $3");
-  const simplifiedRoleName = roleName.replace(/(.*)( '?.*' ?)(.*)/, "$1 $3");
-
-  return (
-    characterName.includes(roleName) ||
-    simplifiedName.includes(roleName) ||
-    characterName.includes(simplifiedRoleName) ||
-    simplifiedName.includes(simplifiedRoleName)
-  );
+  return false;
 };

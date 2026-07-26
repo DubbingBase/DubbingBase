@@ -167,6 +167,8 @@ import PersonSearchModal from "@/components/PersonSearchModal.vue";
 import CreditsReviewModal from "@/components/CreditsReviewModal.vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import { useVoiceActorManagement } from "@/composables/useVoiceActorManagement";
+import { useDeferredCharacters } from "@/composables/useDeferredCharacters";
+import { findCharacter } from "@/utils/character";
 import Share2 from "~icons/lucide/share-2";
 // Removed unused imports
 import { storeToRefs } from "pinia";
@@ -275,90 +277,11 @@ const {
   goToVoiceActor,
 } = useVoiceActorManagement("tv");
 
-const findCharacter = (
-  character: UnwrapRef<typeof characterProfilePictures>[number],
-  role: Role,
-) => {
-  if (!character.name || !role.character) return false;
-
-  const characterName = character.name.toLowerCase();
-  const roleName = role.character.toLowerCase();
-
-  const allNames = characterName.split("/").map((name) => name.trim());
-  // console.log("allNames", allNames);
-
-  const allRoleNames = roleName.split("/").map((name) => name.trim());
-  // console.log("allRoleNames", allRoleNames);
-
-  // Loop through allNames and allRoleNames to find at least one correspondence
-  for (const name of allNames) {
-    for (const roleName of allRoleNames) {
-      // Direct name matching
-      if (
-        name === roleName ||
-        name.includes(roleName) ||
-        roleName.includes(name)
-      ) {
-        return true;
-      }
-
-      // Simplified name matching for current pair
-      const simplifiedName = name.replace(/(.*)( '?.*' ?)(.*)/, "$1 $3");
-      const simplifiedRoleName = roleName.replace(
-        /(.*)( '?.*' ?)(.*)/,
-        "$1 $3",
-      );
-
-      if (
-        simplifiedName.includes(roleName) ||
-        name.includes(simplifiedRoleName) ||
-        simplifiedName.includes(simplifiedRoleName)
-      ) {
-        return true;
-      }
-    }
-  }
-
-  // console.log("characterName", characterName);
-  // console.log("roleName", roleName);
-
-  const simplifiedName = characterName.replace(/(.*)( '?.*' ?)(.*)/, "$1 $3");
-  // console.log("simplifiedName", simplifiedName);
-
-  const simplifiedRoleName = roleName.replace(/(.*)( '?.*' ?)(.*)/, "$1 $3");
-  // console.log("simplifiedRoleName", simplifiedRoleName);
-
-  return (
-    characterName.includes(roleName) ||
-    simplifiedName.includes(roleName) ||
-    characterName.includes(simplifiedRoleName) ||
-    simplifiedName.includes(simplifiedRoleName)
-  );
-};
-
-const actors = computed(() => {
-  return show.value?.credits?.cast?.map((cast: { id: number }) => {
-    const person = actorToPersonData(cast);
-
-    console.log("person.roles", person.roles);
-
-    for (const role of person.roles ?? []) {
-      const image = characterProfilePictures.value.find((character) =>
-        findCharacter(character, role),
-      )?.image;
-      role.image = image ?? "";
-    }
-    console.log("person.roles", person.roles);
-
-    person.roles =
-      person.roles?.filter(
-        (role, index, self) =>
-          index === self.findIndex((r) => r.image === role.image),
-      ) ?? [];
-
-    return person;
-  });
-});
+const { actors } = useDeferredCharacters(
+  () => show.value?.credits?.cast,
+  characterProfilePictures,
+  { deduplicateRolesByImage: true }
+);
 
 // Voice actor methods are now provided by the composable
 
