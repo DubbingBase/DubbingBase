@@ -15,16 +15,16 @@
       </div>
     </div>
 
-    <ion-modal :is-open="isOpen" @didDismiss="isOpen = false" :initial-breakpoint="0.8" :breakpoints="[0, 0.5, 0.8, 1]">
-      <ion-header>
-        <ion-toolbar>
-          <ion-title>{{ collection.name }}</ion-title>
-          <ion-buttons slot="end">
-            <ion-button @click="isOpen = false">Fermer</ion-button>
-          </ion-buttons>
-        </ion-toolbar>
-      </ion-header>
-      <ion-content class="ion-padding">
+    <AppModal v-model:is-open="isOpen" :initial-breakpoint="0.8" :breakpoints="[0, 0.5, 0.8, 1]">
+      <AppHeader>
+        <AppToolbar>
+          <AppTitle>{{ collection.name }}</AppTitle>
+          <template #end>
+            <AppButton @click="isOpen = false" fill="clear">Fermer</AppButton>
+          </template>
+        </AppToolbar>
+      </AppHeader>
+      <AppContent class="ion-padding">
         <p v-if="collection.overview" class="collection-overview">{{ collection.overview }}</p>
 
         <h3 class="movies-title">Films dans cette collection</h3>
@@ -39,14 +39,19 @@
             @click="isOpen = false"
           />
         </div>
-      </ion-content>
-    </ion-modal>
+      </AppContent>
+    </AppModal>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent } from '@ionic/vue';
+import AppModal from '@/components/common/AppModal.vue';
+import AppHeader from '@/components/common/layout/AppHeader.vue';
+import AppToolbar from '@/components/common/layout/AppToolbar.vue';
+import AppTitle from '@/components/common/layout/AppTitle.vue';
+import AppButton from '@/components/common/AppButton.vue';
+import AppContent from '@/components/common/layout/AppContent.vue';
 import MediaItem from './MediaItem.vue';
 
 interface Movie {

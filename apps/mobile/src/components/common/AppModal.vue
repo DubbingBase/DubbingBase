@@ -3,8 +3,8 @@
     :is-open="isOpen"
     @didPresent="onOpened"
     @didDismiss="onClosed"
-    :initial-breakpoint="isFullScreen ? undefined : 1"
-    :breakpoints="isFullScreen ? undefined : [0, 1]"
+    :initial-breakpoint="isFullScreen ? undefined : (initialBreakpoint ?? 1)"
+    :breakpoints="isFullScreen ? undefined : (breakpoints ?? [0, 1])"
     :backdrop-dismiss="overlay"
     class="app-bottom-sheet"
   >
@@ -23,6 +23,8 @@ const props = withDefaults(defineProps<{
   maxHeight?: string;
   canSwipe?: boolean;
   overlay?: boolean;
+  breakpoints?: number[];
+  initialBreakpoint?: number;
 }>(), {
   isOpen: false,
   isFullScreen: false,
