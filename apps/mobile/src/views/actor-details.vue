@@ -36,7 +36,7 @@
               <AppText>{{ t("actor.roles") }}</AppText>
             </AppSegmentButton>
           </AppSegment>
-          <AppSegmentView v-model:active-segment="selectedSegment" :style="{ height: segmentViewHeight, transition: 'height 0.3s ease' }">
+          <AppSegmentView v-model:active-segment="selectedSegment">
             <AppSegmentContent id="about">
               <div class="about-section" ref="aboutSectionRef">
                 <div class="info-card" v-if="actor.data.birthday">
@@ -238,24 +238,8 @@ const searchQuery = ref("");
 const selectedSegment = ref("about");
 const isBiographyExpanded = ref(false);
 
-const segmentViewHeight = ref("auto");
 const aboutSectionRef = ref<HTMLElement | null>(null);
 const rolesSectionRef = ref<HTMLElement | null>(null);
-
-const updateSegmentHeight = async () => {
-  await nextTick();
-  // Small delay to let the DOM settle before measuring
-  setTimeout(() => {
-    if (selectedSegment.value === 'about' && aboutSectionRef.value) {
-      segmentViewHeight.value = `${aboutSectionRef.value.scrollHeight}px`;
-    } else if (selectedSegment.value === 'roles' && rolesSectionRef.value) {
-      segmentViewHeight.value = `${rolesSectionRef.value.scrollHeight}px`;
-    }
-  }, 50);
-};
-
-watch(selectedSegment, updateSegmentHeight);
-watch(isBiographyExpanded, updateSegmentHeight);
 
 const tmdbRoles = computed(() => {
   if (!actor.value?.data?.credits?.cast) return [];
@@ -436,9 +420,6 @@ async function loadActorData() {
     console.log("Converted actor data:", actor.value);
     voiceActors.value = actorResponse.voiceActors || [];
     console.log("Voice actors:", voiceActors.value);
-    
-    // Initial height calculation
-    updateSegmentHeight();
   } catch (err) {
     console.error("Error fetching actor data:", err);
     error.value =
