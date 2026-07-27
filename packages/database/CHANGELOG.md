@@ -1,5 +1,11 @@
 # @app/supabase
 
+## 0.0.42
+
+### Patch Changes
+
+- sd
+
 ## 0.0.41
 
 ### Patch Changes

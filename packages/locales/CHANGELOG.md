@@ -1,5 +1,11 @@
 # @app/locales
 
+## 0.0.24
+
+### Patch Changes
+
+- sd
+
 ## 0.0.23
 
 ### Patch Changes
