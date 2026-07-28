@@ -83,8 +83,50 @@
 
 <script setup lang="ts">
 import { onMounted } from 'vue';
+import { useHead } from '@unhead/vue';
 import { useHomeData } from '@app/shared-logic';
 import { supabase } from '../api/supabase';
+
+useHead({
+  title: 'DubbingBase - La base de données du doublage et comédiens de doublage',
+  meta: [
+    {
+      name: 'description',
+      content: 'Découvrez DubbingBase, la base de données de référence du doublage français. Retrouvez les fiches des comédiens de doublage, leurs rôles et castings vocaux de vos films et séries préférés.',
+    },
+    {
+      name: 'keywords',
+      content: 'doublage, comédiens de doublage, voix française, castings vocaux, films, séries, fiches acteurs',
+    },
+    { property: 'og:title', content: 'DubbingBase - La base de données du doublage' },
+    {
+      property: 'og:description',
+      content: 'Retrouvez la base de données complète des comédiens de doublage et voix françaises.',
+    },
+    { property: 'og:type', content: 'website' },
+    { property: 'og:url', content: 'https://dubbingbase.com/' },
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { name: 'twitter:title', content: 'DubbingBase - La base de données du doublage' },
+    {
+      name: 'twitter:description',
+      content: 'Retrouvez la base de données complète des comédiens de doublage et voix françaises.',
+    },
+  ],
+  link: [{ rel: 'canonical', href: 'https://dubbingbase.com/' }],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'DubbingBase',
+        url: 'https://dubbingbase.com/',
+        description: 'La base de données de référence du doublage et des comédiens de doublage français.',
+        inLanguage: 'fr-FR',
+      }),
+    },
+  ],
+});
 
 const {
   trendingMovies,

@@ -33,7 +33,7 @@ export type VoiceActorResponse = {
   };
   medias: (MovieModel | SerieModel)[];
   potentialWikipediaUrl?: string | null;
-  characterProfilePictures?: Array<{ work_id: number; profile_path: string | null }>;
+  characterProfilePictures?: Array<{ work_id?: number; profile_path?: string | null; image?: string | null; movieId?: number; showId?: number; name?: string }>;
   votes?: Record<
     number,
     { up_count: number; down_count: number; user_vote: string | null }
@@ -68,7 +68,7 @@ function actorToPersonData(actor: { id: number; name?: string; character?: strin
 export function useVoiceActorData(supabase: SupabaseClient) {
   const voiceActor = ref<VoiceActorResponse["voiceActor"] | undefined>();
   const medias = ref<VoiceActorResponse["medias"]>([]);
-  const characterProfilePictures = ref<Array<{ work_id: number; profile_path: string | null }>>([]);
+  const characterProfilePictures = ref<NonNullable<VoiceActorResponse["characterProfilePictures"]>>([]);
   const profilePicture = ref<string | null | undefined>();
   const loading = ref<boolean>(true);
   const searchQuery = ref("");

@@ -346,19 +346,65 @@ const actorName = computed(() => {
   return voiceActor.value.voice_actor_name || `${voiceActor.value.firstname} ${voiceActor.value.lastname}`;
 });
 
-// Update OG Tags dynamically using unhead
+const canonicalUrl = computed(() => `https://dubbingbase.com/voice-actor/${voiceActorId}`);
+const ogImageUrl = computed(() => {
+  if (!voiceActorId) return '';
+  const baseUrl = import.meta.env.VITE_SUPABASE_URL || 'http://localhost:54321';
+  return `${baseUrl}/functions/v1/og-image?type=voice-actor&id=${voiceActorId}`;
+});
+const actorDescription = computed(() => {
+  if (!actorName.value) return 'Fiche comédien de doublage sur DubbingBase.';
+  const workCount = filteredEnhancedWork.value.length;
+  return `Consultez la fiche complète de ${actorName.value}, comédien de doublage. Retrouvez ses ${workCount} rôles et doublages célèbres sur DubbingBase.`;
+});
+
+// Complete SEO metadata & JSON-LD Structured Data using unhead
 useHead({
-  title: computed(() => actorName.value ? `${actorName.value} - DubbingBase` : 'DubbingBase'),
+  title: computed(() => actorName.value ? `${actorName.value} - Comédien de doublage | DubbingBase` : 'Comédien de doublage - DubbingBase'),
   meta: [
     {
-      property: 'og:title',
-      content: computed(() => actorName.value ? `${actorName.value} - Voice Actor Profile` : '')
+      name: 'description',
+      content: actorDescription,
     },
     {
-      property: 'og:image',
-      content: computed(() => voiceActorId ? `${import.meta.env.VITE_SUPABASE_URL || 'http://localhost:54321'}/functions/v1/og-image?type=voice-actor&id=${voiceActorId}` : '')
-    }
-  ]
+      name: 'keywords',
+      content: computed(() => `${actorName.value}, comédien de doublage, voix française, vf, doublage, filmographie`),
+    },
+    { name: 'robots', content: 'index, follow' },
+    // Open Graph
+    { property: 'og:title', content: computed(() => actorName.value ? `${actorName.value} - Comédien de doublage` : 'DubbingBase') },
+    { property: 'og:description', content: actorDescription },
+    { property: 'og:type', content: 'profile' },
+    { property: 'og:url', content: canonicalUrl },
+    { property: 'og:image', content: ogImageUrl },
+    { property: 'og:site_name', content: 'DubbingBase' },
+    // Twitter Card
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { name: 'twitter:title', content: computed(() => actorName.value ? `${actorName.value} - Comédien de doublage` : 'DubbingBase') },
+    { name: 'twitter:description', content: actorDescription },
+    { name: 'twitter:image', content: ogImageUrl },
+  ],
+  link: [
+    { rel: 'canonical', href: canonicalUrl },
+  ],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: computed(() => JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'ProfilePage',
+        url: canonicalUrl.value,
+        name: actorName.value ? `${actorName.value} - Fiche Comédien` : 'Fiche Comédien',
+        mainEntity: {
+          '@type': 'Person',
+          name: actorName.value || 'Comédien de doublage',
+          jobTitle: 'Comédien de doublage',
+          image: profilePicture.value || ogImageUrl.value,
+          url: canonicalUrl.value,
+        },
+      })),
+    },
+  ],
 });
 
 const displayMode = ref<'grouped' | 'list'>('grouped');
