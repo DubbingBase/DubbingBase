@@ -3,10 +3,25 @@
 :root {
   --app-color-primary: #3b82f6;
   --app-color-primary-hover: #2563eb;
+  --app-bg: #111827;
+  --app-bg-secondary: #1f2937;
+  --app-text: #f3f4f6;
+  --app-text-secondary: #d1d5db;
+  --app-border: #374151;
+}
+
+[data-theme="light"] {
+  --app-bg: #ffffff;
+  --app-bg-secondary: #f3f4f6;
+  --app-text: #111827;
+  --app-text-secondary: #4b5563;
+  --app-border: #d1d5db;
 }
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   margin: 0;
   padding: 0;
+  background-color: var(--app-bg);
+  color: var(--app-text);
 }

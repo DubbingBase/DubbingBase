@@ -1,14 +1,5 @@
 <template>
   <div class="max-w-7xl mx-auto p-6">
-    <header class="flex justify-between items-center mb-12 py-6 border-b border-gray-800">
-      <h1 class="text-3xl font-extrabold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-        DubbingBase
-      </h1>
-      <nav>
-        <router-link to="/" class="text-gray-300 hover:text-white transition">Home</router-link>
-      </nav>
-    </header>
-
     <main class="space-y-12">
       <!-- Trending Movies -->
       <section>

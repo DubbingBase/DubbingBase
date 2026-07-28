@@ -1,7 +1,7 @@
 {
   "name": "@app/landing",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.0.3",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -14,8 +14,10 @@
     "@supabase/supabase-js": "^2.110.8",
     "@unhead/vue": "^3.2.3",
     "@vueuse/core": "^14.3.0",
+    "lucide-vue-next": "^1.0.0",
     "reka-ui": "latest",
     "vue": "^3.5.40",
+    "vue-i18n": "^11.4.8",
     "vue-router": "^4.6.4"
   },
   "devDependencies": {

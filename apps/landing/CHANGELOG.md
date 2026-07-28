@@ -1,5 +1,13 @@
 # @app/landing
 
+## 1.0.3
+
+### Patch Changes
+
+- sd
+- Updated dependencies
+  - @app/shared-logic@1.0.3
+
 ## 1.0.2
 
 ### Patch Changes

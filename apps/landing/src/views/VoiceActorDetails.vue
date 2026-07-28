@@ -1,21 +1,5 @@
 <template>
   <div class="max-w-7xl mx-auto p-6">
-    <header
-      class="flex justify-between items-center mb-8 py-6 border-b border-gray-800"
-    >
-      <h1
-        class="text-3xl font-extrabold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent cursor-pointer"
-        @click="$router.push('/')"
-      >
-        DubbingBase
-      </h1>
-      <nav>
-        <router-link to="/" class="text-gray-300 hover:text-white transition"
-          >Home</router-link
-        >
-      </nav>
-    </header>
-
     <div v-if="loading" class="flex justify-center items-center h-64">
       <div
         class="w-12 h-12 border-4 border-gray-800 border-t-blue-500 rounded-full animate-spin"
@@ -444,7 +428,7 @@ const groupedWorks = computed(() => {
 });
 
 onMounted(() => {
-  const id = route.params.id as string;
+  const id = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id;
   if (id) {
     loadVoiceActorData(id);
   }

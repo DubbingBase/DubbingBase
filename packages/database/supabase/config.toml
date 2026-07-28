@@ -334,6 +334,9 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 [functions.actor]
 verify_jwt = false
 
+[functions.career-grid]
+verify_jwt = false
+
 [functions.cast-vote]
 verify_jwt = true
 

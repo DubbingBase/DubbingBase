@@ -1,6 +1,4 @@
 add landing movie and show
-landing multilingual
-auto sitemap generation
 
 Le scroll est buggé a cause du swipe 
 Refaire le layout acteur personnage VF 
@@ -22,7 +20,7 @@ add votes to trust work
 add "untrusted" work
 add gamification
 add skeleton loaders
-how do i push notifications
+how do i push notifications https://onesignal.com/pricing
 suivre un doubleur (notifications)
 fix all any
 as unknown as 
