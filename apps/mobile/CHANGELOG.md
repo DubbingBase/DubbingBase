@@ -1,5 +1,15 @@
 # @app/mobile
 
+## 1.0.59
+
+### Patch Changes
+
+- initialize landing app and implement shared logic for home dashboard data fetching
+- Updated dependencies
+  - @app/shared-logic@1.0.1
+  - @app/supabase@0.0.44
+  - @app/locales@0.0.26
+
 ## 1.0.58
 
 ### Patch Changes

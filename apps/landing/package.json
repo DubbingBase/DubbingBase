@@ -1,0 +1,30 @@
+{
+  "name": "@app/landing",
+  "private": true,
+  "version": "1.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@app/shared-logic": "workspace:*",
+    "@supabase/supabase-js": "^2.110.8",
+    "@unhead/vue": "^3.2.3",
+    "@vueuse/core": "^14.3.0",
+    "reka-ui": "latest",
+    "vue": "^3.5.40",
+    "vue-router": "^4.6.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@vitejs/plugin-vue": "^5.2.4",
+    "@vue/tsconfig": "^0.5.1",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.3",
+    "vite": "^5.4.21",
+    "vue-tsc": "^2.2.12"
+  }
+}

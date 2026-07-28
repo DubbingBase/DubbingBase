@@ -26,6 +26,7 @@ jobs:
       database: ${{ steps.filter.outputs.database }}
       mobile: ${{ steps.filter.outputs.mobile }}
       website: ${{ steps.filter.outputs.website }}
+      landing: ${{ steps.filter.outputs.landing }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -41,6 +42,9 @@ jobs:
               - 'apps/mobile/**'
             website:
               - 'apps/website/**'
+            landing:
+              - 'apps/landing/**'
+              - 'packages/shared-logic/**'
 
   # Job 2: Deploy Supabase (runs first if database needs updating)
   deploy-supabase:
@@ -296,3 +300,42 @@ jobs:
           aab_file_path: "app-release-signed.aab"
           track: internal
           release_status: "completed"
+
+  # Job 7: Deploy Landing to Cloudflare Pages
+  deploy-landing:
+    needs: [detect, deploy-supabase]
+    # Run if landing has changes, and if database job succeeded (or wasn't needed)
+    if: |
+      always() && 
+      needs.detect.outputs.landing == 'true' && 
+      (needs.deploy-supabase.result == 'success' || needs.deploy-supabase.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build landing
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: pnpm --filter=@app/landing build
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy ./apps/landing/dist --project-name=dubbingbase-landing --branch=${{ github.head_ref || github.ref_name }}
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}

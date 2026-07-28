@@ -1,5 +1,11 @@
 # @app/supabase
 
+## 0.0.44
+
+### Patch Changes
+
+- initialize landing app and implement shared logic for home dashboard data fetching
+
 ## 0.0.43
 
 ### Patch Changes

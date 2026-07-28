@@ -1,0 +1,11 @@
+{
+  "name": "@app/og-image",
+  "version": "1.0.1",
+  "type": "module",
+  "main": "src/index.ts",
+  "dependencies": {
+    "satori": "^0.10.13",
+    "satori-html": "^0.3.2",
+    "@resvg/resvg-wasm": "^2.6.2"
+  }
+}

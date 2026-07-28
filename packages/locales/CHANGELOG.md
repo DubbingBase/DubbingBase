@@ -1,5 +1,11 @@
 # @app/locales
 
+## 0.0.26
+
+### Patch Changes
+
+- initialize landing app and implement shared logic for home dashboard data fetching
+
 ## 0.0.25
 
 ### Patch Changes

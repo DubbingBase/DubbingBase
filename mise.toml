@@ -114,6 +114,12 @@ depends = ["install"]
 dir = "apps/website"
 run = "pnpm dev"
 
+[tasks.landing]
+description = "Runs the public facing landing website"
+depends = ["install"]
+dir = "apps/landing"
+run = "pnpm dev"
+
 [tasks.changeset]
 description = "Create a new changeset to describe package changes"
 run = "pnpm changeset"

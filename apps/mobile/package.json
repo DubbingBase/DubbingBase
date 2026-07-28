@@ -1,7 +1,7 @@
 {
   "name": "@app/mobile",
   "private": true,
-  "version": "1.0.58",
+  "version": "1.0.59",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@app/locales": "workspace:*",
+    "@app/shared-logic": "workspace:*",
     "@app/supabase": "workspace:*",
     "@capacitor/action-sheet": "^8.1.1",
     "@capacitor/android": "^8.4.2",

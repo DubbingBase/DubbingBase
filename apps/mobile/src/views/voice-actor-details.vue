@@ -71,7 +71,7 @@
 
 <script setup lang="ts">
 import { IonRefresher, IonRefresherContent } from "@ionic/vue";
-import { IonPage, toastController } from "@ionic/vue";
+import { IonPage, toastController, RefresherCustomEvent } from "@ionic/vue";
 import AppPage from "@/components/common/layout/AppPage.vue";
 import AppHeader from "@/components/common/layout/AppHeader.vue";
 import AppToolbar from "@/components/common/layout/AppToolbar.vue";
@@ -90,9 +90,6 @@ import AppActionSheet, {
 } from "@/components/common/AppActionSheet.vue";
 import { useRoute, useRouter } from "vue-router";
 // Admin check: get user from supabase.auth and check for admin role
-import type { Serie as SerieModel } from "@supabase/functions/_shared/serie";
-
-import type { Movie as MovieModel } from "@supabase/functions/_shared/movie";
 import { supabase } from "../api/supabase";
 import VoiceActorHeader from "@/components/VoiceActorHeader.vue";
 import VoiceActorBio from "@/components/VoiceActorBio.vue";
@@ -102,9 +99,6 @@ import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import VoiceActorFetchModal from "@/components/VoiceActorFetchModal.vue";
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
-import { PersonData } from "@/components/PersonItem.vue";
-import { Actor } from "@supabase/functions/_shared/types";
-import { actorToPersonData } from "@/utils/convert";
 import { useI18n } from "vue-i18n";
 import { useVoiceActorManagement } from "@/composables/useVoiceActorManagement";
 
@@ -115,53 +109,31 @@ const { t } = useI18n();
 
 // Local admin check using Supabase auth
 
+import { watch } from "vue";
+import { useVoiceActorData } from "@app/shared-logic";
+
 const { isAdmin, isAuthenticated } = storeToRefs(authStore);
 const { votes: sharedVotes } = useVoiceActorManagement("movie");
 
-type VoiceActorResponse = {
-  voiceActor: {
-    id: number;
-    firstname: string;
-    lastname: string;
-    bio: string | null;
-    nationality: string | null;
-    date_of_birth: string | null;
-    awards: string | null;
-    years_active: string | null;
-    social_media_links: Record<string, string> | null;
-    profile_picture: string | null;
-    voice_actor_name: string | null;
-    user_voice_actor_links?: { id: string }[];
-    work: {
-      id: number;
-      actor_id: number;
-      dubbing_projects?: {
-        content_id: number;
-        content_type: string | null;
-      };
-      highlight: boolean | null;
-      performance: string | null;
-      source_id: number | null;
-      status: string | null;
-      suggestions: string | null;
-      voice_actor_id: number | null;
-    }[];
-  };
-  medias: (MovieModel | SerieModel)[];
-  potentialWikipediaUrl?: string | null;
-  votes?: Record<
-    number,
-    { up_count: number; down_count: number; user_vote: string | null }
-  >;
-};
+const {
+  voiceActor,
+  profilePicture,
+  loading,
+  searchQuery,
+  potentialWikipediaUrl,
+  votes,
+  isLinked,
+  filteredEnhancedWork,
+  loadVoiceActorData
+} = useVoiceActorData(supabase);
 
-const voiceActor = ref<VoiceActorResponse["voiceActor"] | undefined>();
-const medias = ref<VoiceActorResponse["medias"]>([]);
-const characterProfilePictures = ref<Array<{ work_id: number; profile_path: string | null }>>([]);
-const profilePicture = ref<string | null | undefined>();
-const loading = ref<boolean>(true);
-const searchQuery = ref("");
-const potentialWikipediaUrl = ref<string | null>(null);
+watch(votes, (newVotes) => {
+  if (newVotes) {
+    sharedVotes.value = { ...sharedVotes.value, ...newVotes };
+  }
+}, { immediate: true });
+
+
 
 const isFetchModalOpen = ref(false);
 const isActionSheetOpen = ref(false);
@@ -206,31 +178,17 @@ const actionSheetButtons = computed<ActionSheetButton[]>(() => {
 });
 const handleFetchModalSaved = async () => {
   // Reload the voice actor data to reflect the newly saved updates
-  const id = route.params.id;
-  loading.value = true;
+  const id = route.params.id as string;
 
   try {
-    const voiceActorResponseRaw = await supabase.functions.invoke(
-      "voice-actor",
-      {
-        body: { id },
-      },
-    );
-
-    const voiceActorResponse =
-      (await voiceActorResponseRaw.data) as VoiceActorResponse;
-    if (voiceActorResponse) {
-      voiceActor.value = voiceActorResponse.voiceActor;
-      profilePicture.value = voiceActorResponse.voiceActor.profile_picture;
-
-      const toast = await toastController.create({
-        message: t("common.success", "Actualisé avec succès !"),
-        duration: 2000,
-        position: "bottom",
-        color: "success",
-      });
-      await toast.present();
-    }
+    await loadVoiceActorData(id);
+    const toast = await toastController.create({
+      message: t("common.success", "Actualisé avec succès !"),
+      duration: 2000,
+      position: "bottom",
+      color: "success",
+    });
+    await toast.present();
   } catch (err) {
     console.error("Error refreshing voice actor after fetch:", err);
     const toast = await toastController.create({
@@ -240,141 +198,10 @@ const handleFetchModalSaved = async () => {
       color: "danger",
     });
     await toast.present();
-  } finally {
-    loading.value = false;
   }
 };
 
-// Define a type for our enhanced work item
-type EnhancedWorkItem = {
-  media: MovieModel | SerieModel;
-  work: {
-    id: number;
-    actor_id: number;
-    dubbing_projects?: { content_id: number; content_type: string | null };
-  };
-  data: {
-    character: string | undefined;
-    characterImage?: string;
-    actor: PersonData<Actor>;
-  };
-  sortDate: string;
-};
 
-// Get base enhanced work data
-const baseEnhancedWork = computed<EnhancedWorkItem[]>(() => {
-  if (!voiceActor.value?.work) {
-    console.log("No voice actor work data available");
-    return [];
-  }
-
-  const result = voiceActor.value.work
-    .map((work) => {
-      const media = medias.value.find(
-        (media) => media.id === work.dubbing_projects?.content_id,
-      );
-
-      if (!media) {
-        console.warn(
-          `No media found for work with content_id: ${work.dubbing_projects?.content_id}`,
-        );
-        return null;
-      }
-
-      // Ensure credits exist and has cast
-      if (!(media as { credits?: { cast?: Array<{ id: number; character: string }> } }).credits?.cast) {
-        console.warn(`No credits.cast found for media ${media.id}`);
-        return null;
-      }
-
-      const actor = (media as { credits?: { cast?: Array<{ id: number; character: string }> } }).credits?.cast?.find(
-        (cast: { id: number }) => cast.id === work.actor_id,
-      );
-
-      if (!actor) {
-        console.warn(
-          `No actor found with id: ${work.actor_id} in media ${media.id}`,
-        );
-        return null;
-      }
-
-      const character = actor.character;
-      let characterImage: string | undefined;
-
-      if (characterProfilePictures.value.length > 0) {
-        // TMDB cast name might differ slightly from TVDB, but a direct lowercase match often works.
-        const pic = characterProfilePictures.value.find(
-          (cp: { work_id: number; profile_path: string }) =>
-            (cp.movieId === media.id || cp.showId === media.id) &&
-            cp.name &&
-            character &&
-            cp.name.toLowerCase() === character.toLowerCase(),
-        );
-        if (pic) {
-          characterImage = pic.image;
-        }
-      }
-
-      const data = {
-        character,
-        characterImage,
-        actor: actorToPersonData(actor),
-      };
-
-      return {
-        media,
-        work,
-        data,
-        sortDate:
-          (media as { release_date?: string }).release_date ||
-          (media as { first_air_date?: string }).first_air_date ||
-          "9999-12-31", // Fallback for missing dates
-      };
-    })
-    .filter((item): item is NonNullable<typeof item> => item !== null);
-
-  return result;
-});
-
-const openEditProfile = () => {
-  const id = route.params.id;
-  router.push({ name: "VoiceActorProfile", params: { id } });
-};
-
-const isLinked = computed(() => {
-  return (voiceActor.value?.user_voice_actor_links?.length ?? 0) > 0;
-});
-
-// For chronological view
-const enhancedWork = computed(() => {
-  if (!baseEnhancedWork.value) return [];
-
-  return [...baseEnhancedWork.value].sort((a, b) => {
-    if (!a || !b) return 0;
-    return a.sortDate > b.sortDate ? -1 : 1; // Newest first
-  });
-});
-
-const filteredEnhancedWork = computed(() => {
-  const query = searchQuery.value.toLowerCase();
-  if (!query) return enhancedWork.value;
-
-  return enhancedWork.value.filter((item) => {
-    const title = (
-      (item.media as { title?: string }).title ||
-      (item.media as { name?: string }).name ||
-      ""
-    ).toLowerCase();
-    const character = (item.data.character || "").toLowerCase();
-    const actorName = (item.data.actor?.name || "").toLowerCase();
-
-    return (
-      title.includes(query) ||
-      character.includes(query) ||
-      actorName.includes(query)
-    );
-  });
-});
 
 const onProfilePictureChanged = (newImagePath: string) => {
   console.log("Profile picture changed:", newImagePath);
@@ -391,12 +218,14 @@ const onProfilePictureChanged = (newImagePath: string) => {
 };
 
 onMounted(async () => {
-  await loadVoiceActorData();
+  const id = route.params.id as string;
+  await loadVoiceActorData(id);
 });
 
 const handleRefresh = async (event: RefresherCustomEvent) => {
   try {
-    await loadVoiceActorData();
+    const id = route.params.id as string;
+    await loadVoiceActorData(id);
   } catch (error) {
     console.error("Error refreshing data:", error);
   } finally {
@@ -404,85 +233,9 @@ const handleRefresh = async (event: RefresherCustomEvent) => {
   }
 };
 
-const loadVoiceActorData = async () => {
-  loading.value = true;
-
+const openEditProfile = () => {
   const id = route.params.id;
-
-  console.log("Fetching voice actor with ID:", id);
-
-  const voiceActorResponseRaw = await supabase.functions.invoke("voice-actor", {
-    body: { id },
-  });
-
-  const voiceActorResponse =
-    (await voiceActorResponseRaw.data) as VoiceActorResponse;
-
-  console.log("Raw voice actor response:", voiceActorResponse);
-
-  if (!voiceActorResponse) {
-    console.error("voiceActorResponse is null");
-    loading.value = false;
-    return;
-  }
-
-  console.log("Voice actor data:", voiceActorResponse.voiceActor);
-  console.log(
-    "Number of works:",
-    voiceActorResponse.voiceActor.work?.length || 0,
-  );
-  console.log("Number of medias:", voiceActorResponse.medias?.length || 0);
-
-  // Log first few works and medias for inspection
-  if (voiceActorResponse.voiceActor.work) {
-    console.log(
-      "First 3 works:",
-      voiceActorResponse.voiceActor.work.slice(0, 3),
-    );
-  }
-
-  if (voiceActorResponse.medias) {
-    console.log(
-      "First 3 medias:",
-      voiceActorResponse.medias.slice(0, 3).map((m) => ({
-        id: m.id,
-        title: (m as { title?: string }).title || (m as { name?: string }).name,
-        credits: (m as { credits?: { cast?: Array<{ id: number; character: string }>, crew?: Array<{ id: number; name: string; job: string }> } }).credits
-          ? {
-              cast: (m as { credits?: { cast?: Array<{ id: number; character: string }> } }).credits?.cast?.slice(0, 3).map((c: { id: number; character?: string; name?: string; job?: string }) => ({
-                id: c.id,
-                name: c.name,
-                character: c.character,
-              })),
-              crew: (m as { credits?: { crew?: Array<{ id: number; name: string; job: string }> } }).credits?.crew
-                ?.slice(0, 3)
-                .map((c: { id: number; character?: string; name?: string; job?: string }) => ({ id: c.id, name: c.name, job: c.job })),
-            }
-          : "No credits",
-      })),
-    );
-  }
-
-  voiceActor.value = voiceActorResponse.voiceActor;
-  medias.value = voiceActorResponse.medias;
-  characterProfilePictures.value =
-    (voiceActorResponse as { characterProfilePictures?: Array<{ work_id: number; profile_path: string | null }> }).characterProfilePictures || [];
-  potentialWikipediaUrl.value =
-    voiceActorResponse.potentialWikipediaUrl || null;
-
-  profilePicture.value = voiceActorResponse.voiceActor.profile_picture;
-
-  if (voiceActorResponse.votes) {
-    sharedVotes.value = { ...sharedVotes.value, ...voiceActorResponse.votes };
-  }
-
-  loading.value = false;
-
-  // Add a small delay to ensure computed properties are updated
-  setTimeout(() => {
-    console.log("baseEnhancedWork after update:", baseEnhancedWork.value);
-    console.log("enhancedWork after update:", enhancedWork.value);
-  }, 100);
+  router.push({ name: "VoiceActorProfile", params: { id } });
 };
 </script>
 
