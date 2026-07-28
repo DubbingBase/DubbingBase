@@ -30,7 +30,7 @@ const config: CapacitorConfig = {
       // This is the app's website domain (for Android App Links)
       androidScheme: "https",
       // This is the host for universal links (for iOS)
-      hostname: "dubbingbase.app",
+      hostname: "dubbingbase.com",
       // This is the path prefix for universal links
       path: "/",
       launchUrl: "dubbingbase://",
