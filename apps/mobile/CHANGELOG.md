@@ -1,5 +1,15 @@
 # @app/mobile
 
+## 1.0.64
+
+### Patch Changes
+
+- sds
+- Updated dependencies
+  - @app/supabase@0.0.49
+  - @app/locales@0.0.31
+  - @app/shared-logic@1.0.6
+
 ## 1.0.63
 
 ### Patch Changes
