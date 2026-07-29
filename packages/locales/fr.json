@@ -1,8 +1,4 @@
 {
-  "app": {
-    "title": "DubbingBase",
-    "description": "Découvrez les acteurs de doublage et leurs œuvres"
-  },
   "navigation": {
     "home": "Accueil",
     "search": "Recherche",
@@ -108,11 +104,10 @@
     "movies": "Films",
     "series": "Séries",
     "voiceActors": "Doubleurs",
-    "roles": "Rôles",
+    "roles": "rôles",
     "birthdate": "Date de naissance",
     "biography": "Biographie",
     "role": "rôle",
-    "roles": "rôles",
     "allRoles": "Tous les rôles",
     "dubbedOnly": "Doublés uniquement",
     "noDubbedRoles": "Aucun rôle doublé disponible"
@@ -148,43 +143,6 @@
     "logout": "Se déconnecter",
     "login": "Se connecter"
   },
-  "search": {
-    "placeholder": "Rechercher...",
-    "noResults": "Aucun résultat trouvé.",
-    "emptyState": "Tapez au moins 2 caractères pour rechercher...",
-    "movie": "Film",
-    "tv": "Série",
-    "voiceActor": "Comédien(ne)"
-  },
-  "nav": {
-    "login": "Connexion",
-    "apiKey": "Clé API",
-    "home": "Accueil"
-  },
-  "theme": {
-    "light": "Clair",
-    "dark": "Sombre",
-    "system": "Système"
-  },
-  "language": {
-    "en": "Anglais",
-    "fr": "Français"
-  },
-  "footer": {
-    "explore": "Explorer",
-    "movies": "Films",
-    "series": "Séries",
-    "voiceActors": "Comédiens de doublage",
-    "community": "Communauté",
-    "guidelines": "Lignes directrices",
-    "discussions": "Discussions",
-    "leaderboard": "Classement",
-    "legal": "Légal",
-    "privacy": "Politique de confidentialité",
-    "terms": "Conditions d'utilisation",
-    "contact": "Nous contacter",
-    "rights": "Tous droits réservés."
-  },
   "about": {
     "title": "À propos",
     "attributions": "Attributions",
@@ -201,4 +159,4 @@
     "graph2Placeholder": "Espace réservé pour le graphique 2",
     "graph3Placeholder": "Espace réservé pour le graphique 3"
   }
-}
+}\n

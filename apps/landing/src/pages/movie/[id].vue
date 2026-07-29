@@ -94,14 +94,14 @@
             
             <div class="flex justify-between items-center gap-4">
               <!-- Physical Actor -->
-              <div class="flex items-center gap-4 flex-1 min-w-0">
+              <NuxtLink :to="`/actor/${actor.id}`" class="flex items-center gap-4 flex-1 min-w-0 hover:bg-[#2a2a2a] p-2 -ml-2 rounded-xl transition-colors cursor-pointer">
                 <img v-if="actor.profile_path" :src="actor.profile_path" class="w-20 h-20 rounded-full object-cover bg-gray-800 flex-shrink-0" alt="Actor" />
                 <div v-else class="w-20 h-20 rounded-full bg-gray-800 flex-shrink-0"></div>
                 <div class="min-w-0">
                   <div class="text-[10px] text-gray-500 uppercase tracking-wider">Acteur</div>
-                  <div class="font-bold text-sm text-white truncate" :title="actor.name">{{ actor.name }}</div>
+                  <div class="font-bold text-sm text-white truncate hover:underline" :title="actor.name">{{ actor.name }}</div>
                 </div>
-              </div>
+              </NuxtLink>
 
               <!-- Arrow -->
               <div class="text-gray-600 flex-shrink-0">

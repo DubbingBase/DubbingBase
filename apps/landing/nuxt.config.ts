@@ -21,12 +21,11 @@ export default defineNuxtConfig({
 
   i18n: {
     locales: [
-      { code: "en", file: "en.ts" },
-      { code: "fr", file: "fr.ts" },
+      { code: "en", file: "en.json" },
+      { code: "fr", file: "fr.json" },
     ],
-    lazy: true,
-    langDir: "../locales",
-    defaultLocale: "fr",
+    langDir: "locales",
+    defaultLocale: "en",
   },
 
   supabase: {

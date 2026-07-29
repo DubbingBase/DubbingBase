@@ -1,0 +1,46 @@
+{
+  "app": {
+    "title": "Dubbing Database",
+    "description": "Discover voice actors and their works"
+  },
+  "search": {
+    "placeholder": "Search...",
+    "noResults": "No results found.",
+    "emptyState": "Type at least 2 characters to search...",
+    "movie": "Movie",
+    "tv": "TV Show",
+    "voiceActor": "Voice Actor"
+  },
+  "nav": {
+    "login": "Login",
+    "apiKey": "API Key",
+    "home": "Home"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "language": {
+    "en": "English",
+    "fr": "Français"
+  },
+  "footer": {
+    "explore": "Explore",
+    "movies": "Movies",
+    "series": "Series",
+    "voiceActors": "Voice Actors",
+    "community": "Community",
+    "guidelines": "Guidelines",
+    "discussions": "Discussions",
+    "leaderboard": "Leaderboard",
+    "legal": "Legal",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "contact": "Contact Us",
+    "rights": "All rights reserved."
+  },
+  "about": {
+    "title": "About"
+  }
+}

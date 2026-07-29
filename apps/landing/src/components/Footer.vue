@@ -11,7 +11,7 @@
             {{ t('app.description') }}
           </p>
           <div class="flex items-center gap-4">
-            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-gray-900 dark:text-white transition">
+            <a href="https://x.com/DubbingBase" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-gray-900 dark:text-white transition">
               <TwitterIcon class="w-5 h-5" />
             </a>
             <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-gray-900 dark:text-white transition">

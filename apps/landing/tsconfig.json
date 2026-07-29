@@ -9,6 +9,8 @@
     "src/**/*.ts",
     "src/**/*.d.ts",
     "src/**/*.vue",
-    "locales/**/*.ts"
+    "locales/**/*.ts",
+    "nuxt.config.ts",
+    ".nuxt/nuxt.d.ts"
   ]
 }
