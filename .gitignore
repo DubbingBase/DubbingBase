@@ -38,3 +38,8 @@ supabase/.temp/
 scripts/progress.json
 packages/database/supabase/seed.sql
 packages/database/supabase/buckets
+
+# Nuxt & Cloudflare
+.nuxt
+.output
+.wrangler

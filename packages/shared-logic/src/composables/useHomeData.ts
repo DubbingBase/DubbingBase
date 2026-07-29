@@ -6,21 +6,93 @@ import type {
   Tables 
 } from "../types";
 
-export function useHomeData(supabase: SupabaseClient) {
-  const trendingMovies = ref<MovieTrendingResponse["results"]>([]);
-  const trendingSeries = ref<SerieTrendingResponse["results"]>([]);
-  const recentVoiceActors = ref<Tables<"voice_actors">[]>([]);
-  const topVoiceActors = ref<Tables<"voice_actors">[]>([]);
+export type HomeDataPayload = {
+  trendingMovies: MovieTrendingResponse["results"];
+  trendingSeries: SerieTrendingResponse["results"];
+  recentVoiceActors: Tables<"voice_actors">[];
+  topVoiceActors: Tables<"voice_actors">[];
+  errorMovies: string;
+  errorSeries: string;
+  errorVoiceActors: string;
+  errorTopVoiceActors: string;
+};
+
+export async function fetchHomeData(supabase: SupabaseClient): Promise<HomeDataPayload> {
+  const payload: HomeDataPayload = {
+    trendingMovies: [],
+    trendingSeries: [],
+    recentVoiceActors: [],
+    topVoiceActors: [],
+    errorMovies: "",
+    errorSeries: "",
+    errorVoiceActors: "",
+    errorTopVoiceActors: ""
+  };
+
+  await Promise.allSettled([
+    // Fetch movies in parallel
+    supabase.functions
+      .invoke("trending-movies")
+      .then((res) => {
+        if (res.error) throw new Error(res.error.message || "Erreur inconnue");
+        payload.trendingMovies = res.data.results || [];
+      })
+      .catch((e) => {
+        payload.errorMovies = e.message || "Erreur lors du chargement des films.";
+      }),
+
+    // Fetch series in parallel
+    supabase.functions
+      .invoke("trending-shows")
+      .then((res) => {
+        if (res.error) throw new Error(res.error.message || "Erreur inconnue");
+        payload.trendingSeries = res.data.results || [];
+      })
+      .catch((e) => {
+        payload.errorSeries = e.message || "Erreur lors du chargement des séries.";
+      }),
+
+    // Fetch recent voice actors in parallel
+    supabase.functions
+      .invoke("recent-voice-actors", { body: { limit: 10 } })
+      .then((res) => {
+        if (res.error) throw new Error(res.error.message || "Erreur inconnue");
+        payload.recentVoiceActors = res.data || [];
+      })
+      .catch((e) => {
+        payload.errorVoiceActors = e.message || "Erreur lors du chargement des voix récentes.";
+      }),
+
+    // Fetch top voice actors in parallel
+    supabase.functions
+      .invoke("top-voice-actors", { body: { limit: 10 } })
+      .then((res) => {
+        if (res.error) throw new Error(res.error.message || "Erreur inconnue");
+        payload.topVoiceActors = res.data || [];
+      })
+      .catch((e) => {
+        payload.errorTopVoiceActors = e.message || "Erreur lors du chargement des top doubleurs.";
+      }),
+  ]);
+
+  return payload;
+}
+
+export function useHomeData(supabase: SupabaseClient, initialData?: HomeDataPayload | null) {
+  const trendingMovies = ref<MovieTrendingResponse["results"]>(initialData?.trendingMovies || []);
+  const trendingSeries = ref<SerieTrendingResponse["results"]>(initialData?.trendingSeries || []);
+  const recentVoiceActors = ref<Tables<"voice_actors">[]>(initialData?.recentVoiceActors || []);
+  const topVoiceActors = ref<Tables<"voice_actors">[]>(initialData?.topVoiceActors || []);
   
-  const isLoadingMovies = ref(true);
-  const isLoadingSeries = ref(true);
-  const isLoadingVoiceActors = ref(true);
-  const isLoadingTopVoiceActors = ref(true);
+  const isLoadingMovies = ref(!initialData);
+  const isLoadingSeries = ref(!initialData);
+  const isLoadingVoiceActors = ref(!initialData);
+  const isLoadingTopVoiceActors = ref(!initialData);
   
-  const errorMovies = ref("");
-  const errorSeries = ref("");
-  const errorVoiceActors = ref("");
-  const errorTopVoiceActors = ref("");
+  const errorMovies = ref(initialData?.errorMovies || "");
+  const errorSeries = ref(initialData?.errorSeries || "");
+  const errorVoiceActors = ref(initialData?.errorVoiceActors || "");
+  const errorTopVoiceActors = ref(initialData?.errorTopVoiceActors || "");
 
   const loadHomeData = async () => {
     isLoadingMovies.value = true;
@@ -33,70 +105,23 @@ export function useHomeData(supabase: SupabaseClient) {
     errorVoiceActors.value = "";
     errorTopVoiceActors.value = "";
 
-    await Promise.allSettled([
-      // Fetch movies in parallel
-      supabase.functions
-        .invoke("trending-movies")
-        .then((res) => {
-          if (res.error) throw new Error(res.error.message || "Erreur inconnue");
-          trendingMovies.value = res.data.results || [];
-        })
-        .catch((e) => {
-          errorMovies.value = e.message || "Erreur lors du chargement des films.";
-          trendingMovies.value = [];
-        })
-        .finally(() => {
-          isLoadingMovies.value = false;
-        }),
+    const payload = await fetchHomeData(supabase);
 
-      // Fetch series in parallel
-      supabase.functions
-        .invoke("trending-shows")
-        .then((res) => {
-          if (res.error) throw new Error(res.error.message || "Erreur inconnue");
-          trendingSeries.value = res.data.results || [];
-        })
-        .catch((e) => {
-          errorSeries.value =
-            e.message || "Erreur lors du chargement des séries.";
-          trendingSeries.value = [];
-        })
-        .finally(() => {
-          isLoadingSeries.value = false;
-        }),
+    trendingMovies.value = payload.trendingMovies;
+    errorMovies.value = payload.errorMovies;
+    isLoadingMovies.value = false;
 
-      // Fetch recent voice actors in parallel
-      supabase.functions
-        .invoke("recent-voice-actors", { body: { limit: 10 } })
-        .then((res) => {
-          if (res.error) throw new Error(res.error.message || "Erreur inconnue");
-          recentVoiceActors.value = res.data || [];
-        })
-        .catch((e) => {
-          errorVoiceActors.value =
-            e.message || "Erreur lors du chargement des voix récentes.";
-          recentVoiceActors.value = [];
-        })
-        .finally(() => {
-          isLoadingVoiceActors.value = false;
-        }),
+    trendingSeries.value = payload.trendingSeries;
+    errorSeries.value = payload.errorSeries;
+    isLoadingSeries.value = false;
 
-      // Fetch top voice actors in parallel
-      supabase.functions
-        .invoke("top-voice-actors", { body: { limit: 10 } })
-        .then((res) => {
-          if (res.error) throw new Error(res.error.message || "Erreur inconnue");
-          topVoiceActors.value = res.data || [];
-        })
-        .catch((e) => {
-          errorTopVoiceActors.value =
-            e.message || "Erreur lors du chargement des top doubleurs.";
-          topVoiceActors.value = [];
-        })
-        .finally(() => {
-          isLoadingTopVoiceActors.value = false;
-        }),
-    ]);
+    recentVoiceActors.value = payload.recentVoiceActors;
+    errorVoiceActors.value = payload.errorVoiceActors;
+    isLoadingVoiceActors.value = false;
+
+    topVoiceActors.value = payload.topVoiceActors;
+    errorTopVoiceActors.value = payload.errorTopVoiceActors;
+    isLoadingTopVoiceActors.value = false;
   };
 
   return {

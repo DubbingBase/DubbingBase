@@ -1,0 +1,67 @@
+<template>
+  <footer class="mt-20 border-t border-[#2a2a2a] bg-[#121212] pt-16 pb-8 text-gray-500 dark:text-gray-400">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+        <!-- Brand -->
+        <div class="col-span-1 md:col-span-1">
+          <router-link to="/" class="text-2xl font-extrabold bg-gradient-to-r from-gray-900 dark:from-white to-gray-500 dark:to-gray-400 bg-clip-text text-transparent inline-block mb-4">
+            {{ t('app.title') }}
+          </router-link>
+          <p class="text-sm text-gray-500 mb-6 leading-relaxed">
+            {{ t('app.description') }}
+          </p>
+          <div class="flex items-center gap-4">
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-gray-900 dark:text-white transition">
+              <TwitterIcon class="w-5 h-5" />
+            </a>
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-gray-900 dark:text-white transition">
+              <GithubIcon class="w-5 h-5" />
+            </a>
+          </div>
+        </div>
+
+        <!-- Explore -->
+        <div>
+          <h3 class="text-gray-900 dark:text-white font-semibold mb-4">{{ t('footer.explore') }}</h3>
+          <ul class="space-y-3 text-sm">
+            <li><router-link to="/movies" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.movies') }}</router-link></li>
+            <li><router-link to="/series" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.series') }}</router-link></li>
+            <li><router-link to="/voice-actors" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.voiceActors') }}</router-link></li>
+          </ul>
+        </div>
+
+        <!-- Community -->
+        <div>
+          <h3 class="text-gray-900 dark:text-white font-semibold mb-4">{{ t('footer.community') }}</h3>
+          <ul class="space-y-3 text-sm">
+            <li><router-link to="/guidelines" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.guidelines') }}</router-link></li>
+            <li><router-link to="/discussions" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.discussions') }}</router-link></li>
+            <li><router-link to="/leaderboard" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.leaderboard') }}</router-link></li>
+          </ul>
+        </div>
+
+        <!-- Legal -->
+        <div>
+          <h3 class="text-gray-900 dark:text-white font-semibold mb-4">{{ t('footer.legal') }}</h3>
+          <ul class="space-y-3 text-sm">
+            <li><router-link to="/about" class="hover:text-gray-900 dark:text-white transition">{{ t('about.title') }}</router-link></li>
+            <li><router-link to="/privacy" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.privacy') }}</router-link></li>
+            <li><router-link to="/terms" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.terms') }}</router-link></li>
+            <li><a href="mailto:contact@dubbingbase.com" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.contact') }}</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="pt-8 border-t border-[#2a2a2a] flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500">
+        <p>&copy; {{ new Date().getFullYear() }} DubbingBase. {{ t('footer.rights') }}</p>
+      </div>
+    </div>
+  </footer>
+</template>
+
+<script setup lang="ts">
+import { useI18n } from '../composables/useI18n';
+import { TwitterIcon, GithubIcon } from 'lucide-vue-next';
+
+const { t } = useI18n();
+</script>
