@@ -1,6 +1,6 @@
 {
   "name": "@app/og-image",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "type": "module",
   "main": "src/index.ts",
   "dependencies": {

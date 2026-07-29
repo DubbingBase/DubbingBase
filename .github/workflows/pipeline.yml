@@ -337,5 +337,6 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy ./apps/landing/dist --project-name=dubbingbase-landing --branch=${{ github.head_ref || github.ref_name }}
+          workingDirectory: apps/landing
+          command: pages deploy ./dist --project-name=dubbingbase-landing --branch=${{ github.head_ref || github.ref_name }}
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
