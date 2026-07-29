@@ -1,5 +1,14 @@
 # @app/landing
 
+## 1.0.4
+
+### Patch Changes
+
+- df
+- Updated dependencies
+  - @app/locales@0.0.29
+  - @app/shared-logic@1.0.4
+
 ## 1.0.3
 
 ### Patch Changes
