@@ -1,5 +1,11 @@
 # @app/landing
 
+## 1.0.7
+
+### Patch Changes
+
+- c9ea924: fix reload
+
 ## 1.0.6
 
 ### Patch Changes
