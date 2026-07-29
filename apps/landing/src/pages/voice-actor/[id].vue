@@ -343,7 +343,8 @@ const actorName = computed(() => {
 const canonicalUrl = computed(() => `https://dubbingbase.com/voice-actor/${voiceActorId}`);
 const ogImageUrl = computed(() => {
   if (!voiceActorId) return '';
-  const baseUrl = import.meta.env.VITE_SUPABASE_URL || 'http://localhost:54321';
+  const config = useRuntimeConfig();
+  const baseUrl = config.public.supabase.url;
   return `${baseUrl}/functions/v1/og-image?type=voice-actor&id=${voiceActorId}`;
 });
 const actorDescription = computed(() => {
