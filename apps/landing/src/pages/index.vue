@@ -1,12 +1,12 @@
 <template>
-  <div class="max-w-7xl mx-auto p-6">
-    <main class="space-y-12">
+  <div class="max-w-7xl mx-auto p-4 md:p-6">
+    <main class="space-y-8 md:space-y-12">
       <!-- Hero Search Section -->
-      <section class="relative bg-gradient-to-br from-blue-900/40 to-purple-900/40 rounded-3xl p-10 md:p-16 flex flex-col items-center justify-center text-center overflow-hidden border border-gray-200 dark:border-gray-800">
+      <section class="relative bg-gradient-to-br from-blue-900/40 to-purple-900/40 rounded-2xl md:rounded-3xl p-6 md:p-16 flex flex-col items-center justify-center text-center overflow-hidden border border-gray-200 dark:border-gray-800">
         <div class="absolute inset-0 bg-[url('https://image.tmdb.org/t/p/original/t5zCBSB5xMDKcDqe91qahCOUYVV.jpg')] bg-cover bg-center opacity-10 mix-blend-overlay"></div>
         <div class="relative z-10 max-w-3xl w-full">
-          <h1 class="text-4xl md:text-5xl font-extrabold mb-6 tracking-tight">Bienvenue.</h1>
-          <p class="text-xl text-gray-600 dark:text-gray-300 mb-8 font-medium">
+          <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-4 md:mb-6 tracking-tight">Bienvenue.</h1>
+          <p class="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-6 md:mb-8 font-medium">
             Des millions de films, séries, et comédiens de doublage à découvrir. Explorez maintenant.
           </p>
           <div class="relative w-full">
@@ -14,12 +14,12 @@
               type="text"
               readonly
               placeholder="Rechercher un film, une série, un comédien..."
-              class="w-full bg-white text-gray-900 px-6 py-4 rounded-full text-lg shadow-xl cursor-text outline-none pr-32"
+              class="w-full bg-white text-gray-900 px-4 py-3 md:px-6 md:py-4 rounded-full text-base md:text-lg shadow-xl cursor-text outline-none pr-28 md:pr-32"
               @click="openSearch"
             />
             <button
               @click="openSearch"
-              class="absolute right-1 top-1 bottom-1 bg-gradient-to-r from-[#00E5FF] to-blue-500 hover:from-blue-400 hover:to-blue-600 text-gray-900 dark:text-white font-bold py-2 px-6 rounded-full transition-all"
+              class="absolute right-1 top-1 bottom-1 bg-gradient-to-r from-[#00E5FF] to-blue-500 hover:from-blue-400 hover:to-blue-600 text-gray-900 dark:text-white font-bold py-1.5 px-4 md:py-2 md:px-6 rounded-full transition-all text-sm md:text-base"
             >
               Search
             </button>
@@ -29,7 +29,7 @@
 
       <!-- Trending Movies -->
       <section>
-        <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white tracking-wide">Trending Movies</h2>
+        <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-900 dark:text-white tracking-wide">Trending Movies</h2>
         <div v-if="isLoadingMovies" class="flex gap-4 overflow-x-auto pb-4">
           <div v-for="i in 4" :key="i" class="w-48 h-72 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-xl flex-shrink-0"></div>
         </div>
@@ -48,7 +48,7 @@
 
       <!-- Trending Series -->
       <section>
-        <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white tracking-wide">Trending Series</h2>
+        <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-900 dark:text-white tracking-wide">Trending Series</h2>
         <div v-if="isLoadingSeries" class="flex gap-4 overflow-x-auto pb-4">
           <div v-for="i in 4" :key="i" class="w-48 h-72 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-xl flex-shrink-0"></div>
         </div>
@@ -67,7 +67,7 @@
 
       <!-- Top Voice Actors -->
       <section>
-        <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white tracking-wide">Top Voice Actors</h2>
+        <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-900 dark:text-white tracking-wide">Top Voice Actors</h2>
         <div v-if="isLoadingTopVoiceActors" class="flex gap-4 overflow-x-auto pb-4">
           <div v-for="i in 4" :key="i" class="w-32 flex-shrink-0 flex flex-col items-center gap-3">
             <div class="w-24 h-24 bg-gray-200 dark:bg-gray-800 rounded-full animate-pulse"></div>

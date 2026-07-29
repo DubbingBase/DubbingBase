@@ -1,15 +1,15 @@
 <template>
-  <header class="flex justify-between items-center mb-12 py-6 px-6 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#121212] transition-colors">
-    <router-link to="/" class="text-3xl font-extrabold bg-gradient-to-r from-gray-900 to-gray-500 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
+  <header class="flex justify-between items-center mb-6 md:mb-12 py-4 px-4 md:py-6 md:px-6 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#121212] transition-colors">
+    <router-link to="/" class="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-gray-900 to-gray-500 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
       {{ t('app.title') }}
     </router-link>
 
-    <nav class="flex items-center gap-4">
-      <router-link to="/" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition text-sm">{{ t('nav.home') }}</router-link>
+    <nav class="flex items-center gap-2 md:gap-4">
+      <router-link to="/" class="hidden sm:block text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition text-sm">{{ t('nav.home') }}</router-link>
 
       <button
         @click="isSearchOpen = true"
-        class="flex items-center gap-1.5 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition text-sm bg-gray-100 dark:bg-gray-800/50 hover:bg-gray-200 dark:hover:bg-gray-800 px-3 py-1.5 rounded-full border border-gray-300 dark:border-gray-700"
+        class="flex items-center gap-1.5 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition text-sm bg-gray-100 dark:bg-gray-800/50 hover:bg-gray-200 dark:hover:bg-gray-800 px-2.5 py-1.5 md:px-3 rounded-full border border-gray-300 dark:border-gray-700"
         :aria-label="t('search.placeholder')"
       >
         <SearchIcon class="w-4 h-4" />
@@ -24,8 +24,8 @@
         class="flex items-center gap-1.5 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition text-sm"
         :aria-label="t('nav.login')"
       >
-        <UserIcon class="w-4 h-4" />
-        <span>{{ t('nav.login') }}</span>
+        <UserIcon class="w-5 h-5 md:w-4 md:h-4" />
+        <span class="hidden sm:inline">{{ t('nav.login') }}</span>
       </router-link>
 
       <SelectRoot v-model="theme">
