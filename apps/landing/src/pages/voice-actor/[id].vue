@@ -324,6 +324,7 @@ const router = useRouter();
 
 const route = useRoute();
 const voiceActorId = Number(route.params.id);
+const { locale } = useI18n();
 
 const config = useRuntimeConfig();
 const baseUrl = config.public.supabase.url;
@@ -373,7 +374,6 @@ useHead({
     { property: 'og:description', content: actorDescription },
     { property: 'og:type', content: 'profile' },
     { property: 'og:locale', content: computed(() => {
-      const { locale } = useI18n();
       return locale.value === 'fr' ? 'fr_FR' : 'en_US';
     }) },
     { property: 'og:logo', content: 'https://dubbingbase.com/logo.png' },
