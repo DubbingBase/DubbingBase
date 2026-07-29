@@ -1,5 +1,5 @@
 <template>
-  <div v-if="isMobile && isVisible" class="fixed bottom-0 left-0 right-0 z-50 px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-gray-800 border-t border-gray-700 flex justify-between items-center shadow-lg">
+  <div v-if="isMobile && isVisible" class="fixed bottom-0 left-0 right-0 z-50 p-4 bg-gray-800 border-t border-gray-700 flex justify-between items-center shadow-lg">
     <div class="flex flex-col">
       <span class="text-white font-bold text-sm">{{ t('app.title') }} App</span>
       <span class="text-gray-400 text-xs">Better experience on mobile</span>
