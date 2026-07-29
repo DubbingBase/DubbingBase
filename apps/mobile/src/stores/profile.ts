@@ -5,7 +5,9 @@ import type { Tables } from "@/utils/database";
 import type { Movie } from "@supabase/functions/_shared/movie";
 import type { Serie } from "@supabase/functions/_shared/serie";
 
-interface VoiceActor extends Tables<"voice_actors"> { medias?: WorkEntry[] }
+interface VoiceActor extends Tables<"voice_actors"> {
+  medias?: WorkEntry[];
+}
 type UserProfile = Tables<"user_profiles">;
 type ProfileType = "voice_actor" | "user_profile";
 
@@ -60,8 +62,7 @@ export const useProfileStore = defineStore("profile", () => {
   const currentProfileType = computed(() => profileType.value);
   const allVoiceActors = computed(() => voiceActors.value);
   const currentVoiceActor = computed<VoiceActor | null>(() => {
-    if (impersonatedVoiceActor.value)
-      return impersonatedVoiceActor.value;
+    if (impersonatedVoiceActor.value) return impersonatedVoiceActor.value;
     if (!currentVoiceActorId.value) return null;
     const currentId = currentVoiceActorId.value;
     let found: VoiceActor | null = null;
@@ -77,7 +78,7 @@ export const useProfileStore = defineStore("profile", () => {
   const hasMultipleVoiceActors = computed(() => voiceActors.value.length > 1);
   const isImpersonating = computed(() => impersonatedVoiceActor.value !== null);
   const userProfileData = computed(
-    () => (userProfile.value) || (defaultUserProfile),
+    () => userProfile.value || defaultUserProfile,
   );
   const isLoadingProfile = computed(() => isLoading.value);
   const profileError = computed(() => error.value);
@@ -168,7 +169,7 @@ export const useProfileStore = defineStore("profile", () => {
         // Set work entries from current voice actor data
         const currentVA = currentVoiceActor.value;
         workEntries.value =
-          currentVA && "medias" in currentVA ? (currentVA).medias || [] : [];
+          currentVA && "medias" in currentVA ? currentVA.medias || [] : [];
       } else if (data?.user_profile) {
         profileType.value = "user_profile";
         userProfile.value = data.user_profile;
@@ -194,7 +195,7 @@ export const useProfileStore = defineStore("profile", () => {
     voiceActorId: number,
     identifiers: { targetUserId?: string },
   ) => {
-    if (!(voiceActors.value).find((va) => va.id === voiceActorId)) {
+    if (!voiceActors.value.find((va) => va.id === voiceActorId)) {
       throw new Error("Voice actor not found");
     }
     try {
@@ -203,7 +204,7 @@ export const useProfileStore = defineStore("profile", () => {
       // Set work entries from the selected voice actor data
       const selectedVA = voiceActors.value.find((va) => va.id === voiceActorId);
       workEntries.value =
-        selectedVA && "medias" in selectedVA ? (selectedVA).medias || [] : [];
+        selectedVA && "medias" in selectedVA ? selectedVA.medias || [] : [];
     } catch (err: unknown) {
       error.value = {
         type: "select",
@@ -292,16 +293,16 @@ export const useProfileStore = defineStore("profile", () => {
           ...currentVoiceActor.value,
           ...voiceActorUpdates,
         }; // as VoiceActor is removed
-          const va: VoiceActor = { ...data, work: [] };
-          return va;
+        const va: VoiceActor = { ...data, work: [] };
+        return va;
 
         // Update in the array if it's not impersonated
         if (!impersonatedVoiceActor.value) {
-          const index = (voiceActors.value).findIndex(
+          const index = voiceActors.value.findIndex(
             (va) => va.id === currentVoiceActor.value!.id,
           );
           if (index !== -1) {
-            (voiceActors.value)[index] = updatedVA;
+            voiceActors.value[index] = updatedVA;
           }
         } else {
           // Update the impersonated actor
@@ -369,7 +370,7 @@ export const useProfileStore = defineStore("profile", () => {
       if (addError) throw addError;
 
       // Update work entries from the response data
-      workEntries.value = (data)?.medias || workEntries.value;
+      workEntries.value = data?.medias || workEntries.value;
     } catch (err: unknown) {
       error.value = {
         type: "add",
@@ -476,7 +477,7 @@ export const useProfileStore = defineStore("profile", () => {
       if (removeError) throw removeError;
 
       // Remove from local state
-      voiceActors.value = (voiceActors.value).filter(
+      voiceActors.value = voiceActors.value.filter(
         (va) => va.id !== voiceActorId,
       );
       if (currentVoiceActorId.value === voiceActorId) {
@@ -554,16 +555,15 @@ export const useProfileStore = defineStore("profile", () => {
     impersonatedTargetUserId.value = targetUserId || null;
     if (voiceActor) {
       profileType.value = "voice_actor";
-      workEntries.value =
-        "medias" in voiceActor ? (voiceActor).medias || [] : [];
+      workEntries.value = "medias" in voiceActor ? voiceActor.medias || [] : [];
     } else {
       // Clear impersonation
       impersonatedTargetUserId.value = null;
       if (currentVoiceActorId.value) {
-        const currentVA = (voiceActors.value).find(
+        const currentVA = voiceActors.value.find(
           (va) => va.id === currentVoiceActorId.value,
         );
-          currentVA && "medias" in currentVA ? (currentVA).medias || [] : [];
+        currentVA && "medias" in currentVA ? currentVA.medias || [] : [];
       } else {
         workEntries.value = [];
       }

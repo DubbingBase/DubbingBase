@@ -44,12 +44,22 @@ export const actorToPersonData = <
 };
 
 export const voiceActorToPersonData = (
-  va: { id: number; firstname?: string; lastname?: string; profile_picture?: string },
+  va: {
+    id: number;
+    firstname?: string;
+    lastname?: string;
+    profile_picture?: string;
+  },
   performance: string,
   actorId: number,
   reviewedStatus?: string,
   workId?: number,
-): PersonData<{ id: number; firstname?: string; lastname?: string; profile_picture?: string }> => {
+): PersonData<{
+  id: number;
+  firstname?: string;
+  lastname?: string;
+  profile_picture?: string;
+}> => {
   return {
     id: va.id,
     name: va.firstname + " " + va.lastname,

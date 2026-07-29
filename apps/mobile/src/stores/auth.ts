@@ -110,7 +110,8 @@ export const useAuthStore = defineStore("auth", () => {
 
       clearUser();
     } catch (err: unknown) {
-      error.value = (err as Error).message || "An error occurred during sign in";
+      error.value =
+        (err as Error).message || "An error occurred during sign in";
       throw err;
     } finally {
       isLoading.value = false;
@@ -127,13 +128,16 @@ export const useAuthStore = defineStore("auth", () => {
       }
       return session?.user || null;
     } catch (err: unknown) {
-      error.value = (err as Error).message || "Failed to check authentication status";
+      error.value =
+        (err as Error).message || "Failed to check authentication status";
       return null;
     }
   };
 
   // Initialize auth state
-  let authListener: { subscription: { unsubscribe: () => void } | null } = { subscription: null };
+  let authListener: { subscription: { unsubscribe: () => void } | null } = {
+    subscription: null,
+  };
 
   const initialize = async () => {
     try {

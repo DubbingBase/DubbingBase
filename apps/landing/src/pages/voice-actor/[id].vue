@@ -325,6 +325,9 @@ const router = useRouter();
 const route = useRoute();
 const voiceActorId = Number(route.params.id);
 
+const config = useRuntimeConfig();
+const baseUrl = config.public.supabase.url;
+
 const { data } = await useAsyncData(`voice-actor-${voiceActorId}`, () => fetchVoiceActorData(supabase, voiceActorId));
 
 const {
@@ -341,8 +344,6 @@ const actorName = computed(() => {
 });
 
 const canonicalUrl = computed(() => `https://dubbingbase.com/voice-actor/${voiceActorId}`);
-const config = useRuntimeConfig();
-const baseUrl = config.public.supabase.url;
 
 const ogImageUrl = computed(() => {
   if (!voiceActorId) return '';
@@ -350,7 +351,7 @@ const ogImageUrl = computed(() => {
 });
 const actorDescription = computed(() => {
   if (!actorName.value) return 'Fiche comédien de doublage sur DubbingBase.';
-  const workCount = filteredEnhancedWork.value.length;
+  const workCount = voiceActor.value?.work?.length || 0;
   return `Consultez la fiche complète de ${actorName.value}, comédien de doublage. Retrouvez ses ${workCount} rôles et doublages célèbres sur DubbingBase.`;
 });
 
@@ -371,6 +372,11 @@ useHead({
     { property: 'og:title', content: computed(() => actorName.value ? `${actorName.value} - Comédien de doublage` : 'DubbingBase') },
     { property: 'og:description', content: actorDescription },
     { property: 'og:type', content: 'profile' },
+    { property: 'og:locale', content: computed(() => {
+      const { locale } = useI18n();
+      return locale.value === 'fr' ? 'fr_FR' : 'en_US';
+    }) },
+    { property: 'og:logo', content: 'https://dubbingbase.com/logo.png' },
     { property: 'og:url', content: canonicalUrl },
     { property: 'og:image', content: ogImageUrl },
     { property: 'og:site_name', content: 'DubbingBase' },

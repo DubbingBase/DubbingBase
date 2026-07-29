@@ -11,7 +11,17 @@ class Alert {
   }
 
   async present() {
-    if (typeof window !== "undefined" && (window as unknown as { __addAlert: (opts: AlertOptions, callback: (data: unknown) => void) => void }).__addAlert) {
+    if (
+      typeof window !== "undefined" &&
+      (
+        window as unknown as {
+          __addAlert: (
+            opts: AlertOptions,
+            callback: (data: unknown) => void,
+          ) => void;
+        }
+      ).__addAlert
+    ) {
       const options: AlertOptions = {
         header: this.options.header,
         message: this.options.message,
@@ -20,7 +30,14 @@ class Alert {
         backdropDismiss: this.options.backdropDismiss,
       };
 
-      (window as unknown as { __addAlert: (opts: AlertOptions, callback: (data: unknown) => void) => void }).__addAlert(options, (data: unknown) => {
+      (
+        window as unknown as {
+          __addAlert: (
+            opts: AlertOptions,
+            callback: (data: unknown) => void,
+          ) => void;
+        }
+      ).__addAlert(options, (data: unknown) => {
         if (this.onDismissResolve) {
           this.onDismissResolve(data);
         }

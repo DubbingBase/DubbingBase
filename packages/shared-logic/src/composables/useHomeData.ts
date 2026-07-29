@@ -1,9 +1,9 @@
 import { ref } from "vue";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { 
-  MovieTrendingResponse, 
-  SerieTrendingResponse, 
-  Tables 
+import type {
+  MovieTrendingResponse,
+  SerieTrendingResponse,
+  Tables,
 } from "../types";
 
 export type HomeDataPayload = {
@@ -17,7 +17,9 @@ export type HomeDataPayload = {
   errorTopVoiceActors: string;
 };
 
-export async function fetchHomeData(supabase: SupabaseClient): Promise<HomeDataPayload> {
+export async function fetchHomeData(
+  supabase: SupabaseClient,
+): Promise<HomeDataPayload> {
   const payload: HomeDataPayload = {
     trendingMovies: [],
     trendingSeries: [],
@@ -26,7 +28,7 @@ export async function fetchHomeData(supabase: SupabaseClient): Promise<HomeDataP
     errorMovies: "",
     errorSeries: "",
     errorVoiceActors: "",
-    errorTopVoiceActors: ""
+    errorTopVoiceActors: "",
   };
 
   await Promise.allSettled([
@@ -38,7 +40,8 @@ export async function fetchHomeData(supabase: SupabaseClient): Promise<HomeDataP
         payload.trendingMovies = res.data.results || [];
       })
       .catch((e) => {
-        payload.errorMovies = e.message || "Erreur lors du chargement des films.";
+        payload.errorMovies =
+          e.message || "Erreur lors du chargement des films.";
       }),
 
     // Fetch series in parallel
@@ -49,7 +52,8 @@ export async function fetchHomeData(supabase: SupabaseClient): Promise<HomeDataP
         payload.trendingSeries = res.data.results || [];
       })
       .catch((e) => {
-        payload.errorSeries = e.message || "Erreur lors du chargement des séries.";
+        payload.errorSeries =
+          e.message || "Erreur lors du chargement des séries.";
       }),
 
     // Fetch recent voice actors in parallel
@@ -60,7 +64,8 @@ export async function fetchHomeData(supabase: SupabaseClient): Promise<HomeDataP
         payload.recentVoiceActors = res.data || [];
       })
       .catch((e) => {
-        payload.errorVoiceActors = e.message || "Erreur lors du chargement des voix récentes.";
+        payload.errorVoiceActors =
+          e.message || "Erreur lors du chargement des voix récentes.";
       }),
 
     // Fetch top voice actors in parallel
@@ -71,24 +76,36 @@ export async function fetchHomeData(supabase: SupabaseClient): Promise<HomeDataP
         payload.topVoiceActors = res.data || [];
       })
       .catch((e) => {
-        payload.errorTopVoiceActors = e.message || "Erreur lors du chargement des top doubleurs.";
+        payload.errorTopVoiceActors =
+          e.message || "Erreur lors du chargement des top doubleurs.";
       }),
   ]);
 
   return payload;
 }
 
-export function useHomeData(supabase: SupabaseClient, initialData?: HomeDataPayload | null) {
-  const trendingMovies = ref<MovieTrendingResponse["results"]>(initialData?.trendingMovies || []);
-  const trendingSeries = ref<SerieTrendingResponse["results"]>(initialData?.trendingSeries || []);
-  const recentVoiceActors = ref<Tables<"voice_actors">[]>(initialData?.recentVoiceActors || []);
-  const topVoiceActors = ref<Tables<"voice_actors">[]>(initialData?.topVoiceActors || []);
-  
+export function useHomeData(
+  supabase: SupabaseClient,
+  initialData?: HomeDataPayload | null,
+) {
+  const trendingMovies = ref<MovieTrendingResponse["results"]>(
+    initialData?.trendingMovies || [],
+  );
+  const trendingSeries = ref<SerieTrendingResponse["results"]>(
+    initialData?.trendingSeries || [],
+  );
+  const recentVoiceActors = ref<Tables<"voice_actors">[]>(
+    initialData?.recentVoiceActors || [],
+  );
+  const topVoiceActors = ref<Tables<"voice_actors">[]>(
+    initialData?.topVoiceActors || [],
+  );
+
   const isLoadingMovies = ref(!initialData);
   const isLoadingSeries = ref(!initialData);
   const isLoadingVoiceActors = ref(!initialData);
   const isLoadingTopVoiceActors = ref(!initialData);
-  
+
   const errorMovies = ref(initialData?.errorMovies || "");
   const errorSeries = ref(initialData?.errorSeries || "");
   const errorVoiceActors = ref(initialData?.errorVoiceActors || "");
@@ -99,7 +116,7 @@ export function useHomeData(supabase: SupabaseClient, initialData?: HomeDataPayl
     isLoadingSeries.value = true;
     isLoadingVoiceActors.value = true;
     isLoadingTopVoiceActors.value = true;
-    
+
     errorMovies.value = "";
     errorSeries.value = "";
     errorVoiceActors.value = "";
@@ -137,6 +154,6 @@ export function useHomeData(supabase: SupabaseClient, initialData?: HomeDataPayl
     errorSeries,
     errorVoiceActors,
     errorTopVoiceActors,
-    loadHomeData
+    loadHomeData,
   };
 }

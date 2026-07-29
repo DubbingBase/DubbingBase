@@ -5,7 +5,7 @@ import { findCharacter } from "@/utils/character";
 export function useDeferredCharacters(
   castSource: () => any[] | undefined,
   characterProfilePictures: Ref<any[]>,
-  options: { deduplicateRolesByImage?: boolean } = {}
+  options: { deduplicateRolesByImage?: boolean } = {},
 ) {
   const actors = ref<any[]>([]);
 
@@ -40,15 +40,16 @@ export function useDeferredCharacters(
               personCopy.roles = [...personCopy.roles];
               for (const role of personCopy.roles) {
                 const image = pics.find((character: any) =>
-                  findCharacter(character, role)
+                  findCharacter(character, role),
                 )?.image;
                 role.image = image ?? "";
               }
-              
+
               if (options.deduplicateRolesByImage) {
                 personCopy.roles = personCopy.roles.filter(
                   (role: any, index: number, self: any[]) =>
-                    index === self.findIndex((r: any) => r.image === role.image)
+                    index ===
+                    self.findIndex((r: any) => r.image === role.image),
                 );
               }
             }
@@ -58,7 +59,7 @@ export function useDeferredCharacters(
         }, 0);
       }
     },
-    { immediate: true }
+    { immediate: true },
   );
 
   return { actors };

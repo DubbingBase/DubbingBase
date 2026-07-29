@@ -115,7 +115,8 @@ export default {
         dbDataPromise,
       ]);
 
-      const { movieWithImageUrls, characterProfilePictures, collection } = apiData;
+      const { movieWithImageUrls, characterProfilePictures, collection } =
+        apiData;
 
       const result = {
         movie: movieWithImageUrls,

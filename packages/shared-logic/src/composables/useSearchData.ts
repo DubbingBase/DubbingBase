@@ -16,7 +16,7 @@ export type SearchResult = {
 
 export async function fetchSearchData(
   supabase: SupabaseClient,
-  query: string
+  query: string,
 ): Promise<SearchResult[]> {
   const trimmedQuery = query.trim();
   if (trimmedQuery.length < 2) return [];

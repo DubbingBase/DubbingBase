@@ -33,7 +33,14 @@ export type VoiceActorResponse = {
   };
   medias: (MovieModel | SerieModel)[];
   potentialWikipediaUrl?: string | null;
-  characterProfilePictures?: Array<{ work_id?: number; profile_path?: string | null; image?: string | null; movieId?: number; showId?: number; name?: string }>;
+  characterProfilePictures?: Array<{
+    work_id?: number;
+    profile_path?: string | null;
+    image?: string | null;
+    movieId?: number;
+    showId?: number;
+    name?: string;
+  }>;
   votes?: Record<
     number,
     { up_count: number; down_count: number; user_vote: string | null }
@@ -56,7 +63,12 @@ export type EnhancedWorkItem = {
 };
 
 // Helper for mapping Actor to PersonData
-function actorToPersonData(actor: { id: number; name?: string; character?: string; profile_path?: string | null; }): PersonData<Actor> {
+function actorToPersonData(actor: {
+  id: number;
+  name?: string;
+  character?: string;
+  profile_path?: string | null;
+}): PersonData<Actor> {
   return {
     id: actor.id,
     name: actor.name,
@@ -68,18 +80,24 @@ function actorToPersonData(actor: { id: number; name?: string; character?: strin
 export type VoiceActorDataPayload = {
   voiceActor?: VoiceActorResponse["voiceActor"];
   medias: VoiceActorResponse["medias"];
-  characterProfilePictures: NonNullable<VoiceActorResponse["characterProfilePictures"]>;
+  characterProfilePictures: NonNullable<
+    VoiceActorResponse["characterProfilePictures"]
+  >;
   potentialWikipediaUrl: string | null;
   profilePicture?: string | null;
   votes?: VoiceActorResponse["votes"];
 };
 
-export async function fetchVoiceActorData(supabase: SupabaseClient, id: string | number): Promise<VoiceActorDataPayload | null> {
+export async function fetchVoiceActorData(
+  supabase: SupabaseClient,
+  id: string | number,
+): Promise<VoiceActorDataPayload | null> {
   const voiceActorResponseRaw = await supabase.functions.invoke("voice-actor", {
     body: { id },
   });
 
-  const voiceActorResponse = (await voiceActorResponseRaw.data) as VoiceActorResponse;
+  const voiceActorResponse =
+    (await voiceActorResponseRaw.data) as VoiceActorResponse;
 
   if (!voiceActorResponse || !voiceActorResponse.voiceActor) {
     console.error("voiceActorResponse is null");
@@ -92,19 +110,30 @@ export async function fetchVoiceActorData(supabase: SupabaseClient, id: string |
     characterProfilePictures: voiceActorResponse.characterProfilePictures || [],
     potentialWikipediaUrl: voiceActorResponse.potentialWikipediaUrl || null,
     profilePicture: voiceActorResponse.voiceActor.profile_picture || null,
-    votes: voiceActorResponse.votes
+    votes: voiceActorResponse.votes,
   };
 }
 
-export function useVoiceActorData(supabase: SupabaseClient, initialData?: VoiceActorDataPayload | null) {
-  const voiceActor = ref<VoiceActorResponse["voiceActor"] | undefined>(initialData?.voiceActor);
+export function useVoiceActorData(
+  supabase: SupabaseClient,
+  initialData?: VoiceActorDataPayload | null,
+) {
+  const voiceActor = ref<VoiceActorResponse["voiceActor"] | undefined>(
+    initialData?.voiceActor,
+  );
   const medias = ref<VoiceActorResponse["medias"]>(initialData?.medias || []);
-  const characterProfilePictures = ref<NonNullable<VoiceActorResponse["characterProfilePictures"]>>(initialData?.characterProfilePictures || []);
-  const profilePicture = ref<string | null | undefined>(initialData?.profilePicture);
+  const characterProfilePictures = ref<
+    NonNullable<VoiceActorResponse["characterProfilePictures"]>
+  >(initialData?.characterProfilePictures || []);
+  const profilePicture = ref<string | null | undefined>(
+    initialData?.profilePicture,
+  );
   const loading = ref<boolean>(!initialData);
   const searchQuery = ref("");
-  const potentialWikipediaUrl = ref<string | null>(initialData?.potentialWikipediaUrl || null);
-  
+  const potentialWikipediaUrl = ref<string | null>(
+    initialData?.potentialWikipediaUrl || null,
+  );
+
   // Votes that the component can consume or integrate into its own store
   const votes = ref<VoiceActorResponse["votes"]>(initialData?.votes);
 
@@ -143,11 +172,35 @@ export function useVoiceActorData(supabase: SupabaseClient, initialData?: VoiceA
 
         if (!media) return null;
 
-        if (!(media as { credits?: { cast?: Array<{ id: number; character: string; name?: string; profile_path?: string | null; }> } }).credits?.cast) {
+        if (
+          !(
+            media as {
+              credits?: {
+                cast?: Array<{
+                  id: number;
+                  character: string;
+                  name?: string;
+                  profile_path?: string | null;
+                }>;
+              };
+            }
+          ).credits?.cast
+        ) {
           return null;
         }
 
-        const actor = (media as { credits?: { cast?: Array<{ id: number; character: string; name?: string; profile_path?: string | null; }> } }).credits?.cast?.find(
+        const actor = (
+          media as {
+            credits?: {
+              cast?: Array<{
+                id: number;
+                character: string;
+                name?: string;
+                profile_path?: string | null;
+              }>;
+            };
+          }
+        ).credits?.cast?.find(
           (cast: { id: number }) => cast.id === work.actor_id,
         );
 
@@ -236,6 +289,6 @@ export function useVoiceActorData(supabase: SupabaseClient, initialData?: VoiceA
     baseEnhancedWork,
     enhancedWork,
     filteredEnhancedWork,
-    loadVoiceActorData
+    loadVoiceActorData,
   };
 }

@@ -16,9 +16,8 @@ export class MediaService {
   ) {}
 
   async getVoiceActorWithWorkAndMedia(voiceActorId: number) {
-    const voiceActor = await this.databaseClient.getVoiceActorWithWork(
-      voiceActorId,
-    );
+    const voiceActor =
+      await this.databaseClient.getVoiceActorWithWork(voiceActorId);
 
     console.log("voiceActor fetched:", voiceActor?.id);
 
@@ -90,9 +89,9 @@ export class MediaService {
             if (entityData.entities[bestMatch.id]?.sitelinks?.frwiki?.title) {
               const title =
                 entityData.entities[bestMatch.id].sitelinks.frwiki.title;
-              potentialWikipediaUrl = `https://fr.wikipedia.org/wiki/${
-                encodeURI(title.replace(/ /g, "_"))
-              }`;
+              potentialWikipediaUrl = `https://fr.wikipedia.org/wiki/${encodeURI(
+                title.replace(/ /g, "_"),
+              )}`;
             }
           }
         } catch (e) {
@@ -119,11 +118,7 @@ export class MediaService {
 
     // Wait for all three tracks in parallel
     const [mediaResultsArray, potentialWikipediaUrl, votes] = await Promise.all(
-      [
-        Promise.all(mediaPromises),
-        wikiPromise,
-        votesPromise,
-      ],
+      [Promise.all(mediaPromises), wikiPromise, votesPromise],
     );
 
     const validResults = mediaResultsArray.filter(Boolean) as {
@@ -166,23 +161,26 @@ export class MediaService {
       if (tmdbMedia.external_ids?.tvdb_id) {
         tvdbId = tmdbMedia.external_ids.tvdb_id;
       } else {
-        const searchQuery = tmdbMedia.title ||
+        const searchQuery =
+          tmdbMedia.title ||
           tmdbMedia.name ||
           tmdbMedia.original_title ||
           tmdbMedia.original_name;
         if (searchQuery) {
           const searchResults = await tvdbClient.searchSeries(searchQuery);
           if (searchResults.data && searchResults.data.length > 0) {
-            const bestMatch = searchResults.data.find(
-              (item: any) =>
-                item.name
-                  ?.toLowerCase()
-                  .includes(searchQuery.toLowerCase()) ||
-                searchQuery.toLowerCase().includes(item.name?.toLowerCase()),
-            ) || searchResults.data[0];
-            tvdbId = contentType === "movie"
-              ? bestMatch?.tvdb_id || bestMatch?.id
-              : bestMatch?.id;
+            const bestMatch =
+              searchResults.data.find(
+                (item: any) =>
+                  item.name
+                    ?.toLowerCase()
+                    .includes(searchQuery.toLowerCase()) ||
+                  searchQuery.toLowerCase().includes(item.name?.toLowerCase()),
+              ) || searchResults.data[0];
+            tvdbId =
+              contentType === "movie"
+                ? bestMatch?.tvdb_id || bestMatch?.id
+                : bestMatch?.id;
           }
         }
       }
@@ -242,17 +240,29 @@ export class MediaService {
 
     let collection = null;
     if (contentType === "movie" && media.belongs_to_collection?.id) {
-      const collectionData = await this.tmdbClient.getCollection(media.belongs_to_collection.id);
+      const collectionData = await this.tmdbClient.getCollection(
+        media.belongs_to_collection.id,
+      );
       if (collectionData) {
         collection = {
           ...collectionData,
-          backdrop_path: collectionData.backdrop_path ? `https://image.tmdb.org/t/p/w500${collectionData.backdrop_path}` : null,
-          poster_path: collectionData.poster_path ? `https://image.tmdb.org/t/p/w500${collectionData.poster_path}` : null,
-          parts: collectionData.parts ? collectionData.parts.map((part: any) => ({
-            ...part,
-            backdrop_path: part.backdrop_path ? `https://image.tmdb.org/t/p/w500${part.backdrop_path}` : null,
-            poster_path: part.poster_path ? `https://image.tmdb.org/t/p/w500${part.poster_path}` : null,
-          })) : []
+          backdrop_path: collectionData.backdrop_path
+            ? `https://image.tmdb.org/t/p/w500${collectionData.backdrop_path}`
+            : null,
+          poster_path: collectionData.poster_path
+            ? `https://image.tmdb.org/t/p/w500${collectionData.poster_path}`
+            : null,
+          parts: collectionData.parts
+            ? collectionData.parts.map((part: any) => ({
+                ...part,
+                backdrop_path: part.backdrop_path
+                  ? `https://image.tmdb.org/t/p/w500${part.backdrop_path}`
+                  : null,
+                poster_path: part.poster_path
+                  ? `https://image.tmdb.org/t/p/w500${part.poster_path}`
+                  : null,
+              }))
+            : [],
         };
       }
     }

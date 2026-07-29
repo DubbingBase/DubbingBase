@@ -42,15 +42,22 @@ export default {
 
       // Fetch aggregate credits concurrently
       const aggregateCreditsPromise = (async () => {
-        const cacheKey = CACHE_KEYS.TMDB_TV(Number(showId), "aggregate_credits");
+        const cacheKey = CACHE_KEYS.TMDB_TV(
+          Number(showId),
+          "aggregate_credits",
+        );
         const cachedCredits = await cacheUtils.get(cacheKey);
         if (cachedCredits) {
           console.log(`Cache hit for TMDB TV aggregate credits ${showId}`);
           return cachedCredits;
         } else {
-          console.log(`Cache miss for TMDB TV aggregate credits ${showId}, fetching from API`);
+          console.log(
+            `Cache miss for TMDB TV aggregate credits ${showId}, fetching from API`,
+          );
           try {
-            const credits = await tmdbClient.get(`tv/${showId}/aggregate_credits`);
+            const credits = await tmdbClient.get(
+              `tv/${showId}/aggregate_credits`,
+            );
             await cacheUtils.set(cacheKey, credits, "MEDIUM");
             return credits;
           } catch (err) {
@@ -71,8 +78,9 @@ export default {
               result.media,
             );
 
-          let aggregateCredits = result.media.aggregate_credits || await aggregateCreditsPromise;
-          
+          let aggregateCredits =
+            result.media.aggregate_credits || (await aggregateCreditsPromise);
+
           // Removed backend matching logic as the frontend handles image matching reactively
 
           const creditsWithImages = processMedia({ credits: aggregateCredits });
@@ -140,11 +148,8 @@ export default {
         dbDataPromise,
       ]);
 
-      const {
-        serieWithImageUrls,
-        aggregateCredits,
-        characterProfilePictures,
-      } = apiData;
+      const { serieWithImageUrls, aggregateCredits, characterProfilePictures } =
+        apiData;
 
       const result = {
         serie: serieWithImageUrls,

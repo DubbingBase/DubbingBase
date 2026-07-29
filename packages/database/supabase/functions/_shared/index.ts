@@ -29,11 +29,7 @@ export { WikipediaCache } from "./wikipedia-cache.ts";
 export { MediaService } from "./media-service.ts";
 
 // Export interfaces
-export type {
-  IRedisClient,
-  ITMDBClient,
-  ITVDBClient,
-} from "./interfaces.ts";
+export type { IRedisClient, ITMDBClient, ITVDBClient } from "./interfaces.ts";
 
 // Export cache utilities and constants
 export { CACHE_TTL } from "./cache-utils.ts";

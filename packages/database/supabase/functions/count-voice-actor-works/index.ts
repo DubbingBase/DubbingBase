@@ -10,19 +10,19 @@ export default {
       if (!ids || !Array.isArray(ids)) {
         return Response.json(
           { error: "Missing or invalid ids parameter" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
       // Fetch counts for each ID
       const results: Record<number, number> = {};
-      
+
       for (const id of ids) {
         const { count, error } = await ctx.supabase
-          .from('work')
-          .select('*', { count: 'exact', head: true })
-          .eq('voice_actor_id', id);
-          
+          .from("work")
+          .select("*", { count: "exact", head: true })
+          .eq("voice_actor_id", id);
+
         if (!error && count !== null) {
           results[id] = count;
         } else {
@@ -35,7 +35,7 @@ export default {
       console.error("Error fetching works counts:", error);
       return Response.json(
         { error: "Failed to fetch works counts" },
-        { status: 500 }
+        { status: 500 },
       );
     }
   }),

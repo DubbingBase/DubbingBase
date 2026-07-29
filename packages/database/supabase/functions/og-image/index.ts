@@ -35,9 +35,7 @@ async function initialize() {
 }
 
 // Fetch an image and convert to a base64 data URI for embedding in satori
-async function fetchImageAsDataUri(
-  imageUrl: string,
-): Promise<string | null> {
+async function fetchImageAsDataUri(imageUrl: string): Promise<string | null> {
   try {
     const res = await fetch(imageUrl);
     if (!res.ok) return null;
@@ -98,7 +96,8 @@ function buildVoiceActorOg(params: {
         flexDirection: "row",
         width: "1200px",
         height: "630px",
-        background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
+        background:
+          "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
         color: "white",
         fontFamily: "Inter",
         padding: "48px",
@@ -215,99 +214,95 @@ function buildVoiceActorOg(params: {
 }
 
 export default {
-  fetch: withSupabase<Database>(
-    { auth: "none" },
-    async (req, ctx) => {
-      try {
-        const url = new URL(req.url);
-        const type = url.searchParams.get("type");
+  fetch: withSupabase<Database>({ auth: "none" }, async (req, ctx) => {
+    try {
+      const url = new URL(req.url);
+      const type = url.searchParams.get("type");
 
-        if (!type) {
-          return createErrorResponse("Missing type parameter", 400);
-        }
-
-        await initialize();
-
-        let template;
-
-        if (type === "voice-actor") {
-          const id = url.searchParams.get("id");
-          if (!id) return createErrorResponse("Missing id parameter", 400);
-
-          // Lightweight query: only fetch voice actor + work count
-          // Use supabaseAdmin since auth: "none" doesn't provide ctx.supabase
-          const { data: voiceActor, error } = await ctx.supabaseAdmin
-            .from("voice_actors")
-            .select("id, firstname, lastname, profile_picture, work(id)")
-            .eq("id", Number(id))
-            .single();
-
-          if (error || !voiceActor) {
-            return createErrorResponse("Actor not found", 404);
-          }
-
-          const name =
-            `${voiceActor.firstname} ${voiceActor.lastname}`.trim() ||
-            "Unknown";
-          const worksCount = voiceActor.work?.length ?? 0;
-
-          // Build the profile picture URL using the internal SUPABASE_URL
-          // (buildSupabaseImageUrl can't be used here: it relies on ctx.supabase
-          // which isn't available in auth:"none", and rewrites URLs to 127.0.0.1
-          // in dev mode which is unreachable from inside the edge runtime)
-          let imageDataUri: string | null = null;
-          if (voiceActor.profile_picture) {
-            const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-            const bucket = "voice_actor_profile_pictures";
-            const storageUrl = `${supabaseUrl}/storage/v1/object/public/${bucket}/${voiceActor.profile_picture}`;
-            console.log("Fetching profile picture from:", storageUrl);
-            imageDataUri = await fetchImageAsDataUri(storageUrl);
-          }
-
-          template = buildVoiceActorOg({ name, imageDataUri, worksCount });
-        } else {
-          return createErrorResponse(`Unsupported type: ${type}`, 400);
-        }
-
-        const svg = await satori(template, {
-          width: 1200,
-          height: 630,
-          fonts: [
-            {
-              name: "Inter",
-              data: fontDataRegular!,
-              weight: 400,
-              style: "normal",
-            },
-            {
-              name: "Inter",
-              data: fontDataBold!,
-              weight: 700,
-              style: "normal",
-            },
-          ],
-        });
-
-        const resvg = new Resvg(svg, {
-          fitTo: {
-            mode: "width",
-            value: 1200,
-          },
-        });
-
-        const pngData = resvg.render();
-        const pngBuffer = pngData.asPng();
-
-        return new Response(pngBuffer, {
-          headers: {
-            "Content-Type": "image/png",
-            "Cache-Control": "public, max-age=86400, s-maxage=86400",
-          },
-        });
-      } catch (error) {
-        console.error("Error generating OG image:", error);
-        return createErrorResponse("Failed to generate OG image");
+      if (!type) {
+        return createErrorResponse("Missing type parameter", 400);
       }
-    },
-  ),
+
+      await initialize();
+
+      let template;
+
+      if (type === "voice-actor") {
+        const id = url.searchParams.get("id");
+        if (!id) return createErrorResponse("Missing id parameter", 400);
+
+        // Lightweight query: only fetch voice actor + work count
+        // Use supabaseAdmin since auth: "none" doesn't provide ctx.supabase
+        const { data: voiceActor, error } = await ctx.supabaseAdmin
+          .from("voice_actors")
+          .select("id, firstname, lastname, profile_picture, work(id)")
+          .eq("id", Number(id))
+          .single();
+
+        if (error || !voiceActor) {
+          return createErrorResponse("Actor not found", 404);
+        }
+
+        const name =
+          `${voiceActor.firstname} ${voiceActor.lastname}`.trim() || "Unknown";
+        const worksCount = voiceActor.work?.length ?? 0;
+
+        // Build the profile picture URL using the internal SUPABASE_URL
+        // (buildSupabaseImageUrl can't be used here: it relies on ctx.supabase
+        // which isn't available in auth:"none", and rewrites URLs to 127.0.0.1
+        // in dev mode which is unreachable from inside the edge runtime)
+        let imageDataUri: string | null = null;
+        if (voiceActor.profile_picture) {
+          const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+          const bucket = "voice_actor_profile_pictures";
+          const storageUrl = `${supabaseUrl}/storage/v1/object/public/${bucket}/${voiceActor.profile_picture}`;
+          console.log("Fetching profile picture from:", storageUrl);
+          imageDataUri = await fetchImageAsDataUri(storageUrl);
+        }
+
+        template = buildVoiceActorOg({ name, imageDataUri, worksCount });
+      } else {
+        return createErrorResponse(`Unsupported type: ${type}`, 400);
+      }
+
+      const svg = await satori(template, {
+        width: 1200,
+        height: 630,
+        fonts: [
+          {
+            name: "Inter",
+            data: fontDataRegular!,
+            weight: 400,
+            style: "normal",
+          },
+          {
+            name: "Inter",
+            data: fontDataBold!,
+            weight: 700,
+            style: "normal",
+          },
+        ],
+      });
+
+      const resvg = new Resvg(svg, {
+        fitTo: {
+          mode: "width",
+          value: 1200,
+        },
+      });
+
+      const pngData = resvg.render();
+      const pngBuffer = pngData.asPng();
+
+      return new Response(pngBuffer, {
+        headers: {
+          "Content-Type": "image/png",
+          "Cache-Control": "public, max-age=86400, s-maxage=86400",
+        },
+      });
+    } catch (error) {
+      console.error("Error generating OG image:", error);
+      return createErrorResponse("Failed to generate OG image");
+    }
+  }),
 };

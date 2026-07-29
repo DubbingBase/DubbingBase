@@ -20,7 +20,7 @@ import { Database } from "../_shared/database.types.ts";
 
 async function getActor(actorId: number, tmdbClient: TMDBClient) {
   const cacheKey = CACHE_KEYS.TMDB_PERSON(actorId);
-  
+
   // Try cache first
   const cached = await cacheUtils.get(cacheKey);
   if (cached) {
@@ -32,10 +32,10 @@ async function getActor(actorId: number, tmdbClient: TMDBClient) {
     const actorData = await tmdbClient.get(`person/${actorId}`, {
       append_to_response: "tv_credits,movie_credits,external_ids",
     });
-    
+
     // Cache the result
     cacheUtils.set(cacheKey, actorData, "MEDIUM").catch(() => {});
-    
+
     return actorData;
   } catch (e) {
     console.error("Error fetching actor details:", e);
@@ -83,7 +83,7 @@ async function getVoiceRoles(
         ) {
           mediaDetails = await tmdbClient.fetchMediaDetails(
             work.dubbing_projects.content_id,
-            work.dubbing_projects.content_type
+            work.dubbing_projects.content_type,
           );
         }
 

@@ -189,7 +189,8 @@ export default {
             errMsg = err.message;
           } else {
             try {
-              errMsg = typeof err === "object" ? JSON.stringify(err) : String(err);
+              errMsg =
+                typeof err === "object" ? JSON.stringify(err) : String(err);
             } catch {
               errMsg = String(err);
             }

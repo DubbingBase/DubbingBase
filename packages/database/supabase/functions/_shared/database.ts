@@ -90,15 +90,13 @@ export class DatabaseClient {
     });
 
     if (votes) {
-      votes.forEach(
-        (vote) => {
-          voteCounts[vote.work_id] = {
-            up_count: vote.up_count,
-            down_count: vote.down_count,
-            user_vote: vote.user_vote,
-          };
-        },
-      );
+      votes.forEach((vote) => {
+        voteCounts[vote.work_id] = {
+          up_count: vote.up_count,
+          down_count: vote.down_count,
+          user_vote: vote.user_vote,
+        };
+      });
     }
 
     return voteCounts;

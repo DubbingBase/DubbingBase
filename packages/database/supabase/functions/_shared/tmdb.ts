@@ -171,7 +171,7 @@ export class TMDBClient implements ITMDBClient {
   }
 
   async getCollection(collectionId: number) {
-    const cacheKey = this.cache.tmdbKey('collection', collectionId, "details");
+    const cacheKey = this.cache.tmdbKey("collection", collectionId, "details");
 
     // Try cache first
     const cached = await this.cache.get(cacheKey);

@@ -1,6 +1,6 @@
-import type { Tables } from '@supabase/functions/_shared/database.types';
+import type { Tables } from "@supabase/functions/_shared/database.types";
 
-export interface ProfileWorkItem extends Tables<'work'> {
+export interface ProfileWorkItem extends Tables<"work"> {
   content_type?: string;
   dubbing_projects?: { content_id: number };
 }

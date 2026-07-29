@@ -9,7 +9,6 @@ import { useI18n } from "vue-i18n";
 import type { PersonData } from "@/components/PersonItem.vue";
 import { voiceActorToPersonData } from "@/utils/convert";
 
-
 export interface VoiceActor {
   id: number;
   firstname: string;
@@ -52,7 +51,15 @@ export function useVoiceActorManagement(
   const selectedActor = ref<number>();
 
   // Voice actors data
-  const voiceActors = ref<Array<{ id: number; firstname?: string; lastname?: string; profile_picture?: string; work_id?: number }>>([]);
+  const voiceActors = ref<
+    Array<{
+      id: number;
+      firstname?: string;
+      lastname?: string;
+      profile_picture?: string;
+      work_id?: number;
+    }>
+  >([]);
   const isLoading = ref(false);
   const error = ref("");
 
@@ -62,7 +69,13 @@ export function useVoiceActorManagement(
 
   const getVoiceActorByTmdbId = (
     tmdbId: number,
-  ): Array<{ id: number; firstname?: string; lastname?: string; profile_picture?: string; work_id?: number }> => {
+  ): Array<{
+    id: number;
+    firstname?: string;
+    lastname?: string;
+    profile_picture?: string;
+    work_id?: number;
+  }> => {
     console.log("tmdbId", tmdbId);
     console.log("voiceActors.value", voiceActors.value);
     return voiceActors.value.filter((va) => va.tmdb_id === tmdbId);
@@ -138,7 +151,10 @@ export function useVoiceActorManagement(
     }
   };
 
-  const editVoiceActorLink = async (person: { work_id?: number; name?: string }) => {
+  const editVoiceActorLink = async (person: {
+    work_id?: number;
+    name?: string;
+  }) => {
     const alert = await alertController.create({
       header: "Edit Performance",
       inputs: [
@@ -196,9 +212,10 @@ export function useVoiceActorManagement(
     }
   };
 
-  const confirmDeleteVoiceActorLink = async (
-    person: { work_id?: number; name?: string },
-  ) => {
+  const confirmDeleteVoiceActorLink = async (person: {
+    work_id?: number;
+    name?: string;
+  }) => {
     console.log("person", person);
     const alert = await alertController.create({
       header: t("common.confirmUnlinkTitle", "Délier ce comédien"),

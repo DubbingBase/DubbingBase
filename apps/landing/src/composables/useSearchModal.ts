@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { ref } from "vue";
 
 const isSearchOpen = ref(false);
 
@@ -6,7 +6,7 @@ export function useSearchModal() {
   const openSearch = () => {
     isSearchOpen.value = true;
   };
-  
+
   const closeSearch = () => {
     isSearchOpen.value = false;
   };
@@ -19,6 +19,6 @@ export function useSearchModal() {
     isSearchOpen,
     openSearch,
     closeSearch,
-    toggleSearch
+    toggleSearch,
   };
 }

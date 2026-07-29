@@ -212,7 +212,11 @@ export default {
           `Processing complete. Added ${newVoiceActorsCount} new voice actors.`,
         );
 
-        const result = { ok: true, changes: newVoiceActorsCount, title: mediaTitle };
+        const result = {
+          ok: true,
+          changes: newVoiceActorsCount,
+          title: mediaTitle,
+        };
         return Response.json(result);
       } catch (error) {
         console.error("Error processing fetch request:", error);
