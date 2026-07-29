@@ -4,6 +4,9 @@ import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
 import satori from "npm:satori";
 import { initWasm, Resvg } from "npm:@resvg/resvg-wasm@2.6.2";
+import { DatabaseClient, MediaService, tmdbClient } from "../_shared/index.ts";
+import en from "../../../../locales/en.json" with { type: "json" };
+import fr from "../../../../locales/fr.json" with { type: "json" };
 
 let wasmInitialized = false;
 let fontDataRegular: ArrayBuffer | null = null;
@@ -34,11 +37,29 @@ async function initialize() {
   }
 }
 
-async function fetchImageAsDataUri(
-  imageUrl: string,
-): Promise<string | null> {
+async function fetchImageAsDataUri(url: string): Promise<string | null> {
+  if (!url) return null;
+  let finalUrl = url;
+
+  // If running locally, rewrite 127.0.0.1 or localhost to SUPABASE_URL (e.g. kong:8000)
+  // because the Edge Function container cannot access the host's localhost port directly.
+  if (finalUrl.includes("127.0.0.1") || finalUrl.includes("localhost")) {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    if (supabaseUrl) {
+      try {
+        const urlObj = new URL(finalUrl);
+        const supabaseObj = new URL(supabaseUrl);
+        urlObj.protocol = supabaseObj.protocol;
+        urlObj.host = supabaseObj.host;
+        finalUrl = urlObj.toString();
+      } catch (e) {
+        console.error("Failed to rewrite local URL:", e);
+      }
+    }
+  }
+
   try {
-    const res = await fetch(imageUrl);
+    const res = await fetch(finalUrl);
     if (!res.ok) return null;
     const buffer = await res.arrayBuffer();
     const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
@@ -52,65 +73,131 @@ async function fetchImageAsDataUri(
 function buildCareerGridImage(params: {
   name: string;
   avatarDataUri: string | null;
-  works: Array<{ title: string; characterName: string }>;
-}): { svgHeight: number; template: any } {
-  const MAX_COLS = 3;
+  otherRolesCount: number;
+  works: Array<{
+    title: string;
+    characterName: string;
+    mediaDataUri: string | null;
+    characterDataUri: string | null;
+  }>;
+  lang: string;
+}): { svgWidth: number; svgHeight: number; template: any } {
+  const isFr = params.lang.startsWith("fr");
+  const dict = isFr ? fr : en;
+
+  const tVoiceActor = dict.profile?.voiceActorProfile || (isFr ? "Comédien de doublage" : "Voice Actor");
+  const tRole = (count: number) => {
+    return count === 1 ? dict.actor?.role || (isFr ? "Rôle" : "Role") : dict.actor?.roles || (isFr ? "Rôles" : "Roles");
+  };
+  const tAs = dict.actor?.as || (isFr ? "dans le rôle de" : "as");
+  const tSeeOtherRoles = (count: number) => {
+    // There is no translation for this in the locales yet, so keep fallback
+    if (isFr) return `Voir les ${count} autres rôles sur dubbingbase.com`;
+    return `See ${count} other roles at dubbingbase.com`;
+  };
+
+  const MAX_COLS = 5;
   const WORK_WIDTH = 340;
   const WORK_HEIGHT = 80;
-  const WORK_GAP = 16;
+  const WORK_GAP = 12;
   const PADDING = 48;
   const HEADER_HEIGHT = 140;
   const FOOTER_HEIGHT = 40;
 
-  const works = params.works.slice(0, 30);
-  const cols = Math.min(works.length, MAX_COLS);
+  const works = params.works;
+  const cols = Math.min(Math.max(works.length, 1), MAX_COLS);
   const rows = Math.ceil(works.length / MAX_COLS);
   const rowWidth = cols * WORK_WIDTH + (cols - 1) * WORK_GAP;
-  const gridX = (1200 - rowWidth) / 2;
-  const gridHeight = rows * WORK_HEIGHT + (rows - 1) * WORK_GAP;
+  const svgWidth = Math.max(1200, PADDING * 2 + rowWidth);
+  const gridX = (svgWidth - rowWidth) / 2;
+  const gridHeight = Math.max(0, rows * WORK_HEIGHT + (rows - 1) * WORK_GAP);
 
-  const totalHeight = PADDING + HEADER_HEIGHT + PADDING + gridHeight + PADDING +
-    FOOTER_HEIGHT;
+  const totalHeight =
+    PADDING + HEADER_HEIGHT + PADDING + gridHeight + PADDING + FOOTER_HEIGHT;
 
   const avatarNode = params.avatarDataUri
     ? {
-      type: "img",
-      props: {
-        src: params.avatarDataUri,
-        width: 100,
-        height: 100,
-        style: {
-          borderRadius: "50px",
-          objectFit: "cover",
-          border: "4px solid rgba(99, 102, 241, 0.5)",
+        type: "img",
+        props: {
+          src: params.avatarDataUri,
+          width: 100,
+          height: 100,
+          style: {
+            borderRadius: "50px",
+            objectFit: "cover",
+            border: "4px solid rgba(99, 102, 241, 0.5)",
+          },
         },
-      },
-    }
+      }
     : {
-      type: "div",
-      props: {
-        style: {
-          width: "100px",
-          height: "100px",
-          borderRadius: "50px",
-          background: "linear-gradient(135deg, #334155, #475569)",
-          border: "4px solid rgba(99, 102, 241, 0.5)",
-          color: "#64748b",
-          fontSize: "42px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+        type: "div",
+        props: {
+          style: {
+            width: "100px",
+            height: "100px",
+            borderRadius: "50px",
+            background: "linear-gradient(135deg, #334155, #475569)",
+            border: "4px solid rgba(99, 102, 241, 0.5)",
+            color: "#64748b",
+            fontSize: "42px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          },
+          children: params.name.charAt(0).toUpperCase(),
         },
-        children: params.name.charAt(0).toUpperCase(),
-      },
-    };
+      };
 
   const workNodes = works.map((work, i) => {
     const col = i % MAX_COLS;
     const row = Math.floor(i / MAX_COLS);
     const x = gridX + col * (WORK_WIDTH + WORK_GAP);
-    const y = PADDING + HEADER_HEIGHT + PADDING +
-      row * (WORK_HEIGHT + WORK_GAP);
+    const y =
+      PADDING + HEADER_HEIGHT + PADDING + row * (WORK_HEIGHT + WORK_GAP);
+
+    const mediaPoster = work.mediaDataUri
+      ? {
+          type: "img",
+          props: {
+            src: work.mediaDataUri,
+            style: {
+              width: "40px",
+              height: "60px",
+              borderRadius: "4px",
+              objectFit: "cover",
+              marginRight: "8px",
+            },
+          },
+        }
+      : {
+          type: "div",
+          props: {
+            style: {
+              width: "40px",
+              height: "60px",
+              borderRadius: "4px",
+              background: "#334155",
+              marginRight: "8px",
+            },
+          },
+        };
+
+    const characterAvatar = work.characterDataUri
+      ? {
+          type: "img",
+          props: {
+            src: work.characterDataUri,
+            style: {
+              width: "40px",
+              height: "40px",
+              borderRadius: "20px",
+              objectFit: "cover",
+              border: "2px solid rgba(148, 163, 184, 0.3)",
+              marginLeft: "auto",
+            },
+          },
+        }
+      : null;
 
     return {
       type: "div",
@@ -124,41 +211,67 @@ function buildCareerGridImage(params: {
           background: "#1e293b",
           borderRadius: "8px",
           display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          padding: "12px 16px",
+          flexDirection: "row",
+          alignItems: "center",
+          padding: "10px",
           border: "1px solid rgba(148, 163, 184, 0.1)",
         },
         children: [
+          mediaPoster,
           {
-            type: "p",
+            type: "div",
             props: {
               style: {
-                fontSize: "16px",
-                fontWeight: 600,
-                color: "#f1f5f9",
-                margin: "0 0 4px 0",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                flex: 1,
+                minWidth: 0,
+                marginRight: "8px",
               },
-              children: work.title,
+              children: [
+                {
+                  type: "p",
+                  props: {
+                    style: {
+                      fontSize: "14px",
+                      fontWeight: 600,
+                      color: "#f1f5f9",
+                      margin: "0 0 4px 0",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    },
+                    children: work.title,
+                  },
+                },
+                {
+                  type: "p",
+                  props: {
+                    style: {
+                      fontSize: "12px",
+                      color: "#94a3b8",
+                      margin: "0",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    },
+                    children: work.characterName
+                      ? `${tAs} ${work.characterName}`
+                      : "",
+                  },
+                },
+              ],
             },
           },
-          {
-            type: "p",
-            props: {
-              style: {
-                fontSize: "13px",
-                color: "#94a3b8",
-                margin: "0",
-              },
-              children: `as ${work.characterName}`,
-            },
-          },
+          characterAvatar,
         ],
       },
     };
   });
 
   return {
+    svgWidth,
     svgHeight: totalHeight,
     template: {
       type: "div",
@@ -166,7 +279,7 @@ function buildCareerGridImage(params: {
         style: {
           display: "flex",
           flexDirection: "column",
-          width: "1200px",
+          width: `${svgWidth}px`,
           height: `${totalHeight}px`,
           background:
             "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
@@ -185,56 +298,57 @@ function buildCareerGridImage(params: {
                 gap: "20px",
                 marginBottom: "8px",
               },
-              children: [avatarNode, {
-                type: "div",
-                props: {
-                  style: {
-                    display: "flex",
-                    flexDirection: "column",
+              children: [
+                avatarNode,
+                {
+                  type: "div",
+                  props: {
+                    style: {
+                      display: "flex",
+                      flexDirection: "column",
+                    },
+                    children: [
+                      {
+                        type: "p",
+                        props: {
+                          style: {
+                            fontSize: "16px",
+                            color: "#94a3b8",
+                            margin: "0 0 6px 0",
+                            letterSpacing: "3px",
+                            textTransform: "uppercase" as const,
+                          },
+                          children: tVoiceActor,
+                        },
+                      },
+                      {
+                        type: "p",
+                        props: {
+                          style: {
+                            fontSize: "42px",
+                            fontWeight: 700,
+                            margin: "0",
+                            color: "#f1f5f9",
+                            lineHeight: 1.1,
+                          },
+                          children: params.name,
+                        },
+                      },
+                      {
+                        type: "p",
+                        props: {
+                          style: {
+                            fontSize: "16px",
+                            color: "#64748b",
+                            margin: "8px 0 0 0",
+                          },
+                          children: `${params.works.length} ${tRole(params.works.length)}`,
+                        },
+                      },
+                    ],
                   },
-                  children: [
-                    {
-                      type: "p",
-                      props: {
-                        style: {
-                          fontSize: "16px",
-                          color: "#94a3b8",
-                          margin: "0 0 6px 0",
-                          letterSpacing: "3px",
-                          textTransform: "uppercase" as const,
-                        },
-                        children: "Voice Actor",
-                      },
-                    },
-                    {
-                      type: "p",
-                      props: {
-                        style: {
-                          fontSize: "42px",
-                          fontWeight: 700,
-                          margin: "0",
-                          color: "#f1f5f9",
-                          lineHeight: 1.1,
-                        },
-                        children: params.name,
-                      },
-                    },
-                    {
-                      type: "p",
-                      props: {
-                        style: {
-                          fontSize: "16px",
-                          color: "#64748b",
-                          margin: "8px 0 0 0",
-                        },
-                        children: `${params.works.length} ${
-                          params.works.length === 1 ? "Role" : "Roles"
-                        }`,
-                      },
-                    },
-                  ],
                 },
-              }],
+              ],
             },
           },
           ...workNodes,
@@ -246,10 +360,13 @@ function buildCareerGridImage(params: {
                 bottom: `${PADDING}px`,
                 right: `${PADDING}px`,
                 fontSize: "14px",
-                color: "#475569",
+                color: "#94a3b8",
                 margin: "0",
               },
-              children: "DubbingBase",
+              children:
+                params.otherRolesCount > 0
+                  ? tSeeOtherRoles(params.otherRolesCount)
+                  : "dubbingbase.com",
             },
           },
         ],
@@ -265,62 +382,147 @@ export default {
 
       const url = new URL(req.url);
       const idParam = url.searchParams.get("id");
+      const langParam = url.searchParams.get("lang") || "fr-FR";
 
       if (!idParam) {
         return createErrorResponse("Missing id parameter", 400);
       }
 
-      const id = Number(idParam);
+      const id = parseInt(idParam, 10);
       if (isNaN(id)) {
         return createErrorResponse(
-          `Invalid id parameter: expected a number, got "${idParam}"`,
+          "Invalid id parameter, must be a number",
           400,
         );
       }
 
-      const { data: voiceActor, error } = await ctx.supabaseAdmin
-        .from("voice_actors")
-        .select(
-          "id, firstname, lastname, profile_picture, voice_actor_name, work(id, dubbing_projects(content_id, content_type), performance)",
-        )
-        .eq("id", id)
-        .single();
+      const dbClient = new DatabaseClient(ctx);
+      const mediaService = new MediaService(dbClient, tmdbClient, ctx);
 
-      if (error || !voiceActor) {
-        return createErrorResponse(
-          `Voice actor with id=${id} not found`,
-          404,
-        );
+      const result = await mediaService.getVoiceActorWithWorkAndMedia(id, langParam);
+
+      if (!result?.voiceActor) {
+        return createErrorResponse("Voice actor not found", 404);
       }
 
-      const works = (voiceActor.work || []).map((w: any) => ({
-        title: w.dubbing_projects?.content_id
-          ? `Work #${w.dubbing_projects.content_id}`
-          : "Unknown Work",
-        characterName: w.performance || "Unknown",
-      }));
+      const { voiceActor, medias, characterProfilePictures } = result;
 
-      const name = `${voiceActor.firstname} ${voiceActor.lastname}`.trim() ||
+      // Extract and format all works, link with media
+      let mappedWorks = (voiceActor.work || []).reduce((acc: any[], w: any) => {
+        const contentId = w.dubbing_projects?.content_id;
+        const media = medias.find((m: any) => m.id === contentId);
+
+        if (!media || !media.credits?.cast) return acc;
+
+        const castMember = media.credits.cast.find(
+          (c: any) => c.id === w.actor_id,
+        );
+
+        if (!castMember) return acc;
+
+        let characterName = castMember.character || w.performance || "";
+
+        // Sometimes performance is "dialogues", which we don't want to display
+        if (characterName.toLowerCase().includes("dialogue")) {
+          characterName = "";
+        }
+
+        let characterImage = null;
+        if (castMember.profile_path) {
+          characterImage = castMember.profile_path.replace("/w500/", "/w92/");
+        }
+
+        // Try finding character profile from TVDB mapping if TMDB is missing
+        if (
+          !characterImage &&
+          characterProfilePictures &&
+          Array.isArray(characterProfilePictures)
+        ) {
+          const pic = characterProfilePictures.find(
+            (cp: any) =>
+              (cp.movieId === contentId || cp.showId === contentId) &&
+              cp.name &&
+              characterName &&
+              cp.name.toLowerCase() === characterName.toLowerCase(),
+          );
+          if (pic) {
+            characterImage = pic.image || pic.profile_path || null;
+          }
+        }
+
+        let title = "Unknown Work";
+        let popularity = 0;
+        let mediaPoster = null;
+
+        if (media) {
+          title = media.title || media.name || title;
+          popularity = media.popularity || 0;
+          if (media.poster_path) {
+            mediaPoster = media.poster_path.replace("/w500/", "/w92/");
+          }
+        } else {
+          title = contentId ? `Work #${contentId}` : title;
+        }
+
+        acc.push({
+          title,
+          characterName: characterName || "",
+          popularity,
+          mediaPosterUrl: mediaPoster,
+          characterImageUrl: characterImage,
+        });
+
+        return acc;
+      }, []);
+
+      // Sort by popularity descending
+      mappedWorks.sort((a: any, b: any) => b.popularity - a.popularity);
+
+      const totalWorks = mappedWorks.length;
+      const DISPLAY_LIMIT = 50;
+      const otherRolesCount = Math.max(0, totalWorks - DISPLAY_LIMIT);
+      mappedWorks = mappedWorks.slice(0, DISPLAY_LIMIT);
+
+      // Concurrently fetch images as Data URIs for all mappedWorks
+      const worksPromises = mappedWorks.map(async (work: any) => {
+        const [mediaDataUri, characterDataUri] = await Promise.all([
+          work.mediaPosterUrl
+            ? fetchImageAsDataUri(work.mediaPosterUrl)
+            : Promise.resolve(null),
+          work.characterImageUrl
+            ? fetchImageAsDataUri(work.characterImageUrl)
+            : Promise.resolve(null),
+        ]);
+        return {
+          title: work.title,
+          characterName: work.characterName,
+          mediaDataUri,
+          characterDataUri,
+        };
+      });
+
+      const works = await Promise.all(worksPromises);
+
+      const name =
+        `${voiceActor.firstname} ${voiceActor.lastname}`.trim() ||
         voiceActor.voice_actor_name ||
         "Unknown";
 
       let avatarDataUri: string | null = null;
       if (voiceActor.profile_picture) {
-        const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-        const bucket = "voice_actor_profile_pictures";
-        const storageUrl =
-          `${supabaseUrl}/storage/v1/object/public/${bucket}/${voiceActor.profile_picture}`;
-        avatarDataUri = await fetchImageAsDataUri(storageUrl);
+        avatarDataUri = await fetchImageAsDataUri(voiceActor.profile_picture);
       }
 
-      const { svgHeight, template } = buildCareerGridImage({
+      const { svgWidth, svgHeight, template } = buildCareerGridImage({
         name,
         avatarDataUri,
+        otherRolesCount,
         works,
+        lang: langParam,
       });
 
       const svg = await satori(template, {
-        width: 1200,
+        width: svgWidth,
         height: svgHeight,
         fonts: [
           {
@@ -339,9 +541,10 @@ export default {
       });
 
       const resvg = new Resvg(svg, {
+        font: { loadSystemFonts: false },
         fitTo: {
           mode: "width",
-          value: 1200,
+          value: svgWidth,
         },
       });
 

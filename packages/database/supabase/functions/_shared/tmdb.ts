@@ -55,24 +55,34 @@ export class TMDBClient implements ITMDBClient {
     }
   }
 
-  async getMediaWithCredits(contentType: "movie" | "tv", id: number) {
-    const cacheKey = this.cache.tmdbKey(contentType, id, "credits");
+  async getMediaWithCredits(
+    contentType: "movie" | "tv",
+    id: number,
+    language?: string,
+  ) {
+    const langStr = language || "fr-FR";
+    const cacheKey = this.cache.tmdbKey(contentType, id, `credits-${langStr}`);
 
     // Try cache first
     const cached = await this.cache.get(cacheKey);
     if (cached) {
-      debugLog(`TMDB cache hit for ${contentType} ${id} with credits`);
+      debugLog(
+        `TMDB cache hit for ${contentType} ${id} with credits (${langStr})`,
+      );
       return cached;
     }
 
     // Cache miss - fetch from API
     const result = await this.get(`${contentType}/${id}`, {
       append_to_response: "credits,external_ids",
+      ...(language ? { language } : {}),
     });
 
     // Cache the result with MEDIUM TTL (6 hours for media data)
     await this.cache.set(cacheKey, result, "MEDIUM");
-    debugLog(`TMDB cache set for ${contentType} ${id} with credits`);
+    debugLog(
+      `TMDB cache set for ${contentType} ${id} with credits (${langStr})`,
+    );
 
     return result;
   }

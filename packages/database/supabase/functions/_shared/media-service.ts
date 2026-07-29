@@ -15,7 +15,7 @@ export class MediaService {
     private ctx: SupabaseContext<Database>,
   ) {}
 
-  async getVoiceActorWithWorkAndMedia(voiceActorId: number) {
+  async getVoiceActorWithWorkAndMedia(voiceActorId: number, language?: string) {
     const voiceActor =
       await this.databaseClient.getVoiceActorWithWork(voiceActorId);
 
@@ -37,6 +37,7 @@ export class MediaService {
         const tmdbMedia = await this.tmdbClient.getMediaWithCredits(
           contentType,
           contentId,
+          language
         );
 
         const characterProfilePictures = await this.getCharacterProfilePictures(
