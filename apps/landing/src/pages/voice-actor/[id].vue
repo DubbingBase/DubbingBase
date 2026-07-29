@@ -6,7 +6,13 @@
       ></div>
     </div>
 
-    <div v-else-if="voiceActor" class="space-y-12">
+    <div v-else-if="voiceActor" class="space-y-12 relative pt-12">
+      <!-- Back Button -->
+      <button @click="router.back()" class="absolute top-0 left-0 z-20 flex items-center gap-2 bg-gray-800/80 hover:bg-gray-700 backdrop-blur-sm text-white px-4 py-2 rounded-full transition-colors border border-gray-600 shadow-md">
+        <ArrowLeftIcon class="w-5 h-5" />
+        <span class="font-medium">Retour</span>
+      </button>
+
       <!-- Profile Header -->
       <section class="flex flex-col md:flex-row gap-8 items-start">
         <div
@@ -112,10 +118,11 @@
 
         <template v-if="displayMode === 'list'">
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div
+            <NuxtLink
+              :to="`/${item.work.dubbing_projects?.content_type === 'tv' ? 'show' : 'movie'}/${item.media.id}`"
               v-for="item in sortedWorks"
               :key="item.work.id"
-              class="bg-gray-800/50 border border-gray-700 rounded-2xl p-4 hover:bg-gray-800 transition duration-300 flex flex-col gap-4 shadow-sm"
+              class="bg-gray-800/50 border border-gray-700 rounded-2xl p-4 hover:bg-gray-800 transition duration-300 flex flex-col gap-4 shadow-sm block"
             >
               <!-- Media Info -->
               <div class="flex gap-4">
@@ -220,7 +227,7 @@
                   </div>
                 </div>
               </div>
-            </div>
+            </NuxtLink>
           </div>
         </template>
         <template v-else>
@@ -248,10 +255,11 @@
 
               <!-- Actor Works Grid -->
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div
+                <NuxtLink
+                  :to="`/${item.work.dubbing_projects?.content_type === 'tv' ? 'show' : 'movie'}/${item.media.id}`"
                   v-for="item in works"
                   :key="item.work.id"
-                  class="bg-gray-800/50 border border-gray-700 rounded-2xl p-4 hover:bg-gray-800 transition duration-300 flex flex-col gap-4 shadow-sm"
+                  class="bg-gray-800/50 border border-gray-700 rounded-2xl p-4 hover:bg-gray-800 transition duration-300 flex flex-col gap-4 shadow-sm block"
                 >
                   <!-- Media Info -->
                   <div class="flex gap-4 h-full items-center">
@@ -294,7 +302,7 @@
                       </div>
                     </div>
                   </div>
-                </div>
+                </NuxtLink>
               </div>
             </div>
           </div>
@@ -307,14 +315,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { useHead } from '@unhead/vue';
-import { useRoute } from 'vue-router';
-import { supabase } from '../api/supabase';
-import { useVoiceActorData } from '@app/shared-logic';
+import { useVoiceActorData, fetchVoiceActorData } from '@app/shared-logic';
+import { useRouter } from 'vue-router';
+import { ArrowLeftIcon } from 'lucide-vue-next';
+
+const supabase = useSupabaseClient();
+const router = useRouter();
 
 const route = useRoute();
 const voiceActorId = Number(route.params.id);
+
+const { data } = await useAsyncData(`voice-actor-${voiceActorId}`, () => fetchVoiceActorData(supabase, voiceActorId));
 
 const {
   voiceActor,
@@ -322,8 +333,7 @@ const {
   loading,
   searchQuery,
   filteredEnhancedWork,
-  loadVoiceActorData,
-} = useVoiceActorData(supabase);
+} = useVoiceActorData(supabase, data.value);
 
 const actorName = computed(() => {
   if (!voiceActor.value) return '';
@@ -427,10 +437,4 @@ const groupedWorks = computed(() => {
   });
 });
 
-onMounted(() => {
-  const id = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id;
-  if (id) {
-    loadVoiceActorData(id);
-  }
-});
 </script>

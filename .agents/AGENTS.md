@@ -38,6 +38,7 @@ All development tasks MUST be run via **Mise** to ensure environment consistency
 | `mise run migrate-down` | Rolls back the last applied migration.                                                |
 | `mise run sync`         | Synchronizes mobile app builds with Capacitor platforms (Android, etc.).              |
 | `mise run android-dev`  | Launches the Android emulator and runs the app in development mode.                   |
+| `mise run curl-function <name> [--body <json> | --body @<file>]` | Curl an edge function locally. Reads `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` from `.env.development`. Supports `--body` for inline JSON, `--body @<file>` for file-based JSON, and stdin piping. |
 
 ### Generating Database TypeScript Types:
 
@@ -95,9 +96,18 @@ _(This command generates types to `packages/database/supabase/functions/_shared/
 - **Seed Data**:
   - Keep `packages/database/supabase/seed.sql` up to date if you add new tables or reference data.
 - **Edge Functions (Deno)**:
-  - Written in TypeScript for Deno.
-  - **No Import Map**: The `import_map.json` file has been deleted. Import dependencies directly from standard URLs (e.g., `https://esm.sh/...`) or native Deno/npm specifiers.
-  - VS Code Deno configuration is active for `packages/database/functions`.
+   - Written in TypeScript for Deno.
+   - **No Import Map**: The `import_map.json` file has been deleted. Import dependencies directly from standard URLs (e.g., `https://esm.sh/...`) or native Deno/npm specifiers.
+   - VS Code Deno configuration is active for `packages/database/functions`.
+- **Curl Edge Functions Locally**:
+  - Use `mise run curl-function <function-name> [--body <json> | --body @<file>]` to test edge functions from the CLI.
+  - Reads `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` from `.env.development` (injected by mise).
+  - Supports `--body` for inline JSON, `--body @<file>` for file-based JSON, and stdin piping.
+  - Script location: `packages/database/curl-function.sh`
+  - Examples:
+    - `mise run curl-function search --body '{"query": "actor name"}'`
+    - `echo '{"query": "actor"}' | mise run curl-function search`
+    - `mise run curl-function extract-voice-actor-info --body '{"wikipediaUrl": "..."}'`
 
 ---
 

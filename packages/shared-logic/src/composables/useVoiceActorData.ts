@@ -65,39 +65,63 @@ function actorToPersonData(actor: { id: number; name?: string; character?: strin
   };
 }
 
-export function useVoiceActorData(supabase: SupabaseClient) {
-  const voiceActor = ref<VoiceActorResponse["voiceActor"] | undefined>();
-  const medias = ref<VoiceActorResponse["medias"]>([]);
-  const characterProfilePictures = ref<NonNullable<VoiceActorResponse["characterProfilePictures"]>>([]);
-  const profilePicture = ref<string | null | undefined>();
-  const loading = ref<boolean>(true);
+export type VoiceActorDataPayload = {
+  voiceActor?: VoiceActorResponse["voiceActor"];
+  medias: VoiceActorResponse["medias"];
+  characterProfilePictures: NonNullable<VoiceActorResponse["characterProfilePictures"]>;
+  potentialWikipediaUrl: string | null;
+  profilePicture?: string | null;
+  votes?: VoiceActorResponse["votes"];
+};
+
+export async function fetchVoiceActorData(supabase: SupabaseClient, id: string | number): Promise<VoiceActorDataPayload | null> {
+  const voiceActorResponseRaw = await supabase.functions.invoke("voice-actor", {
+    body: { id },
+  });
+
+  const voiceActorResponse = (await voiceActorResponseRaw.data) as VoiceActorResponse;
+
+  if (!voiceActorResponse || !voiceActorResponse.voiceActor) {
+    console.error("voiceActorResponse is null");
+    return null;
+  }
+
+  return {
+    voiceActor: voiceActorResponse.voiceActor,
+    medias: voiceActorResponse.medias || [],
+    characterProfilePictures: voiceActorResponse.characterProfilePictures || [],
+    potentialWikipediaUrl: voiceActorResponse.potentialWikipediaUrl || null,
+    profilePicture: voiceActorResponse.voiceActor.profile_picture || null,
+    votes: voiceActorResponse.votes
+  };
+}
+
+export function useVoiceActorData(supabase: SupabaseClient, initialData?: VoiceActorDataPayload | null) {
+  const voiceActor = ref<VoiceActorResponse["voiceActor"] | undefined>(initialData?.voiceActor);
+  const medias = ref<VoiceActorResponse["medias"]>(initialData?.medias || []);
+  const characterProfilePictures = ref<NonNullable<VoiceActorResponse["characterProfilePictures"]>>(initialData?.characterProfilePictures || []);
+  const profilePicture = ref<string | null | undefined>(initialData?.profilePicture);
+  const loading = ref<boolean>(!initialData);
   const searchQuery = ref("");
-  const potentialWikipediaUrl = ref<string | null>(null);
+  const potentialWikipediaUrl = ref<string | null>(initialData?.potentialWikipediaUrl || null);
   
   // Votes that the component can consume or integrate into its own store
-  const votes = ref<VoiceActorResponse["votes"]>();
+  const votes = ref<VoiceActorResponse["votes"]>(initialData?.votes);
 
   const loadVoiceActorData = async (id: string | number) => {
     loading.value = true;
 
     try {
-      const voiceActorResponseRaw = await supabase.functions.invoke("voice-actor", {
-        body: { id },
-      });
+      const payload = await fetchVoiceActorData(supabase, id);
 
-      const voiceActorResponse = (await voiceActorResponseRaw.data) as VoiceActorResponse;
+      if (!payload) return;
 
-      if (!voiceActorResponse) {
-        console.error("voiceActorResponse is null");
-        return;
-      }
-
-      voiceActor.value = voiceActorResponse.voiceActor;
-      medias.value = voiceActorResponse.medias;
-      characterProfilePictures.value = voiceActorResponse.characterProfilePictures || [];
-      potentialWikipediaUrl.value = voiceActorResponse.potentialWikipediaUrl || null;
-      profilePicture.value = voiceActorResponse.voiceActor.profile_picture;
-      votes.value = voiceActorResponse.votes;
+      voiceActor.value = payload.voiceActor;
+      medias.value = payload.medias;
+      characterProfilePictures.value = payload.characterProfilePictures;
+      potentialWikipediaUrl.value = payload.potentialWikipediaUrl;
+      profilePicture.value = payload.profilePicture;
+      votes.value = payload.votes;
     } catch (error) {
       console.error("Error fetching voice actor:", error);
       throw error;

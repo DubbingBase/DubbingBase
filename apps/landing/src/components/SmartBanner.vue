@@ -25,15 +25,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useI18n } from '../composables/useI18n';
 import { XIcon } from 'lucide-vue-next';
+import { useRoute } from 'vue-router';
 
 const { t } = useI18n();
+const route = useRoute();
 
 const isMobile = ref(false);
 const isVisible = ref(true);
-const appLink = ref('dubbingbase://');
+
+const appLink = computed(() => {
+  if (typeof window === 'undefined') return 'dubbingbase://';
+  // Use route.path to keep it reactive across client side navigation
+  return `dubbingbase://${route.path.replace(/^\//, '')}`;
+});
 
 // Simple mobile detection based on User Agent
 const checkMobile = () => {
@@ -65,10 +72,5 @@ onMounted(() => {
     checkMobile();
   }
 
-  // Try to append current path to deep link
-  if (typeof window !== 'undefined') {
-    // This allows linking directly to current page in app
-    appLink.value = `dubbingbase://${window.location.pathname.replace(/^\//, '')}`;
-  }
 });
 </script>
