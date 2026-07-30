@@ -1,5 +1,11 @@
 # @app/og-image
 
+## 1.0.9
+
+### Patch Changes
+
+- dh
+
 ## 1.0.8
 
 ### Patch Changes
