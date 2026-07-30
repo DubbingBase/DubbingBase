@@ -1,0 +1,29 @@
+{
+  "name": "DubbingBase",
+  "short_name": "DubbingBase",
+  "description": "The ultimate database for voice actors and dubbing projects.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#121212",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "prefer_related_applications": true,
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=com.dubbingbase.app",
+      "id": "com.dubbingbase.app"
+    }
+  ]
+}

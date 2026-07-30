@@ -53,10 +53,14 @@ const route = useRoute();
 const appLink = computed(() => {
   // Fallback to home if no route is available
   const path = route.fullPath || '/';
-  // Use the custom URL scheme configured in capacitor (dubbingbase://)
-  // Strip the leading slash to form valid URIs like dubbingbase://voice-actor/123
+  // Strip the leading slash
   const formattedPath = path.startsWith('/') ? path.substring(1) : path;
-  return `dubbingbase://${formattedPath}`;
+  
+  // Use Android Intent URL format. 
+  // - If the app is installed, it opens it via the custom scheme dubbingbase://
+  // - If not installed, it falls back to the Play Store
+  const fallbackUrl = encodeURIComponent('https://play.google.com/store/apps/details?id=com.dubbingbase.app&hl=fr');
+  return `intent://${formattedPath}#Intent;scheme=dubbingbase;package=com.dubbingbase.app;S.browser_fallback_url=${fallbackUrl};end`;
 });
 
 const dismissBanner = () => {

@@ -14,6 +14,11 @@
 useHead({
   titleTemplate: (titleChunk) => {
     return titleChunk ? `${titleChunk} | DubbingBase` : 'DubbingBase - La base de données du doublage';
-  }
+  },
+  link: [
+    { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+    { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
+    { rel: 'manifest', href: '/manifest.webmanifest' }
+  ]
 });
 </script>
