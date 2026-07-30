@@ -217,6 +217,19 @@ watch(
             content: newActor.profile_path ? resolveImageUrl(newActor.profile_path) : 'https://dubbingbase.com/default-og.jpg',
           },
         ],
+        script: [
+          {
+            type: 'application/ld+json',
+            innerHTML: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Person',
+              url: `https://dubbingbase.com/actor/${id}`,
+              name: newActor.name,
+              image: newActor.profile_path ? resolveImageUrl(newActor.profile_path) : '',
+              description: newActor.biography || `Discover ${newActor.name}'s filmography and French voice actors on DubbingBase.`,
+            })
+          }
+        ]
       });
     }
   },

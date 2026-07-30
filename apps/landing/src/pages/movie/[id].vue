@@ -257,6 +257,19 @@ useHead({
         return activeDubId.value ? `${baseUrl}?dub=${activeDubId.value}` : baseUrl;
       })
     }
+  ],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: computed(() => JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'Movie',
+        url: `https://dubbingbase.com/movie/${movieId}`,
+        name: movie.value?.title || 'Film',
+        image: posterUrl.value || backdropUrl.value || '',
+        description: movie.value?.overview || `Découvrez le casting et les voix françaises du film ${movie.value?.title}.`,
+      }))
+    }
   ]
 });
 </script>

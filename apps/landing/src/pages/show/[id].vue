@@ -262,6 +262,19 @@ useHead({
         return activeDubId.value ? `${baseUrl}?dub=${activeDubId.value}` : baseUrl;
       })
     }
+  ],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: computed(() => JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'TVSeries',
+        url: `https://dubbingbase.com/show/${showId}`,
+        name: serie.value?.name || 'Série',
+        image: posterUrl.value || backdropUrl.value || '',
+        description: serie.value?.overview || `Découvrez le casting et les voix françaises de la série ${serie.value?.name}.`,
+      }))
+    }
   ]
 });
 </script>

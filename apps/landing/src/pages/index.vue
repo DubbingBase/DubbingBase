@@ -158,6 +158,30 @@ useHead({
             'https://x.com/DubbingBase',
             'https://instagram.com/dubbingbase'
           ]
+        },
+        {
+          '@context': 'https://schema.org',
+          '@type': 'ItemList',
+          'itemListElement': [
+            {
+              '@type': 'SiteNavigationElement',
+              'position': 1,
+              'name': 'Films',
+              'url': 'https://dubbingbase.com/movies'
+            },
+            {
+              '@type': 'SiteNavigationElement',
+              'position': 2,
+              'name': 'Séries',
+              'url': 'https://dubbingbase.com/series'
+            },
+            {
+              '@type': 'SiteNavigationElement',
+              'position': 3,
+              'name': 'Comédiens de doublage',
+              'url': 'https://dubbingbase.com/voice-actors'
+            }
+          ]
         }
       ]),
     },

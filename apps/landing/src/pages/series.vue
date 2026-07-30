@@ -1,7 +1,76 @@
 <template>
-  <UnderConstruction />
+  <div class="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 min-h-screen">
+    <div class="mb-8">
+      <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">Séries</h1>
+      <p class="text-gray-600 dark:text-gray-400">Découvrez les séries télévisées les plus populaires du moment.</p>
+    </div>
+
+    <!-- Loading State -->
+    <div v-if="isLoading" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+      <div v-for="i in 10" :key="i" class="w-full h-64 md:h-80 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-xl"></div>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-6 rounded-xl border border-red-200 dark:border-red-800">
+      <h3 class="text-lg font-semibold mb-2">Erreur</h3>
+      <p>{{ error }}</p>
+    </div>
+
+    <!-- Series Grid -->
+    <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+      <NuxtLink 
+        v-for="serie in series" 
+        :key="serie.id" 
+        :to="'/show/' + serie.id"
+        class="group cursor-pointer block"
+      >
+        <div class="relative w-full aspect-[2/3] rounded-xl overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800 shadow-md transition-transform duration-300 group-hover:-translate-y-1 group-hover:shadow-xl">
+          <NuxtImg 
+            v-if="serie.poster_path" 
+            :src="'https://image.tmdb.org/t/p/w342' + serie.poster_path" 
+            :alt="serie.name" 
+            format="webp" 
+            loading="lazy" 
+            class="object-cover w-full h-full group-hover:scale-105 transition duration-500" 
+          />
+        </div>
+        <h3 class="font-semibold text-sm md:text-base text-gray-800 dark:text-gray-200 line-clamp-2 group-hover:text-blue-500 transition-colors">
+          {{ serie.name }}
+        </h3>
+      </NuxtLink>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import UnderConstruction from "@/components/UnderConstruction.vue";
+import { ref, onMounted } from 'vue';
+
+const supabase = useSupabaseClient();
+
+const series = ref<any[]>([]);
+const isLoading = ref(true);
+const error = ref('');
+
+useHead({
+  title: 'Toutes les Séries - DubbingBase',
+  meta: [
+    {
+      name: 'description',
+      content: 'Parcourez la liste des séries populaires et découvrez leurs comédiens de doublage.'
+    }
+  ]
+});
+
+onMounted(async () => {
+  try {
+    const { data, error: fetchError } = await supabase.functions.invoke('trending-shows');
+    if (fetchError) throw fetchError;
+    
+    series.value = data?.results || [];
+  } catch (err: any) {
+    error.value = err.message || 'Une erreur est survenue lors du chargement des séries.';
+  } finally {
+    isLoading.value = false;
+  }
+});
 </script>
