@@ -50,6 +50,11 @@ const routes = [
         component: () => import("../views/ManualMergeVATool.vue"),
       },
       {
+        path: "career-grid",
+        name: "CareerGridGenerator",
+        component: () => import("../views/CareerGridGenerator.vue"),
+      },
+      {
         path: "duplicates-work",
         name: "DuplicateWork",
         component: () => import("../views/DuplicateWork.vue"),
