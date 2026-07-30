@@ -2,7 +2,7 @@ import fs from "fs";
 import { createClient } from "@supabase/supabase-js";
 
 // Constants
-const USER_AGENT = "DubbingBaseBot/1.0 (contact@example.com)";
+const USER_AGENT = "DubbingBaseBot/1.0 (contact@dubbingbase.com)";
 const BASE_DELAY_MS = 100;
 const LIMIT = 50;
 const PROGRESS_FILE = process.env.PROGRESS_FILE || "./scripts/progress.json";

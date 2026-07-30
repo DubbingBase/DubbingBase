@@ -78,7 +78,7 @@ function markAsChecked(tmdbId: number) {
 }
 
 const WIKIPEDIA_USER_AGENT =
-  "DubbingBase/1.0 (https://github.com/armaldio/dubbingbase; armaldio@gmail.com)";
+  "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
 
 // Wikipedia API helper
 async function checkWikipediaBatchForDubbing(

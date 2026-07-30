@@ -83,7 +83,7 @@ function buildCareerGridImage(params: {
   lang: string;
 }): { svgWidth: number; svgHeight: number; template: any } {
   const isFr = params.lang.startsWith("fr");
-  const dict = isFr ? fr : en;
+  const dict = (isFr ? fr : en) as any;
 
   const tVoiceActor = dict.profile?.voiceActorProfile || (isFr ? "Comédien de doublage" : "Voice Actor");
   const tRole = (count: number) => {

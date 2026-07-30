@@ -14,8 +14,11 @@
             <a href="https://x.com/DubbingBase" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-gray-900 dark:text-white transition">
               <TwitterIcon class="w-5 h-5" />
             </a>
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-gray-900 dark:text-white transition">
-              <GithubIcon class="w-5 h-5" />
+            <a href="https://instagram.com/dubbingbase" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-gray-900 dark:text-white transition">
+              <InstagramIcon class="w-5 h-5" />
+            </a>
+            <a href="mailto:contact@dubbingbase.com" class="text-gray-500 hover:text-gray-900 dark:text-white transition">
+              <MailIcon class="w-5 h-5" />
             </a>
           </div>
         </div>
@@ -61,7 +64,7 @@
 
 <script setup lang="ts">
 import { useI18n } from '../composables/useI18n';
-import { TwitterIcon, GithubIcon } from 'lucide-vue-next';
+import { TwitterIcon, InstagramIcon, MailIcon } from 'lucide-vue-next';
 
 const { t } = useI18n();
 </script>
