@@ -92,36 +92,36 @@
               </div>
             </div>
             
-            <div class="flex justify-between items-center gap-4">
+            <div class="flex flex-col md:flex-row justify-between md:items-center gap-2 md:gap-4">
               <!-- Physical Actor -->
-              <NuxtLink :to="`/actor/${actor.id}`" class="flex items-center gap-4 flex-1 min-w-0 hover:bg-[#2a2a2a] p-2 -ml-2 rounded-xl transition-colors cursor-pointer">
+              <NuxtLink :to="`/actor/${actor.id}`" class="flex items-center gap-4 flex-1 min-w-0 hover:bg-[#2a2a2a] p-2 -mx-2 md:-ml-2 rounded-xl transition-colors cursor-pointer w-full">
                 <img v-if="actor.profile_path" :src="actor.profile_path" class="w-20 h-20 rounded-full object-cover bg-gray-800 flex-shrink-0" alt="Actor" />
                 <div v-else class="w-20 h-20 rounded-full bg-gray-800 flex-shrink-0"></div>
                 <div class="min-w-0">
                   <div class="text-[10px] text-gray-500 uppercase tracking-wider">Acteur</div>
-                  <div class="font-bold text-sm text-white truncate hover:underline" :title="actor.name">{{ actor.name }}</div>
+                  <div class="font-bold text-base md:text-sm text-white truncate hover:underline" :title="actor.name">{{ actor.name }}</div>
                 </div>
               </NuxtLink>
 
               <!-- Arrow -->
-              <div class="text-gray-600 flex-shrink-0">
+              <div class="text-gray-600 flex-shrink-0 hidden md:block">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clip-rule="evenodd" /></svg>
               </div>
 
               <!-- Voice Actor -->
-              <div class="flex items-center gap-4 flex-1 min-w-0 justify-end text-right">
+              <div class="flex flex-row md:flex-row-reverse items-center gap-4 flex-1 min-w-0 justify-start md:justify-end text-left md:text-right w-full hover:bg-[#2a2a2a] md:hover:bg-transparent p-2 -mx-2 md:p-0 md:m-0 rounded-xl transition-colors">
                 <template v-if="actor.voiceActor">
-                  <div class="min-w-0">
-                    <div class="text-[10px] text-[#00E5FF] uppercase tracking-wider">Voix VF</div>
-                    <NuxtLink :to="`/voice-actor/${actor.voiceActor.id}`" class="font-bold text-sm text-[#00E5FF] hover:underline truncate block" :title="actor.voiceActor.firstname + ' ' + actor.voiceActor.lastname">{{ actor.voiceActor.firstname }} {{ actor.voiceActor.lastname }}</NuxtLink>
-                  </div>
                   <img v-if="actor.voiceActor.profile_picture" :src="actor.voiceActor.profile_picture" class="w-20 h-20 rounded-full object-cover bg-gray-700 flex-shrink-0" alt="VF" />
                   <div v-else class="w-20 h-20 rounded-full bg-gray-700 flex-shrink-0 flex items-center justify-center text-xs font-bold text-gray-400">
                     {{ actor.voiceActor.firstname?.[0] }}{{ actor.voiceActor.lastname?.[0] }}
                   </div>
+                  <div class="min-w-0 flex-1 md:flex-none">
+                    <div class="text-[10px] text-[#00E5FF] uppercase tracking-wider">Voix VF</div>
+                    <NuxtLink :to="`/voice-actor/${actor.voiceActor.id}`" class="font-bold text-base md:text-sm text-[#00E5FF] hover:underline truncate block" :title="actor.voiceActor.firstname + ' ' + actor.voiceActor.lastname">{{ actor.voiceActor.firstname }} {{ actor.voiceActor.lastname }}</NuxtLink>
+                  </div>
                 </template>
                 <template v-else>
-                  <div class="text-sm text-gray-500 italic w-full text-center">Non renseignée</div>
+                  <div class="text-sm text-gray-500 italic w-full text-left md:text-right pl-[5.5rem] md:pl-0">Non renseignée</div>
                 </template>
               </div>
             </div>
