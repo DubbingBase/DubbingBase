@@ -1,5 +1,13 @@
 # @app/website
 
+## 0.0.49
+
+### Patch Changes
+
+- hs
+- Updated dependencies
+  - @app/locales@0.0.32
+
 ## 0.0.48
 
 ### Patch Changes

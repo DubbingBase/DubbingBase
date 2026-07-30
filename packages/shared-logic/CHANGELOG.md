@@ -1,5 +1,11 @@
 # @app/shared-logic
 
+## 1.0.7
+
+### Patch Changes
+
+- hs
+
 ## 1.0.6
 
 ### Patch Changes
