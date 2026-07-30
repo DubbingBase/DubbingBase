@@ -9,3 +9,11 @@
     <Footer />
   </div>
 </template>
+
+<script setup lang="ts">
+useHead({
+  titleTemplate: (titleChunk) => {
+    return titleChunk ? `${titleChunk} | DubbingBase` : 'DubbingBase - La base de données du doublage';
+  }
+});
+</script>

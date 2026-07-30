@@ -39,7 +39,7 @@
         <div v-else class="flex gap-4 overflow-x-auto pb-4 custom-scrollbar">
           <NuxtLink :to="'/movie/' + movie.id" v-for="movie in trendingMovies" :key="movie.id" class="w-48 flex-shrink-0 group cursor-pointer transition-transform hover:-translate-y-1 block">
             <div class="relative w-full h-72 rounded-xl overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800">
-              <img v-if="movie.poster_path" :src="'https://image.tmdb.org/t/p/w342' + movie.poster_path" :alt="movie.title" class="object-cover w-full h-full group-hover:scale-105 transition duration-300" />
+              <NuxtImg v-if="movie.poster_path" :src="'https://image.tmdb.org/t/p/w342' + movie.poster_path" :alt="movie.title" format="webp" loading="lazy" class="object-cover w-full h-full group-hover:scale-105 transition duration-300" />
             </div>
             <h3 class="font-semibold text-sm text-gray-800 dark:text-gray-200 line-clamp-2">{{ movie.title }}</h3>
           </NuxtLink>
@@ -58,7 +58,7 @@
         <div v-else class="flex gap-4 overflow-x-auto pb-4 custom-scrollbar">
           <NuxtLink :to="'/show/' + show.id" v-for="show in trendingSeries" :key="show.id" class="w-48 flex-shrink-0 group cursor-pointer transition-transform hover:-translate-y-1 block">
             <div class="relative w-full h-72 rounded-xl overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800">
-              <img v-if="show.poster_path" :src="'https://image.tmdb.org/t/p/w342' + show.poster_path" :alt="(show as any).name || (show as any).title" class="object-cover w-full h-full group-hover:scale-105 transition duration-300" />
+              <NuxtImg v-if="show.poster_path" :src="'https://image.tmdb.org/t/p/w342' + show.poster_path" :alt="(show as any).name || (show as any).title" format="webp" loading="lazy" class="object-cover w-full h-full group-hover:scale-105 transition duration-300" />
             </div>
             <h3 class="font-semibold text-sm text-gray-800 dark:text-gray-200 line-clamp-2">{{ (show as any).name || (show as any).title }}</h3>
           </NuxtLink>
@@ -85,7 +85,7 @@
             class="w-32 flex-shrink-0 flex flex-col items-center gap-3 group transition-transform hover:-translate-y-1"
           >
             <div class="relative w-24 h-24 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-800 border-2 border-transparent group-hover:border-blue-500 transition-colors">
-              <img v-if="va.profile_picture" :src="va.profile_picture" :alt="va.firstname + ' ' + va.lastname" class="object-cover w-full h-full" />
+              <NuxtImg v-if="va.profile_picture" :src="va.profile_picture" :alt="va.firstname + ' ' + va.lastname" format="webp" loading="lazy" class="object-cover w-full h-full" />
               <div v-else class="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-2xl font-bold uppercase">
                 {{ va.firstname?.[0] }}{{ va.lastname?.[0] }}
               </div>
@@ -134,14 +134,32 @@ useHead({
   script: [
     {
       type: 'application/ld+json',
-      innerHTML: JSON.stringify({
-        '@context': 'https://schema.org',
-        '@type': 'WebSite',
-        name: 'DubbingBase',
-        url: 'https://dubbingbase.com/',
-        description: 'La base de données de référence du doublage et des comédiens de doublage français.',
-        inLanguage: 'fr-FR',
-      }),
+      innerHTML: JSON.stringify([
+        {
+          '@context': 'https://schema.org',
+          '@type': 'WebSite',
+          name: 'DubbingBase',
+          url: 'https://dubbingbase.com/',
+          description: 'La base de données de référence du doublage et des comédiens de doublage français.',
+          inLanguage: 'fr-FR',
+          potentialAction: {
+            '@type': 'SearchAction',
+            target: 'https://dubbingbase.com/search?q={search_term_string}',
+            'query-input': 'required name=search_term_string'
+          }
+        },
+        {
+          '@context': 'https://schema.org',
+          '@type': 'Organization',
+          name: 'DubbingBase',
+          url: 'https://dubbingbase.com/',
+          logo: 'https://dubbingbase.com/logo.png',
+          sameAs: [
+            'https://x.com/DubbingBase',
+            'https://instagram.com/dubbingbase'
+          ]
+        }
+      ]),
     },
   ],
 });

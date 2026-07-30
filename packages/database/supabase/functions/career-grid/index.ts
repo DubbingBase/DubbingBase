@@ -41,8 +41,6 @@ async function fetchImageAsDataUri(url: string): Promise<string | null> {
   if (!url) return null;
   let finalUrl = url;
 
-  // If running locally, rewrite 127.0.0.1 or localhost to SUPABASE_URL (e.g. kong:8000)
-  // because the Edge Function container cannot access the host's localhost port directly.
   if (finalUrl.includes("127.0.0.1") || finalUrl.includes("localhost")) {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     if (supabaseUrl) {
@@ -70,6 +68,199 @@ async function fetchImageAsDataUri(url: string): Promise<string | null> {
   }
 }
 
+function buildHomeOgImage(lang: string) {
+  const isFr = lang.startsWith("fr");
+  return {
+    svgWidth: 1200,
+    svgHeight: 630,
+    template: {
+      type: "div",
+      props: {
+        style: {
+          display: "flex",
+          flexDirection: "column",
+          width: "1200px",
+          height: "630px",
+          background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
+          color: "white",
+          fontFamily: "Inter",
+          alignItems: "center",
+          justifyContent: "center",
+          position: "relative",
+        },
+        children: [
+          {
+            type: "h1",
+            props: {
+              style: {
+                fontSize: "100px",
+                fontWeight: 700,
+                margin: "0 0 20px 0",
+                background: "linear-gradient(to right, #60a5fa, #818cf8)",
+                backgroundClip: "text",
+                color: "transparent",
+              },
+              children: "DubbingBase",
+            },
+          },
+          {
+            type: "p",
+            props: {
+              style: {
+                fontSize: "40px",
+                fontWeight: 400,
+                color: "#94a3b8",
+                margin: 0,
+                textAlign: "center",
+                maxWidth: "800px",
+              },
+              children: isFr 
+                ? "La base de données collaborative du doublage" 
+                : "The collaborative dubbing database",
+            },
+          }
+        ],
+      },
+    },
+  };
+}
+
+function buildMediaOgImage(media: any, posterDataUri: string | null, lang: string) {
+  const isFr = lang.startsWith("fr");
+  const title = media.title || media.name || "Unknown";
+  const releaseDate = media.release_date || media.first_air_date || "";
+  const year = releaseDate ? releaseDate.split('-')[0] : "";
+  const overview = media.overview || "";
+  
+  return {
+    svgWidth: 1200,
+    svgHeight: 630,
+    template: {
+      type: "div",
+      props: {
+        style: {
+          display: "flex",
+          width: "1200px",
+          height: "630px",
+          background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
+          color: "white",
+          fontFamily: "Inter",
+          padding: "60px",
+          gap: "60px",
+          alignItems: "center",
+          position: "relative",
+        },
+        children: [
+          posterDataUri ? {
+            type: "img",
+            props: {
+              src: posterDataUri,
+              style: {
+                width: "340px",
+                height: "510px",
+                borderRadius: "16px",
+                objectFit: "cover",
+                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
+              },
+            },
+          } : {
+            type: "div",
+            props: {
+              style: {
+                width: "340px",
+                height: "510px",
+                borderRadius: "16px",
+                background: "#334155",
+              },
+            },
+          },
+          {
+            type: "div",
+            props: {
+              style: {
+                display: "flex",
+                flexDirection: "column",
+                flex: 1,
+                justifyContent: "center",
+              },
+              children: [
+                {
+                  type: "h1",
+                  props: {
+                    style: {
+                      fontSize: "64px",
+                      fontWeight: 700,
+                      margin: "0 0 16px 0",
+                      color: "#f1f5f9",
+                      lineHeight: 1.1,
+                      overflow: "hidden",
+                    },
+                    children: title,
+                  },
+                },
+                {
+                  type: "p",
+                  props: {
+                    style: {
+                      fontSize: "32px",
+                      color: "#94a3b8",
+                      margin: "0 0 32px 0",
+                    },
+                    children: year,
+                  },
+                },
+                {
+                  type: "p",
+                  props: {
+                    style: {
+                      fontSize: "24px",
+                      color: "#cbd5e1",
+                      margin: "0",
+                      lineHeight: 1.5,
+                      maxHeight: "180px",
+                      overflow: "hidden",
+                    },
+                    children: overview.length > 200 ? overview.substring(0, 200) + "..." : overview,
+                  },
+                },
+                {
+                  type: "div",
+                  props: {
+                    style: {
+                      marginTop: "40px",
+                      padding: "16px 24px",
+                      background: "rgba(59, 130, 246, 0.1)",
+                      border: "1px solid rgba(59, 130, 246, 0.3)",
+                      borderRadius: "12px",
+                      display: "flex",
+                    },
+                    children: [
+                      {
+                        type: "p",
+                        props: {
+                          style: {
+                            fontSize: "24px",
+                            color: "#60a5fa",
+                            margin: 0,
+                            fontWeight: 600,
+                          },
+                          children: isFr 
+                            ? "Découvrez le casting VF sur DubbingBase" 
+                            : "Discover the dubbing cast on DubbingBase",
+                        }
+                      }
+                    ]
+                  }
+                }
+              ],
+            },
+          }
+        ],
+      },
+    },
+  };
+}
+
 function buildCareerGridImage(params: {
   name: string;
   avatarDataUri: string | null;
@@ -81,7 +272,7 @@ function buildCareerGridImage(params: {
     characterDataUri: string | null;
   }>;
   lang: string;
-}): { svgWidth: number; svgHeight: number; template: any } {
+}) {
   const isFr = params.lang.startsWith("fr");
   const dict = (isFr ? fr : en) as any;
 
@@ -91,7 +282,6 @@ function buildCareerGridImage(params: {
   };
   const tAs = dict.actor?.as || (isFr ? "dans le rôle de" : "as");
   const tSeeOtherRoles = (count: number) => {
-    // There is no translation for this in the locales yet, so keep fallback
     if (isFr) return `Voir les ${count} autres rôles sur dubbingbase.com`;
     return `See ${count} other roles at dubbingbase.com`;
   };
@@ -381,145 +571,162 @@ export default {
       await initialize();
 
       const url = new URL(req.url);
-      const idParam = url.searchParams.get("id");
+      const typeParam = url.searchParams.get("type") || "actor";
       const langParam = url.searchParams.get("lang") || "fr-FR";
 
-      if (!idParam) {
-        return createErrorResponse("Missing id parameter", 400);
-      }
-
-      const id = parseInt(idParam, 10);
-      if (isNaN(id)) {
-        return createErrorResponse(
-          "Invalid id parameter, must be a number",
-          400,
-        );
-      }
+      let svgWidth = 1200;
+      let svgHeight = 630;
+      let template: any = null;
 
       const dbClient = new DatabaseClient(ctx);
       const mediaService = new MediaService(dbClient, tmdbClient, ctx);
 
-      const result = await mediaService.getVoiceActorWithWorkAndMedia(id, langParam);
+      if (typeParam === "home") {
+        const result = buildHomeOgImage(langParam);
+        svgWidth = result.svgWidth;
+        svgHeight = result.svgHeight;
+        template = result.template;
+      } else if (typeParam === "movie" || typeParam === "series") {
+        const idParam = url.searchParams.get("id");
+        if (!idParam) return createErrorResponse("Missing id parameter", 400);
+        const id = parseInt(idParam, 10);
+        if (isNaN(id)) return createErrorResponse("Invalid id parameter", 400);
 
-      if (!result?.voiceActor) {
-        return createErrorResponse("Voice actor not found", 404);
-      }
-
-      const { voiceActor, medias, characterProfilePictures } = result;
-
-      // Extract and format all works, link with media
-      let mappedWorks = (voiceActor.work || []).reduce((acc: any[], w: any) => {
-        const contentId = w.dubbing_projects?.content_id;
-        const media = medias.find((m: any) => m.id === contentId);
-
-        if (!media || !media.credits?.cast) return acc;
-
-        const castMember = media.credits.cast.find(
-          (c: any) => c.id === w.actor_id,
+        const { media } = await mediaService.getMediaWithVoiceActors(
+          typeParam === "movie" ? "movie" : "tv",
+          id
         );
 
-        if (!castMember) return acc;
-
-        let characterName = castMember.character || w.performance || "";
-
-        // Sometimes performance is "dialogues", which we don't want to display
-        if (characterName.toLowerCase().includes("dialogue")) {
-          characterName = "";
+        if (!media) {
+          return createErrorResponse("Media not found", 404);
         }
 
-        let characterImage = null;
-        if (castMember.profile_path) {
-          characterImage = castMember.profile_path.replace("/w500/", "/w92/");
+        let posterDataUri = null;
+        if (media.poster_path) {
+          // fetch high-res poster if possible
+          posterDataUri = await fetchImageAsDataUri(media.poster_path.replace("/w500/", "/w780/"));
         }
 
-        // Try finding character profile from TVDB mapping if TMDB is missing
-        if (
-          !characterImage &&
-          characterProfilePictures &&
-          Array.isArray(characterProfilePictures)
-        ) {
-          const pic = characterProfilePictures.find(
-            (cp: any) =>
-              (cp.movieId === contentId || cp.showId === contentId) &&
-              cp.name &&
-              characterName &&
-              cp.name.toLowerCase() === characterName.toLowerCase(),
-          );
-          if (pic) {
-            characterImage = pic.image || pic.profile_path || null;
+        const result = buildMediaOgImage(media, posterDataUri, langParam);
+        svgWidth = result.svgWidth;
+        svgHeight = result.svgHeight;
+        template = result.template;
+      } else {
+        // default: actor
+        const idParam = url.searchParams.get("id");
+        if (!idParam) return createErrorResponse("Missing id parameter", 400);
+        const id = parseInt(idParam, 10);
+        if (isNaN(id)) return createErrorResponse("Invalid id parameter", 400);
+
+        const result = await mediaService.getVoiceActorWithWorkAndMedia(id, langParam);
+
+        if (!result?.voiceActor) {
+          return createErrorResponse("Voice actor not found", 404);
+        }
+
+        const { voiceActor, medias, characterProfilePictures } = result;
+
+        let mappedWorks = (voiceActor.work || []).reduce((acc: any[], w: any) => {
+          const contentId = w.dubbing_projects?.content_id;
+          const media = medias.find((m: any) => m.id === contentId);
+
+          if (!media || !media.credits?.cast) return acc;
+
+          const castMember = media.credits.cast.find((c: any) => c.id === w.actor_id);
+          if (!castMember) return acc;
+
+          let characterName = castMember.character || w.performance || "";
+          if (characterName.toLowerCase().includes("dialogue")) {
+            characterName = "";
           }
-        }
 
-        let title = "Unknown Work";
-        let popularity = 0;
-        let mediaPoster = null;
-
-        if (media) {
-          title = media.title || media.name || title;
-          popularity = media.popularity || 0;
-          if (media.poster_path) {
-            mediaPoster = media.poster_path.replace("/w500/", "/w92/");
+          let characterImage = null;
+          if (castMember.profile_path) {
+            characterImage = castMember.profile_path.replace("/w500/", "/w92/");
           }
-        } else {
-          title = contentId ? `Work #${contentId}` : title;
-        }
 
-        acc.push({
-          title,
-          characterName: characterName || "",
-          popularity,
-          mediaPosterUrl: mediaPoster,
-          characterImageUrl: characterImage,
+          if (!characterImage && characterProfilePictures && Array.isArray(characterProfilePictures)) {
+            const pic = characterProfilePictures.find(
+              (cp: any) =>
+                (cp.movieId === contentId || cp.showId === contentId) &&
+                cp.name &&
+                characterName &&
+                cp.name.toLowerCase() === characterName.toLowerCase(),
+            );
+            if (pic) {
+              characterImage = pic.image || pic.profile_path || null;
+            }
+          }
+
+          let title = "Unknown Work";
+          let popularity = 0;
+          let mediaPoster = null;
+
+          if (media) {
+            title = media.title || media.name || title;
+            popularity = media.popularity || 0;
+            if (media.poster_path) {
+              mediaPoster = media.poster_path.replace("/w500/", "/w92/");
+            }
+          } else {
+            title = contentId ? `Work #${contentId}` : title;
+          }
+
+          acc.push({
+            title,
+            characterName: characterName || "",
+            popularity,
+            mediaPosterUrl: mediaPoster,
+            characterImageUrl: characterImage,
+          });
+
+          return acc;
+        }, []);
+
+        mappedWorks.sort((a: any, b: any) => b.popularity - a.popularity);
+
+        const totalWorks = mappedWorks.length;
+        const DISPLAY_LIMIT = 50;
+        const otherRolesCount = Math.max(0, totalWorks - DISPLAY_LIMIT);
+        mappedWorks = mappedWorks.slice(0, DISPLAY_LIMIT);
+
+        const worksPromises = mappedWorks.map(async (work: any) => {
+          const [mediaDataUri, characterDataUri] = await Promise.all([
+            work.mediaPosterUrl ? fetchImageAsDataUri(work.mediaPosterUrl) : Promise.resolve(null),
+            work.characterImageUrl ? fetchImageAsDataUri(work.characterImageUrl) : Promise.resolve(null),
+          ]);
+          return {
+            title: work.title,
+            characterName: work.characterName,
+            mediaDataUri,
+            characterDataUri,
+          };
         });
 
-        return acc;
-      }, []);
+        const works = await Promise.all(worksPromises);
 
-      // Sort by popularity descending
-      mappedWorks.sort((a: any, b: any) => b.popularity - a.popularity);
+        const name =
+          `${voiceActor.firstname} ${voiceActor.lastname}`.trim() ||
+          voiceActor.voice_actor_name ||
+          "Unknown";
 
-      const totalWorks = mappedWorks.length;
-      const DISPLAY_LIMIT = 50;
-      const otherRolesCount = Math.max(0, totalWorks - DISPLAY_LIMIT);
-      mappedWorks = mappedWorks.slice(0, DISPLAY_LIMIT);
+        let avatarDataUri: string | null = null;
+        if (voiceActor.profile_picture) {
+          avatarDataUri = await fetchImageAsDataUri(voiceActor.profile_picture);
+        }
 
-      // Concurrently fetch images as Data URIs for all mappedWorks
-      const worksPromises = mappedWorks.map(async (work: any) => {
-        const [mediaDataUri, characterDataUri] = await Promise.all([
-          work.mediaPosterUrl
-            ? fetchImageAsDataUri(work.mediaPosterUrl)
-            : Promise.resolve(null),
-          work.characterImageUrl
-            ? fetchImageAsDataUri(work.characterImageUrl)
-            : Promise.resolve(null),
-        ]);
-        return {
-          title: work.title,
-          characterName: work.characterName,
-          mediaDataUri,
-          characterDataUri,
-        };
-      });
+        const res = buildCareerGridImage({
+          name,
+          avatarDataUri,
+          otherRolesCount,
+          works,
+          lang: langParam,
+        });
 
-      const works = await Promise.all(worksPromises);
-
-      const name =
-        `${voiceActor.firstname} ${voiceActor.lastname}`.trim() ||
-        voiceActor.voice_actor_name ||
-        "Unknown";
-
-      let avatarDataUri: string | null = null;
-      if (voiceActor.profile_picture) {
-        avatarDataUri = await fetchImageAsDataUri(voiceActor.profile_picture);
+        svgWidth = res.svgWidth;
+        svgHeight = res.svgHeight;
+        template = res.template;
       }
-
-      const { svgWidth, svgHeight, template } = buildCareerGridImage({
-        name,
-        avatarDataUri,
-        otherRolesCount,
-        works,
-        lang: langParam,
-      });
 
       const svg = await satori(template, {
         width: svgWidth,
@@ -558,8 +765,8 @@ export default {
         },
       });
     } catch (error) {
-      console.error("Error generating career grid image:", error);
-      return createErrorResponse("Failed to generate career grid image");
+      console.error("Error generating OG image:", error);
+      return createErrorResponse("Failed to generate OG image");
     }
   }),
 };

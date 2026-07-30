@@ -17,7 +17,23 @@ export default defineNuxtConfig({
 
   css: ["~/assets/main.css"],
 
-  modules: ["@vueuse/nuxt", "@nuxtjs/i18n", "@nuxtjs/supabase"],
+  modules: [
+    "@vueuse/nuxt",
+    "@nuxtjs/i18n",
+    "@nuxtjs/supabase",
+    "@nuxtjs/sitemap",
+    "@nuxtjs/robots",
+    "@nuxt/image"
+  ],
+
+  site: {
+    url: "https://dubbingbase.com",
+    name: "DubbingBase",
+  },
+
+  image: {
+    domains: ["image.tmdb.org"],
+  },
 
   i18n: {
     locales: [
