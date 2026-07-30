@@ -1,5 +1,11 @@
 # @app/locales
 
+## 0.0.33
+
+### Patch Changes
+
+- uodzte
+
 ## 0.0.32
 
 ### Patch Changes
