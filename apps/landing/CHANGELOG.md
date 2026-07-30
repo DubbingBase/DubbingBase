@@ -1,5 +1,12 @@
 # @app/landing
 
+## 1.0.12
+
+### Patch Changes
+
+- 00d27b2: sd
+- daf9923: d
+
 ## 1.0.11
 
 ### Patch Changes
