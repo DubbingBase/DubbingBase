@@ -37,16 +37,16 @@
         <div v-else-if="errorMovies" class="text-red-400 bg-red-900/20 p-4 rounded-lg">
           {{ errorMovies }}
         </div>
-        <Swiper v-else :modules="[FreeMode]" :freeMode="true" :grabCursor="true" :slidesPerView="'auto'" :spaceBetween="16" class="pb-4 !overflow-visible nudge-on-load cursor-grab active:cursor-grabbing">
-          <SwiperSlide v-for="movie in trendingMovies" :key="movie.id" class="!w-48">
+        <div v-else ref="moviesScrollRef" class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 custom-scrollbar">
+          <div v-for="movie in trendingMovies" :key="movie.id" class="w-48 flex-shrink-0 snap-start">
             <NuxtLink :to="$localePath('/movie/' + movie.id)" class="group transition-transform hover:-translate-y-1 block">
               <div class="relative w-full h-72 rounded-xl overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800">
                 <NuxtImg v-if="movie.poster_path" :src="'https://image.tmdb.org/t/p/w342' + movie.poster_path" :alt="movie.title" format="webp" loading="lazy" class="object-cover w-full h-full group-hover:scale-105 transition duration-300" />
               </div>
               <h3 class="font-semibold text-sm text-gray-800 dark:text-gray-200 line-clamp-2">{{ movie.title }}</h3>
             </NuxtLink>
-          </SwiperSlide>
-        </Swiper>
+          </div>
+        </div>
       </section>
 
       <!-- Trending Series -->
@@ -58,16 +58,16 @@
         <div v-else-if="errorSeries" class="text-red-400 bg-red-900/20 p-4 rounded-lg">
           {{ errorSeries }}
         </div>
-        <Swiper v-else :modules="[FreeMode]" :freeMode="true" :grabCursor="true" :slidesPerView="'auto'" :spaceBetween="16" class="pb-4 !overflow-visible nudge-on-load cursor-grab active:cursor-grabbing">
-          <SwiperSlide v-for="show in trendingSeries" :key="show.id" class="!w-48">
+        <div v-else ref="seriesScrollRef" class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 custom-scrollbar">
+          <div v-for="show in trendingSeries" :key="show.id" class="w-48 flex-shrink-0 snap-start">
             <NuxtLink :to="$localePath('/show/' + show.id)" class="group transition-transform hover:-translate-y-1 block">
               <div class="relative w-full h-72 rounded-xl overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800">
                 <NuxtImg v-if="show.poster_path" :src="'https://image.tmdb.org/t/p/w342' + show.poster_path" :alt="(show as any).name || (show as any).title" format="webp" loading="lazy" class="object-cover w-full h-full group-hover:scale-105 transition duration-300" />
               </div>
               <h3 class="font-semibold text-sm text-gray-800 dark:text-gray-200 line-clamp-2">{{ (show as any).name || (show as any).title }}</h3>
             </NuxtLink>
-          </SwiperSlide>
-        </Swiper>
+          </div>
+        </div>
       </section>
 
       <!-- Top Voice Actors -->
@@ -82,8 +82,8 @@
         <div v-else-if="errorTopVoiceActors" class="text-red-400 bg-red-900/20 p-4 rounded-lg">
           {{ errorTopVoiceActors }}
         </div>
-        <Swiper v-else :modules="[FreeMode]" :freeMode="true" :grabCursor="true" :slidesPerView="'auto'" :spaceBetween="24" class="pb-4 !overflow-visible nudge-on-load cursor-grab active:cursor-grabbing">
-          <SwiperSlide v-for="va in topVoiceActors" :key="va.id" class="!w-32">
+        <div v-else ref="vaScrollRef" class="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4 custom-scrollbar">
+          <div v-for="va in topVoiceActors" :key="va.id" class="w-32 flex-shrink-0 snap-start">
             <NuxtLink
               :to="$localePath('/voice-actor/' + va.id)"
               class="flex flex-col items-center gap-3 group transition-transform hover:-translate-y-1"
@@ -96,8 +96,8 @@
               </div>
               <h3 class="font-semibold text-sm text-center text-gray-800 dark:text-gray-200">{{ va.firstname }} {{ va.lastname }}</h3>
             </NuxtLink>
-          </SwiperSlide>
-        </Swiper>
+          </div>
+        </div>
       </section>
     </main>
     </div>
@@ -107,13 +107,19 @@
 <script setup lang="ts">
 import { useHomeData, fetchHomeData } from '@app/shared-logic';
 import { useSearchModal } from '../composables/useSearchModal';
-import { Swiper, SwiperSlide } from 'swiper/vue';
-import { FreeMode } from 'swiper/modules';
-import 'swiper/css';
-import 'swiper/css/free-mode';
+import { useDragScroll } from '../composables/useDragScroll';
+import { ref } from 'vue';
 
 const supabase = useSupabaseClient();
 const { openSearch } = useSearchModal();
+
+const moviesScrollRef = ref<HTMLElement | null>(null);
+const seriesScrollRef = ref<HTMLElement | null>(null);
+const vaScrollRef = ref<HTMLElement | null>(null);
+
+useDragScroll(moviesScrollRef);
+useDragScroll(seriesScrollRef);
+useDragScroll(vaScrollRef);
 
 useHead({
   title: 'DubbingBase - La base de données du doublage et comédiens de doublage',
@@ -214,25 +220,6 @@ const {
 </script>
 
 <style scoped>
-@keyframes nudge-left {
-  0% { transform: translateX(0); }
-  20% { transform: translateX(-25px); }
-  50% { transform: translateX(10px); }
-  100% { transform: translateX(0); }
-}
-
-.nudge-on-load {
-  /* Give a visual hint to the user that it's scrollable after page loads */
-  animation: nudge-left 1.2s ease-in-out 1s 1;
-}
-
-:deep(.swiper), :deep(.swiper *) {
-  cursor: grab !important;
-}
-:deep(.swiper:active), :deep(.swiper:active *) {
-  cursor: grabbing !important;
-}
-
 .custom-scrollbar::-webkit-scrollbar {
   height: 6px;
 }

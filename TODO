@@ -6,8 +6,6 @@ Add tvdb character id to the work row
 
 ## Bugs & UI Fixes
 - Fix scrolling bug caused by swipe interactions
-- Redesign the layout for the French (VF) actor/character mapping
-- Fix the "Monsters, Inc." (Monstres et Cie) display bug
 - Fix unexpected page reload that occurs when launching a new dubbing project
 - Unify the application design around a single consistent theme
 - Fix back button behavior on language change (back should preserve the selected language)

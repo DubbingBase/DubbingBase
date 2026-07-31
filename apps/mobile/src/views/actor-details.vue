@@ -106,7 +106,7 @@
                   />
                 </div>
 
-                <div class="header-with-action">
+                <div class="section-header">
                   <h2>{{ t("actor.roles") }}</h2>
                   <AppChip outline color="primary" class="role-count">
                     {{ roleCount }}
@@ -472,14 +472,14 @@ onMounted(() => {
       font-size: 0.8rem;
       text-transform: uppercase;
       letter-spacing: 1px;
-      color: var(--app-color-medium);
+      color: var(--app-color-text-secondary);
       margin-bottom: 0.5rem;
       font-weight: 600;
     }
 
     .info-value {
       font-size: 1.1rem;
-      color: var(--app-text-color);
+      color: var(--app-color-text-primary);
     }
 
     &.biography-card {
@@ -517,7 +517,7 @@ onMounted(() => {
       font-weight: 600;
       margin: 0 0 1rem 0;
       padding-left: 0.5rem;
-      color: var(--app-text-color);
+      color: var(--app-color-text-primary);
     }
 
     .voice-actors-scroller {
@@ -545,7 +545,7 @@ onMounted(() => {
 
 .media-voice-roles {
   margin-bottom: 2rem;
-  background: var(--app-color-light);
+  background: var(--app-color-step-50);
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -559,12 +559,12 @@ onMounted(() => {
   display: flex;
   padding: 1rem;
   width: 100%;
-  background: var(--app-color-light-shade);
+  background: var(--app-color-border-light);
 }
 
 .voice-roles-list {
   padding: 0.5rem 0;
-  background: var(--app-color-light);
+  background: var(--app-color-step-50);
 
   .voice-role-item {
     --padding-start: 1rem;
@@ -596,9 +596,9 @@ onMounted(() => {
     justify-content: center;
     width: 100%;
     height: 100%;
-    background: var(--app-color-light-shade);
+    background: var(--app-color-border-light);
     border-radius: 50%;
-    color: var(--app-color-medium);
+    color: var(--app-color-text-secondary);
 
     .app-icon {
       font-size: 1.5rem;
@@ -611,13 +611,13 @@ onMounted(() => {
     margin: 0 0 0.25rem;
     font-size: 1rem;
     font-weight: 500;
-    color: var(--app-color-dark);
+    color: var(--app-color-text-primary);
   }
 
   p {
     margin: 0;
     font-size: 0.85rem;
-    color: var(--app-color-medium);
+    color: var(--app-color-text-secondary);
 
     .app-icon {
       margin-right: 0.25rem;
@@ -716,12 +716,12 @@ AppSegmentView, AppSegmentContent {
     .filter-label {
       font-size: 0.95rem;
       font-weight: 500;
-      color: var(--app-text-color);
+      color: var(--app-color-text-primary);
     }
 
     .sleek-toggle {
       --background: var(--app-overlay-10);
-      --handle-background: var(--app-color-medium);
+      --handle-background: var(--app-color-text-secondary);
       --background-checked: var(--app-color-primary);
       --handle-background-checked: #fff;
       padding: 0;
@@ -741,7 +741,7 @@ AppSegmentView, AppSegmentContent {
       margin: 0;
       font-size: 1.25rem;
       font-weight: 600;
-      color: var(--app-text-color);
+      color: var(--app-color-text-primary);
     }
 
     .role-count {
@@ -758,7 +758,7 @@ AppSegmentView, AppSegmentContent {
   gap: 1rem;
 
   .media-group {
-    background: var(--app-item-background);
+    background: var(--app-color-card);
     border-radius: 8px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     overflow: hidden;
@@ -773,27 +773,27 @@ AppSegmentView, AppSegmentContent {
 
     .roles-list {
       padding: 0.5rem 1rem;
-      border-top: 1px solid var(--app-color-light-shade);
-      background: var(--app-color-light);
+      border-top: 1px solid var(--app-color-border-light);
+      background: var(--app-color-step-50);
 
       .role-detail {
         padding: 0.25rem 0;
 
         &:not(:last-child) {
-          border-bottom: 1px solid var(--app-color-light-shade);
+          border-bottom: 1px solid var(--app-color-border-light);
         }
 
         .character-name {
           font-size: 0.85rem;
-          color: var(--app-color-medium);
+          color: var(--app-color-text-secondary);
           font-style: italic;
         }
       }
     }
 
     .voice-actors-section {
-      border-top: 1px solid var(--app-color-light-shade);
-      background: var(--app-color-light);
+      border-top: 1px solid var(--app-color-border-light);
+      background: var(--app-color-step-50);
 
       .voice-actors-list {
         display: flex;

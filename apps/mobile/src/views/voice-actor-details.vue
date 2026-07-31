@@ -288,14 +288,14 @@ const openEditProfile = () => {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--app-text-color, #ffffff);
+  color: var(--app-color-text-primary, #ffffff);
 }
 
 .close-btn {
   background: none;
   border: none;
   font-size: 1.75rem;
-  color: var(--app-color-medium, #94a3b8);
+  color: var(--app-color-text-secondary, #94a3b8);
   cursor: pointer;
   padding: 0;
   line-height: 1;
@@ -303,7 +303,7 @@ const openEditProfile = () => {
 }
 
 .close-btn:hover {
-  color: var(--app-text-color, #ffffff);
+  color: var(--app-color-text-primary, #ffffff);
 }
 
 .modal-body {
@@ -320,18 +320,18 @@ const openEditProfile = () => {
   font-size: 0.85rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
-  color: var(--app-color-medium, #94a3b8);
+  color: var(--app-color-text-secondary, #94a3b8);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .form-group input,
 .form-group textarea {
-  background-color: var(--app-color-light, #0f172a);
+  background-color: var(--app-color-step-50, #0f172a);
   border: 1px solid var(--app-color-light-shade, #334155);
   border-radius: 10px;
   padding: 0.75rem;
-  color: var(--app-text-color, #ffffff);
+  color: var(--app-color-text-primary, #ffffff);
   font-size: 0.9rem;
   outline: none;
   transition: all 0.15s ease;
@@ -385,12 +385,12 @@ const openEditProfile = () => {
 
 .btn-secondary {
   background-color: transparent;
-  color: var(--app-text-color, #ffffff);
+  color: var(--app-color-text-primary, #ffffff);
   border: 1px solid var(--app-color-light-shade, #334155);
 }
 
 .btn-secondary:hover {
-  background-color: var(--app-color-light, #0f172a);
+  background-color: var(--app-color-step-50, #0f172a);
 }
 
 .btn-secondary:disabled {
@@ -434,7 +434,7 @@ const openEditProfile = () => {
 .request-profile-card p {
   margin: 0;
   font-size: 0.8rem;
-  color: var(--app-color-medium, #94a3b8);
+  color: var(--app-color-text-secondary, #94a3b8);
   line-height: 1.3;
 }
 
