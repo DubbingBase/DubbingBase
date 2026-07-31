@@ -37,7 +37,7 @@
           {{ errorMovies }}
         </div>
         <div v-else class="flex gap-4 overflow-x-auto pb-4 custom-scrollbar">
-          <NuxtLink :to="'/movie/' + movie.id" v-for="movie in trendingMovies" :key="movie.id" class="w-48 flex-shrink-0 group cursor-pointer transition-transform hover:-translate-y-1 block">
+          <NuxtLink :to="$localePath('/movie/' + movie.id)" v-for="movie in trendingMovies" :key="movie.id" class="w-48 flex-shrink-0 group cursor-pointer transition-transform hover:-translate-y-1 block">
             <div class="relative w-full h-72 rounded-xl overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800">
               <NuxtImg v-if="movie.poster_path" :src="'https://image.tmdb.org/t/p/w342' + movie.poster_path" :alt="movie.title" format="webp" loading="lazy" class="object-cover w-full h-full group-hover:scale-105 transition duration-300" />
             </div>
@@ -56,7 +56,7 @@
           {{ errorSeries }}
         </div>
         <div v-else class="flex gap-4 overflow-x-auto pb-4 custom-scrollbar">
-          <NuxtLink :to="'/show/' + show.id" v-for="show in trendingSeries" :key="show.id" class="w-48 flex-shrink-0 group cursor-pointer transition-transform hover:-translate-y-1 block">
+          <NuxtLink :to="$localePath('/show/' + show.id)" v-for="show in trendingSeries" :key="show.id" class="w-48 flex-shrink-0 group cursor-pointer transition-transform hover:-translate-y-1 block">
             <div class="relative w-full h-72 rounded-xl overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800">
               <NuxtImg v-if="show.poster_path" :src="'https://image.tmdb.org/t/p/w342' + show.poster_path" :alt="(show as any).name || (show as any).title" format="webp" loading="lazy" class="object-cover w-full h-full group-hover:scale-105 transition duration-300" />
             </div>
@@ -81,7 +81,7 @@
           <NuxtLink
             v-for="va in topVoiceActors"
             :key="va.id"
-            :to="'/voice-actor/' + va.id"
+            :to="$localePath('/voice-actor/' + va.id)"
             class="w-32 flex-shrink-0 flex flex-col items-center gap-3 group transition-transform hover:-translate-y-1"
           >
             <div class="relative w-24 h-24 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-800 border-2 border-transparent group-hover:border-blue-500 transition-colors">

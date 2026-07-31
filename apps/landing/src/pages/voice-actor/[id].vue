@@ -119,7 +119,7 @@
         <template v-if="displayMode === 'list'">
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <NuxtLink
-              :to="`/${item.work.dubbing_projects?.content_type === 'tv' ? 'show' : 'movie'}/${item.media.id}`"
+              :to="$localePath(`/${item.work.dubbing_projects?.content_type === 'tv' ? 'show' : 'movie'}/${item.media.id}`)"
               v-for="item in sortedWorks"
               :key="item.work.id"
               class="bg-gray-800/50 border border-gray-700 rounded-2xl p-4 hover:bg-gray-800 transition duration-300 flex flex-col gap-4 shadow-sm block"
@@ -238,7 +238,7 @@
               class="space-y-4"
             >
               <!-- Actor Group Header -->
-              <NuxtLink :to="`/actor/${works[0]?.data.actor.id}`" class="flex items-center gap-4 border-b border-gray-800 pb-4 hover:bg-gray-800/30 p-2 -ml-2 rounded-xl transition-colors cursor-pointer group">
+              <NuxtLink :to="$localePath(`/actor/${works[0]?.data.actor.id}`)" class="flex items-center gap-4 border-b border-gray-800 pb-4 hover:bg-gray-800/30 p-2 -ml-2 rounded-xl transition-colors cursor-pointer group">
                 <div class="w-14 h-14 rounded-full overflow-hidden bg-gray-700 shadow-md border border-gray-600">
                   <img v-if="works[0]?.data.actor.profile_picture" :src="resolveImageUrl(works[0].data.actor.profile_picture)" :alt="actorName" class="object-cover w-full h-full" />
                   <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-full h-full text-gray-500 p-2">
@@ -256,7 +256,7 @@
               <!-- Actor Works Grid -->
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <NuxtLink
-                  :to="`/${item.work.dubbing_projects?.content_type === 'tv' ? 'show' : 'movie'}/${item.media.id}`"
+                  :to="$localePath(`/${item.work.dubbing_projects?.content_type === 'tv' ? 'show' : 'movie'}/${item.media.id}`)"
                   v-for="item in works"
                   :key="item.work.id"
                   class="bg-gray-800/50 border border-gray-700 rounded-2xl p-4 hover:bg-gray-800 transition duration-300 flex flex-col gap-4 shadow-sm block"

@@ -74,7 +74,7 @@
           <NuxtLink
             v-for="va in uniqueFrenchVoiceActors"
             :key="va.id"
-            :to="`/voice-actor/${va.id}`"
+            :to="$localePath(`/voice-actor/${va.id}`)"
             :class="[
               'flex flex-col items-center p-4 rounded-xl border transition group hover:-translate-y-1',
               va.highlight ? 'bg-blue-900/20 border-blue-500/50 hover:bg-blue-900/40' : 'bg-gray-800/50 border-gray-700 hover:bg-gray-700'
@@ -127,7 +127,7 @@
         
         <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <NuxtLink
-            :to="`/${item.media_type === 'tv' ? 'show' : 'movie'}/${item.id}`"
+            :to="$localePath(`/${item.media_type === 'tv' ? 'show' : 'movie'}/${item.id}`)"
             v-for="item in filteredCredits"
             :key="`${item.media_type}-${item.id}`"
             class="bg-gray-800/50 border border-gray-700 rounded-2xl p-4 hover:bg-gray-800 transition duration-300 flex flex-col gap-4 shadow-sm block group"

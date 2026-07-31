@@ -23,7 +23,9 @@
   },
   "language": {
     "en": "English",
-    "fr": "Français"
+    "fr": "Français",
+    "suggestSwitch": "You seem to prefer English.",
+    "switchNow": "Switch language"
   },
   "footer": {
     "explore": "Explore",

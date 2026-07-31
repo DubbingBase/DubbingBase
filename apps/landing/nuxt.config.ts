@@ -2,6 +2,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { resolve } from "node:path";
 
 export default defineNuxtConfig({
+  rootDir: import.meta.dirname,
   compatibilityDate: "2024-04-03",
 
   nitro: {
@@ -18,12 +19,13 @@ export default defineNuxtConfig({
   css: ["~/assets/main.css"],
 
   modules: [
+    "@nuxt/fonts",
     "@vueuse/nuxt",
     "@nuxtjs/i18n",
     "@nuxtjs/supabase",
     "@nuxtjs/sitemap",
     "@nuxtjs/robots",
-    "@nuxt/image"
+    "@nuxt/image",
   ],
 
   site: {
@@ -37,10 +39,16 @@ export default defineNuxtConfig({
 
   i18n: {
     locales: [
-      { code: "en", file: "en.json" },
-      { code: "fr", file: "fr.json" },
+      { code: "en", file: "en.json", name: "English" },
+      { code: "fr", file: "fr.json", name: "Français" },
     ],
     defaultLocale: "en",
+    strategy: "prefix",
+    detectBrowserLanguage: {
+      useCookie: true,
+      cookieKey: "user_lang",
+      redirectOn: "root", // Only redirect on root path /
+    },
   },
 
   supabase: {

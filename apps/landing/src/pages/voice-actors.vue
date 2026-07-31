@@ -46,7 +46,7 @@
       <NuxtLink 
         v-for="actor in filteredActors" 
         :key="actor.id" 
-        :to="'/voice-actor/' + actor.id"
+        :to="$localePath('/voice-actor/' + actor.id)"
         class="group cursor-pointer flex flex-col items-center"
       >
         <div class="relative w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800 shadow-md transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg border-2 border-transparent group-hover:border-blue-500">

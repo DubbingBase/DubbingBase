@@ -95,7 +95,7 @@
             
             <div class="flex flex-col md:flex-row justify-between md:items-center gap-2 md:gap-4">
               <!-- Physical Actor -->
-              <NuxtLink :to="`/actor/${actor.id}`" class="flex items-center gap-4 flex-1 min-w-0 hover:bg-[#2a2a2a] p-2 -mx-2 md:-ml-2 rounded-xl transition-colors cursor-pointer w-full">
+              <NuxtLink :to="$localePath(`/actor/${actor.id}`)" class="flex items-center gap-4 flex-1 min-w-0 hover:bg-[#2a2a2a] p-2 -mx-2 md:-ml-2 rounded-xl transition-colors cursor-pointer w-full">
                 <img v-if="actor.profile_path" :src="actor.profile_path" class="w-20 h-20 rounded-full object-cover bg-gray-800 flex-shrink-0" alt="Actor" />
                 <div v-else class="w-20 h-20 rounded-full bg-gray-800 flex-shrink-0"></div>
                 <div class="min-w-0">
@@ -118,7 +118,7 @@
                   </div>
                   <div class="min-w-0 flex-1 md:flex-none">
                     <div class="text-[10px] text-[#00E5FF] uppercase tracking-wider">Voix VF</div>
-                    <NuxtLink :to="`/voice-actor/${actor.voiceActor.id}`" class="font-bold text-base md:text-sm text-[#00E5FF] hover:underline truncate block" :title="actor.voiceActor.firstname + ' ' + actor.voiceActor.lastname">{{ actor.voiceActor.firstname }} {{ actor.voiceActor.lastname }}</NuxtLink>
+                    <NuxtLink :to="$localePath(`/voice-actor/${actor.voiceActor.id}`)" class="font-bold text-base md:text-sm text-[#00E5FF] hover:underline truncate block" :title="actor.voiceActor.firstname + ' ' + actor.voiceActor.lastname">{{ actor.voiceActor.firstname }} {{ actor.voiceActor.lastname }}</NuxtLink>
                   </div>
                 </template>
                 <template v-else>
@@ -138,7 +138,7 @@
 
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router';
-import { useAsyncData, useHead, useSupabaseClient } from '#imports';
+
 import { fetchShowData } from '@app/shared-logic';
 import { computed } from 'vue';
 import { ArrowLeftIcon } from 'lucide-vue-next';

@@ -77,7 +77,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
-import { useSupabaseClient } from '#imports';
+
 import { 
   DialogRoot, 
   DialogPortal, 
@@ -85,7 +85,6 @@ import {
   DialogContent 
 } from 'reka-ui';
 import { SearchIcon, Loader2Icon, ImageIcon } from 'lucide-vue-next';
-import { useI18n } from '../composables/useI18n';
 import { fetchSearchData, type SearchResult } from '@app/shared-logic';
 
 const props = defineProps<{
@@ -166,14 +165,16 @@ const getTypeColor = (type: string) => {
   return 'bg-gray-500';
 };
 
+const localePath = useLocalePath();
+
 const handleSelect = (item: SearchResult) => {
   isOpen.value = false;
   if (item.media_type === 'movie') {
-    router.push(`/movie/${item.id}`);
+    router.push(localePath(`/movie/${item.id}`));
   } else if (item.media_type === 'tv') {
-    router.push(`/show/${item.id}`);
+    router.push(localePath(`/show/${item.id}`));
   } else if (item.media_type === 'voice_actor') {
-    router.push(`/voice-actor/${item.id}`);
+    router.push(localePath(`/voice-actor/${item.id}`));
   }
 };
 

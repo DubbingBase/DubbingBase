@@ -22,8 +22,10 @@
     "system": "Système"
   },
   "language": {
-    "en": "Anglais",
-    "fr": "Français"
+    "en": "English",
+    "fr": "Français",
+    "suggestSwitch": "Vous semblez préférer le français.",
+    "switchNow": "Changer de langue"
   },
   "footer": {
     "explore": "Explorer",
