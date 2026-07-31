@@ -5,3 +5,4 @@ export * from "./composables/useMovieData";
 export * from "./composables/useShowData";
 export * from "./composables/useSearchData";
 export * from "./composables/useActorData";
+export * from "./utils/character";

@@ -1,6 +1,6 @@
 import { ref, watch, Ref } from "vue";
 import { actorToPersonData } from "@/utils/convert";
-import { findCharacter } from "@/utils/character";
+import { findCharacter } from "@app/shared-logic";
 
 export function useDeferredCharacters(
   castSource: () => any[] | undefined,
@@ -40,7 +40,7 @@ export function useDeferredCharacters(
               personCopy.roles = [...personCopy.roles];
               for (const role of personCopy.roles) {
                 const image = pics.find((character: any) =>
-                  findCharacter(character, role),
+                  findCharacter(character.name, role.character),
                 )?.image;
                 role.image = image ?? "";
               }

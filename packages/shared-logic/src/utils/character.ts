@@ -1,5 +1,3 @@
-import { Role } from "@/components/PersonItem.vue";
-
 export const normalizeCharacterName = (name: string): string => {
   if (!name) return "";
   return name
@@ -11,16 +9,16 @@ export const normalizeCharacterName = (name: string): string => {
 };
 
 export const findCharacter = (
-  character: { name: string; [key: string]: any },
-  role: Role,
+  characterName: string,
+  roleName: string,
 ): boolean => {
-  if (!character.name || !role.character) return false;
+  if (!characterName || !roleName) return false;
 
-  const charNames = character.name
+  const charNames = characterName
     .split("/")
     .map(normalizeCharacterName)
     .filter(Boolean);
-  const roleNames = role.character
+  const roleNames = roleName
     .split("/")
     .map(normalizeCharacterName)
     .filter(Boolean);

@@ -40,7 +40,7 @@ export class MediaService {
           language
         );
 
-        const characterProfilePictures = await this.getCharacterProfilePictures(
+        const { characters: characterProfilePictures, tvdbId } = await this.getCharacterProfilePictures(
           contentType,
           contentId,
           tmdbMedia,
@@ -49,6 +49,7 @@ export class MediaService {
         return {
           media: processMedia(tmdbMedia),
           characterProfilePictures,
+          tvdbId,
         };
       } catch (err) {
         console.error(
@@ -145,44 +146,87 @@ export class MediaService {
     contentType: "movie" | "tv",
     contentId: number,
     tmdbMedia: any,
-  ): Promise<any[]> {
+  ): Promise<{ characters: any[]; tvdbId: number | null }> {
     const tvdbClient = new TVDBClient(cacheUtils);
     let characterProfilePictures: any[] = [];
     const cacheKey = `tvdb:${contentType}:characters_by_tmdb:${contentId}`;
 
     try {
       // 1. Try Cache First using TMDB ID
-      const cachedCharacters = await cacheUtils.get(cacheKey);
-      if (cachedCharacters) {
-        return cachedCharacters as any[];
+      const cachedResult = await cacheUtils.get(cacheKey);
+      if (cachedResult) {
+        // Handle migration from old cache format (array) to new format (object)
+        if (Array.isArray(cachedResult)) {
+          return { characters: cachedResult, tvdbId: null };
+        }
+        return cachedResult as { characters: any[]; tvdbId: number | null };
       }
 
       // 2. Fetch from TVDB API
       let tvdbId: number | null = null;
       if (tmdbMedia.external_ids?.tvdb_id) {
         tvdbId = tmdbMedia.external_ids.tvdb_id;
-      } else {
+      }
+      
+      if (!tvdbId && tmdbMedia.external_ids?.wikidata_id) {
+        const wikidataId = tmdbMedia.external_ids.wikidata_id;
+        console.log(`[MediaService] Querying Wikidata for TVDB ID for ${wikidataId}`);
+        try {
+          const url = `https://www.wikidata.org/w/api.php?action=wbgetclaims&entity=${wikidataId}&format=json`;
+          const response = await fetch(url);
+          if (response.ok) {
+            const data = await response.json();
+            const property = contentType === "movie" ? "P12196" : "P4835";
+            const claim = data?.claims?.[property]?.[0];
+            if (claim?.mainsnak?.datavalue?.value) {
+              tvdbId = parseInt(claim.mainsnak.datavalue.value, 10);
+              console.log(`[MediaService] Found TVDB ID ${tvdbId} from Wikidata ${property}`);
+            }
+          }
+        } catch (e) {
+          console.error(`Failed to fetch Wikidata for ${wikidataId}`, e);
+        }
+      }
+
+      if (!tvdbId) {
         const searchQuery =
           tmdbMedia.title ||
           tmdbMedia.name ||
           tmdbMedia.original_title ||
           tmdbMedia.original_name;
-        if (searchQuery) {
-          const searchResults = await tvdbClient.searchSeries(searchQuery);
-          if (searchResults.data && searchResults.data.length > 0) {
-            const bestMatch =
-              searchResults.data.find(
-                (item: any) =>
-                  item.name
-                    ?.toLowerCase()
-                    .includes(searchQuery.toLowerCase()) ||
-                  searchQuery.toLowerCase().includes(item.name?.toLowerCase()),
-              ) || searchResults.data[0];
-            tvdbId =
-              contentType === "movie"
-                ? bestMatch?.tvdb_id || bestMatch?.id
-                : bestMatch?.id;
-          }
+
+        console.log(`[MediaService] Searching TVDB for query: "${searchQuery}"`);
+
+        const searchResults = await tvdbClient.searchSeries(searchQuery);
+
+        if (searchResults && searchResults.data) {
+          // Filter by type matching if possible
+          const typeMatchedResults = searchResults.data.filter(
+            (item: any) =>
+              item.type === contentType ||
+              (contentType === "movie" && item.id.startsWith("movie-")) ||
+              (contentType === "tv" && item.id.startsWith("series-")),
+          );
+
+          const bestMatch =
+            typeMatchedResults.find(
+              (item: any) =>
+                item.name
+                  ?.toLowerCase()
+                  .includes(searchQuery.toLowerCase()) ||
+                item.translations?.eng
+                  ?.toLowerCase()
+                  .includes(searchQuery.toLowerCase()),
+            ) || typeMatchedResults[0];
+
+          console.log(`[MediaService] Best Match:`, JSON.stringify(bestMatch, null, 2));
+
+          tvdbId =
+            contentType === "movie"
+              ? bestMatch?.tvdb_id || bestMatch?.id
+              : bestMatch?.id;
+
+          console.log(`[MediaService] Resulting tvdbId: ${tvdbId}`);
         }
       }
 
@@ -211,15 +255,18 @@ export class MediaService {
               image: character.image,
               tvdbPeopleId: character.peopleId,
               movieId: contentType === "movie" ? contentId : undefined,
-              showId: contentType === "tv" ? contentId : undefined,
+              seriesId: contentType === "tv" ? contentId : undefined,
             }));
         }
       }
 
       // 3. Cache the result (even if empty) to prevent redundant API queries
+      const resultObj = { characters: characterProfilePictures, tvdbId };
       cacheUtils
-        .set(cacheKey, characterProfilePictures, "SHORT")
+        .set(cacheKey, resultObj, "SHORT")
         .catch(() => {});
+      
+      return resultObj;
     } catch (e) {
       console.error(
         `Error fetching character profile pictures for ${contentType} ${contentId}:`,
@@ -227,7 +274,7 @@ export class MediaService {
       );
     }
 
-    return characterProfilePictures;
+    return { characters: characterProfilePictures, tvdbId: null };
   }
 
   async getMediaWithVoiceActors(

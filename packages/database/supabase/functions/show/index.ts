@@ -71,7 +71,7 @@ export default {
       const apiDataPromise = mediaService
         .getMediaWithVoiceActors("tv", showId)
         .then(async (result) => {
-          let characterProfilePictures =
+          let { characters: characterProfilePictures, tvdbId } =
             await mediaService.getCharacterProfilePictures(
               "tv",
               showId,
@@ -88,6 +88,7 @@ export default {
             serieWithImageUrls: result.media,
             aggregateCredits: creditsWithImages.credits,
             characterProfilePictures,
+            tvdbId,
           };
         })
         .catch((err) => {
@@ -112,6 +113,7 @@ export default {
             serieWithImageUrls: processMedia(mockSerie),
             aggregateCredits: { cast: [] },
             characterProfilePictures: [],
+            tvdbId: null,
           };
         });
 
@@ -148,7 +150,7 @@ export default {
         dbDataPromise,
       ]);
 
-      const { serieWithImageUrls, aggregateCredits, characterProfilePictures } =
+      const { serieWithImageUrls, aggregateCredits, characterProfilePictures, tvdbId } =
         apiData;
 
       const result = {
@@ -157,6 +159,7 @@ export default {
         characterProfilePictures: characterProfilePictures,
         dubbingProjects: dubbingProjects,
         votes: voteData,
+        tvdbId: tvdbId,
       };
 
       return Response.json(result);

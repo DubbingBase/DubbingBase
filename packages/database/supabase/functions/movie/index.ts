@@ -43,7 +43,7 @@ export default {
       const apiDataPromise = mediaService
         .getMediaWithVoiceActors("movie", movieId)
         .then(async (result) => {
-          const characterProfilePictures =
+          const { characters: characterProfilePictures, tvdbId } =
             await mediaService.getCharacterProfilePictures(
               "movie",
               movieId,
@@ -53,6 +53,7 @@ export default {
             movieWithImageUrls: result.media,
             characterProfilePictures,
             collection: result.collection,
+            tvdbId,
           };
         })
         .catch((err) => {
@@ -77,6 +78,7 @@ export default {
             movieWithImageUrls: processMedia(mockMovie),
             characterProfilePictures: [],
             collection: null,
+            tvdbId: null,
           };
         });
 
@@ -115,7 +117,7 @@ export default {
         dbDataPromise,
       ]);
 
-      const { movieWithImageUrls, characterProfilePictures, collection } =
+      const { movieWithImageUrls, characterProfilePictures, collection, tvdbId } =
         apiData;
 
       const result = {
@@ -124,6 +126,7 @@ export default {
         dubbingProjects: dubbingProjects,
         votes: voteData,
         collection: collection,
+        tvdbId: tvdbId,
       };
 
       return Response.json(result);

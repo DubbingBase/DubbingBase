@@ -112,6 +112,27 @@ _(This command generates types to `packages/database/supabase/functions/_shared/
 
 ---
 
+### 5. External APIs (TMDB, TVDB)
+
+When you need to verify or debug external API data (e.g., missing character images, wrong movie metadata), you should use the local edge functions via `mise run curl-function` rather than querying TMDB or TVDB directly. The backend functions already handle authentication and unify the data from multiple sources (TMDB, TVDB, DB).
+
+- **Querying a Movie**:
+  ```bash
+  mise run curl-function movie --body '{"id": 366672}' | jq .
+  ```
+
+- **Querying a TV Show**:
+  ```bash
+  mise run curl-function show --body '{"id": 1399}' | jq .
+  ```
+
+- **Searching for Media**:
+  ```bash
+  mise run curl-function search --body '{"query": "Paws of Fury"}' | jq .
+  ```
+
+---
+
 ## 🤖 AI Agent Behavior Guidelines
 
 1. **Research First**: Before writing code, inspect existing files, imports, and state to understand the setup.
@@ -120,3 +141,4 @@ _(This command generates types to `packages/database/supabase/functions/_shared/
 4. **Validation**: Test compilation and run formatter tools before completing your turn.
 5. **Local Environment Only**: NEVER execute or run production environment commands or actions (e.g., production database pushes, live deployments, remote mutations). Only target local development environments, and do NOT suggest production actions unless strictly and explicitly asked by the user.
 6. **Token Saving**: Use `rtk` (binary) (https://github.com/rtk-ai/rtk) to save tokens whenever possible.
+7. **Scratch & Test Scripts**: Do NOT leave one-off test scripts (like `test_*.ts`) in the root of the project. If you need a script to test an external API or debug a function, place it in `scripts/scratch/` or use the `.gemini/scratch` folder. For testing edge functions locally, always prioritize using `mise run curl-function` over writing manual scripts.
