@@ -23,6 +23,15 @@
     "wrangler": "^4.115.0"
   },
   "packageManager": "pnpm@9.14.2",
+  "pnpm": {
+    "packageExtensions": {
+      "vue-sonner": {
+        "peerDependencies": {
+          "nuxt": "-"
+        }
+      }
+    }
+  },
   "workspaces": [
     "apps/*",
     "packages/*"

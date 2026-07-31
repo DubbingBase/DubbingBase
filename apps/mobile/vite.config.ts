@@ -16,6 +16,13 @@ export default ({ mode }) => {
     server: {
       port: 1420,
       strictPort: true,
+      proxy: {
+        "/supabase-api": {
+          target: env.VITE_SUPABASE_URL || "http://127.0.0.1:54321",
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/supabase-api/, ""),
+        },
+      },
     },
     plugins: [
       vue({
@@ -39,6 +46,7 @@ export default ({ mode }) => {
           "../../packages/database/supabase/functions",
         ),
       },
+      dedupe: ["vue-router", "@ionic/vue-router", "vue"],
     },
     test: {
       globals: true,

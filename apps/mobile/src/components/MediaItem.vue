@@ -1,5 +1,6 @@
 <template>
   <router-link
+    v-if="routeName && !loading"
     class="media-item"
     :to="{ name: routeName, params: routeParams }"
     :style="{
@@ -10,15 +11,28 @@
   >
     <div class="poster">
       <img
-        v-if="!loading"
         :src="hasError ? fallbackImagePath : (imagePath || fallbackImagePath)"
         @error="onImageError"
         alt=""
         :style="{ width: widthStyle, height: heightStyle }"
       />
+    </div>
+    <div class="caption" v-if="title">
+      {{ title }}
+    </div>
+  </router-link>
+  <div
+    v-else
+    class="media-item"
+    :style="{
+      flexBasis: widthStyle,
+      minWidth: widthStyle,
+      maxWidth: widthStyle,
+    }"
+  >
+    <div class="poster">
       <AppSkeleton
         :animated="true"
-        v-else
         :style="{
           width: widthStyle,
           height: heightStyle,
@@ -28,10 +42,8 @@
       ></AppSkeleton>
     </div>
     <div class="caption" v-if="title">
-      <template v-if="!loading">{{ title }}</template>
       <AppSkeleton
         :animated="true"
-        v-else
         :style="{
           width: '100%',
           height: '42px',
@@ -40,7 +52,7 @@
         }"
       ></AppSkeleton>
     </div>
-  </router-link>
+  </div>
 </template>
 
 <script lang="ts" setup>

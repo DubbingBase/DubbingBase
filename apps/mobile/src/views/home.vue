@@ -184,7 +184,7 @@ import { useHomeData } from "@app/shared-logic";
 import MediaItem from "@/components/MediaItem.vue";
 import { getAvatarFallbackUrl } from "@/utils/image";
 import { supabase } from "../api/supabase";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import SearchIcon from "~icons/lucide/search";
 import SettingsIcon from "~icons/lucide/settings";

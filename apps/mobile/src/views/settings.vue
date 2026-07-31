@@ -1,112 +1,123 @@
 <template>
   <ion-page>
-  
-  <AppPage>
-    <AppHeader>
-      <AppToolbar>
-        <template #start>
-          <AppBackButton />
-        </template>
-        <AppTitle>{{ t('settings.title') }}</AppTitle>
-      </AppToolbar>
-    </AppHeader>
-    <AppContent>
-      <div class="settings-container app-padding">
-        <template v-if="user && user.is_anonymous === false">
-          <div class="settings-section">
-            <h3>Appearance</h3>
-            <div class="settings-card clickable" @click="toggleTheme">
-              <div class="settings-row">
-                <div class="settings-label-group">
-                  <Palette class="settings-icon text-primary" />
-                  <span class="settings-label">{{ t('settings.theme') || 'Theme' }}</span>
-                </div>
-                <div class="theme-toggle">
-                  <SunIcon v-if="currentTheme === 'theme-light'" class="app-icon text-warning" />
-                  <MoonIcon v-else class="app-icon text-primary" />
+    <AppPage>
+      <AppHeader>
+        <AppToolbar>
+          <template #start>
+            <AppBackButton />
+          </template>
+          <AppTitle>{{ t("settings.title") }}</AppTitle>
+        </AppToolbar>
+      </AppHeader>
+      <AppContent>
+        <div class="settings-container app-padding">
+          <template v-if="user && user.is_anonymous === false">
+            <div class="settings-section">
+              <h3>Appearance</h3>
+              <div class="settings-card clickable" @click="toggleTheme">
+                <div class="settings-row">
+                  <div class="settings-label-group">
+                    <Palette class="settings-icon text-primary" />
+                    <span class="settings-label">{{
+                      t("settings.theme") || "Theme"
+                    }}</span>
+                  </div>
+                  <div class="theme-toggle">
+                    <SunIcon
+                      v-if="currentTheme === 'theme-light'"
+                      class="app-icon text-warning"
+                    />
+                    <MoonIcon v-else class="app-icon text-primary" />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <div class="settings-section">
-            <h3>Account</h3>
-            <div class="settings-card">
-              <div class="settings-row">
-                <div class="settings-label-group">
-                  <Mail class="settings-icon text-muted" />
-                  <span class="settings-label">{{ t('settings.email') }}</span>
+            <div class="settings-section">
+              <h3>Account</h3>
+              <div class="settings-card">
+                <div class="settings-row">
+                  <div class="settings-label-group">
+                    <Mail class="settings-icon text-muted" />
+                    <span class="settings-label">{{
+                      t("settings.email")
+                    }}</span>
+                  </div>
+                  <span class="settings-value">{{ user?.email }}</span>
                 </div>
-                <span class="settings-value">{{ user?.email }}</span>
               </div>
             </div>
-          </div>
 
-          <div class="settings-section">
-            <h3>Support</h3>
-            <div class="settings-card clickable" @click="navigateToAbout">
-              <div class="settings-row">
-                <div class="settings-label-group">
-                  <Info class="settings-icon text-info" />
-                  <span class="settings-label">{{ t('settings.about') }}</span>
+            <div class="settings-section">
+              <h3>Support</h3>
+              <div class="settings-card clickable" @click="navigateToAbout">
+                <div class="settings-row">
+                  <div class="settings-label-group">
+                    <Info class="settings-icon text-info" />
+                    <span class="settings-label">{{
+                      t("settings.about")
+                    }}</span>
+                  </div>
+                  <ChevronRight class="app-icon arrow" />
                 </div>
-                <ChevronRight class="app-icon arrow" />
               </div>
             </div>
-          </div>
 
-          <div class="settings-section ion-margin-top">
-            <div class="settings-card clickable danger" @click="logout">
-              <div class="settings-row center">
-                <div class="settings-label-group center">
-                  <LogOut class="settings-icon danger-text" />
-                  <span class="settings-label danger-text">{{ t('settings.logout') }}</span>
+            <div class="settings-section ion-margin-top">
+              <div class="settings-card clickable danger" @click="logout">
+                <div class="settings-row center">
+                  <div class="settings-label-group center">
+                    <LogOut class="settings-icon danger-text" />
+                    <span class="settings-label danger-text">{{
+                      t("settings.logout")
+                    }}</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </template>
-        
-        <template v-else>
-          <div class="settings-section empty-state">
-            <p class="login-prompt">You are currently not logged in.</p>
-            <div class="settings-card clickable primary" @click="login">
-              <div class="settings-row center">
-                <div class="settings-label-group center">
-                  <span class="settings-label primary-text">{{ t('settings.login') }}</span>
+          </template>
+
+          <template v-else>
+            <div class="settings-section empty-state">
+              <p class="login-prompt">You are currently not logged in.</p>
+              <div class="settings-card clickable primary" @click="login">
+                <div class="settings-row center">
+                  <div class="settings-label-group center">
+                    <span class="settings-label primary-text">{{
+                      t("settings.login")
+                    }}</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </template>
-      </div>
-    </AppContent>
-  </AppPage>
-  
+          </template>
+        </div>
+      </AppContent>
+    </AppPage>
   </ion-page>
 </template>
 
 <script setup lang="ts">
 import { IonPage } from "@ionic/vue";
-import AppPage from '@/components/common/layout/AppPage.vue';
-import AppHeader from '@/components/common/layout/AppHeader.vue';
-import AppToolbar from '@/components/common/layout/AppToolbar.vue';
-import AppTitle from '@/components/common/layout/AppTitle.vue';
-import AppContent from '@/components/common/layout/AppContent.vue';
-import AppBackButton from '@/components/common/AppBackButton.vue';
-import ChevronRight from '~icons/lucide/chevron-right';
-import SunIcon from '~icons/lucide/sun';
-import MoonIcon from '~icons/lucide/moon';
-import Palette from '~icons/lucide/palette';
-import Mail from '~icons/lucide/mail';
-import Info from '~icons/lucide/info';
-import LogOut from '~icons/lucide/log-out';
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { useI18n } from 'vue-i18n';
-import { useTheme } from '@/composables/useTheme';
+import AppPage from "@/components/common/layout/AppPage.vue";
+import AppHeader from "@/components/common/layout/AppHeader.vue";
+import AppToolbar from "@/components/common/layout/AppToolbar.vue";
+import AppTitle from "@/components/common/layout/AppTitle.vue";
+import AppContent from "@/components/common/layout/AppContent.vue";
+import AppBackButton from "@/components/common/AppBackButton.vue";
+import ChevronRight from "~icons/lucide/chevron-right";
+import SunIcon from "~icons/lucide/sun";
+import MoonIcon from "~icons/lucide/moon";
+import Palette from "~icons/lucide/palette";
+import Mail from "~icons/lucide/mail";
+import Info from "~icons/lucide/info";
+import LogOut from "~icons/lucide/log-out";
+import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
+import { useTheme } from "@/composables/useTheme";
 
-import { supabase } from '@/api/supabase';
+import { supabase } from "@/api/supabase";
 
 const user = ref<{ is_anonymous?: boolean; email?: string } | null>(null);
 const router = useRouter();
@@ -114,7 +125,9 @@ const { t } = useI18n();
 const { currentTheme, toggleTheme } = useTheme();
 
 const fetchUser = async () => {
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   user.value = session?.user || null;
 };
 
@@ -122,15 +135,15 @@ onMounted(fetchUser);
 
 const logout = async () => {
   await supabase.auth.signOut();
-  router.push({ name: 'Login' });
+  router.push({ name: "Login" });
 };
 
 const login = () => {
-  router.push({ name: 'Login' });
+  router.push({ name: "Login" });
 };
 
 const navigateToAbout = () => {
-  router.push({ name: 'About' });
+  router.push({ name: "About" });
 };
 </script>
 
@@ -222,7 +235,9 @@ const navigateToAbout = () => {
 .settings-card.clickable:hover {
   background: rgba(255, 255, 255, 0.05);
   transform: translateY(-1px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .settings-card.clickable:active {

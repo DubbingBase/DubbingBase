@@ -103,6 +103,7 @@ import { useI18n } from "vue-i18n";
 import { useVoiceActorManagement } from "@/composables/useVoiceActorManagement";
 
 const authStore = useAuthStore();
+
 const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();

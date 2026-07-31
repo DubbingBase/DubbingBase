@@ -122,7 +122,6 @@ router.beforeEach(
   async (
     to: RouteLocationNormalized,
     from: RouteLocationNormalized,
-    next: NavigationGuardNext,
   ) => {
     const authStore = useAuthStore();
 
@@ -132,12 +131,12 @@ router.beforeEach(
     if (to.meta.requiresAdmin) {
       if (!authStore.isAdmin) {
         // User is not an admin, redirect to home
-        return next({ name: "Home" });
+        return { name: "Home" };
       }
     }
 
     // Allow access to the route
-    next();
+    return true;
   },
 );
 
