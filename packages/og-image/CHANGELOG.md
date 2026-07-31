@@ -1,5 +1,11 @@
 # @app/og-image
 
+## 1.0.11
+
+### Patch Changes
+
+- sd
+
 ## 1.0.10
 
 ### Patch Changes
