@@ -1,5 +1,11 @@
 # @app/landing
 
+## 1.0.16
+
+### Patch Changes
+
+- 0a19c44: sd
+
 ## 1.0.15
 
 ### Patch Changes
