@@ -25,6 +25,11 @@ export function buildTmdbImageUrl(
   return `${TMDB_CONFIG.baseUrl}/${size}/${cleanPath}`;
 }
 
+export const cleanCharacterName = (name: string): string => {
+  if (!name) return name;
+  return name.replace(/\s*\([^)]*(?:voice|uncredited|voix|non cr[ée]dit[ée]?)[^)]*\)\s*/gi, '').trim();
+};
+
 export const processMedia = (media: any) => {
   if (!media) return null;
 
@@ -39,6 +44,7 @@ export const processMedia = (media: any) => {
           ...media.credits,
           cast: media.credits.cast?.map((castMember: any) => ({
             ...castMember,
+            character: cleanCharacterName(castMember.character),
             profile_path: buildTmdbImageUrl(castMember.profile_path),
           })),
         }
@@ -46,6 +52,7 @@ export const processMedia = (media: any) => {
     guest_stars: media.guest_stars
       ? media.guest_stars.map((guest: any) => ({
           ...guest,
+          character: cleanCharacterName(guest.character),
           profile_path: buildTmdbImageUrl(guest.profile_path),
         }))
       : [],

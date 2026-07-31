@@ -1,11 +1,8 @@
 # TODOs
 
-Create a test for the character matching script
+Do og image for movie, show and actor
 Add tvdb and tmdbid to the dubbing project
 Add tvdb character id to the work row
-There is no local redis cache
-When doing your fetches, save the output locally so you don't have to fetch it again
-You can stip "voice" and related from character name
 
 ## Bugs & UI Fixes
 - Fix scrolling bug caused by swipe interactions

@@ -53,18 +53,19 @@ function buildVoiceActorOg(params: {
   name: string;
   imageDataUri: string | null;
   worksCount: number;
+  nationality: string | null;
 }) {
   const avatarNode = params.imageDataUri
     ? {
         type: "img",
         props: {
           src: params.imageDataUri,
-          width: 240,
-          height: 240,
+          width: 360,
+          height: 360,
           style: {
-            borderRadius: "120px",
+            borderRadius: "180px",
             objectFit: "cover",
-            border: "4px solid rgba(148, 163, 184, 0.3)",
+            border: "8px solid rgba(148, 163, 184, 0.3)",
             boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.6)",
           },
         },
@@ -76,13 +77,13 @@ function buildVoiceActorOg(params: {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            width: "240px",
-            height: "240px",
-            borderRadius: "120px",
+            width: "360px",
+            height: "360px",
+            borderRadius: "180px",
             background: "linear-gradient(135deg, #334155, #475569)",
-            border: "4px solid rgba(148, 163, 184, 0.3)",
+            border: "8px solid rgba(148, 163, 184, 0.3)",
             color: "#64748b",
-            fontSize: "100px",
+            fontSize: "150px",
           },
           children: params.name.charAt(0).toUpperCase(),
         },
@@ -94,13 +95,14 @@ function buildVoiceActorOg(params: {
       style: {
         display: "flex",
         flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
         width: "1200px",
         height: "630px",
-        background:
-          "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
+        background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
         color: "white",
         fontFamily: "Inter",
-        padding: "48px",
+        padding: "64px 80px",
       },
       children: [
         // Left: Avatar
@@ -111,7 +113,7 @@ function buildVoiceActorOg(params: {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              width: "320px",
+              width: "380px",
               flexShrink: 0,
             },
             children: avatarNode,
@@ -126,7 +128,7 @@ function buildVoiceActorOg(params: {
               flexDirection: "column",
               justifyContent: "center",
               flex: 1,
-              paddingLeft: "32px",
+              paddingLeft: "64px",
             },
             children: [
               // "VOICE ACTOR" label
@@ -134,13 +136,13 @@ function buildVoiceActorOg(params: {
                 type: "p",
                 props: {
                   style: {
-                    fontSize: "20px",
+                    fontSize: "28px",
                     color: "#94a3b8",
-                    margin: "0 0 12px 0",
-                    letterSpacing: "2px",
+                    margin: "0 0 16px 0",
+                    letterSpacing: "3px",
                     textTransform: "uppercase" as const,
                   },
-                  children: "Voice Actor",
+                  children: params.nationality ? `Voice Actor • ${params.nationality}` : "Voice Actor",
                 },
               },
               // Name
@@ -148,11 +150,14 @@ function buildVoiceActorOg(params: {
                 type: "p",
                 props: {
                   style: {
-                    fontSize: "56px",
+                    fontSize: "68px",
                     fontWeight: 700,
                     margin: "0",
                     color: "#f1f5f9",
                     lineHeight: 1.1,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
                   },
                   children: params.name,
                 },
@@ -164,7 +169,7 @@ function buildVoiceActorOg(params: {
                   style: {
                     display: "flex",
                     alignItems: "center",
-                    marginTop: "24px",
+                    marginTop: "32px",
                   },
                   children: {
                     type: "div",
@@ -173,15 +178,15 @@ function buildVoiceActorOg(params: {
                         display: "flex",
                         alignItems: "center",
                         background: "rgba(99, 102, 241, 0.15)",
-                        border: "1px solid rgba(99, 102, 241, 0.3)",
-                        borderRadius: "12px",
-                        padding: "10px 20px",
+                        border: "2px solid rgba(99, 102, 241, 0.3)",
+                        borderRadius: "16px",
+                        padding: "16px 32px",
                       },
                       children: {
                         type: "p",
                         props: {
                           style: {
-                            fontSize: "24px",
+                            fontSize: "32px",
                             color: "#a5b4fc",
                             margin: "0",
                             fontWeight: 600,
@@ -198,9 +203,10 @@ function buildVoiceActorOg(params: {
                 type: "p",
                 props: {
                   style: {
-                    fontSize: "18px",
+                    fontSize: "24px",
                     color: "#475569",
-                    margin: "40px 0 0 0",
+                    margin: "64px 0 0 0",
+                    fontWeight: 600,
                   },
                   children: "DubbingBase",
                 },
@@ -235,7 +241,7 @@ export default {
         // Use supabaseAdmin since auth: "none" doesn't provide ctx.supabase
         const { data: voiceActor, error } = await ctx.supabaseAdmin
           .from("voice_actors")
-          .select("id, firstname, lastname, profile_picture, work(id)")
+          .select("id, firstname, lastname, profile_picture, nationality, work(id)")
           .eq("id", Number(id))
           .single();
 
@@ -246,6 +252,7 @@ export default {
         const name =
           `${voiceActor.firstname} ${voiceActor.lastname}`.trim() || "Unknown";
         const worksCount = voiceActor.work?.length ?? 0;
+        const nationality = voiceActor.nationality;
 
         // Build the profile picture URL using the internal SUPABASE_URL
         // (buildSupabaseImageUrl can't be used here: it relies on ctx.supabase
@@ -260,7 +267,7 @@ export default {
           imageDataUri = await fetchImageAsDataUri(storageUrl);
         }
 
-        template = buildVoiceActorOg({ name, imageDataUri, worksCount });
+        template = buildVoiceActorOg({ name, imageDataUri, worksCount, nationality });
       } else {
         return createErrorResponse(`Unsupported type: ${type}`, 400);
       }

@@ -43,7 +43,6 @@
           :parentLoading="isLoading"
         />
 
-        <LoadingSpinner v-if="isLoading" />
         <div
           v-if="fetchError || (queueStatus === 'failed' && queueErrorMessage)"
           class="text-center text-red-500 mt-4"

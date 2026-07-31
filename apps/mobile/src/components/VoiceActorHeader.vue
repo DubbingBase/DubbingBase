@@ -192,6 +192,7 @@ const uploadImage = async () => {
     font-weight: 700;
     line-height: 1.2;
     margin: 0;
+    color: var(--app-color-text-primary);
 
     @media (max-width: 768px) {
       font-size: 1.3rem;

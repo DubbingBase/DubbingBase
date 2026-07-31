@@ -85,6 +85,7 @@ const releaseDate = computed(() => {
       margin: 0 0 6px 0;
       font-size: 0.95rem;
       font-weight: 600;
+      color: var(--app-color-text-primary);
 
       .title-link {
         color: var(--app-color-text-secondary);

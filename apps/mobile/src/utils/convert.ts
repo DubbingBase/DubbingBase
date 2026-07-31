@@ -1,6 +1,11 @@
 import { PersonData, Role } from "@/components/PersonItem.vue";
 import { Actor } from "@supabase/functions/_shared/types";
 
+export const cleanCharacterName = (name: string): string => {
+  if (!name) return name;
+  return name.replace(/\s*\([^)]*(?:voice|uncredited|voix|non cr[ée]dit[ée]?)[^)]*\)\s*/gi, '').trim();
+};
+
 export const actorToPersonData = <
   T extends {
     id: number;
@@ -19,14 +24,14 @@ export const actorToPersonData = <
   if (actor.roles) {
     roles.push(
       ...actor.roles.map((role) => ({
-        character: role.character,
+        character: cleanCharacterName(role.character),
         image: "",
       })),
     );
   }
   if (actor.character) {
     roles.push({
-      character: actor.character,
+      character: cleanCharacterName(actor.character),
       image: "",
     });
   }

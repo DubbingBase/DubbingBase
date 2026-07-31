@@ -253,8 +253,12 @@ export class TVDBClient implements ITVDBClient {
     const result = await this.get("search", { query });
 
     // Cache the result with MEDIUM TTL (6 hours for search results)
-    await this.cache.set(cacheKey, result, "MEDIUM");
-    debugLog(`TVDB cache set for search query: ${query}`);
+    if (result && result.data && result.data.length > 0) {
+      await this.cache.set(cacheKey, result, "MEDIUM");
+      debugLog(`TVDB cache set for search query: ${query}`);
+    } else {
+      debugLog(`TVDB search query returned empty, not caching: ${query}`);
+    }
 
     return result;
   }

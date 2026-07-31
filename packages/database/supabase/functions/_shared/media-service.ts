@@ -1,7 +1,7 @@
 import { DatabaseClient } from "./database.ts";
 import { ITMDBClient } from "./interfaces.ts";
 import { processVoiceActor } from "./supabase-urls.ts";
-import { processMedia } from "./tmdb-urls.ts";
+import { processMedia, cleanCharacterName } from "./tmdb-urls.ts";
 import { TVDBClient } from "./tvdb.ts";
 import { cacheUtils, wikipediaCache } from "./index.ts";
 
@@ -251,7 +251,7 @@ export class MediaService {
             .filter((character: any) => character.image)
             .map((character: any) => ({
               id: character.id,
-              name: character.name,
+              name: cleanCharacterName(character.name),
               image: character.image,
               tvdbPeopleId: character.peopleId,
               movieId: contentType === "movie" ? contentId : undefined,
@@ -260,11 +260,15 @@ export class MediaService {
         }
       }
 
-      // 3. Cache the result (even if empty) to prevent redundant API queries
+      // 3. Cache the result only if we found a match, to allow retries if it failed
       const resultObj = { characters: characterProfilePictures, tvdbId };
-      cacheUtils
-        .set(cacheKey, resultObj, "SHORT")
-        .catch(() => {});
+      if (tvdbId !== null) {
+        cacheUtils
+          .set(cacheKey, resultObj, "SHORT")
+          .catch(() => {});
+      } else {
+        console.log(`[MediaService] tvdbId is null for ${contentType} ${contentId}, not caching.`);
+      }
       
       return resultObj;
     } catch (e) {

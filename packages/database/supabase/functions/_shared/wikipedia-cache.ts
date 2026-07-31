@@ -163,11 +163,16 @@ export class WikipediaCache {
           `Wikipedia API error: ${response.status} ${response.statusText}`,
         );
       }
-
+      
       const data = await response.json();
 
-      // Cache the result
-      await this.cache.set(cacheKey, data, ttl);
+      // Do not cache if the search result is empty
+      if (data && Array.isArray(data.search) && data.search.length === 0) {
+        console.log(`[WIKIPEDIA CACHE] Search query returned empty, not caching: ${cacheKey}`);
+      } else {
+        // Cache the result
+        await this.cache.set(cacheKey, data, ttl);
+      }
 
       return data;
     } catch (error) {

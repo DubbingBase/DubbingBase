@@ -202,7 +202,22 @@ export interface DubbingProject {
   crew: CrewMember[];
 }
 
-const projects = computed(() => props.projects || []);
+const projects = computed(() => {
+  const projs = [...(props.projects || [])];
+  const currentLocale = locale.value.toLowerCase();
+  return projs.sort((a, b) => {
+    const aIsPref = a.language?.toLowerCase().startsWith(currentLocale) ? 1 : 0;
+    const bIsPref = b.language?.toLowerCase().startsWith(currentLocale) ? 1 : 0;
+    
+    if (aIsPref !== bIsPref) {
+      return bIsPref - aIsPref;
+    }
+    
+    const aWorks = a.works?.length || 0;
+    const bWorks = b.works?.length || 0;
+    return bWorks - aWorks;
+  });
+});
 const error = ref<string | null>(null);
 
 const goToEditProject = () => {
@@ -383,18 +398,17 @@ const groupCrewByJob = (crew: CrewMember[]) => {
   color: var(--app-color-text-primary);
   border: 1px solid var(--app-color-border);
   border-radius: 8px;
-  padding: 8px 36px 8px 16px;
+  /* Use Ionic custom properties to control internal spacing */
+  --padding-start: 12px;
+  --padding-end: 12px;
+  --padding-top: 8px;
+  --padding-bottom: 8px;
   font-size: 14px;
   font-weight: 600;
   outline: none;
   width: 100%;
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a0a0a0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 16px;
+  min-height: 36px;
   cursor: pointer;
-  text-align: center;
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease;
@@ -402,6 +416,19 @@ const groupCrewByJob = (crew: CrewMember[]) => {
   &:hover,
   &:focus {
     border-color: var(--app-color-primary);
+  }
+
+  &::part(container) {
+    width: 100%;
+  }
+
+  &::part(text) {
+    flex: 1;
+    text-align: left;
+  }
+
+  &::part(icon) {
+    margin-left: auto;
   }
 }
 </style>
