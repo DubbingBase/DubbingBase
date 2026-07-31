@@ -11,7 +11,7 @@
             v-model="searchQuery" 
             type="text" 
             placeholder="Rechercher un comédien..." 
-            class="w-full bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white border-0 rounded-full px-6 py-3 focus:ring-2 focus:ring-blue-500 transition-shadow outline-none"
+            class="w-full bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white border-0 rounded-full px-6 py-3 focus:ring-2 focus:ring-cyan-500 transition-shadow outline-none"
           />
           <div class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -49,7 +49,7 @@
         :to="$localePath('/voice-actor/' + actor.id)"
         class="group cursor-pointer flex flex-col items-center"
       >
-        <div class="relative w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800 shadow-md transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg border-2 border-transparent group-hover:border-blue-500">
+        <div class="relative w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800 shadow-md transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg border-2 border-transparent group-hover:border-cyan-500">
           <NuxtImg 
             v-if="actor.profile_picture_url" 
             :src="actor.profile_picture_url" 
@@ -62,7 +62,7 @@
             {{ actor.firstname.charAt(0) }}{{ actor.lastname.charAt(0) }}
           </div>
         </div>
-        <h3 class="font-semibold text-sm md:text-base text-gray-800 dark:text-gray-200 text-center group-hover:text-blue-500 transition-colors">
+        <h3 class="font-semibold text-sm md:text-base text-gray-800 dark:text-gray-200 text-center group-hover:text-cyan-500 transition-colors">
           {{ actor.firstname }} {{ actor.lastname }}
         </h3>
       </NuxtLink>

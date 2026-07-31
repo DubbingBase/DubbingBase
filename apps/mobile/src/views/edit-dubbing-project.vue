@@ -39,26 +39,26 @@
                 class="bg-[var(--app-color-step-50)] border border-[var(--app-color-border)] rounded-xl p-4 flex items-center justify-between"
               >
                 <div>
-                  <div class="text-sm font-bold text-[var(--app-color-text-primary)]">
+                  <div class="text-sm font-bold text-[color:var(--app-color-text-primary)]">
                     {{ mediaTitle || "Loading media title..." }}
                   </div>
                   <div
                     class="flex flex-wrap items-center gap-3 mt-2 text-xs text-[var(--app-color-text-secondary)]"
                   >
                     <span
-                      class="px-2 py-0.5 bg-[var(--app-color-step-200)] rounded uppercase font-bold text-[10px] text-blue-400"
+                      class="px-2 py-0.5 bg-[var(--app-color-step-200)] rounded uppercase font-bold text-[10px] text-[var(--app-color-primary)]"
                     >
                       {{ contentType }}
                     </span>
                     <span
                       >TMDB ID:
-                      <strong class="text-[var(--app-color-text-primary)]">{{
+                      <strong class="text-[color:var(--app-color-text-primary)]">{{
                         contentId || id
                       }}</strong></span
                     >
                     <span
                       >Language:
-                      <strong class="text-[var(--app-color-text-primary)]">{{
+                      <strong class="text-[color:var(--app-color-text-primary)]">{{
                         getLanguageDisplayName(language || 'fr-FR', locale)
                       }}</strong></span
                     >
@@ -68,7 +68,7 @@
                   v-if="!isEditMode"
                   type="button"
                   @click="showMediaSearchModal = true"
-                  class="text-xs text-blue-400 font-semibold"
+                  class="text-xs text-[var(--app-color-primary)] font-semibold"
                 >
                   Change ↵
                 </button>
@@ -88,7 +88,7 @@
                     <router-link
                       v-if="selectedStudioId"
                       :to="`/studio/${selectedStudioId}`"
-                      class="text-xs text-blue-400 font-semibold hover:underline flex items-center gap-1"
+                      class="text-xs text-[var(--app-color-primary)] font-semibold hover:underline flex items-center gap-1"
                     >
                       <span>View Studio</span>
                       <span>↗</span>
@@ -102,10 +102,10 @@
                   class="picker-button"
                 >
                   <div class="flex items-center gap-2 truncate">
-                    <Building2 class="w-4 h-4 text-blue-400 flex-shrink-0" />
+                    <Building2 class="w-4 h-4 text-[var(--app-color-primary)] flex-shrink-0" />
                     <span
                       v-if="studio"
-                      class="truncate font-semibold text-[var(--app-color-text-primary)]"
+                      class="truncate font-semibold text-[color:var(--app-color-text-primary)]"
                       >{{ studio }}</span
                     >
                     <span v-else class="text-slate-400"
@@ -159,7 +159,7 @@
                       <div class="flex items-center gap-2 truncate">
                         <span
                           v-if="row.job_id"
-                          class="truncate font-semibold text-[var(--app-color-text-primary)]"
+                          class="truncate font-semibold text-[color:var(--app-color-text-primary)]"
                         >
                           {{ getJobDisplayName(row.job_id) }}
                         </span>
@@ -182,10 +182,10 @@
                         class="picker-button flex-1"
                       >
                         <div class="flex items-center gap-2 truncate">
-                          <User class="w-4 h-4 text-blue-400 flex-shrink-0" />
+                          <User class="w-4 h-4 text-[var(--app-color-primary)] flex-shrink-0" />
                           <span
                             v-if="row.person_id"
-                            class="truncate font-semibold text-[var(--app-color-text-primary)]"
+                            class="truncate font-semibold text-[color:var(--app-color-text-primary)]"
                           >
                             {{ getCrewDisplayName(row) }}
                           </span>
@@ -252,7 +252,7 @@
                         <User class="w-4 h-4 text-indigo-400 flex-shrink-0" />
                         <span
                           v-if="row.actor_id"
-                          class="truncate font-semibold text-[var(--app-color-text-primary)]"
+                          class="truncate font-semibold text-[color:var(--app-color-text-primary)]"
                         >
                           {{ getActorDisplayName(row) }}
                         </span>
@@ -276,10 +276,10 @@
                         class="picker-button flex-1"
                       >
                         <div class="flex items-center gap-2 truncate">
-                          <Mic class="w-4 h-4 text-blue-400 flex-shrink-0" />
+                          <Mic class="w-4 h-4 text-[var(--app-color-primary)] flex-shrink-0" />
                           <span
                             v-if="row.voice_actor_id"
-                            class="truncate font-semibold text-[var(--app-color-text-primary)]"
+                            class="truncate font-semibold text-[color:var(--app-color-text-primary)]"
                           >
                             {{ getVoiceActorDisplayName(row) }}
                           </span>
@@ -386,7 +386,7 @@
                   />
                 </div>
                 <div class="flex-1 min-w-0">
-                  <div class="text-xs font-bold text-[var(--app-color-text-primary)] truncate">
+                  <div class="text-xs font-bold text-[color:var(--app-color-text-primary)] truncate">
                     {{ item.title || item.name }}
                   </div>
                   <div
@@ -404,7 +404,7 @@
                     </span>
                   </div>
                 </div>
-                <span class="text-xs text-blue-400 font-semibold"
+                <span class="text-xs text-[var(--app-color-primary)] font-semibold"
                   >Select ↵</span
                 >
               </div>

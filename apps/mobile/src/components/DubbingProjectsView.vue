@@ -242,6 +242,8 @@ const getVoiceActorsForProject = (project: DubbingProject) => {
       id: work.voice_actor_id!,
       tmdb_id: Number(work.actor_id),
       actor_id: Number(work.actor_id),
+      firstname: voiceActor.firstname,
+      lastname: voiceActor.lastname,
       name: `${voiceActor.firstname || ""} ${voiceActor.lastname || ""}`.trim(),
       profile_picture: voiceActor.profile_picture ?? undefined,
       role: {

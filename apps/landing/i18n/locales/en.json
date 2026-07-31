@@ -44,5 +44,30 @@
   },
   "about": {
     "title": "About"
+  },
+  "home": {
+    "hero": {
+      "title": "Welcome.",
+      "subtitle": "Millions of movies, TV shows and voice actors to discover. Explore now.",
+      "searchPlaceholder": "Search for a movie, tv show, person...",
+      "searchButton": "Search"
+    },
+    "trendingMovies": "Trending Movies",
+    "trendingSeries": "Trending Series",
+    "topVoiceActors": "Top Voice Actors"
+  },
+  "details": {
+    "back": "Back",
+    "synopsis": "Overview",
+    "noSynopsis": "No overview available.",
+    "originalTitle": "Original Title",
+    "rating": "Rating",
+    "castAndCrew": "Cast & Voice Actors",
+    "dubbing": "Dubbing {lang}",
+    "unknownCharacter": "Unknown character",
+    "actor": "Actor",
+    "character": "Character",
+    "voiceActor": "Voice Actor",
+    "notSpecified": "Not specified"
   }
 }

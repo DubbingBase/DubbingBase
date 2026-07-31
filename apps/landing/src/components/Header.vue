@@ -1,11 +1,12 @@
 <template>
   <header
-    class="flex justify-between items-center mb-6 md:mb-12 py-4 px-4 md:py-6 md:px-6 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#121212] transition-colors"
+    class="sticky top-0 z-50 flex justify-between items-center py-4 px-4 md:py-6 md:px-6 border-b border-gray-200 dark:border-gray-800 bg-white/90 dark:bg-[#121212]/90 backdrop-blur-md transition-colors"
   >
     <NuxtLink
       :to="$localePath('/')"
-      class="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-gray-900 to-gray-500 dark:from-white dark:to-gray-400 bg-clip-text text-transparent"
+      class="flex items-center gap-2 text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white"
     >
+      <img src="/apple-touch-icon.png" alt="Logo" class="w-8 h-8 rounded-md" />
       {{ t("app.title") }}
     </NuxtLink>
 
@@ -48,7 +49,9 @@
           <SunIcon v-if="theme === 'light'" class="w-4 h-4" />
           <MoonIcon v-else-if="theme === 'dark'" class="w-4 h-4" />
           <MonitorIcon v-else class="w-4 h-4" />
-          <SelectValue />
+          <SelectValue>
+            {{ theme === 'light' ? t('theme.light') : theme === 'dark' ? t('theme.dark') : t('theme.system') }}
+          </SelectValue>
         </SelectTrigger>
         <SelectPortal>
           <SelectContent
@@ -88,7 +91,9 @@
           class="flex items-center gap-1.5 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition text-sm bg-transparent border-none cursor-pointer"
         >
           <GlobeIcon class="w-4 h-4" />
-          <SelectValue />
+          <SelectValue>
+            {{ locale === 'fr' ? t('language.fr') : t('language.en') }}
+          </SelectValue>
         </SelectTrigger>
         <SelectPortal>
           <SelectContent
@@ -145,6 +150,6 @@ import {
 } from "reka-ui";
 
 const { theme } = useTheme();
-const { t, locale } = useI18n();
+const { t, locale, setLocale } = useI18n();
 const { isSearchOpen } = useSearchModal();
 </script>

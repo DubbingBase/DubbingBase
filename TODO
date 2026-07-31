@@ -1,39 +1,47 @@
-Le scroll est buggé a cause du swipe 
-Refaire le layout acteur personnage VF 
-Monstre et ci buggé 
+# TODOs
 
-1. Noter un acteur au complet 
-2. Créer une infographie et le tagger
-3. Repeat 
+## Bugs & UI Fixes
+- Fix scrolling bug caused by swipe interactions
+- Redesign the layout for the French (VF) actor/character mapping
+- Fix the "Monsters, Inc." (Monstres et Cie) display bug
+- Fix unexpected page reload that occurs when launching a new dubbing project
+- Unify the application design around a single consistent theme
 
-Améliorer le share: visuels acteur/personnage 
-Avoir des pages web indexées 
+## Features: Actor Profiles & Sharing
+- Allow users to rate an actor's overall performance
+- Create auto-generated infographics for actors that can be tagged/shared on social media
+- Improve the social sharing feature: generate better visuals featuring the actor/character split
+- Build an interactive export card (Game Mode): "Who voices this character in French?" featuring silhouettes or fill-in-the-blanks
+- Implement ultra-detailed voice actor profiles ("Voxography"): Group roles by regular live-action actors, animated characters, and video games
+- Create a dual "Actor / Voice Actor" view on movie pages: Display the physical actor alongside their voice actor, with a toggle to switch between international dubs
 
-carte d'export sous forme de jeu : "Qui double ce personnage en VF ?" avec des silhouettes ou un texte à trou
+## Features: Community & Gamification
+- Implement an upvote/downvote system to verify community-submitted work
+- Support "untrusted" or pending submissions that require community validation
+- Introduce gamification elements (e.g., badges, achievements, points)
+- Build a tracking & statistics system: Let users mark movies/episodes as seen in VF/VOST and unlock stats (e.g., "You've listened to the French voice of Spider-Man for 120 hours")
+- Add community features: Allow users to rate the dubbing quality of a movie/series, leave comments on specific vocal performances, and vote for the best voice actor for a specific role (useful for re-dubs)
 
+## Features: Content, Seasons & News
+- Data Model Update: Support different dubbing studios on a per-season basis
+- Data Model Update: Support voice actor changes on a per-episode or per-season basis
+- Create a "News & Tributes" section: Track new vocal casting announcements, interviews, and tributes to late voice actors
 
-Rechargement des le lancement de création de projet de doublage
-implement view transitions
-add votes to trust work
-add "untrusted" work
-add gamification
-add skeleton loaders
-how do i push notifications https://onesignal.com/pricing
-suivre un doubleur (notifications)
-fix all any
-as unknown as 
-resolve tmdb images on backend onlu
-est-ce qu'une boite de doublage peux faire une saison puis une autre un autre saison ?
-une épisode seulement ?
-comme les doubleurs qui changent en fonction des épisioodes / saisons
-Des profils de comédiens ultra-détaillés : Au lieu de simplement lister des films, la page d'un doubleur (comme Richard Darbois, Donald Reignoux ou Dorothée Pousséo) afficherait sa "voxographie" complète, triée par acteurs physiques réguliers, personnages d'animation, ou jeux vidéo.
+## Features: Notifications
+- Implement push notifications (investigate OneSignal: https://onesignal.com/pricing)
+- Allow users to "follow" a voice actor and receive notifications for their new roles or news
 
-Un système de suivi (Tracking) et de statistiques : Exactement comme sur TV Time, l'utilisateur pourrait cocher les films ou épisodes vus en VF/VOST et débloquer des statistiques amusantes (ex: "Vous avez passé 120 heures à écouter la voix française de Spider-Man").
+## Architecture & Website Consolidation
+- Move edition features to the landing website
+- Merge the admin website into the landing website
+- Rename `landing` to `website`
+- Add authentication on the website
 
-La double fiche "Acteur / Voix" : Sur la page d'un film, on verrait côte à côte l'acteur à l'écran et le comédien qui le double, avec la possibilité de basculer d'une langue à l'autre pour voir les castings vocaux internationaux.
-
-Une dimension communautaire : La possibilité de noter spécifiquement la qualité du doublage d'un film ou d'une série, de laisser des commentaires sur une performance vocale, ou de voter pour son comédien préféré sur un rôle donné (quand il y a eu des redoublages, par exemple).
-
-Une section "Actualités & Hommages" : Pour suivre les annonces de castings vocaux, les interviews, ou rendre hommage aux grandes voix qui disparaissent.
-
-unify on a single theme 
+## Technical Debt & Infrastructure
+- Remove all `any` types and enforce strict TypeScript typing
+- Remove all `as unknown as` type assertions
+- Resolve TMDB images exclusively on the backend
+- Implement View Transitions API for smoother page navigation
+- Add skeleton loaders for better perceived performance during data fetching
+- Implement SEO best practices to ensure web pages are properly indexed
+- Implement a localization system to translate the application

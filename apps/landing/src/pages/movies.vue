@@ -34,7 +34,7 @@
             class="object-cover w-full h-full group-hover:scale-105 transition duration-500" 
           />
         </div>
-        <h3 class="font-semibold text-sm md:text-base text-gray-800 dark:text-gray-200 line-clamp-2 group-hover:text-blue-500 transition-colors">
+        <h3 class="font-semibold text-sm md:text-base text-gray-800 dark:text-gray-200 line-clamp-2 group-hover:text-cyan-500 transition-colors">
           {{ movie.title }}
         </h3>
       </NuxtLink>

@@ -1,10 +1,10 @@
 <template>
-  <footer class="mt-20 border-t border-[#2a2a2a] bg-[#121212] pt-16 pb-8 text-gray-500 dark:text-gray-400">
+  <footer class="mt-20 border-t border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#121212] pt-16 pb-8 text-gray-500 dark:text-gray-400">
     <div class="max-w-7xl mx-auto px-6">
       <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
         <!-- Brand -->
         <div class="col-span-1 md:col-span-1">
-          <NuxtLink :to="$localePath('/')" class="text-2xl font-extrabold bg-gradient-to-r from-gray-900 dark:from-white to-gray-500 dark:to-gray-400 bg-clip-text text-transparent inline-block mb-4">
+          <NuxtLink :to="$localePath('/')" class="text-2xl font-extrabold text-gray-900 dark:text-white inline-block mb-4">
             {{ t('app.title') }}
           </NuxtLink>
           <p class="text-sm text-gray-500 mb-6 leading-relaxed">
@@ -55,7 +55,7 @@
         </div>
       </div>
 
-      <div class="pt-8 border-t border-[#2a2a2a] flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500">
+      <div class="pt-8 border-t border-gray-200 dark:border-[#2a2a2a] flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500">
         <p>&copy; {{ new Date().getFullYear() }} DubbingBase. {{ t('footer.rights') }}</p>
       </div>
     </div>

@@ -44,5 +44,30 @@
   },
   "about": {
     "title": "À propos"
+  },
+  "home": {
+    "hero": {
+      "title": "Bienvenue.",
+      "subtitle": "Des millions de films, séries, et comédiens de doublage à découvrir. Explorez maintenant.",
+      "searchPlaceholder": "Rechercher un film, une série, un comédien...",
+      "searchButton": "Rechercher"
+    },
+    "trendingMovies": "Films du moment",
+    "trendingSeries": "Séries du moment",
+    "topVoiceActors": "Comédiens populaires"
+  },
+  "details": {
+    "back": "Retour",
+    "synopsis": "Synopsis",
+    "noSynopsis": "Aucun synopsis disponible.",
+    "originalTitle": "Titre Original",
+    "rating": "Note",
+    "castAndCrew": "Casting & Voix Françaises",
+    "dubbing": "Doublage {lang}",
+    "unknownCharacter": "Personnage inconnu",
+    "actor": "Acteur",
+    "character": "Personnage",
+    "voiceActor": "Voix VF",
+    "notSpecified": "Non renseignée"
   }
 }

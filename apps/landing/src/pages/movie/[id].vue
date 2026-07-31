@@ -1,10 +1,10 @@
 <template>
-  <div v-if="movie" class="bg-[#1b1b1b] min-h-screen text-white">
+  <div v-if="movie" class="bg-gray-50 dark:bg-[#1b1b1b] min-h-screen text-gray-900 dark:text-white">
     <!-- Hero Section -->
     <div class="relative w-full h-[50vh] min-h-[400px]">
-      <button @click="router.back()" class="absolute top-6 left-6 z-20 flex items-center gap-2 bg-black/50 hover:bg-black/70 backdrop-blur-sm text-white px-4 py-2 rounded-full transition-colors border border-gray-700">
+      <button @click="router.back()" class="absolute top-6 left-6 z-20 flex items-center gap-2 bg-white/50 dark:bg-black/50 hover:bg-white/70 dark:hover:bg-black/70 backdrop-blur-sm text-gray-900 dark:text-white px-4 py-2 rounded-full transition-colors border border-gray-200 dark:border-gray-700">
         <ArrowLeftIcon class="w-5 h-5" />
-        <span class="font-medium">Retour</span>
+        <span class="font-medium">{{ $t('details.back') }}</span>
       </button>
       <div class="absolute inset-0">
         <img
@@ -13,8 +13,8 @@
           class="w-full h-full object-cover"
           alt="Backdrop"
         />
-        <div class="absolute inset-0 bg-gradient-to-t from-[#1b1b1b] to-transparent"></div>
-        <div class="absolute inset-0 bg-black/40"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 dark:from-[#1b1b1b] to-transparent"></div>
+        <div class="absolute inset-0 bg-black/10 dark:bg-black/40"></div>
       </div>
       
       <div class="absolute bottom-0 left-0 w-full p-8 flex flex-col md:flex-row gap-6 items-end">
@@ -26,7 +26,7 @@
         />
         <div class="pb-4">
           <h1 class="text-4xl md:text-5xl font-bold">{{ movie.title }}</h1>
-          <p class="text-gray-300 mt-2 text-lg">
+          <p class="text-gray-600 dark:text-gray-300 mt-2 text-lg">
             {{ new Date(movie.release_date).getFullYear() }}
           </p>
         </div>
@@ -39,20 +39,20 @@
         <!-- Overview -->
         <div class="md:col-span-2 space-y-6">
           <section>
-            <h2 class="text-2xl font-bold mb-4">Synopsis</h2>
-            <p class="text-gray-300 leading-relaxed text-lg">
-              {{ movie.overview || 'Aucun synopsis disponible.' }}
+            <h2 class="text-2xl font-bold mb-4">{{ $t('details.synopsis') }}</h2>
+            <p class="text-gray-700 dark:text-gray-300 leading-relaxed text-lg">
+              {{ movie.overview || $t('details.noSynopsis') }}
             </p>
           </section>
         </div>
 
         <!-- Sidebar Details -->
         <div class="space-y-6">
-          <div class="bg-[#1d1d1d] p-6 rounded-xl border border-[#2a2a2a]">
-            <h3 class="font-bold text-gray-400 mb-2">Titre Original</h3>
+          <div class="bg-white dark:bg-[#1d1d1d] p-6 rounded-xl border border-gray-200 dark:border-[#2a2a2a] shadow-sm dark:shadow-none">
+            <h3 class="font-bold text-gray-500 dark:text-gray-400 mb-2">{{ $t('details.originalTitle') }}</h3>
             <p>{{ movie.original_title }}</p>
 
-            <h3 class="font-bold text-gray-400 mt-4 mb-2">Note</h3>
+            <h3 class="font-bold text-gray-500 dark:text-gray-400 mt-4 mb-2">{{ $t('details.rating') }}</h3>
             <p>{{ movie.vote_average?.toFixed(1) }} / 10</p>
           </div>
         </div>
@@ -60,8 +60,24 @@
 
       <!-- Voice Cast -->
       <section>
-        <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-          <h2 class="text-2xl font-bold">Casting & Voix Françaises</h2>
+        <div class="flex flex-col mb-6 gap-2">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+            <div>
+              <h2 class="text-2xl font-bold">{{ $t('details.castAndCrew') }}</h2>
+              <div class="text-gray-500 dark:text-gray-400 text-sm font-mono mt-1">{{ filteredCast.length }} / {{ formattedCast.length }} roles</div>
+            </div>
+            
+            <div class="relative w-full sm:w-64">
+              <SearchIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                v-model="searchQuery"
+                type="search"
+                :placeholder="$t('search.placeholder')"
+                class="w-full bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-[#00E5FF] transition-all text-gray-900 dark:text-white"
+              />
+            </div>
+          </div>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Each role, shown three ways: the original performer, the character, and the voice actor.</p>
           
           <!-- Dubbing Projects Tabs -->
           <div v-if="dubbingProjects.length > 1" class="flex flex-wrap gap-2">
@@ -69,59 +85,84 @@
               v-for="project in dubbingProjects"
               :key="project.id"
               :to="{ query: { dub: project.id } }"
-              class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-[#2a2a2a]"
-              :class="activeDubId === project.id ? 'bg-[#00E5FF] text-black border-[#00E5FF]' : 'bg-[#1d1d1d] text-gray-300 hover:bg-[#2a2a2a]'"
+              class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-gray-200 dark:border-[#2a2a2a]"
+              :class="activeDubId === project.id ? 'bg-cyan-600 dark:bg-[#00E5FF] text-white dark:text-black border-cyan-600 dark:border-[#00E5FF]' : 'bg-white dark:bg-[#1d1d1d] text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#2a2a2a]'"
             >
-              Doublage {{ getDisplayLanguage(project.language) }}
+              {{ $t('details.dubbing', { lang: getDisplayLanguage(project.language) }) }}
               <span v-if="project.studio_data?.name" class="opacity-75 text-xs ml-1">({{ project.studio_data.name }})</span>
             </NuxtLink>
           </div>
         </div>
         
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
           <div
-            v-for="actor in formattedCast"
+            v-for="actor in filteredCast"
             :key="actor.id"
-            class="bg-[#1d1d1d] border border-[#2a2a2a] rounded-xl overflow-hidden flex flex-col p-4 gap-3 shadow-md"
+            class="bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl p-4 shadow-sm transition-colors hover:border-gray-300 dark:hover:border-gray-700"
           >
-            <!-- Character -->
-            <div class="flex flex-col items-center border-b border-[#2a2a2a] pb-3 mb-2">
-              <img v-if="actor.characterImage" :src="actor.characterImage" class="w-16 h-16 rounded-lg object-cover mb-2 border border-[#3a3a3a] shadow-sm bg-gray-800" alt="Character" />
-              <div class="text-center text-sm font-semibold text-gray-400 truncate w-full" :title="actor.character">
-                {{ actor.character || 'Personnage inconnu' }}
-              </div>
-            </div>
-            
-            <div class="flex flex-col md:flex-row justify-between md:items-center gap-2 md:gap-4">
-              <!-- Physical Actor -->
-              <NuxtLink :to="$localePath(`/actor/${actor.id}`)" class="flex items-center gap-4 flex-1 min-w-0 hover:bg-[#2a2a2a] p-2 -mx-2 md:-ml-2 rounded-xl transition-colors cursor-pointer w-full">
-                <img v-if="actor.profile_path" :src="actor.profile_path" class="w-20 h-20 rounded-full object-cover bg-gray-800 flex-shrink-0" alt="Actor" />
-                <div v-else class="w-20 h-20 rounded-full bg-gray-800 flex-shrink-0"></div>
-                <div class="min-w-0">
-                  <div class="text-[10px] text-gray-500 uppercase tracking-wider">Acteur</div>
-                  <div class="font-bold text-base md:text-sm text-white truncate hover:underline" :title="actor.name">{{ actor.name }}</div>
+            <div class="flex flex-col sm:grid sm:grid-cols-3 gap-4">
+              <!-- Original Actor -->
+              <div class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start">
+                <NuxtLink :to="$localePath(`/actor/${actor.id}`)" class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] bg-gray-200 dark:bg-[#222] sm:mb-3 flex-shrink-0">
+                  <img v-if="actor.profile_path" :src="actor.profile_path" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="Actor" />
+                </NuxtLink>
+                <div class="flex flex-col min-w-0 flex-1">
+                  <div class="flex items-center gap-1.5 text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-1">
+                    <ClapperboardIcon class="w-3 h-3" />
+                    <span class="truncate">{{ $t('details.actor') }}</span>
+                  </div>
+                  <NuxtLink :to="$localePath(`/actor/${actor.id}`)" class="font-bold text-sm text-gray-900 dark:text-white truncate hover:underline" :title="actor.name">
+                    {{ actor.name }}
+                  </NuxtLink>
                 </div>
-              </NuxtLink>
+              </div>
 
-              <!-- Arrow -->
-              <div class="text-gray-600 flex-shrink-0 hidden md:block">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clip-rule="evenodd" /></svg>
+              <!-- Character -->
+              <div class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start">
+                <div class="w-16 sm:w-full relative block overflow-hidden rounded-xl aspect-[2/3] bg-gray-200 dark:bg-[#222] sm:mb-3 flex-shrink-0">
+                  <img v-if="actor.characterImage" :src="actor.characterImage" class="w-full h-full object-cover" alt="Character" />
+                </div>
+                <div class="flex flex-col min-w-0 flex-1">
+                  <div class="flex items-center gap-1.5 text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-1">
+                    <UserIcon class="w-3 h-3" />
+                    <span class="truncate">{{ $t('details.character') }}</span>
+                  </div>
+                  <div class="font-bold text-sm text-gray-900 dark:text-white truncate" :title="actor.character">
+                    {{ actor.character || $t('details.unknownCharacter') }}
+                  </div>
+                </div>
               </div>
 
               <!-- Voice Actor -->
-              <div class="flex flex-row md:flex-row-reverse items-center gap-4 flex-1 min-w-0 justify-start md:justify-end text-left md:text-right w-full hover:bg-[#2a2a2a] md:hover:bg-transparent p-2 -mx-2 md:p-0 md:m-0 rounded-xl transition-colors">
+              <div class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-4 sm:pt-0 mt-2 sm:mt-0">
                 <template v-if="actor.voiceActor">
-                  <img v-if="actor.voiceActor.profile_picture" :src="actor.voiceActor.profile_picture" class="w-20 h-20 rounded-full object-cover bg-gray-700 flex-shrink-0" alt="VF" />
-                  <div v-else class="w-20 h-20 rounded-full bg-gray-700 flex-shrink-0 flex items-center justify-center text-xs font-bold text-gray-400">
-                    {{ actor.voiceActor.firstname?.[0] }}{{ actor.voiceActor.lastname?.[0] }}
-                  </div>
-                  <div class="min-w-0 flex-1 md:flex-none">
-                    <div class="text-[10px] text-[#00E5FF] uppercase tracking-wider">Voix VF</div>
-                    <NuxtLink :to="$localePath(`/voice-actor/${actor.voiceActor.id}`)" class="font-bold text-base md:text-sm text-[#00E5FF] hover:underline truncate block" :title="actor.voiceActor.firstname + ' ' + actor.voiceActor.lastname">{{ actor.voiceActor.firstname }} {{ actor.voiceActor.lastname }}</NuxtLink>
+                  <NuxtLink :to="$localePath(`/voice-actor/${actor.voiceActor.id}`)" class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] bg-gray-200 dark:bg-[#222] sm:mb-3 flex-shrink-0">
+                    <img v-if="actor.voiceActor.profile_picture" :src="actor.voiceActor.profile_picture" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="Voice Actor" />
+                    <div v-else class="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-400">
+                      {{ actor.voiceActor.firstname?.[0] }}{{ actor.voiceActor.lastname?.[0] }}
+                    </div>
+                  </NuxtLink>
+                  <div class="flex flex-col min-w-0 flex-1">
+                    <div class="flex items-center gap-1.5 text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-1">
+                      <MicIcon class="w-3 h-3" />
+                      <span class="truncate">{{ $t('details.voiceActor') }}</span>
+                    </div>
+                    <NuxtLink :to="$localePath(`/voice-actor/${actor.voiceActor.id}`)" class="font-bold text-sm text-gray-900 dark:text-white truncate hover:underline" :title="actor.voiceActor.firstname + ' ' + actor.voiceActor.lastname">
+                      {{ actor.voiceActor.firstname }} {{ actor.voiceActor.lastname }}
+                    </NuxtLink>
                   </div>
                 </template>
                 <template v-else>
-                  <div class="text-sm text-gray-500 italic w-full text-left md:text-right pl-[5.5rem] md:pl-0">Non renseignée</div>
+                  <div class="w-16 sm:w-full relative block overflow-hidden rounded-xl aspect-[2/3] bg-gray-100 dark:bg-[#151515] sm:mb-3 flex items-center justify-center border border-dashed border-gray-300 dark:border-gray-800 flex-shrink-0">
+                    <span class="text-gray-400 dark:text-gray-600 text-xs text-center px-2">?</span>
+                  </div>
+                  <div class="flex flex-col min-w-0 flex-1">
+                    <div class="flex items-center gap-1.5 text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-1">
+                      <MicIcon class="w-3 h-3 opacity-50" />
+                      <span class="truncate">{{ $t('details.voiceActor') }}</span>
+                    </div>
+                    <div class="text-sm text-gray-400 italic truncate">{{ $t('details.notSpecified') }}</div>
+                  </div>
                 </template>
               </div>
             </div>
@@ -130,8 +171,8 @@
       </section>
     </div>
   </div>
-  <div v-else-if="pending" class="min-h-screen bg-[#1b1b1b] flex items-center justify-center">
-    <div class="w-12 h-12 border-4 border-[#00E5FF] border-t-transparent rounded-full animate-spin"></div>
+  <div v-else-if="pending" class="min-h-screen bg-gray-50 dark:bg-[#1b1b1b] flex items-center justify-center">
+    <div class="w-12 h-12 border-4 border-cyan-600 dark:border-[#00E5FF] border-t-transparent rounded-full animate-spin"></div>
   </div>
 </template>
 
@@ -139,8 +180,8 @@
 import { useRoute, useRouter } from 'vue-router';
 
 import { fetchMovieData } from '@app/shared-logic';
-import { computed } from 'vue';
-import { ArrowLeftIcon } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
+import { ArrowLeftIcon, ClapperboardIcon, UserIcon, MicIcon, SearchIcon } from 'lucide-vue-next';
 
 const route = useRoute();
 const router = useRouter();
@@ -222,6 +263,20 @@ const formattedCast = computed(() => {
       voiceActor: voiceActor || null,
       characterImage
     };
+  });
+});
+
+const searchQuery = ref('');
+
+const filteredCast = computed(() => {
+  if (!searchQuery.value) return formattedCast.value;
+  const query = searchQuery.value.toLowerCase();
+  return formattedCast.value.filter((actor: any) => {
+    const actorName = actor.name?.toLowerCase() || '';
+    const characterName = actor.character?.toLowerCase() || '';
+    const vaName = actor.voiceActor ? `${actor.voiceActor.firstname || ''} ${actor.voiceActor.lastname || ''}`.toLowerCase() : '';
+    const vaPerformance = actor.voiceActor?.performance?.toLowerCase() || '';
+    return actorName.includes(query) || characterName.includes(query) || vaName.includes(query) || vaPerformance.includes(query);
   });
 });
 

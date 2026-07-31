@@ -72,7 +72,7 @@
         </AppListItem>
       </AppList>
       <div v-if="!isSearching && !searchError && searchResults.length > 0" class="ion-padding-top ion-text-center border-t border-slate-700/50 mt-4">
-        <AppButton fill="clear" @click="$emit('create-new', searchTerm)" class="w-full text-blue-400">
+        <AppButton fill="clear" @click="$emit('create-new', searchTerm)" class="w-full text-[var(--app-color-primary)]">
           + Create New Person
         </AppButton>
       </div>

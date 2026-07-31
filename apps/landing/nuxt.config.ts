@@ -26,6 +26,8 @@ export default defineNuxtConfig({
     "@nuxtjs/sitemap",
     "@nuxtjs/robots",
     "@nuxt/image",
+    "@nuxt/icon",
+    "nuxt-swiper",
   ],
 
   site: {

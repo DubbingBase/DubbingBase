@@ -263,11 +263,13 @@ export function useVoiceActorData(
       ).toLowerCase();
       const character = (item.data.character || "").toLowerCase();
       const actorName = (item.data.actor?.name || "").toLowerCase();
+      const performance = (item.work.performance || "").toLowerCase();
 
       return (
         title.includes(query) ||
         character.includes(query) ||
-        actorName.includes(query)
+        actorName.includes(query) ||
+        performance.includes(query)
       );
     });
   });

@@ -145,6 +145,16 @@ export function useActorData(
     return Array.from(vaMap.values()).sort((a, b) => b.rolesCount - a.rolesCount);
   });
 
+  const filteredUniqueFrenchVoiceActors = computed(() => {
+    const query = searchQuery.value.toLowerCase();
+    if (!query) return uniqueFrenchVoiceActors.value;
+    
+    return uniqueFrenchVoiceActors.value.filter((va) => {
+      const fullname = `${va.firstname || ""} ${va.lastname || ""}`.toLowerCase();
+      return fullname.includes(query);
+    });
+  });
+
   return {
     actor,
     voiceRoles,
@@ -152,6 +162,7 @@ export function useActorData(
     searchQuery,
     filteredCredits,
     uniqueFrenchVoiceActors,
+    filteredUniqueFrenchVoiceActors,
     loadActorData,
   };
 }
