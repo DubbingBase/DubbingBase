@@ -1,5 +1,11 @@
 # @app/shared-logic
 
+## 1.0.12
+
+### Patch Changes
+
+- e29719d: sd
+
 ## 1.0.11
 
 ### Patch Changes

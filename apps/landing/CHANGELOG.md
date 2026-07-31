@@ -1,5 +1,14 @@
 # @app/landing
 
+## 1.0.15
+
+### Patch Changes
+
+- e29719d: sd
+- Updated dependencies [e29719d]
+  - @app/shared-logic@1.0.12
+  - @app/locales@0.0.37
+
 ## 1.0.14
 
 ### Patch Changes

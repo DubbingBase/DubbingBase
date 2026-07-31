@@ -1,5 +1,11 @@
 # @app/locales
 
+## 0.0.37
+
+### Patch Changes
+
+- e29719d: sd
+
 ## 0.0.36
 
 ### Patch Changes
