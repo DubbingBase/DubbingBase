@@ -26,7 +26,7 @@ const { initOneSignal } = useOneSignal();
 // Initialize auth and handle deep links
 onMounted(async () => {
   initTheme();
-  initOneSignal();
+  await initOneSignal();
   // Handle deep links when app is already open
   App.addListener("appUrlOpen", (event: URLOpenListenerEvent) => {
     // Extract the URL from the event
