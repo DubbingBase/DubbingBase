@@ -1,6 +1,6 @@
 import { useRouter } from "vue-router";
 
-type DeepLinkType = "movie" | "show";
+type DeepLinkType = "movie" | "show" | "actor" | "voice-actor";
 
 interface DeepLink {
   type: DeepLinkType;
@@ -11,8 +11,8 @@ export function parseDeepLink(url: string): DeepLink | null {
   try {
     // Handle both dubbingbase:// and dubbingbase:/ formats
     const match =
-      url.match(/^dubbingbase:\/\/(movie|show)\/(\d+)/i) ||
-      url.match(/^dubbingbase:\/(movie|show)\/(\d+)/i);
+      url.match(/^dubbingbase:\/\/(movie|show|actor|voice-actor)\/([a-zA-Z0-9_-]+)/i) ||
+      url.match(/^dubbingbase:\/(movie|show|actor|voice-actor)\/([a-zA-Z0-9_-]+)/i);
 
     if (match) {
       return {
@@ -42,6 +42,12 @@ export function useDeepLinkHandler() {
         return true;
       case "show":
         router.push({ name: "SerieDetails", params: { id } });
+        return true;
+      case "actor":
+        router.push({ name: "ActorDetails", params: { id } });
+        return true;
+      case "voice-actor":
+        router.push({ name: "voice-actor-details", params: { id } });
         return true;
       default:
         return false;
