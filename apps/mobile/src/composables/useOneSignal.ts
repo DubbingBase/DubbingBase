@@ -1,5 +1,5 @@
 import { isPlatform } from '@ionic/vue';
-import OneSignal from 'onesignal-cordova-plugin';
+import OneSignal from '@onesignal/capacitor-plugin';
 
 export function useOneSignal() {
   const initOneSignal = () => {
