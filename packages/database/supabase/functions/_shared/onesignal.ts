@@ -1,9 +1,15 @@
 export async function sendOneSignalNotification(title: string, message: string) {
   const appId = Deno.env.get("ONESIGNAL_APP_ID");
   const apiKey = Deno.env.get("ONESIGNAL_REST_API_KEY");
+  const adminId = Deno.env.get("ADMIN_USER_ID");
 
   if (!appId || !apiKey) {
     console.warn("[OneSignal] Credentials missing, skipping notification");
+    return;
+  }
+
+  if (!adminId) {
+    console.warn("[OneSignal] ADMIN_USER_ID missing, cannot target admin user. Skipping notification");
     return;
   }
 
@@ -16,7 +22,10 @@ export async function sendOneSignalNotification(title: string, message: string) 
       },
       body: JSON.stringify({
         app_id: appId,
-        included_segments: ["Total Subscriptions"],
+        target_channel: "push",
+        include_aliases: {
+          external_id: [adminId]
+        },
         headings: { en: title },
         contents: { en: message },
       }),
