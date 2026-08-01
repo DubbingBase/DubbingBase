@@ -22,7 +22,7 @@ dependencies {
     implementation project(':capacitor-toast')
 
 }
-
+apply from: "../../../../node_modules/.pnpm/onesignal-cordova-plugin@5.5.2/node_modules/onesignal-cordova-plugin/build-extras-onesignal.gradle"
 
 if (hasProperty('postBuildExtras')) {
   postBuildExtras()

@@ -14,16 +14,19 @@ import AppAlertContainer from "@/components/common/AppAlertContainer.vue";
 import { useAuthStore } from "@/stores/auth";
 import { useDeepLinkHandler } from "@/utils/deepLinks";
 import { useTheme } from "@/composables/useTheme";
+import { useOneSignal } from "@/composables/useOneSignal";
 import { onMounted } from "vue";
 import { App, URLOpenListenerEvent } from "@capacitor/app";
 
 const authStore = useAuthStore();
 const { handleDeepLink } = useDeepLinkHandler();
 const { initTheme } = useTheme();
+const { initOneSignal } = useOneSignal();
 
 // Initialize auth and handle deep links
 onMounted(async () => {
   initTheme();
+  initOneSignal();
   // Handle deep links when app is already open
   App.addListener("appUrlOpen", (event: URLOpenListenerEvent) => {
     // Extract the URL from the event
