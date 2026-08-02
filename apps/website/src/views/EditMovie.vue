@@ -438,6 +438,65 @@
       </div>
     </div>
 
+    <!-- Attachments Section (Only in Edit Mode) -->
+    <div v-if="isEditMode" class="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden mt-8">
+      <div class="px-6 py-4 border-b border-slate-800 bg-slate-950/50 flex justify-between items-center">
+        <div>
+          <h2 class="text-lg font-bold text-white tracking-tight">Project Attachments (Proofs)</h2>
+          <p class="text-xs text-slate-400 mt-1">Upload ending credits or other images to prove the voice cast.</p>
+        </div>
+      </div>
+
+      <div class="p-6">
+        <!-- Upload Form -->
+        <div class="flex flex-col md:flex-row gap-4 items-end mb-6 bg-slate-950/50 p-4 rounded-xl border border-slate-800/60">
+          <div class="flex-1 w-full">
+            <label class="text-xs font-semibold text-slate-400 uppercase mb-1.5 block">Description</label>
+            <input
+              v-model="newAttachmentDescription"
+              type="text"
+              placeholder="e.g. End credits showing French cast"
+              class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white text-sm focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div class="flex-1 w-full">
+            <label class="text-xs font-semibold text-slate-400 uppercase mb-1.5 block">Image File</label>
+            <input
+              type="file"
+              accept="image/*"
+              @change="handleFileUpload"
+              :disabled="isUploadingAttachment"
+              class="w-full px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-slate-300 text-sm focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500"
+            />
+          </div>
+          <div v-if="isUploadingAttachment" class="flex items-center justify-center px-4 py-2 text-blue-400 text-xs font-semibold">
+            Uploading...
+          </div>
+        </div>
+
+        <!-- Attachments List -->
+        <div v-if="attachments.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div v-for="att in attachments" :key="att.id" class="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow flex flex-col">
+            <div class="aspect-video bg-slate-900 relative group overflow-hidden">
+              <img v-if="att.signedUrl" :src="att.signedUrl" class="w-full h-full object-cover" />
+              <div v-else class="w-full h-full flex items-center justify-center text-slate-500 text-xs">Loading...</div>
+              <div class="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-4 backdrop-blur-sm">
+                <a v-if="att.signedUrl" :href="att.signedUrl" target="_blank" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-500 transition-colors shadow">View Full</a>
+                <button @click="deleteAttachment(att.id, att.file_path)" class="px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-semibold hover:bg-red-500 transition-colors shadow">Delete</button>
+              </div>
+            </div>
+            <div class="p-3">
+              <p class="text-sm text-slate-200 font-medium truncate">{{ att.description || 'No description' }}</p>
+              <p class="text-xs text-slate-500 mt-1 truncate">{{ att.file_name }}</p>
+            </div>
+          </div>
+        </div>
+        <div v-else class="text-center py-8 text-slate-500 text-sm border-2 border-dashed border-slate-800 rounded-xl">
+          No attachments uploaded yet.
+        </div>
+      </div>
+    </div>
+
     <!-- Toast Notification -->
     <div
       v-if="toast.show"
@@ -459,6 +518,7 @@
 import { ref, onMounted, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { supabase } from "@/lib/supabase";
+import imageCompression from "browser-image-compression";
 
 const route = useRoute();
 const router = useRouter();
@@ -516,6 +576,20 @@ interface CastRow {
   highlight: boolean;
 }
 const castRows = ref<CastRow[]>([]);
+
+// Attachments state
+interface ProjectAttachment {
+  id: number;
+  dubbing_project_id: number;
+  file_path: string;
+  file_name: string;
+  description: string | null;
+  created_at: string | null;
+  signedUrl?: string; // Cache the signed url
+}
+const attachments = ref<ProjectAttachment[]>([]);
+const isUploadingAttachment = ref(false);
+const newAttachmentDescription = ref("");
 
 // Loading & UI states
 const isSaving = ref(false);
@@ -582,6 +656,20 @@ const fetchMovieProject = async () => {
       projectManager.value = project.project_manager || "";
       creativeSupervision.value = project.creative_supervision || "";
       status.value = project.status || "validated";
+
+      // Fetch attachments
+      const { data: attachData, error: attachErr } = await supabase
+        .from("project_attachments")
+        .select("*")
+        .eq("dubbing_project_id", project.id)
+        .order("created_at", { ascending: false });
+
+      if (attachErr) {
+        console.error("Error fetching attachments:", attachErr);
+      } else {
+        attachments.value = attachData || [];
+        await fetchSignedUrlsForAttachments(attachments.value);
+      }
 
       // Fetch linked work entries for this project
       const { data: works, error: worksErr } = await supabase
@@ -765,6 +853,98 @@ const saveMovieProject = async () => {
     showToast(err.message || "Failed to save movie project.", "error");
   } finally {
     isSaving.value = false;
+  }
+};
+
+const fetchSignedUrlsForAttachments = async (attachs: ProjectAttachment[]) => {
+  for (const att of attachs) {
+    const { data, error } = await supabase.storage.from("project_attachments").createSignedUrl(att.file_path, 3600);
+    if (!error && data) {
+      att.signedUrl = data.signedUrl;
+    }
+  }
+};
+
+const handleFileUpload = async (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (!file) return;
+
+  if (!isEditMode.value || !id) {
+    showToast("You must save the project before adding attachments.", "error");
+    return;
+  }
+
+  isUploadingAttachment.value = true;
+  try {
+    const options = {
+      maxSizeMB: 1,
+      maxWidthOrHeight: 1920,
+      useWebWorker: true,
+    };
+    const compressedFile = await imageCompression(file, options);
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+    const filePath = `${id}/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('project_attachments')
+      .upload(filePath, compressedFile, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (uploadError) throw uploadError;
+
+    const { data, error: insertError } = await supabase
+      .from('project_attachments')
+      .insert({
+        dubbing_project_id: Number(id),
+        file_path: filePath,
+        file_name: file.name,
+        description: newAttachmentDescription.value
+      })
+      .select()
+      .single();
+
+    if (insertError) throw insertError;
+
+    await fetchSignedUrlsForAttachments([data]);
+    attachments.value.unshift(data);
+    newAttachmentDescription.value = "";
+    showToast("Attachment uploaded successfully!", "success");
+    target.value = '';
+  } catch (err: any) {
+    console.error("Error uploading attachment:", err);
+    showToast(err.message || "Failed to upload attachment", "error");
+  } finally {
+    isUploadingAttachment.value = false;
+  }
+};
+
+const deleteAttachment = async (attachmentId: number, filePath: string) => {
+  if (!confirm("Are you sure you want to delete this attachment?")) return;
+
+  try {
+    const { error: storageError } = await supabase.storage
+      .from('project_attachments')
+      .remove([filePath]);
+
+    if (storageError) throw storageError;
+
+    const { error: dbError } = await supabase
+      .from('project_attachments')
+      .delete()
+      .eq('id', attachmentId);
+
+    if (dbError) throw dbError;
+
+    attachments.value = attachments.value.filter(a => a.id !== attachmentId);
+    showToast("Attachment deleted successfully", "success");
+  } catch (err: any) {
+    console.error("Error deleting attachment:", err);
+    showToast(err.message || "Failed to delete attachment", "error");
   }
 };
 

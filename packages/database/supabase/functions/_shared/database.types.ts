@@ -91,6 +91,51 @@ export type Database = {
           studio_id: number | null
           updated_at: string | null
         }
+      }
+      project_attachments: {
+        Row: {
+          id: number
+          dubbing_project_id: number
+          file_path: string
+          file_name: string
+          description: string | null
+          created_at: string | null
+          created_by: string | null
+        }
+        Insert: {
+          id?: number
+          dubbing_project_id: number
+          file_path: string
+          file_name: string
+          description?: string | null
+          created_at?: string | null
+          created_by?: string | null
+        }
+        Update: {
+          id?: number
+          dubbing_project_id?: number
+          file_path?: string
+          file_name?: string
+          description?: string | null
+          created_at?: string | null
+          created_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_attachments_dubbing_project_id_fkey"
+            columns: ["dubbing_project_id"]
+            isOneToOne: false
+            referencedRelation: "dubbing_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_attachments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
         Insert: {
           content_id: number
           content_type: string
