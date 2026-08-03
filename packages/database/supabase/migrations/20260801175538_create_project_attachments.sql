@@ -48,6 +48,25 @@ CREATE POLICY "Allow editors delete access to project_attachments" ON "public"."
         )
     );
 
+CREATE POLICY "Allow editors update access to project_attachments" ON "public"."project_attachments"
+    FOR UPDATE
+    USING (
+        auth.role() = 'authenticated' AND
+        (
+            auth.jwt()->>'role' IN ('admin', 'editor') OR
+            (auth.jwt()->'user_metadata'->>'role') IN ('admin', 'editor') OR
+            (auth.jwt()->'app_metadata'->>'role') IN ('admin', 'editor')
+        )
+    )
+    WITH CHECK (
+        auth.role() = 'authenticated' AND
+        (
+            auth.jwt()->>'role' IN ('admin', 'editor') OR
+            (auth.jwt()->'user_metadata'->>'role') IN ('admin', 'editor') OR
+            (auth.jwt()->'app_metadata'->>'role') IN ('admin', 'editor')
+        )
+    );
+
 -- 4. Storage Bucket Policies for project_attachments bucket
 -- Note: the bucket itself is created via config.toml, but we define the policies here.
 INSERT INTO storage.buckets (id, name, public) VALUES ('project_attachments', 'project_attachments', false) ON CONFLICT (id) DO NOTHING;

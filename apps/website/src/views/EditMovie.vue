@@ -857,11 +857,16 @@ const saveMovieProject = async () => {
 };
 
 const fetchSignedUrlsForAttachments = async (attachs: ProjectAttachment[]) => {
-  for (const att of attachs) {
-    const { data, error } = await supabase.storage.from("project_attachments").createSignedUrl(att.file_path, 3600);
-    if (!error && data) {
-      att.signedUrl = data.signedUrl;
-    }
+  if (attachs.length === 0) return;
+  const paths = attachs.map(a => a.file_path);
+  const { data, error } = await supabase.storage.from("project_attachments").createSignedUrls(paths, 3600);
+  if (!error && data) {
+    attachs.forEach((att) => {
+      const match = data.find(d => d.path === att.file_path);
+      if (match && match.signedUrl) {
+        att.signedUrl = match.signedUrl;
+      }
+    });
   }
 };
 
@@ -927,18 +932,20 @@ const deleteAttachment = async (attachmentId: number, filePath: string) => {
   if (!confirm("Are you sure you want to delete this attachment?")) return;
 
   try {
-    const { error: storageError } = await supabase.storage
-      .from('project_attachments')
-      .remove([filePath]);
-
-    if (storageError) throw storageError;
-
     const { error: dbError } = await supabase
       .from('project_attachments')
       .delete()
       .eq('id', attachmentId);
 
     if (dbError) throw dbError;
+
+    const { error: storageError } = await supabase.storage
+      .from('project_attachments')
+      .remove([filePath]);
+
+    if (storageError) {
+      console.error("Storage deletion failed, but DB record was deleted:", storageError);
+    }
 
     attachments.value = attachments.value.filter(a => a.id !== attachmentId);
     showToast("Attachment deleted successfully", "success");
