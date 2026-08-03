@@ -1,5 +1,11 @@
 # @app/supabase
 
+## 0.0.56
+
+### Patch Changes
+
+- 62000ee: add push notification support
+
 ## 0.0.55
 
 ### Patch Changes

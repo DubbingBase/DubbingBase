@@ -1,5 +1,13 @@
 # @app/mobile
 
+## 1.0.72
+
+### Patch Changes
+
+- 62000ee: add push notification support
+- Updated dependencies [62000ee]
+  - @app/supabase@0.0.56
+
 ## 1.0.71
 
 ### Patch Changes
