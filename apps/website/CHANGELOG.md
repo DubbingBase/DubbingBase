@@ -1,5 +1,13 @@
 # @app/website
 
+## 0.0.60
+
+### Patch Changes
+
+- b374bdf: qs
+- Updated dependencies [b374bdf]
+  - @app/locales@0.0.41
+
 ## 0.0.59
 
 ### Patch Changes

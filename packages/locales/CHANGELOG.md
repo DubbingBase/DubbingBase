@@ -1,5 +1,11 @@
 # @app/locales
 
+## 0.0.41
+
+### Patch Changes
+
+- b374bdf: qs
+
 ## 0.0.40
 
 ### Patch Changes

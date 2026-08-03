@@ -1,5 +1,15 @@
 # @app/mobile
 
+## 1.0.78
+
+### Patch Changes
+
+- b374bdf: qs
+- Updated dependencies [b374bdf]
+  - @app/supabase@0.0.61
+  - @app/locales@0.0.41
+  - @app/shared-logic@1.0.16
+
 ## 1.0.77
 
 ### Patch Changes

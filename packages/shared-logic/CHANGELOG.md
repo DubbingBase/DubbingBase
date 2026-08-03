@@ -1,5 +1,11 @@
 # @app/shared-logic
 
+## 1.0.16
+
+### Patch Changes
+
+- b374bdf: qs
+
 ## 1.0.15
 
 ### Patch Changes

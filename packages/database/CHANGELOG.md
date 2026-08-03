@@ -1,5 +1,11 @@
 # @app/supabase
 
+## 0.0.61
+
+### Patch Changes
+
+- b374bdf: qs
+
 ## 0.0.60
 
 ### Patch Changes
