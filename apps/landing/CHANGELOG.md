@@ -1,5 +1,11 @@
 # @app/landing
 
+## 1.0.17
+
+### Patch Changes
+
+- 664fea2: fix i18n redirection on internal routes
+
 ## 1.0.16
 
 ### Patch Changes
