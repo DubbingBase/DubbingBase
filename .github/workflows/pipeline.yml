@@ -281,6 +281,7 @@ jobs:
   upload-play-store:
     needs: [detect, build-android]
     if: |
+      always() &&
       github.event_name != 'pull_request' && 
       github.ref == 'refs/heads/main' &&
       needs.detect.outputs.mobile == 'true' &&
