@@ -1,5 +1,14 @@
 # @app/landing
 
+## 1.0.19
+
+### Patch Changes
+
+- c45f275: bump
+- Updated dependencies [c45f275]
+  - @app/locales@0.0.39
+  - @app/shared-logic@1.0.14
+
 ## 1.0.18
 
 ### Patch Changes

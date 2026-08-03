@@ -1,5 +1,11 @@
 # @app/shared-logic
 
+## 1.0.14
+
+### Patch Changes
+
+- c45f275: bump
+
 ## 1.0.13
 
 ### Patch Changes

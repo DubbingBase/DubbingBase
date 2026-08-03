@@ -1,5 +1,11 @@
 # @app/locales
 
+## 0.0.39
+
+### Patch Changes
+
+- c45f275: bump
+
 ## 0.0.38
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @app/website
 
+## 0.0.58
+
+### Patch Changes
+
+- c45f275: bump
+- Updated dependencies [c45f275]
+  - @app/locales@0.0.39
+
 ## 0.0.57
 
 ### Patch Changes

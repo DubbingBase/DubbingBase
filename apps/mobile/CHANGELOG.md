@@ -1,5 +1,16 @@
 # @app/mobile
 
+## 1.0.75
+
+### Patch Changes
+
+- b7cbc23: fix mobile app crash
+- c45f275: bump
+- Updated dependencies [c45f275]
+  - @app/supabase@0.0.59
+  - @app/locales@0.0.39
+  - @app/shared-logic@1.0.14
+
 ## 1.0.74
 
 ### Patch Changes
