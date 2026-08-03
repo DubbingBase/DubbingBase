@@ -1,5 +1,11 @@
 # @app/mobile
 
+## 1.0.76
+
+### Patch Changes
+
+- 624d344: fix auth & onesignal
+
 ## 1.0.75
 
 ### Patch Changes
