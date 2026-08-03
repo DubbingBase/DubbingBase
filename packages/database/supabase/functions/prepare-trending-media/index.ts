@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
+import { sendOneSignalNotification } from "../_shared/onesignal.ts";
 
 export default {
   fetch: withSupabase<Database>(
@@ -97,21 +98,10 @@ export default {
           }
         }
 
-        // 3. Send compact ntfy notification
-        const ntfyTopic = "Armaldio_DubbingBaseTrendingSummary";
+        // 3. Send compact OneSignal notification
         const summaryMessage = `Enqueued ${enqueuedCount} items.\nSkipped ${alreadyInQueueCount} already in queue.\nFailed to enqueue ${failedCount} items.`;
 
-        try {
-          await fetch(`https://ntfy.sh/${ntfyTopic}`, {
-            method: "POST",
-            body: summaryMessage,
-            headers: {
-              Title: "DubbingBase Trending Media Report",
-            },
-          });
-        } catch (notifyError) {
-          console.error("Failed to send ntfy notification:", notifyError);
-        }
+        await sendOneSignalNotification("DubbingBase Trending Media Report", summaryMessage);
 
         return Response.json({
           ok: true,
@@ -127,17 +117,10 @@ export default {
           error instanceof Error ? error.message : "Unknown error occurred";
         console.error("Trending media queuing failed:", errorMessage);
 
-        try {
-          await fetch(`https://ntfy.sh/Armaldio_DubbingBaseTrendingSummary`, {
-            method: "POST",
-            body: `Critical failure in prepare-trending-media: ${errorMessage}`,
-            headers: {
-              Title: "Trending Media Job FAILED",
-            },
-          });
-        } catch (_) {
-          // Ignore secondary notification errors
-        }
+        await sendOneSignalNotification(
+          "Trending Media Job FAILED",
+          `Critical failure in prepare-trending-media: ${errorMessage}`
+        );
 
         return Response.json(
           { ok: false, error: errorMessage },

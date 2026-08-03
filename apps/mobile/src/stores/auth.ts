@@ -3,6 +3,8 @@ import { ref, computed, onUnmounted } from "vue";
 import { supabase } from "@/api/supabase";
 import type { User } from "@supabase/supabase-js";
 import type { Permission } from "@/types/permissions";
+import { isPlatform } from "@ionic/vue";
+import OneSignal from "@onesignal/capacitor-plugin";
 
 export const useAuthStore = defineStore("auth", () => {
   // State
@@ -157,6 +159,19 @@ export const useAuthStore = defineStore("auth", () => {
       } = supabase.auth.onAuthStateChange(async (event, session) => {
         console.log("Auth state changed:", event, session);
         user.value = session?.user || null;
+
+        // Handle OneSignal user association
+        if (isPlatform("capacitor")) {
+          try {
+            if (session?.user) {
+              OneSignal.login(session.user.id);
+            } else if (event === "SIGNED_OUT") {
+              OneSignal.logout();
+            }
+          } catch (e) {
+            console.error("Failed to sync OneSignal user state", e);
+          }
+        }
 
         // Handle specific auth events if needed
         if (event === "SIGNED_OUT") {
