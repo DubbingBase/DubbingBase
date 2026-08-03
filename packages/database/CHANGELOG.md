@@ -1,5 +1,11 @@
 # @app/supabase
 
+## 0.0.57
+
+### Patch Changes
+
+- 21de085: add projects attachements
+
 ## 0.0.56
 
 ### Patch Changes

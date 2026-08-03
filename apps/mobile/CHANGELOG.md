@@ -1,5 +1,14 @@
 # @app/mobile
 
+## 1.0.73
+
+### Patch Changes
+
+- 4ed8277: fix permissions
+- 21de085: add projects attachements
+- Updated dependencies [21de085]
+  - @app/supabase@0.0.57
+
 ## 1.0.72
 
 ### Patch Changes
