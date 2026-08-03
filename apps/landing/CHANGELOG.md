@@ -1,5 +1,14 @@
 # @app/landing
 
+## 1.0.20
+
+### Patch Changes
+
+- cee846b: notifications
+- Updated dependencies [cee846b]
+  - @app/locales@0.0.40
+  - @app/shared-logic@1.0.15
+
 ## 1.0.19
 
 ### Patch Changes

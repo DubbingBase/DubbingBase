@@ -1,5 +1,11 @@
 # @app/locales
 
+## 0.0.40
+
+### Patch Changes
+
+- cee846b: notifications
+
 ## 0.0.39
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @app/supabase
 
+## 0.0.60
+
+### Patch Changes
+
+- cee846b: notifications
+
 ## 0.0.59
 
 ### Patch Changes

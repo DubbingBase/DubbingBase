@@ -1,5 +1,13 @@
 # @app/website
 
+## 0.0.59
+
+### Patch Changes
+
+- cee846b: notifications
+- Updated dependencies [cee846b]
+  - @app/locales@0.0.40
+
 ## 0.0.58
 
 ### Patch Changes

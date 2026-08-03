@@ -1,5 +1,15 @@
 # @app/mobile
 
+## 1.0.77
+
+### Patch Changes
+
+- cee846b: notifications
+- Updated dependencies [cee846b]
+  - @app/supabase@0.0.60
+  - @app/locales@0.0.40
+  - @app/shared-logic@1.0.15
+
 ## 1.0.76
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @app/og-image
 
+## 1.0.15
+
+### Patch Changes
+
+- cee846b: notifications
+
 ## 1.0.14
 
 ### Patch Changes
