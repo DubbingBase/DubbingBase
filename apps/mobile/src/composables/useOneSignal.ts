@@ -41,7 +41,7 @@ export function useOneSignal() {
   const hasPermission = () => {
     if (!isPlatform('capacitor')) return false;
     // Returns boolean indicating if user has granted push permissions
-    return OneSignal.Notifications.permission;
+    return OneSignal.Notifications.hasPermission;
   };
 
   return {

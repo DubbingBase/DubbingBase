@@ -14,6 +14,7 @@ import "./theme/variables.css";
 
 import { supabase } from "@/api/supabase";
 import { useAuthStore } from "@/stores/auth";
+import { useOneSignal } from "@/composables/useOneSignal";
 
 import { SplashScreen } from "@capacitor/splash-screen";
 
@@ -32,7 +33,12 @@ const app = createApp(App)
 
 router.isReady().then(async () => {
   const authStore = useAuthStore();
+  const { initOneSignal } = useOneSignal();
+  
   try {
+    // Initialize OneSignal before auth so OneSignal.login doesn't crash on startup
+    await initOneSignal();
+
     // Initialize auth first
     await authStore.initialize();
 
