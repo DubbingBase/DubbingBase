@@ -139,6 +139,44 @@ export type Database = {
         }
         Relationships: []
       }
+      project_attachments: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          dubbing_project_id: number
+          file_name: string
+          file_path: string
+          id: number
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          dubbing_project_id: number
+          file_name: string
+          file_path: string
+          id?: number
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          dubbing_project_id?: number
+          file_name?: string
+          file_path?: string
+          id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_attachments_dubbing_project_id_fkey"
+            columns: ["dubbing_project_id"]
+            isOneToOne: false
+            referencedRelation: "dubbing_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       source: {
         Row: {
           id: number

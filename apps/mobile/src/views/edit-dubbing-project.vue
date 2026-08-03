@@ -412,6 +412,55 @@
           </div>
         </AppModal>
 
+        <!-- Attachments Section (Only in Edit Mode) -->
+        <div v-if="isEditMode" class="form-card mt-4">
+          <div class="card-header">
+            <h3 class="card-title">Project Attachments (Proofs)</h3>
+          </div>
+          <div class="card-content">
+            <p class="text-xs text-[var(--app-color-text-secondary)] mb-4">Upload ending credits or other images to prove the voice cast.</p>
+
+            <div class="form-group flex flex-col gap-2">
+              <label class="form-label">Description</label>
+              <input
+                v-model="newAttachmentDescription"
+                type="text"
+                class="form-input"
+                placeholder="e.g. End credits showing French cast"
+              />
+              <label class="form-label mt-2">Image File</label>
+              <input
+                type="file"
+                accept="image/*"
+                @change="handleFileUpload"
+                :disabled="isUploadingAttachment"
+                class="form-input"
+              />
+              <p v-if="isUploadingAttachment" class="text-xs text-[var(--app-color-primary)] mt-1 font-semibold">Uploading...</p>
+            </div>
+
+            <!-- Attachments List -->
+            <div v-if="attachments.length > 0" class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div v-for="att in attachments" :key="att.id" class="flex flex-col border border-[var(--app-color-step-150)] rounded-xl overflow-hidden bg-[var(--app-color-step-100)]">
+                <img v-if="att.signedUrl" :src="att.signedUrl" class="w-full h-32 object-cover bg-[var(--app-color-step-50)]" />
+                <div v-else class="w-full h-32 flex items-center justify-center text-[var(--app-color-text-secondary)] text-xs">Loading...</div>
+                <div class="p-3 flex justify-between items-center gap-2">
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm text-white font-medium truncate">{{ att.description || 'No description' }}</p>
+                    <p class="text-xs text-[var(--app-color-text-secondary)] mt-0.5 truncate">{{ att.file_name }}</p>
+                  </div>
+                  <button @click="deleteAttachment(att.id, att.file_path)" class="p-2 bg-[var(--app-color-danger)] text-white rounded-lg" title="Delete">
+                    <IonIcon :icon="trashOutline" class="text-base" />
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div v-else class="text-center py-6 text-sm text-[var(--app-color-text-secondary)] border-2 border-dashed border-[var(--app-color-step-150)] rounded-xl mt-4">
+              No attachments uploaded yet.
+            </div>
+          </div>
+        </div>
+
         <!-- Studio Search Picker Modal -->
         <StudioSearchModal
           :is-open="showStudioSearchModal"
@@ -521,7 +570,6 @@
 </template>
 
 <script setup lang="ts">
-import { IonPage, useIonRouter } from "@ionic/vue";
 import AppPage from "@/components/common/layout/AppPage.vue";
 import AppHeader from "@/components/common/layout/AppHeader.vue";
 import AppToolbar from "@/components/common/layout/AppToolbar.vue";
@@ -533,12 +581,8 @@ import AppModal from "@/components/common/AppModal.vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import TmdbPersonSearchModal from "@/components/TmdbPersonSearchModal.vue";
 import { PersonData } from "@/components/PersonItem.vue";
-import {
-
-  createOutline,
-  closeOutline,
-  personAddOutline,
-} from "ionicons/icons";
+import { createOutline, closeOutline, personAddOutline, trashOutline } from "ionicons/icons";
+import { IonIcon, IonPage, useIonRouter } from "@ionic/vue";
 import PersonSearchModal from "@/components/PersonSearchModal.vue";
 import StudioSearchModal from "@/components/StudioSearchModal.vue";
 import JobSearchModal from "@/components/JobSearchModal.vue";
@@ -553,6 +597,7 @@ import ChevronRight from "~icons/lucide/chevron-right";
 import { ref, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { supabase } from "@/api/supabase";
+import imageCompression from "browser-image-compression";
 import { onIonViewWillEnter } from "@ionic/vue";
 import { useI18n } from "vue-i18n";
 import { getLanguageDisplayName } from "@/utils/language";
@@ -643,6 +688,20 @@ interface CastRow {
   highlight: boolean;
 }
 const castRows = ref<CastRow[]>([]);
+
+// Attachments State
+interface ProjectAttachment {
+  id: number;
+  dubbing_project_id: number;
+  file_path: string;
+  file_name: string;
+  description: string | null;
+  created_at: string | null;
+  signedUrl?: string; // Cache the signed url
+}
+const attachments = ref<ProjectAttachment[]>([]);
+const isUploadingAttachment = ref(false);
+const newAttachmentDescription = ref("");
 
 const isLoading = ref(false);
 const isSaving = ref(false);
@@ -973,6 +1032,20 @@ const fetchProjectDetails = async () => {
               highlight: w.highlight || false,
             }));
           }
+
+          // Fetch attachments
+          const { data: attachData, error: attachErr } = await supabase
+            .from("project_attachments")
+            .select("*")
+            .eq("dubbing_project_id", project.id)
+            .order("created_at", { ascending: false });
+
+          if (attachErr) {
+            console.error("Error fetching attachments:", attachErr);
+          } else {
+            attachments.value = attachData || [];
+            await fetchSignedUrlsForAttachments(attachments.value);
+          }
         }
       }
     }
@@ -1131,6 +1204,104 @@ const saveProject = async () => {
     alert(err.message || "Error saving dubbing project");
   } finally {
     isSaving.value = false;
+  }
+};
+
+const fetchSignedUrlsForAttachments = async (attachs: ProjectAttachment[]) => {
+  if (attachs.length === 0) return;
+  const paths = attachs.map(a => a.file_path);
+  const { data, error } = await supabase.storage.from("project_attachments").createSignedUrls(paths, 3600);
+  if (!error && data) {
+    attachs.forEach((att) => {
+      const match = data.find(d => d.path === att.file_path);
+      if (match && match.signedUrl) {
+        att.signedUrl = match.signedUrl;
+      }
+    });
+  }
+};
+
+const handleFileUpload = async (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (!file) return;
+
+  if (!isEditMode.value || !dbProjectId.value) {
+    alert("You must save the project before adding attachments.");
+    return;
+  }
+
+  isUploadingAttachment.value = true;
+  try {
+    const options = {
+      maxSizeMB: 1,
+      maxWidthOrHeight: 1920,
+      useWebWorker: true,
+    };
+    const compressedFile = await imageCompression(file, options);
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+    const filePath = `${dbProjectId.value}/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('project_attachments')
+      .upload(filePath, compressedFile, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (uploadError) throw uploadError;
+
+    const { data, error: insertError } = await supabase
+      .from('project_attachments')
+      .insert({
+        dubbing_project_id: dbProjectId.value,
+        file_path: filePath,
+        file_name: file.name,
+        description: newAttachmentDescription.value
+      })
+      .select()
+      .single();
+
+    if (insertError) throw insertError;
+
+    await fetchSignedUrlsForAttachments([data]);
+    attachments.value.unshift(data);
+    newAttachmentDescription.value = "";
+    target.value = '';
+    alert("Attachment uploaded successfully!");
+  } catch (err: any) {
+    console.error("Error uploading attachment:", err);
+    alert(err.message || "Failed to upload attachment");
+  } finally {
+    isUploadingAttachment.value = false;
+  }
+};
+
+const deleteAttachment = async (attachmentId: number, filePath: string) => {
+  if (!confirm("Are you sure you want to delete this attachment?")) return;
+
+  try {
+    const { error: dbError } = await supabase
+      .from('project_attachments')
+      .delete()
+      .eq('id', attachmentId);
+
+    if (dbError) throw dbError;
+
+    const { error: storageError } = await supabase.storage
+      .from('project_attachments')
+      .remove([filePath]);
+
+    if (storageError) {
+      console.error("Storage deletion failed, but DB record was deleted:", storageError);
+    }
+
+    attachments.value = attachments.value.filter(a => a.id !== attachmentId);
+  } catch (err: any) {
+    console.error("Error deleting attachment:", err);
+    alert(err.message || "Failed to delete attachment");
   }
 };
 
