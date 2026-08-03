@@ -2,7 +2,7 @@ import { isPlatform } from '@ionic/vue';
 import OneSignal from '@onesignal/capacitor-plugin';
 
 export function useOneSignal() {
-  const initOneSignal = () => {
+  const initOneSignal = async () => {
     // Only initialize on native platforms (iOS/Android)
     if (!isPlatform('capacitor')) {
       console.log('OneSignal skipped: Not running in a native environment');
@@ -18,7 +18,7 @@ export function useOneSignal() {
 
     try {
       // Set OneSignal App ID
-      OneSignal.initialize(appId);
+      await OneSignal.initialize(appId);
       console.log('OneSignal initialized successfully');
     } catch (error) {
       console.error("OneSignal initialization failed:", error);
@@ -38,10 +38,10 @@ export function useOneSignal() {
     }
   };
 
-  const hasPermission = () => {
+  const hasPermission = async () => {
     if (!isPlatform('capacitor')) return false;
     // Returns boolean indicating if user has granted push permissions
-    return OneSignal.Notifications.hasPermission;
+    return await OneSignal.Notifications.hasPermission();
   };
 
   return {

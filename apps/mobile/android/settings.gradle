@@ -1,4 +1,6 @@
-// Include the main app module
+plugins {
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+}// Include the main app module
 include ':app'
 
 // Include Cordova plugins only if they exist
