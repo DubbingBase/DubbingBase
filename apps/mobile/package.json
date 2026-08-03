@@ -30,6 +30,7 @@
     "@ionic/vue": "^8.8.15",
     "@ionic/vue-router": "^8.8.15",
     "@onesignal/capacitor-plugin": "^1.1.7",
+    "@onesignal/onesignal-vue3": "^2.5.4",
     "@supabase/supabase-js": "^2.111.0",
     "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^26.1.2",

@@ -1,0 +1,21 @@
+diff --git a/android/build.gradle.kts b/android/build.gradle.kts
+index 8dd5acd2709bedc9706f5d9c7e8060a2c1ddd0db..b65ce5441505b69a8045a220aba6723195f5e96b 100644
+--- a/android/build.gradle.kts
++++ b/android/build.gradle.kts
+@@ -102,13 +102,10 @@ apply(plugin = "com.android.library")
+ 
+ val androidPluginVersion = com.android.build.api.AndroidPluginVersion.getCurrent()
+ 
+-// AGP 9 provides Kotlin support itself, while AGP 8 hosts still require this plugin.
+-if (androidPluginVersion < com.android.build.api.AndroidPluginVersion(9, 0)) {
+-    apply(plugin = "kotlin-android")
++apply(plugin = "kotlin-android")
+ 
+-    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+-        compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+-    }
++tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
++    compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+ }
+ 
+ configure<com.android.build.api.dsl.LibraryExtension> {

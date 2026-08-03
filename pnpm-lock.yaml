@@ -6,6 +6,11 @@ settings:
 
 packageExtensionsChecksum: 098265bd533b186148523f5894a069f1
 
+patchedDependencies:
+  '@onesignal/capacitor-plugin':
+    hash: nssftsay6t2ex2wkhwfdmszqfu
+    path: patches/@onesignal__capacitor-plugin.patch
+
 importers:
 
   .:
@@ -157,7 +162,10 @@ importers:
         version: 8.8.15(@stencil/core@4.43.5)(vue-router@4.6.4(vue@3.5.40(typescript@6.0.3)))(vue@3.5.40(typescript@6.0.3))
       '@onesignal/capacitor-plugin':
         specifier: ^1.1.7
-        version: 1.1.7(@capacitor/core@8.4.2)
+        version: 1.1.7(patch_hash=nssftsay6t2ex2wkhwfdmszqfu)(@capacitor/core@8.4.2)
+      '@onesignal/onesignal-vue3':
+        specifier: ^2.5.4
+        version: 2.5.4(typescript@6.0.3)
       '@supabase/supabase-js':
         specifier: ^2.111.0
         version: 2.111.0
@@ -2470,6 +2478,9 @@ packages:
     resolution: {integrity: sha512-t25tnGb79TGB8u6xGHIO0uJSz27C0wWEzlU6zOH+jZSQ1NeF/vCFoZox9yjEOj3t8hBOEhakZu+oDflwcDv6tw==}
     peerDependencies:
       '@capacitor/core': '>=7.0.0'
+
+  '@onesignal/onesignal-vue3@2.5.4':
+    resolution: {integrity: sha512-vgWrNIdf7DQaqkBPNwbykV6SJtU1iy3Ev5C+ezJPdd3CxBDyETWLIo3uL3WSHEpvmofssgRiiXgEr+j/a4U1WA==}
 
   '@oxc-parser/binding-android-arm-eabi@0.140.0':
     resolution: {integrity: sha512-ZfjDZ422mo7eo3b3VltqNsV9kmv1qt/sPEAMSl64iOSwhVfd0eIZ9LB79Mbs1xYXJnk7WSROwzBCKDIiVxPTvQ==}
@@ -11625,9 +11636,15 @@ snapshots:
 
   '@one-ini/wasm@0.1.1': {}
 
-  '@onesignal/capacitor-plugin@1.1.7(@capacitor/core@8.4.2)':
+  '@onesignal/capacitor-plugin@1.1.7(patch_hash=nssftsay6t2ex2wkhwfdmszqfu)(@capacitor/core@8.4.2)':
     dependencies:
       '@capacitor/core': 8.4.2
+
+  '@onesignal/onesignal-vue3@2.5.4(typescript@6.0.3)':
+    dependencies:
+      vue: 3.5.40(typescript@6.0.3)
+    transitivePeerDependencies:
+      - typescript
 
   '@oxc-parser/binding-android-arm-eabi@0.140.0':
     optional: true

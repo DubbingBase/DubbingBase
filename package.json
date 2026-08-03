@@ -30,6 +30,9 @@
           "nuxt": "-"
         }
       }
+    },
+    "patchedDependencies": {
+      "@onesignal/capacitor-plugin": "patches/@onesignal__capacitor-plugin.patch"
     }
   },
   "workspaces": [

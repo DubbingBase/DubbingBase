@@ -19,16 +19,24 @@ import { useOneSignal } from "@/composables/useOneSignal";
 import { SplashScreen } from "@capacitor/splash-screen";
 
 import { IonicVue } from "@ionic/vue";
+import OneSignalVuePlugin from '@onesignal/onesignal-vue3';
 import "@ionic/vue/css/core.css";
 // Basic Ionic styles for components
 import "@ionic/vue/css/normalize.css";
 import "@ionic/vue/css/structure.css";
 import "@ionic/vue/css/typography.css";
 
+import { isPlatform } from "@ionic/vue";
+
 const app = createApp(App)
   .use(createPinia())
-  .use(IonicVue)
-  .use(router)
+  .use(IonicVue);
+
+if (!isPlatform('capacitor')) {
+  app.use(OneSignalVuePlugin, { appId: import.meta.env.VITE_ONESIGNAL_APP_ID || "" });
+}
+
+app.use(router)
   .use(i18n);
 
 router.isReady().then(async () => {

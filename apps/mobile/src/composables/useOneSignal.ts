@@ -1,16 +1,11 @@
 import { isPlatform } from '@ionic/vue';
 import OneSignal from '@onesignal/capacitor-plugin';
+import { useOneSignal as useOneSignalWeb } from '@onesignal/onesignal-vue3';
 
 let initPromise: Promise<void> | null = null;
 
 export function useOneSignal() {
   const initOneSignal = () => {
-    // Only initialize on native platforms (iOS/Android)
-    if (!isPlatform('capacitor')) {
-      console.log('OneSignal skipped: Not running in a native environment');
-      return Promise.resolve();
-    }
-
     const appId = import.meta.env.VITE_ONESIGNAL_APP_ID;
 
     if (!appId) {
@@ -19,45 +14,70 @@ export function useOneSignal() {
     }
 
     if (!initPromise) {
-      // Set OneSignal App ID
-      initPromise = OneSignal.initialize(appId).then(() => {
-        console.log('OneSignal initialized successfully');
-      }).catch((error) => {
-        console.error("OneSignal initialization failed:", error);
-      });
+      if (isPlatform('capacitor')) {
+        // Native
+        initPromise = OneSignal.initialize(appId).then(() => {
+          console.log('OneSignal initialized successfully (Native)');
+        }).catch((error) => {
+          console.error("OneSignal initialization failed (Native):", error);
+        });
+      } else {
+        // Web
+        const OneSignalWebInstance = useOneSignalWeb();
+        if (OneSignalWebInstance) {
+          // The Vue plugin automatically initializes when we pass {appId} in main.ts
+          console.log('OneSignal web SDK loaded via Vue plugin');
+          initPromise = Promise.resolve();
+        } else {
+          console.warn("OneSignalWeb instance not found");
+          return Promise.resolve();
+        }
+      }
     }
     
     return initPromise;
   };
 
   const login = async (userId: string) => {
-    if (!isPlatform('capacitor')) return;
     if (initPromise) await initPromise;
     try {
-      await OneSignal.login(userId);
+      if (isPlatform('capacitor')) {
+        await OneSignal.login(userId);
+      } else {
+        const OneSignalWebInstance = useOneSignalWeb();
+        await OneSignalWebInstance?.login(userId);
+      }
     } catch (error) {
       console.error("OneSignal login failed:", error);
     }
   };
 
   const logout = async () => {
-    if (!isPlatform('capacitor')) return;
     if (initPromise) await initPromise;
     try {
-      await OneSignal.logout();
+      if (isPlatform('capacitor')) {
+        await OneSignal.logout();
+      } else {
+        const OneSignalWebInstance = useOneSignalWeb();
+        await OneSignalWebInstance?.logout();
+      }
     } catch (error) {
       console.error("OneSignal logout failed:", error);
     }
   };
 
   const requestPushPermission = async (fallbackToSettings = true) => {
-    if (!isPlatform('capacitor')) return false;
-
     try {
       if (initPromise) await initPromise;
-      const success = await OneSignal.Notifications.requestPermission(fallbackToSettings);
-      console.log("OneSignal push permission granted: " + success);
-      return success;
+      if (isPlatform('capacitor')) {
+        const success = await OneSignal.Notifications.requestPermission(fallbackToSettings);
+        console.log("OneSignal push permission granted: " + success);
+        return success;
+      } else {
+        const OneSignalWebInstance = useOneSignalWeb();
+        const success = await OneSignalWebInstance?.Notifications?.requestPermission();
+        return !!success;
+      }
     } catch (error) {
       console.error("OneSignal permission request failed:", error);
       return false;
@@ -65,10 +85,13 @@ export function useOneSignal() {
   };
 
   const hasPermission = async () => {
-    if (!isPlatform('capacitor')) return false;
     if (initPromise) await initPromise;
-    // Returns boolean indicating if user has granted push permissions
-    return await OneSignal.Notifications.hasPermission();
+    if (isPlatform('capacitor')) {
+      return await OneSignal.Notifications.hasPermission();
+    } else {
+      const OneSignalWebInstance = useOneSignalWeb();
+      return !!OneSignalWebInstance?.Notifications?.permission;
+    }
   };
 
   return {

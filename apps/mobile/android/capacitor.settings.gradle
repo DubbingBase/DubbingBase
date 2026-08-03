@@ -36,4 +36,4 @@ include ':capacitor-toast'
 project(':capacitor-toast').projectDir = new File('../../../node_modules/.pnpm/@capacitor+toast@8.0.1_@capacitor+core@8.4.2/node_modules/@capacitor/toast/android')
 
 include ':onesignal-capacitor-plugin'
-project(':onesignal-capacitor-plugin').projectDir = new File('../../../node_modules/.pnpm/@onesignal+capacitor-plugin@1.1.7_@capacitor+core@8.4.2/node_modules/@onesignal/capacitor-plugin/android')
+project(':onesignal-capacitor-plugin').projectDir = new File('../../../node_modules/.pnpm/@onesignal+capacitor-plugin@1.1.7_patch_hash=nssftsay6t2ex2wkhwfdmszqfu_@capacitor+core@8.4.2/node_modules/@onesignal/capacitor-plugin/android')
