@@ -125,6 +125,17 @@ export class VoiceActorService {
       contentType,
     );
 
+    // Check if the work already exists to know if we need to notify subscribers
+    const { data: existingWork } = await this.supabase
+      .from("work")
+      .select("id")
+      .eq("voice_actor_id", voiceActorId)
+      .eq("actor_id", actorId)
+      .eq("dubbing_project_id", dubbing_project_id)
+      .maybeSingle();
+
+    const isNew = !existingWork;
+
     const { data, error } = await this.supabase
       .from("work")
       .upsert({
@@ -136,6 +147,14 @@ export class VoiceActorService {
       .select();
 
     if (error) throw error;
+
+    // Manually trigger the notification edge function for newly added works
+    if (isNew) {
+      this.supabase.functions.invoke("notify-subscribers", {
+        body: { voice_actor_id: voiceActorId, dubbing_project_id },
+      }).catch((err) => console.error("[Notify] Failed to invoke notify-subscribers:", err));
+    }
+
     return data;
   }
 

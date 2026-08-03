@@ -502,3 +502,5 @@ verify_jwt = false
 [functions.og-image]
 verify_jwt = false
 
+[functions.notify-subscribers]
+verify_jwt = false
