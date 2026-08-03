@@ -1,5 +1,11 @@
 # @app/supabase
 
+## 0.0.58
+
+### Patch Changes
+
+- 5e7fbe5: fix build
+
 ## 0.0.57
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @app/shared-logic
 
+## 1.0.13
+
+### Patch Changes
+
+- 5e7fbe5: fix build
+
 ## 1.0.12
 
 ### Patch Changes

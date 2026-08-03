@@ -1,5 +1,13 @@
 # @app/website
 
+## 0.0.57
+
+### Patch Changes
+
+- 5e7fbe5: fix build
+- Updated dependencies [5e7fbe5]
+  - @app/locales@0.0.38
+
 ## 0.0.56
 
 ### Patch Changes

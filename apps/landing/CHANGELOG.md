@@ -1,5 +1,14 @@
 # @app/landing
 
+## 1.0.18
+
+### Patch Changes
+
+- 5e7fbe5: fix build
+- Updated dependencies [5e7fbe5]
+  - @app/locales@0.0.38
+  - @app/shared-logic@1.0.13
+
 ## 1.0.17
 
 ### Patch Changes

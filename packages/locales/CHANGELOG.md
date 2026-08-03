@@ -1,5 +1,11 @@
 # @app/locales
 
+## 0.0.38
+
+### Patch Changes
+
+- 5e7fbe5: fix build
+
 ## 0.0.37
 
 ### Patch Changes
