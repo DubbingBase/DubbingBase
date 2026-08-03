@@ -311,6 +311,32 @@ export type Database = {
           },
         ]
       }
+      voice_actor_subscriptions: {
+        Row: {
+          created_at: string
+          user_id: string
+          voice_actor_id: number
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+          voice_actor_id: number
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+          voice_actor_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_actor_subscriptions_voice_actor_id_fkey"
+            columns: ["voice_actor_id"]
+            isOneToOne: false
+            referencedRelation: "voice_actors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       voice_actors: {
         Row: {
           awards: string | null

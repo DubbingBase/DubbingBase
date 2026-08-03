@@ -30,3 +30,7 @@ for bucket in $(grep -oP '\[storage\.buckets\.\K[^\]]+' supabase/config.toml); d
     rm -f "$folder/.keep"
   fi
 done
+
+# Strip out storage.buckets inserts from seed.sql because config.toml already creates them 
+# and running an INSERT during seed will crash with a unique key constraint.
+perl -0777 -pi -e 's/INSERT INTO "storage"\."buckets".*?;//gs' supabase/seed.sql

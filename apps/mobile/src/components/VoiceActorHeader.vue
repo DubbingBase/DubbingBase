@@ -17,8 +17,22 @@
       />
     </div>
     <div class="actor-info">
-      <div class="actor-name">
-        {{ voiceActor.firstname }} {{ voiceActor.lastname }}
+      <div class="actor-name-row">
+        <div class="actor-name">
+          {{ voiceActor.firstname }} {{ voiceActor.lastname }}
+        </div>
+        <button 
+          v-if="authStore.user"
+          class="notify-btn" 
+          :class="{ 'is-subscribed': isSubscribed }"
+          @click="toggleSubscription"
+          :disabled="isLoading"
+          :title="isSubscribed ? t('common.unsubscribe', 'Se désabonner') : t('common.subscribe', 'S\'abonner')"
+        >
+          <BellRing v-if="isSubscribed && !isLoading" class="icon" />
+          <Bell v-else-if="!isSubscribed && !isLoading" class="icon" />
+          <div v-if="isLoading" class="spinner"></div>
+        </button>
       </div>
       <div class="actor-details">
         <div v-if="voiceActor.date_of_birth" class="detail-item">
@@ -55,6 +69,11 @@ import { supabase } from "../api/supabase";
 import ImageEditorModal from "@/components/common/ImageEditorModal.vue";
 import { THUMBNAIL_DEFAULT_WIDTH, THUMBNAIL_DEFAULT_HEIGHT } from "@/constants/thumbnails";
 import { getAvatarFallbackUrl } from "@/utils/image";
+import Bell from "~icons/lucide/bell";
+import BellRing from "~icons/lucide/bell-ring";
+import { useVoiceActorSubscription } from "@/composables/useVoiceActorSubscription";
+import { useAuthStore } from "@/stores/auth";
+import { useI18n } from "vue-i18n";
 
 interface VoiceActor {
   id: number;
@@ -80,6 +99,19 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   profilePictureChanged: [value: string];
 }>();
+
+const { t } = useI18n();
+const authStore = useAuthStore();
+const { isSubscribed, isLoading, fetchSubscription, toggleSubscription } = useVoiceActorSubscription(() => props.voiceActor.id.toString());
+
+import { onMounted, watch } from "vue";
+onMounted(() => {
+  fetchSubscription();
+});
+
+watch(() => props.voiceActor.id, () => {
+  fetchSubscription();
+});
 
 const isEditorOpen = ref(false);
 const selectedImageFile = ref<File | null>(null);
@@ -187,6 +219,13 @@ const uploadImage = async () => {
     gap: 6px;
   }
 
+  .actor-name-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+  }
+
   .actor-name {
     font-size: 1.5rem;
     font-weight: 700;
@@ -197,6 +236,53 @@ const uploadImage = async () => {
     @media (max-width: 768px) {
       font-size: 1.3rem;
     }
+  }
+
+  .notify-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background-color: var(--app-color-step-100, #1e1e1e);
+    color: var(--app-color-text-secondary, #9ca3af);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    
+    &:hover {
+      background-color: var(--app-color-step-150, #2d2d2d);
+      color: var(--app-color-text-primary, #ffffff);
+    }
+    
+    &.is-subscribed {
+      background-color: rgba(59, 130, 246, 0.15); /* var(--app-color-primary) with opacity */
+      color: var(--app-color-primary, #3b82f6);
+    }
+    
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .icon {
+      font-size: 1.2rem;
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid currentColor;
+      border-right-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+    }
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
   }
 
   .actor-details {
