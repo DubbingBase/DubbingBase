@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
+import { sendOneSignalNotification } from "../_shared/onesignal.ts";
 
 export default {
   fetch: withSupabase<Database>(
@@ -151,38 +152,14 @@ export default {
             `[QUEUE] Successfully processed and archived message ID ${msgId}.`,
           );
 
-          try {
-            const ntfyRes = await fetch(
-              `https://ntfy.sh/Armaldio_DubbingBaseQueue`,
-              {
-                method: "POST",
-                body: `Successfully processed ${mediaTitle}${
-                  payload.season_number
-                    ? ` (Season ${payload.season_number})`
-                    : ""
-                }${
-                  payload.episode_number
-                    ? ` (Episode ${payload.episode_number})`
-                    : ""
-                }. Added ${responseData.changes ?? 0} new voice actors.`,
-                headers: {
-                  Title: "Queue Item Processed",
-                  Tags: "white_check_mark",
-                },
-              },
-            );
-            if (!ntfyRes.ok) {
-              console.error(
-                "[QUEUE] ntfy error (success branch):",
-                ntfyRes.status,
-                await ntfyRes.text(),
-              );
-            } else {
-              await ntfyRes.text();
-            }
-          } catch (e) {
-            console.error("[QUEUE] ntfy exception (success branch):", e);
-          }
+          await sendOneSignalNotification(
+            "Queue Item Processed",
+            `Successfully processed ${mediaTitle}${
+              payload.season_number ? ` (Season ${payload.season_number})` : ""
+            }${
+              payload.episode_number ? ` (Episode ${payload.episode_number})` : ""
+            }. Added ${responseData.changes ?? 0} new voice actors.`
+          );
         } catch (err) {
           let errMsg = "";
           if (err instanceof Error) {
@@ -218,30 +195,10 @@ export default {
             error: errMsg,
           });
 
-          try {
-            const ntfyRes = await fetch(
-              `https://ntfy.sh/Armaldio_DubbingBaseQueue`,
-              {
-                method: "POST",
-                body: `Failed to process ${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type} (TMDB ID ${payload.tmdb_id}): ${errMsg}`,
-                headers: {
-                  Title: "Queue Item Failed",
-                  Tags: "warning",
-                },
-              },
-            );
-            if (!ntfyRes.ok) {
-              console.error(
-                "[QUEUE] ntfy error (fail branch):",
-                ntfyRes.status,
-                await ntfyRes.text(),
-              );
-            } else {
-              await ntfyRes.text();
-            }
-          } catch (e) {
-            console.error("[QUEUE] ntfy exception (fail branch):", e);
-          }
+          await sendOneSignalNotification(
+            "Queue Item Failed",
+            `Failed to process ${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type} (TMDB ID ${payload.tmdb_id}): ${errMsg}`
+          );
         }
 
         // Check if there are more items in the queue and self-trigger to drain it.
@@ -299,30 +256,10 @@ export default {
           error instanceof Error ? error.stack : error,
         );
 
-        try {
-          const ntfyRes = await fetch(
-            `https://ntfy.sh/Armaldio_DubbingBaseQueue`,
-            {
-              method: "POST",
-              body: `Critical failure in process-media-queue: ${errorMsg}`,
-              headers: {
-                Title: "Queue Processor FAILED",
-                Tags: "rotating_light",
-              },
-            },
-          );
-          if (!ntfyRes.ok) {
-            console.error(
-              "[QUEUE] ntfy error (critical branch):",
-              ntfyRes.status,
-              await ntfyRes.text(),
-            );
-          } else {
-            await ntfyRes.text();
-          }
-        } catch (e) {
-          console.error("[QUEUE] ntfy exception (critical branch):", e);
-        }
+        await sendOneSignalNotification(
+          "Queue Processor FAILED",
+          `Critical failure in process-media-queue: ${errorMsg}`
+        );
 
         return Response.json({ ok: false, error: errorMsg }, { status: 500 });
       }
