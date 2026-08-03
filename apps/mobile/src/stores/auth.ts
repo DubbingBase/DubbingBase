@@ -4,7 +4,7 @@ import { supabase } from "@/api/supabase";
 import type { User } from "@supabase/supabase-js";
 import type { Permission } from "@/types/permissions";
 import { isPlatform } from "@ionic/vue";
-import OneSignal from "@onesignal/capacitor-plugin";
+import { useOneSignal } from "@/composables/useOneSignal";
 
 export const useAuthStore = defineStore("auth", () => {
   // State
@@ -140,8 +140,11 @@ export const useAuthStore = defineStore("auth", () => {
   let authListener: { subscription: { unsubscribe: () => void } | null } = {
     subscription: null,
   };
+  let isInitialized = false;
 
   const initialize = async () => {
+    if (isInitialized) return true;
+    
     try {
       // First check current session
       const {
@@ -154,6 +157,7 @@ export const useAuthStore = defineStore("auth", () => {
       }
 
       // Set up auth state listener
+      const { login, logout } = useOneSignal();
       const {
         data: { subscription },
       } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -163,10 +167,10 @@ export const useAuthStore = defineStore("auth", () => {
         // Handle OneSignal user association
         if (isPlatform("capacitor")) {
           try {
-            if (session?.user) {
-              OneSignal.login(session.user.id);
-            } else if (event === "SIGNED_OUT") {
-              OneSignal.logout();
+            if (session?.user && !session.user.is_anonymous) {
+              login(session.user.id);
+            } else if (event === "SIGNED_OUT" || session?.user?.is_anonymous) {
+              logout();
             }
           } catch (e) {
             console.error("Failed to sync OneSignal user state", e);
@@ -183,6 +187,7 @@ export const useAuthStore = defineStore("auth", () => {
       // Store the subscription for cleanup
       authListener.subscription = subscription;
 
+      isInitialized = true;
       return true;
     } catch (err) {
       console.error("Error initializing auth:", err);

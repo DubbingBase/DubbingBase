@@ -9,14 +9,6 @@ import { usePostHog } from "@/composables/usePostHog";
 
 // Import your custom route meta types
 import Home from "../views/home.vue";
-
-import MovieDetails from "../views/movie-details.vue";
-import ActorDetails from "../views/actor-details.vue";
-import SerieDetails from "../views/serie-details.vue";
-import VoiceActorDetails from "../views/voice-actor-details.vue";
-import Search from "../views/search.vue";
-import SeasonDetails from "@/views/season-details.vue";
-import SeasonByEpisode from "@/views/season-by-episodes.vue";
 import Login from "../views/login.vue";
 
 const routes: readonly RouteRecordRaw[] = [
@@ -30,7 +22,11 @@ const routes: readonly RouteRecordRaw[] = [
     component: Login,
   },
   { path: "/home", name: "Home", component: Home },
-  { name: "Search", path: "/search", component: Search },
+  { 
+    name: "Search", 
+    path: "/search", 
+    component: () => import("../views/search.vue") 
+  },
   {
     name: "Settings",
     path: "/settings",
@@ -69,22 +65,22 @@ const routes: readonly RouteRecordRaw[] = [
   {
     name: "MovieDetails",
     path: "/movie/:id",
-    component: MovieDetails,
+    component: () => import("../views/movie-details.vue"),
   },
   {
     name: "ActorDetails",
     path: "/actor/:id",
-    component: ActorDetails,
+    component: () => import("../views/actor-details.vue"),
   },
   {
     name: "SerieDetails",
     path: "/serie/:id",
-    component: SerieDetails,
+    component: () => import("../views/serie-details.vue"),
   },
   {
     name: "voice-actor-details",
     path: "/voice-actor/:id",
-    component: VoiceActorDetails,
+    component: () => import("../views/voice-actor-details.vue"),
   },
   {
     name: "StudioDetails",
@@ -104,12 +100,12 @@ const routes: readonly RouteRecordRaw[] = [
   {
     name: "SeasonDetails",
     path: "/serie/:id/season/:season",
-    component: SeasonDetails,
+    component: () => import("@/views/season-details.vue"),
   },
   {
     name: "SeasonByEpisodes",
     path: "/serie/:id/season/:season/details/:episode",
-    component: SeasonByEpisode,
+    component: () => import("@/views/season-by-episodes.vue"),
   },
 ];
 

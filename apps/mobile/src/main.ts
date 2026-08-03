@@ -36,8 +36,8 @@ router.isReady().then(async () => {
   const { initOneSignal } = useOneSignal();
   
   try {
-    // Initialize OneSignal before auth so OneSignal.login doesn't crash on startup
-    await initOneSignal();
+    // Start OneSignal initialization asynchronously so it doesn't block startup
+    initOneSignal();
 
     // Initialize auth first
     await authStore.initialize();
