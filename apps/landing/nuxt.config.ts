@@ -49,7 +49,7 @@ export default defineNuxtConfig({
     detectBrowserLanguage: {
       useCookie: true,
       cookieKey: "user_lang",
-      redirectOn: "root", // Only redirect on root path /
+      redirectOn: "all", // Redirects on all paths (fixes 404 on URLs without language prefix)
     },
   },
 
