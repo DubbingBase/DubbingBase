@@ -14,7 +14,8 @@
   "nav": {
     "login": "Login",
     "apiKey": "API Key",
-    "home": "Home"
+    "home": "Home",
+    "profile": "Profile"
   },
   "theme": {
     "light": "Light",

@@ -14,7 +14,8 @@
   "nav": {
     "login": "Connexion",
     "apiKey": "Clé API",
-    "home": "Accueil"
+    "home": "Accueil",
+    "profile": "Profil"
   },
   "theme": {
     "light": "Clair",

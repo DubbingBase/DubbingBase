@@ -1,51 +1,42 @@
 <template>
-  <div class="h-screen w-full flex bg-slate-950 text-slate-100 overflow-hidden">
-    <!-- Mobile Navigation Bar -->
-    <header class="lg:hidden fixed top-0 left-0 right-0 h-16 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-4 z-40">
-      <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-400">
-        DubbingBase Admin
-      </h1>
-      <button @click="isSidebarOpen = !isSidebarOpen" class="text-slate-400 hover:text-white p-2">
+  <div class="flex flex-col lg:flex-row w-full min-h-screen bg-white dark:bg-[#121212] text-gray-900 dark:text-white">
+    
+    <!-- Mobile Admin Nav Bar -->
+    <div class="lg:hidden sticky top-[72px] md:top-[80px] z-40 bg-gray-50 dark:bg-[#18181b] border-b border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center justify-between shadow-sm">
+      <h2 class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ currentSectionName }}</h2>
+      <button @click="isSidebarOpen = !isSidebarOpen" class="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path v-if="!isSidebarOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
           <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
-    </header>
+    </div>
 
     <!-- Sidebar Backdrop for Mobile -->
     <div
       v-if="isSidebarOpen"
       @click="isSidebarOpen = false"
-      class="lg:hidden fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40"
+      class="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[45]"
     ></div>
 
-    <!-- Sidebar (Drawer on mobile, fixed on desktop) -->
+    <!-- Sidebar (Drawer on mobile, sticky on desktop) -->
     <aside
       :class="[
-        'fixed inset-y-0 left-0 w-72 bg-slate-900 border-r border-slate-800 z-50 transform lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col',
+        'fixed inset-y-0 left-0 w-72 bg-white dark:bg-[#121212] lg:bg-transparent lg:dark:bg-transparent border-r lg:border-r-0 border-gray-200 dark:border-[#2a2a2a] z-50 transform transition-transform duration-300 ease-in-out flex flex-col',
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full',
-        'lg:static lg:h-screen lg:shrink-0'
+        'lg:sticky lg:top-[80px] lg:h-[calc(100vh-80px)] lg:shrink-0 lg:translate-x-0 lg:z-30'
       ]"
     >
-      <!-- Sidebar Header -->
-      <div class="h-16 flex items-center justify-between px-6 border-b border-slate-800 shrink-0">
-        <h1 class="text-2xl font-black tracking-tight text-white bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-400">
-          DubbingBase
-        </h1>
-        <span class="text-[10px] px-2 py-0.5 bg-slate-800 text-slate-400 rounded-full font-mono font-semibold border border-slate-700/50">
-          Admin
-        </span>
-      </div>
+      <div class="h-4 hidden lg:block shrink-0"></div> <!-- Small top padding for desktop -->
 
       <!-- Navigation Links -->
-      <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
+      <nav class="flex-1 px-4 py-4 space-y-1.5 overflow-y-auto">
         <NuxtLink
           v-for="item in navItems"
           :key="item.path"
           :to="localePath(item.path)"
-          class="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-150 group font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800/50"
-          active-class="bg-blue-600/10 text-blue-400 border border-blue-500/20 hover:bg-blue-600/15 hover:text-blue-300"
+          class="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-150 group font-medium text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/50 dark:hover:bg-gray-800/50"
+          active-class="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-200/50 dark:border-blue-500/20"
           @click="isSidebarOpen = false"
         >
           <span class="shrink-0 text-current" v-html="item.icon"></span>
@@ -53,46 +44,11 @@
         </NuxtLink>
       </nav>
 
-      <!-- Sidebar Footer (Auth Session) -->
-      <div class="p-4 border-t border-slate-800 shrink-0 bg-slate-900/50 space-y-3">
-        <div class="flex items-center space-x-3 px-2">
-          <div class="h-9 w-9 rounded-full bg-slate-800 flex items-center justify-center text-blue-400 font-bold border border-slate-700">
-            {{ user?.email ? user.email.charAt(0).toUpperCase() : 'A' }}
-          </div>
-          <div class="flex-1 min-w-0">
-            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Connected as</p>
-            <p class="text-xs text-slate-300 truncate font-medium">{{ user?.email }}</p>
-          </div>
-        </div>
-        <button
-          @click="handleSignOut"
-          class="w-full flex items-center justify-center space-x-2 py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-sm font-semibold border border-slate-700 transition-all duration-150"
-        >
-          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-          <span>Sign Out</span>
-        </button>
-      </div>
     </aside>
 
     <!-- Main Content Wrapper -->
-    <div class="flex-1 flex flex-col h-full overflow-y-auto overflow-x-hidden pt-16 lg:pt-0">
-      <!-- Top header on desktop -->
-      <header class="hidden lg:flex h-16 border-b border-slate-800 items-center justify-between px-8 bg-slate-900/40 backdrop-blur-md sticky top-0 z-35">
-        <h2 class="text-lg font-bold text-white">{{ currentSectionName }}</h2>
-        <div class="flex items-center space-x-4">
-          <span class="text-xs px-2.5 py-1 bg-green-500/10 text-green-400 rounded-full font-semibold border border-green-500/20">
-            Admin Session
-          </span>
-          <NuxtLink :to="localePath('/')" class="text-xs px-2.5 py-1 bg-slate-800 text-slate-300 hover:text-white rounded-full font-semibold border border-slate-700/50 transition">
-            Back to App
-          </NuxtLink>
-        </div>
-      </header>
-
-      <!-- Main viewport -->
-      <main class="flex-1 p-6 lg:p-8 bg-slate-950">
+    <div class="flex-1 flex flex-col min-w-0">
+      <main class="flex-1 p-4 lg:p-8">
         <slot />
       </main>
     </div>
@@ -165,9 +121,4 @@ const currentSectionName = computed(() => {
   if (route.path.startsWith("/admin/add-voice-cast/")) return "Add Voice Cast";
   return "Administration";
 });
-
-const handleSignOut = async () => {
-  await supabase.auth.signOut();
-  router.push(localePath("/login"));
-};
 </script>

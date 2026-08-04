@@ -1,21 +1,21 @@
 <template>
   <div class="space-y-6">
     <!-- Quick Actions Header -->
-    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex flex-wrap items-center justify-between gap-4 shadow-xl">
+    <div class="bg-white dark:bg-[#1d1d1d] p-5 rounded-2xl border border-gray-200 dark:border-[#2a2a2a] flex flex-wrap items-center justify-between gap-4 shadow-xl">
       <div>
-        <h2 class="text-xl font-bold text-white">Dashboard Overview</h2>
-        <p class="text-xs text-slate-400 mt-0.5">Manage dubbing projects, voice actors, and system statistics.</p>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">Dashboard Overview</h2>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Manage dubbing projects, voice actors, and system statistics.</p>
       </div>
       <div class="flex items-center space-x-3">
         <NuxtLink
           :to="localePath('/admin/movies/new')"
-          class="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl shadow-lg transition-all flex items-center space-x-1.5"
+          class="px-4 py-2.5 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-200 text-white dark:text-gray-900 text-xs font-semibold rounded-xl shadow-lg transition-all flex items-center space-x-1.5"
         >
           <span>+ Create Movie / Dubbing Project</span>
         </NuxtLink>
         <NuxtLink
           :to="localePath('/admin/voice-actors/new')"
-          class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white text-xs font-semibold rounded-xl border border-slate-700 transition-all flex items-center space-x-1.5"
+          class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-[#2a2a2a] dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white text-xs font-semibold rounded-xl border border-gray-200 dark:border-gray-700 transition-all flex items-center space-x-1.5"
         >
           <span>+ Create Voice Actor</span>
         </NuxtLink>
@@ -23,15 +23,15 @@
     </div>
 
     <!-- Loading state -->
-    <div v-if="loading" class="flex flex-col items-center justify-center py-24 space-y-3 bg-slate-900/40 border border-slate-800/60 rounded-2xl">
+    <div v-if="loading" class="flex flex-col items-center justify-center py-24 space-y-3 bg-gray-50/50 dark:bg-[#1d1d1d]/40 border border-gray-200 dark:border-[#2a2a2a] rounded-2xl">
       <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
-      <p class="text-slate-400 text-sm">Loading dashboard data...</p>
+      <p class="text-gray-500 dark:text-gray-400 text-sm">Loading dashboard data...</p>
     </div>
 
     <!-- Error state -->
-    <div v-else-if="error" class="p-4 bg-red-950/30 border border-red-900/50 rounded-xl flex items-center justify-between text-red-200 text-sm">
+    <div v-else-if="error" class="p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 rounded-xl flex items-center justify-between text-red-700 dark:text-red-200 text-sm">
       <div class="flex items-center space-x-3">
-        <svg class="h-5 w-5 text-red-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg class="h-5 w-5 text-red-500 dark:text-red-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
         </svg>
         <span>{{ error }}</span>
@@ -47,21 +47,21 @@
     <!-- Charts Grid Layout -->
     <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- User Registrations Bar Chart -->
-      <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl max-w-full lg:col-span-2">
-        <h2 class="text-lg font-bold text-white mb-4">User Registrations Over Time</h2>
+      <div class="bg-white dark:bg-[#1d1d1d] p-6 rounded-2xl border border-gray-200 dark:border-[#2a2a2a] shadow-xl max-w-full lg:col-span-2">
+        <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">User Registrations Over Time</h2>
         <BarChart :data="userRegistrationsData" :options="barChartOptions" />
       </div>
 
       <!-- Voice Actor Growth Line Chart -->
-      <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl max-w-full">
+      <div class="bg-white dark:bg-[#1d1d1d] p-6 rounded-2xl border border-gray-200 dark:border-[#2a2a2a] shadow-xl max-w-full">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <h2 class="text-lg font-bold text-white">Voice Actor Growth</h2>
+          <h2 class="text-lg font-bold text-gray-900 dark:text-white">Voice Actor Growth</h2>
           <div class="flex items-center space-x-2">
-            <label for="time-unit" class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Time Unit:</label>
+            <label for="time-unit" class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Time Unit:</label>
             <select
               id="time-unit"
               v-model="selectedUnit"
-              class="bg-slate-950 border border-slate-800 text-slate-200 text-xs font-medium rounded-xl py-1.5 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-150"
+              class="bg-gray-50 dark:bg-[#121212] border border-gray-200 dark:border-[#2a2a2a] text-gray-700 dark:text-gray-200 text-xs font-medium rounded-xl py-1.5 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-150"
             >
               <option value="day">Day</option>
               <option value="week">Week</option>
@@ -73,8 +73,8 @@
       </div>
 
       <!-- Top Voice Actors Pie Chart -->
-      <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl max-w-full">
-        <h2 class="text-lg font-bold text-white mb-4">Top Voice Actors</h2>
+      <div class="bg-white dark:bg-[#1d1d1d] p-6 rounded-2xl border border-gray-200 dark:border-[#2a2a2a] shadow-xl max-w-full">
+        <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Top Voice Actors</h2>
         <PieChart :data="topVoiceActorsData" :options="pieChartOptions" />
       </div>
     </div>
@@ -143,9 +143,9 @@ function aggregateData(data: { date: string; count: number }[], unit: string) {
   return [];
 }
 
-// Chart text and grid styling constants for dark mode
-const chartTextColor = '#94a3b8'; // slate-400
-const chartGridColor = '#1e293b'; // slate-800
+// Chart text and grid styling constants
+const chartTextColor = '#6b7280'; 
+const chartGridColor = 'rgba(156, 163, 175, 0.2)'; 
 
 // Chart data
 const userRegistrationsData = ref<ChartData>({
