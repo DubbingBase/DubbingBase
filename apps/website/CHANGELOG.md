@@ -1,5 +1,11 @@
 # @app/landing
 
+## 1.0.26
+
+### Patch Changes
+
+- 981854d: implement legal and privacy policy pages, add registration flow, and update PostHog analytics integration
+
 ## 1.0.25
 
 ### Patch Changes
