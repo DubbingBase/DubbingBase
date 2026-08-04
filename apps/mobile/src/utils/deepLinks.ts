@@ -11,8 +11,12 @@ export function parseDeepLink(url: string): DeepLink | null {
   try {
     // Handle both dubbingbase:// and dubbingbase:/ formats
     const match =
-      url.match(/^dubbingbase:\/\/(movie|show|actor|voice-actor)\/([a-zA-Z0-9_-]+)/i) ||
-      url.match(/^dubbingbase:\/(movie|show|actor|voice-actor)\/([a-zA-Z0-9_-]+)/i);
+      url.match(
+        /^dubbingbase:\/\/(movie|show|actor|voice-actor)\/([a-zA-Z0-9_-]+)/i,
+      ) ||
+      url.match(
+        /^dubbingbase:\/(movie|show|actor|voice-actor)\/([a-zA-Z0-9_-]+)/i,
+      );
 
     if (match) {
       return {

@@ -150,8 +150,12 @@ export default {
         dbDataPromise,
       ]);
 
-      const { serieWithImageUrls, aggregateCredits, characterProfilePictures, tvdbId } =
-        apiData;
+      const {
+        serieWithImageUrls,
+        aggregateCredits,
+        characterProfilePictures,
+        tvdbId,
+      } = apiData;
 
       const result = {
         serie: serieWithImageUrls,

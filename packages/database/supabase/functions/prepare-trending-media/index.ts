@@ -101,7 +101,10 @@ export default {
         // 3. Send compact OneSignal notification
         const summaryMessage = `Enqueued ${enqueuedCount} items.\nSkipped ${alreadyInQueueCount} already in queue.\nFailed to enqueue ${failedCount} items.`;
 
-        await sendOneSignalNotification("DubbingBase Trending Media Report", summaryMessage);
+        await sendOneSignalNotification(
+          "DubbingBase Trending Media Report",
+          summaryMessage,
+        );
 
         return Response.json({
           ok: true,
@@ -119,7 +122,7 @@ export default {
 
         await sendOneSignalNotification(
           "Trending Media Job FAILED",
-          `Critical failure in prepare-trending-media: ${errorMessage}`
+          `Critical failure in prepare-trending-media: ${errorMessage}`,
         );
 
         return Response.json(

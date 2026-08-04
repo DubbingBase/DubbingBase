@@ -3,7 +3,6 @@ import { ref, computed, onUnmounted } from "vue";
 import { supabase } from "@/api/supabase";
 import type { User } from "@supabase/supabase-js";
 import type { Permission } from "@/types/permissions";
-import { isPlatform } from "@ionic/vue";
 import { useOneSignal } from "@/composables/useOneSignal";
 
 export const useAuthStore = defineStore("auth", () => {
@@ -144,7 +143,7 @@ export const useAuthStore = defineStore("auth", () => {
 
   const initialize = async () => {
     if (isInitialized) return true;
-    
+
     try {
       // First check current session
       const {
@@ -152,29 +151,33 @@ export const useAuthStore = defineStore("auth", () => {
       } = await supabase.auth.getSession();
       console.log("Current session:", session);
 
-      if (session) {
-        user.value = session?.user || null;
+      const { login, logout } = useOneSignal();
+
+      if (session?.user) {
+        user.value = session.user;
+        try {
+          login(session.user.id);
+        } catch (e) {
+          console.error("Failed to sync initial OneSignal user state", e);
+        }
       }
 
       // Set up auth state listener
-      const { login, logout } = useOneSignal();
       const {
         data: { subscription },
       } = supabase.auth.onAuthStateChange(async (event, session) => {
         console.log("Auth state changed:", event, session);
         user.value = session?.user || null;
 
-        // Handle OneSignal user association
-        if (isPlatform("capacitor")) {
-          try {
-            if (session?.user && !session.user.is_anonymous) {
-              login(session.user.id);
-            } else if (event === "SIGNED_OUT" || session?.user?.is_anonymous) {
-              logout();
-            }
-          } catch (e) {
-            console.error("Failed to sync OneSignal user state", e);
+        // Handle OneSignal user association (both authenticated & anonymous users)
+        try {
+          if (session?.user) {
+            login(session.user.id);
+          } else if (event === "SIGNED_OUT" || !session) {
+            logout();
           }
+        } catch (e) {
+          console.error("Failed to sync OneSignal user state", e);
         }
 
         // Handle specific auth events if needed

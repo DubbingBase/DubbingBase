@@ -1,6 +1,10 @@
 export interface ITMDBClient {
   get(endpoint: string, params?: Record<string, string>): Promise<any>;
-  getMediaWithCredits(contentType: "movie" | "tv", id: number, language?: string): Promise<any>;
+  getMediaWithCredits(
+    contentType: "movie" | "tv",
+    id: number,
+    language?: string,
+  ): Promise<any>;
   getSeasonWithCredits(seriesId: number, seasonNumber: number): Promise<any>;
   getEpisodeWithCredits(
     seriesId: number,

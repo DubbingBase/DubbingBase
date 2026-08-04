@@ -12,13 +12,15 @@ Use the `mise run curl-function` command from the root of the workspace.
 ## Examples
 
 **Check characters for a Movie (using its TMDB ID)**:
+
 ```bash
 mise run curl-function movie --body '{"id": 366672}' | jq '.characterProfilePictures'
 ```
 
 **Check characters for a TV Show (using its TMDB ID)**:
+
 ```bash
 mise run curl-function show --body '{"id": 1399}' | jq '.characterProfilePictures'
 ```
 
-*Note*: If you need to isolate cache issues, you can clear the Upstash Redis cache via a Deno script or temporarily bypass the cache in `packages/database/supabase/functions/_shared/media-service.ts`.
+_Note_: If you need to isolate cache issues, you can clear the Upstash Redis cache via a Deno script or temporarily bypass the cache in `packages/database/supabase/functions/_shared/media-service.ts`.

@@ -99,7 +99,8 @@ function buildVoiceActorOg(params: {
         justifyContent: "center",
         width: "1200px",
         height: "630px",
-        background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
+        background:
+          "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
         color: "white",
         fontFamily: "Inter",
         padding: "64px 80px",
@@ -142,7 +143,9 @@ function buildVoiceActorOg(params: {
                     letterSpacing: "3px",
                     textTransform: "uppercase" as const,
                   },
-                  children: params.nationality ? `Voice Actor • ${params.nationality}` : "Voice Actor",
+                  children: params.nationality
+                    ? `Voice Actor • ${params.nationality}`
+                    : "Voice Actor",
                 },
               },
               // Name
@@ -241,7 +244,9 @@ export default {
         // Use supabaseAdmin since auth: "none" doesn't provide ctx.supabase
         const { data: voiceActor, error } = await ctx.supabaseAdmin
           .from("voice_actors")
-          .select("id, firstname, lastname, profile_picture, nationality, work(id)")
+          .select(
+            "id, firstname, lastname, profile_picture, nationality, work(id)",
+          )
           .eq("id", Number(id))
           .single();
 
@@ -267,7 +272,12 @@ export default {
           imageDataUri = await fetchImageAsDataUri(storageUrl);
         }
 
-        template = buildVoiceActorOg({ name, imageDataUri, worksCount, nationality });
+        template = buildVoiceActorOg({
+          name,
+          imageDataUri,
+          worksCount,
+          nationality,
+        });
       } else {
         return createErrorResponse(`Unsupported type: ${type}`, 400);
       }

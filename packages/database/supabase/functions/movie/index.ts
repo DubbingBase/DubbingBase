@@ -117,8 +117,12 @@ export default {
         dbDataPromise,
       ]);
 
-      const { movieWithImageUrls, characterProfilePictures, collection, tvdbId } =
-        apiData;
+      const {
+        movieWithImageUrls,
+        characterProfilePictures,
+        collection,
+        tvdbId,
+      } = apiData;
 
       const result = {
         movie: movieWithImageUrls,

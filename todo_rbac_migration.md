@@ -301,3 +301,12 @@ From [permissions.ts](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/ap
 - `[ ]` Verify edge functions correctly read `user_role` from claims
 - `[ ]` Verify mobile app correctly shows/hides admin UI
 - `[ ]` Verify `UserManagement.vue` can assign roles via `user_roles` table
+
+---
+
+## Review Notes & Considerations
+
+- **RLS Performance**: The `authorize()` function queries `role_permissions` for every row. Marking the function as `STABLE` is great for caching per statement. The `UNIQUE (role, permission)` constraint added in Phase 1 provides an index which keeps this lookup extremely fast.
+- **Client JWT Parsing**: While installing `jwt-decode` (Phase 5) works perfectly, note that Supabase's `getSession()` often parses custom claims into the session object automatically (often under `session.user.app_metadata`). Using `jwt-decode` is a safe and robust fallback if you prefer it.
+- **Types Generation**: **CRITICAL** - Remember to run `mise run gen-types` after completing Phase 1 so that the Vue frontend and Edge Functions have strict TypeScript definitions for `app_role`, `app_permission`, and the new tables.
+- **Scope**: This is a **medium-sized effort with a high architectural impact**. The actual lines of code changed won't be massive (mostly a find-and-replace for the client-side `isAdmin` check), but because it touches core authentication, it fundamentally improves how authorization is enforced.

@@ -125,8 +125,6 @@ export class VoiceActorService {
       contentType,
     );
 
-
-
     const { data, error } = await this.supabase
       .from("work")
       .upsert({
@@ -138,8 +136,6 @@ export class VoiceActorService {
       .select();
 
     if (error) throw error;
-
-
 
     return data;
   }

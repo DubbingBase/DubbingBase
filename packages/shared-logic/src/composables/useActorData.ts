@@ -105,10 +105,10 @@ export function useActorData(
 
   const filteredCredits = computed(() => {
     if (!actor.value?.credits?.cast) return [];
-    
+
     const query = searchQuery.value.toLowerCase();
     const cast = actor.value.credits.cast;
-    
+
     if (!query) return cast;
 
     return cast.filter((item) => {
@@ -122,7 +122,7 @@ export function useActorData(
   // Extract unique voice actors who dubbed this actor
   const uniqueFrenchVoiceActors = computed(() => {
     if (!voiceRoles.value) return [];
-    
+
     const vaMap = new Map();
     for (const role of voiceRoles.value) {
       if (role.voice_actors && role.voice_actors.length > 0) {
@@ -131,7 +131,7 @@ export function useActorData(
             vaMap.set(va.id, {
               ...va,
               rolesCount: 1,
-              highlight: role.highlight
+              highlight: role.highlight,
             });
           } else {
             const existing = vaMap.get(va.id);
@@ -141,16 +141,19 @@ export function useActorData(
         }
       }
     }
-    
-    return Array.from(vaMap.values()).sort((a, b) => b.rolesCount - a.rolesCount);
+
+    return Array.from(vaMap.values()).sort(
+      (a, b) => b.rolesCount - a.rolesCount,
+    );
   });
 
   const filteredUniqueFrenchVoiceActors = computed(() => {
     const query = searchQuery.value.toLowerCase();
     if (!query) return uniqueFrenchVoiceActors.value;
-    
+
     return uniqueFrenchVoiceActors.value.filter((va) => {
-      const fullname = `${va.firstname || ""} ${va.lastname || ""}`.toLowerCase();
+      const fullname =
+        `${va.firstname || ""} ${va.lastname || ""}`.toLowerCase();
       return fullname.includes(query);
     });
   });

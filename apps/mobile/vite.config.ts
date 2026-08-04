@@ -16,13 +16,15 @@ export default ({ mode }) => {
   const requiredEnvs = [
     "VITE_ONESIGNAL_APP_ID",
     "VITE_SUPABASE_URL",
-    "VITE_SUPABASE_PUBLISHABLE_KEY"
+    "VITE_SUPABASE_PUBLISHABLE_KEY",
   ];
-  
+
   const missingEnvs = requiredEnvs.filter((key) => !env[key]);
-  
+
   if (missingEnvs.length > 0) {
-    throw new Error(`Missing required environment variables: ${missingEnvs.join(', ')}. Please check your .env file.`);
+    throw new Error(
+      `Missing required environment variables: ${missingEnvs.join(", ")}. Please check your .env file.`,
+    );
   }
   return defineConfig({
     server: {

@@ -29,7 +29,7 @@ export class DatabaseClient {
       debugLog("Error fetching voice actor", { error: error.message });
       throw error;
     }
-    
+
     if (!data) {
       throw new Error(`Voice actor with id ${voiceActorId} not found`);
     }

@@ -157,8 +157,10 @@ export default {
             `Successfully processed ${mediaTitle}${
               payload.season_number ? ` (Season ${payload.season_number})` : ""
             }${
-              payload.episode_number ? ` (Episode ${payload.episode_number})` : ""
-            }. Added ${responseData.changes ?? 0} new voice actors.`
+              payload.episode_number
+                ? ` (Episode ${payload.episode_number})`
+                : ""
+            }. Added ${responseData.changes ?? 0} new voice actors.`,
           );
         } catch (err) {
           let errMsg = "";
@@ -197,7 +199,7 @@ export default {
 
           await sendOneSignalNotification(
             "Queue Item Failed",
-            `Failed to process ${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type} (TMDB ID ${payload.tmdb_id}): ${errMsg}`
+            `Failed to process ${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type} (TMDB ID ${payload.tmdb_id}): ${errMsg}`,
           );
         }
 
@@ -258,7 +260,7 @@ export default {
 
         await sendOneSignalNotification(
           "Queue Processor FAILED",
-          `Critical failure in process-media-queue: ${errorMsg}`
+          `Critical failure in process-media-queue: ${errorMsg}`,
         );
 
         return Response.json({ ok: false, error: errorMsg }, { status: 500 });

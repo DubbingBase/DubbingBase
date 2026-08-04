@@ -35,10 +35,10 @@ export function useTheme() {
       .matchMedia("(prefers-color-scheme: light)")
       .addEventListener("change", () => {
         // Trigger reactivity by touching the theme ref, or use a separate ref for system theme.
-        // Actually, effectiveTheme won't automatically re-compute when system preference changes 
+        // Actually, effectiveTheme won't automatically re-compute when system preference changes
         // unless we make getSystemTheme reactive.
         if (theme.value === "system") {
-           document.documentElement.setAttribute("data-theme", getSystemTheme());
+          document.documentElement.setAttribute("data-theme", getSystemTheme());
         }
       });
   });

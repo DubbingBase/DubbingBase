@@ -19,19 +19,23 @@ export async function sendOneSignalNotification(
 
   // Determine target users
   let targetExternalIds: string[] = [];
-  
+
   if (options?.targetExternalIds && options.targetExternalIds.length > 0) {
     targetExternalIds = options.targetExternalIds;
   } else {
     if (!adminId) {
-      console.warn("[OneSignal] ADMIN_USER_ID missing, cannot target admin user. Skipping notification");
+      console.warn(
+        "[OneSignal] ADMIN_USER_ID missing, cannot target admin user. Skipping notification",
+      );
       return;
     }
     targetExternalIds = [adminId];
   }
 
   if (targetExternalIds.length === 0) {
-    console.log("[OneSignal] No target external IDs provided, skipping notification.");
+    console.log(
+      "[OneSignal] No target external IDs provided, skipping notification.",
+    );
     return;
   }
 
@@ -62,7 +66,9 @@ export async function sendOneSignalNotification(
     if (!res.ok) {
       console.error("[OneSignal] API error:", res.status, await res.text());
     } else {
-      console.log(`[OneSignal] Notification sent successfully to ${targetExternalIds.length} users`);
+      console.log(
+        `[OneSignal] Notification sent successfully to ${targetExternalIds.length} users`,
+      );
     }
   } catch (err) {
     console.error("[OneSignal] Fetch exception:", err);

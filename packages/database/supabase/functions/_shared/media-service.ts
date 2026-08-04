@@ -37,14 +37,15 @@ export class MediaService {
         const tmdbMedia = await this.tmdbClient.getMediaWithCredits(
           contentType,
           contentId,
-          language
+          language,
         );
 
-        const { characters: characterProfilePictures, tvdbId } = await this.getCharacterProfilePictures(
-          contentType,
-          contentId,
-          tmdbMedia,
-        );
+        const { characters: characterProfilePictures, tvdbId } =
+          await this.getCharacterProfilePictures(
+            contentType,
+            contentId,
+            tmdbMedia,
+          );
 
         return {
           media: processMedia(tmdbMedia),
@@ -167,10 +168,12 @@ export class MediaService {
       if (tmdbMedia.external_ids?.tvdb_id) {
         tvdbId = tmdbMedia.external_ids.tvdb_id;
       }
-      
+
       if (!tvdbId && tmdbMedia.external_ids?.wikidata_id) {
         const wikidataId = tmdbMedia.external_ids.wikidata_id;
-        console.log(`[MediaService] Querying Wikidata for TVDB ID for ${wikidataId}`);
+        console.log(
+          `[MediaService] Querying Wikidata for TVDB ID for ${wikidataId}`,
+        );
         try {
           const url = `https://www.wikidata.org/w/api.php?action=wbgetclaims&entity=${wikidataId}&format=json`;
           const response = await fetch(url);
@@ -180,7 +183,9 @@ export class MediaService {
             const claim = data?.claims?.[property]?.[0];
             if (claim?.mainsnak?.datavalue?.value) {
               tvdbId = parseInt(claim.mainsnak.datavalue.value, 10);
-              console.log(`[MediaService] Found TVDB ID ${tvdbId} from Wikidata ${property}`);
+              console.log(
+                `[MediaService] Found TVDB ID ${tvdbId} from Wikidata ${property}`,
+              );
             }
           }
         } catch (e) {
@@ -195,7 +200,9 @@ export class MediaService {
           tmdbMedia.original_title ||
           tmdbMedia.original_name;
 
-        console.log(`[MediaService] Searching TVDB for query: "${searchQuery}"`);
+        console.log(
+          `[MediaService] Searching TVDB for query: "${searchQuery}"`,
+        );
 
         const searchResults = await tvdbClient.searchSeries(searchQuery);
 
@@ -211,15 +218,16 @@ export class MediaService {
           const bestMatch =
             typeMatchedResults.find(
               (item: any) =>
-                item.name
-                  ?.toLowerCase()
-                  .includes(searchQuery.toLowerCase()) ||
+                item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 item.translations?.eng
                   ?.toLowerCase()
                   .includes(searchQuery.toLowerCase()),
             ) || typeMatchedResults[0];
 
-          console.log(`[MediaService] Best Match:`, JSON.stringify(bestMatch, null, 2));
+          console.log(
+            `[MediaService] Best Match:`,
+            JSON.stringify(bestMatch, null, 2),
+          );
 
           tvdbId =
             contentType === "movie"
@@ -263,13 +271,13 @@ export class MediaService {
       // 3. Cache the result only if we found a match, to allow retries if it failed
       const resultObj = { characters: characterProfilePictures, tvdbId };
       if (tvdbId !== null) {
-        cacheUtils
-          .set(cacheKey, resultObj, "SHORT")
-          .catch(() => {});
+        cacheUtils.set(cacheKey, resultObj, "SHORT").catch(() => {});
       } else {
-        console.log(`[MediaService] tvdbId is null for ${contentType} ${contentId}, not caching.`);
+        console.log(
+          `[MediaService] tvdbId is null for ${contentType} ${contentId}, not caching.`,
+        );
       }
-      
+
       return resultObj;
     } catch (e) {
       console.error(

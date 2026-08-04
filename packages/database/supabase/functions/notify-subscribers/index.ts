@@ -8,14 +8,21 @@ export default {
     async (req, ctx) => {
       try {
         const body = await req.json();
-        
+
         const record = body.record;
         const voiceActorId = record?.voice_actor_id;
         const dubbingProjectId = record?.dubbing_project_id;
-        
+
         if (!voiceActorId || !dubbingProjectId) {
           console.error("[Notify] Invalid payload", body);
-          return Response.json({ ok: false, error: "Invalid payload: missing record.voice_actor_id or record.dubbing_project_id" }, { status: 400 });
+          return Response.json(
+            {
+              ok: false,
+              error:
+                "Invalid payload: missing record.voice_actor_id or record.dubbing_project_id",
+            },
+            { status: 400 },
+          );
         }
 
         // 1. Fetch Voice Actor name
@@ -48,8 +55,8 @@ export default {
           const tmdbRes = await fetch(tmdbUrl, {
             headers: {
               Authorization: `Bearer ${Deno.env.get("TMDB_API_KEY")}`,
-              Accept: "application/json"
-            }
+              Accept: "application/json",
+            },
           });
           if (tmdbRes.ok) {
             const tmdbData = await tmdbRes.json();
@@ -78,7 +85,8 @@ export default {
 
         const targetUserIds = subscriptions.map((sub) => sub.user_id);
 
-        const voiceActorName = `${voiceActor.firstname} ${voiceActor.lastname}`.trim();
+        const voiceActorName =
+          `${voiceActor.firstname} ${voiceActor.lastname}`.trim();
 
         console.log(
           `[Notify] Sending notification to ${targetUserIds.length} users for ${voiceActorName} in ${mediaTitle}`,
@@ -97,9 +105,12 @@ export default {
       } catch (err) {
         console.error("[Notify] Error processing notification webhook:", err);
         const errorMessage = err instanceof Error ? err.message : String(err);
-        return Response.json({ ok: false, error: errorMessage }, {
-          status: 500,
-        });
+        return Response.json(
+          { ok: false, error: errorMessage },
+          {
+            status: 500,
+          },
+        );
       }
     },
   ),

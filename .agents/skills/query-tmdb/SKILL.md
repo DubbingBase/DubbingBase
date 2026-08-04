@@ -12,16 +12,19 @@ Use the `mise run curl-function` command from the root of the workspace.
 ## Examples
 
 **Querying a Movie (by TMDB ID)**:
+
 ```bash
 mise run curl-function movie --body '{"id": 366672}' | jq .
 ```
 
 **Querying a TV Show (by TMDB ID)**:
+
 ```bash
 mise run curl-function show --body '{"id": 1399}' | jq .
 ```
 
 **Searching for Media**:
+
 ```bash
 mise run curl-function search --body '{"query": "Paws of Fury"}' | jq .
 ```

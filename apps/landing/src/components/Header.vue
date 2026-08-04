@@ -33,14 +33,33 @@
         </kbd>
       </button>
 
-      <NuxtLink
-        :to="$localePath('/login')"
-        class="flex items-center gap-1.5 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition text-sm"
-        :aria-label="t('nav.login')"
-      >
-        <UserIcon class="w-5 h-5 md:w-4 md:h-4" />
-        <span class="hidden sm:inline">{{ t("nav.login") }}</span>
-      </NuxtLink>
+      <template v-if="user">
+        <a
+          v-if="isAdmin"
+          href="https://app.dubbingbase.com"
+          class="hidden sm:block text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition text-sm mr-2"
+        >
+          Admin
+        </a>
+        <NuxtLink
+          :to="$localePath('/profile')"
+          class="flex items-center justify-center w-8 h-8 md:w-9 md:h-9 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:ring-2 hover:ring-cyan-500 transition-all overflow-hidden"
+          :aria-label="t('nav.profile', 'Profile')"
+        >
+          <img v-if="user.user_metadata?.avatar_url" :src="user.user_metadata.avatar_url" alt="Avatar" class="w-full h-full object-cover" />
+          <UserIcon v-else class="w-5 h-5" />
+        </NuxtLink>
+      </template>
+      <template v-else>
+        <NuxtLink
+          :to="$localePath('/login')"
+          class="flex items-center gap-1.5 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition text-sm"
+          :aria-label="t('nav.login')"
+        >
+          <UserIcon class="w-5 h-5 md:w-4 md:h-4" />
+          <span class="hidden sm:inline">{{ t("nav.login") }}</span>
+        </NuxtLink>
+      </template>
 
       <SelectRoot v-model="theme">
         <SelectTrigger
@@ -126,7 +145,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useTheme } from "../composables/useTheme";
 import { useSearchModal } from "../composables/useSearchModal";
 import {
@@ -152,4 +171,9 @@ import {
 const { theme } = useTheme();
 const { t, locale, setLocale } = useI18n();
 const { isSearchOpen } = useSearchModal();
+const user = useSupabaseUser();
+
+const isAdmin = computed(() => {
+  return user.value?.app_metadata?.role === 'admin' || user.value?.user_metadata?.role === 'admin';
+});
 </script>

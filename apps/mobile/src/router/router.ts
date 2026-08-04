@@ -22,10 +22,10 @@ const routes: readonly RouteRecordRaw[] = [
     component: Login,
   },
   { path: "/home", name: "Home", component: Home },
-  { 
-    name: "Search", 
-    path: "/search", 
-    component: () => import("../views/search.vue") 
+  {
+    name: "Search",
+    path: "/search",
+    component: () => import("../views/search.vue"),
   },
   {
     name: "Settings",
@@ -115,10 +115,7 @@ export const router = createRouter({
 });
 
 router.beforeEach(
-  async (
-    to: RouteLocationNormalized,
-    from: RouteLocationNormalized,
-  ) => {
+  async (to: RouteLocationNormalized, from: RouteLocationNormalized) => {
     const authStore = useAuthStore();
 
     await authStore.initialize();

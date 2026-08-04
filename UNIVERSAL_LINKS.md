@@ -37,9 +37,7 @@ Create a file named `assetlinks.json` and host it in the `.well-known` directory
     "target": {
       "namespace": "android_app",
       "package_name": "com.dubbingbase.app",
-      "sha256_cert_fingerprints": [
-        "<YOUR_APP_SHA256_CERTIFICATE_FINGERPRINT>"
-      ]
+      "sha256_cert_fingerprints": ["<YOUR_APP_SHA256_CERTIFICATE_FINGERPRINT>"]
     }
   }
 ]
@@ -50,5 +48,6 @@ Create a file named `assetlinks.json` and host it in the `.well-known` directory
 ## 3. Capacitor Configuration
 
 The app is already configured for these domains in `apps/mobile/capacitor.config.ts`.
+
 - iOS Hostname: `dubbingbase.com`
 - Custom URL Scheme fallback: `dubbingbase://`

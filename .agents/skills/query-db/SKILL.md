@@ -20,11 +20,13 @@ PGPASSWORD=postgres psql -h 127.0.0.1 -p 55322 -U postgres -d postgres -c "<your
 ### Examples
 
 **List all tables**:
+
 ```bash
 PGPASSWORD=postgres psql -h 127.0.0.1 -p 55322 -U postgres -d postgres -c "\dt"
 ```
 
 **Select rows from a table (formatted as JSON for easier parsing in bash)**:
+
 ```bash
 PGPASSWORD=postgres psql -h 127.0.0.1 -p 55322 -U postgres -d postgres -t -c "SELECT row_to_json(t) FROM (SELECT * FROM your_table LIMIT 5) t;"
 ```

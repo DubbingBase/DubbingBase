@@ -26,19 +26,19 @@ The project is structured as a **Monorepo** managed by `pnpm workspaces` and `tu
 
 All development tasks MUST be run via **Mise** to ensure environment consistency. Always check `mise.toml` first to see if a command exists before attempting to run raw bash commands or `pnpm` scripts directly. If a task is defined in `mise.toml` (e.g. `gen-types`), you must run it using `mise run <task>`.
 
-| Command                                       | Description                                                                           |
+| Command | Description |
 | :-------------------------------------------- | :------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `mise run dev`                                | Starts the entire development environment (local Supabase backend + app dev servers). |
-| `mise run backend`                            | Starts the local Supabase database and environment.                                   |
-| `mise run backend-stop`                       | Stops the local Supabase backend.                                                     |
-| `mise run app`                                | Starts only the development server for the mobile app in web mode (`apps/mobile`).    |
-| `mise run website`                            | Starts only the development server for the website (`apps/website`).                  |
-| `mise run db-reset`                           | Resets the local database, applies local migrations, and loads seed data.             |
-| `mise run migrate-up`                         | Applies pending migrations to the local database.                                     |
-| `mise run migrate-down`                       | Rolls back the last applied migration.                                                |
-| `mise run sync`                               | Synchronizes mobile app builds with Capacitor platforms (Android, etc.).              |
-| `mise run android-dev`                        | Launches the Android emulator and runs the app in development mode.                   |
-| `mise run curl-function <name> [--body <json> | --body @<file>]`                                                                      | Curl an edge function locally. Reads `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` from `.env.development`. Supports `--body` for inline JSON, `--body @<file>` for file-based JSON, and stdin piping. |
+| `mise run dev` | Starts the entire development environment (local Supabase backend + app dev servers). |
+| `mise run backend` | Starts the local Supabase database and environment. |
+| `mise run backend-stop` | Stops the local Supabase backend. |
+| `mise run app` | Starts only the development server for the mobile app in web mode (`apps/mobile`). |
+| `mise run website` | Starts only the development server for the website (`apps/website`). |
+| `mise run db-reset` | Resets the local database, applies local migrations, and loads seed data. |
+| `mise run migrate-up` | Applies pending migrations to the local database. |
+| `mise run migrate-down` | Rolls back the last applied migration. |
+| `mise run sync` | Synchronizes mobile app builds with Capacitor platforms (Android, etc.). |
+| `mise run android-dev` | Launches the Android emulator and runs the app in development mode. |
+| `mise run curl-function <name> [--body <json> | --body @<file>]` | Curl an edge function locally. Reads `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` from `.env.development`. Supports `--body` for inline JSON, `--body @<file>` for file-based JSON, and stdin piping. |
 
 ### Generating Database TypeScript Types:
 
@@ -120,11 +120,13 @@ _(This command generates types to `packages/database/supabase/functions/_shared/
 When you need to verify or debug external API data (e.g., missing character images, wrong movie metadata), you should use the local edge functions via `mise run curl-function` rather than querying TMDB or TVDB directly. The backend functions already handle authentication and unify the data from multiple sources (TMDB, TVDB, DB).
 
 - **Querying a Movie**:
+
   ```bash
   mise run curl-function movie --body '{"id": 366672}' | jq .
   ```
 
 - **Querying a TV Show**:
+
   ```bash
   mise run curl-function show --body '{"id": 1399}' | jq .
   ```
