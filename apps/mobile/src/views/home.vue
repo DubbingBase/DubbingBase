@@ -237,9 +237,7 @@ const handleRefresh = async (event: RefresherCustomEvent) => {
   font-size: 24px;
   font-weight: 800;
   margin: 0;
-  background: linear-gradient(135deg, #fff 0%, #a0a0a0 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--app-color-text-primary);
   letter-spacing: -0.5px;
 }
 
