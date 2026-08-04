@@ -1,5 +1,11 @@
 # @app/landing
 
+## 1.0.23
+
+### Patch Changes
+
+- dba67a5: add high-resolution favicon and android touch icons to app head
+
 ## 1.0.22
 
 ### Patch Changes
