@@ -1,5 +1,17 @@
 # @app/mobile
 
+## 1.0.82
+
+### Patch Changes
+
+- 8b6f56a: migrate website app to Nuxt 3 and standardize Supabase edge function authentication.
+- da720e4: modernize header UI, reorganize navigation, and remove redundant admin layouts
+- Updated dependencies [8b6f56a]
+- Updated dependencies [da720e4]
+  - @app/supabase@0.0.64
+  - @app/locales@0.0.43
+  - @app/shared-logic@1.0.18
+
 ## 1.0.81
 
 ### Patch Changes

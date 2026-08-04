@@ -1,5 +1,11 @@
 # @app/locales
 
+## 0.0.43
+
+### Patch Changes
+
+- da720e4: modernize header UI, reorganize navigation, and remove redundant admin layouts
+
 ## 0.0.42
 
 ### Patch Changes

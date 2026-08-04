@@ -1,5 +1,11 @@
 # @app/shared-logic
 
+## 1.0.18
+
+### Patch Changes
+
+- da720e4: modernize header UI, reorganize navigation, and remove redundant admin layouts
+
 ## 1.0.17
 
 ### Patch Changes

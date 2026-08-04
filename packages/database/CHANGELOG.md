@@ -1,5 +1,12 @@
 # @app/supabase
 
+## 0.0.64
+
+### Patch Changes
+
+- 8b6f56a: migrate website app to Nuxt 3 and standardize Supabase edge function authentication.
+- da720e4: modernize header UI, reorganize navigation, and remove redundant admin layouts
+
 ## 0.0.63
 
 ### Patch Changes

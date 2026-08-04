@@ -1,5 +1,11 @@
 # @app/og-image
 
+## 1.0.17
+
+### Patch Changes
+
+- da720e4: modernize header UI, reorganize navigation, and remove redundant admin layouts
+
 ## 1.0.16
 
 ### Patch Changes
