@@ -11,6 +11,8 @@
     "actions": "Actions",
     "loading": "Chargement...",
     "error": "Erreur",
+    "subscribe": "S'abonner",
+    "unsubscribe": "Se désabonner",
     "save": "Enregistrer",
     "cancel": "Annuler",
     "delete": "Supprimer",
@@ -134,6 +136,12 @@
     "topVoiceActorsError": "Impossible de charger les top doubleurs. Veuillez réessayer plus tard.",
     "topVoiceActorsEmpty": "Aucun top doubleur trouvé."
   },
+  "auth": {
+    "loginRequiredForSubscription": "Vous devez être connecté pour vous abonner"
+  },
+  "errors": {
+    "failedToUpdateSubscription": "Impossible de mettre à jour l'abonnement"
+  },
   "settings": {
     "title": "Paramètres",
     "showTime": "Heure du spectacle",
@@ -141,7 +149,10 @@
     "about": "À propos",
     "email": "Email",
     "logout": "Se déconnecter",
-    "login": "Se connecter"
+    "login": "Se connecter",
+    "notifications": "Notifications",
+    "manageNotifications": "Gérer mes abonnements",
+    "noSubscriptions": "Aucun abonnement actif"
   },
   "about": {
     "title": "À propos",

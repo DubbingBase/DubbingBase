@@ -12,6 +12,8 @@
     "actions": "Actions",
     "loading": "Loading...",
     "error": "Error",
+    "subscribe": "Subscribe",
+    "unsubscribe": "Unsubscribe",
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
@@ -135,6 +137,12 @@
     "topVoiceActorsError": "Unable to load top voice actors. Please try again later.",
     "topVoiceActorsEmpty": "No top voice actors found."
   },
+  "auth": {
+    "loginRequiredForSubscription": "You must be logged in to subscribe"
+  },
+  "errors": {
+    "failedToUpdateSubscription": "Failed to update subscription"
+  },
   "settings": {
     "title": "Settings",
     "showTime": "Show Time",
@@ -142,7 +150,10 @@
     "about": "About",
     "email": "Email",
     "logout": "Logout",
-    "login": "Login"
+    "login": "Login",
+    "notifications": "Notifications",
+    "manageNotifications": "Manage my subscriptions",
+    "noSubscriptions": "No active subscriptions"
   },
   "about": {
     "title": "About",

@@ -4,17 +4,18 @@ import { sendOneSignalNotification } from "../_shared/onesignal.ts";
 
 export default {
   fetch: withSupabase<Database>(
-    { auth: ["secret", "user"] }, // Use secret for webhooks
+    { auth: "secret" }, // Only invoked by Database Webhooks
     async (req, ctx) => {
       try {
         const body = await req.json();
         
-        const voiceActorId = body.voice_actor_id;
-        const dubbingProjectId = body.dubbing_project_id;
+        const record = body.record;
+        const voiceActorId = record?.voice_actor_id;
+        const dubbingProjectId = record?.dubbing_project_id;
         
         if (!voiceActorId || !dubbingProjectId) {
           console.error("[Notify] Invalid payload", body);
-          return Response.json({ ok: false, error: "Invalid payload: missing voice_actor_id or dubbing_project_id" }, { status: 400 });
+          return Response.json({ ok: false, error: "Invalid payload: missing record.voice_actor_id or record.dubbing_project_id" }, { status: 400 });
         }
 
         // 1. Fetch Voice Actor name
@@ -75,7 +76,7 @@ export default {
           return Response.json({ ok: true, notified: 0 });
         }
 
-        const targetUserIds = subscriptions.map((sub: any) => sub.user_id);
+        const targetUserIds = subscriptions.map((sub) => sub.user_id);
 
         const voiceActorName = `${voiceActor.firstname} ${voiceActor.lastname}`.trim();
 

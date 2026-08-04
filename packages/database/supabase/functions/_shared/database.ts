@@ -23,11 +23,15 @@ export class DatabaseClient {
       .from("voice_actors")
       .select(`*, work (*, dubbing_projects(*)), user_voice_actor_links(id)`)
       .eq("id", voiceActorId)
-      .single();
+      .maybeSingle();
 
     if (error) {
       debugLog("Error fetching voice actor", { error: error.message });
       throw error;
+    }
+    
+    if (!data) {
+      throw new Error(`Voice actor with id ${voiceActorId} not found`);
     }
 
     debugLog("Raw voice actor data received", {

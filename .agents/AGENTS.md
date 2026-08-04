@@ -57,7 +57,10 @@ _(This command generates types to `packages/database/supabase/functions/_shared/
 ### 1. Global / Front-end (Common Rules)
 
 - **Strict TypeScript**: Always type variables, function signatures, and props. Types should strictly follow database types. Never cast using `as` and never use `any`.
-- **Strict Edge Function Data Fetching**: NEVER perform inline Supabase database fetches (e.g. `supabase.from(...)`) directly from Vue components. All data fetching logic MUST go through centralized Supabase Edge Functions. Components should only call edge functions or receive data via props/Pinia stores. If an edge function does not return the data you need, update the edge function instead.
+- **Data Fetching Rules**:
+  - **Simple single-table DB queries** (e.g. a single `supabase.from('table').select(...)`) MAY be performed directly without an edge function, but **must always be encapsulated inside a dedicated API utility composable** (e.g. `useVoiceActorSubscription`). Never inline `supabase.from(...)` calls directly in Vue component `<script setup>` blocks.
+  - **Complex requests** (multi-table joins, mutations with side effects, calls to external APIs, or any logic requiring elevated privileges) **MUST go through a Supabase Edge Function**. Components call these via `supabase.functions.invoke(...)` from within a composable.
+  - If a composable is wrapping only simple DB queries, it does not need to route through an edge function. If the composable's logic grows in complexity, migrate it to an edge function at that point.
 - **Vue 3**: Use the **Composition API** exclusively with `<script setup lang="ts">` syntax.
 - **Formatting**: Always run `pnpm format` to format code with Prettier before committing.
 - **Design & Theme**: The app follows a premium dark theme. Ensure consistent UI/UX when creating or modifying components. Avoid using default Ionic variables if they result in poor contrast. Instead, explicitly use the established dark theme colors (e.g., `#1d1d1d` for card backgrounds, `#e0e0e0` for primary text, `#a0a0a0` for secondary text, `#2a2a2a` for borders) or the app's custom CSS variables to maintain a cohesive design.

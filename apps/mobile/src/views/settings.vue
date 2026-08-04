@@ -49,6 +49,38 @@
             </div>
 
             <div class="settings-section">
+              <h3>{{ t("settings.notifications") || "Notifications" }}</h3>
+              <div class="settings-card">
+                <template v-if="loadingSubscriptions">
+                  <div class="settings-row center">
+                    <span class="settings-value">Loading...</span>
+                  </div>
+                </template>
+                <template v-else-if="subscriptions.length === 0">
+                  <div class="settings-row center">
+                    <span class="settings-value">{{ t("settings.noSubscriptions") || "No active subscriptions" }}</span>
+                  </div>
+                </template>
+                <template v-else>
+                  <div 
+                    v-for="sub in subscriptions" 
+                    :key="sub.voice_actor_id" 
+                    class="settings-row clickable"
+                    @click="navigateToVoiceActor(sub.voice_actor_id)"
+                  >
+                    <div class="settings-label-group">
+                      <div class="icon-button" @click.stop="unsubscribe(sub.voice_actor_id)">
+                        <Bell class="settings-icon text-primary" />
+                      </div>
+                      <span class="settings-label">{{ sub.firstname }} {{ sub.lastname }}</span>
+                    </div>
+                    <ChevronRight class="app-icon arrow" />
+                  </div>
+                </template>
+              </div>
+            </div>
+
+            <div class="settings-section">
               <h3>Support</h3>
               <div class="settings-card clickable" @click="navigateToAbout">
                 <div class="settings-row">
@@ -112,10 +144,12 @@ import Palette from "~icons/lucide/palette";
 import Mail from "~icons/lucide/mail";
 import Info from "~icons/lucide/info";
 import LogOut from "~icons/lucide/log-out";
+import Bell from "~icons/lucide/bell";
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { useTheme } from "@/composables/useTheme";
+import { fetchAllSubscriptions, useVoiceActorSubscription } from "@/composables/useVoiceActorSubscription";
 
 import { supabase } from "@/api/supabase";
 
@@ -124,11 +158,34 @@ const router = useRouter();
 const { t } = useI18n();
 const { currentTheme, toggleTheme } = useTheme();
 
+const subscriptions = ref<any[]>([]);
+const loadingSubscriptions = ref(false);
+
 const fetchUser = async () => {
   const {
     data: { session },
   } = await supabase.auth.getSession();
   user.value = session?.user || null;
+  
+  if (user.value && !user.value.is_anonymous) {
+    loadSubscriptions();
+  }
+};
+
+const loadSubscriptions = async () => {
+  loadingSubscriptions.value = true;
+  subscriptions.value = await fetchAllSubscriptions();
+  loadingSubscriptions.value = false;
+};
+
+const unsubscribe = async (voiceActorId: string) => {
+  const { toggleSubscription } = useVoiceActorSubscription(voiceActorId);
+  await toggleSubscription(); // This will unsubscribe since they are currently subscribed
+  await loadSubscriptions(); // Reload the list
+};
+
+const navigateToVoiceActor = (id: string) => {
+  router.push({ name: "voice-actor-details", params: { id } });
 };
 
 onMounted(fetchUser);
@@ -257,6 +314,26 @@ const navigateToAbout = () => {
 .arrow {
   color: var(--app-color-text-muted, #888888);
   font-size: 1.25rem;
+}
+
+.icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.icon-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.icon-button:active {
+  transform: scale(0.95);
 }
 
 .danger-text {

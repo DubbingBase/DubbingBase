@@ -22,7 +22,7 @@ export function useVoiceActorSubscription(voiceActorId: MaybeRefOrGetter<string>
       const { data, error } = await supabase
         .from('voice_actor_subscriptions')
         .select('*')
-        .eq('voice_actor_id', toValue(voiceActorId))
+        .eq('voice_actor_id', Number(toValue(voiceActorId)))
         .eq('user_id', authStore.user.id)
         .maybeSingle();
 
@@ -64,21 +64,16 @@ export function useVoiceActorSubscription(voiceActorId: MaybeRefOrGetter<string>
             console.warn("Push permission not granted, but still subscribing in database.");
         }
 
-        const { error } = await supabase
-          .from('voice_actor_subscriptions')
-          .insert({
-            user_id: authStore.user.id,
-            voice_actor_id: toValue(voiceActorId)
-          });
+        const { error } = await supabase.functions.invoke('manage-subscription', {
+          body: { action: 'subscribe', voice_actor_id: Number(toValue(voiceActorId)) }
+        });
 
         if (error) throw error;
       } else {
         // Unsubscribe
-        const { error } = await supabase
-          .from('voice_actor_subscriptions')
-          .delete()
-          .eq('user_id', authStore.user.id)
-          .eq('voice_actor_id', toValue(voiceActorId));
+        const { error } = await supabase.functions.invoke('manage-subscription', {
+          body: { action: 'unsubscribe', voice_actor_id: Number(toValue(voiceActorId)) }
+        });
 
         if (error) throw error;
       }
@@ -103,4 +98,17 @@ export function useVoiceActorSubscription(voiceActorId: MaybeRefOrGetter<string>
     fetchSubscription,
     toggleSubscription
   };
+}
+
+export async function fetchAllSubscriptions() {
+  const { data, error } = await supabase.functions.invoke('manage-subscription', {
+    body: { action: 'list' }
+  });
+  
+  if (error) {
+    console.error('Failed to fetch all subscriptions:', error);
+    return [];
+  }
+  
+  return data?.subscriptions || [];
 }

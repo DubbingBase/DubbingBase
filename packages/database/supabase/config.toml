@@ -415,6 +415,9 @@ verify_jwt = false
 [functions.list_users]
 verify_jwt = true
 
+[functions.manage-subscription]
+verify_jwt = true
+
 [functions.media-queue]
 verify_jwt = false
 
