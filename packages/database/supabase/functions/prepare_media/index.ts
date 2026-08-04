@@ -114,6 +114,7 @@ export default {
         );
 
         let newVoiceActorsCount = 0;
+        let newCreditsCount = 0;
 
         for (const section of sectionIds) {
           console.log("section", section);
@@ -202,6 +203,7 @@ export default {
               if (result.voiceActorResult.inserted) {
                 newVoiceActorsCount++;
               }
+              newCreditsCount++;
             } else {
               console.error("mistral missing structure", entry);
             }
@@ -209,12 +211,13 @@ export default {
         }
 
         console.log(
-          `Processing complete. Added ${newVoiceActorsCount} new voice actors.`,
+          `Processing complete. Added ${newCreditsCount} credits, ${newVoiceActorsCount} new voice actors.`,
         );
 
         const result = {
           ok: true,
           changes: newVoiceActorsCount,
+          creditsAdded: newCreditsCount,
           title: mediaTitle,
         };
         return Response.json(result);

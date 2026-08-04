@@ -101,6 +101,8 @@ export default {
           },
         );
 
+        console.log(`[Notify] Notification sent for voice actor ${voiceActorId}`);
+
         return Response.json({ ok: true, notified: targetUserIds.length });
       } catch (err) {
         console.error("[Notify] Error processing notification webhook:", err);

@@ -160,7 +160,7 @@ export default {
               payload.episode_number
                 ? ` (Episode ${payload.episode_number})`
                 : ""
-            }. Added ${responseData.changes ?? 0} new voice actors.`,
+            }. Added ${responseData.creditsAdded ?? 0} roles and ${responseData.changes ?? 0} new voice actors.`,
           );
         } catch (err) {
           let errMsg = "";
