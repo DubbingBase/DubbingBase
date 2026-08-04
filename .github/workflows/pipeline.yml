@@ -26,7 +26,6 @@ jobs:
       database: ${{ steps.filter.outputs.database }}
       mobile: ${{ steps.filter.outputs.mobile }}
       website: ${{ steps.filter.outputs.website }}
-      landing: ${{ steps.filter.outputs.landing }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -259,7 +258,7 @@ jobs:
   # Job 7: Deploy Website to Cloudflare Pages
   deploy-website:
     needs: [detect, deploy-supabase]
-    # Run if landing has changes, and if database job succeeded (or wasn't needed)
+    # Run if website has changes, and if database job succeeded (or wasn't needed)
     if: |
       always() && 
       needs.detect.outputs.website == 'true' && 
