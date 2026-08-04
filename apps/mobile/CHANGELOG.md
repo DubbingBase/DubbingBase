@@ -1,5 +1,11 @@
 # @app/mobile
 
+## 1.0.80
+
+### Patch Changes
+
+- 555aba1: implement OneSignal initialization guard and update home view text styling
+
 ## 1.0.79
 
 ### Patch Changes
