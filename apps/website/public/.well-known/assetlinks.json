@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.dubbingbase.app",
+      "sha256_cert_fingerprints": [
+        "C3:BA:F9:71:FC:F3:7E:41:82:23:5A:EB:D8:1A:16:3B:89:70:AD:F7:25:D9:FB:F4:3D:4E:50:92:EB:FC:16:44"
+      ]
+    }
+  }
+]

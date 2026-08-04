@@ -10,12 +10,13 @@ interface DeepLink {
 export function parseDeepLink(url: string): DeepLink | null {
   try {
     // 1. Handle custom schemes dubbingbase:// and dubbingbase:/
+    // Allows an optional host or language prefix (e.g., */ or fr/)
     const schemeMatch =
       url.match(
-        /^dubbingbase:\/\/(movie|show|serie|actor|voice-actor)\/([a-zA-Z0-9_-]+)/i,
+        /^dubbingbase:\/\/(?:[^\/]+\/)?(movie|show|serie|actor|voice-actor)\/([a-zA-Z0-9_-]+)/i,
       ) ||
       url.match(
-        /^dubbingbase:\/(movie|show|serie|actor|voice-actor)\/([a-zA-Z0-9_-]+)/i,
+        /^dubbingbase:\/(?:[^\/]+\/)?(movie|show|serie|actor|voice-actor)\/([a-zA-Z0-9_-]+)/i,
       );
 
     if (schemeMatch) {
@@ -34,8 +35,9 @@ export function parseDeepLink(url: string): DeepLink | null {
       pathname = parsed.pathname;
     }
 
+    // Allows an optional language prefix (e.g., /fr/ or fr/)
     const pathMatch = pathname.match(
-      /^\/?(movie|show|serie|actor|voice-actor)\/([a-zA-Z0-9_-]+)/i,
+      /^\/?(?:[^\/]+\/)?(movie|show|serie|actor|voice-actor)\/([a-zA-Z0-9_-]+)/i,
     );
     if (pathMatch) {
       let type = pathMatch[1].toLowerCase();

@@ -56,10 +56,14 @@ export async function sendOneSignalNotification(
       if (targetUrl.startsWith("/")) {
         const baseUrl =
           Deno.env.get("APP_BASE_URL") || "https://dubbingbase.com";
-        targetUrl = `${baseUrl.replace(/\/+$/, "")}${targetUrl}`;
+        // Web URL gets the localized https route
+        payload.web_url = `${baseUrl.replace(/\/+$/, "")}/fr${targetUrl}`;
+        // App URL gets the custom scheme with asterisk host
+        payload.app_url = `dubbingbase://*${targetUrl}`;
+      } else {
+        payload.web_url = targetUrl;
+        payload.app_url = targetUrl;
       }
-      payload.app_url = targetUrl;
-      payload.web_url = targetUrl;
       payload.data = {
         path: options.url,
         ...(options.data || {}),
