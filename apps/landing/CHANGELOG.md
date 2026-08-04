@@ -1,5 +1,12 @@
 # @app/landing
 
+## 1.0.22
+
+### Patch Changes
+
+- Updated dependencies
+  - @app/locales@0.0.42
+
 ## 1.0.21
 
 ### Patch Changes

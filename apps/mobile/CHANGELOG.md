@@ -1,5 +1,15 @@
 # @app/mobile
 
+## 1.0.79
+
+### Patch Changes
+
+- add voice actor subscription
+- 947ae26: fix crash
+- Updated dependencies
+  - @app/supabase@0.0.62
+  - @app/locales@0.0.42
+
 ## 1.0.78
 
 ### Patch Changes

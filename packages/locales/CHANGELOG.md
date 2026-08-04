@@ -1,5 +1,11 @@
 # @app/locales
 
+## 0.0.42
+
+### Patch Changes
+
+- add voice actor subscription
+
 ## 0.0.41
 
 ### Patch Changes

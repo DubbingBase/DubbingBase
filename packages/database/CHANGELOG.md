@@ -1,5 +1,11 @@
 # @app/supabase
 
+## 0.0.62
+
+### Patch Changes
+
+- add voice actor subscription
+
 ## 0.0.61
 
 ### Patch Changes
