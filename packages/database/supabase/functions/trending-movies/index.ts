@@ -8,7 +8,7 @@ const cacheKey = CACHE_KEYS.TMDB_TRENDING_MOVIES();
 
 export default {
   fetch: withSupabase<Database>(
-    { auth: "publishable:*" },
+    { auth: "publishable" },
     async (_req, _ctx) => {
       try {
         const cachedData = await cacheUtils.get(cacheKey);

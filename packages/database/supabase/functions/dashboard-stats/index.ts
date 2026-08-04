@@ -117,7 +117,7 @@ async function getTopVoiceActors(
 }
 
 export default {
-  fetch: withSupabase<Database>({ auth: "publishable:*" }, async (req, ctx) => {
+  fetch: withSupabase<Database>({ auth: "user" }, async (req, ctx) => {
     try {
       const [
         userCount,

@@ -94,29 +94,29 @@ async function getVoiceRoles(
             : false,
           voice_actors: voice_actors
             ? [
-                {
-                  ...voice_actors,
-                  profile_picture: buildSupabaseImageUrl(
-                    ctx,
-                    voice_actors.profile_picture,
-                    "voice_actor_profile_pictures",
-                    "500",
-                  ),
-                },
-              ]
+              {
+                ...voice_actors,
+                profile_picture: buildSupabaseImageUrl(
+                  ctx,
+                  voice_actors.profile_picture,
+                  "voice_actor_profile_pictures",
+                  "500",
+                ),
+              },
+            ]
             : [],
           mediaDetails: mediaDetails
             ? {
-                id: mediaDetails.id,
-                title: mediaDetails.title || mediaDetails.name,
-                original_title:
-                  mediaDetails.original_title || mediaDetails.original_name,
-                poster_path: buildTmdbImageUrl(mediaDetails.poster_path),
-                release_date:
-                  mediaDetails.release_date || mediaDetails.first_air_date,
-                media_type: work.dubbing_projects?.content_type || "",
-                overview: mediaDetails.overview,
-              }
+              id: mediaDetails.id,
+              title: mediaDetails.title || mediaDetails.name,
+              original_title: mediaDetails.original_title ||
+                mediaDetails.original_name,
+              poster_path: buildTmdbImageUrl(mediaDetails.poster_path),
+              release_date: mediaDetails.release_date ||
+                mediaDetails.first_air_date,
+              media_type: work.dubbing_projects?.content_type || "",
+              overview: mediaDetails.overview,
+            }
             : null,
         };
       }),
@@ -133,7 +133,7 @@ import { withSupabase } from "npm:@supabase/server@^1";
 
 // Main request handler
 export default {
-  fetch: withSupabase<Database>({ auth: "publishable:*" }, async (req, ctx) => {
+  fetch: withSupabase<Database>({ auth: "publishable" }, async (req, ctx) => {
     try {
       const { id } = await req.json();
 

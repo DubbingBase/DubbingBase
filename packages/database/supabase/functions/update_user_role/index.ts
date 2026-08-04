@@ -9,8 +9,7 @@ export default {
         return Response.json({ error: "Unauthorized" }, { status: 401 });
       }
 
-      const isAdmin =
-        user.appMetadata?.role === "admin" ||
+      const isAdmin = user.appMetadata?.role === "admin" ||
         user.userMetadata?.role === "admin" ||
         user.role === "admin";
 

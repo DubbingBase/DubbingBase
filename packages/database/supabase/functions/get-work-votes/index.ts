@@ -5,7 +5,7 @@ import { DatabaseClient } from "../_shared/database.ts";
 import { withSupabase } from "npm:@supabase/server@^1";
 
 export default {
-  fetch: withSupabase<Database>({ auth: "publishable:*" }, async (req, ctx) => {
+  fetch: withSupabase<Database>({ auth: "publishable" }, async (req, ctx) => {
     try {
       const { work_ids } = await req.json();
 

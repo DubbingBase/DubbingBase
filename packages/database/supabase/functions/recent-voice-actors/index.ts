@@ -28,7 +28,7 @@ const getRecentVoiceActors = async (
 };
 
 export default {
-  fetch: withSupabase<Database>({ auth: "publishable:*" }, async (req, ctx) => {
+  fetch: withSupabase<Database>({ auth: "publishable" }, async (req, ctx) => {
     try {
       const { limit = 10 } = (await req
         .json()

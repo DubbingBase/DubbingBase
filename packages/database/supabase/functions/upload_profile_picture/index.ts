@@ -3,7 +3,7 @@ import { Database } from "../_shared/database.types.ts";
 import { buildSupabaseImageUrl } from "../_shared/supabase-urls.ts";
 
 export default {
-  fetch: withSupabase<Database>({ auth: "publishable:*" }, async (req, ctx) => {
+  fetch: withSupabase<Database>({ auth: "user" }, async (req, ctx) => {
     try {
       const formData = await req.formData();
 

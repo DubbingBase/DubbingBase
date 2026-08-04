@@ -26,19 +26,8 @@ onMounted(async () => {
   initTheme();
   // Handle deep links when app is already open
   App.addListener("appUrlOpen", (event: URLOpenListenerEvent) => {
-    // Extract the URL from the event
-    const url = new URL(event.url);
-
-    console.log("url", url.toString());
-
-    // Convert capacitor:// URL to our custom scheme for parsing
-    const deepLink = url
-      .toString()
-      .replace(/^capacitor:\/\//, "dubbingbase://");
-    console.log("deepLink", deepLink.toString());
-
-    // Parse the deep link
-    handleDeepLink(deepLink.toString());
+    console.log("[DeepLink] App opened with URL:", event.url);
+    handleDeepLink(event.url);
   });
 });
 </script>

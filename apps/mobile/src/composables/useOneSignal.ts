@@ -1,8 +1,65 @@
 import { isPlatform } from "@ionic/vue";
 import OneSignal from "@onesignal/capacitor-plugin";
 import { useOneSignal as useOneSignalWeb } from "@onesignal/onesignal-vue3";
+import { handleDeepLink } from "@/utils/deepLinks";
 
 let initPromise: Promise<boolean> | null = null;
+let clickListenerAttached = false;
+
+function setupClickListener() {
+  if (clickListenerAttached) return;
+  clickListenerAttached = true;
+
+  if (isPlatform("capacitor")) {
+    try {
+      OneSignal.Notifications.addEventListener("click", (event) => {
+        console.log(
+          "[OneSignal] Notification click event received (Native):",
+          event,
+        );
+        const additionalData = event.notification?.additionalData as
+          { path?: string; url?: string } | undefined;
+        const target =
+          additionalData?.path ||
+          additionalData?.url ||
+          event.notification?.launchURL;
+
+        if (target) {
+          console.log("[OneSignal] Navigating to:", target);
+          handleDeepLink(target);
+        }
+      });
+    } catch (e) {
+      console.error("[OneSignal] Failed to attach native click listener:", e);
+    }
+  } else {
+    try {
+      const OneSignalWebInstance = useOneSignalWeb();
+      OneSignalWebInstance?.Notifications?.addEventListener(
+        "click",
+        (event: any) => {
+          console.log(
+            "[OneSignal] Notification click event received (Web):",
+            event,
+          );
+          const additionalData = event.notification?.additionalData as
+            { path?: string; url?: string } | undefined;
+          const target =
+            additionalData?.path ||
+            additionalData?.url ||
+            event.notification?.launchURL;
+
+          if (target) {
+            console.log("[OneSignal] Navigating to:", target);
+            handleDeepLink(target);
+          }
+        },
+      );
+    } catch (e) {
+      console.error("[OneSignal] Failed to attach web click listener:", e);
+    }
+  }
+}
 
 export function useOneSignal() {
   const appId = import.meta.env.VITE_ONESIGNAL_APP_ID;
@@ -19,6 +76,7 @@ export function useOneSignal() {
         initPromise = OneSignal.initialize(appId)
           .then(() => {
             console.log("OneSignal initialized successfully (Native)");
+            setupClickListener();
             return true;
           })
           .catch((error) => {
@@ -31,6 +89,7 @@ export function useOneSignal() {
         if (OneSignalWebInstance) {
           // The Vue plugin automatically initializes when we pass {appId} in main.ts
           console.log("OneSignal web SDK loaded via Vue plugin");
+          setupClickListener();
           initPromise = Promise.resolve(true);
         } else {
           console.warn("OneSignalWeb instance not found");

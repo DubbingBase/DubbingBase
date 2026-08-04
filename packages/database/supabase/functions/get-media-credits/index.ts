@@ -4,7 +4,7 @@ import { Database } from "../_shared/database.types.ts";
 
 export default {
   fetch: withSupabase<Database>(
-    { auth: "publishable:*" },
+    { auth: "publishable" },
     async (req, _ctx) => {
       try {
         const { media_type, media_id } = await req.json();

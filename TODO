@@ -40,6 +40,7 @@ Add tvdb character id to the work row
 - Merge the admin website into the landing website
 - Rename `landing` to `website`
 - Add authentication on the website
+- Refactor admin views to match premium theme
 
 ## Technical Debt & Infrastructure
 - Remove all `any` types and enforce strict TypeScript typing

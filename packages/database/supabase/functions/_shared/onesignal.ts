@@ -1,6 +1,7 @@
 export interface OneSignalOptions {
   targetExternalIds?: string[];
   url?: string;
+  data?: Record<string, unknown>;
 }
 
 export async function sendOneSignalNotification(
@@ -40,7 +41,7 @@ export async function sendOneSignalNotification(
   }
 
   try {
-    const payload: any = {
+    const payload: Record<string, unknown> = {
       app_id: appId,
       target_channel: "push",
       include_aliases: {
@@ -51,7 +52,20 @@ export async function sendOneSignalNotification(
     };
 
     if (options?.url) {
-      payload.app_url = options.url;
+      let targetUrl = options.url;
+      if (targetUrl.startsWith("/")) {
+        const baseUrl =
+          Deno.env.get("APP_BASE_URL") || "https://dubbingbase.com";
+        targetUrl = `${baseUrl.replace(/\/+$/, "")}${targetUrl}`;
+      }
+      payload.url = targetUrl;
+      payload.app_url = targetUrl;
+      payload.data = {
+        path: options.url,
+        ...(options.data || {}),
+      };
+    } else if (options?.data) {
+      payload.data = options.data;
     }
 
     const res = await fetch("https://onesignal.com/api/v1/notifications", {

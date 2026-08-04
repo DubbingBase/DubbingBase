@@ -12,8 +12,7 @@ export default {
         );
       }
 
-      const isAdmin =
-        user.appMetadata?.role === "admin" ||
+      const isAdmin = user.appMetadata?.role === "admin" ||
         user.userMetadata?.role === "admin" ||
         user.role === "admin";
 

@@ -7,7 +7,7 @@ import { cacheUtils } from "../_shared/index.ts";
 import { Database } from "../_shared/database.types.ts";
 
 export default {
-  fetch: withSupabase<Database>({ auth: "publishable:*" }, async (req, ctx) => {
+  fetch: withSupabase<Database>({ auth: "publishable" }, async (req, ctx) => {
     try {
       const { id, season_number, episode_number } = await req.json();
 
