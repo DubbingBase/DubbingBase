@@ -48,6 +48,7 @@
           <h3 class="text-gray-900 dark:text-white font-semibold mb-4">{{ t('footer.legal') }}</h3>
           <ul class="space-y-3 text-sm">
             <li><NuxtLink :to="$localePath('/about')" class="hover:text-gray-900 dark:text-white transition">{{ t('about.title') }}</NuxtLink></li>
+            <li><NuxtLink :to="$localePath('/legal')" class="hover:text-gray-900 dark:text-white transition">Legal Notice</NuxtLink></li>
             <li><NuxtLink :to="$localePath('/privacy')" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.privacy') }}</NuxtLink></li>
             <li><NuxtLink :to="$localePath('/terms')" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.terms') }}</NuxtLink></li>
             <li><a href="mailto:contact@dubbingbase.com" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.contact') }}</a></li>

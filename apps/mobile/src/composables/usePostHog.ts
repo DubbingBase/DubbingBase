@@ -17,11 +17,12 @@ export function usePostHog() {
       persistence: "memory",
     });
   } else {
-    // Production initialization
+    // Production initialization (Anonymized for CNIL compliance)
     posthog.init("phc_me2esmRfMkokDSbTzKQfNHaUZgpBOAqgi2921wCYOtP", {
       api_host: "https://eu.i.posthog.com",
       defaults: "2025-05-24",
       person_profiles: "identified_only",
+      persistence: "memory", // No cookies or localStorage for tracking
     });
   }
 

@@ -2,15 +2,15 @@
   <div class="relative min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#121212] px-4 py-12 overflow-hidden select-none">
     <div class="w-full max-w-md z-10">
 
-      <!-- Premium Login Card -->
+      <!-- Premium Register Card -->
       <div class="relative bg-white dark:bg-[#18181b] border border-gray-200 dark:border-white/5 rounded-3xl shadow-2xl p-8 sm:p-10 space-y-8">
         
         <div class="text-center space-y-2">
-          <h3 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ t('nav.login') }}</h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400">Please sign in to your account</p>
+          <h3 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Create an account</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Join DubbingBase today</p>
         </div>
 
-        <form class="space-y-5" @submit.prevent="handleLogin">
+        <form class="space-y-5" @submit.prevent="handleRegister">
           <!-- Email Field -->
           <div class="space-y-2">
             <label for="email" class="text-sm font-medium text-gray-700 dark:text-gray-300">Email address</label>
@@ -37,18 +37,30 @@
             />
           </div>
 
-          <!-- Error Alert -->
-          <div v-if="loginError" class="p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl flex items-start space-x-3">
-            <svg class="h-5 w-5 text-red-500 mt-0.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+          <!-- Error/Success Alert -->
+          <div v-if="authMessage" :class="[
+            'p-4 border rounded-xl flex items-start space-x-3',
+            isError ? 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20' : 'bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/20'
+          ]">
+            <svg v-if="isError" class="h-5 w-5 text-red-500 mt-0.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
             </svg>
-            <span class="text-sm font-medium text-red-800 dark:text-red-200">{{ loginError }}</span>
+            <svg v-else class="h-5 w-5 text-green-500 mt-0.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            <span :class="['text-sm font-medium', isError ? 'text-red-800 dark:text-red-200' : 'text-green-800 dark:text-green-200']">{{ authMessage }}</span>
           </div>
 
-          <!-- Link to Register -->
+          <!-- Terms Agreement -->
+          <p class="text-xs text-gray-500 dark:text-gray-400 text-center px-4 leading-relaxed">
+            By creating an account, you agree to our 
+            <NuxtLink :to="$localePath('/terms')" class="text-cyan-600 dark:text-cyan-400 hover:underline">Terms of Service</NuxtLink>.
+          </p>
+
+          <!-- Link to Login -->
           <div class="text-sm text-center text-gray-500 dark:text-gray-400">
-            Don't have an account?
-            <NuxtLink :to="$localePath('/register')" class="text-cyan-600 dark:text-cyan-400 font-medium hover:underline transition">Sign up</NuxtLink>
+            Already have an account?
+            <NuxtLink :to="$localePath('/login')" class="text-cyan-600 dark:text-cyan-400 font-medium hover:underline transition">Sign in</NuxtLink>
           </div>
 
           <!-- Submit Button -->
@@ -58,7 +70,7 @@
             class="w-full py-3.5 px-4 bg-cyan-500 hover:bg-cyan-400 text-gray-900 font-semibold rounded-xl shadow-lg shadow-cyan-500/20 transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 flex justify-center items-center"
           >
             <span v-if="loading" class="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-900 mr-2"></span>
-            <span>{{ loading ? 'Signing in...' : 'Sign in' }}</span>
+            <span>{{ loading ? 'Creating account...' : 'Sign up' }}</span>
           </button>
         </form>
       </div>
@@ -72,8 +84,8 @@ import { useRouter } from "vue-router";
 
 // SEO configuration
 useSeoMeta({
-  title: 'Login - DubbingBase',
-  description: 'Login to access your DubbingBase profile.',
+  title: 'Register - DubbingBase',
+  description: 'Create a DubbingBase profile.',
   robots: 'noindex, nofollow'
 })
 
@@ -85,7 +97,8 @@ const user = useSupabaseUser();
 const email = ref("");
 const password = ref("");
 const loading = ref(false);
-const loginError = ref<string | null>(null);
+const authMessage = ref<string | null>(null);
+const isError = ref(true);
 
 // Redirect if already logged in
 watchEffect(() => {
@@ -94,28 +107,33 @@ watchEffect(() => {
   }
 });
 
-const handleLogin = async () => {
-  loginError.value = null;
+const handleRegister = async () => {
+  authMessage.value = null;
   loading.value = true;
+  isError.value = true;
 
   try {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error, data } = await supabase.auth.signUp({
       email: email.value,
       password: password.value,
     });
 
     if (error) {
-      if (error.message.includes("Invalid login credentials")) {
-        loginError.value = "Invalid email or password";
-      } else {
-        loginError.value = error.message;
-      }
+      authMessage.value = error.message;
       return;
     }
 
-    // Redirect to profile page handled by watchEffect
+    if (data.user && data.session === null) {
+      // Typically implies email confirmation is required
+      isError.value = false;
+      authMessage.value = "Registration successful! Please check your email to verify your account.";
+    } else {
+      // Logged in immediately
+      router.push('/profile');
+    }
+
   } catch (err: any) {
-    loginError.value = err.message || "An error occurred during login";
+    authMessage.value = err.message || "An error occurred during registration";
   } finally {
     loading.value = false;
   }
