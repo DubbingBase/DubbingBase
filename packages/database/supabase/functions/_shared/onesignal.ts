@@ -58,8 +58,8 @@ export async function sendOneSignalNotification(
           Deno.env.get("APP_BASE_URL") || "https://dubbingbase.com";
         targetUrl = `${baseUrl.replace(/\/+$/, "")}${targetUrl}`;
       }
-      payload.url = targetUrl;
       payload.app_url = targetUrl;
+      payload.web_url = targetUrl;
       payload.data = {
         path: options.url,
         ...(options.data || {}),
