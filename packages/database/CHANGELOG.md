@@ -1,5 +1,11 @@
 # @app/supabase
 
+## 0.0.66
+
+### Patch Changes
+
+- 7be8908: update OneSignal notification payload to use web_url instead of url
+
 ## 0.0.65
 
 ### Patch Changes
