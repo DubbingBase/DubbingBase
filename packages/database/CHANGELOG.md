@@ -1,5 +1,11 @@
 # @app/supabase
 
+## 0.0.65
+
+### Patch Changes
+
+- e2a3aed: track and log total credits added during media processing and add notification logs
+
 ## 0.0.64
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@app/supabase",
-  "version": "0.0.64",
+  "version": "0.0.65",
   "private": true,
   "scripts": {
     "dev": "supabase functions serve --env-file ../../.env.development",
