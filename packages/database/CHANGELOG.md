@@ -1,5 +1,11 @@
 # @app/supabase
 
+## 0.0.67
+
+### Patch Changes
+
+- d641cdd: implement Android App Links with language-agnostic deep linking support
+
 ## 0.0.66
 
 ### Patch Changes

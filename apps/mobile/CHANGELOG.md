@@ -1,5 +1,13 @@
 # @app/mobile
 
+## 1.0.85
+
+### Patch Changes
+
+- d641cdd: implement Android App Links with language-agnostic deep linking support
+- Updated dependencies [d641cdd]
+  - @app/supabase@0.0.67
+
 ## 1.0.84
 
 ### Patch Changes
