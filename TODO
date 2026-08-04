@@ -33,7 +33,6 @@ Add tvdb character id to the work row
 - Create a "News & Tributes" section: Track new vocal casting announcements, interviews, and tributes to late voice actors
 
 ## Features: Notifications
-- Implement push notifications (investigate OneSignal: https://onesignal.com/pricing)
 - Allow users to "follow" a voice actor and receive notifications for their new roles or news
 
 ## Architecture & Website Consolidation

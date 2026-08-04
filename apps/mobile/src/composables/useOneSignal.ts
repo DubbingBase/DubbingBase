@@ -5,9 +5,9 @@ import { useOneSignal as useOneSignalWeb } from '@onesignal/onesignal-vue3';
 let initPromise: Promise<void> | null = null;
 
 export function useOneSignal() {
-  const initOneSignal = () => {
-    const appId = import.meta.env.VITE_ONESIGNAL_APP_ID;
+  const appId = import.meta.env.VITE_ONESIGNAL_APP_ID;
 
+  const initOneSignal = () => {
     if (!appId) {
       console.warn('OneSignal skipped: VITE_ONESIGNAL_APP_ID is not defined');
       return Promise.resolve();
@@ -39,6 +39,7 @@ export function useOneSignal() {
   };
 
   const login = async (userId: string) => {
+    if (!appId) return;
     if (initPromise) await initPromise;
     try {
       if (isPlatform('capacitor')) {
@@ -53,6 +54,7 @@ export function useOneSignal() {
   };
 
   const logout = async () => {
+    if (!appId) return;
     if (initPromise) await initPromise;
     try {
       if (isPlatform('capacitor')) {
@@ -67,6 +69,7 @@ export function useOneSignal() {
   };
 
   const requestPushPermission = async (fallbackToSettings = true) => {
+    if (!appId) return false;
     try {
       if (initPromise) await initPromise;
       if (isPlatform('capacitor')) {
@@ -85,6 +88,7 @@ export function useOneSignal() {
   };
 
   const hasPermission = async () => {
+    if (!appId) return false;
     if (initPromise) await initPromise;
     if (isPlatform('capacitor')) {
       return await OneSignal.Notifications.hasPermission();
