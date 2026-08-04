@@ -1,5 +1,11 @@
 # @app/supabase
 
+## 0.0.63
+
+### Patch Changes
+
+- a5f599a: standardize code formatting across apps and add profile management pages with authentication middleware
+
 ## 0.0.62
 
 ### Patch Changes

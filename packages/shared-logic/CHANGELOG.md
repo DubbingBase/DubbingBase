@@ -1,5 +1,11 @@
 # @app/shared-logic
 
+## 1.0.17
+
+### Patch Changes
+
+- a5f599a: standardize code formatting across apps and add profile management pages with authentication middleware
+
 ## 1.0.16
 
 ### Patch Changes

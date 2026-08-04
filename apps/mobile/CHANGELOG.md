@@ -1,5 +1,14 @@
 # @app/mobile
 
+## 1.0.81
+
+### Patch Changes
+
+- a5f599a: standardize code formatting across apps and add profile management pages with authentication middleware
+- Updated dependencies [a5f599a]
+  - @app/shared-logic@1.0.17
+  - @app/supabase@0.0.63
+
 ## 1.0.80
 
 ### Patch Changes

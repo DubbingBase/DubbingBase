@@ -1,5 +1,13 @@
 # @app/landing
 
+## 1.0.24
+
+### Patch Changes
+
+- a5f599a: standardize code formatting across apps and add profile management pages with authentication middleware
+- Updated dependencies [a5f599a]
+  - @app/shared-logic@1.0.17
+
 ## 1.0.23
 
 ### Patch Changes
