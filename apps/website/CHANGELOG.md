@@ -1,5 +1,11 @@
 # @app/landing
 
+## 1.0.28
+
+### Patch Changes
+
+- 9f014cd: implement dynamic SEO keywords and meta data across all pages
+
 ## 1.0.27
 
 ### Patch Changes

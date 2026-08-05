@@ -1,5 +1,11 @@
 # @app/supabase
 
+## 0.0.69
+
+### Patch Changes
+
+- 9f014cd: implement dynamic SEO keywords and meta data across all pages
+
 ## 0.0.68
 
 ### Patch Changes
