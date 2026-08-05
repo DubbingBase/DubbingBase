@@ -24,7 +24,7 @@
       </a>
       
       <!-- Close button -->
-      <button @click="dismissBanner" class="p-1.5 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-secondary active:scale-95">
+      <button @click="dismissBanner" aria-label="Close banner" class="p-1.5 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-secondary active:scale-95">
         <Icon name="lucide:x" class="h-4 w-4" />
       </button>
     </div>

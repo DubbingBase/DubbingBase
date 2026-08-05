@@ -7,22 +7,24 @@
         <span class="font-medium">{{ $t('details.back') }}</span>
       </button>
       <div class="absolute inset-0">
-        <img
+        <NuxtImg
           v-if="backdropUrl"
           :src="backdropUrl"
           class="w-full h-full object-cover"
           alt="Backdrop"
+          format="webp"
         />
         <div class="absolute inset-0 bg-gradient-to-t from-gray-50 dark:from-[#1b1b1b] to-transparent"></div>
         <div class="absolute inset-0 bg-black/10 dark:bg-black/40"></div>
       </div>
       
       <div class="absolute bottom-0 left-0 w-full p-8 flex flex-col md:flex-row gap-6 items-end">
-        <img
+        <NuxtImg
           v-if="posterUrl"
           :src="posterUrl"
           class="w-32 md:w-48 rounded-lg shadow-xl"
           :alt="movie.title"
+          format="webp"
         />
         <div class="pb-4">
           <h1 class="text-4xl md:text-5xl font-bold">{{ movie.title }}</h1>
@@ -125,7 +127,7 @@
               <!-- Original Actor -->
               <div class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start">
                 <NuxtLink :to="$localePath(`/actor/${actor.id}`)" class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] bg-gray-200 dark:bg-[#222] sm:mb-3 flex-shrink-0">
-                  <img v-if="actor.profile_path" :src="actor.profile_path" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="Actor" />
+                  <NuxtImg format="webp" v-if="actor.profile_path" :src="actor.profile_path" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="Actor" />
                 </NuxtLink>
                 <div class="flex flex-col min-w-0 flex-1 w-full overflow-hidden">
                   <div class="flex items-center gap-1.5 text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-1">
@@ -141,7 +143,7 @@
               <!-- Character -->
               <div class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start">
                 <div class="w-16 sm:w-full relative block overflow-hidden rounded-xl aspect-[2/3] bg-gray-200 dark:bg-[#222] sm:mb-3 flex-shrink-0">
-                  <img v-if="actor.characterImage" :src="actor.characterImage" class="w-full h-full object-cover" alt="Character" />
+                  <NuxtImg format="webp" v-if="actor.characterImage" :src="actor.characterImage" class="w-full h-full object-cover" alt="Character" />
                   <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
                     <UserIcon class="w-8 h-8 opacity-50" />
                   </div>
@@ -161,7 +163,7 @@
               <div class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-4 sm:pt-0 mt-2 sm:mt-0">
                 <template v-if="actor.voiceActor">
                   <NuxtLink :to="$localePath(`/voice-actor/${actor.voiceActor.id}`)" class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] bg-gray-200 dark:bg-[#222] sm:mb-3 flex-shrink-0">
-                    <img v-if="actor.voiceActor.profile_picture" :src="actor.voiceActor.profile_picture" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="Voice Actor" />
+                    <NuxtImg format="webp" v-if="actor.voiceActor.profile_picture" :src="actor.voiceActor.profile_picture" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="Voice Actor" />
                     <div v-else class="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-400">
                       {{ actor.voiceActor.firstname?.[0] }}{{ actor.voiceActor.lastname?.[0] }}
                     </div>
@@ -348,15 +350,25 @@ useHead({
       content: computed(() => backdropUrl.value || posterUrl.value || '')
     }
   ],
-  link: [
-    {
-      rel: 'canonical',
-      href: computed(() => {
-        const baseUrl = 'https://dubbingbase.com/movie/' + movieId;
-        return activeDubId.value ? `${baseUrl}?dub=${activeDubId.value}` : baseUrl;
-      })
+  link: computed(() => {
+    const links: { rel: 'canonical' | 'preload'; href: string; as?: 'image' }[] = [
+      {
+        rel: 'canonical',
+        href: (() => {
+          const baseUrl = 'https://dubbingbase.com/movie/' + movieId;
+          return activeDubId.value ? `${baseUrl}?dub=${activeDubId.value}` : baseUrl;
+        })()
+      }
+    ];
+    if (backdropUrl.value) {
+      links.push({
+        rel: 'preload',
+        as: 'image',
+        href: backdropUrl.value
+      });
     }
-  ],
+    return links;
+  }),
   script: [
     {
       type: 'application/ld+json',
@@ -367,6 +379,15 @@ useHead({
         name: movie.value?.title || 'Film',
         image: posterUrl.value || backdropUrl.value || '',
         description: movie.value?.overview || `Découvrez le casting et les voix du film ${movie.value?.title}.`,
+        datePublished: movie.value?.release_date || undefined,
+        actor: formattedCast.value.map((actor: any) => ({
+          '@type': 'PerformanceRole',
+          actor: {
+            '@type': 'Person',
+            name: actor.name
+          },
+          characterName: actor.character
+        }))
       }))
     }
   ]

@@ -11,7 +11,7 @@
       <div v-if="selectedActor" class="flex items-center justify-between bg-slate-950 border border-slate-800 rounded-xl p-3">
         <div class="flex items-center space-x-3">
           <div class="h-10 w-10 rounded-full overflow-hidden border border-slate-700 bg-slate-800 shrink-0 flex items-center justify-center">
-            <img v-if="selectedActor.profile_picture" :src="selectedActor.profile_picture" class="h-full w-full object-cover" />
+            <NuxtImg format="webp" v-if="selectedActor.profile_picture" :src="selectedActor.profile_picture" class="h-full w-full object-cover" />
             <span v-else class="text-xs font-bold text-slate-500">{{ selectedActor.firstname.charAt(0) }}</span>
           </div>
           <div>
@@ -46,7 +46,7 @@
             class="px-4 py-3 hover:bg-slate-800/50 cursor-pointer flex items-start space-x-3 transition-colors"
           >
             <div class="h-10 w-10 mt-1 rounded-full overflow-hidden border border-slate-700 bg-slate-800 shrink-0 flex items-center justify-center">
-              <img v-if="va.profile_picture" :src="va.profile_picture" class="h-full w-full object-cover" />
+              <NuxtImg format="webp" v-if="va.profile_picture" :src="va.profile_picture" class="h-full w-full object-cover" />
               <span v-else class="text-xs font-bold text-slate-500">{{ va.firstname.charAt(0) }}</span>
             </div>
             <div class="flex-1 min-w-0">
@@ -85,7 +85,7 @@
       <div v-if="imageUrl" class="mt-6 space-y-4">
         <h4 class="font-bold text-white text-sm">Preview:</h4>
         <div class="rounded-xl overflow-hidden border border-slate-800 bg-slate-950 p-4 inline-block">
-          <img :src="imageUrl" alt="Career Grid" class="max-w-full h-auto max-h-[600px] object-contain" />
+          <NuxtImg format="webp" :src="imageUrl" alt="Career Grid" class="max-w-full h-auto max-h-[600px] object-contain" />
         </div>
         <div>
           <button @click="downloadImage" class="py-2 px-4 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-xl text-sm transition-all inline-flex items-center space-x-2">

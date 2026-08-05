@@ -70,8 +70,7 @@
                   <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-3">
                       <div class="h-10 w-10 rounded-full overflow-hidden shrink-0 border border-slate-800 bg-slate-900 flex items-center justify-center text-slate-500">
-                        <img
-                          v-if="actor.profile_picture"
+                        <NuxtImg format="webp"                           v-if="actor.profile_picture"
                           :src="actor.profile_picture"
                           class="h-full w-full object-cover"
                           alt="Actor Avatar"

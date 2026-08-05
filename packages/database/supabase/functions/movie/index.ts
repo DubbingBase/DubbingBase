@@ -4,10 +4,10 @@ import { processMedia } from "../_shared/tmdb-urls.ts";
 import { processVoiceActor } from "../_shared/supabase-urls.ts";
 import {
   cacheUtils,
-  tmdbClient,
-  tvdbClient,
   DatabaseClient,
   MediaService,
+  tmdbClient,
+  tvdbClient,
 } from "../_shared/index.ts";
 import { Database } from "../_shared/database.types.ts";
 
@@ -124,6 +124,28 @@ export default {
         tvdbId,
       } = apiData;
 
+      // Lazy Wikipedia Queue Enqueue
+      const hasVoiceActors = dubbingProjects.some(
+        (p: any) => p.works && p.works.length > 0,
+      );
+      const hasWiki = !!movieWithImageUrls?.external_ids?.wikidata_id;
+
+      if (!hasVoiceActors && hasWiki) {
+        // Enqueue it lazily in the background
+        void (async () => {
+          try {
+            await ctx.supabaseAdmin.rpc("enqueue_media_fetch", {
+              p_media_type: "movie",
+              p_tmdb_id: movieId,
+              p_season_number: undefined,
+              p_episode_number: undefined,
+            });
+          } catch (err) {
+            console.error("Failed to lazily enqueue movie:", err);
+          }
+        })();
+      }
+
       const result = {
         movie: movieWithImageUrls,
         characterProfilePictures: characterProfilePictures,
@@ -138,10 +160,9 @@ export default {
       console.error("Error in movie function:", error);
       return Response.json(
         {
-          error:
-            error instanceof Error
-              ? error.message
-              : "An unknown error occurred",
+          error: error instanceof Error
+            ? error.message
+            : "An unknown error occurred",
         },
         { status: 500 },
       );

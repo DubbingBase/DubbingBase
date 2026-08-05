@@ -1,6 +1,7 @@
 import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
 import { sendOneSignalNotification } from "../_shared/onesignal.ts";
+import { buildTmdbImageUrl } from "../_shared/tmdb-urls.ts";
 
 export default {
   fetch: withSupabase<Database>(
@@ -49,6 +50,7 @@ export default {
 
         // 3. Fetch title from TMDB
         let mediaTitle = "a new project";
+        let imageUrl: string | undefined = undefined;
         try {
           const tmdbType = project.content_type === "movie" ? "movie" : "tv";
           const tmdbUrl = `https://api.themoviedb.org/3/${tmdbType}/${project.content_id}?language=fr-FR`;
@@ -61,6 +63,9 @@ export default {
           if (tmdbRes.ok) {
             const tmdbData = await tmdbRes.json();
             mediaTitle = tmdbData.title || tmdbData.name || mediaTitle;
+            if (tmdbData.poster_path) {
+              imageUrl = buildTmdbImageUrl(tmdbData.poster_path) || undefined;
+            }
           }
         } catch (tmdbErr) {
           console.warn("[Notify] Failed to fetch TMDB title:", tmdbErr);
@@ -98,6 +103,7 @@ export default {
           {
             targetExternalIds: targetUserIds,
             url: `/voice-actor/${voiceActorId}`,
+            imageUrl,
           },
         );
 

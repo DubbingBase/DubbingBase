@@ -5,6 +5,7 @@ import { wikipediaCache } from "../_shared/index.ts";
 import { WithCast } from "../_shared/types.ts";
 import { VoiceActorService } from "../_shared/voice-actor-service.ts";
 import { Database } from "../_shared/database.types.ts";
+import { buildTmdbImageUrl } from "../_shared/tmdb-urls.ts";
 
 export default {
   fetch: withSupabase<Database>(
@@ -149,6 +150,10 @@ export default {
             }),
           });
 
+          if (mistralJSONRequest.status === 429) {
+            throw new Error("Mistral API Rate Limited (429)");
+          }
+
           if (!mistralJSONRequest.ok) {
             throw new Error(
               `Mistral API request failed with status ${mistralJSONRequest.status}`,
@@ -214,11 +219,17 @@ export default {
           `Processing complete. Added ${newCreditsCount} credits, ${newVoiceActorsCount} new voice actors.`,
         );
 
+        let imageUrl: string | undefined = undefined;
+        if (movie && movie.poster_path) {
+          imageUrl = buildTmdbImageUrl(movie.poster_path) || undefined;
+        }
+
         const result = {
           ok: true,
           changes: newVoiceActorsCount,
           creditsAdded: newCreditsCount,
           title: mediaTitle,
+          imageUrl,
         };
         return Response.json(result);
       } catch (error) {

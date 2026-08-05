@@ -3,6 +3,7 @@
 Do og image for movie, show and actor
 Add tvdb and tmdbid to the dubbing project
 Add tvdb character id to the work row
+needd posthog for mobile AND website
 
 ## Bugs & UI Fixes
 - Fix scrolling bug caused by swipe interactions

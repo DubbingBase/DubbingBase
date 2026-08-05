@@ -2,6 +2,7 @@ export interface OneSignalOptions {
   targetExternalIds?: string[];
   url?: string;
   data?: Record<string, unknown>;
+  imageUrl?: string;
 }
 
 export async function sendOneSignalNotification(
@@ -50,6 +51,12 @@ export async function sendOneSignalNotification(
       headings: { en: title },
       contents: { en: message },
     };
+
+    if (options?.imageUrl) {
+      payload.big_picture = options.imageUrl;
+      payload.ios_attachments = { id1: options.imageUrl };
+      payload.chrome_web_image = options.imageUrl;
+    }
 
     if (options?.url) {
       let targetUrl = options.url;

@@ -11,13 +11,13 @@
             {{ t('app.description') }}
           </p>
           <div class="flex items-center gap-4">
-            <a href="https://x.com/DubbingBase" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-gray-900 dark:text-white transition">
+            <a href="https://x.com/DubbingBase" aria-label="Twitter" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-gray-900 dark:text-white transition">
               <TwitterIcon class="w-5 h-5" />
             </a>
-            <a href="https://instagram.com/dubbingbase" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-gray-900 dark:text-white transition">
+            <a href="https://instagram.com/dubbingbase" aria-label="Instagram" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-gray-900 dark:text-white transition">
               <InstagramIcon class="w-5 h-5" />
             </a>
-            <a href="mailto:contact@dubbingbase.com" class="text-gray-500 hover:text-gray-900 dark:text-white transition">
+            <a href="mailto:contact@dubbingbase.com" aria-label="Email" class="text-gray-500 hover:text-gray-900 dark:text-white transition">
               <MailIcon class="w-5 h-5" />
             </a>
           </div>

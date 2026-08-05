@@ -3,12 +3,12 @@ import { withSupabase } from "npm:@supabase/server@^1";
 import { processMedia } from "../_shared/tmdb-urls.ts";
 import { processVoiceActor } from "../_shared/supabase-urls.ts";
 import {
+  CACHE_KEYS,
   cacheUtils,
-  tmdbClient,
-  tvdbClient,
   DatabaseClient,
   MediaService,
-  CACHE_KEYS,
+  tmdbClient,
+  tvdbClient,
 } from "../_shared/index.ts";
 import { Database } from "../_shared/database.types.ts";
 
@@ -78,8 +78,8 @@ export default {
               result.media,
             );
 
-          let aggregateCredits =
-            result.media.aggregate_credits || (await aggregateCreditsPromise);
+          let aggregateCredits = result.media.aggregate_credits ||
+            (await aggregateCreditsPromise);
 
           // Removed backend matching logic as the frontend handles image matching reactively
 
@@ -157,6 +157,28 @@ export default {
         tvdbId,
       } = apiData;
 
+      // Lazy Wikipedia Queue Enqueue
+      const hasVoiceActors = dubbingProjects.some(
+        (p: any) => p.works && p.works.length > 0,
+      );
+      const hasWiki = !!serieWithImageUrls?.external_ids?.wikidata_id;
+
+      if (!hasVoiceActors && hasWiki) {
+        // Enqueue it lazily in the background
+        void (async () => {
+          try {
+            await ctx.supabaseAdmin.rpc("enqueue_media_fetch", {
+              p_media_type: "tv",
+              p_tmdb_id: showId,
+              p_season_number: undefined,
+              p_episode_number: undefined,
+            });
+          } catch (err) {
+            console.error("Failed to lazily enqueue show:", err);
+          }
+        })();
+      }
+
       const result = {
         serie: serieWithImageUrls,
         aggregateCredits: aggregateCredits,
@@ -171,10 +193,9 @@ export default {
       console.error("Error in show function:", error);
       return Response.json(
         {
-          error:
-            error instanceof Error
-              ? error.message
-              : "An unknown error occurred",
+          error: error instanceof Error
+            ? error.message
+            : "An unknown error occurred",
         },
         { status: 500 },
       );

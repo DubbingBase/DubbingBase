@@ -43,3 +43,4 @@ packages/database/supabase/buckets
 .nuxt
 .output
 .wrangler
+lighthouse-report.json

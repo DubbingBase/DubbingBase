@@ -47,8 +47,15 @@
     "title": "À propos"
   },
   "home": {
+    "meta": {
+      "title": "DubbingBase - La base de données du doublage et comédiens de doublage",
+      "description": "Découvrez DubbingBase, la base de données de référence du doublage français. Retrouvez les fiches des comédiens de doublage, leurs rôles et castings vocaux de vos films et séries préférés.",
+      "keywords": "doublage, comédiens de doublage, voix française, castings vocaux, films, séries, fiches acteurs",
+      "ogTitle": "DubbingBase - La base de données du doublage",
+      "ogDescription": "Retrouvez la base de données complète des comédiens de doublage et voix françaises."
+    },
     "hero": {
-      "title": "Bienvenue.",
+      "title": "La base de données du doublage et des comédiens",
       "subtitle": "Des millions de films, séries, et comédiens de doublage à découvrir. Explorez maintenant.",
       "searchPlaceholder": "Rechercher un film, une série, un comédien...",
       "searchButton": "Rechercher"

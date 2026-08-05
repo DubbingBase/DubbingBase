@@ -108,7 +108,17 @@
 import { useHomeData, fetchHomeData } from '@app/shared-logic';
 import { useSearchModal } from '../composables/useSearchModal';
 import { useDragScroll } from '../composables/useDragScroll';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+
+const { t, locale } = useI18n();
+
+const ogLocale = computed(() => {
+  const map: Record<string, string> = {
+    fr: 'fr_FR',
+    en: 'en_US',
+  };
+  return map[locale.value] || 'en_US';
+});
 
 const supabase = useSupabaseClient();
 const { openSearch } = useSearchModal();
@@ -122,29 +132,33 @@ useDragScroll(seriesScrollRef);
 useDragScroll(vaScrollRef);
 
 useHead({
-  title: 'DubbingBase - La base de données du doublage et comédiens de doublage',
+  title: computed(() => t('home.meta.title')),
   meta: [
     {
       name: 'description',
-      content: 'Découvrez DubbingBase, la base de données de référence du doublage français. Retrouvez les fiches des comédiens de doublage, leurs rôles et castings vocaux de vos films et séries préférés.',
+      content: computed(() => t('home.meta.description')),
     },
     {
       name: 'keywords',
-      content: 'doublage, comédiens de doublage, voix française, castings vocaux, films, séries, fiches acteurs',
+      content: computed(() => t('home.meta.keywords')),
     },
-    { property: 'og:title', content: 'DubbingBase - La base de données du doublage' },
+    { property: 'og:title', content: computed(() => t('home.meta.ogTitle')) },
     {
       property: 'og:description',
-      content: 'Retrouvez la base de données complète des comédiens de doublage et voix françaises.',
+      content: computed(() => t('home.meta.ogDescription')),
     },
     { property: 'og:type', content: 'website' },
     { property: 'og:url', content: 'https://dubbingbase.com/' },
+    { property: 'og:image', content: 'https://dubbingbase.com/android-chrome-512x512.png' },
+    { property: 'og:site_name', content: 'DubbingBase' },
+    { property: 'og:locale', content: ogLocale },
     { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: 'DubbingBase - La base de données du doublage' },
+    { name: 'twitter:title', content: computed(() => t('home.meta.ogTitle')) },
     {
       name: 'twitter:description',
-      content: 'Retrouvez la base de données complète des comédiens de doublage et voix françaises.',
+      content: computed(() => t('home.meta.ogDescription')),
     },
+    { name: 'twitter:image', content: 'https://dubbingbase.com/android-chrome-512x512.png' },
   ],
   link: [{ rel: 'canonical', href: 'https://dubbingbase.com/' }],
   script: [

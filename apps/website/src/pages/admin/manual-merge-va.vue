@@ -31,7 +31,7 @@
         <div v-if="actorA" class="flex items-center justify-between bg-slate-950 border border-slate-800 rounded-xl p-3">
           <div class="flex items-center space-x-3">
             <div class="h-10 w-10 rounded-full overflow-hidden border border-slate-700 bg-slate-800 shrink-0 flex items-center justify-center">
-              <img v-if="actorA.profile_picture" :src="actorA.profile_picture" class="h-full w-full object-cover" />
+              <NuxtImg format="webp" v-if="actorA.profile_picture" :src="actorA.profile_picture" class="h-full w-full object-cover" />
               <span v-else class="text-xs font-bold text-slate-500">{{ actorA.firstname.charAt(0) }}</span>
             </div>
             <div>
@@ -66,7 +66,7 @@
               class="px-4 py-3 hover:bg-slate-800/50 cursor-pointer flex items-start space-x-3 transition-colors"
             >
               <div class="h-10 w-10 mt-1 rounded-full overflow-hidden border border-slate-700 bg-slate-800 shrink-0 flex items-center justify-center">
-                <img v-if="va.profile_picture" :src="va.profile_picture" class="h-full w-full object-cover" />
+                <NuxtImg format="webp" v-if="va.profile_picture" :src="va.profile_picture" class="h-full w-full object-cover" />
                 <span v-else class="text-xs font-bold text-slate-500">{{ va.firstname.charAt(0) }}</span>
               </div>
               <div class="flex-1 min-w-0">
@@ -103,7 +103,7 @@
         <div v-if="actorB" class="flex items-center justify-between bg-slate-950 border border-slate-800 rounded-xl p-3">
           <div class="flex items-center space-x-3">
             <div class="h-10 w-10 rounded-full overflow-hidden border border-slate-700 bg-slate-800 shrink-0 flex items-center justify-center">
-              <img v-if="actorB.profile_picture" :src="actorB.profile_picture" class="h-full w-full object-cover" />
+              <NuxtImg format="webp" v-if="actorB.profile_picture" :src="actorB.profile_picture" class="h-full w-full object-cover" />
               <span v-else class="text-xs font-bold text-slate-500">{{ actorB.firstname.charAt(0) }}</span>
             </div>
             <div>
@@ -138,7 +138,7 @@
               class="px-4 py-3 hover:bg-slate-800/50 cursor-pointer flex items-start space-x-3 transition-colors"
             >
               <div class="h-10 w-10 mt-1 rounded-full overflow-hidden border border-slate-700 bg-slate-800 shrink-0 flex items-center justify-center">
-                <img v-if="va.profile_picture" :src="va.profile_picture" class="h-full w-full object-cover" />
+                <NuxtImg format="webp" v-if="va.profile_picture" :src="va.profile_picture" class="h-full w-full object-cover" />
                 <span v-else class="text-xs font-bold text-slate-500">{{ va.firstname.charAt(0) }}</span>
               </div>
               <div class="flex-1 min-w-0">
@@ -191,8 +191,7 @@
                 <div class="flex items-center justify-between">
                   <div class="flex items-center space-x-3">
                     <div class="h-10 w-10 rounded-full overflow-hidden shrink-0 border border-slate-800 bg-slate-900 flex items-center justify-center text-slate-500">
-                      <img
-                        v-if="actor.profile_picture"
+                      <NuxtImg format="webp"                         v-if="actor.profile_picture"
                         :src="actor.profile_picture"
                         class="h-full w-full object-cover"
                       />

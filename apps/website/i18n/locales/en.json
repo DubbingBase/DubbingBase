@@ -47,8 +47,15 @@
     "title": "About"
   },
   "home": {
+    "meta": {
+      "title": "DubbingBase - The Dubbing & Voice Actor Database",
+      "description": "Discover DubbingBase, the reference database for dubbing. Find voice actor profiles, their roles, and voice casts of your favorite movies and series.",
+      "keywords": "dubbing, voice actors, english voice, voice casts, movies, series, actor profiles",
+      "ogTitle": "DubbingBase - The Dubbing Database",
+      "ogDescription": "Find the complete database of voice actors and english voices."
+    },
     "hero": {
-      "title": "Welcome.",
+      "title": "The Dubbing & Voice Actor Database",
       "subtitle": "Millions of movies, TV shows and voice actors to discover. Explore now.",
       "searchPlaceholder": "Search for a movie, tv show, person...",
       "searchButton": "Search"

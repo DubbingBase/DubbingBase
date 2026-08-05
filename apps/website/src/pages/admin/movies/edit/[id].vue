@@ -34,8 +34,7 @@
           <!-- Poster Preview -->
           <div class="flex justify-center">
             <div class="relative h-48 w-32 rounded-xl overflow-hidden border border-slate-800 bg-slate-950 flex items-center justify-center text-slate-500 shadow-md">
-              <img
-                v-if="posterUrl"
+              <NuxtImg format="webp"                 v-if="posterUrl"
                 :src="posterUrl"
                 class="h-full w-full object-cover"
                 alt="Poster"
@@ -478,7 +477,7 @@
         <div v-if="attachments.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div v-for="att in attachments" :key="att.id" class="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow flex flex-col">
             <div class="aspect-video bg-slate-900 relative group overflow-hidden">
-              <img v-if="att.signedUrl" :src="att.signedUrl" class="w-full h-full object-cover" />
+              <NuxtImg format="webp" v-if="att.signedUrl" :src="att.signedUrl" class="w-full h-full object-cover" />
               <div v-else class="w-full h-full flex items-center justify-center text-slate-500 text-xs">Loading...</div>
               <div class="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-4 backdrop-blur-sm">
                 <a v-if="att.signedUrl" :href="att.signedUrl" target="_blank" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-500 transition-colors shadow">View Full</a>

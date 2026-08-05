@@ -56,7 +56,8 @@
       <button
         v-if="!isHomePage"
         @click="isSearchOpen = true"
-        class="sm:hidden flex items-center justify-center w-10 h-10 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors"
+        aria-label="Search"
+        class="sm:hidden p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
       >
         <SearchIcon class="w-5 h-5" />
       </button>

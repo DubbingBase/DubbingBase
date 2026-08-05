@@ -32,8 +32,7 @@
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
           <!-- Poster -->
           <div class="aspect-[2/3] w-full rounded-xl overflow-hidden bg-slate-950 border border-slate-800 shadow-lg relative">
-            <img
-              v-if="movie.poster_path"
+            <NuxtImg format="webp"               v-if="movie.poster_path"
               :src="'https://image.tmdb.org/t/p/w500' + movie.poster_path"
               class="h-full w-full object-cover"
               alt="Movie Poster"
@@ -88,8 +87,7 @@
             <!-- Actor information -->
             <div class="flex items-center space-x-3.5 min-w-0">
               <div class="h-12 w-12 rounded-full overflow-hidden border border-slate-800 bg-slate-950 shrink-0 flex items-center justify-center text-slate-500">
-                <img
-                  v-if="actor.profile_path"
+                <NuxtImg format="webp"                   v-if="actor.profile_path"
                   :src="'https://image.tmdb.org/t/p/w185' + actor.profile_path"
                   class="h-full w-full object-cover"
                   alt="Actor avatar"
@@ -110,7 +108,7 @@
               <div v-if="voiceActorAssignments[actor.id]" class="flex items-center justify-between bg-indigo-950/20 border border-indigo-900/40 rounded-xl p-2 pl-3">
                 <div class="min-w-0 flex items-center space-x-2">
                   <div class="h-5 w-5 rounded-full overflow-hidden border border-indigo-800 bg-slate-950 shrink-0 flex items-center justify-center text-indigo-400">
-                    <img v-if="getAssignedVA(actor.id)?.profile_picture" :src="getAssignedVA(actor.id)!.profile_picture!" class="h-full w-full object-cover" />
+                    <NuxtImg format="webp" v-if="getAssignedVA(actor.id)?.profile_picture" :src="getAssignedVA(actor.id)!.profile_picture!" class="h-full w-full object-cover" />
                     <span v-else class="text-[9px] font-bold">{{ getAssignedVA(actor.id)?.firstname.charAt(0) }}</span>
                   </div>
                   <span class="text-xs font-semibold text-indigo-300 truncate">
@@ -156,7 +154,7 @@
                     class="px-3 py-2 hover:bg-slate-800/50 cursor-pointer flex items-center space-x-2.5 transition-colors"
                   >
                     <div class="h-6 w-6 rounded-full overflow-hidden border border-slate-800 bg-slate-950 shrink-0 flex items-center justify-center text-slate-500">
-                      <img v-if="va.profile_picture" :src="va.profile_picture" class="h-full w-full object-cover" />
+                      <NuxtImg format="webp" v-if="va.profile_picture" :src="va.profile_picture" class="h-full w-full object-cover" />
                       <svg v-else class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>

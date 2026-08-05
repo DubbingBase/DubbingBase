@@ -12,6 +12,21 @@ export default defineNuxtConfig({
     },
   },
 
+  routeRules: {
+    // Prerender static content pages at build time
+    '/about': { prerender: true },
+    '/legal': { prerender: true },
+    '/privacy': { prerender: true },
+    '/terms': { prerender: true },
+    '/guidelines': { prerender: true },
+
+    // Cache media pages at the edge for 1 hour (stale-while-revalidate)
+    '/movie/**': { swr: 3600 },
+    '/show/**': { swr: 3600 },
+    '/actor/**': { swr: 3600 },
+    '/voice-actor/**': { swr: 3600 },
+  },
+
   vite: {
     plugins: [tailwindcss()],
   },
@@ -37,6 +52,11 @@ export default defineNuxtConfig({
 
   image: {
     domains: ["image.tmdb.org"],
+    format: ['avif', 'webp'],
+  },
+
+  icon: {
+    fallbackToApi: false,
   },
 
   i18n: {
@@ -46,6 +66,7 @@ export default defineNuxtConfig({
     ],
     defaultLocale: "en",
     strategy: "prefix",
+    baseUrl: "https://dubbingbase.com",
     detectBrowserLanguage: {
       useCookie: true,
       cookieKey: "user_lang",

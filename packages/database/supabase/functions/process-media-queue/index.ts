@@ -14,6 +14,7 @@ export default {
         const results = [];
         let isSingle = false;
         let isForce = false;
+        let isRateLimited = false;
 
         try {
           // Read request body to check for "single" mode
@@ -161,6 +162,7 @@ export default {
                 ? ` (Episode ${payload.episode_number})`
                 : ""
             }. Added ${responseData.creditsAdded ?? 0} roles and ${responseData.changes ?? 0} new voice actors.`,
+            responseData.imageUrl ? { imageUrl: responseData.imageUrl } : undefined
           );
         } catch (err) {
           let errMsg = "";
@@ -174,40 +176,84 @@ export default {
               errMsg = String(err);
             }
           }
-          const fullErr = err instanceof Error ? err.stack : err;
-          console.error(
-            `[QUEUE] Error processing message ID ${msgId}:`,
-            errMsg,
-          );
-          console.error(`[QUEUE] Full error stack trace:`, fullErr);
 
-          // Archive message with error attached to archived payload so status helper can retrieve it
-          await ctx.supabaseAdmin.rpc(
-            "archive_media_queue_message_with_error",
-            {
-              p_msg_id: msgId,
-              p_error: errMsg,
-            },
-          );
+          if (errMsg.includes("Mistral API Rate Limited (429)")) {
+            isRateLimited = true;
+            
+            const readCt = Number(queueItem.read_ct);
+            const MAX_RETRIES = 5;
 
-          results.push({
-            id: msgId,
-            ok: false,
-            changes: 0,
-            error: errMsg,
-          });
+            if (readCt >= MAX_RETRIES) {
+              console.warn(`[QUEUE] Message ID ${msgId} rate limited by Mistral ${readCt} times. Max retries reached. Archiving.`);
+              
+              await ctx.supabaseAdmin.rpc(
+                "archive_media_queue_message_with_error",
+                {
+                  p_msg_id: msgId,
+                  p_error: `Max retries (${MAX_RETRIES}) reached due to Mistral API Rate Limited (429).`,
+                },
+              );
 
-          await sendOneSignalNotification(
-            "Queue Item Failed",
-            `Failed to process ${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type} (TMDB ID ${payload.tmdb_id}): ${errMsg}`,
-          );
+              results.push({
+                id: msgId,
+                ok: false,
+                changes: 0,
+                error: `Max retries (${MAX_RETRIES}) reached due to Mistral 429`,
+              });
+
+              await sendOneSignalNotification(
+                "Queue Item Failed (Rate Limit)",
+                `Failed to process ${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type} (TMDB ID ${payload.tmdb_id}): Max retries reached due to rate limit.`,
+              );
+            } else {
+              console.warn(`[QUEUE] Message ID ${msgId} rate limited by Mistral (Attempt ${readCt}/${MAX_RETRIES}). Leaving in queue to retry later.`);
+              results.push({
+                id: msgId,
+                ok: false,
+                changes: 0,
+                error: errMsg,
+                rate_limited: true,
+              });
+              // Skip archiving, so the visibility timeout (vt) will expire and it will be retried automatically
+            }
+          } else {
+            const fullErr = err instanceof Error ? err.stack : err;
+            console.error(
+              `[QUEUE] Error processing message ID ${msgId}:`,
+              errMsg,
+            );
+            console.error(`[QUEUE] Full error stack trace:`, fullErr);
+
+            // Archive message with error attached to archived payload so status helper can retrieve it
+            await ctx.supabaseAdmin.rpc(
+              "archive_media_queue_message_with_error",
+              {
+                p_msg_id: msgId,
+                p_error: errMsg,
+              },
+            );
+
+            results.push({
+              id: msgId,
+              ok: false,
+              changes: 0,
+              error: errMsg,
+            });
+
+            await sendOneSignalNotification(
+              "Queue Item Failed",
+              `Failed to process ${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type} (TMDB ID ${payload.tmdb_id}): ${errMsg}`,
+            );
+          }
         }
 
         // Check if there are more items in the queue and self-trigger to drain it.
         // This avoids timeout risk (we always process 1 item per invocation) while
         // ensuring the entire queue is drained without requiring a cron job.
         console.log(`[QUEUE] Checking if we need to self-trigger...`);
-        if (!isSingle) {
+        if (isRateLimited) {
+          console.warn(`[QUEUE] Rate limited by Mistral. Halting queue processor self-trigger.`);
+        } else if (!isSingle) {
           const { data: queueDepth } = await ctx.supabaseAdmin.rpc(
             "get_media_queue_depth",
           );

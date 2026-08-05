@@ -18,8 +18,7 @@
         <div
           class="w-48 h-48 md:w-64 md:h-64 rounded-2xl overflow-hidden flex-shrink-0 bg-gray-100 dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] shadow-2xl"
         >
-          <img
-            v-if="profilePicture"
+          <NuxtImg format="webp"             v-if="profilePicture"
             :src="profilePicture"
             :alt="voiceActor.firstname + ' ' + voiceActor.lastname"
             class="object-cover w-full h-full"
@@ -131,7 +130,7 @@
                 <!-- Column 1: Media -->
                 <div class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start">
                   <div class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 flex-shrink-0">
-                    <img v-if="item.media.poster_path" :src="resolveImageUrl(item.media.poster_path)" :alt="(item.media as any).title || (item.media as any).name" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    <NuxtImg format="webp" v-if="item.media.poster_path" :src="resolveImageUrl(item.media.poster_path)" :alt="(item.media as any).title || (item.media as any).name" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                     <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
                       <ClapperboardIcon class="w-6 h-6 sm:w-8 sm:h-8 opacity-20" />
                     </div>
@@ -145,7 +144,7 @@
                 <!-- Column 2: Original Actor -->
                 <div class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-3 sm:pt-0">
                   <div class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 flex-shrink-0">
-                    <img v-if="item.data.actor.profile_picture" :src="resolveImageUrl(item.data.actor.profile_picture)" :alt="item.data.actor.name" class="w-full h-full object-cover" />
+                    <NuxtImg format="webp" v-if="item.data.actor.profile_picture" :src="resolveImageUrl(item.data.actor.profile_picture)" :alt="item.data.actor.name" class="w-full h-full object-cover" />
                     <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
                       <UserIcon class="w-6 h-6 sm:w-8 sm:h-8 opacity-20" />
                     </div>
@@ -159,7 +158,7 @@
                 <!-- Column 3: Character -->
                 <div class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-3 sm:pt-0">
                   <div class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 relative flex-shrink-0">
-                    <img v-if="item.data.characterImage" :src="resolveImageUrl(item.data.characterImage)" :alt="item.data.character" class="w-full h-full object-cover" />
+                    <NuxtImg format="webp" v-if="item.data.characterImage" :src="resolveImageUrl(item.data.characterImage)" :alt="item.data.character" class="w-full h-full object-cover" />
                     <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
                       <UserIcon class="w-6 h-6 sm:w-8 sm:h-8 opacity-20" />
                     </div>
@@ -186,7 +185,7 @@
               <!-- Actor Group Header -->
               <NuxtLink :to="$localePath(`/actor/${works[0]?.data.actor.id}`)" class="flex items-center gap-4 border-b border-gray-200 dark:border-gray-800 pb-4 hover:bg-gray-50 dark:hover:bg-[#1d1d1d] p-2 -ml-2 rounded-xl transition-colors cursor-pointer group">
                 <div class="w-14 h-14 rounded-full overflow-hidden bg-gray-100 dark:bg-[#161616] shadow-md border border-gray-200 dark:border-[#2a2a2a]">
-                  <img v-if="works[0]?.data.actor.profile_picture" :src="resolveImageUrl(works[0].data.actor.profile_picture)" :alt="actorName" class="object-cover w-full h-full" />
+                  <NuxtImg format="webp" v-if="works[0]?.data.actor.profile_picture" :src="resolveImageUrl(works[0].data.actor.profile_picture)" :alt="actorName" class="object-cover w-full h-full" />
                   <UserIcon v-else class="w-full h-full text-gray-400 p-2" />
                 </div>
                 <div>
@@ -209,7 +208,7 @@
                     <!-- Column 1: Media -->
                     <div class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start">
                       <div class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 flex-shrink-0">
-                        <img v-if="item.media.poster_path" :src="resolveImageUrl(item.media.poster_path)" :alt="(item.media as any).title || (item.media as any).name" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        <NuxtImg format="webp" v-if="item.media.poster_path" :src="resolveImageUrl(item.media.poster_path)" :alt="(item.media as any).title || (item.media as any).name" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                         <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
                           <ClapperboardIcon class="w-6 h-6 opacity-20" />
                         </div>
@@ -223,7 +222,7 @@
                     <!-- Column 2: Character -->
                     <div class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-3 sm:pt-0">
                       <div class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 relative flex-shrink-0">
-                        <img v-if="item.data.characterImage" :src="resolveImageUrl(item.data.characterImage)" :alt="item.data.character" class="w-full h-full object-cover" />
+                        <NuxtImg format="webp" v-if="item.data.characterImage" :src="resolveImageUrl(item.data.characterImage)" :alt="item.data.character" class="w-full h-full object-cover" />
                         <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
                           <UserIcon class="w-6 h-6 opacity-20" />
                         </div>

@@ -18,8 +18,7 @@
         <div
           class="w-48 h-48 md:w-64 md:h-64 rounded-2xl overflow-hidden flex-shrink-0 bg-gray-100 dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] shadow-2xl"
         >
-          <img
-            v-if="actor.profile_path"
+          <NuxtImg format="webp"             v-if="actor.profile_path"
             :src="resolveImageUrl(actor.profile_path)"
             :alt="actor.name"
             class="object-cover w-full h-full"
@@ -92,8 +91,7 @@
             ]"
           >
             <div class="relative w-20 h-20 rounded-full overflow-hidden mb-3 border-2 border-transparent group-hover:border-cyan-400 transition-colors">
-              <img
-                v-if="va.profile_picture"
+              <NuxtImg format="webp"                 v-if="va.profile_picture"
                 :src="va.profile_picture"
                 :alt="`${va.firstname} ${va.lastname}`"
                 class="object-cover w-full h-full"
@@ -136,8 +134,7 @@
             <div class="flex gap-4 h-full">
               <!-- Media Poster -->
               <div class="w-20 md:w-24 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 flex-shrink-0 aspect-[2/3]">
-                <img
-                  v-if="item.poster_path"
+                <NuxtImg format="webp"                   v-if="item.poster_path"
                   :src="resolveImageUrl(item.poster_path)"
                   :alt="item.title || item.name"
                   class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

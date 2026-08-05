@@ -5,7 +5,7 @@
     <LanguageBanner />
     <Header />
     <NuxtLayout>
-      <NuxtPage />
+      <NuxtPage :keepalive="{ max: 10 }" />
     </NuxtLayout>
     <Footer />
   </div>
@@ -14,10 +14,16 @@
 <script setup lang="ts">
 
 const { effectiveTheme } = useTheme();
+const i18nHead = useLocaleHead({
+  dir: true,
+  seo: true
+})
 
 useHead({
   htmlAttrs: {
-    'data-theme': effectiveTheme
+    'data-theme': effectiveTheme,
+    lang: () => i18nHead.value.htmlAttrs!.lang,
+    dir: () => i18nHead.value.htmlAttrs!.dir
   },
   titleTemplate: (titleChunk) => {
     return titleChunk ? `${titleChunk} | DubbingBase` : 'DubbingBase - La base de données du doublage';
@@ -27,7 +33,9 @@ useHead({
     { rel: 'icon', type: 'image/png', href: '/favicon-96x96.png', sizes: '96x96' },
     { rel: 'icon', type: 'image/png', href: '/android-chrome-192x192.png', sizes: '192x192' },
     { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
-    { rel: 'manifest', href: '/manifest.webmanifest' }
-  ]
+    { rel: 'manifest', href: '/manifest.webmanifest' },
+    ...(i18nHead.value.link || [])
+  ],
+  meta: () => [...(i18nHead.value.meta || [])]
 });
 </script>
