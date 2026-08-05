@@ -158,12 +158,10 @@ export default {
       } = apiData;
 
       // Lazy Wikipedia Queue Enqueue
-      const hasVoiceActors = dubbingProjects.some(
-        (p: any) => p.works && p.works.length > 0,
-      );
+      const isProcessed = dubbingProjects.length > 0;
       const hasWiki = !!serieWithImageUrls?.external_ids?.wikidata_id;
 
-      if (!hasVoiceActors && hasWiki) {
+      if (!isProcessed && hasWiki) {
         // Enqueue it lazily in the background
         void (async () => {
           try {

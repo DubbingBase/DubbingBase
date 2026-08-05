@@ -273,6 +273,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_reports: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reporter_id: string
+          status: Database["public"]["Enums"]["user_report_status"]
+          target_url: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reporter_id: string
+          status?: Database["public"]["Enums"]["user_report_status"]
+          target_url: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reporter_id?: string
+          status?: Database["public"]["Enums"]["user_report_status"]
+          target_url?: string
+        }
+        Relationships: []
+      }
       user_voice_actor_links: {
         Row: {
           created_at: string | null
@@ -630,6 +660,7 @@ export type Database = {
       }
     }
     Enums: {
+      user_report_status: "pending" | "resolved" | "dismissed"
       voice_actor_status: "active" | "not contacted" | "not answered"
     }
     CompositeTypes: {
@@ -761,6 +792,7 @@ export const Constants = {
   },
   public: {
     Enums: {
+      user_report_status: ["pending", "resolved", "dismissed"],
       voice_actor_status: ["active", "not contacted", "not answered"],
     },
   },

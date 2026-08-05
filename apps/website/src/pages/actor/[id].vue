@@ -63,6 +63,12 @@
               {{ actor.biography }}
             </p>
           </div>
+          <div class="pt-4 flex justify-end">
+            <button @click="isReportModalOpen = true" class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+              {{ t('report.button', 'Signaler cette fiche') }}
+            </button>
+          </div>
         </div>
       </section>
 
@@ -165,14 +171,19 @@
         </div>
       </section>
     </div>
+
+    <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref, watch, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ArrowLeftIcon, ClapperboardIcon } from "lucide-vue-next";
 import { useActorData } from "@app/shared-logic";
+import ReportModal from '../../components/ReportModal.vue';
+
+const isReportModalOpen = ref(false);
 
 const route = useRoute();
 const router = useRouter();
@@ -180,6 +191,7 @@ const supabase = useSupabaseClient();
 const { locale, t } = useI18n();
 
 const id = route.params.id as string;
+const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
 
 const {
   actor,

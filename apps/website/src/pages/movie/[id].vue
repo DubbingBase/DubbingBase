@@ -77,6 +77,13 @@
                 TVDB <ExternalLinkIcon class="w-3 h-3 opacity-70" />
               </a>
             </div>
+            
+            <div class="mt-8 border-t border-gray-200 dark:border-[#2a2a2a] pt-6">
+              <button @click="isReportModalOpen = true" class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+                {{ $t('report.button', 'Signaler cette fiche') }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -202,6 +209,8 @@
   <div v-else-if="pending" class="min-h-screen bg-gray-50 dark:bg-[#1b1b1b] flex items-center justify-center">
     <div class="w-12 h-12 border-4 border-cyan-600 dark:border-[#00E5FF] border-t-transparent rounded-full animate-spin"></div>
   </div>
+
+  <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
 </template>
 
 <script setup lang="ts">
@@ -210,11 +219,15 @@ import { useRoute, useRouter } from 'vue-router';
 import { fetchMovieData, findCharacter } from '@app/shared-logic';
 import { computed, ref } from 'vue';
 import { ArrowLeftIcon, ClapperboardIcon, UserIcon, MicIcon, SearchIcon, ExternalLinkIcon } from 'lucide-vue-next';
+import ReportModal from '../../components/ReportModal.vue';
+
+const isReportModalOpen = ref(false);
 
 const route = useRoute();
 const router = useRouter();
 const supabase = useSupabaseClient();
 const movieId = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id;
+const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
 
 const { data, pending } = await useAsyncData(`movie-${movieId}`, () => fetchMovieData(supabase, movieId));
 

@@ -74,9 +74,8 @@ export default {
         const { data: existingProjects, error: projectsError } =
           await ctx.supabaseAdmin
             .from("dubbing_projects")
-            .select("content_id, content_type, work!inner(id)")
-            .in("content_id", contentIds)
-            .not("work.voice_actor_id", "is", null);
+            .select("content_id, content_type")
+            .in("content_id", contentIds);
 
         if (projectsError) {
           throw new Error(`Failed to fetch existing projects: ${projectsError.message}`);

@@ -6,6 +6,7 @@ import { WithCast } from "../_shared/types.ts";
 import { VoiceActorService } from "../_shared/voice-actor-service.ts";
 import { Database } from "../_shared/database.types.ts";
 import { buildTmdbImageUrl } from "../_shared/tmdb-urls.ts";
+import { findOrCreateDubbingProject } from "../_shared/dubbing-project.ts";
 
 export default {
   fetch: withSupabase<Database>(
@@ -69,6 +70,10 @@ export default {
 
         const movie = (await response.json()) as any;
         mediaTitle = movie.title || movie.name || "Unknown title";
+        
+        // Mark as processed so it doesn't get repeatedly queued by trending media cron
+        await findOrCreateDubbingProject(ctx.supabaseAdmin, tmdbId, tmdbType);
+
         const wikiId = movie.external_ids?.wikidata_id;
 
         if (!wikiId) {
