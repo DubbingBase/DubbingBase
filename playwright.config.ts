@@ -35,7 +35,7 @@ export default defineConfig({
       command: 'pnpm --filter=@app/mobile run build && pnpm --filter=@app/mobile run preview -- --port 5173 --strictPort',
       port: 5173,
       reuseExistingServer: !process.env.CI,
-      timeout: 120000,
+      timeout: 300000,
     },
     {
       command: 'pnpm --filter=@app/website run build && pnpm --filter=@app/website run preview -- -p 3000',
