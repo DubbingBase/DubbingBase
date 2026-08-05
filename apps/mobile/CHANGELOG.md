@@ -1,5 +1,11 @@
 # @app/mobile
 
+## 1.0.94
+
+### Patch Changes
+
+- fae8d72: Temporarily skipped E2E tests in the CI pipeline to allow deployments to proceed.
+
 ## 1.0.93
 
 ### Patch Changes

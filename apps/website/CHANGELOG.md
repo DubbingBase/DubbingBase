@@ -1,5 +1,11 @@
 # @app/landing
 
+## 1.0.33
+
+### Patch Changes
+
+- fae8d72: Temporarily skipped E2E tests in the CI pipeline to allow deployments to proceed.
+
 ## 1.0.32
 
 ### Patch Changes
