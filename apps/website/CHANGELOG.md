@@ -1,5 +1,11 @@
 # @app/landing
 
+## 1.0.30
+
+### Patch Changes
+
+- a30d030: implement user reporting system with new database migration, edge function, and modal component
+
 ## 1.0.29
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @app/supabase
 
+## 0.0.70
+
+### Patch Changes
+
+- a30d030: implement user reporting system with new database migration, edge function, and modal component
+
 ## 0.0.69
 
 ### Patch Changes
