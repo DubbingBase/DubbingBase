@@ -48,11 +48,11 @@
   },
   "home": {
     "meta": {
-      "title": "DubbingBase - La base de données du doublage et comédiens de doublage",
-      "description": "Découvrez DubbingBase, la base de données de référence du doublage français. Retrouvez les fiches des comédiens de doublage, leurs rôles et castings vocaux de vos films et séries préférés.",
-      "keywords": "doublage, comédiens de doublage, voix française, castings vocaux, films, séries, fiches acteurs",
+      "title": "DubbingBase - La base de données mondiale du doublage",
+      "description": "Découvrez DubbingBase, l'encyclopédie mondiale du doublage. Retrouvez les fiches des comédiens, leurs rôles et les castings vocaux de vos films et séries.",
+      "keywords": "doublage, comédiens de doublage, casting vocal, films, séries, fiches acteurs",
       "ogTitle": "DubbingBase - La base de données du doublage",
-      "ogDescription": "Retrouvez la base de données complète des comédiens de doublage et voix françaises."
+      "ogDescription": "Retrouvez la base de données complète des comédiens de doublage du monde entier."
     },
     "hero": {
       "title": "La base de données du doublage et des comédiens",
@@ -77,5 +77,14 @@
     "character": "Personnage",
     "voiceActor": "Voix VF",
     "notSpecified": "Non renseignée"
+  },
+  "seo": {
+    "movies": "films doublés, doublage français, voix vf films, base de données doublage",
+    "series": "séries doublées, doublage français, voix vf séries, base de données doublage",
+    "voiceActors": "comédiens de doublage, voix françaises, artistes de doublage, base de données doublage",
+    "movieKeywords": "{title}, {title} doublage, {title} voix française, casting vocal, doublage de film, {title} cast",
+    "showKeywords": "{title}, {title} doublage, {title} voix française, casting vocal, doublage de série, {title} cast",
+    "voiceActorKeywords": "{name}, comédien de doublage, voix française, vf, doublage, filmographie",
+    "actorKeywords": "{name}, acteur, {name} voix française, {name} doublage, filmographie"
   }
 }

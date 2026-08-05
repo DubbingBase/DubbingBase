@@ -77,5 +77,14 @@
     "character": "Character",
     "voiceActor": "Voice Actor",
     "notSpecified": "Not specified"
+  },
+  "seo": {
+    "movies": "dubbed movies, english dubbing, movie voice cast, dubbing database",
+    "series": "dubbed series, english dubbing, series voice cast, dubbing database",
+    "voiceActors": "voice actors, english voice actors, dubbing artists, dubbing database",
+    "movieKeywords": "{title}, {title} dubbing, {title} english voice, voice cast, movie dubbing, {title} cast",
+    "showKeywords": "{title}, {title} dubbing, {title} english voice, voice cast, series dubbing, {title} cast",
+    "voiceActorKeywords": "{name}, voice actor, dubbing, english voice, {name} roles, {name} dubbing, filmography",
+    "actorKeywords": "{name}, actor, {name} french voice, {name} dubbing, filmography"
   }
 }

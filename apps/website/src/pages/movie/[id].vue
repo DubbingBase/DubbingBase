@@ -218,7 +218,7 @@ const movieId = Array.isArray(route.params.id) ? route.params.id[0] : route.para
 
 const { data, pending } = await useAsyncData(`movie-${movieId}`, () => fetchMovieData(supabase, movieId));
 
-const { locale } = useI18n();
+const { locale, t } = useI18n();
 
 const movie = computed(() => data.value?.movie);
 const dubbingProjects = computed(() => {
@@ -343,6 +343,14 @@ useHead({
           desc = `Découvrez le casting complet des voix pour le doublage ${getDisplayLanguage(activeDubProject.value.language)} du film ${movie.value?.title}. ` + desc;
         }
         return desc;
+      })
+    },
+    {
+      name: 'keywords',
+      content: computed(() => {
+        const title = movie.value?.title || '';
+        if (!title) return t('home.meta.keywords');
+        return t('seo.movieKeywords', { title });
       })
     },
     {

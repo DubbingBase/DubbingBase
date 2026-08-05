@@ -46,6 +46,7 @@
 import { ref, onMounted } from 'vue';
 
 const supabase = useSupabaseClient();
+const { t } = useI18n();
 
 const series = ref<any[]>([]);
 const isLoading = ref(true);
@@ -57,6 +58,10 @@ useHead({
     {
       name: 'description',
       content: 'Parcourez la liste des séries populaires et découvrez leurs comédiens de doublage.'
+    },
+    {
+      name: 'keywords',
+      content: computed(() => t('seo.series'))
     }
   ]
 });

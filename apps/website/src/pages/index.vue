@@ -222,7 +222,7 @@ useHead({
           '@type': 'Organization',
           name: 'DubbingBase',
           url: 'https://dubbingbase.com/',
-          logo: 'https://dubbingbase.com/logo.png',
+          logo: 'https://dubbingbase.com/android-chrome-512x512.png',
           sameAs: [
             'https://x.com/DubbingBase',
             'https://instagram.com/dubbingbase'

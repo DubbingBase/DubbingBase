@@ -214,7 +214,7 @@ const showId = Array.isArray(route.params.id) ? route.params.id[0] : route.param
 
 const { data, pending } = await useAsyncData(`show-${showId}`, () => fetchShowData(supabase, showId));
 
-const { locale } = useI18n();
+const { locale, t } = useI18n();
 
 const serie = computed(() => data.value?.serie);
 const dubbingProjects = computed(() => {
@@ -343,6 +343,14 @@ useHead({
           desc = `Découvrez le casting complet des voix pour le doublage ${getDisplayLanguage(activeDubProject.value.language)} de la série ${serie.value?.name}. ` + desc;
         }
         return desc;
+      })
+    },
+    {
+      name: 'keywords',
+      content: computed(() => {
+        const title = serie.value?.name || '';
+        if (!title) return t('home.meta.keywords');
+        return t('seo.showKeywords', { title });
       })
     },
     {

@@ -74,6 +74,7 @@
 import { ref, computed, onMounted } from 'vue';
 
 const supabase = useSupabaseClient();
+const { t } = useI18n();
 
 const allActors = ref<any[]>([]);
 const isLoading = ref(true);
@@ -86,6 +87,10 @@ useHead({
     {
       name: 'description',
       content: 'Parcourez la base de données complète des comédiens de doublage et voix françaises.'
+    },
+    {
+      name: 'keywords',
+      content: computed(() => t('seo.voiceActors'))
     }
   ]
 });

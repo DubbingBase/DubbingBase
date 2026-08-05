@@ -153,6 +153,19 @@ export default {
             `[QUEUE] Successfully processed and archived message ID ${msgId}.`,
           );
 
+          let targetUrl: string | undefined = undefined;
+          if (payload.media_type === "movie") {
+            targetUrl = `/movie/${payload.tmdb_id}`;
+          } else if (payload.media_type === "tv") {
+            if (payload.season_number && payload.episode_number) {
+              targetUrl = `/serie/${payload.tmdb_id}/season/${payload.season_number}/details/${payload.episode_number}`;
+            } else if (payload.season_number) {
+              targetUrl = `/serie/${payload.tmdb_id}/season/${payload.season_number}`;
+            } else {
+              targetUrl = `/serie/${payload.tmdb_id}`;
+            }
+          }
+
           await sendOneSignalNotification(
             "Queue Item Processed",
             `Successfully processed ${mediaTitle}${
@@ -162,7 +175,10 @@ export default {
                 ? ` (Episode ${payload.episode_number})`
                 : ""
             }. Added ${responseData.creditsAdded ?? 0} roles and ${responseData.changes ?? 0} new voice actors.`,
-            responseData.imageUrl ? { imageUrl: responseData.imageUrl } : undefined
+            {
+              ...(responseData.imageUrl ? { imageUrl: responseData.imageUrl } : {}),
+              ...(targetUrl ? { url: targetUrl } : {})
+            }
           );
         } catch (err) {
           let errMsg = "";

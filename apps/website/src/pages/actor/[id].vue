@@ -177,6 +177,7 @@ import { useActorData } from "@app/shared-logic";
 const route = useRoute();
 const router = useRouter();
 const supabase = useSupabaseClient();
+const { locale, t } = useI18n();
 
 const id = route.params.id as string;
 
@@ -207,6 +208,13 @@ watch(
           {
             name: "description",
             content: newActor.biography || `Discover ${newActor.name}'s filmography and French voice actors on DubbingBase.`,
+          },
+          {
+            name: "keywords",
+            content: computed(() => {
+              if (!newActor.name) return t('home.meta.keywords');
+              return t('seo.actorKeywords', { name: newActor.name });
+            })
           },
           { property: "og:title", content: `${newActor.name} - DubbingBase` },
           {

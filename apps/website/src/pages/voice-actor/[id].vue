@@ -258,7 +258,7 @@ const router = useRouter();
 
 const route = useRoute();
 const voiceActorId = Number(route.params.id);
-const { locale } = useI18n();
+const { locale, t } = useI18n();
 
 const config = useRuntimeConfig();
 const baseUrl = config.public.supabase.url;
@@ -300,7 +300,11 @@ useHead({
     },
     {
       name: 'keywords',
-      content: computed(() => `${actorName.value}, comédien de doublage, voix française, vf, doublage, filmographie`),
+      content: computed(() => {
+        const name = actorName.value || '';
+        if (!name) return t('home.meta.keywords');
+        return t('seo.voiceActorKeywords', { name });
+      }),
     },
     { name: 'robots', content: 'index, follow' },
     // Open Graph
