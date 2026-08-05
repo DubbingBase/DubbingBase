@@ -1,5 +1,11 @@
 # @app/mobile
 
+## 1.0.89
+
+### Patch Changes
+
+- 8105616: integrate PostHog analytics for mobile and website with automated user identification and version tracking
+
 ## 1.0.88
 
 ### Patch Changes

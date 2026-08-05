@@ -1,5 +1,11 @@
 # @app/landing
 
+## 1.0.29
+
+### Patch Changes
+
+- 8105616: integrate PostHog analytics for mobile and website with automated user identification and version tracking
+
 ## 1.0.28
 
 ### Patch Changes
