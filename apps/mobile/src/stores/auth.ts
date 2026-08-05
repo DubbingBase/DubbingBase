@@ -4,12 +4,15 @@ import { supabase } from "@/api/supabase";
 import type { User } from "@supabase/supabase-js";
 import type { Permission } from "@/types/permissions";
 import { useOneSignal } from "@/composables/useOneSignal";
+import { usePostHog } from "@/composables/usePostHog";
 
 export const useAuthStore = defineStore("auth", () => {
   // State
   const user = ref<User | null>(null);
   const isLoading = ref(false);
   const error = ref<string | null>(null);
+
+  const { posthog } = usePostHog();
 
   // Getters
   const isAuthenticated = computed(() => !!user.value);
@@ -173,8 +176,10 @@ export const useAuthStore = defineStore("auth", () => {
         try {
           if (session?.user) {
             login(session.user.id);
+            posthog.identify(session.user.id);
           } else if (event === "SIGNED_OUT" || !session) {
             logout();
+            posthog.reset();
           }
         } catch (e) {
           console.error("Failed to sync OneSignal user state", e);

@@ -29,6 +29,9 @@ export default defineNuxtConfig({
 
   vite: {
     plugins: [tailwindcss()],
+    define: {
+      __VERSION__: JSON.stringify(process.env.npm_package_version || "1.0.0"),
+    }
   },
 
   css: ["~/assets/main.css"],

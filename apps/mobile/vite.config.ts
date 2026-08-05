@@ -62,6 +62,9 @@ export default ({ mode }) => {
       },
       dedupe: ["vue-router", "@ionic/vue-router", "vue"],
     },
+    define: {
+      __VERSION__: JSON.stringify(process.env.npm_package_version || "1.0.0"),
+    },
     test: {
       globals: true,
       environment: "jsdom",
