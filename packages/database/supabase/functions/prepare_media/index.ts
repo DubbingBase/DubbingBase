@@ -33,9 +33,12 @@ export default {
         return Response.json(
           {
             ok: false,
-            error:
-              "Invalid request payload: " +
-              (err instanceof Error ? err.message : String(err)),
+            error: "Invalid request payload: " +
+            (err instanceof Error
+              ? err.message
+              : typeof err === "object" && err !== null
+                ? (err as any).message || JSON.stringify(err)
+                : String(err)),
           },
           { status: 400 },
         );
@@ -235,7 +238,12 @@ export default {
       } catch (error) {
         console.error("Error processing fetch request:", error);
 
-        const errorMsg = error instanceof Error ? error.message : String(error);
+        const errorMsg =
+          error instanceof Error
+            ? error.message
+            : typeof error === "object" && error !== null
+              ? (error as any).message || JSON.stringify(error)
+              : String(error);
 
         return Response.json({ ok: false, error: errorMsg, title: mediaTitle });
       }

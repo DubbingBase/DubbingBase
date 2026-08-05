@@ -554,6 +554,14 @@ export type Database = {
         }
         Returns: Json
       }
+      get_top_contributors: {
+        Args: { limit_param?: number }
+        Returns: {
+          raw_user_meta_data: Json
+          score: number
+          user_id: string
+        }[]
+      }
       get_top_voice_actors: {
         Args: { limit_param?: number }
         Returns: {

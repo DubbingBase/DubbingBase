@@ -11,6 +11,31 @@
         </div>
 
         <form class="space-y-5" @submit.prevent="handleRegister">
+          <!-- Username Field -->
+          <div class="space-y-2">
+            <label for="username" class="text-sm font-medium text-gray-700 dark:text-gray-300">Username</label>
+            <input
+              id="username"
+              v-model="username"
+              type="text"
+              required
+              placeholder="Your username"
+              class="w-full px-4 py-3 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-200"
+            />
+          </div>
+
+          <!-- Full Name Field -->
+          <div class="space-y-2">
+            <label for="full_name" class="text-sm font-medium text-gray-700 dark:text-gray-300">Full Name <span class="text-gray-500 font-normal">(Optional)</span></label>
+            <input
+              id="full_name"
+              v-model="full_name"
+              type="text"
+              placeholder="John Doe"
+              class="w-full px-4 py-3 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-200"
+            />
+          </div>
+
           <!-- Email Field -->
           <div class="space-y-2">
             <label for="email" class="text-sm font-medium text-gray-700 dark:text-gray-300">Email address</label>
@@ -94,16 +119,20 @@ const router = useRouter();
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
 
+const username = ref("");
+const full_name = ref("");
 const email = ref("");
 const password = ref("");
 const loading = ref(false);
 const authMessage = ref<string | null>(null);
 const isError = ref(true);
 
+const localePath = useLocalePath();
+
 // Redirect if already logged in
 watchEffect(() => {
   if (user.value) {
-    router.push('/profile');
+    router.push(localePath('/profile'));
   }
 });
 
@@ -116,6 +145,12 @@ const handleRegister = async () => {
     const { error, data } = await supabase.auth.signUp({
       email: email.value,
       password: password.value,
+      options: {
+        data: {
+          username: username.value,
+          full_name: full_name.value
+        }
+      }
     });
 
     if (error) {
@@ -129,7 +164,7 @@ const handleRegister = async () => {
       authMessage.value = "Registration successful! Please check your email to verify your account.";
     } else {
       // Logged in immediately
-      router.push('/profile');
+      router.push(localePath('/profile'));
     }
 
   } catch (err: any) {

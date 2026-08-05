@@ -168,13 +168,14 @@ export default {
           let errMsg = "";
           if (err instanceof Error) {
             errMsg = err.message;
-          } else {
+          } else if (typeof err === "object" && err !== null) {
             try {
-              errMsg =
-                typeof err === "object" ? JSON.stringify(err) : String(err);
+              errMsg = (err as any).message || JSON.stringify(err);
             } catch {
               errMsg = String(err);
             }
+          } else {
+            errMsg = String(err);
           }
 
           if (errMsg.includes("Mistral API Rate Limited (429)")) {
@@ -293,7 +294,7 @@ export default {
           error instanceof Error
             ? error.message
             : typeof error === "object" && error !== null
-              ? JSON.stringify(error)
+              ? (error as any).message || JSON.stringify(error)
               : String(error);
         console.error(
           "[QUEUE] Uncaught error in process-media-queue:",

@@ -73,29 +73,61 @@
       <!-- Top Voice Actors -->
       <section>
         <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-900 dark:text-white tracking-wide">{{ $t('home.topVoiceActors') }}</h2>
-        <div v-if="isLoadingTopVoiceActors" class="flex gap-4 overflow-x-auto pb-4">
-          <div v-for="i in 4" :key="i" class="w-32 flex-shrink-0 flex flex-col items-center gap-3">
-            <div class="w-24 h-24 bg-gray-200 dark:bg-gray-800 rounded-full animate-pulse"></div>
+        <div v-if="isLoadingTopVoiceActors" class="flex gap-4 overflow-x-auto pb-4 pt-4 px-2">
+          <div v-for="i in 4" :key="i" class="w-36 flex-shrink-0 flex flex-col items-center gap-3">
+            <div class="w-28 h-28 bg-gray-200 dark:bg-gray-800 rounded-full animate-pulse"></div>
             <div class="h-4 w-20 bg-gray-200 dark:bg-gray-800 rounded animate-pulse"></div>
           </div>
         </div>
         <div v-else-if="errorTopVoiceActors" class="text-red-400 bg-red-900/20 p-4 rounded-lg">
           {{ errorTopVoiceActors }}
         </div>
-        <div v-else ref="vaScrollRef" class="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4 custom-scrollbar">
-          <div v-for="va in topVoiceActors" :key="va.id" class="w-32 flex-shrink-0 snap-start">
+        <div v-else ref="vaScrollRef" class="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4 pt-4 px-2 custom-scrollbar">
+          <div v-for="va in topVoiceActors" :key="va.id" class="w-36 flex-shrink-0 snap-start">
             <NuxtLink
               :to="$localePath('/voice-actor/' + va.id)"
               class="flex flex-col items-center gap-3 group transition-transform hover:-translate-y-1"
             >
-              <div class="relative w-24 h-24 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-800 border-2 border-transparent group-hover:border-cyan-500 transition-colors">
+              <div class="relative w-28 h-28 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-800 border-2 border-transparent group-hover:border-cyan-500 transition-colors shadow-md">
                 <NuxtImg v-if="va.profile_picture" :src="va.profile_picture" :alt="va.firstname + ' ' + va.lastname" format="webp" loading="lazy" class="object-cover w-full h-full" />
-                <div v-else class="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-2xl font-bold uppercase">
+                <div v-else class="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-3xl font-bold uppercase">
                   {{ va.firstname?.[0] }}{{ va.lastname?.[0] }}
                 </div>
               </div>
-              <h3 class="font-semibold text-sm text-center text-gray-800 dark:text-gray-200">{{ va.firstname }} {{ va.lastname }}</h3>
+              <h3 class="font-semibold text-sm text-center text-gray-800 dark:text-gray-200 w-full px-2">{{ va.firstname }} {{ va.lastname }}</h3>
             </NuxtLink>
+          </div>
+        </div>
+      </section>
+      <!-- Top Contributors (Admin Only) -->
+      <section v-if="isAdmin">
+        <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-900 dark:text-white tracking-wide">Top Contributeurs (Admin)</h2>
+        <div v-if="isLoadingTopContributors" class="flex gap-4 overflow-x-auto pb-4">
+          <div v-for="i in 4" :key="i" class="w-32 flex-shrink-0 flex flex-col items-center gap-3">
+            <div class="w-24 h-24 bg-gray-200 dark:bg-gray-800 rounded-full animate-pulse"></div>
+            <div class="h-4 w-20 bg-gray-200 dark:bg-gray-800 rounded animate-pulse"></div>
+          </div>
+        </div>
+        <div v-else-if="errorTopContributors" class="text-red-400 bg-red-900/20 p-4 rounded-lg">
+          {{ errorTopContributors }}
+        </div>
+        <div v-else ref="contributorsScrollRef" class="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4 pt-4 px-2 custom-scrollbar">
+          <div v-for="(contributor, index) in topContributors" :key="contributor.user_id" class="w-36 flex-shrink-0 snap-start">
+            <div class="flex flex-col items-center gap-3 group transition-transform hover:-translate-y-1 relative">
+              <div class="absolute -top-2 0 bg-yellow-400 text-black font-bold rounded-full w-8 h-8 flex items-center justify-center z-10 shadow-lg border-2 border-white dark:border-[#1a1a1a]" style="right: 8px;">
+                #{{ index + 1 }}
+              </div>
+              <div class="relative w-28 h-28 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-800 border-2 border-transparent group-hover:border-yellow-400 transition-colors shadow-md">
+                <NuxtImg v-if="contributor.raw_user_meta_data?.avatar_url" :src="contributor.raw_user_meta_data.avatar_url" :alt="contributor.raw_user_meta_data?.username || 'Utilisateur'" format="webp" loading="lazy" class="object-cover w-full h-full" />
+                <div v-else class="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-3xl font-bold uppercase">
+                  {{ (contributor.raw_user_meta_data?.username || 'U')[0] }}
+                </div>
+              </div>
+              <div class="text-center w-full">
+                <h3 class="font-semibold text-sm text-gray-800 dark:text-gray-200 truncate w-full px-2">{{ contributor.raw_user_meta_data?.username || 'Utilisateur' }}</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400">{{ contributor.score }} contributions</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -109,6 +141,11 @@ import { useHomeData, fetchHomeData } from '@app/shared-logic';
 import { useSearchModal } from '../composables/useSearchModal';
 import { useDragScroll } from '../composables/useDragScroll';
 import { ref, computed } from 'vue';
+
+const user = useSupabaseUser();
+const isAdmin = computed(() => {
+  return user.value?.app_metadata?.role === 'admin' || user.value?.user_metadata?.role === 'admin';
+});
 
 const { t, locale } = useI18n();
 
@@ -126,10 +163,12 @@ const { openSearch } = useSearchModal();
 const moviesScrollRef = ref<HTMLElement | null>(null);
 const seriesScrollRef = ref<HTMLElement | null>(null);
 const vaScrollRef = ref<HTMLElement | null>(null);
+const contributorsScrollRef = ref<HTMLElement | null>(null);
 
 useDragScroll(moviesScrollRef);
 useDragScroll(seriesScrollRef);
 useDragScroll(vaScrollRef);
+useDragScroll(contributorsScrollRef);
 
 useHead({
   title: computed(() => t('home.meta.title')),
@@ -224,12 +263,15 @@ const {
   trendingMovies,
   trendingSeries,
   topVoiceActors,
+  topContributors,
   isLoadingMovies,
   isLoadingSeries,
   isLoadingTopVoiceActors,
+  isLoadingTopContributors,
   errorMovies,
   errorSeries,
   errorTopVoiceActors,
+  errorTopContributors,
 } = useHomeData(supabase, data.value);
 </script>
 

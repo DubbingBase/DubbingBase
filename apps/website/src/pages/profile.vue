@@ -70,8 +70,9 @@ const route = useRoute();
 const router = useRouter();
 const supabase = useSupabaseClient();
 
+const localePath = useLocalePath();
 const handleLogout = async () => {
   await supabase.auth.signOut();
-  router.push('/login');
+  router.push(localePath('/login'));
 };
 </script>

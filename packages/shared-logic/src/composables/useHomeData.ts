@@ -15,6 +15,8 @@ export type HomeDataPayload = {
   errorSeries: string;
   errorVoiceActors: string;
   errorTopVoiceActors: string;
+  topContributors: any[];
+  errorTopContributors: string;
 };
 
 export async function fetchHomeData(
@@ -29,6 +31,8 @@ export async function fetchHomeData(
     errorSeries: "",
     errorVoiceActors: "",
     errorTopVoiceActors: "",
+    topContributors: [],
+    errorTopContributors: "",
   };
 
   await Promise.allSettled([
@@ -79,6 +83,18 @@ export async function fetchHomeData(
         payload.errorTopVoiceActors =
           e.message || "Erreur lors du chargement des top doubleurs.";
       }),
+
+    // Fetch top contributors in parallel
+    supabase.functions
+      .invoke("top-contributors", { body: { limit: 10 } })
+      .then((res) => {
+        if (res.error) throw new Error(res.error.message || "Erreur inconnue");
+        payload.topContributors = res.data || [];
+      })
+      .catch((e) => {
+        payload.errorTopContributors =
+          e.message || "Erreur lors du chargement des contributeurs.";
+      }),
   ]);
 
   return payload;
@@ -100,16 +116,21 @@ export function useHomeData(
   const topVoiceActors = ref<Tables<"voice_actors">[]>(
     initialData?.topVoiceActors || [],
   );
+  const topContributors = ref<any[]>(
+    initialData?.topContributors || [],
+  );
 
   const isLoadingMovies = ref(!initialData);
   const isLoadingSeries = ref(!initialData);
   const isLoadingVoiceActors = ref(!initialData);
   const isLoadingTopVoiceActors = ref(!initialData);
+  const isLoadingTopContributors = ref(!initialData);
 
   const errorMovies = ref(initialData?.errorMovies || "");
   const errorSeries = ref(initialData?.errorSeries || "");
   const errorVoiceActors = ref(initialData?.errorVoiceActors || "");
   const errorTopVoiceActors = ref(initialData?.errorTopVoiceActors || "");
+  const errorTopContributors = ref(initialData?.errorTopContributors || "");
 
   const loadHomeData = async () => {
     isLoadingMovies.value = true;
@@ -121,6 +142,7 @@ export function useHomeData(
     errorSeries.value = "";
     errorVoiceActors.value = "";
     errorTopVoiceActors.value = "";
+    errorTopContributors.value = "";
 
     const payload = await fetchHomeData(supabase);
 
@@ -139,6 +161,10 @@ export function useHomeData(
     topVoiceActors.value = payload.topVoiceActors;
     errorTopVoiceActors.value = payload.errorTopVoiceActors;
     isLoadingTopVoiceActors.value = false;
+
+    topContributors.value = payload.topContributors;
+    errorTopContributors.value = payload.errorTopContributors;
+    isLoadingTopContributors.value = false;
   };
 
   return {
@@ -146,14 +172,17 @@ export function useHomeData(
     trendingSeries,
     recentVoiceActors,
     topVoiceActors,
+    topContributors,
     isLoadingMovies,
     isLoadingSeries,
     isLoadingVoiceActors,
     isLoadingTopVoiceActors,
+    isLoadingTopContributors,
     errorMovies,
     errorSeries,
     errorVoiceActors,
     errorTopVoiceActors,
+    errorTopContributors,
     loadHomeData,
   };
 }

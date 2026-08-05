@@ -87,10 +87,12 @@ const password = ref("");
 const loading = ref(false);
 const loginError = ref<string | null>(null);
 
+const localePath = useLocalePath();
+
 // Redirect if already logged in
 watchEffect(() => {
   if (user.value) {
-    router.push('/profile');
+    router.push(localePath('/profile'));
   }
 });
 

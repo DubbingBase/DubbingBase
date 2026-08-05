@@ -1,8 +1,9 @@
 export default defineNuxtRouteMiddleware((to, from) => {
   const user = useSupabaseUser();
+  const localePath = useLocalePath();
 
   if (!user.value) {
-    return navigateTo("/login");
+    return navigateTo(localePath("/login"));
   }
 
   const isAdmin =
@@ -10,6 +11,6 @@ export default defineNuxtRouteMiddleware((to, from) => {
     user.value?.user_metadata?.role === "admin";
 
   if (!isAdmin) {
-    return navigateTo("/");
+    return navigateTo(localePath("/"));
   }
 });

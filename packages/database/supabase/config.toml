@@ -507,3 +507,6 @@ verify_jwt = false
 
 [functions.notify-subscribers]
 verify_jwt = false
+
+[functions.top-contributors]
+verify_jwt = false
