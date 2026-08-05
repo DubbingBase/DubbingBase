@@ -1,5 +1,11 @@
 # @app/mobile
 
+## 1.0.93
+
+### Patch Changes
+
+- c0e40e3: Fixed Vite configuration warning regarding `__dirname` deprecation by migrating to `import.meta.dirname`.
+
 ## 1.0.92
 
 ### Patch Changes
