@@ -1,5 +1,11 @@
 # @app/mobile
 
+## 1.0.91
+
+### Patch Changes
+
+- 70dfb6f: Added E2E tests for mobile and website apps to the GitHub Actions pipeline, and deduplicated Vue versions to resolve the "Cannot redefine property: imgEl" HMR bug.
+
 ## 1.0.90
 
 ### Patch Changes
