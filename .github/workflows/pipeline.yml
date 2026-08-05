@@ -100,13 +100,49 @@ jobs:
         run: supabase functions deploy --project-ref $PROJECT_ID
         working-directory: packages/database
 
+  # Job 3: E2E Tests
+  e2e-tests:
+    needs: [detect, deploy-supabase]
+    if: |
+      always() && 
+      (needs.detect.outputs.mobile == 'true' || needs.detect.outputs.website == 'true') && 
+      (needs.deploy-supabase.result == 'success' || needs.deploy-supabase.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Install Playwright Browsers
+        run: pnpm exec playwright install --with-deps
+
+      - name: Run Playwright tests
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          NUXT_PUBLIC_SUPABASE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: pnpm exec playwright test
+
   # Job 4: Deploy Mobile App as Website
   deploy-mobile-web:
-    needs: [detect, deploy-supabase]
+    needs: [detect, deploy-supabase, e2e-tests]
     # Run if mobile has changes, and if database job succeeded (or wasn't needed)
     if: |
       always() && 
       needs.detect.outputs.mobile == 'true' && 
+      (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped') &&
       (needs.deploy-supabase.result == 'success' || needs.deploy-supabase.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
@@ -149,11 +185,12 @@ jobs:
 
   # Job 5: Build Android app (runs on any branch if mobile has changes)
   build-android:
-    needs: [detect, deploy-supabase]
+    needs: [detect, deploy-supabase, e2e-tests]
     # Run if mobile has changes, and if database job succeeded (or wasn't needed)
     if: |
       always() &&
       needs.detect.outputs.mobile == 'true' &&
+      (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped') &&
       (needs.deploy-supabase.result == 'success' || needs.deploy-supabase.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
@@ -257,11 +294,12 @@ jobs:
 
   # Job 7: Deploy Website to Cloudflare Pages
   deploy-website:
-    needs: [detect, deploy-supabase]
+    needs: [detect, deploy-supabase, e2e-tests]
     # Run if website has changes, and if database job succeeded (or wasn't needed)
     if: |
       always() && 
       needs.detect.outputs.website == 'true' && 
+      (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped') &&
       (needs.deploy-supabase.result == 'success' || needs.deploy-supabase.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
