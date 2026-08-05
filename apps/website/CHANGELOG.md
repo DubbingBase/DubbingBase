@@ -1,5 +1,14 @@
 # @app/landing
 
+## 1.0.27
+
+### Patch Changes
+
+- b5f52e0: add user profile management, implement internationalized routing, and improve error handling in Supabase functions.
+- 61dc335: replace native img tags with NuxtImg and force webp format for image optimization across all pages
+- Updated dependencies [b5f52e0]
+  - @app/shared-logic@1.0.19
+
 ## 1.0.26
 
 ### Patch Changes

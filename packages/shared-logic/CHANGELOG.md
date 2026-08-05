@@ -1,5 +1,11 @@
 # @app/shared-logic
 
+## 1.0.19
+
+### Patch Changes
+
+- b5f52e0: add user profile management, implement internationalized routing, and improve error handling in Supabase functions.
+
 ## 1.0.18
 
 ### Patch Changes
