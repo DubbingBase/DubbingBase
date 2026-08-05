@@ -1,5 +1,11 @@
 # @app/landing
 
+## 1.0.32
+
+### Patch Changes
+
+- 27b779c: Fixed Playwright E2E pipeline: run tests against built apps instead of dev server, and injected missing ONESIGNAL_APP_ID secret.
+
 ## 1.0.31
 
 ### Patch Changes

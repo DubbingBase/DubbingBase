@@ -1,5 +1,11 @@
 # @app/mobile
 
+## 1.0.92
+
+### Patch Changes
+
+- 27b779c: Fixed Playwright E2E pipeline: run tests against built apps instead of dev server, and injected missing ONESIGNAL_APP_ID secret.
+
 ## 1.0.91
 
 ### Patch Changes
