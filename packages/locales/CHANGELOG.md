@@ -1,5 +1,11 @@
 # @app/locales
 
+## 0.0.44
+
+### Patch Changes
+
+- af640a5: add comprehensive video game support including database schema updates, backend integration, and dedicated game UI components.
+
 ## 0.0.43
 
 ### Patch Changes

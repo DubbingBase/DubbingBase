@@ -1,5 +1,11 @@
 # @app/supabase
 
+## 0.0.71
+
+### Patch Changes
+
+- af640a5: add comprehensive video game support including database schema updates, backend integration, and dedicated game UI components.
+
 ## 0.0.70
 
 ### Patch Changes

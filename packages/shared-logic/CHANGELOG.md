@@ -1,5 +1,11 @@
 # @app/shared-logic
 
+## 1.0.20
+
+### Patch Changes
+
+- af640a5: add comprehensive video game support including database schema updates, backend integration, and dedicated game UI components.
+
 ## 1.0.19
 
 ### Patch Changes

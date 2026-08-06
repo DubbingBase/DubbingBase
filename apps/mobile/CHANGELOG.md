@@ -1,5 +1,15 @@
 # @app/mobile
 
+## 1.0.95
+
+### Patch Changes
+
+- af640a5: add comprehensive video game support including database schema updates, backend integration, and dedicated game UI components.
+- Updated dependencies [af640a5]
+  - @app/shared-logic@1.0.20
+  - @app/supabase@0.0.71
+  - @app/locales@0.0.44
+
 ## 1.0.94
 
 ### Patch Changes
