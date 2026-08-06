@@ -176,9 +176,11 @@ export default {
                 : ""
             }. Added ${responseData.creditsAdded ?? 0} roles and ${responseData.changes ?? 0} new voice actors.`,
             {
-              ...(responseData.imageUrl ? { imageUrl: responseData.imageUrl } : {}),
-              ...(targetUrl ? { url: targetUrl } : {})
-            }
+              ...(responseData.imageUrl
+                ? { imageUrl: responseData.imageUrl }
+                : {}),
+              ...(targetUrl ? { url: targetUrl } : {}),
+            },
           );
         } catch (err) {
           let errMsg = "";
@@ -196,13 +198,15 @@ export default {
 
           if (errMsg.includes("Mistral API Rate Limited (429)")) {
             isRateLimited = true;
-            
+
             const readCt = Number(queueItem.read_ct);
             const MAX_RETRIES = 5;
 
             if (readCt >= MAX_RETRIES) {
-              console.warn(`[QUEUE] Message ID ${msgId} rate limited by Mistral ${readCt} times. Max retries reached. Archiving.`);
-              
+              console.warn(
+                `[QUEUE] Message ID ${msgId} rate limited by Mistral ${readCt} times. Max retries reached. Archiving.`,
+              );
+
               await ctx.supabaseAdmin.rpc(
                 "archive_media_queue_message_with_error",
                 {
@@ -223,7 +227,9 @@ export default {
                 `Failed to process ${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type} (TMDB ID ${payload.tmdb_id}): Max retries reached due to rate limit.`,
               );
             } else {
-              console.warn(`[QUEUE] Message ID ${msgId} rate limited by Mistral (Attempt ${readCt}/${MAX_RETRIES}). Leaving in queue to retry later.`);
+              console.warn(
+                `[QUEUE] Message ID ${msgId} rate limited by Mistral (Attempt ${readCt}/${MAX_RETRIES}). Leaving in queue to retry later.`,
+              );
               results.push({
                 id: msgId,
                 ok: false,
@@ -269,7 +275,9 @@ export default {
         // ensuring the entire queue is drained without requiring a cron job.
         console.log(`[QUEUE] Checking if we need to self-trigger...`);
         if (isRateLimited) {
-          console.warn(`[QUEUE] Rate limited by Mistral. Halting queue processor self-trigger.`);
+          console.warn(
+            `[QUEUE] Rate limited by Mistral. Halting queue processor self-trigger.`,
+          );
         } else if (!isSingle) {
           const { data: queueDepth } = await ctx.supabaseAdmin.rpc(
             "get_media_queue_depth",

@@ -10,7 +10,12 @@ export type { TrendingResponse as MovieTrendingResponse } from "@supabase/functi
 export type { TrendingResponse as SerieTrendingResponse } from "@supabase/functions/_shared/serie";
 export type { Serie as SerieModel } from "@supabase/functions/_shared/serie";
 export type { Movie as MovieModel } from "@supabase/functions/_shared/movie";
-export type { Actor } from "@supabase/functions/_shared/types";
+export type {
+  Actor,
+  IgdbGame,
+  IgdbCharacter,
+  GameResponse,
+} from "@supabase/functions/_shared/types";
 
 export interface Role {
   character: string;

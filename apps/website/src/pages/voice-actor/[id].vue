@@ -7,11 +7,7 @@
     </div>
 
     <div v-else-if="voiceActor" class="space-y-12 relative pt-12">
-      <!-- Back Button -->
-      <button @click="router.back()" class="absolute top-0 left-0 z-20 flex items-center gap-2 bg-white/80 dark:bg-[#161616]/80 hover:bg-gray-100 dark:hover:bg-[#2a2a2a] backdrop-blur-sm text-gray-900 dark:text-white px-4 py-2 rounded-full transition-colors border border-gray-200 dark:border-[#2a2a2a] shadow-md">
-        <ArrowLeftIcon class="w-5 h-5" />
-        <span class="font-medium">Retour</span>
-      </button>
+
 
       <!-- Profile Header -->
       <section class="flex flex-col md:flex-row gap-8 items-start">
@@ -304,7 +300,8 @@ const actorDescription = computed(() => {
 
 // Complete SEO metadata & JSON-LD Structured Data using unhead
 useHead({
-  title: computed(() => actorName.value ? `${actorName.value} - Comédien de doublage | DubbingBase` : 'Comédien de doublage - DubbingBase'),
+  titleTemplate: null,
+  title: computed(() => actorName.value ? `${actorName.value} - Comédien de doublage` : 'Comédien de doublage'),
   meta: [
     {
       name: 'description',

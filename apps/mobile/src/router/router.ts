@@ -78,6 +78,11 @@ const routes: readonly RouteRecordRaw[] = [
     component: () => import("../views/serie-details.vue"),
   },
   {
+    name: "GameDetails",
+    path: "/game/:id",
+    component: () => import("../views/game-details.vue"),
+  },
+  {
     name: "voice-actor-details",
     path: "/voice-actor/:id",
     component: () => import("../views/voice-actor-details.vue"),

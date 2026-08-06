@@ -2,6 +2,8 @@ import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
 import { processMedia, buildTmdbImageUrl } from "../_shared/tmdb-urls.ts";
 import { buildSupabaseImageUrl } from "../_shared/supabase-urls.ts";
+import { igdbClient } from "../_shared/index.ts";
+import { buildIgdbImageUrl } from "../_shared/igdb.ts";
 
 /**
  * Sanitize a user query for use in PostgreSQL full-text search.
@@ -65,17 +67,32 @@ function calculateScore(item: any, trimmedQuery: string): number {
   score += Math.log10(vc + 1);
 
   // Recency weight: favor newer items but don't heavily penalize classics
-  const date = item.release_date || item.first_air_date;
-  if (date) {
+  // TMDB uses ISO date strings; IGDB uses Unix timestamps (seconds)
+  let releaseMs: number | null = null;
+  const isoDate = item.release_date || item.first_air_date;
+  if (isoDate) {
+    releaseMs = new Date(isoDate).getTime();
+  } else if (
+    item.first_release_date &&
+    typeof item.first_release_date === "number"
+  ) {
+    releaseMs = item.first_release_date * 1000;
+  }
+  if (releaseMs !== null) {
     const yearsSinceRelease =
-      (Date.now() - new Date(date).getTime()) / (1000 * 60 * 60 * 24 * 365);
-    // Decay based on years, capped so old movies don't go too negative
+      (Date.now() - releaseMs) / (1000 * 60 * 60 * 24 * 365);
+    // Decay based on years, capped so old items don't go too negative
     score += Math.max(-5, 5 - yearsSinceRelease * 0.2);
   }
 
   // Boost voice actors slightly so they don't get buried under movies
   if (item.media_type === "voice_actor") {
     score += 15; // Higher boost to ensure they appear if there's a name match
+  }
+
+  // Modest boost for video games so they appear at sensible rank
+  if (item.media_type === "video_game") {
+    score += 5;
   }
 
   return score;
@@ -187,13 +204,48 @@ export default {
         return results;
       })();
 
-      // 3. Execute Both Tracks Concurrently
-      const [tmdbResults, dbVoiceActorResults] = await Promise.all([
-        tmdbSearchPromise,
-        voiceActorSearchPromise,
-      ]);
+      // 3. Define the IGDB Game Search Promise
+      const igdbSearchPromise = (async () => {
+        const results: any[] = [];
+        try {
+          const igdbGames = await igdbClient.searchGames(trimmedQuery);
+          for (const game of igdbGames) {
+            results.push({
+              ...game,
+              media_type: "video_game",
+              cover: game.cover
+                ? {
+                    ...game.cover,
+                    url: buildIgdbImageUrl(game.cover.image_id, "cover_big"),
+                  }
+                : undefined,
+              // Synthetic popularity proxy using IGDB rating_count
+              popularity: Math.sqrt((game.rating_count ?? 0) + 1) * 10,
+              vote_average: (game.rating ?? 0) / 10,
+              vote_count: game.rating_count ?? 0,
+            });
+          }
+        } catch (e) {
+          console.error("IGDB search error:", e);
+        }
+        return results;
+      })();
+
+      // 4. Execute All Three Tracks Concurrently
+      const [tmdbResults, dbVoiceActorResults, igdbResults] = await Promise.all(
+        [tmdbSearchPromise, voiceActorSearchPromise, igdbSearchPromise],
+      );
 
       resp.push(...tmdbResults);
+      // Merge IGDB games — deduplicate by video_game:id in case of overlap
+      const igdbKeySet = new Set<string>();
+      for (const game of igdbResults) {
+        const key = `video_game:${game.id}`;
+        if (!igdbKeySet.has(key)) {
+          igdbKeySet.add(key);
+          resp.push(game);
+        }
+      }
       voiceActorResults.push(...dbVoiceActorResults);
       console.log("voice actor results count:", voiceActorResults.length);
 

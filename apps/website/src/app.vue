@@ -38,4 +38,8 @@ useHead({
   ],
   meta: () => [...(i18nHead.value.meta || [])]
 });
+
+useSeoMeta({
+  ogSiteName: 'DubbingBase'
+});
 </script>

@@ -89,9 +89,9 @@ export const CACHE_KEYS = {
   TMDB_PERSON: (id: number, suffix?: string) =>
     SimpleKeyBuilder.tmdb(CONTENT_TYPES.PERSON, id, suffix),
   TMDB_TRENDING_MOVIES: () =>
-    SimpleKeyBuilder.tmdb(CONTENT_TYPES.TRENDING, "movies"),
+    SimpleKeyBuilder.tmdb(CONTENT_TYPES.TRENDING, "movies:v2"),
   TMDB_TRENDING_SHOWS: () =>
-    SimpleKeyBuilder.tmdb(CONTENT_TYPES.TRENDING, "shows"),
+    SimpleKeyBuilder.tmdb(CONTENT_TYPES.TRENDING, "shows:v2"),
 
   // TVDB patterns
   TVDB_AUTH_TOKEN: () => "tvdb:auth_token",

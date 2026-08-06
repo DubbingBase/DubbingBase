@@ -54,7 +54,10 @@ export default ({ mode }) => {
     resolve: {
       alias: {
         "@": path.resolve(import.meta.dirname, "./src"),
-        "@app/supabase": path.resolve(import.meta.dirname, "../../packages/database"),
+        "@app/supabase": path.resolve(
+          import.meta.dirname,
+          "../../packages/database",
+        ),
         "@supabase/functions": path.resolve(
           import.meta.dirname,
           "../../packages/database/supabase/functions",

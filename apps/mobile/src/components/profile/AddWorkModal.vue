@@ -64,7 +64,7 @@
               >
                 <AppText>
                   <h3>{{ member.name }}</h3>
-                  <p>{{ member.character }}</p>
+                  <p>{{ getCastMemberRolesDisplay(member) }}</p>
                 </AppText>
               </AppListItem>
             </AppList>
@@ -132,6 +132,12 @@ const getMediaYear = (media: Movie | Serie) => {
   const dateStr = 'release_date' in media ? media.release_date : ('first_air_date' in media ? media.first_air_date : undefined)
   return new Date(dateStr || '').getFullYear()
 }
+const getCastMemberRolesDisplay = (member: any) => {
+  if (member.roles && Array.isArray(member.roles)) {
+    return member.roles.map((r: any) => r.episode_count ? `${r.character} (${r.episode_count} eps)` : r.character).join(', ')
+  }
+  return member.character || ''
+}
 
 const closeModal = () => emit('close');
 
@@ -174,7 +180,7 @@ const onCharacterSearch = (event: { target: { value: string } }) => {
   if (selectedCastId.value) {
     const selectedMember = cast.value.find((c: Cast) => c.id === selectedCastId.value)
     if (selectedMember) {
-      const selectedText = `${selectedMember.name} (${selectedMember.character})`
+      const selectedText = `${selectedMember.name} (${getCastMemberRolesDisplay(selectedMember)})`
       if (query !== selectedText) {
         selectedCastId.value = null
       }
@@ -187,15 +193,17 @@ const onCharacterSearch = (event: { target: { value: string } }) => {
     return
   }
 
-  characterSearchResults.value = cast.value.filter((member: Cast) =>
-    member.name.toLowerCase().includes(lowerCaseQuery) ||
-    (member.character && member.character.toLowerCase().includes(lowerCaseQuery))
-  )
+  characterSearchResults.value = cast.value.filter((member: any) => {
+    const nameMatch = member.name?.toLowerCase().includes(lowerCaseQuery)
+    const charMatch = member.character && member.character.toLowerCase().includes(lowerCaseQuery)
+    const rolesMatch = member.roles && member.roles.some((r: any) => r.character && r.character.toLowerCase().includes(lowerCaseQuery))
+    return nameMatch || charMatch || rolesMatch
+  })
 }
 
-const selectCastMember = (member: MovieCastMember | SerieCastMember) => {
+const selectCastMember = (member: any) => {
   selectedCastId.value = member.id
-  characterSearchQuery.value = `${member.name} (${member.character})`
+  characterSearchQuery.value = `${member.name} (${getCastMemberRolesDisplay(member)})`
   characterSearchResults.value = []
 }
 

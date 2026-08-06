@@ -11,7 +11,13 @@
           :to="localePath('/admin/movies/new')"
           class="px-4 py-2.5 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-200 text-white dark:text-gray-900 text-xs font-semibold rounded-xl shadow-lg transition-all flex items-center space-x-1.5"
         >
-          <span>+ Create Movie / Dubbing Project</span>
+          <span>+ Create Movie / TV Project</span>
+        </NuxtLink>
+        <NuxtLink
+          :to="localePath('/game/new/edit/new')"
+          class="px-4 py-2.5 bg-gray-900 hover:bg-gray-800 dark:bg-cyan-500 dark:hover:bg-cyan-400 text-white dark:text-gray-900 text-xs font-semibold rounded-xl shadow-lg transition-all flex items-center space-x-1.5"
+        >
+          <span>+ Create Video Game Project</span>
         </NuxtLink>
         <NuxtLink
           :to="localePath('/admin/voice-actors/new')"

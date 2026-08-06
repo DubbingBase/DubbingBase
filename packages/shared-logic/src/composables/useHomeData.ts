@@ -1,6 +1,7 @@
 import { ref } from "vue";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
+  IgdbGame,
   MovieTrendingResponse,
   SerieTrendingResponse,
   Tables,
@@ -9,10 +10,12 @@ import type {
 export type HomeDataPayload = {
   trendingMovies: MovieTrendingResponse["results"];
   trendingSeries: SerieTrendingResponse["results"];
+  trendingGames: IgdbGame[];
   recentVoiceActors: Tables<"voice_actors">[];
   topVoiceActors: Tables<"voice_actors">[];
   errorMovies: string;
   errorSeries: string;
+  errorGames: string;
   errorVoiceActors: string;
   errorTopVoiceActors: string;
   topContributors: any[];
@@ -25,10 +28,12 @@ export async function fetchHomeData(
   const payload: HomeDataPayload = {
     trendingMovies: [],
     trendingSeries: [],
+    trendingGames: [],
     recentVoiceActors: [],
     topVoiceActors: [],
     errorMovies: "",
     errorSeries: "",
+    errorGames: "",
     errorVoiceActors: "",
     errorTopVoiceActors: "",
     topContributors: [],
@@ -58,6 +63,17 @@ export async function fetchHomeData(
       .catch((e) => {
         payload.errorSeries =
           e.message || "Erreur lors du chargement des séries.";
+      }),
+
+    // Fetch games in parallel
+    supabase.functions
+      .invoke("trending-games")
+      .then((res) => {
+        if (res.error) throw new Error(res.error.message || "Erreur inconnue");
+        payload.trendingGames = res.data || [];
+      })
+      .catch((e) => {
+        payload.errorGames = e.message || "Erreur lors du chargement des jeux.";
       }),
 
     // Fetch recent voice actors in parallel
@@ -110,24 +126,25 @@ export function useHomeData(
   const trendingSeries = ref<SerieTrendingResponse["results"]>(
     initialData?.trendingSeries || [],
   );
+  const trendingGames = ref<IgdbGame[]>(initialData?.trendingGames || []);
   const recentVoiceActors = ref<Tables<"voice_actors">[]>(
     initialData?.recentVoiceActors || [],
   );
   const topVoiceActors = ref<Tables<"voice_actors">[]>(
     initialData?.topVoiceActors || [],
   );
-  const topContributors = ref<any[]>(
-    initialData?.topContributors || [],
-  );
+  const topContributors = ref<any[]>(initialData?.topContributors || []);
 
   const isLoadingMovies = ref(!initialData);
   const isLoadingSeries = ref(!initialData);
+  const isLoadingGames = ref(!initialData);
   const isLoadingVoiceActors = ref(!initialData);
   const isLoadingTopVoiceActors = ref(!initialData);
   const isLoadingTopContributors = ref(!initialData);
 
   const errorMovies = ref(initialData?.errorMovies || "");
   const errorSeries = ref(initialData?.errorSeries || "");
+  const errorGames = ref(initialData?.errorGames || "");
   const errorVoiceActors = ref(initialData?.errorVoiceActors || "");
   const errorTopVoiceActors = ref(initialData?.errorTopVoiceActors || "");
   const errorTopContributors = ref(initialData?.errorTopContributors || "");
@@ -135,11 +152,13 @@ export function useHomeData(
   const loadHomeData = async () => {
     isLoadingMovies.value = true;
     isLoadingSeries.value = true;
+    isLoadingGames.value = true;
     isLoadingVoiceActors.value = true;
     isLoadingTopVoiceActors.value = true;
 
     errorMovies.value = "";
     errorSeries.value = "";
+    errorGames.value = "";
     errorVoiceActors.value = "";
     errorTopVoiceActors.value = "";
     errorTopContributors.value = "";
@@ -153,6 +172,10 @@ export function useHomeData(
     trendingSeries.value = payload.trendingSeries;
     errorSeries.value = payload.errorSeries;
     isLoadingSeries.value = false;
+
+    trendingGames.value = payload.trendingGames;
+    errorGames.value = payload.errorGames;
+    isLoadingGames.value = false;
 
     recentVoiceActors.value = payload.recentVoiceActors;
     errorVoiceActors.value = payload.errorVoiceActors;
@@ -170,16 +193,19 @@ export function useHomeData(
   return {
     trendingMovies,
     trendingSeries,
+    trendingGames,
     recentVoiceActors,
     topVoiceActors,
     topContributors,
     isLoadingMovies,
     isLoadingSeries,
+    isLoadingGames,
     isLoadingVoiceActors,
     isLoadingTopVoiceActors,
     isLoadingTopContributors,
     errorMovies,
     errorSeries,
+    errorGames,
     errorVoiceActors,
     errorTopVoiceActors,
     errorTopContributors,

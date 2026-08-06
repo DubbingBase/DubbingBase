@@ -169,5 +169,17 @@
     "graph1Placeholder": "Espace réservé pour le graphique 1",
     "graph2Placeholder": "Espace réservé pour le graphique 2",
     "graph3Placeholder": "Espace réservé pour le graphique 3"
+  },
+  "game": {
+    "prepareCredits": "Extraire les crédits de doublage",
+    "developer": "Développeur",
+    "publisher": "Éditeur",
+    "characters": "Personnages",
+    "rating": "Note",
+    "releaseYear": "Année de sortie",
+    "platforms": "Plateformes",
+    "genres": "Genres",
+    "noCharacters": "Aucun personnage disponible",
+    "notFound": "Jeu introuvable"
   }
 }

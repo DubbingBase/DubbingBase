@@ -47,6 +47,7 @@ import { getAvatarFallbackUrl } from "@/utils/image";
 export interface Role {
   character: string;
   image?: string;
+  episode_count?: number;
 }
 
 export interface PersonData<T = unknown | undefined> {
@@ -89,6 +90,9 @@ const image = computed(() => {
 const subtitle = computed(() => {
   if (props.subtitleOverride) {
     return props.subtitleOverride;
+  }
+  if (props.type === "actor" && props.person.roles && props.person.roles.length > 0) {
+    return props.person.roles.map(r => r.episode_count ? `${r.character} (${r.episode_count} eps)` : r.character).join(", ");
   }
   if (props.type === "actor" && props.person.character) {
     return props.person.character;

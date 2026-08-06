@@ -70,6 +70,27 @@
         </div>
       </section>
 
+      <!-- Trending Games -->
+      <section>
+        <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-900 dark:text-white tracking-wide">{{ $t('game.trendingGames', 'Jeux du moment') }}</h2>
+        <div v-if="isLoadingGames" class="flex gap-4 overflow-x-auto pb-4">
+          <div v-for="i in 4" :key="i" class="w-48 h-72 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-xl flex-shrink-0"></div>
+        </div>
+        <div v-else-if="errorGames" class="text-red-400 bg-red-900/20 p-4 rounded-lg">
+          {{ errorGames }}
+        </div>
+        <div v-else ref="gamesScrollRef" class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 custom-scrollbar">
+          <div v-for="game in trendingGames" :key="game.id" class="w-48 flex-shrink-0 snap-start">
+            <NuxtLink :to="$localePath('/game/' + game.id)" class="group transition-transform hover:-translate-y-1 block">
+              <div class="relative w-full h-72 rounded-xl overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800">
+                <NuxtImg v-if="game.cover?.url" :src="game.cover.url" :alt="game.name" format="webp" loading="lazy" class="object-cover w-full h-full group-hover:scale-105 transition duration-300" />
+              </div>
+              <h3 class="font-semibold text-sm text-gray-800 dark:text-gray-200 line-clamp-2">{{ game.name }}</h3>
+            </NuxtLink>
+          </div>
+        </div>
+      </section>
+
       <!-- Top Voice Actors -->
       <section>
         <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-900 dark:text-white tracking-wide">{{ $t('home.topVoiceActors') }}</h2>
@@ -162,11 +183,13 @@ const { openSearch } = useSearchModal();
 
 const moviesScrollRef = ref<HTMLElement | null>(null);
 const seriesScrollRef = ref<HTMLElement | null>(null);
+const gamesScrollRef = ref<HTMLElement | null>(null);
 const vaScrollRef = ref<HTMLElement | null>(null);
 const contributorsScrollRef = ref<HTMLElement | null>(null);
 
 useDragScroll(moviesScrollRef);
 useDragScroll(seriesScrollRef);
+useDragScroll(gamesScrollRef);
 useDragScroll(vaScrollRef);
 useDragScroll(contributorsScrollRef);
 
@@ -262,14 +285,17 @@ const { data } = await useAsyncData('home-data', () => fetchHomeData(supabase));
 const {
   trendingMovies,
   trendingSeries,
+  trendingGames,
   topVoiceActors,
   topContributors,
   isLoadingMovies,
   isLoadingSeries,
+  isLoadingGames,
   isLoadingTopVoiceActors,
   isLoadingTopContributors,
   errorMovies,
   errorSeries,
+  errorGames,
   errorTopVoiceActors,
   errorTopContributors,
 } = useHomeData(supabase, data.value);

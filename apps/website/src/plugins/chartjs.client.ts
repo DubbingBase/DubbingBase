@@ -9,8 +9,8 @@ import {
   PointElement,
   LineElement,
   ArcElement,
-  Filler
-} from 'chart.js'
+  Filler,
+} from "chart.js";
 
 export default defineNuxtPlugin(() => {
   ChartJS.register(
@@ -23,6 +23,6 @@ export default defineNuxtPlugin(() => {
     PointElement,
     LineElement,
     ArcElement,
-    Filler
-  )
-})
+    Filler,
+  );
+});

@@ -170,5 +170,17 @@
     "graph1Placeholder": "Graph Component 1 Placeholder",
     "graph2Placeholder": "Graph Component 2 Placeholder",
     "graph3Placeholder": "Graph Component 3 Placeholder"
+  },
+  "game": {
+    "prepareCredits": "Extract dubbing credits",
+    "developer": "Developer",
+    "publisher": "Publisher",
+    "characters": "Characters",
+    "rating": "Rating",
+    "releaseYear": "Release Year",
+    "platforms": "Platforms",
+    "genres": "Genres",
+    "noCharacters": "No characters available",
+    "notFound": "Game not found"
   }
 }

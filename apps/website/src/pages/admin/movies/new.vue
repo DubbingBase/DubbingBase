@@ -654,7 +654,7 @@ const fetchMovieProject = async () => {
     if (project) {
       contentId.value = project.content_id;
       contentType.value = project.content_type || "movie";
-      language.value = project.language || "fr";
+      language.value = project.language || "fr-FR";
       studio.value = project.studio || "";
       selectedStudioId.value = project.studio_id || (studiosList.value.find(s => s.name === project.studio)?.id || null);
       artisticDirector.value = project.artistic_director || "";
@@ -800,7 +800,7 @@ const saveMovieProject = async () => {
     const projectPayload = {
       content_id: contentId.value,
       content_type: contentType.value,
-      language: language.value || "fr",
+      language: language.value || "fr-FR",
       studio_id: selectedStudioId.value || null,
       artistic_director: artisticDirector.value || null,
       adaptation: adaptation.value || null,

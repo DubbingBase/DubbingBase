@@ -78,8 +78,8 @@ export default {
               result.media,
             );
 
-          let aggregateCredits = result.media.aggregate_credits ||
-            (await aggregateCreditsPromise);
+          let aggregateCredits =
+            result.media.aggregate_credits || (await aggregateCreditsPromise);
 
           // Removed backend matching logic as the frontend handles image matching reactively
 
@@ -191,9 +191,10 @@ export default {
       console.error("Error in show function:", error);
       return Response.json(
         {
-          error: error instanceof Error
-            ? error.message
-            : "An unknown error occurred",
+          error:
+            error instanceof Error
+              ? error.message
+              : "An unknown error occurred",
         },
         { status: 500 },
       );

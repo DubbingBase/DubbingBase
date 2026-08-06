@@ -253,6 +253,9 @@
       </div>
     </div>
 
+    <!-- Wikipedia Works Diff -->
+    <VoiceActorWorksDiff v-if="isEditMode && id" :voice-actor-id="id" />
+
     <!-- Toast Notifications -->
     <div
       v-if="toast.show"
@@ -282,6 +285,7 @@ definePageMeta({
 });
 
 import { ref, onMounted, computed } from "vue";
+import VoiceActorWorksDiff from "@/components/admin/VoiceActorWorksDiff.vue";
 
 
 const route = useRoute();

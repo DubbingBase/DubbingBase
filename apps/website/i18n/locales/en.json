@@ -9,7 +9,18 @@
     "emptyState": "Type at least 2 characters to search...",
     "movie": "Movie",
     "tv": "TV Show",
-    "voiceActor": "Voice Actor"
+    "voiceActor": "Voice Actor",
+    "videoGame": "Video Game"
+  },
+  "game": {
+    "developer": "Developer",
+    "publisher": "Publisher",
+    "genres": "Genres",
+    "platforms": "Platforms",
+    "trendingGames": "Trending Games"
+  },
+  "report": {
+    "button": "Report"
   },
   "nav": {
     "login": "Login",

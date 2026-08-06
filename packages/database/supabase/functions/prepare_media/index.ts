@@ -34,12 +34,13 @@ export default {
         return Response.json(
           {
             ok: false,
-            error: "Invalid request payload: " +
-            (err instanceof Error
-              ? err.message
-              : typeof err === "object" && err !== null
-                ? (err as any).message || JSON.stringify(err)
-                : String(err)),
+            error:
+              "Invalid request payload: " +
+              (err instanceof Error
+                ? err.message
+                : typeof err === "object" && err !== null
+                  ? (err as any).message || JSON.stringify(err)
+                  : String(err)),
           },
           { status: 400 },
         );
@@ -70,7 +71,7 @@ export default {
 
         const movie = (await response.json()) as any;
         mediaTitle = movie.title || movie.name || "Unknown title";
-        
+
         // Mark as processed so it doesn't get repeatedly queued by trending media cron
         await findOrCreateDubbingProject(ctx.supabaseAdmin, tmdbId, tmdbType);
 

@@ -107,7 +107,9 @@ export default {
           },
         );
 
-        console.log(`[Notify] Notification sent for voice actor ${voiceActorId}`);
+        console.log(
+          `[Notify] Notification sent for voice actor ${voiceActorId}`,
+        );
 
         return Response.json({ ok: true, notified: targetUserIds.length });
       } catch (err) {

@@ -19,6 +19,7 @@ export default {
         media_id,
         character_name,
         role,
+        performance,
         targetUserId,
         actor_id,
       } = requestData;
@@ -108,7 +109,8 @@ export default {
         // Create new link
         const insertData = {
           voice_actor_id,
-          performance: character_name || role || "dialogues",
+          character_name: character_name || null,
+          performance: performance || "dialogues",
           status: "user",
           actor_id: actor_id || null,
           dubbing_project_id,

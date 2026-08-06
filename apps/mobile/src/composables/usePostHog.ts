@@ -8,26 +8,30 @@ export function usePostHog() {
   if (!import.meta.env.DEV) {
     // Production initialization (Anonymized for CNIL compliance)
     posthog.init("phc_me2esmRfMkokDSbTzKQfNHaUZgpBOAqgi2921wCYOtP", {
-      api_host: "https://eu.i.posthog.com",
-      defaults: "2025-05-24",
+      api_host: "https://n.dubbingbase.com",
+      defaults: "2026-05-30",
       person_profiles: "identified_only",
       persistence: "memory", // No cookies or localStorage for tracking
       capture_exceptions: {
         capture_unhandled_errors: true,
         capture_unhandled_rejections: true,
-        capture_console_errors: true
-      }
+        capture_console_errors: true,
+      },
     });
 
-    const appTheme = localStorage.getItem('app-theme') || 'system';
-    const appLang = localStorage.getItem('user_lang') || localStorage.getItem('language') || navigator.language || 'en';
+    const appTheme = localStorage.getItem("app-theme") || "system";
+    const appLang =
+      localStorage.getItem("user_lang") ||
+      localStorage.getItem("language") ||
+      navigator.language ||
+      "en";
 
-    posthog.register({ 
-      application: 'mobile',
+    posthog.register({
+      application: "mobile",
       // @ts-ignore
       app_version: __VERSION__,
       theme: appTheme,
-      language: appLang
+      language: appLang,
     });
   }
 

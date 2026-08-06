@@ -462,7 +462,9 @@ export type Database = {
       }
       work: {
         Row: {
-          actor_id: number
+          actor_id: number | null
+          character_id: number | null
+          character_name: string | null
           created_at: string | null
           created_by: string | null
           dubbing_project_id: number
@@ -478,7 +480,9 @@ export type Database = {
           voice_actor_id: number | null
         }
         Insert: {
-          actor_id: number
+          actor_id?: number | null
+          character_id?: number | null
+          character_name?: string | null
           created_at?: string | null
           created_by?: string | null
           dubbing_project_id: number
@@ -494,7 +498,9 @@ export type Database = {
           voice_actor_id?: number | null
         }
         Update: {
-          actor_id?: number
+          actor_id?: number | null
+          character_id?: number | null
+          character_name?: string | null
           created_at?: string | null
           created_by?: string | null
           dubbing_project_id?: number

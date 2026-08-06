@@ -1,7 +1,7 @@
 <template>
-  <div class="space-y-6">
+  <div class="flex flex-col h-[calc(100vh-120px)] space-y-4 md:space-y-6">
     <!-- Toolbar with search -->
-    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="shrink-0 bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div class="flex-1 max-w-md">
         <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Search Directory</label>
         <div class="relative">
@@ -62,8 +62,8 @@
     </div>
 
     <!-- Revogrid container -->
-    <div v-else class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl">
-      <div class="spreadsheet-container rounded-xl overflow-hidden border border-slate-800/50">
+    <div v-else class="flex-1 bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl min-h-0 min-w-0">
+      <div class="h-full rounded-xl border border-slate-800/50">
         <ClientOnly>
           <revogrid
             ref="revoGridRef"
@@ -171,6 +171,22 @@ let autoSaveTimer: ReturnType<typeof setTimeout> | null = null;
 
 // Revogrid columns
 const revoColumns = computed(() => [
+  {
+    prop: "id",
+    name: "Actions",
+    size: 80,
+    readonly: true,
+    cellTemplate: (createElement: any, props: any) => {
+      return createElement(
+        "a",
+        {
+          href: `/admin/voice-actors/edit/${props.model.id}`,
+          class: "text-blue-500 hover:text-blue-400 font-bold underline text-xs",
+        },
+        "Edit Profile"
+      );
+    },
+  },
   { prop: "id", name: "ID", size: 80, readonly: true },
   { prop: "firstname", name: "First Name", size: 120 },
   { prop: "lastname", name: "Last Name", size: 120 },
@@ -378,21 +394,12 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-.spreadsheet-container {
-  height: calc(100vh - 200px);
-  overflow: hidden;
-}
-
 :deep(.revo-grid) {
   font-size: 14px;
 }
 
 // Mobile-first styles
 @media (max-width: 768px) {
-  .spreadsheet-container {
-    height: calc(100vh - 180px);
-  }
-
   :deep(.revo-grid) {
     font-size: 12px;
   }

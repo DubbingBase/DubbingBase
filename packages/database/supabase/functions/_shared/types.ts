@@ -211,3 +211,95 @@ export interface MistralVoiceActorExtractItemOutput {
   production?: string;
   year?: number;
 }
+
+// ─── IGDB types ───────────────────────────────────────────────────────────────
+
+export interface IgdbCover {
+  image_id: string;
+  url?: string;
+}
+
+export interface IgdbMugShot {
+  image_id: string;
+  url?: string;
+}
+
+export interface IgdbGenre {
+  id: number;
+  name: string;
+}
+
+export interface IgdbPlatform {
+  id: number;
+  name: string;
+  slug?: string;
+}
+
+export interface IgdbCompany {
+  id: number;
+  name: string;
+}
+
+export interface IgdbInvolvedCompany {
+  id: number;
+  company: IgdbCompany;
+  developer: boolean;
+  publisher: boolean;
+}
+
+export interface IgdbExternalGame {
+  id: number;
+  uid: string;
+  /** 1 = Steam, 5 = GOG, 11 = Xbox, 14 = PlayStation, etc. */
+  category: number;
+}
+
+export interface IgdbGame {
+  id: number;
+  name: string;
+  summary?: string;
+  rating?: number;
+  rating_count?: number;
+  /** Unix timestamp in seconds */
+  first_release_date?: number;
+  cover?: IgdbCover;
+  genres?: IgdbGenre[];
+  platforms?: IgdbPlatform[];
+  involved_companies?: IgdbInvolvedCompany[];
+  external_games?: IgdbExternalGame[];
+  websites?: { url: string; category: number }[];
+  /** Computed field: media_type used by the unified search results */
+  media_type?: "video_game";
+}
+
+export interface IgdbCharacter {
+  id: number;
+  name: string;
+  description?: string;
+  mug_shot?: IgdbMugShot;
+  /** IGDB species (e.g. "Human") */
+  species?: { id: number; name: string };
+  /** IGDB gender enum: 0 = Male, 1 = Female, 2 = Questionable */
+  gender?: number;
+  games?: number[];
+}
+
+export interface IgdbPopularityPrimitive {
+  id: number;
+  game_id: number;
+  value: number;
+  /** 1 = Visits, 2 = Want to Play, 3 = Playing, 4 = Played, 5 = Steam 24h Peak, etc. */
+  popularity_type: number;
+  calculated_at?: string;
+}
+
+/** Response shape from the `game` edge function */
+export interface GameResponse {
+  game: IgdbGame | null;
+  characters: IgdbCharacter[];
+  dubbingProjects: any[];
+  votes: Record<
+    number,
+    { up_count: number; down_count: number; user_vote: string | null }
+  >;
+}

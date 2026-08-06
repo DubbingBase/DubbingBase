@@ -9,7 +9,18 @@
     "emptyState": "Tapez au moins 2 caractères pour rechercher...",
     "movie": "Film",
     "tv": "Série",
-    "voiceActor": "Comédien(ne)"
+    "voiceActor": "Comédien(ne)",
+    "videoGame": "Jeu Vidéo"
+  },
+  "game": {
+    "developer": "Développeur",
+    "publisher": "Éditeur",
+    "genres": "Genres",
+    "platforms": "Plateformes",
+    "trendingGames": "Jeux du moment"
+  },
+  "report": {
+    "button": "Signaler"
   },
   "nav": {
     "login": "Connexion",
@@ -75,7 +86,7 @@
     "unknownCharacter": "Personnage inconnu",
     "actor": "Acteur",
     "character": "Personnage",
-    "voiceActor": "Voix VF",
+    "voiceActor": "Voix",
     "notSpecified": "Non renseignée"
   },
   "seo": {

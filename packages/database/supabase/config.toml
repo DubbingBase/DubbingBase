@@ -513,3 +513,15 @@ verify_jwt = false
 
 [functions.submit-user-report]
 verify_jwt = false
+
+[functions.extract-voice-actor-works]
+verify_jwt = false
+
+[functions.game]
+verify_jwt = false
+
+[functions.prepare_game]
+verify_jwt = false
+
+[functions.trending-games]
+verify_jwt = false

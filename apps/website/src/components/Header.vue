@@ -16,8 +16,9 @@
         </span>
       </NuxtLink>
 
-      <nav class="hidden md:flex items-center gap-1 ml-2">
+      <nav class="flex items-center gap-1 ml-2">
         <NuxtLink
+          v-if="!isHomePage"
           :to="$localePath('/')"
           class="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-all"
         >

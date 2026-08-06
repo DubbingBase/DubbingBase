@@ -85,7 +85,7 @@ export default {
                   actor_id: credit.matchedActorId || null,
                   media_type: mediaType,
                   voice_actor_id: vaId,
-                  performance: credit.role || "dialogues",
+                  performance: "dialogues",
                   media_id: mediaId,
                 },
               },

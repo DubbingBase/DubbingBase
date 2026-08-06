@@ -132,6 +132,9 @@ importers:
       ionicons:
         specifier: ^8.1.0
         version: 8.1.0
+      lucide-vue-next:
+        specifier: ^1.0.0
+        version: 1.0.0(vue@3.5.41(typescript@6.0.3))
       pinia:
         specifier: ^4.0.2
         version: 4.0.2(@vue/devtools-api@8.2.1)(typescript@6.0.3)(vue@3.5.41(typescript@6.0.3))
@@ -15131,6 +15134,10 @@ snapshots:
   lru-cache@6.0.0:
     dependencies:
       yallist: 4.0.0
+
+  lucide-vue-next@1.0.0(vue@3.5.41(typescript@6.0.3)):
+    dependencies:
+      vue: 3.5.41(typescript@6.0.3)
 
   lucide-vue-next@1.0.0(vue@3.5.41(typescript@7.0.2)):
     dependencies:

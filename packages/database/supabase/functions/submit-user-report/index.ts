@@ -10,7 +10,7 @@ export default {
       if (!target_url || !reason) {
         return Response.json(
           { error: "Missing required fields (target_url, reason)" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -28,7 +28,7 @@ export default {
           target_url,
           reason,
           details,
-          status: "pending"
+          status: "pending",
         })
         .select()
         .single();
@@ -37,7 +37,7 @@ export default {
         console.error("Error inserting report:", error);
         return Response.json(
           { error: "Failed to submit report" },
-          { status: 500 }
+          { status: 500 },
         );
       }
 
@@ -47,17 +47,14 @@ export default {
         `Reason: ${reason}\nTarget: ${target_url}`,
         {
           url: "/admin/reports",
-          data: { reportId: data.id }
-        }
+          data: { reportId: data.id },
+        },
       );
 
       return Response.json({ success: true, data });
     } catch (err: any) {
       console.error("Exception in submit-user-report:", err);
-      return Response.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      );
+      return Response.json({ error: "Internal server error" }, { status: 500 });
     }
   }),
 };

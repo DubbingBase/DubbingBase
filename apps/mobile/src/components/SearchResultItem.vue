@@ -26,7 +26,7 @@
 import AppCard from '@/components/common/AppCard.vue';
 import AppCardContent from '@/components/common/AppCardContent.vue';
 import { computed } from "vue";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, fromUnixTime } from "date-fns";
 import AppChip from '@/components/common/AppChip.vue';
 import MediaThumbnail from "@/components/MediaThumbnail.vue";
 import type { SearchResult } from "@/types/search";
@@ -34,6 +34,7 @@ import Film from '~icons/lucide/film';
 import Tv from '~icons/lucide/tv';
 import User from '~icons/lucide/user';
 import Mic from '~icons/lucide/mic';
+import Gamepad2 from '~icons/lucide/gamepad-2';
 import { getAvatarFallbackUrl } from '@/utils/image';
 
 interface Props {
@@ -43,6 +44,10 @@ interface Props {
 const props = defineProps<Props>();
 
 const image = computed(() => {
+  // For video games, use IGDB cover URL directly
+  if (props.match.media_type === 'video_game') {
+    return props.match.cover?.url ?? undefined;
+  }
   return props.match.profile_path ?? props.match.poster_path;
 });
 
@@ -51,6 +56,10 @@ const name = computed(() => {
 });
 
 const formattedDate = computed(() => {
+  // IGDB uses Unix timestamps (seconds)
+  if (props.match.media_type === 'video_game' && props.match.first_release_date) {
+    return format(fromUnixTime(props.match.first_release_date), 'yyyy');
+  }
   const date = props.match.first_air_date ?? props.match.release_date;
   if (date) {
     return format(parseISO(date), 'yyyy');
@@ -64,6 +73,8 @@ const routeName = computed(() => {
       return "MovieDetails";
     case "tv":
       return "SerieDetails";
+    case "video_game":
+      return "GameDetails";
     case "person":
       return "ActorDetails";
     case "voice_actor":
@@ -79,6 +90,7 @@ const mediaIcon = computed(() => {
     case "tv": return Tv;
     case "person": return User;
     case "voice_actor": return Mic;
+    case "video_game": return Gamepad2;
     default: return undefined;
   }
 });
@@ -89,6 +101,7 @@ const iconColor = computed(() => {
     case "tv": return "primary";
     case "person": return "warning";
     case "voice_actor": return "success";
+    case "video_game": return "tertiary";
     default: return "medium";
   }
 });

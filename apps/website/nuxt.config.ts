@@ -14,24 +14,24 @@ export default defineNuxtConfig({
 
   routeRules: {
     // Prerender static content pages at build time
-    '/about': { prerender: true },
-    '/legal': { prerender: true },
-    '/privacy': { prerender: true },
-    '/terms': { prerender: true },
-    '/guidelines': { prerender: true },
+    "/about": { prerender: true },
+    "/legal": { prerender: true },
+    "/privacy": { prerender: true },
+    "/terms": { prerender: true },
+    "/guidelines": { prerender: true },
 
     // Cache media pages at the edge for 1 hour (stale-while-revalidate)
-    '/movie/**': { swr: 3600 },
-    '/show/**': { swr: 3600 },
-    '/actor/**': { swr: 3600 },
-    '/voice-actor/**': { swr: 3600 },
+    "/movie/**": { swr: 3600 },
+    "/show/**": { swr: 3600 },
+    "/actor/**": { swr: 3600 },
+    "/voice-actor/**": { swr: 3600 },
   },
 
   vite: {
     plugins: [tailwindcss()],
     define: {
       __VERSION__: JSON.stringify(process.env.npm_package_version || "1.0.0"),
-    }
+    },
   },
 
   css: ["~/assets/main.css"],
@@ -55,7 +55,7 @@ export default defineNuxtConfig({
 
   image: {
     domains: ["image.tmdb.org"],
-    format: ['avif', 'webp'],
+    format: ["avif", "webp"],
   },
 
   icon: {
@@ -64,8 +64,8 @@ export default defineNuxtConfig({
 
   i18n: {
     locales: [
-      { code: "en", iso: "en", file: "en.json", name: "English" },
-      { code: "fr", iso: "fr", file: "fr.json", name: "Français" },
+      { code: "en", language: "en-US", file: "en.json", name: "English" },
+      { code: "fr", language: "fr-FR", file: "fr.json", name: "Français" },
     ],
     defaultLocale: "en",
     strategy: "prefix",

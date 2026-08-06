@@ -37,6 +37,14 @@ export interface ITVDBClient {
   clearCache?(key: string): Promise<void>;
 }
 
+export interface IIgdbClient {
+  query<T>(endpoint: string, body: string): Promise<T[]>;
+  getGame(id: number): Promise<any | null>;
+  searchGames(queryText: string): Promise<any[]>;
+  getGameCharacters(gameId: number): Promise<any[]>;
+  getTrendingGames(limit?: number): Promise<any[]>;
+}
+
 export interface IRedisClient {
   get(key: string): Promise<string | null>;
   set(key: string, value: string, ttl?: number): Promise<boolean>;

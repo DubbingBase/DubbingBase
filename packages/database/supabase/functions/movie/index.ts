@@ -158,9 +158,10 @@ export default {
       console.error("Error in movie function:", error);
       return Response.json(
         {
-          error: error instanceof Error
-            ? error.message
-            : "An unknown error occurred",
+          error:
+            error instanceof Error
+              ? error.message
+              : "An unknown error occurred",
         },
         { status: 500 },
       );

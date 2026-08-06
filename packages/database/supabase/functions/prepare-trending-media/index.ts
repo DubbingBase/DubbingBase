@@ -51,15 +51,19 @@ export default {
           showsResponse.json(),
         ]);
 
-        const movies = (moviesData.results || []).map((item: any) => ({
-          ...item,
-          type: "movie" as const,
-        }));
+        const movies = (moviesData.results || [])
+          .filter((item: any) => item.adult !== true)
+          .map((item: any) => ({
+            ...item,
+            type: "movie" as const,
+          }));
 
-        const shows = (showsData.results || []).map((item: any) => ({
-          ...item,
-          type: "tv" as const,
-        }));
+        const shows = (showsData.results || [])
+          .filter((item: any) => item.adult !== true)
+          .map((item: any) => ({
+            ...item,
+            type: "tv" as const,
+          }));
 
         // Sort by popularity and take the top 10 of each
         const topMovies = movies
@@ -78,7 +82,9 @@ export default {
             .in("content_id", contentIds);
 
         if (projectsError) {
-          throw new Error(`Failed to fetch existing projects: ${projectsError.message}`);
+          throw new Error(
+            `Failed to fetch existing projects: ${projectsError.message}`,
+          );
         }
 
         const itemsWithVoiceActors = new Set(
@@ -124,13 +130,14 @@ export default {
         const summaryMessage = `Enqueued ${enqueuedCount} items.\nSkipped ${alreadyInQueueCount} already in queue.\nSkipped ${skippedCount} already have voice actors.\nFailed to enqueue ${failedCount} items.`;
         let imageUrl: string | undefined = undefined;
         if (itemsToProcess.length > 0 && itemsToProcess[0].poster_path) {
-          imageUrl = buildTmdbImageUrl(itemsToProcess[0].poster_path) || undefined;
+          imageUrl =
+            buildTmdbImageUrl(itemsToProcess[0].poster_path) || undefined;
         }
 
         await sendOneSignalNotification(
           "DubbingBase Trending Media Report",
           summaryMessage,
-          imageUrl ? { imageUrl } : undefined
+          imageUrl ? { imageUrl } : undefined,
         );
 
         return Response.json({

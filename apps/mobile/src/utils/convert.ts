@@ -30,6 +30,7 @@ export const actorToPersonData = <
     roles.push(
       ...actor.roles.map((role) => ({
         character: cleanCharacterName(role.character),
+        episode_count: role.episode_count as number | undefined,
         image: "",
       })),
     );

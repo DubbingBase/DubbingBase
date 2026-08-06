@@ -3,7 +3,10 @@
     <DialogPortal>
       <DialogOverlay class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity" />
       <DialogContent class="fixed top-[20%] left-1/2 -translate-x-1/2 w-[90vw] max-w-2xl z-50 bg-[#1d1d1d] border border-[#2a2a2a] rounded-2xl shadow-2xl overflow-hidden focus:outline-none flex flex-col max-h-[70vh]">
-        
+        <VisuallyHidden>
+          <DialogTitle>Search</DialogTitle>
+          <DialogDescription>Search for movies, TV shows, voice actors, and video games.</DialogDescription>
+        </VisuallyHidden>
         <!-- Search Input -->
         <div class="flex items-center px-4 py-4 border-b border-[#2a2a2a] gap-3">
           <SearchIcon class="w-5 h-5 text-gray-400" />
@@ -39,7 +42,7 @@
               @mouseenter="selectedIndex = index"
             >
               <!-- Image -->
-              <img v-if="item.poster_path || item.profile_path" :src="item.poster_path || item.profile_path" class="w-12 h-16 object-cover rounded shadow-sm bg-gray-800" />
+              <img v-if="item.cover?.url || item.poster_path || item.profile_path" :src="item.cover?.url || item.poster_path || item.profile_path" class="w-12 h-16 object-cover rounded shadow-sm bg-gray-800" />
               <div v-else class="w-12 h-16 rounded bg-gray-800 flex items-center justify-center text-xs text-gray-500 shadow-sm">
                 <ImageIcon class="w-5 h-5" />
               </div>
@@ -82,9 +85,12 @@ import {
   DialogRoot, 
   DialogPortal, 
   DialogOverlay, 
-  DialogContent 
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+  VisuallyHidden
 } from 'reka-ui';
-import { SearchIcon, Loader2Icon, ImageIcon } from 'lucide-vue-next';
+import { SearchIcon, Loader2Icon, ImageIcon, Gamepad2Icon } from 'lucide-vue-next';
 import { fetchSearchData, type SearchResult } from '@app/shared-logic';
 
 const props = defineProps<{
@@ -155,6 +161,7 @@ const getMediaTypeLabel = (type: string) => {
   if (type === 'movie') return t('search.movie') || 'Film';
   if (type === 'tv') return t('search.tv') || 'Série';
   if (type === 'voice_actor') return t('search.voiceActor') || 'Comédien(ne)';
+  if (type === 'video_game') return t('search.videoGame') || 'Jeu vidéo';
   return type;
 };
 
@@ -162,6 +169,7 @@ const getTypeColor = (type: string) => {
   if (type === 'movie') return 'bg-blue-500';
   if (type === 'tv') return 'bg-purple-500';
   if (type === 'voice_actor') return 'bg-[#00E5FF]';
+  if (type === 'video_game') return 'bg-orange-500';
   return 'bg-gray-500';
 };
 
@@ -175,6 +183,8 @@ const handleSelect = (item: SearchResult) => {
     router.push(localePath(`/show/${item.id}`));
   } else if (item.media_type === 'voice_actor') {
     router.push(localePath(`/voice-actor/${item.id}`));
+  } else if (item.media_type === 'video_game') {
+    router.push(localePath(`/game/${item.id}`));
   }
 };
 
