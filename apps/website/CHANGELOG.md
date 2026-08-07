@@ -1,5 +1,14 @@
 # @app/landing
 
+## 1.0.39
+
+### Patch Changes
+
+- b66bc35: fix: pipeline
+- b66bc35: introduce gamification system with audit logs, task management, and contribution tracking hub
+- Updated dependencies [b66bc35]
+  - @app/shared-logic@1.0.22
+
 ## 1.0.38
 
 ### Patch Changes

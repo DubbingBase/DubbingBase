@@ -1,5 +1,12 @@
 # @app/supabase
 
+## 0.0.76
+
+### Patch Changes
+
+- b66bc35: fix: pipeline
+- b66bc35: introduce gamification system with audit logs, task management, and contribution tracking hub
+
 ## 0.0.75
 
 ### Patch Changes

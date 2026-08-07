@@ -1,5 +1,11 @@
 # @app/shared-logic
 
+## 1.0.22
+
+### Patch Changes
+
+- b66bc35: introduce gamification system with audit logs, task management, and contribution tracking hub
+
 ## 1.0.21
 
 ### Patch Changes
