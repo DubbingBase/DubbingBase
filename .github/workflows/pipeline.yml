@@ -75,7 +75,7 @@ jobs:
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v3
         with:
-          version: latest
+          version: 2.111.0
 
       - name: Typecheck Edge Functions
         run: |
