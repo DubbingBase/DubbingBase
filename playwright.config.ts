@@ -16,7 +16,7 @@ export default defineConfig({
       name: "mobile",
       use: {
         ...devices["Pixel 5"],
-        baseURL: "http://localhost:5173",
+        baseURL: "http://localhost:1420",
       },
       testMatch: /mobile\.spec\.ts/,
     },
@@ -33,14 +33,14 @@ export default defineConfig({
   webServer: [
     {
       command:
-        "pnpm --filter=@app/mobile run build && pnpm --filter=@app/mobile run preview -- --port 5173 --strictPort",
-      port: 5173,
+        "mise exec -- pnpm --filter=@app/mobile run build && mise exec -- pnpm --filter=@app/mobile run preview --port 1420 --strictPort",
+      port: 1420,
       reuseExistingServer: !process.env.CI,
       timeout: 300000,
     },
     {
       command:
-        "pnpm --filter=@app/website run build && pnpm --filter=@app/website run preview -- -p 3000",
+        "mise exec -- pnpm --filter=@app/website run build && PORT=3000 mise exec -- pnpm --filter=@app/website run preview",
       port: 3000,
       reuseExistingServer: !process.env.CI,
       timeout: 120000,

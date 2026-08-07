@@ -103,7 +103,8 @@ jobs:
   # Job 3: E2E Tests
   e2e-tests:
     needs: [detect, deploy-supabase]
-    if: false
+    if: needs.detect.outputs.mobile == 'true' || needs.detect.outputs.website == 'true'
+    continue-on-error: true
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

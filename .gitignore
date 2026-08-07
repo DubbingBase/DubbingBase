@@ -44,3 +44,5 @@ packages/database/supabase/buckets
 .output
 .wrangler
 lighthouse-report.json
+test-results
+playwright-report
