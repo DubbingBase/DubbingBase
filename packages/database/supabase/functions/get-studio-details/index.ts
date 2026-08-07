@@ -60,16 +60,22 @@ export default {
         projects.map(async (p) => {
           try {
             const contentType = p.content_type === "movie" ? "movie" : "tv";
-            const mediaDetails = await tmdbClient.fetchMediaDetails(p.content_id, contentType);
+            const mediaDetails = await tmdbClient.fetchMediaDetails(
+              p.content_id,
+              contentType,
+            );
             return {
               ...p,
-              media: mediaDetails
+              media: mediaDetails,
             };
           } catch (e) {
-            console.error(`Failed to fetch TMDB details for ${p.content_type} ${p.content_id}`, e);
+            console.error(
+              `Failed to fetch TMDB details for ${p.content_type} ${p.content_id}`,
+              e,
+            );
             return p;
           }
-        })
+        }),
       );
 
       // 3. Fetch linked voice actors from work table

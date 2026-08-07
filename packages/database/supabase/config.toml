@@ -525,3 +525,12 @@ verify_jwt = false
 
 [functions.trending-games]
 verify_jwt = false
+
+[functions.get-random-task]
+verify_jwt = false
+
+[functions.revert-task]
+verify_jwt = false
+
+[functions.submit-task]
+verify_jwt = false

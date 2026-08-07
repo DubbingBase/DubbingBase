@@ -1,16 +1,25 @@
 <template>
-  <div class="max-w-7xl mx-auto p-6">
+  <div>
     <PersonSkeleton v-if="pending || loading" />
 
-    <div v-else-if="voiceActor" class="space-y-12 relative pt-12">
+  <div v-else-if="voiceActor" class="bg-gray-50 dark:bg-[#1b1b1b] min-h-screen text-gray-900 dark:text-white">
+    <!-- Hero Section -->
+    <div class="relative w-full h-[50vh] min-h-[400px] overflow-hidden">
+      <div class="absolute inset-0">
+        <NuxtImg
+          v-if="profilePicture"
+          :src="profilePicture"
+          class="w-full h-full object-cover blur-3xl opacity-50 scale-110"
+          alt="Backdrop"
+          format="webp"
+        />
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-50 dark:from-[#1b1b1b] to-transparent"></div>
+        <div class="absolute inset-0 bg-black/10 dark:bg-black/40"></div>
+      </div>
 
-
-      <!-- Profile Header -->
-      <section class="flex flex-col md:flex-row gap-8 items-start">
-        <div
-          class="w-48 h-48 md:w-64 md:h-64 rounded-2xl overflow-hidden flex-shrink-0 bg-gray-100 dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] shadow-2xl"
-        >
-          <NuxtImg format="webp"             v-if="profilePicture"
+      <div class="absolute bottom-0 left-0 w-full p-8 flex flex-col md:flex-row gap-6 items-end">
+        <div class="w-32 md:w-48 rounded-lg overflow-hidden shadow-xl aspect-[2/3] bg-gray-100 dark:bg-[#161616] border border-white/10 shrink-0">
+          <NuxtImg format="webp" v-if="profilePicture"
             :src="profilePicture"
             :alt="voiceActor.firstname + ' ' + voiceActor.lastname"
             class="object-cover w-full h-full"
@@ -22,66 +31,99 @@
             {{ voiceActor.firstname?.[0] }}{{ voiceActor.lastname?.[0] }}
           </div>
         </div>
-
-        <div class="flex-1 space-y-4">
-          <h1 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">
-            {{ voiceActor.firstname }} {{ voiceActor.lastname }}
-          </h1>
-          <div class="flex flex-wrap gap-3">
-            <span
-              v-if="voiceActor.nationality"
-              class="px-3 py-1 bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-300 rounded-full text-sm"
-              >{{ voiceActor.nationality }}</span
-            >
-            <span
-              v-if="voiceActor.date_of_birth"
-              class="px-3 py-1 bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-300 rounded-full text-sm"
-              >Born:
-              {{ new Date(voiceActor.date_of_birth).getFullYear() }}</span
-            >
-            <span
-              v-if="voiceActor.years_active"
-              class="px-3 py-1 bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-300 rounded-full text-sm"
-              >Active: {{ voiceActor.years_active }}</span
-            >
-          </div>
-
-          <div
-            v-if="voiceActor.bio"
-            class="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 mt-6 bg-white dark:bg-[#161616] p-6 rounded-2xl border border-gray-200 dark:border-[#2a2a2a]"
-          >
-            <p class="leading-relaxed whitespace-pre-wrap">
-              {{ voiceActor.bio }}
-            </p>
-          </div>
-          <div class="pt-4 flex justify-end">
-            <button @click="isReportModalOpen = true" class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-              {{ t('report.button', 'Signaler cette fiche') }}
-            </button>
+        <div class="pb-4 max-w-3xl">
+          <h1 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">{{ voiceActor.firstname }} {{ voiceActor.lastname }}</h1>
+          
+          <div class="flex flex-wrap items-center gap-3 mt-4">
+            <span v-if="voiceActor.nationality" class="text-gray-900 dark:text-gray-100 font-medium text-sm md:text-base bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-lg">
+              {{ voiceActor.nationality }}
+            </span>
+            <span v-if="voiceActor.date_of_birth" class="text-gray-900 dark:text-gray-100 font-medium text-sm md:text-base bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-lg">
+              Born: {{ new Date(voiceActor.date_of_birth).getFullYear() }}
+            </span>
+            <span v-if="voiceActor.years_active" class="text-gray-900 dark:text-gray-100 font-medium text-sm md:text-base bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-lg">
+              Active: {{ voiceActor.years_active }}
+            </span>
           </div>
         </div>
-      </section>
+      </div>
+    </div>
 
-      <!-- Global Search -->
-      <div class="w-full relative max-w-xl mb-6">
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Search roles, titles or actors..."
-          class="w-full px-4 py-3 pl-12 bg-white/80 dark:bg-[#161616]/80 backdrop-blur border border-gray-200 dark:border-[#2a2a2a] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 transition shadow-sm"
-        />
-        <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+    <!-- Action Bar -->
+    <div class="border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#161616]/95 backdrop-blur sticky top-0 z-10 shadow-sm">
+      <div class="container mx-auto px-8 max-w-6xl py-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <!-- Completeness Score -->
+        <div v-if="user" class="flex items-center gap-4">
+          <div class="relative w-8 h-8 flex-shrink-0">
+            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+              <path class="text-gray-200 dark:text-[#2a2a2a]" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              <path class="text-emerald-500 transition-all duration-1000 ease-out" :stroke-dasharray="`${completenessScore}, 100`" stroke-width="3" stroke-linecap="round" stroke-currentColor fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            </svg>
+            <div class="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-gray-900 dark:text-white">
+              {{ completenessScore }}%
+            </div>
+          </div>
+          <div class="flex flex-col">
+            <NuxtLink v-if="completenessScore < 100" :to="$localePath(`/admin/voice-actors/edit/${voiceActorId}`)" class="text-xs text-cyan-600 dark:text-cyan-400 hover:underline">
+              {{ $t('profile.completeness.incentive', 'Earn points by completing this profile!') }}
+            </NuxtLink>
+            <span v-else class="text-xs text-emerald-500">{{ $t('profile.completeness.complete', 'Profile is 100% complete!') }}</span>
+          </div>
+        </div>
+        <div v-else></div>
+
+        <!-- Right side actions -->
+        <div class="flex items-center flex-wrap gap-4">
+          <NuxtLink v-if="isAdmin" :to="$localePath(`/admin/voice-actors/edit/${voiceActorId}`)" class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-medium">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            <span class="hidden sm:inline">Éditer</span>
+          </NuxtLink>
+          
+          <button @click="isReportModalOpen = true" class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1.5" title="Signaler cette fiche">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+              <line x1="4" y1="22" x2="4" y2="15" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="container mx-auto p-8 max-w-6xl">
+      <!-- Bio -->
+      <div class="mb-12 max-w-4xl" v-if="voiceActor.bio">
+        <section>
+          <h2 class="text-2xl font-bold mb-4">
+            Biography
+          </h2>
+          <p class="text-gray-700 dark:text-gray-300 leading-relaxed text-lg whitespace-pre-wrap">
+            {{ voiceActor.bio }}
+          </p>
+        </section>
       </div>
 
-      <!-- Search Works -->
+      <!-- Filmography -->
       <section>
-        <div
-          class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8"
-        >
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Filmography</h2>
+        <div class="flex flex-col mb-6 gap-2">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+            <div>
+              <h2 class="text-2xl font-bold">Filmography</h2>
+            </div>
 
-          <div class="flex flex-wrap gap-4 items-center">
+            <div class="flex flex-wrap gap-4 items-center">
+              <div class="relative w-full sm:w-64">
+                <SearchIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  v-model="searchQuery"
+                  type="search"
+                  placeholder="Search roles, titles or actors..."
+                  class="w-full bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-[#00E5FF] transition-all text-gray-900 dark:text-white"
+                />
+              </div>
+
             <!-- Display Mode Toggle -->
             <div class="flex bg-gray-100 dark:bg-[#161616] rounded-lg p-1 border border-gray-200 dark:border-[#2a2a2a]">
               <button 
@@ -108,6 +150,7 @@
             </select>
           </div>
         </div>
+      </div>
 
         <div
           v-if="filteredEnhancedWork.length === 0"
@@ -117,7 +160,7 @@
         </div>
 
         <template v-if="displayMode === 'list'">
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
             <NuxtLink
               :to="$localePath(`/${item.work.dubbing_projects?.content_type === 'tv' ? 'show' : 'movie'}/${item.media.id}`)"
               v-for="item in sortedWorks"
@@ -197,7 +240,7 @@
               </NuxtLink>
 
               <!-- Actor Works Grid -->
-              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 <NuxtLink
                   :to="$localePath(`/${item.work.dubbing_projects?.content_type === 'tv' ? 'show' : 'movie'}/${item.media.id}`)"
                   v-for="item in works"
@@ -245,8 +288,9 @@
         </template>
       </section>
     </div>
+  </div>
 
-    <div v-else class="text-center py-20 text-gray-500">Actor not found.</div>
+  <div v-else class="text-center py-20 text-gray-500">Actor not found.</div>
 
     <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
   </div>
@@ -254,9 +298,10 @@
 
 <script setup lang="ts">
 import { useVoiceActorData, fetchVoiceActorData } from '@app/shared-logic';
-import { useRouter } from 'vue-router';
-import { ArrowLeftIcon } from 'lucide-vue-next';
+import { useRouter, useRoute } from 'vue-router';
+import { ClapperboardIcon, UserIcon, SearchIcon } from 'lucide-vue-next';
 import ReportModal from '../../components/ReportModal.vue';
+import { computed, ref, watch } from 'vue';
 
 const isReportModalOpen = ref(false);
 
@@ -271,15 +316,44 @@ const { locale, t } = useI18n();
 const config = useRuntimeConfig();
 const baseUrl = config.public.supabase.url;
 
-const { data, pending } = await useAsyncData(`voice-actor-${voiceActorId}`, () => fetchVoiceActorData(supabase, voiceActorId), { lazy: true });
+const { data, pending } = useAsyncData(`voice-actor-${voiceActorId}`, () => fetchVoiceActorData(supabase, voiceActorId), { lazy: true });
 
+const voiceActorData = useVoiceActorData(supabase, data.value);
 const {
   voiceActor,
   profilePicture,
   loading,
   searchQuery,
   filteredEnhancedWork,
-} = useVoiceActorData(supabase, data.value);
+} = voiceActorData;
+
+const user = useSupabaseUser();
+const isAdmin = computed(() => {
+  return user.value?.app_metadata?.role === 'admin' || user.value?.user_metadata?.role === 'admin';
+});
+
+const completenessScore = computed(() => {
+  if (!voiceActor.value) return 0;
+  let score = 0;
+  if (voiceActor.value.firstname && voiceActor.value.lastname) score += 20;
+  if (voiceActor.value.nationality) score += 20;
+  if (voiceActor.value.date_of_birth) score += 20;
+  if (voiceActor.value.bio) score += 20;
+  if (profilePicture.value) score += 20;
+  return score;
+});
+
+watch(data, (newData) => {
+  if (newData) {
+    voiceActorData.voiceActor.value = newData.voiceActor;
+    voiceActorData.medias.value = newData.medias;
+    voiceActorData.characterProfilePictures.value = newData.characterProfilePictures;
+    voiceActorData.profilePicture.value = newData.profilePicture;
+    voiceActorData.potentialWikipediaUrl.value = newData.potentialWikipediaUrl;
+    voiceActorData.votes.value = newData.votes;
+    voiceActorData.loading.value = false;
+  }
+}, { immediate: true });
 
 const actorName = computed(() => {
   if (!voiceActor.value) return '';

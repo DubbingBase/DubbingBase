@@ -10,12 +10,14 @@
 export function normalizeString(input: string | null | undefined): string {
   if (!input) return "";
 
-  return input
-    .toLowerCase()
-    // Replace anything that is not a letter, number, or space with a space
-    // We use \p{L} and \p{N} to support unicode letters and numbers
-    .replace(/[^\p{L}\p{N}\s]/gu, " ")
-    // Collapse multiple spaces into a single space
-    .replace(/\s+/g, " ")
-    .trim();
+  return (
+    input
+      .toLowerCase()
+      // Replace anything that is not a letter, number, or space with a space
+      // We use \p{L} and \p{N} to support unicode letters and numbers
+      .replace(/[^\p{L}\p{N}\s]/gu, " ")
+      // Collapse multiple spaces into a single space
+      .replace(/\s+/g, " ")
+      .trim()
+  );
 }

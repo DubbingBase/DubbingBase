@@ -55,10 +55,36 @@
         </dl>
       </div>
     </div>
+
+    <!-- Gamified Contributions Section -->
+    <div class="mt-12">
+      <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">Recent Contributions</h2>
+      <div v-if="isLoadingLogs" class="text-sm text-gray-500">Loading contributions...</div>
+      <div v-else-if="auditLogs.length === 0" class="text-sm text-gray-500">You haven't made any gamified contributions yet. Go to the <NuxtLink :to="$localePath('/contribute')" class="text-cyan-500 hover:underline">Contribution Hub</NuxtLink> to start earning points!</div>
+      <div v-else class="bg-gray-50 dark:bg-black/20 rounded-xl border border-gray-100 dark:border-white/5 overflow-hidden">
+        <ul class="divide-y divide-gray-200 dark:divide-slate-800">
+          <li v-for="log in auditLogs" :key="log.id" class="p-4 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">
+            <div>
+              <p class="text-sm font-medium text-gray-900 dark:text-white capitalize">
+                {{ log.action.replace(/_/g, ' ') }} <span class="text-xs text-gray-500 dark:text-gray-400">on {{ log.entity_type }} ({{ log.entity_id }})</span>
+              </p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ new Date(log.created_at).toLocaleString() }}</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <span v-if="log.reverted_at" class="text-xs text-red-500 px-2 py-1 bg-red-500/10 rounded">Reverted</span>
+              <span v-else class="text-sm font-mono text-emerald-500 font-bold">+{{ log.points_awarded }} pts</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue';
+
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
 
@@ -67,6 +93,9 @@ const full_name = ref(user.value?.user_metadata?.full_name || '');
 const isUpdating = ref(false);
 const updateMessage = ref('');
 const isError = ref(false);
+
+const auditLogs = ref<any[]>([]);
+const isLoadingLogs = ref(true);
 
 const updateProfile = async () => {
   if (!username.value.trim()) {
@@ -100,4 +129,25 @@ const formatDate = (dateString?: string) => {
   if (!dateString) return 'Never';
   return new Date(dateString).toLocaleString();
 };
+
+const loadAuditLogs = async () => {
+  if (!user.value) return;
+  isLoadingLogs.value = true;
+  
+  const { data, error } = await supabase
+    .from('audit_logs')
+    .select('*')
+    .eq('user_id', user.value.id)
+    .order('created_at', { ascending: false })
+    .limit(10);
+    
+  if (data) {
+    auditLogs.value = data;
+  }
+  isLoadingLogs.value = false;
+};
+
+onMounted(() => {
+  loadAuditLogs();
+});
 </script>

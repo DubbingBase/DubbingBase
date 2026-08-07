@@ -1,5 +1,6 @@
 <template>
-  <div
+  <div>
+    <div
     v-if="movie"
     class="bg-gray-50 dark:bg-[#1b1b1b] min-h-screen text-gray-900 dark:text-white"
   >
@@ -346,6 +347,7 @@
   <MediaSkeleton v-else-if="pending" />
 
   <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -379,7 +381,7 @@ const isAdmin = computed(() => {
   return user.value?.app_metadata?.role === 'admin' || user.value?.user_metadata?.role === 'admin';
 });
 
-const { data, pending } = await useAsyncData(`movie-${movieId}`, () =>
+const { data, pending } = useAsyncData(`movie-${movieId}`, () =>
   fetchMovieData(supabase, movieId),
   { lazy: true }
 );

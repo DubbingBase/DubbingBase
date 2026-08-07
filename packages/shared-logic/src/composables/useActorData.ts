@@ -101,11 +101,15 @@ export function useActorData(
 
   const selectedLanguage = ref<string>("");
 
-  watch(availableLanguages, (langs) => {
-    if (langs.length > 0 && !selectedLanguage.value) {
-      selectedLanguage.value = langs.includes("fr-FR") ? "fr-FR" : langs[0];
-    }
-  }, { immediate: true });
+  watch(
+    availableLanguages,
+    (langs) => {
+      if (langs.length > 0 && !selectedLanguage.value) {
+        selectedLanguage.value = langs.includes("fr-FR") ? "fr-FR" : langs[0];
+      }
+    },
+    { immediate: true },
+  );
 
   const loadActorData = async (id: string | number) => {
     loading.value = true;
@@ -146,7 +150,7 @@ export function useActorData(
 
     const query = searchQuery.value.toLowerCase();
     const cast = actor.value.credits.cast;
-    
+
     const rolesByMedia = new Map();
     for (const role of voiceRoles.value) {
       if (!role.mediaDetails?.id) continue;
@@ -167,12 +171,16 @@ export function useActorData(
 
     return items.map((item) => {
       const mediaRoles = rolesByMedia.get(item.id) || [];
-      const languageRoles = selectedLanguage.value 
-        ? mediaRoles.filter((r: any) => r.dubbing_projects?.language === selectedLanguage.value)
+      const languageRoles = selectedLanguage.value
+        ? mediaRoles.filter(
+            (r: any) => r.dubbing_projects?.language === selectedLanguage.value,
+          )
         : mediaRoles;
 
-      const voiceActors = languageRoles.flatMap((r: any) => r.voice_actors || []);
-      
+      const voiceActors = languageRoles.flatMap(
+        (r: any) => r.voice_actors || [],
+      );
+
       return {
         ...item,
         dubbing_roles: languageRoles,

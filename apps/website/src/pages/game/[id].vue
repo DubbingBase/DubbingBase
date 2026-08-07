@@ -1,5 +1,6 @@
 <template>
-  <div v-if="game" class="bg-gray-50 dark:bg-[#1b1b1b] min-h-screen text-gray-900 dark:text-white">
+  <div>
+    <div v-if="game" class="bg-gray-50 dark:bg-[#1b1b1b] min-h-screen text-gray-900 dark:text-white">
     <!-- Hero Section -->
     <div class="relative w-full h-[50vh] min-h-[400px]">
 
@@ -258,6 +259,7 @@
   <MediaSkeleton v-else-if="pending" />
 
   <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -283,7 +285,7 @@ const isAdmin = computed(() => {
 
 const isPreparing = ref(false);
 
-const { data, pending, refresh } = await useAsyncData(`game-${gameId}`, () => fetchGameData(supabase, gameId), { lazy: true });
+const { data, pending, refresh } = useAsyncData(`game-${gameId}`, () => fetchGameData(supabase, gameId), { lazy: true });
 
 const { locale, t } = useI18n();
 

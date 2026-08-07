@@ -21,11 +21,14 @@ export type StudioDetailsResponse = {
 
 export async function fetchStudioDetails(
   supabase: SupabaseClient,
-  studioId: string | number
+  studioId: string | number,
 ): Promise<StudioDetailsResponse | null> {
-  const { data, error } = await supabase.functions.invoke("get-studio-details", {
-    body: { studioId },
-  });
+  const { data, error } = await supabase.functions.invoke(
+    "get-studio-details",
+    {
+      body: { studioId },
+    },
+  );
 
   if (error) {
     console.error("Error fetching studio details:", error);

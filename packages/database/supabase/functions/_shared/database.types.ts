@@ -34,6 +34,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          new_value: Json | null
+          points_awarded: number | null
+          previous_value: Json | null
+          reverted_at: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          new_value?: Json | null
+          points_awarded?: number | null
+          previous_value?: Json | null
+          reverted_at?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          new_value?: Json | null
+          points_awarded?: number | null
+          previous_value?: Json | null
+          reverted_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       dubbing_project_crew: {
         Row: {
           created_at: string | null
@@ -120,6 +159,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      gamification_task_locks: {
+        Row: {
+          category: string
+          entity_id: string
+          locked_at: string | null
+        }
+        Insert: {
+          category: string
+          entity_id: string
+          locked_at?: string | null
+        }
+        Update: {
+          category?: string
+          entity_id?: string
+          locked_at?: string | null
+        }
+        Relationships: []
       }
       jobs: {
         Row: {
@@ -554,6 +611,10 @@ export type Database = {
       }
       clear_media_queue: { Args: never; Returns: boolean }
       delete_media_queue_item: { Args: { p_id: number }; Returns: boolean }
+      dubbing_project_completeness: {
+        Args: { dp: Database["public"]["Tables"]["dubbing_projects"]["Row"] }
+        Returns: number
+      }
       enqueue_media_fetch: {
         Args: {
           p_episode_number?: number
@@ -589,6 +650,19 @@ export type Database = {
           p_tmdb_id: number
         }
         Returns: Json
+      }
+      get_recent_contributions: {
+        Args: { limit_param?: number }
+        Returns: {
+          action: string
+          created_at: string
+          entity_id: string
+          entity_name: string
+          entity_type: string
+          id: string
+          points_awarded: number
+          user_name: string
+        }[]
       }
       get_top_contributors: {
         Args: { limit_param?: number }
@@ -658,6 +732,10 @@ export type Database = {
         }[]
       }
       unaccent: { Args: { "": string }; Returns: string }
+      voice_actor_completeness: {
+        Args: { va: Database["public"]["Tables"]["voice_actors"]["Row"] }
+        Returns: number
+      }
       voice_actor_name: {
         Args: { "": Database["public"]["Tables"]["voice_actors"]["Row"] }
         Returns: {
