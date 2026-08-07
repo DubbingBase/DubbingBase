@@ -1,5 +1,12 @@
 # @app/shared-logic
 
+## 1.0.21
+
+### Patch Changes
+
+- ce35380: implement studio management features, add RLS policies, and introduce shared studio data composable
+- 814588e: update playwright config with mise execution and ignore test artifacts
+
 ## 1.0.20
 
 ### Patch Changes

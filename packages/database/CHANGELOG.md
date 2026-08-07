@@ -1,5 +1,11 @@
 # @app/supabase
 
+## 0.0.73
+
+### Patch Changes
+
+- ce35380: implement studio management features, add RLS policies, and introduce shared studio data composable
+
 ## 0.0.72
 
 ### Patch Changes

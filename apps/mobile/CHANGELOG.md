@@ -1,5 +1,15 @@
 # @app/mobile
 
+## 1.0.97
+
+### Patch Changes
+
+- ce35380: implement studio management features, add RLS policies, and introduce shared studio data composable
+- Updated dependencies [ce35380]
+- Updated dependencies [814588e]
+  - @app/shared-logic@1.0.21
+  - @app/supabase@0.0.73
+
 ## 1.0.96
 
 ### Patch Changes

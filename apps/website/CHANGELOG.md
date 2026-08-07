@@ -1,5 +1,14 @@
 # @app/landing
 
+## 1.0.36
+
+### Patch Changes
+
+- ce35380: implement studio management features, add RLS policies, and introduce shared studio data composable
+- Updated dependencies [ce35380]
+- Updated dependencies [814588e]
+  - @app/shared-logic@1.0.21
+
 ## 1.0.35
 
 ### Patch Changes
