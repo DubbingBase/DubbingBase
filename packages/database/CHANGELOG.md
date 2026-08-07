@@ -1,5 +1,11 @@
 # @app/supabase
 
+## 0.0.74
+
+### Patch Changes
+
+- 8a4a413: implement MediaSkeleton and PersonSkeleton components and enable lazy data loading for media pages
+
 ## 0.0.73
 
 ### Patch Changes

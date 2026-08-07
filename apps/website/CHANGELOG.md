@@ -1,5 +1,11 @@
 # @app/landing
 
+## 1.0.37
+
+### Patch Changes
+
+- 8a4a413: implement MediaSkeleton and PersonSkeleton components and enable lazy data loading for media pages
+
 ## 1.0.36
 
 ### Patch Changes
