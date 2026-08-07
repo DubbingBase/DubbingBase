@@ -1,5 +1,11 @@
 # @app/supabase
 
+## 0.0.75
+
+### Patch Changes
+
+- 4caba32: fix: pipeline
+
 ## 0.0.74
 
 ### Patch Changes

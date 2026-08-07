@@ -1,5 +1,11 @@
 # @app/landing
 
+## 1.0.38
+
+### Patch Changes
+
+- 4caba32: fix: pipeline
+
 ## 1.0.37
 
 ### Patch Changes
