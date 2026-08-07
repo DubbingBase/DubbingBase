@@ -4,6 +4,7 @@ import { processMedia, buildTmdbImageUrl } from "../_shared/tmdb-urls.ts";
 import { buildSupabaseImageUrl } from "../_shared/supabase-urls.ts";
 import { igdbClient } from "../_shared/index.ts";
 import { buildIgdbImageUrl } from "../_shared/igdb.ts";
+import { normalizeString } from "../_shared/normalize.ts";
 
 /**
  * Sanitize a user query for use in PostgreSQL full-text search.
@@ -32,39 +33,38 @@ function calculateScore(item: any, trimmedQuery: string): number {
   let score = 0;
 
   // Exact match bonus
-  const queryLower = trimmedQuery.toLowerCase();
+  const queryLower = normalizeString(trimmedQuery);
 
   // Construct full name properly, especially for Voice Actors from DB
   let itemDisplayName = item.title || item.name || item.voice_actor_name || "";
   if (!itemDisplayName && item.firstname && item.lastname) {
     itemDisplayName = `${item.firstname} ${item.lastname}`;
   }
-  const itemName = itemDisplayName.toLowerCase();
+  const itemName = normalizeString(itemDisplayName);
 
   if (itemName === queryLower) {
-    score += 50; // Huge boost for exact match
+    score += 30; // Strong boost for exact match, but not insurmountable
   } else if (itemName.includes(queryLower)) {
     // If it's a partial match that starts with the query, give more points
     if (itemName.startsWith(queryLower)) {
-      score += 20;
-    } else {
       score += 10;
+    } else {
+      score += 5;
     }
   }
 
   // Popularity weight: TMDB popularity is very important to the user.
   // We use a square root curve instead of log10 so that differences in high popularity
   // still matter, but don't completely dwarf exact matches.
-  // A popularity of 100 -> ~20 points. Popularity of 400 -> ~40 points.
   const pop = item.popularity || 0;
-  score += Math.sqrt(pop) * 2;
+  score += Math.sqrt(pop) * 3;
 
   // Vote average weight: max 1.0 (normalized 0-10 scale)
   score += (item.vote_average || 0) * 0.1;
 
-  // Vote count weight: log scale
+  // Vote count weight: log scale, strongly boosted to favor globally famous media
   const vc = item.vote_count || 0;
-  score += Math.log10(vc + 1);
+  score += Math.log10(vc + 1) * 3;
 
   // Recency weight: favor newer items but don't heavily penalize classics
   // TMDB uses ISO date strings; IGDB uses Unix timestamps (seconds)
@@ -105,7 +105,7 @@ export default {
 
       console.log("query", query);
 
-      const trimmedQuery = query.trim();
+      const trimmedQuery = normalizeString(query);
 
       if (!trimmedQuery || trimmedQuery.length < 2) {
         return Response.json([]);

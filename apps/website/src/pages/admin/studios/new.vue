@@ -123,18 +123,14 @@
 </template>
 
 <script setup lang="ts">
-const supabase = useSupabaseClient();
-
-
-
+import { ref, onMounted, computed } from "vue";
 
 definePageMeta({
   layout: 'admin',
   middleware: 'admin'
 });
 
-import { ref, onMounted, computed } from "vue";
-
+const supabase = useSupabaseClient();
 
 const route = useRoute();
 const router = useRouter();

@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
+import { tmdbClient } from "../_shared/index.ts";
 
 export default {
   fetch: withSupabase<Database>({ auth: "publishable" }, async (req, ctx) => {
@@ -40,20 +41,36 @@ export default {
         };
       }
 
-      // 2. Fetch dubbed projects by studio_id or studio name
+      // 2. Fetch dubbed projects by studio_id
       let projQuery = ctx.supabase.from("dubbing_projects").select("*");
       if (studio?.id && !isNaN(Number(studio.id))) {
-        projQuery = projQuery.or(
-          `studio_id.eq.${studio.id},studio.ilike.${studio.name}`,
-        );
-      } else if (studio?.name) {
-        projQuery = projQuery.ilike("studio", studio.name);
+        projQuery = projQuery.eq("studio_id", Number(studio.id));
+      } else {
+        // No valid studio.id means we can't match any projects by foreign key
+        projQuery = projQuery.eq("studio_id", 0);
       }
       const { data: dubbedProjects, error: projErr } = await projQuery;
       if (projErr) throw projErr;
 
       const projects = dubbedProjects || [];
       let voiceActorsRoster: any[] = [];
+
+      // 2.5 Fetch TMDB info for projects
+      const projectsWithMedia = await Promise.all(
+        projects.map(async (p) => {
+          try {
+            const contentType = p.content_type === "movie" ? "movie" : "tv";
+            const mediaDetails = await tmdbClient.fetchMediaDetails(p.content_id, contentType);
+            return {
+              ...p,
+              media: mediaDetails
+            };
+          } catch (e) {
+            console.error(`Failed to fetch TMDB details for ${p.content_type} ${p.content_id}`, e);
+            return p;
+          }
+        })
+      );
 
       // 3. Fetch linked voice actors from work table
       if (projects.length > 0) {
@@ -88,7 +105,7 @@ export default {
 
       return Response.json({
         studio,
-        dubbedProjects: projects,
+        dubbedProjects: projectsWithMedia,
         voiceActorsRoster,
       });
     } catch (error) {

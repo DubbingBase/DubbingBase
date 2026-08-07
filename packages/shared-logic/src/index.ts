@@ -6,4 +6,5 @@ export * from "./composables/useGameData";
 export * from "./composables/useShowData";
 export * from "./composables/useSearchData";
 export * from "./composables/useActorData";
+export * from "./composables/useStudioData";
 export * from "./utils/character";

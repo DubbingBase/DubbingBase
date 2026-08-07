@@ -24,76 +24,143 @@
           :alt="game.name"
           format="webp"
         />
-        <div class="pb-4 relative z-10">
+        <div class="pb-4 relative z-10 max-w-3xl">
           <h1 class="text-4xl md:text-5xl font-bold">{{ game.name }}</h1>
-          <p class="text-gray-600 dark:text-gray-300 mt-2 text-lg">
-            {{ formatReleaseYear(game.first_release_date) }}
-          </p>
+          <div class="flex flex-wrap items-center gap-3 mt-4">
+            <span class="text-gray-900 dark:text-gray-100 font-semibold text-base md:text-lg bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg">
+              {{ formatReleaseYear(game.first_release_date) }}
+            </span>
+            <span v-if="game.rating" class="flex items-center gap-1.5 text-gray-900 dark:text-gray-100 font-bold text-sm md:text-base bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg">
+              <StarIcon class="w-4 h-4 text-yellow-500 fill-current" />
+              {{ (game.rating / 10).toFixed(1) }}
+            </span>
+            <div class="flex gap-2 ml-2">
+              <a :href="`https://www.igdb.com/games/${game.slug}`" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg bg-white/40 dark:bg-black/40 text-gray-800 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-black/60 transition-colors backdrop-blur-md uppercase tracking-wider">
+                IGDB <ExternalLinkIcon class="w-3 h-3 opacity-70" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#161616]/95 backdrop-blur sticky top-0 z-10 shadow-sm">
+      <div class="container mx-auto px-8 max-w-6xl py-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <!-- Dubbing Projects Tabs -->
+        <div v-if="dubbingProjects.length > 0" class="flex flex-wrap gap-2">
+          <NuxtLink
+            v-for="project in dubbingProjects"
+            :key="project.id"
+            :to="{ query: { dub: project.id } }"
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-gray-200 dark:border-[#2a2a2a]"
+            :class="
+              activeDubId === project.id
+                ? 'bg-cyan-600 dark:bg-[#00E5FF] text-white dark:text-black border-cyan-600 dark:border-[#00E5FF]'
+                : 'bg-white dark:bg-[#1d1d1d] text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#2a2a2a]'
+            "
+          >
+            {{
+              $t("details.dubbing", {
+                lang: getDisplayLanguage(project.language),
+              })
+            }}
+          </NuxtLink>
+        </div>
+        <div v-else class="text-sm text-gray-500 font-medium">No dubbing projects available</div>
+        
+        <!-- Right side actions -->
+        <div class="flex items-center flex-wrap gap-4">
+          <template v-if="activeDubProject?.studio_data">
+            <NuxtLink
+              :to="$localePath(`/studio/${activeDubProject.studio_data.id}`)"
+              class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-[#2a2a2a] hover:border-cyan-500 transition-colors group bg-gray-50 dark:bg-[#1d1d1d]"
+              title="Studio de doublage"
+            >
+              <div class="w-6 h-6 rounded flex items-center justify-center overflow-hidden shrink-0 bg-white dark:bg-[#2a2a2a]">
+                <img v-if="activeDubProject.studio_data.logo_url" :src="activeDubProject.studio_data.logo_url" class="w-full h-full object-contain p-0.5" />
+                <span v-else class="font-bold text-xs text-gray-400">{{ activeDubProject.studio_data.name.charAt(0) }}</span>
+              </div>
+              <span class="font-medium text-xs group-hover:text-cyan-500 transition-colors truncate max-w-[120px]">{{ activeDubProject.studio_data.name }}</span>
+            </NuxtLink>
+            <div class="h-6 w-px bg-gray-200 dark:bg-[#2a2a2a]"></div>
+          </template>
+
+          <button v-if="isAdmin" @click="triggerPrepareGame" :disabled="isPreparing" class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-medium">
+            <Loader2Icon v-if="isPreparing" class="w-4 h-4 animate-spin" />
+            <Gamepad2Icon v-else class="w-4 h-4" />
+            <span class="hidden sm:inline">{{ $t('game.prepareCredits', 'Extraire les crédits') }}</span>
+          </button>
+
+          <NuxtLink v-if="isAdmin" :to="$localePath(`/game/${game?.id || 'new'}/edit/${activeDubId || 'new'}`)" class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-medium">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            <span class="hidden sm:inline">Éditer</span>
+          </NuxtLink>
+          
+          <button
+            @click="isReportModalOpen = true"
+            class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1.5"
+            title="Signaler cette fiche"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="w-4 h-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"
+              />
+              <line x1="4" y1="22" x2="4" y2="15" />
+            </svg>
+          </button>
         </div>
       </div>
     </div>
 
     <!-- Content -->
     <div class="container mx-auto p-8 max-w-6xl">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-        <!-- Overview -->
-        <div class="md:col-span-2 space-y-6">
-          <section>
-            <h2 class="text-2xl font-bold mb-4">{{ $t('details.synopsis', 'Synopsis') }}</h2>
-            <p class="text-gray-700 dark:text-gray-300 leading-relaxed text-lg">
-              {{ game.summary || $t('details.noSynopsis', 'Aucun synopsis disponible.') }}
-            </p>
-          </section>
-        </div>
-
-        <!-- Sidebar Details -->
-        <div class="space-y-6">
-          <div class="bg-white dark:bg-[#1d1d1d] p-6 rounded-xl border border-gray-200 dark:border-[#2a2a2a] shadow-sm dark:shadow-none">
-            
-            <h3 class="font-bold text-gray-500 dark:text-gray-400 mb-2">{{ $t('game.developer', 'Développeur') }}</h3>
-            <p>{{ getDevelopers(game) || '-' }}</p>
-
-            <h3 class="font-bold text-gray-500 dark:text-gray-400 mt-4 mb-2">{{ $t('game.publisher', 'Éditeur') }}</h3>
-            <p>{{ getPublishers(game) || '-' }}</p>
-
-            <h3 class="font-bold text-gray-500 dark:text-gray-400 mt-4 mb-2">{{ $t('details.rating', 'Note') }}</h3>
-            <p>{{ game.rating ? (game.rating / 10).toFixed(1) : '-' }} / 10</p>
-            
-            <h3 class="font-bold text-gray-500 dark:text-gray-400 mt-4 mb-2">{{ $t('game.genres', 'Genres') }}</h3>
-            <div class="flex flex-wrap gap-2">
-              <span v-for="genre in game.genres" :key="genre.id" class="px-2 py-1 bg-gray-100 dark:bg-[#2a2a2a] text-xs rounded-md">
-                {{ genre.name }}
-              </span>
+      <!-- Overview -->
+      <div class="mb-12 max-w-4xl">
+        <section>
+          <h2 class="text-2xl font-bold mb-4">{{ $t('details.synopsis', 'Synopsis') }}</h2>
+          <p class="text-gray-700 dark:text-gray-300 leading-relaxed text-lg mb-8">
+            {{ game.summary || $t('details.noSynopsis', 'Aucun synopsis disponible.') }}
+          </p>
+          
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-6 bg-white dark:bg-[#1d1d1d] p-6 rounded-xl border border-gray-200 dark:border-[#2a2a2a] shadow-sm dark:shadow-none">
+            <div>
+              <h3 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">{{ $t('game.developer', 'Développeur') }}</h3>
+              <p class="font-medium text-sm">{{ getDevelopers(game) || '-' }}</p>
             </div>
-
-            <h3 class="font-bold text-gray-500 dark:text-gray-400 mt-4 mb-2">{{ $t('game.platforms', 'Plateformes') }}</h3>
-            <div class="flex flex-wrap gap-2">
-              <span v-for="platform in game.platforms" :key="platform.id" class="px-2 py-1 bg-gray-100 dark:bg-[#2a2a2a] text-xs rounded-md">
-                {{ platform.name }}
-              </span>
+            <div>
+              <h3 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">{{ $t('game.publisher', 'Éditeur') }}</h3>
+              <p class="font-medium text-sm">{{ getPublishers(game) || '-' }}</p>
             </div>
-
-            <div class="mt-8 border-t border-gray-200 dark:border-[#2a2a2a] pt-6 flex flex-col gap-3">
-              <button @click="isReportModalOpen = true" class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-                {{ $t('report.button', 'Signaler cette fiche') }}
-              </button>
-              
-              <button v-if="isAdmin" @click="triggerPrepareGame" :disabled="isPreparing" class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-2 font-medium">
-                <Loader2Icon v-if="isPreparing" class="w-4 h-4 animate-spin" />
-                <Gamepad2Icon v-else class="w-4 h-4" />
-                {{ $t('game.prepareCredits', 'Extraire les crédits de doublage') }}
-              </button>
-
-              <NuxtLink v-if="isAdmin" :to="$localePath(`/game/${game?.id || 'new'}/edit/${activeDubId || 'new'}`)" class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-2 font-medium">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-                Éditer le projet
-              </NuxtLink>
+            <div class="col-span-2 md:col-span-1">
+              <h3 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">{{ $t('game.genres', 'Genres') }}</h3>
+              <div class="flex flex-wrap gap-1.5">
+                <span v-for="genre in game.genres" :key="genre.id" class="px-2 py-0.5 bg-gray-100 dark:bg-[#2a2a2a] text-xs font-medium rounded-md text-gray-700 dark:text-gray-300">
+                  {{ genre.name }}
+                </span>
+              </div>
+            </div>
+            <div class="col-span-2 md:col-span-1">
+              <h3 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">{{ $t('game.platforms', 'Plateformes') }}</h3>
+              <div class="flex flex-wrap gap-1.5">
+                <span v-for="platform in game.platforms" :key="platform.id" class="px-2 py-0.5 bg-gray-100 dark:bg-[#2a2a2a] text-xs font-medium rounded-md text-gray-700 dark:text-gray-300">
+                  {{ platform.name }}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
       </div>
 
       <!-- Voice Cast -->
@@ -114,20 +181,6 @@
                 class="w-full bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-[#00E5FF] transition-all text-gray-900 dark:text-white"
               />
             </div>
-          </div>
-          
-          <!-- Dubbing Projects Tabs -->
-          <div v-if="dubbingProjects.length > 0" class="flex flex-wrap gap-2 mt-4">
-            <NuxtLink
-              v-for="project in dubbingProjects"
-              :key="project.id"
-              :to="{ query: { dub: project.id } }"
-              class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-gray-200 dark:border-[#2a2a2a]"
-              :class="activeDubId === project.id ? 'bg-cyan-600 dark:bg-[#00E5FF] text-white dark:text-black border-cyan-600 dark:border-[#00E5FF]' : 'bg-white dark:bg-[#1d1d1d] text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#2a2a2a]'"
-            >
-              {{ $t('details.dubbing', { lang: getDisplayLanguage(project.language) }) }}
-              <span v-if="project.studio_data?.name" class="opacity-75 text-xs ml-1">({{ project.studio_data.name }})</span>
-            </NuxtLink>
           </div>
         </div>
         
@@ -214,7 +267,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { fetchGameData } from '@app/shared-logic';
 import type { IgdbGame, IgdbCharacter } from '@app/shared-logic';
 import { computed, ref } from 'vue';
-import { ArrowLeftIcon, UserIcon, MicIcon, SearchIcon, Gamepad2Icon, Loader2Icon } from 'lucide-vue-next';
+import { ArrowLeftIcon, UserIcon, MicIcon, SearchIcon, Gamepad2Icon, Loader2Icon, StarIcon, ExternalLinkIcon } from 'lucide-vue-next';
 import ReportModal from '../../components/ReportModal.vue';
 
 const isReportModalOpen = ref(false);

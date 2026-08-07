@@ -165,7 +165,9 @@
                       <UserIcon class="w-6 h-6 sm:w-8 sm:h-8 opacity-20" />
                     </div>
                     <div v-if="item.work.performance" class="absolute bottom-1 left-1 right-1 flex justify-center">
-                       <span class="bg-black/70 backdrop-blur text-white text-[9px] px-2 py-0.5 rounded-full truncate max-w-full font-medium">{{ item.work.performance }}</span>
+                       <span class="bg-black/70 backdrop-blur text-white text-[9px] px-2 py-0.5 rounded-full truncate max-w-full font-medium">
+                         {{ $te(`performance.${item.work.performance}`) ? $t(`performance.${item.work.performance}`) : item.work.performance }}
+                       </span>
                     </div>
                   </div>
                   <div class="flex flex-col min-w-0 flex-1">
@@ -186,7 +188,7 @@
             >
               <!-- Actor Group Header -->
               <NuxtLink :to="$localePath(`/actor/${works[0]?.data.actor.id}`)" class="flex items-center gap-4 border-b border-gray-200 dark:border-gray-800 pb-4 hover:bg-gray-50 dark:hover:bg-[#1d1d1d] p-2 -ml-2 rounded-xl transition-colors cursor-pointer group">
-                <div class="w-14 h-14 rounded-full overflow-hidden bg-gray-100 dark:bg-[#161616] shadow-md border border-gray-200 dark:border-[#2a2a2a]">
+                <div class="w-20 h-20 shrink-0 rounded-full overflow-hidden bg-gray-100 dark:bg-[#161616] shadow-md border border-gray-200 dark:border-[#2a2a2a]">
                   <NuxtImg format="webp" v-if="works[0]?.data.actor.profile_picture" :src="resolveImageUrl(works[0].data.actor.profile_picture)" :alt="actorName" class="object-cover w-full h-full" />
                   <UserIcon v-else class="w-full h-full text-gray-400 p-2" />
                 </div>
@@ -229,7 +231,9 @@
                           <UserIcon class="w-6 h-6 opacity-20" />
                         </div>
                         <div v-if="item.work.performance" class="absolute bottom-1 left-1 right-1 flex justify-center">
-                           <span class="bg-black/70 backdrop-blur text-white text-[9px] px-2 py-0.5 rounded-full truncate max-w-full font-medium">{{ item.work.performance }}</span>
+                           <span class="bg-black/70 backdrop-blur text-white text-[9px] px-2 py-0.5 rounded-full truncate max-w-full font-medium">
+                             {{ $te(`performance.${item.work.performance}`) ? $t(`performance.${item.work.performance}`) : item.work.performance }}
+                           </span>
                         </div>
                       </div>
                       <div class="flex flex-col min-w-0 flex-1">

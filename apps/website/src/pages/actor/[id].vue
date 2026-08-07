@@ -79,12 +79,29 @@
         <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
       </div>
 
-      <!-- French Voices Section -->
-      <section v-if="filteredUniqueFrenchVoiceActors.length > 0">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">French Voices</h2>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      <!-- Voices Section -->
+      <section v-if="availableLanguages.length > 0">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+            Voices
+          </h2>
+          <!-- Language Tabs -->
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="lang in availableLanguages"
+              :key="lang"
+              @click="selectedLanguage = lang"
+              class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border"
+              :class="selectedLanguage === lang ? 'bg-cyan-600 text-white border-cyan-600' : 'bg-white dark:bg-[#161616] text-gray-700 dark:text-gray-300 border-gray-200 dark:border-[#2a2a2a] hover:bg-gray-50 dark:hover:bg-gray-800'"
+            >
+              {{ getDisplayLanguage(lang) }}
+            </button>
+          </div>
+        </div>
+        
+        <div v-if="filteredUniqueVoiceActorsByLanguage.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           <NuxtLink
-            v-for="va in filteredUniqueFrenchVoiceActors"
+            v-for="va in filteredUniqueVoiceActorsByLanguage"
             :key="va.id"
             :to="$localePath(`/voice-actor/${va.id}`)"
             :class="[
@@ -111,6 +128,9 @@
             <span class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ va.rolesCount }} roles</span>
           </NuxtLink>
         </div>
+        <div v-else class="text-gray-500 text-center py-8 bg-white dark:bg-[#161616] rounded-2xl border border-gray-200 dark:border-[#2a2a2a]">
+          No voice actors found for the selected language.
+        </div>
       </section>
 
       <!-- Filmography Section -->
@@ -120,7 +140,7 @@
         </div>
 
         <div
-          v-if="filteredCredits.length === 0"
+          v-if="enhancedFilmography.length === 0"
           class="text-gray-500 text-center py-12 bg-white dark:bg-[#161616] rounded-2xl border border-gray-200 dark:border-[#2a2a2a]"
         >
           No works found.
@@ -129,37 +149,52 @@
         <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           <NuxtLink
             :to="$localePath(`/${item.media_type === 'tv' ? 'show' : 'movie'}/${item.id}`)"
-            v-for="item in filteredCredits"
+            v-for="item in enhancedFilmography"
             :key="`${item.media_type}-${item.id}`"
             class="bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl p-4 shadow-sm transition-colors hover:border-gray-300 dark:hover:border-gray-700 block group"
           >
-            <div class="flex gap-4 h-full">
-              <!-- Media Poster -->
-              <div class="w-20 md:w-24 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 flex-shrink-0 aspect-[2/3]">
-                <NuxtImg format="webp"                   v-if="item.poster_path"
-                  :src="resolveImageUrl(item.poster_path)"
-                  :alt="item.title || item.name"
-                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
-                  <ClapperboardIcon class="w-8 h-8 opacity-20" />
+            <div class="flex flex-col sm:grid sm:grid-cols-3 gap-4 h-full">
+              <!-- Column 1: Media -->
+              <div class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start">
+                <div class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 flex-shrink-0">
+                  <NuxtImg format="webp" v-if="item.poster_path" :src="resolveImageUrl(item.poster_path)" :alt="item.title || item.name" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
+                    <ClapperboardIcon class="w-6 h-6 sm:w-8 sm:h-8 opacity-20" />
+                  </div>
+                </div>
+                <div class="flex flex-col min-w-0 flex-1">
+                  <span class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5">{{ item.release_date ? new Date(item.release_date).getFullYear() : (item.first_air_date ? new Date(item.first_air_date).getFullYear() : 'N/A') }}</span>
+                  <span class="font-bold text-sm text-gray-900 dark:text-gray-100 leading-tight line-clamp-2" :title="item.title || item.name">{{ item.title || item.name }}</span>
                 </div>
               </div>
-              
-              <!-- Info -->
-              <div class="flex flex-col flex-1 min-w-0 py-1">
-                <span class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-1">
-                  {{ item.release_date ? new Date(item.release_date).getFullYear() : (item.first_air_date ? new Date(item.first_air_date).getFullYear() : 'N/A') }}
-                </span>
-                <h3 class="font-bold text-base text-gray-900 dark:text-gray-100 leading-tight line-clamp-2 mb-2" :title="item.title || item.name">
-                  {{ item.title || item.name }}
-                </h3>
-                
-                <div class="mt-auto pt-3 border-t border-gray-100 dark:border-[#2a2a2a]">
-                  <p class="text-sm text-gray-700 dark:text-gray-300 truncate">
-                    <span class="text-xs text-gray-500 uppercase font-medium mr-1">as</span>
-                    {{ item.character || 'Unknown' }}
-                  </p>
+
+              <!-- Column 2: Voice Actor -->
+              <div class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-3 sm:pt-0">
+                <div class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 flex-shrink-0">
+                  <NuxtImg format="webp" v-if="item.voice_actors?.[0]?.profile_picture" :src="item.voice_actors[0].profile_picture" :alt="`${item.voice_actors[0].firstname} ${item.voice_actors[0].lastname}`" class="w-full h-full object-cover" />
+                  <div v-else class="w-full h-full flex items-center justify-center text-gray-400 text-xs font-bold bg-gray-100 dark:bg-[#161616]">
+                    <span v-if="item.voice_actors?.[0]">{{ item.voice_actors[0].firstname?.[0] }}{{ item.voice_actors[0].lastname?.[0] }}</span>
+                    <UserIcon v-else class="w-6 h-6 sm:w-8 sm:h-8 opacity-20" />
+                  </div>
+                </div>
+                <div class="flex flex-col min-w-0 flex-1">
+                  <span class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5">Voiced by</span>
+                  <span v-if="item.voice_actors?.[0]" class="font-medium text-sm text-gray-700 dark:text-gray-300 leading-tight line-clamp-2">{{ item.voice_actors[0].firstname }} {{ item.voice_actors[0].lastname }}</span>
+                  <span v-else class="font-medium text-sm text-gray-400 dark:text-gray-500 italic">Unknown</span>
+                </div>
+              </div>
+
+              <!-- Column 3: Character -->
+              <div class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-3 sm:pt-0">
+                <div class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 relative flex-shrink-0">
+                  <!-- Note: character image from db is not fully integrated in item yet, falling back to a placeholder -->
+                  <div class="w-full h-full flex items-center justify-center text-gray-400">
+                    <UserIcon class="w-6 h-6 sm:w-8 sm:h-8 opacity-20" />
+                  </div>
+                </div>
+                <div class="flex flex-col min-w-0 flex-1">
+                  <span class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5">As</span>
+                  <span class="font-medium text-sm text-gray-700 dark:text-gray-300 leading-tight line-clamp-2">{{ item.character || 'Unknown' }}</span>
                 </div>
               </div>
             </div>
@@ -175,7 +210,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { ArrowLeftIcon, ClapperboardIcon } from "lucide-vue-next";
+import { ArrowLeftIcon, ClapperboardIcon, UserIcon } from "lucide-vue-next";
 import { useActorData } from "@app/shared-logic";
 import ReportModal from '../../components/ReportModal.vue';
 
@@ -194,8 +229,11 @@ const {
   loading,
   searchQuery,
   filteredCredits,
-  uniqueFrenchVoiceActors,
-  filteredUniqueFrenchVoiceActors,
+  enhancedFilmography,
+  availableLanguages,
+  selectedLanguage,
+  uniqueVoiceActorsByLanguage,
+  filteredUniqueVoiceActorsByLanguage,
   loadActorData,
 } = useActorData(supabase);
 
@@ -259,4 +297,15 @@ function resolveImageUrl(path: string | null | undefined): string | undefined {
   if (path.startsWith("http")) return path;
   return `https://image.tmdb.org/t/p/w342${path}`;
 }
+
+const getDisplayLanguage = (langCode: string | undefined | null) => {
+  if (!langCode) return 'Inconnu';
+  try {
+    const displayNames = new Intl.DisplayNames([locale.value || 'en'], { type: 'language' });
+    const name = displayNames.of(langCode);
+    return name ? name.charAt(0).toUpperCase() + name.slice(1) : langCode;
+  } catch (e) {
+    return langCode;
+  }
+};
 </script>

@@ -74,7 +74,21 @@
                   class="voice-actors-section"
                   v-if="filteredVoiceActors.length > 0"
                 >
-                  <h3 class="section-title">{{ t("actor.voiceActors") }}</h3>
+                  <div class="flex flex-col gap-2 mb-4">
+                    <h3 class="section-title m-0">{{ t("actor.voiceActors") }}</h3>
+                    <div class="flex flex-wrap gap-2" v-if="availableLanguages.length > 1">
+                      <AppChip
+                        v-for="lang in availableLanguages"
+                        :key="lang"
+                        :outline="selectedLanguage !== lang"
+                        :color="selectedLanguage === lang ? 'primary' : 'medium'"
+                        @click="selectedLanguage = lang"
+                        class="cursor-pointer m-0"
+                      >
+                        {{ getDisplayLanguage(lang) }}
+                      </AppChip>
+                    </div>
+                  </div>
                   <div class="voice-actors-scroller">
                     <div
                       class="voice-actor-card"
@@ -238,6 +252,24 @@ const searchQuery = ref("");
 const selectedSegment = ref("about");
 const isBiographyExpanded = ref(false);
 
+const availableLanguages = computed(() => {
+  const langs = new Set<string>();
+  voiceActors.value.forEach((role: any) => {
+    if (role.dubbing_projects?.language) {
+      langs.add(role.dubbing_projects.language);
+    }
+  });
+  return Array.from(langs).sort();
+});
+
+const selectedLanguage = ref<string>("");
+
+watch(availableLanguages, (langs) => {
+  if (langs.length > 0 && !selectedLanguage.value) {
+    selectedLanguage.value = langs.includes("fr-FR") ? "fr-FR" : langs[0];
+  }
+}, { immediate: true });
+
 const aboutSectionRef = ref<HTMLElement | null>(null);
 const rolesSectionRef = ref<HTMLElement | null>(null);
 
@@ -346,7 +378,9 @@ const sortedVoiceActors = computed(() => {
   const voiceActorMap = new Map();
 
   // Aggregate voice actors and count their roles
-  voiceActors.value.forEach((role: VoiceActorData) => {
+  voiceActors.value.forEach((role: VoiceActorData & { dubbing_projects?: { language: string } }) => {
+    if (selectedLanguage.value && role.dubbing_projects?.language !== selectedLanguage.value) return;
+
     role.voice_actors?.forEach((va: VoiceActorData) => {
       if (!voiceActorMap.has(va.id)) {
         voiceActorMap.set(va.id, {
@@ -395,6 +429,17 @@ function formatDate(dateString: string): string {
   if (!dateString) return "";
   const date = new Date(dateString);
   return date.toLocaleDateString();
+}
+
+function getDisplayLanguage(langCode: string | undefined | null) {
+  if (!langCode) return 'Inconnu';
+  try {
+    const displayNames = new Intl.DisplayNames(['fr'], { type: 'language' });
+    const name = displayNames.of(langCode);
+    return name ? name.charAt(0).toUpperCase() + name.slice(1) : langCode;
+  } catch (e) {
+    return langCode;
+  }
 }
 
 async function loadActorData() {

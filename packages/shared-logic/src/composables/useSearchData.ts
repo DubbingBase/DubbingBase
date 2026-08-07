@@ -12,6 +12,12 @@ export type SearchResult = {
   poster_path?: string;
   popularity?: number;
   score?: number;
+  release_date?: string;
+  first_air_date?: string;
+  first_release_date?: number;
+  original_title?: string;
+  original_name?: string;
+  cover?: { url: string };
 };
 
 export async function fetchSearchData(

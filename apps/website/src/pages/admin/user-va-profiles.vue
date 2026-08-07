@@ -158,6 +158,44 @@
       </button>
     </div>
 
+    <!-- Existing Links Panel -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6 shadow-xl mt-8">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-white">Existing Links</h3>
+        <button
+          @click="fetchExistingLinks"
+          class="p-2 bg-slate-950 border border-slate-800 text-slate-400 hover:text-white rounded-xl hover:bg-slate-850 transition-colors"
+          title="Refresh List"
+        >
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        </button>
+      </div>
+      <div v-if="linksLoading" class="text-slate-400 text-sm py-4 text-center">Loading links...</div>
+      <div v-else-if="existingLinks.length === 0" class="text-slate-500 text-sm py-4 text-center">No profiles linked yet.</div>
+      <div v-else class="space-y-3">
+        <div v-for="link in existingLinks" :key="link.id" class="flex items-center justify-between p-4 bg-slate-950/60 border border-slate-850 rounded-xl">
+          <div class="flex flex-col gap-1">
+            <span class="text-sm font-bold text-white">{{ link.userEmail }}</span>
+            <span class="text-xs text-slate-500 font-mono">{{ link.user_id }}</span>
+          </div>
+          <svg class="h-4 w-4 text-slate-600 mx-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+          <div class="flex items-center space-x-3 text-right">
+            <span class="text-sm font-bold text-indigo-400">{{ link.voiceActorName }}</span>
+            <div class="h-8 w-8 rounded-full overflow-hidden border border-slate-800 bg-slate-950 shrink-0 flex items-center justify-center text-slate-500">
+              <NuxtImg format="webp" v-if="link.voiceActorImage" :src="getProfilePictureUrl(link.voiceActorImage) || undefined" class="h-full w-full object-cover" />
+              <svg v-else class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Toast Notifications -->
     <div
       v-if="toast.show"
@@ -230,6 +268,9 @@ const voiceActorResults = ref<VoiceActor[]>([]);
 const voiceActorSearching = ref(false);
 const linking = ref(false);
 
+const existingLinks = ref<any[]>([]);
+const linksLoading = ref(false);
+
 // Debouncing helpers
 let vaSearchTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -257,6 +298,7 @@ const fetchUsersList = async () => {
     if (error) throw error;
     allUsers.value = data?.users || [];
     usersFetched.value = true;
+    fetchExistingLinks();
   } catch (err: any) {
     console.error("Error fetching users list:", err);
     showToast("Error loading users database", "error");
@@ -353,6 +395,7 @@ const linkUserVoiceActor = async () => {
     // Reset inputs
     clearUserSelection();
     clearVoiceActorSelection();
+    fetchExistingLinks();
   } catch (err: any) {
     console.error("Error linking user to voice actor:", err);
     showToast(err.message || "Failed to link profile", "error");
@@ -370,6 +413,30 @@ const setupClickListeners = () => {
       isVoiceActorDropdownOpen.value = false;
     }
   });
+};
+
+const fetchExistingLinks = async () => {
+  linksLoading.value = true;
+  try {
+    const { data, error } = await supabase
+      .from("user_voice_actor_links")
+      .select('id, user_id, voice_actors(id, firstname, lastname, profile_picture)')
+      .order('created_at', { ascending: false });
+      
+    if (error) throw error;
+    
+    existingLinks.value = data.map((link: any) => ({
+      id: link.id,
+      user_id: link.user_id,
+      userEmail: allUsers.value.find(u => u.id === link.user_id)?.email || 'Unknown User',
+      voiceActorName: link.voice_actors ? `${link.voice_actors.firstname} ${link.voice_actors.lastname}` : 'Unknown Actor',
+      voiceActorImage: link.voice_actors?.profile_picture || null
+    }));
+  } catch (err: any) {
+    console.error("Error fetching links:", err);
+  } finally {
+    linksLoading.value = false;
+  }
 };
 
 onMounted(() => {

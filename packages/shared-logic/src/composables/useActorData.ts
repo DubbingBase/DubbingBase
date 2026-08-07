@@ -1,4 +1,4 @@
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { MovieModel, SerieModel } from "../types";
 
@@ -43,6 +43,9 @@ export type ActorResponse = {
         media_type: string;
         overview: string;
       } | null;
+      dubbing_projects?: {
+        language: string;
+      } | null;
     }>;
   };
   voiceActors: Array<any>;
@@ -85,6 +88,25 @@ export function useActorData(
   const loading = ref<boolean>(!initialData);
   const searchQuery = ref("");
 
+  const availableLanguages = computed(() => {
+    if (!voiceRoles.value) return [];
+    const langs = new Set<string>();
+    for (const role of voiceRoles.value) {
+      if (role.dubbing_projects?.language) {
+        langs.add(role.dubbing_projects.language);
+      }
+    }
+    return Array.from(langs).sort();
+  });
+
+  const selectedLanguage = ref<string>("");
+
+  watch(availableLanguages, (langs) => {
+    if (langs.length > 0 && !selectedLanguage.value) {
+      selectedLanguage.value = langs.includes("fr-FR") ? "fr-FR" : langs[0];
+    }
+  }, { immediate: true });
+
   const loadActorData = async (id: string | number) => {
     loading.value = true;
 
@@ -119,12 +141,54 @@ export function useActorData(
     });
   });
 
-  // Extract unique voice actors who dubbed this actor
-  const uniqueFrenchVoiceActors = computed(() => {
-    if (!voiceRoles.value) return [];
+  const enhancedFilmography = computed(() => {
+    if (!actor.value?.credits?.cast) return [];
+
+    const query = searchQuery.value.toLowerCase();
+    const cast = actor.value.credits.cast;
+    
+    const rolesByMedia = new Map();
+    for (const role of voiceRoles.value) {
+      if (!role.mediaDetails?.id) continue;
+      if (!rolesByMedia.has(role.mediaDetails.id)) {
+        rolesByMedia.set(role.mediaDetails.id, []);
+      }
+      rolesByMedia.get(role.mediaDetails.id).push(role);
+    }
+
+    let items = cast;
+    if (query) {
+      items = cast.filter((item) => {
+        const title = (item.title || item.name || "").toLowerCase();
+        const character = (item.character || "").toLowerCase();
+        return title.includes(query) || character.includes(query);
+      });
+    }
+
+    return items.map((item) => {
+      const mediaRoles = rolesByMedia.get(item.id) || [];
+      const languageRoles = selectedLanguage.value 
+        ? mediaRoles.filter((r: any) => r.dubbing_projects?.language === selectedLanguage.value)
+        : mediaRoles;
+
+      const voiceActors = languageRoles.flatMap((r: any) => r.voice_actors || []);
+      
+      return {
+        ...item,
+        dubbing_roles: languageRoles,
+        voice_actors: voiceActors,
+      };
+    });
+  });
+
+  // Extract unique voice actors who dubbed this actor based on selected language
+  const uniqueVoiceActorsByLanguage = computed(() => {
+    if (!voiceRoles.value || !selectedLanguage.value) return [];
 
     const vaMap = new Map();
     for (const role of voiceRoles.value) {
+      if (role.dubbing_projects?.language !== selectedLanguage.value) continue;
+
       if (role.voice_actors && role.voice_actors.length > 0) {
         for (const va of role.voice_actors) {
           if (!vaMap.has(va.id)) {
@@ -147,11 +211,11 @@ export function useActorData(
     );
   });
 
-  const filteredUniqueFrenchVoiceActors = computed(() => {
+  const filteredUniqueVoiceActorsByLanguage = computed(() => {
     const query = searchQuery.value.toLowerCase();
-    if (!query) return uniqueFrenchVoiceActors.value;
+    if (!query) return uniqueVoiceActorsByLanguage.value;
 
-    return uniqueFrenchVoiceActors.value.filter((va) => {
+    return uniqueVoiceActorsByLanguage.value.filter((va) => {
       const fullname =
         `${va.firstname || ""} ${va.lastname || ""}`.toLowerCase();
       return fullname.includes(query);
@@ -164,8 +228,11 @@ export function useActorData(
     loading,
     searchQuery,
     filteredCredits,
-    uniqueFrenchVoiceActors,
-    filteredUniqueFrenchVoiceActors,
+    enhancedFilmography,
+    availableLanguages,
+    selectedLanguage,
+    uniqueVoiceActorsByLanguage,
+    filteredUniqueVoiceActorsByLanguage,
     loadActorData,
   };
 }

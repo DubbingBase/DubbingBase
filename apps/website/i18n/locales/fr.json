@@ -97,5 +97,12 @@
     "showKeywords": "{title}, {title} doublage, {title} voix française, casting vocal, doublage de série, {title} cast",
     "voiceActorKeywords": "{name}, comédien de doublage, voix française, vf, doublage, filmographie",
     "actorKeywords": "{name}, acteur, {name} voix française, {name} doublage, filmographie"
+  },
+  "performance": {
+    "dialogues": "Dialogues",
+    "vocals": "Chant",
+    "voice": "Voix",
+    "songs": "Chansons",
+    "other": "Autre"
   }
 }

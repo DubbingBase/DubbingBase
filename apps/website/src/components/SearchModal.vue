@@ -26,15 +26,28 @@
           </button>
         </div>
 
+        <!-- Filter Chips -->
+        <div class="flex gap-2 px-4 py-3 border-b border-[#2a2a2a] overflow-x-auto no-scrollbar shrink-0" v-if="query.length >= 2">
+          <button 
+            v-for="filter in filters" 
+            :key="filter.value"
+            @click="selectedFilter = filter.value"
+            class="inline-flex items-center justify-center px-4 h-8 rounded-full text-sm font-medium whitespace-nowrap transition outline-none focus-visible:ring-2 focus-visible:ring-white shrink-0 leading-none"
+            :class="selectedFilter === filter.value ? 'bg-white text-black' : 'bg-[#2a2a2a] text-gray-300 hover:bg-[#3a3a3a]'"
+          >
+            {{ filter.label }}
+          </button>
+        </div>
+
         <!-- Results -->
         <div class="overflow-y-auto flex-1 p-2 min-h-[100px]">
           <div v-if="loading" class="flex justify-center py-8">
             <Loader2Icon class="w-6 h-6 animate-spin text-gray-400" />
           </div>
           
-          <div v-else-if="results.length > 0" class="flex flex-col gap-1">
+          <div v-else-if="filteredResults.length > 0" class="flex flex-col gap-1">
             <button
-              v-for="(item, index) in results"
+              v-for="(item, index) in filteredResults"
               :key="`${item.media_type}-${item.id}`"
               class="flex items-center gap-4 p-2 rounded-xl transition text-left w-full border"
               :class="selectedIndex === index ? 'bg-[#2a2a2a] border-[#4a4a4a]' : 'border-transparent hover:bg-[#2a2a2a]'"
@@ -50,9 +63,13 @@
               <!-- Info -->
               <div class="flex flex-col flex-1 min-w-0">
                 <div class="font-semibold text-white truncate text-base leading-tight">{{ item.title || item.name || item.voice_actor_name || `${item.firstname || ''} ${item.lastname || ''}`.trim() }}</div>
-                <div class="text-xs text-gray-400 mt-1 capitalize flex items-center gap-1.5">
+                <div class="text-xs text-gray-400 mt-1 flex items-center gap-1.5 flex-wrap">
                   <span class="inline-block w-2 h-2 rounded-full" :class="getTypeColor(item.media_type)"></span>
-                  {{ getMediaTypeLabel(item.media_type) }}
+                  <span class="capitalize">{{ getMediaTypeLabel(item.media_type) }}</span>
+                  <template v-if="getItemMetadata(item)">
+                    <span class="text-gray-600">•</span>
+                    <span class="truncate max-w-[200px] sm:max-w-xs">{{ getItemMetadata(item) }}</span>
+                  </template>
                 </div>
               </div>
               
@@ -78,7 +95,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { 
@@ -130,6 +147,27 @@ const loading = ref(false);
 const searchInput = ref<HTMLInputElement | null>(null);
 const selectedIndex = ref(0);
 
+const selectedFilter = ref<string>('all');
+
+const filters = computed(() => {
+  const getLabel = (key: string, fallback: string) => {
+    const translation = t(key);
+    return translation === key ? fallback : translation;
+  };
+  return [
+    { label: getLabel('search.all', 'All'), value: 'all' },
+    { label: getLabel('search.movie', 'Movie'), value: 'movie' },
+    { label: getLabel('search.tv', 'TV Show'), value: 'tv' },
+    { label: getLabel('search.voiceActor', 'Voice Actor'), value: 'voice_actor' },
+    { label: getLabel('search.videoGame', 'Video Game'), value: 'video_game' },
+  ];
+});
+
+const filteredResults = computed(() => {
+  if (selectedFilter.value === 'all') return results.value;
+  return results.value.filter(item => item.media_type === selectedFilter.value);
+});
+
 let debounceTimeout: any = null;
 
 watch(query, (newVal) => {
@@ -173,6 +211,27 @@ const getTypeColor = (type: string) => {
   return 'bg-gray-500';
 };
 
+const getItemMetadata = (item: SearchResult) => {
+  const parts = [];
+  
+  if (item.release_date) {
+    parts.push(item.release_date.substring(0, 4));
+  } else if (item.first_air_date) {
+    parts.push(item.first_air_date.substring(0, 4));
+  } else if (item.first_release_date) {
+    parts.push(new Date(item.first_release_date * 1000).getFullYear().toString());
+  }
+
+  const mainTitle = item.title || item.name || item.voice_actor_name || `${item.firstname || ''} ${item.lastname || ''}`.trim();
+  const original = item.original_title || item.original_name;
+  
+  if (original && original !== mainTitle) {
+    parts.push(original);
+  }
+
+  return parts.join(' • ');
+};
+
 const localePath = useLocalePath();
 
 const handleSelect = (item: SearchResult) => {
@@ -189,15 +248,15 @@ const handleSelect = (item: SearchResult) => {
 };
 
 const selectCurrent = () => {
-  if (results.value.length > 0 && selectedIndex.value >= 0 && selectedIndex.value < results.value.length) {
-    handleSelect(results.value[selectedIndex.value]);
+  if (filteredResults.value.length > 0 && selectedIndex.value >= 0 && selectedIndex.value < filteredResults.value.length) {
+    handleSelect(filteredResults.value[selectedIndex.value]);
   }
 };
 
 const navigateResults = (direction: number) => {
-  if (results.value.length === 0) return;
+  if (filteredResults.value.length === 0) return;
   const next = selectedIndex.value + direction;
-  if (next >= 0 && next < results.value.length) {
+  if (next >= 0 && next < filteredResults.value.length) {
     selectedIndex.value = next;
   }
 };

@@ -1,6 +1,7 @@
 import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
 import { SupabaseContext } from "npm:@supabase/server@^1";
+import { normalizeString } from "../_shared/normalize.ts";
 
 interface SearchParams {
   query: string;
@@ -13,7 +14,7 @@ const searchVoiceActors = async (
   limit = 10,
 ) => {
   try {
-    const trimmedQuery = query.trim();
+    const trimmedQuery = normalizeString(query);
     if (!trimmedQuery) return [];
 
     const words = trimmedQuery.split(/\s+/).filter(Boolean);
@@ -34,12 +35,12 @@ const searchVoiceActors = async (
 
     if (error) throw error;
 
-    const lowerWords = words.map((w) => w.toLowerCase());
+    const lowerWords = words;
 
     // Filter in JS: must match ALL search words in either first or last name
     const matches = data.filter((actor) => {
-      const first = (actor.firstname || "").toLowerCase();
-      const last = (actor.lastname || "").toLowerCase();
+      const first = normalizeString(actor.firstname);
+      const last = normalizeString(actor.lastname);
       const fullName = `${first} ${last}`;
 
       return lowerWords.every(
@@ -52,8 +53,8 @@ const searchVoiceActors = async (
 
     // Score and sort by search relevance
     const scored = matches.map((actor) => {
-      const first = (actor.firstname || "").toLowerCase();
-      const last = (actor.lastname || "").toLowerCase();
+      const first = normalizeString(actor.firstname);
+      const last = normalizeString(actor.lastname);
 
       let score = 0;
       const primaryQuery = lowerWords[0];

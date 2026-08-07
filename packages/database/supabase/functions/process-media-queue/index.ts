@@ -94,34 +94,66 @@ export default {
         let mediaTitle = "Unknown title";
 
         try {
-          console.log(
-            `[QUEUE] Calling prepare_media via supabase.functions.invoke...`,
-          );
+          let responseData;
 
-          // Invoke prepare_media for this queue item
-          const { data: responseData, error: invokeError } =
-            await ctx.supabaseAdmin.functions.invoke("prepare_media", {
-              body: {
-                tmdbId: payload.tmdb_id,
-                type: payload.media_type,
-                seasonNumber: payload.season_number,
-                episodeNumber: payload.episode_number,
-              },
-            });
+          if (payload.media_type === "video_game") {
+            console.log(
+              `[QUEUE] Calling prepare_game via supabase.functions.invoke...`,
+            );
 
-          if (invokeError) {
-            console.error(`[QUEUE] prepare_media invoke error:`, invokeError);
-            throw new Error(
-              `Edge Function prepare_media failed: ${
-                invokeError.message || JSON.stringify(invokeError)
-              }`,
+            // Invoke prepare_game for this queue item
+            const { data, error: invokeError } =
+              await ctx.supabaseAdmin.functions.invoke("prepare_game", {
+                body: {
+                  igdbId: payload.tmdb_id,
+                },
+              });
+
+            if (invokeError) {
+              console.error(`[QUEUE] prepare_game invoke error:`, invokeError);
+              throw new Error(
+                `Edge Function prepare_game failed: ${
+                  invokeError.message || JSON.stringify(invokeError)
+                }`,
+              );
+            }
+
+            responseData = data;
+            console.log(
+              `[QUEUE] prepare_game parsed JSON response:`,
+              responseData,
+            );
+          } else {
+            console.log(
+              `[QUEUE] Calling prepare_media via supabase.functions.invoke...`,
+            );
+
+            // Invoke prepare_media for this queue item
+            const { data, error: invokeError } =
+              await ctx.supabaseAdmin.functions.invoke("prepare_media", {
+                body: {
+                  tmdbId: payload.tmdb_id,
+                  type: payload.media_type,
+                  seasonNumber: payload.season_number,
+                  episodeNumber: payload.episode_number,
+                },
+              });
+
+            if (invokeError) {
+              console.error(`[QUEUE] prepare_media invoke error:`, invokeError);
+              throw new Error(
+                `Edge Function prepare_media failed: ${
+                  invokeError.message || JSON.stringify(invokeError)
+                }`,
+              );
+            }
+
+            responseData = data;
+            console.log(
+              `[QUEUE] prepare_media parsed JSON response:`,
+              responseData,
             );
           }
-
-          console.log(
-            `[QUEUE] prepare_media parsed JSON response:`,
-            responseData,
-          );
 
           if (responseData && responseData.title) {
             mediaTitle = responseData.title;
@@ -164,6 +196,8 @@ export default {
             } else {
               targetUrl = `/serie/${payload.tmdb_id}`;
             }
+          } else if (payload.media_type === "video_game") {
+            targetUrl = `/game/${payload.tmdb_id}`;
           }
 
           await sendOneSignalNotification(

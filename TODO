@@ -1,7 +1,5 @@
 # TODOs
 
-Add studios pages
-voice actors don't appear on actor pages
 shows don't have seasons and episodes on the website
 I don't like the card on the right
 write a script to request google index update for bulk
@@ -9,8 +7,7 @@ Add tvdb and tmdbid to the dubbing project
 Add tvdb character id to the work row
 Scroll c'est conteneur qui scroll et pas interne 
 Generate everyday a post for social medias 
-
-
+backpropagate character_id into existing rows work
 
 ## Bugs & UI Fixes
 - Fix scrolling bug caused by swipe interactions
@@ -44,10 +41,6 @@ Generate everyday a post for social medias
 - Allow users to "follow" a voice actor and receive notifications for their new roles or news
 
 ## Architecture & Website Consolidation
-- Move edition features to the landing website
-- Merge the admin website into the landing website
-- Rename `landing` to `website`
-- Add authentication on the website
 - Refactor admin views to match premium theme
 
 ## Technical Debt & Infrastructure

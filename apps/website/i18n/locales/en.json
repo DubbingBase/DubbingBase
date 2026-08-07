@@ -97,5 +97,12 @@
     "showKeywords": "{title}, {title} dubbing, {title} english voice, voice cast, series dubbing, {title} cast",
     "voiceActorKeywords": "{name}, voice actor, dubbing, english voice, {name} roles, {name} dubbing, filmography",
     "actorKeywords": "{name}, actor, {name} french voice, {name} dubbing, filmography"
+  },
+  "performance": {
+    "dialogues": "Dialogues",
+    "vocals": "Vocals",
+    "voice": "Voice",
+    "songs": "Songs",
+    "other": "Other"
   }
 }
