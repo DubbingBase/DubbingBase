@@ -32,7 +32,7 @@ function processIgdbCharacter(char: IgdbCharacter) {
     mug_shot: char.mug_shot
       ? {
           ...char.mug_shot,
-          url: buildIgdbImageUrl(char.mug_shot.image_id, "thumb"),
+          url: buildIgdbImageUrl(char.mug_shot.image_id, "1080p"),
         }
       : undefined,
   };

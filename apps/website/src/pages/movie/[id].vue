@@ -92,7 +92,7 @@
             </div>
 
             <div
-              class="mt-8 border-t border-gray-200 dark:border-[#2a2a2a] pt-6"
+              class="mt-8 border-t border-gray-200 dark:border-[#2a2a2a] pt-6 flex flex-col gap-3"
             >
               <button
                 @click="isReportModalOpen = true"
@@ -115,6 +115,13 @@
                 </svg>
                 {{ $t("report.button", "Signaler cette fiche") }}
               </button>
+
+              <NuxtLink v-if="isAdmin" :to="$localePath(`/movie/${movie?.id || 'new'}/edit/${activeDubId || 'new'}`)" class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-2 font-medium">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Éditer le projet
+              </NuxtLink>
             </div>
           </div>
         </div>
@@ -381,6 +388,11 @@ const movieId = Array.isArray(route.params.id)
   ? route.params.id[0]
   : route.params.id;
 const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
+
+const user = useSupabaseUser();
+const isAdmin = computed(() => {
+  return user.value?.app_metadata?.role === 'admin' || user.value?.user_metadata?.role === 'admin';
+});
 
 const { data, pending } = await useAsyncData(`movie-${movieId}`, () =>
   fetchMovieData(supabase, movieId),
