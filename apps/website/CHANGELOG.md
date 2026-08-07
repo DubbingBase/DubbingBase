@@ -1,5 +1,11 @@
 # @app/landing
 
+## 1.0.35
+
+### Patch Changes
+
+- edcdd13: implement movie and show dubbing edit pages with language selection component
+
 ## 1.0.34
 
 ### Patch Changes

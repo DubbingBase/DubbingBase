@@ -1,5 +1,11 @@
 # @app/supabase
 
+## 0.0.72
+
+### Patch Changes
+
+- edcdd13: implement movie and show dubbing edit pages with language selection component
+
 ## 0.0.71
 
 ### Patch Changes
