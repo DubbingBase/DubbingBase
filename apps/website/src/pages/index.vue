@@ -280,25 +280,25 @@ useHead({
   ],
 });
 
-const { data } = await useAsyncData('home-data', () => fetchHomeData(supabase));
+const { data, pending } = await useAsyncData('home-data', () => fetchHomeData(supabase), { lazy: true });
 
-const {
-  trendingMovies,
-  trendingSeries,
-  trendingGames,
-  topVoiceActors,
-  topContributors,
-  isLoadingMovies,
-  isLoadingSeries,
-  isLoadingGames,
-  isLoadingTopVoiceActors,
-  isLoadingTopContributors,
-  errorMovies,
-  errorSeries,
-  errorGames,
-  errorTopVoiceActors,
-  errorTopContributors,
-} = useHomeData(supabase, data.value);
+const trendingMovies = computed(() => data.value?.trendingMovies || []);
+const trendingSeries = computed(() => data.value?.trendingSeries || []);
+const trendingGames = computed(() => data.value?.trendingGames || []);
+const topVoiceActors = computed(() => data.value?.topVoiceActors || []);
+const topContributors = computed(() => data.value?.topContributors || []);
+
+const isLoadingMovies = computed(() => pending.value);
+const isLoadingSeries = computed(() => pending.value);
+const isLoadingGames = computed(() => pending.value);
+const isLoadingTopVoiceActors = computed(() => pending.value);
+const isLoadingTopContributors = computed(() => pending.value);
+
+const errorMovies = computed(() => data.value?.errorMovies || "");
+const errorSeries = computed(() => data.value?.errorSeries || "");
+const errorGames = computed(() => data.value?.errorGames || "");
+const errorTopVoiceActors = computed(() => data.value?.errorTopVoiceActors || "");
+const errorTopContributors = computed(() => data.value?.errorTopContributors || "");
 </script>
 
 <style scoped>

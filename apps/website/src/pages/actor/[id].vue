@@ -1,10 +1,6 @@
 <template>
   <div class="max-w-7xl mx-auto p-6">
-    <div v-if="loading" class="flex justify-center items-center h-64">
-      <div
-        class="w-12 h-12 border-4 border-gray-800 border-t-cyan-500 rounded-full animate-spin"
-      ></div>
-    </div>
+    <PersonSkeleton v-if="loading" />
 
     <div v-else-if="actor" class="space-y-12 relative pt-12">
 

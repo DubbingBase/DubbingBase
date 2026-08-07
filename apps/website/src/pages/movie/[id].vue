@@ -343,14 +343,7 @@
       </section>
     </div>
   </div>
-  <div
-    v-else-if="pending"
-    class="min-h-screen bg-gray-50 dark:bg-[#1b1b1b] flex items-center justify-center"
-  >
-    <div
-      class="w-12 h-12 border-4 border-cyan-600 dark:border-[#00E5FF] border-t-transparent rounded-full animate-spin"
-    ></div>
-  </div>
+  <MediaSkeleton v-else-if="pending" />
 
   <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
 </template>
@@ -388,6 +381,7 @@ const isAdmin = computed(() => {
 
 const { data, pending } = await useAsyncData(`movie-${movieId}`, () =>
   fetchMovieData(supabase, movieId),
+  { lazy: true }
 );
 
 const { locale, t } = useI18n();

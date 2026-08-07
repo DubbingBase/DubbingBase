@@ -7,6 +7,6 @@
     "typecheck": "find supabase/functions -name \"index.ts\" | xargs deno check"
   },
   "devDependencies": {
-    "supabase": "^2.110.0"
+    "supabase": "^2.112.0"
   }
 }
