@@ -33,6 +33,14 @@ depends = ["install"]
 dir = "packages/database"
 run = "pnpm supabase functions deploy"
 
+[tasks.format]
+description = "Format codebase using Prettier"
+run = "pnpm run format"
+
+[tasks.format-staged]
+description = "Format only staged files using lint-staged"
+run = "npx lint-staged"
+
 [tasks.dev]
 description = "Runs the development server"
 depends = ["install", "backend"]
