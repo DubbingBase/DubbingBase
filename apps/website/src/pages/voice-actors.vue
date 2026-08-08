@@ -71,14 +71,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 
 const supabase = useSupabaseClient();
 const { t } = useI18n();
 
-const allActors = ref<any[]>([]);
-const isLoading = ref(true);
-const error = ref('');
 const searchQuery = ref('');
 
 useHead({
@@ -95,6 +92,14 @@ useHead({
   ]
 });
 
+const { data, pending: isLoading, error } = useAsyncData('voice-actors-page', async () => {
+  const { data, error: fetchError } = await supabase.functions.invoke('list-voice-actors');
+  if (fetchError) throw fetchError;
+  return data?.voice_actors || [];
+});
+
+const allActors = computed(() => data.value || []);
+
 // Filtrage local simple
 const filteredActors = computed(() => {
   if (!searchQuery.value.trim()) return allActors.value;
@@ -103,18 +108,5 @@ const filteredActors = computed(() => {
     const fullName = `${actor.firstname} ${actor.lastname}`.toLowerCase();
     return fullName.includes(query);
   });
-});
-
-onMounted(async () => {
-  try {
-    const { data, error: fetchError } = await supabase.functions.invoke('list-voice-actors');
-    if (fetchError) throw fetchError;
-    
-    allActors.value = data?.voice_actors || [];
-  } catch (err: any) {
-    error.value = err.message || 'Une erreur est survenue lors du chargement des comédiens.';
-  } finally {
-    isLoading.value = false;
-  }
 });
 </script>

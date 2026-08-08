@@ -391,8 +391,7 @@ const isAdmin = computed(() => {
 });
 
 const { data, pending } = useAsyncData(`show-${showId}`, () =>
-  fetchShowData(supabase, showId),
-  { lazy: true }
+  fetchShowData(supabase, showId)
 );
 
 const { locale, t } = useI18n();

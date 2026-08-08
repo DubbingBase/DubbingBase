@@ -43,14 +43,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { computed } from 'vue';
 
 const supabase = useSupabaseClient();
 const { t } = useI18n();
-
-const series = ref<any[]>([]);
-const isLoading = ref(true);
-const error = ref('');
 
 useHead({
   title: 'Toutes les Séries - DubbingBase',
@@ -66,16 +62,11 @@ useHead({
   ]
 });
 
-onMounted(async () => {
-  try {
-    const { data, error: fetchError } = await supabase.functions.invoke('trending-shows');
-    if (fetchError) throw fetchError;
-    
-    series.value = data?.results || [];
-  } catch (err: any) {
-    error.value = err.message || 'Une erreur est survenue lors du chargement des séries.';
-  } finally {
-    isLoading.value = false;
-  }
+const { data, pending: isLoading, error } = useAsyncData('series-page', async () => {
+  const { data, error: fetchError } = await supabase.functions.invoke('trending-shows');
+  if (fetchError) throw fetchError;
+  return data?.results || [];
 });
+
+const series = computed(() => data.value || []);
 </script>

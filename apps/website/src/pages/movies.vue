@@ -43,14 +43,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { computed } from 'vue';
 
 const supabase = useSupabaseClient();
 const { t } = useI18n();
-
-const movies = ref<any[]>([]);
-const isLoading = ref(true);
-const error = ref('');
 
 useHead({
   title: 'Tous les Films - DubbingBase',
@@ -66,16 +62,11 @@ useHead({
   ]
 });
 
-onMounted(async () => {
-  try {
-    const { data, error: fetchError } = await supabase.functions.invoke('trending-movies');
-    if (fetchError) throw fetchError;
-    
-    movies.value = data?.results || [];
-  } catch (err: any) {
-    error.value = err.message || 'Une erreur est survenue lors du chargement des films.';
-  } finally {
-    isLoading.value = false;
-  }
+const { data, pending: isLoading, error } = useAsyncData('movies-page', async () => {
+  const { data, error: fetchError } = await supabase.functions.invoke('trending-movies');
+  if (fetchError) throw fetchError;
+  return data?.results || [];
 });
+
+const movies = computed(() => data.value || []);
 </script>
