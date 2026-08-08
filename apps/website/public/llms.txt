@@ -1,0 +1,9 @@
+# DubbingBase Website
+
+> DubbingBase is a comprehensive platform dedicated to tracking and managing dubbing information for movies and TV shows. It serves as a database for voice actors, their roles, and the productions they are involved in.
+
+This website provides a web interface for the DubbingBase platform, featuring data grids and analytics.
+
+## Features
+- **Browse Database**: Explore movies, TV shows, and voice actor profiles.
+- **Data Grids & Analytics**: Advanced tools to view and analyze dubbing information.
