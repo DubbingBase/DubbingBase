@@ -534,3 +534,6 @@ verify_jwt = false
 
 [functions.submit-task]
 verify_jwt = false
+
+[functions.google-indexing]
+verify_jwt = false
