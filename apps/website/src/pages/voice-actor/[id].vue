@@ -367,14 +367,14 @@ const ogImageUrl = computed(() => {
   return `${baseUrl}/functions/v1/og-image?type=voice-actor&id=${voiceActorId}`;
 });
 const actorDescription = computed(() => {
-  if (!actorName.value) return 'Fiche comédien de doublage sur DubbingBase.';
+  if (!actorName.value) return 'Fiche comédien de doublage.';
   const workCount = voiceActor.value?.work?.length || 0;
-  return `Consultez la fiche complète de ${actorName.value}, comédien de doublage. Retrouvez ses ${workCount} rôles et doublages célèbres sur DubbingBase.`;
+  const desc = `Consultez la fiche de ${actorName.value}, comédien de doublage. Retrouvez ses ${workCount} rôles et doublages célèbres.`;
+  return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
 });
 
 // Complete SEO metadata & JSON-LD Structured Data using unhead
 useHead({
-  titleTemplate: null,
   title: computed(() => actorName.value ? `${actorName.value} - Comédien de doublage` : 'Comédien de doublage'),
   meta: [
     {
@@ -391,7 +391,7 @@ useHead({
     },
     { name: 'robots', content: 'index, follow' },
     // Open Graph
-    { property: 'og:title', content: computed(() => actorName.value ? `${actorName.value} - Comédien de doublage` : 'DubbingBase') },
+    { property: 'og:title', content: computed(() => actorName.value ? `${actorName.value} - Comédien de doublage` : 'Comédien de doublage') },
     { property: 'og:description', content: actorDescription },
     { property: 'og:type', content: 'profile' },
     { property: 'og:locale', content: computed(() => {
@@ -403,7 +403,7 @@ useHead({
     { property: 'og:site_name', content: 'DubbingBase' },
     // Twitter Card
     { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: computed(() => actorName.value ? `${actorName.value} - Comédien de doublage` : 'DubbingBase') },
+    { name: 'twitter:title', content: computed(() => actorName.value ? `${actorName.value} - Comédien de doublage` : 'Comédien de doublage') },
     { name: 'twitter:description', content: actorDescription },
     { name: 'twitter:image', content: ogImageUrl },
   ],

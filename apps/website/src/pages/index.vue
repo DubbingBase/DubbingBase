@@ -198,7 +198,10 @@ useHead({
   meta: [
     {
       name: 'description',
-      content: computed(() => t('home.meta.description')),
+      content: computed(() => {
+        const desc = t('home.meta.description');
+        return desc.length > 160 ? desc.substring(0, 157) + '...' : desc;
+      }),
     },
     {
       name: 'keywords',
@@ -207,7 +210,10 @@ useHead({
     { property: 'og:title', content: computed(() => t('home.meta.ogTitle')) },
     {
       property: 'og:description',
-      content: computed(() => t('home.meta.ogDescription')),
+      content: computed(() => {
+        const desc = t('home.meta.ogDescription');
+        return desc.length > 160 ? desc.substring(0, 157) + '...' : desc;
+      }),
     },
     { property: 'og:type', content: 'website' },
     { property: 'og:url', content: 'https://dubbingbase.com/' },
@@ -218,7 +224,10 @@ useHead({
     { name: 'twitter:title', content: computed(() => t('home.meta.ogTitle')) },
     {
       name: 'twitter:description',
-      content: computed(() => t('home.meta.ogDescription')),
+      content: computed(() => {
+        const desc = t('home.meta.ogDescription');
+        return desc.length > 160 ? desc.substring(0, 157) + '...' : desc;
+      }),
     },
     { name: 'twitter:image', content: 'https://dubbingbase.com/android-chrome-512x512.png' },
   ],

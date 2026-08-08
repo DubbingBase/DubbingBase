@@ -531,30 +531,25 @@ const filteredCast = computed(() => {
 });
 
 useHead({
-  titleTemplate: null,
   title: computed(() => {
     const year = serie.value?.first_air_date
       ? ` (${new Date(serie.value.first_air_date).getFullYear()})`
       : "";
     let base = serie.value ? `${serie.value.name}${year}` : "Série";
     if (activeDubProject.value) {
-      base += ` - Doublage ${getDisplayLanguage(activeDubProject.value.language)}`;
+      base += ` - VF ${getDisplayLanguage(activeDubProject.value.language)}`;
     }
-    return base;
+    return base.length > 55 ? base.substring(0, 52) + "..." : base;
   }),
   meta: [
     {
       name: "description",
       content: computed(() => {
-        let desc =
-          serie.value?.overview ||
-          `Découvrez le casting et les voix de la série ${serie.value?.name}.`;
+        let desc = serie.value?.overview || `Découvrez le casting et les voix de la série ${serie.value?.name}.`;
         if (activeDubProject.value) {
-          desc =
-            `Découvrez le casting complet des voix pour le doublage ${getDisplayLanguage(activeDubProject.value.language)} de la série ${serie.value?.name}. ` +
-            desc;
+          desc = `Casting des voix (${getDisplayLanguage(activeDubProject.value.language)}) de la série ${serie.value?.name}. ` + desc;
         }
-        return desc;
+        return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
       }),
     },
     {
@@ -566,7 +561,69 @@ useHead({
       }),
     },
     {
+      property: "og:title",
+      content: computed(() => {
+        const year = serie.value?.first_air_date
+          ? ` (${new Date(serie.value.first_air_date).getFullYear()})`
+          : "";
+        let base = serie.value ? `${serie.value.name}${year}` : "Série";
+        if (activeDubProject.value) {
+          base += ` - VF ${getDisplayLanguage(activeDubProject.value.language)}`;
+        }
+        return base.length > 55 ? base.substring(0, 52) + "..." : base;
+      }),
+    },
+    {
+      property: "og:description",
+      content: computed(() => {
+        let desc = serie.value?.overview || `Découvrez le casting et les voix de la série ${serie.value?.name}.`;
+        if (activeDubProject.value) {
+          desc = `Casting des voix (${getDisplayLanguage(activeDubProject.value.language)}) de la série ${serie.value?.name}. ` + desc;
+        }
+        return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
+      }),
+    },
+    {
+      property: "og:type",
+      content: "video.tv_show",
+    },
+    {
+      property: "og:url",
+      content: computed(() => `https://dubbingbase.com/show/${showId}${activeDubId.value ? `?dub=${activeDubId.value}` : ''}`),
+    },
+    {
       property: "og:image",
+      content: computed(() => backdropUrl.value || posterUrl.value || ""),
+    },
+    {
+      name: "twitter:card",
+      content: "summary_large_image",
+    },
+    {
+      name: "twitter:title",
+      content: computed(() => {
+        const year = serie.value?.first_air_date
+          ? ` (${new Date(serie.value.first_air_date).getFullYear()})`
+          : "";
+        let base = serie.value ? `${serie.value.name}${year}` : "Série";
+        if (activeDubProject.value) {
+          base += ` - VF ${getDisplayLanguage(activeDubProject.value.language)}`;
+        }
+        return base.length > 55 ? base.substring(0, 52) + "..." : base;
+      }),
+    },
+    {
+      name: "twitter:description",
+      content: computed(() => {
+        let desc = serie.value?.overview || `Découvrez le casting et les voix de la série ${serie.value?.name}.`;
+        if (activeDubProject.value) {
+          desc = `Casting des voix (${getDisplayLanguage(activeDubProject.value.language)}) de la série ${serie.value?.name}. ` + desc;
+        }
+        return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
+      }),
+    },
+    {
+      name: "twitter:image",
       content: computed(() => backdropUrl.value || posterUrl.value || ""),
     },
   ],
