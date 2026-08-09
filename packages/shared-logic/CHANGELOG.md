@@ -1,5 +1,11 @@
 # @app/shared-logic
 
+## 1.0.23
+
+### Patch Changes
+
+- bump
+
 ## 1.0.22
 
 ### Patch Changes

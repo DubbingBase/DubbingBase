@@ -1,5 +1,15 @@
 # @app/mobile
 
+## 1.0.101
+
+### Patch Changes
+
+- bump
+- Updated dependencies
+  - @app/supabase@0.0.77
+  - @app/locales@0.0.45
+  - @app/shared-logic@1.0.23
+
 ## 1.0.100
 
 ### Patch Changes

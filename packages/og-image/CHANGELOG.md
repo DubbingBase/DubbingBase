@@ -1,5 +1,11 @@
 # @app/og-image
 
+## 1.0.18
+
+### Patch Changes
+
+- bump
+
 ## 1.0.17
 
 ### Patch Changes
