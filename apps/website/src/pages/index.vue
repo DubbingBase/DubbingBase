@@ -242,8 +242,8 @@ useHead({
             '@type': 'WebSite',
             name: 'DubbingBase',
             url: 'https://dubbingbase.com/',
-            description: 'La base de données de référence du doublage et des comédiens de doublage français.',
-            inLanguage: 'fr-FR',
+            description: t('home.meta.description'),
+            inLanguage: ogLocale.value,
             potentialAction: {
               '@type': 'SearchAction',
               target: 'https://dubbingbase.com/search?q={search_term_string}',
@@ -268,19 +268,19 @@ useHead({
               {
                 '@type': 'SiteNavigationElement',
                 'position': 1,
-                'name': 'Films',
+                'name': t('footer.movies', 'Films'),
                 'url': 'https://dubbingbase.com/movies'
               },
               {
                 '@type': 'SiteNavigationElement',
                 'position': 2,
-                'name': 'Séries',
+                'name': t('footer.series', 'Séries'),
                 'url': 'https://dubbingbase.com/series'
               },
               {
                 '@type': 'SiteNavigationElement',
                 'position': 3,
-                'name': 'Comédiens de doublage',
+                'name': t('footer.voiceActors', 'Comédiens de doublage'),
                 'url': 'https://dubbingbase.com/voice-actors'
               }
             ]

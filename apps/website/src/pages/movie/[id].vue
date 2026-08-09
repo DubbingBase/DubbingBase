@@ -435,9 +435,9 @@ const activeDubProject = computed(() => {
 });
 
 const getDisplayLanguage = (langCode: string | undefined | null) => {
-  if (!langCode) return "Inconnu";
+  if (!langCode) return t('details.notSpecified', 'Inconnu');
   try {
-    const displayNames = new Intl.DisplayNames(["fr"], { type: "language" });
+    const displayNames = new Intl.DisplayNames([locale.value || 'en'], { type: "language" });
     const name = displayNames.of(langCode);
     return name ? name.charAt(0).toUpperCase() + name.slice(1) : langCode;
   } catch (e) {
