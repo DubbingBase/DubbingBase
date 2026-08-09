@@ -96,7 +96,19 @@
     "movieKeywords": "{title}, {title} doublage, {title} voix française, casting vocal, doublage de film, {title} cast",
     "showKeywords": "{title}, {title} doublage, {title} voix française, casting vocal, doublage de série, {title} cast",
     "voiceActorKeywords": "{name}, comédien de doublage, voix française, vf, doublage, filmographie",
-    "actorKeywords": "{name}, acteur, {name} voix française, {name} doublage, filmographie"
+    "actorKeywords": "{name}, acteur, {name} voix française, {name} doublage, filmographie",
+    "actorDescription": "Découvrez la filmographie de {name} et ses voix françaises.",
+    "actorDescriptionFallback": "Découvrez la filmographie et les voix françaises.",
+    "movieDescription": "Découvrez le casting et les voix du film {title}.",
+    "movieDescriptionFallback": "Découvrez le casting et les voix du film.",
+    "movieDescriptionDubbing": "Casting des voix ({lang}) du film {title}.",
+    "showDescription": "Découvrez le casting et les voix de la série {title}.",
+    "showDescriptionFallback": "Découvrez le casting et les voix de la série.",
+    "showDescriptionDubbing": "Casting des voix ({lang}) de la série {title}.",
+    "voiceActorDescription": "Consultez la fiche de {name}, comédien(ne) de doublage. Retrouvez ses {workCount} rôles et doublages célèbres.",
+    "voiceActorDescriptionFallback": "Fiche comédien(ne) de doublage.",
+    "voiceActorTitle": "{name} - Comédien(ne) de doublage",
+    "voiceActorTitleFallback": "Comédien(ne) de doublage"
   },
   "performance": {
     "dialogues": "Dialogues",

@@ -240,12 +240,13 @@ onMounted(async () => {
 });
 
 useHead({
-  title: computed(() => actor.value?.name ? actor.value.name : 'Acteur'),
+  title: computed(() => actor.value?.name ? actor.value.name : t('search.actor', 'Acteur')),
   meta: [
     {
       name: "description",
       content: computed(() => {
-        const desc = actor.value?.biography || `Discover ${actor.value?.name}'s filmography and French voice actors.`;
+        const name = actor.value?.name || '';
+        const desc = actor.value?.biography || (name ? t('seo.actorDescription', { name }) : t('seo.actorDescriptionFallback', 'Discover filmography and voice actors.'));
         return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
       }),
     },
@@ -258,12 +259,13 @@ useHead({
     },
     {
       property: "og:title",
-      content: computed(() => actor.value?.name ? actor.value.name : 'Acteur')
+      content: computed(() => actor.value?.name ? actor.value.name : t('search.actor', 'Acteur'))
     },
     {
       property: "og:description",
       content: computed(() => {
-        const desc = actor.value?.biography || `Discover ${actor.value?.name}'s filmography and French voice actors.`;
+        const name = actor.value?.name || '';
+        const desc = actor.value?.biography || (name ? t('seo.actorDescription', { name }) : t('seo.actorDescriptionFallback', 'Discover filmography and voice actors.'));
         return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
       }),
     },
@@ -285,12 +287,13 @@ useHead({
     },
     {
       name: "twitter:title",
-      content: computed(() => actor.value?.name ? actor.value.name : 'Acteur')
+      content: computed(() => actor.value?.name ? actor.value.name : t('search.actor', 'Acteur'))
     },
     {
       name: "twitter:description",
       content: computed(() => {
-        const desc = actor.value?.biography || `Discover ${actor.value?.name}'s filmography and French voice actors.`;
+        const name = actor.value?.name || '';
+        const desc = actor.value?.biography || (name ? t('seo.actorDescription', { name }) : t('seo.actorDescriptionFallback', 'Discover filmography and voice actors.'));
         return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
       }),
     },
@@ -302,14 +305,19 @@ useHead({
   script: [
     {
       type: 'application/ld+json',
-      innerHTML: computed(() => JSON.stringify({
-        '@context': 'https://schema.org',
-        '@type': 'Person',
-        url: `https://dubbingbase.com/actor/${id}`,
-        name: actor.value?.name || 'Acteur',
-        image: actor.value?.profile_path ? resolveImageUrl(actor.value.profile_path) : '',
-        description: actor.value?.biography || `Discover ${actor.value?.name}'s filmography and French voice actors.`,
-      }))
+      innerHTML: computed(() => {
+        const name = actor.value?.name || '';
+        const json = JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'Person',
+          url: `https://dubbingbase.com/actor/${id}`,
+          name: name || t('search.actor', 'Acteur'),
+          image: actor.value?.profile_path ? resolveImageUrl(actor.value.profile_path) : '',
+          description: actor.value?.biography || (name ? t('seo.actorDescription', { name }) : t('seo.actorDescriptionFallback', 'Discover filmography and voice actors.')),
+        });
+        // HTML-escape the serialized JSON to prevent script-breaking sequences
+        return json.replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+      })
     }
   ]
 });

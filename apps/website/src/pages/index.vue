@@ -235,56 +235,59 @@ useHead({
   script: [
     {
       type: 'application/ld+json',
-      innerHTML: JSON.stringify([
-        {
-          '@context': 'https://schema.org',
-          '@type': 'WebSite',
-          name: 'DubbingBase',
-          url: 'https://dubbingbase.com/',
-          description: 'La base de données de référence du doublage et des comédiens de doublage français.',
-          inLanguage: 'fr-FR',
-          potentialAction: {
-            '@type': 'SearchAction',
-            target: 'https://dubbingbase.com/search?q={search_term_string}',
-            'query-input': 'required name=search_term_string'
-          }
-        },
-        {
-          '@context': 'https://schema.org',
-          '@type': 'Organization',
-          name: 'DubbingBase',
-          url: 'https://dubbingbase.com/',
-          logo: 'https://dubbingbase.com/android-chrome-512x512.png',
-          sameAs: [
-            'https://x.com/DubbingBase',
-            'https://instagram.com/dubbingbase'
-          ]
-        },
-        {
-          '@context': 'https://schema.org',
-          '@type': 'ItemList',
-          'itemListElement': [
-            {
-              '@type': 'SiteNavigationElement',
-              'position': 1,
-              'name': 'Films',
-              'url': 'https://dubbingbase.com/movies'
-            },
-            {
-              '@type': 'SiteNavigationElement',
-              'position': 2,
-              'name': 'Séries',
-              'url': 'https://dubbingbase.com/series'
-            },
-            {
-              '@type': 'SiteNavigationElement',
-              'position': 3,
-              'name': 'Comédiens de doublage',
-              'url': 'https://dubbingbase.com/voice-actors'
+      innerHTML: computed(() => {
+        const json = JSON.stringify([
+          {
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            name: 'DubbingBase',
+            url: 'https://dubbingbase.com/',
+            description: 'La base de données de référence du doublage et des comédiens de doublage français.',
+            inLanguage: 'fr-FR',
+            potentialAction: {
+              '@type': 'SearchAction',
+              target: 'https://dubbingbase.com/search?q={search_term_string}',
+              'query-input': 'required name=search_term_string'
             }
-          ]
-        }
-      ]),
+          },
+          {
+            '@context': 'https://schema.org',
+            '@type': 'Organization',
+            name: 'DubbingBase',
+            url: 'https://dubbingbase.com/',
+            logo: 'https://dubbingbase.com/android-chrome-512x512.png',
+            sameAs: [
+              'https://x.com/DubbingBase',
+              'https://instagram.com/dubbingbase'
+            ]
+          },
+          {
+            '@context': 'https://schema.org',
+            '@type': 'ItemList',
+            'itemListElement': [
+              {
+                '@type': 'SiteNavigationElement',
+                'position': 1,
+                'name': 'Films',
+                'url': 'https://dubbingbase.com/movies'
+              },
+              {
+                '@type': 'SiteNavigationElement',
+                'position': 2,
+                'name': 'Séries',
+                'url': 'https://dubbingbase.com/series'
+              },
+              {
+                '@type': 'SiteNavigationElement',
+                'position': 3,
+                'name': 'Comédiens de doublage',
+                'url': 'https://dubbingbase.com/voice-actors'
+              }
+            ]
+          }
+        ]);
+        return json.replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+      }),
     },
   ],
 });
