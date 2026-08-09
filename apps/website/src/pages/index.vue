@@ -194,7 +194,12 @@ useDragScroll(vaScrollRef);
 useDragScroll(contributorsScrollRef);
 
 useHead({
-  title: computed(() => t('home.meta.title')),
+  titleTemplate: null, // Override global titleTemplate to avoid duplicated DubbingBase
+  title: computed(() => {
+    // In FR: "La base de données mondiale du doublage | DubbingBase"
+    // In EN: "The Dubbing & Voice Actor Database | DubbingBase"
+    return `${t('home.meta.title')} | DubbingBase`;
+  }),
   meta: [
     {
       name: 'description',
