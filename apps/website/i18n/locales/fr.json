@@ -59,10 +59,10 @@
   },
   "home": {
     "meta": {
-      "title": "DubbingBase - La base de données mondiale du doublage",
-      "description": "Découvrez DubbingBase, l'encyclopédie mondiale du doublage. Retrouvez les fiches des comédiens, leurs rôles et les castings vocaux de vos films et séries.",
+      "title": "La base de données mondiale du doublage",
+      "description": "Découvrez l'encyclopédie mondiale du doublage. Retrouvez les fiches des comédiens, leurs rôles et les castings vocaux de vos films et séries.",
       "keywords": "doublage, comédiens de doublage, casting vocal, films, séries, fiches acteurs",
-      "ogTitle": "DubbingBase - La base de données du doublage",
+      "ogTitle": "La base de données du doublage",
       "ogDescription": "Retrouvez la base de données complète des comédiens de doublage du monde entier."
     },
     "hero": {
@@ -96,7 +96,19 @@
     "movieKeywords": "{title}, {title} doublage, {title} voix française, casting vocal, doublage de film, {title} cast",
     "showKeywords": "{title}, {title} doublage, {title} voix française, casting vocal, doublage de série, {title} cast",
     "voiceActorKeywords": "{name}, comédien de doublage, voix française, vf, doublage, filmographie",
-    "actorKeywords": "{name}, acteur, {name} voix française, {name} doublage, filmographie"
+    "actorKeywords": "{name}, acteur, {name} voix française, {name} doublage, filmographie",
+    "actorDescription": "Découvrez la filmographie de {name} et ses voix françaises.",
+    "actorDescriptionFallback": "Découvrez la filmographie et les voix françaises.",
+    "movieDescription": "Découvrez le casting et les voix du film {title}.",
+    "movieDescriptionFallback": "Découvrez le casting et les voix du film.",
+    "movieDescriptionDubbing": "Casting des voix ({lang}) du film {title}.",
+    "showDescription": "Découvrez le casting et les voix de la série {title}.",
+    "showDescriptionFallback": "Découvrez le casting et les voix de la série.",
+    "showDescriptionDubbing": "Casting des voix ({lang}) de la série {title}.",
+    "voiceActorDescription": "Consultez la fiche de {name}, comédien(ne) de doublage. Retrouvez ses {workCount} rôles et doublages célèbres.",
+    "voiceActorDescriptionFallback": "Fiche comédien(ne) de doublage.",
+    "voiceActorTitle": "{name} - Comédien(ne) de doublage",
+    "voiceActorTitleFallback": "Comédien(ne) de doublage"
   },
   "performance": {
     "dialogues": "Dialogues",

@@ -194,11 +194,19 @@ useDragScroll(vaScrollRef);
 useDragScroll(contributorsScrollRef);
 
 useHead({
-  title: computed(() => t('home.meta.title')),
+  titleTemplate: null, // Override global titleTemplate to avoid duplicated DubbingBase
+  title: computed(() => {
+    // In FR: "La base de données mondiale du doublage | DubbingBase"
+    // In EN: "The Dubbing & Voice Actor Database | DubbingBase"
+    return `${t('home.meta.title')} | DubbingBase`;
+  }),
   meta: [
     {
       name: 'description',
-      content: computed(() => t('home.meta.description')),
+      content: computed(() => {
+        const desc = t('home.meta.description');
+        return desc.length > 160 ? desc.substring(0, 157) + '...' : desc;
+      }),
     },
     {
       name: 'keywords',
@@ -207,7 +215,10 @@ useHead({
     { property: 'og:title', content: computed(() => t('home.meta.ogTitle')) },
     {
       property: 'og:description',
-      content: computed(() => t('home.meta.ogDescription')),
+      content: computed(() => {
+        const desc = t('home.meta.ogDescription');
+        return desc.length > 160 ? desc.substring(0, 157) + '...' : desc;
+      }),
     },
     { property: 'og:type', content: 'website' },
     { property: 'og:url', content: 'https://dubbingbase.com/' },
@@ -218,7 +229,10 @@ useHead({
     { name: 'twitter:title', content: computed(() => t('home.meta.ogTitle')) },
     {
       name: 'twitter:description',
-      content: computed(() => t('home.meta.ogDescription')),
+      content: computed(() => {
+        const desc = t('home.meta.ogDescription');
+        return desc.length > 160 ? desc.substring(0, 157) + '...' : desc;
+      }),
     },
     { name: 'twitter:image', content: 'https://dubbingbase.com/android-chrome-512x512.png' },
   ],
@@ -226,56 +240,59 @@ useHead({
   script: [
     {
       type: 'application/ld+json',
-      innerHTML: JSON.stringify([
-        {
-          '@context': 'https://schema.org',
-          '@type': 'WebSite',
-          name: 'DubbingBase',
-          url: 'https://dubbingbase.com/',
-          description: 'La base de données de référence du doublage et des comédiens de doublage français.',
-          inLanguage: 'fr-FR',
-          potentialAction: {
-            '@type': 'SearchAction',
-            target: 'https://dubbingbase.com/search?q={search_term_string}',
-            'query-input': 'required name=search_term_string'
-          }
-        },
-        {
-          '@context': 'https://schema.org',
-          '@type': 'Organization',
-          name: 'DubbingBase',
-          url: 'https://dubbingbase.com/',
-          logo: 'https://dubbingbase.com/android-chrome-512x512.png',
-          sameAs: [
-            'https://x.com/DubbingBase',
-            'https://instagram.com/dubbingbase'
-          ]
-        },
-        {
-          '@context': 'https://schema.org',
-          '@type': 'ItemList',
-          'itemListElement': [
-            {
-              '@type': 'SiteNavigationElement',
-              'position': 1,
-              'name': 'Films',
-              'url': 'https://dubbingbase.com/movies'
-            },
-            {
-              '@type': 'SiteNavigationElement',
-              'position': 2,
-              'name': 'Séries',
-              'url': 'https://dubbingbase.com/series'
-            },
-            {
-              '@type': 'SiteNavigationElement',
-              'position': 3,
-              'name': 'Comédiens de doublage',
-              'url': 'https://dubbingbase.com/voice-actors'
+      innerHTML: computed(() => {
+        const json = JSON.stringify([
+          {
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            name: 'DubbingBase',
+            url: 'https://dubbingbase.com/',
+            description: t('home.meta.description'),
+            inLanguage: ogLocale.value,
+            potentialAction: {
+              '@type': 'SearchAction',
+              target: 'https://dubbingbase.com/search?q={search_term_string}',
+              'query-input': 'required name=search_term_string'
             }
-          ]
-        }
-      ]),
+          },
+          {
+            '@context': 'https://schema.org',
+            '@type': 'Organization',
+            name: 'DubbingBase',
+            url: 'https://dubbingbase.com/',
+            logo: 'https://dubbingbase.com/android-chrome-512x512.png',
+            sameAs: [
+              'https://x.com/DubbingBase',
+              'https://instagram.com/dubbingbase'
+            ]
+          },
+          {
+            '@context': 'https://schema.org',
+            '@type': 'ItemList',
+            'itemListElement': [
+              {
+                '@type': 'SiteNavigationElement',
+                'position': 1,
+                'name': t('footer.movies', 'Films'),
+                'url': 'https://dubbingbase.com/movies'
+              },
+              {
+                '@type': 'SiteNavigationElement',
+                'position': 2,
+                'name': t('footer.series', 'Séries'),
+                'url': 'https://dubbingbase.com/series'
+              },
+              {
+                '@type': 'SiteNavigationElement',
+                'position': 3,
+                'name': t('footer.voiceActors', 'Comédiens de doublage'),
+                'url': 'https://dubbingbase.com/voice-actors'
+              }
+            ]
+          }
+        ]);
+        return json.replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+      }),
     },
   ],
 });

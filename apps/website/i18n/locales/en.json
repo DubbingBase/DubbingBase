@@ -59,10 +59,10 @@
   },
   "home": {
     "meta": {
-      "title": "DubbingBase - The Dubbing & Voice Actor Database",
-      "description": "Discover DubbingBase, the reference database for dubbing. Find voice actor profiles, their roles, and voice casts of your favorite movies and series.",
+      "title": "The Dubbing & Voice Actor Database",
+      "description": "Discover the reference database for dubbing. Find voice actor profiles, their roles, and voice casts of your favorite movies and series.",
       "keywords": "dubbing, voice actors, english voice, voice casts, movies, series, actor profiles",
-      "ogTitle": "DubbingBase - The Dubbing Database",
+      "ogTitle": "The Dubbing Database",
       "ogDescription": "Find the complete database of voice actors and english voices."
     },
     "hero": {
@@ -96,7 +96,19 @@
     "movieKeywords": "{title}, {title} dubbing, {title} english voice, voice cast, movie dubbing, {title} cast",
     "showKeywords": "{title}, {title} dubbing, {title} english voice, voice cast, series dubbing, {title} cast",
     "voiceActorKeywords": "{name}, voice actor, dubbing, english voice, {name} roles, {name} dubbing, filmography",
-    "actorKeywords": "{name}, actor, {name} french voice, {name} dubbing, filmography"
+    "actorKeywords": "{name}, actor, {name} english voice, {name} dubbing, filmography",
+    "actorDescription": "Discover {name}'s filmography and voice actors.",
+    "actorDescriptionFallback": "Discover filmography and voice actors.",
+    "movieDescription": "Discover the voice cast of the movie {title}.",
+    "movieDescriptionFallback": "Discover the voice cast of the movie.",
+    "movieDescriptionDubbing": "Voice cast ({lang}) of the movie {title}.",
+    "showDescription": "Discover the voice cast of the series {title}.",
+    "showDescriptionFallback": "Discover the voice cast of the series.",
+    "showDescriptionDubbing": "Voice cast ({lang}) of the series {title}.",
+    "voiceActorDescription": "View the profile of {name}, voice actor. Find their {workCount} famous roles and dubs.",
+    "voiceActorDescriptionFallback": "Voice actor profile.",
+    "voiceActorTitle": "{name} - Voice Actor",
+    "voiceActorTitleFallback": "Voice Actor"
   },
   "performance": {
     "dialogues": "Dialogues",

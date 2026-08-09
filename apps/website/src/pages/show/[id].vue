@@ -446,9 +446,9 @@ const activeDubProject = computed(() => {
 });
 
 const getDisplayLanguage = (langCode: string | undefined | null) => {
-  if (!langCode) return "Inconnu";
+  if (!langCode) return t('details.notSpecified', 'Inconnu');
   try {
-    const displayNames = new Intl.DisplayNames(["fr"], { type: "language" });
+    const displayNames = new Intl.DisplayNames([locale.value || 'en'], { type: "language" });
     const name = displayNames.of(langCode);
     return name ? name.charAt(0).toUpperCase() + name.slice(1) : langCode;
   } catch (e) {
@@ -530,30 +530,26 @@ const filteredCast = computed(() => {
 });
 
 useHead({
-  titleTemplate: null,
   title: computed(() => {
     const year = serie.value?.first_air_date
       ? ` (${new Date(serie.value.first_air_date).getFullYear()})`
       : "";
-    let base = serie.value ? `${serie.value.name}${year}` : "Série";
+    let base = serie.value ? `${serie.value.name}${year}` : t('search.tv', 'Série');
     if (activeDubProject.value) {
-      base += ` - Doublage ${getDisplayLanguage(activeDubProject.value.language)}`;
+      base += ` - ${t('details.dubbing', { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
     }
-    return base;
+    return base.length > 55 ? base.substring(0, 52) + "..." : base;
   }),
   meta: [
     {
       name: "description",
       content: computed(() => {
-        let desc =
-          serie.value?.overview ||
-          `Découvrez le casting et les voix de la série ${serie.value?.name}.`;
-        if (activeDubProject.value) {
-          desc =
-            `Découvrez le casting complet des voix pour le doublage ${getDisplayLanguage(activeDubProject.value.language)} de la série ${serie.value?.name}. ` +
-            desc;
+        const title = serie.value?.name || '';
+        let desc = serie.value?.overview || (title ? t('seo.showDescription', { title }) : t('seo.showDescriptionFallback', 'Découvrez le casting et les voix de la série.'));
+        if (activeDubProject.value && title) {
+          desc = t('seo.showDescriptionDubbing', { lang: getDisplayLanguage(activeDubProject.value.language), title }) + ' ' + desc;
         }
-        return desc;
+        return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
       }),
     },
     {
@@ -565,7 +561,71 @@ useHead({
       }),
     },
     {
+      property: "og:title",
+      content: computed(() => {
+        const year = serie.value?.first_air_date
+          ? ` (${new Date(serie.value.first_air_date).getFullYear()})`
+          : "";
+        let base = serie.value ? `${serie.value.name}${year}` : t('search.tv', 'Série');
+        if (activeDubProject.value) {
+          base += ` - ${t('details.dubbing', { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
+        }
+        return base.length > 55 ? base.substring(0, 52) + "..." : base;
+      }),
+    },
+    {
+      property: "og:description",
+      content: computed(() => {
+        const title = serie.value?.name || '';
+        let desc = serie.value?.overview || (title ? t('seo.showDescription', { title }) : t('seo.showDescriptionFallback', 'Découvrez le casting et les voix de la série.'));
+        if (activeDubProject.value && title) {
+          desc = t('seo.showDescriptionDubbing', { lang: getDisplayLanguage(activeDubProject.value.language), title }) + ' ' + desc;
+        }
+        return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
+      }),
+    },
+    {
+      property: "og:type",
+      content: "video.tv_show",
+    },
+    {
+      property: "og:url",
+      content: computed(() => `https://dubbingbase.com/show/${showId}${activeDubId.value ? `?dub=${activeDubId.value}` : ''}`),
+    },
+    {
       property: "og:image",
+      content: computed(() => backdropUrl.value || posterUrl.value || ""),
+    },
+    {
+      name: "twitter:card",
+      content: "summary_large_image",
+    },
+    {
+      name: "twitter:title",
+      content: computed(() => {
+        const year = serie.value?.first_air_date
+          ? ` (${new Date(serie.value.first_air_date).getFullYear()})`
+          : "";
+        let base = serie.value ? `${serie.value.name}${year}` : t('search.tv', 'Série');
+        if (activeDubProject.value) {
+          base += ` - ${t('details.dubbing', { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
+        }
+        return base.length > 55 ? base.substring(0, 52) + "..." : base;
+      }),
+    },
+    {
+      name: "twitter:description",
+      content: computed(() => {
+        const title = serie.value?.name || '';
+        let desc = serie.value?.overview || (title ? t('seo.showDescription', { title }) : t('seo.showDescriptionFallback', 'Découvrez le casting et les voix de la série.'));
+        if (activeDubProject.value && title) {
+          desc = t('seo.showDescriptionDubbing', { lang: getDisplayLanguage(activeDubProject.value.language), title }) + ' ' + desc;
+        }
+        return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
+      }),
+    },
+    {
+      name: "twitter:image",
       content: computed(() => backdropUrl.value || posterUrl.value || ""),
     },
   ],
@@ -593,16 +653,17 @@ useHead({
   script: [
     {
       type: "application/ld+json",
-      innerHTML: computed(() =>
-        JSON.stringify({
+      innerHTML: computed(() => {
+        const title = serie.value?.name || "";
+        const json = JSON.stringify({
           "@context": "https://schema.org",
           "@type": "TVSeries",
           url: `https://dubbingbase.com/show/${showId}`,
-          name: serie.value?.name || "Série",
+          name: title || t("search.tv", "Série"),
           image: posterUrl.value || backdropUrl.value || "",
           description:
             serie.value?.overview ||
-            `Découvrez le casting et les voix de la série ${serie.value?.name}.`,
+            (title ? t("seo.showDescription", { title }) : t("seo.showDescriptionFallback", "Découvrez le casting et les voix de la série.")),
           startDate: serie.value?.first_air_date || undefined,
           actor: formattedCast.value.map((actor: any) => ({
             "@type": "PerformanceRole",
@@ -612,8 +673,9 @@ useHead({
             },
             characterName: actor.character,
           })),
-        }),
-      ),
+        });
+        return json.replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026");
+      }),
     },
   ],
 });

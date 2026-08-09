@@ -239,54 +239,88 @@ onMounted(async () => {
   }
 });
 
-// Update page metadata when actor data loads
-watch(
-  actor,
-  (newActor) => {
-    if (newActor) {
-      useHead({
-        titleTemplate: null,
-        title: `${newActor.name}`,
-        meta: [
-          {
-            name: "description",
-            content: newActor.biography || `Discover ${newActor.name}'s filmography and French voice actors on DubbingBase.`,
-          },
-          {
-            name: "keywords",
-            content: computed(() => {
-              if (!newActor.name) return t('home.meta.keywords');
-              return t('seo.actorKeywords', { name: newActor.name });
-            })
-          },
-          { property: "og:title", content: `${newActor.name} - DubbingBase` },
-          {
-            property: "og:description",
-            content: newActor.biography || `Discover ${newActor.name}'s filmography and French voice actors on DubbingBase.`,
-          },
-          {
-            property: "og:image",
-            content: newActor.profile_path ? resolveImageUrl(newActor.profile_path) : 'https://dubbingbase.com/default-og.jpg',
-          },
-        ],
-        script: [
-          {
-            type: 'application/ld+json',
-            innerHTML: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'Person',
-              url: `https://dubbingbase.com/actor/${id}`,
-              name: newActor.name,
-              image: newActor.profile_path ? resolveImageUrl(newActor.profile_path) : '',
-              description: newActor.biography || `Discover ${newActor.name}'s filmography and French voice actors on DubbingBase.`,
-            })
-          }
-        ]
-      });
+useHead({
+  title: computed(() => actor.value?.name ? actor.value.name : t('search.actor', 'Acteur')),
+  meta: [
+    {
+      name: "description",
+      content: computed(() => {
+        const name = actor.value?.name || '';
+        const desc = actor.value?.biography || (name ? t('seo.actorDescription', { name }) : t('seo.actorDescriptionFallback', 'Discover filmography and voice actors.'));
+        return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
+      }),
+    },
+    {
+      name: "keywords",
+      content: computed(() => {
+        if (!actor.value?.name) return t('home.meta.keywords');
+        return t('seo.actorKeywords', { name: actor.value.name });
+      })
+    },
+    {
+      property: "og:title",
+      content: computed(() => actor.value?.name ? actor.value.name : t('search.actor', 'Acteur'))
+    },
+    {
+      property: "og:description",
+      content: computed(() => {
+        const name = actor.value?.name || '';
+        const desc = actor.value?.biography || (name ? t('seo.actorDescription', { name }) : t('seo.actorDescriptionFallback', 'Discover filmography and voice actors.'));
+        return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
+      }),
+    },
+    {
+      property: "og:type",
+      content: "profile"
+    },
+    {
+      property: "og:url",
+      content: computed(() => `https://dubbingbase.com/actor/${id}`)
+    },
+    {
+      property: "og:image",
+      content: computed(() => actor.value?.profile_path ? resolveImageUrl(actor.value.profile_path) : 'https://dubbingbase.com/default-og.jpg'),
+    },
+    {
+      name: "twitter:card",
+      content: "summary_large_image"
+    },
+    {
+      name: "twitter:title",
+      content: computed(() => actor.value?.name ? actor.value.name : t('search.actor', 'Acteur'))
+    },
+    {
+      name: "twitter:description",
+      content: computed(() => {
+        const name = actor.value?.name || '';
+        const desc = actor.value?.biography || (name ? t('seo.actorDescription', { name }) : t('seo.actorDescriptionFallback', 'Discover filmography and voice actors.'));
+        return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
+      }),
+    },
+    {
+      name: "twitter:image",
+      content: computed(() => actor.value?.profile_path ? resolveImageUrl(actor.value.profile_path) : 'https://dubbingbase.com/default-og.jpg'),
+    },
+  ],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: computed(() => {
+        const name = actor.value?.name || '';
+        const json = JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'Person',
+          url: `https://dubbingbase.com/actor/${id}`,
+          name: name || t('search.actor', 'Acteur'),
+          image: actor.value?.profile_path ? resolveImageUrl(actor.value.profile_path) : '',
+          description: actor.value?.biography || (name ? t('seo.actorDescription', { name }) : t('seo.actorDescriptionFallback', 'Discover filmography and voice actors.')),
+        });
+        // HTML-escape the serialized JSON to prevent script-breaking sequences
+        return json.replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+      })
     }
-  },
-  { immediate: true },
-);
+  ]
+});
 
 function resolveImageUrl(path: string | null | undefined): string | undefined {
   if (!path) return undefined;
