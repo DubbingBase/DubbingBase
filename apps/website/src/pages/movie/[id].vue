@@ -382,8 +382,7 @@ const isAdmin = computed(() => {
 });
 
 const { data, pending } = useAsyncData(`movie-${movieId}`, () =>
-  fetchMovieData(supabase, movieId),
-  { lazy: true }
+  fetchMovieData(supabase, movieId)
 );
 
 const { locale, t } = useI18n();

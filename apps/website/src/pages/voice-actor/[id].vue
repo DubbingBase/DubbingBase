@@ -316,7 +316,7 @@ const { locale, t } = useI18n();
 const config = useRuntimeConfig();
 const baseUrl = config.public.supabase.url;
 
-const { data, pending } = useAsyncData(`voice-actor-${voiceActorId}`, () => fetchVoiceActorData(supabase, voiceActorId), { lazy: true });
+const { data, pending } = useAsyncData(`voice-actor-${voiceActorId}`, () => fetchVoiceActorData(supabase, voiceActorId));
 
 const voiceActorData = useVoiceActorData(supabase, data.value);
 const {
