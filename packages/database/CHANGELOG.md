@@ -1,5 +1,11 @@
 # @app/supabase
 
+## 0.0.79
+
+### Patch Changes
+
+- 056174f: add dynamic language support to TMDB requests, expand database relations, and update localized navigation routes
+
 ## 0.0.78
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @app/shared-logic
 
+## 1.0.24
+
+### Patch Changes
+
+- 056174f: add dynamic language support to TMDB requests, expand database relations, and update localized navigation routes
+
 ## 1.0.23
 
 ### Patch Changes

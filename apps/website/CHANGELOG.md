@@ -1,5 +1,13 @@
 # @app/landing
 
+## 1.0.42
+
+### Patch Changes
+
+- 056174f: add dynamic language support to TMDB requests, expand database relations, and update localized navigation routes
+- Updated dependencies [056174f]
+  - @app/shared-logic@1.0.24
+
 ## 1.0.41
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @app/mobile
 
+## 1.0.103
+
+### Patch Changes
+
+- 056174f: add dynamic language support to TMDB requests, expand database relations, and update localized navigation routes
+- Updated dependencies [056174f]
+  - @app/shared-logic@1.0.24
+  - @app/supabase@0.0.79
+
 ## 1.0.102
 
 ### Patch Changes
