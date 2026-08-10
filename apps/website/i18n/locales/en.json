@@ -55,7 +55,17 @@
     "rights": "All rights reserved."
   },
   "about": {
-    "title": "About"
+    "title": "About",
+    "attributions": "Attributions",
+    "usersTitle": "Our Users",
+    "usersDescription": "Thanks to all the contributors who help maintain DubbingBase.",
+    "tvdbTitle": "TheTVDB",
+    "tvdbDescription": "Metadata and artwork are provided by TheTVDB, a community-driven database.",
+    "tmdbTitle": "TMDB",
+    "tmdbDescription": "This product uses the TMDB API but is not endorsed or certified by TMDB.",
+    "igdbTitle": "IGDB",
+    "igdbDescription": "Video game data is provided by IGDB.",
+    "discordDescription": "Join our community on Discord to chat with other users and the developers."
   },
   "home": {
     "meta": {

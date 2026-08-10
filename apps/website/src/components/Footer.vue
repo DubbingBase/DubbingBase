@@ -17,6 +17,9 @@
             <a href="https://instagram.com/dubbingbase" aria-label="Instagram" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-gray-900 dark:text-white transition">
               <InstagramIcon class="w-5 h-5" />
             </a>
+            <a href="https://discord.gg/Jm2EmnnpG" aria-label="Discord" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-[#5865F2] dark:hover:text-[#5865F2] transition">
+              <MessageSquareIcon class="w-5 h-5" />
+            </a>
             <a href="mailto:contact@dubbingbase.com" aria-label="Email" class="text-gray-500 hover:text-gray-900 dark:text-white transition">
               <MailIcon class="w-5 h-5" />
             </a>
@@ -64,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import { TwitterIcon, InstagramIcon, MailIcon } from 'lucide-vue-next';
+import { TwitterIcon, InstagramIcon, MailIcon, MessageSquareIcon } from 'lucide-vue-next';
 
 const { t } = useI18n();
 </script>

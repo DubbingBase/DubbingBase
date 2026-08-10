@@ -9,10 +9,10 @@
         </p>
       </div>
       <NuxtLink
-        :to="localePath('/admin/voice-actor-spreadsheet')"
+        :to="localePath(id ? `/voice-actor/${id}` : '/')"
         class="text-xs font-semibold px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-350 hover:text-white rounded-xl border border-slate-700 transition-colors"
       >
-        ← Back to Spreadsheet
+        ← {{ id ? 'Back to Voice Actor' : 'Back Home' }}
       </NuxtLink>
     </div>
 
@@ -22,8 +22,13 @@
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col items-center text-center space-y-5 h-fit shadow-xl">
         <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block self-start">Profile Photo</label>
         <div class="relative h-44 w-44 rounded-full overflow-hidden border-2 border-slate-800 bg-slate-950 flex items-center justify-center text-slate-500 shadow-inner group">
-          <NuxtImg format="webp"             v-if="profilePicture"
-            :src="profilePicture"
+          <img v-if="previewImage"
+            :src="previewImage"
+            class="h-full w-full object-cover"
+            alt="Profile Picture Preview"
+          />
+          <NuxtImg format="webp" v-else-if="resolvedProfilePicture"
+            :src="resolvedProfilePicture"
             class="h-full w-full object-cover"
             alt="Profile Picture"
           />
@@ -95,12 +100,20 @@
           <!-- Nationality -->
           <div class="space-y-1">
             <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Nationality</label>
-            <input
+            <select
               v-model="nationality"
-              type="text"
-              placeholder="e.g. Français"
-              class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-            />
+              class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm appearance-none"
+            >
+              <option value="" disabled>Select nationality</option>
+              <option value="Français">Français</option>
+              <option value="Belge">Belge</option>
+              <option value="Suisse">Suisse</option>
+              <option value="Québécois(e)">Québécois(e)</option>
+              <option value="Américain(e)">Américain(e)</option>
+              <option value="Britannique">Britannique</option>
+              <option value="Japonais(e)">Japonais(e)</option>
+              <option value="Autre">Autre</option>
+            </select>
           </div>
 
           <!-- Date of birth -->
@@ -113,27 +126,6 @@
             />
           </div>
 
-          <!-- Awards -->
-          <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Awards</label>
-            <input
-              v-model="awards"
-              type="text"
-              placeholder="e.g. Chevalier des Arts et des Lettres"
-              class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-            />
-          </div>
-
-          <!-- Years Active -->
-          <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Years Active</label>
-            <input
-              v-model="yearsActive"
-              type="text"
-              placeholder="e.g. 1970 - présent"
-              class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-            />
-          </div>
 
           <!-- TMDB ID -->
           <div class="space-y-1">
@@ -170,17 +162,30 @@
         </div>
 
         <!-- Social Media Links -->
-        <div class="space-y-1">
-          <div class="flex justify-between items-center">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Social Media Links (JSON format)</label>
-            <span class="text-[10px] text-slate-500">e.g. {"facebook": "https://...", "twitter": "..."}</span>
+        <div class="space-y-4">
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Social Media & Links</label>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-1">
+              <label class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Instagram</label>
+              <input v-model="socialMedia.instagram" type="url" placeholder="https://instagram.com/..." class="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs" />
+            </div>
+            <div class="space-y-1">
+              <label class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Twitter / X</label>
+              <input v-model="socialMedia.twitter" type="url" placeholder="https://twitter.com/..." class="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs" />
+            </div>
+            <div class="space-y-1">
+              <label class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">TikTok</label>
+              <input v-model="socialMedia.tiktok" type="url" placeholder="https://tiktok.com/@..." class="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs" />
+            </div>
+            <div class="space-y-1">
+              <label class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Facebook</label>
+              <input v-model="socialMedia.facebook" type="url" placeholder="https://facebook.com/..." class="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs" />
+            </div>
+            <div class="space-y-1 md:col-span-2">
+              <label class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Website</label>
+              <input v-model="socialMedia.website" type="url" placeholder="https://..." class="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs" />
+            </div>
           </div>
-          <textarea
-            v-model="socialMediaLinks"
-            rows="3"
-            placeholder='{ "instagram": "https://..." }'
-            class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs font-mono resize-y"
-          ></textarea>
         </div>
 
         <!-- Form Submit Bar -->
@@ -205,7 +210,7 @@
           <p class="text-xs text-slate-400">All dubbing credits linked to this voice actor profile.</p>
         </div>
         <NuxtLink
-          :to="`/add-voice-cast/${id}`"
+          :to="localePath(`/admin/add-voice-cast/${id}`)"
           class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-xs shadow-md transition-all flex items-center space-x-1"
         >
           <span>+ Link New Work</span>
@@ -235,7 +240,7 @@
               <td class="px-4 py-3 text-xs text-slate-400">{{ work.performance || 'dialogues' }}</td>
               <td class="px-4 py-3 text-right">
                 <NuxtLink
-                  :to="`/movies/edit/${work.dubbing_project_id}`"
+                  :to="localePath(`/admin/movies/edit/${work.dubbing_project_id}`)"
                   class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-blue-400 hover:text-blue-300 text-xs font-semibold rounded-lg border border-slate-700 transition-all inline-flex items-center space-x-1"
                 >
                   <span>Edit Movie</span>
@@ -254,7 +259,7 @@
     </div>
 
     <!-- Wikipedia Works Diff -->
-    <VoiceActorWorksDiff v-if="isEditMode && id" :voice-actor-id="id" />
+    <VoiceActorWorksDiff v-if="isEditMode && id && isAdmin" :voice-actor-id="id" />
 
     <!-- Toast Notifications -->
     <div
@@ -279,11 +284,6 @@ const supabase = useSupabaseClient();
 
 
 
-definePageMeta({
-  layout: 'admin',
-  middleware: 'admin'
-});
-
 import { ref, onMounted, computed } from "vue";
 import VoiceActorWorksDiff from "@/components/admin/VoiceActorWorksDiff.vue";
 
@@ -291,8 +291,14 @@ import VoiceActorWorksDiff from "@/components/admin/VoiceActorWorksDiff.vue";
 const route = useRoute();
 const router = useRouter();
 const localePath = useLocalePath();
-const id = route.params.id as string | undefined;
+const voiceActorId = route.params.voiceActorId as string | undefined;
+const id = voiceActorId;
 const isEditMode = computed(() => !!id && id !== "new");
+
+const user = useSupabaseUser();
+const isAdmin = computed(() => {
+  return user.value?.app_metadata?.role === 'admin' || user.value?.user_metadata?.role === 'admin';
+});
 
 // Form inputs
 const firstname = ref("");
@@ -302,10 +308,22 @@ const nationality = ref("");
 const dateOfBirth = ref("");
 const awards = ref("");
 const yearsActive = ref("");
-const socialMediaLinks = ref("");
+const socialMedia = ref({
+  instagram: "",
+  twitter: "",
+  tiktok: "",
+  facebook: "",
+  website: ""
+});
 const tmdbId = ref("");
 const wikidataId = ref("");
 const profilePicture = ref("");
+
+const resolvedProfilePicture = computed(() => {
+  if (!profilePicture.value) return "";
+  if (profilePicture.value.startsWith("http")) return profilePicture.value;
+  return supabase.storage.from("voice_actor_profile_pictures").getPublicUrl(profilePicture.value).data.publicUrl;
+});
 
 // Upload properties
 const profilePictureFile = ref<File | null>(null);
@@ -355,7 +373,7 @@ const uploadProfilePicture = async (voiceActorId: string | number) => {
   if (!profilePictureFile.value) return profilePicture.value;
 
   const formData = new FormData();
-  formData.append("file", profilePictureFile.value);
+  formData.append("file", profilePictureFile.value, profilePictureFile.value.name);
   formData.append("voice_actor_id", String(voiceActorId));
 
   const response = await supabase.functions.invoke("upload_profile_picture", {
@@ -404,7 +422,16 @@ const fetchVoiceActor = async () => {
       dateOfBirth.value = data.date_of_birth || "";
       awards.value = data.awards || "";
       yearsActive.value = data.years_active || "";
-      socialMediaLinks.value = data.social_media_links ? JSON.stringify(data.social_media_links, null, 2) : "";
+      
+      const links = data.social_media_links || {};
+      socialMedia.value = {
+        instagram: links.instagram || "",
+        twitter: links.twitter || "",
+        tiktok: links.tiktok || "",
+        facebook: links.facebook || "",
+        website: links.website || ""
+      };
+      
       tmdbId.value = data.tmdb_id || "";
       profilePicture.value = data.profile_picture || "";
       wikidataId.value = data.wikidata_id || "";
@@ -418,6 +445,13 @@ const fetchVoiceActor = async () => {
 
 const saveVoiceActor = async () => {
   isSaving.value = true;
+  const links: Record<string, string> = {};
+  if (socialMedia.value.instagram) links.instagram = socialMedia.value.instagram;
+  if (socialMedia.value.twitter) links.twitter = socialMedia.value.twitter;
+  if (socialMedia.value.tiktok) links.tiktok = socialMedia.value.tiktok;
+  if (socialMedia.value.facebook) links.facebook = socialMedia.value.facebook;
+  if (socialMedia.value.website) links.website = socialMedia.value.website;
+
   const upsertData: any = {
     firstname: firstname.value,
     lastname: lastname.value,
@@ -426,22 +460,11 @@ const saveVoiceActor = async () => {
     date_of_birth: dateOfBirth.value || null,
     awards: awards.value || null,
     years_active: yearsActive.value || null,
-    social_media_links: null,
+    social_media_links: Object.keys(links).length > 0 ? links : null,
     profile_picture: profilePicture.value || null,
     tmdb_id: tmdbId.value ? Number(tmdbId.value) : null,
     wikidata_id: wikidataId.value || null,
   };
-
-  // Parse social media links JSON
-  if (socialMediaLinks.value.trim()) {
-    try {
-      upsertData.social_media_links = JSON.parse(socialMediaLinks.value);
-    } catch (e) {
-      showToast("Invalid JSON schema in Social Media Links", "error");
-      isSaving.value = false;
-      return;
-    }
-  }
 
   if (isEditMode.value && id) {
     upsertData.id = id;
@@ -466,11 +489,6 @@ const saveVoiceActor = async () => {
     }
 
     showToast("Voice actor profile saved successfully!", "success");
-
-    // Redirect to spreadsheet after 1.5s
-    setTimeout(() => {
-      router.push(localePath("/admin/voice-actor-spreadsheet"));
-    }, 1500);
   } catch (err: any) {
     console.error("Error saving voice actor profile:", err);
     showToast(err.message || "Failed to save voice actor.", "error");

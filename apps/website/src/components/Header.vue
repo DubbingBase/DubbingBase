@@ -8,10 +8,18 @@
         :to="$localePath('/')"
         class="flex items-center gap-3 group shrink-0"
       >
-        <div class="w-9 h-9 rounded-xl overflow-hidden shadow-sm ring-1 ring-black/5 dark:ring-white/10 group-hover:shadow-md transition-all">
-          <img src="/apple-touch-icon.png" alt="Logo" class="w-full h-full object-cover" />
+        <div
+          class="w-9 h-9 rounded-xl overflow-hidden shadow-sm ring-1 ring-black/5 dark:ring-white/10 group-hover:shadow-md transition-all"
+        >
+          <img
+            :src="useNewLogo ? '/logo2.png' : '/apple-touch-icon.png'"
+            alt="Logo"
+            class="w-full h-full object-cover"
+          />
         </div>
-        <span class="text-xl font-bold tracking-tight text-gray-900 dark:text-white hidden sm:block">
+        <span
+          class="text-xl font-bold tracking-tight text-gray-900 dark:text-white hidden sm:block"
+        >
           {{ t("app.title") }}
         </span>
       </NuxtLink>
@@ -35,17 +43,24 @@
     </div>
 
     <!-- Center Section: Search -->
-    <div v-if="!isHomePage" class="flex-1 max-w-md mx-4 hidden sm:flex justify-center">
+    <div
+      v-if="!isHomePage"
+      class="flex-1 max-w-md mx-4 hidden sm:flex justify-center"
+    >
       <button
         @click="isSearchOpen = true"
         class="group flex items-center justify-between w-full max-w-[320px] h-10 px-4 text-sm text-gray-500 dark:text-gray-400 bg-gray-100/50 dark:bg-gray-800/40 hover:bg-gray-200/50 dark:hover:bg-gray-800/80 border border-transparent hover:border-gray-300/50 dark:hover:border-gray-700/50 rounded-full transition-all shadow-sm hover:shadow-md"
         :aria-label="t('search.placeholder')"
       >
         <div class="flex items-center gap-2">
-          <SearchIcon class="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
+          <SearchIcon
+            class="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors"
+          />
           <span>{{ t("search.placeholder") || "Search..." }}</span>
         </div>
-        <kbd class="hidden md:inline-flex items-center justify-center w-5 h-5 text-[11px] font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded transition-opacity">
+        <kbd
+          class="hidden md:inline-flex items-center justify-center w-5 h-5 text-[11px] font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded transition-opacity"
+        >
           /
         </kbd>
       </button>
@@ -136,7 +151,9 @@
         </SelectPortal>
       </SelectRoot>
 
-      <div class="w-px h-5 bg-gray-200 dark:bg-gray-700/50 mx-1 md:mx-2 hidden sm:block"></div>
+      <div
+        class="w-px h-5 bg-gray-200 dark:bg-gray-700/50 mx-1 md:mx-2 hidden sm:block"
+      ></div>
 
       <!-- User Profile -->
       <template v-if="user">
@@ -145,7 +162,12 @@
           class="relative flex items-center justify-center w-9 h-9 md:w-10 md:h-10 ml-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 ring-2 ring-transparent hover:ring-gray-200 dark:hover:ring-gray-700 transition-all overflow-hidden cursor-pointer"
           :aria-label="t('nav.profile', 'Profile')"
         >
-          <img v-if="user.user_metadata?.avatar_url" :src="user.user_metadata.avatar_url" alt="Avatar" class="w-full h-full object-cover" />
+          <img
+            v-if="user.user_metadata?.avatar_url"
+            :src="user.user_metadata.avatar_url"
+            alt="Avatar"
+            class="w-full h-full object-cover"
+          />
           <UserIcon v-else class="w-5 h-5" />
         </NuxtLink>
       </template>
@@ -166,6 +188,8 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
+
+const useNewLogo = ref(false);
 import { useRoute } from "vue-router";
 import { useTheme } from "../composables/useTheme";
 import { useSearchModal } from "../composables/useSearchModal";
@@ -197,11 +221,14 @@ const user = useSupabaseUser();
 const route = useRoute();
 
 const isHomePage = computed(() => {
-  const homePath = localePath('/');
+  const homePath = localePath("/");
   return route.path === homePath;
 });
 
 const isAdmin = computed(() => {
-  return user.value?.app_metadata?.role === 'admin' || user.value?.user_metadata?.role === 'admin';
+  return (
+    user.value?.app_metadata?.role === "admin" ||
+    user.value?.user_metadata?.role === "admin"
+  );
 });
 </script>

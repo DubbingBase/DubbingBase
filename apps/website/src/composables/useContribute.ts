@@ -7,10 +7,13 @@ export const useContribute = () => {
   const error = ref<string | null>(null);
   const currentTask = ref<any>(null);
 
+  const activeCategory = ref<string | null>(null);
+
   const getRandomTask = async (category: string) => {
     isLoading.value = true;
     error.value = null;
     currentTask.value = null;
+    activeCategory.value = null;
 
     try {
       const { data, error: invokeError } = await supabase.functions.invoke(
@@ -25,6 +28,7 @@ export const useContribute = () => {
 
       if (data?.task) {
         currentTask.value = data.task;
+        activeCategory.value = data.category || category;
       } else if (data?.message) {
         // e.g. "No tasks available" or "Locked"
         error.value = data.message;
@@ -40,7 +44,7 @@ export const useContribute = () => {
   const submitTask = async (
     category: string,
     entityId: string,
-    file?: File,
+    fields: Record<string, string | File | undefined>,
   ) => {
     isSubmitting.value = true;
     error.value = null;
@@ -49,13 +53,12 @@ export const useContribute = () => {
       const formData = new FormData();
       formData.append("category", category);
       formData.append("entityId", entityId);
-      if (file) {
-        formData.append("file", file);
-      }
 
-      // We cannot use standard supabase.functions.invoke easily with FormData in older clients,
-      // but if the client supports it, we can pass it directly, or use fetch.
-      // Supabase client invoke supports FormData.
+      for (const [key, value] of Object.entries(fields)) {
+        if (value) {
+          formData.append(key, value);
+        }
+      }
 
       const { data, error: invokeError } = await supabase.functions.invoke(
         "submit-task",
@@ -81,6 +84,7 @@ export const useContribute = () => {
     getRandomTask,
     submitTask,
     currentTask,
+    activeCategory,
     isLoading,
     isSubmitting,
     error,

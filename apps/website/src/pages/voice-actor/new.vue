@@ -113,27 +113,7 @@
             />
           </div>
 
-          <!-- Awards -->
-          <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Awards</label>
-            <input
-              v-model="awards"
-              type="text"
-              placeholder="e.g. Chevalier des Arts et des Lettres"
-              class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-            />
-          </div>
 
-          <!-- Years Active -->
-          <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Years Active</label>
-            <input
-              v-model="yearsActive"
-              type="text"
-              placeholder="e.g. 1970 - présent"
-              class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-            />
-          </div>
 
           <!-- TMDB ID -->
           <div class="space-y-1">
@@ -205,7 +185,7 @@
           <p class="text-xs text-slate-400">All dubbing credits linked to this voice actor profile.</p>
         </div>
         <NuxtLink
-          :to="`/add-voice-cast/${id}`"
+          :to="localePath(`/admin/add-voice-cast/${id}`)"
           class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-xs shadow-md transition-all flex items-center space-x-1"
         >
           <span>+ Link New Work</span>
@@ -235,7 +215,7 @@
               <td class="px-4 py-3 text-xs text-slate-400">{{ work.performance || 'dialogues' }}</td>
               <td class="px-4 py-3 text-right">
                 <NuxtLink
-                  :to="`/movies/edit/${work.dubbing_project_id}`"
+                  :to="localePath(`/admin/movies/edit/${work.dubbing_project_id}`)"
                   class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-blue-400 hover:text-blue-300 text-xs font-semibold rounded-lg border border-slate-700 transition-all inline-flex items-center space-x-1"
                 >
                   <span>Edit Movie</span>
@@ -276,10 +256,7 @@ const supabase = useSupabaseClient();
 
 
 
-definePageMeta({
-  layout: 'admin',
-  middleware: 'admin'
-});
+
 
 import { ref, onMounted, computed } from "vue";
 
@@ -287,7 +264,8 @@ import { ref, onMounted, computed } from "vue";
 const route = useRoute();
 const router = useRouter();
 const localePath = useLocalePath();
-const id = route.params.id as string | undefined;
+const voiceActorId = undefined;
+const id = voiceActorId;
 const isEditMode = computed(() => !!id && id !== "new");
 
 // Form inputs

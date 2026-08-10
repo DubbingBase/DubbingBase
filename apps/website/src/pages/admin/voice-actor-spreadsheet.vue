@@ -21,7 +21,7 @@
       </div>
       <div class="flex flex-wrap items-center gap-3 shrink-0">
         <NuxtLink
-          :to="localePath('/admin/voice-actors/new')"
+          :to="localePath('/voice-actor/new')"
           class="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-4 rounded-xl text-sm transition-all duration-150 flex items-center space-x-2 shrink-0 shadow-lg shadow-blue-500/10 border border-blue-500/20"
         >
           <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -180,7 +180,7 @@ const revoColumns = computed(() => [
       return createElement(
         "a",
         {
-          href: `/admin/voice-actors/edit/${props.model.id}`,
+          href: localePath(`/voice-actor/${props.model.id}/edit`),
           class: "text-blue-500 hover:text-blue-400 font-bold underline text-xs",
         },
         "Edit Profile"
@@ -192,8 +192,7 @@ const revoColumns = computed(() => [
   { prop: "lastname", name: "Last Name", size: 120 },
   { prop: "bio", name: "Bio", size: 200 },
   { prop: "nationality", name: "Nationality", size: 120 },
-  { prop: "awards", name: "Awards", size: 150 },
-  { prop: "years_active", name: "Years Active", size: 120 },
+
   { prop: "date_of_birth", name: "Date of Birth", size: 120 },
   { prop: "profile_picture", name: "Profile Picture", size: 150 },
   { prop: "social_media_links", name: "Social Media Links", size: 180 },

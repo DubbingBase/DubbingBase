@@ -22,9 +22,11 @@ export default {
 
       console.log("file", file);
 
-      const { data, error } = await ctx.supabase.storage
+      const fileExt = file.name.split(".").pop() || "jpg";
+      const filePath = `${vaId}.${fileExt}`;
+      const { data, error } = await ctx.supabaseAdmin.storage
         .from("voice_actor_profile_pictures")
-        .upload(file.name, file);
+        .upload(filePath, file, { upsert: true });
       if (error) {
         console.error("error", error);
         return Response.json({ error: error.message }, { status: 500 });

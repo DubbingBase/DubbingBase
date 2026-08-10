@@ -38,6 +38,7 @@ export default {
           logo_url: null,
           updated_at: null,
           website_url: null,
+          social_media_links: null,
         };
       }
 

@@ -1,16 +1,16 @@
 <template>
-  <div class="max-w-7xl mx-auto p-6">
+  <div class="max-w-7xl mx-auto">
     <PersonSkeleton v-if="loading" />
 
     <div v-else-if="actor" class="space-y-12 relative pt-12">
-
-
       <!-- Profile Header -->
       <section class="flex flex-col md:flex-row gap-8 items-start">
         <div
           class="w-48 h-48 md:w-64 md:h-64 rounded-2xl overflow-hidden flex-shrink-0 bg-gray-100 dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] shadow-2xl"
         >
-          <NuxtImg format="webp"             v-if="actor.profile_path"
+          <NuxtImg
+            format="webp"
+            v-if="actor.profile_path"
             :src="resolveImageUrl(actor.profile_path)"
             :alt="actor.name"
             class="object-cover w-full h-full"
@@ -24,7 +24,9 @@
         </div>
 
         <div class="flex-1 space-y-4">
-          <h1 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">
+          <h1
+            class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white"
+          >
             {{ actor.name }}
           </h1>
           <div class="flex flex-wrap gap-3">
@@ -36,14 +38,12 @@
             <span
               v-if="actor.birthday"
               class="px-3 py-1 bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-300 rounded-full text-sm"
-              >Born:
-              {{ new Date(actor.birthday).getFullYear() }}</span
+              >Born: {{ new Date(actor.birthday).getFullYear() }}</span
             >
             <span
               v-if="actor.deathday"
               class="px-3 py-1 bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-300 rounded-full text-sm"
-              >Died:
-              {{ new Date(actor.deathday).getFullYear() }}</span
+              >Died: {{ new Date(actor.deathday).getFullYear() }}</span
             >
           </div>
 
@@ -51,14 +51,33 @@
             v-if="actor.biography"
             class="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 mt-6 bg-white dark:bg-[#161616] p-6 rounded-2xl border border-gray-200 dark:border-[#2a2a2a]"
           >
-            <p class="leading-relaxed whitespace-pre-wrap line-clamp-[10] hover:line-clamp-none transition-all">
+            <p
+              class="leading-relaxed whitespace-pre-wrap line-clamp-[10] hover:line-clamp-none transition-all"
+            >
               {{ actor.biography }}
             </p>
           </div>
           <div class="pt-4 flex justify-end">
-            <button @click="isReportModalOpen = true" class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-              {{ t('report.button', 'Signaler cette fiche') }}
+            <button
+              @click="isReportModalOpen = true"
+              class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors flex items-center gap-2"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-4 h-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"
+                />
+                <line x1="4" y1="22" x2="4" y2="15" />
+              </svg>
+              {{ t("report.button", "Signaler cette fiche") }}
             </button>
           </div>
         </div>
@@ -72,12 +91,27 @@
           placeholder="Search roles, titles or voice actors..."
           class="w-full px-4 py-3 pl-12 bg-white/80 dark:bg-[#161616]/80 backdrop-blur border border-gray-200 dark:border-[#2a2a2a] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 transition shadow-sm"
         />
-        <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        <svg
+          class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          ></path>
+        </svg>
       </div>
 
       <!-- Voices Section -->
       <section v-if="availableLanguages.length > 0">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div
+          class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6"
+        >
           <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
             Voices
           </h2>
@@ -88,25 +122,38 @@
               :key="lang"
               @click="selectedLanguage = lang"
               class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border"
-              :class="selectedLanguage === lang ? 'bg-cyan-600 text-white border-cyan-600' : 'bg-white dark:bg-[#161616] text-gray-700 dark:text-gray-300 border-gray-200 dark:border-[#2a2a2a] hover:bg-gray-50 dark:hover:bg-gray-800'"
+              :class="
+                selectedLanguage === lang
+                  ? 'bg-cyan-600 text-white border-cyan-600'
+                  : 'bg-white dark:bg-[#161616] text-gray-700 dark:text-gray-300 border-gray-200 dark:border-[#2a2a2a] hover:bg-gray-50 dark:hover:bg-gray-800'
+              "
             >
               {{ getDisplayLanguage(lang) }}
             </button>
           </div>
         </div>
-        
-        <div v-if="filteredUniqueVoiceActorsByLanguage.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+
+        <div
+          v-if="filteredUniqueVoiceActorsByLanguage.length > 0"
+          class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+        >
           <NuxtLink
             v-for="va in filteredUniqueVoiceActorsByLanguage"
             :key="va.id"
             :to="$localePath(`/voice-actor/${va.id}`)"
             :class="[
               'flex flex-col items-center p-4 rounded-xl border transition group hover:-translate-y-1',
-              va.highlight ? 'bg-cyan-50 dark:bg-cyan-900/20 border-cyan-200 dark:border-cyan-500/50 hover:bg-cyan-100 dark:hover:bg-cyan-900/40' : 'bg-white dark:bg-[#161616] border-gray-200 dark:border-[#2a2a2a] hover:bg-gray-50 dark:hover:bg-gray-800'
+              va.highlight
+                ? 'bg-cyan-50 dark:bg-cyan-900/20 border-cyan-200 dark:border-cyan-500/50 hover:bg-cyan-100 dark:hover:bg-cyan-900/40'
+                : 'bg-white dark:bg-[#161616] border-gray-200 dark:border-[#2a2a2a] hover:bg-gray-50 dark:hover:bg-gray-800',
             ]"
           >
-            <div class="relative w-20 h-20 rounded-full overflow-hidden mb-3 border-2 border-transparent group-hover:border-cyan-400 transition-colors">
-              <NuxtImg format="webp"                 v-if="va.profile_picture"
+            <div
+              class="relative w-20 h-20 rounded-full overflow-hidden mb-3 border-2 border-transparent group-hover:border-cyan-400 transition-colors"
+            >
+              <NuxtImg
+                format="webp"
+                v-if="va.profile_picture"
                 :src="va.profile_picture"
                 :alt="`${va.firstname} ${va.lastname}`"
                 class="object-cover w-full h-full"
@@ -118,21 +165,32 @@
                 {{ va.firstname?.[0] }}{{ va.lastname?.[0] }}
               </div>
             </div>
-            <h3 class="font-bold text-center text-sm text-gray-900 dark:text-gray-200">
+            <h3
+              class="font-bold text-center text-sm text-gray-900 dark:text-gray-200"
+            >
               {{ va.firstname }} {{ va.lastname }}
             </h3>
-            <span class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ va.rolesCount }} roles</span>
+            <span class="text-xs text-gray-500 dark:text-gray-400 mt-1"
+              >{{ va.rolesCount }} roles</span
+            >
           </NuxtLink>
         </div>
-        <div v-else class="text-gray-500 text-center py-8 bg-white dark:bg-[#161616] rounded-2xl border border-gray-200 dark:border-[#2a2a2a]">
+        <div
+          v-else
+          class="text-gray-500 text-center py-8 bg-white dark:bg-[#161616] rounded-2xl border border-gray-200 dark:border-[#2a2a2a]"
+        >
           No voice actors found for the selected language.
         </div>
       </section>
 
       <!-- Filmography Section -->
       <section>
-        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Filmography</h2>
+        <div
+          class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8"
+        >
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+            Filmography
+          </h2>
         </div>
 
         <div
@@ -141,56 +199,131 @@
         >
           No works found.
         </div>
-        
-        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+
+        <div
+          v-else
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"
+        >
           <NuxtLink
-            :to="$localePath(`/${item.media_type === 'tv' ? 'show' : 'movie'}/${item.id}`)"
+            :to="
+              $localePath(
+                `/${item.media_type === 'tv' ? 'show' : 'movie'}/${item.id}`,
+              )
+            "
             v-for="item in enhancedFilmography"
             :key="`${item.media_type}-${item.id}`"
             class="bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl p-4 shadow-sm transition-colors hover:border-gray-300 dark:hover:border-gray-700 block group"
           >
             <div class="flex flex-col sm:grid sm:grid-cols-3 gap-4 h-full">
               <!-- Column 1: Media -->
-              <div class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start">
-                <div class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 flex-shrink-0">
-                  <NuxtImg format="webp" v-if="item.poster_path" :src="resolveImageUrl(item.poster_path)" :alt="item.title || item.name" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                  <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
-                    <ClapperboardIcon class="w-6 h-6 sm:w-8 sm:h-8 opacity-20" />
+              <div
+                class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start"
+              >
+                <div
+                  class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 flex-shrink-0"
+                >
+                  <NuxtImg
+                    format="webp"
+                    v-if="item.poster_path"
+                    :src="resolveImageUrl(item.poster_path)"
+                    :alt="item.title || item.name"
+                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div
+                    v-else
+                    class="w-full h-full flex items-center justify-center text-gray-400"
+                  >
+                    <ClapperboardIcon
+                      class="w-6 h-6 sm:w-8 sm:h-8 opacity-20"
+                    />
                   </div>
                 </div>
                 <div class="flex flex-col min-w-0 flex-1">
-                  <span class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5">{{ item.release_date ? new Date(item.release_date).getFullYear() : (item.first_air_date ? new Date(item.first_air_date).getFullYear() : 'N/A') }}</span>
-                  <span class="font-bold text-sm text-gray-900 dark:text-gray-100 leading-tight line-clamp-2" :title="item.title || item.name">{{ item.title || item.name }}</span>
+                  <span
+                    class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5"
+                    >{{
+                      item.release_date
+                        ? new Date(item.release_date).getFullYear()
+                        : item.first_air_date
+                          ? new Date(item.first_air_date).getFullYear()
+                          : "N/A"
+                    }}</span
+                  >
+                  <span
+                    class="font-bold text-sm text-gray-900 dark:text-gray-100 leading-tight line-clamp-2"
+                    :title="item.title || item.name"
+                    >{{ item.title || item.name }}</span
+                  >
                 </div>
               </div>
 
               <!-- Column 2: Voice Actor -->
-              <div class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-3 sm:pt-0">
-                <div class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 flex-shrink-0">
-                  <NuxtImg format="webp" v-if="item.voice_actors?.[0]?.profile_picture" :src="item.voice_actors[0].profile_picture" :alt="`${item.voice_actors[0].firstname} ${item.voice_actors[0].lastname}`" class="w-full h-full object-cover" />
-                  <div v-else class="w-full h-full flex items-center justify-center text-gray-400 text-xs font-bold bg-gray-100 dark:bg-[#161616]">
-                    <span v-if="item.voice_actors?.[0]">{{ item.voice_actors[0].firstname?.[0] }}{{ item.voice_actors[0].lastname?.[0] }}</span>
+              <div
+                class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-3 sm:pt-0"
+              >
+                <div
+                  class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 flex-shrink-0"
+                >
+                  <NuxtImg
+                    format="webp"
+                    v-if="item.voice_actors?.[0]?.profile_picture"
+                    :src="item.voice_actors[0].profile_picture"
+                    :alt="`${item.voice_actors[0].firstname} ${item.voice_actors[0].lastname}`"
+                    class="w-full h-full object-cover"
+                  />
+                  <div
+                    v-else
+                    class="w-full h-full flex items-center justify-center text-gray-400 text-xs font-bold bg-gray-100 dark:bg-[#161616]"
+                  >
+                    <span v-if="item.voice_actors?.[0]"
+                      >{{ item.voice_actors[0].firstname?.[0]
+                      }}{{ item.voice_actors[0].lastname?.[0] }}</span
+                    >
                     <UserIcon v-else class="w-6 h-6 sm:w-8 sm:h-8 opacity-20" />
                   </div>
                 </div>
                 <div class="flex flex-col min-w-0 flex-1">
-                  <span class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5">Voiced by</span>
-                  <span v-if="item.voice_actors?.[0]" class="font-medium text-sm text-gray-700 dark:text-gray-300 leading-tight line-clamp-2">{{ item.voice_actors[0].firstname }} {{ item.voice_actors[0].lastname }}</span>
-                  <span v-else class="font-medium text-sm text-gray-400 dark:text-gray-500 italic">Unknown</span>
+                  <span
+                    class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5"
+                    >Voiced by</span
+                  >
+                  <span
+                    v-if="item.voice_actors?.[0]"
+                    class="font-medium text-sm text-gray-700 dark:text-gray-300 leading-tight line-clamp-2"
+                    >{{ item.voice_actors[0].firstname }}
+                    {{ item.voice_actors[0].lastname }}</span
+                  >
+                  <span
+                    v-else
+                    class="font-medium text-sm text-gray-400 dark:text-gray-500 italic"
+                    >Unknown</span
+                  >
                 </div>
               </div>
 
               <!-- Column 3: Character -->
-              <div class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-3 sm:pt-0">
-                <div class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 relative flex-shrink-0">
+              <div
+                class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-3 sm:pt-0"
+              >
+                <div
+                  class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 relative flex-shrink-0"
+                >
                   <!-- Note: character image from db is not fully integrated in item yet, falling back to a placeholder -->
-                  <div class="w-full h-full flex items-center justify-center text-gray-400">
+                  <div
+                    class="w-full h-full flex items-center justify-center text-gray-400"
+                  >
                     <UserIcon class="w-6 h-6 sm:w-8 sm:h-8 opacity-20" />
                   </div>
                 </div>
                 <div class="flex flex-col min-w-0 flex-1">
-                  <span class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5">As</span>
-                  <span class="font-medium text-sm text-gray-700 dark:text-gray-300 leading-tight line-clamp-2">{{ item.character || 'Unknown' }}</span>
+                  <span
+                    class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5"
+                    >As</span
+                  >
+                  <span
+                    class="font-medium text-sm text-gray-700 dark:text-gray-300 leading-tight line-clamp-2"
+                    >{{ item.character || "Unknown" }}</span
+                  >
                 </div>
               </div>
             </div>
@@ -208,7 +341,7 @@ import { onMounted, ref, watch, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ArrowLeftIcon, ClapperboardIcon, UserIcon } from "lucide-vue-next";
 import { useActorData } from "@app/shared-logic";
-import ReportModal from '../../components/ReportModal.vue';
+import ReportModal from "../../components/ReportModal.vue";
 
 const isReportModalOpen = ref(false);
 
@@ -240,6 +373,7 @@ onMounted(async () => {
 });
 
 useHead({
+  titleTemplate: null,
   title: computed(() => actor.value?.name ? actor.value.name : t('search.actor', 'Acteur')),
   meta: [
     {
@@ -329,9 +463,11 @@ function resolveImageUrl(path: string | null | undefined): string | undefined {
 }
 
 const getDisplayLanguage = (langCode: string | undefined | null) => {
-  if (!langCode) return 'Inconnu';
+  if (!langCode) return "Inconnu";
   try {
-    const displayNames = new Intl.DisplayNames([locale.value || 'en'], { type: 'language' });
+    const displayNames = new Intl.DisplayNames([locale.value || "en"], {
+      type: "language",
+    });
     const name = displayNames.of(langCode);
     return name ? name.charAt(0).toUpperCase() + name.slice(1) : langCode;
   } catch (e) {

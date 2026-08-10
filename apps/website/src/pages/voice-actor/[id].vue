@@ -64,7 +64,7 @@
             </div>
           </div>
           <div class="flex flex-col">
-            <NuxtLink v-if="completenessScore < 100" :to="$localePath(`/admin/voice-actors/edit/${voiceActorId}`)" class="text-xs text-cyan-600 dark:text-cyan-400 hover:underline">
+            <NuxtLink v-if="completenessScore < 100" :to="$localePath(`/voice-actor/${voiceActorId}/edit`)" class="text-xs text-cyan-600 dark:text-cyan-400 hover:underline">
               {{ $t('profile.completeness.incentive', 'Earn points by completing this profile!') }}
             </NuxtLink>
             <span v-else class="text-xs text-emerald-500">{{ $t('profile.completeness.complete', 'Profile is 100% complete!') }}</span>
@@ -74,7 +74,7 @@
 
         <!-- Right side actions -->
         <div class="flex items-center flex-wrap gap-4">
-          <NuxtLink v-if="isAdmin" :to="$localePath(`/admin/voice-actors/edit/${voiceActorId}`)" class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-medium">
+          <NuxtLink v-if="isAdmin" :to="$localePath(`/voice-actor/${voiceActorId}/edit`)" class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-medium">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>

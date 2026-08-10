@@ -33,73 +33,20 @@
         </div>
       </div>
 
-      <!-- Mission Grid -->
-      <div class="space-y-6">
-        <h3 class="text-2xl font-bold text-white border-b border-[#2a2a2a] pb-2">Available Missions</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          
-          <!-- Mission Card: Voice Actor Images -->
-          <NuxtLink :to="$localePath('/contribute/task/missing_va_image')" class="group relative bg-[#1d1d1d] rounded-2xl p-6 border border-[#2a2a2a] hover:border-blue-500/50 transition-all duration-300 hover:shadow-[0_0_30px_rgba(59,130,246,0.15)] hover:-translate-y-1 overflow-hidden flex flex-col h-full">
-            <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-              <svg class="w-24 h-24 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <div class="z-10 flex-grow space-y-4">
-              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-sm font-medium">
-                <span class="w-2 h-2 rounded-full bg-blue-400"></span> Image Hunter
-              </div>
-              <h4 class="text-xl font-bold text-white group-hover:text-blue-400 transition-colors">Find Missing Faces</h4>
-              <p class="text-[#a0a0a0] text-sm">
-                Many voice actors in our database are missing profile pictures. Help us put a face to the voice!
-              </p>
-            </div>
-            <div class="z-10 mt-6 pt-4 border-t border-[#2a2a2a] flex justify-between items-center text-sm">
-              <span class="text-emerald-400 font-mono font-medium">+10 pts / task</span>
-              <span class="text-blue-400 font-medium group-hover:translate-x-1 transition-transform">Start &rarr;</span>
-            </div>
-          </NuxtLink>
-
-          <!-- Mission Card: Studio Logos -->
-          <NuxtLink :to="$localePath('/contribute/task/missing_studio_logo')" class="group relative bg-[#1d1d1d] rounded-2xl p-6 border border-[#2a2a2a] hover:border-purple-500/50 transition-all duration-300 hover:shadow-[0_0_30px_rgba(168,85,247,0.15)] hover:-translate-y-1 overflow-hidden flex flex-col h-full">
-            <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-              <svg class="w-24 h-24 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            </div>
-            <div class="z-10 flex-grow space-y-4">
-              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 text-purple-400 text-sm font-medium">
-                <span class="w-2 h-2 rounded-full bg-purple-400"></span> Studio Scout
-              </div>
-              <h4 class="text-xl font-bold text-white group-hover:text-purple-400 transition-colors">Add Studio Logos</h4>
-              <p class="text-[#a0a0a0] text-sm">
-                Studios need representation too. Find and upload high-quality logos for dubbing studios.
-              </p>
-            </div>
-            <div class="z-10 mt-6 pt-4 border-t border-[#2a2a2a] flex justify-between items-center text-sm">
-              <span class="text-emerald-400 font-mono font-medium">+15 pts / task</span>
-              <span class="text-purple-400 font-medium group-hover:translate-x-1 transition-transform">Start &rarr;</span>
-            </div>
-          </NuxtLink>
-
-          <!-- Mission Card: Coming Soon -->
-          <div class="group relative bg-[#1d1d1d]/50 rounded-2xl p-6 border border-[#2a2a2a] overflow-hidden flex flex-col h-full opacity-70">
-            <div class="z-10 flex-grow space-y-4">
-              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-500/10 text-gray-400 text-sm font-medium">
-                <span class="w-2 h-2 rounded-full bg-gray-400"></span> Coming Soon
-              </div>
-              <h4 class="text-xl font-bold text-white">Casting Director</h4>
-              <p class="text-[#a0a0a0] text-sm">
-                Assign voice actors to missing roles in popular dubbing projects.
-              </p>
-            </div>
-            <div class="z-10 mt-6 pt-4 border-t border-[#2a2a2a] flex justify-between items-center text-sm">
-              <span class="text-gray-500 font-mono font-medium">??? pts / task</span>
-              <span class="text-gray-500 font-medium">Locked</span>
-            </div>
-          </div>
-
-        </div>
+      <!-- Start Contributing CTA -->
+      <div class="flex flex-col items-center justify-center space-y-6 py-12 bg-[#1d1d1d] rounded-3xl border border-[#2a2a2a] shadow-2xl relative overflow-hidden">
+        <div class="absolute inset-0 pointer-events-none bg-gradient-to-br from-blue-500/5 to-purple-500/5"></div>
+        <h3 class="text-3xl font-bold text-white text-center relative z-10">Ready to help?</h3>
+        <p class="text-[#a0a0a0] text-center max-w-lg relative z-10 text-lg">
+          Jump into the unified task feed. We'll find profiles and studios that are missing data, and you can fill in whatever you know!
+        </p>
+        <NuxtLink :to="$localePath('/contribute/task/play')" class="group relative mt-4 px-10 py-5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl font-bold text-xl text-white shadow-[0_0_40px_rgba(59,130,246,0.4)] hover:shadow-[0_0_60px_rgba(168,85,247,0.6)] hover:-translate-y-1 transition-all overflow-hidden flex items-center gap-3">
+          <div class="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+          <span class="relative z-10">Start Contributing</span>
+          <svg class="w-6 h-6 relative z-10 group-hover:translate-x-1 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </NuxtLink>
       </div>
 
       <!-- Live Activity Ticker -->

@@ -14,10 +14,11 @@ export default {
       }
 
       const body = await req.json();
-      const category = body.category;
-
-      if (!category) {
-        return Response.json({ error: "Missing category" }, { status: 400 });
+      let activeCategory = body.category;
+      if (activeCategory === "any") {
+        const categories = ["enrich_voice_actor", "enrich_studio"];
+        activeCategory =
+          categories[Math.floor(Math.random() * categories.length)];
       }
 
       let query;
@@ -26,20 +27,24 @@ export default {
       // We will use service_role client to read all records and update locks
       const supabaseAdmin = ctx.supabaseAdmin;
 
-      if (category === "missing_va_image") {
+      if (activeCategory === "enrich_voice_actor") {
         tableName = "voice_actors";
         query = supabaseAdmin
           .from("voice_actors")
           .select("*")
-          .is("profile_picture", null)
-          .limit(10);
-      } else if (category === "missing_studio_logo") {
+          .or(
+            "profile_picture.is.null,nationality.is.null,date_of_birth.is.null,bio.is.null",
+          )
+          .limit(20);
+      } else if (activeCategory === "enrich_studio") {
         tableName = "studios";
         query = supabaseAdmin
           .from("studios")
           .select("*")
-          .is("logo_url", null)
-          .limit(10);
+          .or(
+            "logo_url.is.null,country.is.null,city.is.null,website_url.is.null",
+          )
+          .limit(20);
       } else {
         return Response.json({ error: "Invalid category" }, { status: 400 });
       }
@@ -72,7 +77,7 @@ export default {
         const { data: lockData } = await supabaseAdmin
           .from("gamification_task_locks")
           .select("*")
-          .eq("category", category)
+          .eq("category", activeCategory)
           .eq("entity_id", idStr)
           .single();
 
@@ -87,7 +92,7 @@ export default {
 
         // We found an unlocked one! Lock it and break.
         await supabaseAdmin.from("gamification_task_locks").upsert({
-          category,
+          category: activeCategory,
           entity_id: idStr,
           locked_at: new Date().toISOString(),
         });
@@ -104,7 +109,7 @@ export default {
         });
       }
 
-      return Response.json({ task: selectedTask });
+      return Response.json({ task: selectedTask, category: activeCategory });
     } catch (error) {
       console.error("Unexpected error:", error);
       return Response.json({ error: "Internal server error" }, { status: 500 });

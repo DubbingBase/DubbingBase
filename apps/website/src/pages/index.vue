@@ -17,7 +17,7 @@
           />
           <button
             @click="openSearch"
-            class="absolute right-1 top-1 bottom-1 bg-gradient-to-r from-[#00E5FF] to-cyan-500 hover:from-cyan-400 hover:to-cyan-600 text-gray-900 dark:text-white font-bold py-1.5 px-4 md:py-2 md:px-6 rounded-full transition-all text-sm md:text-base"
+            class="absolute right-1 top-1 bottom-1 bg-[var(--app-color-primary)] hover:bg-[var(--app-color-primary-hover)] text-white font-bold py-1.5 px-4 md:py-2 md:px-6 rounded-full transition-all text-sm md:text-base"
           >
             {{ $t('home.hero.searchButton') }}
           </button>

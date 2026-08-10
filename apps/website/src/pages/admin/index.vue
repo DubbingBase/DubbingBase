@@ -20,7 +20,7 @@
           <span>+ Create Video Game Project</span>
         </NuxtLink>
         <NuxtLink
-          :to="localePath('/admin/voice-actors/new')"
+          :to="localePath('/voice-actor/new')"
           class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-[#2a2a2a] dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white text-xs font-semibold rounded-xl border border-gray-200 dark:border-gray-700 transition-all flex items-center space-x-1.5"
         >
           <span>+ Create Voice Actor</span>

@@ -27,6 +27,11 @@
           <h3>{{ $t('about.tmdbTitle') }}</h3>
           <p>{{ $t('about.tmdbDescription') }}</p>
         </div>
+
+        <div class="attribution-section">
+          <h3>{{ $t('about.igdbTitle') }}</h3>
+          <p>{{ $t('about.igdbDescription') }}</p>
+        </div>
       </div>
     </AppContent>
   </AppPage>

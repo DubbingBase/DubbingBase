@@ -161,9 +161,11 @@
     "usersTitle": "Our Users",
     "usersDescription": "Special thanks to all voice actors, directors, and film enthusiasts who contribute to our community and help build this comprehensive database.",
     "tvdbTitle": "The TV Database (TVDB)",
-    "tvdbDescription": "Television data and images provided by The TV Database (TVDB). Visit them at thetvdb.com for more information.",
+    "tvdbDescription": "Television data and images provided by The TV Database (TVDB). This product uses the TVDB API but is not endorsed or certified by TVDB.",
     "tmdbTitle": "The Movie Database (TMDB)",
-    "tmdbDescription": "Movie and television data provided by The Movie Database (TMDB). Visit them at themoviedb.org for more information."
+    "tmdbDescription": "Movie and television data provided by The Movie Database (TMDB). This product uses the TMDB API but is not endorsed or certified by TMDB.",
+    "igdbTitle": "IGDB",
+    "igdbDescription": "Video game data provided by IGDB. This product uses the IGDB API but is not endorsed or certified by IGDB."
   },
   "dashboard": {
     "title": "Supabase Dashboard",

@@ -2,8 +2,8 @@
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 :root {
-  --app-color-primary: #3b82f6;
-  --app-color-primary-hover: #2563eb;
+  --app-color-primary: #8b5cf6;
+  --app-color-primary-hover: #7c3aed;
   --app-bg: #111827;
   --app-bg-secondary: #1f2937;
   --app-text: #f3f4f6;

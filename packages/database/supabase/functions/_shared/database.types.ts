@@ -264,6 +264,7 @@ export type Database = {
           id: number
           logo_url: string | null
           name: string
+          social_media_links: Json | null
           updated_at: string | null
           website_url: string | null
         }
@@ -275,6 +276,7 @@ export type Database = {
           id?: number
           logo_url?: string | null
           name: string
+          social_media_links?: Json | null
           updated_at?: string | null
           website_url?: string | null
         }
@@ -286,6 +288,7 @@ export type Database = {
           id?: number
           logo_url?: string | null
           name?: string
+          social_media_links?: Json | null
           updated_at?: string | null
           website_url?: string | null
         }

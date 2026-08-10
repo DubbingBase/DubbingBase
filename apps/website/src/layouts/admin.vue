@@ -126,8 +126,7 @@ const navItems = [
 const currentSectionName = computed(() => {
   const matched = navItems.find(item => item.path === route.path);
   if (matched) return matched.name;
-  if (route.path === "/admin/voice-actors/new") return "New Voice Actor";
-  if (route.path.startsWith("/admin/voice-actors/edit/")) return "Edit Voice Actor";
+
   if (route.path.startsWith("/admin/add-voice-cast/")) return "Add Voice Cast";
   return "Administration";
 });

@@ -2,38 +2,38 @@
   <DialogRoot v-model:open="isOpen">
     <DialogPortal>
       <DialogOverlay class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity" />
-      <DialogContent class="fixed top-[20%] left-1/2 -translate-x-1/2 w-[90vw] max-w-2xl z-50 bg-[#1d1d1d] border border-[#2a2a2a] rounded-2xl shadow-2xl overflow-hidden focus:outline-none flex flex-col max-h-[70vh]">
+      <DialogContent class="fixed top-[20%] left-1/2 -translate-x-1/2 w-[90vw] max-w-2xl z-50 bg-white dark:bg-[#1d1d1d] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl shadow-2xl overflow-hidden focus:outline-none flex flex-col max-h-[70vh]">
         <VisuallyHidden>
           <DialogTitle>Search</DialogTitle>
           <DialogDescription>Search for movies, TV shows, voice actors, and video games.</DialogDescription>
         </VisuallyHidden>
         <!-- Search Input -->
-        <div class="flex items-center px-4 py-4 border-b border-[#2a2a2a] gap-3">
+        <div class="flex items-center px-4 py-4 border-b border-gray-200 dark:border-[#2a2a2a] gap-3">
           <SearchIcon class="w-5 h-5 text-gray-400" />
           <input
             ref="searchInput"
             v-model="query"
             type="text"
-            class="flex-1 bg-transparent border-none text-white text-lg focus:ring-0 placeholder-gray-500 outline-none"
+            class="flex-1 bg-transparent border-none text-gray-900 dark:text-white text-lg focus:ring-0 placeholder-gray-500 outline-none"
             :placeholder="t('search.placeholder')"
             @keydown.esc="isOpen = false"
             @keydown.down.prevent="navigateResults(1)"
             @keydown.up.prevent="navigateResults(-1)"
             @keydown.enter.prevent="selectCurrent"
           />
-          <button @click="isOpen = false" class="text-xs text-gray-500 font-medium bg-[#2a2a2a] px-2 py-1 rounded hover:bg-[#3a3a3a] transition">
+          <button @click="isOpen = false" class="text-xs text-gray-500 font-medium bg-gray-100 dark:bg-[#2a2a2a] px-2 py-1 rounded hover:bg-gray-200 dark:hover:bg-[#3a3a3a] transition">
             ESC
           </button>
         </div>
 
         <!-- Filter Chips -->
-        <div class="flex gap-2 px-4 py-3 border-b border-[#2a2a2a] overflow-x-auto no-scrollbar shrink-0" v-if="query.length >= 2">
+        <div class="flex gap-2 px-4 py-3 border-b border-gray-200 dark:border-[#2a2a2a] overflow-x-auto no-scrollbar shrink-0" v-if="query.length >= 2">
           <button 
             v-for="filter in filters" 
             :key="filter.value"
             @click="selectedFilter = filter.value"
-            class="inline-flex items-center justify-center px-4 h-8 rounded-full text-sm font-medium whitespace-nowrap transition outline-none focus-visible:ring-2 focus-visible:ring-white shrink-0 leading-none"
-            :class="selectedFilter === filter.value ? 'bg-white text-black' : 'bg-[#2a2a2a] text-gray-300 hover:bg-[#3a3a3a]'"
+            class="inline-flex items-center justify-center px-4 h-8 rounded-full text-sm font-medium whitespace-nowrap transition outline-none focus-visible:ring-2 focus-visible:ring-gray-900 dark:focus-visible:ring-white shrink-0 leading-none"
+            :class="selectedFilter === filter.value ? 'bg-gray-900 text-white dark:bg-white dark:text-black' : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#3a3a3a]'"
           >
             {{ filter.label }}
           </button>
@@ -50,19 +50,19 @@
               v-for="(item, index) in filteredResults"
               :key="`${item.media_type}-${item.id}`"
               class="flex items-center gap-4 p-2 rounded-xl transition text-left w-full border"
-              :class="selectedIndex === index ? 'bg-[#2a2a2a] border-[#4a4a4a]' : 'border-transparent hover:bg-[#2a2a2a]'"
+              :class="selectedIndex === index ? 'bg-gray-100 dark:bg-[#2a2a2a] border-gray-300 dark:border-[#4a4a4a]' : 'border-transparent hover:bg-gray-50 dark:hover:bg-[#2a2a2a]'"
               @click="handleSelect(item)"
               @mouseenter="selectedIndex = index"
             >
               <!-- Image -->
-              <img v-if="item.cover?.url || item.poster_path || item.profile_path" :src="item.cover?.url || item.poster_path || item.profile_path" class="w-12 h-16 object-cover rounded shadow-sm bg-gray-800" />
-              <div v-else class="w-12 h-16 rounded bg-gray-800 flex items-center justify-center text-xs text-gray-500 shadow-sm">
+              <img v-if="item.cover?.url || item.poster_path || item.profile_path" :src="item.cover?.url || item.poster_path || item.profile_path" class="w-12 h-16 object-cover rounded shadow-sm bg-gray-200 dark:bg-gray-800" />
+              <div v-else class="w-12 h-16 rounded bg-gray-200 dark:bg-gray-800 flex items-center justify-center text-xs text-gray-500 shadow-sm">
                 <ImageIcon class="w-5 h-5" />
               </div>
 
               <!-- Info -->
               <div class="flex flex-col flex-1 min-w-0">
-                <div class="font-semibold text-white truncate text-base leading-tight">{{ item.title || item.name || item.voice_actor_name || `${item.firstname || ''} ${item.lastname || ''}`.trim() }}</div>
+                <div class="font-semibold text-gray-900 dark:text-white truncate text-base leading-tight">{{ item.title || item.name || item.voice_actor_name || `${item.firstname || ''} ${item.lastname || ''}`.trim() }}</div>
                 <div class="text-xs text-gray-400 mt-1 flex items-center gap-1.5 flex-wrap">
                   <span class="inline-block w-2 h-2 rounded-full" :class="getTypeColor(item.media_type)"></span>
                   <span class="capitalize">{{ getMediaTypeLabel(item.media_type) }}</span>

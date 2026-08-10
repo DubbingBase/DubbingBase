@@ -40,69 +40,195 @@ export default {
       let previousValue = null;
       let newValue = null;
 
-      if (category === "missing_va_image") {
+      if (category === "enrich_voice_actor") {
         entityType = "voice_actor";
-        action = "added_profile_picture";
-        pointsAwarded = 10;
+        const updates: any = {};
+        const newValues: any = {};
 
         const file = formData.get("file") as File | null;
-        if (!file) {
-          return Response.json({ error: "Missing file" }, { status: 400 });
+        if (file) {
+          const fileExt = file.name.split(".").pop();
+          const fileName = `${crypto.randomUUID()}.${fileExt}`;
+          const filePath = `${entityId}/${fileName}`;
+          const { error: uploadError, data: uploadData } =
+            await supabaseAdmin.storage
+              .from("voice_actor_profile_pictures")
+              .upload(filePath, file, { contentType: file.type });
+          if (!uploadError && uploadData) {
+            updates.profile_picture = uploadData.path;
+            newValues.profile_picture = uploadData.path;
+            pointsAwarded += 10;
+            action += "added_profile_picture ";
+          }
         }
 
-        // Fetch previous value
-        const { data: va } = await supabaseAdmin
-          .from("voice_actors")
-          .select("profile_picture")
-          .eq("id", parseInt(entityId, 10))
-          .single();
+        const nationality = formData.get("nationality")?.toString();
+        if (nationality) {
+          updates.nationality = nationality;
+          newValues.nationality = nationality;
+          pointsAwarded += 5;
+          action += "added_nationality ";
+        }
 
-        if (!va)
+        const dateOfBirth = formData.get("date_of_birth")?.toString();
+        if (dateOfBirth) {
+          updates.date_of_birth = dateOfBirth;
+          newValues.date_of_birth = dateOfBirth;
+          pointsAwarded += 5;
+          action += "added_dob ";
+        }
+
+        const bio = formData.get("bio")?.toString();
+        if (bio) {
+          updates.bio = bio;
+          newValues.bio = bio;
+          pointsAwarded += 10;
+          action += "added_bio ";
+        }
+
+        const tmdb_id = formData.get("tmdb_id")?.toString();
+        if (tmdb_id) {
+          updates.tmdb_id = parseInt(tmdb_id, 10);
+          newValues.tmdb_id = parseInt(tmdb_id, 10);
+          pointsAwarded += 5;
+          action += "added_tmdb_id ";
+        }
+
+        const wikidata_id = formData.get("wikidata_id")?.toString();
+        if (wikidata_id) {
+          updates.wikidata_id = wikidata_id;
+          newValues.wikidata_id = wikidata_id;
+          pointsAwarded += 5;
+          action += "added_wikidata_id ";
+        }
+
+        const twitter = formData.get("twitter")?.toString();
+        const instagram = formData.get("instagram")?.toString();
+        const tiktok = formData.get("tiktok")?.toString();
+        const facebook = formData.get("facebook")?.toString();
+
+        if (twitter || instagram || tiktok || facebook) {
+          const { data: va } = await supabaseAdmin
+            .from("voice_actors")
+            .select("social_media_links")
+            .eq("id", parseInt(entityId, 10))
+            .single();
+          const currentLinks =
+            (va?.social_media_links as Record<string, string>) || {};
+
+          if (twitter) currentLinks.twitter = twitter;
+          if (instagram) currentLinks.instagram = instagram;
+          if (tiktok) currentLinks.tiktok = tiktok;
+          if (facebook) currentLinks.facebook = facebook;
+
+          updates.social_media_links = currentLinks;
+          newValues.social_media_links = currentLinks;
+          pointsAwarded += 5;
+          action += "added_social_links ";
+        }
+
+        if (Object.keys(updates).length > 0) {
+          updates.updated_by = user.id;
+          await supabaseAdmin
+            .from("voice_actors")
+            .update(updates)
+            .eq("id", parseInt(entityId, 10));
+        } else {
           return Response.json(
-            { error: "Voice actor not found" },
-            { status: 404 },
-          );
-        if (va.profile_picture) {
-          return Response.json(
-            { error: "Voice actor already has a profile picture" },
+            { error: "No fields to update" },
             { status: 400 },
           );
         }
-        previousValue = va.profile_picture;
+        newValue = newValues;
+      } else if (category === "enrich_studio") {
+        entityType = "studio";
+        const updates: any = {};
+        const newValues: any = {};
 
-        // Upload to voice_actor_profile_pictures bucket
-        const fileExt = file.name.split(".").pop();
-        const fileName = `${crypto.randomUUID()}.${fileExt}`;
-        const filePath = `${entityId}/${fileName}`; // Assuming structure is {id}/filename
-
-        const { error: uploadError, data: uploadData } =
-          await supabaseAdmin.storage
-            .from("voice_actor_profile_pictures")
-            .upload(filePath, file, { contentType: file.type });
-
-        if (uploadError) {
-          console.error("Upload error:", uploadError);
-          return Response.json(
-            { error: "Failed to upload image" },
-            { status: 500 },
-          );
+        const file = formData.get("file") as File | null;
+        if (file) {
+          const fileExt = file.name.split(".").pop();
+          const fileName = `${crypto.randomUUID()}.${fileExt}`;
+          const filePath = `${entityId}/${fileName}`;
+          const { error: uploadError, data: uploadData } =
+            await supabaseAdmin.storage
+              .from("studio_logos")
+              .upload(filePath, file, { contentType: file.type });
+          if (!uploadError && uploadData) {
+            updates.logo_url = uploadData.path;
+            newValues.logo_url = uploadData.path;
+            pointsAwarded += 10;
+            action += "added_logo ";
+          }
         }
 
-        newValue = uploadData.path;
+        const country = formData.get("country")?.toString();
+        if (country) {
+          updates.country = country;
+          newValues.country = country;
+          pointsAwarded += 5;
+          action += "added_country ";
+        }
 
-        // Update Voice Actor
-        await supabaseAdmin
-          .from("voice_actors")
-          .update({ profile_picture: newValue, updated_by: user.id })
-          .eq("id", parseInt(entityId, 10));
-      } else if (category === "missing_studio_logo") {
-        // Similar implementation for studio logos
-        return Response.json({ error: "Not implemented yet" }, { status: 501 });
+        const city = formData.get("city")?.toString();
+        if (city) {
+          updates.city = city;
+          newValues.city = city;
+          pointsAwarded += 5;
+          action += "added_city ";
+        }
+
+        const website = formData.get("website_url")?.toString();
+        if (website) {
+          updates.website_url = website;
+          newValues.website_url = website;
+          pointsAwarded += 5;
+          action += "added_website ";
+        }
+
+        const twitter = formData.get("twitter")?.toString();
+        const instagram = formData.get("instagram")?.toString();
+        const tiktok = formData.get("tiktok")?.toString();
+        const facebook = formData.get("facebook")?.toString();
+
+        if (twitter || instagram || tiktok || facebook) {
+          const { data: std } = await supabaseAdmin
+            .from("studios")
+            .select("social_media_links")
+            .eq("id", parseInt(entityId, 10))
+            .single();
+          const currentLinks =
+            (std?.social_media_links as Record<string, string>) || {};
+
+          if (twitter) currentLinks.twitter = twitter;
+          if (instagram) currentLinks.instagram = instagram;
+          if (tiktok) currentLinks.tiktok = tiktok;
+          if (facebook) currentLinks.facebook = facebook;
+
+          updates.social_media_links = currentLinks;
+          newValues.social_media_links = currentLinks;
+          pointsAwarded += 5;
+          action += "added_social_links ";
+        }
+
+        if (Object.keys(updates).length > 0) {
+          await supabaseAdmin
+            .from("studios")
+            .update(updates)
+            .eq("id", parseInt(entityId, 10));
+        } else {
+          return Response.json(
+            { error: "No fields to update" },
+            { status: 400 },
+          );
+        }
+        newValue = newValues;
       } else {
         return Response.json({ error: "Invalid category" }, { status: 400 });
       }
 
       // Record in audit_logs
+      action = action.trim();
       const { error: auditError } = await supabaseAdmin
         .from("audit_logs")
         .insert({
@@ -110,8 +236,8 @@ export default {
           entity_type: entityType,
           entity_id: entityId,
           action: action,
-          previous_value: previousValue ? { value: previousValue } : null,
-          new_value: { value: newValue },
+          previous_value: null,
+          new_value: newValue,
           points_awarded: pointsAwarded,
         });
 
