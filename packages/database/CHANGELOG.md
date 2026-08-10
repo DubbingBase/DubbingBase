@@ -1,5 +1,11 @@
 # @app/supabase
 
+## 0.0.78
+
+### Patch Changes
+
+- 7781f71: update task enrichment logic and add support for flexible task categories
+
 ## 0.0.77
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @app/landing
 
+## 1.0.41
+
+### Patch Changes
+
+- 7781f71: update task enrichment logic and add support for flexible task categories
+- Updated dependencies [7781f71]
+  - @app/locales@0.0.46
+
 ## 1.0.40
 
 ### Patch Changes

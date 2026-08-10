@@ -1,5 +1,14 @@
 # @app/mobile
 
+## 1.0.102
+
+### Patch Changes
+
+- 7781f71: update task enrichment logic and add support for flexible task categories
+- Updated dependencies [7781f71]
+  - @app/supabase@0.0.78
+  - @app/locales@0.0.46
+
 ## 1.0.101
 
 ### Patch Changes

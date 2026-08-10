@@ -1,5 +1,11 @@
 # @app/locales
 
+## 0.0.46
+
+### Patch Changes
+
+- 7781f71: update task enrichment logic and add support for flexible task categories
+
 ## 0.0.45
 
 ### Patch Changes
