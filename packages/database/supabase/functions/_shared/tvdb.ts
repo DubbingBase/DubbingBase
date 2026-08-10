@@ -77,7 +77,11 @@ export class TVDBClient implements ITVDBClient {
     return this.token!;
   }
 
-  async get(endpoint: string, params?: Record<string, string>) {
+  async get(
+    endpoint: string,
+    params?: Record<string, string>,
+    language?: string,
+  ) {
     const token = await this.authenticate();
 
     const url = new URL(`${this.baseUrl}/${endpoint}`);
@@ -93,6 +97,9 @@ export class TVDBClient implements ITVDBClient {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
+          ...(language
+            ? { "Accept-Language": language.split(",")[0].trim() }
+            : {}),
         },
         signal: AbortSignal.timeout(5000), // 5 seconds timeout
       });
@@ -114,12 +121,14 @@ export class TVDBClient implements ITVDBClient {
   async getSeriesById(
     seriesId: number,
     extended?: { meta?: "episodes" | "translations"; short?: boolean },
+    language?: string,
   ): Promise<any> {
+    const langStr = language ? `:${language.split(",")[0].trim()}` : "";
     const cacheKey = CACHE_KEYS.TVDB_SERIES(
       seriesId,
       extended
-        ? `extended:${extended.meta || "none"}:${extended.short}`
-        : undefined,
+        ? `extended:${extended.meta || "none"}:${extended.short}${langStr}`
+        : `default${langStr}`,
     );
 
     // Try cache first
@@ -134,12 +143,16 @@ export class TVDBClient implements ITVDBClient {
     // Cache miss - fetch from API
     let result: any;
     if (extended) {
-      result = await this.get(`series/${seriesId}/extended`, {
-        extended: extended.meta || "",
-        short: extended.short?.toString() || "",
-      });
+      result = await this.get(
+        `series/${seriesId}/extended`,
+        {
+          extended: extended.meta || "",
+          short: extended.short?.toString() || "",
+        },
+        language,
+      );
     } else {
-      result = await this.get(`series/${seriesId}`);
+      result = await this.get(`series/${seriesId}`, undefined, language);
     }
 
     // Cache the result with SHORT TTL (2 hours for series data)
@@ -152,12 +165,14 @@ export class TVDBClient implements ITVDBClient {
   async getMovieById(
     movieId: number,
     extended?: { meta?: "translations"; short?: boolean },
+    language?: string,
   ): Promise<any> {
+    const langStr = language ? `:${language.split(",")[0].trim()}` : "";
     const cacheKey = CACHE_KEYS.TVDB_MOVIE(
       movieId,
       extended
-        ? `extended:${extended.meta || "none"}:${extended.short}`
-        : undefined,
+        ? `extended:${extended.meta || "none"}:${extended.short}${langStr}`
+        : `default${langStr}`,
     );
 
     // Try cache first
@@ -170,12 +185,16 @@ export class TVDBClient implements ITVDBClient {
     // Cache miss - fetch from API
     let result: any;
     if (extended) {
-      result = await this.get(`movies/${movieId}/extended`, {
-        extended: extended.meta || "",
-        short: extended.short?.toString() || "",
-      });
+      result = await this.get(
+        `movies/${movieId}/extended`,
+        {
+          extended: extended.meta || "",
+          short: extended.short?.toString() || "",
+        },
+        language,
+      );
     } else {
-      result = await this.get(`movies/${movieId}`);
+      result = await this.get(`movies/${movieId}`, undefined, language);
     }
 
     // Cache the result with SHORT TTL (2 hours for movie data)
@@ -239,8 +258,11 @@ export class TVDBClient implements ITVDBClient {
     return this.get(`people/${personId}`);
   }
 
-  async searchSeries(query: string): Promise<any> {
-    const cacheKey = CACHE_KEYS.TVDB_SEARCH(query.toLowerCase().trim());
+  async searchSeries(query: string, language?: string): Promise<any> {
+    const langStr = language ? `:${language.split(",")[0].trim()}` : "";
+    const cacheKey = CACHE_KEYS.TVDB_SEARCH(
+      query.toLowerCase().trim() + langStr,
+    );
 
     // Try cache first
     const cached = await this.cache.get(cacheKey);
@@ -250,7 +272,7 @@ export class TVDBClient implements ITVDBClient {
     }
 
     // Cache miss - fetch from API
-    const result = await this.get("search", { query });
+    const result = await this.get("search", { query }, language);
 
     // Cache the result with MEDIUM TTL (6 hours for search results)
     if (result && result.data && result.data.length > 0) {

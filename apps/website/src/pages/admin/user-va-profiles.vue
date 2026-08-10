@@ -293,7 +293,7 @@ const fetchUsersList = async () => {
   userLoading.value = true;
 
   try {
-    const { data, error } = await supabase.functions.invoke("list_users");
+    const { data, error } = await supabase.functions.invoke("list_users", { method: 'GET' });
 
     if (error) throw error;
     allUsers.value = data?.users || [];

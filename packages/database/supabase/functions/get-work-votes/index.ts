@@ -1,4 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { getParams } from "../_shared/index.ts";
 import { Database } from "../_shared/database.types.ts";
 import { createResponse, createErrorResponse } from "../_shared/http-utils.ts";
 import { DatabaseClient } from "../_shared/database.ts";
@@ -7,7 +8,7 @@ import { withSupabase } from "npm:@supabase/server@^1";
 export default {
   fetch: withSupabase<Database>({ auth: "publishable" }, async (req, ctx) => {
     try {
-      const { work_ids } = await req.json();
+      const { work_ids } = await getParams(req);
 
       if (!work_ids || !Array.isArray(work_ids) || work_ids.length === 0) {
         return createErrorResponse("Missing or invalid work_ids array", 400);

@@ -2,7 +2,7 @@ import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
 import { processMedia, buildTmdbImageUrl } from "../_shared/tmdb-urls.ts";
 import { buildSupabaseImageUrl } from "../_shared/supabase-urls.ts";
-import { igdbClient } from "../_shared/index.ts";
+import { igdbClient, getParams } from "../_shared/index.ts";
 import { buildIgdbImageUrl } from "../_shared/igdb.ts";
 import { normalizeString } from "../_shared/normalize.ts";
 
@@ -101,7 +101,7 @@ function calculateScore(item: any, trimmedQuery: string): number {
 export default {
   fetch: withSupabase<Database>({ auth: "publishable" }, async (req, ctx) => {
     try {
-      const { query } = await req.json();
+      const { query } = await getParams(req);
 
       console.log("query", query);
 

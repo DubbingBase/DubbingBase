@@ -147,9 +147,8 @@ const executeSearch = async () => {
   }
   searchLoading.value = true;
   try {
-    const { data, error } = await supabase.functions.invoke("search-voice-actors", {
-      body: { query, limit: 10 }
-    });
+    const params = new URLSearchParams({ query, limit: "10" });
+    const { data, error } = await supabase.functions.invoke(`search-voice-actors?${params.toString()}`, { method: "GET" });
     if (error) throw error;
     searchResults.value = data || [];
   } catch (err: any) {

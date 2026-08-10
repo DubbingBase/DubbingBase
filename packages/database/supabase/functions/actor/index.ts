@@ -18,7 +18,11 @@ import { cacheUtils } from "../_shared/index.ts";
 import { SupabaseContext } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
 
-async function getActor(actorId: number, tmdbClient: TMDBClient) {
+async function getActor(
+  actorId: number,
+  tmdbClient: TMDBClient,
+  acceptLanguage?: string,
+) {
   const cacheKey = CACHE_KEYS.TMDB_PERSON(actorId);
 
   // Try cache first
@@ -29,9 +33,13 @@ async function getActor(actorId: number, tmdbClient: TMDBClient) {
 
   try {
     // Use shared TMDBClient for API calls
-    const actorData = await tmdbClient.get(`person/${actorId}`, {
-      append_to_response: "tv_credits,movie_credits,external_ids",
-    });
+    const actorData = await tmdbClient.get(
+      `person/${actorId}`,
+      {
+        append_to_response: "tv_credits,movie_credits,external_ids",
+      },
+      acceptLanguage,
+    );
 
     // Cache the result
     cacheUtils.set(cacheKey, actorData, "MEDIUM").catch(() => {});
@@ -49,6 +57,7 @@ async function getVoiceRoles(
   actorId: number,
   tmdbClient: TMDBClient,
   dbClient: DatabaseClient,
+  acceptLanguage?: string,
 ): Promise<any[]> {
   try {
     // TODO: rework
@@ -84,6 +93,7 @@ async function getVoiceRoles(
           mediaDetails = await tmdbClient.fetchMediaDetails(
             work.dubbing_projects.content_id,
             work.dubbing_projects.content_type,
+            acceptLanguage,
           );
         }
 
@@ -150,9 +160,11 @@ export default {
       const tmdbClient = new TMDBClient(cacheUtils);
       const dbClient = new DatabaseClient(ctx);
 
+      const acceptLanguage = req.headers.get("Accept-Language") || undefined;
+
       const [actor, voiceRoles] = await Promise.all([
-        getActor(actorId, tmdbClient),
-        getVoiceRoles(ctx, actorId, tmdbClient, dbClient),
+        getActor(actorId, tmdbClient, acceptLanguage),
+        getVoiceRoles(ctx, actorId, tmdbClient, dbClient, acceptLanguage),
       ]);
 
       if (!actor) {

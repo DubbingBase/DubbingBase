@@ -22,6 +22,11 @@ export type VoiceActorResponse = {
       dubbing_projects?: {
         content_id: number;
         content_type: string | null;
+        studios?: {
+          id: number;
+          name: string;
+          logo_url: string | null;
+        } | null;
       };
       highlight: boolean | null;
       performance: string | null;
@@ -52,7 +57,15 @@ export type EnhancedWorkItem = {
   work: {
     id: number;
     actor_id: number;
-    dubbing_projects?: { content_id: number; content_type: string | null };
+    dubbing_projects?: {
+      content_id: number;
+      content_type: string | null;
+      studios?: {
+        id: number;
+        name: string;
+        logo_url: string | null;
+      } | null;
+    };
   };
   data: {
     character: string | undefined;

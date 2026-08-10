@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-7xl mx-auto">
+  <div class="w-full px-4 sm:px-6 lg:px-8">
     <PersonSkeleton v-if="loading" />
 
     <div v-else-if="actor" class="space-y-12 relative pt-12">

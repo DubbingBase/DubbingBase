@@ -1,11 +1,12 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { getParams } from "../_shared/index.ts";
 import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
 
 export default {
   fetch: withSupabase<Database>({ auth: "publishable" }, async (req, ctx) => {
     try {
-      const { numericId } = await req.json();
+      const { numericId } = await getParams(req);
 
       if (numericId === undefined || isNaN(Number(numericId))) {
         return Response.json(

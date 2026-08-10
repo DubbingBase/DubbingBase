@@ -1,5 +1,9 @@
 export interface ITMDBClient {
-  get(endpoint: string, params?: Record<string, string>): Promise<any>;
+  get(
+    endpoint: string,
+    params?: Record<string, string>,
+    language?: string,
+  ): Promise<any>;
   getMediaWithCredits(
     contentType: "movie" | "tv",
     id: number,
@@ -11,7 +15,11 @@ export interface ITMDBClient {
     seasonNumber: number,
     episodeNumber: number,
   ): Promise<any>;
-  fetchMediaDetails(contentId: number, contentType: string): Promise<any>;
+  fetchMediaDetails(
+    contentId: number,
+    contentType: string,
+    language?: string,
+  ): Promise<any>;
   fetchMediaCredits(mediaType: string, mediaId: number): Promise<any>;
   getCollection(collectionId: number): Promise<any>;
   getCached?(endpoint: string, params?: Record<string, string>): Promise<any>;
@@ -20,7 +28,11 @@ export interface ITMDBClient {
 }
 
 export interface ITVDBClient {
-  get(endpoint: string, params?: Record<string, string>): Promise<any>;
+  get(
+    endpoint: string,
+    params?: Record<string, string>,
+    language?: string,
+  ): Promise<any>;
   getSeriesById(seriesId: number): Promise<any>;
   getMovieById(
     movieId: number,
@@ -31,7 +43,7 @@ export interface ITVDBClient {
   getCharactersBySeries(seriesId: number): Promise<any>;
   getCharactersByMovie(movieId: number): Promise<any>;
   getPersonById(personId: number): Promise<any>;
-  searchSeries(query: string): Promise<any>;
+  searchSeries(query: string, language?: string): Promise<any>;
   getCached?(endpoint: string, params?: Record<string, string>): Promise<any>;
   setCache?(key: string, data: any, ttl: string): Promise<void>;
   clearCache?(key: string): Promise<void>;

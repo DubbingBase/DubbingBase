@@ -33,6 +33,7 @@
             <li><NuxtLink :to="$localePath('/movies')" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.movies') }}</NuxtLink></li>
             <li><NuxtLink :to="$localePath('/series')" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.series') }}</NuxtLink></li>
             <li><NuxtLink :to="$localePath('/voice-actors')" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.voiceActors') }}</NuxtLink></li>
+            <li><NuxtLink :to="$localePath('/studios')" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.studios') }}</NuxtLink></li>
           </ul>
         </div>
 

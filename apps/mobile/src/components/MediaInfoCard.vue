@@ -171,6 +171,7 @@ const props = defineProps<Props>();
 
 const getTmdbImageUrl = (path: string | undefined, size = 'w1280') => {
   if (!path) return '';
+  if (path.startsWith('http')) return path;
   return `https://image.tmdb.org/t/p/${size}${path}`;
 };
 

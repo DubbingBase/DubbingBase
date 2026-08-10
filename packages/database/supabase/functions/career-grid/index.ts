@@ -594,7 +594,13 @@ export default {
       let template: any = null;
 
       const dbClient = new DatabaseClient(ctx);
-      const mediaService = new MediaService(dbClient, tmdbClient, ctx);
+      const acceptLanguage = req.headers.get("Accept-Language") || undefined;
+      const mediaService = new MediaService(
+        dbClient,
+        tmdbClient,
+        ctx,
+        acceptLanguage,
+      );
 
       if (typeParam === "home") {
         const result = buildHomeOgImage(langParam);

@@ -144,7 +144,7 @@
                 </select>
                 <NuxtLink
                   v-if="selectedStudioId"
-                  :to="`/studios/edit/${selectedStudioId}`"
+                  :to="$localePath(`/studios/edit/${selectedStudioId}`)"
                   target="_blank"
                   class="px-3 py-2.5 bg-slate-800 text-blue-400 hover:text-blue-300 text-xs font-semibold rounded-xl border border-slate-700"
                 >
@@ -311,7 +311,7 @@
                     </select>
                     <NuxtLink
                       v-if="row.voice_actor_id"
-                      :to="`/voice-actors/edit/${row.voice_actor_id}`"
+                      :to="$localePath(`/voice-actors/edit/${row.voice_actor_id}`)"
                       target="_blank"
                       title="Edit Voice Actor Profile"
                       class="text-blue-400 hover:text-blue-300 text-xs px-1.5 py-1 bg-slate-800 hover:bg-slate-700 rounded border border-slate-700"

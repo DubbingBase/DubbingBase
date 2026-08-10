@@ -93,7 +93,7 @@ useHead({
 });
 
 const { data, pending: isLoading, error } = useAsyncData('voice-actors-page', async () => {
-  const { data, error: fetchError } = await supabase.functions.invoke('list-voice-actors');
+  const { data, error: fetchError } = await supabase.functions.invoke('list-voice-actors', { method: 'GET' });
   if (fetchError) throw fetchError;
   return data?.voice_actors || [];
 });

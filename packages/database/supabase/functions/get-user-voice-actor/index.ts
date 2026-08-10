@@ -1,6 +1,7 @@
 import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
 import { Movie, Serie } from "../_shared/types.ts";
+import { getParams } from "../_shared/index.ts";
 
 type VoiceActor = Database["public"]["Tables"]["voice_actors"]["Row"];
 
@@ -16,10 +17,10 @@ export default {
       let voiceActorIds: number[] = [];
 
       if (req.method === "POST") {
-        const body = await req.json().catch(() => ({}));
+        const body = await getParams(req).catch(() => ({}));
         console.log("body", body);
-        const targetUserId = body?.targetUserId;
-        const providedVoiceActorId = body?.voiceActorId;
+        const targetUserId = (body as any)?.targetUserId;
+        const providedVoiceActorId = (body as any)?.voiceActorId;
 
         if (providedVoiceActorId) {
           voiceActorIds = [providedVoiceActorId];

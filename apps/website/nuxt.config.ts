@@ -9,6 +9,7 @@ export default defineNuxtConfig({
     preset: "cloudflare-pages",
     prerender: {
       autoSubfolderIndex: false,
+      failOnError: false,
     },
   },
 
@@ -20,11 +21,13 @@ export default defineNuxtConfig({
     "/terms": { prerender: true },
     "/guidelines": { prerender: true },
 
-    // Cache media pages at the edge for 1 hour (stale-while-revalidate)
-    "/movie/**": { swr: 3600 },
-    "/show/**": { swr: 3600 },
-    "/actor/**": { swr: 3600 },
-    "/voice-actor/**": { swr: 3600 },
+    // Cache media pages at the edge for 1 hour (stale-while-revalidate) in production only
+    "/movie/**": { swr: process.env.NODE_ENV === "development" ? false : 3600 },
+    "/show/**": { swr: process.env.NODE_ENV === "development" ? false : 3600 },
+    "/actor/**": { swr: process.env.NODE_ENV === "development" ? false : 3600 },
+    "/voice-actor/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
   },
 
   vite: {
@@ -68,7 +71,7 @@ export default defineNuxtConfig({
       { code: "fr", language: "fr-FR", file: "fr.json", name: "Français" },
     ],
     defaultLocale: "en",
-    strategy: "prefix",
+    strategy: "prefix_except_default",
     baseUrl: "https://dubbingbase.com",
     detectBrowserLanguage: {
       useCookie: true,

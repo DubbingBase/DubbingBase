@@ -103,6 +103,7 @@ _(This command generates types to `packages/database/supabase/functions/_shared/
   - Written in TypeScript for Deno.
   - **No Import Map**: The `import_map.json` file has been deleted. Import dependencies directly from standard URLs (e.g., `https://esm.sh/...`) or native Deno/npm specifiers.
   - VS Code Deno configuration is active for `packages/database/functions`.
+  - **GET vs POST**: Use `GET` requests for read-only functions (fetching data) and `POST` for mutations. When using `GET`, pass arguments via URL query parameters since HTTP GET requests cannot have a request body. Use the shared utility `getParams(req)` to handle fallback for both methods.
 - **Curl Edge Functions Locally**:
   - Use `mise run curl-function <function-name> [--body <json> | --body @<file>]` to test edge functions from the CLI.
   - Reads `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` from `.env.development` (injected by mise).

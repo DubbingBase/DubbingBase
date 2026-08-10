@@ -22,7 +22,13 @@ export default {
       console.log("Fetching voice actor with id:", id);
 
       const dbClient = new DatabaseClient(ctx);
-      const mediaService = new MediaService(dbClient, tmdbClient, ctx);
+      const acceptLanguage = req.headers.get("Accept-Language") || undefined;
+      const mediaService = new MediaService(
+        dbClient,
+        tmdbClient,
+        ctx,
+        acceptLanguage,
+      );
       const result = await mediaService.getVoiceActorWithWorkAndMedia(id);
 
       return createResponse(result);

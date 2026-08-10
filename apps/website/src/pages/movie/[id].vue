@@ -10,6 +10,7 @@
         <NuxtImg
           v-if="backdropUrl"
           :src="backdropUrl"
+          :placeholder="backdropUrl.replace('/original/', '/w92/')"
           class="w-full h-full object-cover"
           alt="Backdrop"
           format="webp"
@@ -26,7 +27,8 @@
         <NuxtImg
           v-if="posterUrl"
           :src="posterUrl"
-          class="w-32 md:w-48 rounded-lg shadow-xl"
+          :placeholder="posterUrl.replace('/original/', '/w92/')"
+          class="w-32 md:w-48 object-cover rounded-lg shadow-xl"
           :alt="movie.title"
           format="webp"
         />
@@ -58,7 +60,7 @@
 
     <!-- Action Bar -->
     <div class="border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#161616]/95 backdrop-blur sticky top-0 z-10 shadow-sm">
-      <div class="container mx-auto px-8 max-w-6xl py-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div class="w-full px-8 py-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <!-- Dubbing Projects Tabs -->
         <div v-if="dubbingProjects.length > 0" class="flex flex-wrap gap-2">
           <NuxtLink
@@ -131,7 +133,7 @@
     </div>
 
     <!-- Content -->
-    <div class="container mx-auto p-8 max-w-6xl">
+    <div class="w-full p-8">
       <!-- Overview -->
       <div class="mb-12 max-w-4xl">
         <section>
@@ -411,12 +413,14 @@ const tvdbId = computed(() => data.value?.tvdbId);
 
 const backdropUrl = computed(() => {
   if (!movie.value?.backdrop_path) return null;
+  if (movie.value.backdrop_path.startsWith('http')) return movie.value.backdrop_path;
   return `https://image.tmdb.org/t/p/original${movie.value.backdrop_path}`;
 });
 
 const posterUrl = computed(() => {
   if (!movie.value?.poster_path) return null;
-  return `https://image.tmdb.org/t/p/w500${movie.value.poster_path}`;
+  if (movie.value.poster_path.startsWith('http')) return movie.value.poster_path;
+  return `https://image.tmdb.org/t/p/original${movie.value.poster_path}`;
 });
 
 const activeDubId = computed(() => {

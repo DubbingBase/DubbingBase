@@ -21,7 +21,9 @@ export class DatabaseClient {
 
     const { data, error } = await this.ctx.supabase
       .from("voice_actors")
-      .select(`*, work (*, dubbing_projects(*)), user_voice_actor_links(id)`)
+      .select(
+        `*, work (*, dubbing_projects(*, studios(*))), user_voice_actor_links(id)`,
+      )
       .eq("id", voiceActorId)
       .maybeSingle();
 

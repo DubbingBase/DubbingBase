@@ -1,12 +1,12 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
-import { tmdbClient } from "../_shared/index.ts";
+import { tmdbClient, getParams } from "../_shared/index.ts";
 
 export default {
   fetch: withSupabase<Database>({ auth: "publishable" }, async (req, ctx) => {
     try {
-      const { studioId } = await req.json();
+      const { studioId } = await getParams(req);
 
       if (!studioId) {
         return Response.json(
@@ -61,9 +61,12 @@ export default {
         projects.map(async (p) => {
           try {
             const contentType = p.content_type === "movie" ? "movie" : "tv";
+            const acceptLanguage =
+              req.headers.get("Accept-Language") || undefined;
             const mediaDetails = await tmdbClient.fetchMediaDetails(
               p.content_id,
               contentType,
+              acceptLanguage,
             );
             return {
               ...p,

@@ -6,6 +6,7 @@ import {
   CACHE_KEYS,
   cacheUtils,
   DatabaseClient,
+  getParams,
   MediaService,
   tmdbClient,
   tvdbClient,
@@ -15,7 +16,7 @@ import { Database } from "../_shared/database.types.ts";
 export default {
   fetch: withSupabase<Database>({ auth: "publishable" }, async (req, ctx) => {
     try {
-      const { id } = await req.json();
+      const { id } = await getParams(req);
 
       if (!id) {
         return Response.json(
@@ -38,7 +39,13 @@ export default {
 
       // Use shared DatabaseClient for database queries, initialized with context clients
       const dbClient = new DatabaseClient(ctx);
-      const mediaService = new MediaService(dbClient, tmdbClient, ctx);
+      const acceptLanguage = req.headers.get("Accept-Language") || undefined;
+      const mediaService = new MediaService(
+        dbClient,
+        tmdbClient,
+        ctx,
+        acceptLanguage,
+      );
 
       // Fetch aggregate credits concurrently
       const aggregateCreditsPromise = (async () => {

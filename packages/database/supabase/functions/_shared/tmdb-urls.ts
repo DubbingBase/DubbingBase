@@ -40,10 +40,10 @@ export const processMedia = (media: any) => {
 
   return {
     ...media,
-    backdrop_path: buildTmdbImageUrl(media.backdrop_path),
-    poster_path: buildTmdbImageUrl(media.poster_path),
+    backdrop_path: buildTmdbImageUrl(media.backdrop_path, "original"),
+    poster_path: buildTmdbImageUrl(media.poster_path, "original"),
     profile_path: buildTmdbImageUrl(media.profile_path),
-    still_path: buildTmdbImageUrl(media.still_path),
+    still_path: buildTmdbImageUrl(media.still_path, "original"),
     credits: media.credits
       ? {
           ...media.credits,
@@ -64,13 +64,13 @@ export const processMedia = (media: any) => {
     seasons: media.seasons
       ? (media.seasons ?? []).map((season: any) => ({
           ...season,
-          poster_path: buildTmdbImageUrl(season.poster_path),
+          poster_path: buildTmdbImageUrl(season.poster_path, "original"),
         }))
       : [],
     episodes: media.episodes
       ? (media.episodes ?? []).map((episode: any) => ({
           ...episode,
-          still_path: buildTmdbImageUrl(episode.still_path),
+          still_path: buildTmdbImageUrl(episode.still_path, "original"),
         }))
       : [],
   };

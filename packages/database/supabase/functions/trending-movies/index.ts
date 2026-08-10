@@ -2,7 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
 import { buildTmdbImageUrl } from "../_shared/tmdb-urls.ts";
-import { cacheUtils, CACHE_KEYS } from "../_shared/index.ts";
+import { cacheUtils, CACHE_KEYS, getParams } from "../_shared/index.ts";
 
 const cacheKey = CACHE_KEYS.TMDB_TRENDING_MOVIES();
 

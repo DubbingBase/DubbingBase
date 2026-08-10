@@ -3,13 +3,13 @@ import { withSupabase } from "npm:@supabase/server@^1";
 import { TMDBClient } from "../_shared/tmdb.ts";
 import { DatabaseClient } from "../_shared/database.ts";
 import { MediaService } from "../_shared/media-service.ts";
-import { cacheUtils } from "../_shared/index.ts";
+import { cacheUtils, getParams } from "../_shared/index.ts";
 import { Database } from "../_shared/database.types.ts";
 
 export default {
   fetch: withSupabase<Database>({ auth: "publishable" }, async (req, ctx) => {
     try {
-      const { id, season_number } = await req.json();
+      const { id, season_number } = await getParams(req);
 
       if (!id || season_number === undefined) {
         return Response.json(
@@ -22,7 +22,13 @@ export default {
 
       const tmdbClient = new TMDBClient(cacheUtils);
       const databaseClient = new DatabaseClient(ctx);
-      const mediaService = new MediaService(databaseClient, tmdbClient, ctx);
+      const acceptLanguage = req.headers.get("Accept-Language") || undefined;
+      const mediaService = new MediaService(
+        databaseClient,
+        tmdbClient,
+        ctx,
+        acceptLanguage,
+      );
 
       const apiDataPromise = mediaService
         .getMediaWithVoiceActorsExtended("season", id, season_number)

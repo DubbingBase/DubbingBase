@@ -460,7 +460,7 @@ const fetchQueueAndUsers = async () => {
 
     // 2. Fetch users to map user_id -> email
     const { data: userData, error: userErr } =
-      await supabase.functions.invoke("list_users");
+      await supabase.functions.invoke("list_users", { method: 'GET' });
     if (!userErr && userData?.users) {
       const tempMap: Record<string, string> = {};
       userData.users.forEach((u: any) => {

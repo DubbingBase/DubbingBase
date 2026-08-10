@@ -240,7 +240,7 @@ async function fetchVoiceActors() {
   error.value = "";
 
   try {
-    const response = await supabase.functions.invoke("list-voice-actors");
+    const response = await supabase.functions.invoke("list-voice-actors", { method: 'GET' });
     if (response.error) throw response.error;
     tableData.value = response.data.voice_actors || [];
   } catch (err) {

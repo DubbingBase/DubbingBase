@@ -320,7 +320,7 @@ const fetchDashboardData = async () => {
     loading.value = true;
     error.value = null;
 
-    const { data, error: invokeError } = await supabase.functions.invoke('dashboard-stats');
+    const { data, error: invokeError } = await supabase.functions.invoke('dashboard-stats', { method: 'GET' });
 
     if (invokeError) throw invokeError;
 

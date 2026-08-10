@@ -556,7 +556,8 @@ const fetchIgdbMetadata = async () => {
   
   isFetchingIgdb.value = true;
   try {
-    const { data, error } = await supabase.functions.invoke("game", { body: { id: contentId.value } });
+    const params = new URLSearchParams({ id: contentId.value.toString() });
+    const { data, error } = await supabase.functions.invoke(`game?${params.toString()}`, { method: "GET" });
     if (error) throw error;
     if (data?.game) {
       mediaTitle.value = data.game.name;

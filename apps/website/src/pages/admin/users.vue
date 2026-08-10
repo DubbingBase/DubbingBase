@@ -189,7 +189,7 @@ const fetchUsers = async () => {
     loading.value = true;
     error.value = null;
 
-    const { data, error: funcError } = await supabase.functions.invoke("list_users");
+    const { data, error: funcError } = await supabase.functions.invoke("list_users", { method: 'GET' });
 
     if (funcError) throw funcError;
 

@@ -1,12 +1,13 @@
 import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
+import { getParams } from "../_shared/index.ts";
 
 export default {
   fetch: withSupabase<Database>({ auth: "publishable" }, async (req, ctx) => {
     try {
       // Parse request body to get optional query parameter
-      const requestBody = await req.json().catch(() => ({}));
-      const query = requestBody.query;
+      const requestBody = await getParams(req).catch(() => ({}));
+      const query = (requestBody as any).query;
 
       let queryBuilder = ctx.supabase.from("voice_actors").select("*");
 

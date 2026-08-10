@@ -1,7 +1,12 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
-import { igdbClient, cacheUtils, DatabaseClient } from "../_shared/index.ts";
+import {
+  igdbClient,
+  cacheUtils,
+  DatabaseClient,
+  getParams,
+} from "../_shared/index.ts";
 import { buildIgdbImageUrl } from "../_shared/igdb.ts";
 import type { IgdbGame, IgdbCharacter } from "../_shared/types.ts";
 
@@ -41,7 +46,7 @@ function processIgdbCharacter(char: IgdbCharacter) {
 export default {
   fetch: withSupabase<Database>({ auth: "publishable" }, async (req, ctx) => {
     try {
-      const { id } = await req.json();
+      const { id } = await getParams(req);
 
       if (!id) {
         return Response.json(

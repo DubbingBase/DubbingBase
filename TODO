@@ -1,7 +1,7 @@
 # TODOs
+failOnError: false, o nuxt build
 
-replace POST by GET when possible
-use Acept6language header for localized tmdb/tvdb api calls
+actor hero layout differ from other pages
 shows don't have seasons and episodes on the website
 write a script to request google index update for bulk
 Add tvdb and tmdbid to the dubbing project

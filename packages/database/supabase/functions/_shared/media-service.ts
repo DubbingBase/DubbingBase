@@ -13,6 +13,7 @@ export class MediaService {
     private databaseClient: DatabaseClient,
     private tmdbClient: ITMDBClient,
     private ctx: SupabaseContext<Database>,
+    private acceptLanguage?: string,
   ) {}
 
   async getVoiceActorWithWorkAndMedia(voiceActorId: number, language?: string) {
@@ -37,7 +38,7 @@ export class MediaService {
         const tmdbMedia = await this.tmdbClient.getMediaWithCredits(
           contentType,
           contentId,
-          language,
+          language || this.acceptLanguage,
         );
 
         const { characters: characterProfilePictures, tvdbId } =
@@ -204,7 +205,10 @@ export class MediaService {
           `[MediaService] Searching TVDB for query: "${searchQuery}"`,
         );
 
-        const searchResults = await tvdbClient.searchSeries(searchQuery);
+        const searchResults = await tvdbClient.searchSeries(
+          searchQuery,
+          this.acceptLanguage,
+        );
 
         if (searchResults && searchResults.data) {
           // Filter by type matching if possible
@@ -241,16 +245,24 @@ export class MediaService {
       if (tvdbId) {
         let characters: any[] = [];
         if (contentType === "movie") {
-          const res = await tvdbClient.getMovieById(tvdbId, {
-            meta: "translations",
-            short: false,
-          });
+          const res = await tvdbClient.getMovieById(
+            tvdbId,
+            {
+              meta: "translations",
+              short: false,
+            },
+            this.acceptLanguage,
+          );
           characters = res.data.characters || [];
         } else {
-          const res = await tvdbClient.getSeriesById(tvdbId, {
-            meta: "episodes",
-            short: false,
-          });
+          const res = await tvdbClient.getSeriesById(
+            tvdbId,
+            {
+              meta: "episodes",
+              short: false,
+            },
+            this.acceptLanguage,
+          );
           characters = res.data.characters || [];
         }
 
@@ -296,6 +308,7 @@ export class MediaService {
     const media = await this.tmdbClient.getMediaWithCredits(
       contentType,
       contentId,
+      this.acceptLanguage,
     );
 
     let collection = null;
@@ -343,10 +356,18 @@ export class MediaService {
 
     switch (contentType) {
       case "movie":
-        media = await this.tmdbClient.getMediaWithCredits("movie", id);
+        media = await this.tmdbClient.getMediaWithCredits(
+          "movie",
+          id,
+          this.acceptLanguage,
+        );
         break;
       case "tv":
-        media = await this.tmdbClient.getMediaWithCredits("tv", id);
+        media = await this.tmdbClient.getMediaWithCredits(
+          "tv",
+          id,
+          this.acceptLanguage,
+        );
         break;
       case "season":
         if (!seasonNumber) {

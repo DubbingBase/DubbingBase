@@ -111,6 +111,7 @@ import { useStudioData } from '@app/shared-logic';
 
 const route = useRoute();
 const router = useRouter();
+const localePath = useLocalePath();
 const supabase = useSupabaseClient();
 const { studio, loading: fetchingData, loadStudioDetails } = useStudioData(supabase);
 
@@ -180,7 +181,7 @@ const saveStudio = async () => {
 
     if (error) throw error;
 
-    router.push(`/studio/${isEditMode.value ? studioId : ''}`);
+    router.push(localePath(`/studio/${isEditMode.value ? studioId : ''}`));
   } catch (err: any) {
     console.error("Error saving studio:", err);
     errorMsg.value = err.message || "Une erreur s'est produite lors de la sauvegarde.";

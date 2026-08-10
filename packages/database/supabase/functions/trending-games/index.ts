@@ -1,7 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
-import { igdbClient, cacheUtils } from "../_shared/index.ts";
+import { igdbClient, cacheUtils, getParams } from "../_shared/index.ts";
 import { buildIgdbImageUrl } from "../_shared/igdb.ts";
 import type { IgdbGame } from "../_shared/types.ts";
 

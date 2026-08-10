@@ -568,7 +568,8 @@ const fetchTmdbMetadata = async () => {
   
   isFetchingTmdb.value = true;
   try {
-    const { data, error } = await supabase.functions.invoke("show", { body: { id: contentId.value } });
+    const params = new URLSearchParams({ id: contentId.value.toString() });
+    const { data, error } = await supabase.functions.invoke(`show?${params.toString()}`, { method: "GET" });
     if (error) throw error;
     if (data?.serie) {
       mediaTitle.value = data.serie.name;

@@ -1,11 +1,12 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { getParams } from "../_shared/index.ts";
 import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
 
 export default {
   fetch: withSupabase<Database>({ auth: "publishable" }, async (req, _ctx) => {
     try {
-      const { media_type, media_id } = await req.json();
+      const { media_type, media_id } = await getParams(req);
 
       if (!media_type || !media_id) {
         return Response.json(

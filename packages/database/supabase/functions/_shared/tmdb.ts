@@ -22,9 +22,14 @@ export class TMDBClient implements ITMDBClient {
     });
   }
 
-  async get(endpoint: string, params?: Record<string, string>) {
+  async get(
+    endpoint: string,
+    params?: Record<string, string>,
+    language?: string,
+  ) {
     const url = new URL(`${this.baseUrl}/${endpoint}`);
-    url.searchParams.set("language", "fr-FR");
+    const preferredLang = (language || "fr-FR").split(",")[0].trim();
+    url.searchParams.set("language", preferredLang);
 
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
@@ -37,6 +42,7 @@ export class TMDBClient implements ITMDBClient {
         headers: {
           Authorization: `Bearer ${this.apiKey}`,
           Accept: "application/json",
+          ...(language ? { "Accept-Language": language } : {}),
         },
         signal: AbortSignal.timeout(5000), // 5 seconds timeout
       });
@@ -60,7 +66,7 @@ export class TMDBClient implements ITMDBClient {
     id: number,
     language?: string,
   ) {
-    const langStr = language || "fr-FR";
+    const langStr = (language || "fr-FR").split(",")[0].trim();
     const cacheKey = this.cache.tmdbKey(contentType, id, `credits-${langStr}`);
 
     // Try cache first
@@ -73,10 +79,13 @@ export class TMDBClient implements ITMDBClient {
     }
 
     // Cache miss - fetch from API
-    const result = await this.get(`${contentType}/${id}`, {
-      append_to_response: "credits,external_ids",
-      ...(language ? { language } : {}),
-    });
+    const result = await this.get(
+      `${contentType}/${id}`,
+      {
+        append_to_response: "credits,external_ids",
+      },
+      language,
+    );
 
     // Cache the result with MEDIUM TTL (6 hours for media data)
     await this.cache.set(cacheKey, result, "MEDIUM");
@@ -154,8 +163,17 @@ export class TMDBClient implements ITMDBClient {
     return result;
   }
 
-  async fetchMediaDetails(contentId: number, contentType: string) {
-    const cacheKey = this.cache.tmdbKey(contentType, contentId, "details");
+  async fetchMediaDetails(
+    contentId: number,
+    contentType: string,
+    language?: string,
+  ) {
+    const langStr = (language || "fr-FR").split(",")[0].trim();
+    const cacheKey = this.cache.tmdbKey(
+      contentType,
+      contentId,
+      `details-${langStr}`,
+    );
 
     // Try cache first
     const cached = await this.cache.get(cacheKey);
@@ -165,9 +183,13 @@ export class TMDBClient implements ITMDBClient {
     }
 
     // Cache miss - fetch from API
-    const result = await this.get(`${contentType}/${contentId}`, {
-      append_to_response: "credits,external_ids",
-    });
+    const result = await this.get(
+      `${contentType}/${contentId}`,
+      {
+        append_to_response: "credits,external_ids",
+      },
+      language,
+    );
 
     // Cache the result with MEDIUM TTL (6 hours for media details)
     await this.cache.set(cacheKey, result, "MEDIUM");
