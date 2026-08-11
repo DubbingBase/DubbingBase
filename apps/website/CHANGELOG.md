@@ -1,5 +1,13 @@
 # @app/landing
 
+## 1.0.45
+
+### Patch Changes
+
+- d618dca: implement locale-aware data fetching by passing Accept-Language headers to Supabase functions
+- Updated dependencies [d618dca]
+  - @app/shared-logic@1.0.25
+
 ## 1.0.44
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @app/shared-logic
 
+## 1.0.25
+
+### Patch Changes
+
+- d618dca: implement locale-aware data fetching by passing Accept-Language headers to Supabase functions
+
 ## 1.0.24
 
 ### Patch Changes
