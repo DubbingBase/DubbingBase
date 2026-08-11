@@ -1,5 +1,11 @@
 # @app/supabase
 
+## 0.0.80
+
+### Patch Changes
+
+- 387bdc1: replace OneSignal notifications with a new Discord webhook integration for admin alerts
+
 ## 0.0.79
 
 ### Patch Changes
