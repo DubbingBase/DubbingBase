@@ -7,10 +7,6 @@ export default defineNuxtConfig({
 
   nitro: {
     preset: "cloudflare-pages",
-    prerender: {
-      autoSubfolderIndex: false,
-      failOnError: false,
-    },
   },
 
   routeRules: {
@@ -24,6 +20,7 @@ export default defineNuxtConfig({
     // Cache media pages at the edge for 1 hour (stale-while-revalidate) in production only
     "/movie/**": { swr: process.env.NODE_ENV === "development" ? false : 3600 },
     "/show/**": { swr: process.env.NODE_ENV === "development" ? false : 3600 },
+    "/game/**": { swr: process.env.NODE_ENV === "development" ? false : 3600 },
     "/actor/**": { swr: process.env.NODE_ENV === "development" ? false : 3600 },
     "/voice-actor/**": {
       swr: process.env.NODE_ENV === "development" ? false : 3600,
@@ -81,6 +78,8 @@ export default defineNuxtConfig({
   },
 
   supabase: {
+    url: process.env.SUPABASE_URL || "http://localhost:54321",
+    key: process.env.SUPABASE_KEY || "dummy_key",
     redirect: false,
     types: resolve(
       import.meta.dirname,
