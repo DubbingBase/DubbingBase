@@ -69,15 +69,47 @@
           />
         </div>
 
-        <!-- Logo URL -->
-        <div class="space-y-1">
-          <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Logo URL</label>
-          <input
-            v-model="logoUrl"
-            type="url"
-            placeholder="https://..."
-            class="w-full px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-          />
+        <!-- Studio Logo -->
+        <div class="space-y-2">
+          <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider block">Studio Logo</label>
+          <div class="flex items-center gap-4">
+            <div class="relative h-16 w-16 rounded-xl overflow-hidden border border-gray-800 bg-gray-950 flex shrink-0 items-center justify-center text-gray-500 shadow-inner group">
+              <NuxtImg format="webp" v-if="logoPreview || logoUrl"
+                :src="logoPreview || logoUrl"
+                class="h-full w-full object-cover"
+                alt="Studio Logo"
+              />
+              <svg v-else class="h-8 w-8 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div class="flex-1 space-y-2">
+              <input
+                ref="fileInput"
+                type="file"
+                accept="image/*"
+                @change="onLogoChange"
+                class="hidden"
+              />
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  @click="triggerFileInput"
+                  class="py-2 px-3 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-semibold rounded-lg transition-colors border border-gray-700"
+                >
+                  {{ logoPreview ? 'Change Logo' : 'Upload Logo' }}
+                </button>
+                <button
+                  v-if="logoPreview || logoUrl"
+                  type="button"
+                  @click="clearLogo"
+                  class="py-2 px-3 bg-red-950/30 hover:bg-red-950/50 text-red-400 text-xs font-semibold rounded-lg transition-colors border border-red-900/30"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -124,6 +156,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
+import imageCompression from "browser-image-compression";
 
 definePageMeta({
   layout: 'admin',
@@ -144,6 +177,33 @@ const country = ref("");
 const city = ref("");
 const websiteUrl = ref("");
 const logoUrl = ref("");
+const logoFile = ref<File | null>(null);
+const logoPreview = ref<string | null>(null);
+const fileInput = ref<HTMLInputElement | null>(null);
+
+const triggerFileInput = () => {
+  fileInput.value?.click();
+};
+
+const clearLogo = () => {
+  if (fileInput.value) fileInput.value.value = "";
+  logoFile.value = null;
+  logoPreview.value = null;
+  logoUrl.value = "";
+};
+
+const onLogoChange = (event: Event) => {
+  const files = (event.target as HTMLInputElement).files;
+  if (files && files.length > 0) {
+    const file = files[0];
+    logoFile.value = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      logoPreview.value = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  }
+};
 const isSaving = ref(false);
 
 const toast = ref({
@@ -196,6 +256,8 @@ const saveStudio = async () => {
       logo_url: logoUrl.value || null
     };
 
+    let studioId = id;
+
     if (isEditMode.value && id) {
       const { error } = await supabase
         .from("studios")
@@ -203,10 +265,33 @@ const saveStudio = async () => {
         .eq("id", id);
       if (error) throw error;
     } else {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("studios")
-        .insert([payload]);
+        .insert([payload])
+        .select()
+        .single();
       if (error) throw error;
+      studioId = data.id.toString();
+    }
+
+    if (logoFile.value && studioId) {
+      const options = { maxSizeMB: 1, maxWidthOrHeight: 1024, useWebWorker: true };
+      const compressedFile = await imageCompression(logoFile.value, options);
+      const fileExt = logoFile.value.name.split('.').pop() || 'jpg';
+      const filePath = `${studioId}/${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from("studio_logos")
+        .upload(filePath, compressedFile, { cacheControl: "3600", upsert: true });
+        
+      if (!uploadError) {
+        const { data: publicUrlData } = supabase.storage.from("studio_logos").getPublicUrl(filePath);
+        if (publicUrlData) {
+          await supabase.from("studios").update({ logo_url: publicUrlData.publicUrl }).eq("id", studioId);
+        }
+      } else {
+        console.error("Logo upload error:", uploadError);
+      }
     }
 
     showToast("Studio saved successfully!", "success");

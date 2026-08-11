@@ -2,6 +2,7 @@ import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
 import { SupabaseContext } from "npm:@supabase/server@^1";
 import { normalizeString } from "../_shared/normalize.ts";
+import { getParams } from "../_shared/request-utils.ts";
 
 interface SearchParams {
   query: string;
@@ -101,9 +102,7 @@ const searchVoiceActors = async (
 export default {
   fetch: withSupabase<Database>({ auth: "publishable" }, async (req, ctx) => {
     try {
-      const { query, limit = 10 } = (await req
-        .json()
-        .catch(() => ({}))) as SearchParams;
+      const { query, limit = 10 } = (await getParams(req)) as SearchParams;
 
       if (!query || typeof query !== "string") {
         return Response.json(

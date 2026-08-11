@@ -100,7 +100,7 @@ port = 55324
 [storage]
 enabled = true
 # The maximum file size allowed (e.g. "5MB", "500KB").
-file_size_limit = "50MiB"
+file_size_limit = "5MiB"
 
 # Image transformation API is available to Supabase Pro plan.
 # [storage.image_transformation]
@@ -109,16 +109,21 @@ file_size_limit = "50MiB"
 # Uncomment to configure local storage buckets
 [storage.buckets.project_attachments]
 public = false
-file_size_limit = "50MiB"
+file_size_limit = "5MiB"
 allowed_mime_types = ["image/png", "image/jpeg", "image/webp"]
 objects_path = "./buckets/project_attachments"
 
 [storage.buckets.voice_actor_profile_pictures]
 public = true
-file_size_limit = "50MiB"
+file_size_limit = "5MiB"
 allowed_mime_types = ["image/*"]
 objects_path = "./buckets/voice_actor_profile_pictures"
 
+[storage.buckets.studio_logos]
+public = true
+file_size_limit = "5MiB"
+allowed_mime_types = ["image/*"]
+objects_path = "./buckets/studio_logos"
 [auth]
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used

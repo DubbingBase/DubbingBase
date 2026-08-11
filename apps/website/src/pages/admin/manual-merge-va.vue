@@ -781,10 +781,10 @@ const executeSearch = async (type: "A" | "B") => {
 
   loadingRef.value = true;
   try {
-    const { data, error } = new URLSearchParams({ query, limit: "10" });
-    await supabase.functions.invoke(
+    const params = new URLSearchParams({ query, limit: "10" });
+    const { data, error } = await supabase.functions.invoke(
       `search-voice-actors?${params.toString()}`,
-      { method: "GET" },
+      { method: "GET" }
     );
 
     if (error) throw error;
@@ -873,9 +873,9 @@ const handleOutsideClick = (e: MouseEvent) => {
   }
 };
 
-await (async () => {
+onMounted(() => {
   document.addEventListener("click", handleOutsideClick);
-})();
+});
 
 onUnmounted(() => {
   document.removeEventListener("click", handleOutsideClick);
