@@ -1,5 +1,11 @@
 # @app/supabase
 
+## 0.0.81
+
+### Patch Changes
+
+- 9803ad9: implement studio logo image upload and compression using Supabase storage
+
 ## 0.0.80
 
 ### Patch Changes

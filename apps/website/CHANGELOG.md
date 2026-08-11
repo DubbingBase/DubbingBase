@@ -1,5 +1,13 @@
 # @app/landing
 
+## 1.0.44
+
+### Patch Changes
+
+- 9803ad9: implement studio logo image upload and compression using Supabase storage
+- ff073f6: migrate color palette from slate to gray across admin and edit pages
+- 292ef80: improve grid responsiveness and remove hover zoom effects across movie, show, and actor pages
+
 ## 1.0.43
 
 ### Patch Changes
