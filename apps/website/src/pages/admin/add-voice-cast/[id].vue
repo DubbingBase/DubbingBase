@@ -46,7 +46,7 @@
           <div class="space-y-2">
             <h4 class="text-lg font-bold text-white leading-snug">{{ movie.title }}</h4>
             <p v-if="movie.release_date" class="text-xs font-semibold text-gray-500">
-              Released: {{ new Date(movie.release_date).getFullYear() }}
+              Released: {{ movie.release_date.split('-')[0] }}
             </p>
             <p v-if="movie.overview" class="text-xs text-gray-400 leading-relaxed line-clamp-4 italic">
               "{{ movie.overview }}"

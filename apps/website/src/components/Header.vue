@@ -158,30 +158,36 @@
       ></div>
 
       <!-- User Profile -->
-      <template v-if="user">
-        <NuxtLink
-          :to="$localePath('/profile')"
-          class="relative flex items-center justify-center w-9 h-9 md:w-10 md:h-10 ml-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 ring-2 ring-transparent hover:ring-gray-200 dark:hover:ring-gray-700 transition-all overflow-hidden cursor-pointer"
-          :aria-label="t('nav.profile', 'Profile')"
-        >
-          <img
-            v-if="user.user_metadata?.avatar_url"
-            :src="user.user_metadata.avatar_url"
-            alt="Avatar"
-            class="w-full h-full object-cover"
-          />
-          <UserIcon v-else class="w-5 h-5" />
-        </NuxtLink>
-      </template>
-      <template v-else>
-        <NuxtLink
-          :to="$localePath('/login')"
-          class="flex items-center justify-center h-9 px-4 ml-1 text-sm font-semibold text-white bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 rounded-full transition-all shadow-sm hover:shadow-md"
-          :aria-label="t('nav.login')"
-        >
-          {{ t("nav.login") }}
-        </NuxtLink>
-      </template>
+      <ClientOnly>
+        <template v-if="user">
+          <NuxtLink
+            :to="$localePath('/profile')"
+            class="relative flex items-center justify-center w-9 h-9 md:w-10 md:h-10 ml-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 ring-2 ring-transparent hover:ring-gray-200 dark:hover:ring-gray-700 transition-all overflow-hidden cursor-pointer"
+            :aria-label="t('nav.profile', 'Profile')"
+          >
+            <img
+              v-if="user.user_metadata?.avatar_url"
+              :src="user.user_metadata.avatar_url"
+              alt="Avatar"
+              class="w-full h-full object-cover"
+            />
+            <UserIcon v-else class="w-5 h-5" />
+          </NuxtLink>
+        </template>
+        <template v-else>
+          <NuxtLink
+            :to="$localePath('/login')"
+            class="flex items-center justify-center h-9 px-4 ml-1 text-sm font-semibold text-white bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 rounded-full transition-all shadow-sm hover:shadow-md"
+            :aria-label="t('nav.login')"
+          >
+            {{ t("nav.login") }}
+          </NuxtLink>
+        </template>
+        
+        <template #fallback>
+          <div class="w-9 h-9 md:w-10 md:h-10 ml-1 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse"></div>
+        </template>
+      </ClientOnly>
     </div>
 
     <SearchModal v-model:open="isSearchOpen" />

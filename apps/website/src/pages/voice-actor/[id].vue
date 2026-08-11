@@ -19,7 +19,7 @@
           v-if="voiceActor.date_of_birth"
           class="text-gray-900 dark:text-gray-100 font-medium text-sm md:text-base bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-lg"
         >
-          Born: {{ new Date(voiceActor.date_of_birth).getFullYear() }}
+          Born: {{ voiceActor.date_of_birth.split('-')[0] }}
         </span>
         <span
           v-if="voiceActor.years_active"
@@ -265,7 +265,7 @@
                     <div class="flex flex-col min-w-0 flex-1">
                       <span
                         class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5"
-                        >{{ new Date(item.sortDate).getFullYear() }}</span
+                        >{{ item.sortDate ? item.sortDate.split('-')[0] : '' }}</span
                       >
                       <span
                         class="font-bold text-sm text-gray-900 dark:text-gray-100 leading-tight line-clamp-2"
@@ -477,7 +477,7 @@
                         <div class="flex flex-col min-w-0 flex-1">
                           <span
                             class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5"
-                            >{{ new Date(item.sortDate).getFullYear() }}</span
+                            >{{ item.sortDate ? item.sortDate.split('-')[0] : '' }}</span
                           >
                           <span
                             class="font-bold text-sm text-gray-900 dark:text-gray-100 leading-tight line-clamp-2"

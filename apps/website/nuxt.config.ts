@@ -31,6 +31,7 @@ export default defineNuxtConfig({
     plugins: [tailwindcss()],
     define: {
       __VERSION__: JSON.stringify(process.env.npm_package_version || "1.0.0"),
+      __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: "true",
     },
   },
 
@@ -47,7 +48,17 @@ export default defineNuxtConfig({
     "@nuxt/icon",
     "nuxt-swiper",
     "@nuxt/test-utils/module",
+    "@nuxtjs/html-validator",
   ],
+
+  fonts: {
+    experimental: {
+      processCSSVariables: true,
+    },
+    families: [
+      { name: "Inter", provider: "google", display: "block", preload: true },
+    ],
+  },
 
   site: {
     url: "https://dubbingbase.com",
@@ -86,6 +97,11 @@ export default defineNuxtConfig({
       import.meta.dirname,
       "../../packages/database/supabase/functions/_shared/database.types.ts",
     ),
+    cookieOptions: {
+      maxAge: 60 * 60 * 8,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    },
   },
 
   srcDir: "src/",

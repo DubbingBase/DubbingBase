@@ -9,7 +9,7 @@
     >
       <template #metadata>
         <span class="text-gray-900 dark:text-gray-100 font-semibold text-base md:text-lg bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg">
-          {{ new Date(serie.first_air_date).getFullYear() }}
+          {{ serie.first_air_date ? serie.first_air_date.split('-')[0] : '' }}
           <template v-if="serie.number_of_seasons"> &bull; {{ serie.number_of_seasons }} Saisons</template>
         </span>
         <span v-if="serie.original_name !== serie.name" class="text-gray-800 dark:text-gray-300 font-medium text-sm md:text-base bg-white/40 dark:bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-lg">

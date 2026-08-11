@@ -14,14 +14,12 @@
         >
         <span
           v-if="actor.birthday"
-          class="px-3 py-1 bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-300 rounded-full text-sm"
-          >Born: {{ new Date(actor.birthday).getFullYear() }}</span
-        >
+          class="text-gray-900 dark:text-gray-100 font-semibold text-base md:text-lg bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg"
+          >Born: {{ actor.birthday.split('-')[0] }}</span>
         <span
           v-if="actor.deathday"
-          class="px-3 py-1 bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-300 rounded-full text-sm"
-          >Died: {{ new Date(actor.deathday).getFullYear() }}</span
-        >
+          class="text-gray-900 dark:text-gray-100 font-semibold text-base md:text-lg bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg"
+          >Died: {{ actor.deathday.split('-')[0] }}</span>
       </template>
 
       <template #biography>

@@ -9,7 +9,7 @@
     >
       <template #metadata>
         <span class="text-gray-900 dark:text-gray-100 font-semibold text-base md:text-lg bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg">
-          {{ new Date(movie.release_date).getFullYear() }}
+          {{ movie.release_date ? movie.release_date.split('-')[0] : '' }}
         </span>
         <span v-if="movie.original_title !== movie.title" class="text-gray-800 dark:text-gray-300 font-medium text-sm md:text-base bg-white/40 dark:bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-lg">
           {{ movie.original_title }}
