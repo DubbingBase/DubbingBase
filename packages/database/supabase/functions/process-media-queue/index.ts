@@ -1,7 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
-import { sendOneSignalNotification } from "../_shared/onesignal.ts";
+import { sendDiscordAdminNotification } from "../_shared/discord.ts";
 
 export default {
   fetch: withSupabase<Database>(
@@ -200,7 +200,7 @@ export default {
             targetUrl = `/game/${payload.tmdb_id}`;
           }
 
-          await sendOneSignalNotification(
+          await sendDiscordAdminNotification(
             "Queue Item Processed",
             `Successfully processed ${mediaTitle}${
               payload.season_number ? ` (Season ${payload.season_number})` : ""
@@ -256,7 +256,7 @@ export default {
                 error: `Max retries (${MAX_RETRIES}) reached due to Mistral 429`,
               });
 
-              await sendOneSignalNotification(
+              await sendDiscordAdminNotification(
                 "Queue Item Failed (Rate Limit)",
                 `Failed to process ${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type} (TMDB ID ${payload.tmdb_id}): Max retries reached due to rate limit.`,
               );
@@ -297,7 +297,7 @@ export default {
               error: errMsg,
             });
 
-            await sendOneSignalNotification(
+            await sendDiscordAdminNotification(
               "Queue Item Failed",
               `Failed to process ${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type} (TMDB ID ${payload.tmdb_id}): ${errMsg}`,
             );
@@ -363,7 +363,7 @@ export default {
           error instanceof Error ? error.stack : error,
         );
 
-        await sendOneSignalNotification(
+        await sendDiscordAdminNotification(
           "Queue Processor FAILED",
           `Critical failure in process-media-queue: ${errorMsg}`,
         );

@@ -24,14 +24,6 @@ export async function sendOneSignalNotification(
 
   if (options?.targetExternalIds && options.targetExternalIds.length > 0) {
     targetExternalIds = options.targetExternalIds;
-  } else {
-    if (!adminId) {
-      console.warn(
-        "[OneSignal] ADMIN_USER_ID missing, cannot target admin user. Skipping notification",
-      );
-      return;
-    }
-    targetExternalIds = [adminId];
   }
 
   if (targetExternalIds.length === 0) {

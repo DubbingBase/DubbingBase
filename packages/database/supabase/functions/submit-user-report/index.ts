@@ -1,5 +1,5 @@
 import { withSupabase } from "npm:@supabase/server@^1";
-import { sendOneSignalNotification } from "../_shared/onesignal.ts";
+import { sendDiscordAdminNotification } from "../_shared/discord.ts";
 import type { Database } from "../_shared/database.types.ts";
 
 export default {
@@ -41,13 +41,11 @@ export default {
         );
       }
 
-      // Notify admin
-      await sendOneSignalNotification(
+      await sendDiscordAdminNotification(
         "New User Report",
         `Reason: ${reason}\nTarget: ${target_url}`,
         {
           url: "/admin/reports",
-          data: { reportId: data.id },
         },
       );
 

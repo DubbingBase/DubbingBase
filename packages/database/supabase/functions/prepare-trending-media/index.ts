@@ -1,7 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
-import { sendOneSignalNotification } from "../_shared/onesignal.ts";
+import { sendDiscordAdminNotification } from "../_shared/discord.ts";
 import { buildTmdbImageUrl } from "../_shared/tmdb-urls.ts";
 
 export default {
@@ -134,7 +134,7 @@ export default {
             buildTmdbImageUrl(itemsToProcess[0].poster_path) || undefined;
         }
 
-        await sendOneSignalNotification(
+        await sendDiscordAdminNotification(
           "DubbingBase Trending Media Report",
           summaryMessage,
           imageUrl ? { imageUrl } : undefined,
@@ -155,7 +155,7 @@ export default {
           error instanceof Error ? error.message : "Unknown error occurred";
         console.error("Trending media queuing failed:", errorMessage);
 
-        await sendOneSignalNotification(
+        await sendDiscordAdminNotification(
           "Trending Media Job FAILED",
           `Critical failure in prepare-trending-media: ${errorMessage}`,
         );
