@@ -11,7 +11,7 @@
       <ComboboxAnchor class="relative w-full">
         <ComboboxInput
           v-model="searchTerm"
-          :display-value="displayFn"
+          :display-value="(val) => val == null ? '' : displayFn(val)"
           class="w-full pl-4 pr-16 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:opacity-50"
           :placeholder="placeholder"
           :disabled="disabled"
@@ -57,7 +57,7 @@
 
             <!-- Inline creation option -->
             <div 
-              v-if="allowCreate && searchTerm.length >= 2 && !loading" 
+              v-if="allowCreate && searchTerm.length >= 2 && !loading && (modelValue == null || searchTerm !== displayFn(modelValue))" 
               class="border-t border-slate-700 mt-1 pt-1"
             >
               <button 
@@ -110,7 +110,19 @@ const emit = defineEmits<{
 
 const searchTerm = ref('');
 
+watch(() => props.modelValue, (newVal) => {
+  if (newVal == null) {
+    searchTerm.value = '';
+  } else {
+    searchTerm.value = props.displayFn(newVal) || '';
+  }
+}, { immediate: true });
+
 const debouncedSearch = useDebounceFn((query: string) => {
+  // Prevent searching when the input just synced with the selected model value
+  if (props.modelValue !== null && query === props.displayFn(props.modelValue)) {
+    return;
+  }
   emit('search', query);
 }, 300);
 

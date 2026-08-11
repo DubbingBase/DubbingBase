@@ -1,89 +1,68 @@
 <template>
-  <div class="w-full px-4 sm:px-6 lg:px-8">
-    <PersonSkeleton v-if="loading" />
-
-    <div v-else-if="actor" class="space-y-12 relative pt-12">
-      <!-- Profile Header -->
-      <section class="flex flex-col md:flex-row gap-8 items-start">
-        <div
-          class="w-48 h-48 md:w-64 md:h-64 rounded-2xl overflow-hidden flex-shrink-0 bg-gray-100 dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] shadow-2xl"
+  <div>
+    <PersonDetailsLayout
+      v-if="actor"
+      :name="actor.name"
+      :profile-url="actor.profile_path ? resolveImageUrl(actor.profile_path) : null"
+      :loading="loading"
+    >
+      <template #metadata>
+        <span
+          v-if="actor.place_of_birth"
+          class="px-3 py-1 bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-300 rounded-full text-sm"
+          >{{ actor.place_of_birth }}</span
         >
-          <NuxtImg
-            format="webp"
-            v-if="actor.profile_path"
-            :src="resolveImageUrl(actor.profile_path)"
-            :alt="actor.name"
-            class="object-cover w-full h-full"
-          />
-          <div
-            v-else
-            class="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-[#161616] text-gray-400 text-6xl font-bold uppercase"
+        <span
+          v-if="actor.birthday"
+          class="px-3 py-1 bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-300 rounded-full text-sm"
+          >Born: {{ new Date(actor.birthday).getFullYear() }}</span
+        >
+        <span
+          v-if="actor.deathday"
+          class="px-3 py-1 bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-300 rounded-full text-sm"
+          >Died: {{ new Date(actor.deathday).getFullYear() }}</span
+        >
+      </template>
+
+      <template #biography>
+        <div
+          v-if="actor.biography"
+          class="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 mt-6 bg-white dark:bg-[#161616] p-6 rounded-2xl border border-gray-200 dark:border-[#2a2a2a]"
+        >
+          <p
+            class="leading-relaxed whitespace-pre-wrap line-clamp-[10] hover:line-clamp-none transition-all"
           >
-            {{ actor.name?.[0] }}
-          </div>
+            {{ actor.biography }}
+          </p>
         </div>
+      </template>
 
-        <div class="flex-1 space-y-4">
-          <h1
-            class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white"
+      <template #actions>
+        <button
+          @click="isReportModalOpen = true"
+          class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors flex items-center gap-2"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-4 h-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
           >
-            {{ actor.name }}
-          </h1>
-          <div class="flex flex-wrap gap-3">
-            <span
-              v-if="actor.place_of_birth"
-              class="px-3 py-1 bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-300 rounded-full text-sm"
-              >{{ actor.place_of_birth }}</span
-            >
-            <span
-              v-if="actor.birthday"
-              class="px-3 py-1 bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-300 rounded-full text-sm"
-              >Born: {{ new Date(actor.birthday).getFullYear() }}</span
-            >
-            <span
-              v-if="actor.deathday"
-              class="px-3 py-1 bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-300 rounded-full text-sm"
-              >Died: {{ new Date(actor.deathday).getFullYear() }}</span
-            >
-          </div>
+            <path
+              d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"
+            />
+            <line x1="4" y1="22" x2="4" y2="15" />
+          </svg>
+          {{ t("report.button", "Signaler cette fiche") }}
+        </button>
+      </template>
 
-          <div
-            v-if="actor.biography"
-            class="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 mt-6 bg-white dark:bg-[#161616] p-6 rounded-2xl border border-gray-200 dark:border-[#2a2a2a]"
-          >
-            <p
-              class="leading-relaxed whitespace-pre-wrap line-clamp-[10] hover:line-clamp-none transition-all"
-            >
-              {{ actor.biography }}
-            </p>
-          </div>
-          <div class="pt-4 flex justify-end">
-            <button
-              @click="isReportModalOpen = true"
-              class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors flex items-center gap-2"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-4 h-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path
-                  d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"
-                />
-                <line x1="4" y1="22" x2="4" y2="15" />
-              </svg>
-              {{ t("report.button", "Signaler cette fiche") }}
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <!-- Global Search -->
+      <template #content>
+        <!-- Global Search -->
       <div class="w-full relative max-w-xl mb-6">
         <input
           v-model="searchQuery"
@@ -330,13 +309,15 @@
           </NuxtLink>
         </div>
       </section>
-    </div>
+      </template>
+    </PersonDetailsLayout>
 
     <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
   </div>
 </template>
 
 <script setup lang="ts">
+import PersonDetailsLayout from "../../components/layout/PersonDetailsLayout.vue";
 import { onMounted, ref, watch, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ArrowLeftIcon, ClapperboardIcon, UserIcon } from "lucide-vue-next";

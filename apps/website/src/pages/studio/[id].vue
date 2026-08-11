@@ -1,64 +1,41 @@
 <template>
-  <div
-    v-if="studio"
-    class="bg-gray-50 dark:bg-[#1b1b1b] min-h-screen text-gray-900 dark:text-white pb-12"
-  >
-    <!-- Hero Section -->
-    <div class="relative w-full h-[40vh] min-h-[300px] bg-gray-200 dark:bg-[#1d1d1d]">
-      <div class="absolute inset-0 bg-gradient-to-t from-gray-50 dark:from-[#1b1b1b] to-transparent"></div>
-      
-      <div class="absolute bottom-0 left-0 w-full p-8 flex flex-col md:flex-row gap-6 items-end container mx-auto max-w-6xl">
-        <div class="w-32 h-32 md:w-48 md:h-48 rounded-xl shadow-xl bg-white dark:bg-[#2a2a2a] flex items-center justify-center overflow-hidden shrink-0 relative z-10">
-          <img
-            v-if="studio.logo_url"
-            :src="studio.logo_url"
-            class="w-full h-full object-contain p-4"
-            :alt="studio.name"
-          />
-          <span v-else class="text-6xl font-bold text-gray-300 dark:text-gray-600">{{ studio.name.charAt(0) }}</span>
-        </div>
-        <div class="pb-4 relative z-10">
-          <h1 class="text-4xl md:text-5xl font-bold">{{ studio.name }}</h1>
-          <div class="flex flex-wrap items-center gap-3 mt-4">
-            <span v-if="studio.city || studio.country" class="text-gray-900 dark:text-gray-100 font-semibold text-base md:text-lg bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 opacity-75" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-              {{ [studio.city, studio.country].filter(Boolean).join(', ') }}
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
+  <DetailsPage v-if="studio">
+    <DetailsHero
+      :title="studio.name"
+      :backdrop-url="null"
+      :image-url="studio.logo_url"
+      image-aspect-ratio="logo"
+    >
+      <template #metadata v-if="studio.city || studio.country">
+        <span class="text-gray-900 dark:text-gray-100 font-semibold text-base md:text-lg bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 opacity-75" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+          {{ [studio.city, studio.country].filter(Boolean).join(', ') }}
+        </span>
+      </template>
+    </DetailsHero>
 
-    <!-- Action Bar -->
-    <div class="border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#161616]/95 backdrop-blur sticky top-0 z-10 shadow-sm">
-      <div class="container mx-auto px-4 md:px-8 max-w-6xl py-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <!-- Left side actions -->
-        <div class="flex flex-wrap gap-2">
-          <a
-            v-if="studio.website_url"
-            :href="studio.website_url"
-            target="_blank"
-            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#1d1d1d] text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#2a2a2a] flex items-center gap-2"
-          >
-            Visiter le site web
-            <ExternalLinkIcon class="w-4 h-4 opacity-70" />
-          </a>
-        </div>
-        
-        <!-- Right side actions -->
-        <div class="flex items-center flex-wrap gap-4">
-          <NuxtLink v-if="isAdmin" :to="$localePath(`/studio/${studio.id}/edit`)" class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-medium">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-            <span class="hidden sm:inline">Éditer le studio</span>
-          </NuxtLink>
-        </div>
-      </div>
-    </div>
+    <DetailsActionBar>
+      <template #left v-if="studio.website_url">
+        <a
+          :href="studio.website_url"
+          target="_blank"
+          class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#1d1d1d] text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#2a2a2a] flex items-center gap-2"
+        >
+          Visiter le site web
+          <ExternalLinkIcon class="w-4 h-4 opacity-70" />
+        </a>
+      </template>
+      <template #right v-if="isAdmin">
+        <NuxtLink :to="$localePath(`/studio/${studio.id}/edit`)" class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-medium">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+          <span class="hidden sm:inline">Éditer le studio</span>
+        </NuxtLink>
+      </template>
+    </DetailsActionBar>
 
-    <!-- Content -->
-    <div class="container mx-auto p-4 md:p-8 max-w-6xl">
+    <div class="w-full p-4 md:p-8 max-w-6xl mx-auto">
       <!-- Overview -->
       <div class="mb-12 max-w-4xl">
         <section v-if="studio.description">
@@ -145,11 +122,9 @@
         </div>
       </section>
     </div>
-  </div>
+  </DetailsPage>
 
-  <div v-else-if="loading" class="flex justify-center items-center h-[50vh]">
-    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500"></div>
-  </div>
+  <PersonSkeleton v-else-if="loading" />
   
   <div v-else-if="error" class="container mx-auto p-8 text-center text-red-500">
     {{ error }}
@@ -161,6 +136,10 @@ import { onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useStudioData } from '@app/shared-logic';
 import { ExternalLinkIcon } from 'lucide-vue-next';
+import DetailsPage from '../../components/layout/details/DetailsPage.vue';
+import DetailsHero from '../../components/layout/details/DetailsHero.vue';
+import DetailsActionBar from '../../components/layout/details/DetailsActionBar.vue';
+import PersonSkeleton from '../../components/PersonSkeleton.vue';
 
 const route = useRoute();
 const supabase = useSupabaseClient();

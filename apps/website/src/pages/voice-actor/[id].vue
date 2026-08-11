@@ -2,168 +2,34 @@
   <div>
     <PersonSkeleton v-if="pending || loading" />
 
-    <div
+    <PersonDetailsLayout
       v-else-if="voiceActor"
-      class="bg-gray-50 dark:bg-[#1b1b1b] min-h-screen text-gray-900 dark:text-white"
+      :name="voiceActor.firstname + ' ' + voiceActor.lastname"
+      :profile-url="profilePicture"
+      :loading="false"
     >
-      <!-- Hero Section -->
-      <div class="relative w-full h-[50vh] min-h-[400px] overflow-hidden">
-        <div class="absolute inset-0">
-          <NuxtImg
-            v-if="profilePicture"
-            :src="profilePicture"
-            class="w-full h-full object-cover blur-3xl opacity-50 scale-110"
-            alt="Backdrop"
-            format="webp"
-          />
-          <div
-            class="absolute inset-0 bg-gradient-to-t from-gray-50 dark:from-[#1b1b1b] to-transparent"
-          ></div>
-          <div class="absolute inset-0 bg-black/10 dark:bg-black/40"></div>
-        </div>
-
-        <div
-          class="absolute bottom-0 left-0 w-full p-8 flex flex-col md:flex-row gap-6 items-end"
+      <template #metadata>
+        <span
+          v-if="voiceActor.nationality"
+          class="text-gray-900 dark:text-gray-100 font-medium text-sm md:text-base bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-lg"
         >
-          <div
-            class="w-32 md:w-48 rounded-lg overflow-hidden shadow-xl aspect-[2/3] bg-gray-100 dark:bg-[#161616] border border-white/10 shrink-0"
-          >
-            <NuxtImg
-              format="webp"
-              v-if="profilePicture"
-              :src="profilePicture"
-              :alt="voiceActor.firstname + ' ' + voiceActor.lastname"
-              class="object-cover w-full h-full"
-            />
-            <div
-              v-else
-              class="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-[#161616] text-gray-400 text-6xl font-bold uppercase"
-            >
-              {{ voiceActor.firstname?.[0] }}{{ voiceActor.lastname?.[0] }}
-            </div>
-          </div>
-          <div class="pb-4 max-w-3xl">
-            <h1
-              class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white"
-            >
-              {{ voiceActor.firstname }} {{ voiceActor.lastname }}
-            </h1>
-
-            <div class="flex flex-wrap items-center gap-3 mt-4">
-              <span
-                v-if="voiceActor.nationality"
-                class="text-gray-900 dark:text-gray-100 font-medium text-sm md:text-base bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-lg"
-              >
-                {{ voiceActor.nationality }}
-              </span>
-              <span
-                v-if="voiceActor.date_of_birth"
-                class="text-gray-900 dark:text-gray-100 font-medium text-sm md:text-base bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-lg"
-              >
-                Born: {{ new Date(voiceActor.date_of_birth).getFullYear() }}
-              </span>
-              <span
-                v-if="voiceActor.years_active"
-                class="text-gray-900 dark:text-gray-100 font-medium text-sm md:text-base bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-lg"
-              >
-                Active: {{ voiceActor.years_active }}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Action Bar -->
-      <div
-        class="border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#161616]/95 backdrop-blur sticky top-0 z-10 shadow-sm"
-      >
-        <div
-          class="w-full px-8 py-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+          {{ voiceActor.nationality }}
+        </span>
+        <span
+          v-if="voiceActor.date_of_birth"
+          class="text-gray-900 dark:text-gray-100 font-medium text-sm md:text-base bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-lg"
         >
-          <!-- Completeness Score -->
-          <div v-if="user" class="flex items-center gap-4">
-            <div class="relative w-8 h-8 flex-shrink-0">
-              <svg
-                class="w-full h-full transform -rotate-90"
-                viewBox="0 0 36 36"
-              >
-                <path
-                  class="text-gray-200 dark:text-[#2a2a2a]"
-                  stroke-width="3"
-                  stroke="currentColor"
-                  fill="none"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                />
-                <path
-                  class="text-emerald-500 transition-all duration-1000 ease-out"
-                  :stroke-dasharray="`${completenessScore}, 100`"
-                  stroke-width="3"
-                  stroke-linecap="round"
-                  stroke-currentColor
-                  fill="none"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                />
-              </svg>
-              <div
-                class="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-gray-900 dark:text-white"
-              >
-                {{ completenessScore }}%
-              </div>
-            </div>
-          </div>
-          <div v-else></div>
+          Born: {{ new Date(voiceActor.date_of_birth).getFullYear() }}
+        </span>
+        <span
+          v-if="voiceActor.years_active"
+          class="text-gray-900 dark:text-gray-100 font-medium text-sm md:text-base bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-lg"
+        >
+          Active: {{ voiceActor.years_active }}
+        </span>
+      </template>
 
-          <!-- Right side actions -->
-          <div class="flex items-center flex-wrap gap-4">
-            <NuxtLink
-              v-if="isAdmin"
-              :to="$localePath(`/voice-actor/${voiceActorId}/edit`)"
-              class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-medium"
-            >
-              <svg
-                class="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                />
-              </svg>
-              <span class="hidden sm:inline">Éditer</span>
-            </NuxtLink>
-
-            <button
-              @click="isReportModalOpen = true"
-              class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1.5"
-              title="Signaler cette fiche"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-4 h-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path
-                  d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"
-                />
-                <line x1="4" y1="22" x2="4" y2="15" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Content -->
-      <div class="w-full p-8">
-        <!-- Bio -->
+      <template #biography>
         <div class="mb-12 max-w-4xl" v-if="voiceActor.bio">
           <section>
             <h2 class="text-2xl font-bold mb-4">Biography</h2>
@@ -174,6 +40,86 @@
             </p>
           </section>
         </div>
+      </template>
+
+      <template #actions>
+        <!-- Completeness Score -->
+        <div v-if="user" class="flex items-center gap-4">
+          <div class="relative w-8 h-8 flex-shrink-0">
+            <svg
+              class="w-full h-full transform -rotate-90"
+              viewBox="0 0 36 36"
+            >
+              <path
+                class="text-gray-200 dark:text-[#2a2a2a]"
+                stroke-width="3"
+                stroke="currentColor"
+                fill="none"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+              <path
+                class="text-emerald-500 transition-all duration-1000 ease-out"
+                :stroke-dasharray="`${completenessScore}, 100`"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-currentColor
+                fill="none"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+            </svg>
+            <div
+              class="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-gray-900 dark:text-white"
+            >
+              {{ completenessScore }}%
+            </div>
+          </div>
+        </div>
+
+        <NuxtLink
+          v-if="isAdmin"
+          :to="$localePath(`/voice-actor/${voiceActorId}/edit`)"
+          class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-medium"
+        >
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+            />
+          </svg>
+          <span class="hidden sm:inline">Éditer</span>
+        </NuxtLink>
+
+        <button
+          @click="isReportModalOpen = true"
+          class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1.5"
+          title="Signaler cette fiche"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-4 h-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"
+            />
+            <line x1="4" y1="22" x2="4" y2="15" />
+          </svg>
+        </button>
+      </template>
+
+      <template #content>
 
         <!-- Studios -->
         <div v-if="workedStudios.length > 0" class="mb-12 max-w-4xl">
@@ -593,8 +539,8 @@
             </div>
           </template>
         </section>
-      </div>
-    </div>
+      </template>
+    </PersonDetailsLayout>
 
     <div v-else class="text-center py-20 text-gray-500">Actor not found.</div>
 
@@ -603,6 +549,7 @@
 </template>
 
 <script setup lang="ts">
+import PersonDetailsLayout from "../../components/layout/PersonDetailsLayout.vue";
 import { useVoiceActorData, fetchVoiceActorData } from "@app/shared-logic";
 import { useRouter, useRoute } from "vue-router";
 import { ClapperboardIcon, UserIcon, SearchIcon } from "lucide-vue-next";

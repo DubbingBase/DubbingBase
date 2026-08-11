@@ -1,6 +1,8 @@
 # TODOs
-failOnError: false, o nuxt build
-
+voice actor page and all should be tabbed
+add tests for the autocomplete component
+remove purpleish color from edit pages
+global layout for movie, serie, actor, game, voice actor
 actor hero layout differ from other pages
 shows don't have seasons and episodes on the website
 write a script to request google index update for bulk

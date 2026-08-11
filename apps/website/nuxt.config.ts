@@ -46,6 +46,7 @@ export default defineNuxtConfig({
     "@nuxt/image",
     "@nuxt/icon",
     "nuxt-swiper",
+    "@nuxt/test-utils/module",
   ],
 
   site: {
@@ -78,8 +79,8 @@ export default defineNuxtConfig({
   },
 
   supabase: {
-    url: process.env.SUPABASE_URL || "http://localhost:54321",
-    key: process.env.SUPABASE_KEY || "dummy_key",
+    url: process.env.SUPABASE_URL,
+    key: process.env.SUPABASE_PUBLISHABLE_KEY,
     redirect: false,
     types: resolve(
       import.meta.dirname,
@@ -88,4 +89,11 @@ export default defineNuxtConfig({
   },
 
   srcDir: "src/",
+  sourcemap: {
+    server: true,
+    client: true,
+  },
+  sitemap: {
+    zeroRuntime: true,
+  },
 });

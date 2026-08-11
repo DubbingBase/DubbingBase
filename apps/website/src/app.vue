@@ -4,9 +4,11 @@
     <SmartBanner />
     <LanguageBanner />
     <Header />
-    <NuxtLayout>
-      <NuxtPage :keepalive="{ max: 10 }" />
-    </NuxtLayout>
+    <main>
+      <NuxtLayout>
+        <NuxtPage :keepalive="{ max: 10 }" />
+      </NuxtLayout>
+    </main>
     <Footer />
   </div>
 </template>

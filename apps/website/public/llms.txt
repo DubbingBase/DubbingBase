@@ -4,6 +4,10 @@
 
 This website provides a web interface for the DubbingBase platform, featuring data grids and analytics.
 
-Features:
-- **Browse Database**: Explore movies, TV shows, and voice actor profiles.
-- **Data Grids & Analytics**: Advanced tools to view and analyze dubbing information.
+## Features
+
+- [Home](https://dubbingbase.com/) - Explore movies, TV shows, and voice actor profiles.
+- [About](https://dubbingbase.com/about) - About DubbingBase.
+- [Terms](https://dubbingbase.com/terms) - Terms of Service.
+- [Privacy](https://dubbingbase.com/privacy) - Privacy Policy.
+- [Guidelines](https://dubbingbase.com/guidelines) - Community Guidelines.

@@ -82,6 +82,7 @@
       <SelectRoot v-model="theme">
         <SelectTrigger
           class="flex items-center justify-center w-10 h-10 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors bg-transparent border-none cursor-pointer outline-none"
+          aria-label="Toggle theme"
         >
           <SunIcon v-if="theme === 'light'" class="w-5 h-5" />
           <MoonIcon v-else-if="theme === 'dark'" class="w-5 h-5" />
@@ -124,6 +125,7 @@
       <SelectRoot :modelValue="locale" @update:modelValue="setLocale">
         <SelectTrigger
           class="flex items-center justify-center w-10 h-10 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors bg-transparent border-none cursor-pointer outline-none"
+          aria-label="Toggle language"
         >
           <GlobeIcon class="w-5 h-5" />
         </SelectTrigger>

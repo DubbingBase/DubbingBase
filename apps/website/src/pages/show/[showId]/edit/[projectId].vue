@@ -370,7 +370,10 @@
           />
           <div class="flex justify-end gap-2">
             <button @click="isCreateStudioOpen = false" class="px-4 py-2 text-slate-300 hover:text-white">Cancel</button>
-            <button @click="createStudio" :disabled="!newStudioName" class="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50">Create</button>
+            <button @click="createStudio" :disabled="!newStudioName || isCreatingStudio" class="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50 flex items-center gap-2">
+              <Loader2Icon v-if="isCreatingStudio" class="w-4 h-4 animate-spin" />
+              <span>Create</span>
+            </button>
           </div>
         </DialogContent>
       </DialogPortal>
@@ -399,7 +402,10 @@
           </div>
           <div class="flex justify-end gap-2">
             <button @click="isCreateVaOpen = false" class="px-4 py-2 text-slate-300 hover:text-white">Cancel</button>
-            <button @click="createVoiceActor" :disabled="!newVaFirstname" class="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50">Create</button>
+            <button @click="createVoiceActor" :disabled="!newVaFirstname || isCreatingVa" class="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50 flex items-center gap-2">
+              <Loader2Icon v-if="isCreatingVa" class="w-4 h-4 animate-spin" />
+              <span>Create</span>
+            </button>
           </div>
         </DialogContent>
       </DialogPortal>
@@ -639,17 +645,23 @@ const openCreateStudioDialog = (query: string, callback?: (id: number) => void) 
   isCreateStudioOpen.value = true;
 };
 
+const isCreatingStudio = ref(false);
 const createStudio = async () => {
-  const { data } = await supabase.from("studios").insert({ name: newStudioName.value }).select().single();
-  if (data) {
-    optionsCache.value.set(data.id, data.name);
-    studioOptions.value = [{ id: data.id, name: data.name }];
-    if (studioCreationCallback.value) {
-      studioCreationCallback.value(data.id);
-      studioCreationCallback.value = null;
+  isCreatingStudio.value = true;
+  try {
+    const { data } = await supabase.from("studios").insert({ name: newStudioName.value }).select().single();
+    if (data) {
+      optionsCache.value.set(data.id, data.name);
+      studioOptions.value = [{ id: data.id, name: data.name }];
+      if (studioCreationCallback.value) {
+        studioCreationCallback.value(data.id);
+        studioCreationCallback.value = null;
+      }
+      isCreateStudioOpen.value = false;
+      showToast(`Created ${data.name}`, "success", `/studio/${data.id}`);
     }
-    isCreateStudioOpen.value = false;
-    showToast(`Created ${data.name}`, "success", `/studio/${data.id}`);
+  } finally {
+    isCreatingStudio.value = false;
   }
 };
 
@@ -661,16 +673,25 @@ const openCreateVaDialog = (query: string, callback?: (id: number) => void) => {
   isCreateVaOpen.value = true;
 };
 
+const isCreatingVa = ref(false);
 const createVoiceActor = async () => {
-  const payload = { firstname: newVaFirstname.value, lastname: newVaLastname.value };
-  const { data } = await supabase.from("voice_actors").insert(payload).select().single();
-  if (data) {
-    const name = `${data.firstname || ''} ${data.lastname || ''}`.trim();
-    optionsCache.value.set(data.id, name);
-    voiceActorOptions.value = [{ id: data.id, name }];
-    isCreateVaOpen.value = false;
-    showToast(`Created ${name}`, "success");
-    // User will have to manually pick it from the dropdown unless we stored the callback, but they can just type it again.
+  isCreatingVa.value = true;
+  try {
+    const payload = { firstname: newVaFirstname.value, lastname: newVaLastname.value };
+    const { data } = await supabase.from("voice_actors").insert(payload).select().single();
+    if (data) {
+      const name = `${data.firstname || ''} ${data.lastname || ''}`.trim();
+      optionsCache.value.set(data.id, name);
+      voiceActorOptions.value = [{ id: data.id, name }];
+      if (pendingVaSelectCallback) {
+        pendingVaSelectCallback(data.id);
+        pendingVaSelectCallback = null;
+      }
+      isCreateVaOpen.value = false;
+      showToast(`Created ${name}`, "success");
+    }
+  } finally {
+    isCreatingVa.value = false;
   }
 };
 

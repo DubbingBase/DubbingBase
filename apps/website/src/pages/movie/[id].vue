@@ -1,67 +1,34 @@
 <template>
   <div>
-    <div
-    v-if="movie"
-    class="bg-gray-50 dark:bg-[#1b1b1b] min-h-screen text-gray-900 dark:text-white"
-  >
-    <!-- Hero Section -->
-    <div class="relative w-full h-[50vh] min-h-[400px]">
-      <div class="absolute inset-0">
-        <NuxtImg
-          v-if="backdropUrl"
-          :src="backdropUrl"
-          :placeholder="backdropUrl.replace('/original/', '/w92/')"
-          class="w-full h-full object-cover"
-          alt="Backdrop"
-          format="webp"
-        />
-        <div
-          class="absolute inset-0 bg-gradient-to-t from-gray-50 dark:from-[#1b1b1b] to-transparent"
-        ></div>
-        <div class="absolute inset-0 bg-black/10 dark:bg-black/40"></div>
-      </div>
-
-      <div
-        class="absolute bottom-0 left-0 w-full p-8 flex flex-col md:flex-row gap-6 items-end"
-      >
-        <NuxtImg
-          v-if="posterUrl"
-          :src="posterUrl"
-          :placeholder="posterUrl.replace('/original/', '/w92/')"
-          class="w-32 md:w-48 object-cover rounded-lg shadow-xl"
-          :alt="movie.title"
-          format="webp"
-        />
-        <div class="pb-4 max-w-3xl">
-          <h1 class="text-4xl md:text-5xl font-bold">{{ movie.title }}</h1>
-          <div class="flex flex-wrap items-center gap-3 mt-4">
-            <span class="text-gray-900 dark:text-gray-100 font-semibold text-base md:text-lg bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg">
-              {{ new Date(movie.release_date).getFullYear() }}
-            </span>
-            <span v-if="movie.original_title !== movie.title" class="text-gray-800 dark:text-gray-300 font-medium text-sm md:text-base bg-white/40 dark:bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-lg">
-              {{ movie.original_title }}
-            </span>
-            <span class="flex items-center gap-1.5 text-gray-900 dark:text-gray-100 font-bold text-sm md:text-base bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg">
-              <StarIcon class="w-4 h-4 text-yellow-500 fill-current" />
-              {{ movie.vote_average?.toFixed(1) }}
-            </span>
-            <div class="flex gap-2 ml-2">
-              <a :href="`https://www.themoviedb.org/movie/${movie.id}`" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg bg-white/40 dark:bg-black/40 text-gray-800 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-black/60 transition-colors backdrop-blur-md uppercase tracking-wider">
-                TMDB <ExternalLinkIcon class="w-3 h-3 opacity-70" />
-              </a>
-              <a v-if="tvdbId" :href="`https://thetvdb.com/search?query=${tvdbId}`" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg bg-white/40 dark:bg-black/40 text-gray-800 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-black/60 transition-colors backdrop-blur-md uppercase tracking-wider">
-                TVDB <ExternalLinkIcon class="w-3 h-3 opacity-70" />
-              </a>
-            </div>
-          </div>
+    <MediaDetailsLayout
+      v-if="movie"
+      :title="movie.title"
+      :backdrop-url="backdropUrl"
+      :poster-url="posterUrl"
+      :loading="pending"
+    >
+      <template #metadata>
+        <span class="text-gray-900 dark:text-gray-100 font-semibold text-base md:text-lg bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg">
+          {{ new Date(movie.release_date).getFullYear() }}
+        </span>
+        <span v-if="movie.original_title !== movie.title" class="text-gray-800 dark:text-gray-300 font-medium text-sm md:text-base bg-white/40 dark:bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-lg">
+          {{ movie.original_title }}
+        </span>
+        <span class="flex items-center gap-1.5 text-gray-900 dark:text-gray-100 font-bold text-sm md:text-base bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg">
+          <StarIcon class="w-4 h-4 text-yellow-500 fill-current" />
+          {{ movie.vote_average?.toFixed(1) }}
+        </span>
+        <div class="flex gap-2 ml-2">
+          <a :href="`https://www.themoviedb.org/movie/${movie.id}`" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg bg-white/40 dark:bg-black/40 text-gray-800 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-black/60 transition-colors backdrop-blur-md uppercase tracking-wider">
+            TMDB <ExternalLinkIcon class="w-3 h-3 opacity-70" />
+          </a>
+          <a v-if="tvdbId" :href="`https://thetvdb.com/search?query=${tvdbId}`" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg bg-white/40 dark:bg-black/40 text-gray-800 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-black/60 transition-colors backdrop-blur-md uppercase tracking-wider">
+            TVDB <ExternalLinkIcon class="w-3 h-3 opacity-70" />
+          </a>
         </div>
-      </div>
-    </div>
+      </template>
 
-    <!-- Action Bar -->
-    <div class="border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#161616]/95 backdrop-blur sticky top-0 z-10 shadow-sm">
-      <div class="w-full px-8 py-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <!-- Dubbing Projects Tabs -->
+      <template #actions-left>
         <div v-if="dubbingProjects.length > 0" class="flex flex-wrap gap-2">
           <NuxtLink
             v-for="project in dubbingProjects"
@@ -82,60 +49,57 @@
           </NuxtLink>
         </div>
         <div v-else class="text-sm text-gray-500 font-medium">No dubbing projects available</div>
-        
-        <!-- Right side actions -->
-        <div class="flex items-center flex-wrap gap-4">
-          <template v-if="activeDubProject?.studio_data">
-            <NuxtLink
-              :to="$localePath(`/studio/${activeDubProject.studio_data.id}`)"
-              class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-[#2a2a2a] hover:border-cyan-500 transition-colors group bg-gray-50 dark:bg-[#1d1d1d]"
-              title="Studio de doublage"
-            >
-              <div class="w-6 h-6 rounded flex items-center justify-center overflow-hidden shrink-0 bg-white dark:bg-[#2a2a2a]">
-                <img v-if="activeDubProject.studio_data.logo_url" :src="activeDubProject.studio_data.logo_url" class="w-full h-full object-contain p-0.5" />
-                <span v-else class="font-bold text-xs text-gray-400">{{ activeDubProject.studio_data.name.charAt(0) }}</span>
-              </div>
-              <span class="font-medium text-xs group-hover:text-cyan-500 transition-colors truncate max-w-[120px]">{{ activeDubProject.studio_data.name }}</span>
-            </NuxtLink>
-            <div class="h-6 w-px bg-gray-200 dark:bg-[#2a2a2a]"></div>
-          </template>
+      </template>
 
-          <NuxtLink v-if="isAdmin" :to="$localePath(`/movie/${movie?.id || 'new'}/edit/${activeDubId || 'new'}`)" class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-medium">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-            <span class="hidden sm:inline">Éditer</span>
-          </NuxtLink>
-          
-          <button
-            @click="isReportModalOpen = true"
-            class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1.5"
-            title="Signaler cette fiche"
+      <template #actions-right>
+        <template v-if="activeDubProject?.studio_data">
+          <NuxtLink
+            :to="$localePath(`/studio/${activeDubProject.studio_data.id}`)"
+            class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-[#2a2a2a] hover:border-cyan-500 transition-colors group bg-gray-50 dark:bg-[#1d1d1d]"
+            title="Studio de doublage"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="w-4 h-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path
-                d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"
-              />
-              <line x1="4" y1="22" x2="4" y2="15" />
-            </svg>
-          </button>
-        </div>
-      </div>
-    </div>
+            <div class="w-6 h-6 rounded flex items-center justify-center overflow-hidden shrink-0 bg-white dark:bg-[#2a2a2a]">
+              <img v-if="activeDubProject.studio_data.logo_url" :src="activeDubProject.studio_data.logo_url" class="w-full h-full object-contain p-0.5" />
+              <span v-else class="font-bold text-xs text-gray-400">{{ activeDubProject.studio_data.name.charAt(0) }}</span>
+            </div>
+            <span class="font-medium text-xs group-hover:text-cyan-500 transition-colors truncate max-w-[120px]">{{ activeDubProject.studio_data.name }}</span>
+          </NuxtLink>
+          <div class="h-6 w-px bg-gray-200 dark:bg-[#2a2a2a]"></div>
+        </template>
 
-    <!-- Content -->
-    <div class="w-full p-8">
-      <!-- Overview -->
-      <div class="mb-12 max-w-4xl">
+        <NuxtLink v-if="isAdmin" :to="$localePath(`/movie/${movie?.id || 'new'}/edit/${activeDubId || 'new'}`)" class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-medium">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+          <span class="hidden sm:inline">Éditer</span>
+        </NuxtLink>
+        
+        <button
+          @click="isReportModalOpen = true"
+          class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1.5"
+          title="Signaler cette fiche"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-4 h-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"
+            />
+            <line x1="4" y1="22" x2="4" y2="15" />
+          </svg>
+        </button>
+      </template>
+
+      <template #content>
+        <!-- Overview -->
+        <div class="mb-12 max-w-4xl">
         <section>
           <h2 class="text-2xl font-bold mb-4">
             {{ $t("details.synopsis") }}
@@ -187,6 +151,7 @@
                 <NuxtLink
                   :to="$localePath(`/actor/${actor.id}`)"
                   class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] bg-gray-200 dark:bg-[#222] sm:mb-3 flex-shrink-0"
+                  :aria-label="actor.name"
                 >
                   <NuxtImg
                     format="webp"
@@ -270,6 +235,7 @@
                   <NuxtLink
                     :to="$localePath(`/voice-actor/${actor.voiceActor.id}`)"
                     class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] bg-gray-200 dark:bg-[#222] sm:mb-3 flex-shrink-0"
+                    :aria-label="`${actor.voiceActor.firstname} ${actor.voiceActor.lastname}`"
                   >
                     <NuxtImg
                       format="webp"
@@ -344,15 +310,15 @@
           </div>
         </div>
       </section>
-    </div>
-  </div>
-  <MediaSkeleton v-else-if="pending" />
+      </template>
+    </MediaDetailsLayout>
 
-  <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
+    <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
   </div>
 </template>
 
 <script setup lang="ts">
+import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { fetchMovieData, findCharacter } from "@app/shared-logic";
