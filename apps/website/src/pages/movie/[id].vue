@@ -349,11 +349,11 @@ const isAdmin = computed(() => {
   return user.value?.app_metadata?.role === 'admin' || user.value?.user_metadata?.role === 'admin';
 });
 
-const { data, pending } = useAsyncData(`movie-${movieId}`, () =>
-  fetchMovieData(supabase, movieId)
-);
-
 const { locale, t } = useI18n();
+
+const { data, pending } = useAsyncData(`movie-${movieId}-${locale.value}`, () =>
+  fetchMovieData(supabase, movieId, locale.value)
+);
 
 const movie = computed(() => data.value?.movie);
 const dubbingProjects = computed(() => {

@@ -1,4 +1,5 @@
 # TODOs
+there seems to be a cahe issue: i can briefly see the full up to date content with new image on movie page load, then the uath is resolved and the modify button appear but the image revert back to the unknown one
 reusable "voice actor picker" or "studio picker"
 voice actor page and all should be tabbed
 shows don't have seasons and episodes on the website

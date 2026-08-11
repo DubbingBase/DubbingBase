@@ -4,11 +4,18 @@ import type { GameResponse } from "@supabase/functions/_shared/types";
 export async function fetchGameData(
   supabase: SupabaseClient,
   id: string | number,
+  locale?: string,
 ): Promise<GameResponse | null> {
+  const headers: Record<string, string> = {};
+  if (locale) {
+    headers["Accept-Language"] = locale;
+  }
+
   const gameResponseRaw = await supabase.functions.invoke<GameResponse>(
     "game",
     {
       body: { id },
+      headers,
     },
   );
 

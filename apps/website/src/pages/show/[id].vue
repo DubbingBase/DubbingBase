@@ -356,11 +356,11 @@ const isAdmin = computed(() => {
   return user.value?.app_metadata?.role === 'admin' || user.value?.user_metadata?.role === 'admin';
 });
 
-const { data, pending } = useAsyncData(`show-${showId}`, () =>
-  fetchShowData(supabase, showId)
-);
-
 const { locale, t } = useI18n();
+
+const { data, pending } = useAsyncData(`show-${showId}-${locale.value}`, () =>
+  fetchShowData(supabase, showId, locale.value)
+);
 
 const serie = computed(() => data.value?.serie);
 const dubbingProjects = computed(() => {

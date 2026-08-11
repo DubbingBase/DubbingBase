@@ -256,9 +256,9 @@ const isAdmin = computed(() => {
 
 const isPreparing = ref(false);
 
-const { data, pending, refresh } = useAsyncData(`game-${gameId}`, () => fetchGameData(supabase, gameId));
-
 const { locale, t } = useI18n();
+
+const { data, pending, refresh } = useAsyncData(`game-${gameId}-${locale.value}`, () => fetchGameData(supabase, gameId, locale.value));
 
 const game = computed(() => data.value?.game);
 const characters = computed(() => data.value?.characters || []);
