@@ -229,21 +229,17 @@
           </div>
 
           <template v-if="displayMode === 'list'">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-              <NuxtLink
-                :to="
-                  $localePath(
-                    `/${item.work.dubbing_projects?.content_type === 'tv' ? 'show' : 'movie'}/${item.media.id}`,
-                  )
-                "
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+              <div
                 v-for="item in sortedWorks"
                 :key="item.work.id"
                 class="bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl p-4 shadow-sm transition-colors hover:border-gray-300 dark:hover:border-gray-700 block group"
               >
                 <div class="flex flex-col sm:grid sm:grid-cols-3 gap-4 h-full">
                   <!-- Column 1: Media -->
-                  <div
-                    class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start"
+                  <NuxtLink
+                    :to="$localePath(`/${item.work.dubbing_projects?.content_type === 'tv' ? 'show' : 'movie'}/${item.media.id}`)"
+                    class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start hover:opacity-80 transition-opacity cursor-pointer"
                   >
                     <div
                       class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 flex-shrink-0"
@@ -255,7 +251,7 @@
                         :alt="
                           (item.media as any).title || (item.media as any).name
                         "
-                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        class="w-full h-full object-cover transition-transform duration-300"
                       />
                       <div
                         v-else
@@ -292,11 +288,13 @@
                         </span>
                       </div>
                     </div>
-                  </div>
+                  </NuxtLink>
 
                   <!-- Column 2: Original Actor -->
-                  <div
-                    class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-3 sm:pt-0"
+                  <NuxtLink
+                    v-if="item.data.actor"
+                    :to="$localePath(`/actor/${item.data.actor.id}`)"
+                    class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-3 sm:pt-0 hover:opacity-80 transition-opacity cursor-pointer"
                   >
                     <div
                       class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 flex-shrink-0"
@@ -323,6 +321,30 @@
                       <span
                         class="font-medium text-sm text-gray-700 dark:text-gray-300 leading-tight line-clamp-2"
                         >{{ item.data.actor.name }}</span
+                      >
+                    </div>
+                  </NuxtLink>
+                  <div
+                    v-else
+                    class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-3 sm:pt-0"
+                  >
+                    <div
+                      class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 flex-shrink-0"
+                    >
+                      <div
+                        class="w-full h-full flex items-center justify-center text-gray-400"
+                      >
+                        <UserIcon class="w-6 h-6 sm:w-8 sm:h-8 opacity-20" />
+                      </div>
+                    </div>
+                    <div class="flex flex-col min-w-0 flex-1">
+                      <span
+                        class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5"
+                        >Voiced</span
+                      >
+                      <span
+                        class="font-medium text-sm text-gray-700 dark:text-gray-300 leading-tight line-clamp-2"
+                        >Unknown</span
                       >
                     </div>
                   </div>
@@ -374,7 +396,7 @@
                     </div>
                   </div>
                 </div>
-              </NuxtLink>
+              </div>
             </div>
           </template>
           <template v-else>
@@ -417,14 +439,9 @@
 
                 <!-- Actor Works Grid -->
                 <div
-                  class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"
+                  class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
                 >
-                  <NuxtLink
-                    :to="
-                      $localePath(
-                        `/${item.work.dubbing_projects?.content_type === 'tv' ? 'show' : 'movie'}/${item.media.id}`,
-                      )
-                    "
+                  <div
                     v-for="item in works"
                     :key="item.work.id"
                     class="bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl p-4 shadow-sm transition-colors hover:border-gray-300 dark:hover:border-gray-700 block group"
@@ -433,8 +450,9 @@
                       class="flex flex-col sm:grid sm:grid-cols-2 gap-4 h-full"
                     >
                       <!-- Column 1: Media -->
-                      <div
-                        class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start"
+                      <NuxtLink
+                        :to="$localePath(`/${item.work.dubbing_projects?.content_type === 'tv' ? 'show' : 'movie'}/${item.media.id}`)"
+                        class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start hover:opacity-80 transition-opacity cursor-pointer"
                       >
                         <div
                           class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 flex-shrink-0"
@@ -447,7 +465,7 @@
                               (item.media as any).title ||
                               (item.media as any).name
                             "
-                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            class="w-full h-full object-cover transition-transform duration-300"
                           />
                           <div
                             v-else
@@ -484,9 +502,9 @@
                             </span>
                           </div>
                         </div>
-                      </div>
+                      </NuxtLink>
 
-                      <!-- Column 2: Character -->
+                      <!-- Column 2: Original Actor / Character -->
                       <div
                         class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-3 sm:pt-0"
                       >
@@ -533,7 +551,7 @@
                         </div>
                       </div>
                     </div>
-                  </NuxtLink>
+                  </div>
                 </div>
               </div>
             </div>

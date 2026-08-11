@@ -181,22 +181,18 @@
 
         <div
           v-else
-          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
         >
-          <NuxtLink
-            :to="
-              $localePath(
-                `/${item.media_type === 'tv' ? 'show' : 'movie'}/${item.id}`,
-              )
-            "
+          <div
             v-for="item in enhancedFilmography"
             :key="`${item.media_type}-${item.id}`"
             class="bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl p-4 shadow-sm transition-colors hover:border-gray-300 dark:hover:border-gray-700 block group"
           >
             <div class="flex flex-col sm:grid sm:grid-cols-3 gap-4 h-full">
               <!-- Column 1: Media -->
-              <div
-                class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start"
+              <NuxtLink
+                :to="$localePath(`/${item.media_type === 'tv' ? 'show' : 'movie'}/${item.id}`)"
+                class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start hover:opacity-80 transition-opacity cursor-pointer"
               >
                 <div
                   class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 flex-shrink-0"
@@ -206,7 +202,7 @@
                     v-if="item.poster_path"
                     :src="resolveImageUrl(item.poster_path)"
                     :alt="item.title || item.name"
-                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    class="w-full h-full object-cover transition-transform duration-300"
                   />
                   <div
                     v-else
@@ -234,18 +230,20 @@
                     >{{ item.title || item.name }}</span
                   >
                 </div>
-              </div>
+              </NuxtLink>
 
               <!-- Column 2: Voice Actor -->
-              <div
-                class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-3 sm:pt-0"
+              <NuxtLink
+                v-if="item.voice_actors?.[0]"
+                :to="$localePath(`/voice-actor/${item.voice_actors[0].id}`)"
+                class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-3 sm:pt-0 hover:opacity-80 transition-opacity cursor-pointer"
               >
                 <div
                   class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 flex-shrink-0"
                 >
                   <NuxtImg
                     format="webp"
-                    v-if="item.voice_actors?.[0]?.profile_picture"
+                    v-if="item.voice_actors[0].profile_picture"
                     :src="item.voice_actors[0].profile_picture"
                     :alt="`${item.voice_actors[0].firstname} ${item.voice_actors[0].lastname}`"
                     class="w-full h-full object-cover"
@@ -254,11 +252,7 @@
                     v-else
                     class="w-full h-full flex items-center justify-center text-gray-400 text-xs font-bold bg-gray-100 dark:bg-[#161616]"
                   >
-                    <span v-if="item.voice_actors?.[0]"
-                      >{{ item.voice_actors[0].firstname?.[0]
-                      }}{{ item.voice_actors[0].lastname?.[0] }}</span
-                    >
-                    <UserIcon v-else class="w-6 h-6 sm:w-8 sm:h-8 opacity-20" />
+                    <span>{{ item.voice_actors[0].firstname?.[0] }}{{ item.voice_actors[0].lastname?.[0] }}</span>
                   </div>
                 </div>
                 <div class="flex flex-col min-w-0 flex-1">
@@ -267,16 +261,26 @@
                     >Voiced by</span
                   >
                   <span
-                    v-if="item.voice_actors?.[0]"
                     class="font-medium text-sm text-gray-700 dark:text-gray-300 leading-tight line-clamp-2"
-                    >{{ item.voice_actors[0].firstname }}
-                    {{ item.voice_actors[0].lastname }}</span
                   >
-                  <span
-                    v-else
-                    class="font-medium text-sm text-gray-400 dark:text-gray-500 italic"
-                    >Unknown</span
-                  >
+                    {{ item.voice_actors[0].firstname }} {{ item.voice_actors[0].lastname }}
+                  </span>
+                </div>
+              </NuxtLink>
+              <div
+                v-else
+                class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-3 sm:pt-0"
+              >
+                <div
+                  class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 flex-shrink-0"
+                >
+                  <div class="w-full h-full flex items-center justify-center text-gray-400 text-xs font-bold bg-gray-100 dark:bg-[#161616]">
+                    <UserIcon class="w-6 h-6 sm:w-8 sm:h-8 opacity-20" />
+                  </div>
+                </div>
+                <div class="flex flex-col min-w-0 flex-1">
+                  <span class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5">Voiced by</span>
+                  <span class="font-medium text-sm text-gray-400 dark:text-gray-500 italic">Unknown</span>
                 </div>
               </div>
 
@@ -306,7 +310,7 @@
                 </div>
               </div>
             </div>
-          </NuxtLink>
+          </div>
         </div>
       </section>
       </template>

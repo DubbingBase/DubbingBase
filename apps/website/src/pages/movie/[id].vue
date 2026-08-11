@@ -137,7 +137,7 @@
 
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
           <div
             v-for="actor in filteredCast"
             :key="actor.id"
@@ -157,7 +157,7 @@
                     format="webp"
                     v-if="actor.profile_path"
                     :src="actor.profile_path"
-                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    class="w-full h-full object-cover transition-transform duration-300"
                     alt="Actor"
                   />
                 </NuxtLink>
@@ -241,7 +241,7 @@
                       format="webp"
                       v-if="actor.voiceActor.profile_picture"
                       :src="actor.voiceActor.profile_picture"
-                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      class="w-full h-full object-cover transition-transform duration-300"
                       alt="Voice Actor"
                     />
                     <div

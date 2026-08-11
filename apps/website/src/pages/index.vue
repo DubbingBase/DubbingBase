@@ -41,7 +41,7 @@
           <div v-for="movie in trendingMovies" :key="movie.id" class="w-48 flex-shrink-0 snap-start">
             <NuxtLink :to="$localePath('/movie/' + movie.id)" class="group transition-transform hover:-translate-y-1 block">
               <div class="relative w-full h-72 rounded-xl overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800">
-                <NuxtImg v-if="movie.poster_path" :src="'https://image.tmdb.org/t/p/w342' + movie.poster_path" :alt="movie.title" format="webp" loading="lazy" class="object-cover w-full h-full group-hover:scale-105 transition duration-300" />
+                <NuxtImg v-if="movie.poster_path" :src="'https://image.tmdb.org/t/p/w342' + movie.poster_path" :alt="movie.title" format="webp" loading="lazy" class="object-cover w-full h-full transition duration-300" />
               </div>
               <h3 class="font-semibold text-sm text-gray-800 dark:text-gray-200 line-clamp-2">{{ movie.title }}</h3>
             </NuxtLink>
@@ -62,7 +62,7 @@
           <div v-for="show in trendingSeries" :key="show.id" class="w-48 flex-shrink-0 snap-start">
             <NuxtLink :to="$localePath('/show/' + show.id)" class="group transition-transform hover:-translate-y-1 block">
               <div class="relative w-full h-72 rounded-xl overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800">
-                <NuxtImg v-if="show.poster_path" :src="'https://image.tmdb.org/t/p/w342' + show.poster_path" :alt="(show as any).name || (show as any).title" format="webp" loading="lazy" class="object-cover w-full h-full group-hover:scale-105 transition duration-300" />
+                <NuxtImg v-if="show.poster_path" :src="'https://image.tmdb.org/t/p/w342' + show.poster_path" :alt="(show as any).name || (show as any).title" format="webp" loading="lazy" class="object-cover w-full h-full transition duration-300" />
               </div>
               <h3 class="font-semibold text-sm text-gray-800 dark:text-gray-200 line-clamp-2">{{ (show as any).name || (show as any).title }}</h3>
             </NuxtLink>
@@ -83,7 +83,7 @@
           <div v-for="game in trendingGames" :key="game.id" class="w-48 flex-shrink-0 snap-start">
             <NuxtLink :to="$localePath('/game/' + game.id)" class="group transition-transform hover:-translate-y-1 block">
               <div class="relative w-full h-72 rounded-xl overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800">
-                <NuxtImg v-if="game.cover?.url" :src="game.cover.url" :alt="game.name" format="webp" loading="lazy" class="object-cover w-full h-full group-hover:scale-105 transition duration-300" />
+                <NuxtImg v-if="game.cover?.url" :src="game.cover.url" :alt="game.name" format="webp" loading="lazy" class="object-cover w-full h-full transition duration-300" />
               </div>
               <h3 class="font-semibold text-sm text-gray-800 dark:text-gray-200 line-clamp-2">{{ game.name }}</h3>
             </NuxtLink>

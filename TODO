@@ -1,7 +1,6 @@
 # TODOs
 voice actor page and all should be tabbed
-add tests for the autocomplete component
-remove purpleish color from edit pages
+- [x] remove hover zoom everywhere
 global layout for movie, serie, actor, game, voice actor
 actor hero layout differ from other pages
 shows don't have seasons and episodes on the website

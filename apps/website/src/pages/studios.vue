@@ -39,7 +39,7 @@
             :src="studio.logo_url" 
             :alt="studio.name" 
             loading="lazy" 
-            class="object-contain w-full h-full p-4 group-hover:scale-105 transition duration-500 bg-white" 
+            class="object-contain w-full h-full p-4 transition duration-500 bg-white" 
           />
           <span v-else class="text-4xl font-bold text-gray-400">{{ studio.name.charAt(0) }}</span>
         </div>
