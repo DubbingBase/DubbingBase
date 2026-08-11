@@ -1,25 +1,25 @@
 <template>
   <div class="space-y-6 pb-20">
-    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+    <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800">
       <h3 class="text-lg font-bold text-white">Career Grid Generator</h3>
-      <p class="text-sm text-slate-400">Generate a downloadable image grid showing a voice actor's top roles.</p>
+      <p class="text-sm text-gray-400">Generate a downloadable image grid showing a voice actor's top roles.</p>
     </div>
 
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 shadow-lg">
       <h4 class="font-bold text-white text-sm mb-4">Search Voice Actor</h4>
       
-      <div v-if="selectedActor" class="flex items-center justify-between bg-slate-950 border border-slate-800 rounded-xl p-3">
+      <div v-if="selectedActor" class="flex items-center justify-between bg-gray-950 border border-gray-800 rounded-xl p-3">
         <div class="flex items-center space-x-3">
-          <div class="h-10 w-10 rounded-full overflow-hidden border border-slate-700 bg-slate-800 shrink-0 flex items-center justify-center">
+          <div class="h-10 w-10 rounded-full overflow-hidden border border-gray-700 bg-gray-800 shrink-0 flex items-center justify-center">
             <NuxtImg format="webp" v-if="selectedActor.profile_picture" :src="selectedActor.profile_picture" class="h-full w-full object-cover" />
-            <span v-else class="text-xs font-bold text-slate-500">{{ selectedActor.firstname.charAt(0) }}</span>
+            <span v-else class="text-xs font-bold text-gray-500">{{ selectedActor.firstname.charAt(0) }}</span>
           </div>
           <div>
             <p class="text-sm font-semibold text-white">{{ selectedActor.firstname }} {{ selectedActor.lastname }}</p>
-            <p class="text-xs text-slate-400 font-mono">ID: {{ selectedActor.id }}</p>
+            <p class="text-xs text-gray-400 font-mono">ID: {{ selectedActor.id }}</p>
           </div>
         </div>
-        <button @click="resetSelection" class="p-1.5 text-slate-500 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-colors">
+        <button @click="resetSelection" class="p-1.5 text-gray-500 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-colors">
           <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -33,26 +33,26 @@
           v-model="searchQuery"
           @focus="activeSearch = true"
           @input="triggerSearch"
-          class="w-full pl-4 pr-10 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          class="w-full pl-4 pr-10 py-3 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
         />
         <div
           v-if="activeSearch && searchResults.length > 0"
-          class="absolute z-40 left-0 right-0 mt-2 max-h-60 overflow-y-auto bg-slate-900 border border-slate-800 rounded-xl shadow-2xl divide-y divide-slate-800/60"
+          class="absolute z-40 left-0 right-0 mt-2 max-h-60 overflow-y-auto bg-gray-900 border border-gray-800 rounded-xl shadow-2xl divide-y divide-gray-800/60"
         >
           <div
             v-for="va in searchResults"
             :key="va.id"
             @click="selectActor(va)"
-            class="px-4 py-3 hover:bg-slate-800/50 cursor-pointer flex items-start space-x-3 transition-colors"
+            class="px-4 py-3 hover:bg-gray-800/50 cursor-pointer flex items-start space-x-3 transition-colors"
           >
-            <div class="h-10 w-10 mt-1 rounded-full overflow-hidden border border-slate-700 bg-slate-800 shrink-0 flex items-center justify-center">
+            <div class="h-10 w-10 mt-1 rounded-full overflow-hidden border border-gray-700 bg-gray-800 shrink-0 flex items-center justify-center">
               <NuxtImg format="webp" v-if="va.profile_picture" :src="va.profile_picture" class="h-full w-full object-cover" />
-              <span v-else class="text-xs font-bold text-slate-500">{{ va.firstname.charAt(0) }}</span>
+              <span v-else class="text-xs font-bold text-gray-500">{{ va.firstname.charAt(0) }}</span>
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-semibold text-slate-200">
+              <p class="text-sm font-semibold text-gray-200">
                 {{ va.firstname }} {{ va.lastname }}
-                <span class="text-xs text-slate-500 font-mono ml-2">ID: {{ va.id }}</span>
+                <span class="text-xs text-gray-500 font-mono ml-2">ID: {{ va.id }}</span>
               </p>
             </div>
           </div>
@@ -61,9 +61,9 @@
     </div>
 
     <!-- Generator Actions -->
-    <div v-if="selectedActor" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+    <div v-if="selectedActor" class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl space-y-4">
       <div class="flex items-center space-x-4">
-        <select v-model="selectedLang" class="bg-slate-950 border border-slate-800 rounded-xl text-white py-2 px-4 focus:ring-2 focus:ring-blue-500 text-sm outline-none">
+        <select v-model="selectedLang" class="bg-gray-950 border border-gray-800 rounded-xl text-white py-2 px-4 focus:ring-2 focus:ring-blue-500 text-sm outline-none">
           <option value="fr-FR">Français (FR)</option>
           <option value="en-US">English (EN)</option>
         </select>
@@ -71,7 +71,7 @@
         <button
           @click="generateImage"
           :disabled="generating"
-          class="py-2.5 px-6 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 text-white font-semibold rounded-xl text-sm transition-all duration-150 flex items-center"
+          class="py-2.5 px-6 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-800 disabled:text-gray-500 text-white font-semibold rounded-xl text-sm transition-all duration-150 flex items-center"
         >
           <span v-if="generating" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
           {{ generating ? 'Generating...' : 'Generate Image' }}
@@ -84,7 +84,7 @@
 
       <div v-if="imageUrl" class="mt-6 space-y-4">
         <h4 class="font-bold text-white text-sm">Preview:</h4>
-        <div class="rounded-xl overflow-hidden border border-slate-800 bg-slate-950 p-4 inline-block">
+        <div class="rounded-xl overflow-hidden border border-gray-800 bg-gray-950 p-4 inline-block">
           <NuxtImg format="webp" :src="imageUrl" alt="Career Grid" class="max-w-full h-auto max-h-[600px] object-contain" />
         </div>
         <div>
@@ -98,7 +98,7 @@
       </div>
     </div>
   </div>
-</template>
+  </template>
 
 <script setup lang="ts">
 const supabase = useSupabaseClient();
@@ -215,9 +215,9 @@ const handleOutsideClick = (e: MouseEvent) => {
   }
 };
 
-onMounted(() => {
+await (async () => {
   document.addEventListener('click', handleOutsideClick);
-});
+})();
 
 onUnmounted(() => {
   document.removeEventListener('click', handleOutsideClick);

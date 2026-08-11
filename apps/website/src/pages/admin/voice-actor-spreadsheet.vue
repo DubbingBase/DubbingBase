@@ -1,11 +1,11 @@
 <template>
   <div class="flex flex-col h-[calc(100vh-120px)] space-y-4 md:space-y-6">
     <!-- Toolbar with search -->
-    <div class="shrink-0 bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="shrink-0 bg-gray-900 p-6 rounded-2xl border border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div class="flex-1 max-w-md">
-        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Search Directory</label>
+        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Search Directory</label>
         <div class="relative">
-          <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+          <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
@@ -14,7 +14,7 @@
             v-model="searchQuery"
             type="text"
             placeholder="Search voice actors..."
-            class="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 placeholder-slate-500 text-sm transition-all duration-150"
+            class="w-full pl-10 pr-4 py-2.5 bg-gray-950 border border-gray-800 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 placeholder-gray-500 text-sm transition-all duration-150"
             @input="handleSearch"
           />
         </div>
@@ -29,7 +29,7 @@
           </svg>
           <span>Add Voice Actor</span>
         </NuxtLink>
-        <div class="flex items-center space-x-2 text-xs text-slate-400 bg-slate-950 border border-slate-800/80 px-4 py-2.5 rounded-xl shrink-0">
+        <div class="flex items-center space-x-2 text-xs text-gray-400 bg-gray-950 border border-gray-800/80 px-4 py-2.5 rounded-xl shrink-0">
           <span class="h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
           <span>Auto-saves changes on edit</span>
         </div>
@@ -39,10 +39,10 @@
     <!-- Loading indicator -->
     <div
       v-if="isLoading"
-      class="flex flex-col items-center justify-center py-24 space-y-3 bg-slate-900/40 border border-slate-800/60 rounded-2xl"
+      class="flex flex-col items-center justify-center py-24 space-y-3 bg-gray-900/40 border border-gray-800/60 rounded-2xl"
     >
       <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
-      <p class="text-slate-400 text-sm">Loading voice actors...</p>
+      <p class="text-gray-400 text-sm">Loading voice actors...</p>
     </div>
 
     <!-- Error message -->
@@ -62,8 +62,8 @@
     </div>
 
     <!-- Revogrid container -->
-    <div v-else class="flex-1 bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl min-h-0 min-w-0">
-      <div class="h-full rounded-xl border border-slate-800/50">
+    <div v-else class="flex-1 bg-gray-900 border border-gray-800 rounded-2xl p-4 shadow-xl min-h-0 min-w-0">
+      <div class="h-full rounded-xl border border-gray-800/50">
         <ClientOnly>
           <revogrid
             ref="revoGridRef"
@@ -83,7 +83,7 @@
       <button
         @click="handleBulkSave"
         :disabled="pendingChanges.size === 0 || isBulkSaving"
-        class="bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 disabled:border-slate-800 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:scale-[1.02] active:scale-[0.98] border border-blue-500/20 transition-all duration-150 flex items-center space-x-2.5"
+        class="bg-blue-600 hover:bg-blue-500 disabled:bg-gray-800 disabled:text-gray-500 disabled:border-gray-800 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:scale-[1.02] active:scale-[0.98] border border-blue-500/20 transition-all duration-150 flex items-center space-x-2.5"
       >
         <span
           v-if="isBulkSaving"
@@ -107,7 +107,7 @@
           ? 'bg-green-950/40 border-green-900/60 text-green-200'
           : toast.type === 'error'
           ? 'bg-red-950/40 border-red-900/60 text-red-200'
-          : 'bg-slate-900 border-slate-800 text-slate-200'
+          : 'bg-gray-900 border-gray-800 text-gray-200'
       "
     >
       <span>{{ toast.message }}</span>
@@ -378,9 +378,9 @@ watch(searchQuery, (newQuery) => {
   }, 300);
 });
 
-onMounted(() => {
+await (async () => {
   fetchVoiceActors();
-});
+})();
 
 onUnmounted(() => {
   if (searchTimer) {

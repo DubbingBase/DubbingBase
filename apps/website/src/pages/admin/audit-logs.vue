@@ -128,7 +128,7 @@
     </div>
 
   </div>
-</template>
+  </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
@@ -155,9 +155,9 @@ const loadLogs = async () => {
   isLoading.value = false;
 };
 
-onMounted(() => {
+await (async () => {
   loadLogs();
-});
+})();
 
 const openRevertModal = (log: any) => {
   selectedLog.value = log;

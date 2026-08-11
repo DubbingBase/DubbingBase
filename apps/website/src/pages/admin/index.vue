@@ -85,7 +85,7 @@
       </div>
     </div>
   </div>
-</template>
+  </template>
 
 <script setup lang="ts">
 const localePath = useLocalePath();
@@ -210,7 +210,7 @@ const topVoiceActorsData = ref<ChartData>({
       'rgba(6, 182, 212, 0.8)',    // cyan-500
       'rgba(99, 102, 241, 0.8)'    // indigo-500
     ],
-    borderColor: '#0f172a', // slate-900 to separate segments cleanly
+    borderColor: '#0f172a', // gray-900 to separate segments cleanly
     borderWidth: 2
   }]
 });
@@ -366,9 +366,9 @@ const fetchDashboardData = async () => {
   }
 };
 
-onMounted(() => {
+await (async () => {
   fetchDashboardData();
-});
+})();
 </script>
 
 <style scoped>

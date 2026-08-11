@@ -103,7 +103,7 @@
       </form>
     </div>
   </div>
-</template>
+  </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
@@ -131,7 +131,7 @@ const loading = ref(false);
 const isSaving = ref(false);
 const errorMsg = ref<string | null>(null);
 
-onMounted(async () => {
+await (async () => {
   if (isEditMode.value) {
     loading.value = true;
     try {
@@ -153,7 +153,7 @@ onMounted(async () => {
       loading.value = false;
     }
   }
-});
+})();
 
 const saveStudio = async () => {
   if (!form.value.name.trim()) return;

@@ -1,11 +1,11 @@
 <template>
   <div class="space-y-6">
     <!-- Top back banner -->
-    <div class="flex items-center justify-between bg-slate-900 p-4 rounded-2xl border border-slate-800">
+    <div class="flex items-center justify-between bg-gray-900 p-4 rounded-2xl border border-gray-800">
       <h3 class="text-sm font-bold text-white">Movie Voice Cast Assignment</h3>
       <NuxtLink
         :to="localePath('/admin')"
-        class="text-xs font-semibold px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-350 hover:text-white rounded-xl border border-slate-700 transition-colors"
+        class="text-xs font-semibold px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-350 hover:text-white rounded-xl border border-gray-700 transition-colors"
       >
         ← Back to Dashboard
       </NuxtLink>
@@ -20,24 +20,24 @@
     </div>
 
     <!-- Loading state -->
-    <div v-if="loading" class="flex flex-col items-center justify-center py-24 space-y-3 bg-slate-900/40 border border-slate-800/60 rounded-2xl">
+    <div v-if="loading" class="flex flex-col items-center justify-center py-24 space-y-3 bg-gray-900/40 border border-gray-800/60 rounded-2xl">
       <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
-      <p class="text-slate-400 text-sm">Fetching movie credits data...</p>
+      <p class="text-gray-400 text-sm">Fetching movie credits data...</p>
     </div>
 
     <!-- Main Workspace -->
     <div v-else-if="movie" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Movie details column -->
       <div class="space-y-6">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-4 shadow-xl">
           <!-- Poster -->
-          <div class="aspect-[2/3] w-full rounded-xl overflow-hidden bg-slate-950 border border-slate-800 shadow-lg relative">
+          <div class="aspect-[2/3] w-full rounded-xl overflow-hidden bg-gray-950 border border-gray-800 shadow-lg relative">
             <NuxtImg format="webp"               v-if="movie.poster_path"
               :src="'https://image.tmdb.org/t/p/w500' + movie.poster_path"
               class="h-full w-full object-cover"
               alt="Movie Poster"
             />
-            <div v-else class="h-full w-full flex items-center justify-center text-slate-600">
+            <div v-else class="h-full w-full flex items-center justify-center text-gray-600">
               No Poster Available
             </div>
           </div>
@@ -45,16 +45,16 @@
           <!-- Metadata -->
           <div class="space-y-2">
             <h4 class="text-lg font-bold text-white leading-snug">{{ movie.title }}</h4>
-            <p v-if="movie.release_date" class="text-xs font-semibold text-slate-500">
+            <p v-if="movie.release_date" class="text-xs font-semibold text-gray-500">
               Released: {{ new Date(movie.release_date).getFullYear() }}
             </p>
-            <p v-if="movie.overview" class="text-xs text-slate-400 leading-relaxed line-clamp-4 italic">
+            <p v-if="movie.overview" class="text-xs text-gray-400 leading-relaxed line-clamp-4 italic">
               "{{ movie.overview }}"
             </p>
           </div>
 
           <!-- Save Button -->
-          <div class="border-t border-slate-800/80 pt-4 mt-2">
+          <div class="border-t border-gray-800/80 pt-4 mt-2">
             <button
               @click="saveVoiceCast"
               :disabled="isSaving || !hasChanges"
@@ -63,7 +63,7 @@
               <span v-if="isSaving" class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></span>
               <span>Save Mapping Changes</span>
             </button>
-            <p v-if="!hasChanges" class="text-[10px] text-center text-slate-500 mt-2">
+            <p v-if="!hasChanges" class="text-[10px] text-center text-gray-500 mt-2">
               No changes to save yet.
             </p>
           </div>
@@ -72,9 +72,9 @@
 
       <!-- Cast list column (Double span) -->
       <div class="lg:col-span-2 space-y-4">
-        <h4 class="text-sm font-bold text-slate-400 uppercase tracking-wider px-2">Casting Members Mapping</h4>
+        <h4 class="text-sm font-bold text-gray-400 uppercase tracking-wider px-2">Casting Members Mapping</h4>
 
-        <div v-if="actors.length === 0" class="p-8 text-center bg-slate-900 border border-slate-850 rounded-2xl text-slate-500 text-sm">
+        <div v-if="actors.length === 0" class="p-8 text-center bg-gray-900 border border-gray-850 rounded-2xl text-gray-500 text-sm">
           No cast members returned for this movie.
         </div>
 
@@ -82,11 +82,11 @@
           <div
             v-for="actor in actors"
             :key="actor.id"
-            class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-sm"
+            class="bg-gray-900 border border-gray-800 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-sm"
           >
             <!-- Actor information -->
             <div class="flex items-center space-x-3.5 min-w-0">
-              <div class="h-12 w-12 rounded-full overflow-hidden border border-slate-800 bg-slate-950 shrink-0 flex items-center justify-center text-slate-500">
+              <div class="h-12 w-12 rounded-full overflow-hidden border border-gray-800 bg-gray-950 shrink-0 flex items-center justify-center text-gray-500">
                 <NuxtImg format="webp"                   v-if="actor.profile_path"
                   :src="'https://image.tmdb.org/t/p/w185' + actor.profile_path"
                   class="h-full w-full object-cover"
@@ -98,7 +98,7 @@
               </div>
               <div class="min-w-0">
                 <h5 class="font-bold text-white text-sm truncate leading-snug">{{ actor.name }}</h5>
-                <p class="text-xs text-slate-400 truncate mt-0.5">Character: <span class="text-indigo-400 font-semibold">{{ actor.character }}</span></p>
+                <p class="text-xs text-gray-400 truncate mt-0.5">Character: <span class="text-indigo-400 font-semibold">{{ actor.character }}</span></p>
               </div>
             </div>
 
@@ -107,7 +107,7 @@
               <!-- Mapped profile display -->
               <div v-if="voiceActorAssignments[actor.id]" class="flex items-center justify-between bg-indigo-950/20 border border-indigo-900/40 rounded-xl p-2 pl-3">
                 <div class="min-w-0 flex items-center space-x-2">
-                  <div class="h-5 w-5 rounded-full overflow-hidden border border-indigo-800 bg-slate-950 shrink-0 flex items-center justify-center text-indigo-400">
+                  <div class="h-5 w-5 rounded-full overflow-hidden border border-indigo-800 bg-gray-950 shrink-0 flex items-center justify-center text-indigo-400">
                     <NuxtImg format="webp" v-if="getAssignedVA(actor.id)?.profile_picture" :src="getAssignedVA(actor.id)!.profile_picture!" class="h-full w-full object-cover" />
                     <span v-else class="text-[9px] font-bold">{{ getAssignedVA(actor.id)?.firstname.charAt(0) }}</span>
                   </div>
@@ -117,7 +117,7 @@
                 </div>
                 <button
                   @click="clearVoiceActor(actor.id)"
-                  class="p-1 text-slate-500 hover:text-red-400 rounded-lg hover:bg-slate-800/40 transition-colors shrink-0"
+                  class="p-1 text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-800/40 transition-colors shrink-0"
                   title="Clear mapping"
                 >
                   <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -134,9 +134,9 @@
                   v-model="actorSearchQueries[actor.id]"
                   @focus="openSearchDropdown(actor.id)"
                   @input="triggerSearch(actor.id)"
-                  class="w-full pl-3 pr-8 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs font-medium"
+                  class="w-full pl-3 pr-8 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs font-medium"
                 />
-                <span class="absolute right-2.5 top-2.5 text-slate-600 pointer-events-none">
+                <span class="absolute right-2.5 top-2.5 text-gray-600 pointer-events-none">
                   <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
@@ -145,28 +145,28 @@
                 <!-- Search dropdown -->
                 <div
                   v-if="activeSearchDropdown === actor.id && searchResults[actor.id]?.length > 0"
-                  class="absolute z-40 left-0 right-0 mt-1.5 max-h-40 overflow-y-auto bg-slate-900 border border-slate-850 rounded-xl shadow-2xl divide-y divide-slate-850"
+                  class="absolute z-40 left-0 right-0 mt-1.5 max-h-40 overflow-y-auto bg-gray-900 border border-gray-850 rounded-xl shadow-2xl divide-y divide-gray-850"
                 >
                   <div
                     v-for="va in searchResults[actor.id]"
                     :key="va.id"
                     @click="assignVoiceActor(actor.id, va)"
-                    class="px-3 py-2 hover:bg-slate-800/50 cursor-pointer flex items-center space-x-2.5 transition-colors"
+                    class="px-3 py-2 hover:bg-gray-800/50 cursor-pointer flex items-center space-x-2.5 transition-colors"
                   >
-                    <div class="h-6 w-6 rounded-full overflow-hidden border border-slate-800 bg-slate-950 shrink-0 flex items-center justify-center text-slate-500">
+                    <div class="h-6 w-6 rounded-full overflow-hidden border border-gray-800 bg-gray-950 shrink-0 flex items-center justify-center text-gray-500">
                       <NuxtImg format="webp" v-if="va.profile_picture" :src="va.profile_picture" class="h-full w-full object-cover" />
                       <svg v-else class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
                     </div>
-                    <span class="text-xs font-semibold text-slate-200">{{ va.firstname }} {{ va.lastname }}</span>
+                    <span class="text-xs font-semibold text-gray-200">{{ va.firstname }} {{ va.lastname }}</span>
                   </div>
                 </div>
 
                 <!-- Dropdown states -->
                 <div
                   v-else-if="activeSearchDropdown === actor.id && actorSearchQueries[actor.id]?.trim() && searchLoading[actor.id]"
-                  class="absolute z-40 left-0 right-0 mt-1.5 p-3 bg-slate-900 border border-slate-850 rounded-xl text-center text-slate-500 text-[10px]"
+                  class="absolute z-40 left-0 right-0 mt-1.5 p-3 bg-gray-900 border border-gray-850 rounded-xl text-center text-gray-500 text-[10px]"
                 >
                   Searching database...
                 </div>
@@ -186,13 +186,13 @@
           ? 'bg-green-950/40 border-green-900/60 text-green-200'
           : toast.type === 'error'
           ? 'bg-red-950/40 border-red-900/60 text-red-200'
-          : 'bg-slate-900 border-slate-800 text-slate-200'
+          : 'bg-gray-900 border-gray-800 text-gray-200'
       "
     >
       <span>{{ toast.message }}</span>
     </div>
   </div>
-</template>
+  </template>
 
 <script setup lang="ts">
 const supabase = useSupabaseClient();
@@ -462,8 +462,8 @@ const setupDropdownCloser = () => {
   });
 };
 
-onMounted(() => {
+await (async () => {
   fetchMovieData();
   setupDropdownCloser();
-});
+})();
 </script>

@@ -1,16 +1,16 @@
 <template>
   <div class="max-w-2xl mx-auto space-y-6">
     <!-- Intro Card -->
-    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+    <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800">
       <h3 class="text-lg font-bold text-white">Link User to Voice Actor Profile</h3>
-      <p class="text-sm text-slate-400 mt-1">Associate a user login account to their public voice actor profile. This allows them to manage their own voice cast records.</p>
+      <p class="text-sm text-gray-400 mt-1">Associate a user login account to their public voice actor profile. This allows them to manage their own voice cast records.</p>
     </div>
 
     <!-- Form Panel -->
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6 shadow-xl">
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-6 shadow-xl">
       <!-- User Autocomplete -->
       <div class="space-y-2 relative">
-        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block">1. Select User Account</label>
+        <label class="text-xs font-bold text-gray-400 uppercase tracking-wider block">1. Select User Account</label>
         <div class="flex items-center space-x-2">
           <div class="relative flex-1">
             <input
@@ -19,9 +19,9 @@
               placeholder="Search user email..."
               @focus="isUserDropdownOpen = true"
               @input="handleUserInput"
-              class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              class="w-full px-4 py-3 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
-            <span class="absolute right-3.5 top-3.5 text-slate-500">
+            <span class="absolute right-3.5 top-3.5 text-gray-500">
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
@@ -31,7 +31,7 @@
           <button
             v-if="selectedUser"
             @click="clearUserSelection"
-            class="p-3 bg-slate-950 border border-slate-800 text-slate-400 hover:text-white rounded-xl hover:bg-slate-850 transition-colors"
+            class="p-3 bg-gray-950 border border-gray-800 text-gray-400 hover:text-white rounded-xl hover:bg-gray-850 transition-colors"
           >
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -42,28 +42,28 @@
         <!-- User Dropdown Panel -->
         <div
           v-if="isUserDropdownOpen && filteredUsers.length > 0"
-          class="absolute z-40 left-0 right-0 mt-1.5 max-h-60 overflow-y-auto bg-slate-900 border border-slate-800 rounded-xl shadow-2xl divide-y divide-slate-800/60"
+          class="absolute z-40 left-0 right-0 mt-1.5 max-h-60 overflow-y-auto bg-gray-900 border border-gray-800 rounded-xl shadow-2xl divide-y divide-gray-800/60"
         >
           <div
             v-for="u in filteredUsers"
             :key="u.id"
             @click="selectUser(u)"
-            class="px-4 py-3 hover:bg-slate-800/40 cursor-pointer flex flex-col transition-colors"
+            class="px-4 py-3 hover:bg-gray-800/40 cursor-pointer flex flex-col transition-colors"
           >
             <span class="text-sm font-semibold text-white">{{ u.email }}</span>
-            <span class="text-xs text-slate-500 font-mono mt-0.5">{{ u.id }}</span>
+            <span class="text-xs text-gray-500 font-mono mt-0.5">{{ u.id }}</span>
           </div>
         </div>
         <!-- Loader / Empty feedback in dropdown -->
         <div
           v-else-if="isUserDropdownOpen && userQuery.trim() && userLoading"
-          class="absolute z-40 left-0 right-0 mt-1.5 p-4 bg-slate-900 border border-slate-800 rounded-xl text-center text-slate-400 text-xs"
+          class="absolute z-40 left-0 right-0 mt-1.5 p-4 bg-gray-900 border border-gray-800 rounded-xl text-center text-gray-400 text-xs"
         >
           Loading users list...
         </div>
         <div
           v-else-if="isUserDropdownOpen && userQuery.trim() && filteredUsers.length === 0"
-          class="absolute z-40 left-0 right-0 mt-1.5 p-4 bg-slate-900 border border-slate-800 rounded-xl text-center text-slate-500 text-xs"
+          class="absolute z-40 left-0 right-0 mt-1.5 p-4 bg-gray-900 border border-gray-800 rounded-xl text-center text-gray-500 text-xs"
         >
           No matching user account found.
         </div>
@@ -71,7 +71,7 @@
 
       <!-- Voice Actor Autocomplete -->
       <div class="space-y-2 relative">
-        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block">2. Select Voice Actor Profile</label>
+        <label class="text-xs font-bold text-gray-400 uppercase tracking-wider block">2. Select Voice Actor Profile</label>
         <div class="flex items-center space-x-2">
           <div class="relative flex-1">
             <input
@@ -80,9 +80,9 @@
               placeholder="Search voice actor name..."
               @focus="isVoiceActorDropdownOpen = true"
               @input="handleVoiceActorInput"
-              class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              class="w-full px-4 py-3 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
-            <span class="absolute right-3.5 top-3.5 text-slate-500">
+            <span class="absolute right-3.5 top-3.5 text-gray-500">
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
@@ -92,7 +92,7 @@
           <button
             v-if="selectedVoiceActor"
             @click="clearVoiceActorSelection"
-            class="p-3 bg-slate-950 border border-slate-800 text-slate-400 hover:text-white rounded-xl hover:bg-slate-850 transition-colors"
+            class="p-3 bg-gray-950 border border-gray-800 text-gray-400 hover:text-white rounded-xl hover:bg-gray-850 transition-colors"
           >
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -103,15 +103,15 @@
         <!-- Voice Actor Dropdown Panel -->
         <div
           v-if="isVoiceActorDropdownOpen && voiceActorResults.length > 0"
-          class="absolute z-40 left-0 right-0 mt-1.5 max-h-60 overflow-y-auto bg-slate-900 border border-slate-800 rounded-xl shadow-2xl divide-y divide-slate-800/60"
+          class="absolute z-40 left-0 right-0 mt-1.5 max-h-60 overflow-y-auto bg-gray-900 border border-gray-800 rounded-xl shadow-2xl divide-y divide-gray-800/60"
         >
           <div
             v-for="va in voiceActorResults"
             :key="va.id"
             @click="selectVoiceActor(va)"
-            class="px-4 py-3 hover:bg-slate-800/40 cursor-pointer flex items-center space-x-3 transition-colors"
+            class="px-4 py-3 hover:bg-gray-800/40 cursor-pointer flex items-center space-x-3 transition-colors"
           >
-            <div class="h-8 w-8 rounded-full overflow-hidden border border-slate-800 bg-slate-950 shrink-0 flex items-center justify-center text-slate-500">
+            <div class="h-8 w-8 rounded-full overflow-hidden border border-gray-800 bg-gray-950 shrink-0 flex items-center justify-center text-gray-500">
               <NuxtImg format="webp" v-if="va.profile_picture" :src="getProfilePictureUrl(va.profile_picture) || undefined" class="h-full w-full object-cover" />
               <svg v-else class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -123,26 +123,26 @@
         <!-- Loader / Empty feedback in dropdown -->
         <div
           v-else-if="isVoiceActorDropdownOpen && voiceActorQuery.trim() && voiceActorSearching"
-          class="absolute z-40 left-0 right-0 mt-1.5 p-4 bg-slate-900 border border-slate-800 rounded-xl text-center text-slate-400 text-xs"
+          class="absolute z-40 left-0 right-0 mt-1.5 p-4 bg-gray-900 border border-gray-800 rounded-xl text-center text-gray-400 text-xs"
         >
           Searching voice actors...
         </div>
         <div
           v-else-if="isVoiceActorDropdownOpen && voiceActorQuery.trim() && voiceActorResults.length === 0"
-          class="absolute z-40 left-0 right-0 mt-1.5 p-4 bg-slate-900 border border-slate-800 rounded-xl text-center text-slate-500 text-xs"
+          class="absolute z-40 left-0 right-0 mt-1.5 p-4 bg-gray-900 border border-gray-800 rounded-xl text-center text-gray-500 text-xs"
         >
           No voice actors found matching query.
         </div>
       </div>
 
       <!-- Selected State cards -->
-      <div v-if="selectedUser || selectedVoiceActor" class="p-4 bg-slate-950/60 border border-slate-850 rounded-xl space-y-2.5">
+      <div v-if="selectedUser || selectedVoiceActor" class="p-4 bg-gray-950/60 border border-gray-850 rounded-xl space-y-2.5">
         <div v-if="selectedUser" class="flex justify-between items-center text-xs">
-          <span class="text-slate-500 font-bold uppercase tracking-wider">Target User</span>
+          <span class="text-gray-500 font-bold uppercase tracking-wider">Target User</span>
           <span class="font-semibold text-blue-400 font-mono">{{ selectedUser.email }}</span>
         </div>
         <div v-if="selectedVoiceActor" class="flex justify-between items-center text-xs">
-          <span class="text-slate-500 font-bold uppercase tracking-wider">Voice Actor Profile</span>
+          <span class="text-gray-500 font-bold uppercase tracking-wider">Voice Actor Profile</span>
           <span class="font-semibold text-indigo-400 font-mono">{{ selectedVoiceActor.firstname }} {{ selectedVoiceActor.lastname }}</span>
         </div>
       </div>
@@ -159,12 +159,12 @@
     </div>
 
     <!-- Existing Links Panel -->
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6 shadow-xl mt-8">
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-6 shadow-xl mt-8">
       <div class="flex items-center justify-between">
         <h3 class="text-lg font-bold text-white">Existing Links</h3>
         <button
           @click="fetchExistingLinks"
-          class="p-2 bg-slate-950 border border-slate-800 text-slate-400 hover:text-white rounded-xl hover:bg-slate-850 transition-colors"
+          class="p-2 bg-gray-950 border border-gray-800 text-gray-400 hover:text-white rounded-xl hover:bg-gray-850 transition-colors"
           title="Refresh List"
         >
           <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -172,20 +172,20 @@
           </svg>
         </button>
       </div>
-      <div v-if="linksLoading" class="text-slate-400 text-sm py-4 text-center">Loading links...</div>
-      <div v-else-if="existingLinks.length === 0" class="text-slate-500 text-sm py-4 text-center">No profiles linked yet.</div>
+      <div v-if="linksLoading" class="text-gray-400 text-sm py-4 text-center">Loading links...</div>
+      <div v-else-if="existingLinks.length === 0" class="text-gray-500 text-sm py-4 text-center">No profiles linked yet.</div>
       <div v-else class="space-y-3">
-        <div v-for="link in existingLinks" :key="link.id" class="flex items-center justify-between p-4 bg-slate-950/60 border border-slate-850 rounded-xl">
+        <div v-for="link in existingLinks" :key="link.id" class="flex items-center justify-between p-4 bg-gray-950/60 border border-gray-850 rounded-xl">
           <div class="flex flex-col gap-1">
             <span class="text-sm font-bold text-white">{{ link.userEmail }}</span>
-            <span class="text-xs text-slate-500 font-mono">{{ link.user_id }}</span>
+            <span class="text-xs text-gray-500 font-mono">{{ link.user_id }}</span>
           </div>
-          <svg class="h-4 w-4 text-slate-600 mx-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg class="h-4 w-4 text-gray-600 mx-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
           </svg>
           <div class="flex items-center space-x-3 text-right">
             <span class="text-sm font-bold text-indigo-400">{{ link.voiceActorName }}</span>
-            <div class="h-8 w-8 rounded-full overflow-hidden border border-slate-800 bg-slate-950 shrink-0 flex items-center justify-center text-slate-500">
+            <div class="h-8 w-8 rounded-full overflow-hidden border border-gray-800 bg-gray-950 shrink-0 flex items-center justify-center text-gray-500">
               <NuxtImg format="webp" v-if="link.voiceActorImage" :src="getProfilePictureUrl(link.voiceActorImage) || undefined" class="h-full w-full object-cover" />
               <svg v-else class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -205,13 +205,13 @@
           ? 'bg-green-950/40 border-green-900/60 text-green-200'
           : toast.type === 'error'
           ? 'bg-red-950/40 border-red-900/60 text-red-200'
-          : 'bg-slate-900 border-slate-800 text-slate-200'
+          : 'bg-gray-900 border-gray-800 text-gray-200'
       "
     >
       <span>{{ toast.message }}</span>
     </div>
   </div>
-</template>
+  </template>
 
 <script setup lang="ts">
 
@@ -439,8 +439,8 @@ const fetchExistingLinks = async () => {
   }
 };
 
-onMounted(() => {
+await (async () => {
   fetchUsersList();
   setupClickListeners();
-});
+})();
 </script>

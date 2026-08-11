@@ -1,16 +1,16 @@
 <template>
   <div class="space-y-6">
     <!-- Top toolbar -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-slate-900 p-5 rounded-2xl border border-slate-800">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gray-900 p-5 rounded-2xl border border-gray-800">
       <div>
         <h3 class="text-lg font-bold text-white">User Reports</h3>
-        <p class="text-sm text-slate-400">Manage user-submitted reports for content or profiles.</p>
+        <p class="text-sm text-gray-400">Manage user-submitted reports for content or profiles.</p>
       </div>
       <div class="flex items-center space-x-3">
         <button
           @click="fetchReports"
           :disabled="loading"
-          class="py-2.5 px-5 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 text-white font-semibold rounded-xl shadow-lg transition-all duration-150 hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center shrink-0"
+          class="py-2.5 px-5 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-800 disabled:text-gray-500 text-white font-semibold rounded-xl shadow-lg transition-all duration-150 hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center shrink-0"
         >
           <span v-if="loading" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
           <span>Refresh</span>
@@ -27,36 +27,36 @@
     </div>
 
     <!-- Reports Table Card -->
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
       <!-- Loading indicator -->
       <div v-if="loading" class="flex flex-col items-center justify-center py-20 space-y-3">
         <div class="animate-spin rounded-full h-9 w-9 border-b-2 border-blue-500"></div>
-        <p class="text-slate-400 text-sm">Fetching reports...</p>
+        <p class="text-gray-400 text-sm">Fetching reports...</p>
       </div>
 
       <!-- Empty state -->
       <div v-else-if="reports.length === 0" class="text-center py-16 space-y-2">
-        <p class="text-slate-400 font-medium">No reports found</p>
-        <p class="text-xs text-slate-500">Everything looks good!</p>
+        <p class="text-gray-400 font-medium">No reports found</p>
+        <p class="text-xs text-gray-500">Everything looks good!</p>
       </div>
 
       <!-- Table -->
       <div v-else class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
           <thead>
-            <tr class="border-b border-slate-800 text-xs font-semibold text-slate-400 uppercase tracking-wider bg-slate-900/40">
+            <tr class="border-b border-gray-800 text-xs font-semibold text-gray-400 uppercase tracking-wider bg-gray-900/40">
               <th class="py-4 px-6">Details</th>
               <th class="py-4 px-6">Target</th>
               <th class="py-4 px-6">Reporter</th>
               <th class="py-4 px-6">Status</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-800/60">
-            <tr v-for="report in reports" :key="report.id" class="hover:bg-slate-800/10 transition-colors">
+          <tbody class="divide-y divide-gray-800/60">
+            <tr v-for="report in reports" :key="report.id" class="hover:bg-gray-800/10 transition-colors">
               <td class="py-4 px-6">
                 <div class="font-semibold text-white">{{ report.reason }}</div>
-                <div class="text-xs text-slate-400 mt-1 max-w-sm truncate" :title="report.details || ''">{{ report.details || 'No details provided' }}</div>
-                <div class="text-xs text-slate-500 mt-1">{{ formatDate(report.created_at) }}</div>
+                <div class="text-xs text-gray-400 mt-1 max-w-sm truncate" :title="report.details || ''">{{ report.details || 'No details provided' }}</div>
+                <div class="text-xs text-gray-500 mt-1">{{ formatDate(report.created_at) }}</div>
               </td>
               <td class="py-4 px-6 font-mono text-xs text-blue-400">
                 <NuxtLink :to="localePath(report.target_url)" target="_blank" class="hover:underline flex items-center space-x-1">
@@ -66,7 +66,7 @@
                   <span>Link</span>
                 </NuxtLink>
               </td>
-              <td class="py-4 px-6 text-xs text-slate-400">
+              <td class="py-4 px-6 text-xs text-gray-400">
                 {{ report.reporter_id }}
               </td>
               <td class="py-4 px-6">
@@ -74,11 +74,11 @@
                   v-model="report.status"
                   @change="updateStatus(report)"
                   :disabled="updatingStatus[report.id]"
-                  class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                  class="bg-gray-950 border border-gray-800 rounded-xl px-3 py-1.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                   :class="{
                     'text-yellow-400': report.status === 'pending',
                     'text-green-400': report.status === 'resolved',
-                    'text-slate-400': report.status === 'dismissed'
+                    'text-gray-400': report.status === 'dismissed'
                   }"
                 >
                   <option value="pending">Pending</option>
@@ -101,13 +101,13 @@
           ? 'bg-green-950/40 border-green-900/60 text-green-200'
           : toast.type === 'error'
           ? 'bg-red-950/40 border-red-900/60 text-red-200'
-          : 'bg-slate-900 border-slate-800 text-slate-200'
+          : 'bg-gray-900 border-gray-800 text-gray-200'
       "
     >
       <span>{{ toast.message }}</span>
     </div>
   </div>
-</template>
+  </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'

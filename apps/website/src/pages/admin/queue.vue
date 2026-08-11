@@ -2,11 +2,11 @@
   <div class="space-y-6">
     <!-- Header Card -->
     <div
-      class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+      class="bg-gray-900 p-6 rounded-2xl border border-gray-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
     >
       <div>
         <h3 class="text-lg font-bold text-white">Import Queue Management</h3>
-        <p class="text-sm text-slate-400">
+        <p class="text-sm text-gray-400">
           Monitor TMDb media import requests, retry failed jobs, or clean up the
           queue.
         </p>
@@ -16,7 +16,7 @@
           v-if="isDev"
           @click="clearQueue"
           :disabled="isClearing || isLoading"
-          class="py-2.5 px-5 bg-red-600 hover:bg-red-500 disabled:bg-slate-800 disabled:text-slate-500 text-white font-semibold rounded-xl shadow-lg transition-all duration-150 hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center shrink-0"
+          class="py-2.5 px-5 bg-red-600 hover:bg-red-500 disabled:bg-gray-800 disabled:text-gray-500 text-white font-semibold rounded-xl shadow-lg transition-all duration-150 hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center shrink-0"
         >
           <span
             v-if="isClearing"
@@ -27,7 +27,7 @@
         <button
           @click="startProcessing"
           :disabled="isProcessing || isLoading"
-          class="py-2.5 px-5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-500 text-white font-semibold rounded-xl shadow-lg transition-all duration-150 hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center shrink-0"
+          class="py-2.5 px-5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-gray-800 disabled:text-gray-500 text-white font-semibold rounded-xl shadow-lg transition-all duration-150 hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center shrink-0"
         >
           <span
             v-if="isProcessing"
@@ -38,7 +38,7 @@
         <button
           @click="fetchQueueAndUsers"
           :disabled="isLoading"
-          class="py-2.5 px-5 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 text-white font-semibold rounded-xl shadow-lg transition-all duration-150 hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center shrink-0"
+          class="py-2.5 px-5 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-800 disabled:text-gray-500 text-white font-semibold rounded-xl shadow-lg transition-all duration-150 hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center shrink-0"
         >
           <span
             v-if="isLoading"
@@ -73,21 +73,21 @@
     <!-- Queue Loading State -->
     <div
       v-if="isLoading"
-      class="flex flex-col items-center justify-center py-24 space-y-3 bg-slate-900/40 border border-slate-800/60 rounded-2xl"
+      class="flex flex-col items-center justify-center py-24 space-y-3 bg-gray-900/40 border border-gray-800/60 rounded-2xl"
     >
       <div
         class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"
       ></div>
-      <p class="text-slate-400 text-sm">Loading media import queue...</p>
+      <p class="text-gray-400 text-sm">Loading media import queue...</p>
     </div>
 
     <!-- Empty State -->
     <div
       v-else-if="queueItems.length === 0"
-      class="text-center py-20 bg-slate-900/20 border border-slate-850 rounded-2xl space-y-2"
+      class="text-center py-20 bg-gray-900/20 border border-gray-850 rounded-2xl space-y-2"
     >
       <div
-        class="h-12 w-12 rounded-full bg-slate-900 flex items-center justify-center text-slate-500 mx-auto"
+        class="h-12 w-12 rounded-full bg-gray-900 flex items-center justify-center text-gray-500 mx-auto"
       >
         <svg
           class="h-6 w-6"
@@ -103,22 +103,22 @@
           />
         </svg>
       </div>
-      <p class="text-slate-400 font-semibold">
+      <p class="text-gray-400 font-semibold">
         No media fetch requests in queue
       </p>
-      <p class="text-xs text-slate-500">Queue is completely empty.</p>
+      <p class="text-xs text-gray-500">Queue is completely empty.</p>
     </div>
 
     <!-- Queue Grid / Table -->
     <div
       v-else
-      class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl"
+      class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden shadow-xl"
     >
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse text-sm">
           <thead>
             <tr
-              class="bg-slate-900/50 border-b border-slate-800 text-xs font-semibold text-slate-450 uppercase tracking-wider"
+              class="bg-gray-900/50 border-b border-gray-800 text-xs font-semibold text-gray-450 uppercase tracking-wider"
             >
               <th class="py-4 px-6">Media details</th>
               <th class="py-4 px-6">Requested by</th>
@@ -127,11 +127,11 @@
               <th class="py-4 px-6 w-16 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-800/50">
+          <tbody class="divide-y divide-gray-800/50">
             <tr
               v-for="item in queueItems"
               :key="item.id"
-              class="hover:bg-slate-800/10 transition-colors"
+              class="hover:bg-gray-800/10 transition-colors"
             >
               <!-- Media details column -->
               <td class="py-4 px-6">
@@ -157,7 +157,7 @@
                       :href="`https://hub.toolforge.org/${item.media_type === 'tv' || item.media_type === 'season' || item.media_type === 'episode' ? 'P4983' : 'P4947'}:${item.tmdb_id}?lang=fr`"
                       target="_blank"
                       rel="noopener noreferrer"
-                      class="text-xs font-semibold text-slate-400 hover:text-slate-300 hover:underline flex items-center"
+                      class="text-xs font-semibold text-gray-400 hover:text-gray-300 hover:underline flex items-center"
                       title="Voir sur Wikipédia FR (redirection via Wikidata)"
                     >
                       <span>Wikipédia</span>
@@ -168,13 +168,13 @@
                 <div class="mt-1 flex items-center space-x-2">
                   <span
                     v-if="item.season_number !== null"
-                    class="text-xs px-2 py-0.5 bg-slate-950 border border-slate-800 text-slate-300 rounded font-bold"
+                    class="text-xs px-2 py-0.5 bg-gray-950 border border-gray-800 text-gray-300 rounded font-bold"
                   >
                     Season {{ item.season_number }}
                   </span>
                   <span
                     v-if="item.episode_number !== null"
-                    class="text-xs px-2 py-0.5 bg-slate-950 border border-slate-800 text-slate-300 rounded font-bold"
+                    class="text-xs px-2 py-0.5 bg-gray-950 border border-gray-800 text-gray-300 rounded font-bold"
                   >
                     Episode {{ item.episode_number }}
                   </span>
@@ -184,11 +184,11 @@
               <!-- Requester column -->
               <td class="py-4 px-6">
                 <div
-                  class="font-medium text-slate-200 text-sm truncate max-w-xs"
+                  class="font-medium text-gray-200 text-sm truncate max-w-xs"
                 >
                   {{ getUserEmail(item.user_id) }}
                 </div>
-                <div class="text-xs text-slate-500 mt-0.5">
+                <div class="text-xs text-gray-500 mt-0.5">
                   {{ formatTime(item.created_at) }}
                 </div>
               </td>
@@ -217,7 +217,7 @@
                 >
                   {{ item.error_message }}
                 </div>
-                <div v-else class="text-xs text-slate-550 italic">—</div>
+                <div v-else class="text-xs text-gray-550 italic">—</div>
               </td>
 
               <!-- Actions column -->
@@ -232,7 +232,7 @@
                       reEnqueuingId === item.id || deletingId === item.id
                     "
                     title="Re-enqueue item"
-                    class="p-2 text-slate-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors disabled:opacity-50"
+                    class="p-2 text-gray-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors disabled:opacity-50"
                   >
                     <svg
                       v-if="reEnqueuingId === item.id"
@@ -276,7 +276,7 @@
                       deletingId === item.id || reEnqueuingId === item.id
                     "
                     title="Delete item"
-                    class="p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
+                    class="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
                   >
                     <svg
                       v-if="deletingId === item.id"
@@ -331,13 +331,13 @@
           ? 'bg-green-950/40 border-green-900/60 text-green-200'
           : toast.type === 'error'
             ? 'bg-red-950/40 border-red-900/60 text-red-200'
-            : 'bg-slate-900 border-slate-800 text-slate-200'
+            : 'bg-gray-900 border-gray-800 text-gray-200'
       "
     >
       <span>{{ toast.message }}</span>
     </div>
   </div>
-</template>
+  </template>
 
 <script setup lang="ts">
 const supabase = useSupabaseClient();
@@ -402,7 +402,7 @@ const getStatusClass = (status: string) => {
     case "failed":
       return "bg-red-500/10 border-red-500/25 text-red-400";
     default:
-      return "bg-slate-800 border-slate-700 text-slate-400";
+      return "bg-gray-800 border-gray-700 text-gray-400";
   }
 };
 
@@ -417,7 +417,7 @@ const getTypeClass = (type: string) => {
     case "episode":
       return "bg-pink-500/10 border-pink-500/25 text-pink-400";
     default:
-      return "bg-slate-800 border-slate-700 text-slate-400";
+      return "bg-gray-800 border-gray-700 text-gray-400";
   }
 };
 
@@ -575,5 +575,5 @@ const reEnqueueItem = async (item: QueueItem) => {
   }
 };
 
-onMounted(fetchQueueAndUsers);
+await fetchQueueAndUsers();
 </script>

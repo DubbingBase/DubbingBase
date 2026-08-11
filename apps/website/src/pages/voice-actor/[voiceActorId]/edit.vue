@@ -1,16 +1,16 @@
 <template>
   <div class="max-w-4xl mx-auto space-y-6">
     <!-- Header -->
-    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex justify-between items-center">
+    <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800 flex justify-between items-center">
       <div>
         <h3 class="text-lg font-bold text-white">{{ isEditMode ? 'Edit Voice Actor Profile' : 'Create Voice Actor Profile' }}</h3>
-        <p class="text-sm text-slate-400 mt-0.5">
+        <p class="text-sm text-gray-400 mt-0.5">
           {{ isEditMode ? `Updating database entry ID #${id}` : 'Fill in profile fields to create a new voice actor entry.' }}
         </p>
       </div>
       <NuxtLink
         :to="localePath(id ? `/voice-actor/${id}` : '/')"
-        class="text-xs font-semibold px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-350 hover:text-white rounded-xl border border-slate-700 transition-colors"
+        class="text-xs font-semibold px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-350 hover:text-white rounded-xl border border-gray-700 transition-colors"
       >
         ← {{ id ? 'Back to Voice Actor' : 'Back Home' }}
       </NuxtLink>
@@ -19,9 +19,9 @@
     <!-- Main Workspace -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Profile Image Card (Left column) -->
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col items-center text-center space-y-5 h-fit shadow-xl">
-        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block self-start">Profile Photo</label>
-        <div class="relative h-44 w-44 rounded-full overflow-hidden border-2 border-slate-800 bg-slate-950 flex items-center justify-center text-slate-500 shadow-inner group">
+      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 flex flex-col items-center text-center space-y-5 h-fit shadow-xl">
+        <label class="text-xs font-bold text-gray-400 uppercase tracking-wider block self-start">Profile Photo</label>
+        <div class="relative h-44 w-44 rounded-full overflow-hidden border-2 border-gray-800 bg-gray-950 flex items-center justify-center text-gray-500 shadow-inner group">
           <img v-if="previewImage"
             :src="previewImage"
             class="h-full w-full object-cover"
@@ -32,7 +32,7 @@
             class="h-full w-full object-cover"
             alt="Profile Picture"
           />
-          <svg v-else class="h-14 w-14 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg v-else class="h-14 w-14 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
         </div>
@@ -41,7 +41,7 @@
           <button
             type="button"
             @click="triggerFileInput"
-            class="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-750 text-slate-200 hover:text-white font-semibold rounded-xl text-xs border border-slate-750 hover:border-slate-700 transition-all flex items-center justify-center space-x-2"
+            class="w-full py-2.5 px-4 bg-gray-800 hover:bg-gray-750 text-gray-200 hover:text-white font-semibold rounded-xl text-xs border border-gray-750 hover:border-gray-700 transition-all flex items-center justify-center space-x-2"
           >
             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
@@ -65,44 +65,44 @@
             Reset image selection
           </button>
         </div>
-        <p class="text-[10px] text-slate-500 leading-normal">
+        <p class="text-[10px] text-gray-500 leading-normal">
           Supported file formats: JPG, PNG, WEBP. Maximum file upload size: 5MB.
         </p>
       </div>
 
       <!-- Form (Right column) -->
-      <form @submit.prevent="saveVoiceActor" class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6 shadow-xl">
+      <form @submit.prevent="saveVoiceActor" class="lg:col-span-2 bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-6 shadow-xl">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
           <!-- First Name -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">First Name *</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">First Name *</label>
             <input
               v-model="firstname"
               type="text"
               required
               placeholder="e.g. Richard"
-              class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              class="w-full px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
           </div>
 
           <!-- Last Name -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Last Name *</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Last Name *</label>
             <input
               v-model="lastname"
               type="text"
               required
               placeholder="e.g. Darbois"
-              class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              class="w-full px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
           </div>
 
           <!-- Nationality -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Nationality</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Nationality</label>
             <select
               v-model="nationality"
-              class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm appearance-none"
+              class="w-full px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm appearance-none"
             >
               <option value="" disabled>Select nationality</option>
               <option value="Français">Français</option>
@@ -118,82 +118,82 @@
 
           <!-- Date of birth -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Date of Birth</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Date of Birth</label>
             <input
               v-model="dateOfBirth"
               type="date"
-              class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              class="w-full px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
           </div>
 
 
           <!-- TMDB ID -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">TMDB ID</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">TMDB ID</label>
             <input
               v-model="tmdbId"
               type="number"
               placeholder="e.g. 10243"
-              class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              class="w-full px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
           </div>
 
           <!-- Wikidata ID -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Wikidata ID</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Wikidata ID</label>
             <input
               v-model="wikidataId"
               type="text"
               placeholder="e.g. Q3430691"
-              class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              class="w-full px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
           </div>
         </div>
 
         <!-- Biography -->
         <div class="space-y-1">
-          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Biography</label>
+          <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Biography</label>
           <textarea
             v-model="bio"
             rows="4"
             placeholder="Type profile biography details here..."
-            class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-y"
+            class="w-full px-4 py-3 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-y"
           ></textarea>
         </div>
 
         <!-- Social Media Links -->
         <div class="space-y-4">
-          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Social Media & Links</label>
+          <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Social Media & Links</label>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="space-y-1">
-              <label class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Instagram</label>
-              <input v-model="socialMedia.instagram" type="url" placeholder="https://instagram.com/..." class="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs" />
+              <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Instagram</label>
+              <input v-model="socialMedia.instagram" type="url" placeholder="https://instagram.com/..." class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs" />
             </div>
             <div class="space-y-1">
-              <label class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Twitter / X</label>
-              <input v-model="socialMedia.twitter" type="url" placeholder="https://twitter.com/..." class="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs" />
+              <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Twitter / X</label>
+              <input v-model="socialMedia.twitter" type="url" placeholder="https://twitter.com/..." class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs" />
             </div>
             <div class="space-y-1">
-              <label class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">TikTok</label>
-              <input v-model="socialMedia.tiktok" type="url" placeholder="https://tiktok.com/@..." class="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs" />
+              <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">TikTok</label>
+              <input v-model="socialMedia.tiktok" type="url" placeholder="https://tiktok.com/@..." class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs" />
             </div>
             <div class="space-y-1">
-              <label class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Facebook</label>
-              <input v-model="socialMedia.facebook" type="url" placeholder="https://facebook.com/..." class="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs" />
+              <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Facebook</label>
+              <input v-model="socialMedia.facebook" type="url" placeholder="https://facebook.com/..." class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs" />
             </div>
             <div class="space-y-1 md:col-span-2">
-              <label class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Website</label>
-              <input v-model="socialMedia.website" type="url" placeholder="https://..." class="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs" />
+              <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Website</label>
+              <input v-model="socialMedia.website" type="url" placeholder="https://..." class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs" />
             </div>
           </div>
         </div>
 
         <!-- Form Submit Bar -->
-        <div class="flex justify-end pt-4 border-t border-slate-800/80">
+        <div class="flex justify-end pt-4 border-t border-gray-800/80">
           <button
             type="submit"
             :disabled="isSaving"
-            class="py-3 px-8 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-500 text-white font-semibold rounded-xl text-sm shadow-lg transition-all duration-200 flex items-center justify-center"
+            class="py-3 px-8 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:from-gray-800 disabled:to-gray-800 disabled:text-gray-500 text-white font-semibold rounded-xl text-sm shadow-lg transition-all duration-200 flex items-center justify-center"
           >
             <span v-if="isSaving" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
             <span>Save Profile</span>
@@ -203,11 +203,11 @@
     </div>
 
     <!-- Linked Works & Filmography (Bidirectional Linking) -->
-    <div v-if="isEditMode" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl">
-      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+    <div v-if="isEditMode" class="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4 shadow-xl">
+      <div class="flex justify-between items-center border-b border-gray-800 pb-3">
         <div>
           <h4 class="text-base font-bold text-white">Linked Works & Filmography</h4>
-          <p class="text-xs text-slate-400">All dubbing credits linked to this voice actor profile.</p>
+          <p class="text-xs text-gray-400">All dubbing credits linked to this voice actor profile.</p>
         </div>
         <NuxtLink
           :to="localePath(`/admin/add-voice-cast/${id}`)"
@@ -218,8 +218,8 @@
       </div>
 
       <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm text-slate-300">
-          <thead class="bg-slate-950 text-xs font-semibold uppercase text-slate-400 border-b border-slate-800">
+        <table class="w-full text-left text-sm text-gray-300">
+          <thead class="bg-gray-950 text-xs font-semibold uppercase text-gray-400 border-b border-gray-800">
             <tr>
               <th class="px-4 py-3">Work ID</th>
               <th class="px-4 py-3">Media / Content ID</th>
@@ -229,19 +229,19 @@
               <th class="px-4 py-3 text-right">Edit Project</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-800/60">
-            <tr v-for="work in linkedWorks" :key="work.id" class="hover:bg-slate-950/50 transition-colors">
-              <td class="px-4 py-3 font-mono text-xs text-slate-400">#{{ work.id }}</td>
+          <tbody class="divide-y divide-gray-800/60">
+            <tr v-for="work in linkedWorks" :key="work.id" class="hover:bg-gray-950/50 transition-colors">
+              <td class="px-4 py-3 font-mono text-xs text-gray-400">#{{ work.id }}</td>
               <td class="px-4 py-3 font-mono text-xs text-blue-400">Project #{{ work.dubbing_project_id }}</td>
-              <td class="px-4 py-3 uppercase text-[10px] font-bold tracking-wider text-slate-400">
-                <span class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700">{{ work.content_type || 'movie' }}</span>
+              <td class="px-4 py-3 uppercase text-[10px] font-bold tracking-wider text-gray-400">
+                <span class="px-2 py-0.5 rounded bg-gray-800 border border-gray-700">{{ work.content_type || 'movie' }}</span>
               </td>
               <td class="px-4 py-3 font-medium text-white">{{ work.suggestions || 'Character' }}</td>
-              <td class="px-4 py-3 text-xs text-slate-400">{{ work.performance || 'dialogues' }}</td>
+              <td class="px-4 py-3 text-xs text-gray-400">{{ work.performance || 'dialogues' }}</td>
               <td class="px-4 py-3 text-right">
                 <NuxtLink
                   :to="localePath(`/admin/movies/edit/${work.dubbing_project_id}`)"
-                  class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-blue-400 hover:text-blue-300 text-xs font-semibold rounded-lg border border-slate-700 transition-all inline-flex items-center space-x-1"
+                  class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-blue-400 hover:text-blue-300 text-xs font-semibold rounded-lg border border-gray-700 transition-all inline-flex items-center space-x-1"
                 >
                   <span>Edit Movie</span>
                   <span>↗</span>
@@ -249,7 +249,7 @@
               </td>
             </tr>
             <tr v-if="linkedWorks.length === 0">
-              <td colspan="6" class="text-center py-6 text-slate-500 text-xs">
+              <td colspan="6" class="text-center py-6 text-gray-500 text-xs">
                 No linked works recorded for this voice actor yet.
               </td>
             </tr>
@@ -270,13 +270,13 @@
           ? 'bg-green-950/40 border-green-900/60 text-green-200'
           : toast.type === 'error'
           ? 'bg-red-950/40 border-red-900/60 text-red-200'
-          : 'bg-slate-900 border-slate-800 text-slate-200'
+          : 'bg-gray-900 border-gray-800 text-gray-200'
       "
     >
       <span>{{ toast.message }}</span>
     </div>
   </div>
-</template>
+  </template>
 
 <script setup lang="ts">
 const supabase = useSupabaseClient();
@@ -497,5 +497,5 @@ const saveVoiceActor = async () => {
   }
 };
 
-onMounted(fetchVoiceActor);
+await fetchVoiceActor();
 </script>

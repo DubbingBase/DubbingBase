@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-4xl mx-auto space-y-6">
     <!-- Header -->
-    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex justify-between items-center shadow-xl">
+    <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800 flex justify-between items-center shadow-xl">
       <div>
         <h3 class="text-xl font-bold text-white flex items-center gap-2">
           <svg class="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -9,91 +9,91 @@
           </svg>
           {{ isEditMode ? 'Edit Studio Profile' : 'Create Dubbing Studio' }}
         </h3>
-        <p class="text-sm text-slate-400 mt-1">
+        <p class="text-sm text-gray-400 mt-1">
           {{ isEditMode ? `Updating studio record ID #${id}` : 'Fill in studio information, location, and website details.' }}
         </p>
       </div>
       <NuxtLink
         :to="localePath('/admin')"
-        class="text-xs font-semibold px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl border border-slate-700 transition-colors"
+        class="text-xs font-semibold px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-xl border border-gray-700 transition-colors"
       >
         ← Back to Dashboard
       </NuxtLink>
     </div>
 
     <!-- Main Form -->
-    <form @submit.prevent="saveStudio" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6 shadow-xl">
+    <form @submit.prevent="saveStudio" class="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-6 shadow-xl">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
         <!-- Studio Name -->
         <div class="space-y-1 md:col-span-2">
-          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Studio Name *</label>
+          <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Studio Name *</label>
           <input
             v-model="name"
             type="text"
             required
             placeholder="e.g. Dubbing Brothers"
-            class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            class="w-full px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           />
         </div>
 
         <!-- Country -->
         <div class="space-y-1">
-          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Country</label>
+          <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Country</label>
           <input
             v-model="country"
             type="text"
             placeholder="France"
-            class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            class="w-full px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           />
         </div>
 
         <!-- City -->
         <div class="space-y-1">
-          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">City</label>
+          <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">City</label>
           <input
             v-model="city"
             type="text"
             placeholder="Paris / La Plaine Saint-Denis"
-            class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            class="w-full px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           />
         </div>
 
         <!-- Website URL -->
         <div class="space-y-1">
-          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Website URL</label>
+          <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Website URL</label>
           <input
             v-model="websiteUrl"
             type="url"
             placeholder="https://www.dubbingbrothers.com"
-            class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            class="w-full px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           />
         </div>
 
         <!-- Logo URL -->
         <div class="space-y-1">
-          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Logo URL</label>
+          <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Logo URL</label>
           <input
             v-model="logoUrl"
             type="url"
             placeholder="https://..."
-            class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            class="w-full px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           />
         </div>
       </div>
 
       <!-- Description -->
       <div class="space-y-1">
-        <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Description</label>
+        <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Description</label>
         <textarea
           v-model="description"
           rows="4"
           placeholder="Studio description and historical details..."
-          class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-y"
+          class="w-full px-4 py-3 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-y"
         ></textarea>
       </div>
 
       <!-- Submit Bar -->
-      <div class="flex justify-end pt-4 border-t border-slate-800/80">
+      <div class="flex justify-end pt-4 border-t border-gray-800/80">
         <button
           type="submit"
           :disabled="isSaving"
@@ -114,13 +114,13 @@
           ? 'bg-green-950/80 border-green-800 text-green-200'
           : toast.type === 'error'
           ? 'bg-red-950/80 border-red-800 text-red-200'
-          : 'bg-slate-900 border-slate-800 text-slate-200'
+          : 'bg-gray-900 border-gray-800 text-gray-200'
       "
     >
       <span>{{ toast.message }}</span>
     </div>
   </div>
-</template>
+  </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
@@ -221,5 +221,5 @@ const saveStudio = async () => {
   }
 };
 
-onMounted(fetchStudio);
+await fetchStudio();
 </script>

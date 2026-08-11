@@ -1,32 +1,32 @@
 <template>
   <div class="max-w-6xl mx-auto space-y-6">
     <!-- Header -->
-    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex justify-between items-center shadow-xl">
+    <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800 flex justify-between items-center shadow-xl">
       <div>
         <h3 class="text-xl font-bold text-white flex items-center gap-2">
           <Gamepad2Icon class="w-6 h-6 text-cyan-400" />
           {{ isEditMode ? 'Edit Video Game Project' : 'Create Video Game Project' }}
         </h3>
-        <p class="text-sm text-slate-400 mt-1">
+        <p class="text-sm text-gray-400 mt-1">
           {{ isEditMode ? `Updating dubbing project ID #${projectIdParam}` : 'Fill in IGDB information, technical crew, and cast.' }}
         </p>
       </div>
       <NuxtLink
         :to="igdbGameId ? localePath(`/game/${igdbGameId}`) : localePath('/')"
-        class="text-xs font-semibold px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl border border-slate-700 transition-colors flex items-center space-x-2"
+        class="text-xs font-semibold px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-xl border border-gray-700 transition-colors flex items-center space-x-2"
       >
         <span>{{ igdbGameId ? '← Back to Game' : '← Back Home' }}</span>
       </NuxtLink>
     </div>
 
     <!-- Navigation Tabs -->
-    <div v-if="igdbGameId" class="flex flex-wrap gap-2 pb-2 border-b border-slate-800">
+    <div v-if="igdbGameId" class="flex flex-wrap gap-2 pb-2 border-b border-gray-800">
       <NuxtLink
         v-for="project in gameDubbingProjects"
         :key="project.id"
         :to="localePath(`/game/${igdbGameId}/edit/${project.id}`)"
         class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border"
-        :class="project.id === Number(projectIdParam) ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-900 text-slate-300 border-slate-800 hover:bg-slate-800'"
+        :class="project.id === Number(projectIdParam) ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-900 text-gray-300 border-gray-800 hover:bg-gray-800'"
       >
         {{ getDisplayLanguage(project.language) }}
         <span v-if="project.studios?.name" class="opacity-75 text-xs ml-1">({{ project.studios.name }})</span>
@@ -34,7 +34,7 @@
       <NuxtLink
         :to="localePath(`/game/${igdbGameId}/edit/new`)"
         class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-dashed"
-        :class="projectIdParam === 'new' ? 'bg-cyan-900/50 text-cyan-400 border-cyan-800' : 'bg-slate-900 text-slate-400 border-slate-700 hover:bg-slate-800 hover:text-slate-300'"
+        :class="projectIdParam === 'new' ? 'bg-cyan-900/50 text-cyan-400 border-cyan-800' : 'bg-gray-900 text-gray-400 border-gray-700 hover:bg-gray-800 hover:text-gray-300'"
       >
         + Add Language
       </NuxtLink>
@@ -42,7 +42,7 @@
 
     <!-- Main Workspace -->
     <!-- Loading overlay -->
-    <div v-if="isLoading" class="flex flex-col items-center justify-center py-24 gap-4 text-slate-400">
+    <div v-if="isLoading" class="flex flex-col items-center justify-center py-24 gap-4 text-gray-400">
       <Loader2Icon class="w-8 h-8 animate-spin text-cyan-400" />
       <span class="text-sm">Loading project data...</span>
     </div>
@@ -50,21 +50,21 @@
     <form v-else @submit.prevent="saveGameProject" class="space-y-6">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Media Metadata Card (Left Column) -->
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-5 h-fit shadow-xl">
-          <h4 class="text-sm font-bold text-slate-200 uppercase tracking-wider border-b border-slate-800 pb-3 flex items-center justify-between">
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-5 h-fit shadow-xl">
+          <h4 class="text-sm font-bold text-gray-200 uppercase tracking-wider border-b border-gray-800 pb-3 flex items-center justify-between">
             <span>Media Info</span>
             <span class="text-xs text-cyan-400 font-normal">IGDB Linked</span>
           </h4>
 
           <!-- Poster Preview -->
           <div class="flex justify-center">
-            <div class="relative h-48 w-32 rounded-xl overflow-hidden border border-slate-800 bg-slate-950 flex items-center justify-center text-slate-500 shadow-md">
+            <div class="relative h-48 w-32 rounded-xl overflow-hidden border border-gray-800 bg-gray-950 flex items-center justify-center text-gray-500 shadow-md">
               <NuxtImg format="webp" v-if="posterUrl"
                 :src="posterUrl"
                 class="h-full w-full object-cover"
                 alt="Poster"
               />
-              <div v-else class="text-center p-3 text-slate-600">
+              <div v-else class="text-center p-3 text-gray-600">
                 <ImageIcon class="h-10 w-10 mx-auto mb-1 opacity-50" />
                 <span class="text-[10px]">No poster</span>
               </div>
@@ -73,7 +73,7 @@
 
           <!-- Content ID / IGDB ID -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">IGDB Game ID *</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">IGDB Game ID *</label>
             <div class="flex space-x-2">
               <input
                 v-model.number="contentId"
@@ -81,13 +81,13 @@
                 required
                 :disabled="!!igdbGameId"
                 placeholder="e.g. 1020"
-                class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                class="w-full px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <button
                 type="button"
                 @click="fetchIgdbMetadata"
                 :disabled="isFetchingIgdb || !contentId"
-                class="px-3 py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 whitespace-nowrap"
+                class="px-3 py-2 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 text-gray-200 text-xs font-semibold rounded-xl border border-gray-700 whitespace-nowrap"
               >
                 <Loader2Icon v-if="isFetchingIgdb" class="w-4 h-4 animate-spin" />
                 <span v-else>Fetch</span>
@@ -97,28 +97,28 @@
 
           <!-- Media Name / Title -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Media Title *</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Media Title *</label>
             <input
               v-model="mediaTitle"
               type="text"
               required
               readonly
-              class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm opacity-50 cursor-not-allowed"
+              class="w-full px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm opacity-50 cursor-not-allowed"
             />
           </div>
 
           <!-- Language -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Dubbing Language *</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Dubbing Language *</label>
             <LanguageSelect v-model="language" required />
           </div>
 
           <!-- Status -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</label>
             <select
               v-model="status"
-              class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm"
+              class="w-full px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm"
             >
               <option value="validated">Validated</option>
               <option value="pending">Pending Review</option>
@@ -128,16 +128,16 @@
         </div>
 
         <!-- Technical Crew Form (Right 2 Columns) -->
-        <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6 shadow-xl">
-          <h4 class="text-sm font-bold text-slate-200 uppercase tracking-wider border-b border-slate-800 pb-3 flex items-center justify-between">
+        <div class="lg:col-span-2 bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-6 shadow-xl">
+          <h4 class="text-sm font-bold text-gray-200 uppercase tracking-wider border-b border-gray-800 pb-3 flex items-center justify-between">
             <span>Technical Dubbing Team</span>
-            <span class="text-xs text-slate-400">Crew Attributes</span>
+            <span class="text-xs text-gray-400">Crew Attributes</span>
           </h4>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <!-- Studio -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Dubbing Studio</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Dubbing Studio</label>
               <AsyncAutocomplete
                 v-model="selectedStudioId"
                 :options="studioOptions"
@@ -152,7 +152,7 @@
 
             <!-- Artistic Director -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Artistic Director (D.A.)</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Artistic Director (D.A.)</label>
               <AsyncAutocomplete
                 v-model="artisticDirectorId"
                 :options="voiceActorOptions"
@@ -167,7 +167,7 @@
 
             <!-- Adaptation -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Adaptation / Dialogueur</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Adaptation / Dialogueur</label>
               <AsyncAutocomplete
                 v-model="adaptationId"
                 :options="voiceActorOptions"
@@ -182,7 +182,7 @@
 
             <!-- Recording -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Sound Recording (Enregistrement)</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Sound Recording (Enregistrement)</label>
               <AsyncAutocomplete
                 v-model="recordingId"
                 :options="voiceActorOptions"
@@ -197,7 +197,7 @@
 
             <!-- Editing -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Sound Editing (Montage)</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Sound Editing (Montage)</label>
               <AsyncAutocomplete
                 v-model="editingId"
                 :options="voiceActorOptions"
@@ -212,7 +212,7 @@
 
             <!-- Mixing -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Mixing (Mixage)</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Mixing (Mixage)</label>
               <AsyncAutocomplete
                 v-model="mixingId"
                 :options="voiceActorOptions"
@@ -227,7 +227,7 @@
 
             <!-- Project Manager -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Project Manager</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Project Manager</label>
               <AsyncAutocomplete
                 v-model="projectManagerId"
                 :options="voiceActorOptions"
@@ -242,7 +242,7 @@
             
             <!-- Creative Supervision -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Creative Supervision</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Creative Supervision</label>
               <AsyncAutocomplete
                 v-model="creativeSupervisionId"
                 :options="voiceActorOptions"
@@ -259,9 +259,9 @@
       </div>
 
       <!-- Cast / Voice Actors List -->
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6 shadow-xl">
-        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-          <h4 class="text-sm font-bold text-slate-200 uppercase tracking-wider">Voice Cast</h4>
+      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-6 shadow-xl">
+        <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+          <h4 class="text-sm font-bold text-gray-200 uppercase tracking-wider">Voice Cast</h4>
           <button
             type="button"
             @click="addCastRow"
@@ -272,7 +272,7 @@
         </div>
 
         <div class="space-y-4">
-          <div v-for="(row, index) in castRows" :key="index" class="p-4 bg-slate-950 border border-slate-800 rounded-xl relative group">
+          <div v-for="(row, index) in castRows" :key="index" class="p-4 bg-gray-950 border border-gray-800 rounded-xl relative group">
             <button
               type="button"
               @click="removeCastRow(index)"
@@ -285,7 +285,7 @@
             <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
               <!-- Character fields -->
               <div class="md:col-span-12 space-y-1">
-                <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Character *</label>
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Character *</label>
                 <AsyncAutocomplete
                   v-model="row.character_id"
                   @update:model-value="(val) => handleCharacterSelect(row, val)"
@@ -301,7 +301,7 @@
 
               <!-- Voice Actor -->
               <div class="md:col-span-8 space-y-1">
-                <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Voice Actor *</label>
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Voice Actor *</label>
                 <AsyncAutocomplete
                   v-model="row.voice_actor_id"
                   :options="voiceActorOptions"
@@ -316,10 +316,10 @@
               
               <!-- Performance -->
               <div class="md:col-span-4 space-y-1">
-                <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Performance Type</label>
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Performance Type</label>
                 <select
                   v-model="row.performance"
-                  class="w-full px-4 py-2 bg-slate-900 border border-slate-800 rounded-lg text-white focus:ring-2 focus:ring-blue-500 text-sm"
+                  class="w-full px-4 py-2 bg-gray-900 border border-gray-800 rounded-lg text-white focus:ring-2 focus:ring-blue-500 text-sm"
                 >
                   <option value="dialogues">Dialogues</option>
                   <option value="dialogues & chant">Dialogues & Chant</option>
@@ -330,13 +330,13 @@
               </div>
               
               <div class="md:col-span-12 flex items-center space-x-2">
-                <input type="checkbox" v-model="row.highlight" class="w-4 h-4 bg-slate-900 border-slate-800 rounded text-blue-500 focus:ring-blue-500" />
-                <label class="text-xs text-slate-300">Highlight character</label>
+                <input type="checkbox" v-model="row.highlight" class="w-4 h-4 bg-gray-900 border-gray-800 rounded text-blue-500 focus:ring-blue-500" />
+                <label class="text-xs text-gray-300">Highlight character</label>
               </div>
             </div>
           </div>
           
-          <div v-if="castRows.length === 0" class="text-center py-10 bg-slate-950 border border-dashed border-slate-800 rounded-xl text-slate-500">
+          <div v-if="castRows.length === 0" class="text-center py-10 bg-gray-950 border border-dashed border-gray-800 rounded-xl text-gray-500">
             No cast members added yet.
           </div>
         </div>
@@ -359,17 +359,17 @@
     <DialogRoot v-model:open="isCreateStudioOpen">
       <DialogPortal>
         <DialogOverlay class="fixed inset-0 bg-black/60 z-[110] backdrop-blur-sm" />
-        <DialogContent class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl z-[120] w-[400px]">
+        <DialogContent class="fixed top-1/2 left-1/2 -trangray-x-1/2 -trangray-y-1/2 bg-gray-900 border border-gray-700 rounded-2xl p-6 shadow-2xl z-[120] w-[400px]">
           <DialogTitle class="text-lg font-bold text-white mb-4">Create New Studio</DialogTitle>
           <VisuallyHidden><DialogDescription>Form to create a new studio</DialogDescription></VisuallyHidden>
           <input
             v-model="newStudioName"
             type="text"
             placeholder="Studio Name"
-            class="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white mb-4"
+            class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-lg text-white mb-4"
           />
           <div class="flex justify-end gap-2">
-            <button @click="isCreateStudioOpen = false" class="px-4 py-2 text-slate-300 hover:text-white">Cancel</button>
+            <button @click="isCreateStudioOpen = false" class="px-4 py-2 text-gray-300 hover:text-white">Cancel</button>
             <button @click="createStudio" :disabled="!newStudioName || isCreatingStudio" class="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50 flex items-center gap-2">
               <Loader2Icon v-if="isCreatingStudio" class="w-4 h-4 animate-spin" />
               <span>Create</span>
@@ -383,7 +383,7 @@
     <DialogRoot v-model:open="isCreateVaOpen">
       <DialogPortal>
         <DialogOverlay class="fixed inset-0 bg-black/60 z-[110] backdrop-blur-sm" />
-        <DialogContent class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl z-[120] w-[400px]">
+        <DialogContent class="fixed top-1/2 left-1/2 -trangray-x-1/2 -trangray-y-1/2 bg-gray-900 border border-gray-700 rounded-2xl p-6 shadow-2xl z-[120] w-[400px]">
           <DialogTitle class="text-lg font-bold text-white mb-4">Create New Voice Actor</DialogTitle>
           <VisuallyHidden><DialogDescription>Form to create a new voice actor</DialogDescription></VisuallyHidden>
           <div class="space-y-4 mb-4">
@@ -391,17 +391,17 @@
               v-model="newVaFirstname"
               type="text"
               placeholder="First Name"
-              class="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white"
+              class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-lg text-white"
             />
             <input
               v-model="newVaLastname"
               type="text"
               placeholder="Last Name"
-              class="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white"
+              class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-lg text-white"
             />
           </div>
           <div class="flex justify-end gap-2">
-            <button @click="isCreateVaOpen = false" class="px-4 py-2 text-slate-300 hover:text-white">Cancel</button>
+            <button @click="isCreateVaOpen = false" class="px-4 py-2 text-gray-300 hover:text-white">Cancel</button>
             <button @click="createVoiceActor" :disabled="!newVaFirstname || isCreatingVa" class="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50 flex items-center gap-2">
               <Loader2Icon v-if="isCreatingVa" class="w-4 h-4 animate-spin" />
               <span>Create</span>
@@ -414,13 +414,13 @@
     <!-- Toast -->
     <div
       v-if="toast.show"
-      class="fixed bottom-6 right-6 z-50 p-4 rounded-xl border shadow-2xl text-sm max-w-sm flex flex-col gap-2 bg-slate-900 border-slate-800 text-slate-200"
+      class="fixed bottom-6 right-6 z-50 p-4 rounded-xl border shadow-2xl text-sm max-w-sm flex flex-col gap-2 bg-gray-900 border-gray-800 text-gray-200"
     >
       <span>{{ toast.message }}</span>
       <a v-if="toast.link" :href="toast.link" target="_blank" class="text-blue-400 hover:underline">View Details ↗</a>
     </div>
   </div>
-</template>
+  </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
@@ -827,7 +827,7 @@ const loadData = async () => {
   }
 };
 
-onMounted(async () => {
+await (async () => {
   isLoading.value = true;
   try {
     await loadData();
@@ -836,5 +836,5 @@ onMounted(async () => {
   }
   searchStudios('');
   searchVoiceActors('');
-});
+})();
 </script>
