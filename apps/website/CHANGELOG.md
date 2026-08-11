@@ -1,5 +1,11 @@
 # @app/landing
 
+## 1.0.43
+
+### Patch Changes
+
+- 15ba600: remove unused nitro prerender config and add SWR rule for /game routes
+
 ## 1.0.42
 
 ### Patch Changes
