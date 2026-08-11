@@ -1,5 +1,11 @@
 # @app/landing
 
+## 1.0.46
+
+### Patch Changes
+
+- da3aff5: replace Date parsing with string splitting for year extraction, add header fallback UI, and update nuxt configuration
+
 ## 1.0.45
 
 ### Patch Changes
