@@ -264,7 +264,6 @@ export type Database = {
           id: number
           logo_url: string | null
           name: string
-          social_media_links: Json | null
           updated_at: string | null
           website_url: string | null
         }
@@ -276,7 +275,6 @@ export type Database = {
           id?: number
           logo_url?: string | null
           name: string
-          social_media_links?: Json | null
           updated_at?: string | null
           website_url?: string | null
         }
@@ -288,7 +286,6 @@ export type Database = {
           id?: number
           logo_url?: string | null
           name?: string
-          social_media_links?: Json | null
           updated_at?: string | null
           website_url?: string | null
         }
@@ -680,6 +677,13 @@ export type Database = {
         Returns: {
           role_count: number
           voice_actor: Json
+        }[]
+      }
+      get_trending_voice_actors: {
+        Args: { limit_param?: number; months_param?: number }
+        Returns: {
+          voice_actor: Json
+          work_count: number
         }[]
       }
       get_work_votes_with_user: {
