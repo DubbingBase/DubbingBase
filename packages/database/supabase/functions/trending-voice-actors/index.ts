@@ -2,11 +2,11 @@ import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
 import { buildSupabaseImageUrl } from "../_shared/supabase-urls.ts";
 import { SupabaseContext } from "npm:@supabase/server@^1";
-import { cacheUtils } from "../_shared/index.ts";
+import { cacheUtils, getParams } from "../_shared/index.ts";
 
 interface TrendingVoiceActorsParams {
-  limit?: number;
-  months?: number;
+  limit?: number | string;
+  months?: number | string;
 }
 
 const getTrendingVoiceActors = async (
@@ -48,18 +48,18 @@ const cacheKey = "app:trending:voice-actors:v1";
 export default {
   fetch: withSupabase<Database>({ auth: "publishable" }, async (req, ctx) => {
     try {
-      const { limit = 10, months = 6 } = (await req
-        .json()
-        .catch(() => ({}))) as TrendingVoiceActorsParams;
+      const params = (await getParams(req)) as TrendingVoiceActorsParams;
+      const limit = params.limit ? Number(params.limit) : 10;
+      const months = params.months ? Number(params.months) : 6;
 
-      if (typeof limit !== "number" || limit < 1 || limit > 100) {
+      if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
         return Response.json(
           { error: "Limit must be a number between 1 and 100" },
           { status: 400 },
         );
       }
 
-      if (typeof months !== "number" || months < 1 || months > 24) {
+      if (!Number.isInteger(months) || months < 1 || months > 24) {
         return Response.json(
           { error: "Months must be a number between 1 and 24" },
           { status: 400 },
