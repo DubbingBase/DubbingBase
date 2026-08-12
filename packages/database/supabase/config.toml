@@ -542,3 +542,5 @@ verify_jwt = false
 
 [functions.generate-social-content]
 verify_jwt = false
+[functions.home-stats]
+verify_jwt = false
