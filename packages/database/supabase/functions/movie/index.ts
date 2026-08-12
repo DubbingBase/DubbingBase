@@ -11,6 +11,140 @@ import {
   tvdbClient,
 } from "../_shared/index.ts";
 import { Database } from "../_shared/database.types.ts";
+import type {
+  MovieMedia,
+  MovieDetailResponse,
+  DubbingProject,
+  WorkPerformance,
+  VoiceActorSummary,
+  CharacterProfilePicture,
+  VoteData,
+  Collection,
+  Cast,
+  Season,
+  Genre,
+  ExternalIds,
+  StudioData,
+  CrewMember,
+} from "../_shared/media-types.ts";
+
+// Transform TMDB movie to lean MovieMedia
+function transformMovieToMedia(movie: any): MovieMedia {
+  const processed = processMedia(movie);
+  return {
+    id: processed.id,
+    title: processed.title,
+    overview: processed.overview,
+    poster_path: processed.poster_path,
+    backdrop_path: processed.backdrop_path,
+    vote_average: processed.vote_average,
+    vote_count: processed.vote_count,
+    genres:
+      processed.genres?.map((g: Genre) => ({ id: g.id, name: g.name })) || [],
+    credits: {
+      cast:
+        processed.credits?.cast?.map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          character: c.character,
+          profile_path: c.profile_path,
+        })) || [],
+    },
+    external_ids: processed.external_ids || {
+      imdb_id: null,
+      wikidata_id: null,
+    },
+    media_type: "movie",
+    release_date: processed.release_date,
+    runtime: processed.runtime ?? null,
+    collection: processed.belongs_to_collection
+      ? transformCollection(processed.belongs_to_collection)
+      : null,
+  };
+}
+
+function transformCollection(coll: any): Collection {
+  return {
+    id: coll.id,
+    name: coll.name,
+    poster_path: coll.poster_path,
+    backdrop_path: coll.backdrop_path,
+    parts:
+      coll.parts?.map((p: any) => ({
+        id: p.id,
+        title: p.title,
+        poster_path: p.poster_path,
+        release_date: p.release_date,
+      })) || [],
+  };
+}
+
+function transformDubbingProjects(projects: any[], ctx: any): DubbingProject[] {
+  return projects.map((p) => ({
+    id: p.id,
+    content_id: p.content_id,
+    content_type: p.content_type,
+    language: p.language,
+    studio_id: p.studio_id,
+    studio_data: p.studio_data
+      ? {
+          id: p.studio_data.id,
+          name: p.studio_data.name,
+          logo: p.studio_data.logo,
+          website: p.studio_data.website,
+        }
+      : null,
+    status: p.status,
+    works:
+      p.works?.map((w: any) => ({
+        id: w.id,
+        actor_id: w.actor_id,
+        voice_actor_id: w.voice_actor_id,
+        highlight: w.highlight,
+        suggestions: w.suggestions,
+        status: w.status,
+        source_id: w.source_id,
+        performance: w.performance,
+        dubbing_project_id: w.dubbing_project_id,
+        voice_actor: w.voice_actor
+          ? {
+              id: w.voice_actor.id,
+              firstname: w.voice_actor.firstname,
+              lastname: w.voice_actor.lastname,
+              profile_picture: w.voice_actor.profile_picture,
+              bio: w.voice_actor.bio,
+              nationality: w.voice_actor.nationality,
+              date_of_birth: w.voice_actor.date_of_birth,
+              awards: w.voice_actor.awards,
+              years_active: w.voice_actor.years_active,
+              social_media_links: w.voice_actor.social_media_links,
+              tmdb_id: w.voice_actor.tmdb_id,
+              wikidata_id: w.voice_actor.wikidata_id,
+            }
+          : null,
+      })) || [],
+    crew:
+      p.crew?.map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        job: c.job,
+        department: c.department,
+        profile_path: c.profile_path,
+      })) || [],
+  }));
+}
+
+function transformVotes(votes: Record<number, any>): Record<number, VoteData> {
+  const result: Record<number, VoteData> = {};
+  for (const [key, value] of Object.entries(votes)) {
+    result[Number(key)] = {
+      up_count: value.up_count ?? 0,
+      down_count: value.down_count ?? 0,
+      user_vote: value.user_vote ?? null,
+    };
+  }
+  return result;
+}
 
 export default {
   fetch: withSupabase<Database>({ auth: "publishable" }, async (req, ctx) => {
@@ -151,13 +285,32 @@ export default {
         })();
       }
 
-      const result = {
-        movie: movieWithImageUrls,
-        characterProfilePictures: characterProfilePictures,
-        dubbingProjects: dubbingProjects,
-        votes: voteData,
-        collection: collection,
-        tvdbId: tvdbId,
+      // Transform to new lean types
+      const media = transformMovieToMedia(movieWithImageUrls);
+      const transformedProjects = transformDubbingProjects(
+        dubbingProjects,
+        ctx,
+      );
+      const transformedVotes = transformVotes(voteData);
+      const transformedCollection = collection
+        ? transformCollection(collection)
+        : null;
+      const transformedCharacterPictures: CharacterProfilePicture[] =
+        characterProfilePictures?.map((cp: any) => ({
+          id: cp.id,
+          name: cp.name,
+          image: cp.image,
+          tvdbPeopleId: cp.tvdbPeopleId,
+          movieId: cp.movieId,
+        })) || [];
+
+      const result: MovieDetailResponse = {
+        media,
+        dubbingProjects: transformedProjects,
+        votes: transformedVotes,
+        characterProfilePictures: transformedCharacterPictures,
+        collection: transformedCollection,
+        tvdbId,
       };
 
       return Response.json(result);

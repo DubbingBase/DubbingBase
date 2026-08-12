@@ -104,9 +104,10 @@ import { ref, computed } from 'vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { useProfileStore } from '@/stores/profile'
 import { supabase } from '@/api/supabase'
-import type { Movie } from '@supabase/functions/_shared/movie'
-import type { Serie } from '@supabase/functions/_shared/serie'
-import type { Cast } from '@supabase/functions/_shared/types'
+import type { MovieMedia, TVMedia, SearchResult, Cast } from '@supabase/functions/_shared/types'
+
+type MediaSearchResult = SearchResult;
+
 type MovieCastMember = Cast;
 type SerieCastMember = Cast;
 
@@ -116,8 +117,8 @@ const emit = defineEmits<{ (e: 'close'): void }>()
 const formData = ref({
   media_title: ''})
 
-const searchResults = ref<(Movie | Serie)[]>([])
-const selectedMedia = ref<(Movie | Serie) | null>(null)
+const searchResults = ref<MediaSearchResult[]>([])
+const selectedMedia = ref<MovieMedia | TVMedia | null>(null)
 const cast = ref<(MovieCastMember | SerieCastMember)[]>([])
 const selectedCastId = ref<number | null>(null)
 const characterSearchQuery = ref('')
@@ -127,8 +128,8 @@ let searchTimeout: ReturnType<typeof setTimeout> | null = null
 
 const isFormValid = computed(() => !!selectedMedia.value && !!selectedCastId.value)
 
-const getMediaTitle = (media: Movie | Serie) => ('title' in media) ? media.title : media.name
-const getMediaYear = (media: Movie | Serie) => {
+const getMediaTitle = (media: MovieMedia | TVMedia | MediaSearchResult) => ('title' in media) ? media.title : media.name
+const getMediaYear = (media: MovieMedia | TVMedia | MediaSearchResult) => {
   const dateStr = 'release_date' in media ? media.release_date : ('first_air_date' in media ? media.first_air_date : undefined)
   return new Date(dateStr || '').getFullYear()
 }
@@ -154,13 +155,22 @@ const searchMedia = (event: { target: { value: string } }) => {
       console.error(error)
       return
     }
-    searchResults.value = data.filter((r: Movie | Serie) => r.media_type === 'movie' || r.media_type === 'tv')
+    searchResults.value = data.filter((r: MediaSearchResult) => r.media_type === 'movie' || r.media_type === 'tv')
   }, 300)
 }
 
-const selectMedia = async (media: Movie | Serie) => {
-  selectedMedia.value = media
-  formData.value.media_title = getMediaTitle(media)
+const selectMedia = async (media: MediaSearchResult) => {
+  // Fetch full media details
+  const { data: fullMedia, error: mediaError } = await supabase.functions.invoke(
+    media.media_type === 'movie' ? 'movie' : 'show',
+    { body: { id: media.id } }
+  )
+  if (mediaError || !fullMedia?.data?.media) {
+    console.error(mediaError)
+    return
+  }
+  selectedMedia.value = fullMedia.data.media
+  formData.value.media_title = getMediaTitle(selectedMedia.value)
   searchResults.value = []
   selectedCastId.value = null
   characterSearchQuery.value = ''

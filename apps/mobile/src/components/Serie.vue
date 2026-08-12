@@ -21,12 +21,12 @@
 
 <script lang="ts" setup>
 import { PropType, toRefs } from "vue";
-import { Serie } from "@supabase/functions/_shared/serie";
+import type { TVMedia } from "@supabase/functions/_shared/types";
 import MediaItem from "./MediaItem.vue";
 
 const props = defineProps({
   value: {
-    type: Object as PropType<Serie>,
+    type: Object as PropType<TVMedia>,
     required: true,
   },
 });

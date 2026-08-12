@@ -129,11 +129,19 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 
 import type { Tables } from '@/utils/database';
 import { supabase } from '@/api/supabase';
+import type {
+  VoiceActorSummary,
+  WorkPerformance,
+  DubbingProject,
+  MovieMedia,
+  TVMedia,
+  GameMedia,
+  CharacterProfilePicture,
+} from "@supabase/functions/_shared/types";
 
 type VoiceActor = Tables<'voice_actors'>;
 
 // Use any for editable profile to avoid deep type instantiation issues
-
 
 const route = useRoute()
 const router = useRouter()
@@ -167,7 +175,6 @@ const canEdit = computed(() => {
   return authStore.isAdmin || profileStore.voiceActors.some((va: { id: number }) => va.id === voiceActorId.value)
 })
 
-
 const retryLoadProfile = async () => {
   await profileStore.fetchProfile({ voiceActorId: voiceActorId.value })
 }
@@ -175,6 +182,29 @@ const retryLoadProfile = async () => {
 const handleDeleteWork = async (workEntryId: number) => {
   await profileStore.removeWorkEntry(workEntryId, { voiceActorId: voiceActorId.value });
 };
+
+// Type for the voice-actor function response
+interface VoiceActorFunctionResponse {
+  voiceActor: {
+    id: number;
+    firstname: string;
+    lastname: string;
+    bio: string | null;
+    nationality: string | null;
+    date_of_birth: string | null;
+    awards: string | null;
+    years_active: string | null;
+    social_media_links: Record<string, string> | null;
+    profile_picture: string | null;
+    voice_actor_name: string | null;
+    user_voice_actor_links?: { id: string }[];
+    work: WorkPerformance[];
+  };
+  medias: (MovieMedia | TVMedia | GameMedia)[];
+  characterProfilePictures: CharacterProfilePicture[];
+  potentialWikipediaUrl?: string | null;
+  votes?: Record<number, { up_count: number; down_count: number; user_vote: string | null }>;
+}
 
 const loadProfileData = async () => {
   console.log("[loadProfileData] Starting fetchProfile for voiceActorId:", voiceActorId.value);
@@ -185,18 +215,18 @@ const loadProfileData = async () => {
   if (profileStore.currentVoiceActor?.id !== voiceActorId.value) {
     console.log("[loadProfileData] Voice actor mismatch, fetching directly via 'voice-actor' function");
     try {
-      const { data, error } = await supabase.functions.invoke("voice-actor", {
+      const { data, error } = await supabase.functions.invoke<VoiceActorFunctionResponse>("voice-actor", {
         body: { id: voiceActorId.value }});
       console.log("[loadProfileData] voice-actor response:", { data, error });
       if (data && data.voiceActor) {
         // The edge function returns work rows in data.voiceActor.work and medias in data.medias
         const medias = data.medias || [];
-        const mappedWorks = (data.voiceActor.work || []).map((work: Tables<'work'> & { dubbing_projects?: { content_id: number } }) => {
-          const media = medias.find((m: { id: number }) => m.id === work.dubbing_projects?.content_id);
+        const mappedWorks = (data.voiceActor.work || []).map((work: WorkPerformance) => {
+          const media = medias.find((m: MovieMedia | TVMedia | GameMedia) => m.id === work.dubbing_projects?.content_id);
           
           let character_name = '';
           if (media && media.credits && media.credits.cast) {
-            const actor = media.credits.cast.find((c: { id: number, character: string }) => c.id === work.actor_id);
+            const actor = media.credits.cast.find((c: { id: number; character: string }) => c.id === work.actor_id);
             if (actor) {
               character_name = actor.character;
             }
@@ -292,31 +322,4 @@ const openPublicProfile = () => {
   font-size: 3rem;
 }
 
-.error-container h3,
-.no-profile-container h3 {
-  margin: 1rem 0 0.5rem 0;
-  color: var(--app-color-primary);
-}
-
-.error-container p,
-.no-profile-container p {
-  margin: 0.5rem 0;
-  color: var(--app-text-color);
-  opacity: 0.7;
-}
-
-.profile-content {
-  padding: 1rem;
-}
-
-.work-section {
-  margin-top: 2rem;
-}
-
-.work-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
 </style>

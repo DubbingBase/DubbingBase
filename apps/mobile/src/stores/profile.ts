@@ -2,8 +2,7 @@ import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 import { supabase } from "@/api/supabase";
 import type { Tables } from "@/utils/database";
-import type { Movie } from "@supabase/functions/_shared/movie";
-import type { Serie } from "@supabase/functions/_shared/serie";
+import type { MovieMedia, TVMedia } from "@supabase/functions/_shared/types";
 
 interface VoiceActor extends Tables<"voice_actors"> {
   medias?: WorkEntry[];
@@ -18,7 +17,7 @@ export interface WorkEntry {
   media_id: number;
   character_name?: string;
   role?: string;
-  media?: Movie | Serie;
+  media?: MovieMedia | TVMedia;
   actor_id?: number | null;
 }
 

@@ -29,11 +29,10 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import MediaThumbnail from "@/components/MediaThumbnail.vue";
-import type { Movie as MovieModel } from "@supabase/functions/_shared/movie";
-import type { Serie as SerieModel } from "@supabase/functions/_shared/serie";
+import type { MovieMedia, TVMedia } from "@supabase/functions/_shared/types";
 
 type Props = {
-  media: MovieModel | SerieModel;
+  media: MovieMedia | TVMedia;
   character: string;
   characterImage?: string;
   mediaType: "movie" | "serie";
@@ -43,15 +42,15 @@ const props = defineProps<Props>();
 
 const title = computed(() => {
   if ("title" in props.media) {
-    return (props.media as MovieModel).title;
+    return (props.media as MovieMedia).title;
   }
-  return (props.media as SerieModel).name;
+  return (props.media as TVMedia).name;
 });
 
 const releaseDate = computed(() => {
   const date =
     "release_date" in props.media
-      ? (props.media as MovieModel).release_date
+      ? (props.media as MovieMedia).release_date
       : ('first_air_date' in props.media ? props.media.first_air_date : undefined);
   return date
     ? new Date(date).toLocaleDateString(navigator.language, { year: "numeric" })

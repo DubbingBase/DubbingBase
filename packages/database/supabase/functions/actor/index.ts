@@ -17,6 +17,13 @@ import { buildTmdbImageUrl } from "../_shared/tmdb-urls.ts";
 import { cacheUtils } from "../_shared/index.ts";
 import { SupabaseContext } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
+import type {
+  WorkPerformance,
+  VoiceActorSummary,
+  DubbingProject,
+  MovieMedia,
+  TVMedia,
+} from "../_shared/media-types.ts";
 
 async function getActor(
   actorId: number,
@@ -58,10 +65,8 @@ async function getVoiceRoles(
   tmdbClient: TMDBClient,
   dbClient: DatabaseClient,
   acceptLanguage?: string,
-): Promise<any[]> {
+): Promise<WorkPerformance[]> {
   try {
-    // TODO: rework
-
     // Use shared DatabaseClient for database queries
     const workData = await dbClient.getWorkByActor(actorId);
 
@@ -84,7 +89,7 @@ async function getVoiceRoles(
     const voiceRoles = (await Promise.all(
       workData.map(async (row) => {
         const { voice_actors, ...work } = row;
-        let mediaDetails = null;
+        let mediaDetails: MovieMedia | TVMedia | null = null;
 
         if (
           work.dubbing_projects?.content_id &&
@@ -98,39 +103,42 @@ async function getVoiceRoles(
         }
 
         return {
-          ...work,
+          id: work.id,
+          actor_id: work.actor_id,
+          voice_actor_id: work.voice_actor_id,
           highlight: work.voice_actor_id
             ? top3.includes(work.voice_actor_id)
             : false,
-          voice_actors: voice_actors
-            ? [
-                {
-                  ...voice_actors,
-                  profile_picture: buildSupabaseImageUrl(
-                    ctx,
-                    voice_actors.profile_picture,
-                    "voice_actor_profile_pictures",
-                    "500",
-                  ),
-                },
-              ]
-            : [],
-          mediaDetails: mediaDetails
+          suggestions: work.suggestions,
+          status: work.status,
+          source_id: work.source_id,
+          performance: work.performance,
+          dubbing_project_id: work.dubbing_project_id,
+          voice_actor: voice_actors
             ? {
-                id: mediaDetails.id,
-                title: mediaDetails.title || mediaDetails.name,
-                original_title:
-                  mediaDetails.original_title || mediaDetails.original_name,
-                poster_path: buildTmdbImageUrl(mediaDetails.poster_path),
-                release_date:
-                  mediaDetails.release_date || mediaDetails.first_air_date,
-                media_type: work.dubbing_projects?.content_type || "",
-                overview: mediaDetails.overview,
+                id: voice_actors.id,
+                firstname: voice_actors.firstname,
+                lastname: voice_actors.lastname,
+                profile_picture: buildSupabaseImageUrl(
+                  ctx,
+                  voice_actors.profile_picture,
+                  "voice_actor_profile_pictures",
+                  "500",
+                ),
+                bio: voice_actors.bio,
+                nationality: voice_actors.nationality,
+                date_of_birth: voice_actors.date_of_birth,
+                awards: voice_actors.awards,
+                years_active: voice_actors.years_active,
+                social_media_links: voice_actors.social_media_links,
+                tmdb_id: voice_actors.tmdb_id,
+                wikidata_id: voice_actors.wikidata_id,
               }
             : null,
-        };
+          mediaDetails,
+        } as WorkPerformance;
       }),
-    )) as any[];
+    )) as WorkPerformance[];
 
     return voiceRoles;
   } catch (e) {

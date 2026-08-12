@@ -95,7 +95,7 @@ import AppContent from "@/components/common/layout/AppContent.vue";
 import { toastController, useToast } from "@/composables/useToast";
 import { alertController } from "@/composables/useAlert";
 import AppButton from "@/components/common/AppButton.vue";
-import { computed, ref, UnwrapRef, onMounted, watch } from "vue";
+import { computed, ref, onMounted, watch } from "vue";
 import AppBackButton from "@/components/common/AppBackButton.vue";
 import { useRoute, useRouter } from "vue-router";
 import Share2 from "~icons/lucide/share-2";
@@ -111,7 +111,6 @@ import AppActionSheet, {
   ActionSheetButton,
 } from "@/components/common/AppActionSheet.vue";
 
-import { MovieResponse } from "@supabase/functions/_shared/movie";
 import { supabase } from "../api/supabase";
 import { enqueueMedia } from "../api/mediaQueue";
 import { useVoiceActorManagement } from "@/composables/useVoiceActorManagement";
@@ -128,6 +127,16 @@ import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
 import { actorToPersonData, voiceActorToPersonData } from "@/utils/convert";
 import { Role } from "@/components/PersonItem.vue";
 import { useI18n } from "vue-i18n";
+
+// Import new types
+import type {
+  MovieMedia,
+  Collection,
+  DubbingProject,
+  CharacterProfilePicture,
+  VoteData,
+  MovieDetailResponse,
+} from "@supabase/functions/_shared/movie";
 
 const authStore = useAuthStore();
 const { isAdmin } = storeToRefs(authStore);
@@ -209,21 +218,14 @@ const {
   refreshVotes,
 } = useVoiceActorManagement("movie");
 
-const movie = ref<MovieResponse["movie"] | undefined>();
-const collection = ref<MovieResponse["collection"] | null>(null);
-const dubbingProjects = ref<Array<{ id: number; works?: unknown[] }>>([]);
+// State - use new lean types
+const movie = ref<MovieMedia | undefined>();
+const collection = ref<Collection | null>(null);
+const dubbingProjects = ref<DubbingProject[]>([]);
 const queueStatus = ref<string | null>(null);
 const queueErrorMessage = ref<string | null>(null);
 
-const characterProfilePictures = ref<
-  {
-    id: number;
-    name: string | null;
-    image: string;
-    tvdbPeopleId: number;
-    showId: number;
-  }[]
->([]);
+const characterProfilePictures = ref<CharacterProfilePicture[]>([]);
 
 const { actors } = useDeferredCharacters(
   () => movie.value?.credits?.cast,
@@ -241,7 +243,7 @@ const hasWikidataId = computed(() => {
 
 const hasData = computed(() => {
   return dubbingProjects.value.some(
-    (p: { works?: unknown[] }) => p.works && p.works.length > 0,
+    (p: DubbingProject) => p.works && p.works.length > 0,
   );
 });
 
@@ -502,7 +504,7 @@ const fetchInfos = async () => {
 const fetchMovieData = async () => {
   const id = route.params.id;
   try {
-    const movieResponseRaw = await supabase.functions.invoke<MovieResponse>(
+    const movieResponseRaw = await supabase.functions.invoke<MovieDetailResponse>(
       "movie",
       {
         body: { id },
@@ -510,7 +512,8 @@ const fetchMovieData = async () => {
     );
     const data = movieResponseRaw.data;
     if (data) {
-      movie.value = data.movie;
+      // New response uses 'media' key instead of 'movie'
+      movie.value = data.media;
       dubbingProjects.value = data.dubbingProjects || [];
       if (data.characterProfilePictures) {
         characterProfilePictures.value = data.characterProfilePictures;
@@ -520,10 +523,10 @@ const fetchMovieData = async () => {
       }
 
       // Hydrate shared votes store
-      if ((data as { votes?: Record<string, number> }).votes) {
+      if (data.votes) {
         sharedVotes.value = {
           ...sharedVotes.value,
-          ...(data as { votes?: Record<string, number> }).votes,
+          ...data.votes,
         };
       }
     }
@@ -532,72 +535,6 @@ const fetchMovieData = async () => {
     fetchError.value = "Failed to load movie details.";
   }
 };
-
-// // Edit voice actor link
-// const editVoiceActorLink = (workItem: { work_id?: number; name?: string }) => {
-//   if (!movie.value?.id) return;
-
-//   router.push({
-//     name: 'AddVoiceCast',
-//     params: {
-//       movieId: movie.value.id,
-//       actorId: workItem.actor_id,
-//       workId: workItem.id
-//     }
-//   });
-// };
-
-// Confirm before deleting a voice actor link
-// const confirmDeleteVoiceActorLink = async (workItem: { work_id?: number; name?: string }) => {
-//   const alert = await alertController.create({
-//     header: 'Confirm Delete',
-//     message: `Are you sure you want to remove ${workItem.voiceActorDetails.firstname} ${workItem.voiceActorDetails.lastname} as the voice for ${workItem.character}?`,
-//     buttons: [
-//       {
-//         text: 'Cancel',
-//         role: 'cancel'
-//       },
-//       {
-//         text: 'Delete',
-//         role: 'destructive',
-//         handler: () => deleteVoiceActorLink(workItem.id)
-//       }
-//     ]
-//   });
-//   await alert.present();
-// };
-
-// Delete a voice actor link
-// const deleteVoiceActorLink = async (workId: number) => {
-//   try {
-//     const { error } = await supabase
-//       .from('works')
-//       .delete()
-//       .eq('id', workId);
-
-//     if (error) throw error;
-
-//     // Refresh the data
-//     await fetchMovieData();
-
-//     const toast = await toastController.create({
-//       message: 'Voice actor link removed',
-//       duration: 2000,
-//       color: 'success',
-//       position: 'top'
-//     });
-//     await toast.present();
-//   } catch (err) {
-//     console.error('Error deleting voice actor link:', err);
-//     const toast = await toastController.create({
-//       message: 'Failed to remove voice actor link',
-//       duration: 2000,
-//       color: 'danger',
-//       position: 'top'
-//     });
-//     await toast.present();
-//   }
-// };
 
 onMounted(async () => {
   const newId = route.params.id;

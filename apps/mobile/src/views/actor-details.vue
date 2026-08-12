@@ -102,102 +102,58 @@
               </div>
             </AppSegmentContent>
             <AppSegmentContent id="roles">
-              <div class="voice-roles-section" ref="rolesSectionRef">
-                <AppSearchbar
-                  v-model="searchQuery"
-                  :placeholder="t('common.search', 'Search...')"
-                  animated
-                  class="custom-searchbar"
-                  style="margin-bottom: 1rem;"
-                ></AppSearchbar>
-                
-                <div class="filters-row">
-                  <span class="filter-label">{{ showDubbedOnly === 'true' ? t("actor.dubbedOnly") : t("actor.allRoles") }}</span>
-                  <AppToggle
-                    :checked="showDubbedOnly === 'true'"
-                    @ionChange="showDubbedOnly = $event.detail.checked ? 'true' : 'false'"
-                    class="sleek-toggle"
-                  />
-                </div>
-
-                <div class="section-header">
-                  <h2>{{ t("actor.roles") }}</h2>
-                  <AppChip outline color="primary" class="role-count">
-                    {{ roleCount }}
-                    {{ roleCount > 1 ? t("actor.roles") : t("actor.role") }}
-                  </AppChip>
-                </div>
-
-                <div class="grouped-roles-list">
+              <div class="roles-section" ref="rolesSectionRef">
+                <div class="roles-list" v-if="tmdbRoles.length > 0">
                   <div
-                    v-for="group in filteredRolesToShow"
-                    :key="`${group.mediaId}-${group.mediaType}`"
-                    class="media-group"
+                    v-for="role in groupedTmdbRoles"
+                    :key="role.mediaId"
+                    class="role-group"
                   >
-                    <router-link
-                      :to="{
-                        name:
-                          group.mediaType === 'movie'
-                            ? `MovieDetails`
-                            : `SerieDetails`,
-                        params: { id: group.mediaId }}"
-                      class="no-link"
-                    >
-                      <MovieCard
-                        :media="group"
-                        :character="
-                          group.roles
-                            .map(r => r.character)
-                            .filter(Boolean)
-                            .join(', ')
-                        "
-                        :media-type="group.mediaType"
-                      />
-                    </router-link>
-                    <div class="roles-list" v-if="group.roles.length > 1">
-                      <div
-                        v-for="role in group.roles"
-                        :key="role.id"
-                        class="role-detail"
-                      >
-                        <span class="character-name">{{ role.character }}</span>
+                    <div class="role-group-header">
+                      <div class="role-media-info">
+                        <img
+                          v-if="role.poster_path"
+                          :src="role.poster_path"
+                          :alt="role.title"
+                          class="role-poster"
+                        />
+                        <div class="role-details">
+                          <h4>{{ role.title }}</h4>
+                          <span class="role-year">{{ role.releaseYear }}</span>
+                        </div>
                       </div>
                     </div>
-                    <div
-                      class="voice-actors-section"
-                      v-if="group.voice_actors.length > 0"
-                    >
-                      <div class="voice-actors-list">
-                        <PersonItem
-                          v-for="va in group.voice_actors"
-                          :key="va.id"
-                          :person="
-                            voiceActorToPersonData(
-                              va,
-                              va.performance,
-                              va.actor_id,
-                            )
-                          "
-                          type="voice-actor"
-                        />
+                    <div class="role-characters">
+                      <div
+                        v-for="character in role.roles"
+                        :key="character.id"
+                        class="character-item"
+                      >
+                        <span class="character-name">{{ character.character }}</span>
+                        <div v-if="voiceActorsByMediaId.value.get(role.mediaId)?.length" class="voice-actors-inline">
+                          <PersonItem
+                            v-for="va in voiceActorsByMediaId.value.get(role.mediaId)"
+                            :key="va.id"
+                            :person="va"
+                            type="voice-actor"
+                            size="small"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
+                </div>
+                <div v-else class="no-roles">
+                  <p>{{ t("actor.noRoles") }}</p>
                 </div>
               </div>
             </AppSegmentContent>
           </AppSegmentView>
         </div>
-      </div>
 
-      <LoadingSpinner v-if="loading" />
-
-      <!-- Error State -->
-      <div v-if="error && !loading" class="error-container">
-        <AlertCircle class="app-icon" />
-        <h3>{{ t("common.error") }}</h3>
-        <p>{{ error }}</p>
-        <AppButton @click="retryLoad">{{ t("common.retry") }}</AppButton>
+        <div v-if="error" class="text-center text-red-500 mt-4">
+          {{ error }}
+        </div>
       </div>
     </AppContent>
   </AppPage>
@@ -205,34 +161,37 @@
 </template>
 
 <script setup lang="ts">
-import { IonRefresher, IonRefresherContent } from "@ionic/vue";
-import { IonPage } from "@ionic/vue";
+import {
+  IonRefresher,
+  IonRefresherContent,
+  IonPage,
+  AppSegment,
+  AppSegmentButton,
+  AppSegmentView,
+  AppSegmentContent,
+} from "@ionic/vue";
 import AppPage from '@/components/common/layout/AppPage.vue';
 import AppHeader from '@/components/common/layout/AppHeader.vue';
 import AppToolbar from '@/components/common/layout/AppToolbar.vue';
 import AppTitle from '@/components/common/layout/AppTitle.vue';
 import AppContent from '@/components/common/layout/AppContent.vue';
-import AppSegment from '@/components/common/layout/AppSegment.vue';
-import AppSegmentButton from '@/components/common/layout/AppSegmentButton.vue';
-import AppSegmentView from '@/components/common/layout/AppSegmentView.vue';
-import AppSegmentContent from '@/components/common/layout/AppSegmentContent.vue';
-import AppButton from '@/components/common/AppButton.vue';
-import AppSearchbar from '@/components/common/AppSearchbar.vue';
-import AppToggle from '@/components/common/AppToggle.vue';
-import AppText from '@/components/common/AppText.vue';
-import AlertCircle from '~icons/lucide/alert-circle';
-import AppSpinner from '@/components/common/AppSpinner.vue';
-import AppSkeleton from '@/components/common/AppSkeleton.vue';
 import { computed, onMounted, ref, watch, nextTick } from "vue";
 import AppBackButton from "@/components/common/AppBackButton.vue";
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from "vue-i18n";
 import AppChip from '@/components/common/AppChip.vue';
 
-import type { Actor } from "@supabase/functions/_shared/types";
+import type {
+  Actor,
+  VoiceActorSummary,
+  WorkPerformance,
+  PersonData,
+  MovieMedia,
+  TVMedia,
+} from "@supabase/functions/_shared/types";
 import { supabase } from "../api/supabase";
 import { actorToPersonData, voiceActorToPersonData } from "@/utils/convert";
-import { PersonData } from "@/components/PersonItem.vue";
+import { PersonData as PersonDataType } from "@/components/PersonItem.vue";
 import PersonItem from "@/components/PersonItem.vue";
 import MovieCard from "@/components/MovieCard.vue";
 import LoadingSpinner from "@/components/common/LoadingSpinner.vue";
@@ -242,8 +201,36 @@ const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 
-const actor = ref<PersonData<Actor>>();
-type VoiceActorData = { id: number; firstname: string; lastname: string; profile_picture: string; is_official?: boolean; mediaDetails?: { id: number }; voice_actors?: VoiceActorData[] };
+// Type for TMDB Actor with credits
+interface TMDB_Actor {
+  id: number;
+  name: string;
+  profile_path: string | null;
+  birthday: string | null;
+  biography: string | null;
+  credits: {
+    cast: Array<{
+      id: number;
+      character: string;
+      title?: string;
+      name?: string;
+      release_date?: string;
+      first_air_date?: string;
+      media_type?: string;
+      poster_path?: string;
+      roles?: Array<{ character?: string }>;
+    }>;
+  };
+}
+
+// Response from actor edge function
+interface ActorResponse {
+  actor: TMDB_Actor;
+  voiceActors: WorkPerformance[];
+}
+
+const actor = ref<PersonDataType<Actor> | undefined>();
+type VoiceActorData = PersonDataType<VoiceActorSummary>;
 const voiceActors = ref<VoiceActorData[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
@@ -255,8 +242,8 @@ const isBiographyExpanded = ref(false);
 const availableLanguages = computed(() => {
   const langs = new Set<string>();
   voiceActors.value.forEach((role: any) => {
-    if (role.dubbing_projects?.language) {
-      langs.add(role.dubbing_projects.language);
+    if (role.data?.dubbing_projects?.language) {
+      langs.add(role.data.dubbing_projects.language);
     }
   });
   return Array.from(langs).sort();
@@ -301,7 +288,6 @@ const groupedTmdbRoles = computed(() => {
 
   tmdbRoles.value.forEach((role) => {
     const key = `${role.mediaId}-${role.mediaType}`;
-    console.log("key", key);
     if (!groups.has(key)) {
       groups.set(key, {
         mediaId: role.mediaId,
@@ -320,150 +306,87 @@ const groupedTmdbRoles = computed(() => {
   });
 
   return Array.from(groups.values()).sort((a, b) => {
-    const dateA = new Date(a.release_date || a.first_air_date || "1900-01-01");
-    const dateB = new Date(b.release_date || b.first_air_date || "1900-01-01");
-    return dateB.getTime() - dateA.getTime();
+    const dateA = a.release_date || a.first_air_date || "";
+    const dateB = b.release_date || b.first_air_date || "";
+    return dateB.localeCompare(dateA);
   });
-});
-
-const groupedRolesToShow = computed(() => {
-  if (showDubbedOnly.value === "true") {
-    return groupedTmdbRoles.value.filter((group) =>
-      mediaIdsWithDubs.value.has(group.mediaId),
-    );
-  }
-  return groupedTmdbRoles.value;
-});
-
-const filteredRolesToShow = computed(() => {
-  const query = searchQuery.value.toLowerCase();
-  if (!query) return groupedRolesToShow.value;
-
-  return groupedRolesToShow.value
-    .map((group) => {
-      const titleMatch = (group.title || "").toLowerCase().includes(query);
-      const rolesMatch = group.roles.filter((r: { character?: string }) =>
-        (r.character || "").toLowerCase().includes(query),
-      );
-      const vaMatch = group.voice_actors.filter((va: VoiceActorData) =>
-        `${va.firstname} ${va.lastname}`.toLowerCase().includes(query),
-      );
-
-      if (titleMatch || rolesMatch.length > 0 || vaMatch.length > 0) {
-        return {
-          ...group,
-          // If the title matches, show everything. Otherwise, only show matched roles/VA (or maybe keep all roles if matched? Let's just return the whole group if any matches)
-        };
-      }
-      return null;
-    })
-    .filter(Boolean);
-});
-
-const mediaIdsWithDubs = computed(() => {
-  return new Set(
-    voiceActors.value.map((va: VoiceActorData) => va.mediaDetails?.id).filter(Boolean),
-  );
 });
 
 const voiceActorsByMediaId = computed(() => {
-  const map = new Map();
-  voiceActors.value.forEach((va: VoiceActorData) => {
-    map.set(va.mediaDetails?.id, va.voice_actors);
+  const map = new Map<number, VoiceActorData[]>();
+  
+  voiceActors.value.forEach(va => {
+    const mediaId = va.data?.dubbing_projects?.content_id;
+    if (!mediaId) return;
+    
+    if (!map.has(mediaId)) {
+      map.set(mediaId, []);
+    }
+    map.get(mediaId)!.push(va);
   });
+  
   return map;
 });
 
-const sortedVoiceActors = computed(() => {
-  const voiceActorMap = new Map();
-
-  // Aggregate voice actors and count their roles
-  voiceActors.value.forEach((role: VoiceActorData & { dubbing_projects?: { language: string } }) => {
-    if (selectedLanguage.value && role.dubbing_projects?.language !== selectedLanguage.value) return;
-
-    role.voice_actors?.forEach((va: VoiceActorData) => {
-      if (!voiceActorMap.has(va.id)) {
-        voiceActorMap.set(va.id, {
-          ...va,
-          roleCount: 0});
-      }
-      voiceActorMap.get(va.id).roleCount += 1;
-    });
-  });
-
-  // Convert to array and sort by role count descending
-  return Array.from(voiceActorMap.values()).sort(
-    (a, b) => b.roleCount - a.roleCount,
-  );
-});
-
-const groupedVoiceActors = computed(() => {
-  return sortedVoiceActors.value.map((voiceActor: VoiceActorData & { roleCount: number }) => ({
-    id: voiceActor.id,
-    name: `${voiceActor.firstname} ${voiceActor.lastname}`,
-    tmdb_id: voiceActor.id,
-    profile_picture: voiceActor.profile_picture,
-    performance: `${voiceActor.roleCount} ${
-      voiceActor.roleCount > 1 ? t("actor.roles") : t("actor.role")
-    }`,
-    tags: voiceActor.is_official ? ["official"] : [],
-    data: voiceActor}));
-});
-
 const filteredVoiceActors = computed(() => {
-  const query = searchQuery.value.toLowerCase();
-  if (!query) return groupedVoiceActors.value;
-
-  return groupedVoiceActors.value.filter(
-    (va) =>
-      (va.name || "").toLowerCase().includes(query) ||
-      (va.performance || "").toLowerCase().includes(query),
+  if (!selectedLanguage.value) return voiceActors.value;
+  return voiceActors.value.filter((va: VoiceActorData) => 
+    va.data?.dubbing_projects?.language === selectedLanguage.value
   );
 });
 
-const roleCount = computed(() => {
-  return groupedRolesToShow.value.length;
-});
-
-function formatDate(dateString: string): string {
-  if (!dateString) return "";
-  const date = new Date(dateString);
-  return date.toLocaleDateString();
-}
-
-function getDisplayLanguage(langCode: string | undefined | null) {
-  if (!langCode) return 'Inconnu';
-  try {
-    const displayNames = new Intl.DisplayNames(['fr'], { type: 'language' });
-    const name = displayNames.of(langCode);
-    return name ? name.charAt(0).toUpperCase() + name.slice(1) : langCode;
-  } catch (e) {
-    return langCode;
-  }
-}
-
-async function loadActorData() {
+const loadActorData = async () => {
   const id = route.params.id;
-  console.log("Route params:", route.params);
-  console.log("Actor ID from route:", id);
-
+  if (!id) return;
+  
   loading.value = true;
   error.value = null;
 
   try {
     console.log('Invoking Supabase function "actor" with id:', id);
-    const actorResponseRaw = await supabase.functions.invoke("actor", {
+    const actorResponseRaw = await supabase.functions.invoke<ActorResponse>("actor", {
       body: { id }});
     console.log("Raw Supabase response:", actorResponseRaw);
-    const actorResponse: { data?: { credits?: { cast?: Array<{ id: number; character: string; title?: string; name?: string; release_date?: string; first_air_date?: string; media_type?: string; poster_path?: string }> } } } = await actorResponseRaw.data;
+    const actorResponse = actorResponseRaw.data;
     console.log("Parsed actor response:", actorResponse);
+
+    if (!actorResponse || !actorResponse.actor) {
+      throw new Error("Actor not found");
+    }
 
     // Fix: Properly assign actor data including all required fields
     const convertedActor = actorToPersonData(actorResponse.actor);
     actor.value = convertedActor;
 
     console.log("Converted actor data:", actor.value);
-    voiceActors.value = actorResponse.voiceActors || [];
+    
+    // Convert voice actors with media details
+    voiceActors.value = (actorResponse.voiceActors || []).map((work: WorkPerformance) => {
+      // Find character name from mediaDetails
+      let character = work.suggestions || work.performance || "";
+      if (work.mediaDetails && work.mediaDetails.credits?.cast) {
+        const castMember = work.mediaDetails.credits.cast.find((c: any) => c.id === work.actor_id);
+        if (castMember) character = castMember.character;
+      }
+      
+      return voiceActorToPersonData(
+        {
+          id: work.voice_actor?.id || 0,
+          firstname: work.voice_actor?.firstname || "",
+          lastname: work.voice_actor?.lastname || "",
+          profile_picture: work.voice_actor?.profile_picture || "",
+        },
+        work.performance || "",
+        work.actor_id,
+        work.status,
+        work.id,
+      ) as VoiceActorData & { 
+        data: { 
+          dubbing_projects?: { content_id: number; language: string; content_type: string } 
+        }
+      };
+    });
+    
     console.log("Voice actors:", voiceActors.value);
   } catch (err) {
     console.error("Error fetching actor data:", err);
@@ -472,7 +395,7 @@ async function loadActorData() {
   } finally {
     loading.value = false;
   }
-}
+};
 
 const handleRefresh = async (event: CustomEvent) => {
   try {
@@ -488,11 +411,34 @@ function retryLoad() {
   loadActorData();
 }
 
+function formatDate(dateStr: string | null): string {
+  if (!dateStr) return "";
+  return new Date(dateStr).toLocaleDateString(navigator.language, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+function getDisplayLanguage(lang: string): string {
+  const langMap: Record<string, string> = {
+    "fr-FR": "Français",
+    "en-US": "English",
+    "es-ES": "Español",
+    "de-DE": "Deutsch",
+    "it-IT": "Italiano",
+    "pt-BR": "Português",
+    "ja-JP": "日本語",
+    "zh-CN": "中文",
+    "ko-KR": "한국어",
+  };
+  return langMap[lang] || lang;
+}
+
 onMounted(() => {
   loadActorData();
 });
 </script>
-
 
 <style scoped lang="scss">
 .actor {
@@ -547,322 +493,124 @@ onMounted(() => {
       .read-more-hint {
         margin-top: 8px;
         font-size: 0.85rem;
-        color: var(--app-color-primary);
-        font-weight: 600;
-        text-align: right;
-      }
-    }
-  }
-
-  .voice-actors-section {
-    margin-top: 1rem;
-
-    .section-title {
-      font-size: 1.2rem;
-      font-weight: 600;
-      margin: 0 0 1rem 0;
-      padding-left: 0.5rem;
-      color: var(--app-color-text-primary);
-    }
-
-    .voice-actors-scroller {
-      display: flex;
-      overflow-x: auto;
-      gap: 12px;
-      padding-bottom: 1rem;
-      scroll-snap-type: x mandatory;
-
-      &::-webkit-scrollbar {
-        display: none;
-      }
-
-      .voice-actor-card {
-        scroll-snap-align: start;
-        flex: 0 0 280px;
-        background: rgba(20, 20, 20, 0.95);
-        border-radius: 12px;
-        overflow: hidden;
-        border: 1px solid var(--app-overlay-5);
+        color: var(--app-color-text-secondary);
       }
     }
   }
 }
 
-.media-voice-roles {
-  margin-bottom: 2rem;
-  background: var(--app-color-step-50);
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.voice-actors-section {
+  padding: 0 1rem;
 
-  & + .media-voice-roles {
-    margin-top: 1.5rem;
+  .section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--app-color-text-primary);
   }
 }
 
-.media-header {
+.voice-actors-scroller {
   display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.voice-actor-card {
+  background: rgba(20, 20, 20, 0.95);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--app-overlay-5);
+}
+
+.roles-section {
   padding: 1rem;
-  width: 100%;
-  background: var(--app-color-border-light);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.voice-roles-list {
-  padding: 0.5rem 0;
-  background: var(--app-color-step-50);
-
-  .voice-role-item {
-    --padding-start: 1rem;
-    --padding-end: 1rem;
-    --min-height: 72px;
-
-    &::part(native) {
-      padding-top: 0.75rem;
-      padding-bottom: 0.75rem;
-    }
-  }
+.roles-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.voice-actor-avatar {
-  width: 48px;
-  height: 48px;
-  margin-right: 1rem;
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 50%;
-  }
-
-  .fallback-avatar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    background: var(--app-color-border-light);
-    border-radius: 50%;
-    color: var(--app-color-text-secondary);
-
-    .app-icon {
-      font-size: 1.5rem;
-    }
-  }
+.role-group {
+  background: rgba(20, 20, 20, 0.95);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--app-overlay-5);
 }
 
-.voice-actor-details {
-  h3 {
-    margin: 0 0 0.25rem;
+.role-group-header {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  gap: 1rem;
+  background: var(--app-overlay-2);
+  border-bottom: 1px solid var(--app-overlay-5);
+}
+
+.role-poster {
+  width: 60px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.role-details {
+  flex: 1;
+  min-width: 0;
+
+  h4 {
+    margin: 0 0 0.25rem 0;
     font-size: 1rem;
+    font-weight: 600;
+    color: var(--app-color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .role-year {
+    font-size: 0.85rem;
+    color: var(--app-color-text-secondary);
+  }
+}
+
+.role-characters {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.character-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  background: var(--app-overlay-2);
+  border-radius: 8px;
+  border: 1px solid var(--app-overlay-5);
+
+  .character-name {
+    flex: 1;
     font-weight: 500;
     color: var(--app-color-text-primary);
   }
 
-  p {
-    margin: 0;
-    font-size: 0.85rem;
-    color: var(--app-color-text-secondary);
-
-    .app-icon {
-      margin-right: 0.25rem;
-      vertical-align: middle;
-    }
-  }
-
-  .voice-role-performance {
-    font-weight: 500;
-    color: var(--app-color-primary);
-  }
-}
-
-.header-immersive {
-  position: relative;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  padding: 3rem 1rem 1.5rem;
-  margin-bottom: 1.5rem;
-  overflow: hidden;
-
-  .header-backdrop {
-    position: absolute;
-    top: -10%;
-    left: -10%;
-    right: -10%;
-    bottom: -10%;
-    background-size: cover;
-    background-position: center;
-    filter: blur(20px);
-    z-index: 0;
-    opacity: 0.6;
-  }
-
-  .header-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(
-      to bottom,
-      rgba(0, 0, 0, 0.2) 0%,
-      var(--app-background-color, #121212) 100%
-    );
-    z-index: 1;
-  }
-
-  .header-content {
-    position: relative;
-    z-index: 2;
+  .voice-actors-inline {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-
-    .main-avatar {
-      height: 180px;
-      width: 180px;
-      object-fit: cover;
-      border-radius: 50%;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-      margin-bottom: 1rem;
-      border: 3px solid var(--app-overlay-10);
-    }
-
-    .actor-name {
-      font-size: 1.75rem;
-      font-weight: 700;
-      color: #fff;
-      text-align: center;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-    }
+    gap: 0.5rem;
   }
 }
 
-AppSegmentView, AppSegmentContent {
-  overflow-y: hidden;
+.no-roles {
+  text-align: center;
+  padding: 2rem;
+  color: var(--app-color-text-secondary);
 }
-
-.voice-roles-section {
-  padding: 1.5rem 1rem;
-
-  .filters-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: rgba(20, 20, 20, 0.95);
-    border-radius: 12px;
-    padding: 0.75rem 1rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-    border: 1px solid var(--app-overlay-5);
-
-    .filter-label {
-      font-size: 0.95rem;
-      font-weight: 500;
-      color: var(--app-color-text-primary);
-    }
-
-    .sleek-toggle {
-      --background: var(--app-overlay-10);
-      --handle-background: var(--app-color-text-secondary);
-      --background-checked: var(--app-color-primary);
-      --handle-background-checked: #fff;
-      padding: 0;
-    }
-  }
-
-  .role-toggle {
-    margin-bottom: 1rem;
-  }
-
-  .section-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 1rem;
-
-    h2 {
-      margin: 0;
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: var(--app-color-text-primary);
-    }
-
-    .role-count {
-      margin-left: 0.75rem;
-      font-size: 0.8rem;
-      height: 1.75rem;
-    }
-  }
-}
-
-.grouped-roles-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-
-  .media-group {
-    background: var(--app-color-card);
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-    overflow: hidden;
-    transition:
-      transform 0.2s ease,
-      box-shadow 0.2s ease;
-
-    &:active {
-      transform: translateY(1px);
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    }
-
-    .roles-list {
-      padding: 0.5rem 1rem;
-      border-top: 1px solid var(--app-color-border-light);
-      background: var(--app-color-step-50);
-
-      .role-detail {
-        padding: 0.25rem 0;
-
-        &:not(:last-child) {
-          border-bottom: 1px solid var(--app-color-border-light);
-        }
-
-        .character-name {
-          font-size: 0.85rem;
-          color: var(--app-color-text-secondary);
-          font-style: italic;
-        }
-      }
-    }
-
-    .voice-actors-section {
-      border-top: 1px solid var(--app-color-border-light);
-      background: var(--app-color-step-50);
-
-      .voice-actors-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-      }
-    }
-  }
-}
-
-// Mobile-only styles - no desktop hover states
-@media (min-width: 768px) {
-  .voice-roles-section {
-    margin: 2rem auto;
-    padding: 0 1.5rem;
-  }
-
-  .voice-roles-list {
-    .voice-role-item {
-      --padding-start: 1rem;
-      --padding-end: 1rem;
-      --inner-padding-end: 1rem;
-    }
-  }
-}
-
 </style>

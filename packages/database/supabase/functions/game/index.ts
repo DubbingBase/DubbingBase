@@ -8,39 +8,150 @@ import {
   getParams,
 } from "../_shared/index.ts";
 import { buildIgdbImageUrl } from "../_shared/igdb.ts";
-import type { IgdbGame, IgdbCharacter } from "../_shared/types.ts";
+import type {
+  GameMedia,
+  GameDetailResponse,
+  DubbingProject,
+  WorkPerformance,
+  VoiceActorSummary,
+  CharacterProfilePicture,
+  VoteData,
+  IgdbCover,
+  IgdbPlatform,
+  IgdbInvolvedCompany,
+  IgdbCompany,
+  IgdbCharacter,
+  IgdbMugShot,
+  IgdbGenre,
+} from "../_shared/media-types.ts";
 
-/**
- * Processes an IgdbGame to normalise image URLs and add media_type.
- */
-function processIgdbGame(
-  game: IgdbGame,
-): IgdbGame & { media_type: "video_game" } {
+// Transform IGDB game to lean GameMedia
+function transformGameToMedia(game: any): GameMedia {
   return {
-    ...game,
+    id: game.id,
+    title: game.name,
+    overview: game.summary || "",
+    poster_path: game.cover
+      ? buildIgdbImageUrl(game.cover.image_id, "cover_big")
+      : null,
+    backdrop_path: game.cover
+      ? buildIgdbImageUrl(game.cover.image_id, "cover_big")
+      : null,
+    vote_average: game.rating || 0,
+    vote_count: game.rating_count || 0,
+    genres:
+      game.genres?.map((g: IgdbGenre) => ({ id: g.id, name: g.name })) || [],
+    credits: { cast: [] },
+    external_ids: { imdb_id: null, wikidata_id: null },
     media_type: "video_game",
+    first_release_date: game.first_release_date ?? null,
+    summary: game.summary || "",
     cover: game.cover
       ? {
-          ...game.cover,
+          image_id: game.cover.image_id,
           url: buildIgdbImageUrl(game.cover.image_id, "cover_big"),
         }
-      : undefined,
+      : null,
+    platforms:
+      game.platforms?.map((p: IgdbPlatform) => ({
+        id: p.id,
+        name: p.name,
+        abbreviation: p.abbreviation,
+      })) || [],
+    involved_companies:
+      game.involved_companies?.map((ic: IgdbInvolvedCompany) => ({
+        id: ic.id,
+        company: {
+          id: ic.company.id,
+          name: ic.company.name,
+          logo: ic.company.logo
+            ? buildIgdbImageUrl(ic.company.logo.image_id, "logo_med")
+            : null,
+        },
+        developer: ic.developer,
+        publisher: ic.publisher,
+        porting: ic.porting,
+        supporting: ic.supporting,
+      })) || [],
+    characters:
+      game.characters?.map((c: IgdbCharacter) => ({
+        id: c.id,
+        name: c.name,
+        mug_shot: c.mug_shot
+          ? {
+              image_id: c.mug_shot.image_id,
+              url: buildIgdbImageUrl(c.mug_shot.image_id, "1080p"),
+            }
+          : null,
+      })) || [],
   };
 }
 
-/**
- * Processes an IgdbCharacter to normalise the mug shot URL.
- */
-function processIgdbCharacter(char: IgdbCharacter) {
-  return {
-    ...char,
-    mug_shot: char.mug_shot
+function transformDubbingProjects(projects: any[], ctx: any): DubbingProject[] {
+  return projects.map((p) => ({
+    id: p.id,
+    content_id: p.content_id,
+    content_type: p.content_type,
+    language: p.language,
+    studio_id: p.studio_id,
+    studio_data: p.studio_data
       ? {
-          ...char.mug_shot,
-          url: buildIgdbImageUrl(char.mug_shot.image_id, "1080p"),
+          id: p.studio_data.id,
+          name: p.studio_data.name,
+          logo: p.studio_data.logo,
+          website: p.studio_data.website,
         }
-      : undefined,
-  };
+      : null,
+    status: p.status,
+    works:
+      p.works?.map((w: any) => ({
+        id: w.id,
+        actor_id: w.actor_id,
+        voice_actor_id: w.voice_actor_id,
+        highlight: w.highlight,
+        suggestions: w.suggestions,
+        status: w.status,
+        source_id: w.source_id,
+        performance: w.performance,
+        dubbing_project_id: w.dubbing_project_id,
+        voice_actor: w.voice_actor
+          ? {
+              id: w.voice_actor.id,
+              firstname: w.voice_actor.firstname,
+              lastname: w.voice_actor.lastname,
+              profile_picture: w.voice_actor.profile_picture,
+              bio: w.voice_actor.bio,
+              nationality: w.voice_actor.nationality,
+              date_of_birth: w.voice_actor.date_of_birth,
+              awards: w.voice_actor.awards,
+              years_active: w.voice_actor.years_active,
+              social_media_links: w.voice_actor.social_media_links,
+              tmdb_id: w.voice_actor.tmdb_id,
+              wikidata_id: w.voice_actor.wikidata_id,
+            }
+          : null,
+      })) || [],
+    crew:
+      p.crew?.map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        job: c.job,
+        department: c.department,
+        profile_path: c.profile_path,
+      })) || [],
+  }));
+}
+
+function transformVotes(votes: Record<number, any>): Record<number, VoteData> {
+  const result: Record<number, VoteData> = {};
+  for (const [key, value] of Object.entries(votes)) {
+    result[Number(key)] = {
+      up_count: value.up_count ?? 0,
+      down_count: value.down_count ?? 0,
+      user_vote: value.user_vote ?? null,
+    };
+  }
+  return result;
 }
 
 export default {
@@ -75,18 +186,39 @@ export default {
               igdbClient.getGameCharacters(gameId),
             ]);
             return {
-              game: game ? processIgdbGame(game) : null,
-              characters: characters.map(processIgdbCharacter),
+              game: game ? transformGameToMedia(game) : null,
+              characters: characters.map((c: IgdbCharacter) => ({
+                id: c.id,
+                name: c.name,
+                mug_shot: c.mug_shot
+                  ? {
+                      image_id: c.mug_shot.image_id,
+                      url: buildIgdbImageUrl(c.mug_shot.image_id, "1080p"),
+                    }
+                  : null,
+              })),
             };
           } catch (err) {
             console.error(`Failed to fetch IGDB game ${gameId}:`, err);
             return {
               game: {
                 id: gameId,
-                name: "Information indisponible (Timeout)",
-                summary: "Ce contenu n'a pas pu être chargé.",
+                title: "Information indisponible (Timeout)",
+                overview: "Ce contenu n'a pas pu être chargé.",
+                poster_path: null,
+                backdrop_path: null,
+                vote_average: 0,
+                vote_count: 0,
+                genres: [],
+                credits: { cast: [] },
+                external_ids: { imdb_id: null, wikidata_id: null },
                 media_type: "video_game" as const,
-                cover: undefined,
+                first_release_date: null,
+                summary: "",
+                cover: null,
+                platforms: [],
+                involved_companies: [],
+                characters: [],
               },
               characters: [],
             };
@@ -141,12 +273,24 @@ export default {
         })();
       }
 
-      return Response.json({
-        game,
-        characters,
+      // Transform to new lean types
+      const media = game!;
+      const transformedProjects = transformDubbingProjects(
         dubbingProjects,
-        votes: voteData,
-      });
+        ctx,
+      );
+      const transformedVotes = transformVotes(voteData);
+      const transformedCharacters = characters || [];
+
+      const result: GameDetailResponse = {
+        media,
+        dubbingProjects: transformedProjects,
+        votes: transformedVotes,
+        characterProfilePictures: [], // Games don't have TMDB character profile pictures
+        characters: transformedCharacters,
+      };
+
+      return Response.json(result);
     } catch (error) {
       console.error("Error in game function:", error);
       return Response.json(

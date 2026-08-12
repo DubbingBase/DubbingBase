@@ -192,13 +192,11 @@
       <span>{{ toast.message }}</span>
     </div>
   </div>
-  </template>
+</template>
 
 <script setup lang="ts">
 const supabase = useSupabaseClient();
 const localePath = useLocalePath();
-
-
 
 
 definePageMeta({
@@ -208,7 +206,20 @@ definePageMeta({
 
 import { ref, computed, onMounted } from "vue";
 
+// Import new types
+import type {
+  MovieMedia,
+  DubbingProject,
+  WorkPerformance,
+  VoiceActorSummary,
+  MovieDetailResponse,
+} from "@supabase/functions/_shared/movie";
 
+const route = useRoute();
+
+const movieId = computed(() => Number(route.params.id));
+
+// Types
 interface Actor {
   id: number;
   name: string;
@@ -223,35 +234,10 @@ interface VoiceActor {
   profile_picture: string | null;
 }
 
-interface WorkAndVoiceActor {
-  actor_id: number;
-  voice_actor_id: number;
-  voice_actor: VoiceActor;
-}
-
-interface MovieResponse {
-  movie: {
-    id: number;
-    title: string;
-    overview: string;
-    poster_path: string | null;
-    backdrop_path: string | null;
-    release_date: string;
-    credits: {
-      cast: Actor[];
-    };
-  };
-  voiceActors: WorkAndVoiceActor[];
-}
-
-const route = useRoute();
-
-const movieId = computed(() => Number(route.params.id));
-
 // State
-const movie = ref<MovieResponse["movie"] | null>(null);
+const movie = ref<MovieMedia | null>(null);
 const actors = ref<Actor[]>([]);
-const voiceActors = ref<WorkAndVoiceActor[]>([]);
+const voiceActors = ref<WorkPerformance[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const isSaving = ref(false);
@@ -294,7 +280,12 @@ const getAssignedVA = (actorId: number): VoiceActor | null => {
 
   // Search in fetched list
   const existing = voiceActors.value.find(va => va.voice_actor_id === vaId);
-  if (existing) return existing.voice_actor;
+  if (existing) return {
+    id: existing.voice_actor?.id || 0,
+    firstname: existing.voice_actor?.firstname || "",
+    lastname: existing.voice_actor?.lastname || "",
+    profile_picture: existing.voice_actor?.profile_picture || null,
+  };
 
   // Search in dropdown results
   const results = searchResults.value[actorId] || [];
@@ -314,10 +305,10 @@ const fetchMovieData = async () => {
 
     if (fetchErr) throw fetchErr;
 
-    const response = data as MovieResponse;
-    movie.value = response.movie;
-    voiceActors.value = response.voiceActors || [];
-    actors.value = response.movie.credits?.cast || [];
+    const response = data as MovieDetailResponse;
+    movie.value = response.media;
+    voiceActors.value = response.dubbingProjects.flatMap(p => p.works) || [];
+    actors.value = response.media.credits?.cast || [];
 
     // Initialize mapping values
     const assignments: Record<number, number | null> = {};

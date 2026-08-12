@@ -1,1 +1,1 @@
-export * from "./types.ts";
+export * from "./media-types.ts";

@@ -154,7 +154,7 @@ import { Share } from "@capacitor/share";
 import AppActionSheet, {
   ActionSheetButton,
 } from "@/components/common/AppActionSheet.vue";
-import { ref, computed, UnwrapRef, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import AppBackButton from "@/components/common/AppBackButton.vue";
 import { format } from "date-fns";
@@ -178,7 +178,16 @@ import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { actorToPersonData, voiceActorToPersonData } from "@/utils/convert";
 import { Role } from "@/components/PersonItem.vue";
 import { useI18n } from "vue-i18n";
-import { ShowResponse } from "@supabase/functions/_shared/types";
+
+// Import new types
+import type {
+  TVMedia,
+  DubbingProject,
+  CharacterProfilePicture,
+  VoteData,
+  TVDetailResponse,
+  Season,
+} from "@supabase/functions/_shared/types";
 
 const authStore = useAuthStore();
 const { isAdmin } = storeToRefs(authStore);
@@ -241,8 +250,9 @@ const actionSheetButtons = computed<ActionSheetButton[]>(() => {
   return buttons;
 });
 
-const show = ref<ShowResponse["serie"] | undefined>();
-const dubbingProjects = ref<Array<{ id: number; works?: unknown[] }>>([]);
+// State - use new lean types
+const show = ref<TVMedia | undefined>();
+const dubbingProjects = ref<DubbingProject[]>([]);
 const isLoading = ref(true);
 const isFetching = ref(false);
 const fetchError = ref("");
@@ -250,15 +260,7 @@ const error = ref("");
 const queueStatus = ref<string | null>(null);
 const queueErrorMessage = ref<string | null>(null);
 
-const characterProfilePictures = ref<
-  {
-    id: number;
-    name: string;
-    image: string;
-    tvdbPeopleId: number;
-    showId: number;
-  }[]
->([]);
+const characterProfilePictures = ref<CharacterProfilePicture[]>([]);
 
 // Initialize voice actor management
 const {
@@ -294,7 +296,7 @@ const hasWikidataId = computed(() => {
 
 const hasData = computed(() => {
   return dubbingProjects.value.some(
-    (p: { works?: unknown[] }) => p.works && p.works.length > 0,
+    (p: DubbingProject) => p.works && p.works.length > 0,
   );
 });
 
@@ -302,7 +304,7 @@ const formattedSeasons = computed(() => {
   if (!show.value?.seasons) return [];
 
   return show.value?.seasons?.map(
-    (season: { season_number: number; name: string }) => ({
+    (season: Season) => ({
       ...season,
       formatted_air_date: season.air_date
         ? format(new Date(season.air_date), "MMM dd, yyyy")
@@ -446,7 +448,7 @@ const takePhoto = async () => {
 
 const getSerie = async (id: string) => {
   try {
-    const response = await supabase.functions.invoke<ShowResponse>("show", {
+    const response = await supabase.functions.invoke<TVDetailResponse>("show", {
       body: { id },
     });
     return response;
@@ -462,17 +464,17 @@ const fetchSerieData = async () => {
   try {
     const response = await getSerie(id as string);
     if (response.data) {
-      show.value =
-        response.data.serie || (response.data as { show?: unknown }).show; // Handle both response formats
-      show.value.credits = response.data.aggregateCredits;
+      // New response uses 'media' key instead of 'serie'
+      show.value = response.data.media;
+      show.value.credits = response.data.aggregateCredits?.cast ? { cast: response.data.aggregateCredits.cast } : { cast: [] };
       if (response.data.characterProfilePictures) {
         characterProfilePictures.value = response.data.characterProfilePictures;
       }
       dubbingProjects.value = response.data.dubbingProjects || [];
-      if ((response.data as { votes?: Record<string, number> }).votes) {
+      if (response.data.votes) {
         sharedVotes.value = {
           ...sharedVotes.value,
-          ...(response.data as { votes?: Record<string, number> }).votes,
+          ...response.data.votes,
         };
       }
     }
@@ -715,7 +717,6 @@ AppSegment {
 .segmented-content {
   background-color: #{$background};
 }
-
 
 
 .seasons {

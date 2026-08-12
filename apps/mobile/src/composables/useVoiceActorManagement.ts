@@ -4,27 +4,16 @@ import { useRouter } from "vue-router";
 
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
+import { useProfileStore } from "@/stores/profile";
 import { supabase } from "@/api/supabase";
 import { useI18n } from "vue-i18n";
 import type { PersonData } from "@/components/PersonItem.vue";
 import { voiceActorToPersonData } from "@/utils/convert";
-
-export interface VoiceActor {
-  id: number;
-  firstname: string;
-  lastname: string;
-  profile_picture?: string;
-  nationality?: string;
-}
-
-export interface WorkAndVoiceActor {
-  id: number;
-  voice_actor_id: number;
-  work_id: number;
-  work_type: string;
-  performance: string;
-  voiceActorDetails: VoiceActor;
-}
+import type {
+  VoiceActorSummary,
+  WorkPerformance,
+  DubbingProject,
+} from "@supabase/functions/_shared/types";
 
 // Shared voting state across the app to prevent duplicate/redundant fetches for the same work entries
 const votes = ref<
@@ -35,31 +24,26 @@ const votes = ref<
 >({});
 
 export function useVoiceActorManagement(
-  workType: "movie" | "tv" | "season" | "episode",
+  getContentId: () => string,
+  contentType: "movie" | "tv" | "video_game",
+  onRefresh: () => Promise<void>,
 ) {
   const router = useRouter();
   const authStore = useAuthStore();
+  const profileStore = useProfileStore();
   const { isAdmin } = storeToRefs(authStore);
   const { t } = useI18n();
 
   // Search modal state
   const showVoiceActorSearch = ref(false);
   const searchTerm = ref("");
-  const searchResults = ref<VoiceActor[]>([]);
+  const searchResults = ref<VoiceActorSummary[]>([]);
   const isSearching = ref(false);
   const searchError = ref("");
   const selectedActor = ref<number>();
 
   // Voice actors data
-  const voiceActors = ref<
-    Array<{
-      id: number;
-      firstname?: string;
-      lastname?: string;
-      profile_picture?: string;
-      work_id?: number;
-    }>
-  >([]);
+  const voiceActors = ref<VoiceActorSummary[]>([]);
   const isLoading = ref(false);
   const error = ref("");
 
@@ -67,17 +51,7 @@ export function useVoiceActorManagement(
   const isVoting = ref(false);
   const votingError = ref("");
 
-  const getVoiceActorByTmdbId = (
-    tmdbId: number,
-  ): Array<{
-    id: number;
-    firstname?: string;
-    lastname?: string;
-    profile_picture?: string;
-    work_id?: number;
-  }> => {
-    console.log("tmdbId", tmdbId);
-    console.log("voiceActors.value", voiceActors.value);
+  const getVoiceActorByTmdbId = (tmdbId: number): VoiceActorSummary[] => {
     return voiceActors.value.filter((va) => va.tmdb_id === tmdbId);
   };
 
@@ -99,143 +73,84 @@ export function useVoiceActorManagement(
     searchError.value = "";
 
     try {
-      const response = await supabase.functions.invoke("search-voice-actors", {
-        body: {
-          query: searchTerm.value,
+      const { data, error: fetchError } = await supabase.functions.invoke(
+        "search-voice-actors",
+        {
+          body: { query: searchTerm.value.trim(), limit: 20 },
         },
-      });
-      console.log(response.data);
-      searchResults.value = response.data;
+      );
+
+      if (fetchError) throw fetchError;
+
+      searchResults.value = data || [];
     } catch (err) {
       console.error("Error searching voice actors:", err);
-      searchError.value = "Failed to search voice actors. Please try again.";
+      searchError.value = "Failed to search voice actors";
     } finally {
       isSearching.value = false;
     }
   };
 
-  const linkVoiceActor = async (voiceActor: VoiceActor, contentId: string) => {
-    console.log("selectedActor.value", selectedActor.value);
+  const linkVoiceActor = async (voiceActorId: number, actorId: number) => {
+    if (!selectedActor.value) return;
+
     try {
-      const response = await supabase.functions.invoke("link-voice-actor", {
-        body: {
-          actor_id: selectedActor.value,
-          media_type: workType,
-          voice_actor_id: voiceActor.id,
-          performance: "dialogues",
-          media_id: contentId,
-        },
-      });
-
-      // Add the new voice actor to the list
-      voiceActors.value.push(
-        voiceActorToPersonData(
-          voiceActor,
-          response.data.performance || "dialogues",
-          response.data.actor_id,
-          response.data.status,
-          response.data.id,
-        ),
-      );
-
-      // Close the modal
-      showVoiceActorSearch.value = false;
-    } catch (error) {
-      console.error("Error linking voice actor:", error);
-      const alert = await alertController.create({
-        header: "Error",
-        message: "Failed to link voice actor. Please try again.",
-        buttons: ["OK"],
-      });
-      await alert.present();
-    }
-  };
-
-  const editVoiceActorLink = async (person: {
-    work_id?: number;
-    name?: string;
-  }) => {
-    const alert = await alertController.create({
-      header: "Edit Performance",
-      inputs: [
-        {
-          name: "performance",
-          type: "text",
-          placeholder: "e.g., Lead Role, Narrator, etc.",
-          value: person.performance || "",
-        },
-      ],
-      buttons: [
-        {
-          text: t("common.cancel"),
-          role: "cancel",
-        },
-        {
-          text: t("common.save"),
-          handler: async (data?: { performance?: string }) => {
-            if (person.work_id) {
-              await updateVoiceActorLink(person.work_id, data.performance);
-            }
-          },
-        },
-      ],
-    });
-
-    await alert.present();
-  };
-
-  const updateVoiceActorLink = async (workId: number, performance: string) => {
-    try {
-      const response = await supabase.functions.invoke(
-        "update_voice_actor_link",
+      const contentId = Number(getContentId());
+      const { data, error: linkError } = await supabase.functions.invoke(
+        "link-voice-actor",
         {
           body: {
-            work_id: workId,
-            performance,
+            voice_actor_id: voiceActorId,
+            actor_id: actorId,
+            content_id: contentId,
+            content_type: contentType,
+            targetUserId: profileStore.impersonatedTargetUserId,
           },
         },
       );
 
-      // Update the local state
-      const index = voiceActors.value.findIndex((va) => va.work_id === workId);
-      if (index !== -1) {
-        voiceActors.value[index].performance = response.data.performance;
-      }
-    } catch (error) {
-      console.error("Error updating voice actor link:", error);
-      const alert = await alertController.create({
-        header: "Error",
-        message: "Failed to update voice actor link. Please try again.",
-        buttons: ["OK"],
-      });
-      await alert.present();
+      if (linkError) throw linkError;
+
+      // Refresh voice actors list
+      await onRefresh();
+
+      showVoiceActorSearch.value = false;
+      searchTerm.value = "";
+      searchResults.value = [];
+    } catch (err) {
+      console.error("Error linking voice actor:", err);
     }
   };
 
-  const confirmDeleteVoiceActorLink = async (person: {
-    work_id?: number;
-    name?: string;
-  }) => {
-    console.log("person", person);
+  const editVoiceActorLink = async (work: WorkPerformance) => {
+    if (!work.voice_actor) return;
+
+    const contentId = Number(getContentId());
+    router.push({
+      name: "AddVoiceCast",
+      params: {
+        id: contentId,
+        actorId: work.actor_id,
+        workId: work.id,
+      },
+    });
+  };
+
+  const confirmDeleteVoiceActorLink = async (work: WorkPerformance) => {
+    if (!work.voice_actor) return;
+
     const alert = await alertController.create({
-      header: t("common.confirmUnlinkTitle", "Délier ce comédien"),
-      message: t(
-        "common.confirmUnlinkMessage",
-        `Êtes-vous sûr de vouloir délier ${person.name} de ce rôle ?`,
-      ),
+      header: "Confirm Delete",
+      message: `Are you sure you want to remove ${work.voice_actor.firstname} ${work.voice_actor.lastname} as the voice for ${work.suggestions || "this character"}?`,
       buttons: [
         {
-          text: t("common.cancel", "Annuler"),
+          text: "Cancel",
           role: "cancel",
         },
         {
-          text: t("common.unlink", "Délier"),
+          text: "Delete",
           role: "destructive",
-          handler: () => {
-            if (person.work_id) {
-              deleteVoiceActorLink(person.work_id);
-            }
-          },
+          handler: () => deleteVoiceActorLink(work.id),
         },
       ],
     });
@@ -244,32 +159,38 @@ export function useVoiceActorManagement(
 
   const deleteVoiceActorLink = async (workId: number) => {
     try {
-      await supabase.functions.invoke("delete-voice-actor-link", {
-        body: {
-          id: workId,
+      const { error: deleteError } = await supabase.functions.invoke(
+        "delete-voice-actor-link",
+        {
+          body: {
+            id: workId,
+            targetUserId: profileStore.impersonatedTargetUserId,
+          },
         },
-      });
-
-      // Remove from local state
-      voiceActors.value = voiceActors.value.filter(
-        (va) => va.work_id !== workId,
       );
-    } catch (error) {
-      console.error("Error deleting voice actor link:", error);
-      const alert = await alertController.create({
-        header: "Error",
-        message: "Failed to delete voice actor link. Please try again.",
-        buttons: ["OK"],
-      });
-      await alert.present();
-    }
-  };
 
-  const goToVoiceActor = (id: number) => {
-    router.push({
-      name: "voice-actor-details",
-      params: { id },
-    });
+      if (deleteError) throw deleteError;
+
+      // Refresh the data
+      await onRefresh();
+
+      const toast = await alertController.create({
+        message: "Voice actor link removed",
+        duration: 2000,
+        color: "success",
+        position: "top",
+      });
+      await toast.present();
+    } catch (err) {
+      console.error("Error deleting voice actor link:", err);
+      const toast = await alertController.create({
+        message: "Failed to remove voice actor link",
+        duration: 2000,
+        color: "danger",
+        position: "top",
+      });
+      await toast.present();
+    }
   };
 
   const goToActor = (id: number) => {
@@ -279,147 +200,87 @@ export function useVoiceActorManagement(
     });
   };
 
-  const updateReviewStatus = async (
-    workId: number,
-    status: "waiting" | "accepted" | "rejected",
-  ) => {
-    if (!authStore.user) {
-      console.error("User not authenticated");
-      return;
-    }
-
-    try {
-      const response = await supabase.functions.invoke("update-review-status", {
-        body: {
-          work_id: workId,
-          reviewed_status: status,
-        },
-      });
-
-      if (!response.data?.success) {
-        throw new Error("Failed to update review status");
-      }
-
-      // Update local state - find the voice actor and update its reviewed_status
-      // Note: voiceActors.value contains PersonData objects, not the raw work data
-      // The UI will need to be refreshed to show the updated status
-      console.log("Review status updated, UI should refresh to show changes");
-
-      console.log("Review status updated successfully");
-    } catch (error) {
-      console.error("Error updating review status:", error);
-      throw error;
-    }
+  const goToVoiceActor = (id: number) => {
+    router.push({
+      name: "VoiceActorDetails",
+      params: { id },
+    });
   };
 
   const castVote = async (workId: number, voteType: "up" | "down") => {
-    if (!authStore.user) {
-      votingError.value = "You must be logged in to vote.";
-      return;
-    }
-
-    const previousVote = votes.value[workId]?.user_vote;
-    const previousUpCount = votes.value[workId]?.up_count || 0;
-    const previousDownCount = votes.value[workId]?.down_count || 0;
-
-    // Optimistic update
-    const newUserVote = previousVote === voteType ? null : voteType;
-    const newUpCount =
-      previousVote === "up" && voteType === "up"
-        ? previousUpCount - 1
-        : previousVote !== "up" && voteType === "up"
-          ? previousUpCount + 1
-          : previousUpCount;
-    const newDownCount =
-      previousVote === "down" && voteType === "down"
-        ? previousDownCount - 1
-        : previousVote !== "down" && voteType === "down"
-          ? previousDownCount + 1
-          : previousDownCount;
-
-    votes.value[workId] = {
-      up_count: newUpCount,
-      down_count: newDownCount,
-      user_vote: newUserVote,
-    };
+    if (isVoting.value) return;
 
     isVoting.value = true;
     votingError.value = "";
 
     try {
-      const response = await supabase.functions.invoke("cast-vote", {
-        body: {
-          work_id: workId,
-          vote_type: voteType,
+      const { error: voteError } = await supabase.functions.invoke(
+        "cast-vote",
+        {
+          body: {
+            work_id: workId,
+            vote_type: voteType,
+          },
         },
-      });
+      );
 
-      if (!response.data?.success) {
-        throw new Error("Failed to cast vote");
-      }
-    } catch (error) {
-      console.error("Error casting vote:", error);
-      votingError.value = "Failed to cast vote. Please try again.";
+      if (voteError) throw voteError;
 
-      // Revert optimistic update
-      votes.value[workId] = {
-        up_count: previousUpCount,
-        down_count: previousDownCount,
-        user_vote: previousVote,
+      // Update local votes cache
+      const currentVote = votes.value[workId] || {
+        up_count: 0,
+        down_count: 0,
+        user_vote: null,
       };
+      if (voteType === "up") {
+        currentVote.up_count += currentVote.user_vote === "up" ? 0 : 1;
+        currentVote.down_count -= currentVote.user_vote === "down" ? 1 : 0;
+        currentVote.user_vote = "up";
+      } else {
+        currentVote.down_count += currentVote.user_vote === "down" ? 0 : 1;
+        currentVote.up_count -= currentVote.user_vote === "up" ? 1 : 0;
+        currentVote.user_vote = "down";
+      }
+      votes.value = { ...votes.value, [workId]: currentVote };
+    } catch (err) {
+      console.error("Error casting vote:", err);
+      votingError.value = "Failed to cast vote";
     } finally {
       isVoting.value = false;
     }
   };
 
   const refreshVotes = async (workIds: number[]) => {
-    if (!authStore.user) {
-      return;
-    }
-
     try {
-      const response = await supabase.functions.invoke("get-work-votes", {
-        body: {
-          work_ids: workIds,
+      const { data, error: fetchError } = await supabase.functions.invoke(
+        "get-work-votes",
+        {
+          body: { work_ids: workIds },
         },
-      });
+      );
 
-      votes.value = { ...votes.value, ...response.data };
-    } catch (error) {
-      console.error("Error refreshing votes:", error);
-      votingError.value = "Failed to refresh votes.";
+      if (fetchError) throw fetchError;
+
+      if (data) {
+        votes.value = { ...votes.value, ...data };
+      }
+    } catch (err) {
+      console.error("Error refreshing votes:", err);
     }
   };
-
-  // Watch for search term changes and trigger search immediately
-  // (debouncing is handled by ion-searchbar's :debounce prop)
-  watch(searchTerm, () => {
-    searchVoiceActors();
-  });
-
-  // Cleanup on unmount
-  onUnmounted(() => {
-    // nothing to clean up
-  });
-
-  watch(voiceActors, (newVal) => {
-    console.log("voiceActors changed:", newVal);
-  });
 
   return {
     // State
     showVoiceActorSearch,
-    searchTerm,
-    searchResults,
-    isSearching,
-    searchError,
     voiceActors,
     isLoading,
     error,
-    isAdmin,
-    votes,
+    isSearching,
+    searchResults,
+    searchError,
     isVoting,
     votingError,
+    votes,
 
     // Methods
     getVoiceActorByTmdbId,
@@ -429,9 +290,8 @@ export function useVoiceActorManagement(
     editVoiceActorLink,
     confirmDeleteVoiceActorLink,
     deleteVoiceActorLink,
-    goToVoiceActor,
     goToActor,
-    updateReviewStatus,
+    goToVoiceActor,
     castVote,
     refreshVotes,
   };

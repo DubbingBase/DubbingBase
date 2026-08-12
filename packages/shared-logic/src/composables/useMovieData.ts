@@ -1,17 +1,17 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { MovieResponse } from "@supabase/functions/_shared/movie";
+import type { MovieDetailResponse } from "@supabase/functions/_shared/types";
 
 export async function fetchMovieData(
   supabase: SupabaseClient,
   id: string | number,
   locale?: string,
-): Promise<MovieResponse | null> {
+): Promise<MovieDetailResponse | null> {
   const headers: Record<string, string> = {};
   if (locale) {
     headers["Accept-Language"] = locale;
   }
 
-  const movieResponseRaw = await supabase.functions.invoke<MovieResponse>(
+  const movieResponseRaw = await supabase.functions.invoke<MovieDetailResponse>(
     "movie",
     {
       body: { id },
@@ -20,9 +20,9 @@ export async function fetchMovieData(
   );
 
   const data = movieResponseRaw.data;
-  if (!data || !data.movie) {
+  if (!data || !data.media) {
     console.error(
-      "fetchMovieData: Response is null or missing movie property",
+      "fetchMovieData: Response is null or missing media property",
       movieResponseRaw,
     );
     return null;

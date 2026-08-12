@@ -9,6 +9,16 @@ import { withSupabase } from "npm:@supabase/server@^1";
 
 import { DatabaseClient, MediaService, tmdbClient } from "../_shared/index.ts";
 import { Database } from "../_shared/database.types.ts";
+import type {
+  VoiceActorSummary,
+  WorkPerformance,
+  DubbingProject,
+  MovieMedia,
+  TVMedia,
+  GameMedia,
+  CharacterProfilePicture,
+  VoteData,
+} from "../_shared/media-types.ts";
 
 export default {
   fetch: withSupabase<Database>({ auth: "publishable" }, async (req, ctx) => {

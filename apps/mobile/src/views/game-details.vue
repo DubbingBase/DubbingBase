@@ -15,14 +15,14 @@ import AppButton from "@/components/common/AppButton.vue";
 import AppActionSheet from "@/components/common/AppActionSheet.vue";
 import DubbingProjectsView from "@/components/DubbingProjectsView.vue";
 import { useVoiceActorManagement } from "@/composables/useVoiceActorManagement";
-import type { IgdbGame, IgdbCharacter } from "@/types/igdb";
+import type { GameMedia, IgdbCharacter, GameDetailResponse } from "@supabase/functions/_shared/types";
 
 const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
 const { isAdmin } = usePermissions();
 
-const game = ref<IgdbGame | null>(null);
+const game = ref<GameMedia | null>(null);
 const characters = ref<IgdbCharacter[]>([]);
 const dubbingProjects = ref<any[]>([]);
 const votes = ref<Record<number, any>>({});
@@ -50,13 +50,14 @@ async function fetchData() {
   fetchError.value = null;
 
   try {
-    const { data, error } = await supabase.functions.invoke("game", {
+    const { data, error } = await supabase.functions.invoke<GameDetailResponse>("game", {
       body: { id: Number(route.params.id) },
     });
 
     if (error) throw error;
 
-    game.value = data.game ?? null;
+    // New response uses 'media' key instead of 'game'
+    game.value = data.media ?? null;
     characters.value = data.characters ?? [];
     dubbingProjects.value = data.dubbingProjects ?? [];
     votes.value = data.votes ?? {};
@@ -91,7 +92,7 @@ function formatReleaseYear(timestamp?: number): string {
   return new Date(timestamp * 1000).getFullYear().toString();
 }
 
-function getDevelopers(g: IgdbGame): string {
+function getDevelopers(g: GameMedia): string {
   return (
     g.involved_companies
       ?.filter((c) => c.developer)
@@ -100,7 +101,7 @@ function getDevelopers(g: IgdbGame): string {
   );
 }
 
-function getPublishers(g: IgdbGame): string {
+function getPublishers(g: GameMedia): string {
   return (
     g.involved_companies
       ?.filter((c) => c.publisher)
