@@ -1,6 +1,6 @@
 {
   "name": "@app/locales",
-  "version": "0.0.46",
+  "version": "0.0.47",
   "private": true,
   "main": "index.ts",
   "types": "index.ts",

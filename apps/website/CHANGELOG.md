@@ -1,5 +1,14 @@
 # @app/landing
 
+## 1.0.47
+
+### Patch Changes
+
+- 96c2d3d: migrate data fetching to useAsyncData across app pages and components
+- Updated dependencies [96c2d3d]
+  - @app/shared-logic@1.0.26
+  - @app/locales@0.0.47
+
 ## 1.0.46
 
 ### Patch Changes
