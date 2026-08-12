@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col h-[calc(100vh-120px)] space-y-4 md:space-y-6">
+  <div class="flex flex-col h-full min-h-screen space-y-4 md:space-y-6 pb-24">
     <!-- Toolbar with search -->
     <div class="shrink-0 bg-gray-900 p-6 rounded-2xl border border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div class="flex-1 max-w-md">
@@ -11,11 +11,11 @@
             </svg>
           </span>
           <input
-            v-model="searchQuery"
+            v-model="searchInput"
             type="text"
             placeholder="Search voice actors..."
             class="w-full pl-10 pr-4 py-2.5 bg-gray-950 border border-gray-800 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 placeholder-gray-500 text-sm transition-all duration-150"
-            @input="handleSearch"
+            @input="handleSearchInput"
           />
         </div>
       </div>
@@ -31,22 +31,13 @@
         </NuxtLink>
         <div class="flex items-center space-x-2 text-xs text-gray-400 bg-gray-950 border border-gray-800/80 px-4 py-2.5 rounded-xl shrink-0">
           <span class="h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
-          <span>Auto-saves changes on edit</span>
+          <span>Auto-saves changes</span>
         </div>
       </div>
     </div>
 
-    <!-- Loading indicator -->
-    <div
-      v-if="isLoading"
-      class="flex flex-col items-center justify-center py-24 space-y-3 bg-gray-900/40 border border-gray-800/60 rounded-2xl"
-    >
-      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
-      <p class="text-gray-400 text-sm">Loading voice actors...</p>
-    </div>
-
     <!-- Error message -->
-    <div v-else-if="error" class="p-4 bg-red-950/30 border border-red-900/50 rounded-xl flex items-center justify-between text-red-200 text-sm">
+    <div v-if="error" class="p-4 bg-red-950/30 border border-red-900/50 rounded-xl flex items-center justify-between text-red-200 text-sm">
       <div class="flex items-center space-x-3">
         <svg class="h-5 w-5 text-red-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -54,28 +45,79 @@
         <span>{{ error }}</span>
       </div>
       <button
-        @click="fetchVoiceActors"
+        @click="refresh"
         class="py-1.5 px-3 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-semibold transition-all"
       >
         Retry
       </button>
     </div>
 
-    <!-- Revogrid container -->
-    <div v-else class="flex-1 bg-gray-900 border border-gray-800 rounded-2xl p-4 shadow-xl min-h-0 min-w-0">
-      <div class="h-full rounded-xl border border-gray-800/50">
-        <ClientOnly>
-          <revogrid
-            ref="revoGridRef"
-            :source="tableData"
-            :columns="revoColumns"
-            :theme="'darkMaterial'"
-            height="100%"
-            width="100%"
-            @celleditapply="handleCellEditApply"
-          />
-        </ClientOnly>
+    <!-- Pagination -->
+    <div class="flex items-center justify-between bg-gray-900 p-4 rounded-xl border border-gray-800">
+      <div class="text-sm text-gray-400">
+        Showing <span class="font-bold text-white">{{ (page - 1) * limit + 1 }}</span> to <span class="font-bold text-white">{{ Math.min(page * limit, total) }}</span> of <span class="font-bold text-white">{{ total }}</span> results
       </div>
+      <div class="flex items-center space-x-2">
+        <button
+          @click="page > 1 ? page-- : null"
+          :disabled="page === 1 || pending"
+          class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 text-white rounded-lg text-sm transition-colors"
+        >
+          Previous
+        </button>
+        <span class="text-gray-400 text-sm px-2">Page {{ page }} of {{ Math.ceil(total / limit) || 1 }}</span>
+        <button
+          @click="page < Math.ceil(total / limit) ? page++ : null"
+          :disabled="page >= Math.ceil(total / limit) || pending"
+          class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 text-white rounded-lg text-sm transition-colors"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-x-auto relative">
+      <div v-if="pending" class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm z-10 flex flex-col items-center justify-center">
+        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+      </div>
+      <table class="w-full text-left border-collapse text-sm whitespace-nowrap">
+        <thead>
+          <tr class="border-b border-gray-800 text-xs font-semibold text-gray-400 uppercase tracking-wider bg-gray-900/40">
+            <th class="py-3 px-4">Actions</th>
+            <th class="py-3 px-4">ID</th>
+            <th class="py-3 px-4">First Name</th>
+            <th class="py-3 px-4">Last Name</th>
+            <th class="py-3 px-4">Bio</th>
+            <th class="py-3 px-4">Nationality</th>
+            <th class="py-3 px-4">Date of Birth</th>
+            <th class="py-3 px-4">Profile Pic</th>
+            <th class="py-3 px-4">Socials</th>
+            <th class="py-3 px-4">TMDB ID</th>
+            <th class="py-3 px-4">Wikidata ID</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-800/60">
+          <tr v-for="actor in tableData" :key="actor.id" class="hover:bg-gray-800/20 transition-colors">
+            <td class="py-2 px-4">
+              <NuxtLink :to="localePath(`/voice-actor/${actor.id}/edit`)" class="text-blue-500 hover:text-blue-400 underline text-xs font-bold">Edit</NuxtLink>
+            </td>
+            <td class="py-2 px-4 text-gray-500">{{ actor.id }}</td>
+            <td class="py-2 px-2"><input v-model="actor.firstname" @change="handleCellEdit(actor, 'firstname')" class="w-28 bg-gray-950 border border-transparent hover:border-gray-700 focus:border-blue-500 rounded px-2 py-1 text-white transition-colors" /></td>
+            <td class="py-2 px-2"><input v-model="actor.lastname" @change="handleCellEdit(actor, 'lastname')" class="w-28 bg-gray-950 border border-transparent hover:border-gray-700 focus:border-blue-500 rounded px-2 py-1 text-white transition-colors" /></td>
+            <td class="py-2 px-2"><input v-model="actor.bio" @change="handleCellEdit(actor, 'bio')" class="w-40 bg-gray-950 border border-transparent hover:border-gray-700 focus:border-blue-500 rounded px-2 py-1 text-white transition-colors" /></td>
+            <td class="py-2 px-2"><input v-model="actor.nationality" @change="handleCellEdit(actor, 'nationality')" class="w-24 bg-gray-950 border border-transparent hover:border-gray-700 focus:border-blue-500 rounded px-2 py-1 text-white transition-colors" /></td>
+            <td class="py-2 px-2"><input v-model="actor.date_of_birth" type="date" @change="handleCellEdit(actor, 'date_of_birth')" class="w-36 bg-gray-950 border border-transparent hover:border-gray-700 focus:border-blue-500 rounded px-2 py-1 text-white transition-colors [color-scheme:dark]" /></td>
+            <td class="py-2 px-2"><input v-model="actor.profile_picture" @change="handleCellEdit(actor, 'profile_picture')" class="w-32 bg-gray-950 border border-transparent hover:border-gray-700 focus:border-blue-500 rounded px-2 py-1 text-white transition-colors" /></td>
+            <td class="py-2 px-2"><input v-model="actor.social_media_links" @change="handleCellEdit(actor, 'social_media_links')" class="w-32 bg-gray-950 border border-transparent hover:border-gray-700 focus:border-blue-500 rounded px-2 py-1 text-white transition-colors" /></td>
+            <td class="py-2 px-2"><input v-model="actor.tmdb_id" @change="handleCellEdit(actor, 'tmdb_id')" class="w-24 bg-gray-950 border border-transparent hover:border-gray-700 focus:border-blue-500 rounded px-2 py-1 text-white transition-colors" /></td>
+            <td class="py-2 px-2"><input v-model="actor.wikidata_id" @change="handleCellEdit(actor, 'wikidata_id')" class="w-28 bg-gray-950 border border-transparent hover:border-gray-700 focus:border-blue-500 rounded px-2 py-1 text-white transition-colors" /></td>
+          </tr>
+          <tr v-if="tableData.length === 0">
+            <td colspan="11" class="py-12 text-center text-gray-500">No voice actors found.</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <!-- Floating save button -->
@@ -116,238 +158,136 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed, watch, onUnmounted } from "vue";
+import type { Tables } from "../../../../packages/database/supabase/functions/_shared/database.types";
+
 const supabase = useSupabaseClient();
 const localePath = useLocalePath();
-
-
-
 
 definePageMeta({
   layout: 'admin',
   middleware: 'admin'
 });
 
-import { ref, computed, onMounted, onUnmounted, watch } from "vue";
-import Revogrid from "@revolist/vue3-datagrid";
-import type { Tables } from "../../../../packages/database/supabase/functions/_shared/database.types";
-
-// Types
 type VoiceActor = Tables<"voice_actors">;
-type SaveStatus = "idle" | "saving" | "saved" | "error";
-type CellChange = {
-  row: number;
-  col: number;
-  oldValue: any;
-  newValue: any;
-  prop: string;
-};
+type CellChange = { id: number; prop: string; newValue: any };
 
-// Data
-const tableData = ref<VoiceActor[]>([]);
+const page = ref(1);
+const limit = ref(50);
 const searchQuery = ref("");
-const isLoading = ref(false);
-const error = ref("");
-const revoGridRef = ref<any>(null);
+const searchInput = ref("");
+const tableData = ref<VoiceActor[]>([]);
+const total = ref(0);
+
+// Debouncing for search
+let searchTimer: ReturnType<typeof setTimeout> | null = null;
+let autoSaveTimer: ReturnType<typeof setTimeout> | null = null;
+
+// SSR Data Fetching using useAsyncData
+const { data, pending, error, refresh } = await useAsyncData(
+  `voice-actors-spreadsheet-${page.value}-${searchQuery.value}`,
+  async () => {
+    const response = await supabase.functions.invoke("list-voice-actors", {
+      method: "POST",
+      body: {
+        limit: limit.value,
+        offset: (page.value - 1) * limit.value,
+        query: searchQuery.value,
+      },
+    });
+
+    if (response.error) throw response.error;
+    return response.data;
+  },
+  {
+    watch: [page, searchQuery],
+  }
+);
+
+// Watch data to update local refs
+watch(data, (newData) => {
+  if (newData) {
+    // Clone data so we can mutate it locally for inputs
+    tableData.value = JSON.parse(JSON.stringify(newData.voice_actors || []));
+    total.value = newData.total || 0;
+  }
+}, { immediate: true });
+
+function handleSearchInput(event: Event) {
+  const val = (event.target as HTMLInputElement).value || "";
+  if (searchTimer) clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    searchQuery.value = val;
+    page.value = 1; // reset page on search
+  }, 400);
+}
 
 // Save state management
 const pendingChanges = ref<Map<string, CellChange>>(new Map());
-const saveStatuses = ref<Map<string, SaveStatus>>(new Map());
 const isBulkSaving = ref(false);
 
-// Toast state
-const toast = ref<{
-  show: boolean;
-  message: string;
-  type: "success" | "error" | "info";
-}>({
+const toast = ref<{ show: boolean; message: string; type: "success" | "error" | "info" }>({
   show: false,
   message: "",
   type: "info",
 });
 
-// Debouncing
-let searchTimer: ReturnType<typeof setTimeout> | null = null;
-let autoSaveTimer: ReturnType<typeof setTimeout> | null = null;
+function showToast(message: string, type: "success" | "error" | "info" = "info") {
+  toast.value = { show: true, message, type };
+  setTimeout(() => {
+    toast.value.show = false;
+  }, 3000);
+}
 
-// Revogrid columns
-const revoColumns = computed(() => [
-  {
-    prop: "id",
-    name: "Actions",
-    size: 80,
-    readonly: true,
-    cellTemplate: (createElement: any, props: any) => {
-      return createElement(
-        "a",
-        {
-          href: localePath(`/voice-actor/${props.model.id}/edit`),
-          class: "text-blue-500 hover:text-blue-400 font-bold underline text-xs",
-        },
-        "Edit Profile"
-      );
-    },
-  },
-  { prop: "id", name: "ID", size: 80, readonly: true },
-  { prop: "firstname", name: "First Name", size: 120 },
-  { prop: "lastname", name: "Last Name", size: 120 },
-  { prop: "bio", name: "Bio", size: 200 },
-  { prop: "nationality", name: "Nationality", size: 120 },
-
-  { prop: "date_of_birth", name: "Date of Birth", size: 120 },
-  { prop: "profile_picture", name: "Profile Picture", size: 150 },
-  { prop: "social_media_links", name: "Social Media Links", size: 180 },
-  { prop: "tmdb_id", name: "TMDB ID", size: 100 },
-  { prop: "wikidata_id", name: "Wikidata ID", size: 120 },
-]);
-
-// Handle cell edit apply event from Revogrid
-function handleCellEditApply(event: any) {
-  const { detail } = event;
-  const { model, prop, val } = detail;
-
-  // Find the row data
-  const rowIndex = tableData.value.findIndex((row) => row.id === model.id);
-  if (rowIndex === -1) return;
-
-  const rowData = tableData.value[rowIndex];
-  const oldValue = (rowData as any)[prop];
-
-  // Skip if no change
-  if (oldValue === val) return;
-
-  // Create change object
-  const change: CellChange = {
-    row: rowIndex,
-    col: revoColumns.value.findIndex((col) => col.prop === prop),
-    oldValue,
-    newValue: val,
+function handleCellEdit(actor: VoiceActor, prop: string) {
+  const key = `${actor.id}-${prop}`;
+  const val = (actor as any)[prop];
+  
+  pendingChanges.value.set(key, {
+    id: actor.id,
     prop,
-  };
+    newValue: val,
+  });
 
-  const key = `${rowData.id}-${prop}`;
-  pendingChanges.value.set(key, change);
-
-  // Set saving status
-  saveStatuses.value.set(key, "saving");
-
-  // Trigger auto-save
   debounceAutoSave();
 }
 
-// Data fetching functions
-async function fetchVoiceActors() {
-  isLoading.value = true;
-  error.value = "";
-
-  try {
-    const response = await supabase.functions.invoke("list-voice-actors", { method: 'GET' });
-    if (response.error) throw response.error;
-    tableData.value = response.data.voice_actors || [];
-  } catch (err) {
-    console.error("Error fetching voice actors:", err);
-    error.value = "Failed to load voice actors";
-  } finally {
-    isLoading.value = false;
-  }
-}
-
-async function searchVoiceActors(query: string) {
-  if (!query.trim()) {
-    await fetchVoiceActors();
-    return;
-  }
-
-  isLoading.value = true;
-  error.value = "";
-
-  try {
-    const response = await supabase.functions.invoke("search-voice-actors", {
-      body: { query, limit: 100 },
-    });
-    if (response.error) throw response.error;
-    tableData.value = response.data || [];
-  } catch (err) {
-    console.error("Error searching voice actors:", err);
-    error.value = "Failed to search voice actors";
-  } finally {
-    isLoading.value = false;
-  }
-}
-
-// Handlers
-function handleSearch(event: Event) {
-  searchQuery.value = (event.target as HTMLInputElement).value || "";
-}
-
 function debounceAutoSave() {
-  if (autoSaveTimer) {
-    clearTimeout(autoSaveTimer);
-  }
-
+  if (autoSaveTimer) clearTimeout(autoSaveTimer);
   autoSaveTimer = setTimeout(() => {
     savePendingChanges();
-  }, 500);
+  }, 1000);
 }
 
 async function savePendingChanges() {
   if (pendingChanges.value.size === 0) return;
 
   const changesToSave = Array.from(pendingChanges.value.entries());
-
   for (const [key, change] of changesToSave) {
     await saveSingleChange(key, change);
   }
 }
 
 async function saveSingleChange(key: string, change: CellChange) {
-  const rowData = tableData.value[change.row];
-  if (!rowData) return;
-
   try {
-    // Optimistic update
-    (rowData as any)[change.prop] = change.newValue;
-
     const response = await supabase.functions.invoke("update-voice-actor", {
       body: {
-        voice_actor_id: rowData.id,
+        voice_actor_id: change.id,
         updates: { [change.prop]: change.newValue },
       },
     });
 
     if (response.error) throw response.error;
-
-    // Success
-    saveStatuses.value.set(key, "saved");
     pendingChanges.value.delete(key);
-
-    // Clear saved status after 2 seconds
-    setTimeout(() => {
-      saveStatuses.value.delete(key);
-    }, 2000);
-
-    showToast("Changes saved successfully", "success");
   } catch (err: any) {
     console.error("Error saving change:", err);
-
-    // Rollback optimistic update
-    (rowData as any)[change.prop] = change.oldValue;
-
-    saveStatuses.value.set(key, "error");
-
-    // Clear error status after 5 seconds
-    setTimeout(() => {
-      saveStatuses.value.delete(key);
-    }, 5000);
-
-    showToast(err.message || "Failed to save changes", "error");
+    showToast(`Failed to save ${change.prop}`, "error");
   }
 }
 
 async function handleBulkSave() {
   if (pendingChanges.value.size === 0) return;
-
   isBulkSaving.value = true;
-
   try {
     await savePendingChanges();
     showToast("All changes saved successfully", "success");
@@ -358,65 +298,8 @@ async function handleBulkSave() {
   }
 }
 
-function showToast(
-  message: string,
-  type: "success" | "error" | "info" = "info",
-) {
-  toast.value = { show: true, message, type };
-  setTimeout(() => {
-    toast.value.show = false;
-  }, 3000);
-}
-
-// Watch for search query changes with debouncing
-watch(searchQuery, (newQuery) => {
-  if (searchTimer) {
-    clearTimeout(searchTimer);
-  }
-  searchTimer = setTimeout(() => {
-    searchVoiceActors(newQuery);
-  }, 300);
-});
-
-await (async () => {
-  fetchVoiceActors();
-})();
-
 onUnmounted(() => {
-  if (searchTimer) {
-    clearTimeout(searchTimer);
-  }
-  if (autoSaveTimer) {
-    clearTimeout(autoSaveTimer);
-  }
+  if (searchTimer) clearTimeout(searchTimer);
+  if (autoSaveTimer) clearTimeout(autoSaveTimer);
 });
 </script>
-
-<style scoped lang="scss">
-:deep(.revo-grid) {
-  font-size: 14px;
-}
-
-// Mobile-first styles
-@media (max-width: 768px) {
-  :deep(.revo-grid) {
-    font-size: 12px;
-  }
-
-  :deep(.revo-grid .rgHeaderCell) {
-    font-size: 11px;
-    padding: 4px;
-  }
-
-  :deep(.revo-grid .rgCell) {
-    padding: 4px;
-  }
-}
-
-// No hover states for mobile
-@media (hover: none) {
-  :deep(.revo-grid .rgCell:hover) {
-    background: transparent !important;
-  }
-}
-</style>

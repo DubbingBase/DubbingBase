@@ -563,39 +563,7 @@ const handleActorCreate = (row: CastRow, query: string) => {
   row.character_name = query;
 };
 
-// Async Fetchers
-const fetchTmdbMetadata = async () => {
-  if (!contentId.value) return;
-  
-  if (showIdParam === 'new') {
-    router.push(localePath(`/show/${contentId.value}/edit/new`));
-    return;
-  }
-  
-  isFetchingTmdb.value = true;
-  try {
-    const params = new URLSearchParams({ id: contentId.value.toString() });
-    const { data, error } = await supabase.functions.invoke(`show?${params.toString()}`, { method: "GET" });
-    if (error) throw error;
-    if (data?.serie) {
-      mediaTitle.value = data.serie.name;
-      // Handle relative paths for posters
-      let poster = data.serie.poster_path;
-      if (poster && poster.startsWith("/")) {
-        poster = `https://image.tmdb.org/t/p/w500${poster}`;
-      }
-      posterUrl.value = poster || "";
-    }
-    if (data?.aggregateCredits?.cast) {
-      tmdbCast.value = data.aggregateCredits.cast;
-      filteredTmdbCast.value = tmdbCast.value.slice(0, 50);
-    }
-  } catch (e: any) {
-    showToast("Failed to fetch TMDB data.", "error");
-  } finally {
-    isFetchingTmdb.value = false;
-  }
-};
+
 
 const searchStudios = async (query: string) => {
   isSearchingStudios.value = true;
@@ -770,84 +738,139 @@ const saveShowProject = async () => {
   }
 };
 
-// Data Loading
-const loadData = async () => {
+const { data: initialData } = await useAsyncData(`show-edit-${tmdbShowId.value}-${projectIdParam}`, async () => {
+  let tmdbData = null;
+  let projects = [];
+  let project = null;
+  let studioName = null;
+  let crew = [];
+  let works = [];
+
   if (tmdbShowId.value) {
-    contentId.value = tmdbShowId.value;
-    await fetchTmdbMetadata();
+    // TMDB metadata
+    try {
+      const params = new URLSearchParams({ id: tmdbShowId.value.toString() });
+      const { data, error } = await supabase.functions.invoke(`show?${params.toString()}`, { method: "GET" });
+      if (!error) {
+        tmdbData = data;
+      }
+    } catch (e) {
+      console.error("Failed to fetch TMDB data.", e);
+    }
     
     // Fetch all dubbing projects for this show for the tabs
-    const { data: projects } = await supabase
+    const { data: pData } = await supabase
       .from("dubbing_projects")
       .select("id, language, studio_id, studios(name)")
       .eq("content_id", tmdbShowId.value)
       .eq("content_type", "tv");
-      
-    if (projects) {
-      showDubbingProjects.value = projects;
-    }
+    projects = pData || [];
   }
 
-  if (!isEditMode.value) {
-    isLoading.value = false;
-    return;
-  }
-  
-  const projectId = Number(projectIdParam);
-  
-  // Load Project
-  const { data: project } = await supabase.from("dubbing_projects").select("*").eq("id", projectId).single();
-  if (project) {
-    contentId.value = project.content_id;
-    contentType.value = project.content_type;
-    language.value = project.language;
-    status.value = project.status;
-    selectedStudioId.value = project.studio_id;
-    if (project.studio_id) {
-       const { data: studio } = await supabase.from("studios").select("name").eq("id", project.studio_id).single();
-       if (studio) optionsCache.value.set(project.studio_id, studio.name);
-    }
-  }
-
-  // Load Crew
-  const { data: crew } = await supabase.from("dubbing_project_crew").select("job_id, person_id, voice_actors(firstname, lastname)").eq("dubbing_project_id", projectId);
-  if (crew) {
-    crew.forEach((c: any) => {
-      const name = `${c.voice_actors?.firstname || ''} ${c.voice_actors?.lastname || ''}`.trim();
-      optionsCache.value.set(c.person_id, name);
-      if (c.job_id === 1) artisticDirectorId.value = c.person_id;
-      if (c.job_id === 2) adaptationId.value = c.person_id;
-      if (c.job_id === 3) recordingId.value = c.person_id;
-      if (c.job_id === 4) editingId.value = c.person_id;
-      if (c.job_id === 5) mixingId.value = c.person_id;
-      if (c.job_id === 6) projectManagerId.value = c.person_id;
-      if (c.job_id === 7) creativeSupervisionId.value = c.person_id;
-    });
-  }
-
-  // Load Cast
-  const { data: works } = await supabase.from("work").select("*, voice_actors(firstname, lastname)").eq("dubbing_project_id", projectId);
-  if (works) {
-    castRows.value = works.map((w: any) => {
-      if (w.voice_actors) {
-         const name = `${w.voice_actors.firstname || ''} ${w.voice_actors.lastname || ''}`.trim();
-         optionsCache.value.set(w.voice_actor_id, name);
+  if (isEditMode.value) {
+    const projectId = Number(projectIdParam);
+    const { data: proj } = await supabase.from("dubbing_projects").select("*").eq("id", projectId).single();
+    if (proj) {
+      project = proj;
+      if (proj.studio_id) {
+         const { data: studio } = await supabase.from("studios").select("name").eq("id", proj.studio_id).single();
+         if (studio) studioName = studio.name;
       }
-      return {
-        id: w.id,
-        actor_id: w.actor_id,
-        character_name: w.character_name,
-        voice_actor_id: w.voice_actor_id,
-        performance: w.performance,
-        highlight: w.highlight
-      };
-    });
-  }
-  
-  isLoading.value = false;
-};
+    }
 
-await (async () => {
-  loadData();
-})();
+    const { data: cData } = await supabase.from("dubbing_project_crew").select("job_id, person_id, voice_actors(firstname, lastname)").eq("dubbing_project_id", projectId);
+    crew = cData || [];
+
+    const { data: wData } = await supabase.from("work").select("*, voice_actors(firstname, lastname)").eq("dubbing_project_id", projectId);
+    works = wData || [];
+  }
+
+  // Pre-fetch initial dropdown options
+  const { data: studiosData } = await supabase.from("studios").select("id, name").limit(10);
+  const initialStudios = studiosData || [];
+
+  const { data: vaData } = await supabase.from("voice_actors").select("id, firstname, lastname").limit(10);
+  const initialVoiceActors = (vaData || []).map(va => ({ id: va.id, name: `${va.firstname || ''} ${va.lastname || ''}`.trim() }));
+
+  return { tmdbData, projects, project, studioName, crew, works, initialStudios, initialVoiceActors };
+});
+
+watch(initialData, (data) => {
+  if (data) {
+    if (data.tmdbData) {
+      contentId.value = tmdbShowId.value;
+      if (data.tmdbData.serie) {
+        mediaTitle.value = data.tmdbData.serie.name;
+        let poster = data.tmdbData.serie.poster_path;
+        if (poster && poster.startsWith("/")) {
+          poster = `https://image.tmdb.org/t/p/w500${poster}`;
+        }
+        posterUrl.value = poster || "";
+      }
+      if (data.tmdbData.aggregateCredits?.cast) {
+        tmdbCast.value = data.tmdbData.aggregateCredits.cast;
+        filteredTmdbCast.value = tmdbCast.value.slice(0, 50);
+      }
+    }
+    
+    showDubbingProjects.value = data.projects;
+
+    if (data.project) {
+      contentId.value = data.project.content_id;
+      contentType.value = data.project.content_type;
+      language.value = data.project.language;
+      status.value = data.project.status;
+      selectedStudioId.value = data.project.studio_id;
+      if (data.studioName) {
+        optionsCache.value.set(data.project.studio_id, data.studioName);
+      }
+    }
+
+    if (data.crew) {
+      data.crew.forEach((c: any) => {
+        const name = `${c.voice_actors?.firstname || ''} ${c.voice_actors?.lastname || ''}`.trim();
+        optionsCache.value.set(c.person_id, name);
+        if (c.job_id === 1) artisticDirectorId.value = c.person_id;
+        if (c.job_id === 2) adaptationId.value = c.person_id;
+        if (c.job_id === 3) recordingId.value = c.person_id;
+        if (c.job_id === 4) editingId.value = c.person_id;
+        if (c.job_id === 5) mixingId.value = c.person_id;
+        if (c.job_id === 6) projectManagerId.value = c.person_id;
+        if (c.job_id === 7) creativeSupervisionId.value = c.person_id;
+      });
+    }
+
+    if (data.works) {
+      castRows.value = data.works.map((w: any) => {
+        if (w.voice_actors) {
+           const name = `${w.voice_actors.firstname || ''} ${w.voice_actors.lastname || ''}`.trim();
+           optionsCache.value.set(w.voice_actor_id, name);
+        }
+        return {
+          id: w.id,
+          actor_id: w.actor_id,
+          character_name: w.character_name,
+          voice_actor_id: w.voice_actor_id,
+          performance: w.performance,
+          highlight: w.highlight
+        };
+      });
+    }
+
+    if (data.initialStudios) {
+      studioOptions.value = data.initialStudios;
+      data.initialStudios.forEach((d: any) => optionsCache.value.set(d.id, d.name));
+    }
+
+    if (data.initialVoiceActors) {
+      voiceActorOptions.value = data.initialVoiceActors;
+      data.initialVoiceActors.forEach((f: any) => optionsCache.value.set(f.id, f.name));
+    }
+
+    isLoading.value = false;
+  }
+}, { immediate: true });
+
+const fetchTmdbMetadata = async () => {}; // Dummy to prevent error if called
+
 </script>

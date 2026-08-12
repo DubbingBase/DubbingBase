@@ -550,14 +550,26 @@ const artisticDirector = ref("");
 const adaptation = ref("");
 const recording = ref("");
 
-const fetchStudios = async () => {
-  try {
-    const { data } = await supabase.from("studios").select("id, name").order("name", { ascending: true });
-    studiosList.value = data || [];
-  } catch (e) {
-    console.error("Error fetching studios list:", e);
+const { data: initialLists } = await useAsyncData('movie-lists', async () => {
+  const [studiosRes, voiceActorsRes] = await Promise.all([
+    supabase.from("studios").select("id, name").order("name", { ascending: true }),
+    supabase.from("voice_actors").select("id, firstname, lastname").order("lastname", { ascending: true })
+  ]);
+  return {
+    studios: studiosRes.data || [],
+    voiceActors: voiceActorsRes.data || []
+  };
+});
+
+watch(initialLists, (data) => {
+  if (data) {
+    studiosList.value = data.studios;
+    voiceActorsList.value = data.voiceActors;
   }
-};
+}, { immediate: true });
+
+const fetchStudios = async () => {}; // No-op
+
 
 const onStudioSelectChange = () => {
   const found = studiosList.value.find(s => s.id === selectedStudioId.value);
@@ -625,88 +637,101 @@ const showToast = (message: string, type: "success" | "error" | "info" = "info")
 };
 
 const fetchVoiceActors = async () => {
-  try {
-    const { data, error } = await supabase
-      .from("voice_actors")
-      .select("id, firstname, lastname")
-      .order("lastname", { ascending: true });
-
-    if (error) throw error;
-    voiceActorsList.value = data || [];
-  } catch (err: any) {
-    console.error("Error fetching voice actors:", err);
-  }
+  const { data } = await supabase.from("voice_actors").select("id, firstname, lastname").order("lastname", { ascending: true });
+  if (data) voiceActorsList.value = data;
 };
 
-const fetchMovieProject = async () => {
-  if (!isEditMode.value || !id) return;
+const { data: initialData } = await useAsyncData(`movie-project-${id}`, async () => {
+  if (!isEditMode.value || !id) return null;
+  // Fetch dubbing project details
+  const { data: project, error: projErr } = await supabase
+    .from("dubbing_projects")
+    .select("*")
+    .eq("id", id)
+    .single();
 
-  try {
-    // Fetch dubbing project details
-    const { data: project, error: projErr } = await supabase
-      .from("dubbing_projects")
-      .select("*")
-      .eq("id", id)
-      .single();
+  if (projErr) throw projErr;
+  if (!project) return null;
 
-    if (projErr) throw projErr;
+  // Fetch attachments
+  const { data: attachData, error: attachErr } = await supabase
+    .from("project_attachments")
+    .select("*")
+    .eq("dubbing_project_id", project.id)
+    .order("created_at", { ascending: false });
 
-    if (project) {
-      contentId.value = project.content_id;
-      contentType.value = project.content_type || "movie";
-      language.value = project.language || "fr-FR";
-      studio.value = project.studio || "";
-      selectedStudioId.value = project.studio_id || (studiosList.value.find(s => s.name === project.studio)?.id || null);
-      artisticDirector.value = project.artistic_director || "";
-      adaptation.value = project.adaptation || "";
-      recording.value = project.recording || "";
-      editing.value = project.editing || "";
-      mixing.value = project.mixing || "";
-      projectManager.value = project.project_manager || "";
-      creativeSupervision.value = project.creative_supervision || "";
-      status.value = project.status || "validated";
+  if (attachErr) {
+    console.error("Error fetching attachments:", attachErr);
+  }
 
-      // Fetch attachments
-      const { data: attachData, error: attachErr } = await supabase
-        .from("project_attachments")
-        .select("*")
-        .eq("dubbing_project_id", project.id)
-        .order("created_at", { ascending: false });
+  // Fetch linked work entries for this project
+  const { data: works, error: worksErr } = await supabase
+    .from("work")
+    .select("*")
+    .eq("dubbing_project_id", project.id);
 
-      if (attachErr) {
-        console.error("Error fetching attachments:", attachErr);
-      } else {
-        attachments.value = attachData || [];
-        await fetchSignedUrlsForAttachments(attachments.value);
-      }
+  if (worksErr) throw worksErr;
 
-      // Fetch linked work entries for this project
-      const { data: works, error: worksErr } = await supabase
-        .from("work")
-        .select("*")
-        .eq("dubbing_project_id", project.id);
+  let tmdbData = null;
+  if (project.content_id) {
+    const isShow = project.content_type === "tv" || project.content_type === "show" || project.content_type === "serie";
+    const functionName = isShow ? "show" : "movie";
+    try {
+      const { data } = await supabase.functions.invoke(functionName, {
+        body: { id: project.content_id }
+      });
+      tmdbData = data;
+    } catch (err: any) {
+      console.error("Error fetching TMDB metadata:", err);
+    }
+  }
 
-      if (worksErr) throw worksErr;
+  return {
+    project,
+    attachments: attachData || [],
+    works: works || [],
+    tmdbData
+  };
+});
 
-      if (works) {
-        castRows.value = works.map((w: any) => ({
-          id: w.id,
-          actor_id: w.actor_id,
-          character_name: w.suggestions || "",
-          voice_actor_id: w.voice_actor_id,
-          performance: w.performance || "dialogues",
-          highlight: w.highlight || false
-        }));
-      }
-      if (project.content_id) {
-        fetchTmdbMetadata();
+watch(initialData, async (data) => {
+  if (data && data.project) {
+    const project = data.project;
+    contentId.value = project.content_id;
+    contentType.value = project.content_type || "movie";
+    language.value = project.language || "fr-FR";
+    studio.value = project.studio || "";
+    selectedStudioId.value = project.studio_id || (studiosList.value.find(s => s.name === project.studio)?.id || null);
+    artisticDirector.value = project.artistic_director || "";
+    adaptation.value = project.adaptation || "";
+    recording.value = project.recording || "";
+    editing.value = project.editing || "";
+    mixing.value = project.mixing || "";
+    projectManager.value = project.project_manager || "";
+    creativeSupervision.value = project.creative_supervision || "";
+    status.value = project.status || "validated";
+
+    attachments.value = data.attachments;
+    await fetchSignedUrlsForAttachments(attachments.value);
+
+    castRows.value = data.works.map((w: any) => ({
+      id: w.id,
+      actor_id: w.actor_id,
+      character_name: w.suggestions || "",
+      voice_actor_id: w.voice_actor_id,
+      performance: w.performance || "dialogues",
+      highlight: w.highlight || false
+    }));
+    
+    if (data.tmdbData) {
+      const isShow = contentType.value === "tv" || contentType.value === "show" || contentType.value === "serie";
+      const mediaObj = isShow ? data.tmdbData.serie : data.tmdbData.movie;
+      if (mediaObj?.name || mediaObj?.title) {
+        mediaTitle.value = mediaObj.name || mediaObj.title;
       }
     }
-  } catch (err: any) {
-    console.error("Error loading movie project:", err);
-    showToast("Failed to load movie project details", "error");
   }
-};
+}, { immediate: true });
 
 const fetchTmdbMetadata = async () => {
   if (!contentId.value) return;
@@ -964,9 +989,5 @@ const deleteAttachment = async (attachmentId: number, filePath: string) => {
   }
 };
 
-await (async () => {
-  await fetchStudios();
-  await fetchVoiceActors();
-  await fetchMovieProject();
-})();
+
 </script>

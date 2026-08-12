@@ -1,7 +1,8 @@
 <template>
   <div>
+    <PersonSkeleton v-if="loading && !actor" />
     <PersonDetailsLayout
-      v-if="actor"
+      v-else-if="actor"
       :name="actor.name"
       :profile-url="actor.profile_path ? resolveImageUrl(actor.profile_path) : null"
       :loading="loading"
@@ -37,6 +38,7 @@
 
       <template #actions>
         <button
+          type="button"
           @click="isReportModalOpen = true"
           class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors flex items-center gap-2"
         >
@@ -95,6 +97,7 @@
           <!-- Language Tabs -->
           <div class="flex flex-wrap gap-2">
             <button
+              type="button"
               v-for="lang in availableLanguages"
               :key="lang"
               @click="selectedLanguage = lang"
@@ -142,11 +145,11 @@
                 {{ va.firstname?.[0] }}{{ va.lastname?.[0] }}
               </div>
             </div>
-            <h3
-              class="font-bold text-center text-sm text-gray-900 dark:text-gray-200"
+            <span
+              class="block font-bold text-center text-sm text-gray-900 dark:text-gray-200"
             >
               {{ va.firstname }} {{ va.lastname }}
-            </h3>
+            </span>
             <span class="text-xs text-gray-500 dark:text-gray-400 mt-1"
               >{{ va.rolesCount }} roles</span
             >
@@ -323,7 +326,7 @@ import PersonDetailsLayout from "../../components/layout/PersonDetailsLayout.vue
 import { onMounted, ref, watch, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ArrowLeftIcon, ClapperboardIcon, UserIcon } from "lucide-vue-next";
-import { useActorData } from "@app/shared-logic";
+import { useActorData, fetchActorData } from "@app/shared-logic";
 import ReportModal from "../../components/ReportModal.vue";
 
 const isReportModalOpen = ref(false);
@@ -336,6 +339,10 @@ const { locale, t } = useI18n();
 const id = route.params.id as string;
 const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
 
+const { data: initialData } = await useAsyncData(`actor-${id}`, () =>
+  fetchActorData(supabase, id)
+);
+
 const {
   actor,
   loading,
@@ -347,13 +354,7 @@ const {
   uniqueVoiceActorsByLanguage,
   filteredUniqueVoiceActorsByLanguage,
   loadActorData,
-} = useActorData(supabase);
-
-onMounted(async () => {
-  if (id) {
-    await loadActorData(id);
-  }
-});
+} = useActorData(supabase, initialData.value);
 
 useHead({
   titleTemplate: null,

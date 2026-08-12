@@ -48,16 +48,15 @@
       class="flex-1 max-w-md mx-4 hidden sm:flex justify-center"
     >
       <button
+        type="button"
         @click="isSearchOpen = true"
         class="group flex items-center justify-between w-full max-w-[320px] h-10 px-4 text-sm text-gray-500 dark:text-gray-400 bg-gray-100/50 dark:bg-gray-800/40 hover:bg-gray-200/50 dark:hover:bg-gray-800/80 border border-transparent hover:border-gray-300/50 dark:hover:border-gray-700/50 rounded-full transition-all shadow-sm hover:shadow-md"
         :aria-label="t('search.placeholder')"
       >
-        <div class="flex items-center gap-2">
-          <SearchIcon
-            class="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors"
-          />
+        <span class="flex items-center gap-2 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
+          <SearchIcon :size="16" />
           <span>{{ t("search.placeholder") || "Search..." }}</span>
-        </div>
+        </span>
         <kbd
           class="hidden md:inline-flex items-center justify-center w-5 h-5 text-[11px] font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded transition-opacity"
         >
@@ -70,88 +69,99 @@
     <div class="flex items-center gap-1 md:gap-2 ml-auto shrink-0">
       <!-- Mobile Search Trigger -->
       <button
+        type="button"
         v-if="!isHomePage"
         @click="isSearchOpen = true"
         aria-label="Search"
-        class="sm:hidden p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+        class="sm:hidden p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors flex items-center justify-center"
       >
-        <SearchIcon class="w-5 h-5" />
+        <SearchIcon :size="20" />
       </button>
 
       <!-- Theme Toggle -->
-      <SelectRoot v-model="theme">
-        <SelectTrigger
-          class="flex items-center justify-center w-10 h-10 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors bg-transparent border-none cursor-pointer outline-none"
-          aria-label="Toggle theme"
-        >
-          <SunIcon v-if="theme === 'light'" class="w-5 h-5" />
-          <MoonIcon v-else-if="theme === 'dark'" class="w-5 h-5" />
-          <MonitorIcon v-else class="w-5 h-5" />
-        </SelectTrigger>
-        <SelectPortal>
-          <SelectContent
-            position="popper"
-            class="z-50 bg-white/95 dark:bg-[#1d1d1d]/95 backdrop-blur-md border border-gray-200 dark:border-[#2a2a2a] rounded-xl shadow-xl overflow-hidden min-w-[140px] text-gray-800 dark:text-gray-200"
-            :sideOffset="8"
+      <ClientOnly>
+        <SelectRoot v-model="theme">
+          <SelectTrigger
+            class="flex items-center justify-center w-10 h-10 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors bg-transparent border-none cursor-pointer outline-none"
+            aria-label="Toggle theme"
           >
-            <SelectViewport class="p-1.5">
-              <SelectItem
-                value="light"
-                class="flex items-center gap-2.5 px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-[#2a2a2a] cursor-pointer outline-none rounded-lg data-[highlighted]:bg-gray-100 dark:data-[highlighted]:bg-[#2a2a2a] data-[highlighted]:text-gray-900 dark:data-[highlighted]:text-white transition-colors"
-              >
-                <SunIcon class="w-4 h-4" />
-                <SelectItemText>{{ t("theme.light") }}</SelectItemText>
-              </SelectItem>
-              <SelectItem
-                value="dark"
-                class="flex items-center gap-2.5 px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-[#2a2a2a] cursor-pointer outline-none rounded-lg data-[highlighted]:bg-gray-100 dark:data-[highlighted]:bg-[#2a2a2a] data-[highlighted]:text-gray-900 dark:data-[highlighted]:text-white transition-colors"
-              >
-                <MoonIcon class="w-4 h-4" />
-                <SelectItemText>{{ t("theme.dark") }}</SelectItemText>
-              </SelectItem>
-              <SelectItem
-                value="system"
-                class="flex items-center gap-2.5 px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-[#2a2a2a] cursor-pointer outline-none rounded-lg data-[highlighted]:bg-gray-100 dark:data-[highlighted]:bg-[#2a2a2a] data-[highlighted]:text-gray-900 dark:data-[highlighted]:text-white transition-colors"
-              >
-                <MonitorIcon class="w-4 h-4" />
-                <SelectItemText>{{ t("theme.system") }}</SelectItemText>
-              </SelectItem>
-            </SelectViewport>
-          </SelectContent>
-        </SelectPortal>
-      </SelectRoot>
+            <SunIcon v-if="theme === 'light'" :size="20" />
+            <MoonIcon v-else-if="theme === 'dark'" :size="20" />
+            <MonitorIcon v-else :size="20" />
+          </SelectTrigger>
+          <SelectPortal>
+            <SelectContent
+              position="popper"
+              class="z-50 bg-white/95 dark:bg-[#1d1d1d]/95 backdrop-blur-md border border-gray-200 dark:border-[#2a2a2a] rounded-xl shadow-xl overflow-hidden min-w-[140px] text-gray-800 dark:text-gray-200"
+              :sideOffset="8"
+            >
+              <SelectViewport class="p-1.5">
+                <SelectItem
+                  value="light"
+                  class="flex items-center gap-2.5 px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-[#2a2a2a] cursor-pointer outline-none rounded-lg data-[highlighted]:bg-gray-100 dark:data-[highlighted]:bg-[#2a2a2a] data-[highlighted]:text-gray-900 dark:data-[highlighted]:text-white transition-colors"
+                >
+                  <SunIcon :size="16" />
+                  <SelectItemText>{{ t("theme.light") }}</SelectItemText>
+                </SelectItem>
+                <SelectItem
+                  value="dark"
+                  class="flex items-center gap-2.5 px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-[#2a2a2a] cursor-pointer outline-none rounded-lg data-[highlighted]:bg-gray-100 dark:data-[highlighted]:bg-[#2a2a2a] data-[highlighted]:text-gray-900 dark:data-[highlighted]:text-white transition-colors"
+                >
+                  <MoonIcon :size="16" />
+                  <SelectItemText>{{ t("theme.dark") }}</SelectItemText>
+                </SelectItem>
+                <SelectItem
+                  value="system"
+                  class="flex items-center gap-2.5 px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-[#2a2a2a] cursor-pointer outline-none rounded-lg data-[highlighted]:bg-gray-100 dark:data-[highlighted]:bg-[#2a2a2a] data-[highlighted]:text-gray-900 dark:data-[highlighted]:text-white transition-colors"
+                >
+                  <MonitorIcon :size="16" />
+                  <SelectItemText>{{ t("theme.system") }}</SelectItemText>
+                </SelectItem>
+              </SelectViewport>
+            </SelectContent>
+          </SelectPortal>
+        </SelectRoot>
+        <template #fallback>
+          <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse"></div>
+        </template>
+      </ClientOnly>
 
       <!-- Locale Toggle -->
-      <SelectRoot :modelValue="locale" @update:modelValue="setLocale">
-        <SelectTrigger
-          class="flex items-center justify-center w-10 h-10 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors bg-transparent border-none cursor-pointer outline-none"
-          aria-label="Toggle language"
-        >
-          <GlobeIcon class="w-5 h-5" />
-        </SelectTrigger>
-        <SelectPortal>
-          <SelectContent
-            position="popper"
-            class="z-50 bg-white/95 dark:bg-[#1d1d1d]/95 backdrop-blur-md border border-gray-200 dark:border-[#2a2a2a] rounded-xl shadow-xl overflow-hidden min-w-[140px] text-gray-800 dark:text-gray-200"
-            :sideOffset="8"
+      <ClientOnly>
+        <SelectRoot :modelValue="locale" @update:modelValue="setLocale">
+          <SelectTrigger
+            class="flex items-center justify-center w-10 h-10 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors bg-transparent border-none cursor-pointer outline-none"
+            aria-label="Toggle language"
           >
-            <SelectViewport class="p-1.5">
-              <SelectItem
-                value="en"
-                class="flex items-center px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-[#2a2a2a] cursor-pointer outline-none rounded-lg data-[highlighted]:bg-gray-100 dark:data-[highlighted]:bg-[#2a2a2a] data-[highlighted]:text-gray-900 dark:data-[highlighted]:text-white transition-colors"
-              >
-                <SelectItemText>{{ t("language.en") }}</SelectItemText>
-              </SelectItem>
-              <SelectItem
-                value="fr"
-                class="flex items-center px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-[#2a2a2a] cursor-pointer outline-none rounded-lg data-[highlighted]:bg-gray-100 dark:data-[highlighted]:bg-[#2a2a2a] data-[highlighted]:text-gray-900 dark:data-[highlighted]:text-white transition-colors"
-              >
-                <SelectItemText>{{ t("language.fr") }}</SelectItemText>
-              </SelectItem>
-            </SelectViewport>
-          </SelectContent>
-        </SelectPortal>
-      </SelectRoot>
+            <GlobeIcon :size="20" />
+          </SelectTrigger>
+          <SelectPortal>
+            <SelectContent
+              position="popper"
+              class="z-50 bg-white/95 dark:bg-[#1d1d1d]/95 backdrop-blur-md border border-gray-200 dark:border-[#2a2a2a] rounded-xl shadow-xl overflow-hidden min-w-[140px] text-gray-800 dark:text-gray-200"
+              :sideOffset="8"
+            >
+              <SelectViewport class="p-1.5">
+                <SelectItem
+                  value="en"
+                  class="flex items-center px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-[#2a2a2a] cursor-pointer outline-none rounded-lg data-[highlighted]:bg-gray-100 dark:data-[highlighted]:bg-[#2a2a2a] data-[highlighted]:text-gray-900 dark:data-[highlighted]:text-white transition-colors"
+                >
+                  <SelectItemText>{{ t("language.en") }}</SelectItemText>
+                </SelectItem>
+                <SelectItem
+                  value="fr"
+                  class="flex items-center px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-[#2a2a2a] cursor-pointer outline-none rounded-lg data-[highlighted]:bg-gray-100 dark:data-[highlighted]:bg-[#2a2a2a] data-[highlighted]:text-gray-900 dark:data-[highlighted]:text-white transition-colors"
+                >
+                  <SelectItemText>{{ t("language.fr") }}</SelectItemText>
+                </SelectItem>
+              </SelectViewport>
+            </SelectContent>
+          </SelectPortal>
+        </SelectRoot>
+        <template #fallback>
+          <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse"></div>
+        </template>
+      </ClientOnly>
 
       <div
         class="w-px h-5 bg-gray-200 dark:bg-gray-700/50 mx-1 md:mx-2 hidden sm:block"
@@ -171,7 +181,7 @@
               alt="Avatar"
               class="w-full h-full object-cover"
             />
-            <UserIcon v-else class="w-5 h-5" />
+            <UserIcon v-else :size="20" />
           </NuxtLink>
         </template>
         <template v-else>

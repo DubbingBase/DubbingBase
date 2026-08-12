@@ -219,29 +219,28 @@ const showToast = (message: string, type: "success" | "error" | "info" = "info")
   }, 3000);
 };
 
-const fetchStudio = async () => {
-  if (!isEditMode.value || !id) return;
-  try {
-    const { data, error } = await supabase
-      .from("studios")
-      .select("*")
-      .eq("id", id)
-      .single();
+const { data: initialData } = await useAsyncData(`studio-${id}`, async () => {
+  if (!isEditMode.value || !id) return null;
+  const { data, error } = await supabase
+    .from("studios")
+    .select("*")
+    .eq("id", id)
+    .single();
 
-    if (error) throw error;
-    if (data) {
-      name.value = data.name;
-      description.value = data.description || "";
-      country.value = data.country || "";
-      city.value = data.city || "";
-      websiteUrl.value = data.website_url || "";
-      logoUrl.value = data.logo_url || "";
-    }
-  } catch (err: any) {
-    console.error("Error loading studio:", err);
-    showToast("Failed to load studio profile.", "error");
+  if (error) throw error;
+  return data;
+});
+
+watch(initialData, (data) => {
+  if (data) {
+    name.value = data.name;
+    description.value = data.description || "";
+    country.value = data.country || "";
+    city.value = data.city || "";
+    websiteUrl.value = data.website_url || "";
+    logoUrl.value = data.logo_url || "";
   }
-};
+}, { immediate: true });
 
 const saveStudio = async () => {
   if (!name.value.trim()) return;
@@ -306,5 +305,4 @@ const saveStudio = async () => {
   }
 };
 
-await fetchStudio();
 </script>

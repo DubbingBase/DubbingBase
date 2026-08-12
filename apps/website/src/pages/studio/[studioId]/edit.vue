@@ -192,29 +192,25 @@ const loading = ref(false);
 const isSaving = ref(false);
 const errorMsg = ref<string | null>(null);
 
-await (async () => {
-  if (isEditMode.value) {
-    loading.value = true;
-    try {
-      await loadStudioDetails(studioId);
-      if (studio.value) {
-        form.value = {
-          name: studio.value.name || '',
-          country: studio.value.country || '',
-          city: studio.value.city || '',
-          website_url: studio.value.website_url || '',
-          logo_url: studio.value.logo_url || '',
-          description: studio.value.description || ''
-        };
-      }
-    } catch (err) {
-      console.error(err);
-      errorMsg.value = "Impossible de charger les détails du studio.";
-    } finally {
-      loading.value = false;
-    }
+const { data: initialStudio } = await useAsyncData(`studio-edit-${studioId}`, async () => {
+  if (!isEditMode.value) return null;
+  const { data, error } = await supabase.from('studios').select('*').eq('id', studioId).single();
+  if (error) throw error;
+  return data;
+});
+
+watch(initialStudio, (data) => {
+  if (data) {
+    form.value = {
+      name: data.name || '',
+      country: data.country || '',
+      city: data.city || '',
+      website_url: data.website_url || '',
+      logo_url: data.logo_url || '',
+      description: data.description || ''
+    };
   }
-})();
+}, { immediate: true });
 
 const saveStudio = async () => {
   if (!form.value.name.trim()) return;

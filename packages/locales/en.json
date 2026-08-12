@@ -137,6 +137,12 @@
     "topVoiceActorsError": "Unable to load top voice actors. Please try again later.",
     "topVoiceActorsEmpty": "No top voice actors found."
   },
+  "details": {
+    "modify": "Modify"
+  },
+  "search": {
+    "actor": "Actor"
+  },
   "auth": {
     "loginRequiredForSubscription": "You must be logged in to subscribe"
   },

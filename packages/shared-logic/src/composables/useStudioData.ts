@@ -38,11 +38,33 @@ export async function fetchStudioDetails(
   return data as StudioDetailsResponse;
 }
 
-export function useStudioData(supabase: SupabaseClient) {
-  const studios = ref<Studio[]>([]);
-  const studio = ref<Studio | null>(null);
-  const dubbedProjects = ref<any[]>([]);
-  const voiceActorsRoster = ref<any[]>([]);
+export async function fetchStudiosData(
+  supabase: SupabaseClient,
+): Promise<Studio[]> {
+  const { data, error } = await supabase
+    .from("studios")
+    .select("*")
+    .order("name");
+
+  if (error) {
+    console.error("Error fetching studios:", error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+export function useStudioData(
+  supabase: SupabaseClient,
+  initialStudios?: Studio[],
+  initialStudioDetails?: StudioDetailsResponse | null,
+) {
+  const studios = ref<Studio[]>(initialStudios || []);
+  const studio = ref<Studio | null>(initialStudioDetails?.studio || null);
+  const dubbedProjects = ref<any[]>(initialStudioDetails?.dubbedProjects || []);
+  const voiceActorsRoster = ref<any[]>(
+    initialStudioDetails?.voiceActorsRoster || [],
+  );
   const loading = ref(false);
   const error = ref<string | null>(null);
 

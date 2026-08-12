@@ -445,38 +445,43 @@ const formatTime = (timeStr: string) => {
   }
 };
 
-const fetchQueueAndUsers = async () => {
-  try {
-    isLoading.value = true;
-    error.value = "";
+const { data: initialData, pending, error: fetchError, refresh: fetchQueueAndUsers } = await useAsyncData('admin-queue', async () => {
+  const { data: queueData, error: queueErr } = await supabase.rpc("get_media_queue_items");
+  if (queueErr) throw queueErr;
 
-    // 1. Fetch queue items via RPC
-    const { data: queueData, error: queueErr } = await supabase.rpc(
-      "get_media_queue_items",
-    );
-
-    if (queueErr) throw queueErr;
-    queueItems.value = queueData || [];
-
-    // 2. Fetch users to map user_id -> email
-    const { data: userData, error: userErr } =
-      await supabase.functions.invoke("list_users", { method: 'GET' });
-    if (!userErr && userData?.users) {
-      const tempMap: Record<string, string> = {};
-      userData.users.forEach((u: any) => {
-        tempMap[u.id] = u.email;
-      });
-      usersMap.value = tempMap;
-    }
-  } catch (err: any) {
-    console.error("Error fetching queue or users:", err);
-    error.value = err.message || "Failed to load queue data.";
-  } finally {
-    isLoading.value = false;
+  const { data: userData, error: userErr } = await supabase.functions.invoke("list_users", { method: 'GET' });
+  let map: Record<string, string> = {};
+  if (!userErr && userData?.users) {
+    userData.users.forEach((u: any) => {
+      map[u.id] = u.email;
+    });
   }
-};
+  
+  return {
+    queueItems: queueData || [],
+    usersMap: map
+  };
+});
 
+watch(initialData, (newData) => {
+  if (newData) {
+    queueItems.value = newData.queueItems;
+    usersMap.value = newData.usersMap;
+  }
+}, { immediate: true });
 
+watch(pending, (val) => {
+  isLoading.value = val;
+}, { immediate: true });
+
+watch(fetchError, (err) => {
+  if (err) {
+    error.value = err.message || "Failed to load queue data.";
+    console.error("Error fetching queue or users:", err);
+  } else {
+    error.value = "";
+  }
+}, { immediate: true });
 
 const startProcessing = async () => {
   isProcessing.value = true;
@@ -575,5 +580,4 @@ const reEnqueueItem = async (item: QueueItem) => {
   }
 };
 
-await fetchQueueAndUsers();
 </script>

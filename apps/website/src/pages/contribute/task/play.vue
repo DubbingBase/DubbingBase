@@ -248,10 +248,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, reactive } from 'vue';
-import { useContribute } from '../../../composables/useContribute';
+import { ref, computed, reactive } from 'vue';
+import { useContribute, fetchRandomTask } from '../../../composables/useContribute';
 
-const { getRandomTask, submitTask, currentTask, activeCategory, isLoading, isSubmitting, error } = useContribute();
+const supabase = useSupabaseClient();
+const { data: initialData } = await useAsyncData('random-task', () => fetchRandomTask(supabase, 'any'));
+
+const initialTask = initialData.value?.task || null;
+const initialCategory = initialData.value?.category || null;
+
+const { getRandomTask, submitTask, currentTask, activeCategory, isLoading, isSubmitting, error } = useContribute(initialTask, initialCategory);
 
 const fileInput = ref<HTMLInputElement | null>(null);
 const isDragging = ref(false);
@@ -280,14 +286,10 @@ const resetForm = () => {
   clearFile();
 };
 
-const loadTask = () => {
+const loadTask = async () => {
   resetForm();
-  getRandomTask('any');
+  await getRandomTask('any');
 };
-
-onMounted(() => {
-  loadTask();
-});
 
 const hasAnyInput = computed(() => {
   if (selectedFile.value) return true;

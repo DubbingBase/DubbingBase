@@ -345,50 +345,49 @@ const uploadProfilePicture = async (voiceActorId: string | number) => {
 
 const linkedWorks = ref<any[]>([]);
 
-const fetchLinkedWorks = async () => {
-  if (!isEditMode.value || !id) return;
-  try {
-    const { data, error } = await supabase
-      .from("work")
-      .select("*")
-      .eq("voice_actor_id", id);
-    if (error) throw error;
-    linkedWorks.value = data || [];
-  } catch (err) {
-    console.error("Error loading linked works:", err);
-  }
-};
+const fetchLinkedWorks = async () => {};
 
-const fetchVoiceActor = async () => {
-  if (!isEditMode.value || !id) return;
+const { data: initialData } = await useAsyncData(`voice-actor-new-${id}`, async () => {
+  if (!isEditMode.value || !id) return null;
+  const { data: va, error: vaErr } = await supabase
+    .from("voice_actors")
+    .select("*")
+    .eq("id", id)
+    .single();
+    
+  if (vaErr) throw vaErr;
 
-  try {
-    const { data, error } = await supabase
-      .from("voice_actors")
-      .select("*")
-      .eq("id", id)
-      .single();
+  const { data: works, error: worksErr } = await supabase
+    .from("work")
+    .select("*")
+    .eq("voice_actor_id", id);
 
-    if (error) throw error;
-    if (data) {
-      firstname.value = data.firstname;
-      lastname.value = data.lastname;
-      bio.value = data.bio || "";
-      nationality.value = data.nationality || "";
-      dateOfBirth.value = data.date_of_birth || "";
-      awards.value = data.awards || "";
-      yearsActive.value = data.years_active || "";
-      socialMediaLinks.value = data.social_media_links ? JSON.stringify(data.social_media_links, null, 2) : "";
-      tmdbId.value = data.tmdb_id || "";
-      profilePicture.value = data.profile_picture || "";
-      wikidataId.value = data.wikidata_id || "";
+  return {
+    voiceActor: va,
+    linkedWorks: works || []
+  };
+});
+
+watch(initialData, (data) => {
+  if (data) {
+    if (data.voiceActor) {
+      firstname.value = data.voiceActor.firstname;
+      lastname.value = data.voiceActor.lastname;
+      bio.value = data.voiceActor.bio || "";
+      nationality.value = data.voiceActor.nationality || "";
+      dateOfBirth.value = data.voiceActor.date_of_birth || "";
+      awards.value = data.voiceActor.awards || "";
+      yearsActive.value = data.voiceActor.years_active || "";
+      socialMediaLinks.value = data.voiceActor.social_media_links ? JSON.stringify(data.voiceActor.social_media_links, null, 2) : "";
+      tmdbId.value = data.voiceActor.tmdb_id || "";
+      profilePicture.value = data.voiceActor.profile_picture || "";
+      wikidataId.value = data.voiceActor.wikidata_id || "";
     }
-    await fetchLinkedWorks();
-  } catch (err: any) {
-    console.error("Error loading voice actor profile:", err);
-    showToast("Failed to load voice actor data from database.", "error");
+    linkedWorks.value = data.linkedWorks;
   }
-};
+}, { immediate: true });
+
+const fetchVoiceActor = async () => {}; // Dummy
 
 const saveVoiceActor = async () => {
   isSaving.value = true;
@@ -453,5 +452,5 @@ const saveVoiceActor = async () => {
   }
 };
 
-onMounted(fetchVoiceActor);
+
 </script>

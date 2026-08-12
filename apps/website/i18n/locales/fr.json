@@ -98,7 +98,8 @@
     "actor": "Acteur",
     "character": "Personnage",
     "voiceActor": "Voix",
-    "notSpecified": "Non renseignée"
+    "notSpecified": "Non renseignée",
+    "modify": "Modifier"
   },
   "seo": {
     "movies": "films doublés, doublage français, voix vf films, base de données doublage",

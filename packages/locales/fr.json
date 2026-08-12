@@ -136,6 +136,12 @@
     "topVoiceActorsError": "Impossible de charger les top doubleurs. Veuillez réessayer plus tard.",
     "topVoiceActorsEmpty": "Aucun top doubleur trouvé."
   },
+  "details": {
+    "modify": "Modifier"
+  },
+  "search": {
+    "actor": "Acteur"
+  },
   "auth": {
     "loginRequiredForSubscription": "Vous devez être connecté pour vous abonner"
   },

@@ -98,7 +98,8 @@
     "actor": "Actor",
     "character": "Character",
     "voiceActor": "Voice Actor",
-    "notSpecified": "Not specified"
+    "notSpecified": "Not specified",
+    "modify": "Modify"
   },
   "seo": {
     "movies": "dubbed movies, english dubbing, movie voice cast, dubbing database",

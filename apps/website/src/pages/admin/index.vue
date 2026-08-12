@@ -314,24 +314,20 @@ const pieChartOptions = computed<ChartOptions>(() => ({
   }
 }));
 
-// Data fetching function
-const fetchDashboardData = async () => {
-  try {
-    loading.value = true;
-    error.value = null;
+const { data: dashboardData, pending, error: fetchError, refresh: fetchDashboardData } = await useAsyncData('admin-dashboard', async () => {
+  const { data, error: invokeError } = await supabase.functions.invoke('dashboard-stats', { method: 'GET' });
+  if (invokeError) throw invokeError;
+  return data as {
+    userCount: number;
+    voiceActorCount: number;
+    userGrowth: { date: string; count: number }[];
+    voiceActorGrowth: { date: string; count: number }[];
+    topVoiceActors: any[];
+  };
+});
 
-    const { data, error: invokeError } = await supabase.functions.invoke('dashboard-stats', { method: 'GET' });
-
-    if (invokeError) throw invokeError;
-
-    const stats = data as {
-      userCount: number;
-      voiceActorCount: number;
-      userGrowth: { date: string; count: number }[];
-      voiceActorGrowth: { date: string; count: number }[];
-      topVoiceActors: any[];
-    };
-
+watch(dashboardData, (stats) => {
+  if (stats) {
     userCount.value = stats.userCount;
     voiceActorCount.value = stats.voiceActorCount;
 
@@ -349,7 +345,6 @@ const fetchDashboardData = async () => {
     userRegistrationsData.value.datasets[0].data = userRegistrations.value.map(item => item.count);
 
     voiceActorGrowth.value = stats.voiceActorGrowth;
-
     topVoiceActors.value = stats.topVoiceActors;
 
     // Update top voice actors chart data
@@ -357,18 +352,21 @@ const fetchDashboardData = async () => {
       `${item.firstname} ${item.lastname}`
     );
     topVoiceActorsData.value.datasets[0].data = topVoiceActors.value.map(item => item.role_count);
-
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Failed to load dashboard data';
-    console.error('Dashboard data fetch error:', err);
-  } finally {
-    loading.value = false;
   }
-};
+}, { immediate: true });
 
-await (async () => {
-  fetchDashboardData();
-})();
+watch(pending, (val) => {
+  loading.value = val;
+}, { immediate: true });
+
+watch(fetchError, (err) => {
+  if (err) {
+    error.value = err.message || 'Failed to load dashboard data';
+    console.error('Dashboard data fetch error:', err);
+  } else {
+    error.value = null;
+  }
+}, { immediate: true });
 </script>
 
 <style scoped>

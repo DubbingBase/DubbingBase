@@ -95,7 +95,6 @@ const updateMessage = ref('');
 const isError = ref(false);
 
 const auditLogs = ref<any[]>([]);
-const isLoadingLogs = ref(true);
 
 const updateProfile = async () => {
   if (!username.value.trim()) {
@@ -130,24 +129,22 @@ const formatDate = (dateString?: string) => {
   return new Date(dateString).toLocaleString();
 };
 
-const loadAuditLogs = async () => {
-  if (!user.value) return;
-  isLoadingLogs.value = true;
-  
-  const { data, error } = await supabase
-    .from('audit_logs')
-    .select('*')
-    .eq('user_id', user.value.id)
-    .order('created_at', { ascending: false })
-    .limit(10);
-    
-  if (data) {
-    auditLogs.value = data;
+const { data: auditLogsData, pending: isLoadingLogs } = await useAsyncData(
+  'profile-audit-logs',
+  async () => {
+    if (!user.value) return [];
+    const { data, error } = await supabase
+      .from('audit_logs')
+      .select('*')
+      .eq('user_id', user.value.id)
+      .order('created_at', { ascending: false })
+      .limit(10);
+    if (error) return [];
+    return data || [];
   }
-  isLoadingLogs.value = false;
-};
+);
 
-onMounted(() => {
-  loadAuditLogs();
-});
+if (auditLogsData.value) {
+  auditLogs.value = auditLogsData.value;
+}
 </script>
