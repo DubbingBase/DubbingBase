@@ -21,6 +21,12 @@ export type HomeDataPayload = {
   errorTrendingVoiceActors: string;
   topContributors: any[];
   errorTopContributors: string;
+  homeStats: {
+    voiceActorCount: number;
+    dubbingProjectCount: number;
+    workCount: number;
+  };
+  errorHomeStats: string;
 };
 
 export async function fetchHomeData(
@@ -41,6 +47,12 @@ export async function fetchHomeData(
     errorTrendingVoiceActors: "",
     topContributors: [],
     errorTopContributors: "",
+    homeStats: {
+      voiceActorCount: 0,
+      dubbingProjectCount: 0,
+      workCount: 0,
+    },
+    errorHomeStats: "",
   };
 
   await Promise.allSettled([
@@ -126,6 +138,22 @@ export async function fetchHomeData(
         payload.errorTopContributors =
           e.message || "Erreur lors du chargement des contributeurs.";
       }),
+
+    // Fetch home stats in parallel
+    supabase.functions
+      .invoke("home-stats")
+      .then((res) => {
+        if (res.error) throw new Error(res.error.message || "Erreur inconnue");
+        payload.homeStats = res.data || {
+          voiceActorCount: 0,
+          dubbingProjectCount: 0,
+          workCount: 0,
+        };
+      })
+      .catch((e) => {
+        payload.errorHomeStats =
+          e.message || "Erreur lors du chargement des statistiques.";
+      }),
   ]);
 
   return payload;
@@ -152,6 +180,17 @@ export function useHomeData(
     initialData?.trendingVoiceActors || [],
   );
   const topContributors = ref<any[]>(initialData?.topContributors || []);
+  const homeStats = ref<{
+    voiceActorCount: number;
+    dubbingProjectCount: number;
+    workCount: number;
+  }>(
+    initialData?.homeStats || {
+      voiceActorCount: 0,
+      dubbingProjectCount: 0,
+      workCount: 0,
+    },
+  );
 
   const isLoadingMovies = ref(!initialData);
   const isLoadingSeries = ref(!initialData);
@@ -160,6 +199,7 @@ export function useHomeData(
   const isLoadingTopVoiceActors = ref(!initialData);
   const isLoadingTrendingVoiceActors = ref(!initialData);
   const isLoadingTopContributors = ref(!initialData);
+  const isLoadingHomeStats = ref(!initialData);
 
   const errorMovies = ref(initialData?.errorMovies || "");
   const errorSeries = ref(initialData?.errorSeries || "");
@@ -170,6 +210,7 @@ export function useHomeData(
     initialData?.errorTrendingVoiceActors || "",
   );
   const errorTopContributors = ref(initialData?.errorTopContributors || "");
+  const errorHomeStats = ref(initialData?.errorHomeStats || "");
 
   const loadHomeData = async () => {
     isLoadingMovies.value = true;
@@ -177,6 +218,8 @@ export function useHomeData(
     isLoadingGames.value = true;
     isLoadingVoiceActors.value = true;
     isLoadingTopVoiceActors.value = true;
+    isLoadingTopContributors.value = true;
+    isLoadingHomeStats.value = true;
     isLoadingTrendingVoiceActors.value = true;
 
     errorMovies.value = "";
@@ -186,6 +229,7 @@ export function useHomeData(
     errorTopVoiceActors.value = "";
     errorTrendingVoiceActors.value = "";
     errorTopContributors.value = "";
+    errorHomeStats.value = "";
 
     const payload = await fetchHomeData(supabase);
 
@@ -216,6 +260,10 @@ export function useHomeData(
     topContributors.value = payload.topContributors;
     errorTopContributors.value = payload.errorTopContributors;
     isLoadingTopContributors.value = false;
+
+    homeStats.value = payload.homeStats;
+    errorHomeStats.value = payload.errorHomeStats;
+    isLoadingHomeStats.value = false;
   };
 
   return {
@@ -226,6 +274,7 @@ export function useHomeData(
     topVoiceActors,
     trendingVoiceActors,
     topContributors,
+    homeStats,
     isLoadingMovies,
     isLoadingSeries,
     isLoadingGames,
@@ -233,6 +282,7 @@ export function useHomeData(
     isLoadingTopVoiceActors,
     isLoadingTrendingVoiceActors,
     isLoadingTopContributors,
+    isLoadingHomeStats,
     errorMovies,
     errorSeries,
     errorGames,
@@ -240,6 +290,7 @@ export function useHomeData(
     errorTopVoiceActors,
     errorTrendingVoiceActors,
     errorTopContributors,
+    errorHomeStats,
     loadHomeData,
   };
 }

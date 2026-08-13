@@ -7,6 +7,27 @@
         <p class="text-lg md:text-xl text-gray-700 dark:text-gray-300 mb-8 font-medium">
           {{ $t('home.hero.subtitle') }}
         </p>
+
+        <!-- Subtle Interactive Stats Pill -->
+        <div v-if="!isLoadingHomeStats && homeStats && homeStats.voiceActorCount > 0" class="flex flex-wrap justify-center mb-8">
+          <div class="inline-flex items-center gap-1 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-white/40 dark:bg-[#222222]/40 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 rounded-full shadow-sm text-xs md:text-sm font-medium text-gray-500 dark:text-gray-400 transition-all hover:bg-white/60 dark:hover:bg-[#2a2a2a]/60 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600">
+            <span class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 cursor-default">
+              <span class="text-[var(--app-color-primary)] font-bold opacity-90">{{ homeStats.voiceActorCount.toLocaleString() }}</span>
+              <span>{{ $t('home.stats.voiceActors', 'Voice Actors') }}</span>
+            </span>
+            <span class="w-px h-3.5 bg-gray-300 dark:bg-gray-700"></span>
+            <span class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 cursor-default">
+              <span class="text-[var(--app-color-primary)] font-bold opacity-90">{{ homeStats.dubbingProjectCount.toLocaleString() }}</span>
+              <span>{{ $t('home.stats.projects', 'Dubs') }}</span>
+            </span>
+            <span class="w-px h-3.5 bg-gray-300 dark:bg-gray-700"></span>
+            <span class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 cursor-default">
+              <span class="text-[var(--app-color-primary)] font-bold opacity-90">{{ homeStats.workCount.toLocaleString() }}</span>
+              <span>{{ $t('home.stats.works', 'Roles') }}</span>
+            </span>
+          </div>
+        </div>
+
         <div class="relative w-full max-w-2xl mx-auto">
           <input
             type="text"
@@ -338,6 +359,7 @@ const trendingGames = computed(() => data.value?.trendingGames || []);
 const trendingVoiceActors = computed(() => data.value?.trendingVoiceActors || []);
 const topVoiceActors = computed(() => data.value?.topVoiceActors || []);
 const topContributors = computed(() => data.value?.topContributors || []);
+const homeStats = computed(() => data.value?.homeStats || null);
 
 const isLoadingMovies = computed(() => pending.value);
 const isLoadingSeries = computed(() => pending.value);
@@ -345,6 +367,7 @@ const isLoadingGames = computed(() => pending.value);
 const isLoadingTrendingVoiceActors = computed(() => pending.value);
 const isLoadingTopVoiceActors = computed(() => pending.value);
 const isLoadingTopContributors = computed(() => pending.value);
+const isLoadingHomeStats = computed(() => pending.value);
 
 const errorMovies = computed(() => data.value?.errorMovies || "");
 const errorSeries = computed(() => data.value?.errorSeries || "");

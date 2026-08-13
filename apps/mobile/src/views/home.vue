@@ -29,6 +29,26 @@
             <SearchIcon class="search-icon" />
             <span class="search-placeholder">Search...</span>
           </div>
+
+          <!-- Subtle Interactive Stats Pill -->
+          <div v-if="!isLoadingHomeStats && homeStats && homeStats.voiceActorCount > 0" class="stats-pill-container">
+            <div class="stats-pill">
+              <div class="stat-item">
+                <span class="stat-value">{{ homeStats.voiceActorCount.toLocaleString() }}</span>
+                <span class="stat-label">{{ t('home.stats.voiceActors', 'Voice Actors') }}</span>
+              </div>
+              <div class="stat-divider"></div>
+              <div class="stat-item">
+                <span class="stat-value">{{ homeStats.dubbingProjectCount.toLocaleString() }}</span>
+                <span class="stat-label">{{ t('home.stats.projects', 'Dubs') }}</span>
+              </div>
+              <div class="stat-divider"></div>
+              <div class="stat-item">
+                <span class="stat-value">{{ homeStats.workCount.toLocaleString() }}</span>
+                <span class="stat-label">{{ t('home.stats.works', 'Roles') }}</span>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="trending-movies">
           <div class="list-header">{{ t("home.trendingMovies") }}</div>
@@ -199,10 +219,12 @@ const {
   trendingSeries,
   recentVoiceActors,
   topVoiceActors,
+  homeStats,
   isLoadingMovies,
   isLoadingSeries,
   isLoadingVoiceActors,
   isLoadingTopVoiceActors,
+  isLoadingHomeStats,
   errorMovies,
   errorSeries,
   errorVoiceActors,
@@ -269,6 +291,58 @@ const handleRefresh = async (event: RefresherCustomEvent) => {
 .search-placeholder {
   color: var(--app-color-text-muted, #8e8e8e);
   font-size: 15px;
+}
+
+.stats-pill-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.stats-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--app-overlay-5);
+  border: 1px solid var(--app-overlay-10);
+  border-radius: 9999px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
+
+  &:active {
+    transform: scale(0.98);
+    background: var(--app-overlay-10);
+  }
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  transition: background 0.2s ease, color 0.2s ease;
+  color: var(--app-color-text-muted, #8e8e8e);
+  font-size: 12px;
+
+  &:active {
+    background: var(--app-overlay-10);
+    color: var(--app-color-text-primary, #ffffff);
+  }
+}
+
+.stat-value {
+  color: var(--app-color-primary, #3b82f6);
+  font-weight: 700;
+  opacity: 0.9;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 12px;
+  background: var(--app-overlay-10);
 }
 
 .header-actions {

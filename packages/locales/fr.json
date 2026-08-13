@@ -128,13 +128,18 @@
     "recentVoiceActors": "Doubleurs récents",
     "topVoiceActors": "Top Doubleurs",
     "moviesError": "Impossible de charger les films populaires. Veuillez réessayer plus tard.",
-    "moviesEmpty": "Aucun film tendance trouvé.",
+    "moviesEmpty": "Aucun film tendance trouvé pour le moment.",
     "seriesError": "Impossible de charger les séries populaires. Veuillez réessayer plus tard.",
-    "seriesEmpty": "Aucune série tendance trouvée.",
+    "seriesEmpty": "Aucune série tendance trouvée pour le moment.",
     "voiceActorsError": "Impossible de charger les voix récentes. Veuillez réessayer plus tard.",
-    "voiceActorsEmpty": "Aucune voix récente trouvée.",
+    "voiceActorsEmpty": "Aucun comédien de doublage récent trouvé pour le moment.",
     "topVoiceActorsError": "Impossible de charger les top doubleurs. Veuillez réessayer plus tard.",
-    "topVoiceActorsEmpty": "Aucun top doubleur trouvé."
+    "topVoiceActorsEmpty": "Aucun comédien populaire trouvé pour le moment.",
+    "stats": {
+      "voiceActors": "Comédiens",
+      "projects": "Doublages",
+      "works": "Rôles"
+    }
   },
   "details": {
     "modify": "Modifier"

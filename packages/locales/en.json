@@ -129,13 +129,18 @@
     "recentVoiceActors": "Recent Voice Actors",
     "topVoiceActors": "Top Voice Actors",
     "moviesError": "Unable to load popular movies. Please try again later.",
-    "moviesEmpty": "No trending movies found.",
+    "moviesEmpty": "No trending movies found at the moment.",
     "seriesError": "Unable to load popular series. Please try again later.",
-    "seriesEmpty": "No trending series found.",
+    "seriesEmpty": "No trending series found at the moment.",
     "voiceActorsError": "Unable to load recent voices. Please try again later.",
-    "voiceActorsEmpty": "No recent voices found.",
+    "voiceActorsEmpty": "No recent voice actors found at the moment.",
     "topVoiceActorsError": "Unable to load top voice actors. Please try again later.",
-    "topVoiceActorsEmpty": "No top voice actors found."
+    "topVoiceActorsEmpty": "No top voice actors found at the moment.",
+    "stats": {
+      "voiceActors": "Voice Actors",
+      "projects": "Dubs",
+      "works": "Roles"
+    }
   },
   "details": {
     "modify": "Modify"
