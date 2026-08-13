@@ -169,14 +169,14 @@
   "about": {
     "title": "About",
     "attributions": "Attributions",
-    "usersTitle": "Our Users",
-    "usersDescription": "Special thanks to all voice actors, directors, and film enthusiasts who contribute to our community and help build this comprehensive database.",
+    "usersTitle": "Our Community",
+    "usersDescription": "Special thanks to all voice actors, directors, and film enthusiasts who contribute to our platform and help build this comprehensive database.",
     "tvdbTitle": "The TV Database (TVDB)",
-    "tvdbDescription": "Television data and images provided by The TV Database (TVDB). This product uses the TVDB API but is not endorsed or certified by TVDB.",
+    "tvdbDescription": "Television data and artwork are provided by The TV Database (TVDB).",
     "tmdbTitle": "The Movie Database (TMDB)",
-    "tmdbDescription": "Movie and television data provided by The Movie Database (TMDB). This product uses the TMDB API but is not endorsed or certified by TMDB.",
+    "tmdbDescription": "Movie and television data and artwork are provided by The Movie Database (TMDB).",
     "igdbTitle": "IGDB",
-    "igdbDescription": "Video game data provided by IGDB. This product uses the IGDB API but is not endorsed or certified by IGDB."
+    "igdbDescription": "Video game data and artwork are provided by IGDB."
   },
   "dashboard": {
     "title": "Supabase Dashboard",

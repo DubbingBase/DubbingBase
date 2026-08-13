@@ -58,15 +58,14 @@
   "about": {
     "title": "À propos",
     "attributions": "Attributions",
-    "usersTitle": "Nos Utilisateurs",
-    "usersDescription": "Merci à tous les contributeurs qui aident à maintenir DubbingBase.",
-    "tvdbTitle": "TheTVDB",
-    "tvdbDescription": "Les métadonnées et les images sont fournies par TheTVDB, une base de données communautaire.",
-    "tmdbTitle": "TMDB",
-    "tmdbDescription": "Ce produit utilise l'API TMDB mais n'est ni approuvé ni certifié par TMDB.",
+    "usersTitle": "Notre communauté",
+    "usersDescription": "Remerciements spéciaux à tous les acteurs de doublage, réalisateurs et passionnés qui contribuent à notre plateforme et aident à construire cette base de données exhaustive.",
+    "tvdbTitle": "The TV Database (TVDB)",
+    "tvdbDescription": "Les données et images de télévision sont fournies par The TV Database (TVDB).",
+    "tmdbTitle": "The Movie Database (TMDB)",
+    "tmdbDescription": "Les données et images de films et de télévision sont fournies par The Movie Database (TMDB).",
     "igdbTitle": "IGDB",
-    "igdbDescription": "Les données de jeux vidéo sont fournies par IGDB.",
-    "discordDescription": "Rejoignez notre communauté sur Discord pour discuter avec d'autres utilisateurs et les développeurs."
+    "igdbDescription": "Les données et images de jeux vidéo sont fournies par IGDB."
   },
   "home": {
     "meta": {

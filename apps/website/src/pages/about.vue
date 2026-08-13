@@ -27,10 +27,7 @@
             <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">{{ t('about.igdbDescription') }}</p>
           </a>
 
-          <a href="https://discord.gg/Jm2EmnnpG" target="_blank" rel="noopener noreferrer" class="block p-6 bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-[#2a2a2a] rounded-xl shadow-sm hover:border-[#5865F2] dark:hover:border-[#5865F2] transition-colors cursor-pointer">
-            <h3 class="font-semibold text-[#5865F2] mb-2">Discord</h3>
-            <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">{{ t('about.discordDescription') }}</p>
-          </a>
+
         </div>
       </section>
     </div>

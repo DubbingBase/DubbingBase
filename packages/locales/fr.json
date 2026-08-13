@@ -168,14 +168,14 @@
   "about": {
     "title": "À propos",
     "attributions": "Attributions",
-    "usersTitle": "Nos utilisateurs",
-    "usersDescription": "Remerciements spéciaux à tous les acteurs de doublage, réalisateurs et passionnés de cinéma qui contribuent à notre communauté et aident à construire cette base de données complète.",
+    "usersTitle": "Notre communauté",
+    "usersDescription": "Remerciements spéciaux à tous les acteurs de doublage, réalisateurs et passionnés qui contribuent à notre plateforme et aident à construire cette base de données exhaustive.",
     "tvdbTitle": "The TV Database (TVDB)",
-    "tvdbDescription": "Données et images de télévision fournies par The TV Database (TVDB). Ce produit utilise l'API TVDB mais n'est ni approuvé ni certifié par TVDB.",
+    "tvdbDescription": "Les données et images de télévision sont fournies par The TV Database (TVDB).",
     "tmdbTitle": "The Movie Database (TMDB)",
-    "tmdbDescription": "Données de films et de télévision fournies par The Movie Database (TMDB). Ce produit utilise l'API TMDB mais n'est ni approuvé ni certifié par TMDB.",
+    "tmdbDescription": "Les données et images de films et de télévision sont fournies par The Movie Database (TMDB).",
     "igdbTitle": "IGDB",
-    "igdbDescription": "Données de jeux vidéo fournies par IGDB. Ce produit utilise l'API IGDB mais n'est ni approuvé ni certifié par IGDB."
+    "igdbDescription": "Les données et images de jeux vidéo sont fournies par IGDB."
   },
   "dashboard": {
     "title": "Tableau de Bord Supabase",
