@@ -1,5 +1,11 @@
 # @app/landing
 
+## 1.0.51
+
+### Patch Changes
+
+- 1bc7ebf: disable caching for admin pages, improve auth redirection logic, and add client-side game data persistence strategy.
+
 ## 1.0.50
 
 ### Patch Changes
