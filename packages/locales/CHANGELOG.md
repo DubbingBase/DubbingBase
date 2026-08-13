@@ -1,5 +1,11 @@
 # @app/locales
 
+## 0.0.48
+
+### Patch Changes
+
+- ccac106: update about page content and simplify external database attribution strings
+
 ## 0.0.47
 
 ### Patch Changes

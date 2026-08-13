@@ -1,5 +1,14 @@
 # @app/mobile
 
+## 1.0.108
+
+### Patch Changes
+
+- Updated dependencies [ccac106]
+- Updated dependencies [e1084fa]
+  - @app/locales@0.0.48
+  - @app/supabase@0.1.0
+
 ## 1.0.107
 
 ### Patch Changes
