@@ -84,7 +84,8 @@
     },
     "trendingMovies": "Films du moment",
     "trendingSeries": "Séries du moment",
-    "topVoiceActors": "Comédiens populaires"
+    "topVoiceActors": "Comédiens populaires",
+    "trendingVoiceActors": "Doubleurs du moment"
   },
   "details": {
     "back": "Retour",

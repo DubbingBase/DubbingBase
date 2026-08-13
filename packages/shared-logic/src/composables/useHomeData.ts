@@ -18,6 +18,7 @@ export type HomeDataPayload = {
   errorGames: string;
   errorVoiceActors: string;
   errorTopVoiceActors: string;
+  errorTrendingVoiceActors: string;
   topContributors: any[];
   errorTopContributors: string;
 };
@@ -31,11 +32,13 @@ export async function fetchHomeData(
     trendingGames: [],
     recentVoiceActors: [],
     topVoiceActors: [],
+    trendingVoiceActors: [],
     errorMovies: "",
     errorSeries: "",
     errorGames: "",
     errorVoiceActors: "",
     errorTopVoiceActors: "",
+    errorTrendingVoiceActors: "",
     topContributors: [],
     errorTopContributors: "",
   };
@@ -100,6 +103,18 @@ export async function fetchHomeData(
           e.message || "Erreur lors du chargement des top doubleurs.";
       }),
 
+    // Fetch trending voice actors in parallel
+    supabase.functions
+      .invoke("trending-voice-actors", { method: "GET" }) // use GET as discussed
+      .then((res) => {
+        if (res.error) throw new Error(res.error.message || "Erreur inconnue");
+        payload.trendingVoiceActors = res.data || [];
+      })
+      .catch((e) => {
+        payload.errorTrendingVoiceActors =
+          e.message || "Erreur lors du chargement des doubleurs du moment.";
+      }),
+
     // Fetch top contributors in parallel
     supabase.functions
       .invoke("top-contributors", { body: { limit: 10 } })
@@ -133,6 +148,9 @@ export function useHomeData(
   const topVoiceActors = ref<Tables<"voice_actors">[]>(
     initialData?.topVoiceActors || [],
   );
+  const trendingVoiceActors = ref<any[]>(
+    initialData?.trendingVoiceActors || [],
+  );
   const topContributors = ref<any[]>(initialData?.topContributors || []);
 
   const isLoadingMovies = ref(!initialData);
@@ -140,6 +158,7 @@ export function useHomeData(
   const isLoadingGames = ref(!initialData);
   const isLoadingVoiceActors = ref(!initialData);
   const isLoadingTopVoiceActors = ref(!initialData);
+  const isLoadingTrendingVoiceActors = ref(!initialData);
   const isLoadingTopContributors = ref(!initialData);
 
   const errorMovies = ref(initialData?.errorMovies || "");
@@ -147,6 +166,9 @@ export function useHomeData(
   const errorGames = ref(initialData?.errorGames || "");
   const errorVoiceActors = ref(initialData?.errorVoiceActors || "");
   const errorTopVoiceActors = ref(initialData?.errorTopVoiceActors || "");
+  const errorTrendingVoiceActors = ref(
+    initialData?.errorTrendingVoiceActors || "",
+  );
   const errorTopContributors = ref(initialData?.errorTopContributors || "");
 
   const loadHomeData = async () => {
@@ -155,12 +177,14 @@ export function useHomeData(
     isLoadingGames.value = true;
     isLoadingVoiceActors.value = true;
     isLoadingTopVoiceActors.value = true;
+    isLoadingTrendingVoiceActors.value = true;
 
     errorMovies.value = "";
     errorSeries.value = "";
     errorGames.value = "";
     errorVoiceActors.value = "";
     errorTopVoiceActors.value = "";
+    errorTrendingVoiceActors.value = "";
     errorTopContributors.value = "";
 
     const payload = await fetchHomeData(supabase);
@@ -185,6 +209,10 @@ export function useHomeData(
     errorTopVoiceActors.value = payload.errorTopVoiceActors;
     isLoadingTopVoiceActors.value = false;
 
+    trendingVoiceActors.value = payload.trendingVoiceActors;
+    errorTrendingVoiceActors.value = payload.errorTrendingVoiceActors;
+    isLoadingTrendingVoiceActors.value = false;
+
     topContributors.value = payload.topContributors;
     errorTopContributors.value = payload.errorTopContributors;
     isLoadingTopContributors.value = false;
@@ -196,18 +224,21 @@ export function useHomeData(
     trendingGames,
     recentVoiceActors,
     topVoiceActors,
+    trendingVoiceActors,
     topContributors,
     isLoadingMovies,
     isLoadingSeries,
     isLoadingGames,
     isLoadingVoiceActors,
     isLoadingTopVoiceActors,
+    isLoadingTrendingVoiceActors,
     isLoadingTopContributors,
     errorMovies,
     errorSeries,
     errorGames,
     errorVoiceActors,
     errorTopVoiceActors,
+    errorTrendingVoiceActors,
     errorTopContributors,
     loadHomeData,
   };

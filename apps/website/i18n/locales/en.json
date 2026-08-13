@@ -84,7 +84,8 @@
     },
     "trendingMovies": "Trending Movies",
     "trendingSeries": "Trending Series",
-    "topVoiceActors": "Top Voice Actors"
+    "topVoiceActors": "Top Voice Actors",
+    "trendingVoiceActors": "Trending Voice Actors"
   },
   "details": {
     "back": "Back",
