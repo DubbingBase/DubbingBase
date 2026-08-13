@@ -21,6 +21,8 @@ const i18nHead = useLocaleHead({
   seo: true
 })
 
+const breadcrumbJsonLd = useBreadcrumbJsonLd();
+
 useHead({
   htmlAttrs: {
     'data-theme': effectiveTheme,
@@ -38,7 +40,13 @@ useHead({
     { rel: 'manifest', href: '/manifest.webmanifest' },
     ...(i18nHead.value.link || [])
   ],
-  meta: () => [...(i18nHead.value.meta || [])]
+  meta: () => [...(i18nHead.value.meta || [])],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: breadcrumbJsonLd,
+    },
+  ],
 });
 
 useSeoMeta({

@@ -139,6 +139,33 @@ When you need to verify or debug external API data (e.g., missing character imag
 
 ---
 
+## 📦 Changesets
+
+This repo uses [Changesets](https://github.com/changesets/changesets) for versioning (`@changesets/cli` is installed, config in `.changeset/config.json`).
+
+When adding a **new feature** (or any user-facing change), generate a changeset before finishing the task:
+
+- Run `pnpm changeset` and answer the prompts, OR add a markdown file directly under `.changeset/` (do not edit `README.md` or `config.json`).
+- Name the file anything unique, e.g. `.changeset/add-breadcrumb-structured-data.md`.
+- Format:
+
+  ```md
+  ---
+  "name-of-package": minor
+  ---
+
+  Short description of the feature for the changelog.
+  ```
+
+- Use the correct bump type:
+  - `minor` — new feature (non-breaking)
+  - `patch` — bug fixes / chores
+  - `major` — breaking change
+- One changeset file per logical change; avoid committing changeset files for internal-only refactors with no user-facing impact.
+- Never commit the changeset if the user only asked for a code change without a feature — but when a feature is added, a changeset is expected.
+
+---
+
 ## 🤖 AI Agent Behavior Guidelines
 
 1. **Research First**: Before writing code, inspect existing files, imports, and state to understand the setup.
