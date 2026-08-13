@@ -480,6 +480,9 @@ verify_jwt = false
 [functions.top-voice-actors]
 verify_jwt = false
 
+[functions.trending-voice-actors]
+verify_jwt = false
+
 [functions.trending-movies]
 verify_jwt = false
 

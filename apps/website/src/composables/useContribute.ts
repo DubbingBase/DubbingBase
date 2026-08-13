@@ -1,13 +1,30 @@
 import { ref } from "vue";
 
-export const useContribute = () => {
+export const fetchRandomTask = async (supabase: any, category: string) => {
+  const { data, error: invokeError } = await supabase.functions.invoke(
+    "get-random-task",
+    {
+      body: { category },
+    },
+  );
+
+  if (invokeError) throw invokeError;
+  if (data?.error) throw new Error(data.error);
+
+  return data;
+};
+
+export const useContribute = (
+  initialTask?: any,
+  initialCategory?: string | null,
+) => {
   const supabase = useSupabaseClient();
   const isLoading = ref(false);
   const isSubmitting = ref(false);
   const error = ref<string | null>(null);
-  const currentTask = ref<any>(null);
+  const currentTask = ref<any>(initialTask || null);
 
-  const activeCategory = ref<string | null>(null);
+  const activeCategory = ref<string | null>(initialCategory || null);
 
   const getRandomTask = async (category: string) => {
     isLoading.value = true;

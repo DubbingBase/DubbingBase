@@ -89,7 +89,8 @@
       "voiceActors": "Voice Actors",
       "projects": "Dubs",
       "works": "Roles"
-    }
+    },
+    "trendingVoiceActors": "Trending Voice Actors"
   },
   "details": {
     "back": "Back",
@@ -103,7 +104,8 @@
     "actor": "Actor",
     "character": "Character",
     "voiceActor": "Voice Actor",
-    "notSpecified": "Not specified"
+    "notSpecified": "Not specified",
+    "modify": "Modify"
   },
   "seo": {
     "movies": "dubbed movies, english dubbing, movie voice cast, dubbing database",

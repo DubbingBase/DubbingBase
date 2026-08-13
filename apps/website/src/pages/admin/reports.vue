@@ -142,26 +142,34 @@ const formatDate = (dateStr: string) => {
   return new Date(dateStr).toLocaleString()
 }
 
-const fetchReports = async () => {
-  loading.value = true
-  error.value = null
-  
-  try {
-    const { data, error: fetchError } = await supabase
-      .from('user_reports')
-      .select('*')
-      .order('created_at', { ascending: false })
-      
-    if (fetchError) throw fetchError
+const { data: initialReports, pending, error: fetchError, refresh: fetchReports } = await useAsyncData('admin-reports', async () => {
+  const { data, error } = await supabase
+    .from('user_reports')
+    .select('*')
+    .order('created_at', { ascending: false })
     
-    reports.value = data || []
-  } catch (err: any) {
-    console.error('Error fetching reports:', err)
-    error.value = 'Failed to load reports.'
-  } finally {
-    loading.value = false
+  if (error) throw error
+  return data || []
+});
+
+watch(initialReports, (newReports) => {
+  if (newReports) {
+    reports.value = newReports as any[]
   }
-}
+}, { immediate: true })
+
+watch(pending, (val) => {
+  loading.value = val
+}, { immediate: true })
+
+watch(fetchError, (err) => {
+  if (err) {
+    error.value = 'Failed to load reports.'
+    console.error('Error fetching reports:', err)
+  } else {
+    error.value = null
+  }
+}, { immediate: true })
 
 const updateStatus = async (report: any) => {
   updatingStatus.value[report.id] = true
@@ -184,8 +192,4 @@ const updateStatus = async (report: any) => {
     updatingStatus.value[report.id] = false
   }
 }
-
-onMounted(() => {
-  fetchReports()
-})
 </script>

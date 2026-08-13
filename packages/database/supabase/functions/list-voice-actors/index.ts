@@ -9,7 +9,12 @@ export default {
       const requestBody = await getParams(req).catch(() => ({}));
       const query = (requestBody as any).query;
 
-      let queryBuilder = ctx.supabase.from("voice_actors").select("*");
+      const limit = parseInt((requestBody as any).limit) || 100;
+      const offset = parseInt((requestBody as any).offset) || 0;
+
+      let queryBuilder = ctx.supabase
+        .from("voice_actors")
+        .select("*", { count: "exact" });
 
       // Apply filtering if query is provided
       if (query && typeof query === "string" && query.trim()) {
@@ -20,15 +25,16 @@ export default {
         );
       }
 
-      const { data, error } = await queryBuilder
+      const { data, count, error } = await queryBuilder
         .order("lastname", { ascending: true })
-        .order("firstname", { ascending: true });
+        .order("firstname", { ascending: true })
+        .range(offset, offset + limit - 1);
 
       if (error) {
         throw error;
       }
 
-      return Response.json({ voice_actors: data });
+      return Response.json({ voice_actors: data, total: count });
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "An unknown error occurred";

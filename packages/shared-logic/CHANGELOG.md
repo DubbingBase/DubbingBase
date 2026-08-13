@@ -1,5 +1,11 @@
 # @app/shared-logic
 
+## 1.0.26
+
+### Patch Changes
+
+- 96c2d3d: migrate data fetching to useAsyncData across app pages and components
+
 ## 1.0.25
 
 ### Patch Changes

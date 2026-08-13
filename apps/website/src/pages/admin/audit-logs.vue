@@ -143,21 +143,23 @@ const isReverting = ref(false);
 const conflictError = ref<any>(null);
 const resolvedValue = ref<string>('');
 
-const loadLogs = async () => {
-  isLoading.value = true;
+const { data: initialLogs, pending, refresh: loadLogs } = await useAsyncData('admin-audit-logs', async () => {
   const { data, error } = await supabase
     .from('audit_logs')
     .select('*')
     .order('created_at', { ascending: false })
     .limit(50);
     
-  if (data) logs.value = data;
-  isLoading.value = false;
-};
+  return data || [];
+});
 
-await (async () => {
-  loadLogs();
-})();
+watch(initialLogs, (newLogs) => {
+  if (newLogs) logs.value = newLogs;
+}, { immediate: true });
+
+watch(pending, (val) => {
+  isLoading.value = val;
+}, { immediate: true });
 
 const openRevertModal = (log: any) => {
   selectedLog.value = log;

@@ -1,5 +1,11 @@
 # @app/supabase
 
+## 0.0.82
+
+### Patch Changes
+
+- 96c2d3d: migrate data fetching to useAsyncData across app pages and components
+
 ## 0.0.81
 
 ### Patch Changes

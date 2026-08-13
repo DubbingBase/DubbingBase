@@ -55,11 +55,13 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
-import { useStudioData } from '@app/shared-logic';
+import { useStudioData, fetchStudiosData } from '@app/shared-logic';
 
 const supabase = useSupabaseClient();
-const { studios, loading, error, fetchStudios } = useStudioData(supabase);
+
+const { data: initialStudios } = await useAsyncData('studios-page', () => fetchStudiosData(supabase));
+
+const { studios, loading, error } = useStudioData(supabase, initialStudios.value);
 
 useHead({
   title: 'Studios de Doublage - DubbingBase',
@@ -69,9 +71,5 @@ useHead({
       content: 'Parcourez la liste des studios de doublage et leurs projets associés.'
     }
   ]
-});
-
-onMounted(() => {
-  fetchStudios();
 });
 </script>

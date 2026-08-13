@@ -215,9 +215,9 @@ const handleOutsideClick = (e: MouseEvent) => {
   }
 };
 
-await (async () => {
+onMounted(() => {
   document.addEventListener('click', handleOutsideClick);
-})();
+});
 
 onUnmounted(() => {
   document.removeEventListener('click', handleOutsideClick);

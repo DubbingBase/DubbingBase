@@ -682,6 +682,13 @@ export type Database = {
           voice_actor: Json
         }[]
       }
+      get_trending_voice_actors: {
+        Args: { limit_param?: number; months_param?: number }
+        Returns: {
+          voice_actor: Json
+          work_count: number
+        }[]
+      }
       get_work_votes_with_user: {
         Args: { p_user_id?: string; p_work_ids: number[] }
         Returns: {

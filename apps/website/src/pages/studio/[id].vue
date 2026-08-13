@@ -132,9 +132,9 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, computed } from 'vue';
+import { computed } from 'vue';
 import { useRoute } from 'vue-router';
-import { useStudioData } from '@app/shared-logic';
+import { useStudioData, fetchStudioDetails } from '@app/shared-logic';
 import { ExternalLinkIcon } from 'lucide-vue-next';
 import DetailsPage from '../../components/layout/details/DetailsPage.vue';
 import DetailsHero from '../../components/layout/details/DetailsHero.vue';
@@ -149,7 +149,9 @@ const isAdmin = computed(() => {
   return user.value?.app_metadata?.role === 'admin' || user.value?.user_metadata?.role === 'admin';
 });
 
-const { studio, dubbedProjects, voiceActorsRoster, loading, error, loadStudioDetails } = useStudioData(supabase);
+const { data: initialStudioDetails } = await useAsyncData(`studio-${route.params.id}`, () => fetchStudioDetails(supabase, route.params.id as string));
+
+const { studio, dubbedProjects, voiceActorsRoster, loading, error } = useStudioData(supabase, [], initialStudioDetails.value);
 
 const getProfileUrl = (path: string) => {
   if (path.startsWith("http")) return path;
@@ -159,11 +161,5 @@ const getProfileUrl = (path: string) => {
 
 useHead({
   title: computed(() => studio.value ? `${studio.value.name} - DubbingBase` : 'Studio - DubbingBase'),
-});
-
-onMounted(() => {
-  if (route.params.id) {
-    loadStudioDetails(route.params.id as string);
-  }
 });
 </script>

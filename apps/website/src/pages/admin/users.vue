@@ -184,29 +184,29 @@ const showToast = (message: string, type: "success" | "error" | "info" = "info")
   }, 3000);
 };
 
-const fetchUsers = async () => {
-  try {
-    loading.value = true;
-    error.value = null;
+const { data: initialUsers, pending, error: fetchError, refresh: fetchUsers } = await useAsyncData('admin-users', async () => {
+  const { data, error: funcError } = await supabase.functions.invoke("list_users", { method: 'GET' });
+  if (funcError) throw funcError;
+  return data?.users || [];
+});
 
-    const { data, error: funcError } = await supabase.functions.invoke("list_users", { method: 'GET' });
-
-    if (funcError) throw funcError;
-
-    if (data && data.users) {
-      users.value = data.users;
-      userRole.value = {};
-      for (const u of data.users) {
-        userRole.value[u.id] = u.app_metadata?.role || "user";
-      }
+watch(initialUsers, (newUsers) => {
+  if (newUsers) {
+    users.value = newUsers;
+    userRole.value = {};
+    for (const u of newUsers) {
+      userRole.value[u.id] = u.app_metadata?.role || "user";
     }
-  } catch (err: any) {
-    console.error("Error fetching users:", err);
-    error.value = err.message || "Failed to fetch users list.";
-  } finally {
-    loading.value = false;
   }
-};
+}, { immediate: true });
+
+watch(pending, (val) => {
+  loading.value = val;
+}, { immediate: true });
+
+if (fetchError.value) {
+  error.value = fetchError.value.message;
+}
 
 const filteredUsers = computed(() => {
   if (!searchQuery.value.trim()) return users.value;
@@ -274,5 +274,4 @@ const formatDate = (dateStr: string) => {
   }
 };
 
-await fetchUsers();
 </script>

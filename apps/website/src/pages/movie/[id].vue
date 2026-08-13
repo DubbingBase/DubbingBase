@@ -1,7 +1,8 @@
 <template>
   <div>
+    <MediaSkeleton v-if="pending && !movie" />
     <MediaDetailsLayout
-      v-if="movie"
+      v-else-if="movie"
       :title="movie.title"
       :backdrop-url="backdropUrl"
       :poster-url="posterUrl"
@@ -67,11 +68,19 @@
           <div class="h-6 w-px bg-gray-200 dark:bg-[#2a2a2a]"></div>
         </template>
 
-        <NuxtLink v-if="isAdmin" :to="$localePath(`/movie/${movie?.id || 'new'}/edit/${activeDubId || 'new'}`)" class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-medium">
+        <NuxtLink
+          v-show="isAdmin"
+          :to="
+            $localePath(
+              `/movie/${movie?.id || 'new'}/edit/${activeDubId || 'new'}`,
+            )
+          "
+          class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-medium"
+        >
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
           </svg>
-          <span class="hidden sm:inline">Éditer</span>
+          <span class="hidden sm:inline">{{ $t("details.modify") }}</span>
         </NuxtLink>
         
         <button
@@ -351,9 +360,32 @@ const isAdmin = computed(() => {
 
 const { locale, t } = useI18n();
 
-const { data, pending } = useAsyncData(`movie-${movieId}-${locale.value}`, () =>
-  fetchMovieData(supabase, movieId, locale.value)
-);
+const cacheKey = `movie-${movieId}-${locale.value}`;
+
+const { data, pending } = useAsyncData(cacheKey, async () => {
+  const nuxtApp = useNuxtApp();
+  // We only have cached data on the client side after hydration
+  const cachedData = nuxtApp.payload.data[cacheKey];
+  
+  const newData = await fetchMovieData(supabase, movieId, locale.value);
+  
+  // If TMDB fetch fails on the edge function (e.g., timeout during auth resolution)
+  // but we already have valid TMDB data from SSR, we preserve the TMDB data
+  // while still accepting the fresh database data (votes, dubbing projects).
+  if (
+    newData && 
+    newData.movie?.title === "Information indisponible (Timeout)" && 
+    cachedData?.movie &&
+    cachedData.movie.title !== "Information indisponible (Timeout)"
+  ) {
+    newData.movie = cachedData.movie;
+    newData.collection = cachedData.collection;
+    newData.characterProfilePictures = cachedData.characterProfilePictures;
+    newData.tvdbId = cachedData.tvdbId;
+  }
+  
+  return newData;
+});
 
 const movie = computed(() => data.value?.movie);
 const dubbingProjects = computed(() => {

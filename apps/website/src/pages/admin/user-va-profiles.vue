@@ -287,31 +287,47 @@ const showToast = (message: string, type: "success" | "error" | "info" = "info")
   }, 3000);
 };
 
-// Fetch all users list once
-const fetchUsersList = async () => {
-  if (usersFetched.value) return;
-  userLoading.value = true;
+const { data: initialData, pending, refresh: fetchExistingLinks } = await useAsyncData('admin-user-va-links', async () => {
+  // Fetch users
+  const { data: userData, error: userError } = await supabase.functions.invoke("list_users", { method: 'GET' });
+  if (userError) throw userError;
+  const users = userData?.users || [];
+  
+  // Fetch existing links
+  const { data: linksData, error: linksError } = await supabase
+    .from("user_voice_actor_links")
+    .select('id, user_id, voice_actors(id, firstname, lastname, profile_picture)')
+    .order('created_at', { ascending: false });
+  if (linksError) throw linksError;
+  
+  return {
+    users,
+    links: linksData || []
+  };
+});
 
-  try {
-    const { data, error } = await supabase.functions.invoke("list_users", { method: 'GET' });
-
-    if (error) throw error;
-    allUsers.value = data?.users || [];
+watch(initialData, (data) => {
+  if (data) {
+    allUsers.value = data.users;
     usersFetched.value = true;
-    fetchExistingLinks();
-  } catch (err: any) {
-    console.error("Error fetching users list:", err);
-    showToast("Error loading users database", "error");
-  } finally {
-    userLoading.value = false;
+    
+    existingLinks.value = data.links.map((link: any) => ({
+      id: link.id,
+      user_id: link.user_id,
+      userEmail: data.users.find((u: any) => u.id === link.user_id)?.email || 'Unknown User',
+      voiceActorName: link.voice_actors ? `${link.voice_actors.firstname} ${link.voice_actors.lastname}` : 'Unknown Actor',
+      voiceActorImage: link.voice_actors?.profile_picture || null
+    }));
   }
-};
+}, { immediate: true });
+
+watch(pending, (val) => {
+  userLoading.value = val;
+  linksLoading.value = val;
+}, { immediate: true });
 
 const handleUserInput = () => {
   isUserDropdownOpen.value = true;
-  if (!usersFetched.value) {
-    fetchUsersList();
-  }
 };
 
 // Filter users list based on input
@@ -415,32 +431,7 @@ const setupClickListeners = () => {
   });
 };
 
-const fetchExistingLinks = async () => {
-  linksLoading.value = true;
-  try {
-    const { data, error } = await supabase
-      .from("user_voice_actor_links")
-      .select('id, user_id, voice_actors(id, firstname, lastname, profile_picture)')
-      .order('created_at', { ascending: false });
-      
-    if (error) throw error;
-    
-    existingLinks.value = data.map((link: any) => ({
-      id: link.id,
-      user_id: link.user_id,
-      userEmail: allUsers.value.find(u => u.id === link.user_id)?.email || 'Unknown User',
-      voiceActorName: link.voice_actors ? `${link.voice_actors.firstname} ${link.voice_actors.lastname}` : 'Unknown Actor',
-      voiceActorImage: link.voice_actors?.profile_picture || null
-    }));
-  } catch (err: any) {
-    console.error("Error fetching links:", err);
-  } finally {
-    linksLoading.value = false;
-  }
-};
-
-await (async () => {
-  fetchUsersList();
+onMounted(() => {
   setupClickListeners();
-})();
+});
 </script>

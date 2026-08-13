@@ -10,7 +10,7 @@
         
         <!-- Name & Info -->
         <div class="pb-4 w-full max-w-3xl">
-          <div class="h-10 md:h-12 w-2/3 bg-gray-300 dark:bg-[#333] rounded-lg mb-4"></div>
+          <h1 class="h-10 md:h-12 w-2/3 bg-gray-300 dark:bg-[#333] rounded-lg mb-4 text-transparent select-none"><span class="sr-only">Loading</span></h1>
           <div class="flex flex-wrap gap-3">
             <div class="h-8 w-24 bg-gray-300 dark:bg-[#333] rounded-lg"></div>
             <div class="h-8 w-20 bg-gray-300 dark:bg-[#333] rounded-lg"></div>

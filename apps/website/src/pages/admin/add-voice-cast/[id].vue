@@ -302,22 +302,21 @@ const getAssignedVA = (actorId: number): VoiceActor | null => {
   return matchedResult || null;
 };
 
-const fetchMovieData = async () => {
-  try {
-    loading.value = true;
-    error.value = null;
+const { data: initialData, pending } = await useAsyncData(`movie-cast-${movieId.value}`, async () => {
+  const params = new URLSearchParams({ id: movieId.value.toString() });
+  const { data, error: fetchErr } = await supabase.functions.invoke(`movie?${params.toString()}`, {
+    method: 'GET'
+  });
 
-    const params = new URLSearchParams({ id: movieId.value.toString() });
-    const { data, error: fetchErr } = await supabase.functions.invoke(`movie?${params.toString()}`, {
-      method: 'GET'
-    });
+  if (fetchErr) throw fetchErr;
+  return data as MovieResponse;
+});
 
-    if (fetchErr) throw fetchErr;
-
-    const response = data as MovieResponse;
-    movie.value = response.movie;
-    voiceActors.value = response.voiceActors || [];
-    actors.value = response.movie.credits?.cast || [];
+watch(initialData, (data) => {
+  if (data) {
+    movie.value = data.movie;
+    voiceActors.value = data.voiceActors || [];
+    actors.value = data.movie.credits?.cast || [];
 
     // Initialize mapping values
     const assignments: Record<number, number | null> = {};
@@ -331,13 +330,12 @@ const fetchMovieData = async () => {
 
     voiceActorAssignments.value = assignments;
     initialAssignments.value = initAssigns;
-  } catch (err: any) {
-    console.error("Error fetching movie data:", err);
-    error.value = "Failed to load movie data. Please retry.";
-  } finally {
-    loading.value = false;
   }
-};
+}, { immediate: true });
+
+watch(pending, (val) => {
+  loading.value = val;
+}, { immediate: true });
 
 const openSearchDropdown = (actorId: number) => {
   activeSearchDropdown.value = actorId;
@@ -462,8 +460,7 @@ const setupDropdownCloser = () => {
   });
 };
 
-await (async () => {
-  fetchMovieData();
+onMounted(() => {
   setupDropdownCloser();
-})();
+});
 </script>

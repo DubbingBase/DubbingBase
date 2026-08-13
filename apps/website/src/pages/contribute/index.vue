@@ -67,17 +67,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
 
 const supabase = useSupabaseClient();
-const recentActivities = ref<any[]>([]);
 
-onMounted(async () => {
+const { data: recentActivitiesData } = await useAsyncData('recent-contributions', async () => {
   const { data, error } = await supabase.rpc('get_recent_contributions', { limit_param: 10 });
-  if (!error && data) {
-    recentActivities.value = data;
-  }
+  if (error) return [];
+  return data || [];
 });
+
+const recentActivities = computed(() => recentActivitiesData.value || []);
 </script>
 
 <style scoped>

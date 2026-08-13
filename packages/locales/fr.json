@@ -141,6 +141,12 @@
       "works": "Rôles"
     }
   },
+  "details": {
+    "modify": "Modifier"
+  },
+  "search": {
+    "actor": "Acteur"
+  },
   "auth": {
     "loginRequiredForSubscription": "Vous devez être connecté pour vous abonner"
   },
