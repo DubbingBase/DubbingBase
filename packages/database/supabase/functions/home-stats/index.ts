@@ -1,7 +1,4 @@
-import {
-  createErrorResponse,
-  createResponse,
-} from "../_shared/http-utils.ts";
+import { createErrorResponse, createResponse } from "../_shared/http-utils.ts";
 import { SupabaseContext, withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
 
@@ -12,7 +9,7 @@ interface HomeStats {
 }
 
 export default {
-  fetch: withSupabase<Database>({ auth: "user" }, async (req, ctx) => {
+  fetch: withSupabase<Database>({ auth: "publishable" }, async (req, ctx) => {
     try {
       const [
         { count: voiceActorCount },

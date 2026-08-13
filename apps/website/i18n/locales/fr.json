@@ -84,7 +84,12 @@
     },
     "trendingMovies": "Films du moment",
     "trendingSeries": "Séries du moment",
-    "topVoiceActors": "Comédiens populaires"
+    "topVoiceActors": "Comédiens populaires",
+    "stats": {
+      "voiceActors": "Comédiens",
+      "projects": "Doublages",
+      "works": "Rôles"
+    }
   },
   "details": {
     "back": "Retour",

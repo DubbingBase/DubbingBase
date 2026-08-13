@@ -84,7 +84,12 @@
     },
     "trendingMovies": "Trending Movies",
     "trendingSeries": "Trending Series",
-    "topVoiceActors": "Top Voice Actors"
+    "topVoiceActors": "Top Voice Actors",
+    "stats": {
+      "voiceActors": "Voice Actors",
+      "projects": "Dubs",
+      "works": "Roles"
+    }
   },
   "details": {
     "back": "Back",
