@@ -6,31 +6,88 @@ import { cacheUtils, getParams } from "../_shared/index.ts";
 
 interface TrendingVoiceActorsParams {
   limit?: number | string;
-  months?: number | string;
 }
 
 const getTrendingVoiceActors = async (
   ctx: SupabaseContext<Database>,
   limit = 10,
-  months = 6,
 ) => {
   try {
-    const { data, error } = await ctx.supabase.rpc(
-      "get_trending_voice_actors",
-      {
-        limit_param: limit,
-        months_param: months,
-      },
-    );
+    // 1. Fetch trending media IDs from other Edge Functions
+    const [moviesRes, showsRes, gamesRes] = await Promise.all([
+      ctx.supabase.functions.invoke("trending-movies"),
+      ctx.supabase.functions.invoke("trending-shows"),
+      ctx.supabase.functions.invoke("trending-games"),
+    ]);
+
+    const movieIds = moviesRes.data?.results?.map((m: any) => m.id) || [];
+    const showIds = showsRes.data?.results?.map((s: any) => s.id) || [];
+    const gameIds = gamesRes.data?.map((g: any) => g.id) || [];
+
+    const trendingIds = [...movieIds, ...showIds, ...gameIds];
+
+    if (trendingIds.length === 0) {
+      return [];
+    }
+
+    // 2. Query work table for these trending IDs, joining dubbing_projects
+    const { data: works, error } = await ctx.supabase
+      .from("work")
+      .select(
+        `
+        id,
+        dubbing_projects!inner (
+          content_id
+        ),
+        voice_actors (
+          id,
+          firstname,
+          lastname,
+          profile_picture,
+          bio,
+          nationality,
+          date_of_birth,
+          awards,
+          years_active,
+          social_media_links,
+          tmdb_id,
+          wikidata_id
+        )
+      `,
+      )
+      .in("dubbing_projects.content_id", trendingIds)
+      .not("voice_actor_id", "is", null);
 
     if (error) throw error;
 
-    const resultsWithImageUrls = data.map((result: any) => ({
-      ...result.voice_actor,
-      work_count: result.work_count,
+    // 3. Group by voice actor and count
+    const vaMap = new Map();
+    works?.forEach((work: any) => {
+      const va = work.voice_actors;
+      if (!va) return;
+
+      // Handle Supabase returning an array or object
+      const vaObj = Array.isArray(va) ? va[0] : va;
+
+      if (!vaMap.has(vaObj.id)) {
+        vaMap.set(vaObj.id, {
+          ...vaObj,
+          work_count: 0,
+        });
+      }
+      vaMap.get(vaObj.id).work_count++;
+    });
+
+    // 4. Sort and limit
+    const sortedVas = Array.from(vaMap.values())
+      .sort((a, b) => b.work_count - a.work_count)
+      .slice(0, limit);
+
+    const resultsWithImageUrls = sortedVas.map((va) => ({
+      ...va,
       profile_picture: buildSupabaseImageUrl(
         ctx,
-        result.voice_actor.profile_picture,
+        va.profile_picture,
         "voice_actor_profile_pictures",
         "500",
       ),
@@ -43,14 +100,13 @@ const getTrendingVoiceActors = async (
   }
 };
 
-const cacheKey = "app:trending:voice-actors:v1";
+const cacheKey = "app:trending:voice-actors:v2";
 
 export default {
   fetch: withSupabase<Database>({ auth: "publishable" }, async (req, ctx) => {
     try {
       const params = (await getParams(req)) as TrendingVoiceActorsParams;
       const limit = params.limit ? Number(params.limit) : 10;
-      const months = params.months ? Number(params.months) : 6;
 
       if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
         return Response.json(
@@ -59,14 +115,7 @@ export default {
         );
       }
 
-      if (!Number.isInteger(months) || months < 1 || months > 24) {
-        return Response.json(
-          { error: "Months must be a number between 1 and 24" },
-          { status: 400 },
-        );
-      }
-
-      const dynamicCacheKey = `${cacheKey}:${months}m:${limit}`;
+      const dynamicCacheKey = `${cacheKey}:limit:${limit}`;
 
       try {
         const cachedData = await cacheUtils.get(dynamicCacheKey);
@@ -79,9 +128,9 @@ export default {
       }
 
       console.log(
-        "Cache miss for trending voice actors, fetching from database",
+        "Cache miss for trending voice actors, computing from trending media",
       );
-      const results = await getTrendingVoiceActors(ctx, limit, months);
+      const results = await getTrendingVoiceActors(ctx, limit);
 
       try {
         await cacheUtils.set(dynamicCacheKey, results, "SHORT");
@@ -90,9 +139,16 @@ export default {
       }
 
       return Response.json(results);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error in trending-voice-actors function:", error);
-      return Response.json({ error: "Internal server error" }, { status: 500 });
+      return Response.json(
+        {
+          error: "Internal server error",
+          details: error.message,
+          stack: error.stack,
+        },
+        { status: 500 },
+      );
     }
   }),
 };
