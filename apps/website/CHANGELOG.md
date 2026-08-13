@@ -1,5 +1,11 @@
 # @app/landing
 
+## 1.0.50
+
+### Patch Changes
+
+- 72e6134: implement dynamic post-login redirect support and remove restrictive session maxAge
+
 ## 1.0.49
 
 ### Patch Changes
