@@ -1,7 +1,8 @@
 <template>
   <div>
+    <MediaSkeleton v-if="pending && !game" />
     <MediaDetailsLayout
-      v-if="game"
+      v-else-if="game"
       :title="game.name"
       :backdrop-url="game.artworks?.[0]?.url || game.screenshots?.[0]?.url || null"
       :poster-url="coverUrl"
@@ -236,6 +237,7 @@
 
 <script setup lang="ts">
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
+import MediaSkeleton from "../../components/MediaSkeleton.vue";
 import { useRoute, useRouter } from 'vue-router';
 import { fetchGameData } from '@app/shared-logic';
 import type { IgdbGame, IgdbCharacter } from '@app/shared-logic';
