@@ -1,5 +1,11 @@
 # @app/landing
 
+## 1.0.49
+
+### Patch Changes
+
+- 0c4dc73: implement trending voice actors feature with IGDB auth retries and updated dev environment configuration
+
 ## 1.0.48
 
 ### Patch Changes

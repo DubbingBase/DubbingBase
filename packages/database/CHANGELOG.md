@@ -1,5 +1,15 @@
 # @app/supabase
 
+## 0.2.0
+
+### Minor Changes
+
+- 0c4dc73: Add trending voice actors feature with configurable time period (default 6 months). New edge function with Redis caching accepts limit (1-100) and months (1-24) parameters.
+
+### Patch Changes
+
+- 0c4dc73: implement trending voice actors feature with IGDB auth retries and updated dev environment configuration
+
 ## 0.1.0
 
 ### Minor Changes
