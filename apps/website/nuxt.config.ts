@@ -98,7 +98,6 @@ export default defineNuxtConfig({
       "../../packages/database/supabase/functions/_shared/database.types.ts",
     ),
     cookieOptions: {
-      maxAge: 60 * 60 * 8,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
     },

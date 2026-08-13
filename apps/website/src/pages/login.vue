@@ -68,7 +68,7 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 
 // SEO configuration
 useSeoMeta({
@@ -79,6 +79,7 @@ useSeoMeta({
 
 const { t } = useI18n();
 const router = useRouter();
+const route = useRoute();
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
 
@@ -92,7 +93,8 @@ const localePath = useLocalePath();
 // Redirect if already logged in
 watchEffect(() => {
   if (user.value) {
-    router.push(localePath('/profile'));
+    const redirect = route.query.redirect as string;
+    router.push(redirect ? localePath(redirect) : localePath('/profile'));
   }
 });
 

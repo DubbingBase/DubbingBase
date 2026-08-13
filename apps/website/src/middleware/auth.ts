@@ -3,6 +3,9 @@ export default defineNuxtRouteMiddleware((to, from) => {
   const localePath = useLocalePath();
 
   if (!user.value) {
-    return navigateTo(localePath("/login"));
+    return navigateTo({
+      path: localePath("/login"),
+      query: { redirect: to.fullPath },
+    });
   }
 });
