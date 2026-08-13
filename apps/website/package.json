@@ -9,7 +9,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "typecheck": "nuxt typecheck",
-    "test": "vitest"
+    "test": "nuxt prepare && vitest"
   },
   "dependencies": {
     "@app/locales": "workspace:*",

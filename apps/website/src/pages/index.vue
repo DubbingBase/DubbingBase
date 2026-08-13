@@ -50,17 +50,14 @@
     <div class="max-w-7xl mx-auto p-4 md:p-6 mt-4">
       <main class="space-y-8 md:space-y-12">
         <!-- Trending Movies -->
-      <section>
+      <section v-if="!errorMovies">
         <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-900 dark:text-white tracking-wide">{{ $t('home.trendingMovies') }}</h2>
         <div v-if="isLoadingMovies" class="flex gap-4 overflow-x-auto pb-4">
           <div v-for="i in 4" :key="i" class="w-48 h-72 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-xl flex-shrink-0"></div>
         </div>
-        <div v-else-if="errorMovies" class="text-red-400 bg-red-900/20 p-4 rounded-lg">
-          {{ errorMovies }}
-        </div>
         <div v-else ref="moviesScrollRef" class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 custom-scrollbar">
           <div v-for="movie in trendingMovies" :key="movie.id" class="w-48 flex-shrink-0 snap-start">
-            <NuxtLink :to="$localePath('/movie/' + movie.id)" class="group transition-transform hover:-translate-y-1 block">
+            <NuxtLink :to="localePath('/movie/' + movie.id)" class="group transition-transform hover:-translate-y-1 block">
               <div class="relative w-full h-72 rounded-xl overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800">
                 <NuxtImg v-if="movie.poster_path" :src="'https://image.tmdb.org/t/p/w342' + movie.poster_path" :alt="movie.title" format="webp" loading="lazy" class="object-cover w-full h-full transition duration-300" />
               </div>
@@ -71,17 +68,14 @@
       </section>
 
       <!-- Trending Series -->
-      <section>
+      <section v-if="!errorSeries">
         <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-900 dark:text-white tracking-wide">{{ $t('home.trendingSeries') }}</h2>
         <div v-if="isLoadingSeries" class="flex gap-4 overflow-x-auto pb-4">
           <div v-for="i in 4" :key="i" class="w-48 h-72 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-xl flex-shrink-0"></div>
         </div>
-        <div v-else-if="errorSeries" class="text-red-400 bg-red-900/20 p-4 rounded-lg">
-          {{ errorSeries }}
-        </div>
         <div v-else ref="seriesScrollRef" class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 custom-scrollbar">
           <div v-for="show in trendingSeries" :key="show.id" class="w-48 flex-shrink-0 snap-start">
-            <NuxtLink :to="$localePath('/show/' + show.id)" class="group transition-transform hover:-translate-y-1 block">
+            <NuxtLink :to="localePath('/show/' + show.id)" class="group transition-transform hover:-translate-y-1 block">
               <div class="relative w-full h-72 rounded-xl overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800">
                 <NuxtImg v-if="show.poster_path" :src="'https://image.tmdb.org/t/p/w342' + show.poster_path" :alt="(show as any).name || (show as any).title" format="webp" loading="lazy" class="object-cover w-full h-full transition duration-300" />
               </div>
@@ -92,17 +86,14 @@
       </section>
 
       <!-- Trending Games -->
-      <section>
+      <section v-if="!errorGames">
         <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-900 dark:text-white tracking-wide">{{ $t('game.trendingGames', 'Jeux du moment') }}</h2>
         <div v-if="isLoadingGames" class="flex gap-4 overflow-x-auto pb-4">
           <div v-for="i in 4" :key="i" class="w-48 h-72 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-xl flex-shrink-0"></div>
         </div>
-        <div v-else-if="errorGames" class="text-red-400 bg-red-900/20 p-4 rounded-lg">
-          {{ errorGames }}
-        </div>
         <div v-else ref="gamesScrollRef" class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 custom-scrollbar">
           <div v-for="game in trendingGames" :key="game.id" class="w-48 flex-shrink-0 snap-start">
-            <NuxtLink :to="$localePath('/game/' + game.id)" class="group transition-transform hover:-translate-y-1 block">
+            <NuxtLink :to="localePath('/game/' + game.id)" class="group transition-transform hover:-translate-y-1 block">
               <div class="relative w-full h-72 rounded-xl overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800">
                 <NuxtImg v-if="game.cover?.url" :src="game.cover.url" :alt="game.name" format="webp" loading="lazy" class="object-cover w-full h-full transition duration-300" />
               </div>
@@ -113,7 +104,7 @@
       </section>
 
       <!-- Trending Voice Actors -->
-      <section>
+      <section v-if="!errorTrendingVoiceActors">
         <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-900 dark:text-white tracking-wide">{{ $t('home.trendingVoiceActors') }}</h2>
         <div v-if="isLoadingTrendingVoiceActors" class="flex gap-4 overflow-x-auto pb-4 pt-4 px-2">
           <div v-for="i in 4" :key="i" class="w-36 flex-shrink-0 flex flex-col items-center gap-3">
@@ -121,13 +112,10 @@
             <div class="h-4 w-20 bg-gray-200 dark:bg-gray-800 rounded animate-pulse"></div>
           </div>
         </div>
-        <div v-else-if="errorTrendingVoiceActors" class="text-red-400 bg-red-900/20 p-4 rounded-lg">
-          {{ errorTrendingVoiceActors }}
-        </div>
         <div v-else ref="vaScrollRef" class="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4 pt-4 px-2 custom-scrollbar">
           <div v-for="va in trendingVoiceActors" :key="va.id" class="w-36 flex-shrink-0 snap-start">
             <NuxtLink
-              :to="$localePath('/voice-actor/' + va.id)"
+              :to="localePath('/voice-actor/' + va.id)"
               class="flex flex-col items-center gap-3 group transition-transform hover:-translate-y-1 relative"
             >
               <div class="absolute top-0 right-2 bg-gradient-to-br from-cyan-400 to-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-lg border-2 border-white dark:border-[#1a1a1a] flex items-center justify-center min-w-[28px] z-10 transition-transform group-hover:scale-110 group-hover:rotate-6">
@@ -146,7 +134,7 @@
       </section>
 
       <!-- Top Voice Actors -->
-      <section>
+      <section v-if="!errorTopVoiceActors">
         <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-900 dark:text-white tracking-wide">{{ $t('home.topVoiceActors') }}</h2>
         <div v-if="isLoadingTopVoiceActors" class="flex gap-4 overflow-x-auto pb-4 pt-4 px-2">
           <div v-for="i in 4" :key="i" class="w-36 flex-shrink-0 flex flex-col items-center gap-3">
@@ -154,13 +142,10 @@
             <div class="h-4 w-20 bg-gray-200 dark:bg-gray-800 rounded animate-pulse"></div>
           </div>
         </div>
-        <div v-else-if="errorTopVoiceActors" class="text-red-400 bg-red-900/20 p-4 rounded-lg">
-          {{ errorTopVoiceActors }}
-        </div>
         <div v-else class="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4 pt-4 px-2 custom-scrollbar">
           <div v-for="va in topVoiceActors" :key="va.id" class="w-36 flex-shrink-0 snap-start">
             <NuxtLink
-              :to="$localePath('/voice-actor/' + va.id)"
+              :to="localePath('/voice-actor/' + va.id)"
               class="flex flex-col items-center gap-3 group transition-transform hover:-translate-y-1"
             >
               <div class="relative w-28 h-28 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-800 border-2 border-transparent group-hover:border-cyan-500 transition-colors shadow-md">
@@ -175,16 +160,13 @@
         </div>
       </section>
       <!-- Top Contributors (Admin Only) -->
-      <section v-if="isAdmin">
+      <section v-if="isAdmin && !errorTopContributors">
         <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-900 dark:text-white tracking-wide">Top Contributeurs (Admin)</h2>
         <div v-if="isLoadingTopContributors" class="flex gap-4 overflow-x-auto pb-4">
           <div v-for="i in 4" :key="i" class="w-32 flex-shrink-0 flex flex-col items-center gap-3">
             <div class="w-24 h-24 bg-gray-200 dark:bg-gray-800 rounded-full animate-pulse"></div>
             <div class="h-4 w-20 bg-gray-200 dark:bg-gray-800 rounded animate-pulse"></div>
           </div>
-        </div>
-        <div v-else-if="errorTopContributors" class="text-red-400 bg-red-900/20 p-4 rounded-lg">
-          {{ errorTopContributors }}
         </div>
         <div v-else ref="contributorsScrollRef" class="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4 pt-4 px-2 custom-scrollbar">
           <div v-for="(contributor, index) in topContributors" :key="contributor.user_id" class="w-36 flex-shrink-0 snap-start">
@@ -223,6 +205,7 @@ const isAdmin = computed(() => {
 });
 
 const { t, locale } = useI18n();
+const localePath = useLocalePath();
 
 const ogLocale = computed(() => {
   const map: Record<string, string> = {

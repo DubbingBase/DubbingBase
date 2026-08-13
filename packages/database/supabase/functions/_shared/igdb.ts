@@ -124,10 +124,10 @@ export class IgdbClient implements IIgdbClient {
    * IGDB API uses POST requests with a plain text body (Apicalypse syntax).
    */
   async query<T>(endpoint: string, body: string): Promise<T[]> {
-    const token = await this.authenticate();
+    let token = await this.authenticate();
 
     try {
-      const response = await fetch(`${this.baseUrl}/${endpoint}`, {
+      let response = await fetch(`${this.baseUrl}/${endpoint}`, {
         method: "POST",
         headers: {
           "Client-ID": this.clientId,
@@ -138,6 +138,28 @@ export class IgdbClient implements IIgdbClient {
         body,
         signal: AbortSignal.timeout(8_000),
       });
+
+      if (response.status === 401) {
+        debugLog(
+          `IGDB 401 Unauthorized on /${endpoint}. Clearing token cache and retrying.`,
+        );
+        this.token = null;
+        this.tokenExpiry = null;
+        await this.cache.del("igdb:auth_token");
+        token = await this.authenticate();
+
+        response = await fetch(`${this.baseUrl}/${endpoint}`, {
+          method: "POST",
+          headers: {
+            "Client-ID": this.clientId,
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+            "Content-Type": "text/plain",
+          },
+          body,
+          signal: AbortSignal.timeout(8_000),
+        });
+      }
 
       if (!response.ok) {
         throw new Error(
