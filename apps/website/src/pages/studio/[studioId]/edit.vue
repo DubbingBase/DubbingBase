@@ -138,6 +138,11 @@
   </template>
 
 <script setup lang="ts">
+defineRouteRules({
+  swr: false,
+  cache: false
+});
+
 import { ref, computed, onMounted } from 'vue';
 import { useStudioData } from '@app/shared-logic';
 import imageCompression from "browser-image-compression";

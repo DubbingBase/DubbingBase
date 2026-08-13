@@ -8,6 +8,9 @@ export default defineNuxtConfig({
   nitro: {
     preset: "cloudflare-pages",
   },
+  experimental: {
+    inlineRouteRules: true,
+  },
 
   routeRules: {
     // Prerender static content pages at build time

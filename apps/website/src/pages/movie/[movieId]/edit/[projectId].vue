@@ -430,6 +430,11 @@ import { FilmIcon, Loader2Icon, ImageIcon, XIcon } from "lucide-vue-next";
 import AsyncAutocomplete from "@/components/admin/AsyncAutocomplete.vue";
 import LanguageSelect from "@/components/admin/LanguageSelect.vue";
 
+defineRouteRules({
+  swr: false,
+  cache: false
+});
+
 definePageMeta({
   middleware: 'admin'
 });

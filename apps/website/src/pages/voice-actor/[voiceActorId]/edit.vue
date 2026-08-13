@@ -279,6 +279,11 @@
   </template>
 
 <script setup lang="ts">
+defineRouteRules({
+  swr: false,
+  cache: false
+});
+
 const supabase = useSupabaseClient();
 
 

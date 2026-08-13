@@ -131,10 +131,17 @@ const isError = ref(true);
 const localePath = useLocalePath();
 
 // Redirect if already logged in
-watchEffect(() => {
+onMounted(() => {
   if (user.value) {
     const redirect = route.query.redirect as string;
-    router.push(redirect ? localePath(redirect) : localePath('/profile'));
+    router.push(redirect ? redirect : localePath('/profile'));
+  }
+});
+
+watch(user, (newUser) => {
+  if (newUser) {
+    const redirect = route.query.redirect as string;
+    router.push(redirect ? redirect : localePath('/profile'));
   }
 });
 
@@ -165,9 +172,9 @@ const handleRegister = async () => {
       isError.value = false;
       authMessage.value = "Registration successful! Please check your email to verify your account.";
     } else {
-      // Logged in immediately
+      isError.value = false;
       const redirect = route.query.redirect as string;
-      router.push(redirect ? localePath(redirect) : localePath('/profile'));
+      router.push(redirect ? redirect : localePath('/profile'));
     }
 
   } catch (err: any) {

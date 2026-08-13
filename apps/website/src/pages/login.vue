@@ -91,10 +91,17 @@ const loginError = ref<string | null>(null);
 const localePath = useLocalePath();
 
 // Redirect if already logged in
-watchEffect(() => {
+onMounted(() => {
   if (user.value) {
     const redirect = route.query.redirect as string;
-    router.push(redirect ? localePath(redirect) : localePath('/profile'));
+    router.push(redirect ? redirect : localePath('/profile'));
+  }
+});
+
+watch(user, (newUser) => {
+  if (newUser) {
+    const redirect = route.query.redirect as string;
+    router.push(redirect ? redirect : localePath('/profile'));
   }
 });
 

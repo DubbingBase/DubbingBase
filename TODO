@@ -53,3 +53,4 @@ backpropagate character_id into existing rows work
 - Add skeleton loaders for better perceived performance during data fetching
 - Implement SEO best practices to ensure web pages are properly indexed
 - Implement a localization system to translate the application
+- Implement On-Demand Cache Invalidation (purge Nitro cache tags when editing records)
