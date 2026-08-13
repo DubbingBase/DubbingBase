@@ -1,29 +1,29 @@
-const SECTION_LABELS: Record<string, string> = {
-  movies: "Movies",
-  series: "Series",
-  "voice-actors": "Voice Actors",
-  studios: "Studios",
-  games: "Games",
-  movie: "Movies",
-  show: "Series",
-  game: "Games",
-  "voice-actor": "Voice Actors",
-  studio: "Studios",
-  actor: "Actors",
-  leaderboard: "Leaderboard",
-  discussions: "Discussions",
-  contribute: "Contribute",
-  login: "Login",
-  register: "Register",
-  profile: "Profile",
-  settings: "Settings",
-  "api-key": "API Key",
-  about: "About",
-  legal: "Legal",
-  privacy: "Privacy",
-  terms: "Terms",
-  "terms-api": "API Terms",
-  guidelines: "Guidelines",
+const SECTION_I18N_KEYS: Record<string, string> = {
+  movies: "breadcrumb.sections.movies",
+  series: "breadcrumb.sections.series",
+  "voice-actors": "breadcrumb.sections.voiceActors",
+  studios: "breadcrumb.sections.studios",
+  games: "breadcrumb.sections.games",
+  movie: "breadcrumb.sections.movies",
+  show: "breadcrumb.sections.series",
+  game: "breadcrumb.sections.games",
+  "voice-actor": "breadcrumb.sections.voiceActors",
+  studio: "breadcrumb.sections.studios",
+  actor: "breadcrumb.sections.actors",
+  leaderboard: "breadcrumb.sections.leaderboard",
+  discussions: "breadcrumb.sections.discussions",
+  contribute: "breadcrumb.sections.contribute",
+  login: "breadcrumb.sections.login",
+  register: "breadcrumb.sections.register",
+  profile: "breadcrumb.sections.profile",
+  settings: "breadcrumb.sections.settings",
+  "api-key": "breadcrumb.sections.apiKey",
+  about: "breadcrumb.sections.about",
+  legal: "breadcrumb.sections.legal",
+  privacy: "breadcrumb.sections.privacy",
+  terms: "breadcrumb.sections.terms",
+  "terms-api": "breadcrumb.sections.termsApi",
+  guidelines: "breadcrumb.sections.guidelines",
 };
 
 const LOCALE_PREFIXES = ["fr"];
@@ -34,12 +34,21 @@ function capitalize(value: string): string {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+function safeDecode(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
 function sanitize(json: string): string {
   return json.replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026");
 }
 
 export function useBreadcrumbJsonLd() {
   const route = useRoute();
+  const { t } = useI18n();
   const SITE = "https://dubbingbase.com";
 
   const jsonLd = computed(() => {
@@ -56,7 +65,7 @@ export function useBreadcrumbJsonLd() {
       {
         "@type": "ListItem",
         position: 1,
-        name: "Home",
+        name: t("breadcrumb.home", "Home"),
         item: locale ? `${SITE}/${locale}` : SITE,
       },
     ];
@@ -65,7 +74,8 @@ export function useBreadcrumbJsonLd() {
     let position = 2;
     for (const segment of segments) {
       acc += `/${segment}`;
-      const name = SECTION_LABELS[segment] ?? capitalize(decodeURIComponent(segment));
+      const key = SECTION_I18N_KEYS[segment];
+      const name = key ? t(key) : capitalize(safeDecode(segment));
       itemListElement.push({
         "@type": "ListItem",
         position,

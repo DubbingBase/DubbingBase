@@ -131,5 +131,30 @@
     "voice": "Voice",
     "songs": "Songs",
     "other": "Other"
+  },
+  "breadcrumb": {
+    "home": "Home",
+    "sections": {
+      "movies": "Movies",
+      "series": "Series",
+      "voiceActors": "Voice Actors",
+      "studios": "Studios",
+      "games": "Games",
+      "actors": "Actors",
+      "leaderboard": "Leaderboard",
+      "discussions": "Discussions",
+      "contribute": "Contribute",
+      "login": "Login",
+      "register": "Register",
+      "profile": "Profile",
+      "settings": "Settings",
+      "apiKey": "API Key",
+      "about": "About",
+      "legal": "Legal",
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "termsApi": "API Terms",
+      "guidelines": "Guidelines"
+    }
   }
 }

@@ -145,7 +145,7 @@ This repo uses [Changesets](https://github.com/changesets/changesets) for versio
 
 When adding a **new feature** (or any user-facing change), generate a changeset before finishing the task:
 
-- Run `pnpm changeset` and answer the prompts, OR add a markdown file directly under `.changeset/` (do not edit `README.md` or `config.json`).
+- Run `pnpm exec changeset` and answer the prompts, OR add a markdown file directly under `.changeset/` (do not edit `README.md` or `config.json`).
 - Name the file anything unique, e.g. `.changeset/add-breadcrumb-structured-data.md`.
 - Format:
 
@@ -162,7 +162,7 @@ When adding a **new feature** (or any user-facing change), generate a changeset 
   - `patch` — bug fixes / chores
   - `major` — breaking change
 - One changeset file per logical change; avoid committing changeset files for internal-only refactors with no user-facing impact.
-- Never commit the changeset if the user only asked for a code change without a feature — but when a feature is added, a changeset is expected.
+- Skip the changeset only for internal-only refactors with no user-facing package impact, or when the user explicitly asks for a code-only change. User-facing fixes (`patch`) and features (`minor`) always require a changeset.
 
 ---
 

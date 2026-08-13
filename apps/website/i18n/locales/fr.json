@@ -131,5 +131,30 @@
     "voice": "Voix",
     "songs": "Chansons",
     "other": "Autre"
+  },
+  "breadcrumb": {
+    "home": "Accueil",
+    "sections": {
+      "movies": "Films",
+      "series": "Séries",
+      "voiceActors": "Comédiens de doublage",
+      "studios": "Studios",
+      "games": "Jeux",
+      "actors": "Acteurs",
+      "leaderboard": "Classement",
+      "discussions": "Discussions",
+      "contribute": "Contribuer",
+      "login": "Connexion",
+      "register": "Inscription",
+      "profile": "Profil",
+      "settings": "Paramètres",
+      "apiKey": "Clé API",
+      "about": "À propos",
+      "legal": "Mentions légales",
+      "privacy": "Confidentialité",
+      "terms": "Conditions",
+      "termsApi": "Conditions de l'API",
+      "guidelines": "Directives"
+    }
   }
 }
