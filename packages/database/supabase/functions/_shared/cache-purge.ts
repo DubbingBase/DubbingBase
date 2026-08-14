@@ -33,21 +33,29 @@ export async function purgeCloudflareCache(opts: PurgeOptions): Promise<void> {
   }
 
   try {
-    const res = await fetch(
-      `https://api.cloudflare.com/client/v4/zones/${zone}/purge_cache`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 2000);
+    let res: Response;
+    try {
+      res = await fetch(
+        `https://api.cloudflare.com/client/v4/zones/${zone}/purge_cache`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            files: opts.files ?? [],
+            tags: opts.tags ?? [],
+            prefixes: opts.prefixes ?? [],
+          }),
+          signal: controller.signal,
         },
-        body: JSON.stringify({
-          files: opts.files ?? [],
-          tags: opts.tags ?? [],
-          prefixes: opts.prefixes ?? [],
-        }),
-      },
-    );
+      );
+    } finally {
+      clearTimeout(timeout);
+    }
 
     if (!res.ok) {
       console.error("[CACHE] purge failed", await res.text());
@@ -55,7 +63,11 @@ export async function purgeCloudflareCache(opts: PurgeOptions): Promise<void> {
       console.log("[CACHE] purge ok", JSON.stringify(opts));
     }
   } catch (error) {
-    console.error("[CACHE] purge error", error);
+    if (error instanceof Error && error.name === "AbortError") {
+      console.warn("[CACHE] purge skipped: Cloudflare API timed out");
+    } else {
+      console.error("[CACHE] purge error", error);
+    }
   }
 }
 
