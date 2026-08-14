@@ -327,6 +327,7 @@
 
 <script setup lang="ts">
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
+import { clientCacheGet, clientCacheSet } from "../../composables/useClientDataCache";
 import { useRoute, useRouter } from "vue-router";
 
 import { fetchShowData } from "@app/shared-logic";
@@ -361,25 +362,32 @@ const { locale, t } = useI18n();
 
 const cacheKey = `show-${showId}-${locale.value}`;
 
-const { data, pending } = useAsyncData(cacheKey, async () => {
-  const nuxtApp = useNuxtApp();
-  // We only have cached data on the client side after hydration
-  const cachedData = nuxtApp.payload.data[cacheKey];
+const { data, pending } = useAsyncData(
+  cacheKey,
+  async () => {
+    const nuxtApp = useNuxtApp();
+    // We only have cached data on the client side after hydration
+    const cachedData = nuxtApp.payload.data[cacheKey];
 
-  const newData = await fetchShowData(supabase, showId, locale.value);
-  
-  if (
-    newData && 
-    newData.serie?.title === "Information indisponible (Timeout)" && 
-    cachedData?.serie &&
-    cachedData.serie.title !== "Information indisponible (Timeout)"
-  ) {
-    newData.serie = cachedData.serie;
-    newData.characterProfilePictures = cachedData.characterProfilePictures;
-  }
-  
-  return newData;
-});
+    const newData = await fetchShowData(supabase, showId, locale.value);
+
+    if (
+      newData &&
+      newData.serie?.title === "Information indisponible (Timeout)" &&
+      cachedData?.serie &&
+      cachedData.serie.title !== "Information indisponible (Timeout)"
+    ) {
+      newData.serie = cachedData.serie;
+      newData.characterProfilePictures = cachedData.characterProfilePictures;
+    }
+
+    clientCacheSet(cacheKey, newData);
+    return newData;
+  },
+  {
+    getCachedData: (key) => clientCacheGet(key),
+  },
+);
 
 const serie = computed(() => data.value?.serie);
 const dubbingProjects = computed(() => {

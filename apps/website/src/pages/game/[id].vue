@@ -237,6 +237,7 @@
 
 <script setup lang="ts">
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
+import { clientCacheGet, clientCacheSet } from "../../composables/useClientDataCache";
 import MediaSkeleton from "../../components/MediaSkeleton.vue";
 import { useRoute, useRouter } from 'vue-router';
 import { fetchGameData } from '@app/shared-logic';
@@ -263,31 +264,39 @@ const isPreparing = ref(false);
 const { locale, t } = useI18n();
 
 const cacheKey = `game-${gameId}-${locale.value}`;
-const { data, pending, refresh } = useAsyncData(cacheKey, async () => {
-  const nuxtApp = useNuxtApp();
-  // We only have cached data on the client side after hydration
-  const cachedData = nuxtApp.payload.data[cacheKey];
+const { data, pending, refresh } = useAsyncData(
+  cacheKey,
+  async () => {
+    const nuxtApp = useNuxtApp();
+    // We only have cached data on the client side after hydration
+    const cachedData = nuxtApp.payload.data[cacheKey];
 
-  const newData = await fetchGameData(supabase, gameId, locale.value);
+    const newData = await fetchGameData(supabase, gameId, locale.value);
 
-  // If IGDB fetch fails on the edge function (e.g., timeout)
-  // but we already have valid data from SSR, we preserve the IGDB data
-  // while still accepting the fresh database data (votes, dubbing projects).
-  if (
-    newData && 
-    newData.game?.name === "Information indisponible (Timeout)" && 
-    cachedData?.game &&
-    cachedData.game.name !== "Information indisponible (Timeout)"
-  ) {
-    return {
-      ...newData,
-      game: cachedData.game,
-      characters: cachedData.characters,
-    };
-  }
+    // If IGDB fetch fails on the edge function (e.g., timeout)
+    // but we already have valid data from SSR, we preserve the IGDB data
+    // while still accepting the fresh database data (votes, dubbing projects).
+    let result = newData;
+    if (
+      newData &&
+      newData.game?.name === "Information indisponible (Timeout)" &&
+      cachedData?.game &&
+      cachedData.game.name !== "Information indisponible (Timeout)"
+    ) {
+      result = {
+        ...newData,
+        game: cachedData.game,
+        characters: cachedData.characters,
+      };
+    }
 
-  return newData;
-});
+    clientCacheSet(cacheKey, result);
+    return result;
+  },
+  {
+    getCachedData: (key) => clientCacheGet(key),
+  },
+);
 
 const game = computed(() => data.value?.game);
 const characters = computed(() => data.value?.characters || []);

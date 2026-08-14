@@ -2,4 +2,4 @@
 "@app/website": patch
 ---
 
-Improve navigation speed: enable Nuxt payload prefetching (`prefetchPreload`) so media data is fetched on link hover instead of on click. Edge functions for movie/show/game now return edge-cacheable responses (SWR), and `prepare_media` purges the cached media page after a refresh.
+Performance: enable Nuxt payload prefetching, add client-side SWR cache (instant cached media on navigation with background revalidation), edge-cache media edge-function responses (SWR), and purge the cache on media refresh. Also improve hero images with `fetchpriority="high"`/eager loading, reserved aspect space to avoid layout shift, and lazy-load below-the-fold cast images.
