@@ -135,6 +135,7 @@
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useStudioData, fetchStudioDetails } from '@app/shared-logic';
+import { clientCacheGet, clientCacheSet } from "../../composables/useClientDataCache";
 import { ExternalLinkIcon } from 'lucide-vue-next';
 import DetailsPage from '../../components/layout/details/DetailsPage.vue';
 import DetailsHero from '../../components/layout/details/DetailsHero.vue';
@@ -149,7 +150,18 @@ const isAdmin = computed(() => {
   return user.value?.app_metadata?.role === 'admin' || user.value?.user_metadata?.role === 'admin';
 });
 
-const { data: initialStudioDetails } = await useAsyncData(`studio-${route.params.id}`, () => fetchStudioDetails(supabase, route.params.id as string));
+const studioCacheKey = `studio-${route.params.id}`;
+const { data: initialStudioDetails } = await useAsyncData(
+  studioCacheKey,
+  async () => {
+    const result = await fetchStudioDetails(supabase, route.params.id as string);
+    clientCacheSet(studioCacheKey, result);
+    return result;
+  },
+  {
+    getCachedData: (key) => clientCacheGet(key),
+  },
+);
 
 const { studio, dubbedProjects, voiceActorsRoster, loading, error } = useStudioData(supabase, [], initialStudioDetails.value);
 

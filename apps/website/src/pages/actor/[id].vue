@@ -323,6 +323,7 @@
 
 <script setup lang="ts">
 import PersonDetailsLayout from "../../components/layout/PersonDetailsLayout.vue";
+import { clientCacheGet, clientCacheSet } from "../../composables/useClientDataCache";
 import { onMounted, ref, watch, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ArrowLeftIcon, ClapperboardIcon, UserIcon } from "lucide-vue-next";
@@ -339,8 +340,17 @@ const { locale, t } = useI18n();
 const id = route.params.id as string;
 const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
 
-const { data: initialData } = await useAsyncData(`actor-${id}`, () =>
-  fetchActorData(supabase, id)
+const actorCacheKey = `actor-${id}`;
+const { data: initialData } = await useAsyncData(
+  actorCacheKey,
+  async () => {
+    const result = await fetchActorData(supabase, id);
+    clientCacheSet(actorCacheKey, result);
+    return result;
+  },
+  {
+    getCachedData: (key) => clientCacheGet(key),
+  },
 );
 
 const {
