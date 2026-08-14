@@ -132,7 +132,7 @@
               class="relative w-20 h-20 rounded-full overflow-hidden mb-3 border-2 border-transparent group-hover:border-cyan-400 transition-colors"
             >
               <NuxtImg
-                format="webp"
+                format="webp" loading="lazy"
                 v-if="va.profile_picture"
                 :src="va.profile_picture"
                 :alt="`${va.firstname} ${va.lastname}`"
@@ -199,7 +199,7 @@
                   class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 flex-shrink-0"
                 >
                   <NuxtImg
-                    format="webp"
+                    format="webp" loading="lazy"
                     v-if="item.poster_path"
                     :src="resolveImageUrl(item.poster_path)"
                     :alt="item.title || item.name"
@@ -243,7 +243,7 @@
                   class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 flex-shrink-0"
                 >
                   <NuxtImg
-                    format="webp"
+                    format="webp" loading="lazy"
                     v-if="item.voice_actors[0].profile_picture"
                     :src="item.voice_actors[0].profile_picture"
                     :alt="`${item.voice_actors[0].firstname} ${item.voice_actors[0].lastname}`"
