@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
+import { purgeMediaForProject } from "../_shared/cache-purge.ts";
 
 export default {
   fetch: withSupabase<Database>({ auth: "user" }, async (req, ctx) => {
@@ -73,6 +74,8 @@ export default {
           }
         }
       }
+
+      await purgeMediaForProject(ctx.supabaseAdmin, currentProjectId);
 
       return Response.json({ success: true, projectId: currentProjectId });
     } catch (error) {

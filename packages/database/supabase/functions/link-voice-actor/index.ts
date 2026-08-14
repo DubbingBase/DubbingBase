@@ -1,4 +1,5 @@
 import { withSupabase } from "npm:@supabase/server@^1";
+import { purgeMediaByContentType } from "../_shared/cache-purge.ts";
 import { Database } from "../_shared/database.types.ts";
 import { findOrCreateDubbingProject } from "../_shared/dubbing-project.ts";
 
@@ -140,6 +141,8 @@ export default {
         ...(result as any),
         voiceActorDetails: voiceActorDetails,
       };
+
+      await purgeMediaByContentType(media_type, media_id);
 
       return Response.json(response);
     } catch (error) {

@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
+import { purgeMediaForStudio } from "../_shared/cache-purge.ts";
 
 export default {
   fetch: withSupabase<Database>({ auth: "user" }, async (req, ctx) => {
@@ -25,6 +26,8 @@ export default {
           .eq("id", Number(id));
 
         if (error) throw error;
+        await purgeMediaForStudio(ctx.supabaseAdmin, Number(id));
+
         return Response.json({ success: true, message: "Studio updated" });
       } else {
         const { error } = await ctx.supabase.from("studios").insert([updates]);

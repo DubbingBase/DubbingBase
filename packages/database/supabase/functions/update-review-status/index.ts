@@ -1,6 +1,7 @@
 import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
 import { createErrorResponse, createResponse } from "../_shared/http-utils.ts";
+import { purgeMediaByContentType } from "../_shared/cache-purge.ts";
 import { SimpleCache, CACHE_KEYS } from "../_shared/cache-utils.ts";
 import { RedisClient } from "../_shared/redis.ts";
 
@@ -157,7 +158,11 @@ export default {
         // Don't fail the request if cache invalidation fails
       }
 
-      return createResponse({ success: true, data });
+        if (contentId != null) {
+          await purgeMediaByContentType(contentType, contentId);
+        }
+
+        return createResponse({ success: true, data });
     } catch (error) {
       console.error("Error in update-review-status function:", error);
       return createErrorResponse(

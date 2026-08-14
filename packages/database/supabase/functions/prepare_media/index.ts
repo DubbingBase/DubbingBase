@@ -7,7 +7,7 @@ import { VoiceActorService } from "../_shared/voice-actor-service.ts";
 import { Database } from "../_shared/database.types.ts";
 import { buildTmdbImageUrl } from "../_shared/tmdb-urls.ts";
 import { findOrCreateDubbingProject } from "../_shared/dubbing-project.ts";
-import { purgeCloudflareCache, mediaPageUrl, mediaCacheTag } from "../_shared/cache-purge.ts";
+import { purgeMediaByContentType } from "../_shared/cache-purge.ts";
 
 export default {
   fetch: withSupabase<Database>(
@@ -244,10 +244,7 @@ export default {
 
         // Bust the cached media page + edge-function response so the refresh
         // is visible immediately instead of waiting out the SWR window.
-        await purgeCloudflareCache({
-          files: [mediaPageUrl(tmdbType, tmdbId)],
-          tags: [mediaCacheTag(tmdbType, tmdbId)],
-        });
+        await purgeMediaByContentType(tmdbType, tmdbId);
 
         return Response.json(result);
       } catch (error) {

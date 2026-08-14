@@ -1,3 +1,5 @@
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
+
 /**
  * Defensive Cloudflare cache purge helper.
  *
@@ -65,4 +67,78 @@ export function mediaPageUrl(mediaType: string, id: number | string): string {
 export function mediaCacheTag(mediaType: string, id: number | string): string {
   const path = mediaType === "tv" ? "show" : mediaType;
   return `media-${path}-${id}`;
+}
+
+/**
+ * Purge the cached media page + edge-function response for a given
+ * `dubbing_projects.content_type` / `content_id` pair.
+ * content_type is one of: "movie" | "tv" | "game".
+ */
+export async function purgeMediaByContentType(
+  contentType: string,
+  contentId: number | string,
+): Promise<void> {
+  const path = contentType === "tv" ? "show" : contentType;
+  await purgeCloudflareCache({
+    files: [`${SITE_URL}/${path}/${contentId}`],
+    tags: [`media-${path}-${contentId}`],
+  });
+}
+
+/** Purge a media page by its dubbing_project id (resolves content_type/id). */
+export async function purgeMediaForProject(
+  supabase: SupabaseClient,
+  projectId: number | string,
+): Promise<void> {
+  try {
+    const { data } = await supabase
+      .from("dubbing_projects")
+      .select("content_type, content_id")
+      .eq("id", projectId)
+      .single();
+    if (data?.content_type && data?.content_id != null) {
+      await purgeMediaByContentType(data.content_type, data.content_id);
+    }
+  } catch (error) {
+    console.error("[CACHE] purgeMediaForProject failed", error);
+  }
+}
+
+/** Purge a media page by a work id (resolves via dubbing_project). */
+export async function purgeMediaForWork(
+  supabase: SupabaseClient,
+  workId: number | string,
+): Promise<void> {
+  try {
+    const { data } = await supabase
+      .from("works")
+      .select("dubbing_project_id")
+      .eq("id", workId)
+      .single();
+    if (data?.dubbing_project_id != null) {
+      await purgeMediaForProject(supabase, data.dubbing_project_id);
+    }
+  } catch (error) {
+    console.error("[CACHE] purgeMediaForWork failed", error);
+  }
+}
+
+/** Purge every media page that uses a given studio (via its dubbing projects). */
+export async function purgeMediaForStudio(
+  supabase: SupabaseClient,
+  studioId: number | string,
+): Promise<void> {
+  try {
+    const { data } = await supabase
+      .from("dubbing_projects")
+      .select("content_type, content_id")
+      .eq("studio_id", studioId);
+    for (const p of data ?? []) {
+      if (p.content_type && p.content_id != null) {
+        await purgeMediaByContentType(p.content_type, p.content_id);
+      }
+    }
+  } catch (error) {
+    console.error("[CACHE] purgeMediaForStudio failed", error);
+  }
 }

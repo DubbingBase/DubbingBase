@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { Database } from "../_shared/database.types.ts";
 import { createErrorResponse, createResponse } from "../_shared/http-utils.ts";
+import { purgeMediaForWork } from "../_shared/cache-purge.ts";
 
 import { withSupabase } from "npm:@supabase/server@^1";
 
@@ -46,6 +47,8 @@ export default {
         console.error("Error upserting vote:", error);
         return createErrorResponse("Failed to cast vote", 500);
       }
+
+      await purgeMediaForWork(ctx.supabaseAdmin, workId);
 
       return createResponse({ success: true });
     } catch (error) {
