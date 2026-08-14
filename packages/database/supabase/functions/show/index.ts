@@ -193,7 +193,12 @@ export default {
         tvdbId: tvdbId,
       };
 
-      return Response.json(result);
+      return Response.json(result, {
+        headers: {
+          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=3600",
+          "Cache-Tag": `media-show-${showId}`,
+        },
+      });
     } catch (error) {
       console.error("Error in show function:", error);
       return Response.json(

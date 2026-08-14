@@ -141,12 +141,20 @@ export default {
         })();
       }
 
-      return Response.json({
-        game,
-        characters,
-        dubbingProjects,
-        votes: voteData,
-      });
+      return Response.json(
+        {
+          game,
+          characters,
+          dubbingProjects,
+          votes: voteData,
+        },
+        {
+          headers: {
+            "Cache-Control": "public, s-maxage=60, stale-while-revalidate=3600",
+            "Cache-Tag": `media-game-${gameId}`,
+          },
+        },
+      );
     } catch (error) {
       console.error("Error in game function:", error);
       return Response.json(
