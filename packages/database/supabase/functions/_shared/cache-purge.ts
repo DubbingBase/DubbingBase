@@ -154,3 +154,28 @@ export async function purgeMediaForStudio(
     console.error("[CACHE] purgeMediaForStudio failed", error);
   }
 }
+
+/**
+ * Purge a voice-actor page (and, when the actor is known, the linked actor
+ * page too — it renders the voice actor's profile picture). Used after any
+ * mutation touching `voice_actors.profile_picture`.
+ */
+export async function purgeMediaForVoiceActor(
+  supabase: SupabaseClient,
+  voiceActorId: number | string,
+): Promise<void> {
+  try {
+    const { data } = await supabase
+      .from("voice_actors")
+      .select("actor_id")
+      .eq("id", voiceActorId)
+      .single();
+    const tags = [`media-voice-actor-${voiceActorId}`];
+    if (data?.actor_id != null) {
+      tags.push(`media-actor-${data.actor_id}`);
+    }
+    await purgeCloudflareCache({ tags });
+  } catch (error) {
+    console.error("[CACHE] purgeMediaForVoiceActor failed", error);
+  }
+}

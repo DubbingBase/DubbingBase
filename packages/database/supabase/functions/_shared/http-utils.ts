@@ -5,12 +5,17 @@ export const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
 };
 
-export function createResponse(data: any, status = 200) {
+export function createResponse(
+  data: any,
+  status = 200,
+  headers?: Record<string, string>,
+) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
       ...corsHeaders,
       "Content-Type": "application/json",
+      ...(headers ?? {}),
     },
   });
 }

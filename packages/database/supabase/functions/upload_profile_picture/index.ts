@@ -1,6 +1,7 @@
 import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
 import { buildSupabaseImageUrl } from "../_shared/supabase-urls.ts";
+import { purgeMediaForVoiceActor } from "../_shared/cache-purge.ts";
 
 export default {
   fetch: withSupabase<Database>({ auth: "user" }, async (req, ctx) => {
@@ -44,6 +45,8 @@ export default {
 
       console.log("data2", data2);
       console.log("error2", error2);
+
+      await purgeMediaForVoiceActor(ctx.supabaseAdmin, Number(vaId));
 
       return Response.json({
         ok: true,
