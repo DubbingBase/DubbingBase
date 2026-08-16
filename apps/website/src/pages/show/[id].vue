@@ -112,6 +112,90 @@
         </section>
       </div>
 
+      <!-- Seasons & Episodes -->
+      <section v-if="seasons.length" class="mb-12">
+        <h2 class="text-2xl font-bold mb-4">
+          {{ $t("details.seasons", "Saisons") }}
+        </h2>
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-for="s in seasons"
+            :key="s.season_number"
+            type="button"
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border"
+            :class="
+              selectedSeason === s.season_number
+                ? 'bg-cyan-600 dark:bg-[#00E5FF] text-white dark:text-black border-cyan-600 dark:border-[#00E5FF]'
+                : 'bg-white dark:bg-[#1d1d1d] text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#2a2a2a] border-gray-200 dark:border-[#2a2a2a]'
+            "
+            @click="selectSeason(s.season_number)"
+          >
+            <span class="font-semibold">{{
+              s.season_number === 0
+                ? $t("details.specials", "Specials")
+                : s.name
+            }}</span>
+            <span class="opacity-70 ml-1">({{ s.episode_count }})</span>
+          </button>
+        </div>
+
+        <div v-if="selectedSeason !== null" class="mt-6">
+          <MediaSkeleton v-if="seasonPending" />
+          <p v-else-if="seasonError" class="text-sm text-red-500">
+            {{ seasonError }}
+          </p>
+          <div v-else-if="seasonData?.season?.episodes?.length">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-xl font-bold">{{ seasonData.season.name }}</h3>
+              <span class="text-sm text-gray-500"
+                >{{ seasonData.season.episodes.length }}
+                {{ $t("details.episodes", "épisodes") }}</span
+              >
+            </div>
+            <ul class="flex flex-col gap-3">
+              <li
+                v-for="ep in seasonData.season.episodes"
+                :key="ep.id"
+                class="flex gap-4 bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl p-3"
+              >
+                <div
+                  class="w-32 sm:w-40 shrink-0 rounded-xl overflow-hidden bg-gray-200 dark:bg-[#222] aspect-video"
+                >
+                  <NuxtImg
+                    v-if="episodeStill(ep)"
+                    :src="episodeStill(ep)"
+                    format="webp"
+                    loading="lazy"
+                    class="w-full h-full object-cover"
+                    :alt="ep.name"
+                  />
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-baseline gap-2">
+                    <span
+                      class="font-bold text-sm text-gray-500 dark:text-gray-400"
+                      >S{{ selectedSeason }}E{{ ep.episode_number }}</span
+                    >
+                    <span
+                      class="font-bold text-gray-900 dark:text-white truncate"
+                      >{{ ep.name }}</span
+                    >
+                  </div>
+                  <p v-if="ep.air_date" class="text-xs text-gray-500 mt-0.5">
+                    {{ ep.air_date }}
+                  </p>
+                  <p
+                    class="text-sm text-gray-700 dark:text-gray-300 mt-1 line-clamp-3"
+                  >
+                    {{ ep.overview || "" }}
+                  </p>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
       <!-- Voice Cast -->
       <section>
         <div class="flex flex-col mb-6 gap-2">
@@ -333,7 +417,7 @@ import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import { clientCacheGet, clientCacheSet } from "../../composables/useClientDataCache";
 import { useRoute, useRouter } from "vue-router";
 
-import { fetchShowData } from "@app/shared-logic";
+import { fetchShowData, fetchSeasonData } from "@app/shared-logic";
 import { computed, ref } from "vue";
 import {
   ArrowLeftIcon,
@@ -416,6 +500,51 @@ const aggregateCredits = computed(
   () => data.value?.aggregateCredits || { cast: [] },
 );
 const tvdbId = computed(() => data.value?.tvdbId);
+
+// Seasons & episodes browser
+type SeasonResponseData = Awaited<ReturnType<typeof fetchSeasonData>>;
+type EpisodeItem = NonNullable<
+  NonNullable<SeasonResponseData>["season"]["episodes"]
+>[number];
+
+const selectedSeason = ref<number | null>(null);
+const seasonData = ref<SeasonResponseData>(null);
+const seasonPending = ref(false);
+const seasonError = ref<string | null>(null);
+
+const seasons = computed(() => serie.value?.seasons || []);
+
+async function selectSeason(seasonNumber: number) {
+  if (selectedSeason.value === seasonNumber) {
+    selectedSeason.value = null;
+    seasonData.value = null;
+    return;
+  }
+  selectedSeason.value = seasonNumber;
+  seasonPending.value = true;
+  seasonError.value = null;
+  seasonData.value = null;
+  try {
+    seasonData.value = await fetchSeasonData(
+      supabase,
+      showId,
+      seasonNumber,
+      locale.value,
+    );
+  } catch (e) {
+    seasonError.value =
+      e instanceof Error ? e.message : "Failed to load season";
+  } finally {
+    seasonPending.value = false;
+  }
+}
+
+function episodeStill(ep: EpisodeItem): string | undefined {
+  if (!ep.still_path) return undefined;
+  return ep.still_path.startsWith("http")
+    ? ep.still_path
+    : `https://image.tmdb.org/t/p/w300${ep.still_path}`;
+}
 
 const backdropUrl = computed(() => {
   if (!serie.value?.backdrop_path) return null;

@@ -126,11 +126,13 @@ export default {
       );
 
       // Invalidate cache for this work's content
+      let contentId: string | number | null = null;
+      let contentType = "movie";
       try {
         const cache = new SimpleCache(new RedisClient());
         // Use data from the update response which includes content_id and content_type
-        const contentId = data.dubbing_projects?.content_id;
-        const contentType = data.dubbing_projects?.content_type || "movie";
+        contentId = data.dubbing_projects?.content_id;
+        contentType = data.dubbing_projects?.content_type || "movie";
 
         if (contentId) {
           const cacheKey =
@@ -158,11 +160,11 @@ export default {
         // Don't fail the request if cache invalidation fails
       }
 
-        if (contentId != null) {
-          await purgeMediaByContentType(contentType, contentId);
-        }
+      if (contentId != null) {
+        await purgeMediaByContentType(contentType, contentId);
+      }
 
-        return createResponse({ success: true, data });
+      return createResponse({ success: true, data });
     } catch (error) {
       console.error("Error in update-review-status function:", error);
       return createErrorResponse(
