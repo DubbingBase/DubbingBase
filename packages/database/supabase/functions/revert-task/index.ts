@@ -1,5 +1,6 @@
 import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
+import { purgeMediaForVoiceActor } from "../_shared/cache-purge.ts";
 
 export default {
   fetch: withSupabase<Database>({ auth: "user" }, async (req, ctx) => {
@@ -105,6 +106,13 @@ export default {
         action: "reverted_contribution",
         points_awarded: -(auditLog.points_awarded || 0),
       });
+
+      if (auditLog.entity_type === "voice_actor") {
+        await purgeMediaForVoiceActor(
+          ctx.supabaseAdmin,
+          parseInt(auditLog.entity_id, 10),
+        );
+      }
 
       return Response.json({ success: true });
     } catch (error) {

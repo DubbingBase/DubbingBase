@@ -71,9 +71,7 @@
     "meta": {
       "title": "La base de données mondiale du doublage",
       "description": "Découvrez l'encyclopédie mondiale du doublage. Retrouvez les fiches des comédiens, leurs rôles et les castings vocaux de vos films et séries.",
-      "keywords": "doublage, comédiens de doublage, casting vocal, films, séries, fiches acteurs",
-      "ogTitle": "La base de données du doublage",
-      "ogDescription": "Retrouvez la base de données complète des comédiens de doublage du monde entier."
+      "keywords": "doublage, comédiens de doublage, casting vocal, films, séries, fiches acteurs"
     },
     "hero": {
       "title": "La base de données du doublage et des comédiens",
@@ -133,5 +131,30 @@
     "voice": "Voix",
     "songs": "Chansons",
     "other": "Autre"
+  },
+  "breadcrumb": {
+    "home": "Accueil",
+    "sections": {
+      "movies": "Films",
+      "series": "Séries",
+      "voiceActors": "Comédiens de doublage",
+      "studios": "Studios",
+      "games": "Jeux",
+      "actors": "Acteurs",
+      "leaderboard": "Classement",
+      "discussions": "Discussions",
+      "contribute": "Contribuer",
+      "login": "Connexion",
+      "register": "Inscription",
+      "profile": "Profil",
+      "settings": "Paramètres",
+      "apiKey": "Clé API",
+      "about": "À propos",
+      "legal": "Mentions légales",
+      "privacy": "Confidentialité",
+      "terms": "Conditions",
+      "termsApi": "Conditions de l'API",
+      "guidelines": "Directives"
+    }
   }
 }

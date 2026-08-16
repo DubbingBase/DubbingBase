@@ -230,32 +230,33 @@ useDragScroll(gamesScrollRef);
 useDragScroll(vaScrollRef);
 useDragScroll(contributorsScrollRef);
 
+const pageTitle = computed(() => {
+  // In FR: "La base de données mondiale du doublage | DubbingBase"
+  // In EN: "The Dubbing & Voice Actor Database | DubbingBase"
+  return `${t('home.meta.title')} | DubbingBase`;
+});
+
+const pageDescription = computed(() => {
+  const desc = t('home.meta.description');
+  return desc.length > 160 ? desc.substring(0, 157) + '...' : desc;
+});
+
 useHead({
   titleTemplate: null, // Override global titleTemplate to avoid duplicated DubbingBase
-  title: computed(() => {
-    // In FR: "La base de données mondiale du doublage | DubbingBase"
-    // In EN: "The Dubbing & Voice Actor Database | DubbingBase"
-    return `${t('home.meta.title')} | DubbingBase`;
-  }),
+  title: pageTitle,
   meta: [
     {
       name: 'description',
-      content: computed(() => {
-        const desc = t('home.meta.description');
-        return desc.length > 160 ? desc.substring(0, 157) + '...' : desc;
-      }),
+      content: pageDescription,
     },
     {
       name: 'keywords',
       content: computed(() => t('home.meta.keywords')),
     },
-    { property: 'og:title', content: computed(() => t('home.meta.ogTitle')) },
+    { property: 'og:title', content: pageTitle },
     {
       property: 'og:description',
-      content: computed(() => {
-        const desc = t('home.meta.ogDescription');
-        return desc.length > 160 ? desc.substring(0, 157) + '...' : desc;
-      }),
+      content: pageDescription,
     },
     { property: 'og:type', content: 'website' },
     { property: 'og:url', content: 'https://dubbingbase.com/' },
@@ -263,13 +264,10 @@ useHead({
     { property: 'og:site_name', content: 'DubbingBase' },
     { property: 'og:locale', content: ogLocale },
     { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: computed(() => t('home.meta.ogTitle')) },
+    { name: 'twitter:title', content: pageTitle },
     {
       name: 'twitter:description',
-      content: computed(() => {
-        const desc = t('home.meta.ogDescription');
-        return desc.length > 160 ? desc.substring(0, 157) + '...' : desc;
-      }),
+      content: pageDescription,
     },
     { name: 'twitter:image', content: 'https://dubbingbase.com/android-chrome-512x512.png' },
   ],

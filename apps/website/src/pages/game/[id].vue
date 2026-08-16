@@ -1,7 +1,8 @@
 <template>
   <div>
+    <MediaSkeleton v-if="pending && !game" />
     <MediaDetailsLayout
-      v-if="game"
+      v-else-if="game"
       :title="game.name"
       :backdrop-url="game.artworks?.[0]?.url || game.screenshots?.[0]?.url || null"
       :poster-url="coverUrl"
@@ -53,7 +54,7 @@
             title="Studio de doublage"
           >
             <div class="w-6 h-6 rounded flex items-center justify-center overflow-hidden shrink-0 bg-white dark:bg-[#2a2a2a]">
-              <img v-if="activeDubProject.studio_data.logo_url" :src="activeDubProject.studio_data.logo_url" class="w-full h-full object-contain p-0.5" />
+              <img loading="lazy" v-if="activeDubProject.studio_data.logo_url" :src="activeDubProject.studio_data.logo_url" class="w-full h-full object-contain p-0.5" />
               <span v-else class="font-bold text-xs text-gray-400">{{ activeDubProject.studio_data.name.charAt(0) }}</span>
             </div>
             <span class="font-medium text-xs group-hover:text-cyan-500 transition-colors truncate max-w-[120px]">{{ activeDubProject.studio_data.name }}</span>
@@ -170,7 +171,7 @@
               <!-- Character -->
               <div class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start">
                 <div class="w-16 sm:w-full relative block overflow-hidden rounded-xl aspect-[2/3] bg-gray-200 dark:bg-[#222] sm:mb-3 flex-shrink-0">
-                  <NuxtImg format="webp" v-if="char.mug_shot?.url" :src="char.mug_shot.url" class="w-full h-full object-cover" alt="Character" />
+                  <NuxtImg format="webp" loading="lazy" v-if="char.mug_shot?.url" :src="char.mug_shot.url" class="w-full h-full object-cover" alt="Character" />
                   <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
                     <UserIcon class="w-8 h-8 opacity-50" />
                   </div>
@@ -190,7 +191,7 @@
               <div class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-4 sm:pt-0 mt-2 sm:mt-0">
                 <template v-if="char.voiceActor">
                   <NuxtLink :to="$localePath(`/voice-actor/${char.voiceActor.id}`)" class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] bg-gray-200 dark:bg-[#222] sm:mb-3 flex-shrink-0">
-                    <NuxtImg format="webp" v-if="char.voiceActor.profile_picture" :src="char.voiceActor.profile_picture" class="w-full h-full object-cover transition-transform duration-300" alt="Voice Actor" />
+                    <NuxtImg format="webp" loading="lazy" v-if="char.voiceActor.profile_picture" :src="char.voiceActor.profile_picture" class="w-full h-full object-cover transition-transform duration-300" alt="Voice Actor" />
                     <div v-else class="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-400 uppercase bg-gray-300 dark:bg-gray-800">
                       {{ char.voiceActor.firstname?.[0] }}{{ char.voiceActor.lastname?.[0] }}
                     </div>
@@ -236,6 +237,8 @@
 
 <script setup lang="ts">
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
+import { clientCacheGet, clientCacheSet } from "../../composables/useClientDataCache";
+import MediaSkeleton from "../../components/MediaSkeleton.vue";
 import { useRoute, useRouter } from 'vue-router';
 import { fetchGameData } from '@app/shared-logic';
 import type { IgdbGame, IgdbCharacter } from '@app/shared-logic';
@@ -261,31 +264,39 @@ const isPreparing = ref(false);
 const { locale, t } = useI18n();
 
 const cacheKey = `game-${gameId}-${locale.value}`;
-const { data, pending, refresh } = useAsyncData(cacheKey, async () => {
-  const nuxtApp = useNuxtApp();
-  // We only have cached data on the client side after hydration
-  const cachedData = nuxtApp.payload.data[cacheKey];
+const { data, pending, refresh } = useAsyncData(
+  cacheKey,
+  async () => {
+    const nuxtApp = useNuxtApp();
+    // We only have cached data on the client side after hydration
+    const cachedData = nuxtApp.payload.data[cacheKey];
 
-  const newData = await fetchGameData(supabase, gameId, locale.value);
+    const newData = await fetchGameData(supabase, gameId, locale.value);
 
-  // If IGDB fetch fails on the edge function (e.g., timeout)
-  // but we already have valid data from SSR, we preserve the IGDB data
-  // while still accepting the fresh database data (votes, dubbing projects).
-  if (
-    newData && 
-    newData.game?.name === "Information indisponible (Timeout)" && 
-    cachedData?.game &&
-    cachedData.game.name !== "Information indisponible (Timeout)"
-  ) {
-    return {
-      ...newData,
-      game: cachedData.game,
-      characters: cachedData.characters,
-    };
-  }
+    // If IGDB fetch fails on the edge function (e.g., timeout)
+    // but we already have valid data from SSR, we preserve the IGDB data
+    // while still accepting the fresh database data (votes, dubbing projects).
+    let result = newData;
+    if (
+      newData &&
+      newData.game?.name === "Information indisponible (Timeout)" &&
+      cachedData?.game &&
+      cachedData.game.name !== "Information indisponible (Timeout)"
+    ) {
+      result = {
+        ...newData,
+        game: cachedData.game,
+        characters: cachedData.characters,
+      };
+    }
 
-  return newData;
-});
+    clientCacheSet(cacheKey, result);
+    return result;
+  },
+  {
+    getCachedData: (key) => clientCacheGet(key),
+  },
+);
 
 const game = computed(() => data.value?.game);
 const characters = computed(() => data.value?.characters || []);

@@ -1,4 +1,5 @@
 import { withSupabase } from "npm:@supabase/server@^1";
+import { purgeMediaForWork } from "../_shared/cache-purge.ts";
 import { Database } from "../_shared/database.types.ts";
 
 console.log("update_voice_actor_link function started");
@@ -99,6 +100,8 @@ export default {
       }
 
       // Return success response
+      await purgeMediaForWork(ctx.supabaseAdmin, work_id);
+
       return Response.json(updatedWork);
     } catch (error) {
       console.error("Error in update_voice_actor_link:", error);

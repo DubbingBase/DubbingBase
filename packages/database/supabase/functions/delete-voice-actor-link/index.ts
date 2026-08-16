@@ -1,4 +1,5 @@
 import { withSupabase } from "npm:@supabase/server@^1";
+import { purgeMediaForWork } from "../_shared/cache-purge.ts";
 import { Database } from "../_shared/database.types.ts";
 
 console.log("delete-voice-actor-link function started");
@@ -94,6 +95,8 @@ export default {
       }
 
       // Return success response
+      await purgeMediaForWork(ctx.supabaseAdmin, id);
+
       return Response.json({
         success: true,
         message: "Voice actor link deleted successfully",

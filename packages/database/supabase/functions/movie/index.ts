@@ -160,7 +160,12 @@ export default {
         tvdbId: tvdbId,
       };
 
-      return Response.json(result);
+      return Response.json(result, {
+        headers: {
+          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=3600",
+          "Cache-Tag": `media-movie-${movieId}`,
+        },
+      });
     } catch (error) {
       console.error("Error in movie function:", error);
       return Response.json(

@@ -1,6 +1,7 @@
 import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
 import { createErrorResponse, createResponse } from "../_shared/http-utils.ts";
+import { purgeMediaByContentType } from "../_shared/cache-purge.ts";
 import { SimpleCache, CACHE_KEYS } from "../_shared/cache-utils.ts";
 import { RedisClient } from "../_shared/redis.ts";
 
@@ -125,11 +126,13 @@ export default {
       );
 
       // Invalidate cache for this work's content
+      let contentId: string | number | null = null;
+      let contentType = "movie";
       try {
         const cache = new SimpleCache(new RedisClient());
         // Use data from the update response which includes content_id and content_type
-        const contentId = data.dubbing_projects?.content_id;
-        const contentType = data.dubbing_projects?.content_type || "movie";
+        contentId = data.dubbing_projects?.content_id;
+        contentType = data.dubbing_projects?.content_type || "movie";
 
         if (contentId) {
           const cacheKey =
@@ -155,6 +158,10 @@ export default {
       } catch (cacheError) {
         console.error("Failed to invalidate cache:", cacheError);
         // Don't fail the request if cache invalidation fails
+      }
+
+      if (contentId != null) {
+        await purgeMediaByContentType(contentType, contentId);
       }
 
       return createResponse({ success: true, data });

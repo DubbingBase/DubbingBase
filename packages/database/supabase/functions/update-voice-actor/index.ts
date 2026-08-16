@@ -1,5 +1,6 @@
 import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
+import { purgeMediaForVoiceActor } from "../_shared/cache-purge.ts";
 
 type VoiceActor = Database["public"]["Tables"]["voice_actors"]["Row"];
 
@@ -123,6 +124,8 @@ export default {
           { status: 500 },
         );
       }
+
+      await purgeMediaForVoiceActor(ctx.supabaseAdmin, voice_actor_id);
 
       return Response.json({ profile: voiceActorData });
     } catch (error) {

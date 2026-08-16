@@ -201,7 +201,10 @@ export default {
         voiceActors: voiceRoles,
       };
 
-      return createResponse(result);
+      return createResponse(result, 200, {
+        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=3600",
+        "Cache-Tag": `media-actor-${actorId}`,
+      });
     } catch (error) {
       console.error("Error in actor function:", error);
       return createErrorResponse(

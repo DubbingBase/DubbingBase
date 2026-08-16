@@ -21,6 +21,8 @@ const i18nHead = useLocaleHead({
   seo: true
 })
 
+const breadcrumbJsonLd = useBreadcrumbJsonLd();
+
 useHead({
   htmlAttrs: {
     'data-theme': effectiveTheme,
@@ -38,10 +40,27 @@ useHead({
     { rel: 'manifest', href: '/manifest.webmanifest' },
     ...(i18nHead.value.link || [])
   ],
-  meta: () => [...(i18nHead.value.meta || [])]
+  meta: () => [...(i18nHead.value.meta || [])],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: breadcrumbJsonLd,
+    },
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'DubbingBase',
+        alternateName: 'Dubbing Base',
+        url: 'https://dubbingbase.com',
+      }).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026'),
+    },
+  ],
 });
 
 useSeoMeta({
-  ogSiteName: 'DubbingBase'
+  ogSiteName: 'DubbingBase',
+  applicationName: 'DubbingBase',
 });
 </script>

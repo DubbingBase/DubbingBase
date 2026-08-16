@@ -60,7 +60,7 @@
             title="Studio de doublage"
           >
             <div class="w-6 h-6 rounded flex items-center justify-center overflow-hidden shrink-0 bg-white dark:bg-[#2a2a2a]">
-              <img v-if="activeDubProject.studio_data.logo_url" :src="activeDubProject.studio_data.logo_url" class="w-full h-full object-contain p-0.5" />
+              <img loading="lazy" v-if="activeDubProject.studio_data.logo_url" :src="activeDubProject.studio_data.logo_url" class="w-full h-full object-contain p-0.5" />
               <span v-else class="font-bold text-xs text-gray-400">{{ activeDubProject.studio_data.name.charAt(0) }}</span>
             </div>
             <span class="font-medium text-xs group-hover:text-cyan-500 transition-colors truncate max-w-[120px]">{{ activeDubProject.studio_data.name }}</span>
@@ -164,6 +164,7 @@
                 >
                   <NuxtImg
                     format="webp"
+                    loading="lazy"
                     v-if="actor.profile_path"
                     :src="actor.profile_path"
                     class="w-full h-full object-cover transition-transform duration-300"
@@ -200,6 +201,7 @@
                 >
                   <NuxtImg
                     format="webp"
+                    loading="lazy"
                     v-if="actor.characterImage"
                     :src="actor.characterImage"
                     class="w-full h-full object-cover"
@@ -248,6 +250,7 @@
                   >
                     <NuxtImg
                       format="webp"
+                      loading="lazy"
                       v-if="actor.voiceActor.profile_picture"
                       :src="actor.voiceActor.profile_picture"
                       class="w-full h-full object-cover transition-transform duration-300"
@@ -328,6 +331,7 @@
 
 <script setup lang="ts">
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
+import { clientCacheGet, clientCacheSet } from "../../composables/useClientDataCache";
 import { useRoute, useRouter } from "vue-router";
 
 import { fetchMovieData, findCharacter } from "@app/shared-logic";
@@ -362,30 +366,39 @@ const { locale, t } = useI18n();
 
 const cacheKey = `movie-${movieId}-${locale.value}`;
 
-const { data, pending } = useAsyncData(cacheKey, async () => {
-  const nuxtApp = useNuxtApp();
-  // We only have cached data on the client side after hydration
-  const cachedData = nuxtApp.payload.data[cacheKey];
-  
-  const newData = await fetchMovieData(supabase, movieId, locale.value);
-  
-  // If TMDB fetch fails on the edge function (e.g., timeout during auth resolution)
-  // but we already have valid TMDB data from SSR, we preserve the TMDB data
-  // while still accepting the fresh database data (votes, dubbing projects).
-  if (
-    newData && 
-    newData.movie?.title === "Information indisponible (Timeout)" && 
-    cachedData?.movie &&
-    cachedData.movie.title !== "Information indisponible (Timeout)"
-  ) {
-    newData.movie = cachedData.movie;
-    newData.collection = cachedData.collection;
-    newData.characterProfilePictures = cachedData.characterProfilePictures;
-    newData.tvdbId = cachedData.tvdbId;
-  }
-  
-  return newData;
-});
+const { data, pending } = useAsyncData(
+  cacheKey,
+  async () => {
+    const nuxtApp = useNuxtApp();
+    // We only have cached data on the client side after hydration
+    const cachedData = nuxtApp.payload.data[cacheKey];
+
+    const newData = await fetchMovieData(supabase, movieId, locale.value);
+
+    // If TMDB fetch fails on the edge function (e.g., timeout during auth resolution)
+    // but we already have valid TMDB data from SSR, we preserve the TMDB data
+    // while still accepting the fresh database data (votes, dubbing projects).
+    if (
+      newData &&
+      newData.movie?.title === "Information indisponible (Timeout)" &&
+      cachedData?.movie &&
+      cachedData.movie.title !== "Information indisponible (Timeout)"
+    ) {
+      newData.movie = cachedData.movie;
+      newData.collection = cachedData.collection;
+      newData.characterProfilePictures = cachedData.characterProfilePictures;
+      newData.tvdbId = cachedData.tvdbId;
+    }
+
+    clientCacheSet(cacheKey, newData);
+    return newData;
+  },
+  {
+    // Serve a cached (possibly stale) value instantly on client navigation,
+    // then revalidate in the background for fresh votes/dubbing projects.
+    getCachedData: (key) => clientCacheGet(key),
+  },
+);
 
 const movie = computed(() => data.value?.movie);
 const dubbingProjects = computed(() => {

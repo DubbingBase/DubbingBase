@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
+import { purgeMediaByContentType } from "../_shared/cache-purge.ts";
 import { igdbClient, wikipediaCache } from "../_shared/index.ts";
 import { VoiceActorService } from "../_shared/voice-actor-service.ts";
 import { findOrCreateDubbingProject } from "../_shared/dubbing-project.ts";
@@ -219,6 +220,8 @@ export default {
         console.log(
           `prepare_game complete. Added ${newCreditsCount} credits, ${newVoiceActorsCount} new voice actors.`,
         );
+
+        await purgeMediaByContentType("game", igdbId);
 
         return Response.json({
           ok: true,

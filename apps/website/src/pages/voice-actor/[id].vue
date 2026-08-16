@@ -137,6 +137,7 @@
                   class="w-10 h-10 bg-white rounded-lg flex items-center justify-center p-1 shrink-0 overflow-hidden"
                 >
                   <NuxtImg
+                    loading="lazy"
                     :src="studio.logo_url"
                     :alt="studio.name"
                     class="max-w-full max-h-full object-contain"
@@ -245,7 +246,7 @@
                       class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 flex-shrink-0"
                     >
                       <NuxtImg
-                        format="webp"
+                        format="webp" loading="lazy"
                         v-if="item.media.poster_path"
                         :src="resolveImageUrl(item.media.poster_path)"
                         :alt="
@@ -300,7 +301,7 @@
                       class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 flex-shrink-0"
                     >
                       <NuxtImg
-                        format="webp"
+                        format="webp" loading="lazy"
                         v-if="item.data.actor.profile_picture"
                         :src="resolveImageUrl(item.data.actor.profile_picture)"
                         :alt="item.data.actor.name"
@@ -357,7 +358,7 @@
                       class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 relative flex-shrink-0"
                     >
                       <NuxtImg
-                        format="webp"
+                        format="webp" loading="lazy"
                         v-if="item.data.characterImage"
                         :src="resolveImageUrl(item.data.characterImage)"
                         :alt="item.data.character"
@@ -415,7 +416,7 @@
                     class="w-20 h-20 shrink-0 rounded-full overflow-hidden bg-gray-100 dark:bg-[#161616] shadow-md border border-gray-200 dark:border-[#2a2a2a]"
                   >
                     <NuxtImg
-                      format="webp"
+                      format="webp" loading="lazy"
                       v-if="works[0]?.data.actor.profile_picture"
                       :src="
                         resolveImageUrl(works[0].data.actor.profile_picture)
@@ -458,7 +459,7 @@
                           class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 flex-shrink-0"
                         >
                           <NuxtImg
-                            format="webp"
+                            format="webp" loading="lazy"
                             v-if="item.media.poster_path"
                             :src="resolveImageUrl(item.media.poster_path)"
                             :alt="
@@ -512,7 +513,7 @@
                           class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 relative flex-shrink-0"
                         >
                           <NuxtImg
-                            format="webp"
+                            format="webp" loading="lazy"
                             v-if="item.data.characterImage"
                             :src="resolveImageUrl(item.data.characterImage)"
                             :alt="item.data.character"
@@ -568,6 +569,7 @@
 
 <script setup lang="ts">
 import PersonDetailsLayout from "../../components/layout/PersonDetailsLayout.vue";
+import { clientCacheGet, clientCacheSet } from "../../composables/useClientDataCache";
 import { useVoiceActorData, fetchVoiceActorData } from "@app/shared-logic";
 import { useRouter, useRoute } from "vue-router";
 import { ClapperboardIcon, UserIcon, SearchIcon } from "lucide-vue-next";
@@ -587,8 +589,17 @@ const { locale, t } = useI18n();
 const config = useRuntimeConfig();
 const baseUrl = config.public.supabase.url;
 
-const { data, pending } = useAsyncData(`voice-actor-${voiceActorId}`, () =>
-  fetchVoiceActorData(supabase, voiceActorId),
+const vaCacheKey = `voice-actor-${voiceActorId}`;
+const { data, pending } = useAsyncData(
+  vaCacheKey,
+  async () => {
+    const result = await fetchVoiceActorData(supabase, voiceActorId);
+    clientCacheSet(vaCacheKey, result);
+    return result;
+  },
+  {
+    getCachedData: (key) => clientCacheGet(key),
+  },
 );
 
 const voiceActorData = useVoiceActorData(supabase, data.value);

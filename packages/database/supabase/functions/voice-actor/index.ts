@@ -31,7 +31,10 @@ export default {
       );
       const result = await mediaService.getVoiceActorWithWorkAndMedia(id);
 
-      return createResponse(result);
+      return createResponse(result, 200, {
+        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=3600",
+        "Cache-Tag": `media-voice-actor-${id}`,
+      });
     } catch (error) {
       console.error("Error fetching voice actor:", error);
       return createErrorResponse("Failed to fetch voice actor data");

@@ -134,6 +134,49 @@ export interface ShowResponse {
   votes?: Record<number, any>;
 }
 
+export interface Episode {
+  id: number;
+  name: string;
+  overview: string;
+  episode_number: number;
+  season_number: number;
+  still_path: string | null;
+  air_date: string;
+  vote_average: number;
+  runtime?: number;
+}
+
+export interface SeasonWithEpisodes extends Season {
+  episodes?: Episode[];
+  credits?: { cast: Cast[] };
+}
+
+export interface SeasonResponse {
+  season: SeasonWithEpisodes;
+  dubbingProjects?: any[];
+  characterProfilePictures?: Array<{
+    id: number;
+    name: string;
+    image: string;
+    tvdbPeopleId: number;
+    showId: number;
+  }>;
+  votes?: Record<number, any>;
+}
+
+export interface EpisodeResponse {
+  episode: Episode & { credits?: { cast: Cast[] } };
+  dubbingProjects?: any[];
+  characterProfilePictures?: Array<{
+    id: number;
+    name: string;
+    image: string;
+    tvdbPeopleId: number;
+    showId: number;
+  }>;
+  votes?: Record<number, any>;
+}
+
 // Actor-related types
 export interface ActorCredits {
   cast: Array<Movie | Serie>;

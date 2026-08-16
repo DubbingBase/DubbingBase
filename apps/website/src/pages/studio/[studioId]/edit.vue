@@ -146,6 +146,7 @@ defineRouteRules({
 import { ref, computed, onMounted } from 'vue';
 import { useStudioData } from '@app/shared-logic';
 import imageCompression from "browser-image-compression";
+import { clientCacheDelete } from '../../../composables/useClientDataCache';
 
 const route = useRoute();
 const router = useRouter();
@@ -264,6 +265,10 @@ const saveStudio = async () => {
     });
 
     if (error) throw error;
+
+    if (isEditMode.value) {
+      clientCacheDelete(`studio-${studioId}`);
+    }
 
     router.push(localePath(`/studio/${isEditMode.value ? studioId : ''}`));
   } catch (err: any) {
