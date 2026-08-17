@@ -4,8 +4,8 @@
       <DialogOverlay class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity" />
       <DialogContent class="fixed top-[20%] left-1/2 -translate-x-1/2 w-[90vw] max-w-2xl z-50 bg-white dark:bg-[#1d1d1d] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl shadow-2xl overflow-hidden focus:outline-none flex flex-col max-h-[70vh]">
         <VisuallyHidden>
-          <DialogTitle>Search</DialogTitle>
-          <DialogDescription>Search for movies, TV shows, voice actors, and video games.</DialogDescription>
+          <DialogTitle>{{ t('search.title') }}</DialogTitle>
+          <DialogDescription>{{ t('search.description') }}</DialogDescription>
         </VisuallyHidden>
         <!-- Search Input -->
         <div class="flex items-center px-4 py-4 border-b border-gray-200 dark:border-[#2a2a2a] gap-3">

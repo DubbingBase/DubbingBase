@@ -38,8 +38,8 @@
         >
           <ComboboxViewport class="max-h-[300px] overflow-y-auto p-1">
             <ComboboxEmpty class="text-slate-400 text-sm py-3 px-4 text-center">
-              <span v-if="loading">Searching...</span>
-              <span v-else>No results found</span>
+              <span v-if="loading">{{ $t('common.searching') }}</span>
+              <span v-else>{{ $t('search.noResults') }}</span>
             </ComboboxEmpty>
             
             <ComboboxGroup>
@@ -66,7 +66,7 @@
                 class="w-full text-left px-3 py-2 text-sm text-blue-400 hover:bg-slate-800 rounded-lg font-medium outline-none focus:bg-slate-800 transition-colors flex items-center gap-2"
               >
                 <PlusIcon class="w-4 h-4" />
-                Create "{{ searchTerm }}"
+                {{ $t('common.create', { name: searchTerm }) }}
               </button>
             </div>
           </ComboboxViewport>

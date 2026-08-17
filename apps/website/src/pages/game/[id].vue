@@ -42,7 +42,7 @@
             }}
           </NuxtLink>
         </div>
-        <div v-else class="text-sm text-gray-500 font-medium">No dubbing projects available</div>
+        <div v-else class="text-sm text-gray-500 font-medium">{{ $t('details.noDubbingProjects') }}</div>
       </template>
 
       <template #actions-right>
@@ -50,7 +50,7 @@
           <NuxtLink
             :to="$localePath(`/studio/${activeDubProject.studio_data.id}`)"
             class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-[#2a2a2a] hover:border-cyan-500 transition-colors group bg-gray-50 dark:bg-[#1d1d1d]"
-            title="Studio de doublage"
+            :title="$t('details.dubbingStudio')"
           >
             <div class="w-6 h-6 rounded flex items-center justify-center overflow-hidden shrink-0 bg-white dark:bg-[#2a2a2a]">
               <img v-if="activeDubProject.studio_data.logo_url" :src="activeDubProject.studio_data.logo_url" class="w-full h-full object-contain p-0.5" />
@@ -72,14 +72,14 @@
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
-            <span class="hidden sm:inline">Éditer</span>
+            <span class="hidden sm:inline">{{ $t('details.modify') }}</span>
           </NuxtLink>
         </ClientOnly>
         
         <button
           @click="isReportModalOpen = true"
           class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1.5"
-          title="Signaler cette fiche"
+          :title="$t('report.title')"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -143,7 +143,7 @@
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
             <div>
               <h2 class="text-2xl font-bold">{{ $t('details.castAndCrew', 'Casting') }}</h2>
-              <div class="text-gray-500 dark:text-gray-400 text-sm mt-1">{{ filteredCharacters.length }} / {{ formattedCharacters.length }} rôles</div>
+              <div class="text-gray-500 dark:text-gray-400 text-sm mt-1">{{ filteredCharacters.length }} / {{ formattedCharacters.length }} {{ $t('details.roles') }}</div>
             </div>
             
             <div class="relative w-full sm:w-64">
@@ -323,7 +323,7 @@ const activeDubProject = computed(() => {
 });
 
 const getDisplayLanguage = (langCode: string | undefined | null) => {
-  if (!langCode) return 'Inconnu';
+  if (!langCode) return t('details.notSpecified');
   try {
     const displayNames = new Intl.DisplayNames(['fr'], { type: 'language' });
     const name = displayNames.of(langCode);
@@ -391,7 +391,7 @@ const formattedCharacters = computed(() => {
     }
     return {
       id: `mock-${work.id}`,
-      name: resolvedName || 'Inconnu',
+      name: resolvedName || t('details.unknownCharacter'),
       mug_shot: null,
       voiceActor: { ...work.voice_actor, performance: work.performance }
     };
@@ -448,9 +448,9 @@ useHead({
   titleTemplate: null,
   title: computed(() => {
     const year = game.value?.first_release_date ? ` (${formatReleaseYear(game.value.first_release_date)})` : '';
-    let base = game.value ? `${game.value.name}${year}` : 'Jeu Vidéo';
+    let base = game.value ? `${game.value.name}${year}` : t('search.videoGame');
     if (activeDubProject.value) {
-      base += ` - Doublage ${getDisplayLanguage(activeDubProject.value.language)}`;
+      base += ` - ${t('details.dubbing', { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
     }
     return base;
   }),
@@ -458,9 +458,9 @@ useHead({
     {
       name: 'description',
       content: computed(() => {
-        let desc = game.value?.summary || `Découvrez les voix françaises et le casting du jeu vidéo ${game.value?.name}.`;
-        if (activeDubProject.value) {
-          desc = `Découvrez le casting complet des voix pour le doublage ${getDisplayLanguage(activeDubProject.value.language)} du jeu ${game.value?.name}. ` + desc;
+        let desc = game.value?.summary || (game.value?.name ? t('seo.gameDescription', { name: game.value.name }) : t('seo.gameDescriptionFallback'));
+        if (activeDubProject.value && game.value?.name) {
+          desc = t('seo.gameDescriptionDubbing', { lang: getDisplayLanguage(activeDubProject.value.language), name: game.value.name }) + ' ' + desc;
         }
         return desc;
       })

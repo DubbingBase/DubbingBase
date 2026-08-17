@@ -7,17 +7,17 @@
           <svg class="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0h5" />
           </svg>
-          {{ isEditMode ? 'Edit Studio Profile' : 'Create Dubbing Studio' }}
+          {{ isEditMode ? $t('admin.studios.editStudioProfile') : $t('admin.studios.createDubbingStudio') }}
         </h3>
         <p class="text-sm text-gray-400 mt-1">
-          {{ isEditMode ? `Updating studio record ID #${id}` : 'Fill in studio information, location, and website details.' }}
+          {{ isEditMode ? $t('admin.studios.updatingStudioRecord', { id }) : $t('admin.studios.fillStudioInfo') }}
         </p>
       </div>
       <NuxtLink
         :to="localePath('/admin')"
         class="text-xs font-semibold px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-xl border border-gray-700 transition-colors"
       >
-        ← Back to Dashboard
+        {{ $t('common.backToDashboard') }}
       </NuxtLink>
     </div>
 
@@ -26,7 +26,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
         <!-- Studio Name -->
         <div class="space-y-1 md:col-span-2">
-          <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Studio Name *</label>
+          <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('admin.studios.studioName') }} *</label>
           <input
             v-model="name"
             type="text"
@@ -38,7 +38,7 @@
 
         <!-- Country -->
         <div class="space-y-1">
-          <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Country</label>
+          <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('common.country') }}</label>
           <input
             v-model="country"
             type="text"
@@ -49,7 +49,7 @@
 
         <!-- City -->
         <div class="space-y-1">
-          <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">City</label>
+          <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('common.city') }}</label>
           <input
             v-model="city"
             type="text"
@@ -60,7 +60,7 @@
 
         <!-- Website URL -->
         <div class="space-y-1">
-          <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Website URL</label>
+          <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('admin.studios.websiteUrl') }}</label>
           <input
             v-model="websiteUrl"
             type="url"
@@ -71,7 +71,7 @@
 
         <!-- Studio Logo -->
         <div class="space-y-2">
-          <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider block">Studio Logo</label>
+          <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider block">{{ $t('admin.studios.studioLogo') }}</label>
           <div class="flex items-center gap-4">
             <div class="relative h-16 w-16 rounded-xl overflow-hidden border border-gray-800 bg-gray-950 flex shrink-0 items-center justify-center text-gray-500 shadow-inner group">
               <NuxtImg format="webp" v-if="logoPreview || logoUrl"
@@ -97,7 +97,7 @@
                   @click="triggerFileInput"
                   class="py-2 px-3 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-semibold rounded-lg transition-colors border border-gray-700"
                 >
-                  {{ logoPreview ? 'Change Logo' : 'Upload Logo' }}
+                  {{ logoPreview ? $t('admin.studios.changeLogo') : $t('admin.studios.uploadLogo') }}
                 </button>
                 <button
                   v-if="logoPreview || logoUrl"
@@ -105,7 +105,7 @@
                   @click="clearLogo"
                   class="py-2 px-3 bg-red-950/30 hover:bg-red-950/50 text-red-400 text-xs font-semibold rounded-lg transition-colors border border-red-900/30"
                 >
-                  Remove
+                  {{ $t('common.remove') }}
                 </button>
               </div>
             </div>
@@ -115,7 +115,7 @@
 
       <!-- Description -->
       <div class="space-y-1">
-        <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Description</label>
+        <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('common.description') }}</label>
         <textarea
           v-model="description"
           rows="4"
@@ -132,7 +132,7 @@
           class="py-3 px-8 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 text-white font-semibold rounded-xl text-sm shadow-lg transition-all flex items-center justify-center space-x-2"
         >
           <span v-if="isSaving" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
-          <span>Save Studio Profile</span>
+          <span>{{ $t('admin.studios.saveStudioProfile') }}</span>
         </button>
       </div>
     </form>
@@ -164,6 +164,7 @@ definePageMeta({
 });
 
 const supabase = useSupabaseClient();
+const { t } = useI18n();
 
 const route = useRoute();
 const router = useRouter();
@@ -293,13 +294,13 @@ const saveStudio = async () => {
       }
     }
 
-    showToast("Studio saved successfully!", "success");
+    showToast(t('admin.studios.studioSaved'), "success");
     setTimeout(() => {
       router.push(localePath("/admin"));
     }, 1200);
   } catch (err: any) {
     console.error("Error saving studio:", err);
-    showToast(err.message || "Failed to save studio.", "error");
+    showToast(err.message || t('admin.studios.failedToSave'), "error");
   } finally {
     isSaving.value = false;
   }

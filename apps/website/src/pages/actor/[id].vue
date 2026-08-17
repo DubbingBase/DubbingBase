@@ -67,7 +67,7 @@
         <input
           v-model="searchQuery"
           type="text"
-          placeholder="Search roles, titles or voice actors..."
+          :placeholder="$t('actor.searchPlaceholder')"
           class="w-full px-4 py-3 pl-12 bg-white/80 dark:bg-[#161616]/80 backdrop-blur border border-gray-200 dark:border-[#2a2a2a] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 transition shadow-sm"
         />
         <svg
@@ -259,7 +259,7 @@
                 <div class="flex flex-col min-w-0 flex-1">
                   <span
                     class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5"
-                    >Voiced by</span
+                    >{{ $t('details.voicedBy') }}</span
                   >
                   <span
                     class="font-medium text-sm text-gray-700 dark:text-gray-300 leading-tight line-clamp-2"
@@ -280,8 +280,8 @@
                   </div>
                 </div>
                 <div class="flex flex-col min-w-0 flex-1">
-                  <span class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5">Voiced by</span>
-                  <span class="font-medium text-sm text-gray-400 dark:text-gray-500 italic">Unknown</span>
+                  <span class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5">{{ $t('details.voicedBy') }}</span>
+                  <span class="font-medium text-sm text-gray-400 dark:text-gray-500 italic">{{ $t('details.unknownCharacter') }}</span>
                 </div>
               </div>
 
@@ -302,11 +302,11 @@
                 <div class="flex flex-col min-w-0 flex-1">
                   <span
                     class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5"
-                    >As</span
+                    >{{ $t('details.as') }}</span
                   >
                   <span
                     class="font-medium text-sm text-gray-700 dark:text-gray-300 leading-tight line-clamp-2"
-                    >{{ item.character || "Unknown" }}</span
+                    >{{ item.character || $t('details.unknownCharacter') }}</span
                   >
                 </div>
               </div>

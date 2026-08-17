@@ -1,12 +1,12 @@
 <template>
   <div class="space-y-6 pb-20">
     <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800">
-      <h3 class="text-lg font-bold text-white">Career Grid Generator</h3>
-      <p class="text-sm text-gray-400">Generate a downloadable image grid showing a voice actor's top roles.</p>
+      <h3 class="text-lg font-bold text-white">{{ $t('admin.careerGrid.title') }}</h3>
+      <p class="text-sm text-gray-400">{{ $t('admin.careerGrid.description') }}</p>
     </div>
 
     <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 shadow-lg">
-      <h4 class="font-bold text-white text-sm mb-4">Search Voice Actor</h4>
+      <h4 class="font-bold text-white text-sm mb-4">{{ $t('admin.careerGrid.searchVoiceActor') }}</h4>
       
       <div v-if="selectedActor" class="flex items-center justify-between bg-gray-950 border border-gray-800 rounded-xl p-3">
         <div class="flex items-center space-x-3">
@@ -29,7 +29,7 @@
       <div v-else class="relative">
         <input
           type="text"
-          placeholder="Search Voice Actor..."
+          :placeholder="$t('admin.careerGrid.searchVoiceActorPlaceholder')"
           v-model="searchQuery"
           @focus="activeSearch = true"
           @input="triggerSearch"
@@ -74,7 +74,7 @@
           class="py-2.5 px-6 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-800 disabled:text-gray-500 text-white font-semibold rounded-xl text-sm transition-all duration-150 flex items-center"
         >
           <span v-if="generating" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
-          {{ generating ? 'Generating...' : 'Generate Image' }}
+          {{ generating ? $t('admin.careerGrid.generating') : $t('admin.careerGrid.generateImage') }}
         </button>
       </div>
 
@@ -83,7 +83,7 @@
       </div>
 
       <div v-if="imageUrl" class="mt-6 space-y-4">
-        <h4 class="font-bold text-white text-sm">Preview:</h4>
+        <h4 class="font-bold text-white text-sm">{{ $t('admin.careerGrid.preview') }}</h4>
         <div class="rounded-xl overflow-hidden border border-gray-800 bg-gray-950 p-4 inline-block">
           <NuxtImg format="webp" :src="imageUrl" alt="Career Grid" class="max-w-full h-auto max-h-[600px] object-contain" />
         </div>
@@ -92,7 +92,7 @@
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
-            <span>Download PNG</span>
+            <span>{{ $t('admin.careerGrid.downloadPng') }}</span>
           </button>
         </div>
       </div>
@@ -102,6 +102,7 @@
 
 <script setup lang="ts">
 const supabase = useSupabaseClient();
+const { t } = useI18n();
 
 
 
@@ -191,7 +192,7 @@ const generateImage = async () => {
     imageUrl.value = URL.createObjectURL(blob);
   } catch (err: any) {
     console.error("Error generating image:", err);
-    errorMsg.value = err.message || "Failed to generate image.";
+    errorMsg.value = err.message || t('admin.careerGrid.failedToGenerate');
   } finally {
     generating.value = false;
   }

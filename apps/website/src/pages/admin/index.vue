@@ -63,15 +63,15 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <h2 class="text-lg font-bold text-gray-900 dark:text-white">Voice Actor Growth</h2>
           <div class="flex items-center space-x-2">
-            <label for="time-unit" class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Time Unit:</label>
+            <label for="time-unit" class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ $t('admin.dashboard.timeUnit') }}</label>
             <select
               id="time-unit"
               v-model="selectedUnit"
               class="bg-gray-50 dark:bg-[#121212] border border-gray-200 dark:border-[#2a2a2a] text-gray-700 dark:text-gray-200 text-xs font-medium rounded-xl py-1.5 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-150"
             >
-              <option value="day">Day</option>
-              <option value="week">Week</option>
-              <option value="month">Month</option>
+              <option value="day">{{ $t('admin.dashboard.day') }}</option>
+              <option value="week">{{ $t('admin.dashboard.week') }}</option>
+              <option value="month">{{ $t('admin.dashboard.month') }}</option>
             </select>
           </div>
         </div>
@@ -80,7 +80,7 @@
 
       <!-- Top Voice Actors Pie Chart -->
       <div class="bg-white dark:bg-[#1d1d1d] p-6 rounded-2xl border border-gray-200 dark:border-[#2a2a2a] shadow-xl max-w-full">
-        <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Top Voice Actors</h2>
+        <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">{{ $t('admin.dashboard.topVoiceActors') }}</h2>
         <PieChart :data="topVoiceActorsData" :options="pieChartOptions" />
       </div>
     </div>
