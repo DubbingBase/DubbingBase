@@ -436,7 +436,7 @@ const activeDubProject = computed(() => {
 });
 
 const getDisplayLanguage = (langCode: string | undefined | null) => {
-  if (!langCode) return t('details.notSpecified', 'Inconnu');
+  if (!langCode) return t('details.notSpecified', 'Not specified');
   try {
     const displayNames = new Intl.DisplayNames([locale.value || 'en'], { type: "language" });
     const name = displayNames.of(langCode);
@@ -516,7 +516,7 @@ useHead({
     const year = movie.value?.release_date
       ? ` (${new Date(movie.value.release_date).getFullYear()})`
       : "";
-    let base = movie.value ? `${movie.value.title}${year}` : t('search.movie', 'Film');
+    let base = movie.value ? `${movie.value.title}${year}` : t('search.movie', 'Movie');
     if (activeDubProject.value) {
       base += ` - ${t('details.dubbing', { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
     }
@@ -548,7 +548,7 @@ useHead({
         const year = movie.value?.release_date
           ? ` (${new Date(movie.value.release_date).getFullYear()})`
           : "";
-        let base = movie.value ? `${movie.value.title}${year}` : t('search.movie', 'Film');
+        let base = movie.value ? `${movie.value.title}${year}` : t('search.movie', 'Movie');
         if (activeDubProject.value) {
           base += ` - ${t('details.dubbing', { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
         }
@@ -588,7 +588,7 @@ useHead({
         const year = movie.value?.release_date
           ? ` (${new Date(movie.value.release_date).getFullYear()})`
           : "";
-        let base = movie.value ? `${movie.value.title}${year}` : t('search.movie', 'Film');
+        let base = movie.value ? `${movie.value.title}${year}` : t('search.movie', 'Movie');
         if (activeDubProject.value) {
           base += ` - ${t('details.dubbing', { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
         }

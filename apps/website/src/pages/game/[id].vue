@@ -198,7 +198,7 @@
                   <div class="flex flex-col min-w-0 flex-1 w-full overflow-hidden">
                     <div class="flex items-center gap-1.5 text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-1">
                       <MicIcon class="w-3 h-3 flex-shrink-0" />
-                      <span class="truncate block w-full">{{ $t('details.voiceActor', 'Comédien(ne)') }}</span>
+                      <span class="truncate block w-full">{{ $t('details.voiceActor', 'Voice Actor') }}</span>
                     </div>
                     <NuxtLink :to="$localePath(`/voice-actor/${char.voiceActor.id}`)" class="font-bold text-sm text-gray-900 dark:text-white truncate hover:underline block w-full" :title="char.voiceActor.firstname + ' ' + char.voiceActor.lastname">
                       {{ char.voiceActor.firstname }} {{ char.voiceActor.lastname }}
@@ -217,7 +217,7 @@
                   <div class="flex flex-col min-w-0 flex-1 w-full overflow-hidden">
                     <div class="flex items-center gap-1.5 text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-1">
                       <MicIcon class="w-3 h-3 opacity-50 flex-shrink-0" />
-                      <span class="truncate block w-full">{{ $t('details.voiceActor', 'Comédien(ne)') }}</span>
+                      <span class="truncate block w-full">{{ $t('details.voiceActor', 'Voice Actor') }}</span>
                     </div>
                     <div class="text-sm text-gray-400 italic truncate block w-full">{{ $t('details.notSpecified', 'Non spécifié') }}</div>
                   </div>
@@ -323,9 +323,9 @@ const activeDubProject = computed(() => {
 });
 
 const getDisplayLanguage = (langCode: string | undefined | null) => {
-  if (!langCode) return 'Inconnu';
+  if (!langCode) return 'Unknown';
   try {
-    const displayNames = new Intl.DisplayNames(['fr'], { type: 'language' });
+    const displayNames = new Intl.DisplayNames([locale.value], { type: 'language' });
     const name = displayNames.of(langCode);
     return name ? name.charAt(0).toUpperCase() + name.slice(1) : langCode;
   } catch (e) {

@@ -1,8 +1,8 @@
 <template>
   <div class="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 min-h-screen">
     <div class="mb-8">
-      <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">Comédiens de doublage</h1>
-      <p class="text-gray-600 dark:text-gray-400">Parcourez la base de données des voix françaises.</p>
+      <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">{{ t('home.trendingVoiceActors') }}</h1>
+      <p class="text-gray-600 dark:text-gray-400">{{ t('home.recentVoiceActors') }}</p>
       
       <!-- Barre de recherche locale -->
       <div class="mt-6 max-w-md">

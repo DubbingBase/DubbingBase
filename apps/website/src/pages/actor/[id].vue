@@ -447,7 +447,7 @@ function resolveImageUrl(path: string | null | undefined): string | undefined {
 }
 
 const getDisplayLanguage = (langCode: string | undefined | null) => {
-  if (!langCode) return "Inconnu";
+  if (!langCode) return "Unknown";
   try {
     const displayNames = new Intl.DisplayNames([locale.value || "en"], {
       type: "language",

@@ -211,6 +211,8 @@ const ogLocale = computed(() => {
   const map: Record<string, string> = {
     fr: 'fr_FR',
     en: 'en_US',
+    es: 'es_ES',
+    ja: 'ja_JP',
   };
   return map[locale.value] || 'en_US';
 });
@@ -322,7 +324,7 @@ useHead({
               {
                 '@type': 'SiteNavigationElement',
                 'position': 3,
-                'name': t('footer.voiceActors', 'Comédiens de doublage'),
+                'name': t('footer.voiceActors', 'Voice Actors'),
                 'url': 'https://dubbingbase.com/voice-actors'
               }
             ]
