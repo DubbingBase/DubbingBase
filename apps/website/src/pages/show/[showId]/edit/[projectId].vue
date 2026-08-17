@@ -588,14 +588,21 @@ const searchStudios = async (query: string) => {
 const searchVoiceActors = async (query: string) => {
   isSearchingVoiceActors.value = true;
   try {
-    let q = supabase.from("voice_actors").select("id, firstname, lastname").limit(10);
-    if (query) {
-      q = q.or(`firstname.ilike.%${query}%,lastname.ilike.%${query}%`);
+    if (!query) {
+      voiceActorOptions.value = [];
+      return;
     }
-    const { data } = await q;
-    const formatted = (data || []).map(va => ({ id: va.id, name: `${va.firstname || ''} ${va.lastname || ''}`.trim() }));
+    const { data, error } = await supabase.functions.invoke("search-voice-actors", {
+      body: { query, limit: 10 }
+    });
+    if (error) throw error;
+    const formatted = (data || []).map((va: any) => ({ id: va.id, name: `${va.firstname || ''} ${va.lastname || ''}`.trim() }));
     voiceActorOptions.value = formatted;
     formatted.forEach(f => optionsCache.value.set(f.id, f.name));
+  } catch (err: any) {
+    console.error("Error searching voice actors:", err);
+    showToast("Failed to search voice actors", "error");
+    voiceActorOptions.value = [];
   } finally {
     isSearchingVoiceActors.value = false;
   }
