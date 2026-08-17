@@ -684,17 +684,13 @@ const saveShowProject = async () => {
 
     let projectId = isEditMode.value ? Number(projectIdParam) : null;
 
+    const isNewProject = !isEditMode.value;
+
     if (isEditMode.value && projectId) {
       await supabase.from("dubbing_projects").update(projectPayload).eq("id", projectId);
     } else {
       const { data } = await supabase.from("dubbing_projects").insert([projectPayload]).select().single();
       projectId = data?.id;
-      
-      if (projectId && contentId.value) {
-        showToast("Project created! Redirecting...", "success");
-        router.push(localePath(`/show/${contentId.value}/edit/${projectId}`));
-        return;
-      }
     }
 
     if (!projectId) throw new Error("No project ID returned");
@@ -735,7 +731,12 @@ const saveShowProject = async () => {
       await supabase.from("work").upsert([workPayload]);
     }
 
-    showToast("Project saved successfully!", "success");
+    if (isNewProject && contentId.value) {
+      showToast("Project created! Redirecting...", "success");
+      router.push(localePath(`/show/${contentId.value}/edit/${projectId}`));
+    } else {
+      showToast("Project saved successfully!", "success");
+    }
   } catch (err: any) {
     showToast(err.message, "error");
   } finally {
