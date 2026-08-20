@@ -684,17 +684,15 @@ const saveShowProject = async () => {
 
     let projectId = isEditMode.value ? Number(projectIdParam) : null;
 
+    const isNewProject = !isEditMode.value;
+
     if (isEditMode.value && projectId) {
-      await supabase.from("dubbing_projects").update(projectPayload).eq("id", projectId);
+      const { error } = await supabase.from("dubbing_projects").update(projectPayload).eq("id", projectId);
+      if (error) throw new Error(`Failed to update project: ${error.message}`);
     } else {
-      const { data } = await supabase.from("dubbing_projects").insert([projectPayload]).select().single();
+      const { data, error } = await supabase.from("dubbing_projects").insert([projectPayload]).select().single();
+      if (error) throw new Error(`Failed to create project: ${error.message}`);
       projectId = data?.id;
-      
-      if (projectId && contentId.value) {
-        showToast("Project created! Redirecting...", "success");
-        router.push(localePath(`/show/${contentId.value}/edit/${projectId}`));
-        return;
-      }
     }
 
     if (!projectId) throw new Error("No project ID returned");
@@ -711,10 +709,12 @@ const saveShowProject = async () => {
     ].filter(j => j.person_id !== null);
 
     // Delete old crew & insert new
-    await supabase.from("dubbing_project_crew").delete().eq("dubbing_project_id", projectId);
+    const { error: deleteCrewError } = await supabase.from("dubbing_project_crew").delete().eq("dubbing_project_id", projectId);
+    if (deleteCrewError) throw new Error(`Failed to clear crew: ${deleteCrewError.message}`);
     if (crewJobs.length > 0) {
       const crewPayload = crewJobs.map(j => ({ dubbing_project_id: projectId!, job_id: j.job_id, person_id: j.person_id }));
-      await supabase.from("dubbing_project_crew").insert(crewPayload);
+      const { error: insertCrewError } = await supabase.from("dubbing_project_crew").insert(crewPayload);
+      if (insertCrewError) throw new Error(`Failed to save crew: ${insertCrewError.message}`);
     }
 
     // Save Works (Cast)
@@ -732,10 +732,16 @@ const saveShowProject = async () => {
         highlight: row.highlight ? true : false,
       };
       if (row.id) workPayload.id = row.id;
-      await supabase.from("work").upsert([workPayload]);
+      const { error: upsertWorkError } = await supabase.from("work").upsert([workPayload]);
+      if (upsertWorkError) throw new Error(`Failed to save cast: ${upsertWorkError.message}`);
     }
 
-    showToast("Project saved successfully!", "success");
+    if (isNewProject && contentId.value) {
+      showToast("Project created! Redirecting...", "success");
+      router.push(localePath(`/show/${contentId.value}/edit/${projectId}`));
+    } else {
+      showToast("Project saved successfully!", "success");
+    }
   } catch (err: any) {
     showToast(err.message, "error");
   } finally {
