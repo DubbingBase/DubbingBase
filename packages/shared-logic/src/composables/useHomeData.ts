@@ -1,5 +1,4 @@
 import { ref } from "vue";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   IgdbGame,
   MovieTrendingResponse,
@@ -13,6 +12,7 @@ export type HomeDataPayload = {
   trendingGames: IgdbGame[];
   recentVoiceActors: Tables<"voice_actors">[];
   topVoiceActors: Tables<"voice_actors">[];
+  trendingVoiceActors: any[];
   errorMovies: string;
   errorSeries: string;
   errorGames: string;
@@ -29,9 +29,7 @@ export type HomeDataPayload = {
   errorHomeStats: string;
 };
 
-export async function fetchHomeData(
-  supabase: SupabaseClient,
-): Promise<HomeDataPayload> {
+export async function fetchHomeData(): Promise<HomeDataPayload> {
   const payload: HomeDataPayload = {
     trendingMovies: [],
     trendingSeries: [],
@@ -56,95 +54,84 @@ export async function fetchHomeData(
   };
 
   await Promise.allSettled([
-    // Fetch movies in parallel
-    supabase.functions
-      .invoke("trending-movies")
+    $fetch<any>("/api/trending/movies")
       .then((res) => {
-        if (res.error) throw new Error(res.error.message || "Erreur inconnue");
-        payload.trendingMovies = res.data.results || [];
+        payload.trendingMovies = res.results || [];
       })
       .catch((e) => {
         payload.errorMovies =
-          e.message || "Erreur lors du chargement des films.";
+          e.data?.message ||
+          e.message ||
+          "Erreur lors du chargement des films.";
       }),
 
-    // Fetch series in parallel
-    supabase.functions
-      .invoke("trending-shows")
+    $fetch<any>("/api/trending/shows")
       .then((res) => {
-        if (res.error) throw new Error(res.error.message || "Erreur inconnue");
-        payload.trendingSeries = res.data.results || [];
+        payload.trendingSeries = res.results || [];
       })
       .catch((e) => {
         payload.errorSeries =
-          e.message || "Erreur lors du chargement des séries.";
+          e.data?.message ||
+          e.message ||
+          "Erreur lors du chargement des séries.";
       }),
 
-    // Fetch games in parallel
-    supabase.functions
-      .invoke("trending-games")
+    $fetch<any>("/api/trending/games")
       .then((res) => {
-        if (res.error) throw new Error(res.error.message || "Erreur inconnue");
-        payload.trendingGames = res.data || [];
+        payload.trendingGames = res || [];
       })
       .catch((e) => {
-        payload.errorGames = e.message || "Erreur lors du chargement des jeux.";
+        payload.errorGames =
+          e.data?.message || e.message || "Erreur lors du chargement des jeux.";
       }),
 
-    // Fetch recent voice actors in parallel
-    supabase.functions
-      .invoke("recent-voice-actors", { body: { limit: 10 } })
+    $fetch<any>("/api/recent-voice-actors", { params: { limit: 10 } })
       .then((res) => {
-        if (res.error) throw new Error(res.error.message || "Erreur inconnue");
-        payload.recentVoiceActors = res.data || [];
+        payload.recentVoiceActors = res || [];
       })
       .catch((e) => {
         payload.errorVoiceActors =
-          e.message || "Erreur lors du chargement des voix récentes.";
+          e.data?.message ||
+          e.message ||
+          "Erreur lors du chargement des voix récentes.";
       }),
 
-    // Fetch top voice actors in parallel
-    supabase.functions
-      .invoke("top-voice-actors", { body: { limit: 10 } })
+    $fetch<any>("/api/top-voice-actors", { params: { limit: 10 } })
       .then((res) => {
-        if (res.error) throw new Error(res.error.message || "Erreur inconnue");
-        payload.topVoiceActors = res.data || [];
+        payload.topVoiceActors = res || [];
       })
       .catch((e) => {
         payload.errorTopVoiceActors =
-          e.message || "Erreur lors du chargement des top doubleurs.";
+          e.data?.message ||
+          e.message ||
+          "Erreur lors du chargement des top doubleurs.";
       }),
 
-    // Fetch trending voice actors in parallel
-    supabase.functions
-      .invoke("trending-voice-actors", { method: "GET" }) // use GET as discussed
+    $fetch<any>("/api/trending/voice-actors")
       .then((res) => {
-        if (res.error) throw new Error(res.error.message || "Erreur inconnue");
-        payload.trendingVoiceActors = res.data || [];
+        payload.trendingVoiceActors = res || [];
       })
       .catch((e) => {
         payload.errorTrendingVoiceActors =
-          e.message || "Erreur lors du chargement des doubleurs du moment.";
+          e.data?.message ||
+          e.message ||
+          "Erreur lors du chargement des doubleurs du moment.";
       }),
 
-    // Fetch top contributors in parallel
-    supabase.functions
-      .invoke("top-contributors", { body: { limit: 10 } })
+    $fetch<any>("/api/top-contributors", { params: { limit: 10 } })
       .then((res) => {
-        if (res.error) throw new Error(res.error.message || "Erreur inconnue");
-        payload.topContributors = res.data || [];
+        payload.topContributors = res || [];
       })
       .catch((e) => {
         payload.errorTopContributors =
-          e.message || "Erreur lors du chargement des contributeurs.";
+          e.data?.message ||
+          e.message ||
+          "Erreur lors du chargement des contributeurs.";
       }),
 
-    // Fetch home stats in parallel
-    supabase.functions
-      .invoke("home-stats")
+    $fetch<any>("/api/home-stats")
       .then((res) => {
-        if (res.error) throw new Error(res.error.message || "Erreur inconnue");
-        payload.homeStats = res.data || {
+        payload.homeStats = res || {
           voiceActorCount: 0,
           dubbingProjectCount: 0,
           workCount: 0,
@@ -152,17 +139,16 @@ export async function fetchHomeData(
       })
       .catch((e) => {
         payload.errorHomeStats =
-          e.message || "Erreur lors du chargement des statistiques.";
+          e.data?.message ||
+          e.message ||
+          "Erreur lors du chargement des statistiques.";
       }),
   ]);
 
   return payload;
 }
 
-export function useHomeData(
-  supabase: SupabaseClient,
-  initialData?: HomeDataPayload | null,
-) {
+export function useHomeData(initialData?: HomeDataPayload | null) {
   const trendingMovies = ref<MovieTrendingResponse["results"]>(
     initialData?.trendingMovies || [],
   );
@@ -231,7 +217,7 @@ export function useHomeData(
     errorTopContributors.value = "";
     errorHomeStats.value = "";
 
-    const payload = await fetchHomeData(supabase);
+    const payload = await fetchHomeData();
 
     trendingMovies.value = payload.trendingMovies;
     errorMovies.value = payload.errorMovies;

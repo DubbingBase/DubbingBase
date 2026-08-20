@@ -266,7 +266,7 @@ const { data, pending, refresh } = useAsyncData(cacheKey, async () => {
   // We only have cached data on the client side after hydration
   const cachedData = nuxtApp.payload.data[cacheKey];
 
-  const newData = await fetchGameData(supabase, gameId, locale.value);
+  const newData = await fetchGameData(gameId, locale.value);
 
   // If IGDB fetch fails on the edge function (e.g., timeout)
   // but we already have valid data from SSR, we preserve the IGDB data
@@ -432,10 +432,10 @@ async function triggerPrepareGame() {
   if (!isAdmin.value) return;
   isPreparing.value = true;
   try {
-    const { error } = await supabase.functions.invoke("prepare_game", {
+    await $fetch('/api/prepare_game', {
+      method: 'POST',
       body: { igdbId: Number(gameId) },
     });
-    if (error) throw error;
     await refresh();
   } catch (err) {
     console.error("prepare_game failed:", err);

@@ -184,7 +184,7 @@ watch(query, (newVal) => {
   loading.value = true;
   debounceTimeout = setTimeout(async () => {
     try {
-      const data = await fetchSearchData(supabase, trimmed);
+      const data = await fetchSearchData(trimmed);
       results.value = data;
     } catch (e) {
       console.error(e);

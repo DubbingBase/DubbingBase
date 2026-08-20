@@ -363,14 +363,16 @@ const onProfilePictureChange = (event: Event) => {
   const files = (event.target as HTMLInputElement).files;
   if (files && files.length > 0) {
     const file = files[0];
-    profilePictureFile.value = file;
+    if (file) {
+      profilePictureFile.value = file;
 
-    // Create file reader object for thumbnail preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      previewImage.value = e.target?.result as string;
-    };
-    reader.readAsDataURL(file);
+      // Create file reader object for thumbnail preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        previewImage.value = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    }
   }
 };
 
@@ -381,11 +383,10 @@ const uploadProfilePicture = async (voiceActorId: string | number) => {
   formData.append("file", profilePictureFile.value, profilePictureFile.value.name);
   formData.append("voice_actor_id", String(voiceActorId));
 
-  const response = await supabase.functions.invoke("upload_profile_picture", {
+  const result = await $fetch<{ ok: boolean; fullPath: string; publicUrl: string }>('/api/upload-profile-picture', {
+    method: 'POST',
     body: formData,
   });
-
-  const result = await response.data;
   if (result && result.ok) {
     return profilePictureFile.value.name;
   }

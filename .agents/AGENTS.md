@@ -50,6 +50,15 @@ mise run gen-types
 
 _(This command generates types to `packages/database/supabase/functions/_shared/database.types.ts`)._
 
+### Remote / Mobile Testing via Tailscale or LAN:
+
+When testing the website from a mobile device or other clients over Tailscale/LAN:
+
+- Ensure the Supabase backend is running (`mise run backend`).
+- Run the website dev server bound to all network interfaces with `mise run website` (or `HOST=0.0.0.0 pnpm --filter @app/website dev --host 0.0.0.0`).
+- Find your Tailscale IP on the `tailscale0` interface using `ip a` (e.g. `100.111.167.123`).
+- Connect from the client browser at `http://<tailscale-ip>:3000` (or `3001` if port 3000 is occupied).
+
 ---
 
 ## 💡 Best Practices by Component

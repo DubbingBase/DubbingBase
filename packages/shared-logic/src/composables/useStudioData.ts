@@ -1,5 +1,4 @@
 import { ref } from "vue";
-import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type Studio = {
   id: number;
@@ -20,42 +19,33 @@ export type StudioDetailsResponse = {
 };
 
 export async function fetchStudioDetails(
-  supabase: SupabaseClient,
   studioId: string | number,
 ): Promise<StudioDetailsResponse | null> {
-  const { data, error } = await supabase.functions.invoke(
-    "get-studio-details",
-    {
-      body: { studioId },
-    },
-  );
-
-  if (error) {
-    console.error("Error fetching studio details:", error);
-    throw error;
+  try {
+    const data = await $fetch<StudioDetailsResponse>(
+      "/api/get-studio-details",
+      {
+        params: { studioId },
+      },
+    );
+    return data;
+  } catch (e) {
+    console.error("Error fetching studio details:", e);
+    throw e;
   }
-
-  return data as StudioDetailsResponse;
 }
 
-export async function fetchStudiosData(
-  supabase: SupabaseClient,
-): Promise<Studio[]> {
-  const { data, error } = await supabase
-    .from("studios")
-    .select("*")
-    .order("name");
-
-  if (error) {
-    console.error("Error fetching studios:", error);
-    throw error;
+export async function fetchStudiosData(): Promise<Studio[]> {
+  try {
+    const data = await $fetch<Studio[]>("/api/get-studio-details");
+    return data || [];
+  } catch (e) {
+    console.error("Error fetching studios:", e);
+    throw e;
   }
-
-  return data || [];
 }
 
 export function useStudioData(
-  supabase: SupabaseClient,
   initialStudios?: Studio[],
   initialStudioDetails?: StudioDetailsResponse | null,
 ) {
@@ -72,12 +62,7 @@ export function useStudioData(
     loading.value = true;
     error.value = null;
     try {
-      const { data, error: fetchError } = await supabase
-        .from("studios")
-        .select("*")
-        .order("name");
-
-      if (fetchError) throw fetchError;
+      const data = await $fetch<Studio[]>("/api/get-studio-details");
       studios.value = data || [];
     } catch (err: any) {
       console.error("Error fetching studios:", err);
@@ -91,7 +76,7 @@ export function useStudioData(
     loading.value = true;
     error.value = null;
     try {
-      const payload = await fetchStudioDetails(supabase, id);
+      const payload = await fetchStudioDetails(id);
       if (payload) {
         studio.value = payload.studio;
         dubbedProjects.value = payload.dubbedProjects;

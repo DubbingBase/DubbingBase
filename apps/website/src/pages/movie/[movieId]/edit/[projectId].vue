@@ -752,10 +752,9 @@ const { data: initialData } = await useAsyncData(`movie-edit-${tmdbMovieId.value
   if (tmdbMovieId.value) {
     // TMDB metadata
     try {
-      const params = new URLSearchParams({ id: tmdbMovieId.value.toString() });
-      const { data, error } = await supabase.functions.invoke(`movie?${params.toString()}`, { method: "GET" });
-      if (!error && data?.movie) {
-        tmdbData = data.movie;
+      const movieResult = await $fetch('/api/movie/' + tmdbMovieId.value);
+      if (movieResult?.movie) {
+        tmdbData = movieResult.movie;
       }
     } catch (e) {
       console.error("Failed to fetch TMDB data.", e);

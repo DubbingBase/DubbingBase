@@ -51,7 +51,7 @@ export function useDragScroll(scrollRef: Ref<HTMLElement | null>) {
 
       // Find nearest child to snap to smoothly
       const containerRect = ele.getBoundingClientRect();
-      let closestChild = null;
+      let closestChild: Element | null = null;
       let minDiff = Infinity;
 
       Array.from(ele.children).forEach((child) => {
@@ -64,10 +64,11 @@ export function useDragScroll(scrollRef: Ref<HTMLElement | null>) {
         }
       });
 
-      if (closestChild) {
+      const targetChild = closestChild as Element | null;
+      if (targetChild) {
         ele.style.scrollBehavior = "smooth";
         ele.scrollBy({
-          left: closestChild.getBoundingClientRect().left - containerRect.left,
+          left: targetChild.getBoundingClientRect().left - containerRect.left,
           behavior: "smooth",
         });
 

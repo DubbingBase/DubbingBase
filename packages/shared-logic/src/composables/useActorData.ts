@@ -1,5 +1,4 @@
 import { ref, computed, watch } from "vue";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import type { MovieModel, SerieModel } from "../types";
 
 export type ActorResponse = {
@@ -57,30 +56,27 @@ export type ActorDataPayload = {
 };
 
 export async function fetchActorData(
-  supabase: SupabaseClient,
   id: string | number,
 ): Promise<ActorDataPayload | null> {
-  const responseRaw = await supabase.functions.invoke("actor", {
-    body: { id },
-  });
+  try {
+    const response = await $fetch<ActorResponse>(`/api/actor/${id}`);
 
-  const response = (await responseRaw.data) as ActorResponse;
+    if (!response || !response.actor) {
+      console.error("Actor response is null");
+      return null;
+    }
 
-  if (!response || !response.actor) {
-    console.error("Actor response is null");
+    return {
+      actor: response.actor,
+      voiceRoles: response.actor.voice_roles || [],
+    };
+  } catch (e) {
+    console.error("fetchActorData error:", e);
     return null;
   }
-
-  return {
-    actor: response.actor,
-    voiceRoles: response.actor.voice_roles || [],
-  };
 }
 
-export function useActorData(
-  supabase: SupabaseClient,
-  initialData?: ActorDataPayload | null,
-) {
+export function useActorData(initialData?: ActorDataPayload | null) {
   const actor = ref<ActorResponse["actor"] | undefined>(initialData?.actor);
   const voiceRoles = ref<NonNullable<ActorResponse["actor"]["voice_roles"]>>(
     initialData?.voiceRoles || [],
@@ -105,7 +101,8 @@ export function useActorData(
     availableLanguages,
     (langs) => {
       if (langs.length > 0 && !selectedLanguage.value) {
-        selectedLanguage.value = langs.includes("fr-FR") ? "fr-FR" : langs[0];
+        selectedLanguage.value =
+          (langs.includes("fr-FR") ? "fr-FR" : langs[0]) || "";
       }
     },
     { immediate: true },
@@ -115,7 +112,7 @@ export function useActorData(
     loading.value = true;
 
     try {
-      const payload = await fetchActorData(supabase, id);
+      const payload = await fetchActorData(id);
 
       if (!payload) return;
 
@@ -189,7 +186,6 @@ export function useActorData(
     });
   });
 
-  // Extract unique voice actors who dubbed this actor based on selected language
   const uniqueVoiceActorsByLanguage = computed(() => {
     if (!voiceRoles.value || !selectedLanguage.value) return [];
 

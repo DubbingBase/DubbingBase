@@ -147,10 +147,10 @@ const executeSearch = async () => {
   }
   searchLoading.value = true;
   try {
-    const params = new URLSearchParams({ query, limit: "10" });
-    const { data, error } = await supabase.functions.invoke(`search-voice-actors?${params.toString()}`, { method: "GET" });
-    if (error) throw error;
-    searchResults.value = data || [];
+    const data = await $fetch("/api/search-voice-actors", {
+      params: { query, limit: "10" }
+    });
+    searchResults.value = (data as any) || [];
   } catch (err: any) {
     console.error("Error searching voice actors:", err);
   } finally {
@@ -179,8 +179,7 @@ const generateImage = async () => {
   errorMsg.value = "";
   
   try {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const url = `${supabaseUrl}/functions/v1/career-grid?id=${selectedActor.value.id}&lang=${selectedLang.value}`;
+    const url = `/api/career-grid?id=${selectedActor.value.id}&lang=${selectedLang.value}`;
     
     const response = await fetch(url);
     if (!response.ok) {

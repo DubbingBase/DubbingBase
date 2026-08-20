@@ -1,5 +1,3 @@
-import { supabase } from "./supabase";
-
 /**
  * Enqueue a media fetch request and fire-and-forget the queue processor.
  *
@@ -14,8 +12,8 @@ export async function enqueueMedia(params: {
   seasonNumber?: number | null;
   episodeNumber?: number | null;
 }): Promise<void> {
-  // Enqueue the item so it is tracked in the queue
-  const { error } = await supabase.rpc("enqueue_media_fetch", {
+  const supabase = useSupabaseClient();
+  const { error } = await (supabase as any).rpc("enqueue_media_fetch", {
     p_tmdb_id: params.tmdbId,
     p_media_type: params.mediaType,
     p_season_number: params.seasonNumber ?? null,

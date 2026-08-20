@@ -671,16 +671,13 @@ const fetchWorksCount = async (ids: number[]) => {
   loadingWorks.value = true;
   worksCount.value = {};
   try {
-    const { data, error } = await supabase.functions.invoke(
-      "count-voice-actor-works",
-      {
-        body: { ids },
-      },
-    );
+    const data = await $fetch("/api/count-voice-actor-works", {
+      method: "POST",
+      body: { ids },
+    });
 
-    if (error) throw error;
     if (data) {
-      worksCount.value = data;
+      worksCount.value = data as any;
     }
   } catch (err: any) {
     console.error("Error fetching works count:", err);
@@ -781,14 +778,11 @@ const executeSearch = async (type: "A" | "B") => {
 
   loadingRef.value = true;
   try {
-    const params = new URLSearchParams({ query, limit: "10" });
-    const { data, error } = await supabase.functions.invoke(
-      `search-voice-actors?${params.toString()}`,
-      { method: "GET" }
-    );
+    const data = await $fetch("/api/search-voice-actors", {
+      params: { query, limit: "10" }
+    });
 
-    if (error) throw error;
-    resultsRef.value = data || [];
+    resultsRef.value = (data as any) || [];
   } catch (err: any) {
     console.error(`Error searching voice actors (${type}):`, err);
   } finally {
@@ -830,17 +824,13 @@ const mergeActors = async () => {
         ? actorB.value.id
         : actorA.value.id;
 
-    const { error: funcError } = await supabase.functions.invoke(
-      "merge_voice_actor_duplicates",
-      {
-        body: {
-          keepId: selectedKeepId.value,
-          ids: [otherId],
-        },
+    await $fetch("/api/merge_voice_actor_duplicates", {
+      method: "POST",
+      body: {
+        keepId: selectedKeepId.value,
+        ids: [otherId],
       },
-    );
-
-    if (funcError) throw funcError;
+    });
 
     showToast("Voice actor profiles merged successfully!", "success");
 

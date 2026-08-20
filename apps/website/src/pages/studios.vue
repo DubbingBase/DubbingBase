@@ -59,9 +59,9 @@ import { useStudioData, fetchStudiosData } from '@app/shared-logic';
 
 const supabase = useSupabaseClient();
 
-const { data: initialStudios } = await useAsyncData('studios-page', () => fetchStudiosData(supabase));
+const { data: initialStudios } = await useAsyncData('studios-page', () => fetchStudiosData());
 
-const { studios, loading, error } = useStudioData(supabase, initialStudios.value);
+const { studios, loading, error } = useStudioData(initialStudios.value);
 
 useHead({
   title: 'Studios de Doublage - DubbingBase',

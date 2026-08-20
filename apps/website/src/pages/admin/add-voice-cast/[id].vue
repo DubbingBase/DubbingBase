@@ -303,12 +303,7 @@ const getAssignedVA = (actorId: number): VoiceActor | null => {
 };
 
 const { data: initialData, pending } = await useAsyncData(`movie-cast-${movieId.value}`, async () => {
-  const params = new URLSearchParams({ id: movieId.value.toString() });
-  const { data, error: fetchErr } = await supabase.functions.invoke(`movie?${params.toString()}`, {
-    method: 'GET'
-  });
-
-  if (fetchErr) throw fetchErr;
+  const data = await $fetch(`/api/movie/${movieId.value}`);
   return data as MovieResponse;
 });
 
@@ -362,13 +357,11 @@ const executeSearch = async (actorId: number) => {
 
   searchLoading.value[actorId] = true;
   try {
-    const params = new URLSearchParams({ query, limit: "10" });
-    const { data, error } = await supabase.functions.invoke(`search-voice-actors?${params.toString()}`, {
-      method: 'GET'
+    const data = await $fetch("/api/search-voice-actors", {
+      params: { query, limit: "10" }
     });
 
-    if (error) throw error;
-    searchResults.value[actorId] = data || [];
+    searchResults.value[actorId] = (data as any) || [];
   } catch (err: any) {
     console.error("Error searching voice actors:", err);
   } finally {

@@ -63,8 +63,7 @@ useHead({
 });
 
 const { data, pending: isLoading, error } = useAsyncData('movies-page', async () => {
-  const { data, error: fetchError } = await supabase.functions.invoke('trending-movies', { method: 'GET' });
-  if (fetchError) throw fetchError;
+  const data = await $fetch('/api/trending/movies');
   return data?.results || [];
 });
 

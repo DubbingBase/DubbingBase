@@ -315,8 +315,7 @@ const pieChartOptions = computed<ChartOptions>(() => ({
 }));
 
 const { data: dashboardData, pending, error: fetchError, refresh: fetchDashboardData } = await useAsyncData('admin-dashboard', async () => {
-  const { data, error: invokeError } = await supabase.functions.invoke('dashboard-stats', { method: 'GET' });
-  if (invokeError) throw invokeError;
+  const data = await $fetch("/api/dashboard-stats");
   return data as {
     userCount: number;
     voiceActorCount: number;

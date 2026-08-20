@@ -308,11 +308,9 @@ const fetchDuplicates = async () => {
     error.value = "";
     duplicates.value = [];
 
-    const { data, error: funcError } = await supabase.functions.invoke("find_duplicate_voice_actors");
+    const data = await $fetch("/api/find_duplicate_voice_actors");
 
-    if (funcError) throw funcError;
-
-    duplicates.value = (data || []).map((group: any) => ({
+    duplicates.value = ((data as any) || []).map((group: any) => ({
       actors: group.actors || [],
       selectedId: preselectBest(group.actors || [])
     }));
@@ -336,14 +334,13 @@ const mergeGroup = async (group: DuplicateGroup) => {
       .map(a => a.id)
       .filter(id => id !== group.selectedId);
 
-    const { error: funcError } = await supabase.functions.invoke("merge_voice_actor_duplicates", {
+    await $fetch("/api/merge_voice_actor_duplicates", {
+      method: "POST",
       body: {
         keepId: group.selectedId,
         ids: idsToMerge
       }
     });
-
-    if (funcError) throw funcError;
 
     showToast("Duplicate voice actor profiles merged successfully", "success");
 
