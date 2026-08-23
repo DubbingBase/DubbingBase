@@ -475,6 +475,7 @@ const studioOptions = ref<any[]>([]);
 const isSearchingStudios = ref(false);
 const voiceActorOptions = ref<any[]>([]);
 const isSearchingVoiceActors = ref(false);
+let voiceActorSearchController: AbortController | null = null;
 const optionsCache = ref<Map<number, string>>(new Map());
 
 // Dialog State
@@ -586,19 +587,24 @@ const searchStudios = async (query: string) => {
 };
 
 const searchVoiceActors = async (query: string) => {
+  voiceActorSearchController?.abort();
   isSearchingVoiceActors.value = true;
   try {
     if (!query) {
       voiceActorOptions.value = [];
       return;
     }
+    const controller = new AbortController();
+    voiceActorSearchController = controller;
     const data = await $fetch<{ id: number; firstname: string; lastname: string }[]>("/api/search-voice-actors", {
-      params: { query, limit: 10 }
+      params: { query, limit: 10 },
+      signal: controller.signal
     });
     const formatted = (data || []).map((va) => ({ id: va.id, name: `${va.firstname || ''} ${va.lastname || ''}`.trim() }));
     voiceActorOptions.value = formatted;
     formatted.forEach(f => optionsCache.value.set(f.id, f.name));
   } catch (err: any) {
+    if (err?.name === "AbortError") return;
     console.error("Error searching voice actors:", err);
     showToast("Failed to search voice actors", "error");
     voiceActorOptions.value = [];
