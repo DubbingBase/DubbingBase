@@ -365,7 +365,7 @@ jobs:
           NUXT_GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
           NUXT_SYNC_TABLE_PRIMARY_KEY: ${{ secrets.SYNC_TABLE_PRIMARY_KEY }}
           NUXT_SYNC_WORKSHEET_NAME: ${{ secrets.SYNC_WORKSHEET_NAME }}
-          NITRO_PRESET: cloudflare-worker
+          NITRO_PRESET: cloudflare-module
         run: pnpm --filter=@app/website build
 
   # Job 8: Deploy website to Cloudflare Workers (main only)
@@ -381,11 +381,47 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Deploy to Cloudflare Workers
-        uses: cloudflare/wrangler-action@v3
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: apps/website
-          command: deploy
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          node-version: "24"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build website
+        env:
+          NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          NUXT_PUBLIC_SUPABASE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          NUXT_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          NUXT_SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          NUXT_TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+          NUXT_TVDB_API_KEY: ${{ secrets.TVDB_API_KEY }}
+          NUXT_IGDB_CLIENT_ID: ${{ secrets.IGDB_CLIENT_ID }}
+          NUXT_IGDB_CLIENT_SECRET: ${{ secrets.IGDB_CLIENT_SECRET }}
+          NUXT_MISTRAL_TOKEN: ${{ secrets.MISTRAL_TOKEN }}
+          NUXT_ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}
+          NUXT_ONESIGNAL_REST_API_KEY: ${{ secrets.ONESIGNAL_REST_API_KEY }}
+          NUXT_DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          NUXT_RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          NUXT_RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
+          NUXT_RESEND_TO_EMAIL: ${{ secrets.RESEND_TO_EMAIL }}
+          NUXT_ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          NUXT_GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
+          NUXT_GOOGLE_SERVICE_ACCOUNT_KEY: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
+          NUXT_GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+          NUXT_SYNC_TABLE_PRIMARY_KEY: ${{ secrets.SYNC_TABLE_PRIMARY_KEY }}
+          NUXT_SYNC_WORKSHEET_NAME: ${{ secrets.SYNC_WORKSHEET_NAME }}
+          NITRO_PRESET: cloudflare-module
+        run: pnpm --filter=@app/website build
+
+      - name: Deploy to Cloudflare Workers
+        working-directory: apps/website
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm dlx wrangler@latest deploy
