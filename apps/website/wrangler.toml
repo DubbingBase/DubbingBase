@@ -1,6 +1,11 @@
 name = "dubbingbase-website"
+main = ".output/server/index.mjs"
 compatibility_date = "2024-04-03"
 compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = ".output/public"
+binding = "ASSETS"
 
 # Optional: add KV namespace for edge-distributed caching.
 # Without it, cache falls back to in-memory per isolate.
