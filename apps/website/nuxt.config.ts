@@ -4,7 +4,7 @@ import { defineNuxtConfig } from "nuxt/config";
 
 export default defineNuxtConfig({
   rootDir: resolve(import.meta.dirname),
-  compatibilityDate: "2024-04-03",
+  compatibilityDate: "2024-09-23",
 
   app: {
     head: {
