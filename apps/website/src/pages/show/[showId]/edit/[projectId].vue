@@ -592,11 +592,10 @@ const searchVoiceActors = async (query: string) => {
       voiceActorOptions.value = [];
       return;
     }
-    const { data, error } = await supabase.functions.invoke("search-voice-actors", {
-      body: { query, limit: 10 }
+    const data = await $fetch<{ id: number; firstname: string; lastname: string }[]>("/api/search-voice-actors", {
+      params: { query, limit: 10 }
     });
-    if (error) throw error;
-    const formatted = (data || []).map((va: any) => ({ id: va.id, name: `${va.firstname || ''} ${va.lastname || ''}`.trim() }));
+    const formatted = (data || []).map((va) => ({ id: va.id, name: `${va.firstname || ''} ${va.lastname || ''}`.trim() }));
     voiceActorOptions.value = formatted;
     formatted.forEach(f => optionsCache.value.set(f.id, f.name));
   } catch (err: any) {
