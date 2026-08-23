@@ -151,7 +151,7 @@ const route = useRoute();
 const router = useRouter();
 const localePath = useLocalePath();
 const supabase = useSupabaseClient();
-const { studio, loading: fetchingData, loadStudioDetails } = useStudioData(supabase);
+const { studio, loading: fetchingData, loadStudioDetails } = useStudioData();
 
 const studioId = route.params.studioId as string;
 const isEditMode = computed(() => studioId && studioId !== 'new');
@@ -259,11 +259,10 @@ const saveStudio = async () => {
       isEditMode: isEditMode.value,
     };
 
-    const { error } = await supabase.functions.invoke("save-studio", {
-      body: payload
+    await $fetch('/api/save-studio', {
+      method: 'POST',
+      body: payload,
     });
-
-    if (error) throw error;
 
     router.push(localePath(`/studio/${isEditMode.value ? studioId : ''}`));
   } catch (err: any) {

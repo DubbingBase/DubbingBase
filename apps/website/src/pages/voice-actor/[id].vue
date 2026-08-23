@@ -588,10 +588,10 @@ const config = useRuntimeConfig();
 const baseUrl = config.public.supabase.url;
 
 const { data, pending } = useAsyncData(`voice-actor-${voiceActorId}`, () =>
-  fetchVoiceActorData(supabase, voiceActorId),
+  fetchVoiceActorData(voiceActorId),
 );
 
-const voiceActorData = useVoiceActorData(supabase, data.value);
+const voiceActorData = useVoiceActorData(data.value);
 const {
   voiceActor,
   profilePicture,

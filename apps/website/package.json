@@ -15,8 +15,10 @@
     "@app/locales": "workspace:*",
     "@app/shared-logic": "workspace:*",
     "@nuxtjs/i18n": "^10.5.0",
+    "@resvg/resvg-wasm": "^2.6.2",
     "@revolist/revogrid": "^4.24.1",
     "@revolist/vue3-datagrid": "^4.24.0",
+    "@supabase/supabase-js": "^2.49.1",
     "@vueuse/core": "^14.4.0",
     "@vueuse/nuxt": "^14.3.0",
     "browser-image-compression": "^2.0.2",
@@ -24,6 +26,7 @@
     "lucide-vue-next": "^1.0.0",
     "posthog-js": "^1.407.8",
     "reka-ui": "latest",
+    "satori": "^0.29.0",
     "vue": "latest",
     "vue-chartjs": "^5.3.4",
     "vue-router": "^5.2.0"
@@ -43,7 +46,7 @@
     "nuxt": "latest",
     "nuxt-swiper": "^2.0.2",
     "tailwindcss": "^4.3.3",
-    "typescript": "^7.0.2",
+    "typescript": "^5.8.2",
     "vitest": "^4.1.10",
     "vue-tsc": "^3.3.8"
   }

@@ -149,9 +149,9 @@ const isAdmin = computed(() => {
   return user.value?.app_metadata?.role === 'admin' || user.value?.user_metadata?.role === 'admin';
 });
 
-const { data: initialStudioDetails } = await useAsyncData(`studio-${route.params.id}`, () => fetchStudioDetails(supabase, route.params.id as string));
+const { data: initialStudioDetails } = await useAsyncData(`studio-${route.params.id}`, () => fetchStudioDetails(route.params.id as string));
 
-const { studio, dubbedProjects, voiceActorsRoster, loading, error } = useStudioData(supabase, [], initialStudioDetails.value);
+const { studio, dubbedProjects, voiceActorsRoster, loading, error } = useStudioData([], initialStudioDetails.value);
 
 const getProfileUrl = (path: string) => {
   if (path.startsWith("http")) return path;

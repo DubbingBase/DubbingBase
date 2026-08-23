@@ -1,5 +1,30 @@
+export async function fetchVoiceActorData(
+  id: string | number,
+): Promise<any | null> {
+  try {
+    const voiceActorResponse = await $fetch<any>(`/api/voice-actor/${id}`);
+
+    if (!voiceActorResponse || !voiceActorResponse.voiceActor) {
+      console.error("voiceActorResponse is null");
+      return null;
+    }
+
+    return {
+      voiceActor: voiceActorResponse.voiceActor,
+      medias: voiceActorResponse.medias || [],
+      characterProfilePictures:
+        voiceActorResponse.characterProfilePictures || [],
+      potentialWikipediaUrl: voiceActorResponse.potentialWikipediaUrl || null,
+      profilePicture: voiceActorResponse.voiceActor.profile_picture || null,
+      votes: voiceActorResponse.votes,
+    };
+  } catch (e) {
+    console.error("fetchVoiceActorData error:", e);
+    return null;
+  }
+}
+
 import { ref, computed } from "vue";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import type { MovieModel, SerieModel, PersonData, Actor } from "../types";
 
 export type VoiceActorResponse = {
@@ -57,6 +82,7 @@ export type EnhancedWorkItem = {
   work: {
     id: number;
     actor_id: number;
+    performance?: string | null;
     dubbing_projects?: {
       content_id: number;
       content_type: string | null;
@@ -75,7 +101,6 @@ export type EnhancedWorkItem = {
   sortDate: string;
 };
 
-// Helper for mapping Actor to PersonData
 function actorToPersonData(actor: {
   id: number;
   name?: string;
@@ -101,36 +126,7 @@ export type VoiceActorDataPayload = {
   votes?: VoiceActorResponse["votes"];
 };
 
-export async function fetchVoiceActorData(
-  supabase: SupabaseClient,
-  id: string | number,
-): Promise<VoiceActorDataPayload | null> {
-  const voiceActorResponseRaw = await supabase.functions.invoke("voice-actor", {
-    body: { id },
-  });
-
-  const voiceActorResponse =
-    (await voiceActorResponseRaw.data) as VoiceActorResponse;
-
-  if (!voiceActorResponse || !voiceActorResponse.voiceActor) {
-    console.error("voiceActorResponse is null");
-    return null;
-  }
-
-  return {
-    voiceActor: voiceActorResponse.voiceActor,
-    medias: voiceActorResponse.medias || [],
-    characterProfilePictures: voiceActorResponse.characterProfilePictures || [],
-    potentialWikipediaUrl: voiceActorResponse.potentialWikipediaUrl || null,
-    profilePicture: voiceActorResponse.voiceActor.profile_picture || null,
-    votes: voiceActorResponse.votes,
-  };
-}
-
-export function useVoiceActorData(
-  supabase: SupabaseClient,
-  initialData?: VoiceActorDataPayload | null,
-) {
+export function useVoiceActorData(initialData?: VoiceActorDataPayload | null) {
   const voiceActor = ref<VoiceActorResponse["voiceActor"] | undefined>(
     initialData?.voiceActor,
   );
@@ -147,14 +143,13 @@ export function useVoiceActorData(
     initialData?.potentialWikipediaUrl || null,
   );
 
-  // Votes that the component can consume or integrate into its own store
   const votes = ref<VoiceActorResponse["votes"]>(initialData?.votes);
 
   const loadVoiceActorData = async (id: string | number) => {
     loading.value = true;
 
     try {
-      const payload = await fetchVoiceActorData(supabase, id);
+      const payload = await fetchVoiceActorData(id);
 
       if (!payload) return;
 
@@ -260,7 +255,7 @@ export function useVoiceActorData(
     if (!baseEnhancedWork.value) return [];
     return [...baseEnhancedWork.value].sort((a, b) => {
       if (!a || !b) return 0;
-      return a.sortDate > b.sortDate ? -1 : 1; // Newest first
+      return a.sortDate > b.sortDate ? -1 : 1;
     });
   });
 

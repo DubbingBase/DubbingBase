@@ -1,5 +1,7 @@
 import { createApp } from "vue";
 
+import "@/api/http";
+
 import i18n from "./i18n";
 
 import "./style.css";

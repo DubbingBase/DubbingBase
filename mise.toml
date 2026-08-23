@@ -22,16 +22,6 @@ depends = ["install"]
 dir = "packages/database"
 run = "pnpm supabase stop"
 
-[tasks.functions]
-description = "Starts the Supabase functions"
-depends = ["install"]
-run = "pnpm --filter=@app/supabase dev"
-
-[tasks.function-deploy]
-description = "Deploys the Supabase functions"
-depends = ["install"]
-dir = "packages/database"
-run = "pnpm supabase functions deploy"
 
 [tasks.format]
 description = "Format codebase using Prettier"
@@ -120,7 +110,7 @@ run = "pnpm dev"
 description = "Runs the website"
 depends = ["install"]
 dir = "apps/website"
-run = "pnpm dev"
+run = "pnpm dev --host 0.0.0.0"
 
 [tasks.landing]
 description = "Runs the public facing landing website"
@@ -146,11 +136,6 @@ git diff --cached --quiet || git commit -m "chore: version packages"
 pnpm changeset tag
 git push && git push origin --tags
 """
-
-[tasks.check-functions]
-description = "Verifies all Edge Functions are configured in supabase/config.toml"
-dir = "packages/database"
-run = "./check-functions.sh"
 
 [tasks."curl-function"]
 description = "Curl a Supabase edge function locally for testing"
@@ -197,6 +182,5 @@ depends = ["install"]
 run = "./scripts/fetch-dubbing-prod.sh"
 
 [tasks.check]
-description = "Run all checks that currently block deployment in CI"
-depends = ["install", "check-functions"]
-run = "pnpm --filter=@app/supabase typecheck && pnpm build"
+description = "Builds the website to verify TypeScript, Vue templates, and Nitro server routes"
+run = "pnpm --filter=@app/website build"

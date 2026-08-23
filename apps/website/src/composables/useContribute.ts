@@ -1,14 +1,10 @@
 import { ref } from "vue";
 
-export const fetchRandomTask = async (supabase: any, category: string) => {
-  const { data, error: invokeError } = await supabase.functions.invoke(
-    "get-random-task",
-    {
-      body: { category },
-    },
-  );
+export const fetchRandomTask = async (category: string) => {
+  const data = await $fetch<any>("/api/get-random-task", {
+    params: { category },
+  });
 
-  if (invokeError) throw invokeError;
   if (data?.error) throw new Error(data.error);
 
   return data;
@@ -18,7 +14,6 @@ export const useContribute = (
   initialTask?: any,
   initialCategory?: string | null,
 ) => {
-  const supabase = useSupabaseClient();
   const isLoading = ref(false);
   const isSubmitting = ref(false);
   const error = ref<string | null>(null);
@@ -33,25 +28,21 @@ export const useContribute = (
     activeCategory.value = null;
 
     try {
-      const { data, error: invokeError } = await supabase.functions.invoke(
-        "get-random-task",
-        {
-          body: { category },
-        },
-      );
+      const data = await $fetch<any>("/api/get-random-task", {
+        params: { category },
+      });
 
-      if (invokeError) throw invokeError;
       if (data?.error) throw new Error(data.error);
 
       if (data?.task) {
         currentTask.value = data.task;
         activeCategory.value = data.category || category;
       } else if (data?.message) {
-        // e.g. "No tasks available" or "Locked"
         error.value = data.message;
       }
     } catch (err: any) {
-      error.value = err.message || "Failed to fetch a task.";
+      error.value =
+        err.data?.message || err.message || "Failed to fetch a task.";
       console.error(err);
     } finally {
       isLoading.value = false;
@@ -77,19 +68,17 @@ export const useContribute = (
         }
       }
 
-      const { data, error: invokeError } = await supabase.functions.invoke(
-        "submit-task",
-        {
-          body: formData,
-        },
-      );
+      const data = await $fetch<any>("/api/submit-task", {
+        method: "POST",
+        body: formData,
+      });
 
-      if (invokeError) throw invokeError;
       if (data?.error) throw new Error(data.error);
 
-      return data; // contains { success: true, pointsAwarded: X }
+      return data;
     } catch (err: any) {
-      error.value = err.message || "Failed to submit task.";
+      error.value =
+        err.data?.message || err.message || "Failed to submit task.";
       console.error(err);
       return null;
     } finally {

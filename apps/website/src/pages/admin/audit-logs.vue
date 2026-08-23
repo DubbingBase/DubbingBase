@@ -187,20 +187,19 @@ const confirmRevert = async () => {
       payload.resolvedValue = resolvedValue.value;
     }
     
-    const { data, error } = await supabase.functions.invoke('revert-task', {
+    const data = await $fetch("/api/revert-task", {
+      method: "POST",
       body: payload
     });
     
-    if (error) throw error;
-    
-    if (data?.error === 'ERR_STATE_CHANGED') {
+    if ((data as any)?.error === 'ERR_STATE_CHANGED') {
       conflictError.value = data;
       // Pre-fill with previous safe value
-      resolvedValue.value = data.previousValue || '';
+      resolvedValue.value = (data as any).previousValue || '';
       return; // Stop here and let them see the conflict modal
     }
     
-    if (data?.error) throw new Error(data.error);
+    if ((data as any)?.error) throw new Error((data as any).error);
     
     // Success
     closeModal();

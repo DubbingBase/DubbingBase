@@ -675,11 +675,9 @@ const { data: initialData } = await useAsyncData(`movie-project-${id}`, async ()
   let tmdbData = null;
   if (project.content_id) {
     const isShow = project.content_type === "tv" || project.content_type === "show" || project.content_type === "serie";
-    const functionName = isShow ? "show" : "movie";
+    const route = isShow ? "show" : "movie";
     try {
-      const { data } = await supabase.functions.invoke(functionName, {
-        body: { id: project.content_id }
-      });
+      const data = await $fetch(`/api/${route}/${project.content_id}`);
       tmdbData = data;
     } catch (err: any) {
       console.error("Error fetching TMDB metadata:", err);
@@ -738,11 +736,9 @@ const fetchTmdbMetadata = async () => {
   isFetchingTmdb.value = true;
   try {
     const isShow = contentType.value === "tv" || contentType.value === "show" || contentType.value === "serie";
-    const functionName = isShow ? "show" : "movie";
+    const route = isShow ? "show" : "movie";
 
-    const { data } = await supabase.functions.invoke(functionName, {
-      body: { id: contentId.value }
-    });
+    const data = await $fetch(`/api/${route}/${contentId.value}`);
 
     if (data) {
       const mediaObj = isShow ? data.serie : data.movie;

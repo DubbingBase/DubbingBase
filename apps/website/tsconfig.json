@@ -12,5 +12,8 @@
     "locales/**/*.ts",
     "nuxt.config.ts",
     ".nuxt/nuxt.d.ts"
+  ],
+  "exclude": [
+    "src/**/*.test.ts"
   ]
 }
