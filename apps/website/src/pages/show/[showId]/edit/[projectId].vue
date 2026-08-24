@@ -766,11 +766,7 @@ const { data: initialData } = await useAsyncData(`show-edit-${tmdbShowId.value}-
   if (tmdbShowId.value) {
     // TMDB metadata
     try {
-      const params = new URLSearchParams({ id: tmdbShowId.value.toString() });
-      const { data, error } = await supabase.functions.invoke(`show?${params.toString()}`, { method: "GET" });
-      if (!error) {
-        tmdbData = data;
-      }
+      tmdbData = await $fetch('/api/show/' + tmdbShowId.value);
     } catch (e) {
       console.error("Failed to fetch TMDB data.", e);
     }
