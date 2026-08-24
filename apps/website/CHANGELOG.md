@@ -1,5 +1,11 @@
 # @app/landing
 
+## 1.1.4
+
+### Patch Changes
+
+- 3ad6121: Use hardcoded CLOUDFLARE_ZONE_ID secret for cache purge so token only needs Zone:Cache Purge
+
 ## 1.1.3
 
 ### Patch Changes
