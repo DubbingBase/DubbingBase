@@ -5,16 +5,16 @@
       class="bg-gray-900 p-6 rounded-2xl border border-gray-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
     >
       <div>
-        <h3 class="text-lg font-bold text-white">{{ $t('admin.merge.title') }}</h3>
+        <h3 class="text-lg font-bold text-white">Manual Voice Actor Merge</h3>
         <p class="text-sm text-gray-400">
-          {{ $t('admin.merge.description') }}
+          Select two voice actors to compare and merge them.
         </p>
       </div>
       <button
         @click="reset"
         class="py-2.5 px-5 bg-gray-800 hover:bg-gray-700 text-white font-semibold rounded-xl border border-gray-700 transition-all flex items-center justify-center shrink-0"
       >
-        <span>{{ $t('admin.merge.resetSelection') }}</span>
+        <span>Reset Selection</span>
       </button>
     </div>
 
@@ -45,7 +45,7 @@
       <div
         class="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-3 shadow-lg"
       >
-        <h4 class="font-bold text-white text-sm">{{ $t('admin.merge.voiceActorA') }}</h4>
+        <h4 class="font-bold text-white text-sm">Voice Actor A</h4>
 
         <div
           v-if="actorA"
@@ -97,7 +97,7 @@
         <div v-else class="relative">
           <input
             type="text"
-            :placeholder="$t('admin.merge.searchVoiceActorA')"
+            placeholder="Search Voice Actor A..."
             v-model="searchQueryA"
             @focus="activeSearch = 'A'"
             @input="triggerSearch('A')"
@@ -174,7 +174,7 @@
       <div
         class="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-3 shadow-lg"
       >
-        <h4 class="font-bold text-white text-sm">{{ $t('admin.merge.voiceActorB') }}</h4>
+        <h4 class="font-bold text-white text-sm">Voice Actor B</h4>
 
         <div
           v-if="actorB"
@@ -226,7 +226,7 @@
         <div v-else class="relative">
           <input
             type="text"
-            :placeholder="$t('admin.merge.searchVoiceActorB')"
+            placeholder="Search Voice Actor B..."
             v-model="searchQueryB"
             @focus="activeSearch = 'B'"
             @input="triggerSearch('B')"
@@ -309,7 +309,7 @@
         class="flex items-center justify-between border-b border-gray-800/80 pb-4"
       >
         <h4 class="text-md font-bold text-white flex items-center space-x-2">
-          <span>{{ $t('admin.merge.compareAndMerge') }}</span>
+          <span>Compare & Merge</span>
         </h4>
         <span
           v-if="loadingWorks"
@@ -380,8 +380,8 @@
           <tbody class="divide-y divide-gray-800/60">
             <!-- Name Row -->
             <tr>
-                <td class="p-4 text-gray-400 font-medium bg-gray-900/30">
-                {{ $t('common.name') }}
+              <td class="p-4 text-gray-400 font-medium bg-gray-900/30">
+                Name
               </td>
               <td
                 v-for="actor in actorsToCompare"
@@ -394,8 +394,8 @@
             </tr>
             <!-- Work Count Row -->
             <tr>
-                <td class="p-4 text-gray-400 font-medium bg-gray-900/30">
-                {{ $t('admin.merge.linkedWorks') }}
+              <td class="p-4 text-gray-400 font-medium bg-gray-900/30">
+                Linked Works
               </td>
               <td
                 v-for="actor in actorsToCompare"
@@ -414,8 +414,8 @@
             </tr>
             <!-- Nationality Row -->
             <tr v-if="hasAny('nationality')">
-                <td class="p-4 text-gray-400 font-medium bg-gray-900/30">
-                {{ $t('common.nationality') }}
+              <td class="p-4 text-gray-400 font-medium bg-gray-900/30">
+                Nationality
               </td>
               <td
                 v-for="actor in actorsToCompare"
@@ -428,8 +428,8 @@
             </tr>
             <!-- Born Row -->
             <tr v-if="hasAny('date_of_birth')">
-                <td class="p-4 text-gray-400 font-medium bg-gray-900/30">
-                {{ $t('common.born') }}
+              <td class="p-4 text-gray-400 font-medium bg-gray-900/30">
+                Born
               </td>
               <td
                 v-for="actor in actorsToCompare"
@@ -493,8 +493,8 @@
             </tr>
             <!-- Action Row -->
             <tr>
-                <td class="p-4 text-gray-400 font-medium bg-gray-900/30">
-                {{ $t('common.action') }}
+              <td class="p-4 text-gray-400 font-medium bg-gray-900/30">
+                Action
               </td>
               <td
                 v-for="actor in actorsToCompare"
@@ -557,7 +557,7 @@
             v-if="merging"
             class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"
           ></span>
-          <span>{{ merging ? $t('admin.merge.merging') : $t('admin.merge.mergeProfiles') }}</span>
+          <span>{{ merging ? "Merging..." : "Merge Profiles" }}</span>
         </button>
       </div>
     </div>
@@ -581,7 +581,6 @@
 
 <script setup lang="ts">
 
-const { t } = useI18n();
 
 definePageMeta({
   layout: "admin",
@@ -831,13 +830,13 @@ const mergeActors = async () => {
       },
     });
 
-    showToast(t('admin.merge.profilesMerged'), "success");
+    showToast("Voice actor profiles merged successfully!", "success");
 
     // Reset after success
     reset();
   } catch (err: any) {
     console.error("Error merging voice actors:", err);
-    showToast(err.message || t('admin.merge.failedToMerge'), "error");
+    showToast(err.message || "Failed to merge profiles", "error");
   } finally {
     merging.value = false;
   }

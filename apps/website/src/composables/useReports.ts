@@ -19,14 +19,10 @@ export const useReports = () => {
         throw new Error("You must be logged in to report content.");
       }
 
-      const data = await $fetch("/api/submit-user-report", {
-        method: "POST",
+      await $fetch('/api/submit-user-report', {
+        method: 'POST',
         body: { target_url: targetUrl, reason, details },
       });
-
-      if (data?.error) {
-        throw new Error(data.error);
-      }
 
       return true;
     } catch (err: any) {

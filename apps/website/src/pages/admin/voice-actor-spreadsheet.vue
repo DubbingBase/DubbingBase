@@ -3,7 +3,7 @@
     <!-- Toolbar with search -->
     <div class="shrink-0 bg-gray-900 p-6 rounded-2xl border border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div class="flex-1 max-w-md">
-        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{{ $t('admin.spreadsheet.searchDirectory') }}</label>
+        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Search Directory</label>
         <div class="relative">
           <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -13,7 +13,7 @@
           <input
             v-model="searchInput"
             type="text"
-            :placeholder="$t('admin.spreadsheet.searchVoiceActors')"
+            placeholder="Search voice actors..."
             class="w-full pl-10 pr-4 py-2.5 bg-gray-950 border border-gray-800 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 placeholder-gray-500 text-sm transition-all duration-150"
             @input="handleSearchInput"
           />
@@ -27,11 +27,11 @@
           <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
-          <span>{{ $t('admin.spreadsheet.addVoiceActor') }}</span>
+          <span>Add Voice Actor</span>
         </NuxtLink>
         <div class="flex items-center space-x-2 text-xs text-gray-400 bg-gray-950 border border-gray-800/80 px-4 py-2.5 rounded-xl shrink-0">
           <span class="h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
-          <span>{{ $t('admin.spreadsheet.autoSavesChanges') }}</span>
+          <span>Auto-saves changes</span>
         </div>
       </div>
     </div>
@@ -48,14 +48,14 @@
         @click="refresh"
         class="py-1.5 px-3 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-semibold transition-all"
       >
-        {{ $t('common.retry') }}
+        Retry
       </button>
     </div>
 
     <!-- Pagination -->
     <div class="flex items-center justify-between bg-gray-900 p-4 rounded-xl border border-gray-800">
       <div class="text-sm text-gray-400">
-        {{ $t('admin.spreadsheet.showingResults', { from: (page - 1) * limit + 1, to: Math.min(page * limit, total), total }) }}
+        Showing <span class="font-bold text-white">{{ (page - 1) * limit + 1 }}</span> to <span class="font-bold text-white">{{ Math.min(page * limit, total) }}</span> of <span class="font-bold text-white">{{ total }}</span> results
       </div>
       <div class="flex items-center space-x-2">
         <button
@@ -63,15 +63,15 @@
           :disabled="page === 1 || pending"
           class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 text-white rounded-lg text-sm transition-colors"
         >
-          {{ $t('common.previous') }}
+          Previous
         </button>
-        <span class="text-gray-400 text-sm px-2">{{ $t('admin.spreadsheet.pageOf', { page, totalPages: Math.ceil(total / limit) || 1 }) }}</span>
+        <span class="text-gray-400 text-sm px-2">Page {{ page }} of {{ Math.ceil(total / limit) || 1 }}</span>
         <button
           @click="page < Math.ceil(total / limit) ? page++ : null"
           :disabled="page >= Math.ceil(total / limit) || pending"
           class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 text-white rounded-lg text-sm transition-colors"
         >
-          {{ $t('common.next') }}
+          Next
         </button>
       </div>
     </div>
@@ -84,15 +84,15 @@
       <table class="w-full text-left border-collapse text-sm whitespace-nowrap">
         <thead>
           <tr class="border-b border-gray-800 text-xs font-semibold text-gray-400 uppercase tracking-wider bg-gray-900/40">
-            <th class="py-3 px-4">{{ $t('common.actions') }}</th>
+            <th class="py-3 px-4">Actions</th>
             <th class="py-3 px-4">ID</th>
-            <th class="py-3 px-4">{{ $t('admin.spreadsheet.firstName') }}</th>
-            <th class="py-3 px-4">{{ $t('admin.spreadsheet.lastName') }}</th>
-            <th class="py-3 px-4">{{ $t('admin.spreadsheet.bio') }}</th>
-            <th class="py-3 px-4">{{ $t('admin.spreadsheet.nationality') }}</th>
-            <th class="py-3 px-4">{{ $t('admin.spreadsheet.dateOfBirth') }}</th>
-            <th class="py-3 px-4">{{ $t('admin.spreadsheet.profilePic') }}</th>
-            <th class="py-3 px-4">{{ $t('admin.spreadsheet.socials') }}</th>
+            <th class="py-3 px-4">First Name</th>
+            <th class="py-3 px-4">Last Name</th>
+            <th class="py-3 px-4">Bio</th>
+            <th class="py-3 px-4">Nationality</th>
+            <th class="py-3 px-4">Date of Birth</th>
+            <th class="py-3 px-4">Profile Pic</th>
+            <th class="py-3 px-4">Socials</th>
             <th class="py-3 px-4">TMDB ID</th>
             <th class="py-3 px-4">Wikidata ID</th>
           </tr>
@@ -100,7 +100,7 @@
         <tbody class="divide-y divide-gray-800/60">
           <tr v-for="actor in tableData" :key="actor.id" class="hover:bg-gray-800/20 transition-colors">
             <td class="py-2 px-4">
-              <NuxtLink :to="localePath(`/voice-actor/${actor.id}/edit`)" class="text-blue-500 hover:text-blue-400 underline text-xs font-bold">{{ $t('common.edit') }}</NuxtLink>
+              <NuxtLink :to="localePath(`/voice-actor/${actor.id}/edit`)" class="text-blue-500 hover:text-blue-400 underline text-xs font-bold">Edit</NuxtLink>
             </td>
             <td class="py-2 px-4 text-gray-500">{{ actor.id }}</td>
             <td class="py-2 px-2"><input v-model="actor.firstname" @change="handleCellEdit(actor, 'firstname')" class="w-28 bg-gray-950 border border-transparent hover:border-gray-700 focus:border-blue-500 rounded px-2 py-1 text-white transition-colors" /></td>
@@ -114,7 +114,7 @@
             <td class="py-2 px-2"><input v-model="actor.wikidata_id" @change="handleCellEdit(actor, 'wikidata_id')" class="w-28 bg-gray-950 border border-transparent hover:border-gray-700 focus:border-blue-500 rounded px-2 py-1 text-white transition-colors" /></td>
           </tr>
           <tr v-if="tableData.length === 0">
-            <td colspan="11" class="py-12 text-center text-gray-500">{{ $t('admin.spreadsheet.noVoiceActorsFound') }}</td>
+            <td colspan="11" class="py-12 text-center text-gray-500">No voice actors found.</td>
           </tr>
         </tbody>
       </table>
@@ -135,7 +135,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
         </svg>
         <span>{{
-          isBulkSaving ? $t('admin.spreadsheet.savingChanges') : $t('admin.spreadsheet.saveAllChanges', { count: pendingChanges.size })
+          isBulkSaving ? "Saving changes..." : `Save All Changes (${pendingChanges.size})`
         }}</span>
       </button>
     </div>
@@ -161,9 +161,8 @@
 import { ref, computed, watch, onUnmounted } from "vue";
 import type { Tables } from "../../../../packages/database/supabase/functions/_shared/database.types";
 
-
+const supabase = useSupabaseClient();
 const localePath = useLocalePath();
-const { t } = useI18n();
 
 definePageMeta({
   layout: 'admin',
@@ -188,16 +187,14 @@ let autoSaveTimer: ReturnType<typeof setTimeout> | null = null;
 const { data, pending, error, refresh } = await useAsyncData(
   `voice-actors-spreadsheet-${page.value}-${searchQuery.value}`,
   async () => {
-    const response = await $fetch("/api/list-voice-actors", {
-      method: "POST",
+    return await $fetch('/api/list-voice-actors', {
+      method: 'POST',
       body: {
         limit: limit.value,
         offset: (page.value - 1) * limit.value,
         query: searchQuery.value,
       },
     });
-
-    return response;
   },
   {
     watch: [page, searchQuery],
@@ -270,8 +267,8 @@ async function savePendingChanges() {
 
 async function saveSingleChange(key: string, change: CellChange) {
   try {
-    await $fetch("/api/update-voice-actor", {
-      method: "POST",
+    await $fetch('/api/update-voice-actor', {
+      method: 'POST',
       body: {
         voice_actor_id: change.id,
         updates: { [change.prop]: change.newValue },
@@ -281,7 +278,7 @@ async function saveSingleChange(key: string, change: CellChange) {
     pendingChanges.value.delete(key);
   } catch (err: any) {
     console.error("Error saving change:", err);
-    showToast(t('admin.spreadsheet.saveFailed', { field: change.prop }), "error");
+    showToast(`Failed to save ${change.prop}`, "error");
   }
 }
 
@@ -290,9 +287,9 @@ async function handleBulkSave() {
   isBulkSaving.value = true;
   try {
     await savePendingChanges();
-    showToast(t('admin.spreadsheet.allChangesSaved'), "success");
+    showToast("All changes saved successfully", "success");
   } catch (err) {
-    showToast(t('admin.spreadsheet.someChangesFailed'), "error");
+    showToast("Some changes failed to save", "error");
   } finally {
     isBulkSaving.value = false;
   }

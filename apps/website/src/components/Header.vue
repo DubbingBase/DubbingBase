@@ -154,6 +154,18 @@
                 >
                   <SelectItemText>{{ t("language.fr") }}</SelectItemText>
                 </SelectItem>
+                <SelectItem
+                  value="es"
+                  class="flex items-center px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-[#2a2a2a] cursor-pointer outline-none rounded-lg data-[highlighted]:bg-gray-100 dark:data-[highlighted]:bg-[#2a2a2a] data-[highlighted]:text-gray-900 dark:data-[highlighted]:text-white transition-colors"
+                >
+                  <SelectItemText>{{ t("language.es") }}</SelectItemText>
+                </SelectItem>
+                <SelectItem
+                  value="ja"
+                  class="flex items-center px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-[#2a2a2a] cursor-pointer outline-none rounded-lg data-[highlighted]:bg-gray-100 dark:data-[highlighted]:bg-[#2a2a2a] data-[highlighted]:text-gray-900 dark:data-[highlighted]:text-white transition-colors"
+                >
+                  <SelectItemText>{{ t("language.ja") }}</SelectItemText>
+                </SelectItem>
               </SelectViewport>
             </SelectContent>
           </SelectPortal>

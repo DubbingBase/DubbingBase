@@ -3,8 +3,8 @@
     <!-- Header Row -->
     <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
-        <h3 class="text-lg font-bold text-white">{{ $t('admin.duplicates.workTitle') }}</h3>
-        <p class="text-sm text-gray-400">{{ $t('admin.duplicates.workDescription') }}</p>
+        <h3 class="text-lg font-bold text-white">Duplicate Work Entries</h3>
+        <p class="text-sm text-gray-400">Scan for duplicate casting associations (movie/series credits linked to voice actors) and delete redundant records.</p>
       </div>
       <button
         @click="fetchDuplicates"
@@ -12,7 +12,7 @@
         class="py-2.5 px-5 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-800 disabled:text-gray-500 text-white font-semibold rounded-xl shadow-lg transition-all duration-150 hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center shrink-0"
       >
         <span v-if="loading" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
-        <span>{{ loading ? $t('admin.duplicates.scanning') : $t('admin.duplicates.scanDuplicates') }}</span>
+        <span>{{ loading ? 'Scanning...' : 'Scan Duplicates' }}</span>
       </button>
     </div>
 
@@ -34,7 +34,7 @@
     <!-- Scanner Loading State -->
     <div v-if="loading" class="flex flex-col items-center justify-center py-24 space-y-3 bg-gray-900/40 border border-gray-800/60 rounded-2xl">
       <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
-      <p class="text-gray-400 text-sm">{{ $t('admin.duplicates.scanningWork') }}</p>
+      <p class="text-gray-400 text-sm">Scanning work associations for duplicates...</p>
     </div>
 
     <!-- Empty State -->
@@ -44,8 +44,8 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       </div>
-      <p class="text-gray-400 font-semibold">{{ $t('admin.duplicates.noDuplicateWork') }}</p>
-      <p class="text-xs text-gray-500">{{ $t('admin.duplicates.allUnique') }}</p>
+      <p class="text-gray-400 font-semibold">No duplicate work entries found</p>
+      <p class="text-xs text-gray-500">All actor-voice actor mapping entries appear unique.</p>
     </div>
 
     <!-- Duplicates Group list -->
@@ -60,7 +60,7 @@
             <span class="h-5 w-5 rounded-full bg-gray-800 text-gray-300 text-xs font-semibold flex items-center justify-center">
               {{ idx + 1 }}
             </span>
-            <span>{{ $t('admin.duplicates.duplicateWorkGroup') }}</span>
+            <span>Duplicate Work Group</span>
           </h4>
           <span class="text-xs text-gray-400 font-mono">
             Shared properties (Project ID: {{ group.works[0]?.dubbing_project_id }} | Actor ID: {{ group.works[0]?.actor_id }})
@@ -73,10 +73,10 @@
             <thead>
               <tr class="bg-gray-950/60 border-b border-gray-850 text-gray-450 font-bold uppercase tracking-wider">
                 <th class="py-3 px-4">ID</th>
-                <th class="py-3 px-4">{{ $t('admin.duplicates.voiceActorId') }}</th>
-                <th class="py-3 px-4">{{ $t('admin.duplicates.performance') }}</th>
-                <th class="py-3 px-4">{{ $t('common.status') }}</th>
-                <th class="py-3 px-4">{{ $t('admin.duplicates.contentType') }}</th>
+                <th class="py-3 px-4">Voice Actor ID</th>
+                <th class="py-3 px-4">Performance</th>
+                <th class="py-3 px-4">Status</th>
+                <th class="py-3 px-4">Content Type</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-850">
@@ -114,12 +114,12 @@
         <!-- Deletion Tool Control -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-3 bg-gray-950/20 p-4 rounded-xl border border-gray-850">
           <div class="flex-1 min-w-0 flex items-center space-x-3">
-            <label class="text-xs font-semibold text-gray-400 uppercase shrink-0">{{ $t('admin.duplicates.deleteEntry') }}:</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase shrink-0">Delete Entry:</label>
             <select
               v-model="group.selectedId"
               class="bg-gray-950 border border-gray-800 rounded-xl px-3 py-2 text-xs font-medium text-white focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-xs w-full"
             >
-              <option :value="null">{{ $t('admin.duplicates.selectWorkId') }}</option>
+              <option :value="null">Select work ID to delete</option>
               <option v-for="work in group.works" :key="work.id" :value="work.id">
                 ID #{{ work.id }} (Voice Actor: {{ work.voice_actor_id }})
               </option>
@@ -132,7 +132,7 @@
             class="py-2.5 px-4 bg-red-650 hover:bg-red-600 disabled:bg-gray-800 disabled:text-gray-500 text-white font-semibold rounded-xl text-xs transition-all duration-150 flex items-center justify-center shrink-0 shadow-lg shadow-red-950/20"
           >
             <span v-if="deleting[idx]" class="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-white mr-2"></span>
-            <span>{{ deleting[idx] ? $t('admin.duplicates.deleting') : $t('admin.duplicates.deleteSelected') }}</span>
+            <span>{{ deleting[idx] ? 'Deleting...' : 'Delete Selected' }}</span>
           </button>
         </div>
       </div>
@@ -141,10 +141,6 @@
   </template>
 
 <script setup lang="ts">
-
-const { t } = useI18n();
-
-
 
 
 definePageMeta({
@@ -213,7 +209,7 @@ const deleteWork = async (workId: number | null, groupIdx: number) => {
       throw new Error(data.error?.message || "Failed to delete work entry.");
     }
 
-    successMsg.value = t('admin.duplicates.workDeleted', { id: workId });
+    successMsg.value = `Successfully deleted work entry #${workId}`;
 
     // Remove row locally
     const group = duplicates.value[groupIdx];

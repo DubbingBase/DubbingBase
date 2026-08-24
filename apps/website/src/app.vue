@@ -28,7 +28,7 @@ useHead({
     dir: () => i18nHead.value.htmlAttrs?.dir || 'ltr'
   },
   titleTemplate: (titleChunk) => {
-    return titleChunk ? `${titleChunk} | DubbingBase` : 'DubbingBase - La base de données du doublage';
+    return titleChunk ? `${titleChunk} | DubbingBase` : 'DubbingBase';
   },
   link: [
     { rel: 'icon', type: 'image/png', href: '/favicon-96x96.png', sizes: '96x96' },

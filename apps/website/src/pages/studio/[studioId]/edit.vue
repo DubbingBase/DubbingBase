@@ -259,8 +259,8 @@ const saveStudio = async () => {
       isEditMode: isEditMode.value,
     };
 
-    await $fetch("/api/save-studio", {
-      method: "POST",
+    await $fetch('/api/save-studio', {
+      method: 'POST',
       body: payload
     });
 

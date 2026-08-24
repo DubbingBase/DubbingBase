@@ -1,4 +1,12 @@
 {
+  "app": {
+    "title": "DubbingBase"
+  },
+  "nav": {
+    "home": "Home",
+    "profile": "Profile",
+    "login": "Login"
+  },
   "newVoiceActorsAdded": "new voice actor added | new voice actors added",
   "navigation": {
     "home": "Home",
@@ -33,6 +41,39 @@
     "newVoiceActorsAdded": "{count} new voice actors added",
     "noNewChangesFound": "No new changes found",
     "suggestChanges": "Suggest changes (Coming soon)"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "language": {
+    "suggestSwitch": "Your browser language doesn't match this page.",
+    "switchNow": "Switch now",
+    "en": "English",
+    "fr": "Français",
+    "es": "Español",
+    "ja": "日本語"
+  },
+  "seo": {
+    "voiceActors": "Voice Actors - DubbingBase",
+    "voiceActorTitle": "{name} - Voice Actor | DubbingBase",
+    "voiceActorTitleFallback": "Voice Actor | DubbingBase",
+    "voiceActorDescription": "Discover the biography, filmography, and dubbing roles of {name}.",
+    "voiceActorKeywords": "{name}, voice actor, dubbing, anime, voice over",
+    "movies": "Movies - DubbingBase",
+    "series": "Series - DubbingBase",
+    "showDescription": "Discover the cast and voice actors of {title}.",
+    "showDescriptionFallback": "Discover the cast and voice actors of this series.",
+    "showDescriptionDubbing": "Discover the {lang} dubbing of {title}.",
+    "showKeywords": "{title}, series, dubbing, voice actors, cast",
+    "movieDescription": "Discover the cast and voice actors of {title}.",
+    "movieDescriptionFallback": "Discover the cast and voice actors of this movie.",
+    "movieDescriptionDubbing": "Discover the {lang} dubbing of {title}.",
+    "movieKeywords": "{title}, movie, dubbing, voice actors, cast",
+    "actorDescription": "Discover the filmography and voice actors of {name}.",
+    "actorDescriptionFallback": "Discover filmography and voice actors.",
+    "actorKeywords": "{name}, actor, filmography, movies, series"
   },
   "profile": {
     "userProfile": "My User Profile",
@@ -124,8 +165,22 @@
   },
   "home": {
     "welcome": "Welcome!",
+    "hero": {
+      "title": "The Dubbing & Voice Actor Database",
+      "subtitle": "Explore the world of dubbing. Discover voice actors, their roles, and the productions they bring to life.",
+      "searchPlaceholder": "Search movies, series, voice actors...",
+      "searchButton": "Search"
+    },
+    "meta": {
+      "title": "The Dubbing & Voice Actor Database",
+      "description": "DubbingBase is a comprehensive platform dedicated to tracking dubbing information for movies, series, and video games. Discover voice actors, their roles, and the productions they bring to life.",
+      "ogTitle": "DubbingBase - The Dubbing & Voice Actor Database",
+      "ogDescription": "Explore the world of dubbing. Discover voice actors, their roles, and the productions they bring to life.",
+      "keywords": "dubbing, voice actors, anime, movies, series, video games, cast, seiyuu"
+    },
     "trendingMovies": "Trending - Movies",
     "trendingSeries": "Trending - Series",
+    "trendingVoiceActors": "Trending - Voice Actors",
     "recentVoiceActors": "Recent Voice Actors",
     "topVoiceActors": "Top Voice Actors",
     "moviesError": "Unable to load popular movies. Please try again later.",
@@ -143,10 +198,26 @@
     }
   },
   "details": {
-    "modify": "Modify"
+    "modify": "Modify",
+    "dubbing": "Dubbing ({lang})",
+    "synopsis": "Synopsis",
+    "noSynopsis": "No synopsis available.",
+    "castAndCrew": "Cast & Crew",
+    "actor": "Actor",
+    "character": "Character",
+    "unknownCharacter": "Unknown Character",
+    "voiceActor": "Voice Actor",
+    "notSpecified": "Not specified"
   },
   "search": {
-    "actor": "Actor"
+    "actor": "Actor",
+    "placeholder": "Search...",
+    "noResults": "No results found",
+    "emptyState": "Start typing to search...",
+    "movie": "Movie",
+    "tv": "Series",
+    "voiceActor": "Voice Actor",
+    "videoGame": "Video Game"
   },
   "auth": {
     "loginRequiredForSubscription": "You must be logged in to subscribe"
@@ -194,6 +265,7 @@
     "platforms": "Platforms",
     "genres": "Genres",
     "noCharacters": "No characters available",
-    "notFound": "Game not found"
+    "notFound": "Game not found",
+    "trendingGames": "Trending - Games"
   }
 }

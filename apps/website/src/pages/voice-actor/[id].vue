@@ -672,7 +672,7 @@ useHead({
   title: computed(() =>
     actorName.value
       ? t("seo.voiceActorTitle", { name: actorName.value })
-      : t("seo.voiceActorTitleFallback", "Comédien(ne) de doublage"),
+      : t("seo.voiceActorTitleFallback", "Voice Actor"),
   ),
   meta: [
     {
@@ -694,7 +694,7 @@ useHead({
       content: computed(() =>
         actorName.value
           ? t("seo.voiceActorTitle", { name: actorName.value })
-          : t("seo.voiceActorTitleFallback", "Comédien(ne) de doublage"),
+          : t("seo.voiceActorTitleFallback", "Voice Actor"),
       ),
     },
     { property: "og:description", content: actorDescription },
@@ -702,7 +702,13 @@ useHead({
     {
       property: "og:locale",
       content: computed(() => {
-        return locale.value === "fr" ? "fr_FR" : "en_US";
+        const map: Record<string, string> = {
+          fr: "fr_FR",
+          en: "en_US",
+          es: "es_ES",
+          ja: "ja_JP",
+        };
+        return map[locale.value] || "en_US";
       }),
     },
     { property: "og:logo", content: "https://dubbingbase.com/logo.png" },
@@ -716,7 +722,7 @@ useHead({
       content: computed(() =>
         actorName.value
           ? t("seo.voiceActorTitle", { name: actorName.value })
-          : t("seo.voiceActorTitleFallback", "Comédien(ne) de doublage"),
+          : t("seo.voiceActorTitleFallback", "Voice Actor"),
       ),
     },
     { name: "twitter:description", content: actorDescription },
@@ -732,16 +738,16 @@ useHead({
           "@type": "ProfilePage",
           url: canonicalUrl.value,
           name: actorName.value
-            ? `${actorName.value} - Fiche Comédien`
-            : "Fiche Comédien",
+            ? `${actorName.value} - Voice Actor`
+            : "Voice Actor",
           mainEntity: {
             "@type": "Person",
             name:
               actorName.value ||
-              t("seo.voiceActorTitleFallback", "Comédien(ne) de doublage"),
+              t("seo.voiceActorTitleFallback", "Voice Actor"),
             jobTitle: t(
               "seo.voiceActorTitleFallback",
-              "Comédien(ne) de doublage",
+              "Voice Actor",
             ),
             image: profilePicture.value || ogImageUrl.value,
             url: canonicalUrl.value,

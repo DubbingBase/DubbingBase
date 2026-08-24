@@ -84,7 +84,7 @@
               {{ project.media?.title || project.media?.name || `Media #${project.content_id}` }}
             </h3>
             <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 uppercase font-bold tracking-wider">
-              {{ project.content_type === 'movie' ? 'Film' : 'Série' }}
+              {{ project.content_type === 'movie' ? $t('search.movie') : $t('search.tv') }}
             </div>
           </NuxtLink>
         </div>

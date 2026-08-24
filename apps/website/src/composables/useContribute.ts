@@ -1,12 +1,10 @@
 import { ref } from "vue";
 
 export const fetchRandomTask = async (category: string) => {
-  const data = await $fetch("/api/get-random-task", {
-    method: "POST",
+  const data = await $fetch('/api/get-random-task', {
+    method: 'POST',
     body: { category },
   });
-
-  if (data?.error) throw new Error(data.error);
 
   return data;
 };
@@ -29,12 +27,10 @@ export const useContribute = (
     activeCategory.value = null;
 
     try {
-      const data = await $fetch("/api/get-random-task", {
-        method: "POST",
+      const data = await $fetch('/api/get-random-task', {
+        method: 'POST',
         body: { category },
       });
-
-      if (data?.error) throw new Error(data.error);
 
       if (data?.task) {
         currentTask.value = data.task;
@@ -70,12 +66,10 @@ export const useContribute = (
         }
       }
 
-      const data = await $fetch("/api/submit-task", {
-        method: "POST",
+      const data = await $fetch('/api/submit-task', {
+        method: 'POST',
         body: formData,
       });
-
-      if (data?.error) throw new Error(data.error);
 
       return data; // contains { success: true, pointsAwarded: X }
     } catch (err: any) {

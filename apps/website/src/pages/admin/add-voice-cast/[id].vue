@@ -2,12 +2,12 @@
   <div class="space-y-6">
     <!-- Top back banner -->
     <div class="flex items-center justify-between bg-gray-900 p-4 rounded-2xl border border-gray-800">
-      <h3 class="text-sm font-bold text-white">{{ $t('admin.voiceCast.title') }}</h3>
+      <h3 class="text-sm font-bold text-white">Movie Voice Cast Assignment</h3>
       <NuxtLink
         :to="localePath('/admin')"
         class="text-xs font-semibold px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-350 hover:text-white rounded-xl border border-gray-700 transition-colors"
       >
-        {{ $t('common.backToDashboard') }}
+        ← Back to Dashboard
       </NuxtLink>
     </div>
 
@@ -22,7 +22,7 @@
     <!-- Loading state -->
     <div v-if="loading" class="flex flex-col items-center justify-center py-24 space-y-3 bg-gray-900/40 border border-gray-800/60 rounded-2xl">
       <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
-      <p class="text-gray-400 text-sm">{{ $t('admin.voiceCast.fetchingCredits') }}</p>
+      <p class="text-gray-400 text-sm">Fetching movie credits data...</p>
     </div>
 
     <!-- Main Workspace -->
@@ -61,7 +61,7 @@
               class="w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl shadow-lg transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center text-sm"
             >
               <span v-if="isSaving" class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></span>
-              <span>{{ $t('admin.voiceCast.saveMappingChanges') }}</span>
+              <span>Save Mapping Changes</span>
             </button>
             <p v-if="!hasChanges" class="text-[10px] text-center text-gray-500 mt-2">
               No changes to save yet.
@@ -72,7 +72,7 @@
 
       <!-- Cast list column (Double span) -->
       <div class="lg:col-span-2 space-y-4">
-        <h4 class="text-sm font-bold text-gray-400 uppercase tracking-wider px-2">{{ $t('admin.voiceCast.castingMembersMapping') }}</h4>
+        <h4 class="text-sm font-bold text-gray-400 uppercase tracking-wider px-2">Casting Members Mapping</h4>
 
         <div v-if="actors.length === 0" class="p-8 text-center bg-gray-900 border border-gray-850 rounded-2xl text-gray-500 text-sm">
           No cast members returned for this movie.
@@ -130,7 +130,7 @@
               <div v-else class="relative">
                 <input
                   type="text"
-                  :placeholder="$t('admin.voiceCast.linkVoiceActorPlaceholder')"
+                  placeholder="Link voice actor..."
                   v-model="actorSearchQueries[actor.id]"
                   @focus="openSearchDropdown(actor.id)"
                   @input="triggerSearch(actor.id)"
@@ -195,9 +195,8 @@
   </template>
 
 <script setup lang="ts">
-
+const supabase = useSupabaseClient();
 const localePath = useLocalePath();
-const { t } = useI18n();
 
 
 
@@ -304,9 +303,7 @@ const getAssignedVA = (actorId: number): VoiceActor | null => {
 };
 
 const { data: initialData, pending } = await useAsyncData(`movie-cast-${movieId.value}`, async () => {
-  const data = await $fetch('/api/movie', { params: { id: movieId.value.toString() } });
-
-  return data as MovieResponse;
+  return await $fetch('/api/movie', { params: { id: movieId.value.toString() } }) as MovieResponse;
 });
 
 watch(initialData, (data) => {
@@ -432,13 +429,13 @@ const saveVoiceCast = async () => {
       if (insertError) throw insertError;
     }
 
-    showToast(t('admin.voiceCast.mappingsSaved'), "success");
+    showToast("Voice cast mappings saved successfully!", "success");
 
     // Clear changes diff by resetting initial values
     initialAssignments.value = { ...voiceActorAssignments.value };
   } catch (err: any) {
     console.error("Error saving voice cast:", err);
-    showToast(err.message || t('admin.voiceCast.failedToSave'), "error");
+    showToast(err.message || "Failed to save voice cast mappings", "error");
   } finally {
     isSaving.value = false;
   }

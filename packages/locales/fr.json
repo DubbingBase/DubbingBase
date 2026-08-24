@@ -1,4 +1,12 @@
 {
+  "app": {
+    "title": "DubbingBase"
+  },
+  "nav": {
+    "home": "Accueil",
+    "profile": "Profil",
+    "login": "Connexion"
+  },
   "navigation": {
     "home": "Accueil",
     "search": "Recherche",
@@ -32,6 +40,39 @@
     "newVoiceActorsAdded": "{count} nouveaux doubleurs ajoutés",
     "noNewChangesFound": "Aucun nouveau changement trouvé",
     "suggestChanges": "Suggérer des modifications (Bientôt disponible)"
+  },
+  "theme": {
+    "light": "Clair",
+    "dark": "Sombre",
+    "system": "Système"
+  },
+  "language": {
+    "suggestSwitch": "La langue de votre navigateur ne correspond pas à cette page.",
+    "switchNow": "Changer maintenant",
+    "en": "English",
+    "fr": "Français",
+    "es": "Español",
+    "ja": "日本語"
+  },
+  "seo": {
+    "voiceActors": "Doubleurs - DubbingBase",
+    "voiceActorTitle": "{name} - Comédien de doublage | DubbingBase",
+    "voiceActorTitleFallback": "Comédien de doublage | DubbingBase",
+    "voiceActorDescription": "Découvrez la biographie, la filmographie et les rôles de doublage de {name}.",
+    "voiceActorKeywords": "{name}, comédien, doublage, anime, voix",
+    "movies": "Films - DubbingBase",
+    "series": "Séries - DubbingBase",
+    "showDescription": "Découvrez le casting et les voix de {title}.",
+    "showDescriptionFallback": "Découvrez le casting et les voix de cette série.",
+    "showDescriptionDubbing": "Découvrez le doublage {lang} de {title}.",
+    "showKeywords": "{title}, série, doublage, comédiens, casting",
+    "movieDescription": "Découvrez le casting et les voix de {title}.",
+    "movieDescriptionFallback": "Découvrez le casting et les voix de ce film.",
+    "movieDescriptionDubbing": "Découvrez le doublage {lang} de {title}.",
+    "movieKeywords": "{title}, film, doublage, comédiens, casting",
+    "actorDescription": "Découvrez la filmographie et les doubleurs de {name}.",
+    "actorDescriptionFallback": "Découvrez la filmographie et les doubleurs.",
+    "actorKeywords": "{name}, acteur, filmographie, films, séries"
   },
   "profile": {
     "userProfile": "Mon profil utilisateur",
@@ -123,8 +164,22 @@
   },
   "home": {
     "welcome": "Bienvenue !",
+    "hero": {
+      "title": "La base de données mondiale du doublage",
+      "subtitle": "Explorez le monde du doublage. Découvrez les comédiens, leurs rôles et les productions qu'ils donnent vie.",
+      "searchPlaceholder": "Rechercher films, séries, comédiens...",
+      "searchButton": "Rechercher"
+    },
+    "meta": {
+      "title": "La base de données mondiale du doublage",
+      "description": "DubbingBase est une plateforme complète dédiée au suivi des informations de doublage pour les films, séries et jeux vidéo. Découvrez les comédiens, leurs rôles et les productions qu'ils donnent vie.",
+      "ogTitle": "DubbingBase - La base de données mondiale du doublage",
+      "ogDescription": "Explorez le monde du doublage. Découvrez les comédiens, leurs rôles et les productions qu'ils donnent vie.",
+      "keywords": "doublage, comédiens, anime, films, séries, jeux vidéo, casting, seiyuu"
+    },
     "trendingMovies": "Tendances - Films",
     "trendingSeries": "Tendances - Séries",
+    "trendingVoiceActors": "Tendances - Doubleurs",
     "recentVoiceActors": "Doubleurs récents",
     "topVoiceActors": "Top Doubleurs",
     "moviesError": "Impossible de charger les films populaires. Veuillez réessayer plus tard.",
@@ -142,10 +197,26 @@
     }
   },
   "details": {
-    "modify": "Modifier"
+    "modify": "Modifier",
+    "dubbing": "Doublage ({lang})",
+    "synopsis": "Synopsis",
+    "noSynopsis": "Aucun synopsis disponible.",
+    "castAndCrew": "Distribution & Équipe",
+    "actor": "Acteur",
+    "character": "Personnage",
+    "unknownCharacter": "Personnage inconnu",
+    "voiceActor": "Comédien(ne)",
+    "notSpecified": "Non spécifié"
   },
   "search": {
-    "actor": "Acteur"
+    "actor": "Acteur",
+    "placeholder": "Rechercher...",
+    "noResults": "Aucun résultat trouvé",
+    "emptyState": "Commencez à taper pour rechercher...",
+    "movie": "Film",
+    "tv": "Série",
+    "voiceActor": "Comédien(ne)",
+    "videoGame": "Jeu vidéo"
   },
   "auth": {
     "loginRequiredForSubscription": "Vous devez être connecté pour vous abonner"
@@ -193,6 +264,7 @@
     "platforms": "Plateformes",
     "genres": "Genres",
     "noCharacters": "Aucun personnage disponible",
-    "notFound": "Jeu introuvable"
+    "notFound": "Jeu introuvable",
+    "trendingGames": "Tendances - Jeux"
   }
 }
