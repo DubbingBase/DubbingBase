@@ -1,6 +1,24 @@
 {
   "app": {
-    "title": "DubbingBase"
+    "title": "DubbingBase",
+    "description": "DubbingBaseは、映画、シリーズ、ビデオゲームの吹き替え情報を追跡するための包括的なプラットフォームです。声優、その役柄、そして彼らが命を吹き込む作品を発見しましょう。"
+  },
+  "footer": {
+    "explore": "探索",
+    "movies": "映画",
+    "series": "シリーズ",
+    "voiceActors": "声優",
+    "studios": "スタジオ",
+    "community": "コミュニティ",
+    "guidelines": "ガイドライン",
+    "discussions": "ディスカッション",
+    "leaderboard": "リーダーボード",
+    "legal": "法的情報",
+    "legalNotice": "法的注意事項",
+    "privacy": "プライバシーポリシー",
+    "terms": "利用規約",
+    "contact": "お問い合わせ",
+    "rights": "全著作権所有。"
   },
   "nav": {
     "home": "ホーム",

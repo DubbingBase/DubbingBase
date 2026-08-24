@@ -1,6 +1,24 @@
 {
   "app": {
-    "title": "DubbingBase"
+    "title": "DubbingBase",
+    "description": "DubbingBase est une plateforme complète dédiée au suivi des informations de doublage pour les films, séries et jeux vidéo. Découvrez les comédiens, leurs rôles et les productions qu'ils donnent vie."
+  },
+  "footer": {
+    "explore": "Explorer",
+    "movies": "Films",
+    "series": "Séries",
+    "voiceActors": "Comédiens",
+    "studios": "Studios",
+    "community": "Communauté",
+    "guidelines": "Directives",
+    "discussions": "Discussions",
+    "leaderboard": "Classement",
+    "legal": "Légal",
+    "legalNotice": "Mentions légales",
+    "privacy": "Politique de confidentialité",
+    "terms": "Conditions d'utilisation",
+    "contact": "Nous contacter",
+    "rights": "Tous droits réservés."
   },
   "nav": {
     "home": "Accueil",

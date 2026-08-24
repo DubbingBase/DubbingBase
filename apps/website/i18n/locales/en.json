@@ -1,6 +1,24 @@
 {
   "app": {
-    "title": "DubbingBase"
+    "title": "DubbingBase",
+    "description": "DubbingBase is a comprehensive platform dedicated to tracking dubbing information for movies, series, and video games. Discover voice actors, their roles, and the productions they bring to life."
+  },
+  "footer": {
+    "explore": "Explore",
+    "movies": "Movies",
+    "series": "Series",
+    "voiceActors": "Voice Actors",
+    "studios": "Studios",
+    "community": "Community",
+    "guidelines": "Guidelines",
+    "discussions": "Discussions",
+    "leaderboard": "Leaderboard",
+    "legal": "Legal",
+    "legalNotice": "Legal Notice",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "contact": "Contact Us",
+    "rights": "All rights reserved."
   },
   "nav": {
     "home": "Home",

@@ -62,7 +62,7 @@ useHead({
 });
 
 const { data, pending: isLoading, error } = useAsyncData('series-page', async () => {
-  const data = await $fetch('/api/trending-shows');
+  const data = await $fetch('/api/trending/shows');
   return data?.results || [];
 });
 
