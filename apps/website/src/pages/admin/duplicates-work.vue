@@ -200,7 +200,7 @@ const deleteWork = async (workId: number | null, groupIdx: number) => {
   successMsg.value = "";
 
   try {
-    const data = await $fetch('/api/delete_work_entry', {
+    const data = await $fetch('/api/delete-work-entry', {
       method: 'POST',
       body: { id: workId }
     });

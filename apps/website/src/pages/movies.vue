@@ -62,7 +62,7 @@ useHead({
 });
 
 const { data, pending: isLoading, error } = useAsyncData('movies-page', async () => {
-  const data = await $fetch('/api/trending-movies');
+  const data = await $fetch('/api/trending/movies');
   return data?.results || [];
 });
 

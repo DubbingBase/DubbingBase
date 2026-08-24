@@ -332,7 +332,7 @@ const uploadProfilePicture = async (voiceActorId: string | number) => {
   formData.append("file", profilePictureFile.value);
   formData.append("voice_actor_id", String(voiceActorId));
 
-  const result = await $fetch('/api/upload_profile_picture', {
+  const result = await $fetch('/api/upload-profile-picture', {
     method: 'POST',
     body: formData,
   });
