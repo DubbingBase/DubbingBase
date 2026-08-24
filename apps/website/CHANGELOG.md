@@ -1,5 +1,22 @@
 # @app/landing
 
+## 1.1.0
+
+### Minor Changes
+
+- c58baa6: Migrate all 66 Supabase Edge Functions to Nuxt Nitro server routes on Cloudflare Workers. Replace Upstash Redis with Cloudflare KV for edge caching. Add Cloudflare Hyperdrive for PostgreSQL connection pooling. Migrate frontend composables from supabase.functions.invoke to $fetch.
+
+### Patch Changes
+
+- 80032e9: Fix Android Play Store upload by deriving ANDROID_VERSION_CODE from the package.json version (bumped via changeset) with the GitHub run number appended, preventing "Version code already used" errors
+- 27dbd9b: Fix crew and cast data being lost when creating a new dubbing project on movie and show edit pages. Crew and cast are now saved before the redirect.
+- ced35fb: Fix empty voice actor filmography by including actor_id in the voice_actor.work Supabase select so works can be matched to cast members
+- 398418b: Fix voice actor autocomplete multi-word search to use $fetch instead of deleted edge function
+- 613c489: Remove Google Sheets sync feature and its associated env vars (GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_SERVICE_ACCOUNT_KEY, GOOGLE_SHEET_ID, SYNC_TABLE_PRIMARY_KEY, SYNC_WORKSHEET_NAME)
+- 569c7df: Add CORS headers, origin restriction, and custom client header to API routes
+- Updated dependencies [c58baa6]
+  - @app/shared-logic@1.1.0
+
 ## 1.0.51
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @app/shared-logic
 
+## 1.1.0
+
+### Minor Changes
+
+- c58baa6: Migrate all 66 Supabase Edge Functions to Nuxt Nitro server routes on Cloudflare Workers. Replace Upstash Redis with Cloudflare KV for edge caching. Add Cloudflare Hyperdrive for PostgreSQL connection pooling. Migrate frontend composables from supabase.functions.invoke to $fetch.
+
 ## 1.0.26
 
 ### Patch Changes
