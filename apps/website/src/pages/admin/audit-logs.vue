@@ -4,8 +4,8 @@
       
       <div class="flex justify-between items-center">
         <div>
-          <h1 class="text-3xl font-bold text-white">Contribution Audit Logs</h1>
-          <p class="text-[#a0a0a0]">Review gamified tasks and revert malicious edits.</p>
+          <h1 class="text-3xl font-bold text-white">{{ $t('admin.auditLogs.title') }}</h1>
+          <p class="text-[#a0a0a0]">{{ $t('admin.auditLogs.description') }}</p>
         </div>
         <button @click="loadLogs" class="p-2 bg-[#1d1d1d] hover:bg-[#2a2a2a] rounded-lg border border-[#2a2a2a] transition-colors text-[#a0a0a0] hover:text-white">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -20,12 +20,12 @@
         <table class="w-full text-left border-collapse">
           <thead>
             <tr class="bg-[#2a2a2a] text-xs uppercase text-[#a0a0a0] tracking-wider border-b border-[#333]">
-              <th class="p-4 font-medium">Date</th>
-              <th class="p-4 font-medium">User ID</th>
-              <th class="p-4 font-medium">Action</th>
-              <th class="p-4 font-medium">Points</th>
-              <th class="p-4 font-medium">Status</th>
-              <th class="p-4 font-medium text-right">Actions</th>
+              <th class="p-4 font-medium">{{ $t('admin.auditLogs.date') }}</th>
+              <th class="p-4 font-medium">{{ $t('common.userId') }}</th>
+              <th class="p-4 font-medium">{{ $t('admin.auditLogs.action') }}</th>
+              <th class="p-4 font-medium">{{ $t('admin.auditLogs.points') }}</th>
+              <th class="p-4 font-medium">{{ $t('admin.auditLogs.status') }}</th>
+              <th class="p-4 font-medium text-right">{{ $t('common.actions') }}</th>
             </tr>
           </thead>
           <tbody class="text-sm divide-y divide-[#2a2a2a]">
@@ -41,10 +41,10 @@
               <td class="p-4 text-emerald-400 font-mono">+{{ log.points_awarded }}</td>
               <td class="p-4">
                 <span v-if="log.reverted_at" class="text-red-400 flex items-center gap-1">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Reverted
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> {{ $t('admin.auditLogs.reverted') }}
                 </span>
                 <span v-else class="text-emerald-400 flex items-center gap-1">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg> Applied
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg> {{ $t('admin.auditLogs.applied') }}
                 </span>
               </td>
               <td class="p-4 text-right">
@@ -53,7 +53,7 @@
                   @click="openRevertModal(log)" 
                   class="text-xs px-3 py-1 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded border border-red-500/20 transition-colors"
                 >
-                  Revert & Penalize
+                  {{ $t('admin.auditLogs.revertAndPenalize') }}
                 </button>
               </td>
             </tr>
@@ -73,33 +73,33 @@
         <div>
           <h2 class="text-2xl font-bold text-white flex items-center gap-2">
             <svg class="w-6 h-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-            Revert Contribution
+            {{ $t('admin.auditLogs.revertContribution') }}
           </h2>
-          <p class="text-[#a0a0a0] mt-1">This will revert the change and deduct {{ selectedLog?.points_awarded }} points from the user.</p>
+          <p class="text-[#a0a0a0] mt-1">{{ $t('admin.auditLogs.revertDescription', { points: selectedLog?.points_awarded }) }}</p>
         </div>
 
         <div v-if="conflictError" class="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg space-y-3">
           <p class="text-yellow-500 font-bold flex items-center gap-2">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-            Conflict Detected (3-Way Verification)
+            {{ $t('admin.auditLogs.conflictDetected') }}
           </p>
-          <p class="text-sm text-yellow-200">The current value in the database does not match the value this user set. Someone else may have edited it since.</p>
+          <p class="text-sm text-yellow-200">{{ $t('admin.auditLogs.conflictDescription') }}</p>
           
           <div class="grid grid-cols-3 gap-4 text-xs font-mono mt-2">
             <div class="space-y-1">
-              <span class="text-[#a0a0a0] uppercase block text-[10px]">Previous (Safe)</span>
+              <span class="text-[#a0a0a0] uppercase block text-[10px]">{{ $t('admin.auditLogs.previousSafe') }}</span>
               <div class="bg-[#121212] p-2 rounded border border-[#2a2a2a] break-all truncate">
                 {{ conflictError.previousValue || 'null' }}
               </div>
             </div>
             <div class="space-y-1">
-              <span class="text-[#a0a0a0] uppercase block text-[10px]">What they set</span>
+              <span class="text-[#a0a0a0] uppercase block text-[10px]">{{ $t('admin.auditLogs.whatTheySet') }}</span>
               <div class="bg-[#121212] p-2 rounded border border-[#2a2a2a] break-all truncate">
                 {{ conflictError.loggedValue || 'null' }}
               </div>
             </div>
             <div class="space-y-1">
-              <span class="text-emerald-400 uppercase block text-[10px]">Current DB State</span>
+              <span class="text-emerald-400 uppercase block text-[10px]">{{ $t('admin.auditLogs.currentDbState') }}</span>
               <div class="bg-[#121212] p-2 rounded border border-[#2a2a2a] break-all truncate">
                 {{ conflictError.currentValue || 'null' }}
               </div>
@@ -107,21 +107,21 @@
           </div>
           
           <div class="pt-3 border-t border-yellow-500/20">
-            <label class="block text-sm text-white mb-2">Manual Resolution: What should the final value be?</label>
-            <input v-model="resolvedValue" type="text" class="w-full bg-[#121212] border border-[#2a2a2a] rounded p-2 text-white focus:border-blue-500 focus:outline-none" placeholder="Enter the final correct value (or leave empty)">
+            <label class="block text-sm text-white mb-2">{{ $t('admin.auditLogs.manualResolution') }}</label>
+            <input v-model="resolvedValue" type="text" class="w-full bg-[#121212] border border-[#2a2a2a] rounded p-2 text-white focus:border-blue-500 focus:outline-none" :placeholder="$t('admin.auditLogs.enterFinalValue')">
           </div>
         </div>
 
         <div class="flex justify-end gap-3 pt-4 border-t border-[#2a2a2a]">
-          <button @click="closeModal" class="px-4 py-2 text-[#a0a0a0] hover:text-white transition-colors">Cancel</button>
+          <button @click="closeModal" class="px-4 py-2 text-[#a0a0a0] hover:text-white transition-colors">{{ $t('common.cancel') }}</button>
           <button 
             @click="confirmRevert" 
             class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
             :disabled="isReverting"
           >
             <svg v-if="isReverting" class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-            <span v-if="conflictError">Force Resolve & Penalize</span>
-            <span v-else>Confirm Revert</span>
+            <span v-if="conflictError">{{ $t('admin.auditLogs.forceResolve') }}</span>
+            <span v-else>{{ $t('admin.auditLogs.confirmRevert') }}</span>
           </button>
         </div>
       </div>
@@ -133,7 +133,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 
-const supabase = useSupabaseClient();
+
+const { t } = useI18n();
 const logs = ref<any[]>([]);
 const isLoading = ref(true);
 

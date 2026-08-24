@@ -3,8 +3,8 @@
     <!-- Top toolbar -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gray-900 p-5 rounded-2xl border border-gray-800">
       <div>
-        <h3 class="text-lg font-bold text-white">User Reports</h3>
-        <p class="text-sm text-gray-400">Manage user-submitted reports for content or profiles.</p>
+        <h3 class="text-lg font-bold text-white">{{ $t('admin.reports.title') }}</h3>
+        <p class="text-sm text-gray-400">{{ $t('admin.reports.description') }}</p>
       </div>
       <div class="flex items-center space-x-3">
         <button
@@ -13,7 +13,7 @@
           class="py-2.5 px-5 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-800 disabled:text-gray-500 text-white font-semibold rounded-xl shadow-lg transition-all duration-150 hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center shrink-0"
         >
           <span v-if="loading" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
-          <span>Refresh</span>
+          <span>{{ $t('common.refresh') }}</span>
         </button>
       </div>
     </div>
@@ -31,13 +31,13 @@
       <!-- Loading indicator -->
       <div v-if="loading" class="flex flex-col items-center justify-center py-20 space-y-3">
         <div class="animate-spin rounded-full h-9 w-9 border-b-2 border-blue-500"></div>
-        <p class="text-gray-400 text-sm">Fetching reports...</p>
+        <p class="text-gray-400 text-sm">{{ $t('admin.reports.fetchingReports') }}</p>
       </div>
 
       <!-- Empty state -->
       <div v-else-if="reports.length === 0" class="text-center py-16 space-y-2">
-        <p class="text-gray-400 font-medium">No reports found</p>
-        <p class="text-xs text-gray-500">Everything looks good!</p>
+        <p class="text-gray-400 font-medium">{{ $t('admin.reports.noReportsFound') }}</p>
+        <p class="text-xs text-gray-500">{{ $t('admin.reports.everythingLooksGood') }}</p>
       </div>
 
       <!-- Table -->
@@ -45,17 +45,17 @@
         <table class="w-full text-left border-collapse">
           <thead>
             <tr class="border-b border-gray-800 text-xs font-semibold text-gray-400 uppercase tracking-wider bg-gray-900/40">
-              <th class="py-4 px-6">Details</th>
-              <th class="py-4 px-6">Target</th>
-              <th class="py-4 px-6">Reporter</th>
-              <th class="py-4 px-6">Status</th>
+              <th class="py-4 px-6">{{ $t('admin.reports.details') }}</th>
+              <th class="py-4 px-6">{{ $t('admin.reports.target') }}</th>
+              <th class="py-4 px-6">{{ $t('admin.reports.reporter') }}</th>
+              <th class="py-4 px-6">{{ $t('admin.reports.status') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-800/60">
             <tr v-for="report in reports" :key="report.id" class="hover:bg-gray-800/10 transition-colors">
               <td class="py-4 px-6">
                 <div class="font-semibold text-white">{{ report.reason }}</div>
-                <div class="text-xs text-gray-400 mt-1 max-w-sm truncate" :title="report.details || ''">{{ report.details || 'No details provided' }}</div>
+                <div class="text-xs text-gray-400 mt-1 max-w-sm truncate" :title="report.details || ''">{{ report.details || $t('admin.reports.noDetailsProvided') }}</div>
                 <div class="text-xs text-gray-500 mt-1">{{ formatDate(report.created_at) }}</div>
               </td>
               <td class="py-4 px-6 font-mono text-xs text-blue-400">
@@ -63,7 +63,7 @@
                   <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                   </svg>
-                  <span>Link</span>
+                  <span>{{ $t('common.link') }}</span>
                 </NuxtLink>
               </td>
               <td class="py-4 px-6 text-xs text-gray-400">
@@ -81,9 +81,9 @@
                     'text-gray-400': report.status === 'dismissed'
                   }"
                 >
-                  <option value="pending">Pending</option>
-                  <option value="resolved">Resolved</option>
-                  <option value="dismissed">Dismissed</option>
+                  <option value="pending">{{ $t('admin.reports.statusPending') }}</option>
+                  <option value="resolved">{{ $t('admin.reports.statusResolved') }}</option>
+                  <option value="dismissed">{{ $t('admin.reports.statusDismissed') }}</option>
                 </select>
               </td>
             </tr>
@@ -119,6 +119,7 @@ definePageMeta({
 
 const supabase = useSupabaseClient()
 const localePath = useLocalePath()
+const { t } = useI18n()
 
 const reports = ref<any[]>([])
 const loading = ref(true)
@@ -182,10 +183,10 @@ const updateStatus = async (report: any) => {
       
     if (updateError) throw updateError
     
-    showToast('Report status updated successfully', 'success')
+    showToast(t('admin.reports.statusUpdated'), 'success')
   } catch (err: any) {
     console.error('Error updating status:', err)
-    showToast('Failed to update report status', 'error')
+    showToast(t('admin.reports.failedToUpdateStatus'), 'error')
     // Revert status on failure (simple reload for now)
     fetchReports()
   } finally {
