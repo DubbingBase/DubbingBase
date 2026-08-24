@@ -40,11 +40,6 @@ export default defineNuxtConfig({
     resendFromEmail: process.env.NUXT_RESEND_FROM_EMAIL,
     resendToEmail: process.env.NUXT_RESEND_TO_EMAIL,
     adminEmail: process.env.NUXT_ADMIN_EMAIL,
-    googleServiceAccountEmail: process.env.NUXT_GOOGLE_SERVICE_ACCOUNT_EMAIL,
-    googleServiceAccountKey: process.env.NUXT_GOOGLE_SERVICE_ACCOUNT_KEY,
-    googleSheetId: process.env.NUXT_GOOGLE_SHEET_ID,
-    syncTablePrimaryKey: process.env.NUXT_SYNC_TABLE_PRIMARY_KEY,
-    syncWorksheetName: process.env.NUXT_SYNC_WORKSHEET_NAME,
     public: {
       supabaseUrl: process.env.NUXT_PUBLIC_SUPABASE_URL,
       supabaseKey: process.env.NUXT_PUBLIC_SUPABASE_KEY,

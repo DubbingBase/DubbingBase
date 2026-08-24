@@ -471,9 +471,6 @@ verify_jwt = false
 [functions.season]
 verify_jwt = false
 
-[functions.sheets-sync]
-verify_jwt = false
-
 [functions.show]
 verify_jwt = false
 

@@ -360,11 +360,6 @@ jobs:
           NUXT_RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
           NUXT_RESEND_TO_EMAIL: ${{ secrets.RESEND_TO_EMAIL }}
           NUXT_ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
-          NUXT_GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
-          NUXT_GOOGLE_SERVICE_ACCOUNT_KEY: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
-          NUXT_GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
-          NUXT_SYNC_TABLE_PRIMARY_KEY: ${{ secrets.SYNC_TABLE_PRIMARY_KEY }}
-          NUXT_SYNC_WORKSHEET_NAME: ${{ secrets.SYNC_WORKSHEET_NAME }}
           NITRO_PRESET: cloudflare-module
         run: pnpm --filter=@app/website build
 
@@ -411,11 +406,6 @@ jobs:
           NUXT_RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
           NUXT_RESEND_TO_EMAIL: ${{ secrets.RESEND_TO_EMAIL }}
           NUXT_ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
-          NUXT_GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
-          NUXT_GOOGLE_SERVICE_ACCOUNT_KEY: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
-          NUXT_GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
-          NUXT_SYNC_TABLE_PRIMARY_KEY: ${{ secrets.SYNC_TABLE_PRIMARY_KEY }}
-          NUXT_SYNC_WORKSHEET_NAME: ${{ secrets.SYNC_WORKSHEET_NAME }}
           NITRO_PRESET: cloudflare-module
         run: pnpm --filter=@app/website build
 
