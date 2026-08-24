@@ -1,5 +1,11 @@
 # @app/landing
 
+## 1.1.2
+
+### Patch Changes
+
+- 35468f7: Purge Cloudflare cache after each website deploy so CSS/markup changes propagate immediately
+
 ## 1.1.1
 
 ### Patch Changes
