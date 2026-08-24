@@ -1,32 +1,46 @@
 {
   "app": {
-    "title": "DubbingBase",
-    "description": "Discover voice actors and their works"
-  },
-  "search": {
-    "placeholder": "Search...",
-    "noResults": "No results found.",
-    "emptyState": "Type at least 2 characters to search...",
-    "movie": "Movie",
-    "tv": "TV Show",
-    "voiceActor": "Voice Actor",
-    "videoGame": "Video Game"
-  },
-  "game": {
-    "developer": "Developer",
-    "publisher": "Publisher",
-    "genres": "Genres",
-    "platforms": "Platforms",
-    "trendingGames": "Trending Games"
-  },
-  "report": {
-    "button": "Report"
+    "title": "DubbingBase"
   },
   "nav": {
-    "login": "Login",
-    "apiKey": "API Key",
     "home": "Home",
-    "profile": "Profile"
+    "profile": "Profile",
+    "login": "Login"
+  },
+  "newVoiceActorsAdded": "new voice actor added | new voice actors added",
+  "navigation": {
+    "home": "Home",
+    "search": "Search",
+    "profile": "Profile",
+    "admin": "Administration",
+    "login": "Login",
+    "logout": "Logout"
+  },
+  "common": {
+    "actions": "Actions",
+    "loading": "Loading...",
+    "error": "Error",
+    "subscribe": "Subscribe",
+    "unsubscribe": "Unsubscribe",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "himself": "Himself",
+    "scan": "Scan",
+    "fetchInfos": "Add to queue",
+    "waiting": "Waiting",
+    "accepted": "Accepted",
+    "rejected": "Rejected",
+    "upvote": "Upvote",
+    "downvote": "Downvote",
+    "setStatus": "Set Status",
+    "newVoiceActorsAdded": "{count} new voice actors added",
+    "noNewChangesFound": "No new changes found",
+    "suggestChanges": "Suggest changes (Coming soon)"
   },
   "theme": {
     "light": "Light",
@@ -34,26 +48,194 @@
     "system": "System"
   },
   "language": {
+    "suggestSwitch": "Your browser language doesn't match this page.",
+    "switchNow": "Switch now",
     "en": "English",
     "fr": "Français",
-    "suggestSwitch": "You seem to prefer English.",
-    "switchNow": "Switch language"
+    "es": "Español",
+    "ja": "日本語"
   },
-  "footer": {
-    "explore": "Explore",
+  "seo": {
+    "voiceActors": "Voice Actors - DubbingBase",
+    "voiceActorTitle": "{name} - Voice Actor | DubbingBase",
+    "voiceActorTitleFallback": "Voice Actor | DubbingBase",
+    "voiceActorDescription": "Discover the biography, filmography, and dubbing roles of {name}.",
+    "voiceActorKeywords": "{name}, voice actor, dubbing, anime, voice over",
+    "movies": "Movies - DubbingBase",
+    "series": "Series - DubbingBase",
+    "showDescription": "Discover the cast and voice actors of {title}.",
+    "showDescriptionFallback": "Discover the cast and voice actors of this series.",
+    "showDescriptionDubbing": "Discover the {lang} dubbing of {title}.",
+    "showKeywords": "{title}, series, dubbing, voice actors, cast",
+    "movieDescription": "Discover the cast and voice actors of {title}.",
+    "movieDescriptionFallback": "Discover the cast and voice actors of this movie.",
+    "movieDescriptionDubbing": "Discover the {lang} dubbing of {title}.",
+    "movieKeywords": "{title}, movie, dubbing, voice actors, cast",
+    "actorDescription": "Discover the filmography and voice actors of {name}.",
+    "actorDescriptionFallback": "Discover filmography and voice actors.",
+    "actorKeywords": "{name}, actor, filmography, movies, series"
+  },
+  "profile": {
+    "userProfile": "My User Profile",
+    "myProfile": "My Profile",
+    "voiceActorProfile": "Voice Actor",
+    "adminVoiceActor": "Voice Actor (Admin)",
+    "adminImpersonate": "Search & Impersonate",
+    "addNewVoiceActor": "Add new voice actor profile",
+    "selectProfile": "Select Profile",
+    "selectedProfile": "Selected Profile",
+    "selectProfilePlaceholder": "Select a profile",
+    "switchingProfile": "Switching profile...",
+    "unsavedChanges": "Unsaved Changes",
+    "unsavedChangesMessage": "You have unsaved changes. Do you want to continue without saving?",
+    "continue": "Continue",
+    "close": "Close",
+    "searchPlaceholder": "Search...",
+    "searchVoiceActorPlaceholder": "Search voice actors by name...",
+    "noVoiceActorFound": "No voice actor found",
+    "errorSelectingUserProfile": "Unable to select user profile",
+    "errorSelectingVoiceActor": "Unable to select voice actor profile",
+    "errorLoadingVoiceActors": "Unable to load voice actors",
+    "loadingVoiceActorProfile": "Loading voice actor profile...",
+    "loadingImpersonationProfile": "Loading impersonation profile...",
+    "errorLoadingProfile": "Error loading profile",
+    "errorImpersonating": "Error impersonating voice actor",
+    "retry": "Retry",
+    "voiceActorProfileNotFound": "Voice actor profile not found",
+    "voiceActorProfileNotLoaded": "This voice actor profile could not be loaded.",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "dateOfBirth": "Date of birth",
+    "awards": "Awards",
+    "yearsActive": "Years active",
+    "saveChanges": "Save changes",
+    "filmography": "Filmography",
+    "createMyProfile": "Create my profile",
+    "tellUsAboutYourself": "Tell us about yourself...",
+    "exFrench": "Ex: French",
+    "biography": "Biography",
+    "nationality": "Nationality",
+    "impersonatingUser": "Impersonating",
+    "exitImpersonation": "Exit Impersonation",
+    "noUserProfile": "No user profile created yet",
+    "createUserProfileHint": "Create a user profile to get started",
+    "voiceActorProfiles": "Voice Actor Profiles",
+    "adminSearch": "Admin Search",
+    "areYouAVoiceActor": "Are you this voice actor?",
+    "areYouAVoiceActorGeneral": "Are you a voice actor?",
+    "requestVoiceActorDesc": "If this is you, you can request to link your account to this profile to manage your information.",
+    "requestVoiceActorCreationDesc": "If you are a voice actor and want to link your existing page to your account, you can go to your page in the app and submit a request. Otherwise, you can request the creation of a new public profile here.",
+    "requestVoiceActorBtn": "Claim this profile",
+    "requestVoiceActorCreationBtn": "Request profile creation",
+    "requestVoiceActorTitle": "Claim this profile",
+    "requestVoiceActorCreationTitle": "Request profile creation",
+    "requestDetailsPlaceholder": "Provide any additional details (e.g. links to your work, TMDB page, agency...)",
+    "submitRequest": "Submit request",
+    "requestSuccessMessage": "Your request has been successfully submitted!",
+    "details": "Details"
+  },
+  "voiceActor": {
+    "name": "Name",
+    "biography": "Biography",
+    "works": "Works",
+    "movies": "Movies",
+    "series": "Series",
+    "episodes": "Episodes"
+  },
+  "actor": {
+    "title": "Actor",
+    "about": "About",
     "movies": "Movies",
     "series": "Series",
     "voiceActors": "Voice Actors",
-    "studios": "Studios",
-    "community": "Community",
-    "guidelines": "Guidelines",
-    "discussions": "Discussions",
-    "leaderboard": "Leaderboard",
-    "legal": "Legal",
-    "privacy": "Privacy Policy",
-    "terms": "Terms of Service",
-    "contact": "Contact Us",
-    "rights": "All rights reserved."
+    "roles": "roles",
+    "birthdate": "Birthdate",
+    "biography": "Biography",
+    "role": "role",
+    "allRoles": "All Roles",
+    "dubbedOnly": "Dubbed Only",
+    "noDubbedRoles": "No dubbed roles available"
+  },
+  "media": {
+    "title": "Title",
+    "year": "Year",
+    "genre": "Genre",
+    "director": "Director",
+    "cast": "Cast"
+  },
+  "home": {
+    "welcome": "Welcome!",
+    "hero": {
+      "title": "The Dubbing & Voice Actor Database",
+      "subtitle": "Explore the world of dubbing. Discover voice actors, their roles, and the productions they bring to life.",
+      "searchPlaceholder": "Search movies, series, voice actors...",
+      "searchButton": "Search"
+    },
+    "meta": {
+      "title": "The Dubbing & Voice Actor Database",
+      "description": "DubbingBase is a comprehensive platform dedicated to tracking dubbing information for movies, series, and video games. Discover voice actors, their roles, and the productions they bring to life.",
+      "ogTitle": "DubbingBase - The Dubbing & Voice Actor Database",
+      "ogDescription": "Explore the world of dubbing. Discover voice actors, their roles, and the productions they bring to life.",
+      "keywords": "dubbing, voice actors, anime, movies, series, video games, cast, seiyuu"
+    },
+    "trendingMovies": "Trending - Movies",
+    "trendingSeries": "Trending - Series",
+    "trendingVoiceActors": "Trending - Voice Actors",
+    "recentVoiceActors": "Recent Voice Actors",
+    "topVoiceActors": "Top Voice Actors",
+    "moviesError": "Unable to load popular movies. Please try again later.",
+    "moviesEmpty": "No trending movies found at the moment.",
+    "seriesError": "Unable to load popular series. Please try again later.",
+    "seriesEmpty": "No trending series found at the moment.",
+    "voiceActorsError": "Unable to load recent voices. Please try again later.",
+    "voiceActorsEmpty": "No recent voice actors found at the moment.",
+    "topVoiceActorsError": "Unable to load top voice actors. Please try again later.",
+    "topVoiceActorsEmpty": "No top voice actors found at the moment.",
+    "stats": {
+      "voiceActors": "Voice Actors",
+      "projects": "Dubs",
+      "works": "Roles"
+    }
+  },
+  "details": {
+    "modify": "Modify",
+    "dubbing": "Dubbing ({lang})",
+    "synopsis": "Synopsis",
+    "noSynopsis": "No synopsis available.",
+    "castAndCrew": "Cast & Crew",
+    "actor": "Actor",
+    "character": "Character",
+    "unknownCharacter": "Unknown Character",
+    "voiceActor": "Voice Actor",
+    "notSpecified": "Not specified"
+  },
+  "search": {
+    "actor": "Actor",
+    "placeholder": "Search...",
+    "noResults": "No results found",
+    "emptyState": "Start typing to search...",
+    "movie": "Movie",
+    "tv": "Series",
+    "voiceActor": "Voice Actor",
+    "videoGame": "Video Game"
+  },
+  "auth": {
+    "loginRequiredForSubscription": "You must be logged in to subscribe"
+  },
+  "errors": {
+    "failedToUpdateSubscription": "Failed to update subscription"
+  },
+  "settings": {
+    "title": "Settings",
+    "showTime": "Show Time",
+    "theme": "Theme",
+    "about": "About",
+    "email": "Email",
+    "logout": "Logout",
+    "login": "Login",
+    "notifications": "Notifications",
+    "manageNotifications": "Manage my subscriptions",
+    "noSubscriptions": "No active subscriptions"
   },
   "about": {
     "title": "About",
@@ -67,71 +249,23 @@
     "igdbTitle": "IGDB",
     "igdbDescription": "Video game data and artwork are provided by IGDB."
   },
-  "home": {
-    "meta": {
-      "title": "The Dubbing & Voice Actor Database",
-      "description": "Discover the reference database for dubbing. Find voice actor profiles, their roles, and voice casts of your favorite movies and series.",
-      "keywords": "dubbing, voice actors, english voice, voice casts, movies, series, actor profiles",
-      "ogTitle": "The Dubbing Database",
-      "ogDescription": "Find the complete database of voice actors and english voices."
-    },
-    "hero": {
-      "title": "The Dubbing & Voice Actor Database",
-      "subtitle": "Millions of movies, TV shows and voice actors to discover. Explore now.",
-      "searchPlaceholder": "Search for a movie, tv show, person...",
-      "searchButton": "Search"
-    },
-    "trendingMovies": "Trending Movies",
-    "trendingSeries": "Trending Series",
-    "topVoiceActors": "Top Voice Actors",
-    "stats": {
-      "voiceActors": "Voice Actors",
-      "projects": "Dubs",
-      "works": "Roles"
-    },
-    "trendingVoiceActors": "Trending Voice Actors"
+  "dashboard": {
+    "title": "Supabase Dashboard",
+    "graph1Placeholder": "Graph Component 1 Placeholder",
+    "graph2Placeholder": "Graph Component 2 Placeholder",
+    "graph3Placeholder": "Graph Component 3 Placeholder"
   },
-  "details": {
-    "back": "Back",
-    "synopsis": "Overview",
-    "noSynopsis": "No overview available.",
-    "originalTitle": "Original Title",
+  "game": {
+    "prepareCredits": "Extract dubbing credits",
+    "developer": "Developer",
+    "publisher": "Publisher",
+    "characters": "Characters",
     "rating": "Rating",
-    "castAndCrew": "Cast & Voice Actors",
-    "dubbing": "Dubbing {lang}",
-    "unknownCharacter": "Unknown character",
-    "actor": "Actor",
-    "character": "Character",
-    "voiceActor": "Voice Actor",
-    "notSpecified": "Not specified",
-    "modify": "Modify"
-  },
-  "seo": {
-    "movies": "dubbed movies, english dubbing, movie voice cast, dubbing database",
-    "series": "dubbed series, english dubbing, series voice cast, dubbing database",
-    "voiceActors": "voice actors, english voice actors, dubbing artists, dubbing database",
-    "movieKeywords": "{title}, {title} dubbing, {title} english voice, voice cast, movie dubbing, {title} cast",
-    "showKeywords": "{title}, {title} dubbing, {title} english voice, voice cast, series dubbing, {title} cast",
-    "voiceActorKeywords": "{name}, voice actor, dubbing, english voice, {name} roles, {name} dubbing, filmography",
-    "actorKeywords": "{name}, actor, {name} english voice, {name} dubbing, filmography",
-    "actorDescription": "Discover {name}'s filmography and voice actors.",
-    "actorDescriptionFallback": "Discover filmography and voice actors.",
-    "movieDescription": "Discover the voice cast of the movie {title}.",
-    "movieDescriptionFallback": "Discover the voice cast of the movie.",
-    "movieDescriptionDubbing": "Voice cast ({lang}) of the movie {title}.",
-    "showDescription": "Discover the voice cast of the series {title}.",
-    "showDescriptionFallback": "Discover the voice cast of the series.",
-    "showDescriptionDubbing": "Voice cast ({lang}) of the series {title}.",
-    "voiceActorDescription": "View the profile of {name}, voice actor. Find their {workCount} famous roles and dubs.",
-    "voiceActorDescriptionFallback": "Voice actor profile.",
-    "voiceActorTitle": "{name} - Voice Actor",
-    "voiceActorTitleFallback": "Voice Actor"
-  },
-  "performance": {
-    "dialogues": "Dialogues",
-    "vocals": "Vocals",
-    "voice": "Voice",
-    "songs": "Songs",
-    "other": "Other"
+    "releaseYear": "Release Year",
+    "platforms": "Platforms",
+    "genres": "Genres",
+    "noCharacters": "No characters available",
+    "notFound": "Game not found",
+    "trendingGames": "Trending - Games"
   }
 }
