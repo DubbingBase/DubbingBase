@@ -104,7 +104,7 @@ import LineChart from "@/components/admin/charts/LineChart.vue";
 import PieChart from "@/components/admin/charts/PieChart.vue";
 import type { ChartData, ChartOptions } from 'chart.js';
 
-const supabase = useSupabaseClient();
+
 
 // Reactive state
 const loading = ref(true);
@@ -315,9 +315,7 @@ const pieChartOptions = computed<ChartOptions>(() => ({
 }));
 
 const { data: dashboardData, pending, error: fetchError, refresh: fetchDashboardData } = await useAsyncData('admin-dashboard', async () => {
-  const { data, error: invokeError } = await supabase.functions.invoke('dashboard-stats', { method: 'GET' });
-  if (invokeError) throw invokeError;
-  return data as {
+  const data = await $fetch('/api/dashboard-stats') as {
     userCount: number;
     voiceActorCount: number;
     userGrowth: { date: string; count: number }[];

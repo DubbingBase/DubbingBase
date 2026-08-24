@@ -131,11 +131,11 @@ const extractWorks = async () => {
   selectedIndices.value = [];
 
   try {
-    const { data, error: funcError } = await supabase.functions.invoke('extract-voice-actor-works', {
+    const data = await $fetch('/api/extract-voice-actor-works', {
+      method: 'POST',
       body: { wikipediaUrl: wikipediaUrl.value }
     });
 
-    if (funcError) throw funcError;
     if (!data.ok) throw new Error(data.error);
 
     extractedWorks.value = data.result || [];

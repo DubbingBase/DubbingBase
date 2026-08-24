@@ -137,7 +137,7 @@
   </template>
 
 <script setup lang="ts">
-const supabase = useSupabaseClient();
+
 const { t } = useI18n();
 
 
@@ -186,8 +186,7 @@ const showToast = (message: string, type: "success" | "error" | "info" = "info")
 };
 
 const { data: initialUsers, pending, error: fetchError, refresh: fetchUsers } = await useAsyncData('admin-users', async () => {
-  const { data, error: funcError } = await supabase.functions.invoke("list_users", { method: 'GET' });
-  if (funcError) throw funcError;
+  const data = await $fetch('/api/list_users');
   return data?.users || [];
 });
 
@@ -220,11 +219,11 @@ const updateRole = async (userObj: User) => {
   updatingRole.value[userObj.id] = true;
 
   try {
-    const { error: funcError } = await supabase.functions.invoke("update_user_role", {
+    await $fetch('/api/update_user_role', {
+      method: 'POST',
       body: { userId: userObj.id, role },
     });
 
-    if (funcError) throw funcError;
     showToast(t('admin.users.roleUpdated', { email: userObj.email, role }), "success");
     await fetchUsers();
   } catch (err: any) {
@@ -245,11 +244,10 @@ const deleteUser = async () => {
   deleting.value = true;
 
   try {
-    const { error: funcError } = await supabase.functions.invoke("delete_user", {
+    await $fetch('/api/delete_user', {
+      method: 'POST',
       body: { userId: userToDelete.value.id },
     });
-
-    if (funcError) throw funcError;
 
     showToast(t('admin.users.userDeleted', { email: userToDelete.value.email }), "success");
     showConfirm.value = false;

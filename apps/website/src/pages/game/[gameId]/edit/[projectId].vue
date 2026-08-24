@@ -743,11 +743,8 @@ const { data: initialData } = await useAsyncData(`game-edit-${igdbGameId.value}-
   if (igdbGameId.value) {
     // IGDB metadata
     try {
-      const params = new URLSearchParams({ id: igdbGameId.value.toString() });
-      const { data, error } = await supabase.functions.invoke(`game?${params.toString()}`, { method: "GET" });
-      if (!error) {
-        igdbData = data;
-      }
+      const data = await $fetch("/api/game", { params: { id: igdbGameId.value.toString() } });
+      igdbData = data;
     } catch (e) {
       console.error("Failed to fetch IGDB data.", e);
     }

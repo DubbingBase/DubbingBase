@@ -116,9 +116,7 @@
     "noDubbingProjects": "No dubbing projects available",
     "seasons": "Seasons",
     "dubbingStudio": "Dubbing Studio",
-    "roles": "Roles",
-    "noDubbingProjects": "No dubbing projects available",
-    "seasons": "Seasons"
+    "roles": "Roles"
   },
   "actor": {
     "searchPlaceholder": "Search roles, titles or voice actors..."

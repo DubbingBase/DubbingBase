@@ -133,7 +133,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 
-const supabase = useSupabaseClient();
+
 const { t } = useI18n();
 const logs = ref<any[]>([]);
 const isLoading = ref(true);
@@ -188,11 +188,10 @@ const confirmRevert = async () => {
       payload.resolvedValue = resolvedValue.value;
     }
     
-    const { data, error } = await supabase.functions.invoke('revert-task', {
+    const data = await $fetch('/api/revert-task', {
+      method: 'POST',
       body: payload
     });
-    
-    if (error) throw error;
     
     if (data?.error === 'ERR_STATE_CHANGED') {
       conflictError.value = data;

@@ -449,9 +449,9 @@ const { data: initialData, pending, error: fetchError, refresh: fetchQueueAndUse
   const { data: queueData, error: queueErr } = await supabase.rpc("get_media_queue_items");
   if (queueErr) throw queueErr;
 
-  const { data: userData, error: userErr } = await supabase.functions.invoke("list_users", { method: 'GET' });
+  const userData = await $fetch('/api/list_users');
   let map: Record<string, string> = {};
-  if (!userErr && userData?.users) {
+  if (userData?.users) {
     userData.users.forEach((u: any) => {
       map[u.id] = u.email;
     });
@@ -487,13 +487,10 @@ const startProcessing = async () => {
   isProcessing.value = true;
   showToast(t('admin.queue.processingStarted'), "info");
   try {
-    const { error: processErr } = await supabase.functions.invoke(
-      "process-media-queue",
-      {
-        body: {},
-      }
-    );
-    if (processErr) throw processErr;
+    await $fetch('/api/process-media-queue', {
+      method: 'POST',
+      body: {},
+    });
     showToast(t('admin.queue.processingCompleted'), "success");
   } catch (err: any) {
     console.error("Error processing queue:", err);

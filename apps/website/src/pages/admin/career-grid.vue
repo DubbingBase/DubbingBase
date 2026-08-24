@@ -101,7 +101,7 @@
   </template>
 
 <script setup lang="ts">
-const supabase = useSupabaseClient();
+
 const { t } = useI18n();
 
 
@@ -148,9 +148,7 @@ const executeSearch = async () => {
   }
   searchLoading.value = true;
   try {
-    const params = new URLSearchParams({ query, limit: "10" });
-    const { data, error } = await supabase.functions.invoke(`search-voice-actors?${params.toString()}`, { method: "GET" });
-    if (error) throw error;
+    const data = await $fetch('/api/search-voice-actors', { params: { query, limit: "10" } });
     searchResults.value = data || [];
   } catch (err: any) {
     console.error("Error searching voice actors:", err);

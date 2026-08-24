@@ -678,7 +678,8 @@ const { data: initialData } = await useAsyncData(`movie-project-${id}`, async ()
     const isShow = project.content_type === "tv" || project.content_type === "show" || project.content_type === "serie";
     const functionName = isShow ? "show" : "movie";
     try {
-      const { data } = await supabase.functions.invoke(functionName, {
+      const data = await $fetch(`/api/${functionName}`, {
+        method: "POST",
         body: { id: project.content_id }
       });
       tmdbData = data;
@@ -741,7 +742,8 @@ const fetchTmdbMetadata = async () => {
     const isShow = contentType.value === "tv" || contentType.value === "show" || contentType.value === "serie";
     const functionName = isShow ? "show" : "movie";
 
-    const { data } = await supabase.functions.invoke(functionName, {
+    const data = await $fetch(`/api/${functionName}`, {
+      method: "POST",
       body: { id: contentId.value }
     });
 
