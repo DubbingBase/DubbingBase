@@ -1,5 +1,11 @@
 # @app/landing
 
+## 1.1.1
+
+### Patch Changes
+
+- bdb03bf: Fix voice actor filmography: remove hover opacity pulse on cards and prevent studio/performance badge text overflow
+
 ## 1.1.0
 
 ### Minor Changes
