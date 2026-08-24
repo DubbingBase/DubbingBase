@@ -45,7 +45,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 
-const supabase = useSupabaseClient();
 const { t } = useI18n();
 
 useHead({
@@ -63,7 +62,7 @@ useHead({
 });
 
 const { data, pending: isLoading, error } = useAsyncData('movies-page', async () => {
-  const data = await $fetch('/api/trending/movies');
+  const data = await $fetch('/api/trending-movies');
   return data?.results || [];
 });
 

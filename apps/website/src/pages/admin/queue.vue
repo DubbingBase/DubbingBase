@@ -5,10 +5,9 @@
       class="bg-gray-900 p-6 rounded-2xl border border-gray-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
     >
       <div>
-        <h3 class="text-lg font-bold text-white">Import Queue Management</h3>
+        <h3 class="text-lg font-bold text-white">{{ $t('admin.queue.title') }}</h3>
         <p class="text-sm text-gray-400">
-          Monitor TMDb media import requests, retry failed jobs, or clean up the
-          queue.
+          {{ $t('admin.queue.description') }}
         </p>
       </div>
       <div class="flex items-center space-x-3">
@@ -22,7 +21,7 @@
             v-if="isClearing"
             class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"
           ></span>
-          <span>Clear Queue</span>
+          <span>{{ $t('admin.queue.clearQueue') }}</span>
         </button>
         <button
           @click="startProcessing"
@@ -33,7 +32,7 @@
             v-if="isProcessing"
             class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"
           ></span>
-          <span>Start Processing</span>
+          <span>{{ $t('admin.queue.startProcessing') }}</span>
         </button>
         <button
           @click="fetchQueueAndUsers"
@@ -44,7 +43,7 @@
             v-if="isLoading"
             class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"
           ></span>
-          <span>Refresh Queue</span>
+          <span>{{ $t('admin.queue.refreshQueue') }}</span>
         </button>
       </div>
     </div>
@@ -78,7 +77,7 @@
       <div
         class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"
       ></div>
-      <p class="text-gray-400 text-sm">Loading media import queue...</p>
+      <p class="text-gray-400 text-sm">{{ $t('admin.queue.loadingQueue') }}</p>
     </div>
 
     <!-- Empty State -->
@@ -104,9 +103,9 @@
         </svg>
       </div>
       <p class="text-gray-400 font-semibold">
-        No media fetch requests in queue
+        {{ $t('admin.queue.noMediaRequests') }}
       </p>
-      <p class="text-xs text-gray-500">Queue is completely empty.</p>
+      <p class="text-xs text-gray-500">{{ $t('admin.queue.queueEmpty') }}</p>
     </div>
 
     <!-- Queue Grid / Table -->
@@ -120,11 +119,11 @@
             <tr
               class="bg-gray-900/50 border-b border-gray-800 text-xs font-semibold text-gray-450 uppercase tracking-wider"
             >
-              <th class="py-4 px-6">Media details</th>
-              <th class="py-4 px-6">Requested by</th>
-              <th class="py-4 px-6">Status</th>
-              <th class="py-4 px-6">Errors</th>
-              <th class="py-4 px-6 w-16 text-right">Actions</th>
+              <th class="py-4 px-6">{{ $t('admin.queue.mediaDetails') }}</th>
+              <th class="py-4 px-6">{{ $t('admin.queue.requestedBy') }}</th>
+              <th class="py-4 px-6">{{ $t('common.status') }}</th>
+              <th class="py-4 px-6">{{ $t('admin.queue.errors') }}</th>
+              <th class="py-4 px-6 w-16 text-right">{{ $t('common.actions') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-800/50">
@@ -170,13 +169,13 @@
                     v-if="item.season_number !== null"
                     class="text-xs px-2 py-0.5 bg-gray-950 border border-gray-800 text-gray-300 rounded font-bold"
                   >
-                    Season {{ item.season_number }}
+                    {{ $t('admin.queue.seasonNumber', { number: item.season_number }) }}
                   </span>
                   <span
                     v-if="item.episode_number !== null"
                     class="text-xs px-2 py-0.5 bg-gray-950 border border-gray-800 text-gray-300 rounded font-bold"
                   >
-                    Episode {{ item.episode_number }}
+                    {{ $t('admin.queue.episodeNumber', { number: item.episode_number }) }}
                   </span>
                 </div>
               </td>
@@ -341,6 +340,7 @@
 
 <script setup lang="ts">
 const supabase = useSupabaseClient();
+const { t } = useI18n();
 
 
 
@@ -449,10 +449,10 @@ const { data: initialData, pending, error: fetchError, refresh: fetchQueueAndUse
   const { data: queueData, error: queueErr } = await supabase.rpc("get_media_queue_items");
   if (queueErr) throw queueErr;
 
-  const userData = await $fetch("/api/list_users");
+  const userData = await $fetch('/api/list_users');
   let map: Record<string, string> = {};
-  if ((userData as any)?.users) {
-    (userData as any).users.forEach((u: any) => {
+  if (userData?.users) {
+    userData.users.forEach((u: any) => {
       map[u.id] = u.email;
     });
   }
@@ -485,16 +485,16 @@ watch(fetchError, (err) => {
 
 const startProcessing = async () => {
   isProcessing.value = true;
-  showToast("Processing started...", "info");
+  showToast(t('admin.queue.processingStarted'), "info");
   try {
-    await $fetch("/api/process-media-queue", {
-      method: "POST",
+    await $fetch('/api/process-media-queue', {
+      method: 'POST',
       body: {},
     });
-    showToast("Processing completed successfully!", "success");
+    showToast(t('admin.queue.processingCompleted'), "success");
   } catch (err: any) {
     console.error("Error processing queue:", err);
-    showToast(err.message || "Failed to process queue.", "error");
+    showToast(err.message || t('admin.queue.failedToProcess'), "error");
   } finally {
     isProcessing.value = false;
     await fetchQueueAndUsers();
@@ -510,15 +510,15 @@ const clearQueue = async () => {
     return;
 
   isClearing.value = true;
-  showToast("Clearing queue...", "info");
+  showToast(t('admin.queue.clearingQueue'), "info");
 
   try {
     const { error: clearErr } = await supabase.rpc("clear_media_queue");
     if (clearErr) throw clearErr;
-    showToast("Queue cleared successfully!", "success");
+    showToast(t('admin.queue.cleared'), "success");
   } catch (err: any) {
     console.error("Error clearing queue:", err);
-    showToast(err.message || "Failed to clear queue.", "error");
+    showToast(err.message || t('admin.queue.failedToClear'), "error");
   } finally {
     isClearing.value = false;
     await fetchQueueAndUsers();
@@ -526,7 +526,7 @@ const clearQueue = async () => {
 };
 
 const deleteItem = async (id: number) => {
-  if (!confirm("Are you sure you want to delete this item?")) return;
+  if (!confirm(t('admin.queue.confirmDelete'))) return;
 
   deletingId.value = id;
   try {
@@ -534,11 +534,11 @@ const deleteItem = async (id: number) => {
       p_id: id,
     });
     if (err) throw err;
-    showToast("Item deleted successfully", "success");
+    showToast(t('admin.queue.itemDeleted'), "success");
     await fetchQueueAndUsers();
   } catch (err: any) {
     console.error("Error deleting item:", err);
-    showToast(err.message || "Failed to delete item", "error");
+    showToast(err.message || t('admin.queue.failedToDelete'), "error");
   } finally {
     deletingId.value = null;
   }

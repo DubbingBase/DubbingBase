@@ -3,16 +3,16 @@
     <!-- Header -->
     <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex justify-between items-center">
       <div>
-        <h3 class="text-lg font-bold text-white">{{ isEditMode ? 'Edit Voice Actor Profile' : 'Create Voice Actor Profile' }}</h3>
+        <h3 class="text-lg font-bold text-white">{{ isEditMode ? $t('voiceActor.editTitle') : $t('voiceActor.createTitle') }}</h3>
         <p class="text-sm text-slate-400 mt-0.5">
-          {{ isEditMode ? `Updating database entry ID #${id}` : 'Fill in profile fields to create a new voice actor entry.' }}
+          {{ isEditMode ? $t('voiceActor.updatingEntry', { id }) : $t('voiceActor.createDescription') }}
         </p>
       </div>
       <NuxtLink
         :to="localePath('/admin/voice-actor-spreadsheet')"
         class="text-xs font-semibold px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-350 hover:text-white rounded-xl border border-slate-700 transition-colors"
       >
-        ← Back to Spreadsheet
+        ← {{ $t('voiceActor.backToSpreadsheet') }}
       </NuxtLink>
     </div>
 
@@ -20,12 +20,12 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Profile Image Card (Left column) -->
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col items-center text-center space-y-5 h-fit shadow-xl">
-        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block self-start">Profile Photo</label>
+        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block self-start">{{ $t('voiceActor.profilePhoto') }}</label>
         <div class="relative h-44 w-44 rounded-full overflow-hidden border-2 border-slate-800 bg-slate-950 flex items-center justify-center text-slate-500 shadow-inner group">
           <NuxtImg format="webp"             v-if="profilePicture"
             :src="profilePicture"
             class="h-full w-full object-cover"
-            alt="Profile Picture"
+            :alt="$t('voiceActor.profilePicture')"
           />
           <svg v-else class="h-14 w-14 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -42,7 +42,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <span>{{ previewImage ? 'Change Image' : 'Upload Image' }}</span>
+            <span>{{ previewImage ? $t('voiceActor.changeImage') : $t('voiceActor.uploadImage') }}</span>
           </button>
           <input
             ref="fileInput"
@@ -57,11 +57,11 @@
             @click="clearImage"
             class="w-full py-2 bg-red-950/20 hover:bg-red-950/40 text-red-400 hover:text-red-300 rounded-xl text-[10px] font-bold uppercase tracking-wider border border-red-900/25 transition-all"
           >
-            Reset image selection
+            {{ $t('voiceActor.resetImage') }}
           </button>
         </div>
         <p class="text-[10px] text-slate-500 leading-normal">
-          Supported file formats: JPG, PNG, WEBP. Maximum file upload size: 5MB.
+          {{ $t('voiceActor.supportedFormats') }}
         </p>
       </div>
 
@@ -70,42 +70,42 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
           <!-- First Name -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">First Name *</label>
+            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ $t('voiceActor.firstName') }} *</label>
             <input
               v-model="firstname"
               type="text"
               required
-              placeholder="e.g. Richard"
+              :placeholder="$t('voiceActor.firstNamePlaceholder')"
               class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
           </div>
 
           <!-- Last Name -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Last Name *</label>
+            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ $t('voiceActor.lastName') }} *</label>
             <input
               v-model="lastname"
               type="text"
               required
-              placeholder="e.g. Darbois"
+              :placeholder="$t('voiceActor.lastNamePlaceholder')"
               class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
           </div>
 
           <!-- Nationality -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Nationality</label>
+            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ $t('voiceActor.nationality') }}</label>
             <input
               v-model="nationality"
               type="text"
-              placeholder="e.g. Français"
+              :placeholder="$t('voiceActor.nationalityPlaceholder')"
               class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
           </div>
 
           <!-- Date of birth -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Date of Birth</label>
+            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ $t('voiceActor.dateOfBirth') }}</label>
             <input
               v-model="dateOfBirth"
               type="date"
@@ -117,22 +117,22 @@
 
           <!-- TMDB ID -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">TMDB ID</label>
+            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ $t('voiceActor.tmdbId') }}</label>
             <input
               v-model="tmdbId"
               type="number"
-              placeholder="e.g. 10243"
+              :placeholder="$t('voiceActor.tmdbIdPlaceholder')"
               class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
           </div>
 
           <!-- Wikidata ID -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Wikidata ID</label>
+            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ $t('voiceActor.wikidataId') }}</label>
             <input
               v-model="wikidataId"
               type="text"
-              placeholder="e.g. Q3430691"
+              :placeholder="$t('voiceActor.wikidataIdPlaceholder')"
               class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
           </div>
@@ -140,11 +140,11 @@
 
         <!-- Biography -->
         <div class="space-y-1">
-          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Biography</label>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ $t('voiceActor.biography') }}</label>
           <textarea
             v-model="bio"
             rows="4"
-            placeholder="Type profile biography details here..."
+            :placeholder="$t('voiceActor.biographyPlaceholder')"
             class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-y"
           ></textarea>
         </div>
@@ -152,8 +152,8 @@
         <!-- Social Media Links -->
         <div class="space-y-1">
           <div class="flex justify-between items-center">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Social Media Links (JSON format)</label>
-            <span class="text-[10px] text-slate-500">e.g. {"facebook": "https://...", "twitter": "..."}</span>
+            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ $t('voiceActor.socialMediaLinks') }}</label>
+            <span class="text-[10px] text-slate-500">{{ $t('voiceActor.socialMediaExample') }}</span>
           </div>
           <textarea
             v-model="socialMediaLinks"
@@ -171,7 +171,7 @@
             class="py-3 px-8 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-500 text-white font-semibold rounded-xl text-sm shadow-lg transition-all duration-200 flex items-center justify-center"
           >
             <span v-if="isSaving" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
-            <span>Save Profile</span>
+            <span>{{ $t('voiceActor.saveProfile') }}</span>
           </button>
         </div>
       </form>
@@ -181,14 +181,14 @@
     <div v-if="isEditMode" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
         <div>
-          <h4 class="text-base font-bold text-white">Linked Works & Filmography</h4>
-          <p class="text-xs text-slate-400">All dubbing credits linked to this voice actor profile.</p>
+          <h4 class="text-base font-bold text-white">{{ $t('voiceActor.linkedWorks') }}</h4>
+          <p class="text-xs text-slate-400">{{ $t('voiceActor.linkedWorksDescription') }}</p>
         </div>
         <NuxtLink
           :to="localePath(`/admin/add-voice-cast/${id}`)"
           class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-xs shadow-md transition-all flex items-center space-x-1"
         >
-          <span>+ Link New Work</span>
+          <span>+ {{ $t('voiceActor.linkNewWork') }}</span>
         </NuxtLink>
       </div>
 
@@ -196,12 +196,12 @@
         <table class="w-full text-left text-sm text-slate-300">
           <thead class="bg-slate-950 text-xs font-semibold uppercase text-slate-400 border-b border-slate-800">
             <tr>
-              <th class="px-4 py-3">Work ID</th>
-              <th class="px-4 py-3">Media / Content ID</th>
-              <th class="px-4 py-3">Type</th>
-              <th class="px-4 py-3">Character</th>
-              <th class="px-4 py-3">Performance</th>
-              <th class="px-4 py-3 text-right">Edit Project</th>
+              <th class="px-4 py-3">{{ $t('voiceActor.tableWorkId') }}</th>
+              <th class="px-4 py-3">{{ $t('voiceActor.tableMediaContentId') }}</th>
+              <th class="px-4 py-3">{{ $t('voiceActor.tableType') }}</th>
+              <th class="px-4 py-3">{{ $t('voiceActor.tableCharacter') }}</th>
+              <th class="px-4 py-3">{{ $t('voiceActor.tablePerformance') }}</th>
+              <th class="px-4 py-3 text-right">{{ $t('voiceActor.tableEditProject') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-800/60">
@@ -218,14 +218,14 @@
                   :to="localePath(`/admin/movies/edit/${work.dubbing_project_id}`)"
                   class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-blue-400 hover:text-blue-300 text-xs font-semibold rounded-lg border border-slate-700 transition-all inline-flex items-center space-x-1"
                 >
-                  <span>Edit Movie</span>
+                  <span>{{ $t('voiceActor.editMovie') }}</span>
                   <span>↗</span>
                 </NuxtLink>
               </td>
             </tr>
             <tr v-if="linkedWorks.length === 0">
               <td colspan="6" class="text-center py-6 text-slate-500 text-xs">
-                No linked works recorded for this voice actor yet.
+                {{ $t('voiceActor.noLinkedWorks') }}
               </td>
             </tr>
           </tbody>
@@ -259,7 +259,7 @@ const supabase = useSupabaseClient();
 
 
 import { ref, onMounted, computed } from "vue";
-
+const { t } = useI18n();
 
 const route = useRoute();
 const router = useRouter();
@@ -314,16 +314,14 @@ const onProfilePictureChange = (event: Event) => {
   const files = (event.target as HTMLInputElement).files;
   if (files && files.length > 0) {
     const file = files[0];
-    if (file) {
-      profilePictureFile.value = file;
+    profilePictureFile.value = file;
 
-      // Create file reader object for thumbnail preview
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        previewImage.value = e.target?.result as string;
-      };
-      reader.readAsDataURL(file);
-    }
+    // Create file reader object for thumbnail preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      previewImage.value = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
   }
 };
 
@@ -334,8 +332,8 @@ const uploadProfilePicture = async (voiceActorId: string | number) => {
   formData.append("file", profilePictureFile.value);
   formData.append("voice_actor_id", String(voiceActorId));
 
-  const result = await $fetch<{ ok: boolean; fullPath: string; publicUrl: string }>('/api/upload-profile-picture', {
-    method: 'POST',
+  const result = await $fetch("/api/upload_profile_picture", {
+    method: "POST",
     body: formData,
   });
   if (result && result.ok) {
@@ -411,7 +409,7 @@ const saveVoiceActor = async () => {
     try {
       upsertData.social_media_links = JSON.parse(socialMediaLinks.value);
     } catch (e) {
-      showToast("Invalid JSON schema in Social Media Links", "error");
+      showToast(t('voiceActor.invalidJsonSchema'), "error");
       isSaving.value = false;
       return;
     }
@@ -439,7 +437,7 @@ const saveVoiceActor = async () => {
       await uploadProfilePicture(voiceActorId);
     }
 
-    showToast("Voice actor profile saved successfully!", "success");
+    showToast(t('voiceActor.profileSaved'), "success");
 
     // Redirect to spreadsheet after 1.5s
     setTimeout(() => {
@@ -447,7 +445,7 @@ const saveVoiceActor = async () => {
     }, 1500);
   } catch (err: any) {
     console.error("Error saving voice actor profile:", err);
-    showToast(err.message || "Failed to save voice actor.", "error");
+    showToast(err.message || t('voiceActor.failedToSave'), "error");
   } finally {
     isSaving.value = false;
   }

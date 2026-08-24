@@ -3,6 +3,12 @@ import { mountSuspended } from "@nuxt/test-utils/runtime";
 import AsyncAutocomplete from "./AsyncAutocomplete.vue";
 import { nextTick } from "vue";
 
+const localeMessages: Record<string, string> = {
+  "common.searching": "Searching...",
+  "search.noResults": "No results found.",
+  "common.create": 'Create "{name}"',
+};
+
 describe("AsyncAutocomplete.vue", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -12,6 +18,22 @@ describe("AsyncAutocomplete.vue", () => {
     vi.restoreAllMocks();
   });
 
+  const tMock = (key: string, params?: Record<string, string>) => {
+    let msg = localeMessages[key] || key;
+    if (params) {
+      for (const [k, v] of Object.entries(params)) {
+        msg = msg.replace(`{${k}}`, v);
+      }
+    }
+    return msg;
+  };
+
+  const globalOptions = {
+    global: {
+      mocks: { $t: tMock },
+    },
+  };
+
   const defaultProps = {
     modelValue: null,
     options: [],
@@ -20,6 +42,7 @@ describe("AsyncAutocomplete.vue", () => {
 
   it("renders correctly with placeholder", async () => {
     const wrapper = await mountSuspended(AsyncAutocomplete, {
+      ...globalOptions,
       props: {
         ...defaultProps,
         placeholder: "Search here...",
@@ -33,6 +56,7 @@ describe("AsyncAutocomplete.vue", () => {
 
   it("emits search event when user types (debounced)", async () => {
     const wrapper = await mountSuspended(AsyncAutocomplete, {
+      ...globalOptions,
       props: defaultProps,
     });
 
@@ -49,6 +73,7 @@ describe("AsyncAutocomplete.vue", () => {
 
   it("displays loading state correctly", async () => {
     const wrapper = await mountSuspended(AsyncAutocomplete, {
+      ...globalOptions,
       props: {
         ...defaultProps,
         loading: true,
@@ -69,6 +94,7 @@ describe("AsyncAutocomplete.vue", () => {
 
   it("shows no results found when empty", async () => {
     const wrapper = await mountSuspended(AsyncAutocomplete, {
+      ...globalOptions,
       props: defaultProps,
     });
 
@@ -77,12 +103,13 @@ describe("AsyncAutocomplete.vue", () => {
     await nextTick();
 
     const bodyText = document.body.textContent || "";
-    expect(bodyText).toContain("No results found");
+    expect(bodyText).toContain("No results found.");
   });
 
   it("displays options using displayFn", async () => {
     const options = [{ id: 1 }, { id: 2 }];
     const wrapper = await mountSuspended(AsyncAutocomplete, {
+      ...globalOptions,
       props: {
         ...defaultProps,
         options,
@@ -101,6 +128,7 @@ describe("AsyncAutocomplete.vue", () => {
 
   it("emits update:modelValue when clearing selection", async () => {
     const wrapper = await mountSuspended(AsyncAutocomplete, {
+      ...globalOptions,
       props: {
         ...defaultProps,
         modelValue: 1,
@@ -118,6 +146,7 @@ describe("AsyncAutocomplete.vue", () => {
 
   it("shows create button when allowCreate is true and search term >= 2", async () => {
     const wrapper = await mountSuspended(AsyncAutocomplete, {
+      ...globalOptions,
       props: {
         ...defaultProps,
         allowCreate: true,
@@ -135,6 +164,7 @@ describe("AsyncAutocomplete.vue", () => {
 
   it("hides create button when an item is selected and search term matches its display value", async () => {
     const wrapper = await mountSuspended(AsyncAutocomplete, {
+      ...globalOptions,
       props: {
         ...defaultProps,
         allowCreate: true,
@@ -156,6 +186,7 @@ describe("AsyncAutocomplete.vue", () => {
   it("does not emit search event when selecting an option", async () => {
     const options = [{ id: 1, name: "Item 1" }];
     const wrapper = await mountSuspended(AsyncAutocomplete, {
+      ...globalOptions,
       props: {
         ...defaultProps,
         options,
@@ -187,6 +218,7 @@ describe("AsyncAutocomplete.vue", () => {
 
   it("syncs search term when modelValue is changed externally", async () => {
     const wrapper = await mountSuspended(AsyncAutocomplete, {
+      ...globalOptions,
       props: {
         ...defaultProps,
         modelValue: 1,

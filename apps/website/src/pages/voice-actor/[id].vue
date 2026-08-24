@@ -316,7 +316,7 @@
                     <div class="flex flex-col min-w-0 flex-1">
                       <span
                         class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5"
-                        >Voiced</span
+                        >{{ $t('details.voicedBy') }}</span
                       >
                       <span
                         class="font-medium text-sm text-gray-700 dark:text-gray-300 leading-tight line-clamp-2"
@@ -340,11 +340,11 @@
                     <div class="flex flex-col min-w-0 flex-1">
                       <span
                         class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5"
-                        >Voiced</span
+                        >{{ $t('details.voicedBy') }}</span
                       >
                       <span
                         class="font-medium text-sm text-gray-700 dark:text-gray-300 leading-tight line-clamp-2"
-                        >Unknown</span
+                        >{{ $t('details.unknownCharacter') }}</span
                       >
                     </div>
                   </div>
@@ -387,7 +387,7 @@
                     <div class="flex flex-col min-w-0 flex-1">
                       <span
                         class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5"
-                        >As</span
+                        >{{ $t('details.as') }}</span
                       >
                       <span
                         class="font-medium text-sm text-gray-700 dark:text-gray-300 leading-tight line-clamp-2"
@@ -542,11 +542,11 @@
                         <div class="flex flex-col min-w-0 flex-1">
                           <span
                             class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5"
-                            >As</span
+                            >{{ $t('details.as') }}</span
                           >
                           <span
                             class="font-medium text-sm text-gray-700 dark:text-gray-300 leading-tight line-clamp-2"
-                            >{{ item.data.character || "Unknown" }}</span
+                        >{{ item.data.character || $t('details.unknownCharacter') }}</span
                           >
                         </div>
                       </div>

@@ -11,7 +11,7 @@
       <template #metadata>
         <span class="text-gray-900 dark:text-gray-100 font-semibold text-base md:text-lg bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg">
           {{ serie.first_air_date ? serie.first_air_date.split('-')[0] : '' }}
-          <template v-if="serie.number_of_seasons"> &bull; {{ serie.number_of_seasons }} Saisons</template>
+          <template v-if="serie.number_of_seasons"> &bull; {{ serie.number_of_seasons }} {{ $t('details.seasons') }}</template>
         </span>
         <span v-if="serie.original_name !== serie.name" class="text-gray-800 dark:text-gray-300 font-medium text-sm md:text-base bg-white/40 dark:bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-lg">
           {{ serie.original_name }}
@@ -50,7 +50,7 @@
             }}
           </NuxtLink>
         </div>
-        <div v-else class="text-sm text-gray-500 font-medium">No dubbing projects available</div>
+        <div v-else class="text-sm text-gray-500 font-medium">{{ $t('details.noDubbingProjects') }}</div>
       </template>
 
       <template #actions-right>
@@ -58,7 +58,7 @@
           <NuxtLink
             :to="$localePath(`/studio/${activeDubProject.studio_data.id}`)"
             class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-[#2a2a2a] hover:border-cyan-500 transition-colors group bg-gray-50 dark:bg-[#1d1d1d]"
-            title="Studio de doublage"
+            :title="$t('details.dubbingStudio')"
           >
             <div class="w-6 h-6 rounded flex items-center justify-center overflow-hidden shrink-0 bg-white dark:bg-[#2a2a2a]">
               <img v-if="activeDubProject.studio_data.logo_url" :src="activeDubProject.studio_data.logo_url" class="w-full h-full object-contain p-0.5" />
@@ -79,7 +79,7 @@
         <button
           @click="isReportModalOpen = true"
           class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1.5"
-          title="Signaler cette fiche"
+          :title="$t('report.title')"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

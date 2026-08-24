@@ -251,7 +251,6 @@
 import { ref, computed, reactive } from 'vue';
 import { useContribute, fetchRandomTask } from '../../../composables/useContribute';
 
-const supabase = useSupabaseClient();
 const { data: initialData } = await useAsyncData('random-task', () => fetchRandomTask('any'));
 
 const initialTask = initialData.value?.task || null;

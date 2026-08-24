@@ -1,7 +1,7 @@
 import { ref } from "vue";
 
 export const useReports = () => {
-  const user = useSupabaseUser();
+  const supabase = useSupabaseClient();
   const isSubmitting = ref(false);
   const error = ref<string | null>(null);
 
@@ -14,11 +14,12 @@ export const useReports = () => {
     error.value = null;
 
     try {
-      if (!user.value) {
+      const user = await supabase.auth.getUser();
+      if (!user.data.user) {
         throw new Error("You must be logged in to report content.");
       }
 
-      const data = await $fetch<any>("/api/submit-user-report", {
+      const data = await $fetch("/api/submit-user-report", {
         method: "POST",
         body: { target_url: targetUrl, reason, details },
       });
@@ -30,9 +31,7 @@ export const useReports = () => {
       return true;
     } catch (err: any) {
       error.value =
-        err.data?.message ||
-        err.message ||
-        "An error occurred while submitting the report.";
+        err.message || "An error occurred while submitting the report.";
       console.error("Error submitting report:", err);
       return false;
     } finally {

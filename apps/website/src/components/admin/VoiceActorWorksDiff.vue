@@ -131,14 +131,14 @@ const extractWorks = async () => {
   selectedIndices.value = [];
 
   try {
-    const data = await $fetch("/api/extract-voice-actor-works", {
-      method: "POST",
+    const data = await $fetch('/api/extract-voice-actor-works', {
+      method: 'POST',
       body: { wikipediaUrl: wikipediaUrl.value }
     });
 
-    if (!(data as any).ok) throw new Error((data as any).error);
+    if (!data.ok) throw new Error(data.error);
 
-    extractedWorks.value = (data as any).result || [];
+    extractedWorks.value = data.result || [];
   } catch (err: any) {
     error.value = err.message || 'Failed to extract works';
   } finally {

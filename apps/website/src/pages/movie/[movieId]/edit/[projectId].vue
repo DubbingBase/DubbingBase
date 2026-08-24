@@ -5,17 +5,17 @@
       <div>
         <h3 class="text-xl font-bold text-white flex items-center gap-2">
           <FilmIcon class="w-6 h-6 text-cyan-400" />
-          {{ isEditMode ? 'Edit Movie Dubbing Project' : 'Create Movie Dubbing Project' }}
+          {{ isEditMode ? $t('projects.editMovieProject') : $t('projects.createMovieProject') }}
         </h3>
         <p class="text-sm text-gray-400 mt-1">
-          {{ isEditMode ? `Updating dubbing project ID #${projectIdParam}` : 'Fill in TMDB information, technical crew, and cast.' }}
+          {{ isEditMode ? $t('projects.updatingProjectId', { id: projectIdParam }) : $t('projects.fillTmdbInfo') }}
         </p>
       </div>
       <NuxtLink
         :to="tmdbMovieId ? localePath(`/movie/${tmdbMovieId}`) : localePath('/')"
         class="text-xs font-semibold px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-xl border border-gray-700 transition-colors flex items-center space-x-2"
       >
-        <span>{{ tmdbMovieId ? '← Back to Movie' : '← Back Home' }}</span>
+        <span>{{ tmdbMovieId ? $t('projects.backToMovie') : $t('common.backHome') }}</span>
       </NuxtLink>
     </div>
 
@@ -36,7 +36,7 @@
         class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-dashed"
         :class="projectIdParam === 'new' ? 'bg-cyan-900/50 text-cyan-400 border-cyan-800' : 'bg-gray-900 text-gray-400 border-gray-700 hover:bg-gray-800 hover:text-gray-300'"
       >
-        + Add Language
+        {{ $t('common.addLanguage') }}
       </NuxtLink>
     </div>
 
@@ -44,7 +44,7 @@
     <!-- Loading overlay -->
     <div v-if="isLoading" class="flex flex-col items-center justify-center py-24 gap-4 text-gray-400">
       <Loader2Icon class="w-8 h-8 animate-spin text-cyan-400" />
-      <span class="text-sm">Loading project data...</span>
+      <span class="text-sm">{{ $t('common.loadingProjectData') }}</span>
     </div>
 
     <form v-else @submit.prevent="saveMovieProject" class="space-y-6">
@@ -52,8 +52,8 @@
         <!-- Media Metadata Card (Left Column) -->
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-5 h-fit shadow-xl">
           <h4 class="text-sm font-bold text-gray-200 uppercase tracking-wider border-b border-gray-800 pb-3 flex items-center justify-between">
-            <span>Media Info</span>
-            <span class="text-xs text-cyan-400 font-normal">TMDB Linked</span>
+            <span>{{ $t('common.mediaInfo') }}</span>
+            <span class="text-xs text-cyan-400 font-normal">{{ $t('projects.tmdbLinked') }}</span>
           </h4>
 
           <!-- Poster Preview -->
@@ -62,25 +62,25 @@
               <NuxtImg format="webp" v-if="posterUrl"
                 :src="posterUrl"
                 class="h-full w-full object-cover"
-                alt="Poster"
+                :alt="$t('projects.noPoster')"
               />
               <div v-else class="text-center p-3 text-gray-600">
                 <ImageIcon class="h-10 w-10 mx-auto mb-1 opacity-50" />
-                <span class="text-[10px]">No poster</span>
+                <span class="text-[10px]">{{ $t('projects.noPoster') }}</span>
               </div>
             </div>
           </div>
 
           <!-- Content ID / TMDB ID -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">TMDB Movie ID *</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('projects.tmdbMovieId') }}</label>
             <div class="flex space-x-2">
               <input
                 v-model.number="contentId"
                 type="number"
                 required
                 :disabled="!!tmdbMovieId"
-                placeholder="e.g. 1020"
+                :placeholder="$t('common.exampleId')"
                 class="w-full px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <button
@@ -90,14 +90,14 @@
                 class="px-3 py-2 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 text-gray-200 text-xs font-semibold rounded-xl border border-gray-700 whitespace-nowrap"
               >
                 <Loader2Icon v-if="isFetchingTmdb" class="w-4 h-4 animate-spin" />
-                <span v-else>Fetch</span>
+                <span v-else>{{ $t('common.fetch') }}</span>
               </button>
             </div>
           </div>
 
           <!-- Media Name / Title -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Media Title *</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('common.mediaTitle') }}</label>
             <input
               v-model="mediaTitle"
               type="text"
@@ -109,20 +109,20 @@
 
           <!-- Language -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Dubbing Language *</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('common.dubbingLanguage') }}</label>
             <LanguageSelect v-model="language" required />
           </div>
 
           <!-- Status -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('common.status') }}</label>
             <select
               v-model="status"
               class="w-full px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm"
             >
-              <option value="validated">Validated</option>
-              <option value="pending">Pending Review</option>
-              <option value="draft">Draft</option>
+              <option value="validated">{{ $t('common.statusValidated') }}</option>
+              <option value="pending">{{ $t('common.statusPendingReview') }}</option>
+              <option value="draft">{{ $t('common.statusDraft') }}</option>
             </select>
           </div>
         </div>
@@ -130,19 +130,19 @@
         <!-- Technical Crew Form (Right 2 Columns) -->
         <div class="lg:col-span-2 bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-6 shadow-xl">
           <h4 class="text-sm font-bold text-gray-200 uppercase tracking-wider border-b border-gray-800 pb-3 flex items-center justify-between">
-            <span>Technical Dubbing Team</span>
-            <span class="text-xs text-gray-400">Crew Attributes</span>
+            <span>{{ $t('common.technicalDubbingTeam') }}</span>
+            <span class="text-xs text-gray-400">{{ $t('common.crewAttributes') }}</span>
           </h4>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <!-- Studio -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Dubbing Studio</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('common.dubbingStudio') }}</label>
               <AsyncAutocomplete
                 v-model="selectedStudioId"
                 :options="studioOptions"
                 :loading="isSearchingStudios"
-                placeholder="Search studio..."
+                :placeholder="$t('common.searchStudio')"
                 :allow-create="true"
                 :display-fn="getStudioName"
                 @search="searchStudios"
@@ -152,12 +152,12 @@
 
             <!-- Artistic Director -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Artistic Director (D.A.)</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('common.artisticDirector') }}</label>
               <AsyncAutocomplete
                 v-model="artisticDirectorId"
                 :options="voiceActorOptions"
                 :loading="isSearchingVoiceActors"
-                placeholder="Search Voice Actor..."
+                :placeholder="$t('common.searchVoiceActor')"
                 :allow-create="true"
                 :display-fn="getVoiceActorName"
                 @search="searchVoiceActors"
@@ -167,12 +167,12 @@
 
             <!-- Adaptation -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Adaptation / Dialogueur</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('common.adaptation') }}</label>
               <AsyncAutocomplete
                 v-model="adaptationId"
                 :options="voiceActorOptions"
                 :loading="isSearchingVoiceActors"
-                placeholder="Search Voice Actor..."
+                :placeholder="$t('common.searchVoiceActor')"
                 :allow-create="true"
                 :display-fn="getVoiceActorName"
                 @search="searchVoiceActors"
@@ -182,12 +182,12 @@
 
             <!-- Recording -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Sound Recording (Enregistrement)</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('common.soundRecording') }}</label>
               <AsyncAutocomplete
                 v-model="recordingId"
                 :options="voiceActorOptions"
                 :loading="isSearchingVoiceActors"
-                placeholder="Search Voice Actor..."
+                :placeholder="$t('common.searchVoiceActor')"
                 :allow-create="true"
                 :display-fn="getVoiceActorName"
                 @search="searchVoiceActors"
@@ -197,12 +197,12 @@
 
             <!-- Editing -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Sound Editing (Montage)</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('common.soundEditing') }}</label>
               <AsyncAutocomplete
                 v-model="editingId"
                 :options="voiceActorOptions"
                 :loading="isSearchingVoiceActors"
-                placeholder="Search Voice Actor..."
+                :placeholder="$t('common.searchVoiceActor')"
                 :allow-create="true"
                 :display-fn="getVoiceActorName"
                 @search="searchVoiceActors"
@@ -212,12 +212,12 @@
 
             <!-- Mixing -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Mixing (Mixage)</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('common.mixing') }}</label>
               <AsyncAutocomplete
                 v-model="mixingId"
                 :options="voiceActorOptions"
                 :loading="isSearchingVoiceActors"
-                placeholder="Search Voice Actor..."
+                :placeholder="$t('common.searchVoiceActor')"
                 :allow-create="true"
                 :display-fn="getVoiceActorName"
                 @search="searchVoiceActors"
@@ -227,12 +227,12 @@
 
             <!-- Project Manager -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Project Manager</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('common.projectManager') }}</label>
               <AsyncAutocomplete
                 v-model="projectManagerId"
                 :options="voiceActorOptions"
                 :loading="isSearchingVoiceActors"
-                placeholder="Search Voice Actor..."
+                :placeholder="$t('common.searchVoiceActor')"
                 :allow-create="true"
                 :display-fn="getVoiceActorName"
                 @search="searchVoiceActors"
@@ -242,12 +242,12 @@
             
             <!-- Creative Supervision -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Creative Supervision</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('common.creativeSupervision') }}</label>
               <AsyncAutocomplete
                 v-model="creativeSupervisionId"
                 :options="voiceActorOptions"
                 :loading="isSearchingVoiceActors"
-                placeholder="Search Voice Actor..."
+                :placeholder="$t('common.searchVoiceActor')"
                 :allow-create="true"
                 :display-fn="getVoiceActorName"
                 @search="searchVoiceActors"
@@ -261,13 +261,13 @@
       <!-- Cast / Voice Actors List -->
       <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-6 shadow-xl">
         <div class="flex justify-between items-center border-b border-gray-800 pb-3">
-          <h4 class="text-sm font-bold text-gray-200 uppercase tracking-wider">Voice Cast</h4>
+          <h4 class="text-sm font-bold text-gray-200 uppercase tracking-wider">{{ $t('common.voiceCast') }}</h4>
           <button
             type="button"
             @click="addCastRow"
             class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl flex items-center transition-colors"
           >
-            + Add Voice Actor
+            {{ $t('common.addVoiceActor') }}
           </button>
         </div>
 
@@ -277,7 +277,7 @@
               type="button"
               @click="removeCastRow(index)"
               class="absolute -top-3 -right-3 bg-red-900/80 hover:bg-red-800 text-red-200 border border-red-800 p-1.5 rounded-full transition-colors opacity-0 group-hover:opacity-100 shadow-lg z-10"
-              title="Remove row"
+              :title="$t('common.removeRow')"
             >
               <XIcon class="w-4 h-4" />
             </button>
@@ -285,13 +285,13 @@
             <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
               <!-- Character fields -->
               <div class="md:col-span-12 space-y-1">
-                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Original Actor / Character *</label>
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('projects.originalActorCharacter') }}</label>
                 <AsyncAutocomplete
                   v-model="row.actor_id"
                   @update:model-value="(val) => handleActorSelect(row, val)"
                   :options="filteredTmdbCast"
                   :loading="isFetchingTmdb"
-                  placeholder="Search TMDB Cast..."
+                  :placeholder="$t('projects.searchTmdbCast')"
                   :allow-create="true"
                   :display-fn="(id) => getActorName(id) || row.character_name"
                   @search="searchActors"
@@ -301,12 +301,12 @@
 
               <!-- Voice Actor -->
               <div class="md:col-span-8 space-y-1">
-                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Voice Actor *</label>
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('common.voiceActor') }}</label>
                 <AsyncAutocomplete
                   v-model="row.voice_actor_id"
                   :options="voiceActorOptions"
                   :loading="isSearchingVoiceActors"
-                  placeholder="Search Voice Actor..."
+                  :placeholder="$t('common.searchVoiceActor')"
                   :allow-create="true"
                   :display-fn="getVoiceActorName"
                   @search="searchVoiceActors"
@@ -316,28 +316,28 @@
               
               <!-- Performance -->
               <div class="md:col-span-4 space-y-1">
-                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Performance Type</label>
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('common.performanceType') }}</label>
                 <select
                   v-model="row.performance"
                   class="w-full px-4 py-2 bg-gray-900 border border-gray-800 rounded-lg text-white focus:ring-2 focus:ring-blue-500 text-sm"
                 >
-                  <option value="dialogues">Dialogues</option>
-                  <option value="dialogues & chant">Dialogues & Chant</option>
-                  <option value="chant">Chant</option>
-                  <option value="bruitages">Bruitages</option>
-                  <option value="narration">Narration</option>
+                  <option value="dialogues">{{ $t('common.performanceDialogues') }}</option>
+                  <option value="dialogues & chant">{{ $t('common.performanceDialoguesChant') }}</option>
+                  <option value="chant">{{ $t('common.performanceChant') }}</option>
+                  <option value="bruitages">{{ $t('common.performanceBruitages') }}</option>
+                  <option value="narration">{{ $t('common.performanceNarration') }}</option>
                 </select>
               </div>
               
               <div class="md:col-span-12 flex items-center space-x-2">
                 <input type="checkbox" v-model="row.highlight" class="w-4 h-4 bg-gray-900 border-gray-800 rounded text-blue-500 focus:ring-blue-500" />
-                <label class="text-xs text-gray-300">Highlight character</label>
+                <label class="text-xs text-gray-300">{{ $t('common.highlightCharacter') }}</label>
               </div>
             </div>
           </div>
           
           <div v-if="castRows.length === 0" class="text-center py-10 bg-gray-950 border border-dashed border-gray-800 rounded-xl text-gray-500">
-            No cast members added yet.
+            {{ $t('common.noCastMembers') }}
           </div>
         </div>
       </div>
@@ -350,7 +350,7 @@
           class="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl flex items-center space-x-2 transition-colors disabled:opacity-50"
         >
           <Loader2Icon v-if="isSaving" class="w-5 h-5 animate-spin" />
-          <span v-else>Save Movie Project</span>
+          <span v-else>{{ $t('projects.saveMovie') }}</span>
         </button>
       </div>
     </form>
@@ -360,19 +360,19 @@
       <DialogPortal>
         <DialogOverlay class="fixed inset-0 bg-black/60 z-[110] backdrop-blur-sm" />
         <DialogContent class="fixed top-1/2 left-1/2 -trangray-x-1/2 -trangray-y-1/2 bg-gray-900 border border-gray-700 rounded-2xl p-6 shadow-2xl z-[120] w-[400px]">
-          <DialogTitle class="text-lg font-bold text-white mb-4">Create New Studio</DialogTitle>
-          <VisuallyHidden><DialogDescription>Form to create a new studio</DialogDescription></VisuallyHidden>
+          <DialogTitle class="text-lg font-bold text-white mb-4">{{ $t('common.createNewStudio') }}</DialogTitle>
+          <VisuallyHidden><DialogDescription>{{ $t('common.createStudioDesc') }}</DialogDescription></VisuallyHidden>
           <input
             v-model="newStudioName"
             type="text"
-            placeholder="Studio Name"
+            :placeholder="$t('common.studioName')"
             class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-lg text-white mb-4"
           />
           <div class="flex justify-end gap-2">
-            <button @click="isCreateStudioOpen = false" class="px-4 py-2 text-gray-300 hover:text-white">Cancel</button>
+            <button @click="isCreateStudioOpen = false" class="px-4 py-2 text-gray-300 hover:text-white">{{ $t('common.cancel') }}</button>
             <button @click="createStudio" :disabled="!newStudioName || isCreatingStudio" class="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50 flex items-center gap-2">
               <Loader2Icon v-if="isCreatingStudio" class="w-4 h-4 animate-spin" />
-              <span>Create</span>
+              <span>{{ $t('common.create') }}</span>
             </button>
           </div>
         </DialogContent>
@@ -384,27 +384,27 @@
       <DialogPortal>
         <DialogOverlay class="fixed inset-0 bg-black/60 z-[110] backdrop-blur-sm" />
         <DialogContent class="fixed top-1/2 left-1/2 -trangray-x-1/2 -trangray-y-1/2 bg-gray-900 border border-gray-700 rounded-2xl p-6 shadow-2xl z-[120] w-[400px]">
-          <DialogTitle class="text-lg font-bold text-white mb-4">Create New Voice Actor</DialogTitle>
-          <VisuallyHidden><DialogDescription>Form to create a new voice actor</DialogDescription></VisuallyHidden>
+          <DialogTitle class="text-lg font-bold text-white mb-4">{{ $t('common.createNewVoiceActor') }}</DialogTitle>
+          <VisuallyHidden><DialogDescription>{{ $t('common.createVoiceActorDesc') }}</DialogDescription></VisuallyHidden>
           <div class="space-y-4 mb-4">
             <input
               v-model="newVaFirstname"
               type="text"
-              placeholder="First Name"
+              :placeholder="$t('common.firstName')"
               class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-lg text-white"
             />
             <input
               v-model="newVaLastname"
               type="text"
-              placeholder="Last Name"
+              :placeholder="$t('common.lastName')"
               class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-lg text-white"
             />
           </div>
           <div class="flex justify-end gap-2">
-            <button @click="isCreateVaOpen = false" class="px-4 py-2 text-gray-300 hover:text-white">Cancel</button>
+            <button @click="isCreateVaOpen = false" class="px-4 py-2 text-gray-300 hover:text-white">{{ $t('common.cancel') }}</button>
             <button @click="createVoiceActor" :disabled="!newVaFirstname || isCreatingVa" class="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50 flex items-center gap-2">
               <Loader2Icon v-if="isCreatingVa" class="w-4 h-4 animate-spin" />
-              <span>Create</span>
+              <span>{{ $t('common.create') }}</span>
             </button>
           </div>
         </DialogContent>
@@ -417,7 +417,7 @@
       class="fixed bottom-6 right-6 z-50 p-4 rounded-xl border shadow-2xl text-sm max-w-sm flex flex-col gap-2 bg-gray-900 border-gray-800 text-gray-200"
     >
       <span>{{ toast.message }}</span>
-      <a v-if="toast.link" :href="toast.link" target="_blank" class="text-blue-400 hover:underline">View Details ↗</a>
+      <a v-if="toast.link" :href="toast.link" target="_blank" class="text-blue-400 hover:underline">{{ $t('common.viewDetails') }}</a>
     </div>
   </div>
   </template>
@@ -439,6 +439,7 @@ definePageMeta({
   middleware: 'admin'
 });
 
+const { t } = useI18n();
 const supabase = useSupabaseClient();
 const route = useRoute();
 const router = useRouter();
@@ -475,7 +476,6 @@ const studioOptions = ref<any[]>([]);
 const isSearchingStudios = ref(false);
 const voiceActorOptions = ref<any[]>([]);
 const isSearchingVoiceActors = ref(false);
-let voiceActorSearchController: AbortController | null = null;
 const optionsCache = ref<Map<number, string>>(new Map());
 
 // Dialog State
@@ -505,7 +505,7 @@ const showToast = (message: string, type = "info", link = "") => {
 };
 
 const getDisplayLanguage = (langCode: string | undefined | null) => {
-  if (!langCode) return 'Inconnu';
+  if (!langCode) return t('common.unknown');
   try {
     const displayNames = new Intl.DisplayNames(['fr'], { type: 'language' });
     const name = displayNames.of(langCode);
@@ -579,27 +579,16 @@ const searchStudios = async (query: string) => {
 };
 
 const searchVoiceActors = async (query: string) => {
-  voiceActorSearchController?.abort();
   isSearchingVoiceActors.value = true;
   try {
-    if (!query) {
-      voiceActorOptions.value = [];
-      return;
+    let q = supabase.from("voice_actors").select("id, firstname, lastname").limit(10);
+    if (query) {
+      q = q.or(`firstname.ilike.%${query}%,lastname.ilike.%${query}%`);
     }
-    const controller = new AbortController();
-    voiceActorSearchController = controller;
-    const data = await $fetch<{ id: number; firstname: string; lastname: string }[]>("/api/search-voice-actors", {
-      params: { query, limit: 10 },
-      signal: controller.signal
-    });
-    const formatted = (data || []).map((va) => ({ id: va.id, name: `${va.firstname || ''} ${va.lastname || ''}`.trim() }));
+    const { data } = await q;
+    const formatted = (data || []).map(va => ({ id: va.id, name: `${va.firstname || ''} ${va.lastname || ''}`.trim() }));
     voiceActorOptions.value = formatted;
     formatted.forEach(f => optionsCache.value.set(f.id, f.name));
-  } catch (err: any) {
-    if (err?.name === "AbortError") return;
-    console.error("Error searching voice actors:", err);
-    showToast("Failed to search voice actors", "error");
-    voiceActorOptions.value = [];
   } finally {
     isSearchingVoiceActors.value = false;
   }
@@ -607,11 +596,11 @@ const searchVoiceActors = async (query: string) => {
 
 const getStudioName = (id: number | null) => {
   if (!id) return '';
-  return optionsCache.value.get(id) || `Studio #${id}`;
+  return optionsCache.value.get(id) || t('common.studioIdFallback', { id });
 };
 const getVoiceActorName = (id: number | null) => {
   if (!id) return '';
-  return optionsCache.value.get(id) || `VA #${id}`;
+  return optionsCache.value.get(id) || t('common.vaIdFallback', { id });
 };
 
 // Inline Creation
@@ -635,7 +624,7 @@ const createStudio = async () => {
         studioCreationCallback.value = null;
       }
       isCreateStudioOpen.value = false;
-      showToast(`Created ${data.name}`, "success", `/studio/${data.id}`);
+      showToast(t('common.created', { name: data.name }), "success", `/studio/${data.id}`);
     }
   } finally {
     isCreatingStudio.value = false;
@@ -665,7 +654,7 @@ const createVoiceActor = async () => {
         pendingVaSelectCallback = null;
       }
       isCreateVaOpen.value = false;
-      showToast(`Created ${name}`, "success");
+      showToast(t('common.created', { name }), "success");
     }
   } finally {
     isCreatingVa.value = false;
@@ -674,8 +663,8 @@ const createVoiceActor = async () => {
 
 
 const saveMovieProject = async () => {
-  if (!contentId.value) return showToast("TMDB ID required", "error");
-  if (!language.value) return showToast("Language required", "error");
+  if (!contentId.value) return showToast(t('projects.tmdbIdRequired'), "error");
+  if (!language.value) return showToast(t('projects.languageRequired'), "error");
   isSaving.value = true;
   try {
     const projectPayload = {
@@ -688,18 +677,20 @@ const saveMovieProject = async () => {
 
     let projectId = isEditMode.value ? Number(projectIdParam) : null;
 
-    const isNewProject = !isEditMode.value;
-
     if (isEditMode.value && projectId) {
-      const { error } = await supabase.from("dubbing_projects").update(projectPayload).eq("id", projectId);
-      if (error) throw new Error(`Failed to update project: ${error.message}`);
+      await supabase.from("dubbing_projects").update(projectPayload).eq("id", projectId);
     } else {
-      const { data, error } = await supabase.from("dubbing_projects").insert([projectPayload]).select().single();
-      if (error) throw new Error(`Failed to create project: ${error.message}`);
+      const { data } = await supabase.from("dubbing_projects").insert([projectPayload]).select().single();
       projectId = data?.id;
+      
+      if (projectId && contentId.value) {
+        showToast(t('projects.created'), "success");
+        router.push(localePath(`/movie/${contentId.value}/edit/${projectId}`));
+        return;
+      }
     }
 
-    if (!projectId) throw new Error("No project ID returned");
+    if (!projectId) throw new Error(t('projects.noProjectIdReturned'));
 
     // Save Crew
     const crewJobs = [
@@ -713,12 +704,10 @@ const saveMovieProject = async () => {
     ].filter(j => j.person_id !== null);
 
     // Delete old crew & insert new
-    const { error: deleteCrewError } = await supabase.from("dubbing_project_crew").delete().eq("dubbing_project_id", projectId);
-    if (deleteCrewError) throw new Error(`Failed to clear crew: ${deleteCrewError.message}`);
+    await supabase.from("dubbing_project_crew").delete().eq("dubbing_project_id", projectId);
     if (crewJobs.length > 0) {
       const crewPayload = crewJobs.map(j => ({ dubbing_project_id: projectId!, job_id: j.job_id, person_id: j.person_id }));
-      const { error: insertCrewError } = await supabase.from("dubbing_project_crew").insert(crewPayload);
-      if (insertCrewError) throw new Error(`Failed to save crew: ${insertCrewError.message}`);
+      await supabase.from("dubbing_project_crew").insert(crewPayload);
     }
 
     // Save Works (Cast)
@@ -736,16 +725,10 @@ const saveMovieProject = async () => {
         highlight: row.highlight ? true : false,
       };
       if (row.id) workPayload.id = row.id;
-      const { error: upsertWorkError } = await supabase.from("work").upsert([workPayload]);
-      if (upsertWorkError) throw new Error(`Failed to save cast: ${upsertWorkError.message}`);
+      await supabase.from("work").upsert([workPayload]);
     }
 
-    if (isNewProject && contentId.value) {
-      showToast("Project created! Redirecting...", "success");
-      router.push(localePath(`/movie/${contentId.value}/edit/${projectId}`));
-    } else {
-      showToast("Project saved successfully!", "success");
-    }
+    showToast(t('projects.saved'), "success");
   } catch (err: any) {
     showToast(err.message, "error");
   } finally {
@@ -764,9 +747,9 @@ const { data: initialData } = await useAsyncData(`movie-edit-${tmdbMovieId.value
   if (tmdbMovieId.value) {
     // TMDB metadata
     try {
-      const movieResult = await $fetch('/api/movie/' + tmdbMovieId.value);
-      if (movieResult?.movie) {
-        tmdbData = movieResult.movie;
+      const data = await $fetch("/api/movie", { params: { id: tmdbMovieId.value.toString() } });
+      if (data?.movie) {
+        tmdbData = data.movie;
       }
     } catch (e) {
       console.error("Failed to fetch TMDB data.", e);
@@ -884,6 +867,5 @@ watch(initialData, (data) => {
 }, { immediate: true });
 
 const fetchTmdbMetadata = async () => {}; // Dummy to prevent error if called
-
 
 </script>

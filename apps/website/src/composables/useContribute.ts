@@ -1,8 +1,9 @@
 import { ref } from "vue";
 
 export const fetchRandomTask = async (category: string) => {
-  const data = await $fetch<any>("/api/get-random-task", {
-    params: { category },
+  const data = await $fetch("/api/get-random-task", {
+    method: "POST",
+    body: { category },
   });
 
   if (data?.error) throw new Error(data.error);
@@ -28,8 +29,9 @@ export const useContribute = (
     activeCategory.value = null;
 
     try {
-      const data = await $fetch<any>("/api/get-random-task", {
-        params: { category },
+      const data = await $fetch("/api/get-random-task", {
+        method: "POST",
+        body: { category },
       });
 
       if (data?.error) throw new Error(data.error);
@@ -38,11 +40,11 @@ export const useContribute = (
         currentTask.value = data.task;
         activeCategory.value = data.category || category;
       } else if (data?.message) {
+        // e.g. "No tasks available" or "Locked"
         error.value = data.message;
       }
     } catch (err: any) {
-      error.value =
-        err.data?.message || err.message || "Failed to fetch a task.";
+      error.value = err.message || "Failed to fetch a task.";
       console.error(err);
     } finally {
       isLoading.value = false;
@@ -68,17 +70,16 @@ export const useContribute = (
         }
       }
 
-      const data = await $fetch<any>("/api/submit-task", {
+      const data = await $fetch("/api/submit-task", {
         method: "POST",
         body: formData,
       });
 
       if (data?.error) throw new Error(data.error);
 
-      return data;
+      return data; // contains { success: true, pointsAwarded: X }
     } catch (err: any) {
-      error.value =
-        err.data?.message || err.message || "Failed to submit task.";
+      error.value = err.message || "Failed to submit task.";
       console.error(err);
       return null;
     } finally {

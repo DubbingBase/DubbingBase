@@ -7,17 +7,17 @@
           <svg class="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h18M3 16h18" />
           </svg>
-          {{ isEditMode ? 'Edit Movie & Technical Team' : 'Create Movie & Dubbing Project' }}
+          {{ isEditMode ? $t('admin.movies.editMovieTeam') : $t('admin.movies.createMovieProject') }}
         </h3>
         <p class="text-sm text-gray-400 mt-1">
-          {{ isEditMode ? `Updating dubbing project ID #${id}` : 'Fill in media information, technical crew, and voice actor credits.' }}
+          {{ isEditMode ? $t('admin.movies.updatingProject', { id }) : $t('admin.movies.fillMediaInfo') }}
         </p>
       </div>
       <NuxtLink
         :to="localePath('/admin')"
         class="text-xs font-semibold px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-xl border border-gray-700 transition-colors flex items-center space-x-2"
       >
-        <span>← Back to Dashboard</span>
+        <span>{{ $t('common.backToDashboard') }}</span>
       </NuxtLink>
     </div>
 
@@ -27,8 +27,8 @@
         <!-- Media Metadata Card (Left Column) -->
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-5 h-fit shadow-xl">
           <h4 class="text-sm font-bold text-gray-200 uppercase tracking-wider border-b border-gray-800 pb-3 flex items-center justify-between">
-            <span>Media Info</span>
-            <span class="text-xs text-blue-400 font-normal">TMDB Linked</span>
+            <span>{{ $t('admin.movies.mediaInfo') }}</span>
+            <span class="text-xs text-blue-400 font-normal">{{ $t('admin.movies.tmdbLinked') }}</span>
           </h4>
 
           <!-- Poster Preview -->
@@ -43,14 +43,14 @@
                 <svg class="h-10 w-10 mx-auto mb-1 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                <span class="text-[10px]">No poster image</span>
+                <span class="text-[10px]">{{ $t('admin.movies.noPosterImage') }}</span>
               </div>
             </div>
           </div>
 
           <!-- Content ID / TMDB ID -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">TMDB / Content ID *</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('admin.movies.tmdbContentId') }} *</label>
             <div class="flex space-x-2">
               <input
                 v-model.number="contentId"
@@ -72,19 +72,19 @@
 
           <!-- Content Type -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Content Type</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('admin.movies.contentType') }}</label>
             <select
               v-model="contentType"
               class="w-full px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             >
-              <option value="movie">Movie</option>
-              <option value="tv">TV / Series</option>
+              <option value="movie">{{ $t('admin.movies.contentTypeMovie') }}</option>
+              <option value="tv">{{ $t('admin.movies.contentTypeTv') }}</option>
             </select>
           </div>
 
           <!-- Media Name / Title -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Media Title *</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('admin.movies.mediaTitle') }} *</label>
             <input
               v-model="mediaTitle"
               type="text"
@@ -96,7 +96,7 @@
 
           <!-- Language -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Dubbing Language</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('admin.movies.dubbingLanguage') }}</label>
             <input
               v-model="language"
               type="text"
@@ -107,14 +107,14 @@
 
           <!-- Status -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('admin.movies.status') }}</label>
             <select
               v-model="status"
               class="w-full px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             >
-              <option value="validated">Validated</option>
-              <option value="pending">Pending Review</option>
-              <option value="draft">Draft</option>
+              <option value="validated">{{ $t('admin.movies.statusValidated') }}</option>
+              <option value="pending">{{ $t('admin.movies.statusPendingReview') }}</option>
+              <option value="draft">{{ $t('admin.movies.statusDraft') }}</option>
             </select>
           </div>
         </div>
@@ -122,16 +122,16 @@
         <!-- Technical Crew Form (Right 2 Columns) -->
         <div class="lg:col-span-2 bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-6 shadow-xl">
           <h4 class="text-sm font-bold text-gray-200 uppercase tracking-wider border-b border-gray-800 pb-3 flex items-center justify-between">
-            <span>Technical Dubbing Team</span>
-            <span class="text-xs text-gray-400">Crew Attributes</span>
+            <span>{{ $t('admin.movies.technicalDubbingTeam') }}</span>
+            <span class="text-xs text-gray-400">{{ $t('admin.movies.crewAttributes') }}</span>
           </h4>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <!-- Studio -->
             <div class="space-y-1">
               <div class="flex justify-between items-center">
-                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Dubbing Studio</label>
-                <NuxtLink :to="localePath('/admin/studios/new')" target="_blank" class="text-[10px] text-blue-400 hover:underline">+ New Studio</NuxtLink>
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('admin.movies.dubbingStudio') }}</label>
+                <NuxtLink :to="localePath('/admin/studios/new')" target="_blank" class="text-[10px] text-blue-400 hover:underline">+ {{ $t('admin.movies.newStudio') }}</NuxtLink>
               </div>
               <div class="flex space-x-2">
                 <select
@@ -155,7 +155,7 @@
 
             <!-- Artistic Director -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Artistic Director (D.A.)</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('admin.movies.artisticDirector') }}</label>
               <input
                 v-model="artisticDirector"
                 type="text"
@@ -166,7 +166,7 @@
 
             <!-- Adaptation -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Adaptation / Dialogueur</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('admin.movies.adaptation') }}</label>
               <input
                 v-model="adaptation"
                 type="text"
@@ -177,7 +177,7 @@
 
             <!-- Recording -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Sound Recording (Enregistrement)</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('admin.movies.soundRecording') }}</label>
               <input
                 v-model="recording"
                 type="text"
@@ -188,7 +188,7 @@
 
             <!-- Editing -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Sound Editing (Montage)</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('admin.movies.soundEditing') }}</label>
               <input
                 v-model="editing"
                 type="text"
@@ -199,7 +199,7 @@
 
             <!-- Mixing -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Sound Mixing (Mixage)</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('admin.movies.soundMixing') }}</label>
               <input
                 v-model="mixing"
                 type="text"
@@ -210,7 +210,7 @@
 
             <!-- Project Manager -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Project Manager</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('admin.movies.projectManager') }}</label>
               <input
                 v-model="projectManager"
                 type="text"
@@ -221,7 +221,7 @@
 
             <!-- Creative Supervision -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Creative Supervision</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('admin.movies.creativeSupervision') }}</label>
               <input
                 v-model="creativeSupervision"
                 type="text"
@@ -237,8 +237,8 @@
       <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4 shadow-xl">
         <div class="flex justify-between items-center border-b border-gray-800 pb-3">
           <div>
-            <h4 class="text-base font-bold text-white">Dubbing Cast & Voice Actors</h4>
-            <p class="text-xs text-gray-400">Map original actors to french voice actors and character names.</p>
+            <h4 class="text-base font-bold text-white">{{ $t('admin.movies.dubbingCastVoiceActors') }}</h4>
+            <p class="text-xs text-gray-400">{{ $t('admin.movies.mapOriginalActors') }}</p>
           </div>
           <div class="flex items-center space-x-2">
             <button
@@ -246,14 +246,14 @@
               @click="openCreatePersonModal"
               class="px-3.5 py-2 bg-gray-800 hover:bg-gray-700 text-blue-400 hover:text-blue-300 font-semibold rounded-xl text-xs border border-gray-700 transition-all flex items-center space-x-1"
             >
-              <span>+ New Voice Actor</span>
+              <span>{{ $t('admin.movies.newVoiceActor') }}</span>
             </button>
             <button
               type="button"
               @click="addCastRow"
               class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-xs shadow-md transition-all flex items-center space-x-1"
             >
-              <span>+ Add Cast Member</span>
+              <span>{{ $t('admin.movies.addCastMember') }}</span>
             </button>
           </div>
         </div>
@@ -262,12 +262,12 @@
           <table class="w-full text-left text-sm text-gray-300">
             <thead class="bg-gray-950 text-xs font-semibold uppercase text-gray-400 border-b border-gray-800">
               <tr>
-                <th class="px-4 py-3">Actor ID</th>
-                <th class="px-4 py-3">Original Character Name</th>
-                <th class="px-4 py-3">French Voice Actor</th>
-                <th class="px-4 py-3">Performance</th>
-                <th class="px-4 py-3 text-center">Highlight</th>
-                <th class="px-4 py-3 text-right">Actions</th>
+                <th class="px-4 py-3">{{ $t('admin.movies.actorId') }}</th>
+                <th class="px-4 py-3">{{ $t('admin.movies.originalCharacterName') }}</th>
+                <th class="px-4 py-3">{{ $t('admin.movies.frenchVoiceActor') }}</th>
+                <th class="px-4 py-3">{{ $t('admin.movies.performance') }}</th>
+                <th class="px-4 py-3 text-center">{{ $t('admin.movies.highlight') }}</th>
+                <th class="px-4 py-3 text-right">{{ $t('common.actions') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-800/60">
@@ -327,10 +327,10 @@
                     v-model="row.performance"
                     class="w-full px-3 py-1.5 bg-gray-950 border border-gray-800 rounded-lg text-white text-xs focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="dialogues">Dialogues</option>
-                    <option value="chant">Chant</option>
-                    <option value="dialogues & chant">Dialogues & Chant</option>
-                    <option value="ambiances">Ambiances</option>
+                    <option value="dialogues">{{ $t('admin.movies.performanceDialogues') }}</option>
+                    <option value="chant">{{ $t('admin.movies.performanceChant') }}</option>
+                    <option value="dialogues & chant">{{ $t('admin.movies.performanceDialoguesChant') }}</option>
+                    <option value="ambiances">{{ $t('admin.movies.performanceAmbiances') }}</option>
                   </select>
                 </td>
 
@@ -372,7 +372,7 @@
           class="py-3.5 px-10 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 text-white font-semibold rounded-xl text-sm shadow-xl transition-all flex items-center justify-center space-x-2"
         >
           <span v-if="isSaving" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
-          <span>Save Movie & Technical Team</span>
+          <span>{{ $t('admin.movies.saveMovieTeam') }}</span>
         </button>
       </div>
     </form>
@@ -381,13 +381,13 @@
     <div v-if="showCreatePersonModal" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/80 backdrop-blur-sm p-4">
       <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl">
         <div class="flex justify-between items-center border-b border-gray-800 pb-3">
-          <h3 class="text-base font-bold text-white">Create New Voice Actor Profile</h3>
+          <h3 class="text-base font-bold text-white">{{ $t('admin.movies.createNewVoiceActorProfile') }}</h3>
           <button @click="showCreatePersonModal = false" class="text-gray-400 hover:text-white text-lg">✕</button>
         </div>
 
         <div class="space-y-3">
           <div>
-            <label class="text-xs font-semibold text-gray-400 uppercase">First Name *</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase">{{ $t('admin.movies.firstName') }} *</label>
             <input
               v-model="newPersonFirstname"
               type="text"
@@ -397,7 +397,7 @@
             />
           </div>
           <div>
-            <label class="text-xs font-semibold text-gray-400 uppercase">Last Name *</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase">{{ $t('admin.movies.lastName') }} *</label>
             <input
               v-model="newPersonLastname"
               type="text"
@@ -407,7 +407,7 @@
             />
           </div>
           <div>
-            <label class="text-xs font-semibold text-gray-400 uppercase">Nationality</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase">{{ $t('common.nationality') }}</label>
             <input
               v-model="newPersonNationality"
               type="text"
@@ -423,7 +423,7 @@
             @click="showCreatePersonModal = false"
             class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-semibold rounded-xl"
           >
-            Cancel
+            {{ $t('common.cancel') }}
           </button>
           <button
             type="button"
@@ -431,7 +431,7 @@
             :disabled="isCreatingPerson || !newPersonFirstname || !newPersonLastname"
             class="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-semibold rounded-xl"
           >
-            {{ isCreatingPerson ? 'Creating...' : 'Create & Assign' }}
+            {{ isCreatingPerson ? $t('admin.movies.creating') : $t('admin.movies.createAndAssign') }}
           </button>
         </div>
       </div>
@@ -441,8 +441,8 @@
     <div v-if="isEditMode" class="bg-gray-900 border border-gray-800 rounded-2xl shadow-xl overflow-hidden mt-8">
       <div class="px-6 py-4 border-b border-gray-800 bg-gray-950/50 flex justify-between items-center">
         <div>
-          <h2 class="text-lg font-bold text-white tracking-tight">Project Attachments (Proofs)</h2>
-          <p class="text-xs text-gray-400 mt-1">Upload ending credits or other images to prove the voice cast.</p>
+          <h2 class="text-lg font-bold text-white tracking-tight">{{ $t('admin.movies.projectAttachments') }}</h2>
+          <p class="text-xs text-gray-400 mt-1">{{ $t('admin.movies.uploadProofs') }}</p>
         </div>
       </div>
 
@@ -450,7 +450,7 @@
         <!-- Upload Form -->
         <div class="flex flex-col md:flex-row gap-4 items-end mb-6 bg-gray-950/50 p-4 rounded-xl border border-gray-800/60">
           <div class="flex-1 w-full">
-            <label class="text-xs font-semibold text-gray-400 uppercase mb-1.5 block">Description</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase mb-1.5 block">{{ $t('common.description') }}</label>
             <input
               v-model="newAttachmentDescription"
               type="text"
@@ -459,7 +459,7 @@
             />
           </div>
           <div class="flex-1 w-full">
-            <label class="text-xs font-semibold text-gray-400 uppercase mb-1.5 block">Image File</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase mb-1.5 block">{{ $t('admin.movies.imageFile') }}</label>
             <input
               type="file"
               accept="image/*"
@@ -469,7 +469,7 @@
             />
           </div>
           <div v-if="isUploadingAttachment" class="flex items-center justify-center px-4 py-2 text-blue-400 text-xs font-semibold">
-            Uploading...
+            {{ $t('common.uploading') }}
           </div>
         </div>
 
@@ -480,12 +480,12 @@
               <NuxtImg format="webp" v-if="att.signedUrl" :src="att.signedUrl" class="w-full h-full object-cover" />
               <div v-else class="w-full h-full flex items-center justify-center text-gray-500 text-xs">Loading...</div>
               <div class="absolute inset-0 bg-gray-950/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-4 backdrop-blur-sm">
-                <a v-if="att.signedUrl" :href="att.signedUrl" target="_blank" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-500 transition-colors shadow">View Full</a>
-                <button @click="deleteAttachment(att.id, att.file_path)" class="px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-semibold hover:bg-red-500 transition-colors shadow">Delete</button>
+                <a v-if="att.signedUrl" :href="att.signedUrl" target="_blank" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-500 transition-colors shadow">{{ $t('common.viewFull') }}</a>
+                <button @click="deleteAttachment(att.id, att.file_path)" class="px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-semibold hover:bg-red-500 transition-colors shadow">{{ $t('common.delete') }}</button>
               </div>
             </div>
             <div class="p-3">
-              <p class="text-sm text-gray-200 font-medium truncate">{{ att.description || 'No description' }}</p>
+              <p class="text-sm text-gray-200 font-medium truncate">{{ att.description || $t('admin.movies.noDescription') }}</p>
               <p class="text-xs text-gray-500 mt-1 truncate">{{ att.file_name }}</p>
             </div>
           </div>
@@ -515,6 +515,7 @@
 
 <script setup lang="ts">
 const supabase = useSupabaseClient();
+const { t } = useI18n();
 
 
 
@@ -675,9 +676,12 @@ const { data: initialData } = await useAsyncData(`movie-project-${id}`, async ()
   let tmdbData = null;
   if (project.content_id) {
     const isShow = project.content_type === "tv" || project.content_type === "show" || project.content_type === "serie";
-    const route = isShow ? "show" : "movie";
+    const functionName = isShow ? "show" : "movie";
     try {
-      const data = await $fetch(`/api/${route}/${project.content_id}`);
+      const data = await $fetch(`/api/${functionName}`, {
+        method: "POST",
+        body: { id: project.content_id }
+      });
       tmdbData = data;
     } catch (err: any) {
       console.error("Error fetching TMDB metadata:", err);
@@ -736,9 +740,12 @@ const fetchTmdbMetadata = async () => {
   isFetchingTmdb.value = true;
   try {
     const isShow = contentType.value === "tv" || contentType.value === "show" || contentType.value === "serie";
-    const route = isShow ? "show" : "movie";
+    const functionName = isShow ? "show" : "movie";
 
-    const data = await $fetch(`/api/${route}/${contentId.value}`);
+    const data = await $fetch(`/api/${functionName}`, {
+      method: "POST",
+      body: { id: contentId.value }
+    });
 
     if (data) {
       const mediaObj = isShow ? data.serie : data.movie;
@@ -793,7 +800,7 @@ const quickCreateVoiceActor = async () => {
     if (error) throw error;
 
     if (data) {
-      showToast(`Created profile for ${data.firstname} ${data.lastname}!`, "success");
+      showToast(t('admin.movies.profileCreated', { name: `${data.firstname} ${data.lastname}` }), "success");
       await fetchVoiceActors();
       // If we have cast rows, auto assign to the last row
       if (castRows.value.length > 0) {
@@ -803,7 +810,7 @@ const quickCreateVoiceActor = async () => {
     }
   } catch (err: any) {
     console.error("Error creating voice actor:", err);
-    showToast(err.message || "Failed to create voice actor profile", "error");
+    showToast(err.message || t('admin.movies.failedToCreateProfile'), "error");
   } finally {
     isCreatingPerson.value = false;
   }
@@ -811,7 +818,7 @@ const quickCreateVoiceActor = async () => {
 
 const saveMovieProject = async () => {
   if (!contentId.value) {
-    showToast("Content ID is required.", "error");
+    showToast(t('admin.movies.contentIdRequired'), "error");
     return;
   }
 
@@ -873,14 +880,14 @@ const saveMovieProject = async () => {
       }
     }
 
-    showToast("Movie project and dubbing team saved successfully!", "success");
+    showToast(t('admin.movies.projectSaved'), "success");
 
     setTimeout(() => {
       router.push(localePath("/admin"));
     }, 1200);
   } catch (err: any) {
     console.error("Error saving movie project:", err);
-    showToast(err.message || "Failed to save movie project.", "error");
+    showToast(err.message || t('admin.movies.failedToSaveProject'), "error");
   } finally {
     isSaving.value = false;
   }
@@ -906,7 +913,7 @@ const handleFileUpload = async (event: Event) => {
   if (!file) return;
 
   if (!isEditMode.value || !id) {
-    showToast("You must save the project before adding attachments.", "error");
+    showToast(t('admin.movies.mustSaveFirst'), "error");
     return;
   }
 
@@ -948,18 +955,18 @@ const handleFileUpload = async (event: Event) => {
     await fetchSignedUrlsForAttachments([data]);
     attachments.value.unshift(data);
     newAttachmentDescription.value = "";
-    showToast("Attachment uploaded successfully!", "success");
+    showToast(t('admin.movies.attachmentUploaded'), "success");
     target.value = '';
   } catch (err: any) {
     console.error("Error uploading attachment:", err);
-    showToast(err.message || "Failed to upload attachment", "error");
+    showToast(err.message || t('admin.movies.failedToUploadAttachment'), "error");
   } finally {
     isUploadingAttachment.value = false;
   }
 };
 
 const deleteAttachment = async (attachmentId: number, filePath: string) => {
-  if (!confirm("Are you sure you want to delete this attachment?")) return;
+  if (!confirm(t('admin.movies.confirmDeleteAttachment'))) return;
 
   try {
     const { error: dbError } = await supabase
@@ -978,10 +985,10 @@ const deleteAttachment = async (attachmentId: number, filePath: string) => {
     }
 
     attachments.value = attachments.value.filter(a => a.id !== attachmentId);
-    showToast("Attachment deleted successfully", "success");
+    showToast(t('admin.movies.attachmentDeleted'), "success");
   } catch (err: any) {
     console.error("Error deleting attachment:", err);
-    showToast(err.message || "Failed to delete attachment", "error");
+    showToast(err.message || t('admin.movies.failedToDeleteAttachment'), "error");
   }
 };
 
