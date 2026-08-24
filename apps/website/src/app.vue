@@ -24,8 +24,8 @@ const i18nHead = useLocaleHead({
 useHead({
   htmlAttrs: {
     'data-theme': effectiveTheme,
-    lang: () => i18nHead.value.htmlAttrs!.lang,
-    dir: () => i18nHead.value.htmlAttrs!.dir
+    lang: () => i18nHead.value.htmlAttrs?.lang || 'en',
+    dir: () => i18nHead.value.htmlAttrs?.dir || 'ltr'
   },
   titleTemplate: (titleChunk) => {
     return titleChunk ? `${titleChunk} | DubbingBase` : 'DubbingBase';

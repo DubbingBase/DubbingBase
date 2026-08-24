@@ -1,5 +1,3 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-
 export type SearchResult = {
   id: number;
   media_type: "movie" | "tv" | "voice_actor";
@@ -20,21 +18,17 @@ export type SearchResult = {
   cover?: { url: string };
 };
 
-export async function fetchSearchData(
-  supabase: SupabaseClient,
-  query: string,
-): Promise<SearchResult[]> {
+export async function fetchSearchData(query: string): Promise<SearchResult[]> {
   const trimmedQuery = query.trim();
   if (trimmedQuery.length < 2) return [];
 
-  const response = await supabase.functions.invoke<SearchResult[]>("search", {
-    body: { query: trimmedQuery },
-  });
-
-  if (response.error) {
-    console.error("fetchSearchData error:", response.error);
+  try {
+    const data = await $fetch<SearchResult[]>("/api/search", {
+      params: { query: trimmedQuery },
+    });
+    return data || [];
+  } catch (e) {
+    console.error("fetchSearchData error:", e);
     return [];
   }
-
-  return response.data || [];
 }

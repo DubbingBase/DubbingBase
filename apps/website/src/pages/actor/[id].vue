@@ -340,7 +340,7 @@ const id = route.params.id as string;
 const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
 
 const { data: initialData } = await useAsyncData(`actor-${id}`, () =>
-  fetchActorData(supabase, id)
+  fetchActorData(id)
 );
 
 const {
@@ -354,7 +354,7 @@ const {
   uniqueVoiceActorsByLanguage,
   filteredUniqueVoiceActorsByLanguage,
   loadActorData,
-} = useActorData(supabase, initialData.value);
+} = useActorData(initialData.value);
 
 useHead({
   titleTemplate: null,

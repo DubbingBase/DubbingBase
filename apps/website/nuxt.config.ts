@@ -1,25 +1,61 @@
 import tailwindcss from "@tailwindcss/vite";
 import { resolve } from "node:path";
+import { defineNuxtConfig } from "nuxt/config";
 
 export default defineNuxtConfig({
-  rootDir: import.meta.dirname,
-  compatibilityDate: "2024-04-03",
+  rootDir: resolve(import.meta.dirname),
+  compatibilityDate: "2024-09-23",
+
+  app: {
+    head: {
+      htmlAttrs: {
+        lang: "en",
+      },
+    },
+  },
 
   nitro: {
-    preset: "cloudflare-pages",
+    preset: process.env.NITRO_PRESET || "node-server",
+    cloudflare: {
+      wrangler: {
+        // Optional: add KV namespace for edge-distributed caching.
+        // Without it, cache falls back to in-memory per isolate.
+        // kv_namespaces: [{ binding: "CACHE_KV", id: "YOUR_KV_NAMESPACE_ID" }],
+      },
+    },
   },
+
+  runtimeConfig: {
+    supabaseSecretKey: process.env.SUPABASE_SECRET_KEY,
+    supabaseUrl: process.env.SUPABASE_URL,
+    tmdbApiKey: process.env.TMDB_API_KEY,
+    tvdbApiKey: process.env.TVDB_API_KEY,
+    igdbClientId: process.env.IGDB_CLIENT_ID,
+    igdbClientSecret: process.env.IGDB_CLIENT_SECRET,
+    mistralToken: process.env.MISTRAL_TOKEN,
+    onesignalAppId: process.env.ONESIGNAL_APP_ID,
+    onesignalRestApiKey: process.env.ONESIGNAL_REST_API_KEY,
+    discordWebhookUrl: process.env.DISCORD_ADMIN_WEBHOOK_LOG_URL,
+    resendApiKey: process.env.RESEND_API_KEY,
+    resendFromEmail: process.env.RESEND_FROM_EMAIL,
+    resendToEmail: process.env.RESEND_TO_EMAIL,
+    adminEmail: process.env.ADMIN_EMAIL,
+    googleServiceAccountEmail: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+    googleServiceAccountKey: process.env.GOOGLE_SERVICE_ACCOUNT_KEY,
+    googleSheetId: process.env.GOOGLE_SHEET_ID,
+    syncTablePrimaryKey: process.env.SYNC_TABLE_PRIMARY_KEY,
+    syncWorksheetName: process.env.SYNC_WORKSHEET_NAME,
+    public: {
+      supabaseUrl: process.env.SUPABASE_URL,
+      supabaseKey: process.env.SUPABASE_PUBLISHABLE_KEY,
+    },
+  },
+
   experimental: {
     inlineRouteRules: true,
   },
 
   routeRules: {
-    // Prerender static content pages at build time
-    "/about": { prerender: true },
-    "/legal": { prerender: true },
-    "/privacy": { prerender: true },
-    "/terms": { prerender: true },
-    "/guidelines": { prerender: true },
-
     // Cache media pages at the edge for 1 hour (stale-while-revalidate) in production only
     "/movie/**": { swr: process.env.NODE_ENV === "development" ? false : 3600 },
     "/show/**": { swr: process.env.NODE_ENV === "development" ? false : 3600 },
@@ -47,6 +83,7 @@ export default defineNuxtConfig({
     "@nuxtjs/supabase",
     "@nuxtjs/sitemap",
     "@nuxtjs/robots",
+    "@nuxt/fonts",
     "@nuxt/image",
     "@nuxt/icon",
     "nuxt-swiper",
@@ -54,6 +91,7 @@ export default defineNuxtConfig({
     "@nuxtjs/html-validator",
   ],
 
+  // @ts-ignore
   fonts: {
     experimental: {
       processCSSVariables: true,
