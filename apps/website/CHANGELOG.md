@@ -1,5 +1,11 @@
 # @app/landing
 
+## 1.1.3
+
+### Patch Changes
+
+- 543e255: Trigger website deploy to run Cloudflare cache purge after release
+
 ## 1.1.2
 
 ### Patch Changes
