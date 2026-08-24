@@ -239,7 +239,7 @@
                   <!-- Column 1: Media -->
                   <NuxtLink
                     :to="$localePath(`/${item.work.dubbing_projects?.content_type === 'tv' ? 'show' : 'movie'}/${item.media.id}`)"
-                    class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start hover:opacity-80 transition-opacity cursor-pointer"
+                    class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start cursor-pointer"
                   >
                     <div
                       class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 flex-shrink-0"
@@ -278,10 +278,10 @@
                       >
                       <div
                         v-if="item.work.dubbing_projects?.studios"
-                        class="mt-1 flex"
+                             class="mt-1 flex min-w-0 overflow-hidden"
                       >
                         <span
-                          class="text-[9px] px-1.5 py-0.5 bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-300 rounded-md font-medium border border-gray-200 dark:border-gray-700 truncate"
+                          class="text-[9px] px-1.5 py-0.5 bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-300 rounded-md font-medium border border-gray-200 dark:border-gray-700 truncate min-w-0"
                           :title="item.work.dubbing_projects.studios.name"
                         >
                           {{ item.work.dubbing_projects.studios.name }}
@@ -294,7 +294,7 @@
                   <NuxtLink
                     v-if="item.data.actor"
                     :to="$localePath(`/actor/${item.data.actor.id}`)"
-                    class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-3 sm:pt-0 hover:opacity-80 transition-opacity cursor-pointer"
+                    class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-3 sm:pt-0 cursor-pointer"
                   >
                     <div
                       class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 flex-shrink-0"
@@ -452,7 +452,7 @@
                       <!-- Column 1: Media -->
                       <NuxtLink
                         :to="$localePath(`/${item.work.dubbing_projects?.content_type === 'tv' ? 'show' : 'movie'}/${item.media.id}`)"
-                        class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start hover:opacity-80 transition-opacity cursor-pointer"
+                        class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start cursor-pointer"
                       >
                         <div
                           class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 flex-shrink-0"
@@ -492,10 +492,10 @@
                           >
                           <div
                             v-if="item.work.dubbing_projects?.studios"
-                            class="mt-1 flex"
+                            class="mt-1 flex min-w-0 overflow-hidden"
                           >
                             <span
-                              class="text-[9px] px-1.5 py-0.5 bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-300 rounded-md font-medium border border-gray-200 dark:border-gray-700 truncate"
+                              class="text-[9px] px-1.5 py-0.5 bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-300 rounded-md font-medium border border-gray-200 dark:border-gray-700 truncate min-w-0"
                               :title="item.work.dubbing_projects.studios.name"
                             >
                               {{ item.work.dubbing_projects.studios.name }}
@@ -529,7 +529,7 @@
                             class="absolute bottom-1 left-1 right-1 flex justify-center"
                           >
                             <span
-                              class="bg-black/70 backdrop-blur text-white text-[9px] px-2 py-0.5 rounded-full truncate max-w-full font-medium"
+                              class="bg-black/70 backdrop-blur text-white text-[9px] px-2 py-0.5 rounded-full truncate max-w-full font-medium inline-block min-w-0"
                             >
                               {{
                                 $te(`performance.${item.work.performance}`)
