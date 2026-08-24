@@ -366,26 +366,6 @@ jobs:
           NUXT_SYNC_TABLE_PRIMARY_KEY: ${{ secrets.SYNC_TABLE_PRIMARY_KEY }}
           NUXT_SYNC_WORKSHEET_NAME: ${{ secrets.SYNC_WORKSHEET_NAME }}
           NITRO_PRESET: cloudflare-module
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
-          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
-          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
-          TVDB_API_KEY: ${{ secrets.TVDB_API_KEY }}
-          IGDB_CLIENT_ID: ${{ secrets.IGDB_CLIENT_ID }}
-          IGDB_CLIENT_SECRET: ${{ secrets.IGDB_CLIENT_SECRET }}
-          MISTRAL_TOKEN: ${{ secrets.MISTRAL_TOKEN }}
-          ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}
-          ONESIGNAL_REST_API_KEY: ${{ secrets.ONESIGNAL_REST_API_KEY }}
-          DISCORD_ADMIN_WEBHOOK_LOG_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
-          RESEND_TO_EMAIL: ${{ secrets.RESEND_TO_EMAIL }}
-          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
-          GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
-          GOOGLE_SERVICE_ACCOUNT_KEY: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
-          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
-          SYNC_TABLE_PRIMARY_KEY: ${{ secrets.SYNC_TABLE_PRIMARY_KEY }}
-          SYNC_WORKSHEET_NAME: ${{ secrets.SYNC_WORKSHEET_NAME }}
         run: pnpm --filter=@app/website build
 
   # Job 8: Deploy website to Cloudflare Workers (main only)
@@ -437,26 +417,6 @@ jobs:
           NUXT_SYNC_TABLE_PRIMARY_KEY: ${{ secrets.SYNC_TABLE_PRIMARY_KEY }}
           NUXT_SYNC_WORKSHEET_NAME: ${{ secrets.SYNC_WORKSHEET_NAME }}
           NITRO_PRESET: cloudflare-module
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
-          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
-          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
-          TVDB_API_KEY: ${{ secrets.TVDB_API_KEY }}
-          IGDB_CLIENT_ID: ${{ secrets.IGDB_CLIENT_ID }}
-          IGDB_CLIENT_SECRET: ${{ secrets.IGDB_CLIENT_SECRET }}
-          MISTRAL_TOKEN: ${{ secrets.MISTRAL_TOKEN }}
-          ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}
-          ONESIGNAL_REST_API_KEY: ${{ secrets.ONESIGNAL_REST_API_KEY }}
-          DISCORD_ADMIN_WEBHOOK_LOG_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
-          RESEND_TO_EMAIL: ${{ secrets.RESEND_TO_EMAIL }}
-          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
-          GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
-          GOOGLE_SERVICE_ACCOUNT_KEY: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
-          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
-          SYNC_TABLE_PRIMARY_KEY: ${{ secrets.SYNC_TABLE_PRIMARY_KEY }}
-          SYNC_WORKSHEET_NAME: ${{ secrets.SYNC_WORKSHEET_NAME }}
         run: pnpm --filter=@app/website build
 
       - name: Deploy to Cloudflare Workers
