@@ -19,20 +19,10 @@ export const useReports = () => {
         throw new Error("You must be logged in to report content.");
       }
 
-      const { data, error: invokeError } = await supabase.functions.invoke(
-        "submit-user-report",
-        {
-          body: { target_url: targetUrl, reason, details },
-        },
-      );
-
-      if (invokeError) {
-        throw invokeError;
-      }
-
-      if (data?.error) {
-        throw new Error(data.error);
-      }
+      await $fetch('/api/submit-user-report', {
+        method: 'POST',
+        body: { target_url: targetUrl, reason, details },
+      });
 
       return true;
     } catch (err: any) {

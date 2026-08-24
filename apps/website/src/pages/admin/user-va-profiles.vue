@@ -289,8 +289,7 @@ const showToast = (message: string, type: "success" | "error" | "info" = "info")
 
 const { data: initialData, pending, refresh: fetchExistingLinks } = await useAsyncData('admin-user-va-links', async () => {
   // Fetch users
-  const { data: userData, error: userError } = await supabase.functions.invoke("list_users", { method: 'GET' });
-  if (userError) throw userError;
+  const userData = await $fetch('/api/list_users');
   const users = userData?.users || [];
   
   // Fetch existing links
@@ -366,11 +365,11 @@ const searchVoiceActors = async () => {
 
   voiceActorSearching.value = true;
   try {
-    const { data, error } = await supabase.functions.invoke("search-voice-actors", {
+    const data = await $fetch('/api/search-voice-actors', {
+      method: 'POST',
       body: { query, limit: 10 }
     });
 
-    if (error) throw error;
     voiceActorResults.value = data || [];
   } catch (err: any) {
     console.error("Error searching voice actors:", err);
@@ -398,14 +397,14 @@ const linkUserVoiceActor = async () => {
 
   linking.value = true;
   try {
-    const { error } = await supabase.functions.invoke("link-user-voice-actor", {
+    await $fetch('/api/link-user-voice-actor', {
+      method: 'POST',
       body: {
         user_id: selectedUser.value.id,
         voice_actor_id: selectedVoiceActor.value.id
       }
     });
 
-    if (error) throw error;
     showToast("User account successfully linked to voice actor profile", "success");
 
     // Reset inputs

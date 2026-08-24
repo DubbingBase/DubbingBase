@@ -259,11 +259,10 @@ const saveStudio = async () => {
       isEditMode: isEditMode.value,
     };
 
-    const { error } = await supabase.functions.invoke("save-studio", {
+    await $fetch('/api/save-studio', {
+      method: 'POST',
       body: payload
     });
-
-    if (error) throw error;
 
     router.push(localePath(`/studio/${isEditMode.value ? studioId : ''}`));
   } catch (err: any) {

@@ -187,17 +187,14 @@ let autoSaveTimer: ReturnType<typeof setTimeout> | null = null;
 const { data, pending, error, refresh } = await useAsyncData(
   `voice-actors-spreadsheet-${page.value}-${searchQuery.value}`,
   async () => {
-    const response = await supabase.functions.invoke("list-voice-actors", {
-      method: "POST",
+    return await $fetch('/api/list-voice-actors', {
+      method: 'POST',
       body: {
         limit: limit.value,
         offset: (page.value - 1) * limit.value,
         query: searchQuery.value,
       },
     });
-
-    if (response.error) throw response.error;
-    return response.data;
   },
   {
     watch: [page, searchQuery],
@@ -270,14 +267,14 @@ async function savePendingChanges() {
 
 async function saveSingleChange(key: string, change: CellChange) {
   try {
-    const response = await supabase.functions.invoke("update-voice-actor", {
+    await $fetch('/api/update-voice-actor', {
+      method: 'POST',
       body: {
         voice_actor_id: change.id,
         updates: { [change.prop]: change.newValue },
       },
     });
 
-    if (response.error) throw response.error;
     pendingChanges.value.delete(key);
   } catch (err: any) {
     console.error("Error saving change:", err);

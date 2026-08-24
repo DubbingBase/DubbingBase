@@ -73,7 +73,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 
-const supabase = useSupabaseClient();
 const { t } = useI18n();
 
 const searchQuery = ref('');
@@ -93,8 +92,7 @@ useHead({
 });
 
 const { data, pending: isLoading, error } = useAsyncData('voice-actors-page', async () => {
-  const { data, error: fetchError } = await supabase.functions.invoke('list-voice-actors', { method: 'GET' });
-  if (fetchError) throw fetchError;
+  const data = await $fetch('/api/list-voice-actors');
   return data?.voice_actors || [];
 });
 

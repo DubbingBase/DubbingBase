@@ -141,9 +141,6 @@
   </template>
 
 <script setup lang="ts">
-const supabase = useSupabaseClient();
-
-
 
 
 definePageMeta({
@@ -181,9 +178,7 @@ const fetchDuplicates = async () => {
     successMsg.value = "";
     duplicates.value = [];
 
-    const { data, error: funcError } = await supabase.functions.invoke("find_duplicate_work");
-
-    if (funcError) throw funcError;
+    const data = await $fetch('/api/find_duplicate_work');
 
     duplicates.value = (data || []).map((group: any) => ({
       works: group.works || [],
@@ -205,12 +200,13 @@ const deleteWork = async (workId: number | null, groupIdx: number) => {
   successMsg.value = "";
 
   try {
-    const { data, error: delErr } = await supabase.functions.invoke("delete_work_entry", {
+    const data = await $fetch('/api/delete_work_entry', {
+      method: 'POST',
       body: { id: workId }
     });
 
-    if (delErr || (data && data.error)) {
-      throw new Error((delErr?.message || data?.error?.message) || "Failed to delete work entry.");
+    if (data && data.error) {
+      throw new Error(data.error?.message || "Failed to delete work entry.");
     }
 
     successMsg.value = `Successfully deleted work entry #${workId}`;

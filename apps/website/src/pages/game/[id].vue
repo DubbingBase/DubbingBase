@@ -432,10 +432,7 @@ async function triggerPrepareGame() {
   if (!isAdmin.value) return;
   isPreparing.value = true;
   try {
-    const { error } = await supabase.functions.invoke("prepare_game", {
-      body: { igdbId: Number(gameId) },
-    });
-    if (error) throw error;
+    await $fetch('/api/prepare_game', { method: 'POST', body: { igdbId: Number(gameId) } });
     await refresh();
   } catch (err) {
     console.error("prepare_game failed:", err);

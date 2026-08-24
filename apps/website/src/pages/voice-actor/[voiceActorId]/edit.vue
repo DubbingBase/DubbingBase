@@ -381,11 +381,11 @@ const uploadProfilePicture = async (voiceActorId: string | number) => {
   formData.append("file", profilePictureFile.value, profilePictureFile.value.name);
   formData.append("voice_actor_id", String(voiceActorId));
 
-  const response = await supabase.functions.invoke("upload_profile_picture", {
+  const result = await $fetch('/api/upload_profile_picture', {
+    method: 'POST',
     body: formData,
   });
 
-  const result = await response.data;
   if (result && result.ok) {
     return profilePictureFile.value.name;
   }

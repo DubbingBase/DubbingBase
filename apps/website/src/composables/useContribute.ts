@@ -1,15 +1,10 @@
 import { ref } from "vue";
 
-export const fetchRandomTask = async (supabase: any, category: string) => {
-  const { data, error: invokeError } = await supabase.functions.invoke(
-    "get-random-task",
-    {
-      body: { category },
-    },
-  );
-
-  if (invokeError) throw invokeError;
-  if (data?.error) throw new Error(data.error);
+export const fetchRandomTask = async (category: string) => {
+  const data = await $fetch('/api/get-random-task', {
+    method: 'POST',
+    body: { category },
+  });
 
   return data;
 };
@@ -18,7 +13,6 @@ export const useContribute = (
   initialTask?: any,
   initialCategory?: string | null,
 ) => {
-  const supabase = useSupabaseClient();
   const isLoading = ref(false);
   const isSubmitting = ref(false);
   const error = ref<string | null>(null);
@@ -33,15 +27,10 @@ export const useContribute = (
     activeCategory.value = null;
 
     try {
-      const { data, error: invokeError } = await supabase.functions.invoke(
-        "get-random-task",
-        {
-          body: { category },
-        },
-      );
-
-      if (invokeError) throw invokeError;
-      if (data?.error) throw new Error(data.error);
+      const data = await $fetch('/api/get-random-task', {
+        method: 'POST',
+        body: { category },
+      });
 
       if (data?.task) {
         currentTask.value = data.task;
@@ -77,15 +66,10 @@ export const useContribute = (
         }
       }
 
-      const { data, error: invokeError } = await supabase.functions.invoke(
-        "submit-task",
-        {
-          body: formData,
-        },
-      );
-
-      if (invokeError) throw invokeError;
-      if (data?.error) throw new Error(data.error);
+      const data = await $fetch('/api/submit-task', {
+        method: 'POST',
+        body: formData,
+      });
 
       return data; // contains { success: true, pointsAwarded: X }
     } catch (err: any) {

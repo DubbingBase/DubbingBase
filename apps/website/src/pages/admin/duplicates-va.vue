@@ -194,9 +194,6 @@
   </template>
 
 <script setup lang="ts">
-const supabase = useSupabaseClient();
-
-
 
 
 definePageMeta({
@@ -308,9 +305,7 @@ const fetchDuplicates = async () => {
     error.value = "";
     duplicates.value = [];
 
-    const { data, error: funcError } = await supabase.functions.invoke("find_duplicate_voice_actors");
-
-    if (funcError) throw funcError;
+    const data = await $fetch('/api/find_duplicate_voice_actors');
 
     duplicates.value = (data || []).map((group: any) => ({
       actors: group.actors || [],
@@ -336,14 +331,13 @@ const mergeGroup = async (group: DuplicateGroup) => {
       .map(a => a.id)
       .filter(id => id !== group.selectedId);
 
-    const { error: funcError } = await supabase.functions.invoke("merge_voice_actor_duplicates", {
+    await $fetch('/api/merge_voice_actor_duplicates', {
+      method: 'POST',
       body: {
         keepId: group.selectedId,
         ids: idsToMerge
       }
     });
-
-    if (funcError) throw funcError;
 
     showToast("Duplicate voice actor profiles merged successfully", "success");
 
