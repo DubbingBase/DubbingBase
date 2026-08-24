@@ -251,6 +251,10 @@ jobs:
           VERSION=$(node -p "require('./apps/mobile/package.json').version")
           echo "ANDROID_VERSION_NAME=${VERSION}-build.${GITHUB_RUN_NUMBER}" >> $GITHUB_ENV
 
+      - name: Set Android production version code
+        if: github.ref == 'refs/heads/main'
+        run: echo "ANDROID_VERSION_CODE=$((2000000 + GITHUB_RUN_NUMBER))" >> $GITHUB_ENV
+
       - name: Build Android Release
         if: github.event_name != 'pull_request'
         timeout-minutes: 20
