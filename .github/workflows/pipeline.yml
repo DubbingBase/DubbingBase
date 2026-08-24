@@ -253,7 +253,13 @@ jobs:
 
       - name: Set Android production version code
         if: github.ref == 'refs/heads/main'
-        run: echo "ANDROID_VERSION_CODE=$((2000000 + GITHUB_RUN_NUMBER))" >> $GITHUB_ENV
+        run: |
+          VERSION=$(node -p "require('./apps/mobile/package.json').version")
+          MAJOR=$(echo "$VERSION" | cut -d. -f1)
+          MINOR=$(echo "$VERSION" | cut -d. -f2)
+          PATCH=$(echo "$VERSION" | cut -d. -f3)
+          VERSION_CODE=$(( MAJOR * 1000000 + MINOR * 1000 + PATCH ))
+          echo "ANDROID_VERSION_CODE=${VERSION_CODE}${GITHUB_RUN_NUMBER}" >> $GITHUB_ENV
 
       - name: Build Android Release
         if: github.event_name != 'pull_request'
