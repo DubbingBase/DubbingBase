@@ -1,4 +1,14 @@
-name = "dubbingbase-landing"
-compatibility_date = "2024-04-03"
+name = "dubbingbase-website"
+main = ".output/server/index.mjs"
+compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
-pages_build_output_dir = "dist"
+
+[assets]
+directory = ".output/public"
+binding = "ASSETS"
+
+# Optional: add KV namespace for edge-distributed caching.
+# Without it, cache falls back to in-memory per isolate.
+# [[kv_namespaces]]
+# binding = "CACHE_KV"
+# id = "YOUR_KV_NAMESPACE_ID"

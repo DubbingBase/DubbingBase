@@ -366,7 +366,7 @@ const { data, pending } = useAsyncData(cacheKey, async () => {
   // We only have cached data on the client side after hydration
   const cachedData = nuxtApp.payload.data[cacheKey];
 
-  const newData = await fetchShowData(supabase, showId, locale.value);
+  const newData = await fetchShowData(showId, locale.value);
   
   if (
     newData && 

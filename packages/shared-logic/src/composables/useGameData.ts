@@ -1,32 +1,21 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { GameResponse } from "@supabase/functions/_shared/types";
-
 export async function fetchGameData(
-  supabase: SupabaseClient,
   id: string | number,
   locale?: string,
-): Promise<GameResponse | null> {
+): Promise<any | null> {
   const headers: Record<string, string> = {};
   if (locale) {
     headers["Accept-Language"] = locale;
   }
 
-  const gameResponseRaw = await supabase.functions.invoke<GameResponse>(
-    "game",
-    {
-      body: { id },
-      headers,
-    },
-  );
-
-  const data = gameResponseRaw.data;
-  if (!data || !data.game) {
-    console.error(
-      "fetchGameData: Response is null or missing game property",
-      gameResponseRaw,
-    );
+  try {
+    const data = await $fetch<any>(`/api/game/${id}`, { headers });
+    if (!data || !data.game) {
+      console.error("fetchGameData: Response is null or missing game property");
+      return null;
+    }
+    return data;
+  } catch (e) {
+    console.error("fetchGameData error:", e);
     return null;
   }
-
-  return data;
 }

@@ -367,7 +367,7 @@ const { data, pending } = useAsyncData(cacheKey, async () => {
   // We only have cached data on the client side after hydration
   const cachedData = nuxtApp.payload.data[cacheKey];
   
-  const newData = await fetchMovieData(supabase, movieId, locale.value);
+  const newData = await fetchMovieData(movieId, locale.value);
   
   // If TMDB fetch fails on the edge function (e.g., timeout during auth resolution)
   // but we already have valid TMDB data from SSR, we preserve the TMDB data

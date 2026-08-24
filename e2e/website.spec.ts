@@ -6,9 +6,11 @@ test("Website loads without errors", async ({ page }) => {
     errors.push(err.message);
   });
 
-  await page.goto("/");
-  // Wait for hydration and basic requests
-  await page.waitForLoadState("networkidle");
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  // Give hydration a moment without relying on networkidle,
+  // which never settles when clients hold open connections
+  // (Supabase realtime, OneSignal, etc.)
+  await page.waitForTimeout(2000);
 
   // Verify the page rendered some content
   const body = await page.locator("body");

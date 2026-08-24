@@ -334,7 +334,7 @@ useHead({
   ],
 });
 
-const { data, pending } = useAsyncData('home-data', () => fetchHomeData(supabase));
+const { data, pending } = useAsyncData('home-data', () => fetchHomeData());
 
 const trendingMovies = computed(() => data.value?.trendingMovies || []);
 const trendingSeries = computed(() => data.value?.trendingSeries || []);

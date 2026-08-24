@@ -6,7 +6,7 @@ export default defineNuxtPlugin({
   name: "posthog",
   enforce: "pre",
   setup() {
-    const isDev = import.meta.env.DEV;
+    const isDev = import.meta.dev;
 
     const themeCookie = useCookie("dubbingbase-theme");
     const langCookie = useCookie("user_lang");
