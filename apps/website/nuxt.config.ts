@@ -149,5 +149,5 @@ export default defineNuxtConfig({
   sitemap: {
     zeroRuntime: true,
   },
-  // Cloudflare cache is purged after each deploy (see pipeline.yml)
+  // Cloudflare cache is purged automatically after each deploy (see pipeline.yml)
 });
