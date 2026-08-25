@@ -1,5 +1,7 @@
 import { useSupabaseAdmin } from "../utils/db/client";
 import { requireAdmin } from "../utils/auth";
+import { llmGenerateObject } from "../utils/llm";
+import { z } from "zod";
 
 export default defineEventHandler(async (event) => {
   const internalSecret = getHeader(event, "x-internal-secret");
@@ -60,56 +62,30 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    const mistralToken = config.mistralToken as string;
-    if (!mistralToken) {
-      throw new Error("MISTRAL_TOKEN is not set in runtimeConfig");
-    }
+    const schema = z.object({
+      twitter_post: z.string(),
+      instagram_post: z.string(),
+    });
 
-    const mistralResponse = await fetch(
-      "https://api.mistral.ai/v1/chat/completions",
+    const generatedTexts = await llmGenerateObject(
+      `Sujet : ${promptTopic}\nDonnées : ${JSON.stringify(contextData)}`,
+      schema,
       {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${mistralToken}`,
-        },
-        body: JSON.stringify({
-          model: "mistral-large-latest",
-          response_format: { type: "json_object" },
-          messages: [
-            {
-              role: "system",
-              content: `Agis en tant que community manager de DubbingBase (encyclopédie du doublage).
-Génère deux posts pour les réseaux sociaux basés sur les données fournies.
-Tu dois retourner UNIQUEMENT un objet JSON avec deux clés : "twitter_post" et "instagram_post".
+        systemInstruction: `Act as a community manager for DubbingBase (a French voice acting encyclopedia). Generate two social media posts based on the provided data.
 
-Contraintes Twitter:
-- Moins de 280 caractères.
-- Texte incisif.
-- 2 hashtags maximum.
+Twitter constraints:
+- Under 280 characters.
+- Punchy text.
+- Maximum 2 hashtags.
 
-Contraintes Instagram:
-- Texte plus détaillé et passionné.
-- Inclure un fait surprenant (si possible à partir des données).
-- Appel à l'action invitant à visiter DubbingBase.
-- 5 à 10 hashtags pertinents.`,
-            },
-            {
-              role: "user",
-              content: `Sujet : ${promptTopic}\nDonnées : ${JSON.stringify(contextData)}`,
-            },
-          ],
-        }),
+Instagram constraints:
+- More detailed and passionate text.
+- Include a surprising fact (if possible from the data).
+- Call to action inviting to visit DubbingBase.
+- 5 to 10 relevant hashtags.`,
+        temperature: 0,
       },
     );
-
-    if (!mistralResponse.ok) {
-      const errText = await mistralResponse.text();
-      throw new Error(`Mistral API error: ${errText}`);
-    }
-
-    const mistralData = await mistralResponse.json();
-    const generatedTexts = JSON.parse(mistralData.choices[0].message.content);
 
     const resendApiKey = config.resendApiKey;
     if (!resendApiKey) {

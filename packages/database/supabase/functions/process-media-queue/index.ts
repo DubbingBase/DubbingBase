@@ -230,7 +230,7 @@ export default {
             errMsg = String(err);
           }
 
-          if (errMsg.includes("Mistral API Rate Limited (429)")) {
+          if (errMsg.includes("LLM API Rate Limited (429)")) {
             isRateLimited = true;
 
             const readCt = Number(queueItem.read_ct);
@@ -238,14 +238,14 @@ export default {
 
             if (readCt >= MAX_RETRIES) {
               console.warn(
-                `[QUEUE] Message ID ${msgId} rate limited by Mistral ${readCt} times. Max retries reached. Archiving.`,
+                `[QUEUE] Message ID ${msgId} rate limited by LLM ${readCt} times. Max retries reached. Archiving.`,
               );
 
               await ctx.supabaseAdmin.rpc(
                 "archive_media_queue_message_with_error",
                 {
                   p_msg_id: msgId,
-                  p_error: `Max retries (${MAX_RETRIES}) reached due to Mistral API Rate Limited (429).`,
+                  p_error: `Max retries (${MAX_RETRIES}) reached due to LLM API Rate Limited (429).`,
                 },
               );
 
@@ -253,7 +253,7 @@ export default {
                 id: msgId,
                 ok: false,
                 changes: 0,
-                error: `Max retries (${MAX_RETRIES}) reached due to Mistral 429`,
+                error: `Max retries (${MAX_RETRIES}) reached due to LLM 429`,
               });
 
               await sendDiscordAdminNotification(
@@ -262,7 +262,7 @@ export default {
               );
             } else {
               console.warn(
-                `[QUEUE] Message ID ${msgId} rate limited by Mistral (Attempt ${readCt}/${MAX_RETRIES}). Leaving in queue to retry later.`,
+                `[QUEUE] Message ID ${msgId} rate limited by LLM (Attempt ${readCt}/${MAX_RETRIES}). Leaving in queue to retry later.`,
               );
               results.push({
                 id: msgId,
@@ -310,7 +310,7 @@ export default {
         console.log(`[QUEUE] Checking if we need to self-trigger...`);
         if (isRateLimited) {
           console.warn(
-            `[QUEUE] Rate limited by Mistral. Halting queue processor self-trigger.`,
+            `[QUEUE] Rate limited by LLM. Halting queue processor self-trigger.`,
           );
         } else if (!isSingle) {
           const { data: queueDepth } = await ctx.supabaseAdmin.rpc(

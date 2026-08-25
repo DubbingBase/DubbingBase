@@ -10,8 +10,8 @@ import {
 } from "../_shared/extract/constants.ts";
 import { flatTocToTree } from "./toc.ts";
 import { exploreDubbingSectionChilds } from "./extract.ts";
-import { MistralVoiceActorExtractOutput } from "../_shared/types.ts";
-import { wikipediaCache } from "../_shared/index.ts";
+import { wikipediaCache, geminiGenerateObject } from "../_shared/index.ts";
+import { z } from "npm:zod";
 
 export default {
   fetch: withSupabase<Database>(
@@ -90,36 +90,25 @@ export default {
       );
 
       for (const result of filteredResults.slice(0, 1)) {
-        const mistralURL = "https://api.mistral.ai/v1/agents/completions";
-        const mistralJSONRequest = await fetch(mistralURL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${Deno.env.get("MISTRAL_TOKEN")}`,
-          },
-          body: JSON.stringify({
-            stream: false,
-            messages: [
-              {
-                role: "user",
-                content: result.html,
-              },
-            ],
-            agent_id:
-              "ag:4785a948:20241126:extracteur-page-acteur-wikipedia-doubleurs:249748fe",
-            response_format: {
-              type: "json_object",
-            },
-          }),
+        const schema = z.object({
+          items: z.array(z.object({
+            actor: z.string(),
+            performance: z.string().optional(),
+            production: z.string().optional(),
+            year: z.number().nullable().optional(),
+          })).optional(),
         });
 
-        const mistralJSON = await mistralJSONRequest.json();
-        const mistralSuggestion = mistralJSON.choices[0].message.content;
-        const mistralSuggestionJSON = JSON.parse(
-          mistralSuggestion,
-        ) as MistralVoiceActorExtractOutput;
+        const llmSuggestionJSON = await geminiGenerateObject(
+          result.html,
+          schema,
+          {
+            systemInstruction: `You are an expert at extracting dubbing data from French Wikipedia pages. Extract the dubbing data from the provided text.`,
+            temperature: 0,
+          },
+        );
 
-        console.log("mistralSuggestion", mistralSuggestionJSON);
+        console.log("llmSuggestion", llmSuggestionJSON);
       }
 
       return Response.json({ ok: true });

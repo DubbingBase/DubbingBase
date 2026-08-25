@@ -2,6 +2,8 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
 import { WIKIPEDIA_USER_AGENT } from "../_shared/extract/constants.ts";
+import { geminiGenerateObject } from "../_shared/index.ts";
+import { z } from "npm:zod";
 
 export default {
   fetch: withSupabase<Database>({ auth: "user" }, async (req, ctx) => {
@@ -82,72 +84,28 @@ export default {
         );
       }
 
-      const promptText = `
-You are an expert at extracting filmographies and dubbing roles from French Wikipedia articles.
-Here is the text of a Wikipedia article about a French voice actor. 
-Extract their filmography (dubbing roles) and return a JSON object with an 'extract' property containing an array of objects. 
-Each object should have:
-- 'originalTitle' (the original title of the media, if available, otherwise French title)
-- 'frenchTitle' (the French title of the media)
-- 'character' (the character name they voiced)
-- 'type' ("movie", "serie", "animation", or "game")
-- 'originalActor' (the original actor they dubbed, if applicable, otherwise empty string)
-
-Return ONLY valid JSON. 
-
-Article Text:
-${extractText.substring(0, 30000)} // Truncating just in case, but usually articles are not > 30k chars
-`;
-
-      const mistralURL = "https://api.mistral.ai/v1/chat/completions";
-      const mistralResponse = await fetch(mistralURL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${Deno.env.get("MISTRAL_TOKEN")}`,
-        },
-        body: JSON.stringify({
-          model: "mistral-large-latest",
-          messages: [
-            {
-              role: "user",
-              content: [
-                {
-                  type: "text",
-                  text: promptText,
-                },
-              ],
-            },
-          ],
-          response_format: { type: "json_object" },
-          temperature: 0,
-        }),
+      const schema = z.object({
+        extract: z.array(z.object({
+          originalTitle: z.string(),
+          frenchTitle: z.string(),
+          character: z.string(),
+          type: z.string(),
+          originalActor: z.string(),
+        })),
       });
 
-      if (!mistralResponse.ok) {
-        const errorText = await mistralResponse.text();
-        console.error("Mistral API error:", errorText);
-        return Response.json(
-          {
-            ok: false,
-            error: `Mistral API error: ${mistralResponse.statusText}`,
-          },
-          { status: mistralResponse.status },
-        );
-      }
-
-      const mistralData = await mistralResponse.json();
-      const content = mistralData.choices?.[0]?.message?.content;
-
-      if (!content) {
-        throw new Error("No content returned from Mistral");
-      }
-
-      const parsed = JSON.parse(content);
+      const parsed = await geminiGenerateObject(
+        extractText.substring(0, 30000),
+        schema,
+        {
+          systemInstruction: `You are an expert at extracting filmographies and dubbing roles from French Wikipedia articles. Extract the filmography (dubbing roles) from the article text.`,
+          temperature: 0,
+        },
+      );
 
       return Response.json({
         ok: true,
-        result: parsed.extract || [],
+        result: parsed.extract,
       });
     } catch (error: any) {
       console.error("Error extracting voice actor works:", error);

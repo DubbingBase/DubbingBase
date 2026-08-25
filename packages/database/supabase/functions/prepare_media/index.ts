@@ -1,7 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "npm:@supabase/server@^1";
-import { MistralMovieExtractOutput } from "../_shared/types.ts";
-import { wikipediaCache } from "../_shared/index.ts";
+import { wikipediaCache, geminiGenerateObject } from "../_shared/index.ts";
+import { z } from "npm:zod";
 import { WithCast } from "../_shared/types.ts";
 import { VoiceActorService } from "../_shared/voice-actor-service.ts";
 import { Database } from "../_shared/database.types.ts";
@@ -136,49 +136,28 @@ export default {
           );
           const wikitext = wikitextJSON.parse.wikitext;
 
-          const mistralURL = "https://api.mistral.ai/v1/agents/completions";
-          const mistralJSONRequest = await fetch(mistralURL, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${Deno.env.get("MISTRAL_TOKEN")}`,
-            },
-            body: JSON.stringify({
-              stream: false,
-              messages: [
-                {
-                  role: "user",
-                  content: wikitext,
-                },
-              ],
-              agent_id:
-                "ag:4785a948:20241120:extracteur-page-film-wikipedia-doubleurs:31fc70f7",
-              response_format: {
-                type: "json_object",
-              },
-            }),
+          const schema = z.object({
+            items: z.array(z.object({
+              actor: z.string(),
+              voiceActorName: z.string(),
+              voiceActorFirstname: z.string(),
+              performance: z.string().optional(),
+            })).optional(),
           });
 
-          if (mistralJSONRequest.status === 429) {
-            throw new Error("Mistral API Rate Limited (429)");
-          }
+          const llmSuggestionJSON = await geminiGenerateObject(
+            wikitext,
+            schema,
+            {
+              systemInstruction: `You are an expert at extracting dubbing data from French Wikipedia pages. Extract the dubbing (distribution) data from the provided wikitext.`,
+              temperature: 0,
+            },
+          );
 
-          if (!mistralJSONRequest.ok) {
-            throw new Error(
-              `Mistral API request failed with status ${mistralJSONRequest.status}`,
-            );
-          }
-
-          const mistralJSON = await mistralJSONRequest.json();
-          const mistralSuggestion = mistralJSON.choices[0].message.content;
-          const mistralSuggestionJSON = JSON.parse(
-            mistralSuggestion,
-          ) as MistralMovieExtractOutput;
-
-          console.log("mistralSuggestion", mistralSuggestionJSON);
+          console.log("llmSuggestion", llmSuggestionJSON);
           console.log("movie", movie);
 
-          for (const entry of mistralSuggestionJSON?.items ?? []) {
+          for (const entry of llmSuggestionJSON?.items ?? []) {
             let { actor, voiceActorFirstname, voiceActorName } = entry;
             const { voiceActor } = entry as any;
 
@@ -219,7 +198,7 @@ export default {
               }
               newCreditsCount++;
             } else {
-              console.error("mistral missing structure", entry);
+              console.error("LLM missing structure", entry);
             }
           }
         }

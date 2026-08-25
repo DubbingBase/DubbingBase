@@ -185,22 +185,22 @@ export interface WithExtrernalIds {
   };
 }
 
-export interface MistralMovieExtractOutput {
-  items?: MistralMovieExtractItemOutput[];
+export interface LlmMovieExtractOutput {
+  items?: LlmMovieExtractItemOutput[];
 }
 
-export interface MistralMovieExtractItemOutput {
+export interface LlmMovieExtractItemOutput {
   actor: string;
   voiceActorName: string;
   voiceActorFirstname: string;
   performance?: string;
 }
 
-export interface MistralVoiceActorExtractOutput {
-  items?: MistralVoiceActorExtractItemOutput[];
+export interface LlmVoiceActorExtractOutput {
+  items?: LlmVoiceActorExtractItemOutput[];
 }
 
-export interface MistralVoiceActorExtractItemOutput {
+export interface LlmVoiceActorExtractItemOutput {
   actor: string;
   performance?: string;
   production?: string;

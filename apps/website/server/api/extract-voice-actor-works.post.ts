@@ -1,4 +1,6 @@
 import { requireAdmin } from "../utils/auth";
+import { llmGenerateObject } from "../utils/llm";
+import { z } from "zod";
 
 const WIKIPEDIA_USER_AGENT =
   "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
@@ -85,46 +87,31 @@ export default defineEventHandler(async (event) => {
 
     const works: any[] = [];
     if (dubbingText) {
-      const config = useRuntimeConfig();
-      const mistralToken = config.mistralToken as string;
+      const schema = z.object({
+        works: z.array(z.object({
+          mediaTitle: z.string(),
+          mediaType: z.string(),
+          characterName: z.string(),
+          originalActorName: z.string(),
+        })).optional(),
+      });
 
-      if (mistralToken) {
-        const mistralUrl = "https://api.mistral.ai/v1/chat/completions";
-        const prompt = `Extrais la liste des œuvres doublées, le personnage et l'acteur original depuis ce texte Wikipédia en format JSON structuré avec un tableau "works" contenant: mediaTitle, mediaType (movie ou tv), characterName, originalActorName.
-        
-Texte:
+      try {
+        const prompt = `Extract the list of dubbed works, the character and the original actor from this Wikipedia text in structured JSON format with a "works" array containing: mediaTitle, mediaType (movie or tv), characterName, originalActorName.
+
+Text:
 ${dubbingText.slice(0, 4000)}`;
 
-        const mistralRes = await fetch(mistralUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${mistralToken}`,
-          },
-          body: JSON.stringify({
-            model: "mistral-small-latest",
-            messages: [{ role: "user", content: prompt }],
-            response_format: { type: "json_object" },
-          }),
+        const parsed = await llmGenerateObject(prompt, schema, {
+          systemInstruction: `You are an expert at extracting dubbing data from French Wikipedia pages. Extract the dubbing data from the provided text.`,
+          temperature: 0,
         });
 
-        if (mistralRes.ok) {
-          const mistralData = await mistralRes.json();
-          const content = mistralData.choices?.[0]?.message?.content;
-          if (content) {
-            try {
-              const parsed = JSON.parse(content);
-              if (Array.isArray(parsed.works)) {
-                works.push(...parsed.works);
-              }
-            } catch (jsonErr) {
-              console.warn(
-                "Failed to parse Mistral response as JSON:",
-                jsonErr,
-              );
-            }
-          }
+        if (Array.isArray(parsed.works)) {
+          works.push(...parsed.works);
         }
+      } catch (err) {
+        console.warn("Failed to extract works via LLM:", err);
       }
     }
 

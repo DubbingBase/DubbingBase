@@ -31,6 +31,7 @@ export { RedisClient } from "./redis.ts";
 export { SimpleCache } from "./cache-utils.ts";
 export { WikipediaCache } from "./wikipedia-cache.ts";
 export { MediaService } from "./media-service.ts";
+export { geminiGenerate, geminiGenerateObject, geminiVision, geminiVisionObject } from "./gemini.ts";
 
 // Export interfaces
 export type {

@@ -1,5 +1,7 @@
 import { useWikipediaCache } from "../utils";
 import { requireUser } from "../utils/auth";
+import { llmGenerateObject } from "../utils/llm";
+import { z } from "zod";
 
 const WIKIPEDIA_USER_AGENT =
   "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
@@ -113,48 +115,31 @@ export default defineEventHandler(async (event) => {
     (x) => x.type !== "movie" && x.type !== "show",
   );
 
-  const config = useRuntimeConfig();
   const extractedItems: any[] = [];
 
   for (const result of filteredResults.slice(0, 3)) {
     try {
-      const mistralURL = "https://api.mistral.ai/v1/agents/completions";
-      const mistralJSONRequest = await fetch(mistralURL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${config.mistralToken}`,
-        },
-        body: JSON.stringify({
-          stream: false,
-          messages: [
-            {
-              role: "user",
-              content: result.html,
-            },
-          ],
-          agent_id:
-            "ag:4785a948:20241126:extracteur-page-acteur-wikipedia-doubleurs:249748fe",
-          response_format: {
-            type: "json_object",
-          },
-        }),
+      const schema = z.object({
+        items: z.array(z.object({
+          actor: z.string(),
+          performance: z.string().optional(),
+          production: z.string().optional(),
+          year: z.number().nullable().optional(),
+        })).optional(),
       });
 
-      if (mistralJSONRequest.ok) {
-        const mistralJSON = await mistralJSONRequest.json();
-        const mistralSuggestion = mistralJSON.choices?.[0]?.message?.content;
-        if (mistralSuggestion) {
-          const parsed = JSON.parse(mistralSuggestion);
-          if (Array.isArray(parsed.items)) {
-            extractedItems.push(...parsed.items);
-          } else if (Array.isArray(parsed)) {
-            extractedItems.push(...parsed);
-          }
-        }
+      const llmSuggestionJSON = await llmGenerateObject(result.html, schema, {
+        systemInstruction: `You are an expert at extracting dubbing data from French Wikipedia pages. Extract the dubbing data from the provided text.`,
+        temperature: 0,
+      });
+
+      if (Array.isArray(llmSuggestionJSON?.items)) {
+        extractedItems.push(...llmSuggestionJSON.items);
+      } else if (Array.isArray(llmSuggestionJSON)) {
+        extractedItems.push(...(llmSuggestionJSON as any[]));
       }
-    } catch (mistralErr) {
-      console.warn("Failed to extract section via Mistral:", mistralErr);
+    } catch (err) {
+      console.warn("Failed to extract section via LLM:", err);
     }
   }
 

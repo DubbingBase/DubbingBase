@@ -5,10 +5,9 @@ import { igdbClient, wikipediaCache } from "../_shared/index.ts";
 import { VoiceActorService } from "../_shared/voice-actor-service.ts";
 import { findOrCreateDubbingProject } from "../_shared/dubbing-project.ts";
 import { buildIgdbImageUrl } from "../_shared/igdb.ts";
-import type {
-  MistralMovieExtractOutput,
-  IgdbCharacter,
-} from "../_shared/types.ts";
+import { geminiGenerateObject } from "../_shared/index.ts";
+import { z } from "npm:zod";
+import type { IgdbCharacter } from "../_shared/types.ts";
 
 export default {
   fetch: withSupabase<Database>(
@@ -61,10 +60,10 @@ export default {
         // ─── Step 2a: IGDB character voice actor matching ──────────────────
         // IGDB characters don't natively have a voice_actor_name field in the
         // API response, so we skip this track (IGDB removed structured VA data).
-        // We proceed directly to the Wikipedia/Mistral extraction track below.
+        // We proceed directly to the Wikipedia/Gemini extraction track below.
         // This comment is kept for future reference in case IGDB re-adds VA data.
 
-        // ─── Step 2b: Wikipedia + Mistral credit extraction ────────────────
+        // ─── Step 2b: Wikipedia + Gemini credit extraction ─────────────────
         // Look up the French Wikipedia page for this game by name
         const searchData = await wikipediaCache.searchWikidataEntities(
           game.name,
@@ -140,42 +139,29 @@ export default {
           );
           const wikitext = wikitextJSON.parse.wikitext;
 
-          const mistralURL = "https://api.mistral.ai/v1/agents/completions";
-          const mistralJSONRequest = await fetch(mistralURL, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${Deno.env.get("MISTRAL_TOKEN")}`,
-            },
-            body: JSON.stringify({
-              stream: false,
-              messages: [{ role: "user", content: wikitext }],
-              agent_id:
-                "ag:4785a948:20241120:extracteur-page-film-wikipedia-doubleurs:31fc70f7",
-              response_format: { type: "json_object" },
-            }),
+          const schema = z.object({
+            items: z.array(z.object({
+              actor: z.string(),
+              voiceActorName: z.string(),
+              voiceActorFirstname: z.string(),
+              performance: z.string().optional(),
+            })).optional(),
           });
 
-          if (mistralJSONRequest.status === 429) {
-            throw new Error("Mistral API Rate Limited (429)");
-          }
-          if (!mistralJSONRequest.ok) {
-            throw new Error(
-              `Mistral API request failed with status ${mistralJSONRequest.status}`,
-            );
-          }
+          const llmSuggestionJSON = await geminiGenerateObject(
+            wikitext,
+            schema,
+            {
+              systemInstruction: `You are an expert at extracting dubbing data from French Wikipedia pages. Extract the dubbing (distribution) data from the provided wikitext.`,
+              temperature: 0,
+            },
+          );
 
-          const mistralJSON = await mistralJSONRequest.json();
-          const mistralSuggestion = mistralJSON.choices[0].message.content;
-          const mistralSuggestionJSON = JSON.parse(
-            mistralSuggestion,
-          ) as MistralMovieExtractOutput;
-
-          for (const entry of mistralSuggestionJSON?.items ?? []) {
+          for (const entry of llmSuggestionJSON?.items ?? []) {
             let { actor, voiceActorFirstname, voiceActorName } = entry;
             const { voiceActor } = entry as any;
 
-            // Handle flat "voiceActor" field (some Mistral responses)
+            // Handle flat "voiceActor" field (some LLM responses)
             if (voiceActor && !voiceActorFirstname && !voiceActorName) {
               const parts = voiceActor.trim().split(" ");
               if (parts.length > 0) {
@@ -185,7 +171,7 @@ export default {
             }
 
             if (!actor || !voiceActorFirstname || !voiceActorName) {
-              console.log("Mistral entry missing required fields:", entry);
+              console.log("LLM entry missing required fields:", entry);
               continue;
             }
 
