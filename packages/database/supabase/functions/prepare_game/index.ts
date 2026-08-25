@@ -132,21 +132,25 @@ export default {
           characters.map((c) => [c.name.toLowerCase(), c]),
         );
 
+        const schema = z.object({
+          items: z
+            .array(
+              z.object({
+                actor: z.string(),
+                voiceActorName: z.string(),
+                voiceActorFirstname: z.string(),
+                performance: z.string().optional(),
+              }),
+            )
+            .optional(),
+        });
+
         for (const section of sectionIds) {
           const wikitextJSON = await wikipediaCache.getPageSectionAsWikitext(
             wikipediaLangPageId,
             section.index,
           );
           const wikitext = wikitextJSON.parse.wikitext;
-
-          const schema = z.object({
-            items: z.array(z.object({
-              actor: z.string(),
-              voiceActorName: z.string(),
-              voiceActorFirstname: z.string(),
-              performance: z.string().optional(),
-            })).optional(),
-          });
 
           const llmSuggestionJSON = await geminiGenerateObject(
             wikitext,
@@ -159,16 +163,6 @@ export default {
 
           for (const entry of llmSuggestionJSON?.items ?? []) {
             let { actor, voiceActorFirstname, voiceActorName } = entry;
-            const { voiceActor } = entry as any;
-
-            // Handle flat "voiceActor" field (some LLM responses)
-            if (voiceActor && !voiceActorFirstname && !voiceActorName) {
-              const parts = voiceActor.trim().split(" ");
-              if (parts.length > 0) {
-                voiceActorFirstname = parts[0];
-                voiceActorName = parts.slice(1).join(" ");
-              }
-            }
 
             if (!actor || !voiceActorFirstname || !voiceActorName) {
               console.log("LLM entry missing required fields:", entry);

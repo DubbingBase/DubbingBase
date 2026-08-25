@@ -123,6 +123,19 @@ export default {
           },
         );
 
+        const schema = z.object({
+          items: z
+            .array(
+              z.object({
+                actor: z.string(),
+                voiceActorName: z.string(),
+                voiceActorFirstname: z.string(),
+                performance: z.string().optional(),
+              }),
+            )
+            .optional(),
+        });
+
         let newVoiceActorsCount = 0;
         let newCreditsCount = 0;
 
@@ -135,15 +148,6 @@ export default {
             section.index,
           );
           const wikitext = wikitextJSON.parse.wikitext;
-
-          const schema = z.object({
-            items: z.array(z.object({
-              actor: z.string(),
-              voiceActorName: z.string(),
-              voiceActorFirstname: z.string(),
-              performance: z.string().optional(),
-            })).optional(),
-          });
 
           const llmSuggestionJSON = await geminiGenerateObject(
             wikitext,
@@ -159,47 +163,39 @@ export default {
 
           for (const entry of llmSuggestionJSON?.items ?? []) {
             let { actor, voiceActorFirstname, voiceActorName } = entry;
-            const { voiceActor } = entry as any;
 
-            if (voiceActor && !voiceActorFirstname && !voiceActorName) {
-              const parts = voiceActor.trim().split(" ");
-              if (parts.length > 0) {
-                voiceActorFirstname = parts[0];
-                voiceActorName = parts.slice(1).join(" ");
-              }
-            }
-
-            if (actor && voiceActorFirstname && voiceActorName) {
-              // get actor id from the movie cast
-              const foundActor = movie.credits.cast.find(
-                (cast: any) => cast.name === actor,
-              );
-
-              if (!foundActor) {
-                console.log(
-                  `actor from wikitext "${actor}" not found in tmdb cast`,
-                );
-                continue;
-              }
-
-              const { id: actorId } = foundActor;
-
-              const result = await voiceActorService.insertVoiceActorAndWork(
-                voiceActorFirstname,
-                voiceActorName,
-                tmdbId,
-                actorId,
-                tmdbType, // Insert work entry as tmdbType (tv/movie)
-                entry.performance,
-              );
-
-              if (result.voiceActorResult.inserted) {
-                newVoiceActorsCount++;
-              }
-              newCreditsCount++;
-            } else {
+            if (!actor || !voiceActorFirstname || !voiceActorName) {
               console.error("LLM missing structure", entry);
+              continue;
             }
+
+            // get actor id from the movie cast
+            const foundActor = movie.credits.cast.find(
+              (cast: any) => cast.name === actor,
+            );
+
+            if (!foundActor) {
+              console.log(
+                `actor from wikitext "${actor}" not found in tmdb cast`,
+              );
+              continue;
+            }
+
+            const { id: actorId } = foundActor;
+
+            const result = await voiceActorService.insertVoiceActorAndWork(
+              voiceActorFirstname,
+              voiceActorName,
+              tmdbId,
+              actorId,
+              tmdbType, // Insert work entry as tmdbType (tv/movie)
+              entry.performance,
+            );
+
+            if (result.voiceActorResult.inserted) {
+              newVoiceActorsCount++;
+            }
+            newCreditsCount++;
           }
         }
 
