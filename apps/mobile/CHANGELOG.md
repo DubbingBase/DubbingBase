@@ -1,5 +1,12 @@
 # @app/mobile
 
+## 1.0.112
+
+### Patch Changes
+
+- Updated dependencies [3389bd7]
+  - @app/shared-logic@1.1.1
+
 ## 1.0.111
 
 ### Patch Changes

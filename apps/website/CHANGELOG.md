@@ -1,5 +1,13 @@
 # @app/landing
 
+## 1.1.7
+
+### Patch Changes
+
+- 3389bd7: Fix game search returning no results: bind CACHE_KV namespace so Twitch tokens persist across Worker isolates, stop caching IGDB error fallbacks for 1h in game detail endpoint, and add video_game to shared SearchResult media_type union
+- Updated dependencies [3389bd7]
+  - @app/shared-logic@1.1.1
+
 ## 1.1.6
 
 ### Patch Changes
