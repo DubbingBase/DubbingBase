@@ -1,5 +1,11 @@
 # @app/landing
 
+## 1.1.5
+
+### Patch Changes
+
+- c436558: Verify Cloudflare cache purge after each deploy
+
 ## 1.1.4
 
 ### Patch Changes
