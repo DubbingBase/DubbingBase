@@ -3,16 +3,17 @@ import { requireAdmin } from "../utils/auth";
 const WIKIPEDIA_USER_AGENT =
   "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
 
-function getWikipediaPage(title: string, language = "fr") {
+function getWikipediaPage(title: string, language: string) {
   return `https://${language}.wikipedia.org/w/api.php?action=query&prop=pageprops&format=json&titles=${encodeURIComponent(title)}`;
 }
 
-function getImageFromFilename(filename: string) {
-  return `https://fr.wikipedia.org/w/api.php?action=query&titles=File:${encodeURIComponent(filename)}&prop=imageinfo&iiprop=url&format=json`;
+function getEntity(entityId: string, language: string) {
+  const sitefilter = `${language.replace(/-/g, "_")}wiki`;
+  return `https://www.wikidata.org/w/api.php?action=wbgetentities&props=sitelinks%7Clabels&format=json&ids=${entityId}&sitefilter=${sitefilter}`;
 }
 
-function getEntity(entityId: string, language = "fr") {
-  return `https://www.wikidata.org/w/api.php?action=wbgetentities&props=sitelinks&format=json&ids=${entityId}&sitefilter=${language}wiki`;
+function getImageFromFilename(filename: string, lang: string) {
+  return `https://${lang}.wikipedia.org/w/api.php?action=query&titles=File:${encodeURIComponent(filename)}&prop=imageinfo&iiprop=url&format=json`;
 }
 
 export default defineEventHandler(async (event) => {
@@ -29,10 +30,18 @@ export default defineEventHandler(async (event) => {
   }
 
   let title = "";
+  let lang: string;
   try {
     const urlObj = new URL(wikipediaUrl);
     const splitParts = urlObj.pathname.split("/wiki/");
     title = decodeURIComponent(splitParts[1] || "");
+    const langMatch = urlObj.hostname.match(
+      /^(?:www\.)?([a-z]{2,3}(?:-[a-z0-9]+)?|simple)(?:\.m)?\.wikipedia\.org$/,
+    );
+    if (!langMatch?.[1]) {
+      throw new Error("Could not detect language from Wikipedia URL hostname");
+    }
+    lang = langMatch[1];
     if (!title) {
       throw new Error("Invalid Wikipedia URL format");
     }
@@ -41,7 +50,7 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const wikiPageUrl = getWikipediaPage(title);
+    const wikiPageUrl = getWikipediaPage(title, lang);
     const res = await fetch(wikiPageUrl, {
       headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
     });
@@ -65,7 +74,7 @@ export default defineEventHandler(async (event) => {
 
     const pageprops = pages[pageId]?.pageprops || {};
 
-    const extractUrl = `https://fr.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=1&explaintext=1&format=json&titles=${encodeURIComponent(title)}`;
+    const extractUrl = `https://${lang}.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=1&explaintext=1&format=json&titles=${encodeURIComponent(title)}`;
     const extractRes = await fetch(extractUrl, {
       headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
     });
@@ -86,7 +95,7 @@ export default defineEventHandler(async (event) => {
     lastname = nameParts.slice(1).join(" ");
 
     if (wikidataId) {
-      const entityUrl = getEntity(wikidataId);
+      const entityUrl = getEntity(wikidataId, lang);
       const entityRes = await fetch(entityUrl, {
         headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
       });
@@ -94,7 +103,8 @@ export default defineEventHandler(async (event) => {
       const entity = entityData.entities?.[wikidataId];
 
       if (entity) {
-        const fullName = entity.labels?.fr?.value;
+        const fullName =
+          entity.labels?.[lang]?.value || entity.labels?.en?.value;
         if (fullName) {
           const parts = fullName.split(" ");
           firstname = parts[0] || "";
@@ -105,9 +115,12 @@ export default defineEventHandler(async (event) => {
         if (imageClaim) {
           const filename = imageClaim.mainsnak?.datavalue?.value;
           if (filename) {
-            const imageUrlRes = await fetch(getImageFromFilename(filename), {
-              headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
-            });
+            const imageUrlRes = await fetch(
+              getImageFromFilename(filename, lang),
+              {
+                headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
+              },
+            );
             const imageUrlData = await imageUrlRes.json();
             const imagePages = imageUrlData?.query?.pages;
             if (imagePages) {
@@ -136,7 +149,7 @@ export default defineEventHandler(async (event) => {
       }
     } else if (pageprops.page_image_free) {
       const imageUrlRes = await fetch(
-        getImageFromFilename(pageprops.page_image_free),
+        getImageFromFilename(pageprops.page_image_free, lang),
         {
           headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
         },

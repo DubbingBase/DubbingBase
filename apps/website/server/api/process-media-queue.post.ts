@@ -2,6 +2,8 @@ import { sendDiscordAdminNotification } from "../utils/notifications/discord";
 import { prepareMedia, prepareGame } from "../utils/services/media-preparation";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { requireAdmin } from "../utils/auth";
+import { useWikipediaCache } from "../utils";
+import { extractAvailableLanguages } from "../utils/cache/wikipedia";
 
 export default defineEventHandler(async (event) => {
   const internalSecret = getHeader(event, "x-internal-secret");
@@ -68,6 +70,7 @@ export default defineEventHandler(async (event) => {
       media_type: string;
       season_number?: number | null;
       episode_number?: number | null;
+      language?: string | null;
     } | null;
 
     if (!payload) {
@@ -77,12 +80,156 @@ export default defineEventHandler(async (event) => {
     let mediaTitle = "Unknown title";
     const results: any[] = [];
 
+    // If no language specified, this is a discovery job
+    // Discover languages and enqueue each one as a separate job
+    if (!payload.language) {
+      try {
+        const config = useRuntimeConfig();
+        const tmdbType = payload.media_type === "season" || payload.media_type === "episode" ? "tv" : payload.media_type;
+        
+        // Fetch TMDB data to get Wikidata ID
+        const tmdbUrl = tmdbType === "video_game" 
+          ? null // Games use IGDB, handled differently
+          : `https://api.themoviedb.org/3/${tmdbType}/${payload.tmdb_id}?append_to_response=external_ids`;
+        
+        let wikiId: string | null = null;
+        
+        if (tmdbUrl) {
+          const tmdbResponse = await fetch(tmdbUrl, {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${config.tmdbApiKey}`,
+              Accept: "application/json",
+            },
+          });
+          
+          if (tmdbResponse.ok) {
+            const tmdbData = await tmdbResponse.json() as any;
+            mediaTitle = tmdbData.title || tmdbData.name || "Unknown title";
+            wikiId = tmdbData.external_ids?.wikidata_id || null;
+          }
+        }
+
+        if (!wikiId) {
+          // For games or if no Wikidata ID found, process without language filtering
+          // This maintains backward compatibility
+          console.log(`[QUEUE] No Wikidata ID found for ${payload.media_type} ${payload.tmdb_id}, processing without language filtering`);
+          
+          await supabaseAdmin.rpc("archive_media_queue_message", {
+            p_msg_id: msgId,
+          });
+
+          results.push({
+            id: msgId,
+            ok: true,
+            changes: 0,
+            note: "Processed without language filtering (no Wikidata ID)",
+          });
+          
+          return { ok: true, processed: results.length, results };
+        }
+
+        // Discover available languages from Wikidata sitelinks
+        const wikipediaCache = useWikipediaCache();
+        const entity = await wikipediaCache.getAllSitelinksEntity(wikiId);
+        const sitelinks = entity.entities[wikiId]?.sitelinks;
+        const availableLanguages = extractAvailableLanguages(sitelinks);
+
+        console.log(`[QUEUE] Discovered ${availableLanguages.length} languages for ${mediaTitle}`);
+
+        if (availableLanguages.length === 0) {
+          // No Wikipedia pages found, archive the job
+          await supabaseAdmin.rpc("archive_media_queue_message", {
+            p_msg_id: msgId,
+          });
+
+          results.push({
+            id: msgId,
+            ok: true,
+            changes: 0,
+            note: "No Wikipedia pages found",
+          });
+          
+          return { ok: true, processed: results.length, results };
+        }
+
+        // Enqueue a separate job for each language
+        let enqueuedCount = 0;
+        for (const lang of availableLanguages) {
+          const { error: enqueueError } = await supabaseAdmin.rpc("enqueue_media_fetch", {
+            p_tmdb_id: payload.tmdb_id,
+            p_media_type: payload.media_type,
+            p_season_number: payload.season_number ?? undefined,
+            p_episode_number: payload.episode_number ?? undefined,
+            p_language: lang,
+          });
+
+          if (enqueueError) {
+            if (enqueueError.message?.includes("already in the queue")) {
+              console.log(`[QUEUE] Language ${lang} already enqueued, skipping`);
+            } else {
+              console.error(`[QUEUE] Failed to enqueue language ${lang}:`, enqueueError);
+            }
+          } else {
+            enqueuedCount++;
+          }
+        }
+
+        // Archive the original discovery job
+        await supabaseAdmin.rpc("archive_media_queue_message", {
+          p_msg_id: msgId,
+        });
+
+        results.push({
+          id: msgId,
+          ok: true,
+          changes: 0,
+          enqueuedLanguages: enqueuedCount,
+          totalLanguages: availableLanguages.length,
+        });
+
+        console.log(`[QUEUE] Enqueued ${enqueuedCount} language jobs for ${mediaTitle}`);
+
+      } catch (err) {
+        let errMsg = "";
+        if (err instanceof Error) {
+          errMsg = err.message;
+        } else if (typeof err === "object" && err !== null) {
+          try {
+            errMsg = (err as any).message || JSON.stringify(err);
+          } catch {
+            errMsg = String(err);
+          }
+        } else {
+          errMsg = String(err);
+        }
+
+        console.error(`[QUEUE] Error in discovery job ${msgId}:`, errMsg);
+
+        await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
+          p_msg_id: msgId,
+          p_error: errMsg,
+        });
+
+        results.push({
+          id: msgId,
+          ok: false,
+          changes: 0,
+          error: errMsg,
+        });
+      }
+      
+      return { ok: true, processed: results.length, results };
+    }
+
+    // Language-specific job: process only the specified language
     try {
       let responseData: any;
 
       if (payload.media_type === "video_game") {
         responseData = await prepareGame({
           igdbId: payload.tmdb_id,
+          language: payload.language,
         });
       } else {
         responseData = await prepareMedia({
@@ -90,6 +237,7 @@ export default defineEventHandler(async (event) => {
           type: payload.media_type as any,
           seasonNumber: payload.season_number,
           episodeNumber: payload.episode_number,
+          language: payload.language,
         });
       }
 

@@ -3,6 +3,7 @@ import { useSupabaseAdmin } from "./client";
 export async function findOrCreateDubbingProject(
   contentId: number,
   contentType: string,
+  language: string,
 ): Promise<number> {
   const supabase = useSupabaseAdmin();
 
@@ -11,6 +12,7 @@ export async function findOrCreateDubbingProject(
     .select("id")
     .eq("content_id", contentId)
     .eq("content_type", contentType)
+    .eq("language", language)
     .limit(1)
     .maybeSingle();
 
@@ -23,7 +25,7 @@ export async function findOrCreateDubbingProject(
     .insert({
       content_id: contentId,
       content_type: contentType,
-      language: "fr",
+      language,
     })
     .select("id")
     .single();
