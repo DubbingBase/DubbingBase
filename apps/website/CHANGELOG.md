@@ -1,5 +1,11 @@
 # @app/landing
 
+## 1.1.6
+
+### Patch Changes
+
+- 3d53c5b: Verify Cloudflare cache purge with hardcoded zone ID
+
 ## 1.1.5
 
 ### Patch Changes
