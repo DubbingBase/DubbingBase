@@ -63,12 +63,14 @@ export default defineEventHandler(async (event) => {
             igdbClient.getGameCharacters(gameId),
           ]);
           return {
+            igdbFailed: false,
             game: game ? processIgdbGame(game) : null,
             characters: characters.map(processIgdbCharacter),
           };
         } catch (err) {
           console.error(`Failed to fetch IGDB game ${gameId}:`, err);
           return {
+            igdbFailed: true,
             game: {
               id: gameId,
               name: "Information indisponible (Timeout)",
@@ -104,7 +106,7 @@ export default defineEventHandler(async (event) => {
       }),
     ]);
 
-    const { game, characters } = apiData;
+    const { game, characters, igdbFailed } = apiData;
     const { dubbingProjects, voteData } = dbData;
 
     // Lazy enqueue if not yet processed
@@ -129,7 +131,10 @@ export default defineEventHandler(async (event) => {
       votes: voteData,
     };
 
-    await cache.set(cacheKey, baseData, "SHORT");
+    // Don't cache the error fallback, so recovery isn't delayed by stale poison
+    if (!igdbFailed) {
+      await cache.set(cacheKey, baseData, "SHORT");
+    }
   }
 
   // If authenticated, fetch personal user votes without cache contamination

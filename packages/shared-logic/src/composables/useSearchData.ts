@@ -1,6 +1,6 @@
 export type SearchResult = {
   id: number;
-  media_type: "movie" | "tv" | "voice_actor";
+  media_type: "movie" | "tv" | "voice_actor" | "video_game";
   title?: string;
   name?: string;
   voice_actor_name?: string;
