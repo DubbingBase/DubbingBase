@@ -46,9 +46,6 @@ export default defineEventHandler(async (event) => {
 
     let promptText =
       "Extract the list of actors, their roles, and their French voice actors from this dubbing credits image. Return a JSON object with an 'extract' property containing an array of objects. Each object should have 'actor' (the original actor name), 'role' (the character name), and 'voiceActor' (the French voice actor name). Only return valid JSON. If a column is missing, leave it empty.";
-    if (knownActorsText) {
-      promptText = `Extract the list of actors, their roles, and their French voice actors from this dubbing credits image.\nReturn a JSON object with an 'extract' property containing an array of objects.\nEach object should have 'actor' (the original actor name), 'role' (the character name), 'voiceActor' (the French voice actor name), and 'matchedActorId' (number or null, indicating the ID of the original actor from the known list below).\n\nTry to match the actors or roles from the image to the known list and include their ID in 'matchedActorId'. If a column is missing, leave it empty.${knownActorsText}`;
-    }
 
     const baseCreditSchema = z.object({
       actor: z.string(),
@@ -57,18 +54,25 @@ export default defineEventHandler(async (event) => {
     });
 
     if (knownActorsText) {
-      promptText = `Extract the list of actors, their roles, and their French voice actors from this dubbing credits image.
-Try to match the actors or roles from the image to the known list and include their ID in 'matchedActorId'. If a column is missing, leave it empty.${knownActorsText}`;
+      promptText = `Extract the list of actors, their roles, and their French voice actors from this dubbing credits image.\nReturn a JSON object with an 'extract' property containing an array of objects.\nEach object should have 'actor' (the original actor name), 'role' (the character name), 'voiceActor' (the French voice actor name), and 'matchedActorId' (number or null, indicating the ID of the original actor from the known list below).\n\nTry to match the actors or roles from the image to the known list and include their ID in 'matchedActorId'. If a column is missing, leave it empty.${knownActorsText}`;
 
       const schemaWithMatch = z.object({
-        extract: z.array(baseCreditSchema.extend({
-          matchedActorId: z.number().nullable(),
-        })),
+        extract: z.array(
+          baseCreditSchema.extend({
+            matchedActorId: z.number().nullable(),
+          }),
+        ),
       });
 
-      const parsed = await llmVisionObject(promptText, imageBase64, schemaWithMatch, mimeType, {
-        temperature: 0,
-      });
+      const parsed = await llmVisionObject(
+        promptText,
+        imageBase64,
+        schemaWithMatch,
+        mimeType,
+        {
+          temperature: 0,
+        },
+      );
 
       return {
         ok: true,
@@ -80,9 +84,15 @@ Try to match the actors or roles from the image to the known list and include th
       extract: z.array(baseCreditSchema),
     });
 
-    const parsed = await llmVisionObject(promptText, imageBase64, schema, mimeType, {
-      temperature: 0,
-    });
+    const parsed = await llmVisionObject(
+      promptText,
+      imageBase64,
+      schema,
+      mimeType,
+      {
+        temperature: 0,
+      },
+    );
 
     return {
       ok: true,

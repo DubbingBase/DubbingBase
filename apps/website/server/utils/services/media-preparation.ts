@@ -6,6 +6,19 @@ import { buildTmdbImageUrl } from "../urls/tmdb";
 import { buildIgdbImageUrl } from "../api/igdb";
 import { llmGenerateObject } from "../llm";
 
+const dubbingExtractionSchema = z.object({
+  items: z
+    .array(
+      z.object({
+        actor: z.string(),
+        voiceActorName: z.string(),
+        voiceActorFirstname: z.string(),
+        performance: z.string().optional(),
+      }),
+    )
+    .optional(),
+});
+
 export interface PrepareMediaResult {
   ok: boolean;
   changes?: number;
@@ -117,31 +130,17 @@ export async function prepareMedia(options: {
       const wikitext = wikitextJSON.parse?.wikitext;
       if (!wikitext) continue;
 
-      const schema = z.object({
-        items: z.array(z.object({
-          actor: z.string(),
-          voiceActorName: z.string(),
-          voiceActorFirstname: z.string(),
-          performance: z.string().optional(),
-        })).optional(),
-      });
-
-      const llmSuggestionJSON = await llmGenerateObject(wikitext, schema, {
-        systemInstruction: `You are an expert at extracting dubbing data from French Wikipedia pages. Extract the dubbing (distribution) data from the provided wikitext.`,
-        temperature: 0,
-      });
+      const llmSuggestionJSON = await llmGenerateObject(
+        wikitext,
+        dubbingExtractionSchema,
+        {
+          systemInstruction: `You are an expert at extracting dubbing data from French Wikipedia pages. Extract the dubbing (distribution) data from the provided wikitext.`,
+          temperature: 0,
+        },
+      );
 
       for (const entry of llmSuggestionJSON?.items ?? []) {
         let { actor, voiceActorFirstname, voiceActorName } = entry;
-        const { voiceActor } = entry as any;
-
-        if (voiceActor && !voiceActorFirstname && !voiceActorName) {
-          const parts = voiceActor.trim().split(" ");
-          if (parts.length > 0) {
-            voiceActorFirstname = parts[0];
-            voiceActorName = parts.slice(1).join(" ");
-          }
-        }
 
         if (actor && voiceActorFirstname && voiceActorName) {
           const foundActor = movie.credits?.cast?.find(
@@ -297,31 +296,17 @@ export async function prepareGame(options: {
       const wikitext = wikitextJSON.parse?.wikitext;
       if (!wikitext) continue;
 
-      const schema = z.object({
-        items: z.array(z.object({
-          actor: z.string(),
-          voiceActorName: z.string(),
-          voiceActorFirstname: z.string(),
-          performance: z.string().optional(),
-        })).optional(),
-      });
-
-      const llmSuggestionJSON = await llmGenerateObject(wikitext, schema, {
-        systemInstruction: `You are an expert at extracting dubbing data from French Wikipedia pages. Extract the dubbing (distribution) data from the provided wikitext.`,
-        temperature: 0,
-      });
+      const llmSuggestionJSON = await llmGenerateObject(
+        wikitext,
+        dubbingExtractionSchema,
+        {
+          systemInstruction: `You are an expert at extracting dubbing data from French Wikipedia pages. Extract the dubbing (distribution) data from the provided wikitext.`,
+          temperature: 0,
+        },
+      );
 
       for (const entry of llmSuggestionJSON?.items ?? []) {
         let { actor, voiceActorFirstname, voiceActorName } = entry;
-        const { voiceActor } = entry as any;
-
-        if (voiceActor && !voiceActorFirstname && !voiceActorName) {
-          const parts = voiceActor.trim().split(" ");
-          if (parts.length > 0) {
-            voiceActorFirstname = parts[0];
-            voiceActorName = parts.slice(1).join(" ");
-          }
-        }
 
         if (!actor || !voiceActorFirstname || !voiceActorName) {
           continue;

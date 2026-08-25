@@ -120,12 +120,16 @@ export default defineEventHandler(async (event) => {
   for (const result of filteredResults.slice(0, 3)) {
     try {
       const schema = z.object({
-        items: z.array(z.object({
-          actor: z.string(),
-          performance: z.string().optional(),
-          production: z.string().optional(),
-          year: z.number().nullable().optional(),
-        })).optional(),
+        items: z
+          .array(
+            z.object({
+              actor: z.string(),
+              performance: z.string().optional(),
+              production: z.string().optional(),
+              year: z.number().nullable().optional(),
+            }),
+          )
+          .optional(),
       });
 
       const llmSuggestionJSON = await llmGenerateObject(result.html, schema, {
@@ -135,8 +139,6 @@ export default defineEventHandler(async (event) => {
 
       if (Array.isArray(llmSuggestionJSON?.items)) {
         extractedItems.push(...llmSuggestionJSON.items);
-      } else if (Array.isArray(llmSuggestionJSON)) {
-        extractedItems.push(...(llmSuggestionJSON as any[]));
       }
     } catch (err) {
       console.warn("Failed to extract section via LLM:", err);
