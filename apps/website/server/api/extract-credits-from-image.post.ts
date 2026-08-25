@@ -1,6 +1,8 @@
+import { llmVisionObject } from "../utils/llm";
+import { z } from "zod";
+
 export default defineEventHandler(async (event) => {
   try {
-    const config = useRuntimeConfig();
     const formData = await readMultipartFormData(event);
 
     if (!formData) {
@@ -44,54 +46,57 @@ export default defineEventHandler(async (event) => {
 
     let promptText =
       "Extract the list of actors, their roles, and their French voice actors from this dubbing credits image. Return a JSON object with an 'extract' property containing an array of objects. Each object should have 'actor' (the original actor name), 'role' (the character name), and 'voiceActor' (the French voice actor name). Only return valid JSON. If a column is missing, leave it empty.";
-    if (knownActorsText) {
-      promptText = `Extract the list of actors, their roles, and their French voice actors from this dubbing credits image.\nReturn a JSON object with an 'extract' property containing an array of objects.\nEach object should have 'actor' (the original actor name), 'role' (the character name), 'voiceActor' (the French voice actor name), and 'matchedActorId' (number or null, indicating the ID of the original actor from the known list below).\n\nTry to match the actors or roles from the image to the known list and include their ID in 'matchedActorId'. If a column is missing, leave it empty.${knownActorsText}`;
-    }
 
-    const mistralURL = "https://api.mistral.ai/v1/chat/completions";
-    const mistralResponse = await fetch(mistralURL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${config.mistralToken}`,
-      },
-      body: JSON.stringify({
-        model: "pixtral-12b-2409",
-        messages: [
-          {
-            role: "user",
-            content: [
-              { type: "text", text: promptText },
-              { type: "image_url", image_url: { url: imageBase64 } },
-            ],
-          },
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0,
-      }),
+    const baseCreditSchema = z.object({
+      actor: z.string(),
+      role: z.string(),
+      voiceActor: z.string(),
     });
 
-    if (!mistralResponse.ok) {
-      const errorText = await mistralResponse.text();
-      console.error("Mistral API error:", errorText);
-      throw createError({
-        statusCode: mistralResponse.status,
-        message: `Mistral API error: ${mistralResponse.statusText}`,
+    if (knownActorsText) {
+      promptText = `Extract the list of actors, their roles, and their French voice actors from this dubbing credits image.\nReturn a JSON object with an 'extract' property containing an array of objects.\nEach object should have 'actor' (the original actor name), 'role' (the character name), 'voiceActor' (the French voice actor name), and 'matchedActorId' (number or null, indicating the ID of the original actor from the known list below).\n\nTry to match the actors or roles from the image to the known list and include their ID in 'matchedActorId'. If a column is missing, leave it empty.${knownActorsText}`;
+
+      const schemaWithMatch = z.object({
+        extract: z.array(
+          baseCreditSchema.extend({
+            matchedActorId: z.number().nullable(),
+          }),
+        ),
       });
+
+      const parsed = await llmVisionObject(
+        promptText,
+        imageBase64,
+        schemaWithMatch,
+        mimeType,
+        {
+          temperature: 0,
+        },
+      );
+
+      return {
+        ok: true,
+        result: parsed.extract,
+      };
     }
 
-    const mistralData = await mistralResponse.json();
-    const content = mistralData.choices?.[0]?.message?.content;
+    const schema = z.object({
+      extract: z.array(baseCreditSchema),
+    });
 
-    if (!content) {
-      throw new Error("No content returned from Mistral");
-    }
-
-    const parsed = JSON.parse(content);
+    const parsed = await llmVisionObject(
+      promptText,
+      imageBase64,
+      schema,
+      mimeType,
+      {
+        temperature: 0,
+      },
+    );
 
     return {
       ok: true,
-      result: parsed.extract || [],
+      result: parsed.extract,
     };
   } catch (error: any) {
     if (error && typeof error === "object" && "statusCode" in error)

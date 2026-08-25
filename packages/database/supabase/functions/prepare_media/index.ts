@@ -1,7 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "npm:@supabase/server@^1";
-import { MistralMovieExtractOutput } from "../_shared/types.ts";
-import { wikipediaCache } from "../_shared/index.ts";
+import { wikipediaCache, geminiGenerateObject } from "../_shared/index.ts";
+import { z } from "npm:zod";
 import { WithCast } from "../_shared/types.ts";
 import { VoiceActorService } from "../_shared/voice-actor-service.ts";
 import { Database } from "../_shared/database.types.ts";
@@ -123,6 +123,19 @@ export default {
           },
         );
 
+        const schema = z.object({
+          items: z
+            .array(
+              z.object({
+                actor: z.string(),
+                voiceActorName: z.string(),
+                voiceActorFirstname: z.string(),
+                performance: z.string().optional(),
+              }),
+            )
+            .optional(),
+        });
+
         let newVoiceActorsCount = 0;
         let newCreditsCount = 0;
 
@@ -136,91 +149,53 @@ export default {
           );
           const wikitext = wikitextJSON.parse.wikitext;
 
-          const mistralURL = "https://api.mistral.ai/v1/agents/completions";
-          const mistralJSONRequest = await fetch(mistralURL, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${Deno.env.get("MISTRAL_TOKEN")}`,
+          const llmSuggestionJSON = await geminiGenerateObject(
+            wikitext,
+            schema,
+            {
+              systemInstruction: `You are an expert at extracting dubbing data from French Wikipedia pages. Extract the dubbing (distribution) data from the provided wikitext.`,
+              temperature: 0,
             },
-            body: JSON.stringify({
-              stream: false,
-              messages: [
-                {
-                  role: "user",
-                  content: wikitext,
-                },
-              ],
-              agent_id:
-                "ag:4785a948:20241120:extracteur-page-film-wikipedia-doubleurs:31fc70f7",
-              response_format: {
-                type: "json_object",
-              },
-            }),
-          });
+          );
 
-          if (mistralJSONRequest.status === 429) {
-            throw new Error("Mistral API Rate Limited (429)");
-          }
-
-          if (!mistralJSONRequest.ok) {
-            throw new Error(
-              `Mistral API request failed with status ${mistralJSONRequest.status}`,
-            );
-          }
-
-          const mistralJSON = await mistralJSONRequest.json();
-          const mistralSuggestion = mistralJSON.choices[0].message.content;
-          const mistralSuggestionJSON = JSON.parse(
-            mistralSuggestion,
-          ) as MistralMovieExtractOutput;
-
-          console.log("mistralSuggestion", mistralSuggestionJSON);
+          console.log("llmSuggestion", llmSuggestionJSON);
           console.log("movie", movie);
 
-          for (const entry of mistralSuggestionJSON?.items ?? []) {
+          for (const entry of llmSuggestionJSON?.items ?? []) {
             let { actor, voiceActorFirstname, voiceActorName } = entry;
-            const { voiceActor } = entry as any;
 
-            if (voiceActor && !voiceActorFirstname && !voiceActorName) {
-              const parts = voiceActor.trim().split(" ");
-              if (parts.length > 0) {
-                voiceActorFirstname = parts[0];
-                voiceActorName = parts.slice(1).join(" ");
-              }
+            if (!actor || !voiceActorFirstname || !voiceActorName) {
+              console.error("LLM missing structure", entry);
+              continue;
             }
 
-            if (actor && voiceActorFirstname && voiceActorName) {
-              // get actor id from the movie cast
-              const foundActor = movie.credits.cast.find(
-                (cast: any) => cast.name === actor,
+            // get actor id from the movie cast
+            const foundActor = movie.credits.cast.find(
+              (cast: any) => cast.name === actor,
+            );
+
+            if (!foundActor) {
+              console.log(
+                `actor from wikitext "${actor}" not found in tmdb cast`,
               );
-
-              if (!foundActor) {
-                console.log(
-                  `actor from wikitext "${actor}" not found in tmdb cast`,
-                );
-                continue;
-              }
-
-              const { id: actorId } = foundActor;
-
-              const result = await voiceActorService.insertVoiceActorAndWork(
-                voiceActorFirstname,
-                voiceActorName,
-                tmdbId,
-                actorId,
-                tmdbType, // Insert work entry as tmdbType (tv/movie)
-                entry.performance,
-              );
-
-              if (result.voiceActorResult.inserted) {
-                newVoiceActorsCount++;
-              }
-              newCreditsCount++;
-            } else {
-              console.error("mistral missing structure", entry);
+              continue;
             }
+
+            const { id: actorId } = foundActor;
+
+            const result = await voiceActorService.insertVoiceActorAndWork(
+              voiceActorFirstname,
+              voiceActorName,
+              tmdbId,
+              actorId,
+              tmdbType, // Insert work entry as tmdbType (tv/movie)
+              entry.performance,
+            );
+
+            if (result.voiceActorResult.inserted) {
+              newVoiceActorsCount++;
+            }
+            newCreditsCount++;
           }
         }
 

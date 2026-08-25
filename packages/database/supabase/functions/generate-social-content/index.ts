@@ -1,5 +1,7 @@
 import { withSupabase } from "npm:@supabase/server@^1";
 import { Database } from "../_shared/database.types.ts";
+import { geminiGenerateObject } from "../_shared/index.ts";
+import { z } from "npm:zod";
 
 export default {
   fetch: withSupabase<Database>({ auth: "secret" }, async (req, ctx) => {
@@ -52,56 +54,27 @@ export default {
         }
       }
 
-      const mistralApiKey = Deno.env.get("MISTRAL_API_KEY");
-      if (!mistralApiKey) {
-        throw new Error("MISTRAL_API_KEY is not set");
-      }
+      const userContent = `Topic: ${promptTopic}\nData: ${JSON.stringify(contextData)}`;
 
-      const mistralResponse = await fetch(
-        "https://api.mistral.ai/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${mistralApiKey}`,
-          },
-          body: JSON.stringify({
-            model: "mistral-large-latest",
-            response_format: { type: "json_object" },
-            messages: [
-              {
-                role: "system",
-                content: `Agis en tant que community manager de DubbingBase (encyclopédie du doublage).
-Génère deux posts pour les réseaux sociaux basés sur les données fournies.
-Tu dois retourner UNIQUEMENT un objet JSON avec deux clés : "twitter_post" et "instagram_post".
+      const schema = z.object({
+        twitter_post: z.string(),
+        instagram_post: z.string(),
+      });
 
-Contraintes Twitter:
-- Moins de 280 caractères.
-- Texte incisif.
-- 2 hashtags maximum.
+      const generatedTexts = await geminiGenerateObject(userContent, schema, {
+        systemInstruction: `Act as a community manager for DubbingBase (a French voice acting encyclopedia). Generate two social media posts based on the provided data.
 
-Contraintes Instagram:
-- Texte plus détaillé et passionné.
-- Inclure un fait surprenant (si possible à partir des données).
-- Appel à l'action invitant à visiter DubbingBase.
-- 5 à 10 hashtags pertinents.`,
-              },
-              {
-                role: "user",
-                content: `Sujet : ${promptTopic}\nDonnées : ${JSON.stringify(contextData)}`,
-              },
-            ],
-          }),
-        },
-      );
+Twitter constraints:
+- Under 280 characters.
+- Punchy text.
+- Maximum 2 hashtags.
 
-      if (!mistralResponse.ok) {
-        const errText = await mistralResponse.text();
-        throw new Error(`Mistral API error: ${errText}`);
-      }
-
-      const mistralData = await mistralResponse.json();
-      const generatedTexts = JSON.parse(mistralData.choices[0].message.content);
+Instagram constraints:
+- More detailed and passionate text.
+- Include a surprising fact (if possible from the data).
+- Call to action inviting to visit DubbingBase.
+- 5 to 10 relevant hashtags.`,
+      });
 
       const resendApiKey = Deno.env.get("RESEND_API_KEY");
       if (!resendApiKey) {

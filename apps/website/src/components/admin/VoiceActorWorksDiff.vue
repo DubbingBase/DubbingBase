@@ -2,7 +2,7 @@
   <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6 shadow-xl mt-6">
     <div class="flex justify-between items-center border-b border-slate-800 pb-3">
       <div>
-        <h4 class="text-base font-bold text-white">Import Works from Wikipedia (Mistral AI)</h4>
+        <h4 class="text-base font-bold text-white">Import Works from Wikipedia (Gemini AI)</h4>
         <p class="text-xs text-slate-400">Extract filmography directly from a Wikipedia page URL and match it to our database.</p>
       </div>
     </div>

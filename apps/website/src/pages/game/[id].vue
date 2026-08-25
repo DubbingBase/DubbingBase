@@ -353,7 +353,7 @@ const formattedCharacters = computed(() => {
     // Character ID was mapped in prepare_game using igdbCharacterId
     const mappedActorId = igdbCharacterId(char.id);
     
-    // Fallback ID mapping used by Mistral for unresolved names
+    // Fallback ID mapping used by LLM for unresolved names
     const hashId = Math.abs(
       char.name.split("").reduce((hash, c) => (hash * 31 + c.charCodeAt(0)) | 0, 0),
     ) + 8_000_000_000;

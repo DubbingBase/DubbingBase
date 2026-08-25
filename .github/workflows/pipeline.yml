@@ -362,7 +362,8 @@ jobs:
           NUXT_TVDB_API_KEY: ${{ secrets.TVDB_API_KEY }}
           NUXT_IGDB_CLIENT_ID: ${{ secrets.IGDB_CLIENT_ID }}
           NUXT_IGDB_CLIENT_SECRET: ${{ secrets.IGDB_CLIENT_SECRET }}
-          NUXT_MISTRAL_TOKEN: ${{ secrets.MISTRAL_TOKEN }}
+          NUXT_GOOGLE_AI_KEY: ${{ secrets.GOOGLE_AI_KEY }}
+          NUXT_GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           NUXT_ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}
           NUXT_ONESIGNAL_REST_API_KEY: ${{ secrets.ONESIGNAL_REST_API_KEY }}
           NUXT_DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
@@ -408,7 +409,8 @@ jobs:
           NUXT_TVDB_API_KEY: ${{ secrets.TVDB_API_KEY }}
           NUXT_IGDB_CLIENT_ID: ${{ secrets.IGDB_CLIENT_ID }}
           NUXT_IGDB_CLIENT_SECRET: ${{ secrets.IGDB_CLIENT_SECRET }}
-          NUXT_MISTRAL_TOKEN: ${{ secrets.MISTRAL_TOKEN }}
+          NUXT_GOOGLE_AI_KEY: ${{ secrets.GOOGLE_AI_KEY }}
+          NUXT_GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           NUXT_ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}
           NUXT_ONESIGNAL_REST_API_KEY: ${{ secrets.ONESIGNAL_REST_API_KEY }}
           NUXT_DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}

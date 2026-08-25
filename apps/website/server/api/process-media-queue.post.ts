@@ -154,7 +154,7 @@ export default defineEventHandler(async (event) => {
         errMsg = String(err);
       }
 
-      if (errMsg.includes("Mistral API Rate Limited (429)")) {
+      if (errMsg.includes("LLM API Rate Limited (429)")) {
         isRateLimited = true;
 
         const readCt = Number(queueItem.read_ct);
@@ -163,14 +163,14 @@ export default defineEventHandler(async (event) => {
         if (readCt >= MAX_RETRIES) {
           await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
             p_msg_id: msgId,
-            p_error: `Max retries (${MAX_RETRIES}) reached due to Mistral API Rate Limited (429).`,
+            p_error: `Max retries (${MAX_RETRIES}) reached due to LLM API Rate Limited (429).`,
           });
 
           results.push({
             id: msgId,
             ok: false,
             changes: 0,
-            error: `Max retries (${MAX_RETRIES}) reached due to Mistral 429`,
+            error: `Max retries (${MAX_RETRIES}) reached due to LLM 429`,
           });
 
           await sendDiscordAdminNotification(
@@ -210,7 +210,7 @@ export default defineEventHandler(async (event) => {
 
     if (isRateLimited) {
       console.warn(
-        `[QUEUE] Rate limited by Mistral. Halting queue processor self-trigger.`,
+        `[QUEUE] Rate limited by LLM. Halting queue processor self-trigger.`,
       );
     } else if (!isSingle) {
       const { data: queueDepth } = await supabaseAdmin.rpc(
