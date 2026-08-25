@@ -17,12 +17,21 @@ function formatGame(game: IgdbGame) {
   };
 }
 
-export default defineEventHandler(async () => {
+export default defineEventHandler(async (event) => {
   const cache = useCache();
   const config = useRuntimeConfig();
+  const debug = getQuery(event)?.igdb_debug != null;
 
   if (!config.igdbClientId || !config.igdbClientSecret) {
-    return [];
+    // TEMP DEBUG: lengths only, never secret values
+    return debug
+      ? {
+          debug: "config_missing",
+          idLen: (config.igdbClientId || "").length,
+          secretLen: (config.igdbClientSecret || "").length,
+          kvBound: !!(event.context.cloudflare?.env as any)?.CACHE_KV,
+        }
+      : [];
   }
 
   const igdbClient = useIgdbClient();
@@ -41,6 +50,16 @@ export default defineEventHandler(async () => {
     return formatted;
   } catch (err) {
     console.error("[trending/games] IGDB query failed:", err);
+    // TEMP DEBUG: surface real error for diagnosis, remove once fixed
+    if (debug) {
+      const e = err as Error & { cause?: unknown };
+      return {
+        debug: "igdb_call_failed",
+        name: e?.name,
+        message: e?.message,
+        cause: String(e?.cause ?? ""),
+      };
+    }
     return [];
   }
 });
