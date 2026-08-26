@@ -38,7 +38,14 @@ function toArrayBuffer(data: Uint8Array): ArrayBuffer {
 
 async function initialize() {
   if (!wasmInitialized) {
-    await initWasm(toArrayBuffer(await loadAsset("og-image/index_bg.wasm")));
+    const wasmBytes = await loadAsset("og-image/index_bg.wasm");
+    // Cloudflare Workers may block WebAssembly.instantiate(bytes) but allow
+    // instantiateStreaming(Response), so pass the wasm as a Response.
+    await initWasm(
+      new Response(wasmBytes, {
+        headers: { "Content-Type": "application/wasm" },
+      }),
+    );
     wasmInitialized = true;
   }
 
