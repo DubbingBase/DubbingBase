@@ -11,6 +11,7 @@
 *.ico binary
 *.ttf binary
 *.otf binary
+*.wasm binary
 *.woff binary
 *.woff2 binary
 *.eot binary
