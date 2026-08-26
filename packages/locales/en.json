@@ -5,7 +5,8 @@
   "nav": {
     "home": "Home",
     "profile": "Profile",
-    "login": "Login"
+    "login": "Login",
+    "admin": "Administration"
   },
   "newVoiceActorsAdded": "new voice actor added | new voice actors added",
   "navigation": {
@@ -40,7 +41,37 @@
     "setStatus": "Set Status",
     "newVoiceActorsAdded": "{count} new voice actors added",
     "noNewChangesFound": "No new changes found",
-    "suggestChanges": "Suggest changes (Coming soon)"
+    "suggestChanges": "Suggest changes (Coming soon)",
+    "status": "Status",
+    "backToDashboard": "Back to Dashboard",
+    "country": "Country",
+    "city": "City",
+    "remove": "Remove",
+    "description": "Description",
+    "create": "Create",
+    "searching": "Searching...",
+    "link": "Link",
+    "refresh": "Refresh",
+    "userId": "User ID",
+    "submit": "Submit",
+    "underConstruction": "Under Construction",
+    "underConstructionDescription": "This page is currently under construction. Please check back later.",
+    "returnHome": "Return Home",
+    "close": "Close",
+    "noInfo": "No information available",
+    "readMore": "Read more",
+    "showLess": "Show less",
+    "retry": "Retry",
+    "share": "Share",
+    "editProfile": "Edit Profile",
+    "success": "Success",
+    "publicProfile": "Public Profile",
+    "enqueue": "Enqueue",
+    "fetch": "Fetch",
+    "editImage": "Edit Image",
+    "unlink": "Unlink",
+    "confirmUnlinkTitle": "Confirm Unlink",
+    "unlinkVoiceActor": "Unlink Voice Actor"
   },
   "theme": {
     "light": "Light",
@@ -103,6 +134,13 @@
     "retry": "Retry",
     "voiceActorProfileNotFound": "Voice actor profile not found",
     "voiceActorProfileNotLoaded": "This voice actor profile could not be loaded.",
+    "noSearchResults": "No search results found",
+    "bioTooLong": "Biography is too long",
+    "nationalityInvalid": "Invalid nationality",
+    "dateOfBirthInvalid": "Invalid date of birth",
+    "errorUpdatingProfile": "Error updating profile",
+    "errorCreatingProfile": "Error creating profile",
+    "errorGeneric": "An error occurred",
     "firstName": "First name",
     "lastName": "Last name",
     "dateOfBirth": "Date of birth",
@@ -140,7 +178,9 @@
     "works": "Works",
     "movies": "Movies",
     "series": "Series",
-    "episodes": "Episodes"
+    "episodes": "Episodes",
+    "fetchWikipedia": "Fetch from Wikipedia",
+    "wikipediaUrl": "Wikipedia URL"
   },
   "actor": {
     "title": "Actor",
@@ -154,7 +194,8 @@
     "role": "role",
     "allRoles": "All Roles",
     "dubbedOnly": "Dubbed Only",
-    "noDubbedRoles": "No dubbed roles available"
+    "noDubbedRoles": "No dubbed roles available",
+    "searchPlaceholder": "Search actors..."
   },
   "media": {
     "title": "Title",
@@ -207,7 +248,12 @@
     "character": "Character",
     "unknownCharacter": "Unknown Character",
     "voiceActor": "Voice Actor",
-    "notSpecified": "Not specified"
+    "notSpecified": "Not specified",
+    "voicedBy": "Voiced by",
+    "as": "as",
+    "noDubbingProjects": "No dubbing projects found",
+    "dubbingStudio": "Dubbing Studio",
+    "seasons": "Seasons"
   },
   "search": {
     "actor": "Actor",
@@ -217,7 +263,9 @@
     "movie": "Movie",
     "tv": "Series",
     "voiceActor": "Voice Actor",
-    "videoGame": "Video Game"
+    "videoGame": "Video Game",
+    "title": "Search",
+    "description": "Search for movies, series, voice actors, and more"
   },
   "auth": {
     "loginRequiredForSubscription": "You must be logged in to subscribe"
@@ -235,7 +283,18 @@
     "login": "Login",
     "notifications": "Notifications",
     "manageNotifications": "Manage my subscriptions",
-    "noSubscriptions": "No active subscriptions"
+    "noSubscriptions": "No active subscriptions",
+    "preferences": "Preferences",
+    "emailNotifications": "Email Notifications",
+    "emailNotificationsDescription": "Receive email notifications for updates and activity",
+    "dangerZone": "Danger Zone",
+    "deleteAccount": "Delete Account",
+    "deleteAccountDescription": "Permanently delete your account and all associated data",
+    "apiKeys": "API Keys",
+    "apiKeysDescription": "Manage your API keys for programmatic access",
+    "noApiKeys": "No API keys generated yet",
+    "generateApiKeyDescription": "Generate a new API key to access the API programmatically",
+    "generateNewKey": "Generate New Key"
   },
   "about": {
     "title": "About",
@@ -267,5 +326,118 @@
     "noCharacters": "No characters available",
     "notFound": "Game not found",
     "trendingGames": "Trending - Games"
+  },
+  "contribute": {
+    "title": "Contribute",
+    "description": "Help us improve DubbingBase by contributing to the database",
+    "bronzeContributor": "Bronze Contributor",
+    "currentScore": "Current Score",
+    "progressToSilver": "Progress to Silver",
+    "readyToHelp": "Ready to Help?",
+    "readyToHelpDescription": "Start contributing to earn points and unlock achievements",
+    "startContributing": "Start Contributing",
+    "noRecentActivities": "No recent activities"
+  },
+  "dubbing": {
+    "cast": "Cast",
+    "technicalTeam": "Technical Team"
+  },
+  "movie": {
+    "addDubbingProject": "Add Dubbing Project"
+  },
+  "report": {
+    "title": "Report",
+    "description": "Report an issue with this content",
+    "button": "Report",
+    "reason": "Reason",
+    "selectReason": "Select a reason",
+    "reasons": {
+      "copyright": "Copyright infringement",
+      "inappropriate": "Inappropriate content",
+      "error": "Incorrect information",
+      "other": "Other"
+    },
+    "details": "Details",
+    "detailsPlaceholder": "Provide additional details about the issue...",
+    "successMessage": "Report submitted successfully"
+  },
+  "admin": {
+    "queue": {
+      "title": "Media Queue",
+      "description": "Manage pending media processing requests",
+      "clearQueue": "Clear Queue",
+      "startProcessing": "Start Processing",
+      "refreshQueue": "Refresh",
+      "loadingQueue": "Loading queue...",
+      "noMediaRequests": "No media requests",
+      "queueEmpty": "Queue is empty",
+      "mediaDetails": "Media Details",
+      "requestedBy": "Requested By",
+      "errors": "Errors",
+      "seasonNumber": "Season {number}",
+      "episodeNumber": "Episode {number}",
+      "processingStarted": "Processing started",
+      "processingCompleted": "Processing completed",
+      "failedToProcess": "Failed to process",
+      "clearingQueue": "Clearing queue...",
+      "cleared": "Queue cleared",
+      "failedToClear": "Failed to clear queue",
+      "confirmDelete": "Are you sure you want to delete this item?",
+      "itemDeleted": "Item deleted",
+      "failedToDelete": "Failed to delete item"
+    },
+    "auditLogs": {
+      "title": "Audit Logs",
+      "description": "Track and review all system changes",
+      "date": "Date",
+      "action": "Action",
+      "points": "Points",
+      "status": "Status",
+      "reverted": "Reverted",
+      "applied": "Applied",
+      "revertAndPenalize": "Revert & Penalize",
+      "revertContribution": "Revert Contribution",
+      "revertDescription": "Are you sure you want to revert this contribution? This action will undo the changes and penalize the contributor.",
+      "conflictDetected": "Conflict Detected",
+      "conflictDescription": "This contribution has been modified since it was created. Please review the changes before reverting.",
+      "previousSafe": "Previous (Safe)",
+      "whatTheySet": "What They Set",
+      "currentDbState": "Current DB State",
+      "manualResolution": "Manual Resolution",
+      "enterFinalValue": "Enter the final value to apply",
+      "forceResolve": "Force Resolve",
+      "confirmRevert": "Are you sure you want to revert this?"
+    },
+    "reports": {
+      "title": "Reports",
+      "description": "Manage user-submitted reports",
+      "fetchingReports": "Fetching reports...",
+      "noReportsFound": "No reports found",
+      "everythingLooksGood": "Everything looks good!",
+      "details": "Details",
+      "reporter": "Reporter",
+      "target": "Target",
+      "status": "Status",
+      "noDetailsProvided": "No details provided",
+      "statusPending": "Pending",
+      "statusResolved": "Resolved",
+      "statusDismissed": "Dismissed",
+      "statusUpdated": "Status updated",
+      "failedToUpdateStatus": "Failed to update status"
+    },
+    "studios": {
+      "createDubbingStudio": "Create Dubbing Studio",
+      "editStudioProfile": "Edit Studio Profile",
+      "updatingStudioRecord": "Updating studio record",
+      "fillStudioInfo": "Fill in the studio information below",
+      "studioName": "Studio Name",
+      "websiteUrl": "Website URL",
+      "studioLogo": "Studio Logo",
+      "changeLogo": "Change Logo",
+      "uploadLogo": "Upload Logo",
+      "saveStudioProfile": "Save Studio Profile",
+      "studioSaved": "Studio saved successfully",
+      "failedToSave": "Failed to save studio"
+    }
   }
 }
