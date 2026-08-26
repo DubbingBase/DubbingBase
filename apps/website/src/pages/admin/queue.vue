@@ -9,6 +9,9 @@
         <p class="text-sm text-gray-400">
           {{ $t('admin.queue.description') }}
         </p>
+        <p v-if="pendingCount !== null" class="text-xs text-yellow-400 mt-1">
+          {{ pendingCount }} pending item(s) in queue
+        </p>
       </div>
       <div class="flex items-center space-x-3">
         <button
@@ -108,9 +111,54 @@
       <p class="text-xs text-gray-500">{{ $t('admin.queue.queueEmpty') }}</p>
     </div>
 
+    <!-- Filters -->
+    <div
+      v-if="!isLoading && allQueueItems.length > 0"
+      class="flex flex-wrap items-center gap-3 bg-gray-900 p-4 rounded-2xl border border-gray-800"
+    >
+      <div class="flex items-center space-x-2">
+        <label class="text-xs text-gray-400 font-semibold uppercase">Status</label>
+        <select
+          v-model="filterStatus"
+          class="bg-gray-800 border border-gray-700 text-gray-200 text-xs rounded-lg px-3 py-1.5 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="all">All</option>
+          <option value="pending">Pending</option>
+          <option value="processing">Processing</option>
+          <option value="completed">Completed</option>
+          <option value="failed">Failed</option>
+        </select>
+      </div>
+      <div class="flex items-center space-x-2">
+        <label class="text-xs text-gray-400 font-semibold uppercase">Type</label>
+        <select
+          v-model="filterType"
+          class="bg-gray-800 border border-gray-700 text-gray-200 text-xs rounded-lg px-3 py-1.5 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="all">All</option>
+          <option value="movie">Movie</option>
+          <option value="tv">TV</option>
+          <option value="season">Season</option>
+          <option value="episode">Episode</option>
+        </select>
+      </div>
+      <div class="flex items-center space-x-2">
+        <label class="text-xs text-gray-400 font-semibold uppercase">Search</label>
+        <input
+          v-model="filterSearch"
+          type="text"
+          placeholder="TMDB ID..."
+          class="bg-gray-800 border border-gray-700 text-gray-200 text-xs rounded-lg px-3 py-1.5 w-32 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+        />
+      </div>
+      <span class="text-xs text-gray-500">
+        {{ filteredItems.length }} of {{ allQueueItems.length }} items
+      </span>
+    </div>
+
     <!-- Queue Grid / Table -->
     <div
-      v-else
+      v-else-if="!isLoading && allQueueItems.length > 0"
       class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden shadow-xl"
     >
       <div class="overflow-x-auto">
@@ -128,7 +176,7 @@
           </thead>
           <tbody class="divide-y divide-gray-800/50">
             <tr
-              v-for="item in queueItems"
+              v-for="item in filteredItems"
               :key="item.id"
               class="hover:bg-gray-800/10 transition-colors"
             >
@@ -374,6 +422,22 @@ const deletingId = ref<number | null>(null);
 const reEnqueuingId = ref<number | null>(null);
 const error = ref("");
 const isDev = import.meta.env.DEV;
+const pendingCount = ref<number | null>(null);
+
+const filterStatus = ref("all");
+const filterType = ref("all");
+const filterSearch = ref("");
+
+const allQueueItems = computed(() => queueItems.value);
+
+const filteredItems = computed(() => {
+  return allQueueItems.value.filter((item) => {
+    if (filterStatus.value !== "all" && item.status !== filterStatus.value) return false;
+    if (filterType.value !== "all" && item.media_type !== filterType.value) return false;
+    if (filterSearch.value && !String(item.tmdb_id).includes(filterSearch.value)) return false;
+    return true;
+  });
+});
 
 const toast = ref({
   show: false,
@@ -449,6 +513,8 @@ const { data: initialData, pending, error: fetchError, refresh: fetchQueueAndUse
   const { data: queueData, error: queueErr } = await supabase.rpc("get_media_queue_items");
   if (queueErr) throw queueErr;
 
+  const { data: depthData } = await supabase.rpc("get_media_queue_depth");
+
   const userData = await $fetch('/api/list_users');
   let map: Record<string, string> = {};
   if (userData?.users) {
@@ -459,7 +525,8 @@ const { data: initialData, pending, error: fetchError, refresh: fetchQueueAndUse
   
   return {
     queueItems: queueData || [],
-    usersMap: map
+    usersMap: map,
+    pendingCount: depthData ?? null
   };
 });
 
@@ -467,6 +534,7 @@ watch(initialData, (newData) => {
   if (newData) {
     queueItems.value = newData.queueItems;
     usersMap.value = newData.usersMap;
+    pendingCount.value = newData.pendingCount;
   }
 }, { immediate: true });
 
