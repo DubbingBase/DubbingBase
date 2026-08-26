@@ -38,14 +38,13 @@ function toArrayBuffer(data: Uint8Array): ArrayBuffer {
 
 async function initialize() {
   if (!wasmInitialized) {
-    const wasmBytes = await loadAsset("og-image/index_bg.wasm");
-    // Cloudflare Workers may block WebAssembly.instantiate(bytes) but allow
-    // instantiateStreaming(Response), so pass the wasm as a Response.
-    await initWasm(
-      new Response(wasmBytes, {
-        headers: { "Content-Type": "application/wasm" },
-      }),
-    );
+    // Cloudflare Workers block WebAssembly.instantiate(bytes) at runtime.
+    // The `?module` import yields a pre-compiled WebAssembly.Module (compiled
+    // at load time), which is the supported path on Workers.
+    const wasmModule = (
+      await import("@resvg/resvg-wasm/index_bg.wasm?module" as any)
+    ).default;
+    await initWasm(wasmModule);
     wasmInitialized = true;
   }
 
