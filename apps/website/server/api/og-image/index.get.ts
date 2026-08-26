@@ -1,30 +1,46 @@
+import satori from "satori";
+import { initWasm, Resvg } from "@resvg/resvg-wasm";
+
 let wasmInitialized = false;
 let fontDataRegular: ArrayBuffer | null = null;
 let fontDataBold: ArrayBuffer | null = null;
 
+// Nitro bundles files under server/assets/ and exposes them via the
+// "assets:server" storage namespace (no runtime network fetch needed).
+async function loadAsset(path: string): Promise<Uint8Array> {
+  let lastErr: unknown;
+  for (const ns of ["assets:server", "assets"]) {
+    try {
+      const data = await useStorage(ns).getItemRaw(path);
+      if (data) return data as Uint8Array;
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw new Error(`OG asset not found: ${path} (${String(lastErr)})`);
+}
+
+function toArrayBuffer(data: Uint8Array): ArrayBuffer {
+  return data.buffer.slice(
+    data.byteOffset,
+    data.byteOffset + data.byteLength,
+  ) as ArrayBuffer;
+}
+
 async function initialize() {
   if (!wasmInitialized) {
-    const { initWasm } = await import("@resvg/resvg-wasm");
-    const wasmRes = await fetch(
-      "https://unpkg.com/@resvg/resvg-wasm@2.6.2/index_bg.wasm",
-    );
-    const wasmBuffer = await wasmRes.arrayBuffer();
-    await initWasm(wasmBuffer);
+    await initWasm(toArrayBuffer(await loadAsset("og-image/index_bg.wasm")));
     wasmInitialized = true;
   }
 
   if (!fontDataRegular) {
-    const fontRes = await fetch(
-      "https://cdn.jsdelivr.net/npm/inter-font@3.19.0/ttf/Inter-Regular.ttf",
+    fontDataRegular = toArrayBuffer(
+      await loadAsset("og-image/Inter-Regular.ttf"),
     );
-    fontDataRegular = await fontRes.arrayBuffer();
   }
 
   if (!fontDataBold) {
-    const fontRes = await fetch(
-      "https://cdn.jsdelivr.net/npm/inter-font@3.19.0/ttf/Inter-Bold.ttf",
-    );
-    fontDataBold = await fontRes.arrayBuffer();
+    fontDataBold = toArrayBuffer(await loadAsset("og-image/Inter-Bold.ttf"));
   }
 }
 
@@ -221,9 +237,6 @@ export default defineEventHandler(async (event) => {
     }
 
     await initialize();
-
-    const { default: satori } = await import("satori");
-    const { Resvg } = await import("@resvg/resvg-wasm");
 
     let template;
 
