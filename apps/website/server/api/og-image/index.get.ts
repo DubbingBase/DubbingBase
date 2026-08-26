@@ -5,16 +5,25 @@ let wasmInitialized = false;
 let fontDataRegular: ArrayBuffer | null = null;
 let fontDataBold: ArrayBuffer | null = null;
 
-// Nitro bundles files under server/assets/ and exposes them via the
-// "assets:server" storage namespace (no runtime network fetch needed).
+// Nitro bundles files under server/assets/ and exposes them via storage.
+// Try common namespace + path conventions across Nitro versions.
 async function loadAsset(path: string): Promise<Uint8Array> {
+  const namespaces = ["assets:server", "assets"];
+  const variants = [
+    path,
+    `server/${path}`,
+    `assets/${path}`,
+    `server/assets/${path}`,
+  ];
   let lastErr: unknown;
-  for (const ns of ["assets:server", "assets"]) {
-    try {
-      const data = await useStorage(ns).getItemRaw(path);
-      if (data) return data as Uint8Array;
-    } catch (e) {
-      lastErr = e;
+  for (const ns of namespaces) {
+    for (const v of variants) {
+      try {
+        const data = await useStorage(ns).getItemRaw(v);
+        if (data) return data as Uint8Array;
+      } catch (e) {
+        lastErr = e;
+      }
     }
   }
   throw new Error(`OG asset not found: ${path} (${String(lastErr)})`);
@@ -332,9 +341,11 @@ export default defineEventHandler(async (event) => {
   } catch (error) {
     console.error("Error generating OG image:", error);
     if (error instanceof Error && "statusCode" in error) throw error;
+    const detail = error instanceof Error ? error.stack || error.message : String(error);
     throw createError({
       statusCode: 500,
-      message: "Failed to generate OG image",
+      message: `Failed to generate OG image: ${error instanceof Error ? error.message : String(error)}`,
+      cause: detail,
     });
   }
 });
