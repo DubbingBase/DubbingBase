@@ -5,6 +5,20 @@ import * as path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
 // Initialize Supabase Client
+const WIKI_LANG = process.env.WIKI_LANG || "fr";
+
+// Cheap regex pre-filter for dubbing sections across the major Wikipedia
+// editions. The server-side pipeline (selectDubbingSections) classifies
+// sections via LLM and therefore covers every language; this list is the
+// high-volume batch filter only.
+export const DUBBING_HEADING_PATTERN =
+  /={2,}\s*(distribution|doublages?|voix|casting|voice[- ]?(cast|over|acting)?|dubbing|starring|besetzung|synchronbesetzung|reparto|doblaj[oe]s?|dobragem|dublagem|doppiaggio|nasynchronisatie|röster|stemmer|głos|znění|dabing|znenie|szinkron|дублир|дубляж|закадров|дублюванн|dublaj|μεταγλώττιση|דיבוב|دبلجة|alih suara|lồng tiếng|พากย์|डबिंग|더빙|配音|声優|吹き替え|synchronisation|sincronización)[^=]*={2,}/i;
+const STATE_FILE = path.join(
+  process.cwd(),
+  "scripts",
+  `.scraping_state.${WIKI_LANG}.json`,
+);
+
 const supabaseUrl = process.env.SUPABASE_URL || "http://localhost:54321";
 const supabaseKey =
   process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
@@ -20,7 +34,6 @@ if (!supabaseUrl || !supabaseKey) {
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey);
-const STATE_FILE = path.join(process.cwd(), "scripts", ".scraping_state.json");
 
 // Helper to get or initialize state
 async function getState() {
@@ -49,7 +62,7 @@ async function saveState(state: any) {
 const CACHE_DB_FILE = path.join(
   process.cwd(),
   "scripts",
-  ".scraping_cache.sqlite",
+  `.scraping_cache.${WIKI_LANG}.sqlite`,
 );
 const db = new DatabaseSync(CACHE_DB_FILE);
 
@@ -88,7 +101,7 @@ async function checkWikipediaBatchForDubbing(
   if (titles.length === 0) return {};
   try {
     const titlesParam = encodeURIComponent(titles.join("|"));
-    const url = `https://fr.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content&rvslots=main&format=json&titles=${titlesParam}`;
+    const url = `https://${WIKI_LANG}.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content&rvslots=main&format=json&titles=${titlesParam}`;
     const response = await fetch(url, {
       headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
     });
@@ -146,7 +159,9 @@ async function checkWikipediaBatchForDubbing(
       if (page && page.revisions && page.revisions.length > 0) {
         const wikitext =
           page.revisions[0].slots?.main?.["*"] || page.revisions[0]["*"] || "";
-        if (wikitext.match(/==\s*(distribution|doublage|voix)[^=]*==/i)) {
+        if (
+          wikitext.match(DUBBING_HEADING_PATTERN)
+        ) {
           hasDubbing = true;
         }
       }
@@ -211,7 +226,7 @@ async function performDiscoveryBatch(state: any) {
       ?item wdt:P4947|wdt:P4983 ?tmdbId .
 
       ?article schema:about ?item ;
-               schema:isPartOf <https://fr.wikipedia.org/> .
+               schema:isPartOf <https://${WIKI_LANG}.wikipedia.org/> .
 
       ?item schema:dateModified ?modified .
       FILTER(?modified > "${lastFetchedAt}"^^xsd:dateTime)

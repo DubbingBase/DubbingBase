@@ -9,7 +9,8 @@ const GROQ_MODEL = "llama-3.3-70b-versatile";
 function getGoogleClient() {
   const config = useRuntimeConfig();
   const apiKey = config.googleAiKey as string;
-  if (!apiKey) throw new Error("NUXT_GOOGLE_AI_KEY is not set in runtimeConfig");
+  if (!apiKey)
+    throw new Error("NUXT_GOOGLE_AI_KEY is not set in runtimeConfig");
   return createGoogleGenerativeAI({ apiKey });
 }
 
@@ -147,14 +148,24 @@ export async function llmVision(
     () =>
       generateText({
         model: getGoogleClient()(options?.model ?? GEMINI_MODEL),
-        messages: [{ role: "user", content: [{ type: "text", text: prompt }, imageContent] }],
+        messages: [
+          {
+            role: "user",
+            content: [{ type: "text", text: prompt }, imageContent],
+          },
+        ],
         system,
         temperature,
       }).then((r) => r.text),
     () =>
       generateText({
         model: getGroqClient()(GROQ_MODEL),
-        messages: [{ role: "user", content: [{ type: "text", text: prompt }, imageContent] }],
+        messages: [
+          {
+            role: "user",
+            content: [{ type: "text", text: prompt }, imageContent],
+          },
+        ],
         system,
         temperature,
       }).then((r) => r.text),
@@ -189,7 +200,12 @@ export async function llmVisionObject<T extends z.ZodType>(
     () =>
       generateObject({
         model: getGoogleClient()(options?.model ?? GEMINI_MODEL),
-        messages: [{ role: "user", content: [{ type: "text", text: prompt }, imageContent] }],
+        messages: [
+          {
+            role: "user",
+            content: [{ type: "text", text: prompt }, imageContent],
+          },
+        ],
         schema,
         system,
         temperature,
@@ -197,7 +213,12 @@ export async function llmVisionObject<T extends z.ZodType>(
     () =>
       generateObject({
         model: getGroqClient()(GROQ_MODEL),
-        messages: [{ role: "user", content: [{ type: "text", text: prompt }, imageContent] }],
+        messages: [
+          {
+            role: "user",
+            content: [{ type: "text", text: prompt }, imageContent],
+          },
+        ],
         schema,
         system,
         temperature,
@@ -210,7 +231,7 @@ function parseImageData(imageData: string, mimeType: string) {
   let resolvedMime = mimeType;
   if (imageData.startsWith("data:")) {
     const match = imageData.match(/^data:([^;]+);base64,(.+)$/);
-    if (match) {
+    if (match?.[1] && match[2]) {
       resolvedMime = match[1];
       rawBase64 = match[2];
     }

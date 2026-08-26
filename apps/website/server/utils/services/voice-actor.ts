@@ -99,6 +99,7 @@ export async function upsertWork(
   contentId: number,
   actorId: number | null,
   contentType: string,
+  language: string,
   performance?: string,
   characterId?: number | null,
   characterName?: string | null,
@@ -107,6 +108,7 @@ export async function upsertWork(
   const dubbing_project_id = await findOrCreateDubbingProject(
     contentId,
     contentType,
+    language,
   );
 
   let query = supabase
@@ -159,6 +161,7 @@ export async function insertVoiceActorAndWork(
   contentId: number,
   actorId: number,
   contentType: string,
+  language: string,
   performance?: string,
   characterId?: number | null,
   characterName?: string | null,
@@ -169,6 +172,7 @@ export async function insertVoiceActorAndWork(
     contentId,
     actorId,
     contentType,
+    language,
     performance,
     characterId,
     characterName,
