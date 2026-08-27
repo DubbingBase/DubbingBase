@@ -1,7 +1,7 @@
 name = "dubbingbase-website"
 main = ".output/server/index.mjs"
 compatibility_date = "2024-09-23"
-compatibility_flags = ["nodejs_compat"]
+compatibility_flags = ["nodejs_compat", "disable_nodejs_process_v2"]
 
 [assets]
 directory = ".output/public"
