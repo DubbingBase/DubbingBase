@@ -1,6 +1,21 @@
 import satori from "satori";
-import { Resvg } from "@cf-wasm/resvg/workerd";
+import { initWasm, Resvg } from "@resvg/resvg-wasm";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, resolve } from "node:path";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Read wasm file at build time
+const wasmPath = resolve(
+  __dirname,
+  "../../../../../node_modules/@resvg/resvg-wasm/index_bg.wasm",
+);
+const wasmBytes = readFileSync(wasmPath);
+
+let wasmInitialized = false;
+let wasmModule: WebAssembly.Module | null = null;
 let fontDataRegular: ArrayBuffer | null = null;
 let fontDataBold: ArrayBuffer | null = null;
 
@@ -36,10 +51,25 @@ function toArrayBuffer(data: Uint8Array): ArrayBuffer {
 }
 
 async function initialize() {
-  // resvg-wasm is initialized at module load by @cf-wasm/resvg/workerd
-  // (import x from "./lib/resvg.wasm"; initResvg(x)) — Wrangler pre-compiles
-  // the .wasm into a WebAssembly.Module at deploy time, bypassing the
-  // Workers block on WebAssembly.instantiate(bytes).
+  if (!wasmInitialized) {
+    wasmModule = await WebAssembly.compile(wasmBytes);
+    await initWasm(wasmModule);
+    wasmInitialized = true;
+  }
+
+  if (!fontDataRegular) {
+    fontDataRegular = toArrayBuffer(
+      await loadAsset("og-image/Inter-Regular.ttf"),
+    );
+  }
+
+  if (!fontDataBold) {
+    fontDataBold = toArrayBuffer(await loadAsset("og-image/Inter-Bold.ttf"));
+  }
+}
+  }
+
+>>>>>>> 7399e4b0 (fix: load resvg wasm at runtime to fix build failure)
   if (!fontDataRegular) {
     fontDataRegular = toArrayBuffer(
       await loadAsset("og-image/Inter-Regular.ttf"),
