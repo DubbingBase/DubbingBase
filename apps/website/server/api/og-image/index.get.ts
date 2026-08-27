@@ -358,7 +358,7 @@ export default defineEventHandler(async (event) => {
     const detail = error instanceof Error ? error.stack || error.message : String(error);
     throw createError({
       statusCode: 500,
-      message: `Failed to generate OG image: ${error instanceof Error ? error.message : String(error)} | ${detail}`,
+      message: `Failed to generate OG image: ${error instanceof Error ? error.message : String(error)}`,
       cause: detail,
     });
   }
