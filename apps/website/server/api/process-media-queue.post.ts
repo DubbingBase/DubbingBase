@@ -85,15 +85,19 @@ export default defineEventHandler(async (event) => {
     if (!payload.language) {
       try {
         const config = useRuntimeConfig();
-        const tmdbType = payload.media_type === "season" || payload.media_type === "episode" ? "tv" : payload.media_type;
-        
+        const tmdbType =
+          payload.media_type === "season" || payload.media_type === "episode"
+            ? "tv"
+            : payload.media_type;
+
         // Fetch TMDB data to get Wikidata ID
-        const tmdbUrl = tmdbType === "video_game" 
-          ? null // Games use IGDB, handled differently
-          : `https://api.themoviedb.org/3/${tmdbType}/${payload.tmdb_id}?append_to_response=external_ids`;
-        
+        const tmdbUrl =
+          tmdbType === "video_game"
+            ? null // Games use IGDB, handled differently
+            : `https://api.themoviedb.org/3/${tmdbType}/${payload.tmdb_id}?append_to_response=external_ids`;
+
         let wikiId: string | null = null;
-        
+
         if (tmdbUrl) {
           const tmdbResponse = await fetch(tmdbUrl, {
             headers: {
@@ -102,9 +106,9 @@ export default defineEventHandler(async (event) => {
               Accept: "application/json",
             },
           });
-          
+
           if (tmdbResponse.ok) {
-            const tmdbData = await tmdbResponse.json() as any;
+            const tmdbData = (await tmdbResponse.json()) as any;
             mediaTitle = tmdbData.title || tmdbData.name || "Unknown title";
             wikiId = tmdbData.external_ids?.wikidata_id || null;
           }
@@ -113,8 +117,10 @@ export default defineEventHandler(async (event) => {
         if (!wikiId) {
           // For games or if no Wikidata ID found, process without language filtering
           // This maintains backward compatibility
-          console.log(`[QUEUE] No Wikidata ID found for ${payload.media_type} ${payload.tmdb_id}, processing without language filtering`);
-          
+          console.log(
+            `[QUEUE] No Wikidata ID found for ${payload.media_type} ${payload.tmdb_id}, processing without language filtering`,
+          );
+
           await supabaseAdmin.rpc("archive_media_queue_message", {
             p_msg_id: msgId,
           });
@@ -125,7 +131,7 @@ export default defineEventHandler(async (event) => {
             changes: 0,
             note: "Processed without language filtering (no Wikidata ID)",
           });
-          
+
           return { ok: true, processed: results.length, results };
         }
 
@@ -135,7 +141,9 @@ export default defineEventHandler(async (event) => {
         const sitelinks = entity.entities[wikiId]?.sitelinks;
         const availableLanguages = extractAvailableLanguages(sitelinks);
 
-        console.log(`[QUEUE] Discovered ${availableLanguages.length} languages for ${mediaTitle}`);
+        console.log(
+          `[QUEUE] Discovered ${availableLanguages.length} languages for ${mediaTitle}`,
+        );
 
         if (availableLanguages.length === 0) {
           // No Wikipedia pages found, archive the job
@@ -149,26 +157,34 @@ export default defineEventHandler(async (event) => {
             changes: 0,
             note: "No Wikipedia pages found",
           });
-          
+
           return { ok: true, processed: results.length, results };
         }
 
         // Enqueue a separate job for each language
         let enqueuedCount = 0;
         for (const lang of availableLanguages) {
-          const { error: enqueueError } = await supabaseAdmin.rpc("enqueue_media_fetch", {
-            p_tmdb_id: payload.tmdb_id,
-            p_media_type: payload.media_type,
-            p_season_number: payload.season_number ?? undefined,
-            p_episode_number: payload.episode_number ?? undefined,
-            p_language: lang,
-          });
+          const { error: enqueueError } = await supabaseAdmin.rpc(
+            "enqueue_media_fetch",
+            {
+              p_tmdb_id: payload.tmdb_id,
+              p_media_type: payload.media_type,
+              p_season_number: payload.season_number ?? undefined,
+              p_episode_number: payload.episode_number ?? undefined,
+              p_language: lang,
+            },
+          );
 
           if (enqueueError) {
             if (enqueueError.message?.includes("already in the queue")) {
-              console.log(`[QUEUE] Language ${lang} already enqueued, skipping`);
+              console.log(
+                `[QUEUE] Language ${lang} already enqueued, skipping`,
+              );
             } else {
-              console.error(`[QUEUE] Failed to enqueue language ${lang}:`, enqueueError);
+              console.error(
+                `[QUEUE] Failed to enqueue language ${lang}:`,
+                enqueueError,
+              );
             }
           } else {
             enqueuedCount++;
@@ -188,8 +204,9 @@ export default defineEventHandler(async (event) => {
           totalLanguages: availableLanguages.length,
         });
 
-        console.log(`[QUEUE] Enqueued ${enqueuedCount} language jobs for ${mediaTitle}`);
-
+        console.log(
+          `[QUEUE] Enqueued ${enqueuedCount} language jobs for ${mediaTitle}`,
+        );
       } catch (err) {
         let errMsg = "";
         if (err instanceof Error) {
@@ -218,7 +235,7 @@ export default defineEventHandler(async (event) => {
           error: errMsg,
         });
       }
-      
+
       return { ok: true, processed: results.length, results };
     }
 

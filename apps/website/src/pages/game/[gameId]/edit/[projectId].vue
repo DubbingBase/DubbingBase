@@ -488,9 +488,9 @@ let pendingVaSelectCallback: ((id: number) => void) | null = null;
 // Cast Rows
 interface CastRow {
   id?: number;
-  actor_id: number | string | null;
+  character_id: number | string | null;
   character_name: string;
-  voice_character_id: number | null;
+  voice_actor_id: number | null;
   performance: string;
   highlight: boolean;
 }
@@ -744,7 +744,7 @@ const { data: initialData } = await useAsyncData(`game-edit-${igdbGameId.value}-
   if (igdbGameId.value) {
     // IGDB metadata
     try {
-      const data = await $fetch('/api/game', { params: { id: igdbGameId.value } });
+      const data = await $fetch(`/api/game/${igdbGameId.value}`);
       if (data) {
         igdbData = data;
       }

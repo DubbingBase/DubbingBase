@@ -3,8 +3,8 @@ import { TMDBClient } from "../api/tmdb";
 import { TVDBClient } from "../api/tvdb";
 import { processVoiceActor } from "../urls/supabase";
 import { processMedia, cleanCharacterName } from "../urls/tmdb";
-import { getWorkVotes } from "../db/queries";
-import { useCache } from "../index";
+import { useCache, useIgdbClient } from "../index";
+import { buildIgdbImageUrl } from "../api/igdb";
 
 const WIKIPEDIA_USER_AGENT =
   "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
@@ -76,9 +76,60 @@ export class MediaService {
 
     const mediaPromises = workItems.map(async (work: any) => {
       const contentId = work.dubbing_projects?.content_id;
-      const contentType = work.dubbing_projects?.content_type as "movie" | "tv";
+      const contentType = work.dubbing_projects?.content_type as
+        "movie" | "tv" | "video_game";
 
       if (!contentId || !contentType) return null;
+
+      if (contentType === "video_game") {
+        try {
+          const igdbClient = useIgdbClient();
+          const game = await igdbClient.getGame(contentId);
+          if (!game) {
+            return { media: null, characterProfilePictures: [], tvdbId: null };
+          }
+          const processedGame = {
+            id: game.id,
+            title: game.name,
+            name: game.name,
+            overview: game.summary || "",
+            poster_path: game.cover
+              ? buildIgdbImageUrl(game.cover.image_id, "cover_big")
+              : null,
+            backdrop_path: game.artworks?.[0]
+              ? buildIgdbImageUrl(game.artworks[0].image_id, "1080p")
+              : game.screenshots?.[0]
+                ? buildIgdbImageUrl(
+                    game.screenshots[0].image_id,
+                    "screenshot_huge",
+                  )
+                : null,
+            release_date: game.first_release_date
+              ? new Date(game.first_release_date * 1000)
+                  .toISOString()
+                  .split("T")[0]
+              : "1970-01-01",
+            first_air_date: game.first_release_date
+              ? new Date(game.first_release_date * 1000)
+                  .toISOString()
+                  .split("T")[0]
+              : "1970-01-01",
+            media_type: "video_game" as const,
+            credits: { cast: [] },
+          };
+          return {
+            media: processedGame,
+            characterProfilePictures: [],
+            tvdbId: null,
+          };
+        } catch (err) {
+          console.error(
+            `Failed to fetch IGDB game ${contentId} for voice actor:`,
+            err,
+          );
+          return { media: null, characterProfilePictures: [], tvdbId: null };
+        }
+      }
 
       try {
         const tmdbMedia = await this.tmdbClient.getMediaWithCredits(

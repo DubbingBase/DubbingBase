@@ -66,12 +66,18 @@ export default {
 Try to match the actors or roles from the image to the known list and include their ID in 'matchedActorId'. If a column is missing, leave it empty.${knownActorsText}`;
 
         const schemaWithMatch = z.object({
-          extract: z.array(baseCreditSchema.extend({
-            matchedActorId: z.number().nullable(),
-          })),
+          extract: z.array(
+            baseCreditSchema.extend({
+              matchedActorId: z.number().nullable(),
+            }),
+          ),
         });
 
-        const parsed = await geminiVisionObject(promptText, imageBase64, schemaWithMatch);
+        const parsed = await geminiVisionObject(
+          promptText,
+          imageBase64,
+          schemaWithMatch,
+        );
 
         return Response.json({
           ok: true,

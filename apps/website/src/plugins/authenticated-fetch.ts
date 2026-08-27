@@ -19,7 +19,9 @@ export default defineNuxtPlugin({
         return (async () => {
           try {
             const supabase = useSupabaseClient();
-            const { data: { session } } = await supabase.auth.getSession();
+            const {
+              data: { session },
+            } = await supabase.auth.getSession();
             const headers: Record<string, string> = {
               ...(options?.headers as Record<string, string> | undefined),
             };

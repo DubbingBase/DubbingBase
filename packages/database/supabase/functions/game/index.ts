@@ -25,6 +25,14 @@ function processIgdbGame(
           url: buildIgdbImageUrl(game.cover.image_id, "cover_big"),
         }
       : undefined,
+    artworks: game.artworks?.map((a) => ({
+      ...a,
+      url: buildIgdbImageUrl(a.image_id, "1080p"),
+    })),
+    screenshots: game.screenshots?.map((s) => ({
+      ...s,
+      url: buildIgdbImageUrl(s.image_id, "screenshot_huge"),
+    })),
   };
 }
 
