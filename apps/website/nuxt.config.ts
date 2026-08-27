@@ -75,6 +75,17 @@ export default defineNuxtConfig({
 
   vite: {
     plugins: [tailwindcss()],
+    resolve: {
+      dedupe: [
+        "vue",
+        "@vue/runtime-core",
+        "@vue/runtime-dom",
+        "@vue/reactivity",
+        "@vue/server-renderer",
+        "@vue/shared",
+        "@vue/compiler-sfc",
+      ],
+    },
     define: {
       __VERSION__: JSON.stringify(process.env.npm_package_version || "1.0.0"),
       __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: "true",
@@ -90,7 +101,6 @@ export default defineNuxtConfig({
     "@nuxtjs/supabase",
     "@nuxtjs/sitemap",
     "@nuxtjs/robots",
-    "@nuxt/fonts",
     "@nuxt/image",
     "@nuxt/icon",
     "nuxt-swiper",

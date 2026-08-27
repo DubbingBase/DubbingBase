@@ -7,7 +7,7 @@
   "types": "src/index.ts",
   "dependencies": {
     "@supabase/supabase-js": "^2.111.0",
-    "vue": "^3.5.40",
+    "vue": "^3.5.42",
     "vue-i18n": "^11.4.8"
   },
   "devDependencies": {
