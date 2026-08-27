@@ -207,7 +207,11 @@
     "character": "キャラクター",
     "unknownCharacter": "不明なキャラクター",
     "voiceActor": "声優",
-    "notSpecified": "未指定"
+    "notSpecified": "未指定",
+    "seasons": "シーズン",
+    "episodes": "エピソード",
+    "season": "シーズン {num}",
+    "episode": "第{num}話"
   },
   "search": {
     "actor": "俳優",

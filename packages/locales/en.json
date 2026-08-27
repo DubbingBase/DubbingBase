@@ -207,7 +207,11 @@
     "character": "Character",
     "unknownCharacter": "Unknown Character",
     "voiceActor": "Voice Actor",
-    "notSpecified": "Not specified"
+    "notSpecified": "Not specified",
+    "seasons": "Seasons",
+    "episodes": "Episodes",
+    "season": "Season {num}",
+    "episode": "Episode {num}"
   },
   "search": {
     "actor": "Actor",

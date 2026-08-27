@@ -207,7 +207,11 @@
     "character": "Personaje",
     "unknownCharacter": "Personaje desconocido",
     "voiceActor": "Actor de doblaje",
-    "notSpecified": "No especificado"
+    "notSpecified": "No especificado",
+    "seasons": "Temporadas",
+    "episodes": "Episodios",
+    "season": "Temporada {num}",
+    "episode": "Episodio {num}"
   },
   "search": {
     "actor": "Actor",

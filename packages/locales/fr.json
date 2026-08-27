@@ -206,7 +206,11 @@
     "character": "Personnage",
     "unknownCharacter": "Personnage inconnu",
     "voiceActor": "Comédien(ne)",
-    "notSpecified": "Non spécifié"
+    "notSpecified": "Non spécifié",
+    "seasons": "Saisons",
+    "episodes": "Épisodes",
+    "season": "Saison {num}",
+    "episode": "Épisode {num}"
   },
   "search": {
     "actor": "Acteur",
