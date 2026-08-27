@@ -5,7 +5,8 @@
   "nav": {
     "home": "ホーム",
     "profile": "プロフィール",
-    "login": "ログイン"
+    "login": "ログイン",
+    "admin": "管理"
   },
   "newVoiceActorsAdded": "新しい声優が追加されました",
   "navigation": {
@@ -40,7 +41,37 @@
     "setStatus": "ステータスを設定",
     "newVoiceActorsAdded": "{count}人の新しい声優が追加されました",
     "noNewChangesFound": "新しい変更は見つかりませんでした",
-    "suggestChanges": "変更を提案（近日公開）"
+    "suggestChanges": "変更を提案（近日公開）",
+    "status": "ステータス",
+    "backToDashboard": "ダッシュボードに戻る",
+    "country": "国",
+    "city": "都市",
+    "remove": "削除",
+    "description": "説明",
+    "create": "作成",
+    "searching": "検索中...",
+    "link": "リンク",
+    "refresh": "更新",
+    "userId": "ユーザーID",
+    "submit": "送信",
+    "underConstruction": "工事中",
+    "underConstructionDescription": "このページは現在工事中です。後でもう一度お試しください。",
+    "returnHome": "ホームに戻る",
+    "close": "閉じる",
+    "noInfo": "情報がありません",
+    "readMore": "続きを読む",
+    "showLess": "表示を減らす",
+    "retry": "再試行",
+    "share": "共有",
+    "editProfile": "プロフィールを編集",
+    "success": "成功",
+    "publicProfile": "公開プロフィール",
+    "enqueue": "キューに追加",
+    "fetch": "取得",
+    "editImage": "画像を編集",
+    "unlink": "リンク解除",
+    "confirmUnlinkTitle": "リンク解除の確認",
+    "unlinkVoiceActor": "声優のリンク解除"
   },
   "theme": {
     "light": "ライト",
@@ -103,6 +134,13 @@
     "retry": "再試行",
     "voiceActorProfileNotFound": "声優プロフィールが見つかりません",
     "voiceActorProfileNotLoaded": "この声優プロフィールを読み込めませんでした。",
+    "noSearchResults": "検索結果が見つかりません",
+    "bioTooLong": "略歴が長すぎます",
+    "nationalityInvalid": "無効な国籍です",
+    "dateOfBirthInvalid": "無効な生年月日です",
+    "errorUpdatingProfile": "プロフィールの更新エラー",
+    "errorCreatingProfile": "プロフィールの作成エラー",
+    "errorGeneric": "エラーが発生しました",
     "firstName": "名",
     "lastName": "姓",
     "dateOfBirth": "生年月日",
@@ -140,7 +178,9 @@
     "works": "作品",
     "movies": "映画",
     "series": "テレビ番組",
-    "episodes": "エピソード"
+    "episodes": "エピソード",
+    "fetchWikipedia": "Wikipediaから取得",
+    "wikipediaUrl": "Wikipedia URL"
   },
   "actor": {
     "title": "俳優",
@@ -154,7 +194,8 @@
     "role": "役",
     "allRoles": "全役",
     "dubbedOnly": "吹き替えのみ",
-    "noDubbedRoles": "吹き替えの役はありません"
+    "noDubbedRoles": "吹き替えの役はありません",
+    "searchPlaceholder": "俳優を検索..."
   },
   "media": {
     "title": "タイトル",
@@ -211,7 +252,11 @@
     "seasons": "シーズン",
     "episodes": "エピソード",
     "season": "シーズン {num}",
-    "episode": "第{num}話"
+    "episode": "第{num}話",
+    "voicedBy": "声優",
+    "as": "として",
+    "noDubbingProjects": "吹き替えプロジェクトが見つかりません",
+    "dubbingStudio": "吹き替えスタジオ"
   },
   "search": {
     "actor": "俳優",
@@ -221,7 +266,9 @@
     "movie": "映画",
     "tv": "テレビ番組",
     "voiceActor": "声優",
-    "videoGame": "ビデオゲーム"
+    "videoGame": "ビデオゲーム",
+    "title": "検索",
+    "description": "映画、テレビ番組、声優などを検索"
   },
   "auth": {
     "loginRequiredForSubscription": "購読するにはログインが必要です"
@@ -239,7 +286,18 @@
     "login": "ログイン",
     "notifications": "通知",
     "manageNotifications": "購読を管理",
-    "noSubscriptions": "アクティブな購読はありません"
+    "noSubscriptions": "アクティブな購読はありません",
+    "preferences": "設定",
+    "emailNotifications": "メール通知",
+    "emailNotificationsDescription": "更新やアクティビティのメール通知を受け取る",
+    "dangerZone": "危険ゾーン",
+    "deleteAccount": "アカウントを削除",
+    "deleteAccountDescription": "アカウントと関連するすべてのデータを完全に削除",
+    "apiKeys": "APIキー",
+    "apiKeysDescription": "プログラムアクセス用のAPIキーを管理",
+    "noApiKeys": "APIキーはまだ生成されていません",
+    "generateApiKeyDescription": "APIにプログラムでアクセスする新しいAPIキーを生成",
+    "generateNewKey": "新しいキーを生成"
   },
   "about": {
     "title": "概要",
@@ -271,5 +329,152 @@
     "noCharacters": "キャラクターはありません",
     "notFound": "ゲームが見つかりません",
     "trendingGames": "トレンド - ゲーム"
+  },
+  "contribute": {
+    "title": "貢献",
+    "description": "データベースに貢献してDubbingBaseの改善にご協力ください",
+    "bronzeContributor": "ブロンズ貢献者",
+    "currentScore": "現在のスコア",
+    "progressToSilver": "シルバーへの進捗",
+    "readyToHelp": "手伝いますか？",
+    "readyToHelpDescription": "貢献してポイントを獲得し、実績をアンロックしましょう",
+    "startContributing": "貢献を開始",
+    "noRecentActivities": "最近のアクティビティはありません"
+  },
+  "dubbing": {
+    "cast": "キャスト",
+    "technicalTeam": "技術チーム"
+  },
+  "movie": {
+    "addDubbingProject": "吹き替えプロジェクトを追加"
+  },
+  "report": {
+    "title": "報告",
+    "description": "このコンテンツに関する問題を報告",
+    "button": "報告",
+    "reason": "理由",
+    "selectReason": "理由を選択",
+    "reasons": {
+      "copyright": "著作権侵害",
+      "inappropriate": "不適切なコンテンツ",
+      "error": "不正な情報",
+      "other": "その他"
+    },
+    "details": "詳細",
+    "detailsPlaceholder": "問題についての追加の詳細を提供してください...",
+    "successMessage": "報告が正常に送信されました"
+  },
+  "admin": {
+    "queue": {
+      "title": "メディアキュー",
+      "description": "保留中のメディア処理リクエストを管理",
+      "clearQueue": "キューをクリア",
+      "startProcessing": "処理を開始",
+      "refreshQueue": "更新",
+      "loadingQueue": "キューを読み込み中...",
+      "noMediaRequests": "メディアリクエストがありません",
+      "queueEmpty": "キューは空です",
+      "mediaDetails": "メディアの詳細",
+      "requestedBy": "リクエスト者",
+      "errors": "エラー",
+      "seasonNumber": "シーズン {number}",
+      "episodeNumber": "エピソード {number}",
+      "processingStarted": "処理を開始しました",
+      "processingCompleted": "処理が完了しました",
+      "failedToProcess": "処理に失敗しました",
+      "clearingQueue": "キューをクリア中...",
+      "cleared": "キューをクリアしました",
+      "failedToClear": "キューのクリアに失敗しました",
+      "confirmDelete": "このアイテムを削除してもよろしいですか？",
+      "itemDeleted": "アイテムを削除しました",
+      "failedToDelete": "アイテムの削除に失敗しました"
+    },
+    "auditLogs": {
+      "title": "監査ログ",
+      "description": "システムのすべての変更を追跡および確認",
+      "date": "日付",
+      "action": "アクション",
+      "points": "ポイント",
+      "status": "ステータス",
+      "reverted": "取り消済み",
+      "applied": "適用済み",
+      "revertAndPenalize": "取り消して罰則",
+      "revertContribution": "貢献を取り消す",
+      "revertDescription": "この貢献を取り消してもよろしいですか？この操作は変更を元に戻し、貢献者に罰則を与えます。",
+      "conflictDetected": "競合を検出",
+      "conflictDescription": "この貢献は作成以来変更されています。取り消す前に変更を確認してください。",
+      "previousSafe": "以前（安全）",
+      "whatTheySet": "設定した内容",
+      "currentDbState": "現在のDB状態",
+      "manualResolution": "手動解決",
+      "enterFinalValue": "適用する最終値を入力",
+      "forceResolve": "強制解決",
+      "confirmRevert": "本当にこれを取り消しますか？"
+    },
+    "reports": {
+      "title": "報告",
+      "description": "ユーザーから提出された報告を管理",
+      "fetchingReports": "報告を取得中...",
+      "noReportsFound": "報告が見つかりません",
+      "everythingLooksGood": "すべて正常のようです！",
+      "details": "詳細",
+      "reporter": "報告者",
+      "target": "対象",
+      "status": "ステータス",
+      "noDetailsProvided": "詳細は提供されていません",
+      "statusPending": "保留中",
+      "statusResolved": "解決済み",
+      "statusDismissed": "却下",
+      "statusUpdated": "ステータスを更新しました",
+      "failedToUpdateStatus": "ステータスの更新に失敗しました"
+    },
+    "studios": {
+      "createDubbingStudio": "吹き替えスタジオを作成",
+      "editStudioProfile": "スタジオプロフィールを編集",
+      "updatingStudioRecord": "スタジオレコードを更新中",
+      "fillStudioInfo": "以下のスタジオ情報を入力してください",
+      "studioName": "スタジオ名",
+      "websiteUrl": "ウェブサイトURL",
+      "studioLogo": "スタジオロゴ",
+      "changeLogo": "ロゴを変更",
+      "uploadLogo": "ロゴをアップロード",
+      "saveStudioProfile": "スタジオプロフィールを保存",
+      "studioSaved": "スタジオが正常に保存されました",
+      "failedToSave": "スタジオの保存に失敗しました"
+    }
+  },
+  "contribute": {
+    "title": "貢献",
+    "description": "データベースに貢献してDubbingBaseの改善にご協力ください",
+    "bronzeContributor": "ブロンズ貢献者",
+    "currentScore": "現在のスコア",
+    "progressToSilver": "シルバーへの進捗",
+    "readyToHelp": "手伝いますか？",
+    "readyToHelpDescription": "貢献してポイントを獲得し、実績をアンロックしましょう",
+    "startContributing": "貢献を開始",
+    "noRecentActivities": "最近のアクティビティはありません"
+  },
+  "dubbing": {
+    "cast": "キャスト",
+    "technicalTeam": "技術チーム"
+  },
+  "movie": {
+    "addDubbingProject": "吹き替えプロジェクトを追加"
+  },
+  "report": {
+    "title": "報告",
+    "description": "このコンテンツに関する問題を報告",
+    "button": "報告",
+    "reason": "理由",
+    "selectReason": "理由を選択",
+    "reasons": {
+      "copyright": "著作権侵害",
+      "inappropriate": "不適切なコンテンツ",
+      "error": "不正な情報",
+      "other": "その他"
+    },
+    "details": "詳細",
+    "detailsPlaceholder": "問題についての追加の詳細を提供してください...",
+    "successMessage": "報告が正常に送信されました"
   }
 }

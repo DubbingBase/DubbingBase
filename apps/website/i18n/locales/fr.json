@@ -23,7 +23,8 @@
   "nav": {
     "home": "Accueil",
     "profile": "Profil",
-    "login": "Connexion"
+    "login": "Connexion",
+    "admin": "Administration"
   },
   "navigation": {
     "home": "Accueil",
@@ -57,7 +58,37 @@
     "setStatus": "Définir le statut",
     "newVoiceActorsAdded": "{count} nouveaux doubleurs ajoutés",
     "noNewChangesFound": "Aucun nouveau changement trouvé",
-    "suggestChanges": "Suggérer des modifications (Bientôt disponible)"
+    "suggestChanges": "Suggérer des modifications (Bientôt disponible)",
+    "status": "Statut",
+    "backToDashboard": "Retour au tableau de bord",
+    "country": "Pays",
+    "city": "Ville",
+    "remove": "Supprimer",
+    "description": "Description",
+    "create": "Créer",
+    "searching": "Recherche...",
+    "link": "Lien",
+    "refresh": "Rafraîchir",
+    "userId": "ID utilisateur",
+    "submit": "Envoyer",
+    "underConstruction": "En construction",
+    "underConstructionDescription": "Cette page est en cours de construction. Veuillez revenir plus tard.",
+    "returnHome": "Retour à l'accueil",
+    "close": "Fermer",
+    "noInfo": "Aucune information disponible",
+    "readMore": "Lire la suite",
+    "showLess": "Voir moins",
+    "retry": "Réessayer",
+    "share": "Partager",
+    "editProfile": "Modifier le profil",
+    "success": "Succès",
+    "publicProfile": "Profil public",
+    "enqueue": "Mettre en file",
+    "fetch": "Récupérer",
+    "editImage": "Modifier l'image",
+    "unlink": "Dissocier",
+    "confirmUnlinkTitle": "Confirmer la dissociation",
+    "unlinkVoiceActor": "Dissocier le comédien"
   },
   "theme": {
     "light": "Clair",
@@ -120,6 +151,13 @@
     "retry": "Réessayer",
     "voiceActorProfileNotFound": "Profil comédien introuvable",
     "voiceActorProfileNotLoaded": "Ce profil comédien n'a pas pu être chargé.",
+    "noSearchResults": "Aucun résultat de recherche trouvé",
+    "bioTooLong": "La biographie est trop longue",
+    "nationalityInvalid": "Nationalité invalide",
+    "dateOfBirthInvalid": "Date de naissance invalide",
+    "errorUpdatingProfile": "Erreur lors de la mise à jour du profil",
+    "errorCreatingProfile": "Erreur lors de la création du profil",
+    "errorGeneric": "Une erreur s'est produite",
     "firstName": "Prénom",
     "lastName": "Nom",
     "dateOfBirth": "Date de naissance",
@@ -157,7 +195,9 @@
     "works": "Œuvres",
     "movies": "Films",
     "series": "Séries",
-    "episodes": "Épisodes"
+    "episodes": "Épisodes",
+    "fetchWikipedia": "Récupérer depuis Wikipedia",
+    "wikipediaUrl": "URL Wikipedia"
   },
   "actor": {
     "title": "Acteur",
@@ -171,7 +211,8 @@
     "role": "rôle",
     "allRoles": "Tous les rôles",
     "dubbedOnly": "Doublés uniquement",
-    "noDubbedRoles": "Aucun rôle doublé disponible"
+    "noDubbedRoles": "Aucun rôle doublé disponible",
+    "searchPlaceholder": "Rechercher des acteurs..."
   },
   "media": {
     "title": "Titre",
@@ -224,7 +265,12 @@
     "character": "Personnage",
     "unknownCharacter": "Personnage inconnu",
     "voiceActor": "Comédien(ne)",
-    "notSpecified": "Non spécifié"
+    "notSpecified": "Non spécifié",
+    "voicedBy": "Doublé par",
+    "as": "en tant que",
+    "noDubbingProjects": "Aucun projet de doublage trouvé",
+    "dubbingStudio": "Studio de doublage",
+    "seasons": "Saisons"
   },
   "search": {
     "actor": "Acteur",
@@ -234,7 +280,9 @@
     "movie": "Film",
     "tv": "Série",
     "voiceActor": "Comédien(ne)",
-    "videoGame": "Jeu vidéo"
+    "videoGame": "Jeu vidéo",
+    "title": "Recherche",
+    "description": "Rechercher des films, séries, comédiens et plus"
   },
   "auth": {
     "loginRequiredForSubscription": "Vous devez être connecté pour vous abonner"
@@ -252,7 +300,18 @@
     "login": "Se connecter",
     "notifications": "Notifications",
     "manageNotifications": "Gérer mes abonnements",
-    "noSubscriptions": "Aucun abonnement actif"
+    "noSubscriptions": "Aucun abonnement actif",
+    "preferences": "Préférences",
+    "emailNotifications": "Notifications par email",
+    "emailNotificationsDescription": "Recevoir des notifications par email pour les mises à jour et l'activité",
+    "dangerZone": "Zone dangereuse",
+    "deleteAccount": "Supprimer le compte",
+    "deleteAccountDescription": "Supprimer définitivement votre compte et toutes les données associées",
+    "apiKeys": "Clés API",
+    "apiKeysDescription": "Gérer vos clés API pour l'accès programmatique",
+    "noApiKeys": "Aucune clé API générée",
+    "generateApiKeyDescription": "Générer une nouvelle clé API pour accéder à l'API programmatiquement",
+    "generateNewKey": "Générer une nouvelle clé"
   },
   "about": {
     "title": "À propos",
@@ -284,5 +343,152 @@
     "noCharacters": "Aucun personnage disponible",
     "notFound": "Jeu introuvable",
     "trendingGames": "Tendances - Jeux"
+  },
+  "contribute": {
+    "title": "Contribuer",
+    "description": "Aidez-nous à améliorer DubbingBase en contribuant à la base de données",
+    "bronzeContributor": "Contributeur Bronze",
+    "currentScore": "Score actuel",
+    "progressToSilver": "Progression vers Argent",
+    "readyToHelp": "Prêt à aider ?",
+    "readyToHelpDescription": "Commencez à contribuer pour gagner des points et débloquer des récompenses",
+    "startContributing": "Commencer à contribuer",
+    "noRecentActivities": "Aucune activité récente"
+  },
+  "dubbing": {
+    "cast": "Distribution",
+    "technicalTeam": "Équipe technique"
+  },
+  "movie": {
+    "addDubbingProject": "Ajouter un projet de doublage"
+  },
+  "report": {
+    "title": "Signaler",
+    "description": "Signaler un problème avec ce contenu",
+    "button": "Signaler",
+    "reason": "Raison",
+    "selectReason": "Sélectionnez une raison",
+    "reasons": {
+      "copyright": "Violation du droit d'auteur",
+      "inappropriate": "Contenu inapproprié",
+      "error": "Information incorrecte",
+      "other": "Autre"
+    },
+    "details": "Détails",
+    "detailsPlaceholder": "Fournissez des détails supplémentaires sur le problème...",
+    "successMessage": "Signalement envoyé avec succès"
+  },
+  "admin": {
+    "queue": {
+      "title": "File d'attente Médias",
+      "description": "Gérez les demandes de médias en attente de traitement",
+      "clearQueue": "Vider la file",
+      "startProcessing": "Lancer le traitement",
+      "refreshQueue": "Rafraîchir",
+      "loadingQueue": "Chargement de la file d'attente...",
+      "noMediaRequests": "Aucune demande de média",
+      "queueEmpty": "La file d'attente est vide",
+      "mediaDetails": "Détails du média",
+      "requestedBy": "Demandé par",
+      "errors": "Erreurs",
+      "seasonNumber": "Saison {number}",
+      "episodeNumber": "Épisode {number}",
+      "processingStarted": "Traitement démarré",
+      "processingCompleted": "Traitement terminé",
+      "failedToProcess": "Échec du traitement",
+      "clearingQueue": "Suppression de la file d'attente...",
+      "cleared": "File d'attente vidée",
+      "failedToClear": "Échec de la suppression",
+      "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet élément ?",
+      "itemDeleted": "Élément supprimé",
+      "failedToDelete": "Échec de la suppression"
+    },
+    "auditLogs": {
+      "title": "Journaux d'audit",
+      "description": "Suivre et examiner toutes les modifications du système",
+      "date": "Date",
+      "action": "Action",
+      "points": "Points",
+      "status": "Statut",
+      "reverted": "Annulé",
+      "applied": "Appliqué",
+      "revertAndPenalize": "Annuler et pénaliser",
+      "revertContribution": "Annuler la contribution",
+      "revertDescription": "Êtes-vous sûr de vouloir annuler cette contribution ? Cette action annulera les modifications et pénalisera le contributeur.",
+      "conflictDetected": "Conflit détecté",
+      "conflictDescription": "Cette contribution a été modifiée depuis sa création. Veuillez examiner les modifications avant d'annuler.",
+      "previousSafe": "Précédent (Sûr)",
+      "whatTheySet": "Ce qu'ils ont défini",
+      "currentDbState": "État actuel de la BDD",
+      "manualResolution": "Résolution manuelle",
+      "enterFinalValue": "Entrez la valeur finale à appliquer",
+      "forceResolve": "Forcer la résolution",
+      "confirmRevert": "Êtes-vous sûr de vouloir annuler ceci ?"
+    },
+    "reports": {
+      "title": "Signalements",
+      "description": "Gérer les signalements des utilisateurs",
+      "fetchingReports": "Récupération des signalements...",
+      "noReportsFound": "Aucun signalement trouvé",
+      "everythingLooksGood": "Tout semble en ordre !",
+      "details": "Détails",
+      "reporter": "Signaleur",
+      "target": "Cible",
+      "status": "Statut",
+      "noDetailsProvided": "Aucun détail fourni",
+      "statusPending": "En attente",
+      "statusResolved": "Résolu",
+      "statusDismissed": "Rejeté",
+      "statusUpdated": "Statut mis à jour",
+      "failedToUpdateStatus": "Échec de la mise à jour du statut"
+    },
+    "studios": {
+      "createDubbingStudio": "Créer un studio de doublage",
+      "editStudioProfile": "Modifier le profil du studio",
+      "updatingStudioRecord": "Mise à jour de l'enregistrement du studio",
+      "fillStudioInfo": "Remplissez les informations du studio ci-dessous",
+      "studioName": "Nom du studio",
+      "websiteUrl": "URL du site web",
+      "studioLogo": "Logo du studio",
+      "changeLogo": "Changer le logo",
+      "uploadLogo": "Télécharger le logo",
+      "saveStudioProfile": "Enregistrer le profil du studio",
+      "studioSaved": "Studio enregistré avec succès",
+      "failedToSave": "Échec de l'enregistrement du studio"
+    }
+  },
+  "contribute": {
+    "title": "Contribuer",
+    "description": "Aidez-nous à améliorer DubbingBase en contribuant à la base de données",
+    "bronzeContributor": "Contributeur Bronze",
+    "currentScore": "Score actuel",
+    "progressToSilver": "Progression vers Argent",
+    "readyToHelp": "Prêt à aider ?",
+    "readyToHelpDescription": "Commencez à contribuer pour gagner des points et débloquer des récompenses",
+    "startContributing": "Commencer à contribuer",
+    "noRecentActivities": "Aucune activité récente"
+  },
+  "dubbing": {
+    "cast": "Distribution",
+    "technicalTeam": "Équipe technique"
+  },
+  "movie": {
+    "addDubbingProject": "Ajouter un projet de doublage"
+  },
+  "report": {
+    "title": "Signaler",
+    "description": "Signaler un problème avec ce contenu",
+    "button": "Signaler",
+    "reason": "Raison",
+    "selectReason": "Sélectionnez une raison",
+    "reasons": {
+      "copyright": "Violation du droit d'auteur",
+      "inappropriate": "Contenu inapproprié",
+      "error": "Information incorrecte",
+      "other": "Autre"
+    },
+    "details": "Détails",
+    "detailsPlaceholder": "Fournissez des détails supplémentaires sur le problème...",
+    "successMessage": "Signalement envoyé avec succès"
   }
 }

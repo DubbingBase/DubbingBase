@@ -6,7 +6,9 @@ export const API_PREFIXES = {
   APP: "app",
 } as const;
 
-// Common content types for consistent key generation
+// Schema version - bump when cache structure changes
+export const CACHE_SCHEMA_VERSION = "1";
+
 export const CONTENT_TYPES = {
   MOVIE: "movie",
   TV: "tv",
@@ -29,7 +31,7 @@ export class SimpleKeyBuilder {
     id: string | number,
     suffix?: string,
   ): string {
-    const baseKey = `${api}:${type}:${id}`;
+    const baseKey = `${api}:v${CACHE_SCHEMA_VERSION}:${type}:${id}`;
     return suffix ? `${baseKey}:${suffix}` : baseKey;
   }
 
@@ -105,6 +107,8 @@ export const CACHE_KEYS = {
     ),
   APP_USER_PROFILE: (userId: string) =>
     SimpleKeyBuilder.app(CONTENT_TYPES.USER, userId, "profile"),
+  APP_VOICE_ACTOR: (id: number, lang: string) =>
+    SimpleKeyBuilder.app(CONTENT_TYPES.VOICE_ACTOR, id, lang),
 } as const;
 
 // Cache key validation

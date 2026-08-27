@@ -42,6 +42,7 @@ jobs:
             website:
               - 'apps/website/**'
               - 'packages/shared-logic/**'
+              - 'pnpm-lock.yaml'
 
   # Job 2: Deploy Supabase (runs first if database needs updating)
   deploy-supabase:
