@@ -256,7 +256,9 @@
     "voicedBy": "Voiced by",
     "as": "as",
     "noDubbingProjects": "No dubbing projects found",
-    "dubbingStudio": "Dubbing Studio"
+    "dubbingStudio": "Dubbing Studio",
+    "backToSeason": "Back to Season",
+    "noCast": "No cast information available"
   },
   "search": {
     "actor": "Actor",

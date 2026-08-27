@@ -122,7 +122,7 @@
           <NuxtLink
             v-for="episode in episodes"
             :key="episode.episode_number"
-            :to="$localePath(`/show/${showId}/season/${seasonNumber}/episode/${episode.episode_number}`)"
+            :to="{ path: $localePath(`/show/${showId}/season/${seasonNumber}/episode/${episode.episode_number}`), query: activeDubId ? { dub: activeDubId } : {} }"
             class="group cursor-pointer block bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl p-4 shadow-sm transition-colors hover:border-cyan-400 hover:shadow-md"
           >
             <div class="relative w-full aspect-video mb-3 rounded-lg overflow-hidden bg-gray-200 dark:bg-[#222]">

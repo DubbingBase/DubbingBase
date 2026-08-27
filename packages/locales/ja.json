@@ -256,7 +256,9 @@
     "voicedBy": "声優",
     "as": "として",
     "noDubbingProjects": "吹き替えプロジェクトが見つかりません",
-    "dubbingStudio": "吹き替えスタジオ"
+    "dubbingStudio": "吹き替えスタジオ",
+    "backToSeason": "シーズンに戻る",
+    "noCast": "キャスト情報がありません"
   },
   "search": {
     "actor": "俳優",
