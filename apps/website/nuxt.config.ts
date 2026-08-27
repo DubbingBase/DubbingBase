@@ -16,6 +16,9 @@ export default defineNuxtConfig({
 
   nitro: {
     preset: process.env.NITRO_PRESET || "node-server",
+    wasm: {
+      esmImport: true,
+    },
     cloudflare: {
       wrangler: {
         // Optional: add KV namespace for edge-distributed caching.
@@ -49,6 +52,10 @@ export default defineNuxtConfig({
 
   experimental: {
     inlineRouteRules: true,
+  },
+
+  wasm: {
+    esmImport: true,
   },
 
   routeRules: {
