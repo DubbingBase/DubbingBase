@@ -1,33 +1,23 @@
 import satori from "satori";
-import { initWasm, Resvg } from "@resvg/resvg-wasm";
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import { dirname, resolve } from "node:path";
+import { Resvg } from "@cf-wasm/resvg/workerd";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Read wasm file at build time
-const wasmPath = resolve(
-  __dirname,
-  "../../../../../node_modules/@resvg/resvg-wasm/index_bg.wasm",
-);
-const wasmBytes = readFileSync(wasmPath);
-
-let wasmInitialized = false;
-let wasmModule: WebAssembly.Module | null = null;
 let fontDataRegular: ArrayBuffer | null = null;
 let fontDataBold: ArrayBuffer | null = null;
 
 // Nitro bundles files under server/assets/ and exposes them via storage.
 // Try common namespace + path conventions across Nitro versions.
 async function loadAsset(path: string): Promise<Uint8Array> {
+  const normalizedColon = path.replace(/\//g, ":");
   const namespaces = ["assets:server", "assets"];
   const variants = [
     path,
+    normalizedColon,
     `server/${path}`,
+    `server:${normalizedColon}`,
     `assets/${path}`,
+    `assets:${normalizedColon}`,
     `server/assets/${path}`,
+    `server:assets:${normalizedColon}`,
   ];
   let lastErr: unknown;
   for (const ns of namespaces) {
@@ -40,6 +30,16 @@ async function loadAsset(path: string): Promise<Uint8Array> {
       }
     }
   }
+  // Filesystem fallback for node / dev / test environments
+  try {
+    const fs = await import("node:fs/promises");
+    const pathMod = await import("node:path");
+    const filePath = pathMod.resolve(process.cwd(), "server/assets", path);
+    const data = await fs.readFile(filePath);
+    if (data) return new Uint8Array(data);
+  } catch {
+    // Ignore fallback failure
+  }
   throw new Error(`OG asset not found: ${path} (${String(lastErr)})`);
 }
 
@@ -51,12 +51,6 @@ function toArrayBuffer(data: Uint8Array): ArrayBuffer {
 }
 
 async function initialize() {
-  if (!wasmInitialized) {
-    wasmModule = await WebAssembly.compile(wasmBytes);
-    await initWasm(wasmModule);
-    wasmInitialized = true;
-  }
-
   if (!fontDataRegular) {
     fontDataRegular = toArrayBuffer(
       await loadAsset("og-image/Inter-Regular.ttf"),
@@ -66,6 +60,20 @@ async function initialize() {
   if (!fontDataBold) {
     fontDataBold = toArrayBuffer(await loadAsset("og-image/Inter-Bold.ttf"));
   }
+}
+
+function uint8ArrayToBase64(bytes: Uint8Array): string {
+  if (typeof Buffer !== "undefined") {
+    return Buffer.from(bytes).toString("base64");
+  }
+  let binary = "";
+  const len = bytes.byteLength;
+  const chunkSize = 8192;
+  for (let i = 0; i < len; i += chunkSize) {
+    const chunk = bytes.subarray(i, Math.min(i + chunkSize, len));
+    binary += String.fromCharCode.apply(null, chunk as unknown as number[]);
+  }
+  return btoa(binary);
 }
 
 async function fetchImageAsDataUri(imageUrl: string): Promise<string | null> {
@@ -80,7 +88,7 @@ async function fetchImageAsDataUri(imageUrl: string): Promise<string | null> {
     const res = await fetch(url);
     if (!res.ok) return null;
     const buffer = await res.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+    const base64 = uint8ArrayToBase64(new Uint8Array(buffer));
     const contentType = res.headers.get("content-type") || "image/jpeg";
     return `data:${contentType};base64,${base64}`;
   } catch {
@@ -287,7 +295,7 @@ export default defineEventHandler(async (event) => {
       const { data: voiceActor, error } = await supabaseAdmin
         .from("voice_actors")
         .select(
-          "id, firstname, lastname, profile_picture, nationality, work(id)",
+          "id, firstname, lastname, voice_actor_name, profile_picture, nationality, work(id)",
         )
         .eq("id", Number(id))
         .single();
@@ -297,7 +305,9 @@ export default defineEventHandler(async (event) => {
       }
 
       const name =
-        `${voiceActor.firstname} ${voiceActor.lastname}`.trim() || "Unknown";
+        voiceActor.voice_actor_name?.trim() ||
+        `${voiceActor.firstname || ""} ${voiceActor.lastname || ""}`.trim() ||
+        "Unknown";
       const worksCount = voiceActor.work?.length ?? 0;
       const nationality = voiceActor.nationality;
 
@@ -305,10 +315,21 @@ export default defineEventHandler(async (event) => {
       if (voiceActor.profile_picture) {
         const config = useRuntimeConfig();
         const supabaseUrl =
-          (config.supabaseUrl as string) || process.env.SUPABASE_URL || "";
+          (config.supabaseUrl as string) ||
+          (config.public?.supabaseUrl as string) ||
+          process.env.NUXT_SUPABASE_URL ||
+          process.env.NUXT_PUBLIC_SUPABASE_URL ||
+          process.env.SUPABASE_URL ||
+          "";
         const bucket = "voice_actor_profile_pictures";
-        const storageUrl = `${supabaseUrl}/storage/v1/object/public/${bucket}/${voiceActor.profile_picture}`;
-        imageDataUri = await fetchImageAsDataUri(storageUrl);
+        const storageUrl = voiceActor.profile_picture.startsWith("http")
+          ? voiceActor.profile_picture
+          : supabaseUrl
+            ? `${supabaseUrl.replace(/\/+$/, "")}/storage/v1/object/public/${bucket}/${voiceActor.profile_picture}`
+            : "";
+        if (storageUrl) {
+          imageDataUri = await fetchImageAsDataUri(storageUrl);
+        }
       }
 
       template = buildVoiceActorOg({
