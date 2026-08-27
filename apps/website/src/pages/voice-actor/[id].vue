@@ -584,9 +584,6 @@ const voiceActorId = Number(route.params.id);
 const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
 const { locale, t } = useI18n();
 
-const config = useRuntimeConfig();
-const baseUrl = config.public.supabase.url;
-
 const { data, pending } = useAsyncData(`voice-actor-${voiceActorId}`, () =>
   fetchVoiceActorData(voiceActorId),
 );
@@ -651,7 +648,7 @@ const canonicalUrl = computed(
 
 const ogImageUrl = computed(() => {
   if (!voiceActorId) return "";
-  return `${baseUrl}/functions/v1/og-image?type=voice-actor&id=${voiceActorId}`;
+  return `https://dubbingbase.com/api/og-image?type=voice-actor&id=${voiceActorId}`;
 });
 const actorDescription = computed(() => {
   if (!actorName.value)
