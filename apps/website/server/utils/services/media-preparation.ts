@@ -128,12 +128,12 @@ export async function prepareMedia(options: {
     }
 
     const wikipediaCache = useWikipediaCache();
-    
+
     // When language is provided, process only that language (per-language queue job)
     // When language is null, discover all available languages
     let availableLanguages: string[];
     let sitelinks: Record<string, any> | undefined;
-    
+
     if (language) {
       // Single language mode: skip sitelink discovery, use provided language
       availableLanguages = [language];
@@ -146,7 +146,7 @@ export async function prepareMedia(options: {
       sitelinks = entity.entities[wikiId]?.sitelinks;
       availableLanguages = extractAvailableLanguages(sitelinks);
     }
-    
+
     console.log("availableLanguages", availableLanguages);
 
     if (availableLanguages.length === 0) {
@@ -171,8 +171,8 @@ export async function prepareMedia(options: {
     }
 
     // When processing a specific language (queue job), don't apply the limit
-    const languagesToProcess = language 
-      ? availableLanguages 
+    const languagesToProcess = language
+      ? availableLanguages
       : availableLanguages.slice(0, MAX_LANGUAGES_PER_REQUEST);
 
     for (const lang of languagesToProcess) {
@@ -404,24 +404,28 @@ export async function prepareGame(options: {
     }
 
     const bestMatch = searchData.search[0];
-    
+
     // When language is provided, process only that language (per-language queue job)
     // When language is null, discover all available languages
     let availableLanguages: string[];
     let sitelinks: Record<string, any> | undefined;
-    
+
     if (language) {
       // Single language mode: skip sitelink discovery, use provided language
       availableLanguages = [language];
-      const entityData = await wikipediaCache.getAllSitelinksEntity(bestMatch.id);
+      const entityData = await wikipediaCache.getAllSitelinksEntity(
+        bestMatch.id,
+      );
       sitelinks = entityData.entities[bestMatch.id]?.sitelinks;
     } else {
       // Discovery mode: find all available languages
-      const entityData = await wikipediaCache.getAllSitelinksEntity(bestMatch.id);
+      const entityData = await wikipediaCache.getAllSitelinksEntity(
+        bestMatch.id,
+      );
       sitelinks = entityData.entities[bestMatch.id]?.sitelinks;
       availableLanguages = extractAvailableLanguages(sitelinks);
     }
-    
+
     console.log("availableLanguages", availableLanguages);
 
     if (availableLanguages.length === 0) {
@@ -448,8 +452,8 @@ export async function prepareGame(options: {
     }
 
     // When processing a specific language (queue job), don't apply the limit
-    const languagesToProcess = language 
-      ? availableLanguages 
+    const languagesToProcess = language
+      ? availableLanguages
       : availableLanguages.slice(0, MAX_LANGUAGES_PER_REQUEST);
 
     for (const lang of languagesToProcess) {

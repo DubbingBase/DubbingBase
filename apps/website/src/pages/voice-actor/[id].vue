@@ -238,7 +238,7 @@
                 <div class="flex flex-col sm:grid sm:grid-cols-3 gap-4 h-full">
                   <!-- Column 1: Media -->
                   <NuxtLink
-                    :to="$localePath(`/${item.work.dubbing_projects?.content_type === 'tv' ? 'show' : 'movie'}/${item.media.id}`)"
+                    :to="$localePath(`/${item.work.dubbing_projects?.content_type === 'tv' ? 'show' : item.work.dubbing_projects?.content_type === 'video_game' ? 'game' : 'movie'}/${item.media.id}`)"
                     class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start cursor-pointer"
                   >
                     <div
@@ -451,7 +451,7 @@
                     >
                       <!-- Column 1: Media -->
                       <NuxtLink
-                        :to="$localePath(`/${item.work.dubbing_projects?.content_type === 'tv' ? 'show' : 'movie'}/${item.media.id}`)"
+                        :to="$localePath(`/${item.work.dubbing_projects?.content_type === 'tv' ? 'show' : item.work.dubbing_projects?.content_type === 'video_game' ? 'game' : 'movie'}/${item.media.id}`)"
                         class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start cursor-pointer"
                       >
                         <div

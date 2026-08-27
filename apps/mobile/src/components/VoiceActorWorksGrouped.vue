@@ -26,12 +26,12 @@
             :key="work.media.id"
             class="work-item"
           >
-            <RouterLink :to="{ name: work.work.dubbing_projects?.content_type === 'movie' ? 'MovieDetails' : 'SerieDetails', params: { id: work.media.id } }">
+            <RouterLink :to="{ name: work.work.dubbing_projects?.content_type === 'movie' ? 'MovieDetails' : work.work.dubbing_projects?.content_type === 'video_game' ? 'GameDetails' : 'SerieDetails', params: { id: work.media.id } }">
               <MovieCard
                 :media="work.media"
                 :character="work.data.character || ''"
                 :character-image="work.data.characterImage"
-                :media-type="work.work.dubbing_projects?.content_type === 'movie' ? 'movie' : 'serie'"
+                :media-type="work.work.dubbing_projects?.content_type === 'movie' ? 'movie' : work.work.dubbing_projects?.content_type === 'video_game' ? 'video_game' : 'serie'"
               />
             </RouterLink>
           </div>

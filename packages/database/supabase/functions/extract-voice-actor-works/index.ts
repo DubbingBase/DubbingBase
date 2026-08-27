@@ -85,13 +85,15 @@ export default {
       }
 
       const schema = z.object({
-        extract: z.array(z.object({
-          originalTitle: z.string(),
-          frenchTitle: z.string(),
-          character: z.string(),
-          type: z.string(),
-          originalActor: z.string(),
-        })),
+        extract: z.array(
+          z.object({
+            originalTitle: z.string(),
+            frenchTitle: z.string(),
+            character: z.string(),
+            type: z.string(),
+            originalActor: z.string(),
+          }),
+        ),
       });
 
       const parsed = await geminiGenerateObject(

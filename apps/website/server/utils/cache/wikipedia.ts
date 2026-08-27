@@ -70,8 +70,7 @@ export function extractAvailableLanguages(
 }
 
 /** Wikidata sitelink key for a URL-safe language code ("pt-br" → "pt_brwiki"). */
-export const sitelinkKey = (lang: string) =>
-  `${lang.replace(/-/g, "_")}wiki`;
+export const sitelinkKey = (lang: string) => `${lang.replace(/-/g, "_")}wiki`;
 
 /**
  * Pick the sections of a page that contain dubbing / voice-actor credits,
@@ -88,9 +87,7 @@ export async function selectDubbingSections(
   });
 
   try {
-    const list = sections
-      .map((s) => `${s.index}: ${s.line}`)
-      .join("\n");
+    const list = sections.map((s) => `${s.index}: ${s.line}`).join("\n");
     const parsed = await llmGenerateObject(
       `Below is the table of contents of a Wikipedia article. List the indexes of every section that contains dubbing or voice-actor credit information for a production (e.g. voice cast tables, dubbing actor lists, original actor / voice actor columns). Include subsections only when they themselves hold credits. Return [] if none.
 

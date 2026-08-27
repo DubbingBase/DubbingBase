@@ -159,9 +159,7 @@ async function checkWikipediaBatchForDubbing(
       if (page && page.revisions && page.revisions.length > 0) {
         const wikitext =
           page.revisions[0].slots?.main?.["*"] || page.revisions[0]["*"] || "";
-        if (
-          wikitext.match(DUBBING_HEADING_PATTERN)
-        ) {
+        if (wikitext.match(DUBBING_HEADING_PATTERN)) {
           hasDubbing = true;
         }
       }

@@ -124,7 +124,7 @@ export default defineNuxtConfig({
   },
 
   image: {
-    domains: ["image.tmdb.org"],
+    domains: ["image.tmdb.org", "images.igdb.com"],
     format: ["avif", "webp"],
   },
 

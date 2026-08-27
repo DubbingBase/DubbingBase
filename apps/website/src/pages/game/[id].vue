@@ -1,7 +1,8 @@
 <template>
   <div>
+    <MediaSkeleton v-if="pending && !game" />
     <MediaDetailsLayout
-      v-if="game"
+      v-else-if="game"
       :title="game.name"
       :backdrop-url="game.artworks?.[0]?.url || game.screenshots?.[0]?.url || null"
       :poster-url="coverUrl"
@@ -230,11 +231,16 @@
       </template>
     </MediaDetailsLayout>
 
+    <div v-else-if="!pending" class="text-center py-20 text-gray-500 min-h-screen">
+      {{ $t('details.notFound', 'Jeu vidéo introuvable.') }}
+    </div>
+
     <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
   </div>
 </template>
 
 <script setup lang="ts">
+import MediaSkeleton from "../../components/MediaSkeleton.vue";
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import { useRoute, useRouter } from 'vue-router';
 import { fetchGameData } from '@app/shared-logic';
@@ -266,7 +272,7 @@ const { data, pending, refresh } = useAsyncData(cacheKey, async () => {
   // We only have cached data on the client side after hydration
   const cachedData = nuxtApp.payload.data[cacheKey];
 
-  const newData = await fetchGameData(supabase, gameId, locale.value);
+  const newData = await fetchGameData(gameId, locale.value);
 
   // If IGDB fetch fails on the edge function (e.g., timeout)
   // but we already have valid data from SSR, we preserve the IGDB data
