@@ -145,14 +145,24 @@ export async function geminiVision(
     () =>
       generateText({
         model: getGoogleClient()(options?.model ?? GEMINI_MODEL),
-        messages: [{ role: "user", content: [{ type: "text", text: prompt }, imageContent] }],
+        messages: [
+          {
+            role: "user",
+            content: [{ type: "text", text: prompt }, imageContent],
+          },
+        ],
         system,
         temperature,
       }).then((r) => r.text),
     () =>
       generateText({
         model: getGroqClient()(GROQ_MODEL),
-        messages: [{ role: "user", content: [{ type: "text", text: prompt }, imageContent] }],
+        messages: [
+          {
+            role: "user",
+            content: [{ type: "text", text: prompt }, imageContent],
+          },
+        ],
         system,
         temperature,
       }).then((r) => r.text),
@@ -187,7 +197,12 @@ export async function geminiVisionObject<T extends z.ZodType>(
     () =>
       generateObject({
         model: getGoogleClient()(options?.model ?? GEMINI_MODEL),
-        messages: [{ role: "user", content: [{ type: "text", text: prompt }, imageContent] }],
+        messages: [
+          {
+            role: "user",
+            content: [{ type: "text", text: prompt }, imageContent],
+          },
+        ],
         schema,
         system,
         temperature,
@@ -195,7 +210,12 @@ export async function geminiVisionObject<T extends z.ZodType>(
     () =>
       generateObject({
         model: getGroqClient()(GROQ_MODEL),
-        messages: [{ role: "user", content: [{ type: "text", text: prompt }, imageContent] }],
+        messages: [
+          {
+            role: "user",
+            content: [{ type: "text", text: prompt }, imageContent],
+          },
+        ],
         schema,
         system,
         temperature,

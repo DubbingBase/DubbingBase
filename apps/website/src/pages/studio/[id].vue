@@ -111,7 +111,7 @@
                   :alt="`${va.firstname} ${va.lastname}`"
                 />
                 <div v-else class="w-full h-full flex items-center justify-center font-bold text-xl text-gray-400">
-                  {{ va.firstname.charAt(0) }}{{ va.lastname.charAt(0) }}
+                  {{ va.firstname?.charAt(0) || '' }}{{ va.lastname?.charAt(0) || '' }}
                 </div>
               </div>
               <h3 class="font-semibold text-gray-900 dark:text-white line-clamp-1 group-hover:text-cyan-500 transition-colors">

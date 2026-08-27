@@ -1,5 +1,11 @@
 # @app/locales
 
+## 0.0.49
+
+### Patch Changes
+
+- b966023: Add missing translations for admin pages (queue, audit logs, reports, studios), contribute, dubbing, report modal, settings, profile, and other UI sections across all locales (en, fr, es, ja)
+
 ## 0.0.48
 
 ### Patch Changes

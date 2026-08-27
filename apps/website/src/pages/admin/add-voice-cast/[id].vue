@@ -109,7 +109,7 @@
                 <div class="min-w-0 flex items-center space-x-2">
                   <div class="h-5 w-5 rounded-full overflow-hidden border border-indigo-800 bg-gray-950 shrink-0 flex items-center justify-center text-indigo-400">
                     <NuxtImg format="webp" v-if="getAssignedVA(actor.id)?.profile_picture" :src="getAssignedVA(actor.id)!.profile_picture!" class="h-full w-full object-cover" />
-                    <span v-else class="text-[9px] font-bold">{{ getAssignedVA(actor.id)?.firstname.charAt(0) }}</span>
+                    <span v-else class="text-[9px] font-bold">{{ getAssignedVA(actor.id)?.firstname?.charAt(0) || '' }}</span>
                   </div>
                   <span class="text-xs font-semibold text-indigo-300 truncate">
                     {{ getAssignedVA(actor.id)?.firstname }} {{ getAssignedVA(actor.id)?.lastname }}

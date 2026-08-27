@@ -1,7 +1,7 @@
 <template>
   <div class="bg-gray-50 dark:bg-[#1b1b1b] min-h-screen">
     <!-- Hero Section Skeleton -->
-    <div class="relative w-full h-[50vh] min-h-[400px] bg-gray-200 dark:bg-[#1d1d1d] animate-pulse">
+    <div class="relative w-full h-[50vh] min-h-[400px] bg-gray-200 dark:bg-[#1d1d1d]">
       <div class="absolute inset-0 bg-gradient-to-t from-gray-50 dark:from-[#1b1b1b] to-transparent"></div>
       
       <div class="absolute bottom-0 left-0 w-full p-8 flex flex-col md:flex-row gap-6 items-end">
@@ -51,7 +51,7 @@
       </div>
 
       <!-- Works Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 animate-pulse">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         <div v-for="i in 6" :key="i" class="bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl p-4 shadow-sm">
           <div class="flex flex-col sm:grid sm:grid-cols-3 gap-4 h-full">
             <div class="w-16 sm:w-full aspect-[2/3] rounded-xl bg-gray-200 dark:bg-[#333] shrink-0"></div>

@@ -1,7 +1,8 @@
 <template>
   <div>
+    <MediaSkeleton v-if="pending && !game" />
     <MediaDetailsLayout
-      v-if="game"
+      v-else-if="game"
       :title="game.name"
       :backdrop-url="game.artworks?.[0]?.url || game.screenshots?.[0]?.url || null"
       :poster-url="coverUrl"
@@ -54,7 +55,7 @@
           >
             <div class="w-6 h-6 rounded flex items-center justify-center overflow-hidden shrink-0 bg-white dark:bg-[#2a2a2a]">
               <img v-if="activeDubProject.studio_data.logo_url" :src="activeDubProject.studio_data.logo_url" class="w-full h-full object-contain p-0.5" />
-              <span v-else class="font-bold text-xs text-gray-400">{{ activeDubProject.studio_data.name.charAt(0) }}</span>
+              <span v-else class="font-bold text-xs text-gray-400">{{ activeDubProject.studio_data.name?.charAt(0) || '' }}</span>
             </div>
             <span class="font-medium text-xs group-hover:text-cyan-500 transition-colors truncate max-w-[120px]">{{ activeDubProject.studio_data.name }}</span>
           </NuxtLink>
@@ -230,11 +231,16 @@
       </template>
     </MediaDetailsLayout>
 
+    <div v-else-if="!pending" class="text-center py-20 text-gray-500 min-h-screen">
+      {{ $t('details.notFound', 'Jeu vidéo introuvable.') }}
+    </div>
+
     <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
   </div>
 </template>
 
 <script setup lang="ts">
+import MediaSkeleton from "../../components/MediaSkeleton.vue";
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import { useRoute, useRouter } from 'vue-router';
 import { fetchGameData } from '@app/shared-logic';
@@ -266,7 +272,7 @@ const { data, pending, refresh } = useAsyncData(cacheKey, async () => {
   // We only have cached data on the client side after hydration
   const cachedData = nuxtApp.payload.data[cacheKey];
 
-  const newData = await fetchGameData(supabase, gameId, locale.value);
+  const newData = await fetchGameData(gameId, locale.value);
 
   // If IGDB fetch fails on the edge function (e.g., timeout)
   // but we already have valid data from SSR, we preserve the IGDB data
@@ -325,9 +331,11 @@ const activeDubProject = computed(() => {
 const getDisplayLanguage = (langCode: string | undefined | null) => {
   if (!langCode) return 'Unknown';
   try {
-    const displayNames = new Intl.DisplayNames([locale.value], { type: 'language' });
+    const displayNames = new Intl.DisplayNames([locale.value || 'en'], { type: 'language' });
     const name = displayNames.of(langCode);
-    return name ? name.charAt(0).toUpperCase() + name.slice(1) : langCode;
+    return (typeof name === 'string' && name.length > 0)
+      ? name.charAt(0).toUpperCase() + name.slice(1)
+      : langCode;
   } catch (e) {
     return langCode;
   }

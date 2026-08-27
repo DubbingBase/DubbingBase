@@ -34,13 +34,24 @@ async function initialize() {
   }
 }
 
+function uint8ArrayToBase64(bytes: Uint8Array): string {
+  let binary = "";
+  const len = bytes.byteLength;
+  const chunkSize = 8192;
+  for (let i = 0; i < len; i += chunkSize) {
+    const chunk = bytes.subarray(i, Math.min(i + chunkSize, len));
+    binary += String.fromCharCode.apply(null, chunk as unknown as number[]);
+  }
+  return btoa(binary);
+}
+
 // Fetch an image and convert to a base64 data URI for embedding in satori
 async function fetchImageAsDataUri(imageUrl: string): Promise<string | null> {
   try {
     const res = await fetch(imageUrl);
     if (!res.ok) return null;
     const buffer = await res.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+    const base64 = uint8ArrayToBase64(new Uint8Array(buffer));
     const contentType = res.headers.get("content-type") || "image/jpeg";
     return `data:${contentType};base64,${base64}`;
   } catch {
@@ -85,7 +96,7 @@ function buildVoiceActorOg(params: {
             color: "#64748b",
             fontSize: "150px",
           },
-          children: params.name.charAt(0).toUpperCase(),
+          children: params.name?.charAt(0)?.toUpperCase() || "?",
         },
       };
 
@@ -245,7 +256,7 @@ export default {
         const { data: voiceActor, error } = await ctx.supabaseAdmin
           .from("voice_actors")
           .select(
-            "id, firstname, lastname, profile_picture, nationality, work(id)",
+            "id, firstname, lastname, voice_actor_name, profile_picture, nationality, work(id)",
           )
           .eq("id", Number(id))
           .single();
@@ -255,7 +266,9 @@ export default {
         }
 
         const name =
-          `${voiceActor.firstname} ${voiceActor.lastname}`.trim() || "Unknown";
+          voiceActor.voice_actor_name?.trim() ||
+          `${voiceActor.firstname || ""} ${voiceActor.lastname || ""}`.trim() ||
+          "Unknown";
         const worksCount = voiceActor.work?.length ?? 0;
         const nationality = voiceActor.nationality;
 
@@ -267,7 +280,9 @@ export default {
         if (voiceActor.profile_picture) {
           const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
           const bucket = "voice_actor_profile_pictures";
-          const storageUrl = `${supabaseUrl}/storage/v1/object/public/${bucket}/${voiceActor.profile_picture}`;
+          const storageUrl = voiceActor.profile_picture.startsWith("http")
+            ? voiceActor.profile_picture
+            : `${supabaseUrl}/storage/v1/object/public/${bucket}/${voiceActor.profile_picture}`;
           console.log("Fetching profile picture from:", storageUrl);
           imageDataUri = await fetchImageAsDataUri(storageUrl);
         }

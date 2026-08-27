@@ -63,7 +63,17 @@ export default ({ mode }) => {
           "../../packages/database/supabase/functions",
         ),
       },
-      dedupe: ["vue-router", "@ionic/vue-router", "vue"],
+      dedupe: [
+        "vue-router",
+        "@ionic/vue-router",
+        "vue",
+        "@vue/runtime-core",
+        "@vue/runtime-dom",
+        "@vue/reactivity",
+        "@vue/server-renderer",
+        "@vue/shared",
+        "@vue/compiler-sfc",
+      ],
     },
     define: {
       __VERSION__: JSON.stringify(process.env.npm_package_version || "1.0.0"),

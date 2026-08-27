@@ -91,12 +91,16 @@ export default {
 
       for (const result of filteredResults.slice(0, 1)) {
         const schema = z.object({
-          items: z.array(z.object({
-            actor: z.string(),
-            performance: z.string().optional(),
-            production: z.string().optional(),
-            year: z.number().nullable().optional(),
-          })).optional(),
+          items: z
+            .array(
+              z.object({
+                actor: z.string(),
+                performance: z.string().optional(),
+                production: z.string().optional(),
+                year: z.number().nullable().optional(),
+              }),
+            )
+            .optional(),
         });
 
         const llmSuggestionJSON = await geminiGenerateObject(

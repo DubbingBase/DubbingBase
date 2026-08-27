@@ -62,7 +62,7 @@
           >
             <div class="w-6 h-6 rounded flex items-center justify-center overflow-hidden shrink-0 bg-white dark:bg-[#2a2a2a]">
               <img v-if="activeDubProject.studio_data.logo_url" :src="activeDubProject.studio_data.logo_url" class="w-full h-full object-contain p-0.5" />
-              <span v-else class="font-bold text-xs text-gray-400">{{ activeDubProject.studio_data.name.charAt(0) }}</span>
+              <span v-else class="font-bold text-xs text-gray-400">{{ activeDubProject.studio_data.name?.charAt(0) || '' }}</span>
             </div>
             <span class="font-medium text-xs group-hover:text-cyan-500 transition-colors truncate max-w-[120px]">{{ activeDubProject.studio_data.name }}</span>
           </NuxtLink>
@@ -111,6 +111,42 @@
           </p>
         </section>
       </div>
+
+      <!-- Seasons -->
+      <section v-if="seasons.length" class="mb-12">
+        <h2 class="text-2xl font-bold mb-6">
+          {{ $t("details.seasons") }}
+        </h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6">
+          <NuxtLink
+            v-for="season in seasons"
+            :key="season.season_number"
+            :to="$localePath(`/show/${serie.id}/season/${season.season_number}${activeDubId ? `?dub=${activeDubId}` : ''}`)"
+            class="group cursor-pointer block bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl p-3 shadow-sm transition-colors hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-md"
+          >
+            <div class="relative w-full aspect-[2/3] rounded-xl overflow-hidden mb-3 bg-gray-200 dark:bg-[#222]">
+              <NuxtImg
+                format="webp"
+                v-if="season.poster_path"
+                :src="season.poster_path"
+                class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                :alt="season.name"
+              />
+              <div v-else class="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-600">
+                <ClapperboardIcon class="w-8 h-8" />
+              </div>
+            </div>
+            <div class="flex flex-col">
+              <h3 class="font-bold text-sm text-gray-900 dark:text-white truncate group-hover:text-cyan-500 transition-colors">
+                {{ season.name }}
+              </h3>
+              <div v-if="season.episode_count" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                {{ season.episode_count }} {{ $t("details.episodes") }}
+              </div>
+            </div>
+          </NuxtLink>
+        </div>
+      </section>
 
       <!-- Voice Cast -->
       <section>
@@ -318,6 +354,33 @@
           </div>
         </div>
       </section>
+
+      <!-- Seasons -->
+      <section v-if="serie?.number_of_seasons">
+        <div class="flex flex-col mb-6 gap-2">
+          <div>
+            <h2 class="text-2xl font-bold">
+              {{ $t("details.seasons") }}
+            </h2>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+          <NuxtLink
+            v-for="n in serie.number_of_seasons"
+            :key="n"
+            :to="$localePath(`/show/${showId}/season/${n}`)"
+            class="group cursor-pointer block bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-xl p-4 shadow-sm transition-colors hover:border-cyan-400 hover:shadow-md text-center"
+          >
+            <div class="text-3xl font-bold text-gray-900 dark:text-white group-hover:text-cyan-500 transition-colors">
+              {{ $t("details.season", { num: n }) }}
+            </div>
+            <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              {{ $t("details.episodes") }}
+            </div>
+          </NuxtLink>
+        </div>
+      </section>
       </template>
     </MediaDetailsLayout>
 
@@ -382,6 +445,7 @@ const { data, pending } = useAsyncData(cacheKey, async () => {
 });
 
 const serie = computed(() => data.value?.serie);
+const seasons = computed(() => serie.value?.seasons || []);
 const dubbingProjects = computed(() => {
   const projects = [...(data.value?.dubbingProjects || [])];
   const currentLocale = locale.value.toLowerCase();
@@ -437,7 +501,9 @@ const getDisplayLanguage = (langCode: string | undefined | null) => {
   try {
     const displayNames = new Intl.DisplayNames([locale.value || 'en'], { type: "language" });
     const name = displayNames.of(langCode);
-    return name ? name.charAt(0).toUpperCase() + name.slice(1) : langCode;
+    return (typeof name === 'string' && name.length > 0)
+      ? name.charAt(0).toUpperCase() + name.slice(1)
+      : langCode;
   } catch (e) {
     return langCode;
   }

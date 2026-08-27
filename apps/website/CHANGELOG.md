@@ -1,5 +1,16 @@
 # @app/landing
 
+## 1.1.8
+
+### Patch Changes
+
+- e7f8fba: Fix 401 Unauthorized on admin `/api/list_users` (and any future internal admin endpoints) by injecting the Supabase session token into internal `/api/*` fetch requests via a global `$fetch` wrapper
+- b966023: Add missing translations for admin pages (queue, audit logs, reports, studios), contribute, dubbing, report modal, settings, profile, and other UI sections across all locales (en, fr, es, ja)
+- d54b0cb: Fix OG image generation 500 on Cloudflare Workers: use static imports for `satori`/`@resvg/resvg-wasm` (dynamic imports weren't bundled into the worker) and load the resvg WASM + Inter fonts from Nitro server assets (`server/assets/og-image/`) instead of fetching them from a CDN at runtime.
+- 5401e3a: Fix voice actor detail page footer overlap and remove excessive section pulsing from skeleton loader
+- Updated dependencies [b966023]
+  - @app/locales@0.0.49
+
 ## 1.1.7
 
 ### Patch Changes

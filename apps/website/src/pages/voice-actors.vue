@@ -59,7 +59,7 @@
             class="object-cover w-full h-full" 
           />
           <div v-else class="w-full h-full flex items-center justify-center text-3xl text-gray-400 font-bold bg-gray-100 dark:bg-gray-700">
-            {{ actor.firstname.charAt(0) }}{{ actor.lastname.charAt(0) }}
+            {{ actor.firstname?.charAt(0) || '' }}{{ actor.lastname?.charAt(0) || '' }}
           </div>
         </div>
         <h3 class="font-semibold text-sm md:text-base text-gray-800 dark:text-gray-200 text-center group-hover:text-cyan-500 transition-colors">

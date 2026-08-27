@@ -257,12 +257,15 @@ export interface IgdbExternalGame {
 export interface IgdbGame {
   id: number;
   name: string;
+  slug?: string;
   summary?: string;
   rating?: number;
   rating_count?: number;
   /** Unix timestamp in seconds */
   first_release_date?: number;
   cover?: IgdbCover;
+  artworks?: { id?: number; image_id: string; url?: string }[];
+  screenshots?: { id?: number; image_id: string; url?: string }[];
   genres?: IgdbGenre[];
   platforms?: IgdbPlatform[];
   involved_companies?: IgdbInvolvedCompany[];

@@ -36,7 +36,7 @@
             <div class="flex items-center space-x-4">
               <div class="h-16 w-16 rounded-2xl bg-[var(--app-color-step-50)] border border-[var(--app-color-border)] flex items-center justify-center overflow-hidden shrink-0">
                 <img v-if="studio.logo_url" :src="studio.logo_url" class="h-full w-full object-cover" :alt="studio.name" />
-                <span v-else class="text-2xl font-bold text-[var(--app-color-primary)]">{{ studio.name.charAt(0) }}</span>
+                <span v-else class="text-2xl font-bold text-[var(--app-color-primary)]">{{ studio.name?.charAt(0) || '' }}</span>
               </div>
               <div>
                 <h2 class="text-lg font-bold text-[color:var(--app-color-text-primary)]">{{ studio.name }}</h2>
@@ -109,7 +109,7 @@
               >
                 <div class="h-10 w-10 rounded-full bg-[var(--app-color-step-50)] border border-[var(--app-color-border)] flex items-center justify-center font-bold text-xs text-[var(--app-color-primary)] overflow-hidden shrink-0">
                   <img v-if="va.profile_picture" :src="getProfileUrl(va.profile_picture)" class="h-full w-full object-cover" />
-                  <span v-else>{{ va.firstname.charAt(0) }}{{ va.lastname.charAt(0) }}</span>
+                  <span v-else>{{ va.firstname?.charAt(0) || '' }}{{ va.lastname?.charAt(0) || '' }}</span>
                 </div>
                 <div>
                   <div class="text-xs font-semibold text-[color:var(--app-color-text-primary)]">{{ va.firstname }} {{ va.lastname }}</div>

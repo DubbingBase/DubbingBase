@@ -488,9 +488,9 @@ let pendingVaSelectCallback: ((id: number) => void) | null = null;
 // Cast Rows
 interface CastRow {
   id?: number;
-  actor_id: number | string | null;
+  character_id: number | string | null;
   character_name: string;
-  voice_character_id: number | null;
+  voice_actor_id: number | null;
   performance: string;
   highlight: boolean;
 }
@@ -508,7 +508,9 @@ const getDisplayLanguage = (langCode: string | undefined | null) => {
   try {
     const displayNames = new Intl.DisplayNames(['fr'], { type: 'language' });
     const name = displayNames.of(langCode);
-    return name ? name.charAt(0).toUpperCase() + name.slice(1) : langCode;
+    return (typeof name === 'string' && name.length > 0)
+      ? name.charAt(0).toUpperCase() + name.slice(1)
+      : langCode;
   } catch (e) {
     return langCode;
   }
@@ -742,7 +744,7 @@ const { data: initialData } = await useAsyncData(`game-edit-${igdbGameId.value}-
   if (igdbGameId.value) {
     // IGDB metadata
     try {
-      const data = await $fetch('/api/game', { params: { id: igdbGameId.value } });
+      const data = await $fetch(`/api/game/${igdbGameId.value}`);
       if (data) {
         igdbData = data;
       }

@@ -187,8 +187,10 @@ export class IgdbClient implements IIgdbClient {
 
     const results = await this.query<IgdbGame>(
       "games",
-      `fields id, name, summary, rating, rating_count, first_release_date,
+      `fields id, name, slug, summary, rating, rating_count, first_release_date,
        cover.image_id, cover.url,
+       artworks.image_id, artworks.url,
+       screenshots.image_id, screenshots.url,
        genres.name,
        platforms.name, platforms.slug,
        involved_companies.company.name, involved_companies.developer, involved_companies.publisher,

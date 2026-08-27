@@ -16,6 +16,13 @@ export default defineNuxtConfig({
 
   nitro: {
     preset: process.env.NITRO_PRESET || "node-server",
+    rollupConfig: {
+      // Keep .wasm imports external so Rollup's JS plugins (e.g. inject)
+      // don't try to parse them. Wrangler pre-compiles them into
+      // WebAssembly.Module objects at deploy time (required on Workers,
+      // which block WebAssembly.instantiate(bytes)).
+      external: [/\.wasm($|\?)/],
+    },
     cloudflare: {
       wrangler: {
         // Optional: add KV namespace for edge-distributed caching.
@@ -64,6 +71,17 @@ export default defineNuxtConfig({
 
   vite: {
     plugins: [tailwindcss()],
+    resolve: {
+      dedupe: [
+        "vue",
+        "@vue/runtime-core",
+        "@vue/runtime-dom",
+        "@vue/reactivity",
+        "@vue/server-renderer",
+        "@vue/shared",
+        "@vue/compiler-sfc",
+      ],
+    },
     define: {
       __VERSION__: JSON.stringify(process.env.npm_package_version || "1.0.0"),
       __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: "true",
@@ -79,7 +97,6 @@ export default defineNuxtConfig({
     "@nuxtjs/supabase",
     "@nuxtjs/sitemap",
     "@nuxtjs/robots",
-    "@nuxt/fonts",
     "@nuxt/image",
     "@nuxt/icon",
     "nuxt-swiper",
@@ -103,7 +120,7 @@ export default defineNuxtConfig({
   },
 
   image: {
-    domains: ["image.tmdb.org"],
+    domains: ["image.tmdb.org", "images.igdb.com"],
     format: ["avif", "webp"],
   },
 

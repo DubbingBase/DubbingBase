@@ -1,39 +1,94 @@
-let wasmInitialized = false;
+import satori from "satori";
+import { Resvg } from "@cf-wasm/resvg/workerd";
+
 let fontDataRegular: ArrayBuffer | null = null;
 let fontDataBold: ArrayBuffer | null = null;
 
-async function initialize() {
-  if (!wasmInitialized) {
-    const { initWasm } = await import("@resvg/resvg-wasm");
-    const wasmRes = await fetch(
-      "https://unpkg.com/@resvg/resvg-wasm@2.6.2/index_bg.wasm",
-    );
-    const wasmBuffer = await wasmRes.arrayBuffer();
-    await initWasm(wasmBuffer);
-    wasmInitialized = true;
+// Nitro bundles files under server/assets/ and exposes them via storage.
+// Try common namespace + path conventions across Nitro versions.
+async function loadAsset(path: string): Promise<Uint8Array> {
+  const normalizedColon = path.replace(/\//g, ":");
+  const namespaces = ["assets:server", "assets"];
+  const variants = [
+    path,
+    normalizedColon,
+    `server/${path}`,
+    `server:${normalizedColon}`,
+    `assets/${path}`,
+    `assets:${normalizedColon}`,
+    `server/assets/${path}`,
+    `server:assets:${normalizedColon}`,
+  ];
+  let lastErr: unknown;
+  for (const ns of namespaces) {
+    for (const v of variants) {
+      try {
+        const data = await useStorage(ns).getItemRaw(v);
+        if (data) return data as Uint8Array;
+      } catch (e) {
+        lastErr = e;
+      }
+    }
   }
+  // Filesystem fallback for node / dev / test environments
+  try {
+    const fs = await import("node:fs/promises");
+    const pathMod = await import("node:path");
+    const filePath = pathMod.resolve(process.cwd(), "server/assets", path);
+    const data = await fs.readFile(filePath);
+    if (data) return new Uint8Array(data);
+  } catch {
+    // Ignore fallback failure
+  }
+  throw new Error(`OG asset not found: ${path} (${String(lastErr)})`);
+}
 
+function toArrayBuffer(data: Uint8Array): ArrayBuffer {
+  return data.buffer.slice(
+    data.byteOffset,
+    data.byteOffset + data.byteLength,
+  ) as ArrayBuffer;
+}
+
+async function initialize() {
   if (!fontDataRegular) {
-    const fontRes = await fetch(
-      "https://cdn.jsdelivr.net/npm/inter-font@3.19.0/ttf/Inter-Regular.ttf",
+    fontDataRegular = toArrayBuffer(
+      await loadAsset("og-image/Inter-Regular.ttf"),
     );
-    fontDataRegular = await fontRes.arrayBuffer();
   }
 
   if (!fontDataBold) {
-    const fontRes = await fetch(
-      "https://cdn.jsdelivr.net/npm/inter-font@3.19.0/ttf/Inter-Bold.ttf",
-    );
-    fontDataBold = await fontRes.arrayBuffer();
+    fontDataBold = toArrayBuffer(await loadAsset("og-image/Inter-Bold.ttf"));
   }
 }
 
+function uint8ArrayToBase64(bytes: Uint8Array): string {
+  if (typeof Buffer !== "undefined") {
+    return Buffer.from(bytes).toString("base64");
+  }
+  let binary = "";
+  const len = bytes.byteLength;
+  const chunkSize = 8192;
+  for (let i = 0; i < len; i += chunkSize) {
+    const chunk = bytes.subarray(i, Math.min(i + chunkSize, len));
+    binary += String.fromCharCode.apply(null, chunk as unknown as number[]);
+  }
+  return btoa(binary);
+}
+
 async function fetchImageAsDataUri(imageUrl: string): Promise<string | null> {
+  let url: URL;
   try {
-    const res = await fetch(imageUrl);
+    url = new URL(imageUrl);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+  try {
+    const res = await fetch(url);
     if (!res.ok) return null;
     const buffer = await res.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+    const base64 = uint8ArrayToBase64(new Uint8Array(buffer));
     const contentType = res.headers.get("content-type") || "image/jpeg";
     return `data:${contentType};base64,${base64}`;
   } catch {
@@ -77,7 +132,7 @@ function buildVoiceActorOg(params: {
             color: "#64748b",
             fontSize: "150px",
           },
-          children: params.name.charAt(0).toUpperCase(),
+          children: params.name?.charAt(0)?.toUpperCase() || "?",
         },
       };
 
@@ -208,6 +263,9 @@ function buildVoiceActorOg(params: {
   };
 }
 
+// Skip prerendering — wasm module is only available at runtime on Cloudflare
+export const prerender = false;
+
 export default defineEventHandler(async (event) => {
   try {
     const query = getQuery(event);
@@ -221,9 +279,6 @@ export default defineEventHandler(async (event) => {
     }
 
     await initialize();
-
-    const { default: satori } = await import("satori");
-    const { Resvg } = await import("@resvg/resvg-wasm");
 
     let template;
 
@@ -240,7 +295,7 @@ export default defineEventHandler(async (event) => {
       const { data: voiceActor, error } = await supabaseAdmin
         .from("voice_actors")
         .select(
-          "id, firstname, lastname, profile_picture, nationality, work(id)",
+          "id, firstname, lastname, voice_actor_name, profile_picture, nationality, work(id)",
         )
         .eq("id", Number(id))
         .single();
@@ -250,17 +305,31 @@ export default defineEventHandler(async (event) => {
       }
 
       const name =
-        `${voiceActor.firstname} ${voiceActor.lastname}`.trim() || "Unknown";
+        voiceActor.voice_actor_name?.trim() ||
+        `${voiceActor.firstname || ""} ${voiceActor.lastname || ""}`.trim() ||
+        "Unknown";
       const worksCount = voiceActor.work?.length ?? 0;
       const nationality = voiceActor.nationality;
 
       let imageDataUri: string | null = null;
       if (voiceActor.profile_picture) {
         const config = useRuntimeConfig();
-        const supabaseUrl = config.supabaseUrl ?? "";
+        const supabaseUrl =
+          (config.supabaseUrl as string) ||
+          (config.public?.supabaseUrl as string) ||
+          process.env.NUXT_SUPABASE_URL ||
+          process.env.NUXT_PUBLIC_SUPABASE_URL ||
+          process.env.SUPABASE_URL ||
+          "";
         const bucket = "voice_actor_profile_pictures";
-        const storageUrl = `${supabaseUrl}/storage/v1/object/public/${bucket}/${voiceActor.profile_picture}`;
-        imageDataUri = await fetchImageAsDataUri(storageUrl);
+        const storageUrl = voiceActor.profile_picture.startsWith("http")
+          ? voiceActor.profile_picture
+          : supabaseUrl
+            ? `${supabaseUrl.replace(/\/+$/, "")}/storage/v1/object/public/${bucket}/${voiceActor.profile_picture}`
+            : "";
+        if (storageUrl) {
+          imageDataUri = await fetchImageAsDataUri(storageUrl);
+        }
       }
 
       template = buildVoiceActorOg({
@@ -295,7 +364,7 @@ export default defineEventHandler(async (event) => {
       ],
     });
 
-    const resvg = new Resvg(svg, {
+    const resvg = await Resvg.async(svg, {
       fitTo: {
         mode: "width",
         value: 1200,
@@ -319,9 +388,12 @@ export default defineEventHandler(async (event) => {
   } catch (error) {
     console.error("Error generating OG image:", error);
     if (error instanceof Error && "statusCode" in error) throw error;
+    const detail =
+      error instanceof Error ? error.stack || error.message : String(error);
     throw createError({
       statusCode: 500,
-      message: "Failed to generate OG image",
+      message: `Failed to generate OG image: ${error instanceof Error ? error.message : String(error)} | ${detail}`,
+      cause: detail,
     });
   }
 });
