@@ -1,5 +1,5 @@
 export async function fetchEpisodeData(
-  id: string | number,
+  showId: string | number,
   seasonNumber: string | number,
   episodeNumber: string | number,
   locale?: string,
@@ -12,8 +12,8 @@ export async function fetchEpisodeData(
   try {
     const data = await $fetch<any>(`/api/episode`, {
       headers,
-      params: {
-        id,
+      query: {
+        id: showId,
         season_number: seasonNumber,
         episode_number: episodeNumber,
       },

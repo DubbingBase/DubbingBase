@@ -1,5 +1,5 @@
 export async function fetchSeasonData(
-  id: string | number,
+  showId: string | number,
   seasonNumber: string | number,
   locale?: string,
 ): Promise<any | null> {
@@ -11,7 +11,10 @@ export async function fetchSeasonData(
   try {
     const data = await $fetch<any>(`/api/season`, {
       headers,
-      params: { id, season_number: seasonNumber },
+      query: {
+        id: showId,
+        season_number: seasonNumber,
+      },
     });
     if (!data) {
       console.error("fetchSeasonData: Response is null");

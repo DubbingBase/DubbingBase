@@ -3,24 +3,25 @@
     <MediaSkeleton v-if="pending && !season" />
     <MediaDetailsLayout
       v-else-if="season"
-      :title="season.name || $t('details.season', { number: season.season_number })"
+      :title="`${serieName} - Saison ${seasonNumber}`"
       :backdrop-url="backdropUrl"
       :poster-url="posterUrl"
       :loading="pending"
     >
       <template #metadata>
         <span class="text-gray-900 dark:text-gray-100 font-semibold text-base md:text-lg bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg">
-          {{ $t('details.season', { number: season.season_number }) }}
-          <template v-if="season.air_date"> &bull; {{ formatDate(season.air_date) }}</template>
+          {{ season.air_date ? season.air_date.split('-')[0] : '' }}
           <template v-if="season.episode_count"> &bull; {{ season.episode_count }} {{ $t('details.episodes') }}</template>
-        </span>
-        <span v-if="season.overview" class="text-gray-800 dark:text-gray-300 font-medium text-sm md:text-base bg-white/40 dark:bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-lg">
-          {{ season.overview }}
         </span>
         <span class="flex items-center gap-1.5 text-gray-900 dark:text-gray-100 font-bold text-sm md:text-base bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg">
           <StarIcon class="w-4 h-4 text-yellow-500 fill-current" />
           {{ season.vote_average?.toFixed(1) }}
         </span>
+        <div class="flex gap-2 ml-2">
+          <a :href="`https://www.themoviedb.org/tv/${showId}/season/${seasonNumber}`" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg bg-white/40 dark:bg-black/40 text-gray-800 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-black/60 transition-colors backdrop-blur-md uppercase tracking-wider">
+            TMDB <ExternalLinkIcon class="w-3 h-3 opacity-70" />
+          </a>
+        </div>
       </template>
 
       <template #actions-left>
@@ -28,7 +29,7 @@
           <NuxtLink
             v-for="project in dubbingProjects"
             :key="project.id"
-            :to="$localePath(`/show/${showId}/season/${seasonNumber}?dub=${project.id}`)"
+            :to="{ query: { dub: project.id } }"
             class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-gray-200 dark:border-[#2a2a2a]"
             :class="
               activeDubId === project.id
@@ -47,6 +48,21 @@
       </template>
 
       <template #actions-right>
+        <template v-if="activeDubProject?.studio_data">
+          <NuxtLink
+            :to="$localePath(`/studio/${activeDubProject.studio_data.id}`)"
+            class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-[#2a2a2a] hover:border-cyan-500 transition-colors group bg-gray-50 dark:bg-[#1d1d1d]"
+            :title="$t('details.dubbingStudio')"
+          >
+            <div class="w-6 h-6 rounded flex items-center justify-center overflow-hidden shrink-0 bg-white dark:bg-[#2a2a2a]">
+              <img v-if="activeDubProject.studio_data.logo_url" :src="activeDubProject.studio_data.logo_url" class="w-full h-full object-contain p-0.5" />
+              <span v-else class="font-bold text-xs text-gray-400">{{ activeDubProject.studio_data.name.charAt(0) }}</span>
+            </div>
+            <span class="font-medium text-xs group-hover:text-cyan-500 transition-colors truncate max-w-[120px]">{{ activeDubProject.studio_data.name }}</span>
+          </NuxtLink>
+          <div class="h-6 w-px bg-gray-200 dark:bg-[#2a2a2a]"></div>
+        </template>
+
         <NuxtLink v-show="isAdmin" :to="$localePath(`/show/${showId}/edit/${activeDubId || 'new'}`)" class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-medium">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -69,7 +85,9 @@
             stroke-linecap="round"
             stroke-linejoin="round"
           >
-            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+            <path
+              d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"
+            />
             <line x1="4" y1="22" x2="4" y2="15" />
           </svg>
         </button>
@@ -78,69 +96,67 @@
       <template #content>
         <!-- Overview -->
         <div class="mb-12 max-w-4xl">
-          <section v-if="season.overview">
-            <h2 class="text-2xl font-bold mb-4">
-              {{ $t("details.synopsis") }}
-            </h2>
-            <p class="text-gray-700 dark:text-gray-300 leading-relaxed text-lg">
-              {{ season.overview }}
-            </p>
-          </section>
-        </div>
-
-        <!-- Episodes List -->
         <section>
-          <div class="flex flex-col mb-6 gap-2">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-              <div>
-                <h2 class="text-2xl font-bold">
-                  {{ $t("details.episodes") }}
-                </h2>
-              </div>
+          <h2 class="text-2xl font-bold mb-4">
+            {{ $t("details.synopsis") }}
+          </h2>
+          <p class="text-gray-700 dark:text-gray-300 leading-relaxed text-lg">
+            {{ season.overview || $t("details.noSynopsis") }}
+          </p>
+        </section>
+      </div>
+
+      <!-- Episodes List -->
+      <section>
+        <div class="flex flex-col mb-6 gap-2">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+            <div>
+              <h2 class="text-2xl font-bold">
+                {{ $t("details.episodes") }}
+              </h2>
             </div>
           </div>
+        </div>
 
-          <div v-if="episodes.length === 0" class="text-center py-12 text-gray-500 dark:text-gray-400">
-            {{ $t('details.noEpisodes') }}
-          </div>
-
-          <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-            <NuxtLink
-              v-for="ep in episodes"
-              :key="ep.episode_number"
-              :to="$localePath(`/show/${showId}/season/${seasonNumber}/episode/${ep.episode_number}${activeDubId ? `?dub=${activeDubId}` : ''}")"
-              class="group cursor-pointer block bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl p-4 shadow-sm transition-colors hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-md"
-            >
-              <div class="relative w-full aspect-video rounded-xl overflow-hidden mb-4 bg-gray-200 dark:bg-[#222]">
-                <NuxtImg
-                  format="webp"
-                  v-if="ep.still_path"
-                  :src="'https://image.tmdb.org/t/p/w780' + ep.still_path"
-                  class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  :alt="ep.name"
-                />
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+          <NuxtLink
+            v-for="episode in episodes"
+            :key="episode.episode_number"
+            :to="$localePath(`/show/${showId}/season/${seasonNumber}/episode/${episode.episode_number}`)"
+            class="group cursor-pointer block bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl p-4 shadow-sm transition-colors hover:border-cyan-400 hover:shadow-md"
+          >
+            <div class="relative w-full aspect-video mb-3 rounded-lg overflow-hidden bg-gray-200 dark:bg-[#222]">
+              <NuxtImg
+                format="webp"
+                v-if="episode.still_path"
+                :src="'https://image.tmdb.org/t/p/w342' + episode.still_path"
+                class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                alt="Episode"
+              />
+              <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
+                <ClapperboardIcon class="w-12 h-12 opacity-50" />
               </div>
-              <div class="flex flex-col">
-                <div class="flex items-center gap-1.5 text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-1">
-                  <ClapperboardIcon class="w-3 h-3 flex-shrink-0" />
-                  <span class="truncate block w-full">
-                    {{ $t("details.episode", { number: ep.episode_number }) }}
-                  </span>
-                </div>
-                <h3 class="font-bold text-sm text-gray-900 dark:text-white truncate hover:underline group-hover:text-cyan-500 transition-colors block w-full">
-                  {{ ep.name }}
-                </h3>
-                <div v-if="ep.air_date" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {{ formatDate(ep.air_date) }}
-                </div>
-                <div v-if="ep.vote_average" class="flex items-center gap-1 text-xs text-yellow-500 mt-1">
-                  <StarIcon class="w-3 h-3 fill-current" />
-                  {{ ep.vote_average.toFixed(1) }}
-                </div>
+              <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+                <span class="text-white text-xs font-bold">
+                  {{ $t("details.episode", { num: episode.episode_number }) }}
+                </span>
               </div>
-            </NuxtLink>
-          </div>
-        </section>
+            </div>
+            <h3 class="font-semibold text-sm text-gray-900 dark:text-white line-clamp-2 group-hover:text-cyan-500 transition-colors mb-1">
+              {{ episode.name || $t("details.episode", { num: episode.episode_number }) }}
+            </h3>
+            <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+              <span v-if="episode.air_date">
+                {{ formatDate(episode.air_date) }}
+              </span>
+              <span v-if="episode.vote_average">
+                <StarIcon class="w-3 h-3 text-yellow-500 fill-current" />
+                {{ episode.vote_average.toFixed(1) }}
+              </span>
+            </div>
+          </NuxtLink>
+        </div>
+      </section>
       </template>
     </MediaDetailsLayout>
 
@@ -152,7 +168,7 @@
 import MediaDetailsLayout from "../../../../components/layout/MediaDetailsLayout.vue";
 import { useRoute, useRouter } from "vue-router";
 
-import { fetchSeasonData, fetchShowData } from "@app/shared-logic";
+import { fetchShowData, fetchSeasonData } from "@app/shared-logic";
 import { computed, ref } from "vue";
 import {
   ClapperboardIcon,
@@ -166,12 +182,12 @@ const isReportModalOpen = ref(false);
 const route = useRoute();
 const router = useRouter();
 const supabase = useSupabaseClient();
-const showId = Array.isArray(route.params.id)
+const showId = String(Array.isArray(route.params.id)
   ? route.params.id[0]
-  : route.params.id;
-const seasonNumber = Array.isArray(route.params.seasonNumber)
+  : route.params.id);
+const seasonNumber = Number(Array.isArray(route.params.seasonNumber)
   ? route.params.seasonNumber[0]
-  : route.params.seasonNumber;
+  : route.params.seasonNumber);
 const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
 
 const user = useSupabaseUser();
@@ -181,20 +197,38 @@ const isAdmin = computed(() => {
 
 const { locale, t } = useI18n();
 
-const cacheKey = `season-${showId}-${seasonNumber}-${locale.value}`;
-
-const { data, pending } = useAsyncData(cacheKey, async () => {
+// Fetch show data for basic info
+const showCacheKey = `show-${showId}-${locale.value}`;
+const { data: showData, pending: showPending } = useAsyncData(showCacheKey, async () => {
   const nuxtApp = useNuxtApp();
-  const cachedData = nuxtApp.payload.data[cacheKey];
-
-  const newData = await fetchSeasonData(showId, seasonNumber, locale.value);
+  const cachedData = nuxtApp.payload.data[showCacheKey];
+  const newData = await fetchShowData(showId, locale.value);
+  
+  if (
+    newData && 
+    newData.serie?.title === "Information indisponible (Timeout)" && 
+    cachedData?.serie &&
+    cachedData.serie.title !== "Information indisponible (Timeout)"
+  ) {
+    newData.serie = cachedData.serie;
+    newData.characterProfilePictures = cachedData.characterProfilePictures;
+  }
   
   return newData;
 });
 
-const season = computed(() => data.value?.season);
+const serie = computed(() => showData.value?.serie);
+const serieName = computed(() => serie.value?.name || `Show ${showId}`);
+
+// Fetch season data
+const seasonCacheKey = `season-${showId}-${seasonNumber}-${locale.value}`;
+const { data: seasonData, pending: seasonPending } = useAsyncData(seasonCacheKey, async () => {
+  return await fetchSeasonData(showId, seasonNumber, locale.value);
+});
+
+const season = computed(() => seasonData.value?.season);
 const dubbingProjects = computed(() => {
-  const projects = [...(data.value?.dubbingProjects || [])];
+  const projects = [...(seasonData.value?.dubbingProjects || [])];
   const currentLocale = locale.value.toLowerCase();
   return projects.sort((a, b) => {
     const aIsPref = a.language?.toLowerCase().startsWith(currentLocale) ? 1 : 0;
@@ -209,10 +243,10 @@ const dubbingProjects = computed(() => {
     return bWorks - aWorks;
   });
 });
-const characterProfilePictures = computed(
-  () => data.value?.characterProfilePictures || [],
-);
-const episodes = computed(() => season.value?.episodes || []);
+
+const episodes = computed(() => {
+  return season.value?.episodes || [];
+});
 
 const backdropUrl = computed(() => {
   if (!season.value?.backdrop_path) return null;
@@ -225,6 +259,8 @@ const posterUrl = computed(() => {
   if (season.value.poster_path.startsWith('http')) return season.value.poster_path;
   return `https://image.tmdb.org/t/p/original${season.value.poster_path}`;
 });
+
+const pending = computed(() => showPending.value || seasonPending.value);
 
 const activeDubId = computed(() => {
   if (route.query.dub) {
@@ -251,16 +287,22 @@ const getDisplayLanguage = (langCode: string | undefined | null) => {
   }
 };
 
-const formatDate = (dateStr: string) => {
-  if (!dateStr) return '';
-  const date = new Date(dateStr);
-  return date.toLocaleDateString(locale.value, { year: 'numeric', month: 'long', day: 'numeric' });
+const formatDate = (dateString: string) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString(locale.value, { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric' 
+  });
 };
 
 useHead({
   title: computed(() => {
-    const seasonNum = season.value?.season_number;
-    let base = season.value ? `${$t('details.season', { number: seasonNum })} - ${season.value.name || ''}` : $t('search.tv', 'Series');
+    const year = season.value?.air_date
+      ? ` (${new Date(season.value.air_date).getFullYear()})`
+      : "";
+    let base = `${serieName.value} - Saison ${seasonNumber}${year}`;
     if (activeDubProject.value) {
       base += ` - ${t('details.dubbing', { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
     }
@@ -270,10 +312,10 @@ useHead({
     {
       name: "description",
       content: computed(() => {
-        const seasonName = season.value?.name || $t('details.season', { number: season.value?.season_number });
-        let desc = season.value?.overview || (seasonName ? t('seo.showDescription', { title: seasonName }) : t('seo.showDescriptionFallback', 'Découvrez les épisodes de la saison.'));
-        if (activeDubProject.value && seasonName) {
-          desc = t('seo.showDescriptionDubbing', { lang: getDisplayLanguage(activeDubProject.value.language), title: seasonName }) + ' ' + desc;
+        const title = `${serieName.value} - Saison ${seasonNumber}`;
+        let desc = season.value?.overview || (title ? t('seo.showDescription', { title }) : t('seo.showDescriptionFallback', 'Découvrez le casting et les voix de la série.'));
+        if (activeDubProject.value && title) {
+          desc = t('seo.showDescriptionDubbing', { lang: getDisplayLanguage(activeDubProject.value.language), title }) + ' ' + desc;
         }
         return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
       }),
@@ -281,16 +323,18 @@ useHead({
     {
       name: "keywords",
       content: computed(() => {
-        const seasonName = season.value?.name || $t('details.season', { number: season.value?.season_number });
-        if (!seasonName) return t("home.meta.keywords");
-        return t("seo.showKeywords", { title: seasonName });
+        const title = serieName.value || "";
+        if (!title) return t("home.meta.keywords");
+        return t("seo.showKeywords", { title });
       }),
     },
     {
       property: "og:title",
       content: computed(() => {
-        const seasonNum = season.value?.season_number;
-        let base = season.value ? `${$t('details.season', { number: seasonNum })} - ${season.value.name || ''}` : t('search.tv', 'Series');
+        const year = season.value?.air_date
+          ? ` (${new Date(season.value.air_date).getFullYear()})`
+          : "";
+        let base = `${serieName.value} - Saison ${seasonNumber}${year}`;
         if (activeDubProject.value) {
           base += ` - ${t('details.dubbing', { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
         }
@@ -300,17 +344,17 @@ useHead({
     {
       property: "og:description",
       content: computed(() => {
-        const seasonName = season.value?.name || $t('details.season', { number: season.value?.season_number });
-        let desc = season.value?.overview || (seasonName ? t('seo.showDescription', { title: seasonName }) : t('seo.showDescriptionFallback', 'Découvrez les épisodes de la saison.'));
-        if (activeDubProject.value && seasonName) {
-          desc = t('seo.showDescriptionDubbing', { lang: getDisplayLanguage(activeDubProject.value.language), title: seasonName }) + ' ' + desc;
+        const title = `${serieName.value} - Saison ${seasonNumber}`;
+        let desc = season.value?.overview || (title ? t('seo.showDescription', { title }) : t('seo.showDescriptionFallback', 'Découvrez le casting et les voix de la série.'));
+        if (activeDubProject.value && title) {
+          desc = t('seo.showDescriptionDubbing', { lang: getDisplayLanguage(activeDubProject.value.language), title }) + ' ' + desc;
         }
         return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
       }),
     },
     {
       property: "og:type",
-      content: "video.tv_season",
+      content: "video.tv_show",
     },
     {
       property: "og:url",
@@ -327,8 +371,10 @@ useHead({
     {
       name: "twitter:title",
       content: computed(() => {
-        const seasonNum = season.value?.season_number;
-        let base = season.value ? `${$t('details.season', { number: seasonNum })} - ${season.value.name || ''}` : t('search.tv', 'Series');
+        const year = season.value?.air_date
+          ? ` (${new Date(season.value.air_date).getFullYear()})`
+          : "";
+        let base = `${serieName.value} - Saison ${seasonNumber}${year}`;
         if (activeDubProject.value) {
           base += ` - ${t('details.dubbing', { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
         }
@@ -338,10 +384,10 @@ useHead({
     {
       name: "twitter:description",
       content: computed(() => {
-        const seasonName = season.value?.name || $t('details.season', { number: season.value?.season_number });
-        let desc = season.value?.overview || (seasonName ? t('seo.showDescription', { title: seasonName }) : t('seo.showDescriptionFallback', 'Découvrez les épisodes de la saison.'));
-        if (activeDubProject.value && seasonName) {
-          desc = t('seo.showDescriptionDubbing', { lang: getDisplayLanguage(activeDubProject.value.language), title: seasonName }) + ' ' + desc;
+        const title = `${serieName.value} - Saison ${seasonNumber}`;
+        let desc = season.value?.overview || (title ? t('seo.showDescription', { title }) : t('seo.showDescriptionFallback', 'Découvrez le casting et les voix de la série.'));
+        if (activeDubProject.value && title) {
+          desc = t('seo.showDescriptionDubbing', { lang: getDisplayLanguage(activeDubProject.value.language), title }) + ' ' + desc;
         }
         return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
       }),

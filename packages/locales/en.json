@@ -249,11 +249,14 @@
     "unknownCharacter": "Unknown Character",
     "voiceActor": "Voice Actor",
     "notSpecified": "Not specified",
+    "seasons": "Seasons",
+    "episodes": "Episodes",
+    "season": "Season {num}",
+    "episode": "Episode {num}",
     "voicedBy": "Voiced by",
     "as": "as",
     "noDubbingProjects": "No dubbing projects found",
-    "dubbingStudio": "Dubbing Studio",
-    "seasons": "Seasons"
+    "dubbingStudio": "Dubbing Studio"
   },
   "search": {
     "actor": "Actor",

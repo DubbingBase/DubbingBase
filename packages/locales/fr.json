@@ -248,11 +248,14 @@
     "unknownCharacter": "Personnage inconnu",
     "voiceActor": "Comédien(ne)",
     "notSpecified": "Non spécifié",
+    "seasons": "Saisons",
+    "episodes": "Épisodes",
+    "season": "Saison {num}",
+    "episode": "Épisode {num}",
     "voicedBy": "Doublé par",
     "as": "en tant que",
     "noDubbingProjects": "Aucun projet de doublage trouvé",
-    "dubbingStudio": "Studio de doublage",
-    "seasons": "Saisons"
+    "dubbingStudio": "Studio de doublage"
   },
   "search": {
     "actor": "Acteur",

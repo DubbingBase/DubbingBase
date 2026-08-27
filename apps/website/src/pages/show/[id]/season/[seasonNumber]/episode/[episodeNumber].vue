@@ -1,31 +1,25 @@
 <template>
   <div>
-    <MediaSkeleton v-if="pending && !serie" />
+    <MediaSkeleton v-if="pending && !episode" />
     <MediaDetailsLayout
-      v-else-if="serie"
-      :title="serie.name"
+      v-else-if="episode"
+      :title="`${serieName} - Saison ${seasonNumber} Épisode ${episodeNumber}`"
       :backdrop-url="backdropUrl"
       :poster-url="posterUrl"
       :loading="pending"
     >
       <template #metadata>
         <span class="text-gray-900 dark:text-gray-100 font-semibold text-base md:text-lg bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg">
-          {{ serie.first_air_date ? serie.first_air_date.split('-')[0] : '' }}
-          <template v-if="serie.number_of_seasons"> &bull; {{ serie.number_of_seasons }} {{ $t('details.seasons') }}</template>
-        </span>
-        <span v-if="serie.original_name !== serie.name" class="text-gray-800 dark:text-gray-300 font-medium text-sm md:text-base bg-white/40 dark:bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-lg">
-          {{ serie.original_name }}
+          {{ episode.air_date ? episode.air_date.split('-')[0] : '' }}
+          <template v-if="episode.runtime"> &bull; {{ episode.runtime }} min</template>
         </span>
         <span class="flex items-center gap-1.5 text-gray-900 dark:text-gray-100 font-bold text-sm md:text-base bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg">
           <StarIcon class="w-4 h-4 text-yellow-500 fill-current" />
-          {{ serie.vote_average?.toFixed(1) }}
+          {{ episode.vote_average?.toFixed(1) }}
         </span>
         <div class="flex gap-2 ml-2">
-          <a :href="`https://www.themoviedb.org/tv/${serie.id}`" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg bg-white/40 dark:bg-black/40 text-gray-800 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-black/60 transition-colors backdrop-blur-md uppercase tracking-wider">
+          <a :href="`https://www.themoviedb.org/tv/${showId}/season/${seasonNumber}/episode/${episodeNumber}`" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg bg-white/40 dark:bg-black/40 text-gray-800 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-black/60 transition-colors backdrop-blur-md uppercase tracking-wider">
             TMDB <ExternalLinkIcon class="w-3 h-3 opacity-70" />
-          </a>
-          <a v-if="tvdbId" :href="`https://thetvdb.com/search?query=${tvdbId}`" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg bg-white/40 dark:bg-black/40 text-gray-800 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-black/60 transition-colors backdrop-blur-md uppercase tracking-wider">
-            TVDB <ExternalLinkIcon class="w-3 h-3 opacity-70" />
           </a>
         </div>
       </template>
@@ -69,7 +63,7 @@
           <div class="h-6 w-px bg-gray-200 dark:bg-[#2a2a2a]"></div>
         </template>
 
-        <NuxtLink v-show="isAdmin" :to="$localePath(`/show/${serie?.id || 'new'}/edit/${activeDubId || 'new'}`)" class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-medium">
+        <NuxtLink v-show="isAdmin" :to="$localePath(`/show/${showId}/edit/${activeDubId || 'new'}`)" class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-medium">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
           </svg>
@@ -107,7 +101,7 @@
             {{ $t("details.synopsis") }}
           </h2>
           <p class="text-gray-700 dark:text-gray-300 leading-relaxed text-lg">
-            {{ serie.overview || $t("details.noSynopsis") }}
+            {{ episode.overview || $t("details.noSynopsis") }}
           </p>
         </section>
       </div>
@@ -318,33 +312,6 @@
           </div>
         </div>
       </section>
-
-      <!-- Seasons -->
-      <section v-if="serie?.number_of_seasons">
-        <div class="flex flex-col mb-6 gap-2">
-          <div>
-            <h2 class="text-2xl font-bold">
-              {{ $t("details.seasons") }}
-            </h2>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-          <NuxtLink
-            v-for="n in serie.number_of_seasons"
-            :key="n"
-            :to="$localePath(`/show/${showId}/season/${n}`)"
-            class="group cursor-pointer block bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-xl p-4 shadow-sm transition-colors hover:border-cyan-400 hover:shadow-md text-center"
-          >
-            <div class="text-3xl font-bold text-gray-900 dark:text-white group-hover:text-cyan-500 transition-colors">
-              {{ $t("details.season", { num: n }) }}
-            </div>
-            <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              {{ $t("details.episodes") }}
-            </div>
-          </NuxtLink>
-        </div>
-      </section>
       </template>
     </MediaDetailsLayout>
 
@@ -353,13 +320,12 @@
 </template>
 
 <script setup lang="ts">
-import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
+import MediaDetailsLayout from "../../../../../../components/layout/MediaDetailsLayout.vue";
 import { useRoute, useRouter } from "vue-router";
 
-import { fetchShowData } from "@app/shared-logic";
+import { fetchShowData, fetchEpisodeData } from "@app/shared-logic";
 import { computed, ref } from "vue";
 import {
-  ArrowLeftIcon,
   ClapperboardIcon,
   UserIcon,
   MicIcon,
@@ -367,16 +333,22 @@ import {
   ExternalLinkIcon,
   StarIcon
 } from "lucide-vue-next";
-import ReportModal from "../../components/ReportModal.vue";
+import ReportModal from "../../../../../../components/ReportModal.vue";
 
 const isReportModalOpen = ref(false);
 
 const route = useRoute();
 const router = useRouter();
 const supabase = useSupabaseClient();
-const showId = Array.isArray(route.params.id)
+const showId = String(Array.isArray(route.params.id)
   ? route.params.id[0]
-  : route.params.id;
+  : route.params.id);
+const seasonNumber = Number(Array.isArray(route.params.seasonNumber)
+  ? route.params.seasonNumber[0]
+  : route.params.seasonNumber);
+const episodeNumber = Number(Array.isArray(route.params.episodeNumber)
+  ? route.params.episodeNumber[0]
+  : route.params.episodeNumber);
 const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
 
 const user = useSupabaseUser();
@@ -386,13 +358,11 @@ const isAdmin = computed(() => {
 
 const { locale, t } = useI18n();
 
-const cacheKey = `show-${showId}-${locale.value}`;
-
-const { data, pending } = useAsyncData(cacheKey, async () => {
+// Fetch show data for basic info
+const showCacheKey = `show-${showId}-${locale.value}`;
+const { data: showData, pending: showPending } = useAsyncData(showCacheKey, async () => {
   const nuxtApp = useNuxtApp();
-  // We only have cached data on the client side after hydration
-  const cachedData = nuxtApp.payload.data[cacheKey];
-
+  const cachedData = nuxtApp.payload.data[showCacheKey];
   const newData = await fetchShowData(showId, locale.value);
   
   if (
@@ -408,9 +378,18 @@ const { data, pending } = useAsyncData(cacheKey, async () => {
   return newData;
 });
 
-const serie = computed(() => data.value?.serie);
+const serie = computed(() => showData.value?.serie);
+const serieName = computed(() => serie.value?.name || `Show ${showId}`);
+
+// Fetch episode data
+const episodeCacheKey = `episode-${showId}-${seasonNumber}-${episodeNumber}-${locale.value}`;
+const { data: episodeData, pending: episodePending } = useAsyncData(episodeCacheKey, async () => {
+  return await fetchEpisodeData(showId, seasonNumber, episodeNumber, locale.value);
+});
+
+const episode = computed(() => episodeData.value?.episode);
 const dubbingProjects = computed(() => {
-  const projects = [...(data.value?.dubbingProjects || [])];
+  const projects = [...(episodeData.value?.dubbingProjects || [])];
   const currentLocale = locale.value.toLowerCase();
   return projects.sort((a, b) => {
     const aIsPref = a.language?.toLowerCase().startsWith(currentLocale) ? 1 : 0;
@@ -426,24 +405,25 @@ const dubbingProjects = computed(() => {
   });
 });
 const characterProfilePictures = computed(
-  () => data.value?.characterProfilePictures || [],
+  () => episodeData.value?.characterProfilePictures || [],
 );
 const aggregateCredits = computed(
-  () => data.value?.aggregateCredits || { cast: [] },
+  () => episodeData.value?.aggregateCredits || { cast: [] },
 );
-const tvdbId = computed(() => data.value?.tvdbId);
 
 const backdropUrl = computed(() => {
-  if (!serie.value?.backdrop_path) return null;
-  if (serie.value.backdrop_path.startsWith('http')) return serie.value.backdrop_path;
-  return `https://image.tmdb.org/t/p/original${serie.value.backdrop_path}`;
+  if (!episode.value?.still_path) return null;
+  if (episode.value.still_path.startsWith('http')) return episode.value.still_path;
+  return `https://image.tmdb.org/t/p/original${episode.value.still_path}`;
 });
 
 const posterUrl = computed(() => {
-  if (!serie.value?.poster_path) return null;
-  if (serie.value.poster_path.startsWith('http')) return serie.value.poster_path;
-  return `https://image.tmdb.org/t/p/original${serie.value.poster_path}`;
+  if (!episode.value?.still_path) return null;
+  if (episode.value.still_path.startsWith('http')) return episode.value.still_path;
+  return `https://image.tmdb.org/t/p/original${episode.value.still_path}`;
 });
+
+const pending = computed(() => showPending.value || episodePending.value);
 
 const activeDubId = computed(() => {
   if (route.query.dub) {
@@ -545,10 +525,10 @@ const filteredCast = computed(() => {
 
 useHead({
   title: computed(() => {
-    const year = serie.value?.first_air_date
-      ? ` (${new Date(serie.value.first_air_date).getFullYear()})`
+    const year = episode.value?.air_date
+      ? ` (${new Date(episode.value.air_date).getFullYear()})`
       : "";
-    let base = serie.value ? `${serie.value.name}${year}` : t('search.tv', 'Series');
+    let base = `${serieName.value} - S${String(seasonNumber).padStart(2, '0')}E${String(episodeNumber).padStart(2, '0')}${year}`;
     if (activeDubProject.value) {
       base += ` - ${t('details.dubbing', { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
     }
@@ -558,8 +538,8 @@ useHead({
     {
       name: "description",
       content: computed(() => {
-        const title = serie.value?.name || '';
-        let desc = serie.value?.overview || (title ? t('seo.showDescription', { title }) : t('seo.showDescriptionFallback', 'Découvrez le casting et les voix de la série.'));
+        const title = `${serieName.value} - Saison ${seasonNumber} Épisode ${episodeNumber}`;
+        let desc = episode.value?.overview || (title ? t('seo.showDescription', { title }) : t('seo.showDescriptionFallback', 'Découvrez le casting et les voix de la série.'));
         if (activeDubProject.value && title) {
           desc = t('seo.showDescriptionDubbing', { lang: getDisplayLanguage(activeDubProject.value.language), title }) + ' ' + desc;
         }
@@ -569,7 +549,7 @@ useHead({
     {
       name: "keywords",
       content: computed(() => {
-        const title = serie.value?.name || "";
+        const title = serieName.value || "";
         if (!title) return t("home.meta.keywords");
         return t("seo.showKeywords", { title });
       }),
@@ -577,10 +557,10 @@ useHead({
     {
       property: "og:title",
       content: computed(() => {
-        const year = serie.value?.first_air_date
-          ? ` (${new Date(serie.value.first_air_date).getFullYear()})`
+        const year = episode.value?.air_date
+          ? ` (${new Date(episode.value.air_date).getFullYear()})`
           : "";
-        let base = serie.value ? `${serie.value.name}${year}` : t('search.tv', 'Series');
+        let base = `${serieName.value} - S${String(seasonNumber).padStart(2, '0')}E${String(episodeNumber).padStart(2, '0')}${year}`;
         if (activeDubProject.value) {
           base += ` - ${t('details.dubbing', { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
         }
@@ -590,8 +570,8 @@ useHead({
     {
       property: "og:description",
       content: computed(() => {
-        const title = serie.value?.name || '';
-        let desc = serie.value?.overview || (title ? t('seo.showDescription', { title }) : t('seo.showDescriptionFallback', 'Découvrez le casting et les voix de la série.'));
+        const title = `${serieName.value} - Saison ${seasonNumber} Épisode ${episodeNumber}`;
+        let desc = episode.value?.overview || (title ? t('seo.showDescription', { title }) : t('seo.showDescriptionFallback', 'Découvrez le casting et les voix de la série.'));
         if (activeDubProject.value && title) {
           desc = t('seo.showDescriptionDubbing', { lang: getDisplayLanguage(activeDubProject.value.language), title }) + ' ' + desc;
         }
@@ -600,11 +580,11 @@ useHead({
     },
     {
       property: "og:type",
-      content: "video.tv_show",
+      content: "video.episode",
     },
     {
       property: "og:url",
-      content: computed(() => `https://dubbingbase.com/show/${showId}${activeDubId.value ? `?dub=${activeDubId.value}` : ''}`),
+      content: computed(() => `https://dubbingbase.com/show/${showId}/season/${seasonNumber}/episode/${episodeNumber}${activeDubId.value ? `?dub=${activeDubId.value}` : ''}`),
     },
     {
       property: "og:image",
@@ -617,10 +597,10 @@ useHead({
     {
       name: "twitter:title",
       content: computed(() => {
-        const year = serie.value?.first_air_date
-          ? ` (${new Date(serie.value.first_air_date).getFullYear()})`
+        const year = episode.value?.air_date
+          ? ` (${new Date(episode.value.air_date).getFullYear()})`
           : "";
-        let base = serie.value ? `${serie.value.name}${year}` : t('search.tv', 'Series');
+        let base = `${serieName.value} - S${String(seasonNumber).padStart(2, '0')}E${String(episodeNumber).padStart(2, '0')}${year}`;
         if (activeDubProject.value) {
           base += ` - ${t('details.dubbing', { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
         }
@@ -630,8 +610,8 @@ useHead({
     {
       name: "twitter:description",
       content: computed(() => {
-        const title = serie.value?.name || '';
-        let desc = serie.value?.overview || (title ? t('seo.showDescription', { title }) : t('seo.showDescriptionFallback', 'Découvrez le casting et les voix de la série.'));
+        const title = `${serieName.value} - Saison ${seasonNumber} Épisode ${episodeNumber}`;
+        let desc = episode.value?.overview || (title ? t('seo.showDescription', { title }) : t('seo.showDescriptionFallback', 'Découvrez le casting et les voix de la série.'));
         if (activeDubProject.value && title) {
           desc = t('seo.showDescriptionDubbing', { lang: getDisplayLanguage(activeDubProject.value.language), title }) + ' ' + desc;
         }
@@ -648,7 +628,7 @@ useHead({
       {
         rel: "canonical",
         href: (() => {
-          const baseUrl = "https://dubbingbase.com/show/" + showId;
+          const baseUrl = `https://dubbingbase.com/show/${showId}/season/${seasonNumber}/episode/${episodeNumber}`;
           return activeDubId.value
             ? `${baseUrl}?dub=${activeDubId.value}`
             : baseUrl;
@@ -668,17 +648,24 @@ useHead({
     {
       type: "application/ld+json",
       innerHTML: computed(() => {
-        const title = serie.value?.name || "";
+        const title = `${serieName.value} - S${String(seasonNumber).padStart(2, '0')}E${String(episodeNumber).padStart(2, '0')}`;
         const json = JSON.stringify({
           "@context": "https://schema.org",
-          "@type": "TVSeries",
-          url: `https://dubbingbase.com/show/${showId}`,
-          name: title || t("search.tv", "Série"),
+          "@type": "TVEpisode",
+          url: `https://dubbingbase.com/show/${showId}/season/${seasonNumber}/episode/${episodeNumber}`,
+          name: title || t("details.episode", { num: episodeNumber }),
           image: posterUrl.value || backdropUrl.value || "",
           description:
-            serie.value?.overview ||
+            episode.value?.overview ||
             (title ? t("seo.showDescription", { title }) : t("seo.showDescriptionFallback", "Découvrez le casting et les voix de la série.")),
-          startDate: serie.value?.first_air_date || undefined,
+          datePublished: episode.value?.air_date || undefined,
+          episodeNumber: episodeNumber,
+          seasonNumber: seasonNumber,
+          partOfSeries: {
+            "@type": "TVSeries",
+            name: serieName.value,
+            url: `https://dubbingbase.com/show/${showId}`,
+          },
           actor: formattedCast.value.map((actor: any) => ({
             "@type": "PerformanceRole",
             actor: {
