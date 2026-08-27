@@ -20,7 +20,7 @@ async function getActor(
       { append_to_response: "tv_credits,movie_credits,external_ids" },
       acceptLanguage,
     );
-    cache.set(cacheKey, actorData, "MEDIUM").catch(() => {});
+    await cache.set(cacheKey, actorData, "MEDIUM");
     return actorData;
   } catch (e) {
     console.error("Error fetching actor details:", e);
