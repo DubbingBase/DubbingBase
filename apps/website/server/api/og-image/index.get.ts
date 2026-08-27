@@ -57,6 +57,7 @@ async function initialize() {
 }
 
 async function fetchImageAsDataUri(imageUrl: string): Promise<string | null> {
+  if (!imageUrl || !/^https?:\/\//.test(imageUrl)) return null;
   try {
     const res = await fetch(imageUrl);
     if (!res.ok) return null;
