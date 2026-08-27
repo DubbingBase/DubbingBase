@@ -26,7 +26,7 @@ console.log("patch-wasm: copied wasm to", wasmDest);
 
 let content = readFileSync(outputFile, "utf-8");
 const preamble =
-  'import __RESVG_WASM from "./index_bg.wasm?module";globalThis.__RESVG_WASM=__RESVG_WASM;\n';
+  'import __RESVG_WASM from "./index_bg.wasm";globalThis.__RESVG_WASM=__RESVG_WASM;\n';
 content = preamble + content;
 writeFileSync(outputFile, content);
 console.log("patch-wasm: patched output bundle");

@@ -17,11 +17,8 @@ export function useSupabaseAdmin(): SupabaseClient<Database> {
       process.env.NUXT_SUPABASE_SECRET_KEY ||
       "";
     if (!url) {
-      const envKeys = Object.keys(process.env)
-        .filter((k) => /supabase|nux/i.test(k))
-        .join(",");
       throw new Error(
-        `Supabase URL is not configured. Env keys present: [${envKeys || "none"}]`,
+        "Supabase URL is not configured. Set NUXT_SUPABASE_URL or supabaseUrl in runtimeConfig.",
       );
     }
     try {
