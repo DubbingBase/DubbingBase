@@ -292,7 +292,8 @@ export default defineEventHandler(async (event) => {
       let imageDataUri: string | null = null;
       if (voiceActor.profile_picture) {
         const config = useRuntimeConfig();
-        const supabaseUrl = config.supabaseUrl ?? "";
+        const supabaseUrl =
+          (config.supabaseUrl as string) || process.env.SUPABASE_URL || "";
         const bucket = "voice_actor_profile_pictures";
         const storageUrl = `${supabaseUrl}/storage/v1/object/public/${bucket}/${voiceActor.profile_picture}`;
         imageDataUri = await fetchImageAsDataUri(storageUrl);
