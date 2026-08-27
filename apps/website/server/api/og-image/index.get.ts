@@ -1,7 +1,6 @@
 import satori from "satori";
-import { initWasm, Resvg } from "@resvg/resvg-wasm";
+import { Resvg } from "@cf-wasm/resvg/workerd";
 
-let wasmInitialized = false;
 let fontDataRegular: ArrayBuffer | null = null;
 let fontDataBold: ArrayBuffer | null = null;
 
@@ -37,14 +36,10 @@ function toArrayBuffer(data: Uint8Array): ArrayBuffer {
 }
 
 async function initialize() {
-  if (!wasmInitialized) {
-    // Pre-compiled WebAssembly.Module injected by scripts/patch-wasm.mjs
-    // (`?module` import → Wrangler pre-compiles at deploy time, bypassing the
-    // Workers block on WebAssembly.instantiate(bytes)).
-    await initWasm((globalThis as any).__RESVG_WASM__);
-    wasmInitialized = true;
-  }
-
+  // resvg-wasm is initialized at module load by @cf-wasm/resvg/workerd
+  // (import x from "./lib/resvg.wasm"; initResvg(x)) — Wrangler pre-compiles
+  // the .wasm into a WebAssembly.Module at deploy time, bypassing the
+  // Workers block on WebAssembly.instantiate(bytes).
   if (!fontDataRegular) {
     fontDataRegular = toArrayBuffer(
       await loadAsset("og-image/Inter-Regular.ttf"),
@@ -331,7 +326,7 @@ export default defineEventHandler(async (event) => {
       ],
     });
 
-    const resvg = new Resvg(svg, {
+    const resvg = await Resvg.async(svg, {
       fitTo: {
         mode: "width",
         value: 1200,
