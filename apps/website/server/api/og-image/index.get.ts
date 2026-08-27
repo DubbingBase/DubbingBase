@@ -68,17 +68,6 @@ async function initialize() {
   }
 }
   }
-
->>>>>>> 7399e4b0 (fix: load resvg wasm at runtime to fix build failure)
-  if (!fontDataRegular) {
-    fontDataRegular = toArrayBuffer(
-      await loadAsset("og-image/Inter-Regular.ttf"),
-    );
-  }
-
-  if (!fontDataBold) {
-    fontDataBold = toArrayBuffer(await loadAsset("og-image/Inter-Bold.ttf"));
-  }
 }
 
 async function fetchImageAsDataUri(imageUrl: string): Promise<string | null> {
