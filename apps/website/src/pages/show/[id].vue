@@ -112,6 +112,42 @@
         </section>
       </div>
 
+      <!-- Seasons -->
+      <section v-if="seasons.length" class="mb-12">
+        <h2 class="text-2xl font-bold mb-6">
+          {{ $t("details.seasons") }}
+        </h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6">
+          <NuxtLink
+            v-for="season in seasons"
+            :key="season.season_number"
+            :to="$localePath(`/show/${serie.id}/season/${season.season_number}${activeDubId ? `?dub=${activeDubId}` : ''}`)"
+            class="group cursor-pointer block bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl p-3 shadow-sm transition-colors hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-md"
+          >
+            <div class="relative w-full aspect-[2/3] rounded-xl overflow-hidden mb-3 bg-gray-200 dark:bg-[#222]">
+              <NuxtImg
+                format="webp"
+                v-if="season.poster_path"
+                :src="season.poster_path"
+                class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                :alt="season.name"
+              />
+              <div v-else class="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-600">
+                <ClapperboardIcon class="w-8 h-8" />
+              </div>
+            </div>
+            <div class="flex flex-col">
+              <h3 class="font-bold text-sm text-gray-900 dark:text-white truncate group-hover:text-cyan-500 transition-colors">
+                {{ season.name }}
+              </h3>
+              <div v-if="season.episode_count" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                {{ season.episode_count }} {{ $t("details.episodes") }}
+              </div>
+            </div>
+          </NuxtLink>
+        </div>
+      </section>
+
       <!-- Voice Cast -->
       <section>
         <div class="flex flex-col mb-6 gap-2">
@@ -409,6 +445,7 @@ const { data, pending } = useAsyncData(cacheKey, async () => {
 });
 
 const serie = computed(() => data.value?.serie);
+const seasons = computed(() => serie.value?.seasons || []);
 const dubbingProjects = computed(() => {
   const projects = [...(data.value?.dubbingProjects || [])];
   const currentLocale = locale.value.toLowerCase();
