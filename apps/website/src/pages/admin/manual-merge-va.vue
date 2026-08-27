@@ -62,7 +62,7 @@
                 class="h-full w-full object-cover"
               />
               <span v-else class="text-xs font-bold text-gray-500">{{
-                actorA.firstname.charAt(0)
+                actorA.firstname?.charAt(0) || ''
               }}</span>
             </div>
             <div>
@@ -123,7 +123,7 @@
                   class="h-full w-full object-cover"
                 />
                 <span v-else class="text-xs font-bold text-gray-500">{{
-                  va.firstname.charAt(0)
+                  va.firstname?.charAt(0) || ''
                 }}</span>
               </div>
               <div class="flex-1 min-w-0">
@@ -191,7 +191,7 @@
                 class="h-full w-full object-cover"
               />
               <span v-else class="text-xs font-bold text-gray-500">{{
-                actorB.firstname.charAt(0)
+                actorB.firstname?.charAt(0) || ''
               }}</span>
             </div>
             <div>
@@ -252,7 +252,7 @@
                   class="h-full w-full object-cover"
                 />
                 <span v-else class="text-xs font-bold text-gray-500">{{
-                  va.firstname.charAt(0)
+                  va.firstname?.charAt(0) || ''
                 }}</span>
               </div>
               <div class="flex-1 min-w-0">

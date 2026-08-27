@@ -41,7 +41,7 @@
             loading="lazy" 
             class="object-contain w-full h-full p-4 transition duration-500 bg-white" 
           />
-          <span v-else class="text-4xl font-bold text-gray-400">{{ studio.name.charAt(0) }}</span>
+          <span v-else class="text-4xl font-bold text-gray-400">{{ studio.name?.charAt(0) || '' }}</span>
         </div>
         <h3 class="font-semibold text-sm md:text-base text-gray-800 dark:text-gray-200 line-clamp-2 group-hover:text-cyan-500 transition-colors">
           {{ studio.name }}

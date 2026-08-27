@@ -124,7 +124,7 @@ function buildVoiceActorOg(params: {
             color: "#64748b",
             fontSize: "150px",
           },
-          children: params.name.charAt(0).toUpperCase(),
+          children: params.name?.charAt(0)?.toUpperCase() || "?",
         },
       };
 

@@ -8,7 +8,7 @@ export function getLanguageDisplayName(
       type: "language",
     });
     const name = displayNames.of(langCode);
-    if (!name) return langCode.toUpperCase();
+    if (!name || typeof name !== "string") return langCode.toUpperCase();
 
     // Capitalize the first letter
     return name.charAt(0).toUpperCase() + name.slice(1);

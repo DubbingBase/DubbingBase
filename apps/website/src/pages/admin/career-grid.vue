@@ -12,7 +12,7 @@
         <div class="flex items-center space-x-3">
           <div class="h-10 w-10 rounded-full overflow-hidden border border-gray-700 bg-gray-800 shrink-0 flex items-center justify-center">
             <NuxtImg format="webp" v-if="selectedActor.profile_picture" :src="selectedActor.profile_picture" class="h-full w-full object-cover" />
-            <span v-else class="text-xs font-bold text-gray-500">{{ selectedActor.firstname.charAt(0) }}</span>
+            <span v-else class="text-xs font-bold text-gray-500">{{ selectedActor.firstname?.charAt(0) || '' }}</span>
           </div>
           <div>
             <p class="text-sm font-semibold text-white">{{ selectedActor.firstname }} {{ selectedActor.lastname }}</p>
@@ -47,7 +47,7 @@
           >
             <div class="h-10 w-10 mt-1 rounded-full overflow-hidden border border-gray-700 bg-gray-800 shrink-0 flex items-center justify-center">
               <NuxtImg format="webp" v-if="va.profile_picture" :src="va.profile_picture" class="h-full w-full object-cover" />
-              <span v-else class="text-xs font-bold text-gray-500">{{ va.firstname.charAt(0) }}</span>
+              <span v-else class="text-xs font-bold text-gray-500">{{ va.firstname?.charAt(0) || '' }}</span>
             </div>
             <div class="flex-1 min-w-0">
               <p class="text-sm font-semibold text-gray-200">

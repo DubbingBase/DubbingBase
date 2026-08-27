@@ -315,7 +315,7 @@ function buildCareerGridImage(params: {
             alignItems: "center",
             justifyContent: "center",
           },
-          children: params.name.charAt(0).toUpperCase(),
+          children: params.name?.charAt(0)?.toUpperCase() || "?",
         },
       };
 

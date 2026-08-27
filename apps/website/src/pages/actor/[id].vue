@@ -453,7 +453,9 @@ const getDisplayLanguage = (langCode: string | undefined | null) => {
       type: "language",
     });
     const name = displayNames.of(langCode);
-    return name ? name.charAt(0).toUpperCase() + name.slice(1) : langCode;
+    return (typeof name === "string" && name.length > 0)
+      ? name.charAt(0).toUpperCase() + name.slice(1)
+      : langCode;
   } catch (e) {
     return langCode;
   }

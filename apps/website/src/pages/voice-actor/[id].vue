@@ -147,7 +147,7 @@
                   class="w-10 h-10 bg-gray-100 dark:bg-[#2a2a2a] rounded-lg flex items-center justify-center shrink-0"
                 >
                   <span class="text-gray-400 font-bold">{{
-                    studio.name.charAt(0).toUpperCase()
+                    studio.name?.charAt(0)?.toUpperCase() || ''
                   }}</span>
                 </div>
                 <span class="font-semibold text-gray-900 dark:text-gray-100">{{
