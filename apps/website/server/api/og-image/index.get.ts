@@ -57,9 +57,15 @@ async function initialize() {
 }
 
 async function fetchImageAsDataUri(imageUrl: string): Promise<string | null> {
-  if (!imageUrl || !/^https?:\/\//.test(imageUrl)) return null;
+  let url: URL;
   try {
-    const res = await fetch(imageUrl);
+    url = new URL(imageUrl);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+  try {
+    const res = await fetch(url);
     if (!res.ok) return null;
     const buffer = await res.arrayBuffer();
     const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
