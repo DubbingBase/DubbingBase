@@ -1,10 +1,5 @@
 import satori from "satori";
 import { initWasm, Resvg } from "@resvg/resvg-wasm";
-// unwasm (Nitro's wasm: { esmImport: true }) preserves this import for
-// Cloudflare Workers' bundler (Wrangler) to compile into a pre-compiled
-// WebAssembly.Module at deploy time — bypassing the runtime instantiate(block).
-// @ts-expect-error unwasm ?module suffix
-import wasmModule from "@resvg/resvg-wasm/index_bg.wasm?module";
 
 let wasmInitialized = false;
 let fontDataRegular: ArrayBuffer | null = null;
@@ -43,10 +38,10 @@ function toArrayBuffer(data: Uint8Array): ArrayBuffer {
 
 async function initialize() {
   if (!wasmInitialized) {
-    // wasmModule is a pre-compiled WebAssembly.Module from unwasm's ?module import
-    // (esmImport: true). Wrangler bundles it at deploy time, so no runtime
-    // instantiation from bytes is needed — Cloudflare's block is bypassed.
-    await initWasm(wasmModule);
+    // Pre-compiled WebAssembly.Module injected by scripts/patch-wasm.mjs
+    // (`?module` import → Wrangler pre-compiles at deploy time, bypassing the
+    // Workers block on WebAssembly.instantiate(bytes)).
+    await initWasm((globalThis as any).__RESVG_WASM__);
     wasmInitialized = true;
   }
 
