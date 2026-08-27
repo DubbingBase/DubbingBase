@@ -51,6 +51,10 @@ export default defineNuxtConfig({
     inlineRouteRules: true,
   },
 
+  wasm: {
+    esmImport: true,
+  },
+
   routeRules: {
     // Cache media pages at the edge for 1 hour (stale-while-revalidate) in production only
     "/movie/**": { swr: process.env.NODE_ENV === "development" ? false : 3600 },
