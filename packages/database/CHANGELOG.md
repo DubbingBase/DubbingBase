@@ -1,5 +1,11 @@
 # @app/supabase
 
+## 0.2.1
+
+### Patch Changes
+
+- df1a900: Fix pgmq compatibility after extension upgrade (headers column + 6-col read)
+
 ## 0.2.0
 
 ### Minor Changes
