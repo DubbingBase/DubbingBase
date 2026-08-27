@@ -16,8 +16,12 @@ export default defineNuxtConfig({
 
   nitro: {
     preset: process.env.NITRO_PRESET || "node-server",
-    wasm: {
-      esmImport: true,
+    rollupConfig: {
+      // Keep .wasm imports external so Rollup's JS plugins (e.g. inject)
+      // don't try to parse them. Wrangler pre-compiles them into
+      // WebAssembly.Module objects at deploy time (required on Workers,
+      // which block WebAssembly.instantiate(bytes)).
+      external: [/\.wasm($|\?)/],
     },
     cloudflare: {
       wrangler: {
