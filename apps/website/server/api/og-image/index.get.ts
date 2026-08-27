@@ -1,4 +1,4 @@
-import satori from "satori";
+import satori from "@cf-wasm/satori/workerd";
 import { Resvg } from "@cf-wasm/resvg/workerd";
 
 let fontDataRegular: ArrayBuffer | null = null;

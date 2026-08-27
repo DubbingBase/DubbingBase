@@ -10,22 +10,36 @@ if (!existsSync(outputDir)) {
   process.exit(0);
 }
 
-// Locate resvg.wasm from package
-let wasmSource;
-try {
-  wasmSource = fileURLToPath(import.meta.resolve("@cf-wasm/resvg/resvg.wasm"));
-} catch {
-  wasmSource = resolve(root, "node_modules/@cf-wasm/resvg/dist/lib/resvg.wasm");
-}
+const wasmModules = [
+  {
+    name: "resvg.wasm",
+    specifier: "@cf-wasm/resvg/resvg.wasm",
+    fallback: resolve(root, "node_modules/@cf-wasm/resvg/dist/lib/resvg.wasm"),
+    target: resolve(outputDir, "resvg.wasm"),
+  },
+  {
+    name: "yoga.wasm",
+    specifier: "@cf-wasm/satori/yoga.wasm",
+    fallback: resolve(root, "node_modules/@cf-wasm/satori/dist/lib/yoga.wasm"),
+    target: resolve(outputDir, "yoga.wasm"),
+  },
+];
 
-if (!existsSync(wasmSource)) {
-  console.error("patch-wasm: resvg.wasm not found at", wasmSource);
-  process.exit(1);
-}
+for (const mod of wasmModules) {
+  let source;
+  try {
+    source = fileURLToPath(import.meta.resolve(mod.specifier));
+  } catch {
+    source = mod.fallback;
+  }
 
-const targetWasm = resolve(outputDir, "resvg.wasm");
-copyFileSync(wasmSource, targetWasm);
-console.log("patch-wasm: copied resvg.wasm to", targetWasm);
+  if (existsSync(source)) {
+    copyFileSync(source, mod.target);
+    console.log(`patch-wasm: copied ${mod.name} to ${mod.target}`);
+  } else {
+    console.warn(`patch-wasm: could not find source for ${mod.name}`);
+  }
+}
 
 // Recursively find all .mjs files in outputDir and fix broken wasm import paths
 function fixImports(dir) {
@@ -36,14 +50,24 @@ function fixImports(dir) {
       fixImports(fullPath);
     } else if (file.endsWith(".mjs")) {
       let content = readFileSync(fullPath, "utf-8");
-      if (content.includes("resvg.wasm")) {
-        const relPath = relative(dirname(fullPath), targetWasm).replace(/\\/g, "/");
-        const importSpecifier = relPath.startsWith(".") ? relPath : `./${relPath}`;
-        const newContent = content.replace(/(from\s*["'])[^"']*resvg\.wasm["']/g, `$1${importSpecifier}"`);
-        if (newContent !== content) {
-          writeFileSync(fullPath, newContent);
-          console.log(`patch-wasm: patched wasm import in ${relative(outputDir, fullPath)} -> ${importSpecifier}`);
+      let modified = false;
+
+      for (const mod of wasmModules) {
+        if (content.includes(mod.name)) {
+          const relPath = relative(dirname(fullPath), mod.target).replace(/\\/g, "/");
+          const importSpecifier = relPath.startsWith(".") ? relPath : `./${relPath}`;
+          const regex = new RegExp(`(from\\s*["'])[^"']*${mod.name.replace(".", "\\.")}["']`, "g");
+          const newContent = content.replace(regex, `$1${importSpecifier}"`);
+          if (newContent !== content) {
+            content = newContent;
+            modified = true;
+            console.log(`patch-wasm: patched ${mod.name} import in ${relative(outputDir, fullPath)} -> ${importSpecifier}`);
+          }
         }
+      }
+
+      if (modified) {
+        writeFileSync(fullPath, content);
       }
     }
   }
