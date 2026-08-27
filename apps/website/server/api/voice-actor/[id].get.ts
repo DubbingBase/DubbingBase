@@ -1,6 +1,7 @@
 import { useCache, useTmdbClient } from "../../utils";
 import { MediaService } from "../../utils/services/media";
 import { getWorkVotes } from "../../utils/db/queries";
+import { CACHE_KEYS } from "../../utils/cache/constants";
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, "id");
@@ -17,7 +18,10 @@ export default defineEventHandler(async (event) => {
   const user = event.context.user;
 
   const cache = useCache();
-  const cacheKey = `app:voice-actor:${voiceActorId}:${acceptLanguage || "fr"}`;
+  const cacheKey = CACHE_KEYS.APP_VOICE_ACTOR(
+    voiceActorId,
+    acceptLanguage || "fr",
+  );
 
   const cached = await cache.get(cacheKey);
   let baseData: any = cached;

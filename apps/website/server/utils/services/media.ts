@@ -62,7 +62,9 @@ export class MediaService {
 
     const { data: voiceActor, error: vaError } = await supabase
       .from("voice_actors")
-      .select("*, work(id, actor_id, dubbing_projects(content_id, content_type))")
+      .select(
+        "*, work(id, actor_id, dubbing_projects(content_id, content_type))",
+      )
       .eq("id", voiceActorId)
       .single();
 
@@ -133,13 +135,13 @@ export class MediaService {
     })();
 
     // Wait for all three tracks in parallel
-    const [mediaResultsArray, potentialWikipediaUrl, votes] = await Promise.all([
-      Promise.all(mediaPromises),
-      wikiPromise,
-      votesPromise,
-    ]);
+    const [mediaResultsArray, potentialWikipediaUrl, votes] = await Promise.all(
+      [Promise.all(mediaPromises), wikiPromise, votesPromise],
+    );
 
-    const validResults = mediaResultsArray.filter(Boolean) as {
+    const validResults = mediaResultsArray
+      .filter(Boolean)
+      .filter((r) => r.media !== null) as {
       media: any;
       characterProfilePictures: any[];
     }[];
