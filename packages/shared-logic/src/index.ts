@@ -4,6 +4,8 @@ export * from "./composables/useVoiceActorData";
 export * from "./composables/useMovieData";
 export * from "./composables/useGameData";
 export * from "./composables/useShowData";
+export * from "./composables/useSeasonData";
+export * from "./composables/useEpisodeData";
 export * from "./composables/useSearchData";
 export * from "./composables/useActorData";
 export * from "./composables/useStudioData";

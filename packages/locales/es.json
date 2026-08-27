@@ -238,7 +238,7 @@
       "works": "Roles"
     }
   },
-  "details": {
+"details": {
     "modify": "Modificar",
     "dubbing": "Doblaje ({lang})",
     "synopsis": "Sinopsis",
@@ -249,11 +249,14 @@
     "unknownCharacter": "Personaje desconocido",
     "voiceActor": "Actor de doblaje",
     "notSpecified": "No especificado",
+    "seasons": "Temporadas",
+    "episodes": "Episodios",
+    "season": "Temporada {num}",
+    "episode": "Episodio {num}",
     "voicedBy": "Doblado por",
     "as": "como",
     "noDubbingProjects": "No se encontraron proyectos de doblaje",
-    "dubbingStudio": "Estudio de doblaje",
-    "seasons": "Temporadas"
+    "dubbingStudio": "Estudio de doblaje"
   },
   "search": {
     "actor": "Actor",

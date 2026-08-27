@@ -249,11 +249,14 @@
     "unknownCharacter": "不明なキャラクター",
     "voiceActor": "声優",
     "notSpecified": "未指定",
+    "seasons": "シーズン",
+    "episodes": "エピソード",
+    "season": "シーズン {num}",
+    "episode": "第{num}話",
     "voicedBy": "声優",
     "as": "として",
     "noDubbingProjects": "吹き替えプロジェクトが見つかりません",
-    "dubbingStudio": "吹き替えスタジオ",
-    "seasons": "シーズン"
+    "dubbingStudio": "吹き替えスタジオ"
   },
   "search": {
     "actor": "俳優",
