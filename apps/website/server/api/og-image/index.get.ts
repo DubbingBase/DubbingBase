@@ -67,8 +67,6 @@ async function initialize() {
     fontDataBold = toArrayBuffer(await loadAsset("og-image/Inter-Bold.ttf"));
   }
 }
-  }
-}
 
 async function fetchImageAsDataUri(imageUrl: string): Promise<string | null> {
   let url: URL;
@@ -369,7 +367,8 @@ export default defineEventHandler(async (event) => {
   } catch (error) {
     console.error("Error generating OG image:", error);
     if (error instanceof Error && "statusCode" in error) throw error;
-    const detail = error instanceof Error ? error.stack || error.message : String(error);
+    const detail =
+      error instanceof Error ? error.stack || error.message : String(error);
     throw createError({
       statusCode: 500,
       message: `Failed to generate OG image: ${error instanceof Error ? error.message : String(error)} | ${detail}`,
