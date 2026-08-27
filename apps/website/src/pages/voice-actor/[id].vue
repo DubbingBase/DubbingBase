@@ -560,7 +560,7 @@
       </template>
     </PersonDetailsLayout>
 
-    <div v-else class="text-center py-20 text-gray-500">Actor not found.</div>
+    <div v-else class="text-center py-20 text-gray-500 min-h-screen">Actor not found.</div>
 
     <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
   </div>
