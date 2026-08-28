@@ -27,3 +27,9 @@ This document tracks completed and upcoming route-level performance optimization
 - [x] **Catalog & Listing Pages (`/movies`, `/series`, `/voice-actors`, `/studios`)**
   - Backend: Added public SWR `Cache-Control` headers across `/api/trending/movies`, `/api/trending/shows`, `/api/trending/games`, `/api/trending/voice-actors`, and `/api/list-voice-actors`.
   - Frontend: Added `getCachedData` across all listing pages, debounced search (`refDebounced`) and progressive infinite scroll windowing (`useIntersectionObserver`) on `/voice-actors` and `/studios`, preconnect hints and `decoding="async"` across images.
+- [x] **`/show/:id/season/:seasonNumber` & `/show/:id/.../episode/:episodeNumber` (Season & Episode Details)**
+  - Backend: Removed legacy `getWorkVotes` queries from `/api/season` and `/api/episode`, added public Edge SWR `Cache-Control` headers.
+  - Frontend: Added `getCachedData` to `useAsyncData` for 0ms season/episode transitions, progressive batch rendering (`useIntersectionObserver`) and debounced search (`refDebounced`) for episode cast, preconnect hints and lazy/async images.
+- [x] **`/` (Home Landing Page) & Discovery Endpoints**
+  - Backend: Added public SWR `Cache-Control` headers across `/api/home-stats`, `/api/top-contributors`, `/api/recent-voice-actors`, `/api/top-voice-actors`, and `/api/search-voice-actors`.
+  - Frontend: Added `getCachedData` on the home page for 0ms client transitions and instant back-navigation, preconnect & dns-prefetch hints for TMDB and IGDB.
