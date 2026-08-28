@@ -691,7 +691,8 @@ export default defineEventHandler(async (event) => {
                 cp.name.toLowerCase() === characterName.toLowerCase(),
             );
             if (pic) {
-              characterImage = pic.image || pic.profile_path || null;
+              const p = pic as { image?: string; profile_path?: string };
+              characterImage = p.image || p.profile_path || null;
             }
           }
 

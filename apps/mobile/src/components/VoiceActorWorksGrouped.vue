@@ -26,12 +26,12 @@
             :key="work.media.id"
             class="work-item"
           >
-            <RouterLink :to="{ name: work.work.dubbing_projects?.content_type === 'movie' ? 'MovieDetails' : work.work.dubbing_projects?.content_type === 'video_game' ? 'GameDetails' : 'SerieDetails', params: { id: work.media.id } }">
+            <RouterLink :to="{ name: getRouteName(work.work.dubbing_projects?.content_type), params: { id: work.media.id } }">
               <MovieCard
                 :media="work.media"
                 :character="work.data.character || ''"
                 :character-image="work.data.characterImage"
-                :media-type="work.work.dubbing_projects?.content_type === 'movie' ? 'movie' : work.work.dubbing_projects?.content_type === 'video_game' ? 'video_game' : 'serie'"
+                :media-type="getMediaType(work.work.dubbing_projects?.content_type)"
               />
             </RouterLink>
           </div>
@@ -46,6 +46,26 @@ import { computed } from "vue";
 import { RouterLink } from 'vue-router';
 import MovieCard from "@/components/MovieCard.vue";
 import PersonItem, { PersonData } from "@/components/PersonItem.vue";
+
+function getRouteName(contentType?: string | null) {
+  if (contentType === 'movie') return 'MovieDetails';
+  if (contentType === 'video_game') return 'GameDetails';
+  if (contentType === 'audiobook') return 'AudiobookDetails';
+  if (contentType === 'podcast') return 'PodcastDetails';
+  if (contentType === 'advertisement') return 'AdDetails';
+  if (contentType === 'toy') return 'ToyDetails';
+  return 'SerieDetails';
+}
+
+function getMediaType(contentType?: string | null): any {
+  if (contentType === 'movie') return 'movie';
+  if (contentType === 'video_game') return 'video_game';
+  if (contentType === 'audiobook') return 'audiobook';
+  if (contentType === 'podcast') return 'podcast';
+  if (contentType === 'advertisement') return 'advertisement';
+  if (contentType === 'toy') return 'toy';
+  return 'serie';
+}
 import type { Movie as MovieModel } from "@supabase/functions/_shared/movie";
 import type { Serie as SerieModel } from "@supabase/functions/_shared/serie";
 import { Actor } from "@supabase/functions/_shared/types";

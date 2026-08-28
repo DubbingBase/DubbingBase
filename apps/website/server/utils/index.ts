@@ -2,6 +2,10 @@ import { SimpleCache } from "./cache";
 import { TMDBClient } from "./api/tmdb";
 import { TVDBClient } from "./api/tvdb";
 import { IgdbClient } from "./api/igdb";
+import { OpenLibraryClient } from "./api/openlibrary";
+import { PodcastClient } from "./api/podcast";
+import { AdvertisementClient } from "./api/advertisement";
+import { ToyClient } from "./api/toy";
 import { WikipediaCache } from "./cache/wikipedia";
 
 let _cache: SimpleCache | null = null;
@@ -36,6 +40,22 @@ export function useTvdbClient(): TVDBClient {
 
 export function useIgdbClient(): IgdbClient {
   return new IgdbClient(useCache());
+}
+
+export function useOpenLibraryClient(): OpenLibraryClient {
+  return new OpenLibraryClient(useCache());
+}
+
+export function usePodcastClient(): PodcastClient {
+  return new PodcastClient();
+}
+
+export function useAdvertisementClient(): AdvertisementClient {
+  return new AdvertisementClient();
+}
+
+export function useToyClient(): ToyClient {
+  return new ToyClient();
 }
 
 export function useWikipediaCache(): WikipediaCache {

@@ -240,7 +240,7 @@
                 <div class="flex flex-col sm:grid sm:grid-cols-3 gap-4 h-full">
                   <!-- Column 1: Media -->
                   <NuxtLink
-                    :to="localePath(`/${item.work.dubbing_projects?.content_type === 'tv' ? 'show' : item.work.dubbing_projects?.content_type === 'video_game' ? 'game' : 'movie'}/${item.media.id}`)"
+                    :to="localePath(getMediaLink(item.work.dubbing_projects?.content_type, item.media.id))"
                     class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start cursor-pointer"
                   >
                     <div
@@ -461,7 +461,7 @@
                     >
                       <!-- Column 1: Media -->
                       <NuxtLink
-                        :to="localePath(`/${item.work.dubbing_projects?.content_type === 'tv' ? 'show' : item.work.dubbing_projects?.content_type === 'video_game' ? 'game' : 'movie'}/${item.media.id}`)"
+                        :to="localePath(getMediaLink(item.work.dubbing_projects?.content_type, item.media.id))"
                         class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start cursor-pointer"
                       >
                         <div
@@ -622,6 +622,16 @@ const { locale, t, te } = useI18n();
 const $t = t;
 const $te = te;
 const localePath = useLocalePath();
+
+function getMediaLink(contentType?: string | null, mediaId?: number | string) {
+  if (contentType === 'tv') return `/show/${mediaId}`;
+  if (contentType === 'video_game') return `/game/${mediaId}`;
+  if (contentType === 'audiobook') return `/audiobook/${mediaId}`;
+  if (contentType === 'podcast') return `/podcast/${mediaId}`;
+  if (contentType === 'advertisement') return `/advertisement/${mediaId}`;
+  if (contentType === 'toy') return `/toy/${mediaId}`;
+  return `/movie/${mediaId}`;
+}
 
 const { data, pending } = useAsyncData(
   `voice-actor-${voiceActorId}`,

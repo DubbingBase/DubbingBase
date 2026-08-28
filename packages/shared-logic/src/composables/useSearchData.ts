@@ -1,6 +1,14 @@
 export type SearchResult = {
   id: number;
-  media_type: "movie" | "tv" | "voice_actor" | "video_game";
+  media_type:
+    | "movie"
+    | "tv"
+    | "voice_actor"
+    | "video_game"
+    | "audiobook"
+    | "advertisement"
+    | "podcast"
+    | "toy";
   title?: string;
   name?: string;
   voice_actor_name?: string;
@@ -16,6 +24,12 @@ export type SearchResult = {
   original_title?: string;
   original_name?: string;
   cover?: { url: string };
+  author_name?: string;
+  authors?: Array<{ name: string }>;
+  brand?: string;
+  manufacturer?: string;
+  product_line?: string;
+  video_id?: string | null;
 };
 
 export async function fetchSearchData(query: string): Promise<SearchResult[]> {

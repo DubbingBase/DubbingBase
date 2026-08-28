@@ -33,19 +33,24 @@ import type { Movie as MovieModel } from "@supabase/functions/_shared/movie";
 import type { Serie as SerieModel } from "@supabase/functions/_shared/serie";
 
 type Props = {
-  media: MovieModel | SerieModel;
+  media: any;
   character: string;
-  characterImage?: string;
-  mediaType: "movie" | "serie";
+  mediaType?:
+    | "movie"
+    | "serie"
+    | "video_game"
+    | "audiobook"
+    | "podcast"
+    | "advertisement"
+    | "toy";
 };
 
 const props = defineProps<Props>();
 
 const title = computed(() => {
-  if ("title" in props.media) {
-    return (props.media as MovieModel).title;
-  }
-  return (props.media as SerieModel).name;
+  if (props.media?.title) return props.media.title;
+  if (props.media?.name) return props.media.name;
+  return "";
 });
 
 const releaseDate = computed(() => {

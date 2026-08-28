@@ -160,6 +160,10 @@ const filters = computed(() => {
     { label: getLabel('search.tv', 'TV Show'), value: 'tv' },
     { label: getLabel('search.voiceActor', 'Voice Actor'), value: 'voice_actor' },
     { label: getLabel('search.videoGame', 'Video Game'), value: 'video_game' },
+    { label: getLabel('search.audiobook', 'Audiobook'), value: 'audiobook' },
+    { label: getLabel('search.podcast', 'Podcast'), value: 'podcast' },
+    { label: getLabel('search.advertisement', 'Ad / Pub'), value: 'advertisement' },
+    { label: getLabel('search.toy', 'Toy / Objet'), value: 'toy' },
   ];
 });
 
@@ -200,6 +204,10 @@ const getMediaTypeLabel = (type: string) => {
   if (type === 'tv') return t('search.tv') || 'Série';
   if (type === 'voice_actor') return t('search.voiceActor') || 'Comédien(ne)';
   if (type === 'video_game') return t('search.videoGame') || 'Jeu vidéo';
+  if (type === 'audiobook') return t('search.audiobook') || 'Livre audio';
+  if (type === 'podcast') return t('search.podcast') || 'Podcast';
+  if (type === 'advertisement') return t('search.advertisement') || 'Publicité';
+  if (type === 'toy') return t('search.toy') || 'Jouet / Objet';
   return type;
 };
 
@@ -208,12 +216,24 @@ const getTypeColor = (type: string) => {
   if (type === 'tv') return 'bg-purple-500';
   if (type === 'voice_actor') return 'bg-[#00E5FF]';
   if (type === 'video_game') return 'bg-orange-500';
+  if (type === 'audiobook') return 'bg-amber-600';
+  if (type === 'podcast') return 'bg-pink-500';
+  if (type === 'advertisement') return 'bg-emerald-500';
+  if (type === 'toy') return 'bg-yellow-500';
   return 'bg-gray-500';
 };
 
 const getItemMetadata = (item: SearchResult) => {
   const parts = [];
   
+  if (item.brand) {
+    parts.push(item.brand);
+  } else if (item.manufacturer) {
+    parts.push(item.manufacturer);
+  } else if (item.author_name) {
+    parts.push(item.author_name);
+  }
+
   if (item.release_date) {
     parts.push(item.release_date.substring(0, 4));
   } else if (item.first_air_date) {
@@ -244,6 +264,14 @@ const handleSelect = (item: SearchResult) => {
     router.push(localePath(`/voice-actor/${item.id}`));
   } else if (item.media_type === 'video_game') {
     router.push(localePath(`/game/${item.id}`));
+  } else if (item.media_type === 'audiobook') {
+    router.push(localePath(`/audiobook/${item.id}`));
+  } else if (item.media_type === 'podcast') {
+    router.push(localePath(`/podcast/${item.id}`));
+  } else if (item.media_type === 'advertisement') {
+    router.push(localePath(`/advertisement/${item.id}`));
+  } else if (item.media_type === 'toy') {
+    router.push(localePath(`/toy/${item.id}`));
   }
 };
 

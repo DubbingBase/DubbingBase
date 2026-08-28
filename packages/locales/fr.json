@@ -268,8 +268,53 @@
     "tv": "Série",
     "voiceActor": "Comédien(ne)",
     "videoGame": "Jeu vidéo",
+    "audiobook": "Livre audio",
+    "podcast": "Podcast",
+    "advertisement": "Publicité",
+    "toy": "Jouet / Objet",
     "title": "Recherche",
     "description": "Rechercher des films, séries, comédiens et plus"
+  },
+  "audiobook": {
+    "title": "Livre audio",
+    "author": "Auteur",
+    "narrator": "Narrateur",
+    "narrators": "Narrateurs",
+    "isbn": "ISBN",
+    "publishYear": "Année de publication",
+    "description": "Description",
+    "audiobookInfo": "Informations sur le livre",
+    "openLibraryLinked": "Lié à OpenLibrary",
+    "openLibrary": "OpenLibrary",
+    "editProject": "Modifier le projet de livre audio",
+    "createProject": "Créer un projet de livre audio"
+  },
+  "podcast": {
+    "title": "Podcast & Fiction Audio",
+    "author": "Auteur / Créateur",
+    "episodes": "Épisodes",
+    "feedUrl": "Flux RSS",
+    "description": "Description",
+    "editProject": "Modifier le projet de podcast",
+    "createProject": "Créer un projet de podcast"
+  },
+  "advertisement": {
+    "title": "Publicité & Spot",
+    "brand": "Marque / Annonceur",
+    "agency": "Agence",
+    "year": "Année",
+    "description": "Description",
+    "editProject": "Modifier le spot publicitaire",
+    "createProject": "Créer un spot publicitaire"
+  },
+  "toy": {
+    "title": "Jouet Interactif & Conteuse",
+    "manufacturer": "Fabricant",
+    "productLine": "Gamme / Appareil",
+    "releaseYear": "Année de sortie",
+    "description": "Description",
+    "editProject": "Modifier le projet d'objet connecté",
+    "createProject": "Créer un projet d'objet connecté"
   },
   "auth": {
     "loginRequiredForSubscription": "Vous devez être connecté pour vous abonner"

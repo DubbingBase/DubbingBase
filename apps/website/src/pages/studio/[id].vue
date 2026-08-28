@@ -69,13 +69,13 @@
           <NuxtLink
             v-for="project in visibleProjects"
             :key="project.id"
-            :to="localePath(`/${project.content_type === 'movie' ? 'movie' : 'show'}/${project.content_id}`)"
+            :to="localePath(getMediaLink(project.content_type, project.content_id))"
             class="group transition-transform hover:-translate-y-1 block flex flex-col"
           >
             <div class="relative w-full aspect-[2/3] rounded-xl overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-[#2a2a2a] group-hover:border-cyan-500 transition-colors">
               <NuxtImg 
                 v-if="project.media?.poster_path" 
-                :src="'https://image.tmdb.org/t/p/w342' + project.media.poster_path" 
+                :src="project.media.poster_path.startsWith('http') ? project.media.poster_path : 'https://image.tmdb.org/t/p/w342' + project.media.poster_path" 
                 :alt="project.media?.title || project.media?.name" 
                 format="webp" 
                 loading="lazy"
@@ -99,7 +99,7 @@
               {{ project.media?.title || project.media?.name || `Media #${project.content_id}` }}
             </h3>
             <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 uppercase font-bold tracking-wider">
-              {{ project.content_type === 'movie' ? $t('search.movie') : $t('search.tv') }}
+              {{ getMediaTypeLabel(project.content_type) }}
             </div>
           </NuxtLink>
         </div>
@@ -198,10 +198,34 @@ import DetailsHero from '../../components/layout/details/DetailsHero.vue';
 import DetailsActionBar from '../../components/layout/details/DetailsActionBar.vue';
 import PersonSkeleton from '../../components/PersonSkeleton.vue';
 
+import { useI18n } from 'vue-i18n';
+
 const route = useRoute();
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
 const localePath = useLocalePath();
+const { t } = useI18n();
+
+function getMediaLink(contentType?: string, mediaId?: number | string) {
+  if (contentType === 'tv') return `/show/${mediaId}`;
+  if (contentType === 'video_game') return `/game/${mediaId}`;
+  if (contentType === 'audiobook') return `/audiobook/${mediaId}`;
+  if (contentType === 'podcast') return `/podcast/${mediaId}`;
+  if (contentType === 'advertisement') return `/advertisement/${mediaId}`;
+  if (contentType === 'toy') return `/toy/${mediaId}`;
+  return `/movie/${mediaId}`;
+}
+
+function getMediaTypeLabel(contentType?: string) {
+  if (contentType === 'movie') return t('search.movie') || 'Film';
+  if (contentType === 'tv') return t('search.tv') || 'Série';
+  if (contentType === 'video_game') return t('search.videoGame') || 'Jeu vidéo';
+  if (contentType === 'audiobook') return t('search.audiobook') || 'Livre audio';
+  if (contentType === 'podcast') return t('search.podcast') || 'Podcast';
+  if (contentType === 'advertisement') return t('search.advertisement') || 'Publicité';
+  if (contentType === 'toy') return t('search.toy') || 'Jouet / Objet';
+  return contentType || 'Média';
+}
 
 const isAdmin = computed(() => {
   return user.value?.app_metadata?.role === 'admin' || user.value?.user_metadata?.role === 'admin';

@@ -3,7 +3,16 @@
  */
 export type SearchResult = {
   id: number;
-  media_type: "movie" | "tv" | "person" | "voice_actor" | "video_game";
+  media_type:
+    | "movie"
+    | "tv"
+    | "person"
+    | "voice_actor"
+    | "video_game"
+    | "audiobook"
+    | "advertisement"
+    | "podcast"
+    | "toy";
   poster_path?: string;
   profile_path?: string;
   title?: string;
@@ -23,4 +32,12 @@ export type SearchResult = {
   first_release_date?: number;
   genres?: { id: number; name: string }[];
   platforms?: { id: number; name: string }[];
+  // Audiobook-specific fields (media_type === "audiobook")
+  author_name?: string;
+  authors?: Array<{ name: string }>;
+  // Expanded media fields
+  brand?: string;
+  manufacturer?: string;
+  product_line?: string;
+  video_id?: string | null;
 };

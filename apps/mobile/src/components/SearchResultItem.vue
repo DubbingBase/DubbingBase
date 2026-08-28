@@ -35,6 +35,10 @@ import Tv from '~icons/lucide/tv';
 import User from '~icons/lucide/user';
 import Mic from '~icons/lucide/mic';
 import Gamepad2 from '~icons/lucide/gamepad-2';
+import BookOpen from '~icons/lucide/book-open';
+import Radio from '~icons/lucide/radio';
+import Megaphone from '~icons/lucide/megaphone';
+import Smile from '~icons/lucide/smile';
 import { getAvatarFallbackUrl } from '@/utils/image';
 
 interface Props {
@@ -48,7 +52,7 @@ const image = computed(() => {
   if (props.match.media_type === 'video_game') {
     return props.match.cover?.url ?? undefined;
   }
-  return props.match.profile_path ?? props.match.poster_path;
+  return props.match.profile_path ?? props.match.poster_path ?? props.match.cover?.url;
 });
 
 const name = computed(() => {
@@ -62,7 +66,11 @@ const formattedDate = computed(() => {
   }
   const date = props.match.first_air_date ?? props.match.release_date;
   if (date) {
-    return format(parseISO(date), 'yyyy');
+    try {
+      return format(parseISO(date), 'yyyy');
+    } catch {
+      return date.substring(0, 4);
+    }
   }
   return '';
 });
@@ -75,6 +83,14 @@ const routeName = computed(() => {
       return "SerieDetails";
     case "video_game":
       return "GameDetails";
+    case "audiobook":
+      return "AudiobookDetails";
+    case "podcast":
+      return "PodcastDetails";
+    case "advertisement":
+      return "AdDetails";
+    case "toy":
+      return "ToyDetails";
     case "person":
       return "ActorDetails";
     case "voice_actor":
@@ -91,6 +107,10 @@ const mediaIcon = computed(() => {
     case "person": return User;
     case "voice_actor": return Mic;
     case "video_game": return Gamepad2;
+    case "audiobook": return BookOpen;
+    case "podcast": return Radio;
+    case "advertisement": return Megaphone;
+    case "toy": return Smile;
     default: return undefined;
   }
 });
@@ -102,6 +122,10 @@ const iconColor = computed(() => {
     case "person": return "warning";
     case "voice_actor": return "success";
     case "video_game": return "tertiary";
+    case "audiobook": return "warning";
+    case "podcast": return "danger";
+    case "advertisement": return "success";
+    case "toy": return "warning";
     default: return "medium";
   }
 });
@@ -118,6 +142,11 @@ const chips = computed(() => {
       }
       if (props.match.awards) {
         result.push(props.match.awards);
+      }
+      break;
+    case "audiobook":
+      if (props.match.author_name) {
+        result.push(props.match.author_name);
       }
       break;
   }

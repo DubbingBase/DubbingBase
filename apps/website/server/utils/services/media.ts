@@ -3,7 +3,7 @@ import { TMDBClient } from "../api/tmdb";
 import { TVDBClient } from "../api/tvdb";
 import { processVoiceActor } from "../urls/supabase";
 import { processMedia, cleanCharacterName } from "../urls/tmdb";
-import { useCache, useIgdbClient } from "../index";
+import { useCache, useIgdbClient, useOpenLibraryClient } from "../index";
 import { buildIgdbImageUrl } from "../api/igdb";
 
 const WIKIPEDIA_USER_AGENT =
@@ -71,14 +71,27 @@ export class MediaService {
 
     // 1. Deduplicate media requests by (contentType + contentId)
     type MediaTarget = {
-      contentType: "movie" | "tv" | "video_game";
+      contentType:
+        | "movie"
+        | "tv"
+        | "video_game"
+        | "audiobook"
+        | "advertisement"
+        | "podcast"
+        | "toy";
       contentId: number;
     };
     const uniqueTargetsMap = new Map<string, MediaTarget>();
     for (const work of workItems) {
       const contentId = work.dubbing_projects?.content_id;
       const contentType = work.dubbing_projects?.content_type as
-        "movie" | "tv" | "video_game";
+        | "movie"
+        | "tv"
+        | "video_game"
+        | "audiobook"
+        | "advertisement"
+        | "podcast"
+        | "toy";
       if (contentId && contentType) {
         uniqueTargetsMap.set(`${contentType}:${contentId}`, {
           contentType,
@@ -99,6 +112,65 @@ export class MediaService {
       const batch = uniqueTargets.slice(i, i + BATCH_SIZE);
       const batchResults = await Promise.all(
         batch.map(async ({ contentType, contentId }) => {
+          if (contentType === "audiobook") {
+            try {
+              const openLibraryClient = useOpenLibraryClient();
+              const book = await openLibraryClient.getBook(contentId);
+              if (!book) {
+                return {
+                  key: `${contentType}:${contentId}`,
+                  data: {
+                    media: null,
+                    characterProfilePictures: [],
+                    tvdbId: null,
+                  },
+                };
+              }
+              const processedBook = {
+                id: book.id,
+                title: book.title,
+                name: book.title,
+                overview: book.description || "",
+                poster_path: book.cover_url || null,
+                backdrop_path: null,
+                release_date:
+                  book.release_date ||
+                  (book.first_publish_year
+                    ? `${book.first_publish_year}-01-01`
+                    : "1970-01-01"),
+                first_air_date:
+                  book.release_date ||
+                  (book.first_publish_year
+                    ? `${book.first_publish_year}-01-01`
+                    : "1970-01-01"),
+                media_type: "audiobook" as const,
+                popularity: book.popularity || 0,
+                credits: { cast: [] },
+              };
+              return {
+                key: `${contentType}:${contentId}`,
+                data: {
+                  media: processedBook,
+                  characterProfilePictures: [],
+                  tvdbId: null,
+                },
+              };
+            } catch (err) {
+              console.error(
+                `Failed to fetch OpenLibrary book ${contentId} for voice actor:`,
+                err,
+              );
+              return {
+                key: `${contentType}:${contentId}`,
+                data: {
+                  media: null,
+                  characterProfilePictures: [],
+                  tvdbId: null,
+                },
+              };
+            }
+          }
+
           if (contentType === "video_game") {
             try {
               const igdbClient = useIgdbClient();
@@ -167,16 +239,145 @@ export class MediaService {
             }
           }
 
+          if (contentType === "podcast") {
+            try {
+              const podcastClient = usePodcastClient();
+              const podcast = await podcastClient.getPodcast(contentId);
+              if (!podcast) {
+                return {
+                  key: `${contentType}:${contentId}`,
+                  data: {
+                    media: null,
+                    characterProfilePictures: [],
+                    tvdbId: null,
+                  },
+                };
+              }
+              const processedPodcast = {
+                id: podcast.id,
+                title: podcast.title,
+                name: podcast.title,
+                overview: podcast.description || "",
+                poster_path: podcast.cover_url || null,
+                backdrop_path: null,
+                release_date: podcast.release_date || "1970-01-01",
+                first_air_date: podcast.release_date || "1970-01-01",
+                media_type: "podcast" as const,
+                popularity: podcast.popularity || 0,
+                credits: { cast: [] },
+              };
+              return {
+                key: `${contentType}:${contentId}`,
+                data: {
+                  media: processedPodcast,
+                  characterProfilePictures: [],
+                  tvdbId: null,
+                },
+              };
+            } catch (err) {
+              console.error(`Failed to fetch podcast ${contentId}:`, err);
+              return {
+                key: `${contentType}:${contentId}`,
+                data: {
+                  media: null,
+                  characterProfilePictures: [],
+                  tvdbId: null,
+                },
+              };
+            }
+          }
+
+          if (contentType === "advertisement") {
+            try {
+              const adClient = useAdvertisementClient();
+              const ad = await adClient.getAdvertisement(contentId);
+              const processedAd = {
+                id: ad?.id || contentId,
+                title: ad?.title || `Spot Publicitaire #${contentId}`,
+                name: ad?.title || `Spot Publicitaire #${contentId}`,
+                overview: ad?.description || "",
+                poster_path: ad?.poster_url || null,
+                backdrop_path: null,
+                release_date: ad?.year ? `${ad.year}-01-01` : "1970-01-01",
+                first_air_date: ad?.year ? `${ad.year}-01-01` : "1970-01-01",
+                media_type: "advertisement" as const,
+                popularity: 0,
+                credits: { cast: [] },
+              };
+              return {
+                key: `${contentType}:${contentId}`,
+                data: {
+                  media: processedAd,
+                  characterProfilePictures: [],
+                  tvdbId: null,
+                },
+              };
+            } catch (err) {
+              console.error(`Failed to fetch ad ${contentId}:`, err);
+              return {
+                key: `${contentType}:${contentId}`,
+                data: {
+                  media: null,
+                  characterProfilePictures: [],
+                  tvdbId: null,
+                },
+              };
+            }
+          }
+
+          if (contentType === "toy") {
+            try {
+              const toyClient = useToyClient();
+              const toy = await toyClient.getToy(contentId);
+              const processedToy = {
+                id: toy?.id || contentId,
+                title: toy?.name || `Objet Connecté #${contentId}`,
+                name: toy?.name || `Objet Connecté #${contentId}`,
+                overview: toy?.description || "",
+                poster_path: toy?.cover_url || null,
+                backdrop_path: null,
+                release_date: toy?.release_year
+                  ? `${toy.release_year}-01-01`
+                  : "1970-01-01",
+                first_air_date: toy?.release_year
+                  ? `${toy.release_year}-01-01`
+                  : "1970-01-01",
+                media_type: "toy" as const,
+                popularity: 0,
+                credits: { cast: [] },
+              };
+              return {
+                key: `${contentType}:${contentId}`,
+                data: {
+                  media: processedToy,
+                  characterProfilePictures: [],
+                  tvdbId: null,
+                },
+              };
+            } catch (err) {
+              console.error(`Failed to fetch toy ${contentId}:`, err);
+              return {
+                key: `${contentType}:${contentId}`,
+                data: {
+                  media: null,
+                  characterProfilePictures: [],
+                  tvdbId: null,
+                },
+              };
+            }
+          }
+
           try {
+            const tmdbType = contentType === "tv" ? "tv" : "movie";
             const tmdbMedia = await this.tmdbClient.getMediaWithCredits(
-              contentType,
+              tmdbType,
               contentId,
               language || this.acceptLanguage,
             );
 
             const { characters, tvdbId } =
               await this.getCharacterProfilePictures(
-                contentType,
+                tmdbType,
                 contentId,
                 tmdbMedia,
               );
@@ -220,7 +421,7 @@ export class MediaService {
     for (const work of workItems) {
       const contentId = work.dubbing_projects?.content_id;
       const contentType = work.dubbing_projects?.content_type as
-        "movie" | "tv" | "video_game";
+        "movie" | "tv" | "video_game" | "audiobook";
       if (!contentId || !contentType) continue;
 
       const mediaResult = fetchedResultsMap.get(`${contentType}:${contentId}`);
