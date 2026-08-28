@@ -1,6 +1,5 @@
 import { useCache, useTmdbClient } from "../../utils";
 import { MediaService } from "../../utils/services/media";
-import { getWorkVotes } from "../../utils/db/queries";
 import { CACHE_KEYS } from "../../utils/cache/constants";
 
 export default defineEventHandler(async (event) => {
@@ -15,7 +14,13 @@ export default defineEventHandler(async (event) => {
   }
 
   const acceptLanguage = getHeader(event, "accept-language") || undefined;
-  const user = event.context.user;
+
+  // Set HTTP Edge caching / SWR headers for optimal CDN performance
+  setHeader(
+    event,
+    "Cache-Control",
+    "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+  );
 
   const cache = useCache();
   const cacheKey = CACHE_KEYS.APP_VOICE_ACTOR(
@@ -30,7 +35,10 @@ export default defineEventHandler(async (event) => {
     try {
       const tmdbClient = useTmdbClient();
       const mediaService = new MediaService(tmdbClient, acceptLanguage);
-      baseData = await mediaService.getVoiceActorWithWorkAndMedia(voiceActorId);
+      baseData = await mediaService.getVoiceActorWithWorkAndMedia(
+        voiceActorId,
+        acceptLanguage,
+      );
       await cache.set(cacheKey, baseData, "SHORT");
     } catch (error) {
       console.error("Error fetching voice actor:", error);
@@ -38,25 +46,6 @@ export default defineEventHandler(async (event) => {
         statusCode: 500,
         message: "Failed to fetch voice actor data",
       });
-    }
-  }
-
-  if (user) {
-    const workItems = (baseData?.voiceActor as any)?.work || [];
-    const workIds = workItems.map((w: any) => w.id);
-    if (workIds.length > 0) {
-      try {
-        const userVotes = await getWorkVotes(workIds, user.id);
-        return {
-          ...baseData,
-          votes: userVotes,
-        };
-      } catch (err) {
-        console.error(
-          "Error fetching user-specific votes for voice actor:",
-          err,
-        );
-      }
     }
   }
 

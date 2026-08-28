@@ -624,13 +624,15 @@ watch(
   (newData) => {
     if (newData) {
       voiceActorData.voiceActor.value = newData.voiceActor;
+      if (newData.enhancedWorks) {
+        voiceActorData.enhancedWorks.value = newData.enhancedWorks;
+      }
       voiceActorData.medias.value = newData.medias;
       voiceActorData.characterProfilePictures.value =
         newData.characterProfilePictures;
       voiceActorData.profilePicture.value = newData.profilePicture;
       voiceActorData.potentialWikipediaUrl.value =
         newData.potentialWikipediaUrl;
-      voiceActorData.votes.value = newData.votes;
       voiceActorData.loading.value = false;
     }
   },

@@ -100,7 +100,6 @@ import VoiceActorFetchModal from "@/components/VoiceActorFetchModal.vue";
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
 import { useI18n } from "vue-i18n";
-import { useVoiceActorManagement } from "@/composables/useVoiceActorManagement";
 
 const authStore = useAuthStore();
 
@@ -114,7 +113,6 @@ import { watch } from "vue";
 import { useVoiceActorData } from "@app/shared-logic";
 
 const { isAdmin, isAuthenticated } = storeToRefs(authStore);
-const { votes: sharedVotes } = useVoiceActorManagement("movie");
 
 const {
   voiceActor,
@@ -122,17 +120,10 @@ const {
   loading,
   searchQuery,
   potentialWikipediaUrl,
-  votes,
   isLinked,
   filteredEnhancedWork,
-  loadVoiceActorData
-} = useVoiceActorData(supabase);
-
-watch(votes, (newVotes) => {
-  if (newVotes) {
-    sharedVotes.value = { ...sharedVotes.value, ...newVotes };
-  }
-}, { immediate: true });
+  loadVoiceActorData,
+} = useVoiceActorData();
 
 
 

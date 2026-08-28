@@ -617,70 +617,103 @@ export default defineEventHandler(async (event) => {
         });
       }
 
-      const { voiceActor, medias, characterProfilePictures } = result;
+      const { voiceActor, enhancedWorks, medias, characterProfilePictures } =
+        result;
 
-      let mappedWorks = (voiceActor.work || []).reduce((acc: any[], w: any) => {
-        const contentId = w.dubbing_projects?.content_id;
-        const media = medias.find((m: any) => m.id === contentId);
+      let mappedWorks: any[] = [];
 
-        if (!media || !media.credits?.cast) return acc;
-
-        const castMember = media.credits.cast.find(
-          (c: any) => c.id === w.actor_id,
-        );
-        if (!castMember) return acc;
-
-        let characterName = castMember.character || w.performance || "";
-        if (characterName.toLowerCase().includes("dialogue")) {
-          characterName = "";
-        }
-
-        let characterImage = null;
-        if (castMember.profile_path) {
-          characterImage = castMember.profile_path.replace("/w500/", "/w92/");
-        }
-
-        if (
-          !characterImage &&
-          characterProfilePictures &&
-          Array.isArray(characterProfilePictures)
-        ) {
-          const pic = characterProfilePictures.find(
-            (cp: any) =>
-              (cp.movieId === contentId || cp.showId === contentId) &&
-              cp.name &&
-              characterName &&
-              cp.name.toLowerCase() === characterName.toLowerCase(),
-          );
-          if (pic) {
-            characterImage = pic.image || pic.profile_path || null;
+      if (enhancedWorks && Array.isArray(enhancedWorks)) {
+        mappedWorks = enhancedWorks.map((item: any) => {
+          let characterName =
+            item.data?.character || item.work?.performance || "";
+          if (characterName.toLowerCase().includes("dialogue")) {
+            characterName = "";
           }
-        }
 
-        let title = "Unknown Work";
-        let popularity = 0;
-        let mediaPoster = null;
-
-        if (media) {
-          title = media.title || media.name || title;
-          popularity = media.popularity || 0;
-          if (media.poster_path) {
-            mediaPoster = media.poster_path.replace("/w500/", "/w92/");
+          let characterImage = item.data?.characterImage || null;
+          if (characterImage && characterImage.includes("/w185/")) {
+            characterImage = characterImage.replace("/w185/", "/w92/");
           }
-        } else {
-          title = contentId ? `Work #${contentId}` : title;
-        }
 
-        acc.push({
-          title,
-          characterName: characterName || "",
-          popularity,
-          mediaPosterUrl: mediaPoster,
-          characterImageUrl: characterImage,
+          let mediaPoster = item.media?.poster_path || null;
+          if (mediaPoster && mediaPoster.includes("/w500/")) {
+            mediaPoster = mediaPoster.replace("/w500/", "/w92/");
+          } else if (mediaPoster && !mediaPoster.startsWith("http")) {
+            mediaPoster = `https://image.tmdb.org/t/p/w92${mediaPoster}`;
+          }
+
+          return {
+            title: item.media?.title || item.media?.name || "Unknown Work",
+            characterName: characterName || "",
+            popularity: item.media?.popularity || 0,
+            mediaPosterUrl: mediaPoster,
+            characterImageUrl: characterImage,
+          };
         });
+      } else {
+        mappedWorks = (voiceActor.work || []).reduce((acc: any[], w: any) => {
+          const contentId = w.dubbing_projects?.content_id;
+          const media = (medias || []).find((m: any) => m.id === contentId);
 
-        return acc;
-      }, []);
+          if (!media || !media.credits?.cast) return acc;
+
+          const castMember = media.credits.cast.find(
+            (c: any) => c.id === w.actor_id,
+          );
+          if (!castMember) return acc;
+
+          let characterName = castMember.character || w.performance || "";
+          if (characterName.toLowerCase().includes("dialogue")) {
+            characterName = "";
+          }
+
+          let characterImage = null;
+          if (castMember.profile_path) {
+            characterImage = castMember.profile_path.replace("/w500/", "/w92/");
+          }
+
+          if (
+            !characterImage &&
+            characterProfilePictures &&
+            Array.isArray(characterProfilePictures)
+          ) {
+            const pic = characterProfilePictures.find(
+              (cp: any) =>
+                (cp.movieId === contentId || cp.showId === contentId) &&
+                cp.name &&
+                characterName &&
+                cp.name.toLowerCase() === characterName.toLowerCase(),
+            );
+            if (pic) {
+              characterImage = pic.image || pic.profile_path || null;
+            }
+          }
+
+          let title = "Unknown Work";
+          let popularity = 0;
+          let mediaPoster = null;
+
+          if (media) {
+            title = media.title || media.name || title;
+            popularity = media.popularity || 0;
+            if (media.poster_path) {
+              mediaPoster = media.poster_path.replace("/w500/", "/w92/");
+            }
+          } else {
+            title = contentId ? `Work #${contentId}` : title;
+          }
+
+          acc.push({
+            title,
+            characterName: characterName || "",
+            popularity,
+            mediaPosterUrl: mediaPoster,
+            characterImageUrl: characterImage,
+          });
+
+          return acc;
+        }, []);
+      }
 
       mappedWorks.sort((a: any, b: any) => b.popularity - a.popularity);
 
