@@ -199,7 +199,14 @@
     "series": "テレビ番組",
     "episodes": "エピソード",
     "fetchWikipedia": "Wikipediaから取得",
-    "wikipediaUrl": "Wikipedia URL"
+    "wikipediaUrl": "Wikipedia URL",
+    "filmography": "出演作品",
+    "searchPlaceholder": "役名、タイトル、俳優を検索...",
+    "grouped": "グループ",
+    "list": "リスト",
+    "newestFirst": "新しい順",
+    "oldestFirst": "古い順",
+    "noWorksFound": "この声優の作品は見つかりませんでした。"
   },
   "actor": {
     "title": "俳優",
@@ -279,10 +286,15 @@
     "placeholder": "検索...",
     "noResults": "結果が見つかりません",
     "emptyState": "検索を開始してください...",
+    "all": "すべて",
     "movie": "映画",
-    "tv": "テレビ番組",
+    "tv": "シリーズ",
     "voiceActor": "声優",
-    "videoGame": "ビデオゲーム",
+    "videoGame": "ゲーム",
+    "audiobook": "オーディオブック",
+    "podcast": "ポッドキャスト",
+    "advertisement": "CM・広告",
+    "toy": "トイ・玩具",
     "title": "検索",
     "description": "映画、テレビ番組、声優などを検索"
   },

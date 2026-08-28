@@ -162,12 +162,14 @@
 
         <!-- Filmography -->
         <section>
-          <div class="flex flex-col mb-6 gap-2">
+          <div class="flex flex-col mb-6 gap-4">
             <div
               class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4"
             >
               <div>
-                <h2 class="text-2xl font-bold">Filmography</h2>
+                <h2 class="text-2xl font-bold">
+                  {{ $t('voiceActor.filmography', 'Filmography') }}
+                </h2>
               </div>
 
               <div class="flex flex-wrap gap-4 items-center">
@@ -178,7 +180,12 @@
                   <input
                     v-model="searchInput"
                     type="search"
-                    placeholder="Search roles, titles or actors..."
+                    :placeholder="
+                      $t(
+                        'voiceActor.searchPlaceholder',
+                        'Search roles, titles or actors...',
+                      )
+                    "
                     class="w-full bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-[#00E5FF] transition-all text-gray-900 dark:text-white"
                   />
                 </div>
@@ -190,44 +197,80 @@
                   <button
                     @click="displayMode = 'grouped'"
                     :class="[
-                      'px-4 py-1.5 rounded-md text-sm font-medium transition',
+                      'px-4 py-1.5 rounded-md text-sm font-medium transition cursor-pointer',
                       displayMode === 'grouped'
                         ? 'bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white shadow-sm'
                         : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200',
                     ]"
                   >
-                    Grouped
+                    {{ $t('voiceActor.grouped', 'Grouped') }}
                   </button>
                   <button
                     @click="displayMode = 'list'"
                     :class="[
-                      'px-4 py-1.5 rounded-md text-sm font-medium transition',
+                      'px-4 py-1.5 rounded-md text-sm font-medium transition cursor-pointer',
                       displayMode === 'list'
                         ? 'bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white shadow-sm'
                         : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200',
                     ]"
                   >
-                    List
+                    {{ $t('voiceActor.list', 'List') }}
                   </button>
                 </div>
 
                 <!-- Sort Dropdown -->
                 <select
                   v-model="sortMode"
-                  class="bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-gray-200 text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2"
+                  class="bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-gray-200 text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2 cursor-pointer"
                 >
-                  <option value="newest">Newest First</option>
-                  <option value="oldest">Oldest First</option>
+                  <option value="newest">
+                    {{ $t('voiceActor.newestFirst', 'Newest First') }}
+                  </option>
+                  <option value="oldest">
+                    {{ $t('voiceActor.oldestFirst', 'Oldest First') }}
+                  </option>
                 </select>
               </div>
+            </div>
+
+            <!-- Category Tabs Bar (Below search, applies to all works) -->
+            <div
+              v-if="categoryTabs.length > 1"
+              class="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none"
+            >
+              <button
+                v-for="tab in categoryTabs"
+                :key="tab.id"
+                type="button"
+                @click="activeTab = tab.id"
+                class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all shrink-0 cursor-pointer border"
+                :class="[
+                  activeTab === tab.id
+                    ? 'bg-cyan-500/10 text-cyan-600 dark:text-[#00E5FF] border-cyan-500/30 dark:border-cyan-400/40 shadow-xs font-semibold'
+                    : 'bg-white dark:bg-[#161616] text-gray-600 dark:text-gray-400 border-gray-200 dark:border-[#2a2a2a] hover:text-gray-900 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-[#3a3a3a]',
+                ]"
+              >
+                <component :is="tab.icon" class="w-4 h-4 shrink-0" />
+                <span>{{ tab.label }}</span>
+                <span
+                  class="text-xs px-1.5 py-0.5 rounded-full font-medium transition-colors"
+                  :class="[
+                    activeTab === tab.id
+                      ? 'bg-cyan-500/20 text-cyan-700 dark:text-[#00E5FF]'
+                      : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 dark:text-gray-400',
+                  ]"
+                >
+                  {{ tab.count }}
+                </span>
+              </button>
             </div>
           </div>
 
           <div
-            v-if="filteredEnhancedWork.length === 0"
+            v-if="sortedWorks.length === 0"
             class="text-gray-500 text-center py-12 bg-white dark:bg-[#161616] rounded-2xl border border-gray-200 dark:border-[#2a2a2a]"
           >
-            No works found for this actor.
+            {{ $t('voiceActor.noWorksFound', 'No works found for this actor.') }}
           </div>
 
           <template v-if="displayMode === 'list'">
@@ -605,7 +648,19 @@
 import PersonDetailsLayout from "../../components/layout/PersonDetailsLayout.vue";
 import { useVoiceActorData, fetchVoiceActorData } from "@app/shared-logic";
 import { useRouter, useRoute } from "vue-router";
-import { ClapperboardIcon, UserIcon, SearchIcon } from "lucide-vue-next";
+import {
+  Clapperboard as ClapperboardIcon,
+  User as UserIcon,
+  Search as SearchIcon,
+  Layers as LayersIcon,
+  Film as FilmIcon,
+  Tv as TvIcon,
+  Gamepad2 as Gamepad2Icon,
+  BookOpen as BookOpenIcon,
+  Radio as RadioIcon,
+  Megaphone as MegaphoneIcon,
+  Smile as SmileIcon,
+} from "lucide-vue-next";
 import ReportModal from "../../components/ReportModal.vue";
 import { computed, ref, watch } from "vue";
 import { useIntersectionObserver, refDebounced } from "@vueuse/core";
@@ -623,13 +678,38 @@ const $t = t;
 const $te = te;
 const localePath = useLocalePath();
 
+function normalizeContentType(contentType?: string | null): string {
+  if (!contentType) return "movie";
+  const c = contentType.toLowerCase().trim();
+  if (
+    c === "tv" ||
+    c === "serie" ||
+    c === "series" ||
+    c === "show" ||
+    c === "season" ||
+    c === "episode"
+  ) {
+    return "tv";
+  }
+  if (c === "video_game" || c === "game") return "video_game";
+  if (c === "audiobook" || c === "book") return "audiobook";
+  if (c === "podcast") return "podcast";
+  if (c === "advertisement" || c === "ad" || c === "commercial") {
+    return "advertisement";
+  }
+  if (c === "toy") return "toy";
+  if (c === "movie") return "movie";
+  return c;
+}
+
 function getMediaLink(contentType?: string | null, mediaId?: number | string) {
-  if (contentType === 'tv') return `/show/${mediaId}`;
-  if (contentType === 'video_game') return `/game/${mediaId}`;
-  if (contentType === 'audiobook') return `/audiobook/${mediaId}`;
-  if (contentType === 'podcast') return `/podcast/${mediaId}`;
-  if (contentType === 'advertisement') return `/advertisement/${mediaId}`;
-  if (contentType === 'toy') return `/toy/${mediaId}`;
+  const c = normalizeContentType(contentType);
+  if (c === 'tv') return `/show/${mediaId}`;
+  if (c === 'video_game') return `/game/${mediaId}`;
+  if (c === 'audiobook') return `/audiobook/${mediaId}`;
+  if (c === 'podcast') return `/podcast/${mediaId}`;
+  if (c === 'advertisement') return `/advertisement/${mediaId}`;
+  if (c === 'toy') return `/toy/${mediaId}`;
   return `/movie/${mediaId}`;
 }
 
@@ -827,6 +907,112 @@ useHead({
 
 const displayMode = ref<"grouped" | "list">("grouped");
 const sortMode = ref<"newest" | "oldest">("newest");
+const activeTab = ref<string>("all");
+
+const CATEGORY_TABS_CONFIG = [
+  { id: "all", labelKey: "search.all", defaultLabel: "All", icon: LayersIcon },
+  { id: "movie", labelKey: "search.movie", defaultLabel: "Movies", icon: FilmIcon },
+  { id: "tv", labelKey: "search.tv", defaultLabel: "Series", icon: TvIcon },
+  {
+    id: "video_game",
+    labelKey: "search.videoGame",
+    defaultLabel: "Video Games",
+    icon: Gamepad2Icon,
+  },
+  {
+    id: "audiobook",
+    labelKey: "search.audiobook",
+    defaultLabel: "Audiobooks",
+    icon: BookOpenIcon,
+  },
+  {
+    id: "podcast",
+    labelKey: "search.podcast",
+    defaultLabel: "Podcasts",
+    icon: RadioIcon,
+  },
+  {
+    id: "advertisement",
+    labelKey: "search.advertisement",
+    defaultLabel: "Commercials",
+    icon: MegaphoneIcon,
+  },
+  { id: "toy", labelKey: "search.toy", defaultLabel: "Toys", icon: SmileIcon },
+] as const;
+
+const categoryTabs = computed(() => {
+  const allWorks = voiceActorData.enhancedWork.value || [];
+  const searchFiltered = filteredEnhancedWork.value || [];
+
+  const totalCounts: Record<string, number> = {
+    all: allWorks.length,
+    movie: 0,
+    tv: 0,
+    video_game: 0,
+    audiobook: 0,
+    podcast: 0,
+    advertisement: 0,
+    toy: 0,
+  };
+
+  for (const item of allWorks) {
+    const cType = normalizeContentType(
+      item.work.dubbing_projects?.content_type,
+    );
+    totalCounts[cType] = (totalCounts[cType] || 0) + 1;
+  }
+
+  const filteredCounts: Record<string, number> = {
+    all: searchFiltered.length,
+    movie: 0,
+    tv: 0,
+    video_game: 0,
+    audiobook: 0,
+    podcast: 0,
+    advertisement: 0,
+    toy: 0,
+  };
+
+  for (const item of searchFiltered) {
+    const cType = normalizeContentType(
+      item.work.dubbing_projects?.content_type,
+    );
+    filteredCounts[cType] = (filteredCounts[cType] || 0) + 1;
+  }
+
+  return CATEGORY_TABS_CONFIG.filter((cfg) => {
+    if (cfg.id === "all") return true;
+    return (totalCounts[cfg.id] || 0) > 0;
+  }).map((cfg) => {
+    return {
+      id: cfg.id,
+      label: $te(cfg.labelKey) ? $t(cfg.labelKey) : cfg.defaultLabel,
+      icon: cfg.icon,
+      count: filteredCounts[cfg.id] || 0,
+      totalCount: totalCounts[cfg.id] || 0,
+    };
+  });
+});
+
+watch(categoryTabs, (tabs) => {
+  if (
+    activeTab.value !== "all" &&
+    !tabs.some((t) => t.id === activeTab.value)
+  ) {
+    activeTab.value = "all";
+  }
+});
+
+const worksMatchingTab = computed(() => {
+  if (activeTab.value === "all") {
+    return filteredEnhancedWork.value;
+  }
+  return filteredEnhancedWork.value.filter(
+    (item) =>
+      normalizeContentType(item.work.dubbing_projects?.content_type) ===
+      activeTab.value,
+  );
+});
 
 const workedStudios = computed(() => {
   const studiosMap = new Map<
@@ -851,7 +1037,7 @@ const resolveImageUrl = (path: string | undefined | null) => {
 };
 
 const sortedWorks = computed(() => {
-  const works = [...filteredEnhancedWork.value];
+  const works = [...worksMatchingTab.value];
   if (sortMode.value === "oldest") {
     return works.sort((a, b) => (a.sortDate > b.sortDate ? 1 : -1));
   }
@@ -915,8 +1101,8 @@ useIntersectionObserver(
   { rootMargin: "400px" },
 );
 
-// Reset displayed counts on search, sort or display mode changes
-watch([searchQuery, sortMode, displayMode], () => {
+// Reset displayed counts on search, tab, sort or display mode changes
+watch([searchQuery, activeTab, sortMode, displayMode], () => {
   displayedListCount.value = 36;
   displayedGroupCount.value = 10;
 });

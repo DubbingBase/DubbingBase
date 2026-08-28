@@ -230,20 +230,27 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-800/60">
-            <tr v-for="work in linkedWorks" :key="work.id" class="hover:bg-gray-950/50 transition-colors">
+            <tr v-for="work in (linkedWorks as any[])" :key="work.id" class="hover:bg-gray-950/50 transition-colors">
               <td class="px-4 py-3 font-mono text-xs text-gray-400">#{{ work.id }}</td>
-              <td class="px-4 py-3 font-mono text-xs text-blue-400">Project #{{ work.dubbing_project_id }}</td>
-              <td class="px-4 py-3 uppercase text-[10px] font-bold tracking-wider text-gray-400">
-                <span class="px-2 py-0.5 rounded bg-gray-800 border border-gray-700">{{ work.content_type || 'movie' }}</span>
+              <td class="px-4 py-3 font-mono text-xs text-blue-400">
+                Project #{{ work.dubbing_project_id }}
+                <span v-if="work.dubbing_projects?.content_id" class="text-gray-500 text-[10px] block">
+                  Content #{{ work.dubbing_projects.content_id }}
+                </span>
               </td>
-              <td class="px-4 py-3 font-medium text-white">{{ work.suggestions || 'Character' }}</td>
+              <td class="px-4 py-3 uppercase text-[10px] font-bold tracking-wider text-gray-400">
+                <span class="px-2 py-0.5 rounded bg-gray-800 border border-gray-700">
+                  {{ work.dubbing_projects?.content_type || work.content_type || 'movie' }}
+                </span>
+              </td>
+              <td class="px-4 py-3 font-medium text-white">{{ work.character_name || work.suggestions || 'Character' }}</td>
               <td class="px-4 py-3 text-xs text-gray-400">{{ work.performance || 'dialogues' }}</td>
               <td class="px-4 py-3 text-right">
                 <NuxtLink
-                  :to="localePath(`/admin/movies/edit/${work.dubbing_project_id}`)"
+                  :to="localePath(getProjectEditLink(work.dubbing_projects?.content_type || work.content_type, work.dubbing_projects?.content_id, work.dubbing_project_id))"
                   class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-blue-400 hover:text-blue-300 text-xs font-semibold rounded-lg border border-gray-700 transition-all inline-flex items-center space-x-1"
                 >
-                  <span>Edit Movie</span>
+                  <span>Edit {{ getMediaTypeLabel(work.dubbing_projects?.content_type || work.content_type) }}</span>
                   <span>↗</span>
                 </NuxtLink>
               </td>
@@ -390,7 +397,27 @@ const uploadProfilePicture = async (voiceActorId: string | number) => {
 
 const linkedWorks = ref<any[]>([]);
 
-const fetchLinkedWorks = async () => {};
+function getProjectEditLink(contentType?: string | null, contentId?: number | string, projectId?: number | string) {
+  if (!contentType || contentType === 'movie') return `/movie/${contentId || projectId}/edit/${projectId}`;
+  if (contentType === 'tv' || contentType === 'show' || contentType === 'serie') return `/show/${contentId || projectId}/edit/${projectId}`;
+  if (contentType === 'video_game' || contentType === 'game') return `/game/${contentId || projectId}/edit/${projectId}`;
+  if (contentType === 'audiobook') return `/audiobook/${contentId || projectId}/edit/${projectId}`;
+  if (contentType === 'podcast') return `/podcast/${contentId || projectId}/edit/${projectId}`;
+  if (contentType === 'advertisement') return `/advertisement/${contentId || projectId}/edit/${projectId}`;
+  if (contentType === 'toy') return `/toy/${contentId || projectId}/edit/${projectId}`;
+  return `/admin/movies/edit/${projectId}`;
+}
+
+function getMediaTypeLabel(contentType?: string | null) {
+  if (contentType === 'movie') return 'Movie';
+  if (contentType === 'tv') return 'Series';
+  if (contentType === 'video_game') return 'Video Game';
+  if (contentType === 'audiobook') return 'Audiobook';
+  if (contentType === 'podcast') return 'Podcast';
+  if (contentType === 'advertisement') return 'Commercial';
+  if (contentType === 'toy') return 'Toy';
+  return contentType || 'Media';
+}
 
 const numId = Number(id);
 const { data: initialData } = await useAsyncData(`voice-actor-${id}`, async () => {
@@ -405,7 +432,7 @@ const { data: initialData } = await useAsyncData(`voice-actor-${id}`, async () =
 
   const { data: works, error: worksErr } = await supabase
     .from("work")
-    .select("*")
+    .select("*, dubbing_projects(id, content_id, content_type)")
     .eq("voice_actor_id", numId);
 
   return {

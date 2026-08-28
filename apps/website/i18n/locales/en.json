@@ -199,7 +199,14 @@
     "series": "Series",
     "episodes": "Episodes",
     "fetchWikipedia": "Fetch from Wikipedia",
-    "wikipediaUrl": "Wikipedia URL"
+    "wikipediaUrl": "Wikipedia URL",
+    "filmography": "Filmography",
+    "searchPlaceholder": "Search roles, titles or actors...",
+    "grouped": "Grouped",
+    "list": "List",
+    "newestFirst": "Newest First",
+    "oldestFirst": "Oldest First",
+    "noWorksFound": "No works found for this actor."
   },
   "actor": {
     "title": "Actor",
@@ -279,10 +286,15 @@
     "placeholder": "Search...",
     "noResults": "No results found",
     "emptyState": "Start typing to search...",
-    "movie": "Movie",
+    "all": "All",
+    "movie": "Movies",
     "tv": "Series",
     "voiceActor": "Voice Actor",
-    "videoGame": "Video Game",
+    "videoGame": "Video Games",
+    "audiobook": "Audiobooks",
+    "podcast": "Podcasts",
+    "advertisement": "Commercials",
+    "toy": "Toys & Interactive",
     "title": "Search",
     "description": "Search for movies, series, voice actors, and more"
   },
