@@ -26,7 +26,7 @@
         </a>
       </template>
       <template #right v-if="isAdmin">
-        <NuxtLink :to="$localePath(`/studio/${studio.id}/edit`)" class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-medium">
+        <NuxtLink :to="localePath(`/studio/${studio.id}/edit`)" class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-medium">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
           </svg>
@@ -55,7 +55,7 @@
           <NuxtLink
             v-for="project in dubbedProjects"
             :key="project.id"
-            :to="$localePath(`/${project.content_type === 'movie' ? 'movie' : 'show'}/${project.content_id}`)"
+            :to="localePath(`/${project.content_type === 'movie' ? 'movie' : 'show'}/${project.content_id}`)"
             class="group transition-transform hover:-translate-y-1 block flex flex-col"
           >
             <div class="relative w-full aspect-[2/3] rounded-xl overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-[#2a2a2a] group-hover:border-cyan-500 transition-colors">
@@ -99,7 +99,7 @@
           <NuxtLink
             v-for="va in voiceActorsRoster"
             :key="va.id"
-            :to="$localePath(`/voice-actor/${va.id}`)"
+            :to="localePath(`/voice-actor/${va.id}`)"
             class="group"
           >
             <div class="bg-white dark:bg-[#1d1d1d] border border-gray-200 dark:border-[#2a2a2a] rounded-xl overflow-hidden hover:border-cyan-500 transition-colors flex flex-col items-center p-4 text-center">
@@ -144,6 +144,7 @@ import PersonSkeleton from '../../components/PersonSkeleton.vue';
 const route = useRoute();
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
+const localePath = useLocalePath();
 
 const isAdmin = computed(() => {
   return user.value?.app_metadata?.role === 'admin' || user.value?.user_metadata?.role === 'admin';

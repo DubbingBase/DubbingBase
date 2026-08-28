@@ -3,7 +3,7 @@
   "lock": false,
   "fmt": {
     "exclude": [
-      "packages/database/supabase/functions/_shared/database.types.ts"
+      "packages/database/src/database.types.ts"
     ]
   }
 }

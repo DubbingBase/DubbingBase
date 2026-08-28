@@ -1,19 +1,6 @@
 {
   "extends": "./.nuxt/tsconfig.json",
-  "compilerOptions": {
-    "paths": {
-      "@supabase/functions/*": ["../../packages/database/supabase/functions/*"]
-    }
-  },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.d.ts",
-    "src/**/*.vue",
-    "locales/**/*.ts",
-    "nuxt.config.ts",
-    ".nuxt/nuxt.d.ts"
-  ],
   "exclude": [
-    "src/**/*.test.ts"
+    "**/*.test.ts"
   ]
 }

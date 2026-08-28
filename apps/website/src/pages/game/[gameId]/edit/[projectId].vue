@@ -146,7 +146,7 @@
                 :allow-create="true"
                 :display-fn="getStudioName"
                 @search="searchStudios"
-                @create="(q) => openCreateStudioDialog(q, (id) => selectedStudioId = id)"
+                @create="(q: string) => openCreateStudioDialog(q, (id: number) => selectedStudioId = id)"
               />
             </div>
 
@@ -161,7 +161,7 @@
                 :allow-create="true"
                 :display-fn="getVoiceActorName"
                 @search="searchVoiceActors"
-                @create="(q) => openCreateVaDialog(q, (id) => artisticDirectorId = id)"
+                @create="(q: string) => openCreateVaDialog(q, (id: number) => artisticDirectorId = id)"
               />
             </div>
 
@@ -176,7 +176,7 @@
                 :allow-create="true"
                 :display-fn="getVoiceActorName"
                 @search="searchVoiceActors"
-                @create="(q) => openCreateVaDialog(q, (id) => adaptationId = id)"
+                @create="(q: string) => openCreateVaDialog(q, (id: number) => adaptationId = id)"
               />
             </div>
 
@@ -191,7 +191,7 @@
                 :allow-create="true"
                 :display-fn="getVoiceActorName"
                 @search="searchVoiceActors"
-                @create="(q) => openCreateVaDialog(q, (id) => recordingId = id)"
+                @create="(q: string) => openCreateVaDialog(q, (id: number) => recordingId = id)"
               />
             </div>
 
@@ -206,7 +206,7 @@
                 :allow-create="true"
                 :display-fn="getVoiceActorName"
                 @search="searchVoiceActors"
-                @create="(q) => openCreateVaDialog(q, (id) => editingId = id)"
+                @create="(q: string) => openCreateVaDialog(q, (id: number) => editingId = id)"
               />
             </div>
 
@@ -221,7 +221,7 @@
                 :allow-create="true"
                 :display-fn="getVoiceActorName"
                 @search="searchVoiceActors"
-                @create="(q) => openCreateVaDialog(q, (id) => mixingId = id)"
+                @create="(q: string) => openCreateVaDialog(q, (id: number) => mixingId = id)"
               />
             </div>
 
@@ -236,7 +236,7 @@
                 :allow-create="true"
                 :display-fn="getVoiceActorName"
                 @search="searchVoiceActors"
-                @create="(q) => openCreateVaDialog(q, (id) => projectManagerId = id)"
+                @create="(q: string) => openCreateVaDialog(q, (id: number) => projectManagerId = id)"
               />
             </div>
             
@@ -251,7 +251,7 @@
                 :allow-create="true"
                 :display-fn="getVoiceActorName"
                 @search="searchVoiceActors"
-                @create="(q) => openCreateVaDialog(q, (id) => creativeSupervisionId = id)"
+                @create="(q: string) => openCreateVaDialog(q, (id: number) => creativeSupervisionId = id)"
               />
             </div>
           </div>
@@ -288,14 +288,14 @@
                 <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Character *</label>
                 <AsyncAutocomplete
                   v-model="row.character_id"
-                  @update:model-value="(val) => handleCharacterSelect(row, val)"
+                  @update:model-value="(val: any) => handleCharacterSelect(row, val)"
                   :options="filteredIgdbCharacters"
                   :loading="isFetchingIgdb"
                   placeholder="Search Game Character..."
                   :allow-create="true"
-                  :display-fn="(id) => getCharacterName(id) || row.character_name"
+                  :display-fn="(id: any) => getCharacterName(id) || row.character_name"
                   @search="searchCharacters"
-                  @create="(query) => handleCharacterCreate(row, query)"
+                  @create="(query: string) => handleCharacterCreate(row, query)"
                 />
               </div>
 
@@ -310,7 +310,7 @@
                   :allow-create="true"
                   :display-fn="getVoiceActorName"
                   @search="searchVoiceActors"
-                  @create="(q) => openCreateVaDialog(q, (id) => row.voice_actor_id = id)"
+                  @create="(q: string) => openCreateVaDialog(q, (id: number) => row.voice_actor_id = id)"
                 />
               </div>
               
@@ -427,8 +427,6 @@ import { ref, onMounted, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { DialogRoot, DialogPortal, DialogOverlay, DialogContent, DialogTitle, DialogDescription, VisuallyHidden } from "reka-ui";
 import { Gamepad2Icon, Loader2Icon, ImageIcon, XIcon } from "lucide-vue-next";
-import AsyncAutocomplete from "@/components/admin/AsyncAutocomplete.vue";
-import LanguageSelect from "@/components/admin/LanguageSelect.vue";
 
 defineRouteRules({
   swr: false,
@@ -678,7 +676,7 @@ const saveGameProject = async () => {
       await supabase.from("dubbing_projects").update(projectPayload).eq("id", projectId);
     } else {
       const { data } = await supabase.from("dubbing_projects").insert([projectPayload]).select().single();
-      projectId = data?.id;
+      projectId = data?.id ?? null;
       
       if (projectId && contentId.value) {
         showToast("Project created! Redirecting...", "success");
@@ -703,8 +701,8 @@ const saveGameProject = async () => {
     // Delete old crew & insert new
     await supabase.from("dubbing_project_crew").delete().eq("dubbing_project_id", projectId);
     if (crewJobs.length > 0) {
-      const crewPayload = crewJobs.map(j => ({ dubbing_project_id: projectId!, job_id: j.job_id, person_id: j.person_id }));
-      await supabase.from("dubbing_project_crew").insert(crewPayload);
+      const crewPayload = crewJobs.map(j => ({ dubbing_project_id: projectId!, job_id: j.job_id, person_id: Number(j.person_id) }));
+      await supabase.from("dubbing_project_crew").insert(crewPayload as any);
     }
 
     // Save Works (Cast)
@@ -734,17 +732,17 @@ const saveGameProject = async () => {
 };
 
 const { data: initialData } = await useAsyncData(`game-edit-${igdbGameId.value}-${projectIdParam}`, async () => {
-  let igdbData = null;
-  let projects = [];
-  let project = null;
-  let studioName = null;
-  let crew = [];
-  let works = [];
+  let igdbData: any = null;
+  let projects: any[] = [];
+  let project: any = null;
+  let studioName: string | null = null;
+  let crew: any[] = [];
+  let works: any[] = [];
 
   if (igdbGameId.value) {
     // IGDB metadata
     try {
-      const data = await $fetch(`/api/game/${igdbGameId.value}`);
+      const data = await $fetch<any>(`/api/game/${igdbGameId.value}`);
       if (data) {
         igdbData = data;
       }

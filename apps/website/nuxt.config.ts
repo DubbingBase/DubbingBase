@@ -151,7 +151,7 @@ export default defineNuxtConfig({
     redirect: false,
     types: resolve(
       import.meta.dirname,
-      "../../packages/database/supabase/functions/_shared/database.types.ts",
+      "../../packages/database/src/database.types.ts",
     ),
     cookieOptions: {
       sameSite: "lax",

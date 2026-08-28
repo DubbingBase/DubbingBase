@@ -50,7 +50,7 @@
       <template #actions-right>
         <template v-if="activeDubProject?.studio_data">
           <NuxtLink
-            :to="$localePath(`/studio/${activeDubProject.studio_data.id}`)"
+            :to="localePath(`/studio/${activeDubProject.studio_data.id}`)"
             class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-[#2a2a2a] hover:border-cyan-500 transition-colors group bg-gray-50 dark:bg-[#1d1d1d]"
             :title="$t('details.dubbingStudio')"
           >
@@ -63,7 +63,7 @@
           <div class="h-6 w-px bg-gray-200 dark:bg-[#2a2a2a]"></div>
         </template>
 
-        <NuxtLink v-show="isAdmin" :to="$localePath(`/show/${showId}/edit/${activeDubId || 'new'}`)" class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-medium">
+        <NuxtLink v-show="isAdmin" :to="localePath(`/show/${showId}/edit/${activeDubId || 'new'}`)" class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-medium">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
           </svg>
@@ -122,7 +122,7 @@
           <NuxtLink
             v-for="episode in episodes"
             :key="episode.episode_number"
-            :to="{ path: $localePath(`/show/${showId}/season/${seasonNumber}/episode/${episode.episode_number}`), query: activeDubId ? { dub: activeDubId } : {} }"
+            :to="{ path: localePath(`/show/${showId}/season/${seasonNumber}/episode/${episode.episode_number}`), query: activeDubId ? { dub: activeDubId } : {} }"
             class="group cursor-pointer block bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl p-4 shadow-sm transition-colors hover:border-cyan-400 hover:shadow-md"
           >
             <div class="relative w-full aspect-video mb-3 rounded-lg overflow-hidden bg-gray-200 dark:bg-[#222]">
@@ -196,6 +196,7 @@ const isAdmin = computed(() => {
 });
 
 const { locale, t } = useI18n();
+const localePath = useLocalePath();
 
 // Fetch show data for basic info
 const showCacheKey = `show-${showId}-${locale.value}`;
@@ -399,7 +400,7 @@ useHead({
       content: computed(() => backdropUrl.value || posterUrl.value || ""),
     },
   ],
-  link: computed(() => {
+  link: computed<any[]>(() => {
     const links = [
       {
         rel: "canonical",

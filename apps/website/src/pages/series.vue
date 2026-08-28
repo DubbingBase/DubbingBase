@@ -21,7 +21,7 @@
       <NuxtLink 
         v-for="serie in series" 
         :key="serie.id" 
-        :to="$localePath('/show/' + serie.id)"
+        :to="localePath('/show/' + serie.id)"
         class="group cursor-pointer block"
       >
         <div class="relative w-full aspect-[2/3] rounded-xl overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800 shadow-md transition-transform duration-300 group-hover:-translate-y-1 group-hover:shadow-xl">
@@ -46,6 +46,7 @@
 import { computed } from 'vue';
 
 const { t } = useI18n();
+const localePath = useLocalePath();
 
 useHead({
   title: 'Toutes les Séries - DubbingBase',
@@ -62,7 +63,7 @@ useHead({
 });
 
 const { data, pending: isLoading, error } = useAsyncData('series-page', async () => {
-  const data = await $fetch('/api/trending/shows');
+  const data = await $fetch<{ results: any[] }>('/api/trending/shows');
   return data?.results || [];
 });
 

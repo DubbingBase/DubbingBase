@@ -9,7 +9,7 @@
           </p>
         </div>
         <NuxtLink
-          :to="isEditMode ? $localePath(`/studio/${studioId}`) : $localePath('/studios')"
+          :to="isEditMode ? localePath(`/studio/${studioId}`) : localePath('/studios')"
           class="px-4 py-2 bg-gray-200 dark:bg-[#2a2a2a] hover:bg-gray-300 dark:hover:bg-[#333] rounded-lg transition-colors text-sm font-medium"
         >
           Annuler
@@ -144,14 +144,12 @@ defineRouteRules({
 });
 
 import { ref, computed, onMounted } from 'vue';
-import { useStudioData } from '@app/shared-logic';
 import imageCompression from "browser-image-compression";
 
 const route = useRoute();
 const router = useRouter();
 const localePath = useLocalePath();
 const supabase = useSupabaseClient();
-const { studio, loading: fetchingData, loadStudioDetails } = useStudioData(supabase);
 
 const studioId = route.params.studioId as string;
 const isEditMode = computed(() => studioId && studioId !== 'new');
@@ -182,7 +180,7 @@ const clearLogo = () => {
 
 const onLogoChange = (event: Event) => {
   const files = (event.target as HTMLInputElement).files;
-  if (files && files.length > 0) {
+  if (files && files.length > 0 && files[0]) {
     const file = files[0];
     logoFile.value = file;
     const reader = new FileReader();
@@ -199,7 +197,7 @@ const errorMsg = ref<string | null>(null);
 
 const { data: initialStudio } = await useAsyncData(`studio-edit-${studioId}`, async () => {
   if (!isEditMode.value) return null;
-  const { data, error } = await supabase.from('studios').select('*').eq('id', studioId).single();
+  const { data, error } = await supabase.from('studios').select('*').eq('id', Number(studioId)).single();
   if (error) throw error;
   return data;
 });

@@ -163,7 +163,7 @@
       <div class="flex items-center justify-between">
         <h3 class="text-lg font-bold text-white">Existing Links</h3>
         <button
-          @click="fetchExistingLinks"
+          @click="() => fetchExistingLinks()"
           class="p-2 bg-gray-950 border border-gray-800 text-gray-400 hover:text-white rounded-xl hover:bg-gray-850 transition-colors"
           title="Refresh List"
         >
@@ -289,7 +289,7 @@ const showToast = (message: string, type: "success" | "error" | "info" = "info")
 
 const { data: initialData, pending, refresh: fetchExistingLinks } = await useAsyncData('admin-user-va-links', async () => {
   // Fetch users
-  const userData = await $fetch('/api/list_users');
+  const userData = await $fetch<{ users: any[] }>('/api/list_users');
   const users = userData?.users || [];
   
   // Fetch existing links
@@ -365,7 +365,7 @@ const searchVoiceActors = async () => {
 
   voiceActorSearching.value = true;
   try {
-    const data = await $fetch('/api/search-voice-actors', {
+    const data = await $fetch<VoiceActor[]>('/api/search-voice-actors', {
       method: 'POST',
       body: { query, limit: 10 }
     });

@@ -402,7 +402,7 @@
                 :key="'w-' + actor.id"
                 class="p-4 border-l border-gray-800 font-semibold"
                 :class="
-                  worksCount[actor.id] > 0 ? 'text-green-400' : 'text-gray-500'
+                  (worksCount[actor.id] ?? 0) > 0 ? 'text-green-400' : 'text-gray-500'
                 "
               >
                 {{
@@ -671,7 +671,7 @@ const fetchWorksCount = async (ids: number[]) => {
   loadingWorks.value = true;
   worksCount.value = {};
   try {
-    const data = await $fetch('/api/count-voice-actor-works', {
+    const data = await $fetch<Record<number, number>>('/api/count-voice-actor-works', {
       method: 'POST',
       body: { ids },
     });
@@ -720,13 +720,13 @@ const calculateScore = (actor: VoiceActorCandidate) => {
 
 // Comparison Helpers
 const isDifferent = (field: keyof VoiceActorCandidate) => {
-  if (actorsToCompare.value.length < 2) return false;
+  if (actorsToCompare.value.length < 2 || !actorsToCompare.value[0]) return false;
   const firstVal = actorsToCompare.value[0][field];
   return actorsToCompare.value.some((a) => a[field] !== firstVal);
 };
 
 const isDifferentName = () => {
-  if (actorsToCompare.value.length < 2) return false;
+  if (actorsToCompare.value.length < 2 || !actorsToCompare.value[0]) return false;
   const firstName =
     actorsToCompare.value[0].firstname +
     " " +
@@ -778,7 +778,7 @@ const executeSearch = async (type: "A" | "B") => {
 
   loadingRef.value = true;
   try {
-    const data = await $fetch('/api/search-voice-actors', { params: { query, limit: "10" } });
+    const data = await $fetch<VoiceActorCandidate[]>('/api/search-voice-actors', { params: { query, limit: "10" } });
 
     resultsRef.value = data || [];
   } catch (err: any) {

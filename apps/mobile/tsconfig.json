@@ -14,8 +14,7 @@
     "noEmit": true,
     "allowImportingTsExtensions": true,
     "paths": {
-      "@/*": ["./src/*"],
-      "@supabase/functions/*": ["../../packages/database/supabase/functions/*"]
+      "@/*": ["./src/*"]
     },
     "types": [
       "unplugin-icons/types/vue",

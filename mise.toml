@@ -130,16 +130,11 @@ pnpm changeset tag
 git push && git push origin --tags
 """
 
-[tasks."curl-function"]
-description = "Curl a Supabase edge function locally for testing"
-dir = "packages/database"
-run = "./curl-function.sh"
-
 [tasks.gen-types]
 description = "Generates database types from Supabase"
 depends = ["install", "backend"]
 dir = "packages/database"
-run = "npx supabase gen types --lang=typescript --local > supabase/functions/_shared/database.types.ts"
+run = "npx supabase gen types --lang=typescript --local > src/database.types.ts"
 
 [tasks.fetch-seed]
 description = "Fetches seed data from the remote database"

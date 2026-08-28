@@ -60,7 +60,7 @@
     <div class="mt-12">
       <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">Recent Contributions</h2>
       <div v-if="isLoadingLogs" class="text-sm text-gray-500">Loading contributions...</div>
-      <div v-else-if="auditLogs.length === 0" class="text-sm text-gray-500">You haven't made any gamified contributions yet. Go to the <NuxtLink :to="$localePath('/contribute')" class="text-cyan-500 hover:underline">Contribution Hub</NuxtLink> to start earning points!</div>
+      <div v-else-if="auditLogs.length === 0" class="text-sm text-gray-500">You haven't made any gamified contributions yet. Go to the <NuxtLink :to="localePath('/contribute')" class="text-cyan-500 hover:underline">Contribution Hub</NuxtLink> to start earning points!</div>
       <div v-else class="bg-gray-50 dark:bg-black/20 rounded-xl border border-gray-100 dark:border-white/5 overflow-hidden">
         <ul class="divide-y divide-gray-200 dark:divide-slate-800">
           <li v-for="log in auditLogs" :key="log.id" class="p-4 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">
@@ -87,6 +87,7 @@ import { ref, onMounted } from 'vue';
 
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
+const localePath = useLocalePath();
 
 const username = ref(user.value?.user_metadata?.username || '');
 const full_name = ref(user.value?.user_metadata?.full_name || '');

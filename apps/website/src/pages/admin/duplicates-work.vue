@@ -178,7 +178,7 @@ const fetchDuplicates = async () => {
     successMsg.value = "";
     duplicates.value = [];
 
-    const data = await $fetch('/api/find_duplicate_work');
+    const data = await $fetch<any[]>('/api/find_duplicate_work');
 
     duplicates.value = (data || []).map((group: any) => ({
       works: group.works || [],
@@ -200,7 +200,7 @@ const deleteWork = async (workId: number | null, groupIdx: number) => {
   successMsg.value = "";
 
   try {
-    const data = await $fetch('/api/delete-work-entry', {
+    const data = await $fetch<any>('/api/delete-work-entry', {
       method: 'POST',
       body: { id: workId }
     });
@@ -213,12 +213,14 @@ const deleteWork = async (workId: number | null, groupIdx: number) => {
 
     // Remove row locally
     const group = duplicates.value[groupIdx];
-    group.works = group.works.filter(w => w.id !== workId);
-    group.selectedId = null;
+    if (group) {
+      group.works = group.works.filter(w => w.id !== workId);
+      group.selectedId = null;
 
-    // If less than 2 items left, discard the group
-    if (group.works.length < 2) {
-      duplicates.value.splice(groupIdx, 1);
+      // If less than 2 items left, discard the group
+      if (group.works.length < 2) {
+        duplicates.value.splice(groupIdx, 1);
+      }
     }
   } catch (err: any) {
     console.error("Error deleting work entry:", err);

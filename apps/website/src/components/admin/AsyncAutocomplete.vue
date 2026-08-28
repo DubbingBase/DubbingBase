@@ -2,7 +2,7 @@
   <div class="relative w-full">
     <ComboboxRoot
       :model-value="modelValue"
-      @update:model-value="$emit('update:modelValue', $event)"
+      @update:model-value="(val: any) => $emit('update:modelValue', val)"
       :ignore-filter="true"
       :open-on-click="true"
       :open-on-focus="true"
@@ -91,6 +91,8 @@ import {
 } from 'reka-ui';
 import { Loader2Icon, PlusIcon, XIcon } from 'lucide-vue-next';
 import { useDebounceFn } from '@vueuse/core';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   modelValue: number | string | null;

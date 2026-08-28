@@ -182,7 +182,7 @@ const showToast = (message: string, type: "success" | "error" | "info" = "info")
 };
 
 const { data: initialUsers, pending, error: fetchError, refresh: fetchUsers } = await useAsyncData('admin-users', async () => {
-  const data = await $fetch('/api/list_users');
+  const data = await $fetch<{ users: User[] }>('/api/list_users');
   return data?.users || [];
 });
 

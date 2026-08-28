@@ -38,7 +38,7 @@
           <span>{{ $t('admin.queue.startProcessing') }}</span>
         </button>
         <button
-          @click="fetchQueueAndUsers"
+          @click="() => fetchQueueAndUsers()"
           :disabled="isLoading"
           class="py-2.5 px-5 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-800 disabled:text-gray-500 text-white font-semibold rounded-xl shadow-lg transition-all duration-150 hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center shrink-0"
         >
@@ -515,7 +515,7 @@ const { data: initialData, pending, error: fetchError, refresh: fetchQueueAndUse
 
   const { data: depthData } = await supabase.rpc("get_media_queue_depth");
 
-  const userData = await $fetch('/api/list_users');
+  const userData = await $fetch<{ users: any[] }>('/api/list_users');
   let map: Record<string, string> = {};
   if (userData?.users) {
     userData.users.forEach((u: any) => {
@@ -532,7 +532,7 @@ const { data: initialData, pending, error: fetchError, refresh: fetchQueueAndUse
 
 watch(initialData, (newData) => {
   if (newData) {
-    queueItems.value = newData.queueItems;
+    queueItems.value = newData.queueItems as any;
     usersMap.value = newData.usersMap;
     pendingCount.value = newData.pendingCount;
   }
@@ -625,8 +625,8 @@ const reEnqueueItem = async (item: QueueItem) => {
     const { error: enqueueErr } = await supabase.rpc("enqueue_media_fetch", {
       p_tmdb_id: item.tmdb_id,
       p_media_type: item.media_type,
-      p_season_number: item.season_number,
-      p_episode_number: item.episode_number,
+      p_season_number: item.season_number ?? undefined,
+      p_episode_number: item.episode_number ?? undefined,
     });
     if (enqueueErr) throw enqueueErr;
 

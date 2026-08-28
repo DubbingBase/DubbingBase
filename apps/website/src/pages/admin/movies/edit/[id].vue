@@ -144,7 +144,7 @@
                 </select>
                 <NuxtLink
                   v-if="selectedStudioId"
-                  :to="$localePath(`/studios/edit/${selectedStudioId}`)"
+                  :to="localePath(`/studios/edit/${selectedStudioId}`)"
                   target="_blank"
                   class="px-3 py-2.5 bg-gray-800 text-blue-400 hover:text-blue-300 text-xs font-semibold rounded-xl border border-gray-700"
                 >
@@ -311,7 +311,7 @@
                     </select>
                     <NuxtLink
                       v-if="row.voice_actor_id"
-                      :to="$localePath(`/voice-actors/edit/${row.voice_actor_id}`)"
+                      :to="localePath(`/voice-actors/edit/${row.voice_actor_id}`)"
                       target="_blank"
                       title="Edit Voice Actor Profile"
                       class="text-blue-400 hover:text-blue-300 text-xs px-1.5 py-1 bg-gray-800 hover:bg-gray-700 rounded border border-gray-700"
@@ -641,13 +641,14 @@ const fetchVoiceActors = async () => {
   if (data) voiceActorsList.value = data;
 };
 
+const numId = Number(id);
 const { data: initialData } = await useAsyncData(`movie-project-${id}`, async () => {
-  if (!isEditMode.value || !id) return null;
+  if (!isEditMode.value || isNaN(numId)) return null;
   // Fetch dubbing project details
   const { data: project, error: projErr } = await supabase
     .from("dubbing_projects")
     .select("*")
-    .eq("id", id)
+    .eq("id", numId)
     .single();
 
   if (projErr) throw projErr;
@@ -697,15 +698,16 @@ watch(initialData, async (data) => {
     contentId.value = project.content_id;
     contentType.value = project.content_type || "movie";
     language.value = project.language || "fr-FR";
-    studio.value = project.studio || "";
-    selectedStudioId.value = project.studio_id || (studiosList.value.find(s => s.name === project.studio)?.id || null);
-    artisticDirector.value = project.artistic_director || "";
-    adaptation.value = project.adaptation || "";
-    recording.value = project.recording || "";
-    editing.value = project.editing || "";
-    mixing.value = project.mixing || "";
-    projectManager.value = project.project_manager || "";
-    creativeSupervision.value = project.creative_supervision || "";
+    const proj = project as any;
+    studio.value = proj.studio || "";
+    selectedStudioId.value = project.studio_id || (studiosList.value.find(s => s.name === proj.studio)?.id || null);
+    artisticDirector.value = proj.artistic_director || "";
+    adaptation.value = proj.adaptation || "";
+    recording.value = proj.recording || "";
+    editing.value = proj.editing || "";
+    mixing.value = proj.mixing || "";
+    projectManager.value = proj.project_manager || "";
+    creativeSupervision.value = proj.creative_supervision || "";
     status.value = project.status || "validated";
 
     attachments.value = data.attachments;
@@ -722,7 +724,7 @@ watch(initialData, async (data) => {
     
     if (data.tmdbData) {
       const isShow = contentType.value === "tv" || contentType.value === "show" || contentType.value === "serie";
-      const mediaObj = isShow ? data.tmdbData.serie : data.tmdbData.movie;
+      const mediaObj = isShow ? (data.tmdbData as any).serie : (data.tmdbData as any).movie;
       if (mediaObj?.name || mediaObj?.title) {
         mediaTitle.value = mediaObj.name || mediaObj.title;
       }
@@ -737,7 +739,7 @@ const fetchTmdbMetadata = async () => {
     const isShow = contentType.value === "tv" || contentType.value === "show" || contentType.value === "serie";
     const functionName = isShow ? "show" : "movie";
 
-    const data = await $fetch(`/api/${functionName}`, { method: 'POST', body: { id: contentId.value } });
+    const data = await $fetch<any>(`/api/${functionName}`, { method: 'POST', body: { id: contentId.value } });
 
     if (data) {
       const mediaObj = isShow ? data.serie : data.movie;
@@ -795,8 +797,9 @@ const quickCreateVoiceActor = async () => {
       showToast(`Created profile for ${data.firstname} ${data.lastname}!`, "success");
       await fetchVoiceActors();
       // If we have cast rows, auto assign to the last row
-      if (castRows.value.length > 0) {
-        castRows.value[castRows.value.length - 1].voice_actor_id = data.id;
+      const lastRow = castRows.value[castRows.value.length - 1];
+      if (lastRow) {
+        lastRow.voice_actor_id = data.id;
       }
       showCreatePersonModal.value = false;
     }
@@ -817,18 +820,11 @@ const saveMovieProject = async () => {
   isSaving.value = true;
 
   try {
-    const projectPayload = {
+    const projectPayload: any = {
       content_id: contentId.value,
-      content_type: contentType.value,
+      content_type: "movie",
       language: language.value || "fr-FR",
       studio_id: selectedStudioId.value || null,
-      artistic_director: artisticDirector.value || null,
-      adaptation: adaptation.value || null,
-      recording: recording.value || null,
-      editing: editing.value || null,
-      mixing: mixing.value || null,
-      project_manager: projectManager.value || null,
-      creative_supervision: creativeSupervision.value || null,
       status: status.value || "validated"
     };
 

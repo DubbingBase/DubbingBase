@@ -1,7 +1,7 @@
 import { ref } from "vue";
 
 export const fetchRandomTask = async (category: string) => {
-  const data = await $fetch("/api/get-random-task", {
+  const data = await $fetch<any>("/api/get-random-task", {
     method: "POST",
     body: { category },
   });
@@ -27,7 +27,7 @@ export const useContribute = (
     activeCategory.value = null;
 
     try {
-      const data = await $fetch("/api/get-random-task", {
+      const data = await $fetch<any>("/api/get-random-task", {
         method: "POST",
         body: { category },
       });

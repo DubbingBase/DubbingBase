@@ -77,7 +77,7 @@
 
         <NuxtLink
           v-if="isAdmin"
-          :to="$localePath(`/voice-actor/${voiceActorId}/edit`)"
+          :to="localePath(`/voice-actor/${voiceActorId}/edit`)"
           class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-medium"
         >
           <svg
@@ -129,7 +129,7 @@
               <NuxtLink
                 v-for="studio in workedStudios"
                 :key="studio.id"
-                :to="$localePath(`/studio/${studio.id}`)"
+                :to="localePath(`/studio/${studio.id}`)"
                 class="flex items-center gap-3 bg-white dark:bg-[#1d1d1d] border border-gray-200 dark:border-[#2a2a2a] rounded-xl p-3 hover:border-cyan-500 transition-colors shadow-sm"
               >
                 <div
@@ -238,7 +238,7 @@
                 <div class="flex flex-col sm:grid sm:grid-cols-3 gap-4 h-full">
                   <!-- Column 1: Media -->
                   <NuxtLink
-                    :to="$localePath(`/${item.work.dubbing_projects?.content_type === 'tv' ? 'show' : item.work.dubbing_projects?.content_type === 'video_game' ? 'game' : 'movie'}/${item.media.id}`)"
+                    :to="localePath(`/${item.work.dubbing_projects?.content_type === 'tv' ? 'show' : item.work.dubbing_projects?.content_type === 'video_game' ? 'game' : 'movie'}/${item.media.id}`)"
                     class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start cursor-pointer"
                   >
                     <div
@@ -293,7 +293,7 @@
                   <!-- Column 2: Original Actor -->
                   <NuxtLink
                     v-if="item.data.actor"
-                    :to="$localePath(`/actor/${item.data.actor.id}`)"
+                    :to="localePath(`/actor/${item.data.actor.id}`)"
                     class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-3 sm:pt-0 cursor-pointer"
                   >
                     <div
@@ -408,7 +408,7 @@
               >
                 <!-- Actor Group Header -->
                 <NuxtLink
-                  :to="$localePath(`/actor/${works[0]?.data.actor.id}`)"
+                  :to="localePath(`/actor/${works[0]?.data.actor.id}`)"
                   class="flex items-center gap-4 border-b border-gray-200 dark:border-gray-800 pb-4 hover:bg-gray-50 dark:hover:bg-[#1d1d1d] p-2 -ml-2 rounded-xl transition-colors cursor-pointer group"
                 >
                   <div
@@ -451,7 +451,7 @@
                     >
                       <!-- Column 1: Media -->
                       <NuxtLink
-                        :to="$localePath(`/${item.work.dubbing_projects?.content_type === 'tv' ? 'show' : item.work.dubbing_projects?.content_type === 'video_game' ? 'game' : 'movie'}/${item.media.id}`)"
+                        :to="localePath(`/${item.work.dubbing_projects?.content_type === 'tv' ? 'show' : item.work.dubbing_projects?.content_type === 'video_game' ? 'game' : 'movie'}/${item.media.id}`)"
                         class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start cursor-pointer"
                       >
                         <div
@@ -582,7 +582,10 @@ const router = useRouter();
 const route = useRoute();
 const voiceActorId = Number(route.params.id);
 const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
-const { locale, t } = useI18n();
+const { locale, t, te } = useI18n();
+const $t = t;
+const $te = te;
+const localePath = useLocalePath();
 
 const { data, pending } = useAsyncData(`voice-actor-${voiceActorId}`, () =>
   fetchVoiceActorData(voiceActorId),

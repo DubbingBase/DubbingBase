@@ -144,7 +144,7 @@ const executeSearch = async () => {
   }
   searchLoading.value = true;
   try {
-    const data = await $fetch('/api/search-voice-actors', { params: { query, limit: "10" } });
+    const data = await $fetch<VoiceActorCandidate[]>('/api/search-voice-actors', { params: { query, limit: "10" } });
     searchResults.value = data || [];
   } catch (err: any) {
     console.error("Error searching voice actors:", err);
@@ -174,9 +174,7 @@ const generateImage = async () => {
   errorMsg.value = "";
   
   try {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const url = `${supabaseUrl}/functions/v1/career-grid?id=${selectedActor.value.id}&lang=${selectedLang.value}`;
-    
+    const url = `/api/career-grid?id=${selectedActor.value.id}&lang=${selectedLang.value}`;
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`Failed to generate image: ${response.statusText}`);

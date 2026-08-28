@@ -55,7 +55,7 @@
       <template #actions-right>
         <template v-if="activeDubProject?.studio_data">
           <NuxtLink
-            :to="$localePath(`/studio/${activeDubProject.studio_data.id}`)"
+            :to="localePath(`/studio/${activeDubProject.studio_data.id}`)"
             class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-[#2a2a2a] hover:border-cyan-500 transition-colors group bg-gray-50 dark:bg-[#1d1d1d]"
             :title="$t('details.dubbingStudio')"
           >
@@ -71,7 +71,7 @@
         <NuxtLink
           v-show="isAdmin"
           :to="
-            $localePath(
+            localePath(
               `/movie/${movie?.id || 'new'}/edit/${activeDubId || 'new'}`,
             )
           "
@@ -158,7 +158,7 @@
                 class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start"
               >
                 <NuxtLink
-                  :to="$localePath(`/actor/${actor.id}`)"
+                  :to="localePath(`/actor/${actor.id}`)"
                   class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] bg-gray-200 dark:bg-[#222] sm:mb-3 flex-shrink-0"
                   :aria-label="actor.name"
                 >
@@ -182,7 +182,7 @@
                     }}</span>
                   </div>
                   <NuxtLink
-                    :to="$localePath(`/actor/${actor.id}`)"
+                    :to="localePath(`/actor/${actor.id}`)"
                     class="font-bold text-sm text-gray-900 dark:text-white truncate hover:underline block w-full"
                     :title="actor.name"
                   >
@@ -242,7 +242,7 @@
               >
                 <template v-if="actor.voiceActor">
                   <NuxtLink
-                    :to="$localePath(`/voice-actor/${actor.voiceActor.id}`)"
+                    :to="localePath(`/voice-actor/${actor.voiceActor.id}`)"
                     class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] bg-gray-200 dark:bg-[#222] sm:mb-3 flex-shrink-0"
                     :aria-label="`${actor.voiceActor.firstname} ${actor.voiceActor.lastname}`"
                   >
@@ -273,7 +273,7 @@
                       }}</span>
                     </div>
                     <NuxtLink
-                      :to="$localePath(`/voice-actor/${actor.voiceActor.id}`)"
+                      :to="localePath(`/voice-actor/${actor.voiceActor.id}`)"
                       class="font-bold text-sm text-gray-900 dark:text-white truncate hover:underline block w-full"
                       :title="
                         actor.voiceActor.firstname +
@@ -348,9 +348,9 @@ const isReportModalOpen = ref(false);
 const route = useRoute();
 const router = useRouter();
 const supabase = useSupabaseClient();
-const movieId = Array.isArray(route.params.id)
+const movieId = (Array.isArray(route.params.id)
   ? route.params.id[0]
-  : route.params.id;
+  : route.params.id) || '';
 const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
 
 const user = useSupabaseUser();
@@ -359,6 +359,7 @@ const isAdmin = computed(() => {
 });
 
 const { locale, t } = useI18n();
+const localePath = useLocalePath();
 
 const cacheKey = `movie-${movieId}-${locale.value}`;
 
@@ -613,7 +614,7 @@ useHead({
       content: computed(() => backdropUrl.value || posterUrl.value || ""),
     },
   ],
-  link: computed(() => {
+  link: computed<any[]>(() => {
     const links: {
       rel: "canonical" | "preload";
       href: string;
