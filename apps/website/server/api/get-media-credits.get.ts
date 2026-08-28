@@ -1,4 +1,10 @@
 export default defineEventHandler(async (event) => {
+  setHeader(
+    event,
+    "Cache-Control",
+    "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+  );
+
   const query = getQuery(event);
   const mediaType = query.media_type as string | undefined;
   const mediaId = query.media_id ? Number(query.media_id) : undefined;

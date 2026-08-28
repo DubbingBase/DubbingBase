@@ -547,6 +547,12 @@ function buildCareerGridImage(params: {
 }
 
 export default defineEventHandler(async (event) => {
+  setHeader(
+    event,
+    "Cache-Control",
+    "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+  );
+
   try {
     const query = getQuery(event);
     const typeParam = (query.type as string) || "actor";
