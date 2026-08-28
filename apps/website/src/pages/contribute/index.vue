@@ -70,11 +70,18 @@
 const localePath = useLocalePath();
 const supabase = useSupabaseClient();
 
-const { data: recentActivitiesData } = await useAsyncData('recent-contributions', async () => {
-  const { data, error } = await supabase.rpc('get_recent_contributions', { limit_param: 10 });
-  if (error) return [];
-  return data || [];
-});
+const { data: recentActivitiesData } = await useAsyncData(
+  'recent-contributions',
+  async () => {
+    const { data, error } = await supabase.rpc('get_recent_contributions', { limit_param: 10 });
+    if (error) return [];
+    return data || [];
+  },
+  {
+    getCachedData: (key, nuxtApp) =>
+      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+  },
+);
 
 const recentActivities = computed(() => recentActivitiesData.value || []);
 </script>

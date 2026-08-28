@@ -76,6 +76,12 @@ function calculateScore(item: any, trimmedQuery: string): number {
 }
 
 export default defineEventHandler(async (event) => {
+  setHeader(
+    event,
+    "Cache-Control",
+    "public, max-age=300, s-maxage=1800, stale-while-revalidate=86400",
+  );
+
   try {
     const query = getQuery(event).query as string | undefined;
 
