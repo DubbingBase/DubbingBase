@@ -46,38 +46,42 @@ export class SimpleCache {
     data: T,
     ttl: CacheTTLPreset = "MEDIUM",
   ): Promise<boolean> {
-    try {
-      const sanitizedKey = SimpleKeyValidator.sanitizeKey(key);
-      const ttlSeconds = CACHE_TTL[ttl];
-      const kv = this.kvGetter();
-      if (kv && typeof kv.put === "function") {
+    const sanitizedKey = SimpleKeyValidator.sanitizeKey(key);
+    const ttlSeconds = CACHE_TTL[ttl];
+    const kv = this.kvGetter();
+    if (kv && typeof kv.put === "function") {
+      try {
         await kv.put(sanitizedKey, JSON.stringify(data), {
           expirationTtl: ttlSeconds,
         });
-        return true;
+      } catch (error) {
+        throw new Error(
+          `Failed to set KV cache key "${sanitizedKey}": ${error}`,
+        );
       }
-      this.memoryCache.set(sanitizedKey, {
-        data,
-        expiry: Date.now() + ttlSeconds * 1000,
-      });
       return true;
-    } catch {
-      return false;
     }
+    this.memoryCache.set(sanitizedKey, {
+      data,
+      expiry: Date.now() + ttlSeconds * 1000,
+    });
+    return true;
   }
 
   async del(key: string): Promise<boolean> {
-    try {
-      const sanitizedKey = SimpleKeyValidator.sanitizeKey(key);
-      const kv = this.kvGetter();
-      if (kv && typeof kv.delete === "function") {
+    const sanitizedKey = SimpleKeyValidator.sanitizeKey(key);
+    const kv = this.kvGetter();
+    if (kv && typeof kv.delete === "function") {
+      try {
         await kv.delete(sanitizedKey);
+      } catch (error) {
+        throw new Error(
+          `Failed to delete KV cache key "${sanitizedKey}": ${error}`,
+        );
       }
-      this.memoryCache.delete(sanitizedKey);
-      return true;
-    } catch {
-      return false;
     }
+    this.memoryCache.delete(sanitizedKey);
+    return true;
   }
 
   async exists(key: string): Promise<boolean> {

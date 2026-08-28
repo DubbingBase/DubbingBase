@@ -329,7 +329,7 @@ export class MediaService {
 
       const resultObj = { characters: characterProfilePictures, tvdbId };
       if (tvdbId !== null) {
-        cache.set(cacheKey, resultObj, "SHORT").catch(() => {});
+        await cache.set(cacheKey, resultObj, "SHORT");
       }
 
       return resultObj;
