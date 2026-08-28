@@ -129,6 +129,9 @@
               <h2 class="text-2xl font-bold">
                 {{ $t("details.castAndCrew") }}
               </h2>
+              <div class="text-gray-500 dark:text-gray-400 text-sm mt-1">
+                {{ visibleCast.length }} / {{ formattedCast.length }} rôles
+              </div>
             </div>
 
             <div class="relative w-full sm:w-64">
@@ -136,7 +139,7 @@
                 class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
               />
               <input
-                v-model="searchQuery"
+                v-model="searchInput"
                 type="search"
                 :placeholder="$t('search.placeholder')"
                 class="w-full bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-[#00E5FF] transition-all text-gray-900 dark:text-white"
@@ -148,7 +151,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
           <div
-            v-for="actor in filteredCast"
+            v-for="actor in visibleCast"
             :key="actor.id"
             class="bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl p-4 shadow-sm transition-colors hover:border-gray-300 dark:hover:border-gray-700"
           >
@@ -164,6 +167,8 @@
                 >
                   <NuxtImg
                     format="webp"
+                    loading="lazy"
+                    decoding="async"
                     v-if="actor.profile_path"
                     :src="actor.profile_path"
                     class="w-full h-full object-cover transition-transform duration-300"
@@ -200,6 +205,8 @@
                 >
                   <NuxtImg
                     format="webp"
+                    loading="lazy"
+                    decoding="async"
                     v-if="actor.characterImage"
                     :src="actor.characterImage"
                     class="w-full h-full object-cover"
@@ -248,6 +255,8 @@
                   >
                     <NuxtImg
                       format="webp"
+                      loading="lazy"
+                      decoding="async"
                       v-if="actor.voiceActor.profile_picture"
                       :src="actor.voiceActor.profile_picture"
                       class="w-full h-full object-cover transition-transform duration-300"
@@ -318,6 +327,23 @@
             </div>
           </div>
         </div>
+
+        <!-- Infinite Scroll Sentinel & Load More button -->
+        <div
+          v-if="hasMore"
+          ref="loadMoreSentinel"
+          class="py-10 flex flex-col items-center justify-center gap-3"
+        >
+          <button
+            @click="loadMore"
+            class="px-5 py-2.5 bg-white dark:bg-[#1d1d1d] hover:bg-gray-100 dark:hover:bg-[#2a2a2a] text-sm font-medium rounded-xl text-gray-700 dark:text-gray-200 transition-all border border-gray-200 dark:border-[#2a2a2a] shadow-sm cursor-pointer"
+          >
+            {{ $t('common.loadMore', 'Load more') }}
+          </button>
+          <span class="text-xs text-gray-400">
+            {{ visibleCast.length }} / {{ filteredCast.length }} rôles
+          </span>
+        </div>
       </section>
       </template>
     </MediaDetailsLayout>
@@ -331,7 +357,8 @@ import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { fetchMovieData, findCharacter } from "@app/shared-logic";
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
+import { useIntersectionObserver, refDebounced } from "@vueuse/core";
 import {
   ArrowLeftIcon,
   ClapperboardIcon,
@@ -363,30 +390,37 @@ const localePath = useLocalePath();
 
 const cacheKey = `movie-${movieId}-${locale.value}`;
 
-const { data, pending } = useAsyncData(cacheKey, async () => {
-  const nuxtApp = useNuxtApp();
-  // We only have cached data on the client side after hydration
-  const cachedData = nuxtApp.payload.data[cacheKey];
-  
-  const newData = await fetchMovieData(movieId, locale.value);
-  
-  // If TMDB fetch fails on the edge function (e.g., timeout during auth resolution)
-  // but we already have valid TMDB data from SSR, we preserve the TMDB data
-  // while still accepting the fresh database data (votes, dubbing projects).
-  if (
-    newData && 
-    newData.movie?.title === "Information indisponible (Timeout)" && 
-    cachedData?.movie &&
-    cachedData.movie.title !== "Information indisponible (Timeout)"
-  ) {
-    newData.movie = cachedData.movie;
-    newData.collection = cachedData.collection;
-    newData.characterProfilePictures = cachedData.characterProfilePictures;
-    newData.tvdbId = cachedData.tvdbId;
-  }
-  
-  return newData;
-});
+const { data, pending } = useAsyncData(
+  cacheKey,
+  async () => {
+    const nuxtApp = useNuxtApp();
+    // We only have cached data on the client side after hydration
+    const cachedData = nuxtApp.payload.data[cacheKey];
+
+    const newData = await fetchMovieData(movieId, locale.value);
+
+    // If TMDB fetch fails on the edge function (e.g., timeout during auth resolution)
+    // but we already have valid TMDB data from SSR, we preserve the TMDB data
+    // while still accepting the fresh database data (votes, dubbing projects).
+    if (
+      newData && 
+      newData.movie?.title === "Information indisponible (Timeout)" && 
+      cachedData?.movie &&
+      cachedData.movie.title !== "Information indisponible (Timeout)"
+    ) {
+      newData.movie = cachedData.movie;
+      newData.collection = cachedData.collection;
+      newData.characterProfilePictures = cachedData.characterProfilePictures;
+      newData.tvdbId = cachedData.tvdbId;
+    }
+
+    return newData;
+  },
+  {
+    getCachedData: (key, nuxtApp) =>
+      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+  },
+);
 
 const movie = computed(() => data.value?.movie);
 const dubbingProjects = computed(() => {
@@ -494,10 +528,15 @@ const formattedCast = computed(() => {
 });
 
 const searchQuery = ref("");
+const searchInput = ref("");
+const debouncedSearch = refDebounced(searchInput, 150);
+watch(debouncedSearch, (val) => {
+  searchQuery.value = val;
+});
 
 const filteredCast = computed(() => {
   if (!searchQuery.value) return formattedCast.value;
-  const query = searchQuery.value.toLowerCase();
+  const query = searchQuery.value.toLowerCase().trim();
   return formattedCast.value.filter((actor: any) => {
     const actorName = actor.name?.toLowerCase() || "";
     const characterName = actor.character?.toLowerCase() || "";
@@ -512,6 +551,35 @@ const filteredCast = computed(() => {
       vaPerformance.includes(query)
     );
   });
+});
+
+const displayedCount = ref(36);
+const visibleCast = computed(() => {
+  return filteredCast.value.slice(0, displayedCount.value);
+});
+
+const hasMore = computed(() => {
+  return displayedCount.value < filteredCast.value.length;
+});
+
+const loadMore = () => {
+  displayedCount.value += 36;
+};
+
+const loadMoreSentinel = ref<HTMLElement | null>(null);
+
+useIntersectionObserver(
+  loadMoreSentinel,
+  ([entry]) => {
+    if (entry?.isIntersecting && hasMore.value) {
+      loadMore();
+    }
+  },
+  { rootMargin: "400px" },
+);
+
+watch([searchQuery, activeDubId], () => {
+  displayedCount.value = 36;
 });
 
 useHead({
@@ -616,9 +684,10 @@ useHead({
   ],
   link: computed<any[]>(() => {
     const links: {
-      rel: "canonical" | "preload";
+      rel: "canonical" | "preload" | "preconnect" | "dns-prefetch";
       href: string;
       as?: "image";
+      crossorigin?: string;
     }[] = [
       {
         rel: "canonical",
@@ -629,6 +698,10 @@ useHead({
             : baseUrl;
         })(),
       },
+      { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
+      { rel: "dns-prefetch", href: "https://image.tmdb.org" },
+      { rel: "preconnect", href: "https://thetvdb.com", crossorigin: "" },
+      { rel: "dns-prefetch", href: "https://thetvdb.com" },
     ];
     if (backdropUrl.value) {
       links.push({

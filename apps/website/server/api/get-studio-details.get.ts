@@ -2,6 +2,12 @@ import { useSupabaseAdmin } from "../utils/db/client";
 import { useTmdbClient } from "../utils";
 
 export default defineEventHandler(async (event) => {
+  setHeader(
+    event,
+    "Cache-Control",
+    "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+  );
+
   const query = getQuery(event);
   const studioId = (query.studioId as string) || (query.studioid as string);
 
@@ -69,29 +75,50 @@ export default defineEventHandler(async (event) => {
         studio.id && !isNaN(Number(studio.id)) ? Number(studio.id) : 0,
       );
 
-    // 3. Fetch TMDB info for projects
+    // 3. Fetch TMDB info for projects (deduplicated & batched)
     const tmdbClient = useTmdbClient();
     const acceptLanguage = getHeader(event, "accept-language") || undefined;
 
-    const projectsWithMedia = await Promise.all(
-      (projects || []).map(async (p: any) => {
-        try {
-          const contentType = p.content_type === "movie" ? "movie" : "tv";
-          const mediaDetails = await tmdbClient.fetchMediaDetails(
-            p.content_id,
-            contentType,
-            acceptLanguage,
-          );
-          return { ...p, media: mediaDetails };
-        } catch (e) {
-          console.error(
-            `Failed to fetch TMDB details for ${p.content_type} ${p.content_id}`,
-            e,
-          );
-          return p;
-        }
-      }),
+    const uniqueMediaKeys = Array.from(
+      new Set(
+        (projects || []).map(
+          (p: any) =>
+            `${p.content_type === "movie" ? "movie" : "tv"}:${p.content_id}`,
+        ),
+      ),
     );
+
+    const mediaMap = new Map<string, any>();
+    const BATCH_SIZE = 15;
+    for (let i = 0; i < uniqueMediaKeys.length; i += BATCH_SIZE) {
+      const batch = uniqueMediaKeys.slice(i, i + BATCH_SIZE);
+      await Promise.all(
+        batch.map(async (key) => {
+          const [contentType, contentIdStr] = key.split(":");
+          const contentId = Number(contentIdStr);
+          try {
+            const mediaDetails = await tmdbClient.fetchMediaDetails(
+              contentId,
+              contentType as "movie" | "tv",
+              acceptLanguage,
+            );
+            mediaMap.set(key, mediaDetails);
+          } catch (e) {
+            console.error(
+              `Failed to fetch TMDB details for ${contentType} ${contentId}`,
+              e,
+            );
+            mediaMap.set(key, null);
+          }
+        }),
+      );
+    }
+
+    const projectsWithMedia = (projects || []).map((p: any) => {
+      const contentType = p.content_type === "movie" ? "movie" : "tv";
+      const key = `${contentType}:${p.content_id}`;
+      return { ...p, media: mediaMap.get(key) || null };
+    });
 
     // 4. Fetch linked voice actors from work table
     let voiceActorsRoster: any[] = [];

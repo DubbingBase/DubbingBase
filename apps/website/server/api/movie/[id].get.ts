@@ -1,12 +1,17 @@
 import { useCache, useTmdbClient } from "../../utils";
 import { MediaService } from "../../utils/services/media";
-import { getDubbingProjects, getWorkVotes } from "../../utils/db/queries";
+import { getDubbingProjects } from "../../utils/db/queries";
 import { processMedia } from "../../utils/urls/tmdb";
 import { useSupabaseAdmin } from "../../utils/db/client";
 
 export async function fetchMovieData(event: any, movieId: number) {
+  setHeader(
+    event,
+    "Cache-Control",
+    "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+  );
+
   const acceptLanguage = getHeader(event, "accept-language") || undefined;
-  const user = event.context.user;
 
   const cache = useCache();
   const tmdbClient = useTmdbClient();
@@ -61,28 +66,9 @@ export async function fetchMovieData(event: any, movieId: number) {
         };
       });
 
-    const dbDataPromise = getDubbingProjects(movieId, "movie").then(
-      async (dubbingProjects) => {
-        const workIds = dubbingProjects.flatMap(
-          (p: any) => p.works?.map((w: any) => w.id) || [],
-        );
+    const dbDataPromise = getDubbingProjects(movieId, "movie");
 
-        let voteData: Record<
-          number,
-          { up_count: number; down_count: number; user_vote: string | null }
-        > = {};
-        if (workIds.length > 0) {
-          try {
-            voteData = await getWorkVotes(workIds);
-          } catch (voteError) {
-            console.error("Error fetching vote data:", voteError);
-          }
-        }
-        return { dubbingProjects, voteData };
-      },
-    );
-
-    const [apiData, { dubbingProjects, voteData }] = await Promise.all([
+    const [apiData, dubbingProjects] = await Promise.all([
       apiDataPromise,
       dbDataPromise,
     ]);
@@ -111,30 +97,11 @@ export async function fetchMovieData(event: any, movieId: number) {
       movie: movieWithImageUrls,
       characterProfilePictures,
       dubbingProjects,
-      votes: voteData,
       collection,
       tvdbId,
     };
 
     await cache.set(cacheKey, baseData, "SHORT");
-  }
-
-  // If user is authenticated, fetch their personal votes without polluting public cache
-  if (user) {
-    const workIds = (baseData.dubbingProjects || []).flatMap(
-      (p: any) => p.works?.map((w: any) => w.id) || [],
-    );
-    if (workIds.length > 0) {
-      try {
-        const userVotes = await getWorkVotes(workIds, user.id);
-        return {
-          ...baseData,
-          votes: userVotes,
-        };
-      } catch (err) {
-        console.error("Error fetching user-specific votes for movie:", err);
-      }
-    }
   }
 
   return baseData;

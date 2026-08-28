@@ -1,6 +1,12 @@
 import { useSupabaseAdmin } from "../utils/db/client";
 
 export default defineEventHandler(async (event) => {
+  setHeader(
+    event,
+    "Cache-Control",
+    "public, max-age=1800, s-maxage=3600, stale-while-revalidate=86400",
+  );
+
   const query = getQuery(event);
   const searchQuery = query.query as string | undefined;
   const limit = parseInt(String(query.limit)) || 100;

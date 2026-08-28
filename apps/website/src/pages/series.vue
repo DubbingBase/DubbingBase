@@ -31,6 +31,7 @@
             :alt="serie.name" 
             format="webp" 
             loading="lazy" 
+            decoding="async"
             class="object-cover w-full h-full transition duration-500" 
           />
         </div>
@@ -59,13 +60,24 @@ useHead({
       name: 'keywords',
       content: computed(() => t('seo.series'))
     }
+  ],
+  link: [
+    { rel: 'preconnect', href: 'https://image.tmdb.org', crossorigin: '' },
+    { rel: 'dns-prefetch', href: 'https://image.tmdb.org' },
   ]
 });
 
-const { data, pending: isLoading, error } = useAsyncData('series-page', async () => {
-  const data = await $fetch<{ results: any[] }>('/api/trending/shows');
-  return data?.results || [];
-});
+const { data, pending: isLoading, error } = useAsyncData(
+  'series-page',
+  async () => {
+    const data = await $fetch<{ results: any[] }>('/api/trending/shows');
+    return data?.results || [];
+  },
+  {
+    getCachedData: (key, nuxtApp) =>
+      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+  },
+);
 
 const series = computed(() => data.value || []);
 </script>

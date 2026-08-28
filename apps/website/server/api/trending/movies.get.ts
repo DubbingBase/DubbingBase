@@ -3,7 +3,13 @@ import { buildTmdbImageUrl } from "../../utils/urls/tmdb";
 
 const cacheKey = CACHE_KEYS.TMDB_TRENDING_MOVIES();
 
-export default defineEventHandler(async () => {
+export default defineEventHandler(async (event) => {
+  setHeader(
+    event,
+    "Cache-Control",
+    "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+  );
+
   const cache = useCache();
 
   const cached = await cache.get(cacheKey);

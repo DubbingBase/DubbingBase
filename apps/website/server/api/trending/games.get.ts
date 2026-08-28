@@ -17,7 +17,13 @@ function formatGame(game: IgdbGame) {
   };
 }
 
-export default defineEventHandler(async () => {
+export default defineEventHandler(async (event) => {
+  setHeader(
+    event,
+    "Cache-Control",
+    "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+  );
+
   const cache = useCache();
   const config = useRuntimeConfig();
 

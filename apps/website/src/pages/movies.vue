@@ -31,6 +31,7 @@
             :alt="movie.title" 
             format="webp" 
             loading="lazy" 
+            decoding="async"
             class="object-cover w-full h-full transition duration-500" 
           />
         </div>
@@ -59,13 +60,24 @@ useHead({
       name: 'keywords',
       content: computed(() => t('seo.movies'))
     }
+  ],
+  link: [
+    { rel: 'preconnect', href: 'https://image.tmdb.org', crossorigin: '' },
+    { rel: 'dns-prefetch', href: 'https://image.tmdb.org' },
   ]
 });
 
-const { data, pending: isLoading, error } = useAsyncData('movies-page', async () => {
-  const data = await $fetch<{ results: any[] }>('/api/trending/movies');
-  return data?.results || [];
-});
+const { data, pending: isLoading, error } = useAsyncData(
+  'movies-page',
+  async () => {
+    const data = await $fetch<{ results: any[] }>('/api/trending/movies');
+    return data?.results || [];
+  },
+  {
+    getCachedData: (key, nuxtApp) =>
+      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+  },
+);
 
 const movies = computed(() => data.value || []);
 </script>
