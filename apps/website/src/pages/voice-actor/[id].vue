@@ -174,7 +174,7 @@
                     class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
                   />
                   <input
-                    v-model="searchQuery"
+                    v-model="searchInput"
                     type="search"
                     placeholder="Search roles, titles or actors..."
                     class="w-full bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-[#00E5FF] transition-all text-gray-900 dark:text-white"
@@ -231,7 +231,7 @@
           <template v-if="displayMode === 'list'">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               <div
-                v-for="item in sortedWorks"
+                v-for="item in visibleWorks"
                 :key="item.work.id"
                 class="bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl p-4 shadow-sm transition-colors hover:border-gray-300 dark:hover:border-gray-700 block group"
               >
@@ -402,7 +402,7 @@
           <template v-else>
             <div class="space-y-10">
               <div
-                v-for="[actorName, works] in groupedWorks"
+                v-for="[actorName, works] in visibleGroupedWorks"
                 :key="actorName"
                 class="space-y-4"
               >
@@ -556,6 +556,27 @@
               </div>
             </div>
           </template>
+
+          <!-- Infinite Scroll Sentinel & Load More button -->
+          <div
+            v-if="hasMore"
+            ref="loadMoreSentinel"
+            class="py-10 flex flex-col items-center justify-center gap-3"
+          >
+            <button
+              @click="loadMore"
+              class="px-5 py-2.5 bg-white dark:bg-[#1d1d1d] hover:bg-gray-100 dark:hover:bg-[#2a2a2a] text-sm font-medium rounded-xl text-gray-700 dark:text-gray-200 transition-all border border-gray-200 dark:border-[#2a2a2a] shadow-sm cursor-pointer"
+            >
+              {{ $t('common.loadMore', 'Load more') }}
+            </button>
+            <span class="text-xs text-gray-400">
+              {{
+                displayMode === 'list'
+                  ? `${visibleWorks.length} / ${sortedWorks.length} works`
+                  : `${visibleGroupedWorks.length} / ${groupedWorks.length} actors`
+              }}
+            </span>
+          </div>
         </section>
       </template>
     </PersonDetailsLayout>
@@ -573,6 +594,7 @@ import { useRouter, useRoute } from "vue-router";
 import { ClapperboardIcon, UserIcon, SearchIcon } from "lucide-vue-next";
 import ReportModal from "../../components/ReportModal.vue";
 import { computed, ref, watch } from "vue";
+import { useIntersectionObserver, refDebounced } from "@vueuse/core";
 
 const isReportModalOpen = ref(false);
 
@@ -599,6 +621,12 @@ const {
   searchQuery,
   filteredEnhancedWork,
 } = voiceActorData;
+
+const searchInput = ref("");
+const debouncedSearch = refDebounced(searchInput, 150);
+watch(debouncedSearch, (val) => {
+  searchQuery.value = val;
+});
 
 const user = useSupabaseUser();
 const isAdmin = computed(() => {
@@ -814,5 +842,49 @@ const groupedWorks = computed(() => {
     }
     return a[0].localeCompare(b[0]);
   });
+});
+
+const displayedListCount = ref(36);
+const displayedGroupCount = ref(10);
+
+const visibleWorks = computed(() => {
+  return sortedWorks.value.slice(0, displayedListCount.value);
+});
+
+const visibleGroupedWorks = computed(() => {
+  return groupedWorks.value.slice(0, displayedGroupCount.value);
+});
+
+const hasMore = computed(() => {
+  if (displayMode.value === "list") {
+    return displayedListCount.value < sortedWorks.value.length;
+  }
+  return displayedGroupCount.value < groupedWorks.value.length;
+});
+
+const loadMore = () => {
+  if (displayMode.value === "list") {
+    displayedListCount.value += 36;
+  } else {
+    displayedGroupCount.value += 10;
+  }
+};
+
+const loadMoreSentinel = ref<HTMLElement | null>(null);
+
+useIntersectionObserver(
+  loadMoreSentinel,
+  ([entry]) => {
+    if (entry?.isIntersecting && hasMore.value) {
+      loadMore();
+    }
+  },
+  { rootMargin: "400px" },
+);
+
+// Reset displayed counts on search, sort or display mode changes
+watch([searchQuery, sortMode, displayMode], () => {
+  displayedListCount.value = 36;
+  displayedGroupCount.value = 10;
 });
 </script>

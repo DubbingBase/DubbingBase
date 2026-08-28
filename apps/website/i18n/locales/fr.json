@@ -37,6 +37,7 @@
   "common": {
     "actions": "Actions",
     "loading": "Chargement...",
+    "loadMore": "Charger plus",
     "error": "Erreur",
     "subscribe": "S'abonner",
     "unsubscribe": "Se désabonner",

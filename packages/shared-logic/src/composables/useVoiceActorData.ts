@@ -96,6 +96,7 @@ export type EnhancedWorkItem = {
     actor: PersonData<Actor>;
   };
   sortDate: string;
+  searchText?: string;
 };
 
 function actorToPersonData(actor: {
@@ -222,14 +223,24 @@ export function useVoiceActorData(initialData?: VoiceActorDataPayload | null) {
           actor: actorToPersonData(actor),
         };
 
+        const sortDate =
+          (media as { release_date?: string }).release_date ||
+          (media as { first_air_date?: string }).first_air_date ||
+          "9999-12-31";
+
+        const titleStr =
+          (media as { title?: string }).title ||
+          (media as { name?: string }).name ||
+          "";
+        const searchText =
+          `${titleStr} ${character || ""} ${actor.name || ""} ${work.performance || ""}`.toLowerCase();
+
         return {
           media,
           work,
           data,
-          sortDate:
-            (media as { release_date?: string }).release_date ||
-            (media as { first_air_date?: string }).first_air_date ||
-            "9999-12-31",
+          sortDate,
+          searchText,
         };
       })
       .filter((item): item is NonNullable<typeof item> => item !== null);
@@ -250,6 +261,10 @@ export function useVoiceActorData(initialData?: VoiceActorDataPayload | null) {
     if (!query) return enhancedWork.value;
 
     return enhancedWork.value.filter((item) => {
+      if (item.searchText) {
+        return item.searchText.includes(query);
+      }
+
       const title = (
         (item.media as { title?: string }).title ||
         (item.media as { name?: string }).name ||

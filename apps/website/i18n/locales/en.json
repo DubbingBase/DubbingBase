@@ -38,6 +38,7 @@
   "common": {
     "actions": "Actions",
     "loading": "Loading...",
+    "loadMore": "Load more",
     "error": "Error",
     "subscribe": "Subscribe",
     "unsubscribe": "Unsubscribe",
