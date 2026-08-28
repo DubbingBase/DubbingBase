@@ -150,7 +150,7 @@
             <div class="relative w-full sm:w-64">
               <SearchIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
-                v-model="searchQuery"
+                v-model="searchInput"
                 type="search"
                 :placeholder="$t('search.placeholder', 'Rechercher...')"
                 class="w-full bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-[#00E5FF] transition-all text-gray-900 dark:text-white"
@@ -161,7 +161,7 @@
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
           <div
-            v-for="char in filteredCharacters"
+            v-for="char in visibleCharacters"
             :key="char.id"
             class="bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl p-4 shadow-sm transition-colors hover:border-gray-300 dark:hover:border-gray-700"
           >
@@ -171,7 +171,7 @@
               <!-- Character -->
               <div class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start">
                 <div class="w-16 sm:w-full relative block overflow-hidden rounded-xl aspect-[2/3] bg-gray-200 dark:bg-[#222] sm:mb-3 flex-shrink-0">
-                  <NuxtImg format="webp" v-if="char.mug_shot?.url" :src="char.mug_shot.url" class="w-full h-full object-cover" alt="Character" />
+                  <NuxtImg format="webp" loading="lazy" decoding="async" v-if="char.mug_shot?.url" :src="char.mug_shot.url" class="w-full h-full object-cover" alt="Character" />
                   <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
                     <UserIcon class="w-8 h-8 opacity-50" />
                   </div>
@@ -191,7 +191,7 @@
               <div class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-4 sm:pt-0 mt-2 sm:mt-0">
                 <template v-if="char.voiceActor">
                   <NuxtLink :to="localePath(`/voice-actor/${char.voiceActor.id}`)" class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] bg-gray-200 dark:bg-[#222] sm:mb-3 flex-shrink-0">
-                    <NuxtImg format="webp" v-if="char.voiceActor.profile_picture" :src="char.voiceActor.profile_picture" class="w-full h-full object-cover transition-transform duration-300" alt="Voice Actor" />
+                    <NuxtImg format="webp" loading="lazy" decoding="async" v-if="char.voiceActor.profile_picture" :src="char.voiceActor.profile_picture" class="w-full h-full object-cover transition-transform duration-300" alt="Voice Actor" />
                     <div v-else class="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-400 uppercase bg-gray-300 dark:bg-gray-800">
                       {{ char.voiceActor.firstname?.[0] }}{{ char.voiceActor.lastname?.[0] }}
                     </div>
@@ -227,6 +227,23 @@
             </div>
           </div>
         </div>
+
+        <!-- Infinite Scroll Sentinel & Load More button -->
+        <div
+          v-if="hasMore"
+          ref="loadMoreSentinel"
+          class="py-10 flex flex-col items-center justify-center gap-3"
+        >
+          <button
+            @click="loadMore"
+            class="px-5 py-2.5 bg-white dark:bg-[#1d1d1d] hover:bg-gray-100 dark:hover:bg-[#2a2a2a] text-sm font-medium rounded-xl text-gray-700 dark:text-gray-200 transition-all border border-gray-200 dark:border-[#2a2a2a] shadow-sm cursor-pointer"
+          >
+            {{ $t('common.loadMore', 'Load more') }}
+          </button>
+          <span class="text-xs text-gray-400">
+            {{ visibleCharacters.length }} / {{ filteredCharacters.length }} rôles
+          </span>
+        </div>
       </section>
       </template>
     </MediaDetailsLayout>
@@ -245,7 +262,8 @@ import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import { useRoute, useRouter } from 'vue-router';
 import { fetchGameData } from '@app/shared-logic';
 import type { IgdbGame, IgdbCharacter } from '@app/shared-logic';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { useIntersectionObserver, refDebounced } from '@vueuse/core';
 import { ArrowLeftIcon, UserIcon, MicIcon, SearchIcon, Gamepad2Icon, Loader2Icon, StarIcon, ExternalLinkIcon } from 'lucide-vue-next';
 import ReportModal from '../../components/ReportModal.vue';
 
@@ -268,31 +286,38 @@ const { locale, t } = useI18n();
 const localePath = useLocalePath();
 
 const cacheKey = `game-${gameId}-${locale.value}`;
-const { data, pending, refresh } = useAsyncData(cacheKey, async () => {
-  const nuxtApp = useNuxtApp();
-  // We only have cached data on the client side after hydration
-  const cachedData = nuxtApp.payload.data[cacheKey];
+const { data, pending, refresh } = useAsyncData(
+  cacheKey,
+  async () => {
+    const nuxtApp = useNuxtApp();
+    // We only have cached data on the client side after hydration
+    const cachedData = nuxtApp.payload.data[cacheKey];
 
-  const newData = await fetchGameData(gameId, locale.value);
+    const newData = await fetchGameData(gameId, locale.value);
 
-  // If IGDB fetch fails on the edge function (e.g., timeout)
-  // but we already have valid data from SSR, we preserve the IGDB data
-  // while still accepting the fresh database data (votes, dubbing projects).
-  if (
-    newData && 
-    newData.game?.name === "Information indisponible (Timeout)" && 
-    cachedData?.game &&
-    cachedData.game.name !== "Information indisponible (Timeout)"
-  ) {
-    return {
-      ...newData,
-      game: cachedData.game,
-      characters: cachedData.characters,
-    };
-  }
+    // If IGDB fetch fails on the edge function (e.g., timeout)
+    // but we already have valid data from SSR, we preserve the IGDB data
+    // while still accepting the fresh database data (votes, dubbing projects).
+    if (
+      newData && 
+      newData.game?.name === "Information indisponible (Timeout)" && 
+      cachedData?.game &&
+      cachedData.game.name !== "Information indisponible (Timeout)"
+    ) {
+      return {
+        ...newData,
+        game: cachedData.game,
+        characters: cachedData.characters,
+      };
+    }
 
-  return newData;
-});
+    return newData;
+  },
+  {
+    getCachedData: (key, nuxtApp) =>
+      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+  },
+);
 
 const game = computed(() => data.value?.game);
 const characters = computed(() => data.value?.characters || []);
@@ -425,16 +450,50 @@ const formattedCharacters = computed(() => {
 });
 
 const searchQuery = ref('');
+const searchInput = ref('');
+const debouncedSearch = refDebounced(searchInput, 150);
+watch(debouncedSearch, (val) => {
+  searchQuery.value = val;
+});
 
 const filteredCharacters = computed(() => {
   if (!searchQuery.value) return formattedCharacters.value;
-  const query = searchQuery.value.toLowerCase();
+  const query = searchQuery.value.toLowerCase().trim();
   return formattedCharacters.value.filter((char: any) => {
     const characterName = char.name?.toLowerCase() || '';
     const vaName = char.voiceActor ? `${char.voiceActor.firstname || ''} ${char.voiceActor.lastname || ''}`.toLowerCase() : '';
     const vaPerformance = char.voiceActor?.performance?.toLowerCase() || '';
     return characterName.includes(query) || vaName.includes(query) || vaPerformance.includes(query);
   });
+});
+
+const displayedCount = ref(36);
+const visibleCharacters = computed(() => {
+  return filteredCharacters.value.slice(0, displayedCount.value);
+});
+
+const hasMore = computed(() => {
+  return displayedCount.value < filteredCharacters.value.length;
+});
+
+const loadMore = () => {
+  displayedCount.value += 36;
+};
+
+const loadMoreSentinel = ref<HTMLElement | null>(null);
+
+useIntersectionObserver(
+  loadMoreSentinel,
+  ([entry]) => {
+    if (entry?.isIntersecting && hasMore.value) {
+      loadMore();
+    }
+  },
+  { rootMargin: '400px' },
+);
+
+watch([searchQuery, activeDubId], () => {
+  displayedCount.value = 36;
 });
 
 async function triggerPrepareGame() {
@@ -475,6 +534,10 @@ useHead({
       property: 'og:image',
       content: computed(() => coverUrl.value || '')
     }
+  ],
+  link: [
+    { rel: 'preconnect', href: 'https://images.igdb.com', crossorigin: '' },
+    { rel: 'dns-prefetch', href: 'https://images.igdb.com' },
   ]
 });
 </script>
