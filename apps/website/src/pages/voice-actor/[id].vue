@@ -139,6 +139,8 @@
                   <NuxtImg
                     :src="studio.logo_url"
                     :alt="studio.name"
+                    loading="lazy"
+                    decoding="async"
                     class="max-w-full max-h-full object-contain"
                   />
                 </div>
@@ -246,6 +248,8 @@
                     >
                       <NuxtImg
                         format="webp"
+                        loading="lazy"
+                        decoding="async"
                         v-if="item.media.poster_path"
                         :src="resolveImageUrl(item.media.poster_path)"
                         :alt="
@@ -301,6 +305,8 @@
                     >
                       <NuxtImg
                         format="webp"
+                        loading="lazy"
+                        decoding="async"
                         v-if="item.data.actor.profile_picture"
                         :src="resolveImageUrl(item.data.actor.profile_picture)"
                         :alt="item.data.actor.name"
@@ -358,6 +364,8 @@
                     >
                       <NuxtImg
                         format="webp"
+                        loading="lazy"
+                        decoding="async"
                         v-if="item.data.characterImage"
                         :src="resolveImageUrl(item.data.characterImage)"
                         :alt="item.data.character"
@@ -416,6 +424,8 @@
                   >
                     <NuxtImg
                       format="webp"
+                      loading="lazy"
+                      decoding="async"
                       v-if="works[0]?.data.actor.profile_picture"
                       :src="
                         resolveImageUrl(works[0].data.actor.profile_picture)
@@ -459,6 +469,8 @@
                         >
                           <NuxtImg
                             format="webp"
+                            loading="lazy"
+                            decoding="async"
                             v-if="item.media.poster_path"
                             :src="resolveImageUrl(item.media.poster_path)"
                             :alt="
@@ -513,6 +525,8 @@
                         >
                           <NuxtImg
                             format="webp"
+                            loading="lazy"
+                            decoding="async"
                             v-if="item.data.characterImage"
                             :src="resolveImageUrl(item.data.characterImage)"
                             :alt="item.data.character"
@@ -609,8 +623,13 @@ const $t = t;
 const $te = te;
 const localePath = useLocalePath();
 
-const { data, pending } = useAsyncData(`voice-actor-${voiceActorId}`, () =>
-  fetchVoiceActorData(voiceActorId),
+const { data, pending } = useAsyncData(
+  `voice-actor-${voiceActorId}`,
+  () => fetchVoiceActorData(voiceActorId),
+  {
+    getCachedData: (key, nuxtApp) =>
+      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+  },
 );
 
 const voiceActorData = useVoiceActorData(data.value);
@@ -758,7 +777,11 @@ useHead({
     { name: "twitter:description", content: actorDescription },
     { name: "twitter:image", content: ogImageUrl },
   ],
-  link: [{ rel: "canonical", href: canonicalUrl }],
+  link: [
+    { rel: "canonical", href: canonicalUrl },
+    { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
+    { rel: "dns-prefetch", href: "https://image.tmdb.org" },
+  ],
   script: [
     {
       type: "application/ld+json",
