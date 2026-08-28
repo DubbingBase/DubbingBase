@@ -48,53 +48,89 @@ async function getVoiceRoles(
       .slice(0, 3)
       .map(([id]) => parseInt(id, 10));
 
-    const voiceRoles = await Promise.all(
-      workData.map(async (row) => {
-        const { voice_actors, ...work } = row;
-        let mediaDetails = null;
-
-        if (
-          work.dubbing_projects?.content_id &&
-          work.dubbing_projects?.content_type
-        ) {
-          mediaDetails = await tmdbClient.fetchMediaDetails(
-            work.dubbing_projects.content_id,
-            work.dubbing_projects.content_type,
-            acceptLanguage,
-          );
+    // Deduplicate media details requests
+    const mediaKeySet = new Set<string>();
+    const uniqueMediaItems: Array<{ contentId: number; contentType: string }> =
+      [];
+    for (const row of workData) {
+      const cId = row.dubbing_projects?.content_id;
+      const cType = row.dubbing_projects?.content_type;
+      if (cId && cType) {
+        const key = `${cType}:${cId}`;
+        if (!mediaKeySet.has(key)) {
+          mediaKeySet.add(key);
+          uniqueMediaItems.push({ contentId: cId, contentType: cType });
         }
+      }
+    }
 
-        return {
-          ...work,
-          highlight: work.voice_actor_id
-            ? top3.includes(work.voice_actor_id)
-            : false,
-          voice_actors: voice_actors
-            ? [
-                {
-                  ...voice_actors,
-                  profile_picture: buildSupabaseImageUrl(
-                    (voice_actors as any).profile_picture,
-                  ),
-                },
-              ]
-            : [],
-          mediaDetails: mediaDetails
-            ? {
-                id: mediaDetails.id,
-                title: mediaDetails.title || mediaDetails.name,
-                original_title:
-                  mediaDetails.original_title || mediaDetails.original_name,
-                poster_path: buildTmdbImageUrl(mediaDetails.poster_path),
-                release_date:
-                  mediaDetails.release_date || mediaDetails.first_air_date,
-                media_type: work.dubbing_projects?.content_type || "",
-                overview: mediaDetails.overview,
-              }
-            : null,
-        };
-      }),
-    );
+    // Fetch unique media details in concurrency-limited batches
+    const mediaMap = new Map<string, any>();
+    const BATCH_SIZE = 15;
+    for (let i = 0; i < uniqueMediaItems.length; i += BATCH_SIZE) {
+      const batch = uniqueMediaItems.slice(i, i + BATCH_SIZE);
+      const results = await Promise.all(
+        batch.map(async ({ contentId, contentType }) => {
+          try {
+            const details = await tmdbClient.fetchMediaDetails(
+              contentId,
+              contentType,
+              acceptLanguage,
+            );
+            return { key: `${contentType}:${contentId}`, details };
+          } catch (err) {
+            console.error(
+              `Error fetching TMDB media ${contentType}:${contentId}:`,
+              err,
+            );
+            return { key: `${contentType}:${contentId}`, details: null };
+          }
+        }),
+      );
+      for (const res of results) {
+        if (res.details) {
+          mediaMap.set(res.key, res.details);
+        }
+      }
+    }
+
+    const voiceRoles = workData.map((row) => {
+      const { voice_actors, ...work } = row;
+      const cId = work.dubbing_projects?.content_id;
+      const cType = work.dubbing_projects?.content_type;
+      const mediaDetails =
+        cId && cType ? mediaMap.get(`${cType}:${cId}`) : null;
+
+      return {
+        ...work,
+        highlight: work.voice_actor_id
+          ? top3.includes(work.voice_actor_id)
+          : false,
+        voice_actors: voice_actors
+          ? [
+              {
+                ...voice_actors,
+                profile_picture: buildSupabaseImageUrl(
+                  (voice_actors as any).profile_picture,
+                ),
+              },
+            ]
+          : [],
+        mediaDetails: mediaDetails
+          ? {
+              id: mediaDetails.id,
+              title: mediaDetails.title || mediaDetails.name,
+              original_title:
+                mediaDetails.original_title || mediaDetails.original_name,
+              poster_path: buildTmdbImageUrl(mediaDetails.poster_path),
+              release_date:
+                mediaDetails.release_date || mediaDetails.first_air_date,
+              media_type: work.dubbing_projects?.content_type || "",
+              overview: mediaDetails.overview,
+            }
+          : null,
+      };
+    });
 
     return voiceRoles;
   } catch (e) {
@@ -113,6 +149,12 @@ export default defineEventHandler(async (event) => {
   if (isNaN(actorId)) {
     throw createError({ statusCode: 400, message: "Invalid id parameter" });
   }
+
+  setHeader(
+    event,
+    "Cache-Control",
+    "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+  );
 
   const acceptLanguage = getHeader(event, "accept-language") || undefined;
   const tmdbClient = useTmdbClient();
