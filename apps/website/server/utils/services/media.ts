@@ -53,17 +53,13 @@ export class MediaService {
     private acceptLanguage?: string,
   ) {}
 
-  async getVoiceActorWithWorkAndMedia(
-    voiceActorId: number,
-    userId?: string,
-    language?: string,
-  ) {
+  async getVoiceActorWithWorkAndMedia(voiceActorId: number, language?: string) {
     const supabase = useSupabaseAdmin();
 
     const { data: voiceActor, error: vaError } = await supabase
       .from("voice_actors")
       .select(
-        "*, work(id, actor_id, dubbing_projects(content_id, content_type))",
+        "*, work(id, actor_id, performance, character_name, dubbing_projects(content_id, content_type, studios(id, name, logo_url)))",
       )
       .eq("id", voiceActorId)
       .single();
@@ -72,142 +68,259 @@ export class MediaService {
 
     const voiceActorWithImages = processVoiceActor(voiceActor);
     const workItems = (voiceActor as any).work || [];
-    const workIds = workItems.map((w: any) => w.id);
 
-    const mediaPromises = workItems.map(async (work: any) => {
+    // 1. Deduplicate media requests by (contentType + contentId)
+    type MediaTarget = {
+      contentType: "movie" | "tv" | "video_game";
+      contentId: number;
+    };
+    const uniqueTargetsMap = new Map<string, MediaTarget>();
+    for (const work of workItems) {
       const contentId = work.dubbing_projects?.content_id;
       const contentType = work.dubbing_projects?.content_type as
         "movie" | "tv" | "video_game";
+      if (contentId && contentType) {
+        uniqueTargetsMap.set(`${contentType}:${contentId}`, {
+          contentType,
+          contentId,
+        });
+      }
+    }
+    const uniqueTargets = Array.from(uniqueTargetsMap.values());
 
-      if (!contentId || !contentType) return null;
+    // 2. Fetch unique media items in batches to prevent socket exhaustion and rate limits
+    const fetchedResultsMap = new Map<
+      string,
+      { media: any; characterProfilePictures: any[]; tvdbId: number | null }
+    >();
 
-      if (contentType === "video_game") {
-        try {
-          const igdbClient = useIgdbClient();
-          const game = await igdbClient.getGame(contentId);
-          if (!game) {
-            return { media: null, characterProfilePictures: [], tvdbId: null };
+    const BATCH_SIZE = 15;
+    for (let i = 0; i < uniqueTargets.length; i += BATCH_SIZE) {
+      const batch = uniqueTargets.slice(i, i + BATCH_SIZE);
+      const batchResults = await Promise.all(
+        batch.map(async ({ contentType, contentId }) => {
+          if (contentType === "video_game") {
+            try {
+              const igdbClient = useIgdbClient();
+              const game = await igdbClient.getGame(contentId);
+              if (!game) {
+                return {
+                  key: `${contentType}:${contentId}`,
+                  data: {
+                    media: null,
+                    characterProfilePictures: [],
+                    tvdbId: null,
+                  },
+                };
+              }
+              const processedGame = {
+                id: game.id,
+                title: game.name,
+                name: game.name,
+                overview: game.summary || "",
+                poster_path: game.cover
+                  ? buildIgdbImageUrl(game.cover.image_id, "cover_big")
+                  : null,
+                backdrop_path: game.artworks?.[0]
+                  ? buildIgdbImageUrl(game.artworks[0].image_id, "1080p")
+                  : game.screenshots?.[0]
+                    ? buildIgdbImageUrl(
+                        game.screenshots[0].image_id,
+                        "screenshot_huge",
+                      )
+                    : null,
+                release_date: game.first_release_date
+                  ? new Date(game.first_release_date * 1000)
+                      .toISOString()
+                      .split("T")[0]
+                  : "1970-01-01",
+                first_air_date: game.first_release_date
+                  ? new Date(game.first_release_date * 1000)
+                      .toISOString()
+                      .split("T")[0]
+                  : "1970-01-01",
+                media_type: "video_game" as const,
+                popularity: 0,
+                credits: { cast: [] },
+              };
+              return {
+                key: `${contentType}:${contentId}`,
+                data: {
+                  media: processedGame,
+                  characterProfilePictures: [],
+                  tvdbId: null,
+                },
+              };
+            } catch (err) {
+              console.error(
+                `Failed to fetch IGDB game ${contentId} for voice actor:`,
+                err,
+              );
+              return {
+                key: `${contentType}:${contentId}`,
+                data: {
+                  media: null,
+                  characterProfilePictures: [],
+                  tvdbId: null,
+                },
+              };
+            }
           }
-          const processedGame = {
-            id: game.id,
-            title: game.name,
-            name: game.name,
-            overview: game.summary || "",
-            poster_path: game.cover
-              ? buildIgdbImageUrl(game.cover.image_id, "cover_big")
-              : null,
-            backdrop_path: game.artworks?.[0]
-              ? buildIgdbImageUrl(game.artworks[0].image_id, "1080p")
-              : game.screenshots?.[0]
-                ? buildIgdbImageUrl(
-                    game.screenshots[0].image_id,
-                    "screenshot_huge",
-                  )
-                : null,
-            release_date: game.first_release_date
-              ? new Date(game.first_release_date * 1000)
-                  .toISOString()
-                  .split("T")[0]
-              : "1970-01-01",
-            first_air_date: game.first_release_date
-              ? new Date(game.first_release_date * 1000)
-                  .toISOString()
-                  .split("T")[0]
-              : "1970-01-01",
-            media_type: "video_game" as const,
-            credits: { cast: [] },
+
+          try {
+            const tmdbMedia = await this.tmdbClient.getMediaWithCredits(
+              contentType,
+              contentId,
+              language || this.acceptLanguage,
+            );
+
+            const { characters, tvdbId } =
+              await this.getCharacterProfilePictures(
+                contentType,
+                contentId,
+                tmdbMedia,
+              );
+
+            return {
+              key: `${contentType}:${contentId}`,
+              data: {
+                media: processMedia(tmdbMedia),
+                characterProfilePictures: characters,
+                tvdbId,
+              },
+            };
+          } catch (err) {
+            console.error(
+              `Failed to fetch TMDB ${contentType} ${contentId} for voice actor:`,
+              err,
+            );
+            return {
+              key: `${contentType}:${contentId}`,
+              data: {
+                media: null,
+                characterProfilePictures: [],
+                tvdbId: null,
+              },
+            };
+          }
+        }),
+      );
+
+      for (const res of batchResults) {
+        if (res?.data) {
+          fetchedResultsMap.set(res.key, res.data);
+        }
+      }
+    }
+
+    // 3. Construct compact enhancedWorks on the server (avoids sending massive raw cast lists)
+    const enhancedWorks = [];
+    const compactMediasMap = new Map<number, any>();
+
+    for (const work of workItems) {
+      const contentId = work.dubbing_projects?.content_id;
+      const contentType = work.dubbing_projects?.content_type as
+        "movie" | "tv" | "video_game";
+      if (!contentId || !contentType) continue;
+
+      const mediaResult = fetchedResultsMap.get(`${contentType}:${contentId}`);
+      if (!mediaResult || !mediaResult.media) continue;
+
+      const fullMedia = mediaResult.media;
+
+      let actorData = {
+        id: work.actor_id || 0,
+        name: "",
+        character: "",
+        profile_picture: undefined as string | undefined,
+      };
+      let characterName = work.character_name || undefined;
+      let characterImage: string | undefined;
+
+      if (fullMedia.credits?.cast) {
+        const castMember = fullMedia.credits.cast.find(
+          (c: any) => c.id === work.actor_id,
+        );
+        if (castMember) {
+          actorData = {
+            id: castMember.id,
+            name: castMember.name,
+            character: castMember.character,
+            profile_picture: castMember.profile_path || undefined,
           };
-          return {
-            media: processedGame,
-            characterProfilePictures: [],
-            tvdbId: null,
-          };
-        } catch (err) {
-          console.error(
-            `Failed to fetch IGDB game ${contentId} for voice actor:`,
-            err,
-          );
-          return { media: null, characterProfilePictures: [], tvdbId: null };
+          if (!characterName) {
+            characterName = castMember.character;
+          }
         }
       }
 
-      try {
-        const tmdbMedia = await this.tmdbClient.getMediaWithCredits(
-          contentType,
-          contentId,
-          language || this.acceptLanguage,
+      if (
+        mediaResult.characterProfilePictures &&
+        mediaResult.characterProfilePictures.length > 0 &&
+        characterName
+      ) {
+        const lowerChar = characterName.toLowerCase();
+        const pic = mediaResult.characterProfilePictures.find(
+          (cp: any) =>
+            (cp.movieId === contentId || cp.showId === contentId) &&
+            cp.name &&
+            cp.name.toLowerCase() === lowerChar,
         );
-
-        const { characters, tvdbId } = await this.getCharacterProfilePictures(
-          contentType,
-          contentId,
-          tmdbMedia,
-        );
-
-        return {
-          media: processMedia(tmdbMedia),
-          characterProfilePictures: characters,
-          tvdbId,
-        };
-      } catch (err) {
-        console.error(
-          `Failed to fetch TMDB ${contentType} ${contentId} for voice actor:`,
-          err,
-        );
-        return {
-          media: null,
-          characterProfilePictures: [],
-          tvdbId: null,
-        };
-      }
-    });
-
-    // 2. Fetch Wikipedia URL for voice actors without TMDB ID
-    const wikiPromise = (async () => {
-      if (!voiceActor.tmdb_id) {
-        return await fetchPotentialWikipediaUrl(
-          voiceActor.firstname,
-          voiceActor.lastname,
-        );
-      }
-      return null;
-    })();
-
-    // 3. Fetch Votes
-    const votesPromise = (async () => {
-      if (workIds.length > 0) {
-        try {
-          return await getWorkVotes(workIds, userId);
-        } catch (e) {
-          console.error("Error fetching votes:", e);
+        if (pic) {
+          characterImage = pic.image || pic.profile_path || undefined;
         }
       }
-      return {};
-    })();
 
-    // Wait for all three tracks in parallel
-    const [mediaResultsArray, potentialWikipediaUrl, votes] = await Promise.all(
-      [Promise.all(mediaPromises), wikiPromise, votesPromise],
-    );
+      const sortDate =
+        fullMedia.release_date || fullMedia.first_air_date || "9999-12-31";
 
-    const validResults = mediaResultsArray
-      .filter(Boolean)
-      .filter((r) => r.media !== null) as {
-      media: any;
-      characterProfilePictures: any[];
-    }[];
+      const compactMedia = {
+        id: fullMedia.id,
+        title: fullMedia.title || fullMedia.name || "Unknown",
+        name: fullMedia.name || fullMedia.title || "Unknown",
+        poster_path: fullMedia.poster_path || null,
+        release_date: fullMedia.release_date,
+        first_air_date: fullMedia.first_air_date,
+        media_type: contentType,
+        popularity: fullMedia.popularity || 0,
+      };
 
-    const medias = validResults.map((r) => r.media);
-    const characterProfilePictures = validResults.flatMap(
-      (r) => r.characterProfilePictures,
-    );
+      if (!compactMediasMap.has(fullMedia.id)) {
+        compactMediasMap.set(fullMedia.id, compactMedia);
+      }
+
+      enhancedWorks.push({
+        work: {
+          id: work.id,
+          actor_id: work.actor_id,
+          performance: work.performance,
+          dubbing_projects: work.dubbing_projects,
+        },
+        media: compactMedia,
+        data: {
+          character: characterName,
+          characterImage,
+          actor: actorData,
+        },
+        sortDate,
+      });
+    }
+
+    // 4. Fetch Wikipedia URL for voice actors without TMDB ID
+    let potentialWikipediaUrl: string | null = null;
+    if (!voiceActor.tmdb_id) {
+      potentialWikipediaUrl = await fetchPotentialWikipediaUrl(
+        voiceActor.firstname,
+        voiceActor.lastname,
+      );
+    }
 
     return {
       voiceActor: voiceActorWithImages,
-      medias,
-      characterProfilePictures,
-      potentialWikipediaUrl: null,
-      votes,
+      enhancedWorks,
+      medias: Array.from(compactMediasMap.values()),
+      characterProfilePictures: [],
+      potentialWikipediaUrl,
     };
   }
 

@@ -1,6 +1,6 @@
 export async function fetchVoiceActorData(
   id: string | number,
-): Promise<any | null> {
+): Promise<VoiceActorDataPayload | null> {
   try {
     const voiceActorResponse = await $fetch<any>(`/api/voice-actor/${id}`);
 
@@ -11,12 +11,12 @@ export async function fetchVoiceActorData(
 
     return {
       voiceActor: voiceActorResponse.voiceActor,
+      enhancedWorks: voiceActorResponse.enhancedWorks || [],
       medias: voiceActorResponse.medias || [],
       characterProfilePictures:
         voiceActorResponse.characterProfilePictures || [],
       potentialWikipediaUrl: voiceActorResponse.potentialWikipediaUrl || null,
       profilePicture: voiceActorResponse.voiceActor.profile_picture || null,
-      votes: voiceActorResponse.votes,
     };
   } catch (e) {
     console.error("fetchVoiceActorData error:", e);
@@ -61,6 +61,7 @@ export type VoiceActorResponse = {
       voice_actor_id: number | null;
     }[];
   };
+  enhancedWorks?: EnhancedWorkItem[];
   medias: (MovieModel | SerieModel)[];
   potentialWikipediaUrl?: string | null;
   characterProfilePictures?: Array<{
@@ -71,10 +72,6 @@ export type VoiceActorResponse = {
     showId?: number;
     name?: string;
   }>;
-  votes?: Record<
-    number,
-    { up_count: number; down_count: number; user_vote: string | null }
-  >;
 };
 
 export type EnhancedWorkItem = {
@@ -117,18 +114,21 @@ function actorToPersonData(actor: {
 
 export type VoiceActorDataPayload = {
   voiceActor?: VoiceActorResponse["voiceActor"];
+  enhancedWorks?: EnhancedWorkItem[];
   medias: VoiceActorResponse["medias"];
   characterProfilePictures: NonNullable<
     VoiceActorResponse["characterProfilePictures"]
   >;
   potentialWikipediaUrl: string | null;
   profilePicture?: string | null;
-  votes?: VoiceActorResponse["votes"];
 };
 
 export function useVoiceActorData(initialData?: VoiceActorDataPayload | null) {
   const voiceActor = ref<VoiceActorResponse["voiceActor"] | undefined>(
     initialData?.voiceActor,
+  );
+  const enhancedWorksRef = ref<EnhancedWorkItem[]>(
+    initialData?.enhancedWorks || [],
   );
   const medias = ref<VoiceActorResponse["medias"]>(initialData?.medias || []);
   const characterProfilePictures = ref<
@@ -143,8 +143,6 @@ export function useVoiceActorData(initialData?: VoiceActorDataPayload | null) {
     initialData?.potentialWikipediaUrl || null,
   );
 
-  const votes = ref<VoiceActorResponse["votes"]>(initialData?.votes);
-
   const loadVoiceActorData = async (id: string | number) => {
     loading.value = true;
 
@@ -154,11 +152,13 @@ export function useVoiceActorData(initialData?: VoiceActorDataPayload | null) {
       if (!payload) return;
 
       voiceActor.value = payload.voiceActor;
+      if (payload.enhancedWorks && payload.enhancedWorks.length > 0) {
+        enhancedWorksRef.value = payload.enhancedWorks;
+      }
       medias.value = payload.medias;
       characterProfilePictures.value = payload.characterProfilePictures;
       potentialWikipediaUrl.value = payload.potentialWikipediaUrl;
       profilePicture.value = payload.profilePicture;
-      votes.value = payload.votes;
     } catch (error) {
       console.error("Error fetching voice actor:", error);
       throw error;
@@ -168,63 +168,49 @@ export function useVoiceActorData(initialData?: VoiceActorDataPayload | null) {
   };
 
   const baseEnhancedWork = computed<EnhancedWorkItem[]>(() => {
+    if (enhancedWorksRef.value && enhancedWorksRef.value.length > 0) {
+      return enhancedWorksRef.value;
+    }
+
     if (!voiceActor.value?.work) {
       return [];
     }
 
+    const mediaMap = new Map<number, any>();
+    for (const m of medias.value) {
+      if (m && m.id) mediaMap.set(m.id, m);
+    }
+
+    const charPicMap = new Map<string, any>();
+    for (const cp of characterProfilePictures.value) {
+      const mediaId = cp.movieId || cp.showId;
+      if (mediaId && cp.name) {
+        charPicMap.set(`${mediaId}:${cp.name.toLowerCase()}`, cp);
+      }
+    }
+
     const result = voiceActor.value.work
       .map((work) => {
-        const media = medias.value.find(
-          (media: any) => media.id === work.dubbing_projects?.content_id,
-        );
+        const contentId = work.dubbing_projects?.content_id;
+        if (!contentId) return null;
 
+        const media = mediaMap.get(contentId);
         if (!media) return null;
 
-        if (
-          !(
-            media as {
-              credits?: {
-                cast?: Array<{
-                  id: number;
-                  character: string;
-                  name?: string;
-                  profile_path?: string | null;
-                }>;
-              };
-            }
-          ).credits?.cast
-        ) {
-          return null;
+        let actor: any;
+        if (media.credits?.cast) {
+          actor = media.credits.cast.find(
+            (cast: { id: number }) => cast.id === work.actor_id,
+          );
         }
-
-        const actor = (
-          media as {
-            credits?: {
-              cast?: Array<{
-                id: number;
-                character: string;
-                name?: string;
-                profile_path?: string | null;
-              }>;
-            };
-          }
-        ).credits?.cast?.find(
-          (cast: { id: number }) => cast.id === work.actor_id,
-        );
 
         if (!actor) return null;
 
         const character = actor.character;
         let characterImage: string | undefined;
 
-        if (characterProfilePictures.value.length > 0) {
-          const pic = characterProfilePictures.value.find(
-            (cp: any) =>
-              (cp.movieId === media.id || cp.showId === media.id) &&
-              cp.name &&
-              character &&
-              cp.name.toLowerCase() === character.toLowerCase(),
-          );
+        if (character) {
+          const pic = charPicMap.get(`${media.id}:${character.toLowerCase()}`);
           if (pic) {
             characterImage = pic.image || pic.profile_path || undefined;
           }
@@ -260,7 +246,7 @@ export function useVoiceActorData(initialData?: VoiceActorDataPayload | null) {
   });
 
   const filteredEnhancedWork = computed(() => {
-    const query = searchQuery.value.toLowerCase();
+    const query = searchQuery.value.toLowerCase().trim();
     if (!query) return enhancedWork.value;
 
     return enhancedWork.value.filter((item) => {
@@ -288,13 +274,13 @@ export function useVoiceActorData(initialData?: VoiceActorDataPayload | null) {
 
   return {
     voiceActor,
+    enhancedWorks: enhancedWorksRef,
     medias,
     characterProfilePictures,
     profilePicture,
     loading,
     searchQuery,
     potentialWikipediaUrl,
-    votes,
     isLinked,
     baseEnhancedWork,
     enhancedWork,
