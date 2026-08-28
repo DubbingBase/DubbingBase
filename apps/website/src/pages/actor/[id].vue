@@ -65,7 +65,7 @@
         <!-- Global Search -->
       <div class="w-full relative max-w-xl mb-6">
         <input
-          v-model="searchQuery"
+          v-model="searchInput"
           type="text"
           :placeholder="$t('actor.searchPlaceholder')"
           class="w-full px-4 py-3 pl-12 bg-white/80 dark:bg-[#161616]/80 backdrop-blur border border-gray-200 dark:border-[#2a2a2a] rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 transition shadow-sm"
@@ -133,6 +133,8 @@
             >
               <NuxtImg
                 format="webp"
+                loading="lazy"
+                decoding="async"
                 v-if="va.profile_picture"
                 :src="va.profile_picture"
                 :alt="`${va.firstname} ${va.lastname}`"
@@ -185,7 +187,7 @@
           class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
         >
           <div
-            v-for="item in enhancedFilmography"
+            v-for="item in visibleFilmography"
             :key="`${item.media_type}-${item.id}`"
             class="bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl p-4 shadow-sm transition-colors hover:border-gray-300 dark:hover:border-gray-700 block group"
           >
@@ -200,6 +202,8 @@
                 >
                   <NuxtImg
                     format="webp"
+                    loading="lazy"
+                    decoding="async"
                     v-if="item.poster_path"
                     :src="resolveImageUrl(item.poster_path)"
                     :alt="item.title || item.name"
@@ -244,6 +248,8 @@
                 >
                   <NuxtImg
                     format="webp"
+                    loading="lazy"
+                    decoding="async"
                     v-if="item.voice_actors[0].profile_picture"
                     :src="item.voice_actors[0].profile_picture"
                     :alt="`${item.voice_actors[0].firstname} ${item.voice_actors[0].lastname}`"
@@ -313,6 +319,23 @@
             </div>
           </div>
         </div>
+
+        <!-- Infinite Scroll Sentinel & Load More button -->
+        <div
+          v-if="hasMore"
+          ref="loadMoreSentinel"
+          class="py-10 flex flex-col items-center justify-center gap-3"
+        >
+          <button
+            @click="loadMore"
+            class="px-5 py-2.5 bg-white dark:bg-[#1d1d1d] hover:bg-gray-100 dark:hover:bg-[#2a2a2a] text-sm font-medium rounded-xl text-gray-700 dark:text-gray-200 transition-all border border-gray-200 dark:border-[#2a2a2a] shadow-sm cursor-pointer"
+          >
+            {{ $t('common.loadMore', 'Load more') }}
+          </button>
+          <span class="text-xs text-gray-400">
+            {{ visibleFilmography.length }} / {{ enhancedFilmography.length }} {{ $t('actor.works', 'œuvres') }}
+          </span>
+        </div>
       </section>
       </template>
     </PersonDetailsLayout>
@@ -325,6 +348,7 @@
 import PersonDetailsLayout from "../../components/layout/PersonDetailsLayout.vue";
 import { onMounted, ref, watch, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { useIntersectionObserver, refDebounced } from "@vueuse/core";
 import { ArrowLeftIcon, ClapperboardIcon, UserIcon } from "lucide-vue-next";
 import { useActorData, fetchActorData } from "@app/shared-logic";
 import ReportModal from "../../components/ReportModal.vue";
@@ -340,8 +364,13 @@ const localePath = useLocalePath();
 const id = route.params.id as string;
 const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
 
-const { data: initialData } = await useAsyncData(`actor-${id}`, () =>
-  fetchActorData(id)
+const { data: initialData } = await useAsyncData(
+  `actor-${id}`,
+  () => fetchActorData(id),
+  {
+    getCachedData: (key, nuxtApp) =>
+      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+  },
 );
 
 const {
@@ -356,6 +385,41 @@ const {
   filteredUniqueVoiceActorsByLanguage,
   loadActorData,
 } = useActorData(initialData.value);
+
+const searchInput = ref("");
+const debouncedSearch = refDebounced(searchInput, 150);
+watch(debouncedSearch, (val) => {
+  searchQuery.value = val;
+});
+
+const displayedCount = ref(36);
+const visibleFilmography = computed(() =>
+  enhancedFilmography.value.slice(0, displayedCount.value),
+);
+
+const hasMore = computed(
+  () => displayedCount.value < enhancedFilmography.value.length,
+);
+
+const loadMore = () => {
+  displayedCount.value += 36;
+};
+
+const loadMoreSentinel = ref<HTMLElement | null>(null);
+
+useIntersectionObserver(
+  loadMoreSentinel,
+  ([entry]) => {
+    if (entry?.isIntersecting && hasMore.value) {
+      loadMore();
+    }
+  },
+  { rootMargin: "400px" },
+);
+
+watch([searchQuery, selectedLanguage], () => {
+  displayedCount.value = 36;
+});
 
 useHead({
   titleTemplate: null,
@@ -420,6 +484,10 @@ useHead({
       name: "twitter:image",
       content: computed(() => actor.value?.profile_path ? resolveImageUrl(actor.value.profile_path) : 'https://dubbingbase.com/default-og.jpg'),
     },
+  ],
+  link: [
+    { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
+    { rel: "dns-prefetch", href: "https://image.tmdb.org" },
   ],
   script: [
     {
