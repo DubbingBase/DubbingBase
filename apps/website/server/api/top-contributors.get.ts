@@ -1,6 +1,12 @@
 import { getTopContributors } from "../utils/db/queries";
 
 export default defineEventHandler(async (event) => {
+  setHeader(
+    event,
+    "Cache-Control",
+    "public, max-age=1800, s-maxage=3600, stale-while-revalidate=86400",
+  );
+
   const query = getQuery(event);
   const limit = Number(query.limit) || 10;
 

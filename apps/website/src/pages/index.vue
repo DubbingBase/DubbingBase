@@ -275,7 +275,13 @@ useHead({
     },
     { name: 'twitter:image', content: 'https://dubbingbase.com/android-chrome-512x512.png' },
   ],
-  link: [{ rel: 'canonical', href: 'https://dubbingbase.com/' }],
+  link: [
+    { rel: 'canonical', href: 'https://dubbingbase.com/' },
+    { rel: 'preconnect', href: 'https://image.tmdb.org', crossorigin: '' },
+    { rel: 'dns-prefetch', href: 'https://image.tmdb.org' },
+    { rel: 'preconnect', href: 'https://images.igdb.com', crossorigin: '' },
+    { rel: 'dns-prefetch', href: 'https://images.igdb.com' },
+  ],
   script: [
     {
       type: 'application/ld+json',
@@ -336,7 +342,14 @@ useHead({
   ],
 });
 
-const { data, pending } = useAsyncData('home-data', () => fetchHomeData());
+const { data, pending } = useAsyncData(
+  'home-data',
+  () => fetchHomeData(),
+  {
+    getCachedData: (key, nuxtApp) =>
+      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+  },
+);
 
 const trendingMovies = computed(() => data.value?.trendingMovies || []);
 const trendingSeries = computed(() => data.value?.trendingSeries || []);
