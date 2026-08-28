@@ -39,6 +39,16 @@ backpropagate character_id into existing rows work
 - Data Model Update: Support voice actor changes on a per-episode or per-season basis
 - Create a "News & Tributes" section: Track new vocal casting announcements, interviews, and tributes to late voice actors
 
+## Features: Expanded Works & New Media Types
+- [x] **Audiobooks & Dramatized Audio (`audiobook`)**: Integrated OpenLibrary API for audiobook narrations, covers, authors, search, and cast editing.
+- [x] **Advertisements & Commercials (`advertisement`)**: Support TV, Radio, and Web ads with brand/product metadata, YouTube/video embedding, studio, and voice off talent.
+- [x] **Audio Fiction & Podcasts (`podcast`)**: Integrated Apple Podcasts Search API / RSS lookup for narrative podcasts, episodes, creators, and audio fiction cast.
+- [x] **Interactive Toys & Connected Objects (`toy`)**: Support smart toys & storytellers (Lunii, Toniebox, VTech) with manufacturer, product line, and narration cast.
+- **Theme Park Attractions & Dark Rides (`attraction`)**: Integrate ThemeParks.wiki API or custom DB for theme park rides and animatronics (Disneyland, Astérix).
+- **Station Imaging & Channel Promos (`station_imaging`)**: Support TV/radio network voice branding and station IDs.
+- **Web Dubbing & Creator Content (`web_video`)**: Multi-audio YouTube channels and indie animation projects.
+- **System Voices & Transit (`voice_identity`)**: GPS voices (Waze), voice assistants, and public transit announcements (SNCF).
+
 ## Features: Notifications
 - Allow users to "follow" a voice actor and receive notifications for their new roles or news
 

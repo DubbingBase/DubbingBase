@@ -75,15 +75,19 @@ export default defineEventHandler(async (event) => {
         studio.id && !isNaN(Number(studio.id)) ? Number(studio.id) : 0,
       );
 
-    // 3. Fetch TMDB info for projects (deduplicated & batched)
+    // 3. Fetch media info for projects (deduplicated & batched)
     const tmdbClient = useTmdbClient();
+    const igdbClient = useIgdbClient();
+    const openLibraryClient = useOpenLibraryClient();
+    const podcastClient = usePodcastClient();
+    const adClient = useAdvertisementClient();
+    const toyClient = useToyClient();
     const acceptLanguage = getHeader(event, "accept-language") || undefined;
 
     const uniqueMediaKeys = Array.from(
       new Set(
         (projects || []).map(
-          (p: any) =>
-            `${p.content_type === "movie" ? "movie" : "tv"}:${p.content_id}`,
+          (p: any) => `${p.content_type || "movie"}:${p.content_id}`,
         ),
       ),
     );
@@ -97,15 +101,58 @@ export default defineEventHandler(async (event) => {
           const [contentType, contentIdStr] = key.split(":");
           const contentId = Number(contentIdStr);
           try {
-            const mediaDetails = await tmdbClient.fetchMediaDetails(
-              contentId,
-              contentType as "movie" | "tv",
-              acceptLanguage,
-            );
-            mediaMap.set(key, mediaDetails);
+            if (contentType === "audiobook") {
+              const book = await openLibraryClient.getBook(contentId);
+              mediaMap.set(
+                key,
+                book
+                  ? { title: book.title, poster_path: book.cover_url }
+                  : null,
+              );
+            } else if (contentType === "podcast") {
+              const podcast = await podcastClient.getPodcast(contentId);
+              mediaMap.set(
+                key,
+                podcast
+                  ? { title: podcast.title, poster_path: podcast.cover_url }
+                  : null,
+              );
+            } else if (contentType === "advertisement") {
+              const ad = await adClient.getAdvertisement(contentId);
+              mediaMap.set(
+                key,
+                ad ? { title: ad.title, poster_path: ad.poster_url } : null,
+              );
+            } else if (contentType === "toy") {
+              const toy = await toyClient.getToy(contentId);
+              mediaMap.set(
+                key,
+                toy ? { title: toy.name, poster_path: toy.cover_url } : null,
+              );
+            } else if (contentType === "video_game") {
+              const game = await igdbClient.getGame(contentId);
+              mediaMap.set(
+                key,
+                game
+                  ? {
+                      title: game.name,
+                      poster_path: game.cover
+                        ? buildIgdbImageUrl(game.cover.image_id, "cover_big")
+                        : null,
+                    }
+                  : null,
+              );
+            } else {
+              const mediaDetails = await tmdbClient.fetchMediaDetails(
+                contentId,
+                contentType === "movie" ? "movie" : "tv",
+                acceptLanguage,
+              );
+              mediaMap.set(key, mediaDetails);
+            }
           } catch (e) {
             console.error(
-              `Failed to fetch TMDB details for ${contentType} ${contentId}`,
+              `Failed to fetch details for ${contentType} ${contentId}`,
               e,
             );
             mediaMap.set(key, null);
@@ -115,7 +162,7 @@ export default defineEventHandler(async (event) => {
     }
 
     const projectsWithMedia = (projects || []).map((p: any) => {
-      const contentType = p.content_type === "movie" ? "movie" : "tv";
+      const contentType = p.content_type || "movie";
       const key = `${contentType}:${p.content_id}`;
       return { ...p, media: mediaMap.get(key) || null };
     });

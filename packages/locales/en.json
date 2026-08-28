@@ -269,8 +269,53 @@
     "tv": "Series",
     "voiceActor": "Voice Actor",
     "videoGame": "Video Game",
+    "audiobook": "Audiobook",
+    "podcast": "Podcast",
+    "advertisement": "Commercial / Ad",
+    "toy": "Connected Toy",
     "title": "Search",
     "description": "Search for movies, series, voice actors, and more"
+  },
+  "audiobook": {
+    "title": "Audiobook",
+    "author": "Author",
+    "narrator": "Narrator",
+    "narrators": "Narrators",
+    "isbn": "ISBN",
+    "publishYear": "Publication Year",
+    "description": "Description",
+    "audiobookInfo": "Audiobook Information",
+    "openLibraryLinked": "OpenLibrary Linked",
+    "openLibrary": "OpenLibrary",
+    "editProject": "Edit Audiobook Project",
+    "createProject": "Create Audiobook Project"
+  },
+  "podcast": {
+    "title": "Podcast & Audio Drama",
+    "author": "Creator / Author",
+    "episodes": "Episodes",
+    "feedUrl": "RSS Feed",
+    "description": "Description",
+    "editProject": "Edit Podcast Project",
+    "createProject": "Create Podcast Project"
+  },
+  "advertisement": {
+    "title": "Commercial & Ad",
+    "brand": "Brand / Client",
+    "agency": "Agency",
+    "year": "Year",
+    "description": "Description",
+    "editProject": "Edit Commercial Project",
+    "createProject": "Create Commercial Project"
+  },
+  "toy": {
+    "title": "Connected Toy & Storyteller",
+    "manufacturer": "Manufacturer",
+    "productLine": "Product Line / Device",
+    "releaseYear": "Release Year",
+    "description": "Description",
+    "editProject": "Edit Smart Toy Project",
+    "createProject": "Create Smart Toy Project"
   },
   "auth": {
     "loginRequiredForSubscription": "You must be logged in to subscribe"

@@ -269,8 +269,53 @@
     "tv": "テレビ番組",
     "voiceActor": "声優",
     "videoGame": "ビデオゲーム",
+    "audiobook": "オーディオブック",
+    "podcast": "ポッドキャスト",
+    "advertisement": "CM / 広告",
+    "toy": "スマートトイ / 音声知育玩具",
     "title": "検索",
     "description": "映画、テレビ番組、声優などを検索"
+  },
+  "audiobook": {
+    "title": "オーディオブック",
+    "author": "著者",
+    "narrator": "ナレーター",
+    "narrators": "ナレーター一覧",
+    "isbn": "ISBN",
+    "publishYear": "出版年",
+    "description": "説明",
+    "audiobookInfo": "オーディオブック情報",
+    "openLibraryLinked": "OpenLibrary連携",
+    "openLibrary": "OpenLibrary",
+    "editProject": "オーディオブックプロジェクトを編集",
+    "createProject": "オーディオブックプロジェクトを作成"
+  },
+  "podcast": {
+    "title": "ポッドキャスト・ボイスドラマ",
+    "author": "制作者 / 著者",
+    "episodes": "エピソード",
+    "feedUrl": "RSSフィード",
+    "description": "説明",
+    "editProject": "ポッドキャストプロジェクトを編集",
+    "createProject": "ポッドキャストプロジェクトを作成"
+  },
+  "advertisement": {
+    "title": "CM・広告",
+    "brand": "ブランド / クライアント",
+    "agency": "代理店",
+    "year": "年度",
+    "description": "説明",
+    "editProject": "CMプロジェクトを編集",
+    "createProject": "CMプロジェクトを作成"
+  },
+  "toy": {
+    "title": "スマートトイ・知育スピーカー",
+    "manufacturer": "メーカー",
+    "productLine": "製品ライン / デバイス",
+    "releaseYear": "発売年",
+    "description": "説明",
+    "editProject": "スマートトイプロジェクトを編集",
+    "createProject": "スマートトイプロジェクトを作成"
   },
   "auth": {
     "loginRequiredForSubscription": "購読するにはログインが必要です"

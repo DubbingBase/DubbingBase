@@ -83,6 +83,26 @@ const routes: readonly RouteRecordRaw[] = [
     component: () => import("../views/game-details.vue"),
   },
   {
+    name: "AudiobookDetails",
+    path: "/audiobook/:id",
+    component: () => import("../views/audiobook-details.vue"),
+  },
+  {
+    name: "PodcastDetails",
+    path: "/podcast/:id",
+    component: () => import("../views/podcast-details.vue"),
+  },
+  {
+    name: "AdDetails",
+    path: "/advertisement/:id",
+    component: () => import("../views/advertisement-details.vue"),
+  },
+  {
+    name: "ToyDetails",
+    path: "/toy/:id",
+    component: () => import("../views/toy-details.vue"),
+  },
+  {
     name: "voice-actor-details",
     path: "/voice-actor/:id",
     component: () => import("../views/voice-actor-details.vue"),

@@ -269,8 +269,53 @@
     "tv": "Serie",
     "voiceActor": "Actor de doblaje",
     "videoGame": "Videojuego",
+    "audiobook": "Audiolibro",
+    "podcast": "Podcast",
+    "advertisement": "Publicidad",
+    "toy": "Juguete Conectado",
     "title": "Búsqueda",
     "description": "Buscar películas, series, actores de doblaje y más"
+  },
+  "audiobook": {
+    "title": "Audiolibro",
+    "author": "Autor",
+    "narrator": "Narrador",
+    "narrators": "Narradores",
+    "isbn": "ISBN",
+    "publishYear": "Año de publicación",
+    "description": "Descripción",
+    "audiobookInfo": "Información del audiolibro",
+    "openLibraryLinked": "Vinculado a OpenLibrary",
+    "openLibrary": "OpenLibrary",
+    "editProject": "Editar proyecto de audiolibro",
+    "createProject": "Crear proyecto de audiolibro"
+  },
+  "podcast": {
+    "title": "Podcast y Ficción Sonora",
+    "author": "Creador / Autor",
+    "episodes": "Episodios",
+    "feedUrl": "Feed RSS",
+    "description": "Descripción",
+    "editProject": "Editar proyecto de podcast",
+    "createProject": "Crear proyecto de podcast"
+  },
+  "advertisement": {
+    "title": "Publicidad y Spot",
+    "brand": "Marca / Anunciante",
+    "agency": "Agencia",
+    "year": "Año",
+    "description": "Descripción",
+    "editProject": "Editar spot publicitario",
+    "createProject": "Crear spot publicitario"
+  },
+  "toy": {
+    "title": "Juguete Conectado y Cuentacuentos",
+    "manufacturer": "Fabricante",
+    "productLine": "Gama / Dispositivo",
+    "releaseYear": "Año de lanzamiento",
+    "description": "Descripción",
+    "editProject": "Editar proyecto de juguete conectado",
+    "createProject": "Crear proyecto de juguete conectado"
   },
   "auth": {
     "loginRequiredForSubscription": "Debe iniciar sesión para suscribirse"

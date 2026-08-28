@@ -292,3 +292,116 @@ export interface GameResponse {
     { up_count: number; down_count: number; user_vote: string | null }
   >;
 }
+
+export interface OpenLibraryAuthor {
+  id?: string;
+  name: string;
+}
+
+export interface Audiobook {
+  id: number;
+  title: string;
+  name?: string;
+  description?: string;
+  authors?: OpenLibraryAuthor[];
+  author_name?: string;
+  cover_url?: string | null;
+  cover_id?: number | null;
+  first_publish_year?: number | null;
+  first_publish_date?: string | null;
+  publish_date?: string | null;
+  release_date?: string | null;
+  isbn?: string | null;
+  subjects?: string[];
+  media_type?: "audiobook";
+  popularity?: number;
+  vote_average?: number;
+  vote_count?: number;
+}
+
+export interface AudiobookResponse {
+  audiobook: Audiobook | null;
+  dubbingProjects: any[];
+  votes: Record<
+    number,
+    { up_count: number; down_count: number; user_vote: string | null }
+  >;
+}
+
+export interface Advertisement {
+  id: number;
+  title: string;
+  brand: string;
+  year?: number | string;
+  poster_url?: string | null;
+  video_url?: string | null;
+  video_id?: string | null;
+  country?: string;
+  agency?: string;
+  description?: string;
+  media_type: "advertisement";
+  popularity?: number;
+}
+
+export interface AdvertisementResponse {
+  advertisement: Advertisement | null;
+  dubbingProjects: any[];
+  votes: Record<
+    number,
+    { up_count: number; down_count: number; user_vote: string | null }
+  >;
+}
+
+export interface PodcastEpisode {
+  id: number | string;
+  title: string;
+  description?: string;
+  release_date?: string;
+  duration?: number | string;
+  audio_url?: string;
+}
+
+export interface Podcast {
+  id: number;
+  title: string;
+  author?: string;
+  feed_url?: string;
+  cover_url?: string | null;
+  episodes_count?: number;
+  release_date?: string;
+  genres?: string[];
+  description?: string;
+  episodes?: PodcastEpisode[];
+  media_type: "podcast";
+  popularity?: number;
+}
+
+export interface PodcastResponse {
+  podcast: Podcast | null;
+  dubbingProjects: any[];
+  votes: Record<
+    number,
+    { up_count: number; down_count: number; user_vote: string | null }
+  >;
+}
+
+export interface Toy {
+  id: number;
+  name: string;
+  manufacturer: string;
+  product_line?: string;
+  release_year?: number | string;
+  cover_url?: string | null;
+  description?: string;
+  media_type: "toy";
+  popularity?: number;
+}
+
+export interface ToyResponse {
+  toy: Toy | null;
+  dubbingProjects: any[];
+  votes: Record<
+    number,
+    { up_count: number; down_count: number; user_vote: string | null }
+  >;
+}

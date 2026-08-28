@@ -1,4 +1,11 @@
-import { useCache, useIgdbClient } from "../../utils";
+import {
+  useCache,
+  useIgdbClient,
+  useOpenLibraryClient,
+  usePodcastClient,
+  useAdvertisementClient,
+  useToyClient,
+} from "../../utils";
 import { buildIgdbImageUrl } from "../../utils/api/igdb";
 import { normalizeString } from "../../utils/normalize";
 import { processMedia } from "../../utils/urls/tmdb";
@@ -58,18 +65,13 @@ function calculateScore(item: any, trimmedQuery: string): number {
   ) {
     releaseMs = item.first_release_date * 1000;
   }
-  if (releaseMs !== null) {
-    const yearsSinceRelease =
-      (Date.now() - releaseMs) / (1000 * 60 * 60 * 24 * 365);
-    score += Math.max(-5, 5 - yearsSinceRelease * 0.2);
-  }
 
-  if (item.media_type === "voice_actor") {
-    score += 15;
-  }
-
-  if (item.media_type === "video_game") {
-    score += 5;
+  if (releaseMs && !isNaN(releaseMs)) {
+    const ageYears = Math.max(
+      0,
+      (Date.now() - releaseMs) / (365.25 * 24 * 3600 * 1000),
+    );
+    score += Math.max(0, 15 - ageYears * 1.5);
   }
 
   return score;
@@ -97,6 +99,10 @@ export default defineEventHandler(async (event) => {
 
     const config = useRuntimeConfig();
     const igdbClient = useIgdbClient();
+    const openLibraryClient = useOpenLibraryClient();
+    const podcastClient = usePodcastClient();
+    const adClient = useAdvertisementClient();
+    const toyClient = useToyClient();
     const supabase = useSupabaseAdmin();
 
     // 1. TMDB multi-search
@@ -210,11 +216,81 @@ export default defineEventHandler(async (event) => {
       return results;
     })();
 
-    // 4. Execute all three tracks concurrently
-    const [tmdbResults, dbVoiceActorResults, igdbResults] = await Promise.all([
+    // 4. OpenLibrary audiobook search
+    const openLibrarySearchPromise = (async () => {
+      try {
+        const books = await openLibraryClient.searchBooks(trimmedQuery);
+        return books.map((book) => ({
+          ...book,
+          poster_path: book.cover_url,
+          media_type: "audiobook" as const,
+        }));
+      } catch (e) {
+        console.error("OpenLibrary search error:", e);
+        return [];
+      }
+    })();
+
+    // 5. iTunes Podcast search
+    const podcastSearchPromise = (async () => {
+      try {
+        const podcasts = await podcastClient.searchPodcasts(trimmedQuery);
+        return podcasts.map((p) => ({
+          ...p,
+          poster_path: p.cover_url,
+          media_type: "podcast" as const,
+        }));
+      } catch (e) {
+        console.error("Podcast search error:", e);
+        return [];
+      }
+    })();
+
+    // 6. Advertisement search
+    const adSearchPromise = (async () => {
+      try {
+        const ads = await adClient.searchAdvertisements(trimmedQuery);
+        return ads.map((ad) => ({
+          ...ad,
+          media_type: "advertisement" as const,
+        }));
+      } catch (e) {
+        console.error("Advertisement search error:", e);
+        return [];
+      }
+    })();
+
+    // 7. Toy search
+    const toySearchPromise = (async () => {
+      try {
+        const toys = await toyClient.searchToys(trimmedQuery);
+        return toys.map((toy) => ({
+          ...toy,
+          media_type: "toy" as const,
+        }));
+      } catch (e) {
+        console.error("Toy search error:", e);
+        return [];
+      }
+    })();
+
+    // Execute all tracks concurrently
+    const [
+      tmdbResults,
+      dbVoiceActorResults,
+      igdbResults,
+      openLibraryResults,
+      podcastResults,
+      adResults,
+      toyResults,
+    ] = await Promise.all([
       tmdbSearchPromise,
       voiceActorSearchPromise,
       igdbSearchPromise,
+      openLibrarySearchPromise,
+      podcastSearchPromise,
+      adSearchPromise,
+      toySearchPromise,
     ]);
 
     let resp: any[] = [...tmdbResults];
@@ -227,6 +303,36 @@ export default defineEventHandler(async (event) => {
         igdbKeySet.add(key);
         resp.push(game);
       }
+    }
+
+    // Deduplicate OpenLibrary audiobooks
+    const bookKeySet = new Set<string>();
+    for (const book of openLibraryResults) {
+      const key = `audiobook:${book.id}`;
+      if (!bookKeySet.has(key)) {
+        bookKeySet.add(key);
+        resp.push(book);
+      }
+    }
+
+    // Deduplicate Podcasts
+    const podcastKeySet = new Set<string>();
+    for (const pod of podcastResults) {
+      const key = `podcast:${pod.id}`;
+      if (!podcastKeySet.has(key)) {
+        podcastKeySet.add(key);
+        resp.push(pod);
+      }
+    }
+
+    // Deduplicate Advertisements
+    for (const ad of adResults) {
+      resp.push(ad);
+    }
+
+    // Deduplicate Toys
+    for (const toy of toyResults) {
+      resp.push(toy);
     }
 
     const voiceActorResults = [...dbVoiceActorResults];
