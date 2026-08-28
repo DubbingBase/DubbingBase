@@ -92,6 +92,12 @@ When testing the website from a mobile device or other clients over Tailscale/LA
 - **Styling**: The website uses **Tailwind CSS v4**. Use Tailwind classes for all layouts and UI.
 - **Data Grids**: Use **RevoGrid** (`@revolist/vue3-datagrid`) for complex tables.
 - **Charts**: Use **Chart.js** via `vue-chartjs`.
+- **Route Performance & Caching Architecture**:
+  - **Edge SWR Caching on Server APIs**: Every public GET endpoint MUST set a standardized Edge & Browser SWR `Cache-Control` header using `setPublicCacheHeaders(event, profile)` (`detail`, `catalog`, `discovery`, `search`, or `static`).
+  - **0ms Instant Navigation Hydration**: When calling `useAsyncData` on public/detail pages, always provide `getCachedData: (key, nuxtApp) => nuxtApp.payload.data[key] ?? nuxtApp.static.data[key]` to eliminate loading spinners on client-side route transitions and back-navigation.
+  - **Progressive DOM Windowing**: When rendering dynamic rosters or long lists of cards (cast, episodes, filmography, etc.), never render hundreds of DOM nodes at once. Use the `useProgressiveBatch` composable or `useIntersectionObserver` with a batch size of 24–36 and a bottom sentinel element.
+  - **Client-side Search Filtering**: When filtering in-memory arrays via text search inputs, always debounce the query with `refDebounced(query, 150)` from `@vueuse/core` to prevent frame drops while typing.
+  - **Resource Hints & Image Optimization**: Media pages must declare `preconnect` and `dns-prefetch` links in `useHead.link` for external CDNs (`https://image.tmdb.org`, `https://thetvdb.com`, `https://images.igdb.com`). Always add `loading="lazy"` and `decoding="async"` to non-hero `NuxtImg` elements.
 
 ### 4. Database & Supabase (`packages/database`)
 
