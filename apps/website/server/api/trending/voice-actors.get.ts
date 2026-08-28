@@ -3,6 +3,12 @@ import { useTmdbClient, useIgdbClient, useCache } from "../../utils";
 import { buildSupabaseImageUrl } from "../../utils/urls/supabase";
 
 export default defineEventHandler(async (event) => {
+  setHeader(
+    event,
+    "Cache-Control",
+    "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+  );
+
   const query = getQuery(event);
   const limit = Number(query.limit) || 10;
 

@@ -8,7 +8,7 @@
       <div class="mt-6 max-w-md">
         <div class="relative">
           <input 
-            v-model="searchQuery" 
+            v-model="searchInput" 
             type="text" 
             placeholder="Rechercher un comédien..." 
             class="w-full bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white border-0 rounded-full px-6 py-3 focus:ring-2 focus:ring-cyan-500 transition-shadow outline-none"
@@ -38,45 +38,67 @@
 
     <!-- Empty State -->
     <div v-else-if="filteredActors.length === 0" class="text-center py-12 text-gray-500 dark:text-gray-400">
-      Aucun comédien trouvé pour "{{ searchQuery }}".
+      Aucun comédien trouvé pour "{{ searchInput }}".
     </div>
 
     <!-- Actors Grid -->
-    <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 md:gap-8 pt-4">
-      <NuxtLink 
-        v-for="actor in filteredActors" 
-        :key="actor.id" 
-        :to="localePath('/voice-actor/' + actor.id)"
-        class="group cursor-pointer flex flex-col items-center"
-      >
-        <div class="relative w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800 shadow-md transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg border-2 border-transparent group-hover:border-cyan-500">
-          <NuxtImg 
-            v-if="actor.profile_picture_url" 
-            :src="actor.profile_picture_url" 
-            :alt="actor.firstname + ' ' + actor.lastname" 
-            format="webp" 
-            loading="lazy" 
-            class="object-cover w-full h-full" 
-          />
-          <div v-else class="w-full h-full flex items-center justify-center text-3xl text-gray-400 font-bold bg-gray-100 dark:bg-gray-700">
-            {{ actor.firstname?.charAt(0) || '' }}{{ actor.lastname?.charAt(0) || '' }}
+    <div v-else>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 md:gap-8 pt-4">
+        <NuxtLink 
+          v-for="actor in visibleActors" 
+          :key="actor.id" 
+          :to="localePath('/voice-actor/' + actor.id)"
+          class="group cursor-pointer flex flex-col items-center"
+        >
+          <div class="relative w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800 shadow-md transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg border-2 border-transparent group-hover:border-cyan-500">
+            <NuxtImg 
+              v-if="actor.profile_picture_url" 
+              :src="actor.profile_picture_url" 
+              :alt="actor.firstname + ' ' + actor.lastname" 
+              format="webp" 
+              loading="lazy" 
+              decoding="async"
+              class="object-cover w-full h-full" 
+            />
+            <div v-else class="w-full h-full flex items-center justify-center text-3xl text-gray-400 font-bold bg-gray-100 dark:bg-gray-700">
+              {{ actor.firstname?.charAt(0) || '' }}{{ actor.lastname?.charAt(0) || '' }}
+            </div>
           </div>
-        </div>
-        <h3 class="font-semibold text-sm md:text-base text-gray-800 dark:text-gray-200 text-center group-hover:text-cyan-500 transition-colors">
-          {{ actor.firstname }} {{ actor.lastname }}
-        </h3>
-      </NuxtLink>
+          <h3 class="font-semibold text-sm md:text-base text-gray-800 dark:text-gray-200 text-center group-hover:text-cyan-500 transition-colors">
+            {{ actor.firstname }} {{ actor.lastname }}
+          </h3>
+        </NuxtLink>
+      </div>
+
+      <!-- Sentinel & Load More -->
+      <div
+        v-if="hasMore"
+        ref="loadMoreSentinel"
+        class="py-10 flex flex-col items-center justify-center gap-3"
+      >
+        <button
+          @click="loadMore"
+          class="px-5 py-2.5 bg-white dark:bg-[#1d1d1d] hover:bg-gray-100 dark:hover:bg-[#2a2a2a] text-sm font-medium rounded-xl text-gray-700 dark:text-gray-200 transition-all border border-gray-200 dark:border-[#2a2a2a] shadow-sm cursor-pointer"
+        >
+          {{ $t('common.loadMore', 'Load more') }}
+        </button>
+        <span class="text-xs text-gray-400">
+          {{ visibleActors.length }} / {{ filteredActors.length }} comédiens
+        </span>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
+import { useIntersectionObserver, refDebounced } from '@vueuse/core';
 
 const { t } = useI18n();
 const localePath = useLocalePath();
 
-const searchQuery = ref('');
+const searchInput = ref('');
+const debouncedSearch = refDebounced(searchInput, 150);
 
 useHead({
   title: 'Tous les Comédiens de doublage - DubbingBase',
@@ -92,20 +114,52 @@ useHead({
   ]
 });
 
-const { data, pending: isLoading, error } = useAsyncData('voice-actors-page', async () => {
-  const data = await $fetch<{ voice_actors: any[] }>('/api/list-voice-actors');
-  return data?.voice_actors || [];
-});
+const { data, pending: isLoading, error } = useAsyncData(
+  'voice-actors-page',
+  async () => {
+    const data = await $fetch<{ voice_actors: any[] }>('/api/list-voice-actors');
+    return data?.voice_actors || [];
+  },
+  {
+    getCachedData: (key, nuxtApp) =>
+      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+  },
+);
 
 const allActors = computed<any[]>(() => data.value || []);
 
-// Filtrage local simple
+// Filtrage local simple avec debounce
 const filteredActors = computed(() => {
-  if (!searchQuery.value.trim()) return allActors.value;
-  const query = searchQuery.value.toLowerCase().trim();
+  if (!debouncedSearch.value.trim()) return allActors.value;
+  const query = debouncedSearch.value.toLowerCase().trim();
   return allActors.value.filter((actor: any) => {
     const fullName = `${actor.firstname} ${actor.lastname}`.toLowerCase();
     return fullName.includes(query);
   });
+});
+
+const displayedCount = ref(36);
+const visibleActors = computed(() => {
+  return filteredActors.value.slice(0, displayedCount.value);
+});
+const hasMore = computed(() => {
+  return displayedCount.value < filteredActors.value.length;
+});
+const loadMore = () => {
+  displayedCount.value += 36;
+};
+const loadMoreSentinel = ref<HTMLElement | null>(null);
+useIntersectionObserver(
+  loadMoreSentinel,
+  ([entry]) => {
+    if (entry?.isIntersecting && hasMore.value) {
+      loadMore();
+    }
+  },
+  { rootMargin: '400px' },
+);
+
+watch(debouncedSearch, () => {
+  displayedCount.value = 36;
 });
 </script>
