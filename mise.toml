@@ -88,13 +88,6 @@ dir = "apps/mobile"
 run = "pnpm cap run android"
 env = { "VITE_SUPABASE_URL" = "http://10.0.2.2:55321", "VITE_SUPABASE_PUBLISHABLE_KEY" = "sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH" }
 
-[tasks.android-build-prod]
-description = "Builds the Android app for production"
-depends = ["install", "sync", "build-web"]
-dir = "apps/mobile"
-run = "pnpm cap build android"
-env = { VITE_SUPABASE_URL = "https://rrjgbneefiwoqvsjwzrz.supabase.co", VITE_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH" }
-
 [tasks.android-app-install]
 description = "Installs the Android app"
 depends = ["android-build-prod"]
@@ -175,11 +168,6 @@ run = "pnpm typecheck"
 description = "Fetches dubbing data from Wikipedia and enqueues to Supabase"
 depends = ["install"]
 run = "npx --yes tsx scripts/fetch_wikipedia_dubbing.ts"
-
-[tasks.fetch-dubbing-prod]
-description = "PROD: Fetches dubbing data and enqueues to PRODUCTION Supabase"
-depends = ["install"]
-run = "./scripts/fetch-dubbing-prod.sh"
 
 [tasks.check]
 description = "Builds the website to verify TypeScript, Vue templates, and Nitro server routes"
