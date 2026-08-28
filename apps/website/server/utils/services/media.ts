@@ -289,6 +289,9 @@ export class MediaService {
         compactMediasMap.set(fullMedia.id, compactMedia);
       }
 
+      const searchText =
+        `${compactMedia.title} ${characterName || ""} ${actorData.name || ""} ${work.performance || ""}`.toLowerCase();
+
       enhancedWorks.push({
         work: {
           id: work.id,
@@ -303,6 +306,7 @@ export class MediaService {
           actor: actorData,
         },
         sortDate,
+        searchText,
       });
     }
 
