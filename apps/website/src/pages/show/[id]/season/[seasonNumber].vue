@@ -130,6 +130,8 @@
                 format="webp"
                 v-if="episode.still_path"
                 :src="'https://image.tmdb.org/t/p/w342' + episode.still_path"
+                loading="lazy"
+                decoding="async"
                 class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 alt="Episode"
               />
@@ -200,32 +202,46 @@ const localePath = useLocalePath();
 
 // Fetch show data for basic info
 const showCacheKey = `show-${showId}-${locale.value}`;
-const { data: showData, pending: showPending } = useAsyncData(showCacheKey, async () => {
-  const nuxtApp = useNuxtApp();
-  const cachedData = nuxtApp.payload.data[showCacheKey];
-  const newData = await fetchShowData(showId, locale.value);
-  
-  if (
-    newData && 
-    newData.serie?.title === "Information indisponible (Timeout)" && 
-    cachedData?.serie &&
-    cachedData.serie.title !== "Information indisponible (Timeout)"
-  ) {
-    newData.serie = cachedData.serie;
-    newData.characterProfilePictures = cachedData.characterProfilePictures;
-  }
-  
-  return newData;
-});
+const { data: showData, pending: showPending } = useAsyncData(
+  showCacheKey,
+  async () => {
+    const nuxtApp = useNuxtApp();
+    const cachedData = nuxtApp.payload.data[showCacheKey];
+    const newData = await fetchShowData(showId, locale.value);
+    
+    if (
+      newData && 
+      newData.serie?.title === "Information indisponible (Timeout)" && 
+      cachedData?.serie &&
+      cachedData.serie.title !== "Information indisponible (Timeout)"
+    ) {
+      newData.serie = cachedData.serie;
+      newData.characterProfilePictures = cachedData.characterProfilePictures;
+    }
+    
+    return newData;
+  },
+  {
+    getCachedData: (key, nuxtApp) =>
+      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+  },
+);
 
 const serie = computed(() => showData.value?.serie);
 const serieName = computed(() => serie.value?.name || `Show ${showId}`);
 
 // Fetch season data
 const seasonCacheKey = `season-${showId}-${seasonNumber}-${locale.value}`;
-const { data: seasonData, pending: seasonPending } = useAsyncData(seasonCacheKey, async () => {
-  return await fetchSeasonData(showId, seasonNumber, locale.value);
-});
+const { data: seasonData, pending: seasonPending } = useAsyncData(
+  seasonCacheKey,
+  async () => {
+    return await fetchSeasonData(showId, seasonNumber, locale.value);
+  },
+  {
+    getCachedData: (key, nuxtApp) =>
+      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+  },
+);
 
 const season = computed(() => seasonData.value?.season);
 const dubbingProjects = computed(() => {
@@ -401,7 +417,11 @@ useHead({
     },
   ],
   link: computed<any[]>(() => {
-    const links = [
+    const links: any[] = [
+      { rel: 'preconnect', href: 'https://image.tmdb.org', crossorigin: '' },
+      { rel: 'dns-prefetch', href: 'https://image.tmdb.org' },
+      { rel: 'preconnect', href: 'https://thetvdb.com', crossorigin: '' },
+      { rel: 'dns-prefetch', href: 'https://thetvdb.com' },
       {
         rel: "canonical",
         href: (() => {

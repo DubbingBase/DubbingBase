@@ -142,7 +142,7 @@
 
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
             <div
-              v-for="actor in filteredCast"
+              v-for="actor in visibleCast"
               :key="actor.id"
               class="bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl p-4 shadow-sm transition-colors hover:border-gray-300 dark:hover:border-gray-700"
             >
@@ -157,6 +157,8 @@
                       format="webp"
                       v-if="actor.profile_path"
                       :src="actor.profile_path"
+                      loading="lazy"
+                      decoding="async"
                       class="w-full h-full object-cover transition-transform duration-300"
                       alt="Actor"
                     />
@@ -183,6 +185,8 @@
                       format="webp"
                       v-if="actor.characterImage"
                       :src="actor.characterImage"
+                      loading="lazy"
+                      decoding="async"
                       class="w-full h-full object-cover"
                       alt="Character"
                     />
@@ -216,6 +220,8 @@
                         format="webp"
                         v-if="actor.voiceActor.profile_picture"
                         :src="actor.voiceActor.profile_picture"
+                        loading="lazy"
+                        decoding="async"
                         class="w-full h-full object-cover transition-transform duration-300"
                         alt="Voice Actor"
                       />
@@ -255,6 +261,23 @@
               </div>
             </div>
           </div>
+
+          <!-- Progressive load more sentinel -->
+          <div
+            v-if="hasMoreCast"
+            ref="loadMoreSentinel"
+            class="py-10 flex flex-col items-center justify-center gap-3"
+          >
+            <button
+              @click="loadMoreCast"
+              class="px-5 py-2.5 bg-white dark:bg-[#1d1d1d] hover:bg-gray-100 dark:hover:bg-[#2a2a2a] text-sm font-medium rounded-xl text-gray-700 dark:text-gray-200 transition-all border border-gray-200 dark:border-[#2a2a2a] shadow-sm cursor-pointer"
+            >
+              {{ $t('common.loadMore', 'Load more') }}
+            </button>
+            <span class="text-xs text-gray-400">
+              {{ visibleCast.length }} / {{ filteredCast.length }} {{ $t('details.castAndCrew') }}
+            </span>
+          </div>
         </section>
         <section v-else class="text-center py-12 text-gray-500 dark:text-gray-400">
           {{ $t('details.noCast') }}
@@ -271,7 +294,8 @@ import MediaDetailsLayout from "../../../../../../components/layout/MediaDetails
 import { useRoute, useRouter } from "vue-router";
 
 import { fetchEpisodeData } from "@app/shared-logic";
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
+import { useIntersectionObserver, refDebounced } from "@vueuse/core";
 import {
   ArrowLeftIcon,
   ClapperboardIcon,
@@ -309,14 +333,16 @@ const localePath = useLocalePath();
 
 const cacheKey = `episode-${showId}-${seasonNumber}-${episodeNumber}-${locale.value}`;
 
-const { data, pending } = useAsyncData(cacheKey, async () => {
-  const nuxtApp = useNuxtApp();
-  const cachedData = nuxtApp.payload.data[cacheKey];
-
-  const newData = await fetchEpisodeData(showId, seasonNumber, episodeNumber, locale.value);
-  
-  return newData;
-});
+const { data, pending } = useAsyncData(
+  cacheKey,
+  async () => {
+    return await fetchEpisodeData(showId, seasonNumber, episodeNumber, locale.value);
+  },
+  {
+    getCachedData: (key, nuxtApp) =>
+      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+  },
+);
 
 const episode = computed(() => data.value?.episode);
 const dubbingProjects = computed(() => {
@@ -433,10 +459,11 @@ const formattedCast = computed(() => {
 });
 
 const searchQuery = ref("");
+const debouncedSearch = refDebounced(searchQuery, 150);
 
 const filteredCast = computed(() => {
-  if (!searchQuery.value) return formattedCast.value;
-  const query = searchQuery.value.toLowerCase();
+  if (!debouncedSearch.value.trim()) return formattedCast.value;
+  const query = debouncedSearch.value.toLowerCase().trim();
   return formattedCast.value.filter((actor: any) => {
     const actorName = actor.name?.toLowerCase() || "";
     const characterName = (
@@ -453,6 +480,31 @@ const filteredCast = computed(() => {
       vaPerformance.includes(query)
     );
   });
+});
+
+const displayedCastCount = ref(36);
+const visibleCast = computed(() => {
+  return filteredCast.value.slice(0, displayedCastCount.value);
+});
+const hasMoreCast = computed(() => {
+  return displayedCastCount.value < filteredCast.value.length;
+});
+const loadMoreCast = () => {
+  displayedCastCount.value += 36;
+};
+const loadMoreSentinel = ref<HTMLElement | null>(null);
+useIntersectionObserver(
+  loadMoreSentinel,
+  ([entry]) => {
+    if (entry?.isIntersecting && hasMoreCast.value) {
+      loadMoreCast();
+    }
+  },
+  { rootMargin: '400px' },
+);
+
+watch(debouncedSearch, () => {
+  displayedCastCount.value = 36;
 });
 
 useHead({
@@ -547,7 +599,11 @@ useHead({
     },
   ],
   link: computed<any[]>(() => {
-    const links = [
+    const links: any[] = [
+      { rel: 'preconnect', href: 'https://image.tmdb.org', crossorigin: '' },
+      { rel: 'dns-prefetch', href: 'https://image.tmdb.org' },
+      { rel: 'preconnect', href: 'https://thetvdb.com', crossorigin: '' },
+      { rel: 'dns-prefetch', href: 'https://thetvdb.com' },
       {
         rel: "canonical",
         href: (() => {

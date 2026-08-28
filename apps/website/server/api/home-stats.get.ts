@@ -1,6 +1,12 @@
 import { useSupabaseAdmin } from "../utils/db/client";
 
-export default defineEventHandler(async () => {
+export default defineEventHandler(async (event) => {
+  setHeader(
+    event,
+    "Cache-Control",
+    "public, max-age=1800, s-maxage=3600, stale-while-revalidate=86400",
+  );
+
   try {
     const supabase = useSupabaseAdmin();
 

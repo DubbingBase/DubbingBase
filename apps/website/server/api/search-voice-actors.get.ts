@@ -76,6 +76,12 @@ async function searchVoiceActors(
 }
 
 export default defineEventHandler(async (event) => {
+  setHeader(
+    event,
+    "Cache-Control",
+    "public, max-age=300, s-maxage=1800, stale-while-revalidate=86400",
+  );
+
   const query = getQuery(event);
   const searchQuery = query.query as string | undefined;
   const limit = query.limit ? Number(query.limit) : 10;
