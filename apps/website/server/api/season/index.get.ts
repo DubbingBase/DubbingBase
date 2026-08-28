@@ -1,9 +1,15 @@
 import { useTmdbClient } from "../../utils";
 import { MediaService } from "../../utils/services/media";
 import { useSupabaseAdmin } from "../../utils/db/client";
-import { getDubbingProjects, getWorkVotes } from "../../utils/db/queries";
+import { getDubbingProjects } from "../../utils/db/queries";
 
 export default defineEventHandler(async (event) => {
+  setHeader(
+    event,
+    "Cache-Control",
+    "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+  );
+
   const query = getQuery(event);
   const id = query.id ? Number(query.id) : undefined;
   const seasonNumber =
@@ -34,24 +40,8 @@ export default defineEventHandler(async (event) => {
       });
 
     const dbDataPromise = getDubbingProjects(id, "tv").then(
-      async (dubbingProjects) => {
-        const workIds = dubbingProjects.flatMap(
-          (p: any) => p.works?.map((w: any) => w.id) || [],
-        );
-        let voteData = {};
-        if (workIds.length > 0) {
-          try {
-            const user = event.context.user;
-            if (user) {
-              voteData = await getWorkVotes(workIds, user.id);
-            } else {
-              voteData = await getWorkVotes(workIds);
-            }
-          } catch (voteError) {
-            console.error("Error fetching vote data:", voteError);
-          }
-        }
-        return { dubbingProjects, voteData };
+      (dubbingProjects) => {
+        return { dubbingProjects, voteData: {} };
       },
     );
 
