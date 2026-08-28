@@ -1,6 +1,6 @@
 import { useCache, useIgdbClient } from "../../utils";
 import { buildIgdbImageUrl } from "../../utils/api/igdb";
-import { getDubbingProjects, getWorkVotes } from "../../utils/db/queries";
+import { getDubbingProjects } from "../../utils/db/queries";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import type { IgdbGame, IgdbCharacter } from "@app/shared-logic";
 
@@ -51,7 +51,12 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: "Invalid id parameter" });
   }
 
-  const user = event.context.user;
+  setHeader(
+    event,
+    "Cache-Control",
+    "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+  );
+
   const cache = useCache();
   const igdbClient = useIgdbClient();
 
@@ -91,31 +96,12 @@ export default defineEventHandler(async (event) => {
         }
       })(),
 
-      // DB: dubbing projects + votes
-      getDubbingProjects(gameId, "video_game").then(async (dubbingProjects) => {
-        const workIds = dubbingProjects.flatMap(
-          (p: any) => p.works?.map((w: any) => w.id) || [],
-        );
-
-        let voteData: Record<
-          number,
-          { up_count: number; down_count: number; user_vote: string | null }
-        > = {};
-
-        if (workIds.length > 0) {
-          try {
-            voteData = await getWorkVotes(workIds);
-          } catch (voteError) {
-            console.error("Error fetching vote data:", voteError);
-          }
-        }
-
-        return { dubbingProjects, voteData };
-      }),
+      // DB: dubbing projects
+      getDubbingProjects(gameId, "video_game"),
     ]);
 
     const { game, characters, igdbFailed } = apiData;
-    const { dubbingProjects, voteData } = dbData;
+    const dubbingProjects = dbData;
 
     // Lazy enqueue if not yet processed
     const isProcessed = dubbingProjects.length > 0;
@@ -136,30 +122,11 @@ export default defineEventHandler(async (event) => {
       game,
       characters,
       dubbingProjects,
-      votes: voteData,
     };
 
     // Don't cache the error fallback, so recovery isn't delayed by stale poison
     if (!igdbFailed) {
-      await cache.set(cacheKey, baseData, "SHORT");
-    }
-  }
-
-  // If authenticated, fetch personal user votes without cache contamination
-  if (user) {
-    const workIds = (baseData.dubbingProjects || []).flatMap(
-      (p: any) => p.works?.map((w: any) => w.id) || [],
-    );
-    if (workIds.length > 0) {
-      try {
-        const userVotes = await getWorkVotes(workIds, user.id);
-        return {
-          ...baseData,
-          votes: userVotes,
-        };
-      } catch (err) {
-        console.error("Error fetching user votes for game:", err);
-      }
+      await cache.set(cacheKey, baseData, "LONG");
     }
   }
 
