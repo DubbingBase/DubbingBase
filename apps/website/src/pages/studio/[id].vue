@@ -37,8 +37,8 @@
 
     <div class="w-full p-4 md:p-8 max-w-6xl mx-auto">
       <!-- Overview -->
-      <div class="mb-12 max-w-4xl">
-        <section v-if="studio.description">
+      <div class="mb-12 max-w-4xl" v-if="studio.description">
+        <section>
           <h2 class="text-2xl font-bold mb-4">À propos</h2>
           <p class="text-gray-700 dark:text-gray-300 leading-relaxed text-lg">
             {{ studio.description }}
@@ -48,12 +48,26 @@
 
       <!-- Dubbed Projects -->
       <section class="mb-12" v-if="dubbedProjects.length > 0">
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="text-2xl font-bold">Projets de doublage ({{ dubbedProjects.length }})</h2>
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h2 class="text-2xl font-bold">Projets de doublage ({{ dubbedProjects.length }})</h2>
+            <div class="text-gray-500 dark:text-gray-400 text-sm mt-1">
+              {{ visibleProjects.length }} / {{ filteredProjects.length }} affichés
+            </div>
+          </div>
+          <div class="relative w-full sm:w-64" v-if="dubbedProjects.length > 8">
+            <SearchIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              v-model="searchInput"
+              type="search"
+              :placeholder="$t('search.placeholder', 'Rechercher...')"
+              class="w-full bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-[#00E5FF] transition-all text-gray-900 dark:text-white"
+            />
+          </div>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
           <NuxtLink
-            v-for="project in dubbedProjects"
+            v-for="project in visibleProjects"
             :key="project.id"
             :to="localePath(`/${project.content_type === 'movie' ? 'movie' : 'show'}/${project.content_id}`)"
             class="group transition-transform hover:-translate-y-1 block flex flex-col"
@@ -64,7 +78,8 @@
                 :src="'https://image.tmdb.org/t/p/w342' + project.media.poster_path" 
                 :alt="project.media?.title || project.media?.name" 
                 format="webp" 
-                loading="lazy" 
+                loading="lazy"
+                decoding="async"
                 class="object-cover w-full h-full transition duration-300" 
               />
               <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
@@ -88,16 +103,38 @@
             </div>
           </NuxtLink>
         </div>
+
+        <!-- Sentinel / Load more for projects -->
+        <div
+          v-if="hasMoreProjects"
+          ref="projectsSentinel"
+          class="py-8 flex flex-col items-center justify-center gap-2"
+        >
+          <button
+            @click="loadMoreProjects"
+            class="px-5 py-2 bg-white dark:bg-[#1d1d1d] hover:bg-gray-100 dark:hover:bg-[#2a2a2a] text-sm font-medium rounded-xl text-gray-700 dark:text-gray-200 transition-all border border-gray-200 dark:border-[#2a2a2a] shadow-sm cursor-pointer"
+          >
+            {{ $t('common.loadMore', 'Load more') }}
+          </button>
+          <span class="text-xs text-gray-400">
+            {{ visibleProjects.length }} / {{ filteredProjects.length }} projets
+          </span>
+        </div>
       </section>
 
       <!-- Voice Actors Roster -->
       <section v-if="voiceActorsRoster.length > 0">
         <div class="flex items-center justify-between mb-6">
-          <h2 class="text-2xl font-bold">Comédiens ({{ voiceActorsRoster.length }})</h2>
+          <div>
+            <h2 class="text-2xl font-bold">Comédiens ({{ voiceActorsRoster.length }})</h2>
+            <div class="text-gray-500 dark:text-gray-400 text-sm mt-1" v-if="voiceActorsRoster.length > 20">
+              {{ visibleVoiceActors.length }} / {{ voiceActorsRoster.length }} affichés
+            </div>
+          </div>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           <NuxtLink
-            v-for="va in voiceActorsRoster"
+            v-for="va in visibleVoiceActors"
             :key="va.id"
             :to="localePath(`/voice-actor/${va.id}`)"
             class="group"
@@ -107,6 +144,8 @@
                 <img
                   v-if="va.profile_picture"
                   :src="getProfileUrl(va.profile_picture)"
+                  loading="lazy"
+                  decoding="async"
                   class="w-full h-full object-cover"
                   :alt="`${va.firstname} ${va.lastname}`"
                 />
@@ -120,6 +159,23 @@
             </div>
           </NuxtLink>
         </div>
+
+        <!-- Sentinel / Load more for voice actors -->
+        <div
+          v-if="hasMoreVoiceActors"
+          ref="vaSentinel"
+          class="py-8 flex flex-col items-center justify-center gap-2"
+        >
+          <button
+            @click="loadMoreVoiceActors"
+            class="px-5 py-2 bg-white dark:bg-[#1d1d1d] hover:bg-gray-100 dark:hover:bg-[#2a2a2a] text-sm font-medium rounded-xl text-gray-700 dark:text-gray-200 transition-all border border-gray-200 dark:border-[#2a2a2a] shadow-sm cursor-pointer"
+          >
+            {{ $t('common.loadMore', 'Load more') }}
+          </button>
+          <span class="text-xs text-gray-400">
+            {{ visibleVoiceActors.length }} / {{ voiceActorsRoster.length }} comédiens
+          </span>
+        </div>
       </section>
     </div>
   </DetailsPage>
@@ -132,10 +188,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useStudioData, fetchStudioDetails } from '@app/shared-logic';
-import { ExternalLinkIcon } from 'lucide-vue-next';
+import { ExternalLinkIcon, SearchIcon } from 'lucide-vue-next';
+import { useIntersectionObserver, refDebounced } from '@vueuse/core';
 import DetailsPage from '../../components/layout/details/DetailsPage.vue';
 import DetailsHero from '../../components/layout/details/DetailsHero.vue';
 import DetailsActionBar from '../../components/layout/details/DetailsActionBar.vue';
@@ -150,9 +207,74 @@ const isAdmin = computed(() => {
   return user.value?.app_metadata?.role === 'admin' || user.value?.user_metadata?.role === 'admin';
 });
 
-const { data: initialStudioDetails } = await useAsyncData(`studio-${route.params.id}`, () => fetchStudioDetails(route.params.id as string));
+const { data: initialStudioDetails } = await useAsyncData(
+  `studio-${route.params.id}`,
+  () => fetchStudioDetails(route.params.id as string),
+  {
+    getCachedData: (key, nuxtApp) =>
+      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+  },
+);
 
 const { studio, dubbedProjects, voiceActorsRoster, loading, error } = useStudioData([], initialStudioDetails.value);
+
+const searchInput = ref('');
+const debouncedSearch = refDebounced(searchInput, 150);
+
+const filteredProjects = computed(() => {
+  if (!debouncedSearch.value.trim()) return dubbedProjects.value;
+  const query = debouncedSearch.value.toLowerCase().trim();
+  return dubbedProjects.value.filter((p: any) => {
+    const title = (p.media?.title || p.media?.name || '').toLowerCase();
+    return title.includes(query);
+  });
+});
+
+const displayedProjectsCount = ref(20);
+const visibleProjects = computed(() => {
+  return filteredProjects.value.slice(0, displayedProjectsCount.value);
+});
+const hasMoreProjects = computed(() => {
+  return displayedProjectsCount.value < filteredProjects.value.length;
+});
+const loadMoreProjects = () => {
+  displayedProjectsCount.value += 20;
+};
+const projectsSentinel = ref<HTMLElement | null>(null);
+useIntersectionObserver(
+  projectsSentinel,
+  ([entry]) => {
+    if (entry?.isIntersecting && hasMoreProjects.value) {
+      loadMoreProjects();
+    }
+  },
+  { rootMargin: '400px' },
+);
+
+watch(debouncedSearch, () => {
+  displayedProjectsCount.value = 20;
+});
+
+const displayedVACount = ref(25);
+const visibleVoiceActors = computed(() => {
+  return voiceActorsRoster.value.slice(0, displayedVACount.value);
+});
+const hasMoreVoiceActors = computed(() => {
+  return displayedVACount.value < voiceActorsRoster.value.length;
+});
+const loadMoreVoiceActors = () => {
+  displayedVACount.value += 25;
+};
+const vaSentinel = ref<HTMLElement | null>(null);
+useIntersectionObserver(
+  vaSentinel,
+  ([entry]) => {
+    if (entry?.isIntersecting && hasMoreVoiceActors.value) {
+      loadMoreVoiceActors();
+    }
+  },
+  { rootMargin: '400px' },
+);
 
 const getProfileUrl = (path: string) => {
   if (path.startsWith("http")) return path;
@@ -162,5 +284,9 @@ const getProfileUrl = (path: string) => {
 
 useHead({
   title: computed(() => studio.value ? `${studio.value.name} - DubbingBase` : 'Studio - DubbingBase'),
+  link: [
+    { rel: 'preconnect', href: 'https://image.tmdb.org', crossorigin: '' },
+    { rel: 'dns-prefetch', href: 'https://image.tmdb.org' },
+  ],
 });
 </script>
