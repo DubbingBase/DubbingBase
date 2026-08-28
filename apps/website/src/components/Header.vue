@@ -5,7 +5,7 @@
     <!-- Left Section: Logo & Nav -->
     <div class="flex items-center gap-6 w-full sm:w-auto sm:flex-none">
       <NuxtLink
-        :to="$localePath('/')"
+        :to="localePath('/')"
         class="flex items-center gap-3 group shrink-0"
       >
         <div
@@ -27,14 +27,14 @@
       <nav class="flex items-center gap-1 ml-2">
         <NuxtLink
           v-if="!isHomePage"
-          :to="$localePath('/')"
+          :to="localePath('/')"
           class="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-all"
         >
           {{ t("nav.home") }}
         </NuxtLink>
         <NuxtLink
           v-if="user && isAdmin"
-          :to="$localePath('/admin')"
+          :to="localePath('/admin')"
           class="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-all"
         >
           {{ t("nav.admin") }}
@@ -183,7 +183,7 @@
       <ClientOnly>
         <template v-if="user">
           <NuxtLink
-            :to="$localePath('/profile')"
+            :to="localePath('/profile')"
             class="relative flex items-center justify-center w-9 h-9 md:w-10 md:h-10 ml-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 ring-2 ring-transparent hover:ring-gray-200 dark:hover:ring-gray-700 transition-all overflow-hidden cursor-pointer"
             :aria-label="t('nav.profile', 'Profile')"
           >
@@ -198,7 +198,7 @@
         </template>
         <template v-else>
           <NuxtLink
-            :to="$localePath('/login')"
+            :to="localePath('/login')"
             class="flex items-center justify-center h-9 px-4 ml-1 text-sm font-semibold text-white bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 rounded-full transition-all shadow-sm hover:shadow-md"
             :aria-label="t('nav.login')"
           >
@@ -244,7 +244,10 @@ import {
 } from "reka-ui";
 
 const { theme } = useTheme();
-const { t, locale, setLocale } = useI18n();
+const { t, locale } = useI18n();
+const setLocale = (val: any) => {
+  locale.value = val;
+};
 const localePath = useLocalePath();
 const { isSearchOpen } = useSearchModal();
 const user = useSupabaseUser();

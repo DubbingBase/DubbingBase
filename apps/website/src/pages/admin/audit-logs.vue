@@ -7,7 +7,7 @@
           <h1 class="text-3xl font-bold text-white">{{ $t('admin.auditLogs.title') }}</h1>
           <p class="text-[#a0a0a0]">{{ $t('admin.auditLogs.description') }}</p>
         </div>
-        <button @click="loadLogs" class="p-2 bg-[#1d1d1d] hover:bg-[#2a2a2a] rounded-lg border border-[#2a2a2a] transition-colors text-[#a0a0a0] hover:text-white">
+        <button @click="() => loadLogs()" class="p-2 bg-[#1d1d1d] hover:bg-[#2a2a2a] rounded-lg border border-[#2a2a2a] transition-colors text-[#a0a0a0] hover:text-white">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
@@ -133,7 +133,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 
+definePageMeta({
+  layout: 'admin',
+  middleware: 'admin'
+});
 
+const supabase = useSupabaseClient();
 const { t } = useI18n();
 const logs = ref<any[]>([]);
 const isLoading = ref(true);
@@ -188,7 +193,7 @@ const confirmRevert = async () => {
       payload.resolvedValue = resolvedValue.value;
     }
     
-    const data = await $fetch('/api/revert-task', {
+    const data = await $fetch<any>('/api/revert-task', {
       method: 'POST',
       body: payload
     });

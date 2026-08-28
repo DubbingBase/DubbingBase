@@ -312,7 +312,7 @@ const clearImage = () => {
 
 const onProfilePictureChange = (event: Event) => {
   const files = (event.target as HTMLInputElement).files;
-  if (files && files.length > 0) {
+  if (files && files.length > 0 && files[0]) {
     const file = files[0];
     profilePictureFile.value = file;
 
@@ -332,7 +332,7 @@ const uploadProfilePicture = async (voiceActorId: string | number) => {
   formData.append("file", profilePictureFile.value);
   formData.append("voice_actor_id", String(voiceActorId));
 
-  const result = await $fetch('/api/upload-profile-picture', {
+  const result = await $fetch<{ ok: boolean }>('/api/upload-profile-picture', {
     method: 'POST',
     body: formData,
   });
@@ -379,7 +379,7 @@ watch(initialData, (data) => {
       awards.value = data.voiceActor.awards || "";
       yearsActive.value = data.voiceActor.years_active || "";
       socialMediaLinks.value = data.voiceActor.social_media_links ? JSON.stringify(data.voiceActor.social_media_links, null, 2) : "";
-      tmdbId.value = data.voiceActor.tmdb_id || "";
+      tmdbId.value = data.voiceActor.tmdb_id ? String(data.voiceActor.tmdb_id) : "";
       profilePicture.value = data.voiceActor.profile_picture || "";
       wikidataId.value = data.voiceActor.wikidata_id || "";
     }
@@ -428,9 +428,9 @@ const saveVoiceActor = async () => {
 
     if (upsertErr) throw upsertErr;
 
-    let voiceActorId = id;
-    if (!isEditMode.value && data && data.length > 0) {
-      voiceActorId = data[0].id;
+    let voiceActorId: any = id;
+    if (!isEditMode.value && data && data.length > 0 && data[0]) {
+      voiceActorId = String(data[0].id);
     }
 
     // Upload profile picture if chosen

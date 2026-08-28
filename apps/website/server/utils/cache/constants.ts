@@ -47,7 +47,7 @@ export class SimpleKeyBuilder {
     return this.key(API_PREFIXES.WIKIPEDIA, type, id, suffix);
   }
 
-  static app(type: string, id: string, suffix?: string): string {
+  static app(type: string, id: string | number, suffix?: string): string {
     return this.key(API_PREFIXES.APP, type, id, suffix);
   }
 }

@@ -4,17 +4,7 @@ import { getDubbingProjects, getWorkVotes } from "../../utils/db/queries";
 import { processMedia } from "../../utils/urls/tmdb";
 import { useSupabaseAdmin } from "../../utils/db/client";
 
-export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, "id");
-  if (!id) {
-    throw createError({ statusCode: 400, message: "Missing id parameter" });
-  }
-
-  const showId = parseInt(id, 10);
-  if (isNaN(showId)) {
-    throw createError({ statusCode: 400, message: "Invalid id parameter" });
-  }
-
+export async function fetchShowData(event: any, showId: number) {
   const acceptLanguage = getHeader(event, "accept-language") || undefined;
   const user = event.context.user;
 
@@ -172,4 +162,18 @@ export default defineEventHandler(async (event) => {
   }
 
   return baseData;
+}
+
+export default defineEventHandler(async (event) => {
+  const id = getRouterParam(event, "id");
+  if (!id) {
+    throw createError({ statusCode: 400, message: "Missing id parameter" });
+  }
+
+  const showId = parseInt(id, 10);
+  if (isNaN(showId)) {
+    throw createError({ statusCode: 400, message: "Invalid id parameter" });
+  }
+
+  return await fetchShowData(event, showId);
 });

@@ -58,10 +58,6 @@ export default ({ mode }) => {
           import.meta.dirname,
           "../../packages/database",
         ),
-        "@supabase/functions": path.resolve(
-          import.meta.dirname,
-          "../../packages/database/supabase/functions",
-        ),
       },
       dedupe: [
         "vue-router",

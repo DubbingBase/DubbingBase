@@ -8,7 +8,7 @@
       
       <!-- Header -->
       <div class="flex items-center gap-4">
-        <NuxtLink :to="$localePath('/contribute')" class="text-[#a0a0a0] hover:text-white transition-colors p-2 rounded-full hover:bg-[#2a2a2a]">
+        <NuxtLink :to="localePath('/contribute')" class="text-[#a0a0a0] hover:text-white transition-colors p-2 rounded-full hover:bg-[#2a2a2a]">
           <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
@@ -251,10 +251,12 @@
 import { ref, computed, reactive } from 'vue';
 import { useContribute, fetchRandomTask } from '../../../composables/useContribute';
 
+const localePath = useLocalePath();
+
 const { data: initialData } = await useAsyncData('random-task', () => fetchRandomTask('any'));
 
-const initialTask = initialData.value?.task || null;
-const initialCategory = initialData.value?.category || null;
+const initialTask = (initialData.value as any)?.task || null;
+const initialCategory = (initialData.value as any)?.category || null;
 
 const { getRandomTask, submitTask, currentTask, activeCategory, isLoading, isSubmitting, error } = useContribute(initialTask, initialCategory);
 
@@ -301,14 +303,14 @@ const triggerFileInput = () => {
 
 const handleFileSelect = (event: Event) => {
   const target = event.target as HTMLInputElement;
-  if (target.files && target.files.length > 0) {
+  if (target.files && target.files.length > 0 && target.files[0]) {
     setFile(target.files[0]);
   }
 };
 
 const handleDrop = (event: DragEvent) => {
   isDragging.value = false;
-  if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
+  if (event.dataTransfer?.files && event.dataTransfer.files.length > 0 && event.dataTransfer.files[0]) {
     setFile(event.dataTransfer.files[0]);
   }
 };
@@ -342,7 +344,8 @@ const playConfetti = () => {
     confetti.className = 'absolute w-3 h-3 bg-blue-500 rounded-sm';
     confetti.style.left = Math.random() * 100 + 'vw';
     confetti.style.top = '-10px';
-    confetti.style.backgroundColor = ['#3b82f6', '#8b5cf6', '#10b981', '#ef4444'][Math.floor(Math.random() * 4)];
+    const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#ef4444'];
+    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)] || '#3b82f6';
     confetti.style.transition = 'all 2s ease-out';
     
     container.appendChild(confetti);
@@ -364,12 +367,13 @@ const submit = async () => {
   const payload: Record<string, string | File | undefined> = {};
   if (selectedFile.value) payload.file = selectedFile.value;
   Object.keys(formFields).forEach(key => {
-    if (formFields[key].trim() !== '') {
-      payload[key] = formFields[key].trim();
+    const val = formFields[key];
+    if (val && val.trim() !== '') {
+      payload[key] = val.trim();
     }
   });
 
-  const result = await submitTask(activeCategory.value, currentTask.value.id.toString(), payload);
+  const result: any = await submitTask(activeCategory.value, currentTask.value.id.toString(), payload);
   if (result?.success) {
     playConfetti();
     setTimeout(() => {

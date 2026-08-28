@@ -46,7 +46,7 @@
       <NuxtLink 
         v-for="actor in filteredActors" 
         :key="actor.id" 
-        :to="$localePath('/voice-actor/' + actor.id)"
+        :to="localePath('/voice-actor/' + actor.id)"
         class="group cursor-pointer flex flex-col items-center"
       >
         <div class="relative w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800 shadow-md transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg border-2 border-transparent group-hover:border-cyan-500">
@@ -74,6 +74,7 @@
 import { ref, computed } from 'vue';
 
 const { t } = useI18n();
+const localePath = useLocalePath();
 
 const searchQuery = ref('');
 
@@ -92,17 +93,17 @@ useHead({
 });
 
 const { data, pending: isLoading, error } = useAsyncData('voice-actors-page', async () => {
-  const data = await $fetch('/api/list-voice-actors');
+  const data = await $fetch<{ voice_actors: any[] }>('/api/list-voice-actors');
   return data?.voice_actors || [];
 });
 
-const allActors = computed(() => data.value || []);
+const allActors = computed<any[]>(() => data.value || []);
 
 // Filtrage local simple
 const filteredActors = computed(() => {
   if (!searchQuery.value.trim()) return allActors.value;
   const query = searchQuery.value.toLowerCase().trim();
-  return allActors.value.filter(actor => {
+  return allActors.value.filter((actor: any) => {
     const fullName = `${actor.firstname} ${actor.lastname}`.toLowerCase();
     return fullName.includes(query);
   });

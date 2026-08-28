@@ -48,7 +48,7 @@
           <!-- Link to Register -->
           <div class="text-sm text-center text-gray-500 dark:text-gray-400">
             Don't have an account?
-            <NuxtLink :to="$localePath('/register')" class="text-cyan-600 dark:text-cyan-400 font-medium hover:underline transition">Sign up</NuxtLink>
+            <NuxtLink :to="localePath('/register')" class="text-cyan-600 dark:text-cyan-400 font-medium hover:underline transition">Sign up</NuxtLink>
           </div>
 
           <!-- Submit Button -->

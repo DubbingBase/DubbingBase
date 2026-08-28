@@ -144,11 +144,11 @@
 
                 <!-- Search dropdown -->
                 <div
-                  v-if="activeSearchDropdown === actor.id && searchResults[actor.id]?.length > 0"
+                  v-if="activeSearchDropdown === actor.id && (searchResults[actor.id]?.length ?? 0) > 0"
                   class="absolute z-40 left-0 right-0 mt-1.5 max-h-40 overflow-y-auto bg-gray-900 border border-gray-850 rounded-xl shadow-2xl divide-y divide-gray-850"
                 >
                   <div
-                    v-for="va in searchResults[actor.id]"
+                    v-for="va in (searchResults[actor.id] || [])"
                     :key="va.id"
                     @click="assignVoiceActor(actor.id, va)"
                     class="px-3 py-2 hover:bg-gray-800/50 cursor-pointer flex items-center space-x-2.5 transition-colors"
@@ -356,7 +356,7 @@ const executeSearch = async (actorId: number) => {
 
   searchLoading.value[actorId] = true;
   try {
-    const data = await $fetch('/api/search-voice-actors', { params: { query, limit: "10" } });
+    const data = await $fetch<VoiceActor[]>('/api/search-voice-actors', { params: { query, limit: "10" } });
 
     searchResults.value[actorId] = data || [];
   } catch (err: any) {

@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { serverSupabaseClient } from "#supabase/server";
 import { useSupabaseAdmin } from "../utils/db/client";
 
 export default defineEventHandler(async (event) => {
@@ -12,23 +13,45 @@ export default defineEventHandler(async (event) => {
 
   const authHeader = getHeader(event, "authorization");
   const token = authHeader?.replace(/^Bearer\s+/i, "").trim();
-  if (!token) return;
 
-  const supabase = createClient(config.supabaseUrl, config.public.supabaseKey, {
-    global: { headers: { Authorization: `Bearer ${token}` } },
-  });
+  if (token) {
+    const supabase = createClient(
+      config.supabaseUrl,
+      config.public.supabaseKey,
+      {
+        global: { headers: { Authorization: `Bearer ${token}` } },
+      },
+    );
 
+    try {
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser(token);
+
+      if (!error && user) {
+        event.context.user = user;
+        event.context.supabase = supabase as SupabaseClient;
+        return;
+      }
+    } catch (err) {
+      console.warn("[Auth Middleware] Failed to resolve user from token:", err);
+    }
+  }
+
+  // Fallback: resolve user from session cookies (e.g. browser navigation or SSR)
   try {
+    const client = await serverSupabaseClient(event);
     const {
       data: { user },
       error,
-    } = await supabase.auth.getUser(token);
+    } = await client.auth.getUser();
 
     if (!error && user) {
       event.context.user = user;
-      event.context.supabase = supabase as SupabaseClient;
+      event.context.supabase = client as unknown as SupabaseClient;
     }
   } catch (err) {
-    console.warn("[Auth Middleware] Failed to resolve user from token:", err);
+    // Cookie resolution failed or no cookie present; ignore for public endpoints
   }
 });

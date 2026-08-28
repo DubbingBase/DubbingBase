@@ -6,7 +6,7 @@
         <p class="text-gray-600 dark:text-gray-400">Découvrez les studios de doublage.</p>
       </div>
       <NuxtLink 
-        :to="$localePath('/studio/new/edit')"
+        :to="localePath('/studio/new/edit')"
         class="inline-flex items-center justify-center px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-medium rounded-xl transition-colors shadow-sm"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -30,7 +30,7 @@
       <NuxtLink 
         v-for="studio in studios" 
         :key="studio.id" 
-        :to="$localePath('/studio/' + studio.id)"
+        :to="localePath('/studio/' + studio.id)"
         class="group cursor-pointer block"
       >
         <div class="relative w-full aspect-square rounded-xl overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800 flex items-center justify-center shadow-md transition-transform duration-300 group-hover:-translate-y-1 group-hover:shadow-xl">
@@ -58,6 +58,7 @@
 import { useStudioData, fetchStudiosData } from '@app/shared-logic';
 
 const supabase = useSupabaseClient();
+const localePath = useLocalePath();
 
 const { data: initialStudios } = await useAsyncData('studios-page', () => fetchStudiosData());
 

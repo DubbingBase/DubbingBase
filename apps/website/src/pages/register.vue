@@ -79,13 +79,13 @@
           <!-- Terms Agreement -->
           <p class="text-xs text-gray-500 dark:text-gray-400 text-center px-4 leading-relaxed">
             By creating an account, you agree to our 
-            <NuxtLink :to="$localePath('/terms')" class="text-cyan-600 dark:text-cyan-400 hover:underline">Terms of Service</NuxtLink>.
+            <NuxtLink :to="localePath('/terms')" class="text-cyan-600 dark:text-cyan-400 hover:underline">Terms of Service</NuxtLink>.
           </p>
 
           <!-- Link to Login -->
           <div class="text-sm text-center text-gray-500 dark:text-gray-400">
             Already have an account?
-            <NuxtLink :to="$localePath('/login')" class="text-cyan-600 dark:text-cyan-400 font-medium hover:underline transition">Sign in</NuxtLink>
+            <NuxtLink :to="localePath('/login')" class="text-cyan-600 dark:text-cyan-400 font-medium hover:underline transition">Sign in</NuxtLink>
           </div>
 
           <!-- Submit Button -->

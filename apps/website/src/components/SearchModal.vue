@@ -249,7 +249,10 @@ const handleSelect = (item: SearchResult) => {
 
 const selectCurrent = () => {
   if (filteredResults.value.length > 0 && selectedIndex.value >= 0 && selectedIndex.value < filteredResults.value.length) {
-    handleSelect(filteredResults.value[selectedIndex.value]);
+    const item = filteredResults.value[selectedIndex.value];
+    if (item) {
+      handleSelect(item);
+    }
   }
 };
 

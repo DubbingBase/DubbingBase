@@ -239,13 +239,13 @@ const showToast = (message: string, type: "success" | "error" | "info" = "info")
 };
 
 const isDifferent = (actors: VoiceActorCandidate[], field: keyof VoiceActorCandidate) => {
-  if (!actors || actors.length < 2) return false;
+  if (!actors || actors.length < 2 || !actors[0]) return false;
   const firstVal = actors[0][field];
   return actors.some((a) => a[field] !== firstVal);
 };
 
 const isDifferentName = (actors: VoiceActorCandidate[]) => {
-  if (!actors || actors.length < 2) return false;
+  if (!actors || actors.length < 2 || !actors[0]) return false;
   const firstName = actors[0].firstname + " " + actors[0].lastname;
   return actors.some((a) => a.firstname + " " + a.lastname !== firstName);
 };
@@ -278,20 +278,22 @@ const calculateScore = (actor: VoiceActorCandidate) => {
 };
 
 const preselectBest = (actors: VoiceActorCandidate[]) => {
-  if (!actors || actors.length === 0) return null;
+  if (!actors || actors.length === 0 || !actors[0]) return null;
   
   let bestActor = actors[0];
   let bestScore = calculateScore(bestActor);
   
   for (let i = 1; i < actors.length; i++) {
-    const score = calculateScore(actors[i]);
+    const actor = actors[i];
+    if (!actor) continue;
+    const score = calculateScore(actor);
     if (score > bestScore) {
       bestScore = score;
-      bestActor = actors[i];
+      bestActor = actor;
     } else if (score === bestScore) {
       // Prefer the oldest record in case of a tie
-      if (actors[i].id < bestActor.id) {
-        bestActor = actors[i];
+      if (actor.id < bestActor.id) {
+        bestActor = actor;
       }
     }
   }
@@ -305,7 +307,7 @@ const fetchDuplicates = async () => {
     error.value = "";
     duplicates.value = [];
 
-    const data = await $fetch('/api/find_duplicate_voice_actors');
+    const data = await $fetch<any[]>('/api/find_duplicate_voice_actors');
 
     duplicates.value = (data || []).map((group: any) => ({
       actors: group.actors || [],

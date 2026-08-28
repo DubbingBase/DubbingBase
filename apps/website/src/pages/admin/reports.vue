@@ -8,7 +8,7 @@
       </div>
       <div class="flex items-center space-x-3">
         <button
-          @click="fetchReports"
+          @click="() => fetchReports()"
           :disabled="loading"
           class="py-2.5 px-5 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-800 disabled:text-gray-500 text-white font-semibold rounded-xl shadow-lg transition-all duration-150 hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center shrink-0"
         >

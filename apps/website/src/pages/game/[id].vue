@@ -49,7 +49,7 @@
       <template #actions-right>
         <template v-if="activeDubProject?.studio_data">
           <NuxtLink
-            :to="$localePath(`/studio/${activeDubProject.studio_data.id}`)"
+            :to="localePath(`/studio/${activeDubProject.studio_data.id}`)"
             class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-[#2a2a2a] hover:border-cyan-500 transition-colors group bg-gray-50 dark:bg-[#1d1d1d]"
             title="Studio de doublage"
           >
@@ -69,7 +69,7 @@
             <span class="hidden sm:inline">{{ $t('game.prepareCredits', 'Extraire les crédits') }}</span>
           </button>
 
-          <NuxtLink v-if="isAdmin" :to="$localePath(`/game/${game?.id || 'new'}/edit/${activeDubId || 'new'}`)" class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-medium">
+          <NuxtLink v-if="isAdmin" :to="localePath(`/game/${game?.id || 'new'}/edit/${activeDubId || 'new'}`)" class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-medium">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
@@ -190,7 +190,7 @@
               <!-- Voice Actor -->
               <div class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-4 sm:pt-0 mt-2 sm:mt-0">
                 <template v-if="char.voiceActor">
-                  <NuxtLink :to="$localePath(`/voice-actor/${char.voiceActor.id}`)" class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] bg-gray-200 dark:bg-[#222] sm:mb-3 flex-shrink-0">
+                  <NuxtLink :to="localePath(`/voice-actor/${char.voiceActor.id}`)" class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] bg-gray-200 dark:bg-[#222] sm:mb-3 flex-shrink-0">
                     <NuxtImg format="webp" v-if="char.voiceActor.profile_picture" :src="char.voiceActor.profile_picture" class="w-full h-full object-cover transition-transform duration-300" alt="Voice Actor" />
                     <div v-else class="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-400 uppercase bg-gray-300 dark:bg-gray-800">
                       {{ char.voiceActor.firstname?.[0] }}{{ char.voiceActor.lastname?.[0] }}
@@ -201,7 +201,7 @@
                       <MicIcon class="w-3 h-3 flex-shrink-0" />
                       <span class="truncate block w-full">{{ $t('details.voiceActor', 'Voice Actor') }}</span>
                     </div>
-                    <NuxtLink :to="$localePath(`/voice-actor/${char.voiceActor.id}`)" class="font-bold text-sm text-gray-900 dark:text-white truncate hover:underline block w-full" :title="char.voiceActor.firstname + ' ' + char.voiceActor.lastname">
+                    <NuxtLink :to="localePath(`/voice-actor/${char.voiceActor.id}`)" class="font-bold text-sm text-gray-900 dark:text-white truncate hover:underline block w-full" :title="char.voiceActor.firstname + ' ' + char.voiceActor.lastname">
                       {{ char.voiceActor.firstname }} {{ char.voiceActor.lastname }}
                     </NuxtLink>
                     <div v-if="char.voiceActor.performance" class="text-xs text-cyan-600 dark:text-cyan-400 truncate mt-1">
@@ -254,7 +254,7 @@ const isReportModalOpen = ref(false);
 const route = useRoute();
 const router = useRouter();
 const supabase = useSupabaseClient();
-const gameId = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id;
+const gameId = (Array.isArray(route.params.id) ? route.params.id[0] : route.params.id) || '';
 const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
 
 const user = useSupabaseUser();
@@ -265,6 +265,7 @@ const isAdmin = computed(() => {
 const isPreparing = ref(false);
 
 const { locale, t } = useI18n();
+const localePath = useLocalePath();
 
 const cacheKey = `game-${gameId}-${locale.value}`;
 const { data, pending, refresh } = useAsyncData(cacheKey, async () => {

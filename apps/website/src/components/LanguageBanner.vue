@@ -35,7 +35,7 @@ onMounted(() => {
 const switchToPreferred = () => {
   if (userLangCookie.value) {
     const lang: string = userLangCookie.value;
-    navigateTo(switchLocalePath(lang));
+    navigateTo(switchLocalePath(lang as any));
     showBanner.value = false;
   }
 };

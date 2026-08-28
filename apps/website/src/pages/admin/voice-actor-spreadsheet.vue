@@ -45,7 +45,7 @@
         <span>{{ error }}</span>
       </div>
       <button
-        @click="refresh"
+        @click="() => refresh()"
         class="py-1.5 px-3 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-semibold transition-all"
       >
         Retry
@@ -159,7 +159,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onUnmounted } from "vue";
-import type { Tables } from "../../../../packages/database/supabase/functions/_shared/database.types";
+import type { Database } from "@app/supabase";
 
 const supabase = useSupabaseClient();
 const localePath = useLocalePath();
@@ -169,7 +169,7 @@ definePageMeta({
   middleware: 'admin'
 });
 
-type VoiceActor = Tables<"voice_actors">;
+type VoiceActor = any;
 type CellChange = { id: number; prop: string; newValue: any };
 
 const page = ref(1);
@@ -187,7 +187,7 @@ let autoSaveTimer: ReturnType<typeof setTimeout> | null = null;
 const { data, pending, error, refresh } = await useAsyncData(
   `voice-actors-spreadsheet-${page.value}-${searchQuery.value}`,
   async () => {
-    return await $fetch('/api/list-voice-actors', {
+    return await $fetch<{ voice_actors: VoiceActor[]; total: number }>('/api/list-voice-actors', {
       method: 'POST',
       body: {
         limit: limit.value,

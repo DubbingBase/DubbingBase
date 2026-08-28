@@ -357,7 +357,7 @@ const clearImage = () => {
 
 const onProfilePictureChange = (event: Event) => {
   const files = (event.target as HTMLInputElement).files;
-  if (files && files.length > 0) {
+  if (files && files.length > 0 && files[0]) {
     const file = files[0];
     profilePictureFile.value = file;
 
@@ -377,7 +377,7 @@ const uploadProfilePicture = async (voiceActorId: string | number) => {
   formData.append("file", profilePictureFile.value, profilePictureFile.value.name);
   formData.append("voice_actor_id", String(voiceActorId));
 
-  const result = await $fetch('/api/upload-profile-picture', {
+  const result = await $fetch<{ ok: boolean }>('/api/upload-profile-picture', {
     method: 'POST',
     body: formData,
   });
@@ -392,12 +392,13 @@ const linkedWorks = ref<any[]>([]);
 
 const fetchLinkedWorks = async () => {};
 
+const numId = Number(id);
 const { data: initialData } = await useAsyncData(`voice-actor-${id}`, async () => {
-  if (!isEditMode.value || !id) return null;
+  if (!isEditMode.value || isNaN(numId)) return null;
   const { data: va, error: vaErr } = await supabase
     .from("voice_actors")
     .select("*")
-    .eq("id", id)
+    .eq("id", numId)
     .single();
     
   if (vaErr) throw vaErr;
@@ -405,7 +406,7 @@ const { data: initialData } = await useAsyncData(`voice-actor-${id}`, async () =
   const { data: works, error: worksErr } = await supabase
     .from("work")
     .select("*")
-    .eq("voice_actor_id", id);
+    .eq("voice_actor_id", numId);
 
   return {
     voiceActor: va,
@@ -424,7 +425,7 @@ watch(initialData, (data) => {
       awards.value = data.voiceActor.awards || "";
       yearsActive.value = data.voiceActor.years_active || "";
       
-      const links = data.voiceActor.social_media_links || {};
+      const links = (data.voiceActor.social_media_links as any) || {};
       socialMedia.value = {
         instagram: links.instagram || "",
         twitter: links.twitter || "",
@@ -433,7 +434,7 @@ watch(initialData, (data) => {
         website: links.website || ""
       };
       
-      tmdbId.value = data.voiceActor.tmdb_id || "";
+      tmdbId.value = data.voiceActor.tmdb_id ? String(data.voiceActor.tmdb_id) : "";
       profilePicture.value = data.voiceActor.profile_picture || "";
       wikidataId.value = data.voiceActor.wikidata_id || "";
     }
@@ -444,14 +445,12 @@ watch(initialData, (data) => {
 const fetchVoiceActor = async () => {}; // Dummy
 
 const saveVoiceActor = async () => {
-  isSaving.value = true;
-  const links: Record<string, string> = {};
-  if (socialMedia.value.instagram) links.instagram = socialMedia.value.instagram;
-  if (socialMedia.value.twitter) links.twitter = socialMedia.value.twitter;
-  if (socialMedia.value.tiktok) links.tiktok = socialMedia.value.tiktok;
-  if (socialMedia.value.facebook) links.facebook = socialMedia.value.facebook;
-  if (socialMedia.value.website) links.website = socialMedia.value.website;
+  if (!firstname.value || !lastname.value) {
+    showToast("First name and Last name are required.", "error");
+    return;
+  }
 
+  isSaving.value = true;
   const upsertData: any = {
     firstname: firstname.value,
     lastname: lastname.value,
@@ -460,14 +459,14 @@ const saveVoiceActor = async () => {
     date_of_birth: dateOfBirth.value || null,
     awards: awards.value || null,
     years_active: yearsActive.value || null,
-    social_media_links: Object.keys(links).length > 0 ? links : null,
-    profile_picture: profilePicture.value || null,
-    tmdb_id: tmdbId.value ? Number(tmdbId.value) : null,
+    social_media_links: socialMedia.value,
+    tmdb_id: tmdbId.value ? parseInt(tmdbId.value, 10) : null,
     wikidata_id: wikidataId.value || null,
+    profile_picture: profilePicture.value || null
   };
 
-  if (isEditMode.value && id) {
-    upsertData.id = id;
+  if (isEditMode.value) {
+    upsertData.id = numId;
   }
 
   try {
@@ -479,8 +478,8 @@ const saveVoiceActor = async () => {
     if (upsertErr) throw upsertErr;
 
     let voiceActorId = id;
-    if (!isEditMode.value && data && data.length > 0) {
-      voiceActorId = data[0].id;
+    if (!isEditMode.value && data && data.length > 0 && data[0]) {
+      voiceActorId = String(data[0].id);
     }
 
     // Upload profile picture if chosen

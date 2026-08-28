@@ -120,7 +120,7 @@
           <NuxtLink
             v-for="va in filteredUniqueVoiceActorsByLanguage"
             :key="va.id"
-            :to="$localePath(`/voice-actor/${va.id}`)"
+            :to="localePath(`/voice-actor/${va.id}`)"
             :class="[
               'flex flex-col items-center p-4 rounded-xl border transition group hover:-translate-y-1',
               va.highlight
@@ -192,7 +192,7 @@
             <div class="flex flex-col sm:grid sm:grid-cols-3 gap-4 h-full">
               <!-- Column 1: Media -->
               <NuxtLink
-                :to="$localePath(`/${item.media_type === 'tv' ? 'show' : 'movie'}/${item.id}`)"
+                :to="localePath(`/${item.media_type === 'tv' ? 'show' : 'movie'}/${item.id}`)"
                 class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start hover:opacity-80 transition-opacity cursor-pointer"
               >
                 <div
@@ -236,7 +236,7 @@
               <!-- Column 2: Voice Actor -->
               <NuxtLink
                 v-if="item.voice_actors?.[0]"
-                :to="$localePath(`/voice-actor/${item.voice_actors[0].id}`)"
+                :to="localePath(`/voice-actor/${item.voice_actors[0].id}`)"
                 class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-3 sm:pt-0 hover:opacity-80 transition-opacity cursor-pointer"
               >
                 <div
@@ -335,6 +335,7 @@ const route = useRoute();
 const router = useRouter();
 const supabase = useSupabaseClient();
 const { locale, t } = useI18n();
+const localePath = useLocalePath();
 
 const id = route.params.id as string;
 const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);

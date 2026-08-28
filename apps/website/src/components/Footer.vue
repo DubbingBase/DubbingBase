@@ -4,7 +4,7 @@
       <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
         <!-- Brand -->
         <div class="col-span-1 md:col-span-1">
-          <NuxtLink :to="$localePath('/')" class="text-2xl font-extrabold text-gray-900 dark:text-white inline-block mb-4">
+          <NuxtLink :to="localePath('/')" class="text-2xl font-extrabold text-gray-900 dark:text-white inline-block mb-4">
             {{ t('app.title') }}
           </NuxtLink>
           <p class="text-sm text-gray-500 mb-6 leading-relaxed">
@@ -30,10 +30,10 @@
         <div>
           <h3 class="text-gray-900 dark:text-white font-semibold mb-4">{{ t('footer.explore') }}</h3>
           <ul class="space-y-3 text-sm">
-            <li><NuxtLink :to="$localePath('/movies')" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.movies') }}</NuxtLink></li>
-            <li><NuxtLink :to="$localePath('/series')" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.series') }}</NuxtLink></li>
-            <li><NuxtLink :to="$localePath('/voice-actors')" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.voiceActors') }}</NuxtLink></li>
-            <li><NuxtLink :to="$localePath('/studios')" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.studios') }}</NuxtLink></li>
+            <li><NuxtLink :to="localePath('/movies')" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.movies') }}</NuxtLink></li>
+            <li><NuxtLink :to="localePath('/series')" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.series') }}</NuxtLink></li>
+            <li><NuxtLink :to="localePath('/voice-actors')" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.voiceActors') }}</NuxtLink></li>
+            <li><NuxtLink :to="localePath('/studios')" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.studios') }}</NuxtLink></li>
           </ul>
         </div>
 
@@ -41,9 +41,9 @@
         <div>
           <h3 class="text-gray-900 dark:text-white font-semibold mb-4">{{ t('footer.community') }}</h3>
           <ul class="space-y-3 text-sm">
-            <li><NuxtLink :to="$localePath('/guidelines')" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.guidelines') }}</NuxtLink></li>
-            <li><NuxtLink :to="$localePath('/discussions')" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.discussions') }}</NuxtLink></li>
-            <li><NuxtLink :to="$localePath('/leaderboard')" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.leaderboard') }}</NuxtLink></li>
+            <li><NuxtLink :to="localePath('/guidelines')" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.guidelines') }}</NuxtLink></li>
+            <li><NuxtLink :to="localePath('/discussions')" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.discussions') }}</NuxtLink></li>
+            <li><NuxtLink :to="localePath('/leaderboard')" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.leaderboard') }}</NuxtLink></li>
           </ul>
         </div>
 
@@ -51,10 +51,10 @@
         <div>
           <h3 class="text-gray-900 dark:text-white font-semibold mb-4">{{ t('footer.legal') }}</h3>
           <ul class="space-y-3 text-sm">
-            <li><NuxtLink :to="$localePath('/about')" class="hover:text-gray-900 dark:text-white transition">{{ t('about.title') }}</NuxtLink></li>
-            <li><NuxtLink :to="$localePath('/legal')" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.legalNotice') }}</NuxtLink></li>
-            <li><NuxtLink :to="$localePath('/privacy')" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.privacy') }}</NuxtLink></li>
-            <li><NuxtLink :to="$localePath('/terms')" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.terms') }}</NuxtLink></li>
+            <li><NuxtLink :to="localePath('/about')" class="hover:text-gray-900 dark:text-white transition">{{ t('about.title') }}</NuxtLink></li>
+            <li><NuxtLink :to="localePath('/legal')" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.legalNotice') }}</NuxtLink></li>
+            <li><NuxtLink :to="localePath('/privacy')" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.privacy') }}</NuxtLink></li>
+            <li><NuxtLink :to="localePath('/terms')" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.terms') }}</NuxtLink></li>
             <li><a href="mailto:contact@dubbingbase.com" class="hover:text-gray-900 dark:text-white transition">{{ t('footer.contact') }}</a></li>
           </ul>
         </div>
@@ -71,4 +71,5 @@
 import { TwitterIcon, InstagramIcon, MailIcon, MessageSquareIcon } from 'lucide-vue-next';
 
 const { t } = useI18n();
+const localePath = useLocalePath();
 </script>

@@ -10,27 +10,27 @@
       <aside class="w-full md:w-64 shrink-0">
         <nav class="flex flex-col space-y-1">
           <NuxtLink
-            :to="$localePath('/profile')"
+            :to="localePath('/profile')"
             class="flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors"
             active-class="bg-cyan-50 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300"
             exact-active-class="bg-cyan-50 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300"
-            :class="[route.path === $localePath('/profile') || route.path === $localePath('/profile/') ? 'bg-cyan-50 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300' : 'text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5']"
+            :class="[route.path === localePath('/profile') || route.path === localePath('/profile/') ? 'bg-cyan-50 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300' : 'text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5']"
           >
             Profile
           </NuxtLink>
           <NuxtLink
-            :to="$localePath('/profile/api-key')"
+            :to="localePath('/profile/api-key')"
             class="flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors"
             active-class="bg-cyan-50 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300"
-            :class="[route.path === $localePath('/profile/api-key') || route.path === $localePath('/profile/api-key/') ? 'bg-cyan-50 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300' : 'text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5']"
+            :class="[route.path === localePath('/profile/api-key') || route.path === localePath('/profile/api-key/') ? 'bg-cyan-50 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300' : 'text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5']"
           >
             API Key
           </NuxtLink>
           <NuxtLink
-            :to="$localePath('/profile/settings')"
+            :to="localePath('/profile/settings')"
             class="flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors"
             active-class="bg-cyan-50 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300"
-            :class="[route.path === $localePath('/profile/settings') || route.path === $localePath('/profile/settings/') ? 'bg-cyan-50 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300' : 'text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5']"
+            :class="[route.path === localePath('/profile/settings') || route.path === localePath('/profile/settings/') ? 'bg-cyan-50 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300' : 'text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5']"
           >
             Settings
           </NuxtLink>

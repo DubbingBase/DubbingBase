@@ -195,7 +195,7 @@ const clearLogo = () => {
 
 const onLogoChange = (event: Event) => {
   const files = (event.target as HTMLInputElement).files;
-  if (files && files.length > 0) {
+  if (files && files.length > 0 && files[0]) {
     const file = files[0];
     logoFile.value = file;
     const reader = new FileReader();
@@ -220,12 +220,13 @@ const showToast = (message: string, type: "success" | "error" | "info" = "info")
   }, 3000);
 };
 
+const numId = Number(id);
 const { data: initialData } = await useAsyncData(`studio-${id}`, async () => {
-  if (!isEditMode.value || !id) return null;
+  if (!isEditMode.value || isNaN(numId)) return null;
   const { data, error } = await supabase
     .from("studios")
     .select("*")
-    .eq("id", id)
+    .eq("id", numId)
     .single();
 
   if (error) throw error;
@@ -258,11 +259,11 @@ const saveStudio = async () => {
 
     let studioId = id;
 
-    if (isEditMode.value && id) {
+    if (isEditMode.value && !isNaN(numId)) {
       const { error } = await supabase
         .from("studios")
         .update(payload)
-        .eq("id", id);
+        .eq("id", numId);
       if (error) throw error;
     } else {
       const { data, error } = await supabase
@@ -287,7 +288,7 @@ const saveStudio = async () => {
       if (!uploadError) {
         const { data: publicUrlData } = supabase.storage.from("studio_logos").getPublicUrl(filePath);
         if (publicUrlData) {
-          await supabase.from("studios").update({ logo_url: publicUrlData.publicUrl }).eq("id", studioId);
+          await supabase.from("studios").update({ logo_url: publicUrlData.publicUrl }).eq("id", Number(studioId));
         }
       } else {
         console.error("Logo upload error:", uploadError);

@@ -43,7 +43,7 @@
         <span>{{ error }}</span>
       </div>
       <button
-        @click="fetchDashboardData"
+        @click="() => fetchDashboardData()"
         class="py-1.5 px-3 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-semibold transition-all"
       >
         Retry
@@ -99,9 +99,9 @@ definePageMeta({
 });
 
 import { ref, onMounted, computed } from "vue";
-import BarChart from "@/components/admin/charts/BarChart.vue";
-import LineChart from "@/components/admin/charts/LineChart.vue";
-import PieChart from "@/components/admin/charts/PieChart.vue";
+import BarChart from "../../components/admin/charts/BarChart.vue";
+import LineChart from "../../components/admin/charts/LineChart.vue";
+import PieChart from "../../components/admin/charts/PieChart.vue";
 import type { ChartData, ChartOptions } from 'chart.js';
 
 // Reactive state
@@ -167,7 +167,7 @@ const userRegistrationsData = ref<ChartData>({
 const voiceActorGrowthData = computed<ChartData>(() => {
   const aggregated = aggregateData(voiceActorGrowth.value, selectedUnit.value);
   const cumulative = aggregated.reduce((acc, item, index) => {
-    const prev = index > 0 ? acc[index - 1] : 0;
+    const prev = (index > 0 && acc[index - 1] !== undefined) ? (acc[index - 1] as number) : 0;
     acc.push(prev + item.count);
     return acc;
   }, [] as number[]);
@@ -178,8 +178,9 @@ const voiceActorGrowthData = computed<ChartData>(() => {
       data: aggregated.map(item => item.count),
       borderColor: 'rgb(168, 85, 247)', // purple-500
       backgroundColor: 'rgba(168, 85, 247, 0.1)',
-      tension: 0.4,
-      fill: true
+      borderWidth: 2,
+      fill: true,
+      tension: 0.3
     }, {
       label: 'Cumulative Voice Actors',
       data: cumulative,
@@ -338,7 +339,10 @@ watch(dashboardData, (stats) => {
 
     // Update user registrations chart data
     userRegistrationsData.value.labels = userRegistrations.value.map(item => item.month);
-    userRegistrationsData.value.datasets[0].data = userRegistrations.value.map(item => item.count);
+    const userDataset = userRegistrationsData.value.datasets[0];
+    if (userDataset) {
+      userDataset.data = userRegistrations.value.map(item => item.count);
+    }
 
     voiceActorGrowth.value = stats.voiceActorGrowth;
     topVoiceActors.value = stats.topVoiceActors;
@@ -347,7 +351,10 @@ watch(dashboardData, (stats) => {
     topVoiceActorsData.value.labels = topVoiceActors.value.map(item =>
       `${item.firstname} ${item.lastname}`
     );
-    topVoiceActorsData.value.datasets[0].data = topVoiceActors.value.map(item => item.role_count);
+    const vaDataset = topVoiceActorsData.value.datasets[0];
+    if (vaDataset) {
+      vaDataset.data = topVoiceActors.value.map(item => item.role_count);
+    }
   }
 }, { immediate: true });
 
