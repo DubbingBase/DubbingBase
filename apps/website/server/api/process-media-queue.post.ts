@@ -126,9 +126,21 @@ export default defineEventHandler(async (event) => {
             `[QUEUE] No Wikidata ID found for ${payload.media_type} ${payload.tmdb_id}, processing without language filtering`,
           );
 
-          await supabaseAdmin.rpc("archive_media_queue_message", {
-            p_msg_id: msgId,
-          });
+          const { error: archiveErr } = await supabaseAdmin.rpc(
+            "archive_media_queue_message",
+            {
+              p_msg_id: msgId,
+            },
+          );
+          if (archiveErr) {
+            console.error(
+              `[QUEUE] Failed to archive message ${msgId}:`,
+              archiveErr,
+            );
+            throw new Error(
+              `Failed to archive message ${msgId}: ${archiveErr.message}`,
+            );
+          }
 
           await sendDiscordAdminNotification(
             "Queue Discovery Skipped",
@@ -161,9 +173,21 @@ export default defineEventHandler(async (event) => {
 
         if (availableLanguages.length === 0) {
           // No Wikipedia pages found, archive the job
-          await supabaseAdmin.rpc("archive_media_queue_message", {
-            p_msg_id: msgId,
-          });
+          const { error: archiveErr } = await supabaseAdmin.rpc(
+            "archive_media_queue_message",
+            {
+              p_msg_id: msgId,
+            },
+          );
+          if (archiveErr) {
+            console.error(
+              `[QUEUE] Failed to archive message ${msgId}:`,
+              archiveErr,
+            );
+            throw new Error(
+              `Failed to archive message ${msgId}: ${archiveErr.message}`,
+            );
+          }
 
           await sendDiscordAdminNotification(
             "Queue Discovery: No Wikipedia Pages",
@@ -219,9 +243,21 @@ export default defineEventHandler(async (event) => {
         }
 
         // Archive the original discovery job
-        await supabaseAdmin.rpc("archive_media_queue_message", {
-          p_msg_id: msgId,
-        });
+        const { error: archiveErr } = await supabaseAdmin.rpc(
+          "archive_media_queue_message",
+          {
+            p_msg_id: msgId,
+          },
+        );
+        if (archiveErr) {
+          console.error(
+            `[QUEUE] Failed to archive discovery job ${msgId}:`,
+            archiveErr,
+          );
+          throw new Error(
+            `Failed to archive discovery job ${msgId}: ${archiveErr.message}`,
+          );
+        }
 
         results.push({
           id: msgId,
@@ -332,9 +368,21 @@ export default defineEventHandler(async (event) => {
         throw new Error(errorInfo);
       }
 
-      await supabaseAdmin.rpc("archive_media_queue_message", {
-        p_msg_id: msgId,
-      });
+      const { error: archiveErr } = await supabaseAdmin.rpc(
+        "archive_media_queue_message",
+        {
+          p_msg_id: msgId,
+        },
+      );
+      if (archiveErr) {
+        console.error(
+          `[QUEUE] Failed to archive language job ${msgId}:`,
+          archiveErr,
+        );
+        throw new Error(
+          `Failed to archive language job ${msgId}: ${archiveErr.message}`,
+        );
+      }
 
       results.push({
         id: msgId,
