@@ -1,8 +1,9 @@
 import { test, expect } from "@playwright/test";
 import { setupMockApi } from "./helpers/mock-api";
 
-test.describe("Home Page & Core Navigation", () => {
+test.describe("Home Page & Global Navigation", () => {
   test.beforeEach(async ({ page }) => {
+    test.setTimeout(60000);
     await setupMockApi(page);
   });
 

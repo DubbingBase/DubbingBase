@@ -2,10 +2,10 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./e2e",
-  fullyParallel: true,
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 2 : undefined,
+  retries: process.env.CI ? 1 : 0,
+  workers: 1,
   reporter: [["list"], ["html", { open: "never" }]],
   use: {
     trace: "on-first-retry",
@@ -49,6 +49,11 @@ export default defineConfig({
     {
       command: "pnpm --filter=@app/mobile dev",
       port: 1420,
+      env: {
+        VITE_SUPABASE_URL: "https://mock.supabase.co",
+        VITE_SUPABASE_PUBLISHABLE_KEY: "mock-anon-key",
+        VITE_API_BASE_URL: "https://dubbingbase.com",
+      },
       reuseExistingServer: !process.env.CI,
       timeout: 120000,
     },

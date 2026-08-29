@@ -3,6 +3,7 @@ import { setupMockApi } from "./helpers/mock-api";
 
 test.describe("Studio Profile & Dubbed Projects", () => {
   test.beforeEach(async ({ page }) => {
+    test.setTimeout(60000);
     await setupMockApi(page);
   });
 

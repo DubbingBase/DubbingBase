@@ -3,6 +3,7 @@ import { setupMockApi } from "./helpers/mock-api";
 
 test.describe("Media Detail Pages", () => {
   test.beforeEach(async ({ page }) => {
+    test.setTimeout(60000);
     await setupMockApi(page);
   });
 

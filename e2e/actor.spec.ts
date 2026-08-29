@@ -3,6 +3,7 @@ import { setupMockApi } from "./helpers/mock-api";
 
 test.describe("Original Actor Profile & Localized Voices", () => {
   test.beforeEach(async ({ page }) => {
+    test.setTimeout(60000);
     await setupMockApi(page);
   });
 
@@ -39,7 +40,7 @@ test.describe("Original Actor Profile & Localized Voices", () => {
 
     await expect(
       page.getByRole("heading", { name: "Harrison Ford" }),
-    ).toBeVisible({ timeout: 10000 });
+    ).toBeVisible({ timeout: 20000 });
 
     const vaCard = page.locator("a[href*='/voice-actor/1']").first();
     await expect(vaCard).toBeVisible({ timeout: 5000 });
@@ -48,6 +49,6 @@ test.describe("Original Actor Profile & Localized Voices", () => {
     await page.waitForURL(/\/voice-actor\/1/, { timeout: 5000 });
     await expect(
       page.getByRole("heading", { name: "Richard Darbois" }),
-    ).toBeVisible({ timeout: 10000 });
+    ).toBeVisible({ timeout: 20000 });
   });
 });

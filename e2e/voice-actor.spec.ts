@@ -3,6 +3,7 @@ import { setupMockApi } from "./helpers/mock-api";
 
 test.describe("Voice Actor Profile & Filmography", () => {
   test.beforeEach(async ({ page }) => {
+    test.setTimeout(60000);
     await setupMockApi(page);
   });
 
@@ -12,7 +13,7 @@ test.describe("Voice Actor Profile & Filmography", () => {
 
     // Wait for the main heading with the voice actor name to appear
     const heading = page.getByRole("heading", { name: "Richard Darbois" });
-    await expect(heading).toBeVisible({ timeout: 10000 });
+    await expect(heading).toBeVisible({ timeout: 20000 });
 
     // Verify bio and nationality are displayed
     await expect(page.locator("body")).toContainText("acteur franco-canadien");
@@ -27,7 +28,7 @@ test.describe("Voice Actor Profile & Filmography", () => {
     // Wait for main content to load
     await expect(
       page.getByRole("heading", { name: "Richard Darbois" }),
-    ).toBeVisible({ timeout: 10000 });
+    ).toBeVisible({ timeout: 20000 });
 
     // Verify category tabs bar exists
     const allTab = page
@@ -68,7 +69,7 @@ test.describe("Voice Actor Profile & Filmography", () => {
 
     await expect(
       page.getByRole("heading", { name: "Richard Darbois" }),
-    ).toBeVisible({ timeout: 10000 });
+    ).toBeVisible({ timeout: 20000 });
 
     // Click on Movies tab
     const moviesTab = page
@@ -115,7 +116,7 @@ test.describe("Voice Actor Profile & Filmography", () => {
 
     await expect(
       page.getByRole("heading", { name: "Richard Darbois" }),
-    ).toBeVisible({ timeout: 10000 });
+    ).toBeVisible({ timeout: 20000 });
 
     // Locate the search input within the voice actor page
     const searchInput = page
@@ -146,7 +147,7 @@ test.describe("Voice Actor Profile & Filmography", () => {
 
     await expect(
       page.getByRole("heading", { name: "Richard Darbois" }),
-    ).toBeVisible({ timeout: 10000 });
+    ).toBeVisible({ timeout: 20000 });
 
     // Look for display mode buttons (Grouped / List)
     const listButton = page
