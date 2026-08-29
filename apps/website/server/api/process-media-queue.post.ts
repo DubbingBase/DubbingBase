@@ -117,6 +117,46 @@ export default defineEventHandler(async (event) => {
             const tmdbData = (await tmdbResponse.json()) as any;
             mediaTitle = tmdbData.title || tmdbData.name || "Unknown title";
             wikiId = tmdbData.external_ids?.wikidata_id || null;
+
+            if (tmdbData.adult === true) {
+              console.log(
+                `[QUEUE] Skipping 18+ adult media ${payload.media_type} ${payload.tmdb_id}: ${mediaTitle}`,
+              );
+
+              const { error: archiveErr } = await supabaseAdmin.rpc(
+                "archive_media_queue_message",
+                {
+                  p_msg_id: msgId,
+                },
+              );
+              if (archiveErr) {
+                console.error(
+                  `[QUEUE] Failed to archive message ${msgId}:`,
+                  archiveErr,
+                );
+                throw new Error(
+                  `Failed to archive message ${msgId}: ${archiveErr.message}`,
+                );
+              }
+
+              await sendDiscordAdminNotification(
+                "Queue Discovery Skipped (18+ Content)",
+                `**${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}) is marked as 18+ adult content and was excluded.`,
+              );
+
+              return {
+                ok: true,
+                processed: 1,
+                results: [
+                  {
+                    id: msgId,
+                    ok: true,
+                    changes: 0,
+                    note: "18+ adult content skipped",
+                  },
+                ],
+              };
+            }
           }
         }
 

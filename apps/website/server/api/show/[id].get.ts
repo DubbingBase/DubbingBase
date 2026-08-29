@@ -104,8 +104,9 @@ export async function fetchShowData(event: any, showId: number) {
     // ── Lazy Wikipedia Queue Enqueue ─────────────────────────────────
     const isProcessed = dubbingProjects.length > 0;
     const hasWiki = !!serieWithImageUrls?.external_ids?.wikidata_id;
+    const isAdult = serieWithImageUrls?.adult === true;
 
-    if (!isProcessed && hasWiki) {
+    if (!isProcessed && hasWiki && !isAdult) {
       const supabaseAdmin = useSupabaseAdmin();
       void (async () => {
         const { error } = await supabaseAdmin.rpc("enqueue_media_fetch", {

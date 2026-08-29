@@ -80,8 +80,9 @@ export async function fetchMovieData(event: any, movieId: number) {
     // ── Lazy Wikipedia Queue Enqueue ─────────────────────────────────
     const isProcessed = dubbingProjects.length > 0;
     const hasWiki = !!movieWithImageUrls?.external_ids?.wikidata_id;
+    const isAdult = movieWithImageUrls?.adult === true;
 
-    if (!isProcessed && hasWiki) {
+    if (!isProcessed && hasWiki && !isAdult) {
       const supabaseAdmin = useSupabaseAdmin();
       void (async () => {
         const { error } = await supabaseAdmin.rpc("enqueue_media_fetch", {

@@ -228,6 +228,12 @@ async function performDiscoveryBatch(state: any) {
 
       ?item schema:dateModified ?modified .
       FILTER(?modified > "${lastFetchedAt}"^^xsd:dateTime)
+
+      # Exclude pornographic/erotic films and adult content
+      MINUS { ?item wdt:P136/wdt:P279* wd:Q13076008 . }
+      MINUS { ?item wdt:P31/wdt:P279* wd:Q13076008 . }
+      MINUS { ?item wdt:P136/wdt:P279* wd:Q506240 . }
+      MINUS { ?item wdt:P31/wdt:P279* wd:Q506240 . }
     }
     ORDER BY ?modified
     LIMIT 500

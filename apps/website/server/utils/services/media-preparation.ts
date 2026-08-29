@@ -120,6 +120,18 @@ export async function prepareMedia(options: {
     const movie = (await response.json()) as any;
     mediaTitle = movie.title || movie.name || "Unknown title";
 
+    if (movie.adult === true) {
+      console.log(
+        `[PREPARE] Skipping 18+ adult media ${type} ${tmdbId}: ${mediaTitle}`,
+      );
+      return {
+        ok: true,
+        title: mediaTitle,
+        changes: 0,
+        creditsAdded: 0,
+      };
+    }
+
     const wikiId = movie.external_ids?.wikidata_id;
     if (!wikiId) {
       throw new Error(
