@@ -21,7 +21,7 @@ export default defineEventHandler(async (event): Promise<PodcastResponse> => {
     "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
   );
 
-  const cache = useCache();
+  const cache = useCache(event);
   const podcastClient = usePodcastClient();
 
   const cacheKey = `app:podcast:${podcastId}`;

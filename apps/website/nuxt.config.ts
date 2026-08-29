@@ -85,6 +85,115 @@ export default defineNuxtConfig({
     "/voice-actor/**": {
       swr: process.env.NODE_ENV === "development" ? false : 3600,
     },
+    "/audiobook/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+    "/podcast/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+    "/toy/**": { swr: process.env.NODE_ENV === "development" ? false : 3600 },
+    "/advertisement/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+    "/studio/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+
+    // Localized routes (/fr/**)
+    "/fr/movie/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+    "/fr/show/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+    "/fr/game/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+    "/fr/actor/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+    "/fr/voice-actor/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+    "/fr/audiobook/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+    "/fr/podcast/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+    "/fr/toy/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+    "/fr/advertisement/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+    "/fr/studio/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+
+    // Localized routes (/es/**)
+    "/es/movie/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+    "/es/show/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+    "/es/game/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+    "/es/actor/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+    "/es/voice-actor/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+    "/es/audiobook/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+    "/es/podcast/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+    "/es/toy/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+    "/es/advertisement/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+    "/es/studio/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+
+    // Localized routes (/ja/**)
+    "/ja/movie/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+    "/ja/show/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+    "/ja/game/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+    "/ja/actor/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+    "/ja/voice-actor/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+    "/ja/audiobook/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+    "/ja/podcast/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+    "/ja/toy/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+    "/ja/advertisement/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
+    "/ja/studio/**": {
+      swr: process.env.NODE_ENV === "development" ? false : 3600,
+    },
   },
 
   vite: {

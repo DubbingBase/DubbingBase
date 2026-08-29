@@ -58,7 +58,7 @@ export default defineEventHandler(async (event) => {
     "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
   );
 
-  const cache = useCache();
+  const cache = useCache(event);
   const igdbClient = useIgdbClient();
 
   const cacheKey = `app:game:${gameId}`;

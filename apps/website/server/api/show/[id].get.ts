@@ -14,7 +14,7 @@ export async function fetchShowData(event: any, showId: number) {
 
   const acceptLanguage = getHeader(event, "accept-language") || undefined;
 
-  const cache = useCache();
+  const cache = useCache(event);
   const tmdbClient = useTmdbClient();
   const mediaService = new MediaService(tmdbClient, acceptLanguage);
 
