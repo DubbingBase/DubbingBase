@@ -61,12 +61,16 @@ export default defineEventHandler(async (event) => {
         specificQueue = "wiki_extract";
       } else if (
         targetQueueParam === "check" ||
-        targetQueueParam === "wiki_check"
+        targetQueueParam === "wiki_check" ||
+        targetQueueParam === "wiki_lang" ||
+        targetQueueParam === "lang"
       ) {
         specificQueue = "wiki_check";
       } else if (
         targetQueueParam === "discovery" ||
-        targetQueueParam === "wiki_discovery"
+        targetQueueParam === "wiki_discovery" ||
+        targetQueueParam === "wiki_nolang" ||
+        targetQueueParam === "nolang"
       ) {
         specificQueue = "wiki_discovery";
       }
