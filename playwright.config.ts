@@ -46,16 +46,5 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
       timeout: 120000,
     },
-    {
-      command: "pnpm --filter=@app/mobile dev",
-      port: 1420,
-      env: {
-        VITE_SUPABASE_URL: "https://mock.supabase.co",
-        VITE_SUPABASE_PUBLISHABLE_KEY: "mock-anon-key",
-        VITE_API_BASE_URL: "https://dubbingbase.com",
-      },
-      reuseExistingServer: !process.env.CI,
-      timeout: 120000,
-    },
   ],
 });
