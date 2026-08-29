@@ -25,7 +25,6 @@ export default defineEventHandler(async (event) => {
   try {
     let isSingle = false;
     let isForce = false;
-    let isRateLimited = false;
 
     try {
       const body = await readBody(event);
@@ -36,118 +35,6 @@ export default defineEventHandler(async (event) => {
     }
 
     const supabaseAdmin = useSupabaseAdmin();
-
-    const triggerNextJob = async () => {
-      if (isRateLimited) {
-        console.warn(
-          `[QUEUE] Rate limited by LLM. Halting queue processor self-trigger.`,
-        );
-        return;
-      }
-      if (isSingle) {
-        console.log(`[QUEUE] Single mode enabled. Skipping self-trigger.`);
-        return;
-      }
-
-      try {
-        const { data: queueDepth } = await supabaseAdmin.rpc(
-          "get_media_queue_depth",
-        );
-
-        if (queueDepth && (queueDepth as number) > 0) {
-          console.log(
-            `[QUEUE] ${queueDepth} more item(s) in queue, self-triggering another invocation via Service Binding.`,
-          );
-
-          const cfEnv = (event.context as any)?.cloudflare?.env;
-          const cfContext = (event.context as any)?.cloudflare?.context;
-          const selfBinding = cfEnv?.SELF;
-
-          let fetchPromise: Promise<Response>;
-
-          if (selfBinding && typeof selfBinding.fetch === "function") {
-            // In production on Cloudflare Workers, invoke Worker directly in-memory via Service Binding
-            fetchPromise = selfBinding.fetch(
-              "https://dubbingbase.com/api/process-media-queue",
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "x-internal-secret": secretKey,
-                },
-                body: JSON.stringify({ force: true }),
-              },
-            );
-          } else {
-            // Local dev fallback
-            let origin = "http://127.0.0.1:3000";
-            try {
-              const requestUrl = getRequestURL(event);
-              if (
-                requestUrl.origin &&
-                !requestUrl.origin.includes("localhost") &&
-                !requestUrl.origin.includes("127.0.0.1")
-              ) {
-                origin = requestUrl.origin;
-              } else if (requestUrl.origin) {
-                origin = requestUrl.origin;
-              }
-            } catch {}
-
-            const selfUrl = `${origin}/api/process-media-queue`;
-
-            fetchPromise = fetch(selfUrl, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "x-internal-secret": secretKey,
-              },
-              body: JSON.stringify({ force: true }),
-            });
-          }
-
-          const triggerPromise = fetchPromise
-            .then(async (res) => {
-              console.log(
-                `[QUEUE] Self-trigger fetch completed with status ${res.status}.`,
-              );
-              if (!res.ok) {
-                const text = await res.text().catch(() => "");
-                console.error(
-                  `[QUEUE] Self-trigger failed: ${res.status} ${text}`,
-                );
-                await sendDiscordAdminNotification(
-                  "Queue Self-Trigger Warning",
-                  `Self-trigger for next queue job failed with status **${res.status}**:\n\`\`\`\n${text.slice(0, 500)}\n\`\`\``,
-                );
-              }
-            })
-            .catch(async (err: any) => {
-              console.error(
-                "[QUEUE] Failed to self-trigger next invocation:",
-                err,
-              );
-              await sendDiscordAdminNotification(
-                "Queue Self-Trigger Error",
-                `Self-trigger network request failed:\n\`\`\`\n${String(err)}\n\`\`\``,
-              );
-            });
-
-          if (typeof (event as any).waitUntil === "function") {
-            (event as any).waitUntil(triggerPromise);
-          } else if (cfContext?.waitUntil) {
-            cfContext.waitUntil(triggerPromise);
-          }
-        } else {
-          console.log(`[QUEUE] queueDepth is 0 or invalid. Stopping loop.`);
-        }
-      } catch (urlErr) {
-        console.warn(
-          "[QUEUE] Could not determine origin for self-trigger:",
-          urlErr,
-        );
-      }
-    };
 
     if (!isForce && !isSingle) {
       const { data: lockedCount, error: lockedErr } = await supabaseAdmin.rpc(
@@ -248,8 +135,18 @@ export default defineEventHandler(async (event) => {
             `No Wikidata ID found for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}). Archived without language expansion.`,
           );
 
-          await triggerNextJob();
-          return { ok: true, processed: results.length, results };
+          return {
+            ok: true,
+            processed: 1,
+            results: [
+              {
+                id: msgId,
+                ok: true,
+                changes: 0,
+                note: "No Wikidata ID found",
+              },
+            ],
+          };
         }
 
         // Discover available languages from Wikidata sitelinks
@@ -273,15 +170,18 @@ export default defineEventHandler(async (event) => {
             `No Wikipedia pages found for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}). Discovery archived.`,
           );
 
-          results.push({
-            id: msgId,
+          return {
             ok: true,
-            changes: 0,
-            note: "No Wikipedia pages found",
-          });
-
-          await triggerNextJob();
-          return { ok: true, processed: results.length, results };
+            processed: 1,
+            results: [
+              {
+                id: msgId,
+                ok: true,
+                changes: 0,
+                note: "No Wikipedia pages found",
+              },
+            ],
+          };
         }
 
         // Enqueue a separate job for each language
@@ -401,7 +301,6 @@ export default defineEventHandler(async (event) => {
         );
       }
 
-      await triggerNextJob();
       return { ok: true, processed: results.length, results };
     }
 
@@ -493,8 +392,6 @@ export default defineEventHandler(async (event) => {
         : "";
 
       if (errMsg.includes("LLM API Rate Limited (429)")) {
-        isRateLimited = true;
-
         const readCt = Number(queueItem.read_ct);
         const MAX_RETRIES = 5;
 
@@ -546,7 +443,6 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    await triggerNextJob();
     return { ok: true, processed: results.length, results };
   } catch (error) {
     const errorMsg =
