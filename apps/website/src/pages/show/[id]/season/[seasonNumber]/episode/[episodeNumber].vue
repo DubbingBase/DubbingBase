@@ -285,6 +285,21 @@
       </template>
     </MediaDetailsLayout>
 
+    <div v-else class="min-h-[50vh] flex flex-col items-center justify-center p-8 text-center">
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+        {{ $t("details.notFound", "Épisode introuvable") }}
+      </h1>
+      <p class="text-gray-600 dark:text-gray-400 mb-6">
+        {{ $t("details.notFoundDesc", "Impossible de charger les informations de cet épisode.") }}
+      </p>
+      <NuxtLink
+        :to="localePath(`/show/${showId}/season/${seasonNumber}`)"
+        class="px-4 py-2 bg-cyan-600 dark:bg-[#00E5FF] text-white dark:text-black font-semibold rounded-lg hover:opacity-90 transition-opacity"
+      >
+        {{ $t("details.backToSeason", "Retour à la saison") }}
+      </NuxtLink>
+    </div>
+
     <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
   </div>
 </template>
@@ -366,17 +381,19 @@ const characterProfilePictures = computed(
 );
 const title = computed(() => {
   if (!episode.value) return t('search.tv', 'Series');
-  const episodeName = episode.value.name || $t('details.episode', { num: episode.value.episode_number });
-  return `${$t('details.season', { num: seasonNumber })} · ${$t('details.episode', { num: episode.value.episode_number })} - ${episodeName}`;
+  const episodeName = episode.value.name || t('details.episode', { num: episode.value.episode_number });
+  return `${t('details.season', { num: seasonNumber })} · ${t('details.episode', { num: episode.value.episode_number })} - ${episodeName}`;
 });
 
 const backdropUrl = computed(() => {
   if (!episode.value?.still_path) return null;
+  if (episode.value.still_path.startsWith('http')) return episode.value.still_path;
   return `https://image.tmdb.org/t/p/original${episode.value.still_path}`;
 });
 
 const posterUrl = computed(() => {
   if (!episode.value?.still_path) return null;
+  if (episode.value.still_path.startsWith('http')) return episode.value.still_path;
   return `https://image.tmdb.org/t/p/w500${episode.value.still_path}`;
 });
 
@@ -519,7 +536,7 @@ useHead({
     {
       name: "description",
       content: computed(() => {
-        const episodeName = episode.value?.name || $t('details.episode', { num: episode.value?.episode_number });
+        const episodeName = episode.value?.name || t('details.episode', { num: episode.value?.episode_number });
         let desc = episode.value?.overview || (episodeName ? t('seo.showDescription', { title: episodeName }) : t('seo.showDescriptionFallback', 'Découvrez le casting et les voix de l\'épisode.'));
         if (activeDubProject.value && episodeName) {
           desc = t('seo.showDescriptionDubbing', { lang: getDisplayLanguage(activeDubProject.value.language), title: episodeName }) + ' ' + desc;
@@ -530,7 +547,7 @@ useHead({
     {
       name: "keywords",
       content: computed(() => {
-        const episodeName = episode.value?.name || $t('details.episode', { num: episode.value?.episode_number });
+        const episodeName = episode.value?.name || t('details.episode', { num: episode.value?.episode_number });
         if (!episodeName) return t("home.meta.keywords");
         return t("seo.showKeywords", { title: episodeName });
       }),
@@ -548,7 +565,7 @@ useHead({
     {
       property: "og:description",
       content: computed(() => {
-        const episodeName = episode.value?.name || $t('details.episode', { num: episode.value?.episode_number });
+        const episodeName = episode.value?.name || t('details.episode', { num: episode.value?.episode_number });
         let desc = episode.value?.overview || (episodeName ? t('seo.showDescription', { title: episodeName }) : t('seo.showDescriptionFallback', 'Découvrez le casting et les voix de l\'épisode.'));
         if (activeDubProject.value && episodeName) {
           desc = t('seo.showDescriptionDubbing', { lang: getDisplayLanguage(activeDubProject.value.language), title: episodeName }) + ' ' + desc;
@@ -585,7 +602,7 @@ useHead({
     {
       name: "twitter:description",
       content: computed(() => {
-        const episodeName = episode.value?.name || $t('details.episode', { num: episode.value?.episode_number });
+        const episodeName = episode.value?.name || t('details.episode', { num: episode.value?.episode_number });
         let desc = episode.value?.overview || (episodeName ? t('seo.showDescription', { title: episodeName }) : t('seo.showDescriptionFallback', 'Découvrez le casting et les voix de l\'épisode.'));
         if (activeDubProject.value && episodeName) {
           desc = t('seo.showDescriptionDubbing', { lang: getDisplayLanguage(activeDubProject.value.language), title: episodeName }) + ' ' + desc;

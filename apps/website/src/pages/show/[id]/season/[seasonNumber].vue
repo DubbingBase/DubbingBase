@@ -3,7 +3,7 @@
     <MediaSkeleton v-if="pending && !season" />
     <MediaDetailsLayout
       v-else-if="season"
-      :title="`${serieName} - Saison ${seasonNumber}`"
+      :title="`${serieName} - ${season.name || $t('details.season', { num: seasonNumber })}`"
       :backdrop-url="backdropUrl"
       :poster-url="posterUrl"
       :loading="pending"
@@ -62,6 +62,16 @@
           </NuxtLink>
           <div class="h-6 w-px bg-gray-200 dark:bg-[#2a2a2a]"></div>
         </template>
+
+        <NuxtLink
+          :to="localePath(`/show/${showId}`)"
+          class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-medium"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" />
+          </svg>
+          <span class="hidden sm:inline">{{ $t("details.backToShow", "Retour à la série") }}</span>
+        </NuxtLink>
 
         <NuxtLink v-show="isAdmin" :to="localePath(`/show/${showId}/edit/${activeDubId || 'new'}`)" class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-medium">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -129,7 +139,7 @@
               <NuxtImg
                 format="webp"
                 v-if="episode.still_path"
-                :src="'https://image.tmdb.org/t/p/w342' + episode.still_path"
+                :src="episode.still_path.startsWith('http') ? episode.still_path : ('https://image.tmdb.org/t/p/w342' + episode.still_path)"
                 loading="lazy"
                 decoding="async"
                 class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
@@ -161,6 +171,21 @@
       </section>
       </template>
     </MediaDetailsLayout>
+
+    <div v-else class="min-h-[50vh] flex flex-col items-center justify-center p-8 text-center">
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+        {{ $t("details.notFound", "Saison introuvable") }}
+      </h1>
+      <p class="text-gray-600 dark:text-gray-400 mb-6">
+        {{ $t("details.notFoundDesc", "Impossible de charger les informations de cette saison.") }}
+      </p>
+      <NuxtLink
+        :to="localePath(`/show/${showId}`)"
+        class="px-4 py-2 bg-cyan-600 dark:bg-[#00E5FF] text-white dark:text-black font-semibold rounded-lg hover:opacity-90 transition-opacity"
+      >
+        {{ $t("details.backToShow", "Retour à la série") }}
+      </NuxtLink>
+    </div>
 
     <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
   </div>
@@ -266,18 +291,20 @@ const episodes = computed(() => {
 });
 
 const backdropUrl = computed(() => {
-  if (!season.value?.backdrop_path) return null;
-  if (season.value.backdrop_path.startsWith('http')) return season.value.backdrop_path;
-  return `https://image.tmdb.org/t/p/original${season.value.backdrop_path}`;
+  const path = season.value?.backdrop_path || serie.value?.backdrop_path;
+  if (!path) return null;
+  if (path.startsWith('http')) return path;
+  return `https://image.tmdb.org/t/p/original${path}`;
 });
 
 const posterUrl = computed(() => {
-  if (!season.value?.poster_path) return null;
-  if (season.value.poster_path.startsWith('http')) return season.value.poster_path;
-  return `https://image.tmdb.org/t/p/original${season.value.poster_path}`;
+  const path = season.value?.poster_path || serie.value?.poster_path;
+  if (!path) return null;
+  if (path.startsWith('http')) return path;
+  return `https://image.tmdb.org/t/p/original${path}`;
 });
 
-const pending = computed(() => showPending.value || seasonPending.value);
+const pending = computed(() => seasonPending.value);
 
 const activeDubId = computed(() => {
   if (route.query.dub) {

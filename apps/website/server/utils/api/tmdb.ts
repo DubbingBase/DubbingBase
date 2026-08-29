@@ -89,19 +89,28 @@ export class TMDBClient {
     return result;
   }
 
-  async getSeasonWithCredits(seriesId: number, seasonNumber: number) {
+  async getSeasonWithCredits(
+    seriesId: number,
+    seasonNumber: number,
+    language?: string,
+  ) {
+    const langStr = ((language || "fr-FR").split(",")[0] || "fr-FR").trim();
     const cacheKey = this.cache.tmdbKey(
       "tv",
       seriesId,
-      `season:${seasonNumber}:credits`,
+      `season:${seasonNumber}:credits-${langStr}`,
     );
 
     const cached = await this.cache.get(cacheKey);
     if (cached) return cached;
 
-    const result = await this.get(`tv/${seriesId}/season/${seasonNumber}`, {
-      append_to_response: "credits,external_ids",
-    });
+    const result = await this.get(
+      `tv/${seriesId}/season/${seasonNumber}`,
+      {
+        append_to_response: "credits,external_ids",
+      },
+      language,
+    );
 
     await this.cache.set(cacheKey, result, "MEDIUM");
     return result;
@@ -111,11 +120,13 @@ export class TMDBClient {
     seriesId: number,
     seasonNumber: number,
     episodeNumber: number,
+    language?: string,
   ) {
+    const langStr = ((language || "fr-FR").split(",")[0] || "fr-FR").trim();
     const cacheKey = this.cache.tmdbKey(
       "tv",
       seriesId,
-      `season:${seasonNumber}:episode:${episodeNumber}:credits`,
+      `season:${seasonNumber}:episode:${episodeNumber}:credits-${langStr}`,
     );
 
     const cached = await this.cache.get(cacheKey);
@@ -124,6 +135,7 @@ export class TMDBClient {
     const result = await this.get(
       `tv/${seriesId}/season/${seasonNumber}/episode/${episodeNumber}`,
       { append_to_response: "credits,external_ids" },
+      language,
     );
 
     await this.cache.set(cacheKey, result, "MEDIUM");

@@ -15,6 +15,9 @@ export default defineEventHandler((event) => {
   const path = getRequestURL(event).pathname;
   if (!path.startsWith("/api")) return;
 
+  // Prime the KV cache resolver for this worker isolate
+  useCache(event);
+
   const origin = getHeader(event, "origin") || "";
   const client = getHeader(event, API_CLIENT_HEADER) || "";
 

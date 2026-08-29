@@ -382,33 +382,6 @@
           </span>
         </div>
       </section>
-
-      <!-- Seasons -->
-      <section v-if="serie?.number_of_seasons">
-        <div class="flex flex-col mb-6 gap-2">
-          <div>
-            <h2 class="text-2xl font-bold">
-              {{ $t("details.seasons") }}
-            </h2>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-          <NuxtLink
-            v-for="n in serie.number_of_seasons"
-            :key="n"
-            :to="localePath(`/show/${showId}/season/${n}`)"
-            class="group cursor-pointer block bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-xl p-4 shadow-sm transition-colors hover:border-cyan-400 hover:shadow-md text-center"
-          >
-            <div class="text-3xl font-bold text-gray-900 dark:text-white group-hover:text-cyan-500 transition-colors">
-              {{ $t("details.season", { num: n }) }}
-            </div>
-            <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              {{ $t("details.episodes") }}
-            </div>
-          </NuxtLink>
-        </div>
-      </section>
       </template>
     </MediaDetailsLayout>
 

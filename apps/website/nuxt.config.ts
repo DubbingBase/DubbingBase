@@ -25,9 +25,12 @@ export default defineNuxtConfig({
     },
     cloudflare: {
       wrangler: {
-        // Optional: add KV namespace for edge-distributed caching.
-        // Without it, cache falls back to in-memory per isolate.
-        // kv_namespaces: [{ binding: "CACHE_KV", id: "YOUR_KV_NAMESPACE_ID" }],
+        kv_namespaces: [
+          {
+            binding: "CACHE_KV",
+            id: "340974572b504ed2aa20c160e18f5697",
+          },
+        ],
       },
     },
   },

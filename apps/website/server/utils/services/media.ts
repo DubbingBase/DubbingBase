@@ -729,16 +729,35 @@ export class MediaService {
         );
         break;
       case "season":
-        if (!seasonNumber) throw new Error("seasonNumber required");
-        media = await this.tmdbClient.getSeasonWithCredits(id, seasonNumber);
+        if (
+          seasonNumber === undefined ||
+          seasonNumber === null ||
+          isNaN(seasonNumber)
+        ) {
+          throw new Error("seasonNumber required");
+        }
+        media = await this.tmdbClient.getSeasonWithCredits(
+          id,
+          seasonNumber,
+          this.acceptLanguage,
+        );
         break;
       case "episode":
-        if (!seasonNumber || !episodeNumber)
+        if (
+          seasonNumber === undefined ||
+          seasonNumber === null ||
+          isNaN(seasonNumber) ||
+          episodeNumber === undefined ||
+          episodeNumber === null ||
+          isNaN(episodeNumber)
+        ) {
           throw new Error("seasonNumber and episodeNumber required");
+        }
         media = await this.tmdbClient.getEpisodeWithCredits(
           id,
           seasonNumber,
           episodeNumber,
+          this.acceptLanguage,
         );
         break;
     }

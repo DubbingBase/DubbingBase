@@ -8,11 +8,12 @@ export const CACHE_TTL = {
   EXTENDED: 7 * 24 * 60 * 60, // 7 days
 } as const;
 
-export type CacheTTLPreset = keyof typeof CACHE_TTL;
+export type CacheTTLPreset = keyof typeof CACHE_TTL | number;
 
 /**
- * KV-backed cache utility with in-memory fallback.
- * Wraps Cloudflare KV bindings via a lazy accessor function.
+ * Two-tier cache utility:
+ * - L1: In-memory Map (ultra-fast 0ms latency per isolate)
+ * - L2: Cloudflare KV (persistent across edge isolates globally)
  */
 export class SimpleCache {
   private memoryCache = new Map<string, { data: any; expiry: number }>();
@@ -22,12 +23,8 @@ export class SimpleCache {
   async get<T>(key: string): Promise<T | null> {
     try {
       const sanitizedKey = SimpleKeyValidator.sanitizeKey(key);
-      const kv = this.kvGetter();
-      if (kv && typeof kv.get === "function") {
-        const cached = await kv.get(sanitizedKey, { type: "json" });
-        if (!cached) return null;
-        return cached as T;
-      }
+
+      // 1. Check L1 Memory cache first
       const memoryEntry = this.memoryCache.get(sanitizedKey);
       if (memoryEntry) {
         if (memoryEntry.expiry > Date.now()) {
@@ -35,6 +32,25 @@ export class SimpleCache {
         }
         this.memoryCache.delete(sanitizedKey);
       }
+
+      // 2. Check L2 Cloudflare KV
+      const kv = this.kvGetter();
+      if (kv && typeof kv.get === "function") {
+        try {
+          const cached = await kv.get(sanitizedKey, { type: "json" });
+          if (cached !== null && cached !== undefined) {
+            // Populate L1 cache for fast subsequent lookups in this isolate
+            this.memoryCache.set(sanitizedKey, {
+              data: cached,
+              expiry: Date.now() + CACHE_TTL.SHORT * 1000,
+            });
+            return cached as T;
+          }
+        } catch {
+          // If JSON parse fails in KV, return null
+        }
+      }
+
       return null;
     } catch {
       return null;
@@ -48,18 +64,29 @@ export class SimpleCache {
   ): Promise<boolean> {
     try {
       const sanitizedKey = SimpleKeyValidator.sanitizeKey(key);
-      const ttlSeconds = CACHE_TTL[ttl];
-      const kv = this.kvGetter();
-      if (kv && typeof kv.put === "function") {
-        await kv.put(sanitizedKey, JSON.stringify(data), {
-          expirationTtl: ttlSeconds,
-        });
-        return true;
-      }
+      const ttlSeconds =
+        typeof ttl === "number"
+          ? Math.max(60, ttl)
+          : (CACHE_TTL[ttl] ?? CACHE_TTL.MEDIUM);
+
+      // 1. Set L1 Memory cache
       this.memoryCache.set(sanitizedKey, {
         data,
         expiry: Date.now() + ttlSeconds * 1000,
       });
+
+      // 2. Set L2 Cloudflare KV
+      const kv = this.kvGetter();
+      if (kv && typeof kv.put === "function") {
+        try {
+          await kv.put(sanitizedKey, JSON.stringify(data), {
+            expirationTtl: ttlSeconds,
+          });
+        } catch (kvErr) {
+          console.warn("[SimpleCache] KV put error:", kvErr);
+        }
+      }
+
       return true;
     } catch {
       return false;
@@ -69,11 +96,16 @@ export class SimpleCache {
   async del(key: string): Promise<boolean> {
     try {
       const sanitizedKey = SimpleKeyValidator.sanitizeKey(key);
+      this.memoryCache.delete(sanitizedKey);
+
       const kv = this.kvGetter();
       if (kv && typeof kv.delete === "function") {
-        await kv.delete(sanitizedKey);
+        try {
+          await kv.delete(sanitizedKey);
+        } catch (kvErr) {
+          console.warn("[SimpleCache] KV delete error:", kvErr);
+        }
       }
-      this.memoryCache.delete(sanitizedKey);
       return true;
     } catch {
       return false;
@@ -83,13 +115,19 @@ export class SimpleCache {
   async exists(key: string): Promise<boolean> {
     try {
       const sanitizedKey = SimpleKeyValidator.sanitizeKey(key);
+
+      const memoryEntry = this.memoryCache.get(sanitizedKey);
+      if (memoryEntry && memoryEntry.expiry > Date.now()) {
+        return true;
+      }
+
       const kv = this.kvGetter();
       if (kv && typeof kv.get === "function") {
         const value = await kv.get(sanitizedKey, { type: "text" });
-        return value !== null;
+        return value !== null && value !== undefined;
       }
-      const memoryEntry = this.memoryCache.get(sanitizedKey);
-      return !!memoryEntry && memoryEntry.expiry > Date.now();
+
+      return false;
     } catch {
       return false;
     }
