@@ -50,7 +50,7 @@ export default defineEventHandler(async (event) => {
       // Ignore body/query parse errors
     }
 
-    // Normalize targetQueueParam
+    // Normalize targetQueueParam strictly (no backward compatibility aliases)
     let specificQueue: "wiki_extract" | "wiki_check" | "wiki_discovery" | null =
       null;
     if (targetQueueParam) {
@@ -61,18 +61,19 @@ export default defineEventHandler(async (event) => {
         specificQueue = "wiki_extract";
       } else if (
         targetQueueParam === "check" ||
-        targetQueueParam === "wiki_check" ||
-        targetQueueParam === "wiki_lang" ||
-        targetQueueParam === "lang"
+        targetQueueParam === "wiki_check"
       ) {
         specificQueue = "wiki_check";
       } else if (
         targetQueueParam === "discovery" ||
-        targetQueueParam === "wiki_discovery" ||
-        targetQueueParam === "wiki_nolang" ||
-        targetQueueParam === "nolang"
+        targetQueueParam === "wiki_discovery"
       ) {
         specificQueue = "wiki_discovery";
+      } else {
+        throw createError({
+          statusCode: 400,
+          statusMessage: `Invalid queue name: ${targetQueueParam}. Must be 'discovery', 'check', or 'extract'.`,
+        });
       }
     }
 
