@@ -30,6 +30,58 @@ export default defineEventHandler(async (event) => {
 
     const supabaseAdmin = useSupabaseAdmin();
 
+    const triggerNextJob = async () => {
+      if (isRateLimited) {
+        console.warn(
+          `[QUEUE] Rate limited by LLM. Halting queue processor self-trigger.`,
+        );
+        return;
+      }
+      if (isSingle) {
+        console.log(`[QUEUE] Single mode enabled. Skipping self-trigger.`);
+        return;
+      }
+
+      try {
+        const { data: queueDepth } = await supabaseAdmin.rpc(
+          "get_media_queue_depth",
+        );
+
+        if (queueDepth && (queueDepth as number) > 0) {
+          console.log(
+            `[QUEUE] ${queueDepth} more item(s) in queue, self-triggering another invocation.`,
+          );
+          const requestUrl = getRequestURL(event);
+          const selfUrl = `${requestUrl.origin}/api/process-media-queue`;
+
+          fetch(selfUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-internal-secret": (config.supabaseSecretKey as string) || "",
+            },
+            body: JSON.stringify({ force: true }),
+          })
+            .then(() => {
+              console.log(`[QUEUE] Self-trigger fetch completed successfully.`);
+            })
+            .catch((err: any) => {
+              console.error(
+                "[QUEUE] Failed to self-trigger next invocation:",
+                err,
+              );
+            });
+        } else {
+          console.log(`[QUEUE] queueDepth is 0 or invalid. Stopping loop.`);
+        }
+      } catch (urlErr) {
+        console.warn(
+          "[QUEUE] Could not determine origin for self-trigger:",
+          urlErr,
+        );
+      }
+    };
+
     if (!isForce && !isSingle) {
       const { data: lockedCount, error: lockedErr } = await supabaseAdmin.rpc(
         "get_media_queue_locked_count",
@@ -137,6 +189,7 @@ export default defineEventHandler(async (event) => {
             note: "Processed without language filtering (no Wikidata ID)",
           });
 
+          await triggerNextJob();
           return { ok: true, processed: results.length, results };
         }
 
@@ -168,6 +221,7 @@ export default defineEventHandler(async (event) => {
             note: "No Wikipedia pages found",
           });
 
+          await triggerNextJob();
           return { ok: true, processed: results.length, results };
         }
 
@@ -236,7 +290,7 @@ export default defineEventHandler(async (event) => {
 
         const errorDetails =
           enqueueErrors.length > 0
-            ? `\n⚠️ Errors: ${enqueueErrors.join(", ")}`
+            ? `\n⚠️ **Enqueue Errors:**\n\`\`\`\n${enqueueErrors.join("\n")}\n\`\`\``
             : "";
 
         await sendDiscordAdminNotification(
@@ -276,10 +330,11 @@ export default defineEventHandler(async (event) => {
 
         await sendDiscordAdminNotification(
           "Queue Discovery Failed",
-          `Discovery failed for **${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type}** (ID ${payload.tmdb_id}): ${errMsg}`,
+          `Discovery failed for **${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type}** (ID ${payload.tmdb_id}):\n\`\`\`\n${errMsg}\n\`\`\``,
         );
       }
 
+      await triggerNextJob();
       return { ok: true, processed: results.length, results };
     }
 
@@ -391,7 +446,7 @@ export default defineEventHandler(async (event) => {
 
           await sendDiscordAdminNotification(
             `Queue Item Failed (Rate Limit)${langTag}`,
-            `Failed to process **${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type}** (ID ${payload.tmdb_id}${payload.language ? `, language: ${payload.language.toUpperCase()}` : ""}): Max retries reached due to rate limit.`,
+            `Failed to process **${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type}** (ID ${payload.tmdb_id}${payload.language ? `, language: ${payload.language.toUpperCase()}` : ""}): Max retries (${MAX_RETRIES}) reached due to LLM rate limit.\n\`\`\`\n${errMsg}\n\`\`\``,
           );
         } else {
           results.push({
@@ -419,58 +474,12 @@ export default defineEventHandler(async (event) => {
 
         await sendDiscordAdminNotification(
           `Queue Item Failed${langTag}`,
-          `Failed to process **${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type}** (ID ${payload.tmdb_id}${payload.language ? `, language: ${payload.language.toUpperCase()}` : ""}): ${errMsg}`,
+          `Failed to process **${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type}** (ID ${payload.tmdb_id}${payload.language ? `, language: ${payload.language.toUpperCase()}` : ""}):\n\`\`\`\n${errMsg}\n\`\`\``,
         );
       }
     }
 
-    if (isRateLimited) {
-      console.warn(
-        `[QUEUE] Rate limited by LLM. Halting queue processor self-trigger.`,
-      );
-    } else if (!isSingle) {
-      const { data: queueDepth } = await supabaseAdmin.rpc(
-        "get_media_queue_depth",
-      );
-
-      if (queueDepth && (queueDepth as number) > 0) {
-        console.log(
-          `[QUEUE] ${queueDepth} more item(s) in queue, self-triggering another invocation.`,
-        );
-        try {
-          const requestUrl = getRequestURL(event);
-          const selfUrl = `${requestUrl.origin}/api/process-media-queue`;
-
-          fetch(selfUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-internal-secret": (config.supabaseSecretKey as string) || "",
-            },
-            body: JSON.stringify({ force: true }),
-          })
-            .then(() => {
-              console.log(`[QUEUE] Self-trigger fetch completed successfully.`);
-            })
-            .catch((err: any) => {
-              console.error(
-                "[QUEUE] Failed to self-trigger next invocation:",
-                err,
-              );
-            });
-        } catch (urlErr) {
-          console.warn(
-            "[QUEUE] Could not determine origin for self-trigger:",
-            urlErr,
-          );
-        }
-      } else {
-        console.log(`[QUEUE] queueDepth is 0 or invalid. Stopping loop.`);
-      }
-    } else {
-      console.log(`[QUEUE] Single mode enabled. Skipping self-trigger.`);
-    }
-
+    await triggerNextJob();
     return { ok: true, processed: results.length, results };
   } catch (error) {
     const errorMsg =
