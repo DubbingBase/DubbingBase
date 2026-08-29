@@ -62,6 +62,11 @@ END $$;
 
 -- 4. RPC: enqueue_media_fetch
 -- Enqueues to wiki_check if language is provided, otherwise wiki_discovery
+DROP FUNCTION IF EXISTS public.enqueue_media_fetch(bigint, text, int, int, text);
+DROP FUNCTION IF EXISTS public.enqueue_media_fetch(text, bigint, int, int, text);
+DROP FUNCTION IF EXISTS public.enqueue_media_fetch(bigint, text, int, int);
+DROP FUNCTION IF EXISTS public.enqueue_media_fetch(text, bigint, int, int);
+
 CREATE OR REPLACE FUNCTION public.enqueue_media_fetch(
   p_tmdb_id bigint,
   p_media_type text,
@@ -130,6 +135,8 @@ $$;
 
 -- 5. RPC: enqueue_media_extract
 -- Enqueues verified dubbing sections to wiki_extract
+DROP FUNCTION IF EXISTS public.enqueue_media_extract(bigint, text, text, bigint, jsonb, int, int);
+
 CREATE OR REPLACE FUNCTION public.enqueue_media_extract(
   p_tmdb_id bigint,
   p_media_type text,
@@ -397,6 +404,9 @@ END;
 $$;
 
 -- 9. RPC: get_media_queue_status
+DROP FUNCTION IF EXISTS public.get_media_queue_status(text, bigint, int, int, text);
+DROP FUNCTION IF EXISTS public.get_media_queue_status(text, bigint, int, int);
+
 CREATE OR REPLACE FUNCTION public.get_media_queue_status(
   p_media_type text,
   p_tmdb_id bigint,
@@ -533,6 +543,8 @@ END;
 $$;
 
 -- 10. RPC: get_media_queue_items
+DROP FUNCTION IF EXISTS public.get_media_queue_items();
+
 CREATE OR REPLACE FUNCTION public.get_media_queue_items()
 RETURNS TABLE (
   id bigint,
@@ -674,6 +686,9 @@ AS $$
 $$;
 
 -- 11. RPC: delete_media_queue_item
+DROP FUNCTION IF EXISTS public.delete_media_queue_item(bigint, text);
+DROP FUNCTION IF EXISTS public.delete_media_queue_item(bigint);
+
 CREATE OR REPLACE FUNCTION public.delete_media_queue_item(
   p_id bigint,
   p_queue_name text default null
@@ -709,6 +724,8 @@ END;
 $$;
 
 -- 12. RPC: clear_media_queue
+DROP FUNCTION IF EXISTS public.clear_media_queue();
+
 CREATE OR REPLACE FUNCTION public.clear_media_queue()
 RETURNS boolean
 LANGUAGE plpgsql
@@ -727,6 +744,9 @@ END;
 $$;
 
 -- 13. RPC: get_media_queue_depth
+DROP FUNCTION IF EXISTS public.get_media_queue_depth(text);
+DROP FUNCTION IF EXISTS public.get_media_queue_depth();
+
 CREATE OR REPLACE FUNCTION public.get_media_queue_depth(
   p_queue_name text default null
 )
@@ -756,6 +776,9 @@ END;
 $$;
 
 -- 14. RPC: get_media_queue_locked_count
+DROP FUNCTION IF EXISTS public.get_media_queue_locked_count(text);
+DROP FUNCTION IF EXISTS public.get_media_queue_locked_count();
+
 CREATE OR REPLACE FUNCTION public.get_media_queue_locked_count(
   p_queue_name text default null
 )
