@@ -1,24 +1,13 @@
 import tailwindcss from "@tailwindcss/vite";
 import { resolve } from "node:path";
 import { defineNuxtConfig } from "nuxt/config";
+import {
+  APP_LOCALES,
+  DEFAULT_LOCALE,
+  NON_DEFAULT_LOCALES,
+  MEDIA_ROUTE_PREFIXES,
+} from "@app/shared-logic";
 
-const MEDIA_ROUTE_PREFIXES = [
-  "movie",
-  "show",
-  "game",
-  "actor",
-  "voice-actor",
-  "audiobook",
-  "podcast",
-  "toy",
-  "advertisement",
-  "studio",
-  "movies",
-  "series",
-  "voice-actors",
-  "studios",
-];
-const SUPPORTED_LOCALES = ["fr", "es", "ja"];
 const SWR_CONFIG = {
   swr: process.env.NODE_ENV === "development" ? false : 3600,
 };
@@ -27,7 +16,7 @@ function generateRouteRules() {
   const rules: Record<string, typeof SWR_CONFIG> = {};
   for (const prefix of MEDIA_ROUTE_PREFIXES) {
     rules[`/${prefix}/**`] = SWR_CONFIG;
-    for (const locale of SUPPORTED_LOCALES) {
+    for (const locale of NON_DEFAULT_LOCALES) {
       rules[`/${locale}/${prefix}/**`] = SWR_CONFIG;
     }
   }
@@ -170,13 +159,8 @@ export default defineNuxtConfig({
   },
 
   i18n: {
-    locales: [
-      { code: "en", language: "en-US", file: "en.json", name: "English" },
-      { code: "fr", language: "fr-FR", file: "fr.json", name: "Français" },
-      { code: "es", language: "es-ES", file: "es.json", name: "Español" },
-      { code: "ja", language: "ja-JP", file: "ja.json", name: "日本語" },
-    ],
-    defaultLocale: "en",
+    locales: APP_LOCALES as any,
+    defaultLocale: DEFAULT_LOCALE,
     strategy: "prefix_except_default",
     baseUrl: "https://dubbingbase.com",
     detectBrowserLanguage: {
