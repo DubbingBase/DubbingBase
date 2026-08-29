@@ -166,19 +166,15 @@ const { actors: normalizedActors } = useDeferredCharacters(
 
 const fetchQueueStatus = async () => {
   try {
-    const { data: funcData, error: queueErr } = await supabase.functions.invoke(
-      "media-queue",
+    const { data, error: queueErr } = await (supabase as any).rpc(
+      "get_media_queue_status",
       {
-        body: {
-          action: "status",
-          mediaId: Number(route.params.id),
-          mediaType: "season",
-          seasonNumber: Number(route.params.season),
-        },
+        p_tmdb_id: Number(route.params.id),
+        p_media_type: "season",
+        p_season_number: Number(route.params.season),
       },
     );
 
-    const data = funcData?.data;
     if (queueErr) throw queueErr;
     const statusData = data as {
       status: string | null;

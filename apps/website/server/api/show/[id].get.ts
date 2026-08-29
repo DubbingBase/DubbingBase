@@ -3,6 +3,7 @@ import { MediaService } from "../../utils/services/media";
 import { getDubbingProjects } from "../../utils/db/queries";
 import { processMedia } from "../../utils/urls/tmdb";
 import { useSupabaseAdmin } from "../../utils/db/client";
+import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 
 export async function fetchShowData(event: any, showId: number) {
   setHeader(
@@ -113,7 +114,24 @@ export async function fetchShowData(event: any, showId: number) {
           p_season_number: undefined,
           p_episode_number: undefined,
         });
-        if (error) console.error("Failed to lazily enqueue show:", error);
+        if (error) {
+          if (!error.message?.includes("already in the queue")) {
+            console.error("Failed to lazily enqueue show:", error);
+          }
+        } else {
+          await sendDiscordAdminNotification(
+            "Media Enqueued (Auto)",
+            `Automatically enqueued TV show **${serieWithImageUrls?.name || showId}** (TMDB: ${showId}) for all-languages dubbing discovery.`,
+            {
+              ...(serieWithImageUrls?.poster_path
+                ? {
+                    imageUrl: `https://image.tmdb.org/t/p/w500${serieWithImageUrls.poster_path}`,
+                  }
+                : {}),
+              url: `/serie/${showId}`,
+            },
+          );
+        }
       })();
     }
 

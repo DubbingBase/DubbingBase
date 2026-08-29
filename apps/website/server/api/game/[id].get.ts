@@ -2,6 +2,7 @@ import { useCache, useIgdbClient } from "../../utils";
 import { buildIgdbImageUrl } from "../../utils/api/igdb";
 import { getDubbingProjects } from "../../utils/db/queries";
 import { useSupabaseAdmin } from "../../utils/db/client";
+import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 import type { IgdbGame, IgdbCharacter } from "@app/shared-logic";
 
 function processIgdbGame(
@@ -114,7 +115,20 @@ export default defineEventHandler(async (event) => {
           p_season_number: undefined,
           p_episode_number: undefined,
         });
-        if (error) console.error("Failed to lazily enqueue video_game:", error);
+        if (error) {
+          if (!error.message?.includes("already in the queue")) {
+            console.error("Failed to lazily enqueue video_game:", error);
+          }
+        } else {
+          await sendDiscordAdminNotification(
+            "Media Enqueued (Auto)",
+            `Automatically enqueued video game **${game?.name || gameId}** (IGDB: ${gameId}) for dubbing discovery.`,
+            {
+              ...(game?.cover?.url ? { imageUrl: game.cover.url } : {}),
+              url: `/game/${gameId}`,
+            },
+          );
+        }
       })();
     }
 

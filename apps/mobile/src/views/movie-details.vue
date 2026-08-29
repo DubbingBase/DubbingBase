@@ -262,18 +262,14 @@ const fetchError = ref("");
 
 const fetchQueueStatus = async () => {
   try {
-    const { data: funcData, error } = await supabase.functions.invoke(
-      "media-queue",
+    const { data, error } = await (supabase as any).rpc(
+      "get_media_queue_status",
       {
-        body: {
-          action: "status",
-          mediaId: Number(route.params.id),
-          mediaType: "movie",
-        },
+        p_tmdb_id: Number(route.params.id),
+        p_media_type: "movie",
       },
     );
 
-    const data = funcData?.data;
     if (error) throw error;
     const statusData = data as {
       status: string | null;

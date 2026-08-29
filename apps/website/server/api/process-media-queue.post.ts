@@ -125,6 +125,11 @@ export default defineEventHandler(async (event) => {
             p_msg_id: msgId,
           });
 
+          await sendDiscordAdminNotification(
+            "Queue Discovery Skipped",
+            `No Wikidata ID found for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}). Archived without language expansion.`,
+          );
+
           results.push({
             id: msgId,
             ok: true,
@@ -150,6 +155,11 @@ export default defineEventHandler(async (event) => {
           await supabaseAdmin.rpc("archive_media_queue_message", {
             p_msg_id: msgId,
           });
+
+          await sendDiscordAdminNotification(
+            "Queue Discovery: No Wikipedia Pages",
+            `No Wikipedia pages found for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}). Discovery archived.`,
+          );
 
           results.push({
             id: msgId,
@@ -207,6 +217,27 @@ export default defineEventHandler(async (event) => {
         console.log(
           `[QUEUE] Enqueued ${enqueuedCount} language jobs for ${mediaTitle}`,
         );
+
+        let discoveryUrl: string | undefined = undefined;
+        if (payload.media_type === "movie") {
+          discoveryUrl = `/movie/${payload.tmdb_id}`;
+        } else if (
+          payload.media_type === "tv" ||
+          payload.media_type === "season" ||
+          payload.media_type === "episode"
+        ) {
+          discoveryUrl = `/serie/${payload.tmdb_id}`;
+        } else if (payload.media_type === "video_game") {
+          discoveryUrl = `/game/${payload.tmdb_id}`;
+        }
+
+        await sendDiscordAdminNotification(
+          "Queue Discovery Completed",
+          `Discovered **${availableLanguages.length} language(s)** for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}).\n• Enqueued **${enqueuedCount}** language job(s): ${availableLanguages.map((l: string) => `\`${l.toUpperCase()}\``).join(", ")}.`,
+          {
+            ...(discoveryUrl ? { url: discoveryUrl } : {}),
+          },
+        );
       } catch (err) {
         let errMsg = "";
         if (err instanceof Error) {
@@ -234,6 +265,11 @@ export default defineEventHandler(async (event) => {
           changes: 0,
           error: errMsg,
         });
+
+        await sendDiscordAdminNotification(
+          "Queue Discovery Failed",
+          `Discovery failed for **${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type}** (ID ${payload.tmdb_id}): ${errMsg}`,
+        );
       }
 
       return { ok: true, processed: results.length, results };
@@ -293,13 +329,16 @@ export default defineEventHandler(async (event) => {
         targetUrl = `/game/${payload.tmdb_id}`;
       }
 
+      const langTag = payload.language
+        ? ` [${payload.language.toUpperCase()}]`
+        : "";
       await sendDiscordAdminNotification(
-        "Queue Item Processed",
-        `Successfully processed ${mediaTitle}${
+        `Queue Item Processed${langTag}`,
+        `Successfully processed **${mediaTitle}**${
           payload.season_number ? ` (Season ${payload.season_number})` : ""
         }${
           payload.episode_number ? ` (Episode ${payload.episode_number})` : ""
-        }. Added ${responseData.creditsAdded ?? 0} roles and ${responseData.changes ?? 0} new voice actors.`,
+        }${payload.language ? ` [${payload.language.toUpperCase()}]` : ""}.\n• Added **${responseData.creditsAdded ?? 0}** roles\n• Added **${responseData.changes ?? 0}** new voice actors.`,
         {
           ...(responseData.imageUrl ? { imageUrl: responseData.imageUrl } : {}),
           ...(targetUrl ? { url: targetUrl } : {}),
@@ -318,6 +357,10 @@ export default defineEventHandler(async (event) => {
       } else {
         errMsg = String(err);
       }
+
+      const langTag = payload.language
+        ? ` [${payload.language.toUpperCase()}]`
+        : "";
 
       if (errMsg.includes("LLM API Rate Limited (429)")) {
         isRateLimited = true;
@@ -339,8 +382,8 @@ export default defineEventHandler(async (event) => {
           });
 
           await sendDiscordAdminNotification(
-            "Queue Item Failed (Rate Limit)",
-            `Failed to process ${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type} (TMDB ID ${payload.tmdb_id}): Max retries reached due to rate limit.`,
+            `Queue Item Failed (Rate Limit)${langTag}`,
+            `Failed to process **${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type}** (ID ${payload.tmdb_id}${payload.language ? `, language: ${payload.language.toUpperCase()}` : ""}): Max retries reached due to rate limit.`,
           );
         } else {
           results.push({
@@ -367,8 +410,8 @@ export default defineEventHandler(async (event) => {
         });
 
         await sendDiscordAdminNotification(
-          "Queue Item Failed",
-          `Failed to process ${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type} (TMDB ID ${payload.tmdb_id}): ${errMsg}`,
+          `Queue Item Failed${langTag}`,
+          `Failed to process **${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type}** (ID ${payload.tmdb_id}${payload.language ? `, language: ${payload.language.toUpperCase()}` : ""}): ${errMsg}`,
         );
       }
     }
