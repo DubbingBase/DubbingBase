@@ -9,23 +9,15 @@ import vueDevTools from "vite-plugin-vue-devtools";
 
 // https://vitejs.dev/config/
 export default ({ mode }) => {
-  console.log("mode", mode);
-  const env = loadEnv(mode, process.cwd());
-  console.log("env", env);
-
-  const requiredEnvs = [
-    "VITE_ONESIGNAL_APP_ID",
-    "VITE_SUPABASE_URL",
-    "VITE_SUPABASE_PUBLISHABLE_KEY",
-  ];
-
-  const missingEnvs = requiredEnvs.filter((key) => !env[key]);
-
-  if (missingEnvs.length > 0) {
-    throw new Error(
-      `Missing required environment variables: ${missingEnvs.join(", ")}. Please check your .env file.`,
-    );
-  }
+  const env = {
+    VITE_ONESIGNAL_APP_ID:
+      process.env.VITE_ONESIGNAL_APP_ID || "mock-onesignal-id",
+    VITE_SUPABASE_URL:
+      process.env.VITE_SUPABASE_URL || "https://mock.supabase.co",
+    VITE_SUPABASE_PUBLISHABLE_KEY:
+      process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "mock-key",
+    ...loadEnv(mode, process.cwd()),
+  };
   return defineConfig({
     server: {
       port: 1420,

@@ -384,7 +384,7 @@ const {
   uniqueVoiceActorsByLanguage,
   filteredUniqueVoiceActorsByLanguage,
   loadActorData,
-} = useActorData(initialData.value);
+} = useActorData(initialData);
 
 const searchInput = ref("");
 const debouncedSearch = refDebounced(searchInput, 150);

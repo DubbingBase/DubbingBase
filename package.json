@@ -10,6 +10,7 @@
     "lint": "oxlint -c .oxlintrc.json",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "typecheck": "turbo run typecheck",
+    "test:e2e": "playwright test",
     "discover:media": "npx --yes tsx --env-file=.env.development scripts/discover-media.ts",
     "prepare": "husky"
   },

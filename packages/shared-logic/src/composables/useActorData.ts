@@ -1,4 +1,4 @@
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, unref, type MaybeRef } from "vue";
 import type { MovieModel, SerieModel } from "../types";
 
 export type ActorResponse = {
@@ -76,13 +76,28 @@ export async function fetchActorData(
   }
 }
 
-export function useActorData(initialData?: ActorDataPayload | null) {
-  const actor = ref<ActorResponse["actor"] | undefined>(initialData?.actor);
+export function useActorData(
+  initialData?: MaybeRef<ActorDataPayload | null | undefined>,
+) {
+  const initial = unref(initialData);
+  const actor = ref<ActorResponse["actor"] | undefined>(initial?.actor);
   const voiceRoles = ref<NonNullable<ActorResponse["actor"]["voice_roles"]>>(
-    initialData?.voiceRoles || [],
+    initial?.voiceRoles || [],
   );
-  const loading = ref<boolean>(!initialData);
+  const loading = ref<boolean>(!initial);
   const searchQuery = ref("");
+
+  watch(
+    () => unref(initialData),
+    (payload) => {
+      if (payload) {
+        actor.value = payload.actor;
+        voiceRoles.value = payload.voiceRoles || [];
+        loading.value = false;
+      }
+    },
+    { immediate: true, deep: true },
+  );
 
   const availableLanguages = computed(() => {
     if (!voiceRoles.value) return [];

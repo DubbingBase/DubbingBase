@@ -32,9 +32,9 @@ import { isPlatform } from "@ionic/vue";
 
 const app = createApp(App).use(createPinia()).use(IonicVue);
 
-if (!isPlatform("capacitor")) {
+if (!isPlatform("capacitor") && import.meta.env.VITE_ONESIGNAL_APP_ID) {
   app.use(OneSignalVuePlugin, {
-    appId: import.meta.env.VITE_ONESIGNAL_APP_ID || "",
+    appId: import.meta.env.VITE_ONESIGNAL_APP_ID,
   });
 }
 

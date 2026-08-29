@@ -1,8 +1,6 @@
-import { ref } from "vue";
-
-const isSearchOpen = ref(false);
-
 export function useSearchModal() {
+  const isSearchOpen = useState<boolean>("globalSearchModalOpen", () => false);
+
   const openSearch = () => {
     isSearchOpen.value = true;
   };

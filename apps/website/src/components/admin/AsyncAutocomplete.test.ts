@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { mountSuspended } from "@nuxt/test-utils/runtime";
+import { mockNuxtImport, mountSuspended } from "@nuxt/test-utils/runtime";
 import AsyncAutocomplete from "./AsyncAutocomplete.vue";
 import { nextTick } from "vue";
 
@@ -9,6 +9,22 @@ const localeMessages: Record<string, string> = {
   "common.create": 'Create "{name}"',
 };
 
+const tMock = (key: string, params?: Record<string, string>) => {
+  let msg = localeMessages[key] || key;
+  if (params) {
+    for (const [k, v] of Object.entries(params)) {
+      msg = msg.replace(`{${k}}`, v);
+    }
+  }
+  return msg;
+};
+
+mockNuxtImport("useI18n", () => () => ({
+  t: tMock,
+  te: (key: string) => !!localeMessages[key],
+  locale: { value: "en" },
+}));
+
 describe("AsyncAutocomplete.vue", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -17,16 +33,6 @@ describe("AsyncAutocomplete.vue", () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
-
-  const tMock = (key: string, params?: Record<string, string>) => {
-    let msg = localeMessages[key] || key;
-    if (params) {
-      for (const [k, v] of Object.entries(params)) {
-        msg = msg.replace(`{${k}}`, v);
-      }
-    }
-    return msg;
-  };
 
   const globalOptions = {
     global: {

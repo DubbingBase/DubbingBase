@@ -49,7 +49,8 @@
     >
       <button
         type="button"
-        @click="isSearchOpen = true"
+        data-testid="header-search-trigger"
+        @click="openSearch"
         class="group flex items-center justify-between w-full max-w-[320px] h-10 px-4 text-sm text-gray-500 dark:text-gray-400 bg-gray-100/50 dark:bg-gray-800/40 hover:bg-gray-200/50 dark:hover:bg-gray-800/80 border border-transparent hover:border-gray-300/50 dark:hover:border-gray-700/50 rounded-full transition-all shadow-sm hover:shadow-md"
         :aria-label="t('search.placeholder')"
       >
@@ -71,7 +72,8 @@
       <button
         type="button"
         v-if="!isHomePage"
-        @click="isSearchOpen = true"
+        data-testid="mobile-search-trigger"
+        @click="openSearch"
         :aria-label="t('search.placeholder')"
         class="sm:hidden p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors flex items-center justify-center"
       >
@@ -212,7 +214,6 @@
       </ClientOnly>
     </div>
 
-    <SearchModal v-model:open="isSearchOpen" />
   </header>
 </template>
 
@@ -231,7 +232,6 @@ import {
   MonitorIcon,
   SearchIcon,
 } from "lucide-vue-next";
-import SearchModal from "./SearchModal.vue";
 import {
   SelectRoot,
   SelectTrigger,
@@ -249,7 +249,7 @@ const setLocale = (val: any) => {
   locale.value = val;
 };
 const localePath = useLocalePath();
-const { isSearchOpen } = useSearchModal();
+const { openSearch } = useSearchModal();
 const user = useSupabaseUser();
 const route = useRoute();
 

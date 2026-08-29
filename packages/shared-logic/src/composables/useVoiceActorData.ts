@@ -24,7 +24,7 @@ export async function fetchVoiceActorData(
   }
 }
 
-import { ref, computed } from "vue";
+import { ref, computed, watch, unref, type MaybeRef } from "vue";
 import type { MovieModel, SerieModel, PersonData, Actor } from "../types";
 
 export type VoiceActorResponse = {
@@ -124,24 +124,45 @@ export type VoiceActorDataPayload = {
   profilePicture?: string | null;
 };
 
-export function useVoiceActorData(initialData?: VoiceActorDataPayload | null) {
+export function useVoiceActorData(
+  initialData?: MaybeRef<VoiceActorDataPayload | null | undefined>,
+) {
+  const initial = unref(initialData);
   const voiceActor = ref<VoiceActorResponse["voiceActor"] | undefined>(
-    initialData?.voiceActor,
+    initial?.voiceActor,
   );
   const enhancedWorksRef = ref<EnhancedWorkItem[]>(
-    initialData?.enhancedWorks || [],
+    initial?.enhancedWorks || [],
   );
-  const medias = ref<VoiceActorResponse["medias"]>(initialData?.medias || []);
+  const medias = ref<VoiceActorResponse["medias"]>(initial?.medias || []);
   const characterProfilePictures = ref<
     NonNullable<VoiceActorResponse["characterProfilePictures"]>
-  >(initialData?.characterProfilePictures || []);
+  >(initial?.characterProfilePictures || []);
   const profilePicture = ref<string | null | undefined>(
-    initialData?.profilePicture,
+    initial?.profilePicture,
   );
-  const loading = ref<boolean>(!initialData);
+  const loading = ref<boolean>(!initial);
   const searchQuery = ref("");
   const potentialWikipediaUrl = ref<string | null>(
-    initialData?.potentialWikipediaUrl || null,
+    initial?.potentialWikipediaUrl || null,
+  );
+
+  watch(
+    () => unref(initialData),
+    (payload) => {
+      if (payload) {
+        voiceActor.value = payload.voiceActor;
+        if (payload.enhancedWorks && payload.enhancedWorks.length > 0) {
+          enhancedWorksRef.value = payload.enhancedWorks;
+        }
+        medias.value = payload.medias;
+        characterProfilePictures.value = payload.characterProfilePictures;
+        potentialWikipediaUrl.value = payload.potentialWikipediaUrl;
+        profilePicture.value = payload.profilePicture;
+        loading.value = false;
+      }
+    },
+    { immediate: true, deep: true },
   );
 
   const loadVoiceActorData = async (id: string | number) => {

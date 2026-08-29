@@ -33,16 +33,20 @@ export default defineNuxtPlugin({
                 headers.authorization = reqHeaders.authorization;
               }
             } else {
-              const supabase = useSupabaseClient();
-              const {
-                data: { session },
-              } = await supabase.auth.getSession();
-              if (
-                session?.access_token &&
-                !headers.authorization &&
-                !headers.Authorization
-              ) {
-                headers.authorization = `Bearer ${session.access_token}`;
+              try {
+                const supabase = useSupabaseClient();
+                const {
+                  data: { session },
+                } = await supabase.auth.getSession();
+                if (
+                  session?.access_token &&
+                  !headers.authorization &&
+                  !headers.Authorization
+                ) {
+                  headers.authorization = `Bearer ${session.access_token}`;
+                }
+              } catch {
+                // Ignore when Supabase client is not configured
               }
             }
 
