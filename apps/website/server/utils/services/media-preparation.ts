@@ -12,7 +12,6 @@ import {
 } from "../cache/wikipedia";
 
 const MAX_LANGUAGES_PER_REQUEST = 15;
-
 const TMDB_API_BASE = "https://api.themoviedb.org/3";
 
 /** Map a Wikipedia language code to a TMDB ISO 639-1 (-3166) code. */
@@ -65,6 +64,26 @@ const dubbingExtractionSchema = z.object({
     .optional(),
 });
 
+export interface CheckSectionsResult {
+  ok: boolean;
+  title?: string;
+  wikiId?: string;
+  pageId?: number;
+  sectionIndexes?: number[];
+  wikipediaUrl?: string;
+  isAdult?: boolean;
+  error?: string;
+}
+
+export interface ExtractCreditsResult {
+  ok: boolean;
+  changes: number;
+  creditsAdded: number;
+  title?: string;
+  imageUrl?: string;
+  error?: string;
+}
+
 export interface PrepareMediaResult {
   ok: boolean;
   changes?: number;
@@ -88,23 +107,27 @@ export interface PrepareGameResult {
   error?: string;
 }
 
-export async function prepareMedia(options: {
+// ---------------------------------------------------------------------------
+// 1. Check Stage (Queue 2: wiki_check) - 0 LLM Cost, Regex TOC validation
+// ---------------------------------------------------------------------------
+
+export async function checkMediaDubbingSections(options: {
   tmdbId: number;
   type: "movie" | "tv" | "season" | "episode";
+  language: string;
   seasonNumber?: number | null;
   episodeNumber?: number | null;
-  language?: string | null;
-}): Promise<PrepareMediaResult> {
+}): Promise<CheckSectionsResult> {
   const { tmdbId, type, language } = options;
   let mediaTitle = "Unknown title";
-  let lastCheckedWikiUrl: string | undefined = undefined;
+  let wikiPageUrl: string | undefined = undefined;
 
   try {
     const config = useRuntimeConfig();
     const tmdbType = type === "season" || type === "episode" ? "tv" : type;
 
     const response = await fetch(
-      `https://api.themoviedb.org/3/${tmdbType}/${tmdbId}?append_to_response=credits,external_ids`,
+      `${TMDB_API_BASE}/${tmdbType}/${tmdbId}?append_to_response=external_ids`,
       {
         headers: {
           "Content-Type": "application/json",
@@ -115,24 +138,14 @@ export async function prepareMedia(options: {
     );
 
     if (!response.ok) {
-      throw new Error(
-        `Failed to fetch from TMDB API: status ${response.status}`,
-      );
+      throw new Error(`Failed to fetch TMDB API: status ${response.status}`);
     }
 
     const movie = (await response.json()) as any;
     mediaTitle = movie.title || movie.name || "Unknown title";
 
     if (movie.adult === true) {
-      console.log(
-        `[PREPARE] Skipping 18+ adult media ${type} ${tmdbId}: ${mediaTitle}`,
-      );
-      return {
-        ok: true,
-        title: mediaTitle,
-        changes: 0,
-        creditsAdded: 0,
-      };
+      return { ok: true, title: mediaTitle, isAdult: true };
     }
 
     const wikiId = movie.external_ids?.wikidata_id;
@@ -143,125 +156,246 @@ export async function prepareMedia(options: {
     }
 
     const wikipediaCache = useWikipediaCache();
-    let sitelinks: Record<string, any> | undefined;
-    let availableLanguages: string[] = [];
+    const entityData = await wikipediaCache.getAllSitelinksEntity(wikiId);
+    const sitelinks = entityData.entities[wikiId]?.sitelinks;
 
-    if (language) {
-      // Single-language mode: only process the requested language
-      availableLanguages = [language];
-      const entityData = await wikipediaCache.getAllSitelinksEntity(wikiId);
-      sitelinks = entityData.entities[wikiId]?.sitelinks;
-    } else {
-      // Discovery mode: find all available languages
-      const entityData = await wikipediaCache.getAllSitelinksEntity(wikiId);
-      sitelinks = entityData.entities[wikiId]?.sitelinks;
-      availableLanguages = extractAvailableLanguages(sitelinks);
+    const pageTitle = sitelinks?.[sitelinkKey(language)]?.title;
+    if (!pageTitle) {
+      const wikidataUrl = `https://www.wikidata.org/wiki/${wikiId}`;
+      throw new Error(
+        `No "${language}" Wikipedia sitelink found on Wikidata (${wikidataUrl}) for "${mediaTitle}".`,
+      );
     }
 
-    console.log("availableLanguages", availableLanguages);
+    wikiPageUrl = `https://${language}.wikipedia.org/wiki/${encodeURIComponent(pageTitle.replace(/ /g, "_"))}`;
 
-    if (availableLanguages.length === 0) {
-      return {
-        ok: true,
-        changes: 0,
-        creditsAdded: 0,
-        title: mediaTitle,
-        imageUrl: movie.poster_path
-          ? buildTmdbImageUrl(movie.poster_path) || undefined
-          : undefined,
-        languages: [],
-      };
+    const wikipediaPage = await wikipediaCache.getWikipediaPageInfo(
+      pageTitle,
+      language,
+    );
+
+    const pages = wikipediaPage?.query?.pages || {};
+    const firstPage = Object.keys(pages)[0];
+    const pageId = firstPage ? pages[firstPage]?.pageid : undefined;
+
+    if (!pageId) {
+      throw new Error(
+        `Failed to resolve Wikipedia page ID for "${pageTitle}" (${wikiPageUrl}).`,
+      );
     }
 
-    let totalNewVoiceActors = 0;
-    let totalNewCredits = 0;
-    const processedLanguages: string[] = [];
-    const creditsCache = new Map<string, any[]>();
+    const wikipediaPageSections = await wikipediaCache.getPageSections(
+      pageId,
+      language,
+    );
 
-    const getLangCast = async (lang: string): Promise<any[]> => {
-      const cached = creditsCache.get(lang);
-      if (cached) return cached;
-      const fetched = await fetchTmdbCredits(tmdbType, tmdbId, lang);
-      creditsCache.set(lang, fetched);
-      return fetched;
+    const sections =
+      wikipediaPageSections.parse?.tocdata?.sections ||
+      wikipediaPageSections.parse?.sections ||
+      [];
+
+    const dubbingIndexes = await selectDubbingSections(sections);
+    const matchedSectionIndexes = sections
+      .filter((section: { index: number }) =>
+        dubbingIndexes.includes(String(section.index)),
+      )
+      .map((s: { index: number }) => s.index);
+
+    if (matchedSectionIndexes.length === 0) {
+      throw new Error(
+        `No voice actor / dubbing sections found on Wikipedia page: ${wikiPageUrl}`,
+      );
+    }
+
+    return {
+      ok: true,
+      title: mediaTitle,
+      wikiId,
+      pageId,
+      sectionIndexes: matchedSectionIndexes,
+      wikipediaUrl: wikiPageUrl,
+    };
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    return {
+      ok: false,
+      title: mediaTitle,
+      wikipediaUrl: wikiPageUrl,
+      error: errorMsg,
+    };
+  }
+}
+
+export async function checkGameDubbingSections(options: {
+  igdbId: number;
+  language: string;
+}): Promise<CheckSectionsResult> {
+  const { igdbId, language } = options;
+  let gameTitle = "Unknown title";
+  let wikiPageUrl: string | undefined = undefined;
+
+  try {
+    const igdbClient = useIgdbClient();
+    const game = await igdbClient.getGame(igdbId);
+
+    if (!game) {
+      throw new Error(`IGDB game ${igdbId} not found`);
+    }
+
+    gameTitle = game.name;
+
+    const wikipediaCache = useWikipediaCache();
+    const searchData = await wikipediaCache.searchWikidataEntities(
+      game.name,
+      "en",
+    );
+
+    if (!searchData.search || searchData.search.length === 0) {
+      throw new Error(
+        `No Wikidata entry found for video game "${game.name}" — skipping Wikipedia extraction.`,
+      );
+    }
+
+    const bestMatch = searchData.search[0];
+    const entityData = await wikipediaCache.getAllSitelinksEntity(bestMatch.id);
+    const sitelinks = entityData.entities[bestMatch.id]?.sitelinks;
+
+    const pageTitle = sitelinks?.[sitelinkKey(language)]?.title;
+    if (!pageTitle) {
+      const wikidataUrl = `https://www.wikidata.org/wiki/${bestMatch.id}`;
+      throw new Error(
+        `No "${language}" Wikipedia sitelink found on Wikidata (${wikidataUrl}) for "${gameTitle}".`,
+      );
+    }
+
+    wikiPageUrl = `https://${language}.wikipedia.org/wiki/${encodeURIComponent(pageTitle.replace(/ /g, "_"))}`;
+
+    const wikipediaPage = await wikipediaCache.getWikipediaPageInfo(
+      pageTitle,
+      language,
+    );
+
+    const pages = wikipediaPage?.query?.pages || {};
+    const firstPage = Object.keys(pages)[0];
+    const pageId = firstPage ? pages[firstPage]?.pageid : undefined;
+
+    if (!pageId) {
+      throw new Error(
+        `Failed to resolve Wikipedia page ID for "${pageTitle}" (${wikiPageUrl}).`,
+      );
+    }
+
+    const wikipediaPageSections = await wikipediaCache.getPageSections(
+      pageId,
+      language,
+    );
+
+    const sections =
+      wikipediaPageSections.parse?.tocdata?.sections ||
+      wikipediaPageSections.parse?.sections ||
+      [];
+
+    const dubbingIndexes = await selectDubbingSections(sections);
+    const matchedSectionIndexes = sections
+      .filter((section: { index: number }) =>
+        dubbingIndexes.includes(String(section.index)),
+      )
+      .map((s: { index: number }) => s.index);
+
+    if (matchedSectionIndexes.length === 0) {
+      throw new Error(
+        `No voice actor / dubbing sections found on Wikipedia page: ${wikiPageUrl}`,
+      );
+    }
+
+    return {
+      ok: true,
+      title: gameTitle,
+      wikiId: bestMatch.id,
+      pageId,
+      sectionIndexes: matchedSectionIndexes,
+      wikipediaUrl: wikiPageUrl,
+    };
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    return {
+      ok: false,
+      title: gameTitle,
+      wikipediaUrl: wikiPageUrl,
+      error: errorMsg,
+    };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 2. Extract Stage (Queue 3: wiki_extract) - LLM Gemini credit parsing
+// ---------------------------------------------------------------------------
+
+export async function extractMediaDubbingCredits(options: {
+  tmdbId: number;
+  type: "movie" | "tv" | "season" | "episode";
+  language: string;
+  pageId: number;
+  sectionIndexes: number[];
+  seasonNumber?: number | null;
+  episodeNumber?: number | null;
+}): Promise<ExtractCreditsResult> {
+  const { tmdbId, type, language, pageId, sectionIndexes } = options;
+  let mediaTitle = "Unknown title";
+  let imageUrl: string | undefined = undefined;
+
+  try {
+    const config = useRuntimeConfig();
+    const tmdbType = type === "season" || type === "episode" ? "tv" : type;
+
+    const response = await fetch(
+      `${TMDB_API_BASE}/${tmdbType}/${tmdbId}?append_to_response=credits`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${config.tmdbApiKey}`,
+          Accept: "application/json",
+        },
+      },
+    );
+
+    if (response.ok) {
+      const movie = (await response.json()) as any;
+      mediaTitle = movie.title || movie.name || "Unknown title";
+      if (movie.poster_path) {
+        imageUrl = buildTmdbImageUrl(movie.poster_path) || undefined;
+      }
+    }
+
+    // Cache localized cast lookups per language edition
+    const langCastCache = new Map<string, any[]>();
+    const getLangCast = async (l: string) => {
+      if (!langCastCache.has(l)) {
+        langCastCache.set(l, await fetchTmdbCredits(tmdbType, tmdbId, l));
+      }
+      return langCastCache.get(l)!;
     };
 
-    if (!sitelinks) {
-      throw new Error("No sitelinks found for this media.");
-    }
+    await findOrCreateDubbingProject(tmdbId, tmdbType, language);
 
-    // When processing a specific language (queue job), don't apply the limit
-    const languagesToProcess = language
-      ? availableLanguages
-      : availableLanguages.slice(0, MAX_LANGUAGES_PER_REQUEST);
+    const wikipediaCache = useWikipediaCache();
+    let totalNewVoiceActors = 0;
+    let totalNewCredits = 0;
 
-    for (const lang of languagesToProcess) {
-      const pageTitle = sitelinks[sitelinkKey(lang)]?.title;
-      if (!pageTitle) continue;
-
-      const wikiPageUrl = `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(pageTitle.replace(/ /g, "_"))}`;
-      lastCheckedWikiUrl = wikiPageUrl;
-
-      console.log(
-        `Checking language "${lang}" for page "${pageTitle}" (${wikiPageUrl})`,
-      );
-
-      const wikipediaPage = await wikipediaCache.getWikipediaPageInfo(
-        pageTitle,
-        lang,
-      );
-
-      const pages = wikipediaPage?.query?.pages || {};
-      const firstPage = Object.keys(pages)[0];
-      const pageId = firstPage ? pages[firstPage]?.pageid : undefined;
-
-      if (!pageId) continue;
-
-      const wikipediaPageSections = await wikipediaCache.getPageSections(
+    for (const sectionIndex of sectionIndexes) {
+      const wikitextJSON = await wikipediaCache.getPageSectionAsWikitext(
         pageId,
-        lang,
+        String(sectionIndex),
+        language,
       );
+      const wikitext = wikitextJSON.parse?.wikitext;
+      if (!wikitext) continue;
 
-      const sections =
-        wikipediaPageSections.parse?.tocdata?.sections ||
-        wikipediaPageSections.parse?.sections ||
-        [];
-
-      const dubbingIndexes = await selectDubbingSections(sections);
-      const sectionIds = sections.filter((section: { index: number }) =>
-        dubbingIndexes.includes(String(section.index)),
-      );
-
-      if (sectionIds.length === 0) {
-        console.log(
-          `No matching sections found in "${lang}" Wikipedia (${wikiPageUrl}), skipping`,
-        );
-        continue;
-      }
-
-      console.log(
-        `Processing ${sectionIds.length} section(s) in "${lang}" Wikipedia`,
-      );
-
-      await findOrCreateDubbingProject(tmdbId, tmdbType, lang);
-
-      let langNewVoiceActors = 0;
-      let langNewCredits = 0;
-
-      for (const section of sectionIds) {
-        const wikitextJSON = await wikipediaCache.getPageSectionAsWikitext(
-          pageId,
-          section.index,
-          lang,
-        );
-        const wikitext = wikitextJSON.parse?.wikitext;
-        if (!wikitext) continue;
-
-        const llmSuggestionJSON = await llmGenerateObject(
-          wikitext,
-          dubbingExtractionSchema,
-          {
-            systemInstruction: `You are an expert at extracting dubbing data from Wikipedia pages. Extract the dubbing (distribution) data from the provided wikitext.
+      const llmSuggestionJSON = await llmGenerateObject(
+        wikitext,
+        dubbingExtractionSchema,
+        {
+          systemInstruction: `You are an expert at extracting dubbing data from Wikipedia pages. Extract the dubbing (distribution) data from the provided wikitext.
 
 Each row in a dubbing table = one credit. Output fields:
 - actor: the original/previous performer (the person who originally played the role)
@@ -269,103 +403,45 @@ Each row in a dubbing table = one credit. Output fields:
 - voiceActorFirstname: the localized/new voice actor's given name (e.g. "寿明" for 唐沢寿明)
 - performance: the character name (optional)
 
-If no dubbing or voice-actor data exists in the section, return { items: [] }.
+If no dubbing or voice-actor data exists in the section, return { items: [] }.`,
+          temperature: 0,
+        },
+      );
 
-Example (Japanese):
-Input wikitext:
-{| class="wikitable"
-! キャラクター !! 初代俳優 !! 声優
-|-
-| ウッディ || トム・ハンクス || 唐沢寿明
-|-
-| バズ・ライトイヤー || ティム・アレン || 落合弘治
-|}
-Output:
-{ "items": [
-  { "actor": "トム・ハンクス", "voiceActorName": "唐沢", "voiceActorFirstname": "寿明", "performance": "ウッディ" },
-  { "actor": "ティム・アレン", "voiceActorName": "落合", "voiceActorFirstname": "弘治", "performance": "バズ・ライトイヤー" }
-]}
+      for (const entry of llmSuggestionJSON?.items ?? []) {
+        let { actor, voiceActorFirstname, voiceActorName } = entry;
 
-Example (English):
-Input wikitext:
-{| class="wikitable"
-! Character !! Original Actor !! Voice Actor
-|-
-| Woody || Tom Hanks || Tom Hanks
-|}
-Output:
-{ "items": [
-  { "actor": "Tom Hanks", "voiceActorName": "Hanks", "voiceActorFirstname": "Tom", "performance": "Woody" }
-]}`,
-            temperature: 0,
-          },
-        );
+        if (actor && voiceActorFirstname && voiceActorName) {
+          const langCast = await getLangCast(language);
+          const castPool = langCast.length ? langCast : [];
 
-        for (const entry of llmSuggestionJSON?.items ?? []) {
-          let { actor, voiceActorFirstname, voiceActorName } = entry;
+          const foundActor = castPool.find((cast: any) => cast.name === actor);
 
-          if (actor && voiceActorFirstname && voiceActorName) {
-            // Prefer this edition's localized cast names, fall back to the
-            // default (English/Latin) credits so non-latin editions still link.
-            const langCast = await getLangCast(lang);
-            const castPool = langCast.length
-              ? langCast
-              : movie.credits?.cast || [];
-
-            const foundActor = castPool.find(
-              (cast: any) => cast.name === actor,
+          if (!foundActor) {
+            console.log(
+              `actor from wikitext "${actor}" not found in tmdb cast (lang ${language})`,
             );
-
-            if (!foundActor) {
-              console.log(
-                `actor from wikitext "${actor}" not found in tmdb cast (lang ${lang})`,
-              );
-              continue;
-            }
-
-            const { id: actorId } = foundActor;
-
-            const result = await insertVoiceActorAndWork(
-              voiceActorFirstname,
-              voiceActorName,
-              tmdbId,
-              actorId,
-              tmdbType,
-              lang,
-              entry.performance,
-            );
-
-            if (result.voiceActorResult.inserted) {
-              langNewVoiceActors++;
-            }
-            langNewCredits++;
+            continue;
           }
+
+          const { id: actorId } = foundActor;
+
+          const result = await insertVoiceActorAndWork(
+            voiceActorFirstname,
+            voiceActorName,
+            tmdbId,
+            actorId,
+            tmdbType,
+            language,
+            entry.performance,
+          );
+
+          if (result.voiceActorResult.inserted) {
+            totalNewVoiceActors++;
+          }
+          totalNewCredits++;
         }
       }
-
-      console.log(
-        `"${lang}": ${langNewCredits} credits, ${langNewVoiceActors} new voice actors`,
-      );
-      totalNewVoiceActors += langNewVoiceActors;
-      totalNewCredits += langNewCredits;
-      if (langNewCredits > 0) {
-        processedLanguages.push(lang);
-      }
-    }
-
-    if (processedLanguages.length === 0) {
-      const wikiUrlInfo = lastCheckedWikiUrl
-        ? ` on Wikipedia page: ${lastCheckedWikiUrl}`
-        : "";
-      throw new Error(
-        `No voice actor / dubbing sections found${wikiUrlInfo}. ` +
-          `Checked ${availableLanguages.length} language(s): ${availableLanguages.join(", ")}.`,
-      );
-    }
-
-    let imageUrl: string | undefined = undefined;
-    if (movie && movie.poster_path) {
-      imageUrl = buildTmdbImageUrl(movie.poster_path) || undefined;
     }
 
     return {
@@ -374,34 +450,29 @@ Output:
       creditsAdded: totalNewCredits,
       title: mediaTitle,
       imageUrl,
-      languages: processedLanguages,
-      wikipediaUrl: lastCheckedWikiUrl,
     };
   } catch (error) {
-    console.error("Error in prepareMedia service:", error);
-    const errorMsg =
-      error instanceof Error
-        ? error.message
-        : typeof error === "object" && error !== null
-          ? (error as any).message || JSON.stringify(error)
-          : String(error);
-
+    const errorMsg = error instanceof Error ? error.message : String(error);
     return {
       ok: false,
-      error: errorMsg,
+      changes: 0,
+      creditsAdded: 0,
       title: mediaTitle,
-      wikipediaUrl: lastCheckedWikiUrl,
+      imageUrl,
+      error: errorMsg,
     };
   }
 }
 
-export async function prepareGame(options: {
+export async function extractGameDubbingCredits(options: {
   igdbId: number;
-  language?: string | null;
-}): Promise<PrepareGameResult> {
-  const { igdbId, language } = options;
+  language: string;
+  pageId: number;
+  sectionIndexes: number[];
+}): Promise<ExtractCreditsResult> {
+  const { igdbId, language, pageId, sectionIndexes } = options;
   let gameTitle = "Unknown title";
-  let lastCheckedWikiUrl: string | undefined = undefined;
+  let imageUrl: string | undefined = undefined;
 
   try {
     const igdbClient = useIgdbClient();
@@ -415,147 +486,33 @@ export async function prepareGame(options: {
     }
 
     gameTitle = game.name;
-
-    let newVoiceActorsCount = 0;
-    let newCreditsCount = 0;
-
-    const wikipediaCache = useWikipediaCache();
-    const searchData = await wikipediaCache.searchWikidataEntities(
-      game.name,
-      "en",
-    );
-
-    if (!searchData.search || searchData.search.length === 0) {
-      return {
-        ok: true,
-        changes: 0,
-        creditsAdded: 0,
-        title: gameTitle,
-        imageUrl: game.cover
-          ? buildIgdbImageUrl(game.cover.image_id, "cover_big")
-          : undefined,
-        note: "No Wikidata entry found for this game — skipping Wikipedia extraction.",
-      };
-    }
-
-    const bestMatch = searchData.search[0];
-
-    // When language is provided, process only that language (per-language queue job)
-    // When language is null, discover all available languages
-    let availableLanguages: string[];
-    let sitelinks: Record<string, any> | undefined;
-
-    if (language) {
-      // Single language mode: skip sitelink discovery, use provided language
-      availableLanguages = [language];
-      const entityData = await wikipediaCache.getAllSitelinksEntity(
-        bestMatch.id,
-      );
-      sitelinks = entityData.entities[bestMatch.id]?.sitelinks;
-    } else {
-      // Discovery mode: find all available languages
-      const entityData = await wikipediaCache.getAllSitelinksEntity(
-        bestMatch.id,
-      );
-      sitelinks = entityData.entities[bestMatch.id]?.sitelinks;
-      availableLanguages = extractAvailableLanguages(sitelinks);
-    }
-
-    console.log("availableLanguages", availableLanguages);
-
-    if (availableLanguages.length === 0) {
-      return {
-        ok: true,
-        changes: 0,
-        creditsAdded: 0,
-        title: gameTitle,
-        imageUrl: game.cover
-          ? buildIgdbImageUrl(game.cover.image_id, "cover_big")
-          : undefined,
-        note: `No Wikipedia pages found for "${game.name}".`,
-      };
+    if (game.cover) {
+      imageUrl =
+        buildIgdbImageUrl(game.cover.image_id, "cover_big") || undefined;
     }
 
     const characterMap = new Map(
       characters.map((c: any) => [c.name?.toLowerCase(), c]),
     );
 
-    const processedLanguages: string[] = [];
+    const wikipediaCache = useWikipediaCache();
+    let totalNewVoiceActors = 0;
+    let totalNewCredits = 0;
 
-    if (!sitelinks) {
-      throw new Error("No sitelinks found for this game.");
-    }
-
-    // When processing a specific language (queue job), don't apply the limit
-    const languagesToProcess = language
-      ? availableLanguages
-      : availableLanguages.slice(0, MAX_LANGUAGES_PER_REQUEST);
-
-    for (const lang of languagesToProcess) {
-      const pageTitle = sitelinks[sitelinkKey(lang)]?.title;
-      if (!pageTitle) continue;
-
-      const wikiPageUrl = `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(pageTitle.replace(/ /g, "_"))}`;
-      lastCheckedWikiUrl = wikiPageUrl;
-
-      console.log(
-        `Checking language "${lang}" for page "${pageTitle}" (${wikiPageUrl})`,
-      );
-
-      const wikipediaPage = await wikipediaCache.getWikipediaPageInfo(
-        pageTitle,
-        lang,
-      );
-
-      const pages = wikipediaPage?.query?.pages || {};
-      const firstPage = Object.keys(pages)[0];
-      const pageId = firstPage ? pages[firstPage]?.pageid : undefined;
-
-      if (!pageId) continue;
-
-      const wikipediaPageSections = await wikipediaCache.getPageSections(
+    for (const sectionIndex of sectionIndexes) {
+      const wikitextJSON = await wikipediaCache.getPageSectionAsWikitext(
         pageId,
-        lang,
+        String(sectionIndex),
+        language,
       );
+      const wikitext = wikitextJSON.parse?.wikitext;
+      if (!wikitext) continue;
 
-      const sections =
-        wikipediaPageSections.parse?.tocdata?.sections ||
-        wikipediaPageSections.parse?.sections ||
-        [];
-
-      const dubbingIndexes = await selectDubbingSections(sections);
-      const sectionIds = sections.filter((section: { index: number }) =>
-        dubbingIndexes.includes(String(section.index)),
-      );
-
-      if (sectionIds.length === 0) {
-        console.log(
-          `No matching sections found in "${lang}" Wikipedia (${wikiPageUrl}), skipping`,
-        );
-        continue;
-      }
-
-      console.log(
-        `Processing ${sectionIds.length} section(s) in "${lang}" Wikipedia`,
-      );
-
-      let langNewVoiceActors = 0;
-      let langNewCredits = 0;
-
-      for (const section of sectionIds) {
-        const wikitextJSON = await wikipediaCache.getPageSectionAsWikitext(
-          pageId,
-          section.index,
-          lang,
-        );
-        const wikitext = wikitextJSON.parse?.wikitext;
-        if (!wikitext) continue;
-
-        const llmSuggestionJSON = await llmGenerateObject(
-          wikitext,
-          dubbingExtractionSchema,
-          {
-            systemInstruction: `You are an expert at extracting dubbing data from Wikipedia pages. Extract the dubbing (distribution) data from the provided wikitext.
+      const llmSuggestionJSON = await llmGenerateObject(
+        wikitext,
+        dubbingExtractionSchema,
+        {
+          systemInstruction: `You are an expert at extracting dubbing data from Wikipedia pages. Extract the dubbing (distribution) data from the provided wikitext.
 
 Each row in a dubbing table = one credit. Output fields:
 - actor: the original/previous performer (the person who originally played the role)
@@ -563,114 +520,161 @@ Each row in a dubbing table = one credit. Output fields:
 - voiceActorFirstname: the localized/new voice actor's given name (e.g. "寿明" for 唐沢寿明)
 - performance: the character name (optional)
 
-If no dubbing or voice-actor data exists in the section, return { items: [] }.
+If no dubbing or voice-actor data exists in the section, return { items: [] }.`,
+          temperature: 0,
+        },
+      );
 
-Example (Japanese):
-Input wikitext:
-{| class="wikitable"
-! キャラクター !! 初代俳優 !! 声優
-|-
-| ウッディ || トム・ハンクス || 唐沢寿明
-|-
-| バズ・ライトイヤー || ティム・アレン || 落合弘治
-|}
-Output:
-{ "items": [
-  { "actor": "トム・ハンクス", "voiceActorName": "唐沢", "voiceActorFirstname": "寿明", "performance": "ウッディ" },
-  { "actor": "ティム・アレン", "voiceActorName": "落合", "voiceActorFirstname": "弘治", "performance": "バズ・ライトイヤー" }
-]}
+      for (const entry of llmSuggestionJSON?.items ?? []) {
+        let { actor, voiceActorFirstname, voiceActorName } = entry;
 
-Example (English):
-Input wikitext:
-{| class="wikitable"
-! Character !! Original Actor !! Voice Actor
-|-
-| Woody || Tom Hanks || Tom Hanks
-|}
-Output:
-{ "items": [
-  { "actor": "Tom Hanks", "voiceActorName": "Hanks", "voiceActorFirstname": "Tom", "performance": "Woody" }
-]}`,
-            temperature: 0,
-          },
+        if (!actor || !voiceActorFirstname || !voiceActorName) {
+          continue;
+        }
+
+        const igdbChar = characterMap.get(actor.toLowerCase());
+        const actorId = igdbChar
+          ? (igdbChar as any).id
+          : Math.abs(
+              actor
+                .split("")
+                .reduce(
+                  (hash: number, c: string) =>
+                    (hash * 31 + c.charCodeAt(0)) | 0,
+                  0,
+                ),
+            ) + 8_000_000_000;
+
+        const result = await insertVoiceActorAndWork(
+          voiceActorFirstname,
+          voiceActorName,
+          igdbId,
+          actorId,
+          "video_game",
+          language,
+          entry.performance,
         );
 
-        for (const entry of llmSuggestionJSON?.items ?? []) {
-          let { actor, voiceActorFirstname, voiceActorName } = entry;
-
-          if (!actor || !voiceActorFirstname || !voiceActorName) {
-            continue;
-          }
-
-          const igdbChar = characterMap.get(actor.toLowerCase());
-          const actorId = igdbChar
-            ? (igdbChar as any).id
-            : Math.abs(
-                actor
-                  .split("")
-                  .reduce(
-                    (hash: number, c: string) =>
-                      (hash * 31 + c.charCodeAt(0)) | 0,
-                    0,
-                  ),
-              ) + 8_000_000_000;
-
-          const result = await insertVoiceActorAndWork(
-            voiceActorFirstname,
-            voiceActorName,
-            igdbId,
-            actorId,
-            "video_game",
-            lang,
-            entry.performance,
-          );
-
-          if (result.voiceActorResult.inserted) {
-            langNewVoiceActors++;
-          }
-          langNewCredits++;
+        if (result.voiceActorResult.inserted) {
+          totalNewVoiceActors++;
         }
+        totalNewCredits++;
       }
-
-      console.log(
-        `"${lang}": ${langNewCredits} credits, ${langNewVoiceActors} new voice actors`,
-      );
-      newVoiceActorsCount += langNewVoiceActors;
-      newCreditsCount += langNewCredits;
-      if (langNewCredits > 0) {
-        processedLanguages.push(lang);
-      }
-    }
-
-    if (processedLanguages.length === 0) {
-      const wikiUrlInfo = lastCheckedWikiUrl
-        ? ` on Wikipedia page: ${lastCheckedWikiUrl}`
-        : "";
-      throw new Error(
-        `No voice actor / dubbing sections found${wikiUrlInfo}. ` +
-          `Checked ${availableLanguages.length} language(s): ${availableLanguages.join(", ")}.`,
-      );
     }
 
     return {
       ok: true,
-      changes: newVoiceActorsCount,
-      creditsAdded: newCreditsCount,
+      changes: totalNewVoiceActors,
+      creditsAdded: totalNewCredits,
       title: gameTitle,
-      imageUrl: game.cover
-        ? buildIgdbImageUrl(game.cover.image_id, "cover_big")
-        : undefined,
-      languages: processedLanguages,
-      wikipediaUrl: lastCheckedWikiUrl,
+      imageUrl,
     };
   } catch (error) {
-    console.error("Error in prepareGame service:", error);
     const errorMsg = error instanceof Error ? error.message : String(error);
     return {
       ok: false,
-      error: errorMsg,
+      changes: 0,
+      creditsAdded: 0,
       title: gameTitle,
-      wikipediaUrl: lastCheckedWikiUrl,
+      imageUrl,
+      error: errorMsg,
     };
   }
+}
+
+// ---------------------------------------------------------------------------
+// High-Level Full Preparation Wrappers (for manual / instant UI execution)
+// ---------------------------------------------------------------------------
+
+export async function prepareMedia(options: {
+  tmdbId: number;
+  type: "movie" | "tv" | "season" | "episode";
+  seasonNumber?: number | null;
+  episodeNumber?: number | null;
+  language?: string | null;
+}): Promise<PrepareMediaResult> {
+  const { tmdbId, type, language } = options;
+  if (!language) {
+    throw new Error("Direct prepareMedia requires a specified language.");
+  }
+
+  const check = await checkMediaDubbingSections({
+    tmdbId,
+    type,
+    language,
+    seasonNumber: options.seasonNumber,
+    episodeNumber: options.episodeNumber,
+  });
+
+  if (!check.ok) {
+    return {
+      ok: false,
+      title: check.title,
+      wikipediaUrl: check.wikipediaUrl,
+      error: check.error,
+    };
+  }
+
+  if (check.isAdult) {
+    return { ok: true, title: check.title, changes: 0, creditsAdded: 0 };
+  }
+
+  const extract = await extractMediaDubbingCredits({
+    tmdbId,
+    type,
+    language,
+    pageId: check.pageId!,
+    sectionIndexes: check.sectionIndexes!,
+    seasonNumber: options.seasonNumber,
+    episodeNumber: options.episodeNumber,
+  });
+
+  return {
+    ok: extract.ok,
+    changes: extract.changes,
+    creditsAdded: extract.creditsAdded,
+    title: extract.title || check.title,
+    imageUrl: extract.imageUrl,
+    wikipediaUrl: check.wikipediaUrl,
+    languages: [language],
+    error: extract.error,
+  };
+}
+
+export async function prepareGame(options: {
+  igdbId: number;
+  language?: string | null;
+}): Promise<PrepareGameResult> {
+  const { igdbId, language } = options;
+  if (!language) {
+    throw new Error("Direct prepareGame requires a specified language.");
+  }
+
+  const check = await checkGameDubbingSections({ igdbId, language });
+  if (!check.ok) {
+    return {
+      ok: false,
+      title: check.title,
+      wikipediaUrl: check.wikipediaUrl,
+      error: check.error,
+    };
+  }
+
+  const extract = await extractGameDubbingCredits({
+    igdbId,
+    language,
+    pageId: check.pageId!,
+    sectionIndexes: check.sectionIndexes!,
+  });
+
+  return {
+    ok: extract.ok,
+    changes: extract.changes,
+    creditsAdded: extract.creditsAdded,
+    title: extract.title || check.title,
+    imageUrl: extract.imageUrl,
+    wikipediaUrl: check.wikipediaUrl,
+    languages: [language],
+    error: extract.error,
+  };
 }

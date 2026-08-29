@@ -118,6 +118,18 @@
         class="flex flex-wrap items-center gap-3 bg-gray-900 p-4 rounded-2xl border border-gray-800"
       >
         <div class="flex items-center space-x-2">
+          <label class="text-xs text-gray-400 font-semibold uppercase">Queue</label>
+          <select
+            v-model="filterQueue"
+            class="bg-gray-800 border border-gray-700 text-gray-200 text-xs rounded-lg px-3 py-1.5 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="all">All Queues</option>
+            <option value="wiki_extract">LLM Extraction (Ready)</option>
+            <option value="wiki_check">TOC Section Check</option>
+            <option value="wiki_discovery">Wikidata Discovery</option>
+          </select>
+        </div>
+        <div class="flex items-center space-x-2">
           <label class="text-xs text-gray-400 font-semibold uppercase">{{ $t('admin.queue.status') }}</label>
           <select
             v-model="filterStatus"
@@ -187,7 +199,7 @@
               >
                 <!-- Media details column -->
                 <td class="py-4 px-6">
-                  <div class="flex items-center space-x-2.5">
+                  <div class="flex items-center space-x-2">
                     <span
                       class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase border"
                       :class="getTypeClass(item.media_type)"
@@ -195,16 +207,28 @@
                       {{ item.media_type }}
                     </span>
                     <span
-                      v-if="(item as any).language"
-                      class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-sky-950/60 border border-sky-800/80 text-sky-300"
+                      v-if="(item as any).queue_name === 'wiki_extract'"
+                      class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-950/60 border border-emerald-800/80 text-emerald-300"
                     >
-                      {{ (item as any).language }}
+                      LLM Ready
                     </span>
                     <span
-                      v-else-if="(item as any).queue_name === 'wiki_nolang'"
+                      v-else-if="(item as any).queue_name === 'wiki_check'"
+                      class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-sky-950/60 border border-sky-800/80 text-sky-300"
+                    >
+                      TOC Check
+                    </span>
+                    <span
+                      v-else-if="(item as any).queue_name === 'wiki_discovery'"
                       class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-950/60 border border-amber-800/80 text-amber-300"
                     >
                       Discovery
+                    </span>
+                    <span
+                      v-if="(item as any).language"
+                      class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-purple-950/60 border border-purple-800/80 text-purple-300"
+                    >
+                      {{ (item as any).language }}
                     </span>
                     <div class="flex items-center space-x-3">
                       <a
@@ -450,6 +474,7 @@ const error = ref("");
 const isDev = import.meta.env.DEV;
 const pendingCount = ref<number | null>(null);
 
+const filterQueue = ref("all");
 const filterStatus = ref("all");
 const filterType = ref("all");
 const filterSearch = ref("");
@@ -458,6 +483,12 @@ const allQueueItems = computed(() => queueItems.value);
 
 const filteredItems = computed(() => {
   return allQueueItems.value.filter((item) => {
+    if (
+      filterQueue.value !== "all" &&
+      (item as any).queue_name !== filterQueue.value
+    ) {
+      return false;
+    }
     if (filterStatus.value !== "all" && item.status !== filterStatus.value) {
       return false;
     }
