@@ -52,16 +52,32 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    const { data, error: popError } = await supabaseAdmin.rpc(
+    let targetQueue = "wiki_lang";
+    let { data, error: popError } = await supabaseAdmin.rpc(
       "pop_media_queue_message",
       {
+        p_queue_name: "wiki_lang",
         p_vt_seconds: 90,
       },
     );
 
     if (popError) {
+      console.error("[QUEUE] Error polling wiki_lang:", popError);
+    }
+
+    if (!data || data.length === 0) {
+      targetQueue = "wiki_nolang";
+      const fallbackRes = await supabaseAdmin.rpc("pop_media_queue_message", {
+        p_queue_name: "wiki_nolang",
+        p_vt_seconds: 90,
+      });
+      data = fallbackRes.data;
+      popError = fallbackRes.error;
+    }
+
+    if (popError) {
       throw new Error(
-        `RPC pop_media_queue_message failed: ${JSON.stringify(popError)}`,
+        `RPC pop_media_queue_message failed for ${targetQueue}: ${JSON.stringify(popError)}`,
       );
     }
 
@@ -71,6 +87,7 @@ export default defineEventHandler(async (event) => {
 
     const queueItem = data[0]!;
     const msgId = Number(queueItem.msg_id);
+    const readCt = Number(queueItem.read_ct ?? 1);
     const payload = queueItem.message as {
       tmdb_id: number;
       media_type: string;
@@ -126,12 +143,13 @@ export default defineEventHandler(async (event) => {
               const { error: archiveErr } = await supabaseAdmin.rpc(
                 "archive_media_queue_message",
                 {
+                  p_queue_name: targetQueue,
                   p_msg_id: msgId,
                 },
               );
               if (archiveErr) {
                 console.error(
-                  `[QUEUE] Failed to archive message ${msgId}:`,
+                  `[QUEUE] Failed to archive message ${msgId} in ${targetQueue}:`,
                   archiveErr,
                 );
                 throw new Error(
@@ -169,12 +187,13 @@ export default defineEventHandler(async (event) => {
           const { error: archiveErr } = await supabaseAdmin.rpc(
             "archive_media_queue_message",
             {
+              p_queue_name: targetQueue,
               p_msg_id: msgId,
             },
           );
           if (archiveErr) {
             console.error(
-              `[QUEUE] Failed to archive message ${msgId}:`,
+              `[QUEUE] Failed to archive message ${msgId} in ${targetQueue}:`,
               archiveErr,
             );
             throw new Error(
@@ -212,26 +231,35 @@ export default defineEventHandler(async (event) => {
         );
 
         if (availableLanguages.length === 0) {
-          // No Wikipedia pages found, archive the job
+          // No Wikipedia pages found on Wikidata, archive with error
+          const wikidataUrl = wikiId
+            ? `https://www.wikidata.org/wiki/${wikiId}`
+            : undefined;
+          const errMsg = `No Wikipedia sitelinks found on Wikidata${wikidataUrl ? ` (${wikidataUrl})` : ""}.`;
+
           const { error: archiveErr } = await supabaseAdmin.rpc(
-            "archive_media_queue_message",
+            "archive_media_queue_message_with_error",
             {
+              p_queue_name: targetQueue,
               p_msg_id: msgId,
+              p_error: errMsg,
             },
           );
           if (archiveErr) {
             console.error(
-              `[QUEUE] Failed to archive message ${msgId}:`,
+              `[QUEUE] Failed to archive message ${msgId} in ${targetQueue}:`,
               archiveErr,
-            );
-            throw new Error(
-              `Failed to archive message ${msgId}: ${archiveErr.message}`,
             );
           }
 
+          const wikidataLink = wikidataUrl
+            ? `\n🔗 **Wikidata Item:** ${wikidataUrl}`
+            : "";
+
           await sendDiscordAdminNotification(
             "Queue Discovery: No Wikipedia Pages",
-            `No Wikipedia pages found for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}). Discovery archived.`,
+            `No Wikipedia pages found for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}).\n\`\`\`\n${errMsg}\n\`\`\`${wikidataLink}`,
+            wikidataUrl ? { url: wikidataUrl } : undefined,
           );
 
           return {
@@ -240,9 +268,9 @@ export default defineEventHandler(async (event) => {
             results: [
               {
                 id: msgId,
-                ok: true,
+                ok: false,
                 changes: 0,
-                note: "No Wikipedia pages found",
+                error: errMsg,
               },
             ],
           };
@@ -286,12 +314,13 @@ export default defineEventHandler(async (event) => {
         const { error: archiveErr } = await supabaseAdmin.rpc(
           "archive_media_queue_message",
           {
+            p_queue_name: targetQueue,
             p_msg_id: msgId,
           },
         );
         if (archiveErr) {
           console.error(
-            `[QUEUE] Failed to archive discovery job ${msgId}:`,
+            `[QUEUE] Failed to archive discovery job ${msgId} in ${targetQueue}:`,
             archiveErr,
           );
           throw new Error(
@@ -360,6 +389,7 @@ export default defineEventHandler(async (event) => {
         console.error(`[QUEUE] Error in discovery job ${msgId}:`, errMsg);
 
         await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
+          p_queue_name: targetQueue,
           p_msg_id: msgId,
           p_error: errMsg,
         });
@@ -405,18 +435,23 @@ export default defineEventHandler(async (event) => {
 
       if (!responseData || !responseData.ok) {
         const errorInfo = responseData?.error || "Unknown preparation error";
-        throw new Error(errorInfo);
+        const errObj: any = new Error(errorInfo);
+        if (responseData?.wikipediaUrl) {
+          errObj.wikipediaUrl = responseData.wikipediaUrl;
+        }
+        throw errObj;
       }
 
       const { error: archiveErr } = await supabaseAdmin.rpc(
         "archive_media_queue_message",
         {
+          p_queue_name: targetQueue,
           p_msg_id: msgId,
         },
       );
       if (archiveErr) {
         console.error(
-          `[QUEUE] Failed to archive language job ${msgId}:`,
+          `[QUEUE] Failed to archive language job ${msgId} in ${targetQueue}:`,
           archiveErr,
         );
         throw new Error(
@@ -475,16 +510,25 @@ export default defineEventHandler(async (event) => {
         errMsg = String(err);
       }
 
+      const wikiUrl =
+        (err as any)?.wikipediaUrl ||
+        errMsg.match(
+          /https:\/\/[a-z0-9\-_.]+\.wikipedia\.org\/wiki\/[^\s)\]]+/i,
+        )?.[0];
+      const wikiLinkSection = wikiUrl
+        ? `\n🔗 **Wikipedia Link:** ${wikiUrl}`
+        : "";
+
       const langTag = payload.language
         ? ` [${payload.language.toUpperCase()}]`
         : "";
 
       if (errMsg.includes("LLM API Rate Limited (429)")) {
-        const readCt = Number(queueItem.read_ct);
         const MAX_RETRIES = 5;
 
         if (readCt >= MAX_RETRIES) {
           await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
+            p_queue_name: targetQueue,
             p_msg_id: msgId,
             p_error: `Max retries (${MAX_RETRIES}) reached due to LLM API Rate Limited (429).`,
           });
@@ -498,7 +542,8 @@ export default defineEventHandler(async (event) => {
 
           await sendDiscordAdminNotification(
             `Queue Item Failed (Rate Limit)${langTag}`,
-            `Failed to process **${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type}** (ID ${payload.tmdb_id}${payload.language ? `, language: ${payload.language.toUpperCase()}` : ""}): Max retries (${MAX_RETRIES}) reached due to LLM rate limit.\n\`\`\`\n${errMsg}\n\`\`\``,
+            `Failed to process **${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type}** (ID ${payload.tmdb_id}${payload.language ? `, language: ${payload.language.toUpperCase()}` : ""}): Max retries (${MAX_RETRIES}) reached due to LLM rate limit.\n\`\`\`\n${errMsg}\n\`\`\`${wikiLinkSection}`,
+            wikiUrl ? { url: wikiUrl } : undefined,
           );
         } else {
           results.push({
@@ -513,6 +558,7 @@ export default defineEventHandler(async (event) => {
         console.error(`[QUEUE] Error processing message ID ${msgId}:`, errMsg);
 
         await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
+          p_queue_name: targetQueue,
           p_msg_id: msgId,
           p_error: errMsg,
         });
@@ -526,7 +572,8 @@ export default defineEventHandler(async (event) => {
 
         await sendDiscordAdminNotification(
           `Queue Item Failed${langTag}`,
-          `Failed to process **${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type}** (ID ${payload.tmdb_id}${payload.language ? `, language: ${payload.language.toUpperCase()}` : ""}):\n\`\`\`\n${errMsg}\n\`\`\``,
+          `Failed to process **${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type}** (ID ${payload.tmdb_id}${payload.language ? `, language: ${payload.language.toUpperCase()}` : ""}):\n\`\`\`\n${errMsg}\n\`\`\`${wikiLinkSection}`,
+          wikiUrl ? { url: wikiUrl } : undefined,
         );
       }
     }

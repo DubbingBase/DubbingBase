@@ -9,12 +9,14 @@ export async function enqueueMedia(params: {
   mediaType: string;
   seasonNumber?: number | null;
   episodeNumber?: number | null;
+  language?: string | null;
 }): Promise<void> {
   const { error } = await (supabase as any).rpc("enqueue_media_fetch", {
     p_tmdb_id: params.tmdbId,
     p_media_type: params.mediaType,
     p_season_number: params.seasonNumber ?? null,
     p_episode_number: params.episodeNumber ?? null,
+    p_language: params.language ?? null,
   });
 
   if (error) {

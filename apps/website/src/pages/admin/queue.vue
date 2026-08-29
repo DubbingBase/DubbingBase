@@ -194,6 +194,18 @@
                     >
                       {{ item.media_type }}
                     </span>
+                    <span
+                      v-if="(item as any).language"
+                      class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-sky-950/60 border border-sky-800/80 text-sky-300"
+                    >
+                      {{ (item as any).language }}
+                    </span>
+                    <span
+                      v-else-if="(item as any).queue_name === 'wiki_nolang'"
+                      class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-950/60 border border-amber-800/80 text-amber-300"
+                    >
+                      Discovery
+                    </span>
                     <div class="flex items-center space-x-3">
                       <a
                         :href="`https://www.themoviedb.org/${item.media_type === 'tv' || item.media_type === 'season' || item.media_type === 'episode' ? 'tv' : 'movie'}/${item.tmdb_id}`"
@@ -206,7 +218,7 @@
                         <svg class="w-3 h-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                       </a>
                       <a
-                        :href="`https://hub.toolforge.org/${item.media_type === 'tv' || item.media_type === 'season' || item.media_type === 'episode' ? 'P4983' : 'P4947'}:${item.tmdb_id}?lang=fr`"
+                        :href="`https://hub.toolforge.org/${item.media_type === 'tv' || item.media_type === 'season' || item.media_type === 'episode' ? 'P4983' : 'P4947'}:${item.tmdb_id}?lang=${(item as any).language || 'fr'}`"
                         target="_blank"
                         rel="noopener noreferrer"
                         class="text-xs font-semibold text-gray-400 hover:text-gray-300 hover:underline flex items-center"
@@ -265,9 +277,19 @@
                 <td class="py-4 px-6">
                   <div
                     v-if="item.error_message"
-                    class="text-xs text-red-400 max-w-sm line-clamp-2 leading-relaxed bg-red-950/20 border border-red-900/30 rounded-xl p-2.5 font-mono"
+                    class="text-xs text-red-400 max-w-sm leading-relaxed bg-red-950/20 border border-red-900/30 rounded-xl p-2.5 font-mono"
                   >
-                    {{ item.error_message }}
+                    <div class="line-clamp-2">{{ item.error_message }}</div>
+                    <a
+                      v-if="extractUrl(item.error_message)"
+                      :href="extractUrl(item.error_message)!"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="mt-1.5 inline-flex items-center text-sky-400 hover:text-sky-300 hover:underline text-[11px] font-sans font-medium"
+                    >
+                      <span>{{ extractUrl(item.error_message)?.includes('wikidata.org') ? 'Open Wikidata' : $t('admin.queue.viewOnWikipedia') }}</span>
+                      <svg class="w-3 h-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                    </a>
                   </div>
                   <div v-else class="text-xs text-gray-550 italic">—</div>
                 </td>
@@ -323,7 +345,7 @@
                       </svg>
                     </button>
                     <button
-                      @click="deleteItem(item.id)"
+                      @click="deleteItem(item.id, (item as any).queue_name)"
                       :disabled="
                         deletingId === item.id || reEnqueuingId === item.id
                       "
@@ -510,6 +532,12 @@ const getUserEmail = (userId: string | null | undefined) => {
   return usersMap.value[userId] || `User (${userId.substring(0, 8)})`;
 };
 
+const extractUrl = (text: string | null | undefined): string | null => {
+  if (!text) return null;
+  const match = text.match(/https?:\/\/[^\s)\]]+/i);
+  return match ? match[0] : null;
+};
+
 // Pure JS relative time formatter
 const formatTime = (timeStr: string) => {
   try {
@@ -631,13 +659,14 @@ const clearQueue = async () => {
   }
 };
 
-const deleteItem = async (id: number) => {
+const deleteItem = async (id: number, queueName?: string) => {
   if (!confirm(t("admin.queue.confirmDelete"))) return;
 
   deletingId.value = id;
   try {
     const { error: err } = await supabase.rpc("delete_media_queue_item", {
       p_id: id,
+      p_queue_name: queueName ?? undefined,
     });
     if (err) throw err;
     showToast(t("admin.queue.itemDeleted"), "success");
@@ -660,11 +689,13 @@ const reEnqueueItem = async (item: QueueItem) => {
       p_media_type: item.media_type,
       p_season_number: item.season_number ?? undefined,
       p_episode_number: item.episode_number ?? undefined,
+      p_language: (item as any).language ?? undefined,
     });
     if (enqueueErr) throw enqueueErr;
 
     const { error: delErr } = await supabase.rpc("delete_media_queue_item", {
       p_id: item.id,
+      p_queue_name: (item as any).queue_name ?? undefined,
     });
     if (delErr) console.warn("Failed to delete old archived item:", delErr);
 

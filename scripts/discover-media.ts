@@ -175,17 +175,19 @@ async function checkWikipediaBatchForDubbing(
 }
 
 // Enqueue to Supabase PGMQ
-async function enqueueMedia(tmdbId: number, type: string) {
+async function enqueueMedia(tmdbId: number, type: string, language?: string) {
   try {
+    const lang = language ?? WIKI_LANG;
     const { error } = await supabase.rpc("enqueue_media_fetch", {
       p_tmdb_id: tmdbId,
       p_media_type: type,
+      p_language: lang,
     });
 
     if (error) {
       if (error.message && error.message.includes("already in the queue")) {
         console.log(
-          `[SKIP] TMDB ${tmdbId} (${type}) is already in the queue. Avoiding duplicates.`,
+          `[SKIP] TMDB ${tmdbId} (${type}, ${lang}) is already in the queue. Avoiding duplicates.`,
         );
       } else {
         console.error(
@@ -195,7 +197,7 @@ async function enqueueMedia(tmdbId: number, type: string) {
       }
     } else {
       console.log(
-        `[ENQUEUED] TMDB ${tmdbId} (${type}) successfully added to pgmq.media_queue`,
+        `[ENQUEUED] TMDB ${tmdbId} (${type}, ${lang}) successfully added to pgmq.wiki_lang`,
       );
     }
   } catch (err) {

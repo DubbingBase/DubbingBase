@@ -72,6 +72,7 @@ export interface PrepareMediaResult {
   title?: string;
   imageUrl?: string;
   languages?: string[];
+  wikipediaUrl?: string;
   error?: string;
 }
 
@@ -83,6 +84,7 @@ export interface PrepareGameResult {
   imageUrl?: string;
   note?: string;
   languages?: string[];
+  wikipediaUrl?: string;
   error?: string;
 }
 
@@ -95,6 +97,7 @@ export async function prepareMedia(options: {
 }): Promise<PrepareMediaResult> {
   const { tmdbId, type, language } = options;
   let mediaTitle = "Unknown title";
+  let lastCheckedWikiUrl: string | undefined = undefined;
 
   try {
     const config = useRuntimeConfig();
@@ -140,29 +143,34 @@ export async function prepareMedia(options: {
     }
 
     const wikipediaCache = useWikipediaCache();
-
-    // When language is provided, process only that language (per-language queue job)
-    // When language is null, discover all available languages
-    let availableLanguages: string[];
     let sitelinks: Record<string, any> | undefined;
+    let availableLanguages: string[] = [];
 
     if (language) {
-      // Single language mode: skip sitelink discovery, use provided language
+      // Single-language mode: only process the requested language
       availableLanguages = [language];
-      // We still need sitelinks for pageTitle lookup, but only for this language
-      const entity = await wikipediaCache.getAllSitelinksEntity(wikiId);
-      sitelinks = entity.entities[wikiId]?.sitelinks;
+      const entityData = await wikipediaCache.getAllSitelinksEntity(wikiId);
+      sitelinks = entityData.entities[wikiId]?.sitelinks;
     } else {
       // Discovery mode: find all available languages
-      const entity = await wikipediaCache.getAllSitelinksEntity(wikiId);
-      sitelinks = entity.entities[wikiId]?.sitelinks;
+      const entityData = await wikipediaCache.getAllSitelinksEntity(wikiId);
+      sitelinks = entityData.entities[wikiId]?.sitelinks;
       availableLanguages = extractAvailableLanguages(sitelinks);
     }
 
     console.log("availableLanguages", availableLanguages);
 
     if (availableLanguages.length === 0) {
-      throw new Error("No Wikipedia pages found for this media.");
+      return {
+        ok: true,
+        changes: 0,
+        creditsAdded: 0,
+        title: mediaTitle,
+        imageUrl: movie.poster_path
+          ? buildTmdbImageUrl(movie.poster_path) || undefined
+          : undefined,
+        languages: [],
+      };
     }
 
     let totalNewVoiceActors = 0;
@@ -191,7 +199,12 @@ export async function prepareMedia(options: {
       const pageTitle = sitelinks[sitelinkKey(lang)]?.title;
       if (!pageTitle) continue;
 
-      console.log(`Checking language "${lang}" for page "${pageTitle}"`);
+      const wikiPageUrl = `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(pageTitle.replace(/ /g, "_"))}`;
+      lastCheckedWikiUrl = wikiPageUrl;
+
+      console.log(
+        `Checking language "${lang}" for page "${pageTitle}" (${wikiPageUrl})`,
+      );
 
       const wikipediaPage = await wikipediaCache.getWikipediaPageInfo(
         pageTitle,
@@ -221,7 +234,7 @@ export async function prepareMedia(options: {
 
       if (sectionIds.length === 0) {
         console.log(
-          `No matching sections found in "${lang}" Wikipedia, skipping`,
+          `No matching sections found in "${lang}" Wikipedia (${wikiPageUrl}), skipping`,
         );
         continue;
       }
@@ -341,8 +354,11 @@ Output:
     }
 
     if (processedLanguages.length === 0) {
+      const wikiUrlInfo = lastCheckedWikiUrl
+        ? ` on Wikipedia page: ${lastCheckedWikiUrl}`
+        : "";
       throw new Error(
-        `No Wikipedia page with voice actor / dubbing sections found. ` +
+        `No voice actor / dubbing sections found${wikiUrlInfo}. ` +
           `Checked ${availableLanguages.length} language(s): ${availableLanguages.join(", ")}.`,
       );
     }
@@ -359,6 +375,7 @@ Output:
       title: mediaTitle,
       imageUrl,
       languages: processedLanguages,
+      wikipediaUrl: lastCheckedWikiUrl,
     };
   } catch (error) {
     console.error("Error in prepareMedia service:", error);
@@ -369,7 +386,12 @@ Output:
           ? (error as any).message || JSON.stringify(error)
           : String(error);
 
-    return { ok: false, error: errorMsg, title: mediaTitle };
+    return {
+      ok: false,
+      error: errorMsg,
+      title: mediaTitle,
+      wikipediaUrl: lastCheckedWikiUrl,
+    };
   }
 }
 
@@ -379,6 +401,7 @@ export async function prepareGame(options: {
 }): Promise<PrepareGameResult> {
   const { igdbId, language } = options;
   let gameTitle = "Unknown title";
+  let lastCheckedWikiUrl: string | undefined = undefined;
 
   try {
     const igdbClient = useIgdbClient();
@@ -472,7 +495,12 @@ export async function prepareGame(options: {
       const pageTitle = sitelinks[sitelinkKey(lang)]?.title;
       if (!pageTitle) continue;
 
-      console.log(`Checking language "${lang}" for page "${pageTitle}"`);
+      const wikiPageUrl = `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(pageTitle.replace(/ /g, "_"))}`;
+      lastCheckedWikiUrl = wikiPageUrl;
+
+      console.log(
+        `Checking language "${lang}" for page "${pageTitle}" (${wikiPageUrl})`,
+      );
 
       const wikipediaPage = await wikipediaCache.getWikipediaPageInfo(
         pageTitle,
@@ -502,7 +530,7 @@ export async function prepareGame(options: {
 
       if (sectionIds.length === 0) {
         console.log(
-          `No matching sections found in "${lang}" Wikipedia, skipping`,
+          `No matching sections found in "${lang}" Wikipedia (${wikiPageUrl}), skipping`,
         );
         continue;
       }
@@ -614,6 +642,16 @@ Output:
       }
     }
 
+    if (processedLanguages.length === 0) {
+      const wikiUrlInfo = lastCheckedWikiUrl
+        ? ` on Wikipedia page: ${lastCheckedWikiUrl}`
+        : "";
+      throw new Error(
+        `No voice actor / dubbing sections found${wikiUrlInfo}. ` +
+          `Checked ${availableLanguages.length} language(s): ${availableLanguages.join(", ")}.`,
+      );
+    }
+
     return {
       ok: true,
       changes: newVoiceActorsCount,
@@ -623,10 +661,16 @@ Output:
         ? buildIgdbImageUrl(game.cover.image_id, "cover_big")
         : undefined,
       languages: processedLanguages,
+      wikipediaUrl: lastCheckedWikiUrl,
     };
   } catch (error) {
     console.error("Error in prepareGame service:", error);
     const errorMsg = error instanceof Error ? error.message : String(error);
-    return { ok: false, error: errorMsg, title: gameTitle };
+    return {
+      ok: false,
+      error: errorMsg,
+      title: gameTitle,
+      wikipediaUrl: lastCheckedWikiUrl,
+    };
   }
 }

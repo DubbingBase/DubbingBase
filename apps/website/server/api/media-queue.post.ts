@@ -29,6 +29,7 @@ export default defineEventHandler(async (event) => {
       p_tmdb_id: targetId,
       p_season_number: seasonNumber,
       p_episode_number: episodeNumber,
+      p_language: language || undefined,
     });
 
     if (error) throw error;

@@ -73,40 +73,59 @@ export function extractAvailableLanguages(
 export const sitelinkKey = (lang: string) => `${lang.replace(/-/g, "_")}wiki`;
 
 /**
+ * Regex matching dubbing, voice acting, and cast sections across all major Wikipedia language editions.
+ * ReDoS-safe with strict non-nested patterns.
+ */
+export const DUBBING_SECTION_REGEX =
+  /(?:^|[\s_\-–—/])(?:distribution|doublages?|voix|casting|cast|characters?\s*and\s*cast|version\s*fran[cç]aise|com[eé]diens?\s*de\s*doublage|voice[- ]?(?:cast|over|acting|actor[s]?)?|dubbing|starring|besetzung|synchron(?:isation|sprecher|besetzung|fassung)?|stimmen|reparto(?:[\s_\-–—/]+(?:de\s*)?(?:doblaje|voces))?|doblaj[oe]s?|voces(?:[\s_\-–—/]+en[\s_\-–—/]+espa[ñn]ol)?|actores?(?:[\s_\-–—/]+de[\s_\-–—/]+voz)?|dobragem|dublagem|doppiaggio|doppiatori|voci|nasynchronisatie|r[oö]ster|stemmer|g[lł]os(?:y|i)?|obsada|zn[eě]n[ií]|dabing|szinkron(?:hangok)?|дублир(?:ование|овали)?|дубляж|озвуч(?:ивание|ка)?|закадров(?:ый)?|дублюванн(?:я)?|актор[иы]\s+озвуч|dublaj|seslendirme|μεταγλ[ωώ]ττιση|דיבוב|دبلجة|الدبلجة|alih\s*suara|l[oồ]ng\s*ti[eế]ng|พากย์|डबिंग|더빙|성우|配音(?:員|演員|名單|陣容)?|聲優|声優|吹き替え|日本語吹替(?:版)?|キャスト|配役|登場人物)(?:[\s_\-–—/:]|$)/i;
+
+/**
+ * Clean wikitext heading markup (HTML, refs, wikilinks, templates, formatting).
+ */
+export function cleanHeadingText(raw: string): string {
+  if (!raw) return "";
+  return raw
+    .replace(/<!--[\s\S]*?-->/g, "") // HTML comments
+    .replace(/<ref\b[^>]*>[\s\S]*?<\/ref>/gi, "") // Full <ref>...</ref>
+    .replace(/<ref\b[^>]*\/>/gi, "") // Self-closing <ref />
+    .replace(/<[^>]+>/g, "") // Any remaining HTML tags
+    .replace(/\{\{[^{}]*\}\}/g, "") // Simple templates {{...}}
+    .replace(/\[\[(?:[^|\]]*\|)?([^\]]+)\]\]/g, "$1") // [[Target|Text]] or [[Text]]
+    .replace(/''+/g, "") // Bold/Italics formatting
+    .replace(/&nbsp;/gi, " ") // Non-breaking spaces
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/^[:\s=]+|[:\s=]+$/g, "") // Trim edge colons, equals, whitespace
+    .trim();
+}
+
+/**
+ * Test whether a section heading corresponds to dubbing or voice cast information.
+ */
+export function isDubbingSectionHeading(heading: string): boolean {
+  const cleaned = cleanHeadingText(heading);
+  if (!cleaned) return false;
+  return DUBBING_SECTION_REGEX.test(cleaned);
+}
+
+/**
  * Pick the sections of a page that contain dubbing / voice-actor credits,
- * in ANY language. Uses one LLM call over the section titles so coverage is
- * not limited to a hardcoded vocabulary.
+ * in ANY language, using high-speed multilingual regex parsing.
  */
 export async function selectDubbingSections(
   sections: Array<{ index: number | string; line: string }>,
 ): Promise<string[]> {
-  if (sections.length === 0) return [];
+  if (!sections || sections.length === 0) return [];
 
-  const schema = z.object({
-    dubbingSectionIndexes: z.array(z.string()),
-  });
-
-  try {
-    const list = sections.map((s) => `${s.index}: ${s.line}`).join("\n");
-    const parsed = await llmGenerateObject(
-      `Below is the table of contents of a Wikipedia article. List the indexes of every section that contains dubbing or voice-actor credit information for a production (e.g. voice cast tables, dubbing actor lists, original actor / voice actor columns). Include subsections only when they themselves hold credits. Return [] if none.
-
-${list}`,
-      schema,
-      {
-        systemInstruction:
-          "You identify Wikipedia sections containing dubbing/voice-acting credits, regardless of the article's language. Respond only with matching section indexes.",
-        temperature: 0,
-      },
-    );
-    const valid = new Set(sections.map((s) => String(s.index)));
-    return (parsed.dubbingSectionIndexes || []).filter((i) =>
-      valid.has(String(i)),
-    );
-  } catch (err) {
-    console.warn("selectDubbingSections failed:", err);
-    return [];
+  const matchedIndexes: string[] = [];
+  for (const s of sections) {
+    if (s && s.line && isDubbingSectionHeading(s.line)) {
+      matchedIndexes.push(String(s.index));
+    }
   }
+
+  return matchedIndexes;
 }
 
 export class WikipediaCache {

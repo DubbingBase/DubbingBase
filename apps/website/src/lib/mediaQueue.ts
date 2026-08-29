@@ -11,6 +11,7 @@ export async function enqueueMedia(params: {
   mediaType: string;
   seasonNumber?: number | null;
   episodeNumber?: number | null;
+  language?: string | null;
 }): Promise<void> {
   const supabase = useSupabaseClient();
   const { error } = await (supabase as any).rpc("enqueue_media_fetch", {
@@ -18,6 +19,7 @@ export async function enqueueMedia(params: {
     p_media_type: params.mediaType,
     p_season_number: params.seasonNumber ?? null,
     p_episode_number: params.episodeNumber ?? null,
+    p_language: params.language ?? null,
   });
 
   if (error) {
