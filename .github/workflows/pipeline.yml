@@ -6,10 +6,10 @@ on:
       - "**"
   workflow_dispatch:
 
-# Prevent concurrent deployments from clashing (especially on db push)
+# Prevent concurrent deployments from clashing (cancel obsolete builds on new commit)
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 # Grant permissions required for posting Netlify deployments, comments, and statuses
 permissions:
@@ -329,11 +329,12 @@ jobs:
           track: internal
           release_status: "completed"
 
-  # Job 7: Build website (validates build on all branches)
+  # Job 7: Build website (validates build on non-main branches)
   build-website:
     needs: [detect, deploy-supabase, e2e-tests, frontend-tests]
     if: |
       always() && 
+      github.ref != 'refs/heads/main' &&
       needs.detect.outputs.website == 'true' && 
       (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped') &&
       (needs.frontend-tests.result == 'success' || needs.frontend-tests.result == 'skipped') &&
@@ -377,14 +378,16 @@ jobs:
           NITRO_PRESET: cloudflare-module
         run: pnpm --filter=@app/website build
 
-  # Job 8: Deploy website to Cloudflare Workers (main only)
+  # Job 8: Deploy website to Cloudflare Workers (main only - builds once and deploys)
   deploy-website:
-    needs: [detect, build-website]
+    needs: [detect, deploy-supabase, e2e-tests, frontend-tests]
     if: |
       always() &&
       github.ref == 'refs/heads/main' &&
       needs.detect.outputs.website == 'true' &&
-      needs.build-website.result == 'success'
+      (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped') &&
+      (needs.frontend-tests.result == 'success' || needs.frontend-tests.result == 'skipped') &&
+      (needs.deploy-supabase.result == 'success' || needs.deploy-supabase.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
