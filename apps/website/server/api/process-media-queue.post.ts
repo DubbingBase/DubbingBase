@@ -56,31 +56,57 @@ export default defineEventHandler(async (event) => {
 
         if (queueDepth && (queueDepth as number) > 0) {
           console.log(
-            `[QUEUE] ${queueDepth} more item(s) in queue, self-triggering another invocation.`,
+            `[QUEUE] ${queueDepth} more item(s) in queue, self-triggering another invocation via Service Binding.`,
           );
 
-          let origin = "https://dubbingbase.com";
-          try {
-            const requestUrl = getRequestURL(event);
-            if (
-              requestUrl.origin &&
-              !requestUrl.origin.includes("localhost") &&
-              !requestUrl.origin.includes("127.0.0.1")
-            ) {
-              origin = requestUrl.origin;
-            }
-          } catch {}
+          const cfEnv = (event.context as any)?.cloudflare?.env;
+          const cfContext = (event.context as any)?.cloudflare?.context;
+          const selfBinding = cfEnv?.SELF;
 
-          const selfUrl = `${origin}/api/process-media-queue`;
+          let fetchPromise: Promise<Response>;
 
-          const triggerPromise = fetch(selfUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-internal-secret": secretKey,
-            },
-            body: JSON.stringify({ force: true }),
-          })
+          if (selfBinding && typeof selfBinding.fetch === "function") {
+            // In production on Cloudflare Workers, invoke Worker directly in-memory via Service Binding
+            fetchPromise = selfBinding.fetch(
+              "https://dubbingbase.com/api/process-media-queue",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "x-internal-secret": secretKey,
+                },
+                body: JSON.stringify({ force: true }),
+              },
+            );
+          } else {
+            // Local dev fallback
+            let origin = "http://127.0.0.1:3000";
+            try {
+              const requestUrl = getRequestURL(event);
+              if (
+                requestUrl.origin &&
+                !requestUrl.origin.includes("localhost") &&
+                !requestUrl.origin.includes("127.0.0.1")
+              ) {
+                origin = requestUrl.origin;
+              } else if (requestUrl.origin) {
+                origin = requestUrl.origin;
+              }
+            } catch {}
+
+            const selfUrl = `${origin}/api/process-media-queue`;
+
+            fetchPromise = fetch(selfUrl, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "x-internal-secret": secretKey,
+              },
+              body: JSON.stringify({ force: true }),
+            });
+          }
+
+          const triggerPromise = fetchPromise
             .then(async (res) => {
               console.log(
                 `[QUEUE] Self-trigger fetch completed with status ${res.status}.`,
@@ -109,8 +135,8 @@ export default defineEventHandler(async (event) => {
 
           if (typeof (event as any).waitUntil === "function") {
             (event as any).waitUntil(triggerPromise);
-          } else if ((event.context as any)?.cloudflare?.context?.waitUntil) {
-            (event.context as any).cloudflare.context.waitUntil(triggerPromise);
+          } else if (cfContext?.waitUntil) {
+            cfContext.waitUntil(triggerPromise);
           }
         } else {
           console.log(`[QUEUE] queueDepth is 0 or invalid. Stopping loop.`);
@@ -142,7 +168,7 @@ export default defineEventHandler(async (event) => {
     const { data, error: popError } = await supabaseAdmin.rpc(
       "pop_media_queue_message",
       {
-        p_vt_seconds: 60,
+        p_vt_seconds: 90,
       },
     );
 

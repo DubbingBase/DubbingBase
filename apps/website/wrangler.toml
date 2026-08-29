@@ -10,3 +10,7 @@ binding = "ASSETS"
 [[kv_namespaces]]
 binding = "CACHE_KV"
 id = "340974572b504ed2aa20c160e18f5697"
+
+[[services]]
+binding = "SELF"
+service = "dubbingbase-website"
