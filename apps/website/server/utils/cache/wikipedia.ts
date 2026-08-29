@@ -48,11 +48,80 @@ const getImageFromFilename = (filename: string, lang: string) =>
   `https://${lang}.wikipedia.org/w/api.php?action=query&titles=File:${encodeURIComponent(filename)}&prop=imageinfo&iiprop=url&format=json`;
 
 /**
+ * Popularity ranking for dubbing and voice-acting Wikipedia editions.
+ * Primary dubbing markets appear first to ensure high-priority processing in the queue.
+ */
+export const LANGUAGE_POPULARITY_RANK: readonly string[] = [
+  "fr", // French (DubbingBase primary)
+  "ja", // Japanese (Seiyuu / Anime / Games)
+  "en", // English (Original cast & foreign dubs)
+  "es", // Spanish (Latin America & Spain)
+  "de", // German (Synchronisation)
+  "it", // Italian (Doppiaggio)
+  "pt", // Portuguese (Brazil & Portugal)
+  "pt-br",
+  "ru", // Russian (Дубляж)
+  "pl", // Polish (Dubbing / Obsada)
+  "nl", // Dutch (Stemmen)
+  "sv", // Swedish (Svenska röster)
+  "da", // Danish (Danske stemmer)
+  "no", // Norwegian (Norske stemmer)
+  "fi", // Finnish (Suomenkielinen)
+  "cs", // Czech (Dabing)
+  "hu", // Hungarian (Szinkron)
+  "tr", // Turkish (Seslendirme)
+  "zh", // Chinese (配音)
+  "zh-cn",
+  "zh-tw",
+  "zh-hk",
+  "zh-yue",
+  "ko", // Korean (더빙 / 성우)
+  "uk", // Ukrainian (Дублювання)
+  "el", // Greek (Μεταγλώττιση)
+  "he", // Hebrew (דיבוב)
+  "ar", // Arabic (دبلجة)
+  "th", // Thai (พากย์)
+  "vi", // Vietnamese (Lồng tiếng)
+  "id", // Indonesian (Alih suara)
+  "hi", // Hindi (डबिंग)
+  "ro", // Romanian (Dublaj)
+  "bg", // Bulgarian (Дублаж)
+  "sk", // Slovak (Dabing)
+  "hr", // Croatian (Sinkronizacija)
+  "sr", // Serbian (Синхронизација)
+  "sl", // Slovenian (Sinhronizacija)
+  "ca", // Catalan (Doblatge)
+  "eu", // Basque (Bikoizketa)
+  "gl", // Galician (Dobraxe)
+] as const;
+
+/**
+ * Sort language codes by popularity/dubbing prominence.
+ * Languages in LANGUAGE_POPULARITY_RANK appear first in that exact order.
+ * Any remaining languages appear after, sorted alphabetically.
+ */
+export function sortLanguagesByPopularity(languages: string[]): string[] {
+  const rankMap = new Map<string, number>(
+    LANGUAGE_POPULARITY_RANK.map((lang, index) => [lang, index]),
+  );
+
+  return [...languages].sort((a, b) => {
+    const rankA = rankMap.get(a);
+    const rankB = rankMap.get(b);
+
+    if (rankA !== undefined && rankB !== undefined) {
+      return rankA - rankB;
+    }
+    if (rankA !== undefined) return -1;
+    if (rankB !== undefined) return 1;
+
+    return a.localeCompare(b);
+  });
+}
+
+/**
  * Extract available Wikipedia languages from a Wikidata entity's sitelinks.
- * Returns URL-safe language codes (e.g. "zh-yue") for ALL editions, sorted
- * alphabetically for deterministic processing order. This is intentionally
- * independent of website UI localization — any Wikipedia edition may hold
- * dubbing data.
+ * Returns URL-safe language codes (e.g. "zh-yue") ranked by popularity/dubbing prominence.
  */
 export function extractAvailableLanguages(
   sitelinks: Record<string, { title: string }> | undefined,
@@ -66,7 +135,7 @@ export function extractAvailableLanguages(
       available.push(lang.replace(/_/g, "-"));
     }
   }
-  return available.sort();
+  return sortLanguagesByPopularity(available);
 }
 
 /** Wikidata sitelink key for a URL-safe language code ("pt-br" → "pt_brwiki"). */
