@@ -173,6 +173,7 @@ export default defineEventHandler(async (event) => {
 
         // Enqueue a separate job for each language
         let enqueuedCount = 0;
+        const enqueueErrors: string[] = [];
         for (const lang of availableLanguages) {
           const { error: enqueueError } = await supabaseAdmin.rpc(
             "enqueue_media_fetch",
@@ -195,6 +196,7 @@ export default defineEventHandler(async (event) => {
                 `[QUEUE] Failed to enqueue language ${lang}:`,
                 enqueueError,
               );
+              enqueueErrors.push(`${lang}: ${enqueueError.message}`);
             }
           } else {
             enqueuedCount++;
@@ -212,10 +214,11 @@ export default defineEventHandler(async (event) => {
           changes: 0,
           enqueuedLanguages: enqueuedCount,
           totalLanguages: availableLanguages.length,
+          errors: enqueueErrors.length > 0 ? enqueueErrors : undefined,
         });
 
         console.log(
-          `[QUEUE] Enqueued ${enqueuedCount} language jobs for ${mediaTitle}`,
+          `[QUEUE] Enqueued ${enqueuedCount}/${availableLanguages.length} language jobs for ${mediaTitle}`,
         );
 
         let discoveryUrl: string | undefined = undefined;
@@ -231,9 +234,14 @@ export default defineEventHandler(async (event) => {
           discoveryUrl = `/game/${payload.tmdb_id}`;
         }
 
+        const errorDetails =
+          enqueueErrors.length > 0
+            ? `\n⚠️ Errors: ${enqueueErrors.join(", ")}`
+            : "";
+
         await sendDiscordAdminNotification(
           "Queue Discovery Completed",
-          `Discovered **${availableLanguages.length} language(s)** for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}).\n• Enqueued **${enqueuedCount}** language job(s): ${availableLanguages.map((l: string) => `\`${l.toUpperCase()}\``).join(", ")}.`,
+          `Discovered **${availableLanguages.length} language(s)** for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}).\n• Enqueued **${enqueuedCount}** language job(s): ${availableLanguages.map((l: string) => `\`${l.toUpperCase()}\``).join(", ")}.${errorDetails}`,
           {
             ...(discoveryUrl ? { url: discoveryUrl } : {}),
           },
