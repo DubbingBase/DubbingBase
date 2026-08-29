@@ -8,8 +8,15 @@ import { extractAvailableLanguages } from "../utils/cache/wikipedia";
 export default defineEventHandler(async (event) => {
   const internalSecret = getHeader(event, "x-internal-secret");
   const config = useRuntimeConfig();
+  const secretKey =
+    (config.supabaseSecretKey as string) ||
+    process.env.SUPABASE_SECRET_KEY ||
+    process.env.NUXT_SUPABASE_SECRET_KEY ||
+    "";
   const isInternalTrigger =
-    Boolean(internalSecret) && internalSecret === config.supabaseSecretKey;
+    Boolean(internalSecret) &&
+    Boolean(secretKey) &&
+    internalSecret === secretKey;
 
   if (!isInternalTrigger) {
     requireAdmin(event);
@@ -70,19 +77,33 @@ export default defineEventHandler(async (event) => {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "x-internal-secret": (config.supabaseSecretKey as string) || "",
+              "x-internal-secret": secretKey,
             },
             body: JSON.stringify({ force: true }),
           })
-            .then((res) => {
+            .then(async (res) => {
               console.log(
                 `[QUEUE] Self-trigger fetch completed with status ${res.status}.`,
               );
+              if (!res.ok) {
+                const text = await res.text().catch(() => "");
+                console.error(
+                  `[QUEUE] Self-trigger failed: ${res.status} ${text}`,
+                );
+                await sendDiscordAdminNotification(
+                  "Queue Self-Trigger Warning",
+                  `Self-trigger for next queue job failed with status **${res.status}**:\n\`\`\`\n${text.slice(0, 500)}\n\`\`\``,
+                );
+              }
             })
-            .catch((err: any) => {
+            .catch(async (err: any) => {
               console.error(
                 "[QUEUE] Failed to self-trigger next invocation:",
                 err,
+              );
+              await sendDiscordAdminNotification(
+                "Queue Self-Trigger Error",
+                `Self-trigger network request failed:\n\`\`\`\n${String(err)}\n\`\`\``,
               );
             });
 
@@ -118,289 +139,160 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    const MAX_BATCH_SIZE = isSingle ? 1 : 10;
-    let processedCount = 0;
+    const { data, error: popError } = await supabaseAdmin.rpc(
+      "pop_media_queue_message",
+      {
+        p_vt_seconds: 60,
+      },
+    );
+
+    if (popError) {
+      throw new Error(
+        `RPC pop_media_queue_message failed: ${JSON.stringify(popError)}`,
+      );
+    }
+
+    if (!data || data.length === 0) {
+      return { ok: true, processed: 0, results: [] };
+    }
+
+    const queueItem = data[0]!;
+    const msgId = Number(queueItem.msg_id);
+    const payload = queueItem.message as {
+      tmdb_id: number;
+      media_type: string;
+      season_number?: number | null;
+      episode_number?: number | null;
+      language?: string | null;
+    } | null;
+
+    if (!payload) {
+      throw new Error("Message payload is null or invalid");
+    }
+
+    let mediaTitle = "Unknown title";
     const results: any[] = [];
 
-    while (processedCount < MAX_BATCH_SIZE && !isRateLimited) {
-      const { data, error: popError } = await supabaseAdmin.rpc(
-        "pop_media_queue_message",
-        {
-          p_vt_seconds: 60,
-        },
-      );
+    // If no language specified, this is a discovery job
+    // Discover languages and enqueue each one as a separate job
+    if (!payload.language) {
+      try {
+        const config = useRuntimeConfig();
+        const tmdbType =
+          payload.media_type === "season" || payload.media_type === "episode"
+            ? "tv"
+            : payload.media_type;
 
-      if (popError) {
-        throw new Error(
-          `RPC pop_media_queue_message failed: ${JSON.stringify(popError)}`,
-        );
-      }
+        // Fetch TMDB data to get Wikidata ID
+        const tmdbUrl =
+          tmdbType === "video_game"
+            ? null // Games use IGDB, handled differently
+            : `https://api.themoviedb.org/3/${tmdbType}/${payload.tmdb_id}?append_to_response=external_ids`;
 
-      if (!data || data.length === 0) {
-        console.log(`[QUEUE] No more items available in queue.`);
-        break;
-      }
+        let wikiId: string | null = null;
 
-      const queueItem = data[0]!;
-      const msgId = Number(queueItem.msg_id);
-      const payload = queueItem.message as {
-        tmdb_id: number;
-        media_type: string;
-        season_number?: number | null;
-        episode_number?: number | null;
-        language?: string | null;
-      } | null;
+        if (tmdbUrl) {
+          const tmdbResponse = await fetch(tmdbUrl, {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${config.tmdbApiKey}`,
+              Accept: "application/json",
+            },
+          });
 
-      if (!payload) {
-        console.error(`[QUEUE] Message ID ${msgId} has null payload`);
-        await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
-          p_msg_id: msgId,
-          p_error: "Message payload is null or invalid",
-        });
-        continue;
-      }
-
-      processedCount++;
-      let mediaTitle = "Unknown title";
-
-      // If no language specified, this is a discovery job
-      // Discover languages and enqueue each one as a separate job
-      if (!payload.language) {
-        try {
-          const config = useRuntimeConfig();
-          const tmdbType =
-            payload.media_type === "season" || payload.media_type === "episode"
-              ? "tv"
-              : payload.media_type;
-
-          // Fetch TMDB data to get Wikidata ID
-          const tmdbUrl =
-            tmdbType === "video_game"
-              ? null // Games use IGDB, handled differently
-              : `https://api.themoviedb.org/3/${tmdbType}/${payload.tmdb_id}?append_to_response=external_ids`;
-
-          let wikiId: string | null = null;
-
-          if (tmdbUrl) {
-            const tmdbResponse = await fetch(tmdbUrl, {
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${config.tmdbApiKey}`,
-                Accept: "application/json",
-              },
-            });
-
-            if (tmdbResponse.ok) {
-              const tmdbData = (await tmdbResponse.json()) as any;
-              mediaTitle = tmdbData.title || tmdbData.name || "Unknown title";
-              wikiId = tmdbData.external_ids?.wikidata_id || null;
-            }
+          if (tmdbResponse.ok) {
+            const tmdbData = (await tmdbResponse.json()) as any;
+            mediaTitle = tmdbData.title || tmdbData.name || "Unknown title";
+            wikiId = tmdbData.external_ids?.wikidata_id || null;
           }
+        }
 
-          if (!wikiId) {
-            // For games or if no Wikidata ID found, process without language filtering
-            console.log(
-              `[QUEUE] No Wikidata ID found for ${payload.media_type} ${payload.tmdb_id}, processing without language filtering`,
-            );
-
-            await supabaseAdmin.rpc("archive_media_queue_message", {
-              p_msg_id: msgId,
-            });
-
-            await sendDiscordAdminNotification(
-              "Queue Discovery Skipped",
-              `No Wikidata ID found for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}). Archived without language expansion.`,
-            );
-
-            results.push({
-              id: msgId,
-              ok: true,
-              changes: 0,
-              note: "Processed without language filtering (no Wikidata ID)",
-            });
-
-            continue;
-          }
-
-          // Discover available languages from Wikidata sitelinks
-          const wikipediaCache = useWikipediaCache();
-          const entity = await wikipediaCache.getAllSitelinksEntity(wikiId);
-          const sitelinks = entity.entities[wikiId]?.sitelinks;
-          const availableLanguages = extractAvailableLanguages(sitelinks);
-
+        if (!wikiId) {
+          // For games or if no Wikidata ID found, process without language filtering
           console.log(
-            `[QUEUE] Discovered ${availableLanguages.length} languages for ${mediaTitle}`,
+            `[QUEUE] No Wikidata ID found for ${payload.media_type} ${payload.tmdb_id}, processing without language filtering`,
           );
 
-          if (availableLanguages.length === 0) {
-            // No Wikipedia pages found, archive the job
-            await supabaseAdmin.rpc("archive_media_queue_message", {
-              p_msg_id: msgId,
-            });
-
-            await sendDiscordAdminNotification(
-              "Queue Discovery: No Wikipedia Pages",
-              `No Wikipedia pages found for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}). Discovery archived.`,
-            );
-
-            results.push({
-              id: msgId,
-              ok: true,
-              changes: 0,
-              note: "No Wikipedia pages found",
-            });
-
-            continue;
-          }
-
-          // Enqueue a separate job for each language
-          let enqueuedCount = 0;
-          let alreadyEnqueuedCount = 0;
-          const enqueueErrors: string[] = [];
-          for (const lang of availableLanguages) {
-            const { error: enqueueError } = await supabaseAdmin.rpc(
-              "enqueue_media_fetch",
-              {
-                p_tmdb_id: payload.tmdb_id,
-                p_media_type: payload.media_type,
-                p_season_number: payload.season_number ?? undefined,
-                p_episode_number: payload.episode_number ?? undefined,
-                p_language: lang,
-              },
-            );
-
-            if (enqueueError) {
-              if (enqueueError.message?.includes("already in the queue")) {
-                console.log(
-                  `[QUEUE] Language ${lang} already enqueued, skipping`,
-                );
-                alreadyEnqueuedCount++;
-              } else {
-                console.error(
-                  `[QUEUE] Failed to enqueue language ${lang}:`,
-                  enqueueError,
-                );
-                enqueueErrors.push(`${lang}: ${enqueueError.message}`);
-              }
-            } else {
-              enqueuedCount++;
-            }
-          }
-
-          // Archive the original discovery job
           await supabaseAdmin.rpc("archive_media_queue_message", {
             p_msg_id: msgId,
           });
+
+          await sendDiscordAdminNotification(
+            "Queue Discovery Skipped",
+            `No Wikidata ID found for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}). Archived without language expansion.`,
+          );
+
+          await triggerNextJob();
+          return { ok: true, processed: results.length, results };
+        }
+
+        // Discover available languages from Wikidata sitelinks
+        const wikipediaCache = useWikipediaCache();
+        const entity = await wikipediaCache.getAllSitelinksEntity(wikiId);
+        const sitelinks = entity.entities[wikiId]?.sitelinks;
+        const availableLanguages = extractAvailableLanguages(sitelinks);
+
+        console.log(
+          `[QUEUE] Discovered ${availableLanguages.length} languages for ${mediaTitle}`,
+        );
+
+        if (availableLanguages.length === 0) {
+          // No Wikipedia pages found, archive the job
+          await supabaseAdmin.rpc("archive_media_queue_message", {
+            p_msg_id: msgId,
+          });
+
+          await sendDiscordAdminNotification(
+            "Queue Discovery: No Wikipedia Pages",
+            `No Wikipedia pages found for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}). Discovery archived.`,
+          );
 
           results.push({
             id: msgId,
             ok: true,
             changes: 0,
-            enqueuedLanguages: enqueuedCount,
-            alreadyEnqueuedLanguages: alreadyEnqueuedCount,
-            totalLanguages: availableLanguages.length,
-            errors: enqueueErrors.length > 0 ? enqueueErrors : undefined,
+            note: "No Wikipedia pages found",
           });
 
-          console.log(
-            `[QUEUE] Enqueued ${enqueuedCount}/${availableLanguages.length} language jobs (${alreadyEnqueuedCount} already queued) for ${mediaTitle}`,
-          );
+          await triggerNextJob();
+          return { ok: true, processed: results.length, results };
+        }
 
-          let discoveryUrl: string | undefined = undefined;
-          if (payload.media_type === "movie") {
-            discoveryUrl = `/movie/${payload.tmdb_id}`;
-          } else if (
-            payload.media_type === "tv" ||
-            payload.media_type === "season" ||
-            payload.media_type === "episode"
-          ) {
-            discoveryUrl = `/serie/${payload.tmdb_id}`;
-          } else if (payload.media_type === "video_game") {
-            discoveryUrl = `/game/${payload.tmdb_id}`;
-          }
-
-          const errorDetails =
-            enqueueErrors.length > 0
-              ? `\n⚠️ **Enqueue Errors:**\n\`\`\`\n${enqueueErrors.join("\n")}\n\`\`\``
-              : "";
-
-          const statusSummary =
-            alreadyEnqueuedCount > 0
-              ? `• Enqueued **${enqueuedCount}** new language job(s) (${alreadyEnqueuedCount} already queued): ${availableLanguages.map((l: string) => `\`${l.toUpperCase()}\``).join(", ")}.`
-              : `• Enqueued **${enqueuedCount}** language job(s): ${availableLanguages.map((l: string) => `\`${l.toUpperCase()}\``).join(", ")}.`;
-
-          await sendDiscordAdminNotification(
-            "Queue Discovery Completed",
-            `Discovered **${availableLanguages.length} language(s)** for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}).\n${statusSummary}${errorDetails}`,
+        // Enqueue a separate job for each language
+        let enqueuedCount = 0;
+        let alreadyEnqueuedCount = 0;
+        const enqueueErrors: string[] = [];
+        for (const lang of availableLanguages) {
+          const { error: enqueueError } = await supabaseAdmin.rpc(
+            "enqueue_media_fetch",
             {
-              ...(discoveryUrl ? { url: discoveryUrl } : {}),
+              p_tmdb_id: payload.tmdb_id,
+              p_media_type: payload.media_type,
+              p_season_number: payload.season_number ?? undefined,
+              p_episode_number: payload.episode_number ?? undefined,
+              p_language: lang,
             },
           );
-        } catch (err) {
-          let errMsg = "";
-          if (err instanceof Error) {
-            errMsg = err.message;
-          } else if (typeof err === "object" && err !== null) {
-            try {
-              errMsg = (err as any).message || JSON.stringify(err);
-            } catch {
-              errMsg = String(err);
+
+          if (enqueueError) {
+            if (enqueueError.message?.includes("already in the queue")) {
+              console.log(
+                `[QUEUE] Language ${lang} already enqueued, skipping`,
+              );
+              alreadyEnqueuedCount++;
+            } else {
+              console.error(
+                `[QUEUE] Failed to enqueue language ${lang}:`,
+                enqueueError,
+              );
+              enqueueErrors.push(`${lang}: ${enqueueError.message}`);
             }
           } else {
-            errMsg = String(err);
+            enqueuedCount++;
           }
-
-          console.error(`[QUEUE] Error in discovery job ${msgId}:`, errMsg);
-
-          await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
-            p_msg_id: msgId,
-            p_error: errMsg,
-          });
-
-          results.push({
-            id: msgId,
-            ok: false,
-            changes: 0,
-            error: errMsg,
-          });
-
-          await sendDiscordAdminNotification(
-            "Queue Discovery Failed",
-            `Discovery failed for **${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type}** (ID ${payload.tmdb_id}):\n\`\`\`\n${errMsg}\n\`\`\``,
-          );
         }
 
-        continue;
-      }
-
-      // Language-specific job: process only the specified language
-      try {
-        let responseData: any;
-
-        if (payload.media_type === "video_game") {
-          responseData = await prepareGame({
-            igdbId: payload.tmdb_id,
-            language: payload.language,
-          });
-        } else {
-          responseData = await prepareMedia({
-            tmdbId: payload.tmdb_id,
-            type: payload.media_type as any,
-            seasonNumber: payload.season_number,
-            episodeNumber: payload.episode_number,
-            language: payload.language,
-          });
-        }
-
-        if (responseData && responseData.title) {
-          mediaTitle = responseData.title;
-        }
-
-        if (!responseData || !responseData.ok) {
-          const errorInfo = responseData?.error || "Unknown preparation error";
-          throw new Error(errorInfo);
-        }
-
+        // Archive the original discovery job
         await supabaseAdmin.rpc("archive_media_queue_message", {
           p_msg_id: msgId,
         });
@@ -408,40 +300,45 @@ export default defineEventHandler(async (event) => {
         results.push({
           id: msgId,
           ok: true,
-          changes: responseData.changes ?? 0,
-          error: null,
+          changes: 0,
+          enqueuedLanguages: enqueuedCount,
+          alreadyEnqueuedLanguages: alreadyEnqueuedCount,
+          totalLanguages: availableLanguages.length,
+          errors: enqueueErrors.length > 0 ? enqueueErrors : undefined,
         });
 
-        let targetUrl: string | undefined = undefined;
+        console.log(
+          `[QUEUE] Enqueued ${enqueuedCount}/${availableLanguages.length} language jobs (${alreadyEnqueuedCount} already queued) for ${mediaTitle}`,
+        );
+
+        let discoveryUrl: string | undefined = undefined;
         if (payload.media_type === "movie") {
-          targetUrl = `/movie/${payload.tmdb_id}`;
-        } else if (payload.media_type === "tv") {
-          if (payload.season_number && payload.episode_number) {
-            targetUrl = `/serie/${payload.tmdb_id}/season/${payload.season_number}/details/${payload.episode_number}`;
-          } else if (payload.season_number) {
-            targetUrl = `/serie/${payload.tmdb_id}/season/${payload.season_number}`;
-          } else {
-            targetUrl = `/serie/${payload.tmdb_id}`;
-          }
+          discoveryUrl = `/movie/${payload.tmdb_id}`;
+        } else if (
+          payload.media_type === "tv" ||
+          payload.media_type === "season" ||
+          payload.media_type === "episode"
+        ) {
+          discoveryUrl = `/serie/${payload.tmdb_id}`;
         } else if (payload.media_type === "video_game") {
-          targetUrl = `/game/${payload.tmdb_id}`;
+          discoveryUrl = `/game/${payload.tmdb_id}`;
         }
 
-        const langTag = payload.language
-          ? ` [${payload.language.toUpperCase()}]`
-          : "";
+        const errorDetails =
+          enqueueErrors.length > 0
+            ? `\n⚠️ **Enqueue Errors:**\n\`\`\`\n${enqueueErrors.join("\n")}\n\`\`\``
+            : "";
+
+        const statusSummary =
+          alreadyEnqueuedCount > 0
+            ? `• Enqueued **${enqueuedCount}** new language job(s) (${alreadyEnqueuedCount} already queued): ${availableLanguages.map((l: string) => `\`${l.toUpperCase()}\``).join(", ")}.`
+            : `• Enqueued **${enqueuedCount}** language job(s): ${availableLanguages.map((l: string) => `\`${l.toUpperCase()}\``).join(", ")}.`;
+
         await sendDiscordAdminNotification(
-          `Queue Item Processed${langTag}`,
-          `Successfully processed **${mediaTitle}**${
-            payload.season_number ? ` (Season ${payload.season_number})` : ""
-          }${
-            payload.episode_number ? ` (Episode ${payload.episode_number})` : ""
-          }${payload.language ? ` [${payload.language.toUpperCase()}]` : ""}.\n• Added **${responseData.creditsAdded ?? 0}** roles\n• Added **${responseData.changes ?? 0}** new voice actors.`,
+          "Queue Discovery Completed",
+          `Discovered **${availableLanguages.length} language(s)** for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}).\n${statusSummary}${errorDetails}`,
           {
-            ...(responseData.imageUrl
-              ? { imageUrl: responseData.imageUrl }
-              : {}),
-            ...(targetUrl ? { url: targetUrl } : {}),
+            ...(discoveryUrl ? { url: discoveryUrl } : {}),
           },
         );
       } catch (err) {
@@ -458,65 +355,168 @@ export default defineEventHandler(async (event) => {
           errMsg = String(err);
         }
 
-        const langTag = payload.language
-          ? ` [${payload.language.toUpperCase()}]`
-          : "";
+        console.error(`[QUEUE] Error in discovery job ${msgId}:`, errMsg);
 
-        if (errMsg.includes("LLM API Rate Limited (429)")) {
-          isRateLimited = true;
+        await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
+          p_msg_id: msgId,
+          p_error: errMsg,
+        });
 
-          const readCt = Number(queueItem.read_ct);
-          const MAX_RETRIES = 5;
+        results.push({
+          id: msgId,
+          ok: false,
+          changes: 0,
+          error: errMsg,
+        });
 
-          if (readCt >= MAX_RETRIES) {
-            await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
-              p_msg_id: msgId,
-              p_error: `Max retries (${MAX_RETRIES}) reached due to LLM API Rate Limited (429).`,
-            });
+        await sendDiscordAdminNotification(
+          "Queue Discovery Failed",
+          `Discovery failed for **${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type}** (ID ${payload.tmdb_id}):\n\`\`\`\n${errMsg}\n\`\`\``,
+        );
+      }
 
-            results.push({
-              id: msgId,
-              ok: false,
-              changes: 0,
-              error: `Max retries (${MAX_RETRIES}) reached due to LLM 429`,
-            });
+      await triggerNextJob();
+      return { ok: true, processed: results.length, results };
+    }
 
-            await sendDiscordAdminNotification(
-              `Queue Item Failed (Rate Limit)${langTag}`,
-              `Failed to process **${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type}** (ID ${payload.tmdb_id}${payload.language ? `, language: ${payload.language.toUpperCase()}` : ""}): Max retries (${MAX_RETRIES}) reached due to LLM rate limit.\n\`\`\`\n${errMsg}\n\`\`\``,
-            );
-          } else {
-            results.push({
-              id: msgId,
-              ok: false,
-              changes: 0,
-              error: errMsg,
-              rate_limited: true,
-            });
-          }
+    // Language-specific job: process only the specified language
+    try {
+      let responseData: any;
+
+      if (payload.media_type === "video_game") {
+        responseData = await prepareGame({
+          igdbId: payload.tmdb_id,
+          language: payload.language,
+        });
+      } else {
+        responseData = await prepareMedia({
+          tmdbId: payload.tmdb_id,
+          type: payload.media_type as any,
+          seasonNumber: payload.season_number,
+          episodeNumber: payload.episode_number,
+          language: payload.language,
+        });
+      }
+
+      if (responseData && responseData.title) {
+        mediaTitle = responseData.title;
+      }
+
+      if (!responseData || !responseData.ok) {
+        const errorInfo = responseData?.error || "Unknown preparation error";
+        throw new Error(errorInfo);
+      }
+
+      await supabaseAdmin.rpc("archive_media_queue_message", {
+        p_msg_id: msgId,
+      });
+
+      results.push({
+        id: msgId,
+        ok: true,
+        changes: responseData.changes ?? 0,
+        error: null,
+      });
+
+      let targetUrl: string | undefined = undefined;
+      if (payload.media_type === "movie") {
+        targetUrl = `/movie/${payload.tmdb_id}`;
+      } else if (payload.media_type === "tv") {
+        if (payload.season_number && payload.episode_number) {
+          targetUrl = `/serie/${payload.tmdb_id}/season/${payload.season_number}/details/${payload.episode_number}`;
+        } else if (payload.season_number) {
+          targetUrl = `/serie/${payload.tmdb_id}/season/${payload.season_number}`;
         } else {
-          console.error(
-            `[QUEUE] Error processing message ID ${msgId}:`,
-            errMsg,
-          );
+          targetUrl = `/serie/${payload.tmdb_id}`;
+        }
+      } else if (payload.media_type === "video_game") {
+        targetUrl = `/game/${payload.tmdb_id}`;
+      }
 
+      const langTag = payload.language
+        ? ` [${payload.language.toUpperCase()}]`
+        : "";
+      await sendDiscordAdminNotification(
+        `Queue Item Processed${langTag}`,
+        `Successfully processed **${mediaTitle}**${
+          payload.season_number ? ` (Season ${payload.season_number})` : ""
+        }${
+          payload.episode_number ? ` (Episode ${payload.episode_number})` : ""
+        }${payload.language ? ` [${payload.language.toUpperCase()}]` : ""}.\n• Added **${responseData.creditsAdded ?? 0}** roles\n• Added **${responseData.changes ?? 0}** new voice actors.`,
+        {
+          ...(responseData.imageUrl ? { imageUrl: responseData.imageUrl } : {}),
+          ...(targetUrl ? { url: targetUrl } : {}),
+        },
+      );
+    } catch (err) {
+      let errMsg = "";
+      if (err instanceof Error) {
+        errMsg = err.message;
+      } else if (typeof err === "object" && err !== null) {
+        try {
+          errMsg = (err as any).message || JSON.stringify(err);
+        } catch {
+          errMsg = String(err);
+        }
+      } else {
+        errMsg = String(err);
+      }
+
+      const langTag = payload.language
+        ? ` [${payload.language.toUpperCase()}]`
+        : "";
+
+      if (errMsg.includes("LLM API Rate Limited (429)")) {
+        isRateLimited = true;
+
+        const readCt = Number(queueItem.read_ct);
+        const MAX_RETRIES = 5;
+
+        if (readCt >= MAX_RETRIES) {
           await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
             p_msg_id: msgId,
-            p_error: errMsg,
+            p_error: `Max retries (${MAX_RETRIES}) reached due to LLM API Rate Limited (429).`,
           });
 
           results.push({
             id: msgId,
             ok: false,
             changes: 0,
-            error: errMsg,
+            error: `Max retries (${MAX_RETRIES}) reached due to LLM 429`,
           });
 
           await sendDiscordAdminNotification(
-            `Queue Item Failed${langTag}`,
-            `Failed to process **${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type}** (ID ${payload.tmdb_id}${payload.language ? `, language: ${payload.language.toUpperCase()}` : ""}):\n\`\`\`\n${errMsg}\n\`\`\``,
+            `Queue Item Failed (Rate Limit)${langTag}`,
+            `Failed to process **${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type}** (ID ${payload.tmdb_id}${payload.language ? `, language: ${payload.language.toUpperCase()}` : ""}): Max retries (${MAX_RETRIES}) reached due to LLM rate limit.\n\`\`\`\n${errMsg}\n\`\`\``,
           );
+        } else {
+          results.push({
+            id: msgId,
+            ok: false,
+            changes: 0,
+            error: errMsg,
+            rate_limited: true,
+          });
         }
+      } else {
+        console.error(`[QUEUE] Error processing message ID ${msgId}:`, errMsg);
+
+        await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
+          p_msg_id: msgId,
+          p_error: errMsg,
+        });
+
+        results.push({
+          id: msgId,
+          ok: false,
+          changes: 0,
+          error: errMsg,
+        });
+
+        await sendDiscordAdminNotification(
+          `Queue Item Failed${langTag}`,
+          `Failed to process **${mediaTitle !== "Unknown title" ? mediaTitle : payload.media_type}** (ID ${payload.tmdb_id}${payload.language ? `, language: ${payload.language.toUpperCase()}` : ""}):\n\`\`\`\n${errMsg}\n\`\`\``,
+        );
       }
     }
 
