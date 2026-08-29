@@ -51,10 +51,22 @@ export default defineEventHandler(async (event) => {
           console.log(
             `[QUEUE] ${queueDepth} more item(s) in queue, self-triggering another invocation.`,
           );
-          const requestUrl = getRequestURL(event);
-          const selfUrl = `${requestUrl.origin}/api/process-media-queue`;
 
-          fetch(selfUrl, {
+          let origin = "https://dubbingbase.com";
+          try {
+            const requestUrl = getRequestURL(event);
+            if (
+              requestUrl.origin &&
+              !requestUrl.origin.includes("localhost") &&
+              !requestUrl.origin.includes("127.0.0.1")
+            ) {
+              origin = requestUrl.origin;
+            }
+          } catch {}
+
+          const selfUrl = `${origin}/api/process-media-queue`;
+
+          const triggerPromise = fetch(selfUrl, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -62,8 +74,10 @@ export default defineEventHandler(async (event) => {
             },
             body: JSON.stringify({ force: true }),
           })
-            .then(() => {
-              console.log(`[QUEUE] Self-trigger fetch completed successfully.`);
+            .then((res) => {
+              console.log(
+                `[QUEUE] Self-trigger fetch completed with status ${res.status}.`,
+              );
             })
             .catch((err: any) => {
               console.error(
@@ -71,6 +85,12 @@ export default defineEventHandler(async (event) => {
                 err,
               );
             });
+
+          if (typeof (event as any).waitUntil === "function") {
+            (event as any).waitUntil(triggerPromise);
+          } else if ((event.context as any)?.cloudflare?.context?.waitUntil) {
+            (event.context as any).cloudflare.context.waitUntil(triggerPromise);
+          }
         } else {
           console.log(`[QUEUE] queueDepth is 0 or invalid. Stopping loop.`);
         }
@@ -227,6 +247,7 @@ export default defineEventHandler(async (event) => {
 
         // Enqueue a separate job for each language
         let enqueuedCount = 0;
+        let alreadyEnqueuedCount = 0;
         const enqueueErrors: string[] = [];
         for (const lang of availableLanguages) {
           const { error: enqueueError } = await supabaseAdmin.rpc(
@@ -245,6 +266,7 @@ export default defineEventHandler(async (event) => {
               console.log(
                 `[QUEUE] Language ${lang} already enqueued, skipping`,
               );
+              alreadyEnqueuedCount++;
             } else {
               console.error(
                 `[QUEUE] Failed to enqueue language ${lang}:`,
@@ -267,12 +289,13 @@ export default defineEventHandler(async (event) => {
           ok: true,
           changes: 0,
           enqueuedLanguages: enqueuedCount,
+          alreadyEnqueuedLanguages: alreadyEnqueuedCount,
           totalLanguages: availableLanguages.length,
           errors: enqueueErrors.length > 0 ? enqueueErrors : undefined,
         });
 
         console.log(
-          `[QUEUE] Enqueued ${enqueuedCount}/${availableLanguages.length} language jobs for ${mediaTitle}`,
+          `[QUEUE] Enqueued ${enqueuedCount}/${availableLanguages.length} language jobs (${alreadyEnqueuedCount} already queued) for ${mediaTitle}`,
         );
 
         let discoveryUrl: string | undefined = undefined;
@@ -293,9 +316,14 @@ export default defineEventHandler(async (event) => {
             ? `\n⚠️ **Enqueue Errors:**\n\`\`\`\n${enqueueErrors.join("\n")}\n\`\`\``
             : "";
 
+        const statusSummary =
+          alreadyEnqueuedCount > 0
+            ? `• Enqueued **${enqueuedCount}** new language job(s) (${alreadyEnqueuedCount} already queued): ${availableLanguages.map((l: string) => `\`${l.toUpperCase()}\``).join(", ")}.`
+            : `• Enqueued **${enqueuedCount}** language job(s): ${availableLanguages.map((l: string) => `\`${l.toUpperCase()}\``).join(", ")}.`;
+
         await sendDiscordAdminNotification(
           "Queue Discovery Completed",
-          `Discovered **${availableLanguages.length} language(s)** for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}).\n• Enqueued **${enqueuedCount}** language job(s): ${availableLanguages.map((l: string) => `\`${l.toUpperCase()}\``).join(", ")}.${errorDetails}`,
+          `Discovered **${availableLanguages.length} language(s)** for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}).\n${statusSummary}${errorDetails}`,
           {
             ...(discoveryUrl ? { url: discoveryUrl } : {}),
           },
