@@ -5,13 +5,21 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: "html",
+  workers: process.env.CI ? 2 : undefined,
+  reporter: [["list"], ["html", { open: "never" }]],
   use: {
     trace: "on-first-retry",
   },
 
   projects: [
+    {
+      name: "website",
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: "http://localhost:3050",
+      },
+      testIgnore: /mobile\.spec\.ts/,
+    },
     {
       name: "mobile",
       use: {
@@ -20,28 +28,27 @@ export default defineConfig({
       },
       testMatch: /mobile\.spec\.ts/,
     },
-    {
-      name: "website",
-      use: {
-        ...devices["Desktop Chrome"],
-        baseURL: "http://localhost:3000",
-      },
-      testMatch: /website\.spec\.ts/,
-    },
   ],
 
   webServer: [
     {
       command:
-        "mise exec -- pnpm --filter=@app/mobile run build && mise exec -- pnpm --filter=@app/mobile run preview --port 1420 --strictPort",
-      port: 1420,
+        "E2E_TEST=true PORT=3050 pnpm --filter=@app/website dev --port 3050",
+      port: 3050,
+      env: {
+        E2E_TEST: "true",
+        PORT: "3050",
+        NUXT_PUBLIC_SUPABASE_URL: "https://mock.supabase.co",
+        NUXT_PUBLIC_SUPABASE_KEY: "mock-anon-key",
+        SUPABASE_URL: "https://mock.supabase.co",
+        SUPABASE_KEY: "mock-anon-key",
+      },
       reuseExistingServer: !process.env.CI,
-      timeout: 300000,
+      timeout: 120000,
     },
     {
-      command:
-        "mise exec -- pnpm --filter=@app/website run build && PORT=3000 mise exec -- pnpm --filter=@app/website run preview",
-      port: 3000,
+      command: "pnpm --filter=@app/mobile dev",
+      port: 1420,
       reuseExistingServer: !process.env.CI,
       timeout: 120000,
     },

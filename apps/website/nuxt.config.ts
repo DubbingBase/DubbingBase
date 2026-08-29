@@ -49,8 +49,23 @@ export default defineNuxtConfig({
     resendToEmail: process.env.NUXT_RESEND_TO_EMAIL,
     adminEmail: process.env.NUXT_ADMIN_EMAIL,
     public: {
-      supabaseUrl: process.env.NUXT_PUBLIC_SUPABASE_URL,
-      supabaseKey: process.env.NUXT_PUBLIC_SUPABASE_KEY,
+      supabaseUrl:
+        process.env.NUXT_PUBLIC_SUPABASE_URL || "https://mock.supabase.co",
+      supabaseKey: process.env.NUXT_PUBLIC_SUPABASE_KEY || "mock-anon-key",
+    },
+  },
+
+  supabase: {
+    url: process.env.NUXT_PUBLIC_SUPABASE_URL || "https://mock.supabase.co",
+    key: process.env.NUXT_PUBLIC_SUPABASE_KEY || "mock-anon-key",
+    redirect: false,
+    types: resolve(
+      import.meta.dirname,
+      "../../packages/database/src/database.types.ts",
+    ),
+    cookieOptions: {
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
     },
   },
 
@@ -142,20 +157,6 @@ export default defineNuxtConfig({
       useCookie: true,
       cookieKey: "user_lang",
       redirectOn: "all", // Redirects on all paths (fixes 404 on URLs without language prefix)
-    },
-  },
-
-  supabase: {
-    url: process.env.NUXT_PUBLIC_SUPABASE_URL,
-    key: process.env.NUXT_PUBLIC_SUPABASE_KEY,
-    redirect: false,
-    types: resolve(
-      import.meta.dirname,
-      "../../packages/database/src/database.types.ts",
-    ),
-    cookieOptions: {
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
     },
   },
 

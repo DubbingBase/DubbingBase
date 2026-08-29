@@ -10,10 +10,12 @@
       </NuxtLayout>
     </main>
     <Footer />
+    <SearchModal />
   </div>
 </template>
 
 <script setup lang="ts">
+import SearchModal from "./components/SearchModal.vue";
 
 const { effectiveTheme } = useTheme();
 const i18nHead = useLocaleHead({

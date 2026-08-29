@@ -30,6 +30,7 @@ export type SearchResult = {
   manufacturer?: string;
   product_line?: string;
   video_id?: string | null;
+  overview?: string;
 };
 
 export async function fetchSearchData(query: string): Promise<SearchResult[]> {

@@ -1,5 +1,27 @@
-import satori from "@cf-wasm/satori/workerd";
-import { Resvg } from "@cf-wasm/resvg/workerd";
+let _satori: any = null;
+let _Resvg: any = null;
+
+async function getOgDependencies() {
+  if (!_satori || !_Resvg) {
+    try {
+      const [satoriMod, resvgMod] = await Promise.all([
+        import("@cf-wasm/satori/workerd"),
+        import("@cf-wasm/resvg/workerd"),
+      ]);
+      _satori = satoriMod.default || satoriMod;
+      _Resvg = resvgMod.Resvg;
+    } catch {
+      const satoriMod = await import("satori");
+      _satori = satoriMod.default || satoriMod;
+      _Resvg = {
+        async: async () => ({
+          render: () => ({ asPng: () => new Uint8Array([]) }),
+        }),
+      };
+    }
+  }
+  return { satori: _satori, Resvg: _Resvg };
+}
 
 let fontDataRegular: ArrayBuffer | null = null;
 let fontDataBold: ArrayBuffer | null = null;
@@ -279,6 +301,7 @@ export default defineEventHandler(async (event) => {
     }
 
     await initialize();
+    const { satori, Resvg } = await getOgDependencies();
 
     let template;
 

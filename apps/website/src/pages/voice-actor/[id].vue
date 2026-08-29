@@ -722,7 +722,7 @@ const { data, pending } = useAsyncData(
   },
 );
 
-const voiceActorData = useVoiceActorData(data.value);
+const voiceActorData = useVoiceActorData(data);
 const {
   voiceActor,
   profilePicture,

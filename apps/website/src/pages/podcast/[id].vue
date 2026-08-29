@@ -6,18 +6,52 @@
     <!-- Main Content -->
     <MediaDetailsLayout
       v-else-if="podcast"
-      :backdrop-src="null"
-      :poster-src="coverUrl"
+      :backdrop-url="null"
+      :poster-url="coverUrl"
       :title="podcast.title"
-      :original-title="podcast.author"
-      :media-type="'podcast'"
-      :release-year="podcast.release_date ? podcast.release_date.substring(0, 4) : undefined"
-      :overview="podcast.description"
-      :dubbing-projects="dubbingProjects"
-      :active-dub-id="activeDubId"
-      :total-episodes="podcast.episodes_count"
+      :loading="pending"
     >
-      <template #header-actions>
+      <template #metadata>
+        <span
+          v-if="podcast.release_date"
+          class="text-gray-900 dark:text-gray-100 font-semibold text-base md:text-lg bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg"
+        >
+          {{ podcast.release_date.substring(0, 4) }}
+        </span>
+        <span
+          v-if="podcast.author"
+          class="text-gray-800 dark:text-gray-200 font-medium text-sm md:text-base bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg"
+        >
+          {{ podcast.author }}
+        </span>
+      </template>
+
+      <template #actions-left>
+        <div v-if="dubbingProjects.length > 0" class="flex flex-wrap gap-2">
+          <NuxtLink
+            v-for="project in dubbingProjects"
+            :key="project.id"
+            :to="{ query: { dub: project.id } }"
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-gray-200 dark:border-[#2a2a2a]"
+            :class="
+              activeDubId === project.id
+                ? 'bg-cyan-600 dark:bg-[#00E5FF] text-white dark:text-black border-cyan-600 dark:border-[#00E5FF]'
+                : 'bg-white dark:bg-[#1d1d1d] text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#2a2a2a]'
+            "
+          >
+            {{
+              $t("details.dubbing", {
+                lang: getDisplayLanguage(project.language),
+              })
+            }}
+          </NuxtLink>
+        </div>
+        <div v-else class="text-sm text-gray-500 font-medium">
+          {{ $t("details.noDubbingProjects", "Aucun projet de doublage disponible") }}
+        </div>
+      </template>
+
+      <template #actions-right>
         <div class="flex items-center gap-2">
           <button
             v-if="podcast.feed_url"
@@ -28,51 +62,26 @@
             <span>Flux RSS / Podcast</span>
             <ExternalLinkIcon class="w-3 h-3 opacity-60" />
           </button>
-
-          <NuxtLink
-            v-if="isAdmin"
-            :to="
-              localePath(
-                activeDubProject
-                  ? `/podcast/${podcast.id}/edit/${activeDubProject.id}`
-                  : `/podcast/${podcast.id}/edit/new`,
-              )
-            "
-            class="px-3 py-1.5 bg-pink-600/20 hover:bg-pink-600/30 text-pink-400 text-xs font-semibold rounded-xl border border-pink-500/30 flex items-center gap-1.5 transition-colors"
-          >
-            <span>{{
-              activeDubProject ? "Modifier le projet" : "Ajouter un projet"
-            }}</span>
-          </NuxtLink>
         </div>
       </template>
 
-      <template #details-extra>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-4 border-t border-gray-800/60">
-          <div v-if="podcast.author">
-            <span class="text-xs text-gray-400 block mb-0.5">Auteur / Créateur</span>
-            <span class="text-sm font-semibold text-gray-200">{{ podcast.author }}</span>
-          </div>
+      <template #content>
+        <!-- Synopsis / Description -->
+        <section v-if="podcast.description" class="mb-10">
+          <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+            {{ $t("details.synopsis", "Synopsis") }}
+          </h2>
+          <p class="text-gray-700 dark:text-gray-300 leading-relaxed text-base md:text-lg">
+            {{ podcast.description }}
+          </p>
+        </section>
 
-          <div v-if="podcast.genres && podcast.genres.length > 0">
-            <span class="text-xs text-gray-400 block mb-0.5">Genres</span>
-            <span class="text-sm font-semibold text-gray-200">{{ podcast.genres.join(", ") }}</span>
-          </div>
-
-          <div v-if="podcast.episodes_count">
-            <span class="text-xs text-gray-400 block mb-0.5">Nombre d'épisodes</span>
-            <span class="text-sm font-semibold text-gray-200">{{ podcast.episodes_count }}</span>
-          </div>
-        </div>
-      </template>
-
-      <!-- Technical Crew / Studio Section -->
-      <template #crew-section>
+        <!-- Technical Crew / Studio Section -->
         <div
           v-if="activeDubProject?.studios || activeDubProject?.dubbing_project_crew?.length"
-          class="bg-gray-900/60 backdrop-blur border border-gray-800 rounded-2xl p-6 space-y-4 mb-8 shadow-xl"
+          class="bg-gray-100 dark:bg-gray-900/60 backdrop-blur border border-gray-200 dark:border-gray-800 rounded-2xl p-6 space-y-4 mb-8 shadow-xl"
         >
-          <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">
+          <h3 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
             Équipe de Production & Studio
           </h3>
 
@@ -81,7 +90,7 @@
               <span class="text-xs text-gray-400">Studio d'enregistrement</span>
               <NuxtLink
                 :to="localePath(`/studio/${activeDubProject.studios.id}`)"
-                class="text-sm font-semibold text-pink-400 hover:underline block"
+                class="text-sm font-semibold text-pink-500 hover:underline block"
               >
                 {{ activeDubProject.studios.name }}
               </NuxtLink>
@@ -96,30 +105,28 @@
               <NuxtLink
                 v-if="member.voice_actors"
                 :to="localePath(`/voice-actor/${member.voice_actors.id}`)"
-                class="text-sm font-semibold text-white hover:underline block"
+                class="text-sm font-semibold text-gray-900 dark:text-white hover:underline block"
               >
                 {{ member.voice_actors.firstname }} {{ member.voice_actors.lastname }}
               </NuxtLink>
             </div>
           </div>
         </div>
-      </template>
 
-      <!-- Cast Roster with Progressive DOM windowing -->
-      <template #cast-section>
+        <!-- Cast Roster with Progressive DOM windowing -->
         <section class="space-y-6">
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h2 class="text-xl font-bold text-white flex items-center gap-2">
+              <h2 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 <span>Distribution & Voix</span>
                 <span
                   v-if="formattedCast.length > 0"
-                  class="text-xs px-2.5 py-0.5 rounded-full bg-pink-500/10 text-pink-400 font-semibold border border-pink-500/20"
+                  class="text-xs px-2.5 py-0.5 rounded-full bg-pink-500/10 text-pink-500 font-semibold border border-pink-500/20"
                 >
                   {{ formattedCast.length }}
                 </span>
               </h2>
-              <p class="text-xs text-gray-400 mt-1">
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Comédiens et voix ayant participé à cette fiction audio / podcast.
               </p>
             </div>
@@ -131,14 +138,14 @@
                 v-model="castSearchQuery"
                 type="text"
                 placeholder="Filtrer le casting..."
-                class="w-full bg-gray-900 border border-gray-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-pink-500 transition-all"
+                class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-800 rounded-xl pl-9 pr-4 py-2 text-xs text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-pink-500 transition-all"
               />
             </div>
           </div>
 
           <div
             v-if="visibleCast.length === 0"
-            class="text-center py-16 bg-gray-900/30 rounded-2xl border border-gray-800/40 text-gray-500 text-sm"
+            class="text-center py-16 bg-gray-100 dark:bg-gray-900/30 rounded-2xl border border-gray-200 dark:border-gray-800/40 text-gray-500 text-sm"
           >
             {{
               formattedCast.length === 0
@@ -154,11 +161,11 @@
             <div
               v-for="item in visibleCast"
               :key="item.work_id"
-              class="bg-gray-900/80 border border-gray-800/80 rounded-2xl p-4 flex gap-4 items-center hover:border-gray-700 transition-colors group shadow-md"
+              class="bg-white dark:bg-gray-900/80 border border-gray-200 dark:border-gray-800/80 rounded-2xl p-4 flex gap-4 items-center hover:border-gray-400 dark:hover:border-gray-700 transition-colors group shadow-md"
             >
               <NuxtLink
                 :to="localePath(`/voice-actor/${item.voice_actor_id}`)"
-                class="relative w-14 h-14 rounded-full overflow-hidden bg-gray-800 shrink-0 border border-gray-700 group-hover:border-pink-500 transition-colors flex items-center justify-center"
+                class="relative w-14 h-14 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-800 shrink-0 border border-gray-300 dark:border-gray-700 group-hover:border-pink-500 transition-colors flex items-center justify-center"
               >
                 <NuxtImg
                   v-if="item.profile_picture"
@@ -176,11 +183,11 @@
               <div class="flex-1 min-w-0">
                 <NuxtLink
                   :to="localePath(`/voice-actor/${item.voice_actor_id}`)"
-                  class="text-sm font-bold text-white hover:text-pink-400 transition-colors truncate block"
+                  class="text-sm font-bold text-gray-900 dark:text-white hover:text-pink-500 transition-colors truncate block"
                 >
                   {{ item.firstname }} {{ item.lastname }}
                 </NuxtLink>
-                <span class="text-xs text-gray-400 block truncate mt-0.5">
+                <span class="text-xs text-gray-500 dark:text-gray-400 block truncate mt-0.5">
                   {{ item.character_name || item.performance || "Voix / Rôle" }}
                 </span>
               </div>
@@ -271,6 +278,19 @@ const activeDubProject = computed(() => {
     null
   );
 });
+
+const getDisplayLanguage = (langCode: string | undefined | null) => {
+  if (!langCode) return t('details.notSpecified', 'Not specified');
+  try {
+    const displayNames = new Intl.DisplayNames([locale.value || 'en'], { type: "language" });
+    const name = displayNames.of(langCode);
+    return (typeof name === 'string' && name.length > 0)
+      ? name.charAt(0).toUpperCase() + name.slice(1)
+      : langCode;
+  } catch (e) {
+    return langCode;
+  }
+};
 
 const coverUrl = computed(() => {
   return podcast.value?.cover_url || null;
