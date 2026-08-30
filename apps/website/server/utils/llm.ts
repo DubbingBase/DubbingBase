@@ -3,12 +3,16 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
 import { z } from "zod";
 
-const GEMINI_MODEL = "gemini-3.5-flash";
+const GEMINI_MODEL = "gemini-2.0-flash";
 const GROQ_MODEL = "llama-3.3-70b-versatile";
 
 function getGoogleClient() {
   const config = useRuntimeConfig();
-  const apiKey = config.googleAiKey as string;
+  const apiKey =
+    (config.googleAiKey as string) ||
+    process.env.NUXT_GOOGLE_AI_KEY ||
+    process.env.GOOGLE_AI_KEY ||
+    "";
   if (!apiKey)
     throw new Error("NUXT_GOOGLE_AI_KEY is not set in runtimeConfig");
   return createGoogleGenerativeAI({ apiKey });
@@ -16,7 +20,11 @@ function getGoogleClient() {
 
 function getGroqClient() {
   const config = useRuntimeConfig();
-  const apiKey = config.groqApiKey as string;
+  const apiKey =
+    (config.groqApiKey as string) ||
+    process.env.NUXT_GROQ_API_KEY ||
+    process.env.GROQ_API_KEY ||
+    "";
   if (!apiKey) throw new Error("NUXT_GROQ_API_KEY is not set in runtimeConfig");
   return createOpenAI({
     baseURL: "https://api.groq.com/openai/v1",
@@ -26,7 +34,12 @@ function getGroqClient() {
 
 function isRateLimitError(error: unknown): boolean {
   const msg = error instanceof Error ? error.message : String(error);
-  return msg.includes("429") || msg.includes("rate") || msg.includes("quota");
+  return (
+    msg.includes("429") ||
+    msg.includes("rate") ||
+    msg.includes("quota") ||
+    msg.includes("ResourceExhausted")
+  );
 }
 
 async function runWithFallback<T>(
@@ -36,18 +49,25 @@ async function runWithFallback<T>(
   try {
     return await fn();
   } catch (error) {
-    if (isRateLimitError(error)) {
-      console.warn("[LLM] Primary rate limited, trying fallback...");
-      try {
-        return await fallback();
-      } catch (fallbackError) {
-        if (isRateLimitError(fallbackError)) {
-          throw new Error("LLM API Rate Limited (429)");
-        }
-        throw fallbackError;
+    console.warn(
+      "[LLM] Primary LLM failed, falling back to Groq Llama 3.3 70B...",
+      error instanceof Error ? error.message : error,
+    );
+    try {
+      return await fallback();
+    } catch (fallbackError) {
+      if (isRateLimitError(fallbackError) || isRateLimitError(error)) {
+        throw new Error("LLM API Rate Limited (429)");
       }
+      const primaryMsg = error instanceof Error ? error.message : String(error);
+      const fallbackMsg =
+        fallbackError instanceof Error
+          ? fallbackError.message
+          : String(fallbackError);
+      throw new Error(
+        `LLM Failure - Primary (Gemini): ${primaryMsg} | Fallback (Groq): ${fallbackMsg}`,
+      );
     }
-    throw error;
   }
 }
 

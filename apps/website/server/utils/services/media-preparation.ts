@@ -415,7 +415,24 @@ If no dubbing or voice-actor data exists in the section, return { items: [] }.`,
           const langCast = await getLangCast(language);
           const castPool = langCast.length ? langCast : [];
 
-          const foundActor = castPool.find((cast: any) => cast.name === actor);
+          const targetActorNorm = normalizeString(actor);
+          const foundActor = castPool.find((cast: any) => {
+            if (cast.name === actor) return true;
+            if (normalizeString(cast.name) === targetActorNorm) return true;
+            if (
+              cast.original_name &&
+              normalizeString(cast.original_name) === targetActorNorm
+            )
+              return true;
+            if (
+              entry.performance &&
+              cast.character &&
+              normalizeString(cast.character) ===
+                normalizeString(entry.performance)
+            )
+              return true;
+            return false;
+          });
 
           if (!foundActor) {
             console.log(
