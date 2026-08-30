@@ -557,7 +557,9 @@ export class MediaService {
         const wikidataId = tmdbMedia.external_ids.wikidata_id;
         try {
           const url = `https://www.wikidata.org/w/api.php?action=wbgetclaims&entity=${wikidataId}&format=json`;
-          const response = await fetch(url);
+          const response = await fetch(url, {
+            headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
+          });
           if (response.ok) {
             const data = await response.json();
             const property = contentType === "movie" ? "P12196" : "P4835";
