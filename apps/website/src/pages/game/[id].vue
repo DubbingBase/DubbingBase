@@ -77,6 +77,12 @@
           </NuxtLink>
         </ClientOnly>
         
+        <ForceEnqueueButton
+          v-if="game?.id"
+          media-type="video_game"
+          :media-id="game.id"
+        />
+
         <button
           @click="isReportModalOpen = true"
           class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1.5"

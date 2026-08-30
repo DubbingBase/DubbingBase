@@ -33,6 +33,12 @@
               activeDubProject ? "Modifier le projet" : "Ajouter un projet"
             }}</span>
           </NuxtLink>
+
+          <ForceEnqueueButton
+            v-if="toy?.id"
+            media-type="toy"
+            :media-id="toy.id"
+          />
         </div>
       </template>
 

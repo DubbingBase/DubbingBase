@@ -111,6 +111,12 @@
           </NuxtLink>
         </ClientOnly>
 
+        <ForceEnqueueButton
+          v-if="audiobook?.id"
+          media-type="audiobook"
+          :media-id="audiobook.id"
+        />
+
         <button
           @click="isReportModalOpen = true"
           class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1.5"

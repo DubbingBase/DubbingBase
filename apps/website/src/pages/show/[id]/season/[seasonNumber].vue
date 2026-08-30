@@ -80,6 +80,13 @@
           <span class="hidden sm:inline">{{ $t("details.modify") }}</span>
         </NuxtLink>
         
+        <ForceEnqueueButton
+          v-if="showId"
+          media-type="season"
+          :media-id="showId"
+          :season-number="seasonNumber"
+        />
+
         <button
           @click="isReportModalOpen = true"
           class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1.5"

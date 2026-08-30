@@ -62,6 +62,12 @@
             <span>Flux RSS / Podcast</span>
             <ExternalLinkIcon class="w-3 h-3 opacity-60" />
           </button>
+
+          <ForceEnqueueButton
+            v-if="podcast?.id"
+            media-type="podcast"
+            :media-id="podcast.id"
+          />
         </div>
       </template>
 
