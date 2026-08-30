@@ -173,6 +173,8 @@ export default defineEventHandler(async (event) => {
       language?: string;
       page_id?: number;
       section_indexes?: number[];
+      is_manual?: boolean;
+      priority?: "high" | "normal";
     };
     const readCt = Number(queueItem.read_ct);
 
@@ -313,6 +315,7 @@ export default defineEventHandler(async (event) => {
               p_season_number: payload.season_number ?? undefined,
               p_episode_number: payload.episode_number ?? undefined,
               p_language: lang,
+              p_is_manual: payload.is_manual ?? false,
             },
           );
 
@@ -455,6 +458,7 @@ export default defineEventHandler(async (event) => {
             p_section_indexes: checkResult.sectionIndexes,
             p_season_number: payload.season_number ?? undefined,
             p_episode_number: payload.episode_number ?? undefined,
+            p_is_manual: payload.is_manual ?? false,
           },
         );
 

@@ -103,6 +103,7 @@ export default defineEventHandler(async (event) => {
       p_season_number: numSeason,
       p_episode_number: numEpisode,
       p_language: cleanLang,
+      p_is_manual: true,
     });
 
     if (error) {

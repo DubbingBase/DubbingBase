@@ -230,6 +230,13 @@
                     >
                       {{ (item as any).language }}
                     </span>
+                    <span
+                      v-if="(item as any).is_manual"
+                      class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-rose-950/60 border border-rose-800/80 text-rose-300 flex items-center space-x-1"
+                      title="Enqueued manually (top priority)"
+                    >
+                      <span>⚡ Prioritaire</span>
+                    </span>
                     <div class="flex items-center space-x-3">
                       <a
                         :href="`https://www.themoviedb.org/${item.media_type === 'tv' || item.media_type === 'season' || item.media_type === 'episode' ? 'tv' : 'movie'}/${item.tmdb_id}`"
