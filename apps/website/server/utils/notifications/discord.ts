@@ -1,6 +1,7 @@
 export interface DiscordWebhookOptions {
   url?: string;
   imageUrl?: string;
+  color?: number;
 }
 
 export async function sendDiscordAdminNotification(
@@ -9,7 +10,11 @@ export async function sendDiscordAdminNotification(
   options?: DiscordWebhookOptions,
 ) {
   const config = useRuntimeConfig();
-  const webhookUrl = config.discordWebhookUrl as string;
+  const webhookUrl =
+    (config.discordWebhookUrl as string) ||
+    process.env.NUXT_DISCORD_WEBHOOK_URL ||
+    process.env.DISCORD_WEBHOOK_URL ||
+    "";
 
   if (!webhookUrl || typeof webhookUrl !== "string") {
     console.warn("[Discord] Webhook URL missing, skipping notification");
@@ -20,7 +25,7 @@ export async function sendDiscordAdminNotification(
     const embed: any = {
       title,
       description: message,
-      color: 0x5865f2,
+      color: options?.color ?? 0x5865f2,
       timestamp: new Date().toISOString(),
     };
 

@@ -483,6 +483,19 @@ export default defineEventHandler(async (event) => {
           `[QUEUE] Check verified for ${mediaTitle} [${lang}]: ${checkResult.sectionIndexes.length} sections enqueued to wiki_extract`,
         );
 
+        const checkWikiUrl = checkResult.wikipediaUrl;
+        const checkWikiSection = checkWikiUrl
+          ? `\n🔗 **Wikipedia Link:** ${checkWikiUrl}`
+          : "";
+
+        await sendDiscordAdminNotification(
+          `Dubbing Section Found [${lang.toUpperCase()}]`,
+          `Found **${checkResult.sectionIndexes.length} section(s)** on Wikipedia for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}). Enqueued for LLM credit extraction.${checkWikiSection}`,
+          checkWikiUrl
+            ? { url: checkWikiUrl, color: 0x57f287 }
+            : { color: 0x57f287 },
+        );
+
         return { ok: true, processed: 1, results, queue: targetQueue };
       } catch (err) {
         const errMsg = err instanceof Error ? err.message : String(err);
