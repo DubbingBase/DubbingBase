@@ -1,3 +1,5 @@
+import { API_CLIENT_HEADER, API_CLIENT_VALUE } from "../../shared/constants";
+
 export default defineNuxtPlugin({
   name: "authenticated-fetch",
   setup() {
@@ -17,6 +19,7 @@ export default defineNuxtPlugin({
         return (async () => {
           try {
             const headers: Record<string, string> = {
+              [API_CLIENT_HEADER]: API_CLIENT_VALUE,
               ...(options?.headers as Record<string, string> | undefined),
             };
 

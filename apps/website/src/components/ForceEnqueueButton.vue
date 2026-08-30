@@ -172,6 +172,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
+import { API_CLIENT_HEADER, API_CLIENT_VALUE } from "../../shared/constants";
 
 const props = defineProps<{
   mediaType: string;
@@ -280,6 +281,9 @@ const handleEnqueue = async () => {
       message?: string;
     }>("/api/media-queue", {
       method: "POST",
+      headers: {
+        [API_CLIENT_HEADER]: API_CLIENT_VALUE,
+      },
       body: {
         action: "enqueue",
         mediaType: props.mediaType,

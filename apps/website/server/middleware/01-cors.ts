@@ -5,9 +5,21 @@ const ALLOWED_ORIGINS = [
   "https://www.dubbingbase.com",
 ];
 
-function isAllowedOrigin(origin: string): boolean {
-  return ALLOWED_ORIGINS.some(
-    (a) => origin === a || origin.startsWith(a + "/"),
+function isAllowedOrigin(origin: string, host?: string): boolean {
+  if (!origin) return true;
+  if (host && (origin === `http://${host}` || origin === `https://${host}`)) {
+    return true;
+  }
+  return (
+    ALLOWED_ORIGINS.some((a) => origin === a || origin.startsWith(a + "/")) ||
+    origin.includes("localhost") ||
+    origin.includes("127.0.0.1") ||
+    origin.endsWith(".pages.dev") ||
+    origin.endsWith(".workers.dev") ||
+    origin.startsWith("http://100.") || // Tailscale
+    origin.startsWith("https://100.") ||
+    origin.startsWith("http://192.168.") || // LAN
+    origin.startsWith("http://10.")
   );
 }
 
@@ -19,6 +31,7 @@ export default defineEventHandler((event) => {
   useCache(event);
 
   const origin = getHeader(event, "origin") || "";
+  const host = getHeader(event, "host") || "";
   const client = getHeader(event, API_CLIENT_HEADER) || "";
 
   setResponseHeader(
@@ -34,8 +47,8 @@ export default defineEventHandler((event) => {
   setResponseHeader(event, "Access-Control-Max-Age", "86400");
   setResponseHeader(event, "Vary", "Origin");
 
-  if (isAllowedOrigin(origin)) {
-    setResponseHeader(event, "Access-Control-Allow-Origin", origin);
+  if (isAllowedOrigin(origin, host)) {
+    setResponseHeader(event, "Access-Control-Allow-Origin", origin || "*");
     setResponseHeader(event, "Access-Control-Allow-Credentials", "true");
   }
 
@@ -44,11 +57,27 @@ export default defineEventHandler((event) => {
     return;
   }
 
-  if (origin && !isAllowedOrigin(origin)) {
-    throw createError({ statusCode: 403, message: "Forbidden" });
+  if (origin && !isAllowedOrigin(origin, host)) {
+    throw createError({
+      statusCode: 403,
+      message: "Forbidden (Invalid Origin)",
+    });
   }
 
-  if (origin && client !== API_CLIENT_VALUE) {
-    throw createError({ statusCode: 403, message: "Forbidden" });
+  const isSameOrigin =
+    !origin ||
+    (host && (origin === `http://${host}` || origin === `https://${host}`));
+
+  // If request has an origin from another domain and is missing the client header, reject
+  if (
+    origin &&
+    !isSameOrigin &&
+    !isAllowedOrigin(origin, host) &&
+    client !== API_CLIENT_VALUE
+  ) {
+    throw createError({
+      statusCode: 403,
+      message: "Forbidden (Missing Client Header)",
+    });
   }
 });
