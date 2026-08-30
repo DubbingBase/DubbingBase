@@ -1,16 +1,26 @@
 import { useSupabaseAdmin } from "../utils/db/client";
-import { findOrCreateDubbingProject } from "../utils/db/dubbing-project";
 import { buildTmdbImageUrl } from "../utils/urls/tmdb";
 import { sendDiscordAdminNotification } from "../utils/notifications/discord";
+import { requireAdmin } from "../utils/auth";
 
 export default defineEventHandler(async (event) => {
-  const user = event.context.user;
-  if (!user) {
-    throw createError({ statusCode: 401, message: "Unauthorized" });
+  const internalSecret = getHeader(event, "x-internal-secret");
+  const config = useRuntimeConfig();
+  const secretKey =
+    (config.supabaseSecretKey as string) ||
+    process.env.SUPABASE_SECRET_KEY ||
+    process.env.NUXT_SUPABASE_SECRET_KEY ||
+    "";
+  const isInternalTrigger =
+    Boolean(internalSecret) &&
+    Boolean(secretKey) &&
+    internalSecret === secretKey;
+
+  if (!isInternalTrigger) {
+    requireAdmin(event);
   }
 
   try {
-    const config = useRuntimeConfig();
     const tmdbApiKey = config.tmdbApiKey;
     if (!tmdbApiKey) {
       throw new Error("TMDB_API_KEY environment variable is not set");
@@ -67,13 +77,7 @@ export default defineEventHandler(async (event) => {
       .slice(0, 10);
     const itemsToProcess = [...topMovies, ...topShows];
 
-    const supabaseAdmin = event.context.supabaseAdmin;
-    if (!supabaseAdmin) {
-      throw createError({
-        statusCode: 500,
-        message: "Server configuration error",
-      });
-    }
+    const supabaseAdmin = useSupabaseAdmin();
 
     const contentIds = itemsToProcess.map((item) => item.id);
     const { data: existingProjects, error: projectsError } = await supabaseAdmin
@@ -110,10 +114,7 @@ export default defineEventHandler(async (event) => {
       });
 
       if (error) {
-        if (
-          error.message &&
-          error.message.includes("Request is already in the queue")
-        ) {
+        if (error.message && error.message.includes("already in the")) {
           alreadyInQueueCount++;
         } else {
           console.error(`Error enqueueing ${media.type} ${media.id}:`, error);
@@ -124,7 +125,7 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    const summaryMessage = `Enqueued ${enqueuedCount} items.\nSkipped ${alreadyInQueueCount} already in queue.\nSkipped ${skippedCount} already have voice actors.\nFailed to enqueue ${failedCount} items.`;
+    const summaryMessage = `Enqueued **${enqueuedCount}** items.\nSkipped **${alreadyInQueueCount}** already in queue.\nSkipped **${skippedCount}** already have voice actors.\nFailed to enqueue **${failedCount}** items.`;
     let imageUrl: string | undefined = undefined;
     if (itemsToProcess.length > 0 && itemsToProcess[0].poster_path) {
       imageUrl = buildTmdbImageUrl(itemsToProcess[0].poster_path) || undefined;
