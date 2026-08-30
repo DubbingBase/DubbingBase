@@ -172,7 +172,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import { API_CLIENT_HEADER, API_CLIENT_VALUE } from "../../shared/constants";
+import { API_CLIENT_HEADER, API_CLIENT_VALUE } from "@app/shared-logic";
 
 const props = defineProps<{
   mediaType: string;

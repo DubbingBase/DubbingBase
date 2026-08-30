@@ -50,3 +50,6 @@ export const MEDIA_ROUTE_PREFIXES = [
   "studios",
 ] as const;
 export type MediaRoutePrefix = (typeof MEDIA_ROUTE_PREFIXES)[number];
+
+export const API_CLIENT_HEADER = "x-dubbingbase-client" as const;
+export const API_CLIENT_VALUE = "web" as const;

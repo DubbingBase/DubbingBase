@@ -1,4 +1,4 @@
-import { API_CLIENT_HEADER, API_CLIENT_VALUE } from "../../shared/constants";
+import { API_CLIENT_HEADER, API_CLIENT_VALUE } from "@app/shared-logic";
 
 export default defineNuxtPlugin({
   name: "api-client",
