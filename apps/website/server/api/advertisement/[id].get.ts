@@ -1,6 +1,7 @@
 import { useCache, useAdvertisementClient } from "../../utils";
 import { getDubbingProjects } from "../../utils/db/queries";
 import { useSupabaseAdmin } from "../../utils/db/client";
+import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 import type { AdvertisementResponse } from "@app/shared-logic";
 
 export default defineEventHandler(
@@ -63,16 +64,35 @@ export default defineEventHandler(
       const isProcessed = dubbingProjects.length > 0;
       if (!isProcessed) {
         const supabaseAdmin = useSupabaseAdmin();
-        void (async () => {
+        const enqueueTask = async () => {
           const { error } = await supabaseAdmin.rpc("enqueue_media_fetch", {
             p_media_type: "advertisement",
             p_tmdb_id: adId,
             p_season_number: undefined,
             p_episode_number: undefined,
           });
-          if (error)
-            console.error("Failed to lazily enqueue advertisement:", error);
-        })();
+          if (error) {
+            if (!error.message?.includes("already in the")) {
+              console.error("Failed to lazily enqueue advertisement:", error);
+            }
+          } else {
+            await sendDiscordAdminNotification(
+              "Media Enqueued (Auto)",
+              `Automatically enqueued advertisement **${ad?.title || adId}** (Ad ID: ${adId}) for dubbing discovery.`,
+              {
+                ...(ad?.poster_url ? { imageUrl: ad.poster_url } : {}),
+                url: `/advertisement/${adId}`,
+                color: 0x5865f2,
+              },
+            );
+          }
+        };
+
+        if (event?.waitUntil) {
+          event.waitUntil(enqueueTask());
+        } else {
+          void enqueueTask();
+        }
       }
 
       baseData = {

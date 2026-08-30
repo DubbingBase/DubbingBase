@@ -108,7 +108,7 @@ export default defineEventHandler(async (event) => {
     const isProcessed = dubbingProjects.length > 0;
     if (!isProcessed) {
       const supabaseAdmin = useSupabaseAdmin();
-      void (async () => {
+      const enqueueTask = async () => {
         const { error } = await supabaseAdmin.rpc("enqueue_media_fetch", {
           p_media_type: "video_game",
           p_tmdb_id: gameId,
@@ -116,7 +116,7 @@ export default defineEventHandler(async (event) => {
           p_episode_number: undefined,
         });
         if (error) {
-          if (!error.message?.includes("already in the queue")) {
+          if (!error.message?.includes("already in the")) {
             console.error("Failed to lazily enqueue video_game:", error);
           }
         } else {
@@ -126,10 +126,17 @@ export default defineEventHandler(async (event) => {
             {
               ...(game?.cover?.url ? { imageUrl: game.cover.url } : {}),
               url: `/game/${gameId}`,
+              color: 0x5865f2,
             },
           );
         }
-      })();
+      };
+
+      if (event?.waitUntil) {
+        event.waitUntil(enqueueTask());
+      } else {
+        void enqueueTask();
+      }
     }
 
     baseData = {

@@ -84,7 +84,7 @@ export async function fetchMovieData(event: any, movieId: number) {
 
     if (!isProcessed && hasWiki && !isAdult) {
       const supabaseAdmin = useSupabaseAdmin();
-      void (async () => {
+      const enqueueTask = async () => {
         const { error } = await supabaseAdmin.rpc("enqueue_media_fetch", {
           p_media_type: "movie",
           p_tmdb_id: movieId,
@@ -92,7 +92,7 @@ export async function fetchMovieData(event: any, movieId: number) {
           p_episode_number: undefined,
         });
         if (error) {
-          if (!error.message?.includes("already in the queue")) {
+          if (!error.message?.includes("already in the")) {
             console.error("Failed to lazily enqueue movie:", error);
           }
         } else {
@@ -106,10 +106,17 @@ export async function fetchMovieData(event: any, movieId: number) {
                   }
                 : {}),
               url: `/movie/${movieId}`,
+              color: 0x5865f2,
             },
           );
         }
-      })();
+      };
+
+      if (event?.waitUntil) {
+        event.waitUntil(enqueueTask());
+      } else {
+        void enqueueTask();
+      }
     }
 
     baseData = {

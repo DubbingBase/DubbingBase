@@ -1,6 +1,7 @@
 import { useCache, usePodcastClient } from "../../utils";
 import { getDubbingProjects } from "../../utils/db/queries";
 import { useSupabaseAdmin } from "../../utils/db/client";
+import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 import type { PodcastResponse } from "@app/shared-logic";
 
 export default defineEventHandler(async (event): Promise<PodcastResponse> => {
@@ -61,15 +62,35 @@ export default defineEventHandler(async (event): Promise<PodcastResponse> => {
     const isProcessed = dubbingProjects.length > 0;
     if (!isProcessed) {
       const supabaseAdmin = useSupabaseAdmin();
-      void (async () => {
+      const enqueueTask = async () => {
         const { error } = await supabaseAdmin.rpc("enqueue_media_fetch", {
           p_media_type: "podcast",
           p_tmdb_id: podcastId,
           p_season_number: undefined,
           p_episode_number: undefined,
         });
-        if (error) console.error("Failed to lazily enqueue podcast:", error);
-      })();
+        if (error) {
+          if (!error.message?.includes("already in the")) {
+            console.error("Failed to lazily enqueue podcast:", error);
+          }
+        } else {
+          await sendDiscordAdminNotification(
+            "Media Enqueued (Auto)",
+            `Automatically enqueued audio fiction / podcast **${podcast?.title || podcastId}** (Podcast ID: ${podcastId}) for dubbing discovery.`,
+            {
+              ...(podcast?.cover_url ? { imageUrl: podcast.cover_url } : {}),
+              url: `/podcast/${podcastId}`,
+              color: 0x5865f2,
+            },
+          );
+        }
+      };
+
+      if (event?.waitUntil) {
+        event.waitUntil(enqueueTask());
+      } else {
+        void enqueueTask();
+      }
     }
 
     baseData = {

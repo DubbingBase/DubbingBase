@@ -1,6 +1,7 @@
 import { useCache, useToyClient } from "../../utils";
 import { getDubbingProjects } from "../../utils/db/queries";
 import { useSupabaseAdmin } from "../../utils/db/client";
+import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 import type { ToyResponse } from "@app/shared-logic";
 
 export default defineEventHandler(async (event): Promise<ToyResponse> => {
@@ -62,15 +63,35 @@ export default defineEventHandler(async (event): Promise<ToyResponse> => {
     const isProcessed = dubbingProjects.length > 0;
     if (!isProcessed) {
       const supabaseAdmin = useSupabaseAdmin();
-      void (async () => {
+      const enqueueTask = async () => {
         const { error } = await supabaseAdmin.rpc("enqueue_media_fetch", {
           p_media_type: "toy",
           p_tmdb_id: toyId,
           p_season_number: undefined,
           p_episode_number: undefined,
         });
-        if (error) console.error("Failed to lazily enqueue toy:", error);
-      })();
+        if (error) {
+          if (!error.message?.includes("already in the")) {
+            console.error("Failed to lazily enqueue toy:", error);
+          }
+        } else {
+          await sendDiscordAdminNotification(
+            "Media Enqueued (Auto)",
+            `Automatically enqueued smart toy **${toy?.name || toyId}** (Toy ID: ${toyId}) for dubbing discovery.`,
+            {
+              ...(toy?.cover_url ? { imageUrl: toy.cover_url } : {}),
+              url: `/toy/${toyId}`,
+              color: 0x5865f2,
+            },
+          );
+        }
+      };
+
+      if (event?.waitUntil) {
+        event.waitUntil(enqueueTask());
+      } else {
+        void enqueueTask();
+      }
     }
 
     baseData = {

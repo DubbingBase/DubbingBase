@@ -1,6 +1,7 @@
 import { useCache, useOpenLibraryClient } from "../../utils";
 import { getDubbingProjects } from "../../utils/db/queries";
 import { useSupabaseAdmin } from "../../utils/db/client";
+import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 import type { AudiobookResponse } from "@app/shared-logic";
 
 export default defineEventHandler(async (event): Promise<AudiobookResponse> => {
@@ -64,15 +65,35 @@ export default defineEventHandler(async (event): Promise<AudiobookResponse> => {
     const isProcessed = dubbingProjects.length > 0;
     if (!isProcessed) {
       const supabaseAdmin = useSupabaseAdmin();
-      void (async () => {
+      const enqueueTask = async () => {
         const { error } = await supabaseAdmin.rpc("enqueue_media_fetch", {
           p_media_type: "audiobook",
           p_tmdb_id: bookId,
           p_season_number: undefined,
           p_episode_number: undefined,
         });
-        if (error) console.error("Failed to lazily enqueue audiobook:", error);
-      })();
+        if (error) {
+          if (!error.message?.includes("already in the")) {
+            console.error("Failed to lazily enqueue audiobook:", error);
+          }
+        } else {
+          await sendDiscordAdminNotification(
+            "Media Enqueued (Auto)",
+            `Automatically enqueued audiobook **${book?.title || bookId}** (OpenLibrary ID: ${bookId}) for dubbing discovery.`,
+            {
+              ...(book?.cover_url ? { imageUrl: book.cover_url } : {}),
+              url: `/audiobook/${bookId}`,
+              color: 0x5865f2,
+            },
+          );
+        }
+      };
+
+      if (event?.waitUntil) {
+        event.waitUntil(enqueueTask());
+      } else {
+        void enqueueTask();
+      }
     }
 
     baseData = {
