@@ -432,10 +432,13 @@
       "failedToProcess": "Failed to process",
       "clearingQueue": "Clearing queue...",
       "cleared": "Queue cleared",
-      "failedToClear": "Failed to clear queue",
       "confirmDelete": "Are you sure you want to delete this item?",
       "itemDeleted": "Item deleted",
-      "failedToDelete": "Failed to delete item"
+      "failedToDelete": "Failed to delete item",
+      "appLink": "App Link",
+      "active": "Active",
+      "archived": "Archived",
+      "openInApp": "Open"
     },
     "auditLogs": {
       "title": "Audit Logs",

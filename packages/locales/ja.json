@@ -432,10 +432,13 @@
       "failedToProcess": "処理に失敗しました",
       "clearingQueue": "キューをクリア中...",
       "cleared": "キューをクリアしました",
-      "failedToClear": "キューのクリアに失敗しました",
       "confirmDelete": "このアイテムを削除してもよろしいですか？",
       "itemDeleted": "アイテムを削除しました",
-      "failedToDelete": "アイテムの削除に失敗しました"
+      "failedToDelete": "アイテムの削除に失敗しました",
+      "appLink": "アプリリンク",
+      "active": "アクティブ",
+      "archived": "アーカイブ済み",
+      "openInApp": "開く"
     },
     "auditLogs": {
       "title": "監査ログ",

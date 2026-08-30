@@ -117,6 +117,52 @@
       <div
         class="flex flex-wrap items-center gap-3 bg-gray-900 p-4 rounded-2xl border border-gray-800"
       >
+        <!-- Archive / Active Toggle -->
+        <div
+          class="flex items-center bg-gray-950 p-1 rounded-xl border border-gray-800"
+        >
+          <button
+            type="button"
+            @click="archiveFilter = 'active'"
+            class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-150 flex items-center space-x-1.5"
+            :class="
+              archiveFilter === 'active'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'text-gray-400 hover:text-gray-200'
+            "
+          >
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span>{{ $t('admin.queue.active') }} ({{ activeCount }})</span>
+          </button>
+          <button
+            type="button"
+            @click="archiveFilter = 'archived'"
+            class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-150 flex items-center space-x-1.5"
+            :class="
+              archiveFilter === 'archived'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'text-gray-400 hover:text-gray-200'
+            "
+          >
+            <span class="w-2 h-2 rounded-full bg-gray-400"></span>
+            <span>{{ $t('admin.queue.archived') }} ({{ archivedCount }})</span>
+          </button>
+          <button
+            type="button"
+            @click="archiveFilter = 'all'"
+            class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-150"
+            :class="
+              archiveFilter === 'all'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'text-gray-400 hover:text-gray-200'
+            "
+          >
+            {{ $t('admin.queue.all') }} ({{ allQueueItems.length }})
+          </button>
+        </div>
+
+        <div class="h-6 w-px bg-gray-800 hidden sm:block"></div>
+
         <div class="flex items-center space-x-2">
           <label class="text-xs text-gray-400 font-semibold uppercase">Queue</label>
           <select
@@ -153,6 +199,11 @@
             <option value="tv">{{ $t('admin.queue.tv') }}</option>
             <option value="season">{{ $t('admin.queue.season') }}</option>
             <option value="episode">{{ $t('admin.queue.episode') }}</option>
+            <option value="video_game">Game</option>
+            <option value="audiobook">Audiobook</option>
+            <option value="podcast">Podcast</option>
+            <option value="advertisement">Advertisement</option>
+            <option value="toy">Toy</option>
           </select>
         </div>
         <div class="flex items-center space-x-2">
@@ -164,7 +215,7 @@
             class="bg-gray-800 border border-gray-700 text-gray-200 text-xs rounded-lg px-3 py-1.5 w-32 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
-        <span class="text-xs text-gray-500">
+        <span class="text-xs text-gray-500 ml-auto">
           {{ $t('admin.queue.filterCount', { filtered: filteredItems.length, total: allQueueItems.length }) }}
         </span>
       </div>
@@ -180,6 +231,7 @@
                 class="bg-gray-900/50 border-b border-gray-800 text-xs font-semibold text-gray-450 uppercase tracking-wider"
               >
                 <th class="py-4 px-6">{{ $t('admin.queue.mediaDetails') }}</th>
+                <th class="py-4 px-6">{{ $t('admin.queue.appLink') }}</th>
                 <th class="py-4 px-6">{{ $t('admin.queue.requestedBy') }}</th>
                 <th class="py-4 px-6">{{ $t('common.status') }}</th>
                 <th class="py-4 px-6">{{ $t('admin.queue.errors') }}</th>
@@ -188,7 +240,7 @@
             </thead>
             <tbody class="divide-y divide-gray-800/50">
               <tr v-if="filteredItems.length === 0">
-                <td colspan="5" class="py-8 text-center text-gray-500">
+                <td colspan="6" class="py-8 text-center text-gray-500">
                   {{ $t('admin.queue.noMatchingItems') }}
                 </td>
               </tr>
@@ -274,6 +326,30 @@
                       {{ $t('admin.queue.episodeNumber', { number: item.episode_number }) }}
                     </span>
                   </div>
+                </td>
+
+                <!-- App Link column -->
+                <td class="py-4 px-6 whitespace-nowrap">
+                  <NuxtLink
+                    :to="getAppMediaUrl(item)"
+                    target="_blank"
+                    class="inline-flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 hover:text-blue-300 border border-blue-500/25 text-xs font-semibold transition-all duration-150 group shadow-sm"
+                  >
+                    <span>{{ $t('admin.queue.openInApp') }}</span>
+                    <svg
+                      class="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                      />
+                    </svg>
+                  </NuxtLink>
                 </td>
 
                 <!-- Requester column -->
@@ -485,11 +561,40 @@ const filterQueue = ref("all");
 const filterStatus = ref("all");
 const filterType = ref("all");
 const filterSearch = ref("");
+const archiveFilter = ref<"active" | "archived" | "all">("active");
 
 const allQueueItems = computed(() => queueItems.value);
 
+const activeCount = computed(() => {
+  return allQueueItems.value.filter(
+    (item) => item.status === "pending" || item.status === "processing",
+  ).length;
+});
+
+const archivedCount = computed(() => {
+  return allQueueItems.value.filter(
+    (item) =>
+      item.status === "completed" ||
+      item.status === "failed" ||
+      item.status === "error",
+  ).length;
+});
+
 const filteredItems = computed(() => {
   return allQueueItems.value.filter((item) => {
+    // Archive vs Active toggle
+    const isArchived =
+      item.status === "completed" ||
+      item.status === "failed" ||
+      item.status === "error";
+
+    if (archiveFilter.value === "active" && isArchived) {
+      return false;
+    }
+    if (archiveFilter.value === "archived" && !isArchived) {
+      return false;
+    }
+
     if (
       filterQueue.value !== "all" &&
       (item as any).queue_name !== filterQueue.value
@@ -544,6 +649,7 @@ const getStatusClass = (status: string) => {
     case "pending":
       return "bg-yellow-500/10 border-yellow-500/25 text-yellow-400";
     case "failed":
+    case "error":
       return "bg-red-500/10 border-red-500/25 text-red-400";
     default:
       return "bg-gray-800 border-gray-700 text-gray-400";
@@ -560,8 +666,72 @@ const getTypeClass = (type: string) => {
       return "bg-teal-500/10 border-teal-500/25 text-teal-400";
     case "episode":
       return "bg-pink-500/10 border-pink-500/25 text-pink-400";
+    case "video_game":
+    case "game":
+      return "bg-emerald-500/10 border-emerald-500/25 text-emerald-400";
+    case "audiobook":
+      return "bg-amber-500/10 border-amber-500/25 text-amber-400";
+    case "podcast":
+      return "bg-violet-500/10 border-violet-500/25 text-violet-400";
+    case "advertisement":
+      return "bg-cyan-500/10 border-cyan-500/25 text-cyan-400";
+    case "toy":
+      return "bg-rose-500/10 border-rose-500/25 text-rose-400";
     default:
       return "bg-gray-800 border-gray-700 text-gray-400";
+  }
+};
+
+const getAppMediaUrl = (item: any): string => {
+  const tmdbId = item.tmdb_id;
+  const mediaType = item.media_type;
+  const season = item.season_number;
+  const episode = item.episode_number;
+
+  switch (mediaType) {
+    case "movie":
+      return `/movie/${tmdbId}`;
+    case "tv":
+      if (
+        season !== null &&
+        season !== undefined &&
+        episode !== null &&
+        episode !== undefined
+      ) {
+        return `/serie/${tmdbId}/season/${season}/details/${episode}`;
+      }
+      if (season !== null && season !== undefined) {
+        return `/serie/${tmdbId}/season/${season}`;
+      }
+      return `/serie/${tmdbId}`;
+    case "season":
+      if (season !== null && season !== undefined) {
+        return `/serie/${tmdbId}/season/${season}`;
+      }
+      return `/serie/${tmdbId}`;
+    case "episode":
+      if (
+        season !== null &&
+        season !== undefined &&
+        episode !== null &&
+        episode !== undefined
+      ) {
+        return `/serie/${tmdbId}/season/${season}/details/${episode}`;
+      }
+      return `/serie/${tmdbId}`;
+    case "video_game":
+    case "game":
+      return `/game/${tmdbId}`;
+    case "audiobook":
+      return `/audiobook/${tmdbId}`;
+    case "podcast":
+      return `/podcast/${tmdbId}`;
+    case "advertisement":
+      return `/advertisement/${tmdbId}`;
+    case "toy":
+      return `/toy/${tmdbId}`;
+    default:
+      return `/movie/${tmdbId}`;
   }
 };
 

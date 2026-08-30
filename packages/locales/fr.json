@@ -431,10 +431,13 @@
       "failedToProcess": "Échec du traitement",
       "clearingQueue": "Suppression de la file d'attente...",
       "cleared": "File d'attente vidée",
-      "failedToClear": "Échec de la suppression",
       "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet élément ?",
       "itemDeleted": "Élément supprimé",
-      "failedToDelete": "Échec de la suppression"
+      "failedToDelete": "Échec de la suppression",
+      "appLink": "Lien App",
+      "active": "Actifs",
+      "archived": "Archivés",
+      "openInApp": "Ouvrir"
     },
     "auditLogs": {
       "title": "Journaux d'audit",

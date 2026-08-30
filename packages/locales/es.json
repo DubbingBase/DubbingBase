@@ -432,10 +432,13 @@
       "failedToProcess": "Error al procesar",
       "clearingQueue": "Vaciando cola...",
       "cleared": "Cola vaciada",
-      "failedToClear": "Error al vaciar la cola",
       "confirmDelete": "¿Está seguro de que desea eliminar este elemento?",
       "itemDeleted": "Elemento eliminado",
-      "failedToDelete": "Error al eliminar el elemento"
+      "failedToDelete": "Error al eliminar el elemento",
+      "appLink": "Enlace App",
+      "active": "Activos",
+      "archived": "Archivados",
+      "openInApp": "Abrir"
     },
     "auditLogs": {
       "title": "Registros de auditoría",
