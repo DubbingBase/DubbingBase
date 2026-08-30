@@ -638,6 +638,12 @@ export default defineEventHandler(async (event) => {
               changes: 0,
               error: `Max retries (${MAX_RETRIES}) reached`,
             });
+
+            await sendDiscordAdminNotification(
+              `Queue Extraction Rate-Limited [${lang.toUpperCase()}]`,
+              `Max retries (${MAX_RETRIES}) reached for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${lang.toUpperCase()}]):\n\`\`\`\n${errMsg}\n\`\`\``,
+              { color: 0xed4245 },
+            );
           } else {
             results.push({
               id: msgId,
@@ -658,6 +664,7 @@ export default defineEventHandler(async (event) => {
           await sendDiscordAdminNotification(
             `Queue Item Failed [${lang.toUpperCase()}]`,
             `Failed to extract **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${lang.toUpperCase()}]):\n\`\`\`\n${errMsg}\n\`\`\``,
+            { color: 0xed4245 },
           );
         }
       }

@@ -3,8 +3,17 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
 import { z } from "zod";
 
-const GEMINI_MODEL = "gemini-2.0-flash";
 const GROQ_MODEL = "llama-3.3-70b-versatile";
+
+function getGeminiModel(): string {
+  const config = useRuntimeConfig();
+  return (
+    (config.geminiModel as string) ||
+    process.env.NUXT_GEMINI_MODEL ||
+    process.env.GEMINI_MODEL ||
+    "gemini-2.5-pro"
+  );
+}
 
 function getGoogleClient() {
   const config = useRuntimeConfig();
@@ -89,7 +98,7 @@ export async function llmGenerate(
   return runWithFallback(
     () =>
       generateText({
-        model: getGoogleClient()(options?.model ?? GEMINI_MODEL),
+        model: getGoogleClient()(options?.model ?? getGeminiModel()),
         prompt,
         system,
         temperature,
@@ -123,7 +132,7 @@ export async function llmGenerateObject<T extends z.ZodType>(
   return runWithFallback(
     () =>
       generateObject({
-        model: getGoogleClient()(options?.model ?? GEMINI_MODEL),
+        model: getGoogleClient()(options?.model ?? getGeminiModel()),
         prompt,
         schema,
         system,
@@ -167,7 +176,7 @@ export async function llmVision(
   return runWithFallback(
     () =>
       generateText({
-        model: getGoogleClient()(options?.model ?? GEMINI_MODEL),
+        model: getGoogleClient()(options?.model ?? getGeminiModel()),
         messages: [
           {
             role: "user",
@@ -219,7 +228,7 @@ export async function llmVisionObject<T extends z.ZodType>(
   return runWithFallback(
     () =>
       generateObject({
-        model: getGoogleClient()(options?.model ?? GEMINI_MODEL),
+        model: getGoogleClient()(options?.model ?? getGeminiModel()),
         messages: [
           {
             role: "user",

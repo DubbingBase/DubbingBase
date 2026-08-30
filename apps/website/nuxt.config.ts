@@ -64,6 +64,7 @@ export default defineNuxtConfig({
     igdbClientId: process.env.NUXT_IGDB_CLIENT_ID,
     igdbClientSecret: process.env.NUXT_IGDB_CLIENT_SECRET,
     googleAiKey: process.env.NUXT_GOOGLE_AI_KEY,
+    geminiModel: process.env.NUXT_GEMINI_MODEL || "gemini-2.5-pro",
     groqApiKey: process.env.NUXT_GROQ_API_KEY,
     onesignalAppId: process.env.NUXT_ONESIGNAL_APP_ID,
     onesignalRestApiKey: process.env.NUXT_ONESIGNAL_REST_API_KEY,

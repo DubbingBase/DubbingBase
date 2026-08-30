@@ -22,9 +22,14 @@ export async function sendDiscordAdminNotification(
   }
 
   try {
+    const truncatedMessage =
+      message.length > 2000
+        ? message.slice(0, 1980) + "\n... (truncated)"
+        : message;
+
     const embed: any = {
-      title,
-      description: message,
+      title: title.slice(0, 250),
+      description: truncatedMessage,
       color: options?.color ?? 0x5865f2,
       timestamp: new Date().toISOString(),
     };
@@ -49,10 +54,10 @@ export async function sendDiscordAdminNotification(
     });
 
     if (!res.ok) {
+      const errText = await res.text();
       console.error(
-        "[Discord] Webhook API error:",
-        res.status,
-        await res.text(),
+        `[Discord] Webhook API error (status ${res.status}):`,
+        errText,
       );
     }
   } catch (err) {
