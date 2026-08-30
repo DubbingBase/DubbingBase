@@ -62,7 +62,7 @@ export default defineEventHandler(async (event): Promise<PodcastResponse> => {
     const isProcessed = dubbingProjects.length > 0;
     if (!isProcessed) {
       const supabaseAdmin = useSupabaseAdmin();
-      const enqueueTask = async () => {
+      try {
         const { error } = await supabaseAdmin.rpc("enqueue_media_fetch", {
           p_media_type: "podcast",
           p_tmdb_id: podcastId,
@@ -84,12 +84,8 @@ export default defineEventHandler(async (event): Promise<PodcastResponse> => {
             },
           );
         }
-      };
-
-      if (event?.waitUntil) {
-        event.waitUntil(enqueueTask());
-      } else {
-        void enqueueTask();
+      } catch (err) {
+        console.error("Error auto-enqueueing podcast:", err);
       }
     }
 

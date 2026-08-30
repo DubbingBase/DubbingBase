@@ -108,7 +108,7 @@ export default defineEventHandler(async (event) => {
     const isProcessed = dubbingProjects.length > 0;
     if (!isProcessed) {
       const supabaseAdmin = useSupabaseAdmin();
-      const enqueueTask = async () => {
+      try {
         const { error } = await supabaseAdmin.rpc("enqueue_media_fetch", {
           p_media_type: "video_game",
           p_tmdb_id: gameId,
@@ -130,12 +130,8 @@ export default defineEventHandler(async (event) => {
             },
           );
         }
-      };
-
-      if (event?.waitUntil) {
-        event.waitUntil(enqueueTask());
-      } else {
-        void enqueueTask();
+      } catch (err) {
+        console.error("Error auto-enqueueing video_game:", err);
       }
     }
 

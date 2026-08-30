@@ -64,7 +64,7 @@ export default defineEventHandler(
       const isProcessed = dubbingProjects.length > 0;
       if (!isProcessed) {
         const supabaseAdmin = useSupabaseAdmin();
-        const enqueueTask = async () => {
+        try {
           const { error } = await supabaseAdmin.rpc("enqueue_media_fetch", {
             p_media_type: "advertisement",
             p_tmdb_id: adId,
@@ -86,12 +86,8 @@ export default defineEventHandler(
               },
             );
           }
-        };
-
-        if (event?.waitUntil) {
-          event.waitUntil(enqueueTask());
-        } else {
-          void enqueueTask();
+        } catch (err) {
+          console.error("Error auto-enqueueing advertisement:", err);
         }
       }
 

@@ -108,7 +108,7 @@ export async function fetchShowData(event: any, showId: number) {
 
     if (!isProcessed && hasWiki && !isAdult) {
       const supabaseAdmin = useSupabaseAdmin();
-      const enqueueTask = async () => {
+      try {
         const { error } = await supabaseAdmin.rpc("enqueue_media_fetch", {
           p_media_type: "tv",
           p_tmdb_id: showId,
@@ -134,12 +134,8 @@ export async function fetchShowData(event: any, showId: number) {
             },
           );
         }
-      };
-
-      if (event?.waitUntil) {
-        event.waitUntil(enqueueTask());
-      } else {
-        void enqueueTask();
+      } catch (err) {
+        console.error("Error auto-enqueueing show:", err);
       }
     }
 

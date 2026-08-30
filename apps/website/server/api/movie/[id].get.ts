@@ -84,7 +84,7 @@ export async function fetchMovieData(event: any, movieId: number) {
 
     if (!isProcessed && hasWiki && !isAdult) {
       const supabaseAdmin = useSupabaseAdmin();
-      const enqueueTask = async () => {
+      try {
         const { error } = await supabaseAdmin.rpc("enqueue_media_fetch", {
           p_media_type: "movie",
           p_tmdb_id: movieId,
@@ -110,12 +110,8 @@ export async function fetchMovieData(event: any, movieId: number) {
             },
           );
         }
-      };
-
-      if (event?.waitUntil) {
-        event.waitUntil(enqueueTask());
-      } else {
-        void enqueueTask();
+      } catch (err) {
+        console.error("Error auto-enqueueing movie:", err);
       }
     }
 

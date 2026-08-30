@@ -63,7 +63,7 @@ export default defineEventHandler(async (event): Promise<ToyResponse> => {
     const isProcessed = dubbingProjects.length > 0;
     if (!isProcessed) {
       const supabaseAdmin = useSupabaseAdmin();
-      const enqueueTask = async () => {
+      try {
         const { error } = await supabaseAdmin.rpc("enqueue_media_fetch", {
           p_media_type: "toy",
           p_tmdb_id: toyId,
@@ -85,12 +85,8 @@ export default defineEventHandler(async (event): Promise<ToyResponse> => {
             },
           );
         }
-      };
-
-      if (event?.waitUntil) {
-        event.waitUntil(enqueueTask());
-      } else {
-        void enqueueTask();
+      } catch (err) {
+        console.error("Error auto-enqueueing toy:", err);
       }
     }
 
