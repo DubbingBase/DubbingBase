@@ -416,6 +416,10 @@ If no dubbing or voice-actor data exists in the section, return { items: [] }.`,
           const castPool = langCast.length ? langCast : [];
 
           const targetActorNorm = normalizeString(actor);
+          const targetPerfNorm = entry.performance
+            ? normalizeString(entry.performance)
+            : null;
+
           const foundActor = castPool.find((cast: any) => {
             if (cast.name === actor) return true;
             if (normalizeString(cast.name) === targetActorNorm) return true;
@@ -425,10 +429,14 @@ If no dubbing or voice-actor data exists in the section, return { items: [] }.`,
             )
               return true;
             if (
-              entry.performance &&
+              targetPerfNorm &&
               cast.character &&
-              normalizeString(cast.character) ===
-                normalizeString(entry.performance)
+              normalizeString(cast.character) === targetPerfNorm
+            )
+              return true;
+            if (
+              cast.character &&
+              normalizeString(cast.character) === targetActorNorm
             )
               return true;
             return false;

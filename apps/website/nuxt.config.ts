@@ -63,12 +63,18 @@ export default defineNuxtConfig({
     tvdbApiKey: process.env.NUXT_TVDB_API_KEY,
     igdbClientId: process.env.NUXT_IGDB_CLIENT_ID,
     igdbClientSecret: process.env.NUXT_IGDB_CLIENT_SECRET,
-    googleAiKey: process.env.NUXT_GOOGLE_AI_KEY,
-    geminiModel: process.env.NUXT_GEMINI_MODEL || "gemini-2.5-pro",
-    groqApiKey: process.env.NUXT_GROQ_API_KEY,
+    googleAiKey: process.env.NUXT_GOOGLE_AI_KEY || process.env.GOOGLE_AI_KEY,
+    geminiModel:
+      process.env.NUXT_GEMINI_MODEL ||
+      process.env.GEMINI_MODEL ||
+      "gemini-2.0-flash",
+    groqApiKey: process.env.NUXT_GROQ_API_KEY || process.env.GROQ_API_KEY,
     onesignalAppId: process.env.NUXT_ONESIGNAL_APP_ID,
     onesignalRestApiKey: process.env.NUXT_ONESIGNAL_REST_API_KEY,
-    discordWebhookUrl: process.env.NUXT_DISCORD_WEBHOOK_URL,
+    discordWebhookUrl:
+      process.env.NUXT_DISCORD_WEBHOOK_URL ||
+      process.env.DISCORD_WEBHOOK_URL ||
+      process.env.DISCORD_ADMIN_WEBHOOK_LOG_URL,
     resendApiKey: process.env.NUXT_RESEND_API_KEY,
     resendFromEmail: process.env.NUXT_RESEND_FROM_EMAIL,
     resendToEmail: process.env.NUXT_RESEND_TO_EMAIL,

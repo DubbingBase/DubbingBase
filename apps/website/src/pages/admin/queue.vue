@@ -826,11 +826,34 @@ const startProcessing = async () => {
   isProcessing.value = true;
   showToast(t("admin.queue.processingStarted"), "info");
   try {
-    await $fetch("/api/process-media-queue", {
+    const res = await $fetch<{
+      ok: boolean;
+      processed: number;
+      reason?: string;
+      message?: string;
+      results?: Array<{ id: number; ok: boolean; error?: string; changes?: number; creditsAdded?: number }>;
+    }>("/api/process-media-queue", {
       method: "POST",
-      body: {},
+      body: {
+        force: true,
+        queue: filterQueue.value !== "all" ? filterQueue.value : undefined,
+      },
     });
-    showToast(t("admin.queue.processingCompleted"), "success");
+
+    if (res.results && res.results.length > 0 && !res.results[0]?.ok) {
+      showToast(
+        res.results[0]?.error || t("admin.queue.failedToProcess"),
+        "error",
+      );
+    } else if (res.processed > 0) {
+      const result = res.results?.[0];
+      const detail = result
+        ? ` (+${result.creditsAdded ?? 0} credits)`
+        : "";
+      showToast(`${t("admin.queue.processingCompleted")}${detail}`, "success");
+    } else {
+      showToast(res.message || "No pending items to process", "info");
+    }
   } catch (err: unknown) {
     console.error("Error processing queue:", err);
     showToast(getErrorMessage(err, t("admin.queue.failedToProcess")), "error");

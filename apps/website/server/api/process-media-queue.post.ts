@@ -12,6 +12,10 @@ import { extractAvailableLanguages } from "../utils/cache/wikipedia";
 
 export default defineEventHandler(async (event) => {
   const internalSecret = getHeader(event, "x-internal-secret");
+  const authHeader = getHeader(event, "authorization");
+  const bearerToken = authHeader?.startsWith("Bearer ")
+    ? authHeader.slice(7).trim()
+    : null;
   const config = useRuntimeConfig();
   const secretKey =
     (config.supabaseSecretKey as string) ||
@@ -19,9 +23,9 @@ export default defineEventHandler(async (event) => {
     process.env.NUXT_SUPABASE_SECRET_KEY ||
     "";
   const isInternalTrigger =
-    Boolean(internalSecret) &&
     Boolean(secretKey) &&
-    internalSecret === secretKey;
+    ((Boolean(internalSecret) && internalSecret === secretKey) ||
+      (Boolean(bearerToken) && bearerToken === secretKey));
 
   if (!isInternalTrigger) {
     requireAdmin(event);
@@ -93,8 +97,8 @@ export default defineEventHandler(async (event) => {
           processed: 0,
           results: [],
           reason: "already_running",
-          message:
-            "A queue processor worker is currently active on this queue.",
+          lockedCount: Number(lockedCount),
+          message: `A queue processor worker is currently active on ${specificQueue ?? "the queue"} (${lockedCount} item(s) locked). Pass {"force": true} to process anyway.`,
         };
       }
     }
@@ -158,7 +162,14 @@ export default defineEventHandler(async (event) => {
       console.log(
         `[QUEUE] No pending items in ${specificQueue ?? "any queue"}`,
       );
-      return { ok: true, processed: 0, results: [], queue: targetQueue };
+      return {
+        ok: true,
+        processed: 0,
+        results: [],
+        queue: targetQueue,
+        reason: "no_pending_items",
+        message: `No pending items found in ${specificQueue ?? "any queue"} (items may be locked in visibility timeout or the queue is empty).`,
+      };
     }
 
     const queueItem = Array.isArray(rawQueueItem)
@@ -669,8 +680,9 @@ export default defineEventHandler(async (event) => {
         }
       }
 
+      const hasFailure = results.some((r) => !r.ok);
       return {
-        ok: true,
+        ok: !hasFailure,
         processed: results.length,
         results,
         queue: targetQueue,

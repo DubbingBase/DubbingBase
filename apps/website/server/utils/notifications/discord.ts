@@ -14,6 +14,7 @@ export async function sendDiscordAdminNotification(
     (config.discordWebhookUrl as string) ||
     process.env.NUXT_DISCORD_WEBHOOK_URL ||
     process.env.DISCORD_WEBHOOK_URL ||
+    process.env.DISCORD_ADMIN_WEBHOOK_LOG_URL ||
     "";
 
   if (!webhookUrl || typeof webhookUrl !== "string") {
