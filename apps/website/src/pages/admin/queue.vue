@@ -563,47 +563,13 @@ const filterType = ref("all");
 const filterSearch = ref("");
 const archiveFilter = ref<"active" | "archived" | "all">("active");
 
+const activeCount = ref(0);
+const archivedCount = ref(0);
+
 const allQueueItems = computed(() => queueItems.value);
-
-const activeCount = computed(() => {
-  return allQueueItems.value.filter(
-    (item) => item.status === "pending" || item.status === "processing",
-  ).length;
-});
-
-const archivedCount = computed(() => {
-  return allQueueItems.value.filter(
-    (item) =>
-      item.status === "completed" ||
-      item.status === "failed" ||
-      item.status === "error",
-  ).length;
-});
 
 const filteredItems = computed(() => {
   return allQueueItems.value.filter((item) => {
-    // Archive vs Active toggle
-    const isArchived =
-      item.status === "completed" ||
-      item.status === "failed" ||
-      item.status === "error";
-
-    if (archiveFilter.value === "active" && isArchived) {
-      return false;
-    }
-    if (archiveFilter.value === "archived" && !isArchived) {
-      return false;
-    }
-
-    if (
-      filterQueue.value !== "all" &&
-      (item as any).queue_name !== filterQueue.value
-    ) {
-      return false;
-    }
-    if (filterStatus.value !== "all" && item.status !== filterStatus.value) {
-      return false;
-    }
     if (filterType.value !== "all" && item.media_type !== filterType.value) {
       return false;
     }
@@ -770,27 +736,56 @@ const {
   pending,
   error: fetchError,
   refresh: fetchQueueAndUsers,
-} = await useAsyncData("admin-queue", async () => {
-  const { data: queueData, error: queueErr } =
-    await supabase.rpc("get_media_queue_items");
-  if (queueErr) throw queueErr;
+} = await useAsyncData(
+  "admin-queue",
+  async () => {
+    const statusParam =
+      archiveFilter.value !== "all"
+        ? filterStatus.value !== "all"
+          ? filterStatus.value
+          : archiveFilter.value
+        : filterStatus.value !== "all"
+          ? filterStatus.value
+          : null;
 
-  const { data: depthData } = await supabase.rpc("get_media_queue_depth");
+    const queueParam = filterQueue.value !== "all" ? filterQueue.value : null;
 
-  const userData = await $fetch<ListUsersResponse>("/api/list_users");
-  const map: Record<string, string> = {};
-  if (userData?.users) {
-    for (const u of userData.users) {
-      map[u.id] = u.email;
+    const [queueRes, statsRes, userData] = await Promise.all([
+      (supabase.rpc as any)("get_media_queue_items", {
+        p_queue_name: queueParam,
+        p_status: statusParam,
+        p_limit: 100,
+      }),
+      (supabase.rpc as any)("get_media_queue_stats"),
+      $fetch<ListUsersResponse>("/api/list_users").catch(() => null),
+    ]);
+
+    if (queueRes.error) throw queueRes.error;
+
+    const map: Record<string, string> = {};
+    if (userData?.users) {
+      for (const u of userData.users) {
+        map[u.id] = u.email;
+      }
     }
-  }
 
-  return {
-    queueItems: queueData ?? [],
-    usersMap: map,
-    pendingCount: depthData ?? null,
-  };
-});
+    const stats = statsRes.data as any;
+    const activeTotal = stats?.totals?.total_active ?? 0;
+    const archivedTotal =
+      (stats?.totals?.completed ?? 0) + (stats?.totals?.error ?? 0);
+
+    return {
+      queueItems: queueRes.data ?? [],
+      usersMap: map,
+      activeTotal,
+      archivedTotal,
+      pendingCount: activeTotal,
+    };
+  },
+  {
+    watch: [archiveFilter, filterQueue, filterStatus],
+  },
+);
 
 watch(
   initialData,
@@ -799,6 +794,8 @@ watch(
       queueItems.value = newData.queueItems;
       usersMap.value = newData.usersMap;
       pendingCount.value = newData.pendingCount;
+      activeCount.value = newData.activeTotal;
+      archivedCount.value = newData.archivedTotal;
     }
   },
   { immediate: true },
