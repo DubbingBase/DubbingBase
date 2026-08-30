@@ -21,18 +21,48 @@ export default defineEventHandler(async (event) => {
   }
 
   const supabaseAdmin = useSupabaseAdmin();
-  const targetId = tmdbId || mediaId;
+  const rawTargetId = tmdbId || mediaId;
+  const targetId = parseInt(String(rawTargetId), 10);
+
+  if (isNaN(targetId)) {
+    throw createError({
+      statusCode: 400,
+      message: `Invalid mediaId: ${rawTargetId}`,
+    });
+  }
+
+  const numSeason =
+    seasonNumber !== undefined &&
+    seasonNumber !== null &&
+    !isNaN(Number(seasonNumber))
+      ? parseInt(String(seasonNumber), 10)
+      : undefined;
+
+  const numEpisode =
+    episodeNumber !== undefined &&
+    episodeNumber !== null &&
+    !isNaN(Number(episodeNumber))
+      ? parseInt(String(episodeNumber), 10)
+      : undefined;
+
+  const cleanLang =
+    language && String(language).trim() ? String(language).trim() : undefined;
 
   if (action === "status") {
     const { data, error } = await supabaseAdmin.rpc("get_media_queue_status", {
       p_media_type: mediaType,
       p_tmdb_id: targetId,
-      p_season_number: seasonNumber,
-      p_episode_number: episodeNumber,
-      p_language: language || undefined,
+      p_season_number: numSeason,
+      p_episode_number: numEpisode,
+      p_language: cleanLang,
     });
 
-    if (error) throw error;
+    if (error) {
+      throw createError({
+        statusCode: 400,
+        message: error.message || "Failed to get queue status",
+      });
+    }
     return { data };
   } else if (action === "enqueue") {
     if (
@@ -70,26 +100,39 @@ export default defineEventHandler(async (event) => {
     const { error } = await supabaseAdmin.rpc("enqueue_media_fetch", {
       p_media_type: mediaType,
       p_tmdb_id: targetId,
-      p_season_number: seasonNumber,
-      p_episode_number: episodeNumber,
-      p_language: language || undefined,
+      p_season_number: numSeason,
+      p_episode_number: numEpisode,
+      p_language: cleanLang,
     });
 
-    if (error) throw error;
+    if (error) {
+      if (error.message && error.message.includes("already in the")) {
+        return {
+          success: true,
+          alreadyQueued: true,
+          message: error.message,
+        };
+      }
+      throw createError({
+        statusCode: 400,
+        message: error.message || "Failed to enqueue media",
+      });
+    }
 
-    const langTag = language ? ` [${String(language).toUpperCase()}]` : "";
+    const langTag = cleanLang ? ` [${cleanLang.toUpperCase()}]` : "";
     await sendDiscordAdminNotification(
-      `Media Enqueued${langTag}`,
+      `Media Enqueued (Manual)${langTag}`,
       `Enqueued **${mediaType}** (ID: ${targetId})${
-        seasonNumber ? ` Season ${seasonNumber}` : ""
-      }${episodeNumber ? ` Episode ${episodeNumber}` : ""}${
-        language
-          ? ` for language **${language}**`
+        numSeason ? ` Season ${numSeason}` : ""
+      }${numEpisode ? ` Episode ${numEpisode}` : ""}${
+        cleanLang
+          ? ` for language **${cleanLang}**`
           : " for all-languages discovery"
       }.`,
+      { color: 0x5865f2 },
     );
 
-    return { success: true };
+    return { success: true, alreadyQueued: false };
   }
 
   throw createError({ statusCode: 400, message: "Invalid action" });

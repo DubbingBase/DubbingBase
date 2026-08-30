@@ -160,7 +160,11 @@ const handleEnqueue = async () => {
           : props.episodeNumber
         : undefined;
 
-    await $fetch("/api/media-queue", {
+    const res = await $fetch<{
+      success: boolean;
+      alreadyQueued?: boolean;
+      message?: string;
+    }>("/api/media-queue", {
       method: "POST",
       body: {
         action: "enqueue",
@@ -173,7 +177,11 @@ const handleEnqueue = async () => {
       },
     });
 
-    status.value = "success";
+    if (res?.alreadyQueued) {
+      status.value = "already_queued";
+    } else {
+      status.value = "success";
+    }
   } catch (err: any) {
     const message = err?.data?.message || err?.message || "";
     if (message.includes("already in the")) {
