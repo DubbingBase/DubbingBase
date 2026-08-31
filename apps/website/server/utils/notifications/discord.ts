@@ -6,10 +6,17 @@ export interface DiscordWebhookOptions {
   url?: string;
   imageUrl?: string;
   color?: number;
+  event?: any;
 }
 
-function getDiscordWebhookUrls(queue?: string): string[] {
-  const config = useRuntimeConfig();
+function getDiscordWebhookUrls(queue?: string, event?: any): string[] {
+  let config: any;
+  try {
+    config = event ? useRuntimeConfig(event) : useRuntimeConfig();
+  } catch {
+    config = useRuntimeConfig();
+  }
+  const cfEnv = event?.context?.cloudflare?.env;
   const targetUrls = new Set<string>();
 
   const addUrls = (raw: string | undefined | null) => {
@@ -28,16 +35,25 @@ function getDiscordWebhookUrls(queue?: string): string[] {
   // 1. Check queue-specific webhook variables
   if (queue === "wiki_discovery" || queue === "discovery") {
     addUrls(config.discordWebhookDiscoveryUrl as string);
+    addUrls(cfEnv?.NUXT_DISCORD_WEBHOOK_DISCOVERY_URL);
+    addUrls(cfEnv?.DISCORD_WEBHOOK_DISCOVERY_URL);
+    addUrls(cfEnv?.DISCORD_DISCOVERY_WEBHOOK_URL);
     addUrls(process.env.NUXT_DISCORD_WEBHOOK_DISCOVERY_URL);
     addUrls(process.env.DISCORD_WEBHOOK_DISCOVERY_URL);
     addUrls(process.env.DISCORD_DISCOVERY_WEBHOOK_URL);
   } else if (queue === "wiki_check" || queue === "check") {
     addUrls(config.discordWebhookCheckUrl as string);
+    addUrls(cfEnv?.NUXT_DISCORD_WEBHOOK_CHECK_URL);
+    addUrls(cfEnv?.DISCORD_WEBHOOK_CHECK_URL);
+    addUrls(cfEnv?.DISCORD_CHECK_WEBHOOK_URL);
     addUrls(process.env.NUXT_DISCORD_WEBHOOK_CHECK_URL);
     addUrls(process.env.DISCORD_WEBHOOK_CHECK_URL);
     addUrls(process.env.DISCORD_CHECK_WEBHOOK_URL);
   } else if (queue === "wiki_extract" || queue === "extract") {
     addUrls(config.discordWebhookExtractUrl as string);
+    addUrls(cfEnv?.NUXT_DISCORD_WEBHOOK_EXTRACT_URL);
+    addUrls(cfEnv?.DISCORD_WEBHOOK_EXTRACT_URL);
+    addUrls(cfEnv?.DISCORD_EXTRACT_WEBHOOK_URL);
     addUrls(process.env.NUXT_DISCORD_WEBHOOK_EXTRACT_URL);
     addUrls(process.env.DISCORD_WEBHOOK_EXTRACT_URL);
     addUrls(process.env.DISCORD_EXTRACT_WEBHOOK_URL);
@@ -48,6 +64,9 @@ function getDiscordWebhookUrls(queue?: string): string[] {
     addUrls(config.discordWebhookUrl as string);
     addUrls(config.discordWebhookUrl2 as string);
     addUrls(config.discordWebhookUrl3 as string);
+    addUrls(cfEnv?.NUXT_DISCORD_WEBHOOK_URL);
+    addUrls(cfEnv?.DISCORD_WEBHOOK_URL);
+    addUrls(cfEnv?.DISCORD_ADMIN_WEBHOOK_LOG_URL);
     addUrls(process.env.NUXT_DISCORD_WEBHOOK_URL);
     addUrls(process.env.DISCORD_WEBHOOK_URL);
     addUrls(process.env.DISCORD_ADMIN_WEBHOOK_LOG_URL);
@@ -67,7 +86,7 @@ export async function sendDiscordAdminNotification(
   message: string,
   options?: DiscordWebhookOptions,
 ) {
-  const webhookUrls = getDiscordWebhookUrls(options?.queue);
+  const webhookUrls = getDiscordWebhookUrls(options?.queue, options?.event);
 
   if (webhookUrls.length === 0) {
     console.warn("[Discord] Webhook URL missing, skipping notification");

@@ -604,6 +604,7 @@ export default defineEventHandler(async (event) => {
             payload.episode_number ? ` (Episode ${payload.episode_number})` : ""
           } [${lang.toUpperCase()}].\n• Added **${extractResult.creditsAdded ?? 0}** roles\n• Added **${extractResult.changes ?? 0}** new voice actors.`,
           {
+            event,
             queue: "wiki_extract",
             ...(extractResult.imageUrl
               ? { imageUrl: extractResult.imageUrl }
@@ -636,7 +637,7 @@ export default defineEventHandler(async (event) => {
             await sendDiscordAdminNotification(
               `Queue Extraction Rate-Limited [${lang.toUpperCase()}]`,
               `Max retries (${MAX_RETRIES}) reached for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${lang.toUpperCase()}]):\n\`\`\`\n${errMsg}\n\`\`\``,
-              { queue: "wiki_extract", color: 0xed4245 },
+              { event, queue: "wiki_extract", color: 0xed4245 },
             );
           } else {
             results.push({
@@ -658,7 +659,7 @@ export default defineEventHandler(async (event) => {
           await sendDiscordAdminNotification(
             `Queue Item Failed [${lang.toUpperCase()}]`,
             `Failed to extract **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${lang.toUpperCase()}]):\n\`\`\`\n${errMsg}\n\`\`\``,
-            { queue: "wiki_extract", color: 0xed4245 },
+            { event, queue: "wiki_extract", color: 0xed4245 },
           );
         }
       }
@@ -680,6 +681,7 @@ export default defineEventHandler(async (event) => {
     await sendDiscordAdminNotification(
       "Queue Processor FAILED",
       `Critical failure in process-media-queue: ${errorMsg}`,
+      { event },
     );
 
     throw createError({

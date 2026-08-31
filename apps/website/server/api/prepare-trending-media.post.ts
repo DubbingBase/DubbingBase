@@ -141,6 +141,7 @@ export default defineEventHandler(async (event) => {
       "DubbingBase Trending Media Report",
       summaryMessage,
       {
+        event,
         queue: "wiki_discovery",
         ...(imageUrl ? { imageUrl } : {}),
       },
@@ -164,6 +165,7 @@ export default defineEventHandler(async (event) => {
     await sendDiscordAdminNotification(
       "Trending Media Job FAILED",
       `Critical failure in prepare-trending-media: ${errorMessage}`,
+      { event },
     );
 
     throw createError({ statusCode: 500, message: errorMessage });
