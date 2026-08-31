@@ -7,11 +7,12 @@ export default defineNuxtPlugin({
   enforce: "pre",
   setup() {
     const isDev = import.meta.dev;
+    const isTest = Boolean(import.meta.test || process.env.NODE_ENV === "test");
 
     const themeCookie = useCookie("dubbingbase-theme");
     const langCookie = useCookie("user_lang");
 
-    if (!isDev) {
+    if (!isDev && !isTest) {
       posthog.init("phc_me2esmRfMkokDSbTzKQfNHaUZgpBOAqgi2921wCYOtP", {
         api_host: "https://n.dubbingbase.com",
         defaults: "2026-05-30",
