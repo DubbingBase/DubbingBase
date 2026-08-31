@@ -77,6 +77,7 @@ function getGroqClient() {
   return createOpenAI({
     baseURL: "https://api.groq.com/openai/v1",
     apiKey,
+    compatibility: "compatible",
   });
 }
 
@@ -86,7 +87,8 @@ function isRateLimitError(error: unknown): boolean {
     msg.includes("429") ||
     msg.includes("rate") ||
     msg.includes("quota") ||
-    msg.includes("ResourceExhausted")
+    msg.includes("ResourceExhausted") ||
+    msg.includes("RESOURCE_EXHAUSTED")
   );
 }
 
@@ -109,16 +111,18 @@ async function runWithFallback<T>(
     try {
       return await fallback.fn();
     } catch (fallbackError) {
-      if (isRateLimitError(fallbackError) || isRateLimitError(error)) {
-        throw new Error("LLM API Rate Limited (429)");
-      }
       const primaryMsg = error instanceof Error ? error.message : String(error);
       const fallbackMsg =
         fallbackError instanceof Error
           ? fallbackError.message
           : String(fallbackError);
+      const isRateLimit =
+        isRateLimitError(fallbackError) || isRateLimitError(error);
+      const rateLimitPrefix = isRateLimit
+        ? "LLM API Rate Limited (429) - "
+        : "";
       throw new Error(
-        `LLM Failure - Primary (${primary.name}): ${primaryMsg} | Fallback (${fallback.name}): ${fallbackMsg}`,
+        `${rateLimitPrefix}Primary (${primary.name}): ${primaryMsg} | Fallback (${fallback.name}): ${fallbackMsg}`,
       );
     }
   }

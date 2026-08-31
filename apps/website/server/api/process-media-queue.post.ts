@@ -661,7 +661,13 @@ export default defineEventHandler(async (event) => {
           errMsg,
         );
 
-        if (errMsg.includes("LLM API Rate Limited (429)")) {
+        if (
+          errMsg.includes("LLM API Rate Limited (429)") ||
+          errMsg.includes("429") ||
+          errMsg.includes("ResourceExhausted") ||
+          errMsg.includes("RESOURCE_EXHAUSTED") ||
+          errMsg.includes("quota")
+        ) {
           const MAX_RETRIES = 5;
           if (readCt >= MAX_RETRIES) {
             await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
