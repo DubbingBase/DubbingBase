@@ -154,7 +154,10 @@
               :key="actor.id"
               class="bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl p-4 shadow-sm transition-colors hover:border-gray-300 dark:hover:border-gray-700"
             >
-              <div class="flex flex-col sm:grid sm:grid-cols-3 gap-4">
+              <div
+                class="flex flex-col sm:grid gap-4"
+                :class="isOriginalLanguage ? 'sm:grid-cols-2' : 'sm:grid-cols-3'"
+              >
                 <!-- Original Actor -->
                 <div class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start">
                   <NuxtLink
@@ -217,8 +220,11 @@
                   </div>
                 </div>
 
-                <!-- Voice Actor -->
-                <div class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-4 sm:pt-0 mt-2 sm:mt-0">
+                <!-- Voice Actor (hidden when viewing in original language) -->
+                <div
+                  v-if="!isOriginalLanguage"
+                  class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-4 sm:pt-0 mt-2 sm:mt-0"
+                >
                   <template v-if="actor.voiceActor">
                     <NuxtLink
                       :to="localePath(`/voice-actor/${actor.voiceActor.id}`)"
@@ -417,6 +423,13 @@ const activeDubProject = computed(() => {
     dubbingProjects.value.find((p: any) => p.id === activeDubId.value) ||
     dubbingProjects.value[0]
   );
+});
+
+const isOriginalLanguage = computed(() => {
+  const orig = (episode.value?.original_language || episode.value?.show_original_language)?.toLowerCase();
+  const dub = activeDubProject.value?.language?.toLowerCase();
+  if (!orig || !dub) return false;
+  return orig === dub || dub.startsWith(`${orig}-`) || orig.startsWith(`${dub}-`);
 });
 
 const getDisplayLanguage = (langCode: string | undefined | null) => {
