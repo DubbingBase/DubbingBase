@@ -81,6 +81,7 @@ export default defineEventHandler(async (event): Promise<AudiobookResponse> => {
             "Media Enqueued (Auto)",
             `Automatically enqueued audiobook **${book?.title || bookId}** (OpenLibrary ID: ${bookId}) for dubbing discovery.`,
             {
+              queue: "wiki_discovery",
               ...(book?.cover_url ? { imageUrl: book.cover_url } : {}),
               url: `/audiobook/${bookId}`,
               color: 0x5865f2,

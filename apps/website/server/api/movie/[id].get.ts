@@ -100,6 +100,7 @@ export async function fetchMovieData(event: any, movieId: number) {
             "Media Enqueued (Auto)",
             `Automatically enqueued movie **${movieWithImageUrls?.title || movieId}** (TMDB: ${movieId}) for all-languages dubbing discovery.`,
             {
+              queue: "wiki_discovery",
               ...(movieWithImageUrls?.poster_path
                 ? {
                     imageUrl: `https://image.tmdb.org/t/p/w500${movieWithImageUrls.poster_path}`,

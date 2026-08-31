@@ -78,6 +78,7 @@ export default defineEventHandler(async (event): Promise<PodcastResponse> => {
             "Media Enqueued (Auto)",
             `Automatically enqueued audio fiction / podcast **${podcast?.title || podcastId}** (Podcast ID: ${podcastId}) for dubbing discovery.`,
             {
+              queue: "wiki_discovery",
               ...(podcast?.cover_url ? { imageUrl: podcast.cover_url } : {}),
               url: `/podcast/${podcastId}`,
               color: 0x5865f2,

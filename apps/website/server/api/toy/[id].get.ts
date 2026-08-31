@@ -79,6 +79,7 @@ export default defineEventHandler(async (event): Promise<ToyResponse> => {
             "Media Enqueued (Auto)",
             `Automatically enqueued smart toy **${toy?.name || toyId}** (Toy ID: ${toyId}) for dubbing discovery.`,
             {
+              queue: "wiki_discovery",
               ...(toy?.cover_url ? { imageUrl: toy.cover_url } : {}),
               url: `/toy/${toyId}`,
               color: 0x5865f2,

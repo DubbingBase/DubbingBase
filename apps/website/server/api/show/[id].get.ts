@@ -124,6 +124,7 @@ export async function fetchShowData(event: any, showId: number) {
             "Media Enqueued (Auto)",
             `Automatically enqueued TV show **${serieWithImageUrls?.name || showId}** (TMDB: ${showId}) for all-languages dubbing discovery.`,
             {
+              queue: "wiki_discovery",
               ...(serieWithImageUrls?.poster_path
                 ? {
                     imageUrl: `https://image.tmdb.org/t/p/w500${serieWithImageUrls.poster_path}`,

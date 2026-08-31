@@ -134,7 +134,10 @@ export default defineEventHandler(async (event) => {
     await sendDiscordAdminNotification(
       "DubbingBase Trending Media Report",
       summaryMessage,
-      imageUrl ? { imageUrl } : undefined,
+      {
+        queue: "wiki_discovery",
+        ...(imageUrl ? { imageUrl } : {}),
+      },
     );
 
     return {

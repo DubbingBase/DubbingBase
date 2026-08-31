@@ -130,7 +130,10 @@ export default defineEventHandler(async (event) => {
           ? ` for language **${cleanLang}**`
           : " for all-languages discovery"
       }.`,
-      { color: 0x5865f2 },
+      {
+        queue: cleanLang ? "wiki_check" : "wiki_discovery",
+        color: 0x5865f2,
+      },
     );
 
     return { success: true, alreadyQueued: false };

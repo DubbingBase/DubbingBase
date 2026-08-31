@@ -124,6 +124,7 @@ export default defineEventHandler(async (event) => {
             "Media Enqueued (Auto)",
             `Automatically enqueued video game **${game?.name || gameId}** (IGDB: ${gameId}) for dubbing discovery.`,
             {
+              queue: "wiki_discovery",
               ...(game?.cover?.url ? { imageUrl: game.cover.url } : {}),
               url: `/game/${gameId}`,
               color: 0x5865f2,

@@ -80,6 +80,7 @@ export default defineEventHandler(
               "Media Enqueued (Auto)",
               `Automatically enqueued advertisement **${ad?.title || adId}** (Ad ID: ${adId}) for dubbing discovery.`,
               {
+                queue: "wiki_discovery",
                 ...(ad?.poster_url ? { imageUrl: ad.poster_url } : {}),
                 url: `/advertisement/${adId}`,
                 color: 0x5865f2,
