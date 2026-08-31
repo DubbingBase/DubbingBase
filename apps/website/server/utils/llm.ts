@@ -17,24 +17,35 @@ function getGeminiModel(): string {
 
 function getGoogleClient() {
   const config = useRuntimeConfig();
+  const globalEnv = (globalThis as any)?.__env__;
   const apiKey =
     (config.googleAiKey as string) ||
+    globalEnv?.NUXT_GOOGLE_AI_KEY ||
+    globalEnv?.GOOGLE_AI_KEY ||
+    globalEnv?.GEMINI_API_KEY ||
     process.env.NUXT_GOOGLE_AI_KEY ||
     process.env.GOOGLE_AI_KEY ||
+    process.env.GEMINI_API_KEY ||
     "";
   if (!apiKey)
-    throw new Error("NUXT_GOOGLE_AI_KEY is not set in runtimeConfig");
+    throw new Error(
+      "Google AI / Gemini API key is not configured (NUXT_GOOGLE_AI_KEY)",
+    );
   return createGoogleGenerativeAI({ apiKey });
 }
 
 function getGroqClient() {
   const config = useRuntimeConfig();
+  const globalEnv = (globalThis as any)?.__env__;
   const apiKey =
     (config.groqApiKey as string) ||
+    globalEnv?.NUXT_GROQ_API_KEY ||
+    globalEnv?.GROQ_API_KEY ||
     process.env.NUXT_GROQ_API_KEY ||
     process.env.GROQ_API_KEY ||
     "";
-  if (!apiKey) throw new Error("NUXT_GROQ_API_KEY is not set in runtimeConfig");
+  if (!apiKey)
+    throw new Error("Groq API key is not configured (NUXT_GROQ_API_KEY)");
   return createOpenAI({
     baseURL: "https://api.groq.com/openai/v1",
     apiKey,

@@ -17,9 +17,12 @@ export default defineEventHandler(async (event) => {
   const bearerToken = authHeader?.startsWith("Bearer ")
     ? authHeader.slice(7).trim()
     : null;
-  const config = useRuntimeConfig();
+  const config = useRuntimeConfig(event);
+  const cfEnv = (event.context as any)?.cloudflare?.env;
   const secretKey =
     (config.supabaseSecretKey as string) ||
+    cfEnv?.SUPABASE_SECRET_KEY ||
+    cfEnv?.NUXT_SUPABASE_SECRET_KEY ||
     process.env.SUPABASE_SECRET_KEY ||
     process.env.NUXT_SUPABASE_SECRET_KEY ||
     "";
@@ -30,7 +33,21 @@ export default defineEventHandler(async (event) => {
       (Boolean(apiKeyHeader) && apiKeyHeader === secretKey));
 
   if (!isInternalTrigger) {
-    requireAdmin(event);
+    try {
+      requireAdmin(event);
+    } catch (authErr) {
+      if (internalSecret || bearerToken || apiKeyHeader) {
+        console.error(
+          `[QUEUE] Internal secret authentication failed. Provided: ${(internalSecret || bearerToken || apiKeyHeader || "").slice(0, 10)}..., Configured: ${Boolean(secretKey)}`,
+        );
+        await sendDiscordAdminNotification(
+          "Queue Authentication Failed",
+          `A request with secret credentials failed authentication in process-media-queue.\n• Provided Key: \`${(internalSecret || bearerToken || apiKeyHeader || "").slice(0, 10)}...\`\n• Expected Key Configured: ${Boolean(secretKey)}`,
+          { event },
+        );
+      }
+      throw authErr;
+    }
   }
 
   try {
@@ -77,7 +94,7 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    const supabaseAdmin = useSupabaseAdmin();
+    const supabaseAdmin = useSupabaseAdmin(event);
 
     // Step 1: Pop a message based on queue selection / priority order
     let targetQueue: "wiki_extract" | "wiki_check" | "wiki_discovery" =
@@ -148,11 +165,10 @@ export default defineEventHandler(async (event) => {
       };
     }
 
-    const queueItem = Array.isArray(rawQueueItem)
-      ? rawQueueItem[0]
-      : rawQueueItem;
-    const msgId = Number(queueItem.msg_id);
-    const payload = queueItem.message as {
+    const firstMsg = (rawQueueItem as any[])[0];
+    const msgId = Number(firstMsg.msg_id);
+    const readCt = Number(firstMsg.read_ct);
+    const payload = firstMsg.message as {
       tmdb_id: number;
       media_type: "movie" | "tv" | "season" | "episode" | "video_game";
       season_number?: number;
@@ -162,79 +178,100 @@ export default defineEventHandler(async (event) => {
       section_indexes?: number[];
       is_manual?: boolean;
       priority?: "high" | "normal";
+      wiki_id?: string;
+      title?: string;
     };
-    const readCt = Number(queueItem.read_ct);
 
-    console.log(
-      `[QUEUE] Popped item ${msgId} from ${targetQueue}: ${payload.media_type} ID ${payload.tmdb_id}${payload.language ? ` [${payload.language}]` : ""}`,
-    );
+    if (!payload || !payload.tmdb_id) {
+      await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
+        p_queue_name: targetQueue,
+        p_msg_id: msgId,
+        p_error: "Malformed message payload: missing tmdb_id",
+      });
+      return {
+        ok: false,
+        processed: 1,
+        results: [
+          {
+            id: msgId,
+            ok: false,
+            error: "Malformed message payload: missing tmdb_id",
+          },
+        ],
+        queue: targetQueue,
+      };
+    }
 
     const results: any[] = [];
-    let mediaTitle = "Unknown title";
+    let mediaTitle = payload.title || `Media ${payload.tmdb_id}`;
 
     // -------------------------------------------------------------------------
     // QUEUE 1: wiki_discovery (Wikidata sitelink discovery & language fan-out)
     // -------------------------------------------------------------------------
     if (targetQueue === "wiki_discovery") {
       try {
-        let wikiId: string | undefined = undefined;
+        let wikiId: string | undefined = payload.wiki_id;
 
-        if (payload.media_type === "video_game") {
-          const igdbClient = useIgdbClient();
-          const game = await igdbClient.getGame(payload.tmdb_id);
-          if (!game) throw new Error(`IGDB game ${payload.tmdb_id} not found`);
-          mediaTitle = game.name;
+        if (!wikiId) {
+          if (payload.media_type === "video_game") {
+            const igdbClient = useIgdbClient();
+            const game = await igdbClient.getGame(payload.tmdb_id);
+            if (!game)
+              throw new Error(`IGDB game ${payload.tmdb_id} not found`);
+            mediaTitle = game.name;
 
-          const wikipediaCache = useWikipediaCache();
-          const searchData = await wikipediaCache.searchWikidataEntities(
-            game.name,
-            "en",
-          );
-          if (searchData?.search?.length > 0) {
-            wikiId = searchData.search[0].id;
-          }
-        } else {
-          const tmdbType =
-            payload.media_type === "season" || payload.media_type === "episode"
-              ? "tv"
-              : payload.media_type;
+            const wikipediaCache = useWikipediaCache();
+            const searchData = await wikipediaCache.searchWikidataEntities(
+              game.name,
+              "en",
+            );
+            if (searchData?.search?.length > 0) {
+              wikiId = searchData.search[0].id;
+            }
+          } else {
+            const tmdbType =
+              payload.media_type === "season" ||
+              payload.media_type === "episode"
+                ? "tv"
+                : payload.media_type;
 
-          const config = useRuntimeConfig();
-          const response = await fetch(
-            `https://api.themoviedb.org/3/${tmdbType}/${payload.tmdb_id}?append_to_response=external_ids`,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${config.tmdbApiKey}`,
-                Accept: "application/json",
+            const config = useRuntimeConfig(event);
+            const response = await fetch(
+              `https://api.themoviedb.org/3/${tmdbType}/${payload.tmdb_id}?append_to_response=external_ids`,
+              {
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${config.tmdbApiKey}`,
+                  Accept: "application/json",
+                },
               },
-            },
-          );
+            );
 
-          if (response.ok) {
-            const movie = (await response.json()) as any;
-            mediaTitle = movie.title || movie.name || "Unknown title";
-            wikiId = movie.external_ids?.wikidata_id;
+            if (response.ok) {
+              const movie = (await response.json()) as any;
+              mediaTitle = movie.title || movie.name || "Unknown title";
+              wikiId = movie.external_ids?.wikidata_id;
 
-            if (movie.adult === true) {
-              await supabaseAdmin.rpc("archive_media_queue_message", {
-                p_queue_name: targetQueue,
-                p_msg_id: msgId,
-              });
+              if (movie.adult === true) {
+                await supabaseAdmin.rpc("archive_media_queue_message", {
+                  p_queue_name: targetQueue,
+                  p_msg_id: msgId,
+                });
 
-              await sendDiscordAdminNotification(
-                "Queue Discovery Skipped (18+ Adult Content)",
-                `**${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}) is marked as adult content and was excluded.`,
-                { queue: "wiki_discovery" },
-              );
+                await sendDiscordAdminNotification(
+                  "Queue Discovery Skipped (18+ Adult Content)",
+                  `**${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}) is marked as adult content and was excluded.`,
+                  { event, queue: "wiki_discovery" },
+                );
 
-              return {
-                ok: true,
-                processed: 1,
-                results: [
-                  { id: msgId, ok: true, changes: 0, note: "18+ skipped" },
-                ],
-              };
+                return {
+                  ok: true,
+                  processed: 1,
+                  results: [
+                    { id: msgId, ok: true, changes: 0, note: "18+ skipped" },
+                  ],
+                };
+              }
             }
           }
         }
@@ -250,7 +287,7 @@ export default defineEventHandler(async (event) => {
           await sendDiscordAdminNotification(
             "Queue Discovery Skipped",
             `No Wikidata ID found for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}). Discovery archived.`,
-            { queue: "wiki_discovery" },
+            { event, queue: "wiki_discovery" },
           );
 
           return {
@@ -282,7 +319,7 @@ export default defineEventHandler(async (event) => {
           await sendDiscordAdminNotification(
             "Queue Discovery: No Wikipedia Pages",
             `No Wikipedia pages found for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}).\n\`\`\`\n${errMsg}\n\`\`\`\n🔗 **Wikidata Item:** ${wikidataUrl}`,
-            { queue: "wiki_discovery", url: wikidataUrl },
+            { event, queue: "wiki_discovery", url: wikidataUrl },
           );
 
           return {
@@ -337,7 +374,7 @@ export default defineEventHandler(async (event) => {
         await sendDiscordAdminNotification(
           "Queue Discovery Completed",
           `Discovered **${availableLanguages.length} language(s)** for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}).\n• Enqueued **${enqueuedCount}** new language checks\n• **${alreadyEnqueuedCount}** already pending.`,
-          { queue: "wiki_discovery" },
+          { event, queue: "wiki_discovery" },
         );
       } catch (err) {
         const errMsg = err instanceof Error ? err.message : String(err);
@@ -354,7 +391,7 @@ export default defineEventHandler(async (event) => {
         await sendDiscordAdminNotification(
           "Queue Discovery Failed",
           `Discovery failed for **${mediaTitle}** (ID ${payload.tmdb_id}):\n\`\`\`\n${errMsg}\n\`\`\``,
-          { queue: "wiki_discovery" },
+          { event, queue: "wiki_discovery" },
         );
       }
 
@@ -432,7 +469,11 @@ export default defineEventHandler(async (event) => {
           await sendDiscordAdminNotification(
             `Queue Check: No Dubbing Section [${lang.toUpperCase()}]`,
             `No dubbing section found for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${lang.toUpperCase()}]):\n\`\`\`\n${errorMsg}\n\`\`\`${wikiSection}`,
-            { queue: "wiki_check", ...(wikiUrl ? { url: wikiUrl } : {}) },
+            {
+              event,
+              queue: "wiki_check",
+              ...(wikiUrl ? { url: wikiUrl } : {}),
+            },
           );
 
           return { ok: true, processed: 1, results, queue: targetQueue };
@@ -487,6 +528,7 @@ export default defineEventHandler(async (event) => {
           `Dubbing Section Found [${lang.toUpperCase()}]`,
           `Found **${checkResult.sectionIndexes.length} section(s)** on Wikipedia for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}). Enqueued for LLM credit extraction.${checkWikiSection}`,
           {
+            event,
             queue: "wiki_check",
             color: 0x57f287,
             ...(checkWikiUrl ? { url: checkWikiUrl } : {}),
@@ -519,7 +561,7 @@ export default defineEventHandler(async (event) => {
         await sendDiscordAdminNotification(
           `Queue Check Failed [${lang.toUpperCase()}]`,
           `Failed to check **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${lang.toUpperCase()}]):\n\`\`\`\n${errMsg}\n\`\`\`${wikiSection}`,
-          { queue: "wiki_check", ...(wikiUrl ? { url: wikiUrl } : {}) },
+          { event, queue: "wiki_check", ...(wikiUrl ? { url: wikiUrl } : {}) },
         );
 
         return { ok: true, processed: 1, results, queue: targetQueue };
