@@ -26,7 +26,7 @@ function getGroqModel(): string {
     globalEnv?.GROQ_MODEL ||
     process.env.NUXT_GROQ_MODEL ||
     process.env.GROQ_MODEL ||
-    "llama-3.1-8b-instant"
+    "openai/gpt-oss-20b"
   );
 }
 
@@ -130,7 +130,7 @@ async function runWithFallback<T>(
 
 /**
  * Send a text prompt to an LLM and return the raw text response.
- * Uses Groq (llama-3.1-8b-instant) by default, falls back to Gemini (gemini-3.6-flash).
+ * Uses Groq (openai/gpt-oss-20b) by default, falls back to Gemini (gemini-3.6-flash).
  */
 export async function llmGenerate(
   prompt: string,
@@ -173,7 +173,7 @@ export async function llmGenerate(
 
 /**
  * Send a text prompt to an LLM and return a typed JSON object validated by a Zod schema.
- * Uses Groq (llama-3.1-8b-instant) by default, falls back to Gemini (gemini-3.6-flash).
+ * Uses Groq (openai/gpt-oss-20b) by default, falls back to Gemini (gemini-3.6-flash).
  */
 export async function llmGenerateObject<T extends z.ZodType>(
   prompt: string,
