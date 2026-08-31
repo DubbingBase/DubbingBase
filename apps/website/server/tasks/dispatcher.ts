@@ -7,9 +7,11 @@ export default defineTask({
   async run(event) {
     const cf = (event?.context as any)?.cloudflare;
     const cfCtx = cf?.ctx || cf?.context;
+    const config = useRuntimeConfig();
     const nitroApp = useNitroApp();
 
     const secretKey =
+      (config.supabaseSecretKey as string) ||
       cf?.env?.SUPABASE_SECRET_KEY ||
       cf?.env?.NUXT_SUPABASE_SECRET_KEY ||
       process.env.SUPABASE_SECRET_KEY ||
@@ -29,11 +31,17 @@ export default defineTask({
           method: "POST",
           headers,
           body: { queue: queueName },
+          context: event?.context,
         })
-        .then((res) => {
+        .then(async (res) => {
           if (!res.ok) {
+            const errText = await res.text().catch(() => "");
             console.warn(
-              `[Dispatcher] Queue ${queueName} returned status ${res.status}`,
+              `[Dispatcher] Queue ${queueName} returned status ${res.status}: ${errText}`,
+            );
+          } else {
+            console.log(
+              `[Dispatcher] Queue ${queueName} completed successfully.`,
             );
           }
         })
