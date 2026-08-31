@@ -3,8 +3,6 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
 import { z } from "zod";
 
-const GROQ_MODEL = "llama-3.3-70b-versatile";
-
 function getLlmProvider(): "groq" | "gemini" {
   const config = useRuntimeConfig();
   const globalEnv = (globalThis as any)?.__env__;
@@ -19,13 +17,29 @@ function getLlmProvider(): "groq" | "gemini" {
   return provider === "gemini" ? "gemini" : "groq";
 }
 
+function getGroqModel(): string {
+  const config = useRuntimeConfig();
+  const globalEnv = (globalThis as any)?.__env__;
+  return (
+    (config.groqModel as string) ||
+    globalEnv?.NUXT_GROQ_MODEL ||
+    globalEnv?.GROQ_MODEL ||
+    process.env.NUXT_GROQ_MODEL ||
+    process.env.GROQ_MODEL ||
+    "llama-3.1-8b-instant"
+  );
+}
+
 function getGeminiModel(): string {
   const config = useRuntimeConfig();
+  const globalEnv = (globalThis as any)?.__env__;
   return (
     (config.geminiModel as string) ||
+    globalEnv?.NUXT_GEMINI_MODEL ||
+    globalEnv?.GEMINI_MODEL ||
     process.env.NUXT_GEMINI_MODEL ||
     process.env.GEMINI_MODEL ||
-    "gemini-2.5-flash"
+    "gemini-3.6-flash"
   );
 }
 
@@ -112,7 +126,7 @@ async function runWithFallback<T>(
 
 /**
  * Send a text prompt to an LLM and return the raw text response.
- * Uses Groq by default, falls back to Gemini on failure.
+ * Uses Groq (llama-3.1-8b-instant) by default, falls back to Gemini (gemini-3.6-flash).
  */
 export async function llmGenerate(
   prompt: string,
@@ -127,10 +141,10 @@ export async function llmGenerate(
   const provider = getLlmProvider();
 
   const groqCall: LlmExecution<string> = {
-    name: "Groq",
+    name: `Groq (${options?.model ?? getGroqModel()})`,
     fn: () =>
       generateText({
-        model: getGroqClient()(options?.model ?? GROQ_MODEL),
+        model: getGroqClient()(options?.model ?? getGroqModel()),
         prompt,
         system,
         temperature,
@@ -138,7 +152,7 @@ export async function llmGenerate(
   };
 
   const geminiCall: LlmExecution<string> = {
-    name: "Gemini",
+    name: `Gemini (${options?.model ?? getGeminiModel()})`,
     fn: () =>
       generateText({
         model: getGoogleClient()(options?.model ?? getGeminiModel()),
@@ -155,7 +169,7 @@ export async function llmGenerate(
 
 /**
  * Send a text prompt to an LLM and return a typed JSON object validated by a Zod schema.
- * Uses Groq by default, falls back to Gemini on failure.
+ * Uses Groq (llama-3.1-8b-instant) by default, falls back to Gemini (gemini-3.6-flash).
  */
 export async function llmGenerateObject<T extends z.ZodType>(
   prompt: string,
@@ -171,10 +185,10 @@ export async function llmGenerateObject<T extends z.ZodType>(
   const provider = getLlmProvider();
 
   const groqCall: LlmExecution<z.infer<T>> = {
-    name: "Groq",
+    name: `Groq (${options?.model ?? getGroqModel()})`,
     fn: () =>
       generateObject({
-        model: getGroqClient()(options?.model ?? GROQ_MODEL),
+        model: getGroqClient()(options?.model ?? getGroqModel()),
         prompt,
         schema,
         system,
@@ -183,7 +197,7 @@ export async function llmGenerateObject<T extends z.ZodType>(
   };
 
   const geminiCall: LlmExecution<z.infer<T>> = {
-    name: "Gemini",
+    name: `Gemini (${options?.model ?? getGeminiModel()})`,
     fn: () =>
       generateObject({
         model: getGoogleClient()(options?.model ?? getGeminiModel()),
@@ -225,10 +239,10 @@ export async function llmVision(
   };
 
   const groqCall: LlmExecution<string> = {
-    name: "Groq",
+    name: `Groq (${options?.model ?? getGroqModel()})`,
     fn: () =>
       generateText({
-        model: getGroqClient()(options?.model ?? GROQ_MODEL),
+        model: getGroqClient()(options?.model ?? getGroqModel()),
         messages: [
           {
             role: "user",
@@ -241,7 +255,7 @@ export async function llmVision(
   };
 
   const geminiCall: LlmExecution<string> = {
-    name: "Gemini",
+    name: `Gemini (${options?.model ?? getGeminiModel()})`,
     fn: () =>
       generateText({
         model: getGoogleClient()(options?.model ?? getGeminiModel()),
@@ -287,10 +301,10 @@ export async function llmVisionObject<T extends z.ZodType>(
   };
 
   const groqCall: LlmExecution<z.infer<T>> = {
-    name: "Groq",
+    name: `Groq (${options?.model ?? getGroqModel()})`,
     fn: () =>
       generateObject({
-        model: getGroqClient()(options?.model ?? GROQ_MODEL),
+        model: getGroqClient()(options?.model ?? getGroqModel()),
         messages: [
           {
             role: "user",
@@ -304,7 +318,7 @@ export async function llmVisionObject<T extends z.ZodType>(
   };
 
   const geminiCall: LlmExecution<z.infer<T>> = {
-    name: "Gemini",
+    name: `Gemini (${options?.model ?? getGeminiModel()})`,
     fn: () =>
       generateObject({
         model: getGoogleClient()(options?.model ?? getGeminiModel()),
