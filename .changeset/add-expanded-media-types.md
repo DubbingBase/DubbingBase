@@ -3,7 +3,7 @@
 "@app/locales": minor
 "@app/website": minor
 "@app/mobile": minor
-"@app/database": minor
+"@app/supabase": minor
 ---
 
 Add full support for audiobooks, podcasts, advertisements, and connected toys
