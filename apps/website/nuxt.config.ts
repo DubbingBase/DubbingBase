@@ -37,6 +37,12 @@ export default defineNuxtConfig({
 
   nitro: {
     preset: process.env.NITRO_PRESET || "node-server",
+    experimental: {
+      tasks: true,
+    },
+    scheduledTasks: {
+      "* * * * *": ["dispatcher"],
+    },
     rollupConfig: {
       // Keep .wasm imports external so Rollup's JS plugins (e.g. inject)
       // don't try to parse them. Wrangler pre-compiles them into
