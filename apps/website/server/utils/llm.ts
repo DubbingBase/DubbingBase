@@ -11,7 +11,7 @@ function getGeminiModel(): string {
     (config.geminiModel as string) ||
     process.env.NUXT_GEMINI_MODEL ||
     process.env.GEMINI_MODEL ||
-    "gemini-2.0-flash"
+    "gemini-3.6-flash"
   );
 }
 
