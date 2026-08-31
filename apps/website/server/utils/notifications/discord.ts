@@ -4,20 +4,49 @@ export interface DiscordWebhookOptions {
   color?: number;
 }
 
+function getDiscordWebhookUrls(): string[] {
+  const config = useRuntimeConfig();
+  const rawUrls: (string | undefined | null)[] = [
+    config.discordWebhookUrl as string,
+    config.discordWebhookUrl2 as string,
+    config.discordWebhookUrl3 as string,
+    process.env.NUXT_DISCORD_WEBHOOK_URL,
+    process.env.DISCORD_WEBHOOK_URL,
+    process.env.DISCORD_ADMIN_WEBHOOK_LOG_URL,
+    process.env.NUXT_DISCORD_WEBHOOK_URL_1,
+    process.env.DISCORD_WEBHOOK_URL_1,
+    process.env.NUXT_DISCORD_WEBHOOK_URL_2,
+    process.env.DISCORD_WEBHOOK_URL_2,
+    process.env.NUXT_DISCORD_WEBHOOK_URL_3,
+    process.env.DISCORD_WEBHOOK_URL_3,
+  ];
+
+  const urls = new Set<string>();
+
+  for (const raw of rawUrls) {
+    if (!raw || typeof raw !== "string") continue;
+    const split = raw
+      .split(/[,;\n]+/)
+      .map((u) => u.trim())
+      .filter(Boolean);
+    for (const u of split) {
+      if (u.startsWith("http://") || u.startsWith("https://")) {
+        urls.add(u);
+      }
+    }
+  }
+
+  return Array.from(urls);
+}
+
 export async function sendDiscordAdminNotification(
   title: string,
   message: string,
   options?: DiscordWebhookOptions,
 ) {
-  const config = useRuntimeConfig();
-  const webhookUrl =
-    (config.discordWebhookUrl as string) ||
-    process.env.NUXT_DISCORD_WEBHOOK_URL ||
-    process.env.DISCORD_WEBHOOK_URL ||
-    process.env.DISCORD_ADMIN_WEBHOOK_LOG_URL ||
-    "";
+  const webhookUrls = getDiscordWebhookUrls();
 
-  if (!webhookUrl || typeof webhookUrl !== "string") {
+  if (webhookUrls.length === 0) {
     console.warn("[Discord] Webhook URL missing, skipping notification");
     return;
   }
@@ -48,20 +77,33 @@ export async function sendDiscordAdminNotification(
       embed.image = { url: options.imageUrl };
     }
 
-    const res = await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ embeds: [embed] }),
-    });
+    const payload = JSON.stringify({ embeds: [embed] });
 
-    if (!res.ok) {
-      const errText = await res.text();
-      console.error(
-        `[Discord] Webhook API error (status ${res.status}):`,
-        errText,
-      );
-    }
+    await Promise.allSettled(
+      webhookUrls.map(async (webhookUrl) => {
+        try {
+          const res = await fetch(webhookUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: payload,
+          });
+
+          if (!res.ok) {
+            const errText = await res.text();
+            console.error(
+              `[Discord] Webhook API error (${webhookUrl.slice(0, 35)}... status ${res.status}):`,
+              errText,
+            );
+          }
+        } catch (err) {
+          console.error(
+            `[Discord] Webhook fetch error (${webhookUrl.slice(0, 35)}...):`,
+            err,
+          );
+        }
+      }),
+    );
   } catch (err) {
-    console.error("[Discord] Fetch exception:", err);
+    console.error("[Discord] Notification exception:", err);
   }
 }

@@ -74,7 +74,15 @@ export default defineNuxtConfig({
     discordWebhookUrl:
       process.env.NUXT_DISCORD_WEBHOOK_URL ||
       process.env.DISCORD_WEBHOOK_URL ||
-      process.env.DISCORD_ADMIN_WEBHOOK_LOG_URL,
+      process.env.DISCORD_ADMIN_WEBHOOK_LOG_URL ||
+      process.env.DISCORD_WEBHOOK_URL_1 ||
+      process.env.NUXT_DISCORD_WEBHOOK_URL_1,
+    discordWebhookUrl2:
+      process.env.NUXT_DISCORD_WEBHOOK_URL_2 ||
+      process.env.DISCORD_WEBHOOK_URL_2,
+    discordWebhookUrl3:
+      process.env.NUXT_DISCORD_WEBHOOK_URL_3 ||
+      process.env.DISCORD_WEBHOOK_URL_3,
     resendApiKey: process.env.NUXT_RESEND_API_KEY,
     resendFromEmail: process.env.NUXT_RESEND_FROM_EMAIL,
     resendToEmail: process.env.NUXT_RESEND_TO_EMAIL,
