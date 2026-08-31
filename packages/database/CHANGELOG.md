@@ -1,5 +1,31 @@
 # @app/supabase
 
+## 0.3.0
+
+### Minor Changes
+
+- 636bcda: Add full support for audiobooks, podcasts, advertisements, and connected toys
+
+  - Added database migrations for `audiobook`, `advertisement`, `podcast`, and `toy` content types
+  - Integrated OpenLibrary API for audiobook narrations, covers, and details
+  - Integrated Apple Podcasts / iTunes API for podcast fictions, episodes, and RSS feeds
+  - Added advertisement spot and connected toy metadata resolvers and video/device embeds
+  - Added web detail & edit pages (`/audiobook`, `/podcast`, `/advertisement`, `/toy`)
+  - Added mobile details views and routing for all new media types
+  - Integrated multi-search across all media families with unified scoring
+  - Added full translations in English, French, Spanish, and Japanese
+
+### Patch Changes
+
+- 3133eed: Fix 401 Unauthorized errors for admin routes, add missing API routes and RLS policies, remove legacy edge functions, and relocate database types:
+
+  - Fixed 401 Unauthorized during SSR and cookie authentication in `server/middleware/auth.ts` and `authenticated-fetch.ts`.
+  - Created missing API routes for search voice actors (`POST`), movies (`GET`/`POST`), and shows (`GET`/`POST`).
+  - Added RLS policies granting admin permissions for user reports.
+  - Removed legacy Deno Edge Functions and relocated generated database types to `packages/database/src/database.types.ts`.
+  - Decoupled `packages/shared-logic` from legacy edge function types.
+  - Fixed strict TypeScript typing across admin pages and media edit routes.
+
 ## 0.2.1
 
 ### Patch Changes

@@ -1,5 +1,219 @@
 # @app/landing
 
+## 1.2.0
+
+### Minor Changes
+
+- 636bcda: Add full support for audiobooks, podcasts, advertisements, and connected toys
+
+  - Added database migrations for `audiobook`, `advertisement`, `podcast`, and `toy` content types
+  - Integrated OpenLibrary API for audiobook narrations, covers, and details
+  - Integrated Apple Podcasts / iTunes API for podcast fictions, episodes, and RSS feeds
+  - Added advertisement spot and connected toy metadata resolvers and video/device embeds
+  - Added web detail & edit pages (`/audiobook`, `/podcast`, `/advertisement`, `/toy`)
+  - Added mobile details views and routing for all new media types
+  - Integrated multi-search across all media families with unified scoring
+  - Added full translations in English, French, Spanish, and Japanese
+
+- 9aa7848: Add support for viewing single seasons and episodes for TV shows
+
+  - New composables: `useSeasonData` and `useEpisodeData` in shared-logic
+  - New pages: Season view (`/show/:id/season/:seasonNumber`) and Episode view (`/show/:id/season/:seasonNumber/episode/:episodeNumber`)
+  - Enhanced show page with Seasons section linking to individual seasons
+  - Added translations for seasons/episodes in all locales (en, fr, es, ja)
+  - Uses existing API endpoints (`/api/season`, `/api/episode`)
+
+### Patch Changes
+
+- 83c9685: Add Cloudflare Worker 1-minute cron dispatcher using Nitro tasks:
+
+  - Enable `nitro.experimental.tasks` and map `scheduledTasks: { '* * * * *': ['dispatcher'] }` in `nuxt.config.ts`.
+  - Add Cloudflare Worker cron trigger `[triggers] crons = ['* * * * *']` in `wrangler.toml`.
+  - Implement `server/tasks/dispatcher.ts` with a 6-iteration loop (10s intervals), dispatching `wiki_discovery` and `wiki_check` every 10 seconds and `wiki_extract` (LLM) on iteration 0, using `ctx.waitUntil(...)` for non-blocking concurrent execution.
+
+- 4126abf: Add reusable route performance utilities and architectural guidelines:
+
+  - Added `setPublicCacheHeaders(event, profile)` server utility in `server/utils/cache/http.ts`.
+  - Added `useProgressiveBatch` composable in `src/composables/useProgressiveBatch.ts`.
+  - Updated `.agents/AGENTS.md` with explicit route performance and caching architecture standards.
+
+- 177fe88: fix(website): resolve admin queue table display issue and add translations
+
+  - Group queue filters and table together so the queue items grid renders properly
+  - Add empty state message when search or status filters match no items
+  - Add missing localization strings across all locales (EN, FR, ES, JA)
+  - Use strict TypeScript typing without type assertions
+
+- 3133eed: Fix 401 Unauthorized errors for admin routes, add missing API routes and RLS policies, remove legacy edge functions, and relocate database types:
+
+  - Fixed 401 Unauthorized during SSR and cookie authentication in `server/middleware/auth.ts` and `authenticated-fetch.ts`.
+  - Created missing API routes for search voice actors (`POST`), movies (`GET`/`POST`), and shows (`GET`/`POST`).
+  - Added RLS policies granting admin permissions for user reports.
+  - Removed legacy Deno Edge Functions and relocated generated database types to `packages/database/src/database.types.ts`.
+  - Decoupled `packages/shared-logic` from legacy edge function types.
+  - Fixed strict TypeScript typing across admin pages and media edit routes.
+
+- 1467ef9: Fix Cloudflare Workers deployment failing to resolve `@cf-wasm/resvg` wasm asset:
+
+  - Added `scripts/patch-wasm.mjs` post-build script to copy `resvg.wasm` to `.output/server/resvg.wasm` and rewrite chunk import paths.
+  - Updated `build` script in `package.json` to automatically run `patch-wasm.mjs`.
+
+- bc70b75: Fix Cloudflare Workers Satori `WebAssembly.instantiate` error for OG image generation:
+
+  - Switched from standard `satori` to `@cf-wasm/satori/workerd` to use pre-compiled Yoga WebAssembly module instead of runtime `WebAssembly.instantiate()`.
+  - Updated `scripts/patch-wasm.mjs` to copy and patch both `yoga.wasm` and `resvg.wasm`.
+
+- 400ac3e: Fix cron execution and remove obsolete queue guards:
+
+  - Support `apikey`, `Authorization: Bearer`, and `x-internal-secret` in `/api/process-media-queue` and `/api/prepare-trending-media` for scheduled cron jobs.
+  - Remove obsolete `force`, `single`, and concurrency lock checking (`get_media_queue_locked_count`), relying purely on PGMQ's atomic `FOR UPDATE SKIP LOCKED`.
+  - Clean up `queue.vue` manual processing payload.
+
+- 259d0cd: Fix 404 on the voice actors listing page by adding a GET handler for /api/list-voice-actors (the page calls it with GET; only a POST handler existed)
+- 1d874f3: Fix show season/episode loading timeouts and enable Cloudflare KV cache binding
+
+  - Enable Cloudflare `CACHE_KV` namespace binding in `nuxt.config.ts` with two-tier (L1 in-memory + L2 Cloudflare KV) caching across Worker isolates
+  - Fix show season and episode endpoints hanging on slow external TVDB searches by retrieving parent show character pictures from cache
+  - Fix season 0 / specials validation in TMDB media service
+  - Fix episode image URLs, title formatting, and `$t` references in Vue SFC components
+  - Add error/not-found states for season and episode pages
+
+- 47ecc86: Fix video game pages failing to load on DubbingBase:
+
+  - Corrected `fetchGameData` invocation in `game/[id].vue` by removing incorrect extra argument.
+  - Added `MediaSkeleton` loading state and not-found fallback to video game details page.
+  - Added high-resolution artworks and screenshots mapping in IGDB responses and types.
+  - Allowed `images.igdb.com` in Nuxt image domains.
+  - Fixed IGDB fetch URL in game edit page to `/api/game/:id`.
+  - Added video game resolution and routing support for voice actor works.
+
+- 462903e: Fix voice actor OG image generation on dubbingbase.com:
+
+  - Updated `ogImageUrl` in `voice-actor/[id].vue` to point to `/api/og-image?type=voice-actor&id=...` instead of the legacy Supabase Edge Function URL.
+  - Fixed `@cf-wasm/resvg/workerd` Resvg initialization and import in `api/og-image/index.get.ts`.
+  - Safe chunked base64 conversion in `fetchImageAsDataUri` to prevent stack overflow RangeErrors on large avatar images.
+  - Included `voice_actor_name` in query selections for voice actors with stage names.
+  - Removed obsolete top-level `wasm.esmImport` from Nuxt config.
+
+- 7ab13aa: Fix 500 error on SSR caused by duplicate Vue instances colliding on template refs (`Cannot redefine property: imgEl`).
+
+  - Enforce monorepo-wide Vue deduplication via `pnpm.overrides` and `pnpm-workspace.yaml`.
+  - Add explicit `vite.resolve.dedupe` rules in website and mobile configs.
+  - Add regression test in website unit test suite to prevent future recurrence.
+
+- 8440d49: Optimize original actor details page and API endpoint:
+
+  - Deduplicated TMDB media details queries across dubbing works and introduced concurrency-limited batching (batch size 15) in `/api/actor/[id]`.
+  - Added public SWR `Cache-Control` header (`public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800`) on `/api/actor/[id]`.
+  - Implemented progressive batch rendering (`useIntersectionObserver`) and debounced search (`refDebounced`) for the filmography grid.
+  - Added `getCachedData` to `useAsyncData` for 0ms back-button route transitions without skeleton flicker.
+  - Added `preconnect` and `dns-prefetch` resource hints for `image.tmdb.org` in `useHead`.
+  - Added `loading="lazy"` and `decoding="async"` attributes to `NuxtImg` elements.
+
+- 6b25b7a: Final pass optimization across auxiliary endpoints and pages:
+
+  - Added public SWR `Cache-Control` headers on `/api/search`, `/api/career-grid`, `/api/get-metadata`, and `/api/get-media-credits`.
+  - Added `getCachedData` payload cache resolution to `/contribute` page.
+
+- 850d56e: Optimize catalog listing pages and trending API endpoints:
+
+  - Added public SWR `Cache-Control` headers across `/api/trending/movies`, `/api/trending/shows`, `/api/trending/games`, `/api/trending/voice-actors`, and `/api/list-voice-actors`.
+  - Added `getCachedData` to `useAsyncData` across `/movies`, `/series`, `/voice-actors`, and `/studios` for instant navigation.
+  - Added progressive batch rendering and debounced search to `/voice-actors` and `/studios` using `useIntersectionObserver` and `refDebounced`.
+  - Added preconnect and dns-prefetch resource hints for `image.tmdb.org` on catalog pages.
+  - Added `decoding="async"` across catalog page images.
+
+- 15b81b2: Optimize game details page and API endpoint:
+
+  - Removed work votes queries and user vote merging logic from `/api/game/[id]`.
+  - Added public SWR `Cache-Control` header (`public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800`) on `/api/game/[id]`.
+  - Implemented progressive batch rendering (`useIntersectionObserver`) and debounced search (`refDebounced`) for the game character/voice cast grid.
+  - Added `getCachedData` to `useAsyncData` for 0ms back-button route transitions without skeleton flicker.
+  - Added `preconnect` and `dns-prefetch` resource hints for `images.igdb.com` in `useHead`.
+  - Added `loading="lazy"` and `decoding="async"` attributes to game cover, artwork, and character/voice actor `NuxtImg` elements.
+
+- 5c88ceb: Optimize Home landing page and discovery/search endpoints:
+
+  - Added public SWR `Cache-Control` headers across `/api/home-stats`, `/api/top-contributors`, `/api/recent-voice-actors`, `/api/top-voice-actors`, and `/api/search-voice-actors`.
+  - Added `getCachedData` to `useAsyncData` on the home page (`/`) for 0ms transitions and instantaneous back-navigation.
+  - Added preconnect and dns-prefetch resource hints for `image.tmdb.org` and `images.igdb.com` on the home page.
+
+- 3ade5a4: Optimize movie details page and API endpoint:
+
+  - Removed legacy `getWorkVotes` queries and user-vote merging logic from `/api/movie/[id]`.
+  - Added public SWR `Cache-Control` header (`public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800`) on `/api/movie/[id]`.
+  - Implemented progressive batch rendering (`useIntersectionObserver`) and debounced search (`refDebounced`) for the movie cast grid.
+  - Added `getCachedData` to `useAsyncData` for 0ms back-button route transitions.
+  - Added `preconnect` and `dns-prefetch` resource hints for `image.tmdb.org` and `thetvdb.com` in `useHead`.
+  - Added `loading="lazy"` and `decoding="async"` attributes to `NuxtImg` elements.
+
+- 84c889b: Optimize season and episode details endpoints and pages:
+
+  - Removed legacy `getWorkVotes` queries from `/api/season` and `/api/episode`.
+  - Added public Edge SWR `Cache-Control` headers on `/api/season` and `/api/episode`.
+  - Added `getCachedData` to `useAsyncData` across season and episode pages for 0ms transitions.
+  - Added progressive batch rendering and debounced search to episode cast using `useIntersectionObserver` and `refDebounced`.
+  - Added preconnect and dns-prefetch resource hints for `image.tmdb.org` and `thetvdb.com`.
+  - Added `loading="lazy"` and `decoding="async"` across season/episode still and cast images.
+
+- 47797ff: Optimize TV series details page and API endpoint:
+
+  - Removed legacy `getWorkVotes` queries and user-vote merging logic from `/api/show/[id]`.
+  - Added public SWR `Cache-Control` header (`public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800`) on `/api/show/[id]`.
+  - Implemented progressive batch rendering (`useIntersectionObserver`) and debounced search (`refDebounced`) for the TV series cast grid.
+  - Added `getCachedData` to `useAsyncData` for 0ms back-button and season navigation transitions.
+  - Added `preconnect` and `dns-prefetch` resource hints for `image.tmdb.org` and `thetvdb.com` in `useHead`.
+  - Added `loading="lazy"` and `decoding="async"` attributes to `NuxtImg` elements.
+
+- 2ee5326: Optimize dubbing studio details endpoint and profile page:
+
+  - Added public SWR `Cache-Control` header (`public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800`) on `/api/get-studio-details`.
+  - Deduplicated and batched TMDB media fetches (`BATCH_SIZE = 15`) in `/api/get-studio-details` to avoid duplicated external API calls and rate-limiting.
+  - Added `getCachedData` to `useAsyncData` on `/studio/:id` for 0ms transitions.
+  - Added search filtering (`refDebounced`) and progressive infinite scroll rendering (`useIntersectionObserver`) for dubbed projects and voice actor rosters.
+  - Added `preconnect` and `dns-prefetch` resource hints for `image.tmdb.org`.
+  - Added `loading="lazy"` and `decoding="async"` attributes to images.
+
+- 1cfdb51: Optimize voice actor loading and remove work votes logic:
+
+  - Added deduplication of external TMDB/TVDB/IGDB media requests in `MediaService`.
+  - Implemented batched concurrency for external API calls to avoid socket exhaustion and rate limits.
+  - Pre-projected compact `enhancedWorks` array on the server, reducing API response and SSR payload size by ~99%.
+  - Added public SWR `Cache-Control` header for CDN and edge caching on `/api/voice-actor/[id]`.
+  - Replaced nested linear scans in `useVoiceActorData` with O(1) Map index lookups.
+  - Removed work votes queries, composable references, and UI watchers from the voice actor flows.
+
+- f1389bc: Switch default primary LLM provider to Groq (Llama 3.3 70B) with Gemini fallback:
+
+  - Configure `llmProvider` in runtimeConfig defaulting to `"groq"` (configurable via `NUXT_LLM_PROVIDER`).
+  - Route all text and JSON object generations to Groq `llama-3.3-70b-versatile` by default to avoid Gemini rate limits.
+  - Fix default Gemini model fallback to `"gemini-2.5-flash"`.
+
+- bd5b5da: Update default Groq LLM model from decommissioned `llama-3.1-8b-instant` to `openai/gpt-oss-20b` for dubbing credit extractions.
+- 8850d8f: Phase 3 voice actor profile performance optimizations:
+
+  - Added `getCachedData` to `useAsyncData` on the voice actor page for instant 0ms back-and-forth route transitions with zero skeleton flicker.
+  - Added `preconnect` and `dns-prefetch` resource hints for `image.tmdb.org` in `useHead` link metadata.
+  - Added `loading="lazy"` and `decoding="async"` attributes to all `NuxtImg` poster and avatar elements.
+
+- 1defc6e: Phase 2 frontend UI performance optimizations for voice actor profiles:
+
+  - Added infinite scroll and progressive rendering using VueUse `useIntersectionObserver` for both List and Grouped filmography views.
+  - Implemented debounced search input with VueUse `refDebounced`.
+  - Pre-computed `searchText` index for instant $O(1)$ substring matching during filtering.
+  - Added localized `loadMore` translation across English, French, Spanish, and Japanese locales.
+
+- Updated dependencies [636bcda]
+- Updated dependencies [3133eed]
+- Updated dependencies [47ecc86]
+- Updated dependencies [7ab13aa]
+- Updated dependencies [1cfdb51]
+- Updated dependencies [9aa7848]
+- Updated dependencies [1defc6e]
+  - @app/shared-logic@1.2.0
+  - @app/locales@0.1.0
+  - @app/supabase@0.3.0
+
 ## 1.1.8
 
 ### Patch Changes

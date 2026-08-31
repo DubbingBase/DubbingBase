@@ -1,5 +1,28 @@
 # @app/locales
 
+## 0.1.0
+
+### Minor Changes
+
+- 636bcda: Add full support for audiobooks, podcasts, advertisements, and connected toys
+
+  - Added database migrations for `audiobook`, `advertisement`, `podcast`, and `toy` content types
+  - Integrated OpenLibrary API for audiobook narrations, covers, and details
+  - Integrated Apple Podcasts / iTunes API for podcast fictions, episodes, and RSS feeds
+  - Added advertisement spot and connected toy metadata resolvers and video/device embeds
+  - Added web detail & edit pages (`/audiobook`, `/podcast`, `/advertisement`, `/toy`)
+  - Added mobile details views and routing for all new media types
+  - Integrated multi-search across all media families with unified scoring
+  - Added full translations in English, French, Spanish, and Japanese
+
+- 9aa7848: Add support for viewing single seasons and episodes for TV shows
+
+  - New composables: `useSeasonData` and `useEpisodeData` in shared-logic
+  - New pages: Season view (`/show/:id/season/:seasonNumber`) and Episode view (`/show/:id/season/:seasonNumber/episode/:episodeNumber`)
+  - Enhanced show page with Seasons section linking to individual seasons
+  - Added translations for seasons/episodes in all locales (en, fr, es, ja)
+  - Uses existing API endpoints (`/api/season`, `/api/episode`)
+
 ## 0.0.49
 
 ### Patch Changes
