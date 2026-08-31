@@ -71,18 +71,22 @@ export default defineNuxtConfig({
     groqApiKey: process.env.NUXT_GROQ_API_KEY || process.env.GROQ_API_KEY,
     onesignalAppId: process.env.NUXT_ONESIGNAL_APP_ID,
     onesignalRestApiKey: process.env.NUXT_ONESIGNAL_REST_API_KEY,
+    discordWebhookDiscoveryUrl:
+      process.env.NUXT_DISCORD_WEBHOOK_DISCOVERY_URL ||
+      process.env.DISCORD_WEBHOOK_DISCOVERY_URL ||
+      process.env.DISCORD_DISCOVERY_WEBHOOK_URL,
+    discordWebhookCheckUrl:
+      process.env.NUXT_DISCORD_WEBHOOK_CHECK_URL ||
+      process.env.DISCORD_WEBHOOK_CHECK_URL ||
+      process.env.DISCORD_CHECK_WEBHOOK_URL,
+    discordWebhookExtractUrl:
+      process.env.NUXT_DISCORD_WEBHOOK_EXTRACT_URL ||
+      process.env.DISCORD_WEBHOOK_EXTRACT_URL ||
+      process.env.DISCORD_EXTRACT_WEBHOOK_URL,
     discordWebhookUrl:
       process.env.NUXT_DISCORD_WEBHOOK_URL ||
       process.env.DISCORD_WEBHOOK_URL ||
-      process.env.DISCORD_ADMIN_WEBHOOK_LOG_URL ||
-      process.env.DISCORD_WEBHOOK_URL_1 ||
-      process.env.NUXT_DISCORD_WEBHOOK_URL_1,
-    discordWebhookUrl2:
-      process.env.NUXT_DISCORD_WEBHOOK_URL_2 ||
-      process.env.DISCORD_WEBHOOK_URL_2,
-    discordWebhookUrl3:
-      process.env.NUXT_DISCORD_WEBHOOK_URL_3 ||
-      process.env.DISCORD_WEBHOOK_URL_3,
+      process.env.DISCORD_ADMIN_WEBHOOK_LOG_URL,
     resendApiKey: process.env.NUXT_RESEND_API_KEY,
     resendFromEmail: process.env.NUXT_RESEND_FROM_EMAIL,
     resendToEmail: process.env.NUXT_RESEND_TO_EMAIL,

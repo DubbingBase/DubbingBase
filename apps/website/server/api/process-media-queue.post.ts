@@ -249,6 +249,7 @@ export default defineEventHandler(async (event) => {
               await sendDiscordAdminNotification(
                 "Queue Discovery Skipped (18+ Adult Content)",
                 `**${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}) is marked as adult content and was excluded.`,
+                { queue: "wiki_discovery" },
               );
 
               return {
@@ -273,6 +274,7 @@ export default defineEventHandler(async (event) => {
           await sendDiscordAdminNotification(
             "Queue Discovery Skipped",
             `No Wikidata ID found for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}). Discovery archived.`,
+            { queue: "wiki_discovery" },
           );
 
           return {
@@ -304,7 +306,7 @@ export default defineEventHandler(async (event) => {
           await sendDiscordAdminNotification(
             "Queue Discovery: No Wikipedia Pages",
             `No Wikipedia pages found for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}).\n\`\`\`\n${errMsg}\n\`\`\`\n🔗 **Wikidata Item:** ${wikidataUrl}`,
-            { url: wikidataUrl },
+            { queue: "wiki_discovery", url: wikidataUrl },
           );
 
           return {
@@ -359,6 +361,7 @@ export default defineEventHandler(async (event) => {
         await sendDiscordAdminNotification(
           "Queue Discovery Completed",
           `Discovered **${availableLanguages.length} language(s)** for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}).\n• Enqueued **${enqueuedCount}** new language checks\n• **${alreadyEnqueuedCount}** already pending.`,
+          { queue: "wiki_discovery" },
         );
       } catch (err) {
         const errMsg = err instanceof Error ? err.message : String(err);
@@ -375,6 +378,7 @@ export default defineEventHandler(async (event) => {
         await sendDiscordAdminNotification(
           "Queue Discovery Failed",
           `Discovery failed for **${mediaTitle}** (ID ${payload.tmdb_id}):\n\`\`\`\n${errMsg}\n\`\`\``,
+          { queue: "wiki_discovery" },
         );
       }
 
@@ -452,7 +456,7 @@ export default defineEventHandler(async (event) => {
           await sendDiscordAdminNotification(
             `Queue Check: No Dubbing Section [${lang.toUpperCase()}]`,
             `No dubbing section found for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${lang.toUpperCase()}]):\n\`\`\`\n${errorMsg}\n\`\`\`${wikiSection}`,
-            wikiUrl ? { url: wikiUrl } : undefined,
+            { queue: "wiki_check", ...(wikiUrl ? { url: wikiUrl } : {}) },
           );
 
           return { ok: true, processed: 1, results, queue: targetQueue };
@@ -506,9 +510,11 @@ export default defineEventHandler(async (event) => {
         await sendDiscordAdminNotification(
           `Dubbing Section Found [${lang.toUpperCase()}]`,
           `Found **${checkResult.sectionIndexes.length} section(s)** on Wikipedia for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}). Enqueued for LLM credit extraction.${checkWikiSection}`,
-          checkWikiUrl
-            ? { url: checkWikiUrl, color: 0x57f287 }
-            : { color: 0x57f287 },
+          {
+            queue: "wiki_check",
+            color: 0x57f287,
+            ...(checkWikiUrl ? { url: checkWikiUrl } : {}),
+          },
         );
 
         return { ok: true, processed: 1, results, queue: targetQueue };
@@ -537,7 +543,7 @@ export default defineEventHandler(async (event) => {
         await sendDiscordAdminNotification(
           `Queue Check Failed [${lang.toUpperCase()}]`,
           `Failed to check **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${lang.toUpperCase()}]):\n\`\`\`\n${errMsg}\n\`\`\`${wikiSection}`,
-          wikiUrl ? { url: wikiUrl } : undefined,
+          { queue: "wiki_check", ...(wikiUrl ? { url: wikiUrl } : {}) },
         );
 
         return { ok: true, processed: 1, results, queue: targetQueue };
@@ -622,6 +628,7 @@ export default defineEventHandler(async (event) => {
             payload.episode_number ? ` (Episode ${payload.episode_number})` : ""
           } [${lang.toUpperCase()}].\n• Added **${extractResult.creditsAdded ?? 0}** roles\n• Added **${extractResult.changes ?? 0}** new voice actors.`,
           {
+            queue: "wiki_extract",
             ...(extractResult.imageUrl
               ? { imageUrl: extractResult.imageUrl }
               : {}),
@@ -653,7 +660,7 @@ export default defineEventHandler(async (event) => {
             await sendDiscordAdminNotification(
               `Queue Extraction Rate-Limited [${lang.toUpperCase()}]`,
               `Max retries (${MAX_RETRIES}) reached for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${lang.toUpperCase()}]):\n\`\`\`\n${errMsg}\n\`\`\``,
-              { color: 0xed4245 },
+              { queue: "wiki_extract", color: 0xed4245 },
             );
           } else {
             results.push({
@@ -675,7 +682,7 @@ export default defineEventHandler(async (event) => {
           await sendDiscordAdminNotification(
             `Queue Item Failed [${lang.toUpperCase()}]`,
             `Failed to extract **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${lang.toUpperCase()}]):\n\`\`\`\n${errMsg}\n\`\`\``,
-            { color: 0xed4245 },
+            { queue: "wiki_extract", color: 0xed4245 },
           );
         }
       }
