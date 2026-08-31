@@ -52,16 +52,14 @@ async function fetchTmdbCredits(
 }
 
 const dubbingExtractionSchema = z.object({
-  items: z
-    .array(
-      z.object({
-        actor: z.string(),
-        voiceActorName: z.string(),
-        voiceActorFirstname: z.string(),
-        performance: z.string().optional(),
-      }),
-    )
-    .optional(),
+  items: z.array(
+    z.object({
+      actor: z.string(),
+      voiceActorName: z.string(),
+      voiceActorFirstname: z.string(),
+      performance: z.string().nullable(),
+    }),
+  ),
 });
 
 export interface CheckSectionsResult {
@@ -401,7 +399,7 @@ Each row in a dubbing table = one credit. Output fields:
 - actor: the original/previous performer (the person who originally played the role)
 - voiceActorName: the localized/new voice actor's family/surname (e.g. "唐沢" for 唐沢寿明)
 - voiceActorFirstname: the localized/new voice actor's given name (e.g. "寿明" for 唐沢寿明)
-- performance: the character name (optional)
+- performance: the character name (or null if not found)
 
 If no dubbing or voice-actor data exists in the section, return { items: [] }.`,
           temperature: 0,
@@ -458,7 +456,7 @@ If no dubbing or voice-actor data exists in the section, return { items: [] }.`,
             actorId,
             tmdbType,
             language,
-            entry.performance,
+            entry.performance || undefined,
           );
 
           if (result.voiceActorResult.inserted) {
@@ -543,7 +541,7 @@ Each row in a dubbing table = one credit. Output fields:
 - actor: the original/previous performer (the person who originally played the role)
 - voiceActorName: the localized/new voice actor's family/surname (e.g. "唐沢" for 唐沢寿明)
 - voiceActorFirstname: the localized/new voice actor's given name (e.g. "寿明" for 唐沢寿明)
-- performance: the character name (optional)
+- performance: the character name (or null if not found)
 
 If no dubbing or voice-actor data exists in the section, return { items: [] }.`,
           temperature: 0,
@@ -577,7 +575,7 @@ If no dubbing or voice-actor data exists in the section, return { items: [] }.`,
           actorId,
           "video_game",
           language,
-          entry.performance,
+          entry.performance || undefined,
         );
 
         if (result.voiceActorResult.inserted) {
