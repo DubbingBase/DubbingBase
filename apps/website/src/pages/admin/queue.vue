@@ -835,7 +835,6 @@ const startProcessing = async () => {
     }>("/api/process-media-queue", {
       method: "POST",
       body: {
-        force: true,
         queue: filterQueue.value !== "all" ? filterQueue.value : undefined,
       },
     });

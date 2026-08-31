@@ -13,6 +13,7 @@ import { extractAvailableLanguages } from "../utils/cache/wikipedia";
 export default defineEventHandler(async (event) => {
   const internalSecret = getHeader(event, "x-internal-secret");
   const authHeader = getHeader(event, "authorization");
+  const apiKeyHeader = getHeader(event, "apikey");
   const bearerToken = authHeader?.startsWith("Bearer ")
     ? authHeader.slice(7).trim()
     : null;
@@ -25,15 +26,14 @@ export default defineEventHandler(async (event) => {
   const isInternalTrigger =
     Boolean(secretKey) &&
     ((Boolean(internalSecret) && internalSecret === secretKey) ||
-      (Boolean(bearerToken) && bearerToken === secretKey));
+      (Boolean(bearerToken) && bearerToken === secretKey) ||
+      (Boolean(apiKeyHeader) && apiKeyHeader === secretKey));
 
   if (!isInternalTrigger) {
     requireAdmin(event);
   }
 
   try {
-    let isSingle = false;
-    let isForce = false;
     let targetQueueParam: string | undefined = undefined;
 
     try {
@@ -43,12 +43,8 @@ export default defineEventHandler(async (event) => {
       }
 
       const body = await readBody(event);
-      if (body) {
-        isSingle = body.single === true;
-        isForce = body.force === true;
-        if (body.queue && typeof body.queue === "string") {
-          targetQueueParam = body.queue.trim().toLowerCase();
-        }
+      if (body && body.queue && typeof body.queue === "string") {
+        targetQueueParam = body.queue.trim().toLowerCase();
       }
     } catch {
       // Ignore body/query parse errors
@@ -82,26 +78,6 @@ export default defineEventHandler(async (event) => {
     }
 
     const supabaseAdmin = useSupabaseAdmin();
-
-    if (!isForce && !isSingle) {
-      const { data: lockedCount, error: lockedErr } = await (
-        supabaseAdmin as any
-      ).rpc("get_media_queue_locked_count", {
-        p_queue_name: specificQueue ?? undefined,
-      });
-      if (lockedErr) {
-        console.error("[QUEUE] Failed to check locked count:", lockedErr);
-      } else if ((lockedCount as number) > 0) {
-        return {
-          ok: true,
-          processed: 0,
-          results: [],
-          reason: "already_running",
-          lockedCount: Number(lockedCount),
-          message: `A queue processor worker is currently active on ${specificQueue ?? "the queue"} (${lockedCount} item(s) locked). Pass {"force": true} to process anyway.`,
-        };
-      }
-    }
 
     // Step 1: Pop a message based on queue selection / priority order
     let targetQueue: "wiki_extract" | "wiki_check" | "wiki_discovery" =

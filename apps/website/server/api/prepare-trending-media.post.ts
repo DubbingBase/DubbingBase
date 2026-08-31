@@ -5,6 +5,11 @@ import { requireAdmin } from "../utils/auth";
 
 export default defineEventHandler(async (event) => {
   const internalSecret = getHeader(event, "x-internal-secret");
+  const authHeader = getHeader(event, "authorization");
+  const apiKeyHeader = getHeader(event, "apikey");
+  const bearerToken = authHeader?.startsWith("Bearer ")
+    ? authHeader.slice(7).trim()
+    : null;
   const config = useRuntimeConfig();
   const secretKey =
     (config.supabaseSecretKey as string) ||
@@ -12,9 +17,10 @@ export default defineEventHandler(async (event) => {
     process.env.NUXT_SUPABASE_SECRET_KEY ||
     "";
   const isInternalTrigger =
-    Boolean(internalSecret) &&
     Boolean(secretKey) &&
-    internalSecret === secretKey;
+    ((Boolean(internalSecret) && internalSecret === secretKey) ||
+      (Boolean(bearerToken) && bearerToken === secretKey) ||
+      (Boolean(apiKeyHeader) && apiKeyHeader === secretKey));
 
   if (!isInternalTrigger) {
     requireAdmin(event);
