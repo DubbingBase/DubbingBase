@@ -5,13 +5,27 @@ import { z } from "zod";
 
 const GROQ_MODEL = "llama-3.3-70b-versatile";
 
+function getLlmProvider(): "groq" | "gemini" {
+  const config = useRuntimeConfig();
+  const globalEnv = (globalThis as any)?.__env__;
+  const provider = (
+    (config.llmProvider as string) ||
+    globalEnv?.NUXT_LLM_PROVIDER ||
+    globalEnv?.LLM_PROVIDER ||
+    process.env.NUXT_LLM_PROVIDER ||
+    process.env.LLM_PROVIDER ||
+    "groq"
+  ).toLowerCase();
+  return provider === "gemini" ? "gemini" : "groq";
+}
+
 function getGeminiModel(): string {
   const config = useRuntimeConfig();
   return (
     (config.geminiModel as string) ||
     process.env.NUXT_GEMINI_MODEL ||
     process.env.GEMINI_MODEL ||
-    "gemini-3.6-flash"
+    "gemini-2.5-flash"
   );
 }
 
@@ -62,19 +76,24 @@ function isRateLimitError(error: unknown): boolean {
   );
 }
 
+interface LlmExecution<T> {
+  name: string;
+  fn: () => Promise<T>;
+}
+
 async function runWithFallback<T>(
-  fn: () => Promise<T>,
-  fallback: () => Promise<T>,
+  primary: LlmExecution<T>,
+  fallback: LlmExecution<T>,
 ): Promise<T> {
   try {
-    return await fn();
+    return await primary.fn();
   } catch (error) {
     console.warn(
-      "[LLM] Primary LLM failed, falling back to Groq Llama 3.3 70B...",
+      `[LLM] Primary LLM (${primary.name}) failed, falling back to ${fallback.name}...`,
       error instanceof Error ? error.message : error,
     );
     try {
-      return await fallback();
+      return await fallback.fn();
     } catch (fallbackError) {
       if (isRateLimitError(fallbackError) || isRateLimitError(error)) {
         throw new Error("LLM API Rate Limited (429)");
@@ -85,7 +104,7 @@ async function runWithFallback<T>(
           ? fallbackError.message
           : String(fallbackError);
       throw new Error(
-        `LLM Failure - Primary (Gemini): ${primaryMsg} | Fallback (Groq): ${fallbackMsg}`,
+        `LLM Failure - Primary (${primary.name}): ${primaryMsg} | Fallback (${fallback.name}): ${fallbackMsg}`,
       );
     }
   }
@@ -93,7 +112,7 @@ async function runWithFallback<T>(
 
 /**
  * Send a text prompt to an LLM and return the raw text response.
- * Tries Gemini first, falls back to Groq on rate limits.
+ * Uses Groq by default, falls back to Gemini on failure.
  */
 export async function llmGenerate(
   prompt: string,
@@ -105,28 +124,38 @@ export async function llmGenerate(
 ): Promise<string> {
   const system = options?.systemInstruction;
   const temperature = options?.temperature;
+  const provider = getLlmProvider();
 
-  return runWithFallback(
-    () =>
+  const groqCall: LlmExecution<string> = {
+    name: "Groq",
+    fn: () =>
+      generateText({
+        model: getGroqClient()(options?.model ?? GROQ_MODEL),
+        prompt,
+        system,
+        temperature,
+      }).then((r) => r.text),
+  };
+
+  const geminiCall: LlmExecution<string> = {
+    name: "Gemini",
+    fn: () =>
       generateText({
         model: getGoogleClient()(options?.model ?? getGeminiModel()),
         prompt,
         system,
         temperature,
       }).then((r) => r.text),
-    () =>
-      generateText({
-        model: getGroqClient()(GROQ_MODEL),
-        prompt,
-        system,
-        temperature,
-      }).then((r) => r.text),
-  );
+  };
+
+  return provider === "groq"
+    ? runWithFallback(groqCall, geminiCall)
+    : runWithFallback(geminiCall, groqCall);
 }
 
 /**
  * Send a text prompt to an LLM and return a typed JSON object validated by a Zod schema.
- * Tries Gemini first, falls back to Groq on rate limits.
+ * Uses Groq by default, falls back to Gemini on failure.
  */
 export async function llmGenerateObject<T extends z.ZodType>(
   prompt: string,
@@ -139,9 +168,23 @@ export async function llmGenerateObject<T extends z.ZodType>(
 ): Promise<z.infer<T>> {
   const system = options?.systemInstruction;
   const temperature = options?.temperature;
+  const provider = getLlmProvider();
 
-  return runWithFallback(
-    () =>
+  const groqCall: LlmExecution<z.infer<T>> = {
+    name: "Groq",
+    fn: () =>
+      generateObject({
+        model: getGroqClient()(options?.model ?? GROQ_MODEL),
+        prompt,
+        schema,
+        system,
+        temperature,
+      }).then((r) => r.object),
+  };
+
+  const geminiCall: LlmExecution<z.infer<T>> = {
+    name: "Gemini",
+    fn: () =>
       generateObject({
         model: getGoogleClient()(options?.model ?? getGeminiModel()),
         prompt,
@@ -149,21 +192,17 @@ export async function llmGenerateObject<T extends z.ZodType>(
         system,
         temperature,
       }).then((r) => r.object),
-    () =>
-      generateObject({
-        model: getGroqClient()(GROQ_MODEL),
-        prompt,
-        schema,
-        system,
-        temperature,
-      }).then((r) => r.object),
-  );
+  };
+
+  return provider === "groq"
+    ? runWithFallback(groqCall, geminiCall)
+    : runWithFallback(geminiCall, groqCall);
 }
 
 /**
  * Send a text prompt with an image to an LLM (vision) and return raw text.
  * Accepts a data URL ("data:image/jpeg;base64,...") or raw base64 with mimeType.
- * Tries Gemini first, falls back to Groq on rate limits.
+ * Uses Groq by default, falls back to Gemini on failure.
  */
 export async function llmVision(
   prompt: string,
@@ -177,6 +216,7 @@ export async function llmVision(
 ): Promise<string> {
   const system = options?.systemInstruction;
   const temperature = options?.temperature;
+  const provider = getLlmProvider();
   const { rawBase64, resolvedMime } = parseImageData(imageData, mimeType);
 
   const imageContent = {
@@ -184,8 +224,25 @@ export async function llmVision(
     image: `data:${resolvedMime};base64,${rawBase64}`,
   };
 
-  return runWithFallback(
-    () =>
+  const groqCall: LlmExecution<string> = {
+    name: "Groq",
+    fn: () =>
+      generateText({
+        model: getGroqClient()(options?.model ?? GROQ_MODEL),
+        messages: [
+          {
+            role: "user",
+            content: [{ type: "text", text: prompt }, imageContent],
+          },
+        ],
+        system,
+        temperature,
+      }).then((r) => r.text),
+  };
+
+  const geminiCall: LlmExecution<string> = {
+    name: "Gemini",
+    fn: () =>
       generateText({
         model: getGoogleClient()(options?.model ?? getGeminiModel()),
         messages: [
@@ -197,24 +254,16 @@ export async function llmVision(
         system,
         temperature,
       }).then((r) => r.text),
-    () =>
-      generateText({
-        model: getGroqClient()(GROQ_MODEL),
-        messages: [
-          {
-            role: "user",
-            content: [{ type: "text", text: prompt }, imageContent],
-          },
-        ],
-        system,
-        temperature,
-      }).then((r) => r.text),
-  );
+  };
+
+  return provider === "groq"
+    ? runWithFallback(groqCall, geminiCall)
+    : runWithFallback(geminiCall, groqCall);
 }
 
 /**
  * Send a text prompt with an image to an LLM (vision) and return a typed JSON object.
- * Tries Gemini first, falls back to Groq on rate limits.
+ * Uses Groq by default, falls back to Gemini on failure.
  */
 export async function llmVisionObject<T extends z.ZodType>(
   prompt: string,
@@ -229,6 +278,7 @@ export async function llmVisionObject<T extends z.ZodType>(
 ): Promise<z.infer<T>> {
   const system = options?.systemInstruction;
   const temperature = options?.temperature;
+  const provider = getLlmProvider();
   const { rawBase64, resolvedMime } = parseImageData(imageData, mimeType);
 
   const imageContent = {
@@ -236,8 +286,26 @@ export async function llmVisionObject<T extends z.ZodType>(
     image: `data:${resolvedMime};base64,${rawBase64}`,
   };
 
-  return runWithFallback(
-    () =>
+  const groqCall: LlmExecution<z.infer<T>> = {
+    name: "Groq",
+    fn: () =>
+      generateObject({
+        model: getGroqClient()(options?.model ?? GROQ_MODEL),
+        messages: [
+          {
+            role: "user",
+            content: [{ type: "text", text: prompt }, imageContent],
+          },
+        ],
+        schema,
+        system,
+        temperature,
+      }).then((r) => r.object),
+  };
+
+  const geminiCall: LlmExecution<z.infer<T>> = {
+    name: "Gemini",
+    fn: () =>
       generateObject({
         model: getGoogleClient()(options?.model ?? getGeminiModel()),
         messages: [
@@ -250,20 +318,11 @@ export async function llmVisionObject<T extends z.ZodType>(
         system,
         temperature,
       }).then((r) => r.object),
-    () =>
-      generateObject({
-        model: getGroqClient()(GROQ_MODEL),
-        messages: [
-          {
-            role: "user",
-            content: [{ type: "text", text: prompt }, imageContent],
-          },
-        ],
-        schema,
-        system,
-        temperature,
-      }).then((r) => r.object),
-  );
+  };
+
+  return provider === "groq"
+    ? runWithFallback(groqCall, geminiCall)
+    : runWithFallback(geminiCall, groqCall);
 }
 
 function parseImageData(imageData: string, mimeType: string) {

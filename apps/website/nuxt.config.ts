@@ -73,8 +73,10 @@ export default defineNuxtConfig({
     geminiModel:
       process.env.NUXT_GEMINI_MODEL ||
       process.env.GEMINI_MODEL ||
-      "gemini-3.6-flash",
+      "gemini-2.5-flash",
     groqApiKey: process.env.NUXT_GROQ_API_KEY || process.env.GROQ_API_KEY,
+    llmProvider:
+      process.env.NUXT_LLM_PROVIDER || process.env.LLM_PROVIDER || "groq",
     onesignalAppId: process.env.NUXT_ONESIGNAL_APP_ID,
     onesignalRestApiKey: process.env.NUXT_ONESIGNAL_REST_API_KEY,
     discordWebhookDiscoveryUrl:
