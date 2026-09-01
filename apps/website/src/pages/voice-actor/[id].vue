@@ -6,6 +6,7 @@
       v-else-if="voiceActor"
       :name="voiceActor.firstname + ' ' + voiceActor.lastname"
       :profile-url="profilePicture"
+      :backdrop-url="backdropPath"
       :loading="false"
     >
       <template #metadata>
@@ -726,6 +727,7 @@ const voiceActorData = useVoiceActorData(data);
 const {
   voiceActor,
   profilePicture,
+  backdropPath,
   loading,
   searchQuery,
   filteredEnhancedWork,
@@ -768,6 +770,7 @@ watch(
       voiceActorData.characterProfilePictures.value =
         newData.characterProfilePictures;
       voiceActorData.profilePicture.value = newData.profilePicture;
+      voiceActorData.backdropPath.value = newData.backdropPath;
       voiceActorData.potentialWikipediaUrl.value =
         newData.potentialWikipediaUrl;
       voiceActorData.loading.value = false;

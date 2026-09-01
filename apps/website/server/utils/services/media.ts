@@ -480,6 +480,7 @@ export class MediaService {
         title: fullMedia.title || fullMedia.name || "Unknown",
         name: fullMedia.name || fullMedia.title || "Unknown",
         poster_path: fullMedia.poster_path || null,
+        backdrop_path: fullMedia.backdrop_path || null,
         release_date: fullMedia.release_date,
         first_air_date: fullMedia.first_air_date,
         media_type: contentType,
@@ -511,7 +512,39 @@ export class MediaService {
       });
     }
 
-    // 4. Fetch Wikipedia URL for voice actors without TMDB ID
+    // 4. Compute backdrop from most popular TMDB credit
+    let backdropPath: string | null = null;
+    try {
+      if (voiceActor.tmdb_id) {
+        const personData = await this.tmdbClient.get(
+          `person/${voiceActor.tmdb_id}`,
+          { append_to_response: "movie_credits,tv_credits" },
+          language,
+        );
+        const allCredits: { backdrop_path?: string; popularity?: number }[] = [
+          ...(personData.movie_credits?.cast || []),
+          ...(personData.tv_credits?.cast || []),
+        ];
+        allCredits.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+        const best = allCredits.find((c) => c.backdrop_path);
+        if (best)
+          backdropPath = buildTmdbImageUrl(best.backdrop_path, "original");
+      } else {
+        const sorted = [...enhancedWorks].sort(
+          (a, b) => (b.media.popularity || 0) - (a.media.popularity || 0),
+        );
+        const best = sorted.find(
+          (w) => (w.media as { backdrop_path?: string }).backdrop_path,
+        );
+        if (best)
+          backdropPath =
+            (best.media as { backdrop_path?: string }).backdrop_path || null;
+      }
+    } catch (e) {
+      console.error("Failed to compute voice actor backdrop:", e);
+    }
+
+    // 5. Fetch Wikipedia URL for voice actors without TMDB ID
     let potentialWikipediaUrl: string | null = null;
     if (!voiceActor.tmdb_id) {
       potentialWikipediaUrl = await fetchPotentialWikipediaUrl(
@@ -526,6 +559,7 @@ export class MediaService {
       medias: Array.from(compactMediasMap.values()),
       characterProfilePictures: [],
       potentialWikipediaUrl,
+      backdropPath,
     };
   }
 

@@ -17,6 +17,7 @@ export async function fetchVoiceActorData(
         voiceActorResponse.characterProfilePictures || [],
       potentialWikipediaUrl: voiceActorResponse.potentialWikipediaUrl || null,
       profilePicture: voiceActorResponse.voiceActor.profile_picture || null,
+      backdropPath: voiceActorResponse.backdropPath || null,
     };
   } catch (e) {
     console.error("fetchVoiceActorData error:", e);
@@ -122,6 +123,7 @@ export type VoiceActorDataPayload = {
   >;
   potentialWikipediaUrl: string | null;
   profilePicture?: string | null;
+  backdropPath?: string | null;
 };
 
 export function useVoiceActorData(
@@ -141,6 +143,7 @@ export function useVoiceActorData(
   const profilePicture = ref<string | null | undefined>(
     initial?.profilePicture,
   );
+  const backdropPath = ref<string | null | undefined>(initial?.backdropPath);
   const loading = ref<boolean>(!initial);
   const searchQuery = ref("");
   const potentialWikipediaUrl = ref<string | null>(
@@ -159,6 +162,7 @@ export function useVoiceActorData(
         characterProfilePictures.value = payload.characterProfilePictures;
         potentialWikipediaUrl.value = payload.potentialWikipediaUrl;
         profilePicture.value = payload.profilePicture;
+        backdropPath.value = payload.backdropPath;
         loading.value = false;
       }
     },
@@ -181,6 +185,7 @@ export function useVoiceActorData(
       characterProfilePictures.value = payload.characterProfilePictures;
       potentialWikipediaUrl.value = payload.potentialWikipediaUrl;
       profilePicture.value = payload.profilePicture;
+      backdropPath.value = payload.backdropPath;
     } catch (error) {
       console.error("Error fetching voice actor:", error);
       throw error;
@@ -314,6 +319,7 @@ export function useVoiceActorData(
     medias,
     characterProfilePictures,
     profilePicture,
+    backdropPath,
     loading,
     searchQuery,
     potentialWikipediaUrl,
