@@ -32,18 +32,24 @@
             v-for="project in dubbingProjects"
             :key="project.id"
             :to="{ query: { dub: project.id } }"
-            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-gray-200 dark:border-[#2a2a2a]"
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-gray-200 dark:border-[#2a2a2a] flex items-center gap-1.5"
             :class="
               activeDubId === project.id
                 ? 'bg-cyan-600 dark:bg-[#00E5FF] text-white dark:text-black border-cyan-600 dark:border-[#00E5FF]'
                 : 'bg-white dark:bg-[#1d1d1d] text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#2a2a2a]'
             "
           >
-            {{
-              $t("details.dubbing", {
-                lang: getDisplayLanguage(project.language),
-              })
-            }}
+            {{ getDisplayLanguage(project.language) }}
+            <span
+              class="text-xs px-1.5 py-0.5 rounded-full font-medium transition-colors"
+              :class="
+                activeDubId === project.id
+                  ? 'bg-cyan-500/20 text-cyan-700 dark:text-[#00E5FF]'
+                  : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 dark:text-gray-400'
+              "
+            >
+              {{ projectVoiceActorCount(project) }}
+            </span>
           </NuxtLink>
         </div>
         <div v-else class="text-sm text-gray-500 font-medium">
@@ -268,7 +274,19 @@ const { data, pending } = await useAsyncData(
 );
 
 const podcast = computed<Podcast | null>(() => data.value?.podcast || null);
-const dubbingProjects = computed(() => data.value?.dubbingProjects || []);
+const dubbingProjects = computed(() => {
+  return (data.value?.dubbingProjects || []).filter((p: any) =>
+    (p.works || []).some((w: any) => w.voice_actor),
+  );
+});
+
+function projectVoiceActorCount(project: any): number {
+  const ids = new Set<number>();
+  for (const w of project.works || []) {
+    if (w.voice_actor?.id) ids.add(w.voice_actor.id);
+  }
+  return ids.size;
+}
 
 const activeDubId = computed(() => {
   if (route.query.dub) {
