@@ -30,17 +30,22 @@ function getGroqModel(): string {
   );
 }
 
-function getGeminiModel(): string {
+function getGeminiModelChain(): string[] {
   const config = useRuntimeConfig();
   const globalEnv = (globalThis as any)?.__env__;
-  return (
-    (config.geminiModel as string) ||
-    globalEnv?.NUXT_GEMINI_MODEL ||
-    globalEnv?.GEMINI_MODEL ||
-    process.env.NUXT_GEMINI_MODEL ||
-    process.env.GEMINI_MODEL ||
-    "gemini-3.5-flash-lite"
-  );
+  const list =
+    (config.geminiModels as string) ||
+    globalEnv?.NUXT_GEMINI_MODELS ||
+    globalEnv?.GEMINI_MODELS ||
+    process.env.NUXT_GEMINI_MODELS ||
+    process.env.GEMINI_MODELS;
+  if (list) {
+    return list
+      .split(",")
+      .map((m: string) => m.trim())
+      .filter(Boolean);
+  }
+  return ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite"];
 }
 
 function getGoogleClient() {
@@ -97,40 +102,40 @@ interface LlmExecution<T> {
   fn: () => Promise<T>;
 }
 
-async function runWithFallback<T>(
-  primary: LlmExecution<T>,
-  fallback: LlmExecution<T>,
-): Promise<T> {
-  try {
-    return await primary.fn();
-  } catch (error) {
-    console.warn(
-      `[LLM] Primary LLM (${primary.name}) failed, falling back to ${fallback.name}...`,
-      error instanceof Error ? error.message : error,
-    );
+async function runWithFallbacks<T>(executions: LlmExecution<T>[]): Promise<T> {
+  const failures: { name: string; msg: string }[] = [];
+  for (const exec of executions) {
     try {
-      return await fallback.fn();
-    } catch (fallbackError) {
-      const primaryMsg = error instanceof Error ? error.message : String(error);
-      const fallbackMsg =
-        fallbackError instanceof Error
-          ? fallbackError.message
-          : String(fallbackError);
-      const isRateLimit =
-        isRateLimitError(fallbackError) || isRateLimitError(error);
-      const rateLimitPrefix = isRateLimit
-        ? "LLM API Rate Limited (429) - "
-        : "";
-      throw new Error(
-        `${rateLimitPrefix}Primary (${primary.name}): ${primaryMsg} | Fallback (${fallback.name}): ${fallbackMsg}`,
-      );
+      return await exec.fn();
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.warn(`[LLM] ${exec.name} failed: ${msg}`);
+      failures.push({ name: exec.name, msg });
     }
   }
+  const isRateLimit = failures.some(({ msg }) =>
+    isRateLimitError({ message: msg } as Error),
+  );
+  const prefix = isRateLimit
+    ? "LLM API Rate Limited (429) - "
+    : "All LLM fallbacks failed - ";
+  const detail = failures
+    .map(({ name, msg }) => `* ${name}: ${msg}`)
+    .join(" | ");
+  throw new Error(`${prefix}${detail}`);
+}
+
+function buildGeminiCalls<T>(
+  models: string[],
+  build: (model: string) => LlmExecution<T>,
+): LlmExecution<T>[] {
+  return models.map(build);
 }
 
 /**
  * Send a text prompt to an LLM and return the raw text response.
- * Uses Gemini (gemini-3.5-flash-lite) by default, falls back to Groq (groq/compound).
+ * Tries all Gemini free-tier models in order (3.5-flash-lite → 2.5-flash → 2.0-flash → 1.5-flash),
+ * then falls back to Groq. Configure via GEMINI_MODELS env var (comma-separated).
  */
 export async function llmGenerate(
   prompt: string,
@@ -143,37 +148,45 @@ export async function llmGenerate(
   const system = options?.systemInstruction;
   const temperature = options?.temperature;
   const provider = getLlmProvider();
+  const groqModel = getGroqModel();
 
-  const groqCall: LlmExecution<string> = {
-    name: `Groq (${options?.model ?? getGroqModel()})`,
+  const geminiModels = options?.model ? [options.model] : getGeminiModelChain();
+  const groqExec: LlmExecution<string> = {
+    name: `Groq (${groqModel})`,
     fn: () =>
       generateText({
-        model: getGroqClient()(options?.model ?? getGroqModel()),
+        model: getGroqClient()(groqModel),
         prompt,
         system,
         temperature,
       }).then((r) => r.text),
   };
 
-  const geminiCall: LlmExecution<string> = {
-    name: `Gemini (${options?.model ?? getGeminiModel()})`,
-    fn: () =>
-      generateText({
-        model: getGoogleClient()(options?.model ?? getGeminiModel()),
-        prompt,
-        system,
-        temperature,
-      }).then((r) => r.text),
-  };
+  const geminiExecs: LlmExecution<string>[] = buildGeminiCalls(
+    geminiModels,
+    (model) => ({
+      name: `Gemini (${model})`,
+      fn: () =>
+        generateText({
+          model: getGoogleClient()(model),
+          prompt,
+          system,
+          temperature,
+        }).then((r) => r.text),
+    }),
+  );
 
-  return provider === "groq"
-    ? runWithFallback(groqCall, geminiCall)
-    : runWithFallback(geminiCall, groqCall);
+  const chain: LlmExecution<string>[] =
+    provider === "groq"
+      ? [groqExec, ...geminiExecs]
+      : [...geminiExecs, groqExec];
+
+  return runWithFallbacks(chain);
 }
 
 /**
  * Send a text prompt to an LLM and return a typed JSON object validated by a Zod schema.
- * Uses Gemini (gemini-3.5-flash-lite) by default, falls back to Groq (groq/compound).
+ * Tries all Gemini free-tier models in order, then falls back to Groq.
  */
 export async function llmGenerateObject<T extends z.ZodType>(
   prompt: string,
@@ -187,12 +200,14 @@ export async function llmGenerateObject<T extends z.ZodType>(
   const system = options?.systemInstruction;
   const temperature = options?.temperature;
   const provider = getLlmProvider();
+  const groqModel = getGroqModel();
 
-  const groqCall: LlmExecution<z.infer<T>> = {
-    name: `Groq (${options?.model ?? getGroqModel()})`,
+  const geminiModels = options?.model ? [options.model] : getGeminiModelChain();
+  const groqExec: LlmExecution<z.infer<T>> = {
+    name: `Groq (${groqModel})`,
     fn: () =>
       generateObject({
-        model: getGroqClient()(options?.model ?? getGroqModel()),
+        model: getGroqClient()(groqModel),
         prompt,
         schema,
         system,
@@ -200,21 +215,27 @@ export async function llmGenerateObject<T extends z.ZodType>(
       }).then((r) => r.object),
   };
 
-  const geminiCall: LlmExecution<z.infer<T>> = {
-    name: `Gemini (${options?.model ?? getGeminiModel()})`,
-    fn: () =>
-      generateObject({
-        model: getGoogleClient()(options?.model ?? getGeminiModel()),
-        prompt,
-        schema,
-        system,
-        temperature,
-      }).then((r) => r.object),
-  };
+  const geminiExecs: LlmExecution<z.infer<T>>[] = buildGeminiCalls(
+    geminiModels,
+    (model) => ({
+      name: `Gemini (${model})`,
+      fn: () =>
+        generateObject({
+          model: getGoogleClient()(model),
+          prompt,
+          schema,
+          system,
+          temperature,
+        }).then((r) => r.object),
+    }),
+  );
 
-  return provider === "groq"
-    ? runWithFallback(groqCall, geminiCall)
-    : runWithFallback(geminiCall, groqCall);
+  const chain: LlmExecution<z.infer<T>>[] =
+    provider === "groq"
+      ? [groqExec, ...geminiExecs]
+      : [...geminiExecs, groqExec];
+
+  return runWithFallbacks(chain);
 }
 
 /**
@@ -235,6 +256,7 @@ export async function llmVision(
   const system = options?.systemInstruction;
   const temperature = options?.temperature;
   const provider = getLlmProvider();
+  const groqModel = getGroqModel();
   const { rawBase64, resolvedMime } = parseImageData(imageData, mimeType);
 
   const imageContent = {
@@ -242,11 +264,12 @@ export async function llmVision(
     image: `data:${resolvedMime};base64,${rawBase64}`,
   };
 
-  const groqCall: LlmExecution<string> = {
-    name: `Groq (${options?.model ?? getGroqModel()})`,
+  const geminiModels = options?.model ? [options.model] : getGeminiModelChain();
+  const groqExec: LlmExecution<string> = {
+    name: `Groq (${groqModel})`,
     fn: () =>
       generateText({
-        model: getGroqClient()(options?.model ?? getGroqModel()),
+        model: getGroqClient()(groqModel),
         messages: [
           {
             role: "user",
@@ -258,25 +281,31 @@ export async function llmVision(
       }).then((r) => r.text),
   };
 
-  const geminiCall: LlmExecution<string> = {
-    name: `Gemini (${options?.model ?? getGeminiModel()})`,
-    fn: () =>
-      generateText({
-        model: getGoogleClient()(options?.model ?? getGeminiModel()),
-        messages: [
-          {
-            role: "user",
-            content: [{ type: "text", text: prompt }, imageContent],
-          },
-        ],
-        system,
-        temperature,
-      }).then((r) => r.text),
-  };
+  const geminiExecs: LlmExecution<string>[] = buildGeminiCalls(
+    geminiModels,
+    (model) => ({
+      name: `Gemini (${model})`,
+      fn: () =>
+        generateText({
+          model: getGoogleClient()(model),
+          messages: [
+            {
+              role: "user",
+              content: [{ type: "text", text: prompt }, imageContent],
+            },
+          ],
+          system,
+          temperature,
+        }).then((r) => r.text),
+    }),
+  );
 
-  return provider === "groq"
-    ? runWithFallback(groqCall, geminiCall)
-    : runWithFallback(geminiCall, groqCall);
+  const chain: LlmExecution<string>[] =
+    provider === "groq"
+      ? [groqExec, ...geminiExecs]
+      : [...geminiExecs, groqExec];
+
+  return runWithFallbacks(chain);
 }
 
 /**
@@ -297,6 +326,7 @@ export async function llmVisionObject<T extends z.ZodType>(
   const system = options?.systemInstruction;
   const temperature = options?.temperature;
   const provider = getLlmProvider();
+  const groqModel = getGroqModel();
   const { rawBase64, resolvedMime } = parseImageData(imageData, mimeType);
 
   const imageContent = {
@@ -304,11 +334,12 @@ export async function llmVisionObject<T extends z.ZodType>(
     image: `data:${resolvedMime};base64,${rawBase64}`,
   };
 
-  const groqCall: LlmExecution<z.infer<T>> = {
-    name: `Groq (${options?.model ?? getGroqModel()})`,
+  const geminiModels = options?.model ? [options.model] : getGeminiModelChain();
+  const groqExec: LlmExecution<z.infer<T>> = {
+    name: `Groq (${groqModel})`,
     fn: () =>
       generateObject({
-        model: getGroqClient()(options?.model ?? getGroqModel()),
+        model: getGroqClient()(groqModel),
         messages: [
           {
             role: "user",
@@ -321,26 +352,32 @@ export async function llmVisionObject<T extends z.ZodType>(
       }).then((r) => r.object),
   };
 
-  const geminiCall: LlmExecution<z.infer<T>> = {
-    name: `Gemini (${options?.model ?? getGeminiModel()})`,
-    fn: () =>
-      generateObject({
-        model: getGoogleClient()(options?.model ?? getGeminiModel()),
-        messages: [
-          {
-            role: "user",
-            content: [{ type: "text", text: prompt }, imageContent],
-          },
-        ],
-        schema,
-        system,
-        temperature,
-      }).then((r) => r.object),
-  };
+  const geminiExecs: LlmExecution<z.infer<T>>[] = buildGeminiCalls(
+    geminiModels,
+    (model) => ({
+      name: `Gemini (${model})`,
+      fn: () =>
+        generateObject({
+          model: getGoogleClient()(model),
+          messages: [
+            {
+              role: "user",
+              content: [{ type: "text", text: prompt }, imageContent],
+            },
+          ],
+          schema,
+          system,
+          temperature,
+        }).then((r) => r.object),
+    }),
+  );
 
-  return provider === "groq"
-    ? runWithFallback(groqCall, geminiCall)
-    : runWithFallback(geminiCall, groqCall);
+  const chain: LlmExecution<z.infer<T>>[] =
+    provider === "groq"
+      ? [groqExec, ...geminiExecs]
+      : [...geminiExecs, groqExec];
+
+  return runWithFallbacks(chain);
 }
 
 function parseImageData(imageData: string, mimeType: string) {

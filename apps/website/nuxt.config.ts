@@ -74,6 +74,8 @@ export default defineNuxtConfig({
       process.env.NUXT_GEMINI_MODEL ||
       process.env.GEMINI_MODEL ||
       "gemini-3.5-flash-lite",
+    geminiModels:
+      process.env.NUXT_GEMINI_MODELS || process.env.GEMINI_MODELS || undefined,
     groqApiKey: process.env.NUXT_GROQ_API_KEY || process.env.GROQ_API_KEY,
     groqModel:
       process.env.NUXT_GROQ_MODEL || process.env.GROQ_MODEL || "groq/compound",
