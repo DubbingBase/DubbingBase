@@ -179,8 +179,9 @@
     "movies": "Movies",
     "series": "Series",
     "episodes": "Episodes",
-    "fetchWikipedia": "Fetch from Wikipedia",
-    "wikipediaUrl": "Wikipedia URL"
+  "fetchWikipedia": "Fetch from Wikipedia",
+  "wikipediaUrl": "Wikipedia URL",
+  "enterWikipediaUrlDesc": "Enter a Wikipedia URL to fetch the voice actor's biography, name, and profile picture. You can also manually fill the details below."
   },
   "actor": {
     "title": "Actor",
@@ -258,7 +259,10 @@
     "noDubbingProjects": "No dubbing projects found",
     "dubbingStudio": "Dubbing Studio",
     "backToSeason": "Back to Season",
-    "noCast": "No cast information available"
+    "noCast": "No cast information available",
+    "notFound": "Not found",
+    "backToShow": "Back to Show",
+    "notFoundDesc": "Unable to load information for this season."
   },
   "search": {
     "actor": "Actor",

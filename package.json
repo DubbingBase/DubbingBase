@@ -12,6 +12,7 @@
     "typecheck": "turbo run typecheck",
     "test:e2e": "playwright test",
     "discover:media": "npx --yes tsx --env-file=.env.development scripts/discover-media.ts",
+    "i18n:check": "node scripts/check-i18n.js",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -26,6 +27,7 @@
     "oxlint": "^1.76.0",
     "prettier": "^3.9.6",
     "turbo": "^2.10.7",
+    "vue-i18n-extract": "^2.0.7",
     "wrangler": "^4.115.0"
   },
   "packageManager": "pnpm@9.14.2",

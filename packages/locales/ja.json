@@ -180,7 +180,8 @@
     "series": "テレビ番組",
     "episodes": "エピソード",
     "fetchWikipedia": "Wikipediaから取得",
-    "wikipediaUrl": "Wikipedia URL"
+    "wikipediaUrl": "Wikipedia URL",
+    "enterWikipediaUrlDesc": "ボイスアクターの biography、名前、プロフィール写像を取得するためのWikipedia URLを入力してください。また、以下の詳細を手動で入力することもできます。"
   },
   "actor": {
     "title": "俳優",
@@ -258,7 +259,10 @@
     "noDubbingProjects": "吹き替えプロジェクトが見つかりません",
     "dubbingStudio": "吹き替えスタジオ",
     "backToSeason": "シーズンに戻る",
-    "noCast": "キャスト情報がありません"
+    "noCast": "キャスト情報がありません",
+    "notFound": "見つかりません",
+    "backToShow": "ショーに戻る",
+    "notFoundDesc": "このシーズンの情報を読み込めませんでした。"
   },
   "search": {
     "actor": "俳優",

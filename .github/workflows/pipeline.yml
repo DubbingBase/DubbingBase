@@ -42,6 +42,7 @@ jobs:
             website:
               - 'apps/website/**'
               - 'packages/shared-logic/**'
+              - 'packages/locales/**'
               - 'pnpm-lock.yaml'
 
   # Job 2: Deploy Supabase (runs first if database needs updating)
@@ -158,15 +159,41 @@ jobs:
       - name: Run Vitest tests
         run: pnpm --filter=@app/website run test --run
 
+  # Job 3.6: i18n Translation Check
+  i18n-check:
+    needs: [detect]
+    if: needs.detect.outputs.website == 'true' || needs.detect.outputs.mobile == 'true'
+    continue-on-error: false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Check i18n keys
+        run: pnpm i18n:check
+
   # Job 4: Deploy Mobile App as Website
   deploy-mobile-web:
-    needs: [detect, deploy-supabase, e2e-tests, frontend-tests]
+    needs: [detect, deploy-supabase, e2e-tests, frontend-tests, i18n-check]
     # Run if mobile has changes, and if database job succeeded (or wasn't needed)
     if: |
       always() && 
       needs.detect.outputs.mobile == 'true' && 
       (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped') &&
       (needs.frontend-tests.result == 'success' || needs.frontend-tests.result == 'skipped') &&
+      (needs.i18n-check.result == 'success' || needs.i18n-check.result == 'skipped') &&
       (needs.deploy-supabase.result == 'success' || needs.deploy-supabase.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
@@ -210,13 +237,14 @@ jobs:
 
   # Job 5: Build Android app (runs on any branch if mobile has changes)
   build-android:
-    needs: [detect, deploy-supabase, e2e-tests, frontend-tests]
+    needs: [detect, deploy-supabase, e2e-tests, frontend-tests, i18n-check]
     # Run if mobile has changes, and if database job succeeded (or wasn't needed)
     if: |
       always() &&
       needs.detect.outputs.mobile == 'true' &&
       (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped') &&
       (needs.frontend-tests.result == 'success' || needs.frontend-tests.result == 'skipped') &&
+      (needs.i18n-check.result == 'success' || needs.i18n-check.result == 'skipped') &&
       (needs.deploy-supabase.result == 'success' || needs.deploy-supabase.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
@@ -331,13 +359,14 @@ jobs:
 
   # Job 7: Build website (validates build on non-main branches)
   build-website:
-    needs: [detect, deploy-supabase, e2e-tests, frontend-tests]
+    needs: [detect, deploy-supabase, e2e-tests, frontend-tests, i18n-check]
     if: |
       always() && 
       github.ref != 'refs/heads/main' &&
       needs.detect.outputs.website == 'true' && 
       (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped') &&
       (needs.frontend-tests.result == 'success' || needs.frontend-tests.result == 'skipped') &&
+      (needs.i18n-check.result == 'success' || needs.i18n-check.result == 'skipped') &&
       (needs.deploy-supabase.result == 'success' || needs.deploy-supabase.result == 'skipped')
     runs-on: ubuntu-latest
     steps:

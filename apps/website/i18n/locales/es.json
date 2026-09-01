@@ -123,7 +123,8 @@
     "movieKeywords": "{title}, película, doblaje, actores de doblaje, reparto",
     "actorDescription": "Descubre la filmografía y los actores de doblaje de {name}.",
     "actorDescriptionFallback": "Descubre la filmografía y los actores de doblaje.",
-    "actorKeywords": "{name}, actor, filmografía, películas, series"
+    "actorKeywords": "{name}, actor, filmografía, películas, series",
+    "voiceActorDescriptionFallback": "Perfil de actor de doblaje."
   },
   "profile": {
     "userProfile": "Mi perfil de usuario",
@@ -221,7 +222,8 @@
     "allRoles": "Todos los roles",
     "dubbedOnly": "Solo doblados",
     "noDubbedRoles": "No hay roles doblados disponibles",
-    "searchPlaceholder": "Buscar actores..."
+    "searchPlaceholder": "Buscar actores...",
+    "works": "Obras"
   },
   "media": {
     "title": "Título",
@@ -279,7 +281,15 @@
     "as": "como",
     "noDubbingProjects": "No se encontraron proyectos de doblaje",
     "dubbingStudio": "Estudio de doblaje",
-    "seasons": "Temporadas"
+    "seasons": "Temporadas",
+    "episodes": "Episodios",
+    "season": "Temporada {num}",
+    "episode": "Episodio {num}",
+    "backToSeason": "Volver a la temporada",
+    "noCast": "No hay información del reparto",
+    "notFound": "No encontrado",
+    "backToShow": "Volver a la serie",
+    "notFoundDesc": "No se pudo cargar la información de esta temporada."
   },
   "search": {
     "actor": "Actor",
@@ -296,7 +306,8 @@
     "advertisement": "Publicidades",
     "toy": "Juguetes",
     "title": "Búsqueda",
-    "description": "Buscar películas, series, actores de doblaje y más"
+    "description": "Buscar películas, series, actores de doblaje y más",
+    "typeMore": "Escriba al menos 2 caracteres..."
   },
   "auth": {
     "loginRequiredForSubscription": "Debe iniciar sesión para suscribirse"
@@ -434,6 +445,10 @@
       "episode": "Episodio",
       "viewOnTmdb": "Ver en TMDB",
       "viewOnWikipedia": "Ver en Wikipedia FR (redirección a través de Wikidata)",
+      "appLink": "Enlace de la app",
+      "openInApp": "Abrir en la app",
+      "active": "Activo",
+      "archived": "Archivado",
       "reEnqueueItem": "Volver a poner en cola",
       "deleteItem": "Eliminar elemento",
       "confirmReEnqueue": "¿Está seguro de que desea volver a poner este elemento en la cola? Esto lo agregará nuevamente a la cola activa y eliminará el registro archivado.",
@@ -494,38 +509,45 @@
       "failedToSave": "Error al guardar el estudio"
     }
   },
-  "contribute": {
-    "title": "Contribuir",
-    "description": "Ayúdenos a mejorar DubbingBase contribuyendo a la base de datos",
-    "bronzeContributor": "Contribuidor de bronce",
-    "currentScore": "Puntuación actual",
-    "progressToSilver": "Progreso hacia plata",
-    "readyToHelp": "¿Listo para ayudar?",
-    "readyToHelpDescription": "Comience a contribuir para ganar puntos y desbloquear logros",
-    "startContributing": "Comenzar a contribuir",
-    "noRecentActivities": "No hay actividades recientes"
+  "audiobook": {
+    "title": "Audiolibro",
+    "author": "Autor",
+    "narrator": "Narrador",
+    "narrators": "Narradores",
+    "isbn": "ISBN",
+    "publishYear": "Año de publicación",
+    "description": "Descripción",
+    "audiobookInfo": "Información del audiolibro",
+    "openLibraryLinked": "Vinculado a OpenLibrary",
+    "openLibrary": "OpenLibrary",
+    "editProject": "Editar proyecto de audiolibro",
+    "createProject": "Crear proyecto de audiolibro"
   },
-  "dubbing": {
-    "cast": "Reparto",
-    "technicalTeam": "Equipo técnico"
+  "podcast": {
+    "title": "Podcast y Ficción Sonora",
+    "author": "Creador / Autor",
+    "episodes": "Episodios",
+    "feedUrl": "Feed RSS",
+    "description": "Descripción",
+    "editProject": "Editar proyecto de podcast",
+    "createProject": "Crear proyecto de podcast"
   },
-  "movie": {
-    "addDubbingProject": "Agregar proyecto de doblaje"
+  "advertisement": {
+    "title": "Publicidad y Spot",
+    "brand": "Marca / Anunciante",
+    "agency": "Agencia",
+    "year": "Año",
+    "description": "Descripción",
+    "editProject": "Editar spot publicitario",
+    "createProject": "Crear spot publicitario"
   },
-  "report": {
-    "title": "Reportar",
-    "description": "Reportar un problema con este contenido",
-    "button": "Reportar",
-    "reason": "Razón",
-    "selectReason": "Seleccione una razón",
-    "reasons": {
-      "copyright": "Infracción de derechos de autor",
-      "inappropriate": "Contenido inapropiado",
-      "error": "Información incorrecta",
-      "other": "Otro"
-    },
-    "details": "Detalles",
-    "detailsPlaceholder": "Proporcione detalles adicionales sobre el problema...",
-    "successMessage": "Reporte enviado exitosamente"
+  "toy": {
+    "title": "Juguete Conectado y Cuentacuentos",
+    "manufacturer": "Fabricante",
+    "productLine": "Gama / Dispositivo",
+    "releaseYear": "Año de lanzamiento",
+    "description": "Descripción",
+    "editProject": "Editar proyecto de juguete conectado",
+    "createProject": "Crear proyecto de juguete conectado"
   }
 }

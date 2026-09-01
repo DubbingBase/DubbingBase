@@ -8,6 +8,7 @@
     "login": "Connexion",
     "admin": "Administration"
   },
+  "newVoiceActorsAdded": "nouveau comédien ajouté | nouveaux comédiens ajoutés",
   "navigation": {
     "home": "Accueil",
     "search": "Recherche",
@@ -179,7 +180,8 @@
     "series": "Séries",
     "episodes": "Épisodes",
     "fetchWikipedia": "Récupérer depuis Wikipedia",
-    "wikipediaUrl": "URL Wikipedia"
+    "wikipediaUrl": "URL Wikipedia",
+    "enterWikipediaUrlDesc": "Saisissez une URL Wikipédia pour récupérer la biographie, le nom et la photo du comédien. Vous pouvez également remplir manuellement les détails ci-dessous."
   },
   "actor": {
     "title": "Acteur",
@@ -257,7 +259,10 @@
     "noDubbingProjects": "Aucun projet de doublage trouvé",
     "dubbingStudio": "Studio de doublage",
     "backToSeason": "Retour à la saison",
-    "noCast": "Aucune information sur le casting"
+    "noCast": "Aucune information sur le casting",
+    "notFound": "Introuvable",
+    "backToShow": "Retour à la série",
+    "notFoundDesc": "Impossible de charger les informations de cette saison."
   },
   "search": {
     "actor": "Acteur",

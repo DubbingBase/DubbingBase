@@ -78,7 +78,7 @@
                       <div class="season-title">{{ season.name }}</div>
                       <div class="season-subtitle">
                         {{ season.formatted_air_date }} &sdot;
-                        {{ season.episode_count }} épisodes
+                        {{ season.episode_count }} {{ season.episode_count === 1 ? $t("details.episode") : $t("details.episodes") }}
                       </div>
                     </div>
                   </div>
