@@ -11,13 +11,13 @@
       <li><strong>{{ $t('legal.legal.legalFormLabel') }}</strong>{{ $t('legal.legal.legalForm') }}</li>
       <li><strong>{{ $t('legal.legal.siretLabel') }}</strong>{{ $t('legal.legal.siret') }}</li>
       <li><strong>{{ $t('legal.legal.registeredAddress') }}</strong>{{ $t('legal.legal.registeredAddressBody') }}</li>
-      <li><strong>{{ $t('legal.legal.email') }}</strong> <a href="mailto:contact@dubbingbase.com" class="text-cyan-600 dark:text-cyan-400 hover:underline">{{ $t('legal.contactEmail') }}</a></li>
+      <li><strong>{{ $t('legal.legal.email') }}</strong> <a href="mailto:contact@dubbingbase.com" class="text-cyan-600 dark:text-cyan-400 hover:underline">contact@dubbingbase.com</a></li>
     </ul>
 
     <h2 class="text-2xl font-bold mt-8 mb-4 text-gray-900 dark:text-white">{{ $t('legal.legal.section2') }}</h2>
     <ul class="list-none space-y-2 mb-6">
       <li><strong>{{ $t('legal.legal.name') }}</strong>{{ $t('legal.legal.publisherName') }}</li>
-      <li><strong>{{ $t('legal.legal.contact') }}</strong> <a href="mailto:contact@dubbingbase.com" class="text-cyan-600 dark:text-cyan-400 hover:underline">{{ $t('legal.contactEmail') }}</a></li>
+      <li><strong>{{ $t('legal.legal.contact') }}</strong> <a href="mailto:contact@dubbingbase.com" class="text-cyan-600 dark:text-cyan-400 hover:underline">contact@dubbingbase.com</a></li>
     </ul>
 
     <h2 class="text-2xl font-bold mt-8 mb-4 text-gray-900 dark:text-white">{{ $t('legal.legal.section3') }}</h2>

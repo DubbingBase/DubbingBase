@@ -6,7 +6,7 @@
     <p class="mb-6">{{ $t('legal.privacy.intro') }}</p>
 
     <h2 class="text-2xl font-bold mt-8 mb-4 text-gray-900 dark:text-white">{{ $t('legal.privacy.dataController') }}</h2>
-    <p class="mb-6">{{ $t('legal.privacy.dataControllerBody') }}<a href="mailto:contact@dubbingbase.com" class="text-cyan-600 dark:text-cyan-400 hover:underline">{{ $t('legal.contactEmail') }}</a>.
+    <p class="mb-6">{{ $t('legal.privacy.dataControllerBody') }}<a href="mailto:contact@dubbingbase.com" class="text-cyan-600 dark:text-cyan-400 hover:underline">contact@dubbingbase.com</a>.
     </p>
 
     <h2 class="text-2xl font-bold mt-8 mb-4 text-gray-900 dark:text-white">{{ $t('legal.privacy.technicalData') }}</h2>
@@ -38,7 +38,7 @@
       <li><strong>{{ $t('legal.privacy.rightToErasure') }}</strong>{{ $t('legal.privacy.rightToErasureBody') }}</li>
       <li><strong>{{ $t('legal.privacy.rightToPortability') }}</strong>{{ $t('legal.privacy.rightToPortabilityBody') }}</li>
     </ul>
-    <p class="mb-12">{{ $t('legal.privacy.exerciseRights') }}<a href="mailto:contact@dubbingbase.com" class="text-cyan-600 dark:text-cyan-400 font-medium hover:underline">{{ $t('legal.contactEmail') }}</a>{{ $t('legal.privacy.responseOneMonth') }}</p>
+    <p class="mb-12">{{ $t('legal.privacy.exerciseRights') }}<a href="mailto:contact@dubbingbase.com" class="text-cyan-600 dark:text-cyan-400 font-medium hover:underline">contact@dubbingbase.com</a>{{ $t('legal.privacy.responseOneMonth') }}</p>
     <h2 class="text-2xl font-bold mt-8 mb-4 text-gray-900 dark:text-white">{{ $t('legal.privacy.cookies') }}</h2>
     <p class="mb-4">{{ $t('legal.privacy.weUse') }}<strong>{{ $t('legal.privacy.posthogName') }}</strong>{{ $t('legal.privacy.posthogPurpose') }}</p>
     <ul class="list-disc pl-6 mb-12 space-y-2">
