@@ -97,12 +97,13 @@ Instagram constraints:
     const emailHtml = `
     <h1>Validation requise : Posts réseaux sociaux</h1>
     <h2>Twitter</h2>
-    <p>${generatedTexts.twitter_post}</p>
+    <p>${generatedTexts.data.twitter_post}</p>
     <br />
     <h2>Instagram</h2>
-    <p>${generatedTexts.instagram_post}</p>
+    <p>${generatedTexts.data.instagram_post}</p>
     <br />
     <p>Image suggérée (chemin) : ${imageContextUrl || "Aucune image spécifique trouvée"}</p>
+    <p>Modèle LLM : ${generatedTexts.model}</p>
     `;
 
     const resendResponse = await fetch("https://api.resend.com/emails", {

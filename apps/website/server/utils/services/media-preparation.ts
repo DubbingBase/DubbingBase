@@ -79,6 +79,8 @@ export interface ExtractCreditsResult {
   creditsAdded: number;
   title?: string;
   imageUrl?: string;
+  llmModel?: string;
+  note?: string;
   error?: string;
 }
 
@@ -88,6 +90,8 @@ export interface PrepareMediaResult {
   creditsAdded?: number;
   title?: string;
   imageUrl?: string;
+  llmModel?: string;
+  note?: string;
   languages?: string[];
   wikipediaUrl?: string;
   error?: string;
@@ -99,6 +103,7 @@ export interface PrepareGameResult {
   creditsAdded?: number;
   title?: string;
   imageUrl?: string;
+  llmModel?: string;
   note?: string;
   languages?: string[];
   wikipediaUrl?: string;
@@ -380,6 +385,7 @@ export async function extractMediaDubbingCredits(options: {
     let totalNewVoiceActors = 0;
     let totalNewCredits = 0;
 
+    let llmModel: string | undefined;
     for (const sectionIndex of sectionIndexes) {
       const wikitextJSON = await wikipediaCache.getPageSectionAsWikitext(
         pageId,
@@ -389,7 +395,7 @@ export async function extractMediaDubbingCredits(options: {
       const wikitext = wikitextJSON.parse?.wikitext;
       if (!wikitext) continue;
 
-      const llmSuggestionJSON = await llmGenerateObject(
+      const llmResult = await llmGenerateObject(
         wikitext,
         dubbingExtractionSchema,
         {
@@ -405,8 +411,9 @@ If no dubbing or voice-actor data exists in the section, return { items: [] }.`,
           temperature: 0,
         },
       );
+      llmModel = llmResult.model;
 
-      for (const entry of llmSuggestionJSON?.items ?? []) {
+      for (const entry of llmResult.data?.items ?? []) {
         let { actor, voiceActorFirstname, voiceActorName } = entry;
 
         if (actor && voiceActorFirstname && voiceActorName) {
@@ -465,6 +472,12 @@ If no dubbing or voice-actor data exists in the section, return { items: [] }.`,
           totalNewCredits++;
         }
       }
+
+      if (llmResult.data?.items?.length === 0) {
+        console.log(
+          `[${llmResult.model}] No dubbing entries found in section ${sectionIndex} for "${mediaTitle}"`,
+        );
+      }
     }
 
     return {
@@ -473,6 +486,11 @@ If no dubbing or voice-actor data exists in the section, return { items: [] }.`,
       creditsAdded: totalNewCredits,
       title: mediaTitle,
       imageUrl,
+      llmModel,
+      note:
+        totalNewCredits === 0
+          ? `No dubbing entries matched (LLM: ${llmModel || "unknown"}). Check if Wikipedia has dubbing tables for ${language}.`
+          : undefined,
     };
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
@@ -522,6 +540,7 @@ export async function extractGameDubbingCredits(options: {
     let totalNewVoiceActors = 0;
     let totalNewCredits = 0;
 
+    let llmModel: string | undefined;
     for (const sectionIndex of sectionIndexes) {
       const wikitextJSON = await wikipediaCache.getPageSectionAsWikitext(
         pageId,
@@ -531,7 +550,7 @@ export async function extractGameDubbingCredits(options: {
       const wikitext = wikitextJSON.parse?.wikitext;
       if (!wikitext) continue;
 
-      const llmSuggestionJSON = await llmGenerateObject(
+      const llmResult = await llmGenerateObject(
         wikitext,
         dubbingExtractionSchema,
         {
@@ -547,8 +566,9 @@ If no dubbing or voice-actor data exists in the section, return { items: [] }.`,
           temperature: 0,
         },
       );
+      llmModel = llmResult.model;
 
-      for (const entry of llmSuggestionJSON?.items ?? []) {
+      for (const entry of llmResult.data?.items ?? []) {
         let { actor, voiceActorFirstname, voiceActorName } = entry;
 
         if (!actor || !voiceActorFirstname || !voiceActorName) {
@@ -583,6 +603,12 @@ If no dubbing or voice-actor data exists in the section, return { items: [] }.`,
         }
         totalNewCredits++;
       }
+
+      if (llmResult.data?.items?.length === 0) {
+        console.log(
+          `[${llmResult.model}] No dubbing entries found in section ${sectionIndex} for "${gameTitle}"`,
+        );
+      }
     }
 
     return {
@@ -591,6 +617,11 @@ If no dubbing or voice-actor data exists in the section, return { items: [] }.`,
       creditsAdded: totalNewCredits,
       title: gameTitle,
       imageUrl,
+      llmModel,
+      note:
+        totalNewCredits === 0
+          ? `No dubbing entries matched (LLM: ${llmModel || "unknown"}). Check if Wikipedia has dubbing tables for ${language}.`
+          : undefined,
     };
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
@@ -658,6 +689,8 @@ export async function prepareMedia(options: {
     creditsAdded: extract.creditsAdded,
     title: extract.title || check.title,
     imageUrl: extract.imageUrl,
+    llmModel: extract.llmModel,
+    note: extract.note,
     wikipediaUrl: check.wikipediaUrl,
     languages: [language],
     error: extract.error,
@@ -696,6 +729,8 @@ export async function prepareGame(options: {
     creditsAdded: extract.creditsAdded,
     title: extract.title || check.title,
     imageUrl: extract.imageUrl,
+    llmModel: extract.llmModel,
+    note: extract.note,
     wikipediaUrl: check.wikipediaUrl,
     languages: [language],
     error: extract.error,

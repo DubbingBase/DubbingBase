@@ -522,7 +522,12 @@ async function triggerPrepareGame() {
   if (!isAdmin.value) return;
   isPreparing.value = true;
   try {
-    await $fetch('/api/prepare_game', { method: 'POST', body: { igdbId: Number(gameId) } });
+    const result = await $fetch('/api/prepare_game', { method: 'POST', body: { igdbId: Number(gameId) } });
+    if (result.ok) {
+      console.info(`[prepare_game] LLM: ${result.llmModel ?? "unknown"} | ${result.note ?? `${result.creditsAdded} credits added`}`);
+    } else {
+      console.error("prepare_game failed:", result.error);
+    }
     await refresh();
   } catch (err) {
     console.error("prepare_game failed:", err);

@@ -621,6 +621,8 @@ export default defineEventHandler(async (event) => {
           ok: true,
           changes: extractResult.changes,
           creditsAdded: extractResult.creditsAdded,
+          llmModel: extractResult.llmModel,
+          note: extractResult.note,
         });
 
         let targetUrl: string | undefined = undefined;
@@ -644,7 +646,7 @@ export default defineEventHandler(async (event) => {
             payload.season_number ? ` (Season ${payload.season_number})` : ""
           }${
             payload.episode_number ? ` (Episode ${payload.episode_number})` : ""
-          } [${lang.toUpperCase()}].\n• Added **${extractResult.creditsAdded ?? 0}** roles\n• Added **${extractResult.changes ?? 0}** new voice actors.`,
+          } [${lang.toUpperCase()}].\n• Added **${extractResult.creditsAdded ?? 0}** roles\n• Added **${extractResult.changes ?? 0}** new voice actors.\n• LLM model: **${extractResult.llmModel ?? "unknown"}**${extractResult.note ? `\n• Note: ${extractResult.note}` : ""}`,
           {
             event,
             queue: "wiki_extract",

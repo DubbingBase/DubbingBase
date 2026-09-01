@@ -102,11 +102,19 @@ interface LlmExecution<T> {
   fn: () => Promise<T>;
 }
 
-async function runWithFallbacks<T>(executions: LlmExecution<T>[]): Promise<T> {
+interface LlmResult<T> {
+  data: T;
+  model: string;
+}
+
+async function runWithFallbacks<T>(
+  executions: LlmExecution<T>[],
+): Promise<LlmResult<T>> {
   const failures: { name: string; msg: string }[] = [];
   for (const exec of executions) {
     try {
-      return await exec.fn();
+      const data = await exec.fn();
+      return { data, model: exec.name };
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       console.warn(`[LLM] ${exec.name} failed: ${msg}`);
@@ -144,7 +152,7 @@ export async function llmGenerate(
     systemInstruction?: string;
     temperature?: number;
   },
-): Promise<string> {
+): Promise<{ text: string; model: string }> {
   const system = options?.systemInstruction;
   const temperature = options?.temperature;
   const provider = getLlmProvider();
@@ -181,7 +189,8 @@ export async function llmGenerate(
       ? [groqExec, ...geminiExecs]
       : [...geminiExecs, groqExec];
 
-  return runWithFallbacks(chain);
+  const result = await runWithFallbacks(chain);
+  return { text: result.data, model: result.model };
 }
 
 /**
@@ -196,7 +205,7 @@ export async function llmGenerateObject<T extends z.ZodType>(
     systemInstruction?: string;
     temperature?: number;
   },
-): Promise<z.infer<T>> {
+): Promise<{ data: z.infer<T>; model: string }> {
   const system = options?.systemInstruction;
   const temperature = options?.temperature;
   const provider = getLlmProvider();
@@ -235,7 +244,8 @@ export async function llmGenerateObject<T extends z.ZodType>(
       ? [groqExec, ...geminiExecs]
       : [...geminiExecs, groqExec];
 
-  return runWithFallbacks(chain);
+  const result = await runWithFallbacks(chain);
+  return { data: result.data, model: result.model };
 }
 
 /**
@@ -252,7 +262,7 @@ export async function llmVision(
     systemInstruction?: string;
     temperature?: number;
   },
-): Promise<string> {
+): Promise<{ text: string; model: string }> {
   const system = options?.systemInstruction;
   const temperature = options?.temperature;
   const provider = getLlmProvider();
@@ -305,7 +315,8 @@ export async function llmVision(
       ? [groqExec, ...geminiExecs]
       : [...geminiExecs, groqExec];
 
-  return runWithFallbacks(chain);
+  const result = await runWithFallbacks(chain);
+  return { text: result.data, model: result.model };
 }
 
 /**
@@ -322,7 +333,7 @@ export async function llmVisionObject<T extends z.ZodType>(
     systemInstruction?: string;
     temperature?: number;
   },
-): Promise<z.infer<T>> {
+): Promise<{ data: z.infer<T>; model: string }> {
   const system = options?.systemInstruction;
   const temperature = options?.temperature;
   const provider = getLlmProvider();
@@ -377,7 +388,8 @@ export async function llmVisionObject<T extends z.ZodType>(
       ? [groqExec, ...geminiExecs]
       : [...geminiExecs, groqExec];
 
-  return runWithFallbacks(chain);
+  const result = await runWithFallbacks(chain);
+  return { data: result.data, model: result.model };
 }
 
 function parseImageData(imageData: string, mimeType: string) {

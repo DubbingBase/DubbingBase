@@ -76,7 +76,8 @@ export default defineEventHandler(async (event) => {
 
       return {
         ok: true,
-        result: parsed.extract,
+        result: parsed.data.extract,
+        llmModel: parsed.model,
       };
     }
 
@@ -96,7 +97,8 @@ export default defineEventHandler(async (event) => {
 
     return {
       ok: true,
-      result: parsed.extract,
+      result: parsed.data.extract,
+      llmModel: parsed.model,
     };
   } catch (error: any) {
     if (error && typeof error === "object" && "statusCode" in error)
