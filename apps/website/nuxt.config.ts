@@ -190,6 +190,7 @@ export default defineNuxtConfig({
   },
 
   i18n: {
+    langDir: "i18n/locales",
     locales: APP_LOCALES as any,
     defaultLocale: DEFAULT_LOCALE,
     strategy: "prefix_except_default",
