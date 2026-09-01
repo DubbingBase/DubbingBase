@@ -17,8 +17,7 @@
           {{ (game.rating / 10).toFixed(1) }}
         </span>
         <div class="flex gap-2 ml-2">
-          <a :href="`https://www.igdb.com/games/${game.slug}`" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg bg-white/40 dark:bg-black/40 text-gray-800 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-black/60 transition-colors backdrop-blur-md uppercase tracking-wider">
-            IGDB <ExternalLinkIcon class="w-3 h-3 opacity-70" />
+          <a :href="`https://www.igdb.com/games/${game.slug}`" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg bg-white/40 dark:bg-black/40 text-gray-800 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-black/60 transition-colors backdrop-blur-md uppercase tracking-wider">{{ $t('game.igdb') }}<ExternalLinkIcon class="w-3 h-3 opacity-70" />
           </a>
         </div>
       </template>
@@ -49,7 +48,7 @@
             </span>
           </NuxtLink>
         </div>
-        <div v-else class="text-sm text-gray-500 font-medium">No dubbing projects available</div>
+        <div v-else class="text-sm text-gray-500 font-medium">{{ $t('game.noDubbingProjects') }}</div>
       </template>
 
       <template #actions-right>
@@ -79,7 +78,7 @@
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
-            <span class="hidden sm:inline">Éditer</span>
+            <span class="hidden sm:inline">{{ $t('common.edit') }}</span>
           </NuxtLink>
         </ClientOnly>
         
@@ -156,7 +155,7 @@
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
             <div>
               <h2 class="text-2xl font-bold">{{ $t('details.castAndCrew', 'Casting') }}</h2>
-              <div class="text-gray-500 dark:text-gray-400 text-sm mt-1">{{ filteredCharacters.length }} / {{ formattedCharacters.length }} rôles</div>
+              <div class="text-gray-500 dark:text-gray-400 text-sm mt-1">{{ $t('media.rolesCount', { shown: filteredCharacters.length, total: formattedCharacters.length }) }}</div>
             </div>
             
             <div class="relative w-full sm:w-64">
@@ -252,9 +251,7 @@
           >
             {{ $t('common.loadMore', 'Load more') }}
           </button>
-          <span class="text-xs text-gray-400">
-            {{ visibleCharacters.length }} / {{ filteredCharacters.length }} rôles
-          </span>
+          <span class="text-xs text-gray-400">{{ $t('media.rolesCount', { shown: visibleCharacters.length, total: filteredCharacters.length }) }}</span>
         </div>
       </section>
       </template>

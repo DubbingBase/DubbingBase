@@ -3,8 +3,8 @@
     <!-- Header Card -->
     <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
-        <h3 class="text-lg font-bold text-white">Duplicate Voice Actors</h3>
-        <p class="text-sm text-gray-400">Scan database for potential voice actor profile duplicates and merge them.</p>
+        <h3 class="text-lg font-bold text-white">{{ $t('admin.duplicates.title') }}</h3>
+        <p class="text-sm text-gray-400">{{ $t('admin.duplicates.description') }}</p>
       </div>
       <button
         @click="fetchDuplicates"
@@ -12,7 +12,7 @@
         class="py-2.5 px-5 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-800 disabled:text-gray-500 text-white font-semibold rounded-xl shadow-lg transition-all duration-150 hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center shrink-0"
       >
         <span v-if="loading" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
-        <span>{{ loading ? 'Scanning...' : 'Find Duplicates' }}</span>
+        <span>{{ loading ? $t('admin.duplicates.scanning') : $t('admin.duplicates.findDuplicates') }}</span>
       </button>
     </div>
 
@@ -27,7 +27,7 @@
     <!-- Scanner Loading State -->
     <div v-if="loading" class="flex flex-col items-center justify-center py-24 space-y-3 bg-gray-900/40 border border-gray-800/60 rounded-2xl">
       <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
-      <p class="text-gray-400 text-sm">Comparing voice actor profiles in the database...</p>
+      <p class="text-gray-400 text-sm">{{ $t('admin.duplicates.comparingProfiles') }}</p>
     </div>
 
     <!-- Empty State -->
@@ -37,8 +37,8 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       </div>
-      <p class="text-gray-400 font-semibold">No duplicates found</p>
-      <p class="text-xs text-gray-500">All voice actor profiles in the database look distinct!</p>
+      <p class="text-gray-400 font-semibold">{{ $t('admin.duplicates.noDuplicatesFound') }}</p>
+      <p class="text-xs text-gray-500">{{ $t('admin.duplicates.allProfilesDistinct') }}</p>
     </div>
 
     <!-- Duplicates Group List -->
@@ -53,11 +53,10 @@
             <span class="h-6 w-6 rounded-full bg-gray-800 text-gray-300 text-xs font-semibold flex items-center justify-center">
               {{ idx + 1 }}
             </span>
-            <span>Duplicate Candidates</span>
+            <span>{{ $t('admin.duplicates.duplicateCandidates') }}</span>
           </h4>
           <span class="text-xs text-gray-400 bg-gray-800 px-3 py-1 rounded-full border border-gray-700/50">
-            {{ group.actors.length }} matches detected
-          </span>
+            {{ group.actors.length }}{{ $t('admin.duplicates.matchesDetected') }}</span>
         </div>
 
         <!-- Comparative Table -->
@@ -65,7 +64,7 @@
           <table class="w-full text-sm text-left">
             <thead>
               <tr>
-                <th class="p-4 bg-gray-900/80 border-b border-gray-800 w-32 text-gray-400 font-semibold uppercase tracking-wider text-xs">Field</th>
+                <th class="p-4 bg-gray-900/80 border-b border-gray-800 w-32 text-gray-400 font-semibold uppercase tracking-wider text-xs">{{ $t('admin.duplicates.field') }}</th>
                 <th v-for="actor in group.actors" :key="'h-'+actor.id" class="p-4 bg-gray-900/80 border-b border-l border-gray-800 min-w-[280px]" :class="group.selectedId === actor.id ? 'bg-blue-900/10' : ''">
                   <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-3">
@@ -80,8 +79,8 @@
                         </svg>
                       </div>
                       <div class="min-w-0">
-                        <h5 class="font-bold text-white text-base">Candidate</h5>
-                        <p class="text-xs text-gray-400 font-mono mt-0.5">ID: {{ actor.id }}</p>
+                        <h5 class="font-bold text-white text-base">{{ $t('admin.duplicates.candidate') }}</h5>
+                        <p class="text-xs text-gray-400 font-mono mt-0.5">{{ $t('common.idLabel') }}{{ actor.id }}</p>
                       </div>
                     </div>
                   </div>
@@ -91,42 +90,42 @@
             <tbody class="divide-y divide-gray-800/60">
               <!-- Name Row -->
               <tr>
-                <td class="p-4 text-gray-400 font-medium bg-gray-900/30">Name</td>
+                <td class="p-4 text-gray-400 font-medium bg-gray-900/30">{{ $t('voiceActor.name') }}</td>
                 <td v-for="actor in group.actors" :key="'n-'+actor.id" class="p-4 border-l border-gray-800" :class="getNameDiffClass(group.actors)">
                   {{ actor.firstname }} {{ actor.lastname }}
                 </td>
               </tr>
               <!-- Nationality Row -->
               <tr v-if="hasAny(group.actors, 'nationality')">
-                <td class="p-4 text-gray-400 font-medium bg-gray-900/30">Nationality</td>
+                <td class="p-4 text-gray-400 font-medium bg-gray-900/30">{{ $t('profile.nationality') }}</td>
                 <td v-for="actor in group.actors" :key="'nat-'+actor.id" class="p-4 border-l border-gray-800" :class="getDiffClass(group.actors, 'nationality')">
                   {{ actor.nationality || '-' }}
                 </td>
               </tr>
               <!-- Born Row -->
               <tr v-if="hasAny(group.actors, 'date_of_birth')">
-                <td class="p-4 text-gray-400 font-medium bg-gray-900/30">Born</td>
+                <td class="p-4 text-gray-400 font-medium bg-gray-900/30">{{ $t('admin.duplicates.born') }}</td>
                 <td v-for="actor in group.actors" :key="'dob-'+actor.id" class="p-4 border-l border-gray-800" :class="getDiffClass(group.actors, 'date_of_birth')">
                   {{ actor.date_of_birth ? formatDate(actor.date_of_birth) : '-' }}
                 </td>
               </tr>
               <!-- TMDB Row -->
               <tr v-if="hasAny(group.actors, 'tmdb_id')">
-                <td class="p-4 text-gray-400 font-medium bg-gray-900/30">TMDB ID</td>
+                <td class="p-4 text-gray-400 font-medium bg-gray-900/30">{{ $t('voiceActorEdit.tmdbId') }}</td>
                 <td v-for="actor in group.actors" :key="'tmd-'+actor.id" class="p-4 border-l border-gray-800" :class="getDiffClass(group.actors, 'tmdb_id')">
                   {{ actor.tmdb_id || '-' }}
                 </td>
               </tr>
               <!-- Wikidata Row -->
               <tr v-if="hasAny(group.actors, 'wikidata_id')">
-                <td class="p-4 text-gray-400 font-medium bg-gray-900/30">Wikidata</td>
+                <td class="p-4 text-gray-400 font-medium bg-gray-900/30">{{ $t('admin.duplicates.wikidata') }}</td>
                 <td v-for="actor in group.actors" :key="'wik-'+actor.id" class="p-4 border-l border-gray-800 font-mono text-xs break-all" :class="getDiffClass(group.actors, 'wikidata_id')">
                   {{ actor.wikidata_id || '-' }}
                 </td>
               </tr>
               <!-- Bio Row -->
               <tr v-if="hasAny(group.actors, 'bio')">
-                <td class="p-4 text-gray-400 font-medium bg-gray-900/30 align-top">Bio</td>
+                <td class="p-4 text-gray-400 font-medium bg-gray-900/30 align-top">{{ $t('admin.duplicates.bio') }}</td>
                 <td v-for="actor in group.actors" :key="'bio-'+actor.id" class="p-4 border-l border-gray-800 align-top max-w-xs" :class="getDiffClass(group.actors, 'bio')">
                   <div class="line-clamp-4 italic text-xs leading-relaxed" :class="actor.bio ? '' : 'text-gray-600'">
                     {{ actor.bio || '-' }}
@@ -135,7 +134,7 @@
               </tr>
               <!-- Action Row -->
               <tr>
-                <td class="p-4 text-gray-400 font-medium bg-gray-900/30">Action</td>
+                <td class="p-4 text-gray-400 font-medium bg-gray-900/30">{{ $t('admin.auditLogs.action') }}</td>
                 <td v-for="actor in group.actors" :key="'sel-'+actor.id" class="p-0 border-l border-gray-800 bg-gray-900/50 transition-colors" :class="group.selectedId === actor.id ? 'bg-blue-900/20 shadow-inner' : 'hover:bg-gray-800'">
                   <label class="flex items-center space-x-3 cursor-pointer w-full h-full p-4">
                     <input
@@ -145,7 +144,7 @@
                       v-model="group.selectedId"
                       class="h-5 w-5 text-blue-500 focus:ring-blue-500 focus:ring-offset-gray-900 bg-gray-950 border-gray-700"
                     />
-                    <span class="text-sm font-bold" :class="group.selectedId === actor.id ? 'text-blue-400' : 'text-gray-300'">Keep ID #{{ actor.id }}</span>
+                    <span class="text-sm font-bold" :class="group.selectedId === actor.id ? 'text-blue-400' : 'text-gray-300'">{{ $t('admin.duplicates.keepId') }}{{ actor.id }}</span>
                   </label>
                 </td>
               </tr>
@@ -156,12 +155,8 @@
         <!-- Group Merge Action Bar -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4 border-t border-gray-800/80 bg-gray-900/50 p-4 rounded-xl">
           <div class="text-sm">
-            <span v-if="group.selectedId" class="text-gray-300">
-              Profile to keep: <strong class="text-blue-400">ID #{{ group.selectedId }}</strong>. All other duplicates will be merged into it.
-            </span>
-            <span v-else class="text-yellow-500 font-medium">
-              Please choose a profile to keep before merging.
-            </span>
+            <span v-if="group.selectedId" class="text-gray-300">{{ $t('admin.duplicates.profileToKeep') }}<strong class="text-blue-400">{{ $t('admin.duplicates.idHash') }}{{ group.selectedId }}</strong>{{ $t('admin.duplicates.allOtherDuplicatesMerged') }}</span>
+            <span v-else class="text-yellow-500 font-medium">{{ $t('admin.duplicates.chooseProfileToKeep') }}</span>
           </div>
 
           <button
@@ -170,7 +165,7 @@
             class="py-2 px-4 bg-green-600 hover:bg-green-500 disabled:bg-gray-800 disabled:text-gray-500 text-white font-semibold rounded-xl text-sm transition-all duration-150 flex items-center justify-center shrink-0 shadow-lg shadow-green-900/10"
           >
             <span v-if="mergingGroup[idx]" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
-            <span>{{ mergingGroup[idx] ? 'Merging...' : 'Merge Selected' }}</span>
+            <span>{{ mergingGroup[idx] ? $t('admin.duplicates.merging') : $t('admin.duplicates.mergeSelected') }}</span>
           </button>
         </div>
       </div>

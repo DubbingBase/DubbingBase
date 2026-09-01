@@ -3,17 +3,13 @@
     <div class="max-w-3xl mx-auto">
       <div class="mb-8 flex items-center justify-between">
         <div>
-          <h1 class="text-3xl font-bold">{{ isEditMode ? 'Éditer le studio' : 'Créer un studio' }}</h1>
-          <p class="text-gray-500 dark:text-gray-400 mt-2">
-            Remplissez les informations ci-dessous pour {{ isEditMode ? 'mettre à jour' : 'créer' }} le studio.
-          </p>
+          <h1 class="text-3xl font-bold">{{ isEditMode ? $t('studioEdit.titleEdit') : $t('studioEdit.titleCreate') }}</h1>
+          <p class="text-gray-500 dark:text-gray-400 mt-2">{{ $t('studioEdit.fillInfo', { verb: isEditMode ? $t('studioEdit.saveUpdate') : $t('studioEdit.saveCreate') }) }}</p>
         </div>
         <NuxtLink
           :to="isEditMode ? localePath(`/studio/${studioId}`) : localePath('/studios')"
           class="px-4 py-2 bg-gray-200 dark:bg-[#2a2a2a] hover:bg-gray-300 dark:hover:bg-[#333] rounded-lg transition-colors text-sm font-medium"
-        >
-          Annuler
-        </NuxtLink>
+        >{{ $t('common.cancelButton') }}</NuxtLink>
       </div>
 
       <div v-if="loading" class="flex justify-center py-12">
@@ -24,7 +20,7 @@
         <div class="space-y-6">
           
           <div>
-            <label class="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Nom du studio *</label>
+            <label class="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">{{ $t('studioEdit.studioName') }}</label>
             <input
               v-model="form.name"
               type="text"
@@ -36,7 +32,7 @@
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label class="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Pays</label>
+              <label class="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">{{ $t('common.country') }}</label>
               <input
                 v-model="form.country"
                 type="text"
@@ -45,7 +41,7 @@
               />
             </div>
             <div>
-              <label class="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Ville</label>
+              <label class="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">{{ $t('common.city') }}</label>
               <input
                 v-model="form.city"
                 type="text"
@@ -56,7 +52,7 @@
           </div>
 
           <div>
-            <label class="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Site Web</label>
+            <label class="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">{{ $t('studioEdit.website') }}</label>
             <input
               v-model="form.website_url"
               type="url"
@@ -66,7 +62,7 @@
           </div>
 
           <div class="space-y-2">
-            <label class="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Logo du studio</label>
+            <label class="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">{{ $t('admin.studios.studioLogo') }}</label>
             <div class="flex items-center gap-4">
               <div class="relative h-16 w-16 rounded-xl overflow-hidden border border-gray-200 dark:border-[#2a2a2a] bg-gray-50 dark:bg-[#161616] flex shrink-0 items-center justify-center text-gray-500 shadow-inner group">
                 <NuxtImg format="webp" v-if="logoPreview || form.logo_url"
@@ -92,23 +88,21 @@
                     @click="triggerFileInput"
                     class="py-2 px-4 bg-gray-200 dark:bg-[#2a2a2a] hover:bg-gray-300 dark:hover:bg-[#333] text-gray-900 dark:text-white text-xs font-semibold rounded-lg transition-colors"
                   >
-                    {{ logoPreview ? 'Changer de Logo' : 'Uploader un Logo' }}
+                    {{ logoPreview ? $t('studioEdit.changeLogo') : $t('studioEdit.uploadLogo') }}
                   </button>
                   <button
                     v-if="logoPreview || form.logo_url"
                     type="button"
                     @click="clearLogo"
                     class="py-2 px-4 bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 text-xs font-semibold rounded-lg transition-colors"
-                  >
-                    Supprimer
-                  </button>
+                  >{{ $t('common.delete') }}</button>
                 </div>
               </div>
             </div>
           </div>
 
           <div>
-            <label class="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Description</label>
+            <label class="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">{{ $t('common.description') }}</label>
             <textarea
               v-model="form.description"
               rows="5"
@@ -129,7 +123,7 @@
             class="px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white font-medium rounded-xl transition-colors disabled:opacity-50 flex items-center gap-2"
           >
             <span v-if="isSaving" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
-            {{ isSaving ? 'Enregistrement...' : 'Enregistrer' }}
+            {{ isSaving ? $t('studioEdit.saving') : $t('studioEdit.save') }}
           </button>
         </div>
       </form>

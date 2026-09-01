@@ -32,14 +32,12 @@
 
     <!-- Error State -->
     <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-6 rounded-xl border border-red-200 dark:border-red-800">
-      <h3 class="text-lg font-semibold mb-2">Erreur</h3>
+      <h3 class="text-lg font-semibold mb-2">{{ $t('common.error') }}</h3>
       <p>{{ error }}</p>
     </div>
 
     <!-- Empty State -->
-    <div v-else-if="filteredActors.length === 0" class="text-center py-12 text-gray-500 dark:text-gray-400">
-      Aucun comédien trouvé pour "{{ searchInput }}".
-    </div>
+    <div v-else-if="filteredActors.length === 0" class="text-center py-12 text-gray-500 dark:text-gray-400">{{ $t('voiceActor.noResultsFor', { query: searchInput }) }}</div>
 
     <!-- Actors Grid -->
     <div v-else>
@@ -82,9 +80,7 @@
         >
           {{ $t('common.loadMore', 'Load more') }}
         </button>
-        <span class="text-xs text-gray-400">
-          {{ visibleActors.length }} / {{ filteredActors.length }} comédiens
-        </span>
+        <span class="text-xs text-gray-400">{{ $t('studio.actorsCount', { shown: visibleActors.length, total: filteredActors.length }) }}</span>
       </div>
     </div>
   </div>

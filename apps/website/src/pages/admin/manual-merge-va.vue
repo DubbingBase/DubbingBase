@@ -5,16 +5,14 @@
       class="bg-gray-900 p-6 rounded-2xl border border-gray-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
     >
       <div>
-        <h3 class="text-lg font-bold text-white">Manual Voice Actor Merge</h3>
-        <p class="text-sm text-gray-400">
-          Select two voice actors to compare and merge them.
-        </p>
+        <h3 class="text-lg font-bold text-white">{{ $t('admin.manualMerge.title') }}</h3>
+        <p class="text-sm text-gray-400">{{ $t('admin.manualMerge.description') }}</p>
       </div>
       <button
         @click="reset"
         class="py-2.5 px-5 bg-gray-800 hover:bg-gray-700 text-white font-semibold rounded-xl border border-gray-700 transition-all flex items-center justify-center shrink-0"
       >
-        <span>Reset Selection</span>
+        <span>{{ $t('admin.manualMerge.resetSelection') }}</span>
       </button>
     </div>
 
@@ -45,7 +43,7 @@
       <div
         class="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-3 shadow-lg"
       >
-        <h4 class="font-bold text-white text-sm">Voice Actor A</h4>
+        <h4 class="font-bold text-white text-sm">{{ $t('admin.manualMerge.voiceActorA') }}</h4>
 
         <div
           v-if="actorA"
@@ -61,16 +59,13 @@
                 :src="actorA.profile_picture"
                 class="h-full w-full object-cover"
               />
-              <span v-else class="text-xs font-bold text-gray-500">{{
-                actorA.firstname?.charAt(0) || ''
-              }}</span>
+              <span v-else class="text-xs font-bold text-gray-500">{{ actorA.firstname?.charAt(0) || '' }}</span>
             </div>
             <div>
               <p class="text-sm font-semibold text-white">
                 {{ actorA.firstname }} {{ actorA.lastname }}
               </p>
-              <p class="text-xs text-gray-400 font-mono">
-                ID: {{ actorA.id }}
+              <p class="text-xs text-gray-400 font-mono">{{ $t('common.idLabel') }}{{ actorA.id }}
               </p>
             </div>
           </div>
@@ -122,15 +117,13 @@
                   :src="va.profile_picture"
                   class="h-full w-full object-cover"
                 />
-                <span v-else class="text-xs font-bold text-gray-500">{{
-                  va.firstname?.charAt(0) || ''
-                }}</span>
+                <span v-else class="text-xs font-bold text-gray-500">{{ va.firstname?.charAt(0) || '' }}</span>
               </div>
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-semibold text-gray-200">
                   {{ va.firstname }} {{ va.lastname }}
                   <span class="text-xs text-gray-500 font-mono ml-2"
-                    >ID: {{ va.id }}</span
+                    >{{ $t('common.idLabel') }}{{ va.id }}</span
                   >
                 </p>
                 <div class="text-xs text-gray-400 mt-1 space-y-0.5">
@@ -144,12 +137,12 @@
                     <span v-if="va.nationality">🌍 {{ va.nationality }}</span>
                   </p>
                   <p v-if="va.tmdb_id || va.wikidata_id">
-                    <span v-if="va.tmdb_id">TMDB: {{ va.tmdb_id }}</span>
+                    <span v-if="va.tmdb_id">{{ $t('common.tmdbLabel') }}{{ va.tmdb_id }}</span>
                     <span v-if="va.tmdb_id && va.wikidata_id" class="mx-1"
                       >•</span
                     >
                     <span v-if="va.wikidata_id"
-                      >Wiki: {{ va.wikidata_id }}</span
+                      >{{ $t('common.wikiLabel') }}{{ va.wikidata_id }}</span
                     >
                   </p>
                   <p v-if="va.bio" class="line-clamp-2 italic opacity-80 mt-1">
@@ -164,9 +157,7 @@
               activeSearch === 'A' && searchQueryA.trim() && searchLoadingA
             "
             class="absolute z-40 left-0 right-0 mt-2 p-4 bg-gray-900 border border-gray-800 rounded-xl text-center text-gray-500 text-xs"
-          >
-            Searching...
-          </div>
+          >{{ $t('admin.manualMerge.searching') }}</div>
         </div>
       </div>
 
@@ -174,7 +165,7 @@
       <div
         class="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-3 shadow-lg"
       >
-        <h4 class="font-bold text-white text-sm">Voice Actor B</h4>
+        <h4 class="font-bold text-white text-sm">{{ $t('admin.manualMerge.voiceActorB') }}</h4>
 
         <div
           v-if="actorB"
@@ -190,16 +181,13 @@
                 :src="actorB.profile_picture"
                 class="h-full w-full object-cover"
               />
-              <span v-else class="text-xs font-bold text-gray-500">{{
-                actorB.firstname?.charAt(0) || ''
-              }}</span>
+              <span v-else class="text-xs font-bold text-gray-500">{{ actorB.firstname?.charAt(0) || '' }}</span>
             </div>
             <div>
               <p class="text-sm font-semibold text-white">
                 {{ actorB.firstname }} {{ actorB.lastname }}
               </p>
-              <p class="text-xs text-gray-400 font-mono">
-                ID: {{ actorB.id }}
+              <p class="text-xs text-gray-400 font-mono">{{ $t('common.idLabel') }}{{ actorB.id }}
               </p>
             </div>
           </div>
@@ -251,15 +239,13 @@
                   :src="va.profile_picture"
                   class="h-full w-full object-cover"
                 />
-                <span v-else class="text-xs font-bold text-gray-500">{{
-                  va.firstname?.charAt(0) || ''
-                }}</span>
+                <span v-else class="text-xs font-bold text-gray-500">{{ va.firstname?.charAt(0) || '' }}</span>
               </div>
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-semibold text-gray-200">
                   {{ va.firstname }} {{ va.lastname }}
                   <span class="text-xs text-gray-500 font-mono ml-2"
-                    >ID: {{ va.id }}</span
+                    >{{ $t('common.idLabel') }}{{ va.id }}</span
                   >
                 </p>
                 <div class="text-xs text-gray-400 mt-1 space-y-0.5">
@@ -273,12 +259,12 @@
                     <span v-if="va.nationality">🌍 {{ va.nationality }}</span>
                   </p>
                   <p v-if="va.tmdb_id || va.wikidata_id">
-                    <span v-if="va.tmdb_id">TMDB: {{ va.tmdb_id }}</span>
+                    <span v-if="va.tmdb_id">{{ $t('common.tmdbLabel') }}{{ va.tmdb_id }}</span>
                     <span v-if="va.tmdb_id && va.wikidata_id" class="mx-1"
                       >•</span
                     >
                     <span v-if="va.wikidata_id"
-                      >Wiki: {{ va.wikidata_id }}</span
+                      >{{ $t('common.wikiLabel') }}{{ va.wikidata_id }}</span
                     >
                   </p>
                   <p v-if="va.bio" class="line-clamp-2 italic opacity-80 mt-1">
@@ -293,9 +279,7 @@
               activeSearch === 'B' && searchQueryB.trim() && searchLoadingB
             "
             class="absolute z-40 left-0 right-0 mt-2 p-4 bg-gray-900 border border-gray-800 rounded-xl text-center text-gray-500 text-xs"
-          >
-            Searching...
-          </div>
+          >{{ $t('admin.manualMerge.searching') }}</div>
         </div>
       </div>
     </div>
@@ -309,7 +293,7 @@
         class="flex items-center justify-between border-b border-gray-800/80 pb-4"
       >
         <h4 class="text-md font-bold text-white flex items-center space-x-2">
-          <span>Compare & Merge</span>
+          <span>{{ $t('admin.manualMerge.compareAndMerge') }}</span>
         </h4>
         <span
           v-if="loadingWorks"
@@ -317,9 +301,7 @@
         >
           <span
             class="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-400 mr-2"
-          ></span>
-          Loading work history...
-        </span>
+          ></span>{{ $t('admin.manualMerge.loadingWorkHistory') }}</span>
       </div>
 
       <!-- Comparative Table -->
@@ -331,9 +313,7 @@
             <tr>
               <th
                 class="p-4 bg-gray-900/80 border-b border-gray-800 w-32 text-gray-400 font-semibold uppercase tracking-wider text-xs"
-              >
-                Field
-              </th>
+              >{{ $t('admin.duplicates.field') }}</th>
               <th
                 v-for="actor in actorsToCompare"
                 :key="'h-' + actor.id"
@@ -367,9 +347,8 @@
                       </svg>
                     </div>
                     <div class="min-w-0">
-                      <h5 class="font-bold text-white text-base">Candidate</h5>
-                      <p class="text-xs text-gray-400 font-mono mt-0.5">
-                        ID: {{ actor.id }}
+                      <h5 class="font-bold text-white text-base">{{ $t('admin.duplicates.candidate') }}</h5>
+                      <p class="text-xs text-gray-400 font-mono mt-0.5">{{ $t('common.idLabel') }}{{ actor.id }}
                       </p>
                     </div>
                   </div>
@@ -380,9 +359,7 @@
           <tbody class="divide-y divide-gray-800/60">
             <!-- Name Row -->
             <tr>
-              <td class="p-4 text-gray-400 font-medium bg-gray-900/30">
-                Name
-              </td>
+              <td class="p-4 text-gray-400 font-medium bg-gray-900/30">{{ $t('voiceActor.name') }}</td>
               <td
                 v-for="actor in actorsToCompare"
                 :key="'n-' + actor.id"
@@ -394,9 +371,7 @@
             </tr>
             <!-- Work Count Row -->
             <tr>
-              <td class="p-4 text-gray-400 font-medium bg-gray-900/30">
-                Linked Works
-              </td>
+              <td class="p-4 text-gray-400 font-medium bg-gray-900/30">{{ $t('admin.manualMerge.linkedWorks') }}</td>
               <td
                 v-for="actor in actorsToCompare"
                 :key="'w-' + actor.id"
@@ -405,18 +380,14 @@
                   (worksCount[actor.id] ?? 0) > 0 ? 'text-green-400' : 'text-gray-500'
                 "
               >
-                {{
-                  loadingWorks
+                {{ loadingWorks
                     ? "..."
-                    : (worksCount[actor.id] || 0) + " credits"
-                }}
+                    : (worksCount[actor.id] || 0) + " credits" }}
               </td>
             </tr>
             <!-- Nationality Row -->
             <tr v-if="hasAny('nationality')">
-              <td class="p-4 text-gray-400 font-medium bg-gray-900/30">
-                Nationality
-              </td>
+              <td class="p-4 text-gray-400 font-medium bg-gray-900/30">{{ $t('profile.nationality') }}</td>
               <td
                 v-for="actor in actorsToCompare"
                 :key="'nat-' + actor.id"
@@ -428,25 +399,19 @@
             </tr>
             <!-- Born Row -->
             <tr v-if="hasAny('date_of_birth')">
-              <td class="p-4 text-gray-400 font-medium bg-gray-900/30">
-                Born
-              </td>
+              <td class="p-4 text-gray-400 font-medium bg-gray-900/30">{{ $t('admin.duplicates.born') }}</td>
               <td
                 v-for="actor in actorsToCompare"
                 :key="'dob-' + actor.id"
                 class="p-4 border-l border-gray-800"
                 :class="getDiffClass('date_of_birth')"
               >
-                {{
-                  actor.date_of_birth ? formatDate(actor.date_of_birth) : "-"
-                }}
+                {{ actor.date_of_birth ? formatDate(actor.date_of_birth) : "-" }}
               </td>
             </tr>
             <!-- TMDB Row -->
             <tr v-if="hasAny('tmdb_id')">
-              <td class="p-4 text-gray-400 font-medium bg-gray-900/30">
-                TMDB ID
-              </td>
+              <td class="p-4 text-gray-400 font-medium bg-gray-900/30">{{ $t('voiceActorEdit.tmdbId') }}</td>
               <td
                 v-for="actor in actorsToCompare"
                 :key="'tmd-' + actor.id"
@@ -458,9 +423,7 @@
             </tr>
             <!-- Wikidata Row -->
             <tr v-if="hasAny('wikidata_id')">
-              <td class="p-4 text-gray-400 font-medium bg-gray-900/30">
-                Wikidata
-              </td>
+              <td class="p-4 text-gray-400 font-medium bg-gray-900/30">{{ $t('admin.duplicates.wikidata') }}</td>
               <td
                 v-for="actor in actorsToCompare"
                 :key="'wik-' + actor.id"
@@ -474,9 +437,7 @@
             <tr v-if="hasAny('bio')">
               <td
                 class="p-4 text-gray-400 font-medium bg-gray-900/30 align-top"
-              >
-                Bio
-              </td>
+              >{{ $t('admin.duplicates.bio') }}</td>
               <td
                 v-for="actor in actorsToCompare"
                 :key="'bio-' + actor.id"
@@ -493,9 +454,7 @@
             </tr>
             <!-- Action Row -->
             <tr>
-              <td class="p-4 text-gray-400 font-medium bg-gray-900/30">
-                Action
-              </td>
+              <td class="p-4 text-gray-400 font-medium bg-gray-900/30">{{ $t('admin.auditLogs.action') }}</td>
               <td
                 v-for="actor in actorsToCompare"
                 :key="'sel-' + actor.id"
@@ -523,7 +482,7 @@
                         ? 'text-blue-400'
                         : 'text-gray-300'
                     "
-                    >Keep ID #{{ actor.id }}</span
+                    >{{ $t('admin.duplicates.keepId') }}{{ actor.id }}</span
                   >
                 </label>
               </td>
@@ -537,15 +496,9 @@
         class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4 border-t border-gray-800/80 bg-gray-900/50 p-4 rounded-xl"
       >
         <div class="text-sm">
-          <span v-if="selectedKeepId" class="text-gray-300">
-            Profile to keep:
-            <strong class="text-blue-400">ID #{{ selectedKeepId }}</strong
-            >. The other profile will be merged into it and deleted. Linked
-            works from both will be combined.
-          </span>
-          <span v-else class="text-yellow-500 font-medium">
-            Please choose a profile to keep before merging.
-          </span>
+          <span v-if="selectedKeepId" class="text-gray-300">{{ $t('admin.duplicates.profileToKeep') }}<strong class="text-blue-400">{{ $t('admin.duplicates.idHash') }}{{ selectedKeepId }}</strong
+            >{{ $t('admin.manualMerge.otherProfileMerged') }}</span>
+          <span v-else class="text-yellow-500 font-medium">{{ $t('admin.duplicates.chooseProfileToKeep') }}</span>
         </div>
 
         <button

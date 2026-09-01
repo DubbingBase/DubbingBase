@@ -161,7 +161,7 @@
       </section>
       <!-- Top Contributors (Admin Only) -->
       <section v-if="isAdmin && !errorTopContributors">
-        <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-900 dark:text-white tracking-wide">Top Contributeurs (Admin)</h2>
+        <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-900 dark:text-white tracking-wide">{{ $t('home.topContributorsAdmin') }}</h2>
         <div v-if="isLoadingTopContributors" class="flex gap-4 overflow-x-auto pb-4">
           <div v-for="i in 4" :key="i" class="w-32 flex-shrink-0 flex flex-col items-center gap-3">
             <div class="w-24 h-24 bg-gray-200 dark:bg-gray-800 rounded-full animate-pulse"></div>
@@ -182,7 +182,7 @@
               </div>
               <div class="text-center w-full">
                 <h3 class="font-semibold text-sm text-gray-800 dark:text-gray-200 truncate w-full px-2">{{ contributor.raw_user_meta_data?.username || 'Utilisateur' }}</h3>
-                <p class="text-xs text-gray-500 dark:text-gray-400">{{ contributor.score }} contributions</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">{{ contributor.score }}{{ $t('home.contributions') }}</p>
               </div>
             </div>
           </div>

@@ -3,24 +3,22 @@
     <!-- Header -->
     <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex justify-between items-center">
       <div>
-        <h3 class="text-lg font-bold text-white">{{ isEditMode ? 'Edit Voice Actor Profile' : 'Create Voice Actor Profile' }}</h3>
+        <h3 class="text-lg font-bold text-white">{{ isEditMode ? $t('voiceActorEdit.titleEdit') : $t('voiceActorEdit.titleCreate') }}</h3>
         <p class="text-sm text-slate-400 mt-0.5">
-          {{ isEditMode ? `Updating database entry ID #${id}` : 'Fill in profile fields to create a new voice actor entry.' }}
+          {{ isEditMode ? `Updating database entry ID #${id}` : $t('voiceActorEdit.fillInfo') }}
         </p>
       </div>
       <NuxtLink
         :to="localePath('/admin/voice-actor-spreadsheet')"
         class="text-xs font-semibold px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-350 hover:text-white rounded-xl border border-slate-700 transition-colors"
-      >
-        ← Back to Spreadsheet
-      </NuxtLink>
+      >{{ $t('voiceActorEdit.backToSpreadsheet') }}</NuxtLink>
     </div>
 
     <!-- Main Workspace -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Profile Image Card (Left column) -->
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col items-center text-center space-y-5 h-fit shadow-xl">
-        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block self-start">Profile Photo</label>
+        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block self-start">{{ $t('voiceActorEdit.profilePhoto') }}</label>
         <div class="relative h-44 w-44 rounded-full overflow-hidden border-2 border-slate-800 bg-slate-950 flex items-center justify-center text-slate-500 shadow-inner group">
           <NuxtImg format="webp"             v-if="profilePicture"
             :src="profilePicture"
@@ -42,7 +40,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <span>{{ previewImage ? 'Change Image' : 'Upload Image' }}</span>
+            <span>{{ previewImage ? $t('voiceActorEdit.changeImage') : $t('voiceActorEdit.uploadImage') }}</span>
           </button>
           <input
             ref="fileInput"
@@ -56,13 +54,9 @@
             type="button"
             @click="clearImage"
             class="w-full py-2 bg-red-950/20 hover:bg-red-950/40 text-red-400 hover:text-red-300 rounded-xl text-[10px] font-bold uppercase tracking-wider border border-red-900/25 transition-all"
-          >
-            Reset image selection
-          </button>
+          >{{ $t('voiceActorEdit.resetImageSelection') }}</button>
         </div>
-        <p class="text-[10px] text-slate-500 leading-normal">
-          Supported file formats: JPG, PNG, WEBP. Maximum file upload size: 5MB.
-        </p>
+        <p class="text-[10px] text-slate-500 leading-normal">{{ $t('voiceActorEdit.supportedFileFormats') }}</p>
       </div>
 
       <!-- Form (Right column) -->
@@ -70,7 +64,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
           <!-- First Name -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">First Name *</label>
+            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ $t('admin.movieEditor.firstName') }}</label>
             <input
               v-model="firstname"
               type="text"
@@ -82,7 +76,7 @@
 
           <!-- Last Name -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Last Name *</label>
+            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ $t('admin.movieEditor.lastName') }}</label>
             <input
               v-model="lastname"
               type="text"
@@ -94,7 +88,7 @@
 
           <!-- Nationality -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Nationality</label>
+            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ $t('profile.nationality') }}</label>
             <input
               v-model="nationality"
               type="text"
@@ -105,7 +99,7 @@
 
           <!-- Date of birth -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Date of Birth</label>
+            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ $t('voiceActorEdit.dateOfBirth') }}</label>
             <input
               v-model="dateOfBirth"
               type="date"
@@ -117,7 +111,7 @@
 
           <!-- TMDB ID -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">TMDB ID</label>
+            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ $t('voiceActorEdit.tmdbId') }}</label>
             <input
               v-model="tmdbId"
               type="number"
@@ -128,7 +122,7 @@
 
           <!-- Wikidata ID -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Wikidata ID</label>
+            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ $t('voiceActorEdit.wikidataId') }}</label>
             <input
               v-model="wikidataId"
               type="text"
@@ -140,7 +134,7 @@
 
         <!-- Biography -->
         <div class="space-y-1">
-          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Biography</label>
+          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ $t('profile.biography') }}</label>
           <textarea
             v-model="bio"
             rows="4"
@@ -152,7 +146,7 @@
         <!-- Social Media Links -->
         <div class="space-y-1">
           <div class="flex justify-between items-center">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Social Media Links (JSON format)</label>
+            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ $t('voiceActorEdit.socialMediaLinksJson') }}</label>
             <span class="text-[10px] text-slate-500">e.g. {"facebook": "https://...", "twitter": "..."}</span>
           </div>
           <textarea
@@ -171,7 +165,7 @@
             class="py-3 px-8 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-500 text-white font-semibold rounded-xl text-sm shadow-lg transition-all duration-200 flex items-center justify-center"
           >
             <span v-if="isSaving" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
-            <span>Save Profile</span>
+            <span>{{ $t('voiceActorEdit.saveProfile') }}</span>
           </button>
         </div>
       </form>
@@ -181,14 +175,14 @@
     <div v-if="isEditMode" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
         <div>
-          <h4 class="text-base font-bold text-white">Linked Works & Filmography</h4>
-          <p class="text-xs text-slate-400">All dubbing credits linked to this voice actor profile.</p>
+          <h4 class="text-base font-bold text-white">{{ $t('voiceActorEdit.linkedWorksFilmography') }}</h4>
+          <p class="text-xs text-slate-400">{{ $t('voiceActorEdit.allCreditsLinked') }}</p>
         </div>
         <NuxtLink
           :to="localePath(`/admin/add-voice-cast/${id}`)"
           class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-xs shadow-md transition-all flex items-center space-x-1"
         >
-          <span>+ Link New Work</span>
+          <span>{{ $t('voiceActorEdit.linkNewWork') }}</span>
         </NuxtLink>
       </div>
 
@@ -196,18 +190,18 @@
         <table class="w-full text-left text-sm text-slate-300">
           <thead class="bg-slate-950 text-xs font-semibold uppercase text-slate-400 border-b border-slate-800">
             <tr>
-              <th class="px-4 py-3">Work ID</th>
-              <th class="px-4 py-3">Media / Content ID</th>
-              <th class="px-4 py-3">Type</th>
-              <th class="px-4 py-3">Character</th>
-              <th class="px-4 py-3">Performance</th>
-              <th class="px-4 py-3 text-right">Edit Project</th>
+              <th class="px-4 py-3">{{ $t('voiceActorEdit.workId') }}</th>
+              <th class="px-4 py-3">{{ $t('voiceActorEdit.mediaContentId') }}</th>
+              <th class="px-4 py-3">{{ $t('admin.queue.type') }}</th>
+              <th class="px-4 py-3">{{ $t('details.character') }}</th>
+              <th class="px-4 py-3">{{ $t('admin.movieEditor.performance') }}</th>
+              <th class="px-4 py-3 text-right">{{ $t('voiceActorEdit.editProject') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-800/60">
             <tr v-for="work in linkedWorks" :key="work.id" class="hover:bg-slate-950/50 transition-colors">
               <td class="px-4 py-3 font-mono text-xs text-slate-400">#{{ work.id }}</td>
-              <td class="px-4 py-3 font-mono text-xs text-blue-400">Project #{{ work.dubbing_project_id }}</td>
+              <td class="px-4 py-3 font-mono text-xs text-blue-400">{{ $t('voiceActorEdit.projectNumber') }}{{ work.dubbing_project_id }}</td>
               <td class="px-4 py-3 uppercase text-[10px] font-bold tracking-wider text-slate-400">
                 <span class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700">{{ work.content_type || 'movie' }}</span>
               </td>
@@ -218,15 +212,13 @@
                   :to="localePath(`/admin/movies/edit/${work.dubbing_project_id}`)"
                   class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-blue-400 hover:text-blue-300 text-xs font-semibold rounded-lg border border-slate-700 transition-all inline-flex items-center space-x-1"
                 >
-                  <span>Edit Movie</span>
+                  <span>{{ $t('voiceActorEdit.editMovie') }}</span>
                   <span>↗</span>
                 </NuxtLink>
               </td>
             </tr>
             <tr v-if="linkedWorks.length === 0">
-              <td colspan="6" class="text-center py-6 text-slate-500 text-xs">
-                No linked works recorded for this voice actor yet.
-              </td>
+              <td colspan="6" class="text-center py-6 text-slate-500 text-xs">{{ $t('voiceActorEdit.noLinkedWorks') }}</td>
             </tr>
           </tbody>
         </table>

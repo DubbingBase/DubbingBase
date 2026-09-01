@@ -2,13 +2,11 @@
   <div class="space-y-6">
     <!-- Top back banner -->
     <div class="flex items-center justify-between bg-gray-900 p-4 rounded-2xl border border-gray-800">
-      <h3 class="text-sm font-bold text-white">Movie Voice Cast Assignment</h3>
+      <h3 class="text-sm font-bold text-white">{{ $t('admin.addVoiceCast.title') }}</h3>
       <NuxtLink
         :to="localePath('/admin')"
         class="text-xs font-semibold px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-350 hover:text-white rounded-xl border border-gray-700 transition-colors"
-      >
-        ← Back to Dashboard
-      </NuxtLink>
+      >{{ $t('admin.movieEditor.backToDashboard') }}</NuxtLink>
     </div>
 
     <!-- Error state -->
@@ -22,7 +20,7 @@
     <!-- Loading state -->
     <div v-if="loading" class="flex flex-col items-center justify-center py-24 space-y-3 bg-gray-900/40 border border-gray-800/60 rounded-2xl">
       <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
-      <p class="text-gray-400 text-sm">Fetching movie credits data...</p>
+      <p class="text-gray-400 text-sm">{{ $t('admin.addVoiceCast.fetchingCredits') }}</p>
     </div>
 
     <!-- Main Workspace -->
@@ -37,16 +35,13 @@
               class="h-full w-full object-cover"
               alt="Movie Poster"
             />
-            <div v-else class="h-full w-full flex items-center justify-center text-gray-600">
-              No Poster Available
-            </div>
+            <div v-else class="h-full w-full flex items-center justify-center text-gray-600">{{ $t('admin.addVoiceCast.noPosterAvailable') }}</div>
           </div>
 
           <!-- Metadata -->
           <div class="space-y-2">
             <h4 class="text-lg font-bold text-white leading-snug">{{ movie.title }}</h4>
-            <p v-if="movie.release_date" class="text-xs font-semibold text-gray-500">
-              Released: {{ movie.release_date.split('-')[0] }}
+            <p v-if="movie.release_date" class="text-xs font-semibold text-gray-500">{{ $t('admin.addVoiceCast.released') }}{{ movie.release_date.split('-')[0] }}
             </p>
             <p v-if="movie.overview" class="text-xs text-gray-400 leading-relaxed line-clamp-4 italic">
               "{{ movie.overview }}"
@@ -61,22 +56,18 @@
               class="w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl shadow-lg transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center text-sm"
             >
               <span v-if="isSaving" class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></span>
-              <span>Save Mapping Changes</span>
+              <span>{{ $t('admin.addVoiceCast.saveMappingChanges') }}</span>
             </button>
-            <p v-if="!hasChanges" class="text-[10px] text-center text-gray-500 mt-2">
-              No changes to save yet.
-            </p>
+            <p v-if="!hasChanges" class="text-[10px] text-center text-gray-500 mt-2">{{ $t('admin.addVoiceCast.noChangesYet') }}</p>
           </div>
         </div>
       </div>
 
       <!-- Cast list column (Double span) -->
       <div class="lg:col-span-2 space-y-4">
-        <h4 class="text-sm font-bold text-gray-400 uppercase tracking-wider px-2">Casting Members Mapping</h4>
+        <h4 class="text-sm font-bold text-gray-400 uppercase tracking-wider px-2">{{ $t('admin.addVoiceCast.castingMembersMapping') }}</h4>
 
-        <div v-if="actors.length === 0" class="p-8 text-center bg-gray-900 border border-gray-850 rounded-2xl text-gray-500 text-sm">
-          No cast members returned for this movie.
-        </div>
+        <div v-if="actors.length === 0" class="p-8 text-center bg-gray-900 border border-gray-850 rounded-2xl text-gray-500 text-sm">{{ $t('admin.addVoiceCast.noCastReturned') }}</div>
 
         <div v-else class="space-y-3">
           <div
@@ -98,7 +89,7 @@
               </div>
               <div class="min-w-0">
                 <h5 class="font-bold text-white text-sm truncate leading-snug">{{ actor.name }}</h5>
-                <p class="text-xs text-gray-400 truncate mt-0.5">Character: <span class="text-indigo-400 font-semibold">{{ actor.character }}</span></p>
+                <p class="text-xs text-gray-400 truncate mt-0.5">{{ $t('admin.addVoiceCast.character') }}<span class="text-indigo-400 font-semibold">{{ actor.character }}</span></p>
               </div>
             </div>
 
@@ -167,9 +158,7 @@
                 <div
                   v-else-if="activeSearchDropdown === actor.id && actorSearchQueries[actor.id]?.trim() && searchLoading[actor.id]"
                   class="absolute z-40 left-0 right-0 mt-1.5 p-3 bg-gray-900 border border-gray-850 rounded-xl text-center text-gray-500 text-[10px]"
-                >
-                  Searching database...
-                </div>
+                >{{ $t('admin.addVoiceCast.searchingDatabase') }}</div>
               </div>
             </div>
           </div>

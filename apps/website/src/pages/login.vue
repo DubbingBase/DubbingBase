@@ -7,13 +7,13 @@
         
         <div class="text-center space-y-2">
           <h3 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ t('nav.login') }}</h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400">Please sign in to your account</p>
+          <p class="text-sm text-gray-500 dark:text-gray-400">{{ $t('auth.login.subtitle') }}</p>
         </div>
 
         <form class="space-y-5" @submit.prevent="handleLogin">
           <!-- Email Field -->
           <div class="space-y-2">
-            <label for="email" class="text-sm font-medium text-gray-700 dark:text-gray-300">Email address</label>
+            <label for="email" class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ $t('auth.email') }}</label>
             <input
               id="email"
               v-model="email"
@@ -26,7 +26,7 @@
 
           <!-- Password Field -->
           <div class="space-y-2">
-            <label for="password" class="text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+            <label for="password" class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ $t('auth.password') }}</label>
             <input
               id="password"
               v-model="password"
@@ -46,9 +46,7 @@
           </div>
 
           <!-- Link to Register -->
-          <div class="text-sm text-center text-gray-500 dark:text-gray-400">
-            Don't have an account?
-            <NuxtLink :to="localePath('/register')" class="text-cyan-600 dark:text-cyan-400 font-medium hover:underline transition">Sign up</NuxtLink>
+          <div class="text-sm text-center text-gray-500 dark:text-gray-400">{{ $t('auth.login.noAccount') }}<NuxtLink :to="localePath('/register')" class="text-cyan-600 dark:text-cyan-400 font-medium hover:underline transition">{{ $t('auth.signUp') }}</NuxtLink>
           </div>
 
           <!-- Submit Button -->
@@ -58,7 +56,7 @@
             class="w-full py-3.5 px-4 bg-cyan-500 hover:bg-cyan-400 text-gray-900 font-semibold rounded-xl shadow-lg shadow-cyan-500/20 transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 flex justify-center items-center"
           >
             <span v-if="loading" class="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-900 mr-2"></span>
-            <span>{{ loading ? 'Signing in...' : 'Sign in' }}</span>
+            <span>{{ loading ? $t('auth.login.signingIn') : $t('auth.signIn') }}</span>
           </button>
         </form>
       </div>

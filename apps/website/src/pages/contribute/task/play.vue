@@ -13,7 +13,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
         </NuxtLink>
-        <h1 class="text-3xl font-bold text-white capitalize">Enrich Data</h1>
+        <h1 class="text-3xl font-bold text-white capitalize">{{ $t('contribute.enrichData') }}</h1>
       </div>
 
       <!-- Main Task Card -->
@@ -22,7 +22,7 @@
         <!-- Loading State -->
         <div v-if="isLoading" class="flex flex-col items-center justify-center py-12 space-y-4">
           <div class="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
-          <p class="text-[#a0a0a0] animate-pulse">Finding a task for you...</p>
+          <p class="text-[#a0a0a0] animate-pulse">{{ $t('contribute.findingTask') }}</p>
         </div>
 
         <!-- Error / No Tasks State -->
@@ -33,23 +33,19 @@
             </svg>
           </div>
           <div>
-            <h3 class="text-xl font-bold text-white mb-2">Oops!</h3>
+            <h3 class="text-xl font-bold text-white mb-2">{{ $t('contribute.oops') }}</h3>
             <p class="text-[#a0a0a0]">{{ error }}</p>
           </div>
-          <button @click="loadTask" class="px-6 py-2 bg-[#2a2a2a] hover:bg-[#333] text-white rounded-lg transition-colors">
-            Try Again
-          </button>
+          <button @click="loadTask" class="px-6 py-2 bg-[#2a2a2a] hover:bg-[#333] text-white rounded-lg transition-colors">{{ $t('contribute.tryAgain') }}</button>
         </div>
 
         <!-- Task Content -->
         <div v-else-if="currentTask" class="space-y-8">
           
           <div class="text-center space-y-2">
-            <h2 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-              Who is this?
-            </h2>
-            <p class="text-xl text-white">{{ currentTask.name || currentTask.title || (currentTask.firstname ? `${currentTask.firstname} ${currentTask.lastname || ''}`.trim() : null) || 'Unknown Entity' }}</p>
-            <p class="text-sm text-[#a0a0a0]">Help us complete this profile by filling out what you know.</p>
+            <h2 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">{{ $t('contribute.whoIsThis') }}</h2>
+            <p class="text-xl text-white">{{ currentTask.name || currentTask.title || (currentTask.firstname ? `${currentTask.firstname} ${currentTask.lastname || ''}`.trim() : null) || $t('contribute.unknownEntity') }}</p>
+            <p class="text-sm text-[#a0a0a0]">{{ $t('contribute.helpCompleteProfile') }}</p>
           </div>
 
           <!-- Form Area -->
@@ -59,7 +55,7 @@
             <template v-if="activeCategory === 'enrich_voice_actor'">
               
               <div v-if="currentTask.profile_picture === null" class="space-y-2">
-                <label class="block text-sm font-medium text-white">Profile Picture</label>
+                <label class="block text-sm font-medium text-white">{{ $t('contribute.profilePicture') }}</label>
                 <div 
                   class="border-2 border-dashed border-[#2a2a2a] rounded-xl p-8 text-center hover:border-blue-500/50 hover:bg-blue-500/5 transition-all cursor-pointer relative"
                   @click="triggerFileInput"
@@ -71,76 +67,76 @@
                   <input type="file" ref="fileInput" class="hidden" accept="image/*" @change="handleFileSelect">
                   <div v-if="previewUrl" class="space-y-4">
                     <img :src="previewUrl" class="max-h-48 mx-auto rounded-lg shadow-lg object-cover" />
-                    <button type="button" @click.stop="clearFile" class="text-sm text-red-400 hover:text-red-300">Remove Image</button>
+                    <button type="button" @click.stop="clearFile" class="text-sm text-red-400 hover:text-red-300">{{ $t('contribute.removeImage') }}</button>
                   </div>
                   <div v-else class="space-y-4">
                     <div class="mx-auto w-12 h-12 rounded-full bg-[#2a2a2a] flex items-center justify-center text-[#a0a0a0]">
                       <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                     </div>
-                    <p class="text-sm text-[#a0a0a0]">Click or drop image</p>
+                    <p class="text-sm text-[#a0a0a0]">{{ $t('contribute.clickOrDropImage') }}</p>
                   </div>
                 </div>
               </div>
 
               <div v-if="currentTask.nationality === null" class="space-y-2">
-                <label class="block text-sm font-medium text-white">Nationality</label>
+                <label class="block text-sm font-medium text-white">{{ $t('profile.nationality') }}</label>
                 <select v-model="formFields.nationality" class="w-full bg-[#2a2a2a] border-none rounded-lg text-white px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none appearance-none">
-                  <option value="" disabled>Select nationality</option>
-                  <option value="Français">Français</option>
-                  <option value="Belge">Belge</option>
-                  <option value="Suisse">Suisse</option>
-                  <option value="Québécois(e)">Québécois(e)</option>
-                  <option value="Américain(e)">Américain(e)</option>
-                  <option value="Britannique">Britannique</option>
-                  <option value="Japonais(e)">Japonais(e)</option>
-                  <option value="Autre">Autre</option>
+                  <option value="" disabled>{{ $t('voiceActorEdit.selectNationality') }}</option>
+                  <option value="Français">{{ $t('language.fr') }}</option>
+                  <option value="Belge">{{ $t('voiceActorEdit.nationalityBelgian') }}</option>
+                  <option value="Suisse">{{ $t('voiceActorEdit.nationalitySwiss') }}</option>
+                  <option value="Québécois(e)">{{ $t('voiceActorEdit.nationalityQuebecois') }}</option>
+                  <option value="Américain(e)">{{ $t('voiceActorEdit.nationalityAmerican') }}</option>
+                  <option value="Britannique">{{ $t('voiceActorEdit.nationalityBritish') }}</option>
+                  <option value="Japonais(e)">{{ $t('voiceActorEdit.nationalityJapanese') }}</option>
+                  <option value="Autre">{{ $t('report.reasons.other') }}</option>
                 </select>
               </div>
 
               <div v-if="currentTask.date_of_birth === null" class="space-y-2">
-                <label class="block text-sm font-medium text-white">Date of Birth</label>
+                <label class="block text-sm font-medium text-white">{{ $t('voiceActorEdit.dateOfBirth') }}</label>
                 <input v-model="formFields.date_of_birth" type="date" class="w-full bg-[#2a2a2a] border-none rounded-lg text-white px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none" />
               </div>
 
               <div v-if="currentTask.bio === null" class="space-y-2">
-                <label class="block text-sm font-medium text-white">Biography</label>
+                <label class="block text-sm font-medium text-white">{{ $t('profile.biography') }}</label>
                 <textarea v-model="formFields.bio" rows="4" placeholder="Brief biography..." class="w-full bg-[#2a2a2a] border-none rounded-lg text-white px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
               </div>
 
               <!-- External IDs -->
               <div class="space-y-4 pt-4 border-t border-[#2a2a2a]">
-                <h3 class="text-lg font-medium text-white">External IDs</h3>
+                <h3 class="text-lg font-medium text-white">{{ $t('contribute.externalIds') }}</h3>
                 
                 <div class="space-y-2">
-                  <label class="block text-sm font-medium text-[#a0a0a0]">TMDB ID</label>
+                  <label class="block text-sm font-medium text-[#a0a0a0]">{{ $t('voiceActorEdit.tmdbId') }}</label>
                   <input :value="currentTask.tmdb_id != null ? currentTask.tmdb_id : formFields.tmdb_id" @input="formFields.tmdb_id = ($event.target as HTMLInputElement).value" type="number" placeholder="e.g. 12345" class="w-full bg-[#2a2a2a] border-none rounded-lg text-white px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed" :disabled="currentTask.tmdb_id != null" />
                 </div>
                 
                 <div class="space-y-2">
-                  <label class="block text-sm font-medium text-[#a0a0a0]">Wikidata ID</label>
+                  <label class="block text-sm font-medium text-[#a0a0a0]">{{ $t('voiceActorEdit.wikidataId') }}</label>
                   <input :value="currentTask.wikidata_id != null ? currentTask.wikidata_id : formFields.wikidata_id" @input="formFields.wikidata_id = ($event.target as HTMLInputElement).value" type="text" placeholder="e.g. Q12345" class="w-full bg-[#2a2a2a] border-none rounded-lg text-white px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed" :disabled="currentTask.wikidata_id != null" />
                 </div>
               </div>
 
               <!-- Social Links -->
               <div class="space-y-4 pt-4 border-t border-[#2a2a2a]">
-                <h3 class="text-lg font-medium text-white">Social Links</h3>
+                <h3 class="text-lg font-medium text-white">{{ $t('contribute.socialLinks') }}</h3>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div class="space-y-2">
-                    <label class="block text-sm font-medium text-[#a0a0a0]">Twitter/X</label>
+                    <label class="block text-sm font-medium text-[#a0a0a0]">{{ $t('contribute.twitter') }}</label>
                     <input :value="(currentTask.social_media_links?.twitter) || formFields.twitter" @input="formFields.twitter = ($event.target as HTMLInputElement).value" type="url" placeholder="https://x.com/..." class="w-full bg-[#2a2a2a] border-none rounded-lg text-white px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed" :disabled="currentTask.social_media_links?.twitter != null" />
                   </div>
                   <div class="space-y-2">
-                    <label class="block text-sm font-medium text-[#a0a0a0]">Instagram</label>
+                    <label class="block text-sm font-medium text-[#a0a0a0]">{{ $t('voiceActorEdit.instagram') }}</label>
                     <input :value="(currentTask.social_media_links?.instagram) || formFields.instagram" @input="formFields.instagram = ($event.target as HTMLInputElement).value" type="url" placeholder="https://instagram.com/..." class="w-full bg-[#2a2a2a] border-none rounded-lg text-white px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed" :disabled="currentTask.social_media_links?.instagram != null" />
                   </div>
                   <div class="space-y-2">
-                    <label class="block text-sm font-medium text-[#a0a0a0]">TikTok</label>
+                    <label class="block text-sm font-medium text-[#a0a0a0]">{{ $t('voiceActorEdit.tiktok') }}</label>
                     <input :value="(currentTask.social_media_links?.tiktok) || formFields.tiktok" @input="formFields.tiktok = ($event.target as HTMLInputElement).value" type="url" placeholder="https://tiktok.com/@..." class="w-full bg-[#2a2a2a] border-none rounded-lg text-white px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed" :disabled="currentTask.social_media_links?.tiktok != null" />
                   </div>
                   <div class="space-y-2">
-                    <label class="block text-sm font-medium text-[#a0a0a0]">Facebook</label>
+                    <label class="block text-sm font-medium text-[#a0a0a0]">{{ $t('voiceActorEdit.facebook') }}</label>
                     <input :value="(currentTask.social_media_links?.facebook) || formFields.facebook" @input="formFields.facebook = ($event.target as HTMLInputElement).value" type="url" placeholder="https://facebook.com/..." class="w-full bg-[#2a2a2a] border-none rounded-lg text-white px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed" :disabled="currentTask.social_media_links?.facebook != null" />
                   </div>
                 </div>
@@ -152,7 +148,7 @@
             <template v-if="activeCategory === 'enrich_studio'">
               
               <div v-if="currentTask.logo_url === null" class="space-y-2">
-                <label class="block text-sm font-medium text-white">Studio Logo</label>
+                <label class="block text-sm font-medium text-white">{{ $t('admin.studios.studioLogo') }}</label>
                 <div 
                   class="border-2 border-dashed border-[#2a2a2a] rounded-xl p-8 text-center hover:border-purple-500/50 hover:bg-purple-500/5 transition-all cursor-pointer relative"
                   @click="triggerFileInput"
@@ -164,51 +160,51 @@
                   <input type="file" ref="fileInput" class="hidden" accept="image/*" @change="handleFileSelect">
                   <div v-if="previewUrl" class="space-y-4">
                     <img :src="previewUrl" class="max-h-48 mx-auto rounded-lg shadow-lg object-contain" />
-                    <button type="button" @click.stop="clearFile" class="text-sm text-red-400 hover:text-red-300">Remove Image</button>
+                    <button type="button" @click.stop="clearFile" class="text-sm text-red-400 hover:text-red-300">{{ $t('contribute.removeImage') }}</button>
                   </div>
                   <div v-else class="space-y-4">
                     <div class="mx-auto w-12 h-12 rounded-full bg-[#2a2a2a] flex items-center justify-center text-[#a0a0a0]">
                       <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
                     </div>
-                    <p class="text-sm text-[#a0a0a0]">Click or drop logo</p>
+                    <p class="text-sm text-[#a0a0a0]">{{ $t('contribute.clickOrDropLogo') }}</p>
                   </div>
                 </div>
               </div>
 
               <div v-if="currentTask.country === null" class="space-y-2">
-                <label class="block text-sm font-medium text-white">Country</label>
+                <label class="block text-sm font-medium text-white">{{ $t('common.country') }}</label>
                 <input v-model="formFields.country" type="text" placeholder="e.g. United States" class="w-full bg-[#2a2a2a] border-none rounded-lg text-white px-4 py-3 focus:ring-2 focus:ring-purple-500 outline-none" />
               </div>
 
               <div v-if="currentTask.city === null" class="space-y-2">
-                <label class="block text-sm font-medium text-white">City</label>
+                <label class="block text-sm font-medium text-white">{{ $t('common.city') }}</label>
                 <input v-model="formFields.city" type="text" placeholder="e.g. Los Angeles" class="w-full bg-[#2a2a2a] border-none rounded-lg text-white px-4 py-3 focus:ring-2 focus:ring-purple-500 outline-none" />
               </div>
 
               <div v-if="currentTask.website_url === null" class="space-y-2">
-                <label class="block text-sm font-medium text-white">Website URL</label>
+                <label class="block text-sm font-medium text-white">{{ $t('admin.studios.websiteUrl') }}</label>
                 <input v-model="formFields.website_url" type="url" placeholder="https://..." class="w-full bg-[#2a2a2a] border-none rounded-lg text-white px-4 py-3 focus:ring-2 focus:ring-purple-500 outline-none" />
               </div>
 
               <!-- Social Links -->
               <div class="space-y-4 pt-4 border-t border-[#2a2a2a]">
-                <h3 class="text-lg font-medium text-white">Social Links</h3>
+                <h3 class="text-lg font-medium text-white">{{ $t('contribute.socialLinks') }}</h3>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div class="space-y-2">
-                    <label class="block text-sm font-medium text-[#a0a0a0]">Twitter/X</label>
+                    <label class="block text-sm font-medium text-[#a0a0a0]">{{ $t('contribute.twitter') }}</label>
                     <input :value="(currentTask.social_media_links?.twitter) || formFields.twitter" @input="formFields.twitter = ($event.target as HTMLInputElement).value" type="url" placeholder="https://x.com/..." class="w-full bg-[#2a2a2a] border-none rounded-lg text-white px-4 py-3 focus:ring-2 focus:ring-purple-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed" :disabled="currentTask.social_media_links?.twitter != null" />
                   </div>
                   <div class="space-y-2">
-                    <label class="block text-sm font-medium text-[#a0a0a0]">Instagram</label>
+                    <label class="block text-sm font-medium text-[#a0a0a0]">{{ $t('voiceActorEdit.instagram') }}</label>
                     <input :value="(currentTask.social_media_links?.instagram) || formFields.instagram" @input="formFields.instagram = ($event.target as HTMLInputElement).value" type="url" placeholder="https://instagram.com/..." class="w-full bg-[#2a2a2a] border-none rounded-lg text-white px-4 py-3 focus:ring-2 focus:ring-purple-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed" :disabled="currentTask.social_media_links?.instagram != null" />
                   </div>
                   <div class="space-y-2">
-                    <label class="block text-sm font-medium text-[#a0a0a0]">TikTok</label>
+                    <label class="block text-sm font-medium text-[#a0a0a0]">{{ $t('voiceActorEdit.tiktok') }}</label>
                     <input :value="(currentTask.social_media_links?.tiktok) || formFields.tiktok" @input="formFields.tiktok = ($event.target as HTMLInputElement).value" type="url" placeholder="https://tiktok.com/@..." class="w-full bg-[#2a2a2a] border-none rounded-lg text-white px-4 py-3 focus:ring-2 focus:ring-purple-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed" :disabled="currentTask.social_media_links?.tiktok != null" />
                   </div>
                   <div class="space-y-2">
-                    <label class="block text-sm font-medium text-[#a0a0a0]">Facebook</label>
+                    <label class="block text-sm font-medium text-[#a0a0a0]">{{ $t('voiceActorEdit.facebook') }}</label>
                     <input :value="(currentTask.social_media_links?.facebook) || formFields.facebook" @input="formFields.facebook = ($event.target as HTMLInputElement).value" type="url" placeholder="https://facebook.com/..." class="w-full bg-[#2a2a2a] border-none rounded-lg text-white px-4 py-3 focus:ring-2 focus:ring-purple-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed" :disabled="currentTask.social_media_links?.facebook != null" />
                   </div>
                 </div>
@@ -223,9 +219,7 @@
                 @click="loadTask" 
                 class="flex-1 py-3 px-4 bg-[#2a2a2a] hover:bg-[#333] text-white rounded-xl font-medium transition-colors"
                 :disabled="isSubmitting"
-              >
-                Skip Task
-              </button>
+              >{{ $t('contribute.skipTask') }}</button>
               <button 
                 type="submit" 
                 class="flex-1 py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-400 hover:to-purple-400 text-white rounded-xl font-medium shadow-[0_0_20px_rgba(59,130,246,0.3)] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
@@ -235,7 +229,7 @@
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <span>{{ isSubmitting ? 'Submitting...' : 'Submit & Earn Points' }}</span>
+                <span>{{ isSubmitting ? $t('contribute.submitting') : $t('contribute.submitAndEarnPoints') }}</span>
               </button>
             </div>
           </form>

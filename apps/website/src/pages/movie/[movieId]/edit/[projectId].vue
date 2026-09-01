@@ -5,17 +5,17 @@
       <div>
         <h3 class="text-xl font-bold text-white flex items-center gap-2">
           <FilmIcon class="w-6 h-6 text-cyan-400" />
-          {{ isEditMode ? 'Edit Movie Dubbing Project' : 'Create Movie Dubbing Project' }}
+          {{ isEditMode ? $t('projectEditor.editMovieProject') : $t('projectEditor.createMovieProject') }}
         </h3>
         <p class="text-sm text-gray-400 mt-1">
-          {{ isEditMode ? `Updating dubbing project ID #${projectIdParam}` : 'Fill in TMDB information, technical crew, and cast.' }}
+          {{ isEditMode ? `Updating dubbing project ID #${projectIdParam}` : $t('projectEditor.fillInfoTmdb') }}
         </p>
       </div>
       <NuxtLink
         :to="tmdbMovieId ? localePath(`/movie/${tmdbMovieId}`) : localePath('/')"
         class="text-xs font-semibold px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-xl border border-gray-700 transition-colors flex items-center space-x-2"
       >
-        <span>{{ tmdbMovieId ? '← Back to Movie' : '← Back Home' }}</span>
+        <span>{{ tmdbMovieId ? $t('projectEditor.backToMovie') : $t('projectEditor.backHome') }}</span>
       </NuxtLink>
     </div>
 
@@ -35,16 +35,14 @@
         :to="localePath(`/movie/${tmdbMovieId}/edit/new`)"
         class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-dashed"
         :class="projectIdParam === 'new' ? 'bg-cyan-900/50 text-cyan-400 border-cyan-800' : 'bg-gray-900 text-gray-400 border-gray-700 hover:bg-gray-800 hover:text-gray-300'"
-      >
-        + Add Language
-      </NuxtLink>
+      >{{ $t('projectEditor.addLanguage') }}</NuxtLink>
     </div>
 
     <!-- Main Workspace -->
     <!-- Loading overlay -->
     <div v-if="isLoading" class="flex flex-col items-center justify-center py-24 gap-4 text-gray-400">
       <Loader2Icon class="w-8 h-8 animate-spin text-cyan-400" />
-      <span class="text-sm">Loading project data...</span>
+      <span class="text-sm">{{ $t('projectEditor.loadingData') }}</span>
     </div>
 
     <form v-else @submit.prevent="saveMovieProject" class="space-y-6">
@@ -52,8 +50,8 @@
         <!-- Media Metadata Card (Left Column) -->
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-5 h-fit shadow-xl">
           <h4 class="text-sm font-bold text-gray-200 uppercase tracking-wider border-b border-gray-800 pb-3 flex items-center justify-between">
-            <span>Media Info</span>
-            <span class="text-xs text-cyan-400 font-normal">TMDB Linked</span>
+            <span>{{ $t('admin.movieEditor.mediaInfo') }}</span>
+            <span class="text-xs text-cyan-400 font-normal">{{ $t('admin.movieEditor.tmdbLinked') }}</span>
           </h4>
 
           <!-- Poster Preview -->
@@ -66,14 +64,14 @@
               />
               <div v-else class="text-center p-3 text-gray-600">
                 <ImageIcon class="h-10 w-10 mx-auto mb-1 opacity-50" />
-                <span class="text-[10px]">No poster</span>
+                <span class="text-[10px]">{{ $t('projectEditor.noPoster') }}</span>
               </div>
             </div>
           </div>
 
           <!-- Content ID / TMDB ID -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">TMDB Movie ID *</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('projectEditor.tmdbMovieId') }}</label>
             <div class="flex space-x-2">
               <input
                 v-model.number="contentId"
@@ -90,14 +88,14 @@
                 class="px-3 py-2 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 text-gray-200 text-xs font-semibold rounded-xl border border-gray-700 whitespace-nowrap"
               >
                 <Loader2Icon v-if="isFetchingTmdb" class="w-4 h-4 animate-spin" />
-                <span v-else>Fetch</span>
+                <span v-else>{{ $t('common.fetch') }}</span>
               </button>
             </div>
           </div>
 
           <!-- Media Name / Title -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Media Title *</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('admin.movieEditor.mediaTitle') }}</label>
             <input
               v-model="mediaTitle"
               type="text"
@@ -109,20 +107,20 @@
 
           <!-- Language -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Dubbing Language *</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('projectEditor.dubbingLanguage') }}</label>
             <LanguageSelect v-model="language" required />
           </div>
 
           <!-- Status -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('common.status') }}</label>
             <select
               v-model="status"
               class="w-full px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm"
             >
-              <option value="validated">Validated</option>
-              <option value="pending">Pending Review</option>
-              <option value="draft">Draft</option>
+              <option value="validated">{{ $t('admin.movieEditor.validated') }}</option>
+              <option value="pending">{{ $t('admin.movieEditor.pending') }}</option>
+              <option value="draft">{{ $t('admin.movieEditor.draft') }}</option>
             </select>
           </div>
         </div>
@@ -130,14 +128,14 @@
         <!-- Technical Crew Form (Right 2 Columns) -->
         <div class="lg:col-span-2 bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-6 shadow-xl">
           <h4 class="text-sm font-bold text-gray-200 uppercase tracking-wider border-b border-gray-800 pb-3 flex items-center justify-between">
-            <span>Technical Dubbing Team</span>
-            <span class="text-xs text-gray-400">Crew Attributes</span>
+            <span>{{ $t('admin.movieEditor.technicalDubbingTeam') }}</span>
+            <span class="text-xs text-gray-400">{{ $t('admin.movieEditor.crewAttributes') }}</span>
           </h4>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <!-- Studio -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Dubbing Studio</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('details.dubbingStudio') }}</label>
               <AsyncAutocomplete
                 v-model="selectedStudioId"
                 :options="studioOptions"
@@ -152,7 +150,7 @@
 
             <!-- Artistic Director -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Artistic Director (D.A.)</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('admin.movieEditor.artisticDirector') }}</label>
               <AsyncAutocomplete
                 v-model="artisticDirectorId"
                 :options="voiceActorOptions"
@@ -167,7 +165,7 @@
 
             <!-- Adaptation -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Adaptation / Dialogueur</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('admin.movieEditor.adaptation') }}</label>
               <AsyncAutocomplete
                 v-model="adaptationId"
                 :options="voiceActorOptions"
@@ -182,7 +180,7 @@
 
             <!-- Recording -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Sound Recording (Enregistrement)</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('admin.movieEditor.soundRecording') }}</label>
               <AsyncAutocomplete
                 v-model="recordingId"
                 :options="voiceActorOptions"
@@ -197,7 +195,7 @@
 
             <!-- Editing -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Sound Editing (Montage)</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('admin.movieEditor.soundEditing') }}</label>
               <AsyncAutocomplete
                 v-model="editingId"
                 :options="voiceActorOptions"
@@ -212,7 +210,7 @@
 
             <!-- Mixing -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Mixing (Mixage)</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('dubbing.mixing') }}</label>
               <AsyncAutocomplete
                 v-model="mixingId"
                 :options="voiceActorOptions"
@@ -227,7 +225,7 @@
 
             <!-- Project Manager -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Project Manager</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('admin.movieEditor.projectManager') }}</label>
               <AsyncAutocomplete
                 v-model="projectManagerId"
                 :options="voiceActorOptions"
@@ -242,7 +240,7 @@
             
             <!-- Creative Supervision -->
             <div class="space-y-1">
-              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Creative Supervision</label>
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('admin.movieEditor.creativeSupervision') }}</label>
               <AsyncAutocomplete
                 v-model="creativeSupervisionId"
                 :options="voiceActorOptions"
@@ -261,14 +259,12 @@
       <!-- Cast / Voice Actors List -->
       <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-6 shadow-xl">
         <div class="flex justify-between items-center border-b border-gray-800 pb-3">
-          <h4 class="text-sm font-bold text-gray-200 uppercase tracking-wider">Voice Cast</h4>
+          <h4 class="text-sm font-bold text-gray-200 uppercase tracking-wider">{{ $t('projectEditor.voiceCast') }}</h4>
           <button
             type="button"
             @click="addCastRow"
             class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl flex items-center transition-colors"
-          >
-            + Add Voice Actor
-          </button>
+          >{{ $t('projectEditor.addVoiceActor') }}</button>
         </div>
 
         <div class="space-y-4">
@@ -285,7 +281,7 @@
             <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
               <!-- Character fields -->
               <div class="md:col-span-12 space-y-1">
-                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Original Actor / Character *</label>
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('projectEditor.originalActorCharacter') }}</label>
                 <AsyncAutocomplete
                   v-model="row.actor_id"
                   @update:model-value="(val: any) => handleActorSelect(row, val)"
@@ -301,7 +297,7 @@
 
               <!-- Voice Actor -->
               <div class="md:col-span-8 space-y-1">
-                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Voice Actor *</label>
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('projectEditor.voiceActor') }}</label>
                 <AsyncAutocomplete
                   v-model="row.voice_actor_id"
                   :options="voiceActorOptions"
@@ -316,29 +312,27 @@
               
               <!-- Performance -->
               <div class="md:col-span-4 space-y-1">
-                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Performance Type</label>
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('projectEditor.performanceType') }}</label>
                 <select
                   v-model="row.performance"
                   class="w-full px-4 py-2 bg-gray-900 border border-gray-800 rounded-lg text-white focus:ring-2 focus:ring-blue-500 text-sm"
                 >
-                  <option value="dialogues">Dialogues</option>
-                  <option value="dialogues & chant">Dialogues & Chant</option>
-                  <option value="chant">Chant</option>
-                  <option value="bruitages">Bruitages</option>
-                  <option value="narration">Narration</option>
+                  <option value="dialogues">{{ $t('admin.movieEditor.dialogues') }}</option>
+                  <option value="dialogues & chant">{{ $t('admin.movieEditor.dialoguesAndChant') }}</option>
+                  <option value="chant">{{ $t('admin.movieEditor.chant') }}</option>
+                  <option value="bruitages">{{ $t('projectEditor.performanceBruitages') }}</option>
+                  <option value="narration">{{ $t('projectEditor.performanceNarration') }}</option>
                 </select>
               </div>
               
               <div class="md:col-span-12 flex items-center space-x-2">
                 <input type="checkbox" v-model="row.highlight" class="w-4 h-4 bg-gray-900 border-gray-800 rounded text-blue-500 focus:ring-blue-500" />
-                <label class="text-xs text-gray-300">Highlight character</label>
+                <label class="text-xs text-gray-300">{{ $t('projectEditor.highlightCharacter') }}</label>
               </div>
             </div>
           </div>
           
-          <div v-if="castRows.length === 0" class="text-center py-10 bg-gray-950 border border-dashed border-gray-800 rounded-xl text-gray-500">
-            No cast members added yet.
-          </div>
+          <div v-if="castRows.length === 0" class="text-center py-10 bg-gray-950 border border-dashed border-gray-800 rounded-xl text-gray-500">{{ $t('projectEditor.noCastMembers') }}</div>
         </div>
       </div>
 
@@ -350,7 +344,7 @@
           class="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl flex items-center space-x-2 transition-colors disabled:opacity-50"
         >
           <Loader2Icon v-if="isSaving" class="w-5 h-5 animate-spin" />
-          <span v-else>Save Movie Project</span>
+          <span v-else>{{ $t('projectEditor.saveMovieProject') }}</span>
         </button>
       </div>
     </form>
@@ -360,8 +354,8 @@
       <DialogPortal>
         <DialogOverlay class="fixed inset-0 bg-black/60 z-[110] backdrop-blur-sm" />
         <DialogContent class="fixed top-1/2 left-1/2 -trangray-x-1/2 -trangray-y-1/2 bg-gray-900 border border-gray-700 rounded-2xl p-6 shadow-2xl z-[120] w-[400px]">
-          <DialogTitle class="text-lg font-bold text-white mb-4">Create New Studio</DialogTitle>
-          <VisuallyHidden><DialogDescription>Form to create a new studio</DialogDescription></VisuallyHidden>
+          <DialogTitle class="text-lg font-bold text-white mb-4">{{ $t('projectEditor.createNewStudio') }}</DialogTitle>
+          <VisuallyHidden><DialogDescription>{{ $t('projectEditor.formCreateStudio') }}</DialogDescription></VisuallyHidden>
           <input
             v-model="newStudioName"
             type="text"
@@ -369,10 +363,10 @@
             class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-lg text-white mb-4"
           />
           <div class="flex justify-end gap-2">
-            <button @click="isCreateStudioOpen = false" class="px-4 py-2 text-gray-300 hover:text-white">Cancel</button>
+            <button @click="isCreateStudioOpen = false" class="px-4 py-2 text-gray-300 hover:text-white">{{ $t('common.cancel') }}</button>
             <button @click="createStudio" :disabled="!newStudioName || isCreatingStudio" class="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50 flex items-center gap-2">
               <Loader2Icon v-if="isCreatingStudio" class="w-4 h-4 animate-spin" />
-              <span>Create</span>
+              <span>{{ $t('common.create') }}</span>
             </button>
           </div>
         </DialogContent>
@@ -384,8 +378,8 @@
       <DialogPortal>
         <DialogOverlay class="fixed inset-0 bg-black/60 z-[110] backdrop-blur-sm" />
         <DialogContent class="fixed top-1/2 left-1/2 -trangray-x-1/2 -trangray-y-1/2 bg-gray-900 border border-gray-700 rounded-2xl p-6 shadow-2xl z-[120] w-[400px]">
-          <DialogTitle class="text-lg font-bold text-white mb-4">Create New Voice Actor</DialogTitle>
-          <VisuallyHidden><DialogDescription>Form to create a new voice actor</DialogDescription></VisuallyHidden>
+          <DialogTitle class="text-lg font-bold text-white mb-4">{{ $t('projectEditor.createNewVoiceActor') }}</DialogTitle>
+          <VisuallyHidden><DialogDescription>{{ $t('projectEditor.formCreateVoiceActor') }}</DialogDescription></VisuallyHidden>
           <div class="space-y-4 mb-4">
             <input
               v-model="newVaFirstname"
@@ -401,10 +395,10 @@
             />
           </div>
           <div class="flex justify-end gap-2">
-            <button @click="isCreateVaOpen = false" class="px-4 py-2 text-gray-300 hover:text-white">Cancel</button>
+            <button @click="isCreateVaOpen = false" class="px-4 py-2 text-gray-300 hover:text-white">{{ $t('common.cancel') }}</button>
             <button @click="createVoiceActor" :disabled="!newVaFirstname || isCreatingVa" class="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50 flex items-center gap-2">
               <Loader2Icon v-if="isCreatingVa" class="w-4 h-4 animate-spin" />
-              <span>Create</span>
+              <span>{{ $t('common.create') }}</span>
             </button>
           </div>
         </DialogContent>
@@ -417,7 +411,7 @@
       class="fixed bottom-6 right-6 z-50 p-4 rounded-xl border shadow-2xl text-sm max-w-sm flex flex-col gap-2 bg-gray-900 border-gray-800 text-gray-200"
     >
       <span>{{ toast.message }}</span>
-      <a v-if="toast.link" :href="toast.link" target="_blank" class="text-blue-400 hover:underline">View Details ↗</a>
+      <a v-if="toast.link" :href="toast.link" target="_blank" class="text-blue-400 hover:underline">{{ $t('projectEditor.viewDetails') }}</a>
     </div>
   </div>
   </template>

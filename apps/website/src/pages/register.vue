@@ -6,14 +6,14 @@
       <div class="relative bg-white dark:bg-[#18181b] border border-gray-200 dark:border-white/5 rounded-3xl shadow-2xl p-8 sm:p-10 space-y-8">
         
         <div class="text-center space-y-2">
-          <h3 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Create an account</h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400">Join DubbingBase today</p>
+          <h3 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ $t('auth.register.title') }}</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400">{{ $t('auth.register.subtitle') }}</p>
         </div>
 
         <form class="space-y-5" @submit.prevent="handleRegister">
           <!-- Username Field -->
           <div class="space-y-2">
-            <label for="username" class="text-sm font-medium text-gray-700 dark:text-gray-300">Username</label>
+            <label for="username" class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ $t('auth.username') }}</label>
             <input
               id="username"
               v-model="username"
@@ -26,7 +26,7 @@
 
           <!-- Full Name Field -->
           <div class="space-y-2">
-            <label for="full_name" class="text-sm font-medium text-gray-700 dark:text-gray-300">Full Name <span class="text-gray-500 font-normal">(Optional)</span></label>
+            <label for="full_name" class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ $t('auth.fullName') }}<span class="text-gray-500 font-normal">{{ $t('auth.register.optional') }}</span></label>
             <input
               id="full_name"
               v-model="full_name"
@@ -38,7 +38,7 @@
 
           <!-- Email Field -->
           <div class="space-y-2">
-            <label for="email" class="text-sm font-medium text-gray-700 dark:text-gray-300">Email address</label>
+            <label for="email" class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ $t('auth.email') }}</label>
             <input
               id="email"
               v-model="email"
@@ -51,7 +51,7 @@
 
           <!-- Password Field -->
           <div class="space-y-2">
-            <label for="password" class="text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+            <label for="password" class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ $t('auth.password') }}</label>
             <input
               id="password"
               v-model="password"
@@ -77,15 +77,11 @@
           </div>
 
           <!-- Terms Agreement -->
-          <p class="text-xs text-gray-500 dark:text-gray-400 text-center px-4 leading-relaxed">
-            By creating an account, you agree to our 
-            <NuxtLink :to="localePath('/terms')" class="text-cyan-600 dark:text-cyan-400 hover:underline">Terms of Service</NuxtLink>.
+          <p class="text-xs text-gray-500 dark:text-gray-400 text-center px-4 leading-relaxed">{{ $t('auth.register.agreeToTerms') }}<NuxtLink :to="localePath('/terms')" class="text-cyan-600 dark:text-cyan-400 hover:underline">{{ $t('footer.terms') }}</NuxtLink>.
           </p>
 
           <!-- Link to Login -->
-          <div class="text-sm text-center text-gray-500 dark:text-gray-400">
-            Already have an account?
-            <NuxtLink :to="localePath('/login')" class="text-cyan-600 dark:text-cyan-400 font-medium hover:underline transition">Sign in</NuxtLink>
+          <div class="text-sm text-center text-gray-500 dark:text-gray-400">{{ $t('auth.register.alreadyHaveAccount') }}<NuxtLink :to="localePath('/login')" class="text-cyan-600 dark:text-cyan-400 font-medium hover:underline transition">{{ $t('auth.signIn') }}</NuxtLink>
           </div>
 
           <!-- Submit Button -->
@@ -95,7 +91,7 @@
             class="w-full py-3.5 px-4 bg-cyan-500 hover:bg-cyan-400 text-gray-900 font-semibold rounded-xl shadow-lg shadow-cyan-500/20 transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 flex justify-center items-center"
           >
             <span v-if="loading" class="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-900 mr-2"></span>
-            <span>{{ loading ? 'Creating account...' : 'Sign up' }}</span>
+            <span>{{ loading ? $t('auth.register.creating') : $t('auth.signUp') }}</span>
           </button>
         </form>
       </div>

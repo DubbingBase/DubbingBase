@@ -20,9 +20,7 @@
           :href="studio.website_url"
           target="_blank"
           class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-gray-200 dark:border-[#2a2a2a] bg-white dark:bg-[#1d1d1d] text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#2a2a2a] flex items-center gap-2"
-        >
-          Visiter le site web
-          <ExternalLinkIcon class="w-4 h-4 opacity-70" />
+        >{{ $t('studio.visitWebsite') }}<ExternalLinkIcon class="w-4 h-4 opacity-70" />
         </a>
       </template>
       <template #right v-if="isAdmin">
@@ -30,7 +28,7 @@
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
           </svg>
-          <span class="hidden sm:inline">Éditer le studio</span>
+          <span class="hidden sm:inline">{{ $t('studioEdit.titleEdit') }}</span>
         </NuxtLink>
       </template>
     </DetailsActionBar>
@@ -39,7 +37,7 @@
       <!-- Overview -->
       <div class="mb-12 max-w-4xl" v-if="studio.description">
         <section>
-          <h2 class="text-2xl font-bold mb-4">À propos</h2>
+          <h2 class="text-2xl font-bold mb-4">{{ $t('studio.about') }}</h2>
           <p class="text-gray-700 dark:text-gray-300 leading-relaxed text-lg">
             {{ studio.description }}
           </p>
@@ -50,10 +48,8 @@
       <section class="mb-12" v-if="dubbedProjects.length > 0">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h2 class="text-2xl font-bold">Projets de doublage ({{ dubbedProjects.length }})</h2>
-            <div class="text-gray-500 dark:text-gray-400 text-sm mt-1">
-              {{ visibleProjects.length }} / {{ filteredProjects.length }} affichés
-            </div>
+            <h2 class="text-2xl font-bold">{{ $t('studio.dubbingProjectsCount', { count: dubbedProjects.length }) }}</h2>
+            <div class="text-gray-500 dark:text-gray-400 text-sm mt-1">{{ $t('studio.shownCount', { shown: visibleProjects.length, total: filteredProjects.length }) }}</div>
           </div>
           <div class="relative w-full sm:w-64" v-if="dubbedProjects.length > 8">
             <SearchIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -88,9 +84,9 @@
               
               <!-- Language badge -->
               <div class="absolute top-2 right-2 px-2 py-1 bg-black/60 backdrop-blur-md rounded-md text-xs font-semibold text-white">
-                <span v-if="project.language === 'fr-FR'">Français (VFF)</span>
-                <span v-else-if="project.language === 'fr-CA'">Québécois (VFQ)</span>
-                <span v-else-if="project.language === 'fr-BE'">Belge (VFB)</span>
+                <span v-if="project.language === 'fr-FR'">{{ $t('studio.french') }}</span>
+                <span v-else-if="project.language === 'fr-CA'">{{ $t('studio.quebec') }}</span>
+                <span v-else-if="project.language === 'fr-BE'">{{ $t('studio.belgian') }}</span>
                 <span v-else>{{ project.language }}</span>
               </div>
             </div>
@@ -116,9 +112,7 @@
           >
             {{ $t('common.loadMore', 'Load more') }}
           </button>
-          <span class="text-xs text-gray-400">
-            {{ visibleProjects.length }} / {{ filteredProjects.length }} projets
-          </span>
+          <span class="text-xs text-gray-400">{{ $t('studio.projectsCount', { shown: visibleProjects.length, total: filteredProjects.length }) }}</span>
         </div>
       </section>
 
@@ -126,10 +120,8 @@
       <section v-if="voiceActorsRoster.length > 0">
         <div class="flex items-center justify-between mb-6">
           <div>
-            <h2 class="text-2xl font-bold">Comédiens ({{ voiceActorsRoster.length }})</h2>
-            <div class="text-gray-500 dark:text-gray-400 text-sm mt-1" v-if="voiceActorsRoster.length > 20">
-              {{ visibleVoiceActors.length }} / {{ voiceActorsRoster.length }} affichés
-            </div>
+            <h2 class="text-2xl font-bold">{{ $t('studio.voiceActorsCount', { count: voiceActorsRoster.length }) }}</h2>
+            <div class="text-gray-500 dark:text-gray-400 text-sm mt-1" v-if="voiceActorsRoster.length > 20">{{ $t('studio.shownCount', { shown: visibleVoiceActors.length, total: voiceActorsRoster.length }) }}</div>
           </div>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -172,9 +164,7 @@
           >
             {{ $t('common.loadMore', 'Load more') }}
           </button>
-          <span class="text-xs text-gray-400">
-            {{ visibleVoiceActors.length }} / {{ voiceActorsRoster.length }} comédiens
-          </span>
+          <span class="text-xs text-gray-400">{{ $t('studio.actorsCount', { shown: visibleVoiceActors.length, total: voiceActorsRoster.length }) }}</span>
         </div>
       </section>
     </div>

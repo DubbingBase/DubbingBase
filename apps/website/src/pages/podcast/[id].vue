@@ -65,7 +65,7 @@
             class="px-3 py-1.5 bg-gray-800/80 hover:bg-gray-700 text-xs font-semibold text-gray-200 rounded-xl border border-gray-700 flex items-center gap-1.5 transition-colors"
           >
             <RadioIcon class="w-3.5 h-3.5 text-pink-400" />
-            <span>Flux RSS / Podcast</span>
+            <span>{{ $t('podcast.rssFeed') }}</span>
             <ExternalLinkIcon class="w-3 h-3 opacity-60" />
           </button>
 
@@ -93,13 +93,11 @@
           v-if="activeDubProject?.studios || activeDubProject?.dubbing_project_crew?.length"
           class="bg-gray-100 dark:bg-gray-900/60 backdrop-blur border border-gray-200 dark:border-gray-800 rounded-2xl p-6 space-y-4 mb-8 shadow-xl"
         >
-          <h3 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-            Équipe de Production & Studio
-          </h3>
+          <h3 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ $t('podcast.productionTeam') }}</h3>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div v-if="activeDubProject?.studios" class="space-y-1">
-              <span class="text-xs text-gray-400">Studio d'enregistrement</span>
+              <span class="text-xs text-gray-400">{{ $t('studio.recordingStudio') }}</span>
               <NuxtLink
                 :to="localePath(`/studio/${activeDubProject.studios.id}`)"
                 class="text-sm font-semibold text-pink-500 hover:underline block"
@@ -130,7 +128,7 @@
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h2 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <span>Distribution & Voix</span>
+                <span>{{ $t('podcast.castSection') }}</span>
                 <span
                   v-if="formattedCast.length > 0"
                   class="text-xs px-2.5 py-0.5 rounded-full bg-pink-500/10 text-pink-500 font-semibold border border-pink-500/20"
@@ -138,9 +136,7 @@
                   {{ formattedCast.length }}
                 </span>
               </h2>
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Comédiens et voix ayant participé à cette fiction audio / podcast.
-              </p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ $t('podcast.voiceCastDescription') }}</p>
             </div>
 
             <!-- Cast search filter -->
@@ -159,11 +155,9 @@
             v-if="visibleCast.length === 0"
             class="text-center py-16 bg-gray-100 dark:bg-gray-900/30 rounded-2xl border border-gray-200 dark:border-gray-800/40 text-gray-500 text-sm"
           >
-            {{
-              formattedCast.length === 0
+            {{ formattedCast.length === 0
                 ? "Aucune information de casting enregistrée pour le moment."
-                : "Aucun comédien ne correspond à votre recherche."
-            }}
+                : "Aucun comédien ne correspond à votre recherche." }}
           </div>
 
           <div
@@ -211,16 +205,12 @@
             v-if="hasMoreCast"
             ref="castSentinel"
             class="h-10 flex items-center justify-center text-xs text-gray-500"
-          >
-            Chargement de comédiens supplémentaires...
-          </div>
+          >{{ $t('podcast.loadingMoreActors') }}</div>
         </section>
       </template>
     </MediaDetailsLayout>
 
-    <div v-else class="text-center py-24 text-gray-500">
-      Podcast / Fiction audio introuvable.
-    </div>
+    <div v-else class="text-center py-24 text-gray-500">{{ $t('podcast.notFound') }}</div>
 
     <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
   </div>

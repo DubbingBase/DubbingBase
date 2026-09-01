@@ -11,15 +11,14 @@
       <template #metadata>
         <span class="text-gray-900 dark:text-gray-100 font-semibold text-base md:text-lg bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg">
           {{ season.air_date ? season.air_date.split('-')[0] : '' }}
-          <template v-if="season.episode_count"> &bull; {{ season.episode_count }} {{ $t('details.episodes') }}</template>
+          <template v-if="season.episode_count">{{ $t('common.separator') }}{{ season.episode_count }} {{ $t('details.episodes') }}</template>
         </span>
         <span class="flex items-center gap-1.5 text-gray-900 dark:text-gray-100 font-bold text-sm md:text-base bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg">
           <StarIcon class="w-4 h-4 text-yellow-500 fill-current" />
           {{ season.vote_average?.toFixed(1) }}
         </span>
         <div class="flex gap-2 ml-2">
-          <a :href="`https://www.themoviedb.org/tv/${showId}/season/${seasonNumber}`" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg bg-white/40 dark:bg-black/40 text-gray-800 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-black/60 transition-colors backdrop-blur-md uppercase tracking-wider">
-            TMDB <ExternalLinkIcon class="w-3 h-3 opacity-70" />
+          <a :href="`https://www.themoviedb.org/tv/${showId}/season/${seasonNumber}`" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg bg-white/40 dark:bg-black/40 text-gray-800 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-black/60 transition-colors backdrop-blur-md uppercase tracking-wider">{{ $t('common.tmdb') }}<ExternalLinkIcon class="w-3 h-3 opacity-70" />
           </a>
         </div>
       </template>

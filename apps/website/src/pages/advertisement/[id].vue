@@ -29,9 +29,7 @@
             "
             class="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 text-xs font-semibold rounded-xl border border-emerald-500/30 flex items-center gap-1.5 transition-colors"
           >
-            <span>{{
-              activeDubProject ? "Modifier le projet" : "Ajouter un projet"
-            }}</span>
+            <span>{{ activeDubProject ? "Modifier le projet" : "Ajouter un projet" }}</span>
           </NuxtLink>
 
           <ForceEnqueueButton
@@ -45,17 +43,17 @@
       <template #details-extra>
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-4 border-t border-gray-800/60">
           <div v-if="advertisement.brand">
-            <span class="text-xs text-gray-400 block mb-0.5">Marque / Annonceur</span>
+            <span class="text-xs text-gray-400 block mb-0.5">{{ $t('advertisement.brand') }}</span>
             <span class="text-sm font-semibold text-gray-200">{{ advertisement.brand }}</span>
           </div>
 
           <div v-if="advertisement.agency">
-            <span class="text-xs text-gray-400 block mb-0.5">Agence de publicité</span>
+            <span class="text-xs text-gray-400 block mb-0.5">{{ $t('advertisement.agencyLabel') }}</span>
             <span class="text-sm font-semibold text-gray-200">{{ advertisement.agency }}</span>
           </div>
 
           <div v-if="advertisement.country">
-            <span class="text-xs text-gray-400 block mb-0.5">Pays / Diffusion</span>
+            <span class="text-xs text-gray-400 block mb-0.5">{{ $t('advertisement.countryBroadcast') }}</span>
             <span class="text-sm font-semibold text-gray-200">{{ advertisement.country }}</span>
           </div>
         </div>
@@ -67,9 +65,7 @@
           v-if="advertisement.video_id"
           class="bg-gray-900/60 border border-gray-800 rounded-2xl p-6 space-y-4 mb-8 shadow-xl"
         >
-          <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">
-            Spot Vidéo
-          </h3>
+          <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">{{ $t('advertisement.videoSpot') }}</h3>
           <div class="aspect-video w-full rounded-xl overflow-hidden bg-black shadow-lg">
             <iframe
               :src="`https://www.youtube.com/embed/${advertisement.video_id}`"
@@ -87,13 +83,11 @@
           v-if="activeDubProject?.studios || activeDubProject?.dubbing_project_crew?.length"
           class="bg-gray-900/60 backdrop-blur border border-gray-800 rounded-2xl p-6 space-y-4 mb-8 shadow-xl"
         >
-          <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">
-            Studio & Production Sonore
-          </h3>
+          <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">{{ $t('advertisement.studioAndSoundProduction') }}</h3>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div v-if="activeDubProject?.studios" class="space-y-1">
-              <span class="text-xs text-gray-400">Studio d'enregistrement</span>
+              <span class="text-xs text-gray-400">{{ $t('studio.recordingStudio') }}</span>
               <NuxtLink
                 :to="localePath(`/studio/${activeDubProject.studios.id}`)"
                 class="text-sm font-semibold text-emerald-400 hover:underline block"
@@ -126,7 +120,7 @@
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                <span>Voix Off & Comédiens</span>
+                <span>{{ $t('advertisementEditor.voiceOffActors') }}</span>
                 <span
                   v-if="formattedCast.length > 0"
                   class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-semibold border border-emerald-500/20"
@@ -134,18 +128,14 @@
                   {{ formattedCast.length }}
                 </span>
               </h2>
-              <p class="text-xs text-gray-400 mt-1">
-                Comédiens ayant prêté leur voix pour ce spot publicitaire.
-              </p>
+              <p class="text-xs text-gray-400 mt-1">{{ $t('advertisement.voiceCastDescription') }}</p>
             </div>
           </div>
 
           <div
             v-if="formattedCast.length === 0"
             class="text-center py-16 bg-gray-900/30 rounded-2xl border border-gray-800/40 text-gray-500 text-sm"
-          >
-            Aucune voix off enregistrée pour le moment.
-          </div>
+          >{{ $t('advertisement.noVoicesYet') }}</div>
 
           <div
             v-else
@@ -190,9 +180,7 @@
       </template>
     </MediaDetailsLayout>
 
-    <div v-else class="text-center py-24 text-gray-500">
-      Publicité introuvable.
-    </div>
+    <div v-else class="text-center py-24 text-gray-500">{{ $t('advertisement.notFound') }}</div>
 
     <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
   </div>

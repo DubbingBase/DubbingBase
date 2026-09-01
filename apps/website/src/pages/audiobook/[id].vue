@@ -29,8 +29,7 @@
             target="_blank"
             rel="noopener noreferrer"
             class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg bg-white/40 dark:bg-black/40 text-gray-800 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-black/60 transition-colors backdrop-blur-md uppercase tracking-wider"
-          >
-            OpenLibrary <ExternalLinkIcon class="w-3 h-3 opacity-70" />
+          >{{ $t('audiobook.openLibrary') }}<ExternalLinkIcon class="w-3 h-3 opacity-70" />
           </a>
         </div>
       </template>
@@ -113,7 +112,7 @@
                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
               />
             </svg>
-            <span class="hidden sm:inline">Éditer</span>
+            <span class="hidden sm:inline">{{ $t('common.edit') }}</span>
           </NuxtLink>
         </ClientOnly>
 
@@ -156,13 +155,11 @@
             <p
               class="text-gray-700 dark:text-gray-300 leading-relaxed text-lg mb-8 whitespace-pre-line"
             >
-              {{
-                audiobook.description ||
+              {{ audiobook.description ||
                 $t(
                   "details.noSynopsis",
                   "Aucune description disponible pour ce livre.",
-                )
-              }}
+                ) }}
             </p>
 
             <div
@@ -204,9 +201,7 @@
               >
                 <h3
                   class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2"
-                >
-                  Thèmes
-                </h3>
+                >{{ $t('audiobook.subjects') }}</h3>
                 <div class="flex flex-wrap gap-1.5">
                   <span
                     v-for="(sub, sIdx) in audiobook.subjects.slice(0, 4)"
@@ -231,9 +226,7 @@
                 <h2 class="text-2xl font-bold">
                   {{ $t("details.castAndCrew", "Voix & Narration") }}
                 </h2>
-                <div class="text-gray-500 dark:text-gray-400 text-sm mt-1">
-                  {{ filteredCast.length }} / {{ formattedCast.length }} narrateurs & comédiens
-                </div>
+                <div class="text-gray-500 dark:text-gray-400 text-sm mt-1">{{ $t('audiobook.castCount', { shown: filteredCast.length, total: formattedCast.length }) }}</div>
               </div>
 
               <div class="relative w-full sm:w-64">
@@ -334,9 +327,7 @@
       </template>
     </MediaDetailsLayout>
 
-    <div v-else class="text-center py-20 text-gray-500 min-h-screen">
-      Livre audio non trouvé.
-    </div>
+    <div v-else class="text-center py-20 text-gray-500 min-h-screen">{{ $t('audiobook.notFound') }}</div>
 
     <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
   </div>

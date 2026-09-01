@@ -1,8 +1,8 @@
 <template>
   <div class="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 min-h-screen">
     <div class="mb-8">
-      <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">Séries</h1>
-      <p class="text-gray-600 dark:text-gray-400">Découvrez les séries télévisées les plus populaires du moment.</p>
+      <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">{{ $t('footer.series') }}</h1>
+      <p class="text-gray-600 dark:text-gray-400">{{ $t('series.heroDescription') }}</p>
     </div>
 
     <!-- Loading State -->
@@ -12,7 +12,7 @@
 
     <!-- Error State -->
     <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-6 rounded-xl border border-red-200 dark:border-red-800">
-      <h3 class="text-lg font-semibold mb-2">Erreur</h3>
+      <h3 class="text-lg font-semibold mb-2">{{ $t('common.error') }}</h3>
       <p>{{ error }}</p>
     </div>
 
