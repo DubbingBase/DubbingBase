@@ -245,10 +245,11 @@ import {
 
 const { theme } = useTheme();
 const { t, locale } = useI18n();
-const setLocale = (val: any) => {
-  locale.value = val;
-};
+const switchLocalePath = useSwitchLocalePath();
 const localePath = useLocalePath();
+const setLocale = (val: any) => {
+  navigateTo(switchLocalePath(val));
+};
 const { openSearch } = useSearchModal();
 const user = useSupabaseUser();
 const route = useRoute();
