@@ -1,5 +1,11 @@
 # @app/landing
 
+## 1.2.3
+
+### Patch Changes
+
+- 9fbd705: Set default LLM provider to Gemini (`gemini-3.5-flash-lite`) with Groq (`groq/compound`) as fallback.
+
 ## 1.2.2
 
 ### Patch Changes
