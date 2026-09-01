@@ -1,5 +1,11 @@
 # @app/landing
 
+## 1.2.2
+
+### Patch Changes
+
+- 5d980e8: Display language name directly on dubbing tabs, add voice actor count badge, and hide tabs with zero voice actors
+
 ## 1.2.1
 
 ### Patch Changes
