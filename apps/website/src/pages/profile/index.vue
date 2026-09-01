@@ -1,13 +1,13 @@
 <template>
   <div>
-    <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">Profile Details</h2>
+    <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">{{ $t('profile.details') }}</h2>
     
     <div class="space-y-6">
       <div v-if="user" class="bg-gray-50 dark:bg-black/20 p-4 rounded-xl border border-gray-100 dark:border-white/5">
         <form @submit.prevent="updateProfile" class="mb-6 space-y-4">
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username (Pseudo)</label>
+              <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ $t('profile.username') }}</label>
               <input
                 id="username"
                 v-model="username"
@@ -16,7 +16,7 @@
               />
             </div>
             <div>
-              <label for="full_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
+              <label for="full_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ $t('auth.fullName') }}</label>
               <input
                 id="full_name"
                 v-model="full_name"
@@ -34,22 +34,22 @@
               :disabled="isUpdating || (username === (user.user_metadata?.username || '') && full_name === (user.user_metadata?.full_name || ''))"
               class="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-gray-900 font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {{ isUpdating ? 'Saving...' : 'Save Changes' }}
+              {{ isUpdating ? $t('profile.saving') : $t('profile.saveChanges') }}
             </button>
           </div>
         </form>
 
         <dl class="divide-y divide-gray-200 dark:divide-slate-800 border-t border-gray-200 dark:border-slate-800 pt-4">
           <div class="py-3 flex justify-between">
-            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Email address</dt>
+            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ $t('auth.email') }}</dt>
             <dd class="text-sm text-gray-900 dark:text-white">{{ user.email }}</dd>
           </div>
           <div class="py-3 flex justify-between">
-            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">User ID</dt>
+            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ $t('common.userId') }}</dt>
             <dd class="text-sm text-gray-900 dark:text-white font-mono text-xs">{{ user.id }}</dd>
           </div>
           <div class="py-3 flex justify-between">
-            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Last sign in</dt>
+            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ $t('profile.lastSignIn') }}</dt>
             <dd class="text-sm text-gray-900 dark:text-white">{{ formatDate(user.last_sign_in_at) }}</dd>
           </div>
         </dl>
@@ -58,21 +58,21 @@
 
     <!-- Gamified Contributions Section -->
     <div class="mt-12">
-      <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">Recent Contributions</h2>
-      <div v-if="isLoadingLogs" class="text-sm text-gray-500">Loading contributions...</div>
-      <div v-else-if="auditLogs.length === 0" class="text-sm text-gray-500">You haven't made any gamified contributions yet. Go to the <NuxtLink :to="localePath('/contribute')" class="text-cyan-500 hover:underline">Contribution Hub</NuxtLink> to start earning points!</div>
+      <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">{{ $t('profile.recentContributions') }}</h2>
+      <div v-if="isLoadingLogs" class="text-sm text-gray-500">{{ $t('profile.loadingContributions') }}</div>
+      <div v-else-if="auditLogs.length === 0" class="text-sm text-gray-500">{{ $t('profile.noGamifiedContributionsYet') }}<NuxtLink :to="localePath('/contribute')" class="text-cyan-500 hover:underline">{{ $t('profile.contributionHub') }}</NuxtLink>{{ $t('profile.toStartEarningPoints') }}</div>
       <div v-else class="bg-gray-50 dark:bg-black/20 rounded-xl border border-gray-100 dark:border-white/5 overflow-hidden">
         <ul class="divide-y divide-gray-200 dark:divide-slate-800">
           <li v-for="log in auditLogs" :key="log.id" class="p-4 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">
             <div>
               <p class="text-sm font-medium text-gray-900 dark:text-white capitalize">
-                {{ log.action.replace(/_/g, ' ') }} <span class="text-xs text-gray-500 dark:text-gray-400">on {{ log.entity_type }} ({{ log.entity_id }})</span>
+                {{ log.action.replace(/_/g, ' ') }} <span class="text-xs text-gray-500 dark:text-gray-400">{{ $t('profile.onEntity', { type: log.entity_type, id: log.entity_id }) }}</span>
               </p>
               <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ new Date(log.created_at).toLocaleString() }}</p>
             </div>
             <div class="flex items-center gap-3">
-              <span v-if="log.reverted_at" class="text-xs text-red-500 px-2 py-1 bg-red-500/10 rounded">Reverted</span>
-              <span v-else class="text-sm font-mono text-emerald-500 font-bold">+{{ log.points_awarded }} pts</span>
+              <span v-if="log.reverted_at" class="text-xs text-red-500 px-2 py-1 bg-red-500/10 rounded">{{ $t('admin.auditLogs.reverted') }}</span>
+              <span v-else class="text-sm font-mono text-emerald-500 font-bold">{{ $t('profile.pointsAwarded', { pts: log.points_awarded }) }}</span>
             </div>
           </li>
         </ul>

@@ -14,18 +14,16 @@
       <!-- Stats / Rank Section -->
       <div class="bg-[#1d1d1d]/80 backdrop-blur-md rounded-2xl p-6 border border-[#2a2a2a] shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 transition-transform hover:scale-[1.01]">
         <div class="flex items-center gap-4">
-          <div class="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-2xl font-bold text-white shadow-lg">
-            LV
-          </div>
+          <div class="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-2xl font-bold text-white shadow-lg">{{ $t('contribute.lv') }}</div>
           <div>
             <h2 class="text-2xl font-bold text-white">{{ $t('contribute.bronzeContributor') }}</h2>
-            <p class="text-[#a0a0a0]">{{ $t('contribute.currentScore') }} <span class="text-emerald-400 font-mono font-semibold">1,250 pts</span></p>
+            <p class="text-[#a0a0a0]">{{ $t('contribute.currentScore') }} <span class="text-emerald-400 font-mono font-semibold">{{ $t('contribute.pts1250') }}</span></p>
           </div>
         </div>
         <div class="w-full md:w-1/2">
           <div class="flex justify-between text-sm mb-2 text-[#a0a0a0]">
             <span>{{ $t('contribute.progressToSilver') }}</span>
-            <span>2,000 pts</span>
+            <span>{{ $t('contribute.pts2000') }}</span>
           </div>
           <div class="w-full bg-[#2a2a2a] rounded-full h-3 overflow-hidden">
             <div class="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full" style="width: 62%"></div>
@@ -56,8 +54,7 @@
         <div class="flex animate-[ticker_20s_linear_infinite] whitespace-nowrap gap-8 text-sm text-[#a0a0a0]">
           <span v-for="activity in recentActivities" :key="activity.id" class="flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-emerald-500"></span> 
-            <b>{{ activity.user_name }}</b> {{ activity.action.replace(/_/g, ' ') }} for {{ activity.entity_name }} (+{{ activity.points_awarded }} pts)
-          </span>
+            <b>{{ activity.user_name }}</b>{{ $t('contribute.activityFor', { action: activity.action.replace(/_/g, ' '), name: activity.entity_name, pts: activity.points_awarded }) }}</span>
           <span v-if="recentActivities.length === 0" class="text-[#a0a0a0]">{{ $t('contribute.noRecentActivities') }}</span>
         </div>
       </div>

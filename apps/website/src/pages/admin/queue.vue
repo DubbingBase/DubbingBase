@@ -164,15 +164,15 @@
         <div class="h-6 w-px bg-gray-800 hidden sm:block"></div>
 
         <div class="flex items-center space-x-2">
-          <label class="text-xs text-gray-400 font-semibold uppercase">Queue</label>
+          <label class="text-xs text-gray-400 font-semibold uppercase">{{ $t('admin.queue.queue') }}</label>
           <select
             v-model="filterQueue"
             class="bg-gray-800 border border-gray-700 text-gray-200 text-xs rounded-lg px-3 py-1.5 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
           >
-            <option value="all">All Queues</option>
-            <option value="wiki_extract">LLM Extraction (Ready)</option>
-            <option value="wiki_check">TOC Section Check</option>
-            <option value="wiki_discovery">Wikidata Discovery</option>
+            <option value="all">{{ $t('admin.queue.allQueues') }}</option>
+            <option value="wiki_extract">{{ $t('admin.queue.llmExtractionReady') }}</option>
+            <option value="wiki_check">{{ $t('admin.queue.tocSectionCheck') }}</option>
+            <option value="wiki_discovery">{{ $t('admin.queue.wikidataDiscovery') }}</option>
           </select>
         </div>
         <div class="flex items-center space-x-2">
@@ -199,11 +199,11 @@
             <option value="tv">{{ $t('admin.queue.tv') }}</option>
             <option value="season">{{ $t('admin.queue.season') }}</option>
             <option value="episode">{{ $t('admin.queue.episode') }}</option>
-            <option value="video_game">Game</option>
-            <option value="audiobook">Audiobook</option>
-            <option value="podcast">Podcast</option>
-            <option value="advertisement">Advertisement</option>
-            <option value="toy">Toy</option>
+            <option value="video_game">{{ $t('admin.queue.typeGame') }}</option>
+            <option value="audiobook">{{ $t('audiobook.title') }}</option>
+            <option value="podcast">{{ $t('admin.queue.typePodcast') }}</option>
+            <option value="advertisement">{{ $t('admin.queue.typeAdvertisement') }}</option>
+            <option value="toy">{{ $t('admin.queue.typeToy') }}</option>
           </select>
         </div>
         <div class="flex items-center space-x-2">
@@ -261,21 +261,15 @@
                     <span
                       v-if="(item as any).queue_name === 'wiki_extract'"
                       class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-950/60 border border-emerald-800/80 text-emerald-300"
-                    >
-                      LLM Ready
-                    </span>
+                    >{{ $t('admin.queue.llmReady') }}</span>
                     <span
                       v-else-if="(item as any).queue_name === 'wiki_check'"
                       class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-sky-950/60 border border-sky-800/80 text-sky-300"
-                    >
-                      TOC Check
-                    </span>
+                    >{{ $t('admin.queue.tocCheck') }}</span>
                     <span
                       v-else-if="(item as any).queue_name === 'wiki_discovery'"
                       class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-950/60 border border-amber-800/80 text-amber-300"
-                    >
-                      Discovery
-                    </span>
+                    >{{ $t('admin.queue.discovery') }}</span>
                     <span
                       v-if="(item as any).language"
                       class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-purple-950/60 border border-purple-800/80 text-purple-300"
@@ -287,7 +281,7 @@
                       class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-rose-950/60 border border-rose-800/80 text-rose-300 flex items-center space-x-1"
                       title="Enqueued manually (top priority)"
                     >
-                      <span>⚡ Prioritaire</span>
+                      <span>{{ $t('admin.queue.priority') }}</span>
                     </span>
                     <div class="flex items-center space-x-3">
                       <a
@@ -297,7 +291,7 @@
                         class="text-xs font-semibold text-blue-400 hover:text-blue-300 hover:underline flex items-center"
                         :title="$t('admin.queue.viewOnTmdb')"
                       >
-                        <span>TMDB: {{ item.tmdb_id }}</span>
+                        <span>{{ $t('common.tmdbLabel') }}{{ item.tmdb_id }}</span>
                         <svg class="w-3 h-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                       </a>
                       <a
@@ -307,7 +301,7 @@
                         class="text-xs font-semibold text-gray-400 hover:text-gray-300 hover:underline flex items-center"
                         :title="$t('admin.queue.viewOnWikipedia')"
                       >
-                        <span>Wikipédia</span>
+                        <span>{{ $t('admin.queue.wikipedia') }}</span>
                         <svg class="w-3 h-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                       </a>
                     </div>
@@ -394,7 +388,7 @@
                       rel="noopener noreferrer"
                       class="mt-1.5 inline-flex items-center text-sky-400 hover:text-sky-300 hover:underline text-[11px] font-sans font-medium"
                     >
-                      <span>{{ extractUrl(item.error_message)?.includes('wikidata.org') ? 'Open Wikidata' : $t('admin.queue.viewOnWikipedia') }}</span>
+                      <span>{{ extractUrl(item.error_message)?.includes('wikidata.org') ? $t('admin.queue.openWikidata') : $t('admin.queue.viewOnWikipedia') }}</span>
                       <svg class="w-3 h-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                     </a>
                   </div>

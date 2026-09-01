@@ -3,27 +3,27 @@
     <!-- Quick Actions Header -->
     <div class="bg-white dark:bg-[#1d1d1d] p-5 rounded-2xl border border-gray-200 dark:border-[#2a2a2a] flex flex-wrap items-center justify-between gap-4 shadow-xl">
       <div>
-        <h2 class="text-xl font-bold text-gray-900 dark:text-white">Dashboard Overview</h2>
-        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Manage dubbing projects, voice actors, and system statistics.</p>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ $t('admin.dashboard.title') }}</h2>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ $t('admin.dashboard.description') }}</p>
       </div>
       <div class="flex items-center space-x-3">
         <NuxtLink
           :to="localePath('/admin/movies/new')"
           class="px-4 py-2.5 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-200 text-white dark:text-gray-900 text-xs font-semibold rounded-xl shadow-lg transition-all flex items-center space-x-1.5"
         >
-          <span>+ Create Movie / TV Project</span>
+          <span>{{ $t('admin.dashboard.createMovieTvProject') }}</span>
         </NuxtLink>
         <NuxtLink
           :to="localePath('/game/new/edit/new')"
           class="px-4 py-2.5 bg-gray-900 hover:bg-gray-800 dark:bg-cyan-500 dark:hover:bg-cyan-400 text-white dark:text-gray-900 text-xs font-semibold rounded-xl shadow-lg transition-all flex items-center space-x-1.5"
         >
-          <span>+ Create Video Game Project</span>
+          <span>{{ $t('admin.dashboard.createVideoGameProject') }}</span>
         </NuxtLink>
         <NuxtLink
           :to="localePath('/voice-actor/new')"
           class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-[#2a2a2a] dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white text-xs font-semibold rounded-xl border border-gray-200 dark:border-gray-700 transition-all flex items-center space-x-1.5"
         >
-          <span>+ Create Voice Actor</span>
+          <span>{{ $t('admin.dashboard.createVoiceActor') }}</span>
         </NuxtLink>
       </div>
     </div>
@@ -31,7 +31,7 @@
     <!-- Loading state -->
     <div v-if="loading" class="flex flex-col items-center justify-center py-24 space-y-3 bg-gray-50/50 dark:bg-[#1d1d1d]/40 border border-gray-200 dark:border-[#2a2a2a] rounded-2xl">
       <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
-      <p class="text-gray-500 dark:text-gray-400 text-sm">Loading dashboard data...</p>
+      <p class="text-gray-500 dark:text-gray-400 text-sm">{{ $t('admin.dashboard.loadingData') }}</p>
     </div>
 
     <!-- Error state -->
@@ -45,33 +45,31 @@
       <button
         @click="() => fetchDashboardData()"
         class="py-1.5 px-3 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-semibold transition-all"
-      >
-        Retry
-      </button>
+      >{{ $t('common.retry') }}</button>
     </div>
 
     <!-- Charts Grid Layout -->
     <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- User Registrations Bar Chart -->
       <div class="bg-white dark:bg-[#1d1d1d] p-6 rounded-2xl border border-gray-200 dark:border-[#2a2a2a] shadow-xl max-w-full lg:col-span-2">
-        <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">User Registrations Over Time</h2>
+        <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">{{ $t('admin.dashboard.userRegistrations') }}</h2>
         <BarChart :data="userRegistrationsData" :options="barChartOptions" />
       </div>
 
       <!-- Voice Actor Growth Line Chart -->
       <div class="bg-white dark:bg-[#1d1d1d] p-6 rounded-2xl border border-gray-200 dark:border-[#2a2a2a] shadow-xl max-w-full">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <h2 class="text-lg font-bold text-gray-900 dark:text-white">Voice Actor Growth</h2>
+          <h2 class="text-lg font-bold text-gray-900 dark:text-white">{{ $t('admin.dashboard.voiceActorGrowth') }}</h2>
           <div class="flex items-center space-x-2">
-            <label for="time-unit" class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Time Unit:</label>
+            <label for="time-unit" class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ $t('admin.dashboard.timeUnit') }}</label>
             <select
               id="time-unit"
               v-model="selectedUnit"
               class="bg-gray-50 dark:bg-[#121212] border border-gray-200 dark:border-[#2a2a2a] text-gray-700 dark:text-gray-200 text-xs font-medium rounded-xl py-1.5 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-150"
             >
-              <option value="day">Day</option>
-              <option value="week">Week</option>
-              <option value="month">Month</option>
+              <option value="day">{{ $t('admin.dashboard.day') }}</option>
+              <option value="week">{{ $t('admin.dashboard.week') }}</option>
+              <option value="month">{{ $t('admin.dashboard.month') }}</option>
             </select>
           </div>
         </div>
@@ -80,7 +78,7 @@
 
       <!-- Top Voice Actors Pie Chart -->
       <div class="bg-white dark:bg-[#1d1d1d] p-6 rounded-2xl border border-gray-200 dark:border-[#2a2a2a] shadow-xl max-w-full">
-        <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Top Voice Actors</h2>
+        <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">{{ $t('home.topVoiceActors') }}</h2>
         <PieChart :data="topVoiceActorsData" :options="pieChartOptions" />
       </div>
     </div>

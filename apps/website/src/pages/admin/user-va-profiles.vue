@@ -2,15 +2,15 @@
   <div class="max-w-2xl mx-auto space-y-6">
     <!-- Intro Card -->
     <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800">
-      <h3 class="text-lg font-bold text-white">Link User to Voice Actor Profile</h3>
-      <p class="text-sm text-gray-400 mt-1">Associate a user login account to their public voice actor profile. This allows them to manage their own voice cast records.</p>
+      <h3 class="text-lg font-bold text-white">{{ $t('admin.userVaProfiles.title') }}</h3>
+      <p class="text-sm text-gray-400 mt-1">{{ $t('admin.userVaProfiles.description') }}</p>
     </div>
 
     <!-- Form Panel -->
     <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-6 shadow-xl">
       <!-- User Autocomplete -->
       <div class="space-y-2 relative">
-        <label class="text-xs font-bold text-gray-400 uppercase tracking-wider block">1. Select User Account</label>
+        <label class="text-xs font-bold text-gray-400 uppercase tracking-wider block">{{ $t('admin.userVaProfiles.selectUserAccount') }}</label>
         <div class="flex items-center space-x-2">
           <div class="relative flex-1">
             <input
@@ -58,20 +58,16 @@
         <div
           v-else-if="isUserDropdownOpen && userQuery.trim() && userLoading"
           class="absolute z-40 left-0 right-0 mt-1.5 p-4 bg-gray-900 border border-gray-800 rounded-xl text-center text-gray-400 text-xs"
-        >
-          Loading users list...
-        </div>
+        >{{ $t('admin.userVaProfiles.loadingUsersList') }}</div>
         <div
           v-else-if="isUserDropdownOpen && userQuery.trim() && filteredUsers.length === 0"
           class="absolute z-40 left-0 right-0 mt-1.5 p-4 bg-gray-900 border border-gray-800 rounded-xl text-center text-gray-500 text-xs"
-        >
-          No matching user account found.
-        </div>
+        >{{ $t('admin.userVaProfiles.noMatchingUser') }}</div>
       </div>
 
       <!-- Voice Actor Autocomplete -->
       <div class="space-y-2 relative">
-        <label class="text-xs font-bold text-gray-400 uppercase tracking-wider block">2. Select Voice Actor Profile</label>
+        <label class="text-xs font-bold text-gray-400 uppercase tracking-wider block">{{ $t('admin.userVaProfiles.selectVoiceActorProfile') }}</label>
         <div class="flex items-center space-x-2">
           <div class="relative flex-1">
             <input
@@ -124,25 +120,21 @@
         <div
           v-else-if="isVoiceActorDropdownOpen && voiceActorQuery.trim() && voiceActorSearching"
           class="absolute z-40 left-0 right-0 mt-1.5 p-4 bg-gray-900 border border-gray-800 rounded-xl text-center text-gray-400 text-xs"
-        >
-          Searching voice actors...
-        </div>
+        >{{ $t('admin.userVaProfiles.searchingVoiceActors') }}</div>
         <div
           v-else-if="isVoiceActorDropdownOpen && voiceActorQuery.trim() && voiceActorResults.length === 0"
           class="absolute z-40 left-0 right-0 mt-1.5 p-4 bg-gray-900 border border-gray-800 rounded-xl text-center text-gray-500 text-xs"
-        >
-          No voice actors found matching query.
-        </div>
+        >{{ $t('admin.userVaProfiles.noVoiceActorsMatching') }}</div>
       </div>
 
       <!-- Selected State cards -->
       <div v-if="selectedUser || selectedVoiceActor" class="p-4 bg-gray-950/60 border border-gray-850 rounded-xl space-y-2.5">
         <div v-if="selectedUser" class="flex justify-between items-center text-xs">
-          <span class="text-gray-500 font-bold uppercase tracking-wider">Target User</span>
+          <span class="text-gray-500 font-bold uppercase tracking-wider">{{ $t('admin.userVaProfiles.targetUser') }}</span>
           <span class="font-semibold text-blue-400 font-mono">{{ selectedUser.email }}</span>
         </div>
         <div v-if="selectedVoiceActor" class="flex justify-between items-center text-xs">
-          <span class="text-gray-500 font-bold uppercase tracking-wider">Voice Actor Profile</span>
+          <span class="text-gray-500 font-bold uppercase tracking-wider">{{ $t('admin.userVaProfiles.voiceActorProfile') }}</span>
           <span class="font-semibold text-indigo-400 font-mono">{{ selectedVoiceActor.firstname }} {{ selectedVoiceActor.lastname }}</span>
         </div>
       </div>
@@ -154,14 +146,14 @@
         class="w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl shadow-lg transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex justify-center items-center text-sm"
       >
         <span v-if="linking" class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></span>
-        <span>Link Profile Account</span>
+        <span>{{ $t('admin.userVaProfiles.linkProfileAccount') }}</span>
       </button>
     </div>
 
     <!-- Existing Links Panel -->
     <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-6 shadow-xl mt-8">
       <div class="flex items-center justify-between">
-        <h3 class="text-lg font-bold text-white">Existing Links</h3>
+        <h3 class="text-lg font-bold text-white">{{ $t('admin.userVaProfiles.existingLinks') }}</h3>
         <button
           @click="() => fetchExistingLinks()"
           class="p-2 bg-gray-950 border border-gray-800 text-gray-400 hover:text-white rounded-xl hover:bg-gray-850 transition-colors"
@@ -172,8 +164,8 @@
           </svg>
         </button>
       </div>
-      <div v-if="linksLoading" class="text-gray-400 text-sm py-4 text-center">Loading links...</div>
-      <div v-else-if="existingLinks.length === 0" class="text-gray-500 text-sm py-4 text-center">No profiles linked yet.</div>
+      <div v-if="linksLoading" class="text-gray-400 text-sm py-4 text-center">{{ $t('admin.userVaProfiles.loadingLinks') }}</div>
+      <div v-else-if="existingLinks.length === 0" class="text-gray-500 text-sm py-4 text-center">{{ $t('admin.userVaProfiles.noProfilesLinked') }}</div>
       <div v-else class="space-y-3">
         <div v-for="link in existingLinks" :key="link.id" class="flex items-center justify-between p-4 bg-gray-950/60 border border-gray-850 rounded-xl">
           <div class="flex flex-col gap-1">

@@ -3,16 +3,16 @@
     <!-- Header -->
     <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800 flex justify-between items-center">
       <div>
-        <h3 class="text-lg font-bold text-white">{{ isEditMode ? 'Edit Voice Actor Profile' : 'Create Voice Actor Profile' }}</h3>
+        <h3 class="text-lg font-bold text-white">{{ isEditMode ? $t('voiceActorEdit.titleEdit') : $t('voiceActorEdit.titleCreate') }}</h3>
         <p class="text-sm text-gray-400 mt-0.5">
-          {{ isEditMode ? `Updating database entry ID #${id}` : 'Fill in profile fields to create a new voice actor entry.' }}
+          {{ isEditMode ? `Updating database entry ID #${id}` : $t('voiceActorEdit.fillInfo') }}
         </p>
       </div>
       <NuxtLink
         :to="localePath(id ? `/voice-actor/${id}` : '/')"
         class="text-xs font-semibold px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-350 hover:text-white rounded-xl border border-gray-700 transition-colors"
       >
-        ← {{ id ? 'Back to Voice Actor' : 'Back Home' }}
+        ← {{ id ? $t('voiceActorEdit.backToVoiceActor') : $t('voiceActorEdit.backHome') }}
       </NuxtLink>
     </div>
 
@@ -20,7 +20,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Profile Image Card (Left column) -->
       <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 flex flex-col items-center text-center space-y-5 h-fit shadow-xl">
-        <label class="text-xs font-bold text-gray-400 uppercase tracking-wider block self-start">Profile Photo</label>
+        <label class="text-xs font-bold text-gray-400 uppercase tracking-wider block self-start">{{ $t('voiceActorEdit.profilePhoto') }}</label>
         <div class="relative h-44 w-44 rounded-full overflow-hidden border-2 border-gray-800 bg-gray-950 flex items-center justify-center text-gray-500 shadow-inner group">
           <img v-if="previewImage"
             :src="previewImage"
@@ -47,7 +47,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <span>{{ previewImage ? 'Change Image' : 'Upload Image' }}</span>
+            <span>{{ previewImage ? $t('voiceActorEdit.changeImage') : $t('voiceActorEdit.uploadImage') }}</span>
           </button>
           <input
             ref="fileInput"
@@ -61,13 +61,9 @@
             type="button"
             @click="clearImage"
             class="w-full py-2 bg-red-950/20 hover:bg-red-950/40 text-red-400 hover:text-red-300 rounded-xl text-[10px] font-bold uppercase tracking-wider border border-red-900/25 transition-all"
-          >
-            Reset image selection
-          </button>
+          >{{ $t('voiceActorEdit.resetImageSelection') }}</button>
         </div>
-        <p class="text-[10px] text-gray-500 leading-normal">
-          Supported file formats: JPG, PNG, WEBP. Maximum file upload size: 5MB.
-        </p>
+        <p class="text-[10px] text-gray-500 leading-normal">{{ $t('voiceActorEdit.supportedFileFormats') }}</p>
       </div>
 
       <!-- Form (Right column) -->
@@ -75,7 +71,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
           <!-- First Name -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">First Name *</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('admin.movieEditor.firstName') }}</label>
             <input
               v-model="firstname"
               type="text"
@@ -87,7 +83,7 @@
 
           <!-- Last Name -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Last Name *</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('admin.movieEditor.lastName') }}</label>
             <input
               v-model="lastname"
               type="text"
@@ -99,26 +95,26 @@
 
           <!-- Nationality -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Nationality</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('profile.nationality') }}</label>
             <select
               v-model="nationality"
               class="w-full px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm appearance-none"
             >
-              <option value="" disabled>Select nationality</option>
-              <option value="Français">Français</option>
-              <option value="Belge">Belge</option>
-              <option value="Suisse">Suisse</option>
-              <option value="Québécois(e)">Québécois(e)</option>
-              <option value="Américain(e)">Américain(e)</option>
-              <option value="Britannique">Britannique</option>
-              <option value="Japonais(e)">Japonais(e)</option>
-              <option value="Autre">Autre</option>
+              <option value="" disabled>{{ $t('voiceActorEdit.selectNationality') }}</option>
+              <option value="Français">{{ $t('language.fr') }}</option>
+              <option value="Belge">{{ $t('voiceActorEdit.nationalityBelgian') }}</option>
+              <option value="Suisse">{{ $t('voiceActorEdit.nationalitySwiss') }}</option>
+              <option value="Québécois(e)">{{ $t('voiceActorEdit.nationalityQuebecois') }}</option>
+              <option value="Américain(e)">{{ $t('voiceActorEdit.nationalityAmerican') }}</option>
+              <option value="Britannique">{{ $t('voiceActorEdit.nationalityBritish') }}</option>
+              <option value="Japonais(e)">{{ $t('voiceActorEdit.nationalityJapanese') }}</option>
+              <option value="Autre">{{ $t('report.reasons.other') }}</option>
             </select>
           </div>
 
           <!-- Date of birth -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Date of Birth</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('voiceActorEdit.dateOfBirth') }}</label>
             <input
               v-model="dateOfBirth"
               type="date"
@@ -129,7 +125,7 @@
 
           <!-- TMDB ID -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">TMDB ID</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('voiceActorEdit.tmdbId') }}</label>
             <input
               v-model="tmdbId"
               type="number"
@@ -140,7 +136,7 @@
 
           <!-- Wikidata ID -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Wikidata ID</label>
+            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('voiceActorEdit.wikidataId') }}</label>
             <input
               v-model="wikidataId"
               type="text"
@@ -152,7 +148,7 @@
 
         <!-- Biography -->
         <div class="space-y-1">
-          <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Biography</label>
+          <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('profile.biography') }}</label>
           <textarea
             v-model="bio"
             rows="4"
@@ -163,26 +159,26 @@
 
         <!-- Social Media Links -->
         <div class="space-y-4">
-          <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Social Media & Links</label>
+          <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('voiceActorEdit.socialMediaLinks') }}</label>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="space-y-1">
-              <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Instagram</label>
+              <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{{ $t('voiceActorEdit.instagram') }}</label>
               <input v-model="socialMedia.instagram" type="url" placeholder="https://instagram.com/..." class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs" />
             </div>
             <div class="space-y-1">
-              <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Twitter / X</label>
+              <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{{ $t('voiceActorEdit.twitterX') }}</label>
               <input v-model="socialMedia.twitter" type="url" placeholder="https://twitter.com/..." class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs" />
             </div>
             <div class="space-y-1">
-              <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">TikTok</label>
+              <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{{ $t('voiceActorEdit.tiktok') }}</label>
               <input v-model="socialMedia.tiktok" type="url" placeholder="https://tiktok.com/@..." class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs" />
             </div>
             <div class="space-y-1">
-              <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Facebook</label>
+              <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{{ $t('voiceActorEdit.facebook') }}</label>
               <input v-model="socialMedia.facebook" type="url" placeholder="https://facebook.com/..." class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs" />
             </div>
             <div class="space-y-1 md:col-span-2">
-              <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Website</label>
+              <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{{ $t('voiceActorEdit.website') }}</label>
               <input v-model="socialMedia.website" type="url" placeholder="https://..." class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs" />
             </div>
           </div>
@@ -196,7 +192,7 @@
             class="py-3 px-8 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:from-gray-800 disabled:to-gray-800 disabled:text-gray-500 text-white font-semibold rounded-xl text-sm shadow-lg transition-all duration-200 flex items-center justify-center"
           >
             <span v-if="isSaving" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
-            <span>Save Profile</span>
+            <span>{{ $t('voiceActorEdit.saveProfile') }}</span>
           </button>
         </div>
       </form>
@@ -206,14 +202,14 @@
     <div v-if="isEditMode" class="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4 shadow-xl">
       <div class="flex justify-between items-center border-b border-gray-800 pb-3">
         <div>
-          <h4 class="text-base font-bold text-white">Linked Works & Filmography</h4>
-          <p class="text-xs text-gray-400">All dubbing credits linked to this voice actor profile.</p>
+          <h4 class="text-base font-bold text-white">{{ $t('voiceActorEdit.linkedWorksFilmography') }}</h4>
+          <p class="text-xs text-gray-400">{{ $t('voiceActorEdit.allCreditsLinked') }}</p>
         </div>
         <NuxtLink
           :to="localePath(`/admin/add-voice-cast/${id}`)"
           class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-xs shadow-md transition-all flex items-center space-x-1"
         >
-          <span>+ Link New Work</span>
+          <span>{{ $t('voiceActorEdit.linkNewWork') }}</span>
         </NuxtLink>
       </div>
 
@@ -221,21 +217,19 @@
         <table class="w-full text-left text-sm text-gray-300">
           <thead class="bg-gray-950 text-xs font-semibold uppercase text-gray-400 border-b border-gray-800">
             <tr>
-              <th class="px-4 py-3">Work ID</th>
-              <th class="px-4 py-3">Media / Content ID</th>
-              <th class="px-4 py-3">Type</th>
-              <th class="px-4 py-3">Character</th>
-              <th class="px-4 py-3">Performance</th>
-              <th class="px-4 py-3 text-right">Edit Project</th>
+              <th class="px-4 py-3">{{ $t('voiceActorEdit.workId') }}</th>
+              <th class="px-4 py-3">{{ $t('voiceActorEdit.mediaContentId') }}</th>
+              <th class="px-4 py-3">{{ $t('admin.queue.type') }}</th>
+              <th class="px-4 py-3">{{ $t('details.character') }}</th>
+              <th class="px-4 py-3">{{ $t('admin.movieEditor.performance') }}</th>
+              <th class="px-4 py-3 text-right">{{ $t('voiceActorEdit.editProject') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-800/60">
             <tr v-for="work in (linkedWorks as any[])" :key="work.id" class="hover:bg-gray-950/50 transition-colors">
               <td class="px-4 py-3 font-mono text-xs text-gray-400">#{{ work.id }}</td>
-              <td class="px-4 py-3 font-mono text-xs text-blue-400">
-                Project #{{ work.dubbing_project_id }}
-                <span v-if="work.dubbing_projects?.content_id" class="text-gray-500 text-[10px] block">
-                  Content #{{ work.dubbing_projects.content_id }}
+              <td class="px-4 py-3 font-mono text-xs text-blue-400">{{ $t('voiceActorEdit.projectNumber') }}{{ work.dubbing_project_id }}
+                <span v-if="work.dubbing_projects?.content_id" class="text-gray-500 text-[10px] block">{{ $t('voiceActorEdit.contentNumber') }}{{ work.dubbing_projects.content_id }}
                 </span>
               </td>
               <td class="px-4 py-3 uppercase text-[10px] font-bold tracking-wider text-gray-400">
@@ -250,15 +244,13 @@
                   :to="localePath(getProjectEditLink(work.dubbing_projects?.content_type || work.content_type, work.dubbing_projects?.content_id, work.dubbing_project_id))"
                   class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-blue-400 hover:text-blue-300 text-xs font-semibold rounded-lg border border-gray-700 transition-all inline-flex items-center space-x-1"
                 >
-                  <span>Edit {{ getMediaTypeLabel(work.dubbing_projects?.content_type || work.content_type) }}</span>
+                  <span>{{ $t('common.edit') }}{{ getMediaTypeLabel(work.dubbing_projects?.content_type || work.content_type) }}</span>
                   <span>↗</span>
                 </NuxtLink>
               </td>
             </tr>
             <tr v-if="linkedWorks.length === 0">
-              <td colspan="6" class="text-center py-6 text-gray-500 text-xs">
-                No linked works recorded for this voice actor yet.
-              </td>
+              <td colspan="6" class="text-center py-6 text-gray-500 text-xs">{{ $t('voiceActorEdit.noLinkedWorks') }}</td>
             </tr>
           </tbody>
         </table>

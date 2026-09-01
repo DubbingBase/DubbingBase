@@ -20,11 +20,9 @@
           {{ movie.vote_average?.toFixed(1) }}
         </span>
         <div class="flex gap-2 ml-2">
-          <a :href="`https://www.themoviedb.org/movie/${movie.id}`" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg bg-white/40 dark:bg-black/40 text-gray-800 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-black/60 transition-colors backdrop-blur-md uppercase tracking-wider">
-            TMDB <ExternalLinkIcon class="w-3 h-3 opacity-70" />
+          <a :href="`https://www.themoviedb.org/movie/${movie.id}`" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg bg-white/40 dark:bg-black/40 text-gray-800 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-black/60 transition-colors backdrop-blur-md uppercase tracking-wider">{{ $t('common.tmdb') }}<ExternalLinkIcon class="w-3 h-3 opacity-70" />
           </a>
-          <a v-if="tvdbId" :href="`https://thetvdb.com/search?query=${tvdbId}`" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg bg-white/40 dark:bg-black/40 text-gray-800 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-black/60 transition-colors backdrop-blur-md uppercase tracking-wider">
-            TVDB <ExternalLinkIcon class="w-3 h-3 opacity-70" />
+          <a v-if="tvdbId" :href="`https://thetvdb.com/search?query=${tvdbId}`" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg bg-white/40 dark:bg-black/40 text-gray-800 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-black/60 transition-colors backdrop-blur-md uppercase tracking-wider">{{ $t('common.tvdb') }}<ExternalLinkIcon class="w-3 h-3 opacity-70" />
           </a>
         </div>
       </template>
@@ -141,9 +139,7 @@
               <h2 class="text-2xl font-bold">
                 {{ $t("details.castAndCrew") }}
               </h2>
-              <div class="text-gray-500 dark:text-gray-400 text-sm mt-1">
-                {{ visibleCast.length }} / {{ formattedCast.length }} rôles
-              </div>
+              <div class="text-gray-500 dark:text-gray-400 text-sm mt-1">{{ $t('media.rolesCount', { shown: visibleCast.length, total: formattedCast.length }) }}</div>
             </div>
 
             <div class="relative w-full sm:w-64">
@@ -197,9 +193,7 @@
                     class="flex items-center gap-1.5 text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-1"
                   >
                     <ClapperboardIcon class="w-3 h-3 flex-shrink-0" />
-                    <span class="truncate block w-full">{{
-                      $t("details.actor")
-                    }}</span>
+                    <span class="truncate block w-full">{{ $t("details.actor") }}</span>
                   </div>
                   <NuxtLink
                     :to="localePath(`/actor/${actor.id}`)"
@@ -241,19 +235,15 @@
                     class="flex items-center gap-1.5 text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-1"
                   >
                     <UserIcon class="w-3 h-3 flex-shrink-0" />
-                    <span class="truncate block w-full">{{
-                      $t("details.character")
-                    }}</span>
+                    <span class="truncate block w-full">{{ $t("details.character") }}</span>
                   </div>
                   <div
                     class="font-bold text-sm text-gray-900 dark:text-white truncate block w-full"
                     :title="actor.character || actor.workCharacterName || ''"
                   >
-                    {{
-                      actor.character ||
+                    {{ actor.character ||
                       actor.workCharacterName ||
-                      $t("details.unknownCharacter")
-                    }}
+                      $t("details.unknownCharacter") }}
                   </div>
                 </div>
               </div>
@@ -282,8 +272,7 @@
                       v-else
                       class="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-400"
                     >
-                      {{ actor.voiceActor.firstname?.[0]
-                      }}{{ actor.voiceActor.lastname?.[0] }}
+                      {{ actor.voiceActor.firstname?.[0] }}{{ actor.voiceActor.lastname?.[0] }}
                     </div>
                   </NuxtLink>
                   <div
@@ -293,9 +282,7 @@
                       class="flex items-center gap-1.5 text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-1"
                     >
                       <MicIcon class="w-3 h-3 flex-shrink-0" />
-                      <span class="truncate block w-full">{{
-                        $t("details.voiceActor")
-                      }}</span>
+                      <span class="truncate block w-full">{{ $t("details.voiceActor") }}</span>
                     </div>
                     <NuxtLink
                       :to="localePath(`/voice-actor/${actor.voiceActor.id}`)"
@@ -328,9 +315,7 @@
                       class="flex items-center gap-1.5 text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-1"
                     >
                       <MicIcon class="w-3 h-3 opacity-50 flex-shrink-0" />
-                      <span class="truncate block w-full">{{
-                        $t("details.voiceActor")
-                      }}</span>
+                      <span class="truncate block w-full">{{ $t("details.voiceActor") }}</span>
                     </div>
                     <div
                       class="text-sm text-gray-400 italic truncate block w-full"
@@ -356,9 +341,7 @@
           >
             {{ $t('common.loadMore', 'Load more') }}
           </button>
-          <span class="text-xs text-gray-400">
-            {{ visibleCast.length }} / {{ filteredCast.length }} rôles
-          </span>
+          <span class="text-xs text-gray-400">{{ $t('media.rolesCount', { shown: visibleCast.length, total: filteredCast.length }) }}</span>
         </div>
       </section>
       </template>

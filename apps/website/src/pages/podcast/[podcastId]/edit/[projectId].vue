@@ -7,18 +7,14 @@
       <div>
         <h3 class="text-xl font-bold text-white flex items-center gap-2">
           <RadioIcon class="w-6 h-6 text-pink-500" />
-          {{
-            isEditMode
+          {{ isEditMode
               ? "Modifier le projet de podcast / fiction audio"
-              : "Créer un projet de podcast / fiction audio"
-          }}
+              : "Créer un projet de podcast / fiction audio" }}
         </h3>
         <p class="text-sm text-gray-400 mt-1">
-          {{
-            isEditMode
+          {{ isEditMode
               ? `Mise à jour du projet #${projectIdParam}`
-              : "Informations podcast, studio, réalisation et casting vocal."
-          }}
+              : "Informations podcast, studio, réalisation et casting vocal." }}
         </p>
       </div>
       <NuxtLink
@@ -29,9 +25,7 @@
         "
         class="text-xs font-semibold px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-xl border border-gray-700 transition-colors flex items-center space-x-2"
       >
-        <span>{{
-          parsedPodcastId ? "← Retour au podcast" : "← Accueil"
-        }}</span>
+        <span>{{ parsedPodcastId ? "← Retour au podcast" : "← Accueil" }}</span>
       </NuxtLink>
     </div>
 
@@ -64,9 +58,7 @@
             ? 'bg-pink-900/50 text-pink-400 border-pink-800'
             : 'bg-gray-900 text-gray-400 border-gray-700 hover:bg-gray-800 hover:text-gray-300'
         "
-      >
-        + Ajouter une langue
-      </NuxtLink>
+      >{{ $t('common.addLanguage') }}</NuxtLink>
     </div>
 
     <!-- Loading overlay -->
@@ -75,7 +67,7 @@
       class="flex flex-col items-center justify-center py-24 gap-4 text-gray-400"
     >
       <Loader2Icon class="w-8 h-8 animate-spin text-pink-500" />
-      <span class="text-sm">Chargement des données du projet...</span>
+      <span class="text-sm">{{ $t('common.loadingProjectData') }}</span>
     </div>
 
     <form v-else @submit.prevent="savePodcastProject" class="space-y-6">
@@ -87,8 +79,8 @@
           <h4
             class="text-sm font-bold text-gray-200 uppercase tracking-wider border-b border-gray-800 pb-3 flex items-center justify-between"
           >
-            <span>Informations Podcast</span>
-            <span class="text-xs text-pink-400 font-normal">iTunes / RSS</span>
+            <span>{{ $t('podcastEditor.podcastInfo') }}</span>
+            <span class="text-xs text-pink-400 font-normal">{{ $t('podcastEditor.itunesRss') }}</span>
           </h4>
 
           <!-- Cover Preview -->
@@ -105,7 +97,7 @@
               />
               <div v-else class="text-center p-3 text-gray-600">
                 <RadioIcon class="h-10 w-10 mx-auto mb-1 opacity-50" />
-                <span class="text-[10px]">Pas de vignette</span>
+                <span class="text-[10px]">{{ $t('podcastEditor.noThumbnail') }}</span>
               </div>
             </div>
           </div>
@@ -114,7 +106,7 @@
           <div class="space-y-1">
             <label
               class="text-xs font-semibold text-gray-400 uppercase tracking-wider"
-              >iTunes Collection ID *</label
+              >{{ $t('podcastEditor.itunesCollectionId') }}</label
             >
             <div class="flex space-x-2">
               <input
@@ -135,7 +127,7 @@
                   v-if="isFetchingMetadata"
                   class="w-4 h-4 animate-spin"
                 />
-                <span v-else>Récupérer</span>
+                <span v-else>{{ $t('common.fetch') }}</span>
               </button>
             </div>
           </div>
@@ -144,7 +136,7 @@
           <div class="space-y-1">
             <label
               class="text-xs font-semibold text-gray-400 uppercase tracking-wider"
-              >Titre du podcast / fiction *</label
+              >{{ $t('podcastEditor.podcastTitle') }}</label
             >
             <input
               v-model="mediaTitle"
@@ -158,7 +150,7 @@
           <div class="space-y-1">
             <label
               class="text-xs font-semibold text-gray-400 uppercase tracking-wider"
-              >Langue *</label
+              >{{ $t('common.language') }}</label
             >
             <LanguageSelect v-model="language" required />
           </div>
@@ -167,15 +159,15 @@
           <div class="space-y-1">
             <label
               class="text-xs font-semibold text-gray-400 uppercase tracking-wider"
-              >Statut</label
+              >{{ $t('common.status') }}</label
             >
             <select
               v-model="status"
               class="w-full px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-pink-500 text-sm"
             >
-              <option value="validated">Validé</option>
-              <option value="pending">En attente de validation</option>
-              <option value="draft">Brouillon</option>
+              <option value="validated">{{ $t('common.validated') }}</option>
+              <option value="pending">{{ $t('common.pendingValidation') }}</option>
+              <option value="draft">{{ $t('common.draft') }}</option>
             </select>
           </div>
         </div>
@@ -187,8 +179,8 @@
           <h4
             class="text-sm font-bold text-gray-200 uppercase tracking-wider border-b border-gray-800 pb-3 flex items-center justify-between"
           >
-            <span>Équipe Technique & Studio</span>
-            <span class="text-xs text-gray-400">Production Sonore</span>
+            <span>{{ $t('podcastEditor.technicalStudio') }}</span>
+            <span class="text-xs text-gray-400">{{ $t('podcastEditor.soundProduction') }}</span>
           </h4>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -196,7 +188,7 @@
             <div class="space-y-1">
               <label
                 class="text-xs font-semibold text-gray-400 uppercase tracking-wider"
-                >Studio / Producteur</label
+                >{{ $t('podcastEditor.studioProducer') }}</label
               >
               <AsyncAutocomplete
                 v-model="selectedStudioId"
@@ -220,7 +212,7 @@
             <div class="space-y-1">
               <label
                 class="text-xs font-semibold text-gray-400 uppercase tracking-wider"
-                >Réalisation / Direction Artistique</label
+                >{{ $t('podcastEditor.directionArtistic') }}</label
               >
               <AsyncAutocomplete
                 v-model="artisticDirectorId"
@@ -244,7 +236,7 @@
             <div class="space-y-1">
               <label
                 class="text-xs font-semibold text-gray-400 uppercase tracking-wider"
-                >Prise de son (Sound Designer)</label
+                >{{ $t('podcastEditor.recordingSoundDesigner') }}</label
               >
               <AsyncAutocomplete
                 v-model="recordingId"
@@ -265,7 +257,7 @@
             <div class="space-y-1">
               <label
                 class="text-xs font-semibold text-gray-400 uppercase tracking-wider"
-                >Montage / Mixage audio</label
+                >{{ $t('podcastEditor.mixingAudio') }}</label
               >
               <AsyncAutocomplete
                 v-model="mixingId"
@@ -293,25 +285,19 @@
           class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-800 pb-4"
         >
           <div>
-            <h4 class="text-sm font-bold text-gray-200 uppercase tracking-wider">
-              Distribution Vocale & Rôles
-            </h4>
-            <p class="text-xs text-gray-400 mt-0.5">
-              Associez les comédiens aux personnages ou à la narration.
-            </p>
+            <h4 class="text-sm font-bold text-gray-200 uppercase tracking-wider">{{ $t('podcastEditor.voiceDistribution') }}</h4>
+            <p class="text-xs text-gray-400 mt-0.5">{{ $t('podcastEditor.associateActors') }}</p>
           </div>
           <button
             type="button"
             @click="addNewCastRow"
             class="px-4 py-2 bg-pink-600 hover:bg-pink-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors"
           >
-            <span>+ Ajouter une voix</span>
+            <span>{{ $t('common.addVoice') }}</span>
           </button>
         </div>
 
-        <div v-if="castList.length === 0" class="text-center py-8 text-gray-500 text-sm">
-          Aucun rôle enregistré. Cliquez sur "+ Ajouter une voix".
-        </div>
+        <div v-if="castList.length === 0" class="text-center py-8 text-gray-500 text-sm">{{ $t('podcastEditor.noRoleRecorded') }}</div>
 
         <div v-else class="space-y-4">
           <div
@@ -321,9 +307,7 @@
           >
             <!-- Voice Actor -->
             <div class="md:col-span-5 space-y-1">
-              <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
-                Comédien(ne) *
-              </label>
+              <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{{ $t('common.actor') }}</label>
               <AsyncAutocomplete
                 v-model="row.voice_actor_id"
                 :options="voiceActorOptions"
@@ -344,9 +328,7 @@
 
             <!-- Role / Character Name -->
             <div class="md:col-span-3 space-y-1">
-              <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
-                Personnage / Rôle
-              </label>
+              <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{{ $t('common.characterRole') }}</label>
               <input
                 v-model="row.character_name"
                 type="text"
@@ -357,9 +339,7 @@
 
             <!-- Performance Type -->
             <div class="md:col-span-3 space-y-1">
-              <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
-                Type de performance
-              </label>
+              <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{{ $t('common.performanceType') }}</label>
               <input
                 v-model="row.performance"
                 type="text"
@@ -391,9 +371,7 @@
           type="button"
           @click="router.back()"
           class="px-5 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-semibold rounded-xl border border-gray-700 transition-colors"
-        >
-          Annuler
-        </button>
+        >{{ $t('common.cancelButton') }}</button>
 
         <button
           type="submit"

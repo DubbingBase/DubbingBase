@@ -29,9 +29,7 @@
             "
             class="px-3 py-1.5 bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 text-xs font-semibold rounded-xl border border-amber-500/30 flex items-center gap-1.5 transition-colors"
           >
-            <span>{{
-              activeDubProject ? "Modifier le projet" : "Ajouter un projet"
-            }}</span>
+            <span>{{ activeDubProject ? "Modifier le projet" : "Ajouter un projet" }}</span>
           </NuxtLink>
 
           <ForceEnqueueButton
@@ -45,17 +43,17 @@
       <template #details-extra>
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-4 border-t border-gray-800/60">
           <div v-if="toy.manufacturer">
-            <span class="text-xs text-gray-400 block mb-0.5">Fabricant / Éditeur</span>
+            <span class="text-xs text-gray-400 block mb-0.5">{{ $t('toy.manufacturerLabel') }}</span>
             <span class="text-sm font-semibold text-gray-200">{{ toy.manufacturer }}</span>
           </div>
 
           <div v-if="toy.product_line">
-            <span class="text-xs text-gray-400 block mb-0.5">Gamme / Appareil</span>
+            <span class="text-xs text-gray-400 block mb-0.5">{{ $t('toy.productLine') }}</span>
             <span class="text-sm font-semibold text-gray-200">{{ toy.product_line }}</span>
           </div>
 
           <div v-if="toy.release_year">
-            <span class="text-xs text-gray-400 block mb-0.5">Année de sortie</span>
+            <span class="text-xs text-gray-400 block mb-0.5">{{ $t('toy.releaseYear') }}</span>
             <span class="text-sm font-semibold text-gray-200">{{ toy.release_year }}</span>
           </div>
         </div>
@@ -67,13 +65,11 @@
           v-if="activeDubProject?.studios || activeDubProject?.dubbing_project_crew?.length"
           class="bg-gray-900/60 backdrop-blur border border-gray-800 rounded-2xl p-6 space-y-4 mb-8 shadow-xl"
         >
-          <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">
-            Studio & Production
-          </h3>
+          <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">{{ $t('toy.studioAndProduction') }}</h3>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div v-if="activeDubProject?.studios" class="space-y-1">
-              <span class="text-xs text-gray-400">Studio / Fabricant</span>
+              <span class="text-xs text-gray-400">{{ $t('toyEditor.studioManufacturer') }}</span>
               <NuxtLink
                 :to="localePath(`/studio/${activeDubProject.studios.id}`)"
                 class="text-sm font-semibold text-amber-400 hover:underline block"
@@ -106,7 +102,7 @@
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                <span>Voix & Narrateurs</span>
+                <span>{{ $t('toyEditor.voiceNarrators') }}</span>
                 <span
                   v-if="formattedCast.length > 0"
                   class="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 font-semibold border border-amber-500/20"
@@ -114,18 +110,14 @@
                   {{ formattedCast.length }}
                 </span>
               </h2>
-              <p class="text-xs text-gray-400 mt-1">
-                Comédiens et voix ayant prêté leur voix pour cet objet / histoire interactif.
-              </p>
+              <p class="text-xs text-gray-400 mt-1">{{ $t('toy.voiceCastDescription') }}</p>
             </div>
           </div>
 
           <div
             v-if="formattedCast.length === 0"
             class="text-center py-16 bg-gray-900/30 rounded-2xl border border-gray-800/40 text-gray-500 text-sm"
-          >
-            Aucune voix enregistrée pour le moment.
-          </div>
+          >{{ $t('toy.noVoicesYet') }}</div>
 
           <div
             v-else
@@ -170,9 +162,7 @@
       </template>
     </MediaDetailsLayout>
 
-    <div v-else class="text-center py-24 text-gray-500">
-      Objet / Jouet interactif introuvable.
-    </div>
+    <div v-else class="text-center py-24 text-gray-500">{{ $t('toy.notFound') }}</div>
 
     <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
   </div>

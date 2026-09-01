@@ -18,21 +18,19 @@
         <span
           v-if="voiceActor.date_of_birth"
           class="text-gray-900 dark:text-gray-100 font-medium text-sm md:text-base bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-lg"
-        >
-          Born: {{ voiceActor.date_of_birth.split('-')[0] }}
+        >{{ $t('common.born') }}{{ voiceActor.date_of_birth.split('-')[0] }}
         </span>
         <span
           v-if="voiceActor.years_active"
           class="text-gray-900 dark:text-gray-100 font-medium text-sm md:text-base bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-lg"
-        >
-          Active: {{ voiceActor.years_active }}
+        >{{ $t('voiceActor.active') }}{{ voiceActor.years_active }}
         </span>
       </template>
 
       <template #biography>
         <div class="mb-12 max-w-4xl" v-if="voiceActor.bio">
           <section>
-            <h2 class="text-2xl font-bold mb-4">Biography</h2>
+            <h2 class="text-2xl font-bold mb-4">{{ $t('profile.biography') }}</h2>
             <p
               class="text-gray-700 dark:text-gray-300 leading-relaxed text-lg whitespace-pre-wrap"
             >
@@ -93,7 +91,7 @@
               d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
             />
           </svg>
-          <span class="hidden sm:inline">Éditer</span>
+          <span class="hidden sm:inline">{{ $t('common.edit') }}</span>
         </NuxtLink>
 
         <button
@@ -124,7 +122,7 @@
         <!-- Studios -->
         <div v-if="workedStudios.length > 0" class="mb-12 max-w-4xl">
           <section>
-            <h2 class="text-2xl font-bold mb-4">Studios</h2>
+            <h2 class="text-2xl font-bold mb-4">{{ $t('footer.studios') }}</h2>
             <div class="flex flex-wrap gap-4">
               <NuxtLink
                 v-for="studio in workedStudios"
@@ -148,13 +146,9 @@
                   v-else
                   class="w-10 h-10 bg-gray-100 dark:bg-[#2a2a2a] rounded-lg flex items-center justify-center shrink-0"
                 >
-                  <span class="text-gray-400 font-bold">{{
-                    studio.name?.charAt(0)?.toUpperCase() || ''
-                  }}</span>
+                  <span class="text-gray-400 font-bold">{{ studio.name?.charAt(0)?.toUpperCase() || '' }}</span>
                 </div>
-                <span class="font-semibold text-gray-900 dark:text-gray-100">{{
-                  studio.name
-                }}</span>
+                <span class="font-semibold text-gray-900 dark:text-gray-100">{{ studio.name }}</span>
               </NuxtLink>
             </div>
           </section>
@@ -319,9 +313,7 @@
                         :title="
                           (item.media as any).title || (item.media as any).name
                         "
-                        >{{
-                          (item.media as any).title || (item.media as any).name
-                        }}</span
+                        >{{ (item.media as any).title || (item.media as any).name }}</span
                       >
                       <div
                         v-if="item.work.dubbing_projects?.studios"
@@ -427,11 +419,9 @@
                         <span
                           class="bg-black/70 backdrop-blur text-white text-[9px] px-2 py-0.5 rounded-full truncate max-w-full font-medium"
                         >
-                          {{
-                            $te(`performance.${item.work.performance}`)
+                          {{ $te(`performance.${item.work.performance}`)
                               ? $t(`performance.${item.work.performance}`)
-                              : item.work.performance
-                          }}
+                              : item.work.performance }}
                         </span>
                       </div>
                     </div>
@@ -485,8 +475,7 @@
                       {{ actorName }}
                     </h3>
                     <p class="text-sm text-gray-500 dark:text-gray-400">
-                      {{ works.length }} works
-                    </p>
+                      {{ works.length }}{{ $t('common.works') }}</p>
                   </div>
                 </NuxtLink>
 
@@ -540,10 +529,8 @@
                               (item.media as any).title ||
                               (item.media as any).name
                             "
-                            >{{
-                              (item.media as any).title ||
-                              (item.media as any).name
-                            }}</span
+                            >{{ (item.media as any).title ||
+                              (item.media as any).name }}</span
                           >
                           <div
                             v-if="item.work.dubbing_projects?.studios"
@@ -588,11 +575,9 @@
                             <span
                               class="bg-black/70 backdrop-blur text-white text-[9px] px-2 py-0.5 rounded-full truncate max-w-full font-medium inline-block min-w-0"
                             >
-                              {{
-                                $te(`performance.${item.work.performance}`)
+                              {{ $te(`performance.${item.work.performance}`)
                                   ? $t(`performance.${item.work.performance}`)
-                                  : item.work.performance
-                              }}
+                                  : item.work.performance }}
                             </span>
                           </div>
                         </div>
@@ -627,18 +612,16 @@
               {{ $t('common.loadMore', 'Load more') }}
             </button>
             <span class="text-xs text-gray-400">
-              {{
-                displayMode === 'list'
+              {{ displayMode === 'list'
                   ? `${visibleWorks.length} / ${sortedWorks.length} works`
-                  : `${visibleGroupedWorks.length} / ${groupedWorks.length} actors`
-              }}
+                  : `${visibleGroupedWorks.length} / ${groupedWorks.length} actors` }}
             </span>
           </div>
         </section>
       </template>
     </PersonDetailsLayout>
 
-    <div v-else class="text-center py-20 text-gray-500 min-h-screen">Actor not found.</div>
+    <div v-else class="text-center py-20 text-gray-500 min-h-screen">{{ $t('voiceActor.notFound') }}</div>
 
     <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
   </div>

@@ -16,11 +16,11 @@
         <span
           v-if="actor.birthday"
           class="text-gray-900 dark:text-gray-100 font-semibold text-base md:text-lg bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg"
-          >Born: {{ actor.birthday.split('-')[0] }}</span>
+          >{{ $t('common.born') }}{{ actor.birthday.split('-')[0] }}</span>
         <span
           v-if="actor.deathday"
           class="text-gray-900 dark:text-gray-100 font-semibold text-base md:text-lg bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg"
-          >Died: {{ actor.deathday.split('-')[0] }}</span>
+          >{{ $t('common.died') }}{{ actor.deathday.split('-')[0] }}</span>
       </template>
 
       <template #biography>
@@ -91,9 +91,7 @@
         <div
           class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6"
         >
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-            Voices
-          </h2>
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $t('actor.voices') }}</h2>
           <!-- Language Tabs -->
           <div class="flex flex-wrap gap-2">
             <button
@@ -153,16 +151,14 @@
               {{ va.firstname }} {{ va.lastname }}
             </span>
             <span class="text-xs text-gray-500 dark:text-gray-400 mt-1"
-              >{{ va.rolesCount }} roles</span
+              >{{ va.rolesCount }}{{ $t('actor.roles') }}</span
             >
           </NuxtLink>
         </div>
         <div
           v-else
           class="text-gray-500 text-center py-8 bg-white dark:bg-[#161616] rounded-2xl border border-gray-200 dark:border-[#2a2a2a]"
-        >
-          No voice actors found for the selected language.
-        </div>
+        >{{ $t('actor.noVoiceActorsForLanguage') }}</div>
       </section>
 
       <!-- Filmography Section -->
@@ -170,17 +166,13 @@
         <div
           class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8"
         >
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-            Filmography
-          </h2>
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $t('voiceActor.filmography') }}</h2>
         </div>
 
         <div
           v-if="enhancedFilmography.length === 0"
           class="text-gray-500 text-center py-12 bg-white dark:bg-[#161616] rounded-2xl border border-gray-200 dark:border-[#2a2a2a]"
-        >
-          No works found.
-        </div>
+        >{{ $t('actor.noWorks') }}</div>
 
         <div
           v-else
@@ -221,13 +213,11 @@
                 <div class="flex flex-col min-w-0 flex-1">
                   <span
                     class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5"
-                    >{{
-                      item.release_date
+                    >{{ item.release_date
                         ? new Date(item.release_date).getFullYear()
                         : item.first_air_date
                           ? new Date(item.first_air_date).getFullYear()
-                          : "N/A"
-                    }}</span
+                          : "N/A" }}</span
                   >
                   <span
                     class="font-bold text-sm text-gray-900 dark:text-gray-100 leading-tight line-clamp-2"

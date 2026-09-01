@@ -10,9 +10,8 @@
     >
       <template #metadata>
         <span class="text-gray-900 dark:text-gray-100 font-semibold text-base md:text-lg bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg">
-          {{ $t('details.season', { num: seasonNumber }) }}
-          &bull; {{ $t('details.episode', { num: episode.episode_number }) }}
-          <template v-if="episode.air_date"> &bull; {{ formatDate(episode.air_date) }}</template>
+          {{ $t('details.season', { num: seasonNumber }) }}{{ $t('common.separator') }}{{ $t('details.episode', { num: episode.episode_number }) }}
+          <template v-if="episode.air_date">{{ $t('common.separator') }}{{ formatDate(episode.air_date) }}</template>
         </span>
         <span v-if="episode.overview" class="text-gray-800 dark:text-gray-300 font-medium text-sm md:text-base bg-white/40 dark:bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-lg">
           {{ episode.overview }}
@@ -22,8 +21,7 @@
           {{ episode.vote_average?.toFixed(1) }}
         </span>
         <div class="flex gap-2 ml-2">
-          <a :href="`https://www.themoviedb.org/tv/${showId}/season/${seasonNumber}/episode/${episodeNumber}`" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg bg-white/40 dark:bg-black/40 text-gray-800 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-black/60 transition-colors backdrop-blur-md uppercase tracking-wider">
-            TMDB <ExternalLinkIcon class="w-3 h-3 opacity-70" />
+          <a :href="`https://www.themoviedb.org/tv/${showId}/season/${seasonNumber}/episode/${episodeNumber}`" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg bg-white/40 dark:bg-black/40 text-gray-800 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-black/60 transition-colors backdrop-blur-md uppercase tracking-wider">{{ $t('common.tmdb') }}<ExternalLinkIcon class="w-3 h-3 opacity-70" />
           </a>
         </div>
       </template>
