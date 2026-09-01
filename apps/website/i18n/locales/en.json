@@ -123,7 +123,8 @@
     "movieKeywords": "{title}, movie, dubbing, voice actors, cast",
     "actorDescription": "Discover the filmography and voice actors of {name}.",
     "actorDescriptionFallback": "Discover filmography and voice actors.",
-    "actorKeywords": "{name}, actor, filmography, movies, series"
+    "actorKeywords": "{name}, actor, filmography, movies, series",
+    "voiceActorDescriptionFallback": "Voice actor dubbing profile."
   },
   "profile": {
     "userProfile": "My User Profile",
@@ -221,7 +222,8 @@
     "allRoles": "All Roles",
     "dubbedOnly": "Dubbed Only",
     "noDubbedRoles": "No dubbed roles available",
-    "searchPlaceholder": "Search actors..."
+    "searchPlaceholder": "Search actors...",
+    "works": "Works"
   },
   "media": {
     "title": "Title",
@@ -279,7 +281,15 @@
     "as": "as",
     "noDubbingProjects": "No dubbing projects found",
     "dubbingStudio": "Dubbing Studio",
-    "seasons": "Seasons"
+    "seasons": "Seasons",
+    "episodes": "Episodes",
+    "season": "Season {num}",
+    "episode": "Episode {num}",
+    "backToSeason": "Back to Season",
+    "noCast": "No cast information available",
+    "notFound": "Not found",
+    "backToShow": "Back to Show",
+    "notFoundDesc": "Unable to load information for this season."
   },
   "search": {
     "actor": "Actor",
@@ -296,7 +306,8 @@
     "advertisement": "Commercials",
     "toy": "Toys & Interactive",
     "title": "Search",
-    "description": "Search for movies, series, voice actors, and more"
+    "description": "Search for movies, series, voice actors, and more",
+    "typeMore": "Type at least 2 characters..."
   },
   "auth": {
     "loginRequiredForSubscription": "You must be logged in to subscribe"
@@ -434,6 +445,10 @@
       "episode": "Episode",
       "viewOnTmdb": "View on TMDB",
       "viewOnWikipedia": "View on Wikipedia FR (redirect via Wikidata)",
+      "appLink": "App Link",
+      "openInApp": "Open in App",
+      "active": "Active",
+      "archived": "Archived",
       "reEnqueueItem": "Re-enqueue item",
       "deleteItem": "Delete item",
       "confirmReEnqueue": "Are you sure you want to re-enqueue this item? This will add it back to the active queue and delete the archived record.",
@@ -494,38 +509,45 @@
       "failedToSave": "Failed to save studio"
     }
   },
-  "contribute": {
-    "title": "Contribute",
-    "description": "Help us improve DubbingBase by contributing to the database",
-    "bronzeContributor": "Bronze Contributor",
-    "currentScore": "Current Score",
-    "progressToSilver": "Progress to Silver",
-    "readyToHelp": "Ready to Help?",
-    "readyToHelpDescription": "Start contributing to earn points and unlock achievements",
-    "startContributing": "Start Contributing",
-    "noRecentActivities": "No recent activities"
+  "audiobook": {
+    "title": "Audiobook",
+    "author": "Author",
+    "narrator": "Narrator",
+    "narrators": "Narrators",
+    "isbn": "ISBN",
+    "publishYear": "Publication Year",
+    "description": "Description",
+    "audiobookInfo": "Audiobook Information",
+    "openLibraryLinked": "OpenLibrary Linked",
+    "openLibrary": "OpenLibrary",
+    "editProject": "Edit Audiobook Project",
+    "createProject": "Create Audiobook Project"
   },
-  "dubbing": {
-    "cast": "Cast",
-    "technicalTeam": "Technical Team"
+  "podcast": {
+    "title": "Podcast & Audio Drama",
+    "author": "Creator / Author",
+    "episodes": "Episodes",
+    "feedUrl": "RSS Feed",
+    "description": "Description",
+    "editProject": "Edit Podcast Project",
+    "createProject": "Create Podcast Project"
   },
-  "movie": {
-    "addDubbingProject": "Add Dubbing Project"
+  "advertisement": {
+    "title": "Commercial & Ad",
+    "brand": "Brand / Client",
+    "agency": "Agency",
+    "year": "Year",
+    "description": "Description",
+    "editProject": "Edit Commercial Project",
+    "createProject": "Create Commercial Project"
   },
-  "report": {
-    "title": "Report",
-    "description": "Report an issue with this content",
-    "button": "Report",
-    "reason": "Reason",
-    "selectReason": "Select a reason",
-    "reasons": {
-      "copyright": "Copyright infringement",
-      "inappropriate": "Inappropriate content",
-      "error": "Incorrect information",
-      "other": "Other"
-    },
-    "details": "Details",
-    "detailsPlaceholder": "Provide additional details about the issue...",
-    "successMessage": "Report submitted successfully"
+  "toy": {
+    "title": "Connected Toy & Storyteller",
+    "manufacturer": "Manufacturer",
+    "productLine": "Product Line / Device",
+    "releaseYear": "Release Year",
+    "description": "Description",
+    "editProject": "Edit Smart Toy Project",
+    "createProject": "Create Smart Toy Project"
   }
 }

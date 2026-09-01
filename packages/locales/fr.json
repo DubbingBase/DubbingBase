@@ -8,6 +8,7 @@
     "login": "Connexion",
     "admin": "Administration"
   },
+  "newVoiceActorsAdded": "nouveau comédien ajouté | nouveaux comédiens ajoutés",
   "navigation": {
     "home": "Accueil",
     "search": "Recherche",
@@ -257,7 +258,10 @@
     "noDubbingProjects": "Aucun projet de doublage trouvé",
     "dubbingStudio": "Studio de doublage",
     "backToSeason": "Retour à la saison",
-    "noCast": "Aucune information sur le casting"
+    "noCast": "Aucune information sur le casting",
+    "notFound": "Introuvable",
+    "backToShow": "Retour à la série",
+    "notFoundDesc": "Impossible de charger les informations de cette saison."
   },
   "search": {
     "actor": "Acteur",

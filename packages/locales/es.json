@@ -258,7 +258,10 @@
     "noDubbingProjects": "No se encontraron proyectos de doblaje",
     "dubbingStudio": "Estudio de doblaje",
     "backToSeason": "Volver a la temporada",
-    "noCast": "No hay información del reparto"
+    "noCast": "No hay información del reparto",
+    "notFound": "No encontrado",
+    "backToShow": "Volver a la serie",
+    "notFoundDesc": "No se pudieron cargar las informaciones de esta temporada."
   },
   "search": {
     "actor": "Actor",

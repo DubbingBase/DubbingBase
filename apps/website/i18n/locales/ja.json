@@ -123,7 +123,8 @@
     "movieKeywords": "{title}, 映画, 吹き替え, 声優, キャスト",
     "actorDescription": "{name}のフィルモグラフィーと声優を発見してください。",
     "actorDescriptionFallback": "フィルモグラフィーと声優を発見してください。",
-    "actorKeywords": "{name}, 俳優, フィルモグラフィー, 映画, テレビ番組"
+    "actorKeywords": "{name}, 俳優, フィルモグラフィー, 映画, テレビ番組",
+    "voiceActorDescriptionFallback": "声優の吹き替えプロフィール。"
   },
   "profile": {
     "userProfile": "マイユーザープロフィール",
@@ -221,7 +222,8 @@
     "allRoles": "全役",
     "dubbedOnly": "吹き替えのみ",
     "noDubbedRoles": "吹き替えの役はありません",
-    "searchPlaceholder": "俳優を検索..."
+    "searchPlaceholder": "俳優を検索...",
+    "works": "作品"
   },
   "media": {
     "title": "タイトル",
@@ -279,7 +281,15 @@
     "as": "として",
     "noDubbingProjects": "吹き替えプロジェクトが見つかりません",
     "dubbingStudio": "吹き替えスタジオ",
-    "seasons": "シーズン"
+    "seasons": "シーズン",
+    "episodes": "エピソード",
+    "season": "シーズン {num}",
+    "episode": "第{num}話",
+    "backToSeason": "シーズンに戻る",
+    "noCast": "キャスト情報がありません",
+    "notFound": "見つかりません",
+    "backToShow": "ショーに戻る",
+    "notFoundDesc": "このシーズンの情報を読み込めませんでした。"
   },
   "search": {
     "actor": "俳優",
@@ -296,7 +306,8 @@
     "advertisement": "CM・広告",
     "toy": "トイ・玩具",
     "title": "検索",
-    "description": "映画、テレビ番組、声優などを検索"
+    "description": "映画、テレビ番組、声優などを検索",
+    "typeMore": "少なくとも2文字以上入力してください..."
   },
   "auth": {
     "loginRequiredForSubscription": "購読するにはログインが必要です"
@@ -434,6 +445,10 @@
       "episode": "エピソード",
       "viewOnTmdb": "TMDBで見る",
       "viewOnWikipedia": "フランス語版Wikipediaで見る（Wikidata経由でリダイレクト）",
+      "appLink": "アプリリンク",
+      "openInApp": "アプリで開く",
+      "active": "アクティブ",
+      "archived": "アーカイブ済み",
       "reEnqueueItem": "アイテムを再キュー",
       "deleteItem": "アイテムを削除",
       "confirmReEnqueue": "このアイテムを再度キューに入れますか？アクティブなキューに戻され、アーカイブされたレコードは削除されます。",
@@ -494,38 +509,45 @@
       "failedToSave": "スタジオの保存に失敗しました"
     }
   },
-  "contribute": {
-    "title": "貢献",
-    "description": "データベースに貢献してDubbingBaseの改善にご協力ください",
-    "bronzeContributor": "ブロンズ貢献者",
-    "currentScore": "現在のスコア",
-    "progressToSilver": "シルバーへの進捗",
-    "readyToHelp": "手伝いますか？",
-    "readyToHelpDescription": "貢献してポイントを獲得し、実績をアンロックしましょう",
-    "startContributing": "貢献を開始",
-    "noRecentActivities": "最近のアクティビティはありません"
+  "audiobook": {
+    "title": "オーディオブック",
+    "author": "著者",
+    "narrator": "ナレーター",
+    "narrators": "ナレーター一覧",
+    "isbn": "ISBN",
+    "publishYear": "出版年",
+    "description": "説明",
+    "audiobookInfo": "オーディオブック情報",
+    "openLibraryLinked": "OpenLibrary連携",
+    "openLibrary": "OpenLibrary",
+    "editProject": "オーディオブックプロジェクトを編集",
+    "createProject": "オーディオブックプロジェクトを作成"
   },
-  "dubbing": {
-    "cast": "キャスト",
-    "technicalTeam": "技術チーム"
+  "podcast": {
+    "title": "ポッドキャスト・ボイスドラマ",
+    "author": "制作者 / 著者",
+    "episodes": "エピソード",
+    "feedUrl": "RSSフィード",
+    "description": "説明",
+    "editProject": "ポッドキャストプロジェクトを編集",
+    "createProject": "ポッドキャストプロジェクトを作成"
   },
-  "movie": {
-    "addDubbingProject": "吹き替えプロジェクトを追加"
+  "advertisement": {
+    "title": "CM・広告",
+    "brand": "ブランド / クライアント",
+    "agency": "代理店",
+    "year": "年度",
+    "description": "説明",
+    "editProject": "CMプロジェクトを編集",
+    "createProject": "CMプロジェクトを作成"
   },
-  "report": {
-    "title": "報告",
-    "description": "このコンテンツに関する問題を報告",
-    "button": "報告",
-    "reason": "理由",
-    "selectReason": "理由を選択",
-    "reasons": {
-      "copyright": "著作権侵害",
-      "inappropriate": "不適切なコンテンツ",
-      "error": "不正な情報",
-      "other": "その他"
-    },
-    "details": "詳細",
-    "detailsPlaceholder": "問題についての追加の詳細を提供してください...",
-    "successMessage": "報告が正常に送信されました"
+  "toy": {
+    "title": "スマートトイ・知育スピーカー",
+    "manufacturer": "メーカー",
+    "productLine": "製品ライン / デバイス",
+    "releaseYear": "発売年",
+    "description": "説明",
+    "editProject": "スマートトイプロジェクトを編集",
+    "createProject": "スマートトイプロジェクトを作成"
   }
 }

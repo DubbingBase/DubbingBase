@@ -258,7 +258,10 @@
     "noDubbingProjects": "No dubbing projects found",
     "dubbingStudio": "Dubbing Studio",
     "backToSeason": "Back to Season",
-    "noCast": "No cast information available"
+    "noCast": "No cast information available",
+    "notFound": "Not found",
+    "backToShow": "Back to Show",
+    "notFoundDesc": "Unable to load information for this season."
   },
   "search": {
     "actor": "Actor",
