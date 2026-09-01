@@ -59,27 +59,39 @@ export default defineTask({
       }
     };
 
+    // Throughput budget per minute (cron fires every 60s):
+    //   - wiki_extract (LLM/Gemini): once per minute from external service, keep at
+    //     iteration 0 to avoid hammering the LLM rate limit.
+    //   - wiki_discovery + wiki_check (TMDB + Wikipedia): every ~3s in parallel.
+    //     Limits (verified 2026): TMDB ~40 req/s; Wikipedia (compliant User-Agent)
+    //     = 200 req/min hard cap + 3 concurrent requests etiquette. Each check/discovery
+    //     item costs ~1-2 TMDB calls and 1-3 Wikipedia calls (most cache hits, TTL 24h-7d).
+    //     36 items/min worst-case ≈ 72-108 fresh wiki calls/min < 200 cap.
+    // ponytail: hardcoded 3s pacing + 18 rounds; raise CONCURRENCY/rounds if throughput matters
+    const ROUNDS = 18;
+    const PACING_MS = 3000;
+
     console.log(
-      "[Dispatcher] Starting 1-minute cron cycle (6x 10s iterations)...",
+      `[Dispatcher] Starting 1-minute cron cycle (${ROUNDS}x ${PACING_MS}ms iterations)...`,
     );
 
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < ROUNDS; i++) {
       // 1. Dispatch heavy 1-minute extraction task only on the very first iteration
       if (i === 0) {
         dispatchTask("wiki_extract");
       }
 
-      // 2. Dispatch fast 10-second tasks on every single iteration
+      // 2. Dispatch fast tasks in parallel on every iteration
       dispatchTask("wiki_discovery");
       dispatchTask("wiki_check");
 
-      // Pause for 10 seconds between steps
-      if (i < 5) {
-        await new Promise((resolve) => setTimeout(resolve, 10000));
+      // Throttle pacing so TMDB/Wikipedia stay within their rate limits
+      if (i < ROUNDS - 1) {
+        await new Promise((resolve) => setTimeout(resolve, PACING_MS));
       }
     }
 
-    console.log("[Dispatcher] Finished dispatching all 6 iterations.");
+    console.log(`[Dispatcher] Finished dispatching all ${ROUNDS} iterations.`);
     return { result: "success" };
   },
 });
