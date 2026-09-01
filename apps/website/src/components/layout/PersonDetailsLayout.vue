@@ -4,6 +4,7 @@
       <DetailsHero
         :title="name"
         :image-url="profileUrl"
+        :backdrop-url="backdropUrl"
         image-aspect-ratio="profile"
       >
         <template #metadata>
@@ -33,6 +34,7 @@ import DetailsActionBar from './details/DetailsActionBar.vue';
 defineProps<{
   name?: string;
   profileUrl?: string | null;
+  backdropUrl?: string | null;
   loading?: boolean;
 }>();
 </script>
