@@ -180,7 +180,8 @@
     "series": "Series",
     "episodes": "Episodios",
     "fetchWikipedia": "Obtener de Wikipedia",
-    "wikipediaUrl": "URL de Wikipedia"
+    "wikipediaUrl": "URL de Wikipedia",
+    "enterWikipediaUrlDesc": "Introduzca una URL de Wikipedia para obtener la biografía, el nombre y la foto del actor. También puede rellenar manualmente los detalles a continuación."
   },
   "actor": {
     "title": "Actor",
@@ -261,7 +262,7 @@
     "noCast": "No hay información del reparto",
     "notFound": "No encontrado",
     "backToShow": "Volver a la serie",
-    "notFoundDesc": "No se pudieron cargar las informaciones de esta temporada."
+    "notFoundDesc": "No se pudo cargar la información de esta temporada."
   },
   "search": {
     "actor": "Actor",

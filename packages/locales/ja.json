@@ -180,7 +180,8 @@
     "series": "テレビ番組",
     "episodes": "エピソード",
     "fetchWikipedia": "Wikipediaから取得",
-    "wikipediaUrl": "Wikipedia URL"
+    "wikipediaUrl": "Wikipedia URL",
+    "enterWikipediaUrlDesc": "ボイスアクターの biography、名前、プロフィール写像を取得するためのWikipedia URLを入力してください。また、以下の詳細を手動で入力することもできます。"
   },
   "actor": {
     "title": "俳優",

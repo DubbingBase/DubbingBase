@@ -180,7 +180,8 @@
     "series": "Séries",
     "episodes": "Épisodes",
     "fetchWikipedia": "Récupérer depuis Wikipedia",
-    "wikipediaUrl": "URL Wikipedia"
+    "wikipediaUrl": "URL Wikipedia",
+    "enterWikipediaUrlDesc": "Saisissez une URL Wikipédia pour récupérer la biographie, le nom et la photo du comédien. Vous pouvez également remplir manuellement les détails ci-dessous."
   },
   "actor": {
     "title": "Acteur",

@@ -42,6 +42,7 @@ jobs:
             website:
               - 'apps/website/**'
               - 'packages/shared-logic/**'
+              - 'packages/locales/**'
               - 'pnpm-lock.yaml'
 
   # Job 2: Deploy Supabase (runs first if database needs updating)
@@ -161,7 +162,7 @@ jobs:
   # Job 3.6: i18n Translation Check
   i18n-check:
     needs: [detect]
-    if: needs.detect.outputs.website == 'true'
+    if: needs.detect.outputs.website == 'true' || needs.detect.outputs.mobile == 'true'
     continue-on-error: false
     runs-on: ubuntu-latest
     steps:
@@ -243,6 +244,7 @@ jobs:
       needs.detect.outputs.mobile == 'true' &&
       (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped') &&
       (needs.frontend-tests.result == 'success' || needs.frontend-tests.result == 'skipped') &&
+      (needs.i18n-check.result == 'success' || needs.i18n-check.result == 'skipped') &&
       (needs.deploy-supabase.result == 'success' || needs.deploy-supabase.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
@@ -364,6 +366,7 @@ jobs:
       needs.detect.outputs.website == 'true' && 
       (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped') &&
       (needs.frontend-tests.result == 'success' || needs.frontend-tests.result == 'skipped') &&
+      (needs.i18n-check.result == 'success' || needs.i18n-check.result == 'skipped') &&
       (needs.deploy-supabase.result == 'success' || needs.deploy-supabase.result == 'skipped')
     runs-on: ubuntu-latest
     steps:

@@ -179,8 +179,9 @@
     "movies": "Movies",
     "series": "Series",
     "episodes": "Episodes",
-    "fetchWikipedia": "Fetch from Wikipedia",
-    "wikipediaUrl": "Wikipedia URL"
+  "fetchWikipedia": "Fetch from Wikipedia",
+  "wikipediaUrl": "Wikipedia URL",
+  "enterWikipediaUrlDesc": "Enter a Wikipedia URL to fetch the voice actor's biography, name, and profile picture. You can also manually fill the details below."
   },
   "actor": {
     "title": "Actor",
