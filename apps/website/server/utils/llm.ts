@@ -12,9 +12,9 @@ function getLlmProvider(): "groq" | "gemini" {
     globalEnv?.LLM_PROVIDER ||
     process.env.NUXT_LLM_PROVIDER ||
     process.env.LLM_PROVIDER ||
-    "groq"
+    "gemini"
   ).toLowerCase();
-  return provider === "gemini" ? "gemini" : "groq";
+  return provider === "groq" ? "groq" : "gemini";
 }
 
 function getGroqModel(): string {
@@ -26,7 +26,7 @@ function getGroqModel(): string {
     globalEnv?.GROQ_MODEL ||
     process.env.NUXT_GROQ_MODEL ||
     process.env.GROQ_MODEL ||
-    "openai/gpt-oss-20b"
+    "groq/compound"
   );
 }
 
@@ -39,7 +39,7 @@ function getGeminiModel(): string {
     globalEnv?.GEMINI_MODEL ||
     process.env.NUXT_GEMINI_MODEL ||
     process.env.GEMINI_MODEL ||
-    "gemini-3.6-flash"
+    "gemini-3.5-flash-lite"
   );
 }
 
@@ -130,7 +130,7 @@ async function runWithFallback<T>(
 
 /**
  * Send a text prompt to an LLM and return the raw text response.
- * Uses Groq (openai/gpt-oss-20b) by default, falls back to Gemini (gemini-3.6-flash).
+ * Uses Gemini (gemini-3.5-flash-lite) by default, falls back to Groq (groq/compound).
  */
 export async function llmGenerate(
   prompt: string,
@@ -173,7 +173,7 @@ export async function llmGenerate(
 
 /**
  * Send a text prompt to an LLM and return a typed JSON object validated by a Zod schema.
- * Uses Groq (openai/gpt-oss-20b) by default, falls back to Gemini (gemini-3.6-flash).
+ * Uses Gemini (gemini-3.5-flash-lite) by default, falls back to Groq (groq/compound).
  */
 export async function llmGenerateObject<T extends z.ZodType>(
   prompt: string,
@@ -220,7 +220,7 @@ export async function llmGenerateObject<T extends z.ZodType>(
 /**
  * Send a text prompt with an image to an LLM (vision) and return raw text.
  * Accepts a data URL ("data:image/jpeg;base64,...") or raw base64 with mimeType.
- * Uses Groq by default, falls back to Gemini on failure.
+ * Uses Gemini by default, falls back to Groq on failure.
  */
 export async function llmVision(
   prompt: string,
@@ -281,7 +281,7 @@ export async function llmVision(
 
 /**
  * Send a text prompt with an image to an LLM (vision) and return a typed JSON object.
- * Uses Groq by default, falls back to Gemini on failure.
+ * Uses Gemini by default, falls back to Groq on failure.
  */
 export async function llmVisionObject<T extends z.ZodType>(
   prompt: string,
