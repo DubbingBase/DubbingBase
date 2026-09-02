@@ -672,7 +672,8 @@
       "uploading": "アップロード中...",
       "validated": "承認済み",
       "viewFull": "全画面表示",
-      "backToDashboard": "← ダッシュボードに戻る"
+      "backToDashboard": "← ダッシュボードに戻る",
+      "voice": "ボイス"
     },
     "users": {
       "irreversibleAction": "? この操作は元に戻せません。",
@@ -812,7 +813,12 @@
       "noPosterAvailable": "ポスターなし",
       "saveMappingChanges": "マッピング変更を保存",
       "searchingDatabase": "データベースを検索中...",
-      "released": "公開日："
+      "released": "公開日：",
+      "noPublicCastHint": "このメディアタイプには公開キャストリストがありません。声優を手動で追加してください：",
+      "characterNamePlaceholder": "キャラクター / 役名",
+      "originalActorPlaceholder": "オリジナル俳優名（任意）",
+      "searchVoiceActorPlaceholder": "声優を検索...",
+      "linkVoiceActorPlaceholder": "声優をリンク..."
     }
   },
   "audiobook": {
