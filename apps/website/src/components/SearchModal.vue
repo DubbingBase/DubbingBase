@@ -172,23 +172,23 @@ const selectedIndex = ref(0);
 
 const selectedFilter = ref<string>('all');
 
-const filters = computed(() => {
-  const getLabel = (key: string, fallback: string) => {
-    const translation = t(key);
-    return translation === key ? fallback : translation;
-  };
-  return [
-    { label: getLabel('search.all', 'All'), value: 'all' },
-    { label: getLabel('search.movie', 'Movie'), value: 'movie' },
-    { label: getLabel('search.tv', 'TV Show'), value: 'tv' },
-    { label: getLabel('search.voiceActor', 'Voice Actor'), value: 'voice_actor' },
-    { label: getLabel('search.videoGame', 'Video Game'), value: 'video_game' },
-    { label: getLabel('search.audiobook', 'Audiobook'), value: 'audiobook' },
-    { label: getLabel('search.podcast', 'Podcast'), value: 'podcast' },
-    { label: getLabel('search.advertisement', 'Ad / Pub'), value: 'advertisement' },
-    { label: getLabel('search.toy', 'Toy / Objet'), value: 'toy' },
-  ];
-});
+const getLabel = (key: string, fallback: string) => {
+  const translation = t(key);
+  return translation === key ? fallback : translation;
+};
+
+const filters = computed(() => [
+  { label: getLabel('search.all', 'All'), value: 'all' },
+  { label: getLabel('search.movie', 'Movie'), value: 'movie' },
+  { label: getLabel('search.tv', 'TV Show'), value: 'tv' },
+  { label: getLabel('search.actor', 'Person'), value: 'person' },
+  { label: getLabel('search.voiceActor', 'Voice Actor'), value: 'voice_actor' },
+  { label: getLabel('search.videoGame', 'Video Game'), value: 'video_game' },
+  { label: getLabel('search.audiobook', 'Audiobook'), value: 'audiobook' },
+  { label: getLabel('search.podcast', 'Podcast'), value: 'podcast' },
+  { label: getLabel('search.advertisement', 'Ad / Pub'), value: 'advertisement' },
+  { label: getLabel('search.toy', 'Toy / Objet'), value: 'toy' },
+]);
 
 const filteredResults = computed(() => {
   if (selectedFilter.value === 'all') return results.value;
@@ -223,14 +223,15 @@ watch(query, (newVal) => {
 });
 
 const getMediaTypeLabel = (type: string) => {
-  if (type === 'movie') return t('search.movie') || 'Film';
-  if (type === 'tv') return t('search.tv') || 'Série';
-  if (type === 'voice_actor') return t('search.voiceActor') || 'Comédien(ne)';
-  if (type === 'video_game') return t('search.videoGame') || 'Jeu vidéo';
-  if (type === 'audiobook') return t('search.audiobook') || 'Livre audio';
-  if (type === 'podcast') return t('search.podcast') || 'Podcast';
-  if (type === 'advertisement') return t('search.advertisement') || 'Publicité';
-  if (type === 'toy') return t('search.toy') || 'Jouet / Objet';
+  if (type === 'movie') return getLabel('search.movie', 'Film');
+  if (type === 'tv') return getLabel('search.tv', 'Série');
+  if (type === 'person') return getLabel('search.actor', 'Person');
+  if (type === 'voice_actor') return getLabel('search.voiceActor', 'Comédien(ne)');
+  if (type === 'video_game') return getLabel('search.videoGame', 'Jeu vidéo');
+  if (type === 'audiobook') return getLabel('search.audiobook', 'Livre audio');
+  if (type === 'podcast') return getLabel('search.podcast', 'Podcast');
+  if (type === 'advertisement') return getLabel('search.advertisement', 'Publicité');
+  if (type === 'toy') return getLabel('search.toy', 'Jouet / Objet');
   return type;
 };
 
@@ -244,6 +245,8 @@ const handleSelect = (item: SearchResult) => {
     router.push(localePath(`/show/${item.id}`));
   } else if (item.media_type === 'voice_actor') {
     router.push(localePath(`/voice-actor/${item.id}`));
+  } else if (item.media_type === 'person') {
+    router.push(localePath(`/actor/${item.id}`));
   } else if (item.media_type === 'video_game') {
     router.push(localePath(`/game/${item.id}`));
   } else if (item.media_type === 'audiobook') {
