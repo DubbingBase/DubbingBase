@@ -67,14 +67,8 @@ test.describe("Home Page & Global Navigation", () => {
     await langTrigger.click();
     await page.waitForTimeout(500);
 
-    // Switch to French
-    const frOption = page
-      .locator(
-        "[role='menu'], [role='listbox'], [role='option']",
-      )
-      .last()
-      .locator("text=Français")
-      .first();
+    // Switch to French — the SelectContent renders as a fixed-position overlay
+    const frOption = page.getByText("Français").first();
     await frOption.click();
     await page.waitForURL(/\/fr\//, { timeout: 10000 });
 
