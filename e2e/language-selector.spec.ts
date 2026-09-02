@@ -57,16 +57,26 @@ async function assertNoRawKeys(page: Page) {
 }
 
 test.describe("Language Selector", () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, context }) => {
     test.setTimeout(90000);
     await setupMockApi(page);
-    await page.context().clearCookies();
+    await context.clearCookies();
   });
 
   for (const locale of (["en", "fr", "es", "ja"] as Locale[])) {
     test(`page spawned at /${locale === "en" ? "" : locale} renders translated footer keys`, async ({
       page,
+      context,
     }) => {
+      await context.addCookies([
+        {
+          name: "user_lang",
+          value: locale,
+          url: "http://localhost:3050",
+          sameSite: "Lax",
+        },
+      ]);
+
       const url = LOCALE_URLS[locale];
       await page.goto(url, { waitUntil: "domcontentloaded" });
       await page.waitForTimeout(1500);
@@ -92,7 +102,16 @@ test.describe("Language Selector", () => {
 
   test("selector switches between all four locales and renders correct translations at each step", async ({
     page,
+    context,
   }) => {
+    await context.addCookies([
+      {
+        name: "user_lang",
+        value: "en",
+        url: "http://localhost:3050",
+        sameSite: "Lax",
+      },
+    ]);
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await page.waitForTimeout(1500);
 
