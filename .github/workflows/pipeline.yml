@@ -44,6 +44,7 @@ jobs:
               - 'packages/shared-logic/**'
               - 'packages/locales/**'
               - 'e2e/**'
+              - '.github/**'
               - 'pnpm-lock.yaml'
 
   # Job 2: Deploy Supabase (runs first if database needs updating)
