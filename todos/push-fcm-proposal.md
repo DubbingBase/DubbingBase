@@ -67,7 +67,7 @@ create policy "Users delete own tokens"
 
 **Design notes:**
 - `fcm_token` is globally unique (a token belongs to one device, which belongs to one user; FCM rotates tokens server-side on app reinstall, so the *same* user on a *new* device gets a *new* token — but a single token must never be shared across users). Unique constraint catches that misconfiguration.
-- `last_seen_at` is bumped on every successful send (server side). No nightly sweep needed: FCM tells us about `UNREGISTERED` tokens in the send response, we delete those rows there.
+- `last_seen_at` is bumped on every successful send (server side). No nightly sweep needed: FCM tellss us about `UNREGISTERED` tokens in the send response, we delete those rows there.
 - No `is_active` boolean: presence in the table = active. Soft-delete not worth it; if a user re-installs, the token is different.
 
 ### 2.2 No changes to existing tables
@@ -99,13 +99,14 @@ async function getAccessToken(): Promise<string> {
   }
 
   const now = Math.floor(Date.now() / 1000);
+  const now = Math.floor(Date.now() / 1000);
   const jwt = await new SignJWT({ scope: "https://www.googleapis.com/auth/firebase.messaging" })
     .setIssuer(fcmClientEmail)
     .setAudience("https://oauth2.googleapis.com/token")
-    .setIssuedAt({ integer: true })
-    .setExpirationTime({ integer: true, seconds: 3600 })
+    .setIssuedAt(new Date(now * 1000))
+    .setExpirationTime(new Date((now + 3600) * 1000))
     .setProtectedHeader({ alg: "RS256" })
-    .sign(createSecretKey(pemToArrayBuffer(fcmPrivateKey), "pkcs8"));
+    .sign(await importPKCS8(fcmPrivateKey, "RSASSA-PKCS1-v1_5"));
 
   const res = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
@@ -121,7 +122,7 @@ async function getAccessToken(): Promise<string> {
 }
 ```
 
-`pemToArrayBuffer` is a 5-line helper. `createSecretKey` is Node built-in.
+`pemToArrayBuffer` is a 5-line helper (`atob` → base64 decode → Uint8Array). `importPKCS8` is Web Crypto — available in Cloudflare Workers.
 
 ### 3.2 Send function
 
@@ -178,21 +179,16 @@ export async function sendFcmNotification(
 
 `sendChunk` builds the FCM v1 payload, POSTs `https://fcm.googleapis.com/v1/projects/{id}/messages:send` with `validate_only: false`, and inspects the per-token response. FCM returns per-token `error.code: UNREGISTERED | INVALID_ARGUMENT`; on those we **delete the token row** server-side (the "pruned" count). That's how the system heals itself — no separate sweep needed for "this user uninstalled" (we get told).
 
-```ts
-// Inside sendChunk — response handling (pseudo):
-type fcmResp = { results: { messageId?: string; error?: { code: string } }[] };
-const json: fcmResp = await res.json();
-const dead: number[] = [];
-json.results.forEach((r, idx) => {
-  if (r.messageId) sent++;
-  else if (r.error?.code === "UNREGISTERED" ||
-           r.error?.code === "INVALID_ARGUMENT") dead.push(items[idx].id);
-});
-if (dead.length) {
-  await admin.from("fcm_tokens").delete().in("id", dead);
-  pruned += dead.length;
-}
-```
+  // 4. Prune dead tokens (server-side self-healing for uninstalls).
+  const dead: number[] = [];
+  json.results.forEach((r, idx) => {
+    if (r.messageId) sent++;
+    else if (r.error?.code === "UNREGISTERED") dead.push(items[idx].id);
+  });
+  if (dead.length) {
+    await admin.from("fcm_tokens").delete().in("id", dead);
+    pruned += dead.length;
+  }
 
 **Ponytail: no retry queue.** FCM's 5xx → throw (Cloudflare will retry on a 5xx return, which the endpoint above should return to make the Supabase webhook retry once). Per-token 4xx → delete the row. Don't add a Dead Letter Queue yet.
 
@@ -215,21 +211,30 @@ await sendFcmNotification(
 URL translation (web_url/app_url split) **moves into `sendFcmNotification`** because FCM puts the URL inside `notification.click_action` (Android) or relies on a `data` payload (iOS, web) — it doesn't have OneSignal's automatic `web_url`/`app_url` duality. We keep the same `dubbingbase://*<path>` convention so the existing `handleDeepLink` path works.
 
 ```ts
-// FCM payload data (all platforms read this):
-{
-  notification: { title, body, image: imageUrl },
-  data: {
-    path: options.url,                              // /voice-actor/42
-    url:  isAbsolute(options.url) ? options.url
-                                  : `https://dubbingbase.com/fr${options.url}`,
-    deepLink: `dubbingbase://*${options.url}`,      // legacy alias
-    ...options.data,
-  },
-  // Android-specific: explicit click action so the OS launches the right intent
-  android: { notification: { click_action: "OPEN_ACTIVITY" } },
-  // iOS: we want the default tap-to-open behaviour; no apns.payload, just data
-  webpush: { fcm_options: { link: /* web URL */ } },
+// FCM HTTP v1 `data` must be string→string and cannot use reserved keys
+// (notification, data, android, apns, webpush, fcm_options, token, topic, condition).
+const reserved = new Set([
+  "notification","data","android","apns","webpush","fcm_options",
+  "token","tokens","topic","condition","validate_only",
+]);
+const data: Record<string, string> = {};
+if (options.url) {
+  data.path     = options.url;
+  data.url      = isAbsolute(options.url) ? options.url
+                                          : `https://dubbingbase.com/fr${options.url}`;
+  data.deepLink = `dubbingbase://*${options.url}`;
 }
+for (const [k, v] of Object.entries(options.data ?? {})) {
+  if (!reserved.has(k)) data[k] = String(v);
+}
+
+const message = {
+  notification: { title, body: message, image: options.imageUrl },
+  data,
+  android:  { notification: { click_action: "OPEN_ACTIVITY" } },
+  webpush:  { fcm_options: { link: data.url ?? "https://dubbingbase.com" } },
+  // iOS uses `data` (no apns.payload) for tap routing
+};
 ```
 
 ### 3.4 Webhook auth (existing)
@@ -248,9 +253,9 @@ URL translation (web_url/app_url split) **moves into `sendFcmNotification`** bec
 
 ```ts
 import { isPlatform } from "@ionic/vue";
-import { PushNotifications } from "@capacitor/push-notifications";
+import { FirebaseMessaging } from "@capacitor-firebase/messaging";
 import { initializeApp } from "firebase/app";
-import { getMessaging, getToken, onMessage, deleteToken }
+import { getMessaging, getToken, onMessage, onTokenRefresh, deleteToken }
   from "firebase/messaging";
 
 let initPromise: Promise<boolean> | null = null;
@@ -273,24 +278,23 @@ export function useFcm() {
     if (initPromise) return initPromise;
     initPromise = (async () => {
       if (isCapacitor) {
-        await PushNotifications.requestPermissions();
-        await PushNotifications.register();
+        await FirebaseMessaging.requestPermission();
         return true;
       }
       messaging = getMessaging(initializeApp(cfg));
-      onTokenRefresh(messaging, () => persistTokenToServer(getToken(messaging!, { vapidKey: cfg.vapidKey })));
+      onTokenRefresh(messaging, async () => {
+        const fresh = await getToken(messaging!, { vapidKey: cfg.vapidKey });
+        if (fresh) await persistTokenToServer(fresh);
+      });
       return true;
     })();
     return initPromise;
   }
 
   async function getCurrentToken(): Promise<string | null> {
-    if (isPlatform("capacitor")) {
-      return new Promise((resolve) => {
-        const sub = PushNotifications.addListener("registration",
-          (t) => { sub.remove(); resolve(t.value); });
-        setTimeout(() => { sub.remove(); resolve(null); }, 10_000);
-      });
+    if (isCapacitor) {
+      const { token } = await FirebaseMessaging.getToken();
+      return token ?? null;
     }
     if (!messaging) return null;
     return getToken(messaging, { vapidKey: cfg.vapidKey });
@@ -352,8 +356,8 @@ if (session?.user) {
   loginAndRegister().catch(console.error);
   posthog.identify(session.user.id);
 } else if (event === "SIGNED_OUT" || !session) {
-  logoutAndUnregister().catch(console.error);
   posthog.reset();
+  // Token delete is handled in signOut() above the actual signOut() call.
 }
 ```
 
@@ -414,9 +418,23 @@ if ("serviceWorker" in navigator) {
 
 Native path needs `apps/mobile/android/app/google-services.json` and an iOS `GoogleService-Info.plist` from the Firebase console. **Ponytail:** these are config files, not code. They go in the repo with a comment "do not commit API keys" (they're not secret anyway — they identify the project, not authenticate it).
 
-## 4.5 Capacitor plugin: native push
+## 4.5 Native: iOS APNs vs FCM token
 
-`@capacitor/push-notifications` returns the FCM token directly on Android. On iOS it returns the APNs token, which we still feed into FCM (FCM wraps APNs). Both go in `fcm_tokens.fcm_token` — the value FCM gave us. **No separate iOS path needed in the server.** We just label the platform.
+**Critical: `@capacitor/push-notifications` returns an APNs token on iOS, not an FCM token.** Sending an APNs token via FCM's HTTP v1 fails silently — FCM expects its own registration tokens.
+
+Fix: use `@capacitor-firebase/firebase-messaging` instead, which handles the APNs↔FCM handshake internally on iOS and returns the correct FCM token on all platforms:
+
+```diff
+- import { PushNotifications } from "@capacitor/push-notifications";
++ import { FirebaseMessaging } from "@capacitor-firebase/messaging";
+
+- await PushNotifications.requestPermissions();
+- await PushNotifications.register();
++ await FirebaseMessaging.requestPermission();
++ const { token } = await FirebaseMessaging.getToken();
+```
+
+**Android:** `FirebaseMessaging.getToken()` returns an FCM token directly. No change needed server-side.
 
 ## 4.6 Caller: `useVoiceActorSubscription`
 
@@ -472,7 +490,7 @@ Existing `useOneSignal.ts` reads `additionalData.path` / `additionalData.url` / 
 |---|---|---|
 | Web (SW) | `e.notification.data.path` | URL in handler |
 | Web (foreground) | `payload.data.path` | routed in app code |
-| iOS | `userInfo.path` (we set it in `apns.payload.data`) | native click handler |
+| iOS | `userInfo["path"]` (top-level `data`, not `apns.payload`) | native click handler |
 | Android | `data.path` + `notification.click_action` (we set `OPEN_ACTIVITY`) | MainActivity intent extras |
 
 `handleDeepLink()` from `apps/mobile/src/utils/deepLinks.ts` is unchanged. **Ponytail:** don't re-export; keep using the same util.
@@ -519,7 +537,7 @@ Existing `useOneSignal.ts` reads `additionalData.path` / `additionalData.url` / 
 ## 9. Configuration surface
 
 `.env.example`:
-```
+```dotenv
 # Firebase / FCM
 NUXT_FCM_PROJECT_ID=
 NUXT_FCM_CLIENT_EMAIL=                  # service account
@@ -572,8 +590,8 @@ runtimeConfig: {
 ## 11. What I deliberately did NOT do
 
 - **No notification preferences UI** (mute, per-type). Not requested. `voice_actor_subscriptions` is the only opt-in primitive today; a future "Settings → Notifications" page is a separate feature.
-- **No FCM topics.** We don't need them — fan-out is always a closed set of user_ids per call, resolved to tokens at send time. Topics add a layer we'd never query.
-- **No Dead-Letter Queue.** Add when a real failure is reported.
+- **No FCM topics.** Fan-out is always a closed set of user_ids per call, resolved to tokens at send time. Topics add a layer we'd never query.
+- **No Dead-Letter Queue.** Add when a failure is reported.
 - **No multi-tenant or org-level targeting.** One project, one app.
 - **No `google-auth-library` dep.** Prefer `jose` if already in `package.json`, else Web Crypto. Neither adds significant bundle weight for this one call.
 - **No Edge Function for token registration.** The client writes directly to `fcm_tokens` via RLS. Saves a round-trip. If we ever need server-side token validation, add the function then.
