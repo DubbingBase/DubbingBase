@@ -671,7 +671,8 @@
       "uploading": "Téléchargement...",
       "validated": "Validé",
       "viewFull": "Voir en grand",
-      "backToDashboard": "← Retour au tableau de bord"
+      "backToDashboard": "← Retour au tableau de bord",
+      "voice": "Voix"
     },
     "users": {
       "irreversibleAction": "? Cette action est irréversible.",
@@ -812,7 +813,7 @@
       "saveMappingChanges": "Enregistrer les modifications de correspondance",
       "searchingDatabase": "Recherche dans la base de données...",
       "released": "Sortie :",
-      "noPublicCastHint": "Aucun casting public n'est disponible pour ce type de média. Ajoutez manuellement un comédien :",
+      "noPublicCastHint": "Aucune liste de casting publique n'est disponible pour ce type de média. Ajoutez manuellement un comédien :",
       "characterNamePlaceholder": "Nom du personnage / rôle",
       "originalActorPlaceholder": "Nom de l'acteur original (optionnel)",
       "searchVoiceActorPlaceholder": "Rechercher des comédiens...",

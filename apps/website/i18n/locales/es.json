@@ -672,7 +672,8 @@
       "uploading": "Subiendo...",
       "validated": "Validado",
       "viewFull": "Ver completo",
-      "backToDashboard": "← Volver al panel de control"
+      "backToDashboard": "← Volver al panel de control",
+      "voice": "Voz"
     },
     "users": {
       "irreversibleAction": "? Esta acción es irreversible.",
@@ -812,7 +813,12 @@
       "noPosterAvailable": "No hay póster disponible",
       "saveMappingChanges": "Guardar cambios de mapeo",
       "searchingDatabase": "Buscando en la base de datos...",
-      "released": "Estreno:"
+      "released": "Estreno:",
+      "noPublicCastHint": "No hay una lista de reparto pública disponible para este tipo de medio. Añade un actor de doblaje manualmente:",
+      "characterNamePlaceholder": "Nombre del personaje / rol",
+      "originalActorPlaceholder": "Nombre del actor original (opcional)",
+      "searchVoiceActorPlaceholder": "Buscar actores de doblaje...",
+      "linkVoiceActorPlaceholder": "Vincular actor de doblaje..."
     }
   },
   "audiobook": {
