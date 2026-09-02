@@ -134,4 +134,4 @@ Backend routes in `apps/website/server/api/` handle integration with TMDB, TVDB,
 9. **Caching Rules**:
    - Remember that there is no local Redis cache in the development environment.
    - When doing your fetches (e.g. testing APIs via scratch scripts), save the output locally (e.g. in JSON files in the scratch folder) so you don't have to fetch it again repeatedly.
-10. **GitHub Actions — Always use `gh run watch` to watch pipeline jobs**: When waiting for CI to complete, always use `gh run watch <run-id>` instead of repeatedly polling `gh run view` or `gh run list`. `gh run watch` streams the live status of a run and blocks until it finishes, then exits — it is the correct tool for this. Only use `gh run list` or `gh run view` to get run IDs.
+10. **GitHub Actions — Use `gh run watch <run-id>` to monitor CI**: After getting a run ID via `gh run list`, always use `gh run watch <run-id>` instead of repeatedly polling `gh run view` or `gh run list`. `gh run watch` streams live job status and blocks until the run finishes.
