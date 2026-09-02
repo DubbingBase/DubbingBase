@@ -1,4 +1,5 @@
 # TODOs
+
 can we benefit from a searc hpage result or not ? (seo)
 can you ensure the english and french copy (for seo meta tags and home page) are still in synb, mean the same, have the same meaning and share the same format ?
 reusable "voice actor picker" or "studio picker"
@@ -7,11 +8,12 @@ shows don't have seasons and episodes on the website
 write a script to request google index update for bulk
 Add tvdb and tmdbid to the dubbing project
 Add tvdb character id to the work row
-Scroll c'est conteneur qui scroll et pas interne 
-Generate everyday a post for social medias 
+Scroll c'est conteneur qui scroll et pas interne
+Generate everyday a post for social medias
 backpropagate character_id into existing rows work
 
 ## Bugs & UI Fixes
+
 - Fix scrolling bug caused by swipe interactions
 - Fix unexpected page reload that occurs when launching a new dubbing project
 - Unify the application design around a single consistent theme
@@ -20,6 +22,7 @@ backpropagate character_id into existing rows work
 - Fix wrong theme on voice actor mobile page
 
 ## Features: Actor Profiles & Sharing
+
 - Allow users to rate an actor's overall performance
 - Create auto-generated infographics for actors that can be tagged/shared on social media
 - Improve the social sharing feature: generate better visuals featuring the actor/character split
@@ -28,6 +31,7 @@ backpropagate character_id into existing rows work
 - Create a dual "Actor / Voice Actor" view on movie pages: Display the physical actor alongside their voice actor, with a toggle to switch between international dubs
 
 ## Features: Community & Gamification
+
 - Implement an upvote/downvote system to verify community-submitted work
 - Support "untrusted" or pending submissions that require community validation
 - Introduce gamification elements (e.g., badges, achievements, points)
@@ -35,11 +39,13 @@ backpropagate character_id into existing rows work
 - Add community features: Allow users to rate the dubbing quality of a movie/series, leave comments on specific vocal performances, and vote for the best voice actor for a specific role (useful for re-dubs)
 
 ## Features: Content, Seasons & News
+
 - Data Model Update: Support different dubbing studios on a per-season basis
 - Data Model Update: Support voice actor changes on a per-episode or per-season basis
 - Create a "News & Tributes" section: Track new vocal casting announcements, interviews, and tributes to late voice actors
 
 ## Features: Expanded Works & New Media Types
+
 - [x] **Audiobooks & Dramatized Audio (`audiobook`)**: Integrated OpenLibrary API for audiobook narrations, covers, authors, search, and cast editing.
 - [x] **Advertisements & Commercials (`advertisement`)**: Support TV, Radio, and Web ads with brand/product metadata, YouTube/video embedding, studio, and voice off talent.
 - [x] **Audio Fiction & Podcasts (`podcast`)**: Integrated Apple Podcasts Search API / RSS lookup for narrative podcasts, episodes, creators, and audio fiction cast.
@@ -50,12 +56,15 @@ backpropagate character_id into existing rows work
 - **System Voices & Transit (`voice_identity`)**: GPS voices (Waze), voice assistants, and public transit announcements (SNCF).
 
 ## Features: Notifications
+
 - Allow users to "follow" a voice actor and receive notifications for their new roles or news
 
 ## Architecture & Website Consolidation
+
 - Refactor admin views to match premium theme
 
 ## Technical Debt & Infrastructure
+
 - Remove all `any` types and enforce strict TypeScript typing
 - Remove all `as unknown as` type assertions
 - Resolve TMDB images exclusively on the backend
