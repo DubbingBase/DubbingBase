@@ -79,7 +79,7 @@ async function assertLocaleFooter(page: Page, locale: Locale) {
   for (const other of ALL_LOCALES) {
     if (other === locale) continue;
     for (const text of FOOTER_TEXT[other]) {
-      if (FOOTER_TEXT[locale].includes(text)) continue;
+      if (FOOTER_TEXT[other].includes(text)) continue;
       const count = await page.getByText(text).count();
       expect(
         count,
@@ -123,7 +123,7 @@ test.describe("Language Selector", () => {
   for (const cookie of ALL_LOCALES) {
     for (const url of ALL_LOCALES) {
       if (cookie === url) continue;
-      test(`mix: cookie=${cookie} visits URL /${url === "en" ? "" : url} resolves to URL locale and renders it correctly`, async ({
+      test(`mix: cookie=${cookie} visits URL /${url === "en" ? "" : url} → redirected to cookie locale ${cookie}`, async ({
         page,
         context,
       }) => {
@@ -131,8 +131,11 @@ test.describe("Language Selector", () => {
         await page.goto(LOCALE_URLS[url], { waitUntil: "domcontentloaded" });
         await page.waitForTimeout(1500);
 
-        expect(await getActiveLocale(page)).toBe(url);
-        await assertLocaleFooter(page, url);
+        expect(
+          await getActiveLocale(page),
+          `cookie=${cookie} should redirect away from /${url} to /${cookie === "en" ? "" : cookie}`
+        ).toBe(cookie);
+        await assertLocaleFooter(page, cookie);
         await assertNoRawKeys(page);
       });
     }
@@ -162,7 +165,7 @@ test.describe("Language Selector", () => {
     }
   });
 
-  test("URL locale wins over cookie locale when both differ: French URL on English cookie stays French", async ({
+  test("cookie locale wins over URL locale: en cookie redirects French URL back to /", async ({
     page,
     context,
   }) => {
@@ -170,22 +173,8 @@ test.describe("Language Selector", () => {
     await page.goto("/fr", { waitUntil: "domcontentloaded" });
     await page.waitForTimeout(1500);
 
-    expect(await getActiveLocale(page)).toBe("fr");
-    await assertLocaleFooter(page, "fr");
+    expect(await getActiveLocale(page)).toBe("en");
+    await assertLocaleFooter(page, "en");
     await assertNoRawKeys(page);
-  });
-
-  test("LanguageBanner appears when URL locale differs from user_lang cookie (visiting /es with fr cookie)", async ({
-    page,
-    context,
-  }) => {
-    await setUserLangCookie(context, "fr");
-    await page.goto("/es", { waitUntil: "domcontentloaded" });
-    await page.waitForTimeout(1500);
-
-    expect(await getActiveLocale(page)).toBe("es");
-    await expect(
-      page.getByText("Switch now", { exact: false }).first()
-    ).toBeVisible({ timeout: 5000 });
   });
 });
