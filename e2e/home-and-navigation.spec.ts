@@ -70,7 +70,7 @@ test.describe("Home Page & Global Navigation", () => {
     // Switch to French — the SelectContent renders as a fixed-position overlay
     const frOption = page.getByText("Français").first();
     await frOption.click();
-    await page.waitForURL(/\/fr\//, { timeout: 10000 });
+    await page.waitForURL(/\/fr\/?/, { timeout: 10000 });
 
     // Verify French translations are loaded — footer should say "Films"
     const footerFilms = page.locator("footer").locator("text=Films").first();
