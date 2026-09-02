@@ -20,6 +20,30 @@
           <span>{{ $t('admin.dashboard.createVideoGameProject') }}</span>
         </NuxtLink>
         <NuxtLink
+          :to="localePath('/audiobook/new/edit/new')"
+          class="px-4 py-2.5 bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold rounded-xl shadow-lg transition-all flex items-center space-x-1.5"
+        >
+          <span>{{ $t('admin.dashboard.createAudiobookProject') }}</span>
+        </NuxtLink>
+        <NuxtLink
+          :to="localePath('/podcast/new/edit/new')"
+          class="px-4 py-2.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold rounded-xl shadow-lg transition-all flex items-center space-x-1.5"
+        >
+          <span>{{ $t('admin.dashboard.createPodcastProject') }}</span>
+        </NuxtLink>
+        <NuxtLink
+          :to="localePath('/advertisement/new/edit/new')"
+          class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl shadow-lg transition-all flex items-center space-x-1.5"
+        >
+          <span>{{ $t('admin.dashboard.createAdvertisementProject') }}</span>
+        </NuxtLink>
+        <NuxtLink
+          :to="localePath('/toy/new/edit/new')"
+          class="px-4 py-2.5 bg-pink-600 hover:bg-pink-500 text-white text-xs font-semibold rounded-xl shadow-lg transition-all flex items-center space-x-1.5"
+        >
+          <span>{{ $t('admin.dashboard.createToyProject') }}</span>
+        </NuxtLink>
+        <NuxtLink
           :to="localePath('/voice-actor/new')"
           class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-[#2a2a2a] dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white text-xs font-semibold rounded-xl border border-gray-200 dark:border-gray-700 transition-all flex items-center space-x-1.5"
         >

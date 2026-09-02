@@ -17,11 +17,11 @@ export default defineEventHandler(async (event) => {
     language,
   } = body;
 
-  if (!voice_actor_id || !media_type || !media_id || !actor_id || !language) {
+  if (!voice_actor_id || !media_type || !media_id || !language) {
     throw createError({
       statusCode: 400,
       message:
-        "Missing required fields: actor_id, voice_actor_id, media_type, media_id, and language are required",
+        "Missing required fields: voice_actor_id, media_type, media_id, and language are required",
     });
   }
 
@@ -37,11 +37,20 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const validMediaTypes = ["movie", "tv"];
+  const validMediaTypes = [
+    "movie",
+    "tv",
+    "video_game",
+    "audiobook",
+    "podcast",
+    "advertisement",
+    "toy",
+  ];
   if (!validMediaTypes.includes(media_type)) {
     throw createError({
       statusCode: 400,
-      message: "Invalid media_type. Must be one of: movie, tv",
+      message:
+        "Invalid media_type. Must be one of: movie, tv, video_game, audiobook, podcast, advertisement, toy",
     });
   }
 
@@ -74,7 +83,6 @@ export default defineEventHandler(async (event) => {
   } else {
     query = query.is("actor_id", null);
   }
-
   const { data: existingLink, error: linkCheckError } =
     await query.maybeSingle();
 
@@ -83,40 +91,26 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, message: linkCheckError.message });
   }
 
-  let result;
-
   if (existingLink) {
-    result = existingLink;
-  } else {
-    const insertData = {
-      voice_actor_id,
-      character_name: character_name || null,
-      performance: performance || "dialogues",
-      status: "user",
-      actor_id: actor_id || null,
-      dubbing_project_id,
-    };
-
-    const { data, error } = await supabaseAdmin
-      .from("work")
-      .insert(insertData)
-      .select()
-      .single();
-
-    if (error) throw error;
-    result = data;
+    return { ...existingLink, voiceActorDetails: voiceActor };
   }
 
-  const { data: voiceActorDetails, error: detailsError } = await supabaseAdmin
-    .from("voice_actors")
-    .select("*")
-    .eq("id", voice_actor_id)
+  const insertData = {
+    voice_actor_id,
+    character_name: character_name || null,
+    performance: performance || "dialogues",
+    status: "user",
+    dubbing_project_id,
+    ...(actor_id ? { actor_id } : {}),
+  } satisfies Record<string, unknown>;
+
+  const { data, error } = await supabaseAdmin
+    .from("work")
+    .insert(insertData)
+    .select()
     .single();
 
-  if (detailsError) throw detailsError;
+  if (error) throw error;
 
-  return {
-    ...(result as any),
-    voiceActorDetails,
-  };
+  return { ...data, voiceActorDetails: voiceActor };
 });

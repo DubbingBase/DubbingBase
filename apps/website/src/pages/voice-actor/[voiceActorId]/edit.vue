@@ -205,12 +205,12 @@
           <h4 class="text-base font-bold text-white">{{ $t('voiceActorEdit.linkedWorksFilmography') }}</h4>
           <p class="text-xs text-gray-400">{{ $t('voiceActorEdit.allCreditsLinked') }}</p>
         </div>
-        <NuxtLink
-          :to="localePath(`/admin/add-voice-cast/${id}`)"
+        <button
+          @click="showLinkWorkModal = true"
           class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-xs shadow-md transition-all flex items-center space-x-1"
         >
           <span>{{ $t('voiceActorEdit.linkNewWork') }}</span>
-        </NuxtLink>
+        </button>
       </div>
 
       <div class="overflow-x-auto">
@@ -254,6 +254,225 @@
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- Link New Work Modal -->
+    <div v-if="showLinkWorkModal" class="fixed inset-0 z-50 flex items-start justify-center bg-gray-950/80 backdrop-blur-sm p-4 overflow-y-auto">
+      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-2xl shadow-2xl my-8">
+        <div class="flex justify-between items-center pb-4 border-b border-gray-800">
+          <div>
+            <h3 class="text-base font-bold text-white">{{ $t('voiceActorEdit.linkNewWork') }}</h3>
+            <p class="text-xs text-gray-400 mt-0.5">{{ $t('voiceActorEdit.linkNewWorkDesc') }}</p>
+          </div>
+          <button @click="closeLinkWorkModal" class="text-gray-400 hover:text-white p-1 hover:bg-gray-800 rounded-lg transition-colors">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div v-if="linkWorkStep === 1" class="space-y-4 pt-4">
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">1. {{ $t('voiceActorEdit.selectMediaType') }}</p>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <button
+              v-for="mt in mediaTypes"
+              :key="mt.value"
+              @click="selectedMediaType = mt.value; linkWorkStep = 2"
+              class="p-3 rounded-xl border text-left transition-all"
+              :class="selectedMediaType === mt.value ? 'bg-blue-950/40 border-blue-600' : 'bg-gray-950 border-gray-800 hover:border-gray-700'"
+            >
+              <span class="text-lg block mb-1">{{ mt.icon }}</span>
+              <span class="text-xs font-semibold text-white">{{ mt.label }}</span>
+              <span v-if="mt.note" class="block text-[9px] text-gray-500 mt-0.5">{{ mt.note }}</span>
+            </button>
+          </div>
+        </div>
+
+        <div v-if="linkWorkStep === 2" class="space-y-4 pt-4">
+          <div class="flex items-center gap-2 mb-2">
+            <button @click="linkWorkStep = 1" class="text-gray-400 hover:text-white p-1 hover:bg-gray-800 rounded transition-colors">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+            </button>
+            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              2. {{ $t('voiceActorEdit.searchOrCreate') }} — <span class="text-blue-400">{{ mediaTypeLabel }}</span>
+            </p>
+          </div>
+
+          <div class="flex gap-2">
+            <input
+              v-model="mediaSearchQuery"
+              type="text"
+              :placeholder="$t('voiceActorEdit.searchPlaceholder')"
+              @input="triggerMediaSearch"
+              class="flex-1 px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-white text-sm focus:ring-2 focus:ring-blue-500"
+            />
+            <select v-model="searchLanguage" class="px-3 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-white text-xs">
+              <option value="fr">Français</option>
+              <option value="en">English</option>
+              <option value="es">Español</option>
+              <option value="ja">日本語</option>
+            </select>
+          </div>
+
+          <div v-if="mediaSearchLoading" class="flex justify-center py-6">
+            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+          </div>
+
+          <div v-else-if="mediaSearchResults.length === 0 && mediaSearchQuery.length >= 2" class="text-center py-6">
+            <p class="text-gray-500 text-sm mb-3">{{ $t('voiceActorEdit.noResults') }}</p>
+            <button
+              @click="showCreateMedia = true"
+              class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl"
+            >
+              + {{ $t('voiceActorEdit.createNew') }}
+            </button>
+          </div>
+
+          <div v-else-if="mediaSearchResults.length > 0" class="space-y-2 max-h-64 overflow-y-auto">
+            <button
+              v-for="item in mediaSearchResults"
+              :key="`${item.media_type}-${item.id}`"
+              @click="selectMediaItem(item)"
+              class="w-full flex items-center gap-3 p-3 bg-gray-950 hover:bg-gray-900 border border-gray-800 hover:border-gray-700 rounded-xl text-left transition-all"
+            >
+              <div class="h-10 w-8 rounded overflow-hidden border border-gray-800 bg-gray-900 shrink-0 flex items-center justify-center text-gray-600">
+                <img v-if="item.poster_path || item.cover_url" :src="item.poster_path || item.cover_url" class="h-full w-full object-cover" />
+                <span v-else class="text-[8px]">N/A</span>
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-semibold text-white truncate">{{ item.title || item.name }}</p>
+                <p class="text-[10px] text-gray-500 uppercase tracking-wider">
+                  {{ getMediaTypeLabel(item.media_type) }}
+                  <span v-if="item.release_date || item.first_air_date"> · {{ (item.release_date || item.first_air_date || '').split('-')[0] }}</span>
+                  <span v-if="item.author"> · {{ item.author }}</span>
+                  <span v-if="item.brand"> · {{ item.brand }}</span>
+                </p>
+              </div>
+              <span class="text-gray-600 text-xs shrink-0">→</span>
+            </button>
+          </div>
+
+          <div class="pt-2 border-t border-gray-800">
+            <button
+              @click="showCreateMedia = true"
+              class="w-full py-2.5 border border-dashed border-gray-700 hover:border-gray-600 text-gray-400 hover:text-white text-xs font-semibold rounded-xl transition-all"
+            >
+              + {{ $t('voiceActorEdit.createNew') }} {{ mediaTypeLabel }}
+            </button>
+          </div>
+        </div>
+
+        <div v-if="linkWorkStep === 3" class="space-y-4 pt-4">
+          <div class="flex items-center gap-2 mb-2">
+            <button @click="linkWorkStep = 2" class="text-gray-400 hover:text-white p-1 hover:bg-gray-800 rounded transition-colors">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+            </button>
+            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              3. {{ $t('voiceActorEdit.linkRole') }}
+            </p>
+          </div>
+
+          <div class="flex items-center gap-3 p-3 bg-gray-950 rounded-xl border border-gray-800">
+            <div class="h-14 w-10 rounded overflow-hidden border border-gray-800 bg-gray-900 shrink-0 flex items-center justify-center text-gray-600">
+              <img v-if="selectedMedia?.poster_path || selectedMedia?.cover_url" :src="selectedMedia.poster_path || selectedMedia.cover_url" class="h-full w-full object-cover" />
+              <span v-else class="text-[8px]">N/A</span>
+            </div>
+            <div>
+              <p class="text-sm font-bold text-white">{{ selectedMedia?.title || selectedMedia?.name }}</p>
+              <p class="text-[10px] text-gray-500 uppercase tracking-wider">{{ getMediaTypeLabel(selectedMedia?.media_type) }}</p>
+            </div>
+          </div>
+
+          <div v-if="linkWorkCastLoading" class="flex justify-center py-6">
+            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+          </div>
+
+          <div v-else-if="linkWorkCast.length > 0" class="space-y-2 max-h-56 overflow-y-auto">
+            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{{ $t('voiceActorEdit.selectRole') }}</p>
+            <button
+              v-for="castMember in linkWorkCast"
+              :key="castMember.id"
+              @click="submitWorkLink({ actorId: castMember.id, characterName: castMember.character || castMember.name })"
+              class="w-full flex items-center gap-3 p-2.5 bg-gray-950 hover:bg-gray-900 border border-gray-800 hover:border-gray-700 rounded-xl text-left transition-all"
+            >
+              <div class="h-8 w-8 rounded-full overflow-hidden border border-gray-800 bg-gray-900 shrink-0 flex items-center justify-center text-gray-500">
+                <img v-if="castMember.profile_path" :src="castMember.profile_path" class="h-full w-full object-cover" />
+                <span v-else class="text-[8px]">?</span>
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="text-xs font-semibold text-white truncate">{{ castMember.name }}</p>
+                <p class="text-[10px] text-indigo-400 truncate">as {{ castMember.character || castMember.name }}</p>
+              </div>
+            </button>
+          </div>
+
+          <div v-else class="space-y-3">
+            <div class="grid grid-cols-2 gap-3">
+              <div class="space-y-1">
+                <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{{ $t('voiceActorEdit.originalActor') }}</label>
+                <input v-model="linkWorkActorName" type="text" :placeholder="$t('voiceActorEdit.originalActorPlaceholder')" class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white text-xs focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div class="space-y-1">
+                <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{{ $t('voiceActorEdit.characterName') }}</label>
+                <input v-model="linkWorkCharacterName" type="text" :placeholder="$t('voiceActorEdit.characterNamePlaceholder')" class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white text-xs focus:ring-2 focus:ring-blue-500" />
+              </div>
+            </div>
+            <div class="space-y-1">
+              <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{{ $t('admin.movieEditor.performance') }}</label>
+              <select v-model="linkWorkPerformance" class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white text-xs">
+                <option value="dialogues">{{ $t('admin.movieEditor.dialogues') }}</option>
+                <option value="chant">{{ $t('admin.movieEditor.chant') }}</option>
+                <option value="dialogues & chant">{{ $t('admin.movieEditor.dialoguesAndChant') }}</option>
+                <option value="ambiances">{{ $t('admin.movieEditor.ambiances') }}</option>
+                <option value="voice">{{ $t('admin.movieEditor.voice') }}</option>
+              </select>
+            </div>
+            <button
+              @click="submitWorkLink({ actorName: linkWorkActorName, characterName: linkWorkCharacterName })"
+              :disabled="isSubmittingWorkLink || !linkWorkCharacterName"
+              class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              <span v-if="isSubmittingWorkLink" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+              {{ $t('voiceActorEdit.linkThisWork') }}
+            </button>
+          </div>
+        </div>
+
+        <div v-if="showCreateMedia" class="mt-4 p-4 bg-gray-950 border border-gray-800 rounded-xl space-y-3">
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t('voiceActorEdit.createNew') }} {{ mediaTypeLabel }}</p>
+          <div class="space-y-1">
+            <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{{ $t('voiceActorEdit.name') }}</label>
+            <input v-model="createMediaName" type="text" :placeholder="$t('voiceActorEdit.namePlaceholder')" class="w-full px-3 py-2 bg-gray-900 border border-gray-800 rounded-xl text-white text-sm focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div v-if="selectedMediaType === 'advertisement'" class="space-y-1">
+            <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{{ $t('voiceActorEdit.brand') }}</label>
+            <input v-model="createMediaBrand" type="text" :placeholder="$t('voiceActorEdit.brandPlaceholder')" class="w-full px-3 py-2 bg-gray-900 border border-gray-800 rounded-xl text-white text-sm focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div v-if="selectedMediaType === 'toy'" class="space-y-1">
+            <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{{ $t('voiceActorEdit.manufacturer') }}</label>
+            <input v-model="createMediaBrand" type="text" :placeholder="$t('voiceActorEdit.manufacturerPlaceholder')" class="w-full px-3 py-2 bg-gray-900 border border-gray-800 rounded-xl text-white text-sm focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div v-if="selectedMediaType === 'audiobook'" class="space-y-1">
+            <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{{ $t('voiceActorEdit.author') }}</label>
+            <input v-model="createMediaBrand" type="text" :placeholder="$t('voiceActorEdit.authorPlaceholder')" class="w-full px-3 py-2 bg-gray-900 border border-gray-800 rounded-xl text-white text-sm focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div v-if="selectedMediaType === 'podcast'" class="space-y-1">
+            <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{{ $t('voiceActorEdit.podcastAuthor') }}</label>
+            <input v-model="createMediaBrand" type="text" :placeholder="$t('voiceActorEdit.podcastAuthorPlaceholder')" class="w-full px-3 py-2 bg-gray-900 border border-gray-800 rounded-xl text-white text-sm focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div class="flex gap-2 pt-1">
+            <button @click="showCreateMedia = false" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-semibold rounded-xl">{{ $t('common.cancel') }}</button>
+            <button
+              @click="createAndLink"
+              :disabled="isCreatingMedia || !createMediaName"
+              class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl flex items-center gap-2 disabled:opacity-50"
+            >
+              <span v-if="isCreatingMedia" class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></span>
+              {{ $t('voiceActorEdit.createAndLink') }}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -514,6 +733,168 @@ const saveVoiceActor = async () => {
     isSaving.value = false;
   }
 };
+
+
+// Link Work Modal
+const showLinkWorkModal = ref(false);
+const linkWorkStep = ref(1);
+const selectedMediaType = ref("movie");
+const mediaSearchQuery = ref("");
+const searchLanguage = ref("fr");
+const mediaSearchLoading = ref(false);
+const mediaSearchResults = ref<any[]>([]);
+const selectedMedia = ref<any | null>(null);
+const linkWorkCast = ref<any[]>([]);
+const linkWorkCastLoading = ref(false);
+const linkWorkActorName = ref("");
+const linkWorkCharacterName = ref("");
+const linkWorkPerformance = ref("dialogues");
+const isSubmittingWorkLink = ref(false);
+const showCreateMedia = ref(false);
+const createMediaName = ref("");
+const createMediaBrand = ref("");
+const isCreatingMedia = ref(false);
+const mediaSearchTimer = ref<ReturnType<typeof setTimeout> | null>(null);
+
+const mediaTypes = [
+  { value: "movie", label: "Movie", icon: "🎬", note: "TMDB" },
+  { value: "tv", label: "Series", icon: "📺", note: "TMDB" },
+  { value: "video_game", label: "Video Game", icon: "🎮", note: "IGDB" },
+  { value: "audiobook", label: "Audiobook", icon: "📖", note: "" },
+  { value: "podcast", label: "Podcast", icon: "🎙️", note: "" },
+  { value: "advertisement", label: "Commercial", icon: "📺", note: "" },
+  { value: "toy", label: "Toy", icon: "🧸", note: "" },
+];
+
+const mediaTypeLabel = computed(() => {
+  return mediaTypes.find(m => m.value === selectedMediaType.value)?.label ?? selectedMediaType.value;
+});
+
+function closeLinkWorkModal() {
+  showLinkWorkModal.value = false;
+  linkWorkStep.value = 1;
+  selectedMediaType.value = "movie";
+  mediaSearchQuery.value = "";
+  mediaSearchResults.value = [];
+  selectedMedia.value = null;
+  linkWorkCast.value = [];
+  linkWorkActorName.value = "";
+  linkWorkCharacterName.value = "";
+  showCreateMedia.value = false;
+  createMediaName.value = "";
+  createMediaBrand.value = "";
+}
+
+function triggerMediaSearch() {
+  if (mediaSearchTimer.value) clearTimeout(mediaSearchTimer.value);
+  mediaSearchTimer.value = setTimeout(() => executeMediaSearch(), 300);
+}
+
+async function executeMediaSearch() {
+  const q = mediaSearchQuery.value.trim();
+  if (q.length < 2) { mediaSearchResults.value = []; return; }
+  mediaSearchLoading.value = true;
+  try {
+    const results = await $fetch<any[]>("/api/search", { params: { query: q } });
+    mediaSearchResults.value = (results ?? []).filter((r: any) => {
+      if (selectedMediaType.value === "movie") return r.media_type === "movie";
+      if (selectedMediaType.value === "tv") return r.media_type === "tv";
+      if (selectedMediaType.value === "video_game") return r.media_type === "video_game";
+      if (selectedMediaType.value === "audiobook") return r.media_type === "audiobook";
+      if (selectedMediaType.value === "podcast") return r.media_type === "podcast";
+      if (selectedMediaType.value === "advertisement") return r.media_type === "advertisement";
+      if (selectedMediaType.value === "toy") return r.media_type === "toy";
+      return true;
+    });
+  } catch (err) { console.error(err); }
+  finally { mediaSearchLoading.value = false; }
+}
+
+async function selectMediaItem(item: any) {
+  selectedMedia.value = item;
+  linkWorkStep.value = 3;
+
+  const supportsCast = ["movie", "tv", "video_game"].includes(selectedMediaType.value);
+  if (supportsCast) {
+    linkWorkCastLoading.value = true;
+    try {
+      const credits: any = await $fetch("/api/internal-media-credits", {
+        params: { media_type: selectedMediaType.value, media_id: item.id },
+      });
+      linkWorkCast.value = (credits.cast ?? []).map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        character: c.character ?? c.name,
+        profile_path: c.profile_path ?? null,
+      }));
+    } catch (err) {
+      console.error("Failed to load cast:", err);
+      linkWorkCast.value = [];
+    } finally {
+      linkWorkCastLoading.value = false;
+    }
+  } else {
+    linkWorkCast.value = [];
+  }
+}
+
+async function submitWorkLink(opts: { actorId?: number; actorName?: string; characterName?: string }) {
+  if (!selectedMedia.value) return;
+  isSubmittingWorkLink.value = true;
+  try {
+    await $fetch("/api/link-voice-actor", {
+      method: "POST",
+      body: {
+        voice_actor_id: numId,
+        media_type: selectedMediaType.value,
+        media_id: selectedMedia.value.id,
+        actor_id: opts.actorId ?? 0,
+        character_name: opts.characterName ?? "",
+        performance: linkWorkPerformance.value,
+        language: searchLanguage.value,
+      },
+    });
+    showToast(`Linked to "${selectedMedia.value.title || selectedMedia.value.name}"`, "success");
+    const { data: refreshed } = await supabase
+      .from("work")
+      .select("*, dubbing_projects(id, content_id, content_type)")
+      .eq("voice_actor_id", numId);
+    if (refreshed) linkedWorks.value = refreshed;
+    closeLinkWorkModal();
+  } catch (err: any) {
+    showToast(err?.data?.message || err?.message || "Failed to link work", "error");
+  } finally {
+    isSubmittingWorkLink.value = false;
+  }
+}
+
+async function createAndLink() {
+  if (!createMediaName.value) return;
+  isCreatingMedia.value = true;
+  try {
+    const result = await $fetch<any>("/api/internal-media-create", {
+      method: "POST",
+      body: {
+        media_type: selectedMediaType.value,
+        name: createMediaName.value,
+        brand: createMediaBrand.value || undefined,
+        manufacturer: createMediaBrand.value || undefined,
+      },
+    });
+    if (result?.media) {
+      selectedMedia.value = { ...result.media, media_type: selectedMediaType.value };
+      showCreateMedia.value = false;
+      createMediaName.value = "";
+      createMediaBrand.value = "";
+      linkWorkStep.value = 3;
+      linkWorkCast.value = [];
+    }
+  } catch (err: any) {
+    showToast(err?.data?.message || err?.message || "Failed to create media", "error");
+  } finally {
+    isCreatingMedia.value = false;
+  }
+}
 
 
 </script>
