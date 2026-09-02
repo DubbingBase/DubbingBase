@@ -46,30 +46,44 @@ test.describe("Home Page & Global Navigation", () => {
     }
   });
 
-  test("language switcher updates application language", async ({ page }) => {
+  test("language switcher updates application language and renders translations", async ({
+    page,
+  }) => {
+    // Start on the root URL (English default)
     await page.goto("/", { waitUntil: "domcontentloaded" });
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(1500);
 
-    // Find language selector button / dropdown
+    // Verify English translations are loaded — footer should say "Movies" not "footer.movies"
+    const footerMovies = page.locator("footer").locator("text=Movies").first();
+    await expect(footerMovies).toBeVisible({ timeout: 5000 });
+    // Also verify the raw key is NOT showing (the bug symptom)
+    await expect(page.locator("footer")).not.toContainText("footer.movies");
+
+    // Open the language switcher
     const langTrigger = page
-      .locator(
-        "button:has-text('EN'), button:has-text('FR'), button[aria-label*='language' i]",
-      )
+      .locator("button[aria-label*='language' i]")
       .first();
-    if (await langTrigger.isVisible()) {
-      await langTrigger.click();
-      await page.waitForTimeout(300);
+    await expect(langTrigger).toBeVisible({ timeout: 5000 });
+    await langTrigger.click();
+    await page.waitForTimeout(500);
 
-      // Select French or English if available
-      const langOption = page
-        .locator(
-          "button:has-text('Français'), a:has-text('Français'), button:has-text('English'), a:has-text('English')",
-        )
-        .first();
-      if (await langOption.isVisible()) {
-        await langOption.click();
-        await page.waitForTimeout(500);
-      }
-    }
+    // Switch to French
+    const frOption = page
+      .locator(
+        "[role='menu'], [role='listbox'], [role='option']",
+      )
+      .last()
+      .locator("text=Français")
+      .first();
+    await frOption.click();
+    await page.waitForURL(/\/fr\//, { timeout: 10000 });
+
+    // Verify French translations are loaded — footer should say "Films"
+    const footerFilms = page.locator("footer").locator("text=Films").first();
+    await expect(footerFilms).toBeVisible({ timeout: 5000 });
+    // Also verify the raw key is NOT showing (the bug symptom)
+    await expect(page.locator("footer")).not.toContainText("footer.movies");
+    // And that English didn't bleed through
+    await expect(page.locator("footer")).not.toContainText("Movies");
   });
 });
