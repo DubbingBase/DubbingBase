@@ -61,9 +61,9 @@ export default defineEventHandler(async (event): Promise<AudiobookResponse> => {
     const { book, failed } = apiData;
     const dubbingProjects = dbData;
 
-    // Lazy enqueue if not yet processed
+    // Lazy enqueue if not yet processed - Gated by PostHog 'enqueue-on-navigate' (server-side)
     const isProcessed = dubbingProjects.length > 0;
-    if (!isProcessed) {
+    if (!isProcessed && (await isEnqueueOnNavigateEnabled(event))) {
       const supabaseAdmin = useSupabaseAdmin();
       try {
         const { error } = await supabaseAdmin.rpc("enqueue_media_fetch", {

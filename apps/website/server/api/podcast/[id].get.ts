@@ -60,7 +60,8 @@ export default defineEventHandler(async (event): Promise<PodcastResponse> => {
     const dubbingProjects = dbData;
 
     const isProcessed = dubbingProjects.length > 0;
-    if (!isProcessed) {
+    // Gated by PostHog 'enqueue-on-navigate' (server-side)
+    if (!isProcessed && (await isEnqueueOnNavigateEnabled(event))) {
       const supabaseAdmin = useSupabaseAdmin();
       try {
         const { error } = await supabaseAdmin.rpc("enqueue_media_fetch", {
