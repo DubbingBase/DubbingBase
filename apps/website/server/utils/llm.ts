@@ -136,18 +136,16 @@ function extractQuotaFromHeaders(
   headers?: Record<string, string> | Headers | null,
 ): string | undefined {
   const h = normalizeHeaders(headers as any);
-  if (!h) return undefined;
-  const remReq =
-    h["x-ratelimit-remaining-requests"] ??
-    h["x-ratelimit-remaining"] ??
-    h["ratelimit-remaining"];
-  const limitReq =
-    h["x-ratelimit-limit-requests"] ??
-    h["x-ratelimit-limit"] ??
-    h["ratelimit-limit"];
-  const remTok = h["x-ratelimit-remaining-tokens"];
-  const limitTok = h["x-ratelimit-limit-tokens"];
-  const retryAfter = h["retry-after"];
+  if (!h || Object.keys(h).length === 0) return undefined;
+  const get = (...keys: string[]) => {
+    for (const k of keys) if (h[k] != null) return h[k];
+    return undefined;
+  };
+  const remReq = get("x-ratelimit-remaining-requests", "x-ratelimit-remaining", "ratelimit-remaining", "x-ratelimit-remaining-request");
+  const limitReq = get("x-ratelimit-limit-requests", "x-ratelimit-limit", "ratelimit-limit", "x-ratelimit-limit-request");
+  const remTok = get("x-ratelimit-remaining-tokens", "x-ratelimit-remaining-token");
+  const limitTok = get("x-ratelimit-limit-tokens", "x-ratelimit-limit-token");
+  const retryAfter = get("retry-after", "x-retry-after");
   // Groq / OpenAI compatible: prefer requests quota (daily)
   if (remReq && limitReq) return `${remReq}/${limitReq} req remaining`;
   if (remReq) return `${remReq} req remaining`;
@@ -162,7 +160,20 @@ function extractQuotaFromHeaders(
   for (const [k, v] of Object.entries(h)) {
     if (k.includes("ratelimit")) return `${k}: ${v}`;
   }
+  // Fallback: surface any header for debugging if we recognise quota-like keys
   return undefined;
+}
+
+function getResponseHeaders(r: any): Record<string, string> | Headers | undefined {
+  return (
+    r?.response?.headers ??
+    r?.responseHeaders ??
+    r?.headers ??
+    r?.rawResponse?.headers ??
+    r?.providerMetadata?.headers ??
+    r?.response?.header ??
+    undefined
+  );
 }
 
 async function runWithFallbacks<T>(
@@ -173,6 +184,13 @@ async function runWithFallbacks<T>(
     try {
       const { data, usage, headers } = await exec.fn();
       const quota = extractQuotaFromHeaders(headers);
+      if (!quota && headers) {
+        console.warn(`[LLM] ${exec.name} no quota in headers:`, JSON.stringify(Object.keys(headers).slice(0, 20)));
+      } else if (!headers) {
+        console.warn(`[LLM] ${exec.name} no response headers`);
+      } else {
+        console.log(`[LLM] ${exec.name} quota: ${quota} headers:`, JSON.stringify(headers).slice(0, 500));
+      }
       return { data, model: exec.name, usage, quota, headers };
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
@@ -229,7 +247,7 @@ export async function llmGenerate(
       }).then((r) => ({
         data: r.text,
         usage: (r as any).usage as LlmUsage | undefined,
-        headers: (r as any).response?.headers as Record<string, string> | undefined,
+        headers: getResponseHeaders(r as any) as Record<string, string> | undefined,
       })),
   };
 
@@ -246,7 +264,7 @@ export async function llmGenerate(
         }).then((r) => ({
           data: r.text,
           usage: (r as any).usage as LlmUsage | undefined,
-          headers: (r as any).response?.headers as Record<string, string> | undefined,
+          headers: getResponseHeaders(r as any) as Record<string, string> | undefined,
         })),
     }),
   );
@@ -291,7 +309,7 @@ export async function llmGenerateObject<T extends z.ZodType>(
       }).then((r) => ({
         data: r.object,
         usage: (r as any).usage as LlmUsage | undefined,
-        headers: (r as any).response?.headers as Record<string, string> | undefined,
+        headers: getResponseHeaders(r as any) as Record<string, string> | undefined,
       })),
   };
 
@@ -309,7 +327,7 @@ export async function llmGenerateObject<T extends z.ZodType>(
         }).then((r) => ({
           data: r.object,
           usage: (r as any).usage as LlmUsage | undefined,
-          headers: (r as any).response?.headers as Record<string, string> | undefined,
+          headers: getResponseHeaders(r as any) as Record<string, string> | undefined,
         })),
     }),
   );
@@ -366,7 +384,7 @@ export async function llmVision(
       }).then((r) => ({
         data: r.text,
         usage: (r as any).usage as LlmUsage | undefined,
-        headers: (r as any).response?.headers as Record<string, string> | undefined,
+        headers: getResponseHeaders(r as any) as Record<string, string> | undefined,
       })),
   };
 
@@ -388,7 +406,7 @@ export async function llmVision(
         }).then((r) => ({
           data: r.text,
           usage: (r as any).usage as LlmUsage | undefined,
-          headers: (r as any).response?.headers as Record<string, string> | undefined,
+          headers: getResponseHeaders(r as any) as Record<string, string> | undefined,
         })),
     }),
   );
@@ -446,7 +464,7 @@ export async function llmVisionObject<T extends z.ZodType>(
       }).then((r) => ({
         data: r.object,
         usage: (r as any).usage as LlmUsage | undefined,
-        headers: (r as any).response?.headers as Record<string, string> | undefined,
+        headers: getResponseHeaders(r as any) as Record<string, string> | undefined,
       })),
   };
 
@@ -469,7 +487,7 @@ export async function llmVisionObject<T extends z.ZodType>(
         }).then((r) => ({
           data: r.object,
           usage: (r as any).usage as LlmUsage | undefined,
-          headers: (r as any).response?.headers as Record<string, string> | undefined,
+          headers: getResponseHeaders(r as any) as Record<string, string> | undefined,
         })),
     }),
   );
