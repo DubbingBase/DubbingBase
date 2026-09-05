@@ -300,10 +300,12 @@ export default defineEventHandler(async (event) => {
         const wikipediaCache = useWikipediaCache();
         const entity = await wikipediaCache.getAllSitelinksEntity(wikiId);
         const sitelinks = entity.entities[wikiId]?.sitelinks;
-        const availableLanguages = extractAvailableLanguages(sitelinks);
+        const allLanguages = extractAvailableLanguages(sitelinks);
+        // ponytail: top 5 only to avoid 1:N blow-up (20 langs * 18/min = backlog)
+        const availableLanguages = allLanguages.slice(0, 5);
 
         console.log(
-          `[QUEUE] Discovered ${availableLanguages.length} languages for ${mediaTitle} (ranked by popularity)`,
+          `[QUEUE] Discovered ${allLanguages.length} languages for ${mediaTitle} (ranked, top 5 of ${allLanguages.length} enqueued)`,
         );
 
         if (availableLanguages.length === 0) {
@@ -329,7 +331,7 @@ export default defineEventHandler(async (event) => {
           };
         }
 
-        // Enqueue each language into Queue 2: wiki_check
+        // Enqueue each language into Queue 2: wiki_check (top 5 only)
         let enqueuedCount = 0;
         let alreadyEnqueuedCount = 0;
         for (const lang of availableLanguages) {
@@ -346,7 +348,10 @@ export default defineEventHandler(async (event) => {
           );
 
           if (enqueueError) {
-            if (enqueueError.message?.includes("already in the")) {
+            if (
+              enqueueError.message?.includes("already in the") ||
+              enqueueError.message?.includes("already exists for")
+            ) {
               alreadyEnqueuedCount++;
             } else {
               console.error(
@@ -373,7 +378,7 @@ export default defineEventHandler(async (event) => {
 
         await sendDiscordAdminNotification(
           "Queue Discovery Completed",
-          `Discovered **${availableLanguages.length} language(s)** for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}).\n• Enqueued **${enqueuedCount}** new language checks\n• **${alreadyEnqueuedCount}** already pending.`,
+          `Discovered **${allLanguages.length} language(s)** for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}) [top 5].\n• Enqueued **${enqueuedCount}** new checks\n• **${alreadyEnqueuedCount}** skipped/deduped.`,
           { event, queue: "wiki_discovery" },
         );
       } catch (err) {
