@@ -1,4 +1,4 @@
-import { llmVisionObject } from "../utils/llm";
+import { formatLlmQuota, llmVisionObject } from "../utils/llm";
 import { z } from "zod";
 
 export default defineEventHandler(async (event) => {
@@ -78,6 +78,7 @@ export default defineEventHandler(async (event) => {
         ok: true,
         result: parsed.data.extract,
         llmModel: parsed.model,
+        llmQuota: formatLlmQuota(parsed.usage),
       };
     }
 
@@ -99,6 +100,7 @@ export default defineEventHandler(async (event) => {
       ok: true,
       result: parsed.data.extract,
       llmModel: parsed.model,
+      llmQuota: formatLlmQuota(parsed.usage),
     };
   } catch (error: any) {
     if (error && typeof error === "object" && "statusCode" in error)

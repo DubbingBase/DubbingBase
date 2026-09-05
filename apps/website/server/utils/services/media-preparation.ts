@@ -4,7 +4,7 @@ import { insertVoiceActorAndWork } from "./voice-actor";
 import { useWikipediaCache, useIgdbClient } from "../index";
 import { buildTmdbImageUrl } from "../urls/tmdb";
 import { buildIgdbImageUrl } from "../api/igdb";
-import { llmGenerateObject } from "../llm";
+import { formatLlmQuota, llmGenerateObject } from "../llm";
 import {
   extractAvailableLanguages,
   selectDubbingSections,
@@ -80,6 +80,7 @@ export interface ExtractCreditsResult {
   title?: string;
   imageUrl?: string;
   llmModel?: string;
+  llmQuota?: string;
   note?: string;
   error?: string;
 }
@@ -91,6 +92,7 @@ export interface PrepareMediaResult {
   title?: string;
   imageUrl?: string;
   llmModel?: string;
+  llmQuota?: string;
   note?: string;
   languages?: string[];
   wikipediaUrl?: string;
@@ -104,6 +106,7 @@ export interface PrepareGameResult {
   title?: string;
   imageUrl?: string;
   llmModel?: string;
+  llmQuota?: string;
   note?: string;
   languages?: string[];
   wikipediaUrl?: string;
@@ -386,6 +389,7 @@ export async function extractMediaDubbingCredits(options: {
     let totalNewCredits = 0;
 
     let llmModel: string | undefined;
+    let llmQuota: string | undefined;
     for (const sectionIndex of sectionIndexes) {
       const wikitextJSON = await wikipediaCache.getPageSectionAsWikitext(
         pageId,
@@ -412,6 +416,7 @@ If no dubbing or voice-actor data exists in the section, return { items: [] }.`,
         },
       );
       llmModel = llmResult.model;
+      llmQuota = formatLlmQuota(llmResult.usage) ?? llmQuota;
 
       for (const entry of llmResult.data?.items ?? []) {
         let { actor, voiceActorFirstname, voiceActorName } = entry;
@@ -487,9 +492,10 @@ If no dubbing or voice-actor data exists in the section, return { items: [] }.`,
       title: mediaTitle,
       imageUrl,
       llmModel,
+      llmQuota,
       note:
         totalNewCredits === 0
-          ? `No dubbing entries matched (LLM: ${llmModel || "unknown"}). Check if Wikipedia has dubbing tables for ${language}.`
+          ? `No dubbing entries matched (LLM: ${llmModel || "unknown"}${llmQuota ? `, quota: ${llmQuota}` : ""}). Check if Wikipedia has dubbing tables for ${language}.`
           : undefined,
     };
   } catch (error) {
@@ -541,6 +547,7 @@ export async function extractGameDubbingCredits(options: {
     let totalNewCredits = 0;
 
     let llmModel: string | undefined;
+    let llmQuota: string | undefined;
     for (const sectionIndex of sectionIndexes) {
       const wikitextJSON = await wikipediaCache.getPageSectionAsWikitext(
         pageId,
@@ -567,6 +574,7 @@ If no dubbing or voice-actor data exists in the section, return { items: [] }.`,
         },
       );
       llmModel = llmResult.model;
+      llmQuota = formatLlmQuota(llmResult.usage) ?? llmQuota;
 
       for (const entry of llmResult.data?.items ?? []) {
         let { actor, voiceActorFirstname, voiceActorName } = entry;
@@ -618,9 +626,10 @@ If no dubbing or voice-actor data exists in the section, return { items: [] }.`,
       title: gameTitle,
       imageUrl,
       llmModel,
+      llmQuota,
       note:
         totalNewCredits === 0
-          ? `No dubbing entries matched (LLM: ${llmModel || "unknown"}). Check if Wikipedia has dubbing tables for ${language}.`
+          ? `No dubbing entries matched (LLM: ${llmModel || "unknown"}${llmQuota ? `, quota: ${llmQuota}` : ""}). Check if Wikipedia has dubbing tables for ${language}.`
           : undefined,
     };
   } catch (error) {
@@ -690,6 +699,7 @@ export async function prepareMedia(options: {
     title: extract.title || check.title,
     imageUrl: extract.imageUrl,
     llmModel: extract.llmModel,
+    llmQuota: extract.llmQuota,
     note: extract.note,
     wikipediaUrl: check.wikipediaUrl,
     languages: [language],
@@ -730,6 +740,7 @@ export async function prepareGame(options: {
     title: extract.title || check.title,
     imageUrl: extract.imageUrl,
     llmModel: extract.llmModel,
+    llmQuota: extract.llmQuota,
     note: extract.note,
     wikipediaUrl: check.wikipediaUrl,
     languages: [language],

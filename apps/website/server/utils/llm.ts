@@ -99,12 +99,21 @@ function isRateLimitError(error: unknown): boolean {
 
 interface LlmExecution<T> {
   name: string;
-  fn: () => Promise<T>;
+  fn: () => Promise<{ data: T; usage?: LlmUsage }>;
+}
+
+interface LlmUsage {
+  promptTokens?: number;
+  completionTokens?: number;
+  totalTokens?: number;
+  inputTokens?: number;
+  outputTokens?: number;
 }
 
 interface LlmResult<T> {
   data: T;
   model: string;
+  usage?: LlmUsage;
 }
 
 async function runWithFallbacks<T>(
@@ -113,8 +122,8 @@ async function runWithFallbacks<T>(
   const failures: { name: string; msg: string }[] = [];
   for (const exec of executions) {
     try {
-      const data = await exec.fn();
-      return { data, model: exec.name };
+      const { data, usage } = await exec.fn();
+      return { data, model: exec.name, usage };
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       console.warn(`[LLM] ${exec.name} failed: ${msg}`);
@@ -152,7 +161,7 @@ export async function llmGenerate(
     systemInstruction?: string;
     temperature?: number;
   },
-): Promise<{ text: string; model: string }> {
+): Promise<{ text: string; model: string; usage?: LlmUsage }> {
   const system = options?.systemInstruction;
   const temperature = options?.temperature;
   const provider = getLlmProvider();
@@ -167,7 +176,10 @@ export async function llmGenerate(
         prompt,
         system,
         temperature,
-      }).then((r) => r.text),
+      }).then((r) => ({
+        data: r.text,
+        usage: (r as any).usage as LlmUsage | undefined,
+      })),
   };
 
   const geminiExecs: LlmExecution<string>[] = buildGeminiCalls(
@@ -180,7 +192,10 @@ export async function llmGenerate(
           prompt,
           system,
           temperature,
-        }).then((r) => r.text),
+        }).then((r) => ({
+          data: r.text,
+          usage: (r as any).usage as LlmUsage | undefined,
+        })),
     }),
   );
 
@@ -190,7 +205,7 @@ export async function llmGenerate(
       : [...geminiExecs, groqExec];
 
   const result = await runWithFallbacks(chain);
-  return { text: result.data, model: result.model };
+  return { text: result.data, model: result.model, usage: result.usage };
 }
 
 /**
@@ -205,7 +220,7 @@ export async function llmGenerateObject<T extends z.ZodType>(
     systemInstruction?: string;
     temperature?: number;
   },
-): Promise<{ data: z.infer<T>; model: string }> {
+): Promise<{ data: z.infer<T>; model: string; usage?: LlmUsage }> {
   const system = options?.systemInstruction;
   const temperature = options?.temperature;
   const provider = getLlmProvider();
@@ -221,7 +236,10 @@ export async function llmGenerateObject<T extends z.ZodType>(
         schema,
         system,
         temperature,
-      }).then((r) => r.object),
+      }).then((r) => ({
+        data: r.object,
+        usage: (r as any).usage as LlmUsage | undefined,
+      })),
   };
 
   const geminiExecs: LlmExecution<z.infer<T>>[] = buildGeminiCalls(
@@ -235,7 +253,10 @@ export async function llmGenerateObject<T extends z.ZodType>(
           schema,
           system,
           temperature,
-        }).then((r) => r.object),
+        }).then((r) => ({
+          data: r.object,
+          usage: (r as any).usage as LlmUsage | undefined,
+        })),
     }),
   );
 
@@ -245,7 +266,7 @@ export async function llmGenerateObject<T extends z.ZodType>(
       : [...geminiExecs, groqExec];
 
   const result = await runWithFallbacks(chain);
-  return { data: result.data, model: result.model };
+  return { data: result.data, model: result.model, usage: result.usage };
 }
 
 /**
@@ -262,7 +283,7 @@ export async function llmVision(
     systemInstruction?: string;
     temperature?: number;
   },
-): Promise<{ text: string; model: string }> {
+): Promise<{ text: string; model: string; usage?: LlmUsage }> {
   const system = options?.systemInstruction;
   const temperature = options?.temperature;
   const provider = getLlmProvider();
@@ -288,7 +309,10 @@ export async function llmVision(
         ],
         system,
         temperature,
-      }).then((r) => r.text),
+      }).then((r) => ({
+        data: r.text,
+        usage: (r as any).usage as LlmUsage | undefined,
+      })),
   };
 
   const geminiExecs: LlmExecution<string>[] = buildGeminiCalls(
@@ -306,7 +330,10 @@ export async function llmVision(
           ],
           system,
           temperature,
-        }).then((r) => r.text),
+        }).then((r) => ({
+          data: r.text,
+          usage: (r as any).usage as LlmUsage | undefined,
+        })),
     }),
   );
 
@@ -316,7 +343,7 @@ export async function llmVision(
       : [...geminiExecs, groqExec];
 
   const result = await runWithFallbacks(chain);
-  return { text: result.data, model: result.model };
+  return { text: result.data, model: result.model, usage: result.usage };
 }
 
 /**
@@ -333,7 +360,7 @@ export async function llmVisionObject<T extends z.ZodType>(
     systemInstruction?: string;
     temperature?: number;
   },
-): Promise<{ data: z.infer<T>; model: string }> {
+): Promise<{ data: z.infer<T>; model: string; usage?: LlmUsage }> {
   const system = options?.systemInstruction;
   const temperature = options?.temperature;
   const provider = getLlmProvider();
@@ -360,7 +387,10 @@ export async function llmVisionObject<T extends z.ZodType>(
         schema,
         system,
         temperature,
-      }).then((r) => r.object),
+      }).then((r) => ({
+        data: r.object,
+        usage: (r as any).usage as LlmUsage | undefined,
+      })),
   };
 
   const geminiExecs: LlmExecution<z.infer<T>>[] = buildGeminiCalls(
@@ -379,7 +409,10 @@ export async function llmVisionObject<T extends z.ZodType>(
           schema,
           system,
           temperature,
-        }).then((r) => r.object),
+        }).then((r) => ({
+          data: r.object,
+          usage: (r as any).usage as LlmUsage | undefined,
+        })),
     }),
   );
 
@@ -389,7 +422,20 @@ export async function llmVisionObject<T extends z.ZodType>(
       : [...geminiExecs, groqExec];
 
   const result = await runWithFallbacks(chain);
-  return { data: result.data, model: result.model };
+  return { data: result.data, model: result.model, usage: result.usage };
+}
+
+export function formatLlmQuota(usage?: LlmUsage): string | undefined {
+  if (!usage) return undefined;
+  const prompt = usage.promptTokens ?? usage.inputTokens;
+  const completion = usage.completionTokens ?? usage.outputTokens;
+  const total = usage.totalTokens ?? (prompt != null && completion != null ? prompt + completion : undefined);
+  if (prompt != null && completion != null && total != null) return `${prompt}→${completion} (${total} tokens)`;
+  if (total != null) return `${total} tokens`;
+  if (prompt != null && completion != null) return `${prompt}→${completion} tokens`;
+  if (prompt != null) return `${prompt} prompt tokens`;
+  if (completion != null) return `${completion} completion tokens`;
+  return undefined;
 }
 
 function parseImageData(imageData: string, mimeType: string) {
