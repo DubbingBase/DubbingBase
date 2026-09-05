@@ -99,7 +99,7 @@ function isRateLimitError(error: unknown): boolean {
 
 interface LlmExecution<T> {
   name: string;
-  fn: () => Promise<{ data: T; usage?: LlmUsage }>;
+  fn: () => Promise<{ data: T; usage?: LlmUsage; headers?: Record<string, string> }>;
 }
 
 interface LlmUsage {
@@ -114,6 +114,55 @@ interface LlmResult<T> {
   data: T;
   model: string;
   usage?: LlmUsage;
+  quota?: string;
+  headers?: Record<string, string>;
+}
+
+function normalizeHeaders(
+  raw?: Record<string, string> | Headers | null,
+): Record<string, string> | undefined {
+  if (!raw) return undefined;
+  if (raw instanceof Headers) {
+    const out: Record<string, string> = {};
+    raw.forEach((v, k) => (out[k.toLowerCase()] = v));
+    return out;
+  }
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(raw)) out[k.toLowerCase()] = String(v);
+  return out;
+}
+
+function extractQuotaFromHeaders(
+  headers?: Record<string, string> | Headers | null,
+): string | undefined {
+  const h = normalizeHeaders(headers as any);
+  if (!h) return undefined;
+  const remReq =
+    h["x-ratelimit-remaining-requests"] ??
+    h["x-ratelimit-remaining"] ??
+    h["ratelimit-remaining"];
+  const limitReq =
+    h["x-ratelimit-limit-requests"] ??
+    h["x-ratelimit-limit"] ??
+    h["ratelimit-limit"];
+  const remTok = h["x-ratelimit-remaining-tokens"];
+  const limitTok = h["x-ratelimit-limit-tokens"];
+  const retryAfter = h["retry-after"];
+  // Groq / OpenAI compatible: prefer requests quota (daily)
+  if (remReq && limitReq) return `${remReq}/${limitReq} req remaining`;
+  if (remReq) return `${remReq} req remaining`;
+  if (remTok && limitTok) return `${remTok}/${limitTok} tokens remaining`;
+  if (remTok) return `${remTok} tokens remaining`;
+  if (limitReq) return `limit ${limitReq}`;
+  if (retryAfter) return `retry-after ${retryAfter}s`;
+  // Google / generic quota headers
+  for (const [k, v] of Object.entries(h)) {
+    if (k.includes("quota")) return `${k}: ${v}`;
+  }
+  for (const [k, v] of Object.entries(h)) {
+    if (k.includes("ratelimit")) return `${k}: ${v}`;
+  }
+  return undefined;
 }
 
 async function runWithFallbacks<T>(
@@ -122,8 +171,9 @@ async function runWithFallbacks<T>(
   const failures: { name: string; msg: string }[] = [];
   for (const exec of executions) {
     try {
-      const { data, usage } = await exec.fn();
-      return { data, model: exec.name, usage };
+      const { data, usage, headers } = await exec.fn();
+      const quota = extractQuotaFromHeaders(headers);
+      return { data, model: exec.name, usage, quota, headers };
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       console.warn(`[LLM] ${exec.name} failed: ${msg}`);
@@ -161,7 +211,7 @@ export async function llmGenerate(
     systemInstruction?: string;
     temperature?: number;
   },
-): Promise<{ text: string; model: string; usage?: LlmUsage }> {
+): Promise<{ text: string; model: string; usage?: LlmUsage; quota?: string; headers?: Record<string, string> }> {
   const system = options?.systemInstruction;
   const temperature = options?.temperature;
   const provider = getLlmProvider();
@@ -179,6 +229,7 @@ export async function llmGenerate(
       }).then((r) => ({
         data: r.text,
         usage: (r as any).usage as LlmUsage | undefined,
+        headers: (r as any).response?.headers as Record<string, string> | undefined,
       })),
   };
 
@@ -195,6 +246,7 @@ export async function llmGenerate(
         }).then((r) => ({
           data: r.text,
           usage: (r as any).usage as LlmUsage | undefined,
+          headers: (r as any).response?.headers as Record<string, string> | undefined,
         })),
     }),
   );
@@ -205,7 +257,7 @@ export async function llmGenerate(
       : [...geminiExecs, groqExec];
 
   const result = await runWithFallbacks(chain);
-  return { text: result.data, model: result.model, usage: result.usage };
+  return { text: result.data, model: result.model, usage: result.usage, quota: result.quota, headers: result.headers };
 }
 
 /**
@@ -220,7 +272,7 @@ export async function llmGenerateObject<T extends z.ZodType>(
     systemInstruction?: string;
     temperature?: number;
   },
-): Promise<{ data: z.infer<T>; model: string; usage?: LlmUsage }> {
+): Promise<{ data: z.infer<T>; model: string; usage?: LlmUsage; quota?: string; headers?: Record<string, string> }> {
   const system = options?.systemInstruction;
   const temperature = options?.temperature;
   const provider = getLlmProvider();
@@ -239,6 +291,7 @@ export async function llmGenerateObject<T extends z.ZodType>(
       }).then((r) => ({
         data: r.object,
         usage: (r as any).usage as LlmUsage | undefined,
+        headers: (r as any).response?.headers as Record<string, string> | undefined,
       })),
   };
 
@@ -256,6 +309,7 @@ export async function llmGenerateObject<T extends z.ZodType>(
         }).then((r) => ({
           data: r.object,
           usage: (r as any).usage as LlmUsage | undefined,
+          headers: (r as any).response?.headers as Record<string, string> | undefined,
         })),
     }),
   );
@@ -266,7 +320,7 @@ export async function llmGenerateObject<T extends z.ZodType>(
       : [...geminiExecs, groqExec];
 
   const result = await runWithFallbacks(chain);
-  return { data: result.data, model: result.model, usage: result.usage };
+  return { data: result.data, model: result.model, usage: result.usage, quota: result.quota, headers: result.headers };
 }
 
 /**
@@ -283,7 +337,7 @@ export async function llmVision(
     systemInstruction?: string;
     temperature?: number;
   },
-): Promise<{ text: string; model: string; usage?: LlmUsage }> {
+): Promise<{ text: string; model: string; usage?: LlmUsage; quota?: string; headers?: Record<string, string> }> {
   const system = options?.systemInstruction;
   const temperature = options?.temperature;
   const provider = getLlmProvider();
@@ -312,6 +366,7 @@ export async function llmVision(
       }).then((r) => ({
         data: r.text,
         usage: (r as any).usage as LlmUsage | undefined,
+        headers: (r as any).response?.headers as Record<string, string> | undefined,
       })),
   };
 
@@ -333,6 +388,7 @@ export async function llmVision(
         }).then((r) => ({
           data: r.text,
           usage: (r as any).usage as LlmUsage | undefined,
+          headers: (r as any).response?.headers as Record<string, string> | undefined,
         })),
     }),
   );
@@ -343,7 +399,7 @@ export async function llmVision(
       : [...geminiExecs, groqExec];
 
   const result = await runWithFallbacks(chain);
-  return { text: result.data, model: result.model, usage: result.usage };
+  return { text: result.data, model: result.model, usage: result.usage, quota: result.quota, headers: result.headers };
 }
 
 /**
@@ -360,7 +416,7 @@ export async function llmVisionObject<T extends z.ZodType>(
     systemInstruction?: string;
     temperature?: number;
   },
-): Promise<{ data: z.infer<T>; model: string; usage?: LlmUsage }> {
+): Promise<{ data: z.infer<T>; model: string; usage?: LlmUsage; quota?: string; headers?: Record<string, string> }> {
   const system = options?.systemInstruction;
   const temperature = options?.temperature;
   const provider = getLlmProvider();
@@ -390,6 +446,7 @@ export async function llmVisionObject<T extends z.ZodType>(
       }).then((r) => ({
         data: r.object,
         usage: (r as any).usage as LlmUsage | undefined,
+        headers: (r as any).response?.headers as Record<string, string> | undefined,
       })),
   };
 
@@ -412,6 +469,7 @@ export async function llmVisionObject<T extends z.ZodType>(
         }).then((r) => ({
           data: r.object,
           usage: (r as any).usage as LlmUsage | undefined,
+          headers: (r as any).response?.headers as Record<string, string> | undefined,
         })),
     }),
   );
@@ -422,20 +480,7 @@ export async function llmVisionObject<T extends z.ZodType>(
       : [...geminiExecs, groqExec];
 
   const result = await runWithFallbacks(chain);
-  return { data: result.data, model: result.model, usage: result.usage };
-}
-
-export function formatLlmQuota(usage?: LlmUsage): string | undefined {
-  if (!usage) return undefined;
-  const prompt = usage.promptTokens ?? usage.inputTokens;
-  const completion = usage.completionTokens ?? usage.outputTokens;
-  const total = usage.totalTokens ?? (prompt != null && completion != null ? prompt + completion : undefined);
-  if (prompt != null && completion != null && total != null) return `${prompt}→${completion} (${total} tokens)`;
-  if (total != null) return `${total} tokens`;
-  if (prompt != null && completion != null) return `${prompt}→${completion} tokens`;
-  if (prompt != null) return `${prompt} prompt tokens`;
-  if (completion != null) return `${completion} completion tokens`;
-  return undefined;
+  return { data: result.data, model: result.model, usage: result.usage, quota: result.quota, headers: result.headers };
 }
 
 function parseImageData(imageData: string, mimeType: string) {

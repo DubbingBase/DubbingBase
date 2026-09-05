@@ -4,7 +4,7 @@ import { insertVoiceActorAndWork } from "./voice-actor";
 import { useWikipediaCache, useIgdbClient } from "../index";
 import { buildTmdbImageUrl } from "../urls/tmdb";
 import { buildIgdbImageUrl } from "../api/igdb";
-import { formatLlmQuota, llmGenerateObject } from "../llm";
+import { llmGenerateObject } from "../llm";
 import {
   extractAvailableLanguages,
   selectDubbingSections,
@@ -416,7 +416,7 @@ If no dubbing or voice-actor data exists in the section, return { items: [] }.`,
         },
       );
       llmModel = llmResult.model;
-      llmQuota = formatLlmQuota(llmResult.usage) ?? llmQuota;
+      llmQuota = llmResult.quota ?? llmQuota;
 
       for (const entry of llmResult.data?.items ?? []) {
         let { actor, voiceActorFirstname, voiceActorName } = entry;
@@ -495,7 +495,7 @@ If no dubbing or voice-actor data exists in the section, return { items: [] }.`,
       llmQuota,
       note:
         totalNewCredits === 0
-          ? `No dubbing entries matched (LLM: ${llmModel || "unknown"}${llmQuota ? `, quota: ${llmQuota}` : ""}). Check if Wikipedia has dubbing tables for ${language}.`
+          ? `No dubbing entries matched (LLM: ${llmModel || "unknown"}). Check if Wikipedia has dubbing tables for ${language}.`
           : undefined,
     };
   } catch (error) {
@@ -574,7 +574,7 @@ If no dubbing or voice-actor data exists in the section, return { items: [] }.`,
         },
       );
       llmModel = llmResult.model;
-      llmQuota = formatLlmQuota(llmResult.usage) ?? llmQuota;
+      llmQuota = llmResult.quota ?? llmQuota;
 
       for (const entry of llmResult.data?.items ?? []) {
         let { actor, voiceActorFirstname, voiceActorName } = entry;
@@ -629,7 +629,7 @@ If no dubbing or voice-actor data exists in the section, return { items: [] }.`,
       llmQuota,
       note:
         totalNewCredits === 0
-          ? `No dubbing entries matched (LLM: ${llmModel || "unknown"}${llmQuota ? `, quota: ${llmQuota}` : ""}). Check if Wikipedia has dubbing tables for ${language}.`
+          ? `No dubbing entries matched (LLM: ${llmModel || "unknown"}). Check if Wikipedia has dubbing tables for ${language}.`
           : undefined,
     };
   } catch (error) {
