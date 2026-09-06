@@ -699,43 +699,43 @@ export default defineEventHandler(async (event) => {
           errMsg.includes("RESOURCE_EXHAUSTED") ||
           errMsg.includes("quota")
         ) {
-          // ponytail: never archive on quota exhaustion — keep element queued, extend vt to 1h
+          // ponytail: never archive on quota exhaustion — keep element queued, delay 1h via RPC
           const MAX_RETRIES = 5;
-          if (readCt >= MAX_RETRIES) {
-            console.warn(
-              `[QUEUE] Max retries (${MAX_RETRIES}) reached but quota exhausted — keeping ${msgId} queued with 1h delay instead of archiving`,
+          const { error: delayError } = await (supabaseAdmin as any).rpc(
+            "delay_media_queue_message",
+            {
+              p_queue_name: targetQueue,
+              p_msg_id: msgId,
+              p_delay_seconds: 3600,
+            },
+          );
+          if (delayError) {
+            console.error(
+              `[QUEUE] Failed to delay ${msgId} after quota exhaustion:`,
+              delayError,
             );
-            try {
-              // extend visibility timeout to 1h so we don't hammer quota
-              await (supabaseAdmin as any)
-                .schema("pgmq")
-                .from(`q_${targetQueue}`)
-                .update({
-                  vt: new Date(Date.now() + 3600 * 1000).toISOString(),
-                })
-                .eq("msg_id", msgId);
-            } catch {}
-            // also reset vt via raw fallback if schema update not permitted
-            results.push({
-              id: msgId,
-              ok: false,
-              changes: 0,
-              error: `Quota exhausted, delayed 1h (readCt ${readCt})`,
-              rate_limited: true,
-            });
+          }
+          results.push({
+            id: msgId,
+            ok: false,
+            changes: 0,
+            error:
+              readCt >= MAX_RETRIES
+                ? `Quota exhausted, delayed 1h (readCt ${readCt})`
+                : errMsg,
+            rate_limited: true,
+          });
+          // ponytail: notify once when first delayed, not on every cron tick
+          if (readCt === MAX_RETRIES) {
             await sendDiscordAdminNotification(
               `Queue Extraction Rate-Limited [${lang.toUpperCase()}]`,
               `Quota exhausted for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${lang.toUpperCase()}]): delayed 1h (readCt ${readCt}).\n\`\`\`\n${errMsg}\n\`\`\``,
               { event, queue: "wiki_extract", color: 0xed4245 },
             );
           } else {
-            results.push({
-              id: msgId,
-              ok: false,
-              changes: 0,
-              error: errMsg,
-              rate_limited: true,
-            });
+            console.warn(
+              `[QUEUE] Quota exhausted for ${mediaTitle} (${payload.media_type} ${payload.tmdb_id} [${lang}]), delayed 1h (readCt ${readCt}, notification throttled)`,
+            );
           }
         } else {
           await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
