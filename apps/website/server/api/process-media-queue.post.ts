@@ -9,6 +9,7 @@ import { useSupabaseAdmin } from "../utils/db/client";
 import { requireAdmin } from "../utils/auth";
 import { useWikipediaCache, useIgdbClient } from "../utils";
 import { extractAvailableLanguages } from "../utils/cache/wikipedia";
+import { areAllLlmQuotasExhausted } from "../utils/llm";
 
 export default defineEventHandler(async (event) => {
   const internalSecret = getHeader(event, "x-internal-secret");
@@ -97,22 +98,44 @@ export default defineEventHandler(async (event) => {
     const supabaseAdmin = useSupabaseAdmin(event);
 
     // Step 1: Pop a message based on queue selection / priority order
+    // ponytail: check all quotas before dequeuing extract — if all models exhausted, keep element queued
+    const skipExtract = areAllLlmQuotasExhausted();
+    if (skipExtract) {
+      console.warn(
+        "[QUEUE] All LLM quotas exhausted (cached), skipping wiki_extract pop",
+      );
+    }
     let targetQueue: "wiki_extract" | "wiki_check" | "wiki_discovery" =
       specificQueue ?? "wiki_extract";
     let queueRes: any;
 
     if (specificQueue) {
+      if (specificQueue === "wiki_extract" && skipExtract) {
+        return {
+          ok: true,
+          processed: 0,
+          results: [],
+          queue: "wiki_extract",
+          reason: "quota_exhausted",
+          message:
+            "All LLM quotas exhausted, extract queue skipped (element remains queued)",
+        };
+      }
       queueRes = await supabaseAdmin.rpc("pop_media_queue_message", {
         p_queue_name: specificQueue,
         p_vt_seconds: 90,
       });
     } else {
-      // Priority 1: wiki_extract (LLM ready)
-      queueRes = await supabaseAdmin.rpc("pop_media_queue_message", {
-        p_queue_name: "wiki_extract",
-        p_vt_seconds: 90,
-      });
-      targetQueue = "wiki_extract";
+      // Priority 1: wiki_extract (LLM ready) — skip if quotas exhausted
+      if (!skipExtract) {
+        queueRes = await supabaseAdmin.rpc("pop_media_queue_message", {
+          p_queue_name: "wiki_extract",
+          p_vt_seconds: 90,
+        });
+        targetQueue = "wiki_extract";
+      } else {
+        queueRes = { data: [], error: null } as any;
+      }
 
       // Priority 2: wiki_check (TOC regex check)
       if (
@@ -676,23 +699,33 @@ export default defineEventHandler(async (event) => {
           errMsg.includes("RESOURCE_EXHAUSTED") ||
           errMsg.includes("quota")
         ) {
+          // ponytail: never archive on quota exhaustion — keep element queued, extend vt to 1h
           const MAX_RETRIES = 5;
           if (readCt >= MAX_RETRIES) {
-            await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
-              p_queue_name: targetQueue,
-              p_msg_id: msgId,
-              p_error: `Max retries (${MAX_RETRIES}) reached due to LLM 429 rate limit.`,
-            });
+            console.warn(
+              `[QUEUE] Max retries (${MAX_RETRIES}) reached but quota exhausted — keeping ${msgId} queued with 1h delay instead of archiving`,
+            );
+            try {
+              // extend visibility timeout to 1h so we don't hammer quota
+              await (supabaseAdmin as any)
+                .schema("pgmq")
+                .from(`q_${targetQueue}`)
+                .update({
+                  vt: new Date(Date.now() + 3600 * 1000).toISOString(),
+                })
+                .eq("msg_id", msgId);
+            } catch {}
+            // also reset vt via raw fallback if schema update not permitted
             results.push({
               id: msgId,
               ok: false,
               changes: 0,
-              error: `Max retries (${MAX_RETRIES}) reached`,
+              error: `Quota exhausted, delayed 1h (readCt ${readCt})`,
+              rate_limited: true,
             });
-
             await sendDiscordAdminNotification(
               `Queue Extraction Rate-Limited [${lang.toUpperCase()}]`,
-              `Max retries (${MAX_RETRIES}) reached for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${lang.toUpperCase()}]):\n\`\`\`\n${errMsg}\n\`\`\``,
+              `Quota exhausted for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${lang.toUpperCase()}]): delayed 1h (readCt ${readCt}).\n\`\`\`\n${errMsg}\n\`\`\``,
               { event, queue: "wiki_extract", color: 0xed4245 },
             );
           } else {

@@ -78,7 +78,9 @@ export default defineNuxtConfig({
       process.env.NUXT_GEMINI_MODELS || process.env.GEMINI_MODELS || undefined,
     groqApiKey: process.env.NUXT_GROQ_API_KEY || process.env.GROQ_API_KEY,
     groqModel:
-      process.env.NUXT_GROQ_MODEL || process.env.GROQ_MODEL || "groq/compound",
+      process.env.NUXT_GROQ_MODEL ||
+      process.env.GROQ_MODEL ||
+      "llama-3.3-70b-versatile",
     llmProvider:
       process.env.NUXT_LLM_PROVIDER || process.env.LLM_PROVIDER || "gemini",
     onesignalAppId: process.env.NUXT_ONESIGNAL_APP_ID,
