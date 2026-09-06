@@ -26,7 +26,7 @@ function getGroqModel(): string {
     globalEnv?.GROQ_MODEL ||
     process.env.NUXT_GROQ_MODEL ||
     process.env.GROQ_MODEL ||
-    "llama-3.3-70b-versatile"
+    "openai/gpt-oss-120b"
   );
 }
 

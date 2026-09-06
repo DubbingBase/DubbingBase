@@ -80,7 +80,7 @@ export default defineNuxtConfig({
     groqModel:
       process.env.NUXT_GROQ_MODEL ||
       process.env.GROQ_MODEL ||
-      "llama-3.3-70b-versatile",
+      "openai/gpt-oss-120b",
     llmProvider:
       process.env.NUXT_LLM_PROVIDER || process.env.LLM_PROVIDER || "gemini",
     onesignalAppId: process.env.NUXT_ONESIGNAL_APP_ID,
