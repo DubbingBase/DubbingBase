@@ -24,6 +24,7 @@
     "@revolist/revogrid": "^4.24.1",
     "@revolist/vue3-datagrid": "^4.24.0",
     "@supabase/supabase-js": "^2.49.1",
+    "@tanstack/vue-virtual": "^3.13.34",
     "@vueuse/core": "^14.4.0",
     "@vueuse/nuxt": "^14.3.0",
     "ai": "^4.3.15",
