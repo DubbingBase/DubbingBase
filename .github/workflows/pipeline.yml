@@ -76,7 +76,7 @@ jobs:
           deno-version: "2.1.9"
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --config.minimum-release-age=0 --config.minimum-release-age-strict=false
 
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v3
@@ -120,7 +120,7 @@ jobs:
         uses: jdx/mise-action@v2
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --config.minimum-release-age=0 --config.minimum-release-age-strict=false
 
       - name: Install Playwright Browsers
         run: pnpm exec playwright install --with-deps
@@ -162,7 +162,7 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --config.minimum-release-age=0 --config.minimum-release-age-strict=false
 
       - name: Run Vitest tests
         run: pnpm --filter=@app/website run test --run
@@ -189,7 +189,7 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --config.minimum-release-age=0 --config.minimum-release-age-strict=false
 
       - name: Check i18n keys
         run: pnpm i18n:check
@@ -222,7 +222,7 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --config.minimum-release-age=0 --config.minimum-release-age-strict=false
 
       - name: Build mobile website
         env:
@@ -279,7 +279,7 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --config.minimum-release-age=0 --config.minimum-release-age-strict=false
 
       - name: Setup Android signing - Capacitor
         run: |
@@ -394,7 +394,7 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --config.minimum-release-age=0 --config.minimum-release-age-strict=false
 
       - name: Build website
         env:
@@ -448,7 +448,7 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --config.minimum-release-age=0 --config.minimum-release-age-strict=false
 
       - name: Build website
         env:
