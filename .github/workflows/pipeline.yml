@@ -18,6 +18,10 @@ permissions:
   statuses: write
   pull-requests: write
 
+env:
+  PNPM_CONFIG_MINIMUM_RELEASE_AGE: 0
+  PNPM_CONFIG_MINIMUM_RELEASE_AGE_STRICT: false
+
 jobs:
   # Job 1: Setup and Detect what needs to be run
   detect:
