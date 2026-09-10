@@ -8,7 +8,7 @@ import {
   watch,
   type ComponentPublicInstance,
 } from "vue";
-import { useElementSize } from "@vueuse/core";
+import { useWindowSize } from "@vueuse/core";
 import { useWindowVirtualizer } from "@tanstack/vue-virtual";
 
 export interface VirtualGridBreakpoint {
@@ -34,7 +34,7 @@ defineSlots<{
 }>();
 
 const container = ref<HTMLElement | null>(null);
-const { width } = useElementSize(container);
+const { width } = useWindowSize();
 const scrollMargin = ref(0);
 
 const columnCount = computed(() => {
