@@ -2,6 +2,7 @@ import { generateText, generateObject } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
 import { z } from "zod";
+import { getErrorMessage } from "./error-message";
 
 function getLlmProvider(): "groq" | "gemini" {
   const config = useRuntimeConfig();
@@ -87,7 +88,7 @@ function getGroqClient() {
 }
 
 function isRateLimitError(error: unknown): boolean {
-  const msg = error instanceof Error ? error.message : String(error);
+  const msg = getErrorMessage(error);
   return (
     msg.includes("429") ||
     msg.includes("rate") ||
@@ -262,7 +263,7 @@ async function runWithFallbacks<T>(
       updateQuotaCache(exec.name, headers);
       return { data, model: exec.name, usage, quota, headers };
     } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
+      const msg = getErrorMessage(error);
       console.warn(`[LLM] ${exec.name} failed: ${msg}`);
       // cache 0 remaining if rate limited, so next call skips this model
       if (isRateLimitError(error))
