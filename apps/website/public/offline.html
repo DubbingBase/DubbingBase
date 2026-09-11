@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#121212" />
+    <title>DubbingBase — Offline</title>
+    <style>
+      :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+      body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #121212; color: #e0e0e0; }
+      main { max-width: 28rem; padding: 2rem; text-align: center; }
+      h1 { margin: 0 0 1rem; font-size: 1.5rem; }
+      p { color: #a0a0a0; line-height: 1.6; }
+      a { color: #93c5fd; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>DubbingBase</h1>
+      <p data-message>You're offline. Reconnect to continue exploring dubbing credits.</p>
+      <a href="/">Try again</a>
+    </main>
+    <script>
+      const messages = {
+        fr: "Vous êtes hors connexion. Reconnectez-vous pour continuer à explorer les crédits de doublage.",
+        es: "Estás sin conexión. Vuelve a conectarte para seguir explorando los créditos de doblaje.",
+        ja: "オフラインです。再接続して吹き替えクレジットの探索を続けてください。",
+      };
+      const language = navigator.language.slice(0, 2);
+      if (messages[language]) document.querySelector("[data-message]").textContent = messages[language];
+    </script>
+  </body>
+</html>

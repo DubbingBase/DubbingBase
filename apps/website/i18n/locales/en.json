@@ -3,6 +3,16 @@
     "title": "DubbingBase",
     "description": "DubbingBase is a comprehensive platform dedicated to tracking dubbing information for movies, series, and video games. Discover voice actors, their roles, and the productions they bring to life."
   },
+  "pwa": {
+    "installTitle": "Install DubbingBase",
+    "installDescription": "Add DubbingBase to your home screen for quick access.",
+    "install": "Install",
+    "updateTitle": "DubbingBase has been updated",
+    "updateDescription": "Refresh to use the latest version.",
+    "refresh": "Refresh",
+    "later": "Later",
+    "dismiss": "Dismiss"
+  },
   "footer": {
     "explore": "Explore",
     "movies": "Movies",

@@ -115,6 +115,45 @@ export default defineNuxtConfig({
     inlineRouteRules: true,
   },
 
+  pwa: {
+    registerType: "prompt",
+    client: {
+      installPrompt: "dubbingbase:pwa-install-dismissed",
+    },
+    manifest: {
+      id: "/",
+      name: "DubbingBase",
+      short_name: "DubbingBase",
+      description:
+        "The ultimate database for voice actors and dubbing projects.",
+      start_url: "/",
+      scope: "/",
+      display: "standalone",
+      background_color: "#121212",
+      theme_color: "#121212",
+      icons: [
+        {
+          src: "/android-chrome-192x192.png",
+          sizes: "192x192",
+          type: "image/png",
+          purpose: "any",
+        },
+        {
+          src: "/android-chrome-512x512.png",
+          sizes: "512x512",
+          type: "image/png",
+          purpose: "any maskable",
+        },
+      ],
+    },
+    workbox: {
+      navigateFallback: "/offline.html",
+      navigateFallbackDenylist: [/^\/api\//, /^\/_nuxt\//],
+      globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,webmanifest}"],
+      runtimeCaching: [],
+    },
+  },
+
   // Never enable Nitro's SWR route cache in development. Production-only
   // rules keep local data and API changes immediately visible to developers.
   routeRules:
@@ -150,6 +189,7 @@ export default defineNuxtConfig({
     "@nuxtjs/robots",
     "@nuxt/image",
     "@nuxt/icon",
+    "@vite-pwa/nuxt",
     "nuxt-swiper",
     "@nuxt/test-utils/module",
     "@nuxtjs/html-validator",

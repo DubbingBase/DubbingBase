@@ -48,6 +48,7 @@
     "@nuxtjs/sitemap": "^8.3.2",
     "@nuxtjs/supabase": "latest",
     "@tailwindcss/vite": "^4.3.3",
+    "@vite-pwa/nuxt": "^1.1.1",
     "@vue/test-utils": "^2.4.11",
     "happy-dom": "^20.11.2",
     "nuxt": "latest",
