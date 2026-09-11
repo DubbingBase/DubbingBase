@@ -472,12 +472,6 @@
               </div>
             </template>
           </PaginatedResponsiveGrid>
-          <span class="block text-xs text-gray-400 mt-4">{{
-            $t("media.rolesCount", {
-              shown: filteredCast.length,
-              total: filteredCast.length,
-            })
-          }}</span>
         </section>
       </template>
     </MediaDetailsLayout>

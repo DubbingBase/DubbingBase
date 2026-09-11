@@ -39,7 +39,7 @@ export default defineEventHandler(async (event) => {
 
     if (error) throw error;
 
-    return { voice_actors: data, total: count };
+    return { voice_actors: data, total: count ?? 0 };
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "An unknown error occurred";

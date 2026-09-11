@@ -39,7 +39,7 @@ export default defineConfig({
         E2E_TEST: "true",
         PORT: "3050",
         NUXT_PUBLIC_SUPABASE_URL: "https://mock.supabase.co",
-        NUXT_PUBLIC_SUPABASE_KEY: "mock-anon-key",
+        NUXT_PUBLIC_SUPABASE_KEY: "mock-publishable-key",
         SUPABASE_URL: "https://mock.supabase.co",
         SUPABASE_PUBLISHABLE_KEY: "mock-publishable-key",
         SUPABASE_SECRET_KEY: "mock-secret-key",

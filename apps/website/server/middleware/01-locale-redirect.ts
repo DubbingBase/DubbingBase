@@ -1,4 +1,10 @@
-import { defineEventHandler, getCookie, getRequestURL, sendRedirect } from "h3";
+import {
+  defineEventHandler,
+  getCookie,
+  getHeader,
+  getRequestURL,
+  sendRedirect,
+} from "h3";
 
 const LOCALES = ["en", "fr", "es", "ja"] as const;
 type Locale = (typeof LOCALES)[number];
@@ -10,7 +16,12 @@ export default defineEventHandler((event) => {
   if (!LOCALES.some((locale) => locale === preferredLocale)) return;
 
   const url = getRequestURL(event);
-  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/_nuxt/")) {
+  const acceptsHtml = getHeader(event, "accept")?.includes("text/html");
+  if (
+    !acceptsHtml ||
+    url.pathname.startsWith("/api/") ||
+    url.pathname.startsWith("/_nuxt/")
+  ) {
     return;
   }
 

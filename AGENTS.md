@@ -69,7 +69,7 @@ When testing the website from a mobile device or other clients over Tailscale/LA
 
 ### Website Development with Doppler
 
-Doppler is the source of truth for website environment variables. Agents must use the unprefixed secret names consumed by `apps/website/nuxt.config.ts` (for example, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SECRET_KEY`, `TMDB_API_KEY`, `TVDB_API_KEY`, `IGDB_CLIENT_ID`, and `IGDB_CLIENT_SECRET`). Do not duplicate values under `NUXT_*` names; those names exist only as compatibility fallbacks.
+Doppler is the source of truth for website environment variables. Agents must use the unprefixed secret names consumed by `apps/website/nuxt.config.ts` (for example, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `TMDB_API_KEY`, `TVDB_API_KEY`, `IGDB_CLIENT_ID`, and `IGDB_CLIENT_SECRET`). Do not duplicate values under `NUXT_*` names; those names exist only as compatibility fallbacks.
 
 Configure the repository once from its root:
 

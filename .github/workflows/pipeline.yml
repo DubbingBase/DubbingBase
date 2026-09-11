@@ -403,7 +403,7 @@ jobs:
       - name: Build website
         env:
           NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          NUXT_PUBLIC_SUPABASE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
           NUXT_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           NUXT_SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
           NUXT_TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
@@ -457,7 +457,7 @@ jobs:
       - name: Build website
         env:
           NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          NUXT_PUBLIC_SUPABASE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
           NUXT_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           NUXT_SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
           NUXT_TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
