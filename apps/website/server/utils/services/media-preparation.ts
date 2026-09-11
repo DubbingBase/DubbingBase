@@ -3,6 +3,7 @@ import { getErrorMessage } from "../error-message";
 import { findOrCreateDubbingProject } from "../db/dubbing-project";
 import { insertVoiceActorAndWork } from "./voice-actor";
 import { useWikipediaCache, useIgdbClient } from "../index";
+import type { SimpleCache } from "../cache";
 import { buildTmdbImageUrl } from "../urls/tmdb";
 import { buildIgdbImageUrl } from "../api/igdb";
 import { llmGenerateObject } from "../llm";
@@ -136,8 +137,9 @@ export async function checkMediaDubbingSections(options: {
   language: string;
   seasonNumber?: number | null;
   episodeNumber?: number | null;
+  cache?: SimpleCache;
 }): Promise<CheckSectionsResult> {
-  const { tmdbId, type, language } = options;
+  const { tmdbId, type, language, cache } = options;
   let mediaTitle = "Unknown title";
   let wikiPageUrl: string | undefined = undefined;
 
@@ -174,7 +176,7 @@ export async function checkMediaDubbingSections(options: {
       );
     }
 
-    const wikipediaCache = useWikipediaCache();
+    const wikipediaCache = useWikipediaCache(cache);
     const entityData = await wikipediaCache.getAllSitelinksEntity(wikiId);
     const sitelinks = entityData.entities[wikiId]?.sitelinks;
 
@@ -248,13 +250,14 @@ export async function checkMediaDubbingSections(options: {
 export async function checkGameDubbingSections(options: {
   igdbId: number;
   language: string;
+  cache?: SimpleCache;
 }): Promise<CheckSectionsResult> {
-  const { igdbId, language } = options;
+  const { igdbId, language, cache } = options;
   let gameTitle = "Unknown title";
   let wikiPageUrl: string | undefined = undefined;
 
   try {
-    const igdbClient = useIgdbClient();
+    const igdbClient = useIgdbClient(cache);
     const game = await igdbClient.getGame(igdbId);
 
     if (!game) {
@@ -263,7 +266,7 @@ export async function checkGameDubbingSections(options: {
 
     gameTitle = game.name;
 
-    const wikipediaCache = useWikipediaCache();
+    const wikipediaCache = useWikipediaCache(cache);
     const searchData = await wikipediaCache.searchWikidataEntities(
       game.name,
       "en",
@@ -358,8 +361,9 @@ export async function extractMediaDubbingCredits(options: {
   sectionIndexes: number[];
   seasonNumber?: number | null;
   episodeNumber?: number | null;
+  cache?: SimpleCache;
 }): Promise<ExtractCreditsResult> {
-  const { tmdbId, type, language, pageId, sectionIndexes } = options;
+  const { tmdbId, type, language, pageId, sectionIndexes, cache } = options;
   let mediaTitle = "Unknown title";
   let imageUrl: string | undefined = undefined;
 
@@ -397,7 +401,7 @@ export async function extractMediaDubbingCredits(options: {
 
     await findOrCreateDubbingProject(tmdbId, tmdbType, language);
 
-    const wikipediaCache = useWikipediaCache();
+    const wikipediaCache = useWikipediaCache(cache);
     let totalNewVoiceActors = 0;
     let totalNewCredits = 0;
 
@@ -527,13 +531,14 @@ export async function extractGameDubbingCredits(options: {
   language: string;
   pageId: number;
   sectionIndexes: number[];
+  cache?: SimpleCache;
 }): Promise<ExtractCreditsResult> {
-  const { igdbId, language, pageId, sectionIndexes } = options;
+  const { igdbId, language, pageId, sectionIndexes, cache } = options;
   let gameTitle = "Unknown title";
   let imageUrl: string | undefined = undefined;
 
   try {
-    const igdbClient = useIgdbClient();
+    const igdbClient = useIgdbClient(cache);
     const [game, characters] = await Promise.all([
       igdbClient.getGame(igdbId),
       igdbClient.getGameCharacters(igdbId),
@@ -553,7 +558,7 @@ export async function extractGameDubbingCredits(options: {
       characters.map((c: any) => [c.name?.toLowerCase(), c]),
     );
 
-    const wikipediaCache = useWikipediaCache();
+    const wikipediaCache = useWikipediaCache(cache);
     let totalNewVoiceActors = 0;
     let totalNewCredits = 0;
 

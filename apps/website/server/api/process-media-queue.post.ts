@@ -7,12 +7,15 @@ import {
 } from "../utils/services/media-preparation";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { requireAdmin } from "../utils/auth";
-import { useWikipediaCache, useIgdbClient } from "../utils";
+import { useWikipediaCache, useIgdbClient, useFreshCache } from "../utils";
 import { extractAvailableLanguages } from "../utils/cache/wikipedia";
 import { areAllLlmQuotasExhausted } from "../utils/llm";
 import { getErrorMessage } from "../utils/error-message";
+import { setNoStoreHeaders } from "../utils/cache/http";
 
 export default defineEventHandler(async (event) => {
+  // ponytail: cron-driven queue responses must never be edge-cached
+  setNoStoreHeaders(event);
   const internalSecret = getHeader(event, "x-internal-secret");
   const authHeader = getHeader(event, "authorization");
   const apiKeyHeader = getHeader(event, "apikey");
@@ -97,6 +100,8 @@ export default defineEventHandler(async (event) => {
     }
 
     const supabaseAdmin = useSupabaseAdmin(event);
+    // ponytail: cron work always fetches fresh upstream data (writes still warm the cache)
+    const freshCache = useFreshCache();
 
     // Step 1: Pop a message based on queue selection / priority order
     // ponytail: check all quotas before dequeuing extract — if all models exhausted, keep element queued
@@ -238,13 +243,13 @@ export default defineEventHandler(async (event) => {
 
         if (!wikiId) {
           if (payload.media_type === "video_game") {
-            const igdbClient = useIgdbClient();
+            const igdbClient = useIgdbClient(freshCache);
             const game = await igdbClient.getGame(payload.tmdb_id);
             if (!game)
               throw new Error(`IGDB game ${payload.tmdb_id} not found`);
             mediaTitle = game.name;
 
-            const wikipediaCache = useWikipediaCache();
+            const wikipediaCache = useWikipediaCache(freshCache);
             const searchData = await wikipediaCache.searchWikidataEntities(
               game.name,
               "en",
@@ -321,7 +326,7 @@ export default defineEventHandler(async (event) => {
           };
         }
 
-        const wikipediaCache = useWikipediaCache();
+        const wikipediaCache = useWikipediaCache(freshCache);
         const entity = await wikipediaCache.getAllSitelinksEntity(wikiId);
         const sitelinks = entity.entities[wikiId]?.sitelinks;
         const allLanguages = extractAvailableLanguages(sitelinks);
@@ -444,6 +449,7 @@ export default defineEventHandler(async (event) => {
           checkResult = await checkGameDubbingSections({
             igdbId: payload.tmdb_id,
             language: lang,
+            cache: freshCache,
           });
         } else {
           checkResult = await checkMediaDubbingSections({
@@ -452,6 +458,7 @@ export default defineEventHandler(async (event) => {
             language: lang,
             seasonNumber: payload.season_number,
             episodeNumber: payload.episode_number,
+            cache: freshCache,
           });
         }
 
@@ -619,6 +626,7 @@ export default defineEventHandler(async (event) => {
             language: lang,
             pageId,
             sectionIndexes,
+            cache: freshCache,
           });
         } else {
           extractResult = await extractMediaDubbingCredits({
@@ -629,6 +637,7 @@ export default defineEventHandler(async (event) => {
             sectionIndexes,
             seasonNumber: payload.season_number,
             episodeNumber: payload.episode_number,
+            cache: freshCache,
           });
         }
 
