@@ -3,6 +3,16 @@
     "title": "DubbingBase",
     "description": "DubbingBase est une plateforme complète dédiée au suivi des informations de doublage pour les films, séries et jeux vidéo. Découvrez les comédiens, leurs rôles et les productions qu'ils donnent vie."
   },
+  "pwa": {
+    "installTitle": "Installer DubbingBase",
+    "installDescription": "Ajoutez DubbingBase à votre écran d’accueil pour y accéder rapidement.",
+    "install": "Installer",
+    "updateTitle": "DubbingBase a été mis à jour",
+    "updateDescription": "Actualisez pour utiliser la dernière version.",
+    "refresh": "Actualiser",
+    "later": "Plus tard",
+    "dismiss": "Fermer"
+  },
   "footer": {
     "explore": "Explorer",
     "movies": "Films",

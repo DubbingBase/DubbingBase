@@ -3,6 +3,16 @@
     "title": "DubbingBase",
     "description": "DubbingBaseは、映画、シリーズ、ビデオゲームの吹き替え情報を追跡するための包括的なプラットフォームです。声優、その役柄、そして彼らが命を吹き込む作品を発見しましょう。"
   },
+  "pwa": {
+    "installTitle": "DubbingBaseをインストール",
+    "installDescription": "ホーム画面に追加してすぐにアクセスできます。",
+    "install": "インストール",
+    "updateTitle": "DubbingBaseが更新されました",
+    "updateDescription": "最新バージョンを使うには更新してください。",
+    "refresh": "更新",
+    "later": "後で",
+    "dismiss": "閉じる"
+  },
   "footer": {
     "explore": "探索",
     "movies": "映画",
