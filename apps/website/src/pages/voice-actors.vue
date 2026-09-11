@@ -147,11 +147,15 @@ interface VoiceActorSummary {
 
 interface VoiceActorPage {
   voice_actors: VoiceActorSummary[];
-  total: number | null;
+  total: number;
 }
 
 const pageSize = 48;
 const page = ref(1);
+
+watch(debouncedSearch, () => {
+  page.value = 1;
+});
 
 useHead({
   title: "Tous les Comédiens de doublage - DubbingBase",
@@ -190,16 +194,10 @@ const {
   },
 );
 
-watch(debouncedSearch, () => {
-  page.value = 1;
-});
-
 // Filtrage local simple avec debounce
 const filteredActors = computed(() => {
   return data.value?.voice_actors ?? [];
 });
 
-const totalActors = computed(
-  () => data.value?.total ?? filteredActors.value.length,
-);
+const totalActors = computed(() => data.value?.total ?? 0);
 </script>

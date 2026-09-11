@@ -18,6 +18,10 @@ permissions:
   statuses: write
   pull-requests: write
 
+env:
+  PNPM_CONFIG_MINIMUM_RELEASE_AGE: 0
+  PNPM_CONFIG_MINIMUM_RELEASE_AGE_STRICT: false
+
 jobs:
   # Job 1: Setup and Detect what needs to be run
   detect:
@@ -61,6 +65,8 @@ jobs:
 
       - name: Setup PNPM
         uses: pnpm/action-setup@v4
+        with:
+          version: 12.4.1
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -74,7 +80,7 @@ jobs:
           deno-version: "2.1.9"
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --config.minimum-release-age=0 --config.minimum-release-age-strict=false
 
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v3
@@ -105,6 +111,8 @@ jobs:
 
       - name: Setup PNPM
         uses: pnpm/action-setup@v4
+        with:
+          version: 12.4.1
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -116,7 +124,7 @@ jobs:
         uses: jdx/mise-action@v2
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --config.minimum-release-age=0 --config.minimum-release-age-strict=false
 
       - name: Install Playwright Browsers
         run: pnpm exec playwright install --with-deps
@@ -148,6 +156,8 @@ jobs:
 
       - name: Setup PNPM
         uses: pnpm/action-setup@v4
+        with:
+          version: 12.4.1
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -156,7 +166,7 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --config.minimum-release-age=0 --config.minimum-release-age-strict=false
 
       - name: Run Vitest tests
         run: pnpm --filter=@app/website run test --run
@@ -173,6 +183,8 @@ jobs:
 
       - name: Setup PNPM
         uses: pnpm/action-setup@v4
+        with:
+          version: 12.4.1
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -181,7 +193,7 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --config.minimum-release-age=0 --config.minimum-release-age-strict=false
 
       - name: Check i18n keys
         run: pnpm i18n:check
@@ -204,6 +216,8 @@ jobs:
 
       - name: Setup PNPM
         uses: pnpm/action-setup@v4
+        with:
+          version: 12.4.1
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -212,7 +226,7 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --config.minimum-release-age=0 --config.minimum-release-age-strict=false
 
       - name: Build mobile website
         env:
@@ -250,6 +264,8 @@ jobs:
 
       - name: Setup PNPM
         uses: pnpm/action-setup@v4
+        with:
+          version: 12.4.1
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -267,7 +283,7 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --config.minimum-release-age=0 --config.minimum-release-age-strict=false
 
       - name: Setup Android signing - Capacitor
         run: |
@@ -372,6 +388,8 @@ jobs:
 
       - name: Setup PNPM
         uses: pnpm/action-setup@v4
+        with:
+          version: 12.4.1
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -380,12 +398,12 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --config.minimum-release-age=0 --config.minimum-release-age-strict=false
 
       - name: Build website
         env:
           NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          NUXT_PUBLIC_SUPABASE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
           NUXT_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           NUXT_SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
           NUXT_TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
@@ -424,6 +442,8 @@ jobs:
 
       - name: Setup PNPM
         uses: pnpm/action-setup@v4
+        with:
+          version: 12.4.1
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -432,12 +452,12 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --config.minimum-release-age=0 --config.minimum-release-age-strict=false
 
       - name: Build website
         env:
           NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          NUXT_PUBLIC_SUPABASE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
           NUXT_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           NUXT_SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
           NUXT_TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}

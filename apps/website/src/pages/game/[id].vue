@@ -429,7 +429,7 @@
           <span class="block text-xs text-gray-400 mt-4">{{
             $t("media.rolesCount", {
               shown: filteredCharacters.length,
-              total: filteredCharacters.length,
+              total: formattedCharacters.length,
             })
           }}</span>
         </section>

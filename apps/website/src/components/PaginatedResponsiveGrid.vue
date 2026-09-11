@@ -77,7 +77,7 @@ const setPage = (page: number) => {
     <nav
       v-if="totalPages > 1"
       class="mt-6 flex flex-wrap items-center justify-center gap-3"
-      :aria-label="$t('admin.spreadsheet.searchDirectory')"
+      :aria-label="$t('common.pagination')"
     >
       <button
         type="button"
