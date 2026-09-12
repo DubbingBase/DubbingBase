@@ -10,6 +10,7 @@ import { llmGenerateObject } from "../llm";
 import {
   extractAvailableLanguages,
   selectDubbingSections,
+  filterValidSectionIndexes,
   sitelinkKey,
 } from "../cache/wikipedia";
 
@@ -402,12 +403,31 @@ export async function extractMediaDubbingCredits(options: {
     await findOrCreateDubbingProject(tmdbId, tmdbType, language);
 
     const wikipediaCache = useWikipediaCache(cache);
+    // ponytail: check and extract run on different cron ticks — drop indexes
+    // that no longer match (stale payloads, e.g. bare "Reparto" enqueued pre-fix)
+    const pageSections = await wikipediaCache.getPageSections(pageId, language);
+    const validIndexes = await filterValidSectionIndexes(
+      pageSections.parse?.tocdata?.sections ||
+        pageSections.parse?.sections ||
+        [],
+      sectionIndexes,
+    );
+    if (validIndexes.length === 0) {
+      return {
+        ok: false,
+        changes: 0,
+        creditsAdded: 0,
+        title: mediaTitle,
+        imageUrl,
+        error: `Stale queue element: section(s) [${sectionIndexes.join(", ")}] no longer match dubbing headings on the "${language}" Wikipedia page. The page likely has no dubbing section.`,
+      };
+    }
     let totalNewVoiceActors = 0;
     let totalNewCredits = 0;
 
     let llmModel: string | undefined;
     let llmQuota: string | undefined;
-    for (const sectionIndex of sectionIndexes) {
+    for (const sectionIndex of validIndexes) {
       const wikitextJSON = await wikipediaCache.getPageSectionAsWikitext(
         pageId,
         String(sectionIndex),
@@ -564,12 +584,31 @@ export async function extractGameDubbingCredits(options: {
     );
 
     const wikipediaCache = useWikipediaCache(cache);
+    // ponytail: check and extract run on different cron ticks — drop indexes
+    // that no longer match (stale payloads)
+    const pageSections = await wikipediaCache.getPageSections(pageId, language);
+    const validIndexes = await filterValidSectionIndexes(
+      pageSections.parse?.tocdata?.sections ||
+        pageSections.parse?.sections ||
+        [],
+      sectionIndexes,
+    );
+    if (validIndexes.length === 0) {
+      return {
+        ok: false,
+        changes: 0,
+        creditsAdded: 0,
+        title: gameTitle,
+        imageUrl,
+        error: `Stale queue element: section(s) [${sectionIndexes.join(", ")}] no longer match dubbing headings on the "${language}" Wikipedia page. The page likely has no dubbing section.`,
+      };
+    }
     let totalNewVoiceActors = 0;
     let totalNewCredits = 0;
 
     let llmModel: string | undefined;
     let llmQuota: string | undefined;
-    for (const sectionIndex of sectionIndexes) {
+    for (const sectionIndex of validIndexes) {
       const wikitextJSON = await wikipediaCache.getPageSectionAsWikitext(
         pageId,
         String(sectionIndex),
