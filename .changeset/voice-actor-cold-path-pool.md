@@ -1,5 +1,6 @@
 ---
 "@app/website": patch
+"@app/shared-logic": patch
 ---
 
 perf(server): unblock voice-actor cold path with pooled media fan-out
