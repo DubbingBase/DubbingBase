@@ -1,4 +1,4 @@
-import { SimpleCache } from "./cache";
+import { SimpleCache, FreshCache } from "./cache";
 import { TMDBClient } from "./api/tmdb";
 import { TVDBClient } from "./api/tvdb";
 import { IgdbClient } from "./api/igdb";
@@ -88,16 +88,20 @@ export function useCache(event?: any): SimpleCache {
   return _cache;
 }
 
-export function useTmdbClient(): TMDBClient {
-  return new TMDBClient(useCache());
+export function useFreshCache(): SimpleCache {
+  return new FreshCache(() => getCloudflareKv());
+}
+
+export function useTmdbClient(cache?: SimpleCache): TMDBClient {
+  return new TMDBClient(cache ?? useCache());
 }
 
 export function useTvdbClient(): TVDBClient {
   return new TVDBClient(useCache());
 }
 
-export function useIgdbClient(): IgdbClient {
-  return new IgdbClient(useCache());
+export function useIgdbClient(cache?: SimpleCache): IgdbClient {
+  return new IgdbClient(cache ?? useCache());
 }
 
 export function useOpenLibraryClient(): OpenLibraryClient {
@@ -116,6 +120,6 @@ export function useToyClient(): ToyClient {
   return new ToyClient();
 }
 
-export function useWikipediaCache(): WikipediaCache {
-  return new WikipediaCache(useCache());
+export function useWikipediaCache(cache?: SimpleCache): WikipediaCache {
+  return new WikipediaCache(cache ?? useCache());
 }

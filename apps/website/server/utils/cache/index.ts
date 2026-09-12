@@ -173,3 +173,13 @@ export class SimpleCache {
     return SimpleKeyBuilder.app(type, id, suffix);
   }
 }
+
+/**
+ * Read-through-bypass cache for cron/queue work: reads always miss (fresh
+ * upstream fetch) while writes still warm the shared tiers for public pages.
+ */
+export class FreshCache extends SimpleCache {
+  override async get<T>(): Promise<T | null> {
+    return null;
+  }
+}

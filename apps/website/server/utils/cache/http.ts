@@ -20,6 +20,16 @@ const CACHE_PROFILE_HEADERS: Record<CacheProfile, string> = {
 };
 
 /**
+ * Sets no-store headers on the H3 event. Use for cron/queue and other
+ * mutation endpoints whose responses must never be served from edge cache.
+ */
+export function setNoStoreHeaders(event: H3Event): void {
+  setHeader(event, "Cache-Control", "no-store, no-cache, must-revalidate");
+  setHeader(event, "Pragma", "no-cache");
+  setHeader(event, "Expires", "0");
+}
+
+/**
  * Sets standardized Edge & Browser SWR Cache-Control headers on the H3 event.
  */
 export function setPublicCacheHeaders(

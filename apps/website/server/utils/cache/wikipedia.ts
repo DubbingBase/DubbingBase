@@ -195,6 +195,19 @@ export async function selectDubbingSections(
   return matchedIndexes;
 }
 
+/**
+ * Drop requested section indexes that no longer match dubbing headings.
+ * Queue check and extract run on different cron ticks, so a payload can go
+ * stale (page edited, or detector fixed since enqueue, e.g. bare "Reparto").
+ */
+export async function filterValidSectionIndexes(
+  sections: Array<{ index: number | string; line: string }>,
+  requested: number[],
+): Promise<number[]> {
+  const valid = new Set(await selectDubbingSections(sections));
+  return requested.filter((i) => valid.has(String(i)));
+}
+
 export class WikipediaCache {
   constructor(private cache: SimpleCache) {}
 

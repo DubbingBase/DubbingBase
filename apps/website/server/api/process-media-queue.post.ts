@@ -7,12 +7,20 @@ import {
 } from "../utils/services/media-preparation";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { requireAdmin } from "../utils/auth";
-import { useWikipediaCache, useIgdbClient } from "../utils";
+import { useWikipediaCache, useIgdbClient, useFreshCache } from "../utils";
 import { extractAvailableLanguages } from "../utils/cache/wikipedia";
 import { areAllLlmQuotasExhausted } from "../utils/llm";
 import { getErrorMessage } from "../utils/error-message";
+import { setNoStoreHeaders } from "../utils/cache/http";
+import {
+  validateCheckPayload,
+  validateDiscoveryPayload,
+  validateExtractPayload,
+} from "../utils/queue-payload";
 
 export default defineEventHandler(async (event) => {
+  // ponytail: cron-driven queue responses must never be edge-cached
+  setNoStoreHeaders(event);
   const internalSecret = getHeader(event, "x-internal-secret");
   const authHeader = getHeader(event, "authorization");
   const apiKeyHeader = getHeader(event, "apikey");
@@ -97,6 +105,8 @@ export default defineEventHandler(async (event) => {
     }
 
     const supabaseAdmin = useSupabaseAdmin(event);
+    // ponytail: cron work always fetches fresh upstream data (writes still warm the cache)
+    const freshCache = useFreshCache();
 
     // Step 1: Pop a message based on queue selection / priority order
     // ponytail: check all quotas before dequeuing extract — if all models exhausted, keep element queued
@@ -233,18 +243,34 @@ export default defineEventHandler(async (event) => {
     // QUEUE 1: wiki_discovery (Wikidata sitelink discovery & language fan-out)
     // -------------------------------------------------------------------------
     if (targetQueue === "wiki_discovery") {
+      const valid = validateDiscoveryPayload(payload);
+      if (!valid.ok) {
+        const errMsg = `Broken queue element: ${valid.reason}`;
+        await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
+          p_queue_name: targetQueue,
+          p_msg_id: msgId,
+          p_error: errMsg,
+        });
+        results.push({ id: msgId, ok: false, error: errMsg });
+        await sendDiscordAdminNotification(
+          "Queue Discovery Failed",
+          `Discovery failed for **${mediaTitle}** (ID ${payload.tmdb_id}):\n\`\`\`\n${errMsg}\n\`\`\``,
+          { event, queue: "wiki_discovery" },
+        );
+        return { ok: true, processed: 1, results, queue: targetQueue };
+      }
       try {
         let wikiId: string | undefined = payload.wiki_id;
 
         if (!wikiId) {
           if (payload.media_type === "video_game") {
-            const igdbClient = useIgdbClient();
+            const igdbClient = useIgdbClient(freshCache);
             const game = await igdbClient.getGame(payload.tmdb_id);
             if (!game)
               throw new Error(`IGDB game ${payload.tmdb_id} not found`);
             mediaTitle = game.name;
 
-            const wikipediaCache = useWikipediaCache();
+            const wikipediaCache = useWikipediaCache(freshCache);
             const searchData = await wikipediaCache.searchWikidataEntities(
               game.name,
               "en",
@@ -321,7 +347,7 @@ export default defineEventHandler(async (event) => {
           };
         }
 
-        const wikipediaCache = useWikipediaCache();
+        const wikipediaCache = useWikipediaCache(freshCache);
         const entity = await wikipediaCache.getAllSitelinksEntity(wikiId);
         const sitelinks = entity.entities[wikiId]?.sitelinks;
         const allLanguages = extractAvailableLanguages(sitelinks);
@@ -436,7 +462,24 @@ export default defineEventHandler(async (event) => {
     // QUEUE 2: wiki_check (Instant TOC fetch + regex check -> enqueues to extract)
     // -------------------------------------------------------------------------
     if (targetQueue === "wiki_check") {
-      const lang = payload.language || "fr";
+      const valid = validateCheckPayload(payload);
+      if (!valid.ok) {
+        const errMsg = `Broken queue element: ${valid.reason}`;
+        const lang = payload.language || "fr";
+        await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
+          p_queue_name: targetQueue,
+          p_msg_id: msgId,
+          p_error: errMsg,
+        });
+        results.push({ id: msgId, ok: false, changes: 0, error: errMsg });
+        await sendDiscordAdminNotification(
+          `Queue Check Failed [${lang.toUpperCase()}]`,
+          `Failed to check **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${lang.toUpperCase()}]):\n\`\`\`\n${errMsg}\n\`\`\``,
+          { event, queue: "wiki_check" },
+        );
+        return { ok: true, processed: 1, results, queue: targetQueue };
+      }
+      const lang = valid.value.language;
       try {
         let checkResult: any;
 
@@ -444,6 +487,7 @@ export default defineEventHandler(async (event) => {
           checkResult = await checkGameDubbingSections({
             igdbId: payload.tmdb_id,
             language: lang,
+            cache: freshCache,
           });
         } else {
           checkResult = await checkMediaDubbingSections({
@@ -452,6 +496,7 @@ export default defineEventHandler(async (event) => {
             language: lang,
             seasonNumber: payload.season_number,
             episodeNumber: payload.episode_number,
+            cache: freshCache,
           });
         }
 
@@ -601,16 +646,27 @@ export default defineEventHandler(async (event) => {
     // QUEUE 3: wiki_extract (LLM Gemini extraction of verified sections)
     // -------------------------------------------------------------------------
     if (targetQueue === "wiki_extract") {
-      const lang = payload.language || "fr";
+      const valid = validateExtractPayload(payload);
+      if (!valid.ok) {
+        const errMsg = `Broken queue element: ${valid.reason}`;
+        const lang = String(payload.language || "fr").toUpperCase();
+        await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
+          p_queue_name: targetQueue,
+          p_msg_id: msgId,
+          p_error: errMsg,
+        });
+        results.push({ id: msgId, ok: false, changes: 0, error: errMsg });
+        await sendDiscordAdminNotification(
+          `Queue Item Failed [${lang}]`,
+          `Failed to extract **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${lang}]):\n\`\`\`\n${errMsg}\n\`\`\`\n• pipeline pipe3`,
+          { event, queue: "wiki_extract", color: 0xed4245 },
+        );
+        return { ok: true, processed: 1, results, queue: targetQueue };
+      }
+      const lang = valid.value.language;
       try {
-        const pageId = payload.page_id;
-        const sectionIndexes = payload.section_indexes;
-
-        if (!pageId || !sectionIndexes || !Array.isArray(sectionIndexes)) {
-          throw new Error(
-            "Missing page_id or section_indexes in wiki_extract payload.",
-          );
-        }
+        const pageId = valid.value.pageId;
+        const sectionIndexes = valid.value.sectionIndexes;
 
         let extractResult: any;
         if (payload.media_type === "video_game") {
@@ -619,6 +675,7 @@ export default defineEventHandler(async (event) => {
             language: lang,
             pageId,
             sectionIndexes,
+            cache: freshCache,
           });
         } else {
           extractResult = await extractMediaDubbingCredits({
@@ -629,6 +686,7 @@ export default defineEventHandler(async (event) => {
             sectionIndexes,
             seasonNumber: payload.season_number,
             episodeNumber: payload.episode_number,
+            cache: freshCache,
           });
         }
 
@@ -688,9 +746,12 @@ export default defineEventHandler(async (event) => {
         );
       } catch (err) {
         const errMsg = getErrorMessage(err);
+        // ponytail: log the raw value too — if errMsg ever degrades again,
+        // worker logs still hold the unstringified error for diagnosis
         console.error(
-          `[QUEUE] Error extracting credits for message ${msgId}:`,
+          `[QUEUE:pipe3] Error extracting credits for message ${msgId}:`,
           errMsg,
+          err,
         );
 
         if (
@@ -748,7 +809,7 @@ export default defineEventHandler(async (event) => {
 
           await sendDiscordAdminNotification(
             `Queue Item Failed [${lang.toUpperCase()}]`,
-            `Failed to extract **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${lang.toUpperCase()}]):\n\`\`\`\n${errMsg}\n\`\`\``,
+            `Failed to extract **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${lang.toUpperCase()}]):\n\`\`\`\n${errMsg}\n\`\`\`\n• pipeline pipe3`,
             { event, queue: "wiki_extract", color: 0xed4245 },
           );
         }
