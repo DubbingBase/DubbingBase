@@ -1,8 +1,12 @@
 export async function fetchVoiceActorData(
   id: string | number,
+  lang?: string,
 ): Promise<VoiceActorDataPayload | null> {
   try {
-    const voiceActorResponse = await $fetch<any>(`/api/voice-actor/${id}`);
+    const voiceActorResponse = await $fetch<any>(
+      `/api/voice-actor/${id}`,
+      lang ? { query: { lang } } : undefined,
+    );
 
     if (!voiceActorResponse || !voiceActorResponse.voiceActor) {
       console.error("voiceActorResponse is null");
@@ -169,11 +173,11 @@ export function useVoiceActorData(
     { immediate: true, deep: true },
   );
 
-  const loadVoiceActorData = async (id: string | number) => {
+  const loadVoiceActorData = async (id: string | number, lang?: string) => {
     loading.value = true;
 
     try {
-      const payload = await fetchVoiceActorData(id);
+      const payload = await fetchVoiceActorData(id, lang);
 
       if (!payload) return;
 

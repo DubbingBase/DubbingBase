@@ -684,7 +684,11 @@
 
 <script setup lang="ts">
 import PersonDetailsLayout from "../../components/layout/PersonDetailsLayout.vue";
-import { useVoiceActorData, fetchVoiceActorData } from "@app/shared-logic";
+import {
+  useVoiceActorData,
+  fetchVoiceActorData,
+  APP_LOCALES,
+} from "@app/shared-logic";
 import { useRouter, useRoute } from "vue-router";
 import {
   Clapperboard as ClapperboardIcon,
@@ -752,8 +756,12 @@ function getMediaLink(contentType?: string | null, mediaId?: number | string) {
 }
 
 const { data, pending } = useAsyncData(
-  `voice-actor-${voiceActorId}`,
-  () => fetchVoiceActorData(voiceActorId),
+  `voice-actor-${voiceActorId}-${locale.value}`,
+  () => {
+    const tmdbLanguage =
+      APP_LOCALES.find((l) => l.code === locale.value)?.language || "en-US";
+    return fetchVoiceActorData(voiceActorId, tmdbLanguage);
+  },
   {
     getCachedData: (key, nuxtApp) =>
       nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],

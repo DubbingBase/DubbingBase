@@ -101,300 +101,44 @@ export class MediaService {
     }
     const uniqueTargets = Array.from(uniqueTargetsMap.values());
 
-    // 2. Fetch unique media items in batches to prevent socket exhaustion and rate limits
+    // 2. Fetch unique media items with a concurrency-limited pool.
+    // Serial batches stall on the slowest straggler; a pool keeps CONCURRENCY
+    // requests in flight and starts the next target as soon as one finishes.
     const fetchedResultsMap = new Map<
       string,
       { media: any; characterProfilePictures: any[]; tvdbId: number | null }
     >();
 
-    const BATCH_SIZE = 15;
-    for (let i = 0; i < uniqueTargets.length; i += BATCH_SIZE) {
-      const batch = uniqueTargets.slice(i, i + BATCH_SIZE);
-      const batchResults = await Promise.all(
-        batch.map(async ({ contentType, contentId }) => {
-          if (contentType === "audiobook") {
-            try {
-              const openLibraryClient = useOpenLibraryClient();
-              const book = await openLibraryClient.getBook(contentId);
-              if (!book) {
-                return {
-                  key: `${contentType}:${contentId}`,
-                  data: {
-                    media: null,
-                    characterProfilePictures: [],
-                    tvdbId: null,
-                  },
-                };
-              }
-              const processedBook = {
-                id: book.id,
-                title: book.title,
-                name: book.title,
-                overview: book.description || "",
-                poster_path: book.cover_url || null,
-                backdrop_path: null,
-                release_date:
-                  book.release_date ||
-                  (book.first_publish_year
-                    ? `${book.first_publish_year}-01-01`
-                    : "1970-01-01"),
-                first_air_date:
-                  book.release_date ||
-                  (book.first_publish_year
-                    ? `${book.first_publish_year}-01-01`
-                    : "1970-01-01"),
-                media_type: "audiobook" as const,
-                popularity: book.popularity || 0,
-                credits: { cast: [] },
-              };
-              return {
-                key: `${contentType}:${contentId}`,
-                data: {
-                  media: processedBook,
-                  characterProfilePictures: [],
-                  tvdbId: null,
-                },
-              };
-            } catch (err) {
-              console.error(
-                `Failed to fetch OpenLibrary book ${contentId} for voice actor:`,
-                err,
-              );
-              return {
-                key: `${contentType}:${contentId}`,
-                data: {
-                  media: null,
-                  characterProfilePictures: [],
-                  tvdbId: null,
-                },
-              };
-            }
-          }
+    const CONCURRENCY = 15;
 
-          if (contentType === "video_game") {
-            try {
-              const igdbClient = useIgdbClient();
-              const game = await igdbClient.getGame(contentId);
-              if (!game) {
-                return {
-                  key: `${contentType}:${contentId}`,
-                  data: {
-                    media: null,
-                    characterProfilePictures: [],
-                    tvdbId: null,
-                  },
-                };
-              }
-              const processedGame = {
-                id: game.id,
-                title: game.name,
-                name: game.name,
-                overview: game.summary || "",
-                poster_path: game.cover
-                  ? buildIgdbImageUrl(game.cover.image_id, "cover_big")
-                  : null,
-                backdrop_path: game.artworks?.[0]
-                  ? buildIgdbImageUrl(game.artworks[0].image_id, "1080p")
-                  : game.screenshots?.[0]
-                    ? buildIgdbImageUrl(
-                        game.screenshots[0].image_id,
-                        "screenshot_huge",
-                      )
-                    : null,
-                release_date: game.first_release_date
-                  ? new Date(game.first_release_date * 1000)
-                      .toISOString()
-                      .split("T")[0]
-                  : "1970-01-01",
-                first_air_date: game.first_release_date
-                  ? new Date(game.first_release_date * 1000)
-                      .toISOString()
-                      .split("T")[0]
-                  : "1970-01-01",
-                media_type: "video_game" as const,
-                popularity: 0,
-                credits: { cast: [] },
-              };
-              return {
-                key: `${contentType}:${contentId}`,
-                data: {
-                  media: processedGame,
-                  characterProfilePictures: [],
-                  tvdbId: null,
-                },
-              };
-            } catch (err) {
-              console.error(
-                `Failed to fetch IGDB game ${contentId} for voice actor:`,
-                err,
-              );
-              return {
-                key: `${contentType}:${contentId}`,
-                data: {
-                  media: null,
-                  characterProfilePictures: [],
-                  tvdbId: null,
-                },
-              };
-            }
-          }
+    // Independent tail work (backdrop person credits, Wikipedia fallback)
+    // starts now so it overlaps the media fan-out instead of running after it.
+    const tmdbPersonPromise = voiceActor.tmdb_id
+      ? this.tmdbClient
+          .get(
+            `person/${voiceActor.tmdb_id}`,
+            { append_to_response: "movie_credits,tv_credits" },
+            language,
+          )
+          .catch((e) => {
+            console.error("Failed to compute voice actor backdrop:", e);
+            return null;
+          })
+      : null;
+    const wikipediaPromise =
+      !voiceActor.tmdb_id && voiceActor.firstname && voiceActor.lastname
+        ? fetchPotentialWikipediaUrl(
+            voiceActor.firstname,
+            voiceActor.lastname,
+          ).catch(() => null)
+        : Promise.resolve(null);
 
-          if (contentType === "podcast") {
-            try {
-              const podcastClient = usePodcastClient();
-              const podcast = await podcastClient.getPodcast(contentId);
-              if (!podcast) {
-                return {
-                  key: `${contentType}:${contentId}`,
-                  data: {
-                    media: null,
-                    characterProfilePictures: [],
-                    tvdbId: null,
-                  },
-                };
-              }
-              const processedPodcast = {
-                id: podcast.id,
-                title: podcast.title,
-                name: podcast.title,
-                overview: podcast.description || "",
-                poster_path: podcast.cover_url || null,
-                backdrop_path: null,
-                release_date: podcast.release_date || "1970-01-01",
-                first_air_date: podcast.release_date || "1970-01-01",
-                media_type: "podcast" as const,
-                popularity: podcast.popularity || 0,
-                credits: { cast: [] },
-              };
-              return {
-                key: `${contentType}:${contentId}`,
-                data: {
-                  media: processedPodcast,
-                  characterProfilePictures: [],
-                  tvdbId: null,
-                },
-              };
-            } catch (err) {
-              console.error(`Failed to fetch podcast ${contentId}:`, err);
-              return {
-                key: `${contentType}:${contentId}`,
-                data: {
-                  media: null,
-                  characterProfilePictures: [],
-                  tvdbId: null,
-                },
-              };
-            }
-          }
-
-          if (contentType === "advertisement") {
-            try {
-              const adClient = useAdvertisementClient();
-              const ad = await adClient.getAdvertisement(contentId);
-              const processedAd = {
-                id: ad?.id || contentId,
-                title: ad?.title || `Spot Publicitaire #${contentId}`,
-                name: ad?.title || `Spot Publicitaire #${contentId}`,
-                overview: ad?.description || "",
-                poster_path: ad?.poster_url || null,
-                backdrop_path: null,
-                release_date: ad?.year ? `${ad.year}-01-01` : "1970-01-01",
-                first_air_date: ad?.year ? `${ad.year}-01-01` : "1970-01-01",
-                media_type: "advertisement" as const,
-                popularity: 0,
-                credits: { cast: [] },
-              };
-              return {
-                key: `${contentType}:${contentId}`,
-                data: {
-                  media: processedAd,
-                  characterProfilePictures: [],
-                  tvdbId: null,
-                },
-              };
-            } catch (err) {
-              console.error(`Failed to fetch ad ${contentId}:`, err);
-              return {
-                key: `${contentType}:${contentId}`,
-                data: {
-                  media: null,
-                  characterProfilePictures: [],
-                  tvdbId: null,
-                },
-              };
-            }
-          }
-
-          if (contentType === "toy") {
-            try {
-              const toyClient = useToyClient();
-              const toy = await toyClient.getToy(contentId);
-              const processedToy = {
-                id: toy?.id || contentId,
-                title: toy?.name || `Objet Connecté #${contentId}`,
-                name: toy?.name || `Objet Connecté #${contentId}`,
-                overview: toy?.description || "",
-                poster_path: toy?.cover_url || null,
-                backdrop_path: null,
-                release_date: toy?.release_year
-                  ? `${toy.release_year}-01-01`
-                  : "1970-01-01",
-                first_air_date: toy?.release_year
-                  ? `${toy.release_year}-01-01`
-                  : "1970-01-01",
-                media_type: "toy" as const,
-                popularity: 0,
-                credits: { cast: [] },
-              };
-              return {
-                key: `${contentType}:${contentId}`,
-                data: {
-                  media: processedToy,
-                  characterProfilePictures: [],
-                  tvdbId: null,
-                },
-              };
-            } catch (err) {
-              console.error(`Failed to fetch toy ${contentId}:`, err);
-              return {
-                key: `${contentType}:${contentId}`,
-                data: {
-                  media: null,
-                  characterProfilePictures: [],
-                  tvdbId: null,
-                },
-              };
-            }
-          }
-
-          try {
-            const tmdbType = contentType === "tv" ? "tv" : "movie";
-            const tmdbMedia = await this.tmdbClient.getMediaWithCredits(
-              tmdbType,
-              contentId,
-              language || this.acceptLanguage,
-            );
-
-            const { characters, tvdbId } =
-              await this.getCharacterProfilePictures(
-                tmdbType,
-                contentId,
-                tmdbMedia,
-              );
-
-            return {
-              key: `${contentType}:${contentId}`,
-              data: {
-                media: processMedia(tmdbMedia),
-                characterProfilePictures: characters,
-                tvdbId,
-              },
-            };
-          } catch (err) {
-            console.error(
-              `Failed to fetch TMDB ${contentType} ${contentId} for voice actor:`,
-              err,
-            );
+    const fetchTarget = async ({ contentType, contentId }: MediaTarget) => {
+      if (contentType === "audiobook") {
+        try {
+          const openLibraryClient = useOpenLibraryClient();
+          const book = await openLibraryClient.getBook(contentId);
+          if (!book) {
             return {
               key: `${contentType}:${contentId}`,
               data: {
@@ -404,15 +148,299 @@ export class MediaService {
               },
             };
           }
-        }),
-      );
-
-      for (const res of batchResults) {
-        if (res?.data) {
-          fetchedResultsMap.set(res.key, res.data);
+          const processedBook = {
+            id: book.id,
+            title: book.title,
+            name: book.title,
+            overview: book.description || "",
+            poster_path: book.cover_url || null,
+            backdrop_path: null,
+            release_date:
+              book.release_date ||
+              (book.first_publish_year
+                ? `${book.first_publish_year}-01-01`
+                : "1970-01-01"),
+            first_air_date:
+              book.release_date ||
+              (book.first_publish_year
+                ? `${book.first_publish_year}-01-01`
+                : "1970-01-01"),
+            media_type: "audiobook" as const,
+            popularity: book.popularity || 0,
+            credits: { cast: [] },
+          };
+          return {
+            key: `${contentType}:${contentId}`,
+            data: {
+              media: processedBook,
+              characterProfilePictures: [],
+              tvdbId: null,
+            },
+          };
+        } catch (err) {
+          console.error(
+            `Failed to fetch OpenLibrary book ${contentId} for voice actor:`,
+            err,
+          );
+          return {
+            key: `${contentType}:${contentId}`,
+            data: {
+              media: null,
+              characterProfilePictures: [],
+              tvdbId: null,
+            },
+          };
         }
       }
-    }
+
+      if (contentType === "video_game") {
+        try {
+          const igdbClient = useIgdbClient();
+          const game = await igdbClient.getGame(contentId);
+          if (!game) {
+            return {
+              key: `${contentType}:${contentId}`,
+              data: {
+                media: null,
+                characterProfilePictures: [],
+                tvdbId: null,
+              },
+            };
+          }
+          const processedGame = {
+            id: game.id,
+            title: game.name,
+            name: game.name,
+            overview: game.summary || "",
+            poster_path: game.cover
+              ? buildIgdbImageUrl(game.cover.image_id, "cover_big")
+              : null,
+            backdrop_path: game.artworks?.[0]
+              ? buildIgdbImageUrl(game.artworks[0].image_id, "1080p")
+              : game.screenshots?.[0]
+                ? buildIgdbImageUrl(
+                    game.screenshots[0].image_id,
+                    "screenshot_huge",
+                  )
+                : null,
+            release_date: game.first_release_date
+              ? new Date(game.first_release_date * 1000)
+                  .toISOString()
+                  .split("T")[0]
+              : "1970-01-01",
+            first_air_date: game.first_release_date
+              ? new Date(game.first_release_date * 1000)
+                  .toISOString()
+                  .split("T")[0]
+              : "1970-01-01",
+            media_type: "video_game" as const,
+            popularity: 0,
+            credits: { cast: [] },
+          };
+          return {
+            key: `${contentType}:${contentId}`,
+            data: {
+              media: processedGame,
+              characterProfilePictures: [],
+              tvdbId: null,
+            },
+          };
+        } catch (err) {
+          console.error(
+            `Failed to fetch IGDB game ${contentId} for voice actor:`,
+            err,
+          );
+          return {
+            key: `${contentType}:${contentId}`,
+            data: {
+              media: null,
+              characterProfilePictures: [],
+              tvdbId: null,
+            },
+          };
+        }
+      }
+
+      if (contentType === "podcast") {
+        try {
+          const podcastClient = usePodcastClient();
+          const podcast = await podcastClient.getPodcast(contentId);
+          if (!podcast) {
+            return {
+              key: `${contentType}:${contentId}`,
+              data: {
+                media: null,
+                characterProfilePictures: [],
+                tvdbId: null,
+              },
+            };
+          }
+          const processedPodcast = {
+            id: podcast.id,
+            title: podcast.title,
+            name: podcast.title,
+            overview: podcast.description || "",
+            poster_path: podcast.cover_url || null,
+            backdrop_path: null,
+            release_date: podcast.release_date || "1970-01-01",
+            first_air_date: podcast.release_date || "1970-01-01",
+            media_type: "podcast" as const,
+            popularity: podcast.popularity || 0,
+            credits: { cast: [] },
+          };
+          return {
+            key: `${contentType}:${contentId}`,
+            data: {
+              media: processedPodcast,
+              characterProfilePictures: [],
+              tvdbId: null,
+            },
+          };
+        } catch (err) {
+          console.error(`Failed to fetch podcast ${contentId}:`, err);
+          return {
+            key: `${contentType}:${contentId}`,
+            data: {
+              media: null,
+              characterProfilePictures: [],
+              tvdbId: null,
+            },
+          };
+        }
+      }
+
+      if (contentType === "advertisement") {
+        try {
+          const adClient = useAdvertisementClient();
+          const ad = await adClient.getAdvertisement(contentId);
+          const processedAd = {
+            id: ad?.id || contentId,
+            title: ad?.title || `Spot Publicitaire #${contentId}`,
+            name: ad?.title || `Spot Publicitaire #${contentId}`,
+            overview: ad?.description || "",
+            poster_path: ad?.poster_url || null,
+            backdrop_path: null,
+            release_date: ad?.year ? `${ad.year}-01-01` : "1970-01-01",
+            first_air_date: ad?.year ? `${ad.year}-01-01` : "1970-01-01",
+            media_type: "advertisement" as const,
+            popularity: 0,
+            credits: { cast: [] },
+          };
+          return {
+            key: `${contentType}:${contentId}`,
+            data: {
+              media: processedAd,
+              characterProfilePictures: [],
+              tvdbId: null,
+            },
+          };
+        } catch (err) {
+          console.error(`Failed to fetch ad ${contentId}:`, err);
+          return {
+            key: `${contentType}:${contentId}`,
+            data: {
+              media: null,
+              characterProfilePictures: [],
+              tvdbId: null,
+            },
+          };
+        }
+      }
+
+      if (contentType === "toy") {
+        try {
+          const toyClient = useToyClient();
+          const toy = await toyClient.getToy(contentId);
+          const processedToy = {
+            id: toy?.id || contentId,
+            title: toy?.name || `Objet Connecté #${contentId}`,
+            name: toy?.name || `Objet Connecté #${contentId}`,
+            overview: toy?.description || "",
+            poster_path: toy?.cover_url || null,
+            backdrop_path: null,
+            release_date: toy?.release_year
+              ? `${toy.release_year}-01-01`
+              : "1970-01-01",
+            first_air_date: toy?.release_year
+              ? `${toy.release_year}-01-01`
+              : "1970-01-01",
+            media_type: "toy" as const,
+            popularity: 0,
+            credits: { cast: [] },
+          };
+          return {
+            key: `${contentType}:${contentId}`,
+            data: {
+              media: processedToy,
+              characterProfilePictures: [],
+              tvdbId: null,
+            },
+          };
+        } catch (err) {
+          console.error(`Failed to fetch toy ${contentId}:`, err);
+          return {
+            key: `${contentType}:${contentId}`,
+            data: {
+              media: null,
+              characterProfilePictures: [],
+              tvdbId: null,
+            },
+          };
+        }
+      }
+
+      try {
+        const tmdbType = contentType === "tv" ? "tv" : "movie";
+        const tmdbMedia = await this.tmdbClient.getMediaWithCredits(
+          tmdbType,
+          contentId,
+          language || this.acceptLanguage,
+        );
+
+        // ponytail: no TVDB character lookup here. It costs up to 3 slow
+        // requests per media (Wikidata + TVDB search + TVDB fetch) and resolved
+        // 0 images across 130+ sampled works. Detail pages keep their own
+        // single lookup via getCharacterProfilePictures; add a lazy endpoint
+        // if thumbnails ever matter here.
+        return {
+          key: `${contentType}:${contentId}`,
+          data: {
+            media: processMedia(tmdbMedia),
+            characterProfilePictures: [],
+            tvdbId: null,
+          },
+        };
+      } catch (err) {
+        console.error(
+          `Failed to fetch TMDB ${contentType} ${contentId} for voice actor:`,
+          err,
+        );
+        return {
+          key: `${contentType}:${contentId}`,
+          data: {
+            media: null,
+            characterProfilePictures: [],
+            tvdbId: null,
+          },
+        };
+      }
+    };
+
+    let nextIndex = 0;
+    await Promise.all(
+      Array.from(
+        { length: Math.min(CONCURRENCY, uniqueTargets.length) },
+        async () => {
+          while (true) {
+            const idx = nextIndex++;
+            if (idx >= uniqueTargets.length) return;
+            const target = uniqueTargets[idx] as MediaTarget;
+            const res = await fetchTarget(target);
+            if (res?.data) fetchedResultsMap.set(res.key, res.data);
+          }
+        },
+      ),
+    );
 
     // 3. Construct compact enhancedWorks on the server (avoids sending massive raw cast lists)
     const enhancedWorks = [];
@@ -514,22 +542,22 @@ export class MediaService {
     }
 
     // 4. Compute backdrop from most popular TMDB credit
+    // (person fetch already ran concurrently with the media fan-out above)
     let backdropPath: string | null = null;
     try {
       if (voiceActor.tmdb_id) {
-        const personData = await this.tmdbClient.get(
-          `person/${voiceActor.tmdb_id}`,
-          { append_to_response: "movie_credits,tv_credits" },
-          language,
-        );
-        const allCredits: { backdrop_path?: string; popularity?: number }[] = [
-          ...(personData.movie_credits?.cast || []),
-          ...(personData.tv_credits?.cast || []),
-        ];
-        allCredits.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
-        const best = allCredits.find((c) => c.backdrop_path);
-        if (best)
-          backdropPath = buildTmdbImageUrl(best.backdrop_path, "original");
+        const personData = await tmdbPersonPromise;
+        if (personData) {
+          const allCredits: { backdrop_path?: string; popularity?: number }[] =
+            [
+              ...(personData.movie_credits?.cast || []),
+              ...(personData.tv_credits?.cast || []),
+            ];
+          allCredits.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+          const best = allCredits.find((c) => c.backdrop_path);
+          if (best)
+            backdropPath = buildTmdbImageUrl(best.backdrop_path, "original");
+        }
       } else {
         const sorted = [...enhancedWorks].sort(
           (a, b) => (b.media.popularity || 0) - (a.media.popularity || 0),
@@ -545,14 +573,8 @@ export class MediaService {
       console.error("Failed to compute voice actor backdrop:", e);
     }
 
-    // 5. Fetch Wikipedia URL for voice actors without TMDB ID
-    let potentialWikipediaUrl: string | null = null;
-    if (!voiceActor.tmdb_id) {
-      potentialWikipediaUrl = await fetchPotentialWikipediaUrl(
-        voiceActor.firstname,
-        voiceActor.lastname,
-      );
-    }
+    // 5. Wikipedia URL already resolved concurrently (null when TMDB ID exists)
+    const potentialWikipediaUrl: string | null = await wikipediaPromise;
 
     return {
       voiceActor: voiceActorWithImages,

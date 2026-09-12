@@ -1,6 +1,7 @@
 import { useCache, useTmdbClient } from "../../utils";
 import { MediaService } from "../../utils/services/media";
 import { CACHE_KEYS } from "../../utils/cache/constants";
+import { APP_LOCALES } from "@app/shared-logic";
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, "id");
@@ -12,8 +13,21 @@ export default defineEventHandler(async (event) => {
   if (isNaN(voiceActorId)) {
     throw createError({ statusCode: 400, message: "Invalid id parameter" });
   }
-
-  const acceptLanguage = getHeader(event, "accept-language") || undefined;
+  // TMDB language follows the route locale (?lang=), not the ambient browser
+  // header: titles must match the page language. Allowlisted to the 4
+  // canonical tags so cache keys stay collapsed; header is the fallback.
+  const query = getQuery(event);
+  const rawLang = typeof query.lang === "string" ? query.lang.trim() : "";
+  const canonicalLangs = APP_LOCALES.map((l) => l.language);
+  const shortToCanonical: Record<string, string> = Object.fromEntries(
+    APP_LOCALES.map((l) => [l.code, l.language]),
+  );
+  const headerLang =
+    (getHeader(event, "accept-language") || "fr-FR").split(",")[0]?.trim() ||
+    "fr-FR";
+  const acceptLanguage = canonicalLangs.includes(rawLang)
+    ? rawLang
+    : shortToCanonical[rawLang] || headerLang;
 
   // Set HTTP Edge caching / SWR headers for optimal CDN performance
   setHeader(
@@ -23,10 +37,7 @@ export default defineEventHandler(async (event) => {
   );
 
   const cache = useCache(event);
-  const cacheKey = CACHE_KEYS.APP_VOICE_ACTOR(
-    voiceActorId,
-    acceptLanguage || "fr",
-  );
+  const cacheKey = CACHE_KEYS.APP_VOICE_ACTOR(voiceActorId, acceptLanguage);
 
   const cached = await cache.get(cacheKey);
   let baseData: any = cached;
