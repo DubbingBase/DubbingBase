@@ -697,9 +697,12 @@ export default defineEventHandler(async (event) => {
         );
       } catch (err) {
         const errMsg = getErrorMessage(err);
+        // ponytail: log the raw value too — if errMsg ever degrades again,
+        // worker logs still hold the unstringified error for diagnosis
         console.error(
-          `[QUEUE] Error extracting credits for message ${msgId}:`,
+          `[QUEUE:pipe3] Error extracting credits for message ${msgId}:`,
           errMsg,
+          err,
         );
 
         if (
@@ -757,7 +760,7 @@ export default defineEventHandler(async (event) => {
 
           await sendDiscordAdminNotification(
             `Queue Item Failed [${lang.toUpperCase()}]`,
-            `Failed to extract **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${lang.toUpperCase()}]):\n\`\`\`\n${errMsg}\n\`\`\``,
+            `Failed to extract **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${lang.toUpperCase()}]):\n\`\`\`\n${errMsg}\n\`\`\`\n• pipeline pipe3`,
             { event, queue: "wiki_extract", color: 0xed4245 },
           );
         }

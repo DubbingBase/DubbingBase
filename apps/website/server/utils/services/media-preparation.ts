@@ -515,6 +515,11 @@ export async function extractMediaDubbingCredits(options: {
     };
   } catch (error) {
     const errorMsg = getErrorMessage(error);
+    console.error(
+      `[media-preparation:pipe3] extractMedia failed:`,
+      errorMsg,
+      error,
+    );
     return {
       ok: false,
       changes: 0,
@@ -649,6 +654,11 @@ export async function extractGameDubbingCredits(options: {
     };
   } catch (error) {
     const errorMsg = getErrorMessage(error);
+    console.error(
+      `[media-preparation:pipe3] extractGame failed:`,
+      errorMsg,
+      error,
+    );
     return {
       ok: false,
       changes: 0,
