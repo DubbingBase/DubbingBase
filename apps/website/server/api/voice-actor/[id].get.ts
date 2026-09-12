@@ -12,12 +12,14 @@ export default defineEventHandler(async (event) => {
   if (isNaN(voiceActorId)) {
     throw createError({ statusCode: 400, message: "Invalid id parameter" });
   }
-
   // Normalize to the primary tag: raw Accept-Language varies per browser
-  // ("fr-FR,fr;q=0.9,...") and must not fragment the KV key. Matches the
-  // normalization TMDBClient applies internally, so item keys align.
+  // ("fr-FR,fr;q=0.9,...") and must not fragment the KV key. Default matches
+  // TMDBClient ("fr-FR") so header-less SSR renders share the hot entries
+  // instead of forking "fr" keys. Applies to every locale: en-US, fr-FR,
+  // es-ES, ja-JP each collapse to one entry.
   const acceptLanguage =
-    (getHeader(event, "accept-language") || "fr").split(",")[0]?.trim() || "fr";
+    (getHeader(event, "accept-language") || "fr-FR").split(",")[0]?.trim() ||
+    "fr-FR";
 
   // Set HTTP Edge caching / SWR headers for optimal CDN performance
   setHeader(
