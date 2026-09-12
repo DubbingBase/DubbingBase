@@ -12,6 +12,11 @@ import { extractAvailableLanguages } from "../utils/cache/wikipedia";
 import { areAllLlmQuotasExhausted } from "../utils/llm";
 import { getErrorMessage } from "../utils/error-message";
 import { setNoStoreHeaders } from "../utils/cache/http";
+import {
+  validateCheckPayload,
+  validateDiscoveryPayload,
+  validateExtractPayload,
+} from "../utils/queue-payload";
 
 export default defineEventHandler(async (event) => {
   // ponytail: cron-driven queue responses must never be edge-cached
@@ -238,6 +243,22 @@ export default defineEventHandler(async (event) => {
     // QUEUE 1: wiki_discovery (Wikidata sitelink discovery & language fan-out)
     // -------------------------------------------------------------------------
     if (targetQueue === "wiki_discovery") {
+      const valid = validateDiscoveryPayload(payload);
+      if (!valid.ok) {
+        const errMsg = `Broken queue element: ${valid.reason}`;
+        await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
+          p_queue_name: targetQueue,
+          p_msg_id: msgId,
+          p_error: errMsg,
+        });
+        results.push({ id: msgId, ok: false, error: errMsg });
+        await sendDiscordAdminNotification(
+          "Queue Discovery Failed",
+          `Discovery failed for **${mediaTitle}** (ID ${payload.tmdb_id}):\n\`\`\`\n${errMsg}\n\`\`\``,
+          { event, queue: "wiki_discovery" },
+        );
+        return { ok: true, processed: 1, results, queue: targetQueue };
+      }
       try {
         let wikiId: string | undefined = payload.wiki_id;
 
@@ -441,7 +462,24 @@ export default defineEventHandler(async (event) => {
     // QUEUE 2: wiki_check (Instant TOC fetch + regex check -> enqueues to extract)
     // -------------------------------------------------------------------------
     if (targetQueue === "wiki_check") {
-      const lang = payload.language || "fr";
+      const valid = validateCheckPayload(payload);
+      if (!valid.ok) {
+        const errMsg = `Broken queue element: ${valid.reason}`;
+        const lang = payload.language || "fr";
+        await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
+          p_queue_name: targetQueue,
+          p_msg_id: msgId,
+          p_error: errMsg,
+        });
+        results.push({ id: msgId, ok: false, changes: 0, error: errMsg });
+        await sendDiscordAdminNotification(
+          `Queue Check Failed [${lang.toUpperCase()}]`,
+          `Failed to check **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${lang.toUpperCase()}]):\n\`\`\`\n${errMsg}\n\`\`\``,
+          { event, queue: "wiki_check" },
+        );
+        return { ok: true, processed: 1, results, queue: targetQueue };
+      }
+      const lang = valid.value.language;
       try {
         let checkResult: any;
 
@@ -608,16 +646,27 @@ export default defineEventHandler(async (event) => {
     // QUEUE 3: wiki_extract (LLM Gemini extraction of verified sections)
     // -------------------------------------------------------------------------
     if (targetQueue === "wiki_extract") {
-      const lang = payload.language || "fr";
+      const valid = validateExtractPayload(payload);
+      if (!valid.ok) {
+        const errMsg = `Broken queue element: ${valid.reason}`;
+        const lang = String(payload.language || "fr").toUpperCase();
+        await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
+          p_queue_name: targetQueue,
+          p_msg_id: msgId,
+          p_error: errMsg,
+        });
+        results.push({ id: msgId, ok: false, changes: 0, error: errMsg });
+        await sendDiscordAdminNotification(
+          `Queue Item Failed [${lang}]`,
+          `Failed to extract **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${lang}]):\n\`\`\`\n${errMsg}\n\`\`\`\n• pipeline pipe3`,
+          { event, queue: "wiki_extract", color: 0xed4245 },
+        );
+        return { ok: true, processed: 1, results, queue: targetQueue };
+      }
+      const lang = valid.value.language;
       try {
-        const pageId = payload.page_id;
-        const sectionIndexes = payload.section_indexes;
-
-        if (!pageId || !sectionIndexes || !Array.isArray(sectionIndexes)) {
-          throw new Error(
-            "Missing page_id or section_indexes in wiki_extract payload.",
-          );
-        }
+        const pageId = valid.value.pageId;
+        const sectionIndexes = valid.value.sectionIndexes;
 
         let extractResult: any;
         if (payload.media_type === "video_game") {
