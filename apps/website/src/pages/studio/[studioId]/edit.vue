@@ -186,7 +186,7 @@
           <button
             type="submit"
             :disabled="isSaving || !form.name"
-            class="px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white font-medium rounded-xl transition-colors disabled:opacity-50 flex items-center gap-2"
+            class="px-6 py-3 theme-primary-bg theme-hover-primary-bg font-medium rounded-xl transition-colors disabled:opacity-50 flex items-center gap-2"
           >
             <span
               v-if="isSaving"

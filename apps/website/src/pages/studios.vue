@@ -25,7 +25,7 @@
       </div>
       <NuxtLink
         :to="localePath('/studio/new/edit')"
-        class="inline-flex items-center justify-center px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-medium rounded-xl transition-colors shadow-sm self-start md:self-auto"
+        class="inline-flex items-center justify-center px-4 py-2 theme-primary-bg theme-hover-primary-bg font-medium rounded-xl transition-colors shadow-sm self-start md:self-auto"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

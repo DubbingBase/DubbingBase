@@ -7,7 +7,7 @@
       <DialogContent
         class="fixed top-[20%] left-1/2 -translate-x-1/2 w-[90vw] max-w-md z-50 theme-surface border theme-border rounded-2xl shadow-2xl p-6 overflow-hidden focus:outline-none flex flex-col"
       >
-        <DialogTitle class="text-xl font-bold text-white mb-2">{{
+        <DialogTitle class="text-xl font-bold theme-text mb-2">{{
           t("report.title", "Signaler cette fiche")
         }}</DialogTitle>
         <DialogDescription class="theme-text-muted text-sm mb-4">
@@ -103,7 +103,7 @@
             </button>
             <button
               type="submit"
-              class="px-4 py-2 text-sm font-medium bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition disabled:opacity-50 flex items-center justify-center gap-2"
+              class="px-4 py-2 text-sm font-medium theme-primary-bg theme-hover-primary-bg rounded-lg transition disabled:opacity-50 flex items-center justify-center gap-2"
               :disabled="isSubmitting || !reason"
             >
               <Loader2Icon v-if="isSubmitting" class="w-4 h-4 animate-spin" />

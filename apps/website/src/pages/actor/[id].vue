@@ -108,7 +108,7 @@
                 class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border"
                 :class="
                   selectedLanguage === lang
-                    ? 'bg-cyan-600 text-white border-cyan-600'
+                    ? 'theme-primary-bg theme-primary-border'
                     : 'theme-input theme-text-secondary theme-border-subtle theme-border theme-hover-surface-muted'
                 "
               >

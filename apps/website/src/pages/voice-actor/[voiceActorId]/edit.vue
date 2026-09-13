@@ -349,7 +349,7 @@
     >
       <div class="flex justify-between items-center border-b theme-border pb-3">
         <div>
-          <h4 class="text-base font-bold text-white">
+          <h4 class="text-base font-bold theme-text">
             {{ $t("voiceActorEdit.linkedWorksFilmography") }}
           </h4>
           <p class="text-xs theme-text-muted">
@@ -416,7 +416,7 @@
                   }}
                 </span>
               </td>
-              <td class="px-4 py-3 font-medium text-white">
+              <td class="px-4 py-3 font-medium theme-text">
                 {{ work.character_name || work.suggestions || "Character" }}
               </td>
               <td class="px-4 py-3 text-xs theme-text-muted">
@@ -484,7 +484,7 @@
           class="flex justify-between items-center pb-4 border-b theme-border"
         >
           <div>
-            <h3 class="text-base font-bold text-white">
+            <h3 class="text-base font-bold theme-text">
               {{ $t("voiceActorEdit.linkNewWork") }}
             </h3>
             <p class="text-xs theme-text-muted mt-0.5">
@@ -533,7 +533,7 @@
               "
             >
               <span class="text-lg block mb-1">{{ mt.icon }}</span>
-              <span class="text-xs font-semibold text-white">{{
+              <span class="text-xs font-semibold theme-text">{{
                 mt.label
               }}</span>
               <span
@@ -636,7 +636,7 @@
                 <span v-else class="text-[8px]">N/A</span>
               </div>
               <div class="min-w-0 flex-1">
-                <p class="text-sm font-semibold text-white truncate">
+                <p class="text-sm font-semibold theme-text truncate">
                   {{ item.title || item.name }}
                 </p>
                 <p
@@ -710,7 +710,7 @@
               <span v-else class="text-[8px]">N/A</span>
             </div>
             <div>
-              <p class="text-sm font-bold text-white">
+              <p class="text-sm font-bold theme-text">
                 {{ selectedMedia?.title || selectedMedia?.name }}
               </p>
               <p class="text-[10px] theme-text-muted uppercase tracking-wider">
@@ -756,7 +756,7 @@
                 <span v-else class="text-[8px]">?</span>
               </div>
               <div class="min-w-0 flex-1">
-                <p class="text-xs font-semibold text-white truncate">
+                <p class="text-xs font-semibold theme-text truncate">
                   {{ castMember.name }}
                 </p>
                 <p class="text-[10px] theme-status-info-text truncate">
@@ -936,9 +936,9 @@
       class="fixed bottom-6 right-6 z-50 p-4 rounded-xl border shadow-2xl text-sm max-w-sm flex items-center space-x-3"
       :class="
         toast.type === 'success'
-          ? 'bg-green-950/40 border-green-900/60 text-green-200'
+          ? 'theme-status-success'
           : toast.type === 'error'
-            ? 'bg-red-950/40 border-red-900/60 text-red-200'
+            ? 'theme-status-danger'
             : 'theme-surface-overlay theme-border theme-text'
       "
     >

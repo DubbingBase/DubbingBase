@@ -113,7 +113,7 @@
       >
         <div
           v-if="toast.show"
-          class="fixed bottom-6 right-6 z-50 max-w-sm sm:max-w-md w-full theme-surface theme-bg text-white border rounded-2xl shadow-2xl p-4 flex flex-col gap-2.5 backdrop-blur-lg"
+          class="fixed bottom-6 right-6 z-50 max-w-sm sm:max-w-md w-full theme-surface theme-text border rounded-2xl shadow-2xl p-4 flex flex-col gap-2.5 backdrop-blur-lg"
           :class="toastBorderClass"
         >
           <div class="flex items-center justify-between gap-3">
@@ -186,13 +186,13 @@
           </div>
 
           <p
-            class="text-xs theme-text-secondary font-mono bg-black/60 p-2.5 rounded-xl break-all select-all border border-white/5"
+            class="text-xs theme-contrast font-mono p-2.5 rounded-xl break-all select-all border theme-border"
           >
             {{ toast.message }}
           </p>
 
           <div
-            class="flex items-center justify-between gap-2 pt-1 border-t border-white/5"
+            class="flex items-center justify-between gap-2 pt-1 border-t theme-border-subtle"
           >
             <span class="text-[11px] theme-text-muted">
               Media: {{ props.mediaType }} (ID: {{ props.mediaId }})

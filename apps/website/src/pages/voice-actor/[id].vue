@@ -216,6 +216,7 @@
                 <!-- Sort Dropdown -->
                 <select
                   v-model="sortMode"
+                  :aria-label="$t('common.sort')"
                   class="theme-input border theme-border-subtle theme-border theme-text text-sm rounded-lg theme-focus block p-2 cursor-pointer"
                 >
                   <option value="newest">

@@ -210,7 +210,7 @@
                 v-model="actor.date_of_birth"
                 type="date"
                 @change="handleCellEdit(actor, 'date_of_birth')"
-                class="w-36 theme-input border border-transparent theme-hover-border focus:border-[var(--app-color-focus)] rounded px-2 py-1 theme-text transition-colors [color-scheme:dark]"
+                class="w-36 theme-input border border-transparent theme-hover-border focus:border-[var(--app-color-focus)] rounded px-2 py-1 theme-text transition-colors"
               />
             </td>
             <td class="py-2 px-2">

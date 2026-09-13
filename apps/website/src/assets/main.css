@@ -219,6 +219,11 @@ body {
   color: var(--app-color-on-primary);
 }
 
+.theme-hover-primary-bg:hover {
+  background-color: var(--app-color-primary-hover);
+  color: var(--app-color-on-primary);
+}
+
 .theme-primary-text {
   color: var(--app-color-primary);
 }
@@ -269,6 +274,11 @@ body {
 
 .theme-hover-danger-text:hover {
   color: var(--app-color-danger-text);
+}
+
+.theme-hover-danger:hover {
+  background-color: var(--app-color-danger-border);
+  color: var(--app-color-contrast-text);
 }
 
 .theme-placeholder::placeholder {

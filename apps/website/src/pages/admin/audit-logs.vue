@@ -264,12 +264,12 @@
           </button>
           <button
             @click="confirmRevert"
-            class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
+            class="px-4 py-2 theme-status-danger theme-hover-danger rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
             :disabled="isReverting"
           >
             <svg
               v-if="isReverting"
-              class="animate-spin h-4 w-4 text-white"
+              class="animate-spin h-4 w-4 theme-status-danger-text"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"

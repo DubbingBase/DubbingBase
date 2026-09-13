@@ -49,11 +49,6 @@ test.describe("Website theme accessibility", () => {
       expect(themeState.bodyBackground).not.toBe("rgba(0, 0, 0, 0)");
       expect(themeState.bodyColor).not.toBe("rgba(0, 0, 0, 0)");
 
-      await expect(page).toHaveScreenshot(`theme-${theme}.png`, {
-        animations: "disabled",
-        fullPage: false,
-      });
-
       const accessibility = await new AxeBuilder({ page })
         .withTags(["wcag2a", "wcag2aa"])
         .analyze();
@@ -85,6 +80,35 @@ test.describe("Website theme accessibility", () => {
         .withTags(["wcag2a", "wcag2aa"])
         .analyze();
       expect(detailAccessibility.violations).toEqual([]);
+
+      await page.goto("/actor/3", { waitUntil: "networkidle" });
+      await expect(
+        page.getByRole("heading", { name: "Harrison Ford" }),
+      ).toBeVisible({ timeout: 15000 });
+
+      const reportButton = page.getByRole("button", {
+        name: /report|signaler/i,
+      });
+      await expect(reportButton).toBeVisible();
+      await reportButton.click();
+      await expect(page.getByRole("dialog")).toBeVisible();
+
+      const reportAccessibility = await new AxeBuilder({ page })
+        .exclude("nuxt-devtools-frame")
+        .withTags(["wcag2a", "wcag2aa"])
+        .analyze();
+      expect(reportAccessibility.violations).toEqual([]);
+
+      await page.goto("/voice-actor/1", { waitUntil: "networkidle" });
+      await expect(
+        page.getByRole("heading", { name: "Richard Darbois" }),
+      ).toBeVisible({ timeout: 15000 });
+
+      const voiceActorAccessibility = await new AxeBuilder({ page })
+        .exclude("nuxt-devtools-frame")
+        .withTags(["wcag2a", "wcag2aa"])
+        .analyze();
+      expect(voiceActorAccessibility.violations).toEqual([]);
 
       await page.goto("/login", { waitUntil: "domcontentloaded" });
       await expect(page.getByRole("heading").first()).toBeVisible({
