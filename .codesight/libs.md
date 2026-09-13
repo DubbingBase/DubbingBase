@@ -47,9 +47,16 @@
   - const CACHE_SCHEMA_VERSION
   - const CONTENT_TYPES
   - const CACHE_KEYS
-- `apps/website/server/utils/cache/http.ts` — function setPublicCacheHeaders: (event, profile) => void, type CacheProfile
+- `apps/website/server/utils/cache/http.ts`
+  - function getPublicCacheControl: (profile) => string
+  - function setNoCacheHeaders: (event) => void
+  - function setNoStoreHeaders: (event) => void
+  - function setPublicCacheHeaders: (event, profile) => void
+  - type CacheProfile
+  - const NO_STORE_CACHE_CONTROL
 - `apps/website/server/utils/cache/index.ts`
   - class SimpleCache
+  - class FreshCache
   - type CacheTTLPreset
   - const CACHE_TTL
 - `apps/website/server/utils/cache/wikipedia.ts`
@@ -58,8 +65,8 @@
   - function cleanHeadingText: (raw) => string
   - function isDubbingSectionHeading: (heading) => boolean
   - function selectDubbingSections: (sections) => Promise<string[]>
-  - function sitelinkKey
-  - _...3 more_
+  - function filterValidSectionIndexes: (sections, requested) => Promise<number[]>
+  - _...4 more_
 - `apps/website/server/utils/db/client.ts` — function useSupabaseAdmin: (event?) => SupabaseClient<Database>
 - `apps/website/server/utils/db/dubbing-project.ts` — function findOrCreateDubbingProject: (contentId, contentType, language) => Promise<number>
 - `apps/website/server/utils/db/queries.ts`
@@ -73,11 +80,11 @@
 - `apps/website/server/utils/index.ts`
   - function getCloudflareKv: (event?) => any
   - function useCache: (event?) => SimpleCache
-  - function useTmdbClient: () => TMDBClient
+  - function useFreshCache: () => SimpleCache
+  - function useTmdbClient: (cache?) => TMDBClient
   - function useTvdbClient: () => TVDBClient
-  - function useIgdbClient: () => IgdbClient
-  - function useOpenLibraryClient: () => OpenLibraryClient
-  - _...4 more_
+  - function useIgdbClient: (cache?) => IgdbClient
+  - _...5 more_
 - `apps/website/server/utils/llm.ts`
   - function areAllLlmQuotasExhausted: () => boolean
   - function getLlmQuotaCache: () => void
@@ -94,6 +101,13 @@
   - type QueueName
   - type DiscordNotificationCategory
 - `apps/website/server/utils/notifications/onesignal.ts` — function sendOneSignalNotification: (title, message, options?) => void, interface OneSignalOptions
+- `apps/website/server/utils/queue-payload.ts`
+  - function validateCheckPayload: (payload) => Validated<ValidQueueBase>
+  - function validateDiscoveryPayload: (payload) => Validated<ValidQueueBase>
+  - function validateExtractPayload: (payload) => Validated<ValidExtractPayload>
+  - interface ValidQueueBase
+  - interface ValidExtractPayload
+  - type QueueMediaType
 - `apps/website/server/utils/services/media-preparation.ts`
   - function checkMediaDubbingSections: (options) => Promise<CheckSectionsResult>
   - function checkGameDubbingSections: (options) => Promise<CheckSectionsResult>
@@ -161,7 +175,7 @@
   - type StudioDetailsResponse
 - `packages/shared-logic/src/composables/useToyData.ts` — function fetchToyData: (id, locale?) => Promise<ToyResponse | null>
 - `packages/shared-logic/src/composables/useVoiceActorData.ts`
-  - function fetchVoiceActorData: (id) => Promise<VoiceActorDataPayload | null>
+  - function fetchVoiceActorData: (id, lang?) => Promise<VoiceActorDataPayload | null>
   - function useVoiceActorData: (initialData?) => void
   - type VoiceActorResponse
   - type EnhancedWorkItem

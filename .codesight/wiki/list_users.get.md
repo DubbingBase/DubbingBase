@@ -2,11 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The List_users.get subsystem handles **1 routes** and touches: auth.
+The List_users.get subsystem handles **1 routes** and touches: auth, cache.
 
 ## Routes
 
-- `GET` `/api/list_users` [auth]
+- `GET` `/api/list_users` [auth, cache]
   `apps/website/server/api/list_users.get.ts`
 
 ## Source Files

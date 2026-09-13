@@ -2,11 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Media-queue.post subsystem handles **1 routes** and touches: auth, queue.
+The Media-queue.post subsystem handles **1 routes** and touches: auth, cache, queue.
 
 ## Routes
 
-- `POST` `/api/media-queue` [auth, queue]
+- `POST` `/api/media-queue` [auth, cache, queue]
   `apps/website/server/api/media-queue.post.ts`
 
 ## Source Files

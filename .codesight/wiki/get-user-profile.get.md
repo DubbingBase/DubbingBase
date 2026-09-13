@@ -2,11 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Get-user-profile.get subsystem handles **1 routes** and touches: auth.
+The Get-user-profile.get subsystem handles **1 routes** and touches: auth, cache.
 
 ## Routes
 
-- `GET` `/api/get-user-profile` [auth]
+- `GET` `/api/get-user-profile` [auth, cache]
   `apps/website/server/api/get-user-profile.get.ts`
 
 ## Related Models

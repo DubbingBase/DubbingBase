@@ -2,11 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Get-user-voice-actors.get subsystem handles **1 routes** and touches: auth.
+The Get-user-voice-actors.get subsystem handles **1 routes** and touches: auth, cache.
 
 ## Routes
 
-- `GET` `/api/get-user-voice-actors` [auth]
+- `GET` `/api/get-user-voice-actors` [auth, cache]
   `apps/website/server/api/get-user-voice-actors.get.ts`
 
 ## Related Models
