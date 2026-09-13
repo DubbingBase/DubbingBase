@@ -19,6 +19,7 @@
     "*.{ts,tsx,md}": "prettier --write"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@changesets/cli": "^2.31.1",
     "@playwright/test": "^1.62.1",
     "@types/node": "^26.1.2",

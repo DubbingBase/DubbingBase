@@ -11,13 +11,13 @@
       <template #metadata>
         <span
           v-if="audiobook.first_publish_year"
-          class="text-gray-900 dark:text-gray-100 font-semibold text-base md:text-lg bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg"
+          class="theme-text font-semibold text-base md:text-lg theme-surface-overlay backdrop-blur-md px-3 py-1 rounded-lg"
         >
           {{ audiobook.first_publish_year }}
         </span>
         <span
           v-if="authorsText"
-          class="text-gray-800 dark:text-gray-200 font-medium text-sm md:text-base bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg truncate max-w-[200px] md:max-w-xs"
+          class="theme-text font-medium text-sm md:text-base theme-surface-overlay backdrop-blur-md px-3 py-1 rounded-lg truncate max-w-[200px] md:max-w-xs"
           :title="authorsText"
         >
           {{ authorsText }}
@@ -28,8 +28,9 @@
             :href="`https://openlibrary.org/works/OL${audiobook.id}W`"
             target="_blank"
             rel="noopener noreferrer"
-            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg bg-white/40 dark:bg-black/40 text-gray-800 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-black/60 transition-colors backdrop-blur-md uppercase tracking-wider"
-          >{{ $t('audiobook.openLibrary') }}<ExternalLinkIcon class="w-3 h-3 opacity-70" />
+            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg theme-surface-overlay theme-text theme-hover-surface-muted transition-colors backdrop-blur-md uppercase tracking-wider"
+            >{{ $t("audiobook.openLibrary")
+            }}<ExternalLinkIcon class="w-3 h-3 opacity-70" />
           </a>
         </div>
       </template>
@@ -40,11 +41,11 @@
             v-for="project in dubbingProjects"
             :key="project.id"
             :to="{ query: { dub: project.id } }"
-            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-gray-200 dark:border-[#2a2a2a] flex items-center gap-1.5"
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border theme-border-subtle theme-border flex items-center gap-1.5"
             :class="
               activeDubId === project.id
-                ? 'bg-cyan-600 dark:bg-[#00E5FF] text-white dark:text-black border-cyan-600 dark:border-[#00E5FF]'
-                : 'bg-white dark:bg-[#1d1d1d] text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#2a2a2a]'
+                ? 'theme-primary-bg theme-primary-border'
+                : 'theme-surface theme-text-secondary theme-hover-surface-muted'
             "
           >
             {{ getDisplayLanguage(project.language) }}
@@ -53,15 +54,20 @@
               :class="
                 activeDubId === project.id
                   ? 'bg-black/15 text-black'
-                  : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 dark:text-gray-400'
+                  : 'theme-surface-raised theme-surface-muted theme-text-muted'
               "
             >
               {{ projectVoiceActorCount(project) }}
             </span>
           </NuxtLink>
         </div>
-        <div v-else class="text-sm text-gray-500 font-medium">
-          {{ $t("details.noDubbingProjects", "Aucun projet de doublage disponible") }}
+        <div v-else class="text-sm theme-text-muted font-medium">
+          {{
+            $t(
+              "details.noDubbingProjects",
+              "Aucun projet de doublage disponible",
+            )
+          }}
         </div>
       </template>
 
@@ -69,35 +75,41 @@
         <template v-if="activeDubProject?.studio_data">
           <NuxtLink
             :to="localePath(`/studio/${activeDubProject.studio_data.id}`)"
-            class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-[#2a2a2a] hover:border-cyan-500 transition-colors group bg-gray-50 dark:bg-[#1d1d1d]"
+            class="flex items-center gap-2 px-3 py-1.5 rounded-lg border theme-border-subtle theme-border theme-hover-primary-border transition-colors group theme-surface-raised theme-surface"
             title="Studio d'enregistrement"
           >
             <div
-              class="w-6 h-6 rounded flex items-center justify-center overflow-hidden shrink-0 bg-white dark:bg-[#2a2a2a]"
+              class="w-6 h-6 rounded flex items-center justify-center overflow-hidden shrink-0 theme-surface-muted"
             >
               <img
                 v-if="activeDubProject.studio_data.logo_url"
                 :src="activeDubProject.studio_data.logo_url"
                 class="w-full h-full object-contain p-0.5"
               />
-              <span v-else class="font-bold text-xs text-gray-400">
+              <span v-else class="font-bold text-xs theme-text-muted">
                 {{ activeDubProject.studio_data.name?.charAt(0) || "" }}
               </span>
             </div>
             <span
-              class="font-medium text-xs group-hover:text-cyan-500 transition-colors truncate max-w-[120px]"
+              class="font-medium text-xs theme-hover-primary-text transition-colors truncate max-w-[120px]"
             >
               {{ activeDubProject.studio_data.name }}
             </span>
           </NuxtLink>
-          <div class="h-6 w-px bg-gray-200 dark:bg-[#2a2a2a]"></div>
+          <div class="h-6 w-px theme-surface-muted"></div>
         </template>
 
         <ClientOnly>
           <NuxtLink
             v-if="isAdmin && audiobook?.id"
-            :to="localePath(activeDubId ? `/audiobook/${audiobook.id}/projects/${activeDubId}/edit` : `/audiobook/${audiobook.id}/projects/new`)"
-            class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-medium"
+            :to="
+              localePath(
+                activeDubId
+                  ? `/audiobook/${audiobook.id}/projects/${activeDubId}/edit`
+                  : `/audiobook/${audiobook.id}/projects/new`,
+              )
+            "
+            class="text-sm theme-primary-text theme-hover-primary-text transition-colors flex items-center gap-1.5 font-medium"
           >
             <svg
               class="w-4 h-4"
@@ -112,7 +124,7 @@
                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
               />
             </svg>
-            <span class="hidden sm:inline">{{ $t('common.edit') }}</span>
+            <span class="hidden sm:inline">{{ $t("common.edit") }}</span>
           </NuxtLink>
         </ClientOnly>
 
@@ -124,7 +136,7 @@
 
         <button
           @click="isReportModalOpen = true"
-          class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1.5"
+          class="text-sm theme-text-muted theme-hover-danger-text transition-colors flex items-center gap-1.5"
           title="Signaler cette fiche"
         >
           <svg
@@ -153,21 +165,23 @@
               {{ $t("details.synopsis", "Synopsis / Description") }}
             </h2>
             <p
-              class="text-gray-700 dark:text-gray-300 leading-relaxed text-lg mb-8 whitespace-pre-line"
+              class="theme-text-secondary leading-relaxed text-lg mb-8 whitespace-pre-line"
             >
-              {{ audiobook.description ||
+              {{
+                audiobook.description ||
                 $t(
                   "details.noSynopsis",
                   "Aucune description disponible pour ce livre.",
-                ) }}
+                )
+              }}
             </p>
 
             <div
-              class="grid grid-cols-2 md:grid-cols-4 gap-6 bg-white dark:bg-[#1d1d1d] p-6 rounded-xl border border-gray-200 dark:border-[#2a2a2a] shadow-sm dark:shadow-none"
+              class="grid grid-cols-2 md:grid-cols-4 gap-6 theme-surface p-6 rounded-xl border theme-border-subtle theme-border shadow-sm"
             >
               <div>
                 <h3
-                  class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2"
+                  class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2"
                 >
                   {{ $t("audiobook.author", "Auteur(s)") }}
                 </h3>
@@ -177,17 +191,21 @@
               </div>
               <div>
                 <h3
-                  class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2"
+                  class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2"
                 >
                   {{ $t("audiobook.publishYear", "Publication") }}
                 </h3>
                 <p class="font-medium text-sm">
-                  {{ audiobook.first_publish_year || audiobook.first_publish_date || "-" }}
+                  {{
+                    audiobook.first_publish_year ||
+                    audiobook.first_publish_date ||
+                    "-"
+                  }}
                 </p>
               </div>
               <div v-if="audiobook.isbn">
                 <h3
-                  class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2"
+                  class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2"
                 >
                   {{ $t("audiobook.isbn", "ISBN") }}
                 </h3>
@@ -200,13 +218,15 @@
                 class="col-span-2 md:col-span-1"
               >
                 <h3
-                  class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2"
-                >{{ $t('audiobook.subjects') }}</h3>
+                  class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2"
+                >
+                  {{ $t("audiobook.subjects") }}
+                </h3>
                 <div class="flex flex-wrap gap-1.5">
                   <span
                     v-for="(sub, sIdx) in audiobook.subjects.slice(0, 4)"
                     :key="sIdx"
-                    class="px-2 py-0.5 bg-gray-100 dark:bg-[#2a2a2a] text-xs font-medium rounded-md text-gray-700 dark:text-gray-300"
+                    class="px-2 py-0.5 theme-surface-raised theme-surface-muted text-xs font-medium rounded-md theme-text-secondary"
                   >
                     {{ sub }}
                   </span>
@@ -226,18 +246,27 @@
                 <h2 class="text-2xl font-bold">
                   {{ $t("details.castAndCrew", "Voix & Narration") }}
                 </h2>
-                <div class="text-gray-500 dark:text-gray-400 text-sm mt-1">{{ $t('audiobook.castCount', { shown: filteredCast.length, total: formattedCast.length }) }}</div>
+                <div class="theme-text-muted text-sm mt-1">
+                  {{
+                    $t("audiobook.castCount", {
+                      shown: filteredCast.length,
+                      total: formattedCast.length,
+                    })
+                  }}
+                </div>
               </div>
 
               <div class="relative w-full sm:w-64">
                 <SearchIcon
-                  class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+                  class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 theme-text-muted"
                 />
                 <input
                   v-model="searchInput"
                   type="search"
-                  :placeholder="$t('search.placeholder', 'Rechercher un comédien...')"
-                  class="w-full bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-[#00E5FF] transition-all text-gray-900 dark:text-white"
+                  :placeholder="
+                    $t('search.placeholder', 'Rechercher un comédien...')
+                  "
+                  class="w-full theme-input border theme-border-subtle theme-border rounded-xl pl-10 pr-4 py-2 text-sm theme-focus transition-all theme-text"
                 />
               </div>
             </div>
@@ -245,9 +274,14 @@
 
           <div
             v-if="filteredCast.length === 0"
-            class="text-gray-500 text-center py-12 bg-white dark:bg-[#161616] rounded-2xl border border-gray-200 dark:border-[#2a2a2a]"
+            class="theme-text-muted text-center py-12 theme-input rounded-2xl border theme-border-subtle theme-border"
           >
-            {{ $t("details.noCast", "Aucun narrateur ou comédien renseigné pour ce projet.") }}
+            {{
+              $t(
+                "details.noCast",
+                "Aucun narrateur ou comédien renseigné pour ce projet.",
+              )
+            }}
           </div>
 
           <div
@@ -257,13 +291,13 @@
             <div
               v-for="item in visibleCast"
               :key="item.work_id"
-              class="bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl p-4 shadow-sm transition-colors hover:border-gray-300 dark:hover:border-gray-700"
+              class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border"
             >
               <div class="flex flex-col gap-4">
                 <div class="flex items-center gap-4">
                   <NuxtLink
                     :to="localePath(`/voice-actor/${item.voice_actor_id}`)"
-                    class="w-16 h-16 rounded-xl overflow-hidden bg-gray-200 dark:bg-[#222] flex-shrink-0"
+                    class="w-16 h-16 rounded-xl overflow-hidden theme-surface-muted flex-shrink-0"
                   >
                     <NuxtImg
                       format="webp"
@@ -276,7 +310,7 @@
                     />
                     <div
                       v-else
-                      class="w-full h-full flex items-center justify-center text-lg font-bold text-gray-400 bg-gray-300 dark:bg-gray-800 uppercase"
+                      class="w-full h-full flex items-center justify-center text-lg font-bold theme-text-muted theme-surface-muted uppercase"
                     >
                       {{ item.firstname?.[0] }}{{ item.lastname?.[0] }}
                     </div>
@@ -285,23 +319,29 @@
                   <div class="flex flex-col min-w-0 flex-1">
                     <NuxtLink
                       :to="localePath(`/voice-actor/${item.voice_actor_id}`)"
-                      class="font-bold text-base text-gray-900 dark:text-white hover:text-cyan-500 transition-colors truncate block"
+                      class="font-bold text-base theme-text theme-hover-primary-text transition-colors truncate block"
                     >
                       {{ item.firstname }} {{ item.lastname }}
                     </NuxtLink>
                     <span
-                      class="text-xs text-gray-500 dark:text-gray-400 font-medium truncate block mt-0.5"
+                      class="text-xs theme-text-muted font-medium truncate block mt-0.5"
                     >
-                      {{ item.character_name || item.performance || $t("audiobook.narrator", "Narrateur") }}
+                      {{
+                        item.character_name ||
+                        item.performance ||
+                        $t("audiobook.narrator", "Narrateur")
+                      }}
                     </span>
                     <div v-if="item.performance" class="mt-1">
                       <span
-                        class="text-[10px] px-2 py-0.5 bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-300 rounded-md font-medium border border-gray-200 dark:border-gray-700"
+                        class="text-[10px] px-2 py-0.5 theme-surface-raised theme-surface-muted theme-text-secondary rounded-md font-medium border theme-border-subtle theme-border"
                       >
                         {{ item.performance }}
                       </span>
                     </div>
-                    <div v-if="item.note" class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ item.note }}</div>
+                    <div v-if="item.note" class="text-xs theme-text-muted mt-1">
+                      {{ item.note }}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -316,11 +356,11 @@
           >
             <button
               @click="loadMore"
-              class="px-5 py-2 bg-white dark:bg-[#1d1d1d] hover:bg-gray-100 dark:hover:bg-[#2a2a2a] text-sm font-medium rounded-xl text-gray-700 dark:text-gray-200 transition-all border border-gray-200 dark:border-[#2a2a2a] shadow-sm cursor-pointer"
+              class="px-5 py-2 theme-surface theme-hover-surface-muted text-sm font-medium rounded-xl theme-text-secondary theme-text transition-all border theme-border-subtle theme-border shadow-sm cursor-pointer"
             >
               {{ $t("common.loadMore", "Charger plus") }}
             </button>
-            <span class="text-xs text-gray-400">
+            <span class="text-xs theme-text-muted">
               {{ visibleCast.length }} / {{ filteredCast.length }}
             </span>
           </div>
@@ -328,7 +368,9 @@
       </template>
     </MediaDetailsLayout>
 
-    <div v-else class="text-center py-20 text-gray-500 min-h-screen">{{ $t('audiobook.notFound') }}</div>
+    <div v-else class="text-center py-20 theme-text-muted min-h-screen">
+      {{ $t("audiobook.notFound") }}
+    </div>
 
     <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
   </div>
@@ -380,7 +422,9 @@ const { data, pending } = await useAsyncData(
   },
 );
 
-const audiobook = computed<Audiobook | null>(() => data.value?.audiobook || null);
+const audiobook = computed<Audiobook | null>(
+  () => data.value?.audiobook || null,
+);
 const dubbingProjects = computed(() => {
   return (data.value?.dubbingProjects || []).filter((p: any) =>
     (p.works || []).some((w: any) => w.voice_actor),
@@ -454,7 +498,8 @@ interface FormattedCastItem {
 
 const formattedCast = computed<FormattedCastItem[]>(() => {
   if (!activeDubProject.value) return [];
-  const works = activeDubProject.value.works || activeDubProject.value.work || [];
+  const works =
+    activeDubProject.value.works || activeDubProject.value.work || [];
   return works.map((w: any) => ({
     work_id: w.id,
     voice_actor_id: w.voice_actors?.id || w.voice_actor_id,

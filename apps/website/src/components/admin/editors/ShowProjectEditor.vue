@@ -2,18 +2,18 @@
   <div class="admin-project-editor max-w-6xl mx-auto space-y-6">
     <!-- Header -->
     <div
-      class="bg-gray-900 p-6 rounded-2xl border border-gray-800 flex justify-between items-center shadow-xl"
+      class="theme-surface-overlay p-6 rounded-2xl border theme-border flex justify-between items-center shadow-xl"
     >
       <div>
-        <h3 class="text-xl font-bold text-white flex items-center gap-2">
-          <TvIcon class="w-6 h-6 text-cyan-400" />
+        <h3 class="text-xl font-bold theme-text flex items-center gap-2">
+          <TvIcon class="w-6 h-6 theme-status-info-text" />
           {{
             isEditMode
               ? $t("projectEditor.editShowProject")
               : $t("projectEditor.createShowProject")
           }}
         </h3>
-        <p class="text-sm text-gray-400 mt-1">
+        <p class="text-sm theme-text-muted mt-1">
           {{
             isEditMode
               ? `Updating dubbing project ID #${projectIdParam}`
@@ -23,7 +23,7 @@
       </div>
       <NuxtLink
         :to="tmdbShowId ? localePath(`/show/${tmdbShowId}`) : localePath('/')"
-        class="text-xs font-semibold px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-xl border border-gray-700 transition-colors flex items-center space-x-2"
+        class="text-xs font-semibold px-4 py-2.5 theme-surface-muted theme-hover-surface-muted theme-text-secondary theme-hover-text rounded-xl border theme-border transition-colors flex items-center space-x-2"
       >
         <span>{{
           tmdbShowId
@@ -36,7 +36,7 @@
     <!-- Navigation Tabs -->
     <div
       v-if="tmdbShowId"
-      class="flex flex-wrap gap-2 pb-2 border-b border-gray-800"
+      class="flex flex-wrap gap-2 pb-2 border-b theme-border"
     >
       <NuxtLink
         v-for="project in showDubbingProjects"
@@ -45,8 +45,8 @@
         class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border"
         :class="
           project.id === Number(projectIdParam)
-            ? 'bg-blue-600 text-white border-blue-600'
-            : 'bg-gray-900 text-gray-300 border-gray-800 hover:bg-gray-800'
+            ? 'theme-primary-bg theme-primary-border'
+            : 'theme-surface-overlay theme-text-secondary theme-border theme-hover-surface-muted'
         "
       >
         {{ getDisplayLanguage(project.language) }}
@@ -59,8 +59,8 @@
         class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-dashed"
         :class="
           projectIdParam === 'new'
-            ? 'bg-cyan-900/50 text-cyan-400 border-cyan-800'
-            : 'bg-gray-900 text-gray-400 border-gray-700 hover:bg-gray-800 hover:text-gray-300'
+            ? 'theme-status-info theme-status-info-text border'
+            : 'theme-surface-overlay theme-text-muted theme-border theme-hover-surface-muted theme-hover-text'
         "
         >{{ $t("projectEditor.addLanguage") }}</NuxtLink
       >
@@ -70,16 +70,16 @@
     <!-- Loading overlay -->
     <div
       v-if="isLoading"
-      class="flex flex-col items-center justify-center py-24 gap-4 text-gray-400"
+      class="flex flex-col items-center justify-center py-24 gap-4 theme-text-muted"
     >
-      <Loader2Icon class="w-8 h-8 animate-spin text-cyan-400" />
+      <Loader2Icon class="w-8 h-8 animate-spin theme-status-info-text" />
       <span class="text-sm">{{ $t("projectEditor.loadingData") }}</span>
     </div>
 
     <div
       v-else-if="loadError"
       role="alert"
-      class="rounded-xl border border-red-800 bg-red-950/40 p-6 text-sm text-red-200"
+      class="rounded-xl border border-[var(--app-color-danger-border)] theme-status-danger p-6 text-sm theme-status-danger-text"
     >
       {{ loadError }}
     </div>
@@ -88,13 +88,13 @@
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Media Metadata Card (Left Column) -->
         <div
-          class="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-5 h-fit shadow-xl"
+          class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-5 h-fit shadow-xl"
         >
           <h4
-            class="text-sm font-bold text-gray-200 uppercase tracking-wider border-b border-gray-800 pb-3 flex items-center justify-between"
+            class="text-sm font-bold theme-text uppercase tracking-wider border-b theme-border pb-3 flex items-center justify-between"
           >
             <span>{{ $t("admin.movieEditor.mediaInfo") }}</span>
-            <span class="text-xs text-cyan-400 font-normal">{{
+            <span class="text-xs theme-status-info-text font-normal">{{
               $t("admin.movieEditor.tmdbLinked")
             }}</span>
           </h4>
@@ -102,7 +102,7 @@
           <!-- Poster Preview -->
           <div class="flex justify-center">
             <div
-              class="relative h-48 w-32 rounded-xl overflow-hidden border border-gray-800 bg-gray-950 flex items-center justify-center text-gray-500 shadow-md"
+              class="relative h-48 w-32 rounded-xl overflow-hidden border theme-border theme-input flex items-center justify-center theme-text-muted shadow-md"
             >
               <NuxtImg
                 format="webp"
@@ -111,7 +111,7 @@
                 class="h-full w-full object-cover"
                 alt="Poster"
               />
-              <div v-else class="text-center p-3 text-gray-600">
+              <div v-else class="text-center p-3 theme-text-secondary">
                 <ImageIcon class="h-10 w-10 mx-auto mb-1 opacity-50" />
                 <span class="text-[10px]">{{
                   $t("projectEditor.noPoster")
@@ -123,7 +123,7 @@
           <!-- Content ID / TMDB ID -->
           <div class="space-y-1">
             <label
-              class="text-xs font-semibold text-gray-400 uppercase tracking-wider"
+              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
               >{{ $t("projectEditor.tmdbShowId") }}</label
             >
             <div class="flex space-x-2">
@@ -133,7 +133,7 @@
                 required
                 :disabled="!!tmdbShowId"
                 placeholder="e.g. 1020"
-                class="w-full px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
           </div>
@@ -141,7 +141,7 @@
           <!-- Media Name / Title -->
           <div class="space-y-1">
             <label
-              class="text-xs font-semibold text-gray-400 uppercase tracking-wider"
+              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
               >{{ $t("admin.movieEditor.mediaTitle") }}</label
             >
             <input
@@ -149,14 +149,14 @@
               type="text"
               required
               readonly
-              class="w-full px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm opacity-50 cursor-not-allowed"
+              class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm opacity-50 cursor-not-allowed"
             />
           </div>
 
           <!-- Language -->
           <div class="space-y-1">
             <label
-              class="text-xs font-semibold text-gray-400 uppercase tracking-wider"
+              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
               >{{ $t("projectEditor.dubbingLanguage") }}</label
             >
             <AdminLanguageSelect v-model="language" required />
@@ -165,12 +165,12 @@
           <!-- Status -->
           <div class="space-y-1">
             <label
-              class="text-xs font-semibold text-gray-400 uppercase tracking-wider"
+              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
               >{{ $t("common.status") }}</label
             >
             <select
               v-model="status"
-              class="w-full px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm"
+              class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
             >
               <option value="validated">
                 {{ $t("admin.movieEditor.validated") }}
@@ -185,13 +185,13 @@
 
         <!-- Technical Crew Form (Right 2 Columns) -->
         <div
-          class="lg:col-span-2 bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-6 shadow-xl"
+          class="lg:col-span-2 theme-surface-overlay border theme-border rounded-2xl p-6 space-y-6 shadow-xl"
         >
           <h4
-            class="text-sm font-bold text-gray-200 uppercase tracking-wider border-b border-gray-800 pb-3 flex items-center justify-between"
+            class="text-sm font-bold theme-text uppercase tracking-wider border-b theme-border pb-3 flex items-center justify-between"
           >
             <span>{{ $t("admin.movieEditor.technicalDubbingTeam") }}</span>
-            <span class="text-xs text-gray-400">{{
+            <span class="text-xs theme-text-muted">{{
               $t("admin.movieEditor.crewAttributes")
             }}</span>
           </h4>
@@ -200,7 +200,7 @@
             <!-- Studio -->
             <div class="space-y-1">
               <label
-                class="text-xs font-semibold text-gray-400 uppercase tracking-wider"
+                class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
                 >{{ $t("details.dubbingStudio") }}</label
               >
               <AdminAsyncAutocomplete
@@ -224,7 +224,7 @@
             <!-- Artistic Director -->
             <div class="space-y-1">
               <label
-                class="text-xs font-semibold text-gray-400 uppercase tracking-wider"
+                class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
                 >{{ $t("admin.movieEditor.artisticDirector") }}</label
               >
               <AdminAsyncAutocomplete
@@ -248,7 +248,7 @@
             <!-- Adaptation -->
             <div class="space-y-1">
               <label
-                class="text-xs font-semibold text-gray-400 uppercase tracking-wider"
+                class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
                 >{{ $t("admin.movieEditor.adaptation") }}</label
               >
               <AdminAsyncAutocomplete
@@ -269,7 +269,7 @@
             <!-- Recording -->
             <div class="space-y-1">
               <label
-                class="text-xs font-semibold text-gray-400 uppercase tracking-wider"
+                class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
                 >{{ $t("admin.movieEditor.soundRecording") }}</label
               >
               <AdminAsyncAutocomplete
@@ -290,7 +290,7 @@
             <!-- Editing -->
             <div class="space-y-1">
               <label
-                class="text-xs font-semibold text-gray-400 uppercase tracking-wider"
+                class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
                 >{{ $t("admin.movieEditor.soundEditing") }}</label
               >
               <AdminAsyncAutocomplete
@@ -311,7 +311,7 @@
             <!-- Mixing -->
             <div class="space-y-1">
               <label
-                class="text-xs font-semibold text-gray-400 uppercase tracking-wider"
+                class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
                 >{{ $t("dubbing.mixing") }}</label
               >
               <AdminAsyncAutocomplete
@@ -332,7 +332,7 @@
             <!-- Project Manager -->
             <div class="space-y-1">
               <label
-                class="text-xs font-semibold text-gray-400 uppercase tracking-wider"
+                class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
                 >{{ $t("admin.movieEditor.projectManager") }}</label
               >
               <AdminAsyncAutocomplete
@@ -356,7 +356,7 @@
             <!-- Creative Supervision -->
             <div class="space-y-1">
               <label
-                class="text-xs font-semibold text-gray-400 uppercase tracking-wider"
+                class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
                 >{{ $t("admin.movieEditor.creativeSupervision") }}</label
               >
               <AdminAsyncAutocomplete
@@ -382,18 +382,18 @@
 
       <!-- Cast / Voice Actors List -->
       <div
-        class="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-6 shadow-xl"
+        class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-6 shadow-xl"
       >
         <div
-          class="flex justify-between items-center border-b border-gray-800 pb-3"
+          class="flex justify-between items-center border-b theme-border pb-3"
         >
-          <h4 class="text-sm font-bold text-gray-200 uppercase tracking-wider">
+          <h4 class="text-sm font-bold theme-text uppercase tracking-wider">
             {{ $t("projectEditor.voiceCast") }}
           </h4>
           <button
             type="button"
             @click="addCastRow"
-            class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl flex items-center transition-colors"
+            class="px-4 py-2 theme-primary-bg hover:bg-[var(--app-color-primary-hover)] text-xs font-semibold rounded-xl flex items-center transition-colors"
           >
             {{ $t("projectEditor.addVoiceActor") }}
           </button>
@@ -403,12 +403,12 @@
           <div
             v-for="(row, index) in castRows"
             :key="index"
-            class="p-4 bg-gray-950 border border-gray-800 rounded-xl relative group"
+            class="p-4 theme-input border theme-border rounded-xl relative group"
           >
             <button
               type="button"
               @click="removeCastRow(index)"
-              class="absolute -top-3 -right-3 bg-red-900/80 hover:bg-red-800 text-red-200 border border-red-800 p-1.5 rounded-full transition-colors opacity-0 group-hover:opacity-100 shadow-lg z-10"
+              class="absolute -top-3 -right-3 theme-status-danger hover:bg-[var(--app-color-danger-bg)] border p-1.5 rounded-full transition-colors opacity-0 group-hover:opacity-100 shadow-lg z-10"
               title="Remove row"
             >
               <XIcon class="w-4 h-4" />
@@ -418,7 +418,7 @@
               <!-- Character fields -->
               <div class="md:col-span-12 space-y-1">
                 <label
-                  class="text-xs font-semibold text-gray-400 uppercase tracking-wider"
+                  class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
                   >{{ $t("projectEditor.originalActorCharacter") }}</label
                 >
                 <AdminAsyncAutocomplete
@@ -441,7 +441,7 @@
               <!-- Voice Actor -->
               <div class="md:col-span-8 space-y-1">
                 <label
-                  class="text-xs font-semibold text-gray-400 uppercase tracking-wider"
+                  class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
                   >{{ $t("projectEditor.voiceActor") }}</label
                 >
                 <AdminAsyncAutocomplete
@@ -465,12 +465,12 @@
               <!-- Performance -->
               <div class="md:col-span-4 space-y-1">
                 <label
-                  class="text-xs font-semibold text-gray-400 uppercase tracking-wider"
+                  class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
                   >{{ $t("projectEditor.performanceType") }}</label
                 >
                 <select
                   v-model="row.performance"
-                  class="w-full px-4 py-2 bg-gray-900 border border-gray-800 rounded-lg text-white focus:ring-2 focus:ring-blue-500 text-sm"
+                  class="w-full px-4 py-2 theme-surface-overlay border theme-border rounded-lg theme-text focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
                 >
                   <option value="dialogues">
                     {{ $t("admin.movieEditor.dialogues") }}
@@ -491,17 +491,24 @@
               </div>
 
               <div class="md:col-span-4 space-y-1">
-                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $t("projectEditor.castNote") }}</label>
-                <input v-model="row.note" type="text" class="w-full px-4 py-2 bg-gray-900 border border-gray-800 rounded-lg text-white focus:ring-2 focus:ring-blue-500 text-sm" />
+                <label
+                  class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
+                  >{{ $t("projectEditor.castNote") }}</label
+                >
+                <input
+                  v-model="row.note"
+                  type="text"
+                  class="w-full px-4 py-2 theme-surface-overlay border theme-border rounded-lg theme-text focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
+                />
               </div>
 
               <div class="md:col-span-12 flex items-center space-x-2">
                 <input
                   type="checkbox"
                   v-model="row.highlight"
-                  class="w-4 h-4 bg-gray-900 border-gray-800 rounded text-blue-500 focus:ring-blue-500"
+                  class="w-4 h-4 theme-surface-overlay theme-border rounded text-blue-500 focus:ring-[var(--app-color-focus)]"
                 />
-                <label class="text-xs text-gray-300">{{
+                <label class="text-xs theme-text-secondary">{{
                   $t("projectEditor.highlightCharacter")
                 }}</label>
               </div>
@@ -510,7 +517,7 @@
 
           <div
             v-if="castRows.length === 0"
-            class="text-center py-10 bg-gray-950 border border-dashed border-gray-800 rounded-xl text-gray-500"
+            class="text-center py-10 theme-input border border-dashed theme-border rounded-xl theme-text-muted"
           >
             {{ $t("projectEditor.noCastMembers") }}
           </div>
@@ -522,7 +529,7 @@
         <button
           type="submit"
           :disabled="isSaving"
-          class="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl flex items-center space-x-2 transition-colors disabled:opacity-50"
+          class="px-8 py-3 theme-primary-bg hover:bg-[var(--app-color-primary-hover)] font-bold rounded-xl flex items-center space-x-2 transition-colors disabled:opacity-50"
         >
           <Loader2Icon v-if="isSaving" class="w-5 h-5 animate-spin" />
           <span v-else>{{ $t("projectEditor.saveShowProject") }}</span>
@@ -537,9 +544,9 @@
           class="fixed inset-0 bg-black/60 z-[110] backdrop-blur-sm"
         />
         <DialogContent
-          class="fixed top-1/2 left-1/2 -trangray-x-1/2 -trangray-y-1/2 bg-gray-900 border border-gray-700 rounded-2xl p-6 shadow-2xl z-[120] w-[400px]"
+          class="fixed top-1/2 left-1/2 -trangray-x-1/2 -trangray-y-1/2 theme-surface-overlay border theme-border rounded-2xl p-6 shadow-2xl z-[120] w-[400px]"
         >
-          <DialogTitle class="text-lg font-bold text-white mb-4">{{
+          <DialogTitle class="text-lg font-bold theme-text mb-4">{{
             $t("projectEditor.createNewStudio")
           }}</DialogTitle>
           <VisuallyHidden
@@ -551,19 +558,19 @@
             v-model="newStudioName"
             type="text"
             placeholder="Studio Name"
-            class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-lg text-white mb-4"
+            class="w-full px-4 py-2 theme-input border theme-border rounded-lg theme-text mb-4"
           />
           <div class="flex justify-end gap-2">
             <button
               @click="isCreateStudioOpen = false"
-              class="px-4 py-2 text-gray-300 hover:text-white"
+              class="px-4 py-2 theme-text-secondary theme-hover-text"
             >
               {{ $t("common.cancel") }}
             </button>
             <button
               @click="createStudio"
               :disabled="!newStudioName || isCreatingStudio"
-              class="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50 flex items-center gap-2"
+              class="px-4 py-2 theme-primary-bg theme-primary-border rounded-lg disabled:opacity-50 flex items-center gap-2"
             >
               <Loader2Icon
                 v-if="isCreatingStudio"
@@ -583,9 +590,9 @@
           class="fixed inset-0 bg-black/60 z-[110] backdrop-blur-sm"
         />
         <DialogContent
-          class="fixed top-1/2 left-1/2 -trangray-x-1/2 -trangray-y-1/2 bg-gray-900 border border-gray-700 rounded-2xl p-6 shadow-2xl z-[120] w-[400px]"
+          class="fixed top-1/2 left-1/2 -trangray-x-1/2 -trangray-y-1/2 theme-surface-overlay border theme-border rounded-2xl p-6 shadow-2xl z-[120] w-[400px]"
         >
-          <DialogTitle class="text-lg font-bold text-white mb-4">{{
+          <DialogTitle class="text-lg font-bold theme-text mb-4">{{
             $t("projectEditor.createNewVoiceActor")
           }}</DialogTitle>
           <VisuallyHidden
@@ -598,26 +605,26 @@
               v-model="newVaFirstname"
               type="text"
               placeholder="First Name"
-              class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-lg text-white"
+              class="w-full px-4 py-2 theme-input border theme-border rounded-lg theme-text"
             />
             <input
               v-model="newVaLastname"
               type="text"
               placeholder="Last Name"
-              class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-lg text-white"
+              class="w-full px-4 py-2 theme-input border theme-border rounded-lg theme-text"
             />
           </div>
           <div class="flex justify-end gap-2">
             <button
               @click="isCreateVaOpen = false"
-              class="px-4 py-2 text-gray-300 hover:text-white"
+              class="px-4 py-2 theme-text-secondary theme-hover-text"
             >
               {{ $t("common.cancel") }}
             </button>
             <button
               @click="createVoiceActor"
               :disabled="!newVaFirstname || isCreatingVa"
-              class="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50 flex items-center gap-2"
+              class="px-4 py-2 theme-primary-bg theme-primary-border rounded-lg disabled:opacity-50 flex items-center gap-2"
             >
               <Loader2Icon v-if="isCreatingVa" class="w-4 h-4 animate-spin" />
               <span>{{ $t("common.create") }}</span>
@@ -630,14 +637,14 @@
     <!-- Toast -->
     <div
       v-if="toast.show"
-      class="fixed bottom-6 right-6 z-50 p-4 rounded-xl border shadow-2xl text-sm max-w-sm flex flex-col gap-2 bg-gray-900 border-gray-800 text-gray-200"
+      class="fixed bottom-6 right-6 z-50 p-4 rounded-xl border shadow-2xl text-sm max-w-sm flex flex-col gap-2 theme-surface-overlay theme-border theme-text"
     >
       <span>{{ toast.message }}</span>
       <a
         v-if="toast.link"
         :href="toast.link"
         target="_blank"
-        class="text-blue-400 hover:underline"
+        class="theme-status-info-text hover:underline"
         >{{ $t("projectEditor.viewDetails") }}</a
       >
     </div>
@@ -1192,5 +1199,4 @@ watch(
   },
   { immediate: true },
 );
-
 </script>

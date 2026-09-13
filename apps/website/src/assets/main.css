@@ -1,22 +1,93 @@
 @import "tailwindcss";
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 :root {
-  --app-color-primary: #8b5cf6;
-  --app-color-primary-hover: #7c3aed;
-  --app-bg: #111827;
-  --app-bg-secondary: #1f2937;
-  --app-text: #f3f4f6;
-  --app-text-secondary: #d1d5db;
-  --app-border: #374151;
+  color-scheme: dark;
+
+  --app-color-background: #10131a;
+  --app-color-surface: #171b24;
+  --app-color-surface-raised: #202632;
+  --app-color-surface-muted: #293241;
+  --app-color-input: #11161f;
+  --app-color-text: #f5f7fa;
+  --app-color-text-secondary: #d0d5dd;
+  --app-color-text-muted: #aab4c2;
+  --app-color-text-placeholder: #98a2b3;
+  --app-color-border: #3b4658;
+  --app-color-border-subtle: #293241;
+  --app-color-border-strong: #526176;
+  --app-color-primary: #67e8f9;
+  --app-color-primary-hover: #a5f3fc;
+  --app-color-primary-contrast: #082f49;
+  --app-color-focus: #7dd3fc;
+  --app-color-rating: #facc15;
+  --app-color-backdrop-scrim: rgb(0 0 0 / 10%);
+  --app-color-on-primary: #082f49;
+  --app-color-contrast-background: #f5f7fa;
+  --app-color-contrast-text: #10131a;
+  --app-color-success-bg: #123b2a;
+  --app-color-success-text: #86efac;
+  --app-color-success-border: #166534;
+  --app-color-warning-bg: #3d2b0b;
+  --app-color-warning-text: #facc15;
+  --app-color-warning-border: #a16207;
+  --app-color-danger-bg: #3a1717;
+  --app-color-danger-text: #fca5a5;
+  --app-color-danger-border: #991b1b;
+  --app-color-info-bg: #102a43;
+  --app-color-info-text: #93c5fd;
+  --app-color-info-border: #1d4ed8;
+
+  --app-bg: var(--app-color-background);
+  --app-bg-secondary: var(--app-color-surface-raised);
+  --app-text: var(--app-color-text);
+  --app-text-secondary: var(--app-color-text-secondary);
+  --app-border: var(--app-color-border);
 }
 
 [data-theme="light"] {
-  --app-bg: #ffffff;
-  --app-bg-secondary: #f3f4f6;
-  --app-text: #111827;
-  --app-text-secondary: #4b5563;
-  --app-border: #d1d5db;
+  color-scheme: light;
+
+  --app-color-background: #f8fafc;
+  --app-color-surface: #ffffff;
+  --app-color-surface-raised: #f1f5f9;
+  --app-color-surface-muted: #e2e8f0;
+  --app-color-input: #ffffff;
+  --app-color-text: #101828;
+  --app-color-text-secondary: #344054;
+  --app-color-text-muted: #475467;
+  --app-color-text-placeholder: #667085;
+  --app-color-border: #cbd5e1;
+  --app-color-border-subtle: #e2e8f0;
+  --app-color-border-strong: #94a3b8;
+  --app-color-primary: #0e7490;
+  --app-color-primary-hover: #155e75;
+  --app-color-primary-contrast: #ffffff;
+  --app-color-focus: #0369a1;
+  --app-color-rating: #a16207;
+  --app-color-backdrop-scrim: rgb(0 0 0 / 40%);
+  --app-color-on-primary: #ffffff;
+  --app-color-contrast-background: #101828;
+  --app-color-contrast-text: #ffffff;
+  --app-color-success-bg: #ecfdf3;
+  --app-color-success-text: #067647;
+  --app-color-success-border: #abefc6;
+  --app-color-warning-bg: #fffaeb;
+  --app-color-warning-text: #b54708;
+  --app-color-warning-border: #fedf89;
+  --app-color-danger-bg: #fef3f2;
+  --app-color-danger-text: #b42318;
+  --app-color-danger-border: #fecdca;
+  --app-color-info-bg: #eff8ff;
+  --app-color-info-text: #175cd3;
+  --app-color-info-border: #b2ddff;
+
+  --app-bg: var(--app-color-background);
+  --app-bg-secondary: var(--app-color-surface-raised);
+  --app-text: var(--app-color-text);
+  --app-text-secondary: var(--app-color-text-secondary);
+  --app-border: var(--app-color-border);
 }
 
 body {
@@ -35,83 +106,249 @@ body {
   color: var(--app-text);
 }
 
-/* Project editors use neutral charcoal surfaces independently of media type. */
-.admin-project-editor .bg-gray-900,
-.admin-project-editor .bg-slate-900,
-.admin-project-editor .bg-blue-600,
-.admin-project-editor .bg-cyan-900\/50,
-.admin-project-editor .bg-amber-600,
-.admin-project-editor .bg-amber-900\/50,
-.admin-project-editor .bg-emerald-600,
-.admin-project-editor .bg-emerald-900\/50,
-.admin-project-editor .bg-pink-600,
-.admin-project-editor .bg-pink-900\/50 {
-  background-color: #1d1d1d;
+@theme inline {
+  --color-app-background: var(--app-color-background);
+  --color-app-surface: var(--app-color-surface);
+  --color-app-surface-raised: var(--app-color-surface-raised);
+  --color-app-surface-muted: var(--app-color-surface-muted);
+  --color-app-input: var(--app-color-input);
+  --color-app-text: var(--app-color-text);
+  --color-app-text-secondary: var(--app-color-text-secondary);
+  --color-app-text-muted: var(--app-color-text-muted);
+  --color-app-text-placeholder: var(--app-color-text-placeholder);
+  --color-app-border: var(--app-color-border);
+  --color-app-border-subtle: var(--app-color-border-subtle);
+  --color-app-border-strong: var(--app-color-border-strong);
+  --color-app-primary: var(--app-color-primary);
+  --color-app-primary-hover: var(--app-color-primary-hover);
+  --color-app-focus: var(--app-color-focus);
+  --color-app-rating: var(--app-color-rating);
+  --color-app-success-bg: var(--app-color-success-bg);
+  --color-app-success-text: var(--app-color-success-text);
+  --color-app-success-border: var(--app-color-success-border);
+  --color-app-warning-bg: var(--app-color-warning-bg);
+  --color-app-warning-text: var(--app-color-warning-text);
+  --color-app-warning-border: var(--app-color-warning-border);
+  --color-app-danger-bg: var(--app-color-danger-bg);
+  --color-app-danger-text: var(--app-color-danger-text);
+  --color-app-danger-border: var(--app-color-danger-border);
+  --color-app-info-bg: var(--app-color-info-bg);
+  --color-app-info-text: var(--app-color-info-text);
+  --color-app-info-border: var(--app-color-info-border);
 }
 
-.admin-project-editor .bg-gray-950,
-.admin-project-editor .bg-slate-950 {
-  background-color: #151515;
+/* Semantic utilities keep page markup readable and make light/dark parity explicit. */
+.theme-bg {
+  background-color: var(--app-color-background);
 }
 
-.admin-project-editor .bg-gray-800,
-.admin-project-editor .bg-slate-800 {
-  background-color: #2a2a2a;
+.theme-header {
+  background-color: color-mix(
+    in srgb,
+    var(--app-color-background) 88%,
+    transparent
+  );
 }
 
-.admin-project-editor .hover\:bg-gray-700:hover,
-.admin-project-editor .hover\:bg-gray-800:hover,
-.admin-project-editor .hover\:bg-blue-500:hover,
-.admin-project-editor .hover\:bg-amber-500:hover,
-.admin-project-editor .hover\:bg-emerald-500:hover,
-.admin-project-editor .hover\:bg-pink-500:hover {
-  background-color: #333333;
+.theme-surface {
+  background-color: var(--app-color-surface);
 }
 
-.admin-project-editor .border-gray-700,
-.admin-project-editor .border-gray-800,
-.admin-project-editor .border-slate-700,
-.admin-project-editor .border-slate-800,
-.admin-project-editor .border-blue-600,
-.admin-project-editor .border-cyan-800,
-.admin-project-editor .border-amber-600,
-.admin-project-editor .border-amber-800,
-.admin-project-editor .border-emerald-600,
-.admin-project-editor .border-emerald-800,
-.admin-project-editor .border-pink-600,
-.admin-project-editor .border-pink-800 {
-  border-color: #2a2a2a;
+.theme-surface-overlay {
+  background-color: color-mix(
+    in srgb,
+    var(--app-color-surface) 95%,
+    transparent
+  );
 }
 
-.admin-project-editor .text-white,
-.admin-project-editor .text-gray-200,
-.admin-project-editor .text-gray-300,
-.admin-project-editor .text-blue-400,
-.admin-project-editor .text-blue-500,
-.admin-project-editor .text-cyan-400,
-.admin-project-editor .text-amber-400,
-.admin-project-editor .text-amber-500,
-.admin-project-editor .text-emerald-400,
-.admin-project-editor .text-emerald-500,
-.admin-project-editor .text-pink-400,
-.admin-project-editor .text-pink-500 {
-  color: #e0e0e0;
+.theme-backdrop-scrim {
+  background-color: var(--app-color-backdrop-scrim);
 }
 
-.admin-project-editor .text-gray-400,
-.admin-project-editor .text-gray-500,
-.admin-project-editor .text-gray-600 {
-  color: #a0a0a0;
+.theme-surface-raised {
+  background-color: var(--app-color-surface-raised);
 }
 
-.admin-project-editor .focus\:ring-blue-500:focus,
-.admin-project-editor .focus\:ring-cyan-500:focus,
-.admin-project-editor .focus\:ring-amber-500:focus,
-.admin-project-editor .focus\:ring-emerald-500:focus,
-.admin-project-editor .focus\:ring-pink-500:focus {
-  --tw-ring-color: #a0a0a0;
+.theme-surface-muted {
+  background-color: var(--app-color-surface-muted);
 }
 
-.admin-project-editor input[type="checkbox"] {
-  accent-color: #a0a0a0;
+.theme-input {
+  background-color: var(--app-color-input);
+}
+
+.theme-text {
+  color: var(--app-color-text);
+}
+
+.theme-text-secondary {
+  color: var(--app-color-text-secondary);
+}
+
+.theme-text-muted {
+  color: var(--app-color-text-muted);
+}
+
+.theme-text-placeholder {
+  color: var(--app-color-text-placeholder);
+}
+
+.theme-border {
+  border-color: var(--app-color-border);
+}
+
+.theme-border-subtle {
+  border-color: var(--app-color-border-subtle);
+}
+
+.theme-border-strong {
+  border-color: var(--app-color-border-strong);
+}
+
+.theme-ring-subtle {
+  --tw-ring-color: var(--app-color-border-subtle);
+}
+
+.theme-divide > :not(:last-child) {
+  border-color: var(--app-color-border-subtle);
+}
+
+.theme-primary-bg {
+  background-color: var(--app-color-primary);
+  color: var(--app-color-on-primary);
+}
+
+.theme-primary-text {
+  color: var(--app-color-primary);
+}
+
+.theme-primary-border {
+  border-color: var(--app-color-primary);
+}
+
+.theme-rating {
+  color: var(--app-color-rating);
+}
+
+.theme-hover-primary-text:hover,
+.group:hover .theme-hover-primary-text {
+  color: var(--app-color-primary-hover);
+}
+
+.theme-hover-primary-border:hover,
+.group:hover .theme-hover-primary-border {
+  border-color: var(--app-color-primary-hover);
+}
+
+.theme-contrast {
+  background-color: var(--app-color-contrast-background);
+  color: var(--app-color-contrast-text);
+}
+
+.theme-hover-contrast:hover {
+  background-color: var(--app-color-surface-muted);
+  color: var(--app-color-text);
+}
+
+.theme-hover-surface-muted:hover {
+  background-color: var(--app-color-surface-muted);
+}
+
+.theme-hover-text:hover {
+  color: var(--app-color-text);
+}
+
+.theme-hover-border:hover {
+  border-color: var(--app-color-border);
+}
+
+.theme-hover-border-strong:hover {
+  border-color: var(--app-color-border-strong);
+}
+
+.theme-hover-danger-text:hover {
+  color: var(--app-color-danger-text);
+}
+
+.theme-placeholder::placeholder {
+  color: var(--app-color-text-placeholder);
+  opacity: 1;
+}
+
+.theme-focus:focus,
+.theme-focus:focus-visible {
+  outline: 2px solid var(--app-color-focus);
+  outline-offset: 2px;
+}
+
+.theme-status-success {
+  background-color: var(--app-color-success-bg);
+  color: var(--app-color-success-text);
+  border-color: var(--app-color-success-border);
+}
+
+.theme-status-warning {
+  background-color: var(--app-color-warning-bg);
+  color: var(--app-color-warning-text);
+  border-color: var(--app-color-warning-border);
+}
+
+.theme-status-danger {
+  background-color: var(--app-color-danger-bg);
+  color: var(--app-color-danger-text);
+  border-color: var(--app-color-danger-border);
+}
+
+.theme-status-info {
+  background-color: var(--app-color-info-bg);
+  color: var(--app-color-info-text);
+  border-color: var(--app-color-info-border);
+}
+
+.theme-status-success-text {
+  color: var(--app-color-success-text);
+}
+
+.theme-status-warning-text {
+  color: var(--app-color-warning-text);
+}
+
+.theme-status-danger-text {
+  color: var(--app-color-danger-text);
+}
+
+.theme-status-info-text {
+  color: var(--app-color-info-text);
+}
+
+.theme-selected {
+  background-color: color-mix(
+    in srgb,
+    var(--app-color-primary) 16%,
+    var(--app-color-surface)
+  );
+  color: var(--app-color-text);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--app-color-primary) 45%, transparent);
+}
+
+input,
+textarea,
+select {
+  accent-color: var(--app-color-primary);
+}
+
+::placeholder {
+  color: var(--app-color-text-placeholder);
+  opacity: 1;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--app-color-focus);
+  outline-offset: 2px;
 }

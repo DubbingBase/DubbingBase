@@ -1,6 +1,6 @@
 <template>
   <div
-    class="relative w-full h-[42vh] min-h-[300px] md:h-[50vh] md:min-h-[400px] overflow-hidden bg-gray-200 dark:bg-[#1d1d1d]"
+    class="relative w-full h-[42vh] min-h-[300px] md:h-[50vh] md:min-h-[400px] overflow-hidden theme-surface-muted theme-surface"
   >
     <div class="absolute inset-0">
       <NuxtImg
@@ -14,11 +14,11 @@
       />
       <div
         v-if="backdropUrl"
-        class="absolute inset-0 bg-gradient-to-t from-gray-50 dark:from-[#1b1b1b] to-transparent"
+        class="absolute inset-0 bg-gradient-to-t from-[var(--app-color-background)] to-transparent"
       ></div>
       <div
         v-if="backdropUrl"
-        class="absolute inset-0 bg-black/10 dark:bg-black/40"
+        class="absolute inset-0 theme-backdrop-scrim"
       ></div>
     </div>
 
@@ -31,10 +31,10 @@
             ? 'w-24 sm:w-32 md:w-48 object-cover rounded-lg shadow-xl shrink-0 overflow-hidden'
             : '',
           imageAspectRatio === 'profile'
-            ? 'w-24 sm:w-32 md:w-48 rounded-lg overflow-hidden shadow-xl aspect-[2/3] bg-gray-100 dark:bg-[#161616] border border-white/10 shrink-0'
+            ? 'w-24 sm:w-32 md:w-48 rounded-lg overflow-hidden shadow-xl aspect-[2/3] theme-surface-raised theme-input border theme-border-subtle shrink-0'
             : '',
           imageAspectRatio === 'logo'
-            ? 'w-24 h-24 sm:w-32 sm:h-32 md:w-48 md:h-48 rounded-xl shadow-xl bg-white dark:bg-[#2a2a2a] flex items-center justify-center overflow-hidden shrink-0 relative z-10'
+            ? 'w-24 h-24 sm:w-32 sm:h-32 md:w-48 md:h-48 rounded-xl shadow-xl theme-surface-muted flex items-center justify-center overflow-hidden shrink-0 relative z-10'
             : '',
         ]"
       >
@@ -51,7 +51,7 @@
         />
         <div
           v-else
-          class="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-[#161616] text-gray-400 text-6xl font-bold uppercase aspect-[2/3]"
+          class="w-full h-full flex items-center justify-center theme-surface-raised theme-input theme-text-muted text-6xl font-bold uppercase aspect-[2/3]"
         >
           {{ title?.[0] }}
         </div>
