@@ -1,8 +1,10 @@
-import { useCache, useIgdbClient } from "../../utils";
+import { useIgdbClient } from "../../utils";
 import { buildIgdbImageUrl } from "../../utils/api/igdb";
 import type { IgdbGame } from "@app/shared-logic";
-
-const CACHE_KEY = "igdb:trending:games:formatted:v2";
+import {
+  setNoCacheHeaders,
+  setPublicCacheHeaders,
+} from "../../utils/cache/http";
 
 function formatGame(game: IgdbGame) {
   return {
@@ -18,13 +20,8 @@ function formatGame(game: IgdbGame) {
 }
 
 export default defineEventHandler(async (event) => {
-  setHeader(
-    event,
-    "Cache-Control",
-    "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
-  );
+  setPublicCacheHeaders(event, "discovery");
 
-  const cache = useCache();
   const config = useRuntimeConfig();
 
   if (!config.igdbClientId || !config.igdbClientSecret) {
@@ -33,19 +30,13 @@ export default defineEventHandler(async (event) => {
 
   const igdbClient = useIgdbClient();
 
-  const cached = await cache.get<ReturnType<typeof formatGame>[]>(CACHE_KEY);
-  if (cached) {
-    return cached;
-  }
-
   try {
     const games = await igdbClient.getTrendingGames(20);
     const formatted = games.map(formatGame);
 
-    await cache.set(CACHE_KEY, formatted, "SHORT");
-
     return formatted;
   } catch (err) {
+    setNoCacheHeaders(event);
     console.error("[trending/games] IGDB query failed:", err);
     return [];
   }

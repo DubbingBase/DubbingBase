@@ -1,10 +1,13 @@
-import { useCache, useIgdbClient } from "../../utils";
+import { useIgdbClient } from "../../utils";
 import { buildIgdbImageUrl } from "../../utils/api/igdb";
 import { getDubbingProjects } from "../../utils/db/queries";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 import { scheduleBackgroundTask } from "../../utils/background";
-import { setPublicCacheHeaders } from "../../utils/cache/http";
+import {
+  setNoCacheHeaders,
+  setPublicCacheHeaders,
+} from "../../utils/cache/http";
 import type { IgdbGame, IgdbCharacter } from "@app/shared-logic";
 
 function processIgdbGame(
@@ -56,85 +59,67 @@ export default defineEventHandler(async (event) => {
 
   setPublicCacheHeaders(event, "detail");
 
-  const cache = useCache(event);
   const igdbClient = useIgdbClient();
 
-  const cacheKey = `app:game:${gameId}:metadata`;
-  const cached = await cache.get<{
-    game: (IgdbGame & { media_type: "video_game" }) | null;
-    characters: ReturnType<typeof processIgdbCharacter>[];
-  }>(cacheKey);
+  let game: (IgdbGame & { media_type: "video_game" }) | null = null;
+  let characters: ReturnType<typeof processIgdbCharacter>[] = [];
 
-  let metadata = cached;
-
-  if (!metadata) {
-    let igdbFailed = false;
-    let game: (IgdbGame & { media_type: "video_game" }) | null = null;
-    let characters: ReturnType<typeof processIgdbCharacter>[] = [];
-
-    try {
-      const [igdbGame, igdbCharacters] = await Promise.all([
-        igdbClient.getGame(gameId),
-        igdbClient.getGameCharacters(gameId),
-      ]);
-      game = igdbGame ? processIgdbGame(igdbGame) : null;
-      characters = igdbCharacters.map(processIgdbCharacter);
-    } catch (err) {
-      igdbFailed = true;
-      console.error(`Failed to fetch IGDB game ${gameId}:`, err);
-      game = {
-        id: gameId,
-        name: "Information indisponible (Timeout)",
-        summary: "Ce contenu n'a pas pu être chargé.",
-        media_type: "video_game",
-        cover: undefined,
-      };
-    }
-
-    metadata = { game, characters };
-
-    // Lazy enqueue if not yet processed - Gated by PostHog 'enqueue-on-navigate' (server-side)
-    const dubbingProjects = await getDubbingProjects(gameId, "video_game");
-    const isProcessed = dubbingProjects.length > 0;
-    if (!isProcessed) {
-      scheduleBackgroundTask(
-        event,
-        async () => {
-          if (!(await isEnqueueOnNavigateEnabled())) return;
-          const supabaseAdmin = useSupabaseAdmin(event);
-          const { error } = await supabaseAdmin.rpc("enqueue_media_fetch", {
-            p_media_type: "video_game",
-            p_tmdb_id: gameId,
-            p_season_number: undefined,
-            p_episode_number: undefined,
-          });
-          if (error && !error.message?.includes("already in the")) {
-            console.error("Failed to lazily enqueue video_game:", error);
-          } else if (!error) {
-            await sendDiscordAdminNotification(
-              "Media Enqueued (Auto)",
-              `Automatically enqueued video game **${game?.name || gameId}** (IGDB: ${gameId}) for dubbing discovery.`,
-              {
-                queue: "wiki_discovery",
-                ...(game?.cover?.url ? { imageUrl: game.cover.url } : {}),
-                url: `/game/${gameId}`,
-                color: 0x5865f2,
-                event,
-              },
-            );
-          }
-        },
-        "game discovery",
-      );
-    }
-
-    // Don't cache the error fallback, so recovery isn't delayed by stale poison
-    if (!igdbFailed) {
-      await cache.set(cacheKey, metadata, "LONG");
-    }
+  try {
+    const [igdbGame, igdbCharacters] = await Promise.all([
+      igdbClient.getGame(gameId),
+      igdbClient.getGameCharacters(gameId),
+    ]);
+    game = igdbGame ? processIgdbGame(igdbGame) : null;
+    characters = igdbCharacters.map(processIgdbCharacter);
+  } catch (err) {
+    setNoCacheHeaders(event);
+    console.error(`Failed to fetch IGDB game ${gameId}:`, err);
+    game = {
+      id: gameId,
+      name: "Information indisponible (Timeout)",
+      summary: "Ce contenu n'a pas pu être chargé.",
+      media_type: "video_game",
+      cover: undefined,
+    };
   }
 
-  // Dubbing works are mutable admin data and must not be served from the IGDB metadata cache.
+  const metadata = { game, characters };
+
+  // Lazy enqueue if not yet processed - Gated by PostHog 'enqueue-on-navigate' (server-side)
   const dubbingProjects = await getDubbingProjects(gameId, "video_game");
+  const isProcessed = dubbingProjects.length > 0;
+  if (!isProcessed) {
+    scheduleBackgroundTask(
+      event,
+      async () => {
+        if (!(await isEnqueueOnNavigateEnabled())) return;
+        const supabaseAdmin = useSupabaseAdmin(event);
+        const { error } = await supabaseAdmin.rpc("enqueue_media_fetch", {
+          p_media_type: "video_game",
+          p_tmdb_id: gameId,
+          p_season_number: undefined,
+          p_episode_number: undefined,
+        });
+        if (error && !error.message?.includes("already in the")) {
+          console.error("Failed to lazily enqueue video_game:", error);
+        } else if (!error) {
+          await sendDiscordAdminNotification(
+            "Media Enqueued (Auto)",
+            `Automatically enqueued video game **${game?.name || gameId}** (IGDB: ${gameId}) for dubbing discovery.`,
+            {
+              queue: "wiki_discovery",
+              ...(game?.cover?.url ? { imageUrl: game.cover.url } : {}),
+              url: `/game/${gameId}`,
+              color: 0x5865f2,
+              event,
+            },
+          );
+        }
+      },
+      "game discovery",
+    );
+  }
+
+  // Dubbing works are mutable admin data and are read from Supabase on every request.
   return { ...metadata, dubbingProjects };
 });

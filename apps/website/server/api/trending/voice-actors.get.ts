@@ -1,14 +1,9 @@
 import { useSupabaseAdmin } from "../../utils/db/client";
-import { useTmdbClient, useIgdbClient, useCache } from "../../utils";
+import { useTmdbClient, useIgdbClient } from "../../utils";
 import { buildSupabaseImageUrl } from "../../utils/urls/supabase";
+import { setPublicCacheHeaders } from "../../utils/cache/http";
 
 export default defineEventHandler(async (event) => {
-  setHeader(
-    event,
-    "Cache-Control",
-    "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
-  );
-
   const query = getQuery(event);
   const limit = Number(query.limit) || 10;
 
@@ -19,21 +14,15 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const cache = useCache();
-  const cacheKey = `app:trending:voice-actors:v2:limit:${limit}`;
-
-  const cached = await cache.get(cacheKey);
-  if (cached) {
-    return cached;
-  }
+  setPublicCacheHeaders(event, "discovery");
 
   try {
     const tmdbClient = useTmdbClient();
     const igdbClient = useIgdbClient();
 
     const [trendingMovies, trendingShows, trendingGames] = await Promise.all([
-      tmdbClient.get("trending/movie/week").catch(() => ({ results: [] })),
-      tmdbClient.get("trending/tv/week").catch(() => ({ results: [] })),
+      tmdbClient.getTrending("movie", "week").catch(() => ({ results: [] })),
+      tmdbClient.getTrending("tv", "week").catch(() => ({ results: [] })),
       igdbClient.getTrendingGames(20).catch(() => []),
     ]);
 
@@ -114,8 +103,6 @@ export default defineEventHandler(async (event) => {
           "500",
         ),
       }));
-
-    await cache.set(cacheKey, results, "SHORT");
 
     return results;
   } catch (error: any) {

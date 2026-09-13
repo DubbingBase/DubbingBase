@@ -1,10 +1,7 @@
-export default defineEventHandler(async (event) => {
-  setHeader(
-    event,
-    "Cache-Control",
-    "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
-  );
+import { useTmdbClient } from "../utils";
+import { setPublicCacheHeaders } from "../utils/cache/http";
 
+export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const mediaType = query.media_type as string | undefined;
   const mediaId = query.media_id ? Number(query.media_id) : undefined;
@@ -16,27 +13,21 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const config = useRuntimeConfig();
-  const endpoint = mediaType === "tv" ? "aggregate_credits" : "credits";
+  setPublicCacheHeaders(event, "static");
 
   try {
-    const response = await fetch(
-      `https://api.themoviedb.org/3/${mediaType}/${mediaId}/${endpoint}?language=fr-FR`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${config.tmdbApiKey}`,
-          Accept: "application/json",
-        },
-      },
-    );
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch from TMDB: status ${response.status}`);
+    if (mediaType !== "movie" && mediaType !== "tv") {
+      throw createError({
+        statusCode: 400,
+        message: "media_type must be movie or tv",
+      });
     }
 
-    return await response.json();
+    return await useTmdbClient().fetchMediaCredits(mediaType, mediaId, "fr-FR");
   } catch (error) {
+    if (error && typeof error === "object" && "statusCode" in error) {
+      throw error;
+    }
     const errorMsg = error instanceof Error ? error.message : String(error);
     throw createError({ statusCode: 500, message: errorMsg });
   }

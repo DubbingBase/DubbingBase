@@ -167,8 +167,93 @@ export class TMDBClient {
     return result;
   }
 
-  async fetchMediaCredits(mediaType: string, mediaId: number) {
-    return await this.get(`${mediaType}/${mediaId}/credits`);
+  async fetchMediaCredits(
+    mediaType: "movie" | "tv",
+    mediaId: number,
+    language = "fr-FR",
+  ): Promise<{ cast?: unknown[] }> {
+    const endpoint = mediaType === "tv" ? "aggregate_credits" : "credits";
+    const langStr = (language.split(",")[0] || "fr-FR").trim();
+    const cacheKey = this.cache.tmdbKey(
+      mediaType,
+      mediaId,
+      `${endpoint}-${langStr}`,
+    );
+
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return cached;
+
+    const result = await this.get(
+      `${mediaType}/${mediaId}/${endpoint}`,
+      undefined,
+      langStr,
+    );
+    await this.cache.set(cacheKey, result, "MEDIUM");
+    return result;
+  }
+
+  async getPersonWithCredits(personId: number, language?: string) {
+    const langStr = ((language || "fr-FR").split(",")[0] || "fr-FR").trim();
+    const cacheKey = this.cache.tmdbKey(
+      "person",
+      personId,
+      `credits-${langStr}`,
+    );
+
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return cached;
+
+    const result = await this.get(
+      `person/${personId}`,
+      { append_to_response: "tv_credits,movie_credits,external_ids" },
+      language,
+    );
+    await this.cache.set(cacheKey, result, "MEDIUM");
+    return result;
+  }
+
+  async getTrending(
+    mediaType: "movie" | "tv",
+    timeWindow: "day" | "week",
+    language = "fr-FR",
+  ) {
+    const langStr = (language.split(",")[0] || "fr-FR").trim();
+    const cacheKey = this.cache.tmdbKey(
+      "trending",
+      mediaType,
+      `${timeWindow}-${langStr}`,
+    );
+
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return cached;
+
+    const result = await this.get(
+      `trending/${mediaType}/${timeWindow}`,
+      undefined,
+      language,
+    );
+    await this.cache.set(cacheKey, result, "SHORT");
+    return result;
+  }
+
+  async searchMulti(query: string, page = 1, language = "fr-FR") {
+    const langStr = (language.split(",")[0] || "fr-FR").trim();
+    const cacheKey = this.cache.tmdbKey(
+      "search",
+      `multi:${query}:${page}`,
+      langStr,
+    );
+
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return cached;
+
+    const result = await this.get(
+      "search/multi",
+      { query, page: String(page) },
+      language,
+    );
+    await this.cache.set(cacheKey, result, "SHORT");
+    return result;
   }
 
   async getCollection(collectionId: number) {

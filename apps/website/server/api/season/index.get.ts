@@ -1,14 +1,9 @@
 import { useCache, useTmdbClient } from "../../utils";
 import { MediaService } from "../../utils/services/media";
 import { getDubbingProjects } from "../../utils/db/queries";
+import { setPublicCacheHeaders } from "../../utils/cache/http";
 
 export default defineEventHandler(async (event) => {
-  setHeader(
-    event,
-    "Cache-Control",
-    "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
-  );
-
   const query = getQuery(event);
   const id = query.id !== undefined ? Number(query.id) : undefined;
   const seasonNumber =
@@ -26,16 +21,12 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  setPublicCacheHeaders(event, "detail");
+
   const acceptLanguage = getHeader(event, "accept-language") || undefined;
   const cache = useCache(event);
   const tmdbClient = useTmdbClient();
   const mediaService = new MediaService(tmdbClient, acceptLanguage);
-
-  const cacheKey = `app:season:${id}:${seasonNumber}:${acceptLanguage || "fr"}`;
-  const cached = await cache.get<any>(cacheKey);
-  if (cached) {
-    return cached;
-  }
 
   try {
     const apiDataPromise = mediaService
@@ -88,7 +79,6 @@ export default defineEventHandler(async (event) => {
       votes: dbData.voteData,
     };
 
-    await cache.set(cacheKey, responseData, "SHORT");
     return responseData;
   } catch (error: any) {
     if (error?.statusCode) throw error;

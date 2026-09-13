@@ -1,27 +1,13 @@
 import { useSupabaseAdmin } from "../utils/db/client";
 import { requireUser } from "../utils/auth";
-
-const TMDB_BASE = "https://api.themoviedb.org/3";
-
-async function fetchTmdbMedia(contentType: string, contentId: number) {
-  const config = useRuntimeConfig();
-  const response = await fetch(
-    `${TMDB_BASE}/${contentType}/${contentId}?append_to_response=credits,external_ids&language=fr-FR`,
-    {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${config.tmdbApiKey}`,
-        Accept: "application/json",
-      },
-    },
-  );
-  if (!response.ok) throw new Error(`TMDB error: ${response.status}`);
-  return response.json();
-}
+import { setNoCacheHeaders } from "../utils/cache/http";
+import { useTmdbClient } from "../utils";
 
 export default defineEventHandler(async (event) => {
+  setNoCacheHeaders(event);
   const user = requireUser(event);
   const supabaseAdmin = useSupabaseAdmin();
+  const tmdbClient = useTmdbClient();
 
   let voiceActorIds: number[] = [];
 
@@ -142,7 +128,13 @@ export default defineEventHandler(async (event) => {
         const contentId = work.dubbing_projects?.content_id;
         if (!contentType || !contentId) continue;
 
-        const tmdbMedia = await fetchTmdbMedia(contentType, contentId);
+        if (contentType !== "movie" && contentType !== "tv") continue;
+
+        const tmdbMedia = await tmdbClient.getMediaWithCredits(
+          contentType,
+          contentId,
+          "fr-FR",
+        );
 
         let tmdbCharacterName: string | undefined;
         if (work.actor_id && tmdbMedia.credits?.cast) {

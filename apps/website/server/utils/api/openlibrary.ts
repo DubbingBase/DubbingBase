@@ -199,7 +199,11 @@ export class OpenLibraryClient {
       if (!res.ok) {
         // If not found as OL work and is valid ISBN (10 or 13 digits), try ISBN endpoint
         if (id > 100000000) {
-          return await this.getBookByIsbn(id);
+          const book = await this.getBookByIsbn(id);
+          if (book) {
+            await this.cache.set(cacheKey, book, "LONG");
+          }
+          return book;
         }
         return null;
       }

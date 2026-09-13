@@ -1,5 +1,5 @@
 import {
-  useCache,
+  useTmdbClient,
   useIgdbClient,
   useOpenLibraryClient,
   usePodcastClient,
@@ -11,6 +11,7 @@ import { normalizeString } from "../../utils/normalize";
 import { processMedia } from "../../utils/urls/tmdb";
 import { buildSupabaseImageUrl } from "../../utils/urls/supabase";
 import { useSupabaseAdmin } from "../../utils/db/client";
+import { setPublicCacheHeaders } from "../../utils/cache/http";
 
 function sanitizeForTextSearch(query: string): string {
   return query.replace(/[&|!():*<>@\\'"]/g, " ").trim();
@@ -78,11 +79,7 @@ function calculateScore(item: any, trimmedQuery: string): number {
 }
 
 export default defineEventHandler(async (event) => {
-  setHeader(
-    event,
-    "Cache-Control",
-    "public, max-age=300, s-maxage=1800, stale-while-revalidate=86400",
-  );
+  setPublicCacheHeaders(event, "search");
 
   try {
     const query = getQuery(event).query as string | undefined;
@@ -97,7 +94,7 @@ export default defineEventHandler(async (event) => {
       return [];
     }
 
-    const config = useRuntimeConfig();
+    const tmdbClient = useTmdbClient();
     const igdbClient = useIgdbClient();
     const openLibraryClient = useOpenLibraryClient();
     const podcastClient = usePodcastClient();
@@ -111,36 +108,16 @@ export default defineEventHandler(async (event) => {
       try {
         const pageResponses = await Promise.all(
           [1, 2].map((page) =>
-            fetch(
-              `https://api.themoviedb.org/3/search/multi?query=${encodeURIComponent(trimmedQuery)}&page=${page}&language=fr-FR`,
-              {
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${config.tmdbApiKey}`,
-                  Accept: "application/json",
-                },
-              },
-            ),
+            tmdbClient.searchMulti(trimmedQuery, page, "fr-FR"),
           ),
         );
 
         for (const response of pageResponses) {
-          if (!response.ok) {
-            console.error(
-              `TMDB fetch failed with status: ${response.status} ${response.statusText}`,
-            );
-            continue;
-          }
-          try {
-            const res = await response.json();
-            if (res.results && Array.isArray(res.results)) {
-              const withImages = res.results
-                .filter((x: any) => x !== null)
-                .map((x: any) => processMedia(x));
-              results.push(...withImages);
-            }
-          } catch (err) {
-            console.error("Error parsing TMDB response:", err);
+          if (response.results && Array.isArray(response.results)) {
+            const withImages = response.results
+              .filter((x: any) => x !== null)
+              .map((x: any) => processMedia(x));
+            results.push(...withImages);
           }
         }
       } catch (e) {

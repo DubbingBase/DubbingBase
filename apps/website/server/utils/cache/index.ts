@@ -1,6 +1,7 @@
-import { SimpleKeyBuilder, CACHE_KEYS, SimpleKeyValidator } from "./constants";
+import { SimpleKeyBuilder, SimpleKeyValidator } from "./constants";
 
-// TTL presets in seconds
+// TTL presets in seconds. These values are used for external API data in KV;
+// mutable DubbingBase data is always read from Supabase.
 export const CACHE_TTL = {
   SHORT: 60 * 60, // 1 hour
   MEDIUM: 6 * 60 * 60, // 6 hours
@@ -10,14 +11,8 @@ export const CACHE_TTL = {
 
 export type CacheTTLPreset = keyof typeof CACHE_TTL | number;
 
-/**
- * Two-tier cache utility:
- * - L1: In-memory Map (ultra-fast 0ms latency per isolate)
- * - L2: Cloudflare KV (persistent across edge isolates globally)
- */
+/** Cloudflare KV cache utility for external API responses. */
 export class SimpleCache {
-  private memoryCache = new Map<string, { data: any; expiry: number }>();
-
   private get enabled(): boolean {
     return !(
       import.meta.dev ||
@@ -33,26 +28,11 @@ export class SimpleCache {
     try {
       const sanitizedKey = SimpleKeyValidator.sanitizeKey(key);
 
-      // 1. Check L1 Memory cache first
-      const memoryEntry = this.memoryCache.get(sanitizedKey);
-      if (memoryEntry) {
-        if (memoryEntry.expiry > Date.now()) {
-          return memoryEntry.data as T;
-        }
-        this.memoryCache.delete(sanitizedKey);
-      }
-
-      // 2. Check L2 Cloudflare KV
       const kv = this.kvGetter();
       if (kv && typeof kv.get === "function") {
         try {
           const cached = await kv.get(sanitizedKey, { type: "json" });
           if (cached !== null && cached !== undefined) {
-            // Populate L1 cache for fast subsequent lookups in this isolate
-            this.memoryCache.set(sanitizedKey, {
-              data: cached,
-              expiry: Date.now() + CACHE_TTL.SHORT * 1000,
-            });
             return cached as T;
           }
         } catch {
@@ -80,13 +60,6 @@ export class SimpleCache {
           ? Math.max(60, ttl)
           : (CACHE_TTL[ttl] ?? CACHE_TTL.MEDIUM);
 
-      // 1. Set L1 Memory cache
-      this.memoryCache.set(sanitizedKey, {
-        data,
-        expiry: Date.now() + ttlSeconds * 1000,
-      });
-
-      // 2. Set L2 Cloudflare KV
       const kv = this.kvGetter();
       if (kv && typeof kv.put === "function") {
         try {
@@ -109,8 +82,6 @@ export class SimpleCache {
 
     try {
       const sanitizedKey = SimpleKeyValidator.sanitizeKey(key);
-      this.memoryCache.delete(sanitizedKey);
-
       const kv = this.kvGetter();
       if (kv && typeof kv.delete === "function") {
         try {
@@ -130,11 +101,6 @@ export class SimpleCache {
 
     try {
       const sanitizedKey = SimpleKeyValidator.sanitizeKey(key);
-
-      const memoryEntry = this.memoryCache.get(sanitizedKey);
-      if (memoryEntry && memoryEntry.expiry > Date.now()) {
-        return true;
-      }
 
       const kv = this.kvGetter();
       if (kv && typeof kv.get === "function") {
@@ -158,7 +124,7 @@ export class SimpleCache {
   }
 
   tmdbKey(type: string, id: string | number, suffix?: string): string {
-    return SimpleKeyBuilder.tmdb(type, id as any, suffix);
+    return SimpleKeyBuilder.tmdb(type, id, suffix);
   }
 
   tvdbKey(type: string, id: string | number, suffix?: string): string {
@@ -167,10 +133,6 @@ export class SimpleCache {
 
   wikipediaKey(type: string, id: string, suffix?: string): string {
     return SimpleKeyBuilder.wikipedia(type, id, suffix);
-  }
-
-  appKey(type: string, id: string, suffix?: string): string {
-    return SimpleKeyBuilder.app(type, id, suffix);
   }
 }
 

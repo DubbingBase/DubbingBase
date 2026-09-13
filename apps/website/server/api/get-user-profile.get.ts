@@ -1,7 +1,9 @@
 import { useSupabaseAdmin } from "../utils/db/client";
 import { requireUser } from "../utils/auth";
+import { setNoCacheHeaders } from "../utils/cache/http";
 
 export default defineEventHandler(async (event) => {
+  setNoCacheHeaders(event);
   const user = requireUser(event);
   const supabaseAdmin = useSupabaseAdmin();
 

@@ -109,7 +109,7 @@ export function useOpenLibraryClient(): OpenLibraryClient {
 }
 
 export function usePodcastClient(): PodcastClient {
-  return new PodcastClient();
+  return new PodcastClient(useCache());
 }
 
 export function useAdvertisementClient(): AdvertisementClient {

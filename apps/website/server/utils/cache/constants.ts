@@ -3,7 +3,6 @@ export const API_PREFIXES = {
   TMDB: "tmdb",
   TVDB: "tvdb",
   WIKIPEDIA: "wikipedia",
-  APP: "app",
 } as const;
 
 // Schema version - bump when cache structure changes
@@ -45,10 +44,6 @@ export class SimpleKeyBuilder {
 
   static wikipedia(type: string, id: string, suffix?: string): string {
     return this.key(API_PREFIXES.WIKIPEDIA, type, id, suffix);
-  }
-
-  static app(type: string, id: string | number, suffix?: string): string {
-    return this.key(API_PREFIXES.APP, type, id, suffix);
   }
 }
 
@@ -95,20 +90,6 @@ export const CACHE_KEYS = {
       query.toLowerCase().replace(/[^a-z0-9]/g, "_"),
       suffix,
     ),
-
-  APP_TRENDING_MOVIES: () =>
-    SimpleKeyBuilder.app(CONTENT_TYPES.TRENDING, "movies"),
-  APP_TRENDING_SHOWS: () =>
-    SimpleKeyBuilder.app(CONTENT_TYPES.TRENDING, "shows"),
-  APP_SEARCH: (query: string) =>
-    SimpleKeyBuilder.app(
-      CONTENT_TYPES.SEARCH,
-      query.toLowerCase().replace(/[^a-z0-9]/g, "_"),
-    ),
-  APP_USER_PROFILE: (userId: string) =>
-    SimpleKeyBuilder.app(CONTENT_TYPES.USER, userId, "profile"),
-  APP_VOICE_ACTOR: (id: number, lang: string) =>
-    SimpleKeyBuilder.app(CONTENT_TYPES.VOICE_ACTOR, id, lang),
 } as const;
 
 // Cache key validation

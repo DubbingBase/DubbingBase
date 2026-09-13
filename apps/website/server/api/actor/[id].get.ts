@@ -1,27 +1,16 @@
-import { useCache, useTmdbClient } from "../../utils";
+import { useTmdbClient } from "../../utils";
 import { getWorkByActor } from "../../utils/db/queries";
 import { buildSupabaseImageUrl } from "../../utils/urls/supabase";
 import { buildTmdbImageUrl } from "../../utils/urls/tmdb";
+import { setPublicCacheHeaders } from "../../utils/cache/http";
 
 async function getActor(
   actorId: number,
   tmdbClient: ReturnType<typeof useTmdbClient>,
   acceptLanguage?: string,
 ) {
-  const cache = useCache();
-  const cacheKey = `tmdb:person:${actorId}`;
-
-  const cached = await cache.get(cacheKey);
-  if (cached) return cached;
-
   try {
-    const actorData = await tmdbClient.get(
-      `person/${actorId}`,
-      { append_to_response: "tv_credits,movie_credits,external_ids" },
-      acceptLanguage,
-    );
-    cache.set(cacheKey, actorData, "MEDIUM").catch(() => {});
-    return actorData;
+    return await tmdbClient.getPersonWithCredits(actorId, acceptLanguage);
   } catch (e) {
     console.error("Error fetching actor details:", e);
     return null;
@@ -150,11 +139,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: "Invalid id parameter" });
   }
 
-  setHeader(
-    event,
-    "Cache-Control",
-    "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
-  );
+  setPublicCacheHeaders(event, "detail");
 
   const acceptLanguage = getHeader(event, "accept-language") || undefined;
   const tmdbClient = useTmdbClient();

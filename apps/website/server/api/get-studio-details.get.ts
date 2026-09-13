@@ -1,15 +1,12 @@
 import { useSupabaseAdmin } from "../utils/db/client";
 import { useTmdbClient } from "../utils";
+import { setPublicCacheHeaders } from "../utils/cache/http";
 
 export default defineEventHandler(async (event) => {
-  setHeader(
-    event,
-    "Cache-Control",
-    "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
-  );
-
   const query = getQuery(event);
   const studioId = (query.studioId as string) || (query.studioid as string);
+
+  setPublicCacheHeaders(event, studioId ? "detail" : "catalog");
 
   const supabase = useSupabaseAdmin();
 
