@@ -1,6 +1,6 @@
 <template>
   <header
-    class="sticky top-0 z-50 flex items-center justify-between h-[68px] px-4 md:px-6 border-b border-gray-200/50 dark:border-[#2a2a2a]/50 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-xl transition-colors"
+    class="sticky top-0 z-50 flex items-center justify-between h-[68px] px-4 md:px-6 border-b theme-border-subtle theme-header backdrop-blur-xl transition-colors"
   >
     <!-- Left Section: Logo & Nav -->
     <div class="flex items-center gap-6 w-full sm:w-auto sm:flex-none">
@@ -9,7 +9,7 @@
         class="flex items-center gap-3 group shrink-0"
       >
         <div
-          class="w-9 h-9 rounded-xl overflow-hidden shadow-sm ring-1 ring-black/5 dark:ring-white/10 group-hover:shadow-md transition-all"
+          class="w-9 h-9 rounded-xl overflow-hidden shadow-sm ring-1 theme-ring-subtle group-hover:shadow-md transition-all"
         >
           <img
             :src="useNewLogo ? '/logo2.png' : '/apple-touch-icon.png'"
@@ -18,7 +18,7 @@
           />
         </div>
         <span
-          class="text-xl font-bold tracking-tight text-gray-900 dark:text-white hidden sm:block"
+          class="text-xl font-bold tracking-tight theme-text hidden sm:block"
         >
           {{ t("app.title") }}
         </span>
@@ -28,14 +28,14 @@
         <NuxtLink
           v-if="!isHomePage"
           :to="localePath('/')"
-          class="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-all"
+          class="px-3 py-1.5 text-sm font-medium theme-text-secondary theme-hover-text rounded-lg theme-hover-surface-muted transition-all"
         >
           {{ t("nav.home") }}
         </NuxtLink>
         <NuxtLink
           v-if="user && isAdmin"
           :to="localePath('/admin')"
-          class="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-all"
+          class="px-3 py-1.5 text-sm font-medium theme-text-secondary theme-hover-text rounded-lg theme-hover-surface-muted transition-all"
         >
           {{ t("nav.admin") }}
         </NuxtLink>
@@ -51,15 +51,17 @@
         type="button"
         data-testid="header-search-trigger"
         @click="openSearch"
-        class="group flex items-center justify-between w-full max-w-[320px] h-10 px-4 text-sm text-gray-500 dark:text-gray-400 bg-gray-100/50 dark:bg-gray-800/40 hover:bg-gray-200/50 dark:hover:bg-gray-800/80 border border-transparent hover:border-gray-300/50 dark:hover:border-gray-700/50 rounded-full transition-all shadow-sm hover:shadow-md"
+        class="group flex items-center justify-between w-full max-w-[320px] h-10 px-4 text-sm theme-text-muted theme-surface-raised theme-hover-surface-muted border border-transparent theme-hover-border rounded-full transition-all shadow-sm hover:shadow-md"
         :aria-label="t('search.placeholder')"
       >
-        <span class="flex items-center gap-2 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
+        <span
+          class="flex items-center gap-2 theme-text-muted group-hover:text-[var(--app-color-text-secondary)] transition-colors"
+        >
           <SearchIcon :size="16" />
           <span>{{ t("search.placeholder") || "Search..." }}</span>
         </span>
         <kbd
-          class="hidden md:inline-flex items-center justify-center w-5 h-5 text-[11px] font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded transition-opacity"
+          class="hidden md:inline-flex items-center justify-center w-5 h-5 text-[11px] font-medium theme-text-muted theme-surface-muted border theme-border-strong rounded transition-opacity"
         >
           /
         </kbd>
@@ -75,7 +77,7 @@
         data-testid="mobile-search-trigger"
         @click="openSearch"
         :aria-label="t('search.placeholder')"
-        class="sm:hidden p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors flex items-center justify-center"
+        class="sm:hidden p-2 theme-text-muted theme-hover-text theme-text-muted theme-hover-text theme-hover-surface-muted rounded-full transition-colors flex items-center justify-center"
       >
         <SearchIcon :size="20" />
       </button>
@@ -84,7 +86,7 @@
       <ClientOnly>
         <SelectRoot v-model="theme">
           <SelectTrigger
-            class="flex items-center justify-center w-10 h-10 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors bg-transparent border-none cursor-pointer outline-none"
+            class="flex items-center justify-center w-10 h-10 theme-text-secondary theme-hover-text theme-hover-surface-muted rounded-full transition-colors bg-transparent border-none cursor-pointer outline-none"
             aria-label="Toggle theme"
           >
             <SunIcon v-if="theme === 'light'" :size="20" />
@@ -94,27 +96,27 @@
           <SelectPortal>
             <SelectContent
               position="popper"
-              class="z-50 bg-white/95 dark:bg-[#1d1d1d]/95 backdrop-blur-md border border-gray-200 dark:border-[#2a2a2a] rounded-xl shadow-xl overflow-hidden min-w-[140px] text-gray-800 dark:text-gray-200"
+              class="z-50 theme-surface-overlay backdrop-blur-md border theme-border rounded-xl shadow-xl overflow-hidden min-w-[140px] theme-text"
               :sideOffset="8"
             >
               <SelectViewport class="p-1.5">
                 <SelectItem
                   value="light"
-                  class="flex items-center gap-2.5 px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-[#2a2a2a] cursor-pointer outline-none rounded-lg data-[highlighted]:bg-gray-100 dark:data-[highlighted]:bg-[#2a2a2a] data-[highlighted]:text-gray-900 dark:data-[highlighted]:text-white transition-colors"
+                  class="flex items-center gap-2.5 px-3 py-2 text-sm font-medium theme-hover-surface-muted cursor-pointer outline-none rounded-lg data-[highlighted]:bg-[var(--app-color-surface-muted)] data-[highlighted]:text-[var(--app-color-text)] transition-colors"
                 >
                   <SunIcon :size="16" />
                   <SelectItemText>{{ t("theme.light") }}</SelectItemText>
                 </SelectItem>
                 <SelectItem
                   value="dark"
-                  class="flex items-center gap-2.5 px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-[#2a2a2a] cursor-pointer outline-none rounded-lg data-[highlighted]:bg-gray-100 dark:data-[highlighted]:bg-[#2a2a2a] data-[highlighted]:text-gray-900 dark:data-[highlighted]:text-white transition-colors"
+                  class="flex items-center gap-2.5 px-3 py-2 text-sm font-medium theme-hover-surface-muted cursor-pointer outline-none rounded-lg data-[highlighted]:bg-[var(--app-color-surface-muted)] data-[highlighted]:text-[var(--app-color-text)] transition-colors"
                 >
                   <MoonIcon :size="16" />
                   <SelectItemText>{{ t("theme.dark") }}</SelectItemText>
                 </SelectItem>
                 <SelectItem
                   value="system"
-                  class="flex items-center gap-2.5 px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-[#2a2a2a] cursor-pointer outline-none rounded-lg data-[highlighted]:bg-gray-100 dark:data-[highlighted]:bg-[#2a2a2a] data-[highlighted]:text-gray-900 dark:data-[highlighted]:text-white transition-colors"
+                  class="flex items-center gap-2.5 px-3 py-2 text-sm font-medium theme-hover-surface-muted cursor-pointer outline-none rounded-lg data-[highlighted]:bg-[var(--app-color-surface-muted)] data-[highlighted]:text-[var(--app-color-text)] transition-colors"
                 >
                   <MonitorIcon :size="16" />
                   <SelectItemText>{{ t("theme.system") }}</SelectItemText>
@@ -124,7 +126,9 @@
           </SelectPortal>
         </SelectRoot>
         <template #fallback>
-          <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse"></div>
+          <div
+            class="w-10 h-10 rounded-full theme-surface-raised animate-pulse"
+          ></div>
         </template>
       </ClientOnly>
 
@@ -132,7 +136,7 @@
       <ClientOnly>
         <SelectRoot :modelValue="locale" @update:modelValue="setLocale">
           <SelectTrigger
-            class="flex items-center justify-center w-10 h-10 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors bg-transparent border-none cursor-pointer outline-none"
+            class="flex items-center justify-center w-10 h-10 theme-text-secondary theme-hover-text theme-hover-surface-muted rounded-full transition-colors bg-transparent border-none cursor-pointer outline-none"
             aria-label="Toggle language"
           >
             <GlobeIcon :size="20" />
@@ -140,31 +144,31 @@
           <SelectPortal>
             <SelectContent
               position="popper"
-              class="z-50 bg-white/95 dark:bg-[#1d1d1d]/95 backdrop-blur-md border border-gray-200 dark:border-[#2a2a2a] rounded-xl shadow-xl overflow-hidden min-w-[140px] text-gray-800 dark:text-gray-200"
+              class="z-50 theme-surface-overlay backdrop-blur-md border theme-border rounded-xl shadow-xl overflow-hidden min-w-[140px] theme-text"
               :sideOffset="8"
             >
               <SelectViewport class="p-1.5">
                 <SelectItem
                   value="en"
-                  class="flex items-center px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-[#2a2a2a] cursor-pointer outline-none rounded-lg data-[highlighted]:bg-gray-100 dark:data-[highlighted]:bg-[#2a2a2a] data-[highlighted]:text-gray-900 dark:data-[highlighted]:text-white transition-colors"
+                  class="flex items-center px-3 py-2 text-sm font-medium theme-hover-surface-muted cursor-pointer outline-none rounded-lg data-[highlighted]:bg-[var(--app-color-surface-muted)] data-[highlighted]:text-[var(--app-color-text)] transition-colors"
                 >
                   <SelectItemText>{{ t("language.en") }}</SelectItemText>
                 </SelectItem>
                 <SelectItem
                   value="fr"
-                  class="flex items-center px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-[#2a2a2a] cursor-pointer outline-none rounded-lg data-[highlighted]:bg-gray-100 dark:data-[highlighted]:bg-[#2a2a2a] data-[highlighted]:text-gray-900 dark:data-[highlighted]:text-white transition-colors"
+                  class="flex items-center px-3 py-2 text-sm font-medium theme-hover-surface-muted cursor-pointer outline-none rounded-lg data-[highlighted]:bg-[var(--app-color-surface-muted)] data-[highlighted]:text-[var(--app-color-text)] transition-colors"
                 >
                   <SelectItemText>{{ t("language.fr") }}</SelectItemText>
                 </SelectItem>
                 <SelectItem
                   value="es"
-                  class="flex items-center px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-[#2a2a2a] cursor-pointer outline-none rounded-lg data-[highlighted]:bg-gray-100 dark:data-[highlighted]:bg-[#2a2a2a] data-[highlighted]:text-gray-900 dark:data-[highlighted]:text-white transition-colors"
+                  class="flex items-center px-3 py-2 text-sm font-medium theme-hover-surface-muted cursor-pointer outline-none rounded-lg data-[highlighted]:bg-[var(--app-color-surface-muted)] data-[highlighted]:text-[var(--app-color-text)] transition-colors"
                 >
                   <SelectItemText>{{ t("language.es") }}</SelectItemText>
                 </SelectItem>
                 <SelectItem
                   value="ja"
-                  class="flex items-center px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-[#2a2a2a] cursor-pointer outline-none rounded-lg data-[highlighted]:bg-gray-100 dark:data-[highlighted]:bg-[#2a2a2a] data-[highlighted]:text-gray-900 dark:data-[highlighted]:text-white transition-colors"
+                  class="flex items-center px-3 py-2 text-sm font-medium theme-hover-surface-muted cursor-pointer outline-none rounded-lg data-[highlighted]:bg-[var(--app-color-surface-muted)] data-[highlighted]:text-[var(--app-color-text)] transition-colors"
                 >
                   <SelectItemText>{{ t("language.ja") }}</SelectItemText>
                 </SelectItem>
@@ -173,12 +177,14 @@
           </SelectPortal>
         </SelectRoot>
         <template #fallback>
-          <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse"></div>
+          <div
+            class="w-10 h-10 rounded-full theme-surface-raised animate-pulse"
+          ></div>
         </template>
       </ClientOnly>
 
       <div
-        class="w-px h-5 bg-gray-200 dark:bg-gray-700/50 mx-1 md:mx-2 hidden sm:block"
+        class="w-px h-5 theme-surface-muted mx-1 md:mx-2 hidden sm:block"
       ></div>
 
       <!-- User Profile -->
@@ -186,7 +192,7 @@
         <template v-if="user">
           <NuxtLink
             :to="localePath('/profile')"
-            class="relative flex items-center justify-center w-9 h-9 md:w-10 md:h-10 ml-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 ring-2 ring-transparent hover:ring-gray-200 dark:hover:ring-gray-700 transition-all overflow-hidden cursor-pointer"
+            class="relative flex items-center justify-center w-9 h-9 md:w-10 md:h-10 ml-1 rounded-full theme-surface-muted theme-text-secondary ring-2 ring-transparent hover:ring-[var(--app-color-border-strong)] transition-all overflow-hidden cursor-pointer"
             :aria-label="t('nav.profile', 'Profile')"
           >
             <img
@@ -201,19 +207,20 @@
         <template v-else>
           <NuxtLink
             :to="localePath('/login')"
-            class="flex items-center justify-center h-9 px-4 ml-1 text-sm font-semibold text-white bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 rounded-full transition-all shadow-sm hover:shadow-md"
+            class="flex items-center justify-center h-9 px-4 ml-1 text-sm font-semibold theme-contrast theme-hover-contrast rounded-full transition-all shadow-sm hover:shadow-md"
             :aria-label="t('nav.login')"
           >
             {{ t("nav.login") }}
           </NuxtLink>
         </template>
-        
+
         <template #fallback>
-          <div class="w-9 h-9 md:w-10 md:h-10 ml-1 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse"></div>
+          <div
+            class="w-9 h-9 md:w-10 md:h-10 ml-1 rounded-full theme-surface-raised theme-surface-muted animate-pulse"
+          ></div>
         </template>
       </ClientOnly>
     </div>
-
   </header>
 </template>
 

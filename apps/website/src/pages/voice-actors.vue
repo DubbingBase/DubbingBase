@@ -1,12 +1,10 @@
 <template>
   <div class="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 min-h-screen">
     <div class="mb-8">
-      <h1
-        class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2"
-      >
+      <h1 class="text-3xl md:text-4xl font-bold theme-text mb-2">
         {{ t("home.trendingVoiceActors") }}
       </h1>
-      <p class="text-gray-600 dark:text-gray-400">
+      <p class="theme-text-secondary theme-text-muted">
         {{ t("home.recentVoiceActors") }}
       </p>
 
@@ -17,9 +15,11 @@
             v-model="searchInput"
             type="text"
             placeholder="Rechercher un comédien..."
-            class="w-full bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white border-0 rounded-full px-6 py-3 focus:ring-2 focus:ring-cyan-500 transition-shadow outline-none"
+            class="w-full theme-surface-raised theme-surface-muted theme-text border-0 rounded-full px-6 py-3 theme-focus transition-shadow outline-none"
           />
-          <div class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
+          <div
+            class="absolute right-4 top-1/2 -translate-y-1/2 theme-text-muted"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               class="h-5 w-5"
@@ -50,17 +50,14 @@
         class="flex flex-col items-center animate-pulse"
       >
         <div
-          class="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gray-200 dark:bg-gray-800 mb-4"
+          class="w-24 h-24 md:w-32 md:h-32 rounded-full theme-surface-muted mb-4"
         ></div>
-        <div class="w-20 h-4 bg-gray-200 dark:bg-gray-800 rounded"></div>
+        <div class="w-20 h-4 theme-surface-muted rounded"></div>
       </div>
     </div>
 
     <!-- Error State -->
-    <div
-      v-else-if="error"
-      class="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-6 rounded-xl border border-red-200 dark:border-red-800"
-    >
+    <div v-else-if="error" class="theme-status-danger p-6 rounded-xl border">
       <h3 class="text-lg font-semibold mb-2">{{ $t("common.error") }}</h3>
       <p>{{ error }}</p>
     </div>
@@ -68,7 +65,7 @@
     <!-- Empty State -->
     <div
       v-else-if="filteredActors.length === 0"
-      class="text-center py-12 text-gray-500 dark:text-gray-400"
+      class="text-center py-12 theme-text-muted"
     >
       {{ $t("voiceActor.noResultsFor", { query: searchInput }) }}
     </div>
@@ -91,7 +88,7 @@
             class="group cursor-pointer flex flex-col items-center"
           >
             <div
-              class="relative w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800 shadow-md transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg border-2 border-transparent group-hover:border-cyan-500"
+              class="relative w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden mb-3 theme-surface-muted shadow-md transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg border-2 border-transparent theme-hover-primary-border"
             >
               <NuxtImg
                 v-if="actor.profile_picture_url"
@@ -104,21 +101,21 @@
               />
               <div
                 v-else
-                class="w-full h-full flex items-center justify-center text-3xl text-gray-400 font-bold bg-gray-100 dark:bg-gray-700"
+                class="w-full h-full flex items-center justify-center text-3xl theme-text-muted font-bold theme-surface-raised theme-surface-muted"
               >
                 {{ actor.firstname?.charAt(0) || ""
                 }}{{ actor.lastname?.charAt(0) || "" }}
               </div>
             </div>
             <h3
-              class="font-semibold text-sm md:text-base text-gray-800 dark:text-gray-200 text-center group-hover:text-cyan-500 transition-colors"
+              class="font-semibold text-sm md:text-base theme-text text-center theme-hover-primary-text transition-colors"
             >
               {{ actor.firstname }} {{ actor.lastname }}
             </h3>
           </NuxtLink>
         </template>
       </PaginatedResponsiveGrid>
-      <span class="block text-xs text-gray-400 mt-4">{{
+      <span class="block text-xs theme-text-muted mt-4">{{
         $t("studio.actorsCount", {
           shown: filteredActors.length,
           total: totalActors,

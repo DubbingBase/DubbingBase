@@ -1,6 +1,6 @@
 <template>
   <div
-    class="border-b border-gray-200 dark:border-[#2a2a2a] bg-white/95 dark:bg-[#161616]/95 backdrop-blur sticky top-0 z-10 shadow-sm"
+    class="border-b theme-border-subtle theme-border theme-surface-overlay backdrop-blur sticky top-0 z-10 shadow-sm"
   >
     <div
       class="w-full min-w-0 px-4 sm:px-6 md:px-8 py-3 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 md:gap-4"

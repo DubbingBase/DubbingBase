@@ -1,29 +1,57 @@
 <template>
   <div class="min-h-screen overflow-x-hidden">
     <!-- Hero Search Section (Full Width) -->
-    <section class="relative bg-gray-100 dark:bg-[#1a1a1a] py-16 md:py-24 px-4 flex flex-col items-center justify-center text-center overflow-hidden border-b border-gray-200 dark:border-gray-800">
+    <section
+      class="relative theme-surface-raised py-16 md:py-24 px-4 flex flex-col items-center justify-center text-center overflow-hidden border-b theme-border-subtle"
+    >
       <div class="relative z-10 max-w-3xl w-full">
-        <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-4 md:mb-6 tracking-tight text-gray-900 dark:text-white">{{ $t('home.hero.title') }}</h1>
-        <p class="text-lg md:text-xl text-gray-700 dark:text-gray-300 mb-8 font-medium">
-          {{ $t('home.hero.subtitle') }}
+        <h1
+          class="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-4 md:mb-6 tracking-tight theme-text"
+        >
+          {{ $t("home.hero.title") }}
+        </h1>
+        <p class="text-lg md:text-xl theme-text-secondary mb-8 font-medium">
+          {{ $t("home.hero.subtitle") }}
         </p>
 
         <!-- Subtle Interactive Stats Pill -->
-        <div v-if="!isLoadingHomeStats && homeStats && homeStats.voiceActorCount > 0" class="flex flex-wrap justify-center mb-8">
-          <div class="inline-flex items-center gap-1 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-white/40 dark:bg-[#222222]/40 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 rounded-full shadow-sm text-xs md:text-sm font-medium text-gray-500 dark:text-gray-400 transition-all hover:bg-white/60 dark:hover:bg-[#2a2a2a]/60 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600">
-            <span class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 cursor-default">
-              <span class="text-[var(--app-color-primary)] font-bold opacity-90">{{ homeStats.voiceActorCount.toLocaleString() }}</span>
-              <span>{{ $t('home.stats.voiceActors', 'Voice Actors') }}</span>
+        <div
+          v-if="
+            !isLoadingHomeStats && homeStats && homeStats.voiceActorCount > 0
+          "
+          class="flex flex-wrap justify-center mb-8"
+        >
+          <div
+            class="inline-flex items-center gap-1 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 theme-surface-muted backdrop-blur-md border theme-border-subtle theme-border rounded-full shadow-sm text-xs md:text-sm font-medium theme-text-muted transition-all hover:bg-white/60 theme-hover-surface-muted hover:shadow-md theme-hover-border-strong"
+          >
+            <span
+              class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors theme-hover-text theme-hover-surface-muted cursor-default"
+            >
+              <span
+                class="text-[var(--app-color-primary)] font-bold opacity-90"
+                >{{ homeStats.voiceActorCount.toLocaleString() }}</span
+              >
+              <span>{{ $t("home.stats.voiceActors", "Voice Actors") }}</span>
             </span>
-            <span class="w-px h-3.5 bg-gray-300 dark:bg-gray-700"></span>
-            <span class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 cursor-default">
-              <span class="text-[var(--app-color-primary)] font-bold opacity-90">{{ homeStats.dubbingProjectCount.toLocaleString() }}</span>
-              <span>{{ $t('home.stats.projects', 'Dubs') }}</span>
+            <span class="w-px h-3.5 theme-surface-muted"></span>
+            <span
+              class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors theme-hover-text theme-hover-surface-muted cursor-default"
+            >
+              <span
+                class="text-[var(--app-color-primary)] font-bold opacity-90"
+                >{{ homeStats.dubbingProjectCount.toLocaleString() }}</span
+              >
+              <span>{{ $t("home.stats.projects", "Dubs") }}</span>
             </span>
-            <span class="w-px h-3.5 bg-gray-300 dark:bg-gray-700"></span>
-            <span class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 cursor-default">
-              <span class="text-[var(--app-color-primary)] font-bold opacity-90">{{ homeStats.workCount.toLocaleString() }}</span>
-              <span>{{ $t('home.stats.works', 'Roles') }}</span>
+            <span class="w-px h-3.5 theme-surface-muted"></span>
+            <span
+              class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors theme-hover-text theme-hover-surface-muted cursor-default"
+            >
+              <span
+                class="text-[var(--app-color-primary)] font-bold opacity-90"
+                >{{ homeStats.workCount.toLocaleString() }}</span
+              >
+              <span>{{ $t("home.stats.works", "Roles") }}</span>
             </span>
           </div>
         </div>
@@ -33,14 +61,14 @@
             type="text"
             readonly
             :placeholder="$t('home.hero.searchPlaceholder')"
-            class="w-full bg-white text-gray-900 px-4 py-3 md:px-6 md:py-4 rounded-full text-base md:text-lg shadow-xl cursor-text outline-none pr-28 md:pr-32"
+            class="w-full theme-surface theme-text px-4 py-3 md:px-6 md:py-4 rounded-full text-base md:text-lg shadow-xl cursor-text outline-none pr-28 md:pr-32"
             @click="openSearch"
           />
           <button
             @click="openSearch"
-            class="absolute right-1 top-1 bottom-1 bg-[var(--app-color-primary)] hover:bg-[var(--app-color-primary-hover)] text-white font-bold py-1.5 px-4 md:py-2 md:px-6 rounded-full transition-all text-sm md:text-base"
+            class="absolute right-1 top-1 bottom-1 theme-primary-bg hover:bg-[var(--app-color-primary-hover)] font-bold py-1.5 px-4 md:py-2 md:px-6 rounded-full transition-all text-sm md:text-base"
           >
-            {{ $t('home.hero.searchButton') }}
+            {{ $t("home.hero.searchButton") }}
           </button>
         </div>
       </div>
@@ -50,158 +78,380 @@
     <div class="max-w-7xl mx-auto p-4 md:p-6 mt-4">
       <main class="space-y-8 md:space-y-12">
         <!-- Trending Movies -->
-      <section v-if="!errorMovies">
-        <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-900 dark:text-white tracking-wide">{{ $t('home.trendingMovies') }}</h2>
-        <div v-if="isLoadingMovies" class="flex gap-4 overflow-x-auto pb-4">
-          <div v-for="i in 4" :key="i" class="w-48 h-72 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-xl flex-shrink-0"></div>
-        </div>
-        <div v-else ref="moviesScrollRef" class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 custom-scrollbar">
-          <div v-for="movie in trendingMovies" :key="movie.id" class="w-48 flex-shrink-0 snap-start">
-            <NuxtLink :to="localePath('/movie/' + movie.id)" class="group transition-transform hover:-translate-y-1 block">
-              <div class="relative w-full h-72 rounded-xl overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800">
-                <NuxtImg v-if="movie.poster_path" :src="'https://image.tmdb.org/t/p/w342' + movie.poster_path" :alt="movie.title" format="webp" loading="lazy" class="object-cover w-full h-full transition duration-300" />
-              </div>
-              <h3 class="font-semibold text-sm text-gray-800 dark:text-gray-200 line-clamp-2">{{ movie.title }}</h3>
-            </NuxtLink>
+        <section v-if="!errorMovies">
+          <h2
+            class="text-xl md:text-2xl font-bold mb-4 md:mb-6 theme-text tracking-wide"
+          >
+            {{ $t("home.trendingMovies") }}
+          </h2>
+          <div v-if="isLoadingMovies" class="flex gap-4 overflow-x-auto pb-4">
+            <div
+              v-for="i in 4"
+              :key="i"
+              class="w-48 h-72 theme-surface-muted animate-pulse rounded-xl flex-shrink-0"
+            ></div>
           </div>
-        </div>
-      </section>
-
-      <!-- Trending Series -->
-      <section v-if="!errorSeries">
-        <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-900 dark:text-white tracking-wide">{{ $t('home.trendingSeries') }}</h2>
-        <div v-if="isLoadingSeries" class="flex gap-4 overflow-x-auto pb-4">
-          <div v-for="i in 4" :key="i" class="w-48 h-72 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-xl flex-shrink-0"></div>
-        </div>
-        <div v-else ref="seriesScrollRef" class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 custom-scrollbar">
-          <div v-for="show in trendingSeries" :key="show.id" class="w-48 flex-shrink-0 snap-start">
-            <NuxtLink :to="localePath('/show/' + show.id)" class="group transition-transform hover:-translate-y-1 block">
-              <div class="relative w-full h-72 rounded-xl overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800">
-                <NuxtImg v-if="show.poster_path" :src="'https://image.tmdb.org/t/p/w342' + show.poster_path" :alt="(show as any).name || (show as any).title" format="webp" loading="lazy" class="object-cover w-full h-full transition duration-300" />
-              </div>
-              <h3 class="font-semibold text-sm text-gray-800 dark:text-gray-200 line-clamp-2">{{ (show as any).name || (show as any).title }}</h3>
-            </NuxtLink>
-          </div>
-        </div>
-      </section>
-
-      <!-- Trending Games -->
-      <section v-if="!errorGames">
-        <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-900 dark:text-white tracking-wide">{{ $t('game.trendingGames', 'Jeux du moment') }}</h2>
-        <div v-if="isLoadingGames" class="flex gap-4 overflow-x-auto pb-4">
-          <div v-for="i in 4" :key="i" class="w-48 h-72 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-xl flex-shrink-0"></div>
-        </div>
-        <div v-else ref="gamesScrollRef" class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 custom-scrollbar">
-          <div v-for="game in trendingGames" :key="game.id" class="w-48 flex-shrink-0 snap-start">
-            <NuxtLink :to="localePath('/game/' + game.id)" class="group transition-transform hover:-translate-y-1 block">
-              <div class="relative w-full h-72 rounded-xl overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800">
-                <NuxtImg v-if="game.cover?.url" :src="game.cover.url" :alt="game.name" format="webp" loading="lazy" class="object-cover w-full h-full transition duration-300" />
-              </div>
-              <h3 class="font-semibold text-sm text-gray-800 dark:text-gray-200 line-clamp-2">{{ game.name }}</h3>
-            </NuxtLink>
-          </div>
-        </div>
-      </section>
-
-      <!-- Trending Voice Actors -->
-      <section v-if="!errorTrendingVoiceActors">
-        <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-900 dark:text-white tracking-wide">{{ $t('home.trendingVoiceActors') }}</h2>
-        <div v-if="isLoadingTrendingVoiceActors" class="flex gap-4 overflow-x-auto pb-4 pt-4 px-2">
-          <div v-for="i in 4" :key="i" class="w-36 flex-shrink-0 flex flex-col items-center gap-3">
-            <div class="w-28 h-28 bg-gray-200 dark:bg-gray-800 rounded-full animate-pulse"></div>
-            <div class="h-4 w-20 bg-gray-200 dark:bg-gray-800 rounded animate-pulse"></div>
-          </div>
-        </div>
-        <div v-else ref="vaScrollRef" class="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4 pt-4 px-2 custom-scrollbar">
-          <div v-for="va in trendingVoiceActors" :key="va.id" class="w-36 flex-shrink-0 snap-start">
-            <NuxtLink
-              :to="localePath('/voice-actor/' + va.id)"
-              class="flex flex-col items-center gap-3 group transition-transform hover:-translate-y-1 relative"
+          <div
+            v-else
+            ref="moviesScrollRef"
+            class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 custom-scrollbar"
+          >
+            <div
+              v-for="movie in trendingMovies"
+              :key="movie.id"
+              class="w-48 flex-shrink-0 snap-start"
             >
-              <div class="absolute top-0 right-2 bg-gradient-to-br from-cyan-400 to-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-lg border-2 border-white dark:border-[#1a1a1a] flex items-center justify-center min-w-[28px] z-10 transition-transform group-hover:scale-110 group-hover:rotate-6">
-                {{ va.work_count }}
-              </div>
-              <div class="relative w-28 h-28 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-800 border-2 border-transparent group-hover:border-cyan-500 transition-colors shadow-md">
-                <NuxtImg v-if="va.profile_picture" :src="va.profile_picture" :alt="va.firstname + ' ' + va.lastname" format="webp" loading="lazy" class="object-cover w-full h-full" />
-                <div v-else class="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-3xl font-bold uppercase">
-                  {{ va.firstname?.[0] }}{{ va.lastname?.[0] }}
+              <NuxtLink
+                :to="localePath('/movie/' + movie.id)"
+                class="group transition-transform hover:-translate-y-1 block"
+              >
+                <div
+                  class="relative w-full h-72 rounded-xl overflow-hidden mb-3 theme-surface-muted"
+                >
+                  <NuxtImg
+                    v-if="movie.poster_path"
+                    :src="'https://image.tmdb.org/t/p/w342' + movie.poster_path"
+                    :alt="movie.title"
+                    format="webp"
+                    loading="lazy"
+                    class="object-cover w-full h-full transition duration-300"
+                  />
                 </div>
-              </div>
-              <h3 class="font-semibold text-sm text-center text-gray-800 dark:text-gray-200 w-full px-2">{{ va.firstname }} {{ va.lastname }}</h3>
-            </NuxtLink>
+                <h3 class="font-semibold text-sm theme-text line-clamp-2">
+                  {{ movie.title }}
+                </h3>
+              </NuxtLink>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- Top Voice Actors -->
-      <section v-if="!errorTopVoiceActors">
-        <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-900 dark:text-white tracking-wide">{{ $t('home.topVoiceActors') }}</h2>
-        <div v-if="isLoadingTopVoiceActors" class="flex gap-4 overflow-x-auto pb-4 pt-4 px-2">
-          <div v-for="i in 4" :key="i" class="w-36 flex-shrink-0 flex flex-col items-center gap-3">
-            <div class="w-28 h-28 bg-gray-200 dark:bg-gray-800 rounded-full animate-pulse"></div>
-            <div class="h-4 w-20 bg-gray-200 dark:bg-gray-800 rounded animate-pulse"></div>
+        <!-- Trending Series -->
+        <section v-if="!errorSeries">
+          <h2
+            class="text-xl md:text-2xl font-bold mb-4 md:mb-6 theme-text tracking-wide"
+          >
+            {{ $t("home.trendingSeries") }}
+          </h2>
+          <div v-if="isLoadingSeries" class="flex gap-4 overflow-x-auto pb-4">
+            <div
+              v-for="i in 4"
+              :key="i"
+              class="w-48 h-72 theme-surface-muted animate-pulse rounded-xl flex-shrink-0"
+            ></div>
           </div>
-        </div>
-        <div v-else class="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4 pt-4 px-2 custom-scrollbar">
-          <div v-for="va in topVoiceActors" :key="va.id" class="w-36 flex-shrink-0 snap-start">
-            <NuxtLink
-              :to="localePath('/voice-actor/' + va.id)"
-              class="flex flex-col items-center gap-3 group transition-transform hover:-translate-y-1"
+          <div
+            v-else
+            ref="seriesScrollRef"
+            class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 custom-scrollbar"
+          >
+            <div
+              v-for="show in trendingSeries"
+              :key="show.id"
+              class="w-48 flex-shrink-0 snap-start"
             >
-              <div class="relative w-28 h-28 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-800 border-2 border-transparent group-hover:border-cyan-500 transition-colors shadow-md">
-                <NuxtImg v-if="va.profile_picture" :src="va.profile_picture" :alt="va.firstname + ' ' + va.lastname" format="webp" loading="lazy" class="object-cover w-full h-full" />
-                <div v-else class="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-3xl font-bold uppercase">
-                  {{ va.firstname?.[0] }}{{ va.lastname?.[0] }}
+              <NuxtLink
+                :to="localePath('/show/' + show.id)"
+                class="group transition-transform hover:-translate-y-1 block"
+              >
+                <div
+                  class="relative w-full h-72 rounded-xl overflow-hidden mb-3 theme-surface-muted"
+                >
+                  <NuxtImg
+                    v-if="show.poster_path"
+                    :src="'https://image.tmdb.org/t/p/w342' + show.poster_path"
+                    :alt="(show as any).name || (show as any).title"
+                    format="webp"
+                    loading="lazy"
+                    class="object-cover w-full h-full transition duration-300"
+                  />
                 </div>
-              </div>
-              <h3 class="font-semibold text-sm text-center text-gray-800 dark:text-gray-200 w-full px-2">{{ va.firstname }} {{ va.lastname }}</h3>
-            </NuxtLink>
+                <h3 class="font-semibold text-sm theme-text line-clamp-2">
+                  {{ (show as any).name || (show as any).title }}
+                </h3>
+              </NuxtLink>
+            </div>
           </div>
-        </div>
-      </section>
-      <!-- Top Contributors (Admin Only) -->
-      <section v-if="isAdmin && !errorTopContributors">
-        <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-900 dark:text-white tracking-wide">{{ $t('home.topContributorsAdmin') }}</h2>
-        <div v-if="isLoadingTopContributors" class="flex gap-4 overflow-x-auto pb-4">
-          <div v-for="i in 4" :key="i" class="w-32 flex-shrink-0 flex flex-col items-center gap-3">
-            <div class="w-24 h-24 bg-gray-200 dark:bg-gray-800 rounded-full animate-pulse"></div>
-            <div class="h-4 w-20 bg-gray-200 dark:bg-gray-800 rounded animate-pulse"></div>
+        </section>
+
+        <!-- Trending Games -->
+        <section v-if="!errorGames">
+          <h2
+            class="text-xl md:text-2xl font-bold mb-4 md:mb-6 theme-text tracking-wide"
+          >
+            {{ $t("game.trendingGames", "Jeux du moment") }}
+          </h2>
+          <div v-if="isLoadingGames" class="flex gap-4 overflow-x-auto pb-4">
+            <div
+              v-for="i in 4"
+              :key="i"
+              class="w-48 h-72 theme-surface-muted animate-pulse rounded-xl flex-shrink-0"
+            ></div>
           </div>
-        </div>
-        <div v-else ref="contributorsScrollRef" class="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4 pt-4 px-2 custom-scrollbar">
-          <div v-for="(contributor, index) in topContributors" :key="contributor.user_id" class="w-36 flex-shrink-0 snap-start">
-            <div class="flex flex-col items-center gap-3 group transition-transform hover:-translate-y-1 relative">
-              <div class="absolute -top-2 0 bg-yellow-400 text-black font-bold rounded-full w-8 h-8 flex items-center justify-center z-10 shadow-lg border-2 border-white dark:border-[#1a1a1a]" style="right: 8px;">
-                #{{ index + 1 }}
-              </div>
-              <div class="relative w-28 h-28 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-800 border-2 border-transparent group-hover:border-yellow-400 transition-colors shadow-md">
-                <NuxtImg v-if="contributor.raw_user_meta_data?.avatar_url" :src="contributor.raw_user_meta_data.avatar_url" :alt="contributor.raw_user_meta_data?.username || 'Utilisateur'" format="webp" loading="lazy" class="object-cover w-full h-full" />
-                <div v-else class="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-3xl font-bold uppercase">
-                  {{ (contributor.raw_user_meta_data?.username || 'U')[0] }}
+          <div
+            v-else
+            ref="gamesScrollRef"
+            class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 custom-scrollbar"
+          >
+            <div
+              v-for="game in trendingGames"
+              :key="game.id"
+              class="w-48 flex-shrink-0 snap-start"
+            >
+              <NuxtLink
+                :to="localePath('/game/' + game.id)"
+                class="group transition-transform hover:-translate-y-1 block"
+              >
+                <div
+                  class="relative w-full h-72 rounded-xl overflow-hidden mb-3 theme-surface-muted"
+                >
+                  <NuxtImg
+                    v-if="game.cover?.url"
+                    :src="game.cover.url"
+                    :alt="game.name"
+                    format="webp"
+                    loading="lazy"
+                    class="object-cover w-full h-full transition duration-300"
+                  />
                 </div>
-              </div>
-              <div class="text-center w-full">
-                <h3 class="font-semibold text-sm text-gray-800 dark:text-gray-200 truncate w-full px-2">{{ contributor.raw_user_meta_data?.username || 'Utilisateur' }}</h3>
-                <p class="text-xs text-gray-500 dark:text-gray-400">{{ contributor.score }}{{ $t('home.contributions') }}</p>
+                <h3 class="font-semibold text-sm theme-text line-clamp-2">
+                  {{ game.name }}
+                </h3>
+              </NuxtLink>
+            </div>
+          </div>
+        </section>
+
+        <!-- Trending Voice Actors -->
+        <section v-if="!errorTrendingVoiceActors">
+          <h2
+            class="text-xl md:text-2xl font-bold mb-4 md:mb-6 theme-text tracking-wide"
+          >
+            {{ $t("home.trendingVoiceActors") }}
+          </h2>
+          <div
+            v-if="isLoadingTrendingVoiceActors"
+            class="flex gap-4 overflow-x-auto pb-4 pt-4 px-2"
+          >
+            <div
+              v-for="i in 4"
+              :key="i"
+              class="w-36 flex-shrink-0 flex flex-col items-center gap-3"
+            >
+              <div
+                class="w-28 h-28 theme-surface-muted rounded-full animate-pulse"
+              ></div>
+              <div
+                class="h-4 w-20 theme-surface-muted rounded animate-pulse"
+              ></div>
+            </div>
+          </div>
+          <div
+            v-else
+            ref="vaScrollRef"
+            class="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4 pt-4 px-2 custom-scrollbar"
+          >
+            <div
+              v-for="va in trendingVoiceActors"
+              :key="va.id"
+              class="w-36 flex-shrink-0 snap-start"
+            >
+              <NuxtLink
+                :to="localePath('/voice-actor/' + va.id)"
+                class="flex flex-col items-center gap-3 group transition-transform hover:-translate-y-1 relative"
+              >
+                <div
+                  class="absolute top-0 right-2 bg-gradient-to-br from-cyan-400 to-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-lg border-2 border-white theme-border flex items-center justify-center min-w-[28px] z-10 transition-transform group-hover:scale-110 group-hover:rotate-6"
+                >
+                  {{ va.work_count }}
+                </div>
+                <div
+                  class="relative w-28 h-28 rounded-full overflow-hidden theme-surface-muted border-2 border-transparent theme-hover-primary-border transition-colors shadow-md"
+                >
+                  <NuxtImg
+                    v-if="va.profile_picture"
+                    :src="va.profile_picture"
+                    :alt="va.firstname + ' ' + va.lastname"
+                    format="webp"
+                    loading="lazy"
+                    class="object-cover w-full h-full"
+                  />
+                  <div
+                    v-else
+                    class="w-full h-full flex items-center justify-center theme-surface-muted theme-text-muted text-3xl font-bold uppercase"
+                  >
+                    {{ va.firstname?.[0] }}{{ va.lastname?.[0] }}
+                  </div>
+                </div>
+                <h3
+                  class="font-semibold text-sm text-center theme-text w-full px-2"
+                >
+                  {{ va.firstname }} {{ va.lastname }}
+                </h3>
+              </NuxtLink>
+            </div>
+          </div>
+        </section>
+
+        <!-- Top Voice Actors -->
+        <section v-if="!errorTopVoiceActors">
+          <h2
+            class="text-xl md:text-2xl font-bold mb-4 md:mb-6 theme-text tracking-wide"
+          >
+            {{ $t("home.topVoiceActors") }}
+          </h2>
+          <div
+            v-if="isLoadingTopVoiceActors"
+            class="flex gap-4 overflow-x-auto pb-4 pt-4 px-2"
+          >
+            <div
+              v-for="i in 4"
+              :key="i"
+              class="w-36 flex-shrink-0 flex flex-col items-center gap-3"
+            >
+              <div
+                class="w-28 h-28 theme-surface-muted rounded-full animate-pulse"
+              ></div>
+              <div
+                class="h-4 w-20 theme-surface-muted rounded animate-pulse"
+              ></div>
+            </div>
+          </div>
+          <div
+            v-else
+            class="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4 pt-4 px-2 custom-scrollbar"
+          >
+            <div
+              v-for="va in topVoiceActors"
+              :key="va.id"
+              class="w-36 flex-shrink-0 snap-start"
+            >
+              <NuxtLink
+                :to="localePath('/voice-actor/' + va.id)"
+                class="flex flex-col items-center gap-3 group transition-transform hover:-translate-y-1"
+              >
+                <div
+                  class="relative w-28 h-28 rounded-full overflow-hidden theme-surface-muted border-2 border-transparent theme-hover-primary-border transition-colors shadow-md"
+                >
+                  <NuxtImg
+                    v-if="va.profile_picture"
+                    :src="va.profile_picture"
+                    :alt="va.firstname + ' ' + va.lastname"
+                    format="webp"
+                    loading="lazy"
+                    class="object-cover w-full h-full"
+                  />
+                  <div
+                    v-else
+                    class="w-full h-full flex items-center justify-center theme-surface-muted theme-text-muted text-3xl font-bold uppercase"
+                  >
+                    {{ va.firstname?.[0] }}{{ va.lastname?.[0] }}
+                  </div>
+                </div>
+                <h3
+                  class="font-semibold text-sm text-center theme-text w-full px-2"
+                >
+                  {{ va.firstname }} {{ va.lastname }}
+                </h3>
+              </NuxtLink>
+            </div>
+          </div>
+        </section>
+        <!-- Top Contributors (Admin Only) -->
+        <section v-if="isAdmin && !errorTopContributors">
+          <h2
+            class="text-xl md:text-2xl font-bold mb-4 md:mb-6 theme-text tracking-wide"
+          >
+            {{ $t("home.topContributorsAdmin") }}
+          </h2>
+          <div
+            v-if="isLoadingTopContributors"
+            class="flex gap-4 overflow-x-auto pb-4"
+          >
+            <div
+              v-for="i in 4"
+              :key="i"
+              class="w-32 flex-shrink-0 flex flex-col items-center gap-3"
+            >
+              <div
+                class="w-24 h-24 theme-surface-muted rounded-full animate-pulse"
+              ></div>
+              <div
+                class="h-4 w-20 theme-surface-muted rounded animate-pulse"
+              ></div>
+            </div>
+          </div>
+          <div
+            v-else
+            ref="contributorsScrollRef"
+            class="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4 pt-4 px-2 custom-scrollbar"
+          >
+            <div
+              v-for="(contributor, index) in topContributors"
+              :key="contributor.user_id"
+              class="w-36 flex-shrink-0 snap-start"
+            >
+              <div
+                class="flex flex-col items-center gap-3 group transition-transform hover:-translate-y-1 relative"
+              >
+                <div
+                  class="absolute -top-2 0 bg-yellow-400 text-black font-bold rounded-full w-8 h-8 flex items-center justify-center z-10 shadow-lg border-2 border-white theme-border"
+                  style="right: 8px"
+                >
+                  #{{ index + 1 }}
+                </div>
+                <div
+                  class="relative w-28 h-28 rounded-full overflow-hidden theme-surface-muted border-2 border-transparent group-hover:border-yellow-400 transition-colors shadow-md"
+                >
+                  <NuxtImg
+                    v-if="contributor.raw_user_meta_data?.avatar_url"
+                    :src="contributor.raw_user_meta_data.avatar_url"
+                    :alt="
+                      contributor.raw_user_meta_data?.username || 'Utilisateur'
+                    "
+                    format="webp"
+                    loading="lazy"
+                    class="object-cover w-full h-full"
+                  />
+                  <div
+                    v-else
+                    class="w-full h-full flex items-center justify-center theme-surface-muted theme-text-muted text-3xl font-bold uppercase"
+                  >
+                    {{ (contributor.raw_user_meta_data?.username || "U")[0] }}
+                  </div>
+                </div>
+                <div class="text-center w-full">
+                  <h3
+                    class="font-semibold text-sm theme-text truncate w-full px-2"
+                  >
+                    {{
+                      contributor.raw_user_meta_data?.username || "Utilisateur"
+                    }}
+                  </h3>
+                  <p class="text-xs theme-text-muted">
+                    {{ contributor.score }}{{ $t("home.contributions") }}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
-    </main>
+        </section>
+      </main>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useHomeData, fetchHomeData } from '@app/shared-logic';
-import { useSearchModal } from '../composables/useSearchModal';
-import { useDragScroll } from '../composables/useDragScroll';
-import { ref, computed } from 'vue';
+import { useHomeData, fetchHomeData } from "@app/shared-logic";
+import { useSearchModal } from "../composables/useSearchModal";
+import { useDragScroll } from "../composables/useDragScroll";
+import { ref, computed } from "vue";
 
 const user = useSupabaseUser();
 const isAdmin = computed(() => {
-  return user.value?.app_metadata?.role === 'admin' || user.value?.user_metadata?.role === 'admin';
+  return (
+    user.value?.app_metadata?.role === "admin" ||
+    user.value?.user_metadata?.role === "admin"
+  );
 });
 
 const { t, locale } = useI18n();
@@ -209,12 +459,12 @@ const localePath = useLocalePath();
 
 const ogLocale = computed(() => {
   const map: Record<string, string> = {
-    fr: 'fr_FR',
-    en: 'en_US',
-    es: 'es_ES',
-    ja: 'ja_JP',
+    fr: "fr_FR",
+    en: "en_US",
+    es: "es_ES",
+    ja: "ja_JP",
   };
-  return map[locale.value] || 'en_US';
+  return map[locale.value] || "en_US";
 });
 
 const supabase = useSupabaseClient();
@@ -237,124 +487,131 @@ useHead({
   title: computed(() => {
     // In FR: "La base de données mondiale du doublage | DubbingBase"
     // In EN: "The Dubbing & Voice Actor Database | DubbingBase"
-    return `${t('home.meta.title')} | DubbingBase`;
+    return `${t("home.meta.title")} | DubbingBase`;
   }),
   meta: [
     {
-      name: 'description',
+      name: "description",
       content: computed(() => {
-        const desc = t('home.meta.description');
-        return desc.length > 160 ? desc.substring(0, 157) + '...' : desc;
+        const desc = t("home.meta.description");
+        return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
       }),
     },
     {
-      name: 'keywords',
-      content: computed(() => t('home.meta.keywords')),
+      name: "keywords",
+      content: computed(() => t("home.meta.keywords")),
     },
-    { property: 'og:title', content: computed(() => t('home.meta.ogTitle')) },
+    { property: "og:title", content: computed(() => t("home.meta.ogTitle")) },
     {
-      property: 'og:description',
+      property: "og:description",
       content: computed(() => {
-        const desc = t('home.meta.ogDescription');
-        return desc.length > 160 ? desc.substring(0, 157) + '...' : desc;
+        const desc = t("home.meta.ogDescription");
+        return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
       }),
     },
-    { property: 'og:type', content: 'website' },
-    { property: 'og:url', content: 'https://dubbingbase.com/' },
-    { property: 'og:image', content: 'https://dubbingbase.com/android-chrome-512x512.png' },
-    { property: 'og:site_name', content: 'DubbingBase' },
-    { property: 'og:locale', content: ogLocale },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: computed(() => t('home.meta.ogTitle')) },
+    { property: "og:type", content: "website" },
+    { property: "og:url", content: "https://dubbingbase.com/" },
     {
-      name: 'twitter:description',
+      property: "og:image",
+      content: "https://dubbingbase.com/android-chrome-512x512.png",
+    },
+    { property: "og:site_name", content: "DubbingBase" },
+    { property: "og:locale", content: ogLocale },
+    { name: "twitter:card", content: "summary_large_image" },
+    { name: "twitter:title", content: computed(() => t("home.meta.ogTitle")) },
+    {
+      name: "twitter:description",
       content: computed(() => {
-        const desc = t('home.meta.ogDescription');
-        return desc.length > 160 ? desc.substring(0, 157) + '...' : desc;
+        const desc = t("home.meta.ogDescription");
+        return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
       }),
     },
-    { name: 'twitter:image', content: 'https://dubbingbase.com/android-chrome-512x512.png' },
+    {
+      name: "twitter:image",
+      content: "https://dubbingbase.com/android-chrome-512x512.png",
+    },
   ],
   link: [
-    { rel: 'canonical', href: 'https://dubbingbase.com/' },
-    { rel: 'preconnect', href: 'https://image.tmdb.org', crossorigin: '' },
-    { rel: 'dns-prefetch', href: 'https://image.tmdb.org' },
-    { rel: 'preconnect', href: 'https://images.igdb.com', crossorigin: '' },
-    { rel: 'dns-prefetch', href: 'https://images.igdb.com' },
+    { rel: "canonical", href: "https://dubbingbase.com/" },
+    { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
+    { rel: "dns-prefetch", href: "https://image.tmdb.org" },
+    { rel: "preconnect", href: "https://images.igdb.com", crossorigin: "" },
+    { rel: "dns-prefetch", href: "https://images.igdb.com" },
   ],
   script: [
     {
-      type: 'application/ld+json',
+      type: "application/ld+json",
       innerHTML: computed(() => {
         const json = JSON.stringify([
           {
-            '@context': 'https://schema.org',
-            '@type': 'WebSite',
-            name: 'DubbingBase',
-            url: 'https://dubbingbase.com/',
-            description: t('home.meta.description'),
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "DubbingBase",
+            url: "https://dubbingbase.com/",
+            description: t("home.meta.description"),
             inLanguage: ogLocale.value,
             potentialAction: {
-              '@type': 'SearchAction',
-              target: 'https://dubbingbase.com/search?q={search_term_string}',
-              'query-input': 'required name=search_term_string'
-            }
+              "@type": "SearchAction",
+              target: "https://dubbingbase.com/search?q={search_term_string}",
+              "query-input": "required name=search_term_string",
+            },
           },
           {
-            '@context': 'https://schema.org',
-            '@type': 'Organization',
-            name: 'DubbingBase',
-            url: 'https://dubbingbase.com/',
-            logo: 'https://dubbingbase.com/android-chrome-512x512.png',
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: "DubbingBase",
+            url: "https://dubbingbase.com/",
+            logo: "https://dubbingbase.com/android-chrome-512x512.png",
             sameAs: [
-              'https://x.com/DubbingBase',
-              'https://instagram.com/dubbingbase'
-            ]
+              "https://x.com/DubbingBase",
+              "https://instagram.com/dubbingbase",
+            ],
           },
           {
-            '@context': 'https://schema.org',
-            '@type': 'ItemList',
-            'itemListElement': [
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            itemListElement: [
               {
-                '@type': 'SiteNavigationElement',
-                'position': 1,
-                'name': t('footer.movies', 'Films'),
-                'url': 'https://dubbingbase.com/movies'
+                "@type": "SiteNavigationElement",
+                position: 1,
+                name: t("footer.movies", "Films"),
+                url: "https://dubbingbase.com/movies",
               },
               {
-                '@type': 'SiteNavigationElement',
-                'position': 2,
-                'name': t('footer.series', 'Séries'),
-                'url': 'https://dubbingbase.com/series'
+                "@type": "SiteNavigationElement",
+                position: 2,
+                name: t("footer.series", "Séries"),
+                url: "https://dubbingbase.com/series",
               },
               {
-                '@type': 'SiteNavigationElement',
-                'position': 3,
-                'name': t('footer.voiceActors', 'Voice Actors'),
-                'url': 'https://dubbingbase.com/voice-actors'
-              }
-            ]
-          }
+                "@type": "SiteNavigationElement",
+                position: 3,
+                name: t("footer.voiceActors", "Voice Actors"),
+                url: "https://dubbingbase.com/voice-actors",
+              },
+            ],
+          },
         ]);
-        return json.replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+        return json
+          .replace(/</g, "\\u003c")
+          .replace(/>/g, "\\u003e")
+          .replace(/&/g, "\\u0026");
       }),
     },
   ],
 });
 
-const { data, pending } = useAsyncData(
-  'home-data',
-  () => fetchHomeData(),
-  {
-    getCachedData: (key, nuxtApp) =>
-      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
-  },
-);
+const { data, pending } = useAsyncData("home-data", () => fetchHomeData(), {
+  getCachedData: (key, nuxtApp) =>
+    nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+});
 
 const trendingMovies = computed(() => data.value?.trendingMovies || []);
 const trendingSeries = computed(() => data.value?.trendingSeries || []);
 const trendingGames = computed(() => data.value?.trendingGames || []);
-const trendingVoiceActors = computed(() => data.value?.trendingVoiceActors || []);
+const trendingVoiceActors = computed(
+  () => data.value?.trendingVoiceActors || [],
+);
 const topVoiceActors = computed(() => data.value?.topVoiceActors || []);
 const topContributors = computed(() => data.value?.topContributors || []);
 const homeStats = computed(() => data.value?.homeStats || null);
@@ -370,9 +627,15 @@ const isLoadingHomeStats = computed(() => pending.value);
 const errorMovies = computed(() => data.value?.errorMovies || "");
 const errorSeries = computed(() => data.value?.errorSeries || "");
 const errorGames = computed(() => data.value?.errorGames || "");
-const errorTrendingVoiceActors = computed(() => data.value?.errorTrendingVoiceActors || "");
-const errorTopVoiceActors = computed(() => data.value?.errorTopVoiceActors || "");
-const errorTopContributors = computed(() => data.value?.errorTopContributors || "");
+const errorTrendingVoiceActors = computed(
+  () => data.value?.errorTrendingVoiceActors || "",
+);
+const errorTopVoiceActors = computed(
+  () => data.value?.errorTopVoiceActors || "",
+);
+const errorTopContributors = computed(
+  () => data.value?.errorTopContributors || "",
+);
 </script>
 
 <style scoped>

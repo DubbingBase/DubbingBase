@@ -10,20 +10,20 @@
     >
       <template #metadata>
         <span
-          class="text-gray-900 dark:text-gray-100 font-semibold text-base md:text-lg bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg"
+          class="theme-text font-semibold text-base md:text-lg theme-surface-overlay backdrop-blur-md px-3 py-1 rounded-lg"
         >
           {{ movie.release_date ? movie.release_date.split("-")[0] : "" }}
         </span>
         <span
           v-if="movie.original_title !== movie.title"
-          class="text-gray-800 dark:text-gray-300 font-medium text-sm md:text-base bg-white/40 dark:bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-lg"
+          class="theme-text-secondary font-medium text-sm md:text-base theme-surface-overlay backdrop-blur-md px-3 py-1.5 rounded-lg"
         >
           {{ movie.original_title }}
         </span>
         <span
-          class="flex items-center gap-1.5 text-gray-900 dark:text-gray-100 font-bold text-sm md:text-base bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg"
+          class="flex items-center gap-1.5 theme-text font-bold text-sm md:text-base theme-surface-overlay backdrop-blur-md px-3 py-1 rounded-lg"
         >
-          <StarIcon class="w-4 h-4 text-yellow-500 fill-current" />
+          <StarIcon class="w-4 h-4 theme-rating fill-current" />
           {{ movie.vote_average?.toFixed(1) }}
         </span>
         <div class="flex gap-2 ml-2">
@@ -31,7 +31,7 @@
             :href="`https://www.themoviedb.org/movie/${movie.id}`"
             target="_blank"
             rel="noopener noreferrer"
-            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg bg-white/40 dark:bg-black/40 text-gray-800 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-black/60 transition-colors backdrop-blur-md uppercase tracking-wider"
+            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg theme-surface-overlay theme-text theme-hover-surface-muted transition-colors backdrop-blur-md uppercase tracking-wider"
             >{{ $t("common.tmdb")
             }}<ExternalLinkIcon class="w-3 h-3 opacity-70" />
           </a>
@@ -40,7 +40,7 @@
             :href="`https://thetvdb.com/search?query=${tvdbId}`"
             target="_blank"
             rel="noopener noreferrer"
-            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg bg-white/40 dark:bg-black/40 text-gray-800 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-black/60 transition-colors backdrop-blur-md uppercase tracking-wider"
+            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg theme-surface-overlay theme-text theme-hover-surface-muted transition-colors backdrop-blur-md uppercase tracking-wider"
             >{{ $t("common.tvdb")
             }}<ExternalLinkIcon class="w-3 h-3 opacity-70" />
           </a>
@@ -53,11 +53,11 @@
             v-for="project in dubbingProjects"
             :key="project.id"
             :to="{ query: { dub: project.id } }"
-            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-gray-200 dark:border-[#2a2a2a] flex items-center gap-1.5"
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border theme-border-subtle theme-border flex items-center gap-1.5"
             :class="
               activeDubId === project.id
-                ? 'bg-cyan-600 dark:bg-[#00E5FF] text-white dark:text-black border-cyan-600 dark:border-[#00E5FF]'
-                : 'bg-white dark:bg-[#1d1d1d] text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#2a2a2a]'
+                ? 'theme-primary-bg theme-primary-border'
+                : 'theme-surface theme-text-secondary theme-hover-surface-muted'
             "
           >
             {{ getDisplayLanguage(project.language) }}
@@ -66,14 +66,14 @@
               :class="
                 activeDubId === project.id
                   ? 'bg-black/15 text-black'
-                  : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 dark:text-gray-400'
+                  : 'theme-surface-raised theme-surface-muted theme-text-muted'
               "
             >
               {{ projectVoiceActorCount(project) }}
             </span>
           </NuxtLink>
         </div>
-        <div v-else class="text-sm text-gray-500 font-medium">
+        <div v-else class="text-sm theme-text-muted font-medium">
           {{ $t("details.noDubbingProjects") }}
         </div>
       </template>
@@ -82,27 +82,27 @@
         <template v-if="activeDubProject?.studio_data">
           <NuxtLink
             :to="localePath(`/studio/${activeDubProject.studio_data.id}`)"
-            class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-[#2a2a2a] hover:border-cyan-500 transition-colors group bg-gray-50 dark:bg-[#1d1d1d]"
+            class="flex items-center gap-2 px-3 py-1.5 rounded-lg border theme-border-subtle theme-border theme-hover-primary-border transition-colors group theme-surface-raised theme-surface"
             :title="$t('details.dubbingStudio')"
           >
             <div
-              class="w-6 h-6 rounded flex items-center justify-center overflow-hidden shrink-0 bg-white dark:bg-[#2a2a2a]"
+              class="w-6 h-6 rounded flex items-center justify-center overflow-hidden shrink-0 theme-surface-muted"
             >
               <img
                 v-if="activeDubProject.studio_data.logo_url"
                 :src="activeDubProject.studio_data.logo_url"
                 class="w-full h-full object-contain p-0.5"
               />
-              <span v-else class="font-bold text-xs text-gray-400">{{
+              <span v-else class="font-bold text-xs theme-text-muted">{{
                 activeDubProject.studio_data.name?.charAt(0) || ""
               }}</span>
             </div>
             <span
-              class="font-medium text-xs group-hover:text-cyan-500 transition-colors truncate max-w-[120px]"
+              class="font-medium text-xs theme-hover-primary-text transition-colors truncate max-w-[120px]"
               >{{ activeDubProject.studio_data.name }}</span
             >
           </NuxtLink>
-          <div class="h-6 w-px bg-gray-200 dark:bg-[#2a2a2a]"></div>
+          <div class="h-6 w-px theme-surface-muted"></div>
         </template>
 
         <NuxtLink
@@ -114,7 +114,7 @@
                 : `/movie/${movie.id}/projects/new`,
             )
           "
-          class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-medium"
+          class="text-sm theme-primary-text theme-hover-primary-text transition-colors flex items-center gap-1.5 font-medium"
         >
           <svg
             class="w-4 h-4"
@@ -140,7 +140,7 @@
 
         <button
           @click="isReportModalOpen = true"
-          class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1.5"
+          class="text-sm theme-text-muted theme-hover-danger-text transition-colors flex items-center gap-1.5"
           :title="$t('report.title')"
         >
           <svg
@@ -168,7 +168,7 @@
             <h2 class="text-2xl font-bold mb-4">
               {{ $t("details.synopsis") }}
             </h2>
-            <p class="text-gray-700 dark:text-gray-300 leading-relaxed text-lg">
+            <p class="theme-text-secondary leading-relaxed text-lg">
               {{ movie.overview || $t("details.noSynopsis") }}
             </p>
           </section>
@@ -184,7 +184,7 @@
                 <h2 class="text-2xl font-bold">
                   {{ $t("details.castAndCrew") }}
                 </h2>
-                <div class="text-gray-500 dark:text-gray-400 text-sm mt-1">
+                <div class="theme-text-muted text-sm mt-1">
                   {{
                     $t("media.rolesCount", {
                       shown: filteredCast.length,
@@ -196,13 +196,13 @@
 
               <div class="relative w-full sm:w-64">
                 <SearchIcon
-                  class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+                  class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 theme-text-muted"
                 />
                 <input
                   v-model="searchInput"
                   type="search"
                   :placeholder="$t('search.placeholder')"
-                  class="w-full bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-[#00E5FF] transition-all text-gray-900 dark:text-white"
+                  class="w-full theme-input border theme-border-subtle theme-border rounded-xl pl-10 pr-4 py-2 text-sm theme-focus transition-all theme-text"
                 />
               </div>
             </div>
@@ -218,7 +218,7 @@
             <template #default="{ item: actor }">
               <div
                 :key="actor.id"
-                class="bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl p-4 shadow-sm transition-colors hover:border-gray-300 dark:hover:border-gray-700"
+                class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border"
               >
                 <div
                   class="flex flex-col sm:grid gap-4"
@@ -232,7 +232,7 @@
                   >
                     <NuxtLink
                       :to="localePath(`/actor/${actor.id}`)"
-                      class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] bg-gray-200 dark:bg-[#222] sm:mb-3 flex-shrink-0"
+                      class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                       :aria-label="actor.name"
                     >
                       <NuxtImg
@@ -249,7 +249,7 @@
                       class="flex flex-col min-w-0 flex-1 w-full overflow-hidden"
                     >
                       <div
-                        class="flex items-center gap-1.5 text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-1"
+                        class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
                       >
                         <ClapperboardIcon class="w-3 h-3 flex-shrink-0" />
                         <span class="truncate block w-full">{{
@@ -258,7 +258,7 @@
                       </div>
                       <NuxtLink
                         :to="localePath(`/actor/${actor.id}`)"
-                        class="font-bold text-sm text-gray-900 dark:text-white truncate hover:underline block w-full"
+                        class="font-bold text-sm theme-text truncate hover:underline block w-full"
                         :title="actor.name"
                       >
                         {{ actor.name }}
@@ -271,7 +271,7 @@
                     class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start"
                   >
                     <div
-                      class="w-16 sm:w-full relative block overflow-hidden rounded-xl aspect-[2/3] bg-gray-200 dark:bg-[#222] sm:mb-3 flex-shrink-0"
+                      class="w-16 sm:w-full relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                     >
                       <NuxtImg
                         format="webp"
@@ -284,7 +284,7 @@
                       />
                       <div
                         v-else
-                        class="w-full h-full flex items-center justify-center text-gray-400"
+                        class="w-full h-full flex items-center justify-center theme-text-muted"
                       >
                         <UserIcon class="w-8 h-8 opacity-50" />
                       </div>
@@ -293,7 +293,7 @@
                       class="flex flex-col min-w-0 flex-1 w-full overflow-hidden"
                     >
                       <div
-                        class="flex items-center gap-1.5 text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-1"
+                        class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
                       >
                         <UserIcon class="w-3 h-3 flex-shrink-0" />
                         <span class="truncate block w-full">{{
@@ -301,7 +301,7 @@
                         }}</span>
                       </div>
                       <div
-                        class="font-bold text-sm text-gray-900 dark:text-white truncate block w-full"
+                        class="font-bold text-sm theme-text truncate block w-full"
                         :title="
                           actor.character || actor.workCharacterName || ''
                         "
@@ -318,12 +318,12 @@
                   <!-- Voice Actor (hidden when viewing in original language) -->
                   <div
                     v-if="!isOriginalLanguage"
-                    class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-4 sm:pt-0 mt-2 sm:mt-0"
+                    class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t theme-border-subtle theme-border sm:border-t-0 pt-4 sm:pt-0 mt-2 sm:mt-0"
                   >
                     <template v-if="actor.voiceActor">
                       <NuxtLink
                         :to="localePath(`/voice-actor/${actor.voiceActor.id}`)"
-                        class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] bg-gray-200 dark:bg-[#222] sm:mb-3 flex-shrink-0"
+                        class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                         :aria-label="`${actor.voiceActor.firstname} ${actor.voiceActor.lastname}`"
                       >
                         <NuxtImg
@@ -337,7 +337,7 @@
                         />
                         <div
                           v-else
-                          class="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-400"
+                          class="w-full h-full flex items-center justify-center text-2xl font-bold theme-text-muted"
                         >
                           {{ actor.voiceActor.firstname?.[0]
                           }}{{ actor.voiceActor.lastname?.[0] }}
@@ -347,7 +347,7 @@
                         class="flex flex-col min-w-0 flex-1 w-full overflow-hidden"
                       >
                         <div
-                          class="flex items-center gap-1.5 text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-1"
+                          class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
                         >
                           <MicIcon class="w-3 h-3 flex-shrink-0" />
                           <span class="truncate block w-full">{{
@@ -358,7 +358,7 @@
                           :to="
                             localePath(`/voice-actor/${actor.voiceActor.id}`)
                           "
-                          class="font-bold text-sm text-gray-900 dark:text-white truncate hover:underline block w-full"
+                          class="font-bold text-sm theme-text truncate hover:underline block w-full"
                           :title="
                             actor.voiceActor.firstname +
                             ' ' +
@@ -370,7 +370,7 @@
                         </NuxtLink>
                         <div
                           v-if="actor.voiceActor.note"
-                          class="text-xs text-gray-500 dark:text-gray-400 mt-1"
+                          class="text-xs theme-text-muted mt-1"
                         >
                           {{ actor.voiceActor.note }}
                         </div>
@@ -378,10 +378,10 @@
                     </template>
                     <template v-else>
                       <div
-                        class="w-16 sm:w-full relative block overflow-hidden rounded-xl aspect-[2/3] bg-gray-200 dark:bg-[#222] sm:mb-3 flex-shrink-0"
+                        class="w-16 sm:w-full relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                       >
                         <div
-                          class="w-full h-full flex items-center justify-center text-gray-400"
+                          class="w-full h-full flex items-center justify-center theme-text-muted"
                         >
                           <UserIcon class="w-8 h-8 opacity-50" />
                         </div>
@@ -390,7 +390,7 @@
                         class="flex flex-col min-w-0 flex-1 w-full overflow-hidden"
                       >
                         <div
-                          class="flex items-center gap-1.5 text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-1"
+                          class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
                         >
                           <MicIcon class="w-3 h-3 opacity-50 flex-shrink-0" />
                           <span class="truncate block w-full">{{
@@ -398,7 +398,7 @@
                           }}</span>
                         </div>
                         <div
-                          class="text-sm text-gray-400 italic truncate block w-full"
+                          class="text-sm theme-text-muted italic truncate block w-full"
                         >
                           {{ $t("details.notSpecified") }}
                         </div>
@@ -409,7 +409,7 @@
               </div>
             </template>
           </PaginatedResponsiveGrid>
-          <span class="block text-xs text-gray-400 mt-4">{{
+          <span class="block text-xs theme-text-muted mt-4">{{
             $t("media.rolesCount", {
               shown: filteredCast.length,
               total: filteredCast.length,
@@ -421,7 +421,7 @@
 
     <div
       v-else-if="!pending"
-      class="text-center py-20 text-gray-500 min-h-screen"
+      class="text-center py-20 theme-text-muted min-h-screen"
     >
       {{ $t("movie.notFound") }}
     </div>

@@ -1,8 +1,10 @@
 <template>
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <div class="mb-8">
-      <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white">{{ $t('profile.account') }}</h1>
-      <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">{{ $t('profile.subtitle') }}</p>
+      <h1 class="text-3xl font-extrabold theme-text">
+        {{ $t("profile.account") }}
+      </h1>
+      <p class="mt-2 text-sm theme-text-muted">{{ $t("profile.subtitle") }}</p>
     </div>
 
     <div class="flex flex-col md:flex-row gap-8">
@@ -12,32 +14,57 @@
           <NuxtLink
             :to="localePath('/profile')"
             class="flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors"
-            active-class="bg-cyan-50 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300"
-            exact-active-class="bg-cyan-50 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300"
-            :class="[route.path === localePath('/profile') || route.path === localePath('/profile/') ? 'bg-cyan-50 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300' : 'text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5']"
-          >{{ $t('profile.title') }}</NuxtLink>
+            active-class="theme-selected"
+            exact-active-class="theme-selected"
+            :class="[
+              route.path === localePath('/profile') ||
+              route.path === localePath('/profile/')
+                ? 'theme-selected'
+                : 'theme-text-secondary theme-hover-surface-muted',
+            ]"
+            >{{ $t("profile.title") }}</NuxtLink
+          >
           <NuxtLink
             :to="localePath('/profile/api-key')"
             class="flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors"
-            active-class="bg-cyan-50 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300"
-            :class="[route.path === localePath('/profile/api-key') || route.path === localePath('/profile/api-key/') ? 'bg-cyan-50 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300' : 'text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5']"
-          >{{ $t('profile.apiKey') }}</NuxtLink>
+            active-class="theme-selected"
+            :class="[
+              route.path === localePath('/profile/api-key') ||
+              route.path === localePath('/profile/api-key/')
+                ? 'theme-selected'
+                : 'theme-text-secondary theme-hover-surface-muted',
+            ]"
+            >{{ $t("profile.apiKey") }}</NuxtLink
+          >
           <NuxtLink
             :to="localePath('/profile/settings')"
             class="flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors"
-            active-class="bg-cyan-50 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300"
-            :class="[route.path === localePath('/profile/settings') || route.path === localePath('/profile/settings/') ? 'bg-cyan-50 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300' : 'text-gray-900 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5']"
-          >{{ $t('profile.settings') }}</NuxtLink>
+            active-class="theme-selected"
+            :class="[
+              route.path === localePath('/profile/settings') ||
+              route.path === localePath('/profile/settings/')
+                ? 'theme-selected'
+                : 'theme-text-secondary theme-hover-surface-muted',
+            ]"
+            >{{ $t("profile.settings") }}</NuxtLink
+          >
         </nav>
-        
+
         <div class="mt-8">
-          <button @click="handleLogout" class="w-full flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-red-700 bg-red-100 hover:bg-red-200 dark:text-red-400 dark:bg-red-900/30 dark:hover:bg-red-900/50 transition-colors">{{ $t('profile.logout') }}</button>
+          <button
+            @click="handleLogout"
+            class="w-full flex justify-center items-center px-4 py-2 border rounded-lg text-sm font-medium theme-status-danger transition-colors"
+          >
+            {{ $t("profile.logout") }}
+          </button>
         </div>
       </aside>
 
       <!-- Main Content Area -->
       <main class="flex-1">
-        <div class="bg-white dark:bg-[#18181b] shadow-xl rounded-2xl border border-gray-200 dark:border-white/5 p-6 md:p-8">
+        <div
+          class="theme-surface shadow-xl rounded-2xl border theme-border-subtle p-6 md:p-8"
+        >
           <NuxtPage />
         </div>
       </main>
@@ -46,16 +73,16 @@
 </template>
 
 <script setup lang="ts">
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute, useRouter } from "vue-router";
 
 definePageMeta({
-  middleware: 'auth'
+  middleware: "auth",
 });
 
 useSeoMeta({
-  title: 'Profile - DubbingBase',
-  description: 'Manage your DubbingBase account and preferences.',
-  robots: 'noindex, nofollow'
+  title: "Profile - DubbingBase",
+  description: "Manage your DubbingBase account and preferences.",
+  robots: "noindex, nofollow",
 });
 
 const route = useRoute();
@@ -65,6 +92,6 @@ const supabase = useSupabaseClient();
 const localePath = useLocalePath();
 const handleLogout = async () => {
   await supabase.auth.signOut();
-  router.push(localePath('/login'));
+  router.push(localePath("/login"));
 };
 </script>

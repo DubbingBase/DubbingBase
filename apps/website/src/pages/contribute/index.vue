@@ -1,64 +1,130 @@
 <template>
-  <div class="min-h-screen bg-[#121212] text-[#e0e0e0] py-12 px-4 sm:px-6 lg:px-8 font-sans">
+  <div
+    class="min-h-screen theme-bg theme-text py-12 px-4 sm:px-6 lg:px-8 font-sans"
+  >
     <div class="max-w-5xl mx-auto space-y-12">
       <!-- Header Section -->
       <div class="text-center space-y-4">
-        <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 animate-pulse-slow">
-          {{ $t('contribute.title') }}
+        <h1
+          class="text-4xl md:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 animate-pulse-slow"
+        >
+          {{ $t("contribute.title") }}
         </h1>
-        <p class="text-lg md:text-xl text-[#a0a0a0] max-w-2xl mx-auto">
-          {{ $t('contribute.description') }}
+        <p class="text-lg md:text-xl theme-text-muted max-w-2xl mx-auto">
+          {{ $t("contribute.description") }}
         </p>
       </div>
 
       <!-- Stats / Rank Section -->
-      <div class="bg-[#1d1d1d]/80 backdrop-blur-md rounded-2xl p-6 border border-[#2a2a2a] shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 transition-transform hover:scale-[1.01]">
+      <div
+        class="theme-surface backdrop-blur-md rounded-2xl p-6 border theme-border shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 transition-transform hover:scale-[1.01]"
+      >
         <div class="flex items-center gap-4">
-          <div class="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-2xl font-bold text-white shadow-lg">{{ $t('contribute.lv') }}</div>
+          <div
+            class="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-2xl font-bold text-white shadow-lg"
+          >
+            {{ $t("contribute.lv") }}
+          </div>
           <div>
-            <h2 class="text-2xl font-bold text-white">{{ $t('contribute.bronzeContributor') }}</h2>
-            <p class="text-[#a0a0a0]">{{ $t('contribute.currentScore') }} <span class="text-emerald-400 font-mono font-semibold">{{ $t('contribute.pts1250') }}</span></p>
+            <h2 class="text-2xl font-bold text-white">
+              {{ $t("contribute.bronzeContributor") }}
+            </h2>
+            <p class="theme-text-muted">
+              {{ $t("contribute.currentScore") }}
+              <span class="theme-status-success-text font-mono font-semibold">{{
+                $t("contribute.pts1250")
+              }}</span>
+            </p>
           </div>
         </div>
         <div class="w-full md:w-1/2">
-          <div class="flex justify-between text-sm mb-2 text-[#a0a0a0]">
-            <span>{{ $t('contribute.progressToSilver') }}</span>
-            <span>{{ $t('contribute.pts2000') }}</span>
+          <div class="flex justify-between text-sm mb-2 theme-text-muted">
+            <span>{{ $t("contribute.progressToSilver") }}</span>
+            <span>{{ $t("contribute.pts2000") }}</span>
           </div>
-          <div class="w-full bg-[#2a2a2a] rounded-full h-3 overflow-hidden">
-            <div class="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full" style="width: 62%"></div>
+          <div
+            class="w-full theme-surface-muted rounded-full h-3 overflow-hidden"
+          >
+            <div
+              class="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full"
+              style="width: 62%"
+            ></div>
           </div>
         </div>
       </div>
 
       <!-- Start Contributing CTA -->
-      <div class="flex flex-col items-center justify-center space-y-6 py-12 bg-[#1d1d1d] rounded-3xl border border-[#2a2a2a] shadow-2xl relative overflow-hidden">
-        <div class="absolute inset-0 pointer-events-none bg-gradient-to-br from-blue-500/5 to-purple-500/5"></div>
-        <h3 class="text-3xl font-bold text-white text-center relative z-10">{{ $t('contribute.readyToHelp') }}</h3>
-        <p class="text-[#a0a0a0] text-center max-w-lg relative z-10 text-lg">
-          {{ $t('contribute.readyToHelpDescription') }}
+      <div
+        class="flex flex-col items-center justify-center space-y-6 py-12 theme-surface rounded-3xl border theme-border shadow-2xl relative overflow-hidden"
+      >
+        <div
+          class="absolute inset-0 pointer-events-none bg-gradient-to-br from-blue-500/5 to-purple-500/5"
+        ></div>
+        <h3 class="text-3xl font-bold text-white text-center relative z-10">
+          {{ $t("contribute.readyToHelp") }}
+        </h3>
+        <p class="theme-text-muted text-center max-w-lg relative z-10 text-lg">
+          {{ $t("contribute.readyToHelpDescription") }}
         </p>
-        <NuxtLink :to="localePath('/contribute/task/play')" class="group relative mt-4 px-10 py-5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl font-bold text-xl text-white shadow-[0_0_40px_rgba(59,130,246,0.4)] hover:shadow-[0_0_60px_rgba(168,85,247,0.6)] hover:-translate-y-1 transition-all overflow-hidden flex items-center gap-3">
-          <div class="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-          <span class="relative z-10">{{ $t('contribute.startContributing') }}</span>
-          <svg class="w-6 h-6 relative z-10 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        <NuxtLink
+          :to="localePath('/contribute/task/play')"
+          class="group relative mt-4 px-10 py-5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl font-bold text-xl text-white shadow-[0_0_40px_rgba(59,130,246,0.4)] hover:shadow-[0_0_60px_rgba(168,85,247,0.6)] hover:-translate-y-1 transition-all overflow-hidden flex items-center gap-3"
+        >
+          <div
+            class="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"
+          ></div>
+          <span class="relative z-10">{{
+            $t("contribute.startContributing")
+          }}</span>
+          <svg
+            class="w-6 h-6 relative z-10 group-hover:translate-x-1 transition-transform"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 10V3L4 14h7v7l9-11h-7z"
+            />
           </svg>
         </NuxtLink>
       </div>
 
       <!-- Live Activity Ticker -->
-      <div class="bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a] overflow-hidden relative h-16 flex items-center">
-        <div class="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-[#1a1a1a] to-transparent z-10"></div>
-        <div class="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-[#1a1a1a] to-transparent z-10"></div>
-        <div class="flex animate-[ticker_20s_linear_infinite] whitespace-nowrap gap-8 text-sm text-[#a0a0a0]">
-          <span v-for="activity in recentActivities" :key="activity.id" class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-emerald-500"></span> 
-            <b>{{ activity.user_name }}</b>{{ $t('contribute.activityFor', { action: activity.action.replace(/_/g, ' '), name: activity.entity_name, pts: activity.points_awarded }) }}</span>
-          <span v-if="recentActivities.length === 0" class="text-[#a0a0a0]">{{ $t('contribute.noRecentActivities') }}</span>
+      <div
+        class="theme-surface-raised rounded-xl p-4 border theme-border overflow-hidden relative h-16 flex items-center"
+      >
+        <div
+          class="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-[var(--app-color-surface)] to-transparent z-10"
+        ></div>
+        <div
+          class="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-[var(--app-color-surface)] to-transparent z-10"
+        ></div>
+        <div
+          class="flex animate-[ticker_20s_linear_infinite] whitespace-nowrap gap-8 text-sm theme-text-muted"
+        >
+          <span
+            v-for="activity in recentActivities"
+            :key="activity.id"
+            class="flex items-center gap-2"
+          >
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <b>{{ activity.user_name }}</b
+            >{{
+              $t("contribute.activityFor", {
+                action: activity.action.replace(/_/g, " "),
+                name: activity.entity_name,
+                pts: activity.points_awarded,
+              })
+            }}</span
+          >
+          <span v-if="recentActivities.length === 0" class="theme-text-muted">{{
+            $t("contribute.noRecentActivities")
+          }}</span>
         </div>
       </div>
-
     </div>
   </div>
 </template>
@@ -68,9 +134,11 @@ const localePath = useLocalePath();
 const supabase = useSupabaseClient();
 
 const { data: recentActivitiesData } = await useAsyncData(
-  'recent-contributions',
+  "recent-contributions",
   async () => {
-    const { data, error } = await supabase.rpc('get_recent_contributions', { limit_param: 10 });
+    const { data, error } = await supabase.rpc("get_recent_contributions", {
+      limit_param: 10,
+    });
     if (error) return [];
     return data || [];
   },
@@ -85,8 +153,12 @@ const recentActivities = computed(() => recentActivitiesData.value || []);
 
 <style scoped>
 @keyframes ticker {
-  0% { transform: translateX(100%); }
-  100% { transform: translateX(-100%); }
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
 }
 .animate-pulse-slow {
   animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;

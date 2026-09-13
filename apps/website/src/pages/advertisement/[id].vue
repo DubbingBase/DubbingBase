@@ -11,7 +11,9 @@
       :title="advertisement.title"
       :original-title="advertisement.brand"
       :media-type="'advertisement'"
-      :release-year="advertisement.year ? String(advertisement.year) : undefined"
+      :release-year="
+        advertisement.year ? String(advertisement.year) : undefined
+      "
       :overview="advertisement.description"
       :dubbing-projects="dubbingProjects"
       :active-dub-id="activeDubId"
@@ -27,9 +29,11 @@
                   : `/advertisement/${advertisement.id}/projects/new`,
               )
             "
-            class="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 text-xs font-semibold rounded-xl border border-emerald-500/30 flex items-center gap-1.5 transition-colors"
+            class="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 theme-status-success-text text-xs font-semibold rounded-xl border border-emerald-500/30 flex items-center gap-1.5 transition-colors"
           >
-            <span>{{ activeDubProject ? "Modifier le projet" : "Ajouter un projet" }}</span>
+            <span>{{
+              activeDubProject ? "Modifier le projet" : "Ajouter un projet"
+            }}</span>
           </NuxtLink>
 
           <ForceEnqueueButton
@@ -41,20 +45,34 @@
       </template>
 
       <template #details-extra>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-4 border-t border-gray-800/60">
+        <div
+          class="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-4 border-t theme-border"
+        >
           <div v-if="advertisement.brand">
-            <span class="text-xs text-gray-400 block mb-0.5">{{ $t('advertisement.brand') }}</span>
-            <span class="text-sm font-semibold text-gray-200">{{ advertisement.brand }}</span>
+            <span class="text-xs theme-text-muted block mb-0.5">{{
+              $t("advertisement.brand")
+            }}</span>
+            <span class="text-sm font-semibold theme-text">{{
+              advertisement.brand
+            }}</span>
           </div>
 
           <div v-if="advertisement.agency">
-            <span class="text-xs text-gray-400 block mb-0.5">{{ $t('advertisement.agencyLabel') }}</span>
-            <span class="text-sm font-semibold text-gray-200">{{ advertisement.agency }}</span>
+            <span class="text-xs theme-text-muted block mb-0.5">{{
+              $t("advertisement.agencyLabel")
+            }}</span>
+            <span class="text-sm font-semibold theme-text">{{
+              advertisement.agency
+            }}</span>
           </div>
 
           <div v-if="advertisement.country">
-            <span class="text-xs text-gray-400 block mb-0.5">{{ $t('advertisement.countryBroadcast') }}</span>
-            <span class="text-sm font-semibold text-gray-200">{{ advertisement.country }}</span>
+            <span class="text-xs theme-text-muted block mb-0.5">{{
+              $t("advertisement.countryBroadcast")
+            }}</span>
+            <span class="text-sm font-semibold theme-text">{{
+              advertisement.country
+            }}</span>
           </div>
         </div>
       </template>
@@ -63,15 +81,28 @@
       <template #media-extra>
         <div
           v-if="advertisement.video_id"
-          class="bg-gray-900/60 border border-gray-800 rounded-2xl p-6 space-y-4 mb-8 shadow-xl"
+          class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-4 mb-8 shadow-xl"
         >
-          <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">{{ $t('advertisement.videoSpot') }}</h3>
-          <div class="aspect-video w-full rounded-xl overflow-hidden bg-black shadow-lg">
+          <h3
+            class="text-xs font-bold theme-text-muted uppercase tracking-wider"
+          >
+            {{ $t("advertisement.videoSpot") }}
+          </h3>
+          <div
+            class="aspect-video w-full rounded-xl overflow-hidden bg-black shadow-lg"
+          >
             <iframe
               :src="`https://www.youtube.com/embed/${advertisement.video_id}`"
               class="w-full h-full"
               allowfullscreen
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allow="
+                accelerometer;
+                autoplay;
+                clipboard-write;
+                encrypted-media;
+                gyroscope;
+                picture-in-picture;
+              "
             ></iframe>
           </div>
         </div>
@@ -80,17 +111,26 @@
       <!-- Technical Crew / Studio Section -->
       <template #crew-section>
         <div
-          v-if="activeDubProject?.studios || activeDubProject?.dubbing_project_crew?.length"
-          class="bg-gray-900/60 backdrop-blur border border-gray-800 rounded-2xl p-6 space-y-4 mb-8 shadow-xl"
+          v-if="
+            activeDubProject?.studios ||
+            activeDubProject?.dubbing_project_crew?.length
+          "
+          class="theme-surface-overlay backdrop-blur border theme-border rounded-2xl p-6 space-y-4 mb-8 shadow-xl"
         >
-          <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">{{ $t('advertisement.studioAndSoundProduction') }}</h3>
+          <h3
+            class="text-xs font-bold theme-text-muted uppercase tracking-wider"
+          >
+            {{ $t("advertisement.studioAndSoundProduction") }}
+          </h3>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div v-if="activeDubProject?.studios" class="space-y-1">
-              <span class="text-xs text-gray-400">{{ $t('studio.recordingStudio') }}</span>
+              <span class="text-xs theme-text-muted">{{
+                $t("studio.recordingStudio")
+              }}</span>
               <NuxtLink
                 :to="localePath(`/studio/${activeDubProject.studios.id}`)"
-                class="text-sm font-semibold text-emerald-400 hover:underline block"
+                class="text-sm font-semibold theme-status-success-text hover:underline block"
               >
                 {{ activeDubProject.studios.name }}
               </NuxtLink>
@@ -101,13 +141,16 @@
               :key="member.id"
               class="space-y-1"
             >
-              <span class="text-xs text-gray-400">{{ member.jobs?.name || "Équipe" }}</span>
+              <span class="text-xs theme-text-muted">{{
+                member.jobs?.name || "Équipe"
+              }}</span>
               <NuxtLink
                 v-if="member.voice_actors"
                 :to="localePath(`/voice-actor/${member.voice_actors.id}`)"
                 class="text-sm font-semibold text-white hover:underline block"
               >
-                {{ member.voice_actors.firstname }} {{ member.voice_actors.lastname }}
+                {{ member.voice_actors.firstname }}
+                {{ member.voice_actors.lastname }}
               </NuxtLink>
             </div>
           </div>
@@ -117,25 +160,31 @@
       <!-- Voice Cast Section -->
       <template #cast-section>
         <section class="space-y-6">
-          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div
+            class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+          >
             <div>
               <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                <span>{{ $t('advertisementEditor.voiceOffActors') }}</span>
+                <span>{{ $t("advertisementEditor.voiceOffActors") }}</span>
                 <span
                   v-if="formattedCast.length > 0"
-                  class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-semibold border border-emerald-500/20"
+                  class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 theme-status-success-text font-semibold border border-emerald-500/20"
                 >
                   {{ formattedCast.length }}
                 </span>
               </h2>
-              <p class="text-xs text-gray-400 mt-1">{{ $t('advertisement.voiceCastDescription') }}</p>
+              <p class="text-xs theme-text-muted mt-1">
+                {{ $t("advertisement.voiceCastDescription") }}
+              </p>
             </div>
           </div>
 
           <div
             v-if="formattedCast.length === 0"
-            class="text-center py-16 bg-gray-900/30 rounded-2xl border border-gray-800/40 text-gray-500 text-sm"
-          >{{ $t('advertisement.noVoicesYet') }}</div>
+            class="text-center py-16 theme-surface-overlay rounded-2xl border theme-border theme-text-muted text-sm"
+          >
+            {{ $t("advertisement.noVoicesYet") }}
+          </div>
 
           <div
             v-else
@@ -144,11 +193,11 @@
             <div
               v-for="item in formattedCast"
               :key="item.work_id"
-              class="bg-gray-900/80 border border-gray-800/80 rounded-2xl p-4 flex gap-4 items-center hover:border-gray-700 transition-colors group shadow-md"
+              class="theme-surface-overlay border theme-border rounded-2xl p-4 flex gap-4 items-center theme-hover-border transition-colors group shadow-md"
             >
               <NuxtLink
                 :to="localePath(`/voice-actor/${item.voice_actor_id}`)"
-                class="relative w-14 h-14 rounded-full overflow-hidden bg-gray-800 shrink-0 border border-gray-700 group-hover:border-emerald-500 transition-colors flex items-center justify-center"
+                class="relative w-14 h-14 rounded-full overflow-hidden theme-surface-muted shrink-0 border theme-border group-hover:border-emerald-500 transition-colors flex items-center justify-center"
               >
                 <NuxtImg
                   v-if="item.profile_picture"
@@ -158,7 +207,7 @@
                   loading="lazy"
                   decoding="async"
                 />
-                <span v-else class="text-sm font-bold text-gray-400">
+                <span v-else class="text-sm font-bold theme-text-muted">
                   {{ item.firstname?.[0] }}{{ item.lastname?.[0] }}
                 </span>
               </NuxtLink>
@@ -166,14 +215,18 @@
               <div class="flex-1 min-w-0">
                 <NuxtLink
                   :to="localePath(`/voice-actor/${item.voice_actor_id}`)"
-                  class="text-sm font-bold text-white hover:text-emerald-400 transition-colors truncate block"
+                  class="text-sm font-bold text-white theme-status-success-text transition-colors truncate block"
                 >
                   {{ item.firstname }} {{ item.lastname }}
                 </NuxtLink>
-                <span class="text-xs text-gray-400 block truncate mt-0.5">
+                <span class="text-xs theme-text-muted block truncate mt-0.5">
                   {{ item.character_name || item.performance || "Voix off" }}
                 </span>
-                <span v-if="item.note" class="text-xs text-gray-500 block truncate mt-1">{{ item.note }}</span>
+                <span
+                  v-if="item.note"
+                  class="text-xs theme-text-muted block truncate mt-1"
+                  >{{ item.note }}</span
+                >
               </div>
             </div>
           </div>
@@ -181,7 +234,9 @@
       </template>
     </MediaDetailsLayout>
 
-    <div v-else class="text-center py-24 text-gray-500">{{ $t('advertisement.notFound') }}</div>
+    <div v-else class="text-center py-24 theme-text-muted">
+      {{ $t("advertisement.notFound") }}
+    </div>
 
     <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
   </div>
@@ -271,7 +326,8 @@ interface FormattedCastItem {
 
 const formattedCast = computed<FormattedCastItem[]>(() => {
   if (!activeDubProject.value) return [];
-  const works = activeDubProject.value.works || activeDubProject.value.work || [];
+  const works =
+    activeDubProject.value.works || activeDubProject.value.work || [];
   return works.map((w: any) => ({
     work_id: w.id,
     voice_actor_id: w.voice_actors?.id || w.voice_actor_id,

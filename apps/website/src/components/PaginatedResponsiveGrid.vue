@@ -81,13 +81,13 @@ const setPage = (page: number) => {
     >
       <button
         type="button"
-        class="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 transition hover:border-cyan-500 disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#2a2a2a] dark:text-gray-300"
+        class="rounded-lg border theme-border-subtle px-3 py-2 text-sm theme-text-secondary transition theme-hover-primary-border disabled:cursor-not-allowed disabled:opacity-40 theme-border theme-text-secondary"
         :disabled="currentPage === 1"
         @click="setPage(currentPage - 1)"
       >
         {{ $t("admin.spreadsheet.previous") }}
       </button>
-      <span class="text-sm text-gray-500 dark:text-gray-400">
+      <span class="text-sm theme-text-muted">
         {{
           $t("admin.spreadsheet.pageOf", {
             page: currentPage,
@@ -97,7 +97,7 @@ const setPage = (page: number) => {
       </span>
       <button
         type="button"
-        class="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 transition hover:border-cyan-500 disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#2a2a2a] dark:text-gray-300"
+        class="rounded-lg border theme-border-subtle px-3 py-2 text-sm theme-text-secondary transition theme-hover-primary-border disabled:cursor-not-allowed disabled:opacity-40 theme-border theme-text-secondary"
         :disabled="currentPage === totalPages"
         @click="setPage(currentPage + 1)"
       >

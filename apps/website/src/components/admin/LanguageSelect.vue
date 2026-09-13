@@ -5,7 +5,7 @@
       $emit('update:modelValue', ($event.target as HTMLSelectElement).value)
     "
     :required="required"
-    class="w-full px-4 py-2.5 bg-[#151515] border border-[#2a2a2a] rounded-xl text-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#a0a0a0] text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+    class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm disabled:opacity-50 disabled:cursor-not-allowed"
   >
     <option value="fr-FR">Français (France)</option>
     <option value="fr-CA">Français (Canada)</option>

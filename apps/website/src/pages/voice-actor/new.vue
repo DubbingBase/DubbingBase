@@ -1,32 +1,65 @@
 <template>
   <div class="max-w-4xl mx-auto space-y-6">
     <!-- Header -->
-    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex justify-between items-center">
+    <div
+      class="theme-surface-overlay p-6 rounded-2xl border theme-border flex justify-between items-center"
+    >
       <div>
-        <h3 class="text-lg font-bold text-white">{{ isEditMode ? $t('voiceActorEdit.titleEdit') : $t('voiceActorEdit.titleCreate') }}</h3>
-        <p class="text-sm text-slate-400 mt-0.5">
-          {{ isEditMode ? `Updating database entry ID #${id}` : $t('voiceActorEdit.fillInfo') }}
+        <h3 class="text-lg font-bold theme-text">
+          {{
+            isEditMode
+              ? $t("voiceActorEdit.titleEdit")
+              : $t("voiceActorEdit.titleCreate")
+          }}
+        </h3>
+        <p class="text-sm theme-text-muted mt-0.5">
+          {{
+            isEditMode
+              ? `Updating database entry ID #${id}`
+              : $t("voiceActorEdit.fillInfo")
+          }}
         </p>
       </div>
       <NuxtLink
         :to="localePath('/admin/voice-actor-spreadsheet')"
-        class="text-xs font-semibold px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-350 hover:text-white rounded-xl border border-slate-700 transition-colors"
-      >{{ $t('voiceActorEdit.backToSpreadsheet') }}</NuxtLink>
+        class="text-xs font-semibold px-4 py-2.5 theme-surface-muted theme-hover-surface-muted theme-text-secondary theme-hover-text rounded-xl border theme-border transition-colors"
+        >{{ $t("voiceActorEdit.backToSpreadsheet") }}</NuxtLink
+      >
     </div>
 
     <!-- Main Workspace -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Profile Image Card (Left column) -->
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col items-center text-center space-y-5 h-fit shadow-xl">
-        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block self-start">{{ $t('voiceActorEdit.profilePhoto') }}</label>
-        <div class="relative h-44 w-44 rounded-full overflow-hidden border-2 border-slate-800 bg-slate-950 flex items-center justify-center text-slate-500 shadow-inner group">
-          <NuxtImg format="webp"             v-if="profilePicture"
+      <div
+        class="theme-surface-overlay border theme-border rounded-2xl p-6 flex flex-col items-center text-center space-y-5 h-fit shadow-xl"
+      >
+        <label
+          class="text-xs font-bold theme-text-muted uppercase tracking-wider block self-start"
+          >{{ $t("voiceActorEdit.profilePhoto") }}</label
+        >
+        <div
+          class="relative h-44 w-44 rounded-full overflow-hidden border-2 theme-border theme-input flex items-center justify-center theme-text-muted shadow-inner group"
+        >
+          <NuxtImg
+            format="webp"
+            v-if="profilePicture"
             :src="profilePicture"
             class="h-full w-full object-cover"
             alt="Profile Picture"
           />
-          <svg v-else class="h-14 w-14 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          <svg
+            v-else
+            class="h-14 w-14 theme-text-secondary"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+            />
           </svg>
         </div>
 
@@ -34,13 +67,32 @@
           <button
             type="button"
             @click="triggerFileInput"
-            class="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-750 text-slate-200 hover:text-white font-semibold rounded-xl text-xs border border-slate-750 hover:border-slate-700 transition-all flex items-center justify-center space-x-2"
+            class="w-full py-2.5 px-4 theme-surface-muted theme-hover-surface-muted theme-text theme-hover-text font-semibold rounded-xl text-xs border theme-border theme-hover-border transition-all flex items-center justify-center space-x-2"
           >
-            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+              />
             </svg>
-            <span>{{ previewImage ? $t('voiceActorEdit.changeImage') : $t('voiceActorEdit.uploadImage') }}</span>
+            <span>{{
+              previewImage
+                ? $t("voiceActorEdit.changeImage")
+                : $t("voiceActorEdit.uploadImage")
+            }}</span>
           </button>
           <input
             ref="fileInput"
@@ -53,119 +105,153 @@
             v-if="previewImage"
             type="button"
             @click="clearImage"
-            class="w-full py-2 bg-red-950/20 hover:bg-red-950/40 text-red-400 hover:text-red-300 rounded-xl text-[10px] font-bold uppercase tracking-wider border border-red-900/25 transition-all"
-          >{{ $t('voiceActorEdit.resetImageSelection') }}</button>
+            class="w-full py-2 theme-status-danger theme-hover-surface-muted rounded-xl text-[10px] font-bold uppercase tracking-wider border transition-all"
+          >
+            {{ $t("voiceActorEdit.resetImageSelection") }}
+          </button>
         </div>
-        <p class="text-[10px] text-slate-500 leading-normal">{{ $t('voiceActorEdit.supportedFileFormats') }}</p>
+        <p class="text-[10px] theme-text-muted leading-normal">
+          {{ $t("voiceActorEdit.supportedFileFormats") }}
+        </p>
       </div>
 
       <!-- Form (Right column) -->
-      <form @submit.prevent="saveVoiceActor" class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6 shadow-xl">
+      <form
+        @submit.prevent="saveVoiceActor"
+        class="lg:col-span-2 theme-surface-overlay border theme-border rounded-2xl p-6 space-y-6 shadow-xl"
+      >
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
           <!-- First Name -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ $t('admin.movieEditor.firstName') }}</label>
+            <label
+              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
+              >{{ $t("admin.movieEditor.firstName") }}</label
+            >
             <input
               v-model="firstname"
               type="text"
               required
               placeholder="e.g. Richard"
-              class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text theme-placeholder theme-focus text-sm"
             />
           </div>
 
           <!-- Last Name -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ $t('admin.movieEditor.lastName') }}</label>
+            <label
+              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
+              >{{ $t("admin.movieEditor.lastName") }}</label
+            >
             <input
               v-model="lastname"
               type="text"
               required
               placeholder="e.g. Darbois"
-              class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text theme-placeholder theme-focus text-sm"
             />
           </div>
 
           <!-- Nationality -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ $t('profile.nationality') }}</label>
+            <label
+              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
+              >{{ $t("profile.nationality") }}</label
+            >
             <input
               v-model="nationality"
               type="text"
               placeholder="e.g. Français"
-              class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text theme-placeholder theme-focus text-sm"
             />
           </div>
 
           <!-- Date of birth -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ $t('voiceActorEdit.dateOfBirth') }}</label>
+            <label
+              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
+              >{{ $t("voiceActorEdit.dateOfBirth") }}</label
+            >
             <input
               v-model="dateOfBirth"
               type="date"
-              class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text theme-focus text-sm"
             />
           </div>
 
-
-
           <!-- TMDB ID -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ $t('voiceActorEdit.tmdbId') }}</label>
+            <label
+              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
+              >{{ $t("voiceActorEdit.tmdbId") }}</label
+            >
             <input
               v-model="tmdbId"
               type="number"
               placeholder="e.g. 10243"
-              class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text theme-placeholder theme-focus text-sm"
             />
           </div>
 
           <!-- Wikidata ID -->
           <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ $t('voiceActorEdit.wikidataId') }}</label>
+            <label
+              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
+              >{{ $t("voiceActorEdit.wikidataId") }}</label
+            >
             <input
               v-model="wikidataId"
               type="text"
               placeholder="e.g. Q3430691"
-              class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-650 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text theme-placeholder theme-focus text-sm"
             />
           </div>
         </div>
 
         <!-- Biography -->
         <div class="space-y-1">
-          <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ $t('profile.biography') }}</label>
+          <label
+            class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
+            >{{ $t("profile.biography") }}</label
+          >
           <textarea
             v-model="bio"
             rows="4"
             placeholder="Type profile biography details here..."
-            class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-y"
+            class="w-full px-4 py-3 theme-input border theme-border rounded-xl theme-text theme-placeholder theme-focus text-sm resize-y"
           ></textarea>
         </div>
 
         <!-- Social Media Links -->
         <div class="space-y-1">
           <div class="flex justify-between items-center">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">{{ $t('voiceActorEdit.socialMediaLinksJson') }}</label>
-            <span class="text-[10px] text-slate-500">e.g. {"facebook": "https://...", "twitter": "..."}</span>
+            <label
+              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
+              >{{ $t("voiceActorEdit.socialMediaLinksJson") }}</label
+            >
+            <span class="text-[10px] theme-text-muted"
+              >e.g. {"facebook": "https://...", "twitter": "..."}</span
+            >
           </div>
           <textarea
             v-model="socialMediaLinks"
             rows="3"
             placeholder='{ "instagram": "https://..." }'
-            class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs font-mono resize-y"
+            class="w-full px-4 py-3 theme-input border theme-border rounded-xl theme-text theme-placeholder theme-focus text-xs font-mono resize-y"
           ></textarea>
         </div>
 
         <!-- Form Submit Bar -->
-        <div class="flex justify-end pt-4 border-t border-slate-800/80">
+        <div class="flex justify-end pt-4 border-t theme-border">
           <button
             type="submit"
             :disabled="isSaving"
-            class="py-3 px-8 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-500 text-white font-semibold rounded-xl text-sm shadow-lg transition-all duration-200 flex items-center justify-center"
+            class="py-3 px-8 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:from-[var(--app-color-surface-muted)] disabled:to-[var(--app-color-surface-muted)] disabled:text-[var(--app-color-text-muted)] text-white font-semibold rounded-xl text-sm shadow-lg transition-all duration-200 flex items-center justify-center"
           >
-            <span v-if="isSaving" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
-            <span>{{ $t('voiceActorEdit.saveProfile') }}</span>
+            <span
+              v-if="isSaving"
+              class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"
+            ></span>
+            <span>{{ $t("voiceActorEdit.saveProfile") }}</span>
           </button>
         </div>
       </form>
@@ -179,8 +265,8 @@
         toast.type === 'success'
           ? 'bg-green-950/40 border-green-900/60 text-green-200'
           : toast.type === 'error'
-          ? 'bg-red-950/40 border-red-900/60 text-red-200'
-          : 'bg-slate-900 border-slate-800 text-slate-200'
+            ? 'bg-red-950/40 border-red-900/60 text-red-200'
+            : 'theme-surface-overlay theme-border theme-text'
       "
     >
       <span>{{ toast.message }}</span>
@@ -191,13 +277,7 @@
 <script setup lang="ts">
 const supabase = useSupabaseClient();
 
-
-
-
-
-
 import { ref, onMounted, computed } from "vue";
-
 
 const route = useRoute();
 const router = useRouter();
@@ -228,10 +308,13 @@ const isSaving = ref(false);
 const toast = ref({
   show: false,
   message: "",
-  type: "info"
+  type: "info",
 });
 
-const showToast = (message: string, type: "success" | "error" | "info" = "info") => {
+const showToast = (
+  message: string,
+  type: "success" | "error" | "info" = "info",
+) => {
   toast.value = { show: true, message, type };
   setTimeout(() => {
     toast.value.show = false;
@@ -270,8 +353,8 @@ const uploadProfilePicture = async (voiceActorId: string | number) => {
   formData.append("file", profilePictureFile.value);
   formData.append("voice_actor_id", String(voiceActorId));
 
-  const result = await $fetch<{ ok: boolean }>('/api/upload-profile-picture', {
-    method: 'POST',
+  const result = await $fetch<{ ok: boolean }>("/api/upload-profile-picture", {
+    method: "POST",
     body: formData,
   });
 
@@ -343,6 +426,4 @@ const saveVoiceActor = async () => {
     isSaving.value = false;
   }
 };
-
-
 </script>

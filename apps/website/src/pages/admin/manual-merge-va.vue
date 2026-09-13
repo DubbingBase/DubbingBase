@@ -2,27 +2,31 @@
   <div class="space-y-6 pb-20">
     <!-- Header Card -->
     <div
-      class="bg-gray-900 p-6 rounded-2xl border border-gray-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+      class="theme-surface-overlay p-6 rounded-2xl border theme-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
     >
       <div>
-        <h3 class="text-lg font-bold text-white">{{ $t('admin.manualMerge.title') }}</h3>
-        <p class="text-sm text-gray-400">{{ $t('admin.manualMerge.description') }}</p>
+        <h3 class="text-lg font-bold theme-text">
+          {{ $t("admin.manualMerge.title") }}
+        </h3>
+        <p class="text-sm theme-text-muted">
+          {{ $t("admin.manualMerge.description") }}
+        </p>
       </div>
       <button
         @click="reset"
-        class="py-2.5 px-5 bg-gray-800 hover:bg-gray-700 text-white font-semibold rounded-xl border border-gray-700 transition-all flex items-center justify-center shrink-0"
+        class="py-2.5 px-5 theme-surface-muted theme-hover-surface-muted theme-text font-semibold rounded-xl border theme-border transition-all flex items-center justify-center shrink-0"
       >
-        <span>{{ $t('admin.manualMerge.resetSelection') }}</span>
+        <span>{{ $t("admin.manualMerge.resetSelection") }}</span>
       </button>
     </div>
 
     <!-- Error Alert -->
     <div
       v-if="error"
-      class="p-4 bg-red-950/30 border border-red-900/50 rounded-xl flex items-center space-x-3 text-red-200 text-sm"
+      class="p-4 theme-status-danger border border-[var(--app-color-danger-border)] rounded-xl flex items-center space-x-3 theme-status-danger-text text-sm"
     >
       <svg
-        class="h-5 w-5 text-red-400 shrink-0"
+        class="h-5 w-5 theme-status-danger-text shrink-0"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -41,17 +45,19 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <!-- Actor A Selection -->
       <div
-        class="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-3 shadow-lg"
+        class="theme-surface-overlay border theme-border rounded-2xl p-5 space-y-3 shadow-lg"
       >
-        <h4 class="font-bold text-white text-sm">{{ $t('admin.manualMerge.voiceActorA') }}</h4>
+        <h4 class="font-bold theme-text text-sm">
+          {{ $t("admin.manualMerge.voiceActorA") }}
+        </h4>
 
         <div
           v-if="actorA"
-          class="flex items-center justify-between bg-gray-950 border border-gray-800 rounded-xl p-3"
+          class="flex items-center justify-between theme-input border theme-border rounded-xl p-3"
         >
           <div class="flex items-center space-x-3">
             <div
-              class="h-10 w-10 rounded-full overflow-hidden border border-gray-700 bg-gray-800 shrink-0 flex items-center justify-center"
+              class="h-10 w-10 rounded-full overflow-hidden border theme-border theme-surface-muted shrink-0 flex items-center justify-center"
             >
               <NuxtImg
                 format="webp"
@@ -59,19 +65,22 @@
                 :src="actorA.profile_picture"
                 class="h-full w-full object-cover"
               />
-              <span v-else class="text-xs font-bold text-gray-500">{{ actorA.firstname?.charAt(0) || '' }}</span>
+              <span v-else class="text-xs font-bold theme-text-muted">{{
+                actorA.firstname?.charAt(0) || ""
+              }}</span>
             </div>
             <div>
-              <p class="text-sm font-semibold text-white">
+              <p class="text-sm font-semibold theme-text">
                 {{ actorA.firstname }} {{ actorA.lastname }}
               </p>
-              <p class="text-xs text-gray-400 font-mono">{{ $t('common.idLabel') }}{{ actorA.id }}
+              <p class="text-xs theme-text-muted font-mono">
+                {{ $t("common.idLabel") }}{{ actorA.id }}
               </p>
             </div>
           </div>
           <button
             @click="actorA = null"
-            class="p-1.5 text-gray-500 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-colors"
+            class="p-1.5 theme-text-muted hover:text-[var(--app-color-danger-text)] theme-hover-surface-muted rounded-lg transition-colors"
           >
             <svg
               class="h-5 w-5"
@@ -96,20 +105,20 @@
             v-model="searchQueryA"
             @focus="activeSearch = 'A'"
             @input="triggerSearch('A')"
-            class="w-full pl-4 pr-10 py-3 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            class="w-full pl-4 pr-10 py-3 theme-input border theme-border rounded-xl theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
           />
           <div
             v-if="activeSearch === 'A' && searchResultsA.length > 0"
-            class="absolute z-40 left-0 right-0 mt-2 max-h-60 overflow-y-auto bg-gray-900 border border-gray-800 rounded-xl shadow-2xl divide-y divide-gray-800/60"
+            class="absolute z-40 left-0 right-0 mt-2 max-h-60 overflow-y-auto theme-surface-overlay border theme-border rounded-xl shadow-2xl divide-y theme-divide"
           >
             <div
               v-for="va in searchResultsA"
               :key="va.id"
               @click="selectActor('A', va)"
-              class="px-4 py-3 hover:bg-gray-800/50 cursor-pointer flex items-start space-x-3 transition-colors"
+              class="px-4 py-3 theme-hover-surface-muted cursor-pointer flex items-start space-x-3 transition-colors"
             >
               <div
-                class="h-10 w-10 mt-1 rounded-full overflow-hidden border border-gray-700 bg-gray-800 shrink-0 flex items-center justify-center"
+                class="h-10 w-10 mt-1 rounded-full overflow-hidden border theme-border theme-surface-muted shrink-0 flex items-center justify-center"
               >
                 <NuxtImg
                   format="webp"
@@ -117,16 +126,18 @@
                   :src="va.profile_picture"
                   class="h-full w-full object-cover"
                 />
-                <span v-else class="text-xs font-bold text-gray-500">{{ va.firstname?.charAt(0) || '' }}</span>
+                <span v-else class="text-xs font-bold theme-text-muted">{{
+                  va.firstname?.charAt(0) || ""
+                }}</span>
               </div>
               <div class="flex-1 min-w-0">
-                <p class="text-sm font-semibold text-gray-200">
+                <p class="text-sm font-semibold theme-text">
                   {{ va.firstname }} {{ va.lastname }}
-                  <span class="text-xs text-gray-500 font-mono ml-2"
-                    >{{ $t('common.idLabel') }}{{ va.id }}</span
+                  <span class="text-xs theme-text-muted font-mono ml-2"
+                    >{{ $t("common.idLabel") }}{{ va.id }}</span
                   >
                 </p>
-                <div class="text-xs text-gray-400 mt-1 space-y-0.5">
+                <div class="text-xs theme-text-muted mt-1 space-y-0.5">
                   <p v-if="va.date_of_birth || va.nationality">
                     <span v-if="va.date_of_birth"
                       >🎂 {{ formatDate(va.date_of_birth) }}</span
@@ -137,12 +148,14 @@
                     <span v-if="va.nationality">🌍 {{ va.nationality }}</span>
                   </p>
                   <p v-if="va.tmdb_id || va.wikidata_id">
-                    <span v-if="va.tmdb_id">{{ $t('common.tmdbLabel') }}{{ va.tmdb_id }}</span>
+                    <span v-if="va.tmdb_id"
+                      >{{ $t("common.tmdbLabel") }}{{ va.tmdb_id }}</span
+                    >
                     <span v-if="va.tmdb_id && va.wikidata_id" class="mx-1"
                       >•</span
                     >
                     <span v-if="va.wikidata_id"
-                      >{{ $t('common.wikiLabel') }}{{ va.wikidata_id }}</span
+                      >{{ $t("common.wikiLabel") }}{{ va.wikidata_id }}</span
                     >
                   </p>
                   <p v-if="va.bio" class="line-clamp-2 italic opacity-80 mt-1">
@@ -156,24 +169,28 @@
             v-else-if="
               activeSearch === 'A' && searchQueryA.trim() && searchLoadingA
             "
-            class="absolute z-40 left-0 right-0 mt-2 p-4 bg-gray-900 border border-gray-800 rounded-xl text-center text-gray-500 text-xs"
-          >{{ $t('admin.manualMerge.searching') }}</div>
+            class="absolute z-40 left-0 right-0 mt-2 p-4 theme-surface-overlay border theme-border rounded-xl text-center theme-text-muted text-xs"
+          >
+            {{ $t("admin.manualMerge.searching") }}
+          </div>
         </div>
       </div>
 
       <!-- Actor B Selection -->
       <div
-        class="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-3 shadow-lg"
+        class="theme-surface-overlay border theme-border rounded-2xl p-5 space-y-3 shadow-lg"
       >
-        <h4 class="font-bold text-white text-sm">{{ $t('admin.manualMerge.voiceActorB') }}</h4>
+        <h4 class="font-bold theme-text text-sm">
+          {{ $t("admin.manualMerge.voiceActorB") }}
+        </h4>
 
         <div
           v-if="actorB"
-          class="flex items-center justify-between bg-gray-950 border border-gray-800 rounded-xl p-3"
+          class="flex items-center justify-between theme-input border theme-border rounded-xl p-3"
         >
           <div class="flex items-center space-x-3">
             <div
-              class="h-10 w-10 rounded-full overflow-hidden border border-gray-700 bg-gray-800 shrink-0 flex items-center justify-center"
+              class="h-10 w-10 rounded-full overflow-hidden border theme-border theme-surface-muted shrink-0 flex items-center justify-center"
             >
               <NuxtImg
                 format="webp"
@@ -181,19 +198,22 @@
                 :src="actorB.profile_picture"
                 class="h-full w-full object-cover"
               />
-              <span v-else class="text-xs font-bold text-gray-500">{{ actorB.firstname?.charAt(0) || '' }}</span>
+              <span v-else class="text-xs font-bold theme-text-muted">{{
+                actorB.firstname?.charAt(0) || ""
+              }}</span>
             </div>
             <div>
-              <p class="text-sm font-semibold text-white">
+              <p class="text-sm font-semibold theme-text">
                 {{ actorB.firstname }} {{ actorB.lastname }}
               </p>
-              <p class="text-xs text-gray-400 font-mono">{{ $t('common.idLabel') }}{{ actorB.id }}
+              <p class="text-xs theme-text-muted font-mono">
+                {{ $t("common.idLabel") }}{{ actorB.id }}
               </p>
             </div>
           </div>
           <button
             @click="actorB = null"
-            class="p-1.5 text-gray-500 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-colors"
+            class="p-1.5 theme-text-muted hover:text-[var(--app-color-danger-text)] theme-hover-surface-muted rounded-lg transition-colors"
           >
             <svg
               class="h-5 w-5"
@@ -218,20 +238,20 @@
             v-model="searchQueryB"
             @focus="activeSearch = 'B'"
             @input="triggerSearch('B')"
-            class="w-full pl-4 pr-10 py-3 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            class="w-full pl-4 pr-10 py-3 theme-input border theme-border rounded-xl theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
           />
           <div
             v-if="activeSearch === 'B' && searchResultsB.length > 0"
-            class="absolute z-40 left-0 right-0 mt-2 max-h-60 overflow-y-auto bg-gray-900 border border-gray-800 rounded-xl shadow-2xl divide-y divide-gray-800/60"
+            class="absolute z-40 left-0 right-0 mt-2 max-h-60 overflow-y-auto theme-surface-overlay border theme-border rounded-xl shadow-2xl divide-y theme-divide"
           >
             <div
               v-for="va in searchResultsB"
               :key="va.id"
               @click="selectActor('B', va)"
-              class="px-4 py-3 hover:bg-gray-800/50 cursor-pointer flex items-start space-x-3 transition-colors"
+              class="px-4 py-3 theme-hover-surface-muted cursor-pointer flex items-start space-x-3 transition-colors"
             >
               <div
-                class="h-10 w-10 mt-1 rounded-full overflow-hidden border border-gray-700 bg-gray-800 shrink-0 flex items-center justify-center"
+                class="h-10 w-10 mt-1 rounded-full overflow-hidden border theme-border theme-surface-muted shrink-0 flex items-center justify-center"
               >
                 <NuxtImg
                   format="webp"
@@ -239,16 +259,18 @@
                   :src="va.profile_picture"
                   class="h-full w-full object-cover"
                 />
-                <span v-else class="text-xs font-bold text-gray-500">{{ va.firstname?.charAt(0) || '' }}</span>
+                <span v-else class="text-xs font-bold theme-text-muted">{{
+                  va.firstname?.charAt(0) || ""
+                }}</span>
               </div>
               <div class="flex-1 min-w-0">
-                <p class="text-sm font-semibold text-gray-200">
+                <p class="text-sm font-semibold theme-text">
                   {{ va.firstname }} {{ va.lastname }}
-                  <span class="text-xs text-gray-500 font-mono ml-2"
-                    >{{ $t('common.idLabel') }}{{ va.id }}</span
+                  <span class="text-xs theme-text-muted font-mono ml-2"
+                    >{{ $t("common.idLabel") }}{{ va.id }}</span
                   >
                 </p>
-                <div class="text-xs text-gray-400 mt-1 space-y-0.5">
+                <div class="text-xs theme-text-muted mt-1 space-y-0.5">
                   <p v-if="va.date_of_birth || va.nationality">
                     <span v-if="va.date_of_birth"
                       >🎂 {{ formatDate(va.date_of_birth) }}</span
@@ -259,12 +281,14 @@
                     <span v-if="va.nationality">🌍 {{ va.nationality }}</span>
                   </p>
                   <p v-if="va.tmdb_id || va.wikidata_id">
-                    <span v-if="va.tmdb_id">{{ $t('common.tmdbLabel') }}{{ va.tmdb_id }}</span>
+                    <span v-if="va.tmdb_id"
+                      >{{ $t("common.tmdbLabel") }}{{ va.tmdb_id }}</span
+                    >
                     <span v-if="va.tmdb_id && va.wikidata_id" class="mx-1"
                       >•</span
                     >
                     <span v-if="va.wikidata_id"
-                      >{{ $t('common.wikiLabel') }}{{ va.wikidata_id }}</span
+                      >{{ $t("common.wikiLabel") }}{{ va.wikidata_id }}</span
                     >
                   </p>
                   <p v-if="va.bio" class="line-clamp-2 italic opacity-80 mt-1">
@@ -278,8 +302,10 @@
             v-else-if="
               activeSearch === 'B' && searchQueryB.trim() && searchLoadingB
             "
-            class="absolute z-40 left-0 right-0 mt-2 p-4 bg-gray-900 border border-gray-800 rounded-xl text-center text-gray-500 text-xs"
-          >{{ $t('admin.manualMerge.searching') }}</div>
+            class="absolute z-40 left-0 right-0 mt-2 p-4 theme-surface-overlay border theme-border rounded-xl text-center theme-text-muted text-xs"
+          >
+            {{ $t("admin.manualMerge.searching") }}
+          </div>
         </div>
       </div>
     </div>
@@ -287,43 +313,43 @@
     <!-- Comparison Area -->
     <div
       v-if="actorA && actorB"
-      class="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-6 shadow-xl"
+      class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-6 shadow-xl"
     >
-      <div
-        class="flex items-center justify-between border-b border-gray-800/80 pb-4"
-      >
-        <h4 class="text-md font-bold text-white flex items-center space-x-2">
-          <span>{{ $t('admin.manualMerge.compareAndMerge') }}</span>
+      <div class="flex items-center justify-between border-b theme-border pb-4">
+        <h4 class="text-md font-bold theme-text flex items-center space-x-2">
+          <span>{{ $t("admin.manualMerge.compareAndMerge") }}</span>
         </h4>
         <span
           v-if="loadingWorks"
-          class="text-xs text-gray-400 flex items-center"
+          class="text-xs theme-text-muted flex items-center"
         >
           <span
-            class="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-400 mr-2"
-          ></span>{{ $t('admin.manualMerge.loadingWorkHistory') }}</span>
+            class="animate-spin rounded-full h-3 w-3 border-b-2 theme-border-strong mr-2"
+          ></span
+          >{{ $t("admin.manualMerge.loadingWorkHistory") }}</span
+        >
       </div>
 
       <!-- Comparative Table -->
-      <div
-        class="overflow-x-auto rounded-xl border border-gray-800 bg-gray-950/40"
-      >
+      <div class="overflow-x-auto rounded-xl border theme-border theme-input">
         <table class="w-full text-sm text-left">
           <thead>
             <tr>
               <th
-                class="p-4 bg-gray-900/80 border-b border-gray-800 w-32 text-gray-400 font-semibold uppercase tracking-wider text-xs"
-              >{{ $t('admin.duplicates.field') }}</th>
+                class="p-4 theme-surface-overlay border-b theme-border w-32 theme-text-muted font-semibold uppercase tracking-wider text-xs"
+              >
+                {{ $t("admin.duplicates.field") }}
+              </th>
               <th
                 v-for="actor in actorsToCompare"
                 :key="'h-' + actor.id"
-                class="p-4 bg-gray-900/80 border-b border-l border-gray-800 min-w-[280px]"
-                :class="selectedKeepId === actor.id ? 'bg-blue-900/10' : ''"
+                class="p-4 theme-surface-overlay border-b border-l theme-border min-w-[280px]"
+                :class="selectedKeepId === actor.id ? 'theme-selected' : ''"
               >
                 <div class="flex items-center justify-between">
                   <div class="flex items-center space-x-3">
                     <div
-                      class="h-10 w-10 rounded-full overflow-hidden shrink-0 border border-gray-800 bg-gray-900 flex items-center justify-center text-gray-500"
+                      class="h-10 w-10 rounded-full overflow-hidden shrink-0 border theme-border theme-surface-overlay flex items-center justify-center theme-text-muted"
                     >
                       <NuxtImg
                         format="webp"
@@ -347,8 +373,11 @@
                       </svg>
                     </div>
                     <div class="min-w-0">
-                      <h5 class="font-bold text-white text-base">{{ $t('admin.duplicates.candidate') }}</h5>
-                      <p class="text-xs text-gray-400 font-mono mt-0.5">{{ $t('common.idLabel') }}{{ actor.id }}
+                      <h5 class="font-bold theme-text text-base">
+                        {{ $t("admin.duplicates.candidate") }}
+                      </h5>
+                      <p class="text-xs theme-text-muted font-mono mt-0.5">
+                        {{ $t("common.idLabel") }}{{ actor.id }}
                       </p>
                     </div>
                   </div>
@@ -356,14 +385,18 @@
               </th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-800/60">
+          <tbody class="divide-y theme-divide">
             <!-- Name Row -->
             <tr>
-              <td class="p-4 text-gray-400 font-medium bg-gray-900/30">{{ $t('voiceActor.name') }}</td>
+              <td
+                class="p-4 theme-text-muted font-medium theme-surface-overlay"
+              >
+                {{ $t("voiceActor.name") }}
+              </td>
               <td
                 v-for="actor in actorsToCompare"
                 :key="'n-' + actor.id"
-                class="p-4 border-l border-gray-800"
+                class="p-4 border-l theme-border"
                 :class="getNameDiffClass()"
               >
                 {{ actor.firstname }} {{ actor.lastname }}
@@ -371,27 +404,39 @@
             </tr>
             <!-- Work Count Row -->
             <tr>
-              <td class="p-4 text-gray-400 font-medium bg-gray-900/30">{{ $t('admin.manualMerge.linkedWorks') }}</td>
+              <td
+                class="p-4 theme-text-muted font-medium theme-surface-overlay"
+              >
+                {{ $t("admin.manualMerge.linkedWorks") }}
+              </td>
               <td
                 v-for="actor in actorsToCompare"
                 :key="'w-' + actor.id"
-                class="p-4 border-l border-gray-800 font-semibold"
+                class="p-4 border-l theme-border font-semibold"
                 :class="
-                  (worksCount[actor.id] ?? 0) > 0 ? 'text-green-400' : 'text-gray-500'
+                  (worksCount[actor.id] ?? 0) > 0
+                    ? 'theme-status-success-text'
+                    : 'theme-text-muted'
                 "
               >
-                {{ loadingWorks
+                {{
+                  loadingWorks
                     ? "..."
-                    : (worksCount[actor.id] || 0) + " credits" }}
+                    : (worksCount[actor.id] || 0) + " credits"
+                }}
               </td>
             </tr>
             <!-- Nationality Row -->
             <tr v-if="hasAny('nationality')">
-              <td class="p-4 text-gray-400 font-medium bg-gray-900/30">{{ $t('profile.nationality') }}</td>
+              <td
+                class="p-4 theme-text-muted font-medium theme-surface-overlay"
+              >
+                {{ $t("profile.nationality") }}
+              </td>
               <td
                 v-for="actor in actorsToCompare"
                 :key="'nat-' + actor.id"
-                class="p-4 border-l border-gray-800"
+                class="p-4 border-l theme-border"
                 :class="getDiffClass('nationality')"
               >
                 {{ actor.nationality || "-" }}
@@ -399,23 +444,33 @@
             </tr>
             <!-- Born Row -->
             <tr v-if="hasAny('date_of_birth')">
-              <td class="p-4 text-gray-400 font-medium bg-gray-900/30">{{ $t('admin.duplicates.born') }}</td>
+              <td
+                class="p-4 theme-text-muted font-medium theme-surface-overlay"
+              >
+                {{ $t("admin.duplicates.born") }}
+              </td>
               <td
                 v-for="actor in actorsToCompare"
                 :key="'dob-' + actor.id"
-                class="p-4 border-l border-gray-800"
+                class="p-4 border-l theme-border"
                 :class="getDiffClass('date_of_birth')"
               >
-                {{ actor.date_of_birth ? formatDate(actor.date_of_birth) : "-" }}
+                {{
+                  actor.date_of_birth ? formatDate(actor.date_of_birth) : "-"
+                }}
               </td>
             </tr>
             <!-- TMDB Row -->
             <tr v-if="hasAny('tmdb_id')">
-              <td class="p-4 text-gray-400 font-medium bg-gray-900/30">{{ $t('voiceActorEdit.tmdbId') }}</td>
+              <td
+                class="p-4 theme-text-muted font-medium theme-surface-overlay"
+              >
+                {{ $t("voiceActorEdit.tmdbId") }}
+              </td>
               <td
                 v-for="actor in actorsToCompare"
                 :key="'tmd-' + actor.id"
-                class="p-4 border-l border-gray-800"
+                class="p-4 border-l theme-border"
                 :class="getDiffClass('tmdb_id')"
               >
                 {{ actor.tmdb_id || "-" }}
@@ -423,11 +478,15 @@
             </tr>
             <!-- Wikidata Row -->
             <tr v-if="hasAny('wikidata_id')">
-              <td class="p-4 text-gray-400 font-medium bg-gray-900/30">{{ $t('admin.duplicates.wikidata') }}</td>
+              <td
+                class="p-4 theme-text-muted font-medium theme-surface-overlay"
+              >
+                {{ $t("admin.duplicates.wikidata") }}
+              </td>
               <td
                 v-for="actor in actorsToCompare"
                 :key="'wik-' + actor.id"
-                class="p-4 border-l border-gray-800 font-mono text-xs break-all"
+                class="p-4 border-l theme-border font-mono text-xs break-all"
                 :class="getDiffClass('wikidata_id')"
               >
                 {{ actor.wikidata_id || "-" }}
@@ -436,17 +495,19 @@
             <!-- Bio Row -->
             <tr v-if="hasAny('bio')">
               <td
-                class="p-4 text-gray-400 font-medium bg-gray-900/30 align-top"
-              >{{ $t('admin.duplicates.bio') }}</td>
+                class="p-4 theme-text-muted font-medium theme-surface-overlay align-top"
+              >
+                {{ $t("admin.duplicates.bio") }}
+              </td>
               <td
                 v-for="actor in actorsToCompare"
                 :key="'bio-' + actor.id"
-                class="p-4 border-l border-gray-800 align-top max-w-xs"
+                class="p-4 border-l theme-border align-top max-w-xs"
                 :class="getDiffClass('bio')"
               >
                 <div
                   class="line-clamp-4 italic text-xs leading-relaxed"
-                  :class="actor.bio ? '' : 'text-gray-600'"
+                  :class="actor.bio ? '' : 'theme-text-secondary'"
                 >
                   {{ actor.bio || "-" }}
                 </div>
@@ -454,15 +515,19 @@
             </tr>
             <!-- Action Row -->
             <tr>
-              <td class="p-4 text-gray-400 font-medium bg-gray-900/30">{{ $t('admin.auditLogs.action') }}</td>
+              <td
+                class="p-4 theme-text-muted font-medium theme-surface-overlay"
+              >
+                {{ $t("admin.auditLogs.action") }}
+              </td>
               <td
                 v-for="actor in actorsToCompare"
                 :key="'sel-' + actor.id"
-                class="p-0 border-l border-gray-800 bg-gray-900/50 transition-colors"
+                class="p-0 border-l theme-border theme-surface-overlay transition-colors"
                 :class="
                   selectedKeepId === actor.id
-                    ? 'bg-blue-900/20 shadow-inner'
-                    : 'hover:bg-gray-800'
+                    ? 'theme-selected shadow-inner'
+                    : 'theme-hover-surface-muted'
                 "
               >
                 <label
@@ -473,16 +538,16 @@
                     name="keepId"
                     :value="actor.id"
                     v-model="selectedKeepId"
-                    class="h-5 w-5 text-blue-500 focus:ring-blue-500 focus:ring-offset-gray-900 bg-gray-950 border-gray-700"
+                    class="h-5 w-5 theme-status-info-text focus:ring-[var(--app-color-focus)] focus:ring-offset-[var(--app-color-background)] theme-input theme-border"
                   />
                   <span
                     class="text-sm font-bold"
                     :class="
                       selectedKeepId === actor.id
-                        ? 'text-blue-400'
-                        : 'text-gray-300'
+                        ? 'theme-status-info-text'
+                        : 'theme-text-secondary'
                     "
-                    >{{ $t('admin.duplicates.keepId') }}{{ actor.id }}</span
+                    >{{ $t("admin.duplicates.keepId") }}{{ actor.id }}</span
                   >
                 </label>
               </td>
@@ -493,18 +558,24 @@
 
       <!-- Action Bar -->
       <div
-        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4 border-t border-gray-800/80 bg-gray-900/50 p-4 rounded-xl"
+        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4 border-t theme-border theme-surface-overlay p-4 rounded-xl"
       >
         <div class="text-sm">
-          <span v-if="selectedKeepId" class="text-gray-300">{{ $t('admin.duplicates.profileToKeep') }}<strong class="text-blue-400">{{ $t('admin.duplicates.idHash') }}{{ selectedKeepId }}</strong
-            >{{ $t('admin.manualMerge.otherProfileMerged') }}</span>
-          <span v-else class="text-yellow-500 font-medium">{{ $t('admin.duplicates.chooseProfileToKeep') }}</span>
+          <span v-if="selectedKeepId" class="theme-text-secondary"
+            >{{ $t("admin.duplicates.profileToKeep")
+            }}<strong class="theme-status-info-text"
+              >{{ $t("admin.duplicates.idHash") }}{{ selectedKeepId }}</strong
+            >{{ $t("admin.manualMerge.otherProfileMerged") }}</span
+          >
+          <span v-else class="theme-status-warning-text font-medium">{{
+            $t("admin.duplicates.chooseProfileToKeep")
+          }}</span>
         </div>
 
         <button
           @click="mergeActors"
           :disabled="!selectedKeepId || merging"
-          class="py-2.5 px-6 bg-green-600 hover:bg-green-500 disabled:bg-gray-800 disabled:text-gray-500 text-white font-semibold rounded-xl text-sm transition-all duration-150 flex items-center justify-center shrink-0 shadow-lg shadow-green-900/10"
+          class="py-2.5 px-6 bg-green-600 hover:bg-green-500 disabled:bg-[var(--app-color-surface-muted)] disabled:text-[var(--app-color-text-muted)] text-white font-semibold rounded-xl text-sm transition-all duration-150 flex items-center justify-center shrink-0 shadow-lg shadow-green-900/10"
         >
           <span
             v-if="merging"
@@ -521,20 +592,18 @@
       class="fixed bottom-6 right-6 z-50 p-4 rounded-xl border shadow-2xl text-sm max-w-sm flex items-center space-x-3"
       :class="
         toast.type === 'success'
-          ? 'bg-green-950/40 border-green-900/60 text-green-200'
+          ? 'theme-status-success border-[var(--app-color-success-border)] theme-status-success-text'
           : toast.type === 'error'
-            ? 'bg-red-950/40 border-red-900/60 text-red-200'
-            : 'bg-gray-900 border-gray-800 text-gray-200'
+            ? 'theme-status-danger border-[var(--app-color-danger-border)] theme-status-danger-text'
+            : 'theme-surface-overlay theme-border theme-text'
       "
     >
       <span>{{ toast.message }}</span>
     </div>
   </div>
-  </template>
+</template>
 
 <script setup lang="ts">
-
-
 definePageMeta({
   layout: "admin",
   middleware: "admin",
@@ -624,10 +693,13 @@ const fetchWorksCount = async (ids: number[]) => {
   loadingWorks.value = true;
   worksCount.value = {};
   try {
-    const data = await $fetch<Record<number, number>>('/api/count-voice-actor-works', {
-      method: 'POST',
-      body: { ids },
-    });
+    const data = await $fetch<Record<number, number>>(
+      "/api/count-voice-actor-works",
+      {
+        method: "POST",
+        body: { ids },
+      },
+    );
 
     if (data) {
       worksCount.value = data;
@@ -673,13 +745,15 @@ const calculateScore = (actor: VoiceActorCandidate) => {
 
 // Comparison Helpers
 const isDifferent = (field: keyof VoiceActorCandidate) => {
-  if (actorsToCompare.value.length < 2 || !actorsToCompare.value[0]) return false;
+  if (actorsToCompare.value.length < 2 || !actorsToCompare.value[0])
+    return false;
   const firstVal = actorsToCompare.value[0][field];
   return actorsToCompare.value.some((a) => a[field] !== firstVal);
 };
 
 const isDifferentName = () => {
-  if (actorsToCompare.value.length < 2 || !actorsToCompare.value[0]) return false;
+  if (actorsToCompare.value.length < 2 || !actorsToCompare.value[0])
+    return false;
   const firstName =
     actorsToCompare.value[0].firstname +
     " " +
@@ -691,14 +765,14 @@ const isDifferentName = () => {
 
 const getDiffClass = (field: keyof VoiceActorCandidate) => {
   return isDifferent(field)
-    ? "text-amber-300 font-bold bg-amber-900/30 shadow-[inset_0_0_0_1px_rgba(217,119,6,0.5)]"
-    : "text-gray-300";
+    ? "theme-status-warning-text font-bold bg-amber-900/30 shadow-[inset_0_0_0_1px_rgba(217,119,6,0.5)]"
+    : "theme-text-secondary";
 };
 
 const getNameDiffClass = () => {
   return isDifferentName()
-    ? "text-amber-300 font-bold bg-amber-900/30 shadow-[inset_0_0_0_1px_rgba(217,119,6,0.5)]"
-    : "text-gray-200 font-semibold";
+    ? "theme-status-warning-text font-bold bg-amber-900/30 shadow-[inset_0_0_0_1px_rgba(217,119,6,0.5)]"
+    : "theme-text font-semibold";
 };
 
 const hasAny = (field: keyof VoiceActorCandidate) => {
@@ -731,7 +805,10 @@ const executeSearch = async (type: "A" | "B") => {
 
   loadingRef.value = true;
   try {
-    const data = await $fetch<VoiceActorCandidate[]>('/api/search-voice-actors', { params: { query, limit: "10" } });
+    const data = await $fetch<VoiceActorCandidate[]>(
+      "/api/search-voice-actors",
+      { params: { query, limit: "10" } },
+    );
 
     resultsRef.value = data || [];
   } catch (err: any) {
@@ -775,8 +852,8 @@ const mergeActors = async () => {
         ? actorB.value.id
         : actorA.value.id;
 
-    await $fetch('/api/merge_voice_actor_duplicates', {
-      method: 'POST',
+    await $fetch("/api/merge_voice_actor_duplicates", {
+      method: "POST",
       body: {
         keepId: selectedKeepId.value,
         ids: [otherId],

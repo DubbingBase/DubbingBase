@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="min-h-screen bg-white text-gray-900 dark:bg-[#121212] dark:text-white transition-colors duration-200"
-  >
+  <div class="min-h-screen theme-bg theme-text transition-colors duration-200">
     <NuxtLoadingIndicator color="#3B82F6" :height="3" />
     <ClientOnly>
       <PwaLifecycleBanner />
@@ -56,12 +54,12 @@ useHead({
   meta: () => [
     {
       name: "theme-color",
-      content: "#121212",
+      content: "#10131a",
       media: "(prefers-color-scheme: dark)",
     },
     {
       name: "theme-color",
-      content: "#ffffff",
+      content: "#f8fafc",
       media: "(prefers-color-scheme: light)",
     },
     ...(i18nHead.value.meta || []),

@@ -12,7 +12,7 @@
         <ComboboxInput
           v-model="searchTerm"
           :display-value="(val) => (val == null ? '' : displayFn(val))"
-          class="w-full pl-4 pr-16 py-2.5 bg-[#151515] border border-[#2a2a2a] rounded-xl text-[#e0e0e0] placeholder-[#707070] focus:outline-none focus:ring-2 focus:ring-[#a0a0a0] text-sm disabled:opacity-50"
+          class="w-full pl-4 pr-16 py-2.5 theme-input border theme-border rounded-xl theme-text placeholder-[#707070] focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm disabled:opacity-50"
           :placeholder="placeholder"
           :disabled="disabled"
         />
@@ -22,7 +22,7 @@
           <button
             v-if="modelValue && !disabled"
             type="button"
-            class="p-1 text-[#a0a0a0] hover:text-[#e0e0e0] transition-colors"
+            class="p-1 theme-text-muted theme-hover-text transition-colors"
             @click.stop="
               $emit('update:modelValue', null);
               searchTerm = '';
@@ -31,18 +31,20 @@
             <XIcon class="w-4 h-4" />
           </button>
           <div v-if="loading" class="p-1">
-            <Loader2Icon class="w-4 h-4 text-[#a0a0a0] animate-spin" />
+            <Loader2Icon class="w-4 h-4 theme-text-muted animate-spin" />
           </div>
         </div>
       </ComboboxAnchor>
 
       <ComboboxPortal>
         <ComboboxContent
-          class="z-[100] w-[var(--reka-popper-anchor-width)] mt-1 bg-[#1d1d1d] border border-[#2a2a2a] rounded-xl shadow-xl overflow-hidden"
+          class="z-[100] w-[var(--reka-popper-anchor-width)] mt-1 theme-surface border theme-border rounded-xl shadow-xl overflow-hidden"
           position="popper"
         >
           <ComboboxViewport class="max-h-[300px] overflow-y-auto p-1">
-            <ComboboxEmpty class="text-[#a0a0a0] text-sm py-3 px-4 text-center">
+            <ComboboxEmpty
+              class="theme-text-muted text-sm py-3 px-4 text-center"
+            >
               <span v-if="loading">{{ $t("common.searching") }}</span>
               <span v-else>{{ $t("search.noResults") }}</span>
             </ComboboxEmpty>
@@ -52,7 +54,7 @@
                 v-for="option in options"
                 :key="option.id"
                 :value="option.id"
-                class="flex items-center px-3 py-2 text-sm text-[#e0e0e0] rounded-lg cursor-pointer data-[highlighted]:bg-[#2a2a2a] data-[highlighted]:text-[#e0e0e0] outline-none"
+                class="flex items-center px-3 py-2 text-sm theme-text rounded-lg cursor-pointer data-[highlighted]:bg-[var(--app-color-surface-muted)] data-[highlighted]:text-[var(--app-color-text)] outline-none"
               >
                 <slot name="option" :option="option">
                   {{ displayFn(option.id) }}
@@ -68,12 +70,12 @@
                 !loading &&
                 (modelValue == null || searchTerm !== displayFn(modelValue))
               "
-              class="border-t border-[#2a2a2a] mt-1 pt-1"
+              class="border-t theme-border mt-1 pt-1"
             >
               <button
                 type="button"
                 @click="$emit('create', searchTerm)"
-                class="w-full text-left px-3 py-2 text-sm text-[#e0e0e0] hover:bg-[#2a2a2a] rounded-lg font-medium outline-none focus:bg-[#2a2a2a] transition-colors flex items-center gap-2"
+                class="w-full text-left px-3 py-2 text-sm theme-text theme-hover-surface-muted rounded-lg font-medium outline-none theme-surface-muted transition-colors flex items-center gap-2"
               >
                 <PlusIcon class="w-4 h-4" />
                 {{ $t("common.create", { name: searchTerm }) }}

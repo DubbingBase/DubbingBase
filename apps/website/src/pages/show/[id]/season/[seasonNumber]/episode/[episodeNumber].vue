@@ -9,19 +9,37 @@
       :loading="pending"
     >
       <template #metadata>
-        <span class="text-gray-900 dark:text-gray-100 font-semibold text-base md:text-lg bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg">
-          {{ $t('details.season', { num: seasonNumber }) }}{{ $t('common.separator') }}{{ $t('details.episode', { num: episode.episode_number }) }}
-          <template v-if="episode.air_date">{{ $t('common.separator') }}{{ formatDate(episode.air_date) }}</template>
+        <span
+          class="theme-text font-semibold text-base md:text-lg theme-surface-overlay backdrop-blur-md px-3 py-1 rounded-lg"
+        >
+          {{ $t("details.season", { num: seasonNumber })
+          }}{{ $t("common.separator")
+          }}{{ $t("details.episode", { num: episode.episode_number }) }}
+          <template v-if="episode.air_date"
+            >{{ $t("common.separator")
+            }}{{ formatDate(episode.air_date) }}</template
+          >
         </span>
-        <span v-if="episode.overview" class="text-gray-800 dark:text-gray-300 font-medium text-sm md:text-base bg-white/40 dark:bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-lg">
+        <span
+          v-if="episode.overview"
+          class="theme-text-secondary font-medium text-sm md:text-base theme-surface-overlay backdrop-blur-md px-3 py-1.5 rounded-lg"
+        >
           {{ episode.overview }}
         </span>
-        <span class="flex items-center gap-1.5 text-gray-900 dark:text-gray-100 font-bold text-sm md:text-base bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg">
-          <StarIcon class="w-4 h-4 text-yellow-500 fill-current" />
+        <span
+          class="flex items-center gap-1.5 theme-text font-bold text-sm md:text-base theme-surface-overlay backdrop-blur-md px-3 py-1 rounded-lg"
+        >
+          <StarIcon class="w-4 h-4 theme-rating fill-current" />
           {{ episode.vote_average?.toFixed(1) }}
         </span>
         <div class="flex gap-2 ml-2">
-          <a :href="`https://www.themoviedb.org/tv/${showId}/season/${seasonNumber}/episode/${episodeNumber}`" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg bg-white/40 dark:bg-black/40 text-gray-800 dark:text-gray-200 hover:bg-white/60 dark:hover:bg-black/60 transition-colors backdrop-blur-md uppercase tracking-wider">{{ $t('common.tmdb') }}<ExternalLinkIcon class="w-3 h-3 opacity-70" />
+          <a
+            :href="`https://www.themoviedb.org/tv/${showId}/season/${seasonNumber}/episode/${episodeNumber}`"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg theme-surface-overlay theme-text theme-hover-surface-muted transition-colors backdrop-blur-md uppercase tracking-wider"
+            >{{ $t("common.tmdb")
+            }}<ExternalLinkIcon class="w-3 h-3 opacity-70" />
           </a>
         </div>
       </template>
@@ -31,12 +49,17 @@
           <NuxtLink
             v-for="project in dubbingProjects"
             :key="project.id"
-            :to="{ path: localePath(`/show/${showId}/season/${seasonNumber}/episode/${episodeNumber}`), query: { dub: project.id } }"
-            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-gray-200 dark:border-[#2a2a2a] flex items-center gap-1.5"
+            :to="{
+              path: localePath(
+                `/show/${showId}/season/${seasonNumber}/episode/${episodeNumber}`,
+              ),
+              query: { dub: project.id },
+            }"
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border theme-border-subtle theme-border flex items-center gap-1.5"
             :class="
               activeDubId === project.id
-                ? 'bg-cyan-600 dark:bg-[#00E5FF] text-white dark:text-black border-cyan-600 dark:border-[#00E5FF]'
-                : 'bg-white dark:bg-[#1d1d1d] text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#2a2a2a]'
+                ? 'theme-primary-bg theme-primary-border'
+                : 'theme-surface theme-text-secondary theme-hover-surface-muted'
             "
           >
             {{ getDisplayLanguage(project.language) }}
@@ -44,50 +67,96 @@
               class="text-xs px-1.5 py-0.5 rounded-full font-medium transition-colors"
               :class="
                 activeDubId === project.id
-                 ? 'bg-black/15 text-black'
-                  : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 dark:text-gray-400'
+                  ? 'bg-black/15 text-black'
+                  : 'theme-surface-raised theme-surface-muted theme-text-muted'
               "
             >
               {{ projectVoiceActorCount(project) }}
             </span>
           </NuxtLink>
         </div>
-        <div v-else class="text-sm text-gray-500 font-medium">{{ $t('details.noDubbingProjects') }}</div>
+        <div v-else class="text-sm theme-text-muted font-medium">
+          {{ $t("details.noDubbingProjects") }}
+        </div>
       </template>
 
       <template #actions-right>
         <template v-if="activeDubProject?.studio_data">
           <NuxtLink
             :to="localePath(`/studio/${activeDubProject.studio_data.id}`)"
-            class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-[#2a2a2a] hover:border-cyan-500 transition-colors group bg-gray-50 dark:bg-[#1d1d1d]"
+            class="flex items-center gap-2 px-3 py-1.5 rounded-lg border theme-border-subtle theme-border theme-hover-primary-border transition-colors group theme-surface-raised theme-surface"
             :title="$t('details.dubbingStudio')"
           >
-            <div class="w-6 h-6 rounded flex items-center justify-center overflow-hidden shrink-0 bg-white dark:bg-[#2a2a2a]">
-              <img v-if="activeDubProject.studio_data.logo_url" :src="activeDubProject.studio_data.logo_url" class="w-full h-full object-contain p-0.5" />
-              <span v-else class="font-bold text-xs text-gray-400">{{ activeDubProject.studio_data.name?.charAt(0) || '' }}</span>
+            <div
+              class="w-6 h-6 rounded flex items-center justify-center overflow-hidden shrink-0 theme-surface-muted"
+            >
+              <img
+                v-if="activeDubProject.studio_data.logo_url"
+                :src="activeDubProject.studio_data.logo_url"
+                class="w-full h-full object-contain p-0.5"
+              />
+              <span v-else class="font-bold text-xs theme-text-muted">{{
+                activeDubProject.studio_data.name?.charAt(0) || ""
+              }}</span>
             </div>
-            <span class="font-medium text-xs group-hover:text-cyan-500 transition-colors truncate max-w-[120px]">{{ activeDubProject.studio_data.name }}</span>
+            <span
+              class="font-medium text-xs theme-hover-primary-text transition-colors truncate max-w-[120px]"
+              >{{ activeDubProject.studio_data.name }}</span
+            >
           </NuxtLink>
-          <div class="h-6 w-px bg-gray-200 dark:bg-[#2a2a2a]"></div>
+          <div class="h-6 w-px theme-surface-muted"></div>
         </template>
 
         <NuxtLink
-          :to="{ path: localePath(`/show/${showId}/season/${seasonNumber}`), query: activeDubId ? { dub: activeDubId } : {} }"
-          class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-medium"
+          :to="{
+            path: localePath(`/show/${showId}/season/${seasonNumber}`),
+            query: activeDubId ? { dub: activeDubId } : {},
+          }"
+          class="text-sm theme-primary-text theme-hover-primary-text transition-colors flex items-center gap-1.5 font-medium"
         >
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" />
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M11 17l-5-5m0 0l5-5m-5 5h12"
+            />
           </svg>
           <span class="hidden sm:inline">{{ $t("details.backToSeason") }}</span>
         </NuxtLink>
-        
-        <NuxtLink v-show="isAdmin" :to="localePath(activeDubId ? `/show/${showId}/projects/${activeDubId}/edit` : `/show/${showId}/projects/new`)" class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-medium">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+
+        <NuxtLink
+          v-show="isAdmin"
+          :to="
+            localePath(
+              activeDubId
+                ? `/show/${showId}/projects/${activeDubId}/edit`
+                : `/show/${showId}/projects/new`,
+            )
+          "
+          class="text-sm theme-primary-text theme-hover-primary-text transition-colors flex items-center gap-1.5 font-medium"
+        >
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+            />
           </svg>
           <span class="hidden sm:inline">{{ $t("details.modify") }}</span>
         </NuxtLink>
-        
+
         <ForceEnqueueButton
           v-if="showId"
           media-type="episode"
@@ -98,7 +167,7 @@
 
         <button
           @click="isReportModalOpen = true"
-          class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1.5"
+          class="text-sm theme-text-muted theme-hover-danger-text transition-colors flex items-center gap-1.5"
           :title="$t('report.title')"
         >
           <svg
@@ -111,7 +180,9 @@
             stroke-linecap="round"
             stroke-linejoin="round"
           >
-            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+            <path
+              d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"
+            />
             <line x1="4" y1="22" x2="4" y2="15" />
           </svg>
         </button>
@@ -124,7 +195,7 @@
             <h2 class="text-2xl font-bold mb-4">
               {{ $t("details.synopsis") }}
             </h2>
-            <p class="text-gray-700 dark:text-gray-300 leading-relaxed text-lg">
+            <p class="theme-text-secondary leading-relaxed text-lg">
               {{ episode.overview }}
             </p>
           </section>
@@ -133,7 +204,9 @@
         <!-- Voice Cast -->
         <section v-if="formattedCast.length > 0">
           <div class="flex flex-col mb-6 gap-2">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+            <div
+              class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4"
+            >
               <div>
                 <h2 class="text-2xl font-bold">
                   {{ $t("details.castAndCrew") }}
@@ -141,32 +214,40 @@
               </div>
 
               <div class="relative w-full sm:w-64">
-                <SearchIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <SearchIcon
+                  class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 theme-text-muted"
+                />
                 <input
                   v-model="searchQuery"
                   type="search"
                   :placeholder="$t('search.placeholder')"
-                  class="w-full bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-[#00E5FF] transition-all text-gray-900 dark:text-white"
+                  class="w-full theme-input border theme-border-subtle theme-border rounded-xl pl-10 pr-4 py-2 text-sm theme-focus transition-all theme-text"
                 />
               </div>
             </div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+          <div
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+          >
             <div
               v-for="actor in visibleCast"
               :key="actor.id"
-              class="bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl p-4 shadow-sm transition-colors hover:border-gray-300 dark:hover:border-gray-700"
+              class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border"
             >
               <div
                 class="flex flex-col sm:grid gap-4"
-                :class="isOriginalLanguage ? 'sm:grid-cols-2' : 'sm:grid-cols-3'"
+                :class="
+                  isOriginalLanguage ? 'sm:grid-cols-2' : 'sm:grid-cols-3'
+                "
               >
                 <!-- Original Actor -->
-                <div class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start">
+                <div
+                  class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start"
+                >
                   <NuxtLink
                     :to="localePath(`/actor/${actor.id}`)"
-                    class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] bg-gray-200 dark:bg-[#222] sm:mb-3 flex-shrink-0"
+                    class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                   >
                     <NuxtImg
                       format="webp"
@@ -178,14 +259,20 @@
                       alt="Actor"
                     />
                   </NuxtLink>
-                  <div class="flex flex-col min-w-0 flex-1 w-full overflow-hidden">
-                    <div class="flex items-center gap-1.5 text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-1">
+                  <div
+                    class="flex flex-col min-w-0 flex-1 w-full overflow-hidden"
+                  >
+                    <div
+                      class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
+                    >
                       <ClapperboardIcon class="w-3 h-3 flex-shrink-0" />
-                      <span class="truncate block w-full">{{ $t("details.actor") }}</span>
+                      <span class="truncate block w-full">{{
+                        $t("details.actor")
+                      }}</span>
                     </div>
                     <NuxtLink
                       :to="localePath(`/actor/${actor.id}`)"
-                      class="font-bold text-sm text-gray-900 dark:text-white truncate hover:underline block w-full"
+                      class="font-bold text-sm theme-text truncate hover:underline block w-full"
                       :title="actor.name"
                     >
                       {{ actor.name }}
@@ -194,8 +281,12 @@
                 </div>
 
                 <!-- Character -->
-                <div class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start">
-                  <div class="w-16 sm:w-full relative block overflow-hidden rounded-xl aspect-[2/3] bg-gray-200 dark:bg-[#222] sm:mb-3 flex-shrink-0">
+                <div
+                  class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start"
+                >
+                  <div
+                    class="w-16 sm:w-full relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
+                  >
                     <NuxtImg
                       format="webp"
                       v-if="actor.characterImage"
@@ -206,14 +297,24 @@
                       alt="Character"
                     />
                   </div>
-                  <div class="flex flex-col min-w-0 flex-1 w-full overflow-hidden">
-                    <div class="flex items-center gap-1.5 text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-1">
+                  <div
+                    class="flex flex-col min-w-0 flex-1 w-full overflow-hidden"
+                  >
+                    <div
+                      class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
+                    >
                       <UserIcon class="w-3 h-3 flex-shrink-0" />
-                      <span class="truncate block w-full">{{ $t("details.character") }}</span>
+                      <span class="truncate block w-full">{{
+                        $t("details.character")
+                      }}</span>
                     </div>
                     <div
-                      class="font-bold text-sm text-gray-900 dark:text-white truncate block w-full"
-                      :title="actor.roles?.map((r: any) => r.character).join(', ') || actor.workCharacterName || ''"
+                      class="font-bold text-sm theme-text truncate block w-full"
+                      :title="
+                        actor.roles?.map((r: any) => r.character).join(', ') ||
+                        actor.workCharacterName ||
+                        ''
+                      "
                     >
                       {{
                         actor.roles?.map((r: any) => r.character).join(", ") ||
@@ -227,12 +328,12 @@
                 <!-- Voice Actor (hidden when viewing in original language) -->
                 <div
                   v-if="!isOriginalLanguage"
-                  class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-4 sm:pt-0 mt-2 sm:mt-0"
+                  class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t theme-border-subtle theme-border sm:border-t-0 pt-4 sm:pt-0 mt-2 sm:mt-0"
                 >
                   <template v-if="actor.voiceActor">
                     <NuxtLink
                       :to="localePath(`/voice-actor/${actor.voiceActor.id}`)"
-                      class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] bg-gray-200 dark:bg-[#222] sm:mb-3 flex-shrink-0"
+                      class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                     >
                       <NuxtImg
                         format="webp"
@@ -243,35 +344,68 @@
                         class="w-full h-full object-cover transition-transform duration-300"
                         alt="Voice Actor"
                       />
-                      <div v-else class="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-400">
-                        {{ actor.voiceActor.firstname?.[0] }}{{ actor.voiceActor.lastname?.[0] }}
+                      <div
+                        v-else
+                        class="w-full h-full flex items-center justify-center text-2xl font-bold theme-text-muted"
+                      >
+                        {{ actor.voiceActor.firstname?.[0]
+                        }}{{ actor.voiceActor.lastname?.[0] }}
                       </div>
                     </NuxtLink>
-                    <div class="flex flex-col min-w-0 flex-1 w-full overflow-hidden">
-                      <div class="flex items-center gap-1.5 text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-1">
+                    <div
+                      class="flex flex-col min-w-0 flex-1 w-full overflow-hidden"
+                    >
+                      <div
+                        class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
+                      >
                         <MicIcon class="w-3 h-3 flex-shrink-0" />
-                        <span class="truncate block w-full">{{ $t("details.voiceActor") }}</span>
+                        <span class="truncate block w-full">{{
+                          $t("details.voiceActor")
+                        }}</span>
                       </div>
                       <NuxtLink
                         :to="localePath(`/voice-actor/${actor.voiceActor.id}`)"
-                        class="font-bold text-sm text-gray-900 dark:text-white truncate hover:underline block w-full"
-                        :title="actor.voiceActor.firstname + ' ' + actor.voiceActor.lastname"
+                        class="font-bold text-sm theme-text truncate hover:underline block w-full"
+                        :title="
+                          actor.voiceActor.firstname +
+                          ' ' +
+                          actor.voiceActor.lastname
+                        "
                       >
-                        {{ actor.voiceActor.firstname }} {{ actor.voiceActor.lastname }}
+                        {{ actor.voiceActor.firstname }}
+                        {{ actor.voiceActor.lastname }}
                       </NuxtLink>
-                      <div v-if="actor.voiceActor.note" class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ actor.voiceActor.note }}</div>
+                      <div
+                        v-if="actor.voiceActor.note"
+                        class="text-xs theme-text-muted mt-1"
+                      >
+                        {{ actor.voiceActor.note }}
+                      </div>
                     </div>
                   </template>
                   <template v-else>
-                    <div class="w-16 sm:w-full relative block overflow-hidden rounded-xl aspect-[2/3] bg-gray-100 dark:bg-[#151515] sm:mb-3 flex items-center justify-center border border-dashed border-gray-300 dark:border-gray-800 flex-shrink-0">
-                      <span class="text-gray-400 dark:text-gray-600 text-xs text-center px-2">?</span>
+                    <div
+                      class="w-16 sm:w-full relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-raised theme-input sm:mb-3 flex items-center justify-center border border-dashed theme-border-subtle theme-border flex-shrink-0"
+                    >
+                      <span
+                        class="theme-text-muted theme-text-secondary text-xs text-center px-2"
+                        >?</span
+                      >
                     </div>
-                    <div class="flex flex-col min-w-0 flex-1 w-full overflow-hidden">
-                      <div class="flex items-center gap-1.5 text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-1">
+                    <div
+                      class="flex flex-col min-w-0 flex-1 w-full overflow-hidden"
+                    >
+                      <div
+                        class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
+                      >
                         <MicIcon class="w-3 h-3 opacity-50 flex-shrink-0" />
-                        <span class="truncate block w-full">{{ $t("details.voiceActor") }}</span>
+                        <span class="truncate block w-full">{{
+                          $t("details.voiceActor")
+                        }}</span>
                       </div>
-                      <div class="text-sm text-gray-400 italic truncate block w-full">
+                      <div
+                        class="text-sm theme-text-muted italic truncate block w-full"
+                      >
                         {{ $t("details.notSpecified") }}
                       </div>
                     </div>
@@ -289,31 +423,40 @@
           >
             <button
               @click="loadMoreCast"
-              class="px-5 py-2.5 bg-white dark:bg-[#1d1d1d] hover:bg-gray-100 dark:hover:bg-[#2a2a2a] text-sm font-medium rounded-xl text-gray-700 dark:text-gray-200 transition-all border border-gray-200 dark:border-[#2a2a2a] shadow-sm cursor-pointer"
+              class="px-5 py-2.5 theme-surface theme-hover-surface-muted text-sm font-medium rounded-xl theme-text-secondary theme-text transition-all border theme-border-subtle theme-border shadow-sm cursor-pointer"
             >
-              {{ $t('common.loadMore', 'Load more') }}
+              {{ $t("common.loadMore", "Load more") }}
             </button>
-            <span class="text-xs text-gray-400">
-              {{ visibleCast.length }} / {{ filteredCast.length }} {{ $t('details.castAndCrew') }}
+            <span class="text-xs theme-text-muted">
+              {{ visibleCast.length }} / {{ filteredCast.length }}
+              {{ $t("details.castAndCrew") }}
             </span>
           </div>
         </section>
-        <section v-else class="text-center py-12 text-gray-500 dark:text-gray-400">
-          {{ $t('details.noCast') }}
+        <section v-else class="text-center py-12 theme-text-muted">
+          {{ $t("details.noCast") }}
         </section>
       </template>
     </MediaDetailsLayout>
 
-    <div v-else class="min-h-[50vh] flex flex-col items-center justify-center p-8 text-center">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+    <div
+      v-else
+      class="min-h-[50vh] flex flex-col items-center justify-center p-8 text-center"
+    >
+      <h1 class="text-2xl font-bold theme-text mb-2">
         {{ $t("details.notFound", "Épisode introuvable") }}
       </h1>
-      <p class="text-gray-600 dark:text-gray-400 mb-6">
-        {{ $t("details.notFoundDesc", "Impossible de charger les informations de cet épisode.") }}
+      <p class="theme-text-secondary theme-text-muted mb-6">
+        {{
+          $t(
+            "details.notFoundDesc",
+            "Impossible de charger les informations de cet épisode.",
+          )
+        }}
       </p>
       <NuxtLink
         :to="localePath(`/show/${showId}/season/${seasonNumber}`)"
-        class="px-4 py-2 bg-cyan-600 dark:bg-[#00E5FF] text-white dark:text-black font-semibold rounded-lg hover:opacity-90 transition-opacity"
+        class="px-4 py-2 theme-primary-bg font-semibold rounded-lg hover:opacity-90 transition-opacity"
       >
         {{ $t("details.backToSeason", "Retour à la saison") }}
       </NuxtLink>
@@ -337,7 +480,7 @@ import {
   MicIcon,
   SearchIcon,
   ExternalLinkIcon,
-  StarIcon
+  StarIcon,
 } from "lucide-vue-next";
 import ReportModal from "../../../../../../components/ReportModal.vue";
 import { matchCastWorks } from "../../../../../../utils/media-cast";
@@ -347,20 +490,24 @@ const isReportModalOpen = ref(false);
 const route = useRoute();
 const router = useRouter();
 const supabase = useSupabaseClient();
-const showId = (Array.isArray(route.params.id)
-  ? route.params.id[0]
-  : route.params.id) || '';
-const seasonNumber = (Array.isArray(route.params.seasonNumber)
-  ? route.params.seasonNumber[0]
-  : route.params.seasonNumber) || '1';
-const episodeNumber = (Array.isArray(route.params.episodeNumber)
-  ? route.params.episodeNumber[0]
-  : route.params.episodeNumber) || '1';
+const showId =
+  (Array.isArray(route.params.id) ? route.params.id[0] : route.params.id) || "";
+const seasonNumber =
+  (Array.isArray(route.params.seasonNumber)
+    ? route.params.seasonNumber[0]
+    : route.params.seasonNumber) || "1";
+const episodeNumber =
+  (Array.isArray(route.params.episodeNumber)
+    ? route.params.episodeNumber[0]
+    : route.params.episodeNumber) || "1";
 const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
 
 const user = useSupabaseUser();
 const isAdmin = computed(() => {
-  return user.value?.app_metadata?.role === 'admin' || user.value?.user_metadata?.role === 'admin';
+  return (
+    user.value?.app_metadata?.role === "admin" ||
+    user.value?.user_metadata?.role === "admin"
+  );
 });
 
 const { locale, t } = useI18n();
@@ -371,7 +518,12 @@ const cacheKey = `episode-${showId}-${seasonNumber}-${episodeNumber}-${locale.va
 const { data, pending } = useAsyncData(
   cacheKey,
   async () => {
-    return await fetchEpisodeData(showId, seasonNumber, episodeNumber, locale.value);
+    return await fetchEpisodeData(
+      showId,
+      seasonNumber,
+      episodeNumber,
+      locale.value,
+    );
   },
   {
     getCachedData: (key, nuxtApp) =>
@@ -381,8 +533,9 @@ const { data, pending } = useAsyncData(
 
 const episode = computed(() => data.value?.episode);
 const dubbingProjects = computed(() => {
-  const projects = [...(data.value?.dubbingProjects || [])]
-    .filter((p) => projectHasVoiceActor(p));
+  const projects = [...(data.value?.dubbingProjects || [])].filter((p) =>
+    projectHasVoiceActor(p),
+  );
   const currentLocale = locale.value.toLowerCase();
   return projects.sort((a, b) => {
     const aIsPref = a.language?.toLowerCase().startsWith(currentLocale) ? 1 : 0;
@@ -413,20 +566,24 @@ const characterProfilePictures = computed(
   () => data.value?.characterProfilePictures || [],
 );
 const title = computed(() => {
-  if (!episode.value) return t('search.tv', 'Series');
-  const episodeName = episode.value.name || t('details.episode', { num: episode.value.episode_number });
-  return `${t('details.season', { num: seasonNumber })} · ${t('details.episode', { num: episode.value.episode_number })} - ${episodeName}`;
+  if (!episode.value) return t("search.tv", "Series");
+  const episodeName =
+    episode.value.name ||
+    t("details.episode", { num: episode.value.episode_number });
+  return `${t("details.season", { num: seasonNumber })} · ${t("details.episode", { num: episode.value.episode_number })} - ${episodeName}`;
 });
 
 const backdropUrl = computed(() => {
   if (!episode.value?.still_path) return null;
-  if (episode.value.still_path.startsWith('http')) return episode.value.still_path;
+  if (episode.value.still_path.startsWith("http"))
+    return episode.value.still_path;
   return `https://image.tmdb.org/t/p/original${episode.value.still_path}`;
 });
 
 const posterUrl = computed(() => {
   if (!episode.value?.still_path) return null;
-  if (episode.value.still_path.startsWith('http')) return episode.value.still_path;
+  if (episode.value.still_path.startsWith("http"))
+    return episode.value.still_path;
   return `https://image.tmdb.org/t/p/w500${episode.value.still_path}`;
 });
 
@@ -445,18 +602,24 @@ const activeDubProject = computed(() => {
 });
 
 const isOriginalLanguage = computed(() => {
-  const orig = (episode.value?.original_language || episode.value?.show_original_language)?.toLowerCase();
+  const orig = (
+    episode.value?.original_language || episode.value?.show_original_language
+  )?.toLowerCase();
   const dub = activeDubProject.value?.language?.toLowerCase();
   if (!orig || !dub) return false;
-  return orig === dub || dub.startsWith(`${orig}-`) || orig.startsWith(`${dub}-`);
+  return (
+    orig === dub || dub.startsWith(`${orig}-`) || orig.startsWith(`${dub}-`)
+  );
 });
 
 const getDisplayLanguage = (langCode: string | undefined | null) => {
-  if (!langCode) return t('details.notSpecified', 'Not specified');
+  if (!langCode) return t("details.notSpecified", "Not specified");
   try {
-    const displayNames = new Intl.DisplayNames([locale.value || 'en'], { type: "language" });
+    const displayNames = new Intl.DisplayNames([locale.value || "en"], {
+      type: "language",
+    });
     const name = displayNames.of(langCode);
-    return (typeof name === 'string' && name.length > 0)
+    return typeof name === "string" && name.length > 0
       ? name.charAt(0).toUpperCase() + name.slice(1)
       : langCode;
   } catch (e) {
@@ -465,9 +628,13 @@ const getDisplayLanguage = (langCode: string | undefined | null) => {
 };
 
 const formatDate = (dateStr: string) => {
-  if (!dateStr) return '';
+  if (!dateStr) return "";
   const date = new Date(dateStr);
-  return date.toLocaleDateString(locale.value, { year: 'numeric', month: 'long', day: 'numeric' });
+  return date.toLocaleDateString(locale.value, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 };
 
 // Format cast and attach voice actors
@@ -476,7 +643,10 @@ const formattedCast = computed(() => {
 
   const works = activeDubProject.value?.works || [];
 
-  const { matches, unmatchedWorks } = matchCastWorks(episode.value.credits.cast, works);
+  const { matches, unmatchedWorks } = matchCastWorks(
+    episode.value.credits.cast,
+    works,
+  );
 
   const matchedCards = matches.flatMap(({ actor, works: actorWorks }) => {
     let profilePath = actor.profile_path;
@@ -487,36 +657,37 @@ const formattedCast = computed(() => {
     const cards = actorWorks.length > 0 ? actorWorks : [null];
 
     return cards.map((work: any) => {
-    const voiceActor = work?.voice_actor;
-    const workCharacterName = work?.character_name || null;
+      const voiceActor = work?.voice_actor;
+      const workCharacterName = work?.character_name || null;
 
-    let characterImage = null;
-    const characterName =
-      actor.roles?.map((r: any) => r.character).join(", ") || workCharacterName;
-    if (characterName) {
-      const namesToTry = [
-        ...(actor.roles || []).map((r: any) => r.character).filter(Boolean),
-        ...(workCharacterName ? [workCharacterName] : []),
-      ];
-      for (const name of namesToTry) {
-        const match = characterProfilePictures.value.find(
-          (c: any) => c.name && c.name.toLowerCase() === name.toLowerCase(),
-        );
-        if (match && match.image) {
-          characterImage = match.image;
-          break;
+      let characterImage = null;
+      const characterName =
+        actor.roles?.map((r: any) => r.character).join(", ") ||
+        workCharacterName;
+      if (characterName) {
+        const namesToTry = [
+          ...(actor.roles || []).map((r: any) => r.character).filter(Boolean),
+          ...(workCharacterName ? [workCharacterName] : []),
+        ];
+        for (const name of namesToTry) {
+          const match = characterProfilePictures.value.find(
+            (c: any) => c.name && c.name.toLowerCase() === name.toLowerCase(),
+          );
+          if (match && match.image) {
+            characterImage = match.image;
+            break;
+          }
         }
       }
-    }
 
-    return {
-      ...actor,
-      id: work ? `${actor.id}-${work.id}` : actor.id,
-      profile_path: profilePath,
-      voiceActor: voiceActor ? { ...voiceActor, note: work.note } : null,
-      characterImage,
-      workCharacterName,
-    };
+      return {
+        ...actor,
+        id: work ? `${actor.id}-${work.id}` : actor.id,
+        profile_path: profilePath,
+        voiceActor: voiceActor ? { ...voiceActor, note: work.note } : null,
+        characterImage,
+        workCharacterName,
+      };
     });
   });
 
@@ -577,7 +748,7 @@ useIntersectionObserver(
       loadMoreCast();
     }
   },
-  { rootMargin: '400px' },
+  { rootMargin: "400px" },
 );
 
 watch(debouncedSearch, () => {
@@ -588,7 +759,7 @@ useHead({
   title: computed(() => {
     let base = title.value;
     if (activeDubProject.value) {
-      base += ` - ${t('details.dubbing', { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
+      base += ` - ${t("details.dubbing", { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
     }
     return base.length > 55 ? base.substring(0, 52) + "..." : base;
   }),
@@ -596,10 +767,25 @@ useHead({
     {
       name: "description",
       content: computed(() => {
-        const episodeName = episode.value?.name || t('details.episode', { num: episode.value?.episode_number });
-        let desc = episode.value?.overview || (episodeName ? t('seo.showDescription', { title: episodeName }) : t('seo.showDescriptionFallback', 'Découvrez le casting et les voix de l\'épisode.'));
+        const episodeName =
+          episode.value?.name ||
+          t("details.episode", { num: episode.value?.episode_number });
+        let desc =
+          episode.value?.overview ||
+          (episodeName
+            ? t("seo.showDescription", { title: episodeName })
+            : t(
+                "seo.showDescriptionFallback",
+                "Découvrez le casting et les voix de l'épisode.",
+              ));
         if (activeDubProject.value && episodeName) {
-          desc = t('seo.showDescriptionDubbing', { lang: getDisplayLanguage(activeDubProject.value.language), title: episodeName }) + ' ' + desc;
+          desc =
+            t("seo.showDescriptionDubbing", {
+              lang: getDisplayLanguage(activeDubProject.value.language),
+              title: episodeName,
+            }) +
+            " " +
+            desc;
         }
         return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
       }),
@@ -607,7 +793,9 @@ useHead({
     {
       name: "keywords",
       content: computed(() => {
-        const episodeName = episode.value?.name || t('details.episode', { num: episode.value?.episode_number });
+        const episodeName =
+          episode.value?.name ||
+          t("details.episode", { num: episode.value?.episode_number });
         if (!episodeName) return t("home.meta.keywords");
         return t("seo.showKeywords", { title: episodeName });
       }),
@@ -617,7 +805,7 @@ useHead({
       content: computed(() => {
         let base = title.value;
         if (activeDubProject.value) {
-          base += ` - ${t('details.dubbing', { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
+          base += ` - ${t("details.dubbing", { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
         }
         return base.length > 55 ? base.substring(0, 52) + "..." : base;
       }),
@@ -625,10 +813,25 @@ useHead({
     {
       property: "og:description",
       content: computed(() => {
-        const episodeName = episode.value?.name || t('details.episode', { num: episode.value?.episode_number });
-        let desc = episode.value?.overview || (episodeName ? t('seo.showDescription', { title: episodeName }) : t('seo.showDescriptionFallback', 'Découvrez le casting et les voix de l\'épisode.'));
+        const episodeName =
+          episode.value?.name ||
+          t("details.episode", { num: episode.value?.episode_number });
+        let desc =
+          episode.value?.overview ||
+          (episodeName
+            ? t("seo.showDescription", { title: episodeName })
+            : t(
+                "seo.showDescriptionFallback",
+                "Découvrez le casting et les voix de l'épisode.",
+              ));
         if (activeDubProject.value && episodeName) {
-          desc = t('seo.showDescriptionDubbing', { lang: getDisplayLanguage(activeDubProject.value.language), title: episodeName }) + ' ' + desc;
+          desc =
+            t("seo.showDescriptionDubbing", {
+              lang: getDisplayLanguage(activeDubProject.value.language),
+              title: episodeName,
+            }) +
+            " " +
+            desc;
         }
         return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
       }),
@@ -639,7 +842,10 @@ useHead({
     },
     {
       property: "og:url",
-      content: computed(() => `https://dubbingbase.com/show/${showId}/season/${seasonNumber}/episode/${episodeNumber}${activeDubId.value ? `?dub=${activeDubId.value}` : ''}`),
+      content: computed(
+        () =>
+          `https://dubbingbase.com/show/${showId}/season/${seasonNumber}/episode/${episodeNumber}${activeDubId.value ? `?dub=${activeDubId.value}` : ""}`,
+      ),
     },
     {
       property: "og:image",
@@ -654,7 +860,7 @@ useHead({
       content: computed(() => {
         let base = title.value;
         if (activeDubProject.value) {
-          base += ` - ${t('details.dubbing', { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
+          base += ` - ${t("details.dubbing", { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
         }
         return base.length > 55 ? base.substring(0, 52) + "..." : base;
       }),
@@ -662,10 +868,25 @@ useHead({
     {
       name: "twitter:description",
       content: computed(() => {
-        const episodeName = episode.value?.name || t('details.episode', { num: episode.value?.episode_number });
-        let desc = episode.value?.overview || (episodeName ? t('seo.showDescription', { title: episodeName }) : t('seo.showDescriptionFallback', 'Découvrez le casting et les voix de l\'épisode.'));
+        const episodeName =
+          episode.value?.name ||
+          t("details.episode", { num: episode.value?.episode_number });
+        let desc =
+          episode.value?.overview ||
+          (episodeName
+            ? t("seo.showDescription", { title: episodeName })
+            : t(
+                "seo.showDescriptionFallback",
+                "Découvrez le casting et les voix de l'épisode.",
+              ));
         if (activeDubProject.value && episodeName) {
-          desc = t('seo.showDescriptionDubbing', { lang: getDisplayLanguage(activeDubProject.value.language), title: episodeName }) + ' ' + desc;
+          desc =
+            t("seo.showDescriptionDubbing", {
+              lang: getDisplayLanguage(activeDubProject.value.language),
+              title: episodeName,
+            }) +
+            " " +
+            desc;
         }
         return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
       }),
@@ -677,10 +898,10 @@ useHead({
   ],
   link: computed<any[]>(() => {
     const links: any[] = [
-      { rel: 'preconnect', href: 'https://image.tmdb.org', crossorigin: '' },
-      { rel: 'dns-prefetch', href: 'https://image.tmdb.org' },
-      { rel: 'preconnect', href: 'https://thetvdb.com', crossorigin: '' },
-      { rel: 'dns-prefetch', href: 'https://thetvdb.com' },
+      { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
+      { rel: "dns-prefetch", href: "https://image.tmdb.org" },
+      { rel: "preconnect", href: "https://thetvdb.com", crossorigin: "" },
+      { rel: "dns-prefetch", href: "https://thetvdb.com" },
       {
         rel: "canonical",
         href: (() => {

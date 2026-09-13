@@ -12,18 +12,18 @@
       <template #metadata>
         <span
           v-if="voiceActor.nationality"
-          class="text-gray-900 dark:text-gray-100 font-medium text-sm md:text-base bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-lg"
+          class="theme-text font-medium text-sm md:text-base theme-surface-overlay backdrop-blur-md px-3 py-1.5 rounded-lg"
         >
           {{ voiceActor.nationality }}
         </span>
         <span
           v-if="voiceActor.date_of_birth"
-          class="text-gray-900 dark:text-gray-100 font-medium text-sm md:text-base bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-lg"
+          class="theme-text font-medium text-sm md:text-base theme-surface-overlay backdrop-blur-md px-3 py-1.5 rounded-lg"
           >{{ $t("common.born") }}{{ voiceActor.date_of_birth.split("-")[0] }}
         </span>
         <span
           v-if="voiceActor.years_active"
-          class="text-gray-900 dark:text-gray-100 font-medium text-sm md:text-base bg-white/60 dark:bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-lg"
+          class="theme-text font-medium text-sm md:text-base theme-surface-overlay backdrop-blur-md px-3 py-1.5 rounded-lg"
           >{{ $t("voiceActor.active") }}{{ voiceActor.years_active }}
         </span>
       </template>
@@ -35,7 +35,7 @@
               {{ $t("profile.biography") }}
             </h2>
             <p
-              class="text-gray-700 dark:text-gray-300 leading-relaxed text-lg whitespace-pre-wrap"
+              class="theme-text-secondary leading-relaxed text-lg whitespace-pre-wrap"
             >
               {{ voiceActor.bio }}
             </p>
@@ -49,14 +49,14 @@
           <div class="relative w-8 h-8 flex-shrink-0">
             <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
               <path
-                class="text-gray-200 dark:text-[#2a2a2a]"
+                class="theme-text-muted"
                 stroke-width="3"
                 stroke="currentColor"
                 fill="none"
                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
               />
               <path
-                class="text-emerald-500 transition-all duration-1000 ease-out"
+                class="theme-status-success-text transition-all duration-1000 ease-out"
                 :stroke-dasharray="`${completenessScore}, 100`"
                 stroke-width="3"
                 stroke-linecap="round"
@@ -66,7 +66,7 @@
               />
             </svg>
             <div
-              class="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-gray-900 dark:text-white"
+              class="absolute inset-0 flex items-center justify-center text-[9px] font-bold theme-text"
             >
               {{ completenessScore }}%
             </div>
@@ -76,7 +76,7 @@
         <NuxtLink
           v-if="isAdmin"
           :to="localePath(`/voice-actor/${voiceActorId}/edit`)"
-          class="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors flex items-center gap-1.5 font-medium"
+          class="text-sm theme-primary-text theme-hover-primary-text transition-colors flex items-center gap-1.5 font-medium"
         >
           <svg
             class="w-4 h-4"
@@ -96,7 +96,7 @@
 
         <button
           @click="isReportModalOpen = true"
-          class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1.5"
+          class="text-sm theme-text-muted theme-hover-danger-text transition-colors flex items-center gap-1.5"
           title="Signaler cette fiche"
         >
           <svg
@@ -127,7 +127,7 @@
                 v-for="studio in workedStudios"
                 :key="studio.id"
                 :to="localePath(`/studio/${studio.id}`)"
-                class="flex items-center gap-3 bg-white dark:bg-[#1d1d1d] border border-gray-200 dark:border-[#2a2a2a] rounded-xl p-3 hover:border-cyan-500 transition-colors shadow-sm"
+                class="flex items-center gap-3 theme-surface border theme-border-subtle theme-border rounded-xl p-3 theme-hover-primary-border transition-colors shadow-sm"
               >
                 <div
                   v-if="studio.logo_url"
@@ -143,15 +143,13 @@
                 </div>
                 <div
                   v-else
-                  class="w-10 h-10 bg-gray-100 dark:bg-[#2a2a2a] rounded-lg flex items-center justify-center shrink-0"
+                  class="w-10 h-10 theme-surface-raised theme-surface-muted rounded-lg flex items-center justify-center shrink-0"
                 >
-                  <span class="text-gray-400 font-bold">{{
+                  <span class="theme-text-muted font-bold">{{
                     studio.name?.charAt(0)?.toUpperCase() || ""
                   }}</span>
                 </div>
-                <span class="font-semibold text-gray-900 dark:text-gray-100">{{
-                  studio.name
-                }}</span>
+                <span class="font-semibold theme-text">{{ studio.name }}</span>
               </NuxtLink>
             </div>
           </section>
@@ -172,7 +170,7 @@
               <div class="flex flex-wrap gap-4 items-center">
                 <div class="relative w-full sm:w-64">
                   <SearchIcon
-                    class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+                    class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 theme-text-muted"
                   />
                   <input
                     v-model="searchInput"
@@ -183,21 +181,21 @@
                         'Search roles, titles or actors...',
                       )
                     "
-                    class="w-full bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-[#00E5FF] transition-all text-gray-900 dark:text-white"
+                    class="w-full theme-input border theme-border-subtle theme-border rounded-xl pl-10 pr-4 py-2 text-sm theme-focus transition-all theme-text"
                   />
                 </div>
 
                 <!-- Display Mode Toggle -->
                 <div
-                  class="flex bg-gray-100 dark:bg-[#161616] rounded-lg p-1 border border-gray-200 dark:border-[#2a2a2a]"
+                  class="flex theme-surface-raised theme-input rounded-lg p-1 border theme-border-subtle theme-border"
                 >
                   <button
                     @click="displayMode = 'grouped'"
                     :class="[
                       'px-4 py-1.5 rounded-md text-sm font-medium transition cursor-pointer',
                       displayMode === 'grouped'
-                        ? 'bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white shadow-sm'
-                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200',
+                        ? 'theme-surface-muted theme-text shadow-sm'
+                        : 'theme-text-muted theme-hover-text',
                     ]"
                   >
                     {{ $t("voiceActor.grouped", "Grouped") }}
@@ -207,8 +205,8 @@
                     :class="[
                       'px-4 py-1.5 rounded-md text-sm font-medium transition cursor-pointer',
                       displayMode === 'list'
-                        ? 'bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white shadow-sm'
-                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200',
+                        ? 'theme-surface-muted theme-text shadow-sm'
+                        : 'theme-text-muted theme-hover-text',
                     ]"
                   >
                     {{ $t("voiceActor.list", "List") }}
@@ -218,7 +216,8 @@
                 <!-- Sort Dropdown -->
                 <select
                   v-model="sortMode"
-                  class="bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] text-gray-900 dark:text-gray-200 text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2 cursor-pointer"
+                  :aria-label="$t('common.sort')"
+                  class="theme-input border theme-border-subtle theme-border theme-text text-sm rounded-lg theme-focus block p-2 cursor-pointer"
                 >
                   <option value="newest">
                     {{ $t("voiceActor.newestFirst", "Newest First") }}
@@ -243,8 +242,8 @@
                 class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all shrink-0 cursor-pointer border"
                 :class="[
                   activeTab === tab.id
-                    ? 'bg-cyan-500/10 text-cyan-600 dark:text-[#00E5FF] border-cyan-500/30 dark:border-cyan-400/40 shadow-xs font-semibold'
-                    : 'bg-white dark:bg-[#161616] text-gray-600 dark:text-gray-400 border-gray-200 dark:border-[#2a2a2a] hover:text-gray-900 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-[#3a3a3a]',
+                    ? 'theme-selected shadow-xs font-semibold'
+                    : 'theme-input theme-text-secondary theme-text-muted theme-border-subtle theme-border theme-hover-text theme-hover-border-strong',
                 ]"
               >
                 <component :is="tab.icon" class="w-4 h-4 shrink-0" />
@@ -253,8 +252,8 @@
                   class="text-xs px-1.5 py-0.5 rounded-full font-medium transition-colors"
                   :class="[
                     activeTab === tab.id
-                      ? 'bg-cyan-500/20 text-cyan-700 dark:text-[#00E5FF]'
-                      : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 dark:text-gray-400',
+                      ? 'bg-cyan-500/20 text-cyan-700 theme-primary-text'
+                      : 'theme-surface-raised theme-surface-muted theme-text-muted',
                   ]"
                 >
                   {{ tab.count }}
@@ -265,7 +264,7 @@
 
           <div
             v-if="sortedWorks.length === 0"
-            class="text-gray-500 text-center py-12 bg-white dark:bg-[#161616] rounded-2xl border border-gray-200 dark:border-[#2a2a2a]"
+            class="theme-text-muted text-center py-12 theme-input rounded-2xl border theme-border-subtle theme-border"
           >
             {{
               $t("voiceActor.noWorksFound", "No works found for this actor.")
@@ -283,7 +282,7 @@
               <template #default="{ item }">
                 <div
                   :key="item.work.id"
-                  class="bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl p-4 shadow-sm transition-colors hover:border-gray-300 dark:hover:border-gray-700 block group"
+                  class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border block group"
                 >
                   <div
                     class="flex flex-col sm:grid sm:grid-cols-3 gap-4 h-full"
@@ -301,7 +300,7 @@
                       class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start cursor-pointer"
                     >
                       <div
-                        class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 flex-shrink-0"
+                        class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden theme-surface-raised theme-surface-muted sm:mb-3 flex-shrink-0"
                       >
                         <NuxtImg
                           format="webp"
@@ -317,7 +316,7 @@
                         />
                         <div
                           v-else
-                          class="w-full h-full flex items-center justify-center text-gray-400"
+                          class="w-full h-full flex items-center justify-center theme-text-muted"
                         >
                           <ClapperboardIcon
                             class="w-6 h-6 sm:w-8 sm:h-8 opacity-20"
@@ -326,13 +325,13 @@
                       </div>
                       <div class="flex flex-col min-w-0 flex-1">
                         <span
-                          class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5"
+                          class="text-[10px] theme-text-muted font-semibold uppercase tracking-wider mb-0.5"
                           >{{
                             item.sortDate ? item.sortDate.split("-")[0] : ""
                           }}</span
                         >
                         <span
-                          class="font-bold text-sm text-gray-900 dark:text-gray-100 leading-tight line-clamp-2"
+                          class="font-bold text-sm theme-text leading-tight line-clamp-2"
                           :title="
                             (item.media as any).title ||
                             (item.media as any).name
@@ -347,7 +346,7 @@
                           class="mt-1 flex min-w-0 overflow-hidden"
                         >
                           <span
-                            class="text-[9px] px-1.5 py-0.5 bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-300 rounded-md font-medium border border-gray-200 dark:border-gray-700 truncate min-w-0"
+                            class="text-[9px] px-1.5 py-0.5 theme-surface-raised theme-surface-muted theme-text-secondary rounded-md font-medium border theme-border-subtle theme-border truncate min-w-0"
                             :title="item.work.dubbing_projects.studios.name"
                           >
                             {{ item.work.dubbing_projects.studios.name }}
@@ -360,10 +359,10 @@
                     <NuxtLink
                       v-if="item.data.actor"
                       :to="localePath(`/actor/${item.data.actor.id}`)"
-                      class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-3 sm:pt-0 cursor-pointer"
+                      class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t theme-border-subtle theme-border sm:border-t-0 pt-3 sm:pt-0 cursor-pointer"
                     >
                       <div
-                        class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 flex-shrink-0"
+                        class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden theme-surface-raised theme-surface-muted sm:mb-3 flex-shrink-0"
                       >
                         <NuxtImg
                           format="webp"
@@ -378,42 +377,42 @@
                         />
                         <div
                           v-else
-                          class="w-full h-full flex items-center justify-center text-gray-400"
+                          class="w-full h-full flex items-center justify-center theme-text-muted"
                         >
                           <UserIcon class="w-6 h-6 sm:w-8 sm:h-8 opacity-20" />
                         </div>
                       </div>
                       <div class="flex flex-col min-w-0 flex-1">
                         <span
-                          class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5"
+                          class="text-[10px] theme-text-muted font-semibold uppercase tracking-wider mb-0.5"
                           >{{ $t("details.voicedBy") }}</span
                         >
                         <span
-                          class="font-medium text-sm text-gray-700 dark:text-gray-300 leading-tight line-clamp-2"
+                          class="font-medium text-sm theme-text-secondary leading-tight line-clamp-2"
                           >{{ item.data.actor.name }}</span
                         >
                       </div>
                     </NuxtLink>
                     <div
                       v-else
-                      class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-3 sm:pt-0"
+                      class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t theme-border-subtle theme-border sm:border-t-0 pt-3 sm:pt-0"
                     >
                       <div
-                        class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 flex-shrink-0"
+                        class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden theme-surface-raised theme-surface-muted sm:mb-3 flex-shrink-0"
                       >
                         <div
-                          class="w-full h-full flex items-center justify-center text-gray-400"
+                          class="w-full h-full flex items-center justify-center theme-text-muted"
                         >
                           <UserIcon class="w-6 h-6 sm:w-8 sm:h-8 opacity-20" />
                         </div>
                       </div>
                       <div class="flex flex-col min-w-0 flex-1">
                         <span
-                          class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5"
+                          class="text-[10px] theme-text-muted font-semibold uppercase tracking-wider mb-0.5"
                           >{{ $t("details.voicedBy") }}</span
                         >
                         <span
-                          class="font-medium text-sm text-gray-700 dark:text-gray-300 leading-tight line-clamp-2"
+                          class="font-medium text-sm theme-text-secondary leading-tight line-clamp-2"
                           >{{ $t("details.unknownCharacter") }}</span
                         >
                       </div>
@@ -421,10 +420,10 @@
 
                     <!-- Column 3: Character -->
                     <div
-                      class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-3 sm:pt-0"
+                      class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t theme-border-subtle theme-border sm:border-t-0 pt-3 sm:pt-0"
                     >
                       <div
-                        class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 relative flex-shrink-0"
+                        class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden theme-surface-raised theme-surface-muted sm:mb-3 relative flex-shrink-0"
                       >
                         <NuxtImg
                           format="webp"
@@ -437,7 +436,7 @@
                         />
                         <div
                           v-else
-                          class="w-full h-full flex items-center justify-center text-gray-400"
+                          class="w-full h-full flex items-center justify-center theme-text-muted"
                         >
                           <UserIcon class="w-6 h-6 sm:w-8 sm:h-8 opacity-20" />
                         </div>
@@ -458,11 +457,11 @@
                       </div>
                       <div class="flex flex-col min-w-0 flex-1">
                         <span
-                          class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5"
+                          class="text-[10px] theme-text-muted font-semibold uppercase tracking-wider mb-0.5"
                           >{{ $t("details.as") }}</span
                         >
                         <span
-                          class="font-medium text-sm text-gray-700 dark:text-gray-300 leading-tight line-clamp-2"
+                          class="font-medium text-sm theme-text-secondary leading-tight line-clamp-2"
                           >{{ item.data.character || "Unknown" }}</span
                         >
                       </div>
@@ -482,10 +481,10 @@
                 <!-- Actor Group Header -->
                 <NuxtLink
                   :to="localePath(`/actor/${works[0]?.data.actor.id}`)"
-                  class="flex items-center gap-4 border-b border-gray-200 dark:border-gray-800 pb-4 hover:bg-gray-50 dark:hover:bg-[#1d1d1d] p-2 -ml-2 rounded-xl transition-colors cursor-pointer group"
+                  class="flex items-center gap-4 border-b theme-border-subtle theme-border pb-4 theme-hover-surface-muted theme-surface p-2 -ml-2 rounded-xl transition-colors cursor-pointer group"
                 >
                   <div
-                    class="w-20 h-20 shrink-0 rounded-full overflow-hidden bg-gray-100 dark:bg-[#161616] shadow-md border border-gray-200 dark:border-[#2a2a2a]"
+                    class="w-20 h-20 shrink-0 rounded-full overflow-hidden theme-surface-raised theme-input shadow-md border theme-border-subtle theme-border"
                   >
                     <NuxtImg
                       format="webp"
@@ -498,15 +497,18 @@
                       :alt="actorName"
                       class="object-cover w-full h-full"
                     />
-                    <UserIcon v-else class="w-full h-full text-gray-400 p-2" />
+                    <UserIcon
+                      v-else
+                      class="w-full h-full theme-text-muted p-2"
+                    />
                   </div>
                   <div>
                     <h3
-                      class="text-xl font-bold text-gray-900 dark:text-gray-100 group-hover:underline"
+                      class="text-xl font-bold theme-text group-hover:underline"
                     >
                       {{ actorName }}
                     </h3>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <p class="text-sm theme-text-muted">
                       {{ works.length }}{{ $t("common.works") }}
                     </p>
                   </div>
@@ -522,7 +524,7 @@
                   <template #default="{ item }">
                     <div
                       :key="item.work.id"
-                      class="bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl p-4 shadow-sm transition-colors hover:border-gray-300 dark:hover:border-gray-700 block group"
+                      class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border block group"
                     >
                       <div
                         class="flex flex-col sm:grid sm:grid-cols-2 gap-4 h-full"
@@ -540,7 +542,7 @@
                           class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start cursor-pointer"
                         >
                           <div
-                            class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 flex-shrink-0"
+                            class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden theme-surface-raised theme-surface-muted sm:mb-3 flex-shrink-0"
                           >
                             <NuxtImg
                               format="webp"
@@ -556,20 +558,20 @@
                             />
                             <div
                               v-else
-                              class="w-full h-full flex items-center justify-center text-gray-400"
+                              class="w-full h-full flex items-center justify-center theme-text-muted"
                             >
                               <ClapperboardIcon class="w-6 h-6 opacity-20" />
                             </div>
                           </div>
                           <div class="flex flex-col min-w-0 flex-1">
                             <span
-                              class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5"
+                              class="text-[10px] theme-text-muted font-semibold uppercase tracking-wider mb-0.5"
                               >{{
                                 item.sortDate ? item.sortDate.split("-")[0] : ""
                               }}</span
                             >
                             <span
-                              class="font-bold text-sm text-gray-900 dark:text-gray-100 leading-tight line-clamp-2"
+                              class="font-bold text-sm theme-text leading-tight line-clamp-2"
                               :title="
                                 (item.media as any).title ||
                                 (item.media as any).name
@@ -584,7 +586,7 @@
                               class="mt-1 flex min-w-0 overflow-hidden"
                             >
                               <span
-                                class="text-[9px] px-1.5 py-0.5 bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-300 rounded-md font-medium border border-gray-200 dark:border-gray-700 truncate min-w-0"
+                                class="text-[9px] px-1.5 py-0.5 theme-surface-raised theme-surface-muted theme-text-secondary rounded-md font-medium border theme-border-subtle theme-border truncate min-w-0"
                                 :title="item.work.dubbing_projects.studios.name"
                               >
                                 {{ item.work.dubbing_projects.studios.name }}
@@ -595,10 +597,10 @@
 
                         <!-- Column 2: Original Actor / Character -->
                         <div
-                          class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t border-gray-100 dark:border-[#2a2a2a] sm:border-t-0 pt-3 sm:pt-0"
+                          class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t theme-border-subtle theme-border sm:border-t-0 pt-3 sm:pt-0"
                         >
                           <div
-                            class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 sm:mb-3 relative flex-shrink-0"
+                            class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden theme-surface-raised theme-surface-muted sm:mb-3 relative flex-shrink-0"
                           >
                             <NuxtImg
                               format="webp"
@@ -611,7 +613,7 @@
                             />
                             <div
                               v-else
-                              class="w-full h-full flex items-center justify-center text-gray-400"
+                              class="w-full h-full flex items-center justify-center theme-text-muted"
                             >
                               <UserIcon class="w-6 h-6 opacity-20" />
                             </div>
@@ -632,11 +634,11 @@
                           </div>
                           <div class="flex flex-col min-w-0 flex-1">
                             <span
-                              class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5"
+                              class="text-[10px] theme-text-muted font-semibold uppercase tracking-wider mb-0.5"
                               >{{ $t("details.as") }}</span
                             >
                             <span
-                              class="font-medium text-sm text-gray-700 dark:text-gray-300 leading-tight line-clamp-2"
+                              class="font-medium text-sm theme-text-secondary leading-tight line-clamp-2"
                               >{{
                                 item.data.character ||
                                 $t("details.unknownCharacter")
@@ -660,11 +662,11 @@
           >
             <button
               @click="loadMore"
-              class="px-5 py-2.5 bg-white dark:bg-[#1d1d1d] hover:bg-gray-100 dark:hover:bg-[#2a2a2a] text-sm font-medium rounded-xl text-gray-700 dark:text-gray-200 transition-all border border-gray-200 dark:border-[#2a2a2a] shadow-sm cursor-pointer"
+              class="px-5 py-2.5 theme-surface theme-hover-surface-muted text-sm font-medium rounded-xl theme-text-secondary theme-text transition-all border theme-border-subtle theme-border shadow-sm cursor-pointer"
             >
               {{ $t("common.loadMore", "Load more") }}
             </button>
-            <span class="text-xs text-gray-400">
+            <span class="text-xs theme-text-muted">
               {{
                 `${visibleGroupedWorks.length} / ${groupedWorks.length} actors`
               }}
@@ -674,7 +676,7 @@
       </template>
     </PersonDetailsLayout>
 
-    <div v-else class="text-center py-20 text-gray-500 min-h-screen">
+    <div v-else class="text-center py-20 theme-text-muted min-h-screen">
       {{ $t("voiceActor.notFound") }}
     </div>
 
