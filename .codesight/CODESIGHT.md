@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 80 routes | 16 models | 193 components | 71 lib files | 63 env vars | 11 middleware | 4% test coverage
-> **Token savings:** this file is ~13,900 tokens. Without it, AI exploration would cost ~149,200 tokens. **Saves ~135,300 tokens per conversation.**
-> **Last scanned:** 2026-09-09 15:06 — re-run after significant changes
+> 74 routes | 16 models | 194 components | 74 lib files | 63 env vars | 12 middleware | 4% test coverage
+> **Token savings:** this file is ~14,100 tokens. Without it, AI exploration would cost ~147,400 tokens. **Saves ~133,400 tokens per conversation.**
+> **Last scanned:** 2026-09-12 18:21 — re-run after significant changes
 
 ---
 
@@ -46,14 +46,11 @@
 - `POST` `/api/link-user-voice-actor` [db]
 - `POST` `/api/link-voice-actor` [auth, db]
 - `GET` `/api/list-voice-actors` [cache]
-- `POST` `/api/list-voice-actors`
 - `GET` `/api/list_users` [auth]
 - `POST` `/api/manage-subscription` [db]
 - `POST` `/api/media-queue` [auth, queue]
 - `POST` `/api/merge_voice_actor_duplicates` [auth]
 - `GET` `/api/movie/:id` params(id) [cache, queue]
-- `GET` `/api/movie/index`
-- `POST` `/api/movie/index`
 - `POST` `/api/notify-subscribers` [auth, webhook]
 - `GET` `/api/og-image/index` [cache]
 - `GET` `/api/podcast/:id` params(id) [cache, queue]
@@ -70,11 +67,8 @@
 - `POST` `/api/save-studio` [db]
 - `GET` `/api/search/index` [auth, db, cache]
 - `GET` `/api/search-voice-actors` [cache]
-- `POST` `/api/search-voice-actors`
 - `GET` `/api/season/index` [cache]
 - `GET` `/api/show/:id` params(id) [cache, queue]
-- `GET` `/api/show/index`
-- `POST` `/api/show/index`
 - `POST` `/api/submit-task` [db, upload]
 - `POST` `/api/submit-user-report` [db]
 - `GET` `/api/top-contributors` [cache]
@@ -328,10 +322,11 @@
 - **Header** [client] — `apps/website/src/components/Header.vue`
 - **LanguageBanner** [client] — `apps/website/src/components/LanguageBanner.vue`
 - **MediaSkeleton** [client] — `apps/website/src/components/MediaSkeleton.vue`
+- **PaginatedResponsiveGrid** [client] — props: items, pageSize, totalItems, page, gridClass, itemKey — `apps/website/src/components/PaginatedResponsiveGrid.vue`
 - **PersonSkeleton** [client] — `apps/website/src/components/PersonSkeleton.vue`
+- **PwaLifecycleBanner** [client] — `apps/website/src/components/PwaLifecycleBanner.vue`
 - **ReportModal** [client] — props: open, targetUrl — `apps/website/src/components/ReportModal.vue`
 - **SearchModal** [client] — `apps/website/src/components/SearchModal.vue`
-- **SmartBanner** [client] — `apps/website/src/components/SmartBanner.vue`
 - **UnderConstruction** [client] — `apps/website/src/components/UnderConstruction.vue`
 - **AsyncAutocomplete** [client] — props: modelValue, options, loading, placeholder, disabled, allowCreate, displayFn — `apps/website/src/components/admin/AsyncAutocomplete.vue`
 - **LanguageSelect** [client] — props: modelValue, required — `apps/website/src/components/admin/LanguageSelect.vue`
@@ -462,6 +457,7 @@
 - `apps/website/server/utils/api/toy.ts` — class ToyClient
 - `apps/website/server/utils/api/tvdb.ts` — class TVDBClient
 - `apps/website/server/utils/auth.ts` — function requireUser: (event) => User, function requireAdmin: (event) => User
+- `apps/website/server/utils/background.ts` — function scheduleBackgroundTask: (event, task, label) => void
 - `apps/website/server/utils/cache/constants.ts`
   - class SimpleKeyBuilder
   - class SimpleKeyValidator
@@ -490,6 +486,7 @@
   - function getDubbingProjects: (contentId, contentType) => void
   - function getWorkVotes: (workIds, userId?) => Promise<
   - function getTopContributors: (limit) => void
+- `apps/website/server/utils/error-message.ts` — function getErrorMessage: (error) => string
 - `apps/website/server/utils/featureFlags.ts` — function isEnqueueOnNavigateEnabled: () => Promise<boolean>
 - `apps/website/server/utils/index.ts`
   - function getCloudflareKv: (event?) => any
@@ -544,6 +541,12 @@
 - `apps/website/src/composables/useTheme.ts` — function useTheme: () => void
 - `apps/website/src/lib/media-editor-routes.ts` — function getMediaEditorRoute: ({...}, mediaId, projectId }) => string | null
 - `apps/website/src/lib/mediaQueue.ts` — function enqueueMedia: (params) => Promise<void>
+- `apps/website/src/utils/media-cast.ts`
+  - function sameMediaId: (left, right) => boolean
+  - function matchCastWorks: (actors, works) => CastWorkMatchResult<Actor, Work>
+  - interface CastActorReference
+  - interface CastWorkReference
+  - interface CastWorkMatchResult
 - `e2e/helpers/mock-api.ts` — function setupMockApi: (page, options) => void, interface MockApiOptions
 - `packages/og-image/src/index.ts`
   - function generateTemplate: (options) => void
@@ -675,6 +678,7 @@
 
 - 00-cache — `apps/website/server/middleware/00-cache.ts`
 - 00-e2e-mock — `apps/website/server/middleware/00-e2e-mock.ts`
+- 01-locale-redirect — `apps/website/server/middleware/01-locale-redirect.ts`
 - admin — `apps/website/src/middleware/admin.ts`
 - 20260618000000_migrate_to_pgmq — `packages/database/supabase/migrations/20260618000000_migrate_to_pgmq.sql`
 
@@ -688,7 +692,7 @@
 
 ## Most Imported Files (change these carefully)
 
-- `apps/website/server/utils/db/client.ts` — imported by **61** files
+- `apps/website/server/utils/db/client.ts` — imported by **59** files
 - `apps/website/server/utils/auth.ts` — imported by **26** files
 - `apps/website/server/utils/index.ts` — imported by **22** files
 - `apps/website/server/utils/db/queries.ts` — imported by **12** files
@@ -696,22 +700,22 @@
 - `apps/website/server/utils/urls/supabase.ts` — imported by **10** files
 - `apps/website/server/utils/urls/tmdb.ts` — imported by **10** files
 - `apps/website/server/utils/api/igdb.ts` — imported by **8** files
+- `apps/website/server/utils/background.ts` — imported by **7** files
 - `e2e/helpers/mock-api.ts` — imported by **7** files
 - `packages/shared-logic/src/types/index.ts` — imported by **7** files
 - `apps/website/server/utils/services/media.ts` — imported by **6** files
 - `apps/website/server/utils/cache/index.ts` — imported by **6** files
 - `apps/website/server/utils/llm.ts` — imported by **4** files
-- `apps/website/server/utils/normalize.ts` — imported by **4** files
 - `apps/website/server/utils/db/dubbing-project.ts` — imported by **3** files
+- `apps/website/server/utils/error-message.ts` — imported by **3** files
+- `apps/website/server/utils/normalize.ts` — imported by **3** files
 - `apps/website/server/utils/cache/constants.ts` — imported by **3** files
 - `apps/mobile/src/api/supabase.ts` — imported by **2** files
 - `apps/mobile/src/views/voice-actor-profile.vue` — imported by **2** files
-- `apps/mobile/src/views/edit-dubbing-project.vue` — imported by **2** files
-- `apps/mobile/src/views/edit-studio.vue` — imported by **2** files
 
 ## Import Map (who imports what)
 
-- `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/cast-vote.post.ts`, `apps/website/server/api/count-voice-actor-works.post.ts` +56 more
+- `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/cast-vote.post.ts`, `apps/website/server/api/count-voice-actor-works.post.ts` +54 more
 - `apps/website/server/utils/auth.ts` ← `apps/website/server/api/create-user-profile.post.ts`, `apps/website/server/api/dashboard-stats.get.ts`, `apps/website/server/api/delete-voice-actor-link.post.ts`, `apps/website/server/api/delete-work-entry.post.ts`, `apps/website/server/api/delete_user.post.ts` +21 more
 - `apps/website/server/utils/index.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/episode/index.get.ts` +17 more
 - `apps/website/server/utils/db/queries.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/game/[id].get.ts` +7 more
@@ -719,15 +723,15 @@
 - `apps/website/server/utils/urls/supabase.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/dashboard-stats.get.ts`, `apps/website/server/api/find_duplicate_voice_actors.get.ts`, `apps/website/server/api/recent-voice-actors.get.ts`, `apps/website/server/api/search/index.get.ts` +5 more
 - `apps/website/server/utils/urls/tmdb.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/movie/[id].get.ts`, `apps/website/server/api/notify-subscribers.post.ts`, `apps/website/server/api/prepare-trending-media.post.ts`, `apps/website/server/api/search/index.get.ts` +5 more
 - `apps/website/server/utils/api/igdb.ts` ← `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/internal-media-credits.get.ts`, `apps/website/server/api/internal-media-metadata.get.ts`, `apps/website/server/api/search/index.get.ts`, `apps/website/server/api/trending/games.get.ts` +3 more
+- `apps/website/server/utils/background.ts` ← `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/movie/[id].get.ts`, `apps/website/server/api/podcast/[id].get.ts` +2 more
 - `e2e/helpers/mock-api.ts` ← `e2e/actor.spec.ts`, `e2e/home-and-navigation.spec.ts`, `e2e/language-selector.spec.ts`, `e2e/media-pages.spec.ts`, `e2e/search.spec.ts` +2 more
-- `packages/shared-logic/src/types/index.ts` ← `packages/shared-logic/src/composables/useActorData.ts`, `packages/shared-logic/src/composables/useAdvertisementData.ts`, `packages/shared-logic/src/composables/useAudiobookData.ts`, `packages/shared-logic/src/composables/usePodcastData.ts`, `packages/shared-logic/src/composables/useToyData.ts` +2 more
 
 ---
 
 # Test Coverage
 
 > **4%** of routes and models are covered by tests
-> 17 test files found
+> 20 test files found
 
 ## Covered Models
 
@@ -740,10 +744,11 @@
 
 # CI/CD Pipelines
 
-## GitHub Actions (1 workflow)
+## GitHub Actions (2 workflows)
 
 | Workflow                        | Triggers                | Jobs | Deploy              | Environments |
 | ------------------------------- | ----------------------- | ---- | ------------------- | ------------ |
+| codesight                       | push                    | 1    | —                   | —            |
 | Release and Deployment Pipeline | push, workflow_dispatch | 10   | netlify, cloudflare | —            |
 
 ### Release and Deployment Pipeline
@@ -829,7 +834,7 @@
 
 ---
 
-_Source: .github/workflows/pipeline.yml_
+_Source: .github/workflows/codesight.yml, .github/workflows/pipeline.yml_
 _Generated by codesight-cicd-plugin_
 
 ---

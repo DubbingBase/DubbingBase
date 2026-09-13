@@ -103,10 +103,11 @@
 - **Header** [client] — `apps/website/src/components/Header.vue`
 - **LanguageBanner** [client] — `apps/website/src/components/LanguageBanner.vue`
 - **MediaSkeleton** [client] — `apps/website/src/components/MediaSkeleton.vue`
+- **PaginatedResponsiveGrid** [client] — props: items, pageSize, totalItems, page, gridClass, itemKey — `apps/website/src/components/PaginatedResponsiveGrid.vue`
 - **PersonSkeleton** [client] — `apps/website/src/components/PersonSkeleton.vue`
+- **PwaLifecycleBanner** [client] — `apps/website/src/components/PwaLifecycleBanner.vue`
 - **ReportModal** [client] — props: open, targetUrl — `apps/website/src/components/ReportModal.vue`
 - **SearchModal** [client] — `apps/website/src/components/SearchModal.vue`
-- **SmartBanner** [client] — `apps/website/src/components/SmartBanner.vue`
 - **UnderConstruction** [client] — `apps/website/src/components/UnderConstruction.vue`
 - **AsyncAutocomplete** [client] — props: modelValue, options, loading, placeholder, disabled, allowCreate, displayFn — `apps/website/src/components/admin/AsyncAutocomplete.vue`
 - **LanguageSelect** [client] — props: modelValue, required — `apps/website/src/components/admin/LanguageSelect.vue`

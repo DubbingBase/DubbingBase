@@ -358,8 +358,7 @@ const searchVoiceActors = async () => {
   voiceActorSearching.value = true;
   try {
     const data = await $fetch<VoiceActor[]>('/api/search-voice-actors', {
-      method: 'POST',
-      body: { query, limit: 10 }
+      params: { query, limit: 10 }
     });
 
     voiceActorResults.value = data || [];
