@@ -148,6 +148,7 @@ export class MediaService {
         ? fetchPotentialWikipediaUrl(
             voiceActor.firstname,
             voiceActor.lastname,
+            useCache(),
           ).catch(() => null)
         : Promise.resolve(null);
 
