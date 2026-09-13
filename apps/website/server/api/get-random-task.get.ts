@@ -1,7 +1,9 @@
 import { requireUser } from "../utils/auth";
 import { useSupabaseAdmin } from "../utils/db/client";
+import { setNoCacheHeaders } from "../utils/cache/http";
 
 export default defineEventHandler(async (event) => {
+  setNoCacheHeaders(event);
   requireUser(event);
 
   try {

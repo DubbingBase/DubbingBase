@@ -1,7 +1,7 @@
-import { useCache, useTmdbClient } from "../../utils";
+import { useTmdbClient } from "../../utils";
 import { MediaService } from "../../utils/services/media";
-import { CACHE_KEYS } from "../../utils/cache/constants";
 import { APP_LOCALES } from "@app/shared-logic";
+import { setPublicCacheHeaders } from "../../utils/cache/http";
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, "id");
@@ -29,36 +29,21 @@ export default defineEventHandler(async (event) => {
     ? rawLang
     : shortToCanonical[rawLang] || headerLang;
 
-  // Set HTTP Edge caching / SWR headers for optimal CDN performance
-  setHeader(
-    event,
-    "Cache-Control",
-    "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
-  );
+  setPublicCacheHeaders(event, "detail");
 
-  const cache = useCache(event);
-  const cacheKey = CACHE_KEYS.APP_VOICE_ACTOR(voiceActorId, acceptLanguage);
-
-  const cached = await cache.get(cacheKey);
-  let baseData: any = cached;
-
-  if (!baseData) {
-    try {
-      const tmdbClient = useTmdbClient();
-      const mediaService = new MediaService(tmdbClient, acceptLanguage);
-      baseData = await mediaService.getVoiceActorWithWorkAndMedia(
-        voiceActorId,
-        acceptLanguage,
-      );
-      await cache.set(cacheKey, baseData, "SHORT");
-    } catch (error) {
-      console.error("Error fetching voice actor:", error);
-      throw createError({
-        statusCode: 500,
-        message: "Failed to fetch voice actor data",
-      });
-    }
+  try {
+    const tmdbClient = useTmdbClient();
+    const mediaService = new MediaService(tmdbClient, acceptLanguage);
+    const baseData = await mediaService.getVoiceActorWithWorkAndMedia(
+      voiceActorId,
+      acceptLanguage,
+    );
+    return baseData;
+  } catch (error) {
+    console.error("Error fetching voice actor:", error);
+    throw createError({
+      statusCode: 500,
+      message: "Failed to fetch voice actor data",
+    });
   }
-
-  return baseData;
 });

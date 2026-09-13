@@ -1,5 +1,6 @@
 import { ofetch } from "ofetch";
 import type { Podcast, PodcastEpisode } from "@app/shared-logic";
+import { SimpleCache } from "../cache";
 
 export interface ITunesPodcastResult {
   collectionId: number;
@@ -21,8 +22,15 @@ export interface ITunesPodcastResult {
 export class PodcastClient {
   private baseUrl = "https://itunes.apple.com";
 
+  constructor(private cache: SimpleCache) {}
+
   async searchPodcasts(query: string, limit = 20): Promise<Podcast[]> {
     if (!query || query.trim().length < 2) return [];
+
+    const trimmedQuery = query.trim();
+    const cacheKey = `itunes:search:podcast:${trimmedQuery}:${limit}`;
+    const cached = await this.cache.get<Podcast[]>(cacheKey);
+    if (cached) return cached;
 
     try {
       const response = await ofetch<{
@@ -30,7 +38,7 @@ export class PodcastClient {
         results: ITunesPodcastResult[];
       }>(`${this.baseUrl}/search`, {
         params: {
-          term: query.trim(),
+          term: trimmedQuery,
           media: "podcast",
           entity: "podcast",
           limit,
@@ -40,7 +48,7 @@ export class PodcastClient {
 
       if (!response?.results) return [];
 
-      return response.results.map((item) => ({
+      const podcasts = response.results.map((item) => ({
         id: item.collectionId || item.trackId || 0,
         title: item.collectionName || item.trackName || "Podcast",
         author: item.artistName || "",
@@ -52,6 +60,9 @@ export class PodcastClient {
           item.genres || (item.primaryGenreName ? [item.primaryGenreName] : []),
         media_type: "podcast" as const,
       }));
+
+      await this.cache.set(cacheKey, podcasts, "SHORT");
+      return podcasts;
     } catch (err) {
       console.error("iTunes podcast search failed:", err);
       return [];
@@ -59,6 +70,10 @@ export class PodcastClient {
   }
 
   async getPodcast(id: number): Promise<Podcast | null> {
+    const cacheKey = `itunes:podcast:${id}`;
+    const cached = await this.cache.get<Podcast>(cacheKey);
+    if (cached) return cached;
+
     try {
       const response = await ofetch<{
         resultCount: number;
@@ -88,7 +103,7 @@ export class PodcastClient {
         audio_url: ep.episodeUrl || "",
       }));
 
-      return {
+      const podcast = {
         id: podcastHeader.collectionId || podcastHeader.trackId || id,
         title:
           podcastHeader.collectionName || podcastHeader.trackName || "Podcast",
@@ -107,6 +122,9 @@ export class PodcastClient {
         episodes,
         media_type: "podcast" as const,
       };
+
+      await this.cache.set(cacheKey, podcast, "MEDIUM");
+      return podcast;
     } catch (err) {
       console.error(`iTunes lookup for podcast ${id} failed:`, err);
       return {

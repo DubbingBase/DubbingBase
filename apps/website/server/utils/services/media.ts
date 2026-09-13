@@ -9,13 +9,29 @@ import { buildIgdbImageUrl } from "../api/igdb";
 const WIKIPEDIA_USER_AGENT =
   "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
 
+interface WikidataClaimsResponse {
+  claims?: Record<
+    string,
+    Array<{
+      mainsnak?: {
+        datavalue?: { value?: string | number };
+      };
+    }>
+  >;
+}
+
 async function fetchPotentialWikipediaUrl(
   firstname: string,
   lastname: string,
+  cache: ReturnType<typeof useCache>,
 ): Promise<string | null> {
   try {
     const name = `${firstname} ${lastname}`.trim();
     if (!name) return null;
+
+    const cacheKey = cache.wikipediaKey("voice-actor", name, "url");
+    const cached = await cache.get<string>(cacheKey);
+    if (cached) return cached;
 
     // Search Wikidata for the person
     const searchUrl = `https://wikidata.org/w/api.php?action=wbsearchentities&format=json&search=${encodeURIComponent(name)}&language=fr`;
@@ -40,7 +56,9 @@ async function fetchPotentialWikipediaUrl(
     const title = entityData.entities?.[bestMatch.id]?.sitelinks?.frwiki?.title;
     if (!title) return null;
 
-    return `https://fr.wikipedia.org/wiki/${encodeURI(title.replace(/ /g, "_"))}`;
+    const wikipediaUrl = `https://fr.wikipedia.org/wiki/${encodeURI(title.replace(/ /g, "_"))}`;
+    await cache.set(cacheKey, wikipediaUrl, "MEDIUM");
+    return wikipediaUrl;
   } catch (e) {
     console.error("Failed to fetch potential Wikipedia URL:", e);
     return null;
@@ -613,17 +631,29 @@ export class MediaService {
       if (!tvdbId && tmdbMedia.external_ids?.wikidata_id) {
         const wikidataId = tmdbMedia.external_ids.wikidata_id;
         try {
-          const url = `https://www.wikidata.org/w/api.php?action=wbgetclaims&entity=${wikidataId}&format=json`;
-          const response = await fetch(url, {
-            headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
-          });
-          if (response.ok) {
-            const data = await response.json();
-            const property = contentType === "movie" ? "P12196" : "P4835";
-            const claim = data?.claims?.[property]?.[0];
-            if (claim?.mainsnak?.datavalue?.value) {
-              tvdbId = parseInt(claim.mainsnak.datavalue.value, 10);
+          const wikidataCacheKey = cache.wikipediaKey(
+            "entity",
+            wikidataId,
+            `claims-${contentType}`,
+          );
+          let data = await cache.get<WikidataClaimsResponse>(wikidataCacheKey);
+
+          if (!data) {
+            const url = `https://www.wikidata.org/w/api.php?action=wbgetclaims&entity=${wikidataId}&format=json`;
+            const response = await fetch(url, {
+              headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
+            });
+            if (response.ok) {
+              data = await response.json();
+              await cache.set(wikidataCacheKey, data, "MEDIUM");
             }
+          }
+
+          const property = contentType === "movie" ? "P12196" : "P4835";
+          const claim = data?.claims?.[property]?.[0];
+          const claimValue = claim?.mainsnak?.datavalue?.value;
+          if (claimValue !== undefined) {
+            tvdbId = parseInt(String(claimValue), 10);
           }
         } catch (e) {
           console.error(`Failed to fetch Wikidata for ${wikidataId}`, e);

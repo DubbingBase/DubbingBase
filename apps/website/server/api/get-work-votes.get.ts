@@ -1,6 +1,8 @@
 import { getWorkVotes } from "../utils/db/queries";
+import { setNoCacheHeaders } from "../utils/cache/http";
 
 export default defineEventHandler(async (event) => {
+  setNoCacheHeaders(event);
   const query = getQuery(event);
   const rawWorkIds = query.work_ids as any;
 

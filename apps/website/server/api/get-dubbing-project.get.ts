@@ -1,6 +1,8 @@
 import { useSupabaseAdmin } from "../utils/db/client";
+import { setNoCacheHeaders } from "../utils/cache/http";
 
 export default defineEventHandler(async (event) => {
+  setNoCacheHeaders(event);
   const query = getQuery(event);
   const numericId =
     query.numericId !== undefined ? Number(query.numericId) : undefined;

@@ -4,10 +4,13 @@ import {
   usePodcastClient,
   useAdvertisementClient,
   useToyClient,
+  useTmdbClient,
 } from "../utils";
 import { buildIgdbImageUrl } from "../utils/api/igdb";
+import { setNoCacheHeaders } from "../utils/cache/http";
 
 export default defineEventHandler(async (event) => {
+  setNoCacheHeaders(event);
   const query = getQuery(event);
   const mediaType = String(query.media_type ?? "");
   const mediaId = Number(query.media_id);
@@ -19,20 +22,13 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const config = useRuntimeConfig();
-
   if (mediaType === "movie" || mediaType === "tv") {
-    const response = await fetch(
-      `https://api.themoviedb.org/3/${mediaType}/${mediaId}?language=fr-FR`,
-      {
-        headers: {
-          Authorization: `Bearer ${config.tmdbApiKey}`,
-          Accept: "application/json",
-        },
-      },
+    const media = await useTmdbClient().getMediaWithCredits(
+      mediaType,
+      mediaId,
+      "fr-FR",
     );
-    if (!response.ok) throw new Error(`TMDB failed: ${response.status}`);
-    return { media: await response.json(), mediaType };
+    return { media, mediaType };
   }
 
   if (mediaType === "video_game") {
