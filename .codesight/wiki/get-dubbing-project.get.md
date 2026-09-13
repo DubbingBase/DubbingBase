@@ -2,11 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Get-dubbing-project.get subsystem handles **1 routes**.
+The Get-dubbing-project.get subsystem handles **1 routes** and touches: cache.
 
 ## Routes
 
-- `GET` `/api/get-dubbing-project`
+- `GET` `/api/get-dubbing-project` [cache]
   `apps/website/server/api/get-dubbing-project.get.ts`
 
 ## Related Models

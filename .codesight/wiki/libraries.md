@@ -2,26 +2,27 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**74 library files** across 5 modules
+**75 library files** across 5 modules
 
-## Website (39 files)
+## Website (40 files)
 
-- `apps/website/server/utils/index.ts` — getCloudflareKv, useCache, useTmdbClient, useTvdbClient, useIgdbClient, useOpenLibraryClient, …
+- `apps/website/server/utils/index.ts` — getCloudflareKv, useCache, useFreshCache, useTmdbClient, useTvdbClient, useIgdbClient, …
+- `apps/website/server/utils/cache/wikipedia.ts` — sortLanguagesByPopularity, extractAvailableLanguages, cleanHeadingText, isDubbingSectionHeading, selectDubbingSections, filterValidSectionIndexes, …
 - `apps/website/server/utils/services/media-preparation.ts` — checkMediaDubbingSections, checkGameDubbingSections, extractMediaDubbingCredits, extractGameDubbingCredits, prepareMedia, prepareGame, …
-- `apps/website/server/utils/cache/wikipedia.ts` — sortLanguagesByPopularity, extractAvailableLanguages, cleanHeadingText, isDubbingSectionHeading, selectDubbingSections, sitelinkKey, …
 - `apps/website/server/utils/cache/constants.ts` — SimpleKeyBuilder, SimpleKeyValidator, API_PREFIXES, CACHE_SCHEMA_VERSION, CONTENT_TYPES, CACHE_KEYS
+- `apps/website/server/utils/cache/http.ts` — getPublicCacheControl, setNoCacheHeaders, setNoStoreHeaders, setPublicCacheHeaders, CacheProfile, NO_STORE_CACHE_CONTROL
 - `apps/website/server/utils/llm.ts` — areAllLlmQuotasExhausted, getLlmQuotaCache, llmGenerate, llmGenerateObject, llmVision, llmVisionObject
 - `apps/website/server/utils/notifications/discord.ts` — normalizeDiscordUrl, buildDiscordEmbed, sendDiscordAdminNotification, DiscordWebhookOptions, QueueName, DiscordNotificationCategory
+- `apps/website/server/utils/queue-payload.ts` — validateCheckPayload, validateDiscoveryPayload, validateExtractPayload, ValidQueueBase, ValidExtractPayload, QueueMediaType
 - `apps/website/server/utils/db/queries.ts` — getVoiceActorWithWork, getWorkByActor, getDubbingProjects, getWorkVotes, getTopContributors
 - `apps/website/server/utils/services/voice-actor.ts` — upsertVoiceActor, upsertActor, upsertStudio, upsertWork, insertVoiceActorAndWork
 - `apps/website/src/utils/media-cast.ts` — sameMediaId, matchCastWorks, CastActorReference, CastWorkReference, CastWorkMatchResult
+- `apps/website/server/utils/cache/index.ts` — SimpleCache, FreshCache, CacheTTLPreset, CACHE_TTL
 - `apps/website/server/utils/urls/tmdb.ts` — buildTmdbImageUrl, cleanCharacterName, processMedia, TMDB_CONFIG
 - `apps/website/server/utils/api/igdb.ts` — buildIgdbImageUrl, IgdbClient, IgdbPopularityPrimitive
-- `apps/website/server/utils/cache/index.ts` — SimpleCache, CacheTTLPreset, CACHE_TTL
 - `apps/website/server/utils/api/openlibrary.ts` — buildOpenLibraryCoverUrl, OpenLibraryClient
 - `apps/website/server/utils/api/podcast.ts` — PodcastClient, ITunesPodcastResult
 - `apps/website/server/utils/auth.ts` — requireUser, requireAdmin
-- `apps/website/server/utils/cache/http.ts` — setPublicCacheHeaders, CacheProfile
 - `apps/website/server/utils/normalize.ts` — normalizeString, isExploitableVoiceActorName
 - `apps/website/server/utils/notifications/onesignal.ts` — sendOneSignalNotification, OneSignalOptions
 - `apps/website/server/utils/urls/supabase.ts` — buildSupabaseImageUrl, processVoiceActor
@@ -30,8 +31,7 @@
 - `apps/website/server/api/movie/[id].get.ts` — fetchMovieData
 - `apps/website/server/api/show/[id].get.ts` — fetchShowData
 - `apps/website/server/utils/api/advertisement.ts` — AdvertisementClient
-- `apps/website/server/utils/api/tmdb.ts` — TMDBClient
-- _…and 14 more files_
+- _…and 15 more files_
 
 ## Mobile (17 files)
 
@@ -81,5 +81,4 @@
 - `e2e/helpers/mock-api.ts` — setupMockApi, MockApiOptions
 
 ---
-
 _Back to [overview.md](./overview.md)_

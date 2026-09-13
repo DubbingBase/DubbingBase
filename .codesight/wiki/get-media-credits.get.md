@@ -2,11 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Get-media-credits.get subsystem handles **1 routes** and touches: auth, cache.
+The Get-media-credits.get subsystem handles **1 routes** and touches: cache.
 
 ## Routes
 
-- `GET` `/api/get-media-credits` [auth, cache]
+- `GET` `/api/get-media-credits` [cache]
   `apps/website/server/api/get-media-credits.get.ts`
 
 ## Source Files

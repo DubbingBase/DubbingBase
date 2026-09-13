@@ -2,11 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Shows.get subsystem handles **1 routes** and touches: auth, cache.
+The Shows.get subsystem handles **1 routes** and touches: cache.
 
 ## Routes
 
-- `GET` `/api/trending/shows` [auth, cache]
+- `GET` `/api/trending/shows` [cache]
   `apps/website/server/api/trending/shows.get.ts`
 
 ## Source Files

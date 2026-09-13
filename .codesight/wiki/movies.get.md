@@ -2,11 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Movies.get subsystem handles **1 routes** and touches: auth, cache.
+The Movies.get subsystem handles **1 routes** and touches: cache.
 
 ## Routes
 
-- `GET` `/api/trending/movies` [auth, cache]
+- `GET` `/api/trending/movies` [cache]
   `apps/website/server/api/trending/movies.get.ts`
 
 ## Source Files

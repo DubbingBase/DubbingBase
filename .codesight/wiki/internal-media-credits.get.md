@@ -2,11 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Internal-media-credits.get subsystem handles **1 routes** and touches: auth.
+The Internal-media-credits.get subsystem handles **1 routes** and touches: cache.
 
 ## Routes
 
-- `GET` `/api/internal-media-credits` [auth]
+- `GET` `/api/internal-media-credits` [cache]
   `apps/website/server/api/internal-media-credits.get.ts`
 
 ## Source Files

@@ -2,11 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Dashboard-stats.get subsystem handles **1 routes** and touches: auth.
+The Dashboard-stats.get subsystem handles **1 routes** and touches: auth, cache.
 
 ## Routes
 
-- `GET` `/api/dashboard-stats` [auth]
+- `GET` `/api/dashboard-stats` [auth, cache]
   `apps/website/server/api/dashboard-stats.get.ts`
 
 ## Source Files
