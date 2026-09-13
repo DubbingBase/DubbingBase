@@ -2,9 +2,9 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**71 library files** across 5 modules
+**74 library files** across 5 modules
 
-## Website (36 files)
+## Website (39 files)
 
 - `apps/website/server/utils/index.ts` — getCloudflareKv, useCache, useTmdbClient, useTvdbClient, useIgdbClient, useOpenLibraryClient, …
 - `apps/website/server/utils/services/media-preparation.ts` — checkMediaDubbingSections, checkGameDubbingSections, extractMediaDubbingCredits, extractGameDubbingCredits, prepareMedia, prepareGame, …
@@ -14,6 +14,7 @@
 - `apps/website/server/utils/notifications/discord.ts` — normalizeDiscordUrl, buildDiscordEmbed, sendDiscordAdminNotification, DiscordWebhookOptions, QueueName, DiscordNotificationCategory
 - `apps/website/server/utils/db/queries.ts` — getVoiceActorWithWork, getWorkByActor, getDubbingProjects, getWorkVotes, getTopContributors
 - `apps/website/server/utils/services/voice-actor.ts` — upsertVoiceActor, upsertActor, upsertStudio, upsertWork, insertVoiceActorAndWork
+- `apps/website/src/utils/media-cast.ts` — sameMediaId, matchCastWorks, CastActorReference, CastWorkReference, CastWorkMatchResult
 - `apps/website/server/utils/urls/tmdb.ts` — buildTmdbImageUrl, cleanCharacterName, processMedia, TMDB_CONFIG
 - `apps/website/server/utils/api/igdb.ts` — buildIgdbImageUrl, IgdbClient, IgdbPopularityPrimitive
 - `apps/website/server/utils/cache/index.ts` — SimpleCache, CacheTTLPreset, CACHE_TTL
@@ -30,8 +31,7 @@
 - `apps/website/server/api/show/[id].get.ts` — fetchShowData
 - `apps/website/server/utils/api/advertisement.ts` — AdvertisementClient
 - `apps/website/server/utils/api/tmdb.ts` — TMDBClient
-- `apps/website/server/utils/api/toy.ts` — ToyClient
-- _…and 11 more files_
+- _…and 14 more files_
 
 ## Mobile (17 files)
 
@@ -81,4 +81,5 @@
 - `e2e/helpers/mock-api.ts` — setupMockApi, MockApiOptions
 
 ---
+
 _Back to [overview.md](./overview.md)_

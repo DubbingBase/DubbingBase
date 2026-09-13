@@ -8,7 +8,7 @@
 
 ## Scale
 
-80 API routes · 16 database models · 193 UI components · 71 library files · 11 middleware layers · 63 environment variables
+74 API routes · 16 database models · 194 UI components · 74 library files · 12 middleware layers · 63 environment variables
 
 ## Subsystems
 
@@ -38,15 +38,13 @@
 - **[Get-user-voice-actors.get](./get-user-voice-actors.get.md)** — 1 routes — touches: auth
 - **[Get-work-votes.get](./get-work-votes.get.md)** — 1 routes
 - **[Home-stats.get](./home-stats.get.md)** — 1 routes — touches: cache
-- **[Index.get](./index.get.md)** — 6 routes — touches: cache, auth, db
-- **[Index.post](./index.post.md)** — 2 routes
+- **[Index.get](./index.get.md)** — 4 routes — touches: cache, auth, db
 - **[Internal-media-create.post](./internal-media-create.post.md)** — 1 routes — touches: auth, db
 - **[Internal-media-credits.get](./internal-media-credits.get.md)** — 1 routes — touches: auth
 - **[Internal-media-metadata.get](./internal-media-metadata.get.md)** — 1 routes — touches: auth
 - **[Link-user-voice-actor.post](./link-user-voice-actor.post.md)** — 1 routes — touches: db
 - **[Link-voice-actor.post](./link-voice-actor.post.md)** — 1 routes — touches: auth, db
 - **[List-voice-actors.get](./list-voice-actors.get.md)** — 1 routes — touches: cache
-- **[List-voice-actors.post](./list-voice-actors.post.md)** — 1 routes
 - **[List_users.get](./list_users.get.md)** — 1 routes — touches: auth
 - **[Manage-subscription.post](./manage-subscription.post.md)** — 1 routes — touches: db
 - **[Media-queue.post](./media-queue.post.md)** — 1 routes — touches: auth, queue
@@ -65,7 +63,6 @@
 - **[Save-metadata.post](./save-metadata.post.md)** — 1 routes — touches: db
 - **[Save-studio.post](./save-studio.post.md)** — 1 routes — touches: db
 - **[Search-voice-actors.get](./search-voice-actors.get.md)** — 1 routes — touches: cache
-- **[Search-voice-actors.post](./search-voice-actors.post.md)** — 1 routes
 - **[Shows.get](./shows.get.md)** — 1 routes — touches: auth, cache
 - **[Submit-task.post](./submit-task.post.md)** — 1 routes — touches: db, upload
 - **[Submit-user-report.post](./submit-user-report.post.md)** — 1 routes — touches: db
@@ -81,15 +78,15 @@
 
 **Database:** unknown, 16 models — see [database.md](./database.md)
 
-**UI:** 193 components (vue) — see [ui.md](./ui.md)
+**UI:** 194 components (vue) — see [ui.md](./ui.md)
 
-**Libraries:** 71 files — see [libraries.md](./libraries.md)
+**Libraries:** 74 files — see [libraries.md](./libraries.md)
 
 ## High-Impact Files
 
 Changes to these files have the widest blast radius across the codebase:
 
-- `apps/website/server/utils/db/client.ts` — imported by **61** files
+- `apps/website/server/utils/db/client.ts` — imported by **59** files
 - `apps/website/server/utils/auth.ts` — imported by **26** files
 - `apps/website/server/utils/index.ts` — imported by **22** files
 - `apps/website/server/utils/db/queries.ts` — imported by **12** files
@@ -113,4 +110,5 @@ Changes to these files have the widest blast radius across the codebase:
 - _...33 more_
 
 ---
-_Back to [index.md](./index.md) · Generated 2026-09-09_
+
+_Back to [index.md](./index.md) · Generated 2026-09-12_

@@ -1,6 +1,6 @@
 # dubbing-base-monorepo — Wiki
 
-_Generated 2026-09-09 — re-run `npx codesight --wiki` if the codebase has changed._
+_Generated 2026-09-12 — re-run `npx codesight --wiki` if the codebase has changed._
 
 Structural map compiled from source code via AST. No LLM — deterministic, 200ms.
 
@@ -37,14 +37,12 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 - [Get-work-votes.get](./get-work-votes.get.md)
 - [Home-stats.get](./home-stats.get.md)
 - [Index.get](./index.get.md)
-- [Index.post](./index.post.md)
 - [Internal-media-create.post](./internal-media-create.post.md)
 - [Internal-media-credits.get](./internal-media-credits.get.md)
 - [Internal-media-metadata.get](./internal-media-metadata.get.md)
 - [Link-user-voice-actor.post](./link-user-voice-actor.post.md)
 - [Link-voice-actor.post](./link-voice-actor.post.md)
 - [List-voice-actors.get](./list-voice-actors.get.md)
-- [List-voice-actors.post](./list-voice-actors.post.md)
 - [List_users.get](./list_users.get.md)
 - [Manage-subscription.post](./manage-subscription.post.md)
 - [Media-queue.post](./media-queue.post.md)
@@ -63,7 +61,6 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 - [Save-metadata.post](./save-metadata.post.md)
 - [Save-studio.post](./save-studio.post.md)
 - [Search-voice-actors.get](./search-voice-actors.get.md)
-- [Search-voice-actors.post](./search-voice-actors.post.md)
 - [Shows.get](./shows.get.md)
 - [Submit-task.post](./submit-task.post.md)
 - [Submit-user-report.post](./submit-user-report.post.md)
@@ -81,9 +78,9 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 
 ## Quick Stats
 
-- Routes: **80**
+- Routes: **74**
 - Models: **16**
-- Components: **193**
+- Components: **194**
 - Env vars: **45** required, **18** with defaults
 
 ## How to Use
@@ -99,6 +96,7 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 ## What the Wiki Does Not Cover
 
 These exist in your codebase but are **not** reflected in wiki articles:
+
 - Routes registered dynamically at runtime (loops, plugin factories, `app.use(dynamicRouter)`)
 - Internal routes from npm packages (e.g. Better Auth's built-in `/api/auth/*` endpoints)
 - WebSocket and SSE handlers
@@ -111,4 +109,5 @@ These exist in your codebase but are **not** reflected in wiki articles:
 When in doubt, search the source. The wiki is a starting point, not a complete inventory.
 
 ---
-_Last compiled: 2026-09-09 · 71 articles · [codesight](https://github.com/Houseofmvps/codesight)_
+
+_Last compiled: 2026-09-12 · 68 articles · [codesight](https://github.com/Houseofmvps/codesight)_

@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Component inventory and prop signatures extracted via AST. Read the source files before adding props or modifying component logic.
 
-**193 components** (vue)
+**194 components** (vue)
 
 ## Client Components
 
@@ -109,10 +109,11 @@
 - **Header** — `apps/website/src/components/Header.vue`
 - **LanguageBanner** — `apps/website/src/components/LanguageBanner.vue`
 - **MediaSkeleton** — `apps/website/src/components/MediaSkeleton.vue`
+- **PaginatedResponsiveGrid** — props: items, pageSize, totalItems, page, gridClass, itemKey — `apps/website/src/components/PaginatedResponsiveGrid.vue`
 - **PersonSkeleton** — `apps/website/src/components/PersonSkeleton.vue`
+- **PwaLifecycleBanner** — `apps/website/src/components/PwaLifecycleBanner.vue`
 - **ReportModal** — props: open, targetUrl — `apps/website/src/components/ReportModal.vue`
 - **SearchModal** — `apps/website/src/components/SearchModal.vue`
-- **SmartBanner** — `apps/website/src/components/SmartBanner.vue`
 - **UnderConstruction** — `apps/website/src/components/UnderConstruction.vue`
 - **AsyncAutocomplete** — props: modelValue, options, loading, placeholder, disabled, allowCreate, displayFn — `apps/website/src/components/admin/AsyncAutocomplete.vue`
 - **LanguageSelect** — props: modelValue, required — `apps/website/src/components/admin/LanguageSelect.vue`
@@ -201,4 +202,5 @@
 - **voice-actors** — `apps/website/src/pages/voice-actors.vue`
 
 ---
+
 _Back to [overview.md](./overview.md)_

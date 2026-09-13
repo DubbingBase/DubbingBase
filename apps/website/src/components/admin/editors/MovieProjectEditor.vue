@@ -1023,9 +1023,7 @@ const { data: initialData, error: initialDataError } = await useAsyncData(
     if (tmdbMovieId.value) {
       // TMDB metadata
       try {
-        const data = await $fetch<any>("/api/movie", {
-          params: { id: tmdbMovieId.value },
-        });
+        const data = await $fetch<any>(`/api/movie/${tmdbMovieId.value}`);
         if (data && data.movie) {
           tmdbData = data.movie;
         }

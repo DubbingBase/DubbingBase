@@ -39,6 +39,7 @@
 - `apps/website/server/utils/api/toy.ts` — class ToyClient
 - `apps/website/server/utils/api/tvdb.ts` — class TVDBClient
 - `apps/website/server/utils/auth.ts` — function requireUser: (event) => User, function requireAdmin: (event) => User
+- `apps/website/server/utils/background.ts` — function scheduleBackgroundTask: (event, task, label) => void
 - `apps/website/server/utils/cache/constants.ts`
   - class SimpleKeyBuilder
   - class SimpleKeyValidator
@@ -67,6 +68,7 @@
   - function getDubbingProjects: (contentId, contentType) => void
   - function getWorkVotes: (workIds, userId?) => Promise<
   - function getTopContributors: (limit) => void
+- `apps/website/server/utils/error-message.ts` — function getErrorMessage: (error) => string
 - `apps/website/server/utils/featureFlags.ts` — function isEnqueueOnNavigateEnabled: () => Promise<boolean>
 - `apps/website/server/utils/index.ts`
   - function getCloudflareKv: (event?) => any
@@ -121,6 +123,12 @@
 - `apps/website/src/composables/useTheme.ts` — function useTheme: () => void
 - `apps/website/src/lib/media-editor-routes.ts` — function getMediaEditorRoute: ({...}, mediaId, projectId }) => string | null
 - `apps/website/src/lib/mediaQueue.ts` — function enqueueMedia: (params) => Promise<void>
+- `apps/website/src/utils/media-cast.ts`
+  - function sameMediaId: (left, right) => boolean
+  - function matchCastWorks: (actors, works) => CastWorkMatchResult<Actor, Work>
+  - interface CastActorReference
+  - interface CastWorkReference
+  - interface CastWorkMatchResult
 - `e2e/helpers/mock-api.ts` — function setupMockApi: (page, options) => void, interface MockApiOptions
 - `packages/og-image/src/index.ts`
   - function generateTemplate: (options) => void
