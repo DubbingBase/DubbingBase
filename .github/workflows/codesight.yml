@@ -1,9 +1,18 @@
 name: codesight
 
-on: [push]
+on:
+  push:
+    branches:
+      - "**"
+    paths-ignore:
+      - .codesight/**
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
-  scan:
+  update:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -11,7 +20,10 @@ jobs:
         with:
           node-version: 20
       - run: npm install -g codesight && codesight --wiki
-      - uses: actions/upload-artifact@v4
-        with:
-          name: codesight
-          path: .codesight/
+      - name: Commit updated Codesight context
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .codesight
+          git diff --cached --quiet || git commit -m "chore: update Codesight context"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
