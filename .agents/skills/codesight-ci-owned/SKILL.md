@@ -15,11 +15,16 @@ For human-authored work:
 - A deliberate change to `.github/workflows/codesight.yml` is allowed when changing the automation; do not include generated output with that change.
 - Stage explicit paths instead of using broad commands such as `git add .` or `git add -A` when generated files may be present.
 
-Before committing or opening a pull request, verify that the human-authored diff contains no generated Codesight paths:
+Before a human commit, verify that no generated Codesight path is staged:
 
 ```bash
 git diff --cached --name-only | grep -E '^\.codesight/'
-git diff origin/main...HEAD --name-only | grep -E '^\.codesight/'
 ```
 
-Both checks must produce no output. If generated files are modified or staged locally, leave their contents unchanged, unstage them with `git restore --staged -- .codesight` when needed, and report the state rather than committing them. If refreshed context is required, change the source or workflow and let the GitHub Action generate and commit it.
+This check must produce no output. Before opening a pull request, inspect any commits that touch `.codesight/`:
+
+```bash
+git log origin/main..HEAD --format='%h %an <%ae>' -- .codesight/
+```
+
+Only the configured GitHub Actions bot may author those commits. If a human-authored commit touches generated files, remove that commit from the branch or report the state rather than editing the generated content. If generated files are modified or staged locally, leave their contents unchanged and unstage them with `git restore --staged -- .codesight` when needed. If refreshed context is required, change the source or workflow and let the GitHub Action generate and commit it.
