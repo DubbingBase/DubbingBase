@@ -475,7 +475,7 @@
           <template v-else>
             <div class="space-y-10">
               <div
-                v-for="[actorName, works] in visibleGroupedWorks"
+                v-for="[actorName, works] in groupedWorks"
                 :key="actorName"
                 class="space-y-4"
               >
@@ -513,13 +513,10 @@
                 </NuxtLink>
 
                 <!-- Actor Works Grid -->
-                <PaginatedResponsiveGrid
-                  :items="works"
-                  :page-size="12"
-                  grid-class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
-                  :item-key="(item) => item.work.id"
+                <div
+                  class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
                 >
-                  <template #default="{ item }">
+                  <template v-for="item in works" :key="item.work.id">
                     <div
                       :key="item.work.id"
                       class="bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2a2a2a] rounded-2xl p-4 shadow-sm transition-colors hover:border-gray-300 dark:hover:border-gray-700 block group"
@@ -647,29 +644,10 @@
                       </div>
                     </div>
                   </template>
-                </PaginatedResponsiveGrid>
+                </div>
               </div>
             </div>
           </template>
-
-          <!-- Infinite Scroll Sentinel & Load More button -->
-          <div
-            v-if="hasMore"
-            ref="loadMoreSentinel"
-            class="py-10 flex flex-col items-center justify-center gap-3"
-          >
-            <button
-              @click="loadMore"
-              class="px-5 py-2.5 bg-white dark:bg-[#1d1d1d] hover:bg-gray-100 dark:hover:bg-[#2a2a2a] text-sm font-medium rounded-xl text-gray-700 dark:text-gray-200 transition-all border border-gray-200 dark:border-[#2a2a2a] shadow-sm cursor-pointer"
-            >
-              {{ $t("common.loadMore", "Load more") }}
-            </button>
-            <span class="text-xs text-gray-400">
-              {{
-                `${visibleGroupedWorks.length} / ${groupedWorks.length} actors`
-              }}
-            </span>
-          </div>
         </section>
       </template>
     </PersonDetailsLayout>
@@ -705,7 +683,7 @@ import {
 } from "lucide-vue-next";
 import ReportModal from "../../components/ReportModal.vue";
 import { computed, ref, watch } from "vue";
-import { useIntersectionObserver, refDebounced } from "@vueuse/core";
+import { refDebounced } from "@vueuse/core";
 
 const isReportModalOpen = ref(false);
 
@@ -1111,39 +1089,5 @@ const groupedWorks = computed(() => {
     }
     return a[0].localeCompare(b[0]);
   });
-});
-
-const displayedGroupCount = ref(10);
-
-const visibleGroupedWorks = computed(() => {
-  return groupedWorks.value.slice(0, displayedGroupCount.value);
-});
-
-const hasMore = computed(() => {
-  return (
-    displayMode.value === "grouped" &&
-    displayedGroupCount.value < groupedWorks.value.length
-  );
-});
-
-const loadMore = () => {
-  displayedGroupCount.value += 10;
-};
-
-const loadMoreSentinel = ref<HTMLElement | null>(null);
-
-useIntersectionObserver(
-  loadMoreSentinel,
-  ([entry]) => {
-    if (entry?.isIntersecting && hasMore.value) {
-      loadMore();
-    }
-  },
-  { rootMargin: "400px" },
-);
-
-// Reset displayed counts on search, tab, sort or display mode changes
-watch([searchQuery, activeTab, sortMode, displayMode], () => {
-  displayedGroupCount.value = 10;
 });
 </script>

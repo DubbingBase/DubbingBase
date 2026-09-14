@@ -16,12 +16,40 @@ export default defineEventHandler(async (event) => {
   // If no studioId, return all studios (for the studios listing page)
   if (!studioId) {
     try {
-      const { data: rows, error } = await supabase
+      const search = typeof query.query === "string" ? query.query.trim() : "";
+      const requestedLimit = Number.parseInt(String(query.limit), 10);
+      const requestedOffset = Number.parseInt(String(query.offset), 10);
+      const hasPagination =
+        Number.isFinite(requestedLimit) || Number.isFinite(requestedOffset);
+      const limit = Number.isFinite(requestedLimit)
+        ? Math.min(Math.max(requestedLimit, 1), 100)
+        : 100;
+      const offset = Number.isFinite(requestedOffset)
+        ? Math.max(requestedOffset, 0)
+        : 0;
+
+      let studiosQuery = supabase
         .from("studios")
-        .select("*")
-        .order("name");
+        .select("*", { count: hasPagination ? "exact" : undefined });
+
+      if (search) {
+        const escapedSearch = search.replace(/[%_,]/g, " ");
+        studiosQuery = studiosQuery.or(
+          `name.ilike.%${escapedSearch}%,city.ilike.%${escapedSearch}%,country.ilike.%${escapedSearch}%`,
+        );
+      }
+
+      studiosQuery = studiosQuery.order("name");
+
+      if (hasPagination) {
+        studiosQuery = studiosQuery.range(offset, offset + limit - 1);
+      }
+
+      const { data: rows, count, error } = await studiosQuery;
       if (error) throw error;
-      return rows || [];
+      return hasPagination
+        ? { studios: rows || [], total: count ?? 0 }
+        : rows || [];
     } catch (error) {
       console.error("Error fetching studios:", error);
       throw createError({
