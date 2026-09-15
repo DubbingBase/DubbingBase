@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 74 routes | 16 models | 194 components | 75 lib files | 63 env vars | 12 middleware | 4% test coverage
-> **Token savings:** this file is ~14,300 tokens. Without it, AI exploration would cost ~147,700 tokens. **Saves ~133,400 tokens per conversation.**
-> **Last scanned:** 2026-09-13 14:20 — re-run after significant changes
+> 75 routes | 16 models | 195 components | 77 lib files | 63 env vars | 12 middleware | 4% test coverage
+> **Token savings:** this file is ~14,400 tokens. Without it, AI exploration would cost ~149,000 tokens. **Saves ~134,600 tokens per conversation.**
+> **Last scanned:** 2026-09-15 08:54 — re-run after significant changes
 
 ---
 
@@ -23,6 +23,7 @@
 - `POST` `/api/delete-voice-actor-link` [auth, db]
 - `POST` `/api/delete-work-entry` [auth, db]
 - `POST` `/api/delete_user` [auth]
+- `GET` `/api/detail-collections` [cache]
 - `GET` `/api/episode/index` [cache]
 - `POST` `/api/extract-credits-from-image` [upload]
 - `POST` `/api/extract-voice-actor-info` [auth]
@@ -307,6 +308,7 @@
 - **LanguageBanner** [client] — `apps/website/src/components/LanguageBanner.vue`
 - **MediaSkeleton** [client] — `apps/website/src/components/MediaSkeleton.vue`
 - **PaginatedResponsiveGrid** [client] — props: items, pageSize, totalItems, page, gridClass, itemKey — `apps/website/src/components/PaginatedResponsiveGrid.vue`
+- **PaginationControls** [client] — props: page, totalItems, pageSize — `apps/website/src/components/PaginationControls.vue`
 - **PersonSkeleton** [client] — `apps/website/src/components/PersonSkeleton.vue`
 - **PwaLifecycleBanner** [client] — `apps/website/src/components/PwaLifecycleBanner.vue`
 - **ReportModal** [client] — props: open, targetUrl — `apps/website/src/components/ReportModal.vue`
@@ -503,6 +505,11 @@
   - type QueueName
   - type DiscordNotificationCategory
 - `apps/website/server/utils/notifications/onesignal.ts` — function sendOneSignalNotification: (title, message, options?) => void, interface OneSignalOptions
+- `apps/website/server/utils/pagination.ts`
+  - function parsePagination: (options) => ParsedPagination
+  - function paginateArray: (items, options) => void
+  - type PaginationOptions
+  - type ParsedPagination
 - `apps/website/server/utils/queue-payload.ts`
   - function validateCheckPayload: (payload) => Validated<ValidQueueBase>
   - function validateDiscoveryPayload: (payload) => Validated<ValidQueueBase>
@@ -533,10 +540,10 @@
   - const TMDB_CONFIG
 - `apps/website/src/composables/useContribute.ts` — function fetchRandomTask, function useContribute
 - `apps/website/src/composables/useDragScroll.ts` — function useDragScroll: (scrollRef) => void
-- `apps/website/src/composables/useProgressiveBatch.ts` — function useProgressiveBatch: (items, options) => void, interface UseProgressiveBatchOptions
 - `apps/website/src/composables/useReports.ts` — function useReports
 - `apps/website/src/composables/useSearchModal.ts` — function useSearchModal: () => void
 - `apps/website/src/composables/useTheme.ts` — function useTheme: () => void
+- `apps/website/src/composables/useUrlPagination.ts` — function readUrlPage: (value) => number, function useUrlPagination: (queryKey) => void
 - `apps/website/src/lib/media-editor-routes.ts` — function getMediaEditorRoute: ({...}, mediaId, projectId }) => string | null
 - `apps/website/src/lib/mediaQueue.ts` — function enqueueMedia: (params) => Promise<void>
 - `apps/website/src/utils/media-cast.ts`
@@ -558,6 +565,10 @@
   - type ActorDataPayload
 - `packages/shared-logic/src/composables/useAdvertisementData.ts` — function fetchAdvertisementData: (id, locale?) => Promise<AdvertisementResponse | null>
 - `packages/shared-logic/src/composables/useAudiobookData.ts` — function fetchAudiobookData: (id, locale?) => Promise<AudiobookResponse | null>
+- `packages/shared-logic/src/composables/useDetailCollections.ts`
+  - function fetchDetailCollection: (params) => Promise<PaginatedResponse<T>>
+  - type DetailCollection
+  - type DetailCollectionParams
 - `packages/shared-logic/src/composables/useEpisodeData.ts` — function fetchEpisodeData: (showId, seasonNumber, episodeNumber, locale?) => Promise<any | null>
 - `packages/shared-logic/src/composables/useGameData.ts` — function fetchGameData: (id, locale?) => Promise<any | null>
 - `packages/shared-logic/src/composables/useHomeData.ts`
@@ -688,7 +699,7 @@
 ## Most Imported Files (change these carefully)
 
 - `apps/website/server/utils/db/client.ts` — imported by **59** files
-- `apps/website/server/utils/cache/http.ts` — imported by **38** files
+- `apps/website/server/utils/cache/http.ts` — imported by **39** files
 - `apps/website/server/utils/auth.ts` — imported by **26** files
 - `apps/website/server/utils/index.ts` — imported by **24** files
 - `apps/website/server/utils/db/queries.ts` — imported by **12** files
@@ -698,8 +709,8 @@
 - `apps/website/server/utils/cache/index.ts` — imported by **10** files
 - `apps/website/server/utils/api/igdb.ts` — imported by **8** files
 - `e2e/helpers/mock-api.ts` — imported by **8** files
+- `packages/shared-logic/src/types/index.ts` — imported by **8** files
 - `apps/website/server/utils/background.ts` — imported by **7** files
-- `packages/shared-logic/src/types/index.ts` — imported by **7** files
 - `apps/website/server/utils/services/media.ts` — imported by **6** files
 - `apps/website/server/utils/error-message.ts` — imported by **5** files
 - `apps/website/server/utils/llm.ts` — imported by **4** files
@@ -711,7 +722,7 @@
 ## Import Map (who imports what)
 
 - `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/cast-vote.post.ts`, `apps/website/server/api/count-voice-actor-works.post.ts` +54 more
-- `apps/website/server/utils/cache/http.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/dashboard-stats.get.ts` +33 more
+- `apps/website/server/utils/cache/http.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/dashboard-stats.get.ts` +34 more
 - `apps/website/server/utils/auth.ts` ← `apps/website/server/api/create-user-profile.post.ts`, `apps/website/server/api/dashboard-stats.get.ts`, `apps/website/server/api/delete-voice-actor-link.post.ts`, `apps/website/server/api/delete-work-entry.post.ts`, `apps/website/server/api/delete_user.post.ts` +21 more
 - `apps/website/server/utils/index.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/episode/index.get.ts` +19 more
 - `apps/website/server/utils/db/queries.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/game/[id].get.ts` +7 more
@@ -726,7 +737,7 @@
 # Test Coverage
 
 > **4%** of routes and models are covered by tests
-> 27 test files found
+> 29 test files found
 
 ## Covered Models
 

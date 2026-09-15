@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Component inventory and prop signatures extracted via AST. Read the source files before adding props or modifying component logic.
 
-**194 components** (vue)
+**195 components** (vue)
 
 ## Client Components
 
@@ -110,6 +110,7 @@
 - **LanguageBanner** — `apps/website/src/components/LanguageBanner.vue`
 - **MediaSkeleton** — `apps/website/src/components/MediaSkeleton.vue`
 - **PaginatedResponsiveGrid** — props: items, pageSize, totalItems, page, gridClass, itemKey — `apps/website/src/components/PaginatedResponsiveGrid.vue`
+- **PaginationControls** — props: page, totalItems, pageSize — `apps/website/src/components/PaginationControls.vue`
 - **PersonSkeleton** — `apps/website/src/components/PersonSkeleton.vue`
 - **PwaLifecycleBanner** — `apps/website/src/components/PwaLifecycleBanner.vue`
 - **ReportModal** — props: open, targetUrl — `apps/website/src/components/ReportModal.vue`
