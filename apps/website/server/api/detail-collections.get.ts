@@ -320,7 +320,6 @@ async function getCollectionItems(
           voiceActors.set(voiceActor.id, {
             ...voiceActor,
             rolesCount: (current?.rolesCount || 0) + 1,
-            highlight: Boolean(current?.highlight || role.highlight),
           });
         }
       }

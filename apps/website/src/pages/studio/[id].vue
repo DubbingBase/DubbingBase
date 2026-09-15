@@ -377,7 +377,10 @@ const projectRequest = computed(() => ({
 const { data: projectPageData } = useAsyncData<
   PaginatedResponse<StudioCollectionItem>
 >(
-  `studio-projects-${route.params.id}`,
+  computed(
+    () =>
+      `studio-projects-${route.params.id}-${projectsPage.value}-${debouncedSearch.value}`,
+  ),
   () => fetchDetailCollection<StudioCollectionItem>(projectRequest.value),
   {
     watch: [projectRequest],
@@ -399,7 +402,7 @@ const rosterRequest = computed(() => ({
 const { data: rosterPageData } = useAsyncData<
   PaginatedResponse<StudioCollectionItem>
 >(
-  `studio-voice-actors-${route.params.id}`,
+  computed(() => `studio-voice-actors-${route.params.id}-${rosterPage.value}`),
   () => fetchDetailCollection<StudioCollectionItem>(rosterRequest.value),
   {
     watch: [rosterRequest],

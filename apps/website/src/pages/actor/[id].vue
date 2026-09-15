@@ -133,9 +133,7 @@
                 :to="localePath(`/voice-actor/${va.id}`)"
                 :class="[
                   'flex flex-col items-center p-4 rounded-xl border transition group hover:-translate-y-1',
-                  va.highlight
-                    ? 'theme-status-info theme-hover-surface-muted'
-                    : 'theme-input theme-border-subtle theme-border theme-hover-surface-muted',
+                  'theme-input theme-border-subtle theme-border theme-hover-surface-muted',
                 ]"
               >
                 <div
@@ -422,7 +420,10 @@ const voiceActorsRequest = computed(() => ({
 const { data: voiceActorsPageData } = useAsyncData<
   PaginatedResponse<ActorCollectionItem>
 >(
-  `actor-voice-actors-${id}`,
+  computed(
+    () =>
+      `actor-voice-actors-${id}-${voicesPage.value}-${searchQuery.value}-${selectedLanguage.value}`,
+  ),
   () => fetchDetailCollection<ActorCollectionItem>(voiceActorsRequest.value),
   {
     watch: [voiceActorsRequest],
@@ -447,7 +448,10 @@ const filmographyRequest = computed(() => ({
 const { data: filmographyPageData } = useAsyncData<
   PaginatedResponse<ActorCollectionItem>
 >(
-  `actor-filmography-${id}`,
+  computed(
+    () =>
+      `actor-filmography-${id}-${filmographyPage.value}-${searchQuery.value}-${selectedLanguage.value}`,
+  ),
   () => fetchDetailCollection<ActorCollectionItem>(filmographyRequest.value),
   {
     watch: [filmographyRequest],

@@ -622,7 +622,10 @@ const castRequest = computed(() => ({
   pageSize: 12,
 }));
 const { data: castPageData } = useAsyncData<PaginatedResponse<GameCastItem>>(
-  `game-cast-${gameId}-${locale.value}`,
+  computed(
+    () =>
+      `game-cast-${gameId}-${locale.value}-${castPage.value}-${activeDubId.value}-${searchQuery.value}`,
+  ),
   () => fetchDetailCollection<GameCastItem>(castRequest.value),
   {
     watch: [castRequest],

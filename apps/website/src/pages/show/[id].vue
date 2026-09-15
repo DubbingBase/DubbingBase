@@ -576,7 +576,7 @@ const seasonsRequest = computed(() => ({
 const { data: seasonsPageData } = useAsyncData<
   PaginatedResponse<ShowSeasonItem>
 >(
-  `show-seasons-${showId}-${locale.value}`,
+  computed(() => `show-seasons-${showId}-${locale.value}-${seasonsPage.value}`),
   () => fetchDetailCollection<ShowSeasonItem>(seasonsRequest.value),
   {
     watch: [seasonsRequest],
@@ -774,7 +774,10 @@ const castRequest = computed(() => ({
   pageSize: 12,
 }));
 const { data: castPageData } = useAsyncData<PaginatedResponse<ShowCastItem>>(
-  `show-cast-${showId}-${locale.value}`,
+  computed(
+    () =>
+      `show-cast-${showId}-${locale.value}-${castPage.value}-${activeDubId.value}-${searchQuery.value}`,
+  ),
   () => fetchDetailCollection<ShowCastItem>(castRequest.value),
   {
     watch: [castRequest],
