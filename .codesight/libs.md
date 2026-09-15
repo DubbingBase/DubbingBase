@@ -168,7 +168,7 @@
 - `packages/shared-logic/src/composables/useEpisodeData.ts` — function fetchEpisodeData: (showId, seasonNumber, episodeNumber, locale?) => Promise<any | null>
 - `packages/shared-logic/src/composables/useGameData.ts` — function fetchGameData: (id, locale?) => Promise<any | null>
 - `packages/shared-logic/src/composables/useHomeData.ts`
-  - function fetchHomeData: () => Promise<HomeDataPayload>
+  - function fetchHomeData: (language) => Promise<HomeDataPayload>
   - function useHomeData: (initialData?) => void
   - type HomeDataPayload
 - `packages/shared-logic/src/composables/useMovieData.ts` — function fetchMovieData: (id, locale?) => Promise<any | null>
@@ -189,4 +189,12 @@
   - type VoiceActorResponse
   - type EnhancedWorkItem
   - type VoiceActorDataPayload
+- `packages/shared-logic/src/constants.ts`
+  - function resolveLocaleLanguage: (value?) => string | null
+  - interface LocaleConfig
+  - type SupportedLocale
+  - type NonDefaultLocale
+  - type MediaType
+  - type MediaRoutePrefix
+  - _...9 more_
 - `packages/shared-logic/src/utils/character.ts` — function normalizeCharacterName, function findCharacter

@@ -1,11 +1,25 @@
 import { useTmdbClient } from "../../utils";
 import { buildTmdbImageUrl } from "../../utils/urls/tmdb";
 import { setPublicCacheHeaders } from "../../utils/cache/http";
+import { resolveLocaleLanguage } from "@app/shared-logic";
 
 export default defineEventHandler(async (event) => {
   setPublicCacheHeaders(event, "discovery");
 
-  const json = await useTmdbClient().getTrending("tv", "day");
+  const query = getQuery(event);
+  const rawLanguage = query.lang;
+  const language = resolveLocaleLanguage(
+    rawLanguage === undefined
+      ? undefined
+      : typeof rawLanguage === "string"
+        ? rawLanguage
+        : "",
+  );
+  if (language === null) {
+    throw createError({ statusCode: 400, message: "Unsupported language" });
+  }
+
+  const json = await useTmdbClient().getTrending("tv", "day", language);
   const trendingShows = {
     ...json,
     results: (Array.isArray(json?.results) ? json.results : [])

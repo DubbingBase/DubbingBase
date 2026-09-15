@@ -33,14 +33,14 @@ export default defineEventHandler(async (event) => {
     }
 
     const [moviesResponse, showsResponse] = await Promise.all([
-      fetch("https://api.themoviedb.org/3/trending/movie/day?language=fr-FR", {
+      fetch("https://api.themoviedb.org/3/trending/movie/day", {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${tmdbApiKey}`,
           Accept: "application/json",
         },
       }),
-      fetch("https://api.themoviedb.org/3/trending/tv/day?language=fr-FR", {
+      fetch("https://api.themoviedb.org/3/trending/tv/day", {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${tmdbApiKey}`,

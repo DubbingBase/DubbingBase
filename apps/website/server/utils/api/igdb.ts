@@ -1,5 +1,9 @@
 import { SimpleCache } from "../cache";
-import type { IgdbGame, IgdbCharacter } from "@app/shared-logic";
+import {
+  DEFAULT_LANGUAGE,
+  type IgdbGame,
+  type IgdbCharacter,
+} from "@app/shared-logic";
 
 export interface IgdbPopularityPrimitive {
   id: number;
@@ -32,6 +36,12 @@ interface TwitchTokenResponse {
   access_token: string;
   expires_in: number;
   token_type: string;
+}
+
+interface IgdbGameLocalization {
+  game: number;
+  name: string;
+  region?: { identifier?: string };
 }
 
 export class IgdbClient {
@@ -220,8 +230,11 @@ export class IgdbClient {
     return results;
   }
 
-  async getTrendingGames(limit = 20): Promise<IgdbGame[]> {
-    const cacheKey = "igdb:trending:games:v2";
+  async getTrendingGames(
+    limit = 20,
+    language = DEFAULT_LANGUAGE,
+  ): Promise<IgdbGame[]> {
+    const cacheKey = `igdb:trending:games:v2:${language}`;
     const cached = await this.cache.get<IgdbGame[]>(cacheKey);
     if (cached) return cached;
 
@@ -252,10 +265,38 @@ export class IgdbClient {
       `fields id, name, summary, rating, first_release_date,
               cover.image_id, genres.name, platforms.name;
        where id = (${topIds.join(",")}) & (themes != (42) | themes = null);
-       limit ${limit};`,
+      limit ${limit};`,
     );
 
-    await this.cache.set(cacheKey, games, "SHORT");
-    return games;
+    if (games.length === 0) return games;
+
+    let localizedGames = games;
+    try {
+      const localizations = await this.query<IgdbGameLocalization>(
+        "game_localizations",
+        `fields game, name, region.identifier;
+         where game = (${topIds.join(",")});
+         limit ${Math.max(topIds.length * 10, 100)};`,
+      );
+      const localizedNames = new Map<number, string>();
+      for (const localization of localizations) {
+        if (
+          localization.region?.identifier === language &&
+          !localizedNames.has(localization.game)
+        ) {
+          localizedNames.set(localization.game, localization.name);
+        }
+      }
+      localizedGames = games.map((game) => ({
+        ...game,
+        name: localizedNames.get(game.id) ?? game.name,
+      }));
+    } catch (error) {
+      debugLog("Failed to fetch game localizations:", error);
+      localizedGames = games;
+    }
+
+    await this.cache.set(cacheKey, localizedGames, "SHORT");
+    return localizedGames;
   }
 }

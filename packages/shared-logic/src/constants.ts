@@ -20,6 +20,20 @@ export const APP_LOCALES: readonly LocaleConfig[] = [
   { code: "ja", language: "ja-JP", file: "ja.json", name: "日本語" },
 ] as const;
 
+export const DEFAULT_LANGUAGE = "en-US";
+
+export function resolveLocaleLanguage(value?: string): string | null {
+  if (value === undefined) return DEFAULT_LANGUAGE;
+
+  const normalized = value.trim();
+  const locale = APP_LOCALES.find(
+    (candidate) =>
+      candidate.code === normalized || candidate.language === normalized,
+  );
+
+  return locale?.language ?? null;
+}
+
 export const MEDIA_TYPES = [
   "movie",
   "tv",

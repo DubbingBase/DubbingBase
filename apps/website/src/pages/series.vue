@@ -62,9 +62,13 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
+import { resolveLocaleLanguage } from "@app/shared-logic";
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const localePath = useLocalePath();
+const trendingLanguage = computed(
+  () => resolveLocaleLanguage(locale.value) || "en-US",
+);
 
 useHead({
   title: "Toutes les Séries - DubbingBase",
@@ -90,12 +94,15 @@ const {
   pending: isLoading,
   error,
 } = useAsyncData(
-  "series-page",
+  () => `series-page:${trendingLanguage.value}`,
   async () => {
-    const data = await $fetch<{ results: any[] }>("/api/trending/shows");
+    const data = await $fetch<{ results: any[] }>("/api/trending/shows", {
+      params: { lang: trendingLanguage.value },
+    });
     return data?.results || [];
   },
   {
+    watch: [trendingLanguage],
     getCachedData: (key, nuxtApp) =>
       nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
   },
