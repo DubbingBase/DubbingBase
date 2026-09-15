@@ -148,6 +148,7 @@ function formatTmdbCards(
       const voiceActor = work ? workVoiceActor(work) : null;
       cards.push({
         ...actor,
+        actorId: actor.id,
         id: work ? `${actor.id}-${work.id}` : actor.id,
         work_id: work?.id,
         voiceActor,
