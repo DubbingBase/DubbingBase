@@ -2,4 +2,4 @@
 "@app/website": patch
 ---
 
-Fix paginated media cast collections and show only linked dubbing roles.
+Fix paginated media cast collections, show only linked dubbing roles, and align voice actor group headers below the site header.
