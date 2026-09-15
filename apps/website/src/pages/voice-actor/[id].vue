@@ -476,7 +476,7 @@
           <template v-else>
             <div class="space-y-10">
               <div
-                v-for="[actorName, works] in visibleGroupedWorks"
+                v-for="[actorName, works] in groupedWorks"
                 :key="actorName"
                 class="space-y-4"
               >

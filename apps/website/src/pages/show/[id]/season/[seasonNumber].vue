@@ -410,7 +410,15 @@ function projectVoiceActorCount(project: any): number {
   return ids.size;
 }
 
-const episodes = computed(() => {
+type SeasonEpisode = {
+  air_date?: string | null;
+  episode_number: number;
+  name?: string | null;
+  still_path?: string | null;
+  vote_average?: number;
+};
+
+const episodes = computed<SeasonEpisode[]>(() => {
   return season.value?.episodes || [];
 });
 const { page: episodesPage, setPage: setEpisodesPage } =

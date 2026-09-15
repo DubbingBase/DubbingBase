@@ -505,7 +505,7 @@ const localePath = useLocalePath();
 
 const cacheKey = `episode-${showId}-${seasonNumber}-${episodeNumber}-${locale.value}`;
 
-const { data, pending } = useAsyncData(
+const { data, pending, refresh } = useAsyncData(
   cacheKey,
   async () => {
     return await fetchEpisodeData(
