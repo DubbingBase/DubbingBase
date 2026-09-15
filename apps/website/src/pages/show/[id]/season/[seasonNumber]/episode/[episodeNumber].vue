@@ -227,14 +227,19 @@
             </div>
           </div>
 
-          <div
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+          <PaginatedResponsiveGrid
+            :items="filteredCast"
+            :page="castPage"
+            :page-size="12"
+            grid-class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+            :item-key="(actor) => actor.id"
+            @update:page="setCastPage"
           >
-            <div
-              v-for="actor in filteredCast"
-              :key="actor.id"
-              class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border"
-            >
+            <template #default="{ item: actor }">
+              <div
+                :key="actor.id"
+                class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border"
+              >
               <div
                 class="flex flex-col sm:grid gap-4"
                 :class="
@@ -412,8 +417,9 @@
                   </template>
                 </div>
               </div>
-            </div>
-          </div>
+              </div>
+            </template>
+          </PaginatedResponsiveGrid>
         </section>
         <section v-else class="text-center py-12 theme-text-muted">
           {{ $t("details.noCast") }}
@@ -468,6 +474,8 @@ import ReportModal from "../../../../../../components/ReportModal.vue";
 import { matchCastWorks } from "../../../../../../utils/media-cast";
 
 const isReportModalOpen = ref(false);
+const { page: castPage, setPage: setCastPage } =
+  useUrlPagination("castPage");
 
 const route = useRoute();
 const router = useRouter();
@@ -710,6 +718,14 @@ const filteredCast = computed(() => {
       vaPerformance.includes(query)
     );
   });
+});
+
+watch([debouncedSearch, activeDubId], () => {
+  void refresh();
+});
+
+watch(debouncedSearch, () => {
+  void setCastPage(1);
 });
 
 useHead({

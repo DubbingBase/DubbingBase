@@ -117,13 +117,18 @@
             </div>
           </div>
 
-          <div
+          <PaginatedResponsiveGrid
             v-if="filteredUniqueVoiceActorsByLanguage.length > 0"
-            class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+            :items="filteredUniqueVoiceActorsByLanguage"
+            :page="voicesPage"
+            :page-size="12"
+            grid-class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+            :item-key="(va) => va.id"
+            @update:page="setVoicesPage"
           >
-            <NuxtLink
-              v-for="va in filteredUniqueVoiceActorsByLanguage"
-              :key="va.id"
+            <template #default="{ item: va }">
+              <NuxtLink
+                :key="va.id"
               :to="localePath(`/voice-actor/${va.id}`)"
               :class="[
                 'flex flex-col items-center p-4 rounded-xl border transition group hover:-translate-y-1',
@@ -157,8 +162,9 @@
               <span class="text-xs theme-text-muted mt-1"
                 >{{ va.rolesCount }}{{ $t("actor.roles") }}</span
               >
-            </NuxtLink>
-          </div>
+              </NuxtLink>
+            </template>
+          </PaginatedResponsiveGrid>
           <div
             v-else
             class="theme-text-muted text-center py-8 theme-input rounded-2xl border theme-border-subtle theme-border"
@@ -184,15 +190,20 @@
             {{ $t("actor.noWorks") }}
           </div>
 
-          <div
+          <PaginatedResponsiveGrid
             v-else
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+            :items="enhancedFilmography"
+            :page="filmographyPage"
+            :page-size="12"
+            grid-class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+            :item-key="(item) => `${item.media_type}-${item.id}`"
+            @update:page="setFilmographyPage"
           >
-            <div
-              v-for="item in enhancedFilmography"
-              :key="`${item.media_type}-${item.id}`"
-              class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border block group"
-            >
+            <template #default="{ item }">
+              <div
+                :key="`${item.media_type}-${item.id}`"
+                class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border block group"
+              >
               <div class="flex flex-col sm:grid sm:grid-cols-3 gap-4 h-full">
                 <!-- Column 1: Media -->
                 <NuxtLink
@@ -336,8 +347,9 @@
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+              </div>
+            </template>
+          </PaginatedResponsiveGrid>
         </section>
       </template>
     </PersonDetailsLayout>
@@ -366,7 +378,7 @@ const localePath = useLocalePath();
 const id = route.params.id as string;
 const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
 
-const { data: initialData } = await useAsyncData(
+const { data: initialData, refresh } = await useAsyncData(
   `actor-${id}`,
   () => fetchActorData(id),
   {
@@ -389,9 +401,18 @@ const {
 } = useActorData(initialData);
 
 const searchInput = ref("");
+const { page: voicesPage, setPage: setVoicesPage } =
+  useUrlPagination("voicesPage");
+const { page: filmographyPage, setPage: setFilmographyPage } =
+  useUrlPagination("filmographyPage");
 const debouncedSearch = refDebounced(searchInput, 150);
 watch(debouncedSearch, (val) => {
   searchQuery.value = val;
+});
+watch([searchQuery, selectedLanguage], () => {
+  void setVoicesPage(1);
+  void setFilmographyPage(1);
+  void refresh();
 });
 
 useHead({

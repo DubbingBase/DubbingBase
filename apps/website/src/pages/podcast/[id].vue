@@ -206,15 +206,20 @@
             }}
           </div>
 
-          <div
+          <PaginatedResponsiveGrid
             v-else
-            class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+            :items="filteredCast"
+            :page="castPage"
+            :page-size="12"
+            grid-class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+            :item-key="(item) => item.work_id"
+            @update:page="setCastPage"
           >
-            <div
-              v-for="item in filteredCast"
-              :key="item.work_id"
-              class="theme-surface-overlay border theme-border-subtle theme-border rounded-2xl p-4 flex gap-4 items-center theme-hover-border transition-colors group shadow-md"
-            >
+            <template #default="{ item }">
+              <div
+                :key="item.work_id"
+                class="theme-surface-overlay border theme-border-subtle theme-border rounded-2xl p-4 flex gap-4 items-center theme-hover-border transition-colors group shadow-md"
+              >
               <NuxtLink
                 :to="localePath(`/voice-actor/${item.voice_actor_id}`)"
                 class="relative w-14 h-14 rounded-full overflow-hidden theme-surface-muted shrink-0 border theme-border-subtle theme-border group-hover:border-pink-500 transition-colors flex items-center justify-center"
@@ -248,8 +253,9 @@
                   >{{ item.note }}</span
                 >
               </div>
-            </div>
-          </div>
+              </div>
+            </template>
+          </PaginatedResponsiveGrid>
         </section>
       </template>
     </MediaDetailsLayout>
@@ -263,7 +269,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { refDebounced } from "@vueuse/core";
@@ -298,9 +304,11 @@ const podcastId = computed(() => {
 
 const isReportModalOpen = ref(false);
 const currentUrl = computed(() => route.fullPath);
+const { page: castPage, setPage: setCastPage } =
+  useUrlPagination("castPage");
 
 // Instant Hydration Data Fetching
-const { data, pending } = await useAsyncData(
+const { data, pending, refresh } = await useAsyncData(
   `podcast-${podcastId.value}-${locale.value}`,
   () => fetchPodcastData(podcastId.value, locale.value),
   {
@@ -403,6 +411,14 @@ const filteredCast = computed(() => {
       `${c.firstname} ${c.lastname}`.toLowerCase().includes(query) ||
       (c.character_name && c.character_name.toLowerCase().includes(query)),
   );
+});
+
+watch([debouncedCastSearch, activeDubId], () => {
+  void refresh();
+});
+
+watch(debouncedCastSearch, () => {
+  void setCastPage(1);
 });
 
 function openExternalUrl(url?: string) {

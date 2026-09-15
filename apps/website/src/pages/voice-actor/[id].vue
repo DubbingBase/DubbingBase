@@ -275,9 +275,11 @@
             <PaginatedResponsiveGrid
               :key="`${searchQuery}|${activeTab}|${sortMode}`"
               :items="sortedWorks"
+              :page="worksPage"
               :page-size="12"
               grid-class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
               :item-key="(item) => item.work.id"
+              @update:page="setWorksPage"
             >
               <template #default="{ item }">
                 <div
@@ -738,7 +740,7 @@ function getMediaLink(contentType?: string | null, mediaId?: number | string) {
   return `/movie/${mediaId}`;
 }
 
-const { data, pending } = useAsyncData(
+const { data, pending, refresh } = useAsyncData(
   `voice-actor-${voiceActorId}-${locale.value}`,
   () => {
     const tmdbLanguage =
@@ -936,6 +938,8 @@ useHead({
 const displayMode = ref<"grouped" | "list">("grouped");
 const sortMode = ref<"newest" | "oldest">("newest");
 const activeTab = ref<string>("all");
+const { page: worksPage, setPage: setWorksPage } =
+  useUrlPagination("worksPage");
 
 const CATEGORY_TABS_CONFIG = [
   { id: "all", labelKey: "search.all", defaultLabel: "All", icon: LayersIcon },
@@ -1094,5 +1098,10 @@ const groupedWorks = computed(() => {
     }
     return a[0].localeCompare(b[0]);
   });
+});
+
+watch([searchQuery, activeTab, sortMode, displayMode], () => {
+  void setWorksPage(1);
+  void refresh();
 });
 </script>

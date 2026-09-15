@@ -200,12 +200,17 @@
             </div>
           </div>
 
-          <div
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+          <PaginatedResponsiveGrid
+            :items="episodes"
+            :page="episodesPage"
+            :page-size="12"
+            grid-class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+            :item-key="(episode) => episode.episode_number"
+            @update:page="setEpisodesPage"
           >
-            <NuxtLink
-              v-for="episode in episodes"
-              :key="episode.episode_number"
+            <template #default="{ item: episode }">
+              <NuxtLink
+                :key="episode.episode_number"
               :to="{
                 path: localePath(
                   `/show/${showId}/season/${seasonNumber}/episode/${episode.episode_number}`,
@@ -261,8 +266,9 @@
                   {{ episode.vote_average.toFixed(1) }}
                 </span>
               </div>
-            </NuxtLink>
-          </div>
+              </NuxtLink>
+            </template>
+          </PaginatedResponsiveGrid>
         </section>
       </template>
     </MediaDetailsLayout>
@@ -407,6 +413,8 @@ function projectVoiceActorCount(project: any): number {
 const episodes = computed(() => {
   return season.value?.episodes || [];
 });
+const { page: episodesPage, setPage: setEpisodesPage } =
+  useUrlPagination("episodesPage");
 
 const backdropUrl = computed(() => {
   const path = season.value?.backdrop_path || serie.value?.backdrop_path;

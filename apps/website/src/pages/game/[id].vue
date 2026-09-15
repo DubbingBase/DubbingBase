@@ -274,9 +274,11 @@
           <PaginatedResponsiveGrid
             :key="searchQuery"
             :items="filteredCharacters"
+            :page="castPage"
             :page-size="12"
             grid-class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
             :item-key="(character) => character.id"
+            @update:page="setCastPage"
           >
             <template #default="{ item: char }">
               <div
@@ -704,9 +706,14 @@ const formattedCharacters = computed(() => {
 
 const searchQuery = ref("");
 const searchInput = ref("");
+const { page: castPage, setPage: setCastPage } =
+  useUrlPagination("castPage");
 const debouncedSearch = refDebounced(searchInput, 150);
 watch(debouncedSearch, (val) => {
   searchQuery.value = val;
+});
+watch(searchQuery, () => {
+  void setCastPage(1);
 });
 
 const filteredCharacters = computed(() => {
@@ -726,6 +733,10 @@ const filteredCharacters = computed(() => {
       vaNote.includes(query)
     );
   });
+});
+
+watch([searchQuery, activeDubId], () => {
+  void refresh();
 });
 
 async function triggerPrepareGame() {

@@ -186,15 +186,20 @@
             {{ $t("advertisement.noVoicesYet") }}
           </div>
 
-          <div
+          <PaginatedResponsiveGrid
             v-else
-            class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+            :items="formattedCast"
+            :page="castPage"
+            :page-size="12"
+            grid-class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+            :item-key="(item) => item.work_id"
+            @update:page="setCastPage"
           >
-            <div
-              v-for="item in formattedCast"
-              :key="item.work_id"
-              class="theme-surface-overlay border theme-border rounded-2xl p-4 flex gap-4 items-center theme-hover-border transition-colors group shadow-md"
-            >
+            <template #default="{ item }">
+              <div
+                :key="item.work_id"
+                class="theme-surface-overlay border theme-border rounded-2xl p-4 flex gap-4 items-center theme-hover-border transition-colors group shadow-md"
+              >
               <NuxtLink
                 :to="localePath(`/voice-actor/${item.voice_actor_id}`)"
                 class="relative w-14 h-14 rounded-full overflow-hidden theme-surface-muted shrink-0 border theme-border group-hover:border-emerald-500 transition-colors flex items-center justify-center"
@@ -228,8 +233,9 @@
                   >{{ item.note }}</span
                 >
               </div>
-            </div>
-          </div>
+              </div>
+            </template>
+          </PaginatedResponsiveGrid>
         </section>
       </template>
     </MediaDetailsLayout>
@@ -271,10 +277,12 @@ const adId = computed(() => {
 });
 
 const isReportModalOpen = ref(false);
+const { page: castPage, setPage: setCastPage } =
+  useUrlPagination("castPage");
 const currentUrl = computed(() => route.fullPath);
 
 // Instant Hydration Data Fetching
-const { data, pending } = await useAsyncData(
+const { data, pending, refresh } = await useAsyncData(
   `ad-${adId.value}-${locale.value}`,
   () => fetchAdvertisementData(adId.value, locale.value),
   {
@@ -301,6 +309,11 @@ const activeDubProject = computed(() => {
     dubbingProjects.value[0] ||
     null
   );
+});
+
+watch(activeDubId, () => {
+  void setCastPage(1);
+  void refresh();
 });
 
 const posterUrl = computed(() => {

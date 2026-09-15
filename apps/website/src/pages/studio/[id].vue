@@ -106,12 +106,17 @@
             />
           </div>
         </div>
-        <div
-          class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6"
+        <PaginatedResponsiveGrid
+          :items="filteredProjects"
+          :page="projectsPage"
+          :page-size="12"
+          grid-class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6"
+          :item-key="(project) => project.id"
+          @update:page="setProjectsPage"
         >
-          <NuxtLink
-            v-for="project in filteredProjects"
-            :key="project.id"
+          <template #default="{ item: project }">
+            <NuxtLink
+              :key="project.id"
             :to="
               localePath(getMediaLink(project.content_type, project.content_id))
             "
@@ -197,8 +202,9 @@
             >
               {{ getMediaTypeLabel(project.content_type) }}
             </div>
-          </NuxtLink>
-        </div>
+            </NuxtLink>
+          </template>
+        </PaginatedResponsiveGrid>
       </section>
 
       <!-- Voice Actors Roster -->
@@ -225,12 +231,17 @@
             </div>
           </div>
         </div>
-        <div
-          class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
+        <PaginatedResponsiveGrid
+          :items="voiceActorsRoster"
+          :page="rosterPage"
+          :page-size="12"
+          grid-class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
+          :item-key="(va) => va.id"
+          @update:page="setRosterPage"
         >
-          <NuxtLink
-            v-for="va in voiceActorsRoster"
-            :key="va.id"
+          <template #default="{ item: va }">
+            <NuxtLink
+              :key="va.id"
             :to="localePath(`/voice-actor/${va.id}`)"
             class="group"
           >
@@ -262,8 +273,9 @@
                 {{ va.firstname }} {{ va.lastname }}
               </h3>
             </div>
-          </NuxtLink>
-        </div>
+            </NuxtLink>
+          </template>
+        </PaginatedResponsiveGrid>
       </section>
     </div>
   </DetailsPage>
@@ -327,7 +339,7 @@ const isAdmin = computed(() => {
   );
 });
 
-const { data: initialStudioDetails } = await useAsyncData(
+const { data: initialStudioDetails, refresh } = await useAsyncData(
   `studio-${route.params.id}`,
   () => fetchStudioDetails(route.params.id as string),
   {
@@ -340,6 +352,10 @@ const { studio, dubbedProjects, voiceActorsRoster, loading, error } =
   useStudioData([], initialStudioDetails.value);
 
 const searchInput = ref("");
+const { page: projectsPage, setPage: setProjectsPage } =
+  useUrlPagination("projectsPage");
+const { page: rosterPage, setPage: setRosterPage } =
+  useUrlPagination("rosterPage");
 const debouncedSearch = refDebounced(searchInput, 150);
 
 const filteredProjects = computed(() => {
@@ -349,6 +365,11 @@ const filteredProjects = computed(() => {
     const title = (p.media?.title || p.media?.name || "").toLowerCase();
     return title.includes(query);
   });
+});
+
+watch(debouncedSearch, () => {
+  void setProjectsPage(1);
+  void refresh();
 });
 
 const getProfileUrl = (path: string) => {

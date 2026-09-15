@@ -269,9 +269,11 @@
           <PaginatedResponsiveGrid
             :key="searchQuery"
             :items="filteredCast"
+            :page="castPage"
             :page-size="12"
             grid-class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
             :item-key="(actor) => actor.id"
+            @update:page="setCastPage"
           >
             <template #default="{ item: actor }">
               <div
@@ -528,7 +530,7 @@ const localePath = useLocalePath();
 
 const cacheKey = `show-${showId}-${locale.value}`;
 
-const { data, pending } = useAsyncData(
+const { data, pending, refresh } = useAsyncData(
   cacheKey,
   async () => {
     const nuxtApp = useNuxtApp();
@@ -725,9 +727,14 @@ const formattedCast = computed(() => {
 
 const searchQuery = ref("");
 const searchInput = ref("");
+const { page: castPage, setPage: setCastPage } =
+  useUrlPagination("castPage");
 const debouncedSearch = refDebounced(searchInput, 150);
 watch(debouncedSearch, (val) => {
   searchQuery.value = val;
+});
+watch(searchQuery, () => {
+  void setCastPage(1);
 });
 
 const filteredCast = computed(() => {
@@ -749,6 +756,10 @@ const filteredCast = computed(() => {
       vaPerformance.includes(query)
     );
   });
+});
+
+watch([searchQuery, activeDubId], () => {
+  void refresh();
 });
 
 useHead({

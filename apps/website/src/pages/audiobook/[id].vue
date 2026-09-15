@@ -284,15 +284,20 @@
             }}
           </div>
 
-          <div
+          <PaginatedResponsiveGrid
             v-else
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+            :items="filteredCast"
+            :page="castPage"
+            :page-size="12"
+            grid-class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+            :item-key="(item) => item.work_id"
+            @update:page="setCastPage"
           >
-            <div
-              v-for="item in filteredCast"
-              :key="item.work_id"
-              class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border"
-            >
+            <template #default="{ item }">
+              <div
+                :key="item.work_id"
+                class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border"
+              >
               <div class="flex flex-col gap-4">
                 <div class="flex items-center gap-4">
                   <NuxtLink
@@ -345,8 +350,9 @@
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+              </div>
+            </template>
+          </PaginatedResponsiveGrid>
         </section>
       </template>
     </MediaDetailsLayout>
@@ -360,7 +366,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { refDebounced } from "@vueuse/core";
@@ -394,9 +400,11 @@ const audiobookId = computed(() => {
 
 const isReportModalOpen = ref(false);
 const currentUrl = computed(() => route.fullPath);
+const { page: castPage, setPage: setCastPage } =
+  useUrlPagination("castPage");
 
 // Instant Hydration Data Fetching
-const { data, pending } = await useAsyncData(
+const { data, pending, refresh } = await useAsyncData(
   `audiobook-${audiobookId.value}-${locale.value}`,
   () => fetchAudiobookData(audiobookId.value, locale.value),
   {
@@ -508,6 +516,14 @@ const filteredCast = computed(() => {
     const perf = (item.performance || "").toLowerCase();
     return fullName.includes(q) || char.includes(q) || perf.includes(q);
   });
+});
+
+watch([debouncedSearch, activeDubId], () => {
+  void refresh();
+});
+
+watch(debouncedSearch, () => {
+  void setCastPage(1);
 });
 
 // SEO Meta
