@@ -231,7 +231,7 @@
             class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
           >
             <div
-              v-for="actor in visibleCast"
+              v-for="actor in filteredCast"
               :key="actor.id"
               class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border"
             >
@@ -414,24 +414,6 @@
               </div>
             </div>
           </div>
-
-          <!-- Progressive load more sentinel -->
-          <div
-            v-if="hasMoreCast"
-            ref="loadMoreSentinel"
-            class="py-10 flex flex-col items-center justify-center gap-3"
-          >
-            <button
-              @click="loadMoreCast"
-              class="px-5 py-2.5 theme-surface theme-hover-surface-muted text-sm font-medium rounded-xl theme-text-secondary theme-text transition-all border theme-border-subtle theme-border shadow-sm cursor-pointer"
-            >
-              {{ $t("common.loadMore", "Load more") }}
-            </button>
-            <span class="text-xs theme-text-muted">
-              {{ visibleCast.length }} / {{ filteredCast.length }}
-              {{ $t("details.castAndCrew") }}
-            </span>
-          </div>
         </section>
         <section v-else class="text-center py-12 theme-text-muted">
           {{ $t("details.noCast") }}
@@ -472,7 +454,7 @@ import { useRoute, useRouter } from "vue-router";
 
 import { fetchEpisodeData } from "@app/shared-logic";
 import { computed, ref, watch } from "vue";
-import { useIntersectionObserver, refDebounced } from "@vueuse/core";
+import { refDebounced } from "@vueuse/core";
 import {
   ArrowLeftIcon,
   ClapperboardIcon,
@@ -728,31 +710,6 @@ const filteredCast = computed(() => {
       vaPerformance.includes(query)
     );
   });
-});
-
-const displayedCastCount = ref(36);
-const visibleCast = computed(() => {
-  return filteredCast.value.slice(0, displayedCastCount.value);
-});
-const hasMoreCast = computed(() => {
-  return displayedCastCount.value < filteredCast.value.length;
-});
-const loadMoreCast = () => {
-  displayedCastCount.value += 36;
-};
-const loadMoreSentinel = ref<HTMLElement | null>(null);
-useIntersectionObserver(
-  loadMoreSentinel,
-  ([entry]) => {
-    if (entry?.isIntersecting && hasMoreCast.value) {
-      loadMoreCast();
-    }
-  },
-  { rootMargin: "400px" },
-);
-
-watch(debouncedSearch, () => {
-  displayedCastCount.value = 36;
 });
 
 useHead({

@@ -71,125 +71,109 @@
 
     <!-- Studios Grid -->
     <div v-else>
-      <div
-        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6"
+      <PaginatedResponsiveGrid
+        :items="studios"
+        :total-items="totalStudios"
+        :page-size="pageSize"
+        :page="page"
+        grid-class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6"
+        @update:page="page = $event"
       >
-        <NuxtLink
-          v-for="studio in visibleStudios"
-          :key="studio.id"
-          :to="localePath('/studio/' + studio.id)"
-          class="group cursor-pointer block"
-        >
-          <div
-            class="relative w-full aspect-square rounded-xl overflow-hidden mb-3 theme-surface-muted flex items-center justify-center shadow-md transition-transform duration-300 group-hover:-translate-y-1 group-hover:shadow-xl"
+        <template #default="{ item: studio }">
+          <NuxtLink
+            :to="localePath('/studio/' + studio.id)"
+            class="group cursor-pointer block"
           >
-            <img
-              v-if="studio.logo_url"
-              :src="studio.logo_url"
-              :alt="studio.name"
-              loading="lazy"
-              decoding="async"
-              class="object-contain w-full h-full p-4 transition duration-500 bg-white"
-            />
-            <span v-else class="text-4xl font-bold theme-text-muted">{{
-              studio.name?.charAt(0) || ""
-            }}</span>
-          </div>
-          <h3
-            class="font-semibold text-sm md:text-base theme-text line-clamp-2 theme-hover-primary-text transition-colors"
-          >
-            {{ studio.name }}
-          </h3>
-          <p
-            v-if="studio.city || studio.country"
-            class="text-xs theme-text-muted mt-1"
-          >
-            {{ [studio.city, studio.country].filter(Boolean).join(", ") }}
-          </p>
-        </NuxtLink>
-      </div>
-
-      <!-- Sentinel & Load More -->
-      <div
-        v-if="hasMore"
-        ref="loadMoreSentinel"
-        class="py-10 flex flex-col items-center justify-center gap-3"
-      >
-        <button
-          @click="loadMore"
-          class="px-5 py-2.5 theme-surface theme-hover-surface-muted text-sm font-medium rounded-xl theme-text-secondary theme-text transition-all border theme-border-subtle theme-border shadow-sm cursor-pointer"
-        >
-          {{ $t("common.loadMore", "Load more") }}
-        </button>
-        <span class="text-xs theme-text-muted">{{
-          $t("studio.studiosCount", {
-            shown: visibleStudios.length,
-            total: filteredStudios.length,
-          })
-        }}</span>
-      </div>
+            <div
+              class="relative w-full aspect-square rounded-xl overflow-hidden mb-3 theme-surface-muted flex items-center justify-center shadow-md transition-transform duration-300 group-hover:-translate-y-1 group-hover:shadow-xl"
+            >
+              <img
+                v-if="studio.logo_url"
+                :src="studio.logo_url"
+                :alt="studio.name"
+                loading="lazy"
+                decoding="async"
+                class="object-contain w-full h-full p-4 transition duration-500 bg-white"
+              />
+              <span v-else class="text-4xl font-bold theme-text-muted">{{
+                studio.name?.charAt(0) || ""
+              }}</span>
+            </div>
+            <h3
+              class="font-semibold text-sm md:text-base theme-text line-clamp-2 theme-hover-primary-text transition-colors"
+            >
+              {{ studio.name }}
+            </h3>
+            <p
+              v-if="studio.city || studio.country"
+              class="text-xs theme-text-muted mt-1"
+            >
+              {{ [studio.city, studio.country].filter(Boolean).join(", ") }}
+            </p>
+          </NuxtLink>
+        </template>
+      </PaginatedResponsiveGrid>
+      <span class="block text-xs theme-text-muted mt-4">{{
+        $t("studio.studiosCount", {
+          shown: studios.length,
+          total: totalStudios,
+        })
+      }}</span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import { useStudioData, fetchStudiosData } from "@app/shared-logic";
-import { useIntersectionObserver, refDebounced } from "@vueuse/core";
+import { refDebounced } from "@vueuse/core";
 
-const supabase = useSupabaseClient();
 const localePath = useLocalePath();
 
 const searchInput = ref("");
 const debouncedSearch = refDebounced(searchInput, 150);
 
-const { data: initialStudios } = await useAsyncData(
+interface Studio {
+  id: number;
+  name: string;
+  city: string | null;
+  country: string | null;
+  logo_url: string | null;
+}
+
+interface StudiosPage {
+  studios: Studio[];
+  total: number;
+}
+
+const pageSize = 20;
+const page = ref(1);
+
+const {
+  data,
+  pending: loading,
+  error,
+} = await useAsyncData<StudiosPage>(
   "studios-page",
-  () => fetchStudiosData(),
+  () =>
+    $fetch<StudiosPage>("/api/get-studio-details", {
+      query: {
+        limit: pageSize,
+        offset: (page.value - 1) * pageSize,
+        query: debouncedSearch.value.trim() || undefined,
+      },
+    }),
   {
     getCachedData: (key, nuxtApp) =>
       nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+    watch: [debouncedSearch, page],
   },
 );
 
-const { studios, loading, error } = useStudioData(initialStudios.value);
-
-const filteredStudios = computed(() => {
-  if (!debouncedSearch.value.trim()) return studios.value;
-  const query = debouncedSearch.value.toLowerCase().trim();
-  return studios.value.filter((s: any) => {
-    const name = (s.name || "").toLowerCase();
-    const city = (s.city || "").toLowerCase();
-    const country = (s.country || "").toLowerCase();
-    return (
-      name.includes(query) || city.includes(query) || country.includes(query)
-    );
-  });
-});
-
-const displayedCount = ref(20);
-const visibleStudios = computed(() => {
-  return filteredStudios.value.slice(0, displayedCount.value);
-});
-const hasMore = computed(() => {
-  return displayedCount.value < filteredStudios.value.length;
-});
-const loadMore = () => {
-  displayedCount.value += 20;
-};
-const loadMoreSentinel = ref<HTMLElement | null>(null);
-useIntersectionObserver(
-  loadMoreSentinel,
-  ([entry]) => {
-    if (entry?.isIntersecting && hasMore.value) {
-      loadMore();
-    }
-  },
-  { rootMargin: "400px" },
-);
+const studios = computed(() => data.value?.studios ?? []);
+const totalStudios = computed(() => data.value?.total ?? 0);
 
 watch(debouncedSearch, () => {
-  displayedCount.value = 20;
+  page.value = 1;
 });
 
 useHead({

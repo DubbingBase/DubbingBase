@@ -88,7 +88,7 @@
             <div class="theme-text-muted text-sm mt-1">
               {{
                 $t("studio.shownCount", {
-                  shown: visibleProjects.length,
+                  shown: filteredProjects.length,
                   total: filteredProjects.length,
                 })
               }}
@@ -110,7 +110,7 @@
           class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6"
         >
           <NuxtLink
-            v-for="project in visibleProjects"
+            v-for="project in filteredProjects"
             :key="project.id"
             :to="
               localePath(getMediaLink(project.content_type, project.content_id))
@@ -199,26 +199,6 @@
             </div>
           </NuxtLink>
         </div>
-
-        <!-- Sentinel / Load more for projects -->
-        <div
-          v-if="hasMoreProjects"
-          ref="projectsSentinel"
-          class="py-8 flex flex-col items-center justify-center gap-2"
-        >
-          <button
-            @click="loadMoreProjects"
-            class="px-5 py-2 theme-surface theme-hover-surface-muted text-sm font-medium rounded-xl theme-text-secondary theme-text transition-all border theme-border-subtle theme-border shadow-sm cursor-pointer"
-          >
-            {{ $t("common.loadMore", "Load more") }}
-          </button>
-          <span class="text-xs theme-text-muted">{{
-            $t("studio.projectsCount", {
-              shown: visibleProjects.length,
-              total: filteredProjects.length,
-            })
-          }}</span>
-        </div>
       </section>
 
       <!-- Voice Actors Roster -->
@@ -238,7 +218,7 @@
             >
               {{
                 $t("studio.shownCount", {
-                  shown: visibleVoiceActors.length,
+                  shown: voiceActorsRoster.length,
                   total: voiceActorsRoster.length,
                 })
               }}
@@ -249,7 +229,7 @@
           class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
         >
           <NuxtLink
-            v-for="va in visibleVoiceActors"
+            v-for="va in voiceActorsRoster"
             :key="va.id"
             :to="localePath(`/voice-actor/${va.id}`)"
             class="group"
@@ -284,26 +264,6 @@
             </div>
           </NuxtLink>
         </div>
-
-        <!-- Sentinel / Load more for voice actors -->
-        <div
-          v-if="hasMoreVoiceActors"
-          ref="vaSentinel"
-          class="py-8 flex flex-col items-center justify-center gap-2"
-        >
-          <button
-            @click="loadMoreVoiceActors"
-            class="px-5 py-2 theme-surface theme-hover-surface-muted text-sm font-medium rounded-xl theme-text-secondary theme-text transition-all border theme-border-subtle theme-border shadow-sm cursor-pointer"
-          >
-            {{ $t("common.loadMore", "Load more") }}
-          </button>
-          <span class="text-xs theme-text-muted">{{
-            $t("studio.actorsCount", {
-              shown: visibleVoiceActors.length,
-              total: voiceActorsRoster.length,
-            })
-          }}</span>
-        </div>
       </section>
     </div>
   </DetailsPage>
@@ -323,7 +283,7 @@ import { computed, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { useStudioData, fetchStudioDetails } from "@app/shared-logic";
 import { ExternalLinkIcon, SearchIcon } from "lucide-vue-next";
-import { useIntersectionObserver, refDebounced } from "@vueuse/core";
+import { refDebounced } from "@vueuse/core";
 import DetailsPage from "../../components/layout/details/DetailsPage.vue";
 import DetailsHero from "../../components/layout/details/DetailsHero.vue";
 import DetailsActionBar from "../../components/layout/details/DetailsActionBar.vue";
@@ -390,52 +350,6 @@ const filteredProjects = computed(() => {
     return title.includes(query);
   });
 });
-
-const displayedProjectsCount = ref(20);
-const visibleProjects = computed(() => {
-  return filteredProjects.value.slice(0, displayedProjectsCount.value);
-});
-const hasMoreProjects = computed(() => {
-  return displayedProjectsCount.value < filteredProjects.value.length;
-});
-const loadMoreProjects = () => {
-  displayedProjectsCount.value += 20;
-};
-const projectsSentinel = ref<HTMLElement | null>(null);
-useIntersectionObserver(
-  projectsSentinel,
-  ([entry]) => {
-    if (entry?.isIntersecting && hasMoreProjects.value) {
-      loadMoreProjects();
-    }
-  },
-  { rootMargin: "400px" },
-);
-
-watch(debouncedSearch, () => {
-  displayedProjectsCount.value = 20;
-});
-
-const displayedVACount = ref(25);
-const visibleVoiceActors = computed(() => {
-  return voiceActorsRoster.value.slice(0, displayedVACount.value);
-});
-const hasMoreVoiceActors = computed(() => {
-  return displayedVACount.value < voiceActorsRoster.value.length;
-});
-const loadMoreVoiceActors = () => {
-  displayedVACount.value += 25;
-};
-const vaSentinel = ref<HTMLElement | null>(null);
-useIntersectionObserver(
-  vaSentinel,
-  ([entry]) => {
-    if (entry?.isIntersecting && hasMoreVoiceActors.value) {
-      loadMoreVoiceActors();
-    }
-  },
-  { rootMargin: "400px" },
-);
 
 const getProfileUrl = (path: string) => {
   if (path.startsWith("http")) return path;

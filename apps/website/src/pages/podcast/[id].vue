@@ -196,7 +196,7 @@
           </div>
 
           <div
-            v-if="visibleCast.length === 0"
+            v-if="filteredCast.length === 0"
             class="text-center py-16 theme-surface-raised theme-surface-overlay rounded-2xl border theme-border-subtle theme-border theme-text-muted text-sm"
           >
             {{
@@ -211,7 +211,7 @@
             class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
           >
             <div
-              v-for="item in visibleCast"
+              v-for="item in filteredCast"
               :key="item.work_id"
               class="theme-surface-overlay border theme-border-subtle theme-border rounded-2xl p-4 flex gap-4 items-center theme-hover-border transition-colors group shadow-md"
             >
@@ -250,15 +250,6 @@
               </div>
             </div>
           </div>
-
-          <!-- Bottom Sentinel for Progressive Loading -->
-          <div
-            v-if="hasMoreCast"
-            ref="castSentinel"
-            class="h-10 flex items-center justify-center text-xs theme-text-muted"
-          >
-            {{ $t("podcast.loadingMoreActors") }}
-          </div>
         </section>
       </template>
     </MediaDetailsLayout>
@@ -272,10 +263,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, useTemplateRef } from "vue";
+import { ref, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
-import { useIntersectionObserver, refDebounced } from "@vueuse/core";
+import { refDebounced } from "@vueuse/core";
 import MediaSkeleton from "../../components/MediaSkeleton.vue";
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import ReportModal from "../../components/ReportModal.vue";
@@ -419,26 +410,6 @@ function openExternalUrl(url?: string) {
     window.open(url, "_blank");
   }
 }
-
-const batchSize = ref(24);
-const visibleCast = computed(() =>
-  filteredCast.value.slice(0, batchSize.value),
-);
-const hasMoreCast = computed(
-  () => visibleCast.value.length < filteredCast.value.length,
-);
-
-const castSentinel = useTemplateRef<HTMLElement>("castSentinel");
-useIntersectionObserver(
-  castSentinel,
-  (entries) => {
-    const entry = entries?.[0];
-    if (entry?.isIntersecting && hasMoreCast.value) {
-      batchSize.value += 24;
-    }
-  },
-  { rootMargin: "200px" },
-);
 
 useHead({
   title: computed(() =>

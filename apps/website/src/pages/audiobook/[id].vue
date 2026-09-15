@@ -289,7 +289,7 @@
             class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
           >
             <div
-              v-for="item in visibleCast"
+              v-for="item in filteredCast"
               :key="item.work_id"
               class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border"
             >
@@ -347,23 +347,6 @@
               </div>
             </div>
           </div>
-
-          <!-- Load more sentinel -->
-          <div
-            v-if="hasMore"
-            ref="sentinelRef"
-            class="py-8 flex flex-col items-center justify-center gap-2"
-          >
-            <button
-              @click="loadMore"
-              class="px-5 py-2 theme-surface theme-hover-surface-muted text-sm font-medium rounded-xl theme-text-secondary theme-text transition-all border theme-border-subtle theme-border shadow-sm cursor-pointer"
-            >
-              {{ $t("common.loadMore", "Charger plus") }}
-            </button>
-            <span class="text-xs theme-text-muted">
-              {{ visibleCast.length }} / {{ filteredCast.length }}
-            </span>
-          </div>
         </section>
       </template>
     </MediaDetailsLayout>
@@ -377,10 +360,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, useTemplateRef } from "vue";
+import { ref, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
-import { useIntersectionObserver, refDebounced } from "@vueuse/core";
+import { refDebounced } from "@vueuse/core";
 import MediaSkeleton from "../../components/MediaSkeleton.vue";
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import ReportModal from "../../components/ReportModal.vue";
@@ -525,29 +508,6 @@ const filteredCast = computed(() => {
     const perf = (item.performance || "").toLowerCase();
     return fullName.includes(q) || char.includes(q) || perf.includes(q);
   });
-});
-
-// Progressive batching for long cast lists
-const BATCH_SIZE = 24;
-const currentBatchCount = ref(1);
-
-const visibleCast = computed(() => {
-  return filteredCast.value.slice(0, currentBatchCount.value * BATCH_SIZE);
-});
-
-const hasMore = computed(() => {
-  return visibleCast.value.length < filteredCast.value.length;
-});
-
-function loadMore() {
-  currentBatchCount.value += 1;
-}
-
-const sentinelRef = useTemplateRef<HTMLElement>("sentinelRef");
-useIntersectionObserver(sentinelRef, ([entry]) => {
-  if (entry?.isIntersecting && hasMore.value) {
-    loadMore();
-  }
 });
 
 // SEO Meta

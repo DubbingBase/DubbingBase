@@ -189,7 +189,7 @@
             class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
           >
             <div
-              v-for="item in visibleFilmography"
+              v-for="item in enhancedFilmography"
               :key="`${item.media_type}-${item.id}`"
               class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border block group"
             >
@@ -338,24 +338,6 @@
               </div>
             </div>
           </div>
-
-          <!-- Infinite Scroll Sentinel & Load More button -->
-          <div
-            v-if="hasMore"
-            ref="loadMoreSentinel"
-            class="py-10 flex flex-col items-center justify-center gap-3"
-          >
-            <button
-              @click="loadMore"
-              class="px-5 py-2.5 theme-surface theme-hover-surface-muted text-sm font-medium rounded-xl theme-text-secondary theme-text transition-all border theme-border-subtle theme-border shadow-sm cursor-pointer"
-            >
-              {{ $t("common.loadMore", "Load more") }}
-            </button>
-            <span class="text-xs theme-text-muted">
-              {{ visibleFilmography.length }} / {{ enhancedFilmography.length }}
-              {{ $t("actor.works", "œuvres") }}
-            </span>
-          </div>
         </section>
       </template>
     </PersonDetailsLayout>
@@ -368,7 +350,7 @@
 import PersonDetailsLayout from "../../components/layout/PersonDetailsLayout.vue";
 import { onMounted, ref, watch, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { useIntersectionObserver, refDebounced } from "@vueuse/core";
+import { refDebounced } from "@vueuse/core";
 import { ArrowLeftIcon, ClapperboardIcon, UserIcon } from "lucide-vue-next";
 import { useActorData, fetchActorData } from "@app/shared-logic";
 import ReportModal from "../../components/ReportModal.vue";
@@ -410,35 +392,6 @@ const searchInput = ref("");
 const debouncedSearch = refDebounced(searchInput, 150);
 watch(debouncedSearch, (val) => {
   searchQuery.value = val;
-});
-
-const displayedCount = ref(36);
-const visibleFilmography = computed(() =>
-  enhancedFilmography.value.slice(0, displayedCount.value),
-);
-
-const hasMore = computed(
-  () => displayedCount.value < enhancedFilmography.value.length,
-);
-
-const loadMore = () => {
-  displayedCount.value += 36;
-};
-
-const loadMoreSentinel = ref<HTMLElement | null>(null);
-
-useIntersectionObserver(
-  loadMoreSentinel,
-  ([entry]) => {
-    if (entry?.isIntersecting && hasMore.value) {
-      loadMore();
-    }
-  },
-  { rootMargin: "400px" },
-);
-
-watch([searchQuery, selectedLanguage], () => {
-  displayedCount.value = 36;
 });
 
 useHead({

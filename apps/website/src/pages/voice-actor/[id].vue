@@ -653,25 +653,6 @@
               </div>
             </div>
           </template>
-
-          <!-- Infinite Scroll Sentinel & Load More button -->
-          <div
-            v-if="hasMore"
-            ref="loadMoreSentinel"
-            class="py-10 flex flex-col items-center justify-center gap-3"
-          >
-            <button
-              @click="loadMore"
-              class="px-5 py-2.5 theme-surface theme-hover-surface-muted text-sm font-medium rounded-xl theme-text-secondary theme-text transition-all border theme-border-subtle theme-border shadow-sm cursor-pointer"
-            >
-              {{ $t("common.loadMore", "Load more") }}
-            </button>
-            <span class="text-xs theme-text-muted">
-              {{
-                `${visibleGroupedWorks.length} / ${groupedWorks.length} actors`
-              }}
-            </span>
-          </div>
         </section>
       </template>
     </PersonDetailsLayout>
@@ -707,7 +688,7 @@ import {
 } from "lucide-vue-next";
 import ReportModal from "../../components/ReportModal.vue";
 import { computed, ref, watch } from "vue";
-import { useIntersectionObserver, refDebounced } from "@vueuse/core";
+import { refDebounced } from "@vueuse/core";
 
 const isReportModalOpen = ref(false);
 
@@ -1113,39 +1094,5 @@ const groupedWorks = computed(() => {
     }
     return a[0].localeCompare(b[0]);
   });
-});
-
-const displayedGroupCount = ref(10);
-
-const visibleGroupedWorks = computed(() => {
-  return groupedWorks.value.slice(0, displayedGroupCount.value);
-});
-
-const hasMore = computed(() => {
-  return (
-    displayMode.value === "grouped" &&
-    displayedGroupCount.value < groupedWorks.value.length
-  );
-});
-
-const loadMore = () => {
-  displayedGroupCount.value += 10;
-};
-
-const loadMoreSentinel = ref<HTMLElement | null>(null);
-
-useIntersectionObserver(
-  loadMoreSentinel,
-  ([entry]) => {
-    if (entry?.isIntersecting && hasMore.value) {
-      loadMore();
-    }
-  },
-  { rootMargin: "400px" },
-);
-
-// Reset displayed counts on search, tab, sort or display mode changes
-watch([searchQuery, activeTab, sortMode, displayMode], () => {
-  displayedGroupCount.value = 10;
 });
 </script>
