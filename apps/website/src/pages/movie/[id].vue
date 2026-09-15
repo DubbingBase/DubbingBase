@@ -187,8 +187,8 @@
                 <div class="theme-text-muted text-sm mt-1">
                   {{
                     $t("media.rolesCount", {
-                      shown: filteredCast.length,
-                      total: formattedCast.length,
+                      shown: castItems.length,
+                      total: castTotal,
                     })
                   }}
                 </div>
@@ -210,10 +210,13 @@
 
           <PaginatedResponsiveGrid
             :key="searchQuery"
-            :items="filteredCast"
+            :items="castItems"
+            :total-items="castTotal"
+            :page="castPage"
             :page-size="12"
             grid-class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
             :item-key="(actor) => actor.id"
+            @update:page="setCastPage"
           >
             <template #default="{ item: actor }">
               <div
@@ -237,7 +240,6 @@
                     >
                       <NuxtImg
                         format="webp"
-                        loading="lazy"
                         decoding="async"
                         v-if="actor.profile_path"
                         :src="actor.profile_path"
@@ -275,7 +277,6 @@
                     >
                       <NuxtImg
                         format="webp"
-                        loading="lazy"
                         decoding="async"
                         v-if="actor.characterImage"
                         :src="actor.characterImage"
@@ -328,7 +329,6 @@
                       >
                         <NuxtImg
                           format="webp"
-                          loading="lazy"
                           decoding="async"
                           v-if="actor.voiceActor.profile_picture"
                           :src="actor.voiceActor.profile_picture"
@@ -411,8 +411,8 @@
           </PaginatedResponsiveGrid>
           <span class="block text-xs theme-text-muted mt-4">{{
             $t("media.rolesCount", {
-              shown: filteredCast.length,
-              total: filteredCast.length,
+              shown: castItems.length,
+              total: castTotal,
             })
           }}</span>
         </section>
@@ -434,7 +434,12 @@
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import { useRoute, useRouter } from "vue-router";
 
-import { fetchMovieData, findCharacter } from "@app/shared-logic";
+import {
+  fetchMovieData,
+  fetchDetailCollection,
+  findCharacter,
+} from "@app/shared-logic";
+import type { PaginatedResponse } from "@app/shared-logic";
 import { computed, ref, watch } from "vue";
 import { refDebounced } from "@vueuse/core";
 import {
@@ -662,29 +667,36 @@ const formattedCast = computed(() => {
 
 const searchQuery = ref("");
 const searchInput = ref("");
+const { page: castPage, setPage: setCastPage } = useUrlPagination("castPage");
 const debouncedSearch = refDebounced(searchInput, 150);
 watch(debouncedSearch, (val) => {
   searchQuery.value = val;
 });
+watch([searchQuery, activeDubId], () => void setCastPage(1));
 
-const filteredCast = computed(() => {
-  if (!searchQuery.value) return formattedCast.value;
-  const query = searchQuery.value.toLowerCase().trim();
-  return formattedCast.value.filter((actor: any) => {
-    const actorName = actor.name?.toLowerCase() || "";
-    const characterName = actor.character?.toLowerCase() || "";
-    const vaName = actor.voiceActor
-      ? `${actor.voiceActor.firstname || ""} ${actor.voiceActor.lastname || ""}`.toLowerCase()
-      : "";
-    const vaPerformance = actor.voiceActor?.performance?.toLowerCase() || "";
-    return (
-      actorName.includes(query) ||
-      characterName.includes(query) ||
-      vaName.includes(query) ||
-      vaPerformance.includes(query)
-    );
-  });
-});
+type MovieCastItem = Record<string, any>;
+const castRequest = computed(() => ({
+  collection: "media-cast" as const,
+  type: "movie",
+  id: movieId,
+  projectId: activeDubId.value || undefined,
+  query: searchQuery.value,
+  page: castPage.value,
+  pageSize: 12,
+}));
+const { data: castPageData } = useAsyncData<PaginatedResponse<MovieCastItem>>(
+  `movie-cast-${movieId}-${locale.value}`,
+  () => fetchDetailCollection<MovieCastItem>(castRequest.value),
+  {
+    watch: [castRequest],
+    getCachedData: (key, nuxtApp) =>
+      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+  },
+);
+const castItems = computed(() => castPageData.value?.data || []);
+const castTotal = computed(
+  () => castPageData.value?.pagination.totalItems || 0,
+);
 
 useHead({
   title: computed(() => {

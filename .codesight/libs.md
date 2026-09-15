@@ -101,6 +101,11 @@
   - type QueueName
   - type DiscordNotificationCategory
 - `apps/website/server/utils/notifications/onesignal.ts` — function sendOneSignalNotification: (title, message, options?) => void, interface OneSignalOptions
+- `apps/website/server/utils/pagination.ts`
+  - function parsePagination: (options) => ParsedPagination
+  - function paginateArray: (items, options) => void
+  - type PaginationOptions
+  - type ParsedPagination
 - `apps/website/server/utils/queue-payload.ts`
   - function validateCheckPayload: (payload) => Validated<ValidQueueBase>
   - function validateDiscoveryPayload: (payload) => Validated<ValidQueueBase>
@@ -131,10 +136,10 @@
   - const TMDB_CONFIG
 - `apps/website/src/composables/useContribute.ts` — function fetchRandomTask, function useContribute
 - `apps/website/src/composables/useDragScroll.ts` — function useDragScroll: (scrollRef) => void
-- `apps/website/src/composables/useProgressiveBatch.ts` — function useProgressiveBatch: (items, options) => void, interface UseProgressiveBatchOptions
 - `apps/website/src/composables/useReports.ts` — function useReports
 - `apps/website/src/composables/useSearchModal.ts` — function useSearchModal: () => void
 - `apps/website/src/composables/useTheme.ts` — function useTheme: () => void
+- `apps/website/src/composables/useUrlPagination.ts` — function readUrlPage: (value) => number, function useUrlPagination: (queryKey) => void
 - `apps/website/src/lib/media-editor-routes.ts` — function getMediaEditorRoute: ({...}, mediaId, projectId }) => string | null
 - `apps/website/src/lib/mediaQueue.ts` — function enqueueMedia: (params) => Promise<void>
 - `apps/website/src/utils/media-cast.ts`
@@ -156,6 +161,10 @@
   - type ActorDataPayload
 - `packages/shared-logic/src/composables/useAdvertisementData.ts` — function fetchAdvertisementData: (id, locale?) => Promise<AdvertisementResponse | null>
 - `packages/shared-logic/src/composables/useAudiobookData.ts` — function fetchAudiobookData: (id, locale?) => Promise<AudiobookResponse | null>
+- `packages/shared-logic/src/composables/useDetailCollections.ts`
+  - function fetchDetailCollection: (params) => Promise<PaginatedResponse<T>>
+  - type DetailCollection
+  - type DetailCollectionParams
 - `packages/shared-logic/src/composables/useEpisodeData.ts` — function fetchEpisodeData: (showId, seasonNumber, episodeNumber, locale?) => Promise<any | null>
 - `packages/shared-logic/src/composables/useGameData.ts` — function fetchGameData: (id, locale?) => Promise<any | null>
 - `packages/shared-logic/src/composables/useHomeData.ts`

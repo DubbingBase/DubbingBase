@@ -117,48 +117,54 @@
             </div>
           </div>
 
-          <div
-            v-if="filteredUniqueVoiceActorsByLanguage.length > 0"
-            class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+          <PaginatedResponsiveGrid
+            v-if="voiceActorsTotal > 0"
+            :items="voiceActorItems"
+            :total-items="voiceActorsTotal"
+            :page="voicesPage"
+            :page-size="12"
+            grid-class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+            :item-key="(va) => va.id"
+            @update:page="setVoicesPage"
           >
-            <NuxtLink
-              v-for="va in filteredUniqueVoiceActorsByLanguage"
-              :key="va.id"
-              :to="localePath(`/voice-actor/${va.id}`)"
-              :class="[
-                'flex flex-col items-center p-4 rounded-xl border transition group hover:-translate-y-1',
-                va.highlight
-                  ? 'theme-status-info theme-hover-surface-muted'
-                  : 'theme-input theme-border-subtle theme-border theme-hover-surface-muted',
-              ]"
-            >
-              <div
-                class="relative w-20 h-20 rounded-full overflow-hidden mb-3 border-2 border-transparent theme-hover-primary-border transition-colors"
+            <template #default="{ item: va }">
+              <NuxtLink
+                :key="va.id"
+                :to="localePath(`/voice-actor/${va.id}`)"
+                :class="[
+                  'flex flex-col items-center p-4 rounded-xl border transition group hover:-translate-y-1',
+                  va.highlight
+                    ? 'theme-status-info theme-hover-surface-muted'
+                    : 'theme-input theme-border-subtle theme-border theme-hover-surface-muted',
+                ]"
               >
-                <NuxtImg
-                  format="webp"
-                  loading="lazy"
-                  decoding="async"
-                  v-if="va.profile_picture"
-                  :src="va.profile_picture"
-                  :alt="`${va.firstname} ${va.lastname}`"
-                  class="object-cover w-full h-full"
-                />
                 <div
-                  v-else
-                  class="w-full h-full flex items-center justify-center theme-surface-raised theme-surface-muted theme-text-muted font-bold"
+                  class="relative w-20 h-20 rounded-full overflow-hidden mb-3 border-2 border-transparent theme-hover-primary-border transition-colors"
                 >
-                  {{ va.firstname?.[0] }}{{ va.lastname?.[0] }}
+                  <NuxtImg
+                    format="webp"
+                    decoding="async"
+                    v-if="va.profile_picture"
+                    :src="va.profile_picture"
+                    :alt="`${va.firstname} ${va.lastname}`"
+                    class="object-cover w-full h-full"
+                  />
+                  <div
+                    v-else
+                    class="w-full h-full flex items-center justify-center theme-surface-raised theme-surface-muted theme-text-muted font-bold"
+                  >
+                    {{ va.firstname?.[0] }}{{ va.lastname?.[0] }}
+                  </div>
                 </div>
-              </div>
-              <span class="block font-bold text-center text-sm theme-text">
-                {{ va.firstname }} {{ va.lastname }}
-              </span>
-              <span class="text-xs theme-text-muted mt-1"
-                >{{ va.rolesCount }}{{ $t("actor.roles") }}</span
-              >
-            </NuxtLink>
-          </div>
+                <span class="block font-bold text-center text-sm theme-text">
+                  {{ va.firstname }} {{ va.lastname }}
+                </span>
+                <span class="text-xs theme-text-muted mt-1"
+                  >{{ va.rolesCount }}{{ $t("actor.roles") }}</span
+                >
+              </NuxtLink>
+            </template>
+          </PaginatedResponsiveGrid>
           <div
             v-else
             class="theme-text-muted text-center py-8 theme-input rounded-2xl border theme-border-subtle theme-border"
@@ -178,184 +184,172 @@
           </div>
 
           <div
-            v-if="enhancedFilmography.length === 0"
+            v-if="filmographyTotal === 0"
             class="theme-text-muted text-center py-12 theme-input rounded-2xl border theme-border-subtle theme-border"
           >
             {{ $t("actor.noWorks") }}
           </div>
 
-          <div
+          <PaginatedResponsiveGrid
             v-else
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+            :items="filmographyItems"
+            :total-items="filmographyTotal"
+            :page="filmographyPage"
+            :page-size="12"
+            grid-class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+            :item-key="(item) => `${item.media_type}-${item.id}`"
+            @update:page="setFilmographyPage"
           >
-            <div
-              v-for="item in visibleFilmography"
-              :key="`${item.media_type}-${item.id}`"
-              class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border block group"
-            >
-              <div class="flex flex-col sm:grid sm:grid-cols-3 gap-4 h-full">
-                <!-- Column 1: Media -->
-                <NuxtLink
-                  :to="
-                    localePath(
-                      `/${item.media_type === 'tv' ? 'show' : 'movie'}/${item.id}`,
-                    )
-                  "
-                  class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start hover:opacity-80 transition-opacity cursor-pointer"
-                >
-                  <div
-                    class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden theme-surface-raised theme-surface-muted sm:mb-3 flex-shrink-0"
+            <template #default="{ item }">
+              <div
+                :key="`${item.media_type}-${item.id}`"
+                class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border block group"
+              >
+                <div class="flex flex-col sm:grid sm:grid-cols-3 gap-4 h-full">
+                  <!-- Column 1: Media -->
+                  <NuxtLink
+                    :to="
+                      localePath(
+                        `/${item.media_type === 'tv' ? 'show' : 'movie'}/${item.id}`,
+                      )
+                    "
+                    class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start hover:opacity-80 transition-opacity cursor-pointer"
                   >
-                    <NuxtImg
-                      format="webp"
-                      loading="lazy"
-                      decoding="async"
-                      v-if="item.poster_path"
-                      :src="resolveImageUrl(item.poster_path)"
-                      :alt="item.title || item.name"
-                      class="w-full h-full object-cover transition-transform duration-300"
-                    />
                     <div
-                      v-else
-                      class="w-full h-full flex items-center justify-center theme-text-muted"
+                      class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden theme-surface-raised theme-surface-muted sm:mb-3 flex-shrink-0"
                     >
-                      <ClapperboardIcon
-                        class="w-6 h-6 sm:w-8 sm:h-8 opacity-20"
+                      <NuxtImg
+                        format="webp"
+                        decoding="async"
+                        v-if="item.poster_path"
+                        :src="resolveImageUrl(item.poster_path)"
+                        :alt="item.title || item.name"
+                        class="w-full h-full object-cover transition-transform duration-300"
                       />
+                      <div
+                        v-else
+                        class="w-full h-full flex items-center justify-center theme-text-muted"
+                      >
+                        <ClapperboardIcon
+                          class="w-6 h-6 sm:w-8 sm:h-8 opacity-20"
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <div class="flex flex-col min-w-0 flex-1">
-                    <span
-                      class="text-[10px] theme-text-muted font-semibold uppercase tracking-wider mb-0.5"
-                      >{{
-                        item.release_date
-                          ? new Date(item.release_date).getFullYear()
-                          : item.first_air_date
-                            ? new Date(item.first_air_date).getFullYear()
-                            : "N/A"
-                      }}</span
-                    >
-                    <span
-                      class="font-bold text-sm theme-text leading-tight line-clamp-2"
-                      :title="item.title || item.name"
-                      >{{ item.title || item.name }}</span
-                    >
-                  </div>
-                </NuxtLink>
-
-                <!-- Column 2: Voice Actor -->
-                <NuxtLink
-                  v-if="item.voice_actors?.[0]"
-                  :to="localePath(`/voice-actor/${item.voice_actors[0].id}`)"
-                  class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t theme-border-subtle theme-border sm:border-t-0 pt-3 sm:pt-0 hover:opacity-80 transition-opacity cursor-pointer"
-                >
-                  <div
-                    class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden theme-surface-raised theme-surface-muted sm:mb-3 flex-shrink-0"
-                  >
-                    <NuxtImg
-                      format="webp"
-                      loading="lazy"
-                      decoding="async"
-                      v-if="item.voice_actors[0].profile_picture"
-                      :src="item.voice_actors[0].profile_picture"
-                      :alt="`${item.voice_actors[0].firstname} ${item.voice_actors[0].lastname}`"
-                      class="w-full h-full object-cover"
-                    />
-                    <div
-                      v-else
-                      class="w-full h-full flex items-center justify-center theme-text-muted text-xs font-bold theme-surface-raised theme-input"
-                    >
+                    <div class="flex flex-col min-w-0 flex-1">
                       <span
-                        >{{ item.voice_actors[0].firstname?.[0]
-                        }}{{ item.voice_actors[0].lastname?.[0] }}</span
+                        class="text-[10px] theme-text-muted font-semibold uppercase tracking-wider mb-0.5"
+                        >{{
+                          item.release_date
+                            ? new Date(item.release_date).getFullYear()
+                            : item.first_air_date
+                              ? new Date(item.first_air_date).getFullYear()
+                              : "N/A"
+                        }}</span
+                      >
+                      <span
+                        class="font-bold text-sm theme-text leading-tight line-clamp-2"
+                        :title="item.title || item.name"
+                        >{{ item.title || item.name }}</span
+                      >
+                    </div>
+                  </NuxtLink>
+
+                  <!-- Column 2: Voice Actor -->
+                  <NuxtLink
+                    v-if="item.voice_actors?.[0]"
+                    :to="localePath(`/voice-actor/${item.voice_actors[0].id}`)"
+                    class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t theme-border-subtle theme-border sm:border-t-0 pt-3 sm:pt-0 hover:opacity-80 transition-opacity cursor-pointer"
+                  >
+                    <div
+                      class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden theme-surface-raised theme-surface-muted sm:mb-3 flex-shrink-0"
+                    >
+                      <NuxtImg
+                        format="webp"
+                        decoding="async"
+                        v-if="item.voice_actors[0].profile_picture"
+                        :src="item.voice_actors[0].profile_picture"
+                        :alt="`${item.voice_actors[0].firstname} ${item.voice_actors[0].lastname}`"
+                        class="w-full h-full object-cover"
+                      />
+                      <div
+                        v-else
+                        class="w-full h-full flex items-center justify-center theme-text-muted text-xs font-bold theme-surface-raised theme-input"
+                      >
+                        <span
+                          >{{ item.voice_actors[0].firstname?.[0]
+                          }}{{ item.voice_actors[0].lastname?.[0] }}</span
+                        >
+                      </div>
+                    </div>
+                    <div class="flex flex-col min-w-0 flex-1">
+                      <span
+                        class="text-[10px] theme-text-muted font-semibold uppercase tracking-wider mb-0.5"
+                        >{{ $t("details.voicedBy") }}</span
+                      >
+                      <span
+                        class="font-medium text-sm theme-text-secondary leading-tight line-clamp-2"
+                      >
+                        {{ item.voice_actors[0].firstname }}
+                        {{ item.voice_actors[0].lastname }}
+                      </span>
+                    </div>
+                  </NuxtLink>
+                  <div
+                    v-else
+                    class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t theme-border-subtle theme-border sm:border-t-0 pt-3 sm:pt-0"
+                  >
+                    <div
+                      class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden theme-surface-raised theme-surface-muted sm:mb-3 flex-shrink-0"
+                    >
+                      <div
+                        class="w-full h-full flex items-center justify-center theme-text-muted text-xs font-bold theme-surface-raised theme-input"
+                      >
+                        <UserIcon class="w-6 h-6 sm:w-8 sm:h-8 opacity-20" />
+                      </div>
+                    </div>
+                    <div class="flex flex-col min-w-0 flex-1">
+                      <span
+                        class="text-[10px] theme-text-muted font-semibold uppercase tracking-wider mb-0.5"
+                        >{{ $t("details.voicedBy") }}</span
+                      >
+                      <span
+                        class="font-medium text-sm theme-text-muted italic"
+                        >{{ $t("details.unknownCharacter") }}</span
                       >
                     </div>
                   </div>
-                  <div class="flex flex-col min-w-0 flex-1">
-                    <span
-                      class="text-[10px] theme-text-muted font-semibold uppercase tracking-wider mb-0.5"
-                      >{{ $t("details.voicedBy") }}</span
-                    >
-                    <span
-                      class="font-medium text-sm theme-text-secondary leading-tight line-clamp-2"
-                    >
-                      {{ item.voice_actors[0].firstname }}
-                      {{ item.voice_actors[0].lastname }}
-                    </span>
-                  </div>
-                </NuxtLink>
-                <div
-                  v-else
-                  class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t theme-border-subtle theme-border sm:border-t-0 pt-3 sm:pt-0"
-                >
-                  <div
-                    class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden theme-surface-raised theme-surface-muted sm:mb-3 flex-shrink-0"
-                  >
-                    <div
-                      class="w-full h-full flex items-center justify-center theme-text-muted text-xs font-bold theme-surface-raised theme-input"
-                    >
-                      <UserIcon class="w-6 h-6 sm:w-8 sm:h-8 opacity-20" />
-                    </div>
-                  </div>
-                  <div class="flex flex-col min-w-0 flex-1">
-                    <span
-                      class="text-[10px] theme-text-muted font-semibold uppercase tracking-wider mb-0.5"
-                      >{{ $t("details.voicedBy") }}</span
-                    >
-                    <span class="font-medium text-sm theme-text-muted italic">{{
-                      $t("details.unknownCharacter")
-                    }}</span>
-                  </div>
-                </div>
 
-                <!-- Column 3: Character -->
-                <div
-                  class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t theme-border-subtle theme-border sm:border-t-0 pt-3 sm:pt-0"
-                >
+                  <!-- Column 3: Character -->
                   <div
-                    class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden theme-surface-raised theme-surface-muted sm:mb-3 relative flex-shrink-0"
+                    class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t theme-border-subtle theme-border sm:border-t-0 pt-3 sm:pt-0"
                   >
-                    <!-- Note: character image from db is not fully integrated in item yet, falling back to a placeholder -->
                     <div
-                      class="w-full h-full flex items-center justify-center theme-text-muted"
+                      class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden theme-surface-raised theme-surface-muted sm:mb-3 relative flex-shrink-0"
                     >
-                      <UserIcon class="w-6 h-6 sm:w-8 sm:h-8 opacity-20" />
+                      <!-- Note: character image from db is not fully integrated in item yet, falling back to a placeholder -->
+                      <div
+                        class="w-full h-full flex items-center justify-center theme-text-muted"
+                      >
+                        <UserIcon class="w-6 h-6 sm:w-8 sm:h-8 opacity-20" />
+                      </div>
                     </div>
-                  </div>
-                  <div class="flex flex-col min-w-0 flex-1">
-                    <span
-                      class="text-[10px] theme-text-muted font-semibold uppercase tracking-wider mb-0.5"
-                      >{{ $t("details.as") }}</span
-                    >
-                    <span
-                      class="font-medium text-sm theme-text-secondary leading-tight line-clamp-2"
-                      >{{
-                        item.character || $t("details.unknownCharacter")
-                      }}</span
-                    >
+                    <div class="flex flex-col min-w-0 flex-1">
+                      <span
+                        class="text-[10px] theme-text-muted font-semibold uppercase tracking-wider mb-0.5"
+                        >{{ $t("details.as") }}</span
+                      >
+                      <span
+                        class="font-medium text-sm theme-text-secondary leading-tight line-clamp-2"
+                        >{{
+                          item.character || $t("details.unknownCharacter")
+                        }}</span
+                      >
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <!-- Infinite Scroll Sentinel & Load More button -->
-          <div
-            v-if="hasMore"
-            ref="loadMoreSentinel"
-            class="py-10 flex flex-col items-center justify-center gap-3"
-          >
-            <button
-              @click="loadMore"
-              class="px-5 py-2.5 theme-surface theme-hover-surface-muted text-sm font-medium rounded-xl theme-text-secondary theme-text transition-all border theme-border-subtle theme-border shadow-sm cursor-pointer"
-            >
-              {{ $t("common.loadMore", "Load more") }}
-            </button>
-            <span class="text-xs theme-text-muted">
-              {{ visibleFilmography.length }} / {{ enhancedFilmography.length }}
-              {{ $t("actor.works", "œuvres") }}
-            </span>
-          </div>
+            </template>
+          </PaginatedResponsiveGrid>
         </section>
       </template>
     </PersonDetailsLayout>
@@ -368,9 +362,14 @@
 import PersonDetailsLayout from "../../components/layout/PersonDetailsLayout.vue";
 import { onMounted, ref, watch, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { useIntersectionObserver, refDebounced } from "@vueuse/core";
+import { refDebounced } from "@vueuse/core";
 import { ArrowLeftIcon, ClapperboardIcon, UserIcon } from "lucide-vue-next";
-import { useActorData, fetchActorData } from "@app/shared-logic";
+import {
+  useActorData,
+  fetchActorData,
+  fetchDetailCollection,
+} from "@app/shared-logic";
+import type { PaginatedResponse } from "@app/shared-logic";
 import ReportModal from "../../components/ReportModal.vue";
 
 const isReportModalOpen = ref(false);
@@ -393,53 +392,73 @@ const { data: initialData } = await useAsyncData(
   },
 );
 
-const {
-  actor,
-  loading,
-  searchQuery,
-  filteredCredits,
-  enhancedFilmography,
-  availableLanguages,
-  selectedLanguage,
-  uniqueVoiceActorsByLanguage,
-  filteredUniqueVoiceActorsByLanguage,
-  loadActorData,
-} = useActorData(initialData);
+const { actor, loading, searchQuery, availableLanguages, selectedLanguage } =
+  useActorData(initialData);
 
 const searchInput = ref("");
+const { page: voicesPage, setPage: setVoicesPage } =
+  useUrlPagination("voicesPage");
+const { page: filmographyPage, setPage: setFilmographyPage } =
+  useUrlPagination("filmographyPage");
 const debouncedSearch = refDebounced(searchInput, 150);
 watch(debouncedSearch, (val) => {
   searchQuery.value = val;
 });
-
-const displayedCount = ref(36);
-const visibleFilmography = computed(() =>
-  enhancedFilmography.value.slice(0, displayedCount.value),
-);
-
-const hasMore = computed(
-  () => displayedCount.value < enhancedFilmography.value.length,
-);
-
-const loadMore = () => {
-  displayedCount.value += 36;
-};
-
-const loadMoreSentinel = ref<HTMLElement | null>(null);
-
-useIntersectionObserver(
-  loadMoreSentinel,
-  ([entry]) => {
-    if (entry?.isIntersecting && hasMore.value) {
-      loadMore();
-    }
-  },
-  { rootMargin: "400px" },
-);
-
 watch([searchQuery, selectedLanguage], () => {
-  displayedCount.value = 36;
+  void setVoicesPage(1);
+  void setFilmographyPage(1);
 });
+
+type ActorCollectionItem = Record<string, any>;
+const voiceActorsRequest = computed(() => ({
+  collection: "actor-voice-actors" as const,
+  id,
+  language:
+    selectedLanguage.value === "all" ? undefined : selectedLanguage.value,
+  query: searchQuery.value,
+  page: voicesPage.value,
+  pageSize: 12,
+}));
+const { data: voiceActorsPageData } = useAsyncData<
+  PaginatedResponse<ActorCollectionItem>
+>(
+  `actor-voice-actors-${id}`,
+  () => fetchDetailCollection<ActorCollectionItem>(voiceActorsRequest.value),
+  {
+    watch: [voiceActorsRequest],
+    getCachedData: (key, nuxtApp) =>
+      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+  },
+);
+const voiceActorItems = computed(() => voiceActorsPageData.value?.data || []);
+const voiceActorsTotal = computed(
+  () => voiceActorsPageData.value?.pagination.totalItems || 0,
+);
+
+const filmographyRequest = computed(() => ({
+  collection: "actor-filmography" as const,
+  id,
+  language:
+    selectedLanguage.value === "all" ? undefined : selectedLanguage.value,
+  query: searchQuery.value,
+  page: filmographyPage.value,
+  pageSize: 12,
+}));
+const { data: filmographyPageData } = useAsyncData<
+  PaginatedResponse<ActorCollectionItem>
+>(
+  `actor-filmography-${id}`,
+  () => fetchDetailCollection<ActorCollectionItem>(filmographyRequest.value),
+  {
+    watch: [filmographyRequest],
+    getCachedData: (key, nuxtApp) =>
+      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+  },
+);
+const filmographyItems = computed(() => filmographyPageData.value?.data || []);
+const filmographyTotal = computed(
+  () => filmographyPageData.value?.pagination.totalItems || 0,
+);
 
 useHead({
   titleTemplate: null,

@@ -249,8 +249,8 @@
                 <div class="theme-text-muted text-sm mt-1">
                   {{
                     $t("audiobook.castCount", {
-                      shown: filteredCast.length,
-                      total: formattedCast.length,
+                      shown: castItems.length,
+                      total: castTotal,
                     })
                   }}
                 </div>
@@ -273,7 +273,7 @@
           </div>
 
           <div
-            v-if="filteredCast.length === 0"
+            v-if="castTotal === 0"
             class="theme-text-muted text-center py-12 theme-input rounded-2xl border theme-border-subtle theme-border"
           >
             {{
@@ -284,86 +284,78 @@
             }}
           </div>
 
-          <div
+          <PaginatedResponsiveGrid
             v-else
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+            :items="castItems"
+            :total-items="castTotal"
+            :page="castPage"
+            :page-size="12"
+            grid-class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+            :item-key="(item) => item.work_id"
+            @update:page="setCastPage"
           >
-            <div
-              v-for="item in visibleCast"
-              :key="item.work_id"
-              class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border"
-            >
-              <div class="flex flex-col gap-4">
-                <div class="flex items-center gap-4">
-                  <NuxtLink
-                    :to="localePath(`/voice-actor/${item.voice_actor_id}`)"
-                    class="w-16 h-16 rounded-xl overflow-hidden theme-surface-muted flex-shrink-0"
-                  >
-                    <NuxtImg
-                      format="webp"
-                      loading="lazy"
-                      decoding="async"
-                      v-if="item.profile_picture"
-                      :src="item.profile_picture"
-                      class="w-full h-full object-cover"
-                      alt="Voice Actor"
-                    />
-                    <div
-                      v-else
-                      class="w-full h-full flex items-center justify-center text-lg font-bold theme-text-muted theme-surface-muted uppercase"
-                    >
-                      {{ item.firstname?.[0] }}{{ item.lastname?.[0] }}
-                    </div>
-                  </NuxtLink>
-
-                  <div class="flex flex-col min-w-0 flex-1">
+            <template #default="{ item }">
+              <div
+                :key="item.work_id"
+                class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border"
+              >
+                <div class="flex flex-col gap-4">
+                  <div class="flex items-center gap-4">
                     <NuxtLink
                       :to="localePath(`/voice-actor/${item.voice_actor_id}`)"
-                      class="font-bold text-base theme-text theme-hover-primary-text transition-colors truncate block"
+                      class="w-16 h-16 rounded-xl overflow-hidden theme-surface-muted flex-shrink-0"
                     >
-                      {{ item.firstname }} {{ item.lastname }}
-                    </NuxtLink>
-                    <span
-                      class="text-xs theme-text-muted font-medium truncate block mt-0.5"
-                    >
-                      {{
-                        item.character_name ||
-                        item.performance ||
-                        $t("audiobook.narrator", "Narrateur")
-                      }}
-                    </span>
-                    <div v-if="item.performance" class="mt-1">
-                      <span
-                        class="text-[10px] px-2 py-0.5 theme-surface-raised theme-surface-muted theme-text-secondary rounded-md font-medium border theme-border-subtle theme-border"
+                      <NuxtImg
+                        format="webp"
+                        decoding="async"
+                        v-if="item.profile_picture"
+                        :src="item.profile_picture"
+                        class="w-full h-full object-cover"
+                        alt="Voice Actor"
+                      />
+                      <div
+                        v-else
+                        class="w-full h-full flex items-center justify-center text-lg font-bold theme-text-muted theme-surface-muted uppercase"
                       >
-                        {{ item.performance }}
+                        {{ item.firstname?.[0] }}{{ item.lastname?.[0] }}
+                      </div>
+                    </NuxtLink>
+
+                    <div class="flex flex-col min-w-0 flex-1">
+                      <NuxtLink
+                        :to="localePath(`/voice-actor/${item.voice_actor_id}`)"
+                        class="font-bold text-base theme-text theme-hover-primary-text transition-colors truncate block"
+                      >
+                        {{ item.firstname }} {{ item.lastname }}
+                      </NuxtLink>
+                      <span
+                        class="text-xs theme-text-muted font-medium truncate block mt-0.5"
+                      >
+                        {{
+                          item.character_name ||
+                          item.performance ||
+                          $t("audiobook.narrator", "Narrateur")
+                        }}
                       </span>
-                    </div>
-                    <div v-if="item.note" class="text-xs theme-text-muted mt-1">
-                      {{ item.note }}
+                      <div v-if="item.performance" class="mt-1">
+                        <span
+                          class="text-[10px] px-2 py-0.5 theme-surface-raised theme-surface-muted theme-text-secondary rounded-md font-medium border theme-border-subtle theme-border"
+                        >
+                          {{ item.performance }}
+                        </span>
+                      </div>
+                      <div
+                        v-if="item.note"
+                        class="text-xs theme-text-muted mt-1"
+                      >
+                        {{ item.note }}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <!-- Load more sentinel -->
-          <div
-            v-if="hasMore"
-            ref="sentinelRef"
-            class="py-8 flex flex-col items-center justify-center gap-2"
-          >
-            <button
-              @click="loadMore"
-              class="px-5 py-2 theme-surface theme-hover-surface-muted text-sm font-medium rounded-xl theme-text-secondary theme-text transition-all border theme-border-subtle theme-border shadow-sm cursor-pointer"
-            >
-              {{ $t("common.loadMore", "Charger plus") }}
-            </button>
-            <span class="text-xs theme-text-muted">
-              {{ visibleCast.length }} / {{ filteredCast.length }}
-            </span>
-          </div>
+            </template>
+          </PaginatedResponsiveGrid>
         </section>
       </template>
     </MediaDetailsLayout>
@@ -377,15 +369,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, useTemplateRef } from "vue";
+import { ref, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
-import { useIntersectionObserver, refDebounced } from "@vueuse/core";
+import { refDebounced } from "@vueuse/core";
 import MediaSkeleton from "../../components/MediaSkeleton.vue";
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import ReportModal from "../../components/ReportModal.vue";
-import { fetchAudiobookData } from "@app/shared-logic";
-import type { Audiobook, AudiobookResponse } from "@app/shared-logic";
+import { fetchAudiobookData, fetchDetailCollection } from "@app/shared-logic";
+import type {
+  Audiobook,
+  AudiobookResponse,
+  PaginatedResponse,
+} from "@app/shared-logic";
 import {
   ExternalLink as ExternalLinkIcon,
   Search as SearchIcon,
@@ -411,6 +407,7 @@ const audiobookId = computed(() => {
 
 const isReportModalOpen = ref(false);
 const currentUrl = computed(() => route.fullPath);
+const { page: castPage, setPage: setCastPage } = useUrlPagination("castPage");
 
 // Instant Hydration Data Fetching
 const { data, pending } = await useAsyncData(
@@ -479,12 +476,6 @@ function getDisplayLanguage(langCode?: string | null): string {
   return langCode;
 }
 
-function resolveProfilePicture(path?: string | null): string | null {
-  if (!path) return null;
-  if (path.startsWith("http://") || path.startsWith("https://")) return path;
-  return `https://supabase.dubbingbase.com/storage/v1/object/public/voice-actors/${path}`;
-}
-
 interface FormattedCastItem {
   work_id: number;
   voice_actor_id: number;
@@ -496,59 +487,38 @@ interface FormattedCastItem {
   profile_picture?: string | null;
 }
 
-const formattedCast = computed<FormattedCastItem[]>(() => {
-  if (!activeDubProject.value) return [];
-  const works =
-    activeDubProject.value.works || activeDubProject.value.work || [];
-  return works.map((w: any) => ({
-    work_id: w.id,
-    voice_actor_id: w.voice_actors?.id || w.voice_actor_id,
-    firstname: w.voice_actors?.firstname || "",
-    lastname: w.voice_actors?.lastname || "",
-    character_name: w.character_name || "",
-    performance: w.performance || "",
-    note: w.note || "",
-    profile_picture: resolveProfilePicture(w.voice_actors?.profile_picture),
-  }));
-});
-
 // Client-side search with debounce
 const searchInput = ref("");
 const debouncedSearch = refDebounced(searchInput, 150);
 
-const filteredCast = computed(() => {
-  if (!debouncedSearch.value) return formattedCast.value;
-  const q = debouncedSearch.value.toLowerCase().trim();
-  return formattedCast.value.filter((item) => {
-    const fullName = `${item.firstname} ${item.lastname}`.toLowerCase();
-    const char = (item.character_name || "").toLowerCase();
-    const perf = (item.performance || "").toLowerCase();
-    return fullName.includes(q) || char.includes(q) || perf.includes(q);
-  });
+watch([debouncedSearch, activeDubId], () => {
+  void setCastPage(1);
 });
 
-// Progressive batching for long cast lists
-const BATCH_SIZE = 24;
-const currentBatchCount = ref(1);
-
-const visibleCast = computed(() => {
-  return filteredCast.value.slice(0, currentBatchCount.value * BATCH_SIZE);
-});
-
-const hasMore = computed(() => {
-  return visibleCast.value.length < filteredCast.value.length;
-});
-
-function loadMore() {
-  currentBatchCount.value += 1;
-}
-
-const sentinelRef = useTemplateRef<HTMLElement>("sentinelRef");
-useIntersectionObserver(sentinelRef, ([entry]) => {
-  if (entry?.isIntersecting && hasMore.value) {
-    loadMore();
-  }
-});
+const castRequest = computed(() => ({
+  collection: "media-cast" as const,
+  type: "audiobook",
+  id: audiobookId.value,
+  projectId: activeDubId.value || undefined,
+  query: debouncedSearch.value,
+  page: castPage.value,
+  pageSize: 12,
+}));
+const { data: castPageData } = useAsyncData<
+  PaginatedResponse<FormattedCastItem>
+>(
+  `audiobook-cast-${audiobookId.value}-${locale.value}`,
+  () => fetchDetailCollection<FormattedCastItem>(castRequest.value),
+  {
+    watch: [castRequest],
+    getCachedData: (key, nuxtApp) =>
+      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+  },
+);
+const castItems = computed(() => castPageData.value?.data || []);
+const castTotal = computed(
+  () => castPageData.value?.pagination.totalItems || 0,
+);
 
 // SEO Meta
 useHead({

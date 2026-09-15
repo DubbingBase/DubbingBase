@@ -31,13 +31,9 @@ defineSlots<{
 const localPage = ref(1);
 const isServerPaginated = computed(() => props.totalItems !== undefined);
 const currentPage = computed(() => props.page ?? localPage.value);
+const totalItems = computed(() => props.totalItems ?? props.items.length);
 const totalPages = computed(() =>
-  Math.max(
-    1,
-    Math.ceil(
-      (props.totalItems ?? props.items.length) / Math.max(1, props.pageSize),
-    ),
-  ),
+  Math.max(1, Math.ceil(totalItems.value / Math.max(1, props.pageSize))),
 );
 const visibleItems = computed(() => {
   if (isServerPaginated.value) return props.items;
@@ -74,35 +70,11 @@ const setPage = (page: number) => {
       </template>
     </div>
 
-    <nav
-      v-if="totalPages > 1"
-      class="mt-6 flex flex-wrap items-center justify-center gap-3"
-      :aria-label="$t('common.pagination')"
-    >
-      <button
-        type="button"
-        class="rounded-lg border theme-border-subtle px-3 py-2 text-sm theme-text-secondary transition theme-hover-primary-border disabled:cursor-not-allowed disabled:opacity-40 theme-border theme-text-secondary"
-        :disabled="currentPage === 1"
-        @click="setPage(currentPage - 1)"
-      >
-        {{ $t("admin.spreadsheet.previous") }}
-      </button>
-      <span class="text-sm theme-text-muted">
-        {{
-          $t("admin.spreadsheet.pageOf", {
-            page: currentPage,
-            total: totalPages,
-          })
-        }}
-      </span>
-      <button
-        type="button"
-        class="rounded-lg border theme-border-subtle px-3 py-2 text-sm theme-text-secondary transition theme-hover-primary-border disabled:cursor-not-allowed disabled:opacity-40 theme-border theme-text-secondary"
-        :disabled="currentPage === totalPages"
-        @click="setPage(currentPage + 1)"
-      >
-        {{ $t("admin.spreadsheet.next") }}
-      </button>
-    </nav>
+    <PaginationControls
+      :page="currentPage"
+      :total-items="totalItems"
+      :page-size="pageSize"
+      @update:page="setPage"
+    />
   </div>
 </template>

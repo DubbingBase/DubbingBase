@@ -113,7 +113,6 @@
                     :src="'https://image.tmdb.org/t/p/w342' + movie.poster_path"
                     :alt="movie.title"
                     format="webp"
-                    loading="lazy"
                     class="object-cover w-full h-full transition duration-300"
                   />
                 </div>
@@ -161,7 +160,6 @@
                     :src="'https://image.tmdb.org/t/p/w342' + show.poster_path"
                     :alt="(show as any).name || (show as any).title"
                     format="webp"
-                    loading="lazy"
                     class="object-cover w-full h-full transition duration-300"
                   />
                 </div>
@@ -209,7 +207,6 @@
                     :src="game.cover.url"
                     :alt="game.name"
                     format="webp"
-                    loading="lazy"
                     class="object-cover w-full h-full transition duration-300"
                   />
                 </div>
@@ -272,7 +269,6 @@
                     :src="va.profile_picture"
                     :alt="va.firstname + ' ' + va.lastname"
                     format="webp"
-                    loading="lazy"
                     class="object-cover w-full h-full"
                   />
                   <div
@@ -337,7 +333,6 @@
                     :src="va.profile_picture"
                     :alt="va.firstname + ' ' + va.lastname"
                     format="webp"
-                    loading="lazy"
                     class="object-cover w-full h-full"
                   />
                   <div
@@ -409,7 +404,6 @@
                       contributor.raw_user_meta_data?.username || 'Utilisateur'
                     "
                     format="webp"
-                    loading="lazy"
                     class="object-cover w-full h-full"
                   />
                   <div

@@ -14,4 +14,5 @@ export * from "./composables/useEpisodeData";
 export * from "./composables/useSearchData";
 export * from "./composables/useActorData";
 export * from "./composables/useStudioData";
+export * from "./composables/useDetailCollections";
 export * from "./utils/character";

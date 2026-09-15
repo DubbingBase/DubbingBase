@@ -2,9 +2,9 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**75 library files** across 5 modules
+**77 library files** across 5 modules
 
-## Website (40 files)
+## Website (41 files)
 
 - `apps/website/server/utils/index.ts` — getCloudflareKv, useCache, useFreshCache, useTmdbClient, useTvdbClient, useIgdbClient, …
 - `apps/website/server/utils/cache/wikipedia.ts` — sortLanguagesByPopularity, extractAvailableLanguages, cleanHeadingText, isDubbingSectionHeading, selectDubbingSections, filterValidSectionIndexes, …
@@ -18,6 +18,7 @@
 - `apps/website/server/utils/services/voice-actor.ts` — upsertVoiceActor, upsertActor, upsertStudio, upsertWork, insertVoiceActorAndWork
 - `apps/website/src/utils/media-cast.ts` — sameMediaId, matchCastWorks, CastActorReference, CastWorkReference, CastWorkMatchResult
 - `apps/website/server/utils/cache/index.ts` — SimpleCache, FreshCache, CacheTTLPreset, CACHE_TTL
+- `apps/website/server/utils/pagination.ts` — parsePagination, paginateArray, PaginationOptions, ParsedPagination
 - `apps/website/server/utils/urls/tmdb.ts` — buildTmdbImageUrl, cleanCharacterName, processMedia, TMDB_CONFIG
 - `apps/website/server/utils/api/igdb.ts` — buildIgdbImageUrl, IgdbClient, IgdbPopularityPrimitive
 - `apps/website/server/utils/api/openlibrary.ts` — buildOpenLibraryCoverUrl, OpenLibraryClient
@@ -27,11 +28,10 @@
 - `apps/website/server/utils/notifications/onesignal.ts` — sendOneSignalNotification, OneSignalOptions
 - `apps/website/server/utils/urls/supabase.ts` — buildSupabaseImageUrl, processVoiceActor
 - `apps/website/src/composables/useContribute.ts` — fetchRandomTask, useContribute
-- `apps/website/src/composables/useProgressiveBatch.ts` — useProgressiveBatch, UseProgressiveBatchOptions
+- `apps/website/src/composables/useUrlPagination.ts` — readUrlPage, useUrlPagination
 - `apps/website/server/api/movie/[id].get.ts` — fetchMovieData
 - `apps/website/server/api/show/[id].get.ts` — fetchShowData
-- `apps/website/server/utils/api/advertisement.ts` — AdvertisementClient
-- _…and 15 more files_
+- _…and 16 more files_
 
 ## Mobile (17 files)
 
@@ -53,11 +53,12 @@
 - `apps/mobile/src/utils/image.ts` — getAvatarFallbackUrl
 - `apps/mobile/src/utils/language.ts` — getLanguageDisplayName
 
-## Shared-logic (15 files)
+## Shared-logic (16 files)
 
 - `packages/shared-logic/src/composables/useStudioData.ts` — fetchStudioDetails, fetchStudiosData, useStudioData, Studio, StudioDetailsResponse
 - `packages/shared-logic/src/composables/useVoiceActorData.ts` — fetchVoiceActorData, useVoiceActorData, VoiceActorResponse, EnhancedWorkItem, VoiceActorDataPayload
 - `packages/shared-logic/src/composables/useActorData.ts` — fetchActorData, useActorData, ActorResponse, ActorDataPayload
+- `packages/shared-logic/src/composables/useDetailCollections.ts` — fetchDetailCollection, DetailCollection, DetailCollectionParams
 - `packages/shared-logic/src/composables/useHomeData.ts` — fetchHomeData, useHomeData, HomeDataPayload
 - `packages/shared-logic/src/composables/useSearchData.ts` — fetchSearchData, SearchResult
 - `packages/shared-logic/src/utils/character.ts` — normalizeCharacterName, findCharacter

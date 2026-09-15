@@ -46,7 +46,6 @@
             :src="'https://image.tmdb.org/t/p/w342' + movie.poster_path"
             :alt="movie.title"
             format="webp"
-            loading="lazy"
             decoding="async"
             class="object-cover w-full h-full transition duration-500"
           />

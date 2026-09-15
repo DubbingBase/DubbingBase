@@ -250,8 +250,8 @@
                 <div class="theme-text-muted text-sm mt-1">
                   {{
                     $t("media.rolesCount", {
-                      shown: filteredCharacters.length,
-                      total: formattedCharacters.length,
+                      shown: castItems.length,
+                      total: castTotal,
                     })
                   }}
                 </div>
@@ -273,10 +273,13 @@
 
           <PaginatedResponsiveGrid
             :key="searchQuery"
-            :items="filteredCharacters"
+            :items="castItems"
+            :total-items="castTotal"
+            :page="castPage"
             :page-size="12"
             grid-class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
             :item-key="(character) => character.id"
+            @update:page="setCastPage"
           >
             <template #default="{ item: char }">
               <div
@@ -294,7 +297,6 @@
                     >
                       <NuxtImg
                         format="webp"
-                        loading="lazy"
                         decoding="async"
                         v-if="char.mug_shot?.url"
                         :src="char.mug_shot.url"
@@ -339,7 +341,6 @@
                       >
                         <NuxtImg
                           format="webp"
-                          loading="lazy"
                           decoding="async"
                           v-if="char.voiceActor.profile_picture"
                           :src="char.voiceActor.profile_picture"
@@ -426,8 +427,8 @@
           </PaginatedResponsiveGrid>
           <span class="block text-xs theme-text-muted mt-4">{{
             $t("media.rolesCount", {
-              shown: filteredCharacters.length,
-              total: formattedCharacters.length,
+              shown: castItems.length,
+              total: castTotal,
             })
           }}</span>
         </section>
@@ -449,8 +450,9 @@
 import MediaSkeleton from "../../components/MediaSkeleton.vue";
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import { useRoute, useRouter } from "vue-router";
-import { fetchGameData } from "@app/shared-logic";
-import type { IgdbGame, IgdbCharacter } from "@app/shared-logic";
+import { fetchGameData, fetchDetailCollection } from "@app/shared-logic";
+import type { PaginatedResponse } from "@app/shared-logic";
+import type { IgdbGame } from "@app/shared-logic";
 import { computed, ref, watch } from "vue";
 import { refDebounced } from "@vueuse/core";
 import {
@@ -464,7 +466,6 @@ import {
   ExternalLinkIcon,
 } from "lucide-vue-next";
 import ReportModal from "../../components/ReportModal.vue";
-import { sameMediaId } from "../../utils/media-cast";
 
 const isReportModalOpen = ref(false);
 
@@ -523,7 +524,6 @@ const { data, pending, refresh } = useAsyncData(
 );
 
 const game = computed(() => data.value?.game);
-const characters = computed(() => data.value?.characters || []);
 const dubbingProjects = computed(() => {
   const projects = [...(data.value?.dubbingProjects || [])].filter((p) =>
     projectHasVoiceActor(p),
@@ -602,131 +602,38 @@ const getPublishers = (g: IgdbGame) =>
 const formatReleaseYear = (ts?: number) =>
   ts ? new Date(ts * 1000).getFullYear().toString() : "";
 
-// Map IGDB character IDs to Actor IDs (what we use in the work table)
-function igdbCharacterId(charId: number): number {
-  return 9_000_000_000 + charId;
-}
-
-// Format characters and attach voice actors
-const formattedCharacters = computed(() => {
-  // Get works (dubbing links) for the currently active dubbing project
-  const works = activeDubProject.value?.works || [];
-  const igdbChars = characters.value || [];
-  const matchedWorkIds = new Set();
-
-  const mappedIgdbChars = igdbChars.flatMap((char: IgdbCharacter) => {
-    // Character ID was mapped in prepare_game using igdbCharacterId
-    const mappedActorId = igdbCharacterId(char.id);
-
-    // Fallback ID mapping used by LLM for unresolved names
-    const hashId =
-      Math.abs(
-        char.name
-          .split("")
-          .reduce((hash, c) => (hash * 31 + c.charCodeAt(0)) | 0, 0),
-      ) + 8_000_000_000;
-
-    // Find the voice actor work for this character.
-    // Check actor_id (set by prepare_game) and character_id (set by manual entry in the edit form).
-    const matchingWorks = works.filter(
-      (w: any) =>
-        sameMediaId(w.actor_id, mappedActorId) ||
-        sameMediaId(w.actor_id, hashId) ||
-        sameMediaId(w.character_id, char.id) ||
-        sameMediaId(w.character_id, mappedActorId),
-    );
-
-    if (matchingWorks.length === 0) return [{ ...char, voiceActor: null }];
-
-    return matchingWorks.map((work: any) => {
-      matchedWorkIds.add(work.id);
-      return {
-        ...char,
-        id: `${char.id}-${work.id}`,
-        voiceActor: work.voice_actor
-          ? {
-              ...work.voice_actor,
-              performance: work.performance,
-              note: work.note,
-            }
-          : null,
-      };
-    });
-  });
-
-  // Find all works that were NOT matched to an IGDB character
-  const unmatchedWorks = works.filter((w: any) => !matchedWorkIds.has(w.id));
-
-  // Create mock characters for unmatched works.
-  // Try to resolve the name from the IGDB character list (by character_id) before
-  // falling back to work.character_name, then 'Inconnu'.
-  const mockChars = unmatchedWorks.map((work: any) => {
-    let resolvedName = work.character_name || null;
-    if (!resolvedName && work.character_id) {
-      const igdbChar = igdbChars.find(
-        (c: IgdbCharacter) =>
-          sameMediaId(igdbCharacterId(c.id), work.character_id) ||
-          sameMediaId(c.id, work.character_id),
-      );
-      if (igdbChar) resolvedName = igdbChar.name;
-    }
-    return {
-      id: `mock-${work.id}`,
-      name: resolvedName || "Inconnu",
-      mug_shot: null,
-      voiceActor: work.voice_actor
-        ? {
-            ...work.voice_actor,
-            performance: work.performance,
-            note: work.note,
-          }
-        : null,
-    };
-  });
-
-  const allCharacters = [...mappedIgdbChars, ...mockChars];
-
-  return allCharacters.sort((a, b) => {
-    // 1. Characters with a voice actor assigned go first
-    const aHasVa = a.voiceActor ? 1 : 0;
-    const bHasVa = b.voiceActor ? 1 : 0;
-    if (aHasVa !== bHasVa) return bHasVa - aHasVa;
-
-    // 2. Characters with a picture go next
-    const aHasMug = a.mug_shot ? 1 : 0;
-    const bHasMug = b.mug_shot ? 1 : 0;
-    if (aHasMug !== bHasMug) return bHasMug - aHasMug;
-
-    // 3. Sort alphabetically by name as a fallback
-    return (a.name || "").localeCompare(b.name || "");
-  });
-});
-
 const searchQuery = ref("");
 const searchInput = ref("");
+const { page: castPage, setPage: setCastPage } = useUrlPagination("castPage");
 const debouncedSearch = refDebounced(searchInput, 150);
 watch(debouncedSearch, (val) => {
   searchQuery.value = val;
 });
+watch([searchQuery, activeDubId], () => void setCastPage(1));
 
-const filteredCharacters = computed(() => {
-  if (!searchQuery.value) return formattedCharacters.value;
-  const query = searchQuery.value.toLowerCase().trim();
-  return formattedCharacters.value.filter((char: any) => {
-    const characterName = char.name?.toLowerCase() || "";
-    const vaName = char.voiceActor
-      ? `${char.voiceActor.firstname || ""} ${char.voiceActor.lastname || ""}`.toLowerCase()
-      : "";
-    const vaPerformance = char.voiceActor?.performance?.toLowerCase() || "";
-    const vaNote = char.voiceActor?.note?.toLowerCase() || "";
-    return (
-      characterName.includes(query) ||
-      vaName.includes(query) ||
-      vaPerformance.includes(query) ||
-      vaNote.includes(query)
-    );
-  });
-});
+type GameCastItem = Record<string, any>;
+const castRequest = computed(() => ({
+  collection: "media-cast" as const,
+  type: "game",
+  id: gameId,
+  projectId: activeDubId.value || undefined,
+  query: searchQuery.value,
+  page: castPage.value,
+  pageSize: 12,
+}));
+const { data: castPageData } = useAsyncData<PaginatedResponse<GameCastItem>>(
+  `game-cast-${gameId}-${locale.value}`,
+  () => fetchDetailCollection<GameCastItem>(castRequest.value),
+  {
+    watch: [castRequest],
+    getCachedData: (key, nuxtApp) =>
+      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+  },
+);
+const castItems = computed(() => castPageData.value?.data || []);
+const castTotal = computed(
+  () => castPageData.value?.pagination.totalItems || 0,
+);
 
 async function triggerPrepareGame() {
   if (!isAdmin.value) return;

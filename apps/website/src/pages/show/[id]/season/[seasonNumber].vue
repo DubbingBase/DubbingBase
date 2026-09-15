@@ -200,69 +200,77 @@
             </div>
           </div>
 
-          <div
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+          <PaginatedResponsiveGrid
+            :items="episodeItems"
+            :total-items="episodeTotal"
+            :page="episodesPage"
+            :page-size="12"
+            grid-class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+            :item-key="(episode) => episode.episode_number"
+            @update:page="setEpisodesPage"
           >
-            <NuxtLink
-              v-for="episode in episodes"
-              :key="episode.episode_number"
-              :to="{
-                path: localePath(
-                  `/show/${showId}/season/${seasonNumber}/episode/${episode.episode_number}`,
-                ),
-                query: activeDubId ? { dub: activeDubId } : {},
-              }"
-              class="group cursor-pointer block theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-primary-border hover:shadow-md"
-            >
-              <div
-                class="relative w-full aspect-video mb-3 rounded-lg overflow-hidden theme-surface-muted"
+            <template #default="{ item: episode }">
+              <NuxtLink
+                :key="episode.episode_number"
+                :to="{
+                  path: localePath(
+                    `/show/${showId}/season/${seasonNumber}/episode/${episode.episode_number}`,
+                  ),
+                  query: activeDubId ? { dub: activeDubId } : {},
+                }"
+                class="group cursor-pointer block theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-primary-border hover:shadow-md"
               >
-                <NuxtImg
-                  format="webp"
-                  v-if="episode.still_path"
-                  :src="
-                    episode.still_path.startsWith('http')
-                      ? episode.still_path
-                      : 'https://image.tmdb.org/t/p/w342' + episode.still_path
-                  "
-                  loading="lazy"
-                  decoding="async"
-                  class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  alt="Episode"
-                />
                 <div
-                  v-else
-                  class="w-full h-full flex items-center justify-center theme-text-muted"
+                  class="relative w-full aspect-video mb-3 rounded-lg overflow-hidden theme-surface-muted"
                 >
-                  <ClapperboardIcon class="w-12 h-12 opacity-50" />
+                  <NuxtImg
+                    format="webp"
+                    v-if="episode.still_path"
+                    :src="
+                      episode.still_path.startsWith('http')
+                        ? episode.still_path
+                        : 'https://image.tmdb.org/t/p/w342' + episode.still_path
+                    "
+                    decoding="async"
+                    class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    alt="Episode"
+                  />
+                  <div
+                    v-else
+                    class="w-full h-full flex items-center justify-center theme-text-muted"
+                  >
+                    <ClapperboardIcon class="w-12 h-12 opacity-50" />
+                  </div>
+                  <div
+                    class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2"
+                  >
+                    <span class="text-white text-xs font-bold">
+                      {{
+                        $t("details.episode", { num: episode.episode_number })
+                      }}
+                    </span>
+                  </div>
                 </div>
-                <div
-                  class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2"
+                <h3
+                  class="font-semibold text-sm theme-text line-clamp-2 theme-hover-primary-text transition-colors mb-1"
                 >
-                  <span class="text-white text-xs font-bold">
-                    {{ $t("details.episode", { num: episode.episode_number }) }}
+                  {{
+                    episode.name ||
+                    $t("details.episode", { num: episode.episode_number })
+                  }}
+                </h3>
+                <div class="flex items-center gap-2 text-xs theme-text-muted">
+                  <span v-if="episode.air_date">
+                    {{ formatDate(episode.air_date) }}
+                  </span>
+                  <span v-if="episode.vote_average">
+                    <StarIcon class="w-3 h-3 theme-rating fill-current" />
+                    {{ episode.vote_average.toFixed(1) }}
                   </span>
                 </div>
-              </div>
-              <h3
-                class="font-semibold text-sm theme-text line-clamp-2 theme-hover-primary-text transition-colors mb-1"
-              >
-                {{
-                  episode.name ||
-                  $t("details.episode", { num: episode.episode_number })
-                }}
-              </h3>
-              <div class="flex items-center gap-2 text-xs theme-text-muted">
-                <span v-if="episode.air_date">
-                  {{ formatDate(episode.air_date) }}
-                </span>
-                <span v-if="episode.vote_average">
-                  <StarIcon class="w-3 h-3 theme-rating fill-current" />
-                  {{ episode.vote_average.toFixed(1) }}
-                </span>
-              </div>
-            </NuxtLink>
-          </div>
+              </NuxtLink>
+            </template>
+          </PaginatedResponsiveGrid>
         </section>
       </template>
     </MediaDetailsLayout>
@@ -298,7 +306,12 @@
 import MediaDetailsLayout from "../../../../components/layout/MediaDetailsLayout.vue";
 import { useRoute, useRouter } from "vue-router";
 
-import { fetchShowData, fetchSeasonData } from "@app/shared-logic";
+import {
+  fetchShowData,
+  fetchSeasonData,
+  fetchDetailCollection,
+} from "@app/shared-logic";
+import type { PaginatedResponse } from "@app/shared-logic";
 import { computed, ref } from "vue";
 import { ClapperboardIcon, ExternalLinkIcon, StarIcon } from "lucide-vue-next";
 import ReportModal from "../../../../components/ReportModal.vue";
@@ -404,9 +417,38 @@ function projectVoiceActorCount(project: any): number {
   return ids.size;
 }
 
-const episodes = computed(() => {
-  return season.value?.episodes || [];
-});
+type SeasonEpisode = {
+  air_date?: string | null;
+  episode_number: number;
+  name?: string | null;
+  still_path?: string | null;
+  vote_average?: number;
+};
+
+const { page: episodesPage, setPage: setEpisodesPage } =
+  useUrlPagination("episodesPage");
+const episodeRequest = computed(() => ({
+  collection: "season-episodes" as const,
+  id: showId,
+  seasonNumber,
+  page: episodesPage.value,
+  pageSize: 12,
+}));
+const { data: episodePageData } = useAsyncData<
+  PaginatedResponse<SeasonEpisode>
+>(
+  `season-episodes-${showId}-${seasonNumber}-${locale.value}`,
+  () => fetchDetailCollection<SeasonEpisode>(episodeRequest.value),
+  {
+    watch: [episodeRequest],
+    getCachedData: (key, nuxtApp) =>
+      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+  },
+);
+const episodeItems = computed(() => episodePageData.value?.data || []);
+const episodeTotal = computed(
+  () => episodePageData.value?.pagination.totalItems || 0,
+);
 
 const backdropUrl = computed(() => {
   const path = season.value?.backdrop_path || serie.value?.backdrop_path;
