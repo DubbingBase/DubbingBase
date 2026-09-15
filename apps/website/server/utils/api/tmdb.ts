@@ -215,9 +215,9 @@ export class TMDBClient {
   async getTrending(
     mediaType: "movie" | "tv",
     timeWindow: "day" | "week",
-    language = "fr-FR",
+    language = "en-US",
   ) {
-    const langStr = (language.split(",")[0] || "fr-FR").trim();
+    const langStr = (language.split(",")[0] || "en-US").trim();
     const cacheKey = this.cache.tmdbKey(
       "trending",
       mediaType,

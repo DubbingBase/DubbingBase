@@ -29,7 +29,9 @@ export type HomeDataPayload = {
   errorHomeStats: string;
 };
 
-export async function fetchHomeData(): Promise<HomeDataPayload> {
+export async function fetchHomeData(
+  language = "en-US",
+): Promise<HomeDataPayload> {
   const payload: HomeDataPayload = {
     trendingMovies: [],
     trendingSeries: [],
@@ -54,7 +56,7 @@ export async function fetchHomeData(): Promise<HomeDataPayload> {
   };
 
   await Promise.allSettled([
-    $fetch<any>("/api/trending/movies")
+    $fetch<any>("/api/trending/movies", { params: { lang: language } })
       .then((res) => {
         payload.trendingMovies = res.results || [];
       })
@@ -65,7 +67,7 @@ export async function fetchHomeData(): Promise<HomeDataPayload> {
           "Erreur lors du chargement des films.";
       }),
 
-    $fetch<any>("/api/trending/shows")
+    $fetch<any>("/api/trending/shows", { params: { lang: language } })
       .then((res) => {
         payload.trendingSeries = res.results || [];
       })
@@ -76,7 +78,7 @@ export async function fetchHomeData(): Promise<HomeDataPayload> {
           "Erreur lors du chargement des séries.";
       }),
 
-    $fetch<any>("/api/trending/games")
+    $fetch<any>("/api/trending/games", { params: { lang: language } })
       .then((res) => {
         payload.trendingGames = res || [];
       })

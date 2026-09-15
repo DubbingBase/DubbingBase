@@ -435,7 +435,7 @@
 </template>
 
 <script setup lang="ts">
-import { useHomeData, fetchHomeData } from "@app/shared-logic";
+import { fetchHomeData, resolveLocaleLanguage } from "@app/shared-logic";
 import { useSearchModal } from "../composables/useSearchModal";
 import { useDragScroll } from "../composables/useDragScroll";
 import { ref, computed } from "vue";
@@ -595,10 +595,19 @@ useHead({
   ],
 });
 
-const { data, pending } = useAsyncData("home-data", () => fetchHomeData(), {
-  getCachedData: (key, nuxtApp) =>
-    nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
-});
+const trendingLanguage = computed(
+  () => resolveLocaleLanguage(locale.value) || "en-US",
+);
+
+const { data, pending } = useAsyncData(
+  () => `home-data:${trendingLanguage.value}`,
+  () => fetchHomeData(trendingLanguage.value),
+  {
+    getCachedData: (key, nuxtApp) =>
+      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+    watch: [trendingLanguage],
+  },
+);
 
 const trendingMovies = computed(() => data.value?.trendingMovies || []);
 const trendingSeries = computed(() => data.value?.trendingSeries || []);
