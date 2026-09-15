@@ -480,7 +480,7 @@
                 <!-- Actor Group Header -->
                 <NuxtLink
                   :to="localePath(`/actor/${works[0]?.data.actor.id}`)"
-                  class="flex items-center gap-4 border-b theme-border-subtle theme-border pb-4 theme-hover-surface-muted theme-surface p-2 -ml-2 rounded-xl transition-colors cursor-pointer group"
+                  class="sticky top-[120px] z-20 flex items-center gap-4 border-b theme-border-subtle theme-border pb-4 theme-surface-overlay backdrop-blur theme-hover-surface-muted p-2 -ml-2 rounded-xl transition-colors cursor-pointer group"
                 >
                   <div
                     class="w-20 h-20 shrink-0 rounded-full overflow-hidden theme-surface-raised theme-input shadow-md border theme-border-subtle theme-border"
