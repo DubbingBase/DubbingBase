@@ -73,7 +73,7 @@
       </div>
 
       <!-- Dubbed Projects -->
-      <section class="mb-12" v-if="dubbedProjects.length > 0">
+      <section class="mb-12" v-if="projectTotal > 0">
         <div
           class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6"
         >
@@ -81,20 +81,20 @@
             <h2 class="text-2xl font-bold">
               {{
                 $t("studio.dubbingProjectsCount", {
-                  count: dubbedProjects.length,
+                  count: projectTotal,
                 })
               }}
             </h2>
             <div class="theme-text-muted text-sm mt-1">
               {{
                 $t("studio.shownCount", {
-                  shown: filteredProjects.length,
-                  total: filteredProjects.length,
+                  shown: projectItems.length,
+                  total: projectTotal,
                 })
               }}
             </div>
           </div>
-          <div class="relative w-full sm:w-64" v-if="dubbedProjects.length > 8">
+          <div class="relative w-full sm:w-64" v-if="projectTotal > 8">
             <SearchIcon
               class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 theme-text-muted"
             />
@@ -107,7 +107,8 @@
           </div>
         </div>
         <PaginatedResponsiveGrid
-          :items="filteredProjects"
+          :items="projectItems"
+          :total-items="projectTotal"
           :page="projectsPage"
           :page-size="12"
           grid-class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6"
@@ -117,122 +118,121 @@
           <template #default="{ item: project }">
             <NuxtLink
               :key="project.id"
-            :to="
-              localePath(getMediaLink(project.content_type, project.content_id))
-            "
-            class="group transition-transform hover:-translate-y-1 block flex flex-col"
-          >
-            <div
-              class="relative w-full aspect-[2/3] rounded-xl overflow-hidden mb-3 theme-surface-muted shadow-sm border theme-border-subtle theme-border theme-hover-primary-border transition-colors"
+              :to="
+                localePath(
+                  getMediaLink(project.content_type, project.content_id),
+                )
+              "
+              class="group transition-transform hover:-translate-y-1 block flex flex-col"
             >
-              <NuxtImg
-                v-if="project.media?.poster_path"
-                :src="
-                  project.media.poster_path.startsWith('http')
-                    ? project.media.poster_path
-                    : 'https://image.tmdb.org/t/p/w342' +
-                      project.media.poster_path
-                "
-                :alt="project.media?.title || project.media?.name"
-                format="webp"
-                loading="lazy"
-                decoding="async"
-                class="object-cover w-full h-full transition duration-300"
-              />
               <div
-                v-else
-                class="w-full h-full flex items-center justify-center theme-text-muted"
+                class="relative w-full aspect-[2/3] rounded-xl overflow-hidden mb-3 theme-surface-muted shadow-sm border theme-border-subtle theme-border theme-hover-primary-border transition-colors"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="w-12 h-12 opacity-50"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                <NuxtImg
+                  v-if="project.media?.poster_path"
+                  :src="
+                    project.media.poster_path.startsWith('http')
+                      ? project.media.poster_path
+                      : 'https://image.tmdb.org/t/p/w342' +
+                        project.media.poster_path
+                  "
+                  :alt="project.media?.title || project.media?.name"
+                  format="webp"
+                  decoding="async"
+                  class="object-cover w-full h-full transition duration-300"
+                />
+                <div
+                  v-else
+                  class="w-full h-full flex items-center justify-center theme-text-muted"
                 >
-                  <rect
-                    x="2"
-                    y="2"
-                    width="20"
-                    height="20"
-                    rx="2.18"
-                    ry="2.18"
-                  ></rect>
-                  <line x1="7" y1="2" x2="7" y2="22"></line>
-                  <line x1="17" y1="2" x2="17" y2="22"></line>
-                  <line x1="2" y1="12" x2="22" y2="12"></line>
-                  <line x1="2" y1="7" x2="7" y2="7"></line>
-                  <line x1="2" y1="17" x2="7" y2="17"></line>
-                  <line x1="17" y1="17" x2="22" y2="17"></line>
-                  <line x1="17" y1="7" x2="22" y2="7"></line>
-                </svg>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="w-12 h-12 opacity-50"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <rect
+                      x="2"
+                      y="2"
+                      width="20"
+                      height="20"
+                      rx="2.18"
+                      ry="2.18"
+                    ></rect>
+                    <line x1="7" y1="2" x2="7" y2="22"></line>
+                    <line x1="17" y1="2" x2="17" y2="22"></line>
+                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                    <line x1="2" y1="7" x2="7" y2="7"></line>
+                    <line x1="2" y1="17" x2="7" y2="17"></line>
+                    <line x1="17" y1="17" x2="22" y2="17"></line>
+                    <line x1="17" y1="7" x2="22" y2="7"></line>
+                  </svg>
+                </div>
+
+                <!-- Language badge -->
+                <div
+                  class="absolute top-2 right-2 px-2 py-1 bg-black/60 backdrop-blur-md rounded-md text-xs font-semibold text-white"
+                >
+                  <span v-if="project.language === 'fr-FR'">{{
+                    $t("studio.french")
+                  }}</span>
+                  <span v-else-if="project.language === 'fr-CA'">{{
+                    $t("studio.quebec")
+                  }}</span>
+                  <span v-else-if="project.language === 'fr-BE'">{{
+                    $t("studio.belgian")
+                  }}</span>
+                  <span v-else>{{ project.language }}</span>
+                </div>
               </div>
 
-              <!-- Language badge -->
-              <div
-                class="absolute top-2 right-2 px-2 py-1 bg-black/60 backdrop-blur-md rounded-md text-xs font-semibold text-white"
+              <h3
+                class="font-semibold text-sm md:text-base theme-text line-clamp-2"
               >
-                <span v-if="project.language === 'fr-FR'">{{
-                  $t("studio.french")
-                }}</span>
-                <span v-else-if="project.language === 'fr-CA'">{{
-                  $t("studio.quebec")
-                }}</span>
-                <span v-else-if="project.language === 'fr-BE'">{{
-                  $t("studio.belgian")
-                }}</span>
-                <span v-else>{{ project.language }}</span>
+                {{
+                  project.media?.title ||
+                  project.media?.name ||
+                  `Media #${project.content_id}`
+                }}
+              </h3>
+              <div
+                class="text-xs theme-text-muted mt-1 uppercase font-bold tracking-wider"
+              >
+                {{ getMediaTypeLabel(project.content_type) }}
               </div>
-            </div>
-
-            <h3
-              class="font-semibold text-sm md:text-base theme-text line-clamp-2"
-            >
-              {{
-                project.media?.title ||
-                project.media?.name ||
-                `Media #${project.content_id}`
-              }}
-            </h3>
-            <div
-              class="text-xs theme-text-muted mt-1 uppercase font-bold tracking-wider"
-            >
-              {{ getMediaTypeLabel(project.content_type) }}
-            </div>
             </NuxtLink>
           </template>
         </PaginatedResponsiveGrid>
       </section>
 
       <!-- Voice Actors Roster -->
-      <section v-if="voiceActorsRoster.length > 0">
+      <section v-if="rosterTotal > 0">
         <div class="flex items-center justify-between mb-6">
           <div>
             <h2 class="text-2xl font-bold">
               {{
                 $t("studio.voiceActorsCount", {
-                  count: voiceActorsRoster.length,
+                  count: rosterTotal,
                 })
               }}
             </h2>
-            <div
-              class="theme-text-muted text-sm mt-1"
-              v-if="voiceActorsRoster.length > 20"
-            >
+            <div class="theme-text-muted text-sm mt-1" v-if="rosterTotal > 20">
               {{
                 $t("studio.shownCount", {
-                  shown: voiceActorsRoster.length,
-                  total: voiceActorsRoster.length,
+                  shown: rosterItems.length,
+                  total: rosterTotal,
                 })
               }}
             </div>
           </div>
         </div>
         <PaginatedResponsiveGrid
-          :items="voiceActorsRoster"
+          :items="rosterItems"
+          :total-items="rosterTotal"
           :page="rosterPage"
           :page-size="12"
           grid-class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
@@ -242,37 +242,36 @@
           <template #default="{ item: va }">
             <NuxtLink
               :key="va.id"
-            :to="localePath(`/voice-actor/${va.id}`)"
-            class="group"
-          >
-            <div
-              class="theme-surface border theme-border-subtle theme-border rounded-xl overflow-hidden theme-hover-primary-border transition-colors flex flex-col items-center p-4 text-center"
+              :to="localePath(`/voice-actor/${va.id}`)"
+              class="group"
             >
               <div
-                class="w-20 h-20 rounded-full overflow-hidden mb-3 theme-surface-muted shrink-0 border-2 border-transparent theme-hover-primary-border transition-colors"
+                class="theme-surface border theme-border-subtle theme-border rounded-xl overflow-hidden theme-hover-primary-border transition-colors flex flex-col items-center p-4 text-center"
               >
-                <img
-                  v-if="va.profile_picture"
-                  :src="getProfileUrl(va.profile_picture)"
-                  loading="lazy"
-                  decoding="async"
-                  class="w-full h-full object-cover"
-                  :alt="`${va.firstname} ${va.lastname}`"
-                />
                 <div
-                  v-else
-                  class="w-full h-full flex items-center justify-center font-bold text-xl theme-text-muted"
+                  class="w-20 h-20 rounded-full overflow-hidden mb-3 theme-surface-muted shrink-0 border-2 border-transparent theme-hover-primary-border transition-colors"
                 >
-                  {{ va.firstname?.charAt(0) || ""
-                  }}{{ va.lastname?.charAt(0) || "" }}
+                  <img
+                    v-if="va.profile_picture"
+                    :src="getProfileUrl(va.profile_picture)"
+                    decoding="async"
+                    class="w-full h-full object-cover"
+                    :alt="`${va.firstname} ${va.lastname}`"
+                  />
+                  <div
+                    v-else
+                    class="w-full h-full flex items-center justify-center font-bold text-xl theme-text-muted"
+                  >
+                    {{ va.firstname?.charAt(0) || ""
+                    }}{{ va.lastname?.charAt(0) || "" }}
+                  </div>
                 </div>
+                <h3
+                  class="font-semibold theme-text line-clamp-1 theme-hover-primary-text transition-colors"
+                >
+                  {{ va.firstname }} {{ va.lastname }}
+                </h3>
               </div>
-              <h3
-                class="font-semibold theme-text line-clamp-1 theme-hover-primary-text transition-colors"
-              >
-                {{ va.firstname }} {{ va.lastname }}
-              </h3>
-            </div>
             </NuxtLink>
           </template>
         </PaginatedResponsiveGrid>
@@ -293,7 +292,12 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { useRoute } from "vue-router";
-import { useStudioData, fetchStudioDetails } from "@app/shared-logic";
+import {
+  useStudioData,
+  fetchStudioDetails,
+  fetchDetailCollection,
+} from "@app/shared-logic";
+import type { PaginatedResponse } from "@app/shared-logic";
 import { ExternalLinkIcon, SearchIcon } from "lucide-vue-next";
 import { refDebounced } from "@vueuse/core";
 import DetailsPage from "../../components/layout/details/DetailsPage.vue";
@@ -339,7 +343,7 @@ const isAdmin = computed(() => {
   );
 });
 
-const { data: initialStudioDetails, refresh } = await useAsyncData(
+const { data: initialStudioDetails } = await useAsyncData(
   `studio-${route.params.id}`,
   () => fetchStudioDetails(route.params.id as string),
   {
@@ -358,19 +362,55 @@ const { page: rosterPage, setPage: setRosterPage } =
   useUrlPagination("rosterPage");
 const debouncedSearch = refDebounced(searchInput, 150);
 
-const filteredProjects = computed(() => {
-  if (!debouncedSearch.value.trim()) return dubbedProjects.value;
-  const query = debouncedSearch.value.toLowerCase().trim();
-  return dubbedProjects.value.filter((p: any) => {
-    const title = (p.media?.title || p.media?.name || "").toLowerCase();
-    return title.includes(query);
-  });
-});
-
 watch(debouncedSearch, () => {
   void setProjectsPage(1);
-  void refresh();
 });
+
+type StudioCollectionItem = Record<string, any>;
+const projectRequest = computed(() => ({
+  collection: "studio-projects" as const,
+  id: String(route.params.id),
+  query: debouncedSearch.value,
+  page: projectsPage.value,
+  pageSize: 12,
+}));
+const { data: projectPageData } = useAsyncData<
+  PaginatedResponse<StudioCollectionItem>
+>(
+  `studio-projects-${route.params.id}`,
+  () => fetchDetailCollection<StudioCollectionItem>(projectRequest.value),
+  {
+    watch: [projectRequest],
+    getCachedData: (key, nuxtApp) =>
+      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+  },
+);
+const projectItems = computed(() => projectPageData.value?.data || []);
+const projectTotal = computed(
+  () => projectPageData.value?.pagination.totalItems || 0,
+);
+
+const rosterRequest = computed(() => ({
+  collection: "studio-voice-actors" as const,
+  id: String(route.params.id),
+  page: rosterPage.value,
+  pageSize: 12,
+}));
+const { data: rosterPageData } = useAsyncData<
+  PaginatedResponse<StudioCollectionItem>
+>(
+  `studio-voice-actors-${route.params.id}`,
+  () => fetchDetailCollection<StudioCollectionItem>(rosterRequest.value),
+  {
+    watch: [rosterRequest],
+    getCachedData: (key, nuxtApp) =>
+      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+  },
+);
+const rosterItems = computed(() => rosterPageData.value?.data || []);
+const rosterTotal = computed(
+  () => rosterPageData.value?.pagination.totalItems || 0,
+);
 
 const getProfileUrl = (path: string) => {
   if (path.startsWith("http")) return path;

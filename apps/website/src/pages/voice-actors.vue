@@ -95,7 +95,6 @@
                 :src="actor.profile_picture_url"
                 :alt="actor.firstname + ' ' + actor.lastname"
                 format="webp"
-                loading="lazy"
                 decoding="async"
                 class="object-cover w-full h-full"
               />

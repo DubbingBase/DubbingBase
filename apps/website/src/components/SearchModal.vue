@@ -94,7 +94,6 @@
                   `${item.firstname || ''} ${item.lastname || ''}`.trim()
                 "
                 class="w-full h-full object-cover"
-                loading="lazy"
                 width="48"
                 height="64"
               />

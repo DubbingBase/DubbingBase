@@ -91,7 +91,6 @@
                 v-if="studio.logo_url"
                 :src="studio.logo_url"
                 :alt="studio.name"
-                loading="lazy"
                 decoding="async"
                 class="object-contain w-full h-full p-4 transition duration-500 bg-white"
               />

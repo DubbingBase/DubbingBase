@@ -158,7 +158,7 @@
           </div>
         </div>
 
-        <!-- Cast Roster with Progressive DOM windowing -->
+        <!-- Server-paginated cast roster -->
         <section class="space-y-6">
           <div
             class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
@@ -167,10 +167,10 @@
               <h2 class="text-xl font-bold theme-text flex items-center gap-2">
                 <span>{{ $t("podcast.castSection") }}</span>
                 <span
-                  v-if="formattedCast.length > 0"
+                  v-if="castTotal > 0"
                   class="text-xs px-2.5 py-0.5 rounded-full bg-pink-500/10 theme-primary-text font-semibold border border-pink-500/20"
                 >
-                  {{ formattedCast.length }}
+                  {{ castTotal }}
                 </span>
               </h2>
               <p class="text-xs theme-text-muted mt-1">
@@ -179,10 +179,7 @@
             </div>
 
             <!-- Cast search filter -->
-            <div
-              v-if="formattedCast.length > 8"
-              class="relative w-full sm:w-64"
-            >
+            <div v-if="castTotal > 8" class="relative w-full sm:w-64">
               <SearchIcon
                 class="w-4 h-4 theme-text-muted absolute left-3 top-1/2 -translate-y-1/2"
               />
@@ -196,11 +193,11 @@
           </div>
 
           <div
-            v-if="filteredCast.length === 0"
+            v-if="castTotal === 0"
             class="text-center py-16 theme-surface-raised theme-surface-overlay rounded-2xl border theme-border-subtle theme-border theme-text-muted text-sm"
           >
             {{
-              formattedCast.length === 0
+              castTotal === 0
                 ? "Aucune information de casting enregistrée pour le moment."
                 : "Aucun comédien ne correspond à votre recherche."
             }}
@@ -208,7 +205,8 @@
 
           <PaginatedResponsiveGrid
             v-else
-            :items="filteredCast"
+            :items="castItems"
+            :total-items="castTotal"
             :page="castPage"
             :page-size="12"
             grid-class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
@@ -220,39 +218,40 @@
                 :key="item.work_id"
                 class="theme-surface-overlay border theme-border-subtle theme-border rounded-2xl p-4 flex gap-4 items-center theme-hover-border transition-colors group shadow-md"
               >
-              <NuxtLink
-                :to="localePath(`/voice-actor/${item.voice_actor_id}`)"
-                class="relative w-14 h-14 rounded-full overflow-hidden theme-surface-muted shrink-0 border theme-border-subtle theme-border group-hover:border-pink-500 transition-colors flex items-center justify-center"
-              >
-                <NuxtImg
-                  v-if="item.profile_picture"
-                  :src="item.profile_picture"
-                  :alt="item.firstname + ' ' + item.lastname"
-                  class="w-full h-full object-cover"
-                  loading="lazy"
-                  decoding="async"
-                />
-                <span v-else class="text-sm font-bold theme-text-muted">
-                  {{ item.firstname?.[0] }}{{ item.lastname?.[0] }}
-                </span>
-              </NuxtLink>
-
-              <div class="flex-1 min-w-0">
                 <NuxtLink
                   :to="localePath(`/voice-actor/${item.voice_actor_id}`)"
-                  class="text-sm font-bold theme-text theme-hover-primary-text transition-colors truncate block"
+                  class="relative w-14 h-14 rounded-full overflow-hidden theme-surface-muted shrink-0 border theme-border-subtle theme-border group-hover:border-pink-500 transition-colors flex items-center justify-center"
                 >
-                  {{ item.firstname }} {{ item.lastname }}
+                  <NuxtImg
+                    v-if="item.profile_picture"
+                    :src="item.profile_picture"
+                    :alt="item.firstname + ' ' + item.lastname"
+                    class="w-full h-full object-cover"
+                    decoding="async"
+                  />
+                  <span v-else class="text-sm font-bold theme-text-muted">
+                    {{ item.firstname?.[0] }}{{ item.lastname?.[0] }}
+                  </span>
                 </NuxtLink>
-                <span class="text-xs theme-text-muted block truncate mt-0.5">
-                  {{ item.character_name || item.performance || "Voix / Rôle" }}
-                </span>
-                <span
-                  v-if="item.note"
-                  class="text-xs theme-text-muted block truncate mt-1"
-                  >{{ item.note }}</span
-                >
-              </div>
+
+                <div class="flex-1 min-w-0">
+                  <NuxtLink
+                    :to="localePath(`/voice-actor/${item.voice_actor_id}`)"
+                    class="text-sm font-bold theme-text theme-hover-primary-text transition-colors truncate block"
+                  >
+                    {{ item.firstname }} {{ item.lastname }}
+                  </NuxtLink>
+                  <span class="text-xs theme-text-muted block truncate mt-0.5">
+                    {{
+                      item.character_name || item.performance || "Voix / Rôle"
+                    }}
+                  </span>
+                  <span
+                    v-if="item.note"
+                    class="text-xs theme-text-muted block truncate mt-1"
+                    >{{ item.note }}</span
+                  >
+                </div>
               </div>
             </template>
           </PaginatedResponsiveGrid>
@@ -276,8 +275,12 @@ import { refDebounced } from "@vueuse/core";
 import MediaSkeleton from "../../components/MediaSkeleton.vue";
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import ReportModal from "../../components/ReportModal.vue";
-import { fetchPodcastData } from "@app/shared-logic";
-import type { Podcast, PodcastResponse } from "@app/shared-logic";
+import { fetchPodcastData, fetchDetailCollection } from "@app/shared-logic";
+import type {
+  Podcast,
+  PodcastResponse,
+  PaginatedResponse,
+} from "@app/shared-logic";
 import {
   ExternalLink as ExternalLinkIcon,
   Search as SearchIcon,
@@ -304,11 +307,10 @@ const podcastId = computed(() => {
 
 const isReportModalOpen = ref(false);
 const currentUrl = computed(() => route.fullPath);
-const { page: castPage, setPage: setCastPage } =
-  useUrlPagination("castPage");
+const { page: castPage, setPage: setCastPage } = useUrlPagination("castPage");
 
 // Instant Hydration Data Fetching
-const { data, pending, refresh } = await useAsyncData(
+const { data, pending } = await useAsyncData(
   `podcast-${podcastId.value}-${locale.value}`,
   () => fetchPodcastData(podcastId.value, locale.value),
   {
@@ -366,12 +368,6 @@ const coverUrl = computed(() => {
   return podcast.value?.cover_url || null;
 });
 
-function resolveProfilePicture(path?: string | null): string | null {
-  if (!path) return null;
-  if (path.startsWith("http://") || path.startsWith("https://")) return path;
-  return `https://supabase.dubbingbase.com/storage/v1/object/public/voice-actors/${path}`;
-}
-
 interface FormattedCastItem {
   work_id: number;
   voice_actor_id: number;
@@ -383,43 +379,38 @@ interface FormattedCastItem {
   profile_picture?: string | null;
 }
 
-const formattedCast = computed<FormattedCastItem[]>(() => {
-  if (!activeDubProject.value) return [];
-  const works =
-    activeDubProject.value.works || activeDubProject.value.work || [];
-  return works.map((w: any) => ({
-    work_id: w.id,
-    voice_actor_id: w.voice_actors?.id || w.voice_actor_id,
-    firstname: w.voice_actors?.firstname || "",
-    lastname: w.voice_actors?.lastname || "",
-    character_name: w.character_name || "",
-    performance: w.performance || "",
-    note: w.note || "",
-    profile_picture: resolveProfilePicture(w.voice_actors?.profile_picture),
-  }));
-});
-
-// Client-side Progressive Batch Windowing & Debounced Filtering
+// Debounced search is sent to the server-backed collection endpoint.
 const castSearchQuery = ref("");
 const debouncedCastSearch = refDebounced(castSearchQuery, 150);
 
-const filteredCast = computed(() => {
-  const query = debouncedCastSearch.value.trim().toLowerCase();
-  if (!query) return formattedCast.value;
-  return formattedCast.value.filter(
-    (c) =>
-      `${c.firstname} ${c.lastname}`.toLowerCase().includes(query) ||
-      (c.character_name && c.character_name.toLowerCase().includes(query)),
-  );
-});
-
 watch([debouncedCastSearch, activeDubId], () => {
-  void refresh();
-});
-
-watch(debouncedCastSearch, () => {
   void setCastPage(1);
 });
+
+const castRequest = computed(() => ({
+  collection: "media-cast" as const,
+  type: "podcast",
+  id: podcastId.value,
+  projectId: activeDubId.value || undefined,
+  query: debouncedCastSearch.value,
+  page: castPage.value,
+  pageSize: 12,
+}));
+const { data: castPageData } = useAsyncData<
+  PaginatedResponse<FormattedCastItem>
+>(
+  `podcast-cast-${podcastId.value}-${locale.value}`,
+  () => fetchDetailCollection<FormattedCastItem>(castRequest.value),
+  {
+    watch: [castRequest],
+    getCachedData: (key, nuxtApp) =>
+      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+  },
+);
+const castItems = computed(() => castPageData.value?.data || []);
+const castTotal = computed(
+  () => castPageData.value?.pagination.totalItems || 0,
+);
 
 function openExternalUrl(url?: string) {
   if (typeof window !== "undefined" && url) {

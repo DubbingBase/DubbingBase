@@ -1,5 +1,6 @@
 ---
 "@app/website": patch
+"@app/shared-logic": patch
 ---
 
-Remove intersection-observer list loading and render complete filtered detail lists, while keeping explicit pagination for large directories. Directory search requests use server-side filtering and pagination.
+Replace lazy and virtual list loading with uniform URL-backed pagination for detail collections. Search and filters now request fresh server-filtered pages, including media cast, seasons, episodes, actor filmography, voice actors, voice actor works, and studio collections.

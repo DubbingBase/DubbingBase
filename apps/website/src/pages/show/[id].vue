@@ -179,57 +179,63 @@
         </div>
 
         <!-- Seasons -->
-        <section v-if="seasons.length" class="mb-12">
+        <section v-if="seasonTotal > 0" class="mb-12">
           <h2 class="text-2xl font-bold mb-6">
             {{ $t("details.seasons") }}
           </h2>
-          <div
-            class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6"
+          <PaginatedResponsiveGrid
+            :items="seasonItems"
+            :total-items="seasonTotal"
+            :page="seasonsPage"
+            :page-size="12"
+            grid-class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6"
+            :item-key="(season) => season.season_number"
+            @update:page="setSeasonsPage"
           >
-            <NuxtLink
-              v-for="season in seasons"
-              :key="season.season_number"
-              :to="
-                localePath(
-                  `/show/${serie.id}/season/${season.season_number}${activeDubId ? `?dub=${activeDubId}` : ''}`,
-                )
-              "
-              class="group cursor-pointer block theme-input border theme-border-subtle theme-border rounded-2xl p-3 shadow-sm transition-colors theme-hover-border hover:shadow-md"
-            >
-              <div
-                class="relative w-full aspect-[2/3] rounded-xl overflow-hidden mb-3 theme-surface-muted"
+            <template #default="{ item: season }">
+              <NuxtLink
+                :key="season.season_number"
+                :to="
+                  localePath(
+                    `/show/${serie.id}/season/${season.season_number}${activeDubId ? `?dub=${activeDubId}` : ''}`,
+                  )
+                "
+                class="group cursor-pointer block theme-input border theme-border-subtle theme-border rounded-2xl p-3 shadow-sm transition-colors theme-hover-border hover:shadow-md"
               >
-                <NuxtImg
-                  format="webp"
-                  loading="lazy"
-                  decoding="async"
-                  v-if="season.poster_path"
-                  :src="season.poster_path"
-                  class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  :alt="season.name"
-                />
                 <div
-                  v-else
-                  class="w-full h-full flex items-center justify-center theme-text-muted theme-text-secondary"
+                  class="relative w-full aspect-[2/3] rounded-xl overflow-hidden mb-3 theme-surface-muted"
                 >
-                  <ClapperboardIcon class="w-8 h-8" />
+                  <NuxtImg
+                    format="webp"
+                    decoding="async"
+                    v-if="season.poster_path"
+                    :src="season.poster_path"
+                    class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    :alt="season.name"
+                  />
+                  <div
+                    v-else
+                    class="w-full h-full flex items-center justify-center theme-text-muted theme-text-secondary"
+                  >
+                    <ClapperboardIcon class="w-8 h-8" />
+                  </div>
                 </div>
-              </div>
-              <div class="flex flex-col">
-                <h3
-                  class="font-bold text-sm theme-text truncate theme-hover-primary-text transition-colors"
-                >
-                  {{ season.name }}
-                </h3>
-                <div
-                  v-if="season.episode_count"
-                  class="text-xs theme-text-muted mt-0.5"
-                >
-                  {{ season.episode_count }} {{ $t("details.episodes") }}
+                <div class="flex flex-col">
+                  <h3
+                    class="font-bold text-sm theme-text truncate theme-hover-primary-text transition-colors"
+                  >
+                    {{ season.name }}
+                  </h3>
+                  <div
+                    v-if="season.episode_count"
+                    class="text-xs theme-text-muted mt-0.5"
+                  >
+                    {{ season.episode_count }} {{ $t("details.episodes") }}
+                  </div>
                 </div>
-              </div>
-            </NuxtLink>
-          </div>
+              </NuxtLink>
+            </template>
+          </PaginatedResponsiveGrid>
         </section>
 
         <!-- Voice Cast -->
@@ -245,8 +251,8 @@
                 <div class="theme-text-muted text-sm mt-1">
                   {{
                     $t("media.rolesCount", {
-                      shown: filteredCast.length,
-                      total: formattedCast.length,
+                      shown: castItems.length,
+                      total: castTotal,
                     })
                   }}
                 </div>
@@ -268,7 +274,8 @@
 
           <PaginatedResponsiveGrid
             :key="searchQuery"
-            :items="filteredCast"
+            :items="castItems"
+            :total-items="castTotal"
             :page="castPage"
             :page-size="12"
             grid-class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
@@ -296,7 +303,6 @@
                     >
                       <NuxtImg
                         format="webp"
-                        loading="lazy"
                         decoding="async"
                         v-if="actor.profile_path"
                         :src="actor.profile_path"
@@ -334,7 +340,6 @@
                     >
                       <NuxtImg
                         format="webp"
-                        loading="lazy"
                         decoding="async"
                         v-if="actor.characterImage"
                         :src="actor.characterImage"
@@ -394,7 +399,6 @@
                       >
                         <NuxtImg
                           format="webp"
-                          loading="lazy"
                           decoding="async"
                           v-if="actor.voiceActor.profile_picture"
                           :src="actor.voiceActor.profile_picture"
@@ -493,7 +497,8 @@
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import { useRoute, useRouter } from "vue-router";
 
-import { fetchShowData } from "@app/shared-logic";
+import { fetchShowData, fetchDetailCollection } from "@app/shared-logic";
+import type { PaginatedResponse } from "@app/shared-logic";
 import { computed, ref, watch } from "vue";
 import { refDebounced } from "@vueuse/core";
 import {
@@ -530,7 +535,7 @@ const localePath = useLocalePath();
 
 const cacheKey = `show-${showId}-${locale.value}`;
 
-const { data, pending, refresh } = useAsyncData(
+const { data, pending } = useAsyncData(
   cacheKey,
   async () => {
     const nuxtApp = useNuxtApp();
@@ -559,6 +564,30 @@ const { data, pending, refresh } = useAsyncData(
 
 const serie = computed(() => data.value?.serie);
 const seasons = computed(() => serie.value?.seasons || []);
+const { page: seasonsPage, setPage: setSeasonsPage } =
+  useUrlPagination("seasonsPage");
+type ShowSeasonItem = Record<string, any>;
+const seasonsRequest = computed(() => ({
+  collection: "show-seasons" as const,
+  id: showId,
+  page: seasonsPage.value,
+  pageSize: 12,
+}));
+const { data: seasonsPageData } = useAsyncData<
+  PaginatedResponse<ShowSeasonItem>
+>(
+  `show-seasons-${showId}-${locale.value}`,
+  () => fetchDetailCollection<ShowSeasonItem>(seasonsRequest.value),
+  {
+    watch: [seasonsRequest],
+    getCachedData: (key, nuxtApp) =>
+      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+  },
+);
+const seasonItems = computed(() => seasonsPageData.value?.data || []);
+const seasonTotal = computed(
+  () => seasonsPageData.value?.pagination.totalItems || 0,
+);
 const dubbingProjects = computed(() => {
   const projects = [...(data.value?.dubbingProjects || [])].filter((p) =>
     projectHasVoiceActor(p),
@@ -727,40 +756,36 @@ const formattedCast = computed(() => {
 
 const searchQuery = ref("");
 const searchInput = ref("");
-const { page: castPage, setPage: setCastPage } =
-  useUrlPagination("castPage");
+const { page: castPage, setPage: setCastPage } = useUrlPagination("castPage");
 const debouncedSearch = refDebounced(searchInput, 150);
 watch(debouncedSearch, (val) => {
   searchQuery.value = val;
 });
-watch(searchQuery, () => {
-  void setCastPage(1);
-});
+watch([searchQuery, activeDubId], () => void setCastPage(1));
 
-const filteredCast = computed(() => {
-  if (!searchQuery.value) return formattedCast.value;
-  const query = searchQuery.value.toLowerCase().trim();
-  return formattedCast.value.filter((actor: any) => {
-    const actorName = actor.name?.toLowerCase() || "";
-    const characterName = (
-      actor.roles?.map((r: any) => r.character).join(", ") || ""
-    ).toLowerCase();
-    const vaName = actor.voiceActor
-      ? `${actor.voiceActor.firstname || ""} ${actor.voiceActor.lastname || ""}`.toLowerCase()
-      : "";
-    const vaPerformance = actor.voiceActor?.performance?.toLowerCase() || "";
-    return (
-      actorName.includes(query) ||
-      characterName.includes(query) ||
-      vaName.includes(query) ||
-      vaPerformance.includes(query)
-    );
-  });
-});
-
-watch([searchQuery, activeDubId], () => {
-  void refresh();
-});
+type ShowCastItem = Record<string, any>;
+const castRequest = computed(() => ({
+  collection: "media-cast" as const,
+  type: "show",
+  id: showId,
+  projectId: activeDubId.value || undefined,
+  query: searchQuery.value,
+  page: castPage.value,
+  pageSize: 12,
+}));
+const { data: castPageData } = useAsyncData<PaginatedResponse<ShowCastItem>>(
+  `show-cast-${showId}-${locale.value}`,
+  () => fetchDetailCollection<ShowCastItem>(castRequest.value),
+  {
+    watch: [castRequest],
+    getCachedData: (key, nuxtApp) =>
+      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+  },
+);
+const castItems = computed(() => castPageData.value?.data || []);
+const castTotal = computed(
+  () => castPageData.value?.pagination.totalItems || 0,
+);
 
 useHead({
   title: computed(() => {

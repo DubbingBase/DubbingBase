@@ -134,10 +134,10 @@
               <h2 class="text-xl font-bold text-white flex items-center gap-2">
                 <span>{{ $t("toyEditor.voiceNarrators") }}</span>
                 <span
-                  v-if="formattedCast.length > 0"
+                  v-if="castTotal > 0"
                   class="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/10 theme-status-warning-text font-semibold border border-amber-500/20"
                 >
-                  {{ formattedCast.length }}
+                  {{ castTotal }}
                 </span>
               </h2>
               <p class="text-xs theme-text-muted mt-1">
@@ -147,7 +147,7 @@
           </div>
 
           <div
-            v-if="formattedCast.length === 0"
+            v-if="castTotal === 0"
             class="text-center py-16 theme-surface-overlay rounded-2xl border theme-border theme-text-muted text-sm"
           >
             {{ $t("toy.noVoicesYet") }}
@@ -155,7 +155,8 @@
 
           <PaginatedResponsiveGrid
             v-else
-            :items="formattedCast"
+            :items="castItems"
+            :total-items="castTotal"
             :page="castPage"
             :page-size="12"
             grid-class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
@@ -167,43 +168,42 @@
                 :key="item.work_id"
                 class="theme-surface-overlay border theme-border rounded-2xl p-4 flex gap-4 items-center theme-hover-border transition-colors group shadow-md"
               >
-              <NuxtLink
-                :to="localePath(`/voice-actor/${item.voice_actor_id}`)"
-                class="relative w-14 h-14 rounded-full overflow-hidden theme-surface-muted shrink-0 border theme-border group-hover:border-amber-500 transition-colors flex items-center justify-center"
-              >
-                <NuxtImg
-                  v-if="item.profile_picture"
-                  :src="item.profile_picture"
-                  :alt="item.firstname + ' ' + item.lastname"
-                  class="w-full h-full object-cover"
-                  loading="lazy"
-                  decoding="async"
-                />
-                <span v-else class="text-sm font-bold theme-text-muted">
-                  {{ item.firstname?.[0] }}{{ item.lastname?.[0] }}
-                </span>
-              </NuxtLink>
-
-              <div class="flex-1 min-w-0">
                 <NuxtLink
                   :to="localePath(`/voice-actor/${item.voice_actor_id}`)"
-                  class="text-sm font-bold text-white theme-status-warning-text transition-colors truncate block"
+                  class="relative w-14 h-14 rounded-full overflow-hidden theme-surface-muted shrink-0 border theme-border group-hover:border-amber-500 transition-colors flex items-center justify-center"
                 >
-                  {{ item.firstname }} {{ item.lastname }}
+                  <NuxtImg
+                    v-if="item.profile_picture"
+                    :src="item.profile_picture"
+                    :alt="item.firstname + ' ' + item.lastname"
+                    class="w-full h-full object-cover"
+                    decoding="async"
+                  />
+                  <span v-else class="text-sm font-bold theme-text-muted">
+                    {{ item.firstname?.[0] }}{{ item.lastname?.[0] }}
+                  </span>
                 </NuxtLink>
-                <span class="text-xs theme-text-muted block truncate mt-0.5">
-                  {{
-                    item.character_name ||
-                    item.performance ||
-                    "Voix / Personnage"
-                  }}
-                </span>
-                <span
-                  v-if="item.note"
-                  class="text-xs theme-text-muted block truncate mt-1"
-                  >{{ item.note }}</span
-                >
-              </div>
+
+                <div class="flex-1 min-w-0">
+                  <NuxtLink
+                    :to="localePath(`/voice-actor/${item.voice_actor_id}`)"
+                    class="text-sm font-bold text-white theme-status-warning-text transition-colors truncate block"
+                  >
+                    {{ item.firstname }} {{ item.lastname }}
+                  </NuxtLink>
+                  <span class="text-xs theme-text-muted block truncate mt-0.5">
+                    {{
+                      item.character_name ||
+                      item.performance ||
+                      "Voix / Personnage"
+                    }}
+                  </span>
+                  <span
+                    v-if="item.note"
+                    class="text-xs theme-text-muted block truncate mt-1"
+                    >{{ item.note }}</span
+                  >
+                </div>
               </div>
             </template>
           </PaginatedResponsiveGrid>
@@ -226,8 +226,8 @@ import { useI18n } from "vue-i18n";
 import MediaSkeleton from "../../components/MediaSkeleton.vue";
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import ReportModal from "../../components/ReportModal.vue";
-import { fetchToyData } from "@app/shared-logic";
-import type { Toy, ToyResponse } from "@app/shared-logic";
+import { fetchToyData, fetchDetailCollection } from "@app/shared-logic";
+import type { Toy, ToyResponse, PaginatedResponse } from "@app/shared-logic";
 
 const route = useRoute();
 const router = useRouter();
@@ -248,12 +248,11 @@ const toyId = computed(() => {
 });
 
 const isReportModalOpen = ref(false);
-const { page: castPage, setPage: setCastPage } =
-  useUrlPagination("castPage");
+const { page: castPage, setPage: setCastPage } = useUrlPagination("castPage");
 const currentUrl = computed(() => route.fullPath);
 
 // Instant Hydration Data Fetching
-const { data, pending, refresh } = await useAsyncData(
+const { data, pending } = await useAsyncData(
   `toy-${toyId.value}-${locale.value}`,
   () => fetchToyData(toyId.value, locale.value),
   {
@@ -280,20 +279,11 @@ const activeDubProject = computed(() => {
   );
 });
 
-watch(activeDubId, () => {
-  void setCastPage(1);
-  void refresh();
-});
+watch(activeDubId, () => void setCastPage(1));
 
 const coverUrl = computed(() => {
   return toy.value?.cover_url || null;
 });
-
-function resolveProfilePicture(path?: string | null): string | null {
-  if (!path) return null;
-  if (path.startsWith("http://") || path.startsWith("https://")) return path;
-  return `https://supabase.dubbingbase.com/storage/v1/object/public/voice-actors/${path}`;
-}
 
 interface FormattedCastItem {
   work_id: number;
@@ -306,21 +296,29 @@ interface FormattedCastItem {
   profile_picture?: string | null;
 }
 
-const formattedCast = computed<FormattedCastItem[]>(() => {
-  if (!activeDubProject.value) return [];
-  const works =
-    activeDubProject.value.works || activeDubProject.value.work || [];
-  return works.map((w: any) => ({
-    work_id: w.id,
-    voice_actor_id: w.voice_actors?.id || w.voice_actor_id,
-    firstname: w.voice_actors?.firstname || "",
-    lastname: w.voice_actors?.lastname || "",
-    character_name: w.character_name || "",
-    performance: w.performance || "",
-    note: w.note || "",
-    profile_picture: resolveProfilePicture(w.voice_actors?.profile_picture),
-  }));
-});
+const castRequest = computed(() => ({
+  collection: "media-cast" as const,
+  type: "toy",
+  id: toyId.value,
+  projectId: activeDubId.value || undefined,
+  page: castPage.value,
+  pageSize: 12,
+}));
+const { data: castPageData } = useAsyncData<
+  PaginatedResponse<FormattedCastItem>
+>(
+  `toy-cast-${toyId.value}-${locale.value}`,
+  () => fetchDetailCollection<FormattedCastItem>(castRequest.value),
+  {
+    watch: [castRequest],
+    getCachedData: (key, nuxtApp) =>
+      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+  },
+);
+const castItems = computed(() => castPageData.value?.data || []);
+const castTotal = computed(
+  () => castPageData.value?.pagination.totalItems || 0,
+);
 
 useHead({
   title: computed(() =>
