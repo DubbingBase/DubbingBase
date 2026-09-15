@@ -34,3 +34,15 @@ done
 # Strip out storage.buckets inserts from seed.sql because config.toml already creates them 
 # and running an INSERT during seed will crash with a unique key constraint.
 perl -0777 -pi -e 's/INSERT INTO "storage"\."buckets".*?;//gs' supabase/seed.sql
+
+# The linked Storage schema can be newer than the local Storage image.
+perl -0777 -pi -e '
+  my $start = index($_, q{INSERT INTO "storage"."objects"});
+  if ($start >= 0) {
+    my $end = index($_, q{;}, $start);
+    my $block = substr($_, $start, $end - $start);
+    $block =~ s/, "archived_at", "is_delete_marker", "is_versioned"//;
+    $block =~ s/, (?:NULL|\x27(?:\x27\x27|[^\x27])*\x27), (?:true|false), (?:true|false)(?=\),?)/ /g;
+    substr($_, $start, $end - $start) = $block;
+  }
+' supabase/seed.sql
