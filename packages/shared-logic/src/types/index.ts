@@ -6,6 +6,8 @@ export type {
   Enums,
 } from "@app/supabase";
 
+export type { PaginatedResponse, PaginationMeta } from "./pagination";
+
 export interface Movie {
   adult: boolean;
   backdrop_path: string;
