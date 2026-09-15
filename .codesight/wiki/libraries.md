@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**77 library files** across 5 modules
+**78 library files** across 5 modules
 
 ## Website (41 files)
 
@@ -53,8 +53,9 @@
 - `apps/mobile/src/utils/image.ts` — getAvatarFallbackUrl
 - `apps/mobile/src/utils/language.ts` — getLanguageDisplayName
 
-## Shared-logic (16 files)
+## Shared-logic (17 files)
 
+- `packages/shared-logic/src/constants.ts` — resolveLocaleLanguage, LocaleConfig, SupportedLocale, NonDefaultLocale, MediaType, MediaRoutePrefix, …
 - `packages/shared-logic/src/composables/useStudioData.ts` — fetchStudioDetails, fetchStudiosData, useStudioData, Studio, StudioDetailsResponse
 - `packages/shared-logic/src/composables/useVoiceActorData.ts` — fetchVoiceActorData, useVoiceActorData, VoiceActorResponse, EnhancedWorkItem, VoiceActorDataPayload
 - `packages/shared-logic/src/composables/useActorData.ts` — fetchActorData, useActorData, ActorResponse, ActorDataPayload
