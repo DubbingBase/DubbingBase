@@ -507,7 +507,10 @@ const castRequest = computed(() => ({
 const { data: castPageData } = useAsyncData<
   PaginatedResponse<FormattedCastItem>
 >(
-  `audiobook-cast-${audiobookId.value}-${locale.value}`,
+  computed(
+    () =>
+      `audiobook-cast-${audiobookId.value}-${locale.value}-${castPage.value}-${activeDubId.value}-${debouncedSearch.value}`,
+  ),
   () => fetchDetailCollection<FormattedCastItem>(castRequest.value),
   {
     watch: [castRequest],

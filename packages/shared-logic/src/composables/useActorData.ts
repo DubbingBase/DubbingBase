@@ -26,7 +26,6 @@ export type ActorResponse = {
     voice_roles: Array<{
       id: number;
       performance: string | null;
-      highlight: boolean;
       voice_actors: Array<{
         id: number;
         firstname: string;
@@ -214,12 +213,10 @@ export function useActorData(
             vaMap.set(va.id, {
               ...va,
               rolesCount: 1,
-              highlight: role.highlight,
             });
           } else {
             const existing = vaMap.get(va.id);
             existing.rolesCount++;
-            if (role.highlight) existing.highlight = true;
           }
         }
       }

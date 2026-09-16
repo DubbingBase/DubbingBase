@@ -949,7 +949,6 @@ export const MOCK_ACTOR = {
       {
         id: 101,
         performance: "dialogues",
-        highlight: true,
         voice_actors: [
           {
             id: 1,

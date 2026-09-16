@@ -647,7 +647,10 @@ const castRequest = computed(() => ({
   pageSize: 12,
 }));
 const { data: castPageData } = useAsyncData<PaginatedResponse<EpisodeCastItem>>(
-  `episode-cast-${showId}-${seasonNumber}-${episodeNumber}-${locale.value}`,
+  computed(
+    () =>
+      `episode-cast-${showId}-${seasonNumber}-${episodeNumber}-${locale.value}-${castPage.value}-${activeDubId.value}-${debouncedSearch.value}`,
+  ),
   () => fetchDetailCollection<EpisodeCastItem>(castRequest.value),
   {
     watch: [castRequest],

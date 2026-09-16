@@ -137,9 +137,9 @@ function formatTmdbCards(
       if (matches) matchedWorkIds.add(work.id);
       return matches;
     });
-    const cardsForActor = actorWorks.length > 0 ? actorWorks : [null];
+    if (actorWorks.length === 0) continue;
 
-    for (const work of cardsForActor) {
+    for (const work of actorWorks) {
       const characterName = actor.character || work?.character_name || null;
       const characterPicture = (detail.characterProfilePictures || []).find(
         (picture: CollectionItem) =>
@@ -148,6 +148,7 @@ function formatTmdbCards(
       const voiceActor = work ? workVoiceActor(work) : null;
       cards.push({
         ...actor,
+        actorId: actor.id,
         id: work ? `${actor.id}-${work.id}` : actor.id,
         work_id: work?.id,
         voiceActor,
@@ -229,11 +230,12 @@ function formatGameCards(
 }
 
 async function getMediaCast(
+  event: any,
   query: Record<string, any>,
 ): Promise<CollectionItem[]> {
   const type = queryValue(query.type) || "";
   const id = requiredId(query.id, "id");
-  const requestFetch = useRequestFetch();
+  const requestFetch = event.$fetch;
   const detailQuery =
     type === "episode"
       ? {
@@ -257,17 +259,18 @@ async function getMediaCast(
 }
 
 async function getCollectionItems(
+  event: any,
   query: Record<string, any>,
 ): Promise<CollectionItem[]> {
   const collection = queryValue(query.collection) || "";
   const id = ["studio-projects", "studio-voice-actors"].includes(collection)
     ? requiredTextId(query.id, "id")
     : requiredId(query.id, "id");
-  const requestFetch = useRequestFetch();
+  const requestFetch = event.$fetch;
 
   switch (collection) {
     case "media-cast":
-      return await getMediaCast(query);
+      return await getMediaCast(event, query);
     case "show-seasons": {
       const detail = await requestFetch<DetailPayload>(`/api/show/${id}`);
       return detail.serie?.seasons || [];
@@ -317,7 +320,6 @@ async function getCollectionItems(
           voiceActors.set(voiceActor.id, {
             ...voiceActor,
             rolesCount: (current?.rolesCount || 0) + 1,
-            highlight: Boolean(current?.highlight || role.highlight),
           });
         }
       }
@@ -392,7 +394,7 @@ export default defineEventHandler(
     );
     setPublicCacheHeaders(event, hasFilter ? "search" : "detail");
 
-    const items = await getCollectionItems(query);
+    const items = await getCollectionItems(event, query);
     const filteredItems = items.filter((item) =>
       searchMatch(item, normalized(queryValue(query.query))),
     );

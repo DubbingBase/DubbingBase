@@ -26,17 +26,6 @@ async function getVoiceRoles(
     const workData = await getWorkByActor(actorId);
     if (!workData.length) return [];
 
-    const counts: Record<number, number> = {};
-    for (const row of workData) {
-      if (!row.voice_actor_id) continue;
-      counts[row.voice_actor_id] = (counts[row.voice_actor_id] || 0) + 1;
-    }
-
-    const top3 = Object.entries(counts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 3)
-      .map(([id]) => parseInt(id, 10));
-
     // Deduplicate media details requests
     const mediaKeySet = new Set<string>();
     const uniqueMediaItems: Array<{ contentId: number; contentType: string }> =
@@ -92,9 +81,6 @@ async function getVoiceRoles(
 
       return {
         ...work,
-        highlight: work.voice_actor_id
-          ? top3.includes(work.voice_actor_id)
-          : false,
         voice_actors: voice_actors
           ? [
               {

@@ -437,7 +437,10 @@ const episodeRequest = computed(() => ({
 const { data: episodePageData } = useAsyncData<
   PaginatedResponse<SeasonEpisode>
 >(
-  `season-episodes-${showId}-${seasonNumber}-${locale.value}`,
+  computed(
+    () =>
+      `season-episodes-${showId}-${seasonNumber}-${locale.value}-${episodesPage.value}`,
+  ),
   () => fetchDetailCollection<SeasonEpisode>(episodeRequest.value),
   {
     watch: [episodeRequest],

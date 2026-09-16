@@ -345,7 +345,10 @@ const castRequest = computed(() => ({
 const { data: castPageData } = useAsyncData<
   PaginatedResponse<FormattedCastItem>
 >(
-  `advertisement-cast-${adId.value}-${locale.value}`,
+  computed(
+    () =>
+      `advertisement-cast-${adId.value}-${locale.value}-${castPage.value}-${activeDubId.value}`,
+  ),
   () => fetchDetailCollection<FormattedCastItem>(castRequest.value),
   {
     watch: [castRequest],

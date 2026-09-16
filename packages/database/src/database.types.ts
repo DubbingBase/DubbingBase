@@ -731,9 +731,9 @@ export type Database = {
           isSetofReturn: true;
         };
       };
-      merge_voice_actors: {
-        Args: { p_keep_id: number; p_other_ids: number[] };
-        Returns: undefined;
+      merge_voice_actor_duplicates_atomic: {
+        Args: { p_keep_id: number; p_other_ids: number[]; p_updates?: Json };
+        Returns: Json;
       };
       normalize_actor_name: { Args: { str: string }; Returns: string };
       pop_media_queue_message: {
