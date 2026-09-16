@@ -43,14 +43,10 @@
     </div>
 
     <!-- Center Section: Search -->
-    <div
-      v-if="!isHomePage"
-      class="flex-1 max-w-md mx-4 hidden sm:flex justify-center"
-    >
-      <button
-        type="button"
+    <div class="flex-1 max-w-md mx-4 hidden sm:flex justify-center">
+      <NuxtLink
+        :to="localePath('/search')"
         data-testid="header-search-trigger"
-        @click="openSearch"
         class="group flex items-center justify-between w-full max-w-[320px] h-10 px-4 text-sm theme-text-muted theme-surface-raised theme-hover-surface-muted border border-transparent theme-hover-border rounded-full transition-all shadow-sm hover:shadow-md"
         :aria-label="t('search.placeholder')"
       >
@@ -58,29 +54,27 @@
           class="flex items-center gap-2 theme-text-muted group-hover:text-[var(--app-color-text-secondary)] transition-colors"
         >
           <SearchIcon :size="16" />
-          <span>{{ t("search.placeholder") || "Search..." }}</span>
+          <span>{{ t("search.placeholder") }}</span>
         </span>
         <kbd
           class="hidden md:inline-flex items-center justify-center w-5 h-5 text-[11px] font-medium theme-text-muted theme-surface-muted border theme-border-strong rounded transition-opacity"
         >
           /
         </kbd>
-      </button>
+      </NuxtLink>
     </div>
 
     <!-- Right Section: Actions & Profile -->
     <div class="flex items-center gap-1 md:gap-2 ml-auto shrink-0">
       <!-- Mobile Search Trigger -->
-      <button
-        type="button"
-        v-if="!isHomePage"
+      <NuxtLink
+        :to="localePath('/search')"
         data-testid="mobile-search-trigger"
-        @click="openSearch"
         :aria-label="t('search.placeholder')"
         class="sm:hidden p-2 theme-text-muted theme-hover-text theme-text-muted theme-hover-text theme-hover-surface-muted rounded-full transition-colors flex items-center justify-center"
       >
         <SearchIcon :size="20" />
-      </button>
+      </NuxtLink>
 
       <!-- Theme Toggle -->
       <ClientOnly>
@@ -225,12 +219,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { nextTick, onMounted, onUnmounted, ref, computed } from "vue";
 
 const useNewLogo = ref(false);
 import { useRoute } from "vue-router";
 import { useTheme } from "../composables/useTheme";
-import { useSearchModal } from "../composables/useSearchModal";
 import {
   SunIcon,
   MoonIcon,
@@ -257,7 +250,6 @@ const localePath = useLocalePath();
 const setLocale = (val: any) => {
   navigateTo(switchLocalePath(val));
 };
-const { openSearch } = useSearchModal();
 const user = useSupabaseUser();
 const route = useRoute();
 
@@ -271,5 +263,54 @@ const isAdmin = computed(() => {
     user.value?.app_metadata?.role === "admin" ||
     user.value?.user_metadata?.role === "admin"
   );
+});
+
+const focusSearchInput = (): void => {
+  document
+    .querySelector<HTMLInputElement>("[data-testid='search-input']")
+    ?.focus();
+};
+
+const goToSearch = async (): Promise<void> => {
+  if (route.path !== localePath("/search")) {
+    await navigateTo(localePath("/search"));
+  }
+  await nextTick();
+  focusSearchInput();
+};
+
+const isEditableTarget = (target: EventTarget | null): boolean => {
+  if (!(target instanceof HTMLElement)) return false;
+  return (
+    target.isContentEditable ||
+    ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)
+  );
+};
+
+const handleGlobalKeydown = (event: KeyboardEvent): void => {
+  if (
+    (event.metaKey || event.ctrlKey) &&
+    (event.key.toLowerCase() === "k" || event.code === "KeyK")
+  ) {
+    event.preventDefault();
+    void goToSearch();
+    return;
+  }
+
+  if (
+    (event.key === "/" || event.code === "Slash") &&
+    !isEditableTarget(event.target)
+  ) {
+    event.preventDefault();
+    void goToSearch();
+  }
+};
+
+onMounted(() => {
+  document.addEventListener("keydown", handleGlobalKeydown, true);
+});
+
+onUnmounted(() => {
+  document.removeEventListener("keydown", handleGlobalKeydown, true);
 });
 </script>

@@ -56,21 +56,21 @@
           </div>
         </div>
 
-        <div class="relative w-full max-w-2xl mx-auto">
-          <input
-            type="text"
-            readonly
-            :placeholder="$t('home.hero.searchPlaceholder')"
-            class="w-full theme-surface theme-text px-4 py-3 md:px-6 md:py-4 rounded-full text-base md:text-lg shadow-xl cursor-text outline-none pr-28 md:pr-32"
-            @click="openSearch"
-          />
-          <button
-            @click="openSearch"
-            class="absolute right-1 top-1 bottom-1 theme-primary-bg hover:bg-[var(--app-color-primary-hover)] font-bold py-1.5 px-4 md:py-2 md:px-6 rounded-full transition-all text-sm md:text-base"
+        <NuxtLink
+          :to="localePath('/search')"
+          data-testid="home-search-trigger"
+          class="relative mx-auto block w-full max-w-2xl rounded-full theme-surface px-4 py-3 text-left text-base shadow-xl theme-text md:px-6 md:py-4 md:text-lg"
+          :aria-label="$t('home.hero.searchPlaceholder')"
+        >
+          <span class="block pr-28 md:pr-32">
+            {{ $t("home.hero.searchPlaceholder") }}
+          </span>
+          <span
+            class="absolute right-1 top-1 bottom-1 flex items-center rounded-full px-4 py-1.5 font-bold theme-primary-bg transition-all hover:bg-[var(--app-color-primary-hover)] md:px-6 md:py-2"
           >
             {{ $t("home.hero.searchButton") }}
-          </button>
-        </div>
+          </span>
+        </NuxtLink>
       </div>
     </section>
 
@@ -436,7 +436,6 @@
 
 <script setup lang="ts">
 import { fetchHomeData, resolveLocaleLanguage } from "@app/shared-logic";
-import { useSearchModal } from "../composables/useSearchModal";
 import { useDragScroll } from "../composables/useDragScroll";
 import { ref, computed } from "vue";
 
@@ -462,7 +461,6 @@ const ogLocale = computed(() => {
 });
 
 const supabase = useSupabaseClient();
-const { openSearch } = useSearchModal();
 
 const moviesScrollRef = ref<HTMLElement | null>(null);
 const seriesScrollRef = ref<HTMLElement | null>(null);
