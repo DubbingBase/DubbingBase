@@ -97,7 +97,7 @@
     <div v-else class="space-y-8">
       <div
         v-for="(group, idx) in duplicates"
-        :key="idx"
+        :key="group.actors.map((actor) => actor.id).join('-')"
         class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-6 shadow-xl"
       >
         <div
@@ -145,7 +145,9 @@
                           v-if="actor.profile_picture"
                           :src="actor.profile_picture"
                           class="h-full w-full object-cover"
-                          alt="Actor Avatar"
+                          :alt="`${actor.firstname} ${actor.lastname}`"
+                          loading="lazy"
+                          decoding="async"
                         />
                         <svg
                           v-else
@@ -164,36 +166,144 @@
                       </div>
                       <div class="min-w-0">
                         <h5 class="font-bold theme-text text-base">
-                          {{ $t("admin.duplicates.candidate") }}
+                          {{ actor.firstname }} {{ actor.lastname }}
                         </h5>
                         <p class="text-xs theme-text-muted font-mono mt-0.5">
                           {{ $t("common.idLabel") }}{{ actor.id }}
                         </p>
                       </div>
                     </div>
+                    <div class="flex gap-2 text-xs shrink-0">
+                      <a
+                        v-if="actor.tmdb_id"
+                        :href="`https://www.themoviedb.org/person/${actor.tmdb_id}`"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="theme-status-info-text hover:underline"
+                        >TMDB</a
+                      >
+                      <a
+                        v-if="actor.wikidata_id"
+                        :href="`https://www.wikidata.org/wiki/Special:GoToLinkedPage/${locale}wiki/${actor.wikidata_id}`"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="theme-status-info-text hover:underline"
+                        >Wikipedia</a
+                      >
+                    </div>
+                  </div>
+                </th>
+                <th
+                  class="p-4 theme-surface-overlay border-b border-l theme-border min-w-[320px]"
+                >
+                  <div class="flex items-center gap-3">
+                    <div
+                      class="h-10 w-10 rounded-full overflow-hidden shrink-0 border theme-border theme-surface-overlay flex items-center justify-center theme-text-muted"
+                    >
+                      <NuxtImg
+                        v-if="keptActor(group)?.profile_picture"
+                        format="webp"
+                        :src="keptActor(group)?.profile_picture || ''"
+                        class="h-full w-full object-cover"
+                        :alt="`${group.merged.firstname} ${group.merged.lastname}`"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                      <svg
+                        v-else
+                        class="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
+                      </svg>
+                    </div>
+                    <span>{{ $t("admin.duplicates.finalProfile") }}</span>
                   </div>
                 </th>
               </tr>
             </thead>
             <tbody class="divide-y theme-divide">
-              <!-- Name Row -->
+              <!-- First name Row -->
               <tr>
                 <td
                   class="p-4 theme-text-muted font-medium theme-surface-overlay"
                 >
-                  {{ $t("voiceActor.name") }}
+                  {{ $t("admin.duplicates.firstName") }}
                 </td>
                 <td
                   v-for="actor in group.actors"
                   :key="'n-' + actor.id"
                   class="p-4 border-l theme-border"
-                  :class="getNameDiffClass(group.actors)"
+                  :class="getDiffClass(group.actors, 'firstname')"
                 >
-                  {{ actor.firstname }} {{ actor.lastname }}
+                  {{ actor.firstname || "-" }}
+                </td>
+                <td class="p-4 border-l theme-border">
+                  <input
+                    v-model="group.merged.firstname"
+                    class="w-full rounded-lg theme-input px-3 py-2"
+                  />
+                  <div class="flex flex-wrap gap-2 mt-2">
+                    <button
+                      v-for="actor in uniqueSuggestions(
+                        group.actors,
+                        'firstname',
+                      )"
+                      :key="`first-${actor.id}`"
+                      type="button"
+                      class="text-xs theme-status-info-text hover:underline"
+                      @click="group.merged.firstname = actor.firstname"
+                    >
+                      {{ actor.firstname }}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <!-- Last name Row -->
+              <tr>
+                <td
+                  class="p-4 theme-text-muted font-medium theme-surface-overlay"
+                >
+                  {{ $t("admin.duplicates.lastName") }}
+                </td>
+                <td
+                  v-for="actor in group.actors"
+                  :key="`last-${actor.id}`"
+                  class="p-4 border-l theme-border"
+                  :class="getDiffClass(group.actors, 'lastname')"
+                >
+                  {{ actor.lastname || "-" }}
+                </td>
+                <td class="p-4 border-l theme-border">
+                  <input
+                    v-model="group.merged.lastname"
+                    class="w-full rounded-lg theme-input px-3 py-2"
+                  />
+                  <div class="flex flex-wrap gap-2 mt-2">
+                    <button
+                      v-for="actor in uniqueSuggestions(
+                        group.actors,
+                        'lastname',
+                      )"
+                      :key="`last-use-${actor.id}`"
+                      type="button"
+                      class="text-xs theme-status-info-text hover:underline"
+                      @click="group.merged.lastname = actor.lastname"
+                    >
+                      {{ actor.lastname }}
+                    </button>
+                  </div>
                 </td>
               </tr>
               <!-- Nationality Row -->
-              <tr v-if="hasAny(group.actors, 'nationality')">
+              <tr>
                 <td
                   class="p-4 theme-text-muted font-medium theme-surface-overlay"
                 >
@@ -207,9 +317,27 @@
                 >
                   {{ actor.nationality || "-" }}
                 </td>
+                <td class="p-4 border-l theme-border">
+                  <input
+                    v-model="group.merged.nationality"
+                    class="w-full rounded-lg theme-input px-3 py-2"
+                  />
+                  <button
+                    v-for="actor in uniqueSuggestions(
+                      group.actors,
+                      'nationality',
+                    )"
+                    :key="`nat-use-${actor.id}`"
+                    type="button"
+                    class="mr-2 mt-2 text-xs theme-status-info-text hover:underline"
+                    @click="group.merged.nationality = actor.nationality || ''"
+                  >
+                    {{ actor.nationality || $t("admin.duplicates.empty") }}
+                  </button>
+                </td>
               </tr>
               <!-- Born Row -->
-              <tr v-if="hasAny(group.actors, 'date_of_birth')">
+              <tr>
                 <td
                   class="p-4 theme-text-muted font-medium theme-surface-overlay"
                 >
@@ -225,9 +353,28 @@
                     actor.date_of_birth ? formatDate(actor.date_of_birth) : "-"
                   }}
                 </td>
+                <td class="p-4 border-l theme-border">
+                  <input
+                    v-model="group.merged.date_of_birth"
+                    type="date"
+                    class="w-full rounded-lg theme-input px-3 py-2"
+                  />
+                  <button
+                    v-for="actor in uniqueSuggestions(
+                      group.actors,
+                      'date_of_birth',
+                    )"
+                    :key="`dob-use-${actor.id}`"
+                    type="button"
+                    class="mr-2 mt-2 text-xs theme-status-info-text hover:underline"
+                    @click="group.merged.date_of_birth = actor.date_of_birth"
+                  >
+                    {{ actor.date_of_birth || $t("admin.duplicates.empty") }}
+                  </button>
+                </td>
               </tr>
               <!-- TMDB Row -->
-              <tr v-if="hasAny(group.actors, 'tmdb_id')">
+              <tr>
                 <td
                   class="p-4 theme-text-muted font-medium theme-surface-overlay"
                 >
@@ -241,9 +388,25 @@
                 >
                   {{ actor.tmdb_id || "-" }}
                 </td>
+                <td class="p-4 border-l theme-border">
+                  <input
+                    v-model="group.merged.tmdb_id"
+                    type="number"
+                    class="w-full rounded-lg theme-input px-3 py-2"
+                  />
+                  <button
+                    v-for="actor in uniqueSuggestions(group.actors, 'tmdb_id')"
+                    :key="`tmdb-use-${actor.id}`"
+                    type="button"
+                    class="mr-2 mt-2 text-xs theme-status-info-text hover:underline"
+                    @click="group.merged.tmdb_id = actor.tmdb_id"
+                  >
+                    {{ actor.tmdb_id || $t("admin.duplicates.empty") }}
+                  </button>
+                </td>
               </tr>
               <!-- Wikidata Row -->
-              <tr v-if="hasAny(group.actors, 'wikidata_id')">
+              <tr>
                 <td
                   class="p-4 theme-text-muted font-medium theme-surface-overlay"
                 >
@@ -257,9 +420,27 @@
                 >
                   {{ actor.wikidata_id || "-" }}
                 </td>
+                <td class="p-4 border-l theme-border">
+                  <input
+                    v-model="group.merged.wikidata_id"
+                    class="w-full rounded-lg theme-input px-3 py-2"
+                  />
+                  <button
+                    v-for="actor in uniqueSuggestions(
+                      group.actors,
+                      'wikidata_id',
+                    )"
+                    :key="`wik-use-${actor.id}`"
+                    type="button"
+                    class="mr-2 mt-2 text-xs theme-status-info-text hover:underline"
+                    @click="group.merged.wikidata_id = actor.wikidata_id || ''"
+                  >
+                    {{ actor.wikidata_id || $t("admin.duplicates.empty") }}
+                  </button>
+                </td>
               </tr>
               <!-- Bio Row -->
-              <tr v-if="hasAny(group.actors, 'bio')">
+              <tr>
                 <td
                   class="p-4 theme-text-muted font-medium theme-surface-overlay align-top"
                 >
@@ -278,44 +459,25 @@
                     {{ actor.bio || "-" }}
                   </div>
                 </td>
-              </tr>
-              <!-- Action Row -->
-              <tr>
-                <td
-                  class="p-4 theme-text-muted font-medium theme-surface-overlay"
-                >
-                  {{ $t("admin.auditLogs.action") }}
-                </td>
-                <td
-                  v-for="actor in group.actors"
-                  :key="'sel-' + actor.id"
-                  class="p-0 border-l theme-border theme-surface-overlay transition-colors"
-                  :class="
-                    group.selectedId === actor.id
-                      ? 'theme-selected shadow-inner'
-                      : 'theme-hover-surface-muted'
-                  "
-                >
-                  <label
-                    class="flex items-center space-x-3 cursor-pointer w-full h-full p-4"
+                <td class="p-4 border-l theme-border">
+                  <textarea
+                    v-model="group.merged.bio"
+                    rows="4"
+                    class="w-full rounded-lg theme-input px-3 py-2"
+                  />
+                  <button
+                    v-for="actor in uniqueSuggestions(group.actors, 'bio')"
+                    :key="`bio-use-${actor.id}`"
+                    type="button"
+                    class="mr-2 mt-2 text-xs theme-status-info-text hover:underline"
+                    @click="group.merged.bio = actor.bio || ''"
                   >
-                    <input
-                      type="radio"
-                      :name="'group-' + idx"
-                      :value="actor.id"
-                      v-model="group.selectedId"
-                      class="h-5 w-5 theme-status-info-text focus:ring-[var(--app-color-focus)] focus:ring-offset-[var(--app-color-background)] theme-input theme-border"
-                    />
-                    <span
-                      class="text-sm font-bold"
-                      :class="
-                        group.selectedId === actor.id
-                          ? 'theme-status-info-text'
-                          : 'theme-text-secondary'
-                      "
-                      >{{ $t("admin.duplicates.keepId") }}{{ actor.id }}</span
-                    >
-                  </label>
+                    {{
+                      actor.bio
+                        ? `${actor.firstname} ${actor.lastname}`
+                        : $t("admin.duplicates.empty")
+                    }}
+                  </button>
                 </td>
               </tr>
             </tbody>
@@ -383,6 +545,8 @@ definePageMeta({
 
 import { ref } from "vue";
 
+const { locale } = useI18n();
+
 interface VoiceActorCandidate {
   id: number;
   firstname: string;
@@ -398,6 +562,20 @@ interface VoiceActorCandidate {
 interface DuplicateGroup {
   actors: VoiceActorCandidate[];
   selectedId: number | null;
+  merged: Pick<
+    VoiceActorCandidate,
+    | "firstname"
+    | "lastname"
+    | "bio"
+    | "nationality"
+    | "date_of_birth"
+    | "tmdb_id"
+    | "wikidata_id"
+  >;
+}
+
+interface DuplicateResponse {
+  actors: VoiceActorCandidate[];
 }
 
 const duplicates = ref<DuplicateGroup[]>([]);
@@ -430,12 +608,6 @@ const isDifferent = (
   return actors.some((a) => a[field] !== firstVal);
 };
 
-const isDifferentName = (actors: VoiceActorCandidate[]) => {
-  if (!actors || actors.length < 2 || !actors[0]) return false;
-  const firstName = actors[0].firstname + " " + actors[0].lastname;
-  return actors.some((a) => a.firstname + " " + a.lastname !== firstName);
-};
-
 const getDiffClass = (
   actors: VoiceActorCandidate[],
   field: keyof VoiceActorCandidate,
@@ -443,21 +615,6 @@ const getDiffClass = (
   return isDifferent(actors, field)
     ? "theme-status-warning-text font-bold bg-amber-900/30 shadow-[inset_0_0_0_1px_rgba(217,119,6,0.5)]"
     : "theme-text-secondary";
-};
-
-const getNameDiffClass = (actors: VoiceActorCandidate[]) => {
-  return isDifferentName(actors)
-    ? "theme-status-warning-text font-bold bg-amber-900/30 shadow-[inset_0_0_0_1px_rgba(217,119,6,0.5)]"
-    : "theme-text font-semibold";
-};
-
-const hasAny = (
-  actors: VoiceActorCandidate[],
-  field: keyof VoiceActorCandidate,
-) => {
-  return actors.some(
-    (a) => a[field] !== null && a[field] !== undefined && a[field] !== "",
-  );
 };
 
 const calculateScore = (actor: VoiceActorCandidate) => {
@@ -495,21 +652,67 @@ const preselectBest = (actors: VoiceActorCandidate[]) => {
   return bestActor.id;
 };
 
+const uniqueSuggestions = (
+  actors: VoiceActorCandidate[],
+  field: keyof VoiceActorCandidate,
+) => {
+  const seen = new Set<string>();
+  return actors.filter((actor) => {
+    const value = String(actor[field] ?? "");
+    if (seen.has(value)) return false;
+    seen.add(value);
+    return true;
+  });
+};
+
+const keptActor = (group: DuplicateGroup) =>
+  group.actors.find((actor) => actor.id === group.selectedId);
+
+const mergedValues = (actors: VoiceActorCandidate[]) => {
+  const best =
+    actors.find((actor) => actor.id === preselectBest(actors)) || actors[0];
+  return {
+    firstname: best?.firstname || "",
+    lastname: best?.lastname || "",
+    bio: best?.bio || actors.find((actor) => actor.bio)?.bio || null,
+    nationality:
+      best?.nationality ||
+      actors.find((actor) => actor.nationality)?.nationality ||
+      null,
+    date_of_birth:
+      best?.date_of_birth ||
+      actors.find((actor) => actor.date_of_birth)?.date_of_birth ||
+      null,
+    tmdb_id:
+      best?.tmdb_id || actors.find((actor) => actor.tmdb_id)?.tmdb_id || null,
+    wikidata_id:
+      best?.wikidata_id ||
+      actors.find((actor) => actor.wikidata_id)?.wikidata_id ||
+      null,
+  };
+};
+
 const fetchDuplicates = async () => {
   try {
     loading.value = true;
     error.value = "";
     duplicates.value = [];
 
-    const data = await $fetch<any[]>("/api/find_duplicate_voice_actors");
+    const data = await $fetch<DuplicateResponse[]>(
+      "/api/find_duplicate_voice_actors",
+    );
 
-    duplicates.value = (data || []).map((group: any) => ({
-      actors: group.actors || [],
-      selectedId: preselectBest(group.actors || []),
+    duplicates.value = (data || []).map((group) => ({
+      actors: group.actors,
+      selectedId: preselectBest(group.actors),
+      merged: mergedValues(group.actors),
     }));
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error fetching voice actor duplicates:", err);
-    error.value = err.message || "Failed to find duplicate voice actors.";
+    error.value =
+      err instanceof Error
+        ? err.message
+        : "Failed to find duplicate voice actors.";
   } finally {
     loading.value = false;
   }
@@ -532,16 +735,19 @@ const mergeGroup = async (group: DuplicateGroup) => {
       body: {
         keepId: group.selectedId,
         ids: idsToMerge,
+        updates: group.merged,
       },
     });
 
     showToast("Duplicate voice actor profiles merged successfully", "success");
 
-    // Remove group from UI list
-    duplicates.value = duplicates.value.filter((g) => g !== group);
-  } catch (err: any) {
+    await fetchDuplicates();
+  } catch (err: unknown) {
     console.error("Error merging duplicate voice actors:", err);
-    showToast(err.message || "Failed to merge profiles", "error");
+    showToast(
+      err instanceof Error ? err.message : "Failed to merge profiles",
+      "error",
+    );
   } finally {
     mergingGroup.value[groupIndex] = false;
   }

@@ -103,7 +103,7 @@ run = "pnpm dev"
 description = "Runs the website"
 depends = ["install"]
 dir = "apps/website"
-run = "doppler run -- pnpm dev --host 0.0.0.0"
+run = "doppler run -- sh -c 'node ../../scripts/check-local-supabase-env.mjs && exec pnpm dev --host 0.0.0.0'"
 
 [tasks.landing]
 description = "Runs the public facing landing website"
