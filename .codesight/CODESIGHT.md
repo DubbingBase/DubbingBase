@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 75 routes | 16 models | 195 components | 78 lib files | 63 env vars | 12 middleware | 4% test coverage
-> **Token savings:** this file is ~14,500 tokens. Without it, AI exploration would cost ~149,300 tokens. **Saves ~134,800 tokens per conversation.**
-> **Last scanned:** 2026-09-16 13:55 — re-run after significant changes
+> 75 routes | 16 models | 197 components | 78 lib files | 63 env vars | 12 middleware | 4% test coverage
+> **Token savings:** this file is ~14,600 tokens. Without it, AI exploration would cost ~150,000 tokens. **Saves ~135,400 tokens per conversation.**
+> **Last scanned:** 2026-09-16 18:09 — re-run after significant changes
 
 ---
 
@@ -312,7 +312,8 @@
 - **PersonSkeleton** [client] — `apps/website/src/components/PersonSkeleton.vue`
 - **PwaLifecycleBanner** [client] — `apps/website/src/components/PwaLifecycleBanner.vue`
 - **ReportModal** [client] — props: open, targetUrl — `apps/website/src/components/ReportModal.vue`
-- **SearchModal** [client] — `apps/website/src/components/SearchModal.vue`
+- **SearchFilters** [client] — props: modelValue — `apps/website/src/components/SearchFilters.vue`
+- **SearchResultItem** [client] — props: result, mediaTypeLabel, selected — `apps/website/src/components/SearchResultItem.vue`
 - **UnderConstruction** [client] — `apps/website/src/components/UnderConstruction.vue`
 - **AsyncAutocomplete** [client] — props: modelValue, options, loading, placeholder, disabled, allowCreate, displayFn — `apps/website/src/components/admin/AsyncAutocomplete.vue`
 - **LanguageSelect** [client] — props: modelValue, required — `apps/website/src/components/admin/LanguageSelect.vue`
@@ -380,6 +381,7 @@
 - **settings** [client] — `apps/website/src/pages/profile/settings.vue`
 - **profile** [client] — `apps/website/src/pages/profile.vue`
 - **register** [client] — `apps/website/src/pages/register.vue`
+- **search** [client] — `apps/website/src/pages/search.vue`
 - **series** [client] — `apps/website/src/pages/series.vue`
 - **[episodeNumber]** [client] — `apps/website/src/pages/show/[id]/season/[seasonNumber]/episode/[episodeNumber].vue`
 - **[seasonNumber]** [client] — `apps/website/src/pages/show/[id]/season/[seasonNumber].vue`
@@ -541,7 +543,6 @@
 - `apps/website/src/composables/useContribute.ts` — function fetchRandomTask, function useContribute
 - `apps/website/src/composables/useDragScroll.ts` — function useDragScroll: (scrollRef) => void
 - `apps/website/src/composables/useReports.ts` — function useReports
-- `apps/website/src/composables/useSearchModal.ts` — function useSearchModal: () => void
 - `apps/website/src/composables/useTheme.ts` — function useTheme: () => void
 - `apps/website/src/composables/useUrlPagination.ts` — function readUrlPage: (value) => number, function useUrlPagination: (queryKey) => void
 - `apps/website/src/lib/media-editor-routes.ts` — function getMediaEditorRoute: ({...}, mediaId, projectId }) => string | null
@@ -552,6 +553,7 @@
   - interface CastActorReference
   - interface CastWorkReference
   - interface CastWorkMatchResult
+- `apps/website/src/utils/search-routes.ts` — function getSearchResultRoute: (result, "id" | "media_type">) => string, type SearchFilter
 - `e2e/helpers/mock-api.ts` — function setupMockApi: (page, options) => void, interface MockApiOptions
 - `packages/og-image/src/index.ts`
   - function generateTemplate: (options) => void
@@ -745,7 +747,7 @@
 # Test Coverage
 
 > **4%** of routes and models are covered by tests
-> 30 test files found
+> 31 test files found
 
 ## Covered Models
 

@@ -29,8 +29,8 @@
 - `apps/website/server/utils/urls/supabase.ts` — buildSupabaseImageUrl, processVoiceActor
 - `apps/website/src/composables/useContribute.ts` — fetchRandomTask, useContribute
 - `apps/website/src/composables/useUrlPagination.ts` — readUrlPage, useUrlPagination
+- `apps/website/src/utils/search-routes.ts` — getSearchResultRoute, SearchFilter
 - `apps/website/server/api/movie/[id].get.ts` — fetchMovieData
-- `apps/website/server/api/show/[id].get.ts` — fetchShowData
 - _…and 16 more files_
 
 ## Mobile (17 files)

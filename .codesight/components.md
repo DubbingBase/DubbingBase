@@ -108,7 +108,8 @@
 - **PersonSkeleton** [client] — `apps/website/src/components/PersonSkeleton.vue`
 - **PwaLifecycleBanner** [client] — `apps/website/src/components/PwaLifecycleBanner.vue`
 - **ReportModal** [client] — props: open, targetUrl — `apps/website/src/components/ReportModal.vue`
-- **SearchModal** [client] — `apps/website/src/components/SearchModal.vue`
+- **SearchFilters** [client] — props: modelValue — `apps/website/src/components/SearchFilters.vue`
+- **SearchResultItem** [client] — props: result, mediaTypeLabel, selected — `apps/website/src/components/SearchResultItem.vue`
 - **UnderConstruction** [client] — `apps/website/src/components/UnderConstruction.vue`
 - **AsyncAutocomplete** [client] — props: modelValue, options, loading, placeholder, disabled, allowCreate, displayFn — `apps/website/src/components/admin/AsyncAutocomplete.vue`
 - **LanguageSelect** [client] — props: modelValue, required — `apps/website/src/components/admin/LanguageSelect.vue`
@@ -176,6 +177,7 @@
 - **settings** [client] — `apps/website/src/pages/profile/settings.vue`
 - **profile** [client] — `apps/website/src/pages/profile.vue`
 - **register** [client] — `apps/website/src/pages/register.vue`
+- **search** [client] — `apps/website/src/pages/search.vue`
 - **series** [client] — `apps/website/src/pages/series.vue`
 - **[episodeNumber]** [client] — `apps/website/src/pages/show/[id]/season/[seasonNumber]/episode/[episodeNumber].vue`
 - **[seasonNumber]** [client] — `apps/website/src/pages/show/[id]/season/[seasonNumber].vue`
