@@ -11,6 +11,7 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 - [Overview](./overview.md)
 - [Database](./database.md)
 - [[id].get](./[id].get.md)
+- [Admin](./admin.md)
 - [Career-grid.get](./career-grid.get.md)
 - [Cast-vote.post](./cast-vote.post.md)
 - [Count-voice-actor-works.post](./count-voice-actor-works.post.md)
@@ -18,13 +19,11 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 - [Dashboard-stats.get](./dashboard-stats.get.md)
 - [Delete-user-voice-actor-link.post](./delete-user-voice-actor-link.post.md)
 - [Delete-voice-actor-link.post](./delete-voice-actor-link.post.md)
-- [Delete-work-entry.post](./delete-work-entry.post.md)
 - [Delete_user.post](./delete_user.post.md)
 - [Detail-collections.get](./detail-collections.get.md)
 - [Extract-credits-from-image.post](./extract-credits-from-image.post.md)
 - [Extract-voice-actor-info.post](./extract-voice-actor-info.post.md)
 - [Find_duplicate_voice_actors.get](./find_duplicate_voice_actors.get.md)
-- [Find_duplicate_work.get](./find_duplicate_work.get.md)
 - [Games.get](./games.get.md)
 - [Generate-social-content.post](./generate-social-content.post.md)
 - [Get-dubbing-project.get](./get-dubbing-project.get.md)
@@ -109,4 +108,4 @@ These exist in your codebase but are **not** reflected in wiki articles:
 When in doubt, search the source. The wiki is a starting point, not a complete inventory.
 
 ---
-_Last compiled: 2026-09-17 · 69 articles · [codesight](https://github.com/Houseofmvps/codesight)_
+_Last compiled: 2026-09-17 · 68 articles · [codesight](https://github.com/Houseofmvps/codesight)_
