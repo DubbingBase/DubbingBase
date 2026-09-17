@@ -168,6 +168,14 @@ export async function setupMockApi(page: Page, options: MockApiOptions = {}) {
       });
     }
 
+    if (path.includes("/api/top-contributors")) {
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify([]),
+      });
+    }
+
     // 11. Home stats
     if (path.includes("/api/home-stats")) {
       return route.fulfill({

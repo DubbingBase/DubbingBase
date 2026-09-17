@@ -56,21 +56,35 @@
           </div>
         </div>
 
-        <div class="relative w-full max-w-2xl mx-auto">
+        <form
+          role="search"
+          data-testid="home-search-form"
+          class="mx-auto flex w-full max-w-2xl items-center rounded-full theme-surface p-1 text-left text-base shadow-xl md:p-1.5 md:text-lg"
+          @submit.prevent="submitHomeSearch"
+        >
+          <label class="sr-only" for="home-search-input">
+            {{ $t("home.hero.searchPlaceholder") }}
+          </label>
           <input
-            type="text"
-            readonly
+            id="home-search-input"
+            ref="homeSearchInput"
+            v-model="homeSearchQuery"
+            type="search"
+            minlength="2"
+            required
+            data-testid="home-search-input"
             :placeholder="$t('home.hero.searchPlaceholder')"
-            class="w-full theme-surface theme-text px-4 py-3 md:px-6 md:py-4 rounded-full text-base md:text-lg shadow-xl cursor-text outline-none pr-28 md:pr-32"
-            @click="openSearch"
+            class="min-w-0 flex-1 bg-transparent py-2 pl-3 pr-2 text-base outline-none theme-text theme-placeholder theme-focus md:py-3 md:pl-5 md:text-lg"
           />
           <button
-            @click="openSearch"
-            class="absolute right-1 top-1 bottom-1 theme-primary-bg hover:bg-[var(--app-color-primary-hover)] font-bold py-1.5 px-4 md:py-2 md:px-6 rounded-full transition-all text-sm md:text-base"
+            type="submit"
+            data-testid="home-search-submit"
+            :disabled="!canSubmitHomeSearch"
+            class="shrink-0 rounded-full px-4 py-2 font-bold theme-primary-bg transition-all hover:bg-[var(--app-color-primary-hover)] disabled:cursor-not-allowed disabled:opacity-50 md:px-6 md:py-2.5"
           >
             {{ $t("home.hero.searchButton") }}
           </button>
-        </div>
+        </form>
       </div>
     </section>
 
@@ -436,7 +450,6 @@
 
 <script setup lang="ts">
 import { fetchHomeData, resolveLocaleLanguage } from "@app/shared-logic";
-import { useSearchModal } from "../composables/useSearchModal";
 import { useDragScroll } from "../composables/useDragScroll";
 import { ref, computed } from "vue";
 
@@ -450,6 +463,24 @@ const isAdmin = computed(() => {
 
 const { t, locale } = useI18n();
 const localePath = useLocalePath();
+const homeSearchQuery = ref("");
+const homeSearchInput = ref<HTMLInputElement | null>(null);
+const canSubmitHomeSearch = computed(
+  () => homeSearchQuery.value.trim().length >= 2,
+);
+
+const submitHomeSearch = (): void => {
+  const query = homeSearchQuery.value.trim();
+  if (query.length < 2) {
+    homeSearchInput.value?.focus();
+    return;
+  }
+
+  void navigateTo({
+    path: localePath("/search"),
+    query: { q: query },
+  });
+};
 
 const ogLocale = computed(() => {
   const map: Record<string, string> = {
@@ -462,7 +493,6 @@ const ogLocale = computed(() => {
 });
 
 const supabase = useSupabaseClient();
-const { openSearch } = useSearchModal();
 
 const moviesScrollRef = ref<HTMLElement | null>(null);
 const seriesScrollRef = ref<HTMLElement | null>(null);

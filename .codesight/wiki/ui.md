@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Component inventory and prop signatures extracted via AST. Read the source files before adding props or modifying component logic.
 
-**195 components** (vue)
+**197 components** (vue)
 
 ## Client Components
 
@@ -114,7 +114,8 @@
 - **PersonSkeleton** — `apps/website/src/components/PersonSkeleton.vue`
 - **PwaLifecycleBanner** — `apps/website/src/components/PwaLifecycleBanner.vue`
 - **ReportModal** — props: open, targetUrl — `apps/website/src/components/ReportModal.vue`
-- **SearchModal** — `apps/website/src/components/SearchModal.vue`
+- **SearchFilters** — props: modelValue — `apps/website/src/components/SearchFilters.vue`
+- **SearchResultItem** — props: result, mediaTypeLabel, selected — `apps/website/src/components/SearchResultItem.vue`
 - **UnderConstruction** — `apps/website/src/components/UnderConstruction.vue`
 - **AsyncAutocomplete** — props: modelValue, options, loading, placeholder, disabled, allowCreate, displayFn — `apps/website/src/components/admin/AsyncAutocomplete.vue`
 - **LanguageSelect** — props: modelValue, required — `apps/website/src/components/admin/LanguageSelect.vue`
@@ -182,6 +183,7 @@
 - **settings** — `apps/website/src/pages/profile/settings.vue`
 - **profile** — `apps/website/src/pages/profile.vue`
 - **register** — `apps/website/src/pages/register.vue`
+- **search** — `apps/website/src/pages/search.vue`
 - **series** — `apps/website/src/pages/series.vue`
 - **[episodeNumber]** — `apps/website/src/pages/show/[id]/season/[seasonNumber]/episode/[episodeNumber].vue`
 - **[seasonNumber]** — `apps/website/src/pages/show/[id]/season/[seasonNumber].vue`

@@ -1,14 +1,23 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import { setupMockApi } from "./helpers/mock-api";
 
-test.describe("Global Search & Quick Search Modal", () => {
+const openHomepage = async (page: Page, searchPath = "/search") => {
+  await page.goto(searchPath, { waitUntil: "commit" });
+  await expect(page.getByTestId("search-input")).toBeVisible({
+    timeout: 15000,
+  });
+  await page.locator("header a").first().click();
+  await expect(page.getByTestId("home-search-input")).toBeVisible({
+    timeout: 15000,
+  });
+};
+
+test.describe("Global Search Page", () => {
   test.beforeEach(async ({ page }) => {
-    test.setTimeout(60000);
-    page.on("console", (msg) => console.log("BROWSER LOG:", msg.text()));
-    await setupMockApi(page);
+    test.setTimeout(120000);
   });
 
-  test("opens search modal and searches for media and voice actors", async ({
+  test("opens from the header and searches for mixed results", async ({
     page,
   }) => {
     const api = await setupMockApi(page);
@@ -17,52 +26,195 @@ test.describe("Global Search & Quick Search Modal", () => {
       page.getByRole("heading", { name: "Raiders of the Lost Ark" }),
     ).toBeVisible({ timeout: 15000 });
 
-    // Wait until SearchModal is mounted
-    await page.waitForFunction(
-      () => typeof (window as any).__openSearchModal === "function",
-      { timeout: 15000 },
-    );
-    await page.evaluate(() => (window as any).__openSearchModal());
+    await page.getByTestId("header-search-trigger").click();
+    await page.waitForURL(/\/search(?:\?|$)/, { timeout: 5000 });
+    await page.reload({ waitUntil: "networkidle" });
 
-    const modalInput = page.locator("[data-testid='search-modal-input']");
-    await expect(modalInput).toBeVisible({ timeout: 10000 });
+    const searchInput = page.getByTestId("search-input");
+    await expect(searchInput).toBeVisible();
+    await expect(searchInput).toBeFocused();
 
-    // Type search query
-    await modalInput.fill("Richard");
-    await page.waitForTimeout(600);
-
-    // Verify search results display voice actor
-    await expect(page.locator("body")).toContainText("Richard Darbois");
+    await searchInput.fill("Richard");
+    await expect(page).toHaveURL(/\/search\?q=Richard/, { timeout: 5000 });
+    await expect(
+      page.getByRole("button", { name: "Richard Darbois" }),
+    ).toBeVisible({ timeout: 5000 });
 
     api.expectNoErrors();
   });
 
-  test("navigates to voice actor page when selecting a search result", async ({
+  test("submits the homepage search on Enter and shows results", async ({
     page,
   }) => {
+    await setupMockApi(page);
+    await openHomepage(page);
+
+    const homeSearchInput = page.getByTestId("home-search-input");
+    await homeSearchInput.fill("  Richard  ");
+    await homeSearchInput.press("Enter");
+
+    await page.waitForURL(/\/search\?q=Richard$/, { timeout: 10000 });
+    const searchInput = page.getByTestId("search-input");
+    await expect(searchInput).toHaveValue("Richard");
+    await expect(searchInput).toBeFocused();
+    await expect(
+      page.getByRole("button", { name: "Richard Darbois" }),
+    ).toBeVisible({ timeout: 10000 });
+  });
+
+  test("submits the homepage search from its button", async ({ page }) => {
+    await setupMockApi(page);
+    await openHomepage(page);
+
+    await page.getByTestId("home-search-input").fill("Richard");
+    await page.getByTestId("home-search-submit").click();
+
+    await page.waitForURL(/\/search\?q=Richard$/, { timeout: 10000 });
+    await expect(page.getByTestId("search-input")).toHaveValue("Richard");
+  });
+
+  test("keeps invalid homepage queries on the homepage", async ({ page }) => {
+    await setupMockApi(page);
+    await openHomepage(page);
+    const homepageUrl = page.url();
+
+    const homeSearchInput = page.getByTestId("home-search-input");
+    const submitButton = page.getByTestId("home-search-submit");
+
+    await expect(submitButton).toBeDisabled();
+    await homeSearchInput.fill("A");
+    await expect(submitButton).toBeDisabled();
+    await homeSearchInput.press("Enter");
+    await expect(page).toHaveURL(homepageUrl);
+
+    await homeSearchInput.fill("   ");
+    await expect(submitButton).toBeDisabled();
+    await homeSearchInput.press("Enter");
+    await expect(page).toHaveURL(homepageUrl);
+  });
+
+  test("preserves the selected locale when submitting homepage search", async ({
+    page,
+  }) => {
+    await setupMockApi(page);
+    await openHomepage(page, "/fr/search");
+
+    await page.getByTestId("home-search-input").fill("Richard");
+    await page.getByTestId("home-search-submit").click();
+
+    await page.waitForURL(/\/fr\/search\?q=Richard$/, { timeout: 10000 });
+    await expect(page.getByTestId("search-input")).toHaveValue("Richard");
+  });
+
+  test("navigates from keyboard shortcuts and focuses the input", async ({
+    page,
+  }) => {
+    await setupMockApi(page);
     await page.goto("/movie/85");
     await expect(
       page.getByRole("heading", { name: "Raiders of the Lost Ark" }),
     ).toBeVisible({ timeout: 15000 });
+    await page.reload({ waitUntil: "networkidle" });
+    await expect(
+      page.getByRole("heading", { name: "Raiders of the Lost Ark" }),
+    ).toBeVisible({ timeout: 15000 });
+    await page.keyboard.press("/");
+    await page.waitForURL(/\/search(?:\?|$)/, { timeout: 5000 });
+    await expect(page.getByTestId("search-input")).toBeFocused();
 
-    // Wait until SearchModal is mounted
-    await page.waitForFunction(
-      () => typeof (window as any).__openSearchModal === "function",
-      { timeout: 15000 },
-    );
-    await page.evaluate(() => (window as any).__openSearchModal());
+    await page.goto("/movie/85");
+    await page.keyboard.press("Control+k");
+    await page.waitForURL(/\/search(?:\?|$)/, { timeout: 5000 });
+    await expect(page.getByTestId("search-input")).toBeFocused();
+  });
 
-    const modalInput = page.locator("[data-testid='search-modal-input']");
-    await expect(modalInput).toBeVisible({ timeout: 10000 });
+  test("does not select stale results while a new search is loading", async ({
+    page,
+  }) => {
+    await setupMockApi(page);
 
-    await modalInput.fill("Richard");
-    await page.waitForTimeout(600);
+    const previousResults = [
+      {
+        id: 1,
+        firstname: "Richard",
+        lastname: "Darbois",
+        voice_actor_name: "Richard Darbois",
+        media_type: "voice_actor",
+      },
+      {
+        id: 85,
+        title: "Raiders of the Lost Ark",
+        media_type: "movie",
+      },
+    ];
+    let releasePendingSearch: () => void = () => {};
+    const pendingSearch = new Promise<void>((resolve) => {
+      releasePendingSearch = resolve;
+    });
 
-    const resultItem = page
-      .locator("button")
-      .filter({ hasText: "Richard Darbois" })
-      .first();
-    await expect(resultItem).toBeVisible({ timeout: 5000 });
+    await page.route("**/api/search**", async (route) => {
+      const url = new URL(route.request().url());
+      if (url.searchParams.get("query") !== "Al") {
+        return route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(previousResults),
+        });
+      }
+
+      await pendingSearch;
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify([
+          {
+            id: 501,
+            title: "Alpine",
+            media_type: "movie",
+          },
+        ]),
+      });
+    });
+
+    await page.goto("/search?q=Richard");
+    await expect(
+      page.getByRole("button", { name: "Richard Darbois" }),
+    ).toBeVisible({ timeout: 10000 });
+
+    const searchInput = page.getByTestId("search-input");
+    const newSearchRequest = page.waitForRequest((request) => {
+      const url = new URL(request.url());
+      return (
+        url.pathname === "/api/search" && url.searchParams.get("query") === "Al"
+      );
+    });
+
+    await searchInput.fill("Al");
+    try {
+      await newSearchRequest;
+      await expect(page.getByRole("status")).toContainText("Searching");
+      await searchInput.press("ArrowDown");
+      await searchInput.press("Enter");
+      await expect(page).toHaveURL(/\/search\?q=Al$/);
+    } finally {
+      releasePendingSearch();
+    }
+
+    await expect(page.getByRole("button", { name: "Alpine" })).toBeVisible({
+      timeout: 10000,
+    });
+  });
+
+  test("navigates to a voice actor page when selecting a result", async ({
+    page,
+  }) => {
+    await setupMockApi(page);
+    await page.goto("/search?q=Richard");
+
+    const resultItem = page.getByRole("button", {
+      name: "Richard Darbois",
+    });
+    await expect(resultItem).toBeVisible({ timeout: 10000 });
     await resultItem.click();
 
     await page.waitForURL(/\/voice-actor\/1/, { timeout: 5000 });

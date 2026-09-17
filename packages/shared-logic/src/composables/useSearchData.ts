@@ -1,8 +1,9 @@
 export type SearchResult = {
-  id: number;
+  id: number | string;
   media_type:
     | "movie"
     | "tv"
+    | "person"
     | "voice_actor"
     | "video_game"
     | "audiobook"

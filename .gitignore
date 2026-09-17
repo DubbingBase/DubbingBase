@@ -46,3 +46,5 @@ packages/database/supabase/buckets
 lighthouse-report.json
 test-results
 playwright-report
+test-results/
+playwright-report/
