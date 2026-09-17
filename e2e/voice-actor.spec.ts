@@ -1,7 +1,25 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import { setupMockApi, waitForVueHydration } from "./helpers/mock-api";
 
 test.describe("Voice Actor Profile & Filmography", () => {
+  const getFilmography = (page: Page) =>
+    page
+      .getByRole("heading", { name: /Filmography|Filmographie/i })
+      .locator("xpath=ancestor::section[1]");
+
+  const waitForCollectionRequest = (
+    page: Page,
+    parameter: "category" | "query",
+    value: string,
+  ) =>
+    page.waitForRequest((request) => {
+      const url = new URL(request.url());
+      return (
+        url.pathname === "/api/detail-collections" &&
+        url.searchParams.get(parameter) === value
+      );
+    });
+
   test.beforeEach(async ({ page }) => {
     test.setTimeout(60000);
     await setupMockApi(page);
@@ -74,36 +92,47 @@ test.describe("Voice Actor Profile & Filmography", () => {
       page.getByRole("heading", { name: "Richard Darbois" }),
     ).toBeVisible({ timeout: 20000 });
 
+    const filmography = getFilmography(page);
     // Click on Movies tab
-    const moviesTab = page
-      .locator("button")
-      .filter({ hasText: /Film|Movie/i })
-      .first();
-    await moviesTab.click();
+    const moviesTab = filmography.getByRole("button", {
+      name: /Film|Movie/i,
+    });
+    await Promise.all([
+      waitForCollectionRequest(page, "category", "movie"),
+      moviesTab.click(),
+    ]);
 
-    await expect(page.locator("a[href*='/movie/85']")).toBeVisible();
-    await expect(page.locator("a[href*='/movie/78']")).toBeVisible();
-    await expect(page.locator("a[href*='/audiobook/401']")).toHaveCount(0);
+    await expect(filmography.locator("a[href*='/movie/85']")).toBeVisible();
+    await expect(filmography.locator("a[href*='/movie/78']")).toBeVisible();
+    await expect(filmography.locator("a[href*='/audiobook/401']")).toHaveCount(
+      0,
+    );
 
     // Click on Audiobooks tab
-    const audiobooksTab = page
-      .locator("button")
-      .filter({ hasText: /Livre|Audiobook/i })
-      .first();
-    await audiobooksTab.click();
+    const audiobooksTab = filmography.getByRole("button", {
+      name: /Livre|Audiobook/i,
+    });
+    await Promise.all([
+      waitForCollectionRequest(page, "category", "audiobook"),
+      audiobooksTab.click(),
+    ]);
 
-    await expect(page.locator("a[href*='/audiobook/401']")).toBeVisible();
-    await expect(page.locator("a[href*='/movie/85']")).toHaveCount(0);
+    await expect(
+      filmography.locator("a[href*='/audiobook/401']"),
+    ).toBeVisible();
+    await expect(filmography.locator("a[href*='/movie/85']")).toHaveCount(0);
 
     // Click on All tab to restore full list
-    const allTab = page
-      .locator("button")
-      .filter({ hasText: /All|Tous/i })
-      .first();
-    await allTab.click();
+    const allTab = filmography.getByRole("button", { name: /All|Tous/i });
+    await Promise.all([
+      waitForCollectionRequest(page, "category", "all"),
+      allTab.click(),
+    ]);
 
-    await expect(page.locator("a[href*='/movie/85']")).toBeVisible();
-    await expect(page.locator("a[href*='/audiobook/401']")).toBeVisible();
+    await expect(filmography.locator("a[href*='/movie/85']")).toBeVisible();
+    await expect(
+      filmography.locator("a[href*='/audiobook/401']"),
+    ).toBeVisible();
   });
 
   test("filters filmography dynamically with search bar", async ({ page }) => {
@@ -114,24 +143,26 @@ test.describe("Voice Actor Profile & Filmography", () => {
       page.getByRole("heading", { name: "Richard Darbois" }),
     ).toBeVisible({ timeout: 20000 });
 
+    const filmography = getFilmography(page);
     // Locate the search input within the voice actor page
-    const searchInput = page
-      .locator("input[placeholder*='Search'], input[placeholder*='Rechercher']")
-      .first();
+    const searchInput = filmography.locator("input[type='search']");
     await expect(searchInput).toBeVisible({ timeout: 5000 });
 
     // Type query "Indiana"
-    await searchInput.fill("Indiana");
+    await Promise.all([
+      waitForCollectionRequest(page, "query", "Indiana"),
+      searchInput.fill("Indiana"),
+    ]);
 
-    await expect(page.locator("a[href*='/movie/85']")).toBeVisible();
-    await expect(page.locator("a[href*='/movie/78']")).toHaveCount(0);
-    await expect(page.locator("a[href*='/game/301']")).toHaveCount(0);
+    await expect(filmography.locator("a[href*='/movie/85']")).toBeVisible();
+    await expect(filmography.locator("a[href*='/movie/78']")).toHaveCount(0);
+    await expect(filmography.locator("a[href*='/game/301']")).toHaveCount(0);
 
     // Clear search
     await searchInput.fill("");
 
-    await expect(page.locator("a[href*='/movie/85']")).toBeVisible();
-    await expect(page.locator("a[href*='/movie/78']")).toBeVisible();
+    await expect(filmography.locator("a[href*='/movie/85']")).toBeVisible();
+    await expect(filmography.locator("a[href*='/movie/78']")).toBeVisible();
   });
 
   test("toggles between Grouped and List display modes", async ({ page }) => {

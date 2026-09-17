@@ -38,7 +38,7 @@ test.describe("Home Page & Global Navigation", () => {
     await waitForVueHydration(page);
     await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
 
-    await page.getByRole("button", { name: "Toggle theme" }).click();
+    await page.locator('button[aria-label="Toggle theme"]').click();
     await page.getByRole("option", { name: "Dark" }).click();
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   });

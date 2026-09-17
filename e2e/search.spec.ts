@@ -117,6 +117,13 @@ test.describe("Global Search Page", () => {
     page,
   }) => {
     await setupMockApi(page);
+    await page.context().addCookies([
+      {
+        name: "user_lang",
+        value: "fr",
+        url: "http://localhost:3050",
+      },
+    ]);
     await openHomepage(page, "/fr/search");
 
     await page.getByTestId("home-search-input").fill("Richard");
