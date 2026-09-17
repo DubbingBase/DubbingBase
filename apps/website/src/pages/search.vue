@@ -176,12 +176,14 @@ const handleSelect = (item: SearchResult): void => {
 };
 
 const selectCurrent = (): void => {
+  if (loading.value) return;
+
   const item = filteredResults.value[selectedIndex.value];
   if (item) handleSelect(item);
 };
 
 const navigateResults = (direction: number): void => {
-  if (filteredResults.value.length === 0) return;
+  if (loading.value || filteredResults.value.length === 0) return;
   selectedIndex.value = Math.min(
     Math.max(selectedIndex.value + direction, 0),
     filteredResults.value.length - 1,

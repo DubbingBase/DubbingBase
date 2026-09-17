@@ -88,6 +88,9 @@ const displayName = computed(
 );
 
 const imagePath = computed(
-  () => props.result.poster_path || props.result.profile_path,
+  () =>
+    props.result.poster_path ||
+    props.result.profile_path ||
+    props.result.cover?.url,
 );
 </script>

@@ -25,7 +25,6 @@ test.describe("Global Search Page", () => {
     await expect(
       page.getByRole("heading", { name: "Raiders of the Lost Ark" }),
     ).toBeVisible({ timeout: 15000 });
-    await page.waitForTimeout(15000);
 
     await page.getByTestId("header-search-trigger").click();
     await page.waitForURL(/\/search(?:\?|$)/, { timeout: 5000 });
@@ -112,8 +111,13 @@ test.describe("Global Search Page", () => {
   }) => {
     await setupMockApi(page);
     await page.goto("/movie/85");
-    await page.waitForTimeout(15000);
+    await expect(
+      page.getByRole("heading", { name: "Raiders of the Lost Ark" }),
+    ).toBeVisible({ timeout: 15000 });
     await page.reload({ waitUntil: "networkidle" });
+    await expect(
+      page.getByRole("heading", { name: "Raiders of the Lost Ark" }),
+    ).toBeVisible({ timeout: 15000 });
     await page.keyboard.press("/");
     await page.waitForURL(/\/search(?:\?|$)/, { timeout: 5000 });
     await expect(page.getByTestId("search-input")).toBeFocused();
@@ -122,6 +126,83 @@ test.describe("Global Search Page", () => {
     await page.keyboard.press("Control+k");
     await page.waitForURL(/\/search(?:\?|$)/, { timeout: 5000 });
     await expect(page.getByTestId("search-input")).toBeFocused();
+  });
+
+  test("does not select stale results while a new search is loading", async ({
+    page,
+  }) => {
+    await setupMockApi(page);
+
+    const previousResults = [
+      {
+        id: 1,
+        firstname: "Richard",
+        lastname: "Darbois",
+        voice_actor_name: "Richard Darbois",
+        media_type: "voice_actor",
+      },
+      {
+        id: 85,
+        title: "Raiders of the Lost Ark",
+        media_type: "movie",
+      },
+    ];
+    let releasePendingSearch: () => void = () => {};
+    const pendingSearch = new Promise<void>((resolve) => {
+      releasePendingSearch = resolve;
+    });
+
+    await page.route("**/api/search**", async (route) => {
+      const url = new URL(route.request().url());
+      if (url.searchParams.get("query") !== "Al") {
+        return route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(previousResults),
+        });
+      }
+
+      await pendingSearch;
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify([
+          {
+            id: 501,
+            title: "Alpine",
+            media_type: "movie",
+          },
+        ]),
+      });
+    });
+
+    await page.goto("/search?q=Richard");
+    await expect(
+      page.getByRole("button", { name: "Richard Darbois" }),
+    ).toBeVisible({ timeout: 10000 });
+
+    const searchInput = page.getByTestId("search-input");
+    const newSearchRequest = page.waitForRequest((request) => {
+      const url = new URL(request.url());
+      return (
+        url.pathname === "/api/search" && url.searchParams.get("query") === "Al"
+      );
+    });
+
+    await searchInput.fill("Al");
+    try {
+      await newSearchRequest;
+      await expect(page.getByRole("status")).toContainText("Searching");
+      await searchInput.press("ArrowDown");
+      await searchInput.press("Enter");
+      await expect(page).toHaveURL(/\/search\?q=Al$/);
+    } finally {
+      releasePendingSearch();
+    }
+
+    await expect(page.getByRole("button", { name: "Alpine" })).toBeVisible({
+      timeout: 10000,
+    });
   });
 
   test("navigates to a voice actor page when selecting a result", async ({
