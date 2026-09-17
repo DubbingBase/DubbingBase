@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { setupMockApi } from "./helpers/mock-api";
+import { setupMockApi, waitForVueHydration } from "./helpers/mock-api";
 
 test.describe("Original Actor Profile & Localized Voices", () => {
   test.beforeEach(async ({ page }) => {
@@ -12,6 +12,7 @@ test.describe("Original Actor Profile & Localized Voices", () => {
   }) => {
     const api = await setupMockApi(page);
     await page.goto("/actor/3", { waitUntil: "domcontentloaded" });
+    await waitForVueHydration(page);
 
     // Verify actor name and biography
     await expect(
@@ -37,6 +38,7 @@ test.describe("Original Actor Profile & Localized Voices", () => {
     page,
   }) => {
     await page.goto("/actor/3", { waitUntil: "domcontentloaded" });
+    await waitForVueHydration(page);
 
     await expect(
       page.getByRole("heading", { name: "Harrison Ford" }),
@@ -44,9 +46,10 @@ test.describe("Original Actor Profile & Localized Voices", () => {
 
     const vaCard = page.locator("a[href*='/voice-actor/1']").first();
     await expect(vaCard).toBeVisible({ timeout: 5000 });
-    await vaCard.click();
-
-    await page.waitForURL(/\/voice-actor\/1/, { timeout: 10000 });
+    await Promise.all([
+      page.waitForURL(/\/voice-actor\/1/, { timeout: 10000 }),
+      vaCard.click(),
+    ]);
     await expect(
       page.getByRole("heading", { name: "Richard Darbois" }),
     ).toBeVisible({ timeout: 20000 });

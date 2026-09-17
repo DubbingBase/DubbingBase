@@ -142,7 +142,7 @@ jobs:
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
           IGDB_CLIENT_ID: ${{ secrets.IGDB_CLIENT_ID }}
           IGDB_CLIENT_SECRET: ${{ secrets.IGDB_CLIENT_SECRET }}
-        run: pnpm exec playwright test
+        run: pnpm exec playwright test --project=website
 
   # Job 3.5: Frontend Unit Tests
   frontend-tests:

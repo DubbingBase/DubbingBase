@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
-import { setupMockApi } from "./helpers/mock-api";
+import { setupMockApi, waitForVueHydration } from "./helpers/mock-api";
 
 const themes = ["light", "dark"];
 
@@ -22,8 +22,8 @@ test.describe("Website theme accessibility", () => {
         },
       ]);
       await page.goto("/", { waitUntil: "domcontentloaded" });
+      await waitForVueHydration(page);
       await expect(page.locator("body")).toBeVisible({ timeout: 15000 });
-      await page.waitForTimeout(1000);
 
       const themeState = await page.evaluate(() => {
         const rootStyle = getComputedStyle(document.documentElement);
@@ -50,6 +50,7 @@ test.describe("Website theme accessibility", () => {
       expect(themeState.bodyColor).not.toBe("rgba(0, 0, 0, 0)");
 
       const accessibility = await new AxeBuilder({ page })
+        .exclude("nuxt-devtools-frame")
         .withTags(["wcag2a", "wcag2aa"])
         .analyze();
       expect(accessibility.violations).toEqual([]);
@@ -72,16 +73,19 @@ test.describe("Website theme accessibility", () => {
         },
       ]);
       await page.goto("/movie/85", { waitUntil: "domcontentloaded" });
+      await waitForVueHydration(page);
       await expect(
         page.getByRole("heading", { name: "Raiders of the Lost Ark" }),
       ).toBeVisible({ timeout: 15000 });
 
       const detailAccessibility = await new AxeBuilder({ page })
+        .exclude("nuxt-devtools-frame")
         .withTags(["wcag2a", "wcag2aa"])
         .analyze();
       expect(detailAccessibility.violations).toEqual([]);
 
-      await page.goto("/actor/3", { waitUntil: "networkidle" });
+      await page.goto("/actor/3", { waitUntil: "domcontentloaded" });
+      await waitForVueHydration(page);
       await expect(
         page.getByRole("heading", { name: "Harrison Ford" }),
       ).toBeVisible({ timeout: 15000 });
@@ -99,7 +103,8 @@ test.describe("Website theme accessibility", () => {
         .analyze();
       expect(reportAccessibility.violations).toEqual([]);
 
-      await page.goto("/voice-actor/1", { waitUntil: "networkidle" });
+      await page.goto("/voice-actor/1", { waitUntil: "domcontentloaded" });
+      await waitForVueHydration(page);
       await expect(
         page.getByRole("heading", { name: "Richard Darbois" }),
       ).toBeVisible({ timeout: 15000 });
@@ -111,11 +116,13 @@ test.describe("Website theme accessibility", () => {
       expect(voiceActorAccessibility.violations).toEqual([]);
 
       await page.goto("/login", { waitUntil: "domcontentloaded" });
+      await waitForVueHydration(page);
       await expect(page.getByRole("heading").first()).toBeVisible({
         timeout: 15000,
       });
 
       const formAccessibility = await new AxeBuilder({ page })
+        .exclude("nuxt-devtools-frame")
         .withTags(["wcag2a", "wcag2aa"])
         .analyze();
       expect(formAccessibility.violations).toEqual([]);

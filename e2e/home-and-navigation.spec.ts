@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { setupMockApi } from "./helpers/mock-api";
+import { setupMockApi, waitForVueHydration } from "./helpers/mock-api";
 
 test.describe("Home Page & Global Navigation", () => {
   test.beforeEach(async ({ page }) => {
@@ -12,7 +12,7 @@ test.describe("Home Page & Global Navigation", () => {
   }) => {
     const api = await setupMockApi(page);
     await page.goto("/", { waitUntil: "domcontentloaded" });
-    await page.waitForTimeout(1000);
+    await waitForVueHydration(page);
 
     // Verify main body is rendered
     await expect(page.locator("body")).toBeVisible();
@@ -23,27 +23,24 @@ test.describe("Home Page & Global Navigation", () => {
     api.expectNoErrors();
   });
 
-  test("theme toggle switches theme classes", async ({ page }) => {
+  test("theme selector applies the selected theme", async ({ page }) => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
-    await page.waitForTimeout(1000);
+    await waitForVueHydration(page);
 
-    // Locate theme toggle button (moon / sun icon button)
-    const themeButton = page
-      .locator(
-        "button[aria-label*='theme' i], button[aria-label*='mode' i], button:has(svg.lucide-sun), button:has(svg.lucide-moon)",
-      )
-      .first();
-    if (await themeButton.isVisible()) {
-      const htmlEl = page.locator("html");
-      const initialClass = await htmlEl.getAttribute("class");
+    await page.context().addCookies([
+      {
+        name: "dubbingbase-theme",
+        value: "light",
+        url: "http://localhost:3050",
+      },
+    ]);
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await waitForVueHydration(page);
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
 
-      await themeButton.click();
-      await page.waitForTimeout(300);
-
-      const newClass = await htmlEl.getAttribute("class");
-      // The class or color-scheme should toggle
-      expect(newClass).not.toBe(initialClass);
-    }
+    await page.getByRole("button", { name: "Toggle theme" }).click();
+    await page.getByRole("option", { name: "Dark" }).click();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   });
 
   test("language switcher updates application language and renders translations", async ({
@@ -51,7 +48,7 @@ test.describe("Home Page & Global Navigation", () => {
   }) => {
     // Start on the root URL (English default)
     await page.goto("/", { waitUntil: "domcontentloaded" });
-    await page.waitForTimeout(1500);
+    await waitForVueHydration(page);
 
     // Verify English translations are loaded — footer should say "Movies" not "footer.movies"
     const footerMovies = page.locator("footer").locator("text=Movies").first();
@@ -65,12 +62,14 @@ test.describe("Home Page & Global Navigation", () => {
       .first();
     await expect(langTrigger).toBeVisible({ timeout: 5000 });
     await langTrigger.click();
-    await page.waitForTimeout(500);
 
     // Switch to French — the SelectContent renders as a fixed-position overlay
     const frOption = page.getByText("Français").first();
-    await frOption.click();
-    await page.waitForURL(/\/fr\/?/, { timeout: 10000 });
+    await Promise.all([
+      page.waitForURL(/\/fr\/?/, { timeout: 10000 }),
+      frOption.click(),
+    ]);
+    await waitForVueHydration(page);
 
     // Verify French translations are loaded — footer should say "Films"
     const footerFilms = page.locator("footer").locator("text=Films").first();

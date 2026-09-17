@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { setupMockApi } from "./helpers/mock-api";
+import { setupMockApi, waitForVueHydration } from "./helpers/mock-api";
 
 test.describe("Voice Actor Profile & Filmography", () => {
   test.beforeEach(async ({ page }) => {
@@ -10,6 +10,7 @@ test.describe("Voice Actor Profile & Filmography", () => {
   test("renders voice actor profile details correctly", async ({ page }) => {
     const api = await setupMockApi(page);
     await page.goto("/voice-actor/1", { waitUntil: "domcontentloaded" });
+    await waitForVueHydration(page);
 
     // Wait for the main heading with the voice actor name to appear
     const heading = page.getByRole("heading", { name: "Richard Darbois" });
@@ -24,6 +25,7 @@ test.describe("Voice Actor Profile & Filmography", () => {
 
   test("renders category tabs with accurate counts", async ({ page }) => {
     await page.goto("/voice-actor/1", { waitUntil: "domcontentloaded" });
+    await waitForVueHydration(page);
 
     // Wait for main content to load
     await expect(
@@ -66,6 +68,7 @@ test.describe("Voice Actor Profile & Filmography", () => {
 
   test("filters filmography when clicking category tabs", async ({ page }) => {
     await page.goto("/voice-actor/1", { waitUntil: "domcontentloaded" });
+    await waitForVueHydration(page);
 
     await expect(
       page.getByRole("heading", { name: "Richard Darbois" }),
@@ -77,13 +80,10 @@ test.describe("Voice Actor Profile & Filmography", () => {
       .filter({ hasText: /Film|Movie/i })
       .first();
     await moviesTab.click();
-    await page.waitForTimeout(300);
 
-    // Verify movie cards are visible
-    await expect(page.locator("body")).toContainText("Raiders of the Lost Ark");
-    await expect(page.locator("body")).toContainText("Blade Runner");
-    // Verify non-movie items are hidden
-    await expect(page.locator("body")).not.toContainText("L'Île au trésor");
+    await expect(page.locator("a[href*='/movie/85']")).toBeVisible();
+    await expect(page.locator("a[href*='/movie/78']")).toBeVisible();
+    await expect(page.locator("a[href*='/audiobook/401']")).toHaveCount(0);
 
     // Click on Audiobooks tab
     const audiobooksTab = page
@@ -91,13 +91,9 @@ test.describe("Voice Actor Profile & Filmography", () => {
       .filter({ hasText: /Livre|Audiobook/i })
       .first();
     await audiobooksTab.click();
-    await page.waitForTimeout(300);
 
-    // Verify audiobook card is visible
-    await expect(page.locator("body")).toContainText("L'Île au trésor");
-    await expect(page.locator("body")).not.toContainText(
-      "Raiders of the Lost Ark",
-    );
+    await expect(page.locator("a[href*='/audiobook/401']")).toBeVisible();
+    await expect(page.locator("a[href*='/movie/85']")).toHaveCount(0);
 
     // Click on All tab to restore full list
     const allTab = page
@@ -105,14 +101,14 @@ test.describe("Voice Actor Profile & Filmography", () => {
       .filter({ hasText: /All|Tous/i })
       .first();
     await allTab.click();
-    await page.waitForTimeout(300);
 
-    await expect(page.locator("body")).toContainText("Raiders of the Lost Ark");
-    await expect(page.locator("body")).toContainText("L'Île au trésor");
+    await expect(page.locator("a[href*='/movie/85']")).toBeVisible();
+    await expect(page.locator("a[href*='/audiobook/401']")).toBeVisible();
   });
 
   test("filters filmography dynamically with search bar", async ({ page }) => {
     await page.goto("/voice-actor/1", { waitUntil: "domcontentloaded" });
+    await waitForVueHydration(page);
 
     await expect(
       page.getByRole("heading", { name: "Richard Darbois" }),
@@ -126,24 +122,21 @@ test.describe("Voice Actor Profile & Filmography", () => {
 
     // Type query "Indiana"
     await searchInput.fill("Indiana");
-    await page.waitForTimeout(500); // Wait for debounce
 
-    // Should only show Indiana Jones work
-    await expect(page.locator("body")).toContainText("Raiders of the Lost Ark");
-    await expect(page.locator("body")).not.toContainText("Blade Runner");
-    await expect(page.locator("body")).not.toContainText("The Witcher");
+    await expect(page.locator("a[href*='/movie/85']")).toBeVisible();
+    await expect(page.locator("a[href*='/movie/78']")).toHaveCount(0);
+    await expect(page.locator("a[href*='/game/301']")).toHaveCount(0);
 
     // Clear search
     await searchInput.fill("");
-    await page.waitForTimeout(500);
 
-    // All works restored
-    await expect(page.locator("body")).toContainText("Raiders of the Lost Ark");
-    await expect(page.locator("body")).toContainText("Blade Runner");
+    await expect(page.locator("a[href*='/movie/85']")).toBeVisible();
+    await expect(page.locator("a[href*='/movie/78']")).toBeVisible();
   });
 
   test("toggles between Grouped and List display modes", async ({ page }) => {
     await page.goto("/voice-actor/1", { waitUntil: "domcontentloaded" });
+    await waitForVueHydration(page);
 
     await expect(
       page.getByRole("heading", { name: "Richard Darbois" }),
@@ -156,23 +149,20 @@ test.describe("Voice Actor Profile & Filmography", () => {
       .first();
     if (await listButton.isVisible()) {
       await listButton.click();
-      await page.waitForTimeout(300);
-      await expect(page.locator("body")).toContainText(
-        "Raiders of the Lost Ark",
-      );
+      await expect(page.locator("a[href*='/movie/85']")).toBeVisible();
 
       const groupedButton = page
         .locator("button")
         .filter({ hasText: /Group|Groupe/i })
         .first();
       await groupedButton.click();
-      await page.waitForTimeout(300);
       await expect(page.locator("body")).toContainText("Harrison Ford");
     }
   });
 
   test("navigates to media detail page on card click", async ({ page }) => {
     await page.goto("/voice-actor/1", { waitUntil: "domcontentloaded" });
+    await waitForVueHydration(page);
 
     await expect(
       page.getByRole("heading", { name: "Richard Darbois" }),
@@ -181,10 +171,10 @@ test.describe("Voice Actor Profile & Filmography", () => {
     // Click on Raiders of the Lost Ark link
     const mediaLink = page.locator("a[href*='/movie/85']").first();
     await expect(mediaLink).toBeVisible({ timeout: 5000 });
-    await mediaLink.click();
-
-    // Verify navigation
-    await page.waitForURL(/\/movie\/85/, { timeout: 5000 });
+    await Promise.all([
+      page.waitForURL(/\/movie\/85/, { timeout: 5000 }),
+      mediaLink.click(),
+    ]);
     await expect(page.locator("body")).toContainText("Raiders of the Lost Ark");
   });
 });

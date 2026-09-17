@@ -24,6 +24,12 @@ export interface MockApiOptions {
   searchResults?: any[];
 }
 
+export async function waitForVueHydration(page: Page): Promise<void> {
+  await expect(page.locator('button[aria-label="Toggle theme"]')).toBeVisible({
+    timeout: 30000,
+  });
+}
+
 export async function setupMockApi(page: Page, options: MockApiOptions = {}) {
   const errors: string[] = [];
 

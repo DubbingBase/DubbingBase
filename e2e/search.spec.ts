@@ -1,12 +1,17 @@
 import { test, expect, type Page } from "@playwright/test";
-import { setupMockApi } from "./helpers/mock-api";
+import { setupMockApi, waitForVueHydration } from "./helpers/mock-api";
 
 const openHomepage = async (page: Page, searchPath = "/search") => {
   await page.goto(searchPath, { waitUntil: "commit" });
+  await waitForVueHydration(page);
   await expect(page.getByTestId("search-input")).toBeVisible({
     timeout: 15000,
   });
-  await page.locator("header a").first().click();
+  await Promise.all([
+    page.waitForURL((url) => url.pathname === "/" || url.pathname === "/fr"),
+    page.locator("header a").first().click(),
+  ]);
+  await waitForVueHydration(page);
   await expect(page.getByTestId("home-search-input")).toBeVisible({
     timeout: 15000,
   });
@@ -26,16 +31,23 @@ test.describe("Global Search Page", () => {
       page.getByRole("heading", { name: "Raiders of the Lost Ark" }),
     ).toBeVisible({ timeout: 15000 });
 
-    await page.getByTestId("header-search-trigger").click();
-    await page.waitForURL(/\/search(?:\?|$)/, { timeout: 5000 });
-    await page.reload({ waitUntil: "networkidle" });
+    await waitForVueHydration(page);
+    await Promise.all([
+      page.waitForURL(/\/search(?:\?|$)/, { timeout: 5000 }),
+      page.getByTestId("header-search-trigger").click(),
+    ]);
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await waitForVueHydration(page);
 
     const searchInput = page.getByTestId("search-input");
     await expect(searchInput).toBeVisible();
     await expect(searchInput).toBeFocused();
 
+    const searchUrl = page.waitForURL(/\/search\?q=Richard/, {
+      timeout: 5000,
+    });
     await searchInput.fill("Richard");
-    await expect(page).toHaveURL(/\/search\?q=Richard/, { timeout: 5000 });
+    await searchUrl;
     await expect(
       page.getByRole("button", { name: "Richard Darbois" }),
     ).toBeVisible({ timeout: 5000 });
@@ -51,12 +63,16 @@ test.describe("Global Search Page", () => {
 
     const homeSearchInput = page.getByTestId("home-search-input");
     await homeSearchInput.fill("  Richard  ");
-    await homeSearchInput.press("Enter");
+    const submitButton = page.getByTestId("home-search-submit");
+    await expect(submitButton).toBeEnabled();
+    await Promise.all([
+      page.waitForURL(/\/search\?q=Richard$/, { timeout: 10000 }),
+      homeSearchInput.press("Enter"),
+    ]);
 
-    await page.waitForURL(/\/search\?q=Richard$/, { timeout: 10000 });
+    await waitForVueHydration(page);
     const searchInput = page.getByTestId("search-input");
     await expect(searchInput).toHaveValue("Richard");
-    await expect(searchInput).toBeFocused();
     await expect(
       page.getByRole("button", { name: "Richard Darbois" }),
     ).toBeVisible({ timeout: 10000 });
@@ -67,9 +83,13 @@ test.describe("Global Search Page", () => {
     await openHomepage(page);
 
     await page.getByTestId("home-search-input").fill("Richard");
-    await page.getByTestId("home-search-submit").click();
-
-    await page.waitForURL(/\/search\?q=Richard$/, { timeout: 10000 });
+    const submitButton = page.getByTestId("home-search-submit");
+    await expect(submitButton).toBeEnabled();
+    await Promise.all([
+      page.waitForURL(/\/search\?q=Richard$/, { timeout: 10000 }),
+      submitButton.click(),
+    ]);
+    await waitForVueHydration(page);
     await expect(page.getByTestId("search-input")).toHaveValue("Richard");
   });
 
@@ -100,9 +120,13 @@ test.describe("Global Search Page", () => {
     await openHomepage(page, "/fr/search");
 
     await page.getByTestId("home-search-input").fill("Richard");
-    await page.getByTestId("home-search-submit").click();
-
-    await page.waitForURL(/\/fr\/search\?q=Richard$/, { timeout: 10000 });
+    const submitButton = page.getByTestId("home-search-submit");
+    await expect(submitButton).toBeEnabled();
+    await Promise.all([
+      page.waitForURL(/\/fr\/search\?q=Richard$/, { timeout: 10000 }),
+      submitButton.click(),
+    ]);
+    await waitForVueHydration(page);
     await expect(page.getByTestId("search-input")).toHaveValue("Richard");
   });
 
@@ -111,20 +135,29 @@ test.describe("Global Search Page", () => {
   }) => {
     await setupMockApi(page);
     await page.goto("/movie/85");
+    await waitForVueHydration(page);
     await expect(
       page.getByRole("heading", { name: "Raiders of the Lost Ark" }),
     ).toBeVisible({ timeout: 15000 });
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await waitForVueHydration(page);
     await expect(
       page.getByRole("heading", { name: "Raiders of the Lost Ark" }),
     ).toBeVisible({ timeout: 15000 });
-    await page.keyboard.press("/");
-    await page.waitForURL(/\/search(?:\?|$)/, { timeout: 5000 });
+    await Promise.all([
+      page.waitForURL(/\/search(?:\?|$)/, { timeout: 5000 }),
+      page.keyboard.press("/"),
+    ]);
+    await waitForVueHydration(page);
     await expect(page.getByTestId("search-input")).toBeFocused();
 
     await page.goto("/movie/85");
-    await page.keyboard.press("Control+k");
-    await page.waitForURL(/\/search(?:\?|$)/, { timeout: 5000 });
+    await waitForVueHydration(page);
+    await Promise.all([
+      page.waitForURL(/\/search(?:\?|$)/, { timeout: 5000 }),
+      page.keyboard.press("Control+k"),
+    ]);
+    await waitForVueHydration(page);
     await expect(page.getByTestId("search-input")).toBeFocused();
   });
 
@@ -177,6 +210,7 @@ test.describe("Global Search Page", () => {
     });
 
     await page.goto("/search?q=Richard");
+    await waitForVueHydration(page);
     await expect(
       page.getByRole("button", { name: "Richard Darbois" }),
     ).toBeVisible({ timeout: 10000 });
@@ -210,14 +244,16 @@ test.describe("Global Search Page", () => {
   }) => {
     await setupMockApi(page);
     await page.goto("/search?q=Richard");
+    await waitForVueHydration(page);
 
     const resultItem = page.getByRole("button", {
       name: "Richard Darbois",
     });
     await expect(resultItem).toBeVisible({ timeout: 10000 });
-    await resultItem.click();
-
-    await page.waitForURL(/\/voice-actor\/1/, { timeout: 5000 });
+    await Promise.all([
+      page.waitForURL(/\/voice-actor\/1/, { timeout: 5000 }),
+      resultItem.click(),
+    ]);
     await expect(
       page.getByRole("heading", { name: "Richard Darbois" }),
     ).toBeVisible({ timeout: 10000 });
