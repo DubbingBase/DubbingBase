@@ -56,21 +56,35 @@
           </div>
         </div>
 
-        <NuxtLink
-          :to="localePath('/search')"
-          data-testid="home-search-trigger"
-          class="relative mx-auto block w-full max-w-2xl rounded-full theme-surface px-4 py-3 text-left text-base shadow-xl theme-text md:px-6 md:py-4 md:text-lg"
-          :aria-label="$t('home.hero.searchPlaceholder')"
+        <form
+          role="search"
+          data-testid="home-search-form"
+          class="mx-auto flex w-full max-w-2xl items-center rounded-full theme-surface p-1 text-left text-base shadow-xl md:p-1.5 md:text-lg"
+          @submit.prevent="submitHomeSearch"
         >
-          <span class="block pr-28 md:pr-32">
+          <label class="sr-only" for="home-search-input">
             {{ $t("home.hero.searchPlaceholder") }}
-          </span>
-          <span
-            class="absolute right-1 top-1 bottom-1 flex items-center rounded-full px-4 py-1.5 font-bold theme-primary-bg transition-all hover:bg-[var(--app-color-primary-hover)] md:px-6 md:py-2"
+          </label>
+          <input
+            id="home-search-input"
+            ref="homeSearchInput"
+            v-model="homeSearchQuery"
+            type="search"
+            minlength="2"
+            required
+            data-testid="home-search-input"
+            :placeholder="$t('home.hero.searchPlaceholder')"
+            class="min-w-0 flex-1 bg-transparent py-2 pl-3 pr-2 text-base outline-none theme-text theme-placeholder theme-focus md:py-3 md:pl-5 md:text-lg"
+          />
+          <button
+            type="submit"
+            data-testid="home-search-submit"
+            :disabled="!canSubmitHomeSearch"
+            class="shrink-0 rounded-full px-4 py-2 font-bold theme-primary-bg transition-all hover:bg-[var(--app-color-primary-hover)] disabled:cursor-not-allowed disabled:opacity-50 md:px-6 md:py-2.5"
           >
             {{ $t("home.hero.searchButton") }}
-          </span>
-        </NuxtLink>
+          </button>
+        </form>
       </div>
     </section>
 
@@ -449,6 +463,24 @@ const isAdmin = computed(() => {
 
 const { t, locale } = useI18n();
 const localePath = useLocalePath();
+const homeSearchQuery = ref("");
+const homeSearchInput = ref<HTMLInputElement | null>(null);
+const canSubmitHomeSearch = computed(
+  () => homeSearchQuery.value.trim().length >= 2,
+);
+
+const submitHomeSearch = (): void => {
+  const query = homeSearchQuery.value.trim();
+  if (query.length < 2) {
+    homeSearchInput.value?.focus();
+    return;
+  }
+
+  void navigateTo({
+    path: localePath("/search"),
+    query: { q: query },
+  });
+};
 
 const ogLocale = computed(() => {
   const map: Record<string, string> = {

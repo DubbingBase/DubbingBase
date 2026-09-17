@@ -1,5 +1,16 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import { setupMockApi } from "./helpers/mock-api";
+
+const openHomepage = async (page: Page, searchPath = "/search") => {
+  await page.goto(searchPath, { waitUntil: "commit" });
+  await expect(page.getByTestId("search-input")).toBeVisible({
+    timeout: 15000,
+  });
+  await page.locator("header a").first().click();
+  await expect(page.getByTestId("home-search-input")).toBeVisible({
+    timeout: 15000,
+  });
+};
 
 test.describe("Global Search Page", () => {
   test.beforeEach(async ({ page }) => {
@@ -33,12 +44,67 @@ test.describe("Global Search Page", () => {
     api.expectNoErrors();
   });
 
-  test("opens from the homepage hero", async ({ page }) => {
+  test("submits the homepage search on Enter and shows results", async ({
+    page,
+  }) => {
     await setupMockApi(page);
-    await page.goto("/");
-    await page.getByTestId("home-search-trigger").click();
-    await page.waitForURL(/\/search(?:\?|$)/, { timeout: 5000 });
-    await expect(page.getByTestId("search-input")).toBeVisible();
+    await openHomepage(page);
+
+    const homeSearchInput = page.getByTestId("home-search-input");
+    await homeSearchInput.fill("  Richard  ");
+    await homeSearchInput.press("Enter");
+
+    await page.waitForURL(/\/search\?q=Richard$/, { timeout: 10000 });
+    const searchInput = page.getByTestId("search-input");
+    await expect(searchInput).toHaveValue("Richard");
+    await expect(searchInput).toBeFocused();
+    await expect(
+      page.getByRole("button", { name: "Richard Darbois" }),
+    ).toBeVisible({ timeout: 10000 });
+  });
+
+  test("submits the homepage search from its button", async ({ page }) => {
+    await setupMockApi(page);
+    await openHomepage(page);
+
+    await page.getByTestId("home-search-input").fill("Richard");
+    await page.getByTestId("home-search-submit").click();
+
+    await page.waitForURL(/\/search\?q=Richard$/, { timeout: 10000 });
+    await expect(page.getByTestId("search-input")).toHaveValue("Richard");
+  });
+
+  test("keeps invalid homepage queries on the homepage", async ({ page }) => {
+    await setupMockApi(page);
+    await openHomepage(page);
+    const homepageUrl = page.url();
+
+    const homeSearchInput = page.getByTestId("home-search-input");
+    const submitButton = page.getByTestId("home-search-submit");
+
+    await expect(submitButton).toBeDisabled();
+    await homeSearchInput.fill("A");
+    await expect(submitButton).toBeDisabled();
+    await homeSearchInput.press("Enter");
+    await expect(page).toHaveURL(homepageUrl);
+
+    await homeSearchInput.fill("   ");
+    await expect(submitButton).toBeDisabled();
+    await homeSearchInput.press("Enter");
+    await expect(page).toHaveURL(homepageUrl);
+  });
+
+  test("preserves the selected locale when submitting homepage search", async ({
+    page,
+  }) => {
+    await setupMockApi(page);
+    await openHomepage(page, "/fr/search");
+
+    await page.getByTestId("home-search-input").fill("Richard");
+    await page.getByTestId("home-search-submit").click();
+
+    await page.waitForURL(/\/fr\/search\?q=Richard$/, { timeout: 10000 });
+    await expect(page.getByTestId("search-input")).toHaveValue("Richard");
   });
 
   test("navigates from keyboard shortcuts and focuses the input", async ({
