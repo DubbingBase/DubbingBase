@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 75 routes | 16 models | 197 components | 78 lib files | 63 env vars | 12 middleware | 4% test coverage
+> 75 routes | 16 models | 197 components | 78 lib files | 63 env vars | 12 middleware | 5% test coverage
 > **Token savings:** this file is ~14,600 tokens. Without it, AI exploration would cost ~150,000 tokens. **Saves ~135,300 tokens per conversation.**
-> **Last scanned:** 2026-09-17 14:14 — re-run after significant changes
+> **Last scanned:** 2026-09-17 14:32 — re-run after significant changes
 
 ---
 
@@ -23,7 +23,7 @@
 - `POST` `/api/delete-voice-actor-link` [auth, db]
 - `POST` `/api/delete-work-entry` [auth, db]
 - `POST` `/api/delete_user` [auth]
-- `GET` `/api/detail-collections` [cache]
+- `GET` `/api/detail-collections` [cache] ✓
 - `GET` `/api/episode/index` [cache]
 - `POST` `/api/extract-credits-from-image` [upload]
 - `POST` `/api/extract-voice-actor-info` [auth]
@@ -749,8 +749,12 @@
 
 # Test Coverage
 
-> **4%** of routes and models are covered by tests
+> **5%** of routes and models are covered by tests
 > 32 test files found
+
+## Covered Routes
+
+- GET:/api/detail-collections
 
 ## Covered Models
 

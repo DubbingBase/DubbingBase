@@ -1,7 +1,11 @@
 # Test Coverage
 
-> **4%** of routes and models are covered by tests
+> **5%** of routes and models are covered by tests
 > 32 test files found
+
+## Covered Routes
+
+- GET:/api/detail-collections
 
 ## Covered Models
 
