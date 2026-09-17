@@ -7,6 +7,19 @@ test.describe("Voice Actor Profile & Filmography", () => {
       .getByRole("heading", { name: /Filmography|Filmographie/i })
       .locator("xpath=ancestor::section[1]");
 
+  const waitForCollectionRequest = (
+    page: Page,
+    parameter: "category" | "query",
+    value: string,
+  ) =>
+    page.waitForRequest((request) => {
+      const url = new URL(request.url());
+      return (
+        url.pathname === "/api/detail-collections" &&
+        url.searchParams.get(parameter) === value
+      );
+    });
+
   test.beforeEach(async ({ page }) => {
     test.setTimeout(60000);
     await setupMockApi(page);
@@ -84,7 +97,10 @@ test.describe("Voice Actor Profile & Filmography", () => {
     const moviesTab = filmography.getByRole("button", {
       name: /Film|Movie/i,
     });
-    await moviesTab.click();
+    await Promise.all([
+      waitForCollectionRequest(page, "category", "movie"),
+      moviesTab.click(),
+    ]);
     await expect(moviesTab).toHaveClass(/theme-selected/);
 
     await expect(filmography.locator("a[href*='/movie/85']")).toBeVisible();
@@ -97,7 +113,10 @@ test.describe("Voice Actor Profile & Filmography", () => {
     const audiobooksTab = filmography.getByRole("button", {
       name: /Livre|Audiobook/i,
     });
-    await audiobooksTab.click();
+    await Promise.all([
+      waitForCollectionRequest(page, "category", "audiobook"),
+      audiobooksTab.click(),
+    ]);
     await expect(audiobooksTab).toHaveClass(/theme-selected/);
 
     await expect(
@@ -107,7 +126,10 @@ test.describe("Voice Actor Profile & Filmography", () => {
 
     // Click on All tab to restore full list
     const allTab = filmography.getByRole("button", { name: /All|Tous/i });
-    await allTab.click();
+    await Promise.all([
+      waitForCollectionRequest(page, "category", "all"),
+      allTab.click(),
+    ]);
     await expect(allTab).toHaveClass(/theme-selected/);
 
     await expect(filmography.locator("a[href*='/movie/85']")).toBeVisible();
@@ -130,7 +152,10 @@ test.describe("Voice Actor Profile & Filmography", () => {
     await expect(searchInput).toBeVisible({ timeout: 5000 });
 
     // Type query "Indiana"
-    await searchInput.fill("Indiana");
+    await Promise.all([
+      waitForCollectionRequest(page, "query", "Indiana"),
+      searchInput.fill("Indiana"),
+    ]);
 
     await expect(filmography.locator("a[href*='/movie/85']")).toBeVisible();
     await expect(filmography.locator("a[href*='/movie/78']")).toHaveCount(0);

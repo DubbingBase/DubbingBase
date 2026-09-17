@@ -959,8 +959,10 @@ const { data: worksPageData } = useAsyncData<
   () => fetchDetailCollection<VoiceActorWorkItem>(worksRequest.value),
   {
     watch: [worksRequest],
-    getCachedData: (key, nuxtApp) =>
-      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+    getCachedData: (key, nuxtApp, { cause }) =>
+      cause === "initial"
+        ? (nuxtApp.payload.data[key] ?? nuxtApp.static.data[key])
+        : undefined,
   },
 );
 const worksItems = computed(() => worksPageData.value?.data || []);
