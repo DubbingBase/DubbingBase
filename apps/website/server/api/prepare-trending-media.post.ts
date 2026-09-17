@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
   const bearerToken = authHeader?.startsWith("Bearer ")
     ? authHeader.slice(7).trim()
     : null;
-  const config = useRuntimeConfig();
+  const config = useRuntimeConfig(event);
   const secretKey =
     (config.supabaseSecretKey as string) ||
     process.env.SUPABASE_SECRET_KEY ||
@@ -83,7 +83,7 @@ export default defineEventHandler(async (event) => {
       .slice(0, 10);
     const itemsToProcess = [...topMovies, ...topShows];
 
-    const supabaseAdmin = useSupabaseAdmin();
+    const supabaseAdmin = useSupabaseAdmin(event);
 
     const contentIds = itemsToProcess.map((item) => item.id);
     const { data: existingProjects, error: projectsError } = await supabaseAdmin

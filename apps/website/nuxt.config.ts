@@ -43,6 +43,7 @@ export default defineNuxtConfig({
     },
     scheduledTasks: {
       "* * * * *": ["dispatcher"],
+      "0 6 * * *": ["enqueue-trending-media"],
     },
     rollupConfig: {
       // Keep .wasm imports external so Rollup's JS plugins (e.g. inject)
