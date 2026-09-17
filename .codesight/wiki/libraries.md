@@ -80,7 +80,7 @@
 
 ## E2e (1 files)
 
-- `e2e/helpers/mock-api.ts` — setupMockApi, MockApiOptions
+- `e2e/helpers/mock-api.ts` — waitForVueHydration, setupMockApi, MockApiOptions
 
 ---
 _Back to [overview.md](./overview.md)_

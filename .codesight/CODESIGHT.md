@@ -4,8 +4,8 @@
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
 > 75 routes | 16 models | 197 components | 78 lib files | 63 env vars | 12 middleware | 4% test coverage
-> **Token savings:** this file is ~14,600 tokens. Without it, AI exploration would cost ~150,000 tokens. **Saves ~135,400 tokens per conversation.**
-> **Last scanned:** 2026-09-17 12:32 — re-run after significant changes
+> **Token savings:** this file is ~14,600 tokens. Without it, AI exploration would cost ~150,000 tokens. **Saves ~135,300 tokens per conversation.**
+> **Last scanned:** 2026-09-17 14:14 — re-run after significant changes
 
 ---
 
@@ -554,7 +554,10 @@
   - interface CastWorkReference
   - interface CastWorkMatchResult
 - `apps/website/src/utils/search-routes.ts` — function getSearchResultRoute: (result, "id" | "media_type">) => string, type SearchFilter
-- `e2e/helpers/mock-api.ts` — function setupMockApi: (page, options) => void, interface MockApiOptions
+- `e2e/helpers/mock-api.ts`
+  - function waitForVueHydration: (page) => Promise<void>
+  - function setupMockApi: (page, options) => void
+  - interface MockApiOptions
 - `packages/og-image/src/index.ts`
   - function generateTemplate: (options) => void
   - interface GenerateOptions

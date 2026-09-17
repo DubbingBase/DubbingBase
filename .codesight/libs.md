@@ -148,7 +148,10 @@
   - interface CastWorkReference
   - interface CastWorkMatchResult
 - `apps/website/src/utils/search-routes.ts` — function getSearchResultRoute: (result, "id" | "media_type">) => string, type SearchFilter
-- `e2e/helpers/mock-api.ts` — function setupMockApi: (page, options) => void, interface MockApiOptions
+- `e2e/helpers/mock-api.ts`
+  - function waitForVueHydration: (page) => Promise<void>
+  - function setupMockApi: (page, options) => void
+  - interface MockApiOptions
 - `packages/og-image/src/index.ts`
   - function generateTemplate: (options) => void
   - interface GenerateOptions
