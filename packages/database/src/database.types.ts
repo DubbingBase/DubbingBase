@@ -758,6 +758,10 @@ export type Database = {
         Returns: number;
       };
       find_duplicate_voice_actors_rpc: { Args: never; Returns: Json };
+      find_duplicate_work_groups: {
+        Args: { p_after_group_id?: number; p_limit?: number };
+        Returns: Json;
+      };
       get_ready_media_queues: { Args: never; Returns: string[] };
       get_media_queue_depth: {
         Args: { p_queue_name?: string };
@@ -904,6 +908,15 @@ export type Database = {
         Returns: Json;
       };
       normalize_actor_name: { Args: { str: string }; Returns: string };
+      merge_work_duplicates_atomic: {
+        Args: {
+          p_admin_id: string;
+          p_canonical_id: number;
+          p_updates: Json;
+          p_work_ids: number[];
+        };
+        Returns: Json;
+      };
       pop_media_queue_batch: {
         Args: {
           p_batch_size: number;

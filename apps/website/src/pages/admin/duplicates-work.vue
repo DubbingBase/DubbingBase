@@ -1,344 +1,818 @@
 <template>
-  <div class="space-y-6">
-    <!-- Header Row -->
-    <div
-      class="theme-surface-overlay p-6 rounded-2xl border theme-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-    >
+  <section class="space-y-5">
+    <header class="flex flex-wrap items-end justify-between gap-4">
       <div>
-        <h3 class="text-lg font-bold theme-text">
-          {{ $t("admin.duplicatesWork.title") }}
-        </h3>
-        <p class="text-sm theme-text-muted">
-          {{ $t("admin.duplicatesWork.description") }}
+        <p
+          class="text-xs font-semibold uppercase tracking-[0.18em] theme-status-info-text"
+        >
+          {{ t("admin.duplicatesWork.reviewEyebrow") }}
+        </p>
+        <h1 class="mt-1 text-2xl font-bold theme-text">
+          {{ t("admin.duplicatesWork.title") }}
+        </h1>
+        <p class="mt-1 max-w-2xl text-sm theme-text-muted">
+          {{ t("admin.duplicatesWork.description") }}
         </p>
       </div>
       <button
-        @click="fetchDuplicates"
-        :disabled="loading"
-        class="py-2.5 px-5 bg-blue-600 hover:bg-blue-500 disabled:bg-[var(--app-color-surface-muted)] disabled:text-[var(--app-color-text-muted)] text-white font-semibold rounded-xl shadow-lg transition-all duration-150 hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center shrink-0"
+        type="button"
+        @click="scan"
+        :disabled="loading || merging"
+        class="rounded-lg border theme-border px-4 py-2 text-sm font-semibold theme-text transition hover:theme-surface-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--app-color-focus)] disabled:opacity-50"
       >
-        <span
-          v-if="loading"
-          class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"
-        ></span>
-        <span>{{
+        {{
           loading
-            ? $t("admin.duplicates.scanning")
-            : $t("admin.duplicatesWork.scanDuplicates")
-        }}</span>
+            ? t("admin.duplicatesWork.scanningAssociations")
+            : t("admin.duplicatesWork.scanDuplicates")
+        }}
       </button>
-    </div>
+    </header>
 
-    <!-- Feedback Banners -->
     <div
       v-if="error"
-      class="p-4 theme-status-danger border border-[var(--app-color-danger-border)] rounded-xl flex items-center space-x-3 theme-status-danger-text text-sm"
+      role="alert"
+      class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[var(--app-color-danger-border)] theme-status-danger px-4 py-3 text-sm theme-status-danger-text"
     >
-      <svg
-        class="h-5 w-5 theme-status-danger-text shrink-0"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-        />
-      </svg>
       <span>{{ error }}</span>
+      <button
+        v-if="stale"
+        type="button"
+        @click="scan"
+        class="font-semibold underline"
+      >
+        {{ t("admin.duplicatesWork.reloadGroup") }}
+      </button>
+    </div>
+    <div
+      v-if="notice"
+      role="status"
+      class="rounded-lg border border-[var(--app-color-success-border)] theme-status-success px-4 py-3 text-sm theme-status-success-text"
+    >
+      {{ notice }}
     </div>
 
     <div
-      v-if="successMsg"
-      class="p-4 theme-status-success border border-[var(--app-color-success-border)] rounded-xl flex items-center space-x-3 theme-status-success-text text-sm"
+      v-if="loading && groups.length === 0"
+      aria-busy="true"
+      class="rounded-lg border theme-border theme-surface-overlay p-8 text-center text-sm theme-text-muted"
     >
-      <svg
-        class="h-5 w-5 theme-status-success-text shrink-0"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
-      </svg>
-      <span>{{ successMsg }}</span>
+      {{ t("admin.duplicatesWork.scanningAssociations") }}
     </div>
 
-    <!-- Scanner Loading State -->
     <div
-      v-if="loading"
-      class="flex flex-col items-center justify-center py-24 space-y-3 theme-surface-overlay border theme-border rounded-2xl"
+      v-else-if="!currentGroup"
+      role="status"
+      class="rounded-lg border theme-border theme-surface-overlay px-6 py-16 text-center"
     >
-      <div
-        class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"
-      ></div>
-      <p class="theme-text-muted text-sm">
-        {{ $t("admin.duplicatesWork.scanningAssociations") }}
+      <h2 class="text-lg font-semibold theme-text">
+        {{ t("admin.duplicatesWork.noDuplicatesFound") }}
+      </h2>
+      <p class="mx-auto mt-2 max-w-lg text-sm theme-text-muted">
+        {{ t("admin.duplicatesWork.allUnique") }}
       </p>
     </div>
 
-    <!-- Empty State -->
-    <div
-      v-else-if="duplicates.length === 0"
-      class="text-center py-20 theme-surface-overlay border theme-border rounded-2xl space-y-2"
-    >
+    <template v-else>
       <div
-        class="h-12 w-12 rounded-full theme-surface-overlay flex items-center justify-center theme-text-muted mx-auto"
+        class="flex flex-wrap items-center justify-between gap-3 rounded-lg border theme-border theme-surface-overlay px-4 py-3"
       >
-        <svg
-          class="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-      </div>
-      <p class="theme-text-muted font-semibold">
-        {{ $t("admin.duplicatesWork.noDuplicatesFound") }}
-      </p>
-      <p class="text-xs theme-text-muted">
-        {{ $t("admin.duplicatesWork.allUnique") }}
-      </p>
-    </div>
-
-    <!-- Duplicates Group list -->
-    <div v-else class="space-y-6">
-      <div
-        v-for="(group, idx) in duplicates"
-        :key="idx"
-        class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-4 shadow-xl"
-      >
-        <div
-          class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b theme-border pb-3 gap-3"
-        >
-          <h4 class="text-sm font-bold theme-text flex items-center space-x-2">
-            <span
-              class="h-5 w-5 rounded-full theme-surface-muted theme-text-secondary text-xs font-semibold flex items-center justify-center"
-            >
-              {{ idx + 1 }}
-            </span>
-            <span>{{ $t("admin.duplicatesWork.duplicateGroup") }}</span>
-          </h4>
-          <span class="text-xs theme-text-muted font-mono">{{
-            $t("admin.duplicatesWork.sharedProperties", {
-              projectId: group.works[0]?.dubbing_project_id,
-              actorId: group.works[0]?.actor_id,
-            })
-          }}</span>
-        </div>
-
-        <!-- Table view of entries -->
-        <div class="overflow-x-auto border theme-border rounded-xl">
-          <table class="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr
-                class="theme-input border-b theme-border theme-text-muted font-bold uppercase tracking-wider"
-              >
-                <th class="py-3 px-4">{{ $t("common.id") }}</th>
-                <th class="py-3 px-4">
-                  {{ $t("admin.duplicatesWork.voiceActorId") }}
-                </th>
-                <th class="py-3 px-4">
-                  {{ $t("admin.movieEditor.performance") }}
-                </th>
-                <th class="py-3 px-4">{{ $t("common.status") }}</th>
-                <th class="py-3 px-4">
-                  {{ $t("admin.movieEditor.contentType") }}
-                </th>
-              </tr>
-            </thead>
-            <tbody class="divide-y theme-divide">
-              <tr
-                v-for="work in group.works"
-                :key="work.id"
-                :class="[
-                  'theme-hover-surface-muted transition-colors',
-                  group.selectedId === work.id ? 'theme-selected' : '',
-                ]"
-              >
-                <td class="py-3 px-4 font-mono font-bold theme-text-secondary">
-                  {{ work.id }}
-                </td>
-                <td class="py-3 px-4 font-mono theme-text-muted">
-                  {{ work.voice_actor_id }}
-                </td>
-                <td class="py-3 px-4 font-medium theme-text">
-                  {{ work.performance }}
-                </td>
-                <td class="py-3 px-4">
-                  <span
-                    class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase border"
-                    :class="
-                      work.status === 'approved' || work.status === 'accepted'
-                        ? 'theme-status-success border-[var(--app-color-success-border)] theme-status-success-text'
-                        : work.status === 'waiting'
-                          ? 'theme-status-warning border-[var(--app-color-warning-border)] theme-status-warning-text'
-                          : 'theme-surface-muted theme-border theme-text-muted'
-                    "
-                  >
-                    {{ work.status || "unknown" }}
-                  </span>
-                </td>
-                <td class="py-3 px-4 theme-text-muted font-semibold">
-                  {{ work.content_type }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Deletion Tool Control -->
-        <div
-          class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-3 theme-input p-4 rounded-xl border theme-border"
-        >
-          <div class="flex-1 min-w-0 flex items-center space-x-3">
-            <label
-              class="text-xs font-semibold theme-text-muted uppercase shrink-0"
-              >{{ $t("admin.duplicatesWork.deleteEntry") }}</label
-            >
-            <select
-              v-model="group.selectedId"
-              class="theme-input border theme-border rounded-xl px-3 py-2 text-xs font-medium theme-text focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] max-w-xs w-full"
-            >
-              <option :value="null">
-                {{ $t("admin.duplicatesWork.selectWorkToDelete") }}
-              </option>
-              <option
-                v-for="work in group.works"
-                :key="work.id"
-                :value="work.id"
-              >
-                {{
-                  $t("admin.duplicatesWork.idWithVoiceActor", {
-                    id: work.id,
-                    voiceActorId: work.voice_actor_id,
-                  })
-                }}
-              </option>
-            </select>
-          </div>
-
-          <button
-            @click="deleteWork(group.selectedId, idx)"
-            :disabled="!group.selectedId || deleting[idx]"
-            class="py-2.5 px-4 bg-red-600 hover:bg-red-500 disabled:bg-[var(--app-color-surface-muted)] disabled:text-[var(--app-color-text-muted)] text-white font-semibold rounded-xl text-xs transition-all duration-150 flex items-center justify-center shrink-0 shadow-lg shadow-red-950/20"
+        <div class="flex items-center gap-3">
+          <span class="font-mono text-sm font-bold theme-text"
+            >{{ currentIndex + 1 }} / {{ totalGroups }}</span
           >
-            <span
-              v-if="deleting[idx]"
-              class="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-white mr-2"
-            ></span>
-            <span>{{
-              deleting[idx]
-                ? $t("admin.duplicatesWork.deleting")
-                : $t("admin.duplicatesWork.deleteSelected")
-            }}</span>
+          <span
+            class="rounded-full theme-surface-muted px-2.5 py-1 text-xs font-semibold theme-text-secondary"
+            >{{
+              t("admin.duplicatesWork.recordsInGroup", {
+                count: currentGroup.works.length,
+              })
+            }}</span
+          >
+        </div>
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            @click="move(-1)"
+            :disabled="currentIndex === 0 || merging"
+            :aria-label="t('admin.duplicatesWork.previousGroup')"
+            class="rounded-md border theme-border px-3 py-2 text-sm theme-text disabled:opacity-40"
+          >
+            {{ t("admin.duplicatesWork.previous") }}
+          </button>
+          <button
+            type="button"
+            @click="move(1)"
+            :disabled="currentIndex === groups.length - 1 || merging"
+            :aria-label="t('admin.duplicatesWork.nextGroup')"
+            class="rounded-md border theme-border px-3 py-2 text-sm theme-text disabled:opacity-40"
+          >
+            {{ t("admin.duplicatesWork.next") }}
           </button>
         </div>
       </div>
-    </div>
-  </div>
+
+      <div
+        class="flex flex-wrap items-center justify-between gap-3 rounded-lg border theme-border theme-surface-overlay px-4 py-3 text-sm"
+      >
+        <div class="min-w-0">
+          <p class="font-semibold theme-text">
+            {{
+              t("admin.duplicatesWork.mediaContext", {
+                type: currentGroup.project.contentType,
+                id: currentGroup.project.contentId,
+              })
+            }}
+          </p>
+          <p class="mt-1 text-xs theme-text-muted">
+            {{
+              t("admin.duplicatesWork.language", {
+                language:
+                  currentGroup.project.language ||
+                  t("admin.duplicatesWork.none"),
+              })
+            }}
+          </p>
+          <p class="mt-1 theme-text-muted">
+            {{
+              t("admin.duplicatesWork.identityContext", {
+                project: currentGroup.identity.dubbingProjectId,
+                actor: displayId(currentGroup.identity.actorId),
+                character: displayCharacter(currentGroup),
+                voiceActor: displayVoiceActor(currentGroup),
+              })
+            }}
+          </p>
+        </div>
+        <NuxtLink
+          :to="mediaPath"
+          class="shrink-0 rounded-md border theme-border px-3 py-2 font-semibold theme-status-info-text hover:underline"
+          >{{ t("admin.duplicatesWork.openMedia") }}</NuxtLink
+        >
+      </div>
+
+      <section class="space-y-3 lg:hidden">
+        <div
+          class="rounded-lg border-2 theme-primary-border theme-surface-overlay p-4"
+        >
+          <div class="mb-4 flex items-center justify-between">
+            <h2 class="font-bold theme-text">
+              {{ t("admin.duplicatesWork.finalResult") }}
+            </h2>
+            <label class="text-xs theme-text-muted"
+              >{{ t("admin.duplicatesWork.keepRecord") }}
+              <select
+                :value="canonicalId"
+                @change="onCanonicalChange"
+                class="ml-2 max-w-36 rounded-md border theme-border theme-input px-2 py-1 theme-text"
+              >
+                <option
+                  v-for="work in currentGroup.works"
+                  :key="work.id"
+                  :value="work.id"
+                >
+                  #{{ work.id }}
+                </option>
+              </select>
+            </label>
+          </div>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <label
+              v-for="field in textFields"
+              :key="field.key"
+              class="block text-xs font-semibold theme-text-muted"
+              >{{ t(field.label) }}
+              <input
+                :value="finalValues[field.key] ?? ''"
+                @input="setFinalText(field.key, $event)"
+                :aria-label="t(field.label)"
+                class="mt-1 w-full rounded-md border theme-border theme-input px-3 py-2 text-sm theme-text focus-visible:outline-2 focus-visible:outline-[var(--app-color-focus)]"
+              />
+            </label>
+            <label class="block text-xs font-semibold theme-text-muted"
+              >{{ t("admin.duplicatesWork.reviewStatus") }}
+              <select
+                v-model="finalValues.reviewed_status"
+                class="mt-1 w-full rounded-md border theme-border theme-input px-3 py-2 text-sm theme-text"
+              >
+                <option :value="null">—</option>
+                <option value="waiting">waiting</option>
+                <option value="accepted">accepted</option>
+                <option value="rejected">rejected</option>
+              </select>
+            </label>
+            <label
+              class="flex items-center gap-2 self-end rounded-md border theme-border px-3 py-2 text-sm theme-text"
+              ><input
+                v-model="finalValues.highlight"
+                type="checkbox"
+                class="accent-[var(--app-color-primary)]"
+              />{{ t("admin.duplicatesWork.highlight") }}</label
+            >
+            <label class="block text-xs font-semibold theme-text-muted"
+              >{{ t("admin.duplicatesWork.source") }}
+              <input
+                :value="finalValues.source_id ?? ''"
+                type="number"
+                min="1"
+                @input="setFinalNumber('source_id', $event)"
+                class="mt-1 w-full rounded-md border theme-border theme-input px-3 py-2 text-sm theme-text"
+              />
+            </label>
+            <label
+              class="block text-xs font-semibold theme-text-muted sm:col-span-2"
+              >{{ t("admin.duplicatesWork.note") }}
+              <textarea
+                v-model="finalValues.note"
+                rows="2"
+                class="mt-1 w-full rounded-md border theme-border theme-input px-3 py-2 text-sm theme-text"
+              />
+            </label>
+          </div>
+          <ul
+            class="mt-4 grid gap-1 border-t theme-border pt-3 text-[11px] theme-text-muted sm:grid-cols-2"
+          >
+            <li v-for="field in matrixFields" :key="`source-${field.key}`">
+              {{ t(field.label) }} ·
+              {{
+                t("admin.duplicatesWork.prefilledFrom", {
+                  id: provenance[field.key],
+                })
+              }}
+            </li>
+          </ul>
+        </div>
+        <div class="overflow-x-auto pb-2">
+          <div class="flex min-w-max gap-3">
+            <article
+              v-for="work in currentGroup.works"
+              :key="work.id"
+              class="w-64 rounded-lg border theme-border theme-surface-overlay p-4 text-sm"
+            >
+              <h3 class="font-bold theme-text">
+                {{ t("admin.duplicatesWork.sourceRecord", { id: work.id }) }}
+              </h3>
+              <p class="mt-1 text-xs theme-text-muted">
+                {{
+                  t("admin.duplicatesWork.votes", {
+                    up: work.upVotes,
+                    down: work.downVotes,
+                  })
+                }}
+              </p>
+              <p class="mt-1 text-[11px] theme-text-muted">
+                {{
+                  t("admin.duplicatesWork.updatedAt", {
+                    date: formatDate(work.updated_at || work.created_at),
+                    user:
+                      work.updated_by ||
+                      work.created_by ||
+                      t("admin.duplicatesWork.none"),
+                  })
+                }}
+              </p>
+              <dl class="mt-3 space-y-2">
+                <div v-for="field in matrixFields" :key="field.key">
+                  <dt class="text-xs theme-text-muted">{{ t(field.label) }}</dt>
+                  <dd class="break-words theme-text">
+                    {{ formatWorkValue(field.key, work) }}
+                  </dd>
+                </div>
+              </dl>
+              <button
+                type="button"
+                @click="chooseCanonicalId(work.id)"
+                class="mt-4 w-full rounded-md border theme-border px-3 py-2 text-xs font-semibold theme-text"
+              >
+                {{ t("admin.duplicatesWork.keepThisRecord") }}
+              </button>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="hidden overflow-x-auto rounded-lg border theme-border lg:block"
+      >
+        <table class="w-full min-w-[1100px] border-collapse text-left text-sm">
+          <thead
+            class="theme-surface-raised text-xs uppercase tracking-wide theme-text-muted"
+          >
+            <tr>
+              <th
+                class="sticky left-0 z-20 w-40 border-b theme-border theme-surface-raised px-4 py-3"
+              >
+                {{ t("admin.duplicatesWork.field") }}
+              </th>
+              <th
+                v-for="work in currentGroup.works"
+                :key="work.id"
+                class="min-w-56 border-b border-l theme-border px-4 py-3"
+              >
+                {{ t("admin.duplicatesWork.sourceRecord", { id: work.id }) }}
+                <span class="mt-1 block normal-case tracking-normal">{{
+                  t("admin.duplicatesWork.votes", {
+                    up: work.upVotes,
+                    down: work.downVotes,
+                  })
+                }}</span>
+              </th>
+              <th
+                class="sticky right-0 z-10 min-w-72 border-b border-l-2 theme-border theme-surface-raised px-4 py-3 theme-text"
+              >
+                {{ t("admin.duplicatesWork.finalResult") }}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="field in matrixFields"
+              :key="field.key"
+              class="border-b theme-border"
+            >
+              <th
+                scope="row"
+                class="sticky left-0 z-10 theme-surface-overlay px-4 py-3 text-xs font-semibold theme-text-muted"
+              >
+                {{ t(field.label) }}
+              </th>
+              <td
+                v-for="work in currentGroup.works"
+                :key="`${field.key}-${work.id}`"
+                class="border-l theme-border px-4 py-3 align-top"
+                :class="
+                  isDifferent(field.key, work)
+                    ? 'theme-status-warning theme-status-warning-text'
+                    : 'theme-text-secondary'
+                "
+              >
+                {{ formatValue(work[field.key])
+                }}<span
+                  v-if="canonicalId === work.id"
+                  class="ml-2 rounded theme-surface-muted px-1.5 py-0.5 text-[10px] font-bold"
+                  >{{ t("admin.duplicatesWork.canonical") }}</span
+                >
+              </td>
+              <td
+                class="sticky right-0 z-[5] border-l-2 theme-border theme-surface-overlay px-3 py-2 align-top shadow-[-8px_0_12px_-12px_currentColor]"
+              >
+                <template v-if="field.key === 'reviewed_status'"
+                  ><select
+                    v-model="finalValues.reviewed_status"
+                    class="w-full rounded-md border theme-border theme-input px-2 py-2 text-sm theme-text"
+                  >
+                    <option :value="null">—</option>
+                    <option value="waiting">waiting</option>
+                    <option value="accepted">accepted</option>
+                    <option value="rejected">rejected</option>
+                  </select></template
+                >
+                <template v-else-if="field.key === 'highlight'"
+                  ><label
+                    class="flex items-center gap-2 py-2 text-sm theme-text"
+                    ><input
+                      v-model="finalValues.highlight"
+                      type="checkbox"
+                      class="accent-[var(--app-color-primary)]"
+                    />{{
+                      finalValues.highlight
+                        ? t("admin.duplicatesWork.enabled")
+                        : t("admin.duplicatesWork.disabled")
+                    }}</label
+                  ></template
+                >
+                <template v-else-if="field.key === 'source_id'"
+                  ><input
+                    :value="finalValues.source_id ?? ''"
+                    type="number"
+                    min="1"
+                    @input="setFinalNumber('source_id', $event)"
+                    class="w-full rounded-md border theme-border theme-input px-2 py-2 text-sm theme-text"
+                  /><small
+                    v-if="sourceLabel"
+                    class="mt-1 block theme-text-muted"
+                    >{{ sourceLabel }}</small
+                  ></template
+                >
+                <template v-else-if="field.key === 'note'">
+                  <textarea
+                    v-model="finalValues.note"
+                    rows="2"
+                    class="w-full rounded-md border theme-border theme-input px-2 py-2 text-sm theme-text"
+                  />
+                </template>
+                <template v-else
+                  ><input
+                    :value="finalValues[field.key] ?? ''"
+                    @input="setFinalText(field.key, $event)"
+                    class="w-full rounded-md border theme-border theme-input px-2 py-2 text-sm theme-text"
+                /></template>
+                <small class="mt-1 block text-[10px] theme-text-muted">{{
+                  t("admin.duplicatesWork.prefilledFrom", {
+                    id: provenance[field.key],
+                  })
+                }}</small>
+              </td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <th
+                class="sticky left-0 z-10 theme-surface-overlay px-4 py-3 text-xs theme-text-muted"
+              >
+                {{ t("admin.duplicatesWork.keepRecord") }}
+              </th>
+              <td
+                v-for="work in currentGroup.works"
+                :key="`keep-${work.id}`"
+                class="border-l theme-border px-4 py-3"
+              >
+                <button
+                  type="button"
+                  @click="chooseCanonicalId(work.id)"
+                  class="rounded-md border theme-border px-3 py-2 text-xs font-semibold theme-text"
+                >
+                  {{ t("admin.duplicatesWork.keepThisRecord") }}
+                </button>
+              </td>
+              <td
+                class="sticky right-0 z-[5] border-l-2 theme-border theme-surface-overlay px-4 py-3 text-sm font-semibold theme-text"
+              >
+                #{{ canonicalId }} ·
+                {{
+                  t("admin.duplicatesWork.resultOf", {
+                    count: currentGroup.works.length,
+                  })
+                }}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </section>
+
+      <footer
+        class="sticky bottom-0 z-30 flex flex-wrap items-center justify-between gap-3 border theme-border theme-surface-raised px-4 py-3 shadow-lg"
+      >
+        <p class="text-xs theme-text-muted">
+          {{
+            t("admin.duplicatesWork.mergeSummary", {
+              keep: canonicalId,
+              remove: currentGroup.works.length - 1,
+            })
+          }}
+        </p>
+        <button
+          type="button"
+          @click="confirmOpen = true"
+          :disabled="merging"
+          class="rounded-md bg-[var(--app-color-primary)] px-4 py-2.5 text-sm font-bold text-[var(--app-color-on-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--app-color-focus)] disabled:opacity-50"
+        >
+          {{
+            merging
+              ? t("admin.duplicatesWork.merging")
+              : t("admin.duplicatesWork.reviewAndMerge")
+          }}
+        </button>
+      </footer>
+    </template>
+
+    <DialogRoot v-model:open="confirmOpen">
+      <DialogPortal>
+        <DialogOverlay
+          class="fixed inset-0 z-40 bg-black/65 backdrop-blur-sm"
+        />
+        <DialogContent
+          class="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-lg border theme-border theme-surface p-6 shadow-2xl focus:outline-none"
+        >
+          <DialogTitle class="text-lg font-bold theme-text">{{
+            t("admin.duplicatesWork.confirmTitle")
+          }}</DialogTitle>
+          <DialogDescription class="mt-2 text-sm theme-text-muted">{{
+            t("admin.duplicatesWork.confirmDescription", {
+              keep: canonicalId,
+              remove: (currentGroup?.works.length || 1) - 1,
+              votes: voteCount,
+            })
+          }}</DialogDescription>
+          <div class="mt-5 flex justify-end gap-3">
+            <DialogClose
+              class="rounded-md border theme-border px-4 py-2 text-sm font-semibold theme-text"
+              >{{ t("common.cancel") }}</DialogClose
+            >
+            <button
+              type="button"
+              @click="mergeGroup"
+              :disabled="merging"
+              class="rounded-md bg-[var(--app-color-danger-bg)] px-4 py-2 text-sm font-bold theme-status-danger-text disabled:opacity-50"
+            >
+              {{
+                merging
+                  ? t("admin.duplicatesWork.merging")
+                  : t("admin.duplicatesWork.confirmMerge")
+              }}
+            </button>
+          </div>
+        </DialogContent>
+      </DialogPortal>
+    </DialogRoot>
+  </section>
 </template>
 
 <script setup lang="ts">
-definePageMeta({
-  layout: "admin",
-  middleware: "admin",
+import { computed, onMounted, ref, watch } from "vue";
+import {
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogOverlay,
+  DialogPortal,
+  DialogRoot,
+  DialogTitle,
+} from "reka-ui";
+import {
+  editableWorkFields,
+  prefillDuplicateWork,
+  rankDuplicateWorks,
+  type DuplicateWorkGroup,
+  type DuplicateWorkPage,
+  type EditableWorkField,
+  type EditableWorkValues,
+} from "~/utils/duplicate-work";
+
+definePageMeta({ layout: "admin", middleware: "admin" });
+
+const { t } = useI18n();
+const localePath = useLocalePath();
+const groups = ref<DuplicateWorkGroup[]>([]);
+const cursor = ref<number | null>(0);
+const currentIndex = ref(0);
+const totalGroups = ref(0);
+const loading = ref(true);
+const merging = ref(false);
+const stale = ref(false);
+const error = ref("");
+const notice = ref("");
+const confirmOpen = ref(false);
+const canonicalId = ref(0);
+const provenance = ref<Record<EditableWorkField, number>>({
+  performance: 0,
+  status: 0,
+  reviewed_status: 0,
+  note: 0,
+  highlight: 0,
+  source_id: 0,
+  suggestions: 0,
+  character_name: 0,
+});
+const finalValues = ref<EditableWorkValues>({
+  performance: null,
+  status: null,
+  reviewed_status: null,
+  note: null,
+  highlight: null,
+  source_id: null,
+  suggestions: null,
+  character_name: null,
 });
 
-import { ref } from "vue";
+const textFields = [
+  { key: "performance", label: "admin.duplicatesWork.performance" },
+  { key: "status", label: "common.status" },
+  { key: "character_name", label: "admin.duplicatesWork.characterName" },
+  { key: "suggestions", label: "admin.duplicatesWork.suggestions" },
+] as const;
+const matrixFields = editableWorkFields.map((key) => ({
+  key,
+  label:
+    key === "status"
+      ? "common.status"
+      : `admin.duplicatesWork.${key === "reviewed_status" ? "reviewStatus" : key === "source_id" ? "source" : key === "character_name" ? "characterName" : key}`,
+}));
+const currentGroup = computed(() => groups.value[currentIndex.value] ?? null);
+const currentCanonical = computed(
+  () =>
+    currentGroup.value?.works.find((work) => work.id === canonicalId.value) ??
+    null,
+);
+const voteCount = computed(
+  () =>
+    currentGroup.value?.works.reduce((sum, work) => sum + work.voteCount, 0) ??
+    0,
+);
+const sourceLabel = computed(
+  () =>
+    currentGroup.value?.works.find(
+      (work) => work.id === provenance.value.source_id,
+    )?.sourceName ?? "",
+);
+const mediaPath = computed(() => {
+  const project = currentGroup.value?.project;
+  if (!project) return localePath("/");
+  const type = ["tv", "series"].includes(project.contentType)
+    ? "show"
+    : project.contentType;
+  return localePath(`/${type}/${project.contentId}`);
+});
 
-interface WorkEntry {
-  id: number;
-  dubbing_project_id: number;
-  actor_id: number;
-  voice_actor_id: number;
-  status: string | null;
-  performance: string | null;
-  content_type: string | null;
+function displayId(value: number | null): string {
+  return value === null ? t("admin.duplicatesWork.none") : `#${value}`;
 }
-
-interface DuplicateGroup {
-  works: WorkEntry[];
-  selectedId: number | null;
+function displayCharacter(group: DuplicateWorkGroup): string {
+  const name = group.works.find((work) => work.character_name)?.character_name;
+  return name
+    ? `${name} · ${displayId(group.identity.characterId)}`
+    : displayId(group.identity.characterId);
 }
-
-const duplicates = ref<DuplicateGroup[]>([]);
-const loading = ref(false);
-const error = ref("");
-const successMsg = ref("");
-const deleting = ref<Record<number, boolean>>({});
-
-const fetchDuplicates = async () => {
+function displayVoiceActor(group: DuplicateWorkGroup): string {
+  const voiceActor = group.works.find((work) => work.voiceActor)?.voiceActor;
+  return voiceActor
+    ? `${voiceActor.firstName} ${voiceActor.lastName} · #${voiceActor.id}`
+    : displayId(group.identity.voiceActorId);
+}
+function formatValue(value: string | number | boolean | null): string {
+  if (value === null || value === "") return t("admin.duplicatesWork.none");
+  if (typeof value === "boolean")
+    return value
+      ? t("admin.duplicatesWork.enabled")
+      : t("admin.duplicatesWork.disabled");
+  return String(value);
+}
+function formatWorkValue(
+  field: EditableWorkField,
+  work: DuplicateWorkGroup["works"][number],
+): string {
+  if (field === "source_id" && work.source_id !== null && work.sourceName)
+    return `${work.source_id} · ${work.sourceName}`;
+  return formatValue(work[field]);
+}
+function formatDate(value: string | null): string {
+  return value
+    ? new Date(value).toLocaleString()
+    : t("admin.duplicatesWork.none");
+}
+function setFinalText(field: EditableWorkField, event: Event): void {
+  const target = event.target;
+  if (!(target instanceof HTMLInputElement)) return;
+  const value = target.value || null;
+  switch (field) {
+    case "performance":
+      finalValues.value.performance = value;
+      break;
+    case "status":
+      finalValues.value.status = value;
+      break;
+    case "character_name":
+      finalValues.value.character_name = value;
+      break;
+    case "suggestions":
+      finalValues.value.suggestions = value;
+      break;
+    default:
+      break;
+  }
+}
+function setFinalNumber(field: "source_id", event: Event): void {
+  const target = event.target;
+  if (target instanceof HTMLInputElement)
+    finalValues.value[field] = target.value ? Number(target.value) : null;
+}
+function isDifferent(
+  field: EditableWorkField,
+  work: DuplicateWorkGroup["works"][number],
+): boolean {
+  return (
+    currentGroup.value?.works.some((entry) => entry[field] !== work[field]) ??
+    false
+  );
+}
+function resetFinalValues(): void {
+  if (!currentGroup.value) return;
+  const ranked = rankDuplicateWorks(currentGroup.value.works);
+  const canonical =
+    ranked.find((work) => work.id === canonicalId.value) ?? ranked[0];
+  if (!canonical) return;
+  canonicalId.value = canonical.id;
+  const result = prefillDuplicateWork(canonical, ranked);
+  finalValues.value = result.values;
+  provenance.value = result.provenance;
+}
+function chooseCanonicalId(id: number): void {
+  if (id === canonicalId.value || !currentGroup.value) return;
+  if (!window.confirm(t("admin.duplicatesWork.changeCanonicalConfirm"))) return;
+  canonicalId.value = id;
+  resetFinalValues();
+}
+function onCanonicalChange(event: Event): void {
+  const target = event.target;
+  if (target instanceof HTMLSelectElement) {
+    chooseCanonicalId(Number(target.value));
+    target.value = String(canonicalId.value);
+  }
+}
+function move(direction: -1 | 1): void {
+  const next = currentIndex.value + direction;
+  if (next < 0 || next >= groups.value.length) return;
+  currentIndex.value = next;
+  resetFinalValues();
+  error.value = "";
+  notice.value = "";
+}
+async function loadPage(after: number): Promise<DuplicateWorkPage> {
+  return await $fetch<DuplicateWorkPage>(
+    `/api/admin/work-duplicates?after=${after}&limit=20`,
+  );
+}
+async function scan(): Promise<void> {
+  loading.value = true;
+  error.value = "";
+  notice.value = "";
+  stale.value = false;
+  cursor.value = 0;
+  groups.value = [];
+  currentIndex.value = 0;
   try {
-    loading.value = true;
-    error.value = "";
-    successMsg.value = "";
-    duplicates.value = [];
-
-    const data = await $fetch<any[]>("/api/find_duplicate_work");
-
-    duplicates.value = (data || []).map((group: any) => ({
-      works: group.works || [],
-      selectedId: null,
-    }));
-  } catch (err: any) {
-    console.error("Error fetching duplicate work entries:", err);
-    error.value = err.message || "Failed to fetch duplicate work entries.";
+    const page = await loadPage(0);
+    groups.value = page.items;
+    cursor.value = page.nextCursor;
+    totalGroups.value = page.totalGroups;
+    resetFinalValues();
+  } catch (cause: unknown) {
+    error.value =
+      cause instanceof Error
+        ? cause.message
+        : t("admin.duplicatesWork.scanFailed");
   } finally {
     loading.value = false;
   }
-};
-
-const deleteWork = async (workId: number | null, groupIdx: number) => {
-  if (!workId) return;
-
-  deleting.value[groupIdx] = true;
-  error.value = "";
-  successMsg.value = "";
-
+}
+async function loadNextPage(): Promise<void> {
+  if (cursor.value === null || loading.value) return;
+  loading.value = true;
   try {
-    const data = await $fetch<any>("/api/delete-work-entry", {
-      method: "POST",
-      body: { id: workId },
-    });
-
-    if (data && data.error) {
-      throw new Error(data.error?.message || "Failed to delete work entry.");
-    }
-
-    successMsg.value = `Successfully deleted work entry #${workId}`;
-
-    // Remove row locally
-    const group = duplicates.value[groupIdx];
-    if (group) {
-      group.works = group.works.filter((w) => w.id !== workId);
-      group.selectedId = null;
-
-      // If less than 2 items left, discard the group
-      if (group.works.length < 2) {
-        duplicates.value.splice(groupIdx, 1);
-      }
-    }
-  } catch (err: any) {
-    console.error("Error deleting work entry:", err);
-    error.value = err.message || "Failed to delete work entry.";
+    const page = await loadPage(cursor.value);
+    groups.value.push(...page.items);
+    cursor.value = page.nextCursor;
+    totalGroups.value = page.totalGroups;
+  } catch (cause: unknown) {
+    error.value =
+      cause instanceof Error
+        ? cause.message
+        : t("admin.duplicatesWork.scanFailed");
   } finally {
-    deleting.value[groupIdx] = false;
+    loading.value = false;
+    if (
+      currentIndex.value >= groups.value.length - 2 &&
+      cursor.value !== null
+    ) {
+      void loadNextPage();
+    }
   }
-};
+}
+async function mergeGroup(): Promise<void> {
+  if (!currentGroup.value || !currentCanonical.value) return;
+  merging.value = true;
+  stale.value = false;
+  error.value = "";
+  try {
+    await $fetch("/api/admin/work-duplicates/merge", {
+      method: "POST",
+      body: {
+        canonicalId: canonicalId.value,
+        workIds: currentGroup.value.works.map((work) => work.id),
+        updates: Object.fromEntries(
+          editableWorkFields.map((field) => [field, finalValues.value[field]]),
+        ),
+      },
+    });
+    confirmOpen.value = false;
+    groups.value.splice(currentIndex.value, 1);
+    totalGroups.value = Math.max(totalGroups.value - 1, 0);
+    canonicalId.value = 0;
+    notice.value = t("admin.duplicatesWork.mergeSucceeded");
+    if (currentIndex.value >= groups.value.length && currentIndex.value > 0)
+      currentIndex.value -= 1;
+    if (groups.value.length === 0 && cursor.value !== null) await scan();
+    else resetFinalValues();
+  } catch (cause: unknown) {
+    const response =
+      cause && typeof cause === "object" && "data" in cause ? cause.data : null;
+    const statusMessage =
+      response && typeof response === "object" && "statusMessage" in response
+        ? response.statusMessage
+        : null;
+    stale.value = statusMessage === "DUPLICATE_GROUP_CHANGED";
+    error.value = stale.value
+      ? t("admin.duplicatesWork.staleGroup")
+      : cause instanceof Error
+        ? cause.message
+        : t("admin.duplicatesWork.mergeFailed");
+  } finally {
+    merging.value = false;
+  }
+}
 
-// Auto scan on load
-fetchDuplicates();
+watch(currentIndex, async () => {
+  if (currentIndex.value >= groups.value.length - 2 && cursor.value !== null)
+    await loadNextPage();
+});
+onMounted(scan);
 </script>
