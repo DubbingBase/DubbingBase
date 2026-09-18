@@ -2,13 +2,14 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**78 library files** across 5 modules
+**79 library files** across 5 modules
 
-## Website (41 files)
+## Website (42 files)
 
 - `apps/website/server/utils/index.ts` — getCloudflareKv, useCache, useFreshCache, useTmdbClient, useTvdbClient, useIgdbClient, …
 - `apps/website/server/utils/cache/wikipedia.ts` — sortLanguagesByPopularity, extractAvailableLanguages, cleanHeadingText, isDubbingSectionHeading, selectDubbingSections, filterValidSectionIndexes, …
 - `apps/website/server/utils/services/media-preparation.ts` — checkMediaDubbingSections, checkGameDubbingSections, extractMediaDubbingCredits, extractGameDubbingCredits, prepareMedia, prepareGame, …
+- `apps/website/src/utils/duplicate-work.ts` — duplicateWorkDraftHasChanges, canPrefetchDuplicateWorkPage, rankDuplicateWorks, prefillDuplicateWork, DuplicateWorkEntry, DuplicateWorkGroup, …
 - `apps/website/server/utils/cache/constants.ts` — SimpleKeyBuilder, SimpleKeyValidator, API_PREFIXES, CACHE_SCHEMA_VERSION, CONTENT_TYPES, CACHE_KEYS
 - `apps/website/server/utils/cache/http.ts` — getPublicCacheControl, setNoCacheHeaders, setNoStoreHeaders, setPublicCacheHeaders, CacheProfile, NO_STORE_CACHE_CONTROL
 - `apps/website/server/utils/llm.ts` — areAllLlmQuotasExhausted, getLlmQuotaCache, llmGenerate, llmGenerateObject, llmVision, llmVisionObject
@@ -30,8 +31,7 @@
 - `apps/website/src/composables/useContribute.ts` — fetchRandomTask, useContribute
 - `apps/website/src/composables/useUrlPagination.ts` — readUrlPage, useUrlPagination
 - `apps/website/src/utils/search-routes.ts` — getSearchResultRoute, SearchFilter
-- `apps/website/server/api/movie/[id].get.ts` — fetchMovieData
-- _…and 16 more files_
+- _…and 17 more files_
 
 ## Mobile (17 files)
 

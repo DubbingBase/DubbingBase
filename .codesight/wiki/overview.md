@@ -8,11 +8,12 @@
 
 ## Scale
 
-75 API routes · 16 database models · 197 UI components · 78 library files · 12 middleware layers · 63 environment variables
+75 API routes · 16 database models · 197 UI components · 79 library files · 12 middleware layers · 63 environment variables
 
 ## Subsystems
 
 - **[[id].get](./[id].get.md)** — 9 routes — touches: cache, queue
+- **[Admin](./admin.md)** — 2 routes — touches: auth, cache
 - **[Career-grid.get](./career-grid.get.md)** — 1 routes — touches: cache
 - **[Cast-vote.post](./cast-vote.post.md)** — 1 routes
 - **[Count-voice-actor-works.post](./count-voice-actor-works.post.md)** — 1 routes
@@ -20,13 +21,11 @@
 - **[Dashboard-stats.get](./dashboard-stats.get.md)** — 1 routes — touches: auth, cache
 - **[Delete-user-voice-actor-link.post](./delete-user-voice-actor-link.post.md)** — 1 routes — touches: db
 - **[Delete-voice-actor-link.post](./delete-voice-actor-link.post.md)** — 1 routes — touches: auth, db
-- **[Delete-work-entry.post](./delete-work-entry.post.md)** — 1 routes — touches: auth, db
 - **[Delete_user.post](./delete_user.post.md)** — 1 routes — touches: auth
 - **[Detail-collections.get](./detail-collections.get.md)** — 1 routes — touches: cache
 - **[Extract-credits-from-image.post](./extract-credits-from-image.post.md)** — 1 routes — touches: upload
 - **[Extract-voice-actor-info.post](./extract-voice-actor-info.post.md)** — 1 routes — touches: auth
 - **[Find_duplicate_voice_actors.get](./find_duplicate_voice_actors.get.md)** — 1 routes — touches: auth, cache
-- **[Find_duplicate_work.get](./find_duplicate_work.get.md)** — 1 routes — touches: auth, cache
 - **[Games.get](./games.get.md)** — 1 routes — touches: cache
 - **[Generate-social-content.post](./generate-social-content.post.md)** — 1 routes — touches: auth, email
 - **[Get-dubbing-project.get](./get-dubbing-project.get.md)** — 1 routes — touches: cache
@@ -81,7 +80,7 @@
 
 **UI:** 197 components (vue) — see [ui.md](./ui.md)
 
-**Libraries:** 78 files — see [libraries.md](./libraries.md)
+**Libraries:** 79 files — see [libraries.md](./libraries.md)
 
 ## High-Impact Files
 
@@ -111,4 +110,4 @@ Changes to these files have the widest blast radius across the codebase:
 - _...33 more_
 
 ---
-_Back to [index.md](./index.md) · Generated 2026-09-17_
+_Back to [index.md](./index.md) · Generated 2026-09-18_

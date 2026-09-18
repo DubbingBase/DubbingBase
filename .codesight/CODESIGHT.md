@@ -3,15 +3,17 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 75 routes | 16 models | 197 components | 78 lib files | 63 env vars | 12 middleware | 5% test coverage
-> **Token savings:** this file is ~14,600 tokens. Without it, AI exploration would cost ~150,000 tokens. **Saves ~135,300 tokens per conversation.**
-> **Last scanned:** 2026-09-17 14:53 — re-run after significant changes
+> 75 routes | 16 models | 197 components | 79 lib files | 63 env vars | 12 middleware | 7% test coverage
+> **Token savings:** this file is ~14,800 tokens. Without it, AI exploration would cost ~150,200 tokens. **Saves ~135,400 tokens per conversation.**
+> **Last scanned:** 2026-09-18 07:27 — re-run after significant changes
 
 ---
 
 # Routes
 
 - `GET` `/api/actor/:id` params(id) [cache]
+- `POST` `/api/admin/work-duplicates/merge` [auth]
+- `GET` `/api/admin/work-duplicates` [auth, cache]
 - `GET` `/api/advertisement/:id` params(id) [cache, queue]
 - `GET` `/api/audiobook/:id` params(id) [cache, queue]
 - `GET` `/api/career-grid` [cache]
@@ -21,14 +23,12 @@
 - `GET` `/api/dashboard-stats` [auth, cache]
 - `POST` `/api/delete-user-voice-actor-link` [db]
 - `POST` `/api/delete-voice-actor-link` [auth, db]
-- `POST` `/api/delete-work-entry` [auth, db]
 - `POST` `/api/delete_user` [auth]
 - `GET` `/api/detail-collections` [cache] ✓
 - `GET` `/api/episode/index` [cache]
 - `POST` `/api/extract-credits-from-image` [upload]
 - `POST` `/api/extract-voice-actor-info` [auth]
 - `GET` `/api/find_duplicate_voice_actors` [auth, cache]
-- `GET` `/api/find_duplicate_work` [auth, cache]
 - `GET` `/api/game/:id` params(id) [cache, queue]
 - `POST` `/api/generate-social-content` [auth, email]
 - `GET` `/api/get-dubbing-project` [cache]
@@ -547,6 +547,14 @@
 - `apps/website/src/composables/useUrlPagination.ts` — function readUrlPage: (value) => number, function useUrlPagination: (queryKey) => void
 - `apps/website/src/lib/media-editor-routes.ts` — function getMediaEditorRoute: ({...}, mediaId, projectId }) => string | null
 - `apps/website/src/lib/mediaQueue.ts` — function enqueueMedia: (params) => Promise<void>
+- `apps/website/src/utils/duplicate-work.ts`
+  - function duplicateWorkDraftHasChanges: (initial, current) => boolean
+  - function canPrefetchDuplicateWorkPage: (requestSucceeded, currentIndex, groupCount, nextCursor) => boolean
+  - function rankDuplicateWorks: (works) => DuplicateWorkEntry[]
+  - function prefillDuplicateWork: (canonical, works) => void
+  - interface DuplicateWorkEntry
+  - interface DuplicateWorkGroup
+  - _...4 more_
 - `apps/website/src/utils/media-cast.ts`
   - function sameMediaId: (left, right) => boolean
   - function matchCastWorks: (actors, works) => CastWorkMatchResult<Actor, Work>
@@ -734,9 +742,9 @@
 
 ## Import Map (who imports what)
 
-- `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/cast-vote.post.ts`, `apps/website/server/api/count-voice-actor-works.post.ts` +54 more
-- `apps/website/server/utils/cache/http.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/dashboard-stats.get.ts` +34 more
-- `apps/website/server/utils/auth.ts` ← `apps/website/server/api/create-user-profile.post.ts`, `apps/website/server/api/dashboard-stats.get.ts`, `apps/website/server/api/delete-voice-actor-link.post.ts`, `apps/website/server/api/delete-work-entry.post.ts`, `apps/website/server/api/delete_user.post.ts` +21 more
+- `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/work-duplicates/merge.post.ts`, `apps/website/server/api/admin/work-duplicates.get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts` +54 more
+- `apps/website/server/utils/cache/http.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/admin/work-duplicates.get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts` +34 more
+- `apps/website/server/utils/auth.ts` ← `apps/website/server/api/admin/work-duplicates/merge.post.ts`, `apps/website/server/api/admin/work-duplicates.get.ts`, `apps/website/server/api/create-user-profile.post.ts`, `apps/website/server/api/dashboard-stats.get.ts`, `apps/website/server/api/delete-voice-actor-link.post.ts` +21 more
 - `apps/website/server/utils/index.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/episode/index.get.ts` +18 more
 - `apps/website/server/utils/db/queries.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/game/[id].get.ts` +7 more
 - `apps/website/server/utils/notifications/discord.ts` ← `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/media-queue.post.ts`, `apps/website/server/api/movie/[id].get.ts` +6 more
@@ -749,8 +757,8 @@
 
 # Test Coverage
 
-> **5%** of routes and models are covered by tests
-> 32 test files found
+> **7%** of routes and models are covered by tests
+> 33 test files found
 
 ## Covered Routes
 
@@ -761,6 +769,7 @@
 - voice_actors
 - source
 - work
+- votes
 - studios
 
 ---

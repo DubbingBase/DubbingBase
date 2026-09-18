@@ -141,6 +141,14 @@
 - `apps/website/src/composables/useUrlPagination.ts` — function readUrlPage: (value) => number, function useUrlPagination: (queryKey) => void
 - `apps/website/src/lib/media-editor-routes.ts` — function getMediaEditorRoute: ({...}, mediaId, projectId }) => string | null
 - `apps/website/src/lib/mediaQueue.ts` — function enqueueMedia: (params) => Promise<void>
+- `apps/website/src/utils/duplicate-work.ts`
+  - function duplicateWorkDraftHasChanges: (initial, current) => boolean
+  - function canPrefetchDuplicateWorkPage: (requestSucceeded, currentIndex, groupCount, nextCursor) => boolean
+  - function rankDuplicateWorks: (works) => DuplicateWorkEntry[]
+  - function prefillDuplicateWork: (canonical, works) => void
+  - interface DuplicateWorkEntry
+  - interface DuplicateWorkGroup
+  - _...4 more_
 - `apps/website/src/utils/media-cast.ts`
   - function sameMediaId: (left, right) => boolean
   - function matchCastWorks: (actors, works) => CastWorkMatchResult<Actor, Work>
