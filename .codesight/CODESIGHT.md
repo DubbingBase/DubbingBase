@@ -4,8 +4,8 @@
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
 > 75 routes | 16 models | 197 components | 79 lib files | 63 env vars | 12 middleware | 7% test coverage
-> **Token savings:** this file is ~14,700 tokens. Without it, AI exploration would cost ~150,200 tokens. **Saves ~135,500 tokens per conversation.**
-> **Last scanned:** 2026-09-17 20:33 — re-run after significant changes
+> **Token savings:** this file is ~14,800 tokens. Without it, AI exploration would cost ~150,200 tokens. **Saves ~135,400 tokens per conversation.**
+> **Last scanned:** 2026-09-18 07:27 — re-run after significant changes
 
 ---
 
@@ -548,13 +548,13 @@
 - `apps/website/src/lib/media-editor-routes.ts` — function getMediaEditorRoute: ({...}, mediaId, projectId }) => string | null
 - `apps/website/src/lib/mediaQueue.ts` — function enqueueMedia: (params) => Promise<void>
 - `apps/website/src/utils/duplicate-work.ts`
+  - function duplicateWorkDraftHasChanges: (initial, current) => boolean
+  - function canPrefetchDuplicateWorkPage: (requestSucceeded, currentIndex, groupCount, nextCursor) => boolean
   - function rankDuplicateWorks: (works) => DuplicateWorkEntry[]
   - function prefillDuplicateWork: (canonical, works) => void
   - interface DuplicateWorkEntry
   - interface DuplicateWorkGroup
-  - interface DuplicateWorkPage
-  - type EditableWorkField
-  - _...2 more_
+  - _...4 more_
 - `apps/website/src/utils/media-cast.ts`
   - function sameMediaId: (left, right) => boolean
   - function matchCastWorks: (actors, works) => CastWorkMatchResult<Actor, Work>
