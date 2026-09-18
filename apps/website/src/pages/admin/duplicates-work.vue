@@ -529,6 +529,8 @@ import {
   DialogTitle,
 } from "reka-ui";
 import {
+  canPrefetchDuplicateWorkPage,
+  duplicateWorkDraftHasChanges,
   editableWorkFields,
   prefillDuplicateWork,
   rankDuplicateWorks,
@@ -540,7 +542,7 @@ import {
 
 definePageMeta({ layout: "admin", middleware: "admin" });
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const localePath = useLocalePath();
 const groups = ref<DuplicateWorkGroup[]>([]);
 const cursor = ref<number | null>(0);
@@ -573,6 +575,12 @@ const finalValues = ref<EditableWorkValues>({
   suggestions: null,
   character_name: null,
 });
+const initialFinalValues = ref<EditableWorkValues>({ ...finalValues.value });
+const hasUnsavedChanges = computed(
+  () =>
+    currentGroup.value !== null &&
+    duplicateWorkDraftHasChanges(initialFinalValues.value, finalValues.value),
+);
 
 const textFields = [
   { key: "performance", label: "admin.duplicatesWork.performance" },
@@ -646,7 +654,7 @@ function formatWorkValue(
 }
 function formatDate(value: string | null): string {
   return value
-    ? new Date(value).toLocaleString()
+    ? new Date(value).toLocaleString(locale.value)
     : t("admin.duplicatesWork.none");
 }
 function setFinalText(field: EditableWorkField, event: Event): void {
@@ -693,7 +701,14 @@ function resetFinalValues(): void {
   canonicalId.value = canonical.id;
   const result = prefillDuplicateWork(canonical, ranked);
   finalValues.value = result.values;
+  initialFinalValues.value = { ...result.values };
   provenance.value = result.provenance;
+}
+function confirmDiscardChanges(): boolean {
+  return (
+    !hasUnsavedChanges.value ||
+    window.confirm(t("admin.duplicatesWork.discardChangesConfirm"))
+  );
 }
 function chooseCanonicalId(id: number): void {
   if (id === canonicalId.value || !currentGroup.value) return;
@@ -711,6 +726,7 @@ function onCanonicalChange(event: Event): void {
 function move(direction: -1 | 1): void {
   const next = currentIndex.value + direction;
   if (next < 0 || next >= groups.value.length) return;
+  if (!confirmDiscardChanges()) return;
   currentIndex.value = next;
   resetFinalValues();
   error.value = "";
@@ -722,6 +738,7 @@ async function loadPage(after: number): Promise<DuplicateWorkPage> {
   );
 }
 async function scan(): Promise<void> {
+  if (!confirmDiscardChanges()) return;
   loading.value = true;
   error.value = "";
   notice.value = "";
@@ -747,11 +764,13 @@ async function scan(): Promise<void> {
 async function loadNextPage(): Promise<void> {
   if (cursor.value === null || loading.value) return;
   loading.value = true;
+  let succeeded = false;
   try {
     const page = await loadPage(cursor.value);
     groups.value.push(...page.items);
     cursor.value = page.nextCursor;
     totalGroups.value = page.totalGroups;
+    succeeded = true;
   } catch (cause: unknown) {
     error.value =
       cause instanceof Error
@@ -760,8 +779,12 @@ async function loadNextPage(): Promise<void> {
   } finally {
     loading.value = false;
     if (
-      currentIndex.value >= groups.value.length - 2 &&
-      cursor.value !== null
+      canPrefetchDuplicateWorkPage(
+        succeeded,
+        currentIndex.value,
+        groups.value.length,
+        cursor.value,
+      )
     ) {
       void loadNextPage();
     }

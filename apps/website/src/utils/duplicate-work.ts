@@ -62,6 +62,24 @@ export interface DuplicateWorkPage {
 
 export type EditableWorkValues = Pick<DuplicateWorkEntry, EditableWorkField>;
 
+export function duplicateWorkDraftHasChanges(
+  initial: EditableWorkValues,
+  current: EditableWorkValues,
+): boolean {
+  return editableWorkFields.some((field) => initial[field] !== current[field]);
+}
+
+export function canPrefetchDuplicateWorkPage(
+  requestSucceeded: boolean,
+  currentIndex: number,
+  groupCount: number,
+  nextCursor: number | null,
+): boolean {
+  return (
+    requestSucceeded && currentIndex >= groupCount - 2 && nextCursor !== null
+  );
+}
+
 const reviewPriority = (
   status: DuplicateWorkEntry["reviewed_status"],
 ): number => {

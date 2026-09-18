@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  canPrefetchDuplicateWorkPage,
+  duplicateWorkDraftHasChanges,
   prefillDuplicateWork,
   rankDuplicateWorks,
   type DuplicateWorkEntry,
+  type EditableWorkValues,
 } from "./duplicate-work";
 
 const work = (
@@ -35,6 +38,33 @@ const work = (
 });
 
 describe("duplicate work comparison", () => {
+  it("detects unsaved edits while treating equal false values as unchanged", () => {
+    const original: EditableWorkValues = {
+      performance: null,
+      status: null,
+      reviewed_status: null,
+      note: null,
+      highlight: false,
+      source_id: null,
+      suggestions: null,
+      character_name: null,
+    };
+
+    expect(duplicateWorkDraftHasChanges(original, { ...original })).toBe(false);
+    expect(
+      duplicateWorkDraftHasChanges(original, { ...original, note: "edited" }),
+    ).toBe(true);
+    expect(
+      duplicateWorkDraftHasChanges(original, { ...original, highlight: null }),
+    ).toBe(true);
+  });
+
+  it("prefetches only after successful requests near the end of the list", () => {
+    expect(canPrefetchDuplicateWorkPage(false, 0, 1, 20)).toBe(false);
+    expect(canPrefetchDuplicateWorkPage(true, 0, 1, 20)).toBe(true);
+    expect(canPrefetchDuplicateWorkPage(true, 0, 5, null)).toBe(false);
+  });
+
   it("ranks reviewed and complete records before newer or lower-id records", () => {
     expect(
       rankDuplicateWorks([
