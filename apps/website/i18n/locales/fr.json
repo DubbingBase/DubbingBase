@@ -844,6 +844,7 @@
       "scanFailed": "Impossible de rechercher les doublons.",
       "mergeFailed": "Impossible de fusionner ce groupe.",
       "changeCanonicalConfirm": "Changer la fiche conservée remplacera le résultat provisoire. Continuer ?",
+      "discardChangesConfirm": "Abandonner les modifications non enregistrées du résultat final et continuer ?",
       "prefilledFrom": "Valeur issue de la fiche nº {id}",
       "enabled": "Oui",
       "disabled": "Non",

@@ -845,6 +845,7 @@
       "scanFailed": "重複ワークを検索できませんでした。",
       "mergeFailed": "このグループを統合できませんでした。",
       "changeCanonicalConfirm": "残すレコードを変更すると現在の最終案が置き換わります。続行しますか？",
+      "discardChangesConfirm": "保存していない最終結果の編集を破棄して続行しますか？",
       "prefilledFrom": "元レコード #{id} の値",
       "enabled": "はい",
       "disabled": "いいえ",

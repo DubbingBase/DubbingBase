@@ -845,6 +845,7 @@
       "scanFailed": "No se pudieron buscar trabajos duplicados.",
       "mergeFailed": "No se pudo fusionar este grupo.",
       "changeCanonicalConfirm": "Cambiar el registro principal reemplazará el borrador final actual. ¿Continuar?",
+      "discardChangesConfirm": "¿Descartar los cambios sin guardar del resultado final y continuar?",
       "prefilledFrom": "Valor del registro n.º {id}",
       "enabled": "Sí",
       "disabled": "No",

@@ -845,6 +845,7 @@
       "scanFailed": "Could not scan duplicate work records.",
       "mergeFailed": "Could not merge this duplicate group.",
       "changeCanonicalConfirm": "Changing the keeper will replace the current final draft. Continue?",
+      "discardChangesConfirm": "Discard your unsaved final-result edits and continue?",
       "prefilledFrom": "Value from source #{id}",
       "enabled": "Yes",
       "disabled": "No",
