@@ -1,7 +1,10 @@
 import { useCache, useTmdbClient } from "../../utils";
 import { MediaService } from "../../utils/services/media";
 import { getDubbingProjects } from "../../utils/db/queries";
-import { setPublicCacheHeaders } from "../../utils/cache/http";
+import {
+  setErrorCacheHeaders,
+  setPublicCacheHeaders,
+} from "../../utils/cache/http";
 import {
   parseEpisodeQuery,
   withMediaServiceTimeout,
@@ -66,6 +69,7 @@ export default defineEventHandler(async (event) => {
 
     return responseData;
   } catch (error: unknown) {
+    setErrorCacheHeaders(event, error);
     if (
       typeof error === "object" &&
       error !== null &&
