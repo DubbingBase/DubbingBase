@@ -48,12 +48,13 @@
   - const CONTENT_TYPES
   - const CACHE_KEYS
 - `apps/website/server/utils/cache/http.ts`
+  - function shouldDisableErrorCaching: (error) => boolean
+  - function setErrorCacheHeaders: (event, error) => void
   - function getPublicCacheControl: (profile) => string
   - function setNoCacheHeaders: (event) => void
   - function setNoStoreHeaders: (event) => void
   - function setPublicCacheHeaders: (event, profile) => void
-  - type CacheProfile
-  - const NO_STORE_CACHE_CONTROL
+  - _...2 more_
 - `apps/website/server/utils/cache/index.ts`
   - class SimpleCache
   - class FreshCache

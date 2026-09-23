@@ -5,7 +5,7 @@
 
 > 75 routes | 16 models | 197 components | 81 lib files | 63 env vars | 12 middleware | 5% test coverage
 > **Token savings:** this file is ~14,800 tokens. Without it, AI exploration would cost ~150,700 tokens. **Saves ~135,900 tokens per conversation.**
-> **Last scanned:** 2026-09-23 15:00 — re-run after significant changes
+> **Last scanned:** 2026-09-23 15:31 — re-run after significant changes
 
 ---
 
@@ -454,12 +454,13 @@
   - const CONTENT_TYPES
   - const CACHE_KEYS
 - `apps/website/server/utils/cache/http.ts`
+  - function shouldDisableErrorCaching: (error) => boolean
+  - function setErrorCacheHeaders: (event, error) => void
   - function getPublicCacheControl: (profile) => string
   - function setNoCacheHeaders: (event) => void
   - function setNoStoreHeaders: (event) => void
   - function setPublicCacheHeaders: (event, profile) => void
-  - type CacheProfile
-  - const NO_STORE_CACHE_CONTROL
+  - _...2 more_
 - `apps/website/server/utils/cache/index.ts`
   - class SimpleCache
   - class FreshCache
@@ -720,7 +721,7 @@
 ## Most Imported Files (change these carefully)
 
 - `apps/website/server/utils/db/client.ts` — imported by **59** files
-- `apps/website/server/utils/cache/http.ts` — imported by **39** files
+- `apps/website/server/utils/cache/http.ts` — imported by **36** files
 - `apps/website/server/utils/auth.ts` — imported by **26** files
 - `apps/website/server/utils/index.ts` — imported by **23** files
 - `apps/website/server/utils/db/queries.ts` — imported by **12** files
@@ -743,7 +744,7 @@
 ## Import Map (who imports what)
 
 - `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/cast-vote.post.ts`, `apps/website/server/api/count-voice-actor-works.post.ts` +54 more
-- `apps/website/server/utils/cache/http.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/dashboard-stats.get.ts` +34 more
+- `apps/website/server/utils/cache/http.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/dashboard-stats.get.ts` +31 more
 - `apps/website/server/utils/auth.ts` ← `apps/website/server/api/create-user-profile.post.ts`, `apps/website/server/api/dashboard-stats.get.ts`, `apps/website/server/api/delete-voice-actor-link.post.ts`, `apps/website/server/api/delete-work-entry.post.ts`, `apps/website/server/api/delete_user.post.ts` +21 more
 - `apps/website/server/utils/index.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/episode/index.get.ts` +18 more
 - `apps/website/server/utils/db/queries.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/game/[id].get.ts` +7 more
