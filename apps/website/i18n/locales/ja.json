@@ -351,7 +351,8 @@
     "noCast": "キャスト情報がありません",
     "notFound": "見つかりません",
     "backToShow": "ショーに戻る",
-    "notFoundDesc": "このシーズンの情報を読み込めませんでした。"
+    "notFoundDesc": "このシーズンの情報を読み込めませんでした。",
+    "requestError": "現在このコンテンツを読み込めません。"
   },
   "search": {
     "actor": "俳優",

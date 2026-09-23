@@ -351,7 +351,8 @@
     "noCast": "No cast information available",
     "notFound": "Not found",
     "backToShow": "Back to Show",
-    "notFoundDesc": "Unable to load information for this season."
+    "notFoundDesc": "Unable to load information for this season.",
+    "requestError": "Unable to load this media right now."
   },
   "search": {
     "actor": "Actor",

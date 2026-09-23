@@ -439,7 +439,7 @@
         {{ $t("common.error", "Une erreur est survenue") }}
       </h1>
       <p class="theme-text-secondary theme-text-muted mb-6">
-        {{ $t("details.requestError", "Impossible de charger cet épisode.") }}
+        {{ $t("details.requestError") }}
       </p>
       <NuxtLink
         :to="localePath(`/show/${showId}/season/${seasonNumber}`)"

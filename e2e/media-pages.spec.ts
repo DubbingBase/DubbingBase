@@ -113,7 +113,7 @@ test.describe("Media Detail Pages", () => {
     await expect(page).toHaveURL("/fr/show/108978/season/1?dub=524");
     await expect(page.locator(".animate-pulse").first()).toBeVisible();
     await expect(
-      page.getByText("Impossible de charger cette saison."),
+      page.getByText("Impossible de charger ce contenu pour le moment."),
     ).toBeVisible();
   });
 
