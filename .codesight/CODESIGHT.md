@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 75 routes | 16 models | 197 components | 79 lib files | 63 env vars | 12 middleware | 5% test coverage
-> **Token savings:** this file is ~14,700 tokens. Without it, AI exploration would cost ~150,200 tokens. **Saves ~135,500 tokens per conversation.**
-> **Last scanned:** 2026-09-23 13:29 — re-run after significant changes
+> 75 routes | 16 models | 197 components | 81 lib files | 63 env vars | 12 middleware | 5% test coverage
+> **Token savings:** this file is ~14,800 tokens. Without it, AI exploration would cost ~150,700 tokens. **Saves ~135,900 tokens per conversation.**
+> **Last scanned:** 2026-09-23 14:06 — re-run after significant changes
 
 ---
 
@@ -498,6 +498,10 @@
   - function llmGenerateObject: (prompt, schema, options?) => Promise<
   - function llmVision: (prompt, imageData, mimeType, options?) => Promise<
   - function llmVisionObject: (prompt, imageData, schema, mimeType, options?) => Promise<
+- `apps/website/server/utils/media-request.ts`
+  - function parseSeasonQuery: (query, unknown>) => void
+  - function parseEpisodeQuery: (query, unknown>) => void
+  - function withMediaServiceTimeout: (request) => void
 - `apps/website/server/utils/normalize.ts` — function normalizeString: (input) => string, function isExploitableVoiceActorName: (input) => boolean
 - `apps/website/server/utils/notifications/discord.ts`
   - function normalizeDiscordUrl: (url) => string
@@ -552,10 +556,12 @@
   - function sameMediaId: (left, right) => boolean
   - function matchCastWorks: (actors, works) => CastWorkMatchResult<Actor, Work>
   - interface CastActorReference
+  - interface CharacterProfilePicture
   - interface CastWorkReference
   - interface DisplayCastActor
-  - interface CastWorkMatchResult
+  - _...1 more_
 - `apps/website/src/utils/search-routes.ts` — function getSearchResultRoute: (result, "id" | "media_type">) => string, type SearchFilter
+- `apps/website/src/utils/season-data.ts` — function fetchSeasonPageData: (showId, seasonNumber, locale?) => Promise<SeasonDataResponse>, function fetchEpisodePageData: (showId, seasonNumber, episodeNumber, locale?) => Promise<EpisodeDataResponse>
 - `e2e/helpers/mock-api.ts`
   - function waitForVueHydration: (page) => Promise<void>
   - function setupMockApi: (page, options) => void
@@ -728,11 +734,11 @@
 - `apps/website/server/utils/background.ts` — imported by **7** files
 - `apps/website/server/utils/services/media.ts` — imported by **6** files
 - `apps/website/server/utils/error-message.ts` — imported by **5** files
+- `apps/website/server/utils/with-timeout.ts` — imported by **4** files
 - `apps/website/server/utils/llm.ts` — imported by **4** files
+- `apps/website/src/utils/media-cast.ts` — imported by **3** files
 - `apps/website/server/utils/db/dubbing-project.ts` — imported by **3** files
 - `apps/website/server/utils/normalize.ts` — imported by **3** files
-- `apps/mobile/src/api/supabase.ts` — imported by **2** files
-- `apps/mobile/src/views/voice-actor-profile.vue` — imported by **2** files
 
 ## Import Map (who imports what)
 
@@ -752,7 +758,7 @@
 # Test Coverage
 
 > **5%** of routes and models are covered by tests
-> 32 test files found
+> 33 test files found
 
 ## Covered Routes
 
