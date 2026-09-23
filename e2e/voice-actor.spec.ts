@@ -27,6 +27,16 @@ test.describe("Voice Actor Profile & Filmography", () => {
 
   test("renders voice actor profile details correctly", async ({ page }) => {
     const api = await setupMockApi(page);
+    const hydrationMessages: string[] = [];
+    page.on("console", (message) => {
+      if (
+        (message.type() === "warning" || message.type() === "error") &&
+        message.text().includes("Hydration")
+      ) {
+        hydrationMessages.push(message.text());
+      }
+    });
+
     await page.goto("/voice-actor/1", { waitUntil: "domcontentloaded" });
     await waitForVueHydration(page);
 
@@ -38,6 +48,7 @@ test.describe("Voice Actor Profile & Filmography", () => {
     await expect(page.locator("body")).toContainText("acteur franco-canadien");
     await expect(page.locator("body")).toContainText("Français");
 
+    expect(hydrationMessages).toEqual([]);
     api.expectNoErrors();
   });
 
