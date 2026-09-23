@@ -258,6 +258,7 @@
     "searchPlaceholder": "Search roles, titles or actors...",
     "grouped": "Grouped",
     "list": "List",
+    "unknownActor": "Unknown Actor",
     "newestFirst": "Newest First",
     "oldestFirst": "Oldest First",
     "noWorksFound": "No works found for this actor.",

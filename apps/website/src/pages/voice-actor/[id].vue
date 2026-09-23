@@ -309,10 +309,7 @@
                           decoding="async"
                           v-if="item.media.poster_path"
                           :src="resolveImageUrl(item.media.poster_path)"
-                          :alt="
-                            (item.media as any).title ||
-                            (item.media as any).name
-                          "
+                          :alt="item.media.title || item.media.name"
                           class="w-full h-full object-cover transition-transform duration-300"
                         />
                         <div
@@ -333,14 +330,8 @@
                         >
                         <span
                           class="font-bold text-sm theme-text leading-tight line-clamp-2"
-                          :title="
-                            (item.media as any).title ||
-                            (item.media as any).name
-                          "
-                          >{{
-                            (item.media as any).title ||
-                            (item.media as any).name
-                          }}</span
+                          :title="item.media.title || item.media.name"
+                          >{{ item.media.title || item.media.name }}</span
                         >
                         <div
                           v-if="item.work.dubbing_projects?.studios"
@@ -358,7 +349,7 @@
 
                     <!-- Column 2: Original Actor -->
                     <NuxtLink
-                      v-if="item.data.actor"
+                      v-if="item.data.actor && item.data.actor.id > 0"
                       :to="localePath(`/actor/${item.data.actor.id}`)"
                       class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t theme-border-subtle theme-border sm:border-t-0 pt-3 sm:pt-0 cursor-pointer"
                     >
@@ -473,13 +464,15 @@
           <template v-else>
             <div class="space-y-10">
               <div
-                v-for="[actorName, works] in groupedWorks"
-                :key="actorName"
+                v-for="group in groupedWorks"
+                :key="group.key"
+                data-testid="voice-actor-group"
                 class="space-y-4"
               >
                 <!-- Actor Group Header -->
                 <NuxtLink
-                  :to="localePath(`/actor/${works[0]?.data.actor.id}`)"
+                  v-if="group.actorId !== null && group.actorId > 0"
+                  :to="localePath(`/actor/${group.actorId}`)"
                   class="sticky top-[68px] z-20 flex items-center gap-4 border-b theme-border-subtle theme-border pb-4 theme-surface-overlay backdrop-blur theme-hover-surface-muted p-2 -ml-2 rounded-xl transition-colors cursor-pointer group"
                 >
                   <div
@@ -488,11 +481,9 @@
                     <NuxtImg
                       format="webp"
                       decoding="async"
-                      v-if="works[0]?.data.actor.profile_picture"
-                      :src="
-                        resolveImageUrl(works[0].data.actor.profile_picture)
-                      "
-                      :alt="actorName"
+                      v-if="group.actor.profile_picture"
+                      :src="resolveImageUrl(group.actor.profile_picture)"
+                      :alt="group.actor.name || $t('voiceActor.unknownActor')"
                       class="object-cover w-full h-full"
                     />
                     <UserIcon
@@ -504,20 +495,49 @@
                     <h3
                       class="text-xl font-bold theme-text group-hover:underline"
                     >
-                      {{ actorName }}
+                      {{ group.actor.name || $t("voiceActor.unknownActor") }}
                     </h3>
                     <p class="text-sm theme-text-muted">
-                      {{ works.length }}{{ $t("common.works") }}
+                      {{ group.worksCount }}{{ $t("common.works") }}
                     </p>
                   </div>
                 </NuxtLink>
+                <div
+                  v-else
+                  class="sticky top-[68px] z-20 flex items-center gap-4 border-b theme-border-subtle theme-border pb-4 theme-surface-overlay backdrop-blur p-2 -ml-2 rounded-xl"
+                >
+                  <div
+                    class="w-20 h-20 shrink-0 rounded-full overflow-hidden theme-surface-raised theme-input shadow-md border theme-border-subtle theme-border"
+                  >
+                    <NuxtImg
+                      format="webp"
+                      decoding="async"
+                      v-if="group.actor.profile_picture"
+                      :src="resolveImageUrl(group.actor.profile_picture)"
+                      :alt="group.actor.name || $t('voiceActor.unknownActor')"
+                      class="object-cover w-full h-full"
+                    />
+                    <UserIcon
+                      v-else
+                      class="w-full h-full theme-text-muted p-2"
+                    />
+                  </div>
+                  <div>
+                    <h3 class="text-xl font-bold theme-text">
+                      {{ group.actor.name || $t("voiceActor.unknownActor") }}
+                    </h3>
+                    <p class="text-sm theme-text-muted">
+                      {{ group.worksCount }}{{ $t("common.works") }}
+                    </p>
+                  </div>
+                </div>
 
                 <!-- Actor Works Grid -->
                 <div
                   class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
                 >
                   <div
-                    v-for="item in works"
+                    v-for="item in group.works"
                     :key="item.work.id"
                     class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border block group"
                   >
@@ -544,10 +564,7 @@
                             decoding="async"
                             v-if="item.media.poster_path"
                             :src="resolveImageUrl(item.media.poster_path)"
-                            :alt="
-                              (item.media as any).title ||
-                              (item.media as any).name
-                            "
+                            :alt="item.media.title || item.media.name"
                             class="w-full h-full object-cover transition-transform duration-300"
                           />
                           <div
@@ -566,14 +583,8 @@
                           >
                           <span
                             class="font-bold text-sm theme-text leading-tight line-clamp-2"
-                            :title="
-                              (item.media as any).title ||
-                              (item.media as any).name
-                            "
-                            >{{
-                              (item.media as any).title ||
-                              (item.media as any).name
-                            }}</span
+                            :title="item.media.title || item.media.name"
+                            >{{ item.media.title || item.media.name }}</span
                           >
                           <div
                             v-if="item.work.dubbing_projects?.studios"
@@ -939,7 +950,56 @@ const activeTab = ref<string>("all");
 const { page: worksPage, setPage: setWorksPage } =
   useUrlPagination("worksPage");
 
-type VoiceActorWorkItem = Record<string, any>;
+type VoiceActorWorkItem = {
+  work: {
+    id: number;
+    actor_id: number;
+    performance?: string | null;
+    dubbing_projects?: {
+      content_type?: string | null;
+      studios?: {
+        id: number;
+        name: string;
+        logo_url: string | null;
+      } | null;
+    } | null;
+  };
+  media: {
+    id: number;
+    title: string;
+    name: string;
+    poster_path: string | null;
+  };
+  data: {
+    character?: string;
+    characterImage?: string;
+    actor?: {
+      id: number;
+      name?: string;
+      profile_picture?: string;
+    } | null;
+  };
+  sortDate?: string;
+};
+type VoiceActorWorkGroup = {
+  key: string;
+  actorId: number | null;
+  actor: {
+    id: number | null;
+    name: string | null;
+    profile_picture: string | null;
+  };
+  works: VoiceActorWorkItem[];
+  worksCount: number;
+};
+type VoiceActorCollectionItem = VoiceActorWorkItem | VoiceActorWorkGroup;
+
+function isVoiceActorWorkGroup(
+  item: VoiceActorCollectionItem,
+): item is VoiceActorWorkGroup {
+  return "works" in item;
+}
+
 const worksRequest = computed(() => ({
   collection: "voice-actor-works" as const,
   id: voiceActorId,
@@ -953,10 +1013,10 @@ const worksRequest = computed(() => ({
   pageSize: 12,
 }));
 const { data: worksPageData } = useAsyncData<
-  PaginatedResponse<VoiceActorWorkItem>
+  PaginatedResponse<VoiceActorCollectionItem>
 >(
   `voice-actor-works-${voiceActorId}-${locale.value}`,
-  () => fetchDetailCollection<VoiceActorWorkItem>(worksRequest.value),
+  () => fetchDetailCollection<VoiceActorCollectionItem>(worksRequest.value),
   {
     watch: [worksRequest],
     getCachedData: (key, nuxtApp, { cause }) =>
@@ -965,7 +1025,15 @@ const { data: worksPageData } = useAsyncData<
         : undefined,
   },
 );
-const worksItems = computed(() => worksPageData.value?.data || []);
+const collectionItems = computed(() => worksPageData.value?.data || []);
+const worksItems = computed(() =>
+  collectionItems.value.filter(
+    (item): item is VoiceActorWorkItem => !isVoiceActorWorkGroup(item),
+  ),
+);
+const groupedWorks = computed(() =>
+  collectionItems.value.filter(isVoiceActorWorkGroup),
+);
 const worksTotal = computed(
   () => worksPageData.value?.pagination.totalItems || 0,
 );
@@ -1069,17 +1137,6 @@ watch(categoryTabs, (tabs) => {
   }
 });
 
-const worksMatchingTab = computed(() => {
-  if (activeTab.value === "all") {
-    return filteredEnhancedWork.value;
-  }
-  return filteredEnhancedWork.value.filter(
-    (item) =>
-      normalizeContentType(item.work.dubbing_projects?.content_type) ===
-      activeTab.value,
-  );
-});
-
 const workedStudios = computed(() => {
   const studiosMap = new Map<
     number,
@@ -1101,33 +1158,6 @@ const resolveImageUrl = (path: string | undefined | null) => {
   if (path.startsWith("http")) return path;
   return `https://image.tmdb.org/t/p/w185${path}`;
 };
-
-const sortedWorks = computed(() => {
-  const works = [...worksMatchingTab.value];
-  if (sortMode.value === "oldest") {
-    return works.sort((a, b) => (a.sortDate > b.sortDate ? 1 : -1));
-  }
-  return works.sort((a, b) => (a.sortDate > b.sortDate ? -1 : 1));
-});
-
-const groupedWorks = computed(() => {
-  const map = new Map<string, VoiceActorWorkItem[]>();
-  for (const item of worksItems.value) {
-    const actorName = item.data?.actor?.name || "Unknown Actor";
-    if (!map.has(actorName)) {
-      map.set(actorName, []);
-    }
-    map.get(actorName)!.push(item);
-  }
-
-  return Array.from(map.entries()).sort((a, b) => {
-    // Sort by number of works, then alphabetically
-    if (b[1].length !== a[1].length) {
-      return b[1].length - a[1].length;
-    }
-    return a[0].localeCompare(b[0]);
-  });
-});
 
 watch([searchQuery, activeTab, sortMode, displayMode], () => {
   void setWorksPage(1);

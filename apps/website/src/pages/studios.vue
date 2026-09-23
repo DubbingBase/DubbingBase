@@ -63,7 +63,7 @@
 
     <!-- Empty Search State -->
     <div
-      v-else-if="filteredStudios.length === 0"
+      v-else-if="studios.length === 0"
       class="text-center py-12 theme-text-muted"
     >
       {{ $t("studio.noResultsFor", { query: searchInput }) }}

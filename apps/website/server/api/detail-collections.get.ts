@@ -1,6 +1,10 @@
 import type { PaginatedResponse } from "@app/shared-logic";
 import { setPublicCacheHeaders } from "../utils/cache/http";
 import { paginateArray } from "../utils/pagination";
+import {
+  paginateVoiceActorWorks,
+  type VoiceActorWorkGroup,
+} from "../utils/voice-actor-work-groups";
 
 type DetailPayload = Record<string, any>;
 type CollectionItem = Record<string, any>;
@@ -368,7 +372,11 @@ async function getCollectionItems(
 }
 
 export default defineEventHandler(
-  async (event): Promise<PaginatedResponse<CollectionItem>> => {
+  async (
+    event,
+  ): Promise<
+    PaginatedResponse<CollectionItem | VoiceActorWorkGroup<CollectionItem>>
+  > => {
     const query = getQuery(event);
     const collection = queryValue(query.collection) || "";
     if (!COLLECTIONS.has(collection)) {
@@ -390,10 +398,18 @@ export default defineEventHandler(
     const filteredItems = items.filter((item) =>
       searchMatch(item, normalized(queryValue(query.query))),
     );
-    const result = paginateArray(filteredItems, {
+    const paginationOptions = {
       page: query.page,
       pageSize: query.pageSize,
-    });
+    };
+    const result =
+      collection === "voice-actor-works"
+        ? paginateVoiceActorWorks(
+            filteredItems,
+            paginationOptions,
+            queryValue(query.view),
+          )
+        : paginateArray(filteredItems, paginationOptions);
 
     return {
       data: result.items,

@@ -257,6 +257,7 @@
     "searchPlaceholder": "Rechercher des rôles, titres ou acteurs...",
     "grouped": "Groupé",
     "list": "Liste",
+    "unknownActor": "Acteur inconnu",
     "newestFirst": "Plus récents",
     "oldestFirst": "Plus anciens",
     "noWorksFound": "Aucune œuvre trouvée pour ce comédien.",

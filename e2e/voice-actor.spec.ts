@@ -194,6 +194,200 @@ test.describe("Voice Actor Profile & Filmography", () => {
     }
   });
 
+  test("keeps complete original actor groups together across pages", async ({
+    page,
+  }) => {
+    const api = await setupMockApi(page);
+    const createWork = (id: number, actorId: number, actorName: string) => ({
+      work: {
+        id,
+        actor_id: actorId,
+        performance: null,
+        dubbing_projects: {
+          content_id: id,
+          content_type: "movie",
+          studios: null,
+        },
+      },
+      media: {
+        id,
+        title: `Film ${id}`,
+        name: `Film ${id}`,
+        poster_path: null,
+      },
+      data: {
+        character: `Character ${id}`,
+        actor: { id: actorId, name: actorName, profile_picture: null },
+      },
+      sortDate: "2020-01-01",
+    });
+    const harrisonWorks = Array.from({ length: 13 }, (_, index) =>
+      createWork(8001 + index, 17419, "Harrison Ford"),
+    );
+    const otherGroups = Array.from({ length: 11 }, (_, index) => {
+      const actorId = 200 + index;
+      const actorWorks = [createWork(8100 + index, actorId, `Actor ${index}`)];
+      return {
+        key: `actor:${actorId}`,
+        actorId,
+        actor: {
+          id: actorId,
+          name: `Actor ${index}`,
+          profile_picture: null,
+        },
+        works: actorWorks,
+        worksCount: actorWorks.length,
+      };
+    });
+    const unknownWork = createWork(8999, 0, "");
+    const groups = [
+      {
+        key: "actor:17419",
+        actorId: 17419,
+        actor: {
+          id: 17419,
+          name: "Harrison Ford",
+          profile_picture: null,
+        },
+        works: harrisonWorks,
+        worksCount: harrisonWorks.length,
+      },
+      ...otherGroups,
+      {
+        key: "actor:unknown",
+        actorId: null,
+        actor: { id: null, name: null, profile_picture: null },
+        works: [unknownWork],
+        worksCount: 1,
+      },
+    ];
+
+    await page.route("**/api/detail-collections**", async (route) => {
+      const url = new URL(route.request().url());
+      if (
+        url.pathname !== "/api/detail-collections" ||
+        url.searchParams.get("collection") !== "voice-actor-works"
+      ) {
+        return route.fallback();
+      }
+
+      const pageNumber = Number(url.searchParams.get("page") || 1);
+      const pageSize = Number(url.searchParams.get("pageSize") || 12);
+      const isGrouped = url.searchParams.get("view") === "grouped";
+      const responseItems = isGrouped
+        ? groups.slice((pageNumber - 1) * pageSize, pageNumber * pageSize)
+        : [
+            ...harrisonWorks,
+            ...otherGroups.flatMap((group) => group.works),
+          ].slice((pageNumber - 1) * pageSize, pageNumber * pageSize);
+      const totalItems = isGrouped
+        ? groups.length
+        : harrisonWorks.length + otherGroups.length;
+
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          data: responseItems,
+          pagination: {
+            page: pageNumber,
+            pageSize,
+            totalItems,
+            totalPages: Math.max(1, Math.ceil(totalItems / pageSize)),
+          },
+        }),
+      });
+    });
+
+    await page.goto("/voice-actor/1", { waitUntil: "domcontentloaded" });
+    await waitForVueHydration(page);
+    await expect(
+      page.getByRole("heading", { name: "Richard Darbois" }),
+    ).toBeVisible({ timeout: 20000 });
+
+    const filmography = getFilmography(page);
+    const listButton = filmography
+      .locator("button")
+      .filter({ hasText: /List|Liste/i })
+      .first();
+    await Promise.all([
+      page.waitForRequest((request) => {
+        const url = new URL(request.url());
+        return (
+          url.pathname === "/api/detail-collections" &&
+          url.searchParams.get("view") === "list"
+        );
+      }),
+      listButton.click(),
+    ]);
+    await expect(filmography.locator("a[href*='/movie/8001']")).toBeVisible();
+
+    const groupedButton = filmography
+      .locator("button")
+      .filter({ hasText: /Group|Groupe/i })
+      .first();
+    await Promise.all([
+      page.waitForRequest((request) => {
+        const url = new URL(request.url());
+        return (
+          url.pathname === "/api/detail-collections" &&
+          url.searchParams.get("view") === "grouped" &&
+          url.searchParams.get("page") === "1"
+        );
+      }),
+      groupedButton.click(),
+    ]);
+
+    const harrisonGroup = filmography
+      .getByTestId("voice-actor-group")
+      .filter({ hasText: "Harrison Ford" });
+    await expect(harrisonGroup).toHaveCount(1);
+    await expect(harrisonGroup.locator("p")).toContainText("13");
+    await expect(harrisonGroup.locator("a[href*='/movie/']")).toHaveCount(13);
+    await expect(harrisonGroup.locator("a[href*='/actor/17419']")).toHaveCount(
+      1,
+    );
+    await expect(filmography.getByTestId("voice-actor-group")).toHaveCount(12);
+
+    const nextPageButton = filmography.locator("nav button").last();
+    await Promise.all([
+      page.waitForRequest((request) => {
+        const url = new URL(request.url());
+        return (
+          url.pathname === "/api/detail-collections" &&
+          url.searchParams.get("view") === "grouped" &&
+          url.searchParams.get("page") === "2"
+        );
+      }),
+      nextPageButton.click(),
+    ]);
+    const unknownGroup = filmography.getByTestId("voice-actor-group");
+    await expect(unknownGroup).toHaveCount(1);
+    await expect(unknownGroup).toContainText(
+      /Unknown Actor|Acteur inconnu|Actor desconocido|不明な俳優/,
+    );
+    await expect(unknownGroup.locator("a[href*='/actor/0']")).toHaveCount(0);
+
+    const resetListButton = filmography
+      .locator("button")
+      .filter({ hasText: /List|Liste/i })
+      .first();
+    await Promise.all([
+      page.waitForRequest((request) => {
+        const url = new URL(request.url());
+        return (
+          url.pathname === "/api/detail-collections" &&
+          url.searchParams.get("view") === "list" &&
+          url.searchParams.get("page") === "1"
+        );
+      }),
+      resetListButton.click(),
+    ]);
+    await expect(filmography.locator("a[href*='/movie/8001']")).toBeVisible();
+    await expect(filmography.getByTestId("voice-actor-group")).toHaveCount(0);
+    api.expectNoErrors();
+  });
+
   test("navigates to media detail page on card click", async ({ page }) => {
     await page.goto("/voice-actor/1", { waitUntil: "domcontentloaded" });
     await waitForVueHydration(page);
