@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 75 routes | 16 models | 197 components | 78 lib files | 63 env vars | 12 middleware | 5% test coverage
-> **Token savings:** this file is ~14,600 tokens. Without it, AI exploration would cost ~150,000 tokens. **Saves ~135,300 tokens per conversation.**
-> **Last scanned:** 2026-09-17 14:53 — re-run after significant changes
+> 75 routes | 16 models | 197 components | 79 lib files | 63 env vars | 12 middleware | 5% test coverage
+> **Token savings:** this file is ~14,700 tokens. Without it, AI exploration would cost ~150,200 tokens. **Saves ~135,500 tokens per conversation.**
+> **Last scanned:** 2026-09-23 13:29 — re-run after significant changes
 
 ---
 
@@ -540,6 +540,7 @@
   - function cleanCharacterName
   - function processMedia
   - const TMDB_CONFIG
+- `apps/website/server/utils/with-timeout.ts` — function withTimeout: (promise, timeoutMs, dependency) => Promise<T>
 - `apps/website/src/composables/useContribute.ts` — function fetchRandomTask, function useContribute
 - `apps/website/src/composables/useDragScroll.ts` — function useDragScroll: (scrollRef) => void
 - `apps/website/src/composables/useReports.ts` — function useReports
@@ -552,6 +553,7 @@
   - function matchCastWorks: (actors, works) => CastWorkMatchResult<Actor, Work>
   - interface CastActorReference
   - interface CastWorkReference
+  - interface DisplayCastActor
   - interface CastWorkMatchResult
 - `apps/website/src/utils/search-routes.ts` — function getSearchResultRoute: (result, "id" | "media_type">) => string, type SearchFilter
 - `e2e/helpers/mock-api.ts`

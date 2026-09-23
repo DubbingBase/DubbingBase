@@ -2,9 +2,9 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**78 library files** across 5 modules
+**79 library files** across 5 modules
 
-## Website (41 files)
+## Website (42 files)
 
 - `apps/website/server/utils/index.ts` — getCloudflareKv, useCache, useFreshCache, useTmdbClient, useTvdbClient, useIgdbClient, …
 - `apps/website/server/utils/cache/wikipedia.ts` — sortLanguagesByPopularity, extractAvailableLanguages, cleanHeadingText, isDubbingSectionHeading, selectDubbingSections, filterValidSectionIndexes, …
@@ -14,9 +14,9 @@
 - `apps/website/server/utils/llm.ts` — areAllLlmQuotasExhausted, getLlmQuotaCache, llmGenerate, llmGenerateObject, llmVision, llmVisionObject
 - `apps/website/server/utils/notifications/discord.ts` — normalizeDiscordUrl, buildDiscordEmbed, sendDiscordAdminNotification, DiscordWebhookOptions, QueueName, DiscordNotificationCategory
 - `apps/website/server/utils/queue-payload.ts` — validateCheckPayload, validateDiscoveryPayload, validateExtractPayload, ValidQueueBase, ValidExtractPayload, QueueMediaType
+- `apps/website/src/utils/media-cast.ts` — sameMediaId, matchCastWorks, CastActorReference, CastWorkReference, DisplayCastActor, CastWorkMatchResult
 - `apps/website/server/utils/db/queries.ts` — getVoiceActorWithWork, getWorkByActor, getDubbingProjects, getWorkVotes, getTopContributors
 - `apps/website/server/utils/services/voice-actor.ts` — upsertVoiceActor, upsertActor, upsertStudio, upsertWork, insertVoiceActorAndWork
-- `apps/website/src/utils/media-cast.ts` — sameMediaId, matchCastWorks, CastActorReference, CastWorkReference, CastWorkMatchResult
 - `apps/website/server/utils/cache/index.ts` — SimpleCache, FreshCache, CacheTTLPreset, CACHE_TTL
 - `apps/website/server/utils/pagination.ts` — parsePagination, paginateArray, PaginationOptions, ParsedPagination
 - `apps/website/server/utils/urls/tmdb.ts` — buildTmdbImageUrl, cleanCharacterName, processMedia, TMDB_CONFIG
@@ -31,7 +31,7 @@
 - `apps/website/src/composables/useUrlPagination.ts` — readUrlPage, useUrlPagination
 - `apps/website/src/utils/search-routes.ts` — getSearchResultRoute, SearchFilter
 - `apps/website/server/api/movie/[id].get.ts` — fetchMovieData
-- _…and 16 more files_
+- _…and 17 more files_
 
 ## Mobile (17 files)
 
