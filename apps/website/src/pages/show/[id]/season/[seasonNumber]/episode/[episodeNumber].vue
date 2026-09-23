@@ -251,8 +251,13 @@
                   <div
                     class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start"
                   >
-                    <NuxtLink
-                      :to="localePath(`/actor/${actor.id}`)"
+                    <component
+                      :is="actor.actorId ? NuxtLink : 'div'"
+                      :to="
+                        actor.actorId
+                          ? localePath(`/actor/${actor.actorId}`)
+                          : undefined
+                      "
                       class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                     >
                       <NuxtImg
@@ -263,7 +268,7 @@
                         class="w-full h-full object-cover transition-transform duration-300"
                         alt="Actor"
                       />
-                    </NuxtLink>
+                    </component>
                     <div
                       class="flex flex-col min-w-0 flex-1 w-full overflow-hidden"
                     >
@@ -275,13 +280,18 @@
                           $t("details.actor")
                         }}</span>
                       </div>
-                      <NuxtLink
-                        :to="localePath(`/actor/${actor.id}`)"
+                      <component
+                        :is="actor.actorId ? NuxtLink : 'div'"
+                        :to="
+                          actor.actorId
+                            ? localePath(`/actor/${actor.actorId}`)
+                            : undefined
+                        "
                         class="font-bold text-sm theme-text truncate hover:underline block w-full"
                         :title="actor.name"
                       >
                         {{ actor.name }}
-                      </NuxtLink>
+                      </component>
                     </div>
                   </div>
 
@@ -479,6 +489,7 @@
 <script setup lang="ts">
 import MediaDetailsLayout from "../../../../../../components/layout/MediaDetailsLayout.vue";
 import { useRoute, useRouter } from "vue-router";
+import { NuxtLink } from "#components";
 
 import { computed, ref, watch } from "vue";
 import { refDebounced } from "@vueuse/core";
@@ -718,6 +729,7 @@ const filteredCast = computed(() => {
       actor.workCharacterName,
       actor.voiceActor?.firstname,
       actor.voiceActor?.lastname,
+      `${actor.voiceActor?.firstname || ""} ${actor.voiceActor?.lastname || ""}`.trim(),
       ...(actor.roles || []).map((role) => role.character),
     ];
     return searchable.some((value) =>

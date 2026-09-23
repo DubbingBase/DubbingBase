@@ -18,8 +18,8 @@ export interface MockApiOptions {
   voiceActor?: any;
   movie?: any;
   show?: any;
-  season?: any;
-  episode?: any;
+  season?: typeof MOCK_SEASON;
+  episode?: typeof MOCK_EPISODE;
   game?: any;
   audiobook?: any;
   podcast?: any;

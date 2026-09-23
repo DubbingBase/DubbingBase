@@ -334,6 +334,7 @@ import ReportModal from "../../../../components/ReportModal.vue";
 const isReportModalOpen = ref(false);
 
 const route = useRoute();
+const isSeasonRoute = computed(() => route.params.episodeNumber === undefined);
 const router = useRouter();
 const supabase = useSupabaseClient();
 const showId = String(
@@ -493,6 +494,7 @@ const formatDate = (dateString: string) => {
 
 useHead({
   title: computed(() => {
+    if (!isSeasonRoute.value) return undefined;
     const year = season.value?.air_date
       ? ` (${new Date(season.value.air_date).getFullYear()})`
       : "";
@@ -502,138 +504,143 @@ useHead({
     }
     return base.length > 55 ? base.substring(0, 52) + "..." : base;
   }),
-  meta: [
-    {
-      name: "description",
-      content: computed(() => {
-        const title = `${serieName.value} - Saison ${seasonNumber}`;
-        let desc =
-          season.value?.overview ||
-          (title
-            ? t("seo.showDescription", { title })
-            : t(
-                "seo.showDescriptionFallback",
-                "Découvrez le casting et les voix de la série.",
-              ));
-        if (activeDubProject.value && title) {
-          desc =
-            t("seo.showDescriptionDubbing", {
-              lang: getDisplayLanguage(activeDubProject.value.language),
-              title,
-            }) +
-            " " +
-            desc;
-        }
-        return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
-      }),
-    },
-    {
-      name: "keywords",
-      content: computed(() => {
-        const title = serieName.value || "";
-        if (!title) return t("home.meta.keywords");
-        return t("seo.showKeywords", { title });
-      }),
-    },
-    {
-      property: "og:title",
-      content: computed(() => {
-        const year = season.value?.air_date
-          ? ` (${new Date(season.value.air_date).getFullYear()})`
-          : "";
-        let base = `${serieName.value} - Saison ${seasonNumber}${year}`;
-        if (activeDubProject.value) {
-          base += ` - ${t("details.dubbing", { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
-        }
-        return base.length > 55 ? base.substring(0, 52) + "..." : base;
-      }),
-    },
-    {
-      property: "og:description",
-      content: computed(() => {
-        const title = `${serieName.value} - Saison ${seasonNumber}`;
-        let desc =
-          season.value?.overview ||
-          (title
-            ? t("seo.showDescription", { title })
-            : t(
-                "seo.showDescriptionFallback",
-                "Découvrez le casting et les voix de la série.",
-              ));
-        if (activeDubProject.value && title) {
-          desc =
-            t("seo.showDescriptionDubbing", {
-              lang: getDisplayLanguage(activeDubProject.value.language),
-              title,
-            }) +
-            " " +
-            desc;
-        }
-        return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
-      }),
-    },
-    {
-      property: "og:type",
-      content: "video.tv_show",
-    },
-    {
-      property: "og:url",
-      content: computed(
-        () =>
-          `https://dubbingbase.com/show/${showId}/season/${seasonNumber}${activeDubId.value ? `?dub=${activeDubId.value}` : ""}`,
-      ),
-    },
-    {
-      property: "og:image",
-      content: computed(() => backdropUrl.value || posterUrl.value || ""),
-    },
-    {
-      name: "twitter:card",
-      content: "summary_large_image",
-    },
-    {
-      name: "twitter:title",
-      content: computed(() => {
-        const year = season.value?.air_date
-          ? ` (${new Date(season.value.air_date).getFullYear()})`
-          : "";
-        let base = `${serieName.value} - Saison ${seasonNumber}${year}`;
-        if (activeDubProject.value) {
-          base += ` - ${t("details.dubbing", { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
-        }
-        return base.length > 55 ? base.substring(0, 52) + "..." : base;
-      }),
-    },
-    {
-      name: "twitter:description",
-      content: computed(() => {
-        const title = `${serieName.value} - Saison ${seasonNumber}`;
-        let desc =
-          season.value?.overview ||
-          (title
-            ? t("seo.showDescription", { title })
-            : t(
-                "seo.showDescriptionFallback",
-                "Découvrez le casting et les voix de la série.",
-              ));
-        if (activeDubProject.value && title) {
-          desc =
-            t("seo.showDescriptionDubbing", {
-              lang: getDisplayLanguage(activeDubProject.value.language),
-              title,
-            }) +
-            " " +
-            desc;
-        }
-        return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
-      }),
-    },
-    {
-      name: "twitter:image",
-      content: computed(() => backdropUrl.value || posterUrl.value || ""),
-    },
-  ],
+  meta: computed(() =>
+    isSeasonRoute.value
+      ? [
+          {
+            name: "description",
+            content: computed(() => {
+              const title = `${serieName.value} - Saison ${seasonNumber}`;
+              let desc =
+                season.value?.overview ||
+                (title
+                  ? t("seo.showDescription", { title })
+                  : t(
+                      "seo.showDescriptionFallback",
+                      "Découvrez le casting et les voix de la série.",
+                    ));
+              if (activeDubProject.value && title) {
+                desc =
+                  t("seo.showDescriptionDubbing", {
+                    lang: getDisplayLanguage(activeDubProject.value.language),
+                    title,
+                  }) +
+                  " " +
+                  desc;
+              }
+              return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
+            }),
+          },
+          {
+            name: "keywords",
+            content: computed(() => {
+              const title = serieName.value || "";
+              if (!title) return t("home.meta.keywords");
+              return t("seo.showKeywords", { title });
+            }),
+          },
+          {
+            property: "og:title",
+            content: computed(() => {
+              const year = season.value?.air_date
+                ? ` (${new Date(season.value.air_date).getFullYear()})`
+                : "";
+              let base = `${serieName.value} - Saison ${seasonNumber}${year}`;
+              if (activeDubProject.value) {
+                base += ` - ${t("details.dubbing", { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
+              }
+              return base.length > 55 ? base.substring(0, 52) + "..." : base;
+            }),
+          },
+          {
+            property: "og:description",
+            content: computed(() => {
+              const title = `${serieName.value} - Saison ${seasonNumber}`;
+              let desc =
+                season.value?.overview ||
+                (title
+                  ? t("seo.showDescription", { title })
+                  : t(
+                      "seo.showDescriptionFallback",
+                      "Découvrez le casting et les voix de la série.",
+                    ));
+              if (activeDubProject.value && title) {
+                desc =
+                  t("seo.showDescriptionDubbing", {
+                    lang: getDisplayLanguage(activeDubProject.value.language),
+                    title,
+                  }) +
+                  " " +
+                  desc;
+              }
+              return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
+            }),
+          },
+          {
+            property: "og:type",
+            content: "video.tv_show",
+          },
+          {
+            property: "og:url",
+            content: computed(
+              () =>
+                `https://dubbingbase.com/show/${showId}/season/${seasonNumber}${activeDubId.value ? `?dub=${activeDubId.value}` : ""}`,
+            ),
+          },
+          {
+            property: "og:image",
+            content: computed(() => backdropUrl.value || posterUrl.value || ""),
+          },
+          {
+            name: "twitter:card",
+            content: "summary_large_image",
+          },
+          {
+            name: "twitter:title",
+            content: computed(() => {
+              const year = season.value?.air_date
+                ? ` (${new Date(season.value.air_date).getFullYear()})`
+                : "";
+              let base = `${serieName.value} - Saison ${seasonNumber}${year}`;
+              if (activeDubProject.value) {
+                base += ` - ${t("details.dubbing", { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
+              }
+              return base.length > 55 ? base.substring(0, 52) + "..." : base;
+            }),
+          },
+          {
+            name: "twitter:description",
+            content: computed(() => {
+              const title = `${serieName.value} - Saison ${seasonNumber}`;
+              let desc =
+                season.value?.overview ||
+                (title
+                  ? t("seo.showDescription", { title })
+                  : t(
+                      "seo.showDescriptionFallback",
+                      "Découvrez le casting et les voix de la série.",
+                    ));
+              if (activeDubProject.value && title) {
+                desc =
+                  t("seo.showDescriptionDubbing", {
+                    lang: getDisplayLanguage(activeDubProject.value.language),
+                    title,
+                  }) +
+                  " " +
+                  desc;
+              }
+              return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
+            }),
+          },
+          {
+            name: "twitter:image",
+            content: computed(() => backdropUrl.value || posterUrl.value || ""),
+          },
+        ]
+      : [],
+  ),
   link: computed<any[]>(() => {
+    if (!isSeasonRoute.value) return [];
     const links: any[] = [
       { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
       { rel: "dns-prefetch", href: "https://image.tmdb.org" },

@@ -42,6 +42,94 @@ test.describe("Media Detail Pages", () => {
     api.expectNoErrors();
   });
 
+  test("uses TMDB actor IDs and leaves unmatched cast works unlinked", async ({
+    page,
+  }) => {
+    await setupMockApi(page);
+    await page.goto("/show/1396", { waitUntil: "domcontentloaded" });
+
+    await expect(page.locator('a[href="/actor/17419"]').first()).toBeVisible();
+    const unmatchedCard = page
+      .getByText("Unlinked character", { exact: true })
+      .locator("xpath=ancestor::div[contains(@class, 'theme-input')][1]");
+    await expect(unmatchedCard).toBeVisible();
+    await expect(unmatchedCard.locator('a[href*="/actor/"]')).toHaveCount(0);
+    await expect(
+      page.locator('a[href*="/actor/undefined"], a[href*="/actor/17419-"]'),
+    ).toHaveCount(0);
+  });
+
+  test("links movie and episode cast cards with TMDB actor IDs", async ({
+    page,
+  }) => {
+    await setupMockApi(page);
+    await page.goto("/movie/85", { waitUntil: "domcontentloaded" });
+    await expect(page.locator('a[href="/actor/3"]').first()).toBeVisible();
+
+    await page.goto("/show/1396/season/1/episode/1", {
+      waitUntil: "domcontentloaded",
+    });
+    await expect(page.locator('a[href="/actor/17419"]').first()).toBeVisible();
+    await expect(
+      page.locator('a[href*="/actor/undefined"], a[href*="/actor/17419-"]'),
+    ).toHaveCount(0);
+  });
+
+  test("filters cast by full voice actor name on movie, show, and episode", async ({
+    page,
+  }) => {
+    const routes = [
+      { path: "/movie/85", actor: "Harrison Ford", absentActor: "Karen Allen" },
+      {
+        path: "/show/1396",
+        actor: "Bryan Cranston",
+        absentActor: "Aaron Paul",
+      },
+      {
+        path: "/show/1396/season/1/episode/1",
+        actor: "Bryan Cranston",
+        absentActor: "Aaron Paul",
+      },
+    ];
+
+    for (const route of routes) {
+      await page.goto(route.path, { waitUntil: "domcontentloaded" });
+      const search = page.locator('input[type="search"]').last();
+      await search.fill("Jean-Louis Faure");
+      await expect(page.getByText(route.actor, { exact: true })).toBeVisible();
+      await expect(
+        page.getByText(route.absentActor, { exact: true }),
+      ).toHaveCount(0);
+    }
+  });
+
+  test("only exposes show JSON-LD on the show route", async ({ page }) => {
+    await page.goto("/show/1396", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.locator('head script[type="application/ld+json"]'),
+    ).toHaveCount(1);
+
+    await page.goto("/show/1396/season/1", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.locator('head script[type="application/ld+json"]'),
+    ).toHaveCount(0);
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      "href",
+      /show\/1396\/season\/1/,
+    );
+
+    await page.goto("/show/1396/season/1/episode/1", {
+      waitUntil: "domcontentloaded",
+    });
+    await expect(
+      page.locator('head script[type="application/ld+json"]'),
+    ).toHaveCount(0);
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      "href",
+      /show\/1396\/season\/1\/episode\/1/,
+    );
+  });
+
   test("navigates show to season to episode and preserves the selected dub", async ({
     page,
   }) => {
