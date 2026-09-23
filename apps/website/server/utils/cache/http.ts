@@ -1,9 +1,26 @@
-import type { H3Event } from "h3";
+import { setHeader, type H3Event } from "h3";
 
 export type CacheProfile =
   "detail" | "catalog" | "discovery" | "search" | "static";
 
 export const NO_STORE_CACHE_CONTROL = "no-store, no-cache, must-revalidate";
+
+export function shouldDisableErrorCaching(error: unknown): boolean {
+  if (
+    typeof error !== "object" ||
+    error === null ||
+    !("statusCode" in error) ||
+    typeof error.statusCode !== "number"
+  ) {
+    return true;
+  }
+
+  return error.statusCode >= 500;
+}
+
+export function setErrorCacheHeaders(event: H3Event, error: unknown): void {
+  if (shouldDisableErrorCaching(error)) setNoCacheHeaders(event);
+}
 
 const CACHE_PROFILE_HEADERS: Record<CacheProfile, string> = {
   // Mutable detail/catalog/discovery data: 5m browser, 10m edge, 15m stale.

@@ -350,7 +350,8 @@
     "noCast": "Aucune information sur le casting",
     "notFound": "Introuvable",
     "backToShow": "Retour à la série",
-    "notFoundDesc": "Impossible de charger les informations de cette saison."
+    "notFoundDesc": "Impossible de charger les informations de cette saison.",
+    "requestError": "Impossible de charger ce contenu pour le moment."
   },
   "search": {
     "actor": "Acteur",

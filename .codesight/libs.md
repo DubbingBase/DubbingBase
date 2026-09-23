@@ -48,12 +48,13 @@
   - const CONTENT_TYPES
   - const CACHE_KEYS
 - `apps/website/server/utils/cache/http.ts`
+  - function shouldDisableErrorCaching: (error) => boolean
+  - function setErrorCacheHeaders: (event, error) => void
   - function getPublicCacheControl: (profile) => string
   - function setNoCacheHeaders: (event) => void
   - function setNoStoreHeaders: (event) => void
   - function setPublicCacheHeaders: (event, profile) => void
-  - type CacheProfile
-  - const NO_STORE_CACHE_CONTROL
+  - _...2 more_
 - `apps/website/server/utils/cache/index.ts`
   - class SimpleCache
   - class FreshCache
@@ -92,6 +93,10 @@
   - function llmGenerateObject: (prompt, schema, options?) => Promise<
   - function llmVision: (prompt, imageData, mimeType, options?) => Promise<
   - function llmVisionObject: (prompt, imageData, schema, mimeType, options?) => Promise<
+- `apps/website/server/utils/media-request.ts`
+  - function parseSeasonQuery: (query, unknown>) => void
+  - function parseEpisodeQuery: (query, unknown>) => void
+  - function withMediaServiceTimeout: (request) => void
 - `apps/website/server/utils/normalize.ts` — function normalizeString: (input) => string, function isExploitableVoiceActorName: (input) => boolean
 - `apps/website/server/utils/notifications/discord.ts`
   - function normalizeDiscordUrl: (url) => string
@@ -134,6 +139,7 @@
   - function cleanCharacterName
   - function processMedia
   - const TMDB_CONFIG
+- `apps/website/server/utils/with-timeout.ts` — function withTimeout: (promise, timeoutMs, dependency) => Promise<T>
 - `apps/website/src/composables/useContribute.ts` — function fetchRandomTask, function useContribute
 - `apps/website/src/composables/useDragScroll.ts` — function useDragScroll: (scrollRef) => void
 - `apps/website/src/composables/useReports.ts` — function useReports
@@ -145,9 +151,12 @@
   - function sameMediaId: (left, right) => boolean
   - function matchCastWorks: (actors, works) => CastWorkMatchResult<Actor, Work>
   - interface CastActorReference
+  - interface CharacterProfilePicture
   - interface CastWorkReference
-  - interface CastWorkMatchResult
+  - interface DisplayCastActor
+  - _...1 more_
 - `apps/website/src/utils/search-routes.ts` — function getSearchResultRoute: (result, "id" | "media_type">) => string, type SearchFilter
+- `apps/website/src/utils/season-data.ts` — function fetchSeasonPageData: (showId, seasonNumber, locale?) => Promise<SeasonDataResponse>, function fetchEpisodePageData: (showId, seasonNumber, episodeNumber, locale?) => Promise<EpisodeDataResponse>
 - `e2e/helpers/mock-api.ts`
   - function waitForVueHydration: (page) => Promise<void>
   - function setupMockApi: (page, options) => void

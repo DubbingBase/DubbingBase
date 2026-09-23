@@ -2,8 +2,6 @@ import type { PaginatedResponse } from "../types";
 
 export type DetailCollection =
   | "media-cast"
-  | "show-seasons"
-  | "season-episodes"
   | "actor-filmography"
   | "actor-voice-actors"
   | "voice-actor-works"

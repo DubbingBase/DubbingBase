@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 75 routes | 16 models | 197 components | 78 lib files | 63 env vars | 12 middleware | 5% test coverage
-> **Token savings:** this file is ~14,600 tokens. Without it, AI exploration would cost ~150,000 tokens. **Saves ~135,300 tokens per conversation.**
-> **Last scanned:** 2026-09-17 14:53 — re-run after significant changes
+> 75 routes | 16 models | 197 components | 81 lib files | 63 env vars | 12 middleware | 5% test coverage
+> **Token savings:** this file is ~14,800 tokens. Without it, AI exploration would cost ~150,700 tokens. **Saves ~135,900 tokens per conversation.**
+> **Last scanned:** 2026-09-23 15:31 — re-run after significant changes
 
 ---
 
@@ -454,12 +454,13 @@
   - const CONTENT_TYPES
   - const CACHE_KEYS
 - `apps/website/server/utils/cache/http.ts`
+  - function shouldDisableErrorCaching: (error) => boolean
+  - function setErrorCacheHeaders: (event, error) => void
   - function getPublicCacheControl: (profile) => string
   - function setNoCacheHeaders: (event) => void
   - function setNoStoreHeaders: (event) => void
   - function setPublicCacheHeaders: (event, profile) => void
-  - type CacheProfile
-  - const NO_STORE_CACHE_CONTROL
+  - _...2 more_
 - `apps/website/server/utils/cache/index.ts`
   - class SimpleCache
   - class FreshCache
@@ -498,6 +499,10 @@
   - function llmGenerateObject: (prompt, schema, options?) => Promise<
   - function llmVision: (prompt, imageData, mimeType, options?) => Promise<
   - function llmVisionObject: (prompt, imageData, schema, mimeType, options?) => Promise<
+- `apps/website/server/utils/media-request.ts`
+  - function parseSeasonQuery: (query, unknown>) => void
+  - function parseEpisodeQuery: (query, unknown>) => void
+  - function withMediaServiceTimeout: (request) => void
 - `apps/website/server/utils/normalize.ts` — function normalizeString: (input) => string, function isExploitableVoiceActorName: (input) => boolean
 - `apps/website/server/utils/notifications/discord.ts`
   - function normalizeDiscordUrl: (url) => string
@@ -540,6 +545,7 @@
   - function cleanCharacterName
   - function processMedia
   - const TMDB_CONFIG
+- `apps/website/server/utils/with-timeout.ts` — function withTimeout: (promise, timeoutMs, dependency) => Promise<T>
 - `apps/website/src/composables/useContribute.ts` — function fetchRandomTask, function useContribute
 - `apps/website/src/composables/useDragScroll.ts` — function useDragScroll: (scrollRef) => void
 - `apps/website/src/composables/useReports.ts` — function useReports
@@ -551,9 +557,12 @@
   - function sameMediaId: (left, right) => boolean
   - function matchCastWorks: (actors, works) => CastWorkMatchResult<Actor, Work>
   - interface CastActorReference
+  - interface CharacterProfilePicture
   - interface CastWorkReference
-  - interface CastWorkMatchResult
+  - interface DisplayCastActor
+  - _...1 more_
 - `apps/website/src/utils/search-routes.ts` — function getSearchResultRoute: (result, "id" | "media_type">) => string, type SearchFilter
+- `apps/website/src/utils/season-data.ts` — function fetchSeasonPageData: (showId, seasonNumber, locale?) => Promise<SeasonDataResponse>, function fetchEpisodePageData: (showId, seasonNumber, episodeNumber, locale?) => Promise<EpisodeDataResponse>
 - `e2e/helpers/mock-api.ts`
   - function waitForVueHydration: (page) => Promise<void>
   - function setupMockApi: (page, options) => void
@@ -712,7 +721,7 @@
 ## Most Imported Files (change these carefully)
 
 - `apps/website/server/utils/db/client.ts` — imported by **59** files
-- `apps/website/server/utils/cache/http.ts` — imported by **39** files
+- `apps/website/server/utils/cache/http.ts` — imported by **36** files
 - `apps/website/server/utils/auth.ts` — imported by **26** files
 - `apps/website/server/utils/index.ts` — imported by **23** files
 - `apps/website/server/utils/db/queries.ts` — imported by **12** files
@@ -726,16 +735,16 @@
 - `apps/website/server/utils/background.ts` — imported by **7** files
 - `apps/website/server/utils/services/media.ts` — imported by **6** files
 - `apps/website/server/utils/error-message.ts` — imported by **5** files
+- `apps/website/server/utils/with-timeout.ts` — imported by **4** files
 - `apps/website/server/utils/llm.ts` — imported by **4** files
+- `apps/website/src/utils/media-cast.ts` — imported by **3** files
 - `apps/website/server/utils/db/dubbing-project.ts` — imported by **3** files
 - `apps/website/server/utils/normalize.ts` — imported by **3** files
-- `apps/mobile/src/api/supabase.ts` — imported by **2** files
-- `apps/mobile/src/views/voice-actor-profile.vue` — imported by **2** files
 
 ## Import Map (who imports what)
 
 - `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/cast-vote.post.ts`, `apps/website/server/api/count-voice-actor-works.post.ts` +54 more
-- `apps/website/server/utils/cache/http.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/dashboard-stats.get.ts` +34 more
+- `apps/website/server/utils/cache/http.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/dashboard-stats.get.ts` +31 more
 - `apps/website/server/utils/auth.ts` ← `apps/website/server/api/create-user-profile.post.ts`, `apps/website/server/api/dashboard-stats.get.ts`, `apps/website/server/api/delete-voice-actor-link.post.ts`, `apps/website/server/api/delete-work-entry.post.ts`, `apps/website/server/api/delete_user.post.ts` +21 more
 - `apps/website/server/utils/index.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/episode/index.get.ts` +18 more
 - `apps/website/server/utils/db/queries.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/game/[id].get.ts` +7 more
@@ -750,7 +759,7 @@
 # Test Coverage
 
 > **5%** of routes and models are covered by tests
-> 32 test files found
+> 33 test files found
 
 ## Covered Routes
 
