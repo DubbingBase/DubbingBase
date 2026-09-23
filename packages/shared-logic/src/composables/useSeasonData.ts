@@ -8,21 +8,12 @@ export async function fetchSeasonData(
     headers["Accept-Language"] = locale;
   }
 
-  try {
-    const data = await $fetch<any>(`/api/season`, {
-      headers,
-      query: {
-        id: showId,
-        season_number: seasonNumber,
-      },
-    });
-    if (!data) {
-      console.error("fetchSeasonData: Response is null");
-      return null;
-    }
-    return data;
-  } catch (e) {
-    console.error("fetchSeasonData error:", e);
-    return null;
-  }
+  return await $fetch<any>(`/api/season`, {
+    headers,
+    timeout: 20_000,
+    query: {
+      id: showId,
+      season_number: seasonNumber,
+    },
+  });
 }

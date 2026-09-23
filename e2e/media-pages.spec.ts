@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { setupMockApi } from "./helpers/mock-api";
+import { MOCK_SEASON } from "./fixtures/mock-data";
 
 test.describe("Media Detail Pages", () => {
   test.beforeEach(async ({ page }) => {
@@ -39,6 +40,58 @@ test.describe("Media Detail Pages", () => {
     await expect(page.locator("body")).toContainText("Jean-Louis Faure");
 
     api.expectNoErrors();
+  });
+
+  test("navigates show to season to episode and preserves the selected dub", async ({
+    page,
+  }) => {
+    await setupMockApi(page);
+    await page.goto("/show/1396");
+
+    const seasonLink = page.locator('a[href*="/show/1396/season/1"]').first();
+    await expect(seasonLink).toHaveAttribute("href", /dub=139601/);
+    await seasonLink.click();
+    await expect(page).toHaveURL(/\/show\/1396\/season\/1\?dub=139601/);
+    await expect(
+      page.getByText("Walter White begins a new chapter."),
+    ).toBeVisible();
+
+    await page.getByRole("link", { name: /Pilot/ }).first().click();
+    await expect(page).toHaveURL(
+      /\/show\/1396\/season\/1\/episode\/1\?dub=139601/,
+    );
+    await expect(page.locator("body")).toContainText(
+      "Walter White starts cooking methamphetamine.",
+    );
+  });
+
+  test("loads Specials from season zero", async ({ page }) => {
+    await setupMockApi(page);
+    await page.goto("/show/1396/season/0");
+    await expect(page.locator("body")).toContainText("Specials");
+    await expect(page.getByRole("heading", { name: "Episodes" })).toBeVisible();
+  });
+
+  test("mounts the season skeleton while the season request is delayed", async ({
+    page,
+  }) => {
+    await setupMockApi(page);
+    await page.goto("/show/1396");
+    await page.route("**/api/season?**", async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 700));
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(MOCK_SEASON),
+      });
+    });
+
+    await page.locator('a[href*="/show/1396/season/1"]').first().click();
+    await expect(page).toHaveURL(/\/show\/1396\/season\/1/);
+    await expect(page.locator(".animate-pulse").first()).toBeVisible();
+    await expect(
+      page.getByText("Walter White begins a new chapter."),
+    ).toBeVisible();
   });
 
   test("renders Video Game detail page with localized voice cast", async ({

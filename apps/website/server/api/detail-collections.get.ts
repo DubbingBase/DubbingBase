@@ -7,8 +7,6 @@ type CollectionItem = Record<string, any>;
 
 const COLLECTIONS = new Set([
   "media-cast",
-  "show-seasons",
-  "season-episodes",
   "actor-filmography",
   "actor-voice-actors",
   "voice-actor-works",
@@ -26,6 +24,15 @@ function requiredId(value: unknown, name: string): number {
   const parsed = Number(raw);
   if (!raw || !Number.isSafeInteger(parsed) || parsed <= 0) {
     throw createError({ statusCode: 400, message: `Invalid ${name}` });
+  }
+  return parsed;
+}
+
+function requiredSeasonNumber(value: unknown): number {
+  const raw = queryValue(value)?.trim();
+  const parsed = Number(raw);
+  if (!raw || !Number.isSafeInteger(parsed) || parsed < 0) {
+    throw createError({ statusCode: 400, message: "Invalid seasonNumber" });
   }
   return parsed;
 }
@@ -240,11 +247,11 @@ async function getMediaCast(
     type === "episode"
       ? {
           id,
-          season_number: requiredId(query.seasonNumber, "seasonNumber"),
+          season_number: requiredSeasonNumber(query.seasonNumber),
           episode_number: requiredId(query.episodeNumber, "episodeNumber"),
         }
       : undefined;
-  const detail = await requestFetch<DetailPayload>(
+  const detail = await requestFetch(
     type === "episode" ? "/api/episode" : mediaEndpoint(type, id),
     { query: detailQuery },
   );
@@ -271,21 +278,8 @@ async function getCollectionItems(
   switch (collection) {
     case "media-cast":
       return await getMediaCast(event, query);
-    case "show-seasons": {
-      const detail = await requestFetch<DetailPayload>(`/api/show/${id}`);
-      return detail.serie?.seasons || [];
-    }
-    case "season-episodes": {
-      const detail = await requestFetch<DetailPayload>("/api/season", {
-        query: {
-          id,
-          season_number: requiredId(query.seasonNumber, "seasonNumber"),
-        },
-      });
-      return detail.season?.episodes || [];
-    }
     case "actor-filmography": {
-      const detail = await requestFetch<DetailPayload>(`/api/actor/${id}`);
+      const detail = await requestFetch(`/api/actor/${id}`);
       const roles = detail.actor?.voice_roles || [];
       return (detail.actor?.credits?.cast || []).map(
         (item: CollectionItem) => ({
@@ -304,7 +298,7 @@ async function getCollectionItems(
       );
     }
     case "actor-voice-actors": {
-      const detail = await requestFetch<DetailPayload>(`/api/actor/${id}`);
+      const detail = await requestFetch(`/api/actor/${id}`);
       const roles = detail.actor?.voice_roles || [];
       const voiceActors = new Map<number, CollectionItem>();
       for (const role of roles) {
@@ -329,7 +323,7 @@ async function getCollectionItems(
     }
     case "voice-actor-works": {
       const lang = queryValue(query.lang);
-      const detail = await requestFetch<DetailPayload>(
+      const detail = await requestFetch(
         `/api/voice-actor/${id}`,
         lang ? { query: { lang } } : undefined,
       );
@@ -354,20 +348,18 @@ async function getCollectionItems(
       return works;
     }
     case "studio-projects": {
-      const detail = await requestFetch<DetailPayload>(
-        `/api/get-studio-details`,
-        { query: { studioId: id } },
-      );
+      const detail = await requestFetch(`/api/get-studio-details`, {
+        query: { studioId: id },
+      });
       const text = normalized(queryValue(query.query));
       return (detail.dubbedProjects || []).filter((item: CollectionItem) =>
         searchMatch(item, text),
       );
     }
     case "studio-voice-actors": {
-      const detail = await requestFetch<DetailPayload>(
-        `/api/get-studio-details`,
-        { query: { studioId: id } },
-      );
+      const detail = await requestFetch(`/api/get-studio-details`, {
+        query: { studioId: id },
+      });
       return detail.voiceActorsRoster || [];
     }
     default:

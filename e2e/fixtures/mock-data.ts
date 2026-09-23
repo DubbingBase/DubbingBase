@@ -530,6 +530,20 @@ export const MOCK_SHOW = {
     vote_count: 14000,
     number_of_seasons: 5,
     number_of_episodes: 62,
+    seasons: [
+      {
+        season_number: 0,
+        name: "Specials",
+        poster_path: null,
+        episode_count: 1,
+      },
+      {
+        season_number: 1,
+        name: "Season 1",
+        poster_path: "/season_1.jpg",
+        episode_count: 1,
+      },
+    ],
     credits: {
       cast: [
         {
@@ -560,6 +574,20 @@ export const MOCK_SHOW = {
     vote_count: 14000,
     number_of_seasons: 5,
     number_of_episodes: 62,
+    seasons: [
+      {
+        season_number: 0,
+        name: "Specials",
+        poster_path: null,
+        episode_count: 1,
+      },
+      {
+        season_number: 1,
+        name: "Season 1",
+        poster_path: "/season_1.jpg",
+        episode_count: 1,
+      },
+    ],
     credits: {
       cast: [
         {
@@ -657,6 +685,50 @@ export const MOCK_SHOW = {
       crew: [],
     },
   ],
+};
+
+export const MOCK_SEASON = {
+  season: {
+    id: 1396,
+    season_number: 1,
+    name: "Season 1",
+    air_date: "2008-01-20",
+    episode_count: 1,
+    vote_average: 8.9,
+    overview: "Walter White begins a new chapter.",
+    poster_path: "/season_1.jpg",
+    episodes: [
+      {
+        id: 1,
+        episode_number: 1,
+        name: "Pilot",
+        air_date: "2008-01-20",
+        still_path: "/pilot.jpg",
+        vote_average: 8.9,
+      },
+    ],
+  },
+  dubbingProjects: MOCK_SHOW.dubbingProjects,
+  characterProfilePictures: [],
+  votes: {},
+};
+
+export const MOCK_EPISODE = {
+  episode: {
+    id: 1,
+    episode_number: 1,
+    season_number: 1,
+    name: "Pilot",
+    air_date: "2008-01-20",
+    still_path: "/pilot.jpg",
+    overview: "Walter White starts cooking methamphetamine.",
+    vote_average: 8.9,
+    original_language: "en",
+    credits: { cast: MOCK_SHOW.aggregateCredits.cast },
+  },
+  dubbingProjects: MOCK_SHOW.dubbingProjects,
+  characterProfilePictures: [],
+  votes: {},
 };
 
 export const MOCK_GAME = {

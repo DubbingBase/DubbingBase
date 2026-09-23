@@ -3,6 +3,8 @@ import {
   MOCK_VOICE_ACTOR,
   MOCK_MOVIE,
   MOCK_SHOW,
+  MOCK_SEASON,
+  MOCK_EPISODE,
   MOCK_GAME,
   MOCK_AUDIOBOOK,
   MOCK_PODCAST,
@@ -16,6 +18,8 @@ export interface MockApiOptions {
   voiceActor?: any;
   movie?: any;
   show?: any;
+  season?: any;
+  episode?: any;
   game?: any;
   audiobook?: any;
   podcast?: any;
@@ -77,6 +81,24 @@ export async function setupMockApi(page: Page, options: MockApiOptions = {}) {
         status: 200,
         contentType: "application/json",
         body: JSON.stringify(showData),
+      });
+    }
+
+    if (path === "/api/season") {
+      const seasonData = options.season || MOCK_SEASON;
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(seasonData),
+      });
+    }
+
+    if (path === "/api/episode") {
+      const episodeData = options.episode || MOCK_EPISODE;
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(episodeData),
       });
     }
 

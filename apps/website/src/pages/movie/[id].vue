@@ -434,12 +434,7 @@
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import { useRoute, useRouter } from "vue-router";
 
-import {
-  fetchMovieData,
-  fetchDetailCollection,
-  findCharacter,
-} from "@app/shared-logic";
-import type { PaginatedResponse } from "@app/shared-logic";
+import { fetchMovieData, findCharacter } from "@app/shared-logic";
 import { computed, ref, watch } from "vue";
 import { refDebounced } from "@vueuse/core";
 import {
@@ -452,7 +447,7 @@ import {
   StarIcon,
 } from "lucide-vue-next";
 import ReportModal from "../../components/ReportModal.vue";
-import { matchCastWorks } from "../../utils/media-cast";
+import { matchCastWorks, type DisplayCastActor } from "../../utils/media-cast";
 
 const isReportModalOpen = ref(false);
 
@@ -597,7 +592,7 @@ const getDisplayLanguage = (langCode: string | undefined | null) => {
 };
 
 // Format cast and attach voice actors
-const formattedCast = computed(() => {
+const formattedCast = computed<DisplayCastActor[]>(() => {
   if (!movie.value?.credits?.cast) return [];
 
   // Get works (dubbing links) for the currently active dubbing project
@@ -639,6 +634,7 @@ const formattedCast = computed(() => {
 
       return {
         ...actor,
+        actorId: actor.id,
         id: work ? `${actor.id}-${work.id}` : actor.id,
         profile_path: profilePath,
         voiceActor: voiceActor ? { ...voiceActor, note: work.note } : null,
@@ -674,32 +670,30 @@ watch(debouncedSearch, (val) => {
 });
 watch([searchQuery, activeDubId], () => void setCastPage(1));
 
-type MovieCastItem = Record<string, any>;
-const castRequest = computed(() => ({
-  collection: "media-cast" as const,
-  type: "movie",
-  id: movieId,
-  projectId: activeDubId.value || undefined,
-  query: searchQuery.value,
-  page: castPage.value,
-  pageSize: 12,
-}));
-const { data: castPageData } = useAsyncData<PaginatedResponse<MovieCastItem>>(
-  computed(
-    () =>
-      `movie-cast-${movieId}-${locale.value}-${castPage.value}-${activeDubId.value}-${searchQuery.value}`,
-  ),
-  () => fetchDetailCollection<MovieCastItem>(castRequest.value),
-  {
-    watch: [castRequest],
-    getCachedData: (key, nuxtApp) =>
-      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
-  },
+const filteredCast = computed(() =>
+  formattedCast.value.filter((actor: any) => {
+    if (!String(actor.id).includes("-")) return false;
+    const query = searchQuery.value.trim().toLowerCase();
+    if (!query) return true;
+    const searchable = [
+      actor.name,
+      actor.character,
+      actor.workCharacterName,
+      actor.voiceActor?.firstname,
+      actor.voiceActor?.lastname,
+    ];
+    return searchable.some((value) =>
+      String(value || "")
+        .toLowerCase()
+        .includes(query),
+    );
+  }),
 );
-const castItems = computed(() => castPageData.value?.data || []);
-const castTotal = computed(
-  () => castPageData.value?.pagination.totalItems || 0,
-);
+const castTotal = computed(() => filteredCast.value.length);
+const castItems = computed(() => {
+  const start = (castPage.value - 1) * 12;
+  return filteredCast.value.slice(start, start + 12);
+});
 
 useHead({
   title: computed(() => {

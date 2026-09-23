@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-if="route.params.seasonNumber === undefined">
     <MediaSkeleton v-if="pending && !serie" />
     <MediaDetailsLayout
       v-else-if="serie"
@@ -491,14 +491,14 @@
 
     <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
   </div>
+  <NuxtPage v-else />
 </template>
 
 <script setup lang="ts">
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import { useRoute, useRouter } from "vue-router";
 
-import { fetchShowData, fetchDetailCollection } from "@app/shared-logic";
-import type { PaginatedResponse } from "@app/shared-logic";
+import { fetchShowData } from "@app/shared-logic";
 import { computed, ref, watch } from "vue";
 import { refDebounced } from "@vueuse/core";
 import {
@@ -511,7 +511,7 @@ import {
   StarIcon,
 } from "lucide-vue-next";
 import ReportModal from "../../components/ReportModal.vue";
-import { matchCastWorks } from "../../utils/media-cast";
+import { matchCastWorks, type DisplayCastActor } from "../../utils/media-cast";
 
 const isReportModalOpen = ref(false);
 
@@ -557,37 +557,27 @@ const { data, pending } = useAsyncData(
     return newData;
   },
   {
+    lazy: true,
     getCachedData: (key, nuxtApp) =>
       nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
   },
 );
 
 const serie = computed(() => data.value?.serie);
-const seasons = computed(() => serie.value?.seasons || []);
+type ShowSeasonItem = {
+  season_number: number;
+  name?: string | null;
+  poster_path?: string | null;
+  episode_count?: number | null;
+};
+const seasons = computed<ShowSeasonItem[]>(() => serie.value?.seasons || []);
 const { page: seasonsPage, setPage: setSeasonsPage } =
   useUrlPagination("seasonsPage");
-type ShowSeasonItem = Record<string, any>;
-const seasonsRequest = computed(() => ({
-  collection: "show-seasons" as const,
-  id: showId,
-  page: seasonsPage.value,
-  pageSize: 12,
-}));
-const { data: seasonsPageData } = useAsyncData<
-  PaginatedResponse<ShowSeasonItem>
->(
-  computed(() => `show-seasons-${showId}-${locale.value}-${seasonsPage.value}`),
-  () => fetchDetailCollection<ShowSeasonItem>(seasonsRequest.value),
-  {
-    watch: [seasonsRequest],
-    getCachedData: (key, nuxtApp) =>
-      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
-  },
-);
-const seasonItems = computed(() => seasonsPageData.value?.data || []);
-const seasonTotal = computed(
-  () => seasonsPageData.value?.pagination.totalItems || 0,
-);
+const seasonTotal = computed(() => seasons.value.length);
+const seasonItems = computed(() => {
+  const start = (seasonsPage.value - 1) * 12;
+  return seasons.value.slice(start, start + 12);
+});
 const dubbingProjects = computed(() => {
   const projects = [...(data.value?.dubbingProjects || [])].filter((p) =>
     projectHasVoiceActor(p),
@@ -679,7 +669,7 @@ const getDisplayLanguage = (langCode: string | undefined | null) => {
 };
 
 // Format cast and attach voice actors
-const formattedCast = computed(() => {
+const formattedCast = computed<DisplayCastActor[]>(() => {
   if (!aggregateCredits.value?.cast) return [];
 
   // Get works (dubbing links) for the currently active dubbing project
@@ -728,6 +718,7 @@ const formattedCast = computed(() => {
 
       return {
         ...actor,
+        actorId: actor.id,
         id: work ? `${actor.id}-${work.id}` : actor.id,
         profile_path: profilePath,
         voiceActor: voiceActor ? { ...voiceActor, note: work.note } : null,
@@ -763,32 +754,31 @@ watch(debouncedSearch, (val) => {
 });
 watch([searchQuery, activeDubId], () => void setCastPage(1));
 
-type ShowCastItem = Record<string, any>;
-const castRequest = computed(() => ({
-  collection: "media-cast" as const,
-  type: "show",
-  id: showId,
-  projectId: activeDubId.value || undefined,
-  query: searchQuery.value,
-  page: castPage.value,
-  pageSize: 12,
-}));
-const { data: castPageData } = useAsyncData<PaginatedResponse<ShowCastItem>>(
-  computed(
-    () =>
-      `show-cast-${showId}-${locale.value}-${castPage.value}-${activeDubId.value}-${searchQuery.value}`,
-  ),
-  () => fetchDetailCollection<ShowCastItem>(castRequest.value),
-  {
-    watch: [castRequest],
-    getCachedData: (key, nuxtApp) =>
-      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
-  },
+const filteredCast = computed(() =>
+  formattedCast.value.filter((actor: any) => {
+    if (!String(actor.id).includes("-")) return false;
+    const query = searchQuery.value.trim().toLowerCase();
+    if (!query) return true;
+    const searchable = [
+      actor.name,
+      actor.character,
+      actor.workCharacterName,
+      actor.voiceActor?.firstname,
+      actor.voiceActor?.lastname,
+      ...(actor.roles || []).map((role: any) => role.character),
+    ];
+    return searchable.some((value) =>
+      String(value || "")
+        .toLowerCase()
+        .includes(query),
+    );
+  }),
 );
-const castItems = computed(() => castPageData.value?.data || []);
-const castTotal = computed(
-  () => castPageData.value?.pagination.totalItems || 0,
-);
+const castTotal = computed(() => filteredCast.value.length);
+const castItems = computed(() => {
+  const start = (castPage.value - 1) * 12;
+  return filteredCast.value.slice(start, start + 12);
+});
 
 useHead({
   title: computed(() => {

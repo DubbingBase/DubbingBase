@@ -432,13 +432,31 @@
     </MediaDetailsLayout>
 
     <div
-      v-else
+      v-else-if="requestError"
+      class="min-h-[50vh] flex flex-col items-center justify-center p-8 text-center"
+    >
+      <h1 class="text-2xl font-bold theme-text mb-2">
+        {{ $t("common.error", "Une erreur est survenue") }}
+      </h1>
+      <p class="theme-text-secondary theme-text-muted mb-6">
+        {{ $t("details.requestError", "Impossible de charger cet épisode.") }}
+      </p>
+      <NuxtLink
+        :to="localePath(`/show/${showId}/season/${seasonNumber}`)"
+        class="px-4 py-2 theme-primary-bg font-semibold rounded-lg hover:opacity-90 transition-opacity"
+      >
+        {{ $t("details.backToSeason", "Retour à la saison") }}
+      </NuxtLink>
+    </div>
+
+    <div
+      v-else-if="!pending"
       class="min-h-[50vh] flex flex-col items-center justify-center p-8 text-center"
     >
       <h1 class="text-2xl font-bold theme-text mb-2">
         {{ $t("details.notFound", "Épisode introuvable") }}
       </h1>
-      <p class="theme-text-secondary theme-text-muted mb-6">
+      <p class="text-sm theme-text-secondary theme-text-muted mb-6">
         {{
           $t(
             "details.notFoundDesc",
@@ -448,7 +466,7 @@
       </p>
       <NuxtLink
         :to="localePath(`/show/${showId}/season/${seasonNumber}`)"
-        class="px-4 py-2 theme-primary-bg font-semibold rounded-lg hover:opacity-90 transition-opacity"
+        class="px-4 py-2 theme-primary-bg font-semibold rounded-lg"
       >
         {{ $t("details.backToSeason", "Retour à la saison") }}
       </NuxtLink>
@@ -462,8 +480,7 @@
 import MediaDetailsLayout from "../../../../../../components/layout/MediaDetailsLayout.vue";
 import { useRoute, useRouter } from "vue-router";
 
-import { fetchEpisodeData, fetchDetailCollection } from "@app/shared-logic";
-import type { PaginatedResponse } from "@app/shared-logic";
+import { fetchEpisodeData } from "@app/shared-logic";
 import { computed, ref, watch } from "vue";
 import { refDebounced } from "@vueuse/core";
 import {
@@ -476,6 +493,10 @@ import {
   StarIcon,
 } from "lucide-vue-next";
 import ReportModal from "../../../../../../components/ReportModal.vue";
+import {
+  matchCastWorks,
+  type DisplayCastActor,
+} from "../../../../../../utils/media-cast";
 
 const isReportModalOpen = ref(false);
 const { page: castPage, setPage: setCastPage } = useUrlPagination("castPage");
@@ -508,7 +529,7 @@ const localePath = useLocalePath();
 
 const cacheKey = `episode-${showId}-${seasonNumber}-${episodeNumber}-${locale.value}`;
 
-const { data, pending } = useAsyncData(
+const { data, pending, error } = useAsyncData(
   cacheKey,
   async () => {
     return await fetchEpisodeData(
@@ -519,12 +540,16 @@ const { data, pending } = useAsyncData(
     );
   },
   {
+    lazy: true,
     getCachedData: (key, nuxtApp) =>
       nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
   },
 );
 
 const episode = computed(() => data.value?.episode);
+const requestError = computed(() =>
+  Boolean(error.value && error.value.statusCode !== 404),
+);
 const dubbingProjects = computed(() => {
   const projects = [...(data.value?.dubbingProjects || [])].filter((p) =>
     projectHasVoiceActor(p),
@@ -634,34 +659,74 @@ watch([debouncedSearch, activeDubId], () => {
   void setCastPage(1);
 });
 
-type EpisodeCastItem = Record<string, any>;
-const castRequest = computed(() => ({
-  collection: "media-cast" as const,
-  type: "episode",
-  id: showId,
-  seasonNumber,
-  episodeNumber,
-  projectId: activeDubId.value || undefined,
-  query: debouncedSearch.value,
-  page: castPage.value,
-  pageSize: 12,
-}));
-const { data: castPageData } = useAsyncData<PaginatedResponse<EpisodeCastItem>>(
-  computed(
-    () =>
-      `episode-cast-${showId}-${seasonNumber}-${episodeNumber}-${locale.value}-${castPage.value}-${activeDubId.value}-${debouncedSearch.value}`,
-  ),
-  () => fetchDetailCollection<EpisodeCastItem>(castRequest.value),
-  {
-    watch: [castRequest],
-    getCachedData: (key, nuxtApp) =>
-      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
-  },
-);
-const castItems = computed(() => castPageData.value?.data || []);
-const castTotal = computed(
-  () => castPageData.value?.pagination.totalItems || 0,
-);
+const formattedCast = computed<DisplayCastActor[]>(() => {
+  const cast =
+    data.value?.aggregateCredits?.cast || episode.value?.credits?.cast || [];
+  const works = activeDubProject.value?.works || [];
+  const { matches, unmatchedWorks } = matchCastWorks(cast, works);
+  const matchedCards = matches.flatMap(({ actor, works: actorWorks }) =>
+    actorWorks.map((work: any) => {
+      const characterName = actor.character || work.character_name;
+      const characterImage = (data.value?.characterProfilePictures || []).find(
+        (picture: any) =>
+          String(picture.name || "").toLowerCase() ===
+          String(characterName || "").toLowerCase(),
+      )?.image;
+      let profilePath = actor.profile_path;
+      if (profilePath?.startsWith("/")) {
+        profilePath = `https://image.tmdb.org/t/p/w185${profilePath}`;
+      }
+
+      return {
+        ...actor,
+        actorId: actor.id,
+        id: `${actor.id}-${work.id}`,
+        profile_path: profilePath,
+        voiceActor: work.voice_actor
+          ? { ...work.voice_actor, note: work.note }
+          : null,
+        characterImage: characterImage || null,
+        workCharacterName: work.character_name || null,
+      };
+    }),
+  );
+  const unmatchedCards = unmatchedWorks.map((work: any) => ({
+    id: `work-${work.id}`,
+    name: work.character_name || t("details.unknownCharacter"),
+    profile_path: null,
+    character: work.character_name || null,
+    voiceActor: work.voice_actor
+      ? { ...work.voice_actor, note: work.note }
+      : null,
+    characterImage: null,
+    workCharacterName: work.character_name || null,
+  }));
+  return [...matchedCards, ...unmatchedCards];
+});
+const filteredCast = computed(() => {
+  const query = debouncedSearch.value.trim().toLowerCase();
+  return formattedCast.value.filter((actor: any) => {
+    if (!query) return true;
+    const searchable = [
+      actor.name,
+      actor.character,
+      actor.workCharacterName,
+      actor.voiceActor?.firstname,
+      actor.voiceActor?.lastname,
+      ...(actor.roles || []).map((role: any) => role.character),
+    ];
+    return searchable.some((value) =>
+      String(value || "")
+        .toLowerCase()
+        .includes(query),
+    );
+  });
+});
+const castTotal = computed(() => filteredCast.value.length);
+const castItems = computed(() => {
+  const start = (castPage.value - 1) * 12;
+  return filteredCast.value.slice(start, start + 12);
+});
 
 useHead({
   title: computed(() => {

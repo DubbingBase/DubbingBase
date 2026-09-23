@@ -2,18 +2,23 @@ import { useCache, useTmdbClient } from "../../utils";
 import { MediaService } from "../../utils/services/media";
 import { getDubbingProjects } from "../../utils/db/queries";
 import { setPublicCacheHeaders } from "../../utils/cache/http";
+import { withTimeout } from "../../utils/with-timeout";
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const id = query.id !== undefined ? Number(query.id) : undefined;
+  const seasonNumberRaw = query.season_number;
   const seasonNumber =
-    query.season_number !== undefined ? Number(query.season_number) : undefined;
+    seasonNumberRaw !== undefined ? Number(seasonNumberRaw) : undefined;
 
   if (
     id === undefined ||
     seasonNumber === undefined ||
-    isNaN(id) ||
-    isNaN(seasonNumber)
+    !Number.isSafeInteger(id) ||
+    id <= 0 ||
+    !Number.isSafeInteger(seasonNumber) ||
+    String(seasonNumberRaw).trim() === "" ||
+    seasonNumber < 0
   ) {
     throw createError({
       statusCode: 400,
@@ -34,7 +39,11 @@ export default defineEventHandler(async (event) => {
       .then(async (result) => {
         // Fetch character profile pictures from cache for the parent TV show if available
         const showCacheKey = `tvdb:tv:characters_by_tmdb:${id}`;
-        const cachedChars = await cache.get<any>(showCacheKey);
+        const cachedChars = await withTimeout(
+          cache.get<any>(showCacheKey),
+          8_000,
+          "Character cache lookup",
+        );
         let characterProfilePictures: any[] = [];
         if (cachedChars) {
           characterProfilePictures = Array.isArray(cachedChars)
@@ -44,6 +53,7 @@ export default defineEventHandler(async (event) => {
         return { season: result.media, characterProfilePictures };
       })
       .catch((err) => {
+        if (err?.statusCode === 504) throw err;
         console.error(
           `Failed to fetch TMDB season ${id} S${seasonNumber}:`,
           err,
@@ -54,11 +64,11 @@ export default defineEventHandler(async (event) => {
         };
       });
 
-    const dbDataPromise = getDubbingProjects(id, "tv").then(
-      (dubbingProjects) => {
-        return { dubbingProjects, voteData: {} };
-      },
-    );
+    const dbDataPromise = withTimeout(
+      getDubbingProjects(id, "tv"),
+      10_000,
+      "Supabase dubbing projects query",
+    ).then((dubbingProjects) => ({ dubbingProjects, voteData: {} }));
 
     const [apiData, dbData] = await Promise.all([
       apiDataPromise,
