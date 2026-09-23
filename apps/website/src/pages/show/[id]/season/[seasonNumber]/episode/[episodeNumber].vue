@@ -480,7 +480,6 @@
 import MediaDetailsLayout from "../../../../../../components/layout/MediaDetailsLayout.vue";
 import { useRoute, useRouter } from "vue-router";
 
-import { fetchEpisodeData } from "@app/shared-logic";
 import { computed, ref, watch } from "vue";
 import { refDebounced } from "@vueuse/core";
 import {
@@ -493,7 +492,11 @@ import {
   StarIcon,
 } from "lucide-vue-next";
 import ReportModal from "../../../../../../components/ReportModal.vue";
+import { fetchEpisodePageData } from "../../../../../../utils/season-data";
 import {
+  type CastActorReference,
+  type CastWorkReference,
+  type CharacterProfilePicture,
   matchCastWorks,
   type DisplayCastActor,
 } from "../../../../../../utils/media-cast";
@@ -532,7 +535,7 @@ const cacheKey = `episode-${showId}-${seasonNumber}-${episodeNumber}-${locale.va
 const { data, pending, error } = useAsyncData(
   cacheKey,
   async () => {
-    return await fetchEpisodeData(
+    return await fetchEpisodePageData(
       showId,
       seasonNumber,
       episodeNumber,
@@ -660,15 +663,17 @@ watch([debouncedSearch, activeDubId], () => {
 });
 
 const formattedCast = computed<DisplayCastActor[]>(() => {
-  const cast =
+  const cast: CastActorReference[] =
     data.value?.aggregateCredits?.cast || episode.value?.credits?.cast || [];
-  const works = activeDubProject.value?.works || [];
+  const works: CastWorkReference[] = activeDubProject.value?.works || [];
+  const characterProfilePictures: CharacterProfilePicture[] =
+    data.value?.characterProfilePictures || [];
   const { matches, unmatchedWorks } = matchCastWorks(cast, works);
   const matchedCards = matches.flatMap(({ actor, works: actorWorks }) =>
-    actorWorks.map((work: any) => {
+    actorWorks.map((work) => {
       const characterName = actor.character || work.character_name;
-      const characterImage = (data.value?.characterProfilePictures || []).find(
-        (picture: any) =>
+      const characterImage = characterProfilePictures.find(
+        (picture) =>
           String(picture.name || "").toLowerCase() ===
           String(characterName || "").toLowerCase(),
       )?.image;
@@ -690,7 +695,7 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
       };
     }),
   );
-  const unmatchedCards = unmatchedWorks.map((work: any) => ({
+  const unmatchedCards = unmatchedWorks.map((work) => ({
     id: `work-${work.id}`,
     name: work.character_name || t("details.unknownCharacter"),
     profile_path: null,
@@ -705,7 +710,7 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
 });
 const filteredCast = computed(() => {
   const query = debouncedSearch.value.trim().toLowerCase();
-  return formattedCast.value.filter((actor: any) => {
+  return formattedCast.value.filter((actor: DisplayCastActor) => {
     if (!query) return true;
     const searchable = [
       actor.name,
@@ -713,7 +718,7 @@ const filteredCast = computed(() => {
       actor.workCharacterName,
       actor.voiceActor?.firstname,
       actor.voiceActor?.lastname,
-      ...(actor.roles || []).map((role: any) => role.character),
+      ...(actor.roles || []).map((role) => role.character),
     ];
     return searchable.some((value) =>
       String(value || "")

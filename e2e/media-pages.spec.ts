@@ -94,6 +94,29 @@ test.describe("Media Detail Pages", () => {
     ).toBeVisible();
   });
 
+  test("shows an error for a timed out French season request", async ({
+    page,
+  }) => {
+    await setupMockApi(page);
+    await page.context().addCookies([
+      {
+        name: "user_lang",
+        value: "fr",
+        url: "http://localhost:3050",
+        sameSite: "Lax",
+      },
+    ]);
+    await page.goto("/fr/show/108978/season/1?dub=524", {
+      waitUntil: "domcontentloaded",
+    });
+
+    await expect(page).toHaveURL("/fr/show/108978/season/1?dub=524");
+    await expect(page.locator(".animate-pulse").first()).toBeVisible();
+    await expect(
+      page.getByText("Impossible de charger cette saison."),
+    ).toBeVisible();
+  });
+
   test("renders Video Game detail page with localized voice cast", async ({
     page,
   }) => {

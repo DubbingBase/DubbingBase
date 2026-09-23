@@ -6,6 +6,11 @@ export interface CastActorReference {
   roles?: Array<{ character: string; episode_count?: number }>;
 }
 
+export interface CharacterProfilePicture {
+  name?: string | null;
+  image?: string | null;
+}
+
 export interface CastWorkReference {
   id: number;
   actor_id: number | string | null;

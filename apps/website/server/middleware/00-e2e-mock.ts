@@ -1,4 +1,4 @@
-import { defineEventHandler, getRequestURL, send } from "h3";
+import { defineEventHandler, getRequestURL, send, setResponseStatus } from "h3";
 
 export const MOCK_VOICE_ACTOR = {
   voiceActor: {
@@ -1170,7 +1170,7 @@ export const MOCK_HOME_DATA = {
   ],
 };
 
-export default defineEventHandler((event) => {
+export default defineEventHandler(async (event) => {
   // Only activate mock interceptor when E2E_TEST is true
   if (process.env.E2E_TEST !== "true") {
     return;
@@ -1195,6 +1195,22 @@ export default defineEventHandler((event) => {
   }
 
   if (path === "/api/season") {
+    if (
+      url.searchParams.get("id") === "108978" &&
+      url.searchParams.get("season_number") === "1"
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, 700));
+      setResponseStatus(event, 504);
+      return send(
+        event,
+        JSON.stringify({
+          statusCode: 504,
+          statusMessage: "Mock season timeout",
+        }),
+        "application/json",
+      );
+    }
+
     const seasonNumber = Number(url.searchParams.get("season_number"));
     const season = {
       ...MOCK_SEASON.season,

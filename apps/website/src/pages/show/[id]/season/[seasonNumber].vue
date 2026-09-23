@@ -325,7 +325,8 @@
 import MediaDetailsLayout from "../../../../components/layout/MediaDetailsLayout.vue";
 import { useRoute, useRouter } from "vue-router";
 
-import { fetchSeasonData, fetchShowData } from "@app/shared-logic";
+import { fetchShowData } from "@app/shared-logic";
+import { fetchSeasonPageData } from "../../../../utils/season-data";
 import { computed, ref } from "vue";
 import { ClapperboardIcon, ExternalLinkIcon, StarIcon } from "lucide-vue-next";
 import ReportModal from "../../../../components/ReportModal.vue";
@@ -373,7 +374,7 @@ const {
 } = useAsyncData(
   seasonCacheKey,
   async () => {
-    return await fetchSeasonData(showId, seasonNumber, locale.value);
+    return await fetchSeasonPageData(showId, seasonNumber, locale.value);
   },
   {
     lazy: true,

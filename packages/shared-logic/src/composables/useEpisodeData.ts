@@ -9,13 +9,22 @@ export async function fetchEpisodeData(
     headers["Accept-Language"] = locale;
   }
 
-  return await $fetch<any>(`/api/episode`, {
-    headers,
-    timeout: 20_000,
-    query: {
-      id: showId,
-      season_number: seasonNumber,
-      episode_number: episodeNumber,
-    },
-  });
+  try {
+    const data = await $fetch<any>(`/api/episode`, {
+      headers,
+      query: {
+        id: showId,
+        season_number: seasonNumber,
+        episode_number: episodeNumber,
+      },
+    });
+    if (!data) {
+      console.error("fetchEpisodeData: Response is null");
+      return null;
+    }
+    return data;
+  } catch (e) {
+    console.error("fetchEpisodeData error:", e);
+    return null;
+  }
 }
