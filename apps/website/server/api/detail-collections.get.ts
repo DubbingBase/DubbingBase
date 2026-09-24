@@ -1,10 +1,6 @@
 import type { PaginatedResponse } from "@app/shared-logic";
 import { setPublicCacheHeaders } from "../utils/cache/http";
 import { paginateArray } from "../utils/pagination";
-import {
-  paginateVoiceActorWorks,
-  type VoiceActorWorkGroup,
-} from "../utils/voice-actor-work-groups";
 
 type DetailPayload = Record<string, any>;
 type CollectionItem = Record<string, any>;
@@ -13,7 +9,6 @@ const COLLECTIONS = new Set([
   "media-cast",
   "actor-filmography",
   "actor-voice-actors",
-  "voice-actor-works",
   "studio-projects",
   "studio-voice-actors",
 ]);
@@ -325,32 +320,6 @@ async function getCollectionItems(
         (left, right) => right.rolesCount - left.rolesCount,
       );
     }
-    case "voice-actor-works": {
-      const lang = queryValue(query.lang);
-      const detail = await requestFetch(
-        `/api/voice-actor/${id}`,
-        lang ? { query: { lang } } : undefined,
-      );
-      let works = detail.enhancedWorks || [];
-      const category = queryValue(query.category);
-      if (category && category !== "all") {
-        works = works.filter(
-          (item: CollectionItem) =>
-            normalized(item.work?.dubbing_projects?.content_type) ===
-            normalized(category),
-        );
-      }
-      const text = normalized(queryValue(query.query));
-      works = works.filter((item: CollectionItem) => searchMatch(item, text));
-      works.sort((left: CollectionItem, right: CollectionItem) => {
-        const leftDate = left.sortDate || "9999-12-31";
-        const rightDate = right.sortDate || "9999-12-31";
-        return queryValue(query.sort) === "oldest"
-          ? leftDate.localeCompare(rightDate)
-          : rightDate.localeCompare(leftDate);
-      });
-      return works;
-    }
     case "studio-projects": {
       const detail = await requestFetch(`/api/get-studio-details`, {
         query: { studioId: id },
@@ -372,11 +341,7 @@ async function getCollectionItems(
 }
 
 export default defineEventHandler(
-  async (
-    event,
-  ): Promise<
-    PaginatedResponse<CollectionItem | VoiceActorWorkGroup<CollectionItem>>
-  > => {
+  async (event): Promise<PaginatedResponse<CollectionItem>> => {
     const query = getQuery(event);
     const collection = queryValue(query.collection) || "";
     if (!COLLECTIONS.has(collection)) {
@@ -398,18 +363,10 @@ export default defineEventHandler(
     const filteredItems = items.filter((item) =>
       searchMatch(item, normalized(queryValue(query.query))),
     );
-    const paginationOptions = {
+    const result = paginateArray(filteredItems, {
       page: query.page,
       pageSize: query.pageSize,
-    };
-    const result =
-      collection === "voice-actor-works"
-        ? paginateVoiceActorWorks(
-            filteredItems,
-            paginationOptions,
-            queryValue(query.view),
-          )
-        : paginateArray(filteredItems, paginationOptions);
+    });
 
     return {
       data: result.items,

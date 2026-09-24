@@ -309,7 +309,7 @@
                           decoding="async"
                           v-if="item.media.poster_path"
                           :src="resolveImageUrl(item.media.poster_path)"
-                          :alt="item.media.title || item.media.name"
+                          :alt="getMediaTitle(item.media)"
                           class="w-full h-full object-cover transition-transform duration-300"
                         />
                         <div
@@ -330,8 +330,8 @@
                         >
                         <span
                           class="font-bold text-sm theme-text leading-tight line-clamp-2"
-                          :title="item.media.title || item.media.name"
-                          >{{ item.media.title || item.media.name }}</span
+                          :title="getMediaTitle(item.media)"
+                          >{{ getMediaTitle(item.media) }}</span
                         >
                         <div
                           v-if="item.work.dubbing_projects?.studios"
@@ -564,7 +564,7 @@
                             decoding="async"
                             v-if="item.media.poster_path"
                             :src="resolveImageUrl(item.media.poster_path)"
-                            :alt="item.media.title || item.media.name"
+                            :alt="getMediaTitle(item.media)"
                             class="w-full h-full object-cover transition-transform duration-300"
                           />
                           <div
@@ -583,8 +583,8 @@
                           >
                           <span
                             class="font-bold text-sm theme-text leading-tight line-clamp-2"
-                            :title="item.media.title || item.media.name"
-                            >{{ item.media.title || item.media.name }}</span
+                            :title="getMediaTitle(item.media)"
+                            >{{ getMediaTitle(item.media) }}</span
                           >
                           <div
                             v-if="item.work.dubbing_projects?.studios"
@@ -679,10 +679,10 @@ import PersonDetailsLayout from "../../components/layout/PersonDetailsLayout.vue
 import {
   useVoiceActorData,
   fetchVoiceActorData,
-  fetchDetailCollection,
+  paginateVoiceActorWorks,
+  type VoiceActorWorkGroup,
   APP_LOCALES,
 } from "@app/shared-logic";
-import type { PaginatedResponse } from "@app/shared-logic";
 import { useRouter, useRoute } from "vue-router";
 import {
   Clapperboard as ClapperboardIcon,
@@ -749,7 +749,7 @@ function getMediaLink(contentType?: string | null, mediaId?: number | string) {
   return `/movie/${mediaId}`;
 }
 
-const { data, pending } = await useAsyncData(
+const voiceActorDataRequest = useAsyncData(
   `voice-actor-${voiceActorId}-${locale.value}`,
   () => {
     const tmdbLanguage =
@@ -761,6 +761,7 @@ const { data, pending } = await useAsyncData(
       nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
   },
 );
+const { data, pending } = voiceActorDataRequest;
 
 const voiceActorData = useVoiceActorData(data);
 const {
@@ -797,26 +798,25 @@ const completenessScore = computed(() => {
   return score;
 });
 
-watch(
-  data,
-  (newData) => {
-    if (newData) {
-      voiceActorData.voiceActor.value = newData.voiceActor;
-      if (newData.enhancedWorks) {
-        voiceActorData.enhancedWorks.value = newData.enhancedWorks;
-      }
-      voiceActorData.medias.value = newData.medias;
-      voiceActorData.characterProfilePictures.value =
-        newData.characterProfilePictures;
-      voiceActorData.profilePicture.value = newData.profilePicture;
-      voiceActorData.backdropPath.value = newData.backdropPath;
-      voiceActorData.potentialWikipediaUrl.value =
-        newData.potentialWikipediaUrl;
-      voiceActorData.loading.value = false;
-    }
-  },
-  { immediate: true },
-);
+function syncVoiceActorData(newData: typeof data.value): void {
+  if (!newData) return;
+
+  voiceActorData.voiceActor.value = newData.voiceActor;
+  if (newData.enhancedWorks) {
+    voiceActorData.enhancedWorks.value = newData.enhancedWorks;
+  }
+  voiceActorData.medias.value = newData.medias;
+  voiceActorData.characterProfilePictures.value =
+    newData.characterProfilePictures;
+  voiceActorData.profilePicture.value = newData.profilePicture;
+  voiceActorData.backdropPath.value = newData.backdropPath;
+  voiceActorData.potentialWikipediaUrl.value = newData.potentialWikipediaUrl;
+  voiceActorData.loading.value = false;
+}
+
+watch(data, syncVoiceActorData, { immediate: true });
+await voiceActorDataRequest;
+syncVoiceActorData(data.value);
 
 const actorName = computed(() => {
   if (!voiceActor.value) return "";
@@ -950,93 +950,53 @@ const activeTab = ref<string>("all");
 const { page: worksPage, setPage: setWorksPage } =
   useUrlPagination("worksPage");
 
-type VoiceActorWorkItem = {
-  work: {
-    id: number;
-    actor_id: number;
-    performance?: string | null;
-    dubbing_projects?: {
-      content_type?: string | null;
-      studios?: {
-        id: number;
-        name: string;
-        logo_url: string | null;
-      } | null;
-    } | null;
-  };
-  media: {
-    id: number;
-    title: string;
-    name: string;
-    poster_path: string | null;
-  };
-  data: {
-    character?: string;
-    characterImage?: string;
-    actor?: {
-      id: number;
-      name?: string;
-      profile_picture?: string;
-    } | null;
-  };
-  sortDate?: string;
-};
-type VoiceActorWorkGroup = {
-  key: string;
-  actorId: number | null;
-  actor: {
-    id: number | null;
-    name: string | null;
-    profile_picture: string | null;
-  };
-  works: VoiceActorWorkItem[];
-  worksCount: number;
-};
-type VoiceActorCollectionItem = VoiceActorWorkItem | VoiceActorWorkGroup;
+const filteredWorks = computed(() => {
+  const works = filteredEnhancedWork.value.filter((item) => {
+    return (
+      activeTab.value === "all" ||
+      normalizeContentType(item.work.dubbing_projects?.content_type) ===
+        activeTab.value
+    );
+  });
+
+  return [...works].sort((left, right) => {
+    const dateOrder = left.sortDate.localeCompare(right.sortDate);
+    return sortMode.value === "oldest" ? dateOrder : -dateOrder;
+  });
+});
+type VoiceActorWorkItem = (typeof filteredWorks.value)[number];
+type VoiceActorCollectionItem =
+  VoiceActorWorkItem | VoiceActorWorkGroup<VoiceActorWorkItem>;
+
+function getMediaTitle(media: VoiceActorWorkItem["media"]): string {
+  if ("title" in media && media.title) return media.title;
+  if ("name" in media && media.name) return media.name;
+  return "";
+}
 
 function isVoiceActorWorkGroup(
   item: VoiceActorCollectionItem,
-): item is VoiceActorWorkGroup {
+): item is VoiceActorWorkGroup<VoiceActorWorkItem> {
   return "works" in item;
 }
 
-const worksRequest = computed(() => ({
-  collection: "voice-actor-works" as const,
-  id: voiceActorId,
-  query: searchQuery.value,
-  category: activeTab.value,
-  sort: sortMode.value,
-  view: displayMode.value,
-  lang:
-    APP_LOCALES.find((item) => item.code === locale.value)?.language || "en-US",
-  page: worksPage.value,
-  pageSize: 12,
-}));
-const { data: worksPageData } = useAsyncData<
-  PaginatedResponse<VoiceActorCollectionItem>
->(
-  `voice-actor-works-${voiceActorId}-${locale.value}`,
-  () => fetchDetailCollection<VoiceActorCollectionItem>(worksRequest.value),
-  {
-    watch: [worksRequest],
-    getCachedData: (key, nuxtApp, { cause }) =>
-      cause === "initial"
-        ? (nuxtApp.payload.data[key] ?? nuxtApp.static.data[key])
-        : undefined,
-  },
+const worksPageData = computed(() =>
+  paginateVoiceActorWorks(
+    filteredWorks.value,
+    displayMode.value,
+    worksPage.value,
+    12,
+  ),
 );
-const collectionItems = computed(() => worksPageData.value?.data || []);
 const worksItems = computed(() =>
-  collectionItems.value.filter(
+  worksPageData.value.data.filter(
     (item): item is VoiceActorWorkItem => !isVoiceActorWorkGroup(item),
   ),
 );
 const groupedWorks = computed(() =>
-  collectionItems.value.filter(isVoiceActorWorkGroup),
+  worksPageData.value.data.filter(isVoiceActorWorkGroup),
 );
-const worksTotal = computed(
-  () => worksPageData.value?.pagination.totalItems || 0,
-);
+const worksTotal = computed(() => worksPageData.value.pagination.totalItems);
 
 const CATEGORY_TABS_CONFIG = [
   { id: "all", labelKey: "search.all", defaultLabel: "All", icon: LayersIcon },

@@ -1,5 +1,3 @@
-import { paginateArray, type PaginationOptions } from "./pagination";
-
 export type VoiceActorWorkLike = {
   work?: { actor_id?: number | null } | null;
   data?: {
@@ -22,6 +20,9 @@ export type VoiceActorWorkGroup<T extends VoiceActorWorkLike> = {
   works: T[];
   worksCount: number;
 };
+
+export type VoiceActorWorksPageItem<T extends VoiceActorWorkLike> =
+  T | VoiceActorWorkGroup<T>;
 
 function positiveActorId(value: number | null | undefined): number | null {
   return typeof value === "number" && Number.isSafeInteger(value) && value > 0
@@ -46,9 +47,11 @@ export function groupVoiceActorWorks<T extends VoiceActorWorkLike>(
     if (group) {
       group.works.push(work);
       group.worksCount += 1;
-      if (!group.actor.name && actorName) group.actor.name = actorName;
-      if (!group.actor.profile_picture && profilePicture) {
-        group.actor.profile_picture = profilePicture;
+      if (actorId !== null) {
+        if (!group.actor.name && actorName) group.actor.name = actorName;
+        if (!group.actor.profile_picture && profilePicture) {
+          group.actor.profile_picture = profilePicture;
+        }
       }
       continue;
     }
@@ -58,8 +61,8 @@ export function groupVoiceActorWorks<T extends VoiceActorWorkLike>(
       actorId,
       actor: {
         id: actorId,
-        name: actorName,
-        profile_picture: profilePicture,
+        name: actorId === null ? null : actorName,
+        profile_picture: actorId === null ? null : profilePicture,
       },
       works: [work],
       worksCount: 1,
@@ -84,12 +87,31 @@ export function groupVoiceActorWorks<T extends VoiceActorWorkLike>(
 
 export function paginateVoiceActorWorks<T extends VoiceActorWorkLike>(
   works: readonly T[],
-  options: PaginationOptions,
-  view: string | undefined,
-) {
-  if (view === "grouped") {
-    return paginateArray(groupVoiceActorWorks(works), options);
-  }
+  view: "grouped" | "list",
+  page: number,
+  pageSize: number,
+): {
+  data: VoiceActorWorksPageItem<T>[];
+  pagination: {
+    page: number;
+    pageSize: number;
+    totalItems: number;
+    totalPages: number;
+  };
+} {
+  const items = view === "grouped" ? groupVoiceActorWorks(works) : works;
+  const totalItems = items.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const currentPage = Math.min(Math.max(1, page), totalPages);
+  const start = (currentPage - 1) * pageSize;
 
-  return paginateArray(works, options);
+  return {
+    data: items.slice(start, start + pageSize),
+    pagination: {
+      page: currentPage,
+      pageSize,
+      totalItems,
+      totalPages,
+    },
+  };
 }

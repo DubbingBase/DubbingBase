@@ -4,7 +4,6 @@ export type DetailCollection =
   | "media-cast"
   | "actor-filmography"
   | "actor-voice-actors"
-  | "voice-actor-works"
   | "studio-projects"
   | "studio-voice-actors";
 

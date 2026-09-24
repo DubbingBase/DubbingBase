@@ -3,7 +3,7 @@ import {
   groupVoiceActorWorks,
   paginateVoiceActorWorks,
   type VoiceActorWorkLike,
-} from "./voice-actor-work-groups";
+} from "@app/shared-logic";
 
 type TestWork = VoiceActorWorkLike & { label: string };
 
@@ -66,19 +66,26 @@ describe("groupVoiceActorWorks", () => {
     expect(groups[0]?.actorId).toBe(12);
   });
 
-  it("groups missing and invalid actor IDs into one non-navigable group", () => {
-    const groups = groupVoiceActorWorks([
-      work("missing", null),
-      work("zero-primary", 0, "Unknown One", 0),
-      work("negative", -1, "Unknown Two", -1),
-    ]);
+  it("keeps unresolved works together without claiming actor identity", () => {
+    const unresolvedWorks = [
+      work("missing", null, "Unverified Actor One"),
+      work("zero-primary", 0, "Unverified Actor Two", 0),
+      work("negative", -1, "Unverified Actor Three", -1),
+    ];
+    const groups = groupVoiceActorWorks(unresolvedWorks);
 
     expect(groups).toHaveLength(1);
     expect(groups[0]).toMatchObject({
       key: "actor:unknown",
       actorId: null,
+      actor: {
+        id: null,
+        name: null,
+        profile_picture: null,
+      },
       worksCount: 3,
     });
+    expect(groups[0]?.works).toEqual(unresolvedWorks);
   });
 
   it("sorts groups by full counts, then actor name, with unknown last on a tie", () => {
@@ -128,14 +135,10 @@ describe("groupVoiceActorWorks", () => {
       ),
     ];
 
-    const result = paginateVoiceActorWorks(
-      works,
-      { page: 1, pageSize: 12 },
-      "grouped",
-    );
+    const result = paginateVoiceActorWorks(works, "grouped", 1, 12);
 
-    expect(result.items).toHaveLength(12);
-    expect(result.items[0]).toMatchObject({
+    expect(result.data).toHaveLength(12);
+    expect(result.data[0]).toMatchObject({
       key: "actor:42",
       worksCount: 13,
     });
@@ -146,14 +149,10 @@ describe("groupVoiceActorWorks", () => {
       totalPages: 2,
     });
 
-    const secondPage = paginateVoiceActorWorks(
-      works,
-      { page: 2, pageSize: 12 },
-      "grouped",
-    );
-    expect(secondPage.items).toHaveLength(1);
-    expect(secondPage.items[0]).toMatchObject({ worksCount: 1 });
-    expect(secondPage.items[0]).not.toMatchObject({ key: "actor:42" });
+    const secondPage = paginateVoiceActorWorks(works, "grouped", 2, 12);
+    expect(secondPage.data).toHaveLength(1);
+    expect(secondPage.data[0]).toMatchObject({ worksCount: 1 });
+    expect(secondPage.data[0]).not.toMatchObject({ key: "actor:42" });
   });
 
   it("keeps individual work pagination in list mode", () => {
@@ -161,14 +160,10 @@ describe("groupVoiceActorWorks", () => {
       work(`harrison-${index + 1}`, 42, "Harrison Ford", 42),
     );
 
-    const result = paginateVoiceActorWorks(
-      works,
-      { page: 1, pageSize: 12 },
-      "list",
-    );
+    const result = paginateVoiceActorWorks(works, "list", 1, 12);
 
-    expect(result.items).toHaveLength(12);
-    expect(result.items[0]).toBe(works[0]);
+    expect(result.data).toHaveLength(12);
+    expect(result.data[0]).toBe(works[0]);
     expect(result.pagination.totalItems).toBe(13);
     expect(result.pagination.totalPages).toBe(2);
   });
