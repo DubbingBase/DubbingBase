@@ -304,16 +304,14 @@ test.describe("Voice Actor Profile & Filmography", () => {
       .locator(":scope > div")
       .filter({ hasText: "Unverified Voice Credit" });
     await expect(unknownActorRow).toHaveCount(1);
-    const originalActorColumn = unknownActorRow
-      .locator(":scope > div")
-      .locator(":scope > div")
-      .nth(1);
+    const originalActorColumn = unknownActorRow.locator(":scope > div > :nth-child(2)");
     await expect(originalActorColumn).toContainText(
       /Unknown Actor|Acteur inconnu|Actor desconocido|不明な俳優/,
     );
     await expect(unknownActorRow.locator("a[href*='/actor/0']")).toHaveCount(0);
     await expect(unknownActorRow.locator("a[href*='/actor/']")).toHaveCount(0);
     await expect(originalActorColumn.locator("img")).toHaveCount(0);
+    await expect(originalActorColumn.locator("svg")).toHaveCount(1);
 
     await groupedButton.click();
     await expect(page).not.toHaveURL(/worksPage=2/);
