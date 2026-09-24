@@ -1,10 +1,4 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[];
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
   graphql_public: {
@@ -614,8 +608,12 @@ export type Database = {
         Returns: boolean;
       };
       archive_media_queue_message_with_error: {
-        Args: { p_error: string; p_msg_id: number };
+        Args: { p_error: string; p_msg_id: number; p_queue_name: string };
         Returns: boolean;
+      };
+      archive_media_queue_messages: {
+        Args: { p_msg_ids: number[]; p_queue_name: string };
+        Returns: number;
       };
       clear_media_queue: { Args: never; Returns: boolean };
       delete_media_queue_item: { Args: { p_id: number }; Returns: boolean };
@@ -631,6 +629,27 @@ export type Database = {
           p_tmdb_id: number;
         };
         Returns: number;
+      };
+      enqueue_media_extract: {
+        Args: {
+          p_episode_number?: number;
+          p_is_manual?: boolean;
+          p_language: string;
+          p_media_type: string;
+          p_page_id: number;
+          p_season_number?: number;
+          p_section_indexes: Json;
+          p_tmdb_id: number;
+        };
+        Returns: number;
+      };
+      delay_media_queue_message: {
+        Args: {
+          p_delay_seconds?: number;
+          p_msg_id: number;
+          p_queue_name: string;
+        };
+        Returns: boolean;
       };
       find_duplicate_voice_actors_rpc: { Args: never; Returns: Json };
       get_media_queue_depth: { Args: never; Returns: number };
@@ -746,6 +765,20 @@ export type Database = {
           vt: string;
         }[];
       };
+      pop_media_queue_batch: {
+        Args: {
+          p_batch_size: number;
+          p_queue_name: string;
+          p_vt_seconds: number;
+        };
+        Returns: {
+          enqueued_at: string;
+          message: Json;
+          msg_id: number;
+          read_ct: number;
+          vt: string;
+        }[];
+      };
       unaccent: { Args: { "": string }; Returns: string };
       voice_actor_completeness: {
         Args: { va: Database["public"]["Tables"]["voice_actors"]["Row"] };
@@ -770,10 +803,7 @@ export type Database = {
 
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">;
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<
-  keyof Database,
-  "public"
->];
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">];
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
@@ -794,10 +824,8 @@ export type Tables<
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] & DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R;
       }
       ? R
@@ -806,7 +834,8 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
@@ -830,7 +859,8 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
@@ -854,7 +884,8 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    keyof DefaultSchema["Enums"] | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
