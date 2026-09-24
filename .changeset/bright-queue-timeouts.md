@@ -2,4 +2,4 @@
 "@app/website": patch
 ---
 
-Bound queue metadata requests and remove the per-batch queue-depth lookup.
+Bound queue metadata requests, retry transient provider failures, and remove the per-batch queue-depth lookup.

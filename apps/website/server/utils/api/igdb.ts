@@ -6,6 +6,11 @@ import {
   type IgdbCharacter,
 } from "@app/shared-logic";
 import { buildCacheKey } from "../cache/constants";
+import {
+  createMediaResponseError,
+  fetchMediaRequest,
+  RetryableMediaRequestError,
+} from "../retryable-request";
 
 interface IgdbCachedToken {
   accessToken: string;
@@ -83,39 +88,38 @@ export class IgdbClient {
       return this.token;
     }
 
-    const result = await this.cache.getOrFetch(
-      igdbTokenNamespace,
-      "igdb:auth_token",
-      async () => {
-        debugLog("Fetching new Twitch OAuth2 token for IGDB");
-        const params = new URLSearchParams();
-        params.append("client_id", this.clientId);
-        params.append("client_secret", this.clientSecret);
-        params.append("grant_type", "client_credentials");
+    const fetchToken = async (): Promise<IgdbCachedToken> => {
+      debugLog("Fetching new Twitch OAuth2 token for IGDB");
+      const params = new URLSearchParams();
+      params.append("client_id", this.clientId);
+      params.append("client_secret", this.clientSecret);
+      params.append("grant_type", "client_credentials");
 
-        const response = await fetch(this.tokenUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: params,
-          signal: AbortSignal.timeout(10000),
-        });
+      const response = await fetchMediaRequest(this.tokenUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: params,
+        signal: AbortSignal.timeout(10000),
+      });
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(
-            `Twitch token fetch failed: ${response.status} ${response.statusText} - ${errorText}`,
-          );
-        }
+      if (!response.ok) {
+        throw createMediaResponseError("Twitch OAuth2", response);
+      }
 
-        const tokenData: TwitchTokenResponse = await response.json();
-        return {
-          accessToken: tokenData.access_token,
-          expiresAt:
-            Date.now() + Math.max(tokenData.expires_in - 3600, 3600) * 1000,
-        };
-      },
-      { ttl: 604800 },
-    );
+      const tokenData: TwitchTokenResponse = await response.json();
+      return {
+        accessToken: tokenData.access_token,
+        expiresAt:
+          Date.now() + Math.max(tokenData.expires_in - 3600, 3600) * 1000,
+      };
+    };
+
+    const getCachedToken = () =>
+      this.cache.getOrFetch(igdbTokenNamespace, "igdb:auth_token", fetchToken, {
+        ttl: 604800,
+      });
+
+    let result = await getCachedToken();
 
     // Older KV entries contain only the token string, so they have no reliable
     // expiry. Discard them, along with expired entries, and fetch a fresh token.
@@ -128,7 +132,18 @@ export class IgdbClient {
       result.expiresAt <= Date.now()
     ) {
       await this.cache.del("igdb:auth_token");
-      return this.authenticate();
+      result = await getCachedToken();
+      if (
+        typeof result !== "object" ||
+        result === null ||
+        typeof result.accessToken !== "string" ||
+        typeof result.expiresAt !== "number" ||
+        !Number.isFinite(result.expiresAt) ||
+        result.expiresAt <= Date.now()
+      ) {
+        // Bound recovery if KV cannot remove the stale value.
+        result = await fetchToken();
+      }
     }
 
     this.token = result.accessToken;
@@ -140,7 +155,7 @@ export class IgdbClient {
     let token = await this.authenticate();
 
     try {
-      let response = await fetch(`${this.baseUrl}/${endpoint}`, {
+      let response = await fetchMediaRequest(`${this.baseUrl}/${endpoint}`, {
         method: "POST",
         headers: {
           "Client-ID": this.clientId,
@@ -161,7 +176,7 @@ export class IgdbClient {
         await this.cache.del("igdb:auth_token");
         token = await this.authenticate();
 
-        response = await fetch(`${this.baseUrl}/${endpoint}`, {
+        response = await fetchMediaRequest(`${this.baseUrl}/${endpoint}`, {
           method: "POST",
           headers: {
             "Client-ID": this.clientId,
@@ -175,17 +190,20 @@ export class IgdbClient {
       }
 
       if (!response.ok) {
-        throw new Error(
-          `IGDB API error on /${endpoint}: ${response.status} ${response.statusText}`,
-        );
+        throw createMediaResponseError("IGDB", response);
       }
 
       return (await response.json()) as T[];
-    } catch (e: any) {
-      if (e.name === "TimeoutError" || e.name === "AbortError") {
-        throw new Error(`IGDB API timeout: /${endpoint}`);
+    } catch (error: unknown) {
+      if (
+        error instanceof Error &&
+        (error.name === "TimeoutError" || error.name === "AbortError")
+      ) {
+        throw new RetryableMediaRequestError(`IGDB API timeout: /${endpoint}`, {
+          cause: error,
+        });
       }
-      throw e;
+      throw error;
     }
   }
 

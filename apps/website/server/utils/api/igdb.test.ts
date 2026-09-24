@@ -4,11 +4,12 @@ import { IgdbClient } from "./igdb";
 
 const tokenUrl = "https://id.twitch.tv/oauth2/token";
 
-function createCache(values: Map<string, unknown>) {
+function createCache(values: Map<string, unknown>, failDelete = false) {
   return new SimpleCache(() => ({
     get: async (key) => values.get(key) ?? null,
     put: async (key, value) => values.set(key, JSON.parse(value)),
     delete: async (key) => {
+      if (failDelete) throw new Error("KV delete failed");
       values.delete(key);
     },
   }));
@@ -93,4 +94,21 @@ describe("IgdbClient token cache expiry", () => {
       });
     },
   );
+
+  it("bounds stale-token recovery when KV deletion fails", async () => {
+    const values = new Map<string, unknown>([
+      ["igdb:auth_token", { accessToken: "expired-token", expiresAt: 0 }],
+    ]);
+    const fetch = mockFetch();
+    const client = new IgdbClient(createCache(values, true));
+
+    await client.query("games", "fields id;");
+    await client.query("games", "fields id;");
+
+    expect(fetch.tokenFetchCount).toBe(1);
+    expect(values.get("igdb:auth_token")).toMatchObject({
+      accessToken: "expired-token",
+      expiresAt: 0,
+    });
+  });
 });

@@ -77,7 +77,7 @@ export class SimpleCache {
     try {
       const kv = this.kvGetter();
       if (kv) {
-        const cached = await kv.get(SimpleKeyValidator.sanitizeKey(key), {
+        const cached = await kv.get<T>(SimpleKeyValidator.sanitizeKey(key), {
           type: "json",
         });
         if (cached !== null && cached !== undefined) return cached;

@@ -7,6 +7,11 @@ import {
   type CheckSectionsResult,
   type ExtractCreditsResult,
 } from "../utils/services/media-preparation";
+import {
+  createMediaResponseError,
+  fetchMediaRequest,
+  isRetryableMediaRequestError,
+} from "../utils/retryable-request";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { requireAdmin } from "../utils/auth";
 import { useWikipediaCache, useIgdbClient, useCache } from "../utils";
@@ -317,6 +322,23 @@ export default defineEventHandler(async (event) => {
 
       const results: QueueItemResult[] = [];
       let mediaTitle = payload.title || `Media ${payload.tmdb_id}`;
+      const deferForRetry = async (errorMsg: string, delaySeconds = 60) => {
+        const { error } = await supabaseAdmin.rpc("delay_media_queue_message", {
+          p_queue_name: targetQueue,
+          p_msg_id: msgId,
+          p_delay_seconds: delaySeconds,
+        });
+        if (error) {
+          console.error(`[QUEUE] Failed to defer ${msgId}:`, error);
+        }
+        results.push({
+          id: msgId,
+          ok: false,
+          error: errorMsg,
+          retryable: true,
+        });
+        return { ok: false, processed: 1, results, queue: targetQueue };
+      };
 
       // -------------------------------------------------------------------------
       // QUEUE 1: wiki_discovery (Wikidata sitelink discovery & language fan-out)
@@ -365,7 +387,7 @@ export default defineEventHandler(async (event) => {
                   : payload.media_type;
 
               const config = useRuntimeConfig(event);
-              const response = await fetch(
+              const response = await fetchMediaRequest(
                 `https://api.themoviedb.org/3/${tmdbType}/${payload.tmdb_id}?append_to_response=external_ids`,
                 {
                   headers: {
@@ -377,34 +399,35 @@ export default defineEventHandler(async (event) => {
                 },
               );
 
-              if (response.ok) {
-                const movie = await response.json();
-                mediaTitle =
-                  getStringProperty(movie, "title") ||
-                  getStringProperty(movie, "name") ||
-                  "Unknown title";
-                wikiId = getStringProperty(
-                  readProperty(movie, "external_ids"),
-                  "wikidata_id",
+              if (!response.ok)
+                throw createMediaResponseError("TMDB", response);
+
+              const movie = await response.json();
+              mediaTitle =
+                getStringProperty(movie, "title") ||
+                getStringProperty(movie, "name") ||
+                "Unknown title";
+              wikiId = getStringProperty(
+                readProperty(movie, "external_ids"),
+                "wikidata_id",
+              );
+
+              if (readProperty(movie, "adult") === true) {
+                pendingArchiveIds.push(msgId);
+
+                await sendDiscordAdminNotification(
+                  "Queue Discovery Skipped (18+ Adult Content)",
+                  `**${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}) is marked as adult content and was excluded.`,
+                  { event, queue: "wiki_discovery" },
                 );
 
-                if (readProperty(movie, "adult") === true) {
-                  pendingArchiveIds.push(msgId);
-
-                  await sendDiscordAdminNotification(
-                    "Queue Discovery Skipped (18+ Adult Content)",
-                    `**${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}) is marked as adult content and was excluded.`,
-                    { event, queue: "wiki_discovery" },
-                  );
-
-                  return {
-                    ok: true,
-                    processed: 1,
-                    results: [
-                      { id: msgId, ok: true, changes: 0, note: "18+ skipped" },
-                    ],
-                  };
-                }
+                return {
+                  ok: true,
+                  processed: 1,
+                  results: [
+                    { id: msgId, ok: true, changes: 0, note: "18+ skipped" },
+                  ],
+                };
               }
             }
           }
@@ -515,6 +538,10 @@ export default defineEventHandler(async (event) => {
           const errMsg = getErrorMessage(err);
           console.error(`[QUEUE] Error in discovery job ${msgId}:`, errMsg);
 
+          if (isRetryableMediaRequestError(err)) {
+            return deferForRetry(errMsg);
+          }
+
           await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
             p_queue_name: targetQueue,
             p_msg_id: msgId,
@@ -604,11 +631,14 @@ export default defineEventHandler(async (event) => {
           if (
             !checkResult.ok ||
             !checkResult.sectionIndexes ||
-            checkResult.sectionIndexes.length === 0
+            checkResult.sectionIndexes.length === 0 ||
+            typeof checkResult.pageId !== "number"
           ) {
             const errorMsg =
               checkResult.error ||
               `No voice actor / dubbing sections found on Wikipedia: ${checkResult.wikipediaUrl || lang}`;
+
+            if (checkResult.retryable) return deferForRetry(errorMsg);
 
             await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
               p_queue_name: targetQueue,
@@ -697,6 +727,10 @@ export default defineEventHandler(async (event) => {
             errMsg,
           );
 
+          if (isRetryableMediaRequestError(err)) {
+            return deferForRetry(errMsg);
+          }
+
           await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
             p_queue_name: targetQueue,
             p_msg_id: msgId,
@@ -783,7 +817,13 @@ export default defineEventHandler(async (event) => {
           }
 
           if (!extractResult.ok) {
-            throw new Error(extractResult.error || "Credit extraction failed");
+            const error = new Error(
+              extractResult.error || "Credit extraction failed",
+            );
+            if (extractResult.retryable) {
+              error.name = "RetryableQueueItemError";
+            }
+            throw error;
           }
 
           pendingArchiveIds.push(msgId);
@@ -840,6 +880,10 @@ export default defineEventHandler(async (event) => {
             errMsg,
             err,
           );
+
+          if (err instanceof Error && err.name === "RetryableQueueItemError") {
+            return deferForRetry(errMsg);
+          }
 
           if (
             errMsg.includes("LLM API Rate Limited (429)") ||

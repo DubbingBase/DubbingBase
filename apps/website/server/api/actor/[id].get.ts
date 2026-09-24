@@ -4,6 +4,44 @@ import { buildSupabaseImageUrl } from "../../utils/urls/supabase";
 import { buildTmdbImageUrl } from "../../utils/urls/tmdb";
 import { setPublicCacheHeaders } from "../../utils/cache/http";
 
+type TmdbCastMember = Record<string, unknown> & {
+  profile_path?: string | null;
+  poster_path?: string | null;
+  backdrop_path?: string | null;
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isOptionalString(value: unknown): value is string | null | undefined {
+  return value === undefined || value === null || typeof value === "string";
+}
+
+function isTmdbCastMember(value: unknown): value is TmdbCastMember {
+  return (
+    isRecord(value) &&
+    isOptionalString(value.profile_path) &&
+    isOptionalString(value.poster_path) &&
+    isOptionalString(value.backdrop_path)
+  );
+}
+
+function getCastMembers(value: unknown): TmdbCastMember[] {
+  if (!isRecord(value) || !Array.isArray(value.cast)) return [];
+  return value.cast.filter(isTmdbCastMember);
+}
+
+function getStringProperty(
+  value: Record<string, unknown>,
+  key: string,
+): string | null | undefined {
+  const property = value[key];
+  return typeof property === "string" || property === null
+    ? property
+    : undefined;
+}
+
 async function getActor(
   actorId: number,
   tmdbClient: ReturnType<typeof useTmdbClient>,
@@ -141,15 +179,15 @@ export default defineEventHandler(async (event) => {
     }
 
     const actorCredits = [
-      ...actor.movie_credits.cast.map((x: any) => ({
+      ...getCastMembers(actor.movie_credits).map((x) => ({
         ...x,
         media_type: "movie",
       })),
-      ...actor.tv_credits.cast.map((x: any) => ({
+      ...getCastMembers(actor.tv_credits).map((x) => ({
         ...x,
         media_type: "tv",
       })),
-    ].map((castMember: any) => ({
+    ].map((castMember) => ({
       ...castMember,
       profile_path: buildTmdbImageUrl(castMember.profile_path),
       poster_path: buildTmdbImageUrl(castMember.poster_path),
@@ -159,7 +197,9 @@ export default defineEventHandler(async (event) => {
     return {
       actor: {
         ...actor,
-        profile_path: buildTmdbImageUrl(actor.profile_path),
+        profile_path: buildTmdbImageUrl(
+          getStringProperty(actor, "profile_path"),
+        ),
         credits: {
           cast: actorCredits,
         },

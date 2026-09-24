@@ -2,6 +2,10 @@ import { SimpleCache, createCacheNamespace } from "./index";
 import { buildCacheKey } from "./constants";
 import type { CacheFetchOptions } from "../api/cache-options";
 import { CACHE_KEYS } from "./constants";
+import {
+  createMediaResponseError,
+  fetchMediaRequest,
+} from "../retryable-request";
 
 const WIKIPEDIA_USER_AGENT =
   "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
@@ -356,14 +360,12 @@ export class WikipediaCache {
   }
 
   private async fetch(url: string): Promise<any> {
-    const response = await fetch(url, {
+    const response = await fetchMediaRequest(url, {
       headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
       signal: AbortSignal.timeout(10000),
     });
     if (!response.ok) {
-      throw new Error(
-        `Wikipedia API error: ${response.status} ${response.statusText}`,
-      );
+      throw createMediaResponseError("Wikipedia", response);
     }
     return response.json();
   }

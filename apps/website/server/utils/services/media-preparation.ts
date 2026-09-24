@@ -1,5 +1,10 @@
 import { z } from "zod";
 import { getErrorMessage } from "../error-message";
+import {
+  createMediaResponseError,
+  fetchMediaRequest,
+  isRetryableMediaRequestError,
+} from "../retryable-request";
 import { findOrCreateDubbingProject } from "../db/dubbing-project";
 import { insertVoiceActorAndWork } from "./voice-actor";
 import { useWikipediaCache, useIgdbClient } from "../index";
@@ -39,21 +44,17 @@ async function fetchTmdbCredits(
   const url = `${TMDB_API_BASE}/${tmdbType}/${tmdbId}/credits?language=${encodeURIComponent(
     tmdbLang(lang),
   )}`;
-  try {
-    const res = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${config.tmdbApiKey}`,
-        Accept: "application/json",
-      },
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!res.ok) return [];
-    const data = (await res.json()) as any;
-    return data.cast || [];
-  } catch {
-    return [];
-  }
+  const res = await fetchMediaRequest(url, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${config.tmdbApiKey}`,
+      Accept: "application/json",
+    },
+    signal: AbortSignal.timeout(5000),
+  });
+  if (!res.ok) throw createMediaResponseError("TMDB", res);
+  const data = (await res.json()) as any;
+  return data.cast || [];
 }
 
 const dubbingExtractionSchema = z.object({
@@ -88,6 +89,7 @@ export interface CheckSectionsResult {
   wikipediaUrl?: string;
   isAdult?: boolean;
   error?: string;
+  retryable?: boolean;
 }
 
 export interface ExtractCreditsResult {
@@ -100,6 +102,7 @@ export interface ExtractCreditsResult {
   llmQuota?: string;
   note?: string;
   error?: string;
+  retryable?: boolean;
 }
 
 export interface PrepareMediaResult {
@@ -154,7 +157,7 @@ export async function checkMediaDubbingSections(options: {
     const config = useRuntimeConfig();
     const tmdbType = type === "season" || type === "episode" ? "tv" : type;
 
-    const response = await fetch(
+    const response = await fetchMediaRequest(
       `${TMDB_API_BASE}/${tmdbType}/${tmdbId}?append_to_response=external_ids`,
       {
         headers: {
@@ -167,7 +170,7 @@ export async function checkMediaDubbingSections(options: {
     );
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch TMDB API: status ${response.status}`);
+      throw createMediaResponseError("TMDB", response);
     }
 
     const movie = (await response.json()) as any;
@@ -253,6 +256,7 @@ export async function checkMediaDubbingSections(options: {
       title: mediaTitle,
       wikipediaUrl: wikiPageUrl,
       error: errorMsg,
+      retryable: isRetryableMediaRequestError(error),
     };
   }
 }
@@ -361,6 +365,7 @@ export async function checkGameDubbingSections(options: {
       title: gameTitle,
       wikipediaUrl: wikiPageUrl,
       error: errorMsg,
+      retryable: isRetryableMediaRequestError(error),
     };
   }
 }
@@ -399,7 +404,7 @@ export async function extractMediaDubbingCredits(options: {
     const config = useRuntimeConfig();
     const tmdbType = type === "season" || type === "episode" ? "tv" : type;
 
-    const response = await fetch(
+    const response = await fetchMediaRequest(
       `${TMDB_API_BASE}/${tmdbType}/${tmdbId}?append_to_response=credits`,
       {
         headers: {
@@ -411,12 +416,12 @@ export async function extractMediaDubbingCredits(options: {
       },
     );
 
-    if (response.ok) {
-      const movie = (await response.json()) as any;
-      mediaTitle = movie.title || movie.name || "Unknown title";
-      if (movie.poster_path) {
-        imageUrl = buildTmdbImageUrl(movie.poster_path) || undefined;
-      }
+    if (!response.ok) throw createMediaResponseError("TMDB", response);
+
+    const movie = (await response.json()) as any;
+    mediaTitle = movie.title || movie.name || "Unknown title";
+    if (movie.poster_path) {
+      imageUrl = buildTmdbImageUrl(movie.poster_path) || undefined;
     }
 
     // Cache localized cast lookups per language edition
@@ -580,6 +585,7 @@ export async function extractMediaDubbingCredits(options: {
       title: mediaTitle,
       imageUrl,
       error: errorMsg,
+      retryable: isRetryableMediaRequestError(error),
     };
   }
 }
@@ -748,6 +754,7 @@ export async function extractGameDubbingCredits(options: {
       title: gameTitle,
       imageUrl,
       error: errorMsg,
+      retryable: isRetryableMediaRequestError(error),
     };
   }
 }

@@ -23,15 +23,37 @@ interface WikidataClaimsResponse {
   >;
 }
 
+interface TmdbCredit {
+  backdrop_path?: string;
+  popularity?: number;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isTmdbCredit(value: unknown): value is TmdbCredit {
+  if (!isRecord(value)) return false;
+  return (
+    (value.backdrop_path === undefined ||
+      typeof value.backdrop_path === "string") &&
+    (value.popularity === undefined || typeof value.popularity === "number")
+  );
+}
+
+function tmdbCastCredits(value: unknown): TmdbCredit[] {
+  if (!isRecord(value) || !Array.isArray(value.cast)) return [];
+  return value.cast.filter(isTmdbCredit);
+}
+
 export const WIKIDATA_CLAIMS_NAMESPACE =
   createCacheNamespace<WikidataClaimsResponse | null>();
 export const WIKIPEDIA_ACTOR_URL_NAMESPACE = createCacheNamespace<
   string | null
 >();
-export const MEDIA_TVDB_CHARACTERS_NAMESPACE =
-  createCacheNamespace<
-    Awaited<ReturnType<MediaService["getCharacterProfilePictures"]>>
-  >();
+export const MEDIA_TVDB_CHARACTERS_NAMESPACE = createCacheNamespace<Awaited<
+  ReturnType<MediaService["getCharacterProfilePictures"]>
+> | null>();
 
 async function fetchPotentialWikipediaUrl(
   firstname: string,
@@ -588,11 +610,10 @@ export class MediaService {
       if (voiceActor.tmdb_id) {
         const personData = await tmdbPersonPromise;
         if (personData) {
-          const allCredits: { backdrop_path?: string; popularity?: number }[] =
-            [
-              ...(personData.movie_credits?.cast || []),
-              ...(personData.tv_credits?.cast || []),
-            ];
+          const allCredits = [
+            ...tmdbCastCredits(personData.movie_credits),
+            ...tmdbCastCredits(personData.tv_credits),
+          ];
           allCredits.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
           const best = allCredits.find((c) => c.backdrop_path);
           if (best)
@@ -787,31 +808,38 @@ export class MediaService {
       this.acceptLanguage,
     );
 
-    let collection = null;
-    if (contentType === "movie" && media.belongs_to_collection?.id) {
-      const collectionData = await this.tmdbClient.getCollection(
-        media.belongs_to_collection.id,
-      );
+    let collection: Record<string, unknown> | null = null;
+    const belongsToCollection = media.belongs_to_collection;
+    const collectionId = isRecord(belongsToCollection)
+      ? belongsToCollection.id
+      : undefined;
+    if (contentType === "movie" && typeof collectionId === "number") {
+      const collectionData = await this.tmdbClient.getCollection(collectionId);
       if (collectionData) {
+        const parts = Array.isArray(collectionData.parts)
+          ? collectionData.parts.filter(isRecord)
+          : [];
         collection = {
           ...collectionData,
-          backdrop_path: collectionData.backdrop_path
-            ? `https://image.tmdb.org/t/p/w500${collectionData.backdrop_path}`
-            : null,
-          poster_path: collectionData.poster_path
-            ? `https://image.tmdb.org/t/p/w500${collectionData.poster_path}`
-            : null,
-          parts: collectionData.parts
-            ? collectionData.parts.map((part: any) => ({
-                ...part,
-                backdrop_path: part.backdrop_path
-                  ? `https://image.tmdb.org/t/p/w500${part.backdrop_path}`
-                  : null,
-                poster_path: part.poster_path
-                  ? `https://image.tmdb.org/t/p/w500${part.poster_path}`
-                  : null,
-              }))
-            : [],
+          backdrop_path:
+            typeof collectionData.backdrop_path === "string"
+              ? `https://image.tmdb.org/t/p/w500${collectionData.backdrop_path}`
+              : null,
+          poster_path:
+            typeof collectionData.poster_path === "string"
+              ? `https://image.tmdb.org/t/p/w500${collectionData.poster_path}`
+              : null,
+          parts: parts.map((part) => ({
+            ...part,
+            backdrop_path:
+              typeof part.backdrop_path === "string"
+                ? `https://image.tmdb.org/t/p/w500${part.backdrop_path}`
+                : null,
+            poster_path:
+              typeof part.poster_path === "string"
+                ? `https://image.tmdb.org/t/p/w500${part.poster_path}`
+                : null,
+          })),
         };
       }
     }
