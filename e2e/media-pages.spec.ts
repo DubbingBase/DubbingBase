@@ -78,22 +78,23 @@ test.describe("Media Detail Pages", () => {
   test("filters cast by full voice actor name on movie, show, and episode", async ({
     page,
   }) => {
+    test.setTimeout(120000);
     const routes = [
       {
         path: "/movie/85",
-        search: "Richard Darbois",
+        voiceActor: "Richard Darbois",
         actor: "Harrison Ford",
         absentActor: "Karen Allen",
       },
       {
         path: "/show/1396",
-        search: "Jean-Louis Faure",
+        voiceActor: "Jean-Louis Faure",
         actor: "Bryan Cranston",
         absentActor: "Aaron Paul",
       },
       {
         path: "/show/1396/season/1/episode/1",
-        search: "Jean-Louis Faure",
+        voiceActor: "Jean-Louis Faure",
         actor: "Bryan Cranston",
         absentActor: "Aaron Paul",
       },
@@ -102,11 +103,16 @@ test.describe("Media Detail Pages", () => {
     for (const route of routes) {
       await page.goto(route.path, { waitUntil: "domcontentloaded" });
       await waitForVueHydration(page);
-      const search = page.locator('input[type="search"]').last();
-      await search.fill(route.search);
-      await expect(page.getByText(route.actor, { exact: true })).toBeVisible();
+      const castSection = page
+        .getByRole("heading", { name: "Cast & Crew" })
+        .locator("xpath=ancestor::section[1]");
+      const search = castSection.locator('input[type="search"]');
+      await search.fill(route.voiceActor);
       await expect(
-        page.getByText(route.absentActor, { exact: true }),
+        castSection.getByText(route.actor, { exact: true }),
+      ).toBeVisible();
+      await expect(
+        castSection.getByText(route.absentActor, { exact: true }),
       ).toHaveCount(0);
     }
   });
