@@ -68,7 +68,7 @@
 - `GET` `/api/trending/movies` [cache]
 - `GET` `/api/trending/shows` [cache]
 - `GET` `/api/trending/voice-actors` [cache]
-- `POST` `/api/update-review-status` [db, cache]
+- `POST` `/api/update-review-status` [db]
 - `POST` `/api/update-user-profile`
 - `POST` `/api/update-voice-actor` [auth, db, upload]
 - `POST` `/api/update_user_role` [auth]

@@ -2,36 +2,36 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**82 library files** across 5 modules
+**83 library files** across 5 modules
 
-## Website (44 files)
+## Website (45 files)
 
-- `apps/website/server/utils/index.ts` — getCloudflareKv, useCache, useFreshCache, useTmdbClient, useTvdbClient, useIgdbClient, …
+- `apps/website/server/utils/index.ts` — getCloudflareKv, useCache, getOrFetch, useTmdbClient, useTvdbClient, useIgdbClient, …
 - `apps/website/server/utils/cache/wikipedia.ts` — sortLanguagesByPopularity, extractAvailableLanguages, cleanHeadingText, isDubbingSectionHeading, selectDubbingSections, filterValidSectionIndexes, …
 - `apps/website/server/utils/services/media-preparation.ts` — checkMediaDubbingSections, checkGameDubbingSections, extractMediaDubbingCredits, extractGameDubbingCredits, prepareMedia, prepareGame, …
+- `apps/website/server/utils/cache/constants.ts` — hashCacheValue, buildCacheKey, SimpleKeyBuilder, SimpleKeyValidator, CacheKeyInput, CACHE_SCHEMA_VERSION, …
 - `apps/website/server/utils/cache/http.ts` — shouldDisableErrorCaching, setErrorCacheHeaders, getPublicCacheControl, setNoCacheHeaders, setNoStoreHeaders, setPublicCacheHeaders, …
+- `apps/website/server/utils/cache/index.ts` — createCacheNamespace, CacheNamespace, SimpleCache, GetOrFetchOptions, CacheKv, CacheTTLPreset, …
 - `apps/website/src/utils/media-cast.ts` — sameMediaId, matchCastWorks, CastActorReference, CharacterProfilePicture, CastWorkReference, DisplayCastActor, …
-- `apps/website/server/utils/cache/constants.ts` — SimpleKeyBuilder, SimpleKeyValidator, API_PREFIXES, CACHE_SCHEMA_VERSION, CONTENT_TYPES, CACHE_KEYS
 - `apps/website/server/utils/llm.ts` — areAllLlmQuotasExhausted, getLlmQuotaCache, llmGenerate, llmGenerateObject, llmVision, llmVisionObject
 - `apps/website/server/utils/notifications/discord.ts` — normalizeDiscordUrl, buildDiscordEmbed, sendDiscordAdminNotification, DiscordWebhookOptions, QueueName, DiscordNotificationCategory
 - `apps/website/server/utils/queue-payload.ts` — validateCheckPayload, validateDiscoveryPayload, validateExtractPayload, ValidQueueBase, ValidExtractPayload, QueueMediaType
 - `apps/website/server/utils/db/queries.ts` — getVoiceActorWithWork, getWorkByActor, getDubbingProjects, getWorkVotes, getTopContributors
+- `apps/website/server/utils/retryable-request.ts` — isRetryableMediaRequestError, isRetryableMediaRequestStatus, createMediaResponseError, fetchMediaRequest, RetryableMediaRequestError
 - `apps/website/server/utils/services/voice-actor.ts` — upsertVoiceActor, upsertActor, upsertStudio, upsertWork, insertVoiceActorAndWork
-- `apps/website/server/utils/cache/index.ts` — SimpleCache, FreshCache, CacheTTLPreset, CACHE_TTL
 - `apps/website/server/utils/pagination.ts` — parsePagination, paginateArray, PaginationOptions, ParsedPagination
+- `apps/website/server/utils/services/media.ts` — MediaService, WIKIDATA_CLAIMS_NAMESPACE, WIKIPEDIA_ACTOR_URL_NAMESPACE, MEDIA_TVDB_CHARACTERS_NAMESPACE
 - `apps/website/server/utils/urls/tmdb.ts` — buildTmdbImageUrl, cleanCharacterName, processMedia, TMDB_CONFIG
 - `apps/website/server/utils/api/igdb.ts` — buildIgdbImageUrl, IgdbClient, IgdbPopularityPrimitive
+- `apps/website/server/utils/api/podcast.ts` — PodcastClient, ITunesPodcastResult, PODCAST_LOOKUP_NAMESPACE
+- `apps/website/server/utils/api/tvdb.ts` — TVDBClient, TVDB_AUTH_TOKEN_NAMESPACE, TVDB_API_RESPONSE_NAMESPACE
 - `apps/website/server/utils/media-request.ts` — parseSeasonQuery, parseEpisodeQuery, withMediaServiceTimeout
 - `apps/website/server/utils/api/openlibrary.ts` — buildOpenLibraryCoverUrl, OpenLibraryClient
-- `apps/website/server/utils/api/podcast.ts` — PodcastClient, ITunesPodcastResult
 - `apps/website/server/utils/auth.ts` — requireUser, requireAdmin
 - `apps/website/server/utils/normalize.ts` — normalizeString, isExploitableVoiceActorName
 - `apps/website/server/utils/notifications/onesignal.ts` — sendOneSignalNotification, OneSignalOptions
 - `apps/website/server/utils/urls/supabase.ts` — buildSupabaseImageUrl, processVoiceActor
-- `apps/website/src/composables/useContribute.ts` — fetchRandomTask, useContribute
-- `apps/website/src/composables/useUrlPagination.ts` — readUrlPage, useUrlPagination
-- `apps/website/src/utils/search-routes.ts` — getSearchResultRoute, SearchFilter
-- _…and 19 more files_
+- _…and 20 more files_
 
 ## Shared-logic (18 files)
 

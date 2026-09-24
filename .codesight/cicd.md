@@ -56,7 +56,7 @@
   - `actions/checkout@v4`
   - `pnpm/action-setup@v4`
   - `actions/setup-node@v4`
-- **deploy-website** on `ubuntu-latest` — 7 steps (needs: detect, deploy-supabase, e2e-tests, frontend-tests) → **cloudflare**
+- **deploy-website** on `ubuntu-latest` — 6 steps (needs: detect, deploy-supabase, e2e-tests, frontend-tests) → **cloudflare**
   - `actions/checkout@v4`
   - `pnpm/action-setup@v4`
   - `actions/setup-node@v4`

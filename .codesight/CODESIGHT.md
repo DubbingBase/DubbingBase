@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 75 routes | 16 models | 197 components | 82 lib files | 63 env vars | 12 middleware | 5% test coverage
-> **Token savings:** this file is ~14,900 tokens. Without it, AI exploration would cost ~151,000 tokens. **Saves ~136,100 tokens per conversation.**
-> **Last scanned:** 2026-09-24 15:04 — re-run after significant changes
+> 75 routes | 16 models | 197 components | 83 lib files | 61 env vars | 12 middleware | 5% test coverage
+> **Token savings:** this file is ~15,100 tokens. Without it, AI exploration would cost ~151,000 tokens. **Saves ~135,900 tokens per conversation.**
+> **Last scanned:** 2026-09-24 18:45 — re-run after significant changes
 
 ---
 
@@ -79,7 +79,7 @@
 - `GET` `/api/trending/movies` [cache]
 - `GET` `/api/trending/shows` [cache]
 - `GET` `/api/trending/voice-actors` [cache]
-- `POST` `/api/update-review-status` [db, cache]
+- `POST` `/api/update-review-status` [db]
 - `POST` `/api/update-user-profile`
 - `POST` `/api/update-voice-actor` [auth, db, upload]
 - `POST` `/api/update_user_role` [auth]
@@ -440,19 +440,26 @@
   - class IgdbClient
   - interface IgdbPopularityPrimitive
 - `apps/website/server/utils/api/openlibrary.ts` — function buildOpenLibraryCoverUrl: (coverId, size) => string, class OpenLibraryClient
-- `apps/website/server/utils/api/podcast.ts` — class PodcastClient, interface ITunesPodcastResult
+- `apps/website/server/utils/api/podcast.ts`
+  - class PodcastClient
+  - interface ITunesPodcastResult
+  - const PODCAST_LOOKUP_NAMESPACE
 - `apps/website/server/utils/api/tmdb.ts` — class TMDBClient
 - `apps/website/server/utils/api/toy.ts` — class ToyClient
-- `apps/website/server/utils/api/tvdb.ts` — class TVDBClient
+- `apps/website/server/utils/api/tvdb.ts`
+  - class TVDBClient
+  - const TVDB_AUTH_TOKEN_NAMESPACE
+  - const TVDB_API_RESPONSE_NAMESPACE
 - `apps/website/server/utils/auth.ts` — function requireUser: (event) => User, function requireAdmin: (event) => User
 - `apps/website/server/utils/background.ts` — function scheduleBackgroundTask: (event, task, label) => void
 - `apps/website/server/utils/cache/constants.ts`
+  - function hashCacheValue: (value) => string
+  - function buildCacheKey: (input) => string
   - class SimpleKeyBuilder
   - class SimpleKeyValidator
-  - const API_PREFIXES
+  - interface CacheKeyInput
   - const CACHE_SCHEMA_VERSION
-  - const CONTENT_TYPES
-  - const CACHE_KEYS
+  - _...3 more_
 - `apps/website/server/utils/cache/http.ts`
   - function shouldDisableErrorCaching: (error) => boolean
   - function setErrorCacheHeaders: (event, error) => void
@@ -462,10 +469,13 @@
   - function setPublicCacheHeaders: (event, profile) => void
   - _...2 more_
 - `apps/website/server/utils/cache/index.ts`
+  - function createCacheNamespace: () => CacheNamespace<T>
+  - class CacheNamespace
   - class SimpleCache
-  - class FreshCache
+  - interface GetOrFetchOptions
+  - interface CacheKv
   - type CacheTTLPreset
-  - const CACHE_TTL
+  - _...1 more_
 - `apps/website/server/utils/cache/wikipedia.ts`
   - function sortLanguagesByPopularity: (languages) => string[]
   - function extractAvailableLanguages: (sitelinks, {...}) => string[]
@@ -485,9 +495,9 @@
 - `apps/website/server/utils/error-message.ts` — function getErrorMessage: (error) => string
 - `apps/website/server/utils/featureFlags.ts` — function isEnqueueOnNavigateEnabled: () => Promise<boolean>
 - `apps/website/server/utils/index.ts`
-  - function getCloudflareKv: (event?) => any
+  - function getCloudflareKv: (event?) => CacheKv | null
   - function useCache: (event?) => SimpleCache
-  - function useFreshCache: () => SimpleCache
+  - function getOrFetch: (namespace, key, fetcher) => void
   - function useTmdbClient: (cache?) => TMDBClient
   - function useTvdbClient: () => TVDBClient
   - function useIgdbClient: (cache?) => IgdbClient
@@ -524,6 +534,12 @@
   - interface ValidQueueBase
   - interface ValidExtractPayload
   - type QueueMediaType
+- `apps/website/server/utils/retryable-request.ts`
+  - function isRetryableMediaRequestError: (error) => error is RetryableMediaRequestError
+  - function isRetryableMediaRequestStatus: (status) => boolean
+  - function createMediaResponseError: (provider, response) => Error
+  - function fetchMediaRequest: (input, init?) => Promise<Response>
+  - class RetryableMediaRequestError
 - `apps/website/server/utils/services/media-preparation.ts`
   - function checkMediaDubbingSections: (options) => Promise<CheckSectionsResult>
   - function checkGameDubbingSections: (options) => Promise<CheckSectionsResult>
@@ -532,7 +548,11 @@
   - function prepareMedia: (options) => Promise<PrepareMediaResult>
   - function prepareGame: (options) => Promise<PrepareGameResult>
   - _...4 more_
-- `apps/website/server/utils/services/media.ts` — class MediaService
+- `apps/website/server/utils/services/media.ts`
+  - class MediaService
+  - const WIKIDATA_CLAIMS_NAMESPACE
+  - const WIKIPEDIA_ACTOR_URL_NAMESPACE
+  - const MEDIA_TVDB_CHARACTERS_NAMESPACE
 - `apps/website/server/utils/services/voice-actor.ts`
   - function upsertVoiceActor: (firstName, lastName) => void
   - function upsertActor: (id, name, profile_path?) => void
@@ -685,8 +705,6 @@
 - `SUPABASE_URL` (has default) — .env.example
 - `TMDB_API_KEY` **required** — .env.example
 - `TVDB_API_KEY` **required** — .env.example
-- `UPSTASH_REDIS_REST_TOKEN` **required** — .env.example
-- `UPSTASH_REDIS_REST_URL` **required** — .env.example
 - `VITE_API_BASE_URL` (has default) — .env.example
 - `VITE_ONESIGNAL_APP_ID` **required** — .env.example
 - `VITE_SUPABASE_PUBLISHABLE_KEY` **required** — .env.example
@@ -727,15 +745,17 @@
 ## Most Imported Files (change these carefully)
 
 - `apps/website/server/utils/db/client.ts` — imported by **59** files
-- `apps/website/server/utils/cache/http.ts` — imported by **36** files
+- `apps/website/server/utils/cache/http.ts` — imported by **37** files
 - `apps/website/server/utils/auth.ts` — imported by **26** files
 - `apps/website/server/utils/index.ts` — imported by **23** files
+- `apps/website/server/utils/cache/index.ts` — imported by **13** files
 - `apps/website/server/utils/db/queries.ts` — imported by **12** files
 - `apps/website/server/utils/notifications/discord.ts` — imported by **11** files
+- `apps/website/server/utils/cache/constants.ts` — imported by **11** files
 - `apps/website/server/utils/urls/supabase.ts` — imported by **10** files
 - `apps/website/server/utils/urls/tmdb.ts` — imported by **10** files
-- `apps/website/server/utils/cache/index.ts` — imported by **10** files
-- `apps/website/server/utils/api/igdb.ts` — imported by **8** files
+- `apps/website/server/utils/api/igdb.ts` — imported by **9** files
+- `apps/website/server/utils/api/cache-options.ts` — imported by **8** files
 - `e2e/helpers/mock-api.ts` — imported by **8** files
 - `packages/shared-logic/src/types/index.ts` — imported by **8** files
 - `apps/website/server/utils/background.ts` — imported by **7** files
@@ -744,28 +764,26 @@
 - `apps/website/server/utils/with-timeout.ts` — imported by **4** files
 - `apps/website/server/utils/llm.ts` — imported by **4** files
 - `apps/website/src/utils/media-cast.ts` — imported by **3** files
-- `apps/website/server/utils/db/dubbing-project.ts` — imported by **3** files
-- `apps/website/server/utils/normalize.ts` — imported by **3** files
 
 ## Import Map (who imports what)
 
 - `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/cast-vote.post.ts`, `apps/website/server/api/count-voice-actor-works.post.ts` +54 more
-- `apps/website/server/utils/cache/http.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/dashboard-stats.get.ts` +31 more
+- `apps/website/server/utils/cache/http.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/dashboard-stats.get.ts` +32 more
 - `apps/website/server/utils/auth.ts` ← `apps/website/server/api/create-user-profile.post.ts`, `apps/website/server/api/dashboard-stats.get.ts`, `apps/website/server/api/delete-voice-actor-link.post.ts`, `apps/website/server/api/delete-work-entry.post.ts`, `apps/website/server/api/delete_user.post.ts` +21 more
 - `apps/website/server/utils/index.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/episode/index.get.ts` +18 more
+- `apps/website/server/utils/cache/index.ts` ← `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/season/index.get.ts`, `apps/website/server/utils/api/igdb.test.ts`, `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.ts` +8 more
 - `apps/website/server/utils/db/queries.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/game/[id].get.ts` +7 more
 - `apps/website/server/utils/notifications/discord.ts` ← `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/media-queue.post.ts`, `apps/website/server/api/movie/[id].get.ts` +6 more
+- `apps/website/server/utils/cache/constants.ts` ← `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/season/index.get.ts`, `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.ts`, `apps/website/server/utils/api/podcast.ts` +6 more
 - `apps/website/server/utils/urls/supabase.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/dashboard-stats.get.ts`, `apps/website/server/api/find_duplicate_voice_actors.get.ts`, `apps/website/server/api/recent-voice-actors.get.ts`, `apps/website/server/api/search/index.get.ts` +5 more
 - `apps/website/server/utils/urls/tmdb.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/movie/[id].get.ts`, `apps/website/server/api/notify-subscribers.post.ts`, `apps/website/server/api/prepare-trending-media.post.ts`, `apps/website/server/api/search/index.get.ts` +5 more
-- `apps/website/server/utils/cache/index.ts` ← `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.ts`, `apps/website/server/utils/api/podcast.ts`, `apps/website/server/utils/api/tmdb.ts`, `apps/website/server/utils/api/tvdb.ts` +5 more
-- `apps/website/server/utils/api/igdb.ts` ← `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/internal-media-credits.get.ts`, `apps/website/server/api/internal-media-metadata.get.ts`, `apps/website/server/api/search/index.get.ts`, `apps/website/server/api/trending/games.get.ts` +3 more
 
 ---
 
 # Test Coverage
 
 > **5%** of routes and models are covered by tests
-> 35 test files found
+> 36 test files found
 
 ## Covered Routes
 
@@ -838,7 +856,7 @@
   - `actions/checkout@v4`
   - `pnpm/action-setup@v4`
   - `actions/setup-node@v4`
-- **deploy-website** on `ubuntu-latest` — 7 steps (needs: detect, deploy-supabase, e2e-tests, frontend-tests) → **cloudflare**
+- **deploy-website** on `ubuntu-latest` — 6 steps (needs: detect, deploy-supabase, e2e-tests, frontend-tests) → **cloudflare**
   - `actions/checkout@v4`
   - `pnpm/action-setup@v4`
   - `actions/setup-node@v4`

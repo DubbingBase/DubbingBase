@@ -34,19 +34,26 @@
   - class IgdbClient
   - interface IgdbPopularityPrimitive
 - `apps/website/server/utils/api/openlibrary.ts` — function buildOpenLibraryCoverUrl: (coverId, size) => string, class OpenLibraryClient
-- `apps/website/server/utils/api/podcast.ts` — class PodcastClient, interface ITunesPodcastResult
+- `apps/website/server/utils/api/podcast.ts`
+  - class PodcastClient
+  - interface ITunesPodcastResult
+  - const PODCAST_LOOKUP_NAMESPACE
 - `apps/website/server/utils/api/tmdb.ts` — class TMDBClient
 - `apps/website/server/utils/api/toy.ts` — class ToyClient
-- `apps/website/server/utils/api/tvdb.ts` — class TVDBClient
+- `apps/website/server/utils/api/tvdb.ts`
+  - class TVDBClient
+  - const TVDB_AUTH_TOKEN_NAMESPACE
+  - const TVDB_API_RESPONSE_NAMESPACE
 - `apps/website/server/utils/auth.ts` — function requireUser: (event) => User, function requireAdmin: (event) => User
 - `apps/website/server/utils/background.ts` — function scheduleBackgroundTask: (event, task, label) => void
 - `apps/website/server/utils/cache/constants.ts`
+  - function hashCacheValue: (value) => string
+  - function buildCacheKey: (input) => string
   - class SimpleKeyBuilder
   - class SimpleKeyValidator
-  - const API_PREFIXES
+  - interface CacheKeyInput
   - const CACHE_SCHEMA_VERSION
-  - const CONTENT_TYPES
-  - const CACHE_KEYS
+  - _...3 more_
 - `apps/website/server/utils/cache/http.ts`
   - function shouldDisableErrorCaching: (error) => boolean
   - function setErrorCacheHeaders: (event, error) => void
@@ -56,10 +63,13 @@
   - function setPublicCacheHeaders: (event, profile) => void
   - _...2 more_
 - `apps/website/server/utils/cache/index.ts`
+  - function createCacheNamespace: () => CacheNamespace<T>
+  - class CacheNamespace
   - class SimpleCache
-  - class FreshCache
+  - interface GetOrFetchOptions
+  - interface CacheKv
   - type CacheTTLPreset
-  - const CACHE_TTL
+  - _...1 more_
 - `apps/website/server/utils/cache/wikipedia.ts`
   - function sortLanguagesByPopularity: (languages) => string[]
   - function extractAvailableLanguages: (sitelinks, {...}) => string[]
@@ -79,9 +89,9 @@
 - `apps/website/server/utils/error-message.ts` — function getErrorMessage: (error) => string
 - `apps/website/server/utils/featureFlags.ts` — function isEnqueueOnNavigateEnabled: () => Promise<boolean>
 - `apps/website/server/utils/index.ts`
-  - function getCloudflareKv: (event?) => any
+  - function getCloudflareKv: (event?) => CacheKv | null
   - function useCache: (event?) => SimpleCache
-  - function useFreshCache: () => SimpleCache
+  - function getOrFetch: (namespace, key, fetcher) => void
   - function useTmdbClient: (cache?) => TMDBClient
   - function useTvdbClient: () => TVDBClient
   - function useIgdbClient: (cache?) => IgdbClient
@@ -118,6 +128,12 @@
   - interface ValidQueueBase
   - interface ValidExtractPayload
   - type QueueMediaType
+- `apps/website/server/utils/retryable-request.ts`
+  - function isRetryableMediaRequestError: (error) => error is RetryableMediaRequestError
+  - function isRetryableMediaRequestStatus: (status) => boolean
+  - function createMediaResponseError: (provider, response) => Error
+  - function fetchMediaRequest: (input, init?) => Promise<Response>
+  - class RetryableMediaRequestError
 - `apps/website/server/utils/services/media-preparation.ts`
   - function checkMediaDubbingSections: (options) => Promise<CheckSectionsResult>
   - function checkGameDubbingSections: (options) => Promise<CheckSectionsResult>
@@ -126,7 +142,11 @@
   - function prepareMedia: (options) => Promise<PrepareMediaResult>
   - function prepareGame: (options) => Promise<PrepareGameResult>
   - _...4 more_
-- `apps/website/server/utils/services/media.ts` — class MediaService
+- `apps/website/server/utils/services/media.ts`
+  - class MediaService
+  - const WIKIDATA_CLAIMS_NAMESPACE
+  - const WIKIPEDIA_ACTOR_URL_NAMESPACE
+  - const MEDIA_TVDB_CHARACTERS_NAMESPACE
 - `apps/website/server/utils/services/voice-actor.ts`
   - function upsertVoiceActor: (firstName, lastName) => void
   - function upsertActor: (id, name, profile_path?) => void
