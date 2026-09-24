@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { setupMockApi } from "./helpers/mock-api";
+import { setupMockApi, waitForVueHydration } from "./helpers/mock-api";
 import { MOCK_SEASON } from "./fixtures/mock-data";
 
 test.describe("Media Detail Pages", () => {
@@ -79,14 +79,21 @@ test.describe("Media Detail Pages", () => {
     page,
   }) => {
     const routes = [
-      { path: "/movie/85", actor: "Harrison Ford", absentActor: "Karen Allen" },
+      {
+        path: "/movie/85",
+        search: "Richard Darbois",
+        actor: "Harrison Ford",
+        absentActor: "Karen Allen",
+      },
       {
         path: "/show/1396",
+        search: "Jean-Louis Faure",
         actor: "Bryan Cranston",
         absentActor: "Aaron Paul",
       },
       {
         path: "/show/1396/season/1/episode/1",
+        search: "Jean-Louis Faure",
         actor: "Bryan Cranston",
         absentActor: "Aaron Paul",
       },
@@ -94,8 +101,9 @@ test.describe("Media Detail Pages", () => {
 
     for (const route of routes) {
       await page.goto(route.path, { waitUntil: "domcontentloaded" });
+      await waitForVueHydration(page);
       const search = page.locator('input[type="search"]').last();
-      await search.fill("Jean-Louis Faure");
+      await search.fill(route.search);
       await expect(page.getByText(route.actor, { exact: true })).toBeVisible();
       await expect(
         page.getByText(route.absentActor, { exact: true }),

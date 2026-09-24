@@ -49,12 +49,6 @@ export function buildIgdbImageUrl(
   return `https://images.igdb.com/igdb/image/upload/t_${size}/${hash}.jpg`;
 }
 
-interface TwitchTokenResponse {
-  access_token: string;
-  expires_in: number;
-  token_type: string;
-}
-
 interface IgdbGameLocalization {
   game: number;
   name: string;
@@ -106,11 +100,29 @@ export class IgdbClient {
         throw createMediaResponseError("Twitch OAuth2", response);
       }
 
-      const tokenData: TwitchTokenResponse = await response.json();
+      const tokenData: unknown = await response.json();
+      const accessToken =
+        typeof tokenData === "object" && tokenData !== null
+          ? Reflect.get(tokenData, "access_token")
+          : undefined;
+      const expiresIn =
+        typeof tokenData === "object" && tokenData !== null
+          ? Reflect.get(tokenData, "expires_in")
+          : undefined;
+
+      if (
+        typeof accessToken !== "string" ||
+        accessToken.trim().length === 0 ||
+        typeof expiresIn !== "number" ||
+        !Number.isFinite(expiresIn) ||
+        expiresIn <= 0
+      ) {
+        throw new Error("Invalid Twitch OAuth token response");
+      }
+
       return {
-        accessToken: tokenData.access_token,
-        expiresAt:
-          Date.now() + Math.max(tokenData.expires_in - 3600, 3600) * 1000,
+        accessToken: accessToken.trim(),
+        expiresAt: Date.now() + Math.max(expiresIn - 3600, 3600) * 1000,
       };
     };
 
@@ -127,6 +139,7 @@ export class IgdbClient {
       typeof result !== "object" ||
       result === null ||
       typeof result.accessToken !== "string" ||
+      result.accessToken.trim().length === 0 ||
       typeof result.expiresAt !== "number" ||
       !Number.isFinite(result.expiresAt) ||
       result.expiresAt <= Date.now()
@@ -137,6 +150,7 @@ export class IgdbClient {
         typeof result !== "object" ||
         result === null ||
         typeof result.accessToken !== "string" ||
+        result.accessToken.trim().length === 0 ||
         typeof result.expiresAt !== "number" ||
         !Number.isFinite(result.expiresAt) ||
         result.expiresAt <= Date.now()

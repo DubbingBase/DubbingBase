@@ -15,17 +15,18 @@ function createCache(values: Map<string, unknown>, failDelete = false) {
   }));
 }
 
-function mockFetch() {
+function mockFetch(tokenBody = "") {
   let tokenFetchCount = 0;
   const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
     if (String(input) === tokenUrl) {
       tokenFetchCount += 1;
       return new Response(
-        JSON.stringify({
-          access_token: "fresh-token",
-          expires_in: 7200,
-          token_type: "bearer",
-        }),
+        tokenBody ||
+          JSON.stringify({
+            access_token: "fresh-token",
+            expires_in: 7200,
+            token_type: "bearer",
+          }),
       );
     }
     return new Response("[]");
@@ -75,6 +76,10 @@ describe("IgdbClient token cache expiry", () => {
   it.each([
     ["expired token metadata", { accessToken: "expired-token", expiresAt: 0 }],
     ["legacy string token", "legacy-token"],
+    [
+      "empty cached token",
+      { accessToken: " ", expiresAt: Date.now() + 60_000 },
+    ],
   ])(
     "refreshes an %s instead of assigning a guessed expiry",
     async (_label, cachedValue) => {
@@ -110,5 +115,28 @@ describe("IgdbClient token cache expiry", () => {
       accessToken: "expired-token",
       expiresAt: 0,
     });
+  });
+
+  it.each([
+    ["empty access token", '{"access_token":"","expires_in":7200}'],
+    ["whitespace access token", '{"access_token":" ","expires_in":7200}'],
+    ["missing access token", '{"expires_in":7200}'],
+    ["non-numeric expiry", '{"access_token":"token","expires_in":"7200"}'],
+    ["non-finite expiry", '{"access_token":"token","expires_in":1e999}'],
+    ["non-positive expiry", '{"access_token":"token","expires_in":0}'],
+  ])("rejects and does not cache a response with %s", async (_label, body) => {
+    const values = new Map<string, unknown>();
+    const fetch = mockFetch(body);
+    const client = new IgdbClient(createCache(values));
+
+    await expect(client.query("games", "fields id;")).rejects.toThrow(
+      "Invalid Twitch OAuth token response",
+    );
+    await expect(client.query("games", "fields id;")).rejects.toThrow(
+      "Invalid Twitch OAuth token response",
+    );
+
+    expect(fetch.tokenFetchCount).toBe(2);
+    expect(values.has("igdb:auth_token")).toBe(false);
   });
 });
