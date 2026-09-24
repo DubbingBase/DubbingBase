@@ -238,19 +238,96 @@ test.describe("Voice Actor Profile & Filmography", () => {
     page,
   }) => {
     const api = await setupMockApi(page);
+    await page.unroute("**/api/**");
+    const hydrationMessages: string[] = [];
+    page.on("console", (message) => {
+      if (
+        (message.type() === "warning" || message.type() === "error") &&
+        message.text().includes("Hydration")
+      ) {
+        hydrationMessages.push(message.text());
+      }
+    });
 
-    await page.goto("/voice-actor/999", { waitUntil: "domcontentloaded" });
+    const response = await page.goto("/voice-actor/999", {
+      waitUntil: "domcontentloaded",
+    });
+    const serverRenderedMarkup = (await response?.text())?.replace(
+      /<script\b[^>]*>[\s\S]*?<\/script>/g,
+      "",
+    );
     await waitForVueHydration(page);
 
-    const unknownGroup = getFilmography(page)
-      .getByTestId("voice-actor-group")
-      .filter({
-        hasText: /Unknown Actor|Acteur inconnu|Actor desconocido|不明な俳優/,
-      });
+    const filmography = getFilmography(page);
+    const groups = filmography.getByTestId("voice-actor-group");
+    const harrisonGroup = groups.filter({ hasText: "Harrison Ford" });
+    expect(serverRenderedMarkup).toContain("Film 2012");
+    await expect(harrisonGroup).toHaveCount(1);
+    await expect(harrisonGroup.locator("p")).toContainText("15");
+    await expect(harrisonGroup.locator("a[href*='/movie/']")).toHaveCount(15);
+    await expect(harrisonGroup.locator("a[href*='/actor/3']")).toHaveCount(1);
+    await expect(groups).toHaveCount(12);
+
+    const harrisonWorkLinks = harrisonGroup.locator("a[href*='/movie/']");
+    await expect(harrisonWorkLinks.first()).toHaveAttribute(
+      "href",
+      /\/movie\/2012$/,
+    );
+    await expect(harrisonWorkLinks.last()).toHaveAttribute(
+      "href",
+      /\/movie\/85$/,
+    );
+
+    const sortSelect = filmography.locator("select");
+    await sortSelect.selectOption("oldest");
+    await expect(harrisonWorkLinks.first()).toHaveAttribute(
+      "href",
+      /\/movie\/85$/,
+    );
+    await sortSelect.selectOption("newest");
+    await expect(harrisonWorkLinks.first()).toHaveAttribute(
+      "href",
+      /\/movie\/2012$/,
+    );
+
+    await filmography.locator("nav button").last().click();
+    await expect(page).toHaveURL(/worksPage=2/);
+    await expect(groups).toHaveCount(7);
+    await expect(harrisonGroup).toHaveCount(0);
+
+    const unknownGroup = groups.filter({
+      hasText: /Unknown Actor|Acteur inconnu|Actor desconocido|不明な俳優/,
+    });
     await expect(unknownGroup).toHaveCount(1);
     await expect(unknownGroup).not.toContainText("Unverified Person");
     await expect(unknownGroup.locator("a[href*='/actor/']")).toHaveCount(0);
     await expect(unknownGroup.locator("div.sticky img")).toHaveCount(0);
+
+    const listButton = filmography
+      .locator("button")
+      .filter({ hasText: /List|Liste/i })
+      .first();
+    await listButton.click();
+    await expect(page).not.toHaveURL(/worksPage=2/);
+    await expect(groups).toHaveCount(0);
+    await expect(
+      filmography.locator(".grid").last().locator(":scope > div"),
+    ).toHaveCount(12);
+
+    const groupedButton = filmography
+      .locator("button")
+      .filter({ hasText: /Group|Groupe/i })
+      .first();
+    await filmography.locator("nav button").last().click();
+    await expect(page).toHaveURL(/worksPage=2/);
+    await expect(
+      filmography.locator(".grid").last().locator(":scope > div"),
+    ).toHaveCount(12);
+    await groupedButton.click();
+    await expect(page).not.toHaveURL(/worksPage=2/);
+    await expect(groups).toHaveCount(12);
+    await expect(harrisonGroup).toHaveCount(1);
+    expect(hydrationMessages).toEqual([]);
     api.expectNoErrors();
   });
 
