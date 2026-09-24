@@ -16,7 +16,7 @@
 - `DISCORD_WEBHOOK_URL_1` **required** — apps/website/server/utils/notifications/discord.ts
 - `DISCORD_WEBHOOK_URL_2` **required** — apps/website/server/utils/notifications/discord.ts
 - `DISCORD_WEBHOOK_URL_3` **required** — apps/website/server/utils/notifications/discord.ts
-- `E2E_TEST` **required** — apps/website/server/middleware/00-e2e-mock.ts
+- `E2E_TEST` **required** — apps/website/nuxt.config.ts
 - `GEMINI_API_KEY` (has default) — apps/website/server/utils/llm.ts
 - `GEMINI_MODELS` **required** — apps/website/server/utils/llm.ts
 - `GOOGLE_AI_KEY` **required** — .env.example

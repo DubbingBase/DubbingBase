@@ -5,7 +5,7 @@
 
 > 75 routes | 16 models | 197 components | 82 lib files | 63 env vars | 12 middleware | 5% test coverage
 > **Token savings:** this file is ~14,900 tokens. Without it, AI exploration would cost ~151,000 tokens. **Saves ~136,100 tokens per conversation.**
-> **Last scanned:** 2026-09-24 14:17 — re-run after significant changes
+> **Last scanned:** 2026-09-24 15:04 — re-run after significant changes
 
 ---
 
@@ -643,7 +643,7 @@
 - `DISCORD_WEBHOOK_URL_1` **required** — apps/website/server/utils/notifications/discord.ts
 - `DISCORD_WEBHOOK_URL_2` **required** — apps/website/server/utils/notifications/discord.ts
 - `DISCORD_WEBHOOK_URL_3` **required** — apps/website/server/utils/notifications/discord.ts
-- `E2E_TEST` **required** — apps/website/server/middleware/00-e2e-mock.ts
+- `E2E_TEST` **required** — apps/website/nuxt.config.ts
 - `GEMINI_API_KEY` (has default) — apps/website/server/utils/llm.ts
 - `GEMINI_MODELS` **required** — apps/website/server/utils/llm.ts
 - `GOOGLE_AI_KEY` **required** — .env.example
