@@ -290,6 +290,14 @@ test.describe("Voice Actor Profile & Filmography", () => {
     await expect(groups).toHaveCount(0);
     await expect(filmography.locator(".grid").last().locator(":scope > div")).toHaveCount(12);
 
+    const groupedButton = filmography
+      .locator("button")
+      .filter({ hasText: /Group|Groupe/i })
+      .first();
+    await filmography.locator("nav button").last().click();
+    await expect(page).toHaveURL(/worksPage=2/);
+    await expect(filmography.locator(".grid").last().locator(":scope > div")).toHaveCount(12);
+
     const unknownActorRow = filmography
       .locator(".grid")
       .last()
@@ -307,13 +315,6 @@ test.describe("Voice Actor Profile & Filmography", () => {
     await expect(unknownActorRow.locator("a[href*='/actor/']")).toHaveCount(0);
     await expect(originalActorColumn.locator("img")).toHaveCount(0);
 
-    const groupedButton = filmography
-      .locator("button")
-      .filter({ hasText: /Group|Groupe/i })
-      .first();
-    await filmography.locator("nav button").last().click();
-    await expect(page).toHaveURL(/worksPage=2/);
-    await expect(filmography.locator(".grid").last().locator(":scope > div")).toHaveCount(12);
     await groupedButton.click();
     await expect(page).not.toHaveURL(/worksPage=2/);
     await expect(groups).toHaveCount(12);
