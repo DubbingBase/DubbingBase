@@ -21,13 +21,10 @@ export type VoiceActorWorkGroup<T extends VoiceActorWorkLike> = {
   worksCount: number;
 };
 
-export type VoiceActorWorksPageItem<T extends VoiceActorWorkLike> =
-  T | VoiceActorWorkGroup<T>;
+export type VoiceActorWorksPageItem<T extends VoiceActorWorkLike> = T | VoiceActorWorkGroup<T>;
 
 function positiveActorId(value: number | null | undefined): number | null {
-  return typeof value === "number" && Number.isSafeInteger(value) && value > 0
-    ? value
-    : null;
+  return typeof value === "number" && Number.isSafeInteger(value) && value > 0 ? value : null;
 }
 
 export function groupVoiceActorWorks<T extends VoiceActorWorkLike>(
@@ -36,9 +33,7 @@ export function groupVoiceActorWorks<T extends VoiceActorWorkLike>(
   const groups = new Map<string, VoiceActorWorkGroup<T>>();
 
   for (const work of works) {
-    const actorId =
-      positiveActorId(work.work?.actor_id) ??
-      positiveActorId(work.data?.actor?.id);
+    const actorId = positiveActorId(work.work?.actor_id) ?? positiveActorId(work.data?.actor?.id);
     const key = actorId === null ? "actor:unknown" : `actor:${actorId}`;
     const actorName = work.data?.actor?.name?.trim() || null;
     const profilePicture = work.data?.actor?.profile_picture || null;
@@ -76,9 +71,7 @@ export function groupVoiceActorWorks<T extends VoiceActorWorkLike>(
     if (left.actorId === null && right.actorId !== null) return 1;
     if (left.actorId !== null && right.actorId === null) return -1;
 
-    const nameOrder = (left.actor.name || "").localeCompare(
-      right.actor.name || "",
-    );
+    const nameOrder = (left.actor.name || "").localeCompare(right.actor.name || "", "en");
     if (nameOrder !== 0) return nameOrder;
 
     return (left.actorId || 0) - (right.actorId || 0);

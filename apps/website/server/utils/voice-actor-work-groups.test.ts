@@ -109,6 +109,16 @@ describe("groupVoiceActorWorks", () => {
     expect(groups.map((group) => group.worksCount)).toEqual([2, 2, 1, 1]);
   });
 
+  it("sorts equal-count accented names with a fixed locale", () => {
+    const groups = groupVoiceActorWorks([
+      work("zoe", 3, "Zoë", 3),
+      work("emile", 2, "Émile", 2),
+      work("ake", 1, "Åke", 1),
+    ]);
+
+    expect(groups.map((group) => group.actor.name)).toEqual(["Åke", "Émile", "Zoë"]);
+  });
+
   it("preserves input ordering inside each group", () => {
     const works = [
       work("later", 42, "Harrison Ford", 42),
@@ -119,10 +129,7 @@ describe("groupVoiceActorWorks", () => {
     const groups = groupVoiceActorWorks(works);
     const harrison = groups.find((group) => group.actorId === 42);
 
-    expect(harrison?.works.map((item) => item.label)).toEqual([
-      "later",
-      "earlier",
-    ]);
+    expect(harrison?.works.map((item) => item.label)).toEqual(["later", "earlier"]);
   });
 
   it("groups before pagination and counts groups in grouped mode", () => {

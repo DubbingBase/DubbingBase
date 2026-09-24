@@ -53,9 +53,9 @@ test.describe("Voice Actor Profile & Filmography", () => {
     await waitForVueHydration(page);
 
     // Wait for main content to load
-    await expect(
-      page.getByRole("heading", { name: "Richard Darbois" }),
-    ).toBeVisible({ timeout: 20000 });
+    await expect(page.getByRole("heading", { name: "Richard Darbois" })).toBeVisible({
+      timeout: 20000,
+    });
 
     // Verify category tabs bar exists
     const allTab = page
@@ -95,9 +95,9 @@ test.describe("Voice Actor Profile & Filmography", () => {
     await page.goto("/voice-actor/1", { waitUntil: "domcontentloaded" });
     await waitForVueHydration(page);
 
-    await expect(
-      page.getByRole("heading", { name: "Richard Darbois" }),
-    ).toBeVisible({ timeout: 20000 });
+    await expect(page.getByRole("heading", { name: "Richard Darbois" })).toBeVisible({
+      timeout: 20000,
+    });
 
     const filmography = getFilmography(page);
     // Click on Movies tab
@@ -109,9 +109,7 @@ test.describe("Voice Actor Profile & Filmography", () => {
 
     await expect(filmography.locator("a[href*='/movie/85']")).toBeVisible();
     await expect(filmography.locator("a[href*='/movie/78']")).toBeVisible();
-    await expect(filmography.locator("a[href*='/audiobook/401']")).toHaveCount(
-      0,
-    );
+    await expect(filmography.locator("a[href*='/audiobook/401']")).toHaveCount(0);
 
     // Click on Audiobooks tab
     const audiobooksTab = filmography.getByRole("button", {
@@ -120,9 +118,7 @@ test.describe("Voice Actor Profile & Filmography", () => {
     await audiobooksTab.click();
     await expect(audiobooksTab).toHaveClass(/theme-selected/);
 
-    await expect(
-      filmography.locator("a[href*='/audiobook/401']"),
-    ).toBeVisible();
+    await expect(filmography.locator("a[href*='/audiobook/401']")).toBeVisible();
     await expect(filmography.locator("a[href*='/movie/85']")).toHaveCount(0);
 
     // Click on All tab to restore full list
@@ -131,18 +127,16 @@ test.describe("Voice Actor Profile & Filmography", () => {
     await expect(allTab).toHaveClass(/theme-selected/);
 
     await expect(filmography.locator("a[href*='/movie/85']")).toBeVisible();
-    await expect(
-      filmography.locator("a[href*='/audiobook/401']"),
-    ).toBeVisible();
+    await expect(filmography.locator("a[href*='/audiobook/401']")).toBeVisible();
   });
 
   test("filters filmography dynamically with search bar", async ({ page }) => {
     await page.goto("/voice-actor/1", { waitUntil: "domcontentloaded" });
     await waitForVueHydration(page);
 
-    await expect(
-      page.getByRole("heading", { name: "Richard Darbois" }),
-    ).toBeVisible({ timeout: 20000 });
+    await expect(page.getByRole("heading", { name: "Richard Darbois" })).toBeVisible({
+      timeout: 20000,
+    });
 
     const filmography = getFilmography(page);
     // Locate the search input within the voice actor page
@@ -167,9 +161,9 @@ test.describe("Voice Actor Profile & Filmography", () => {
     await page.goto("/voice-actor/1", { waitUntil: "domcontentloaded" });
     await waitForVueHydration(page);
 
-    await expect(
-      page.getByRole("heading", { name: "Richard Darbois" }),
-    ).toBeVisible({ timeout: 20000 });
+    await expect(page.getByRole("heading", { name: "Richard Darbois" })).toBeVisible({
+      timeout: 20000,
+    });
 
     // Look for display mode buttons (Grouped / List)
     const listButton = page
@@ -189,9 +183,7 @@ test.describe("Voice Actor Profile & Filmography", () => {
     }
   });
 
-  test("groups the existing filmography without fetching a collection", async ({
-    page,
-  }) => {
+  test("groups the existing filmography without fetching a collection", async ({ page }) => {
     const api = await setupMockApi(page);
     const collectionRequests: string[] = [];
     page.on("request", (request) => {
@@ -203,9 +195,9 @@ test.describe("Voice Actor Profile & Filmography", () => {
 
     await page.goto("/voice-actor/1", { waitUntil: "domcontentloaded" });
     await waitForVueHydration(page);
-    await expect(
-      page.getByRole("heading", { name: "Richard Darbois" }),
-    ).toBeVisible({ timeout: 20000 });
+    await expect(page.getByRole("heading", { name: "Richard Darbois" })).toBeVisible({
+      timeout: 20000,
+    });
 
     const filmography = getFilmography(page);
     const harrisonGroup = filmography
@@ -234,9 +226,7 @@ test.describe("Voice Actor Profile & Filmography", () => {
     api.expectNoErrors();
   });
 
-  test("keeps unresolved actors anonymous and non-navigable", async ({
-    page,
-  }) => {
+  test("keeps unresolved actors anonymous and non-navigable", async ({ page }) => {
     const api = await setupMockApi(page);
     await page.unroute("**/api/**");
     const hydrationMessages: string[] = [];
@@ -269,26 +259,14 @@ test.describe("Voice Actor Profile & Filmography", () => {
     await expect(groups).toHaveCount(12);
 
     const harrisonWorkLinks = harrisonGroup.locator("a[href*='/movie/']");
-    await expect(harrisonWorkLinks.first()).toHaveAttribute(
-      "href",
-      /\/movie\/2012$/,
-    );
-    await expect(harrisonWorkLinks.last()).toHaveAttribute(
-      "href",
-      /\/movie\/85$/,
-    );
+    await expect(harrisonWorkLinks.first()).toHaveAttribute("href", /\/movie\/2012$/);
+    await expect(harrisonWorkLinks.last()).toHaveAttribute("href", /\/movie\/85$/);
 
     const sortSelect = filmography.locator("select");
     await sortSelect.selectOption("oldest");
-    await expect(harrisonWorkLinks.first()).toHaveAttribute(
-      "href",
-      /\/movie\/85$/,
-    );
+    await expect(harrisonWorkLinks.first()).toHaveAttribute("href", /\/movie\/85$/);
     await sortSelect.selectOption("newest");
-    await expect(harrisonWorkLinks.first()).toHaveAttribute(
-      "href",
-      /\/movie\/2012$/,
-    );
+    await expect(harrisonWorkLinks.first()).toHaveAttribute("href", /\/movie\/2012$/);
 
     await filmography.locator("nav button").last().click();
     await expect(page).toHaveURL(/worksPage=2/);
@@ -310,9 +288,24 @@ test.describe("Voice Actor Profile & Filmography", () => {
     await listButton.click();
     await expect(page).not.toHaveURL(/worksPage=2/);
     await expect(groups).toHaveCount(0);
-    await expect(
-      filmography.locator(".grid").last().locator(":scope > div"),
-    ).toHaveCount(12);
+    await expect(filmography.locator(".grid").last().locator(":scope > div")).toHaveCount(12);
+
+    const unknownActorRow = filmography
+      .locator(".grid")
+      .last()
+      .locator(":scope > div")
+      .filter({ hasText: "Unverified Voice Credit" });
+    await expect(unknownActorRow).toHaveCount(1);
+    const originalActorColumn = unknownActorRow
+      .locator(":scope > div")
+      .locator(":scope > div")
+      .nth(1);
+    await expect(originalActorColumn).toContainText(
+      /Unknown Actor|Acteur inconnu|Actor desconocido|不明な俳優/,
+    );
+    await expect(unknownActorRow.locator("a[href*='/actor/0']")).toHaveCount(0);
+    await expect(unknownActorRow.locator("a[href*='/actor/']")).toHaveCount(0);
+    await expect(originalActorColumn.locator("img")).toHaveCount(0);
 
     const groupedButton = filmography
       .locator("button")
@@ -320,9 +313,7 @@ test.describe("Voice Actor Profile & Filmography", () => {
       .first();
     await filmography.locator("nav button").last().click();
     await expect(page).toHaveURL(/worksPage=2/);
-    await expect(
-      filmography.locator(".grid").last().locator(":scope > div"),
-    ).toHaveCount(12);
+    await expect(filmography.locator(".grid").last().locator(":scope > div")).toHaveCount(12);
     await groupedButton.click();
     await expect(page).not.toHaveURL(/worksPage=2/);
     await expect(groups).toHaveCount(12);
@@ -335,17 +326,14 @@ test.describe("Voice Actor Profile & Filmography", () => {
     await page.goto("/voice-actor/1", { waitUntil: "domcontentloaded" });
     await waitForVueHydration(page);
 
-    await expect(
-      page.getByRole("heading", { name: "Richard Darbois" }),
-    ).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole("heading", { name: "Richard Darbois" })).toBeVisible({
+      timeout: 15000,
+    });
 
     // Click on Raiders of the Lost Ark link
     const mediaLink = page.locator("a[href*='/movie/85']").first();
     await expect(mediaLink).toBeVisible({ timeout: 5000 });
-    await Promise.all([
-      page.waitForURL(/\/movie\/85/, { timeout: 5000 }),
-      mediaLink.click(),
-    ]);
+    await Promise.all([page.waitForURL(/\/movie\/85/, { timeout: 5000 }), mediaLink.click()]);
     await expect(page.locator("body")).toContainText("Raiders of the Lost Ark");
   });
 });
