@@ -768,7 +768,6 @@ watch([searchQuery, activeDubId], () => void setCastPage(1));
 
 const filteredCast = computed(() =>
   formattedCast.value.filter((actor: DisplayCastActor) => {
-    if (!String(actor.id).includes("-")) return false;
     const query = searchQuery.value.trim().toLowerCase();
     if (!query) return true;
     const searchable = [
