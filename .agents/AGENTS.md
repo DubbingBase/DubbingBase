@@ -32,18 +32,18 @@ The project is structured as a **Monorepo** managed by `pnpm workspaces` and `tu
 
 All development tasks MUST be run via **Mise** to ensure environment consistency. Always check `mise.toml` first to see if a command exists before attempting to run raw bash commands or `pnpm` scripts directly. If a task is defined in `mise.toml` (e.g. `gen-types`), you must run it using `mise run <task>`.
 
-| Command                 | Description                                                                           |
-| :---------------------- | :------------------------------------------------------------------------------------ |
-| `mise run dev`          | Starts the entire development environment (local Supabase backend + app dev servers). |
-| `mise run backend`      | Starts the local Supabase database and environment.                                   |
-| `mise run backend-stop` | Stops the local Supabase backend.                                                     |
-| `mise run app`          | Maintainer-only: starts the mobile app in web mode (`apps/mobile`); agents MUST NOT run it. |
-| `mise run website`      | Starts only the development server for the website (`apps/website`).                  |
-| `mise run db-reset`     | Resets the local database, applies local migrations, and loads seed data.             |
-| `mise run migrate-up`   | Applies pending migrations to the local database.                                     |
-| `mise run migrate-down` | Rolls back the last applied migration.                                                |
+| Command                 | Description                                                                                   |
+| :---------------------- | :-------------------------------------------------------------------------------------------- |
+| `mise run dev`          | Starts the entire development environment (local Supabase backend + app dev servers).         |
+| `mise run backend`      | Starts the local Supabase database and environment.                                           |
+| `mise run backend-stop` | Stops the local Supabase backend.                                                             |
+| `mise run app`          | Maintainer-only: starts the mobile app in web mode (`apps/mobile`); agents MUST NOT run it.   |
+| `mise run website`      | Starts only the development server for the website (`apps/website`).                          |
+| `mise run db-reset`     | Resets the local database, applies local migrations, and loads seed data.                     |
+| `mise run migrate-up`   | Applies pending migrations to the local database.                                             |
+| `mise run migrate-down` | Rolls back the last applied migration.                                                        |
 | `mise run sync`         | Maintainer-only: synchronizes mobile builds with Capacitor platforms; agents MUST NOT run it. |
-| `mise run android-dev`  | Maintainer-only: launches Android development; agents MUST NOT run it.                |
+| `mise run android-dev`  | Maintainer-only: launches Android development; agents MUST NOT run it.                        |
 
 ### Generating Database TypeScript Types:
 
@@ -115,7 +115,7 @@ doppler run -- mise run website
 - **Charts**: Use **Chart.js** via `vue-chartjs`.
 - **Route Performance & Caching Architecture**:
   - **Dynamic Edge SWR Route Rules**: All public media paths (e.g. `/movie/**`, `/show/**`, `/game/**`, etc.) and all localized prefixes (`/fr/**`, `/es/**`, `/ja/**`) are dynamically generated in `apps/website/nuxt.config.ts` via `MEDIA_ROUTE_PREFIXES`. When adding a new media category or discovery route, always register its prefix in `MEDIA_ROUTE_PREFIXES` so that all localized variants automatically receive Cloudflare Edge SWR caching.
-  - **Global Worker KV Resolver**: `apps/website/server/middleware/00-cache.ts` automatically runs on every request to prime the Cloudflare KV cache binding for the isolate. In server routes and composables, always use `useCache(event)` or `useCache()` to interact with the two-tier (L1 In-Memory + L2 Cloudflare KV) cache.
+  - **Global Worker KV Resolver**: `apps/website/server/middleware/00-cache.ts` automatically runs on every request to prime the Cloudflare KV cache binding for the isolate. In server routes and composables, use `useCache(event)` or `useCache()` to access the shared Cloudflare KV cache for external metadata. It is the only persistent server-side data cache; do not add an in-memory value cache.
   - **Edge SWR Caching on Server APIs**: Every public GET endpoint MUST set a standardized Edge & Browser SWR `Cache-Control` header using `setPublicCacheHeaders(event, profile)` (`detail`, `catalog`, `discovery`, `search`, or `static`).
   - **0ms Instant Navigation Hydration**: When calling `useAsyncData` on public/detail pages, always provide `getCachedData: (key, nuxtApp) => nuxtApp.payload.data[key] ?? nuxtApp.static.data[key]` to eliminate loading spinners on client-side route transitions and back-navigation.
   - **Progressive DOM Windowing**: When rendering dynamic rosters or long lists of cards (cast, episodes, filmography, etc.), never render hundreds of DOM nodes at once. Use the `useProgressiveBatch` composable or `useIntersectionObserver` with a batch size of 24–36 and a bottom sentinel element.

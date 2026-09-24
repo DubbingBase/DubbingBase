@@ -77,39 +77,13 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    try {
-      const cache = useCache();
-      const contentId = data.dubbing_projects?.content_id;
-      const contentType = data.dubbing_projects?.content_type || "movie";
-
-      if (contentId) {
-        const cacheKey =
-          contentType === "movie"
-            ? CACHE_KEYS.TMDB_MOVIE(contentId)
-            : CACHE_KEYS.TMDB_TV(contentId);
-        await cache.del(cacheKey);
-
-        if (contentType === "tv") {
-          const aggregateCacheKey = CACHE_KEYS.TMDB_TV(
-            contentId,
-            "aggregate_credits",
-          );
-          await cache.del(aggregateCacheKey);
-        }
-      }
-    } catch (cacheError) {
-      console.error("Failed to invalidate cache:", cacheError);
-    }
-
     return { success: true, data };
   } catch (error) {
-    if (error && typeof error === "object" && "statusCode" in error)
-      throw error;
+    if (error && typeof error === "object" && "statusCode" in error) throw error;
     console.error("Error in update-review-status:", error);
     throw createError({
       statusCode: 500,
-      message:
-        error instanceof Error ? error.message : "An unknown error occurred",
+      message: error instanceof Error ? error.message : "An unknown error occurred",
     });
   }
 });

@@ -1,10 +1,4 @@
-import {
-  createApp,
-  createError,
-  defineEventHandler,
-  setHeader,
-  toWebHandler,
-} from "h3";
+import { createApp, createError, defineEventHandler, setHeader, toWebHandler } from "h3";
 import { describe, expect, it } from "vitest";
 import {
   getPublicCacheControl,
@@ -13,10 +7,10 @@ import {
   shouldDisableErrorCaching,
 } from "./http";
 
-describe("public cache profiles", () => {
-  it("keeps successful season and episode details at the detail TTL", () => {
+describe("HTTP cache headers", () => {
+  it("uses a short public cache window across profiles", () => {
     expect(getPublicCacheControl("detail")).toBe(
-      "public, max-age=300, s-maxage=600, stale-while-revalidate=900",
+      "public, max-age=60, s-maxage=300, stale-while-revalidate=300",
     );
   });
 
@@ -46,9 +40,9 @@ describe("public cache profiles", () => {
     expect(response.headers.get("expires")).toBe("0");
   });
 
-  it("keeps search responses shorter than other public responses", () => {
+  it("uses the same short cache window for search responses", () => {
     expect(getPublicCacheControl("search")).toBe(
-      "public, max-age=60, s-maxage=300, stale-while-revalidate=600",
+      "public, max-age=60, s-maxage=300, stale-while-revalidate=300",
     );
   });
 });

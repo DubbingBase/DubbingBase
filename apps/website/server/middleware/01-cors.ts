@@ -1,9 +1,7 @@
 import { API_CLIENT_HEADER, API_CLIENT_VALUE } from "@app/shared-logic";
+import { setNoCacheHeaders } from "../utils/cache/http";
 
-const ALLOWED_ORIGINS = [
-  "https://dubbingbase.com",
-  "https://www.dubbingbase.com",
-];
+const ALLOWED_ORIGINS = ["https://dubbingbase.com", "https://www.dubbingbase.com"];
 
 function isAllowedOrigin(origin: string, host?: string): boolean {
   if (!origin) return true;
@@ -27,18 +25,14 @@ export default defineEventHandler((event) => {
   const path = getRequestURL(event).pathname;
   if (!path.startsWith("/api")) return;
 
-  // Prime the KV cache resolver for this worker isolate
-  useCache(event);
+  // API responses default to private; public handlers opt in with short cache headers.
+  setNoCacheHeaders(event);
 
   const origin = getHeader(event, "origin") || "";
   const host = getHeader(event, "host") || "";
   const client = getHeader(event, API_CLIENT_HEADER) || "";
 
-  setResponseHeader(
-    event,
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE, OPTIONS",
-  );
+  setResponseHeader(event, "Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   setResponseHeader(
     event,
     "Access-Control-Allow-Headers",
@@ -65,16 +59,10 @@ export default defineEventHandler((event) => {
   }
 
   const isSameOrigin =
-    !origin ||
-    (host && (origin === `http://${host}` || origin === `https://${host}`));
+    !origin || (host && (origin === `http://${host}` || origin === `https://${host}`));
 
   // If request has an origin from another domain and is missing the client header, reject
-  if (
-    origin &&
-    !isSameOrigin &&
-    !isAllowedOrigin(origin, host) &&
-    client !== API_CLIENT_VALUE
-  ) {
+  if (origin && !isSameOrigin && !isAllowedOrigin(origin, host) && client !== API_CLIENT_VALUE) {
     throw createError({
       statusCode: 403,
       message: "Forbidden (Missing Client Header)",

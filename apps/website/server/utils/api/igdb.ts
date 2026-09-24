@@ -1,9 +1,7 @@
 import { SimpleCache } from "../cache";
-import {
-  DEFAULT_LANGUAGE,
-  type IgdbGame,
-  type IgdbCharacter,
-} from "@app/shared-logic";
+import type { CacheFetchOptions } from "./cache-options";
+import { DEFAULT_LANGUAGE, type IgdbGame, type IgdbCharacter } from "@app/shared-logic";
+import { buildCacheKey } from "../cache/constants";
 
 export interface IgdbPopularityPrimitive {
   id: number;
@@ -71,49 +69,40 @@ export class IgdbClient {
       return this.token;
     }
 
-    const cacheKey = "igdb:auth_token";
-    try {
-      const cached = await this.cache.get<string>(cacheKey);
-      if (cached) {
-        debugLog("IGDB auth token cache hit");
-        this.token = cached;
-        this.tokenExpiry = new Date(Date.now() + 5 * 60 * 60 * 1000);
-        return this.token;
-      }
-    } catch (err) {
-      debugLog("Failed to read IGDB token from cache:", err);
-    }
+    const result = await this.cache.getOrFetch(
+      "igdb:auth_token",
+      async () => {
+        debugLog("Fetching new Twitch OAuth2 token for IGDB");
+        const params = new URLSearchParams();
+        params.append("client_id", this.clientId);
+        params.append("client_secret", this.clientSecret);
+        params.append("grant_type", "client_credentials");
 
-    debugLog("Fetching new Twitch OAuth2 token for IGDB");
-    const params = new URLSearchParams();
-    params.append("client_id", this.clientId);
-    params.append("client_secret", this.clientSecret);
-    params.append("grant_type", "client_credentials");
+        const response = await fetch(this.tokenUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: params,
+          signal: AbortSignal.timeout(10000),
+        });
 
-    const response = await fetch(this.tokenUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: params,
-      signal: AbortSignal.timeout(10000),
-    });
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(
+            `Twitch token fetch failed: ${response.status} ${response.statusText} - ${errorText}`,
+          );
+        }
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(
-        `Twitch token fetch failed: ${response.status} ${response.statusText} - ${errorText}`,
-      );
-    }
-
-    const tokenData: TwitchTokenResponse = await response.json();
-    this.token = tokenData.access_token;
-    const ttlSeconds = Math.max(tokenData.expires_in - 3600, 3600);
-    this.tokenExpiry = new Date(Date.now() + ttlSeconds * 1000);
-
-    this.cache
-      .set(cacheKey, this.token, "EXTENDED")
-      .catch((err) => debugLog("Failed to cache IGDB auth token:", err));
-
-    return this.token!;
+        const tokenData: TwitchTokenResponse = await response.json();
+        this.tokenExpiry = new Date(
+          Date.now() + Math.max(tokenData.expires_in - 3600, 3600) * 1000,
+        );
+        return tokenData.access_token;
+      },
+      { ttl: 604800 },
+    );
+    this.token = result;
+    this.tokenExpiry ??= new Date(Date.now() + 5 * 60 * 60 * 1000);
+    return result;
   }
 
   async query<T>(endpoint: string, body: string): Promise<T[]> {
@@ -167,14 +156,19 @@ export class IgdbClient {
     }
   }
 
-  async getGame(id: number): Promise<IgdbGame | null> {
-    const cacheKey = `igdb:game:${id}:details`;
-    const cached = await this.cache.get<IgdbGame>(cacheKey);
-    if (cached) return cached;
-
-    const results = await this.query<IgdbGame>(
-      "games",
-      `fields id, name, slug, summary, rating, rating_count, first_release_date,
+  async getGame(id: number, options: CacheFetchOptions = {}): Promise<IgdbGame | null> {
+    const cacheKey = buildCacheKey({
+      provider: "igdb",
+      resource: "game",
+      id,
+      params: { response: "details" },
+    });
+    return this.cache.getOrFetch(
+      cacheKey,
+      async () => {
+        const results = await this.query<IgdbGame>(
+          "games",
+          `fields id, name, slug, summary, rating, rating_count, first_release_date,
        cover.image_id, cover.url,
        artworks.image_id, artworks.url,
        screenshots.image_id, screenshots.url,
@@ -184,20 +178,14 @@ export class IgdbClient {
        external_games.uid, external_games.category,
        websites.url, websites.category;
        where id = ${id};`,
+        );
+        return results[0] ?? null;
+      },
+      { ttl: 86400, ...options },
     );
-
-    const game = results[0] ?? null;
-    if (game) {
-      await this.cache.set(cacheKey, game, "MEDIUM");
-    }
-    return game;
   }
 
   async searchGames(queryText: string): Promise<IgdbGame[]> {
-    const cacheKey = `igdb:search:${queryText.toLowerCase().replace(/[^a-z0-9]/g, "_")}`;
-    const cached = await this.cache.get<IgdbGame[]>(cacheKey);
-    if (cached) return cached;
-
     const escapedQuery = queryText.replace(/"/g, '\\"');
     const results = await this.query<IgdbGame>(
       "games",
@@ -208,95 +196,109 @@ export class IgdbClient {
        limit 10;`,
     );
 
-    await this.cache.set(cacheKey, results, "SHORT");
     return results;
   }
 
-  async getGameCharacters(gameId: number): Promise<IgdbCharacter[]> {
-    const cacheKey = `igdb:game:${gameId}:characters`;
-    const cached = await this.cache.get<IgdbCharacter[]>(cacheKey);
-    if (cached) return cached;
-
-    const results = await this.query<IgdbCharacter>(
-      "characters",
-      `fields id, name, description, species, gender,
+  async getGameCharacters(
+    gameId: number,
+    options: CacheFetchOptions = {},
+  ): Promise<IgdbCharacter[]> {
+    const cacheKey = buildCacheKey({
+      provider: "igdb",
+      resource: "game-characters",
+      id: gameId,
+    });
+    return this.cache.getOrFetch(
+      cacheKey,
+      () =>
+        this.query<IgdbCharacter>(
+          "characters",
+          `fields id, name, description, species, gender,
               mug_shot.image_id, mug_shot.url,
               games;
        where games = (${gameId});
        limit 50;`,
+        ),
+      { ttl: 86400, ...options },
     );
-
-    await this.cache.set(cacheKey, results, "MEDIUM");
-    return results;
   }
 
   async getTrendingGames(
     limit = 20,
     language = DEFAULT_LANGUAGE,
+    options: CacheFetchOptions = {},
   ): Promise<IgdbGame[]> {
-    const cacheKey = `igdb:trending:games:v2:${language}`;
-    const cached = await this.cache.get<IgdbGame[]>(cacheKey);
-    if (cached) return cached;
-
-    const primitives = await this.query<IgdbPopularityPrimitive>(
-      "popularity_primitives",
-      `fields game_id, value, popularity_type;
+    const cacheKey = buildCacheKey({
+      provider: "igdb",
+      resource: "trending-games",
+      id: "popular",
+      language,
+      params: { limit, version: 2 },
+    });
+    return this.cache.getOrFetch(
+      cacheKey,
+      async () => {
+        const primitives = await this.query<IgdbPopularityPrimitive>(
+          "popularity_primitives",
+          `fields game_id, value, popularity_type;
        where popularity_type = (1, 2);
        sort value desc;
        limit 100;`,
-    );
+        );
 
-    const scoreMap = new Map<number, number>();
-    for (const p of primitives) {
-      const weight = p.popularity_type === 1 ? 0.6 : 0.4;
-      const current = scoreMap.get(p.game_id) ?? 0;
-      scoreMap.set(p.game_id, current + p.value * weight);
-    }
+        const scoreMap = new Map<number, number>();
+        for (const p of primitives) {
+          const weight = p.popularity_type === 1 ? 0.6 : 0.4;
+          const current = scoreMap.get(p.game_id) ?? 0;
+          scoreMap.set(p.game_id, current + p.value * weight);
+        }
 
-    const topIds = [...scoreMap.entries()]
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, limit)
-      .map(([id]) => id);
+        const topIds = [...scoreMap.entries()]
+          .sort(([, a], [, b]) => b - a)
+          .slice(0, limit)
+          .map(([id]) => id);
 
-    if (topIds.length === 0) return [];
+        if (topIds.length === 0) return [];
 
-    const games = await this.query<IgdbGame>(
-      "games",
-      `fields id, name, summary, rating, first_release_date,
+        const games = await this.query<IgdbGame>(
+          "games",
+          `fields id, name, summary, rating, first_release_date,
               cover.image_id, genres.name, platforms.name;
        where id = (${topIds.join(",")}) & (themes != (42) | themes = null);
       limit ${limit};`,
-    );
+        );
 
-    if (games.length === 0) return games;
+        if (games.length === 0) return games;
 
-    let localizedGames = games;
-    try {
-      const localizations = await this.query<IgdbGameLocalization>(
-        "game_localizations",
-        `fields game, name, region.identifier;
+        let localizedGames = games;
+        try {
+          const localizations = await this.query<IgdbGameLocalization>(
+            "game_localizations",
+            `fields game, name, region.identifier;
          where game = (${topIds.join(",")});
          limit ${Math.max(topIds.length * 10, 100)};`,
-      );
-      const localizedNames = new Map<number, string>();
-      for (const localization of localizations) {
-        if (
-          localization.region?.identifier === language &&
-          !localizedNames.has(localization.game)
-        ) {
-          localizedNames.set(localization.game, localization.name);
+          );
+          const localizedNames = new Map<number, string>();
+          for (const localization of localizations) {
+            if (
+              localization.region?.identifier === language &&
+              !localizedNames.has(localization.game)
+            ) {
+              localizedNames.set(localization.game, localization.name);
+            }
+          }
+          localizedGames = games.map((game) => ({
+            ...game,
+            name: localizedNames.get(game.id) ?? game.name,
+          }));
+        } catch (error) {
+          debugLog("Failed to fetch game localizations:", error);
+          localizedGames = games;
         }
-      }
-      localizedGames = games.map((game) => ({
-        ...game,
-        name: localizedNames.get(game.id) ?? game.name,
-      }));
-    } catch (error) {
-      debugLog("Failed to fetch game localizations:", error);
-      localizedGames = games;
-    }
 
-    await this.cache.set(cacheKey, localizedGames, "SHORT");
-    return localizedGames;
+        return localizedGames;
+      },
+      { ttl: 3600, ...options },
+    );
   }
 }

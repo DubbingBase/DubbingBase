@@ -1,4 +1,6 @@
 import { SimpleCache } from "../cache";
+import { buildCacheKey } from "../cache/constants";
+import type { CacheFetchOptions } from "./cache-options";
 
 function debugLog(message: string, data?: any) {
   console.log(`[TMDB] ${message}`, data ? JSON.stringify(data, null, 2) : "");
@@ -20,15 +22,9 @@ export class TMDBClient {
     });
   }
 
-  async get(
-    endpoint: string,
-    params?: Record<string, string>,
-    language?: string,
-  ) {
+  async get(endpoint: string, params?: Record<string, string>, language?: string) {
     const url = new URL(`${this.baseUrl}/${endpoint}`);
-    const preferredLang = (
-      (language || "fr-FR").split(",")[0] || "fr-FR"
-    ).trim();
+    const preferredLang = ((language || "fr-FR").split(",")[0] || "fr-FR").trim();
     url.searchParams.set("language", preferredLang);
 
     if (params) {
@@ -65,55 +61,53 @@ export class TMDBClient {
     contentType: "movie" | "tv",
     id: number,
     language?: string,
+    options: CacheFetchOptions = {},
   ) {
     const langStr = ((language || "fr-FR").split(",")[0] || "fr-FR").trim();
-    const cacheKey = this.cache.tmdbKey(contentType, id, `credits-${langStr}`);
+    const cacheKey = buildCacheKey({
+      provider: "tmdb",
+      resource: contentType,
+      id,
+      language: langStr,
+      params: { append_to_response: "credits,external_ids" },
+    });
 
-    const cached = await this.cache.get(cacheKey);
-    if (cached) {
-      debugLog(
-        `TMDB cache hit for ${contentType} ${id} with credits (${langStr})`,
-      );
-      return cached;
-    }
-
-    const result = await this.get(
-      `${contentType}/${id}`,
-      {
-        append_to_response: "credits,external_ids",
-      },
-      language,
+    return this.cache.getOrFetch(
+      cacheKey,
+      () =>
+        this.get(`${contentType}/${id}`, { append_to_response: "credits,external_ids" }, language),
+      { ttl: 86400, ...options },
     );
-
-    await this.cache.set(cacheKey, result, "MEDIUM");
-    return result;
   }
 
   async getSeasonWithCredits(
     seriesId: number,
     seasonNumber: number,
     language?: string,
+    options: CacheFetchOptions = {},
   ) {
     const langStr = ((language || "fr-FR").split(",")[0] || "fr-FR").trim();
-    const cacheKey = this.cache.tmdbKey(
-      "tv",
-      seriesId,
-      `season:${seasonNumber}:credits-${langStr}`,
-    );
-
-    const cached = await this.cache.get(cacheKey);
-    if (cached) return cached;
-
-    const result = await this.get(
-      `tv/${seriesId}/season/${seasonNumber}`,
-      {
+    const cacheKey = buildCacheKey({
+      provider: "tmdb",
+      resource: "season",
+      id: seriesId,
+      language: langStr,
+      params: {
+        season: seasonNumber,
         append_to_response: "credits,external_ids",
       },
-      language,
-    );
+    });
 
-    await this.cache.set(cacheKey, result, "MEDIUM");
-    return result;
+    return this.cache.getOrFetch(
+      cacheKey,
+      () =>
+        this.get(
+          `tv/${seriesId}/season/${seasonNumber}`,
+          { append_to_response: "credits,external_ids" },
+          language,
+        ),
+      { ttl: 86400, ...options },
+    );
   }
 
   async getEpisodeWithCredits(
@@ -121,149 +115,141 @@ export class TMDBClient {
     seasonNumber: number,
     episodeNumber: number,
     language?: string,
+    options: CacheFetchOptions = {},
   ) {
     const langStr = ((language || "fr-FR").split(",")[0] || "fr-FR").trim();
-    const cacheKey = this.cache.tmdbKey(
-      "tv",
-      seriesId,
-      `season:${seasonNumber}:episode:${episodeNumber}:credits-${langStr}`,
+    const cacheKey = buildCacheKey({
+      provider: "tmdb",
+      resource: "episode",
+      id: seriesId,
+      language: langStr,
+      params: {
+        season: seasonNumber,
+        episode: episodeNumber,
+        append_to_response: "credits,external_ids",
+      },
+    });
+
+    return this.cache.getOrFetch(
+      cacheKey,
+      () =>
+        this.get(
+          `tv/${seriesId}/season/${seasonNumber}/episode/${episodeNumber}`,
+          { append_to_response: "credits,external_ids" },
+          language,
+        ),
+      { ttl: 86400, ...options },
     );
-
-    const cached = await this.cache.get(cacheKey);
-    if (cached) return cached;
-
-    const result = await this.get(
-      `tv/${seriesId}/season/${seasonNumber}/episode/${episodeNumber}`,
-      { append_to_response: "credits,external_ids" },
-      language,
-    );
-
-    await this.cache.set(cacheKey, result, "MEDIUM");
-    return result;
   }
 
   async fetchMediaDetails(
     contentId: number,
     contentType: string,
     language?: string,
+    options: CacheFetchOptions = {},
   ) {
     const langStr = ((language || "fr-FR").split(",")[0] || "fr-FR").trim();
-    const cacheKey = this.cache.tmdbKey(
-      contentType,
-      contentId,
-      `details-${langStr}`,
+    const cacheKey = buildCacheKey({
+      provider: "tmdb",
+      resource: contentType,
+      id: contentId,
+      language: langStr,
+      params: { append_to_response: "credits,external_ids" },
+    });
+
+    return this.cache.getOrFetch(
+      cacheKey,
+      () =>
+        this.get(
+          `${contentType}/${contentId}`,
+          { append_to_response: "credits,external_ids" },
+          language,
+        ),
+      { ttl: 86400, ...options },
     );
-
-    const cached = await this.cache.get(cacheKey);
-    if (cached) return cached;
-
-    const result = await this.get(
-      `${contentType}/${contentId}`,
-      { append_to_response: "credits,external_ids" },
-      language,
-    );
-
-    await this.cache.set(cacheKey, result, "MEDIUM");
-    return result;
   }
 
   async fetchMediaCredits(
     mediaType: "movie" | "tv",
     mediaId: number,
     language = "fr-FR",
+    options: CacheFetchOptions = {},
   ): Promise<{ cast?: unknown[] }> {
     const endpoint = mediaType === "tv" ? "aggregate_credits" : "credits";
     const langStr = (language.split(",")[0] || "fr-FR").trim();
-    const cacheKey = this.cache.tmdbKey(
-      mediaType,
-      mediaId,
-      `${endpoint}-${langStr}`,
-    );
+    const cacheKey = buildCacheKey({
+      provider: "tmdb",
+      resource: mediaType,
+      id: mediaId,
+      language: langStr,
+      params: { endpoint },
+    });
 
-    const cached = await this.cache.get(cacheKey);
-    if (cached) return cached;
-
-    const result = await this.get(
-      `${mediaType}/${mediaId}/${endpoint}`,
-      undefined,
-      langStr,
+    return this.cache.getOrFetch(
+      cacheKey,
+      () => this.get(`${mediaType}/${mediaId}/${endpoint}`, undefined, langStr),
+      { ttl: 86400, ...options },
     );
-    await this.cache.set(cacheKey, result, "MEDIUM");
-    return result;
   }
 
-  async getPersonWithCredits(personId: number, language?: string) {
+  async getPersonWithCredits(personId: number, language?: string, options: CacheFetchOptions = {}) {
     const langStr = ((language || "fr-FR").split(",")[0] || "fr-FR").trim();
-    const cacheKey = this.cache.tmdbKey(
-      "person",
-      personId,
-      `credits-${langStr}`,
-    );
+    const cacheKey = buildCacheKey({
+      provider: "tmdb",
+      resource: "person",
+      id: personId,
+      language: langStr,
+      params: { append_to_response: "tv_credits,movie_credits,external_ids" },
+    });
 
-    const cached = await this.cache.get(cacheKey);
-    if (cached) return cached;
-
-    const result = await this.get(
-      `person/${personId}`,
-      { append_to_response: "tv_credits,movie_credits,external_ids" },
-      language,
+    return this.cache.getOrFetch(
+      cacheKey,
+      () =>
+        this.get(
+          `person/${personId}`,
+          { append_to_response: "tv_credits,movie_credits,external_ids" },
+          language,
+        ),
+      { ttl: 86400, ...options },
     );
-    await this.cache.set(cacheKey, result, "MEDIUM");
-    return result;
   }
 
   async getTrending(
     mediaType: "movie" | "tv",
     timeWindow: "day" | "week",
     language = "en-US",
+    options: CacheFetchOptions = {},
   ) {
     const langStr = (language.split(",")[0] || "en-US").trim();
-    const cacheKey = this.cache.tmdbKey(
-      "trending",
-      mediaType,
-      `${timeWindow}-${langStr}`,
-    );
+    const cacheKey = buildCacheKey({
+      provider: "tmdb",
+      resource: "trending",
+      id: mediaType,
+      language: langStr,
+      params: { timeWindow },
+    });
 
-    const cached = await this.cache.get(cacheKey);
-    if (cached) return cached;
-
-    const result = await this.get(
-      `trending/${mediaType}/${timeWindow}`,
-      undefined,
-      language,
+    return this.cache.getOrFetch(
+      cacheKey,
+      () => this.get(`trending/${mediaType}/${timeWindow}`, undefined, language),
+      { ttl: 3600, ...options },
     );
-    await this.cache.set(cacheKey, result, "SHORT");
-    return result;
   }
 
   async searchMulti(query: string, page = 1, language = "fr-FR") {
-    const langStr = (language.split(",")[0] || "fr-FR").trim();
-    const cacheKey = this.cache.tmdbKey(
-      "search",
-      `multi:${query}:${page}`,
-      langStr,
-    );
-
-    const cached = await this.cache.get(cacheKey);
-    if (cached) return cached;
-
-    const result = await this.get(
-      "search/multi",
-      { query, page: String(page) },
-      language,
-    );
-    await this.cache.set(cacheKey, result, "SHORT");
-    return result;
+    return this.get("search/multi", { query, page: String(page) }, language);
   }
 
   async getCollection(collectionId: number) {
-    const cacheKey = this.cache.tmdbKey("collection", collectionId, "details");
+    const cacheKey = buildCacheKey({
+      provider: "tmdb",
+      resource: "collection",
+      id: collectionId,
+      params: { endpoint: "details" },
+    });
 
-    const cached = await this.cache.get(cacheKey);
-    if (cached) return cached;
-
-    const result = await this.get(`collection/${collectionId}`);
-    await this.cache.set(cacheKey, result, "MEDIUM");
-    return result;
+    return this.cache.getOrFetch(cacheKey, () => this.get(`collection/${collectionId}`), {
+      ttl: 86400,
+    });
   }
 }

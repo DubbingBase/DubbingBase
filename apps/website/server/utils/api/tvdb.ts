@@ -1,4 +1,5 @@
 import { SimpleCache } from "../cache";
+import type { CacheFetchOptions } from "./cache-options";
 
 function debugLog(message: string, data?: any) {
   console.log(`[TVDB] ${message}`, data ? JSON.stringify(data, null, 2) : "");
@@ -24,38 +25,31 @@ export class TVDBClient {
       return this.token;
     }
 
-    const cacheKey = "tvdb:auth_token";
-    const cached = await this.cache.get<string>(cacheKey);
-    if (cached) {
-      this.token = cached;
-      this.tokenExpiry = new Date(Date.now() + 23 * 60 * 60 * 1000);
-      return this.token;
-    }
+    const token = await this.cache.getOrFetch(
+      "tvdb:auth_token",
+      async () => {
+        const response = await fetch(`${this.baseUrl}/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ apikey: this.apiKey }),
+          signal: AbortSignal.timeout(10000),
+        });
 
-    const response = await fetch(`${this.baseUrl}/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ apikey: this.apiKey }),
-      signal: AbortSignal.timeout(10000),
-    });
+        if (!response.ok) {
+          throw new Error(`TVDB auth failed: ${response.status}`);
+        }
 
-    if (!response.ok) {
-      throw new Error(`TVDB auth failed: ${response.status}`);
-    }
-
-    const data = await response.json();
-    this.token = data.data.token;
+        const data = await response.json();
+        return data.data.token as string;
+      },
+      { ttl: 23 * 60 * 60 },
+    );
+    this.token = token;
     this.tokenExpiry = new Date(Date.now() + 23 * 60 * 60 * 1000);
-
-    await this.cache.set(cacheKey, this.token, "SHORT");
-    return this.token!;
+    return token;
   }
 
-  async get(
-    endpoint: string,
-    params?: Record<string, string>,
-    language?: string,
-  ) {
+  async get(endpoint: string, params?: Record<string, string>, language?: string) {
     const token = await this.authenticate();
     const url = new URL(`${this.baseUrl}${endpoint}`);
 
@@ -94,92 +88,67 @@ export class TVDBClient {
     seriesId: number,
     extended?: { meta?: string; short?: boolean },
     language?: string,
+    options: CacheFetchOptions = {},
   ) {
-    const cacheKey = this.cache.tvdbKey(
-      "series",
-      seriesId,
-      extended ? `meta-${extended.meta}` : "basic",
-    );
-
-    const cached = await this.cache.get(cacheKey);
-    if (cached) return cached;
-
+    const normalizedLanguage = language ? (language.split(",")[0] || "en").trim() : "default";
+    const suffix = extended
+      ? `meta-${extended.meta ?? "default"}-${extended.short ? "short" : "full"}`
+      : "basic";
+    const cacheKey = this.cache.tvdbKey("series", seriesId, suffix, normalizedLanguage);
     const params: Record<string, string> = {};
     if (extended?.meta) params.meta = extended.meta;
     if (extended?.short) params.short = "true";
-
-    const result = await this.get(`/series/${seriesId}`, params, language);
-    await this.cache.set(cacheKey, result, "MEDIUM");
-    return result;
+    return this.cache.getOrFetch(
+      cacheKey,
+      () => this.get(`/series/${seriesId}`, params, language),
+      { ttl: 86400, ...options },
+    );
   }
 
   async getMovieById(
     movieId: number,
     extended?: { meta?: string; short?: boolean },
     language?: string,
+    options: CacheFetchOptions = {},
   ) {
-    const cacheKey = this.cache.tvdbKey(
-      "movie",
-      movieId,
-      extended ? `meta-${extended.meta}` : "basic",
-    );
-
-    const cached = await this.cache.get(cacheKey);
-    if (cached) return cached;
-
+    const normalizedLanguage = language ? (language.split(",")[0] || "en").trim() : "default";
+    const suffix = extended
+      ? `meta-${extended.meta ?? "default"}-${extended.short ? "short" : "full"}`
+      : "basic";
+    const cacheKey = this.cache.tvdbKey("movie", movieId, suffix, normalizedLanguage);
     const params: Record<string, string> = {};
     if (extended?.meta) params.meta = extended.meta;
-
-    const result = await this.get(`/movies/${movieId}`, params, language);
-    await this.cache.set(cacheKey, result, "MEDIUM");
-    return result;
+    return this.cache.getOrFetch(cacheKey, () => this.get(`/movies/${movieId}`, params, language), {
+      ttl: 86400,
+      ...options,
+    });
   }
 
-  async getCharacterById(characterId: number) {
+  async getCharacterById(characterId: number, options: CacheFetchOptions = {}) {
     const cacheKey = this.cache.tvdbKey("character", characterId);
-    const cached = await this.cache.get(cacheKey);
-    if (cached) return cached;
-
-    const result = await this.get(`/characters/${characterId}`);
-    await this.cache.set(cacheKey, result, "MEDIUM");
-    return result;
+    return this.cache.getOrFetch(cacheKey, () => this.get(`/characters/${characterId}`), {
+      ttl: 86400,
+      ...options,
+    });
   }
 
-  async getCharactersBySeries(seriesId: number) {
+  async getCharactersBySeries(seriesId: number, options: CacheFetchOptions = {}) {
     const cacheKey = this.cache.tvdbKey("series", seriesId, "characters");
-    const cached = await this.cache.get(cacheKey);
-    if (cached) return cached;
-
-    const result = await this.get(`/series/${seriesId}/characters`);
-    await this.cache.set(cacheKey, result, "MEDIUM");
-    return result;
+    return this.cache.getOrFetch(cacheKey, () => this.get(`/series/${seriesId}/characters`), {
+      ttl: 86400,
+      ...options,
+    });
   }
 
-  async getCharactersByMovie(movieId: number) {
+  async getCharactersByMovie(movieId: number, options: CacheFetchOptions = {}) {
     const cacheKey = this.cache.tvdbKey("movie", movieId, "characters");
-    const cached = await this.cache.get(cacheKey);
-    if (cached) return cached;
-
-    const result = await this.get(`/movies/${movieId}/characters`);
-    await this.cache.set(cacheKey, result, "MEDIUM");
-    return result;
+    return this.cache.getOrFetch(cacheKey, () => this.get(`/movies/${movieId}/characters`), {
+      ttl: 86400,
+      ...options,
+    });
   }
 
   async searchSeries(query: string, language?: string) {
-    const cacheKey = this.cache.tvdbKey(
-      "search",
-      query.toLowerCase().replace(/[^a-z0-9]/g, "_"),
-    );
-
-    const cached = await this.cache.get(cacheKey);
-    if (cached) return cached;
-
-    const result = await this.get(
-      "/search",
-      { query, type: "series" },
-      language,
-    );
-    await this.cache.set(cacheKey, result, "SHORT");
-    return result;
+    return this.get("/search", { query, type: "series" }, language);
   }
 }

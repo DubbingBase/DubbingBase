@@ -1,10 +1,9 @@
 import { SimpleCache } from "../cache";
+import { buildCacheKey } from "../cache/constants";
 import type { Audiobook, OpenLibraryAuthor } from "@app/shared-logic";
+import type { CacheFetchOptions } from "./cache-options";
 
-export function buildOpenLibraryCoverUrl(
-  coverId: number,
-  size: "S" | "M" | "L" = "L",
-): string {
+export function buildOpenLibraryCoverUrl(coverId: number, size: "S" | "M" | "L" = "L"): string {
   return `https://covers.openlibrary.org/b/id/${coverId}-${size}.jpg`;
 }
 
@@ -40,8 +39,7 @@ interface OpenLibraryAuthorResponse {
 export class OpenLibraryClient {
   private baseUrl = "https://openlibrary.org";
   private cache: SimpleCache;
-  private userAgent =
-    "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
+  private userAgent = "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
 
   constructor(cache: SimpleCache) {
     this.cache = cache;
@@ -50,16 +48,6 @@ export class OpenLibraryClient {
   async searchBooks(query: string): Promise<Audiobook[]> {
     const trimmed = query.trim();
     if (!trimmed || trimmed.length < 2) return [];
-
-    const cacheKey = `openlibrary:search:${encodeURIComponent(trimmed.toLowerCase())}`;
-    try {
-      const cached = await this.cache.get<Audiobook[]>(cacheKey);
-      if (cached && Array.isArray(cached)) {
-        return cached;
-      }
-    } catch {
-      // Ignore cache read errors
-    }
 
     try {
       const url = `${this.baseUrl}/search.json?q=${encodeURIComponent(trimmed)}&limit=20`;
@@ -97,15 +85,11 @@ export class OpenLibraryClient {
 
         if (!id || isNaN(id)) continue;
 
-        const coverUrl = doc.cover_i
-          ? buildOpenLibraryCoverUrl(doc.cover_i, "L")
-          : null;
+        const coverUrl = doc.cover_i ? buildOpenLibraryCoverUrl(doc.cover_i, "L") : null;
 
-        const authors: OpenLibraryAuthor[] = (doc.author_name || []).map(
-          (name) => ({
-            name,
-          }),
-        );
+        const authors: OpenLibraryAuthor[] = (doc.author_name || []).map((name) => ({
+          name,
+        }));
 
         books.push({
           id,
@@ -116,15 +100,9 @@ export class OpenLibraryClient {
           cover_url: coverUrl,
           cover_id: doc.cover_i || null,
           first_publish_year: doc.first_publish_year || null,
-          first_publish_date: doc.first_publish_year
-            ? String(doc.first_publish_year)
-            : null,
-          publish_date: doc.first_publish_year
-            ? `${doc.first_publish_year}-01-01`
-            : null,
-          release_date: doc.first_publish_year
-            ? `${doc.first_publish_year}-01-01`
-            : null,
+          first_publish_date: doc.first_publish_year ? String(doc.first_publish_year) : null,
+          publish_date: doc.first_publish_year ? `${doc.first_publish_year}-01-01` : null,
+          release_date: doc.first_publish_year ? `${doc.first_publish_year}-01-01` : null,
           isbn: doc.isbn?.[0] || null,
           media_type: "audiobook",
           popularity: doc.edition_count ? Math.sqrt(doc.edition_count) * 5 : 0,
@@ -133,7 +111,6 @@ export class OpenLibraryClient {
         });
       }
 
-      await this.cache.set(cacheKey, books, "MEDIUM");
       return books;
     } catch (err) {
       console.error("OpenLibrary search error:", err);
@@ -141,133 +118,130 @@ export class OpenLibraryClient {
     }
   }
 
-  async getAuthorName(authorKey: string): Promise<string> {
+  async getAuthorName(authorKey: string, options: CacheFetchOptions = {}): Promise<string> {
     const cleanKey = authorKey.replace(/^\//, "").replace(/^authors\//, "");
-    const cacheKey = `openlibrary:author:${cleanKey}`;
+    const cacheKey = buildCacheKey({
+      provider: "openlibrary",
+      resource: "author",
+      id: cleanKey,
+    });
+    return this.cache.getOrFetch(
+      cacheKey,
+      async () => {
+        try {
+          const url = `${this.baseUrl}/authors/${cleanKey}.json`;
+          const res = await fetch(url, {
+            headers: {
+              "User-Agent": this.userAgent,
+              Accept: "application/json",
+            },
+            signal: AbortSignal.timeout(6000),
+          });
 
-    try {
-      const cached = await this.cache.get<string>(cacheKey);
-      if (cached) return cached;
-    } catch {
-      // Ignore cache read errors
-    }
+          if (!res.ok) return "";
 
-    try {
-      const url = `${this.baseUrl}/authors/${cleanKey}.json`;
-      const res = await fetch(url, {
-        headers: {
-          "User-Agent": this.userAgent,
-          Accept: "application/json",
-        },
-        signal: AbortSignal.timeout(6000),
-      });
-
-      if (!res.ok) return "";
-
-      const data = (await res.json()) as OpenLibraryAuthorResponse;
-      const name = data.name || data.personal_name || "";
-      if (name) {
-        await this.cache.set(cacheKey, name, "LONG");
-      }
-      return name;
-    } catch (err) {
-      console.error(`Failed to fetch OpenLibrary author ${cleanKey}:`, err);
-      return "";
-    }
+          const data = (await res.json()) as OpenLibraryAuthorResponse;
+          return data.name || data.personal_name || "";
+        } catch (err) {
+          console.error(`Failed to fetch OpenLibrary author ${cleanKey}:`, err);
+          return "";
+        }
+      },
+      { ttl: 604800, ...options },
+    );
   }
 
-  async getBook(id: number): Promise<Audiobook | null> {
-    const cacheKey = `openlibrary:book:${id}`;
-    try {
-      const cached = await this.cache.get<Audiobook>(cacheKey);
-      if (cached) return cached;
-    } catch {
-      // Ignore cache read errors
-    }
+  async getBook(id: number, options: CacheFetchOptions = {}): Promise<Audiobook | null> {
+    const cacheKey = buildCacheKey({
+      provider: "openlibrary",
+      resource: "book",
+      id,
+    });
+    return this.cache.getOrFetch(
+      cacheKey,
+      async () => {
+        try {
+          // Try work endpoint first
+          const workUrl = `${this.baseUrl}/works/OL${id}W.json`;
+          const res = await fetch(workUrl, {
+            headers: {
+              "User-Agent": this.userAgent,
+              Accept: "application/json",
+            },
+            signal: AbortSignal.timeout(8000),
+          });
 
-    try {
-      // Try work endpoint first
-      const workUrl = `${this.baseUrl}/works/OL${id}W.json`;
-      const res = await fetch(workUrl, {
-        headers: {
-          "User-Agent": this.userAgent,
-          Accept: "application/json",
-        },
-        signal: AbortSignal.timeout(8000),
-      });
-
-      if (!res.ok) {
-        // If not found as OL work and is valid ISBN (10 or 13 digits), try ISBN endpoint
-        if (id > 100000000) {
-          const book = await this.getBookByIsbn(id);
-          if (book) {
-            await this.cache.set(cacheKey, book, "LONG");
+          if (!res.ok) {
+            // If not found as OL work and is valid ISBN (10 or 13 digits), try ISBN endpoint
+            if (id > 100000000) {
+              const book = await this.getBookByIsbn(id);
+              return book;
+            }
+            return null;
           }
-          return book;
-        }
-        return null;
-      }
 
-      const data = (await res.json()) as OpenLibraryWorkResponse;
-      if (!data.title) return null;
+          const data = (await res.json()) as OpenLibraryWorkResponse;
+          if (!data.title) return null;
 
-      let description = "";
-      if (typeof data.description === "string") {
-        description = data.description;
-      } else if (data.description && typeof data.description === "object") {
-        description = data.description.value || "";
-      }
+          let description = "";
+          if (typeof data.description === "string") {
+            description = data.description;
+          } else if (data.description && typeof data.description === "object") {
+            description = data.description.value || "";
+          }
 
-      const validCovers = (data.covers || []).filter((c) => c && c > 0);
-      const coverId = validCovers[0] || null;
-      const coverUrl = coverId ? buildOpenLibraryCoverUrl(coverId, "L") : null;
+          const validCovers = (data.covers || []).filter((c) => c && c > 0);
+          const coverId = validCovers[0] || null;
+          const coverUrl = coverId ? buildOpenLibraryCoverUrl(coverId, "L") : null;
 
-      const authors: OpenLibraryAuthor[] = [];
-      if (data.authors && Array.isArray(data.authors)) {
-        for (const item of data.authors) {
-          if (item?.author?.key) {
-            const authorName = await this.getAuthorName(item.author.key);
-            if (authorName) {
-              authors.push({
-                id: item.author.key,
-                name: authorName,
-              });
+          const authors: OpenLibraryAuthor[] = [];
+          if (data.authors && Array.isArray(data.authors)) {
+            for (const item of data.authors) {
+              if (item?.author?.key) {
+                const authorName = await this.getAuthorName(item.author.key, options);
+                if (authorName) {
+                  authors.push({
+                    id: item.author.key,
+                    name: authorName,
+                  });
+                }
+              }
             }
           }
+
+          let publishYear: number | null = null;
+          if (data.first_publish_date) {
+            const yearMatch = data.first_publish_date.match(/\b(19\d\d|20\d\d)\b/);
+            if (yearMatch && yearMatch[1]) {
+              publishYear = parseInt(yearMatch[1], 10);
+            }
+          }
+
+          const book: Audiobook = {
+            id,
+            title: data.title,
+            name: data.title,
+            description,
+            authors,
+            author_name: authors[0]?.name || "",
+            cover_url: coverUrl,
+            cover_id: coverId,
+            first_publish_year: publishYear,
+            first_publish_date: data.first_publish_date || null,
+            publish_date: publishYear ? `${publishYear}-01-01` : null,
+            release_date: publishYear ? `${publishYear}-01-01` : null,
+            subjects: data.subjects?.slice(0, 10) || [],
+            media_type: "audiobook",
+          };
+
+          return book;
+        } catch (err) {
+          console.error(`Failed to fetch OpenLibrary book ${id}:`, err);
+          return null;
         }
-      }
-
-      let publishYear: number | null = null;
-      if (data.first_publish_date) {
-        const yearMatch = data.first_publish_date.match(/\b(19\d\d|20\d\d)\b/);
-        if (yearMatch && yearMatch[1]) {
-          publishYear = parseInt(yearMatch[1], 10);
-        }
-      }
-
-      const book: Audiobook = {
-        id,
-        title: data.title,
-        name: data.title,
-        description,
-        authors,
-        author_name: authors[0]?.name || "",
-        cover_url: coverUrl,
-        cover_id: coverId,
-        first_publish_year: publishYear,
-        first_publish_date: data.first_publish_date || null,
-        publish_date: publishYear ? `${publishYear}-01-01` : null,
-        release_date: publishYear ? `${publishYear}-01-01` : null,
-        subjects: data.subjects?.slice(0, 10) || [],
-        media_type: "audiobook",
-      };
-
-      await this.cache.set(cacheKey, book, "LONG");
-      return book;
-    } catch (err) {
-      console.error(`Failed to fetch OpenLibrary book ${id}:`, err);
-      return null;
-    }
+      },
+      { ttl: 604800, ...options },
+    );
   }
 
   private async getBookByIsbn(isbn: number): Promise<Audiobook | null> {
