@@ -34,9 +34,7 @@
             <h2 class="text-2xl font-bold mb-4">
               {{ $t("profile.biography") }}
             </h2>
-            <p
-              class="theme-text-secondary leading-relaxed text-lg whitespace-pre-wrap"
-            >
+            <p class="theme-text-secondary leading-relaxed text-lg whitespace-pre-wrap">
               {{ voiceActor.bio }}
             </p>
           </section>
@@ -78,12 +76,7 @@
           :to="localePath(`/voice-actor/${voiceActorId}/edit`)"
           class="text-sm theme-primary-text theme-hover-primary-text transition-colors flex items-center gap-1.5 font-medium"
         >
-          <svg
-            class="w-4 h-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -109,9 +102,7 @@
             stroke-linecap="round"
             stroke-linejoin="round"
           >
-            <path
-              d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"
-            />
+            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
             <line x1="4" y1="22" x2="4" y2="15" />
           </svg>
         </button>
@@ -157,9 +148,7 @@
         <!-- Filmography -->
         <section>
           <div class="flex flex-col mb-6 gap-4">
-            <div
-              class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4"
-            >
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
               <div>
                 <h2 class="text-2xl font-bold">
                   {{ $t("voiceActor.filmography", "Filmography") }}
@@ -175,10 +164,7 @@
                     v-model="searchInput"
                     type="search"
                     :placeholder="
-                      $t(
-                        'voiceActor.searchPlaceholder',
-                        'Search roles, titles or actors...',
-                      )
+                      $t('voiceActor.searchPlaceholder', 'Search roles, titles or actors...')
                     "
                     class="w-full theme-input border theme-border-subtle theme-border rounded-xl pl-10 pr-4 py-2 text-sm theme-focus transition-all theme-text"
                   />
@@ -265,9 +251,7 @@
             v-if="worksTotal === 0"
             class="theme-text-muted text-center py-12 theme-input rounded-2xl border theme-border-subtle theme-border"
           >
-            {{
-              $t("voiceActor.noWorksFound", "No works found for this actor.")
-            }}
+            {{ $t("voiceActor.noWorksFound", "No works found for this actor.") }}
           </div>
 
           <template v-if="displayMode === 'list'">
@@ -275,7 +259,7 @@
               :key="`${searchQuery}|${activeTab}|${sortMode}`"
               :items="worksItems"
               :total-items="worksTotal"
-              :page="worksPage"
+              :page="currentWorksPage"
               :page-size="12"
               grid-class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
               :item-key="(item) => item.work.id"
@@ -286,17 +270,12 @@
                   :key="item.work.id"
                   class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border block group"
                 >
-                  <div
-                    class="flex flex-col sm:grid sm:grid-cols-3 gap-4 h-full"
-                  >
+                  <div class="flex flex-col sm:grid sm:grid-cols-3 gap-4 h-full">
                     <!-- Column 1: Media -->
                     <NuxtLink
                       :to="
                         localePath(
-                          getMediaLink(
-                            item.work.dubbing_projects?.content_type,
-                            item.media.id,
-                          ),
+                          getMediaLink(item.work.dubbing_projects?.content_type, item.media.id),
                         )
                       "
                       class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start cursor-pointer"
@@ -309,38 +288,25 @@
                           decoding="async"
                           v-if="item.media.poster_path"
                           :src="resolveImageUrl(item.media.poster_path)"
-                          :alt="
-                            (item.media as any).title ||
-                            (item.media as any).name
-                          "
+                          :alt="getMediaTitle(item.media)"
                           class="w-full h-full object-cover transition-transform duration-300"
                         />
                         <div
                           v-else
                           class="w-full h-full flex items-center justify-center theme-text-muted"
                         >
-                          <ClapperboardIcon
-                            class="w-6 h-6 sm:w-8 sm:h-8 opacity-20"
-                          />
+                          <ClapperboardIcon class="w-6 h-6 sm:w-8 sm:h-8 opacity-20" />
                         </div>
                       </div>
                       <div class="flex flex-col min-w-0 flex-1">
                         <span
                           class="text-[10px] theme-text-muted font-semibold uppercase tracking-wider mb-0.5"
-                          >{{
-                            item.sortDate ? item.sortDate.split("-")[0] : ""
-                          }}</span
+                          >{{ item.sortDate ? item.sortDate.split("-")[0] : "" }}</span
                         >
                         <span
                           class="font-bold text-sm theme-text leading-tight line-clamp-2"
-                          :title="
-                            (item.media as any).title ||
-                            (item.media as any).name
-                          "
-                          >{{
-                            (item.media as any).title ||
-                            (item.media as any).name
-                          }}</span
+                          :title="getMediaTitle(item.media)"
+                          >{{ getMediaTitle(item.media) }}</span
                         >
                         <div
                           v-if="item.work.dubbing_projects?.studios"
@@ -358,7 +324,7 @@
 
                     <!-- Column 2: Original Actor -->
                     <NuxtLink
-                      v-if="item.data.actor"
+                      v-if="item.data.actor && item.data.actor.id > 0"
                       :to="localePath(`/actor/${item.data.actor.id}`)"
                       class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t theme-border-subtle theme-border sm:border-t-0 pt-3 sm:pt-0 cursor-pointer"
                     >
@@ -369,9 +335,7 @@
                           format="webp"
                           decoding="async"
                           v-if="item.data.actor.profile_picture"
-                          :src="
-                            resolveImageUrl(item.data.actor.profile_picture)
-                          "
+                          :src="resolveImageUrl(item.data.actor.profile_picture)"
                           :alt="item.data.actor.name"
                           class="w-full h-full object-cover"
                         />
@@ -413,7 +377,7 @@
                         >
                         <span
                           class="font-medium text-sm theme-text-secondary leading-tight line-clamp-2"
-                          >{{ $t("details.unknownCharacter") }}</span
+                          >{{ $t("voiceActor.unknownActor") }}</span
                         >
                       </div>
                     </div>
@@ -473,13 +437,15 @@
           <template v-else>
             <div class="space-y-10">
               <div
-                v-for="[actorName, works] in groupedWorks"
-                :key="actorName"
+                v-for="group in groupedWorks"
+                :key="group.key"
+                data-testid="voice-actor-group"
                 class="space-y-4"
               >
                 <!-- Actor Group Header -->
                 <NuxtLink
-                  :to="localePath(`/actor/${works[0]?.data.actor.id}`)"
+                  v-if="group.actorId !== null && group.actorId > 0"
+                  :to="localePath(`/actor/${group.actorId}`)"
                   class="sticky top-[68px] z-20 flex items-center gap-4 border-b theme-border-subtle theme-border pb-4 theme-surface-overlay backdrop-blur theme-hover-surface-muted p-2 -ml-2 rounded-xl transition-colors cursor-pointer group"
                 >
                   <div
@@ -488,50 +454,64 @@
                     <NuxtImg
                       format="webp"
                       decoding="async"
-                      v-if="works[0]?.data.actor.profile_picture"
-                      :src="
-                        resolveImageUrl(works[0].data.actor.profile_picture)
-                      "
-                      :alt="actorName"
+                      v-if="group.actor.profile_picture"
+                      :src="resolveImageUrl(group.actor.profile_picture)"
+                      :alt="group.actor.name || $t('voiceActor.unknownActor')"
                       class="object-cover w-full h-full"
                     />
-                    <UserIcon
-                      v-else
-                      class="w-full h-full theme-text-muted p-2"
-                    />
+                    <UserIcon v-else class="w-full h-full theme-text-muted p-2" />
                   </div>
                   <div>
-                    <h3
-                      class="text-xl font-bold theme-text group-hover:underline"
-                    >
-                      {{ actorName }}
+                    <h3 class="text-xl font-bold theme-text group-hover:underline">
+                      {{ group.actor.name || $t("voiceActor.unknownActor") }}
                     </h3>
                     <p class="text-sm theme-text-muted">
-                      {{ works.length }}{{ $t("common.works") }}
+                      {{ group.worksCount }}{{ $t("common.works") }}
                     </p>
                   </div>
                 </NuxtLink>
+                <div
+                  v-else
+                  class="sticky top-[68px] z-20 flex items-center gap-4 border-b theme-border-subtle theme-border pb-4 theme-surface-overlay backdrop-blur p-2 -ml-2 rounded-xl"
+                >
+                  <div
+                    class="w-20 h-20 shrink-0 rounded-full overflow-hidden theme-surface-raised theme-input shadow-md border theme-border-subtle theme-border"
+                  >
+                    <NuxtImg
+                      format="webp"
+                      decoding="async"
+                      v-if="group.actor.profile_picture"
+                      :src="resolveImageUrl(group.actor.profile_picture)"
+                      :alt="group.actor.name || $t('voiceActor.unknownActor')"
+                      class="object-cover w-full h-full"
+                    />
+                    <UserIcon v-else class="w-full h-full theme-text-muted p-2" />
+                  </div>
+                  <div>
+                    <h3 class="text-xl font-bold theme-text">
+                      {{ group.actor.name || $t("voiceActor.unknownActor") }}
+                    </h3>
+                    <p class="text-sm theme-text-muted">
+                      {{ group.worksCount }}{{ $t("common.works") }}
+                    </p>
+                  </div>
+                </div>
 
                 <!-- Actor Works Grid -->
                 <div
                   class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
                 >
                   <div
-                    v-for="item in works"
+                    v-for="item in group.works"
                     :key="item.work.id"
                     class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border block group"
                   >
-                    <div
-                      class="flex flex-col sm:grid sm:grid-cols-2 gap-4 h-full"
-                    >
+                    <div class="flex flex-col sm:grid sm:grid-cols-2 gap-4 h-full">
                       <!-- Column 1: Media -->
                       <NuxtLink
                         :to="
                           localePath(
-                            getMediaLink(
-                              item.work.dubbing_projects?.content_type,
-                              item.media.id,
-                            ),
+                            getMediaLink(item.work.dubbing_projects?.content_type, item.media.id),
                           )
                         "
                         class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start cursor-pointer"
@@ -544,10 +524,7 @@
                             decoding="async"
                             v-if="item.media.poster_path"
                             :src="resolveImageUrl(item.media.poster_path)"
-                            :alt="
-                              (item.media as any).title ||
-                              (item.media as any).name
-                            "
+                            :alt="getMediaTitle(item.media)"
                             class="w-full h-full object-cover transition-transform duration-300"
                           />
                           <div
@@ -560,20 +537,12 @@
                         <div class="flex flex-col min-w-0 flex-1">
                           <span
                             class="text-[10px] theme-text-muted font-semibold uppercase tracking-wider mb-0.5"
-                            >{{
-                              item.sortDate ? item.sortDate.split("-")[0] : ""
-                            }}</span
+                            >{{ item.sortDate ? item.sortDate.split("-")[0] : "" }}</span
                           >
                           <span
                             class="font-bold text-sm theme-text leading-tight line-clamp-2"
-                            :title="
-                              (item.media as any).title ||
-                              (item.media as any).name
-                            "
-                            >{{
-                              (item.media as any).title ||
-                              (item.media as any).name
-                            }}</span
+                            :title="getMediaTitle(item.media)"
+                            >{{ getMediaTitle(item.media) }}</span
                           >
                           <div
                             v-if="item.work.dubbing_projects?.studios"
@@ -632,10 +601,7 @@
                           >
                           <span
                             class="font-medium text-sm theme-text-secondary leading-tight line-clamp-2"
-                            >{{
-                              item.data.character ||
-                              $t("details.unknownCharacter")
-                            }}</span
+                            >{{ item.data.character || $t("details.unknownCharacter") }}</span
                           >
                         </div>
                       </div>
@@ -645,7 +611,7 @@
               </div>
             </div>
             <PaginationControls
-              :page="worksPage"
+              :page="currentWorksPage"
               :total-items="worksTotal"
               :page-size="12"
               @update:page="setWorksPage"
@@ -668,10 +634,10 @@ import PersonDetailsLayout from "../../components/layout/PersonDetailsLayout.vue
 import {
   useVoiceActorData,
   fetchVoiceActorData,
-  fetchDetailCollection,
+  paginateVoiceActorWorks,
+  type VoiceActorWorkGroup,
   APP_LOCALES,
 } from "@app/shared-logic";
-import type { PaginatedResponse } from "@app/shared-logic";
 import { useRouter, useRoute } from "vue-router";
 import {
   Clapperboard as ClapperboardIcon,
@@ -738,28 +704,21 @@ function getMediaLink(contentType?: string | null, mediaId?: number | string) {
   return `/movie/${mediaId}`;
 }
 
-const { data, pending } = useAsyncData(
+const voiceActorDataRequest = useAsyncData(
   `voice-actor-${voiceActorId}-${locale.value}`,
   () => {
-    const tmdbLanguage =
-      APP_LOCALES.find((l) => l.code === locale.value)?.language || "en-US";
+    const tmdbLanguage = APP_LOCALES.find((l) => l.code === locale.value)?.language || "en-US";
     return fetchVoiceActorData(voiceActorId, tmdbLanguage);
   },
   {
-    getCachedData: (key, nuxtApp) =>
-      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+    getCachedData: (key, nuxtApp) => nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
   },
 );
+const { data, pending } = voiceActorDataRequest;
 
 const voiceActorData = useVoiceActorData(data);
-const {
-  voiceActor,
-  profilePicture,
-  backdropPath,
-  loading,
-  searchQuery,
-  filteredEnhancedWork,
-} = voiceActorData;
+const { voiceActor, profilePicture, backdropPath, loading, searchQuery, filteredEnhancedWork } =
+  voiceActorData;
 
 const searchInput = ref("");
 const debouncedSearch = refDebounced(searchInput, 150);
@@ -769,10 +728,7 @@ watch(debouncedSearch, (val) => {
 
 const user = useSupabaseUser();
 const isAdmin = computed(() => {
-  return (
-    user.value?.app_metadata?.role === "admin" ||
-    user.value?.user_metadata?.role === "admin"
-  );
+  return user.value?.app_metadata?.role === "admin" || user.value?.user_metadata?.role === "admin";
 });
 
 const completenessScore = computed(() => {
@@ -786,26 +742,24 @@ const completenessScore = computed(() => {
   return score;
 });
 
-watch(
-  data,
-  (newData) => {
-    if (newData) {
-      voiceActorData.voiceActor.value = newData.voiceActor;
-      if (newData.enhancedWorks) {
-        voiceActorData.enhancedWorks.value = newData.enhancedWorks;
-      }
-      voiceActorData.medias.value = newData.medias;
-      voiceActorData.characterProfilePictures.value =
-        newData.characterProfilePictures;
-      voiceActorData.profilePicture.value = newData.profilePicture;
-      voiceActorData.backdropPath.value = newData.backdropPath;
-      voiceActorData.potentialWikipediaUrl.value =
-        newData.potentialWikipediaUrl;
-      voiceActorData.loading.value = false;
-    }
-  },
-  { immediate: true },
-);
+function syncVoiceActorData(newData: typeof data.value): void {
+  if (!newData) return;
+
+  voiceActorData.voiceActor.value = newData.voiceActor;
+  if (newData.enhancedWorks) {
+    voiceActorData.enhancedWorks.value = newData.enhancedWorks;
+  }
+  voiceActorData.medias.value = newData.medias;
+  voiceActorData.characterProfilePictures.value = newData.characterProfilePictures;
+  voiceActorData.profilePicture.value = newData.profilePicture;
+  voiceActorData.backdropPath.value = newData.backdropPath;
+  voiceActorData.potentialWikipediaUrl.value = newData.potentialWikipediaUrl;
+  voiceActorData.loading.value = false;
+}
+
+watch(data, syncVoiceActorData, { immediate: true });
+await voiceActorDataRequest;
+syncVoiceActorData(data.value);
 
 const actorName = computed(() => {
   if (!voiceActor.value) return "";
@@ -815,9 +769,7 @@ const actorName = computed(() => {
   );
 });
 
-const canonicalUrl = computed(
-  () => `https://dubbingbase.com/voice-actor/${voiceActorId}`,
-);
+const canonicalUrl = computed(() => `https://dubbingbase.com/voice-actor/${voiceActorId}`);
 
 const ogImageUrl = computed(() => {
   if (!voiceActorId) return "";
@@ -825,10 +777,7 @@ const ogImageUrl = computed(() => {
 });
 const actorDescription = computed(() => {
   if (!actorName.value)
-    return t(
-      "seo.voiceActorDescriptionFallback",
-      "Fiche comédien(ne) de doublage.",
-    );
+    return t("seo.voiceActorDescriptionFallback", "Fiche comédien(ne) de doublage.");
   const workCount = voiceActor.value?.work?.length || 0;
   const desc = t("seo.voiceActorDescription", {
     name: actorName.value,
@@ -911,23 +860,16 @@ useHead({
           "@context": "https://schema.org",
           "@type": "ProfilePage",
           url: canonicalUrl.value,
-          name: actorName.value
-            ? `${actorName.value} - Voice Actor`
-            : "Voice Actor",
+          name: actorName.value ? `${actorName.value} - Voice Actor` : "Voice Actor",
           mainEntity: {
             "@type": "Person",
-            name:
-              actorName.value ||
-              t("seo.voiceActorTitleFallback", "Voice Actor"),
+            name: actorName.value || t("seo.voiceActorTitleFallback", "Voice Actor"),
             jobTitle: t("seo.voiceActorTitleFallback", "Voice Actor"),
             image: profilePicture.value || ogImageUrl.value,
             url: canonicalUrl.value,
           },
         });
-        return json
-          .replace(/</g, "\\u003c")
-          .replace(/>/g, "\\u003e")
-          .replace(/&/g, "\\u0026");
+        return json.replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026");
       }),
     },
   ],
@@ -936,39 +878,47 @@ useHead({
 const displayMode = ref<"grouped" | "list">("grouped");
 const sortMode = ref<"newest" | "oldest">("newest");
 const activeTab = ref<string>("all");
-const { page: worksPage, setPage: setWorksPage } =
-  useUrlPagination("worksPage");
+const { page: worksPage, setPage: setWorksPage } = useUrlPagination("worksPage");
 
-type VoiceActorWorkItem = Record<string, any>;
-const worksRequest = computed(() => ({
-  collection: "voice-actor-works" as const,
-  id: voiceActorId,
-  query: searchQuery.value,
-  category: activeTab.value,
-  sort: sortMode.value,
-  view: displayMode.value,
-  lang:
-    APP_LOCALES.find((item) => item.code === locale.value)?.language || "en-US",
-  page: worksPage.value,
-  pageSize: 12,
-}));
-const { data: worksPageData } = useAsyncData<
-  PaginatedResponse<VoiceActorWorkItem>
->(
-  `voice-actor-works-${voiceActorId}-${locale.value}`,
-  () => fetchDetailCollection<VoiceActorWorkItem>(worksRequest.value),
-  {
-    watch: [worksRequest],
-    getCachedData: (key, nuxtApp, { cause }) =>
-      cause === "initial"
-        ? (nuxtApp.payload.data[key] ?? nuxtApp.static.data[key])
-        : undefined,
-  },
+const filteredWorks = computed(() => {
+  const works = filteredEnhancedWork.value.filter((item) => {
+    return (
+      activeTab.value === "all" ||
+      normalizeContentType(item.work.dubbing_projects?.content_type) === activeTab.value
+    );
+  });
+
+  return [...works].sort((left, right) => {
+    const dateOrder = left.sortDate.localeCompare(right.sortDate);
+    return sortMode.value === "oldest" ? dateOrder : -dateOrder;
+  });
+});
+type VoiceActorWorkItem = (typeof filteredWorks.value)[number];
+type VoiceActorCollectionItem = VoiceActorWorkItem | VoiceActorWorkGroup<VoiceActorWorkItem>;
+
+function getMediaTitle(media: VoiceActorWorkItem["media"]): string {
+  if ("title" in media && media.title) return media.title;
+  if ("name" in media && media.name) return media.name;
+  return "";
+}
+
+function isVoiceActorWorkGroup(
+  item: VoiceActorCollectionItem,
+): item is VoiceActorWorkGroup<VoiceActorWorkItem> {
+  return "works" in item;
+}
+
+const worksPageData = computed(() =>
+  paginateVoiceActorWorks(filteredWorks.value, displayMode.value, worksPage.value, 12),
 );
-const worksItems = computed(() => worksPageData.value?.data || []);
-const worksTotal = computed(
-  () => worksPageData.value?.pagination.totalItems || 0,
+const worksItems = computed(() =>
+  worksPageData.value.data.filter(
+    (item): item is VoiceActorWorkItem => !isVoiceActorWorkGroup(item),
+  ),
 );
+const groupedWorks = computed(() => worksPageData.value.data.filter(isVoiceActorWorkGroup));
+const worksTotal = computed(() => worksPageData.value.pagination.totalItems);
+const currentWorksPage = computed(() => worksPageData.value.pagination.page);
 
 const CATEGORY_TABS_CONFIG = [
   { id: "all", labelKey: "search.all", defaultLabel: "All", icon: LayersIcon },
@@ -1022,9 +972,7 @@ const categoryTabs = computed(() => {
   };
 
   for (const item of allWorks) {
-    const cType = normalizeContentType(
-      item.work.dubbing_projects?.content_type,
-    );
+    const cType = normalizeContentType(item.work.dubbing_projects?.content_type);
     totalCounts[cType] = (totalCounts[cType] || 0) + 1;
   }
 
@@ -1040,9 +988,7 @@ const categoryTabs = computed(() => {
   };
 
   for (const item of searchFiltered) {
-    const cType = normalizeContentType(
-      item.work.dubbing_projects?.content_type,
-    );
+    const cType = normalizeContentType(item.work.dubbing_projects?.content_type);
     filteredCounts[cType] = (filteredCounts[cType] || 0) + 1;
   }
 
@@ -1061,39 +1007,20 @@ const categoryTabs = computed(() => {
 });
 
 watch(categoryTabs, (tabs) => {
-  if (
-    activeTab.value !== "all" &&
-    !tabs.some((t) => t.id === activeTab.value)
-  ) {
+  if (activeTab.value !== "all" && !tabs.some((t) => t.id === activeTab.value)) {
     activeTab.value = "all";
   }
 });
 
-const worksMatchingTab = computed(() => {
-  if (activeTab.value === "all") {
-    return filteredEnhancedWork.value;
-  }
-  return filteredEnhancedWork.value.filter(
-    (item) =>
-      normalizeContentType(item.work.dubbing_projects?.content_type) ===
-      activeTab.value,
-  );
-});
-
 const workedStudios = computed(() => {
-  const studiosMap = new Map<
-    number,
-    { id: number; name: string; logo_url: string | null }
-  >();
+  const studiosMap = new Map<number, { id: number; name: string; logo_url: string | null }>();
   for (const item of filteredEnhancedWork.value) {
     const studio = item.work.dubbing_projects?.studios;
     if (studio && !studiosMap.has(studio.id)) {
       studiosMap.set(studio.id, studio);
     }
   }
-  return Array.from(studiosMap.values()).sort((a, b) =>
-    a.name.localeCompare(b.name),
-  );
+  return Array.from(studiosMap.values()).sort((a, b) => a.name.localeCompare(b.name));
 });
 
 const resolveImageUrl = (path: string | undefined | null) => {
@@ -1101,33 +1028,6 @@ const resolveImageUrl = (path: string | undefined | null) => {
   if (path.startsWith("http")) return path;
   return `https://image.tmdb.org/t/p/w185${path}`;
 };
-
-const sortedWorks = computed(() => {
-  const works = [...worksMatchingTab.value];
-  if (sortMode.value === "oldest") {
-    return works.sort((a, b) => (a.sortDate > b.sortDate ? 1 : -1));
-  }
-  return works.sort((a, b) => (a.sortDate > b.sortDate ? -1 : 1));
-});
-
-const groupedWorks = computed(() => {
-  const map = new Map<string, VoiceActorWorkItem[]>();
-  for (const item of worksItems.value) {
-    const actorName = item.data?.actor?.name || "Unknown Actor";
-    if (!map.has(actorName)) {
-      map.set(actorName, []);
-    }
-    map.get(actorName)!.push(item);
-  }
-
-  return Array.from(map.entries()).sort((a, b) => {
-    // Sort by number of works, then alphabetically
-    if (b[1].length !== a[1].length) {
-      return b[1].length - a[1].length;
-    }
-    return a[0].localeCompare(b[0]);
-  });
-});
 
 watch([searchQuery, activeTab, sortMode, displayMode], () => {
   void setWorksPage(1);

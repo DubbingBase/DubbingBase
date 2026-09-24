@@ -1,15 +1,9 @@
 import type { H3Event } from "h3";
 
 export type QueueName =
-  | "wiki_discovery"
-  | "wiki_check"
-  | "wiki_extract"
-  | string;
+  "wiki_discovery" | "wiki_check" | "wiki_extract" | string;
 export type DiscordNotificationCategory =
-  | "general"
-  | "discovery"
-  | "check"
-  | "extract";
+  "general" | "discovery" | "check" | "extract";
 
 export interface DiscordWebhookOptions {
   queue?: QueueName;
@@ -121,7 +115,7 @@ export function buildDiscordEmbed(
   options?: DiscordWebhookOptions,
 ): Record<string, unknown> {
   const category = categoryFor(options);
-  const label = category[0].toUpperCase() + category.slice(1);
+  const label = category.charAt(0).toUpperCase() + category.slice(1);
   const description =
     message.length > 2000
       ? message.slice(0, 1980) + "\n... (truncated)"

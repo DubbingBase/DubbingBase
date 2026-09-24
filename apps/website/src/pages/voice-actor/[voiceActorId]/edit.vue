@@ -437,7 +437,7 @@
                         work.dubbing_projects?.content_type,
                         work.dubbing_projects?.content_id,
                         work.dubbing_project_id,
-                      ),
+                      ) ?? '/',
                     )
                   "
                   class="px-3 py-1.5 theme-surface-muted theme-hover-surface-muted theme-status-info-text theme-status-info-text text-xs font-semibold rounded-lg border theme-border transition-all inline-flex items-center space-x-1"

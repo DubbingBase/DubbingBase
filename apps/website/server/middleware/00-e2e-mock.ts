@@ -399,6 +399,91 @@ export const MOCK_VOICE_ACTOR = {
   profilePicture: "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
 };
 
+function createMockVoiceActorWork(
+  id: number,
+  actorId: number,
+  actorName: string,
+  sortDate: string,
+) {
+  return {
+    media: {
+      id,
+      title: `Film ${id}`,
+      name: `Film ${id}`,
+      poster_path: null,
+      release_date: sortDate,
+    },
+    work: {
+      id,
+      actor_id: actorId,
+      performance: "dialogues",
+      dubbing_projects: {
+        content_id: id,
+        content_type: "movie",
+        studios: null,
+      },
+    },
+    data: {
+      character: `Character ${id}`,
+      actor: { id: actorId, name: actorName, profile_picture: null },
+    },
+    sortDate,
+    searchText: `film ${id} ${actorName.toLowerCase()}`,
+  };
+}
+
+const MOCK_VOICE_ACTOR_WITH_UNRESOLVED_WORK = {
+  ...MOCK_VOICE_ACTOR,
+  enhancedWorks: [
+    ...MOCK_VOICE_ACTOR.enhancedWorks,
+    ...Array.from({ length: 13 }, (_, index) =>
+      createMockVoiceActorWork(
+        2000 + index,
+        3,
+        "Harrison Ford",
+        `${2010 + index}-01-01`,
+      ),
+    ),
+    ...Array.from({ length: 11 }, (_, index) =>
+      createMockVoiceActorWork(
+        2100 + index,
+        1000 + index,
+        `Actor ${index}`,
+        "2024-01-02",
+      ),
+    ),
+    {
+      media: {
+        id: 999,
+        title: "Unverified Voice Credit",
+        name: "Unverified Voice Credit",
+        poster_path: null,
+        release_date: "2024-01-01",
+      },
+      work: {
+        id: 999,
+        actor_id: 0,
+        performance: "dialogues",
+        dubbing_projects: {
+          content_id: 999,
+          content_type: "movie",
+          studios: null,
+        },
+      },
+      data: {
+        character: "Unverified character",
+        actor: {
+          id: 0,
+          name: "Unverified Person",
+          profile_picture: "/unverified.jpg",
+        },
+      },
+      sortDate: "2024-01-01",
+      searchText: "unverified voice credit",
+    },
+  ],
+};
+
 export const MOCK_MOVIE = {
   movie: {
     id: 85,
@@ -1200,7 +1285,11 @@ export default defineEventHandler(async (event) => {
 
   // 1. Voice Actor Detail
   if (path.startsWith("/api/voice-actor/")) {
-    return send(event, JSON.stringify(MOCK_VOICE_ACTOR), "application/json");
+    const response =
+      path === "/api/voice-actor/999"
+        ? MOCK_VOICE_ACTOR_WITH_UNRESOLVED_WORK
+        : MOCK_VOICE_ACTOR;
+    return send(event, JSON.stringify(response), "application/json");
   }
 
   // 2. Movie Detail

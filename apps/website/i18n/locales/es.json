@@ -258,6 +258,7 @@
     "searchPlaceholder": "Buscar papeles, títulos o actores...",
     "grouped": "Agrupado",
     "list": "Lista",
+    "unknownActor": "Actor desconocido",
     "newestFirst": "Más recientes",
     "oldestFirst": "Más antiguos",
     "noWorksFound": "No se encontraron obras para este actor.",
