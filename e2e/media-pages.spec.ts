@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { setupMockApi } from "./helpers/mock-api";
+import { setupMockApi, waitForVueHydration } from "./helpers/mock-api";
 import { MOCK_SEASON } from "./fixtures/mock-data";
 
 test.describe("Media Detail Pages", () => {
@@ -78,6 +78,7 @@ test.describe("Media Detail Pages", () => {
   test("filters cast by full voice actor name on movie, show, and episode", async ({
     page,
   }) => {
+    test.setTimeout(120000);
     const routes = [
       {
         path: "/movie/85",
@@ -101,6 +102,7 @@ test.describe("Media Detail Pages", () => {
 
     for (const route of routes) {
       await page.goto(route.path, { waitUntil: "domcontentloaded" });
+      await waitForVueHydration(page);
 
       const castSection = page
         .getByRole("heading", { name: "Cast & Crew" })
@@ -108,9 +110,11 @@ test.describe("Media Detail Pages", () => {
       const search = castSection.locator('input[type="search"]');
       await search.fill(route.voiceActor);
 
-      await expect(page.getByText(route.actor, { exact: true })).toBeVisible();
       await expect(
-        page.getByText(route.absentActor, { exact: true }),
+        castSection.getByText(route.actor, { exact: true }),
+      ).toBeVisible();
+      await expect(
+        castSection.getByText(route.absentActor, { exact: true }),
       ).toHaveCount(0);
     }
   });

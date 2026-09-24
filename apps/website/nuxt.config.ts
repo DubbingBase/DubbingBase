@@ -41,10 +41,13 @@ export default defineNuxtConfig({
     experimental: {
       tasks: true,
     },
-    scheduledTasks: {
-      "* * * * *": ["dispatcher"],
-      "0 6 * * *": ["enqueue-trending-media"],
-    },
+    scheduledTasks:
+      process.env.E2E_TEST === "true"
+        ? {}
+        : {
+            "* * * * *": ["dispatcher"],
+            "0 6 * * *": ["enqueue-trending-media"],
+          },
     rollupConfig: {
       // Keep .wasm imports external so Rollup's JS plugins (e.g. inject)
       // don't try to parse them. Wrangler pre-compiles them into
@@ -222,7 +225,7 @@ export default defineNuxtConfig({
 
   i18n: {
     langDir: "locales",
-    locales: APP_LOCALES as any,
+    locales: [...APP_LOCALES],
     defaultLocale: DEFAULT_LOCALE,
     strategy: "prefix_except_default",
     baseUrl: "https://dubbingbase.com",
