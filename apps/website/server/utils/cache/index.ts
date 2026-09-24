@@ -1,5 +1,35 @@
 import { SimpleKeyBuilder, SimpleKeyValidator } from "./constants";
 
+interface CacheInFlightRequest<T> {
+  forceRefresh: boolean;
+  promise: Promise<T>;
+  shouldCache: boolean;
+  resolve: (value: T) => void;
+  reject: (reason: unknown) => void;
+  writePromise?: Promise<boolean>;
+}
+
+/** A stable, typed scope for sharing in-flight requests without type casts. */
+export class CacheNamespace<T> {
+  private readonly requests = new Map<string, CacheInFlightRequest<T>>();
+
+  get(key: string): CacheInFlightRequest<T> | undefined {
+    return this.requests.get(key);
+  }
+
+  set(key: string, request: CacheInFlightRequest<T>): void {
+    this.requests.set(key, request);
+  }
+
+  delete(key: string, request: CacheInFlightRequest<T>): void {
+    if (this.requests.get(key) === request) this.requests.delete(key);
+  }
+}
+
+export function createCacheNamespace<T>(): CacheNamespace<T> {
+  return new CacheNamespace<T>();
+}
+
 /** The three supported lifetimes, in seconds. */
 export const CACHE_TTL = {
   TRENDING: 60 * 60,
@@ -13,21 +43,15 @@ export interface GetOrFetchOptions {
   forceRefresh?: boolean;
 }
 
-interface InFlightRequest {
-  forceRefresh: boolean;
-  promise: Promise<void>;
-  shouldCache: boolean;
-  finish: () => void;
-  writePromise?: Promise<boolean>;
-}
-
 export interface CacheKv {
   get<T>(key: string, options: { type: "json" }): Promise<T | null>;
-  put(key: string, value: string, options: { expirationTtl: number }): Promise<void>;
+  put(
+    key: string,
+    value: string,
+    options: { expirationTtl: number },
+  ): Promise<void>;
   delete?(key: string): Promise<void>;
 }
-
-const inFlight = new Map<string, InFlightRequest>();
 
 function ttlSeconds(ttl: CacheTTLPreset = "NORMAL"): number {
   return typeof ttl === "number" ? Math.max(60, ttl) : CACHE_TTL[ttl];
@@ -64,14 +88,22 @@ export class SimpleCache {
     return null;
   }
 
-  private async set<T>(key: string, data: T, ttl: CacheTTLPreset = "NORMAL"): Promise<boolean> {
+  private async set<T>(
+    key: string,
+    data: T,
+    ttl: CacheTTLPreset = "NORMAL",
+  ): Promise<boolean> {
     if (!this.enabled) return false;
     try {
       const kv = this.kvGetter();
       if (kv) {
-        await kv.put(SimpleKeyValidator.sanitizeKey(key), JSON.stringify(data), {
-          expirationTtl: ttlSeconds(ttl),
-        });
+        await kv.put(
+          SimpleKeyValidator.sanitizeKey(key),
+          JSON.stringify(data),
+          {
+            expirationTtl: ttlSeconds(ttl),
+          },
+        );
         return true;
       }
     } catch (kvErr) {
@@ -93,18 +125,18 @@ export class SimpleCache {
     }
   }
 
-  async getOrFetch<T>(
+  getOrFetch<T>(
+    namespace: CacheNamespace<T>,
     key: string,
     fetcher: () => Promise<T>,
     options: GetOrFetchOptions = {},
   ): Promise<T> {
     const safeKey = SimpleKeyValidator.sanitizeKey(key);
-    const forceRefresh = Boolean(options.forceRefresh) && !isAuthenticationTokenKey(key);
-    const inProgress = inFlight.get(safeKey);
+    const forceRefresh =
+      Boolean(options.forceRefresh) && !isAuthenticationTokenKey(key);
+    const inProgress = namespace.get(safeKey);
     if (inProgress && (!forceRefresh || inProgress.forceRefresh)) {
-      await inProgress.promise;
-      const cached = await this.get<T>(safeKey);
-      return cached !== null ? cached : this.getOrFetch(key, fetcher, options);
+      return inProgress.promise;
     }
     let pendingSupersededWrite: Promise<boolean> | undefined;
     if (forceRefresh && inProgress && !inProgress.forceRefresh) {
@@ -112,42 +144,60 @@ export class SimpleCache {
       pendingSupersededWrite = inProgress.writePromise;
     }
 
-    const request: InFlightRequest = {
+    let resolvePromise: (value: T) => void = () => undefined;
+    let rejectPromise: (reason: unknown) => void = () => undefined;
+    const promise = new Promise<T>((resolve, reject) => {
+      resolvePromise = resolve;
+      rejectPromise = reject;
+    });
+    const request: CacheInFlightRequest<T> = {
       forceRefresh,
       shouldCache: true,
-      promise: Promise.resolve(),
-      finish: () => undefined,
+      promise,
+      resolve: resolvePromise,
+      reject: rejectPromise,
     };
-    request.promise = new Promise<void>((resolve) => {
-      request.finish = resolve;
-    });
-    inFlight.set(safeKey, request);
-    const promise = (async () => {
-      if (!forceRefresh) {
-        const cached = await this.get<T>(safeKey);
-        if (cached !== null) return cached;
-      }
+    namespace.set(safeKey, request);
 
-      const value = await fetcher();
-      if (pendingSupersededWrite) {
-        await pendingSupersededWrite.catch(() => false);
+    void (async () => {
+      try {
+        if (!forceRefresh) {
+          const cached = await this.get<T>(safeKey);
+          if (cached !== null) {
+            request.resolve(cached);
+            return;
+          }
+        }
+
+        const value = await fetcher();
+        if (pendingSupersededWrite) {
+          await pendingSupersededWrite.catch(() => false);
+        }
+        if (value !== null && value !== undefined && request.shouldCache) {
+          request.writePromise = this.set(
+            safeKey,
+            value,
+            options.ttl ?? "NORMAL",
+          );
+          await request.writePromise;
+        }
+        request.resolve(value);
+      } catch (error) {
+        request.reject(error);
+      } finally {
+        namespace.delete(safeKey, request);
       }
-      if (value !== null && value !== undefined && request.shouldCache) {
-        request.writePromise = this.set(safeKey, value, options.ttl ?? "NORMAL");
-        await request.writePromise;
-      }
-      return value;
     })();
 
-    try {
-      return await promise;
-    } finally {
-      if (inFlight.get(safeKey) === request) inFlight.delete(safeKey);
-      request.finish();
-    }
+    return promise;
   }
 
-  generateKey(api: string, type: string, id: string | number, suffix?: string): string {
+  generateKey(
+    api: string,
+    type: string,
+    id: string | number,
+    suffix?: string,
+  ): string {
     return SimpleKeyBuilder.key(api, type, id, suffix);
   }
 
@@ -155,7 +205,12 @@ export class SimpleCache {
     return SimpleKeyBuilder.tmdb(type, id, suffix);
   }
 
-  tvdbKey(type: string, id: string | number, suffix?: string, language?: string): string {
+  tvdbKey(
+    type: string,
+    id: string | number,
+    suffix?: string,
+    language?: string,
+  ): string {
     return SimpleKeyBuilder.tvdb(type, id, suffix, language);
   }
 

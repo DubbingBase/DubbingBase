@@ -1,9 +1,12 @@
-import { SimpleCache } from "./index";
+import { SimpleCache, createCacheNamespace } from "./index";
 import { buildCacheKey } from "./constants";
 import type { CacheFetchOptions } from "../api/cache-options";
 import { CACHE_KEYS } from "./constants";
 
-const WIKIPEDIA_USER_AGENT = "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
+const WIKIPEDIA_USER_AGENT =
+  "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
+
+const wikipediaResponseNamespace = createCacheNamespace<unknown>();
 
 const frenchMaleDubber = (cmContinue = "") =>
   `https://fr.wikipedia.org/w/api.php?action=query&list=categorymembers&cmtitle=Category:Acteur_fran%C3%A7ais_de_doublage&cmlimit=100&format=json&cmcontinue=${cmContinue}`;
@@ -13,10 +16,18 @@ const frenchFemaleDubber = (cmContinue = "") =>
 const wikipediaPageFindSections = (pageId: number, lang: string) =>
   `https://${lang}.wikipedia.org/w/api.php?action=parse&format=json&pageid=${pageId}&prop=tocdata&formatversion=2`;
 
-const parseDubberPageAsHTML = (pageId: number, sectionId: string, lang: string) =>
+const parseDubberPageAsHTML = (
+  pageId: number,
+  sectionId: string,
+  lang: string,
+) =>
   `https://${lang}.wikipedia.org/w/api.php?action=parse&format=json&pageid=${pageId}&prop=text&formatversion=2&section=${sectionId}`;
 
-const parseDubberPageAsWikitext = (pageId: number, sectionId: string, lang: string) =>
+const parseDubberPageAsWikitext = (
+  pageId: number,
+  sectionId: string,
+  lang: string,
+) =>
   `https://${lang}.wikipedia.org/w/api.php?action=parse&format=json&pageid=${pageId}&prop=wikitext&formatversion=2&section=${sectionId}`;
 
 const searchEntities = (search: string, lang: string) =>
@@ -25,7 +36,11 @@ const searchEntities = (search: string, lang: string) =>
 const getAllSitelinks = (entityId: string) =>
   `https://www.wikidata.org/w/api.php?action=wbgetentities&props=sitelinks&format=json&ids=${entityId}`;
 
-const getWikipediaPageSectionAsWikitext = (pageId: number, sectionId: string, lang: string) =>
+const getWikipediaPageSectionAsWikitext = (
+  pageId: number,
+  sectionId: string,
+  lang: string,
+) =>
   `https://${lang}.wikipedia.org/w/api.php?action=parse&format=json&pageid=${pageId}&prop=wikitext&formatversion=2&section=${sectionId}`;
 
 const getWikipediaPage = (title: string, language: string) =>
@@ -200,14 +215,26 @@ export async function filterValidSectionIndexes(
 export class WikipediaCache {
   constructor(private cache: SimpleCache) {}
 
-  async getMaleVoiceActors(cmContinue = "", options: CacheFetchOptions = {}): Promise<any> {
-    const cacheKey = CACHE_KEYS.WIKIPEDIA_CATEGORY("male-voice-actors", cmContinue || "initial");
+  async getMaleVoiceActors(
+    cmContinue = "",
+    options: CacheFetchOptions = {},
+  ): Promise<any> {
+    const cacheKey = CACHE_KEYS.WIKIPEDIA_CATEGORY(
+      "male-voice-actors",
+      cmContinue || "initial",
+    );
     const url = frenchMaleDubber(cmContinue);
     return this.fetchWithCache(url, cacheKey, 86400, options);
   }
 
-  async getFemaleVoiceActors(cmContinue = "", options: CacheFetchOptions = {}): Promise<any> {
-    const cacheKey = CACHE_KEYS.WIKIPEDIA_CATEGORY("female-voice-actors", cmContinue || "initial");
+  async getFemaleVoiceActors(
+    cmContinue = "",
+    options: CacheFetchOptions = {},
+  ): Promise<any> {
+    const cacheKey = CACHE_KEYS.WIKIPEDIA_CATEGORY(
+      "female-voice-actors",
+      cmContinue || "initial",
+    );
     const url = frenchFemaleDubber(cmContinue);
     return this.fetchWithCache(url, cacheKey, 86400, options);
   }
@@ -287,7 +314,12 @@ export class WikipediaCache {
     return this.fetch(url);
   }
 
-  async getAllSitelinksEntity(entityId: string, options: CacheFetchOptions = {}): Promise<any> {
+  async getAllSitelinksEntity(
+    entityId: string,
+    options: CacheFetchOptions = {},
+  ): Promise<any> {
+    // Wikidata sitelinks are stable cross-reference metadata; use their normal
+    // seven-day cache unless a caller has a concrete reason to refresh them.
     const cacheKey = CACHE_KEYS.WIKIPEDIA_ENTITY(entityId, "all");
     const url = getAllSitelinks(entityId);
     return this.fetchWithCache(url, cacheKey, 604800, options);
@@ -328,7 +360,9 @@ export class WikipediaCache {
       headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
     });
     if (!response.ok) {
-      throw new Error(`Wikipedia API error: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `Wikipedia API error: ${response.status} ${response.statusText}`,
+      );
     }
     return response.json();
   }
@@ -339,9 +373,14 @@ export class WikipediaCache {
     ttl: number,
     options: CacheFetchOptions,
   ): Promise<any> {
-    return this.cache.getOrFetch(cacheKey, () => this.fetch(url), {
-      ttl,
-      ...options,
-    });
+    return this.cache.getOrFetch(
+      wikipediaResponseNamespace,
+      cacheKey,
+      () => this.fetch(url),
+      {
+        ttl,
+        ...options,
+      },
+    );
   }
 }

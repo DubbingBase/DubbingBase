@@ -1,6 +1,7 @@
-import { setHeader, type H3Event } from "h3";
+import { removeResponseHeader, setHeader, type H3Event } from "h3";
 
-export type CacheProfile = "detail" | "catalog" | "discovery" | "search" | "static";
+export type CacheProfile =
+  "detail" | "catalog" | "discovery" | "search" | "static";
 
 export const NO_STORE_CACHE_CONTROL = "no-store, no-cache, must-revalidate";
 
@@ -21,10 +22,13 @@ export function setErrorCacheHeaders(event: H3Event, error: unknown): void {
   if (shouldDisableErrorCaching(error)) setNoCacheHeaders(event);
 }
 
-const PUBLIC_CACHE_CONTROL = "public, max-age=60, s-maxage=300, stale-while-revalidate=300";
+const PUBLIC_CACHE_CONTROL = "public, max-age=300, s-maxage=300";
+const STATIC_CACHE_CONTROL = "public, max-age=86400, s-maxage=86400";
 
-export function getPublicCacheControl(_profile: CacheProfile = "detail"): string {
-  return PUBLIC_CACHE_CONTROL;
+export function getPublicCacheControl(
+  profile: CacheProfile = "detail",
+): string {
+  return profile === "static" ? STATIC_CACHE_CONTROL : PUBLIC_CACHE_CONTROL;
 }
 
 export function setNoCacheHeaders(event: H3Event): void {
@@ -42,13 +46,18 @@ export function setNoStoreHeaders(event: H3Event): void {
 }
 
 /**
- * Sets standardized Edge & Browser SWR Cache-Control headers on the H3 event.
+ * Sets standardized public cache headers on the H3 event.
  */
-export function setPublicCacheHeaders(event: H3Event, profile: CacheProfile = "detail"): void {
+export function setPublicCacheHeaders(
+  event: H3Event,
+  profile: CacheProfile = "detail",
+): void {
   if (import.meta.dev || process.env.NODE_ENV === "development") {
     setNoCacheHeaders(event);
     return;
   }
 
+  removeResponseHeader(event, "Pragma");
+  removeResponseHeader(event, "Expires");
   setHeader(event, "Cache-Control", getPublicCacheControl(profile));
 }

@@ -30,7 +30,9 @@ export interface CacheKeyInput {
   id?: string | number;
   query?: string;
   language?: string;
-  params?: Readonly<Record<string, string | number | boolean | null | undefined>>;
+  params?: Readonly<
+    Record<string, string | number | boolean | null | undefined>
+  >;
 }
 
 /** A deterministic 64-bit FNV-1a hash over UTF-8 bytes; works in Node and Workers. */
@@ -59,7 +61,8 @@ function stableParams(params: CacheKeyInput["params"]): string | undefined {
 
 /** Shared key strategy for all external providers and result-changing inputs. */
 export function buildCacheKey(input: CacheKeyInput): string {
-  const identity = input.query !== undefined ? `q-${input.query}` : `id-${input.id ?? ""}`;
+  const identity =
+    input.query !== undefined ? `q-${input.query}` : `id-${input.id ?? ""}`;
   const params = stableParams(input.params);
   const components = [
     "external",
@@ -67,16 +70,25 @@ export function buildCacheKey(input: CacheKeyInput): string {
     input.provider.toLowerCase(),
     input.resource.toLowerCase(),
     segment(identity),
-    input.language !== undefined ? `lang-${segment(input.language)}` : undefined,
+    input.language !== undefined
+      ? `lang-${segment(input.language)}`
+      : undefined,
     params ? `params-${segment(params)}` : undefined,
   ];
-  return components.filter((value): value is string => value !== undefined).join(":");
+  return components
+    .filter((value): value is string => value !== undefined)
+    .join(":");
 }
 
 // Compatibility facade for existing provider call sites. New call sites should
 // pass language and parameters separately through buildCacheKey.
 export class SimpleKeyBuilder {
-  static key(api: string, type: string, id: string | number, suffix?: string): string {
+  static key(
+    api: string,
+    type: string,
+    id: string | number,
+    suffix?: string,
+  ): string {
     return buildCacheKey({
       provider: api,
       resource: type,
@@ -89,7 +101,12 @@ export class SimpleKeyBuilder {
     return this.key(API_PREFIXES.TMDB, type, id, suffix);
   }
 
-  static tvdb(type: string, id: string | number, suffix?: string, language?: string): string {
+  static tvdb(
+    type: string,
+    id: string | number,
+    suffix?: string,
+    language?: string,
+  ): string {
     return buildCacheKey({
       provider: API_PREFIXES.TVDB,
       resource: type,
@@ -107,13 +124,16 @@ export class SimpleKeyBuilder {
 export const CACHE_KEYS = {
   TMDB_MOVIE: (id: number, suffix?: string) =>
     SimpleKeyBuilder.tmdb(CONTENT_TYPES.MOVIE, id, suffix),
-  TMDB_TV: (id: number, suffix?: string) => SimpleKeyBuilder.tmdb(CONTENT_TYPES.TV, id, suffix),
+  TMDB_TV: (id: number, suffix?: string) =>
+    SimpleKeyBuilder.tmdb(CONTENT_TYPES.TV, id, suffix),
   TMDB_EPISODE: (id: number, suffix?: string) =>
     SimpleKeyBuilder.tmdb(CONTENT_TYPES.EPISODE, id, suffix),
   TMDB_PERSON: (id: number, suffix?: string) =>
     SimpleKeyBuilder.tmdb(CONTENT_TYPES.PERSON, id, suffix),
-  TMDB_TRENDING_MOVIES: () => SimpleKeyBuilder.tmdb(CONTENT_TYPES.TRENDING, "movies:v2"),
-  TMDB_TRENDING_SHOWS: () => SimpleKeyBuilder.tmdb(CONTENT_TYPES.TRENDING, "shows:v2"),
+  TMDB_TRENDING_MOVIES: () =>
+    SimpleKeyBuilder.tmdb(CONTENT_TYPES.TRENDING, "movies:v2"),
+  TMDB_TRENDING_SHOWS: () =>
+    SimpleKeyBuilder.tmdb(CONTENT_TYPES.TRENDING, "shows:v2"),
   TVDB_AUTH_TOKEN: () => "tvdb:auth_token",
   TVDB_SERIES: (id: number, suffix?: string, language?: string) =>
     SimpleKeyBuilder.tvdb(CONTENT_TYPES.SERIES, id, suffix, language),

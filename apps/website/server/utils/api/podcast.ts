@@ -1,8 +1,10 @@
 import { ofetch } from "ofetch";
 import type { Podcast, PodcastEpisode } from "@app/shared-logic";
-import { SimpleCache } from "../cache";
+import { createCacheNamespace, SimpleCache } from "../cache";
 import { buildCacheKey } from "../cache/constants";
 import type { CacheFetchOptions } from "./cache-options";
+
+export const PODCAST_LOOKUP_NAMESPACE = createCacheNamespace<Podcast | null>();
 
 export interface ITunesPodcastResult {
   collectionId: number;
@@ -55,7 +57,8 @@ export class PodcastClient {
         cover_url: item.artworkUrl600 || item.artworkUrl100 || null,
         episodes_count: item.trackCount || 0,
         release_date: item.releaseDate || "",
-        genres: item.genres || (item.primaryGenreName ? [item.primaryGenreName] : []),
+        genres:
+          item.genres || (item.primaryGenreName ? [item.primaryGenreName] : []),
         media_type: "podcast" as const,
       }));
 
@@ -66,7 +69,10 @@ export class PodcastClient {
     }
   }
 
-  async getPodcast(id: number, options: CacheFetchOptions = {}): Promise<Podcast | null> {
+  async getPodcast(
+    id: number,
+    options: CacheFetchOptions = {},
+  ): Promise<Podcast | null> {
     const cacheKey = buildCacheKey({
       provider: "podcast",
       resource: "podcast",
@@ -75,6 +81,7 @@ export class PodcastClient {
     });
     try {
       return await this.cache.getOrFetch(
+        PODCAST_LOOKUP_NAMESPACE,
         cacheKey,
         async () => {
           const response = await ofetch<{
@@ -99,21 +106,31 @@ export class PodcastClient {
             title: ep.trackName || "Épisode",
             description: ep.description || ep.shortDescription || "",
             release_date: ep.releaseDate || "",
-            duration: ep.trackTimeMillis ? Math.round(ep.trackTimeMillis / 60000) : undefined,
+            duration: ep.trackTimeMillis
+              ? Math.round(ep.trackTimeMillis / 60000)
+              : undefined,
             audio_url: ep.episodeUrl || "",
           }));
 
           const podcast = {
             id: podcastHeader.collectionId || podcastHeader.trackId || id,
-            title: podcastHeader.collectionName || podcastHeader.trackName || "Podcast",
+            title:
+              podcastHeader.collectionName ||
+              podcastHeader.trackName ||
+              "Podcast",
             author: podcastHeader.artistName || "",
             feed_url: podcastHeader.feedUrl || "",
-            cover_url: podcastHeader.artworkUrl600 || podcastHeader.artworkUrl100 || null,
+            cover_url:
+              podcastHeader.artworkUrl600 ||
+              podcastHeader.artworkUrl100 ||
+              null,
             episodes_count: podcastHeader.trackCount || episodes.length,
             release_date: podcastHeader.releaseDate || "",
             genres:
               podcastHeader.genres ||
-              (podcastHeader.primaryGenreName ? [podcastHeader.primaryGenreName] : []),
+              (podcastHeader.primaryGenreName
+                ? [podcastHeader.primaryGenreName]
+                : []),
             description: podcastHeader.description || "",
             episodes,
             media_type: "podcast" as const,

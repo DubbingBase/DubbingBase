@@ -5,10 +5,12 @@ import { processVoiceActor } from "../urls/supabase";
 import { processMedia, cleanCharacterName } from "../urls/tmdb";
 import { useCache, useIgdbClient, useOpenLibraryClient } from "../index";
 import { buildIgdbImageUrl } from "../api/igdb";
+import { createCacheNamespace } from "../cache";
 import { buildCacheKey } from "../cache/constants";
 import type { CacheFetchOptions } from "../api/cache-options";
 
-const WIKIPEDIA_USER_AGENT = "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
+const WIKIPEDIA_USER_AGENT =
+  "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
 
 interface WikidataClaimsResponse {
   claims?: Record<
@@ -20,6 +22,16 @@ interface WikidataClaimsResponse {
     }>
   >;
 }
+
+export const WIKIDATA_CLAIMS_NAMESPACE =
+  createCacheNamespace<WikidataClaimsResponse | null>();
+export const WIKIPEDIA_ACTOR_URL_NAMESPACE = createCacheNamespace<
+  string | null
+>();
+export const MEDIA_TVDB_CHARACTERS_NAMESPACE =
+  createCacheNamespace<
+    Awaited<ReturnType<MediaService["getCharacterProfilePictures"]>>
+  >();
 
 async function fetchPotentialWikipediaUrl(
   firstname: string,
@@ -37,6 +49,7 @@ async function fetchPotentialWikipediaUrl(
       language: "fr",
     });
     return await cache.getOrFetch(
+      WIKIPEDIA_ACTOR_URL_NAMESPACE,
       cacheKey,
       async () => {
         // Search Wikidata for the person
@@ -59,7 +72,8 @@ async function fetchPotentialWikipediaUrl(
         if (!entityRes.ok) return null;
 
         const entityData = await entityRes.json();
-        const title = entityData.entities?.[bestMatch.id]?.sitelinks?.frwiki?.title;
+        const title =
+          entityData.entities?.[bestMatch.id]?.sitelinks?.frwiki?.title;
         if (!title) return null;
 
         return `https://fr.wikipedia.org/wiki/${encodeURI(title.replace(/ /g, "_"))}`;
@@ -152,9 +166,11 @@ export class MediaService {
       : null;
     const wikipediaPromise =
       !voiceActor.tmdb_id && voiceActor.firstname && voiceActor.lastname
-        ? fetchPotentialWikipediaUrl(voiceActor.firstname, voiceActor.lastname, useCache()).catch(
-            () => null,
-          )
+        ? fetchPotentialWikipediaUrl(
+            voiceActor.firstname,
+            voiceActor.lastname,
+            useCache(),
+          ).catch(() => null)
         : Promise.resolve(null);
 
     const fetchTarget = async ({ contentType, contentId }: MediaTarget) => {
@@ -181,10 +197,14 @@ export class MediaService {
             backdrop_path: null,
             release_date:
               book.release_date ||
-              (book.first_publish_year ? `${book.first_publish_year}-01-01` : "1970-01-01"),
+              (book.first_publish_year
+                ? `${book.first_publish_year}-01-01`
+                : "1970-01-01"),
             first_air_date:
               book.release_date ||
-              (book.first_publish_year ? `${book.first_publish_year}-01-01` : "1970-01-01"),
+              (book.first_publish_year
+                ? `${book.first_publish_year}-01-01`
+                : "1970-01-01"),
             media_type: "audiobook" as const,
             popularity: book.popularity || 0,
             credits: { cast: [] },
@@ -198,7 +218,10 @@ export class MediaService {
             },
           };
         } catch (err) {
-          console.error(`Failed to fetch OpenLibrary book ${contentId} for voice actor:`, err);
+          console.error(
+            `Failed to fetch OpenLibrary book ${contentId} for voice actor:`,
+            err,
+          );
           return {
             key: `${contentType}:${contentId}`,
             data: {
@@ -229,17 +252,26 @@ export class MediaService {
             title: game.name,
             name: game.name,
             overview: game.summary || "",
-            poster_path: game.cover ? buildIgdbImageUrl(game.cover.image_id, "cover_big") : null,
+            poster_path: game.cover
+              ? buildIgdbImageUrl(game.cover.image_id, "cover_big")
+              : null,
             backdrop_path: game.artworks?.[0]
               ? buildIgdbImageUrl(game.artworks[0].image_id, "1080p")
               : game.screenshots?.[0]
-                ? buildIgdbImageUrl(game.screenshots[0].image_id, "screenshot_huge")
+                ? buildIgdbImageUrl(
+                    game.screenshots[0].image_id,
+                    "screenshot_huge",
+                  )
                 : null,
             release_date: game.first_release_date
-              ? new Date(game.first_release_date * 1000).toISOString().split("T")[0]
+              ? new Date(game.first_release_date * 1000)
+                  .toISOString()
+                  .split("T")[0]
               : "1970-01-01",
             first_air_date: game.first_release_date
-              ? new Date(game.first_release_date * 1000).toISOString().split("T")[0]
+              ? new Date(game.first_release_date * 1000)
+                  .toISOString()
+                  .split("T")[0]
               : "1970-01-01",
             media_type: "video_game" as const,
             popularity: 0,
@@ -254,7 +286,10 @@ export class MediaService {
             },
           };
         } catch (err) {
-          console.error(`Failed to fetch IGDB game ${contentId} for voice actor:`, err);
+          console.error(
+            `Failed to fetch IGDB game ${contentId} for voice actor:`,
+            err,
+          );
           return {
             key: `${contentType}:${contentId}`,
             data: {
@@ -363,8 +398,12 @@ export class MediaService {
             overview: toy?.description || "",
             poster_path: toy?.cover_url || null,
             backdrop_path: null,
-            release_date: toy?.release_year ? `${toy.release_year}-01-01` : "1970-01-01",
-            first_air_date: toy?.release_year ? `${toy.release_year}-01-01` : "1970-01-01",
+            release_date: toy?.release_year
+              ? `${toy.release_year}-01-01`
+              : "1970-01-01",
+            first_air_date: toy?.release_year
+              ? `${toy.release_year}-01-01`
+              : "1970-01-01",
             media_type: "toy" as const,
             popularity: 0,
             credits: { cast: [] },
@@ -412,7 +451,10 @@ export class MediaService {
           },
         };
       } catch (err) {
-        console.error(`Failed to fetch TMDB ${contentType} ${contentId} for voice actor:`, err);
+        console.error(
+          `Failed to fetch TMDB ${contentType} ${contentId} for voice actor:`,
+          err,
+        );
         return {
           key: `${contentType}:${contentId}`,
           data: {
@@ -426,15 +468,18 @@ export class MediaService {
 
     let nextIndex = 0;
     await Promise.all(
-      Array.from({ length: Math.min(CONCURRENCY, uniqueTargets.length) }, async () => {
-        while (true) {
-          const idx = nextIndex++;
-          if (idx >= uniqueTargets.length) return;
-          const target = uniqueTargets[idx] as MediaTarget;
-          const res = await fetchTarget(target);
-          if (res?.data) fetchedResultsMap.set(res.key, res.data);
-        }
-      }),
+      Array.from(
+        { length: Math.min(CONCURRENCY, uniqueTargets.length) },
+        async () => {
+          while (true) {
+            const idx = nextIndex++;
+            if (idx >= uniqueTargets.length) return;
+            const target = uniqueTargets[idx] as MediaTarget;
+            const res = await fetchTarget(target);
+            if (res?.data) fetchedResultsMap.set(res.key, res.data);
+          }
+        },
+      ),
     );
 
     // 3. Construct compact enhancedWorks on the server (avoids sending massive raw cast lists)
@@ -444,10 +489,7 @@ export class MediaService {
     for (const work of workItems) {
       const contentId = work.dubbing_projects?.content_id;
       const contentType = work.dubbing_projects?.content_type as
-        | "movie"
-        | "tv"
-        | "video_game"
-        | "audiobook";
+        "movie" | "tv" | "video_game" | "audiobook";
       if (!contentId || !contentType) continue;
 
       const mediaResult = fetchedResultsMap.get(`${contentType}:${contentId}`);
@@ -465,7 +507,9 @@ export class MediaService {
       let characterImage: string | undefined;
 
       if (fullMedia.credits?.cast) {
-        const castMember = fullMedia.credits.cast.find((c: any) => c.id === work.actor_id);
+        const castMember = fullMedia.credits.cast.find(
+          (c: any) => c.id === work.actor_id,
+        );
         if (castMember) {
           actorData = {
             id: castMember.id,
@@ -496,7 +540,8 @@ export class MediaService {
         }
       }
 
-      const sortDate = fullMedia.release_date || fullMedia.first_air_date || "9999-12-31";
+      const sortDate =
+        fullMedia.release_date || fullMedia.first_air_date || "9999-12-31";
 
       const compactMedia = {
         id: fullMedia.id,
@@ -543,20 +588,26 @@ export class MediaService {
       if (voiceActor.tmdb_id) {
         const personData = await tmdbPersonPromise;
         if (personData) {
-          const allCredits: { backdrop_path?: string; popularity?: number }[] = [
-            ...(personData.movie_credits?.cast || []),
-            ...(personData.tv_credits?.cast || []),
-          ];
+          const allCredits: { backdrop_path?: string; popularity?: number }[] =
+            [
+              ...(personData.movie_credits?.cast || []),
+              ...(personData.tv_credits?.cast || []),
+            ];
           allCredits.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
           const best = allCredits.find((c) => c.backdrop_path);
-          if (best) backdropPath = buildTmdbImageUrl(best.backdrop_path, "original");
+          if (best)
+            backdropPath = buildTmdbImageUrl(best.backdrop_path, "original");
         }
       } else {
         const sorted = [...enhancedWorks].sort(
           (a, b) => (b.media.popularity || 0) - (a.media.popularity || 0),
         );
-        const best = sorted.find((w) => (w.media as { backdrop_path?: string }).backdrop_path);
-        if (best) backdropPath = (best.media as { backdrop_path?: string }).backdrop_path || null;
+        const best = sorted.find(
+          (w) => (w.media as { backdrop_path?: string }).backdrop_path,
+        );
+        if (best)
+          backdropPath =
+            (best.media as { backdrop_path?: string }).backdrop_path || null;
       }
     } catch (e) {
       console.error("Failed to compute voice actor backdrop:", e);
@@ -596,6 +647,7 @@ export class MediaService {
 
     try {
       const result = await cache.getOrFetch(
+        MEDIA_TVDB_CHARACTERS_NAMESPACE,
         cacheKey,
         async () => {
           let tvdbId: number | null = null;
@@ -613,13 +665,16 @@ export class MediaService {
                 params: { contentType },
               });
               const data = await cache.getOrFetch(
+                WIKIDATA_CLAIMS_NAMESPACE,
                 wikidataCacheKey,
                 async () => {
                   const url = `https://www.wikidata.org/w/api.php?action=wbgetclaims&entity=${wikidataId}&format=json`;
                   const response = await fetch(url, {
                     headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
                   });
-                  return response.ok ? ((await response.json()) as WikidataClaimsResponse) : null;
+                  return response.ok
+                    ? ((await response.json()) as WikidataClaimsResponse)
+                    : null;
                 },
                 { ttl: 604800, ...options },
               );
@@ -642,7 +697,10 @@ export class MediaService {
               tmdbMedia.original_title ||
               tmdbMedia.original_name;
 
-            const searchResults = await tvdbClient.searchSeries(searchQuery, this.acceptLanguage);
+            const searchResults = await tvdbClient.searchSeries(
+              searchQuery,
+              this.acceptLanguage,
+            );
 
             if (searchResults && searchResults.data) {
               const typeMatchedResults = searchResults.data.filter(
@@ -655,12 +713,18 @@ export class MediaService {
               const bestMatch =
                 typeMatchedResults.find(
                   (item: any) =>
-                    item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    item.translations?.eng?.toLowerCase().includes(searchQuery.toLowerCase()),
+                    item.name
+                      ?.toLowerCase()
+                      .includes(searchQuery.toLowerCase()) ||
+                    item.translations?.eng
+                      ?.toLowerCase()
+                      .includes(searchQuery.toLowerCase()),
                 ) || typeMatchedResults[0];
 
               tvdbId =
-                contentType === "movie" ? bestMatch?.tvdb_id || bestMatch?.id : bestMatch?.id;
+                contentType === "movie"
+                  ? bestMatch?.tvdb_id || bestMatch?.id
+                  : bestMatch?.id;
             }
           }
 
@@ -713,7 +777,10 @@ export class MediaService {
     return { characters: [], tvdbId: null };
   }
 
-  async getMediaWithVoiceActors(contentType: "movie" | "tv", contentId: number) {
+  async getMediaWithVoiceActors(
+    contentType: "movie" | "tv",
+    contentId: number,
+  ) {
     const media = await this.tmdbClient.getMediaWithCredits(
       contentType,
       contentId,
@@ -722,7 +789,9 @@ export class MediaService {
 
     let collection = null;
     if (contentType === "movie" && media.belongs_to_collection?.id) {
-      const collectionData = await this.tmdbClient.getCollection(media.belongs_to_collection.id);
+      const collectionData = await this.tmdbClient.getCollection(
+        media.belongs_to_collection.id,
+      );
       if (collectionData) {
         collection = {
           ...collectionData,
@@ -762,16 +831,32 @@ export class MediaService {
 
     switch (contentType) {
       case "movie":
-        media = await this.tmdbClient.getMediaWithCredits("movie", id, this.acceptLanguage);
+        media = await this.tmdbClient.getMediaWithCredits(
+          "movie",
+          id,
+          this.acceptLanguage,
+        );
         break;
       case "tv":
-        media = await this.tmdbClient.getMediaWithCredits("tv", id, this.acceptLanguage);
+        media = await this.tmdbClient.getMediaWithCredits(
+          "tv",
+          id,
+          this.acceptLanguage,
+        );
         break;
       case "season":
-        if (seasonNumber === undefined || seasonNumber === null || isNaN(seasonNumber)) {
+        if (
+          seasonNumber === undefined ||
+          seasonNumber === null ||
+          isNaN(seasonNumber)
+        ) {
           throw new Error("seasonNumber required");
         }
-        media = await this.tmdbClient.getSeasonWithCredits(id, seasonNumber, this.acceptLanguage);
+        media = await this.tmdbClient.getSeasonWithCredits(
+          id,
+          seasonNumber,
+          this.acceptLanguage,
+        );
         break;
       case "episode":
         if (

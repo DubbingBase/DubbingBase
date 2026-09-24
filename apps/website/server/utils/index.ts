@@ -1,4 +1,9 @@
-import { SimpleCache, type CacheTTLPreset, type CacheKv } from "./cache";
+import {
+  SimpleCache,
+  type CacheNamespace,
+  type CacheTTLPreset,
+  type CacheKv,
+} from "./cache";
 import { TMDBClient } from "./api/tmdb";
 import { TVDBClient } from "./api/tvdb";
 import { IgdbClient } from "./api/igdb";
@@ -83,11 +88,12 @@ export function useCache(event?: unknown): SimpleCache {
 }
 
 export function getOrFetch<T>(
+  namespace: CacheNamespace<T>,
   key: string,
   fetcher: () => Promise<T>,
   options?: { ttl?: CacheTTLPreset; forceRefresh?: boolean },
 ): Promise<T> {
-  return useCache().getOrFetch(key, fetcher, options);
+  return useCache().getOrFetch(namespace, key, fetcher, options);
 }
 
 export function useTmdbClient(cache?: SimpleCache): TMDBClient {

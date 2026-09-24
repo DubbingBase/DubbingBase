@@ -1,6 +1,17 @@
-import { SimpleCache } from "../cache";
+import { SimpleCache, createCacheNamespace } from "../cache";
 import { buildCacheKey } from "../cache/constants";
 import type { CacheFetchOptions } from "./cache-options";
+
+type TmdbResponse = Record<string, unknown> & { cast?: unknown[] };
+
+const tmdbResponseNamespace = createCacheNamespace<TmdbResponse>();
+
+function isTmdbResponse(value: unknown): value is TmdbResponse {
+  if (typeof value !== "object" || value === null || Array.isArray(value))
+    return false;
+  const cast = Reflect.get(value, "cast");
+  return cast === undefined || Array.isArray(cast);
+}
 
 function debugLog(message: string, data?: any) {
   console.log(`[TMDB] ${message}`, data ? JSON.stringify(data, null, 2) : "");
@@ -22,9 +33,15 @@ export class TMDBClient {
     });
   }
 
-  async get(endpoint: string, params?: Record<string, string>, language?: string) {
+  async get(
+    endpoint: string,
+    params?: Record<string, string>,
+    language?: string,
+  ): Promise<TmdbResponse> {
     const url = new URL(`${this.baseUrl}/${endpoint}`);
-    const preferredLang = ((language || "fr-FR").split(",")[0] || "fr-FR").trim();
+    const preferredLang = (
+      (language || "fr-FR").split(",")[0] || "fr-FR"
+    ).trim();
     url.searchParams.set("language", preferredLang);
 
     if (params) {
@@ -47,7 +64,13 @@ export class TMDBClient {
         throw new Error(`TMDB API error: ${response.status}`);
       }
 
-      return await response.json();
+      const data: unknown = await response.json();
+      if (!isTmdbResponse(data)) {
+        throw new Error(
+          `TMDB API returned an invalid response for ${endpoint}`,
+        );
+      }
+      return data;
     } catch (e: any) {
       if (e.name === "TimeoutError" || e.name === "AbortError") {
         console.warn(`[TMDB] Request timed out for ${endpoint}`);
@@ -73,9 +96,14 @@ export class TMDBClient {
     });
 
     return this.cache.getOrFetch(
+      tmdbResponseNamespace,
       cacheKey,
       () =>
-        this.get(`${contentType}/${id}`, { append_to_response: "credits,external_ids" }, language),
+        this.get(
+          `${contentType}/${id}`,
+          { append_to_response: "credits,external_ids" },
+          language,
+        ),
       { ttl: 86400, ...options },
     );
   }
@@ -99,6 +127,7 @@ export class TMDBClient {
     });
 
     return this.cache.getOrFetch(
+      tmdbResponseNamespace,
       cacheKey,
       () =>
         this.get(
@@ -131,6 +160,7 @@ export class TMDBClient {
     });
 
     return this.cache.getOrFetch(
+      tmdbResponseNamespace,
       cacheKey,
       () =>
         this.get(
@@ -158,6 +188,7 @@ export class TMDBClient {
     });
 
     return this.cache.getOrFetch(
+      tmdbResponseNamespace,
       cacheKey,
       () =>
         this.get(
@@ -186,13 +217,18 @@ export class TMDBClient {
     });
 
     return this.cache.getOrFetch(
+      tmdbResponseNamespace,
       cacheKey,
       () => this.get(`${mediaType}/${mediaId}/${endpoint}`, undefined, langStr),
       { ttl: 86400, ...options },
     );
   }
 
-  async getPersonWithCredits(personId: number, language?: string, options: CacheFetchOptions = {}) {
+  async getPersonWithCredits(
+    personId: number,
+    language?: string,
+    options: CacheFetchOptions = {},
+  ) {
     const langStr = ((language || "fr-FR").split(",")[0] || "fr-FR").trim();
     const cacheKey = buildCacheKey({
       provider: "tmdb",
@@ -203,6 +239,7 @@ export class TMDBClient {
     });
 
     return this.cache.getOrFetch(
+      tmdbResponseNamespace,
       cacheKey,
       () =>
         this.get(
@@ -230,8 +267,10 @@ export class TMDBClient {
     });
 
     return this.cache.getOrFetch(
+      tmdbResponseNamespace,
       cacheKey,
-      () => this.get(`trending/${mediaType}/${timeWindow}`, undefined, language),
+      () =>
+        this.get(`trending/${mediaType}/${timeWindow}`, undefined, language),
       { ttl: 3600, ...options },
     );
   }
@@ -248,8 +287,13 @@ export class TMDBClient {
       params: { endpoint: "details" },
     });
 
-    return this.cache.getOrFetch(cacheKey, () => this.get(`collection/${collectionId}`), {
-      ttl: 86400,
-    });
+    return this.cache.getOrFetch(
+      tmdbResponseNamespace,
+      cacheKey,
+      () => this.get(`collection/${collectionId}`),
+      {
+        ttl: 86400,
+      },
+    );
   }
 }

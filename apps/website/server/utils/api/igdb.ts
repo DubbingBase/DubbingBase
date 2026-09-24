@@ -1,7 +1,16 @@
-import { SimpleCache } from "../cache";
+import { SimpleCache, createCacheNamespace } from "../cache";
 import type { CacheFetchOptions } from "./cache-options";
-import { DEFAULT_LANGUAGE, type IgdbGame, type IgdbCharacter } from "@app/shared-logic";
+import {
+  DEFAULT_LANGUAGE,
+  type IgdbGame,
+  type IgdbCharacter,
+} from "@app/shared-logic";
 import { buildCacheKey } from "../cache/constants";
+
+const igdbTokenNamespace = createCacheNamespace<string>();
+const igdbGameNamespace = createCacheNamespace<IgdbGame | null>();
+const igdbCharactersNamespace = createCacheNamespace<IgdbCharacter[]>();
+const igdbTrendingGamesNamespace = createCacheNamespace<IgdbGame[]>();
 
 export interface IgdbPopularityPrimitive {
   id: number;
@@ -70,6 +79,7 @@ export class IgdbClient {
     }
 
     const result = await this.cache.getOrFetch(
+      igdbTokenNamespace,
       "igdb:auth_token",
       async () => {
         debugLog("Fetching new Twitch OAuth2 token for IGDB");
@@ -125,6 +135,8 @@ export class IgdbClient {
         debugLog(`IGDB 401 on /${endpoint}. Retrying.`);
         this.token = null;
         this.tokenExpiry = null;
+        // A 401 means the credential itself is stale; evict only this token
+        // so authenticate() obtains a replacement before retrying the request.
         await this.cache.del("igdb:auth_token");
         token = await this.authenticate();
 
@@ -156,7 +168,10 @@ export class IgdbClient {
     }
   }
 
-  async getGame(id: number, options: CacheFetchOptions = {}): Promise<IgdbGame | null> {
+  async getGame(
+    id: number,
+    options: CacheFetchOptions = {},
+  ): Promise<IgdbGame | null> {
     const cacheKey = buildCacheKey({
       provider: "igdb",
       resource: "game",
@@ -164,6 +179,7 @@ export class IgdbClient {
       params: { response: "details" },
     });
     return this.cache.getOrFetch(
+      igdbGameNamespace,
       cacheKey,
       async () => {
         const results = await this.query<IgdbGame>(
@@ -209,6 +225,7 @@ export class IgdbClient {
       id: gameId,
     });
     return this.cache.getOrFetch(
+      igdbCharactersNamespace,
       cacheKey,
       () =>
         this.query<IgdbCharacter>(
@@ -236,6 +253,7 @@ export class IgdbClient {
       params: { limit, version: 2 },
     });
     return this.cache.getOrFetch(
+      igdbTrendingGamesNamespace,
       cacheKey,
       async () => {
         const primitives = await this.query<IgdbPopularityPrimitive>(

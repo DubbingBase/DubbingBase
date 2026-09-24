@@ -1,10 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
-import { CACHE_TTL, SimpleCache } from "./index";
+import { CACHE_TTL, createCacheNamespace, SimpleCache } from "./index";
 import { buildCacheKey } from "./constants";
 
 interface FakeKv {
   get: (key: string, options: { type: "json" }) => Promise<unknown>;
-  put: (key: string, value: string, options: { expirationTtl: number }) => Promise<void>;
+  put: (
+    key: string,
+    value: string,
+    options: { expirationTtl: number },
+  ) => Promise<void>;
 }
 
 describe("SimpleCache", () => {
@@ -18,12 +22,17 @@ describe("SimpleCache", () => {
       put: async () => undefined,
     };
     const cache = new SimpleCache(() => kv);
+    const namespace = createCacheNamespace<{ value: number }>();
 
     const fetcher = vi.fn(async () => ({ value: 0 }));
-    await expect(cache.getOrFetch("external:key", fetcher)).resolves.toEqual({
+    await expect(
+      cache.getOrFetch(namespace, "external:key", fetcher),
+    ).resolves.toEqual({
       value: 1,
     });
-    await expect(cache.getOrFetch("external:key", fetcher)).resolves.toEqual({
+    await expect(
+      cache.getOrFetch(namespace, "external:key", fetcher),
+    ).resolves.toEqual({
       value: 2,
     });
     expect(fetcher).not.toHaveBeenCalled();
@@ -36,13 +45,18 @@ describe("SimpleCache", () => {
       put: async (key, value) => values.set(key, JSON.parse(value)),
     };
     const cache = new SimpleCache(() => kv);
+    const namespace = createCacheNamespace<{ title: string }>();
     const fetcher = async () => ({ title: "Result" });
 
     await expect(
-      cache.getOrFetch("external:resource:1", fetcher, { ttl: "NORMAL" }),
+      cache.getOrFetch(namespace, "external:resource:1", fetcher, {
+        ttl: "NORMAL",
+      }),
     ).resolves.toEqual({ title: "Result" });
     await expect(
-      cache.getOrFetch("external:resource:1", async () => ({ title: "Wrong" })),
+      cache.getOrFetch(namespace, "external:resource:1", async () => ({
+        title: "Wrong",
+      })),
     ).resolves.toEqual({ title: "Result" });
     expect(CACHE_TTL).toEqual({
       TRENDING: 60 * 60,
@@ -62,9 +76,10 @@ describe("SimpleCache", () => {
       },
     };
     const cache = new SimpleCache(() => kv);
+    const namespace = createCacheNamespace<string>();
 
     await expect(
-      cache.getOrFetch("external:resource:1", async () => "new", {
+      cache.getOrFetch(namespace, "external:resource:1", async () => "new", {
         forceRefresh: true,
       }),
     ).resolves.toBe("new");
@@ -74,6 +89,7 @@ describe("SimpleCache", () => {
 
   it("does not write empty fetch results to KV", async () => {
     let writes = 0;
+    const namespace = createCacheNamespace<string | null>();
     const cache = new SimpleCache(() => ({
       get: async () => null,
       put: async () => {
@@ -81,7 +97,9 @@ describe("SimpleCache", () => {
       },
     }));
 
-    await expect(cache.getOrFetch("external:missing", async () => null)).resolves.toBeNull();
+    await expect(
+      cache.getOrFetch(namespace, "external:missing", async () => null),
+    ).resolves.toBeNull();
     expect(writes).toBe(0);
   });
 
@@ -94,6 +112,7 @@ describe("SimpleCache", () => {
       put: async (key, value) => values.set(key, JSON.parse(value)),
     };
     const cache = new SimpleCache(() => kv);
+    const namespace = createCacheNamespace<string>();
     const fetcher = () => {
       fetchCount += 1;
       return new Promise<string>((resolve) => {
@@ -101,22 +120,59 @@ describe("SimpleCache", () => {
       });
     };
 
-    const first = cache.getOrFetch("external:coalesced", fetcher, {
+    const first = cache.getOrFetch(namespace, "external:coalesced", fetcher, {
       forceRefresh: true,
     });
-    const second = cache.getOrFetch("external:coalesced", fetcher, {
+    const second = cache.getOrFetch(namespace, "external:coalesced", fetcher, {
       forceRefresh: true,
     });
+    expect(second).toBe(first);
     await vi.waitFor(() => expect(fetchCount).toBe(1));
     resolveFetch?.("shared");
 
-    await expect(Promise.all([first, second])).resolves.toEqual(["shared", "shared"]);
+    await expect(Promise.all([first, second])).resolves.toEqual([
+      "shared",
+      "shared",
+    ]);
     expect(fetchCount).toBe(1);
+  });
+
+  it("returns the identical typed promise to concurrent same-key callers", async () => {
+    let resolveFetch: ((value: { title: string }) => void) | undefined;
+    let fetchCount = 0;
+    const namespace = createCacheNamespace<{ title: string }>();
+    const cache = new SimpleCache(() => ({
+      get: async () => null,
+      put: async () => undefined,
+    }));
+    const fetcher = () => {
+      fetchCount += 1;
+      return new Promise<{ title: string }>((resolve) => {
+        resolveFetch = resolve;
+      });
+    };
+
+    const first = cache.getOrFetch(
+      namespace,
+      "external:promise-identity",
+      fetcher,
+    );
+    const second = cache.getOrFetch(
+      namespace,
+      "external:promise-identity",
+      fetcher,
+    );
+
+    expect(second).toBe(first);
+    await vi.waitFor(() => expect(fetchCount).toBe(1));
+    resolveFetch?.({ title: "shared" });
+    await expect(first).resolves.toEqual({ title: "shared" });
   });
 
   it("does not let a pending normal lookup suppress a forced refresh", async () => {
     let resolveRead: ((value: unknown) => void) | undefined;
     let forcedFetchCount = 0;
+    const namespace = createCacheNamespace<string>();
     const cache = new SimpleCache(() => ({
       get: async () =>
         new Promise<unknown>((resolve) => {
@@ -125,9 +181,14 @@ describe("SimpleCache", () => {
       put: async () => undefined,
     }));
 
-    const normal = cache.getOrFetch("external:refresh-race", async () => "normal");
+    const normal = cache.getOrFetch(
+      namespace,
+      "external:refresh-race",
+      async () => "normal",
+    );
     await vi.waitFor(() => expect(resolveRead).toBeDefined());
     const forced = cache.getOrFetch(
+      namespace,
       "external:refresh-race",
       async () => {
         forcedFetchCount += 1;
@@ -146,12 +207,14 @@ describe("SimpleCache", () => {
   it("does not let a slower normal fetch overwrite a forced refresh", async () => {
     const values = new Map<string, unknown>();
     let resolveNormalFetch: ((value: string) => void) | undefined;
+    const namespace = createCacheNamespace<string>();
     const cache = new SimpleCache(() => ({
       get: async (key) => values.get(key) ?? null,
       put: async (key, value) => values.set(key, JSON.parse(value)),
     }));
 
     const normal = cache.getOrFetch(
+      namespace,
       "external:fetch-race",
       () =>
         new Promise<string>((resolve) => {
@@ -159,9 +222,14 @@ describe("SimpleCache", () => {
         }),
     );
     await vi.waitFor(() => expect(resolveNormalFetch).toBeDefined());
-    const forced = cache.getOrFetch("external:fetch-race", async () => "fresh", {
-      forceRefresh: true,
-    });
+    const forced = cache.getOrFetch(
+      namespace,
+      "external:fetch-race",
+      async () => "fresh",
+      {
+        forceRefresh: true,
+      },
+    );
 
     await expect(forced).resolves.toBe("fresh");
     expect(values.get("external:fetch-race")).toBe("fresh");
@@ -172,6 +240,7 @@ describe("SimpleCache", () => {
 
   it("cleans up failed in-flight requests so a later request can retry", async () => {
     let fetchCount = 0;
+    const namespace = createCacheNamespace<string>();
     const cache = new SimpleCache(() => ({
       get: async () => null,
       put: async () => undefined,
@@ -182,12 +251,17 @@ describe("SimpleCache", () => {
       return "recovered";
     };
 
-    await expect(cache.getOrFetch("external:retry", fetcher)).rejects.toThrow("upstream failed");
-    await expect(cache.getOrFetch("external:retry", fetcher)).resolves.toBe("recovered");
+    await expect(
+      cache.getOrFetch(namespace, "external:retry", fetcher),
+    ).rejects.toThrow("upstream failed");
+    await expect(
+      cache.getOrFetch(namespace, "external:retry", fetcher),
+    ).resolves.toBe("recovered");
     expect(fetchCount).toBe(2);
   });
 
   it("does not force refresh authentication tokens", async () => {
+    const namespace = createCacheNamespace<string>();
     const cache = new SimpleCache(() => ({
       get: async () => "cached-token",
       put: async () => undefined,
@@ -196,6 +270,7 @@ describe("SimpleCache", () => {
 
     await expect(
       cache.getOrFetch(
+        namespace,
         "tvdb:auth_token",
         async () => {
           fetchCount += 1;

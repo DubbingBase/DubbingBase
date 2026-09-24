@@ -1,9 +1,12 @@
-import { SimpleCache } from "../cache";
+import { createCacheNamespace, SimpleCache } from "../cache";
 import { buildCacheKey } from "../cache/constants";
 import type { Audiobook, OpenLibraryAuthor } from "@app/shared-logic";
 import type { CacheFetchOptions } from "./cache-options";
 
-export function buildOpenLibraryCoverUrl(coverId: number, size: "S" | "M" | "L" = "L"): string {
+export function buildOpenLibraryCoverUrl(
+  coverId: number,
+  size: "S" | "M" | "L" = "L",
+): string {
   return `https://covers.openlibrary.org/b/id/${coverId}-${size}.jpg`;
 }
 
@@ -36,10 +39,24 @@ interface OpenLibraryAuthorResponse {
   death_date?: string;
 }
 
+const OPENLIBRARY_AUTHOR_CACHE = createCacheNamespace<string | null>();
+const OPENLIBRARY_BOOK_CACHE = createCacheNamespace<Audiobook | null>();
+
+function isOpenLibraryAuthorResponse(
+  value: unknown,
+): value is OpenLibraryAuthorResponse {
+  if (typeof value !== "object" || value === null) return false;
+  return (
+    (!("name" in value) || typeof value.name === "string") &&
+    (!("personal_name" in value) || typeof value.personal_name === "string")
+  );
+}
+
 export class OpenLibraryClient {
   private baseUrl = "https://openlibrary.org";
   private cache: SimpleCache;
-  private userAgent = "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
+  private userAgent =
+    "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
 
   constructor(cache: SimpleCache) {
     this.cache = cache;
@@ -64,7 +81,7 @@ export class OpenLibraryClient {
         return [];
       }
 
-      const data = (await res.json()) as { docs?: OpenLibraryDoc[] };
+      const data: { docs?: OpenLibraryDoc[] } = await res.json();
       const docs = data.docs || [];
 
       const books: Audiobook[] = [];
@@ -85,11 +102,15 @@ export class OpenLibraryClient {
 
         if (!id || isNaN(id)) continue;
 
-        const coverUrl = doc.cover_i ? buildOpenLibraryCoverUrl(doc.cover_i, "L") : null;
+        const coverUrl = doc.cover_i
+          ? buildOpenLibraryCoverUrl(doc.cover_i, "L")
+          : null;
 
-        const authors: OpenLibraryAuthor[] = (doc.author_name || []).map((name) => ({
-          name,
-        }));
+        const authors: OpenLibraryAuthor[] = (doc.author_name || []).map(
+          (name) => ({
+            name,
+          }),
+        );
 
         books.push({
           id,
@@ -100,9 +121,15 @@ export class OpenLibraryClient {
           cover_url: coverUrl,
           cover_id: doc.cover_i || null,
           first_publish_year: doc.first_publish_year || null,
-          first_publish_date: doc.first_publish_year ? String(doc.first_publish_year) : null,
-          publish_date: doc.first_publish_year ? `${doc.first_publish_year}-01-01` : null,
-          release_date: doc.first_publish_year ? `${doc.first_publish_year}-01-01` : null,
+          first_publish_date: doc.first_publish_year
+            ? String(doc.first_publish_year)
+            : null,
+          publish_date: doc.first_publish_year
+            ? `${doc.first_publish_year}-01-01`
+            : null,
+          release_date: doc.first_publish_year
+            ? `${doc.first_publish_year}-01-01`
+            : null,
           isbn: doc.isbn?.[0] || null,
           media_type: "audiobook",
           popularity: doc.edition_count ? Math.sqrt(doc.edition_count) * 5 : 0,
@@ -118,16 +145,20 @@ export class OpenLibraryClient {
     }
   }
 
-  async getAuthorName(authorKey: string, options: CacheFetchOptions = {}): Promise<string> {
+  async getAuthorName(
+    authorKey: string,
+    options: CacheFetchOptions = {},
+  ): Promise<string> {
     const cleanKey = authorKey.replace(/^\//, "").replace(/^authors\//, "");
     const cacheKey = buildCacheKey({
       provider: "openlibrary",
       resource: "author",
       id: cleanKey,
     });
-    return this.cache.getOrFetch(
+    const authorName = await this.cache.getOrFetch(
+      OPENLIBRARY_AUTHOR_CACHE,
       cacheKey,
-      async () => {
+      async (): Promise<string | null> => {
         try {
           const url = `${this.baseUrl}/authors/${cleanKey}.json`;
           const res = await fetch(url, {
@@ -138,26 +169,33 @@ export class OpenLibraryClient {
             signal: AbortSignal.timeout(6000),
           });
 
-          if (!res.ok) return "";
+          if (!res.ok) return null;
 
-          const data = (await res.json()) as OpenLibraryAuthorResponse;
-          return data.name || data.personal_name || "";
+          const data: unknown = await res.json();
+          if (!isOpenLibraryAuthorResponse(data)) return null;
+          const name = data.name || data.personal_name;
+          return name || null;
         } catch (err) {
           console.error(`Failed to fetch OpenLibrary author ${cleanKey}:`, err);
-          return "";
+          return null;
         }
       },
       { ttl: 604800, ...options },
     );
+    return authorName ?? "";
   }
 
-  async getBook(id: number, options: CacheFetchOptions = {}): Promise<Audiobook | null> {
+  async getBook(
+    id: number,
+    options: CacheFetchOptions = {},
+  ): Promise<Audiobook | null> {
     const cacheKey = buildCacheKey({
       provider: "openlibrary",
       resource: "book",
       id,
     });
     return this.cache.getOrFetch(
+      OPENLIBRARY_BOOK_CACHE,
       cacheKey,
       async () => {
         try {
@@ -180,7 +218,7 @@ export class OpenLibraryClient {
             return null;
           }
 
-          const data = (await res.json()) as OpenLibraryWorkResponse;
+          const data: OpenLibraryWorkResponse = await res.json();
           if (!data.title) return null;
 
           let description = "";
@@ -192,13 +230,18 @@ export class OpenLibraryClient {
 
           const validCovers = (data.covers || []).filter((c) => c && c > 0);
           const coverId = validCovers[0] || null;
-          const coverUrl = coverId ? buildOpenLibraryCoverUrl(coverId, "L") : null;
+          const coverUrl = coverId
+            ? buildOpenLibraryCoverUrl(coverId, "L")
+            : null;
 
           const authors: OpenLibraryAuthor[] = [];
           if (data.authors && Array.isArray(data.authors)) {
             for (const item of data.authors) {
               if (item?.author?.key) {
-                const authorName = await this.getAuthorName(item.author.key, options);
+                const authorName = await this.getAuthorName(
+                  item.author.key,
+                  options,
+                );
                 if (authorName) {
                   authors.push({
                     id: item.author.key,
@@ -211,7 +254,8 @@ export class OpenLibraryClient {
 
           let publishYear: number | null = null;
           if (data.first_publish_date) {
-            const yearMatch = data.first_publish_date.match(/\b(19\d\d|20\d\d)\b/);
+            const yearMatch =
+              data.first_publish_date.match(/\b(19\d\d|20\d\d)\b/);
             if (yearMatch && yearMatch[1]) {
               publishYear = parseInt(yearMatch[1], 10);
             }
@@ -257,13 +301,13 @@ export class OpenLibraryClient {
 
       if (!res.ok) return null;
 
-      const data = (await res.json()) as {
+      const data: {
         title?: string;
         description?: string | { value: string };
         covers?: number[];
         publish_date?: string;
         works?: Array<{ key: string }>;
-      };
+      } = await res.json();
 
       if (!data.title) return null;
 

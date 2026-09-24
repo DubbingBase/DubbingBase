@@ -652,7 +652,10 @@ export type Database = {
         Returns: boolean;
       };
       find_duplicate_voice_actors_rpc: { Args: never; Returns: Json };
-      get_media_queue_depth: { Args: never; Returns: number };
+      get_media_queue_depth: {
+        Args: { p_queue_name?: string };
+        Returns: number;
+      };
       get_media_queue_items: {
         Args: never;
         Returns: {

@@ -1,5 +1,11 @@
-import { SimpleCache } from "../cache";
+import { createCacheNamespace, SimpleCache } from "../cache";
 import type { CacheFetchOptions } from "./cache-options";
+
+type TvdbApiResponse = Awaited<ReturnType<TVDBClient["get"]>>;
+
+export const TVDB_AUTH_TOKEN_NAMESPACE = createCacheNamespace<string>();
+export const TVDB_API_RESPONSE_NAMESPACE =
+  createCacheNamespace<TvdbApiResponse>();
 
 function debugLog(message: string, data?: any) {
   console.log(`[TVDB] ${message}`, data ? JSON.stringify(data, null, 2) : "");
@@ -26,6 +32,7 @@ export class TVDBClient {
     }
 
     const token = await this.cache.getOrFetch(
+      TVDB_AUTH_TOKEN_NAMESPACE,
       "tvdb:auth_token",
       async () => {
         const response = await fetch(`${this.baseUrl}/login`, {
@@ -49,7 +56,11 @@ export class TVDBClient {
     return token;
   }
 
-  async get(endpoint: string, params?: Record<string, string>, language?: string) {
+  async get(
+    endpoint: string,
+    params?: Record<string, string>,
+    language?: string,
+  ) {
     const token = await this.authenticate();
     const url = new URL(`${this.baseUrl}${endpoint}`);
 
@@ -90,15 +101,23 @@ export class TVDBClient {
     language?: string,
     options: CacheFetchOptions = {},
   ) {
-    const normalizedLanguage = language ? (language.split(",")[0] || "en").trim() : "default";
+    const normalizedLanguage = language
+      ? (language.split(",")[0] || "en").trim()
+      : "default";
     const suffix = extended
       ? `meta-${extended.meta ?? "default"}-${extended.short ? "short" : "full"}`
       : "basic";
-    const cacheKey = this.cache.tvdbKey("series", seriesId, suffix, normalizedLanguage);
+    const cacheKey = this.cache.tvdbKey(
+      "series",
+      seriesId,
+      suffix,
+      normalizedLanguage,
+    );
     const params: Record<string, string> = {};
     if (extended?.meta) params.meta = extended.meta;
     if (extended?.short) params.short = "true";
     return this.cache.getOrFetch(
+      TVDB_API_RESPONSE_NAMESPACE,
       cacheKey,
       () => this.get(`/series/${seriesId}`, params, language),
       { ttl: 86400, ...options },
@@ -111,41 +130,71 @@ export class TVDBClient {
     language?: string,
     options: CacheFetchOptions = {},
   ) {
-    const normalizedLanguage = language ? (language.split(",")[0] || "en").trim() : "default";
+    const normalizedLanguage = language
+      ? (language.split(",")[0] || "en").trim()
+      : "default";
     const suffix = extended
       ? `meta-${extended.meta ?? "default"}-${extended.short ? "short" : "full"}`
       : "basic";
-    const cacheKey = this.cache.tvdbKey("movie", movieId, suffix, normalizedLanguage);
+    const cacheKey = this.cache.tvdbKey(
+      "movie",
+      movieId,
+      suffix,
+      normalizedLanguage,
+    );
     const params: Record<string, string> = {};
     if (extended?.meta) params.meta = extended.meta;
-    return this.cache.getOrFetch(cacheKey, () => this.get(`/movies/${movieId}`, params, language), {
-      ttl: 86400,
-      ...options,
-    });
+    return this.cache.getOrFetch(
+      TVDB_API_RESPONSE_NAMESPACE,
+      cacheKey,
+      () => this.get(`/movies/${movieId}`, params, language),
+      {
+        ttl: 86400,
+        ...options,
+      },
+    );
   }
 
   async getCharacterById(characterId: number, options: CacheFetchOptions = {}) {
     const cacheKey = this.cache.tvdbKey("character", characterId);
-    return this.cache.getOrFetch(cacheKey, () => this.get(`/characters/${characterId}`), {
-      ttl: 86400,
-      ...options,
-    });
+    return this.cache.getOrFetch(
+      TVDB_API_RESPONSE_NAMESPACE,
+      cacheKey,
+      () => this.get(`/characters/${characterId}`),
+      {
+        ttl: 86400,
+        ...options,
+      },
+    );
   }
 
-  async getCharactersBySeries(seriesId: number, options: CacheFetchOptions = {}) {
+  async getCharactersBySeries(
+    seriesId: number,
+    options: CacheFetchOptions = {},
+  ) {
     const cacheKey = this.cache.tvdbKey("series", seriesId, "characters");
-    return this.cache.getOrFetch(cacheKey, () => this.get(`/series/${seriesId}/characters`), {
-      ttl: 86400,
-      ...options,
-    });
+    return this.cache.getOrFetch(
+      TVDB_API_RESPONSE_NAMESPACE,
+      cacheKey,
+      () => this.get(`/series/${seriesId}/characters`),
+      {
+        ttl: 86400,
+        ...options,
+      },
+    );
   }
 
   async getCharactersByMovie(movieId: number, options: CacheFetchOptions = {}) {
     const cacheKey = this.cache.tvdbKey("movie", movieId, "characters");
-    return this.cache.getOrFetch(cacheKey, () => this.get(`/movies/${movieId}/characters`), {
-      ttl: 86400,
-      ...options,
-    });
+    return this.cache.getOrFetch(
+      TVDB_API_RESPONSE_NAMESPACE,
+      cacheKey,
+      () => this.get(`/movies/${movieId}/characters`),
+      {
+        ttl: 86400,
+        ...options,
+      },
+    );
   }
 
   async searchSeries(query: string, language?: string) {
