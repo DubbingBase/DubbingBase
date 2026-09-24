@@ -358,6 +358,7 @@ export class WikipediaCache {
   private async fetch(url: string): Promise<any> {
     const response = await fetch(url, {
       headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
+      signal: AbortSignal.timeout(10000),
     });
     if (!response.ok) {
       throw new Error(

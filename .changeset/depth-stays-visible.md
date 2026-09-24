@@ -1,6 +1,5 @@
 ---
 "@app/supabase": patch
-"@app/website": patch
 ---
 
-Expose per-queue depth in generated database types and log the remaining queue after each batch.
+Expose the optional queue-name argument for `get_media_queue_depth` in the generated database types.

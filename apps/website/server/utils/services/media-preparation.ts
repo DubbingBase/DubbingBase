@@ -46,6 +46,7 @@ async function fetchTmdbCredits(
         Authorization: `Bearer ${config.tmdbApiKey}`,
         Accept: "application/json",
       },
+      signal: AbortSignal.timeout(5000),
     });
     if (!res.ok) return [];
     const data = (await res.json()) as any;
@@ -161,6 +162,7 @@ export async function checkMediaDubbingSections(options: {
           Authorization: `Bearer ${config.tmdbApiKey}`,
           Accept: "application/json",
         },
+        signal: AbortSignal.timeout(5000),
       },
     );
 
@@ -405,6 +407,7 @@ export async function extractMediaDubbingCredits(options: {
           Authorization: `Bearer ${config.tmdbApiKey}`,
           Accept: "application/json",
         },
+        signal: AbortSignal.timeout(5000),
       },
     );
 

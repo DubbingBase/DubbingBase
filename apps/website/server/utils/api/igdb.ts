@@ -7,7 +7,12 @@ import {
 } from "@app/shared-logic";
 import { buildCacheKey } from "../cache/constants";
 
-const igdbTokenNamespace = createCacheNamespace<string>();
+interface IgdbCachedToken {
+  accessToken: string;
+  expiresAt: number;
+}
+
+const igdbTokenNamespace = createCacheNamespace<IgdbCachedToken>();
 const igdbGameNamespace = createCacheNamespace<IgdbGame | null>();
 const igdbCharactersNamespace = createCacheNamespace<IgdbCharacter[]>();
 const igdbTrendingGamesNamespace = createCacheNamespace<IgdbGame[]>();
@@ -103,16 +108,32 @@ export class IgdbClient {
         }
 
         const tokenData: TwitchTokenResponse = await response.json();
-        this.tokenExpiry = new Date(
-          Date.now() + Math.max(tokenData.expires_in - 3600, 3600) * 1000,
-        );
-        return tokenData.access_token;
+        return {
+          accessToken: tokenData.access_token,
+          expiresAt:
+            Date.now() + Math.max(tokenData.expires_in - 3600, 3600) * 1000,
+        };
       },
       { ttl: 604800 },
     );
-    this.token = result;
-    this.tokenExpiry ??= new Date(Date.now() + 5 * 60 * 60 * 1000);
-    return result;
+
+    // Older KV entries contain only the token string, so they have no reliable
+    // expiry. Discard them, along with expired entries, and fetch a fresh token.
+    if (
+      typeof result !== "object" ||
+      result === null ||
+      typeof result.accessToken !== "string" ||
+      typeof result.expiresAt !== "number" ||
+      !Number.isFinite(result.expiresAt) ||
+      result.expiresAt <= Date.now()
+    ) {
+      await this.cache.del("igdb:auth_token");
+      return this.authenticate();
+    }
+
+    this.token = result.accessToken;
+    this.tokenExpiry = new Date(result.expiresAt);
+    return result.accessToken;
   }
 
   async query<T>(endpoint: string, body: string): Promise<T[]> {

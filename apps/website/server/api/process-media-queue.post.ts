@@ -373,6 +373,7 @@ export default defineEventHandler(async (event) => {
                     Authorization: `Bearer ${config.tmdbApiKey}`,
                     Accept: "application/json",
                   },
+                  signal: AbortSignal.timeout(5000),
                 },
               );
 
@@ -947,29 +948,6 @@ export default defineEventHandler(async (event) => {
           `Failed to archive processed queue batch: ${archiveError.message}`,
         );
       }
-    }
-
-    // Depth reporting is best-effort: monitoring must not fail completed queue work.
-    try {
-      const { data: remainingDepth, error: depthError } =
-        await supabaseAdmin.rpc("get_media_queue_depth", {
-          p_queue_name: targetQueue,
-        });
-      if (depthError) {
-        console.warn(
-          `[QUEUE] Could not read remaining ${targetQueue} depth:`,
-          depthError.message,
-        );
-      } else {
-        console.info(
-          `[QUEUE] Remaining ${targetQueue} depth: ${remainingDepth}`,
-        );
-      }
-    } catch (depthError) {
-      console.warn(
-        `[QUEUE] Could not read remaining ${targetQueue} depth:`,
-        getErrorMessage(depthError),
-      );
     }
 
     return {

@@ -624,6 +624,8 @@ export type Database = {
       enqueue_media_fetch: {
         Args: {
           p_episode_number?: number;
+          p_is_manual?: boolean;
+          p_language?: string;
           p_media_type: string;
           p_season_number?: number;
           p_tmdb_id: number;
