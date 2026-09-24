@@ -1,6 +1,10 @@
 import { ofetch } from "ofetch";
 import type { Podcast, PodcastEpisode } from "@app/shared-logic";
-import { SimpleCache } from "../cache";
+import { createCacheNamespace, SimpleCache } from "../cache";
+import { buildCacheKey } from "../cache/constants";
+import type { CacheFetchOptions } from "./cache-options";
+
+export const PODCAST_LOOKUP_NAMESPACE = createCacheNamespace<Podcast | null>();
 
 export interface ITunesPodcastResult {
   collectionId: number;
@@ -28,9 +32,6 @@ export class PodcastClient {
     if (!query || query.trim().length < 2) return [];
 
     const trimmedQuery = query.trim();
-    const cacheKey = `itunes:search:podcast:${trimmedQuery}:${limit}`;
-    const cached = await this.cache.get<Podcast[]>(cacheKey);
-    if (cached) return cached;
 
     try {
       const response = await ofetch<{
@@ -61,7 +62,6 @@ export class PodcastClient {
         media_type: "podcast" as const,
       }));
 
-      await this.cache.set(cacheKey, podcasts, "SHORT");
       return podcasts;
     } catch (err) {
       console.error("iTunes podcast search failed:", err);
@@ -69,62 +69,77 @@ export class PodcastClient {
     }
   }
 
-  async getPodcast(id: number): Promise<Podcast | null> {
-    const cacheKey = `itunes:podcast:${id}`;
-    const cached = await this.cache.get<Podcast>(cacheKey);
-    if (cached) return cached;
-
+  async getPodcast(
+    id: number,
+    options: CacheFetchOptions = {},
+  ): Promise<Podcast | null> {
+    const cacheKey = buildCacheKey({
+      provider: "podcast",
+      resource: "podcast",
+      id,
+      params: { entity: "podcastEpisode", limit: 50 },
+    });
     try {
-      const response = await ofetch<{
-        resultCount: number;
-        results: any[];
-      }>(`${this.baseUrl}/lookup`, {
-        params: {
-          id,
-          entity: "podcastEpisode",
-          limit: 50,
+      return await this.cache.getOrFetch(
+        PODCAST_LOOKUP_NAMESPACE,
+        cacheKey,
+        async () => {
+          const response = await ofetch<{
+            resultCount: number;
+            results: any[];
+          }>(`${this.baseUrl}/lookup`, {
+            params: {
+              id,
+              entity: "podcastEpisode",
+              limit: 50,
+            },
+            timeout: 6000,
+          });
+
+          if (!response?.results || response.results.length === 0) return null;
+
+          const podcastHeader = response.results[0] as ITunesPodcastResult;
+          const rawEpisodes = response.results.slice(1);
+
+          const episodes: PodcastEpisode[] = rawEpisodes.map((ep: any) => ({
+            id: ep.trackId || ep.collectionId || 0,
+            title: ep.trackName || "Épisode",
+            description: ep.description || ep.shortDescription || "",
+            release_date: ep.releaseDate || "",
+            duration: ep.trackTimeMillis
+              ? Math.round(ep.trackTimeMillis / 60000)
+              : undefined,
+            audio_url: ep.episodeUrl || "",
+          }));
+
+          const podcast = {
+            id: podcastHeader.collectionId || podcastHeader.trackId || id,
+            title:
+              podcastHeader.collectionName ||
+              podcastHeader.trackName ||
+              "Podcast",
+            author: podcastHeader.artistName || "",
+            feed_url: podcastHeader.feedUrl || "",
+            cover_url:
+              podcastHeader.artworkUrl600 ||
+              podcastHeader.artworkUrl100 ||
+              null,
+            episodes_count: podcastHeader.trackCount || episodes.length,
+            release_date: podcastHeader.releaseDate || "",
+            genres:
+              podcastHeader.genres ||
+              (podcastHeader.primaryGenreName
+                ? [podcastHeader.primaryGenreName]
+                : []),
+            description: podcastHeader.description || "",
+            episodes,
+            media_type: "podcast" as const,
+          };
+
+          return podcast;
         },
-        timeout: 6000,
-      });
-
-      if (!response?.results || response.results.length === 0) return null;
-
-      const podcastHeader = response.results[0] as ITunesPodcastResult;
-      const rawEpisodes = response.results.slice(1);
-
-      const episodes: PodcastEpisode[] = rawEpisodes.map((ep: any) => ({
-        id: ep.trackId || ep.collectionId || 0,
-        title: ep.trackName || "Épisode",
-        description: ep.description || ep.shortDescription || "",
-        release_date: ep.releaseDate || "",
-        duration: ep.trackTimeMillis
-          ? Math.round(ep.trackTimeMillis / 60000)
-          : undefined,
-        audio_url: ep.episodeUrl || "",
-      }));
-
-      const podcast = {
-        id: podcastHeader.collectionId || podcastHeader.trackId || id,
-        title:
-          podcastHeader.collectionName || podcastHeader.trackName || "Podcast",
-        author: podcastHeader.artistName || "",
-        feed_url: podcastHeader.feedUrl || "",
-        cover_url:
-          podcastHeader.artworkUrl600 || podcastHeader.artworkUrl100 || null,
-        episodes_count: podcastHeader.trackCount || episodes.length,
-        release_date: podcastHeader.releaseDate || "",
-        genres:
-          podcastHeader.genres ||
-          (podcastHeader.primaryGenreName
-            ? [podcastHeader.primaryGenreName]
-            : []),
-        description: podcastHeader.description || "",
-        episodes,
-        media_type: "podcast" as const,
-      };
-
-      await this.cache.set(cacheKey, podcast, "MEDIUM");
-      return podcast;
+        { ttl: 86400, ...options },
+      );
     } catch (err) {
       console.error(`iTunes lookup for podcast ${id} failed:`, err);
       return {

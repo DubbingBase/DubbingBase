@@ -5,6 +5,9 @@ import { processVoiceActor } from "../urls/supabase";
 import { processMedia, cleanCharacterName } from "../urls/tmdb";
 import { useCache, useIgdbClient, useOpenLibraryClient } from "../index";
 import { buildIgdbImageUrl } from "../api/igdb";
+import { createCacheNamespace } from "../cache";
+import { buildCacheKey } from "../cache/constants";
+import type { CacheFetchOptions } from "../api/cache-options";
 
 const WIKIPEDIA_USER_AGENT =
   "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
@@ -20,6 +23,38 @@ interface WikidataClaimsResponse {
   >;
 }
 
+interface TmdbCredit {
+  backdrop_path?: string;
+  popularity?: number;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isTmdbCredit(value: unknown): value is TmdbCredit {
+  if (!isRecord(value)) return false;
+  return (
+    (value.backdrop_path === undefined ||
+      typeof value.backdrop_path === "string") &&
+    (value.popularity === undefined || typeof value.popularity === "number")
+  );
+}
+
+function tmdbCastCredits(value: unknown): TmdbCredit[] {
+  if (!isRecord(value) || !Array.isArray(value.cast)) return [];
+  return value.cast.filter(isTmdbCredit);
+}
+
+export const WIKIDATA_CLAIMS_NAMESPACE =
+  createCacheNamespace<WikidataClaimsResponse | null>();
+export const WIKIPEDIA_ACTOR_URL_NAMESPACE = createCacheNamespace<
+  string | null
+>();
+export const MEDIA_TVDB_CHARACTERS_NAMESPACE = createCacheNamespace<Awaited<
+  ReturnType<MediaService["getCharacterProfilePictures"]>
+> | null>();
+
 async function fetchPotentialWikipediaUrl(
   firstname: string,
   lastname: string,
@@ -29,36 +64,44 @@ async function fetchPotentialWikipediaUrl(
     const name = `${firstname} ${lastname}`.trim();
     if (!name) return null;
 
-    const cacheKey = cache.wikipediaKey("voice-actor", name, "url");
-    const cached = await cache.get<string>(cacheKey);
-    if (cached) return cached;
-
-    // Search Wikidata for the person
-    const searchUrl = `https://wikidata.org/w/api.php?action=wbsearchentities&format=json&search=${encodeURIComponent(name)}&language=fr`;
-    const searchRes = await fetch(searchUrl, {
-      headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
+    const cacheKey = buildCacheKey({
+      provider: "wikipedia",
+      resource: "voice-actor-url",
+      query: name,
+      language: "fr",
     });
-    if (!searchRes.ok) return null;
+    return await cache.getOrFetch(
+      WIKIPEDIA_ACTOR_URL_NAMESPACE,
+      cacheKey,
+      async () => {
+        // Search Wikidata for the person
+        const searchUrl = `https://wikidata.org/w/api.php?action=wbsearchentities&format=json&search=${encodeURIComponent(name)}&language=fr`;
+        const searchRes = await fetch(searchUrl, {
+          headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
+        });
+        if (!searchRes.ok) return null;
 
-    const searchData = await searchRes.json();
-    if (!searchData.search || searchData.search.length === 0) return null;
+        const searchData = await searchRes.json();
+        if (!searchData.search || searchData.search.length === 0) return null;
 
-    const bestMatch = searchData.search[0];
+        const bestMatch = searchData.search[0];
 
-    // Get sitelinks for French Wikipedia
-    const entityUrl = `https://www.wikidata.org/w/api.php?action=wbgetentities&props=sitelinks&format=json&ids=${bestMatch.id}&sitefilter=frwiki`;
-    const entityRes = await fetch(entityUrl, {
-      headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
-    });
-    if (!entityRes.ok) return null;
+        // Get sitelinks for French Wikipedia
+        const entityUrl = `https://www.wikidata.org/w/api.php?action=wbgetentities&props=sitelinks&format=json&ids=${bestMatch.id}&sitefilter=frwiki`;
+        const entityRes = await fetch(entityUrl, {
+          headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
+        });
+        if (!entityRes.ok) return null;
 
-    const entityData = await entityRes.json();
-    const title = entityData.entities?.[bestMatch.id]?.sitelinks?.frwiki?.title;
-    if (!title) return null;
+        const entityData = await entityRes.json();
+        const title =
+          entityData.entities?.[bestMatch.id]?.sitelinks?.frwiki?.title;
+        if (!title) return null;
 
-    const wikipediaUrl = `https://fr.wikipedia.org/wiki/${encodeURI(title.replace(/ /g, "_"))}`;
-    await cache.set(cacheKey, wikipediaUrl, "MEDIUM");
-    return wikipediaUrl;
+        return `https://fr.wikipedia.org/wiki/${encodeURI(title.replace(/ /g, "_"))}`;
+      },
+      { ttl: 604800 },
+    );
   } catch (e) {
     console.error("Failed to fetch potential Wikipedia URL:", e);
     return null;
@@ -567,11 +610,10 @@ export class MediaService {
       if (voiceActor.tmdb_id) {
         const personData = await tmdbPersonPromise;
         if (personData) {
-          const allCredits: { backdrop_path?: string; popularity?: number }[] =
-            [
-              ...(personData.movie_credits?.cast || []),
-              ...(personData.tv_credits?.cast || []),
-            ];
+          const allCredits = [
+            ...tmdbCastCredits(personData.movie_credits),
+            ...tmdbCastCredits(personData.tv_credits),
+          ];
           allCredits.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
           const best = allCredits.find((c) => c.backdrop_path);
           if (best)
@@ -609,138 +651,143 @@ export class MediaService {
     contentType: "movie" | "tv",
     contentId: number,
     tmdbMedia: any,
+    options: CacheFetchOptions = {},
   ): Promise<{ characters: any[]; tvdbId: number | null }> {
     const cache = useCache();
     const tvdbClient = new TVDBClient(cache);
-    let characterProfilePictures: any[] = [];
-    const cacheKey = `tvdb:${contentType}:characters_by_tmdb:${contentId}`;
+    const normalizedLanguage = this.acceptLanguage
+      ? (this.acceptLanguage.split(",")[0] || "en").trim()
+      : "default";
+    const cacheKey = buildCacheKey({
+      provider: "tvdb",
+      resource: "characters-by-tmdb-id",
+      id: contentId,
+      language: normalizedLanguage,
+      params: { contentType },
+    });
 
     try {
-      const cachedResult = await cache.get(cacheKey);
-      if (cachedResult) {
-        if (Array.isArray(cachedResult)) {
-          return { characters: cachedResult, tvdbId: null };
-        }
-        return cachedResult as { characters: any[]; tvdbId: number | null };
-      }
+      const result = await cache.getOrFetch(
+        MEDIA_TVDB_CHARACTERS_NAMESPACE,
+        cacheKey,
+        async () => {
+          let tvdbId: number | null = null;
+          if (tmdbMedia.external_ids?.tvdb_id) {
+            tvdbId = tmdbMedia.external_ids.tvdb_id;
+          }
 
-      let tvdbId: number | null = null;
-      if (tmdbMedia.external_ids?.tvdb_id) {
-        tvdbId = tmdbMedia.external_ids.tvdb_id;
-      }
+          if (!tvdbId && tmdbMedia.external_ids?.wikidata_id) {
+            const wikidataId = tmdbMedia.external_ids.wikidata_id;
+            try {
+              const wikidataCacheKey = buildCacheKey({
+                provider: "wikipedia",
+                resource: "entity-claims",
+                id: wikidataId,
+                params: { contentType },
+              });
+              const data = await cache.getOrFetch(
+                WIKIDATA_CLAIMS_NAMESPACE,
+                wikidataCacheKey,
+                async () => {
+                  const url = `https://www.wikidata.org/w/api.php?action=wbgetclaims&entity=${wikidataId}&format=json`;
+                  const response = await fetch(url, {
+                    headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
+                  });
+                  return response.ok
+                    ? ((await response.json()) as WikidataClaimsResponse)
+                    : null;
+                },
+                { ttl: 604800, ...options },
+              );
 
-      if (!tvdbId && tmdbMedia.external_ids?.wikidata_id) {
-        const wikidataId = tmdbMedia.external_ids.wikidata_id;
-        try {
-          const wikidataCacheKey = cache.wikipediaKey(
-            "entity",
-            wikidataId,
-            `claims-${contentType}`,
-          );
-          let data = await cache.get<WikidataClaimsResponse>(wikidataCacheKey);
-
-          if (!data) {
-            const url = `https://www.wikidata.org/w/api.php?action=wbgetclaims&entity=${wikidataId}&format=json`;
-            const response = await fetch(url, {
-              headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
-            });
-            if (response.ok) {
-              data = await response.json();
-              await cache.set(wikidataCacheKey, data, "MEDIUM");
+              const property = contentType === "movie" ? "P12196" : "P4835";
+              const claim = data?.claims?.[property]?.[0];
+              const claimValue = claim?.mainsnak?.datavalue?.value;
+              if (claimValue !== undefined) {
+                tvdbId = parseInt(String(claimValue), 10);
+              }
+            } catch (e) {
+              console.error(`Failed to fetch Wikidata for ${wikidataId}`, e);
             }
           }
 
-          const property = contentType === "movie" ? "P12196" : "P4835";
-          const claim = data?.claims?.[property]?.[0];
-          const claimValue = claim?.mainsnak?.datavalue?.value;
-          if (claimValue !== undefined) {
-            tvdbId = parseInt(String(claimValue), 10);
+          if (!tvdbId) {
+            const searchQuery =
+              tmdbMedia.title ||
+              tmdbMedia.name ||
+              tmdbMedia.original_title ||
+              tmdbMedia.original_name;
+
+            const searchResults = await tvdbClient.searchSeries(
+              searchQuery,
+              this.acceptLanguage,
+            );
+
+            if (searchResults && searchResults.data) {
+              const typeMatchedResults = searchResults.data.filter(
+                (item: any) =>
+                  item.type === contentType ||
+                  (contentType === "movie" && item.id.startsWith("movie-")) ||
+                  (contentType === "tv" && item.id.startsWith("series-")),
+              );
+
+              const bestMatch =
+                typeMatchedResults.find(
+                  (item: any) =>
+                    item.name
+                      ?.toLowerCase()
+                      .includes(searchQuery.toLowerCase()) ||
+                    item.translations?.eng
+                      ?.toLowerCase()
+                      .includes(searchQuery.toLowerCase()),
+                ) || typeMatchedResults[0];
+
+              tvdbId =
+                contentType === "movie"
+                  ? bestMatch?.tvdb_id || bestMatch?.id
+                  : bestMatch?.id;
+            }
           }
-        } catch (e) {
-          console.error(`Failed to fetch Wikidata for ${wikidataId}`, e);
-        }
-      }
 
-      if (!tvdbId) {
-        const searchQuery =
-          tmdbMedia.title ||
-          tmdbMedia.name ||
-          tmdbMedia.original_title ||
-          tmdbMedia.original_name;
+          if (tvdbId) {
+            let characters: any[] = [];
+            if (contentType === "movie") {
+              const res = await tvdbClient.getMovieById(
+                tvdbId,
+                { meta: "translations", short: false },
+                this.acceptLanguage,
+                options,
+              );
+              characters = res.data.characters || [];
+            } else {
+              const res = await tvdbClient.getSeriesById(
+                tvdbId,
+                { meta: "episodes", short: false },
+                this.acceptLanguage,
+                options,
+              );
+              characters = res.data.characters || [];
+            }
 
-        const searchResults = await tvdbClient.searchSeries(
-          searchQuery,
-          this.acceptLanguage,
-        );
+            const characterProfilePictures = characters
+              .filter((character: any) => character.image)
+              .map((character: any) => ({
+                id: character.id,
+                name: cleanCharacterName(character.name),
+                image: character.image,
+                tvdbPeopleId: character.peopleId,
+                movieId: contentType === "movie" ? contentId : undefined,
+                seriesId: contentType === "tv" ? contentId : undefined,
+              }));
 
-        if (searchResults && searchResults.data) {
-          const typeMatchedResults = searchResults.data.filter(
-            (item: any) =>
-              item.type === contentType ||
-              (contentType === "movie" && item.id.startsWith("movie-")) ||
-              (contentType === "tv" && item.id.startsWith("series-")),
-          );
+            return { characters: characterProfilePictures, tvdbId };
+          }
 
-          const bestMatch =
-            typeMatchedResults.find(
-              (item: any) =>
-                item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                item.translations?.eng
-                  ?.toLowerCase()
-                  .includes(searchQuery.toLowerCase()),
-            ) || typeMatchedResults[0];
-
-          tvdbId =
-            contentType === "movie"
-              ? bestMatch?.tvdb_id || bestMatch?.id
-              : bestMatch?.id;
-        }
-      }
-
-      if (tvdbId) {
-        let characters: any[] = [];
-        if (contentType === "movie") {
-          const res = await tvdbClient.getMovieById(
-            tvdbId,
-            {
-              meta: "translations",
-              short: false,
-            },
-            this.acceptLanguage,
-          );
-          characters = res.data.characters || [];
-        } else {
-          const res = await tvdbClient.getSeriesById(
-            tvdbId,
-            {
-              meta: "episodes",
-              short: false,
-            },
-            this.acceptLanguage,
-          );
-          characters = res.data.characters || [];
-        }
-
-        if (characters && characters.length > 0) {
-          characterProfilePictures = characters
-            .filter((character: any) => character.image)
-            .map((character: any) => ({
-              id: character.id,
-              name: cleanCharacterName(character.name),
-              image: character.image,
-              tvdbPeopleId: character.peopleId,
-              movieId: contentType === "movie" ? contentId : undefined,
-              seriesId: contentType === "tv" ? contentId : undefined,
-            }));
-        }
-      }
-
-      const resultObj = { characters: characterProfilePictures, tvdbId };
-      if (tvdbId !== null) {
-        cache.set(cacheKey, resultObj, "SHORT").catch(() => {});
-      }
-
-      return resultObj;
+          return null;
+        },
+        { ttl: 86400, ...options },
+      );
+      if (result) return result;
     } catch (e) {
       console.error(
         `Error fetching character profile pictures for ${contentType} ${contentId}:`,
@@ -748,7 +795,7 @@ export class MediaService {
       );
     }
 
-    return { characters: characterProfilePictures, tvdbId: null };
+    return { characters: [], tvdbId: null };
   }
 
   async getMediaWithVoiceActors(
@@ -761,31 +808,38 @@ export class MediaService {
       this.acceptLanguage,
     );
 
-    let collection = null;
-    if (contentType === "movie" && media.belongs_to_collection?.id) {
-      const collectionData = await this.tmdbClient.getCollection(
-        media.belongs_to_collection.id,
-      );
+    let collection: Record<string, unknown> | null = null;
+    const belongsToCollection = media.belongs_to_collection;
+    const collectionId = isRecord(belongsToCollection)
+      ? belongsToCollection.id
+      : undefined;
+    if (contentType === "movie" && typeof collectionId === "number") {
+      const collectionData = await this.tmdbClient.getCollection(collectionId);
       if (collectionData) {
+        const parts = Array.isArray(collectionData.parts)
+          ? collectionData.parts.filter(isRecord)
+          : [];
         collection = {
           ...collectionData,
-          backdrop_path: collectionData.backdrop_path
-            ? `https://image.tmdb.org/t/p/w500${collectionData.backdrop_path}`
-            : null,
-          poster_path: collectionData.poster_path
-            ? `https://image.tmdb.org/t/p/w500${collectionData.poster_path}`
-            : null,
-          parts: collectionData.parts
-            ? collectionData.parts.map((part: any) => ({
-                ...part,
-                backdrop_path: part.backdrop_path
-                  ? `https://image.tmdb.org/t/p/w500${part.backdrop_path}`
-                  : null,
-                poster_path: part.poster_path
-                  ? `https://image.tmdb.org/t/p/w500${part.poster_path}`
-                  : null,
-              }))
-            : [],
+          backdrop_path:
+            typeof collectionData.backdrop_path === "string"
+              ? `https://image.tmdb.org/t/p/w500${collectionData.backdrop_path}`
+              : null,
+          poster_path:
+            typeof collectionData.poster_path === "string"
+              ? `https://image.tmdb.org/t/p/w500${collectionData.poster_path}`
+              : null,
+          parts: parts.map((part) => ({
+            ...part,
+            backdrop_path:
+              typeof part.backdrop_path === "string"
+                ? `https://image.tmdb.org/t/p/w500${part.backdrop_path}`
+                : null,
+            poster_path:
+              typeof part.poster_path === "string"
+                ? `https://image.tmdb.org/t/p/w500${part.poster_path}`
+                : null,
+          })),
         };
       }
     }

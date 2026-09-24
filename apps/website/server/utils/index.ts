@@ -1,4 +1,9 @@
-import { SimpleCache, FreshCache } from "./cache";
+import {
+  SimpleCache,
+  type CacheNamespace,
+  type CacheTTLPreset,
+  type CacheKv,
+} from "./cache";
 import { TMDBClient } from "./api/tmdb";
 import { TVDBClient } from "./api/tvdb";
 import { IgdbClient } from "./api/igdb";
@@ -8,77 +13,71 @@ import { AdvertisementClient } from "./api/advertisement";
 import { ToyClient } from "./api/toy";
 import { WikipediaCache } from "./cache/wikipedia";
 
-let _resolvedKv: any = null;
+let _resolvedKv: CacheKv | null = null;
 let _cache: SimpleCache | null = null;
 
-export function getCloudflareKv(event?: any): any {
-  if (_resolvedKv && typeof _resolvedKv.get === "function") {
-    return _resolvedKv;
-  }
+function readProperty(value: unknown, key: string): unknown {
+  if (typeof value !== "object" || value === null) return undefined;
+  return Reflect.get(value, key);
+}
 
-  // 1. Check passed event context
-  if (event?.context?.cloudflare?.env?.CACHE_KV) {
-    _resolvedKv = event.context.cloudflare.env.CACHE_KV;
-    return _resolvedKv;
-  }
-  if (event?.context?.env?.CACHE_KV) {
-    _resolvedKv = event.context.env.CACHE_KV;
-    return _resolvedKv;
-  }
-  if (event?.context?.CACHE_KV) {
-    _resolvedKv = event.context.CACHE_KV;
-    return _resolvedKv;
-  }
+function readPath(value: unknown, ...keys: string[]): unknown {
+  let current = value;
+  for (const key of keys) current = readProperty(current, key);
+  return current;
+}
 
-  // 2. Check useEvent() context (Nitro / H3)
-  try {
-    const currentEvent = useEvent();
-    if (currentEvent?.context?.cloudflare?.env?.CACHE_KV) {
-      _resolvedKv = currentEvent.context.cloudflare.env.CACHE_KV;
-      return _resolvedKv;
-    }
-    if (currentEvent?.context?.env?.CACHE_KV) {
-      _resolvedKv = currentEvent.context.env.CACHE_KV;
-      return _resolvedKv;
-    }
-    if (currentEvent?.context?.CACHE_KV) {
-      _resolvedKv = currentEvent.context.CACHE_KV;
-      return _resolvedKv;
-    }
-  } catch {
-    // useEvent not available in this scope
-  }
+function isCacheKv(value: unknown): value is CacheKv {
+  return (
+    typeof readProperty(value, "get") === "function" &&
+    typeof readProperty(value, "put") === "function"
+  );
+}
 
-  // 3. Check globalThis (Cloudflare workers / global scope)
-  if (typeof globalThis !== "undefined") {
-    const g = globalThis as any;
-    if (g.CACHE_KV && typeof g.CACHE_KV.get === "function") {
-      _resolvedKv = g.CACHE_KV;
-      return _resolvedKv;
-    }
-    if (g.__env__?.CACHE_KV && typeof g.__env__.CACHE_KV.get === "function") {
-      _resolvedKv = g.__env__.CACHE_KV;
-      return _resolvedKv;
-    }
-    if (g.env?.CACHE_KV && typeof g.env.CACHE_KV.get === "function") {
-      _resolvedKv = g.env.CACHE_KV;
-      return _resolvedKv;
-    }
+function findCacheKv(...values: unknown[]): CacheKv | null {
+  for (const value of values) {
+    if (isCacheKv(value)) return value;
   }
-
-  // 4. Check process.env (Node / SSR fallback)
-  if (typeof process !== "undefined") {
-    const p = process as any;
-    if (p.env?.CACHE_KV && typeof p.env.CACHE_KV.get === "function") {
-      _resolvedKv = p.env.CACHE_KV;
-      return _resolvedKv;
-    }
-  }
-
   return null;
 }
 
-export function useCache(event?: any): SimpleCache {
+export function getCloudflareKv(event?: unknown): CacheKv | null {
+  if (_resolvedKv) return _resolvedKv;
+
+  const eventContext = readPath(event, "context");
+  const candidates = [
+    readPath(eventContext, "cloudflare", "env", "CACHE_KV"),
+    readPath(eventContext, "env", "CACHE_KV"),
+    readPath(eventContext, "CACHE_KV"),
+  ];
+
+  // Check useEvent() context (Nitro / H3).
+  try {
+    const currentContext = readPath(useEvent(), "context");
+    candidates.push(
+      readPath(currentContext, "cloudflare", "env", "CACHE_KV"),
+      readPath(currentContext, "env", "CACHE_KV"),
+      readPath(currentContext, "CACHE_KV"),
+    );
+  } catch {
+    // useEvent not available in this scope.
+  }
+
+  // Check worker globals, then the Node SSR fallback.
+  candidates.push(
+    readPath(globalThis, "CACHE_KV"),
+    readPath(globalThis, "__env__", "CACHE_KV"),
+    readPath(globalThis, "env", "CACHE_KV"),
+  );
+  if (typeof process !== "undefined") {
+    candidates.push(readPath(process, "env", "CACHE_KV"));
+  }
+
+  _resolvedKv = findCacheKv(...candidates);
+  return _resolvedKv;
+}
+
+export function useCache(event?: unknown): SimpleCache {
   if (event) {
     getCloudflareKv(event);
   }
@@ -88,8 +87,13 @@ export function useCache(event?: any): SimpleCache {
   return _cache;
 }
 
-export function useFreshCache(): SimpleCache {
-  return new FreshCache(() => getCloudflareKv());
+export function getOrFetch<T>(
+  namespace: CacheNamespace<T>,
+  key: string,
+  fetcher: () => Promise<T>,
+  options?: { ttl?: CacheTTLPreset; forceRefresh?: boolean },
+): Promise<T> {
+  return useCache().getOrFetch(namespace, key, fetcher, options);
 }
 
 export function useTmdbClient(cache?: SimpleCache): TMDBClient {

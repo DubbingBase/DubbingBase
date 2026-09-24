@@ -11,6 +11,14 @@ import {
 } from "../../utils/media-request";
 import { withTimeout } from "../../utils/with-timeout";
 import type { CharacterProfilePicture } from "../../../src/utils/media-cast";
+import { buildCacheKey } from "../../utils/cache/constants";
+import { createCacheNamespace } from "../../utils/cache";
+
+type CachedTvdbCharacterData =
+  CharacterProfilePicture[] | { characters?: CharacterProfilePicture[] } | null;
+
+const tvdbCharacterCacheNamespace =
+  createCacheNamespace<CachedTvdbCharacterData>();
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
@@ -31,10 +39,21 @@ export default defineEventHandler(async (event) => {
         seasonNumber,
       );
       // Fetch character profile pictures from cache for the parent TV show if available
-      const showCacheKey = `tvdb:tv:characters_by_tmdb:${id}`;
-      const cachedChars = await cache.get<
-        CharacterProfilePicture[] | { characters?: CharacterProfilePicture[] }
-      >(showCacheKey);
+      const language = acceptLanguage
+        ? (acceptLanguage.split(",")[0] || "en").trim()
+        : "default";
+      const showCacheKey = buildCacheKey({
+        provider: "tvdb",
+        resource: "characters-by-tmdb-id",
+        id,
+        language,
+        params: { contentType: "tv" },
+      });
+      const cachedChars = await cache.getOrFetch<CachedTvdbCharacterData>(
+        tvdbCharacterCacheNamespace,
+        showCacheKey,
+        async () => null,
+      );
       const characterProfilePictures = Array.isArray(cachedChars)
         ? cachedChars
         : (cachedChars?.characters ?? []);

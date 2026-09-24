@@ -103,13 +103,11 @@ test.describe("Media Detail Pages", () => {
     for (const route of routes) {
       await page.goto(route.path, { waitUntil: "domcontentloaded" });
       await waitForVueHydration(page);
-
       const castSection = page
         .getByRole("heading", { name: "Cast & Crew" })
         .locator("xpath=ancestor::section[1]");
       const search = castSection.locator('input[type="search"]');
       await search.fill(route.voiceActor);
-
       await expect(
         castSection.getByText(route.actor, { exact: true }),
       ).toBeVisible();

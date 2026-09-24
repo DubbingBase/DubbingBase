@@ -1,17 +1,67 @@
 import { SimpleKeyBuilder, SimpleKeyValidator } from "./constants";
 
-// TTL presets in seconds. These values are used for external API data in KV;
-// mutable DubbingBase data is always read from Supabase.
+interface CacheInFlightRequest<T> {
+  forceRefresh: boolean;
+  promise: Promise<T>;
+  shouldCache: boolean;
+  resolve: (value: T) => void;
+  reject: (reason: unknown) => void;
+  writePromise?: Promise<boolean>;
+}
+
+/** A stable, typed scope for sharing in-flight requests without type casts. */
+export class CacheNamespace<T> {
+  private readonly requests = new Map<string, CacheInFlightRequest<T>>();
+
+  get(key: string): CacheInFlightRequest<T> | undefined {
+    return this.requests.get(key);
+  }
+
+  set(key: string, request: CacheInFlightRequest<T>): void {
+    this.requests.set(key, request);
+  }
+
+  delete(key: string, request: CacheInFlightRequest<T>): void {
+    if (this.requests.get(key) === request) this.requests.delete(key);
+  }
+}
+
+export function createCacheNamespace<T>(): CacheNamespace<T> {
+  return new CacheNamespace<T>();
+}
+
+/** The three supported lifetimes, in seconds. */
 export const CACHE_TTL = {
-  SHORT: 60 * 60, // 1 hour
-  MEDIUM: 6 * 60 * 60, // 6 hours
-  LONG: 24 * 60 * 60, // 24 hours
-  EXTENDED: 7 * 24 * 60 * 60, // 7 days
+  TRENDING: 60 * 60,
+  NORMAL: 24 * 60 * 60,
+  STABLE: 7 * 24 * 60 * 60,
 } as const;
 
 export type CacheTTLPreset = keyof typeof CACHE_TTL | number;
+export interface GetOrFetchOptions {
+  ttl?: CacheTTLPreset;
+  forceRefresh?: boolean;
+}
 
-/** Cloudflare KV cache utility for external API responses. */
+export interface CacheKv {
+  get<T>(key: string, options: { type: "json" }): Promise<T | null>;
+  put(
+    key: string,
+    value: string,
+    options: { expirationTtl: number },
+  ): Promise<void>;
+  delete?(key: string): Promise<void>;
+}
+
+function ttlSeconds(ttl: CacheTTLPreset = "NORMAL"): number {
+  return typeof ttl === "number" ? Math.max(60, ttl) : CACHE_TTL[ttl];
+}
+
+function isAuthenticationTokenKey(key: string): boolean {
+  return /(^|:)auth_token$/i.test(key);
+}
+
+/** Cloudflare KV adapter for external API responses; it has no local data tier. */
 export class SimpleCache {
   private get enabled(): boolean {
     return !(
@@ -20,75 +70,54 @@ export class SimpleCache {
     );
   }
 
-  constructor(private kvGetter: () => any) {}
+  constructor(private readonly kvGetter: () => CacheKv | null) {}
 
-  async get<T>(key: string): Promise<T | null> {
+  private async get<T>(key: string): Promise<T | null> {
     if (!this.enabled) return null;
-
     try {
-      const sanitizedKey = SimpleKeyValidator.sanitizeKey(key);
-
       const kv = this.kvGetter();
-      if (kv && typeof kv.get === "function") {
-        try {
-          const cached = await kv.get(sanitizedKey, { type: "json" });
-          if (cached !== null && cached !== undefined) {
-            return cached as T;
-          }
-        } catch {
-          // If JSON parse fails in KV, return null
-        }
+      if (kv) {
+        const cached = await kv.get<T>(SimpleKeyValidator.sanitizeKey(key), {
+          type: "json",
+        });
+        if (cached !== null && cached !== undefined) return cached;
       }
-
-      return null;
     } catch {
-      return null;
+      // A KV read failure behaves like a cache miss.
     }
+    return null;
   }
 
-  async set<T>(
+  private async set<T>(
     key: string,
     data: T,
-    ttl: CacheTTLPreset = "MEDIUM",
+    ttl: CacheTTLPreset = "NORMAL",
   ): Promise<boolean> {
     if (!this.enabled) return false;
-
     try {
-      const sanitizedKey = SimpleKeyValidator.sanitizeKey(key);
-      const ttlSeconds =
-        typeof ttl === "number"
-          ? Math.max(60, ttl)
-          : (CACHE_TTL[ttl] ?? CACHE_TTL.MEDIUM);
-
       const kv = this.kvGetter();
-      if (kv && typeof kv.put === "function") {
-        try {
-          await kv.put(sanitizedKey, JSON.stringify(data), {
-            expirationTtl: ttlSeconds,
-          });
-        } catch (kvErr) {
-          console.warn("[SimpleCache] KV put error:", kvErr);
-        }
+      if (kv) {
+        await kv.put(
+          SimpleKeyValidator.sanitizeKey(key),
+          JSON.stringify(data),
+          {
+            expirationTtl: ttlSeconds(ttl),
+          },
+        );
+        return true;
       }
-
-      return true;
-    } catch {
-      return false;
+    } catch (kvErr) {
+      console.warn("[SimpleCache] KV put error:", kvErr);
     }
+    return false;
   }
 
   async del(key: string): Promise<boolean> {
     if (!this.enabled) return true;
-
     try {
-      const sanitizedKey = SimpleKeyValidator.sanitizeKey(key);
       const kv = this.kvGetter();
-      if (kv && typeof kv.delete === "function") {
-        try {
-          await kv.delete(sanitizedKey);
-        } catch (kvErr) {
-          console.warn("[SimpleCache] KV delete error:", kvErr);
-        }
+      if (kv?.delete) {
+        await kv.delete(SimpleKeyValidator.sanitizeKey(key));
       }
       return true;
     } catch {
@@ -96,22 +125,71 @@ export class SimpleCache {
     }
   }
 
-  async exists(key: string): Promise<boolean> {
-    if (!this.enabled) return false;
-
-    try {
-      const sanitizedKey = SimpleKeyValidator.sanitizeKey(key);
-
-      const kv = this.kvGetter();
-      if (kv && typeof kv.get === "function") {
-        const value = await kv.get(sanitizedKey, { type: "text" });
-        return value !== null && value !== undefined;
-      }
-
-      return false;
-    } catch {
-      return false;
+  getOrFetch<T>(
+    namespace: CacheNamespace<T>,
+    key: string,
+    fetcher: () => Promise<T>,
+    options: GetOrFetchOptions = {},
+  ): Promise<T> {
+    const safeKey = SimpleKeyValidator.sanitizeKey(key);
+    const forceRefresh =
+      Boolean(options.forceRefresh) && !isAuthenticationTokenKey(key);
+    const inProgress = namespace.get(safeKey);
+    if (inProgress && (!forceRefresh || inProgress.forceRefresh)) {
+      return inProgress.promise;
     }
+    let pendingSupersededWrite: Promise<boolean> | undefined;
+    if (forceRefresh && inProgress && !inProgress.forceRefresh) {
+      inProgress.shouldCache = false;
+      pendingSupersededWrite = inProgress.writePromise;
+    }
+
+    let resolvePromise: (value: T) => void = () => undefined;
+    let rejectPromise: (reason: unknown) => void = () => undefined;
+    const promise = new Promise<T>((resolve, reject) => {
+      resolvePromise = resolve;
+      rejectPromise = reject;
+    });
+    const request: CacheInFlightRequest<T> = {
+      forceRefresh,
+      shouldCache: true,
+      promise,
+      resolve: resolvePromise,
+      reject: rejectPromise,
+    };
+    namespace.set(safeKey, request);
+
+    void (async () => {
+      try {
+        if (!forceRefresh) {
+          const cached = await this.get<T>(safeKey);
+          if (cached !== null) {
+            request.resolve(cached);
+            return;
+          }
+        }
+
+        const value = await fetcher();
+        if (pendingSupersededWrite) {
+          await pendingSupersededWrite.catch(() => false);
+        }
+        if (value !== null && value !== undefined && request.shouldCache) {
+          request.writePromise = this.set(
+            safeKey,
+            value,
+            options.ttl ?? "NORMAL",
+          );
+          await request.writePromise;
+        }
+        request.resolve(value);
+      } catch (error) {
+        request.reject(error);
+      } finally {
+        namespace.delete(safeKey, request);
+      }
+    })();
+
+    return promise;
   }
 
   generateKey(
@@ -127,21 +205,16 @@ export class SimpleCache {
     return SimpleKeyBuilder.tmdb(type, id, suffix);
   }
 
-  tvdbKey(type: string, id: string | number, suffix?: string): string {
-    return SimpleKeyBuilder.tvdb(type, id, suffix);
+  tvdbKey(
+    type: string,
+    id: string | number,
+    suffix?: string,
+    language?: string,
+  ): string {
+    return SimpleKeyBuilder.tvdb(type, id, suffix, language);
   }
 
   wikipediaKey(type: string, id: string, suffix?: string): string {
     return SimpleKeyBuilder.wikipedia(type, id, suffix);
-  }
-}
-
-/**
- * Read-through-bypass cache for cron/queue work: reads always miss (fresh
- * upstream fetch) while writes still warm the shared tiers for public pages.
- */
-export class FreshCache extends SimpleCache {
-  override async get<T>(): Promise<T | null> {
-    return null;
   }
 }

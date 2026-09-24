@@ -3,6 +3,30 @@ import { requireUser } from "../utils/auth";
 import { setNoCacheHeaders } from "../utils/cache/http";
 import { useTmdbClient } from "../utils";
 
+interface TmdbCastMember {
+  id: number;
+  character?: string;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isTmdbCastMember(value: unknown): value is TmdbCastMember {
+  return (
+    isRecord(value) &&
+    typeof value.id === "number" &&
+    (value.character === undefined || typeof value.character === "string")
+  );
+}
+
+function getTmdbCast(value: unknown): TmdbCastMember[] {
+  if (!isRecord(value)) return [];
+  const credits = value.credits;
+  if (!isRecord(credits) || !Array.isArray(credits.cast)) return [];
+  return credits.cast.filter(isTmdbCastMember);
+}
+
 export default defineEventHandler(async (event) => {
   setNoCacheHeaders(event);
   const user = requireUser(event);
@@ -137,9 +161,9 @@ export default defineEventHandler(async (event) => {
         );
 
         let tmdbCharacterName: string | undefined;
-        if (work.actor_id && tmdbMedia.credits?.cast) {
-          const castMember = tmdbMedia.credits.cast.find(
-            (c: any) => c.id === work.actor_id,
+        if (work.actor_id) {
+          const castMember = getTmdbCast(tmdbMedia).find(
+            (member) => member.id === work.actor_id,
           );
           tmdbCharacterName = castMember?.character;
         }
