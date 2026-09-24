@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**81 library files** across 5 modules
+**82 library files** across 5 modules
 
 ## Website (44 files)
 
@@ -33,6 +33,27 @@
 - `apps/website/src/utils/search-routes.ts` — getSearchResultRoute, SearchFilter
 - _…and 19 more files_
 
+## Shared-logic (18 files)
+
+- `packages/shared-logic/src/constants.ts` — resolveLocaleLanguage, LocaleConfig, SupportedLocale, NonDefaultLocale, MediaType, MediaRoutePrefix, …
+- `packages/shared-logic/src/composables/useStudioData.ts` — fetchStudioDetails, fetchStudiosData, useStudioData, Studio, StudioDetailsResponse
+- `packages/shared-logic/src/composables/useVoiceActorData.ts` — fetchVoiceActorData, useVoiceActorData, VoiceActorResponse, EnhancedWorkItem, VoiceActorDataPayload
+- `packages/shared-logic/src/utils/voice-actor-work-groups.ts` — groupVoiceActorWorks, paginateVoiceActorWorks, VoiceActorWorkLike, VoiceActorWorkGroup, VoiceActorWorksPageItem
+- `packages/shared-logic/src/composables/useActorData.ts` — fetchActorData, useActorData, ActorResponse, ActorDataPayload
+- `packages/shared-logic/src/composables/useDetailCollections.ts` — fetchDetailCollection, DetailCollection, DetailCollectionParams
+- `packages/shared-logic/src/composables/useHomeData.ts` — fetchHomeData, useHomeData, HomeDataPayload
+- `packages/shared-logic/src/composables/useSearchData.ts` — fetchSearchData, SearchResult
+- `packages/shared-logic/src/utils/character.ts` — normalizeCharacterName, findCharacter
+- `packages/shared-logic/src/composables/useAdvertisementData.ts` — fetchAdvertisementData
+- `packages/shared-logic/src/composables/useAudiobookData.ts` — fetchAudiobookData
+- `packages/shared-logic/src/composables/useEpisodeData.ts` — fetchEpisodeData
+- `packages/shared-logic/src/composables/useGameData.ts` — fetchGameData
+- `packages/shared-logic/src/composables/useMovieData.ts` — fetchMovieData
+- `packages/shared-logic/src/composables/usePodcastData.ts` — fetchPodcastData
+- `packages/shared-logic/src/composables/useSeasonData.ts` — fetchSeasonData
+- `packages/shared-logic/src/composables/useShowData.ts` — fetchShowData
+- `packages/shared-logic/src/composables/useToyData.ts` — fetchToyData
+
 ## Mobile (17 files)
 
 - `apps/mobile/src/composables/useVoiceActorManagement.ts` — useVoiceActorManagement, VoiceActor, WorkAndVoiceActor
@@ -52,26 +73,6 @@
 - `apps/mobile/src/composables/useTheme.ts` — useTheme
 - `apps/mobile/src/utils/image.ts` — getAvatarFallbackUrl
 - `apps/mobile/src/utils/language.ts` — getLanguageDisplayName
-
-## Shared-logic (17 files)
-
-- `packages/shared-logic/src/constants.ts` — resolveLocaleLanguage, LocaleConfig, SupportedLocale, NonDefaultLocale, MediaType, MediaRoutePrefix, …
-- `packages/shared-logic/src/composables/useStudioData.ts` — fetchStudioDetails, fetchStudiosData, useStudioData, Studio, StudioDetailsResponse
-- `packages/shared-logic/src/composables/useVoiceActorData.ts` — fetchVoiceActorData, useVoiceActorData, VoiceActorResponse, EnhancedWorkItem, VoiceActorDataPayload
-- `packages/shared-logic/src/composables/useActorData.ts` — fetchActorData, useActorData, ActorResponse, ActorDataPayload
-- `packages/shared-logic/src/composables/useDetailCollections.ts` — fetchDetailCollection, DetailCollection, DetailCollectionParams
-- `packages/shared-logic/src/composables/useHomeData.ts` — fetchHomeData, useHomeData, HomeDataPayload
-- `packages/shared-logic/src/composables/useSearchData.ts` — fetchSearchData, SearchResult
-- `packages/shared-logic/src/utils/character.ts` — normalizeCharacterName, findCharacter
-- `packages/shared-logic/src/composables/useAdvertisementData.ts` — fetchAdvertisementData
-- `packages/shared-logic/src/composables/useAudiobookData.ts` — fetchAudiobookData
-- `packages/shared-logic/src/composables/useEpisodeData.ts` — fetchEpisodeData
-- `packages/shared-logic/src/composables/useGameData.ts` — fetchGameData
-- `packages/shared-logic/src/composables/useMovieData.ts` — fetchMovieData
-- `packages/shared-logic/src/composables/usePodcastData.ts` — fetchPodcastData
-- `packages/shared-logic/src/composables/useSeasonData.ts` — fetchSeasonData
-- `packages/shared-logic/src/composables/useShowData.ts` — fetchShowData
-- `packages/shared-logic/src/composables/useToyData.ts` — fetchToyData
 
 ## Og-image (2 files)
 

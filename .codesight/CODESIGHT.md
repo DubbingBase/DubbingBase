@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 75 routes | 16 models | 197 components | 81 lib files | 63 env vars | 12 middleware | 5% test coverage
-> **Token savings:** this file is ~14,800 tokens. Without it, AI exploration would cost ~150,700 tokens. **Saves ~135,900 tokens per conversation.**
-> **Last scanned:** 2026-09-23 18:31 — re-run after significant changes
+> 75 routes | 16 models | 197 components | 82 lib files | 63 env vars | 12 middleware | 5% test coverage
+> **Token savings:** this file is ~14,900 tokens. Without it, AI exploration would cost ~151,000 tokens. **Saves ~136,100 tokens per conversation.**
+> **Last scanned:** 2026-09-24 12:24 — re-run after significant changes
 
 ---
 
@@ -616,6 +616,12 @@
   - type MediaRoutePrefix
   - _...9 more_
 - `packages/shared-logic/src/utils/character.ts` — function normalizeCharacterName, function findCharacter
+- `packages/shared-logic/src/utils/voice-actor-work-groups.ts`
+  - function groupVoiceActorWorks: (works) => VoiceActorWorkGroup<T>[]
+  - function paginateVoiceActorWorks: (works, view, page, pageSize) => void
+  - type VoiceActorWorkLike
+  - type VoiceActorWorkGroup
+  - type VoiceActorWorksPageItem
 
 ---
 
@@ -759,7 +765,7 @@
 # Test Coverage
 
 > **5%** of routes and models are covered by tests
-> 33 test files found
+> 35 test files found
 
 ## Covered Routes
 

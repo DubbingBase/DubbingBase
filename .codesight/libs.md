@@ -210,3 +210,9 @@
   - type MediaRoutePrefix
   - _...9 more_
 - `packages/shared-logic/src/utils/character.ts` — function normalizeCharacterName, function findCharacter
+- `packages/shared-logic/src/utils/voice-actor-work-groups.ts`
+  - function groupVoiceActorWorks: (works) => VoiceActorWorkGroup<T>[]
+  - function paginateVoiceActorWorks: (works, view, page, pageSize) => void
+  - type VoiceActorWorkLike
+  - type VoiceActorWorkGroup
+  - type VoiceActorWorksPageItem
