@@ -34,11 +34,10 @@
     "wrangler": "^4.115.0"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "oxlint --fix -c .oxlintrc.json",
+    "*.{js,jsx,ts,tsx,vue}": [
+      "oxlint --fix -c .oxlintrc.json --vue-plugin",
       "oxfmt --write"
     ],
-    "*.vue": "oxfmt --write",
     "*.{json,jsonc}": "oxfmt --write",
     "*.md": "prettier --write"
   },
