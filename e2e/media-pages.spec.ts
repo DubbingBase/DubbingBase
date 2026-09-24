@@ -79,14 +79,21 @@ test.describe("Media Detail Pages", () => {
     page,
   }) => {
     const routes = [
-      { path: "/movie/85", actor: "Harrison Ford", absentActor: "Karen Allen" },
+      {
+        path: "/movie/85",
+        voiceActor: "Richard Darbois",
+        actor: "Harrison Ford",
+        absentActor: "Karen Allen",
+      },
       {
         path: "/show/1396",
+        voiceActor: "Jean-Louis Faure",
         actor: "Bryan Cranston",
         absentActor: "Aaron Paul",
       },
       {
         path: "/show/1396/season/1/episode/1",
+        voiceActor: "Jean-Louis Faure",
         actor: "Bryan Cranston",
         absentActor: "Aaron Paul",
       },
@@ -94,8 +101,13 @@ test.describe("Media Detail Pages", () => {
 
     for (const route of routes) {
       await page.goto(route.path, { waitUntil: "domcontentloaded" });
-      const search = page.locator('input[type="search"]').last();
-      await search.fill("Jean-Louis Faure");
+
+      const castSection = page
+        .getByRole("heading", { name: "Cast & Crew" })
+        .locator("xpath=ancestor::section[1]");
+      const search = castSection.locator('input[type="search"]');
+      await search.fill(route.voiceActor);
+
       await expect(page.getByText(route.actor, { exact: true })).toBeVisible();
       await expect(
         page.getByText(route.absentActor, { exact: true }),
