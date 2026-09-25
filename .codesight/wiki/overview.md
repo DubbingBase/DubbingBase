@@ -8,11 +8,12 @@
 
 ## Scale
 
-75 API routes · 16 database models · 197 UI components · 83 library files · 12 middleware layers · 61 environment variables
+77 API routes · 16 database models · 197 UI components · 83 library files · 12 middleware layers · 61 environment variables
 
 ## Subsystems
 
 - **[[id].get](./[id].get.md)** — 9 routes — touches: cache, queue
+- **[Admin](./admin.md)** — 2 routes — touches: auth, queue
 - **[Career-grid.get](./career-grid.get.md)** — 1 routes — touches: cache
 - **[Cast-vote.post](./cast-vote.post.md)** — 1 routes
 - **[Count-voice-actor-works.post](./count-voice-actor-works.post.md)** — 1 routes
@@ -87,9 +88,9 @@
 
 Changes to these files have the widest blast radius across the codebase:
 
-- `apps/website/server/utils/db/client.ts` — imported by **59** files
+- `apps/website/server/utils/db/client.ts` — imported by **61** files
 - `apps/website/server/utils/cache/http.ts` — imported by **37** files
-- `apps/website/server/utils/auth.ts` — imported by **26** files
+- `apps/website/server/utils/auth.ts` — imported by **29** files
 - `apps/website/server/utils/index.ts` — imported by **23** files
 - `apps/website/server/utils/cache/index.ts` — imported by **13** files
 - `apps/website/server/utils/db/queries.ts` — imported by **12** files
@@ -111,4 +112,4 @@ Changes to these files have the widest blast radius across the codebase:
 - _...31 more_
 
 ---
-_Back to [index.md](./index.md) · Generated 2026-09-24_
+_Back to [index.md](./index.md) · Generated 2026-09-25_

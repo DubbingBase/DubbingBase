@@ -1,7 +1,7 @@
 # Test Coverage
 
-> **5%** of routes and models are covered by tests
-> 36 test files found
+> **6%** of routes and models are covered by tests
+> 37 test files found
 
 ## Covered Routes
 
@@ -12,4 +12,5 @@
 - voice_actors
 - source
 - work
+- dubbing_projects
 - studios

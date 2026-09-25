@@ -1,6 +1,8 @@
 # Routes
 
 - `GET` `/api/actor/:id` params(id) [cache]
+- `POST` `/api/admin/queue/clear` [auth, queue]
+- `DELETE` `/api/admin/queue/item` [auth, queue]
 - `GET` `/api/advertisement/:id` params(id) [cache, queue]
 - `GET` `/api/audiobook/:id` params(id) [cache, queue]
 - `GET` `/api/career-grid` [cache]
