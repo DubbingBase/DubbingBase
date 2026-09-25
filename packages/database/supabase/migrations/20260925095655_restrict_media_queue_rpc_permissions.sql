@@ -27,3 +27,13 @@ REVOKE EXECUTE ON FUNCTION public.delete_media_queue_item(bigint, text)
   FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.delete_media_queue_item(bigint, text)
   TO service_role;
+
+REVOKE EXECUTE ON FUNCTION public.enqueue_media_fetch(bigint, text, integer, integer, text, boolean)
+  FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.enqueue_media_fetch(bigint, text, integer, integer, text, boolean)
+  TO service_role;
+
+REVOKE EXECUTE ON FUNCTION public.enqueue_media_extract(bigint, text, text, bigint, jsonb, integer, integer, boolean)
+  FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.enqueue_media_extract(bigint, text, text, bigint, jsonb, integer, integer, boolean)
+  TO service_role;
