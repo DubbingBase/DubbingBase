@@ -4,8 +4,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, message: "Unauthorized" });
   }
 
-  const isAdmin =
-    user.app_metadata?.role === "admin" || user.user_metadata?.role === "admin";
+  const isAdmin = user.app_metadata?.role === "admin";
   if (!isAdmin) {
     throw createError({
       statusCode: 403,

@@ -15,8 +15,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const isAdmin =
-    user.app_metadata?.role === "admin" || user.user_metadata?.role === "admin";
+  const isAdmin = user.app_metadata?.role === "admin";
   if (user_id !== user.id && !isAdmin) {
     throw createError({
       statusCode: 403,

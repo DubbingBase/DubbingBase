@@ -9,9 +9,7 @@ export default defineNuxtRouteMiddleware((to, from) => {
     });
   }
 
-  const isAdmin =
-    user.value?.app_metadata?.role === "admin" ||
-    user.value?.user_metadata?.role === "admin";
+  const isAdmin = user.value?.app_metadata?.role === "admin";
 
   if (!isAdmin) {
     return navigateTo(localePath("/"));

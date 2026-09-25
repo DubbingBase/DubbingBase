@@ -15,10 +15,7 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const isAdmin =
-      user.app_metadata?.role === "admin" ||
-      user.user_metadata?.role === "admin" ||
-      (user as any).role === "admin";
+    const isAdmin = user.app_metadata?.role === "admin";
 
     if (targetUserId && !isAdmin) {
       throw createError({

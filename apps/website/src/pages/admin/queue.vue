@@ -961,8 +961,7 @@ const clearQueue = async () => {
   showToast(t("admin.queue.clearingQueue"), "info");
 
   try {
-    const { error: clearErr } = await supabase.rpc("clear_media_queue");
-    if (clearErr) throw clearErr;
+    await $fetch("/api/admin/queue/clear", { method: "POST" });
     showToast(t("admin.queue.cleared"), "success");
   } catch (err: unknown) {
     console.error("Error clearing queue:", err);
@@ -978,11 +977,10 @@ const deleteItem = async (id: number, queueName?: string) => {
 
   deletingId.value = id;
   try {
-    const { error: err } = await supabase.rpc("delete_media_queue_item", {
-      p_id: id,
-      p_queue_name: queueName ?? undefined,
+    await $fetch("/api/admin/queue/item", {
+      method: "DELETE",
+      body: { id, queueName },
     });
-    if (err) throw err;
     showToast(t("admin.queue.itemDeleted"), "success");
     await fetchQueueAndUsers();
   } catch (err: unknown) {
@@ -1007,11 +1005,17 @@ const reEnqueueItem = async (item: QueueItem) => {
     });
     if (enqueueErr) throw enqueueErr;
 
-    const { error: delErr } = await supabase.rpc("delete_media_queue_item", {
-      p_id: item.id,
-      p_queue_name: (item as any).queue_name ?? undefined,
-    });
-    if (delErr) console.warn("Failed to delete old archived item:", delErr);
+    try {
+      await $fetch("/api/admin/queue/item", {
+        method: "DELETE",
+        body: {
+          id: item.id,
+          queueName: (item as any).queue_name ?? undefined,
+        },
+      });
+    } catch (deleteError: unknown) {
+      console.warn("Failed to delete old archived item:", deleteError);
+    }
 
     showToast(t("admin.queue.reEnqueued"), "success");
     await fetchQueueAndUsers();
