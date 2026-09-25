@@ -20,13 +20,10 @@ const STATE_FILE = path.join(
 );
 
 const supabaseUrl = process.env.SUPABASE_URL || "http://localhost:54321";
-const supabaseKey =
-  process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
+const supabaseKey = process.env.SUPABASE_SECRET_KEY?.trim();
 
-if (!supabaseUrl || !supabaseKey) {
-  console.error(
-    "Missing SUPABASE_URL or SUPABASE_SECRET_KEY environment variables.",
-  );
+if (!supabaseKey) {
+  console.error("Missing SUPABASE_SECRET_KEY environment variable.");
   console.error(
     "Please run with: tsx --env-file=.env.development scripts/discover-media.ts",
   );

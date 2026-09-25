@@ -23,4 +23,4 @@ mise run curl-function movie --body '{"id": 366672}' | jq '.characterProfilePict
 mise run curl-function show --body '{"id": 1399}' | jq '.characterProfilePictures'
 ```
 
-_Note_: If you need to isolate cache issues, you can clear the Upstash Redis cache via a Deno script or temporarily bypass the cache in `packages/database/supabase/functions/_shared/media-service.ts`.
+_Note_: External metadata is cached in Cloudflare KV through the Worker cache binding. For cache issues, inspect the route's cache key and its use of `useCache(event)`; DubbingBase data remains in Supabase.

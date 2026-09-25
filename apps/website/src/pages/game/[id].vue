@@ -478,10 +478,7 @@ const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
 
 const user = useSupabaseUser();
 const isAdmin = computed(() => {
-  return (
-    user.value?.app_metadata?.role === "admin" ||
-    user.value?.user_metadata?.role === "admin"
-  );
+  return user.value?.app_metadata?.role === "admin";
 });
 
 const isPreparing = ref(false);

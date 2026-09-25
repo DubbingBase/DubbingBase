@@ -55,10 +55,7 @@ export default defineEventHandler(async (event) => {
   if (providedVoiceActorId) {
     voiceActorIds = [providedVoiceActorId];
   } else if (targetUserId) {
-    const isAdmin =
-      user.app_metadata?.role === "admin" ||
-      user.user_metadata?.role === "admin" ||
-      (user as any).role === "admin";
+    const isAdmin = user.app_metadata?.role === "admin";
 
     if (!isAdmin) {
       throw createError({

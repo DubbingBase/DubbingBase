@@ -1,4 +1,5 @@
 import { useSupabaseAdmin } from "../utils/db/client";
+import { requireUser } from "../utils/auth";
 import { sendDiscordAdminNotification } from "../utils/notifications/discord";
 import { setNoStoreHeaders } from "../utils/cache/http";
 
@@ -21,6 +22,10 @@ export default defineEventHandler(async (event) => {
       statusCode: 400,
       message: "Missing required parameters",
     });
+  }
+
+  if (action === "enqueue") {
+    requireUser(event);
   }
 
   const supabaseAdmin = useSupabaseAdmin();

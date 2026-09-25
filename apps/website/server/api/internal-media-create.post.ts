@@ -4,10 +4,7 @@ import { useSupabaseAdmin } from "../utils/db/client";
 export default defineEventHandler(async (event) => {
   const user = requireUser(event);
 
-  const isAdmin =
-    user.app_metadata?.role === "admin" ||
-    user.user_metadata?.role === "admin" ||
-    (user as any).role === "admin";
+  const isAdmin = user.app_metadata?.role === "admin";
 
   if (!isAdmin) {
     throw createError({

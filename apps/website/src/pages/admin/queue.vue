@@ -961,8 +961,7 @@ const clearQueue = async () => {
   showToast(t("admin.queue.clearingQueue"), "info");
 
   try {
-    const { error: clearErr } = await supabase.rpc("clear_media_queue");
-    if (clearErr) throw clearErr;
+    await $fetch("/api/admin/queue/clear", { method: "POST" });
     showToast(t("admin.queue.cleared"), "success");
   } catch (err: unknown) {
     console.error("Error clearing queue:", err);
@@ -978,11 +977,10 @@ const deleteItem = async (id: number, queueName?: string) => {
 
   deletingId.value = id;
   try {
-    const { error: err } = await supabase.rpc("delete_media_queue_item", {
-      p_id: id,
-      p_queue_name: queueName ?? undefined,
+    await $fetch("/api/admin/queue/item", {
+      method: "DELETE",
+      body: { id, queueName },
     });
-    if (err) throw err;
     showToast(t("admin.queue.itemDeleted"), "success");
     await fetchQueueAndUsers();
   } catch (err: unknown) {
@@ -998,22 +996,43 @@ const reEnqueueItem = async (item: QueueItem) => {
 
   reEnqueuingId.value = item.id;
   try {
-    const { error: enqueueErr } = await supabase.rpc("enqueue_media_fetch", {
-      p_tmdb_id: item.tmdb_id,
-      p_media_type: item.media_type,
-      p_season_number: item.season_number ?? undefined,
-      p_episode_number: item.episode_number ?? undefined,
-      p_language: (item as any).language ?? undefined,
-    });
-    if (enqueueErr) throw enqueueErr;
+    const language = Reflect.get(item, "language");
+    const queueName = Reflect.get(item, "queue_name");
 
-    const { error: delErr } = await supabase.rpc("delete_media_queue_item", {
-      p_id: item.id,
-      p_queue_name: (item as any).queue_name ?? undefined,
+    const enqueueResult = await $fetch<{
+      alreadyQueued?: boolean;
+      message?: string;
+    }>("/api/media-queue", {
+      method: "POST",
+      body: {
+        action: "enqueue",
+        mediaId: item.tmdb_id,
+        tmdbId: item.tmdb_id,
+        mediaType: item.media_type,
+        seasonNumber: item.season_number ?? undefined,
+        episodeNumber: item.episode_number ?? undefined,
+        language: typeof language === "string" ? language : undefined,
+      },
     });
-    if (delErr) console.warn("Failed to delete old archived item:", delErr);
 
-    showToast(t("admin.queue.reEnqueued"), "success");
+    if (enqueueResult.alreadyQueued) {
+      if (enqueueResult.message) showToast(enqueueResult.message, "info");
+    } else {
+      try {
+        await $fetch("/api/admin/queue/item", {
+          method: "DELETE",
+          body: {
+            id: item.id,
+            queueName: typeof queueName === "string" ? queueName : undefined,
+          },
+        });
+      } catch (deleteError: unknown) {
+        console.warn("Failed to delete old archived item:", deleteError);
+      }
+
+      showToast(t("admin.queue.reEnqueued"), "success");
+    }
+
     await fetchQueueAndUsers();
   } catch (err: unknown) {
     console.error("Error re-enqueuing item:", err);
