@@ -999,7 +999,10 @@ const reEnqueueItem = async (item: QueueItem) => {
     const language = Reflect.get(item, "language");
     const queueName = Reflect.get(item, "queue_name");
 
-    await $fetch("/api/media-queue", {
+    const enqueueResult = await $fetch<{
+      alreadyQueued?: boolean;
+      message?: string;
+    }>("/api/media-queue", {
       method: "POST",
       body: {
         action: "enqueue",
@@ -1012,19 +1015,24 @@ const reEnqueueItem = async (item: QueueItem) => {
       },
     });
 
-    try {
-      await $fetch("/api/admin/queue/item", {
-        method: "DELETE",
-        body: {
-          id: item.id,
-          queueName: typeof queueName === "string" ? queueName : undefined,
-        },
-      });
-    } catch (deleteError: unknown) {
-      console.warn("Failed to delete old archived item:", deleteError);
+    if (enqueueResult.alreadyQueued) {
+      if (enqueueResult.message) showToast(enqueueResult.message, "info");
+    } else {
+      try {
+        await $fetch("/api/admin/queue/item", {
+          method: "DELETE",
+          body: {
+            id: item.id,
+            queueName: typeof queueName === "string" ? queueName : undefined,
+          },
+        });
+      } catch (deleteError: unknown) {
+        console.warn("Failed to delete old archived item:", deleteError);
+      }
+
+      showToast(t("admin.queue.reEnqueued"), "success");
     }
 
-    showToast(t("admin.queue.reEnqueued"), "success");
     await fetchQueueAndUsers();
   } catch (err: unknown) {
     console.error("Error re-enqueuing item:", err);
