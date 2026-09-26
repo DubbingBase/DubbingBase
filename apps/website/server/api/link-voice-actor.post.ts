@@ -1,6 +1,7 @@
 import { requireUser } from "../utils/auth";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { findOrCreateDubbingProject } from "../utils/db/dubbing-project";
+import { requireDubbingLanguage } from "../utils/dubbing-language";
 
 export default defineEventHandler(async (event) => {
   const user = requireUser(event);
@@ -24,6 +25,8 @@ export default defineEventHandler(async (event) => {
         "Missing required fields: voice_actor_id, media_type, media_id, and language are required",
     });
   }
+
+  requireDubbingLanguage(language);
 
   const isAdmin = user.app_metadata?.role === "admin";
 

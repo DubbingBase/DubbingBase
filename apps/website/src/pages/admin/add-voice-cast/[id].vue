@@ -86,6 +86,12 @@
         <p class="text-xs theme-text-muted">
           {{ $t("admin.addVoiceCast.noPublicCastHint") }}
         </p>
+        <label class="block space-y-2">
+          <span class="text-xs font-semibold theme-text-secondary">
+            {{ $t("admin.regionalDubbingLanguage") }}
+          </span>
+          <AdminLanguageSelect v-model="language" required />
+        </label>
         <div class="flex flex-col sm:flex-row gap-2">
           <input
             v-model="manualCharacterName"
@@ -474,6 +480,7 @@
 </template>
 
 <script setup lang="ts">
+import { validateDubbingLanguage } from "@app/shared-logic";
 const supabase = useSupabaseClient();
 const localePath = useLocalePath();
 
@@ -517,7 +524,7 @@ const mediaTypeParam = computed(() =>
   String(route.query.media_type ?? "movie"),
 );
 const mediaId = computed(() => Number(route.params.id));
-const language = computed(() => String(route.query.lang ?? "fr"));
+const language = ref(String(route.query.lang ?? ""));
 
 const mediaTypeLabel = computed(() => {
   switch (mediaTypeParam.value) {
@@ -744,6 +751,7 @@ const clearVoiceActor = (actorId: number) => {
 };
 
 async function findOrCreateProject(): Promise<number> {
+  validateDubbingLanguage(language.value);
   const { data: project } = await supabase
     .from("dubbing_projects")
     .select("id")

@@ -837,7 +837,10 @@
       "originalActorPlaceholder": "Nom de l'acteur original (optionnel)",
       "searchVoiceActorPlaceholder": "Rechercher des comédiens...",
       "linkVoiceActorPlaceholder": "Associer un comédien..."
-    }
+    },
+    "regionalDubbingLanguageRequired": "Sélectionner la région du doublage",
+    "regionalDubbingLanguage": "Région du doublage",
+    "wikipediaLanguage": "Source Wikipédia"
   },
   "newVoiceActorsAdded": "nouveau comédien ajouté | nouveaux comédiens ajoutés",
   "audiobook": {

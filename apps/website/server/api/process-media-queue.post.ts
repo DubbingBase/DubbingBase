@@ -42,6 +42,8 @@ type QueuePayload = {
   season_number?: number;
   episode_number?: number;
   language?: string;
+  wikipedia_language?: string;
+  dubbing_language?: string;
   page_id?: number;
   section_indexes?: number[];
   is_manual?: boolean;
@@ -95,6 +97,12 @@ function parseQueuePayload(value: Json): QueuePayload | null {
       ? { episode_number: value.episode_number }
       : {}),
     ...(typeof value.language === "string" ? { language: value.language } : {}),
+    ...(typeof value.wikipedia_language === "string"
+      ? { wikipedia_language: value.wikipedia_language }
+      : {}),
+    ...(typeof value.dubbing_language === "string"
+      ? { dubbing_language: value.dubbing_language }
+      : {}),
     ...(typeof value.page_id === "number" ? { page_id: value.page_id } : {}),
     ...(parsedSectionIndexes ? { section_indexes: parsedSectionIndexes } : {}),
     ...(typeof value.is_manual === "boolean"
@@ -499,6 +507,8 @@ export default defineEventHandler(async (event) => {
                 p_season_number: payload.season_number ?? undefined,
                 p_episode_number: payload.episode_number ?? undefined,
                 p_language: lang,
+                p_wikipedia_language: lang,
+                p_dubbing_language: valid.value.dubbingLanguage,
                 p_is_manual: payload.is_manual ?? false,
               },
             );
@@ -572,7 +582,8 @@ export default defineEventHandler(async (event) => {
         const valid = validateCheckPayload(payload);
         if (!valid.ok) {
           const errMsg = `Broken queue element: ${valid.reason}`;
-          const lang = payload.language || "fr";
+          const lang =
+            payload.wikipedia_language || payload.language || "unknown";
           await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
             p_queue_name: targetQueue,
             p_msg_id: msgId,
@@ -586,7 +597,7 @@ export default defineEventHandler(async (event) => {
           );
           return { ok: true, processed: 1, results, queue: targetQueue };
         }
-        const lang = valid.value.language;
+        const lang = valid.value.wikipediaLanguage;
         try {
           let checkResult: CheckSectionsResult;
 
@@ -673,6 +684,8 @@ export default defineEventHandler(async (event) => {
               p_tmdb_id: payload.tmdb_id,
               p_media_type: payload.media_type,
               p_language: lang,
+              p_wikipedia_language: lang,
+              p_dubbing_language: valid.value.dubbingLanguage,
               p_page_id: checkResult.pageId,
               p_section_indexes: checkResult.sectionIndexes,
               p_season_number: payload.season_number ?? undefined,
@@ -767,7 +780,9 @@ export default defineEventHandler(async (event) => {
         const valid = validateExtractPayload(payload);
         if (!valid.ok) {
           const errMsg = `Broken queue element: ${valid.reason}`;
-          const lang = String(payload.language || "fr").toUpperCase();
+          const lang = String(
+            payload.wikipedia_language || payload.language || "unknown",
+          ).toUpperCase();
           await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
             p_queue_name: targetQueue,
             p_msg_id: msgId,
@@ -781,7 +796,7 @@ export default defineEventHandler(async (event) => {
           );
           return { ok: true, processed: 1, results, queue: targetQueue };
         }
-        const lang = valid.value.language;
+        const lang = valid.value.wikipediaLanguage;
         try {
           const pageId = valid.value.pageId;
           const sectionIndexes = valid.value.sectionIndexes;
@@ -793,6 +808,7 @@ export default defineEventHandler(async (event) => {
             extractResult = await extractGameDubbingCredits({
               igdbId: payload.tmdb_id,
               language: lang,
+              dubbingLanguage: valid.value.dubbingLanguage,
               pageId,
               sectionIndexes,
               cache,
@@ -803,6 +819,7 @@ export default defineEventHandler(async (event) => {
               tmdbId: payload.tmdb_id,
               type: payload.media_type,
               language: lang,
+              dubbingLanguage: valid.value.dubbingLanguage,
               pageId,
               sectionIndexes,
               seasonNumber: payload.season_number,

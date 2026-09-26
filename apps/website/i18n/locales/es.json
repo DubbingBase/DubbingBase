@@ -838,7 +838,10 @@
       "originalActorPlaceholder": "Nombre del actor original (opcional)",
       "searchVoiceActorPlaceholder": "Buscar actores de doblaje...",
       "linkVoiceActorPlaceholder": "Vincular actor de doblaje..."
-    }
+    },
+    "regionalDubbingLanguageRequired": "Seleccionar la región del doblaje",
+    "regionalDubbingLanguage": "Región del doblaje",
+    "wikipediaLanguage": "Fuente de Wikipedia"
   },
   "audiobook": {
     "title": "Audiolibro",

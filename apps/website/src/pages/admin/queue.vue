@@ -306,10 +306,18 @@
                       >{{ $t("admin.queue.discovery") }}</span
                     >
                     <span
-                      v-if="(item as any).language"
+                      v-if="item.wikipedia_language"
                       class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase theme-status-info border"
                     >
-                      {{ (item as any).language }}
+                      {{ $t("admin.wikipediaLanguage") }}:
+                      {{ item.wikipedia_language }}
+                    </span>
+                    <span
+                      v-if="item.dubbing_language"
+                      class="px-2 py-0.5 rounded-full text-[10px] font-extrabold theme-status-info border"
+                    >
+                      {{ $t("admin.regionalDubbingLanguage") }}:
+                      {{ item.dubbing_language }}
                     </span>
                     <span
                       v-if="(item as any).is_manual"
@@ -344,7 +352,7 @@
                         </svg>
                       </a>
                       <a
-                        :href="`https://hub.toolforge.org/${item.media_type === 'tv' || item.media_type === 'season' || item.media_type === 'episode' ? 'P4983' : 'P4947'}:${item.tmdb_id}?lang=${(item as any).language || 'fr'}`"
+                        :href="`https://hub.toolforge.org/${item.media_type === 'tv' || item.media_type === 'season' || item.media_type === 'episode' ? 'P4983' : 'P4947'}:${item.tmdb_id}?lang=${item.wikipedia_language || 'fr'}`"
                         target="_blank"
                         rel="noopener noreferrer"
                         class="text-xs font-semibold theme-text-muted theme-hover-text hover:underline flex items-center"
@@ -424,7 +432,7 @@
                 <!-- Requester column -->
                 <td class="py-4 px-6">
                   <div class="font-medium theme-text text-sm truncate max-w-xs">
-                    {{ getUserEmail(item.user_id) }}
+                    {{ getUserEmail(getQueueRequesterId(item)) }}
                   </div>
                   <div class="text-xs theme-text-muted mt-0.5">
                     {{ formatTime(item.created_at) }}
@@ -784,6 +792,12 @@ const getAppMediaUrl = (item: any): string => {
   }
 };
 
+function getQueueRequesterId(item: QueueItem): string | undefined {
+  return "user_id" in item && typeof item.user_id === "string"
+    ? item.user_id
+    : undefined;
+}
+
 const getUserEmail = (userId: string | null | undefined) => {
   if (!userId) return "Anonymous";
   return usersMap.value[userId] || `User (${userId.substring(0, 8)})`;
@@ -996,8 +1010,7 @@ const reEnqueueItem = async (item: QueueItem) => {
 
   reEnqueuingId.value = item.id;
   try {
-    const language = Reflect.get(item, "language");
-    const queueName = Reflect.get(item, "queue_name");
+    const queueName = item.queue_name;
 
     const enqueueResult = await $fetch<{
       alreadyQueued?: boolean;
@@ -1011,7 +1024,10 @@ const reEnqueueItem = async (item: QueueItem) => {
         mediaType: item.media_type,
         seasonNumber: item.season_number ?? undefined,
         episodeNumber: item.episode_number ?? undefined,
-        language: typeof language === "string" ? language : undefined,
+        language: item.wikipedia_language ?? item.language ?? undefined,
+        wikipedia_language:
+          item.wikipedia_language ?? item.language ?? undefined,
+        dubbing_language: item.dubbing_language ?? undefined,
       },
     });
 
@@ -1023,7 +1039,7 @@ const reEnqueueItem = async (item: QueueItem) => {
           method: "DELETE",
           body: {
             id: item.id,
-            queueName: typeof queueName === "string" ? queueName : undefined,
+            queueName,
           },
         });
       } catch (deleteError: unknown) {

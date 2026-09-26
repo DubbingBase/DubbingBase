@@ -838,7 +838,10 @@
       "originalActorPlaceholder": "Original actor name (optional)",
       "searchVoiceActorPlaceholder": "Search voice actors...",
       "linkVoiceActorPlaceholder": "Link voice actor..."
-    }
+    },
+    "regionalDubbingLanguageRequired": "Select the dubbing region",
+    "regionalDubbingLanguage": "Dubbing region",
+    "wikipediaLanguage": "Wikipedia source"
   },
   "audiobook": {
     "title": "Audiobook",

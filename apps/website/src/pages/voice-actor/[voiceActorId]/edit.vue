@@ -581,15 +581,7 @@
               @input="triggerMediaSearch"
               class="flex-1 px-4 py-2.5 theme-input border theme-border rounded-xl theme-text theme-focus text-sm"
             />
-            <select
-              v-model="searchLanguage"
-              class="px-3 py-2.5 theme-input border theme-border rounded-xl theme-text text-xs"
-            >
-              <option value="fr">Français</option>
-              <option value="en">English</option>
-              <option value="es">Español</option>
-              <option value="ja">日本語</option>
-            </select>
+            <AdminLanguageSelect v-model="dubbingLanguage" required />
           </div>
 
           <div v-if="mediaSearchLoading" class="flex justify-center py-6">
@@ -1200,7 +1192,7 @@ const showLinkWorkModal = ref(false);
 const linkWorkStep = ref(1);
 const selectedMediaType = ref("movie");
 const mediaSearchQuery = ref("");
-const searchLanguage = ref("fr");
+const dubbingLanguage = ref("");
 const mediaSearchLoading = ref(false);
 const mediaSearchResults = ref<any[]>([]);
 const selectedMedia = ref<any | null>(null);
@@ -1368,7 +1360,7 @@ async function submitWorkLink(opts: {
         actor_id: opts.actorId ?? 0,
         character_name: opts.characterName ?? "",
         performance: linkWorkPerformance.value,
-        language: searchLanguage.value,
+        language: dubbingLanguage.value,
       },
     });
     showToast(
@@ -1404,6 +1396,7 @@ async function createAndLink() {
         name: createMediaName.value,
         brand: createMediaBrand.value || undefined,
         manufacturer: createMediaBrand.value || undefined,
+        language: dubbingLanguage.value,
       },
     });
     if (result?.media) {

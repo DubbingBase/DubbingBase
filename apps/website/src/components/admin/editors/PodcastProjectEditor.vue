@@ -436,6 +436,10 @@
 </template>
 
 <script setup lang="ts">
+import {
+  validateDubbingLanguage,
+  displayDubbingLanguage,
+} from "@app/shared-logic";
 import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
@@ -464,7 +468,7 @@ const parsedPodcastId = computed(() => {
 const contentId = ref<number | null>(parsedPodcastId.value);
 const mediaTitle = ref("");
 const posterUrl = ref<string | null>(null);
-const language = ref("fr");
+const language = ref("");
 const status = ref("validated");
 const selectedStudioId = ref<number | null>(null);
 const artisticDirectorId = ref<number | null>(null);
@@ -587,9 +591,7 @@ function removeCastRow(index: number) {
 }
 
 function getDisplayLanguage(langCode?: string): string {
-  if (langCode === "fr" || langCode === "fr-FR") return "Français";
-  if (langCode === "en" || langCode === "en-US") return "Anglais";
-  return langCode || "Autre";
+  return langCode ? displayDubbingLanguage(langCode, "fr") : "";
 }
 
 async function fetchPodcastMetadata() {
@@ -633,7 +635,7 @@ onMounted(async () => {
         .single();
 
       if (project) {
-        language.value = project.language || "fr";
+        language.value = project.language || "";
         status.value = project.status || "validated";
         selectedStudioId.value = project.studio_id;
         if (project.studios) {
@@ -696,22 +698,23 @@ async function savePodcastProject() {
 
     if (isEditMode.value) {
       currentProjectId = Number(projectIdParam.value);
-      await supabase
+      const { error: projectError } = await supabase
         .from("dubbing_projects")
         .update({
-          language: language.value,
+          language: validateDubbingLanguage(language.value),
           status: status.value,
           studio_id: selectedStudioId.value,
           updated_at: new Date().toISOString(),
         })
         .eq("id", currentProjectId);
+      if (projectError) throw projectError;
     } else {
       const { data: newProject, error } = await supabase
         .from("dubbing_projects")
         .insert({
           content_id: contentId.value,
           content_type: "podcast",
-          language: language.value,
+          language: validateDubbingLanguage(language.value),
           status: status.value,
           studio_id: selectedStudioId.value,
         })

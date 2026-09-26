@@ -1,3 +1,4 @@
+import { requireDubbingLanguage } from "../dubbing-language";
 import { useSupabaseAdmin } from "../db/client";
 import { findOrCreateDubbingProject } from "../db/dubbing-project";
 
@@ -166,6 +167,7 @@ export async function insertVoiceActorAndWork(
   characterId?: number | null,
   characterName?: string | null,
 ) {
+  requireDubbingLanguage(language);
   const voiceActorResult = await upsertVoiceActor(firstName, lastName);
   const workResult = await upsertWork(
     (voiceActorResult.data as any).id,

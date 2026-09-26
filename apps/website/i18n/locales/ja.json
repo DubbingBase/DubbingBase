@@ -838,7 +838,10 @@
       "originalActorPlaceholder": "オリジナル俳優名（任意）",
       "searchVoiceActorPlaceholder": "声優を検索...",
       "linkVoiceActorPlaceholder": "声優をリンク..."
-    }
+    },
+    "regionalDubbingLanguageRequired": "吹き替えの地域を選択",
+    "regionalDubbingLanguage": "吹き替えの地域",
+    "wikipediaLanguage": "ウィキペディアの出典"
   },
   "audiobook": {
     "title": "オーディオブック",

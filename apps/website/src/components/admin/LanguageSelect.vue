@@ -1,34 +1,35 @@
 <template>
   <select
     :value="modelValue"
-    @change="
-      $emit('update:modelValue', ($event.target as HTMLSelectElement).value)
-    "
+    @change="onChange"
     :required="required"
     class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm disabled:opacity-50 disabled:cursor-not-allowed"
   >
-    <option value="fr-FR">Français (France)</option>
-    <option value="fr-CA">Français (Canada)</option>
-    <option value="fr-BE">Français (Belgique)</option>
-    <option value="en-US">English (US)</option>
-    <option value="en-GB">English (UK)</option>
-    <option value="ja-JP">Japanese</option>
-    <option value="es-ES">Español (España)</option>
-    <option value="es-MX">Español (Latinoamérica)</option>
-    <option value="de-DE">Deutsch</option>
-    <option value="it-IT">Italiano</option>
-    <option value="pt-BR">Português (Brasil)</option>
-    <option value="pt-PT">Português (Portugal)</option>
+    <option v-if="!isDubbingLanguage(modelValue)" :value="modelValue" disabled>
+      {{ $t("admin.regionalDubbingLanguageRequired")
+      }}{{ modelValue ? ` (${modelValue})` : "" }}
+    </option>
+    <option v-for="code in DUBBING_LANGUAGES" :key="code" :value="code">
+      {{ displayDubbingLanguage(code, locale) }}
+    </option>
   </select>
 </template>
 
 <script setup lang="ts">
-defineProps<{
-  modelValue: string;
-  required?: boolean;
-}>();
+import {
+  DUBBING_LANGUAGES,
+  displayDubbingLanguage,
+  isDubbingLanguage,
+} from "@app/shared-logic";
 
-defineEmits<{
-  (e: "update:modelValue", value: string): void;
-}>();
+const { locale } = useI18n();
+defineProps<{ modelValue: string; required?: boolean }>();
+const emit = defineEmits<{ (e: "update:modelValue", value: string): void }>();
+
+function onChange(event: Event): void {
+  const target = event.target;
+  if (target instanceof HTMLSelectElement && isDubbingLanguage(target.value)) {
+    emit("update:modelValue", target.value);
+  }
+}
 </script>

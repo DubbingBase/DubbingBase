@@ -652,6 +652,7 @@
 </template>
 
 <script setup lang="ts">
+import { validateDubbingLanguage } from "@app/shared-logic";
 import { ref, onMounted, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
@@ -685,7 +686,7 @@ const showDubbingProjects = ref<any[]>([]);
 const contentId = ref<number | null>(null);
 const mediaTitle = ref("");
 const contentType = ref("tv");
-const language = ref("fr-FR");
+const language = ref("");
 const posterUrl = ref("");
 const status = ref("validated");
 const selectedStudioId = ref<number | null>(null);
@@ -942,7 +943,7 @@ const saveShowProject = async () => {
     const projectPayload = {
       content_id: contentId.value,
       content_type: contentType.value,
-      language: language.value || "fr-FR",
+      language: validateDubbingLanguage(language.value),
       studio_id: selectedStudioId.value || null,
       status: status.value || "validated",
     };

@@ -1,4 +1,10 @@
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
 
 export type Database = {
   graphql_public: {
@@ -64,6 +70,42 @@ export type Database = {
           previous_value?: Json | null;
           reverted_at?: string | null;
           user_id?: string;
+        };
+        Relationships: [];
+      };
+      dubbing_language_reviews: {
+        Row: {
+          applied_at: string;
+          decision: Json;
+          id: number;
+          source_snapshot: Json;
+          target_snapshot: Json | null;
+        };
+        Insert: {
+          applied_at?: string;
+          decision: Json;
+          id?: never;
+          source_snapshot: Json;
+          target_snapshot?: Json | null;
+        };
+        Update: {
+          applied_at?: string;
+          decision?: Json;
+          id?: never;
+          source_snapshot?: Json;
+          target_snapshot?: Json | null;
+        };
+        Relationships: [];
+      };
+      dubbing_languages: {
+        Row: {
+          code: string;
+        };
+        Insert: {
+          code: string;
+        };
+        Update: {
+          code?: string;
         };
         Relationships: [];
       };
@@ -428,8 +470,8 @@ export type Database = {
           created_at: string | null;
           created_by: string | null;
           date_of_birth: string | null;
-          duplicate_first_name_tokens: string[];
-          duplicate_last_name_tokens: string[];
+          duplicate_first_name_tokens: string[] | null;
+          duplicate_last_name_tokens: string[] | null;
           firstname: string;
           id: number;
           lastname: string;
@@ -450,6 +492,8 @@ export type Database = {
           created_at?: string | null;
           created_by?: string | null;
           date_of_birth?: string | null;
+          duplicate_first_name_tokens?: string[] | null;
+          duplicate_last_name_tokens?: string[] | null;
           firstname: string;
           id?: number;
           lastname: string;
@@ -469,6 +513,8 @@ export type Database = {
           created_at?: string | null;
           created_by?: string | null;
           date_of_birth?: string | null;
+          duplicate_first_name_tokens?: string[] | null;
+          duplicate_last_name_tokens?: string[] | null;
           firstname?: string;
           id?: number;
           lastname?: string;
@@ -603,8 +649,12 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      apply_reviewed_dubbing_languages: {
+        Args: { p_decisions: Json };
+        Returns: undefined;
+      };
       archive_media_queue_message: {
-        Args: { p_msg_id: number };
+        Args: { p_msg_id: number; p_queue_name: string };
         Returns: boolean;
       };
       archive_media_queue_message_with_error: {
@@ -616,35 +666,6 @@ export type Database = {
         Returns: number;
       };
       clear_media_queue: { Args: never; Returns: boolean };
-      delete_media_queue_item: { Args: { p_id: number }; Returns: boolean };
-      dubbing_project_completeness: {
-        Args: { dp: Database["public"]["Tables"]["dubbing_projects"]["Row"] };
-        Returns: number;
-      };
-      enqueue_media_fetch: {
-        Args: {
-          p_episode_number?: number;
-          p_is_manual?: boolean;
-          p_language?: string;
-          p_media_type: string;
-          p_season_number?: number;
-          p_tmdb_id: number;
-        };
-        Returns: number;
-      };
-      enqueue_media_extract: {
-        Args: {
-          p_episode_number?: number;
-          p_is_manual?: boolean;
-          p_language: string;
-          p_media_type: string;
-          p_page_id: number;
-          p_season_number?: number;
-          p_section_indexes: Json;
-          p_tmdb_id: number;
-        };
-        Returns: number;
-      };
       delay_media_queue_message: {
         Args: {
           p_delay_seconds?: number;
@@ -653,35 +674,99 @@ export type Database = {
         };
         Returns: boolean;
       };
+      delete_media_queue_item: {
+        Args: { p_id: number; p_queue_name?: string };
+        Returns: boolean;
+      };
+      dubbing_language_review_snapshot: {
+        Args: { p_project_id: number };
+        Returns: Json;
+      };
+      dubbing_project_completeness: {
+        Args: { dp: Database["public"]["Tables"]["dubbing_projects"]["Row"] };
+        Returns: number;
+      };
+      enqueue_media_extract: {
+        Args: {
+          p_dubbing_language?: string;
+          p_episode_number?: number;
+          p_is_manual?: boolean;
+          p_language: string;
+          p_media_type: string;
+          p_page_id: number;
+          p_season_number?: number;
+          p_section_indexes: Json;
+          p_tmdb_id: number;
+          p_wikipedia_language?: string;
+        };
+        Returns: number;
+      };
+      enqueue_media_fetch: {
+        Args: {
+          p_dubbing_language?: string;
+          p_episode_number?: number;
+          p_is_manual?: boolean;
+          p_language?: string;
+          p_media_type: string;
+          p_season_number?: number;
+          p_tmdb_id: number;
+          p_wikipedia_language?: string;
+        };
+        Returns: number;
+      };
+      finalize_dubbing_language_constraints: {
+        Args: never;
+        Returns: undefined;
+      };
       find_duplicate_voice_actors_rpc: { Args: never; Returns: Json };
+      find_duplicate_work_groups: {
+        Args: { p_after_group_id?: number; p_limit?: number };
+        Returns: Json;
+      };
       get_media_queue_depth: {
         Args: { p_queue_name?: string };
         Returns: number;
       };
       get_media_queue_items: {
-        Args: never;
+        Args: {
+          p_limit?: number;
+          p_offset?: number;
+          p_queue_name?: string;
+          p_status?: string;
+        };
         Returns: {
           created_at: string;
+          dubbing_language: string;
           episode_number: number;
           error_message: string;
           id: number;
+          is_manual: boolean;
+          language: string;
           media_type: string;
+          queue_name: string;
+          read_ct: number;
           season_number: number;
           status: string;
           tmdb_id: number;
-          updated_at: string;
-          user_id: string;
+          wikipedia_language: string;
         }[];
       };
-      get_media_queue_locked_count: { Args: never; Returns: number };
+      get_media_queue_locked_count: {
+        Args: { p_queue_name?: string };
+        Returns: number;
+      };
+      get_media_queue_stats: { Args: never; Returns: Json };
       get_media_queue_status: {
         Args: {
+          p_dubbing_language?: string;
           p_episode_number?: number;
+          p_language?: string;
           p_media_type: string;
           p_season_number?: number;
           p_tmdb_id: number;
+          p_wikipedia_language?: string;
         };
-        Returns: Json;
+        Returns: string;
       };
       get_recent_contributions: {
         Args: { limit_param?: number };
@@ -735,6 +820,8 @@ export type Database = {
           created_at: string | null;
           created_by: string | null;
           date_of_birth: string | null;
+          duplicate_first_name_tokens: string[] | null;
+          duplicate_last_name_tokens: string[] | null;
           firstname: string;
           id: number;
           lastname: string;
@@ -759,9 +846,22 @@ export type Database = {
         Args: { p_keep_id: number; p_other_ids: number[]; p_updates?: Json };
         Returns: Json;
       };
+      merge_work_duplicates_atomic: {
+        Args: {
+          p_admin_id: string;
+          p_canonical_id: number;
+          p_updates: Json;
+          p_work_ids: number[];
+        };
+        Returns: Json;
+      };
       normalize_actor_name: { Args: { str: string }; Returns: string };
-      pop_media_queue_message: {
-        Args: { p_queue_name: string; p_vt_seconds?: number };
+      pop_media_queue_batch: {
+        Args: {
+          p_batch_size: number;
+          p_queue_name: string;
+          p_vt_seconds: number;
+        };
         Returns: {
           enqueued_at: string;
           message: Json;
@@ -770,12 +870,8 @@ export type Database = {
           vt: string;
         }[];
       };
-      pop_media_queue_batch: {
-        Args: {
-          p_batch_size: number;
-          p_queue_name: string;
-          p_vt_seconds: number;
-        };
+      pop_media_queue_message: {
+        Args: { p_queue_name: string; p_vt_seconds?: number };
         Returns: {
           enqueued_at: string;
           message: Json;
@@ -808,7 +904,10 @@ export type Database = {
 
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">;
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">];
+type DefaultSchema = DatabaseWithoutInternals[Extract<
+  keyof Database,
+  "public"
+>];
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
@@ -829,8 +928,10 @@ export type Tables<
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] & DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R;
       }
       ? R
@@ -839,8 +940,7 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
@@ -864,8 +964,7 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
@@ -889,8 +988,7 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema["Enums"] | { schema: keyof DatabaseWithoutInternals },
   EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
