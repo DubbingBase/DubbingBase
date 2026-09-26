@@ -3,15 +3,7 @@ import { useSupabaseAdmin } from "../../utils/db/client";
 import { findOrCreateDubbingProject } from "../../utils/db/dubbing-project";
 import { requireDubbingLanguage } from "../../utils/dubbing-language";
 
-const MEDIA_TYPES = [
-  "movie",
-  "tv",
-  "video_game",
-  "audiobook",
-  "podcast",
-  "advertisement",
-  "toy",
-];
+const MEDIA_TYPES = ["movie", "tv", "video_game", "audiobook", "podcast", "advertisement", "toy"];
 
 interface Assignment {
   actor_id: number;
@@ -78,30 +70,18 @@ export default defineEventHandler(async (event) => {
 
   if (actorIds.length === 0) return { saved: true, projectId: null };
 
-  const projectId = await findOrCreateDubbingProject(
-    contentId,
-    contentType,
-    dubbingLanguage,
-  );
+  const projectId = await findOrCreateDubbingProject(contentId, contentType, dubbingLanguage);
   const supabase = useSupabaseAdmin(event);
-  const { error: deleteError } = await supabase
-    .from("work")
-    .delete()
-    .eq("dubbing_project_id", projectId)
-    .in("actor_id", actorIds);
+  const { error } = await supabase.rpc("replace_regional_project_actor_assignments", {
+    p_dubbing_project_id: projectId,
+    p_actor_ids: actorIds,
+    p_assignments: assignments.map(({ actor_id, voice_actor_id }) => ({
+      actor_id,
+      voice_actor_id,
+    })),
+  });
 
-  if (deleteError) throw deleteError;
-
-  if (assignments.length > 0) {
-    const rows = assignments.map((assignment) => ({
-      ...assignment,
-      dubbing_project_id: projectId,
-      performance: "voice",
-      status: "validated",
-    }));
-    const { error: insertError } = await supabase.from("work").insert(rows);
-    if (insertError) throw insertError;
-  }
+  if (error) throw error;
 
   return { saved: true, projectId };
 });

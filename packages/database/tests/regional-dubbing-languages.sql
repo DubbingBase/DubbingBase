@@ -4,6 +4,7 @@
 -- and before:
 --   20260926130158_map_legacy_dubbing_project_regions.sql
 -- This test finalizes once inside its transaction, then rolls every assertion back.
+\set ON_ERROR_STOP on
 BEGIN;
 SET LOCAL statement_timeout='30s';
 CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA public;

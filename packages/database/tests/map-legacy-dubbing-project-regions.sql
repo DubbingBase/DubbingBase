@@ -1,6 +1,7 @@
 -- Run with psql against an isolated database after applying the first two
 -- regional-language migrations. This fixture applies the mapping migration
 -- itself, verifies its merges and final constraints, and rolls everything back.
+\set ON_ERROR_STOP on
 BEGIN;
 SET LOCAL statement_timeout = '60s';
 TRUNCATE public.dubbing_language_reviews, public.dubbing_projects CASCADE;

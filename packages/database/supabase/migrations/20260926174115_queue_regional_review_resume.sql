@@ -158,16 +158,24 @@ BEGIN
     RAISE EXCEPTION 'Review item has no valid Wikipedia source language';
   END IF;
 
-  PERFORM public.enqueue_media_fetch(
-    p_media_type := v_media_type,
-    p_tmdb_id := v_tmdb_id,
-    p_season_number := v_season_number,
-    p_episode_number := v_episode_number,
-    p_language := v_wikipedia_language,
-    p_is_manual := v_is_manual,
-    p_wikipedia_language := v_wikipedia_language,
-    p_dubbing_language := p_dubbing_language
-  );
+  BEGIN
+    PERFORM public.enqueue_media_fetch(
+      p_media_type := v_media_type,
+      p_tmdb_id := v_tmdb_id,
+      p_season_number := v_season_number,
+      p_episode_number := v_episode_number,
+      p_language := v_wikipedia_language,
+      p_is_manual := v_is_manual,
+      p_wikipedia_language := v_wikipedia_language,
+      p_dubbing_language := p_dubbing_language
+    );
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM = 'Item is already in the check queue'
+      OR SQLERRM LIKE 'Dubbing project already exists for %' THEN
+      RETURN false;
+    END IF;
+    RAISE;
+  END;
 
   DELETE FROM pgmq.a_wiki_check WHERE msg_id = p_msg_id;
   RETURN true;

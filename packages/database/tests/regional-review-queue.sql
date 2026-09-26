@@ -2,8 +2,10 @@
 -- 20260926092722_enforce_regional_dubbing_languages.sql,
 -- 20260926094824_preserve_dubbing_review_dependencies.sql,
 -- 20260926130158_map_legacy_dubbing_project_regions.sql, and
--- 20260926174115_queue_regional_review_resume.sql.
+-- 20260926174115_queue_regional_review_resume.sql and
+-- 20260926174116_atomic_regional_project_actor_assignments.sql.
 -- Fixtures and queue transitions are rolled back.
+\set ON_ERROR_STOP on
 BEGIN;
 SET LOCAL statement_timeout = '30s';
 
@@ -12,6 +14,8 @@ DECLARE
   message_id bigint;
   discovery_id bigint;
   extract_id bigint;
+  project_duplicate_review_id bigint;
+  queue_duplicate_review_id bigint;
 BEGIN
   -- Source-only queue work reaches wiki_check and becomes an explicit review item.
   message_id := public.enqueue_media_fetch(
@@ -58,6 +62,62 @@ BEGIN
       AND message->>'dubbing_language' = 'fr-FR'
   ) THEN
     RAISE EXCEPTION 'Resumed item did not restart wiki_check with the chosen region';
+  END IF;
+
+  -- A regional project created while review was pending conflicts cleanly;
+  -- the archived review item remains available for a different decision.
+  project_duplicate_review_id := public.enqueue_media_fetch(
+    p_tmdb_id => -980106,
+    p_media_type => 'movie',
+    p_language => 'simple'
+  );
+  PERFORM public.archive_wiki_check_for_regional_review(
+    project_duplicate_review_id,
+    'Regional project appeared while waiting for review.'
+  );
+  INSERT INTO public.dubbing_projects(content_id, content_type, language)
+  VALUES (-980106, 'movie', 'fr-FR');
+  IF public.resume_wiki_check_for_regional_review(project_duplicate_review_id, 'fr-FR') THEN
+    RAISE EXCEPTION 'Review resumed although its regional project already exists';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pgmq.a_wiki_check
+    WHERE msg_id = project_duplicate_review_id
+      AND message->>'review_needed' = 'true'
+  ) THEN
+    RAISE EXCEPTION 'Project conflict discarded its archived review item';
+  END IF;
+
+  -- Another check may race into the active queue after an item is archived.
+  queue_duplicate_review_id := public.enqueue_media_fetch(
+    p_tmdb_id => -980107,
+    p_media_type => 'movie',
+    p_language => 'simple'
+  );
+  PERFORM public.archive_wiki_check_for_regional_review(
+    queue_duplicate_review_id,
+    'Checking for an active duplicate.'
+  );
+  PERFORM pgmq.send(
+    'wiki_check',
+    jsonb_build_object(
+      'tmdb_id', -980107,
+      'media_type', 'movie',
+      'language', 'simple',
+      'wikipedia_language', 'simple',
+      'dubbing_language', 'fr-FR'
+    ),
+    '{}'::jsonb
+  );
+  IF public.resume_wiki_check_for_regional_review(queue_duplicate_review_id, 'fr-FR') THEN
+    RAISE EXCEPTION 'Review resumed while an active duplicate check existed';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pgmq.a_wiki_check
+    WHERE msg_id = queue_duplicate_review_id
+      AND message->>'review_needed' = 'true'
+  ) THEN
+    RAISE EXCEPTION 'Queue conflict discarded its archived review item';
   END IF;
 
   -- Discovery may preserve a target without inventing a Wikipedia source.

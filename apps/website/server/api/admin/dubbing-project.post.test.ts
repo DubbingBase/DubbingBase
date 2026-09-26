@@ -1,19 +1,5 @@
-import {
-  createApp,
-  createError,
-  defineEventHandler,
-  readBody,
-  toWebHandler,
-} from "h3";
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from "vitest";
+import { createApp, createError, defineEventHandler, readBody, toWebHandler } from "h3";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const routeMocks = vi.hoisted(() => ({
   findOrCreateDubbingProject: vi.fn(),
@@ -46,34 +32,19 @@ beforeEach(() => {
 
 afterAll(() => vi.unstubAllGlobals());
 
-interface DeleteBuilder {
-  eq(column: string, value: number): DeleteBuilder;
-  in(column: string, values: number[]): Promise<{ error: null }>;
-}
-
 function createSupabaseMock() {
-  const deletedProjectIds: number[] = [];
-  const insertedRows: Array<Record<string, unknown>> = [];
-  const deleteBuilder: DeleteBuilder = {
-    eq(column, value) {
-      if (column === "dubbing_project_id") deletedProjectIds.push(value);
-      return deleteBuilder;
-    },
-    async in() {
-      return { error: null };
-    },
-  };
+  const rpcCalls: Array<{
+    name: string;
+    args: Record<string, unknown>;
+  }> = [];
   const supabase = {
-    from: vi.fn(() => ({
-      delete: () => deleteBuilder,
-      insert: async (rows: Array<Record<string, unknown>>) => {
-        insertedRows.push(...rows);
-        return { error: null };
-      },
-    })),
+    rpc: vi.fn(async (name: string, args: Record<string, unknown>) => {
+      rpcCalls.push({ name, args });
+      return { error: null };
+    }),
   };
 
-  return { supabase, deletedProjectIds, insertedRows };
+  return { supabase, rpcCalls };
 }
 
 async function saveRegion(
@@ -81,7 +52,7 @@ async function saveRegion(
   projectId: number,
   voiceActorId: number,
 ): Promise<Response> {
-  const { supabase, deletedProjectIds, insertedRows } = createSupabaseMock();
+  const { supabase, rpcCalls } = createSupabaseMock();
   routeMocks.findOrCreateDubbingProject.mockResolvedValue(projectId);
   routeMocks.useSupabaseAdmin.mockReturnValue(supabase);
 
@@ -105,21 +76,17 @@ async function saveRegion(
   );
 
   expect(response.status).toBe(200);
-  expect(deletedProjectIds).toEqual([projectId]);
-  expect(insertedRows).toEqual([
+  expect(rpcCalls).toEqual([
     {
-      actor_id: 101,
-      voice_actor_id: voiceActorId,
-      dubbing_project_id: projectId,
-      performance: "voice",
-      status: "validated",
+      name: "replace_regional_project_actor_assignments",
+      args: {
+        p_dubbing_project_id: projectId,
+        p_actor_ids: [101],
+        p_assignments: [{ actor_id: 101, voice_actor_id: voiceActorId }],
+      },
     },
   ]);
-  expect(routeMocks.findOrCreateDubbingProject).toHaveBeenCalledWith(
-    211288,
-    "tv",
-    dubbingLanguage,
-  );
+  expect(routeMocks.findOrCreateDubbingProject).toHaveBeenCalledWith(211288, "tv", dubbingLanguage);
   return response;
 }
 
