@@ -28,6 +28,64 @@ it("keeps the database seed and website registry aligned", () => {
   expect([...new Set(codes)].sort()).toEqual([...DUBBING_LANGUAGES].sort());
 });
 
+it("registers every target used by the legacy language mapping", () => {
+  const migration = readFileSync(
+    resolve(
+      process.cwd(),
+      "../../packages/database/supabase/migrations/20260926130158_map_legacy_dubbing_project_regions.sql",
+    ),
+    "utf8",
+  );
+  const migrationsBeforeMapping = readdirSync(
+    resolve(process.cwd(), "../../packages/database/supabase/migrations"),
+  )
+    .filter(
+      (file) =>
+        file.endsWith(".sql") &&
+        file <= "20260926130158_map_legacy_dubbing_project_regions.sql",
+    )
+    .map((file) =>
+      readFileSync(
+        resolve(
+          process.cwd(),
+          "../../packages/database/supabase/migrations",
+          file,
+        ),
+        "utf8",
+      ),
+    );
+  const mappings = migration.match(
+    /SELECT \* FROM \(VALUES([\s\S]*?)\)\s+AS languages\(/,
+  )?.[1];
+
+  expect(mappings).toBeDefined();
+
+  const mappingTargets = Array.from(
+    (mappings ?? "").matchAll(/\(\s*'[^']+'\s*,\s*'([^']+)'\s*\)/g),
+    (match) => String(match[1]),
+  );
+  const seededTargets = migrationsBeforeMapping.flatMap((sql) => {
+    const seed = sql.match(
+      /INSERT INTO public\.dubbing_languages\(code\) VALUES([\s\S]*?)(?:ON CONFLICT[^;]*|;)/,
+    )?.[1];
+    return Array.from(
+      (seed ?? "").matchAll(/'([a-z]{2,3}-[A-Z]{2})'/g),
+      (match) => String(match[1]),
+    );
+  });
+
+  expect(mappingTargets.length).toBeGreaterThan(0);
+  for (const target of mappingTargets) {
+    expect(
+      DUBBING_LANGUAGES,
+      `TypeScript registry is missing ${target}`,
+    ).toContain(target);
+    expect(seededTargets, `Database seed is missing ${target}`).toContain(
+      target,
+    );
+  }
+});
+
 describe("dubbing language validation", () => {
   it.each(DUBBING_LANGUAGES)("accepts registered regional code %s", (code) => {
     expect(validateDubbingLanguage(code)).toBe(code);

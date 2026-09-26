@@ -6,6 +6,7 @@ export enum DubbingLanguage {
   EnglishUS = "en-US",
   EnglishUK = "en-GB",
   JapaneseJapan = "ja-JP",
+  KoreanKorea = "ko-KR",
   SpanishSpain = "es-ES",
   SpanishMexico = "es-MX",
   GermanGermany = "de-DE",

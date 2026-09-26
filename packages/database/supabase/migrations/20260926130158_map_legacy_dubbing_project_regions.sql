@@ -5,7 +5,7 @@
 -- while sh is retained and regionalized as sh-RS.
 
 INSERT INTO public.dubbing_languages(code) VALUES
-  ('ar-EG'), ('an-ES'), ('ca-ES'), ('ceb-PH'), ('cs-CZ'), ('cy-GB'),
+  ('ar-EG'), ('an-ES'), ('ca-ES'), ('ceb-PH'), ('cs-CZ'), ('cy-GB'), ('ko-KR'),
   ('da-DK'), ('el-GR'), ('fy-NL'), ('gsw-CH'), ('ha-NG'), ('he-IL'),
   ('hr-HR'), ('hu-HU'), ('id-ID'), ('la-VA'), ('ms-MY'), ('nl-NL'),
   ('no-NO'), ('pl-PL'), ('ro-RO'), ('ru-RU'), ('sco-GB'), ('sh-RS'),
