@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
   requireAdmin(event);
   try {
     const body = await readBody(event);
-    const { action, credits, mediaType, mediaId, language } = body;
+    const { action, credits, mediaType, mediaId, dubbing_language } = body;
 
     if (action === "match") {
       if (!credits || !Array.isArray(credits)) {
@@ -58,7 +58,7 @@ export default defineEventHandler(async (event) => {
       const projectId = await findOrCreateDubbingProject(
         Number(mediaId),
         mediaType,
-        requireDubbingLanguage(language),
+        requireDubbingLanguage(dubbing_language),
       );
 
       let successCount = 0;

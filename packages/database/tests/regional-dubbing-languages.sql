@@ -1,8 +1,13 @@
--- Run against an isolated local database after applying the regional migrations.
--- Every fixture and schema assertion is rolled back.
+-- Run against an isolated local database after:
+--   20260926092722_enforce_regional_dubbing_languages.sql
+--   20260926094824_preserve_dubbing_review_dependencies.sql
+-- and before:
+--   20260926130158_map_legacy_dubbing_project_regions.sql
+-- This test finalizes once inside its transaction, then rolls every assertion back.
 BEGIN;
 SET LOCAL statement_timeout='30s';
 CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA public;
+TRUNCATE public.dubbing_language_reviews, public.dubbing_projects CASCADE;
 
 DO $$
 BEGIN
@@ -55,12 +60,6 @@ DO $$ BEGIN
     INSERT INTO public.dubbing_projects(content_id,content_type,language) VALUES(-900010,'tv','fr-FR');
     RAISE EXCEPTION 'Duplicate regional project was accepted';
   EXCEPTION WHEN unique_violation THEN NULL;
-  END;
-  BEGIN
-    PERFORM public.finalize_dubbing_language_constraints();
-    RAISE EXCEPTION 'Unresolved project was finalized';
-  EXCEPTION WHEN raise_exception THEN
-    IF SQLERRM NOT LIKE 'Unresolved dubbing regions%' THEN RAISE; END IF;
   END;
 END; $$;
 
@@ -142,11 +141,41 @@ BEGIN
 END;
 $$;
 
+DO $$ BEGIN
+  IF EXISTS (
+    SELECT 1 FROM public.dubbing_projects p
+    WHERE p.language IS NULL
+       OR NOT EXISTS (SELECT 1 FROM public.dubbing_languages l WHERE l.code=p.language)
+  ) THEN RAISE EXCEPTION 'Unresolved project languages before finalization'; END IF;
+  IF EXISTS (
+    SELECT 1 FROM public.dubbing_projects
+    GROUP BY content_id,content_type,language HAVING count(*)>1
+  ) THEN RAISE EXCEPTION 'Duplicate media+region projects before finalization'; END IF;
+END; $$;
+
 SELECT public.finalize_dubbing_language_constraints();
 DO $$ BEGIN
   IF EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='dubbing_projects' AND column_name='language' AND is_nullable='YES') THEN
     RAISE EXCEPTION 'Final language constraint remains nullable';
   END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid='public.dubbing_projects'::regclass
+      AND conname='dubbing_projects_language_fkey'
+      AND contype='f'
+  ) THEN RAISE EXCEPTION 'Final language registry foreign key is missing'; END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid='public.dubbing_projects'::regclass
+      AND conname='dubbing_projects_media_region_key'
+      AND contype='u'
+  ) THEN RAISE EXCEPTION 'Final media+region uniqueness is missing'; END IF;
+  IF EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgrelid='public.dubbing_projects'::regclass
+      AND tgname='dubbing_project_regional_language_guard'
+      AND NOT tgisinternal
+  ) THEN RAISE EXCEPTION 'Temporary language guard trigger remains'; END IF;
   BEGIN
     INSERT INTO public.dubbing_projects(content_id,content_type,language) VALUES(-900010,'tv','fr-FR');
     RAISE EXCEPTION 'Final uniqueness was not enforced';

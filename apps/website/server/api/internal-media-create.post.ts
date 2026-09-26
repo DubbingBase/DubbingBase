@@ -6,8 +6,15 @@ export default defineEventHandler(async (event) => {
   requireAdmin(event);
 
   const body = await readBody(event);
-  const { media_type, name, brand, manufacturer, description, language } = body;
-  const dubbingLanguage = requireDubbingLanguage(language);
+  const {
+    media_type,
+    name,
+    brand,
+    manufacturer,
+    description,
+    dubbing_language,
+  } = body;
+  const dubbingLanguage = requireDubbingLanguage(dubbing_language);
 
   if (!media_type || !name) {
     throw createError({

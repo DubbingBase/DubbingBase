@@ -162,10 +162,15 @@
           <!-- Language -->
           <div class="space-y-1">
             <label
+              for="audiobook-project-dubbing-language"
               class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
               >{{ $t("audiobookEditor.narrationLanguage") }}</label
             >
-            <AdminLanguageSelect v-model="language" required />
+            <AdminLanguageSelect
+              id="audiobook-project-dubbing-language"
+              v-model="dubbingLanguage"
+              required
+            />
           </div>
 
           <!-- Status -->
@@ -470,7 +475,7 @@ const openLibraryBookId = computed(() => {
 const contentId = ref<number | null>(openLibraryBookId.value);
 const mediaTitle = ref("");
 const posterUrl = ref<string | null>(null);
-const language = ref("");
+const dubbingLanguage = ref("");
 const status = ref("validated");
 const selectedStudioId = ref<number | null>(null);
 const artisticDirectorId = ref<number | null>(null);
@@ -640,7 +645,7 @@ onMounted(async () => {
         .single();
 
       if (project) {
-        language.value = project.language || "";
+        dubbingLanguage.value = project.language || "";
         status.value = project.status || "validated";
         selectedStudioId.value = project.studio_id;
         if (project.studios) {
@@ -708,7 +713,7 @@ async function saveBookProject() {
       const { error: projectError } = await supabase
         .from("dubbing_projects")
         .update({
-          language: validateDubbingLanguage(language.value),
+          language: validateDubbingLanguage(dubbingLanguage.value),
           status: status.value,
           studio_id: selectedStudioId.value,
           updated_at: new Date().toISOString(),
@@ -721,7 +726,7 @@ async function saveBookProject() {
         .insert({
           content_id: contentId.value,
           content_type: "audiobook",
-          language: validateDubbingLanguage(language.value),
+          language: validateDubbingLanguage(dubbingLanguage.value),
           status: status.value,
           studio_id: selectedStudioId.value,
         })

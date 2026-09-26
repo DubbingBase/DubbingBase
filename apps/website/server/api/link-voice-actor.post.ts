@@ -15,18 +15,18 @@ export default defineEventHandler(async (event) => {
     performance,
     targetUserId,
     actor_id,
-    language,
+    dubbing_language,
   } = body;
 
-  if (!voice_actor_id || !media_type || !media_id || !language) {
+  if (!voice_actor_id || !media_type || !media_id || !dubbing_language) {
     throw createError({
       statusCode: 400,
       message:
-        "Missing required fields: voice_actor_id, media_type, media_id, and language are required",
+        "Missing required fields: voice_actor_id, media_type, media_id, and dubbing_language are required",
     });
   }
 
-  requireDubbingLanguage(language);
+  const dubbingLanguage = requireDubbingLanguage(dubbing_language);
 
   const isAdmin = user.app_metadata?.role === "admin";
 
@@ -97,7 +97,7 @@ export default defineEventHandler(async (event) => {
   const dubbing_project_id = await findOrCreateDubbingProject(
     media_id,
     media_type,
-    language,
+    dubbingLanguage,
   );
 
   let query = supabaseAdmin

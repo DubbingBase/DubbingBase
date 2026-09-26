@@ -56,6 +56,7 @@ export default defineEventHandler(async (event) => {
       ? parseInt(String(episodeNumber), 10)
       : undefined;
 
+  // Deprecated `language` remains an alias for Wikipedia source edition only.
   const sourceLanguage = wikipedia_language ?? language;
   const cleanLang =
     typeof sourceLanguage === "string" && sourceLanguage.length > 0

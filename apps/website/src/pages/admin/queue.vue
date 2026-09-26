@@ -166,6 +166,21 @@
           >
             {{ $t("admin.queue.all") }} ({{ allQueueItems.length }})
           </button>
+          <button
+            type="button"
+            @click="
+              archiveFilter = 'archived';
+              filterStatus = 'review_needed';
+            "
+            class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-150"
+            :class="
+              filterStatus === 'review_needed'
+                ? 'theme-primary-bg shadow-md'
+                : 'theme-text-muted theme-hover-text'
+            "
+          >
+            {{ $t("admin.queue.reviewNeeded") }}
+          </button>
         </div>
 
         <div class="h-6 w-px theme-surface-muted hidden sm:block"></div>
@@ -205,6 +220,9 @@
             </option>
             <option value="completed">{{ $t("admin.queue.completed") }}</option>
             <option value="failed">{{ $t("admin.queue.failed") }}</option>
+            <option value="review_needed">
+              {{ $t("admin.queue.reviewNeeded") }}
+            </option>
           </select>
         </div>
         <div class="flex items-center space-x-2">
@@ -489,12 +507,51 @@
                       </svg>
                     </a>
                   </div>
+                  <div
+                    v-else-if="item.status === 'review_needed'"
+                    class="text-xs theme-status-warning-text max-w-sm leading-relaxed theme-status-warning border theme-border rounded-xl p-2.5"
+                  >
+                    {{
+                      item.review_note || $t("admin.queue.regionalReviewNote")
+                    }}
+                  </div>
                   <div v-else class="text-xs theme-text-muted italic">—</div>
                 </td>
 
                 <!-- Actions column -->
                 <td class="py-4 px-6 text-right">
                   <div class="flex items-center justify-end space-x-1">
+                    <div
+                      v-if="item.status === 'review_needed'"
+                      class="flex items-center gap-2"
+                    >
+                      <label
+                        :for="`queue-review-language-${item.id}`"
+                        class="sr-only"
+                      >
+                        {{ $t("admin.regionalDubbingLanguage") }}
+                      </label>
+                      <AdminLanguageSelect
+                        :id="`queue-review-language-${item.id}`"
+                        :model-value="reviewDubbingLanguages[item.id] ?? ''"
+                        @update:model-value="
+                          setReviewDubbingLanguage(item.id, $event)
+                        "
+                        required
+                      />
+                      <button
+                        type="button"
+                        @click="resumeRegionalReview(item)"
+                        :disabled="
+                          reEnqueuingId === item.id ||
+                          !isDubbingLanguage(reviewDubbingLanguages[item.id])
+                        "
+                        :title="$t('admin.queue.resumeReview')"
+                        class="px-3 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold disabled:opacity-50"
+                      >
+                        {{ $t("admin.queue.resumeReview") }}
+                      </button>
+                    </div>
                     <button
                       v-if="
                         item.status === 'failed' || item.status === 'completed'
@@ -614,10 +671,16 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
+import { isDubbingLanguage } from "@app/shared-logic";
 import type { Database } from "@app/supabase";
 
-type QueueItem =
-  Database["public"]["Functions"]["get_media_queue_items"]["Returns"][number];
+type QueueItem = (
+  | Database["public"]["Functions"]["get_media_queue_items"]["Returns"][number]
+  | Database["public"]["Functions"]["get_regional_review_queue_items"]["Returns"][number]
+) & {
+  language?: string | null;
+  review_note?: string | null;
+};
 
 interface ListUsersResponse {
   users?: Array<{ id: string; email: string }>;
@@ -644,6 +707,7 @@ const isProcessing = ref(false);
 const isClearing = ref(false);
 const deletingId = ref<number | null>(null);
 const reEnqueuingId = ref<number | null>(null);
+const reviewDubbingLanguages = ref<Record<number, string>>({});
 const error = ref("");
 const isDev = import.meta.env.DEV;
 const pendingCount = ref<number | null>(null);
@@ -690,6 +754,10 @@ const showToast = (
   }, 3000);
 };
 
+const setReviewDubbingLanguage = (itemId: number, dubbingLanguage: string) => {
+  reviewDubbingLanguages.value[itemId] = dubbingLanguage;
+};
+
 function getErrorMessage(err: unknown, fallback: string): string {
   if (err instanceof Error) {
     return err.message;
@@ -708,6 +776,8 @@ const getStatusClass = (status: string) => {
     case "failed":
     case "error":
       return "theme-status-danger";
+    case "review_needed":
+      return "theme-status-warning";
     default:
       return "theme-surface-muted theme-border theme-text-muted";
   }
@@ -848,11 +918,15 @@ const {
     const queueParam = filterQueue.value !== "all" ? filterQueue.value : null;
 
     const [queueRes, statsRes, userData] = await Promise.all([
-      (supabase.rpc as any)("get_media_queue_items", {
-        p_queue_name: queueParam,
-        p_status: statusParam,
-        p_limit: 100,
-      }),
+      statusParam === "review_needed"
+        ? supabase.rpc("get_regional_review_queue_items", {
+            p_limit: 100,
+          })
+        : supabase.rpc("get_media_queue_items", {
+            p_queue_name: queueParam ?? undefined,
+            p_status: statusParam ?? undefined,
+            p_limit: 100,
+          }),
       (supabase.rpc as any)("get_media_queue_stats"),
       $fetch<ListUsersResponse>("/api/list_users").catch(() => null),
     ]);
@@ -872,7 +946,12 @@ const {
       (stats?.totals?.completed ?? 0) + (stats?.totals?.error ?? 0);
 
     return {
-      queueItems: queueRes.data ?? [],
+      queueItems:
+        statusParam === "review_needed" && queueParam
+          ? (queueRes.data ?? []).filter(
+              (item: QueueItem) => item.queue_name === queueParam,
+            )
+          : (queueRes.data ?? []),
       usersMap: map,
       activeTotal,
       archivedTotal,
@@ -889,6 +968,16 @@ watch(
   (newData) => {
     if (newData) {
       queueItems.value = newData.queueItems;
+      const selections = { ...reviewDubbingLanguages.value };
+      for (const item of newData.queueItems) {
+        if (
+          item.status === "review_needed" &&
+          selections[item.id] === undefined
+        ) {
+          selections[item.id] = "";
+        }
+      }
+      reviewDubbingLanguages.value = selections;
       usersMap.value = newData.usersMap;
       pendingCount.value = newData.pendingCount;
       activeCount.value = newData.activeTotal;
@@ -1024,7 +1113,6 @@ const reEnqueueItem = async (item: QueueItem) => {
         mediaType: item.media_type,
         seasonNumber: item.season_number ?? undefined,
         episodeNumber: item.episode_number ?? undefined,
-        language: item.wikipedia_language ?? item.language ?? undefined,
         wikipedia_language:
           item.wikipedia_language ?? item.language ?? undefined,
         dubbing_language: item.dubbing_language ?? undefined,
@@ -1052,6 +1140,30 @@ const reEnqueueItem = async (item: QueueItem) => {
     await fetchQueueAndUsers();
   } catch (err: unknown) {
     console.error("Error re-enqueuing item:", err);
+    showToast(
+      getErrorMessage(err, t("admin.queue.failedToReEnqueue")),
+      "error",
+    );
+  } finally {
+    reEnqueuingId.value = null;
+  }
+};
+
+const resumeRegionalReview = async (item: QueueItem) => {
+  const dubbingLanguage = reviewDubbingLanguages.value[item.id];
+  if (!isDubbingLanguage(dubbingLanguage)) return;
+
+  reEnqueuingId.value = item.id;
+  try {
+    await $fetch("/api/admin/queue/review", {
+      method: "POST",
+      body: { id: item.id, dubbing_language: dubbingLanguage },
+    });
+    showToast(t("admin.queue.reviewResumed"), "success");
+    delete reviewDubbingLanguages.value[item.id];
+    await fetchQueueAndUsers();
+  } catch (err: unknown) {
+    console.error("Error resuming regional review:", err);
     showToast(
       getErrorMessage(err, t("admin.queue.failedToReEnqueue")),
       "error",

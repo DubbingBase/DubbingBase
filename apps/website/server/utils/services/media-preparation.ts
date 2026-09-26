@@ -794,24 +794,24 @@ The approved target dubbing market is ${dubbingLanguage} (${displayDubbingLangua
 export async function prepareMedia(options: {
   tmdbId: number;
   type: "movie" | "tv" | "season" | "episode";
-  seasonNumber?: number | null;
-  episodeNumber?: number | null;
-  language?: string | null;
-  dubbingLanguage?: DubbingLanguage;
+  seasonNumber: number | null;
+  episodeNumber: number | null;
+  wikipediaLanguage: string;
+  dubbingLanguage: DubbingLanguage;
 }): Promise<PrepareMediaResult> {
-  const { tmdbId, type, language } = options;
-  if (!language) {
-    throw new Error("Direct prepareMedia requires a specified language.");
+  const { tmdbId, type, wikipediaLanguage, dubbingLanguage } = options;
+  if (!wikipediaLanguage) {
+    throw new Error("Direct prepareMedia requires a Wikipedia source language.");
   }
 
-  if (!isDubbingLanguage(options.dubbingLanguage)) {
+  if (!isDubbingLanguage(dubbingLanguage)) {
     throw new Error("Regional dubbing language requires review");
   }
 
   const check = await checkMediaDubbingSections({
     tmdbId,
     type,
-    language,
+    language: wikipediaLanguage,
     seasonNumber: options.seasonNumber,
     episodeNumber: options.episodeNumber,
   });
@@ -832,8 +832,8 @@ export async function prepareMedia(options: {
   const extract = await extractMediaDubbingCredits({
     tmdbId,
     type,
-    language,
-    dubbingLanguage: options.dubbingLanguage,
+    language: wikipediaLanguage,
+    dubbingLanguage,
     pageId: check.pageId!,
     sectionIndexes: check.sectionIndexes!,
     seasonNumber: options.seasonNumber,
@@ -850,26 +850,29 @@ export async function prepareMedia(options: {
     llmQuota: extract.llmQuota,
     note: extract.note,
     wikipediaUrl: check.wikipediaUrl,
-    languages: [language],
+    languages: [wikipediaLanguage],
     error: extract.error,
   };
 }
 
 export async function prepareGame(options: {
   igdbId: number;
-  language?: string | null;
-  dubbingLanguage?: DubbingLanguage;
+  wikipediaLanguage: string;
+  dubbingLanguage: DubbingLanguage;
 }): Promise<PrepareGameResult> {
-  const { igdbId, language } = options;
-  if (!language) {
-    throw new Error("Direct prepareGame requires a specified language.");
+  const { igdbId, wikipediaLanguage, dubbingLanguage } = options;
+  if (!wikipediaLanguage) {
+    throw new Error("Direct prepareGame requires a Wikipedia source language.");
   }
 
-  if (!isDubbingLanguage(options.dubbingLanguage)) {
+  if (!isDubbingLanguage(dubbingLanguage)) {
     throw new Error("Regional dubbing language requires review");
   }
 
-  const check = await checkGameDubbingSections({ igdbId, language });
+  const check = await checkGameDubbingSections({
+    igdbId,
+    language: wikipediaLanguage,
+  });
   if (!check.ok) {
     return {
       ok: false,
@@ -881,8 +884,8 @@ export async function prepareGame(options: {
 
   const extract = await extractGameDubbingCredits({
     igdbId,
-    language,
-    dubbingLanguage: options.dubbingLanguage,
+    language: wikipediaLanguage,
+    dubbingLanguage,
     pageId: check.pageId!,
     sectionIndexes: check.sectionIndexes!,
   });
@@ -897,7 +900,7 @@ export async function prepareGame(options: {
     llmQuota: extract.llmQuota,
     note: extract.note,
     wikipediaUrl: check.wikipediaUrl,
-    languages: [language],
+    languages: [wikipediaLanguage],
     error: extract.error,
   };
 }

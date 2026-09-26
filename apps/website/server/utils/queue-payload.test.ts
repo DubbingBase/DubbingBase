@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { validateCheckPayload, validateExtractPayload } from "./queue-payload";
+import {
+  validateCheckPayload,
+  validateDiscoveryPayload,
+  validateExtractPayload,
+} from "./queue-payload";
 
 describe("validateExtractPayload", () => {
   const valid = {
@@ -99,6 +103,37 @@ describe("source and target separation", () => {
       ).toBe(false);
     },
   );
+
+  it.each(["fr", "FR-fr", "fr-Fr", "zz-ZZ"])(
+    "rejects non-regional target %s",
+    (dubbing_language) => {
+      expect(
+        validateExtractPayload({
+          tmdb_id: 1,
+          media_type: "movie",
+          wikipedia_language: "simple",
+          dubbing_language,
+          page_id: 1,
+          section_indexes: [1],
+        }).ok,
+      ).toBe(false);
+    },
+  );
+
+  it("requires a regional target before the extract stage", () => {
+    expect(
+      validateExtractPayload({
+        tmdb_id: 1,
+        media_type: "movie",
+        wikipedia_language: "simple",
+        page_id: 1,
+        section_indexes: [1],
+      }),
+    ).toEqual({
+      ok: false,
+      reason: "Regional dubbing language requires review",
+    });
+  });
   it("accepts Wikipedia edition identifiers independently", () => {
     expect(
       validateCheckPayload({
@@ -110,6 +145,47 @@ describe("source and target separation", () => {
     ).toMatchObject({
       ok: true,
       value: { wikipediaLanguage: "simple", dubbingLanguage: "en-US" },
+    });
+  });
+
+  it("allows source-only discovery and preserves an explicit target when present", () => {
+    expect(
+      validateDiscoveryPayload({ tmdb_id: 1, media_type: "movie" }),
+    ).toMatchObject({ ok: true, value: { tmdbId: 1, mediaType: "movie" } });
+    expect(
+      validateDiscoveryPayload({
+        tmdb_id: 1,
+        media_type: "movie",
+        wikipedia_language: "simple",
+        dubbing_language: "en-US",
+      }),
+    ).toMatchObject({
+      ok: true,
+      value: { wikipediaLanguage: "simple", dubbingLanguage: "en-US" },
+    });
+  });
+
+  it("treats different regional targets as distinct work for one source", () => {
+    const france = validateCheckPayload({
+      tmdb_id: 1,
+      media_type: "movie",
+      wikipedia_language: "fr",
+      dubbing_language: "fr-FR",
+    });
+    const canada = validateCheckPayload({
+      tmdb_id: 1,
+      media_type: "movie",
+      wikipedia_language: "fr",
+      dubbing_language: "fr-CA",
+    });
+
+    expect(france).toMatchObject({
+      ok: true,
+      value: { wikipediaLanguage: "fr", dubbingLanguage: "fr-FR" },
+    });
+    expect(canada).toMatchObject({
+      ok: true,
+      value: { wikipediaLanguage: "fr", dubbingLanguage: "fr-CA" },
     });
   });
 });

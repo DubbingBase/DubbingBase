@@ -581,7 +581,14 @@
               @input="triggerMediaSearch"
               class="flex-1 px-4 py-2.5 theme-input border theme-border rounded-xl theme-text theme-focus text-sm"
             />
-            <AdminLanguageSelect v-model="dubbingLanguage" required />
+            <label for="voice-actor-edit-dubbing-language" class="sr-only">
+              {{ $t("admin.regionalDubbingLanguage") }}
+            </label>
+            <AdminLanguageSelect
+              id="voice-actor-edit-dubbing-language"
+              v-model="dubbingLanguage"
+              required
+            />
           </div>
 
           <div v-if="mediaSearchLoading" class="flex justify-center py-6">
@@ -1360,7 +1367,7 @@ async function submitWorkLink(opts: {
         actor_id: opts.actorId ?? 0,
         character_name: opts.characterName ?? "",
         performance: linkWorkPerformance.value,
-        language: dubbingLanguage.value,
+        dubbing_language: dubbingLanguage.value,
       },
     });
     showToast(
@@ -1396,7 +1403,7 @@ async function createAndLink() {
         name: createMediaName.value,
         brand: createMediaBrand.value || undefined,
         manufacturer: createMediaBrand.value || undefined,
-        language: dubbingLanguage.value,
+        dubbing_language: dubbingLanguage.value,
       },
     });
     if (result?.media) {

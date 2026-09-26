@@ -24,6 +24,7 @@ import {
   validateDiscoveryPayload,
   validateExtractPayload,
 } from "../utils/queue-payload";
+import { wikiCheckDisposition } from "../utils/wiki-check-disposition";
 import type { Database, Json } from "@app/supabase/types";
 
 // Keep provider fan-out small enough to finish inside one cron cycle.
@@ -41,6 +42,7 @@ type QueuePayload = {
   media_type: "movie" | "tv" | "season" | "episode" | "video_game";
   season_number?: number;
   episode_number?: number;
+  /** Deprecated alias for the Wikipedia source edition only. */
   language?: string;
   wikipedia_language?: string;
   dubbing_language?: string;
@@ -498,7 +500,7 @@ export default defineEventHandler(async (event) => {
           // Enqueue each language into Queue 2: wiki_check (top 5 only)
           let enqueuedCount = 0;
           let alreadyEnqueuedCount = 0;
-          for (const lang of availableLanguages) {
+          for (const wikipediaLanguage of availableLanguages) {
             const { error: enqueueError } = await supabaseAdmin.rpc(
               "enqueue_media_fetch",
               {
@@ -506,8 +508,8 @@ export default defineEventHandler(async (event) => {
                 p_media_type: payload.media_type,
                 p_season_number: payload.season_number ?? undefined,
                 p_episode_number: payload.episode_number ?? undefined,
-                p_language: lang,
-                p_wikipedia_language: lang,
+                p_language: wikipediaLanguage,
+                p_wikipedia_language: wikipediaLanguage,
                 p_dubbing_language: valid.value.dubbingLanguage,
                 p_is_manual: payload.is_manual ?? false,
               },
@@ -521,7 +523,7 @@ export default defineEventHandler(async (event) => {
                 alreadyEnqueuedCount++;
               } else {
                 console.error(
-                  `[QUEUE] Failed to enqueue language ${lang}:`,
+                  `[QUEUE] Failed to enqueue language ${wikipediaLanguage}:`,
                   enqueueError,
                 );
               }
@@ -582,7 +584,7 @@ export default defineEventHandler(async (event) => {
         const valid = validateCheckPayload(payload);
         if (!valid.ok) {
           const errMsg = `Broken queue element: ${valid.reason}`;
-          const lang =
+          const wikipediaLanguage =
             payload.wikipedia_language || payload.language || "unknown";
           await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
             p_queue_name: targetQueue,
@@ -591,13 +593,13 @@ export default defineEventHandler(async (event) => {
           });
           results.push({ id: msgId, ok: false, changes: 0, error: errMsg });
           await sendDiscordAdminNotification(
-            `Queue Check Failed [${lang.toUpperCase()}]`,
-            `Failed to check **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${lang.toUpperCase()}]):\n\`\`\`\n${errMsg}\n\`\`\``,
+            `Queue Check Failed [${wikipediaLanguage.toUpperCase()}]`,
+            `Failed to check **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${wikipediaLanguage.toUpperCase()}]):\n\`\`\`\n${errMsg}\n\`\`\``,
             { event, queue: "wiki_check" },
           );
           return { ok: true, processed: 1, results, queue: targetQueue };
         }
-        const lang = valid.value.wikipediaLanguage;
+        const wikipediaLanguage = valid.value.wikipediaLanguage;
         try {
           let checkResult: CheckSectionsResult;
 
@@ -606,7 +608,7 @@ export default defineEventHandler(async (event) => {
           if (payload.media_type === "video_game") {
             checkResult = await checkGameDubbingSections({
               igdbId: payload.tmdb_id,
-              language: lang,
+              language: wikipediaLanguage,
               cache,
               forceRefresh: true,
             });
@@ -614,7 +616,7 @@ export default defineEventHandler(async (event) => {
             checkResult = await checkMediaDubbingSections({
               tmdbId: payload.tmdb_id,
               type: payload.media_type,
-              language: lang,
+              language: wikipediaLanguage,
               seasonNumber: payload.season_number,
               episodeNumber: payload.episode_number,
               cache,
@@ -647,7 +649,7 @@ export default defineEventHandler(async (event) => {
           ) {
             const errorMsg =
               checkResult.error ||
-              `No voice actor / dubbing sections found on Wikipedia: ${checkResult.wikipediaUrl || lang}`;
+              `No voice actor / dubbing sections found on Wikipedia: ${checkResult.wikipediaUrl || wikipediaLanguage}`;
 
             if (checkResult.retryable) return deferForRetry(errorMsg);
 
@@ -665,13 +667,50 @@ export default defineEventHandler(async (event) => {
               : "";
 
             await sendDiscordAdminNotification(
-              `Queue Check: No Dubbing Section [${lang.toUpperCase()}]`,
-              `No dubbing section found for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${lang.toUpperCase()}]):\n\`\`\`\n${errorMsg}\n\`\`\`${wikiSection}`,
+              `Queue Check: No Dubbing Section [${wikipediaLanguage.toUpperCase()}]`,
+              `No dubbing section found for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${wikipediaLanguage.toUpperCase()}]):\n\`\`\`\n${errorMsg}\n\`\`\`${wikiSection}`,
               {
                 event,
                 queue: "wiki_check",
                 ...(wikiUrl ? { url: wikiUrl } : {}),
               },
+            );
+
+            return { ok: true, processed: 1, results, queue: targetQueue };
+          }
+
+          if (
+            wikiCheckDisposition(true, valid.value.dubbingLanguage) ===
+            "regional_review_required"
+          ) {
+            const reviewNote =
+              "Dubbing sections were found on Wikipedia. Select a regional dubbing language in the admin queue, then resume review.";
+            const { data: archivedForReview, error: reviewArchiveError } =
+              await supabaseAdmin.rpc(
+                "archive_wiki_check_for_regional_review",
+                {
+                  p_msg_id: msgId,
+                  p_review_note: reviewNote,
+                },
+              );
+            if (reviewArchiveError) throw reviewArchiveError;
+            if (!archivedForReview) {
+              throw new Error(
+                `Could not archive wiki_check item ${msgId} for regional review`,
+              );
+            }
+
+            results.push({
+              id: msgId,
+              ok: true,
+              changes: 0,
+              note: reviewNote,
+            });
+
+            await sendDiscordAdminNotification(
+              `Regional Dubbing Review Required [${wikipediaLanguage.toUpperCase()}]`,
+              `Dubbing sections were found for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}), but no dubbing region was selected. Choose a regional dubbing language in the admin queue and resume review.`,
+              { event, queue: "wiki_check", color: 0xfee75c },
             );
 
             return { ok: true, processed: 1, results, queue: targetQueue };
@@ -683,8 +722,8 @@ export default defineEventHandler(async (event) => {
             {
               p_tmdb_id: payload.tmdb_id,
               p_media_type: payload.media_type,
-              p_language: lang,
-              p_wikipedia_language: lang,
+              p_language: wikipediaLanguage,
+              p_wikipedia_language: wikipediaLanguage,
               p_dubbing_language: valid.value.dubbingLanguage,
               p_page_id: checkResult.pageId,
               p_section_indexes: checkResult.sectionIndexes,
@@ -713,7 +752,7 @@ export default defineEventHandler(async (event) => {
           });
 
           console.log(
-            `[QUEUE] Check verified for ${mediaTitle} [${lang}]: ${checkResult.sectionIndexes.length} sections enqueued to wiki_extract`,
+            `[QUEUE] Check verified for ${mediaTitle} [${wikipediaLanguage}]: ${checkResult.sectionIndexes.length} sections enqueued to wiki_extract`,
           );
 
           const checkWikiUrl = checkResult.wikipediaUrl;
@@ -722,7 +761,7 @@ export default defineEventHandler(async (event) => {
             : "";
 
           await sendDiscordAdminNotification(
-            `Dubbing Section Found [${lang.toUpperCase()}]`,
+            `Dubbing Section Found [${wikipediaLanguage.toUpperCase()}]`,
             `Found **${checkResult.sectionIndexes.length} section(s)** on Wikipedia for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}). Enqueued for LLM credit extraction.${checkWikiSection}`,
             {
               event,
@@ -760,8 +799,8 @@ export default defineEventHandler(async (event) => {
             : "";
 
           await sendDiscordAdminNotification(
-            `Queue Check Failed [${lang.toUpperCase()}]`,
-            `Failed to check **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${lang.toUpperCase()}]):\n\`\`\`\n${errMsg}\n\`\`\`${wikiSection}`,
+            `Queue Check Failed [${wikipediaLanguage.toUpperCase()}]`,
+            `Failed to check **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${wikipediaLanguage.toUpperCase()}]):\n\`\`\`\n${errMsg}\n\`\`\`${wikiSection}`,
             {
               event,
               queue: "wiki_check",
@@ -780,7 +819,7 @@ export default defineEventHandler(async (event) => {
         const valid = validateExtractPayload(payload);
         if (!valid.ok) {
           const errMsg = `Broken queue element: ${valid.reason}`;
-          const lang = String(
+          const wikipediaLanguage = String(
             payload.wikipedia_language || payload.language || "unknown",
           ).toUpperCase();
           await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
@@ -790,13 +829,13 @@ export default defineEventHandler(async (event) => {
           });
           results.push({ id: msgId, ok: false, changes: 0, error: errMsg });
           await sendDiscordAdminNotification(
-            `Queue Item Failed [${lang}]`,
-            `Failed to extract **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${lang}]):\n\`\`\`\n${errMsg}\n\`\`\`\n• pipeline pipe3`,
+            `Queue Item Failed [${wikipediaLanguage}]`,
+            `Failed to extract **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${wikipediaLanguage}]):\n\`\`\`\n${errMsg}\n\`\`\`\n• pipeline pipe3`,
             { event, queue: "wiki_extract", color: 0xed4245 },
           );
           return { ok: true, processed: 1, results, queue: targetQueue };
         }
-        const lang = valid.value.wikipediaLanguage;
+        const wikipediaLanguage = valid.value.wikipediaLanguage;
         try {
           const pageId = valid.value.pageId;
           const sectionIndexes = valid.value.sectionIndexes;
@@ -807,7 +846,7 @@ export default defineEventHandler(async (event) => {
           if (payload.media_type === "video_game") {
             extractResult = await extractGameDubbingCredits({
               igdbId: payload.tmdb_id,
-              language: lang,
+              language: wikipediaLanguage,
               dubbingLanguage: valid.value.dubbingLanguage,
               pageId,
               sectionIndexes,
@@ -818,7 +857,7 @@ export default defineEventHandler(async (event) => {
             extractResult = await extractMediaDubbingCredits({
               tmdbId: payload.tmdb_id,
               type: payload.media_type,
-              language: lang,
+              language: wikipediaLanguage,
               dubbingLanguage: valid.value.dubbingLanguage,
               pageId,
               sectionIndexes,
@@ -871,14 +910,14 @@ export default defineEventHandler(async (event) => {
           }
 
           await sendDiscordAdminNotification(
-            `Queue Item Processed [${lang.toUpperCase()}]`,
+            `Queue Item Processed [${wikipediaLanguage.toUpperCase()}]`,
             `Successfully processed **${mediaTitle}**${
               payload.season_number ? ` (Season ${payload.season_number})` : ""
             }${
               payload.episode_number
                 ? ` (Episode ${payload.episode_number})`
                 : ""
-            } [${lang.toUpperCase()}].\n• Added **${extractResult.creditsAdded ?? 0}** roles\n• Added **${extractResult.changes ?? 0}** new voice actors.\n• LLM model: **${extractResult.llmModel ?? "unknown"}**${extractResult.llmQuota ? ` (quota: ${extractResult.llmQuota})` : ""}${extractResult.note ? `\n• Note: ${extractResult.note}` : ""}`,
+            } [${wikipediaLanguage.toUpperCase()}].\n• Added **${extractResult.creditsAdded ?? 0}** roles\n• Added **${extractResult.changes ?? 0}** new voice actors.\n• LLM model: **${extractResult.llmModel ?? "unknown"}**${extractResult.llmQuota ? ` (quota: ${extractResult.llmQuota})` : ""}${extractResult.note ? `\n• Note: ${extractResult.note}` : ""}`,
             {
               event,
               queue: "wiki_extract",
@@ -938,13 +977,13 @@ export default defineEventHandler(async (event) => {
             // ponytail: notify once when first delayed, not on every cron tick
             if (readCt === MAX_RETRIES) {
               await sendDiscordAdminNotification(
-                `Queue Extraction Rate-Limited [${lang.toUpperCase()}]`,
-                `Quota exhausted for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${lang.toUpperCase()}]): delayed 1h (readCt ${readCt}).\n\`\`\`\n${errMsg}\n\`\`\``,
+                `Queue Extraction Rate-Limited [${wikipediaLanguage.toUpperCase()}]`,
+                `Quota exhausted for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${wikipediaLanguage.toUpperCase()}]): delayed 1h (readCt ${readCt}).\n\`\`\`\n${errMsg}\n\`\`\``,
                 { event, queue: "wiki_extract", color: 0xed4245 },
               );
             } else {
               console.warn(
-                `[QUEUE] Quota exhausted for ${mediaTitle} (${payload.media_type} ${payload.tmdb_id} [${lang}]), delayed 1h (readCt ${readCt}, notification throttled)`,
+                `[QUEUE] Quota exhausted for ${mediaTitle} (${payload.media_type} ${payload.tmdb_id} [${wikipediaLanguage}]), delayed 1h (readCt ${readCt}, notification throttled)`,
               );
             }
           } else {
@@ -956,8 +995,8 @@ export default defineEventHandler(async (event) => {
             results.push({ id: msgId, ok: false, changes: 0, error: errMsg });
 
             await sendDiscordAdminNotification(
-              `Queue Item Failed [${lang.toUpperCase()}]`,
-              `Failed to extract **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${lang.toUpperCase()}]):\n\`\`\`\n${errMsg}\n\`\`\`\n• pipeline pipe3`,
+              `Queue Item Failed [${wikipediaLanguage.toUpperCase()}]`,
+              `Failed to extract **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id} [${wikipediaLanguage.toUpperCase()}]):\n\`\`\`\n${errMsg}\n\`\`\`\n• pipeline pipe3`,
               { event, queue: "wiki_extract", color: 0xed4245 },
             );
           }

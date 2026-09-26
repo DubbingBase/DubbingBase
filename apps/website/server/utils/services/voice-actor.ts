@@ -100,7 +100,7 @@ export async function upsertWork(
   contentId: number,
   actorId: number | null,
   contentType: string,
-  language: string,
+  dubbingLanguage: string,
   performance?: string,
   characterId?: number | null,
   characterName?: string | null,
@@ -109,7 +109,7 @@ export async function upsertWork(
   const dubbing_project_id = await findOrCreateDubbingProject(
     contentId,
     contentType,
-    language,
+    dubbingLanguage,
   );
 
   let query = supabase
@@ -162,19 +162,19 @@ export async function insertVoiceActorAndWork(
   contentId: number,
   actorId: number,
   contentType: string,
-  language: string,
+  dubbingLanguage: string,
   performance?: string,
   characterId?: number | null,
   characterName?: string | null,
 ) {
-  requireDubbingLanguage(language);
+  requireDubbingLanguage(dubbingLanguage);
   const voiceActorResult = await upsertVoiceActor(firstName, lastName);
   const workResult = await upsertWork(
     (voiceActorResult.data as any).id,
     contentId,
     actorId,
     contentType,
-    language,
+    dubbingLanguage,
     performance,
     characterId,
     characterName,

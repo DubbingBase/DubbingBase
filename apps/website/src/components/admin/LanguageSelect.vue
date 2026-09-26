@@ -1,5 +1,6 @@
 <template>
   <select
+    :id="id"
     :value="modelValue"
     @change="onChange"
     :required="required"
@@ -23,7 +24,7 @@ import {
 } from "@app/shared-logic";
 
 const { locale } = useI18n();
-defineProps<{ modelValue: string; required?: boolean }>();
+defineProps<{ id: string; modelValue: string; required?: boolean }>();
 const emit = defineEmits<{ (e: "update:modelValue", value: string): void }>();
 
 function onChange(event: Event): void {

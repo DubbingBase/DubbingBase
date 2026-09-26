@@ -44,7 +44,10 @@ BEFORE INSERT OR UPDATE OF language, content_id, content_type ON public.dubbing_
 FOR EACH ROW EXECUTE FUNCTION public.guard_dubbing_project_language();
 REVOKE EXECUTE ON FUNCTION public.guard_dubbing_project_language() FROM PUBLIC;
 
--- Called only by a subsequent reviewed migration, never by public APIs.
+-- Migration contract: call exactly once, after reviewed mappings have removed
+-- every NULL, unregistered, and duplicate media+region project. This function
+-- installs final constraints and removes its temporary guard, so it is not
+-- idempotent and must not be called again in the same schema state.
 CREATE FUNCTION public.finalize_dubbing_language_constraints() RETURNS void
 LANGUAGE plpgsql SECURITY INVOKER SET search_path = '' AS $$
 BEGIN
