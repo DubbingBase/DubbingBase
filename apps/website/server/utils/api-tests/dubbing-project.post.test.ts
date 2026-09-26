@@ -7,23 +7,23 @@ const routeMocks = vi.hoisted(() => ({
   useSupabaseAdmin: vi.fn(),
 }));
 
-vi.mock("../../utils/auth", () => ({
+vi.mock("../auth", () => ({
   requireAdmin: routeMocks.requireAdmin,
 }));
-vi.mock("../../utils/db/client", () => ({
+vi.mock("../db/client", () => ({
   useSupabaseAdmin: routeMocks.useSupabaseAdmin,
 }));
-vi.mock("../../utils/db/dubbing-project", () => ({
+vi.mock("../db/dubbing-project", () => ({
   findOrCreateDubbingProject: routeMocks.findOrCreateDubbingProject,
 }));
 
-let handler: typeof import("./dubbing-project.post").default;
+let handler: typeof import("../../api/admin/dubbing-project.post").default;
 
 beforeAll(async () => {
   vi.stubGlobal("createError", createError);
   vi.stubGlobal("defineEventHandler", defineEventHandler);
   vi.stubGlobal("readBody", readBody);
-  handler = (await import("./dubbing-project.post")).default;
+  handler = (await import("../../api/admin/dubbing-project.post")).default;
 });
 
 beforeEach(() => {

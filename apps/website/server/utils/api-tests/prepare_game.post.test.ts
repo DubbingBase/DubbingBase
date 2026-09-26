@@ -1,37 +1,23 @@
-import {
-  createApp,
-  createError,
-  defineEventHandler,
-  readBody,
-  toWebHandler,
-} from "h3";
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from "vitest";
+import { createApp, createError, defineEventHandler, readBody, toWebHandler } from "h3";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const routeMocks = vi.hoisted(() => ({
   prepareGame: vi.fn(),
   requireUser: vi.fn(),
 }));
 
-vi.mock("../utils/auth", () => ({ requireUser: routeMocks.requireUser }));
-vi.mock("../utils/services/media-preparation", () => ({
+vi.mock("../auth", () => ({ requireUser: routeMocks.requireUser }));
+vi.mock("../services/media-preparation", () => ({
   prepareGame: routeMocks.prepareGame,
 }));
 
-let handler: typeof import("./prepare_game.post").default;
+let handler: typeof import("../../api/prepare_game.post").default;
 
 beforeAll(async () => {
   vi.stubGlobal("createError", createError);
   vi.stubGlobal("defineEventHandler", defineEventHandler);
   vi.stubGlobal("readBody", readBody);
-  handler = (await import("./prepare_game.post")).default;
+  handler = (await import("../../api/prepare_game.post")).default;
 });
 
 beforeEach(() => {
