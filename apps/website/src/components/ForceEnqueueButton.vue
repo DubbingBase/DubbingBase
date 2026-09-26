@@ -25,11 +25,7 @@
           stroke="currentColor"
           stroke-width="4"
         ></circle>
-        <path
-          class="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8v8H4z"
-        ></path>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
       </svg>
 
       <!-- Success Checkmark -->
@@ -42,11 +38,7 @@
         stroke="currentColor"
         stroke-width="2"
       >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          d="M5 13l4 4L19 7"
-        />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
       </svg>
 
       <!-- Already Queued Info -->
@@ -129,11 +121,7 @@
                   stroke="currentColor"
                   stroke-width="2"
                 >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M5 13l4 4L19 7"
-                  />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
                 Ajouté à la file d'attente
               </span>
@@ -156,10 +144,7 @@
                 </svg>
                 Déjà dans la file d'attente
               </span>
-              <span
-                v-else
-                class="theme-status-danger-text flex items-center gap-1.5"
-              >
+              <span v-else class="theme-status-danger-text flex items-center gap-1.5">
                 <svg
                   class="w-4 h-4"
                   fill="none"
@@ -191,9 +176,7 @@
             {{ toast.message }}
           </p>
 
-          <div
-            class="flex items-center justify-between gap-2 pt-1 border-t theme-border-subtle"
-          >
+          <div class="flex items-center justify-between gap-2 pt-1 border-t theme-border-subtle">
             <span class="text-[11px] theme-text-muted">
               Media: {{ props.mediaType }} (ID: {{ props.mediaId }})
             </span>
@@ -214,11 +197,7 @@
                 stroke="currentColor"
                 stroke-width="2"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M5 13l4 4L19 7"
-                />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
               </svg>
               <svg
                 v-else
@@ -252,7 +231,7 @@ const props = defineProps<{
   mediaId: number | string;
   seasonNumber?: number | string | null;
   episodeNumber?: number | string | null;
-  language?: string | null;
+  wikipediaLanguage?: string | null;
 }>();
 
 const isLoading = ref(false);
@@ -269,8 +248,14 @@ const toast = ref<{
   message: "",
 });
 
-let timeoutId: any = null;
-let toastTimeoutId: any = null;
+let timeoutId: ReturnType<typeof setTimeout> | undefined;
+let toastTimeoutId: ReturnType<typeof setTimeout> | undefined;
+
+function readStringProperty(value: unknown, key: string): string | undefined {
+  if (typeof value !== "object" || value === null) return undefined;
+  const property = Reflect.get(value, key);
+  return typeof property === "string" ? property : undefined;
+}
 
 const buttonTitle = computed(() => {
   if (isLoading.value) return "Ajout à la file d'attente...";
@@ -329,10 +314,7 @@ const handleEnqueue = async () => {
   status.value = "idle";
 
   try {
-    const numId =
-      typeof props.mediaId === "string"
-        ? parseInt(props.mediaId, 10)
-        : props.mediaId;
+    const numId = typeof props.mediaId === "string" ? parseInt(props.mediaId, 10) : props.mediaId;
 
     const numSeason =
       props.seasonNumber !== undefined && props.seasonNumber !== null
@@ -362,9 +344,10 @@ const handleEnqueue = async () => {
         mediaType: props.mediaType,
         mediaId: numId,
         tmdbId: numId,
-        seasonNumber: isNaN(numSeason as number) ? undefined : numSeason,
-        episodeNumber: isNaN(numEpisode as number) ? undefined : numEpisode,
-        language: props.language ?? undefined,
+        seasonNumber: numSeason === undefined || Number.isNaN(numSeason) ? undefined : numSeason,
+        episodeNumber:
+          numEpisode === undefined || Number.isNaN(numEpisode) ? undefined : numEpisode,
+        wikipedia_language: props.wikipediaLanguage ?? undefined,
       },
     });
 
@@ -372,8 +355,7 @@ const handleEnqueue = async () => {
       status.value = "already_queued";
       showToast(
         "info",
-        res.message ||
-          `Ce contenu (${props.mediaType} ${numId}) est déjà en attente dans la file.`,
+        res.message || `Ce contenu (${props.mediaType} ${numId}) est déjà en attente dans la file.`,
       );
     } else {
       status.value = "success";
@@ -382,13 +364,16 @@ const handleEnqueue = async () => {
         `Contenu (${props.mediaType} ${numId}) ajouté avec succès à la file d'attente de détection.`,
       );
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errorData =
+      typeof err === "object" && err !== null ? Reflect.get(err, "data") : undefined;
     const message =
-      err?.data?.message ||
-      err?.data?.statusMessage ||
-      err?.statusMessage ||
-      err?.message ||
-      (typeof err === "object" ? JSON.stringify(err) : String(err));
+      readStringProperty(errorData, "message") ||
+      readStringProperty(errorData, "statusMessage") ||
+      readStringProperty(err, "statusMessage") ||
+      readStringProperty(err, "message") ||
+      (typeof err === "object" ? JSON.stringify(err) : String(err)) ||
+      "Queue request failed";
 
     if (message.includes("already in the")) {
       status.value = "already_queued";

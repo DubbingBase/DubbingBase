@@ -9,10 +9,7 @@ import {
 } from "./services/media-preparation";
 
 it("keeps the database seed and website registry aligned", () => {
-  const migrationDirectory = resolve(
-    process.cwd(),
-    "../../packages/database/supabase/migrations",
-  );
+  const migrationDirectory = resolve(process.cwd(), "../../packages/database/supabase/migrations");
   const migrations = readdirSync(migrationDirectory)
     .filter((file) => file.endsWith(".sql"))
     .map((file) => readFileSync(resolve(migrationDirectory, file), "utf8"));
@@ -21,9 +18,7 @@ it("keeps the database seed and website registry aligned", () => {
       .split("INSERT INTO public.dubbing_languages(code) VALUES")[1]
       ?.split(";")[0];
     if (!seed) return [];
-    return Array.from(seed.matchAll(/'([a-z]{2,3}-[A-Z]{2})'/g), (match) =>
-      String(match[1]),
-    );
+    return Array.from(seed.matchAll(/'([a-z]{2,3}-[A-Z]{2})'/g), (match) => String(match[1]));
   });
   expect([...new Set(codes)].sort()).toEqual([...DUBBING_LANGUAGES].sort());
 });
@@ -41,22 +36,15 @@ it("registers every target used by the legacy language mapping", () => {
   )
     .filter(
       (file) =>
-        file.endsWith(".sql") &&
-        file <= "20260926130158_map_legacy_dubbing_project_regions.sql",
+        file.endsWith(".sql") && file <= "20260926130158_map_legacy_dubbing_project_regions.sql",
     )
     .map((file) =>
       readFileSync(
-        resolve(
-          process.cwd(),
-          "../../packages/database/supabase/migrations",
-          file,
-        ),
+        resolve(process.cwd(), "../../packages/database/supabase/migrations", file),
         "utf8",
       ),
     );
-  const mappings = migration.match(
-    /SELECT \* FROM \(VALUES([\s\S]*?)\)\s+AS languages\(/,
-  )?.[1];
+  const mappings = migration.match(/SELECT \* FROM \(VALUES([\s\S]*?)\)\s+AS languages\(/)?.[1];
 
   expect(mappings).toBeDefined();
 
@@ -68,21 +56,15 @@ it("registers every target used by the legacy language mapping", () => {
     const seed = sql.match(
       /INSERT INTO public\.dubbing_languages\(code\) VALUES([\s\S]*?)(?:ON CONFLICT[^;]*|;)/,
     )?.[1];
-    return Array.from(
-      (seed ?? "").matchAll(/'([a-z]{2,3}-[A-Z]{2})'/g),
-      (match) => String(match[1]),
+    return Array.from((seed ?? "").matchAll(/'([a-z]{2,3}-[A-Z]{2})'/g), (match) =>
+      String(match[1]),
     );
   });
 
   expect(mappingTargets.length).toBeGreaterThan(0);
   for (const target of mappingTargets) {
-    expect(
-      DUBBING_LANGUAGES,
-      `TypeScript registry is missing ${target}`,
-    ).toContain(target);
-    expect(seededTargets, `Database seed is missing ${target}`).toContain(
-      target,
-    );
+    expect(DUBBING_LANGUAGES, `TypeScript registry is missing ${target}`).toContain(target);
+    expect(seededTargets, `Database seed is missing ${target}`).toContain(target);
   }
 });
 
@@ -91,20 +73,13 @@ describe("dubbing language validation", () => {
     expect(validateDubbingLanguage(code)).toBe(code);
     expect(requireDubbingLanguage(code)).toBe(code);
   });
-  it.each([
-    "fr",
-    "de",
-    "simple",
-    "fr-Fr",
-    "FR-fr",
-    "zz-ZZ",
-    "fr-FR ",
-    null,
-    undefined,
-  ])("rejects %s at the server boundary", (value) => {
-    expect(() => requireDubbingLanguage(value)).toThrow();
-    expect(() => validateDubbingLanguage(value)).toThrow();
-  });
+  it.each(["fr", "de", "simple", "fr-Fr", "FR-fr", "zz-ZZ", "fr-FR ", null, undefined])(
+    "rejects %s at the server boundary",
+    (value) => {
+      expect(() => requireDubbingLanguage(value)).toThrow();
+      expect(() => validateDubbingLanguage(value)).toThrow();
+    },
+  );
 });
 
 it("does not fetch, call an LLM, or create credits for source-only extraction", async () => {
@@ -114,13 +89,13 @@ it("does not fetch, call an LLM, or create credits for source-only extraction", 
     const movie = await extractMediaDubbingCredits({
       tmdbId: 1,
       type: "movie",
-      language: "fr",
+      wikipediaLanguage: "fr",
       pageId: 2,
       sectionIndexes: [1],
     });
     const game = await extractGameDubbingCredits({
       igdbId: 1,
-      language: "de",
+      wikipediaLanguage: "de",
       pageId: 2,
       sectionIndexes: [1],
     });
