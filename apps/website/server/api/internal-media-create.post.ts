@@ -1,20 +1,20 @@
-import { requireUser } from "../utils/auth";
+import { requireAdmin } from "../utils/auth";
 import { useSupabaseAdmin } from "../utils/db/client";
+import { requireDubbingLanguage } from "../utils/dubbing-language";
 
 export default defineEventHandler(async (event) => {
-  const user = requireUser(event);
-
-  const isAdmin = user.app_metadata?.role === "admin";
-
-  if (!isAdmin) {
-    throw createError({
-      statusCode: 403,
-      message: "Admin access required to create internal media records",
-    });
-  }
+  requireAdmin(event);
 
   const body = await readBody(event);
-  const { media_type, name, brand, manufacturer, description, language } = body;
+  const {
+    media_type,
+    name,
+    brand,
+    manufacturer,
+    description,
+    dubbing_language,
+  } = body;
+  const dubbingLanguage = requireDubbingLanguage(dubbing_language);
 
   if (!media_type || !name) {
     throw createError({
@@ -51,7 +51,7 @@ export default defineEventHandler(async (event) => {
     .insert({
       content_id: newContentId,
       content_type: media_type,
-      language: language || "fr",
+      language: dubbingLanguage,
       status: "validated",
     })
     .select()

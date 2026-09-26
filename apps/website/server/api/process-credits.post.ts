@@ -1,9 +1,13 @@
 import { useSupabaseAdmin } from "../utils/db/client";
+import { requireAdmin } from "../utils/auth";
+import { findOrCreateDubbingProject } from "../utils/db/dubbing-project";
+import { requireDubbingLanguage } from "../utils/dubbing-language";
 
 export default defineEventHandler(async (event) => {
+  requireAdmin(event);
   try {
     const body = await readBody(event);
-    const { action, credits, mediaType, mediaId } = body;
+    const { action, credits, mediaType, mediaId, dubbing_language } = body;
 
     if (action === "match") {
       if (!credits || !Array.isArray(credits)) {
@@ -51,6 +55,11 @@ export default defineEventHandler(async (event) => {
       }
 
       const supabaseAdmin = useSupabaseAdmin();
+      const projectId = await findOrCreateDubbingProject(
+        Number(mediaId),
+        mediaType,
+        requireDubbingLanguage(dubbing_language),
+      );
 
       let successCount = 0;
       const failedCredits: any[] = [];
@@ -72,27 +81,6 @@ export default defineEventHandler(async (event) => {
 
             if (vaError) throw vaError;
             vaId = newVa.id;
-          }
-
-          // Inline the link-voice-actor logic
-          // Find or create dubbing project
-          const { data: project, error: projErr } = await supabaseAdmin
-            .from("dubbing_projects")
-            .select("id")
-            .eq("content_id", mediaId)
-            .eq("content_type", mediaType)
-            .maybeSingle();
-
-          let projectId = project?.id;
-          if (!projectId) {
-            const { data: newProj, error: newProjErr } = await (
-              supabaseAdmin.from("dubbing_projects") as any
-            )
-              .insert({ content_id: mediaId, content_type: mediaType })
-              .select("id")
-              .single();
-            if (newProjErr) throw newProjErr;
-            projectId = newProj.id;
           }
 
           const { error: workErr } = await (

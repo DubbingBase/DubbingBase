@@ -1,8 +1,9 @@
-import { requireUser } from "../utils/auth";
+import { requireAdmin } from "../utils/auth";
 import { useSupabaseAdmin } from "../utils/db/client";
+import { requireDubbingLanguage } from "../utils/dubbing-language";
 
 export default defineEventHandler(async (event) => {
-  requireUser(event);
+  requireAdmin(event);
 
   try {
     const body = await readBody(event);
@@ -14,6 +15,8 @@ export default defineEventHandler(async (event) => {
         message: "Missing content_id in projectPayload parameter",
       });
     }
+
+    requireDubbingLanguage(projectPayload.language);
 
     const supabase = event.context.supabaseAdmin || useSupabaseAdmin();
     let currentProjectId = projectId;

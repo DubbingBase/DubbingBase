@@ -1,131 +1,127 @@
-/**
- * Strict validation for media queue payloads (pgmq JSON is untrusted input).
- * Broken elements are archived with a precise reason instead of dying deep
- * in the pipeline. Numeric fields are coerced (pgmq may deliver strings).
- */
+import { isDubbingLanguage, type DubbingLanguage } from "@app/shared-logic";
 
+/** pgmq JSON is untrusted. Old `language` fields identify Wikipedia editions only. */
 export type QueueMediaType =
   "movie" | "tv" | "season" | "episode" | "video_game";
-
-const MEDIA_TYPES: readonly string[] = [
-  "movie",
-  "tv",
-  "season",
-  "episode",
-  "video_game",
-];
 
 export interface ValidQueueBase {
   tmdbId: number;
   mediaType: QueueMediaType;
-  language: string;
+  wikipediaLanguage?: string;
+  dubbingLanguage?: DubbingLanguage;
   seasonNumber?: number;
   episodeNumber?: number;
 }
-
-export interface ValidExtractPayload extends ValidQueueBase {
+export interface ValidCheckPayload extends ValidQueueBase {
+  wikipediaLanguage: string;
+}
+export interface ValidExtractPayload extends ValidCheckPayload {
+  dubbingLanguage: DubbingLanguage;
   pageId: number;
   sectionIndexes: number[];
 }
-
 type Validated<T> = { ok: true; value: T } | { ok: false; reason: string };
 
-function toPositiveInt(raw: unknown): number | null {
-  const n = typeof raw === "number" ? raw : Number(raw);
-  return Number.isInteger(n) && n > 0 ? n : null;
+function property(raw: unknown, key: string): unknown {
+  return typeof raw === "object" && raw !== null
+    ? Reflect.get(raw, key)
+    : undefined;
+}
+function toInt(raw: unknown, minimum: number): number | null {
+  if (raw === null || raw === undefined || raw === "") return null;
+  if (typeof raw !== "number" && typeof raw !== "string") return null;
+  const value = Number(raw);
+  return Number.isInteger(value) && value >= minimum ? value : null;
 }
 
-function toNonNegativeInt(raw: unknown): number | null {
-  const n = typeof raw === "number" ? raw : Number(raw);
-  return Number.isInteger(n) && n >= 0 ? n : null;
-}
-
-function validateBase(payload: any): Validated<ValidQueueBase> {
-  const mediaType = payload?.media_type;
-  if (!MEDIA_TYPES.includes(mediaType)) {
+function validateBase(payload: unknown): Validated<ValidQueueBase> {
+  const mediaType = property(payload, "media_type");
+  if (
+    mediaType !== "movie" &&
+    mediaType !== "tv" &&
+    mediaType !== "season" &&
+    mediaType !== "episode" &&
+    mediaType !== "video_game"
+  ) {
     return {
       ok: false,
       reason: `unknown media_type ${JSON.stringify(mediaType)}`,
     };
   }
-  const tmdbId = toPositiveInt(payload?.tmdb_id);
-  if (tmdbId === null) {
-    return {
-      ok: false,
-      reason: `invalid tmdb_id ${JSON.stringify(payload?.tmdb_id)}`,
-    };
-  }
-  const rawLang = payload?.language;
-  const language =
-    rawLang === undefined || rawLang === null || rawLang === ""
-      ? "fr"
-      : String(rawLang).trim() || "fr";
-
-  const value: ValidQueueBase = { tmdbId, mediaType, language };
-
-  if (payload?.season_number !== undefined && payload?.season_number !== null) {
-    const seasonNumber = toNonNegativeInt(payload.season_number);
-    if (seasonNumber === null) {
-      return {
-        ok: false,
-        reason: `invalid season_number ${JSON.stringify(payload.season_number)}`,
-      };
+  const tmdbId = toInt(property(payload, "tmdb_id"), 1);
+  if (tmdbId === null) return { ok: false, reason: "invalid tmdb_id" };
+  const value: ValidQueueBase = { tmdbId, mediaType };
+  const source =
+    property(payload, "wikipedia_language") ?? property(payload, "language");
+  if (source !== undefined && source !== null && source !== "") {
+    if (typeof source !== "string" || !/^[a-z][a-z0-9-]*$/.test(source)) {
+      return { ok: false, reason: "invalid wikipedia_language" };
     }
-    value.seasonNumber = seasonNumber;
+    value.wikipediaLanguage = source;
   }
-  if (
-    payload?.episode_number !== undefined &&
-    payload?.episode_number !== null
-  ) {
-    const episodeNumber = toNonNegativeInt(payload.episode_number);
-    if (episodeNumber === null) {
-      return {
-        ok: false,
-        reason: `invalid episode_number ${JSON.stringify(payload.episode_number)}`,
-      };
-    }
-    value.episodeNumber = episodeNumber;
+  const target = property(payload, "dubbing_language");
+  if (target !== undefined && target !== null) {
+    if (!isDubbingLanguage(target))
+      return { ok: false, reason: "invalid regional dubbing_language" };
+    value.dubbingLanguage = target;
+  }
+  for (const [key, field] of [
+    ["season_number", "seasonNumber"],
+    ["episode_number", "episodeNumber"],
+  ]) {
+    if (!key || !field) continue;
+    const raw = property(payload, key);
+    if (raw === undefined || raw === null) continue;
+    const number = toInt(raw, 0);
+    if (number === null) return { ok: false, reason: `invalid ${key}` };
+    if (field === "seasonNumber") value.seasonNumber = number;
+    else value.episodeNumber = number;
   }
   return { ok: true, value };
 }
 
-export function validateCheckPayload(payload: any): Validated<ValidQueueBase> {
-  return validateBase(payload);
-}
-
 export function validateDiscoveryPayload(
-  payload: any,
+  payload: unknown,
 ): Validated<ValidQueueBase> {
   return validateBase(payload);
 }
-
-export function validateExtractPayload(
-  payload: any,
-): Validated<ValidExtractPayload> {
+export function validateCheckPayload(
+  payload: unknown,
+): Validated<ValidCheckPayload> {
   const base = validateBase(payload);
   if (!base.ok) return base;
-  const pageId = toPositiveInt(payload?.page_id);
-  if (pageId === null) {
-    return {
-      ok: false,
-      reason: `invalid page_id ${JSON.stringify(payload?.page_id)}`,
-    };
+  if (!base.value.wikipediaLanguage)
+    return { ok: false, reason: "missing wikipedia_language" };
+  return {
+    ok: true,
+    value: { ...base.value, wikipediaLanguage: base.value.wikipediaLanguage },
+  };
+}
+export function validateExtractPayload(
+  payload: unknown,
+): Validated<ValidExtractPayload> {
+  const base = validateCheckPayload(payload);
+  if (!base.ok) return base;
+  if (!base.value.dubbingLanguage) {
+    return { ok: false, reason: "Regional dubbing language requires review" };
   }
-  const rawSections = payload?.section_indexes;
-  if (!Array.isArray(rawSections) || rawSections.length === 0) {
-    return {
-      ok: false,
-      reason: `invalid section_indexes ${JSON.stringify(rawSections)}`,
-    };
-  }
-  const sectionIndexes = rawSections
-    .map((s) => toNonNegativeInt(s))
+  const pageId = toInt(property(payload, "page_id"), 1);
+  if (pageId === null) return { ok: false, reason: "invalid page_id" };
+  const rawSections = property(payload, "section_indexes");
+  if (!Array.isArray(rawSections))
+    return { ok: false, reason: "invalid section_indexes" };
+  const sectionIndexes: number[] = rawSections
+    .map((raw: unknown) => toInt(raw, 0))
     .filter((n): n is number => n !== null);
-  if (sectionIndexes.length === 0) {
-    return {
-      ok: false,
-      reason: `no usable section_indexes in ${JSON.stringify(rawSections)}`,
-    };
-  }
-  return { ok: true, value: { ...base.value, pageId, sectionIndexes } };
+  if (sectionIndexes.length === 0)
+    return { ok: false, reason: "no usable section_indexes" };
+  return {
+    ok: true,
+    value: {
+      ...base.value,
+      dubbingLanguage: base.value.dubbingLanguage,
+      pageId,
+      sectionIndexes,
+    },
+  };
 }

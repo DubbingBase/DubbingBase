@@ -1,5 +1,6 @@
 export * from "./types";
 export * from "./constants";
+export * from "./dubbing-languages";
 export * from "./composables/useHomeData";
 export * from "./composables/useVoiceActorData";
 export * from "./composables/useMovieData";

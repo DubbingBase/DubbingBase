@@ -35,6 +35,22 @@
       <span>{{ error }}</span>
     </div>
 
+    <div
+      v-if="media"
+      class="theme-surface-overlay border theme-border rounded-xl p-4"
+    >
+      <label for="add-voice-cast-dubbing-language" class="block space-y-2">
+        <span class="text-xs font-semibold theme-text-secondary">
+          {{ $t("admin.regionalDubbingLanguage") }}
+        </span>
+        <AdminLanguageSelect
+          id="add-voice-cast-dubbing-language"
+          v-model="dubbingLanguage"
+          required
+        />
+      </label>
+    </div>
+
     <!-- Loading state -->
     <div
       v-if="loading"
@@ -137,7 +153,12 @@
           <button
             type="button"
             @click="saveManualEntry"
-            :disabled="isSaving || !manualCharacterName || !selectedManualVA"
+            :disabled="
+              isSaving ||
+              !isValidDubbingLanguage ||
+              !manualCharacterName ||
+              !selectedManualVA
+            "
             class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold rounded-xl"
           >
             {{ $t("admin.addVoiceCast.saveMappingChanges") }}
@@ -244,7 +265,9 @@
           <div class="border-t theme-border pt-4 mt-2">
             <button
               @click="saveVoiceCast"
-              :disabled="isSaving || !hasChanges"
+              :disabled="
+                isSaving || isRegionalAssignmentsLoading || !canSaveVoiceCast
+              "
               class="w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl shadow-lg transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center text-sm"
             >
               <span
@@ -254,7 +277,13 @@
               <span>{{ $t("admin.addVoiceCast.saveMappingChanges") }}</span>
             </button>
             <p
-              v-if="!hasChanges"
+              v-if="!isValidDubbingLanguage"
+              class="text-[10px] text-center theme-text-muted mt-2"
+            >
+              {{ $t("admin.regionalDubbingLanguageRequired") }}
+            </p>
+            <p
+              v-else-if="!hasChanges"
               class="text-[10px] text-center theme-text-muted mt-2"
             >
               {{ $t("admin.addVoiceCast.noChangesYet") }}
@@ -474,6 +503,15 @@
 </template>
 
 <script setup lang="ts">
+import { isDubbingLanguage } from "@app/shared-logic";
+import {
+  assignmentsForActors,
+  canSaveRegionalAssignments,
+  emptyAssignmentsForActors,
+  haveAssignmentsChanged,
+  isCurrentRegionalRequest,
+  regionalLanguageFromQuery,
+} from "./voice-cast-assignments";
 const supabase = useSupabaseClient();
 const localePath = useLocalePath();
 
@@ -482,7 +520,7 @@ definePageMeta({
   middleware: "admin",
 });
 
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 
 interface Actor {
   id: number;
@@ -499,9 +537,14 @@ interface VoiceActor {
 }
 
 interface WorkAndVoiceActor {
-  actor_id: number;
-  voice_actor_id: number;
-  voice_actor: VoiceActor;
+  actor_id: number | null;
+  voice_actor_id: number | null;
+  voice_actor: VoiceActor | null;
+}
+
+interface RegionalProjectResponse {
+  projectId: number | null;
+  works: WorkAndVoiceActor[];
 }
 
 interface MediaSummary {
@@ -517,7 +560,10 @@ const mediaTypeParam = computed(() =>
   String(route.query.media_type ?? "movie"),
 );
 const mediaId = computed(() => Number(route.params.id));
-const language = computed(() => String(route.query.lang ?? "fr"));
+const dubbingLanguage = ref(regionalLanguageFromQuery(route.query.lang));
+const isValidDubbingLanguage = computed(() =>
+  isDubbingLanguage(dubbingLanguage.value),
+);
 
 const mediaTypeLabel = computed(() => {
   switch (mediaTypeParam.value) {
@@ -551,6 +597,7 @@ const voiceActors = ref<WorkAndVoiceActor[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const isSaving = ref(false);
+const isRegionalAssignmentsLoading = ref(false);
 
 // Manual-entry state (media types without public cast)
 const mediaSummary = ref<MediaSummary | null>(null);
@@ -592,11 +639,18 @@ const showToast = (
 };
 
 const hasChanges = computed(() => {
-  return Object.keys(voiceActorAssignments.value).some((actorId) => {
-    const aid = Number(actorId);
-    return voiceActorAssignments.value[aid] !== initialAssignments.value[aid];
-  });
+  return haveAssignmentsChanged(
+    voiceActorAssignments.value,
+    initialAssignments.value,
+  );
 });
+const canSaveVoiceCast = computed(() =>
+  canSaveRegionalAssignments(
+    dubbingLanguage.value,
+    isSaving.value || isRegionalAssignmentsLoading.value,
+    hasChanges.value,
+  ),
+);
 
 const getAssignedVA = (actorId: number): VoiceActor | null => {
   const vaId = voiceActorAssignments.value[actorId];
@@ -607,7 +661,60 @@ const getAssignedVA = (actorId: number): VoiceActor | null => {
   return results.find((va) => va.id === vaId) ?? null;
 };
 
-async function fetchInitialData() {
+let regionalRequestSequence = 0;
+
+async function loadRegionalAssignments() {
+  const requestSequence = ++regionalRequestSequence;
+  const emptyAssignments = emptyAssignmentsForActors(
+    actors.value.map((actor) => actor.id),
+  );
+  voiceActors.value = [];
+  voiceActorAssignments.value = emptyAssignments;
+  initialAssignments.value = { ...emptyAssignments };
+  error.value = null;
+
+  if (!isValidDubbingLanguage.value) {
+    isRegionalAssignmentsLoading.value = false;
+    return;
+  }
+
+  isRegionalAssignmentsLoading.value = true;
+  try {
+    const result = await $fetch<RegionalProjectResponse>(
+      "/api/admin/dubbing-project",
+      {
+        params: {
+          content_id: mediaId.value,
+          content_type: mediaTypeParam.value,
+          dubbing_language: dubbingLanguage.value,
+        },
+      },
+    );
+
+    if (!isCurrentRegionalRequest(requestSequence, regionalRequestSequence))
+      return;
+
+    voiceActors.value = result.works;
+    const assignments = assignmentsForActors(
+      actors.value.map((actor) => actor.id),
+      result.works,
+    );
+    voiceActorAssignments.value = assignments;
+    initialAssignments.value = { ...assignments };
+  } catch (err: unknown) {
+    if (!isCurrentRegionalRequest(requestSequence, regionalRequestSequence))
+      return;
+    console.error("Failed to load regional voice cast:", err);
+    error.value =
+      err instanceof Error ? err.message : "Failed to load voice cast";
+  } finally {
+    if (isCurrentRegionalRequest(requestSequence, regionalRequestSequence)) {
+      isRegionalAssignmentsLoading.value = false;
+    }
+  }
+}
+
+async function fetchMediaData() {
   loading.value = true;
   error.value = null;
   try {
@@ -645,35 +752,7 @@ async function fetchInitialData() {
       mediaSummary.value = media.value;
     }
 
-    // Fetch existing voice actor mappings
-    const { data: projects } = await supabase
-      .from("dubbing_projects")
-      .select("id")
-      .eq("content_id", mediaId.value)
-      .eq("content_type", mediaTypeParam.value);
-    const projectIds = (projects ?? []).map((p: any) => p.id);
-    if (projectIds.length > 0) {
-      const { data: works } = await supabase
-        .from("work")
-        .select(
-          "actor_id, voice_actor_id, voice_actor:voice_actors(id, firstname, lastname, profile_picture)",
-        )
-        .in("dubbing_project_id", projectIds);
-      if (works) {
-        voiceActors.value = works as any;
-        const assignments: Record<number, number | null> = {};
-        const initAssigns: Record<number, number | null> = {};
-        actors.value.forEach((actor) => {
-          const match = voiceActors.value.find(
-            (va: any) => va.actor_id === actor.id,
-          );
-          assignments[actor.id] = match ? (match.voice_actor_id ?? null) : null;
-          initAssigns[actor.id] = assignments[actor.id] ?? null;
-        });
-        voiceActorAssignments.value = assignments;
-        initialAssignments.value = initAssigns;
-      }
-    }
+    await loadRegionalAssignments();
   } catch (err: any) {
     console.error("Failed to load media:", err);
     error.value = err?.message || "Failed to load media";
@@ -682,7 +761,8 @@ async function fetchInitialData() {
   }
 }
 
-onMounted(fetchInitialData);
+watch(dubbingLanguage, () => void loadRegionalAssignments());
+onMounted(fetchMediaData);
 
 const openSearchDropdown = (actorId: number) => {
   activeSearchDropdown.value = actorId;
@@ -743,58 +823,34 @@ const clearVoiceActor = (actorId: number) => {
   voiceActorAssignments.value[actorId] = null;
 };
 
-async function findOrCreateProject(): Promise<number> {
-  const { data: project } = await supabase
-    .from("dubbing_projects")
-    .select("id")
-    .eq("content_id", mediaId.value)
-    .eq("content_type", mediaTypeParam.value)
-    .eq("language", language.value)
-    .maybeSingle();
-  if (project) return project.id;
-  const { data: newProject, error } = await supabase
-    .from("dubbing_projects")
-    .insert([
-      {
-        content_id: mediaId.value,
-        content_type: mediaTypeParam.value,
-        status: "validated",
-        language: language.value,
-      },
-    ])
-    .select()
-    .single();
-  if (error) throw error;
-  return newProject.id;
-}
-
 const saveVoiceCast = async () => {
-  if (!hasChanges.value) return;
+  if (!canSaveVoiceCast.value) {
+    return;
+  }
+  const savedDubbingLanguage = dubbingLanguage.value;
+  const savedAssignments = { ...voiceActorAssignments.value };
   isSaving.value = true;
   try {
-    const projectId = await findOrCreateProject();
     const assignments = Object.entries(voiceActorAssignments.value)
       .filter(([_, voiceActorId]) => voiceActorId !== null)
       .map(([actorId, voiceActorId]) => ({
         actor_id: Number(actorId),
         voice_actor_id: voiceActorId,
-        dubbing_project_id: projectId,
-        performance: "voice",
-        status: "validated",
       }));
-    const { error: deleteError } = await supabase
-      .from("work")
-      .delete()
-      .eq("dubbing_project_id", projectId);
-    if (deleteError) throw deleteError;
-    if (assignments.length > 0) {
-      const { error: insertError } = await supabase
-        .from("work")
-        .insert(assignments);
-      if (insertError) throw insertError;
-    }
+    await $fetch("/api/admin/dubbing-project", {
+      method: "POST",
+      body: {
+        content_id: mediaId.value,
+        content_type: mediaTypeParam.value,
+        dubbing_language: savedDubbingLanguage,
+        actor_ids: actors.value.map((actor) => actor.id),
+        assignments,
+      },
+    });
     showToast("Voice cast mappings saved successfully!", "success");
-    initialAssignments.value = { ...voiceActorAssignments.value };
+    if (dubbingLanguage.value === savedDubbingLanguage) {
+      initialAssignments.value = savedAssignments;
+    }
   } catch (err: any) {
     console.error(err);
     showToast(err.message || "Failed to save voice cast mappings", "error");
@@ -835,22 +891,27 @@ const quickCreateVoiceActorForManual = async () => {
 };
 
 const saveManualEntry = async () => {
-  if (!manualCharacterName.value || !selectedManualVA.value) {
+  if (
+    !isValidDubbingLanguage.value ||
+    !manualCharacterName.value ||
+    !selectedManualVA.value
+  ) {
     showToast("Character name and voice actor are required.", "error");
     return;
   }
   isSaving.value = true;
   try {
-    const projectId = await findOrCreateProject();
-    const { error: insertError } = await supabase.from("work").insert({
-      dubbing_project_id: projectId,
-      voice_actor_id: selectedManualVA.value.id,
-      character_name: manualCharacterName.value,
-      actor_id: null,
-      performance: manualPerformance.value,
-      status: "validated",
+    await $fetch("/api/link-voice-actor", {
+      method: "POST",
+      body: {
+        media_type: mediaTypeParam.value,
+        media_id: mediaId.value,
+        dubbing_language: dubbingLanguage.value,
+        voice_actor_id: selectedManualVA.value.id,
+        character_name: manualCharacterName.value,
+        performance: manualPerformance.value,
+      },
     });
-    if (insertError) throw insertError;
     showToast("Mapping created successfully!", "success");
     manualCharacterName.value = "";
     manualActorName.value = "";

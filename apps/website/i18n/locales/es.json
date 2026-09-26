@@ -441,6 +441,10 @@
   },
   "game": {
     "prepareCredits": "Extraer créditos de doblaje",
+    "prepareDialogTitle": "Extraer créditos de doblaje del juego",
+    "prepareDialogDescription": "Elige la edición de Wikipedia que se consultará y el proyecto regional de doblaje que recibirá los créditos.",
+    "wikipediaSourceLanguage": "Idioma de origen de Wikipedia",
+    "wikipediaSourceHint": "Introduce un código de edición como en, fr o simple.",
     "developer": "Desarrollador",
     "publisher": "Editor",
     "characters": "Personajes",
@@ -563,6 +567,10 @@
       "confirmReEnqueue": "¿Está seguro de que desea volver a poner este elemento en la cola? Esto lo agregará nuevamente a la cola activa y eliminará el registro archivado.",
       "reEnqueued": "Elemento vuelto a poner en cola con éxito",
       "failedToReEnqueue": "Error al volver a poner en cola el elemento",
+      "reviewNeeded": "Región pendiente de revisión",
+      "regionalReviewNote": "Se encontraron secciones de doblaje. Selecciona una región para continuar.",
+      "resumeReview": "Reanudar",
+      "reviewResumed": "Revisión regional reanudada",
       "priority": "⚡ Prioritario",
       "typeAdvertisement": "Publicidad",
       "allQueues": "Todas las colas",
@@ -838,7 +846,10 @@
       "originalActorPlaceholder": "Nombre del actor original (opcional)",
       "searchVoiceActorPlaceholder": "Buscar actores de doblaje...",
       "linkVoiceActorPlaceholder": "Vincular actor de doblaje..."
-    }
+    },
+    "regionalDubbingLanguageRequired": "Seleccionar la región del doblaje",
+    "regionalDubbingLanguage": "Región del doblaje",
+    "wikipediaLanguage": "Fuente de Wikipedia"
   },
   "audiobook": {
     "title": "Audiolibro",

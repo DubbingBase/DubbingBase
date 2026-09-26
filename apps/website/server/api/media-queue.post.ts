@@ -1,3 +1,4 @@
+import { requireDubbingLanguage } from "../utils/dubbing-language";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { requireUser } from "../utils/auth";
 import { sendDiscordAdminNotification } from "../utils/notifications/discord";
@@ -15,6 +16,8 @@ export default defineEventHandler(async (event) => {
     seasonNumber,
     episodeNumber,
     language,
+    wikipedia_language,
+    dubbing_language,
   } = body;
 
   if (!action || !mediaType) {
@@ -53,8 +56,22 @@ export default defineEventHandler(async (event) => {
       ? parseInt(String(episodeNumber), 10)
       : undefined;
 
+  // Deprecated `language` remains an alias for Wikipedia source edition only.
+  const sourceLanguage = wikipedia_language ?? language;
   const cleanLang =
-    language && String(language).trim() ? String(language).trim() : undefined;
+    typeof sourceLanguage === "string" && sourceLanguage.length > 0
+      ? sourceLanguage
+      : undefined;
+  if (cleanLang && !/^[a-z][a-z0-9-]*$/.test(cleanLang)) {
+    throw createError({
+      statusCode: 400,
+      message: "Invalid Wikipedia source language",
+    });
+  }
+  const dubbingLanguage =
+    dubbing_language == null
+      ? undefined
+      : requireDubbingLanguage(dubbing_language);
 
   if (action === "status") {
     const { data, error } = await supabaseAdmin.rpc("get_media_queue_status", {
@@ -63,6 +80,8 @@ export default defineEventHandler(async (event) => {
       p_season_number: numSeason,
       p_episode_number: numEpisode,
       p_language: cleanLang,
+      p_wikipedia_language: cleanLang,
+      p_dubbing_language: dubbingLanguage,
     });
 
     if (error) {
@@ -111,6 +130,8 @@ export default defineEventHandler(async (event) => {
       p_season_number: numSeason,
       p_episode_number: numEpisode,
       p_language: cleanLang,
+      p_wikipedia_language: cleanLang,
+      p_dubbing_language: dubbingLanguage,
       p_is_manual: true,
     });
 

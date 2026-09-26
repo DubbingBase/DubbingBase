@@ -96,7 +96,7 @@
         <ClientOnly>
           <button
             v-if="isAdmin"
-            @click="triggerPrepareGame"
+            @click="showPrepareDialog = true"
             :disabled="isPreparing"
             class="text-sm theme-primary-text theme-hover-primary-text transition-colors flex items-center gap-1.5 font-medium"
           >
@@ -443,6 +443,76 @@
     </div>
 
     <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
+
+    <div
+      v-if="showPrepareDialog && isAdmin"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+      role="presentation"
+      @click.self="showPrepareDialog = false"
+    >
+      <form
+        class="w-full max-w-lg space-y-5 rounded-2xl border theme-border theme-surface-overlay p-6 shadow-2xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="prepare-game-dialog-title"
+        @submit.prevent="triggerPrepareGame"
+      >
+        <div class="space-y-2">
+          <h2
+            id="prepare-game-dialog-title"
+            class="text-lg font-bold theme-text"
+          >
+            {{ $t("game.prepareDialogTitle") }}
+          </h2>
+          <p class="text-sm theme-text-muted">
+            {{ $t("game.prepareDialogDescription") }}
+          </p>
+        </div>
+        <label for="prepare-game-wikipedia-language" class="block space-y-2">
+          <span class="text-sm font-semibold theme-text">
+            {{ $t("game.wikipediaSourceLanguage") }}
+          </span>
+          <input
+            id="prepare-game-wikipedia-language"
+            v-model="prepareWikipediaLanguage"
+            type="text"
+            required
+            pattern="[a-z][a-z0-9-]*"
+            autocomplete="off"
+            class="w-full rounded-xl border theme-border theme-input px-4 py-2.5 text-sm theme-text"
+          />
+          <span class="block text-xs theme-text-muted">
+            {{ $t("game.wikipediaSourceHint") }}
+          </span>
+        </label>
+        <label for="prepare-game-dubbing-language" class="block space-y-2">
+          <span class="text-sm font-semibold theme-text">
+            {{ $t("admin.regionalDubbingLanguage") }}
+          </span>
+          <AdminLanguageSelect
+            id="prepare-game-dubbing-language"
+            v-model="prepareDubbingLanguage"
+            required
+          />
+        </label>
+        <div class="flex justify-end gap-3">
+          <button
+            type="button"
+            class="rounded-xl border theme-border px-4 py-2 text-sm theme-text"
+            @click="showPrepareDialog = false"
+          >
+            {{ $t("common.cancel") }}
+          </button>
+          <button
+            type="submit"
+            :disabled="isPreparing || !canPrepareGame"
+            class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          >
+            {{ $t("game.prepareCredits") }}
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 
@@ -450,7 +520,11 @@
 import MediaSkeleton from "../../components/MediaSkeleton.vue";
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import { useRoute, useRouter } from "vue-router";
-import { fetchGameData, fetchDetailCollection } from "@app/shared-logic";
+import {
+  fetchGameData,
+  fetchDetailCollection,
+  isDubbingLanguage,
+} from "@app/shared-logic";
 import type { PaginatedResponse } from "@app/shared-logic";
 import type { IgdbGame } from "@app/shared-logic";
 import { computed, ref, watch } from "vue";
@@ -482,6 +556,14 @@ const isAdmin = computed(() => {
 });
 
 const isPreparing = ref(false);
+const showPrepareDialog = ref(false);
+const prepareWikipediaLanguage = ref("");
+const prepareDubbingLanguage = ref("");
+const canPrepareGame = computed(
+  () =>
+    /^[a-z][a-z0-9-]*$/.test(prepareWikipediaLanguage.value) &&
+    isDubbingLanguage(prepareDubbingLanguage.value),
+);
 
 const { locale, t } = useI18n();
 const localePath = useLocalePath();
@@ -636,17 +718,22 @@ const castTotal = computed(
 );
 
 async function triggerPrepareGame() {
-  if (!isAdmin.value) return;
+  if (!isAdmin.value || !canPrepareGame.value) return;
   isPreparing.value = true;
   try {
     const result = await $fetch("/api/prepare_game", {
       method: "POST",
-      body: { igdbId: Number(gameId) },
+      body: {
+        igdbId: Number(gameId),
+        wikipedia_language: prepareWikipediaLanguage.value,
+        dubbing_language: prepareDubbingLanguage.value,
+      },
     });
     if (result.ok) {
       console.info(
         `[prepare_game] LLM: ${result.llmModel ?? "unknown"} | ${result.note ?? `${result.creditsAdded} credits added`}`,
       );
+      showPrepareDialog.value = false;
     } else {
       console.error("prepare_game failed:", result.error);
     }

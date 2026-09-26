@@ -1,3 +1,8 @@
+import {
+  isDubbingLanguage,
+  displayDubbingLanguage,
+  type DubbingLanguage,
+} from "@app/shared-logic";
 import { z } from "zod";
 import { getErrorMessage } from "../error-message";
 import {
@@ -5,7 +10,6 @@ import {
   fetchMediaRequest,
   isRetryableMediaRequestError,
 } from "../retryable-request";
-import { findOrCreateDubbingProject } from "../db/dubbing-project";
 import { insertVoiceActorAndWork } from "./voice-actor";
 import { useWikipediaCache, useIgdbClient } from "../index";
 import type { SimpleCache } from "../cache";
@@ -378,6 +382,7 @@ export async function extractMediaDubbingCredits(options: {
   tmdbId: number;
   type: "movie" | "tv" | "season" | "episode";
   language: string;
+  dubbingLanguage?: DubbingLanguage;
   pageId: number;
   sectionIndexes: number[];
   seasonNumber?: number | null;
@@ -399,6 +404,16 @@ export async function extractMediaDubbingCredits(options: {
   const fetchOptions: CacheFetchOptions = { forceRefresh };
   let mediaTitle = "Unknown title";
   let imageUrl: string | undefined = undefined;
+
+  const dubbingLanguage = options.dubbingLanguage;
+  if (!isDubbingLanguage(dubbingLanguage)) {
+    return {
+      ok: false,
+      changes: 0,
+      creditsAdded: 0,
+      error: "Regional dubbing language requires review",
+    };
+  }
 
   try {
     const config = useRuntimeConfig();
@@ -432,8 +447,6 @@ export async function extractMediaDubbingCredits(options: {
       }
       return langCastCache.get(l)!;
     };
-
-    await findOrCreateDubbingProject(tmdbId, tmdbType, language);
 
     const wikipediaCache = useWikipediaCache(cache);
     // ponytail: check and extract run on different cron ticks — drop indexes
@@ -478,7 +491,9 @@ export async function extractMediaDubbingCredits(options: {
         wikitext,
         dubbingExtractionSchema,
         {
-          systemInstruction: dubbingExtractionSystemInstruction,
+          systemInstruction: `${dubbingExtractionSystemInstruction}
+
+The approved target dubbing market is ${dubbingLanguage} (${displayDubbingLanguage(dubbingLanguage, "en")}). Extract only credits for this target. Exclude other regional versions and original-language casting. The Wikipedia edition is a source identifier, never evidence of the dubbing market.`,
           temperature: 0,
         },
       );
@@ -540,7 +555,7 @@ export async function extractMediaDubbingCredits(options: {
             tmdbId,
             actorId,
             tmdbType,
-            language,
+            dubbingLanguage,
             entry.performance || undefined,
           );
 
@@ -593,6 +608,7 @@ export async function extractMediaDubbingCredits(options: {
 export async function extractGameDubbingCredits(options: {
   igdbId: number;
   language: string;
+  dubbingLanguage?: DubbingLanguage;
   pageId: number;
   sectionIndexes: number[];
   cache?: SimpleCache;
@@ -605,6 +621,16 @@ export async function extractGameDubbingCredits(options: {
   const fetchOptions: CacheFetchOptions = { forceRefresh };
   let gameTitle = "Unknown title";
   let imageUrl: string | undefined = undefined;
+
+  const dubbingLanguage = options.dubbingLanguage;
+  if (!isDubbingLanguage(dubbingLanguage)) {
+    return {
+      ok: false,
+      changes: 0,
+      creditsAdded: 0,
+      error: "Regional dubbing language requires review",
+    };
+  }
 
   try {
     const igdbClient = useIgdbClient(cache);
@@ -670,7 +696,9 @@ export async function extractGameDubbingCredits(options: {
         wikitext,
         dubbingExtractionSchema,
         {
-          systemInstruction: dubbingExtractionSystemInstruction,
+          systemInstruction: `${dubbingExtractionSystemInstruction}
+
+The approved target dubbing market is ${dubbingLanguage} (${displayDubbingLanguage(dubbingLanguage, "en")}). Extract only credits for this target. Exclude other regional versions and original-language casting. The Wikipedia edition is a source identifier, never evidence of the dubbing market.`,
           temperature: 0,
         },
       );
@@ -710,7 +738,7 @@ export async function extractGameDubbingCredits(options: {
           igdbId,
           actorId,
           "video_game",
-          language,
+          dubbingLanguage,
           entry.performance || undefined,
         );
 
@@ -766,19 +794,24 @@ export async function extractGameDubbingCredits(options: {
 export async function prepareMedia(options: {
   tmdbId: number;
   type: "movie" | "tv" | "season" | "episode";
-  seasonNumber?: number | null;
-  episodeNumber?: number | null;
-  language?: string | null;
+  seasonNumber: number | null;
+  episodeNumber: number | null;
+  wikipediaLanguage: string;
+  dubbingLanguage: DubbingLanguage;
 }): Promise<PrepareMediaResult> {
-  const { tmdbId, type, language } = options;
-  if (!language) {
-    throw new Error("Direct prepareMedia requires a specified language.");
+  const { tmdbId, type, wikipediaLanguage, dubbingLanguage } = options;
+  if (!wikipediaLanguage) {
+    throw new Error("Direct prepareMedia requires a Wikipedia source language.");
+  }
+
+  if (!isDubbingLanguage(dubbingLanguage)) {
+    throw new Error("Regional dubbing language requires review");
   }
 
   const check = await checkMediaDubbingSections({
     tmdbId,
     type,
-    language,
+    language: wikipediaLanguage,
     seasonNumber: options.seasonNumber,
     episodeNumber: options.episodeNumber,
   });
@@ -799,7 +832,8 @@ export async function prepareMedia(options: {
   const extract = await extractMediaDubbingCredits({
     tmdbId,
     type,
-    language,
+    language: wikipediaLanguage,
+    dubbingLanguage,
     pageId: check.pageId!,
     sectionIndexes: check.sectionIndexes!,
     seasonNumber: options.seasonNumber,
@@ -816,21 +850,29 @@ export async function prepareMedia(options: {
     llmQuota: extract.llmQuota,
     note: extract.note,
     wikipediaUrl: check.wikipediaUrl,
-    languages: [language],
+    languages: [wikipediaLanguage],
     error: extract.error,
   };
 }
 
 export async function prepareGame(options: {
   igdbId: number;
-  language?: string | null;
+  wikipediaLanguage: string;
+  dubbingLanguage: DubbingLanguage;
 }): Promise<PrepareGameResult> {
-  const { igdbId, language } = options;
-  if (!language) {
-    throw new Error("Direct prepareGame requires a specified language.");
+  const { igdbId, wikipediaLanguage, dubbingLanguage } = options;
+  if (!wikipediaLanguage) {
+    throw new Error("Direct prepareGame requires a Wikipedia source language.");
   }
 
-  const check = await checkGameDubbingSections({ igdbId, language });
+  if (!isDubbingLanguage(dubbingLanguage)) {
+    throw new Error("Regional dubbing language requires review");
+  }
+
+  const check = await checkGameDubbingSections({
+    igdbId,
+    language: wikipediaLanguage,
+  });
   if (!check.ok) {
     return {
       ok: false,
@@ -842,7 +884,8 @@ export async function prepareGame(options: {
 
   const extract = await extractGameDubbingCredits({
     igdbId,
-    language,
+    language: wikipediaLanguage,
+    dubbingLanguage,
     pageId: check.pageId!,
     sectionIndexes: check.sectionIndexes!,
   });
@@ -857,7 +900,7 @@ export async function prepareGame(options: {
     llmQuota: extract.llmQuota,
     note: extract.note,
     wikipediaUrl: check.wikipediaUrl,
-    languages: [language],
+    languages: [wikipediaLanguage],
     error: extract.error,
   };
 }
