@@ -2,7 +2,6 @@ import { createApp, createError, defineEventHandler, readBody, toWebHandler } fr
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const routeMocks = vi.hoisted(() => ({
-  findOrCreateDubbingProject: vi.fn(),
   requireAdmin: vi.fn(),
   useSupabaseAdmin: vi.fn(),
 }));
@@ -12,9 +11,6 @@ vi.mock("../auth", () => ({
 }));
 vi.mock("../db/client", () => ({
   useSupabaseAdmin: routeMocks.useSupabaseAdmin,
-}));
-vi.mock("../db/dubbing-project", () => ({
-  findOrCreateDubbingProject: routeMocks.findOrCreateDubbingProject,
 }));
 
 let handler: typeof import("../../api/admin/dubbing-project.post").default;
@@ -26,78 +22,133 @@ beforeAll(async () => {
   handler = (await import("../../api/admin/dubbing-project.post")).default;
 });
 
-beforeEach(() => {
-  vi.clearAllMocks();
-});
-
+beforeEach(() => vi.clearAllMocks());
 afterAll(() => vi.unstubAllGlobals());
 
-function createSupabaseMock() {
-  const rpcCalls: Array<{
-    name: string;
-    args: Record<string, unknown>;
-  }> = [];
+function createSupabaseMock(
+  result: { data: number | null; error: (Error & { code?: string }) | null } = {
+    data: 501,
+    error: null,
+  },
+) {
+  const rpcCalls: Array<{ name: string; args: Record<string, unknown> }> = [];
   const supabase = {
     rpc: vi.fn(async (name: string, args: Record<string, unknown>) => {
       rpcCalls.push({ name, args });
-      return { error: null };
+      return result;
     }),
   };
-
   return { supabase, rpcCalls };
 }
 
-async function saveRegion(
-  dubbingLanguage: string,
-  projectId: number,
-  voiceActorId: number,
-): Promise<Response> {
-  const { supabase, rpcCalls } = createSupabaseMock();
-  routeMocks.findOrCreateDubbingProject.mockResolvedValue(projectId);
-  routeMocks.useSupabaseAdmin.mockReturnValue(supabase);
-
+async function post(body: unknown): Promise<Response> {
   const app = createApp();
   app.use(
     "/",
     defineEventHandler((event) => handler(event)),
   );
-  const response = await toWebHandler(app)(
+  return toWebHandler(app)(
     new Request("http://localhost/", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        content_id: 211288,
-        content_type: "tv",
-        dubbing_language: dubbingLanguage,
-        actor_ids: [101],
-        assignments: [{ actor_id: 101, voice_actor_id: voiceActorId }],
-      }),
+      body: JSON.stringify(body),
     }),
   );
-
-  expect(response.status).toBe(200);
-  expect(rpcCalls).toEqual([
-    {
-      name: "replace_regional_project_actor_assignments",
-      args: {
-        p_dubbing_project_id: projectId,
-        p_actor_ids: [101],
-        p_assignments: [{ actor_id: 101, voice_actor_id: voiceActorId }],
-      },
-    },
-  ]);
-  expect(routeMocks.findOrCreateDubbingProject).toHaveBeenCalledWith(211288, "tv", dubbingLanguage);
-  return response;
 }
 
 describe("POST /api/admin/dubbing-project", () => {
-  it("creates and writes only the selected regional project", async () => {
-    await saveRegion("fr-FR", 501, 201);
-    await saveRegion("fr-CA", 502, 202);
+  it("sends exact work operations and the selected regional project inputs to one RPC", async () => {
+    const { supabase, rpcCalls } = createSupabaseMock();
+    routeMocks.useSupabaseAdmin.mockReturnValue(supabase);
 
-    expect(routeMocks.findOrCreateDubbingProject.mock.calls).toEqual([
-      [211288, "tv", "fr-FR"],
-      [211288, "tv", "fr-CA"],
+    const response = await post({
+      content_id: 211288,
+      content_type: "tv",
+      dubbing_language: "fr-FR",
+      operations: [
+        { actor_id: 101, work_id: 305, voice_actor_id: 201 },
+        { actor_id: 102, work_id: null, voice_actor_id: 202 },
+        { actor_id: 103, work_id: 306, voice_actor_id: null },
+      ],
+    });
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ saved: true, projectId: 501 });
+    expect(rpcCalls).toEqual([
+      {
+        name: "save_regional_project_actor_assignments",
+        args: {
+          p_content_id: 211288,
+          p_content_type: "tv",
+          p_dubbing_language: "fr-FR",
+          p_operations: [
+            { actor_id: 101, work_id: 305, voice_actor_id: 201 },
+            { actor_id: 102, work_id: null, voice_actor_id: 202 },
+            { actor_id: 103, work_id: 306, voice_actor_id: null },
+          ],
+        },
+      },
     ]);
+  });
+
+  it("rejects legacy and invalid dubbing languages before calling the RPC", async () => {
+    const { supabase, rpcCalls } = createSupabaseMock();
+    routeMocks.useSupabaseAdmin.mockReturnValue(supabase);
+
+    for (const dubbingLanguage of ["fr", "FR-fr", "zz-ZZ"]) {
+      const response = await post({
+        content_id: 211288,
+        content_type: "tv",
+        dubbing_language: dubbingLanguage,
+        operations: [{ actor_id: 101, work_id: null, voice_actor_id: 201 }],
+      });
+      expect(response.status).toBe(400);
+    }
+    expect(rpcCalls).toEqual([]);
+  });
+
+  it("rejects duplicate actors and no-op operations", async () => {
+    const { supabase, rpcCalls } = createSupabaseMock();
+    routeMocks.useSupabaseAdmin.mockReturnValue(supabase);
+
+    const duplicateResponse = await post({
+      content_id: 211288,
+      content_type: "tv",
+      dubbing_language: "fr-FR",
+      operations: [
+        { actor_id: 101, work_id: 305, voice_actor_id: 201 },
+        { actor_id: 101, work_id: 306, voice_actor_id: 202 },
+      ],
+    });
+    const emptyOperationResponse = await post({
+      content_id: 211288,
+      content_type: "tv",
+      dubbing_language: "fr-FR",
+      operations: [{ actor_id: 101, work_id: null, voice_actor_id: null }],
+    });
+
+    expect(duplicateResponse.status).toBe(400);
+    expect(emptyOperationResponse.status).toBe(400);
+    expect(rpcCalls).toEqual([]);
+  });
+
+  it("surfaces the database ambiguity rejection without retrying a destructive save", async () => {
+    const { supabase, rpcCalls } = createSupabaseMock({
+      data: null,
+      error: Object.assign(new Error("Actor 101 has multiple works in this regional project"), {
+        code: "55000",
+      }),
+    });
+    routeMocks.useSupabaseAdmin.mockReturnValue(supabase);
+
+    const response = await post({
+      content_id: 211288,
+      content_type: "tv",
+      dubbing_language: "fr-FR",
+      operations: [{ actor_id: 101, work_id: 305, voice_actor_id: 201 }],
+    });
+
+    expect(response.status).toBe(409);
+    expect(rpcCalls).toHaveLength(1);
   });
 });

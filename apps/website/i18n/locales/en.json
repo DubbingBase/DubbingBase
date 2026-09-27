@@ -845,7 +845,8 @@
       "characterNamePlaceholder": "Character / role name",
       "originalActorPlaceholder": "Original actor name (optional)",
       "searchVoiceActorPlaceholder": "Search voice actors...",
-      "linkVoiceActorPlaceholder": "Link voice actor..."
+      "linkVoiceActorPlaceholder": "Link voice actor...",
+      "multipleWorksNotEditable": "Multiple work records exist for this actor in this region. Edit them in the project editor."
     },
     "regionalDubbingLanguageRequired": "Select the dubbing region",
     "regionalDubbingLanguage": "Dubbing region",

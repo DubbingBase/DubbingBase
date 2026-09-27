@@ -844,7 +844,8 @@
       "characterNamePlaceholder": "Nom du personnage / rôle",
       "originalActorPlaceholder": "Nom de l'acteur original (optionnel)",
       "searchVoiceActorPlaceholder": "Rechercher des comédiens...",
-      "linkVoiceActorPlaceholder": "Associer un comédien..."
+      "linkVoiceActorPlaceholder": "Associer un comédien...",
+      "multipleWorksNotEditable": "Plusieurs crédits existent pour cet acteur dans cette région. Modifiez-les dans l’éditeur du projet."
     },
     "regionalDubbingLanguageRequired": "Sélectionner la région du doublage",
     "regionalDubbingLanguage": "Région du doublage",

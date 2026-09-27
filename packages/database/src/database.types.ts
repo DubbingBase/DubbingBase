@@ -155,7 +155,7 @@ export type Database = {
           content_type: string;
           created_at: string | null;
           id: number;
-          language: string | null;
+          language: string;
           status: string | null;
           studio_id: number | null;
           updated_at: string | null;
@@ -165,7 +165,7 @@ export type Database = {
           content_type: string;
           created_at?: string | null;
           id?: number;
-          language?: string | null;
+          language: string;
           status?: string | null;
           studio_id?: number | null;
           updated_at?: string | null;
@@ -175,12 +175,19 @@ export type Database = {
           content_type?: string;
           created_at?: string | null;
           id?: number;
-          language?: string | null;
+          language?: string;
           status?: string | null;
           studio_id?: number | null;
           updated_at?: string | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "dubbing_projects_language_fkey";
+            columns: ["language"];
+            isOneToOne: false;
+            referencedRelation: "dubbing_languages";
+            referencedColumns: ["code"];
+          },
           {
             foreignKeyName: "dubbing_projects_studio_id_fkey";
             columns: ["studio_id"];
@@ -659,6 +666,10 @@ export type Database = {
         Args: { p_msg_ids: number[]; p_queue_name: string };
         Returns: number;
       };
+      archive_wiki_check_for_regional_review: {
+        Args: { p_msg_id: number; p_review_note: string };
+        Returns: boolean;
+      };
       clear_media_queue: { Args: never; Returns: boolean };
       delay_media_queue_message: {
         Args: {
@@ -708,50 +719,11 @@ export type Database = {
         };
         Returns: number;
       };
-      archive_wiki_check_for_regional_review: {
-        Args: { p_msg_id: number; p_review_note: string };
-        Returns: boolean;
-      };
-      resume_wiki_check_for_regional_review: {
-        Args: { p_dubbing_language: string; p_msg_id: number };
-        Returns: boolean;
-      };
-      replace_regional_project_actor_assignments: {
-        Args: {
-          p_actor_ids: number[];
-          p_assignments: Json;
-          p_dubbing_project_id: number;
-        };
-        Returns: undefined;
-      };
-      get_regional_review_queue_items: {
-        Args: { p_limit?: number };
-        Returns: {
-          created_at: string;
-          dubbing_language: string | null;
-          episode_number: number | null;
-          error_message: string | null;
-          id: number;
-          is_manual: boolean;
-          media_type: string;
-          queue_name: string;
-          read_ct: number;
-          review_note: string | null;
-          season_number: number | null;
-          status: string;
-          tmdb_id: number;
-          wikipedia_language: string | null;
-        }[];
-      };
       finalize_dubbing_language_constraints: {
         Args: never;
         Returns: undefined;
       };
       find_duplicate_voice_actors_rpc: { Args: never; Returns: Json };
-      find_duplicate_work_groups: {
-        Args: { p_after_group_id?: number; p_limit?: number };
-        Returns: Json;
-      };
       get_media_queue_depth: {
         Args: { p_queue_name?: string };
         Returns: number;
@@ -808,6 +780,25 @@ export type Database = {
           id: string;
           points_awarded: number;
           user_name: string;
+        }[];
+      };
+      get_regional_review_queue_items: {
+        Args: { p_limit?: number };
+        Returns: {
+          created_at: string;
+          dubbing_language: string;
+          episode_number: number;
+          error_message: string;
+          id: number;
+          is_manual: boolean;
+          media_type: string;
+          queue_name: string;
+          read_ct: number;
+          review_note: string;
+          season_number: number;
+          status: string;
+          tmdb_id: number;
+          wikipedia_language: string;
         }[];
       };
       get_top_contributors: {
@@ -875,15 +866,6 @@ export type Database = {
         Args: { p_keep_id: number; p_other_ids: number[]; p_updates?: Json };
         Returns: Json;
       };
-      merge_work_duplicates_atomic: {
-        Args: {
-          p_admin_id: string;
-          p_canonical_id: number;
-          p_updates: Json;
-          p_work_ids: number[];
-        };
-        Returns: Json;
-      };
       normalize_actor_name: { Args: { str: string }; Returns: string };
       pop_media_queue_batch: {
         Args: {
@@ -908,6 +890,19 @@ export type Database = {
           read_ct: number;
           vt: string;
         }[];
+      };
+      resume_wiki_check_for_regional_review: {
+        Args: { p_dubbing_language: string; p_msg_id: number };
+        Returns: boolean;
+      };
+      save_regional_project_actor_assignments: {
+        Args: {
+          p_content_id: number;
+          p_content_type: string;
+          p_dubbing_language: string;
+          p_operations: Json;
+        };
+        Returns: number;
       };
       unaccent: { Args: { "": string }; Returns: string };
       voice_actor_completeness: {

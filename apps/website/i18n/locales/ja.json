@@ -845,7 +845,8 @@
       "characterNamePlaceholder": "キャラクター / 役名",
       "originalActorPlaceholder": "オリジナル俳優名（任意）",
       "searchVoiceActorPlaceholder": "声優を検索...",
-      "linkVoiceActorPlaceholder": "声優をリンク..."
+      "linkVoiceActorPlaceholder": "声優をリンク...",
+      "multipleWorksNotEditable": "この地域にはこの俳優の作品記録が複数あります。プロジェクトエディターで編集してください。"
     },
     "regionalDubbingLanguageRequired": "吹き替えの地域を選択",
     "regionalDubbingLanguage": "吹き替えの地域",

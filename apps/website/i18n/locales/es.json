@@ -845,7 +845,8 @@
       "characterNamePlaceholder": "Nombre del personaje / rol",
       "originalActorPlaceholder": "Nombre del actor original (opcional)",
       "searchVoiceActorPlaceholder": "Buscar actores de doblaje...",
-      "linkVoiceActorPlaceholder": "Vincular actor de doblaje..."
+      "linkVoiceActorPlaceholder": "Vincular actor de doblaje...",
+      "multipleWorksNotEditable": "Hay varios trabajos para este actor en esta región. Edítelos en el editor del proyecto."
     },
     "regionalDubbingLanguageRequired": "Seleccionar la región del doblaje",
     "regionalDubbingLanguage": "Región del doblaje",
