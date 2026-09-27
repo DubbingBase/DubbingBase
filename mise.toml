@@ -149,10 +149,15 @@ dir = "packages/database"
 run = "./prepare-seed.sh"
 
 [tasks.reseed]
-description = "Fetches seed data and storage from remote and resets local database"
+description = "Refreshes local Supabase, imports production data before regional migrations, then applies them"
 depends = ["prepare-seed"]
 dir = "packages/database"
-run = "npx supabase db reset --local --yes"
+run = """
+npx supabase stop --no-backup
+npx supabase start
+npx supabase db reset --local --version 20260926094824 --yes
+npx supabase migration up --local
+"""
 
 [tasks.typecheck]
 description = "Run TypeScript type checking across all workspaces"
