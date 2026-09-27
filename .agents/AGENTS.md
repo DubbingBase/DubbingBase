@@ -134,6 +134,25 @@ doppler run -- mise run website
 - **Seed Data**:
   - Keep `packages/database/supabase/seed.sql` up to date if you add new tables or reference data.
 
+### Headless production-backed local reseed
+
+`mise run reseed` reads a data dump and Storage files from its linked Supabase project, then resets only the local Supabase stack. Run it only when the user explicitly asks to refresh local data from production. Never push migrations, mutate remote data, or deploy as part of a reseed.
+
+The production Supabase project ref selected for this repository is `rrjgbneefiwoqvsjwzrz`. To avoid browser login and interactive project selection in a headless environment:
+
+- Make `SUPABASE_ACCESS_TOKEN` available to the CLI process through an approved secret manager. Never commit the token or put it directly in a command or log.
+- From `packages/database`, link a fresh checkout explicitly with `mise exec -- npx supabase link --project-ref rrjgbneefiwoqvsjwzrz`. If `db dump` fails while initializing a temporary login role with `401 Unauthorized`, or asks for a database password, inject `SUPABASE_DB_PASSWORD` through the secret manager. Do not persist either secret in the repository.
+- If the CLI is already authenticated and the project is linked, no login or link step is needed. The project ref is not a credential; use it instead of the interactive project picker. The `reseed` task stops and restarts the local stack first so Storage uses the linked project's pinned image instead of a stale container.
+- The `reseed` task's dependency chain includes the root `install` task (`pnpm install`), which may traverse the mobile workspace. Agents must keep mobile out of scope and run the existing database tasks individually from the repository root, in order, after dependencies are installed:
+
+  ```bash
+  mise run --skip-deps fetch-seed
+  mise run --skip-deps prepare-seed
+  mise run --skip-deps reseed
+  ```
+
+  `fetch-seed` reads the linked remote database and `prepare-seed` downloads linked Storage objects. `reseed` imports those rows at migration `20260926094824` (immediately before the regional language mapping), then applies all later migrations to the imported data. This ordering is required to validate data migrations against the production snapshot. Confirm the linked ref before starting the sequence.
+
 ---
 
 ### 5. External APIs (TMDB, TVDB, IGDB)
@@ -149,7 +168,7 @@ Backend routes in `apps/website/server/api/` handle integration with TMDB, TVDB,
 3. **Precise Code Changes**: Make targeted edits instead of rewriting large files.
 4. **Validation**: Test compilation and run formatter tools before completing your turn.
 5. **Wrangler / Cloudflare deploys**: `apps/website` deploys via `git push` to `main` (CI/CD pipeline). Do NOT run `wrangler deploy` locally — `CLOUDFLARE_API_TOKEN` is not set in the dev environment. To pause or resume cron triggers, edit `crons` in `apps/website/wrangler.toml`, commit, and push to `main`.
-6. **Local Environment Only**: NEVER execute or run production environment commands or actions (e.g., production database pushes, live deployments, remote mutations). Only target local development environments, and do NOT suggest production actions unless strictly and explicitly asked by the user. **Specifically, NEVER run `supabase db push` or `supabase functions deploy` directly.** All remote deployments must happen strictly through the CI/CD pipeline on the `main` branch.
+6. **Production and local environments**: Never perform production writes, remote migrations, or live deployments. By default, target local development only. A production read to refresh local data is allowed only when the user explicitly requests it and the destination is local. **Never run `supabase db push` or `supabase functions deploy` directly.** All remote deployments must happen strictly through the CI/CD pipeline on the `main` branch.
 7. **Token Saving**: Use `rtk` (binary) (https://github.com/rtk-ai/rtk) to save tokens whenever possible.
 8. **Scratch & Test Scripts**: Do NOT leave one-off test scripts (like `test_*.ts`) in the root of the project. If you need a script to test an external API or debug a function, place it in `scripts/scratch/` or use the `.gemini/scratch` folder.
 9. **Caching Rules**:
