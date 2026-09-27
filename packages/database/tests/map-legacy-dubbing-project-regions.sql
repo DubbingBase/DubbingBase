@@ -30,7 +30,9 @@ VALUES
   (-910003, 980201, 'movie', 'simple', 'validated'),
   (-910004, 980202, 'movie', 'fr', 'validated'),
   (-910006, 980203, 'movie', 'pt', 'validated'),
-  (-910007, 980204, 'video_game', 'ko', 'validated');
+  (-910007, 980204, 'video_game', 'ko', 'validated'),
+  (-910008, 980205, 'movie', 'sq', 'validated'),
+  (-910009, 980206, 'movie', 'zh-yue', 'validated');
 SET LOCAL session_replication_role = origin;
 
 INSERT INTO public.work(
@@ -97,13 +99,25 @@ BEGIN
   END IF;
   IF NOT EXISTS (
     SELECT 1 FROM public.dubbing_projects
+    WHERE id = -910008 AND language = 'sq-AL'
+  ) THEN
+    RAISE EXCEPTION 'Legacy sq did not map to registered sq-AL';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.dubbing_projects
+    WHERE id = -910009 AND language = 'yue-HK'
+  ) THEN
+    RAISE EXCEPTION 'Legacy zh-yue did not map to registered yue-HK';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.dubbing_projects
     WHERE id = -910006 AND language = 'pt-BR'
   ) THEN
     RAISE EXCEPTION 'Legacy pt did not map to pt-BR';
   END IF;
   IF EXISTS (
     SELECT 1 FROM public.dubbing_projects
-    WHERE language IN ('fr', 'en', 'pt', 'simple', 'ko')
+    WHERE language IN ('fr', 'en', 'pt', 'simple', 'ko', 'sq', 'zh-yue')
   ) THEN
     RAISE EXCEPTION 'Legacy project language remains unresolved';
   END IF;
@@ -145,7 +159,7 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'Audit references to deleted rows were not reparented';
   END IF;
-  IF (SELECT count(*) FROM public.dubbing_language_reviews) <> 5 THEN
+  IF (SELECT count(*) FROM public.dubbing_language_reviews) <> 7 THEN
     RAISE EXCEPTION 'Source recovery snapshots are missing';
   END IF;
   IF NOT EXISTS (

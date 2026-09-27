@@ -2,15 +2,15 @@
 -- CLDR likely subtags provide conventional defaults; this migration adopts them
 -- as product policy at the user's direction, not as proof of each recording's market.
 -- Wikimedia's special codes are normalized below: simple -> en, als -> gsw,
--- while sh is retained and regionalized as sh-RS.
+-- zh-yue -> yue, while sh is retained and regionalized as sh-RS.
 
 INSERT INTO public.dubbing_languages(code) VALUES
   ('ar-EG'), ('an-ES'), ('ca-ES'), ('ceb-PH'), ('cs-CZ'), ('cy-GB'), ('ko-KR'),
   ('da-DK'), ('el-GR'), ('fy-NL'), ('gsw-CH'), ('ha-NG'), ('he-IL'),
   ('hr-HR'), ('hu-HU'), ('id-ID'), ('la-VA'), ('ms-MY'), ('nl-NL'),
   ('no-NO'), ('pl-PL'), ('ro-RO'), ('ru-RU'), ('sco-GB'), ('sh-RS'),
-  ('sk-SK'), ('sn-ZW'), ('sv-SE'), ('tl-PH'), ('tr-TR'), ('uk-UA'),
-  ('vi-VN'), ('zh-CN')
+  ('sk-SK'), ('sn-ZW'), ('sq-AL'), ('sv-SE'), ('tl-PH'), ('tr-TR'), ('uk-UA'),
+  ('vi-VN'), ('yue-HK'), ('zh-CN')
 ON CONFLICT (code) DO NOTHING;
 
 DO $$
@@ -41,7 +41,7 @@ BEGIN
       ('als', 'gsw-CH'), ('an', 'an-ES'), ('ca', 'ca-ES'),
       ('ar', 'ar-EG'), ('ms', 'ms-MY'), ('sn', 'sn-ZW'),
       ('tl', 'tl-PH'), ('sk', 'sk-SK'), ('sco', 'sco-GB'),
-      ('simple', 'en-US')
+      ('sq', 'sq-AL'), ('simple', 'en-US'), ('zh-yue', 'yue-HK')
     ) AS languages(legacy_code, regional_code)
   LOOP
     FOR project_id IN
@@ -73,7 +73,7 @@ BEGIN
         'target_language', mapping.regional_code,
         'approved_by', 'User-approved base-region rule, 2026-09-26',
         'evidence_url', CASE
-          WHEN mapping.legacy_code IN ('als', 'sh', 'simple')
+          WHEN mapping.legacy_code IN ('als', 'sh', 'simple', 'zh-yue')
             THEN 'https://meta.wikimedia.org/wiki/Special_language_codes'
           ELSE 'https://unicode.org/cldr/charts/45/supplemental/likely_subtags.html'
         END,

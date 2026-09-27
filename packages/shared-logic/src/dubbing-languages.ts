@@ -13,6 +13,7 @@ export enum DubbingLanguage {
   ItalianItaly = "it-IT",
   PortugueseBrazil = "pt-BR",
   PortuguesePortugal = "pt-PT",
+  AlbanianAlbania = "sq-AL",
   ArabicEgypt = "ar-EG",
   CatalanSpain = "ca-ES",
   CebuanoPhilippines = "ceb-PH",
@@ -45,18 +46,14 @@ export enum DubbingLanguage {
   WelshUnitedKingdom = "cy-GB",
   WesternFrisianNetherlands = "fy-NL",
   ChineseChina = "zh-CN",
+  YueHongKong = "yue-HK",
 }
 
-export const DUBBING_LANGUAGES: readonly DubbingLanguage[] =
-  Object.values(DubbingLanguage);
-export const DEFAULT_DUBBING_LANGUAGE: DubbingLanguage =
-  DubbingLanguage.FrenchFrance;
+export const DUBBING_LANGUAGES: readonly DubbingLanguage[] = Object.values(DubbingLanguage);
+export const DEFAULT_DUBBING_LANGUAGE: DubbingLanguage = DubbingLanguage.FrenchFrance;
 
 export function isDubbingLanguage(value: unknown): value is DubbingLanguage {
-  return (
-    typeof value === "string" &&
-    DUBBING_LANGUAGES.some((code) => code === value)
-  );
+  return typeof value === "string" && DUBBING_LANGUAGES.some((code) => code === value);
 }
 
 export function validateDubbingLanguage(value: unknown): DubbingLanguage {
