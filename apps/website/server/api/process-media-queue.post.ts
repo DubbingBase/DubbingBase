@@ -46,6 +46,7 @@ type QueuePayload = {
   language?: string;
   wikipedia_language?: string;
   dubbing_language?: string;
+  requested_by?: string;
   page_id?: number;
   section_indexes?: number[];
   is_manual?: boolean;
@@ -101,6 +102,7 @@ function parseQueuePayload(value: Json): QueuePayload | null {
     ...(typeof value.dubbing_language === "string"
       ? { dubbing_language: value.dubbing_language }
       : {}),
+    ...(typeof value.requested_by === "string" ? { requested_by: value.requested_by } : {}),
     ...(typeof value.page_id === "number" ? { page_id: value.page_id } : {}),
     ...(parsedSectionIndexes ? { section_indexes: parsedSectionIndexes } : {}),
     ...(typeof value.is_manual === "boolean" ? { is_manual: value.is_manual } : {}),

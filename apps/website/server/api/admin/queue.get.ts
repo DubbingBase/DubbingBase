@@ -3,7 +3,15 @@ import { useSupabaseAdmin } from "../../utils/db/client";
 import { setNoStoreHeaders } from "../../utils/cache/http";
 
 const QUEUE_NAMES = ["wiki_discovery", "wiki_check", "wiki_extract"] as const;
-const QUEUE_STATUSES = ["pending", "processing", "completed", "failed", "review_needed"] as const;
+const QUEUE_STATUSES = [
+  "active",
+  "archived",
+  "pending",
+  "processing",
+  "completed",
+  "failed",
+  "review_needed",
+] as const;
 
 function queryValue(value: unknown, name: string): string | undefined {
   if (value === undefined) return undefined;

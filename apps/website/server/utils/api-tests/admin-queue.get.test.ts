@@ -122,4 +122,24 @@ describe("GET /api/admin/queue", () => {
       p_offset: 5,
     });
   });
+
+  it.each(["active", "archived"] as const)(
+    "accepts the %s filter used by the admin queue UI",
+    async (status) => {
+      const response = await getQueue(`?status=${status}`);
+
+      expect(response.status).toBe(200);
+      expect(routeMocks.rpc).toHaveBeenCalledWith(
+        "get_media_queue_items",
+        expect.objectContaining({ p_status: status }),
+      );
+    },
+  );
+
+  it("returns 400 for unsupported statuses", async () => {
+    const response = await getQueue("?status=unknown");
+
+    expect(response.status).toBe(400);
+    expect(routeMocks.rpc).not.toHaveBeenCalled();
+  });
 });
