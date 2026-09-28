@@ -138,16 +138,16 @@ doppler run -- mise run website
 
 `mise run reseed` reads a data dump and Storage files from its linked Supabase project, then resets only the local Supabase stack. Run it only when the user explicitly asks to refresh local data from production. Never push migrations, mutate remote data, or deploy as part of a reseed.
 
-The production Supabase project ref selected for this repository is `rrjgbneefiwoqvsjwzrz`. To avoid browser login and interactive project selection in a headless environment:
+The production Supabase project ref selected for this repository is `rrjgbneefiwoqvsjwzrz`. Use Doppler project `dubbingbase`, config `prd`, for read-only production dump and Storage downloads. The required CLI credentials are `SUPABASE_ACCESS_TOKEN` and `SUPABASE_DB_PASSWORD`; never print or commit their values. To avoid browser login and interactive project selection in a headless environment:
 
-- Make `SUPABASE_ACCESS_TOKEN` available to the CLI process through an approved secret manager. Never commit the token or put it directly in a command or log.
-- From `packages/database`, link a fresh checkout explicitly with `mise exec -- npx supabase link --project-ref rrjgbneefiwoqvsjwzrz`. If `db dump` fails while initializing a temporary login role with `401 Unauthorized`, or asks for a database password, inject `SUPABASE_DB_PASSWORD` through the secret manager. Do not persist either secret in the repository.
+- From `packages/database`, link a fresh checkout explicitly with `doppler run --project dubbingbase --config prd -- mise exec -- npx supabase link --project-ref rrjgbneefiwoqvsjwzrz`.
+- If `db dump` fails while initializing a temporary login role with `401 Unauthorized`, or asks for a database password, check that the command is running with the `prd` Doppler config. Do not persist either secret in the repository.
 - If the CLI is already authenticated and the project is linked, no login or link step is needed. The project ref is not a credential; use it instead of the interactive project picker. The `reseed` task stops and restarts the local stack first so Storage uses the linked project's pinned image instead of a stale container.
 - The `reseed` task's dependency chain includes the root `install` task (`pnpm install`), which may traverse the mobile workspace. Agents must keep mobile out of scope and run the existing database tasks individually from the repository root, in order, after dependencies are installed:
 
   ```bash
-  mise run --skip-deps fetch-seed
-  mise run --skip-deps prepare-seed
+  doppler run --project dubbingbase --config prd -- mise run --skip-deps fetch-seed
+  doppler run --project dubbingbase --config prd -- mise run --skip-deps prepare-seed
   mise run --skip-deps reseed
   ```
 
