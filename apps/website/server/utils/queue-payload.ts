@@ -1,14 +1,14 @@
 import { isDubbingLanguage, type DubbingLanguage } from "@app/shared-logic";
 
 /** pgmq JSON is untrusted. Old `language` fields identify Wikipedia editions only. */
-export type QueueMediaType =
-  "movie" | "tv" | "season" | "episode" | "video_game";
+export type QueueMediaType = "movie" | "tv" | "season" | "episode" | "video_game";
 
 export interface ValidQueueBase {
   tmdbId: number;
   mediaType: QueueMediaType;
   wikipediaLanguage?: string;
   dubbingLanguage?: DubbingLanguage;
+  requestedBy: string | null;
   seasonNumber?: number;
   episodeNumber?: number;
 }
@@ -23,10 +23,27 @@ export interface ValidExtractPayload extends ValidCheckPayload {
 type Validated<T> = { ok: true; value: T } | { ok: false; reason: string };
 
 function property(raw: unknown, key: string): unknown {
-  return typeof raw === "object" && raw !== null
-    ? Reflect.get(raw, key)
-    : undefined;
+  return typeof raw === "object" && raw !== null ? Reflect.get(raw, key) : undefined;
 }
+
+export function queueRequester(value: unknown): string | null {
+  if (
+    typeof value !== "string" ||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
+  ) {
+    return null;
+  }
+  return value;
+}
+
+/** Omit NULL so PostgreSQL's DEFAULT NULL keeps anonymous work unchanged. */
+export function queueRequesterRpcArgs(value: unknown): {
+  p_requested_by?: string;
+} {
+  const requester = queueRequester(value);
+  return requester === null ? {} : { p_requested_by: requester };
+}
+
 function toInt(raw: unknown, minimum: number): number | null {
   if (raw === null || raw === undefined || raw === "") return null;
   if (typeof raw !== "number" && typeof raw !== "string") return null;
@@ -50,9 +67,12 @@ function validateBase(payload: unknown): Validated<ValidQueueBase> {
   }
   const tmdbId = toInt(property(payload, "tmdb_id"), 1);
   if (tmdbId === null) return { ok: false, reason: "invalid tmdb_id" };
-  const value: ValidQueueBase = { tmdbId, mediaType };
-  const source =
-    property(payload, "wikipedia_language") ?? property(payload, "language");
+  const value: ValidQueueBase = {
+    tmdbId,
+    mediaType,
+    requestedBy: queueRequester(property(payload, "requested_by")),
+  };
+  const source = property(payload, "wikipedia_language") ?? property(payload, "language");
   if (source !== undefined && source !== null && source !== "") {
     if (typeof source !== "string" || !/^[a-z][a-z0-9-]*$/.test(source)) {
       return { ok: false, reason: "invalid wikipedia_language" };
@@ -80,26 +100,19 @@ function validateBase(payload: unknown): Validated<ValidQueueBase> {
   return { ok: true, value };
 }
 
-export function validateDiscoveryPayload(
-  payload: unknown,
-): Validated<ValidQueueBase> {
+export function validateDiscoveryPayload(payload: unknown): Validated<ValidQueueBase> {
   return validateBase(payload);
 }
-export function validateCheckPayload(
-  payload: unknown,
-): Validated<ValidCheckPayload> {
+export function validateCheckPayload(payload: unknown): Validated<ValidCheckPayload> {
   const base = validateBase(payload);
   if (!base.ok) return base;
-  if (!base.value.wikipediaLanguage)
-    return { ok: false, reason: "missing wikipedia_language" };
+  if (!base.value.wikipediaLanguage) return { ok: false, reason: "missing wikipedia_language" };
   return {
     ok: true,
     value: { ...base.value, wikipediaLanguage: base.value.wikipediaLanguage },
   };
 }
-export function validateExtractPayload(
-  payload: unknown,
-): Validated<ValidExtractPayload> {
+export function validateExtractPayload(payload: unknown): Validated<ValidExtractPayload> {
   const base = validateCheckPayload(payload);
   if (!base.ok) return base;
   if (!base.value.dubbingLanguage) {
@@ -108,13 +121,11 @@ export function validateExtractPayload(
   const pageId = toInt(property(payload, "page_id"), 1);
   if (pageId === null) return { ok: false, reason: "invalid page_id" };
   const rawSections = property(payload, "section_indexes");
-  if (!Array.isArray(rawSections))
-    return { ok: false, reason: "invalid section_indexes" };
+  if (!Array.isArray(rawSections)) return { ok: false, reason: "invalid section_indexes" };
   const sectionIndexes: number[] = rawSections
     .map((raw: unknown) => toInt(raw, 0))
     .filter((n): n is number => n !== null);
-  if (sectionIndexes.length === 0)
-    return { ok: false, reason: "no usable section_indexes" };
+  if (sectionIndexes.length === 0) return { ok: false, reason: "no usable section_indexes" };
   return {
     ok: true,
     value: {

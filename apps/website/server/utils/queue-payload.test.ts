@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  queueRequester,
+  queueRequesterRpcArgs,
   validateCheckPayload,
   validateDiscoveryPayload,
   validateExtractPayload,
@@ -42,16 +44,10 @@ describe("validateExtractPayload", () => {
   });
 
   it("rejects unknown media types, bad ids, and empty sections", () => {
-    expect(validateExtractPayload({ ...valid, media_type: "song" }).ok).toBe(
-      false,
-    );
+    expect(validateExtractPayload({ ...valid, media_type: "song" }).ok).toBe(false);
     expect(validateExtractPayload({ ...valid, page_id: null }).ok).toBe(false);
-    expect(validateExtractPayload({ ...valid, section_indexes: [] }).ok).toBe(
-      false,
-    );
-    expect(
-      validateExtractPayload({ ...valid, section_indexes: ["x"] }).ok,
-    ).toBe(false);
+    expect(validateExtractPayload({ ...valid, section_indexes: [] }).ok).toBe(false);
+    expect(validateExtractPayload({ ...valid, section_indexes: ["x"] }).ok).toBe(false);
     expect(validateExtractPayload({ ...valid, tmdb_id: "abc" }).ok).toBe(false);
   });
 });
@@ -60,10 +56,9 @@ describe("validateCheckPayload", () => {
   it("requires an explicit Wikipedia language and rejects bad seasons", () => {
     const res = validateCheckPayload({ tmdb_id: 1, media_type: "tv" });
     expect(res.ok).toBe(false);
-    expect(
-      validateCheckPayload({ tmdb_id: 1, media_type: "tv", season_number: -2 })
-        .ok,
-    ).toBe(false);
+    expect(validateCheckPayload({ tmdb_id: 1, media_type: "tv", season_number: -2 }).ok).toBe(
+      false,
+    );
   });
 });
 
@@ -84,9 +79,7 @@ describe("source and target separation", () => {
       ok: false,
       reason: "Regional dubbing language requires review",
     });
-    expect(
-      validateExtractPayload({ ...payload, dubbing_language: "fr-FR" }).ok,
-    ).toBe(true);
+    expect(validateExtractPayload({ ...payload, dubbing_language: "fr-FR" }).ok).toBe(true);
   });
   it.each(["fr", "de", "simple", "fr-Fr", "zz-ZZ", ""])(
     "rejects %s as a dubbing region",
@@ -149,9 +142,10 @@ describe("source and target separation", () => {
   });
 
   it("allows source-only discovery and preserves an explicit target when present", () => {
-    expect(
-      validateDiscoveryPayload({ tmdb_id: 1, media_type: "movie" }),
-    ).toMatchObject({ ok: true, value: { tmdbId: 1, mediaType: "movie" } });
+    expect(validateDiscoveryPayload({ tmdb_id: 1, media_type: "movie" })).toMatchObject({
+      ok: true,
+      value: { tmdbId: 1, mediaType: "movie" },
+    });
     expect(
       validateDiscoveryPayload({
         tmdb_id: 1,
@@ -187,5 +181,57 @@ describe("source and target separation", () => {
       ok: true,
       value: { wikipediaLanguage: "fr", dubbingLanguage: "fr-CA" },
     });
+  });
+});
+
+describe("queue requester provenance", () => {
+  const requester = "11111111-1111-4111-8111-111111111111";
+
+  it("preserves only a valid UUID and keeps missing or malformed requesters null", () => {
+    expect(queueRequester(requester)).toBe(requester);
+    expect(queueRequester(null)).toBeNull();
+    expect(queueRequester(undefined)).toBeNull();
+    expect(queueRequester("worker-user")).toBeNull();
+    expect(queueRequester("11111111-1111-4111-8111-11111111111x")).toBeNull();
+    expect(queueRequesterRpcArgs(requester)).toEqual({
+      p_requested_by: requester,
+    });
+    expect(queueRequesterRpcArgs(null)).toEqual({});
+    expect(queueRequesterRpcArgs("worker-user")).toEqual({});
+  });
+
+  it("carries the requester through discovery, check, and extract validation", () => {
+    const payload = {
+      tmdb_id: 12,
+      media_type: "movie",
+      wikipedia_language: "simple",
+      dubbing_language: "en-US",
+      requested_by: requester,
+      page_id: 2,
+      section_indexes: [1],
+    };
+
+    expect(validateDiscoveryPayload(payload)).toMatchObject({
+      ok: true,
+      value: { requestedBy: requester },
+    });
+    expect(validateCheckPayload(payload)).toMatchObject({
+      ok: true,
+      value: { requestedBy: requester },
+    });
+    expect(validateExtractPayload(payload)).toMatchObject({
+      ok: true,
+      value: { requestedBy: requester },
+    });
+  });
+
+  it("normalizes an invalid requester to null rather than inventing one", () => {
+    expect(
+      validateDiscoveryPayload({
+        tmdb_id: 12,
+        media_type: "movie",
+        requested_by: "queue-worker",
+      }),
+    ).toMatchObject({ ok: true, value: { requestedBy: null } });
   });
 });

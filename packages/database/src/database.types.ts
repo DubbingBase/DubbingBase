@@ -699,6 +699,7 @@ export type Database = {
           p_language: string;
           p_media_type: string;
           p_page_id: number;
+          p_requested_by?: string;
           p_season_number?: number;
           p_section_indexes: Json;
           p_tmdb_id: number;
@@ -713,6 +714,7 @@ export type Database = {
           p_is_manual?: boolean;
           p_language?: string;
           p_media_type: string;
+          p_requested_by?: string;
           p_season_number?: number;
           p_tmdb_id: number;
           p_wikipedia_language?: string;
@@ -781,7 +783,7 @@ export type Database = {
         }[];
       };
       get_regional_review_queue_items: {
-        Args: { p_limit?: number };
+        Args: { p_limit?: number; p_offset?: number };
         Returns: {
           created_at: string;
           dubbing_language: string;

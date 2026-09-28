@@ -20,6 +20,7 @@ import { areAllLlmQuotasExhausted } from "../utils/llm";
 import { getErrorMessage } from "../utils/error-message";
 import { setNoStoreHeaders } from "../utils/cache/http";
 import {
+  queueRequesterRpcArgs,
   validateCheckPayload,
   validateDiscoveryPayload,
   validateExtractPayload,
@@ -470,6 +471,7 @@ export default defineEventHandler(async (event) => {
               p_wikipedia_language: wikipediaLanguage,
               p_dubbing_language: valid.value.dubbingLanguage,
               p_is_manual: payload.is_manual ?? false,
+              ...queueRequesterRpcArgs(valid.value.requestedBy),
             });
 
             if (enqueueError) {
@@ -676,6 +678,7 @@ export default defineEventHandler(async (event) => {
             p_season_number: payload.season_number ?? undefined,
             p_episode_number: payload.episode_number ?? undefined,
             p_is_manual: payload.is_manual ?? false,
+            ...queueRequesterRpcArgs(valid.value.requestedBy),
           });
 
           if (extractEnqueueErr && !extractEnqueueErr.message?.includes("already in the")) {

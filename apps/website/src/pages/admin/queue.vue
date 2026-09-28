@@ -638,13 +638,17 @@ interface ListUsersResponse {
   users?: Array<{ id: string; email: string }>;
 }
 
+interface AdminQueueResponse {
+  items: QueueItem[];
+  stats: unknown;
+}
+
 interface ToastState {
   show: boolean;
   message: string;
   type: "success" | "error" | "info";
 }
 
-const supabase = useSupabaseClient<Database>();
 const { t } = useI18n();
 
 definePageMeta({
@@ -859,21 +863,17 @@ const {
 
     const queueParam = filterQueue.value !== "all" ? filterQueue.value : null;
 
-    const [queueRes, statsRes, userData] = await Promise.all([
-      statusParam === "review_needed"
-        ? supabase.rpc("get_regional_review_queue_items", {
-            p_limit: 100,
-          })
-        : supabase.rpc("get_media_queue_items", {
-            p_queue_name: queueParam ?? undefined,
-            p_status: statusParam ?? undefined,
-            p_limit: 100,
-          }),
-      supabase.rpc("get_media_queue_stats"),
+    const [queueRes, userData] = await Promise.all([
+      $fetch<AdminQueueResponse>("/api/admin/queue", {
+        query: {
+          queue: queueParam ?? undefined,
+          status: statusParam ?? undefined,
+          limit: 100,
+          offset: 0,
+        },
+      }),
       $fetch<ListUsersResponse>("/api/list_users").catch(() => null),
     ]);
-
-    if (queueRes.error) throw queueRes.error;
 
     const map: Record<string, string> = {};
     if (userData?.users) {
@@ -882,7 +882,7 @@ const {
       }
     }
 
-    const stats = isRecord(statsRes.data) ? statsRes.data : null;
+    const stats = isRecord(queueRes.stats) ? queueRes.stats : null;
     const totals = stats && isRecord(stats.totals) ? stats.totals : null;
     const activeTotal = typeof totals?.total_active === "number" ? totals.total_active : 0;
     const archivedTotal =
@@ -892,8 +892,8 @@ const {
     return {
       queueItems:
         statusParam === "review_needed" && queueParam
-          ? (queueRes.data ?? []).filter((item: QueueItem) => item.queue_name === queueParam)
-          : (queueRes.data ?? []),
+          ? queueRes.items.filter((item) => item.queue_name === queueParam)
+          : queueRes.items,
       usersMap: map,
       activeTotal,
       archivedTotal,

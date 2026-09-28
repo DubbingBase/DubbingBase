@@ -23,7 +23,8 @@ BEGIN
   message_id := public.enqueue_media_fetch(
     p_tmdb_id => 980101,
     p_media_type => 'tv',
-    p_language => 'simple'
+    p_language => 'simple',
+    p_requested_by => requester_id
   );
   IF NOT EXISTS (
     SELECT 1 FROM pgmq.q_wiki_check
@@ -34,9 +35,6 @@ BEGIN
     RAISE EXCEPTION 'Source-only check did not preserve Wikipedia language separately';
   END IF;
 
-  UPDATE pgmq.q_wiki_check
-  SET message = message || jsonb_build_object('requested_by', requester_id::text)
-  WHERE msg_id = message_id;
   IF NOT EXISTS (
     SELECT 1 FROM public.get_media_queue_items('wiki_check', 'active', 100, 0)
     WHERE id = message_id AND requested_by = requester_id
@@ -90,9 +88,6 @@ BEGIN
     p_media_type => 'movie',
     p_language => 'simple'
   );
-  UPDATE pgmq.q_wiki_check
-  SET message = message - 'requested_by'
-  WHERE msg_id = project_duplicate_review_id;
   PERFORM public.archive_wiki_check_for_regional_review(
     project_duplicate_review_id,
     'Regional project appeared while waiting for review.'
@@ -154,9 +149,6 @@ BEGIN
     p_media_type => 'movie',
     p_dubbing_language => 'fr-CA'
   );
-  UPDATE pgmq.q_wiki_discovery
-  SET message = message - 'requested_by'
-  WHERE msg_id = discovery_id;
   IF NOT EXISTS (
     SELECT 1 FROM pgmq.q_wiki_discovery
     WHERE msg_id = discovery_id

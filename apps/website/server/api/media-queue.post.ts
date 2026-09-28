@@ -27,9 +27,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  if (action === "enqueue") {
-    requireUser(event);
-  }
+  const requestingUser = action === "enqueue" ? requireUser(event) : null;
 
   const supabaseAdmin = useSupabaseAdmin();
   const rawTargetId = tmdbId || mediaId;
@@ -123,6 +121,7 @@ export default defineEventHandler(async (event) => {
       p_wikipedia_language: wikipediaLanguage,
       p_dubbing_language: dubbingLanguage,
       p_is_manual: true,
+      p_requested_by: requestingUser?.id,
     });
 
     if (error) {
