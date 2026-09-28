@@ -177,16 +177,11 @@
                 <div
                   class="absolute top-2 right-2 px-2 py-1 bg-black/60 backdrop-blur-md rounded-md text-xs font-semibold text-white"
                 >
-                  <span v-if="project.language === 'fr-FR'">{{
-                    $t("studio.french")
+                  <span>{{
+                    project.language
+                      ? displayDubbingLanguage(project.language, locale)
+                      : t("details.notSpecified")
                   }}</span>
-                  <span v-else-if="project.language === 'fr-CA'">{{
-                    $t("studio.quebec")
-                  }}</span>
-                  <span v-else-if="project.language === 'fr-BE'">{{
-                    $t("studio.belgian")
-                  }}</span>
-                  <span v-else>{{ project.language }}</span>
                 </div>
               </div>
 
@@ -290,6 +285,7 @@
 </template>
 
 <script setup lang="ts">
+import { displayDubbingLanguage } from "@app/shared-logic";
 import { computed, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import {
@@ -311,7 +307,7 @@ const route = useRoute();
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
 const localePath = useLocalePath();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 function getMediaLink(contentType?: string, mediaId?: number | string) {
   if (contentType === "tv") return `/show/${mediaId}`;

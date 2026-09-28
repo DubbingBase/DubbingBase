@@ -1,0 +1,4 @@
+# Local audit outputs may include review snapshots and user identifiers.
+*.json
+*.sql
+supabase/

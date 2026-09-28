@@ -225,7 +225,7 @@ export default defineNuxtConfig({
 
   i18n: {
     langDir: "locales",
-    locales: [...APP_LOCALES],
+    locales: APP_LOCALES.map((locale) => ({ ...locale })),
     defaultLocale: DEFAULT_LOCALE,
     strategy: "prefix_except_default",
     baseUrl: "https://dubbingbase.com",

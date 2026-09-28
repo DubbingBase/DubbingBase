@@ -158,10 +158,15 @@
           <!-- Language -->
           <div class="space-y-1">
             <label
+              for="movie-project-dubbing-language"
               class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
               >{{ $t("projectEditor.dubbingLanguage") }}</label
             >
-            <AdminLanguageSelect v-model="language" required />
+            <AdminLanguageSelect
+              id="movie-project-dubbing-language"
+              v-model="dubbingLanguage"
+              required
+            />
           </div>
 
           <!-- Status -->
@@ -654,6 +659,7 @@
 </template>
 
 <script setup lang="ts">
+import { validateDubbingLanguage } from "@app/shared-logic";
 import { ref, onMounted, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
@@ -687,7 +693,7 @@ const movieDubbingProjects = ref<any[]>([]);
 const contentId = ref<number | null>(null);
 const mediaTitle = ref("");
 const contentType = ref("movie");
-const language = ref("fr-FR");
+const dubbingLanguage = ref("");
 const posterUrl = ref("");
 const status = ref("validated");
 const selectedStudioId = ref<number | null>(null);
@@ -926,13 +932,13 @@ const createVoiceActor = async () => {
 
 const saveMovieProject = async () => {
   if (!contentId.value) return showToast("TMDB ID required", "error");
-  if (!language.value) return showToast("Language required", "error");
+  if (!dubbingLanguage.value) return showToast("Language required", "error");
   isSaving.value = true;
   try {
     const projectPayload = {
       content_id: contentId.value,
       content_type: contentType.value,
-      language: language.value || "fr-FR",
+      language: validateDubbingLanguage(dubbingLanguage.value),
       studio_id: selectedStudioId.value || null,
       status: status.value || "validated",
     };
@@ -1126,7 +1132,7 @@ watch(
       if (data.project) {
         contentId.value = data.project.content_id;
         contentType.value = data.project.content_type;
-        language.value = data.project.language;
+        dubbingLanguage.value = data.project.language;
         status.value = data.project.status;
         selectedStudioId.value = data.project.studio_id;
         if (data.studioName) {

@@ -369,6 +369,7 @@
 </template>
 
 <script setup lang="ts">
+import { displayDubbingLanguage } from "@app/shared-logic";
 import { ref, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
@@ -461,16 +462,9 @@ const authorsText = computed(() => {
 });
 
 function getDisplayLanguage(langCode?: string | null): string {
-  if (!langCode) return "Français";
-  if (langCode === "fr" || langCode === "fr-FR") return "Français";
-  if (langCode === "fr-CA") return "Québécois";
-  if (langCode === "fr-BE") return "Belge";
-  if (langCode === "en" || langCode === "en-US") return "English";
-  if (langCode === "ja") return "Japonais";
-  if (langCode === "es") return "Espagnol";
-  if (langCode === "de") return "Allemand";
-  if (langCode === "it") return "Italien";
-  return langCode;
+  return langCode
+    ? displayDubbingLanguage(langCode, locale.value)
+    : t("details.notSpecified");
 }
 
 interface FormattedCastItem {

@@ -4,9 +4,7 @@
     <MediaDetailsLayout
       v-else-if="game"
       :title="game.name"
-      :backdrop-url="
-        game.artworks?.[0]?.url || game.screenshots?.[0]?.url || null
-      "
+      :backdrop-url="game.artworks?.[0]?.url || game.screenshots?.[0]?.url || null"
       :poster-url="coverUrl"
       :loading="pending"
     >
@@ -29,8 +27,7 @@
             target="_blank"
             rel="noopener noreferrer"
             class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg theme-surface-overlay theme-text theme-hover-surface-muted transition-colors backdrop-blur-md uppercase tracking-wider"
-            >{{ $t("game.igdb")
-            }}<ExternalLinkIcon class="w-3 h-3 opacity-70" />
+            >{{ $t("game.igdb") }}<ExternalLinkIcon class="w-3 h-3 opacity-70" />
           </a>
         </div>
       </template>
@@ -96,7 +93,7 @@
         <ClientOnly>
           <button
             v-if="isAdmin"
-            @click="triggerPrepareGame"
+            @click="showPrepareDialog = true"
             :disabled="isPreparing"
             class="text-sm theme-primary-text theme-hover-primary-text transition-colors flex items-center gap-1.5 font-medium"
           >
@@ -118,12 +115,7 @@
             "
             class="text-sm theme-primary-text theme-hover-primary-text transition-colors flex items-center gap-1.5 font-medium"
           >
-            <svg
-              class="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -135,11 +127,7 @@
           </NuxtLink>
         </ClientOnly>
 
-        <ForceEnqueueButton
-          v-if="game?.id"
-          media-type="video_game"
-          :media-id="game.id"
-        />
+        <ForceEnqueueButton v-if="game?.id" media-type="video_game" :media-id="game.id" />
 
         <button
           @click="isReportModalOpen = true"
@@ -156,9 +144,7 @@
             stroke-linecap="round"
             stroke-linejoin="round"
           >
-            <path
-              d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"
-            />
+            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
             <line x1="4" y1="22" x2="4" y2="15" />
           </svg>
         </button>
@@ -172,19 +158,14 @@
               {{ $t("details.synopsis", "Synopsis") }}
             </h2>
             <p class="theme-text-secondary leading-relaxed text-lg mb-8">
-              {{
-                game.summary ||
-                $t("details.noSynopsis", "Aucun synopsis disponible.")
-              }}
+              {{ game.summary || $t("details.noSynopsis", "Aucun synopsis disponible.") }}
             </p>
 
             <div
               class="grid grid-cols-2 md:grid-cols-4 gap-6 theme-surface p-6 rounded-xl border theme-border-subtle theme-border shadow-sm"
             >
               <div>
-                <h3
-                  class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2"
-                >
+                <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2">
                   {{ $t("game.developer", "Développeur") }}
                 </h3>
                 <p class="font-medium text-sm">
@@ -192,9 +173,7 @@
                 </p>
               </div>
               <div>
-                <h3
-                  class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2"
-                >
+                <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2">
                   {{ $t("game.publisher", "Éditeur") }}
                 </h3>
                 <p class="font-medium text-sm">
@@ -202,9 +181,7 @@
                 </p>
               </div>
               <div class="col-span-2 md:col-span-1">
-                <h3
-                  class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2"
-                >
+                <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2">
                   {{ $t("game.genres", "Genres") }}
                 </h3>
                 <div class="flex flex-wrap gap-1.5">
@@ -218,9 +195,7 @@
                 </div>
               </div>
               <div class="col-span-2 md:col-span-1">
-                <h3
-                  class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2"
-                >
+                <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2">
                   {{ $t("game.platforms", "Plateformes") }}
                 </h3>
                 <div class="flex flex-wrap gap-1.5">
@@ -240,9 +215,7 @@
         <!-- Voice Cast -->
         <section>
           <div class="flex flex-col mb-6 gap-2">
-            <div
-              class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4"
-            >
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
               <div>
                 <h2 class="text-2xl font-bold">
                   {{ $t("details.castAndCrew", "Casting") }}
@@ -310,9 +283,7 @@
                         <UserIcon class="w-8 h-8 opacity-50" />
                       </div>
                     </div>
-                    <div
-                      class="flex flex-col min-w-0 flex-1 w-full overflow-hidden"
-                    >
+                    <div class="flex flex-col min-w-0 flex-1 w-full overflow-hidden">
                       <div
                         class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
                       >
@@ -351,13 +322,10 @@
                           v-else
                           class="w-full h-full flex items-center justify-center text-2xl font-bold theme-text-muted uppercase theme-surface-muted"
                         >
-                          {{ char.voiceActor.firstname?.[0]
-                          }}{{ char.voiceActor.lastname?.[0] }}
+                          {{ char.voiceActor.firstname?.[0] }}{{ char.voiceActor.lastname?.[0] }}
                         </div>
                       </NuxtLink>
-                      <div
-                        class="flex flex-col min-w-0 flex-1 w-full overflow-hidden"
-                      >
+                      <div class="flex flex-col min-w-0 flex-1 w-full overflow-hidden">
                         <div
                           class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
                         >
@@ -369,11 +337,7 @@
                         <NuxtLink
                           :to="localePath(`/voice-actor/${char.voiceActor.id}`)"
                           class="font-bold text-sm theme-text truncate hover:underline block w-full"
-                          :title="
-                            char.voiceActor.firstname +
-                            ' ' +
-                            char.voiceActor.lastname
-                          "
+                          :title="char.voiceActor.firstname + ' ' + char.voiceActor.lastname"
                         >
                           {{ char.voiceActor.firstname }}
                           {{ char.voiceActor.lastname }}
@@ -384,10 +348,7 @@
                         >
                           {{ char.voiceActor.performance }}
                         </div>
-                        <div
-                          v-if="char.voiceActor.note"
-                          class="text-xs theme-text-muted mt-1"
-                        >
+                        <div v-if="char.voiceActor.note" class="text-xs theme-text-muted mt-1">
                           {{ char.voiceActor.note }}
                         </div>
                       </div>
@@ -402,9 +363,7 @@
                           <UserIcon class="w-8 h-8 opacity-50" />
                         </div>
                       </div>
-                      <div
-                        class="flex flex-col min-w-0 flex-1 w-full overflow-hidden"
-                      >
+                      <div class="flex flex-col min-w-0 flex-1 w-full overflow-hidden">
                         <div
                           class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
                         >
@@ -413,9 +372,7 @@
                             $t("details.voiceActor", "Voice Actor")
                           }}</span>
                         </div>
-                        <div
-                          class="text-sm theme-text-muted italic truncate block w-full"
-                        >
+                        <div class="text-sm theme-text-muted italic truncate block w-full">
                           {{ $t("details.notSpecified", "Non spécifié") }}
                         </div>
                       </div>
@@ -435,14 +392,78 @@
       </template>
     </MediaDetailsLayout>
 
-    <div
-      v-else-if="!pending"
-      class="text-center py-20 theme-text-muted min-h-screen"
-    >
+    <div v-else-if="!pending" class="text-center py-20 theme-text-muted min-h-screen">
       {{ $t("details.notFound", "Jeu vidéo introuvable.") }}
     </div>
 
     <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
+
+    <div
+      v-if="showPrepareDialog && isAdmin"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+      role="presentation"
+      @click.self="showPrepareDialog = false"
+    >
+      <form
+        class="w-full max-w-lg space-y-5 rounded-2xl border theme-border theme-surface-overlay p-6 shadow-2xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="prepare-game-dialog-title"
+        @submit.prevent="triggerPrepareGame"
+      >
+        <div class="space-y-2">
+          <h2 id="prepare-game-dialog-title" class="text-lg font-bold theme-text">
+            {{ $t("game.prepareDialogTitle") }}
+          </h2>
+          <p class="text-sm theme-text-muted">
+            {{ $t("game.prepareDialogDescription") }}
+          </p>
+        </div>
+        <label for="prepare-game-wikipedia-language" class="block space-y-2">
+          <span class="text-sm font-semibold theme-text">
+            {{ $t("game.wikipediaSourceLanguage") }}
+          </span>
+          <input
+            id="prepare-game-wikipedia-language"
+            v-model="prepareWikipediaLanguage"
+            type="text"
+            required
+            pattern="[a-z][a-z0-9-]*"
+            autocomplete="off"
+            class="w-full rounded-xl border theme-border theme-input px-4 py-2.5 text-sm theme-text"
+          />
+          <span class="block text-xs theme-text-muted">
+            {{ $t("game.wikipediaSourceHint") }}
+          </span>
+        </label>
+        <label for="prepare-game-dubbing-language" class="block space-y-2">
+          <span class="text-sm font-semibold theme-text">
+            {{ $t("admin.regionalDubbingLanguage") }}
+          </span>
+          <AdminLanguageSelect
+            id="prepare-game-dubbing-language"
+            v-model="prepareDubbingLanguage"
+            required
+          />
+        </label>
+        <div class="flex justify-end gap-3">
+          <button
+            type="button"
+            class="rounded-xl border theme-border px-4 py-2 text-sm theme-text"
+            @click="showPrepareDialog = false"
+          >
+            {{ $t("common.cancel") }}
+          </button>
+          <button
+            type="submit"
+            :disabled="isPreparing || !canPrepareGame"
+            class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          >
+            {{ $t("game.prepareCredits") }}
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 
@@ -453,6 +474,36 @@ import { useRoute, useRouter } from "vue-router";
 import { fetchGameData, fetchDetailCollection } from "@app/shared-logic";
 import type { PaginatedResponse } from "@app/shared-logic";
 import type { IgdbGame } from "@app/shared-logic";
+import { buildPrepareGameRequest } from "./prepare-game-request";
+
+interface GameDubbingWork {
+  voice_actor?: { id?: number | null } | null;
+}
+
+interface GameDubbingProject {
+  id: number;
+  language?: string | null;
+  works?: GameDubbingWork[] | null;
+  studio_data?: {
+    id: number;
+    logo_url?: string | null;
+    name?: string | null;
+  } | null;
+}
+
+interface GameCastItem {
+  id: number;
+  mug_shot?: { url?: string | null } | null;
+  name: string;
+  voiceActor?: {
+    id: number;
+    firstname: string;
+    lastname: string;
+    profile_picture?: string | null;
+    performance?: string | null;
+    note?: string | null;
+  } | null;
+}
 import { computed, ref, watch } from "vue";
 import { refDebounced } from "@vueuse/core";
 import {
@@ -472,8 +523,7 @@ const isReportModalOpen = ref(false);
 const route = useRoute();
 const router = useRouter();
 const supabase = useSupabaseClient();
-const gameId =
-  (Array.isArray(route.params.id) ? route.params.id[0] : route.params.id) || "";
+const gameId = (Array.isArray(route.params.id) ? route.params.id[0] : route.params.id) || "";
 const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
 
 const user = useSupabaseUser();
@@ -482,6 +532,17 @@ const isAdmin = computed(() => {
 });
 
 const isPreparing = ref(false);
+const showPrepareDialog = ref(false);
+const prepareWikipediaLanguage = ref("");
+const prepareDubbingLanguage = ref("");
+const canPrepareGame = computed(
+  () =>
+    buildPrepareGameRequest(
+      Number(gameId),
+      prepareWikipediaLanguage.value,
+      prepareDubbingLanguage.value,
+    ) !== null,
+);
 
 const { locale, t } = useI18n();
 const localePath = useLocalePath();
@@ -515,15 +576,14 @@ const { data, pending, refresh } = useAsyncData(
     return newData;
   },
   {
-    getCachedData: (key, nuxtApp) =>
-      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+    getCachedData: (key, nuxtApp) => nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
   },
 );
 
 const game = computed(() => data.value?.game);
 const dubbingProjects = computed(() => {
-  const projects = [...(data.value?.dubbingProjects || [])].filter((p) =>
-    projectHasVoiceActor(p),
+  const projects: GameDubbingProject[] = [...(data.value?.dubbingProjects || [])].filter(
+    projectHasVoiceActor,
   );
   const currentLocale = locale.value.toLowerCase();
   return projects.sort((a, b) => {
@@ -540,14 +600,14 @@ const dubbingProjects = computed(() => {
   });
 });
 
-function projectHasVoiceActor(project: any): boolean {
-  return (project.works || []).some((w: any) => w.voice_actor);
+function projectHasVoiceActor(project: GameDubbingProject): boolean {
+  return (project.works || []).some((work) => work.voice_actor);
 }
 
-function projectVoiceActorCount(project: any): number {
+function projectVoiceActorCount(project: GameDubbingProject): number {
   const ids = new Set<number>();
-  for (const w of project.works || []) {
-    if (w.voice_actor?.id) ids.add(w.voice_actor.id);
+  for (const work of project.works || []) {
+    if (work.voice_actor?.id) ids.add(work.voice_actor.id);
   }
   return ids.size;
 }
@@ -566,7 +626,7 @@ const activeDubId = computed(() => {
 
 const activeDubProject = computed(() => {
   return (
-    dubbingProjects.value.find((p: any) => p.id === activeDubId.value) ||
+    dubbingProjects.value.find((project) => project.id === activeDubId.value) ||
     dubbingProjects.value[0]
   );
 });
@@ -596,8 +656,7 @@ const getPublishers = (g: IgdbGame) =>
     ?.filter((c) => c.publisher)
     .map((c) => c.company.name)
     .join(", ");
-const formatReleaseYear = (ts?: number) =>
-  ts ? new Date(ts * 1000).getFullYear().toString() : "";
+const formatReleaseYear = (ts?: number) => (ts ? new Date(ts * 1000).getFullYear().toString() : "");
 
 const searchQuery = ref("");
 const searchInput = ref("");
@@ -608,7 +667,6 @@ watch(debouncedSearch, (val) => {
 });
 watch([searchQuery, activeDubId], () => void setCastPage(1));
 
-type GameCastItem = Record<string, any>;
 const castRequest = computed(() => ({
   collection: "media-cast" as const,
   type: "game",
@@ -626,27 +684,30 @@ const { data: castPageData } = useAsyncData<PaginatedResponse<GameCastItem>>(
   () => fetchDetailCollection<GameCastItem>(castRequest.value),
   {
     watch: [castRequest],
-    getCachedData: (key, nuxtApp) =>
-      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+    getCachedData: (key, nuxtApp) => nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
   },
 );
 const castItems = computed(() => castPageData.value?.data || []);
-const castTotal = computed(
-  () => castPageData.value?.pagination.totalItems || 0,
-);
+const castTotal = computed(() => castPageData.value?.pagination.totalItems || 0);
 
 async function triggerPrepareGame() {
-  if (!isAdmin.value) return;
+  const body = buildPrepareGameRequest(
+    Number(gameId),
+    prepareWikipediaLanguage.value,
+    prepareDubbingLanguage.value,
+  );
+  if (!isAdmin.value || !body) return;
   isPreparing.value = true;
   try {
     const result = await $fetch("/api/prepare_game", {
       method: "POST",
-      body: { igdbId: Number(gameId) },
+      body,
     });
     if (result.ok) {
       console.info(
         `[prepare_game] LLM: ${result.llmModel ?? "unknown"} | ${result.note ?? `${result.creditsAdded} credits added`}`,
       );
+      showPrepareDialog.value = false;
     } else {
       console.error("prepare_game failed:", result.error);
     }

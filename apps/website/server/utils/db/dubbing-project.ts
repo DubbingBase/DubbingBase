@@ -1,20 +1,23 @@
 import { useSupabaseAdmin } from "./client";
+import { requireDubbingLanguage } from "../dubbing-language";
 
 export async function findOrCreateDubbingProject(
   contentId: number,
   contentType: string,
-  language: string,
+  dubbingLanguage: string,
 ): Promise<number> {
+  requireDubbingLanguage(dubbingLanguage);
   const supabase = useSupabaseAdmin();
 
-  const { data: existing } = await supabase
+  const { data: existing, error: lookupError } = await supabase
     .from("dubbing_projects")
     .select("id")
     .eq("content_id", contentId)
     .eq("content_type", contentType)
-    .eq("language", language)
-    .limit(1)
+    .eq("language", dubbingLanguage)
     .maybeSingle();
+
+  if (lookupError) throw lookupError;
 
   if (existing) {
     return existing.id;
@@ -25,11 +28,22 @@ export async function findOrCreateDubbingProject(
     .insert({
       content_id: contentId,
       content_type: contentType,
-      language,
+      language: dubbingLanguage,
     })
     .select("id")
     .single();
 
+  if (error?.code === "23505") {
+    const { data: concurrent, error: concurrentError } = await supabase
+      .from("dubbing_projects")
+      .select("id")
+      .eq("content_id", contentId)
+      .eq("content_type", contentType)
+      .eq("language", dubbingLanguage)
+      .single();
+    if (concurrentError) throw concurrentError;
+    return concurrent.id;
+  }
   if (error) throw error;
   return newProject.id;
 }

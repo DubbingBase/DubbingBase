@@ -4,7 +4,7 @@ export async function enqueueMedia(params: {
   mediaType: string;
   seasonNumber?: number | null;
   episodeNumber?: number | null;
-  language?: string | null;
+  wikipediaLanguage?: string | null;
 }): Promise<void> {
   await $fetch("/api/media-queue", {
     method: "POST",
@@ -15,7 +15,7 @@ export async function enqueueMedia(params: {
       mediaType: params.mediaType,
       seasonNumber: params.seasonNumber ?? undefined,
       episodeNumber: params.episodeNumber ?? undefined,
-      language: params.language ?? undefined,
+      wikipedia_language: params.wikipediaLanguage ?? undefined,
     },
   });
 }

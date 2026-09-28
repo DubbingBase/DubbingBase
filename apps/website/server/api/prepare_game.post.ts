@@ -1,23 +1,17 @@
 import { requireUser } from "../utils/auth";
 import { prepareGame } from "../utils/services/media-preparation";
+import { prepareGameFromPayload } from "../utils/prepare-payload";
 
 export default defineEventHandler(async (event) => {
   requireUser(event);
 
-  let igdbId: number;
-
-  try {
-    const body = await readBody(event);
-    igdbId = Number(body.igdbId);
-    if (isNaN(igdbId)) throw new Error("igdbId must be a number");
-  } catch (err) {
+  const result = await prepareGameFromPayload(await readBody(event), prepareGame);
+  if (!result.ok) {
     throw createError({
       statusCode: 400,
-      message:
-        "Invalid request payload: " +
-        (err instanceof Error ? err.message : String(err)),
+      message: `Invalid request payload: ${result.reason}`,
     });
   }
 
-  return await prepareGame({ igdbId });
+  return result.value;
 });
