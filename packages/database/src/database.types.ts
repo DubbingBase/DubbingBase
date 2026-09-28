@@ -719,10 +719,7 @@ export type Database = {
         };
         Returns: number;
       };
-      finalize_dubbing_language_constraints: {
-        Args: never;
-        Returns: undefined;
-      };
+      finalize_dubbing_language_constraints: { Args: never; Returns: undefined };
       find_duplicate_voice_actors_rpc: { Args: never; Returns: Json };
       get_media_queue_depth: {
         Args: { p_queue_name?: string };
@@ -746,6 +743,7 @@ export type Database = {
           media_type: string;
           queue_name: string;
           read_ct: number;
+          requested_by: string;
           season_number: number;
           status: string;
           tmdb_id: number;
@@ -794,6 +792,7 @@ export type Database = {
           media_type: string;
           queue_name: string;
           read_ct: number;
+          requested_by: string;
           review_note: string;
           season_number: number;
           status: string;

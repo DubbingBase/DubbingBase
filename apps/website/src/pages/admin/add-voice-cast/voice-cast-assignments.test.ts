@@ -111,9 +111,9 @@ describe("regional voice cast assignments", () => {
     };
 
     expect(changedAssignmentOperations(current, initial)).toEqual([
-      { actor_id: 101, work_id: 301, voice_actor_id: 999 },
-      { actor_id: 102, work_id: 302, voice_actor_id: null },
-      { actor_id: 103, work_id: null, voice_actor_id: 303 },
+      { actor_id: 101, work_id: 301, expected_voice_actor_id: 201, voice_actor_id: 999 },
+      { actor_id: 102, work_id: 302, expected_voice_actor_id: 202, voice_actor_id: null },
+      { actor_id: 103, work_id: null, expected_voice_actor_id: null, voice_actor_id: 303 },
     ]);
   });
 });

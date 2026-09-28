@@ -66,9 +66,9 @@ describe("POST /api/admin/dubbing-project", () => {
       content_type: "tv",
       dubbing_language: "fr-FR",
       operations: [
-        { actor_id: 101, work_id: 305, voice_actor_id: 201 },
-        { actor_id: 102, work_id: null, voice_actor_id: 202 },
-        { actor_id: 103, work_id: 306, voice_actor_id: null },
+        { actor_id: 101, work_id: 305, expected_voice_actor_id: 199, voice_actor_id: 201 },
+        { actor_id: 102, work_id: null, expected_voice_actor_id: null, voice_actor_id: 202 },
+        { actor_id: 103, work_id: 306, expected_voice_actor_id: 200, voice_actor_id: null },
       ],
     });
 
@@ -82,9 +82,9 @@ describe("POST /api/admin/dubbing-project", () => {
           p_content_type: "tv",
           p_dubbing_language: "fr-FR",
           p_operations: [
-            { actor_id: 101, work_id: 305, voice_actor_id: 201 },
-            { actor_id: 102, work_id: null, voice_actor_id: 202 },
-            { actor_id: 103, work_id: 306, voice_actor_id: null },
+            { actor_id: 101, work_id: 305, expected_voice_actor_id: 199, voice_actor_id: 201 },
+            { actor_id: 102, work_id: null, expected_voice_actor_id: null, voice_actor_id: 202 },
+            { actor_id: 103, work_id: 306, expected_voice_actor_id: 200, voice_actor_id: null },
           ],
         },
       },
@@ -116,19 +116,46 @@ describe("POST /api/admin/dubbing-project", () => {
       content_type: "tv",
       dubbing_language: "fr-FR",
       operations: [
-        { actor_id: 101, work_id: 305, voice_actor_id: 201 },
-        { actor_id: 101, work_id: 306, voice_actor_id: 202 },
+        { actor_id: 101, work_id: 305, expected_voice_actor_id: 200, voice_actor_id: 201 },
+        { actor_id: 101, work_id: 306, expected_voice_actor_id: 201, voice_actor_id: 202 },
       ],
     });
     const emptyOperationResponse = await post({
       content_id: 211288,
       content_type: "tv",
       dubbing_language: "fr-FR",
-      operations: [{ actor_id: 101, work_id: null, voice_actor_id: null }],
+      operations: [
+        { actor_id: 101, work_id: null, expected_voice_actor_id: null, voice_actor_id: null },
+      ],
     });
 
     expect(duplicateResponse.status).toBe(400);
     expect(emptyOperationResponse.status).toBe(400);
+    expect(rpcCalls).toEqual([]);
+  });
+
+  it("requires an optional positive expected voice actor ID", async () => {
+    const { supabase, rpcCalls } = createSupabaseMock();
+    routeMocks.useSupabaseAdmin.mockReturnValue(supabase);
+
+    const base = {
+      content_id: 211288,
+      content_type: "tv",
+      dubbing_language: "fr-FR",
+    };
+    const missingExpectedValue = await post({
+      ...base,
+      operations: [{ actor_id: 101, work_id: 305, voice_actor_id: 201 }],
+    });
+    const invalidExpectedValue = await post({
+      ...base,
+      operations: [
+        { actor_id: 101, work_id: 305, expected_voice_actor_id: -1, voice_actor_id: 201 },
+      ],
+    });
+
+    expect(missingExpectedValue.status).toBe(400);
+    expect(invalidExpectedValue.status).toBe(400);
     expect(rpcCalls).toEqual([]);
   });
 
@@ -145,10 +172,33 @@ describe("POST /api/admin/dubbing-project", () => {
       content_id: 211288,
       content_type: "tv",
       dubbing_language: "fr-FR",
-      operations: [{ actor_id: 101, work_id: 305, voice_actor_id: 201 }],
+      operations: [
+        { actor_id: 101, work_id: 305, expected_voice_actor_id: 199, voice_actor_id: 201 },
+      ],
     });
 
     expect(response.status).toBe(409);
     expect(rpcCalls).toHaveLength(1);
+  });
+
+  it("surfaces a stale assignment conflict as HTTP 409", async () => {
+    const { supabase } = createSupabaseMock({
+      data: null,
+      error: Object.assign(new Error("Assignment changed; reload before saving"), {
+        code: "40001",
+      }),
+    });
+    routeMocks.useSupabaseAdmin.mockReturnValue(supabase);
+
+    const response = await post({
+      content_id: 211288,
+      content_type: "tv",
+      dubbing_language: "fr-FR",
+      operations: [
+        { actor_id: 101, work_id: 305, expected_voice_actor_id: 199, voice_actor_id: 201 },
+      ],
+    });
+
+    expect(response.status).toBe(409);
   });
 });

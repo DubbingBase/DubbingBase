@@ -3,7 +3,8 @@
 -- 20260926094824_preserve_dubbing_review_dependencies.sql,
 -- 20260926130158_map_legacy_dubbing_project_regions.sql, and
 -- 20260926174115_queue_regional_review_resume.sql and
--- 20260926174116_atomic_regional_project_actor_assignments.sql.
+-- 20260926174116_atomic_regional_project_actor_assignments.sql and
+-- 20260928083958_harden_regional_assignment_concurrency_and_queue_metadata.sql.
 -- Fixtures and queue transitions are rolled back.
 \set ON_ERROR_STOP on
 BEGIN;
@@ -16,6 +17,7 @@ DECLARE
   extract_id bigint;
   project_duplicate_review_id bigint;
   queue_duplicate_review_id bigint;
+  requester_id uuid := '11111111-1111-4111-8111-111111111111';
 BEGIN
   -- Source-only queue work reaches wiki_check and becomes an explicit review item.
   message_id := public.enqueue_media_fetch(
@@ -32,6 +34,16 @@ BEGIN
     RAISE EXCEPTION 'Source-only check did not preserve Wikipedia language separately';
   END IF;
 
+  UPDATE pgmq.q_wiki_check
+  SET message = message || jsonb_build_object('requested_by', requester_id::text)
+  WHERE msg_id = message_id;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.get_media_queue_items('wiki_check', 'active', 100, 0)
+    WHERE id = message_id AND requested_by = requester_id
+  ) THEN
+    RAISE EXCEPTION 'Active queue RPC did not return the requested_by UUID';
+  END IF;
+
   IF NOT public.archive_wiki_check_for_regional_review(
     message_id,
     'Dubbing sections found; regional selection required.'
@@ -44,9 +56,16 @@ BEGIN
       AND status = 'review_needed'
       AND wikipedia_language = 'simple'
       AND dubbing_language IS NULL
+      AND requested_by = requester_id
       AND review_note LIKE '%regional selection required%'
   ) THEN
-    RAISE EXCEPTION 'Review-needed state or source/target separation was lost';
+    RAISE EXCEPTION 'Review-needed state, requester, or source/target separation was lost';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.get_media_queue_items('wiki_check', 'archived', 100, 0)
+    WHERE id = message_id AND requested_by = requester_id
+  ) THEN
+    RAISE EXCEPTION 'Archived queue RPC did not return the requested_by UUID';
   END IF;
 
   IF NOT public.resume_wiki_check_for_regional_review(message_id, 'fr-FR') THEN
@@ -71,6 +90,9 @@ BEGIN
     p_media_type => 'movie',
     p_language => 'simple'
   );
+  UPDATE pgmq.q_wiki_check
+  SET message = message - 'requested_by'
+  WHERE msg_id = project_duplicate_review_id;
   PERFORM public.archive_wiki_check_for_regional_review(
     project_duplicate_review_id,
     'Regional project appeared while waiting for review.'
@@ -82,10 +104,16 @@ BEGIN
   END IF;
   IF NOT EXISTS (
     SELECT 1 FROM pgmq.a_wiki_check
-    WHERE msg_id = project_duplicate_review_id
+      WHERE msg_id = project_duplicate_review_id
       AND message->>'review_needed' = 'true'
   ) THEN
     RAISE EXCEPTION 'Project conflict discarded its archived review item';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.get_regional_review_queue_items()
+    WHERE id = project_duplicate_review_id AND requested_by IS NULL
+  ) THEN
+    RAISE EXCEPTION 'An archived message without requested_by did not return NULL';
   END IF;
 
   -- Another check may race into the active queue after an item is archived.
@@ -126,6 +154,9 @@ BEGIN
     p_media_type => 'movie',
     p_dubbing_language => 'fr-CA'
   );
+  UPDATE pgmq.q_wiki_discovery
+  SET message = message - 'requested_by'
+  WHERE msg_id = discovery_id;
   IF NOT EXISTS (
     SELECT 1 FROM pgmq.q_wiki_discovery
     WHERE msg_id = discovery_id
@@ -133,6 +164,12 @@ BEGIN
       AND message->>'dubbing_language' = 'fr-CA'
   ) THEN
     RAISE EXCEPTION 'Discovery did not preserve the regional target independently';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.get_media_queue_items('wiki_discovery', 'active', 100, 0)
+    WHERE id = discovery_id AND requested_by IS NULL
+  ) THEN
+    RAISE EXCEPTION 'An active message without requested_by did not return NULL';
   END IF;
 
   -- Same Wikipedia edition plus distinct regional targets is distinct queue work.

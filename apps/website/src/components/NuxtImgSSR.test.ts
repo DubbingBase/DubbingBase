@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { mount } from "@vue/test-utils";
-import { defineComponent, h, version as vueVersion, useTemplateRef } from "vue";
+import { defineComponent, h, resolveComponent, version as vueVersion, useTemplateRef } from "vue";
 import { NuxtImg } from "#components";
 
 describe("Vue deduplication & NuxtImg SSR stability", () => {
@@ -27,16 +27,17 @@ describe("Vue deduplication & NuxtImg SSR stability", () => {
   it("renders multiple NuxtImg instances without throwing 'Cannot redefine property: imgEl'", () => {
     const TestComponent = defineComponent({
       render() {
+        const nuxtImg = resolveComponent("NuxtImg");
         return h("div", [
-          h(NuxtImg, {
+          h(nuxtImg, {
             src: "https://image.tmdb.org/t/p/w342/test1.jpg",
             alt: "Test 1",
           }),
-          h(NuxtImg, {
+          h(nuxtImg, {
             src: "https://image.tmdb.org/t/p/w342/test2.jpg",
             alt: "Test 2",
           }),
-          h(NuxtImg, {
+          h(nuxtImg, {
             src: "https://image.tmdb.org/t/p/w342/test3.jpg",
             alt: "Test 3",
           }),
@@ -45,7 +46,7 @@ describe("Vue deduplication & NuxtImg SSR stability", () => {
     });
 
     expect(() => {
-      const wrapper = mount(TestComponent);
+      const wrapper = mount(TestComponent, { global: { components: { NuxtImg } } });
       expect(wrapper.exists()).toBe(true);
     }).not.toThrow();
   });

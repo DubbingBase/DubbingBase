@@ -85,29 +85,6 @@
       </p>
     </div>
 
-    <!-- Empty State -->
-    <div
-      v-else-if="allQueueItems.length === 0"
-      class="text-center py-20 theme-surface-overlay border theme-border rounded-2xl space-y-2"
-    >
-      <div
-        class="h-12 w-12 rounded-full theme-surface-overlay flex items-center justify-center theme-text-muted mx-auto"
-      >
-        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-      </div>
-      <p class="theme-text-muted font-semibold">
-        {{ $t("admin.queue.noMediaRequests") }}
-      </p>
-      <p class="text-xs theme-text-muted">{{ $t("admin.queue.queueEmpty") }}</p>
-    </div>
-
     <!-- Queue Content (Filters + Table) -->
     <div v-else class="space-y-6">
       <!-- Filters -->
@@ -118,7 +95,7 @@
         <div class="flex items-center theme-input p-1 rounded-xl border theme-border">
           <button
             type="button"
-            @click="archiveFilter = 'active'"
+            @click="selectArchiveFilter('active')"
             class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-150 flex items-center space-x-1.5"
             :class="
               archiveFilter === 'active'
@@ -131,7 +108,7 @@
           </button>
           <button
             type="button"
-            @click="archiveFilter = 'archived'"
+            @click="selectArchiveFilter('archived')"
             class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-150 flex items-center space-x-1.5"
             :class="
               archiveFilter === 'archived'
@@ -144,7 +121,7 @@
           </button>
           <button
             type="button"
-            @click="archiveFilter = 'all'"
+            @click="selectArchiveFilter('all')"
             class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-150"
             :class="
               archiveFilter === 'all'
@@ -156,10 +133,7 @@
           </button>
           <button
             type="button"
-            @click="
-              archiveFilter = 'archived';
-              filterStatus = 'review_needed';
-            "
+            @click="selectArchiveFilter('review_needed')"
             class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-150"
             :class="
               filterStatus === 'review_needed'
@@ -208,9 +182,6 @@
             </option>
             <option value="completed">{{ $t("admin.queue.completed") }}</option>
             <option value="failed">{{ $t("admin.queue.failed") }}</option>
-            <option value="review_needed">
-              {{ $t("admin.queue.reviewNeeded") }}
-            </option>
           </select>
         </div>
         <div class="flex items-center space-x-2">
@@ -256,8 +227,34 @@
         </span>
       </div>
 
+      <!-- Empty State -->
+      <div
+        v-if="filteredItems.length === 0"
+        class="text-center py-20 theme-surface-overlay border theme-border rounded-2xl space-y-2"
+      >
+        <div
+          class="h-12 w-12 rounded-full theme-surface-overlay flex items-center justify-center theme-text-muted mx-auto"
+        >
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        </div>
+        <p class="theme-text-muted font-semibold">
+          {{ $t("admin.queue.noMediaRequests") }}
+        </p>
+        <p class="text-xs theme-text-muted">{{ $t("admin.queue.queueEmpty") }}</p>
+      </div>
+
       <!-- Queue Grid / Table -->
-      <div class="theme-surface-overlay border theme-border rounded-2xl overflow-hidden shadow-xl">
+      <div
+        v-else
+        class="theme-surface-overlay border theme-border rounded-2xl overflow-hidden shadow-xl"
+      >
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse text-sm">
             <thead>
@@ -275,11 +272,6 @@
               </tr>
             </thead>
             <tbody class="divide-y theme-divide">
-              <tr v-if="filteredItems.length === 0">
-                <td colspan="6" class="py-8 text-center theme-text-muted">
-                  {{ $t("admin.queue.noMatchingItems") }}
-                </td>
-              </tr>
               <tr
                 v-for="item in filteredItems"
                 :key="item.id"
@@ -428,7 +420,7 @@
                 <!-- Requester column -->
                 <td class="py-4 px-6">
                   <div class="font-medium theme-text text-sm truncate max-w-xs">
-                    {{ getUserEmail(getQueueRequesterId(item)) }}
+                    {{ getUserEmail(item.requested_by) }}
                   </div>
                   <div class="text-xs theme-text-muted mt-0.5">
                     {{ formatTime(item.created_at) }}
@@ -636,6 +628,11 @@ import { ref, computed, watch } from "vue";
 import { isDubbingLanguage } from "@app/shared-logic";
 import type { Database } from "@app/supabase";
 import type { QueueItem } from "~/utils/queue-item";
+import {
+  queueFilterStateForSelection,
+  type QueueFilterSelection,
+  type QueueStatusFilter,
+} from "./queue-state";
 
 interface ListUsersResponse {
   users?: Array<{ id: string; email: string }>;
@@ -668,13 +665,19 @@ const isDev = import.meta.env.DEV;
 const pendingCount = ref<number | null>(null);
 
 const filterQueue = ref("all");
-const filterStatus = ref("all");
+const filterStatus = ref<QueueStatusFilter>("all");
 const filterType = ref("all");
 const filterSearch = ref("");
 const archiveFilter = ref<"active" | "archived" | "all">("active");
 
 const activeCount = ref(0);
 const archivedCount = ref(0);
+
+function selectArchiveFilter(selection: QueueFilterSelection): void {
+  const next = queueFilterStateForSelection(selection, filterStatus.value);
+  archiveFilter.value = next.archiveFilter;
+  filterStatus.value = next.filterStatus;
+}
 
 const allQueueItems = computed(() => queueItems.value);
 
@@ -806,10 +809,6 @@ const getAppMediaUrl = (
       return `/movie/${tmdbId}`;
   }
 };
-
-function getQueueRequesterId(item: QueueItem): string | undefined {
-  return "user_id" in item && typeof item.user_id === "string" ? item.user_id : undefined;
-}
 
 const getUserEmail = (userId: string | null | undefined) => {
   if (!userId) return "Anonymous";

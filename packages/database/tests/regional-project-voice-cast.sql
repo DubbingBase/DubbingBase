@@ -1,6 +1,7 @@
 -- Run against an isolated database after
 -- 20260926174116_atomic_regional_project_actor_assignments.sql and
--- 20260927171839_save_regional_project_actor_assignments.sql.
+-- 20260927171839_save_regional_project_actor_assignments.sql and
+-- 20260928083958_harden_regional_assignment_concurrency_and_queue_metadata.sql.
 -- The test exercises transaction rollback and leaves no fixture data behind.
 \set ON_ERROR_STOP on
 BEGIN;
@@ -19,6 +20,7 @@ DECLARE
   actor_clear bigint := 710100004;
   actor_keep bigint := 710100005;
   actor_fr bigint := 710100006;
+  actor_concurrent bigint := 710100007;
   project_id bigint;
   work_id bigint;
   rich_work_id bigint;
@@ -28,6 +30,8 @@ DECLARE
   keep_work_id bigint;
   france_work_id bigint;
   canada_work_id bigint;
+  concurrent_work_id bigint;
+  rollback_work_id bigint;
 BEGIN
   INSERT INTO public.voice_actors(firstname, lastname)
   VALUES ('Regional RPC', 'One') RETURNING id INTO va_one;
@@ -47,6 +51,7 @@ BEGIN
     jsonb_build_array(jsonb_build_object(
       'actor_id', actor_new,
       'work_id', NULL,
+      'expected_voice_actor_id', NULL,
       'voice_actor_id', va_one
     ))
   );
@@ -68,11 +73,12 @@ BEGIN
       jsonb_build_array(jsonb_build_object(
         'actor_id', actor_new,
         'work_id', NULL,
+        'expected_voice_actor_id', NULL,
         'voice_actor_id', -9223372036854770000
       ))
     );
     RAISE EXCEPTION 'An unknown voice actor was accepted';
-  EXCEPTION WHEN foreign_key_violation THEN
+  EXCEPTION WHEN SQLSTATE '22023' OR foreign_key_violation THEN
     NULL;
   END;
   IF EXISTS (
@@ -91,6 +97,7 @@ BEGIN
     jsonb_build_array(jsonb_build_object(
       'actor_id', actor_rich,
       'work_id', NULL,
+      'expected_voice_actor_id', NULL,
       'voice_actor_id', va_one
     ))
   );
@@ -115,6 +122,7 @@ BEGIN
     jsonb_build_array(jsonb_build_object(
       'actor_id', actor_rich,
       'work_id', rich_work_id,
+      'expected_voice_actor_id', va_one,
       'voice_actor_id', va_two
     ))
   );
@@ -155,6 +163,7 @@ BEGIN
       jsonb_build_array(jsonb_build_object(
         'actor_id', actor_ambiguous,
         'work_id', ambiguous_work_one,
+        'expected_voice_actor_id', va_one,
         'voice_actor_id', va_three
       ))
     );
@@ -182,6 +191,7 @@ BEGIN
     jsonb_build_array(jsonb_build_object(
       'actor_id', actor_clear,
       'work_id', clear_work_id,
+      'expected_voice_actor_id', va_one,
       'voice_actor_id', NULL
     ))
   );
@@ -202,6 +212,7 @@ BEGIN
       jsonb_build_array(jsonb_build_object(
         'actor_id', actor_new,
         'work_id', 999999999999,
+        'expected_voice_actor_id', va_one,
         'voice_actor_id', va_three
       ))
     );
@@ -233,6 +244,7 @@ BEGIN
     jsonb_build_array(jsonb_build_object(
       'actor_id', actor_fr,
       'work_id', france_work_id,
+      'expected_voice_actor_id', va_one,
       'voice_actor_id', va_three
     ))
   );
@@ -242,6 +254,75 @@ BEGIN
     SELECT 1 FROM public.work WHERE id = canada_work_id AND voice_actor_id = va_four
   ) THEN
     RAISE EXCEPTION 'Saving the France region changed the Canada work or lost the France work identity';
+  END IF;
+
+  -- The voice actor loaded by an admin is a compare-and-set guard against
+  -- overwriting another admin's newer assignment.
+  project_id := public.save_regional_project_actor_assignments(
+    -980208,
+    'movie',
+    'fr-FR',
+    jsonb_build_array(jsonb_build_object(
+      'actor_id', actor_concurrent,
+      'work_id', NULL,
+      'expected_voice_actor_id', NULL,
+      'voice_actor_id', va_one
+    ))
+  );
+  UPDATE public.dubbing_projects SET status = 'in_progress' WHERE id = project_id;
+  UPDATE public.work
+  SET character_id = 80801,
+      character_name = 'Concurrency character',
+      note = 'Preserve after conflict'
+  WHERE dubbing_project_id = project_id AND actor_id = actor_concurrent
+  RETURNING id INTO concurrent_work_id;
+  INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id)
+  VALUES (project_id, actor_keep, va_one)
+  RETURNING id INTO rollback_work_id;
+
+  -- Simulate a second admin saving after the first admin loaded VA One.
+  UPDATE public.work SET voice_actor_id = va_two WHERE id = concurrent_work_id;
+  BEGIN
+    PERFORM public.save_regional_project_actor_assignments(
+      -980208,
+      'movie',
+      'fr-FR',
+      jsonb_build_array(
+        jsonb_build_object(
+          'actor_id', actor_keep,
+          'work_id', rollback_work_id,
+          'expected_voice_actor_id', va_one,
+          'voice_actor_id', va_four
+        ),
+        jsonb_build_object(
+          'actor_id', actor_concurrent,
+          'work_id', concurrent_work_id,
+          'expected_voice_actor_id', va_one,
+          'voice_actor_id', va_three
+        )
+      )
+    );
+    RAISE EXCEPTION 'A stale voice-cast edit overwrote a concurrent assignment';
+  EXCEPTION WHEN SQLSTATE '40001' THEN
+    NULL;
+  END;
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.work AS work
+    JOIN public.dubbing_projects AS project ON project.id = work.dubbing_project_id
+    WHERE work.id = concurrent_work_id
+      AND work.voice_actor_id = va_two
+      AND work.character_id = 80801
+      AND work.character_name = 'Concurrency character'
+      AND work.note = 'Preserve after conflict'
+      AND project.content_id = -980208
+      AND project.language = 'fr-FR'
+      AND project.status = 'in_progress'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM public.work
+    WHERE id = rollback_work_id AND voice_actor_id = va_one
+  ) THEN
+    RAISE EXCEPTION 'A stale voice-cast conflict changed work rows or the project';
   END IF;
 END;
 $$;

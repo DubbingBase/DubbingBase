@@ -5,6 +5,7 @@ type QueueFieldsThatMayBeNull =
   | "episode_number"
   | "error_message"
   | "language"
+  | "requested_by"
   | "season_number"
   | "wikipedia_language";
 
@@ -16,6 +17,7 @@ type QueueRow = Omit<
   episode_number: number | null;
   error_message: string | null;
   language: string | null;
+  requested_by: string | null;
   season_number: number | null;
   wikipedia_language: string | null;
 };
@@ -28,6 +30,7 @@ type RegionalReviewQueueRow = Omit<
   episode_number: number | null;
   error_message: string | null;
   language?: string | null;
+  requested_by: string | null;
   review_note: string | null;
   season_number: number | null;
   wikipedia_language: string | null;

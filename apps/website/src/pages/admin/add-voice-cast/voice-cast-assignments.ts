@@ -16,6 +16,7 @@ export interface VoiceCastAssignment {
 export interface VoiceCastAssignmentOperation {
   actor_id: number;
   work_id: number | null;
+  expected_voice_actor_id: number | null;
   voice_actor_id: number | null;
 }
 
@@ -103,6 +104,7 @@ export function changedAssignmentOperations(
     .map(([actorId, assignment]) => ({
       actor_id: Number(actorId),
       work_id: assignment.work_id,
+      expected_voice_actor_id: initial[Number(actorId)]?.voice_actor_id ?? null,
       voice_actor_id: assignment.voice_actor_id,
     }));
 }

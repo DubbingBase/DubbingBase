@@ -19,7 +19,11 @@ for bucket in $(grep -oP '\[storage\.buckets\.\K[^\]]+' supabase/config.toml); d
     temp_dir=$(mktemp -d)
     
     # Supabase CLI creates a subfolder for the bucket inside the target directory
-    npx --yes supabase storage cp --experimental --linked -r "ss:///$bucket/" "$temp_dir/" || true
+    if ! npx --yes supabase storage cp --experimental --linked -r "ss:///$bucket/" "$temp_dir/"; then
+      rm -rf "$temp_dir"
+      echo "Failed to download remote bucket '$bucket'." >&2
+      exit 1
+    fi
     
     # Copy the contents directly into the target folder to avoid nesting
     if [ -d "$temp_dir/$bucket" ]; then
@@ -35,14 +39,6 @@ done
 # and running an INSERT during seed will crash with a unique key constraint.
 perl -0777 -pi -e 's/INSERT INTO "storage"\."buckets".*?;//gs' supabase/seed.sql
 
-# The linked Storage schema can be newer than the local Storage image.
-perl -0777 -pi -e '
-  my $start = index($_, q{INSERT INTO "storage"."objects"});
-  if ($start >= 0) {
-    my $end = index($_, q{;}, $start);
-    my $block = substr($_, $start, $end - $start);
-    $block =~ s/, "archived_at", "is_delete_marker", "is_versioned"//;
-    $block =~ s/, (?:NULL|\x27(?:\x27\x27|[^\x27])*\x27), (?:true|false), (?:true|false)(?=\),?)/ /g;
-    substr($_, $start, $end - $start) = $block;
-  }
-' supabase/seed.sql
+# Bucket objects are restored through the Storage API from their configured
+# objects_path. Keep the data-only dump from inserting duplicate object rows.
+perl -0777 -pi -e 's/INSERT INTO "storage"\."objects".*?;//gs' supabase/seed.sql

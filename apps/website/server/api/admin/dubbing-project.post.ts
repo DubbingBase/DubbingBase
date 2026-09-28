@@ -8,6 +8,7 @@ const MEDIA_TYPES = ["movie", "tv", "video_game", "audiobook", "podcast", "adver
 interface AssignmentOperation {
   actor_id: number;
   work_id: number | null;
+  expected_voice_actor_id: number | null;
   voice_actor_id: number | null;
 }
 
@@ -55,8 +56,10 @@ export default defineEventHandler(async (event) => {
       !isRecord(value) ||
       !isPositiveId(value.actor_id) ||
       !isOptionalPositiveId(value.work_id) ||
+      !isOptionalPositiveId(value.expected_voice_actor_id) ||
       !isOptionalPositiveId(value.voice_actor_id) ||
-      (value.work_id === null && value.voice_actor_id === null) ||
+      (value.work_id === null &&
+        (value.voice_actor_id === null || value.expected_voice_actor_id !== null)) ||
       seenActorIds.has(value.actor_id)
     ) {
       throw createError({
@@ -68,6 +71,7 @@ export default defineEventHandler(async (event) => {
     operations.push({
       actor_id: value.actor_id,
       work_id: value.work_id,
+      expected_voice_actor_id: value.expected_voice_actor_id,
       voice_actor_id: value.voice_actor_id,
     });
   }
@@ -80,6 +84,7 @@ export default defineEventHandler(async (event) => {
     p_operations: operations.map((operation): Json => ({
       actor_id: operation.actor_id,
       work_id: operation.work_id,
+      expected_voice_actor_id: operation.expected_voice_actor_id,
       voice_actor_id: operation.voice_actor_id,
     })),
   });
