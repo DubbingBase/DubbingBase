@@ -13,6 +13,8 @@ The Get-dubbing-project.get subsystem handles **1 routes** and touches: cache.
 
 - **dubbing_projects** (13 fields) → [database.md](./database.md)
 - **dubbing_project_crew** (4 fields) → [database.md](./database.md)
+- **dubbing_languages** (1 fields) → [database.md](./database.md)
+- **dubbing_language_reviews** (5 fields) → [database.md](./database.md)
 
 ## Source Files
 

@@ -2,21 +2,22 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**83 library files** across 5 modules
+**88 library files** across 6 modules
 
-## Website (45 files)
+## Website (48 files)
 
 - `apps/website/server/utils/index.ts` — getCloudflareKv, useCache, getOrFetch, useTmdbClient, useTvdbClient, useIgdbClient, …
 - `apps/website/server/utils/cache/wikipedia.ts` — sortLanguagesByPopularity, extractAvailableLanguages, cleanHeadingText, isDubbingSectionHeading, selectDubbingSections, filterValidSectionIndexes, …
 - `apps/website/server/utils/services/media-preparation.ts` — checkMediaDubbingSections, checkGameDubbingSections, extractMediaDubbingCredits, extractGameDubbingCredits, prepareMedia, prepareGame, …
 - `apps/website/server/utils/cache/constants.ts` — hashCacheValue, buildCacheKey, SimpleKeyBuilder, SimpleKeyValidator, CacheKeyInput, CACHE_SCHEMA_VERSION, …
+- `apps/website/server/utils/queue-payload.ts` — queueRequester, queueRequesterRpcArgs, validateDiscoveryPayload, validateCheckPayload, validateExtractPayload, ValidQueueBase, …
 - `apps/website/server/utils/cache/http.ts` — shouldDisableErrorCaching, setErrorCacheHeaders, getPublicCacheControl, setNoCacheHeaders, setNoStoreHeaders, setPublicCacheHeaders, …
 - `apps/website/server/utils/cache/index.ts` — createCacheNamespace, CacheNamespace, SimpleCache, GetOrFetchOptions, CacheKv, CacheTTLPreset, …
 - `apps/website/src/utils/media-cast.ts` — sameMediaId, matchCastWorks, CastActorReference, CharacterProfilePicture, CastWorkReference, DisplayCastActor, …
 - `apps/website/server/utils/llm.ts` — areAllLlmQuotasExhausted, getLlmQuotaCache, llmGenerate, llmGenerateObject, llmVision, llmVisionObject
 - `apps/website/server/utils/notifications/discord.ts` — normalizeDiscordUrl, buildDiscordEmbed, sendDiscordAdminNotification, DiscordWebhookOptions, QueueName, DiscordNotificationCategory
-- `apps/website/server/utils/queue-payload.ts` — validateCheckPayload, validateDiscoveryPayload, validateExtractPayload, ValidQueueBase, ValidExtractPayload, QueueMediaType
 - `apps/website/server/utils/db/queries.ts` — getVoiceActorWithWork, getWorkByActor, getDubbingProjects, getWorkVotes, getTopContributors
+- `apps/website/server/utils/prepare-payload.ts` — validatePrepareGamePayload, prepareGameFromPayload, validatePrepareMediaPayload, PrepareGameInput, PrepareMediaInput
 - `apps/website/server/utils/retryable-request.ts` — isRetryableMediaRequestError, isRetryableMediaRequestStatus, createMediaResponseError, fetchMediaRequest, RetryableMediaRequestError
 - `apps/website/server/utils/services/voice-actor.ts` — upsertVoiceActor, upsertActor, upsertStudio, upsertWork, insertVoiceActorAndWork
 - `apps/website/server/utils/pagination.ts` — parsePagination, paginateArray, PaginationOptions, ParsedPagination
@@ -30,12 +31,12 @@
 - `apps/website/server/utils/auth.ts` — requireUser, requireAdmin
 - `apps/website/server/utils/normalize.ts` — normalizeString, isExploitableVoiceActorName
 - `apps/website/server/utils/notifications/onesignal.ts` — sendOneSignalNotification, OneSignalOptions
-- `apps/website/server/utils/urls/supabase.ts` — buildSupabaseImageUrl, processVoiceActor
-- _…and 20 more files_
+- _…and 23 more files_
 
-## Shared-logic (18 files)
+## Shared-logic (19 files)
 
 - `packages/shared-logic/src/constants.ts` — resolveLocaleLanguage, LocaleConfig, SupportedLocale, NonDefaultLocale, MediaType, MediaRoutePrefix, …
+- `packages/shared-logic/src/dubbing-languages.ts` — isDubbingLanguage, validateDubbingLanguage, displayDubbingLanguage, DubbingLanguage, DUBBING_LANGUAGES, DEFAULT_DUBBING_LANGUAGE
 - `packages/shared-logic/src/composables/useStudioData.ts` — fetchStudioDetails, fetchStudiosData, useStudioData, Studio, StudioDetailsResponse
 - `packages/shared-logic/src/composables/useVoiceActorData.ts` — fetchVoiceActorData, useVoiceActorData, VoiceActorResponse, EnhancedWorkItem, VoiceActorDataPayload
 - `packages/shared-logic/src/utils/voice-actor-work-groups.ts` — groupVoiceActorWorks, paginateVoiceActorWorks, VoiceActorWorkLike, VoiceActorWorkGroup, VoiceActorWorksPageItem
@@ -82,6 +83,10 @@
 ## E2e (1 files)
 
 - `e2e/helpers/mock-api.ts` — waitForVueHydration, setupMockApi, MockApiOptions
+
+## Scripts (1 files)
+
+- `scripts/audit-dubbing-languages.py` — query, render_migration, main
 
 ---
 _Back to [overview.md](./overview.md)_

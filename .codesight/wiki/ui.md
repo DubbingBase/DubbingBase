@@ -105,7 +105,7 @@
 - **voice-actor-profile** — `apps/mobile/src/views/voice-actor-profile.vue`
 - **app** — `apps/website/src/app.vue`
 - **Footer** — `apps/website/src/components/Footer.vue`
-- **ForceEnqueueButton** — props: mediaType, mediaId, seasonNumber, episodeNumber, language — `apps/website/src/components/ForceEnqueueButton.vue`
+- **ForceEnqueueButton** — props: mediaType, mediaId, seasonNumber, episodeNumber, wikipediaLanguage — `apps/website/src/components/ForceEnqueueButton.vue`
 - **Header** — `apps/website/src/components/Header.vue`
 - **LanguageBanner** — `apps/website/src/components/LanguageBanner.vue`
 - **MediaSkeleton** — `apps/website/src/components/MediaSkeleton.vue`
@@ -118,7 +118,7 @@
 - **SearchResultItem** — props: result, mediaTypeLabel, selected — `apps/website/src/components/SearchResultItem.vue`
 - **UnderConstruction** — `apps/website/src/components/UnderConstruction.vue`
 - **AsyncAutocomplete** — props: modelValue, options, loading, placeholder, disabled, allowCreate, displayFn — `apps/website/src/components/admin/AsyncAutocomplete.vue`
-- **LanguageSelect** — props: modelValue, required — `apps/website/src/components/admin/LanguageSelect.vue`
+- **LanguageSelect** — props: id — `apps/website/src/components/admin/LanguageSelect.vue`
 - **BarChart** — `apps/website/src/components/admin/charts/BarChart.vue`
 - **LineChart** — `apps/website/src/components/admin/charts/LineChart.vue`
 - **PieChart** — `apps/website/src/components/admin/charts/PieChart.vue`

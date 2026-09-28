@@ -1,8 +1,12 @@
 # Routes
 
 - `GET` `/api/actor/:id` params(id) [cache]
+- `GET` `/api/admin/dubbing-project` [auth] ✓
+- `POST` `/api/admin/dubbing-project` [auth] ✓
 - `POST` `/api/admin/queue/clear` [auth, queue]
 - `DELETE` `/api/admin/queue/item` [auth, queue]
+- `POST` `/api/admin/queue/review` [auth, queue]
+- `GET` `/api/admin/queue` [auth, cache, queue]
 - `GET` `/api/advertisement/:id` params(id) [cache, queue]
 - `GET` `/api/audiobook/:id` params(id) [cache, queue]
 - `GET` `/api/career-grid` [cache]
@@ -40,17 +44,17 @@
 - `GET` `/api/list-voice-actors` [cache]
 - `GET` `/api/list_users` [auth, cache]
 - `POST` `/api/manage-subscription` [db]
-- `POST` `/api/media-queue` [auth, cache, queue]
+- `POST` `/api/media-queue` [auth, cache, queue] ✓
 - `POST` `/api/merge_voice_actor_duplicates` [auth]
 - `GET` `/api/movie/:id` params(id) [cache, queue]
 - `POST` `/api/notify-subscribers` [auth, webhook]
 - `GET` `/api/og-image/index` [cache]
 - `GET` `/api/podcast/:id` params(id) [cache, queue]
 - `POST` `/api/prepare-trending-media` [auth, queue]
-- `POST` `/api/prepare_game` [auth]
+- `POST` `/api/prepare_game` [auth] ✓
 - `POST` `/api/prepare_media` [auth]
-- `POST` `/api/process-credits` [db]
-- `POST` `/api/process-media-queue` [auth, cache, queue]
+- `POST` `/api/process-credits` [auth, db]
+- `POST` `/api/process-media-queue` [auth, cache, queue] ✓
 - `GET` `/api/recent-voice-actors` [cache]
 - `POST` `/api/request-voice-actor-page` [auth, email]
 - `POST` `/api/revert-task` [db]

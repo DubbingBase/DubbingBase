@@ -108,3 +108,13 @@
 - category: text (required)
 - entity_id: text (required, fk)
 - locked_at: timestamp(tz) (default)
+
+### dubbing_languages
+- code: text (pk)
+
+### dubbing_language_reviews
+- id: bigint (pk)
+- decision: jsonb (required)
+- source_snapshot: jsonb (required)
+- target_snapshot: jsonb
+- applied_at: timestamp(tz) (required)

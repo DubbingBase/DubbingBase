@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Schema shapes and field types extracted via AST. Read the actual schema source files before writing migrations or query logic.
 
-**unknown** — 16 models
+**unknown** — 18 models
 
 ### voice_actors
 
@@ -161,11 +161,27 @@ fk: entity_id
 - `entity_id`: text _(required, fk)_
 - `locked_at`: timestamp(tz) _(default)_
 
+### dubbing_languages
+
+pk: `code` (text)
+
+- `code`: text _(pk)_
+
+### dubbing_language_reviews
+
+pk: `id` (bigint)
+
+- `id`: bigint _(pk)_
+- `decision`: jsonb _(required)_
+- `source_snapshot`: jsonb _(required)_
+- `target_snapshot`: jsonb
+- `applied_at`: timestamp(tz) _(required)_
+
 ## Schema Source Files
 
 Read and edit these files when adding columns, creating migrations, or changing relations:
 
-- `apps/website/server/utils/db/client.ts` — imported by **61** files
+- `apps/website/server/utils/db/client.ts` — imported by **65** files
 - `apps/website/server/utils/db/queries.ts` — imported by **12** files
 
 ---

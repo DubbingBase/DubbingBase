@@ -3,17 +3,21 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 77 routes | 16 models | 197 components | 83 lib files | 61 env vars | 12 middleware | 6% test coverage
-> **Token savings:** this file is ~15,100 tokens. Without it, AI exploration would cost ~152,000 tokens. **Saves ~136,900 tokens per conversation.**
-> **Last scanned:** 2026-09-25 21:52 — re-run after significant changes
+> 81 routes | 18 models | 197 components | 88 lib files | 61 env vars | 12 middleware | 18% test coverage
+> **Token savings:** this file is ~15,700 tokens. Without it, AI exploration would cost ~156,200 tokens. **Saves ~140,500 tokens per conversation.**
+> **Last scanned:** 2026-09-28 18:32 — re-run after significant changes
 
 ---
 
 # Routes
 
 - `GET` `/api/actor/:id` params(id) [cache]
+- `GET` `/api/admin/dubbing-project` [auth] ✓
+- `POST` `/api/admin/dubbing-project` [auth] ✓
 - `POST` `/api/admin/queue/clear` [auth, queue]
 - `DELETE` `/api/admin/queue/item` [auth, queue]
+- `POST` `/api/admin/queue/review` [auth, queue]
+- `GET` `/api/admin/queue` [auth, cache, queue]
 - `GET` `/api/advertisement/:id` params(id) [cache, queue]
 - `GET` `/api/audiobook/:id` params(id) [cache, queue]
 - `GET` `/api/career-grid` [cache]
@@ -51,17 +55,17 @@
 - `GET` `/api/list-voice-actors` [cache]
 - `GET` `/api/list_users` [auth, cache]
 - `POST` `/api/manage-subscription` [db]
-- `POST` `/api/media-queue` [auth, cache, queue]
+- `POST` `/api/media-queue` [auth, cache, queue] ✓
 - `POST` `/api/merge_voice_actor_duplicates` [auth]
 - `GET` `/api/movie/:id` params(id) [cache, queue]
 - `POST` `/api/notify-subscribers` [auth, webhook]
 - `GET` `/api/og-image/index` [cache]
 - `GET` `/api/podcast/:id` params(id) [cache, queue]
 - `POST` `/api/prepare-trending-media` [auth, queue]
-- `POST` `/api/prepare_game` [auth]
+- `POST` `/api/prepare_game` [auth] ✓
 - `POST` `/api/prepare_media` [auth]
-- `POST` `/api/process-credits` [db]
-- `POST` `/api/process-media-queue` [auth, cache, queue]
+- `POST` `/api/process-credits` [auth, db]
+- `POST` `/api/process-media-queue` [auth, cache, queue] ✓
 - `GET` `/api/recent-voice-actors` [cache]
 - `POST` `/api/request-voice-actor-page` [auth, email]
 - `POST` `/api/revert-task` [db]
@@ -202,6 +206,16 @@
 - entity_id: text (required, fk)
 - locked_at: timestamp(tz) (default)
 
+### dubbing_languages
+- code: text (pk)
+
+### dubbing_language_reviews
+- id: bigint (pk)
+- decision: jsonb (required)
+- source_snapshot: jsonb (required)
+- target_snapshot: jsonb
+- applied_at: timestamp(tz) (required)
+
 ---
 
 # Components
@@ -305,7 +319,7 @@
 - **voice-actor-profile** [client] — `apps/mobile/src/views/voice-actor-profile.vue`
 - **app** [client] — `apps/website/src/app.vue`
 - **Footer** [client] — `apps/website/src/components/Footer.vue`
-- **ForceEnqueueButton** [client] — props: mediaType, mediaId, seasonNumber, episodeNumber, language — `apps/website/src/components/ForceEnqueueButton.vue`
+- **ForceEnqueueButton** [client] — props: mediaType, mediaId, seasonNumber, episodeNumber, wikipediaLanguage — `apps/website/src/components/ForceEnqueueButton.vue`
 - **Header** [client] — `apps/website/src/components/Header.vue`
 - **LanguageBanner** [client] — `apps/website/src/components/LanguageBanner.vue`
 - **MediaSkeleton** [client] — `apps/website/src/components/MediaSkeleton.vue`
@@ -318,7 +332,7 @@
 - **SearchResultItem** [client] — props: result, mediaTypeLabel, selected — `apps/website/src/components/SearchResultItem.vue`
 - **UnderConstruction** [client] — `apps/website/src/components/UnderConstruction.vue`
 - **AsyncAutocomplete** [client] — props: modelValue, options, loading, placeholder, disabled, allowCreate, displayFn — `apps/website/src/components/admin/AsyncAutocomplete.vue`
-- **LanguageSelect** [client] — props: modelValue, required — `apps/website/src/components/admin/LanguageSelect.vue`
+- **LanguageSelect** [client] — props: id — `apps/website/src/components/admin/LanguageSelect.vue`
 - **BarChart** [client] — `apps/website/src/components/admin/charts/BarChart.vue`
 - **LineChart** [client] — `apps/website/src/components/admin/charts/LineChart.vue`
 - **PieChart** [client] — `apps/website/src/components/admin/charts/PieChart.vue`
@@ -487,13 +501,14 @@
   - function filterValidSectionIndexes: (sections, requested) => Promise<number[]>
   - _...4 more_
 - `apps/website/server/utils/db/client.ts` — function useSupabaseAdmin: (event?) => SupabaseClient<Database>
-- `apps/website/server/utils/db/dubbing-project.ts` — function findOrCreateDubbingProject: (contentId, contentType, language) => Promise<number>
+- `apps/website/server/utils/db/dubbing-project.ts` — function findOrCreateDubbingProject: (contentId, contentType, dubbingLanguage) => Promise<number>
 - `apps/website/server/utils/db/queries.ts`
   - function getVoiceActorWithWork: (id) => void
   - function getWorkByActor: (actorId) => void
   - function getDubbingProjects: (contentId, contentType) => void
   - function getWorkVotes: (workIds, userId?) => Promise<
   - function getTopContributors: (limit) => void
+- `apps/website/server/utils/dubbing-language.ts` — function requireDubbingLanguage: (value) => DubbingLanguage
 - `apps/website/server/utils/error-message.ts` — function getErrorMessage: (error) => string
 - `apps/website/server/utils/featureFlags.ts` — function isEnqueueOnNavigateEnabled: () => Promise<boolean>
 - `apps/website/server/utils/index.ts`
@@ -529,13 +544,20 @@
   - function paginateArray: (items, options) => void
   - type PaginationOptions
   - type ParsedPagination
+- `apps/website/server/utils/prepare-payload.ts`
+  - function validatePrepareGamePayload: (payload) => Validated<PrepareGameInput>
+  - function prepareGameFromPayload: (payload, prepare) => void
+  - function validatePrepareMediaPayload: (payload) => Validated<PrepareMediaInput>
+  - interface PrepareGameInput
+  - interface PrepareMediaInput
 - `apps/website/server/utils/queue-payload.ts`
-  - function validateCheckPayload: (payload) => Validated<ValidQueueBase>
+  - function queueRequester: (value) => string | null
+  - function queueRequesterRpcArgs: (value) => void
   - function validateDiscoveryPayload: (payload) => Validated<ValidQueueBase>
+  - function validateCheckPayload: (payload) => Validated<ValidCheckPayload>
   - function validateExtractPayload: (payload) => Validated<ValidExtractPayload>
   - interface ValidQueueBase
-  - interface ValidExtractPayload
-  - type QueueMediaType
+  - _...3 more_
 - `apps/website/server/utils/retryable-request.ts`
   - function isRetryableMediaRequestError: (error) => error is RetryableMediaRequestError
   - function isRetryableMediaRequestStatus: (status) => boolean
@@ -559,14 +581,15 @@
   - function upsertVoiceActor: (firstName, lastName) => void
   - function upsertActor: (id, name, profile_path?) => void
   - function upsertStudio: (name, logo_url?) => void
-  - function upsertWork: (voiceActorId, contentId, actorId, contentType, language, performance?, characterId?, characterName?) => void
-  - function insertVoiceActorAndWork: (firstName, lastName, contentId, actorId, contentType, language, performance?, characterId?, characterName?) => void
+  - function upsertWork: (voiceActorId, contentId, actorId, contentType, dubbingLanguage, performance?, characterId?, characterName?) => void
+  - function insertVoiceActorAndWork: (firstName, lastName, contentId, actorId, contentType, dubbingLanguage, performance?, characterId?, characterName?) => void
 - `apps/website/server/utils/urls/supabase.ts` — function buildSupabaseImageUrl: (imagePath, bucket, size) => string | null, function processVoiceActor
 - `apps/website/server/utils/urls/tmdb.ts`
   - function buildTmdbImageUrl: (imagePath, size) => string | null
   - function cleanCharacterName
   - function processMedia
   - const TMDB_CONFIG
+- `apps/website/server/utils/wiki-check-disposition.ts` — function wikiCheckDisposition: (hasDubbingSections, dubbingLanguage) => WikiCheckDisposition, type WikiCheckDisposition
 - `apps/website/server/utils/with-timeout.ts` — function withTimeout: (promise, timeoutMs, dependency) => Promise<T>
 - `apps/website/src/composables/useContribute.ts` — function fetchRandomTask, function useContribute
 - `apps/website/src/composables/useDragScroll.ts` — function useDragScroll: (scrollRef) => void
@@ -637,6 +660,13 @@
   - type MediaType
   - type MediaRoutePrefix
   - _...9 more_
+- `packages/shared-logic/src/dubbing-languages.ts`
+  - function isDubbingLanguage: (value) => value is DubbingLanguage
+  - function validateDubbingLanguage: (value) => DubbingLanguage
+  - function displayDubbingLanguage: (code, locale) => string
+  - enum DubbingLanguage
+  - const DUBBING_LANGUAGES: readonly DubbingLanguage[]
+  - const DEFAULT_DUBBING_LANGUAGE: DubbingLanguage
 - `packages/shared-logic/src/utils/character.ts` — function normalizeCharacterName, function findCharacter
 - `packages/shared-logic/src/utils/voice-actor-work-groups.ts`
   - function groupVoiceActorWorks: (works) => VoiceActorWorkGroup<T>[]
@@ -644,6 +674,10 @@
   - type VoiceActorWorkLike
   - type VoiceActorWorkGroup
   - type VoiceActorWorksPageItem
+- `scripts/audit-dubbing-languages.py`
+  - function query: (sql) -> object
+  - function render_migration: (manifest_path, output) -> None
+  - function main: () -> None
 
 ---
 
@@ -746,12 +780,13 @@
 
 ## Most Imported Files (change these carefully)
 
-- `apps/website/server/utils/db/client.ts` — imported by **61** files
-- `apps/website/server/utils/cache/http.ts` — imported by **37** files
-- `apps/website/server/utils/auth.ts` — imported by **29** files
+- `apps/website/server/utils/db/client.ts` — imported by **65** files
+- `apps/website/server/utils/cache/http.ts` — imported by **38** files
+- `apps/website/server/utils/auth.ts` — imported by **34** files
 - `apps/website/server/utils/index.ts` — imported by **23** files
 - `apps/website/server/utils/cache/index.ts` — imported by **13** files
 - `apps/website/server/utils/db/queries.ts` — imported by **12** files
+- `apps/website/server/utils/dubbing-language.ts` — imported by **11** files
 - `apps/website/server/utils/notifications/discord.ts` — imported by **11** files
 - `apps/website/server/utils/cache/constants.ts` — imported by **11** files
 - `apps/website/server/utils/urls/supabase.ts` — imported by **10** files
@@ -765,39 +800,50 @@
 - `apps/website/server/utils/error-message.ts` — imported by **5** files
 - `apps/website/server/utils/with-timeout.ts` — imported by **4** files
 - `apps/website/server/utils/llm.ts` — imported by **4** files
-- `apps/website/src/utils/media-cast.ts` — imported by **3** files
 
 ## Import Map (who imports what)
 
-- `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts` +56 more
-- `apps/website/server/utils/cache/http.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/dashboard-stats.get.ts` +32 more
-- `apps/website/server/utils/auth.ts` ← `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/create-user-profile.post.ts`, `apps/website/server/api/dashboard-stats.get.ts`, `apps/website/server/api/delete-voice-actor-link.post.ts` +24 more
+- `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/review.post.ts` +60 more
+- `apps/website/server/utils/cache/http.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/admin/queue.get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts` +33 more
+- `apps/website/server/utils/auth.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/review.post.ts` +29 more
 - `apps/website/server/utils/index.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/episode/index.get.ts` +18 more
 - `apps/website/server/utils/cache/index.ts` ← `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/season/index.get.ts`, `apps/website/server/utils/api/igdb.test.ts`, `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.ts` +8 more
 - `apps/website/server/utils/db/queries.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/game/[id].get.ts` +7 more
+- `apps/website/server/utils/dubbing-language.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/review.post.ts`, `apps/website/server/api/internal-media-create.post.ts`, `apps/website/server/api/link-voice-actor.post.ts` +6 more
 - `apps/website/server/utils/notifications/discord.ts` ← `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/media-queue.post.ts`, `apps/website/server/api/movie/[id].get.ts` +6 more
 - `apps/website/server/utils/cache/constants.ts` ← `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/season/index.get.ts`, `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.ts`, `apps/website/server/utils/api/podcast.ts` +6 more
 - `apps/website/server/utils/urls/supabase.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/dashboard-stats.get.ts`, `apps/website/server/api/find_duplicate_voice_actors.get.ts`, `apps/website/server/api/recent-voice-actors.get.ts`, `apps/website/server/api/search/index.get.ts` +5 more
-- `apps/website/server/utils/urls/tmdb.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/movie/[id].get.ts`, `apps/website/server/api/notify-subscribers.post.ts`, `apps/website/server/api/prepare-trending-media.post.ts`, `apps/website/server/api/search/index.get.ts` +5 more
 
 ---
 
 # Test Coverage
 
-> **6%** of routes and models are covered by tests
-> 37 test files found
+> **18%** of routes and models are covered by tests
+> 54 test files found
 
 ## Covered Routes
 
+- GET:/api/admin/dubbing-project
+- POST:/api/admin/dubbing-project
 - GET:/api/detail-collections
+- POST:/api/media-queue
+- POST:/api/prepare_game
+- POST:/api/process-media-queue
 
 ## Covered Models
 
 - voice_actors
 - source
 - work
+- votes
 - dubbing_projects
 - studios
+- dubbing_project_crew
+- jobs
+- project_attachments
+- audit_logs
+- dubbing_languages
+- dubbing_language_reviews
 
 ---
 

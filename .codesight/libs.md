@@ -79,13 +79,14 @@
   - function filterValidSectionIndexes: (sections, requested) => Promise<number[]>
   - _...4 more_
 - `apps/website/server/utils/db/client.ts` — function useSupabaseAdmin: (event?) => SupabaseClient<Database>
-- `apps/website/server/utils/db/dubbing-project.ts` — function findOrCreateDubbingProject: (contentId, contentType, language) => Promise<number>
+- `apps/website/server/utils/db/dubbing-project.ts` — function findOrCreateDubbingProject: (contentId, contentType, dubbingLanguage) => Promise<number>
 - `apps/website/server/utils/db/queries.ts`
   - function getVoiceActorWithWork: (id) => void
   - function getWorkByActor: (actorId) => void
   - function getDubbingProjects: (contentId, contentType) => void
   - function getWorkVotes: (workIds, userId?) => Promise<
   - function getTopContributors: (limit) => void
+- `apps/website/server/utils/dubbing-language.ts` — function requireDubbingLanguage: (value) => DubbingLanguage
 - `apps/website/server/utils/error-message.ts` — function getErrorMessage: (error) => string
 - `apps/website/server/utils/featureFlags.ts` — function isEnqueueOnNavigateEnabled: () => Promise<boolean>
 - `apps/website/server/utils/index.ts`
@@ -121,13 +122,20 @@
   - function paginateArray: (items, options) => void
   - type PaginationOptions
   - type ParsedPagination
+- `apps/website/server/utils/prepare-payload.ts`
+  - function validatePrepareGamePayload: (payload) => Validated<PrepareGameInput>
+  - function prepareGameFromPayload: (payload, prepare) => void
+  - function validatePrepareMediaPayload: (payload) => Validated<PrepareMediaInput>
+  - interface PrepareGameInput
+  - interface PrepareMediaInput
 - `apps/website/server/utils/queue-payload.ts`
-  - function validateCheckPayload: (payload) => Validated<ValidQueueBase>
+  - function queueRequester: (value) => string | null
+  - function queueRequesterRpcArgs: (value) => void
   - function validateDiscoveryPayload: (payload) => Validated<ValidQueueBase>
+  - function validateCheckPayload: (payload) => Validated<ValidCheckPayload>
   - function validateExtractPayload: (payload) => Validated<ValidExtractPayload>
   - interface ValidQueueBase
-  - interface ValidExtractPayload
-  - type QueueMediaType
+  - _...3 more_
 - `apps/website/server/utils/retryable-request.ts`
   - function isRetryableMediaRequestError: (error) => error is RetryableMediaRequestError
   - function isRetryableMediaRequestStatus: (status) => boolean
@@ -151,14 +159,15 @@
   - function upsertVoiceActor: (firstName, lastName) => void
   - function upsertActor: (id, name, profile_path?) => void
   - function upsertStudio: (name, logo_url?) => void
-  - function upsertWork: (voiceActorId, contentId, actorId, contentType, language, performance?, characterId?, characterName?) => void
-  - function insertVoiceActorAndWork: (firstName, lastName, contentId, actorId, contentType, language, performance?, characterId?, characterName?) => void
+  - function upsertWork: (voiceActorId, contentId, actorId, contentType, dubbingLanguage, performance?, characterId?, characterName?) => void
+  - function insertVoiceActorAndWork: (firstName, lastName, contentId, actorId, contentType, dubbingLanguage, performance?, characterId?, characterName?) => void
 - `apps/website/server/utils/urls/supabase.ts` — function buildSupabaseImageUrl: (imagePath, bucket, size) => string | null, function processVoiceActor
 - `apps/website/server/utils/urls/tmdb.ts`
   - function buildTmdbImageUrl: (imagePath, size) => string | null
   - function cleanCharacterName
   - function processMedia
   - const TMDB_CONFIG
+- `apps/website/server/utils/wiki-check-disposition.ts` — function wikiCheckDisposition: (hasDubbingSections, dubbingLanguage) => WikiCheckDisposition, type WikiCheckDisposition
 - `apps/website/server/utils/with-timeout.ts` — function withTimeout: (promise, timeoutMs, dependency) => Promise<T>
 - `apps/website/src/composables/useContribute.ts` — function fetchRandomTask, function useContribute
 - `apps/website/src/composables/useDragScroll.ts` — function useDragScroll: (scrollRef) => void
@@ -229,6 +238,13 @@
   - type MediaType
   - type MediaRoutePrefix
   - _...9 more_
+- `packages/shared-logic/src/dubbing-languages.ts`
+  - function isDubbingLanguage: (value) => value is DubbingLanguage
+  - function validateDubbingLanguage: (value) => DubbingLanguage
+  - function displayDubbingLanguage: (code, locale) => string
+  - enum DubbingLanguage
+  - const DUBBING_LANGUAGES: readonly DubbingLanguage[]
+  - const DEFAULT_DUBBING_LANGUAGE: DubbingLanguage
 - `packages/shared-logic/src/utils/character.ts` — function normalizeCharacterName, function findCharacter
 - `packages/shared-logic/src/utils/voice-actor-work-groups.ts`
   - function groupVoiceActorWorks: (works) => VoiceActorWorkGroup<T>[]
@@ -236,3 +252,7 @@
   - type VoiceActorWorkLike
   - type VoiceActorWorkGroup
   - type VoiceActorWorksPageItem
+- `scripts/audit-dubbing-languages.py`
+  - function query: (sql) -> object
+  - function render_migration: (manifest_path, output) -> None
+  - function main: () -> None
