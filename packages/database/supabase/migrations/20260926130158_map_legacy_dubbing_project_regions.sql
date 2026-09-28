@@ -13,6 +13,13 @@ INSERT INTO public.dubbing_languages(code) VALUES
   ('vi-VN'), ('yue-HK'), ('zh-CN')
 ON CONFLICT (code) DO NOTHING;
 
+-- This runs in the migration transaction while the table is locked against
+-- concurrent writes, so the controlled bulk mapping cannot race application writes.
+-- Disable only the temporary serializer: retaining one advisory xact lock per
+-- mapped project would exhaust PostgreSQL's shared lock table before commit.
+ALTER TABLE public.dubbing_projects
+  DISABLE TRIGGER dubbing_project_regional_language_guard;
+
 DO $$
 DECLARE
   mapping record;

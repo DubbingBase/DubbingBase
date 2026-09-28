@@ -6,6 +6,38 @@ BEGIN;
 SET LOCAL statement_timeout = '60s';
 TRUNCATE public.dubbing_language_reviews, public.dubbing_projects CASCADE;
 
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgrelid = 'public.dubbing_projects'::regclass
+      AND tgname = 'dubbing_project_regional_language_guard'
+      AND tgenabled = 'O'
+  ) THEN
+    RAISE EXCEPTION 'Regional language guard must be enabled before mapping';
+  END IF;
+END;
+$$;
+
+CREATE TEMP TABLE regional_guard_observations (
+  old_language text NOT NULL,
+  enabled_code text NOT NULL
+);
+CREATE FUNCTION public.test_observe_regional_guard_state() RETURNS trigger
+LANGUAGE plpgsql SET search_path = '' AS $$
+BEGIN
+  INSERT INTO pg_temp.regional_guard_observations(old_language, enabled_code)
+  SELECT OLD.language, t.tgenabled::text
+  FROM pg_catalog.pg_trigger t
+  WHERE t.tgrelid = 'public.dubbing_projects'::regclass
+    AND t.tgname = 'dubbing_project_regional_language_guard';
+  RETURN NEW;
+END;
+$$;
+CREATE TRIGGER regional_guard_state_observer
+BEFORE UPDATE OF language ON public.dubbing_projects
+FOR EACH ROW EXECUTE FUNCTION public.test_observe_regional_guard_state();
+
 INSERT INTO auth.users(id) VALUES
   ('00000000-0000-0000-0000-000000910001'),
   ('00000000-0000-0000-0000-000000910002');
@@ -79,6 +111,16 @@ INSERT INTO public.audit_logs(entity_type, entity_id, action, user_id) VALUES
 
 DO $$
 BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_temp.regional_guard_observations) THEN
+    RAISE EXCEPTION 'Mapping fixture did not exercise the language update observer';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM pg_temp.regional_guard_observations
+    WHERE enabled_code <> 'D'
+  ) THEN
+    RAISE EXCEPTION 'Temporary regional-language guard was enabled during bulk mapping';
+  END IF;
+
   IF EXISTS (
     SELECT 1 FROM public.dubbing_projects
     WHERE id IN (-910002, -910003, -910004)
