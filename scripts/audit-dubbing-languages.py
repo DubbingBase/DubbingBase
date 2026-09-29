@@ -37,12 +37,11 @@ WITH queue_jobs AS (
   FROM public.work w JOIN public.source s ON s.id=w.source_id GROUP BY w.dubbing_project_id
 ), snapshots AS MATERIALIZED (
   SELECT p.*,public.dubbing_language_review_snapshot(p.id) AS snapshot
-  FROM public.dubbing_projects p WHERE p.language IS NULL OR NOT EXISTS (
-    SELECT 1 FROM public.dubbing_languages l WHERE l.code=p.language)
+  FROM public.dubbing_projects p
+  WHERE p.language IS NULL OR NOT public.is_valid_dubbing_language(p.language)
 )
 SELECT jsonb_build_object(
   'generated_at',now(),'scope','local Supabase snapshot; no live database writes',
-  'registry',(SELECT jsonb_agg(code ORDER BY code) FROM public.dubbing_languages),
   'total_projects',(SELECT count(*) FROM public.dubbing_projects),
   'unresolved_projects',(SELECT count(*) FROM snapshots),
   'language_counts',(SELECT jsonb_agg(t) FROM (SELECT language,count(*) AS projects FROM snapshots GROUP BY language ORDER BY count(*) DESC) t),
@@ -54,7 +53,7 @@ SELECT jsonb_build_object(
     'source_names',COALESCE(n.names,'[]'::jsonb),'pending_source_jobs',COALESCE(j.jobs,'[]'::jsonb),
     'regional_siblings',COALESCE((SELECT jsonb_agg(jsonb_build_object('project_id',s.id,'language',s.language,
       'expected_target_snapshot_hash',md5(public.dubbing_language_review_snapshot(s.id)::text)))
-      FROM public.dubbing_projects s JOIN public.dubbing_languages l ON l.code=s.language
+      FROM public.dubbing_projects s
       WHERE s.content_id=p.content_id AND s.content_type=p.content_type AND s.id<>p.id),'[]'::jsonb),
     'proposed_language',NULL,'review_reason','A Wikipedia edition and cast nationality do not prove a dubbing region'
   ) ORDER BY p.id) FROM snapshots p LEFT JOIN source_names n ON n.dubbing_project_id=p.id

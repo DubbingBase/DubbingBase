@@ -33,9 +33,7 @@ BEGIN
   IF v_lang IS NOT NULL AND v_lang !~ '^[a-z][a-z0-9-]*$' THEN
     RAISE EXCEPTION 'Invalid Wikipedia source language';
   END IF;
-  IF p_dubbing_language IS NOT NULL AND NOT EXISTS (
-    SELECT 1 FROM public.dubbing_languages WHERE code = p_dubbing_language
-  ) THEN
+  IF p_dubbing_language IS NOT NULL AND NOT public.is_valid_dubbing_language(p_dubbing_language) THEN
     RAISE EXCEPTION 'Invalid regional dubbing language';
   END IF;
 
@@ -129,9 +127,7 @@ BEGIN
   IF v_wikipedia_language IS NULL OR v_wikipedia_language !~ '^[a-z][a-z0-9-]*$' THEN
     RAISE EXCEPTION 'Invalid Wikipedia source language';
   END IF;
-  IF p_dubbing_language IS NULL OR NOT EXISTS (
-    SELECT 1 FROM public.dubbing_languages WHERE code = p_dubbing_language
-  ) THEN
+  IF NOT public.is_valid_dubbing_language(p_dubbing_language) THEN
     RAISE EXCEPTION 'A registered regional dubbing language is required';
   END IF;
   IF EXISTS (
@@ -194,9 +190,7 @@ DECLARE
   v_is_manual boolean;
   v_requested_by uuid;
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM public.dubbing_languages WHERE code = p_dubbing_language
-  ) THEN
+  IF NOT public.is_valid_dubbing_language(p_dubbing_language) THEN
     RAISE EXCEPTION 'Invalid regional dubbing language';
   END IF;
 

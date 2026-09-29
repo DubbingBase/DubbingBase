@@ -1,9 +1,11 @@
 -- Run against an isolated local database after:
 --   20260926092722_enforce_regional_dubbing_languages.sql
 --   20260926094824_preserve_dubbing_review_dependencies.sql
+--   20260926120000_schema_owned_dubbing_language_rule.sql
 -- and before:
 --   20260926130158_map_legacy_dubbing_project_regions.sql
--- This test finalizes once inside its transaction, then rolls every assertion back.
+-- This test finalizes once inside its transaction, checks the final CHECK-based
+-- contract, then rolls every assertion back.
 \set ON_ERROR_STOP on
 BEGIN;
 SET LOCAL statement_timeout='30s';
@@ -146,7 +148,7 @@ DO $$ BEGIN
   IF EXISTS (
     SELECT 1 FROM public.dubbing_projects p
     WHERE p.language IS NULL
-       OR NOT EXISTS (SELECT 1 FROM public.dubbing_languages l WHERE l.code=p.language)
+       OR NOT public.is_valid_dubbing_language(p.language)
   ) THEN RAISE EXCEPTION 'Unresolved project languages before finalization'; END IF;
   IF EXISTS (
     SELECT 1 FROM public.dubbing_projects
@@ -162,9 +164,14 @@ DO $$ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_constraint
     WHERE conrelid='public.dubbing_projects'::regclass
+      AND conname='dubbing_projects_language_check'
+      AND contype='c'
+  ) THEN RAISE EXCEPTION 'Final language CHECK is missing'; END IF;
+  IF EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid='public.dubbing_projects'::regclass
       AND conname='dubbing_projects_language_fkey'
-      AND contype='f'
-  ) THEN RAISE EXCEPTION 'Final language registry foreign key is missing'; END IF;
+  ) THEN RAISE EXCEPTION 'Final language registry foreign key remains'; END IF;
   IF NOT EXISTS (
     SELECT 1 FROM pg_constraint
     WHERE conrelid='public.dubbing_projects'::regclass
@@ -177,10 +184,19 @@ DO $$ BEGIN
       AND tgname='dubbing_project_regional_language_guard'
       AND NOT tgisinternal
   ) THEN RAISE EXCEPTION 'Temporary language guard trigger remains'; END IF;
+  IF to_regclass('public.dubbing_languages') IS NOT NULL THEN
+    RAISE EXCEPTION 'Temporary dubbing language table remains after finalization';
+  END IF;
   BEGIN
     INSERT INTO public.dubbing_projects(content_id,content_type,language) VALUES(-900010,'tv','fr-FR');
     RAISE EXCEPTION 'Final uniqueness was not enforced';
   EXCEPTION WHEN unique_violation THEN NULL;
   END;
+  BEGIN
+    INSERT INTO public.dubbing_projects(content_id,content_type,language) VALUES(-900020,'tv','zz-ZZ');
+    RAISE EXCEPTION 'Final language CHECK accepted an unsupported code';
+  EXCEPTION WHEN check_violation THEN NULL;
+  END;
+  INSERT INTO public.dubbing_projects(content_id,content_type,language) VALUES(-900021,'tv','fr-CA');
 END; $$;
 ROLLBACK;

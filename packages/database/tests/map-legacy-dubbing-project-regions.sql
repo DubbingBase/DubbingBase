@@ -1,10 +1,40 @@
 -- Run with psql against an isolated database after applying the first two
--- regional-language migrations. This fixture applies the mapping migration
--- itself, verifies its merges and final constraints, and rolls everything back.
+-- regional-language migrations and the SQL-owned language-rule migration.
+-- This fixture applies the mapping migration itself, verifies every legacy
+-- mapping, dependency merges, and final constraints, then rolls everything back.
 \set ON_ERROR_STOP on
 BEGIN;
 SET LOCAL statement_timeout = '60s';
 TRUNCATE public.dubbing_language_reviews, public.dubbing_projects CASCADE;
+
+CREATE TEMP TABLE mapping_expectations (
+  project_id bigint PRIMARY KEY,
+  legacy_code text NOT NULL,
+  regional_code text NOT NULL
+);
+INSERT INTO mapping_expectations(project_id, legacy_code, regional_code) VALUES
+  (-911001, 'fr', 'fr-FR'), (-911002, 'en', 'en-US'),
+  (-911003, 'es', 'es-ES'), (-911004, 'pt', 'pt-BR'),
+  (-911005, 'de', 'de-DE'), (-911006, 'ja', 'ja-JP'),
+  (-911007, 'it', 'it-IT'), (-911008, 'pl', 'pl-PL'),
+  (-911009, 'zh', 'zh-CN'), (-911010, 'uk', 'uk-UA'),
+  (-911011, 'ceb', 'ceb-PH'), (-911012, 'ko', 'ko-KR'),
+  (-911013, 'nl', 'nl-NL'), (-911014, 'sv', 'sv-SE'),
+  (-911015, 'cs', 'cs-CZ'), (-911016, 'vi', 'vi-VN'),
+  (-911017, 'no', 'no-NO'), (-911018, 'da', 'da-DK'),
+  (-911019, 'el', 'el-GR'), (-911020, 'ro', 'ro-RO'),
+  (-911021, 'tr', 'tr-TR'), (-911022, 'cy', 'cy-GB'),
+  (-911023, 'hu', 'hu-HU'), (-911024, 'sh', 'sh-RS'),
+  (-911025, 'fy', 'fy-NL'), (-911026, 'id', 'id-ID'),
+  (-911027, 'he', 'he-IL'), (-911028, 'la', 'la-VA'),
+  (-911029, 'ru', 'ru-RU'), (-911030, 'hr', 'hr-HR'),
+  (-911031, 'ha', 'ha-NG'), (-911032, 'als', 'gsw-CH'),
+  (-911033, 'an', 'an-ES'), (-911034, 'ca', 'ca-ES'),
+  (-911035, 'ar', 'ar-EG'), (-911036, 'ms', 'ms-MY'),
+  (-911037, 'sn', 'sn-ZW'), (-911038, 'tl', 'tl-PH'),
+  (-911039, 'sk', 'sk-SK'), (-911040, 'sco', 'sco-GB'),
+  (-911041, 'sq', 'sq-AL'), (-911042, 'simple', 'en-US'),
+  (-911043, 'zh-yue', 'yue-HK');
 
 DO $$
 BEGIN
@@ -65,6 +95,11 @@ VALUES
   (-910007, 980204, 'video_game', 'ko', 'validated'),
   (-910008, 980205, 'movie', 'sq', 'validated'),
   (-910009, 980206, 'movie', 'zh-yue', 'validated');
+INSERT INTO public.dubbing_projects(id, content_id, content_type, language, status)
+SELECT expectation.project_id,
+  981000 + row_number() OVER (ORDER BY expectation.project_id),
+  'movie', expectation.legacy_code, 'validated'
+FROM mapping_expectations expectation;
 SET LOCAL session_replication_role = origin;
 
 INSERT INTO public.work(
@@ -165,9 +200,20 @@ BEGIN
   END IF;
   IF EXISTS (
     SELECT 1 FROM public.dubbing_projects p
-    WHERE NOT EXISTS (SELECT 1 FROM public.dubbing_languages l WHERE l.code = p.language)
+    WHERE NOT public.is_valid_dubbing_language(p.language)
   ) THEN
-    RAISE EXCEPTION 'A project language is absent from the approved registry';
+    RAISE EXCEPTION 'A project language is outside the schema-owned language rule';
+  END IF;
+  IF EXISTS (
+    SELECT 1
+    FROM mapping_expectations expectation
+    LEFT JOIN public.dubbing_projects project ON project.id = expectation.project_id
+    WHERE project.language IS DISTINCT FROM expectation.regional_code
+  ) THEN
+    RAISE EXCEPTION 'At least one supported legacy code did not map to its regional code';
+  END IF;
+  IF to_regclass('public.dubbing_languages') IS NOT NULL THEN
+    RAISE EXCEPTION 'The temporary dubbing language table remains after mapping';
   END IF;
   IF EXISTS (
     SELECT 1 FROM public.dubbing_projects
@@ -201,7 +247,7 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'Audit references to deleted rows were not reparented';
   END IF;
-  IF (SELECT count(*) FROM public.dubbing_language_reviews) <> 7 THEN
+  IF (SELECT count(*) FROM public.dubbing_language_reviews) <> 50 THEN
     RAISE EXCEPTION 'Source recovery snapshots are missing';
   END IF;
   IF NOT EXISTS (
@@ -219,7 +265,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_constraint
     WHERE conrelid = 'public.dubbing_projects'::regclass
-      AND conname = 'dubbing_projects_language_fkey' AND contype = 'f'
+      AND conname = 'dubbing_projects_language_check' AND contype = 'c'
   ) OR NOT EXISTS (
     SELECT 1 FROM pg_constraint
     WHERE conrelid = 'public.dubbing_projects'::regclass
@@ -236,6 +282,26 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'Final language constraints were not installed correctly';
   END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.dubbing_projects'::regclass
+      AND conname = 'dubbing_projects_language_fkey'
+  ) THEN
+    RAISE EXCEPTION 'The final schema still has a registry foreign key';
+  END IF;
+  IF NOT public.is_valid_dubbing_language('ko-KR')
+    OR public.is_valid_dubbing_language('zz-ZZ') THEN
+    RAISE EXCEPTION 'The SQL language validator does not match the supported regional set';
+  END IF;
+  BEGIN
+    INSERT INTO public.dubbing_projects(content_id, content_type, language)
+    VALUES (989999, 'movie', 'zz-ZZ');
+    RAISE EXCEPTION 'An unsupported regional code was accepted';
+  EXCEPTION WHEN check_violation THEN NULL;
+  END;
+  INSERT INTO public.dubbing_projects(content_id, content_type, language)
+  VALUES (989998, 'movie', 'fr-CA');
 END;
 $$;
 

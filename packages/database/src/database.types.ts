@@ -91,18 +91,6 @@ export type Database = {
         };
         Relationships: [];
       };
-      dubbing_languages: {
-        Row: {
-          code: string;
-        };
-        Insert: {
-          code: string;
-        };
-        Update: {
-          code?: string;
-        };
-        Relationships: [];
-      };
       dubbing_project_crew: {
         Row: {
           created_at: string | null;
@@ -181,13 +169,6 @@ export type Database = {
           updated_at?: string | null;
         };
         Relationships: [
-          {
-            foreignKeyName: "dubbing_projects_language_fkey";
-            columns: ["language"];
-            isOneToOne: false;
-            referencedRelation: "dubbing_languages";
-            referencedColumns: ["code"];
-          },
           {
             foreignKeyName: "dubbing_projects_studio_id_fkey";
             columns: ["studio_id"];
@@ -832,6 +813,10 @@ export type Database = {
           user_vote: string;
           work_id: number;
         }[];
+      };
+      is_valid_dubbing_language: {
+        Args: { p_language: string };
+        Returns: boolean;
       };
       match_voice_actor: {
         Args: { p_firstname: string; p_lastname: string };

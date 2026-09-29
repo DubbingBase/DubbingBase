@@ -66,6 +66,41 @@ BEGIN
     RAISE EXCEPTION 'Archived queue RPC did not return the requested_by UUID';
   END IF;
 
+  BEGIN
+    PERFORM public.enqueue_media_extract(
+      p_tmdb_id => 980102,
+      p_media_type => 'movie',
+      p_language => 'simple',
+      p_page_id => 980102,
+      p_section_indexes => '[]'::jsonb,
+      p_wikipedia_language => 'simple',
+      p_dubbing_language => 'fr'
+    );
+    RAISE EXCEPTION 'Extract RPC accepted a non-regional dubbing language';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM <> 'A registered regional dubbing language is required' THEN
+      RAISE;
+    END IF;
+  END;
+  IF EXISTS (
+    SELECT 1 FROM pgmq.q_wiki_extract
+    WHERE message->>'tmdb_id' = '980102'
+  ) THEN
+    RAISE EXCEPTION 'Invalid regional language created an extract item';
+  END IF;
+
+  BEGIN
+    PERFORM public.resume_wiki_check_for_regional_review(message_id, 'fr');
+    RAISE EXCEPTION 'Resume RPC accepted a non-regional dubbing language';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM <> 'Invalid regional dubbing language' THEN
+      RAISE;
+    END IF;
+  END;
+  IF NOT EXISTS (SELECT 1 FROM pgmq.a_wiki_check WHERE msg_id = message_id) THEN
+    RAISE EXCEPTION 'Invalid regional language removed the review item';
+  END IF;
+
   IF NOT public.resume_wiki_check_for_regional_review(message_id, 'fr-FR') THEN
     RAISE EXCEPTION 'Regional review did not resume';
   END IF;

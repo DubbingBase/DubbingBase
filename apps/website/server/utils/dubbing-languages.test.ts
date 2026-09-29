@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { DUBBING_LANGUAGES, validateDubbingLanguage } from "@app/shared-logic";
@@ -8,18 +8,19 @@ import {
   extractGameDubbingCredits,
 } from "./services/media-preparation";
 
-it("keeps the database seed and website registry aligned", () => {
-  const migrationDirectory = resolve(process.cwd(), "../../packages/database/supabase/migrations");
-  const migrations = readdirSync(migrationDirectory)
-    .filter((file) => file.endsWith(".sql"))
-    .map((file) => readFileSync(resolve(migrationDirectory, file), "utf8"));
-  const codes = migrations.flatMap((migration) => {
-    const seed = migration
-      .split("INSERT INTO public.dubbing_languages(code) VALUES")[1]
-      ?.split(";")[0];
-    if (!seed) return [];
-    return Array.from(seed.matchAll(/'([a-z]{2,3}-[A-Z]{2})'/g), (match) => String(match[1]));
-  });
+it("keeps the SQL language rule and TypeScript registry aligned", () => {
+  const migration = readFileSync(
+    resolve(
+      process.cwd(),
+      "../../packages/database/supabase/migrations/20260926120000_schema_owned_dubbing_language_rule.sql",
+    ),
+    "utf8",
+  );
+  const supportedCodes = migration.match(/ARRAY\[([\s\S]*?)\]::text\[\]/)?.[1] ?? "";
+  const codes = Array.from(supportedCodes.matchAll(/'([a-z]{2,3}-[A-Z]{2})'/g), (match) =>
+    String(match[1]),
+  );
+
   expect([...new Set(codes)].sort()).toEqual([...DUBBING_LANGUAGES].sort());
 });
 
@@ -31,20 +32,15 @@ it("registers every target used by the legacy language mapping", () => {
     ),
     "utf8",
   );
-  const migrationsBeforeMapping = readdirSync(
-    resolve(process.cwd(), "../../packages/database/supabase/migrations"),
-  )
-    .filter(
-      (file) =>
-        file.endsWith(".sql") && file <= "20260926130158_map_legacy_dubbing_project_regions.sql",
-    )
-    .map((file) =>
-      readFileSync(
-        resolve(process.cwd(), "../../packages/database/supabase/migrations", file),
-        "utf8",
-      ),
-    );
   const mappings = migration.match(/SELECT \* FROM \(VALUES([\s\S]*?)\)\s+AS languages\(/)?.[1];
+  const languageRule = readFileSync(
+    resolve(
+      process.cwd(),
+      "../../packages/database/supabase/migrations/20260926120000_schema_owned_dubbing_language_rule.sql",
+    ),
+    "utf8",
+  );
+  const supportedCodes = languageRule.match(/ARRAY\[([\s\S]*?)\]::text\[\]/)?.[1] ?? "";
 
   expect(mappings).toBeDefined();
 
@@ -52,19 +48,14 @@ it("registers every target used by the legacy language mapping", () => {
     (mappings ?? "").matchAll(/\(\s*'[^']+'\s*,\s*'([^']+)'\s*\)/g),
     (match) => String(match[1]),
   );
-  const seededTargets = migrationsBeforeMapping.flatMap((sql) => {
-    const seed = sql.match(
-      /INSERT INTO public\.dubbing_languages\(code\) VALUES([\s\S]*?)(?:ON CONFLICT[^;]*|;)/,
-    )?.[1];
-    return Array.from((seed ?? "").matchAll(/'([a-z]{2,3}-[A-Z]{2})'/g), (match) =>
-      String(match[1]),
-    );
-  });
+  const sqlLanguages = Array.from(supportedCodes.matchAll(/'([a-z]{2,3}-[A-Z]{2})'/g), (match) =>
+    String(match[1]),
+  );
 
   expect(mappingTargets.length).toBeGreaterThan(0);
   for (const target of mappingTargets) {
     expect(DUBBING_LANGUAGES, `TypeScript registry is missing ${target}`).toContain(target);
-    expect(seededTargets, `Database seed is missing ${target}`).toContain(target);
+    expect(sqlLanguages, `Database language rule is missing ${target}`).toContain(target);
   }
 });
 

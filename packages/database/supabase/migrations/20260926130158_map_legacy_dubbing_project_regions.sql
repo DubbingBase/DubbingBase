@@ -4,15 +4,6 @@
 -- Wikimedia's special codes are normalized below: simple -> en, als -> gsw,
 -- zh-yue -> yue, while sh is retained and regionalized as sh-RS.
 
-INSERT INTO public.dubbing_languages(code) VALUES
-  ('ar-EG'), ('an-ES'), ('ca-ES'), ('ceb-PH'), ('cs-CZ'), ('cy-GB'), ('ko-KR'),
-  ('da-DK'), ('el-GR'), ('fy-NL'), ('gsw-CH'), ('ha-NG'), ('he-IL'),
-  ('hr-HR'), ('hu-HU'), ('id-ID'), ('la-VA'), ('ms-MY'), ('nl-NL'),
-  ('no-NO'), ('pl-PL'), ('ro-RO'), ('ru-RU'), ('sco-GB'), ('sh-RS'),
-  ('sk-SK'), ('sn-ZW'), ('sq-AL'), ('sv-SE'), ('tl-PH'), ('tr-TR'), ('uk-UA'),
-  ('vi-VN'), ('yue-HK'), ('zh-CN')
-ON CONFLICT (code) DO NOTHING;
-
 -- This runs in the migration transaction while the table is locked against
 -- concurrent writes, so the controlled bulk mapping cannot race application writes.
 -- Disable only the temporary serializer: retaining one advisory xact lock per
@@ -141,12 +132,13 @@ BEGIN
   IF EXISTS (
     SELECT 1 FROM public.dubbing_projects p
     WHERE p.language IS NULL
-       OR NOT EXISTS (SELECT 1 FROM public.dubbing_languages l WHERE l.code = p.language)
+       OR NOT public.is_valid_dubbing_language(p.language)
   ) THEN
     RAISE EXCEPTION 'Unmapped legacy dubbing languages remain; refusing to finalize';
   END IF;
 
-  -- Installs NOT NULL, registry FK, and one project per media and region.
+  -- Installs NOT NULL, the schema-owned language check, and one project per
+  -- media and region, then removes the transitional registry table.
   PERFORM public.finalize_dubbing_language_constraints();
 END;
 $$;
