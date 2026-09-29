@@ -12,7 +12,7 @@ run = "pnpm install"
 
 [tasks.backend]
 description = "Starts the Supabase backend"
-depends = ["install"]
+depends = ["database-install"]
 dir = "packages/database"
 run = "pnpm supabase start"
 
@@ -49,13 +49,13 @@ run = "pnpm build"
 
 [tasks.migrate-up]
 description = "Runs the database migration"
-depends = ["install"]
+depends = ["database-install"]
 dir = "packages/database"
 run = "pnpm supabase migration up"
 
 [tasks.migrate-down]
 description = "Reverts the database migration"
-depends = ["install"]
+depends = ["database-install"]
 dir = "packages/database"
 run = "pnpm supabase migration down"
 
@@ -68,10 +68,10 @@ description = "Alias for fetching the production reseed data"
 run = "mise run fetch-seed"
 
 [tasks.db-reset]
-description = "Resets the local schema and applies migrations without seed data"
+description = "Resets local schema and applies migrations without the production data seed"
 depends = ["database-install"]
 dir = "packages/database"
-run = "npx supabase db reset --local --yes"
+run = "npx supabase db reset --local --no-seed --yes"
 
 [tasks.backup-db]
 description = "Backups the database"
@@ -134,7 +134,7 @@ git push && git push origin --tags
 
 [tasks.gen-types]
 description = "Generates database types from Supabase"
-depends = ["install", "backend"]
+depends = ["database-install", "backend"]
 dir = "packages/database"
 run = "npx supabase gen types --lang=typescript --local > src/database.types.ts"
 
@@ -142,25 +142,19 @@ run = "npx supabase gen types --lang=typescript --local > src/database.types.ts"
 description = "Dumps production application data for a local reseed"
 depends = ["database-install"]
 dir = "packages/database"
-run = "npx supabase db dump --data-only --exclude public.dubbing_languages --file supabase/seed.sql --linked"
+run = "npx supabase db dump --data-only --file supabase/seed.sql --linked"
 
-[tasks.prepare-seed]
-description = "Prepares the production seed and replaces local Storage files with production objects"
-depends = ["fetch-seed"]
+[tasks.sync-storage]
+description = "Refreshes local Storage bucket files from the linked production project"
+depends = ["database-install"]
 dir = "packages/database"
-run = "./prepare-seed.sh"
+run = "./sync-storage.sh"
 
 [tasks.reseed]
-description = "Resets local data from production at its migration checkpoint, then applies pending migrations"
-depends = ["prepare-seed"]
+description = "Fetches production data and uses the normal local Supabase reset flow"
+depends = ["fetch-seed"]
 dir = "packages/database"
-run = """
-set -euo pipefail
-npx supabase stop --no-backup
-npx supabase start --yes
-npx supabase db reset --local --version 20260926094824 --sql-paths seed.sql --yes
-npx supabase migration up --local
-"""
+run = "npx supabase db reset --local --yes"
 
 [tasks.typecheck]
 description = "Run TypeScript type checking across all workspaces"

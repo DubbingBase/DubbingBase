@@ -53,9 +53,8 @@ enabled = true
 schema_paths = []
 
 [db.seed]
-# Production snapshots include legacy dubbing-project language values. Load
-# them only through the checkpoint reseed command, not on a fresh schema.
-enabled = false
+# fetch-seed writes the production application-data dump to this path.
+enabled = true
 # Specifies an ordered list of seed files to load during db reset.
 # Supports glob patterns relative to supabase directory: "./seeds/*.sql"
 sql_paths = ["./seed.sql"]
@@ -112,19 +111,16 @@ file_size_limit = "5MiB"
 public = false
 file_size_limit = "5MiB"
 allowed_mime_types = ["image/png", "image/jpeg", "image/webp"]
-objects_path = "./buckets/project_attachments"
 
 [storage.buckets.voice_actor_profile_pictures]
 public = true
 file_size_limit = "5MiB"
 allowed_mime_types = ["image/*"]
-objects_path = "./buckets/voice_actor_profile_pictures"
 
 [storage.buckets.studio_logos]
 public = true
 file_size_limit = "5MiB"
 allowed_mime_types = ["image/*"]
-objects_path = "./buckets/studio_logos"
 [auth]
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used

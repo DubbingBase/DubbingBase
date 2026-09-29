@@ -1,18 +1,19 @@
 Apply production migrations through the CI/CD deployment workflow. Do not run `supabase db push` directly.
 
-For a normal local database reset with local development seed data:
+`mise run db-reset` builds the local schema from migrations without production data. Supported dubbing-language codes are enforced by a database CHECK and mirrored in shared TypeScript constants; they are not stored in a reference table.
 
-```bash
-mise run db-reset
-```
-
-For an explicitly requested production-backed local rehearsal, fetches are read-only and all resets/imports target local Supabase:
+For a production-backed local refresh, reset the local database with the complete production data dump, then synchronize Storage separately:
 
 ```bash
 doppler run --project dubbingbase --config prd -- mise run reseed
+doppler run --project dubbingbase --config prd -- mise run sync-storage
 ```
 
-`fetch-seed` writes a data-only production dump to the ignored `packages/database/supabase/seed.sql`, excluding only `public.dubbing_languages`. Migrations own that deterministic reference table; the production snapshot supplies mutable application data. This is not a local/production merge: `db reset` recreates the local database from scratch before loading the selected seed.
+`reseed` runs the normal local `supabase db reset`; migrations run before the configured `seed.sql`. `sync-storage` downloads production objects and replaces configured local buckets through Supabase Storage CLI operations. Bucket definitions remain in `supabase/config.toml`; bucket files are not part of SQL seed preparation.
+
+`fetch-seed` runs `supabase db dump --data-only --file supabase/seed.sql --linked`. It writes the full production dump to ignored `packages/database/supabase/seed.sql`; generated SQL is not rewritten. Production remains read-only; database reset and Storage synchronization write only to local Supabase.
+
+The linked production database has not yet applied the regional mapping migration. Do not run `reseed` until that migration has been deployed through CI/CD, because current production project rows still use legacy codes rejected by the final local CHECK. Until then, use `mise run db-reset` and SQL fixtures for local validation; no migration checkpoint is needed.
 
 To fetch a production seed without resetting local data:
 

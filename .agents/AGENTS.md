@@ -132,26 +132,26 @@ doppler run -- mise run website
   - The local Supabase database runs on port `55322` (you can verify this by running `npx supabase status`).
   - To query the local DB from the terminal, use: `PGPASSWORD=postgres psql -h 127.0.0.1 -p 55322 -U postgres -d postgres -c "<query>"`.
 - **Seed Data**:
-  - Keep `packages/database/supabase/seed.sql` up to date if you add new tables or reference data.
+  - `seed.sql` is a production-derived local copy. Migrations own schema and supported-language rules; the application owns mutable business records.
 
-### Headless production-backed local reseed
+### Production-backed local refresh
 
-`mise run reseed` fetches linked production application data and Storage files, resets only the local Supabase database to migration `20260926094824`, loads the production seed at that checkpoint, restores Storage objects, and applies pending local migrations. Run it only when the user explicitly asks to refresh local data from production. Never push migrations, mutate remote data, or deploy as part of a reseed.
+Production-backed refresh is opt-in. Production access is read-only; all database resets and file replacement target local Supabase. Never push migrations, mutate remote data, or deploy as part of a refresh.
 
-`public.dubbing_languages` is migration-owned reference data and is excluded from the production dump. This is not a merge: `db reset` recreates the local database from scratch, migrations recreate reference data, and the production seed supplies mutable application data.
+Migrations own the supported dubbing-language rule in the `dubbing_projects.language` CHECK constraint. There is no dubbing-language reference table or seed exclusion. Database refresh uses the full data-only production dump and the normal local reset. Storage objects are synchronized separately through Supabase Storage CLI commands.
 
-The production Supabase project ref selected for this repository is `rrjgbneefiwoqvsjwzrz`. Use Doppler project `dubbingbase`, config `prd`, for read-only production dump and Storage downloads. The required CLI credentials are `SUPABASE_ACCESS_TOKEN` and `SUPABASE_DB_PASSWORD`; never print or commit their values. To avoid browser login and interactive project selection in a headless environment:
+Use Doppler project `dubbingbase`, config `prd`, for read-only production dumps and Storage downloads. The required CLI credentials are `SUPABASE_ACCESS_TOKEN` and `SUPABASE_DB_PASSWORD`; never print or commit their values. To avoid browser login and interactive project selection in a headless environment:
 
 - From `packages/database`, link a fresh checkout explicitly with `doppler run --project dubbingbase --config prd -- mise exec -- npx supabase link --project-ref rrjgbneefiwoqvsjwzrz`.
 - If `db dump` fails while initializing a temporary login role with `401 Unauthorized`, or asks for a database password, check that the command is running with the `prd` Doppler config. Do not persist either secret in the repository.
-- If the CLI is already authenticated and the project is linked, no login or link step is needed. The project ref is not a credential; use it instead of the interactive project picker. The `reseed` task stops and restarts the local stack first so Storage uses the linked project's pinned image instead of a stale container.
-- The database tasks use `database-install`, which installs only `@app/supabase` dependencies. Run the full reseed from the repository root:
+- If the CLI is already authenticated and the project is linked, no login or link step is needed. The project ref is not a credential; use it instead of the interactive project picker.
+- The database tasks use `database-install`, which installs only `@app/supabase` dependencies. From the repository root, run:
 
   ```bash
   doppler run --project dubbingbase --config prd -- mise run reseed
   ```
 
-  `fetch-seed` writes a data-only dump, excluding only migration-owned `public.dubbing_languages`, to the ignored `packages/database/supabase/seed.sql`. `prepare-seed` removes Storage table rows from that SQL and replaces local Storage assets only after each downloaded bucket has been copied successfully. `reseed` uses `supabase db reset --version 20260926094824 --sql-paths seed.sql`, then applies pending migrations. Production remains read-only throughout.
+  `fetch-seed` writes the full data-only dump to ignored `packages/database/supabase/seed.sql`; `reseed` runs the normal local `supabase db reset` flow. Run `mise run sync-storage` separately after the database reset. The linked production project still needs the regional mapping migration before its project rows satisfy the final regional-language CHECK; until then, use migration-only resets and SQL fixtures for local validation. Use `mise run db-reset` when only a fresh schema is needed.
 
 ---
 

@@ -42,7 +42,7 @@ All development tasks MUST be run via **Mise** to ensure environment consistency
 | `mise run backend-stop` | Stops the local Supabase backend.                                                     |
 | `mise run app`          | Starts only the development server for the mobile app in web mode (`apps/mobile`).    |
 | `mise run website`      | Starts only the development server for the website (`apps/website`).                  |
-| `mise run db-reset`     | Resets the local database, applies local migrations, and loads seed data.             |
+| `mise run db-reset`     | Resets the local database and applies migrations without production seed data.        |
 | `mise run migrate-up`   | Applies pending migrations to the local database.                                     |
 | `mise run migrate-down` | Rolls back the last applied migration.                                                |
 | `mise run sync`         | Synchronizes mobile app builds with Capacitor platforms (Android, etc.).              |
@@ -144,7 +144,7 @@ doppler run -- mise run website
   - The local Supabase database runs on port `55322` (you can verify this by running `npx supabase status`).
   - To query the local DB from the terminal, use: `PGPASSWORD=postgres psql -h 127.0.0.1 -p 55322 -U postgres -d postgres -c "<query>"`.
 - **Seed Data**:
-  - Keep `packages/database/supabase/seed.sql` up to date if you add new tables or reference data.
+  - `seed.sql` is a production-derived local data copy. Migrations own schema and supported-language rules; the application owns mutable business records.
 
 ---
 
