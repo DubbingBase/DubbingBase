@@ -1,9 +1,10 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 cd "$(dirname "$0")"
 
-# Creates required folders and removes .keep files to avoid mime-type errors during seed
+# Prepare the complete SQL snapshot for local restore and replace each local
+# Storage bucket's files with the corresponding production bucket contents.
 
 for bucket in $(grep -oP '\[storage\.buckets\.\K[^\]]+' supabase/config.toml); do
   path=$(awk -v b="$bucket" '
@@ -13,19 +14,22 @@ for bucket in $(grep -oP '\[storage\.buckets\.\K[^\]]+' supabase/config.toml); d
   
   if [ -n "$path" ]; then
     folder="supabase/${path#./}"
-    mkdir -p "$folder"
-    
+
     echo "Downloading remote bucket '$bucket'..."
     temp_dir=$(mktemp -d)
     
     # Supabase CLI creates a subfolder for the bucket inside the target directory
-    if ! npx --yes supabase storage cp --experimental --linked -r "ss:///$bucket/" "$temp_dir/"; then
+    if ! npx --yes supabase storage cp --experimental --linked -r "ss:///$bucket/" "$temp_dir/" >/dev/null 2>&1; then
       rm -rf "$temp_dir"
       echo "Failed to download remote bucket '$bucket'." >&2
       exit 1
     fi
     
-    # Copy the contents directly into the target folder to avoid nesting
+    # Replace the destination only after the remote download has succeeded.
+    rm -rf "$folder"
+    mkdir -p "$folder"
+
+    # Copy the contents directly into the target folder to avoid nesting.
     if [ -d "$temp_dir/$bucket" ]; then
       cp -a "$temp_dir/$bucket/." "$folder/"
     fi
@@ -35,10 +39,7 @@ for bucket in $(grep -oP '\[storage\.buckets\.\K[^\]]+' supabase/config.toml); d
   fi
 done
 
-# Strip out storage.buckets inserts from seed.sql because config.toml already creates them 
-# and running an INSERT during seed will crash with a unique key constraint.
-perl -0777 -pi -e 's/INSERT INTO "storage"\."buckets".*?;//gs' supabase/seed.sql
-
-# Bucket objects are restored through the Storage API from their configured
-# objects_path. Keep the data-only dump from inserting duplicate object rows.
-perl -0777 -pi -e 's/INSERT INTO "storage"\."objects".*?;//gs' supabase/seed.sql
+python3 prepare-production-data.py \
+  .local/production-data.sql \
+  .local/production-data-prepared.sql \
+  .local/production-data-manifest.json

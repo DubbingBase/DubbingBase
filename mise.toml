@@ -59,17 +59,21 @@ depends = ["install"]
 dir = "packages/database"
 run = "pnpm supabase migration down"
 
+[tasks.database-install]
+description = "Installs only the database workspace dependencies"
+run = "pnpm install --filter @app/supabase..."
+
 [tasks.pull-production]
-description = "Pulls the production database"
-depends = ["install"]
+description = "Fetches a complete production data snapshot"
+depends = ["database-install"]
 dir = "packages/database"
-run = "pnpm supabase db dump -f supabase/seed.sql --data-only --linked"
+run = "mkdir -p .local && npx supabase db dump --data-only --use-copy -f .local/production-data.sql --linked"
 
 [tasks.db-reset]
-description = "Resets the database migration"
-depends = ["pull-production"]
+description = "Resets the local database with local development seed data"
+depends = ["database-install"]
 dir = "packages/database"
-run = "pnpm supabase db reset --local"
+run = "npx supabase db reset --local --yes"
 
 [tasks.backup-db]
 description = "Backups the database"
@@ -137,64 +141,28 @@ dir = "packages/database"
 run = "npx supabase gen types --lang=typescript --local > src/database.types.ts"
 
 [tasks.fetch-seed]
-description = "Fetches seed data from the remote database"
-depends = ["install"]
+description = "Fetches a complete production data snapshot"
+depends = ["database-install"]
 dir = "packages/database"
-run = "npx supabase db dump --data-only --exclude public.dubbing_languages -f supabase/seed.sql --linked"
+run = "mkdir -p .local && npx supabase db dump --data-only --use-copy -f .local/production-data.sql --linked"
 
 [tasks.prepare-seed]
-description = "Creates required folders and removes .keep files to avoid mime-type errors during seed"
+description = "Prepares the database snapshot and replaces local Storage files with production objects"
 depends = ["fetch-seed"]
 dir = "packages/database"
 run = "./prepare-seed.sh"
 
 [tasks.reseed]
-description = "Refreshes local Supabase, imports production data before regional migrations, then applies them"
+description = "Replaces local data with the production snapshot at the production schema checkpoint, then applies pending migrations"
 depends = ["prepare-seed"]
 dir = "packages/database"
 run = """
-set -e
-
-# Start schema-only, reset to the snapshot's migration checkpoint, then load
-# production data before the regional mapping and later migrations.
-seed_was_enabled="$(python3 -c 'from pathlib import Path; import re; s=Path("supabase/config.toml").read_text(); m=re.search(r"(?ms)^\\[db\\.seed\\]\\s*$(.*?)(?=^\\[|\\Z)", s); print(re.search(r"(?m)^enabled = (\\w+)$", m.group(1)).group(1) if m else "false")')"
-set_seed_enabled() {
-  python3 - "$1" <<'PY'
-from pathlib import Path
-import re
-import sys
-
-path = Path("supabase/config.toml")
-text = path.read_text()
-enabled = sys.argv[1]
-pattern = r"(?ms)(^\\[db\\.seed\\]\\s*.*?^enabled = )(?:true|false)(\\s*$)"
-updated, count = re.subn(pattern, rf"\\g<1>{enabled}\\g<2>", text, count=1)
-if count != 1:
-    raise SystemExit("Could not find [db.seed].enabled in supabase/config.toml")
-path.write_text(updated)
-PY
-}
-restore_seed_setting() {
-  if [ "$seed_was_enabled" = "true" ]; then
-    set_seed_enabled true
-  fi
-}
-trap restore_seed_setting EXIT
-if [ "$seed_was_enabled" = "true" ]; then
-  set_seed_enabled false
-fi
-
+set -euo pipefail
 npx supabase stop --no-backup
-npx supabase start
-npx supabase db reset --local --version 20260926094824 --no-seed --yes
-restore_seed_setting
-trap - EXIT
-project_id="$(sed -n 's/^project_id = "\\(.*\\)"$/\\1/p' supabase/config.toml | head -1)"
-{
-  printf '%s\\n' 'BEGIN;' 'ALTER TABLE public.dubbing_projects DISABLE TRIGGER dubbing_project_regional_language_guard;'
-  cat supabase/seed.sql
-  printf '%s\\n' 'ALTER TABLE public.dubbing_projects ENABLE TRIGGER dubbing_project_regional_language_guard;' 'COMMIT;'
-} | docker exec -i "supabase_db_${project_id}" psql -v ON_ERROR_STOP=1 -U postgres -d postgres
+npx supabase start --yes >/dev/null
+npx supabase db reset --local --version 20260926094824 --no-seed --yes >/dev/null
+./restore-production-seed.sh
+./verify-production-seed-replacement.sh
 npx supabase migration up --local
 """
 

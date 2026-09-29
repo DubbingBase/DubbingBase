@@ -136,22 +136,20 @@ doppler run -- mise run website
 
 ### Headless production-backed local reseed
 
-`mise run reseed` reads a data dump and Storage files from its linked Supabase project, then resets only the local Supabase stack. Run it only when the user explicitly asks to refresh local data from production. Never push migrations, mutate remote data, or deploy as part of a reseed.
+`mise run reseed` fetches the complete linked production data snapshot and Storage files, resets only the local Supabase stack to the production migration checkpoint, replaces snapshot-owned local rows, restores Storage objects, and applies pending local migrations. Run it only when the user explicitly asks to refresh local data from production. Never push migrations, mutate remote data, or deploy as part of a reseed.
 
 The production Supabase project ref selected for this repository is `rrjgbneefiwoqvsjwzrz`. Use Doppler project `dubbingbase`, config `prd`, for read-only production dump and Storage downloads. The required CLI credentials are `SUPABASE_ACCESS_TOKEN` and `SUPABASE_DB_PASSWORD`; never print or commit their values. To avoid browser login and interactive project selection in a headless environment:
 
 - From `packages/database`, link a fresh checkout explicitly with `doppler run --project dubbingbase --config prd -- mise exec -- npx supabase link --project-ref rrjgbneefiwoqvsjwzrz`.
 - If `db dump` fails while initializing a temporary login role with `401 Unauthorized`, or asks for a database password, check that the command is running with the `prd` Doppler config. Do not persist either secret in the repository.
 - If the CLI is already authenticated and the project is linked, no login or link step is needed. The project ref is not a credential; use it instead of the interactive project picker. The `reseed` task stops and restarts the local stack first so Storage uses the linked project's pinned image instead of a stale container.
-- The `reseed` task's dependency chain includes the root `install` task (`pnpm install`), which may traverse the mobile workspace. Agents must keep mobile out of scope and run the existing database tasks individually from the repository root, in order, after dependencies are installed:
+- The database tasks use `database-install`, which installs only `@app/supabase` dependencies and does not install the mobile workspace. Run the full reseed from the repository root:
 
   ```bash
-  doppler run --project dubbingbase --config prd -- mise run --skip-deps fetch-seed
-  doppler run --project dubbingbase --config prd -- mise run --skip-deps prepare-seed
-  mise run --skip-deps reseed
+  doppler run --project dubbingbase --config prd -- mise run reseed
   ```
 
-  `fetch-seed` reads the linked remote database and `prepare-seed` downloads linked Storage objects. `reseed` imports those rows at migration `20260926094824` (immediately before the regional language mapping), then applies all later migrations to the imported data. This ordering is required to validate data migrations against the production snapshot. Confirm the linked ref before starting the sequence.
+  `fetch-seed` writes the full data-only dump to `packages/database/.local/production-data.sql`; `prepare-seed` creates the local import file and replaces local Storage assets. `reseed` resets to migration `20260926094824`, atomically clears and restores snapshot-owned database rows with only the temporary regional-language guard disabled, verifies replacement against a deliberately dirty local database, then applies pending migrations. Production remains read-only throughout.
 
 ---
 

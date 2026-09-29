@@ -1,23 +1,21 @@
-push local db to remote using migrations
+Apply production migrations through the CI/CD deployment workflow. Do not run `supabase db push` directly.
 
-```
-supabase db push
-```
+For a normal local database reset with local development seed data:
 
-create a new migration based on the diff of the local and remote db
-
-```
-pnpm supabase db diff -f initial-schema
+```bash
+mise run db-reset
 ```
 
-generate seed data
+For an explicitly requested production-backed local rehearsal, fetches are read-only and all resets/imports target local Supabase:
 
-```
-supabase db dump -f supabase/seed.sql --data-only
+```bash
+doppler run --project dubbingbase --config prd -- mise run reseed
 ```
 
-apply all migrations
+The full production snapshot is stored at `packages/database/.local/production-data.sql`. `packages/database/supabase/seed.sql` is reserved for local development fixtures and is never overwritten by production data.
 
-```
-supabase db reset
+To fetch a production snapshot without resetting local data:
+
+```bash
+doppler run --project dubbingbase --config prd -- mise run fetch-seed
 ```
