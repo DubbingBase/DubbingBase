@@ -39,7 +39,7 @@ All development tasks MUST be run via **Mise** to ensure environment consistency
 | `mise run backend-stop` | Stops the local Supabase backend.                                                             |
 | `mise run app`          | Maintainer-only: starts the mobile app in web mode (`apps/mobile`); agents MUST NOT run it.   |
 | `mise run website`      | Starts only the development server for the website (`apps/website`).                          |
-| `mise run db-reset`     | Resets the local database, applies local migrations, and loads seed data.                     |
+| `mise run db-reset`     | Resets the local schema and applies migrations without seed data.                             |
 | `mise run migrate-up`   | Applies pending migrations to the local database.                                             |
 | `mise run migrate-down` | Rolls back the last applied migration.                                                        |
 | `mise run sync`         | Maintainer-only: synchronizes mobile builds with Capacitor platforms; agents MUST NOT run it. |
@@ -136,20 +136,22 @@ doppler run -- mise run website
 
 ### Headless production-backed local reseed
 
-`mise run reseed` fetches the complete linked production data snapshot and Storage files, resets only the local Supabase stack to the production migration checkpoint, replaces snapshot-owned local rows, restores Storage objects, and applies pending local migrations. Run it only when the user explicitly asks to refresh local data from production. Never push migrations, mutate remote data, or deploy as part of a reseed.
+`mise run reseed` fetches linked production application data and Storage files, resets only the local Supabase database to migration `20260926094824`, loads the production seed at that checkpoint, restores Storage objects, and applies pending local migrations. Run it only when the user explicitly asks to refresh local data from production. Never push migrations, mutate remote data, or deploy as part of a reseed.
+
+`public.dubbing_languages` is migration-owned reference data and is excluded from the production dump. This is not a merge: `db reset` recreates the local database from scratch, migrations recreate reference data, and the production seed supplies mutable application data.
 
 The production Supabase project ref selected for this repository is `rrjgbneefiwoqvsjwzrz`. Use Doppler project `dubbingbase`, config `prd`, for read-only production dump and Storage downloads. The required CLI credentials are `SUPABASE_ACCESS_TOKEN` and `SUPABASE_DB_PASSWORD`; never print or commit their values. To avoid browser login and interactive project selection in a headless environment:
 
 - From `packages/database`, link a fresh checkout explicitly with `doppler run --project dubbingbase --config prd -- mise exec -- npx supabase link --project-ref rrjgbneefiwoqvsjwzrz`.
 - If `db dump` fails while initializing a temporary login role with `401 Unauthorized`, or asks for a database password, check that the command is running with the `prd` Doppler config. Do not persist either secret in the repository.
 - If the CLI is already authenticated and the project is linked, no login or link step is needed. The project ref is not a credential; use it instead of the interactive project picker. The `reseed` task stops and restarts the local stack first so Storage uses the linked project's pinned image instead of a stale container.
-- The database tasks use `database-install`, which installs only `@app/supabase` dependencies and does not install the mobile workspace. Run the full reseed from the repository root:
+- The database tasks use `database-install`, which installs only `@app/supabase` dependencies. Run the full reseed from the repository root:
 
   ```bash
   doppler run --project dubbingbase --config prd -- mise run reseed
   ```
 
-  `fetch-seed` writes the full data-only dump to `packages/database/.local/production-data.sql`; `prepare-seed` creates the local import file and replaces local Storage assets. `reseed` resets to migration `20260926094824`, atomically clears and restores snapshot-owned database rows with only the temporary regional-language guard disabled, verifies replacement against a deliberately dirty local database, then applies pending migrations. Production remains read-only throughout.
+  `fetch-seed` writes a data-only dump, excluding only migration-owned `public.dubbing_languages`, to the ignored `packages/database/supabase/seed.sql`. `prepare-seed` removes Storage table rows from that SQL and replaces local Storage assets only after each downloaded bucket has been copied successfully. `reseed` uses `supabase db reset --version 20260926094824 --sql-paths seed.sql`, then applies pending migrations. Production remains read-only throughout.
 
 ---
 

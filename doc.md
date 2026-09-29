@@ -12,9 +12,9 @@ For an explicitly requested production-backed local rehearsal, fetches are read-
 doppler run --project dubbingbase --config prd -- mise run reseed
 ```
 
-The full production snapshot is stored at `packages/database/.local/production-data.sql`. `packages/database/supabase/seed.sql` is reserved for local development fixtures and is never overwritten by production data.
+`fetch-seed` writes a data-only production dump to the ignored `packages/database/supabase/seed.sql`, excluding only `public.dubbing_languages`. Migrations own that deterministic reference table; the production snapshot supplies mutable application data. This is not a local/production merge: `db reset` recreates the local database from scratch before loading the selected seed.
 
-To fetch a production snapshot without resetting local data:
+To fetch a production seed without resetting local data:
 
 ```bash
 doppler run --project dubbingbase --config prd -- mise run fetch-seed

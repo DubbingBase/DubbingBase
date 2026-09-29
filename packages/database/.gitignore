@@ -2,8 +2,6 @@
 .branches
 .temp
 .env
-.local/
-__pycache__/
 
 # Supabase
 .branches

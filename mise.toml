@@ -64,13 +64,11 @@ description = "Installs only the database workspace dependencies"
 run = "pnpm install --filter @app/supabase..."
 
 [tasks.pull-production]
-description = "Fetches a complete production data snapshot"
-depends = ["database-install"]
-dir = "packages/database"
-run = "mkdir -p .local && npx supabase db dump --data-only --use-copy -f .local/production-data.sql --linked"
+description = "Alias for fetching the production reseed data"
+run = "mise run fetch-seed"
 
 [tasks.db-reset]
-description = "Resets the local database with local development seed data"
+description = "Resets the local schema and applies migrations without seed data"
 depends = ["database-install"]
 dir = "packages/database"
 run = "npx supabase db reset --local --yes"
@@ -141,28 +139,26 @@ dir = "packages/database"
 run = "npx supabase gen types --lang=typescript --local > src/database.types.ts"
 
 [tasks.fetch-seed]
-description = "Fetches a complete production data snapshot"
+description = "Dumps production application data for a local reseed"
 depends = ["database-install"]
 dir = "packages/database"
-run = "mkdir -p .local && npx supabase db dump --data-only --use-copy -f .local/production-data.sql --linked"
+run = "npx supabase db dump --data-only --exclude public.dubbing_languages --file supabase/seed.sql --linked"
 
 [tasks.prepare-seed]
-description = "Prepares the database snapshot and replaces local Storage files with production objects"
+description = "Prepares the production seed and replaces local Storage files with production objects"
 depends = ["fetch-seed"]
 dir = "packages/database"
 run = "./prepare-seed.sh"
 
 [tasks.reseed]
-description = "Replaces local data with the production snapshot at the production schema checkpoint, then applies pending migrations"
+description = "Resets local data from production at its migration checkpoint, then applies pending migrations"
 depends = ["prepare-seed"]
 dir = "packages/database"
 run = """
 set -euo pipefail
 npx supabase stop --no-backup
-npx supabase start --yes >/dev/null
-npx supabase db reset --local --version 20260926094824 --no-seed --yes >/dev/null
-./restore-production-seed.sh
-./verify-production-seed-replacement.sh
+npx supabase start --yes
+npx supabase db reset --local --version 20260926094824 --sql-paths seed.sql --yes
 npx supabase migration up --local
 """
 
