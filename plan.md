@@ -203,7 +203,7 @@ to:
 "regional dubbing language"
 ```
 
-## Final migration shape
+# Final migration shape
 
 ```text
 DROP temporary guard

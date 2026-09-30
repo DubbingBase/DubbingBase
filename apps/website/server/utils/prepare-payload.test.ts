@@ -7,9 +7,7 @@ import {
 
 describe("prepare_game request contract", () => {
   it("requires a Wikipedia source language", () => {
-    expect(
-      validatePrepareGamePayload({ igdbId: 42, dubbing_language: "fr-FR" }),
-    ).toEqual({
+    expect(validatePrepareGamePayload({ igdbId: 42, dubbing_language: "fr-FR" })).toEqual({
       ok: false,
       reason: "A valid Wikipedia source language is required",
     });
@@ -25,12 +23,10 @@ describe("prepare_game request contract", () => {
     ).toBe(false);
   });
 
-  it("requires a registered regional dubbing target", () => {
-    expect(
-      validatePrepareGamePayload({ igdbId: 42, wikipedia_language: "simple" }),
-    ).toEqual({
+  it("requires a structurally valid regional dubbing target", () => {
+    expect(validatePrepareGamePayload({ igdbId: 42, wikipedia_language: "simple" })).toEqual({
       ok: false,
-      reason: "A registered regional dubbing language is required",
+      reason: "A regional dubbing language is required (for example fr-FR)",
     });
     expect(
       validatePrepareGamePayload({
@@ -93,9 +89,7 @@ describe("prepare_game request contract", () => {
 
 describe("prepare_media request contract", () => {
   it("requires both source and regional target", () => {
-    expect(validatePrepareMediaPayload({ tmdbId: 42, type: "movie" }).ok).toBe(
-      false,
-    );
+    expect(validatePrepareMediaPayload({ tmdbId: 42, type: "movie" }).ok).toBe(false);
     expect(
       validatePrepareMediaPayload({
         tmdbId: 42,
