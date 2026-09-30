@@ -1,6 +1,6 @@
 Apply production migrations through the CI/CD deployment workflow. Do not run `supabase db push` directly.
 
-`mise run db-reset` builds the local schema from migrations without production data. Supported dubbing-language codes are enforced by a database CHECK and mirrored in shared TypeScript constants; they are not stored in a reference table.
+`mise run db-reset` builds the local schema from migrations without production data. `dubbing_projects.language` is non-null text constrained by `^[a-z]{2,3}-[A-Z]{2}$`; shared TypeScript validates the same shape at request boundaries. This is structural validation, not an allow-list of CLDR/IANA codes.
 
 For a production-backed local refresh, reset the local database with the complete production data dump, then synchronize Storage separately:
 
@@ -13,7 +13,7 @@ doppler run --project dubbingbase --config prd -- mise run sync-storage
 
 `fetch-seed` runs `supabase db dump --data-only --file supabase/seed.sql --linked`. It writes the full production dump to ignored `packages/database/supabase/seed.sql`; generated SQL is not rewritten. Production remains read-only; database reset and Storage synchronization write only to local Supabase.
 
-The linked production database has not yet applied the regional mapping migration. Do not run `reseed` until that migration has been deployed through CI/CD, because current production project rows still use legacy codes rejected by the final local CHECK. Until then, use `mise run db-reset` and SQL fixtures for local validation; no migration checkpoint is needed.
+The linked production database has not yet applied the regional mapping migration. Do not run `reseed` until that migration has been deployed through CI/CD, because current production project rows still use legacy codes rejected by the final local CHECK. Until then, use `mise run db-reset` and SQL fixtures for local validation.
 
 To fetch a production seed without resetting local data:
 

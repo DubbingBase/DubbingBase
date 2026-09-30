@@ -132,13 +132,13 @@ doppler run -- mise run website
   - The local Supabase database runs on port `55322` (you can verify this by running `npx supabase status`).
   - To query the local DB from the terminal, use: `PGPASSWORD=postgres psql -h 127.0.0.1 -p 55322 -U postgres -d postgres -c "<query>"`.
 - **Seed Data**:
-  - `seed.sql` is a production-derived local copy. Migrations own schema and supported-language rules; the application owns mutable business records.
+  - `seed.sql` is a production-derived local copy of mutable business data. Migrations own schema and constrain `dubbing_projects.language` to the regional-code shape `^[a-z]{2,3}-[A-Z]{2}$`; shared TypeScript validates the same shape at application boundaries.
 
 ### Production-backed local refresh
 
 Production-backed refresh is opt-in. Production access is read-only; all database resets and file replacement target local Supabase. Never push migrations, mutate remote data, or deploy as part of a refresh.
 
-Migrations own the supported dubbing-language rule in the `dubbing_projects.language` CHECK constraint. There is no dubbing-language reference table or seed exclusion. Database refresh uses the full data-only production dump and the normal local reset. Storage objects are synchronized separately through Supabase Storage CLI commands.
+Migrations own schema and enforce the structural regional-code rule in the `dubbing_projects.language` CHECK constraint. Shared TypeScript validates the same shape. There is no dubbing-language registry table. Database refresh uses the full data-only production dump and the normal local reset. Storage objects are synchronized separately through Supabase Storage CLI commands.
 
 Use Doppler project `dubbingbase`, config `prd`, for read-only production dumps and Storage downloads. The required CLI credentials are `SUPABASE_ACCESS_TOKEN` and `SUPABASE_DB_PASSWORD`; never print or commit their values. To avoid browser login and interactive project selection in a headless environment:
 

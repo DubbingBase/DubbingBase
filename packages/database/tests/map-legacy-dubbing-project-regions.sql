@@ -1,5 +1,5 @@
--- Run with psql against an isolated database after applying the first two
--- regional-language migrations and the SQL-owned language-rule migration.
+-- Run with psql against an isolated database after applying the two deployed
+-- regional-language staging migrations and before the mapping migration.
 -- This fixture applies the mapping migration itself, verifies every legacy
 -- mapping, dependency merges, and final constraints, then rolls everything back.
 \set ON_ERROR_STOP on
@@ -145,6 +145,8 @@ INSERT INTO public.audit_logs(entity_type, entity_id, action, user_id) VALUES
 \ir ../supabase/migrations/20260926130158_map_legacy_dubbing_project_regions.sql
 
 DO $$
+DECLARE
+  invalid_code text;
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_temp.regional_guard_observations) THEN
     RAISE EXCEPTION 'Mapping fixture did not exercise the language update observer';
@@ -172,19 +174,19 @@ BEGIN
     SELECT 1 FROM public.dubbing_projects
     WHERE id = -910007 AND language = 'ko-KR'
   ) THEN
-    RAISE EXCEPTION 'Legacy ko did not map to registered ko-KR';
+    RAISE EXCEPTION 'Legacy ko did not map to regional ko-KR';
   END IF;
   IF NOT EXISTS (
     SELECT 1 FROM public.dubbing_projects
     WHERE id = -910008 AND language = 'sq-AL'
   ) THEN
-    RAISE EXCEPTION 'Legacy sq did not map to registered sq-AL';
+    RAISE EXCEPTION 'Legacy sq did not map to regional sq-AL';
   END IF;
   IF NOT EXISTS (
     SELECT 1 FROM public.dubbing_projects
     WHERE id = -910009 AND language = 'yue-HK'
   ) THEN
-    RAISE EXCEPTION 'Legacy zh-yue did not map to registered yue-HK';
+    RAISE EXCEPTION 'Legacy zh-yue did not map to regional yue-HK';
   END IF;
   IF NOT EXISTS (
     SELECT 1 FROM public.dubbing_projects
@@ -200,9 +202,9 @@ BEGIN
   END IF;
   IF EXISTS (
     SELECT 1 FROM public.dubbing_projects p
-    WHERE NOT public.is_valid_dubbing_language(p.language)
+    WHERE p.language IS NULL OR p.language !~ '^[a-z]{2,3}-[A-Z]{2}$'
   ) THEN
-    RAISE EXCEPTION 'A project language is outside the schema-owned language rule';
+    RAISE EXCEPTION 'A project language does not match the regional language format';
   END IF;
   IF EXISTS (
     SELECT 1
@@ -265,7 +267,9 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_constraint
     WHERE conrelid = 'public.dubbing_projects'::regclass
-      AND conname = 'dubbing_projects_language_check' AND contype = 'c'
+      AND conname = 'dubbing_projects_language_check'
+      AND contype = 'c'
+      AND pg_get_constraintdef(oid) LIKE '%[a-z]{2,3}-[A-Z]{2}%'
   ) OR NOT EXISTS (
     SELECT 1 FROM pg_constraint
     WHERE conrelid = 'public.dubbing_projects'::regclass
@@ -288,20 +292,34 @@ BEGIN
     WHERE conrelid = 'public.dubbing_projects'::regclass
       AND conname = 'dubbing_projects_language_fkey'
   ) THEN
-    RAISE EXCEPTION 'The final schema still has a registry foreign key';
+    RAISE EXCEPTION 'The final schema still has a language foreign key';
   END IF;
-  IF NOT public.is_valid_dubbing_language('ko-KR')
-    OR public.is_valid_dubbing_language('zz-ZZ') THEN
-    RAISE EXCEPTION 'The SQL language validator does not match the supported regional set';
+  FOREACH invalid_code IN ARRAY ARRAY['fr', 'FR-fr', 'fr_fr', 'fr-FRA', 'fr-FR '] LOOP
+    BEGIN
+      INSERT INTO public.dubbing_projects(content_id, content_type, language)
+      VALUES (989999, 'movie', invalid_code);
+      RAISE EXCEPTION 'Invalid regional shape % was accepted', invalid_code;
+    EXCEPTION WHEN check_violation THEN NULL;
+    END;
+  END LOOP;
+  INSERT INTO public.dubbing_projects(content_id, content_type, language)
+  VALUES (989996, 'movie', 'zz-ZZ');
+  INSERT INTO public.dubbing_projects(content_id, content_type, language)
+  VALUES (989998, 'movie', 'fr-CH');
+
+  IF to_regprocedure('public.is_valid_dubbing_language(text)') IS NOT NULL
+    OR to_regprocedure('public.guard_dubbing_project_language()') IS NOT NULL
+    OR to_regprocedure('public.finalize_dubbing_language_constraints()') IS NOT NULL
+    OR to_regprocedure('public.apply_reviewed_dubbing_languages(jsonb)') IS NOT NULL
+    OR to_regprocedure('public.dubbing_language_review_snapshot(bigint)') IS NOT NULL THEN
+    RAISE EXCEPTION 'Temporary dubbing-language migration helpers remain in the final schema';
   END IF;
   BEGIN
     INSERT INTO public.dubbing_projects(content_id, content_type, language)
-    VALUES (989999, 'movie', 'zz-ZZ');
-    RAISE EXCEPTION 'An unsupported regional code was accepted';
+    VALUES (989997, 'movie', 'FR-fR');
+    RAISE EXCEPTION 'Invalid region casing was accepted';
   EXCEPTION WHEN check_violation THEN NULL;
   END;
-  INSERT INTO public.dubbing_projects(content_id, content_type, language)
-  VALUES (989998, 'movie', 'fr-CA');
 END;
 $$;
 

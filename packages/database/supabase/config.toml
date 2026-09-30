@@ -121,6 +121,9 @@ allowed_mime_types = ["image/*"]
 public = true
 file_size_limit = "5MiB"
 allowed_mime_types = ["image/*"]
+
+[storage.buckets.gamification_uploads]
+public = true
 [auth]
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used

@@ -7,10 +7,15 @@
     class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm disabled:opacity-50 disabled:cursor-not-allowed"
   >
     <option v-if="!isDubbingLanguage(modelValue)" :value="modelValue" disabled>
-      {{ $t("admin.regionalDubbingLanguageRequired")
-      }}{{ modelValue ? ` (${modelValue})` : "" }}
+      {{ $t("admin.regionalDubbingLanguageRequired") }}{{ modelValue ? ` (${modelValue})` : "" }}
     </option>
-    <option v-for="code in DUBBING_LANGUAGES" :key="code" :value="code">
+    <option
+      v-else-if="!DUBBING_LANGUAGE_OPTIONS.some((code) => code === modelValue)"
+      :value="modelValue"
+    >
+      {{ displayDubbingLanguage(modelValue, locale) }} ({{ modelValue }})
+    </option>
+    <option v-for="code in DUBBING_LANGUAGE_OPTIONS" :key="code" :value="code">
       {{ displayDubbingLanguage(code, locale) }}
     </option>
   </select>
@@ -18,7 +23,7 @@
 
 <script setup lang="ts">
 import {
-  DUBBING_LANGUAGES,
+  DUBBING_LANGUAGE_OPTIONS,
   displayDubbingLanguage,
   isDubbingLanguage,
 } from "@app/shared-logic";

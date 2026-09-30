@@ -81,7 +81,7 @@ describe("source and target separation", () => {
     });
     expect(validateExtractPayload({ ...payload, dubbing_language: "fr-FR" }).ok).toBe(true);
   });
-  it.each(["fr", "de", "simple", "fr-Fr", "zz-ZZ", ""])(
+  it.each(["fr", "de", "simple", "fr-Fr", "fr-FRA", ""])(
     "rejects %s as a dubbing region",
     (dubbing_language) => {
       expect(
@@ -97,7 +97,7 @@ describe("source and target separation", () => {
     },
   );
 
-  it.each(["fr", "FR-fr", "fr-Fr", "zz-ZZ"])(
+  it.each(["fr", "FR-fr", "fr-Fr", "fr-FRA"])(
     "rejects non-regional target %s",
     (dubbing_language) => {
       expect(
@@ -112,6 +112,19 @@ describe("source and target separation", () => {
       ).toBe(false);
     },
   );
+
+  it("accepts a structurally valid code without checking a registry", () => {
+    expect(
+      validateExtractPayload({
+        tmdb_id: 1,
+        media_type: "movie",
+        wikipedia_language: "simple",
+        dubbing_language: "zz-ZZ",
+        page_id: 1,
+        section_indexes: [1],
+      }).ok,
+    ).toBe(true);
+  });
 
   it("requires a regional target before the extract stage", () => {
     expect(

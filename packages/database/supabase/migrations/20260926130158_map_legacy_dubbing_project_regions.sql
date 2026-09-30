@@ -4,6 +4,34 @@
 -- Wikimedia's special codes are normalized below: simple -> en, als -> gsw,
 -- zh-yue -> yue, while sh is retained and regionalized as sh-RS.
 
+-- The already-deployed review RPC requires its target to exist in this
+-- temporary registry. Seed only the targets needed for this one-time mapping.
+CREATE TEMP TABLE legacy_dubbing_language_mapping (
+  legacy_code text PRIMARY KEY,
+  regional_code text NOT NULL
+) ON COMMIT DROP;
+
+INSERT INTO pg_temp.legacy_dubbing_language_mapping(legacy_code, regional_code) VALUES
+  ('fr', 'fr-FR'), ('en', 'en-US'), ('es', 'es-ES'), ('pt', 'pt-BR'),
+  ('de', 'de-DE'), ('ja', 'ja-JP'), ('it', 'it-IT'),
+  ('pl', 'pl-PL'), ('zh', 'zh-CN'), ('uk', 'uk-UA'),
+  ('ceb', 'ceb-PH'), ('ko', 'ko-KR'), ('nl', 'nl-NL'),
+  ('sv', 'sv-SE'), ('cs', 'cs-CZ'), ('vi', 'vi-VN'),
+  ('no', 'no-NO'), ('da', 'da-DK'), ('el', 'el-GR'),
+  ('ro', 'ro-RO'), ('tr', 'tr-TR'), ('cy', 'cy-GB'),
+  ('hu', 'hu-HU'), ('sh', 'sh-RS'), ('fy', 'fy-NL'),
+  ('id', 'id-ID'), ('he', 'he-IL'), ('la', 'la-VA'),
+  ('ru', 'ru-RU'), ('hr', 'hr-HR'), ('ha', 'ha-NG'),
+  ('als', 'gsw-CH'), ('an', 'an-ES'), ('ca', 'ca-ES'),
+  ('ar', 'ar-EG'), ('ms', 'ms-MY'), ('sn', 'sn-ZW'),
+  ('tl', 'tl-PH'), ('sk', 'sk-SK'), ('sco', 'sco-GB'),
+  ('sq', 'sq-AL'), ('simple', 'en-US'), ('zh-yue', 'yue-HK');
+
+INSERT INTO public.dubbing_languages(code)
+SELECT DISTINCT regional_code
+FROM pg_temp.legacy_dubbing_language_mapping
+ON CONFLICT (code) DO NOTHING;
+
 -- This runs in the migration transaction while the table is locked against
 -- concurrent writes, so the controlled bulk mapping cannot race application writes.
 -- Disable only the temporary serializer: retaining one advisory xact lock per
@@ -25,22 +53,9 @@ DECLARE
   has_target boolean;
 BEGIN
   FOR mapping IN
-    SELECT * FROM (VALUES
-      ('fr', 'fr-FR'), ('en', 'en-US'), ('es', 'es-ES'), ('pt', 'pt-BR'),
-      ('de', 'de-DE'), ('ja', 'ja-JP'), ('it', 'it-IT'),
-      ('pl', 'pl-PL'), ('zh', 'zh-CN'), ('uk', 'uk-UA'),
-      ('ceb', 'ceb-PH'), ('ko', 'ko-KR'), ('nl', 'nl-NL'),
-      ('sv', 'sv-SE'), ('cs', 'cs-CZ'), ('vi', 'vi-VN'),
-      ('no', 'no-NO'), ('da', 'da-DK'), ('el', 'el-GR'),
-      ('ro', 'ro-RO'), ('tr', 'tr-TR'), ('cy', 'cy-GB'),
-      ('hu', 'hu-HU'), ('sh', 'sh-RS'), ('fy', 'fy-NL'),
-      ('id', 'id-ID'), ('he', 'he-IL'), ('la', 'la-VA'),
-      ('ru', 'ru-RU'), ('hr', 'hr-HR'), ('ha', 'ha-NG'),
-      ('als', 'gsw-CH'), ('an', 'an-ES'), ('ca', 'ca-ES'),
-      ('ar', 'ar-EG'), ('ms', 'ms-MY'), ('sn', 'sn-ZW'),
-      ('tl', 'tl-PH'), ('sk', 'sk-SK'), ('sco', 'sco-GB'),
-      ('sq', 'sq-AL'), ('simple', 'en-US'), ('zh-yue', 'yue-HK')
-    ) AS languages(legacy_code, regional_code)
+    SELECT legacy_code, regional_code
+    FROM pg_temp.legacy_dubbing_language_mapping
+    ORDER BY legacy_code
   LOOP
     FOR project_id IN
       SELECT p.id
@@ -129,16 +144,35 @@ BEGIN
     END LOOP;
   END LOOP;
 
+  LOCK TABLE public.dubbing_projects IN ACCESS EXCLUSIVE MODE;
+
   IF EXISTS (
     SELECT 1 FROM public.dubbing_projects p
     WHERE p.language IS NULL
-       OR NOT public.is_valid_dubbing_language(p.language)
+       OR p.language !~ '^[a-z]{2,3}-[A-Z]{2}$'
   ) THEN
     RAISE EXCEPTION 'Unmapped legacy dubbing languages remain; refusing to finalize';
   END IF;
 
-  -- Installs NOT NULL, the schema-owned language check, and one project per
-  -- media and region, then removes the transitional registry table.
-  PERFORM public.finalize_dubbing_language_constraints();
+  IF EXISTS (
+    SELECT 1 FROM public.dubbing_projects
+    GROUP BY content_id, content_type, language HAVING count(*) > 1
+  ) THEN
+    RAISE EXCEPTION 'Unresolved dubbing project collisions remain; refusing to finalize';
+  END IF;
+
+  ALTER TABLE public.dubbing_projects ALTER COLUMN language SET NOT NULL;
+  ALTER TABLE public.dubbing_projects DROP CONSTRAINT IF EXISTS dubbing_projects_language_fkey;
+  ALTER TABLE public.dubbing_projects ADD CONSTRAINT dubbing_projects_language_check
+    CHECK (language ~ '^[a-z]{2,3}-[A-Z]{2}$');
+  ALTER TABLE public.dubbing_projects ADD CONSTRAINT dubbing_projects_media_region_key
+    UNIQUE (content_id, content_type, language);
+
+  DROP TRIGGER dubbing_project_regional_language_guard ON public.dubbing_projects;
+  DROP TABLE public.dubbing_languages;
+  DROP FUNCTION public.apply_reviewed_dubbing_languages(jsonb);
+  DROP FUNCTION public.dubbing_language_review_snapshot(bigint);
+  DROP FUNCTION public.finalize_dubbing_language_constraints();
+  DROP FUNCTION public.guard_dubbing_project_language();
 END;
 $$;

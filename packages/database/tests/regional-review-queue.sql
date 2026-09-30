@@ -78,7 +78,7 @@ BEGIN
     );
     RAISE EXCEPTION 'Extract RPC accepted a non-regional dubbing language';
   EXCEPTION WHEN raise_exception THEN
-    IF SQLERRM <> 'A registered regional dubbing language is required' THEN
+    IF SQLERRM <> 'A regional dubbing language is required (for example fr-FR)' THEN
       RAISE;
     END IF;
   END;

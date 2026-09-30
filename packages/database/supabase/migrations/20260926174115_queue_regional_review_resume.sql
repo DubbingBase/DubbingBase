@@ -29,8 +29,8 @@ BEGIN
   IF v_wikipedia_language IS NULL OR v_wikipedia_language !~ '^[a-z][a-z0-9-]*$' THEN
     RAISE EXCEPTION 'Invalid Wikipedia source language';
   END IF;
-  IF NOT public.is_valid_dubbing_language(p_dubbing_language) THEN
-    RAISE EXCEPTION 'A registered regional dubbing language is required';
+  IF p_dubbing_language IS NULL OR p_dubbing_language !~ '^[a-z]{2,3}-[A-Z]{2}$' THEN
+    RAISE EXCEPTION 'A regional dubbing language is required (for example fr-FR)';
   END IF;
   IF EXISTS (
     SELECT 1 FROM public.dubbing_projects dp
@@ -130,7 +130,7 @@ DECLARE
   v_episode_number int;
   v_is_manual boolean;
 BEGIN
-  IF NOT public.is_valid_dubbing_language(p_dubbing_language) THEN
+  IF p_dubbing_language IS NULL OR p_dubbing_language !~ '^[a-z]{2,3}-[A-Z]{2}$' THEN
     RAISE EXCEPTION 'Invalid regional dubbing language';
   END IF;
 

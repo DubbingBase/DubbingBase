@@ -496,7 +496,7 @@ export async function extractMediaDubbingCredits(options: {
       const llmResult = await llmGenerateObject(wikitext, dubbingExtractionSchema, {
         systemInstruction: `${dubbingExtractionSystemInstruction}
 
-The approved target dubbing market is ${dubbingLanguage} (${displayDubbingLanguage(dubbingLanguage, "en")}). Extract only credits for this target. Exclude other regional versions and original-language casting. The Wikipedia edition is a source identifier, never evidence of the dubbing market.`,
+The requested target dubbing region is ${dubbingLanguage} (${displayDubbingLanguage(dubbingLanguage, "en")}). Extract only credits for this target. Exclude other regional versions and original-language casting. The Wikipedia edition is a source identifier, never evidence of the dubbing market.`,
         temperature: 0,
       });
       llmModel = llmResult.model;
@@ -675,7 +675,7 @@ export async function extractGameDubbingCredits(options: {
       const llmResult = await llmGenerateObject(wikitext, dubbingExtractionSchema, {
         systemInstruction: `${dubbingExtractionSystemInstruction}
 
-The approved target dubbing market is ${dubbingLanguage} (${displayDubbingLanguage(dubbingLanguage, "en")}). Extract only credits for this target. Exclude other regional versions and original-language casting. The Wikipedia edition is a source identifier, never evidence of the dubbing market.`,
+The requested target dubbing region is ${dubbingLanguage} (${displayDubbingLanguage(dubbingLanguage, "en")}). Extract only credits for this target. Exclude other regional versions and original-language casting. The Wikipedia edition is a source identifier, never evidence of the dubbing market.`,
         temperature: 0,
       });
       llmModel = llmResult.model;
