@@ -87,6 +87,61 @@ describe("SimpleCache", () => {
     expect(writes).toBe(1);
   });
 
+  it("force refreshes without storing volatile upstream data", async () => {
+    let writes = 0;
+    const cache = new SimpleCache(() => ({
+      get: async () => "stale",
+      put: async () => {
+        writes += 1;
+      },
+    }));
+    const namespace = createCacheNamespace<string>();
+
+    await expect(
+      cache.getOrFetch(namespace, "wikipedia:volatile", async () => "fresh", {
+        forceRefresh: true,
+        writeCache: false,
+      }),
+    ).resolves.toBe("fresh");
+    expect(writes).toBe(0);
+  });
+
+  it("lets a concurrent no-write caller suppress the shared refresh write", async () => {
+    let resolveFetch: ((value: string) => void) | undefined;
+    let fetchCount = 0;
+    let writes = 0;
+    const cache = new SimpleCache(() => ({
+      get: async () => null,
+      put: async () => {
+        writes += 1;
+      },
+    }));
+    const namespace = createCacheNamespace<string>();
+    const fetcher = () => {
+      fetchCount += 1;
+      return new Promise<string>((resolve) => {
+        resolveFetch = resolve;
+      });
+    };
+
+    const first = cache.getOrFetch(namespace, "wikipedia:volatile", fetcher, {
+      forceRefresh: true,
+    });
+    const second = cache.getOrFetch(namespace, "wikipedia:volatile", fetcher, {
+      forceRefresh: true,
+      writeCache: false,
+    });
+
+    expect(second).toBe(first);
+    await vi.waitFor(() => expect(fetchCount).toBe(1));
+    resolveFetch?.("fresh");
+    await expect(Promise.all([first, second])).resolves.toEqual([
+      "fresh",
+      "fresh",
+    ]);
+    expect(writes).toBe(0);
+  });
+
   it("does not write empty fetch results to KV", async () => {
     let writes = 0;
     const namespace = createCacheNamespace<string | null>();

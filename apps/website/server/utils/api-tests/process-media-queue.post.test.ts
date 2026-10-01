@@ -15,7 +15,11 @@ const routeMocks = vi.hoisted(() => ({
   rpc: vi.fn(),
   sendDiscordAdminNotification: vi.fn(),
   checkMediaDubbingSections: vi.fn(),
+  checkGameDubbingSections: vi.fn(),
+  extractMediaDubbingCredits: vi.fn(),
+  extractGameDubbingCredits: vi.fn(),
   useWikipediaCache: vi.fn(),
+  cacheGetOrFetch: vi.fn(),
 }));
 
 vi.mock("../notifications/discord", () => ({
@@ -23,9 +27,9 @@ vi.mock("../notifications/discord", () => ({
 }));
 vi.mock("../services/media-preparation", () => ({
   checkMediaDubbingSections: routeMocks.checkMediaDubbingSections,
-  checkGameDubbingSections: vi.fn(),
-  extractMediaDubbingCredits: vi.fn(),
-  extractGameDubbingCredits: vi.fn(),
+  checkGameDubbingSections: routeMocks.checkGameDubbingSections,
+  extractMediaDubbingCredits: routeMocks.extractMediaDubbingCredits,
+  extractGameDubbingCredits: routeMocks.extractGameDubbingCredits,
 }));
 vi.mock("../retryable-request", () => ({
   createMediaResponseError: vi.fn(),
@@ -37,7 +41,7 @@ vi.mock("../auth", () => ({ requireAdmin: vi.fn() }));
 vi.mock("..", () => ({
   useWikipediaCache: routeMocks.useWikipediaCache,
   useIgdbClient: vi.fn(),
-  useCache: vi.fn(() => ({})),
+  useCache: vi.fn(() => ({ getOrFetch: routeMocks.cacheGetOrFetch })),
 }));
 vi.mock("../llm", () => ({ areAllLlmQuotasExhausted: vi.fn(() => false) }));
 vi.mock("../cache/http", () => ({ setNoStoreHeaders: vi.fn() }));
@@ -63,6 +67,23 @@ beforeEach(() => {
     sectionIndexes: [2],
     pageId: 55,
     wikipediaUrl: "https://simple.wikipedia.org/wiki/Test_movie",
+  });
+  routeMocks.checkGameDubbingSections.mockResolvedValue({
+    ok: true,
+    title: "Test game",
+    sectionIndexes: [2],
+    pageId: 55,
+    wikipediaUrl: "https://simple.wikipedia.org/wiki/Test_game",
+  });
+  routeMocks.extractMediaDubbingCredits.mockResolvedValue({
+    ok: true,
+    changes: 1,
+    creditsAdded: 1,
+  });
+  routeMocks.extractGameDubbingCredits.mockResolvedValue({
+    ok: true,
+    changes: 1,
+    creditsAdded: 1,
   });
   routeMocks.useWikipediaCache.mockReturnValue({
     getAllSitelinksEntity: vi.fn(async (wikiId: string) => ({
@@ -98,11 +119,14 @@ beforeEach(() => {
 afterAll(() => vi.unstubAllGlobals());
 
 async function processQueue(
-  queue: "discovery" | "check",
+  queue: "discovery" | "check" | "extract",
   payloadChanges: Record<string, unknown> = {},
 ) {
   routeMocks.rpc.mockImplementation(async (name: string) => {
-    if (name === "pop_media_queue_batch") {
+    if (
+      name === "pop_media_queue_batch" ||
+      name === "pop_media_queue_message"
+    ) {
       return {
         data: [
           {
@@ -115,7 +139,9 @@ async function processQueue(
               wikipedia_language: "simple",
               dubbing_language: "en-US",
               is_manual: true,
-              ...(queue === "check" ? { page_id: 55, section_indexes: [2] } : {}),
+              ...(queue === "check" || queue === "extract"
+                ? { page_id: 55, section_indexes: [2] }
+                : {}),
               ...payloadChanges,
             },
           },
@@ -144,6 +170,32 @@ async function processQueue(
 }
 
 describe("POST /api/process-media-queue requester propagation", () => {
+  it("does not invoke cache-backed work for an empty queue cycle", async () => {
+    routeMocks.rpc.mockResolvedValue({ data: [], error: null });
+    const app = createApp();
+    app.use(
+      "/",
+      defineEventHandler((event) => handler(event)),
+    );
+
+    const response = await toWebHandler(app)(
+      new Request("http://localhost/?queue=check", {
+        method: "POST",
+        headers: {
+          "x-internal-secret": "queue-secret",
+          "content-type": "application/json",
+        },
+        body: "{}",
+      }),
+    );
+
+    expect(await response.json()).toEqual(
+      expect.objectContaining({ processed: 0, reason: "no_pending_items" }),
+    );
+    expect(routeMocks.cacheGetOrFetch).not.toHaveBeenCalled();
+    expect(routeMocks.checkMediaDubbingSections).not.toHaveBeenCalled();
+  });
+
   it("preserves requested_by through discovery fan-out into every wiki_check", async () => {
     await processQueue("discovery", { requested_by: requester });
 
@@ -160,9 +212,36 @@ describe("POST /api/process-media-queue requester propagation", () => {
   it("preserves requested_by from wiki_check into wiki_extract", async () => {
     await processQueue("check", { requested_by: requester });
 
+    expect(routeMocks.checkMediaDubbingSections).toHaveBeenCalledWith(
+      expect.objectContaining({ forceRefresh: true, writeCache: false }),
+    );
     expect(routeMocks.rpc).toHaveBeenCalledWith(
       "enqueue_media_extract",
       expect.objectContaining({ p_requested_by: requester }),
+    );
+  });
+
+  it("refreshes game check inputs without persisting volatile Wikipedia data", async () => {
+    await processQueue("check", { media_type: "video_game" });
+
+    expect(routeMocks.checkGameDubbingSections).toHaveBeenCalledWith(
+      expect.objectContaining({ forceRefresh: true, writeCache: false }),
+    );
+  });
+
+  it("refreshes extract inputs without persisting volatile Wikipedia data", async () => {
+    await processQueue("extract");
+
+    expect(routeMocks.extractMediaDubbingCredits).toHaveBeenCalledWith(
+      expect.objectContaining({ forceRefresh: true, writeCache: false }),
+    );
+  });
+
+  it("refreshes game extract inputs without persisting volatile Wikipedia data", async () => {
+    await processQueue("extract", { media_type: "video_game" });
+
+    expect(routeMocks.extractGameDubbingCredits).toHaveBeenCalledWith(
+      expect.objectContaining({ forceRefresh: true, writeCache: false }),
     );
   });
 

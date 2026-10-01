@@ -120,7 +120,7 @@ export class TVDBClient {
       TVDB_API_RESPONSE_NAMESPACE,
       cacheKey,
       () => this.get(`/series/${seriesId}`, params, language),
-      { ttl: 86400, ...options },
+      { ttl: 604800, ...options },
     );
   }
 
@@ -149,7 +149,7 @@ export class TVDBClient {
       cacheKey,
       () => this.get(`/movies/${movieId}`, params, language),
       {
-        ttl: 86400,
+        ttl: 604800,
         ...options,
       },
     );
@@ -162,7 +162,7 @@ export class TVDBClient {
       cacheKey,
       () => this.get(`/characters/${characterId}`),
       {
-        ttl: 86400,
+        ttl: 604800,
         ...options,
       },
     );
@@ -178,7 +178,7 @@ export class TVDBClient {
       cacheKey,
       () => this.get(`/series/${seriesId}/characters`),
       {
-        ttl: 86400,
+        ttl: 604800,
         ...options,
       },
     );
@@ -191,7 +191,7 @@ export class TVDBClient {
       cacheKey,
       () => this.get(`/movies/${movieId}/characters`),
       {
-        ttl: 86400,
+        ttl: 604800,
         ...options,
       },
     );

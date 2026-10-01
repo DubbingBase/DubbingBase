@@ -104,7 +104,7 @@ export class TMDBClient {
           { append_to_response: "credits,external_ids" },
           language,
         ),
-      { ttl: 86400, ...options },
+      { ttl: 604800, ...options },
     );
   }
 
@@ -135,7 +135,7 @@ export class TMDBClient {
           { append_to_response: "credits,external_ids" },
           language,
         ),
-      { ttl: 86400, ...options },
+      { ttl: 604800, ...options },
     );
   }
 
@@ -168,7 +168,7 @@ export class TMDBClient {
           { append_to_response: "credits,external_ids" },
           language,
         ),
-      { ttl: 86400, ...options },
+      { ttl: 604800, ...options },
     );
   }
 
@@ -196,7 +196,7 @@ export class TMDBClient {
           { append_to_response: "credits,external_ids" },
           language,
         ),
-      { ttl: 86400, ...options },
+      { ttl: 604800, ...options },
     );
   }
 
@@ -220,7 +220,7 @@ export class TMDBClient {
       tmdbResponseNamespace,
       cacheKey,
       () => this.get(`${mediaType}/${mediaId}/${endpoint}`, undefined, langStr),
-      { ttl: 86400, ...options },
+      { ttl: 604800, ...options },
     );
   }
 
@@ -247,7 +247,7 @@ export class TMDBClient {
           { append_to_response: "tv_credits,movie_credits,external_ids" },
           language,
         ),
-      { ttl: 86400, ...options },
+      { ttl: 604800, ...options },
     );
   }
 
@@ -292,7 +292,7 @@ export class TMDBClient {
       cacheKey,
       () => this.get(`collection/${collectionId}`),
       {
-        ttl: 86400,
+        ttl: 604800,
       },
     );
   }

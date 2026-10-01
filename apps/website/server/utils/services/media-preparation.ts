@@ -187,11 +187,19 @@ export async function checkMediaDubbingSections(options: {
   episodeNumber?: number | null;
   cache?: SimpleCache;
   forceRefresh?: boolean;
+  writeCache?: boolean;
 }): Promise<CheckSectionsResult> {
-  const { tmdbId, type, wikipediaLanguage, cache, forceRefresh } = options;
+  const {
+    tmdbId,
+    type,
+    wikipediaLanguage,
+    cache,
+    forceRefresh,
+    writeCache,
+  } = options;
   // Queue check/extract run on separate cron ticks: refresh Wikipedia page
   // metadata and sections so stale section indexes are validated against the page.
-  const fetchOptions: CacheFetchOptions = { forceRefresh };
+  const fetchOptions: CacheFetchOptions = { forceRefresh, writeCache };
   let mediaTitle = "Unknown title";
   let wikiPageUrl: string | undefined = undefined;
 
@@ -302,11 +310,13 @@ export async function checkGameDubbingSections(options: {
   wikipediaLanguage: string;
   cache?: SimpleCache;
   forceRefresh?: boolean;
+  writeCache?: boolean;
 }): Promise<CheckSectionsResult> {
-  const { igdbId, wikipediaLanguage, cache, forceRefresh } = options;
+  const { igdbId, wikipediaLanguage, cache, forceRefresh, writeCache } =
+    options;
   // Queue check/extract run on separate cron ticks: refresh Wikipedia page
   // metadata and sections so stale section indexes are validated against the page.
-  const fetchOptions: CacheFetchOptions = { forceRefresh };
+  const fetchOptions: CacheFetchOptions = { forceRefresh, writeCache };
   let gameTitle = "Unknown title";
   let wikiPageUrl: string | undefined = undefined;
 
@@ -410,11 +420,21 @@ export async function extractMediaDubbingCredits(options: {
   episodeNumber?: number | null;
   cache?: SimpleCache;
   forceRefresh?: boolean;
+  writeCache?: boolean;
 }): Promise<ExtractCreditsResult> {
-  const { tmdbId, type, wikipediaLanguage, pageId, sectionIndexes, cache, forceRefresh } = options;
+  const {
+    tmdbId,
+    type,
+    wikipediaLanguage,
+    pageId,
+    sectionIndexes,
+    cache,
+    forceRefresh,
+    writeCache,
+  } = options;
   // Re-read volatile Wikipedia sections and wikitext because the check stage
   // ran on an earlier cron tick and the section list can have changed since.
-  const fetchOptions: CacheFetchOptions = { forceRefresh };
+  const fetchOptions: CacheFetchOptions = { forceRefresh, writeCache };
   let mediaTitle = "Unknown title";
   let imageUrl: string | undefined = undefined;
 
@@ -611,11 +631,20 @@ export async function extractGameDubbingCredits(options: {
   sectionIndexes: number[];
   cache?: SimpleCache;
   forceRefresh?: boolean;
+  writeCache?: boolean;
 }): Promise<ExtractCreditsResult> {
-  const { igdbId, wikipediaLanguage, pageId, sectionIndexes, cache, forceRefresh } = options;
+  const {
+    igdbId,
+    wikipediaLanguage,
+    pageId,
+    sectionIndexes,
+    cache,
+    forceRefresh,
+    writeCache,
+  } = options;
   // Re-read volatile Wikipedia sections and wikitext because the check stage
   // ran on an earlier cron tick and the section list can have changed since.
-  const fetchOptions: CacheFetchOptions = { forceRefresh };
+  const fetchOptions: CacheFetchOptions = { forceRefresh, writeCache };
   let gameTitle = "Unknown title";
   let imageUrl: string | undefined = undefined;
 

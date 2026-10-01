@@ -571,6 +571,7 @@ export default defineEventHandler(async (event) => {
               wikipediaLanguage,
               cache,
               forceRefresh: true,
+              writeCache: false,
             });
           } else {
             checkResult = await checkMediaDubbingSections({
@@ -581,6 +582,7 @@ export default defineEventHandler(async (event) => {
               episodeNumber: payload.episode_number,
               cache,
               forceRefresh: true,
+              writeCache: false,
             });
           }
 
@@ -790,6 +792,7 @@ export default defineEventHandler(async (event) => {
               sectionIndexes,
               cache,
               forceRefresh: true,
+              writeCache: false,
             });
           } else {
             extractResult = await extractMediaDubbingCredits({
@@ -803,6 +806,7 @@ export default defineEventHandler(async (event) => {
               episodeNumber: payload.episode_number,
               cache,
               forceRefresh: true,
+              writeCache: false,
             });
           }
 

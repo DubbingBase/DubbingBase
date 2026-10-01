@@ -41,6 +41,7 @@ export type CacheTTLPreset = keyof typeof CACHE_TTL | number;
 export interface GetOrFetchOptions {
   ttl?: CacheTTLPreset;
   forceRefresh?: boolean;
+  writeCache?: boolean;
 }
 
 export interface CacheKv {
@@ -136,6 +137,7 @@ export class SimpleCache {
       Boolean(options.forceRefresh) && !isAuthenticationTokenKey(key);
     const inProgress = namespace.get(safeKey);
     if (inProgress && (!forceRefresh || inProgress.forceRefresh)) {
+      if (options.writeCache === false) inProgress.shouldCache = false;
       return inProgress.promise;
     }
     let pendingSupersededWrite: Promise<boolean> | undefined;
@@ -152,7 +154,7 @@ export class SimpleCache {
     });
     const request: CacheInFlightRequest<T> = {
       forceRefresh,
-      shouldCache: true,
+      shouldCache: options.writeCache !== false,
       promise,
       resolve: resolvePromise,
       reject: rejectPromise,

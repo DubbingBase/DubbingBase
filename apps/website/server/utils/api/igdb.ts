@@ -250,7 +250,7 @@ export class IgdbClient {
         );
         return results[0] ?? null;
       },
-      { ttl: 86400, ...options },
+      { ttl: 604800, ...options },
     );
   }
 
@@ -289,7 +289,7 @@ export class IgdbClient {
        where games = (${gameId});
        limit 50;`,
         ),
-      { ttl: 86400, ...options },
+      { ttl: 604800, ...options },
     );
   }
 
