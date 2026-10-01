@@ -179,6 +179,7 @@ export interface PrepareGameResult {
 // 1. Check Stage (Queue 2: wiki_check) - 0 LLM Cost, Regex TOC validation
 // ---------------------------------------------------------------------------
 
+/** Finds dubbing sections on a Wikipedia page linked to TMDB media. */
 export async function checkMediaDubbingSections(options: {
   tmdbId: number;
   type: "movie" | "tv" | "season" | "episode";
@@ -189,14 +190,7 @@ export async function checkMediaDubbingSections(options: {
   forceRefresh?: boolean;
   writeCache?: boolean;
 }): Promise<CheckSectionsResult> {
-  const {
-    tmdbId,
-    type,
-    wikipediaLanguage,
-    cache,
-    forceRefresh,
-    writeCache,
-  } = options;
+  const { tmdbId, type, wikipediaLanguage, cache, forceRefresh, writeCache } = options;
   // Queue check/extract run on separate cron ticks: refresh Wikipedia page
   // metadata and sections so stale section indexes are validated against the page.
   const fetchOptions: CacheFetchOptions = { forceRefresh, writeCache };
@@ -305,6 +299,7 @@ export async function checkMediaDubbingSections(options: {
   }
 }
 
+/** Finds dubbing sections on a Wikipedia page linked to an IGDB game. */
 export async function checkGameDubbingSections(options: {
   igdbId: number;
   wikipediaLanguage: string;
@@ -312,8 +307,7 @@ export async function checkGameDubbingSections(options: {
   forceRefresh?: boolean;
   writeCache?: boolean;
 }): Promise<CheckSectionsResult> {
-  const { igdbId, wikipediaLanguage, cache, forceRefresh, writeCache } =
-    options;
+  const { igdbId, wikipediaLanguage, cache, forceRefresh, writeCache } = options;
   // Queue check/extract run on separate cron ticks: refresh Wikipedia page
   // metadata and sections so stale section indexes are validated against the page.
   const fetchOptions: CacheFetchOptions = { forceRefresh, writeCache };
@@ -409,6 +403,7 @@ export async function checkGameDubbingSections(options: {
 // 2. Extract Stage (Queue 3: wiki_extract) - LLM Gemini credit parsing
 // ---------------------------------------------------------------------------
 
+/** Extracts credits from selected Wikipedia sections for a TMDB media item. */
 export async function extractMediaDubbingCredits(options: {
   tmdbId: number;
   type: "movie" | "tv" | "season" | "episode";
@@ -623,6 +618,7 @@ The approved target dubbing market is ${dubbingLanguage} (${displayDubbingLangua
   }
 }
 
+/** Extracts credits from selected Wikipedia sections for an IGDB game. */
 export async function extractGameDubbingCredits(options: {
   igdbId: number;
   wikipediaLanguage: string;
@@ -633,15 +629,8 @@ export async function extractGameDubbingCredits(options: {
   forceRefresh?: boolean;
   writeCache?: boolean;
 }): Promise<ExtractCreditsResult> {
-  const {
-    igdbId,
-    wikipediaLanguage,
-    pageId,
-    sectionIndexes,
-    cache,
-    forceRefresh,
-    writeCache,
-  } = options;
+  const { igdbId, wikipediaLanguage, pageId, sectionIndexes, cache, forceRefresh, writeCache } =
+    options;
   // Re-read volatile Wikipedia sections and wikitext because the check stage
   // ran on an earlier cron tick and the section list can have changed since.
   const fetchOptions: CacheFetchOptions = { forceRefresh, writeCache };

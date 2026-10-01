@@ -2,6 +2,7 @@ import { SimpleKeyBuilder, SimpleKeyValidator } from "./constants";
 
 interface CacheInFlightRequest<T> {
   forceRefresh: boolean;
+  writeCache: boolean;
   promise: Promise<T>;
   shouldCache: boolean;
   resolve: (value: T) => void;
@@ -41,16 +42,13 @@ export type CacheTTLPreset = keyof typeof CACHE_TTL | number;
 export interface GetOrFetchOptions {
   ttl?: CacheTTLPreset;
   forceRefresh?: boolean;
+  /** Persist fetched data to KV; defaults to true. */
   writeCache?: boolean;
 }
 
 export interface CacheKv {
   get<T>(key: string, options: { type: "json" }): Promise<T | null>;
-  put(
-    key: string,
-    value: string,
-    options: { expirationTtl: number },
-  ): Promise<void>;
+  put(key: string, value: string, options: { expirationTtl: number }): Promise<void>;
   delete?(key: string): Promise<void>;
 }
 
@@ -89,22 +87,14 @@ export class SimpleCache {
     return null;
   }
 
-  private async set<T>(
-    key: string,
-    data: T,
-    ttl: CacheTTLPreset = "NORMAL",
-  ): Promise<boolean> {
+  private async set<T>(key: string, data: T, ttl: CacheTTLPreset = "NORMAL"): Promise<boolean> {
     if (!this.enabled) return false;
     try {
       const kv = this.kvGetter();
       if (kv) {
-        await kv.put(
-          SimpleKeyValidator.sanitizeKey(key),
-          JSON.stringify(data),
-          {
-            expirationTtl: ttlSeconds(ttl),
-          },
-        );
+        await kv.put(SimpleKeyValidator.sanitizeKey(key), JSON.stringify(data), {
+          expirationTtl: ttlSeconds(ttl),
+        });
         return true;
       }
     } catch (kvErr) {
@@ -126,6 +116,10 @@ export class SimpleCache {
     }
   }
 
+  /**
+   * Returns cached data or fetches it upstream. `forceRefresh` skips KV reads;
+   * set `writeCache` to false when the refreshed value must not be persisted.
+   */
   getOrFetch<T>(
     namespace: CacheNamespace<T>,
     key: string,
@@ -133,11 +127,15 @@ export class SimpleCache {
     options: GetOrFetchOptions = {},
   ): Promise<T> {
     const safeKey = SimpleKeyValidator.sanitizeKey(key);
-    const forceRefresh =
-      Boolean(options.forceRefresh) && !isAuthenticationTokenKey(key);
+    const forceRefresh = Boolean(options.forceRefresh) && !isAuthenticationTokenKey(key);
+    const writeCache = options.writeCache !== false;
     const inProgress = namespace.get(safeKey);
-    if (inProgress && (!forceRefresh || inProgress.forceRefresh)) {
-      if (options.writeCache === false) inProgress.shouldCache = false;
+    // Coalesce only when callers agree on whether the fetched value is persisted.
+    if (
+      inProgress &&
+      inProgress.writeCache === writeCache &&
+      (!forceRefresh || inProgress.forceRefresh)
+    ) {
       return inProgress.promise;
     }
     let pendingSupersededWrite: Promise<boolean> | undefined;
@@ -154,7 +152,8 @@ export class SimpleCache {
     });
     const request: CacheInFlightRequest<T> = {
       forceRefresh,
-      shouldCache: options.writeCache !== false,
+      writeCache,
+      shouldCache: writeCache,
       promise,
       resolve: resolvePromise,
       reject: rejectPromise,
@@ -176,11 +175,7 @@ export class SimpleCache {
           await pendingSupersededWrite.catch(() => false);
         }
         if (value !== null && value !== undefined && request.shouldCache) {
-          request.writePromise = this.set(
-            safeKey,
-            value,
-            options.ttl ?? "NORMAL",
-          );
+          request.writePromise = this.set(safeKey, value, options.ttl ?? "NORMAL");
           await request.writePromise;
         }
         request.resolve(value);
@@ -194,12 +189,7 @@ export class SimpleCache {
     return promise;
   }
 
-  generateKey(
-    api: string,
-    type: string,
-    id: string | number,
-    suffix?: string,
-  ): string {
+  generateKey(api: string, type: string, id: string | number, suffix?: string): string {
     return SimpleKeyBuilder.key(api, type, id, suffix);
   }
 
@@ -207,12 +197,7 @@ export class SimpleCache {
     return SimpleKeyBuilder.tmdb(type, id, suffix);
   }
 
-  tvdbKey(
-    type: string,
-    id: string | number,
-    suffix?: string,
-    language?: string,
-  ): string {
+  tvdbKey(type: string, id: string | number, suffix?: string, language?: string): string {
     return SimpleKeyBuilder.tvdb(type, id, suffix, language);
   }
 

@@ -4,11 +4,7 @@ import { buildCacheKey } from "./constants";
 
 interface FakeKv {
   get: (key: string, options: { type: "json" }) => Promise<unknown>;
-  put: (
-    key: string,
-    value: string,
-    options: { expirationTtl: number },
-  ) => Promise<void>;
+  put: (key: string, value: string, options: { expirationTtl: number }) => Promise<void>;
 }
 
 describe("SimpleCache", () => {
@@ -25,14 +21,10 @@ describe("SimpleCache", () => {
     const namespace = createCacheNamespace<{ value: number }>();
 
     const fetcher = vi.fn(async () => ({ value: 0 }));
-    await expect(
-      cache.getOrFetch(namespace, "external:key", fetcher),
-    ).resolves.toEqual({
+    await expect(cache.getOrFetch(namespace, "external:key", fetcher)).resolves.toEqual({
       value: 1,
     });
-    await expect(
-      cache.getOrFetch(namespace, "external:key", fetcher),
-    ).resolves.toEqual({
+    await expect(cache.getOrFetch(namespace, "external:key", fetcher)).resolves.toEqual({
       value: 2,
     });
     expect(fetcher).not.toHaveBeenCalled();
@@ -106,7 +98,7 @@ describe("SimpleCache", () => {
     expect(writes).toBe(0);
   });
 
-  it("lets a concurrent no-write caller suppress the shared refresh write", async () => {
+  it("coalesces concurrent no-write refreshes without writing to KV", async () => {
     let resolveFetch: ((value: string) => void) | undefined;
     let fetchCount = 0;
     let writes = 0;
@@ -126,6 +118,7 @@ describe("SimpleCache", () => {
 
     const first = cache.getOrFetch(namespace, "wikipedia:volatile", fetcher, {
       forceRefresh: true,
+      writeCache: false,
     });
     const second = cache.getOrFetch(namespace, "wikipedia:volatile", fetcher, {
       forceRefresh: true,
@@ -135,11 +128,42 @@ describe("SimpleCache", () => {
     expect(second).toBe(first);
     await vi.waitFor(() => expect(fetchCount).toBe(1));
     resolveFetch?.("fresh");
-    await expect(Promise.all([first, second])).resolves.toEqual([
-      "fresh",
-      "fresh",
-    ]);
+    await expect(Promise.all([first, second])).resolves.toEqual(["fresh", "fresh"]);
     expect(writes).toBe(0);
+  });
+
+  it("keeps concurrent refreshes with different write policies independent", async () => {
+    const resolveFetches: Array<(value: string) => void> = [];
+    const writes: string[] = [];
+    let fetchCount = 0;
+    const cache = new SimpleCache(() => ({
+      get: async () => null,
+      put: async (_key, value) => {
+        writes.push(value);
+      },
+    }));
+    const namespace = createCacheNamespace<string>();
+    const fetcher = () => {
+      fetchCount += 1;
+      return new Promise<string>((resolve) => {
+        resolveFetches.push(resolve);
+      });
+    };
+
+    const cacheable = cache.getOrFetch(namespace, "wikipedia:mixed-policy", fetcher, {
+      forceRefresh: true,
+    });
+    const noWrite = cache.getOrFetch(namespace, "wikipedia:mixed-policy", fetcher, {
+      forceRefresh: true,
+      writeCache: false,
+    });
+
+    expect(noWrite).not.toBe(cacheable);
+    await vi.waitFor(() => expect(fetchCount).toBe(2));
+    resolveFetches[0]?.("cacheable");
+    resolveFetches[1]?.("volatile");
+    await expect(Promise.all([cacheable, noWrite])).resolves.toEqual(["cacheable", "volatile"]);
+    expect(writes).toEqual(['"cacheable"']);
   });
 
   it("does not write empty fetch results to KV", async () => {
@@ -185,10 +209,7 @@ describe("SimpleCache", () => {
     await vi.waitFor(() => expect(fetchCount).toBe(1));
     resolveFetch?.("shared");
 
-    await expect(Promise.all([first, second])).resolves.toEqual([
-      "shared",
-      "shared",
-    ]);
+    await expect(Promise.all([first, second])).resolves.toEqual(["shared", "shared"]);
     expect(fetchCount).toBe(1);
   });
 
@@ -207,16 +228,8 @@ describe("SimpleCache", () => {
       });
     };
 
-    const first = cache.getOrFetch(
-      namespace,
-      "external:promise-identity",
-      fetcher,
-    );
-    const second = cache.getOrFetch(
-      namespace,
-      "external:promise-identity",
-      fetcher,
-    );
+    const first = cache.getOrFetch(namespace, "external:promise-identity", fetcher);
+    const second = cache.getOrFetch(namespace, "external:promise-identity", fetcher);
 
     expect(second).toBe(first);
     await vi.waitFor(() => expect(fetchCount).toBe(1));
@@ -236,11 +249,7 @@ describe("SimpleCache", () => {
       put: async () => undefined,
     }));
 
-    const normal = cache.getOrFetch(
-      namespace,
-      "external:refresh-race",
-      async () => "normal",
-    );
+    const normal = cache.getOrFetch(namespace, "external:refresh-race", async () => "normal");
     await vi.waitFor(() => expect(resolveRead).toBeDefined());
     const forced = cache.getOrFetch(
       namespace,
@@ -277,14 +286,9 @@ describe("SimpleCache", () => {
         }),
     );
     await vi.waitFor(() => expect(resolveNormalFetch).toBeDefined());
-    const forced = cache.getOrFetch(
-      namespace,
-      "external:fetch-race",
-      async () => "fresh",
-      {
-        forceRefresh: true,
-      },
-    );
+    const forced = cache.getOrFetch(namespace, "external:fetch-race", async () => "fresh", {
+      forceRefresh: true,
+    });
 
     await expect(forced).resolves.toBe("fresh");
     expect(values.get("external:fetch-race")).toBe("fresh");
@@ -306,12 +310,10 @@ describe("SimpleCache", () => {
       return "recovered";
     };
 
-    await expect(
-      cache.getOrFetch(namespace, "external:retry", fetcher),
-    ).rejects.toThrow("upstream failed");
-    await expect(
-      cache.getOrFetch(namespace, "external:retry", fetcher),
-    ).resolves.toBe("recovered");
+    await expect(cache.getOrFetch(namespace, "external:retry", fetcher)).rejects.toThrow(
+      "upstream failed",
+    );
+    await expect(cache.getOrFetch(namespace, "external:retry", fetcher)).resolves.toBe("recovered");
     expect(fetchCount).toBe(2);
   });
 
