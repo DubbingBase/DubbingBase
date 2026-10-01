@@ -224,7 +224,7 @@ export class IgdbClient {
 
   async getGame(
     id: number,
-    options: CacheFetchOptions = {},
+    options: CacheFetchOptions = { cachePolicy: "persistent", ttl: "STABLE" },
   ): Promise<IgdbGame | null> {
     const cacheKey = buildCacheKey({
       provider: "igdb",
@@ -251,7 +251,7 @@ export class IgdbClient {
         );
         return results[0] ?? null;
       },
-      { ttl: "STABLE", cachePolicy: "persistent", ...options },
+      options,
     );
   }
 
@@ -272,7 +272,7 @@ export class IgdbClient {
 
   async getGameCharacters(
     gameId: number,
-    options: CacheFetchOptions = {},
+    options: CacheFetchOptions = { cachePolicy: "persistent", ttl: "STABLE" },
   ): Promise<IgdbCharacter[]> {
     const cacheKey = buildCacheKey({
       provider: "igdb",
@@ -291,7 +291,7 @@ export class IgdbClient {
        where games = (${gameId});
        limit 50;`,
         ),
-      { ttl: "STABLE", cachePolicy: "persistent", ...options },
+      options,
     );
   }
 
@@ -343,31 +343,25 @@ export class IgdbClient {
 
         if (games.length === 0) return games;
 
-        let localizedGames = games;
-        try {
-          const localizations = await this.query<IgdbGameLocalization>(
-            "game_localizations",
-            `fields game, name, region.identifier;
+        const localizations = await this.query<IgdbGameLocalization>(
+          "game_localizations",
+          `fields game, name, region.identifier;
          where game = (${topIds.join(",")});
          limit ${Math.max(topIds.length * 10, 100)};`,
-          );
-          const localizedNames = new Map<number, string>();
-          for (const localization of localizations) {
-            if (
-              localization.region?.identifier === language &&
-              !localizedNames.has(localization.game)
-            ) {
-              localizedNames.set(localization.game, localization.name);
-            }
+        );
+        const localizedNames = new Map<number, string>();
+        for (const localization of localizations) {
+          if (
+            localization.region?.identifier === language &&
+            !localizedNames.has(localization.game)
+          ) {
+            localizedNames.set(localization.game, localization.name);
           }
-          localizedGames = games.map((game) => ({
-            ...game,
-            name: localizedNames.get(game.id) ?? game.name,
-          }));
-        } catch (error) {
-          debugLog("Failed to fetch game localizations:", error);
-          localizedGames = games;
         }
+        const localizedGames = games.map((game) => ({
+          ...game,
+          name: localizedNames.get(game.id) ?? game.name,
+        }));
 
         return localizedGames;
       },

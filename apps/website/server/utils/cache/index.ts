@@ -40,17 +40,22 @@ export function createCacheNamespace<T>(): CacheNamespace<T> {
 
 /** The three supported lifetimes, in seconds. */
 export const CACHE_TTL = {
-  NORMAL: 24 * 60 * 60,
   STABLE: 7 * 24 * 60 * 60,
 } as const;
 
 export type CachePolicy = "persistent" | "read-only" | "none";
 export type CacheTTLPreset = keyof typeof CACHE_TTL | number;
-export interface GetOrFetchOptions {
-  ttl?: CacheTTLPreset;
-  /** `persistent` reads and writes KV, `read-only` reads KV, `none` bypasses KV. */
-  cachePolicy: CachePolicy;
-}
+export type GetOrFetchOptions =
+  | {
+      /** Persistent cache writes always have an explicit lifetime. */
+      cachePolicy: "persistent";
+      ttl: CacheTTLPreset;
+    }
+  | {
+      /** Read-only and bypass policies cannot carry an irrelevant TTL. */
+      cachePolicy: "read-only" | "none";
+      ttl?: never;
+    };
 
 export interface CacheKv {
   get<T>(key: string, options: { type: "json" }): Promise<T | null>;
@@ -62,7 +67,7 @@ export interface CacheKv {
   delete?(key: string): Promise<void>;
 }
 
-function ttlSeconds(ttl: CacheTTLPreset = "NORMAL"): number {
+function ttlSeconds(ttl: CacheTTLPreset): number {
   return typeof ttl === "number" ? Math.max(60, ttl) : CACHE_TTL[ttl];
 }
 
@@ -97,7 +102,7 @@ export class SimpleCache {
   private async set<T>(
     key: string,
     data: T,
-    ttl: CacheTTLPreset = "NORMAL",
+    ttl: CacheTTLPreset,
   ): Promise<boolean> {
     if (!this.enabled) return false;
     try {
@@ -151,11 +156,11 @@ export class SimpleCache {
 
       const value = await fetcher();
       if (
-        cachePolicy === "persistent" &&
+        options.cachePolicy === "persistent" &&
         value !== null &&
         value !== undefined
       ) {
-        await this.set(safeKey, value, options.ttl ?? "NORMAL");
+        await this.set(safeKey, value, options.ttl);
       }
       return value;
     });

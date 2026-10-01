@@ -148,7 +148,7 @@ export class OpenLibraryClient {
 
   async getAuthorName(
     authorKey: string,
-    options: CacheFetchOptions = {},
+    options: CacheFetchOptions = { cachePolicy: "persistent", ttl: "STABLE" },
   ): Promise<string> {
     const cleanKey = authorKey.replace(/^\//, "").replace(/^authors\//, "");
     const cacheKey = buildCacheKey({
@@ -181,14 +181,14 @@ export class OpenLibraryClient {
           return null;
         }
       },
-      { ttl: "STABLE", cachePolicy: "persistent", ...options },
+      options,
     );
     return authorName ?? "";
   }
 
   async getBook(
     id: number,
-    options: CacheFetchOptions = {},
+    options: CacheFetchOptions = { cachePolicy: "persistent", ttl: "STABLE" },
   ): Promise<Audiobook | null> {
     // Internal metadata reads bypass public edge caching, so keep shared KV.
     const cacheKey = buildCacheKey({
@@ -286,7 +286,7 @@ export class OpenLibraryClient {
           return null;
         }
       },
-      { ttl: "STABLE", cachePolicy: "persistent", ...options },
+      options,
     );
   }
 

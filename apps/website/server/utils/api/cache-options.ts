@@ -1,6 +1,3 @@
-import type { CachePolicy, CacheTTLPreset } from "../cache";
+import type { GetOrFetchOptions } from "../cache";
 
-export interface CacheFetchOptions {
-  ttl?: CacheTTLPreset;
-  cachePolicy?: CachePolicy;
-}
+export type CacheFetchOptions = GetOrFetchOptions;

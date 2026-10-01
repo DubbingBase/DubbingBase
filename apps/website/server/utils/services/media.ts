@@ -651,7 +651,7 @@ export class MediaService {
     contentType: "movie" | "tv",
     contentId: number,
     tmdbMedia: any,
-    options: CacheFetchOptions = {},
+    options: CacheFetchOptions = { cachePolicy: "persistent", ttl: "STABLE" },
   ): Promise<{ characters: any[]; tvdbId: number | null }> {
     const cache = useCache();
     const tvdbClient = new TVDBClient(cache);
@@ -697,7 +697,7 @@ export class MediaService {
                     ? ((await response.json()) as WikidataClaimsResponse)
                     : null;
                 },
-                { ...options, ttl: "STABLE", cachePolicy: "persistent" },
+                { cachePolicy: "persistent", ttl: "STABLE" },
               );
 
               const property = contentType === "movie" ? "P12196" : "P4835";
@@ -785,7 +785,7 @@ export class MediaService {
 
           return null;
         },
-        { ...options, ttl: "STABLE", cachePolicy: "persistent" },
+        { cachePolicy: "persistent", ttl: "STABLE" },
       );
       if (result) return result;
     } catch (e) {

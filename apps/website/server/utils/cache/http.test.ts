@@ -77,7 +77,7 @@ describe("HTTP cache headers", () => {
           namespace,
           "tmdb:movie:1",
           fetchProviderMetadata,
-          { cachePolicy: "persistent" },
+          { cachePolicy: "persistent", ttl: "STABLE" },
         );
         return { metadata, dubbingProjects: [`request-${requestCount}`] };
       }),

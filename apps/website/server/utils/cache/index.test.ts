@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
-import { CACHE_TTL, createCacheNamespace, SimpleCache } from "./index";
+import {
+  CACHE_TTL,
+  createCacheNamespace,
+  SimpleCache,
+  type GetOrFetchOptions,
+} from "./index";
 import { buildCacheKey } from "./constants";
 import { OpenLibraryClient } from "../api/openlibrary";
 
@@ -39,6 +44,30 @@ function makeCache(initial = new Map<string, unknown>()) {
 }
 
 describe("SimpleCache policies", () => {
+  it("requires a TTL for persistent and rejects TTLs for non-writing policies", () => {
+    const persistent: GetOrFetchOptions = {
+      cachePolicy: "persistent",
+      ttl: "STABLE",
+    };
+    const readOnly: GetOrFetchOptions = { cachePolicy: "read-only" };
+    const none: GetOrFetchOptions = { cachePolicy: "none" };
+
+    // @ts-expect-error persistent writes must select an explicit TTL
+    const missingTtl: GetOrFetchOptions = { cachePolicy: "persistent" };
+    const ttlOnNone: GetOrFetchOptions = {
+      cachePolicy: "none",
+      // @ts-expect-error bypass policy cannot carry a TTL
+      ttl: "STABLE",
+    };
+
+    expect([
+      persistent.cachePolicy,
+      readOnly.cachePolicy,
+      none.cachePolicy,
+    ]).toEqual(["persistent", "read-only", "none"]);
+    expect([missingTtl, ttlOnNone]).toHaveLength(2);
+  });
+
   it("persistent reads KV, fetches and writes on a miss, then serves the hit", async () => {
     const harness = makeCache();
     const namespace = createCacheNamespace<{ title: string }>();
@@ -112,13 +141,13 @@ describe("SimpleCache policies", () => {
       namespace,
       "provider:coalesced",
       fetcher,
-      { cachePolicy: "persistent" },
+      { cachePolicy: "persistent", ttl: "STABLE" },
     );
     const second = harness.cache.getOrFetch(
       namespace,
       "provider:coalesced",
       fetcher,
-      { cachePolicy: "persistent" },
+      { cachePolicy: "persistent", ttl: "STABLE" },
     );
 
     expect(second).toBe(first);
@@ -142,7 +171,7 @@ describe("SimpleCache policies", () => {
       namespace,
       "provider:mixed-policy",
       fetcher,
-      { cachePolicy: "persistent" },
+      { cachePolicy: "persistent", ttl: "STABLE" },
     );
     const readOnly = harness.cache.getOrFetch(
       namespace,
@@ -193,16 +222,19 @@ describe("SimpleCache policies", () => {
     await expect(
       harness.cache.getOrFetch(namespace, "provider:nullable", fetcher, {
         cachePolicy: "persistent",
+        ttl: "STABLE",
       }),
     ).resolves.toBeNull();
     await expect(
       harness.cache.getOrFetch(namespace, "provider:nullable", fetcher, {
         cachePolicy: "persistent",
+        ttl: "STABLE",
       }),
     ).rejects.toThrow("upstream failed");
     await expect(
       harness.cache.getOrFetch(namespace, "provider:nullable", fetcher, {
         cachePolicy: "persistent",
+        ttl: "STABLE",
       }),
     ).resolves.toBe("recovered");
 
@@ -210,7 +242,7 @@ describe("SimpleCache policies", () => {
       {
         key: "provider:nullable",
         value: "recovered",
-        ttl: CACHE_TTL.NORMAL,
+        ttl: CACHE_TTL.STABLE,
       },
     ]);
   });

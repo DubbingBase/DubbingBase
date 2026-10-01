@@ -1,12 +1,12 @@
 import { createApp, defineEventHandler, toWebHandler } from "h3";
 import { describe, expect, it } from "vitest";
-import cacheHeadersMiddleware from "./00-cache-headers";
+import cacheHeadersMiddleware from "../../middleware/00-cache-headers";
 import {
   getCloudflareCacheControl,
   getPublicCacheControl,
   NO_STORE_CACHE_CONTROL,
   setPublicCacheHeaders,
-} from "../utils/cache/http";
+} from "./http";
 
 describe("default cache headers middleware", () => {
   it("defaults dynamic Nitro responses to no-store and clears Cloudflare headers", async () => {

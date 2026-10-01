@@ -99,7 +99,7 @@ export class TVDBClient {
     seriesId: number,
     extended?: { meta?: string; short?: boolean },
     language?: string,
-    options: CacheFetchOptions = {},
+    options: CacheFetchOptions = { cachePolicy: "persistent", ttl: "STABLE" },
   ) {
     const normalizedLanguage = language
       ? (language.split(",")[0] || "en").trim()
@@ -120,7 +120,7 @@ export class TVDBClient {
       TVDB_API_RESPONSE_NAMESPACE,
       cacheKey,
       () => this.get(`/series/${seriesId}`, params, language),
-      { ttl: "STABLE", cachePolicy: "persistent", ...options },
+      options,
     );
   }
 
@@ -128,7 +128,7 @@ export class TVDBClient {
     movieId: number,
     extended?: { meta?: string; short?: boolean },
     language?: string,
-    options: CacheFetchOptions = {},
+    options: CacheFetchOptions = { cachePolicy: "persistent", ttl: "STABLE" },
   ) {
     const normalizedLanguage = language
       ? (language.split(",")[0] || "en").trim()
@@ -148,56 +148,46 @@ export class TVDBClient {
       TVDB_API_RESPONSE_NAMESPACE,
       cacheKey,
       () => this.get(`/movies/${movieId}`, params, language),
-      {
-        ttl: "STABLE",
-        cachePolicy: "persistent",
-        ...options,
-      },
+      options,
     );
   }
 
-  async getCharacterById(characterId: number, options: CacheFetchOptions = {}) {
+  async getCharacterById(
+    characterId: number,
+    options: CacheFetchOptions = { cachePolicy: "persistent", ttl: "STABLE" },
+  ) {
     const cacheKey = this.cache.tvdbKey("character", characterId);
     return this.cache.getOrFetch(
       TVDB_API_RESPONSE_NAMESPACE,
       cacheKey,
       () => this.get(`/characters/${characterId}`),
-      {
-        ttl: "STABLE",
-        cachePolicy: "persistent",
-        ...options,
-      },
+      options,
     );
   }
 
   async getCharactersBySeries(
     seriesId: number,
-    options: CacheFetchOptions = {},
+    options: CacheFetchOptions = { cachePolicy: "persistent", ttl: "STABLE" },
   ) {
     const cacheKey = this.cache.tvdbKey("series", seriesId, "characters");
     return this.cache.getOrFetch(
       TVDB_API_RESPONSE_NAMESPACE,
       cacheKey,
       () => this.get(`/series/${seriesId}/characters`),
-      {
-        ttl: "STABLE",
-        cachePolicy: "persistent",
-        ...options,
-      },
+      options,
     );
   }
 
-  async getCharactersByMovie(movieId: number, options: CacheFetchOptions = {}) {
+  async getCharactersByMovie(
+    movieId: number,
+    options: CacheFetchOptions = { cachePolicy: "persistent", ttl: "STABLE" },
+  ) {
     const cacheKey = this.cache.tvdbKey("movie", movieId, "characters");
     return this.cache.getOrFetch(
       TVDB_API_RESPONSE_NAMESPACE,
       cacheKey,
       () => this.get(`/movies/${movieId}/characters`),
-      {
-        ttl: "STABLE",
-        cachePolicy: "persistent",
-        ...options,
-      },
+      options,
     );
   }
 

@@ -72,7 +72,7 @@ export class PodcastClient {
 
   async getPodcast(
     id: number,
-    options: CacheFetchOptions = {},
+    options: CacheFetchOptions = { cachePolicy: "persistent", ttl: "STABLE" },
   ): Promise<Podcast | null> {
     // Internal metadata reads bypass public edge caching, so keep shared KV.
     const cacheKey = buildCacheKey({
@@ -140,7 +140,7 @@ export class PodcastClient {
 
           return podcast;
         },
-        { ttl: "STABLE", cachePolicy: "persistent", ...options },
+        options,
       );
     } catch (err) {
       console.error(`iTunes lookup for podcast ${id} failed:`, err);

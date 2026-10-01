@@ -84,7 +84,7 @@ export class TMDBClient {
     contentType: "movie" | "tv",
     id: number,
     language?: string,
-    options: CacheFetchOptions = {},
+    options: CacheFetchOptions = { cachePolicy: "persistent", ttl: "STABLE" },
   ) {
     const langStr = ((language || "fr-FR").split(",")[0] || "fr-FR").trim();
     const cacheKey = buildCacheKey({
@@ -104,7 +104,7 @@ export class TMDBClient {
           { append_to_response: "credits,external_ids" },
           language,
         ),
-      { ttl: "STABLE", cachePolicy: "persistent", ...options },
+      options,
     );
   }
 
@@ -112,7 +112,7 @@ export class TMDBClient {
     seriesId: number,
     seasonNumber: number,
     language?: string,
-    options: CacheFetchOptions = {},
+    options: CacheFetchOptions = { cachePolicy: "persistent", ttl: "STABLE" },
   ) {
     const langStr = ((language || "fr-FR").split(",")[0] || "fr-FR").trim();
     const cacheKey = buildCacheKey({
@@ -135,7 +135,7 @@ export class TMDBClient {
           { append_to_response: "credits,external_ids" },
           language,
         ),
-      { ttl: "STABLE", cachePolicy: "persistent", ...options },
+      options,
     );
   }
 
@@ -144,7 +144,7 @@ export class TMDBClient {
     seasonNumber: number,
     episodeNumber: number,
     language?: string,
-    options: CacheFetchOptions = {},
+    options: CacheFetchOptions = { cachePolicy: "persistent", ttl: "STABLE" },
   ) {
     const langStr = ((language || "fr-FR").split(",")[0] || "fr-FR").trim();
     const cacheKey = buildCacheKey({
@@ -168,7 +168,7 @@ export class TMDBClient {
           { append_to_response: "credits,external_ids" },
           language,
         ),
-      { ttl: "STABLE", cachePolicy: "persistent", ...options },
+      options,
     );
   }
 
@@ -176,7 +176,7 @@ export class TMDBClient {
     contentId: number,
     contentType: string,
     language?: string,
-    options: CacheFetchOptions = {},
+    options: CacheFetchOptions = { cachePolicy: "persistent", ttl: "STABLE" },
   ) {
     const langStr = ((language || "fr-FR").split(",")[0] || "fr-FR").trim();
     const cacheKey = buildCacheKey({
@@ -196,7 +196,7 @@ export class TMDBClient {
           { append_to_response: "credits,external_ids" },
           language,
         ),
-      { ttl: "STABLE", cachePolicy: "persistent", ...options },
+      options,
     );
   }
 
@@ -204,7 +204,7 @@ export class TMDBClient {
     mediaType: "movie" | "tv",
     mediaId: number,
     language = "fr-FR",
-    options: CacheFetchOptions = {},
+    options: CacheFetchOptions = { cachePolicy: "persistent", ttl: "STABLE" },
   ): Promise<{ cast?: unknown[] }> {
     const endpoint = mediaType === "tv" ? "aggregate_credits" : "credits";
     const langStr = (language.split(",")[0] || "fr-FR").trim();
@@ -220,14 +220,14 @@ export class TMDBClient {
       tmdbResponseNamespace,
       cacheKey,
       () => this.get(`${mediaType}/${mediaId}/${endpoint}`, undefined, langStr),
-      { ttl: "STABLE", cachePolicy: "persistent", ...options },
+      options,
     );
   }
 
   async getPersonWithCredits(
     personId: number,
     language?: string,
-    options: CacheFetchOptions = {},
+    options: CacheFetchOptions = { cachePolicy: "persistent", ttl: "STABLE" },
   ) {
     const langStr = ((language || "fr-FR").split(",")[0] || "fr-FR").trim();
     const cacheKey = buildCacheKey({
@@ -247,7 +247,7 @@ export class TMDBClient {
           { append_to_response: "tv_credits,movie_credits,external_ids" },
           language,
         ),
-      { ttl: "STABLE", cachePolicy: "persistent", ...options },
+      options,
     );
   }
 

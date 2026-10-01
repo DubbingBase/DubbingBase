@@ -16,6 +16,8 @@ import {
   vi,
 } from "vitest";
 import cacheHeadersMiddleware from "../../middleware/00-cache-headers";
+import { SimpleCache } from "../cache";
+import { IgdbClient } from "../api/igdb";
 import {
   getCloudflareCacheControl,
   getPublicCacheControl,
@@ -70,17 +72,20 @@ async function request(handler: EventHandler, path = "/"): Promise<Response> {
   return toWebHandler(app)(new Request(`http://localhost${path}`));
 }
 
-async function requestTrendingGames(config: {
-  igdbClientId?: string;
-  igdbClientSecret?: string;
-}): Promise<Response> {
+async function requestTrendingGames(
+  config: {
+    igdbClientId?: string;
+    igdbClientSecret?: string;
+  },
+  getTrendingGames = routeMocks.getTrendingGames,
+): Promise<Response> {
   const app = createApp();
   app.use("/", cacheHeadersMiddleware);
   app.use(
     "/",
     defineEventHandler((event) =>
       getTrendingGamesResponse(event, "fr-FR", config, {
-        getTrendingGames: routeMocks.getTrendingGames,
+        getTrendingGames,
       }),
     ),
   );
@@ -209,6 +214,51 @@ describe("provider-only endpoint response caching", () => {
     expect(invalid.status).toBe(200);
     expectNoStore(invalid);
     await expect(invalid.json()).resolves.toEqual([]);
+  });
+
+  it("keeps base IGDB games no-store when localization lookup fails", async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url === "https://id.twitch.tv/oauth2/token") {
+        return new Response(
+          JSON.stringify({ access_token: "token", expires_in: 7200 }),
+        );
+      }
+      if (url.endsWith("/popularity_primitives")) {
+        return new Response(
+          JSON.stringify([{ game_id: 42, popularity_type: 1, value: 100 }]),
+        );
+      }
+      if (url.endsWith("/games")) {
+        return new Response(JSON.stringify([{ id: 42, name: "Base Name" }]));
+      }
+      if (url.endsWith("/game_localizations")) {
+        return new Response("localization unavailable", { status: 503 });
+      }
+      throw new Error(`Unexpected IGDB request: ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal("useRuntimeConfig", () => ({
+      igdbClientId: "client",
+      igdbClientSecret: "secret",
+    }));
+
+    const client = new IgdbClient(new SimpleCache(() => null));
+    const response = await requestTrendingGames(
+      { igdbClientId: "client", igdbClientSecret: "secret" },
+      (limit, language) => client.getTrendingGames(limit, language),
+    );
+
+    expect(response.status).toBe(200);
+    expectNoStore(response);
+    await expect(response.json()).resolves.toEqual([]);
+    expect(fetchMock.mock.calls.map(([input]) => String(input))).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("/popularity_primitives"),
+        expect.stringContaining("/games"),
+        expect.stringContaining("/game_localizations"),
+      ]),
+    );
   });
 
   it("caches successful provider credits and keeps invalid or failed requests no-store", async () => {
