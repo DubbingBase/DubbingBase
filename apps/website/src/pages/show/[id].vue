@@ -567,8 +567,7 @@ const { data, pending } = useAsyncData(
   },
   {
     lazy: true,
-    getCachedData: (key, nuxtApp) =>
-      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+    getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
 

@@ -140,7 +140,7 @@ export class PodcastClient {
 
           return podcast;
         },
-        { ttl: 86400, cachePolicy: "persistent", ...options },
+        { ttl: "STABLE", cachePolicy: "persistent", ...options },
       );
     } catch (err) {
       console.error(`iTunes lookup for podcast ${id} failed:`, err);

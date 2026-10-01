@@ -128,7 +128,7 @@ export class IgdbClient {
 
     const getCachedToken = () =>
       this.cache.getOrFetch(igdbTokenNamespace, "igdb:auth_token", fetchToken, {
-        ttl: 604800,
+        ttl: "STABLE",
         cachePolicy: "persistent",
       });
 
@@ -251,12 +251,12 @@ export class IgdbClient {
         );
         return results[0] ?? null;
       },
-      { ttl: 604800, cachePolicy: "persistent", ...options },
+      { ttl: "STABLE", cachePolicy: "persistent", ...options },
     );
   }
 
   async searchGames(queryText: string): Promise<IgdbGame[]> {
-    // Search is served through the short public HTTP cache, not persistent KV.
+    // Search results bypass KV and are fetched on every request.
     const escapedQuery = queryText.replace(/"/g, '\\"');
     const results = await this.query<IgdbGame>(
       "games",
@@ -291,7 +291,7 @@ export class IgdbClient {
        where games = (${gameId});
        limit 50;`,
         ),
-      { ttl: 604800, cachePolicy: "persistent", ...options },
+      { ttl: "STABLE", cachePolicy: "persistent", ...options },
     );
   }
 
@@ -299,7 +299,7 @@ export class IgdbClient {
     limit = 20,
     language = DEFAULT_LANGUAGE,
   ): Promise<IgdbGame[]> {
-    // Trending is served through the public discovery cache, not persistent KV.
+    // Trending results bypass KV; the provider-only route applies HTTP caching.
     const cacheKey = buildCacheKey({
       provider: "igdb",
       resource: "trending-games",

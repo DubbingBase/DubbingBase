@@ -1,6 +1,6 @@
 import {
-  getPublicCacheControl,
-  setPublicCacheHeaders,
+  NO_STORE_CACHE_CONTROL,
+  setNoCacheHeaders,
 } from "../../utils/cache/http";
 
 let _satori: any = null;
@@ -294,6 +294,7 @@ function buildVoiceActorOg(params: {
 export const prerender = false;
 
 export default defineEventHandler(async (event) => {
+  setNoCacheHeaders(event);
   try {
     const query = getQuery(event);
     const type = query.type as string;
@@ -402,20 +403,14 @@ export default defineEventHandler(async (event) => {
     const pngData = resvg.render();
     const pngBuffer = pngData.asPng();
 
-    const cacheControl = getPublicCacheControl("static");
-    setPublicCacheHeaders(event, "static");
-    setResponseHeaders(event, {
-      "Content-Type": "image/png",
-      "Cache-Control": cacheControl,
-    });
-
     return new Response(pngBuffer as any, {
       headers: {
         "Content-Type": "image/png",
-        "Cache-Control": cacheControl,
+        "Cache-Control": NO_STORE_CACHE_CONTROL,
       },
     });
   } catch (error) {
+    setNoCacheHeaders(event);
     console.error("Error generating OG image:", error);
     if (error instanceof Error && "statusCode" in error) throw error;
     const detail =

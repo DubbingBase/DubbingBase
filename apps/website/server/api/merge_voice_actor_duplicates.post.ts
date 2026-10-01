@@ -1,3 +1,4 @@
+import { setNoCacheHeaders } from "../utils/cache/http";
 import { requireAdmin } from "../utils/auth";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { z } from "zod";
@@ -36,6 +37,7 @@ const bodySchema = z
   .strict();
 
 export default defineEventHandler(async (event) => {
+  setNoCacheHeaders(event);
   requireAdmin(event);
 
   const parsedBody = bodySchema.safeParse(await readBody(event));

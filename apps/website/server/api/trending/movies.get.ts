@@ -7,6 +7,7 @@ import {
 import { resolveLocaleLanguage } from "@app/shared-logic";
 
 export default defineEventHandler(async (event) => {
+  setNoCacheHeaders(event);
   const query = getQuery(event);
   const rawLanguage = query.lang;
   const language = resolveLocaleLanguage(
@@ -30,16 +31,23 @@ export default defineEventHandler(async (event) => {
     setNoCacheHeaders(event);
     throw error;
   }
-  const trendingMovies = {
-    ...json,
-    results: (Array.isArray(json?.results) ? json.results : [])
-      .filter((movie: any) => movie.adult !== true)
-      .map((result: any) => ({
-        ...result,
-        backdrop_path: buildTmdbImageUrl(result.backdrop_path, "w780"),
-        poster_path: buildTmdbImageUrl(result.poster_path, "w342"),
-      })),
-  };
-
-  return trendingMovies;
+  try {
+    if (!Array.isArray(json?.results)) {
+      setNoCacheHeaders(event);
+      return { ...json, results: [] };
+    }
+    return {
+      ...json,
+      results: json.results
+        .filter((movie: any) => movie.adult !== true)
+        .map((result: any) => ({
+          ...result,
+          backdrop_path: buildTmdbImageUrl(result.backdrop_path, "w780"),
+          poster_path: buildTmdbImageUrl(result.poster_path, "w342"),
+        })),
+    };
+  } catch (error) {
+    setNoCacheHeaders(event);
+    throw error;
+  }
 });

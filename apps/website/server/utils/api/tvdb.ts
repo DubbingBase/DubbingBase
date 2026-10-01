@@ -120,7 +120,7 @@ export class TVDBClient {
       TVDB_API_RESPONSE_NAMESPACE,
       cacheKey,
       () => this.get(`/series/${seriesId}`, params, language),
-      { ttl: 604800, cachePolicy: "persistent", ...options },
+      { ttl: "STABLE", cachePolicy: "persistent", ...options },
     );
   }
 
@@ -149,7 +149,7 @@ export class TVDBClient {
       cacheKey,
       () => this.get(`/movies/${movieId}`, params, language),
       {
-        ttl: 604800,
+        ttl: "STABLE",
         cachePolicy: "persistent",
         ...options,
       },
@@ -163,7 +163,7 @@ export class TVDBClient {
       cacheKey,
       () => this.get(`/characters/${characterId}`),
       {
-        ttl: 604800,
+        ttl: "STABLE",
         cachePolicy: "persistent",
         ...options,
       },
@@ -180,7 +180,7 @@ export class TVDBClient {
       cacheKey,
       () => this.get(`/series/${seriesId}/characters`),
       {
-        ttl: 604800,
+        ttl: "STABLE",
         cachePolicy: "persistent",
         ...options,
       },
@@ -194,7 +194,7 @@ export class TVDBClient {
       cacheKey,
       () => this.get(`/movies/${movieId}/characters`),
       {
-        ttl: 604800,
+        ttl: "STABLE",
         cachePolicy: "persistent",
         ...options,
       },
@@ -202,7 +202,7 @@ export class TVDBClient {
   }
 
   async searchSeries(query: string, language?: string) {
-    // Search results use the short public HTTP cache, not persistent KV.
+    // Search results bypass KV and are fetched on every request.
     return this.get("/search", { query, type: "series" }, language);
   }
 }

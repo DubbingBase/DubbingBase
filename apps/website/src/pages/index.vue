@@ -630,8 +630,7 @@ const { data, pending } = useAsyncData(
   () => `home-data:${trendingLanguage.value}`,
   () => fetchHomeData(trendingLanguage.value),
   {
-    getCachedData: (key, nuxtApp) =>
-      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+    getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
     watch: [trendingLanguage],
   },
 );

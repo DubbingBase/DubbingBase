@@ -44,7 +44,7 @@ vi.mock("..", () => ({
   useCache: vi.fn(() => ({ getOrFetch: routeMocks.cacheGetOrFetch })),
 }));
 vi.mock("../llm", () => ({ areAllLlmQuotasExhausted: vi.fn(() => false) }));
-vi.mock("../cache/http", () => ({ setNoStoreHeaders: vi.fn() }));
+vi.mock("../cache/http", () => ({ setNoCacheHeaders: vi.fn() }));
 
 let handler: typeof import("../../api/process-media-queue.post").default;
 

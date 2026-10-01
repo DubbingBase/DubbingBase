@@ -1,7 +1,6 @@
 import { SimpleCache, createCacheNamespace } from "./index";
 import { buildCacheKey } from "./constants";
-import type { CacheFetchOptions } from "../api/cache-options";
-import type { CachePolicy } from "./index";
+import type { CachePolicy, CacheTTLPreset } from "./index";
 import { CACHE_KEYS } from "./constants";
 import {
   createMediaResponseError,
@@ -226,7 +225,7 @@ export class WikipediaCache {
       cmContinue || "initial",
     );
     const url = frenchMaleDubber(cmContinue);
-    return this.fetchWithCache(url, cacheKey, 86400, "none");
+    return this.fetchWithCache(url, cacheKey, "none");
   }
 
   async getFemaleVoiceActors(cmContinue = ""): Promise<any> {
@@ -235,7 +234,7 @@ export class WikipediaCache {
       cmContinue || "initial",
     );
     const url = frenchFemaleDubber(cmContinue);
-    return this.fetchWithCache(url, cacheKey, 86400, "none");
+    return this.fetchWithCache(url, cacheKey, "none");
   }
 
   async getPageSections(pageId: number, lang: string): Promise<any> {
@@ -246,7 +245,7 @@ export class WikipediaCache {
       language: lang,
     });
     const url = wikipediaPageFindSections(pageId, lang);
-    return this.fetchWithCache(url, cacheKey, 604800, "none");
+    return this.fetchWithCache(url, cacheKey, "none");
   }
 
   async getPageContentAsHTML(
@@ -262,7 +261,7 @@ export class WikipediaCache {
       params: { section: sectionId },
     });
     const url = parseDubberPageAsHTML(pageId, sectionId, lang);
-    return this.fetchWithCache(url, cacheKey, 604800, "none");
+    return this.fetchWithCache(url, cacheKey, "none");
   }
 
   async getPageContentAsWikitext(
@@ -278,7 +277,7 @@ export class WikipediaCache {
       params: { section: sectionId },
     });
     const url = parseDubberPageAsWikitext(pageId, sectionId, lang);
-    return this.fetchWithCache(url, cacheKey, 604800, "none");
+    return this.fetchWithCache(url, cacheKey, "none");
   }
 
   async getPageSectionAsWikitext(
@@ -294,7 +293,7 @@ export class WikipediaCache {
       params: { section: sectionId },
     });
     const url = getWikipediaPageSectionAsWikitext(pageId, sectionId, lang);
-    return this.fetchWithCache(url, cacheKey, 604800, "none");
+    return this.fetchWithCache(url, cacheKey, "none");
   }
 
   async searchWikidataEntities(search: string, lang: string): Promise<any> {
@@ -303,26 +302,14 @@ export class WikipediaCache {
     return this.fetch(url);
   }
 
-  async getAllSitelinksEntity(
-    entityId: string,
-    options: CacheFetchOptions = {},
-  ): Promise<any> {
-    // Wikidata sitelinks are stable cross-reference metadata; use their normal
-    // seven-day cache unless a caller has a concrete reason to refresh them.
+  async getAllSitelinksEntity(entityId: string): Promise<any> {
+    // Wikidata sitelinks are stable cross-reference metadata.
     const cacheKey = CACHE_KEYS.WIKIPEDIA_ENTITY(entityId, "all");
     const url = getAllSitelinks(entityId);
-    return this.fetchWithCache(url, cacheKey, 604800, "persistent", {
-      ...options,
-      cachePolicy: "persistent",
-      writeCache: true,
-    });
+    return this.fetchWithCache(url, cacheKey, "persistent", "STABLE");
   }
 
-  async getWikipediaPageInfo(
-    title: string,
-    language: string,
-    options: CacheFetchOptions = {},
-  ): Promise<any> {
+  async getWikipediaPageInfo(title: string, language: string): Promise<any> {
     const cacheKey = buildCacheKey({
       provider: "wikipedia",
       resource: "page-info",
@@ -330,7 +317,7 @@ export class WikipediaCache {
       language,
     });
     const url = getWikipediaPage(title, language);
-    return this.fetchWithCache(url, cacheKey, 604800, "none");
+    return this.fetchWithCache(url, cacheKey, "none");
   }
 
   async getImageFromFilename(filename: string, lang: string): Promise<any> {
@@ -341,7 +328,7 @@ export class WikipediaCache {
       language: lang,
     });
     const url = getImageFromFilename(filename, lang);
-    return this.fetchWithCache(url, cacheKey, 604800, "none");
+    return this.fetchWithCache(url, cacheKey, "none");
   }
 
   private async fetch(url: string): Promise<any> {
@@ -358,19 +345,14 @@ export class WikipediaCache {
   private fetchWithCache(
     url: string,
     cacheKey: string,
-    ttl: number,
     cachePolicy: CachePolicy,
-    options: CacheFetchOptions = {},
+    ttl?: CacheTTLPreset,
   ): Promise<any> {
     return this.cache.getOrFetch(
       wikipediaResponseNamespace,
       cacheKey,
       () => this.fetch(url),
-      {
-        ...options,
-        ttl,
-        cachePolicy,
-      },
+      { cachePolicy, ...(ttl ? { ttl } : {}) },
     );
   }
 }

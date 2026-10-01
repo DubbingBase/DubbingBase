@@ -1,7 +1,9 @@
+import { setNoCacheHeaders } from "../utils/cache/http";
 import { sendDiscordAdminNotification } from "../utils/notifications/discord";
 import { useSupabaseAdmin } from "../utils/db/client";
 
 export default defineEventHandler(async (event) => {
+  setNoCacheHeaders(event);
   const user = event.context.user;
   if (!user) {
     throw createError({ statusCode: 401, message: "Unauthorized" });

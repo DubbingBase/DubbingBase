@@ -4,7 +4,9 @@
     <MediaDetailsLayout
       v-else-if="game"
       :title="game.name"
-      :backdrop-url="game.artworks?.[0]?.url || game.screenshots?.[0]?.url || null"
+      :backdrop-url="
+        game.artworks?.[0]?.url || game.screenshots?.[0]?.url || null
+      "
       :poster-url="coverUrl"
       :loading="pending"
     >
@@ -27,7 +29,8 @@
             target="_blank"
             rel="noopener noreferrer"
             class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg theme-surface-overlay theme-text theme-hover-surface-muted transition-colors backdrop-blur-md uppercase tracking-wider"
-            >{{ $t("game.igdb") }}<ExternalLinkIcon class="w-3 h-3 opacity-70" />
+            >{{ $t("game.igdb")
+            }}<ExternalLinkIcon class="w-3 h-3 opacity-70" />
           </a>
         </div>
       </template>
@@ -115,7 +118,12 @@
             "
             class="text-sm theme-primary-text theme-hover-primary-text transition-colors flex items-center gap-1.5 font-medium"
           >
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -127,7 +135,11 @@
           </NuxtLink>
         </ClientOnly>
 
-        <ForceEnqueueButton v-if="game?.id" media-type="video_game" :media-id="game.id" />
+        <ForceEnqueueButton
+          v-if="game?.id"
+          media-type="video_game"
+          :media-id="game.id"
+        />
 
         <button
           @click="isReportModalOpen = true"
@@ -144,7 +156,9 @@
             stroke-linecap="round"
             stroke-linejoin="round"
           >
-            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+            <path
+              d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"
+            />
             <line x1="4" y1="22" x2="4" y2="15" />
           </svg>
         </button>
@@ -158,14 +172,19 @@
               {{ $t("details.synopsis", "Synopsis") }}
             </h2>
             <p class="theme-text-secondary leading-relaxed text-lg mb-8">
-              {{ game.summary || $t("details.noSynopsis", "Aucun synopsis disponible.") }}
+              {{
+                game.summary ||
+                $t("details.noSynopsis", "Aucun synopsis disponible.")
+              }}
             </p>
 
             <div
               class="grid grid-cols-2 md:grid-cols-4 gap-6 theme-surface p-6 rounded-xl border theme-border-subtle theme-border shadow-sm"
             >
               <div>
-                <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2">
+                <h3
+                  class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2"
+                >
                   {{ $t("game.developer", "Développeur") }}
                 </h3>
                 <p class="font-medium text-sm">
@@ -173,7 +192,9 @@
                 </p>
               </div>
               <div>
-                <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2">
+                <h3
+                  class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2"
+                >
                   {{ $t("game.publisher", "Éditeur") }}
                 </h3>
                 <p class="font-medium text-sm">
@@ -181,7 +202,9 @@
                 </p>
               </div>
               <div class="col-span-2 md:col-span-1">
-                <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2">
+                <h3
+                  class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2"
+                >
                   {{ $t("game.genres", "Genres") }}
                 </h3>
                 <div class="flex flex-wrap gap-1.5">
@@ -195,7 +218,9 @@
                 </div>
               </div>
               <div class="col-span-2 md:col-span-1">
-                <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2">
+                <h3
+                  class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2"
+                >
                   {{ $t("game.platforms", "Plateformes") }}
                 </h3>
                 <div class="flex flex-wrap gap-1.5">
@@ -215,7 +240,9 @@
         <!-- Voice Cast -->
         <section>
           <div class="flex flex-col mb-6 gap-2">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+            <div
+              class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4"
+            >
               <div>
                 <h2 class="text-2xl font-bold">
                   {{ $t("details.castAndCrew", "Casting") }}
@@ -283,7 +310,9 @@
                         <UserIcon class="w-8 h-8 opacity-50" />
                       </div>
                     </div>
-                    <div class="flex flex-col min-w-0 flex-1 w-full overflow-hidden">
+                    <div
+                      class="flex flex-col min-w-0 flex-1 w-full overflow-hidden"
+                    >
                       <div
                         class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
                       >
@@ -322,10 +351,13 @@
                           v-else
                           class="w-full h-full flex items-center justify-center text-2xl font-bold theme-text-muted uppercase theme-surface-muted"
                         >
-                          {{ char.voiceActor.firstname?.[0] }}{{ char.voiceActor.lastname?.[0] }}
+                          {{ char.voiceActor.firstname?.[0]
+                          }}{{ char.voiceActor.lastname?.[0] }}
                         </div>
                       </NuxtLink>
-                      <div class="flex flex-col min-w-0 flex-1 w-full overflow-hidden">
+                      <div
+                        class="flex flex-col min-w-0 flex-1 w-full overflow-hidden"
+                      >
                         <div
                           class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
                         >
@@ -337,7 +369,11 @@
                         <NuxtLink
                           :to="localePath(`/voice-actor/${char.voiceActor.id}`)"
                           class="font-bold text-sm theme-text truncate hover:underline block w-full"
-                          :title="char.voiceActor.firstname + ' ' + char.voiceActor.lastname"
+                          :title="
+                            char.voiceActor.firstname +
+                            ' ' +
+                            char.voiceActor.lastname
+                          "
                         >
                           {{ char.voiceActor.firstname }}
                           {{ char.voiceActor.lastname }}
@@ -348,7 +384,10 @@
                         >
                           {{ char.voiceActor.performance }}
                         </div>
-                        <div v-if="char.voiceActor.note" class="text-xs theme-text-muted mt-1">
+                        <div
+                          v-if="char.voiceActor.note"
+                          class="text-xs theme-text-muted mt-1"
+                        >
                           {{ char.voiceActor.note }}
                         </div>
                       </div>
@@ -363,7 +402,9 @@
                           <UserIcon class="w-8 h-8 opacity-50" />
                         </div>
                       </div>
-                      <div class="flex flex-col min-w-0 flex-1 w-full overflow-hidden">
+                      <div
+                        class="flex flex-col min-w-0 flex-1 w-full overflow-hidden"
+                      >
                         <div
                           class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
                         >
@@ -372,7 +413,9 @@
                             $t("details.voiceActor", "Voice Actor")
                           }}</span>
                         </div>
-                        <div class="text-sm theme-text-muted italic truncate block w-full">
+                        <div
+                          class="text-sm theme-text-muted italic truncate block w-full"
+                        >
                           {{ $t("details.notSpecified", "Non spécifié") }}
                         </div>
                       </div>
@@ -392,7 +435,10 @@
       </template>
     </MediaDetailsLayout>
 
-    <div v-else-if="!pending" class="text-center py-20 theme-text-muted min-h-screen">
+    <div
+      v-else-if="!pending"
+      class="text-center py-20 theme-text-muted min-h-screen"
+    >
       {{ $t("details.notFound", "Jeu vidéo introuvable.") }}
     </div>
 
@@ -412,7 +458,10 @@
         @submit.prevent="triggerPrepareGame"
       >
         <div class="space-y-2">
-          <h2 id="prepare-game-dialog-title" class="text-lg font-bold theme-text">
+          <h2
+            id="prepare-game-dialog-title"
+            class="text-lg font-bold theme-text"
+          >
             {{ $t("game.prepareDialogTitle") }}
           </h2>
           <p class="text-sm theme-text-muted">
@@ -523,7 +572,8 @@ const isReportModalOpen = ref(false);
 const route = useRoute();
 const router = useRouter();
 const supabase = useSupabaseClient();
-const gameId = (Array.isArray(route.params.id) ? route.params.id[0] : route.params.id) || "";
+const gameId =
+  (Array.isArray(route.params.id) ? route.params.id[0] : route.params.id) || "";
 const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
 
 const user = useSupabaseUser();
@@ -576,15 +626,15 @@ const { data, pending, refresh } = useAsyncData(
     return newData;
   },
   {
-    getCachedData: (key, nuxtApp) => nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+    getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
 
 const game = computed(() => data.value?.game);
 const dubbingProjects = computed(() => {
-  const projects: GameDubbingProject[] = [...(data.value?.dubbingProjects || [])].filter(
-    projectHasVoiceActor,
-  );
+  const projects: GameDubbingProject[] = [
+    ...(data.value?.dubbingProjects || []),
+  ].filter(projectHasVoiceActor);
   const currentLocale = locale.value.toLowerCase();
   return projects.sort((a, b) => {
     const aIsPref = a.language?.toLowerCase().startsWith(currentLocale) ? 1 : 0;
@@ -656,7 +706,8 @@ const getPublishers = (g: IgdbGame) =>
     ?.filter((c) => c.publisher)
     .map((c) => c.company.name)
     .join(", ");
-const formatReleaseYear = (ts?: number) => (ts ? new Date(ts * 1000).getFullYear().toString() : "");
+const formatReleaseYear = (ts?: number) =>
+  ts ? new Date(ts * 1000).getFullYear().toString() : "";
 
 const searchQuery = ref("");
 const searchInput = ref("");
@@ -684,11 +735,13 @@ const { data: castPageData } = useAsyncData<PaginatedResponse<GameCastItem>>(
   () => fetchDetailCollection<GameCastItem>(castRequest.value),
   {
     watch: [castRequest],
-    getCachedData: (key, nuxtApp) => nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+    getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
 const castItems = computed(() => castPageData.value?.data || []);
-const castTotal = computed(() => castPageData.value?.pagination.totalItems || 0);
+const castTotal = computed(
+  () => castPageData.value?.pagination.totalItems || 0,
+);
 
 async function triggerPrepareGame() {
   const body = buildPrepareGameRequest(

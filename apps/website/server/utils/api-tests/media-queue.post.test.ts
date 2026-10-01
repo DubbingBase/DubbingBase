@@ -5,7 +5,7 @@ const routeMocks = vi.hoisted(() => ({
   requireUser: vi.fn(),
   rpc: vi.fn(),
   sendDiscordAdminNotification: vi.fn(),
-  setNoStoreHeaders: vi.fn(),
+  setNoCacheHeaders: vi.fn(),
 }));
 
 vi.mock("../auth", () => ({ requireUser: routeMocks.requireUser }));
@@ -16,7 +16,7 @@ vi.mock("../notifications/discord", () => ({
   sendDiscordAdminNotification: routeMocks.sendDiscordAdminNotification,
 }));
 vi.mock("../cache/http", () => ({
-  setNoStoreHeaders: routeMocks.setNoStoreHeaders,
+  setNoCacheHeaders: routeMocks.setNoCacheHeaders,
 }));
 
 let handler: typeof import("../../api/media-queue.post").default;

@@ -2,6 +2,7 @@ import { useTmdbClient } from "../utils";
 import { setNoCacheHeaders, setPublicCacheHeaders } from "../utils/cache/http";
 
 export default defineEventHandler(async (event) => {
+  setNoCacheHeaders(event);
   const query = getQuery(event);
   const mediaType = query.media_type as string | undefined;
   const mediaId = query.media_id ? Number(query.media_id) : undefined;

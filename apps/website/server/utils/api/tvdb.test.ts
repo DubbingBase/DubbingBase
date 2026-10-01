@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { SimpleCache } from "../cache";
+import { CACHE_TTL, SimpleCache } from "../cache";
 import { buildCacheKey } from "../cache/constants";
 import { TVDBClient } from "./tvdb";
 
@@ -8,6 +8,7 @@ afterEach(() => vi.unstubAllGlobals());
 describe("TVDB persistence policy", () => {
   it("keeps auth tokens and character mappings in KV", async () => {
     const values = new Map<string, unknown>();
+    const writeTtls: number[] = [];
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       if (String(input).endsWith("/login")) {
         return new Response(JSON.stringify({ data: { token: "fresh-token" } }));
@@ -21,7 +22,10 @@ describe("TVDB persistence policy", () => {
     const client = new TVDBClient(
       new SimpleCache(() => ({
         get: async (key) => values.get(key) ?? null,
-        put: async (key, value) => values.set(key, JSON.parse(value)),
+        put: async (key, value, options) => {
+          writeTtls.push(options.expirationTtl);
+          values.set(key, JSON.parse(value));
+        },
       })),
     );
 
@@ -36,6 +40,7 @@ describe("TVDB persistence policy", () => {
     ).toMatchObject({
       data: { id: 42, name: "Character" },
     });
+    expect(writeTtls).toContain(CACHE_TTL.STABLE);
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 

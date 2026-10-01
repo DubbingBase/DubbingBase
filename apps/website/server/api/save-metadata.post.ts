@@ -1,6 +1,8 @@
+import { setNoCacheHeaders } from "../utils/cache/http";
 import { useSupabaseAdmin } from "../utils/db/client";
 
 export default defineEventHandler(async (event) => {
+  setNoCacheHeaders(event);
   try {
     const body = await readBody(event);
     const { type, payload } = body;

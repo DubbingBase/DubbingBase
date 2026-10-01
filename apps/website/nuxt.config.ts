@@ -1,11 +1,7 @@
 import tailwindcss from "@tailwindcss/vite";
 import { resolve } from "node:path";
 import { defineNuxtConfig } from "nuxt/config";
-import {
-  APP_LOCALES,
-  DEFAULT_LOCALE,
-  NON_DEFAULT_LOCALES,
-} from "@app/shared-logic";
+import { APP_LOCALES, DEFAULT_LOCALE } from "@app/shared-logic";
 
 function env(name: string): string | undefined {
   return process.env[name] ?? process.env[`NUXT_${name}`];
@@ -13,17 +9,6 @@ function env(name: string): string | undefined {
 
 const supabaseUrl = env("SUPABASE_URL") ?? env("PUBLIC_SUPABASE_URL");
 const supabasePublishableKey = env("SUPABASE_PUBLISHABLE_KEY");
-const CACHEABLE_PROVIDER_ONLY_ROUTES = ["movies", "series"] as const;
-const productionRouteRules = Object.fromEntries(
-  CACHEABLE_PROVIDER_ONLY_ROUTES.flatMap((route) => [
-    [`/${route}`, { swr: 3600 }],
-    ...NON_DEFAULT_LOCALES.map((locale) => [
-      `/${locale}/${route}`,
-      { swr: 3600 },
-    ]),
-  ]),
-);
-
 export default defineNuxtConfig({
   rootDir: resolve(import.meta.dirname),
   compatibilityDate: "2024-09-23",
@@ -157,11 +142,6 @@ export default defineNuxtConfig({
       runtimeCaching: [],
     },
   },
-
-  // Never enable Nitro's SWR route cache in development. Production-only
-  // rules keep local data and API changes immediately visible to developers.
-  routeRules:
-    process.env.NODE_ENV === "development" ? {} : productionRouteRules,
 
   vite: {
     plugins: [tailwindcss()],

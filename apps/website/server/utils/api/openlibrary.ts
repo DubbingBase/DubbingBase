@@ -181,7 +181,7 @@ export class OpenLibraryClient {
           return null;
         }
       },
-      { ttl: 604800, cachePolicy: "persistent", ...options },
+      { ttl: "STABLE", cachePolicy: "persistent", ...options },
     );
     return authorName ?? "";
   }
@@ -286,7 +286,7 @@ export class OpenLibraryClient {
           return null;
         }
       },
-      { ttl: 604800, cachePolicy: "persistent", ...options },
+      { ttl: "STABLE", cachePolicy: "persistent", ...options },
     );
   }
 

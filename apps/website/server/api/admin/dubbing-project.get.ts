@@ -1,10 +1,20 @@
+import { setNoCacheHeaders } from "../../utils/cache/http";
 import { requireAdmin } from "../../utils/auth";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { requireDubbingLanguage } from "../../utils/dubbing-language";
 
-const MEDIA_TYPES = ["movie", "tv", "video_game", "audiobook", "podcast", "advertisement", "toy"];
+const MEDIA_TYPES = [
+  "movie",
+  "tv",
+  "video_game",
+  "audiobook",
+  "podcast",
+  "advertisement",
+  "toy",
+];
 
 export default defineEventHandler(async (event) => {
+  setNoCacheHeaders(event);
   requireAdmin(event);
   const query = getQuery(event);
   const contentId = Number(query.content_id);
@@ -44,7 +54,10 @@ export default defineEventHandler(async (event) => {
   const workCountByActor = new Map<number, number>();
   for (const work of workRows) {
     if (work.actor_id === null) continue;
-    workCountByActor.set(work.actor_id, (workCountByActor.get(work.actor_id) ?? 0) + 1);
+    workCountByActor.set(
+      work.actor_id,
+      (workCountByActor.get(work.actor_id) ?? 0) + 1,
+    );
   }
 
   return {
@@ -54,7 +67,8 @@ export default defineEventHandler(async (event) => {
       actor_id: work.actor_id,
       voice_actor_id: work.voice_actor_id,
       voice_actor: work.voice_actor,
-      editable: work.actor_id !== null && workCountByActor.get(work.actor_id) === 1,
+      editable:
+        work.actor_id !== null && workCountByActor.get(work.actor_id) === 1,
     })),
   };
 });

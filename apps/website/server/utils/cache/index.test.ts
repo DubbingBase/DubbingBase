@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { CACHE_TTL, createCacheNamespace, SimpleCache } from "./index";
 import { buildCacheKey } from "./constants";
+import { OpenLibraryClient } from "../api/openlibrary";
 
 interface FakeKv {
   get: (key: string, options: { type: "json" }) => Promise<unknown>;
@@ -11,505 +12,201 @@ interface FakeKv {
   ) => Promise<void>;
 }
 
-describe("SimpleCache", () => {
-  it("reads from KV for every lookup instead of retaining an in-memory entry", async () => {
-    let getCount = 0;
-    const kv: FakeKv = {
-      get: async () => {
-        getCount += 1;
-        return { value: getCount };
-      },
-      put: async () => undefined,
-    };
-    const cache = new SimpleCache(() => kv);
-    const namespace = createCacheNamespace<{ value: number }>();
+function makeCache(initial = new Map<string, unknown>()) {
+  let reads = 0;
+  const writes: Array<{ key: string; value: unknown; ttl: number }> = [];
+  const values = initial;
+  const kv: FakeKv = {
+    get: async (key) => {
+      reads += 1;
+      return values.get(key) ?? null;
+    },
+    put: async (key, value, options) => {
+      const parsed: unknown = JSON.parse(value);
+      values.set(key, parsed);
+      writes.push({ key, value: parsed, ttl: options.expirationTtl });
+    },
+  };
 
-    const fetcher = vi.fn(async () => ({ value: 0 }));
-    await expect(
-      cache.getOrFetch(namespace, "external:key", fetcher),
-    ).resolves.toEqual({
-      value: 1,
-    });
-    await expect(
-      cache.getOrFetch(namespace, "external:key", fetcher),
-    ).resolves.toEqual({
-      value: 2,
-    });
-    expect(fetcher).not.toHaveBeenCalled();
-  });
+  return {
+    cache: new SimpleCache(() => kv),
+    values,
+    writes,
+    get reads() {
+      return reads;
+    },
+  };
+}
 
-  it("fetches and stores a KV miss, then serves the KV value on a hit", async () => {
-    const values = new Map<string, unknown>();
-    const kv: FakeKv = {
-      get: async (key) => values.get(key) ?? null,
-      put: async (key, value) => values.set(key, JSON.parse(value)),
-    };
-    const cache = new SimpleCache(() => kv);
+describe("SimpleCache policies", () => {
+  it("persistent reads KV, fetches and writes on a miss, then serves the hit", async () => {
+    const harness = makeCache();
     const namespace = createCacheNamespace<{ title: string }>();
-    const fetcher = async () => ({ title: "Result" });
+    const fetcher = vi.fn(async () => ({ title: "Provider title" }));
 
     await expect(
-      cache.getOrFetch(namespace, "external:resource:1", fetcher, {
-        ttl: "NORMAL",
+      harness.cache.getOrFetch(namespace, "tmdb:movie:1", fetcher, {
+        ttl: "STABLE",
+        cachePolicy: "persistent",
       }),
-    ).resolves.toEqual({ title: "Result" });
+    ).resolves.toEqual({ title: "Provider title" });
     await expect(
-      cache.getOrFetch(namespace, "external:resource:1", async () => ({
-        title: "Wrong",
-      })),
-    ).resolves.toEqual({ title: "Result" });
-    expect(CACHE_TTL).toEqual({
-      TRENDING: 60 * 60,
-      NORMAL: 24 * 60 * 60,
-      STABLE: 7 * 24 * 60 * 60,
-    });
-  });
-
-  it("force refreshes the same key and stores the fetched value", async () => {
-    const values = new Map<string, unknown>([["external:resource:1", "old"]]);
-    let writes = 0;
-    const kv: FakeKv = {
-      get: async (key) => values.get(key) ?? null,
-      put: async (key, value) => {
-        writes += 1;
-        values.set(key, JSON.parse(value));
-      },
-    };
-    const cache = new SimpleCache(() => kv);
-    const namespace = createCacheNamespace<string>();
-
-    await expect(
-      cache.getOrFetch(namespace, "external:resource:1", async () => "new", {
-        forceRefresh: true,
+      harness.cache.getOrFetch(namespace, "tmdb:movie:1", fetcher, {
+        ttl: "STABLE",
+        cachePolicy: "persistent",
       }),
-    ).resolves.toBe("new");
-    expect(values.get("external:resource:1")).toBe("new");
-    expect(writes).toBe(1);
-  });
+    ).resolves.toEqual({ title: "Provider title" });
 
-  it("force refreshes without storing volatile upstream data", async () => {
-    let writes = 0;
-    const cache = new SimpleCache(() => ({
-      get: async () => "stale",
-      put: async () => {
-        writes += 1;
-      },
-    }));
-    const namespace = createCacheNamespace<string>();
-
-    await expect(
-      cache.getOrFetch(namespace, "wikipedia:volatile", async () => "fresh", {
-        forceRefresh: true,
-        writeCache: false,
-      }),
-    ).resolves.toBe("fresh");
-    expect(writes).toBe(0);
-  });
-
-  it("coalesces concurrent no-write refreshes without writing to KV", async () => {
-    let resolveFetch: ((value: string) => void) | undefined;
-    let fetchCount = 0;
-    let writes = 0;
-    const cache = new SimpleCache(() => ({
-      get: async () => null,
-      put: async () => {
-        writes += 1;
-      },
-    }));
-    const namespace = createCacheNamespace<string>();
-    const fetcher = () => {
-      fetchCount += 1;
-      return new Promise<string>((resolve) => {
-        resolveFetch = resolve;
-      });
-    };
-
-    const first = cache.getOrFetch(namespace, "wikipedia:volatile", fetcher, {
-      forceRefresh: true,
-      writeCache: false,
-    });
-    const second = cache.getOrFetch(namespace, "wikipedia:volatile", fetcher, {
-      forceRefresh: true,
-      writeCache: false,
-    });
-
-    expect(second).toBe(first);
-    await vi.waitFor(() => expect(fetchCount).toBe(1));
-    resolveFetch?.("fresh");
-    await expect(Promise.all([first, second])).resolves.toEqual([
-      "fresh",
-      "fresh",
-    ]);
-    expect(writes).toBe(0);
-  });
-
-  it("keeps concurrent refreshes with different write policies independent", async () => {
-    const resolveFetches: Array<(value: string) => void> = [];
-    const writes: string[] = [];
-    let fetchCount = 0;
-    const cache = new SimpleCache(() => ({
-      get: async () => null,
-      put: async (_key, value) => {
-        writes.push(value);
-      },
-    }));
-    const namespace = createCacheNamespace<string>();
-    const fetcher = () => {
-      fetchCount += 1;
-      return new Promise<string>((resolve) => {
-        resolveFetches.push(resolve);
-      });
-    };
-
-    const cacheable = cache.getOrFetch(
-      namespace,
-      "wikipedia:mixed-policy",
-      fetcher,
+    expect(harness.reads).toBe(2);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(harness.writes).toEqual([
       {
-        forceRefresh: true,
+        key: "tmdb:movie:1",
+        value: { title: "Provider title" },
+        ttl: CACHE_TTL.STABLE,
       },
-    );
-    const noWrite = cache.getOrFetch(
-      namespace,
-      "wikipedia:mixed-policy",
-      fetcher,
-      {
-        forceRefresh: true,
-        writeCache: false,
-      },
-    );
-
-    expect(noWrite).not.toBe(cacheable);
-    await vi.waitFor(() => expect(fetchCount).toBe(2));
-    resolveFetches[0]?.("cacheable");
-    resolveFetches[1]?.("volatile");
-    await expect(Promise.all([cacheable, noWrite])).resolves.toEqual([
-      "cacheable",
-      "volatile",
     ]);
-    expect(writes).toEqual(['"cacheable"']);
   });
 
-  it("waits for a superseded KV write before storing the forced refresh", async () => {
-    let resolveNormalFetch: ((value: string) => void) | undefined;
-    let finishNormalWrite: (() => void) | undefined;
-    const writes: string[] = [];
-    const cache = new SimpleCache(() => ({
-      get: async () => null,
-      put: async (_key, value) => {
-        writes.push(value);
-        if (value === '"stale"') {
-          await new Promise<void>((resolve) => {
-            finishNormalWrite = resolve;
-          });
-        }
-      },
-    }));
+  it("read-only reads KV and fetches misses without writing", async () => {
+    const harness = makeCache();
     const namespace = createCacheNamespace<string>();
-    const normal = cache.getOrFetch(
-      namespace,
-      "external:pending-write",
-      () =>
-        new Promise<string>((resolve) => {
-          resolveNormalFetch = resolve;
-        }),
-    );
-    await vi.waitFor(() => expect(resolveNormalFetch).toBeDefined());
-    resolveNormalFetch?.("stale");
-    await vi.waitFor(() => expect(writes).toEqual(['"stale"']));
-
-    let forcedFetchStarted = false;
-    const forced = cache.getOrFetch(
-      namespace,
-      "external:pending-write",
-      async () => {
-        forcedFetchStarted = true;
-        return "fresh";
-      },
-      { forceRefresh: true },
-    );
-    let forcedSettled = false;
-    void forced.then(() => {
-      forcedSettled = true;
-    });
-    await vi.waitFor(() => expect(forcedFetchStarted).toBe(true));
-    expect(forcedSettled).toBe(false);
-    expect(writes).toEqual(['"stale"']);
-
-    finishNormalWrite?.();
-    await expect(normal).resolves.toBe("stale");
-    await expect(forced).resolves.toBe("fresh");
-    expect(writes).toEqual(['"stale"', '"fresh"']);
-  });
-
-  it("does not write empty fetch results to KV", async () => {
-    let writes = 0;
-    const namespace = createCacheNamespace<string | null>();
-    const cache = new SimpleCache(() => ({
-      get: async () => null,
-      put: async () => {
-        writes += 1;
-      },
-    }));
 
     await expect(
-      cache.getOrFetch(namespace, "external:missing", async () => null),
-    ).resolves.toBeNull();
-    expect(writes).toBe(0);
-  });
-
-  it("does not read or write KV when the provider policy is none", async () => {
-    let reads = 0;
-    let writes = 0;
-    const cache = new SimpleCache(() => ({
-      get: async () => {
-        reads += 1;
-        return "stale";
-      },
-      put: async () => {
-        writes += 1;
-      },
-    }));
-
-    await expect(
-      cache.getOrFetch(
-        createCacheNamespace<string>(),
-        "volatile:response",
-        async () => "fresh",
-        { cachePolicy: "none" },
-      ),
-    ).resolves.toBe("fresh");
-    expect(reads).toBe(0);
-    expect(writes).toBe(0);
-  });
-
-  it("reads KV but does not write misses for the read-only policy", async () => {
-    let reads = 0;
-    let writes = 0;
-    const cache = new SimpleCache(() => ({
-      get: async () => {
-        reads += 1;
-        return null;
-      },
-      put: async () => {
-        writes += 1;
-      },
-    }));
-
-    await expect(
-      cache.getOrFetch(
-        createCacheNamespace<string>(),
-        "mapping:legacy",
-        async () => "upstream",
+      harness.cache.getOrFetch(
+        namespace,
+        "tvdb:characters:1",
+        async () => "upstream mapping",
         { cachePolicy: "read-only" },
       ),
-    ).resolves.toBe("upstream");
-    expect(reads).toBe(1);
-    expect(writes).toBe(0);
+    ).resolves.toBe("upstream mapping");
+
+    expect(harness.reads).toBe(1);
+    expect(harness.writes).toEqual([]);
   });
 
-  it("keeps authentication tokens in KV even when a no-cache policy is requested", async () => {
-    let reads = 0;
-    let writes = 0;
-    const cache = new SimpleCache(() => ({
-      get: async () => {
-        reads += 1;
-        return null;
-      },
-      put: async () => {
-        writes += 1;
-      },
-    }));
+  it("none fetches upstream without KV reads or writes", async () => {
+    const harness = makeCache(new Map([["wikipedia:search", "stale"]]));
+    const namespace = createCacheNamespace<string>();
+    const fetcher = vi.fn(async () => "fresh");
 
     await expect(
-      cache.getOrFetch(
+      harness.cache.getOrFetch(namespace, "wikipedia:search", fetcher, {
+        cachePolicy: "none",
+      }),
+    ).resolves.toBe("fresh");
+
+    expect(harness.reads).toBe(0);
+    expect(harness.writes).toEqual([]);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
+  it("coalesces a same-key, same-policy miss", async () => {
+    const harness = makeCache();
+    const namespace = createCacheNamespace<string>();
+    let resolveFetch: ((value: string) => void) | undefined;
+    const fetcher = vi.fn(
+      () => new Promise<string>((resolve) => (resolveFetch = resolve)),
+    );
+    const first = harness.cache.getOrFetch(
+      namespace,
+      "provider:coalesced",
+      fetcher,
+      { cachePolicy: "persistent" },
+    );
+    const second = harness.cache.getOrFetch(
+      namespace,
+      "provider:coalesced",
+      fetcher,
+      { cachePolicy: "persistent" },
+    );
+
+    expect(second).toBe(first);
+    await vi.waitFor(() => expect(fetcher).toHaveBeenCalledTimes(1));
+    resolveFetch?.("shared result");
+    await expect(Promise.all([first, second])).resolves.toEqual([
+      "shared result",
+      "shared result",
+    ]);
+  });
+
+  it("keeps the same key independent across different policies", async () => {
+    const harness = makeCache();
+    const namespace = createCacheNamespace<string>();
+    const resolveFetches: Array<(value: string) => void> = [];
+    const fetcher = vi.fn(
+      () => new Promise<string>((resolve) => resolveFetches.push(resolve)),
+    );
+
+    const persistent = harness.cache.getOrFetch(
+      namespace,
+      "provider:mixed-policy",
+      fetcher,
+      { cachePolicy: "persistent" },
+    );
+    const readOnly = harness.cache.getOrFetch(
+      namespace,
+      "provider:mixed-policy",
+      fetcher,
+      { cachePolicy: "read-only" },
+    );
+
+    expect(readOnly).not.toBe(persistent);
+    await vi.waitFor(() => expect(fetcher).toHaveBeenCalledTimes(2));
+    resolveFetches[0]?.("persistent result");
+    resolveFetches[1]?.("read-only result");
+    await expect(Promise.all([persistent, readOnly])).resolves.toEqual([
+      "persistent result",
+      "read-only result",
+    ]);
+    expect(harness.reads).toBe(2);
+    expect(harness.writes).toHaveLength(1);
+  });
+
+  it("always persists authentication tokens regardless of a requested policy", async () => {
+    const harness = makeCache();
+
+    await expect(
+      harness.cache.getOrFetch(
         createCacheNamespace<string>(),
         "igdb:auth_token",
         async () => "token",
-        { cachePolicy: "none", forceRefresh: true, writeCache: false },
+        { cachePolicy: "none" },
       ),
     ).resolves.toBe("token");
-    expect(reads).toBe(1);
-    expect(writes).toBe(1);
+
+    expect(harness.reads).toBe(1);
+    expect(harness.writes).toHaveLength(1);
   });
 
-  it("coalesces same-key misses, including forced refreshes", async () => {
-    const values = new Map<string, unknown>();
-    let resolveFetch: ((value: string) => void) | undefined;
-    let fetchCount = 0;
-    const kv: FakeKv = {
-      get: async (key) => values.get(key) ?? null,
-      put: async (key, value) => values.set(key, JSON.parse(value)),
-    };
-    const cache = new SimpleCache(() => kv);
-    const namespace = createCacheNamespace<string>();
-    const fetcher = () => {
-      fetchCount += 1;
-      return new Promise<string>((resolve) => {
-        resolveFetch = resolve;
-      });
-    };
-
-    const first = cache.getOrFetch(namespace, "external:coalesced", fetcher, {
-      forceRefresh: true,
-    });
-    const second = cache.getOrFetch(namespace, "external:coalesced", fetcher, {
-      forceRefresh: true,
-    });
-    expect(second).toBe(first);
-    await vi.waitFor(() => expect(fetchCount).toBe(1));
-    resolveFetch?.("shared");
-
-    await expect(Promise.all([first, second])).resolves.toEqual([
-      "shared",
-      "shared",
-    ]);
-    expect(fetchCount).toBe(1);
-  });
-
-  it("returns the identical typed promise to concurrent same-key callers", async () => {
-    let resolveFetch: ((value: { title: string }) => void) | undefined;
-    let fetchCount = 0;
-    const namespace = createCacheNamespace<{ title: string }>();
-    const cache = new SimpleCache(() => ({
-      get: async () => null,
-      put: async () => undefined,
-    }));
-    const fetcher = () => {
-      fetchCount += 1;
-      return new Promise<{ title: string }>((resolve) => {
-        resolveFetch = resolve;
-      });
-    };
-
-    const first = cache.getOrFetch(
-      namespace,
-      "external:promise-identity",
-      fetcher,
-    );
-    const second = cache.getOrFetch(
-      namespace,
-      "external:promise-identity",
-      fetcher,
-    );
-
-    expect(second).toBe(first);
-    await vi.waitFor(() => expect(fetchCount).toBe(1));
-    resolveFetch?.({ title: "shared" });
-    await expect(first).resolves.toEqual({ title: "shared" });
-  });
-
-  it("does not let a pending normal lookup suppress a forced refresh", async () => {
-    let resolveRead: ((value: unknown) => void) | undefined;
-    let forcedFetchCount = 0;
-    const namespace = createCacheNamespace<string>();
-    const cache = new SimpleCache(() => ({
-      get: async () =>
-        new Promise<unknown>((resolve) => {
-          resolveRead = resolve;
-        }),
-      put: async () => undefined,
-    }));
-
-    const normal = cache.getOrFetch(
-      namespace,
-      "external:refresh-race",
-      async () => "normal",
-    );
-    await vi.waitFor(() => expect(resolveRead).toBeDefined());
-    const forced = cache.getOrFetch(
-      namespace,
-      "external:refresh-race",
-      async () => {
-        forcedFetchCount += 1;
-        return "fresh";
-      },
-      { forceRefresh: true },
-    );
-
-    await vi.waitFor(() => expect(forcedFetchCount).toBe(1));
-    resolveRead?.("stale");
-
-    await expect(normal).resolves.toBe("stale");
-    await expect(forced).resolves.toBe("fresh");
-  });
-
-  it("does not let a slower normal fetch overwrite a forced refresh", async () => {
-    const values = new Map<string, unknown>();
-    let resolveNormalFetch: ((value: string) => void) | undefined;
-    const namespace = createCacheNamespace<string>();
-    const cache = new SimpleCache(() => ({
-      get: async (key) => values.get(key) ?? null,
-      put: async (key, value) => values.set(key, JSON.parse(value)),
-    }));
-
-    const normal = cache.getOrFetch(
-      namespace,
-      "external:fetch-race",
-      () =>
-        new Promise<string>((resolve) => {
-          resolveNormalFetch = resolve;
-        }),
-    );
-    await vi.waitFor(() => expect(resolveNormalFetch).toBeDefined());
-    const forced = cache.getOrFetch(
-      namespace,
-      "external:fetch-race",
-      async () => "fresh",
-      {
-        forceRefresh: true,
-      },
-    );
-
-    await expect(forced).resolves.toBe("fresh");
-    expect(values.get("external:fetch-race")).toBe("fresh");
-    resolveNormalFetch?.("stale");
-    await expect(normal).resolves.toBe("stale");
-    expect(values.get("external:fetch-race")).toBe("fresh");
-  });
-
-  it("cleans up failed in-flight requests so a later request can retry", async () => {
-    let fetchCount = 0;
-    const namespace = createCacheNamespace<string>();
-    const cache = new SimpleCache(() => ({
-      get: async () => null,
-      put: async () => undefined,
-    }));
-    const fetcher = async () => {
-      fetchCount += 1;
-      if (fetchCount === 1) throw new Error("upstream failed");
+  it("does not persist null or failed results and allows retry", async () => {
+    const harness = makeCache();
+    const namespace = createCacheNamespace<string | null>();
+    let attempts = 0;
+    const fetcher = vi.fn(async () => {
+      attempts += 1;
+      if (attempts === 1) return null;
+      if (attempts === 2) throw new Error("upstream failed");
       return "recovered";
-    };
+    });
 
     await expect(
-      cache.getOrFetch(namespace, "external:retry", fetcher),
+      harness.cache.getOrFetch(namespace, "provider:nullable", fetcher),
+    ).resolves.toBeNull();
+    await expect(
+      harness.cache.getOrFetch(namespace, "provider:nullable", fetcher),
     ).rejects.toThrow("upstream failed");
     await expect(
-      cache.getOrFetch(namespace, "external:retry", fetcher),
+      harness.cache.getOrFetch(namespace, "provider:nullable", fetcher),
     ).resolves.toBe("recovered");
-    expect(fetchCount).toBe(2);
-  });
 
-  it("does not force refresh authentication tokens", async () => {
-    const namespace = createCacheNamespace<string>();
-    const cache = new SimpleCache(() => ({
-      get: async () => "cached-token",
-      put: async () => undefined,
-    }));
-    let fetchCount = 0;
-
-    await expect(
-      cache.getOrFetch(
-        namespace,
-        "tvdb:auth_token",
-        async () => {
-          fetchCount += 1;
-          return "new-token";
-        },
-        { forceRefresh: true },
-      ),
-    ).resolves.toBe("cached-token");
-    expect(fetchCount).toBe(0);
+    expect(harness.writes).toEqual([
+      {
+        key: "provider:nullable",
+        value: "recovered",
+        ttl: CACHE_TTL.NORMAL,
+      },
+    ]);
   });
 });
 
@@ -543,4 +240,37 @@ describe("buildCacheKey", () => {
     expect(accented).not.toBe(otherAccented);
     expect(accented).toMatch(/^[a-z0-9:_-]+$/);
   });
+});
+
+describe("OpenLibrary author caching", () => {
+  const invalidResponses: Array<[string, () => Response]> = [
+    ["empty author responses", () => new Response(JSON.stringify({}))],
+    ["upstream errors", () => new Response("unavailable", { status: 503 })],
+  ];
+
+  it.each(invalidResponses)(
+    "does not cache %s",
+    async (_label, makeResponse) => {
+      let writes = 0;
+      const client = new OpenLibraryClient(
+        new SimpleCache(() => ({
+          get: async () => null,
+          put: async () => {
+            writes += 1;
+          },
+        })),
+      );
+      const fetchMock = vi.fn(async () => makeResponse());
+      vi.stubGlobal("fetch", fetchMock);
+
+      try {
+        await expect(client.getAuthorName("OL123A")).resolves.toBe("");
+        await expect(client.getAuthorName("OL123A")).resolves.toBe("");
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+        expect(writes).toBe(0);
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    },
+  );
 });

@@ -340,8 +340,7 @@ const { data: initialStudioDetails } = await useAsyncData(
   `studio-${route.params.id}`,
   () => fetchStudioDetails(route.params.id as string),
   {
-    getCachedData: (key, nuxtApp) =>
-      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+    getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
 
@@ -377,8 +376,7 @@ const { data: projectPageData } = useAsyncData<
   () => fetchDetailCollection<StudioCollectionItem>(projectRequest.value),
   {
     watch: [projectRequest],
-    getCachedData: (key, nuxtApp) =>
-      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+    getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
 const projectItems = computed(() => projectPageData.value?.data || []);
@@ -399,8 +397,7 @@ const { data: rosterPageData } = useAsyncData<
   () => fetchDetailCollection<StudioCollectionItem>(rosterRequest.value),
   {
     watch: [rosterRequest],
-    getCachedData: (key, nuxtApp) =>
-      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+    getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
 const rosterItems = computed(() => rosterPageData.value?.data || []);

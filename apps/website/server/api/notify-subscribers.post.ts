@@ -1,8 +1,10 @@
+import { setNoCacheHeaders } from "../utils/cache/http";
 import { buildTmdbImageUrl } from "../utils/urls/tmdb";
 import { sendOneSignalNotification } from "../utils/notifications/onesignal";
 import { useSupabaseAdmin } from "../utils/db/client";
 
 export default defineEventHandler(async (event) => {
+  setNoCacheHeaders(event);
   try {
     const body = await readBody(event);
 

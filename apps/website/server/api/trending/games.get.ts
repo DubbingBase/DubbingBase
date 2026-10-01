@@ -21,6 +21,7 @@ function formatGame(game: IgdbGame) {
 }
 
 export default defineEventHandler(async (event) => {
+  setNoCacheHeaders(event);
   const query = getQuery(event);
   const rawLanguage = query.lang;
   const language = resolveLocaleLanguage(

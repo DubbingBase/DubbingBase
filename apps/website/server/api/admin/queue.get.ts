@@ -1,6 +1,6 @@
 import { requireAdmin } from "../../utils/auth";
 import { useSupabaseAdmin } from "../../utils/db/client";
-import { setNoStoreHeaders } from "../../utils/cache/http";
+import { setNoCacheHeaders } from "../../utils/cache/http";
 
 const QUEUE_NAMES = ["wiki_discovery", "wiki_check", "wiki_extract"] as const;
 const QUEUE_STATUSES = [
@@ -41,7 +41,7 @@ function queryInteger(
 
 export default defineEventHandler(async (event) => {
   requireAdmin(event);
-  setNoStoreHeaders(event);
+  setNoCacheHeaders(event);
 
   const query = getQuery(event);
   const queueName = queryValue(query.queue, "queue");
