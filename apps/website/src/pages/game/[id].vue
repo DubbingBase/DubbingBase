@@ -600,31 +600,7 @@ const localePath = useLocalePath();
 const cacheKey = `game-${gameId}-${locale.value}`;
 const { data, pending, refresh } = useAsyncData(
   cacheKey,
-  async () => {
-    const nuxtApp = useNuxtApp();
-    // We only have cached data on the client side after hydration
-    const cachedData = nuxtApp.payload.data[cacheKey];
-
-    const newData = await fetchGameData(gameId, locale.value);
-
-    // If IGDB fetch fails on the edge function (e.g., timeout)
-    // but we already have valid data from SSR, we preserve the IGDB data
-    // while still accepting the fresh database data (votes, dubbing projects).
-    if (
-      newData &&
-      newData.game?.name === "Information indisponible (Timeout)" &&
-      cachedData?.game &&
-      cachedData.game.name !== "Information indisponible (Timeout)"
-    ) {
-      return {
-        ...newData,
-        game: cachedData.game,
-        characters: cachedData.characters,
-      };
-    }
-
-    return newData;
-  },
+  () => fetchGameData(gameId, locale.value),
   {
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },

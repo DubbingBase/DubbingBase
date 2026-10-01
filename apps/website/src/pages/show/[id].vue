@@ -546,25 +546,7 @@ const cacheKey = `show-${showId}-${locale.value}`;
 
 const { data, pending } = useAsyncData(
   cacheKey,
-  async () => {
-    const nuxtApp = useNuxtApp();
-    // We only have cached data on the client side after hydration
-    const cachedData = nuxtApp.payload.data[cacheKey];
-
-    const newData = await fetchShowData(showId, locale.value);
-
-    if (
-      newData &&
-      newData.serie?.title === "Information indisponible (Timeout)" &&
-      cachedData?.serie &&
-      cachedData.serie.title !== "Information indisponible (Timeout)"
-    ) {
-      newData.serie = cachedData.serie;
-      newData.characterProfilePictures = cachedData.characterProfilePictures;
-    }
-
-    return newData;
-  },
+  () => fetchShowData(showId, locale.value),
   {
     lazy: true,
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
