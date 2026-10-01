@@ -49,7 +49,7 @@ export class TVDBClient {
         const data = await response.json();
         return data.data.token as string;
       },
-      { ttl: 23 * 60 * 60 },
+      { ttl: 23 * 60 * 60, cachePolicy: "persistent" },
     );
     this.token = token;
     this.tokenExpiry = new Date(Date.now() + 23 * 60 * 60 * 1000);
@@ -120,7 +120,7 @@ export class TVDBClient {
       TVDB_API_RESPONSE_NAMESPACE,
       cacheKey,
       () => this.get(`/series/${seriesId}`, params, language),
-      { ttl: 604800, ...options },
+      { ttl: 604800, cachePolicy: "persistent", ...options },
     );
   }
 
@@ -150,6 +150,7 @@ export class TVDBClient {
       () => this.get(`/movies/${movieId}`, params, language),
       {
         ttl: 604800,
+        cachePolicy: "persistent",
         ...options,
       },
     );
@@ -163,6 +164,7 @@ export class TVDBClient {
       () => this.get(`/characters/${characterId}`),
       {
         ttl: 604800,
+        cachePolicy: "persistent",
         ...options,
       },
     );
@@ -179,6 +181,7 @@ export class TVDBClient {
       () => this.get(`/series/${seriesId}/characters`),
       {
         ttl: 604800,
+        cachePolicy: "persistent",
         ...options,
       },
     );
@@ -192,12 +195,14 @@ export class TVDBClient {
       () => this.get(`/movies/${movieId}/characters`),
       {
         ttl: 604800,
+        cachePolicy: "persistent",
         ...options,
       },
     );
   }
 
   async searchSeries(query: string, language?: string) {
+    // Search results use the short public HTTP cache, not persistent KV.
     return this.get("/search", { query, type: "series" }, language);
   }
 }

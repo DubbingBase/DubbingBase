@@ -43,11 +43,14 @@ export const CACHE_TTL = {
   STABLE: 7 * 24 * 60 * 60,
 } as const;
 
+export type CachePolicy = "persistent" | "read-only" | "none";
 export type CacheTTLPreset = keyof typeof CACHE_TTL | number;
 export interface GetOrFetchOptions {
   ttl?: CacheTTLPreset;
   forceRefresh?: boolean;
-  /** Persist fetched data to KV; defaults to true. */
+  /** `persistent` reads and writes KV, `read-only` reads KV, `none` bypasses KV. Auth tokens stay persistent. */
+  cachePolicy?: CachePolicy;
+  /** Allow a forced refresh to skip its KV write; use `cachePolicy: "none"` to bypass reads too. */
   writeCache?: boolean;
 }
 
@@ -145,9 +148,15 @@ export class SimpleCache {
     options: GetOrFetchOptions = {},
   ): Promise<T> {
     const safeKey = SimpleKeyValidator.sanitizeKey(key);
+    const isAuthToken = isAuthenticationTokenKey(key);
+    const cachePolicy = isAuthToken
+      ? "persistent"
+      : (options.cachePolicy ?? "persistent");
     const forceRefresh =
-      Boolean(options.forceRefresh) && !isAuthenticationTokenKey(key);
-    const writeCache = options.writeCache !== false;
+      !isAuthToken && (cachePolicy === "none" || Boolean(options.forceRefresh));
+    const writeCache =
+      isAuthToken ||
+      (cachePolicy === "persistent" && options.writeCache !== false);
     const inProgress = namespace.get(safeKey);
     // Coalesce only when callers agree on whether the fetched value is persisted.
     const coalescedRequest = inProgress.find(

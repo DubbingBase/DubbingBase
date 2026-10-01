@@ -570,8 +570,6 @@ export default defineEventHandler(async (event) => {
               igdbId: payload.tmdb_id,
               wikipediaLanguage,
               cache,
-              forceRefresh: true,
-              writeCache: false,
             });
           } else {
             checkResult = await checkMediaDubbingSections({
@@ -581,8 +579,6 @@ export default defineEventHandler(async (event) => {
               seasonNumber: payload.season_number,
               episodeNumber: payload.episode_number,
               cache,
-              forceRefresh: true,
-              writeCache: false,
             });
           }
 
@@ -791,8 +787,6 @@ export default defineEventHandler(async (event) => {
               pageId,
               sectionIndexes,
               cache,
-              forceRefresh: true,
-              writeCache: false,
             });
           } else {
             extractResult = await extractMediaDubbingCredits({
@@ -805,8 +799,6 @@ export default defineEventHandler(async (event) => {
               seasonNumber: payload.season_number,
               episodeNumber: payload.episode_number,
               cache,
-              forceRefresh: true,
-              writeCache: false,
             });
           }
 

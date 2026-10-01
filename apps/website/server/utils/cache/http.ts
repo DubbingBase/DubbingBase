@@ -1,4 +1,9 @@
-import { removeResponseHeader, setHeader, type H3Event } from "h3";
+import {
+  getResponseHeader,
+  removeResponseHeader,
+  setHeader,
+  type H3Event,
+} from "h3";
 
 export type CacheProfile =
   "detail" | "catalog" | "discovery" | "search" | "static";
@@ -15,23 +20,43 @@ export function shouldDisableErrorCaching(error: unknown): boolean {
     return true;
   }
 
-  return error.statusCode >= 500;
+  return error.statusCode >= 400;
 }
 
 export function setErrorCacheHeaders(event: H3Event, error: unknown): void {
   if (shouldDisableErrorCaching(error)) setNoCacheHeaders(event);
 }
 
-const PUBLIC_CACHE_CONTROL = "public, max-age=300, s-maxage=300";
-const STATIC_CACHE_CONTROL = "public, max-age=86400, s-maxage=86400";
+const PUBLIC_CACHE_CONTROL: Record<CacheProfile, string> = {
+  detail: "public, max-age=300, stale-while-revalidate=86400",
+  catalog: "public, max-age=60, stale-while-revalidate=3600",
+  discovery: "public, max-age=60, stale-while-revalidate=3600",
+  search: "public, max-age=0, stale-while-revalidate=60",
+  static: "public, max-age=86400, stale-while-revalidate=2592000",
+};
+
+const CLOUDFLARE_CACHE_CONTROL: Record<CacheProfile, string> = {
+  detail: "public, max-age=3600, stale-while-revalidate=86400",
+  catalog: "public, max-age=300, stale-while-revalidate=3600",
+  discovery: "public, max-age=600, stale-while-revalidate=3600",
+  search: "public, max-age=30, stale-while-revalidate=60",
+  static: "public, max-age=604800, stale-while-revalidate=2592000",
+};
 
 export function getPublicCacheControl(
   profile: CacheProfile = "detail",
 ): string {
-  return profile === "static" ? STATIC_CACHE_CONTROL : PUBLIC_CACHE_CONTROL;
+  return PUBLIC_CACHE_CONTROL[profile];
+}
+
+export function getCloudflareCacheControl(
+  profile: CacheProfile = "detail",
+): string {
+  return CLOUDFLARE_CACHE_CONTROL[profile];
 }
 
 export function setNoCacheHeaders(event: H3Event): void {
+  removeResponseHeader(event, "Cloudflare-CDN-Cache-Control");
   setHeader(event, "Cache-Control", NO_STORE_CACHE_CONTROL);
   setHeader(event, "Pragma", "no-cache");
   setHeader(event, "Expires", "0");
@@ -60,4 +85,26 @@ export function setPublicCacheHeaders(
   removeResponseHeader(event, "Pragma");
   removeResponseHeader(event, "Expires");
   setHeader(event, "Cache-Control", getPublicCacheControl(profile));
+  setHeader(
+    event,
+    "Cloudflare-CDN-Cache-Control",
+    getCloudflareCacheControl(profile),
+  );
+  const varyHeader = getResponseHeader(event, "Vary");
+  const vary = Array.isArray(varyHeader)
+    ? varyHeader.join(", ")
+    : typeof varyHeader === "string"
+      ? varyHeader
+      : undefined;
+  if (
+    !vary
+      ?.split(",")
+      .some((value) => value.trim().toLowerCase() === "accept-language")
+  ) {
+    setHeader(
+      event,
+      "Vary",
+      vary ? `${vary}, Accept-Language` : "Accept-Language",
+    );
+  }
 }

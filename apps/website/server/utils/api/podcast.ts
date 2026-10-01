@@ -29,6 +29,7 @@ export class PodcastClient {
   constructor(private cache: SimpleCache) {}
 
   async searchPodcasts(query: string, limit = 20): Promise<Podcast[]> {
+    // Search results are low-reuse and do not use persistent KV.
     if (!query || query.trim().length < 2) return [];
 
     const trimmedQuery = query.trim();
@@ -73,6 +74,7 @@ export class PodcastClient {
     id: number,
     options: CacheFetchOptions = {},
   ): Promise<Podcast | null> {
+    // Internal metadata reads bypass public edge caching, so keep shared KV.
     const cacheKey = buildCacheKey({
       provider: "podcast",
       resource: "podcast",
@@ -138,7 +140,7 @@ export class PodcastClient {
 
           return podcast;
         },
-        { ttl: 86400, ...options },
+        { ttl: 86400, cachePolicy: "persistent", ...options },
       );
     } catch (err) {
       console.error(`iTunes lookup for podcast ${id} failed:`, err);

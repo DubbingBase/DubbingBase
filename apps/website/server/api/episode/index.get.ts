@@ -54,6 +54,7 @@ export default defineEventHandler(async (event) => {
         tvdbCharacterCacheNamespace,
         showCacheKey,
         async () => null,
+        { cachePolicy: "read-only" },
       );
       const characterProfilePictures = Array.isArray(cachedChars)
         ? cachedChars

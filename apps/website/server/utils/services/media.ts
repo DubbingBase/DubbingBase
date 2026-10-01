@@ -100,7 +100,7 @@ async function fetchPotentialWikipediaUrl(
 
         return `https://fr.wikipedia.org/wiki/${encodeURI(title.replace(/ /g, "_"))}`;
       },
-      { ttl: 604800 },
+      { ttl: 604800, cachePolicy: "persistent" },
     );
   } catch (e) {
     console.error("Failed to fetch potential Wikipedia URL:", e);
@@ -697,7 +697,7 @@ export class MediaService {
                     ? ((await response.json()) as WikidataClaimsResponse)
                     : null;
                 },
-                { ttl: 604800, ...options },
+                { ...options, ttl: 604800, cachePolicy: "persistent" },
               );
 
               const property = contentType === "movie" ? "P12196" : "P4835";
@@ -785,7 +785,7 @@ export class MediaService {
 
           return null;
         },
-        { ttl: 86400, ...options },
+        { ...options, ttl: 86400, cachePolicy: "persistent" },
       );
       if (result) return result;
     } catch (e) {

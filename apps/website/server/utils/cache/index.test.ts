@@ -258,6 +258,81 @@ describe("SimpleCache", () => {
     expect(writes).toBe(0);
   });
 
+  it("does not read or write KV when the provider policy is none", async () => {
+    let reads = 0;
+    let writes = 0;
+    const cache = new SimpleCache(() => ({
+      get: async () => {
+        reads += 1;
+        return "stale";
+      },
+      put: async () => {
+        writes += 1;
+      },
+    }));
+
+    await expect(
+      cache.getOrFetch(
+        createCacheNamespace<string>(),
+        "volatile:response",
+        async () => "fresh",
+        { cachePolicy: "none" },
+      ),
+    ).resolves.toBe("fresh");
+    expect(reads).toBe(0);
+    expect(writes).toBe(0);
+  });
+
+  it("reads KV but does not write misses for the read-only policy", async () => {
+    let reads = 0;
+    let writes = 0;
+    const cache = new SimpleCache(() => ({
+      get: async () => {
+        reads += 1;
+        return null;
+      },
+      put: async () => {
+        writes += 1;
+      },
+    }));
+
+    await expect(
+      cache.getOrFetch(
+        createCacheNamespace<string>(),
+        "mapping:legacy",
+        async () => "upstream",
+        { cachePolicy: "read-only" },
+      ),
+    ).resolves.toBe("upstream");
+    expect(reads).toBe(1);
+    expect(writes).toBe(0);
+  });
+
+  it("keeps authentication tokens in KV even when a no-cache policy is requested", async () => {
+    let reads = 0;
+    let writes = 0;
+    const cache = new SimpleCache(() => ({
+      get: async () => {
+        reads += 1;
+        return null;
+      },
+      put: async () => {
+        writes += 1;
+      },
+    }));
+
+    await expect(
+      cache.getOrFetch(
+        createCacheNamespace<string>(),
+        "igdb:auth_token",
+        async () => "token",
+        { cachePolicy: "none", forceRefresh: true, writeCache: false },
+      ),
+    ).resolves.toBe("token");
+    expect(reads).toBe(1);
+    expect(writes).toBe(1);
+  });
+
   it("coalesces same-key misses, including forced refreshes", async () => {
     const values = new Map<string, unknown>();
     let resolveFetch: ((value: string) => void) | undefined;

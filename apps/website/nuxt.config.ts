@@ -16,10 +16,10 @@ const supabaseUrl = env("SUPABASE_URL") ?? env("PUBLIC_SUPABASE_URL");
 const supabasePublishableKey = env("SUPABASE_PUBLISHABLE_KEY");
 const productionRouteRules = Object.fromEntries(
   MEDIA_ROUTE_PREFIXES.flatMap((prefix) => [
-    [`/${prefix}/**`, { swr: 600 }],
+    [`/${prefix}/**`, { swr: 3600 }],
     ...NON_DEFAULT_LOCALES.map((locale) => [
       `/${locale}/${prefix}/**`,
-      { swr: 600 },
+      { swr: 3600 },
     ]),
   ]),
 );

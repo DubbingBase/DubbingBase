@@ -212,36 +212,9 @@ describe("POST /api/process-media-queue requester propagation", () => {
   it("preserves requested_by from wiki_check into wiki_extract", async () => {
     await processQueue("check", { requested_by: requester });
 
-    expect(routeMocks.checkMediaDubbingSections).toHaveBeenCalledWith(
-      expect.objectContaining({ forceRefresh: true, writeCache: false }),
-    );
     expect(routeMocks.rpc).toHaveBeenCalledWith(
       "enqueue_media_extract",
       expect.objectContaining({ p_requested_by: requester }),
-    );
-  });
-
-  it("refreshes game check inputs without persisting volatile Wikipedia data", async () => {
-    await processQueue("check", { media_type: "video_game" });
-
-    expect(routeMocks.checkGameDubbingSections).toHaveBeenCalledWith(
-      expect.objectContaining({ forceRefresh: true, writeCache: false }),
-    );
-  });
-
-  it("refreshes extract inputs without persisting volatile Wikipedia data", async () => {
-    await processQueue("extract");
-
-    expect(routeMocks.extractMediaDubbingCredits).toHaveBeenCalledWith(
-      expect.objectContaining({ forceRefresh: true, writeCache: false }),
-    );
-  });
-
-  it("refreshes game extract inputs without persisting volatile Wikipedia data", async () => {
-    await processQueue("extract", { media_type: "video_game" });
-
-    expect(routeMocks.extractGameDubbingCredits).toHaveBeenCalledWith(
-      expect.objectContaining({ forceRefresh: true, writeCache: false }),
     );
   });
 

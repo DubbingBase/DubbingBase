@@ -104,7 +104,7 @@ export class TMDBClient {
           { append_to_response: "credits,external_ids" },
           language,
         ),
-      { ttl: 604800, ...options },
+      { ttl: 604800, cachePolicy: "persistent", ...options },
     );
   }
 
@@ -135,7 +135,7 @@ export class TMDBClient {
           { append_to_response: "credits,external_ids" },
           language,
         ),
-      { ttl: 604800, ...options },
+      { ttl: 604800, cachePolicy: "persistent", ...options },
     );
   }
 
@@ -168,7 +168,7 @@ export class TMDBClient {
           { append_to_response: "credits,external_ids" },
           language,
         ),
-      { ttl: 604800, ...options },
+      { ttl: 604800, cachePolicy: "persistent", ...options },
     );
   }
 
@@ -196,7 +196,7 @@ export class TMDBClient {
           { append_to_response: "credits,external_ids" },
           language,
         ),
-      { ttl: 604800, ...options },
+      { ttl: 604800, cachePolicy: "persistent", ...options },
     );
   }
 
@@ -220,7 +220,7 @@ export class TMDBClient {
       tmdbResponseNamespace,
       cacheKey,
       () => this.get(`${mediaType}/${mediaId}/${endpoint}`, undefined, langStr),
-      { ttl: 604800, ...options },
+      { ttl: 604800, cachePolicy: "persistent", ...options },
     );
   }
 
@@ -247,7 +247,7 @@ export class TMDBClient {
           { append_to_response: "tv_credits,movie_credits,external_ids" },
           language,
         ),
-      { ttl: 604800, ...options },
+      { ttl: 604800, cachePolicy: "persistent", ...options },
     );
   }
 
@@ -255,7 +255,6 @@ export class TMDBClient {
     mediaType: "movie" | "tv",
     timeWindow: "day" | "week",
     language = "en-US",
-    options: CacheFetchOptions = {},
   ) {
     const langStr = (language.split(",")[0] || "en-US").trim();
     const cacheKey = buildCacheKey({
@@ -271,11 +270,12 @@ export class TMDBClient {
       cacheKey,
       () =>
         this.get(`trending/${mediaType}/${timeWindow}`, undefined, language),
-      { ttl: 3600, ...options },
+      { ttl: 3600, cachePolicy: "none" },
     );
   }
 
   async searchMulti(query: string, page = 1, language = "fr-FR") {
+    // Search is served through the short public HTTP cache, not persistent KV.
     return this.get("search/multi", { query, page: String(page) }, language);
   }
 
@@ -291,9 +291,7 @@ export class TMDBClient {
       tmdbResponseNamespace,
       cacheKey,
       () => this.get(`collection/${collectionId}`),
-      {
-        ttl: 604800,
-      },
+      { ttl: 604800, cachePolicy: "persistent" },
     );
   }
 }

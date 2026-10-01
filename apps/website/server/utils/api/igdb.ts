@@ -129,6 +129,7 @@ export class IgdbClient {
     const getCachedToken = () =>
       this.cache.getOrFetch(igdbTokenNamespace, "igdb:auth_token", fetchToken, {
         ttl: 604800,
+        cachePolicy: "persistent",
       });
 
     let result = await getCachedToken();
@@ -250,11 +251,12 @@ export class IgdbClient {
         );
         return results[0] ?? null;
       },
-      { ttl: 604800, ...options },
+      { ttl: 604800, cachePolicy: "persistent", ...options },
     );
   }
 
   async searchGames(queryText: string): Promise<IgdbGame[]> {
+    // Search is served through the short public HTTP cache, not persistent KV.
     const escapedQuery = queryText.replace(/"/g, '\\"');
     const results = await this.query<IgdbGame>(
       "games",
@@ -289,15 +291,15 @@ export class IgdbClient {
        where games = (${gameId});
        limit 50;`,
         ),
-      { ttl: 604800, ...options },
+      { ttl: 604800, cachePolicy: "persistent", ...options },
     );
   }
 
   async getTrendingGames(
     limit = 20,
     language = DEFAULT_LANGUAGE,
-    options: CacheFetchOptions = {},
   ): Promise<IgdbGame[]> {
+    // Trending is served through the public discovery cache, not persistent KV.
     const cacheKey = buildCacheKey({
       provider: "igdb",
       resource: "trending-games",
@@ -369,7 +371,7 @@ export class IgdbClient {
 
         return localizedGames;
       },
-      { ttl: 3600, ...options },
+      { ttl: 3600, cachePolicy: "none" },
     );
   }
 }
