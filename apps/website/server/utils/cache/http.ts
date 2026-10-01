@@ -76,6 +76,7 @@ export function setNoStoreHeaders(event: H3Event): void {
 export function setPublicCacheHeaders(
   event: H3Event,
   profile: CacheProfile = "detail",
+  options: { varyAcceptLanguage?: boolean } = {},
 ): void {
   if (import.meta.dev || process.env.NODE_ENV === "development") {
     setNoCacheHeaders(event);
@@ -90,21 +91,23 @@ export function setPublicCacheHeaders(
     "Cloudflare-CDN-Cache-Control",
     getCloudflareCacheControl(profile),
   );
-  const varyHeader = getResponseHeader(event, "Vary");
-  const vary = Array.isArray(varyHeader)
-    ? varyHeader.join(", ")
-    : typeof varyHeader === "string"
-      ? varyHeader
-      : undefined;
-  if (
-    !vary
-      ?.split(",")
-      .some((value) => value.trim().toLowerCase() === "accept-language")
-  ) {
-    setHeader(
-      event,
-      "Vary",
-      vary ? `${vary}, Accept-Language` : "Accept-Language",
-    );
+  if (options.varyAcceptLanguage) {
+    const varyHeader = getResponseHeader(event, "Vary");
+    const vary = Array.isArray(varyHeader)
+      ? varyHeader.join(", ")
+      : typeof varyHeader === "string"
+        ? varyHeader
+        : undefined;
+    if (
+      !vary
+        ?.split(",")
+        .some((value) => value.trim().toLowerCase() === "accept-language")
+    ) {
+      setHeader(
+        event,
+        "Vary",
+        vary ? `${vary}, Accept-Language` : "Accept-Language",
+      );
+    }
   }
 }

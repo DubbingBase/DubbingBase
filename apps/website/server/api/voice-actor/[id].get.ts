@@ -1,7 +1,7 @@
 import { useTmdbClient } from "../../utils";
 import { MediaService } from "../../utils/services/media";
 import { APP_LOCALES } from "@app/shared-logic";
-import { setPublicCacheHeaders } from "../../utils/cache/http";
+import { setNoCacheHeaders } from "../../utils/cache/http";
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, "id");
@@ -29,7 +29,7 @@ export default defineEventHandler(async (event) => {
     ? rawLang
     : shortToCanonical[rawLang] || headerLang;
 
-  setPublicCacheHeaders(event, "detail");
+  setNoCacheHeaders(event);
 
   try {
     const tmdbClient = useTmdbClient();

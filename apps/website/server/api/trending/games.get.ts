@@ -21,8 +21,6 @@ function formatGame(game: IgdbGame) {
 }
 
 export default defineEventHandler(async (event) => {
-  setPublicCacheHeaders(event, "discovery");
-
   const query = getQuery(event);
   const rawLanguage = query.lang;
   const language = resolveLocaleLanguage(
@@ -39,8 +37,11 @@ export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
 
   if (!config.igdbClientId || !config.igdbClientSecret) {
+    setNoCacheHeaders(event);
     return [];
   }
+
+  setPublicCacheHeaders(event, "discovery");
 
   const igdbClient = useIgdbClient();
 

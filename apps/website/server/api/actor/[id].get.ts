@@ -2,7 +2,7 @@ import { useTmdbClient } from "../../utils";
 import { getWorkByActor } from "../../utils/db/queries";
 import { buildSupabaseImageUrl } from "../../utils/urls/supabase";
 import { buildTmdbImageUrl } from "../../utils/urls/tmdb";
-import { setPublicCacheHeaders } from "../../utils/cache/http";
+import { setNoCacheHeaders } from "../../utils/cache/http";
 
 type TmdbCastMember = Record<string, unknown> & {
   profile_path?: string | null;
@@ -163,7 +163,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: "Invalid id parameter" });
   }
 
-  setPublicCacheHeaders(event, "detail");
+  setNoCacheHeaders(event);
 
   const acceptLanguage = getHeader(event, "accept-language") || undefined;
   const tmdbClient = useTmdbClient();

@@ -3,7 +3,7 @@ import { getDubbingProjects } from "../../utils/db/queries";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 import { scheduleBackgroundTask } from "../../utils/background";
-import { setPublicCacheHeaders } from "../../utils/cache/http";
+import { setNoCacheHeaders } from "../../utils/cache/http";
 import type { PodcastResponse } from "@app/shared-logic";
 
 export default defineEventHandler(async (event): Promise<PodcastResponse> => {
@@ -18,7 +18,7 @@ export default defineEventHandler(async (event): Promise<PodcastResponse> => {
     throw createError({ statusCode: 400, message: "Invalid id parameter" });
   }
 
-  setPublicCacheHeaders(event, "detail");
+  setNoCacheHeaders(event);
 
   const podcastClient = usePodcastClient();
   const [apiData, dbData] = await Promise.all([

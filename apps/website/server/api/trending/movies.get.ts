@@ -1,11 +1,12 @@
 import { useTmdbClient } from "../../utils";
 import { buildTmdbImageUrl } from "../../utils/urls/tmdb";
-import { setPublicCacheHeaders } from "../../utils/cache/http";
+import {
+  setNoCacheHeaders,
+  setPublicCacheHeaders,
+} from "../../utils/cache/http";
 import { resolveLocaleLanguage } from "@app/shared-logic";
 
 export default defineEventHandler(async (event) => {
-  setPublicCacheHeaders(event, "discovery");
-
   const query = getQuery(event);
   const rawLanguage = query.lang;
   const language = resolveLocaleLanguage(
@@ -19,7 +20,16 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: "Unsupported language" });
   }
 
-  const json = await useTmdbClient().getTrending("movie", "day", language);
+  setPublicCacheHeaders(event, "discovery");
+
+  const tmdbClient = useTmdbClient();
+  let json: Awaited<ReturnType<typeof tmdbClient.getTrending>>;
+  try {
+    json = await tmdbClient.getTrending("movie", "day", language);
+  } catch (error) {
+    setNoCacheHeaders(event);
+    throw error;
+  }
   const trendingMovies = {
     ...json,
     results: (Array.isArray(json?.results) ? json.results : [])

@@ -4,10 +4,7 @@ import { getDubbingProjects } from "../../utils/db/queries";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 import { scheduleBackgroundTask } from "../../utils/background";
-import {
-  setNoCacheHeaders,
-  setPublicCacheHeaders,
-} from "../../utils/cache/http";
+import { setNoCacheHeaders } from "../../utils/cache/http";
 import type { IgdbGame, IgdbCharacter } from "@app/shared-logic";
 
 function processIgdbGame(
@@ -57,7 +54,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: "Invalid id parameter" });
   }
 
-  setPublicCacheHeaders(event, "detail");
+  setNoCacheHeaders(event);
 
   const igdbClient = useIgdbClient();
 

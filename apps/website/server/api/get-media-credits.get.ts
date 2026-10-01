@@ -1,5 +1,5 @@
 import { useTmdbClient } from "../utils";
-import { setPublicCacheHeaders } from "../utils/cache/http";
+import { setNoCacheHeaders, setPublicCacheHeaders } from "../utils/cache/http";
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
@@ -25,6 +25,7 @@ export default defineEventHandler(async (event) => {
 
     return await useTmdbClient().fetchMediaCredits(mediaType, mediaId, "fr-FR");
   } catch (error) {
+    setNoCacheHeaders(event);
     if (error && typeof error === "object" && "statusCode" in error) {
       throw error;
     }

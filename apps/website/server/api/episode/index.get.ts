@@ -3,7 +3,7 @@ import { MediaService } from "../../utils/services/media";
 import { getDubbingProjects } from "../../utils/db/queries";
 import {
   setErrorCacheHeaders,
-  setPublicCacheHeaders,
+  setNoCacheHeaders,
 } from "../../utils/cache/http";
 import {
   parseEpisodeQuery,
@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const { id, seasonNumber, episodeNumber } = parseEpisodeQuery(query);
 
-  setPublicCacheHeaders(event, "detail");
+  setNoCacheHeaders(event);
 
   const acceptLanguage = getHeader(event, "accept-language") || undefined;
   const cache = useCache(event);

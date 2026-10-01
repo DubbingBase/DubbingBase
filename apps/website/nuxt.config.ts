@@ -4,7 +4,6 @@ import { defineNuxtConfig } from "nuxt/config";
 import {
   APP_LOCALES,
   DEFAULT_LOCALE,
-  MEDIA_ROUTE_PREFIXES,
   NON_DEFAULT_LOCALES,
 } from "@app/shared-logic";
 
@@ -14,11 +13,12 @@ function env(name: string): string | undefined {
 
 const supabaseUrl = env("SUPABASE_URL") ?? env("PUBLIC_SUPABASE_URL");
 const supabasePublishableKey = env("SUPABASE_PUBLISHABLE_KEY");
+const CACHEABLE_PROVIDER_ONLY_ROUTES = ["movies", "series"] as const;
 const productionRouteRules = Object.fromEntries(
-  MEDIA_ROUTE_PREFIXES.flatMap((prefix) => [
-    [`/${prefix}/**`, { swr: 3600 }],
+  CACHEABLE_PROVIDER_ONLY_ROUTES.flatMap((route) => [
+    [`/${route}`, { swr: 3600 }],
     ...NON_DEFAULT_LOCALES.map((locale) => [
-      `/${locale}/${prefix}/**`,
+      `/${locale}/${route}`,
       { swr: 3600 },
     ]),
   ]),

@@ -5,13 +5,10 @@ import { processMedia } from "../../utils/urls/tmdb";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 import { scheduleBackgroundTask } from "../../utils/background";
-import {
-  setNoCacheHeaders,
-  setPublicCacheHeaders,
-} from "../../utils/cache/http";
+import { setNoCacheHeaders } from "../../utils/cache/http";
 
 export async function fetchMovieData(event: any, movieId: number) {
-  setPublicCacheHeaders(event, "detail");
+  setNoCacheHeaders(event);
 
   const acceptLanguage = getHeader(event, "accept-language") || undefined;
 

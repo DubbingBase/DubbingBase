@@ -1,9 +1,9 @@
 import { useSupabaseAdmin } from "../utils/db/client";
 import { buildSupabaseImageUrl } from "../utils/urls/supabase";
-import { setPublicCacheHeaders } from "../utils/cache/http";
+import { setNoCacheHeaders } from "../utils/cache/http";
 
 export default defineEventHandler(async (event) => {
-  setPublicCacheHeaders(event, "discovery");
+  setNoCacheHeaders(event);
 
   const query = getQuery(event);
   const limit = Number(query.limit) || 10;

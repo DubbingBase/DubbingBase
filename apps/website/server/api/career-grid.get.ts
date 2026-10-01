@@ -1,7 +1,7 @@
 import { useSupabaseAdmin } from "../utils/db/client";
 import { useTmdbClient, useCache } from "../utils";
 import { MediaService } from "../utils/services/media";
-import { setPublicCacheHeaders } from "../utils/cache/http";
+import { setNoCacheHeaders } from "../utils/cache/http";
 
 async function initialize(cache: ReturnType<typeof useCache>) {
   // Font data would be loaded here in a real implementation
@@ -548,7 +548,7 @@ function buildCareerGridImage(params: {
 }
 
 export default defineEventHandler(async (event) => {
-  setPublicCacheHeaders(event, "detail");
+  setNoCacheHeaders(event);
 
   try {
     const query = getQuery(event);

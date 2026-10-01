@@ -1,6 +1,6 @@
 import { normalizeString } from "../utils/normalize";
 import { useSupabaseAdmin } from "../utils/db/client";
-import { setPublicCacheHeaders } from "../utils/cache/http";
+import { setNoCacheHeaders } from "../utils/cache/http";
 
 interface SearchParams {
   query: string;
@@ -77,7 +77,7 @@ async function searchVoiceActors(
 }
 
 export default defineEventHandler(async (event) => {
-  setPublicCacheHeaders(event, "search");
+  setNoCacheHeaders(event);
 
   const query = getQuery(event);
   const searchQuery = query.query as string | undefined;

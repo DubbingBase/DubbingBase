@@ -785,7 +785,7 @@ export class MediaService {
 
           return null;
         },
-        { ...options, ttl: 86400, cachePolicy: "persistent" },
+        { ...options, ttl: 604800, cachePolicy: "persistent" },
       );
       if (result) return result;
     } catch (e) {

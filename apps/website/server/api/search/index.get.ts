@@ -11,7 +11,7 @@ import { normalizeString } from "../../utils/normalize";
 import { processMedia } from "../../utils/urls/tmdb";
 import { buildSupabaseImageUrl } from "../../utils/urls/supabase";
 import { useSupabaseAdmin } from "../../utils/db/client";
-import { setPublicCacheHeaders } from "../../utils/cache/http";
+import { setNoCacheHeaders } from "../../utils/cache/http";
 
 function sanitizeForTextSearch(query: string): string {
   return query.replace(/[&|!():*<>@\\'"]/g, " ").trim();
@@ -79,7 +79,7 @@ function calculateScore(item: any, trimmedQuery: string): number {
 }
 
 export default defineEventHandler(async (event) => {
-  setPublicCacheHeaders(event, "search");
+  setNoCacheHeaders(event);
 
   try {
     const query = getQuery(event).query as string | undefined;
