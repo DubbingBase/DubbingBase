@@ -87,6 +87,7 @@ export class SimpleCache {
     return null;
   }
 
+  /** Persists a fetched value to KV using the selected expiration lifetime. */
   private async set<T>(key: string, data: T, ttl: CacheTTLPreset = "NORMAL"): Promise<boolean> {
     if (!this.enabled) return false;
     try {
