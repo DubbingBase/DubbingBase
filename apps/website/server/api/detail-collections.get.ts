@@ -1,5 +1,4 @@
 import type { PaginatedResponse } from "@app/shared-logic";
-import { setNoCacheHeaders } from "../utils/cache/http";
 import { paginateArray } from "../utils/pagination";
 
 type DetailPayload = Record<string, any>;
@@ -347,9 +346,6 @@ export default defineEventHandler(
     if (!COLLECTIONS.has(collection)) {
       throw createError({ statusCode: 400, message: "Invalid collection" });
     }
-
-    setNoCacheHeaders(event);
-
     const items = await getCollectionItems(event, query);
     const filteredItems = items.filter((item) =>
       searchMatch(item, normalized(queryValue(query.query))),

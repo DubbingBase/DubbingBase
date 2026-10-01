@@ -1,13 +1,8 @@
 import { useSupabaseAdmin } from "../utils/db/client";
 import { useTmdbClient } from "../utils";
-import { setNoCacheHeaders } from "../utils/cache/http";
-
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const studioId = (query.studioId as string) || (query.studioid as string);
-
-  setNoCacheHeaders(event);
-
   const supabase = useSupabaseAdmin();
 
   // If no studioId, return all studios (for the studios listing page)

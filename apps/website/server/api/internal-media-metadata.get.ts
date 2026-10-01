@@ -7,10 +7,7 @@ import {
   useTmdbClient,
 } from "../utils";
 import { buildIgdbImageUrl } from "../utils/api/igdb";
-import { setNoCacheHeaders } from "../utils/cache/http";
-
 export default defineEventHandler(async (event) => {
-  setNoCacheHeaders(event);
   const query = getQuery(event);
   const mediaType = String(query.media_type ?? "");
   const mediaId = Number(query.media_id);

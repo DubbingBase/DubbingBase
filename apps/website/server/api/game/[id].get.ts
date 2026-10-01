@@ -4,7 +4,6 @@ import { getDubbingProjects } from "../../utils/db/queries";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 import { scheduleBackgroundTask } from "../../utils/background";
-import { setNoCacheHeaders } from "../../utils/cache/http";
 import type { IgdbGame, IgdbCharacter } from "@app/shared-logic";
 
 function processIgdbGame(
@@ -53,9 +52,6 @@ export default defineEventHandler(async (event) => {
   if (isNaN(gameId)) {
     throw createError({ statusCode: 400, message: "Invalid id parameter" });
   }
-
-  setNoCacheHeaders(event);
-
   const igdbClient = useIgdbClient();
 
   let game: (IgdbGame & { media_type: "video_game" }) | null = null;
@@ -69,7 +65,6 @@ export default defineEventHandler(async (event) => {
     game = igdbGame ? processIgdbGame(igdbGame) : null;
     characters = igdbCharacters.map(processIgdbCharacter);
   } catch (err) {
-    setNoCacheHeaders(event);
     console.error(`Failed to fetch IGDB game ${gameId}:`, err);
     game = {
       id: gameId,

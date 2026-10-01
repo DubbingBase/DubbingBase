@@ -1,11 +1,9 @@
 import { useIgdbClient } from "../../utils";
+import type { H3Event } from "h3";
 import { buildIgdbImageUrl } from "../../utils/api/igdb";
 import type { IgdbGame } from "@app/shared-logic";
 import { resolveLocaleLanguage } from "@app/shared-logic";
-import {
-  setNoCacheHeaders,
-  setPublicCacheHeaders,
-} from "../../utils/cache/http";
+import { setPublicCacheHeaders } from "../../utils/cache/http";
 
 function formatGame(game: IgdbGame) {
   return {
@@ -20,8 +18,48 @@ function formatGame(game: IgdbGame) {
   };
 }
 
+function isIgdbGame(value: unknown): value is IgdbGame {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return false;
+  }
+  const id = Reflect.get(value, "id");
+  const name = Reflect.get(value, "name");
+  const cover = Reflect.get(value, "cover");
+  return (
+    typeof id === "number" &&
+    Number.isFinite(id) &&
+    typeof name === "string" &&
+    (cover === undefined ||
+      cover === null ||
+      (typeof cover === "object" &&
+        typeof Reflect.get(cover, "image_id") === "string"))
+  );
+}
+
+export async function getTrendingGamesResponse(
+  event: H3Event,
+  language: string,
+  config: { igdbClientId?: string; igdbClientSecret?: string },
+  igdbClient: {
+    getTrendingGames(limit?: number, language?: string): Promise<unknown>;
+  },
+) {
+  if (!config.igdbClientId || !config.igdbClientSecret) return [];
+
+  try {
+    const games = await igdbClient.getTrendingGames(20, language);
+    if (!Array.isArray(games) || !games.every(isIgdbGame)) return [];
+    const formatted = games.map(formatGame);
+
+    setPublicCacheHeaders(event, "discovery");
+    return formatted;
+  } catch (err) {
+    console.error("[trending/games] IGDB query failed:", err);
+    return [];
+  }
+}
+
 export default defineEventHandler(async (event) => {
-  setNoCacheHeaders(event);
   const query = getQuery(event);
   const rawLanguage = query.lang;
   const language = resolveLocaleLanguage(
@@ -36,24 +74,6 @@ export default defineEventHandler(async (event) => {
   }
 
   const config = useRuntimeConfig();
-
-  if (!config.igdbClientId || !config.igdbClientSecret) {
-    setNoCacheHeaders(event);
-    return [];
-  }
-
-  setPublicCacheHeaders(event, "discovery");
-
   const igdbClient = useIgdbClient();
-
-  try {
-    const games = await igdbClient.getTrendingGames(20, language);
-    const formatted = games.map(formatGame);
-
-    return formatted;
-  } catch (err) {
-    setNoCacheHeaders(event);
-    console.error("[trending/games] IGDB query failed:", err);
-    return [];
-  }
+  return getTrendingGamesResponse(event, language, config, igdbClient);
 });

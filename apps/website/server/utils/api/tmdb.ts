@@ -270,7 +270,7 @@ export class TMDBClient {
       cacheKey,
       () =>
         this.get(`trending/${mediaType}/${timeWindow}`, undefined, language),
-      { ttl: 3600, cachePolicy: "none" },
+      { cachePolicy: "none" },
     );
   }
 

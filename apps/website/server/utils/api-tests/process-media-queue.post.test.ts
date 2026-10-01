@@ -7,7 +7,15 @@ import {
   readBody,
   toWebHandler,
 } from "h3";
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 const requester = "11111111-1111-4111-8111-111111111111";
 
@@ -36,7 +44,9 @@ vi.mock("../retryable-request", () => ({
   fetchMediaRequest: vi.fn(),
   isRetryableMediaRequestError: vi.fn(() => false),
 }));
-vi.mock("../db/client", () => ({ useSupabaseAdmin: () => ({ rpc: routeMocks.rpc }) }));
+vi.mock("../db/client", () => ({
+  useSupabaseAdmin: () => ({ rpc: routeMocks.rpc }),
+}));
 vi.mock("../auth", () => ({ requireAdmin: vi.fn() }));
 vi.mock("..", () => ({
   useWikipediaCache: routeMocks.useWikipediaCache,
@@ -44,8 +54,6 @@ vi.mock("..", () => ({
   useCache: vi.fn(() => ({ getOrFetch: routeMocks.cacheGetOrFetch })),
 }));
 vi.mock("../llm", () => ({ areAllLlmQuotasExhausted: vi.fn(() => false) }));
-vi.mock("../cache/http", () => ({ setNoCacheHeaders: vi.fn() }));
-
 let handler: typeof import("../../api/process-media-queue.post").default;
 
 beforeAll(async () => {
@@ -54,7 +62,9 @@ beforeAll(async () => {
   vi.stubGlobal("getHeader", getHeader);
   vi.stubGlobal("getQuery", getQuery);
   vi.stubGlobal("readBody", readBody);
-  vi.stubGlobal("useRuntimeConfig", () => ({ supabaseSecretKey: "queue-secret" }));
+  vi.stubGlobal("useRuntimeConfig", () => ({
+    supabaseSecretKey: "queue-secret",
+  }));
   handler = (await import("../../api/process-media-queue.post")).default;
 });
 
@@ -88,7 +98,12 @@ beforeEach(() => {
   routeMocks.useWikipediaCache.mockReturnValue({
     getAllSitelinksEntity: vi.fn(async (wikiId: string) => ({
       entities: {
-        [wikiId]: { sitelinks: { enwiki: { title: "Example" }, frwiki: { title: "Exemple" } } },
+        [wikiId]: {
+          sitelinks: {
+            enwiki: { title: "Example" },
+            frwiki: { title: "Exemple" },
+          },
+        },
       },
     })),
   });
@@ -205,7 +220,9 @@ describe("POST /api/process-media-queue requester propagation", () => {
     expect(childEnqueues.length).toBeGreaterThan(0);
     for (const [name, args] of childEnqueues) {
       expect(name).toBe("enqueue_media_fetch");
-      expect(args).toEqual(expect.objectContaining({ p_requested_by: requester }));
+      expect(args).toEqual(
+        expect.objectContaining({ p_requested_by: requester }),
+      );
     }
   });
 
@@ -221,11 +238,16 @@ describe("POST /api/process-media-queue requester propagation", () => {
   it.each([
     ["missing", {}],
     ["malformed", { requested_by: "not-a-uuid" }],
-  ] as const)("does not invent a requester when the field is %s", async (_caseName, payload) => {
-    await processQueue("check", payload);
+  ] as const)(
+    "does not invent a requester when the field is %s",
+    async (_caseName, payload) => {
+      await processQueue("check", payload);
 
-    const enqueue = routeMocks.rpc.mock.calls.find(([name]) => name === "enqueue_media_extract");
-    expect(enqueue).toBeDefined();
-    expect(enqueue?.[1]).not.toHaveProperty("p_requested_by");
-  });
+      const enqueue = routeMocks.rpc.mock.calls.find(
+        ([name]) => name === "enqueue_media_extract",
+      );
+      expect(enqueue).toBeDefined();
+      expect(enqueue?.[1]).not.toHaveProperty("p_requested_by");
+    },
+  );
 });

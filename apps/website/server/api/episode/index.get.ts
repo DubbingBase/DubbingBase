@@ -2,10 +2,6 @@ import { useCache, useTmdbClient } from "../../utils";
 import { MediaService } from "../../utils/services/media";
 import { getDubbingProjects } from "../../utils/db/queries";
 import {
-  setErrorCacheHeaders,
-  setNoCacheHeaders,
-} from "../../utils/cache/http";
-import {
   parseEpisodeQuery,
   withMediaServiceTimeout,
 } from "../../utils/media-request";
@@ -23,9 +19,6 @@ const tvdbCharacterCacheNamespace =
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const { id, seasonNumber, episodeNumber } = parseEpisodeQuery(query);
-
-  setNoCacheHeaders(event);
-
   const acceptLanguage = getHeader(event, "accept-language") || undefined;
   const cache = useCache(event);
   const tmdbClient = useTmdbClient();
@@ -89,7 +82,6 @@ export default defineEventHandler(async (event) => {
 
     return responseData;
   } catch (error: unknown) {
-    setErrorCacheHeaders(event, error);
     if (
       typeof error === "object" &&
       error !== null &&

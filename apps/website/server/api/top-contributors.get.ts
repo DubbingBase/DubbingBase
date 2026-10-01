@@ -1,9 +1,5 @@
 import { getTopContributors } from "../utils/db/queries";
-import { setNoCacheHeaders } from "../utils/cache/http";
-
 export default defineEventHandler(async (event) => {
-  setNoCacheHeaders(event);
-
   const query = getQuery(event);
   const limit = Number(query.limit) || 10;
 

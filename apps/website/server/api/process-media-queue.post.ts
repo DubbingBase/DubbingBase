@@ -18,7 +18,6 @@ import { useWikipediaCache, useIgdbClient, useCache } from "../utils";
 import { extractAvailableLanguages } from "../utils/cache/wikipedia";
 import { areAllLlmQuotasExhausted } from "../utils/llm";
 import { getErrorMessage } from "../utils/error-message";
-import { setNoCacheHeaders } from "../utils/cache/http";
 import {
   queueRequesterRpcArgs,
   validateCheckPayload,
@@ -125,7 +124,6 @@ function parseQueuePayload(value: Json): QueuePayload | null {
 
 export default defineEventHandler(async (event) => {
   // ponytail: cron-driven queue responses must never be edge-cached
-  setNoCacheHeaders(event);
   const internalSecret = getHeader(event, "x-internal-secret");
   const authHeader = getHeader(event, "authorization");
   const apiKeyHeader = getHeader(event, "apikey");

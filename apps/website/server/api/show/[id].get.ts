@@ -5,11 +5,7 @@ import { processMedia } from "../../utils/urls/tmdb";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 import { scheduleBackgroundTask } from "../../utils/background";
-import { setNoCacheHeaders } from "../../utils/cache/http";
-
 export async function fetchShowData(event: any, showId: number) {
-  setNoCacheHeaders(event);
-
   const acceptLanguage = getHeader(event, "accept-language") || undefined;
 
   const tmdbClient = useTmdbClient();
@@ -46,7 +42,6 @@ export async function fetchShowData(event: any, showId: number) {
       };
     })
     .catch((err) => {
-      setNoCacheHeaders(event);
       if (err instanceof Error && err.message === "TMDB API error: 404") {
         return {
           serieWithImageUrls: null,

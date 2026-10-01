@@ -4,23 +4,6 @@ export type CacheProfile = "discovery" | "static";
 
 export const NO_STORE_CACHE_CONTROL = "no-store, no-cache, must-revalidate";
 
-export function shouldDisableErrorCaching(error: unknown): boolean {
-  if (
-    typeof error !== "object" ||
-    error === null ||
-    !("statusCode" in error) ||
-    typeof error.statusCode !== "number"
-  ) {
-    return true;
-  }
-
-  return error.statusCode >= 400;
-}
-
-export function setErrorCacheHeaders(event: H3Event, error: unknown): void {
-  if (shouldDisableErrorCaching(error)) setNoCacheHeaders(event);
-}
-
 const PUBLIC_CACHE_CONTROL: Record<CacheProfile, string> = {
   discovery: "public, max-age=60, stale-while-revalidate=3600",
   static: "public, max-age=86400, stale-while-revalidate=2592000",

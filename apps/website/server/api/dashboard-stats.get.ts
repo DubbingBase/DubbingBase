@@ -1,8 +1,6 @@
 import { useSupabaseAdmin } from "../utils/db/client";
 import { buildSupabaseImageUrl } from "../utils/urls/supabase";
 import { requireAdmin } from "../utils/auth";
-import { setNoCacheHeaders } from "../utils/cache/http";
-
 interface DashboardStats {
   userCount: number;
   voiceActorCount: number;
@@ -109,7 +107,6 @@ async function getTopVoiceActors(limit = 10): Promise<any[]> {
 }
 
 export default defineEventHandler(async (event) => {
-  setNoCacheHeaders(event);
   requireAdmin(event);
 
   try {

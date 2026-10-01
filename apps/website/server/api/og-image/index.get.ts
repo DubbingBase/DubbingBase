@@ -1,7 +1,4 @@
-import {
-  NO_STORE_CACHE_CONTROL,
-  setNoCacheHeaders,
-} from "../../utils/cache/http";
+import { NO_STORE_CACHE_CONTROL } from "../../utils/cache/http";
 
 let _satori: any = null;
 let _Resvg: any = null;
@@ -294,7 +291,6 @@ function buildVoiceActorOg(params: {
 export const prerender = false;
 
 export default defineEventHandler(async (event) => {
-  setNoCacheHeaders(event);
   try {
     const query = getQuery(event);
     const type = query.type as string;
@@ -410,7 +406,6 @@ export default defineEventHandler(async (event) => {
       },
     });
   } catch (error) {
-    setNoCacheHeaders(event);
     console.error("Error generating OG image:", error);
     if (error instanceof Error && "statusCode" in error) throw error;
     const detail =

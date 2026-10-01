@@ -163,7 +163,7 @@ describe("SimpleCache policies", () => {
     expect(harness.writes).toHaveLength(1);
   });
 
-  it("always persists authentication tokens regardless of a requested policy", async () => {
+  it("does not infer persistence from an authentication token key", async () => {
     const harness = makeCache();
 
     await expect(
@@ -175,8 +175,8 @@ describe("SimpleCache policies", () => {
       ),
     ).resolves.toBe("token");
 
-    expect(harness.reads).toBe(1);
-    expect(harness.writes).toHaveLength(1);
+    expect(harness.reads).toBe(0);
+    expect(harness.writes).toEqual([]);
   });
 
   it("does not persist null or failed results and allows retry", async () => {
@@ -191,13 +191,19 @@ describe("SimpleCache policies", () => {
     });
 
     await expect(
-      harness.cache.getOrFetch(namespace, "provider:nullable", fetcher),
+      harness.cache.getOrFetch(namespace, "provider:nullable", fetcher, {
+        cachePolicy: "persistent",
+      }),
     ).resolves.toBeNull();
     await expect(
-      harness.cache.getOrFetch(namespace, "provider:nullable", fetcher),
+      harness.cache.getOrFetch(namespace, "provider:nullable", fetcher, {
+        cachePolicy: "persistent",
+      }),
     ).rejects.toThrow("upstream failed");
     await expect(
-      harness.cache.getOrFetch(namespace, "provider:nullable", fetcher),
+      harness.cache.getOrFetch(namespace, "provider:nullable", fetcher, {
+        cachePolicy: "persistent",
+      }),
     ).resolves.toBe("recovered");
 
     expect(harness.writes).toEqual([

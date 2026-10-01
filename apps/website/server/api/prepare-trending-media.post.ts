@@ -1,11 +1,9 @@
-import { setNoCacheHeaders } from "../utils/cache/http";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { buildTmdbImageUrl } from "../utils/urls/tmdb";
 import { sendDiscordAdminNotification } from "../utils/notifications/discord";
 import { requireAdmin } from "../utils/auth";
 
 export default defineEventHandler(async (event) => {
-  setNoCacheHeaders(event);
   const internalSecret = getHeader(event, "x-internal-secret");
   const authHeader = getHeader(event, "authorization");
   const apiKeyHeader = getHeader(event, "apikey");

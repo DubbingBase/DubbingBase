@@ -1,9 +1,5 @@
 import { useSupabaseAdmin } from "../utils/db/client";
-import { setNoCacheHeaders } from "../utils/cache/http";
-
 export default defineEventHandler(async (event) => {
-  setNoCacheHeaders(event);
-
   const query = getQuery(event);
   const searchQuery = query.query as string | undefined;
   const requestedLimit = Number.parseInt(String(query.limit), 10);

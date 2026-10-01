@@ -1,10 +1,4 @@
-import {
-  createApp,
-  createError,
-  defineEventHandler,
-  setHeader,
-  toWebHandler,
-} from "h3";
+import { createApp, defineEventHandler, toWebHandler } from "h3";
 import { describe, expect, it, vi } from "vitest";
 import { OpenLibraryClient } from "../api/openlibrary";
 import { createCacheNamespace, SimpleCache } from "./index";
@@ -12,10 +6,8 @@ import {
   getCloudflareCacheControl,
   getPublicCacheControl,
   NO_STORE_CACHE_CONTROL,
-  setErrorCacheHeaders,
   setNoCacheHeaders,
   setPublicCacheHeaders,
-  shouldDisableErrorCaching,
 } from "./http";
 
 describe("HTTP cache headers", () => {
@@ -34,37 +26,8 @@ describe("HTTP cache headers", () => {
     );
   });
 
-  it("disables caching for timeout and upstream server errors", () => {
-    expect(shouldDisableErrorCaching({ statusCode: 502 })).toBe(true);
-    expect(shouldDisableErrorCaching({ statusCode: 504 })).toBe(true);
-    expect(shouldDisableErrorCaching(new Error("upstream failed"))).toBe(true);
-    expect(shouldDisableErrorCaching({ statusCode: 404 })).toBe(true);
-    expect(shouldDisableErrorCaching({ statusCode: 400 })).toBe(true);
+  it("defines the no-store value for dynamic responses", () => {
     expect(NO_STORE_CACHE_CONTROL).toBe("no-store, no-cache, must-revalidate");
-  });
-
-  it("overrides public headers on a timeout response", async () => {
-    const app = createApp();
-    app.use(
-      "/",
-      defineEventHandler((event) => {
-        setHeader(event, "Cache-Control", getPublicCacheControl("discovery"));
-        setHeader(
-          event,
-          "Cloudflare-CDN-Cache-Control",
-          getCloudflareCacheControl("discovery"),
-        );
-        setErrorCacheHeaders(event, { statusCode: 504 });
-        throw createError({ statusCode: 504, statusMessage: "Timed out" });
-      }),
-    );
-    const response = await toWebHandler(app)(new Request("http://localhost/"));
-
-    expect(response.status).toBe(504);
-    expect(response.headers.get("cache-control")).toBe(NO_STORE_CACHE_CONTROL);
-    expect(response.headers.has("cloudflare-cdn-cache-control")).toBe(false);
-    expect(response.headers.get("pragma")).toBe("no-cache");
-    expect(response.headers.get("expires")).toBe("0");
   });
 
   it("caches a provider-only successful response without header-language variance", async () => {

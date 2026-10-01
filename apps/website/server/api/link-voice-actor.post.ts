@@ -1,11 +1,9 @@
-import { setNoCacheHeaders } from "../utils/cache/http";
 import { requireUser } from "../utils/auth";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { findOrCreateDubbingProject } from "../utils/db/dubbing-project";
 import { requireDubbingLanguage } from "../utils/dubbing-language";
 
 export default defineEventHandler(async (event) => {
-  setNoCacheHeaders(event);
   const user = requireUser(event);
 
   const body = await readBody(event);

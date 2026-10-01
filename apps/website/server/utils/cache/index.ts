@@ -40,7 +40,6 @@ export function createCacheNamespace<T>(): CacheNamespace<T> {
 
 /** The three supported lifetimes, in seconds. */
 export const CACHE_TTL = {
-  TRENDING: 60 * 60,
   NORMAL: 24 * 60 * 60,
   STABLE: 7 * 24 * 60 * 60,
 } as const;
@@ -49,8 +48,8 @@ export type CachePolicy = "persistent" | "read-only" | "none";
 export type CacheTTLPreset = keyof typeof CACHE_TTL | number;
 export interface GetOrFetchOptions {
   ttl?: CacheTTLPreset;
-  /** `persistent` reads and writes KV, `read-only` reads KV, `none` bypasses KV. Auth tokens stay persistent. */
-  cachePolicy?: CachePolicy;
+  /** `persistent` reads and writes KV, `read-only` reads KV, `none` bypasses KV. */
+  cachePolicy: CachePolicy;
 }
 
 export interface CacheKv {
@@ -65,10 +64,6 @@ export interface CacheKv {
 
 function ttlSeconds(ttl: CacheTTLPreset = "NORMAL"): number {
   return typeof ttl === "number" ? Math.max(60, ttl) : CACHE_TTL[ttl];
-}
-
-function isAuthenticationTokenKey(key: string): boolean {
-  return /(^|:)auth_token$/i.test(key);
 }
 
 /** Cloudflare KV adapter for external API responses; it has no local data tier. */
@@ -141,13 +136,10 @@ export class SimpleCache {
     namespace: CacheNamespace<T>,
     key: string,
     fetcher: () => Promise<T>,
-    options: GetOrFetchOptions = {},
+    options: GetOrFetchOptions,
   ): Promise<T> {
     const safeKey = SimpleKeyValidator.sanitizeKey(key);
-    const isAuthToken = isAuthenticationTokenKey(safeKey);
-    const cachePolicy = isAuthToken
-      ? "persistent"
-      : (options.cachePolicy ?? "persistent");
+    const cachePolicy = options.cachePolicy;
     const existingRequest = namespace.get(safeKey, cachePolicy);
     if (existingRequest) return existingRequest.promise;
 

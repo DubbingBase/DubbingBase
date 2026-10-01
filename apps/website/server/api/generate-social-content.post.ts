@@ -1,11 +1,9 @@
-import { setNoCacheHeaders } from "../utils/cache/http";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { requireAdmin } from "../utils/auth";
 import { llmGenerateObject } from "../utils/llm";
 import { z } from "zod";
 
 export default defineEventHandler(async (event) => {
-  setNoCacheHeaders(event);
   const internalSecret = getHeader(event, "x-internal-secret");
   const config = useRuntimeConfig();
   const isInternalTrigger =

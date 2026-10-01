@@ -1,4 +1,3 @@
-import { setNoCacheHeaders } from "../../utils/cache/http";
 import { requireAdmin } from "../../utils/auth";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { requireDubbingLanguage } from "../../utils/dubbing-language";
@@ -14,7 +13,6 @@ const MEDIA_TYPES = [
 ];
 
 export default defineEventHandler(async (event) => {
-  setNoCacheHeaders(event);
   requireAdmin(event);
   const query = getQuery(event);
   const contentId = Number(query.content_id);

@@ -1,4 +1,3 @@
-import { setNoCacheHeaders } from "../../utils/cache/http";
 import { requireAdmin } from "../../utils/auth";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { requireDubbingLanguage } from "../../utils/dubbing-language";
@@ -34,7 +33,6 @@ function isOptionalPositiveId(value: unknown): value is number | null {
 }
 
 export default defineEventHandler(async (event) => {
-  setNoCacheHeaders(event);
   requireAdmin(event);
   const body: unknown = await readBody(event);
   if (!isRecord(body)) {

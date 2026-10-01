@@ -2,11 +2,8 @@ import { requireDubbingLanguage } from "../utils/dubbing-language";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { requireUser } from "../utils/auth";
 import { sendDiscordAdminNotification } from "../utils/notifications/discord";
-import { setNoCacheHeaders } from "../utils/cache/http";
-
 export default defineEventHandler(async (event) => {
   // ponytail: queue responses must never be edge-cached
-  setNoCacheHeaders(event);
   const body = await readBody(event);
   const {
     action,

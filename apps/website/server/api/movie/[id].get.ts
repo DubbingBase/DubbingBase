@@ -5,11 +5,7 @@ import { processMedia } from "../../utils/urls/tmdb";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 import { scheduleBackgroundTask } from "../../utils/background";
-import { setNoCacheHeaders } from "../../utils/cache/http";
-
 export async function fetchMovieData(event: any, movieId: number) {
-  setNoCacheHeaders(event);
-
   const acceptLanguage = getHeader(event, "accept-language") || undefined;
 
   const tmdbClient = useTmdbClient();
@@ -33,7 +29,6 @@ export async function fetchMovieData(event: any, movieId: number) {
       };
     })
     .catch((err) => {
-      setNoCacheHeaders(event);
       if (err instanceof Error && err.message === "TMDB API error: 404") {
         return {
           movieWithImageUrls: null,

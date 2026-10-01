@@ -1,13 +1,34 @@
 import { useTmdbClient } from "../../utils";
 import { buildTmdbImageUrl } from "../../utils/urls/tmdb";
-import {
-  setNoCacheHeaders,
-  setPublicCacheHeaders,
-} from "../../utils/cache/http";
+import { setPublicCacheHeaders } from "../../utils/cache/http";
 import { resolveLocaleLanguage } from "@app/shared-logic";
 
+function isTrendingShow(value: unknown): value is {
+  adult?: boolean;
+  backdrop_path?: string | null;
+  poster_path?: string | null;
+} {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return false;
+  }
+  const id = Reflect.get(value, "id");
+  const adult = Reflect.get(value, "adult");
+  const backdropPath = Reflect.get(value, "backdrop_path");
+  const posterPath = Reflect.get(value, "poster_path");
+  return (
+    typeof id === "number" &&
+    Number.isFinite(id) &&
+    (adult === undefined || typeof adult === "boolean") &&
+    (backdropPath === undefined ||
+      backdropPath === null ||
+      typeof backdropPath === "string") &&
+    (posterPath === undefined ||
+      posterPath === null ||
+      typeof posterPath === "string")
+  );
+}
+
 export default defineEventHandler(async (event) => {
-  setNoCacheHeaders(event);
   const query = getQuery(event);
   const rawLanguage = query.lang;
   const language = resolveLocaleLanguage(
@@ -21,33 +42,28 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: "Unsupported language" });
   }
 
-  setPublicCacheHeaders(event, "discovery");
-
   const tmdbClient = useTmdbClient();
-  let json: Awaited<ReturnType<typeof tmdbClient.getTrending>>;
-  try {
-    json = await tmdbClient.getTrending("tv", "day", language);
-  } catch (error) {
-    setNoCacheHeaders(event);
-    throw error;
+  const json = await tmdbClient.getTrending("tv", "day", language);
+  if (
+    typeof json !== "object" ||
+    json === null ||
+    !Array.isArray(json.results) ||
+    !json.results.every(isTrendingShow)
+  ) {
+    return { ...json, results: [] };
   }
-  try {
-    if (!Array.isArray(json?.results)) {
-      setNoCacheHeaders(event);
-      return { ...json, results: [] };
-    }
-    return {
-      ...json,
-      results: json.results
-        .filter((show: any) => show.adult !== true)
-        .map((result: any) => ({
-          ...result,
-          backdrop_path: buildTmdbImageUrl(result.backdrop_path, "w780"),
-          poster_path: buildTmdbImageUrl(result.poster_path, "w342"),
-        })),
-    };
-  } catch (error) {
-    setNoCacheHeaders(event);
-    throw error;
-  }
+
+  const trendingShows = {
+    ...json,
+    results: json.results
+      .filter((show) => show.adult !== true)
+      .map((result) => ({
+        ...result,
+        backdrop_path: buildTmdbImageUrl(result.backdrop_path, "w780"),
+        poster_path: buildTmdbImageUrl(result.poster_path, "w342"),
+      })),
+  };
+
+  setPublicCacheHeaders(event, "discovery");
+  return trendingShows;
 });

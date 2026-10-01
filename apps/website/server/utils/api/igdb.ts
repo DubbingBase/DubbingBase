@@ -371,7 +371,7 @@ export class IgdbClient {
 
         return localizedGames;
       },
-      { ttl: 3600, cachePolicy: "none" },
+      { cachePolicy: "none" },
     );
   }
 }
