@@ -5,6 +5,7 @@ interface CacheInFlightRequest<T> {
   writeCache: boolean;
   promise: Promise<T>;
   shouldCache: boolean;
+  superseded: boolean;
   resolve: (value: T) => void;
   reject: (reason: unknown) => void;
   writePromise?: Promise<boolean>;
@@ -12,18 +13,22 @@ interface CacheInFlightRequest<T> {
 
 /** A stable, typed scope for sharing in-flight requests without type casts. */
 export class CacheNamespace<T> {
-  private readonly requests = new Map<string, CacheInFlightRequest<T>>();
+  private readonly requests = new Map<string, CacheInFlightRequest<T>[]>();
 
-  get(key: string): CacheInFlightRequest<T> | undefined {
-    return this.requests.get(key);
+  get(key: string): CacheInFlightRequest<T>[] {
+    return this.requests.get(key) ?? [];
   }
 
   set(key: string, request: CacheInFlightRequest<T>): void {
-    this.requests.set(key, request);
+    this.requests.set(key, [...this.get(key), request]);
   }
 
   delete(key: string, request: CacheInFlightRequest<T>): void {
-    if (this.requests.get(key) === request) this.requests.delete(key);
+    const active = this.get(key).filter(
+      (activeRequest) => activeRequest !== request,
+    );
+    if (active.length) this.requests.set(key, active);
+    else this.requests.delete(key);
   }
 }
 
@@ -48,7 +53,11 @@ export interface GetOrFetchOptions {
 
 export interface CacheKv {
   get<T>(key: string, options: { type: "json" }): Promise<T | null>;
-  put(key: string, value: string, options: { expirationTtl: number }): Promise<void>;
+  put(
+    key: string,
+    value: string,
+    options: { expirationTtl: number },
+  ): Promise<void>;
   delete?(key: string): Promise<void>;
 }
 
@@ -88,14 +97,22 @@ export class SimpleCache {
   }
 
   /** Persists a fetched value to KV using the selected expiration lifetime. */
-  private async set<T>(key: string, data: T, ttl: CacheTTLPreset = "NORMAL"): Promise<boolean> {
+  private async set<T>(
+    key: string,
+    data: T,
+    ttl: CacheTTLPreset = "NORMAL",
+  ): Promise<boolean> {
     if (!this.enabled) return false;
     try {
       const kv = this.kvGetter();
       if (kv) {
-        await kv.put(SimpleKeyValidator.sanitizeKey(key), JSON.stringify(data), {
-          expirationTtl: ttlSeconds(ttl),
-        });
+        await kv.put(
+          SimpleKeyValidator.sanitizeKey(key),
+          JSON.stringify(data),
+          {
+            expirationTtl: ttlSeconds(ttl),
+          },
+        );
         return true;
       }
     } catch (kvErr) {
@@ -128,21 +145,31 @@ export class SimpleCache {
     options: GetOrFetchOptions = {},
   ): Promise<T> {
     const safeKey = SimpleKeyValidator.sanitizeKey(key);
-    const forceRefresh = Boolean(options.forceRefresh) && !isAuthenticationTokenKey(key);
+    const forceRefresh =
+      Boolean(options.forceRefresh) && !isAuthenticationTokenKey(key);
     const writeCache = options.writeCache !== false;
     const inProgress = namespace.get(safeKey);
     // Coalesce only when callers agree on whether the fetched value is persisted.
-    if (
-      inProgress &&
-      inProgress.writeCache === writeCache &&
-      (!forceRefresh || inProgress.forceRefresh)
-    ) {
-      return inProgress.promise;
-    }
-    let pendingSupersededWrite: Promise<boolean> | undefined;
-    if (forceRefresh && inProgress && !inProgress.forceRefresh) {
-      inProgress.shouldCache = false;
-      pendingSupersededWrite = inProgress.writePromise;
+    const coalescedRequest = inProgress.find(
+      (request) =>
+        request.writeCache === writeCache &&
+        (!forceRefresh || request.forceRefresh) &&
+        (request.forceRefresh || !request.superseded),
+    );
+    if (coalescedRequest) return coalescedRequest.promise;
+
+    let pendingSupersededWrites: Promise<boolean>[] = [];
+    if (forceRefresh) {
+      const supersededRequests = inProgress.filter(
+        (request) => !request.forceRefresh,
+      );
+      for (const request of supersededRequests) {
+        request.superseded = true;
+        request.shouldCache = false;
+      }
+      pendingSupersededWrites = supersededRequests.flatMap((request) =>
+        request.writePromise ? [request.writePromise] : [],
+      );
     }
 
     let resolvePromise: (value: T) => void = () => undefined;
@@ -155,6 +182,7 @@ export class SimpleCache {
       forceRefresh,
       writeCache,
       shouldCache: writeCache,
+      superseded: false,
       promise,
       resolve: resolvePromise,
       reject: rejectPromise,
@@ -172,11 +200,17 @@ export class SimpleCache {
         }
 
         const value = await fetcher();
-        if (pendingSupersededWrite) {
-          await pendingSupersededWrite.catch(() => false);
+        if (pendingSupersededWrites.length) {
+          await Promise.all(
+            pendingSupersededWrites.map((write) => write.catch(() => false)),
+          );
         }
         if (value !== null && value !== undefined && request.shouldCache) {
-          request.writePromise = this.set(safeKey, value, options.ttl ?? "NORMAL");
+          request.writePromise = this.set(
+            safeKey,
+            value,
+            options.ttl ?? "NORMAL",
+          );
           await request.writePromise;
         }
         request.resolve(value);
@@ -190,7 +224,12 @@ export class SimpleCache {
     return promise;
   }
 
-  generateKey(api: string, type: string, id: string | number, suffix?: string): string {
+  generateKey(
+    api: string,
+    type: string,
+    id: string | number,
+    suffix?: string,
+  ): string {
     return SimpleKeyBuilder.key(api, type, id, suffix);
   }
 
@@ -198,7 +237,12 @@ export class SimpleCache {
     return SimpleKeyBuilder.tmdb(type, id, suffix);
   }
 
-  tvdbKey(type: string, id: string | number, suffix?: string, language?: string): string {
+  tvdbKey(
+    type: string,
+    id: string | number,
+    suffix?: string,
+    language?: string,
+  ): string {
     return SimpleKeyBuilder.tvdb(type, id, suffix, language);
   }
 
