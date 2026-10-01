@@ -706,7 +706,7 @@ const castRequest = computed(() => ({
 const { data: castPageData } = useAsyncData<PaginatedResponse<GameCastItem>>(
   computed(
     () =>
-      `game-cast-${gameId}-${locale.value}-${castPage.value}-${activeDubId.value}-${searchQuery.value}`,
+      `game-cast-${gameId}-${locale.value}-${castPage.value}-${searchQuery.value}`,
   ),
   () => fetchDetailCollection<GameCastItem>(castRequest.value),
   {
