@@ -49,13 +49,13 @@
 - `apps/website/server/utils/auth.ts` — function requireUser: (event) => User, function requireAdmin: (event) => User
 - `apps/website/server/utils/background.ts` — function scheduleBackgroundTask: (event, task, label) => void
 - `apps/website/server/utils/cache/constants.ts`
+  - function classifyCacheWriteKey: (key) => CacheWriteDimensions
   - function hashCacheValue: (value) => string
   - function buildCacheKey: (input) => string
   - class SimpleKeyBuilder
   - class SimpleKeyValidator
-  - interface CacheKeyInput
-  - const CACHE_SCHEMA_VERSION
-  - _...3 more_
+  - interface CacheWriteDimensions
+  - _...5 more_
 - `apps/website/server/utils/cache/http.ts`
   - function getPublicCacheControl: (profile) => string
   - function getCloudflareCacheControl: (profile) => string
