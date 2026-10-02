@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 81 routes | 18 models | 197 components | 90 lib files | 61 env vars | 14 middleware | 18% test coverage
+> 81 routes | 18 models | 197 components | 90 lib files | 61 env vars | 14 middleware | 19% test coverage
 > **Token savings:** this file is ~15,800 tokens. Without it, AI exploration would cost ~157,200 tokens. **Saves ~141,400 tokens per conversation.**
-> **Last scanned:** 2026-10-02 09:32 — re-run after significant changes
+> **Last scanned:** 2026-10-02 12:28 — re-run after significant changes
 
 ---
 
@@ -32,7 +32,7 @@
 - `GET` `/api/detail-collections` ✓
 - `GET` `/api/episode/index` [cache]
 - `POST` `/api/extract-credits-from-image` [upload]
-- `POST` `/api/extract-voice-actor-info` [auth]
+- `POST` `/api/extract-voice-actor-info` [auth] ✓
 - `GET` `/api/find_duplicate_voice_actors` [auth]
 - `GET` `/api/find_duplicate_work` [auth]
 - `GET` `/api/game/:id` params(id) [queue]
@@ -666,8 +666,8 @@
   - function isDubbingLanguage: (value) => value is DubbingLanguage
   - function validateDubbingLanguage: (value) => DubbingLanguage
   - function displayDubbingLanguage: (code, locale) => string
-  - enum DubbingLanguage
-  - const DUBBING_LANGUAGES: readonly DubbingLanguage[]
+  - type DubbingLanguage
+  - const DUBBING_LANGUAGE_OPTIONS
   - const DEFAULT_DUBBING_LANGUAGE: DubbingLanguage
 - `packages/shared-logic/src/utils/character.ts` — function normalizeCharacterName, function findCharacter
 - `packages/shared-logic/src/utils/voice-actor-work-groups.ts`
@@ -676,10 +676,7 @@
   - type VoiceActorWorkLike
   - type VoiceActorWorkGroup
   - type VoiceActorWorksPageItem
-- `scripts/audit-dubbing-languages.py`
-  - function query: (sql) -> object
-  - function render_migration: (manifest_path, output) -> None
-  - function main: () -> None
+- `packages/shared-logic/src/wikipedia-language.ts` — function isWikipediaLanguage: (value) => value is string
 
 ---
 
@@ -822,7 +819,7 @@
 
 # Test Coverage
 
-> **18%** of routes and models are covered by tests
+> **19%** of routes and models are covered by tests
 > 61 test files found
 
 ## Covered Routes
@@ -830,6 +827,7 @@
 - GET:/api/admin/dubbing-project
 - POST:/api/admin/dubbing-project
 - GET:/api/detail-collections
+- POST:/api/extract-voice-actor-info
 - POST:/api/media-queue
 - POST:/api/prepare_game
 - POST:/api/process-media-queue

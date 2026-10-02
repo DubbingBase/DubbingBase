@@ -21,7 +21,7 @@
 - `GET` `/api/detail-collections` ✓
 - `GET` `/api/episode/index` [cache]
 - `POST` `/api/extract-credits-from-image` [upload]
-- `POST` `/api/extract-voice-actor-info` [auth]
+- `POST` `/api/extract-voice-actor-info` [auth] ✓
 - `GET` `/api/find_duplicate_voice_actors` [auth]
 - `GET` `/api/find_duplicate_work` [auth]
 - `GET` `/api/game/:id` params(id) [queue]

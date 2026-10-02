@@ -1,6 +1,6 @@
 # Test Coverage
 
-> **18%** of routes and models are covered by tests
+> **19%** of routes and models are covered by tests
 > 61 test files found
 
 ## Covered Routes
@@ -8,6 +8,7 @@
 - GET:/api/admin/dubbing-project
 - POST:/api/admin/dubbing-project
 - GET:/api/detail-collections
+- POST:/api/extract-voice-actor-info
 - POST:/api/media-queue
 - POST:/api/prepare_game
 - POST:/api/process-media-queue

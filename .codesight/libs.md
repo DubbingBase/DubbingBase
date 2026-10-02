@@ -244,8 +244,8 @@
   - function isDubbingLanguage: (value) => value is DubbingLanguage
   - function validateDubbingLanguage: (value) => DubbingLanguage
   - function displayDubbingLanguage: (code, locale) => string
-  - enum DubbingLanguage
-  - const DUBBING_LANGUAGES: readonly DubbingLanguage[]
+  - type DubbingLanguage
+  - const DUBBING_LANGUAGE_OPTIONS
   - const DEFAULT_DUBBING_LANGUAGE: DubbingLanguage
 - `packages/shared-logic/src/utils/character.ts` — function normalizeCharacterName, function findCharacter
 - `packages/shared-logic/src/utils/voice-actor-work-groups.ts`
@@ -254,7 +254,4 @@
   - type VoiceActorWorkLike
   - type VoiceActorWorkGroup
   - type VoiceActorWorksPageItem
-- `scripts/audit-dubbing-languages.py`
-  - function query: (sql) -> object
-  - function render_migration: (manifest_path, output) -> None
-  - function main: () -> None
+- `packages/shared-logic/src/wikipedia-language.ts` — function isWikipediaLanguage: (value) => value is string

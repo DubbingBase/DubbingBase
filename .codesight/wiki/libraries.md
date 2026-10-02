@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**90 library files** across 6 modules
+**90 library files** across 5 modules
 
 ## Website (50 files)
 
@@ -33,10 +33,10 @@
 - `apps/website/server/utils/notifications/onesignal.ts` — sendOneSignalNotification, OneSignalOptions
 - _…and 25 more files_
 
-## Shared-logic (19 files)
+## Shared-logic (20 files)
 
 - `packages/shared-logic/src/constants.ts` — resolveLocaleLanguage, LocaleConfig, SupportedLocale, NonDefaultLocale, MediaType, MediaRoutePrefix, …
-- `packages/shared-logic/src/dubbing-languages.ts` — isDubbingLanguage, validateDubbingLanguage, displayDubbingLanguage, DubbingLanguage, DUBBING_LANGUAGES, DEFAULT_DUBBING_LANGUAGE
+- `packages/shared-logic/src/dubbing-languages.ts` — isDubbingLanguage, validateDubbingLanguage, displayDubbingLanguage, DubbingLanguage, DUBBING_LANGUAGE_OPTIONS, DEFAULT_DUBBING_LANGUAGE
 - `packages/shared-logic/src/composables/useStudioData.ts` — fetchStudioDetails, fetchStudiosData, useStudioData, Studio, StudioDetailsResponse
 - `packages/shared-logic/src/composables/useVoiceActorData.ts` — fetchVoiceActorData, useVoiceActorData, VoiceActorResponse, EnhancedWorkItem, VoiceActorDataPayload
 - `packages/shared-logic/src/utils/voice-actor-work-groups.ts` — groupVoiceActorWorks, paginateVoiceActorWorks, VoiceActorWorkLike, VoiceActorWorkGroup, VoiceActorWorksPageItem
@@ -54,6 +54,7 @@
 - `packages/shared-logic/src/composables/useSeasonData.ts` — fetchSeasonData
 - `packages/shared-logic/src/composables/useShowData.ts` — fetchShowData
 - `packages/shared-logic/src/composables/useToyData.ts` — fetchToyData
+- `packages/shared-logic/src/wikipedia-language.ts` — isWikipediaLanguage
 
 ## Mobile (17 files)
 
@@ -83,10 +84,6 @@
 ## E2e (1 files)
 
 - `e2e/helpers/mock-api.ts` — waitForVueHydration, setupMockApi, MockApiOptions
-
-## Scripts (1 files)
-
-- `scripts/audit-dubbing-languages.py` — query, render_migration, main
 
 ---
 _Back to [overview.md](./overview.md)_
