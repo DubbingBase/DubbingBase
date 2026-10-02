@@ -1,6 +1,5 @@
 import { createCacheNamespace, SimpleCache } from "../cache";
 import { buildCacheKey } from "../cache/constants";
-import { observeProviderRequest } from "../retryable-request";
 import type { Audiobook, OpenLibraryAuthor } from "@app/shared-logic";
 
 export function buildOpenLibraryCoverUrl(coverId: number, size: "S" | "M" | "L" = "L"): string {
@@ -62,15 +61,13 @@ export class OpenLibraryClient {
 
     try {
       const url = `${this.baseUrl}/search.json?q=${encodeURIComponent(trimmed)}&limit=20`;
-      const res = await observeProviderRequest("openlibrary", () =>
-        fetch(url, {
-          headers: {
-            "User-Agent": this.userAgent,
-            Accept: "application/json",
-          },
-          signal: AbortSignal.timeout(8000),
-        }),
-      );
+      const res = await fetch(url, {
+        headers: {
+          "User-Agent": this.userAgent,
+          Accept: "application/json",
+        },
+        signal: AbortSignal.timeout(8000),
+      });
 
       if (!res.ok) {
         console.error(`OpenLibrary search failed with status: ${res.status}`);
@@ -144,15 +141,13 @@ export class OpenLibraryClient {
       async (): Promise<string | null> => {
         try {
           const url = `${this.baseUrl}/authors/${cleanKey}.json`;
-          const res = await observeProviderRequest("openlibrary", () =>
-            fetch(url, {
-              headers: {
-                "User-Agent": this.userAgent,
-                Accept: "application/json",
-              },
-              signal: AbortSignal.timeout(6000),
-            }),
-          );
+          const res = await fetch(url, {
+            headers: {
+              "User-Agent": this.userAgent,
+              Accept: "application/json",
+            },
+            signal: AbortSignal.timeout(6000),
+          });
 
           if (!res.ok) return null;
 
@@ -174,15 +169,13 @@ export class OpenLibraryClient {
     try {
       // Try work endpoint first
       const workUrl = `${this.baseUrl}/works/OL${id}W.json`;
-      const res = await observeProviderRequest("openlibrary", () =>
-        fetch(workUrl, {
-          headers: {
-            "User-Agent": this.userAgent,
-            Accept: "application/json",
-          },
-          signal: AbortSignal.timeout(8000),
-        }),
-      );
+      const res = await fetch(workUrl, {
+        headers: {
+          "User-Agent": this.userAgent,
+          Accept: "application/json",
+        },
+        signal: AbortSignal.timeout(8000),
+      });
 
       if (!res.ok) {
         // If not found as OL work and is valid ISBN (10 or 13 digits), try ISBN endpoint
@@ -257,15 +250,13 @@ export class OpenLibraryClient {
   private async getBookByIsbn(isbn: number): Promise<Audiobook | null> {
     try {
       const url = `${this.baseUrl}/isbn/${isbn}.json`;
-      const res = await observeProviderRequest("openlibrary", () =>
-        fetch(url, {
-          headers: {
-            "User-Agent": this.userAgent,
-            Accept: "application/json",
-          },
-          signal: AbortSignal.timeout(8000),
-        }),
-      );
+      const res = await fetch(url, {
+        headers: {
+          "User-Agent": this.userAgent,
+          Accept: "application/json",
+        },
+        signal: AbortSignal.timeout(8000),
+      });
 
       if (!res.ok) return null;
 
