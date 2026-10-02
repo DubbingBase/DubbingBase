@@ -267,10 +267,14 @@ const {
   pending,
   error: fetchError,
   refresh: fetchUsers,
-} = await useAsyncData("admin-users", async () => {
-  const data = await $fetch<{ users: User[] }>("/api/list_users");
-  return data?.users || [];
-});
+} = await useAsyncData(
+  "admin-users",
+  async () => {
+    const data = await $fetch<{ users: User[] }>("/api/list_users");
+    return data?.users || [];
+  },
+  { getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp) },
+);
 
 watch(
   initialUsers,

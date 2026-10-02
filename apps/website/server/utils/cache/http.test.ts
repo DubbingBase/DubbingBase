@@ -1,93 +1,110 @@
-import {
-  createApp,
-  createError,
-  defineEventHandler,
-  setHeader,
-  toWebHandler,
-} from "h3";
+import { createApp, defineEventHandler, toWebHandler } from "h3";
 import { describe, expect, it, vi } from "vitest";
 import { OpenLibraryClient } from "../api/openlibrary";
-import { SimpleCache } from "./index";
+import { createCacheNamespace, SimpleCache } from "./index";
 import {
+  getCloudflareCacheControl,
   getPublicCacheControl,
   NO_STORE_CACHE_CONTROL,
-  setErrorCacheHeaders,
+  setNoCacheHeaders,
   setPublicCacheHeaders,
-  shouldDisableErrorCaching,
 } from "./http";
 
 describe("HTTP cache headers", () => {
-  it("uses a five minute public cache window across ordinary profiles", () => {
-    expect(getPublicCacheControl("detail")).toBe(
-      "public, max-age=300, s-maxage=300",
-    );
-    expect(getPublicCacheControl("catalog")).toBe(
-      "public, max-age=300, s-maxage=300",
-    );
+  it("defines only cache windows used by provider-only responses", () => {
     expect(getPublicCacheControl("discovery")).toBe(
-      "public, max-age=300, s-maxage=300",
+      "public, max-age=60, stale-while-revalidate=3600",
     );
-    expect(getPublicCacheControl("search")).toBe(
-      "public, max-age=300, s-maxage=300",
+    expect(getCloudflareCacheControl("discovery")).toBe(
+      "public, max-age=600, stale-while-revalidate=3600",
     );
-  });
-
-  it("uses a 24 hour cache window for expensive static responses", () => {
     expect(getPublicCacheControl("static")).toBe(
-      "public, max-age=86400, s-maxage=86400",
+      "public, max-age=86400, stale-while-revalidate=2592000",
+    );
+    expect(getCloudflareCacheControl("static")).toBe(
+      "public, max-age=604800, stale-while-revalidate=2592000",
     );
   });
 
-  it("disables caching for timeout and upstream server errors", () => {
-    expect(shouldDisableErrorCaching({ statusCode: 502 })).toBe(true);
-    expect(shouldDisableErrorCaching({ statusCode: 504 })).toBe(true);
-    expect(shouldDisableErrorCaching(new Error("upstream failed"))).toBe(true);
-    expect(shouldDisableErrorCaching({ statusCode: 404 })).toBe(false);
+  it("defines the no-store value for dynamic responses", () => {
     expect(NO_STORE_CACHE_CONTROL).toBe("no-store, no-cache, must-revalidate");
   });
 
-  it("overrides public detail headers on a timeout response", async () => {
+  it("caches a provider-only successful response without header-language variance", async () => {
     const app = createApp();
     app.use(
       "/",
       defineEventHandler((event) => {
-        setHeader(event, "Cache-Control", getPublicCacheControl("detail"));
-        setErrorCacheHeaders(event, { statusCode: 504 });
-        throw createError({ statusCode: 504, statusMessage: "Timed out" });
-      }),
-    );
-    const response = await toWebHandler(app)(new Request("http://localhost/"));
-
-    expect(response.status).toBe(504);
-    expect(response.headers.get("cache-control")).toBe(NO_STORE_CACHE_CONTROL);
-    expect(response.headers.get("pragma")).toBe("no-cache");
-    expect(response.headers.get("expires")).toBe("0");
-  });
-
-  it("uses the same short cache window for search responses", () => {
-    expect(getPublicCacheControl("search")).toBe(
-      "public, max-age=300, s-maxage=300",
-    );
-  });
-
-  it("clears stale Pragma and Expires headers when switching to public caching", async () => {
-    const app = createApp();
-    app.use(
-      "/",
-      defineEventHandler((event) => {
-        setHeader(event, "Pragma", "no-cache");
-        setHeader(event, "Expires", "0");
-        setPublicCacheHeaders(event, "detail");
-        return "ok";
+        setPublicCacheHeaders(event, "discovery");
+        return { results: ["provider-only"] };
       }),
     );
     const response = await toWebHandler(app)(new Request("http://localhost/"));
 
     expect(response.headers.get("cache-control")).toBe(
-      "public, max-age=300, s-maxage=300",
+      getPublicCacheControl("discovery"),
     );
-    expect(response.headers.has("pragma")).toBe(false);
-    expect(response.headers.has("expires")).toBe(false);
+    expect(response.headers.get("cloudflare-cdn-cache-control")).toBe(
+      getCloudflareCacheControl("discovery"),
+    );
+    expect(response.headers.has("vary")).toBe(false);
+    await expect(response.json()).resolves.toEqual({
+      results: ["provider-only"],
+    });
+  });
+
+  it("keeps mixed detail responses fresh while reusing provider metadata from KV", async () => {
+    const values = new Map<string, unknown>();
+    const kv = {
+      get: vi.fn(async (key: string) => values.get(key) ?? null),
+      put: vi.fn(async (key: string, value: string) => {
+        values.set(key, JSON.parse(value));
+      }),
+    };
+    const cache = new SimpleCache(() => kv);
+    const namespace = createCacheNamespace<{ title: string }>();
+    const fetchProviderMetadata = vi.fn(async () => ({
+      title: "Provider title",
+    }));
+    let requestCount = 0;
+    const app = createApp();
+    app.use(
+      "/",
+      defineEventHandler(async (event) => {
+        setNoCacheHeaders(event);
+        requestCount += 1;
+        const metadata = await cache.getOrFetch(
+          namespace,
+          "tmdb:movie:1",
+          fetchProviderMetadata,
+          { cachePolicy: "persistent", ttl: "STABLE" },
+        );
+        return { metadata, dubbingProjects: [`request-${requestCount}`] };
+      }),
+    );
+    const handler = toWebHandler(app);
+
+    const firstResponse = await handler(new Request("http://localhost/"));
+    const firstBody = await firstResponse.json();
+    const secondResponse = await handler(new Request("http://localhost/"));
+    const secondBody = await secondResponse.json();
+
+    expect(firstResponse.headers.get("cache-control")).toBe(
+      NO_STORE_CACHE_CONTROL,
+    );
+    expect(secondResponse.headers.get("cache-control")).toBe(
+      NO_STORE_CACHE_CONTROL,
+    );
+    expect(firstBody).toEqual({
+      metadata: { title: "Provider title" },
+      dubbingProjects: ["request-1"],
+    });
+    expect(secondBody).toEqual({
+      metadata: { title: "Provider title" },
+      dubbingProjects: ["request-2"],
+    });
+    expect(fetchProviderMetadata).toHaveBeenCalledTimes(1);
+    expect(kv.get).toHaveBeenCalledTimes(2);
   });
 });
 

@@ -311,8 +311,7 @@ const { data, pending } = await useAsyncData(
   `podcast-${podcastId.value}-${locale.value}`,
   () => fetchPodcastData(podcastId.value, locale.value),
   {
-    getCachedData: (key, nuxtApp) =>
-      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+    getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
 
@@ -403,8 +402,7 @@ const { data: castPageData } = useAsyncData<
   () => fetchDetailCollection<FormattedCastItem>(castRequest.value),
   {
     watch: [castRequest],
-    getCachedData: (key, nuxtApp) =>
-      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+    getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
 const castItems = computed(() => castPageData.value?.data || []);

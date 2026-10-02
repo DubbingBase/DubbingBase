@@ -100,7 +100,7 @@ async function fetchPotentialWikipediaUrl(
 
         return `https://fr.wikipedia.org/wiki/${encodeURI(title.replace(/ /g, "_"))}`;
       },
-      { ttl: 604800 },
+      { ttl: "STABLE", cachePolicy: "persistent" },
     );
   } catch (e) {
     console.error("Failed to fetch potential Wikipedia URL:", e);
@@ -651,7 +651,6 @@ export class MediaService {
     contentType: "movie" | "tv",
     contentId: number,
     tmdbMedia: any,
-    options: CacheFetchOptions = {},
   ): Promise<{ characters: any[]; tvdbId: number | null }> {
     const cache = useCache();
     const tvdbClient = new TVDBClient(cache);
@@ -697,7 +696,7 @@ export class MediaService {
                     ? ((await response.json()) as WikidataClaimsResponse)
                     : null;
                 },
-                { ttl: 604800, ...options },
+                { cachePolicy: "persistent", ttl: "STABLE" },
               );
 
               const property = contentType === "movie" ? "P12196" : "P4835";
@@ -756,7 +755,6 @@ export class MediaService {
                 tvdbId,
                 { meta: "translations", short: false },
                 this.acceptLanguage,
-                options,
               );
               characters = res.data.characters || [];
             } else {
@@ -764,7 +762,6 @@ export class MediaService {
                 tvdbId,
                 { meta: "episodes", short: false },
                 this.acceptLanguage,
-                options,
               );
               characters = res.data.characters || [];
             }
@@ -785,7 +782,7 @@ export class MediaService {
 
           return null;
         },
-        { ttl: 86400, ...options },
+        { cachePolicy: "persistent", ttl: "STABLE" },
       );
       if (result) return result;
     } catch (e) {

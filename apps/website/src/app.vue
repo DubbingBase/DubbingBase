@@ -8,7 +8,7 @@
     <Header />
     <main>
       <NuxtLayout>
-        <NuxtPage :keepalive="{ max: 10 }" />
+        <NuxtPage />
       </NuxtLayout>
     </main>
     <Footer />

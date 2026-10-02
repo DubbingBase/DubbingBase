@@ -1,7 +1,5 @@
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { buildSupabaseImageUrl } from "../../utils/urls/supabase";
-import { setPublicCacheHeaders } from "../../utils/cache/http";
-
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const limit = query.limit === undefined ? 10 : Number(query.limit);
@@ -20,9 +18,6 @@ export default defineEventHandler(async (event) => {
       message: "Months must be a number between 1 and 24",
     });
   }
-
-  setPublicCacheHeaders(event, "discovery");
-
   try {
     const supabase = useSupabaseAdmin();
     const { data, error } = await supabase.rpc("get_trending_voice_actors", {

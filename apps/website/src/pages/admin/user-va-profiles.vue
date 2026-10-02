@@ -457,25 +457,29 @@ const {
   data: initialData,
   pending,
   refresh: fetchExistingLinks,
-} = await useAsyncData("admin-user-va-links", async () => {
-  // Fetch users
-  const userData = await $fetch<{ users: any[] }>("/api/list_users");
-  const users = userData?.users || [];
+} = await useAsyncData(
+  "admin-user-va-links",
+  async () => {
+    // Fetch users
+    const userData = await $fetch<{ users: any[] }>("/api/list_users");
+    const users = userData?.users || [];
 
-  // Fetch existing links
-  const { data: linksData, error: linksError } = await supabase
-    .from("user_voice_actor_links")
-    .select(
-      "id, user_id, voice_actors(id, firstname, lastname, profile_picture)",
-    )
-    .order("created_at", { ascending: false });
-  if (linksError) throw linksError;
+    // Fetch existing links
+    const { data: linksData, error: linksError } = await supabase
+      .from("user_voice_actor_links")
+      .select(
+        "id, user_id, voice_actors(id, firstname, lastname, profile_picture)",
+      )
+      .order("created_at", { ascending: false });
+    if (linksError) throw linksError;
 
-  return {
-    users,
-    links: linksData || [],
-  };
-});
+    return {
+      users,
+      links: linksData || [],
+    };
+  },
+  { getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp) },
+);
 
 watch(
   initialData,

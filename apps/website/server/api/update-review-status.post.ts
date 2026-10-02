@@ -76,11 +76,13 @@ export default defineEventHandler(async (event) => {
 
     return { success: true, data };
   } catch (error) {
-    if (error && typeof error === "object" && "statusCode" in error) throw error;
+    if (error && typeof error === "object" && "statusCode" in error)
+      throw error;
     console.error("Error in update-review-status:", error);
     throw createError({
       statusCode: 500,
-      message: error instanceof Error ? error.message : "An unknown error occurred",
+      message:
+        error instanceof Error ? error.message : "An unknown error occurred",
     });
   }
 });

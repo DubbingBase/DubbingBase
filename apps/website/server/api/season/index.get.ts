@@ -2,10 +2,6 @@ import { useCache, useTmdbClient } from "../../utils";
 import { MediaService } from "../../utils/services/media";
 import { getDubbingProjects } from "../../utils/db/queries";
 import {
-  setErrorCacheHeaders,
-  setPublicCacheHeaders,
-} from "../../utils/cache/http";
-import {
   parseSeasonQuery,
   withMediaServiceTimeout,
 } from "../../utils/media-request";
@@ -23,9 +19,6 @@ const tvdbCharacterCacheNamespace =
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const { id, seasonNumber } = parseSeasonQuery(query);
-
-  setPublicCacheHeaders(event, "detail");
-
   const acceptLanguage = getHeader(event, "accept-language") || undefined;
   const cache = useCache(event);
   const tmdbClient = useTmdbClient();
@@ -53,6 +46,7 @@ export default defineEventHandler(async (event) => {
         tvdbCharacterCacheNamespace,
         showCacheKey,
         async () => null,
+        { cachePolicy: "read-only" },
       );
       const characterProfilePictures = Array.isArray(cachedChars)
         ? cachedChars
@@ -87,7 +81,6 @@ export default defineEventHandler(async (event) => {
 
     return responseData;
   } catch (error: unknown) {
-    setErrorCacheHeaders(event, error);
     if (
       typeof error === "object" &&
       error !== null &&

@@ -481,33 +481,9 @@ const cacheKey = `movie-${movieId}-${locale.value}`;
 
 const { data, pending } = useAsyncData(
   cacheKey,
-  async () => {
-    const nuxtApp = useNuxtApp();
-    // We only have cached data on the client side after hydration
-    const cachedData = nuxtApp.payload.data[cacheKey];
-
-    const newData = await fetchMovieData(movieId, locale.value);
-
-    // If TMDB fetch fails on the edge function (e.g., timeout during auth resolution)
-    // but we already have valid TMDB data from SSR, we preserve the TMDB data
-    // while still accepting the fresh database data (votes, dubbing projects).
-    if (
-      newData &&
-      newData.movie?.title === "Information indisponible (Timeout)" &&
-      cachedData?.movie &&
-      cachedData.movie.title !== "Information indisponible (Timeout)"
-    ) {
-      newData.movie = cachedData.movie;
-      newData.collection = cachedData.collection;
-      newData.characterProfilePictures = cachedData.characterProfilePictures;
-      newData.tvdbId = cachedData.tvdbId;
-    }
-
-    return newData;
-  },
+  () => fetchMovieData(movieId, locale.value),
   {
-    getCachedData: (key, nuxtApp) =>
-      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+    getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
 

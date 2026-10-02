@@ -1,7 +1,4 @@
-import {
-  getPublicCacheControl,
-  setPublicCacheHeaders,
-} from "../../utils/cache/http";
+import { NO_STORE_CACHE_CONTROL } from "../../utils/cache/http";
 
 let _satori: any = null;
 let _Resvg: any = null;
@@ -402,17 +399,10 @@ export default defineEventHandler(async (event) => {
     const pngData = resvg.render();
     const pngBuffer = pngData.asPng();
 
-    const cacheControl = getPublicCacheControl("static");
-    setPublicCacheHeaders(event, "static");
-    setResponseHeaders(event, {
-      "Content-Type": "image/png",
-      "Cache-Control": cacheControl,
-    });
-
     return new Response(pngBuffer as any, {
       headers: {
         "Content-Type": "image/png",
-        "Cache-Control": cacheControl,
+        "Cache-Control": NO_STORE_CACHE_CONTROL,
       },
     });
   } catch (error) {

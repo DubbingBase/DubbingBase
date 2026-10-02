@@ -63,6 +63,7 @@ export class OpenLibraryClient {
   }
 
   async searchBooks(query: string): Promise<Audiobook[]> {
+    // Search results are low-reuse and do not use persistent KV.
     const trimmed = query.trim();
     if (!trimmed || trimmed.length < 2) return [];
 
@@ -147,7 +148,7 @@ export class OpenLibraryClient {
 
   async getAuthorName(
     authorKey: string,
-    options: CacheFetchOptions = {},
+    options: CacheFetchOptions = { cachePolicy: "persistent", ttl: "STABLE" },
   ): Promise<string> {
     const cleanKey = authorKey.replace(/^\//, "").replace(/^authors\//, "");
     const cacheKey = buildCacheKey({
@@ -180,15 +181,16 @@ export class OpenLibraryClient {
           return null;
         }
       },
-      { ttl: 604800, ...options },
+      options,
     );
     return authorName ?? "";
   }
 
   async getBook(
     id: number,
-    options: CacheFetchOptions = {},
+    options: CacheFetchOptions = { cachePolicy: "persistent", ttl: "STABLE" },
   ): Promise<Audiobook | null> {
+    // Internal metadata reads bypass public edge caching, so keep shared KV.
     const cacheKey = buildCacheKey({
       provider: "openlibrary",
       resource: "book",
@@ -284,7 +286,7 @@ export class OpenLibraryClient {
           return null;
         }
       },
-      { ttl: 604800, ...options },
+      options,
     );
   }
 

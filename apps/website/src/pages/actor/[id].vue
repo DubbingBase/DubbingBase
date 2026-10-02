@@ -385,8 +385,7 @@ const { data: initialData } = await useAsyncData(
   `actor-${id}`,
   () => fetchActorData(id),
   {
-    getCachedData: (key, nuxtApp) =>
-      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+    getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
 
@@ -427,8 +426,7 @@ const { data: voiceActorsPageData } = useAsyncData<
   () => fetchDetailCollection<ActorCollectionItem>(voiceActorsRequest.value),
   {
     watch: [voiceActorsRequest],
-    getCachedData: (key, nuxtApp) =>
-      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+    getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
 const voiceActorItems = computed(() => voiceActorsPageData.value?.data || []);
@@ -455,8 +453,7 @@ const { data: filmographyPageData } = useAsyncData<
   () => fetchDetailCollection<ActorCollectionItem>(filmographyRequest.value),
   {
     watch: [filmographyRequest],
-    getCachedData: (key, nuxtApp) =>
-      nuxtApp.payload.data[key] ?? nuxtApp.static.data[key],
+    getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
 const filmographyItems = computed(() => filmographyPageData.value?.data || []);

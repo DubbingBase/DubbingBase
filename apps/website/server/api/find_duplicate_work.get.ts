@@ -1,7 +1,5 @@
 import { requireAdmin } from "../utils/auth";
 import { useSupabaseAdmin } from "../utils/db/client";
-import { setNoCacheHeaders } from "../utils/cache/http";
-
 interface Work {
   id: number;
   dubbing_project_id: number;
@@ -31,7 +29,6 @@ function processWorksBatch(
 }
 
 export default defineEventHandler(async (event) => {
-  setNoCacheHeaders(event);
   requireAdmin(event);
   const supabaseAdmin = useSupabaseAdmin();
 

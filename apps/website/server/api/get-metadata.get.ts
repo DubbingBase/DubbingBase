@@ -1,9 +1,5 @@
 import { useSupabaseAdmin } from "../utils/db/client";
-import { setPublicCacheHeaders } from "../utils/cache/http";
-
 export default defineEventHandler(async (event) => {
-  setPublicCacheHeaders(event, "catalog");
-
   const query = getQuery(event);
   const type = query.type as string | undefined;
   const supabaseAdmin = useSupabaseAdmin();

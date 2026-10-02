@@ -50,6 +50,70 @@ describe("IgdbClient token cache expiry", () => {
     vi.unstubAllGlobals();
   });
 
+  it("does not read or write KV for search or trending results while keeping token KV", async () => {
+    const values = new Map<string, unknown>([
+      [
+        "igdb:auth_token",
+        { accessToken: "cached-token", expiresAt: Date.now() + 60_000 },
+      ],
+    ]);
+    const fetch = mockFetch();
+    const reads: string[] = [];
+    const writes: string[] = [];
+    const client = new IgdbClient(
+      new SimpleCache(() => ({
+        get: async (key) => {
+          reads.push(key);
+          return values.get(key) ?? null;
+        },
+        put: async (key, value) => {
+          writes.push(key);
+          values.set(key, JSON.parse(value));
+        },
+      })),
+    );
+
+    await client.searchGames("example");
+    await client.getTrendingGames();
+
+    expect(reads).toEqual(["igdb:auth_token"]);
+    expect(writes).toEqual([]);
+    expect(fetch.tokenFetchCount).toBe(0);
+  });
+
+  it("retains KV for game details shared by public and internal reads", async () => {
+    const values = new Map<string, unknown>([
+      [
+        "igdb:auth_token",
+        { accessToken: "cached-token", expiresAt: Date.now() + 60_000 },
+      ],
+    ]);
+    let gameFetches = 0;
+    vi.stubGlobal("fetch", async (input: RequestInfo | URL) => {
+      if (String(input) === tokenUrl) {
+        return new Response("{}", { status: 500 });
+      }
+      gameFetches += 1;
+      return new Response(JSON.stringify([{ id: 42, name: "Game" }]));
+    });
+    vi.stubGlobal("useRuntimeConfig", () => ({
+      igdbClientId: "client-id",
+      igdbClientSecret: "client-secret",
+    }));
+    const client = new IgdbClient(
+      new SimpleCache(() => ({
+        get: async (key) => values.get(key) ?? null,
+        put: async (key, value) => values.set(key, JSON.parse(value)),
+      })),
+    );
+
+    await client.getGame(42);
+    await client.getGame(42);
+
+    expect(gameFetches).toBe(1);
+    expect(values.size).toBe(2);
+  });
+
   it("restores a cached expiry and reuses the token only until that expiry", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     const expiresAt = Date.now() + 10_000;

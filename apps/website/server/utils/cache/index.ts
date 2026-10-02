@@ -1,28 +1,36 @@
 import { SimpleKeyBuilder, SimpleKeyValidator } from "./constants";
 
 interface CacheInFlightRequest<T> {
-  forceRefresh: boolean;
+  cachePolicy: CachePolicy;
   promise: Promise<T>;
-  shouldCache: boolean;
-  resolve: (value: T) => void;
-  reject: (reason: unknown) => void;
-  writePromise?: Promise<boolean>;
 }
 
 /** A stable, typed scope for sharing in-flight requests without type casts. */
 export class CacheNamespace<T> {
-  private readonly requests = new Map<string, CacheInFlightRequest<T>>();
+  private readonly requests = new Map<
+    string,
+    Map<CachePolicy, CacheInFlightRequest<T>>
+  >();
 
-  get(key: string): CacheInFlightRequest<T> | undefined {
-    return this.requests.get(key);
+  get(
+    key: string,
+    cachePolicy: CachePolicy,
+  ): CacheInFlightRequest<T> | undefined {
+    return this.requests.get(key)?.get(cachePolicy);
   }
 
   set(key: string, request: CacheInFlightRequest<T>): void {
-    this.requests.set(key, request);
+    const requests =
+      this.requests.get(key) ?? new Map<CachePolicy, CacheInFlightRequest<T>>();
+    requests.set(request.cachePolicy, request);
+    this.requests.set(key, requests);
   }
 
   delete(key: string, request: CacheInFlightRequest<T>): void {
-    if (this.requests.get(key) === request) this.requests.delete(key);
+    const requests = this.requests.get(key);
+    if (requests?.get(request.cachePolicy) !== request) return;
+    requests.delete(request.cachePolicy);
+    if (!requests.size) this.requests.delete(key);
   }
 }
 
@@ -32,16 +40,22 @@ export function createCacheNamespace<T>(): CacheNamespace<T> {
 
 /** The three supported lifetimes, in seconds. */
 export const CACHE_TTL = {
-  TRENDING: 60 * 60,
-  NORMAL: 24 * 60 * 60,
   STABLE: 7 * 24 * 60 * 60,
 } as const;
 
+export type CachePolicy = "persistent" | "read-only" | "none";
 export type CacheTTLPreset = keyof typeof CACHE_TTL | number;
-export interface GetOrFetchOptions {
-  ttl?: CacheTTLPreset;
-  forceRefresh?: boolean;
-}
+export type GetOrFetchOptions =
+  | {
+      /** Persistent cache writes always have an explicit lifetime. */
+      cachePolicy: "persistent";
+      ttl: CacheTTLPreset;
+    }
+  | {
+      /** Read-only and bypass policies cannot carry an irrelevant TTL. */
+      cachePolicy: "read-only" | "none";
+      ttl?: never;
+    };
 
 export interface CacheKv {
   get<T>(key: string, options: { type: "json" }): Promise<T | null>;
@@ -53,12 +67,8 @@ export interface CacheKv {
   delete?(key: string): Promise<void>;
 }
 
-function ttlSeconds(ttl: CacheTTLPreset = "NORMAL"): number {
+function ttlSeconds(ttl: CacheTTLPreset): number {
   return typeof ttl === "number" ? Math.max(60, ttl) : CACHE_TTL[ttl];
-}
-
-function isAuthenticationTokenKey(key: string): boolean {
-  return /(^|:)auth_token$/i.test(key);
 }
 
 /** Cloudflare KV adapter for external API responses; it has no local data tier. */
@@ -88,10 +98,11 @@ export class SimpleCache {
     return null;
   }
 
+  /** Persists a fetched value to KV using the selected expiration lifetime. */
   private async set<T>(
     key: string,
     data: T,
-    ttl: CacheTTLPreset = "NORMAL",
+    ttl: CacheTTLPreset,
   ): Promise<boolean> {
     if (!this.enabled) return false;
     try {
@@ -125,70 +136,40 @@ export class SimpleCache {
     }
   }
 
+  /** Returns cached data or fetches it upstream according to one policy. */
   getOrFetch<T>(
     namespace: CacheNamespace<T>,
     key: string,
     fetcher: () => Promise<T>,
-    options: GetOrFetchOptions = {},
+    options: GetOrFetchOptions,
   ): Promise<T> {
     const safeKey = SimpleKeyValidator.sanitizeKey(key);
-    const forceRefresh =
-      Boolean(options.forceRefresh) && !isAuthenticationTokenKey(key);
-    const inProgress = namespace.get(safeKey);
-    if (inProgress && (!forceRefresh || inProgress.forceRefresh)) {
-      return inProgress.promise;
-    }
-    let pendingSupersededWrite: Promise<boolean> | undefined;
-    if (forceRefresh && inProgress && !inProgress.forceRefresh) {
-      inProgress.shouldCache = false;
-      pendingSupersededWrite = inProgress.writePromise;
-    }
+    const cachePolicy = options.cachePolicy;
+    const existingRequest = namespace.get(safeKey, cachePolicy);
+    if (existingRequest) return existingRequest.promise;
 
-    let resolvePromise: (value: T) => void = () => undefined;
-    let rejectPromise: (reason: unknown) => void = () => undefined;
-    const promise = new Promise<T>((resolve, reject) => {
-      resolvePromise = resolve;
-      rejectPromise = reject;
-    });
-    const request: CacheInFlightRequest<T> = {
-      forceRefresh,
-      shouldCache: true,
-      promise,
-      resolve: resolvePromise,
-      reject: rejectPromise,
-    };
-    namespace.set(safeKey, request);
-
-    void (async () => {
-      try {
-        if (!forceRefresh) {
-          const cached = await this.get<T>(safeKey);
-          if (cached !== null) {
-            request.resolve(cached);
-            return;
-          }
-        }
-
-        const value = await fetcher();
-        if (pendingSupersededWrite) {
-          await pendingSupersededWrite.catch(() => false);
-        }
-        if (value !== null && value !== undefined && request.shouldCache) {
-          request.writePromise = this.set(
-            safeKey,
-            value,
-            options.ttl ?? "NORMAL",
-          );
-          await request.writePromise;
-        }
-        request.resolve(value);
-      } catch (error) {
-        request.reject(error);
-      } finally {
-        namespace.delete(safeKey, request);
+    const promise = Promise.resolve().then(async () => {
+      if (cachePolicy !== "none") {
+        const cached = await this.get<T>(safeKey);
+        if (cached !== null) return cached;
       }
-    })();
 
+      const value = await fetcher();
+      if (
+        options.cachePolicy === "persistent" &&
+        value !== null &&
+        value !== undefined
+      ) {
+        await this.set(safeKey, value, options.ttl);
+      }
+      return value;
+    });
+    const request = { cachePolicy, promise };
+    namespace.set(safeKey, request);
+    void promise.then(
+      () => namespace.delete(safeKey, request),
+      () => namespace.delete(safeKey, request),
+    );
     return promise;
   }
 

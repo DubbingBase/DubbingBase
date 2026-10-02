@@ -265,6 +265,7 @@ const { data: initialStudio } = await useAsyncData(
     if (error) throw error;
     return data;
   },
+  { getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp) },
 );
 
 watch(

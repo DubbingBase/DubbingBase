@@ -7,7 +7,15 @@ import {
   readBody,
   toWebHandler,
 } from "h3";
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 const requester = "11111111-1111-4111-8111-111111111111";
 
@@ -15,7 +23,13 @@ const routeMocks = vi.hoisted(() => ({
   rpc: vi.fn(),
   sendDiscordAdminNotification: vi.fn(),
   checkMediaDubbingSections: vi.fn(),
+  checkGameDubbingSections: vi.fn(),
+  extractMediaDubbingCredits: vi.fn(),
+  extractGameDubbingCredits: vi.fn(),
   useWikipediaCache: vi.fn(),
+  useIgdbClient: vi.fn(),
+  getGame: vi.fn(),
+  cacheGetOrFetch: vi.fn(),
 }));
 
 vi.mock("../notifications/discord", () => ({
@@ -23,25 +37,25 @@ vi.mock("../notifications/discord", () => ({
 }));
 vi.mock("../services/media-preparation", () => ({
   checkMediaDubbingSections: routeMocks.checkMediaDubbingSections,
-  checkGameDubbingSections: vi.fn(),
-  extractMediaDubbingCredits: vi.fn(),
-  extractGameDubbingCredits: vi.fn(),
+  checkGameDubbingSections: routeMocks.checkGameDubbingSections,
+  extractMediaDubbingCredits: routeMocks.extractMediaDubbingCredits,
+  extractGameDubbingCredits: routeMocks.extractGameDubbingCredits,
 }));
 vi.mock("../retryable-request", () => ({
   createMediaResponseError: vi.fn(),
   fetchMediaRequest: vi.fn(),
   isRetryableMediaRequestError: vi.fn(() => false),
 }));
-vi.mock("../db/client", () => ({ useSupabaseAdmin: () => ({ rpc: routeMocks.rpc }) }));
+vi.mock("../db/client", () => ({
+  useSupabaseAdmin: () => ({ rpc: routeMocks.rpc }),
+}));
 vi.mock("../auth", () => ({ requireAdmin: vi.fn() }));
 vi.mock("..", () => ({
   useWikipediaCache: routeMocks.useWikipediaCache,
-  useIgdbClient: vi.fn(),
-  useCache: vi.fn(() => ({})),
+  useIgdbClient: routeMocks.useIgdbClient,
+  useCache: vi.fn(() => ({ getOrFetch: routeMocks.cacheGetOrFetch })),
 }));
 vi.mock("../llm", () => ({ areAllLlmQuotasExhausted: vi.fn(() => false) }));
-vi.mock("../cache/http", () => ({ setNoStoreHeaders: vi.fn() }));
-
 let handler: typeof import("../../api/process-media-queue.post").default;
 
 beforeAll(async () => {
@@ -50,7 +64,9 @@ beforeAll(async () => {
   vi.stubGlobal("getHeader", getHeader);
   vi.stubGlobal("getQuery", getQuery);
   vi.stubGlobal("readBody", readBody);
-  vi.stubGlobal("useRuntimeConfig", () => ({ supabaseSecretKey: "queue-secret" }));
+  vi.stubGlobal("useRuntimeConfig", () => ({
+    supabaseSecretKey: "queue-secret",
+  }));
   handler = (await import("../../api/process-media-queue.post")).default;
 });
 
@@ -64,13 +80,38 @@ beforeEach(() => {
     pageId: 55,
     wikipediaUrl: "https://simple.wikipedia.org/wiki/Test_movie",
   });
+  routeMocks.checkGameDubbingSections.mockResolvedValue({
+    ok: true,
+    title: "Test game",
+    sectionIndexes: [2],
+    pageId: 55,
+    wikipediaUrl: "https://simple.wikipedia.org/wiki/Test_game",
+  });
+  routeMocks.extractMediaDubbingCredits.mockResolvedValue({
+    ok: true,
+    changes: 1,
+    creditsAdded: 1,
+  });
+  routeMocks.extractGameDubbingCredits.mockResolvedValue({
+    ok: true,
+    changes: 1,
+    creditsAdded: 1,
+  });
   routeMocks.useWikipediaCache.mockReturnValue({
+    searchWikidataEntities: vi.fn(async () => ({ search: [{ id: "Q42" }] })),
     getAllSitelinksEntity: vi.fn(async (wikiId: string) => ({
       entities: {
-        [wikiId]: { sitelinks: { enwiki: { title: "Example" }, frwiki: { title: "Exemple" } } },
+        [wikiId]: {
+          sitelinks: {
+            enwiki: { title: "Example" },
+            frwiki: { title: "Exemple" },
+          },
+        },
       },
     })),
   });
+  routeMocks.useIgdbClient.mockReturnValue({ getGame: routeMocks.getGame });
+  routeMocks.getGame.mockResolvedValue({ name: "Test game" });
   routeMocks.rpc.mockImplementation(async (name: string) => {
     if (name === "pop_media_queue_batch") {
       return {
@@ -98,11 +139,14 @@ beforeEach(() => {
 afterAll(() => vi.unstubAllGlobals());
 
 async function processQueue(
-  queue: "discovery" | "check",
+  queue: "discovery" | "check" | "extract",
   payloadChanges: Record<string, unknown> = {},
 ) {
   routeMocks.rpc.mockImplementation(async (name: string) => {
-    if (name === "pop_media_queue_batch") {
+    if (
+      name === "pop_media_queue_batch" ||
+      name === "pop_media_queue_message"
+    ) {
       return {
         data: [
           {
@@ -115,7 +159,9 @@ async function processQueue(
               wikipedia_language: "simple",
               dubbing_language: "en-US",
               is_manual: true,
-              ...(queue === "check" ? { page_id: 55, section_indexes: [2] } : {}),
+              ...(queue === "check" || queue === "extract"
+                ? { page_id: 55, section_indexes: [2] }
+                : {}),
               ...payloadChanges,
             },
           },
@@ -144,6 +190,48 @@ async function processQueue(
 }
 
 describe("POST /api/process-media-queue requester propagation", () => {
+  it("does not invoke cache-backed work for an empty queue cycle", async () => {
+    routeMocks.rpc.mockResolvedValue({ data: [], error: null });
+    const app = createApp();
+    app.use(
+      "/",
+      defineEventHandler((event) => handler(event)),
+    );
+
+    const response = await toWebHandler(app)(
+      new Request("http://localhost/?queue=check", {
+        method: "POST",
+        headers: {
+          "x-internal-secret": "queue-secret",
+          "content-type": "application/json",
+        },
+        body: "{}",
+      }),
+    );
+
+    expect(await response.json()).toEqual(
+      expect.objectContaining({ processed: 0, reason: "no_pending_items" }),
+    );
+    expect(routeMocks.cacheGetOrFetch).not.toHaveBeenCalled();
+    expect(routeMocks.checkMediaDubbingSections).not.toHaveBeenCalled();
+  });
+
+  it("uses the standard stable Wikidata metadata lookup in queue discovery", async () => {
+    await processQueue("discovery");
+
+    const wikipediaCache = routeMocks.useWikipediaCache.mock.results[0]?.value;
+    expect(wikipediaCache.getAllSitelinksEntity).toHaveBeenCalledWith("Q42");
+  });
+
+  it("uses the standard stable IGDB metadata lookup in queue discovery", async () => {
+    await processQueue("discovery", {
+      media_type: "video_game",
+      wiki_id: undefined,
+    });
+
+    expect(routeMocks.getGame).toHaveBeenCalledWith(42);
+  });
+
   it("preserves requested_by through discovery fan-out into every wiki_check", async () => {
     await processQueue("discovery", { requested_by: requester });
 
@@ -153,7 +241,9 @@ describe("POST /api/process-media-queue requester propagation", () => {
     expect(childEnqueues.length).toBeGreaterThan(0);
     for (const [name, args] of childEnqueues) {
       expect(name).toBe("enqueue_media_fetch");
-      expect(args).toEqual(expect.objectContaining({ p_requested_by: requester }));
+      expect(args).toEqual(
+        expect.objectContaining({ p_requested_by: requester }),
+      );
     }
   });
 
@@ -169,11 +259,16 @@ describe("POST /api/process-media-queue requester propagation", () => {
   it.each([
     ["missing", {}],
     ["malformed", { requested_by: "not-a-uuid" }],
-  ] as const)("does not invent a requester when the field is %s", async (_caseName, payload) => {
-    await processQueue("check", payload);
+  ] as const)(
+    "does not invent a requester when the field is %s",
+    async (_caseName, payload) => {
+      await processQueue("check", payload);
 
-    const enqueue = routeMocks.rpc.mock.calls.find(([name]) => name === "enqueue_media_extract");
-    expect(enqueue).toBeDefined();
-    expect(enqueue?.[1]).not.toHaveProperty("p_requested_by");
-  });
+      const enqueue = routeMocks.rpc.mock.calls.find(
+        ([name]) => name === "enqueue_media_extract",
+      );
+      expect(enqueue).toBeDefined();
+      expect(enqueue?.[1]).not.toHaveProperty("p_requested_by");
+    },
+  );
 });

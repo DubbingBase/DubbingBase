@@ -3,7 +3,15 @@ import { useSupabaseAdmin } from "../../utils/db/client";
 import { requireDubbingLanguage } from "../../utils/dubbing-language";
 import type { Json } from "@app/supabase";
 
-const MEDIA_TYPES = ["movie", "tv", "video_game", "audiobook", "podcast", "advertisement", "toy"];
+const MEDIA_TYPES = [
+  "movie",
+  "tv",
+  "video_game",
+  "audiobook",
+  "podcast",
+  "advertisement",
+  "toy",
+];
 
 interface AssignmentOperation {
   actor_id: number;
@@ -59,7 +67,8 @@ export default defineEventHandler(async (event) => {
       !isOptionalPositiveId(value.expected_voice_actor_id) ||
       !isOptionalPositiveId(value.voice_actor_id) ||
       (value.work_id === null &&
-        (value.voice_actor_id === null || value.expected_voice_actor_id !== null)) ||
+        (value.voice_actor_id === null ||
+          value.expected_voice_actor_id !== null)) ||
       seenActorIds.has(value.actor_id)
     ) {
       throw createError({
@@ -77,17 +86,20 @@ export default defineEventHandler(async (event) => {
   }
 
   const supabase = useSupabaseAdmin(event);
-  const { data: projectId, error } = await supabase.rpc("save_regional_project_actor_assignments", {
-    p_content_id: contentId,
-    p_content_type: contentType,
-    p_dubbing_language: dubbingLanguage,
-    p_operations: operations.map((operation): Json => ({
-      actor_id: operation.actor_id,
-      work_id: operation.work_id,
-      expected_voice_actor_id: operation.expected_voice_actor_id,
-      voice_actor_id: operation.voice_actor_id,
-    })),
-  });
+  const { data: projectId, error } = await supabase.rpc(
+    "save_regional_project_actor_assignments",
+    {
+      p_content_id: contentId,
+      p_content_type: contentType,
+      p_dubbing_language: dubbingLanguage,
+      p_operations: operations.map((operation): Json => ({
+        actor_id: operation.actor_id,
+        work_id: operation.work_id,
+        expected_voice_actor_id: operation.expected_voice_actor_id,
+        voice_actor_id: operation.voice_actor_id,
+      })),
+    },
+  );
 
   if (error?.code === "55000" || error?.code === "40001") {
     throw createError({

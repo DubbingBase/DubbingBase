@@ -9,7 +9,6 @@ import {
 import { insertVoiceActorAndWork } from "./voice-actor";
 import { useWikipediaCache, useIgdbClient } from "../index";
 import type { SimpleCache } from "../cache";
-import type { CacheFetchOptions } from "../api/cache-options";
 import { buildTmdbImageUrl } from "../urls/tmdb";
 import { buildIgdbImageUrl } from "../api/igdb";
 import { llmGenerateObject } from "../llm";
@@ -179,6 +178,7 @@ export interface PrepareGameResult {
 // 1. Check Stage (Queue 2: wiki_check) - 0 LLM Cost, Regex TOC validation
 // ---------------------------------------------------------------------------
 
+/** Finds dubbing sections on a Wikipedia page linked to TMDB media. */
 export async function checkMediaDubbingSections(options: {
   tmdbId: number;
   type: "movie" | "tv" | "season" | "episode";
@@ -186,12 +186,8 @@ export async function checkMediaDubbingSections(options: {
   seasonNumber?: number | null;
   episodeNumber?: number | null;
   cache?: SimpleCache;
-  forceRefresh?: boolean;
 }): Promise<CheckSectionsResult> {
-  const { tmdbId, type, wikipediaLanguage, cache, forceRefresh } = options;
-  // Queue check/extract run on separate cron ticks: refresh Wikipedia page
-  // metadata and sections so stale section indexes are validated against the page.
-  const fetchOptions: CacheFetchOptions = { forceRefresh };
+  const { tmdbId, type, wikipediaLanguage, cache } = options;
   let mediaTitle = "Unknown title";
   let wikiPageUrl: string | undefined = undefined;
 
@@ -248,7 +244,6 @@ export async function checkMediaDubbingSections(options: {
     const wikipediaPage = await wikipediaCache.getWikipediaPageInfo(
       pageTitle,
       wikipediaLanguage,
-      fetchOptions,
     );
 
     const pages = wikipediaPage?.query?.pages || {};
@@ -262,7 +257,6 @@ export async function checkMediaDubbingSections(options: {
     const wikipediaPageSections = await wikipediaCache.getPageSections(
       pageId,
       wikipediaLanguage,
-      fetchOptions,
     );
 
     const sections =
@@ -297,16 +291,13 @@ export async function checkMediaDubbingSections(options: {
   }
 }
 
+/** Finds dubbing sections on a Wikipedia page linked to an IGDB game. */
 export async function checkGameDubbingSections(options: {
   igdbId: number;
   wikipediaLanguage: string;
   cache?: SimpleCache;
-  forceRefresh?: boolean;
 }): Promise<CheckSectionsResult> {
-  const { igdbId, wikipediaLanguage, cache, forceRefresh } = options;
-  // Queue check/extract run on separate cron ticks: refresh Wikipedia page
-  // metadata and sections so stale section indexes are validated against the page.
-  const fetchOptions: CacheFetchOptions = { forceRefresh };
+  const { igdbId, wikipediaLanguage, cache } = options;
   let gameTitle = "Unknown title";
   let wikiPageUrl: string | undefined = undefined;
 
@@ -346,7 +337,6 @@ export async function checkGameDubbingSections(options: {
     const wikipediaPage = await wikipediaCache.getWikipediaPageInfo(
       pageTitle,
       wikipediaLanguage,
-      fetchOptions,
     );
 
     const pages = wikipediaPage?.query?.pages || {};
@@ -360,7 +350,6 @@ export async function checkGameDubbingSections(options: {
     const wikipediaPageSections = await wikipediaCache.getPageSections(
       pageId,
       wikipediaLanguage,
-      fetchOptions,
     );
 
     const sections =
@@ -399,6 +388,7 @@ export async function checkGameDubbingSections(options: {
 // 2. Extract Stage (Queue 3: wiki_extract) - LLM Gemini credit parsing
 // ---------------------------------------------------------------------------
 
+/** Extracts credits from selected Wikipedia sections for a TMDB media item. */
 export async function extractMediaDubbingCredits(options: {
   tmdbId: number;
   type: "movie" | "tv" | "season" | "episode";
@@ -409,12 +399,15 @@ export async function extractMediaDubbingCredits(options: {
   seasonNumber?: number | null;
   episodeNumber?: number | null;
   cache?: SimpleCache;
-  forceRefresh?: boolean;
 }): Promise<ExtractCreditsResult> {
-  const { tmdbId, type, wikipediaLanguage, pageId, sectionIndexes, cache, forceRefresh } = options;
-  // Re-read volatile Wikipedia sections and wikitext because the check stage
-  // ran on an earlier cron tick and the section list can have changed since.
-  const fetchOptions: CacheFetchOptions = { forceRefresh };
+  const {
+    tmdbId,
+    type,
+    wikipediaLanguage,
+    pageId,
+    sectionIndexes,
+    cache,
+  } = options;
   let mediaTitle = "Unknown title";
   let imageUrl: string | undefined = undefined;
 
@@ -471,7 +464,6 @@ export async function extractMediaDubbingCredits(options: {
     const pageSections = await wikipediaCache.getPageSections(
       pageId,
       wikipediaLanguage,
-      fetchOptions,
     );
     const validIndexes = await filterValidSectionIndexes(
       pageSections.parse?.tocdata?.sections || pageSections.parse?.sections || [],
@@ -497,7 +489,6 @@ export async function extractMediaDubbingCredits(options: {
         pageId,
         String(sectionIndex),
         wikipediaLanguage,
-        fetchOptions,
       );
       const wikitext = wikitextJSON.parse?.wikitext;
       if (!wikitext) continue;
@@ -603,6 +594,7 @@ The approved target dubbing market is ${dubbingLanguage} (${displayDubbingLangua
   }
 }
 
+/** Extracts credits from selected Wikipedia sections for an IGDB game. */
 export async function extractGameDubbingCredits(options: {
   igdbId: number;
   wikipediaLanguage: string;
@@ -610,12 +602,8 @@ export async function extractGameDubbingCredits(options: {
   pageId: number;
   sectionIndexes: number[];
   cache?: SimpleCache;
-  forceRefresh?: boolean;
 }): Promise<ExtractCreditsResult> {
-  const { igdbId, wikipediaLanguage, pageId, sectionIndexes, cache, forceRefresh } = options;
-  // Re-read volatile Wikipedia sections and wikitext because the check stage
-  // ran on an earlier cron tick and the section list can have changed since.
-  const fetchOptions: CacheFetchOptions = { forceRefresh };
+  const { igdbId, wikipediaLanguage, pageId, sectionIndexes, cache } = options;
   let gameTitle = "Unknown title";
   let imageUrl: string | undefined = undefined;
 
@@ -655,7 +643,6 @@ export async function extractGameDubbingCredits(options: {
     const pageSections = await wikipediaCache.getPageSections(
       pageId,
       wikipediaLanguage,
-      fetchOptions,
     );
     const validIndexes = await filterValidSectionIndexes(
       pageSections.parse?.tocdata?.sections || pageSections.parse?.sections || [],
@@ -681,7 +668,6 @@ export async function extractGameDubbingCredits(options: {
         pageId,
         String(sectionIndex),
         wikipediaLanguage,
-        fetchOptions,
       );
       const wikitext = wikitextJSON.parse?.wikitext;
       if (!wikitext) continue;

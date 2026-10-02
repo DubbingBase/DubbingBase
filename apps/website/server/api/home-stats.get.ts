@@ -1,9 +1,5 @@
 import { useSupabaseAdmin } from "../utils/db/client";
-import { setPublicCacheHeaders } from "../utils/cache/http";
-
 export default defineEventHandler(async (event) => {
-  setPublicCacheHeaders(event, "discovery");
-
   try {
     const supabase = useSupabaseAdmin();
 

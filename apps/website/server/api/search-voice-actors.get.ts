@@ -1,7 +1,5 @@
 import { normalizeString } from "../utils/normalize";
 import { useSupabaseAdmin } from "../utils/db/client";
-import { setPublicCacheHeaders } from "../utils/cache/http";
-
 interface SearchParams {
   query: string;
   limit?: number;
@@ -77,8 +75,6 @@ async function searchVoiceActors(
 }
 
 export default defineEventHandler(async (event) => {
-  setPublicCacheHeaders(event, "search");
-
   const query = getQuery(event);
   const searchQuery = query.query as string | undefined;
   const limit = query.limit ? Number(query.limit) : 10;

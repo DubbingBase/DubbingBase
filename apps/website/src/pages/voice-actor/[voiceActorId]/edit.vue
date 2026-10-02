@@ -1104,6 +1104,7 @@ const { data: initialData } = await useAsyncData(
       linkedWorks: works || [],
     };
   },
+  { getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp) },
 );
 
 watch(

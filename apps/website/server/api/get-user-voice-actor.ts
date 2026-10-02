@@ -1,6 +1,5 @@
 import { useSupabaseAdmin } from "../utils/db/client";
 import { requireUser } from "../utils/auth";
-import { setNoCacheHeaders } from "../utils/cache/http";
 import { useTmdbClient } from "../utils";
 
 interface TmdbCastMember {
@@ -28,7 +27,6 @@ function getTmdbCast(value: unknown): TmdbCastMember[] {
 }
 
 export default defineEventHandler(async (event) => {
-  setNoCacheHeaders(event);
   const user = requireUser(event);
   const supabaseAdmin = useSupabaseAdmin();
   const tmdbClient = useTmdbClient();

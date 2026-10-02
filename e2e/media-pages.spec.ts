@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { setupMockApi, waitForVueHydration } from "./helpers/mock-api";
-import { MOCK_SEASON } from "./fixtures/mock-data";
+import { MOCK_MOVIE, MOCK_SEASON } from "./fixtures/mock-data";
 
 test.describe("Media Detail Pages", () => {
   test.beforeEach(async ({ page }) => {
@@ -24,6 +24,41 @@ test.describe("Media Detail Pages", () => {
     await expect(vaLink).toBeVisible({ timeout: 5000 });
 
     api.expectNoErrors();
+  });
+
+  test("refetches movie data when browser back returns to the detail page", async ({
+    page,
+  }) => {
+    await setupMockApi(page);
+    const freshMovie = structuredClone(MOCK_MOVIE);
+    freshMovie.movie.title = "Raiders of the Lost Ark (Updated)";
+    let movieRequests = 0;
+
+    await page.route("**/api/movie/85**", async (route) => {
+      movieRequests += 1;
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(freshMovie),
+      });
+    });
+
+    await page.goto("/movie/85", { waitUntil: "domcontentloaded" });
+    await waitForVueHydration(page);
+    await expect(
+      page.getByRole("heading", { name: "Raiders of the Lost Ark" }),
+    ).toBeVisible();
+
+    await page.locator('a[href*="/voice-actor/1"]').first().click();
+    await expect(page).toHaveURL(/\/voice-actor\/1/);
+    await page.goBack();
+
+    await expect.poll(() => movieRequests).toBe(1);
+    await expect(
+      page.getByRole("heading", {
+        name: "Raiders of the Lost Ark (Updated)",
+      }),
+    ).toBeVisible();
   });
 
   test("renders TV Show detail page with cast and seasons", async ({

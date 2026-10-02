@@ -217,6 +217,7 @@ const { data: auditLogsData, pending: isLoadingLogs } = await useAsyncData(
     if (error) return [];
     return data || [];
   },
+  { getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp) },
 );
 
 if (auditLogsData.value) {

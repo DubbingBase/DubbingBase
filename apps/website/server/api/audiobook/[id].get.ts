@@ -3,7 +3,6 @@ import { getDubbingProjects } from "../../utils/db/queries";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 import { scheduleBackgroundTask } from "../../utils/background";
-import { setPublicCacheHeaders } from "../../utils/cache/http";
 import type { AudiobookResponse } from "@app/shared-logic";
 
 export default defineEventHandler(async (event): Promise<AudiobookResponse> => {
@@ -17,9 +16,6 @@ export default defineEventHandler(async (event): Promise<AudiobookResponse> => {
   if (isNaN(bookId)) {
     throw createError({ statusCode: 400, message: "Invalid id parameter" });
   }
-
-  setPublicCacheHeaders(event, "detail");
-
   const openLibraryClient = useOpenLibraryClient();
   // Fetch OpenLibrary book data + DB dubbing projects concurrently
   const [apiData, dbData] = await Promise.all([

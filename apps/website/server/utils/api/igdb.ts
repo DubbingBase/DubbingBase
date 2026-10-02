@@ -20,7 +20,13 @@ interface IgdbCachedToken {
 const igdbTokenNamespace = createCacheNamespace<IgdbCachedToken>();
 const igdbGameNamespace = createCacheNamespace<IgdbGame | null>();
 const igdbCharactersNamespace = createCacheNamespace<IgdbCharacter[]>();
-const igdbTrendingGamesNamespace = createCacheNamespace<IgdbGame[]>();
+const igdbTrendingGamesNamespace =
+  createCacheNamespace<IgdbTrendingGamesResult>();
+
+export interface IgdbTrendingGamesResult {
+  games: IgdbGame[];
+  degraded: boolean;
+}
 
 export interface IgdbPopularityPrimitive {
   id: number;
@@ -128,7 +134,8 @@ export class IgdbClient {
 
     const getCachedToken = () =>
       this.cache.getOrFetch(igdbTokenNamespace, "igdb:auth_token", fetchToken, {
-        ttl: 604800,
+        ttl: "STABLE",
+        cachePolicy: "persistent",
       });
 
     let result = await getCachedToken();
@@ -223,7 +230,7 @@ export class IgdbClient {
 
   async getGame(
     id: number,
-    options: CacheFetchOptions = {},
+    options: CacheFetchOptions = { cachePolicy: "persistent", ttl: "STABLE" },
   ): Promise<IgdbGame | null> {
     const cacheKey = buildCacheKey({
       provider: "igdb",
@@ -250,11 +257,12 @@ export class IgdbClient {
         );
         return results[0] ?? null;
       },
-      { ttl: 86400, ...options },
+      options,
     );
   }
 
   async searchGames(queryText: string): Promise<IgdbGame[]> {
+    // Search results bypass KV and are fetched on every request.
     const escapedQuery = queryText.replace(/"/g, '\\"');
     const results = await this.query<IgdbGame>(
       "games",
@@ -270,7 +278,7 @@ export class IgdbClient {
 
   async getGameCharacters(
     gameId: number,
-    options: CacheFetchOptions = {},
+    options: CacheFetchOptions = { cachePolicy: "persistent", ttl: "STABLE" },
   ): Promise<IgdbCharacter[]> {
     const cacheKey = buildCacheKey({
       provider: "igdb",
@@ -289,15 +297,15 @@ export class IgdbClient {
        where games = (${gameId});
        limit 50;`,
         ),
-      { ttl: 86400, ...options },
+      options,
     );
   }
 
   async getTrendingGames(
     limit = 20,
     language = DEFAULT_LANGUAGE,
-    options: CacheFetchOptions = {},
-  ): Promise<IgdbGame[]> {
+  ): Promise<IgdbTrendingGamesResult> {
+    // Trending results bypass KV; the provider-only route applies HTTP caching.
     const cacheKey = buildCacheKey({
       provider: "igdb",
       resource: "trending-games",
@@ -329,7 +337,7 @@ export class IgdbClient {
           .slice(0, limit)
           .map(([id]) => id);
 
-        if (topIds.length === 0) return [];
+        if (topIds.length === 0) return { games: [], degraded: false };
 
         const games = await this.query<IgdbGame>(
           "games",
@@ -339,37 +347,40 @@ export class IgdbClient {
       limit ${limit};`,
         );
 
-        if (games.length === 0) return games;
+        if (games.length === 0) return { games, degraded: false };
 
-        let localizedGames = games;
+        let localizations: IgdbGameLocalization[];
         try {
-          const localizations = await this.query<IgdbGameLocalization>(
+          localizations = await this.query<IgdbGameLocalization>(
             "game_localizations",
             `fields game, name, region.identifier;
          where game = (${topIds.join(",")});
          limit ${Math.max(topIds.length * 10, 100)};`,
           );
-          const localizedNames = new Map<number, string>();
-          for (const localization of localizations) {
-            if (
-              localization.region?.identifier === language &&
-              !localizedNames.has(localization.game)
-            ) {
-              localizedNames.set(localization.game, localization.name);
-            }
-          }
-          localizedGames = games.map((game) => ({
-            ...game,
-            name: localizedNames.get(game.id) ?? game.name,
-          }));
         } catch (error) {
-          debugLog("Failed to fetch game localizations:", error);
-          localizedGames = games;
+          console.warn(
+            "[IGDB] Game localization lookup failed; returning base names",
+            error,
+          );
+          return { games, degraded: true };
         }
+        const localizedNames = new Map<number, string>();
+        for (const localization of localizations) {
+          if (
+            localization.region?.identifier === language &&
+            !localizedNames.has(localization.game)
+          ) {
+            localizedNames.set(localization.game, localization.name);
+          }
+        }
+        const localizedGames = games.map((game) => ({
+          ...game,
+          name: localizedNames.get(game.id) ?? game.name,
+        }));
 
-        return localizedGames;
+        return { games: localizedGames, degraded: false };
       },
-      { ttl: 3600, ...options },
+      { cachePolicy: "none" },
     );
   }
 }

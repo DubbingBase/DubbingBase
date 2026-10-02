@@ -1,11 +1,24 @@
-import { createApp, createError, defineEventHandler, readBody, toWebHandler } from "h3";
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  createApp,
+  createError,
+  defineEventHandler,
+  readBody,
+  toWebHandler,
+} from "h3";
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 const routeMocks = vi.hoisted(() => ({
   requireUser: vi.fn(),
   rpc: vi.fn(),
   sendDiscordAdminNotification: vi.fn(),
-  setNoStoreHeaders: vi.fn(),
 }));
 
 vi.mock("../auth", () => ({ requireUser: routeMocks.requireUser }));
@@ -15,10 +28,6 @@ vi.mock("../db/client", () => ({
 vi.mock("../notifications/discord", () => ({
   sendDiscordAdminNotification: routeMocks.sendDiscordAdminNotification,
 }));
-vi.mock("../cache/http", () => ({
-  setNoStoreHeaders: routeMocks.setNoStoreHeaders,
-}));
-
 let handler: typeof import("../../api/media-queue.post").default;
 
 beforeAll(async () => {

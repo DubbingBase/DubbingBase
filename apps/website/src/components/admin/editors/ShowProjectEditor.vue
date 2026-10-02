@@ -1111,6 +1111,7 @@ const { data: initialData, error: initialDataError } = await useAsyncData(
       initialVoiceActors,
     };
   },
+  { getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp) },
 );
 
 watch(

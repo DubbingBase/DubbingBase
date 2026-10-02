@@ -369,15 +369,19 @@ const {
   pending,
   error: fetchError,
   refresh: fetchDashboardData,
-} = await useAsyncData("admin-dashboard", async () => {
-  return (await $fetch("/api/dashboard-stats")) as {
-    userCount: number;
-    voiceActorCount: number;
-    userGrowth: { date: string; count: number }[];
-    voiceActorGrowth: { date: string; count: number }[];
-    topVoiceActors: any[];
-  };
-});
+} = await useAsyncData(
+  "admin-dashboard",
+  async () => {
+    return (await $fetch("/api/dashboard-stats")) as {
+      userCount: number;
+      voiceActorCount: number;
+      userGrowth: { date: string; count: number }[];
+      voiceActorGrowth: { date: string; count: number }[];
+      topVoiceActors: any[];
+    };
+  },
+  { getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp) },
+);
 
 watch(
   dashboardData,

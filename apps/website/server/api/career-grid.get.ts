@@ -1,8 +1,6 @@
 import { useSupabaseAdmin } from "../utils/db/client";
 import { useTmdbClient, useCache } from "../utils";
 import { MediaService } from "../utils/services/media";
-import { setPublicCacheHeaders } from "../utils/cache/http";
-
 async function initialize(cache: ReturnType<typeof useCache>) {
   // Font data would be loaded here in a real implementation
   // For Cloudflare Workers, fonts must be bundled or fetched
@@ -548,8 +546,6 @@ function buildCareerGridImage(params: {
 }
 
 export default defineEventHandler(async (event) => {
-  setPublicCacheHeaders(event, "detail");
-
   try {
     const query = getQuery(event);
     const typeParam = (query.type as string) || "actor";
