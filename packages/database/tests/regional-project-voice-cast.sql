@@ -43,6 +43,29 @@ BEGIN
   VALUES ('Regional RPC', 'Four') RETURNING id INTO va_four;
   INSERT INTO public.source(name) VALUES ('Regional RPC fixture') RETURNING id INTO v_source_id;
 
+  BEGIN
+    PERFORM public.save_regional_project_actor_assignments(
+      -980204, 'movie', 'fr', '[]'::jsonb
+    );
+    RAISE EXCEPTION 'A legacy language code was accepted by the assignment RPC';
+  EXCEPTION WHEN SQLSTATE '22023' THEN
+    NULL;
+  END;
+  BEGIN
+    PERFORM public.save_regional_project_actor_assignments(
+      -980209, 'movie', 'zz-ZZ', '[]'::jsonb
+    );
+    RAISE EXCEPTION 'An unsupported regional code was accepted by the assignment RPC';
+  EXCEPTION WHEN SQLSTATE '22023' THEN
+    NULL;
+  END;
+  IF EXISTS (
+    SELECT 1 FROM public.dubbing_projects
+    WHERE content_id = -980204 AND content_type = 'movie'
+  ) THEN
+    RAISE EXCEPTION 'An invalid regional language created a project';
+  END IF;
+
   -- A new project and its first assignment are created atomically and validated.
   project_id := public.save_regional_project_actor_assignments(
     -980201,

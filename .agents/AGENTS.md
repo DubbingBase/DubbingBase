@@ -39,7 +39,7 @@ All development tasks MUST be run via **Mise** to ensure environment consistency
 | `mise run backend-stop` | Stops the local Supabase backend.                                                             |
 | `mise run app`          | Maintainer-only: starts the mobile app in web mode (`apps/mobile`); agents MUST NOT run it.   |
 | `mise run website`      | Starts only the development server for the website (`apps/website`).                          |
-| `mise run db-reset`     | Resets the local database, applies local migrations, and loads seed data.                     |
+| `mise run db-reset`     | Resets the local schema and applies migrations without seed data.                             |
 | `mise run migrate-up`   | Applies pending migrations to the local database.                                             |
 | `mise run migrate-down` | Rolls back the last applied migration.                                                        |
 | `mise run sync`         | Maintainer-only: synchronizes mobile builds with Capacitor platforms; agents MUST NOT run it. |
@@ -132,26 +132,26 @@ doppler run -- mise run website
   - The local Supabase database runs on port `55322` (you can verify this by running `npx supabase status`).
   - To query the local DB from the terminal, use: `PGPASSWORD=postgres psql -h 127.0.0.1 -p 55322 -U postgres -d postgres -c "<query>"`.
 - **Seed Data**:
-  - Keep `packages/database/supabase/seed.sql` up to date if you add new tables or reference data.
+  - `seed.sql` is a production-derived local copy of mutable business data. Migrations own schema and constrain `dubbing_projects.language` to the supported regional dubbing-language set; shared TypeScript validates membership in the same set at application boundaries.
 
-### Headless production-backed local reseed
+### Production-backed local refresh
 
-`mise run reseed` reads a data dump and Storage files from its linked Supabase project, then resets only the local Supabase stack. Run it only when the user explicitly asks to refresh local data from production. Never push migrations, mutate remote data, or deploy as part of a reseed.
+Production-backed refresh is opt-in. Production access is read-only; all database resets and file replacement target local Supabase. Never push migrations, mutate remote data, or deploy as part of a refresh.
 
-The production Supabase project ref selected for this repository is `rrjgbneefiwoqvsjwzrz`. Use Doppler project `dubbingbase`, config `prd`, for read-only production dump and Storage downloads. The required CLI credentials are `SUPABASE_ACCESS_TOKEN` and `SUPABASE_DB_PASSWORD`; never print or commit their values. To avoid browser login and interactive project selection in a headless environment:
+Migrations own schema and enforce supported regional dubbing-language membership through `public.is_valid_dubbing_language(text)` and the `dubbing_projects.language` CHECK constraint. Shared TypeScript validates membership in the matching list. The temporary `dubbing_languages` table exists only between the deployed staging migration and the final queue-RPC replacement. Database refresh uses the full data-only production dump and normal local reset after production has completed regional migration; before then, use the documented migration-checkpoint rehearsal. Storage objects are synchronized separately through Supabase Storage CLI commands.
+
+Use Doppler project `dubbingbase`, config `prd`, for read-only production dumps and Storage downloads. The required CLI credentials are `SUPABASE_ACCESS_TOKEN` and `SUPABASE_DB_PASSWORD`; never print or commit their values. To avoid browser login and interactive project selection in a headless environment:
 
 - From `packages/database`, link a fresh checkout explicitly with `doppler run --project dubbingbase --config prd -- mise exec -- npx supabase link --project-ref rrjgbneefiwoqvsjwzrz`.
 - If `db dump` fails while initializing a temporary login role with `401 Unauthorized`, or asks for a database password, check that the command is running with the `prd` Doppler config. Do not persist either secret in the repository.
-- If the CLI is already authenticated and the project is linked, no login or link step is needed. The project ref is not a credential; use it instead of the interactive project picker. The `reseed` task stops and restarts the local stack first so Storage uses the linked project's pinned image instead of a stale container.
-- The `reseed` task's dependency chain includes the root `install` task (`pnpm install`), which may traverse the mobile workspace. Agents must keep mobile out of scope and run the existing database tasks individually from the repository root, in order, after dependencies are installed:
+- If the CLI is already authenticated and the project is linked, no login or link step is needed. The project ref is not a credential; use it instead of the interactive project picker.
+- The database tasks use `database-install`, which installs only `@app/supabase` dependencies. From the repository root, run:
 
   ```bash
-  doppler run --project dubbingbase --config prd -- mise run --skip-deps fetch-seed
-  doppler run --project dubbingbase --config prd -- mise run --skip-deps prepare-seed
-  mise run --skip-deps reseed
+  doppler run --project dubbingbase --config prd -- mise run reseed
   ```
 
-  `fetch-seed` reads the linked remote database and `prepare-seed` downloads linked Storage objects. `reseed` imports those rows at migration `20260926094824` (immediately before the regional language mapping), then applies all later migrations to the imported data. This ordering is required to validate data migrations against the production snapshot. Confirm the linked ref before starting the sequence.
+  `fetch-seed` writes the full data-only dump to ignored `packages/database/supabase/seed.sql`; `reseed` runs the normal local `supabase db reset` flow. Run `mise run sync-storage` separately after the database reset. The linked production project still needs the regional mapping migration before its project rows satisfy the final regional-language CHECK; until then, use migration-only resets and SQL fixtures for local validation. Use `mise run db-reset` when only a fresh schema is needed.
 
 ---
 

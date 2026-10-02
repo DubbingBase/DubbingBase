@@ -443,7 +443,7 @@
     "prepareDialogTitle": "Extraire les crédits de doublage du jeu",
     "prepareDialogDescription": "Choisissez l’édition Wikipédia à consulter et le projet régional de doublage auquel attribuer les crédits.",
     "wikipediaSourceLanguage": "Langue source Wikipédia",
-    "wikipediaSourceHint": "Saisissez un code d’édition comme en, fr ou simple.",
+    "wikipediaSourceHint": "Saisissez un code d’édition comme en ou fr.",
     "developer": "Développeur",
     "publisher": "Éditeur",
     "characters": "Personnages",

@@ -7,15 +7,7 @@ import {
   readBody,
   toWebHandler,
 } from "h3";
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const requester = "11111111-1111-4111-8111-111111111111";
 
@@ -78,7 +70,7 @@ beforeEach(() => {
     title: "Test movie",
     sectionIndexes: [2],
     pageId: 55,
-    wikipediaUrl: "https://simple.wikipedia.org/wiki/Test_movie",
+    wikipediaUrl: "https://en.wikipedia.org/wiki/Test_movie",
   });
   routeMocks.checkGameDubbingSections.mockResolvedValue({
     ok: true,
@@ -123,7 +115,7 @@ beforeEach(() => {
               tmdb_id: 42,
               media_type: "movie",
               wiki_id: "Q42",
-              wikipedia_language: "simple",
+              wikipedia_language: "en",
               dubbing_language: "en-US",
               is_manual: true,
             },
@@ -143,10 +135,7 @@ async function processQueue(
   payloadChanges: Record<string, unknown> = {},
 ) {
   routeMocks.rpc.mockImplementation(async (name: string) => {
-    if (
-      name === "pop_media_queue_batch" ||
-      name === "pop_media_queue_message"
-    ) {
+    if (name === "pop_media_queue_batch" || name === "pop_media_queue_message") {
       return {
         data: [
           {
@@ -156,7 +145,7 @@ async function processQueue(
               tmdb_id: 42,
               media_type: "movie",
               wiki_id: "Q42",
-              wikipedia_language: "simple",
+              wikipedia_language: "en",
               dubbing_language: "en-US",
               is_manual: true,
               ...(queue === "check" || queue === "extract"
@@ -241,9 +230,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
     expect(childEnqueues.length).toBeGreaterThan(0);
     for (const [name, args] of childEnqueues) {
       expect(name).toBe("enqueue_media_fetch");
-      expect(args).toEqual(
-        expect.objectContaining({ p_requested_by: requester }),
-      );
+      expect(args).toEqual(expect.objectContaining({ p_requested_by: requester }));
     }
   });
 
@@ -259,16 +246,11 @@ describe("POST /api/process-media-queue requester propagation", () => {
   it.each([
     ["missing", {}],
     ["malformed", { requested_by: "not-a-uuid" }],
-  ] as const)(
-    "does not invent a requester when the field is %s",
-    async (_caseName, payload) => {
-      await processQueue("check", payload);
+  ] as const)("does not invent a requester when the field is %s", async (_caseName, payload) => {
+    await processQueue("check", payload);
 
-      const enqueue = routeMocks.rpc.mock.calls.find(
-        ([name]) => name === "enqueue_media_extract",
-      );
-      expect(enqueue).toBeDefined();
-      expect(enqueue?.[1]).not.toHaveProperty("p_requested_by");
-    },
-  );
+    const enqueue = routeMocks.rpc.mock.calls.find(([name]) => name === "enqueue_media_extract");
+    expect(enqueue).toBeDefined();
+    expect(enqueue?.[1]).not.toHaveProperty("p_requested_by");
+  });
 });

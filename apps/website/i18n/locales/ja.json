@@ -444,7 +444,7 @@
     "prepareDialogTitle": "ゲームの吹き替えクレジットを抽出",
     "prepareDialogDescription": "参照する Wikipedia の言語版と、クレジットを登録する吹き替え地域を選択してください。",
     "wikipediaSourceLanguage": "Wikipedia の参照言語",
-    "wikipediaSourceHint": "en、fr、simple などの言語版コードを入力してください。",
+    "wikipediaSourceHint": "en、fr などの言語版コードを入力してください。",
     "developer": "開発者",
     "publisher": "パブリッシャー",
     "characters": "キャラクター",

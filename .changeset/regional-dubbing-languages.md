@@ -4,4 +4,4 @@
 "@app/shared-logic": minor
 ---
 
-Require explicit regional dubbing languages at website and database write boundaries. Separate Wikipedia editions from dubbing regions in the import queue, retain unclassified imports for review, and provide evidence-backed migration and merge tools that preserve credits and their history.
+Keep the temporary dubbing-language registry through the legacy mapping boundary, then remove it after queue RPCs switch to supported-code validation through the shared TypeScript list and immutable SQL helper. Preserve Simple Wikipedia only as a historical project mapping and collision test; reject it as a runtime source edition.

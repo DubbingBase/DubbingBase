@@ -30,12 +30,10 @@ DECLARE
 BEGIN
   v_lang := nullif(trim(COALESCE(p_wikipedia_language, p_language)), '');
 
-  IF v_lang IS NOT NULL AND v_lang !~ '^[a-z][a-z0-9-]*$' THEN
+  IF v_lang IS NOT NULL AND (v_lang !~ '^[a-z][a-z0-9-]*$' OR v_lang = 'simple') THEN
     RAISE EXCEPTION 'Invalid Wikipedia source language';
   END IF;
-  IF p_dubbing_language IS NOT NULL AND NOT EXISTS (
-    SELECT 1 FROM public.dubbing_languages WHERE code = p_dubbing_language
-  ) THEN
+  IF p_dubbing_language IS NOT NULL AND NOT public.is_valid_dubbing_language(p_dubbing_language) THEN
     RAISE EXCEPTION 'Invalid regional dubbing language';
   END IF;
 
@@ -126,13 +124,13 @@ DECLARE
 BEGIN
   v_wikipedia_language := nullif(trim(COALESCE(p_wikipedia_language, p_language)), '');
 
-  IF v_wikipedia_language IS NULL OR v_wikipedia_language !~ '^[a-z][a-z0-9-]*$' THEN
+  IF v_wikipedia_language IS NULL
+    OR v_wikipedia_language !~ '^[a-z][a-z0-9-]*$'
+    OR v_wikipedia_language = 'simple' THEN
     RAISE EXCEPTION 'Invalid Wikipedia source language';
   END IF;
-  IF p_dubbing_language IS NULL OR NOT EXISTS (
-    SELECT 1 FROM public.dubbing_languages WHERE code = p_dubbing_language
-  ) THEN
-    RAISE EXCEPTION 'A registered regional dubbing language is required';
+  IF p_dubbing_language IS NULL OR NOT public.is_valid_dubbing_language(p_dubbing_language) THEN
+    RAISE EXCEPTION 'A regional dubbing language is required (for example fr-FR)';
   END IF;
   IF EXISTS (
     SELECT 1 FROM public.dubbing_projects dp
@@ -194,9 +192,7 @@ DECLARE
   v_is_manual boolean;
   v_requested_by uuid;
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM public.dubbing_languages WHERE code = p_dubbing_language
-  ) THEN
+  IF p_dubbing_language IS NULL OR NOT public.is_valid_dubbing_language(p_dubbing_language) THEN
     RAISE EXCEPTION 'Invalid regional dubbing language';
   END IF;
 
@@ -221,7 +217,9 @@ BEGIN
     v_requested_by := NULL;
   END;
 
-  IF v_wikipedia_language IS NULL OR v_wikipedia_language !~ '^[a-z][a-z0-9-]*$' THEN
+  IF v_wikipedia_language IS NULL
+    OR v_wikipedia_language !~ '^[a-z][a-z0-9-]*$'
+    OR v_wikipedia_language = 'simple' THEN
     RAISE EXCEPTION 'Review item has no valid Wikipedia source language';
   END IF;
 
@@ -302,6 +300,10 @@ AS $$
   LIMIT GREATEST(1, LEAST(COALESCE(p_limit, 100), 500))
   OFFSET GREATEST(COALESCE(p_offset, 0), 0);
 $$;
+
+-- Earlier queue RPCs still required this staging registry. Their final
+-- replacements above use structural validation, so the table can now go.
+DROP TABLE public.dubbing_languages;
 
 REVOKE ALL ON FUNCTION public.enqueue_media_fetch(bigint, text, integer, integer, text, boolean, text, text, uuid)
   FROM PUBLIC, anon, authenticated;

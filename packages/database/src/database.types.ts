@@ -91,18 +91,6 @@ export type Database = {
         };
         Relationships: [];
       };
-      dubbing_languages: {
-        Row: {
-          code: string;
-        };
-        Insert: {
-          code: string;
-        };
-        Update: {
-          code?: string;
-        };
-        Relationships: [];
-      };
       dubbing_project_crew: {
         Row: {
           created_at: string | null;
@@ -181,13 +169,6 @@ export type Database = {
           updated_at?: string | null;
         };
         Relationships: [
-          {
-            foreignKeyName: "dubbing_projects_language_fkey";
-            columns: ["language"];
-            isOneToOne: false;
-            referencedRelation: "dubbing_languages";
-            referencedColumns: ["code"];
-          },
           {
             foreignKeyName: "dubbing_projects_studio_id_fkey";
             columns: ["studio_id"];
@@ -650,10 +631,6 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      apply_reviewed_dubbing_languages: {
-        Args: { p_decisions: Json };
-        Returns: undefined;
-      };
       archive_media_queue_message: {
         Args: { p_msg_id: number; p_queue_name: string };
         Returns: boolean;
@@ -682,10 +659,6 @@ export type Database = {
       delete_media_queue_item: {
         Args: { p_id: number; p_queue_name?: string };
         Returns: boolean;
-      };
-      dubbing_language_review_snapshot: {
-        Args: { p_project_id: number };
-        Returns: Json;
       };
       dubbing_project_completeness: {
         Args: { dp: Database["public"]["Tables"]["dubbing_projects"]["Row"] };
@@ -721,7 +694,6 @@ export type Database = {
         };
         Returns: number;
       };
-      finalize_dubbing_language_constraints: { Args: never; Returns: undefined };
       find_duplicate_voice_actors_rpc: { Args: never; Returns: Json };
       get_media_queue_depth: {
         Args: { p_queue_name?: string };
@@ -832,6 +804,10 @@ export type Database = {
           user_vote: string;
           work_id: number;
         }[];
+      };
+      is_valid_dubbing_language: {
+        Args: { p_language: string };
+        Returns: boolean;
       };
       match_voice_actor: {
         Args: { p_firstname: string; p_lastname: string };

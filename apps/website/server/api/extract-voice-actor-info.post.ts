@@ -1,7 +1,6 @@
 import { requireAdmin } from "../utils/auth";
 
-const WIKIPEDIA_USER_AGENT =
-  "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
+const WIKIPEDIA_USER_AGENT = "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
 
 function getWikipediaPage(title: string, language: string) {
   return `https://${language}.wikipedia.org/w/api.php?action=query&prop=pageprops&format=json&titles=${encodeURIComponent(title)}`;
@@ -36,7 +35,7 @@ export default defineEventHandler(async (event) => {
     const splitParts = urlObj.pathname.split("/wiki/");
     title = decodeURIComponent(splitParts[1] || "");
     const langMatch = urlObj.hostname.match(
-      /^(?:www\.)?([a-z]{2,3}(?:-[a-z0-9]+)?|simple)(?:\.m)?\.wikipedia\.org$/,
+      /^(?:www\.)?([a-z]{2,3}(?:-[a-z0-9]+)?)(?:\.m)?\.wikipedia\.org$/,
     );
     if (!langMatch?.[1]) {
       throw new Error("Could not detect language from Wikipedia URL hostname");
@@ -45,7 +44,7 @@ export default defineEventHandler(async (event) => {
     if (!title) {
       throw new Error("Invalid Wikipedia URL format");
     }
-  } catch (e) {
+  } catch {
     throw createError({ statusCode: 400, message: "Invalid Wikipedia URL" });
   }
 
@@ -103,8 +102,7 @@ export default defineEventHandler(async (event) => {
       const entity = entityData.entities?.[wikidataId];
 
       if (entity) {
-        const fullName =
-          entity.labels?.[lang]?.value || entity.labels?.en?.value;
+        const fullName = entity.labels?.[lang]?.value || entity.labels?.en?.value;
         if (fullName) {
           const parts = fullName.split(" ");
           firstname = parts[0] || "";
@@ -115,18 +113,14 @@ export default defineEventHandler(async (event) => {
         if (imageClaim) {
           const filename = imageClaim.mainsnak?.datavalue?.value;
           if (filename) {
-            const imageUrlRes = await fetch(
-              getImageFromFilename(filename, lang),
-              {
-                headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
-              },
-            );
+            const imageUrlRes = await fetch(getImageFromFilename(filename, lang), {
+              headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
+            });
             const imageUrlData = await imageUrlRes.json();
             const imagePages = imageUrlData?.query?.pages;
             if (imagePages) {
               const imagePageId = Object.keys(imagePages)[0] || "";
-              profile_picture =
-                imagePages[imagePageId]?.imageinfo?.[0]?.url || null;
+              profile_picture = imagePages[imagePageId]?.imageinfo?.[0]?.url || null;
             }
           }
         }
@@ -148,12 +142,9 @@ export default defineEventHandler(async (event) => {
         }
       }
     } else if (pageprops.page_image_free) {
-      const imageUrlRes = await fetch(
-        getImageFromFilename(pageprops.page_image_free, lang),
-        {
-          headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
-        },
-      );
+      const imageUrlRes = await fetch(getImageFromFilename(pageprops.page_image_free, lang), {
+        headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
+      });
       const imageUrlData = await imageUrlRes.json();
       const imagePages = imageUrlData?.query?.pages;
       if (imagePages) {
@@ -174,12 +165,12 @@ export default defineEventHandler(async (event) => {
         tmdb_id: tmdb_id || null,
       },
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error extracting voice actor info:", error);
     if (error instanceof Error && "statusCode" in error) throw error;
     throw createError({
       statusCode: 500,
-      message: error.message || "Internal server error",
+      message: error instanceof Error ? error.message : "Internal server error",
     });
   }
 });

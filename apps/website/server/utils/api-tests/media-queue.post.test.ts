@@ -1,19 +1,5 @@
-import {
-  createApp,
-  createError,
-  defineEventHandler,
-  readBody,
-  toWebHandler,
-} from "h3";
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from "vitest";
+import { createApp, createError, defineEventHandler, readBody, toWebHandler } from "h3";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const routeMocks = vi.hoisted(() => ({
   requireUser: vi.fn(),
@@ -67,7 +53,7 @@ describe("POST /api/media-queue", () => {
       action: "enqueue",
       mediaType: "video_game",
       mediaId: 42,
-      wikipedia_language: "simple",
+      wikipedia_language: "en",
       dubbing_language: "en-US",
       requested_by: "user-u2",
     });
@@ -78,8 +64,8 @@ describe("POST /api/media-queue", () => {
       p_tmdb_id: 42,
       p_season_number: undefined,
       p_episode_number: undefined,
-      p_language: "simple",
-      p_wikipedia_language: "simple",
+      p_language: "en",
+      p_wikipedia_language: "en",
       p_dubbing_language: "en-US",
       p_is_manual: true,
       p_requested_by: "user-u1",
@@ -95,10 +81,23 @@ describe("POST /api/media-queue", () => {
       action: "enqueue",
       mediaType: "video_game",
       mediaId: 42,
-      wikipedia_language: "simple",
+      wikipedia_language: "en",
     });
 
     expect(response.status).toBe(401);
+    expect(routeMocks.rpc).not.toHaveBeenCalled();
+  });
+
+  it("rejects Simple Wikipedia as a source before writing to the queue", async () => {
+    const response = await post({
+      action: "enqueue",
+      mediaType: "video_game",
+      mediaId: 42,
+      wikipedia_language: "simple",
+      dubbing_language: "en-US",
+    });
+
+    expect(response.status).toBe(400);
     expect(routeMocks.rpc).not.toHaveBeenCalled();
   });
 });

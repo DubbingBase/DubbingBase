@@ -241,10 +241,7 @@ export async function checkMediaDubbingSections(options: {
 
     wikiPageUrl = `https://${wikipediaLanguage}.wikipedia.org/wiki/${encodeURIComponent(pageTitle.replace(/ /g, "_"))}`;
 
-    const wikipediaPage = await wikipediaCache.getWikipediaPageInfo(
-      pageTitle,
-      wikipediaLanguage,
-    );
+    const wikipediaPage = await wikipediaCache.getWikipediaPageInfo(pageTitle, wikipediaLanguage);
 
     const pages = wikipediaPage?.query?.pages || {};
     const firstPage = Object.keys(pages)[0];
@@ -254,18 +251,15 @@ export async function checkMediaDubbingSections(options: {
       throw new Error(`Failed to resolve Wikipedia page ID for "${pageTitle}" (${wikiPageUrl}).`);
     }
 
-    const wikipediaPageSections = await wikipediaCache.getPageSections(
-      pageId,
-      wikipediaLanguage,
-    );
+    const wikipediaPageSections = await wikipediaCache.getPageSections(pageId, wikipediaLanguage);
 
     const sections =
       wikipediaPageSections.parse?.tocdata?.sections || wikipediaPageSections.parse?.sections || [];
 
     const dubbingIndexes = await selectDubbingSections(sections);
     const matchedSectionIndexes = sections
-      .filter((section: { index: number }) => dubbingIndexes.includes(String(section.index)))
-      .map((s: { index: number }) => s.index);
+      .filter((section) => dubbingIndexes.includes(String(section.index)))
+      .map((section) => section.index);
 
     if (matchedSectionIndexes.length === 0) {
       throw new Error(`No voice actor / dubbing sections found on Wikipedia page: ${wikiPageUrl}`);
@@ -321,6 +315,9 @@ export async function checkGameDubbingSections(options: {
     }
 
     const bestMatch = searchData.search[0];
+    if (!bestMatch) {
+      throw new Error(`No Wikidata entry found for video game "${game.name}".`);
+    }
     const entityData = await wikipediaCache.getAllSitelinksEntity(bestMatch.id);
     const sitelinks = entityData.entities[bestMatch.id]?.sitelinks;
 
@@ -334,10 +331,7 @@ export async function checkGameDubbingSections(options: {
 
     wikiPageUrl = `https://${wikipediaLanguage}.wikipedia.org/wiki/${encodeURIComponent(pageTitle.replace(/ /g, "_"))}`;
 
-    const wikipediaPage = await wikipediaCache.getWikipediaPageInfo(
-      pageTitle,
-      wikipediaLanguage,
-    );
+    const wikipediaPage = await wikipediaCache.getWikipediaPageInfo(pageTitle, wikipediaLanguage);
 
     const pages = wikipediaPage?.query?.pages || {};
     const firstPage = Object.keys(pages)[0];
@@ -347,18 +341,15 @@ export async function checkGameDubbingSections(options: {
       throw new Error(`Failed to resolve Wikipedia page ID for "${pageTitle}" (${wikiPageUrl}).`);
     }
 
-    const wikipediaPageSections = await wikipediaCache.getPageSections(
-      pageId,
-      wikipediaLanguage,
-    );
+    const wikipediaPageSections = await wikipediaCache.getPageSections(pageId, wikipediaLanguage);
 
     const sections =
       wikipediaPageSections.parse?.tocdata?.sections || wikipediaPageSections.parse?.sections || [];
 
     const dubbingIndexes = await selectDubbingSections(sections);
     const matchedSectionIndexes = sections
-      .filter((section: { index: number }) => dubbingIndexes.includes(String(section.index)))
-      .map((s: { index: number }) => s.index);
+      .filter((section) => dubbingIndexes.includes(String(section.index)))
+      .map((section) => section.index);
 
     if (matchedSectionIndexes.length === 0) {
       throw new Error(`No voice actor / dubbing sections found on Wikipedia page: ${wikiPageUrl}`);
@@ -400,14 +391,7 @@ export async function extractMediaDubbingCredits(options: {
   episodeNumber?: number | null;
   cache?: SimpleCache;
 }): Promise<ExtractCreditsResult> {
-  const {
-    tmdbId,
-    type,
-    wikipediaLanguage,
-    pageId,
-    sectionIndexes,
-    cache,
-  } = options;
+  const { tmdbId, type, wikipediaLanguage, pageId, sectionIndexes, cache } = options;
   let mediaTitle = "Unknown title";
   let imageUrl: string | undefined = undefined;
 
@@ -461,10 +445,7 @@ export async function extractMediaDubbingCredits(options: {
     const wikipediaCache = useWikipediaCache(cache);
     // ponytail: check and extract run on different cron ticks — drop indexes
     // that no longer match (stale payloads, e.g. bare "Reparto" enqueued pre-fix)
-    const pageSections = await wikipediaCache.getPageSections(
-      pageId,
-      wikipediaLanguage,
-    );
+    const pageSections = await wikipediaCache.getPageSections(pageId, wikipediaLanguage);
     const validIndexes = await filterValidSectionIndexes(
       pageSections.parse?.tocdata?.sections || pageSections.parse?.sections || [],
       sectionIndexes,
@@ -496,7 +477,7 @@ export async function extractMediaDubbingCredits(options: {
       const llmResult = await llmGenerateObject(wikitext, dubbingExtractionSchema, {
         systemInstruction: `${dubbingExtractionSystemInstruction}
 
-The approved target dubbing market is ${dubbingLanguage} (${displayDubbingLanguage(dubbingLanguage, "en")}). Extract only credits for this target. Exclude other regional versions and original-language casting. The Wikipedia edition is a source identifier, never evidence of the dubbing market.`,
+The requested target dubbing region is ${dubbingLanguage} (${displayDubbingLanguage(dubbingLanguage, "en")}). Extract only credits for this target. Exclude other regional versions and original-language casting. The Wikipedia edition is a source identifier, never evidence of the dubbing market.`,
         temperature: 0,
       });
       llmModel = llmResult.model;
@@ -640,10 +621,7 @@ export async function extractGameDubbingCredits(options: {
     const wikipediaCache = useWikipediaCache(cache);
     // ponytail: check and extract run on different cron ticks — drop indexes
     // that no longer match (stale payloads)
-    const pageSections = await wikipediaCache.getPageSections(
-      pageId,
-      wikipediaLanguage,
-    );
+    const pageSections = await wikipediaCache.getPageSections(pageId, wikipediaLanguage);
     const validIndexes = await filterValidSectionIndexes(
       pageSections.parse?.tocdata?.sections || pageSections.parse?.sections || [],
       sectionIndexes,
@@ -675,7 +653,7 @@ export async function extractGameDubbingCredits(options: {
       const llmResult = await llmGenerateObject(wikitext, dubbingExtractionSchema, {
         systemInstruction: `${dubbingExtractionSystemInstruction}
 
-The approved target dubbing market is ${dubbingLanguage} (${displayDubbingLanguage(dubbingLanguage, "en")}). Extract only credits for this target. Exclude other regional versions and original-language casting. The Wikipedia edition is a source identifier, never evidence of the dubbing market.`,
+The requested target dubbing region is ${dubbingLanguage} (${displayDubbingLanguage(dubbingLanguage, "en")}). Extract only credits for this target. Exclude other regional versions and original-language casting. The Wikipedia edition is a source identifier, never evidence of the dubbing market.`,
         temperature: 0,
       });
       llmModel = llmResult.model;
