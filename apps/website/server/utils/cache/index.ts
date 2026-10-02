@@ -1,4 +1,9 @@
-import { classifyCacheWriteKey, SimpleKeyBuilder, SimpleKeyValidator } from "./constants";
+import {
+  classifyCacheWriteKey,
+  hashCacheValue,
+  SimpleKeyBuilder,
+  SimpleKeyValidator,
+} from "./constants";
 
 interface CacheInFlightRequest<T> {
   cachePolicy: CachePolicy;
@@ -105,6 +110,7 @@ export class SimpleCache {
             provider,
             resource,
             ttl: expirationTtl,
+            keyFingerprint: hashCacheValue(safeKey),
           });
         } catch {
           // Diagnostics must not change the outcome of a successful KV write.
