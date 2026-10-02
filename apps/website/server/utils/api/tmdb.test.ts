@@ -4,54 +4,46 @@ import { TMDBClient } from "./tmdb";
 
 afterEach(() => vi.unstubAllGlobals());
 
-function createClient() {
-  let reads = 0;
-  let writes = 0;
-  vi.stubGlobal("useRuntimeConfig", () => ({ tmdbApiKey: "test-key" }));
-  vi.stubGlobal(
-    "fetch",
-    vi.fn(async () => new Response(JSON.stringify({ id: 1, results: [] }))),
-  );
-  const client = new TMDBClient(
-    new SimpleCache(() => ({
-      get: async () => {
-        reads += 1;
-        return null;
-      },
-      put: async () => {
-        writes += 1;
-      },
-    })),
-  );
+describe("TMDB metadata fetches", () => {
+  it("fetches metadata directly without reading or writing KV", async () => {
+    const get = vi.fn(async () => null);
+    const put = vi.fn(async () => undefined);
+    const getOrFetch = vi.spyOn(SimpleCache.prototype, "getOrFetch");
+    const urls: URL[] = [];
+    vi.stubGlobal("CACHE_KV", { get, put });
+    vi.stubGlobal("useRuntimeConfig", () => ({ tmdbApiKey: "test-key" }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        urls.push(new URL(String(input)));
+        return new Response(JSON.stringify({ id: 1, results: [], cast: [] }));
+      }),
+    );
 
-  return {
-    client,
-    get reads() {
-      return reads;
-    },
-    get writes() {
-      return writes;
-    },
-  };
-}
+    const client = new TMDBClient();
+    await client.getMediaWithCredits("movie", 1);
+    await client.getMediaWithCredits("tv", 2);
+    await client.getSeasonWithCredits(2, 3);
+    await client.getEpisodeWithCredits(2, 3, 4);
+    await client.fetchMediaDetails(3, "movie");
+    await client.fetchMediaCredits("tv", 4);
+    await client.getPersonWithCredits(5);
+    await client.getCollection(6);
+    await client.getTrending("movie", "day");
 
-describe("TMDB persistence policy", () => {
-  it("does not read or write KV for search or trending responses", async () => {
-    const setup = createClient();
-
-    await setup.client.searchMulti("example");
-    await setup.client.getTrending("movie", "day");
-
-    expect(setup.reads).toBe(0);
-    expect(setup.writes).toBe(0);
-  });
-
-  it("retains KV for media details shared by internal fan-out", async () => {
-    const setup = createClient();
-
-    await setup.client.getMediaWithCredits("movie", 42);
-
-    expect(setup.reads).toBe(1);
-    expect(setup.writes).toBe(1);
+    expect(urls.map((url) => url.pathname)).toEqual([
+      "/3/movie/1",
+      "/3/tv/2",
+      "/3/tv/2/season/3",
+      "/3/tv/2/season/3/episode/4",
+      "/3/movie/3",
+      "/3/tv/4/aggregate_credits",
+      "/3/person/5",
+      "/3/collection/6",
+      "/3/trending/movie/day",
+    ]);
+    expect(getOrFetch).not.toHaveBeenCalled();
+    expect(get).not.toHaveBeenCalled();
+    expect(put).not.toHaveBeenCalled();
   });
 });

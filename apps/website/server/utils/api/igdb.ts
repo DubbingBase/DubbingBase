@@ -1,11 +1,5 @@
 import { SimpleCache, createCacheNamespace } from "../cache";
-import type { CacheFetchOptions } from "./cache-options";
-import {
-  DEFAULT_LANGUAGE,
-  type IgdbGame,
-  type IgdbCharacter,
-} from "@app/shared-logic";
-import { buildCacheKey } from "../cache/constants";
+import { DEFAULT_LANGUAGE, type IgdbGame, type IgdbCharacter } from "@app/shared-logic";
 import {
   createMediaResponseError,
   fetchMediaRequest,
@@ -18,10 +12,6 @@ interface IgdbCachedToken {
 }
 
 const igdbTokenNamespace = createCacheNamespace<IgdbCachedToken>();
-const igdbGameNamespace = createCacheNamespace<IgdbGame | null>();
-const igdbCharactersNamespace = createCacheNamespace<IgdbCharacter[]>();
-const igdbTrendingGamesNamespace =
-  createCacheNamespace<IgdbTrendingGamesResult>();
 
 export interface IgdbTrendingGamesResult {
   games: IgdbGame[];
@@ -228,23 +218,10 @@ export class IgdbClient {
     }
   }
 
-  async getGame(
-    id: number,
-    options: CacheFetchOptions = { cachePolicy: "persistent", ttl: "STABLE" },
-  ): Promise<IgdbGame | null> {
-    const cacheKey = buildCacheKey({
-      provider: "igdb",
-      resource: "game",
-      id,
-      params: { response: "details" },
-    });
-    return this.cache.getOrFetch(
-      igdbGameNamespace,
-      cacheKey,
-      async () => {
-        const results = await this.query<IgdbGame>(
-          "games",
-          `fields id, name, slug, summary, rating, rating_count, first_release_date,
+  async getGame(id: number): Promise<IgdbGame | null> {
+    const results = await this.query<IgdbGame>(
+      "games",
+      `fields id, name, slug, summary, rating, rating_count, first_release_date,
        cover.image_id, cover.url,
        artworks.image_id, artworks.url,
        screenshots.image_id, screenshots.url,
@@ -254,15 +231,11 @@ export class IgdbClient {
        external_games.uid, external_games.category,
        websites.url, websites.category;
        where id = ${id};`,
-        );
-        return results[0] ?? null;
-      },
-      options,
     );
+    return results[0] ?? null;
   }
 
   async searchGames(queryText: string): Promise<IgdbGame[]> {
-    // Search results bypass KV and are fetched on every request.
     const escapedQuery = queryText.replace(/"/g, '\\"');
     const results = await this.query<IgdbGame>(
       "games",
@@ -276,28 +249,14 @@ export class IgdbClient {
     return results;
   }
 
-  async getGameCharacters(
-    gameId: number,
-    options: CacheFetchOptions = { cachePolicy: "persistent", ttl: "STABLE" },
-  ): Promise<IgdbCharacter[]> {
-    const cacheKey = buildCacheKey({
-      provider: "igdb",
-      resource: "game-characters",
-      id: gameId,
-    });
-    return this.cache.getOrFetch(
-      igdbCharactersNamespace,
-      cacheKey,
-      () =>
-        this.query<IgdbCharacter>(
-          "characters",
-          `fields id, name, description, species, gender,
+  async getGameCharacters(gameId: number): Promise<IgdbCharacter[]> {
+    return this.query<IgdbCharacter>(
+      "characters",
+      `fields id, name, description, species, gender,
               mug_shot.image_id, mug_shot.url,
               games;
        where games = (${gameId});
        limit 50;`,
-        ),
-      options,
     );
   }
 
@@ -305,82 +264,61 @@ export class IgdbClient {
     limit = 20,
     language = DEFAULT_LANGUAGE,
   ): Promise<IgdbTrendingGamesResult> {
-    // Trending results bypass KV; the provider-only route applies HTTP caching.
-    const cacheKey = buildCacheKey({
-      provider: "igdb",
-      resource: "trending-games",
-      id: "popular",
-      language,
-      params: { limit, version: 2 },
-    });
-    return this.cache.getOrFetch(
-      igdbTrendingGamesNamespace,
-      cacheKey,
-      async () => {
-        const primitives = await this.query<IgdbPopularityPrimitive>(
-          "popularity_primitives",
-          `fields game_id, value, popularity_type;
+    const primitives = await this.query<IgdbPopularityPrimitive>(
+      "popularity_primitives",
+      `fields game_id, value, popularity_type;
        where popularity_type = (1, 2);
        sort value desc;
        limit 100;`,
-        );
+    );
 
-        const scoreMap = new Map<number, number>();
-        for (const p of primitives) {
-          const weight = p.popularity_type === 1 ? 0.6 : 0.4;
-          const current = scoreMap.get(p.game_id) ?? 0;
-          scoreMap.set(p.game_id, current + p.value * weight);
-        }
+    const scoreMap = new Map<number, number>();
+    for (const p of primitives) {
+      const weight = p.popularity_type === 1 ? 0.6 : 0.4;
+      const current = scoreMap.get(p.game_id) ?? 0;
+      scoreMap.set(p.game_id, current + p.value * weight);
+    }
 
-        const topIds = [...scoreMap.entries()]
-          .sort(([, a], [, b]) => b - a)
-          .slice(0, limit)
-          .map(([id]) => id);
+    const topIds = [...scoreMap.entries()]
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, limit)
+      .map(([id]) => id);
 
-        if (topIds.length === 0) return { games: [], degraded: false };
+    if (topIds.length === 0) return { games: [], degraded: false };
 
-        const games = await this.query<IgdbGame>(
-          "games",
-          `fields id, name, summary, rating, first_release_date,
+    const games = await this.query<IgdbGame>(
+      "games",
+      `fields id, name, summary, rating, first_release_date,
               cover.image_id, genres.name, platforms.name;
        where id = (${topIds.join(",")}) & (themes != (42) | themes = null);
       limit ${limit};`,
-        );
+    );
 
-        if (games.length === 0) return { games, degraded: false };
+    if (games.length === 0) return { games, degraded: false };
 
-        let localizations: IgdbGameLocalization[];
-        try {
-          localizations = await this.query<IgdbGameLocalization>(
-            "game_localizations",
-            `fields game, name, region.identifier;
+    let localizations: IgdbGameLocalization[];
+    try {
+      localizations = await this.query<IgdbGameLocalization>(
+        "game_localizations",
+        `fields game, name, region.identifier;
          where game = (${topIds.join(",")});
          limit ${Math.max(topIds.length * 10, 100)};`,
-          );
-        } catch (error) {
-          console.warn(
-            "[IGDB] Game localization lookup failed; returning base names",
-            error,
-          );
-          return { games, degraded: true };
-        }
-        const localizedNames = new Map<number, string>();
-        for (const localization of localizations) {
-          if (
-            localization.region?.identifier === language &&
-            !localizedNames.has(localization.game)
-          ) {
-            localizedNames.set(localization.game, localization.name);
-          }
-        }
-        const localizedGames = games.map((game) => ({
-          ...game,
-          name: localizedNames.get(game.id) ?? game.name,
-        }));
+      );
+    } catch (error) {
+      console.warn("[IGDB] Game localization lookup failed; returning base names", error);
+      return { games, degraded: true };
+    }
+    const localizedNames = new Map<number, string>();
+    for (const localization of localizations) {
+      if (localization.region?.identifier === language && !localizedNames.has(localization.game)) {
+        localizedNames.set(localization.game, localization.name);
+      }
+    }
+    const localizedGames = games.map((game) => ({
+      ...game,
+      name: localizedNames.get(game.id) ?? game.name,
+    }));
 
-        return { games: localizedGames, degraded: false };
-      },
-      { cachePolicy: "none" },
-    );
+    return { games: localizedGames, degraded: false };
   }
 }

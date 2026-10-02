@@ -35,28 +35,22 @@ function makeCache(initial = new Map<string, unknown>()) {
 }
 
 describe("SimpleCache policies", () => {
-  it("requires a TTL for persistent and rejects TTLs for non-writing policies", () => {
+  it("requires a TTL for persistent writes and rejects TTLs for read-only access", () => {
     const persistent: GetOrFetchOptions = {
       cachePolicy: "persistent",
       ttl: "STABLE",
     };
     const readOnly: GetOrFetchOptions = { cachePolicy: "read-only" };
-    const none: GetOrFetchOptions = { cachePolicy: "none" };
-
     // @ts-expect-error persistent writes must select an explicit TTL
     const missingTtl: GetOrFetchOptions = { cachePolicy: "persistent" };
-    const ttlOnNone: GetOrFetchOptions = {
-      cachePolicy: "none",
-      // @ts-expect-error bypass policy cannot carry a TTL
+    const ttlOnReadOnly: GetOrFetchOptions = {
+      cachePolicy: "read-only",
+      // @ts-expect-error read-only policy cannot carry a TTL
       ttl: "STABLE",
     };
 
-    expect([persistent.cachePolicy, readOnly.cachePolicy, none.cachePolicy]).toEqual([
-      "persistent",
-      "read-only",
-      "none",
-    ]);
-    expect([missingTtl, ttlOnNone]).toHaveLength(2);
+    expect([persistent.cachePolicy, readOnly.cachePolicy]).toEqual(["persistent", "read-only"]);
+    expect([missingTtl, ttlOnReadOnly]).toHaveLength(2);
   });
 
   it("persistent reads KV, fetches and writes on a miss, then serves the hit", async () => {
@@ -100,22 +94,6 @@ describe("SimpleCache policies", () => {
 
     expect(harness.reads).toBe(1);
     expect(harness.writes).toEqual([]);
-  });
-
-  it("none fetches upstream without KV reads or writes", async () => {
-    const harness = makeCache(new Map([["wikipedia:search", "stale"]]));
-    const namespace = createCacheNamespace<string>();
-    const fetcher = vi.fn(async () => "fresh");
-
-    await expect(
-      harness.cache.getOrFetch(namespace, "wikipedia:search", fetcher, {
-        cachePolicy: "none",
-      }),
-    ).resolves.toBe("fresh");
-
-    expect(harness.reads).toBe(0);
-    expect(harness.writes).toEqual([]);
-    expect(fetcher).toHaveBeenCalledTimes(1);
   });
 
   it("coalesces a same-key, same-policy miss", async () => {
@@ -162,22 +140,6 @@ describe("SimpleCache policies", () => {
     ]);
     expect(harness.reads).toBe(2);
     expect(harness.writes).toHaveLength(1);
-  });
-
-  it("does not infer persistence from an authentication token key", async () => {
-    const harness = makeCache();
-
-    await expect(
-      harness.cache.getOrFetch(
-        createCacheNamespace<string>(),
-        "igdb:auth_token",
-        async () => "token",
-        { cachePolicy: "none" },
-      ),
-    ).resolves.toBe("token");
-
-    expect(harness.reads).toBe(0);
-    expect(harness.writes).toEqual([]);
   });
 
   it("does not persist null or failed results and allows retry", async () => {
@@ -254,18 +216,16 @@ describe("buildCacheKey", () => {
 
 describe("KV write diagnostics", () => {
   it.each([
-    [buildCacheKey({ provider: "tmdb", resource: "movie", id: 42 }), "tmdb", "movie"],
+    [buildCacheKey({ provider: "openlibrary", resource: "author", id: "OL42A" }), "openlibrary", "author"],
     [
       buildCacheKey({
         provider: "wikipedia",
-        resource: "entity-claims",
+        resource: "entity",
         id: "Q42",
       }),
       "wikipedia",
-      "entity-claims",
+      "entity",
     ],
-    [buildCacheKey({ provider: "tmdb", resource: "season", id: 7 }), "tmdb", "season"],
-    [buildCacheKey({ provider: "tmdb", resource: "collection", id: 7 }), "tmdb", "collection"],
     [
       buildCacheKey({
         provider: "tmdb",
@@ -284,8 +244,8 @@ describe("KV write diagnostics", () => {
     const harness = makeCache();
     const namespace = createCacheNamespace<{ token: string }>();
     const key = buildCacheKey({
-      provider: "tmdb",
-      resource: "movie",
+      provider: "openlibrary",
+      resource: "author",
       query: "private-query-value",
       language: "private-language-value",
       params: { token: "private-param-value" },
@@ -303,8 +263,8 @@ describe("KV write diagnostics", () => {
       expect(log).toHaveBeenCalledTimes(1);
       expect(log).toHaveBeenCalledWith({
         event: "kv_write",
-        provider: "tmdb",
-        resource: "movie",
+        provider: "openlibrary",
+        resource: "author",
         ttl: CACHE_TTL.STABLE,
         keyFingerprint: hashCacheValue(key),
       });
@@ -355,7 +315,7 @@ describe("KV write diagnostics", () => {
       await expect(
         harness.cache.getOrFetch(
           createCacheNamespace<string>(),
-          buildCacheKey({ provider: "tmdb", resource: "movie", id: 42 }),
+          buildCacheKey({ provider: "openlibrary", resource: "author", id: 42 }),
           async () => "value",
           { cachePolicy: "persistent", ttl: "STABLE" },
         ),

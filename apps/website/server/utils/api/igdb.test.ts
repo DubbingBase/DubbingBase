@@ -50,12 +50,9 @@ describe("IgdbClient token cache expiry", () => {
     vi.unstubAllGlobals();
   });
 
-  it("does not read or write KV for search or trending results while keeping token KV", async () => {
+  it("does not cache search, trending, game, or character metadata", async () => {
     const values = new Map<string, unknown>([
-      [
-        "igdb:auth_token",
-        { accessToken: "cached-token", expiresAt: Date.now() + 60_000 },
-      ],
+      ["igdb:auth_token", { accessToken: "cached-token", expiresAt: Date.now() + 60_000 }],
     ]);
     const fetch = mockFetch();
     const reads: string[] = [];
@@ -75,19 +72,20 @@ describe("IgdbClient token cache expiry", () => {
 
     await client.searchGames("example");
     await client.getTrendingGames();
+    await client.getGame(42);
+    await client.getGameCharacters(42);
 
     expect(reads).toEqual(["igdb:auth_token"]);
     expect(writes).toEqual([]);
     expect(fetch.tokenFetchCount).toBe(0);
   });
 
-  it("retains KV for game details shared by public and internal reads", async () => {
+  it("fetches game metadata on every request while retaining the token cache", async () => {
     const values = new Map<string, unknown>([
-      [
-        "igdb:auth_token",
-        { accessToken: "cached-token", expiresAt: Date.now() + 60_000 },
-      ],
+      ["igdb:auth_token", { accessToken: "cached-token", expiresAt: Date.now() + 60_000 }],
     ]);
+    const reads: string[] = [];
+    const writes: string[] = [];
     let gameFetches = 0;
     vi.stubGlobal("fetch", async (input: RequestInfo | URL) => {
       if (String(input) === tokenUrl) {
@@ -102,16 +100,24 @@ describe("IgdbClient token cache expiry", () => {
     }));
     const client = new IgdbClient(
       new SimpleCache(() => ({
-        get: async (key) => values.get(key) ?? null,
-        put: async (key, value) => values.set(key, JSON.parse(value)),
+        get: async (key) => {
+          reads.push(key);
+          return values.get(key) ?? null;
+        },
+        put: async (key, value) => {
+          writes.push(key);
+          values.set(key, JSON.parse(value));
+        },
       })),
     );
 
     await client.getGame(42);
     await client.getGame(42);
 
-    expect(gameFetches).toBe(1);
-    expect(values.size).toBe(2);
+    expect(gameFetches).toBe(2);
+    expect(reads).toEqual(["igdb:auth_token"]);
+    expect(writes).toEqual([]);
+    expect(values.size).toBe(1);
   });
 
   it("restores a cached expiry and reuses the token only until that expiry", async () => {
@@ -140,29 +146,21 @@ describe("IgdbClient token cache expiry", () => {
   it.each([
     ["expired token metadata", { accessToken: "expired-token", expiresAt: 0 }],
     ["legacy string token", "legacy-token"],
-    [
-      "empty cached token",
-      { accessToken: " ", expiresAt: Date.now() + 60_000 },
-    ],
-  ])(
-    "refreshes an %s instead of assigning a guessed expiry",
-    async (_label, cachedValue) => {
-      const values = new Map<string, unknown>([
-        ["igdb:auth_token", cachedValue],
-      ]);
-      const fetch = mockFetch();
-      const client = new IgdbClient(createCache(values));
+    ["empty cached token", { accessToken: " ", expiresAt: Date.now() + 60_000 }],
+  ])("refreshes an %s instead of assigning a guessed expiry", async (_label, cachedValue) => {
+    const values = new Map<string, unknown>([["igdb:auth_token", cachedValue]]);
+    const fetch = mockFetch();
+    const client = new IgdbClient(createCache(values));
 
-      await client.query("games", "fields id;");
-      await client.query("games", "fields id;");
+    await client.query("games", "fields id;");
+    await client.query("games", "fields id;");
 
-      expect(fetch.tokenFetchCount).toBe(1);
-      expect(values.get("igdb:auth_token")).toMatchObject({
-        accessToken: "fresh-token",
-        expiresAt: expect.any(Number),
-      });
-    },
-  );
+    expect(fetch.tokenFetchCount).toBe(1);
+    expect(values.get("igdb:auth_token")).toMatchObject({
+      accessToken: "fresh-token",
+      expiresAt: expect.any(Number),
+    });
+  });
 
   it("bounds stale-token recovery when KV deletion fails", async () => {
     const values = new Map<string, unknown>([
