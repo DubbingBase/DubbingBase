@@ -5,7 +5,7 @@
 
 > 81 routes | 18 models | 197 components | 90 lib files | 61 env vars | 14 middleware | 19% test coverage
 > **Token savings:** this file is ~15,800 tokens. Without it, AI exploration would cost ~157,200 tokens. **Saves ~141,400 tokens per conversation.**
-> **Last scanned:** 2026-10-02 15:08 — re-run after significant changes
+> **Last scanned:** 2026-10-02 18:57 — re-run after significant changes
 
 ---
 
@@ -458,26 +458,20 @@
   - interface IgdbTrendingGamesResult
   - interface IgdbPopularityPrimitive
 - `apps/website/server/utils/api/openlibrary.ts` — function buildOpenLibraryCoverUrl: (coverId, size) => string, class OpenLibraryClient
-- `apps/website/server/utils/api/podcast.ts`
-  - class PodcastClient
-  - interface ITunesPodcastResult
-  - const PODCAST_LOOKUP_NAMESPACE
+- `apps/website/server/utils/api/podcast.ts` — class PodcastClient, interface ITunesPodcastResult
 - `apps/website/server/utils/api/tmdb.ts` — class TMDBClient
 - `apps/website/server/utils/api/toy.ts` — class ToyClient
-- `apps/website/server/utils/api/tvdb.ts`
-  - class TVDBClient
-  - const TVDB_AUTH_TOKEN_NAMESPACE
-  - const TVDB_API_RESPONSE_NAMESPACE
+- `apps/website/server/utils/api/tvdb.ts` — class TVDBClient, const TVDB_AUTH_TOKEN_NAMESPACE
 - `apps/website/server/utils/auth.ts` — function requireUser: (event) => User, function requireAdmin: (event) => User
 - `apps/website/server/utils/background.ts` — function scheduleBackgroundTask: (event, task, label) => void
 - `apps/website/server/utils/cache/constants.ts`
   - function classifyCacheWriteKey: (key) => CacheWriteDimensions
   - function hashCacheValue: (value) => string
   - function buildCacheKey: (input) => string
-  - class SimpleKeyBuilder
   - class SimpleKeyValidator
   - interface CacheWriteDimensions
-  - _...5 more_
+  - interface CacheKeyInput
+  - _...1 more_
 - `apps/website/server/utils/cache/http.ts`
   - function getPublicCacheControl: (profile) => string
   - function getCloudflareCacheControl: (profile) => string
@@ -515,7 +509,7 @@
 - `apps/website/server/utils/index.ts`
   - function getCloudflareKv: (event?) => CacheKv | null
   - function useCache: (event?) => SimpleCache
-  - function useTmdbClient: (cache?) => TMDBClient
+  - function useTmdbClient: () => TMDBClient
   - function useTvdbClient: () => TVDBClient
   - function useIgdbClient: (cache?) => IgdbClient
   - function useOpenLibraryClient: () => OpenLibraryClient
@@ -563,6 +557,7 @@
   - function isRetryableMediaRequestError: (error) => error is RetryableMediaRequestError
   - function isRetryableMediaRequestStatus: (status) => boolean
   - function createMediaResponseError: (provider, response) => Error
+  - function observeProviderRequest: (provider, request) => void
   - function fetchMediaRequest: (input, init?) => Promise<Response>
   - class RetryableMediaRequestError
 - `apps/website/server/utils/services/media-preparation.ts`
@@ -575,7 +570,6 @@
   - _...4 more_
 - `apps/website/server/utils/services/media.ts`
   - class MediaService
-  - const WIKIDATA_CLAIMS_NAMESPACE
   - const WIKIPEDIA_ACTOR_URL_NAMESPACE
   - const MEDIA_TVDB_CHARACTERS_NAMESPACE
 - `apps/website/server/utils/services/voice-actor.ts`
@@ -784,20 +778,20 @@
 - `apps/website/server/utils/db/client.ts` — imported by **65** files
 - `apps/website/server/utils/auth.ts` — imported by **34** files
 - `apps/website/server/utils/index.ts` — imported by **23** files
-- `apps/website/server/utils/cache/index.ts` — imported by **22** files
+- `apps/website/server/utils/cache/index.ts` — imported by **18** files
 - `apps/website/server/utils/db/queries.ts` — imported by **12** files
 - `apps/website/server/utils/dubbing-language.ts` — imported by **11** files
 - `apps/website/server/utils/notifications/discord.ts` — imported by **11** files
-- `apps/website/server/utils/cache/constants.ts` — imported by **11** files
 - `apps/website/server/utils/api/igdb.ts` — imported by **11** files
 - `apps/website/server/utils/urls/supabase.ts` — imported by **10** files
 - `apps/website/server/utils/urls/tmdb.ts` — imported by **10** files
+- `apps/website/server/utils/cache/constants.ts` — imported by **8** files
 - `e2e/helpers/mock-api.ts` — imported by **8** files
 - `packages/shared-logic/src/types/index.ts` — imported by **8** files
 - `apps/website/server/utils/background.ts` — imported by **7** files
 - `apps/website/server/utils/cache/http.ts` — imported by **7** files
 - `apps/website/server/utils/services/media.ts` — imported by **6** files
-- `apps/website/server/utils/api/cache-options.ts` — imported by **6** files
+- `apps/website/server/utils/retryable-request.ts` — imported by **6** files
 - `apps/website/server/utils/error-message.ts` — imported by **5** files
 - `apps/website/server/utils/with-timeout.ts` — imported by **4** files
 - `apps/website/server/utils/llm.ts` — imported by **4** files
@@ -807,13 +801,13 @@
 - `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/review.post.ts` +60 more
 - `apps/website/server/utils/auth.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/review.post.ts` +29 more
 - `apps/website/server/utils/index.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/episode/index.get.ts` +18 more
-- `apps/website/server/utils/cache/index.ts` ← `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/season/index.get.ts`, `apps/website/server/utils/api/cache-options.ts`, `apps/website/server/utils/api/igdb.test.ts`, `apps/website/server/utils/api/igdb.ts` +17 more
+- `apps/website/server/utils/cache/index.ts` ← `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/season/index.get.ts`, `apps/website/server/utils/api/igdb.test.ts`, `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.test.ts` +13 more
 - `apps/website/server/utils/db/queries.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/game/[id].get.ts` +7 more
 - `apps/website/server/utils/dubbing-language.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/review.post.ts`, `apps/website/server/api/internal-media-create.post.ts`, `apps/website/server/api/link-voice-actor.post.ts` +6 more
 - `apps/website/server/utils/notifications/discord.ts` ← `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/media-queue.post.ts`, `apps/website/server/api/movie/[id].get.ts` +6 more
-- `apps/website/server/utils/cache/constants.ts` ← `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/season/index.get.ts`, `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.ts`, `apps/website/server/utils/api/podcast.ts` +6 more
 - `apps/website/server/utils/api/igdb.ts` ← `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/internal-media-credits.get.ts`, `apps/website/server/api/internal-media-metadata.get.ts`, `apps/website/server/api/search/index.get.ts`, `apps/website/server/api/trending/games.get.ts` +6 more
 - `apps/website/server/utils/urls/supabase.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/dashboard-stats.get.ts`, `apps/website/server/api/find_duplicate_voice_actors.get.ts`, `apps/website/server/api/recent-voice-actors.get.ts`, `apps/website/server/api/search/index.get.ts` +5 more
+- `apps/website/server/utils/urls/tmdb.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/movie/[id].get.ts`, `apps/website/server/api/notify-subscribers.post.ts`, `apps/website/server/api/prepare-trending-media.post.ts`, `apps/website/server/api/search/index.get.ts` +5 more
 
 ---
 

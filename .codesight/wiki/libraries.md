@@ -6,28 +6,28 @@
 
 ## Website (50 files)
 
-- `apps/website/server/utils/cache/constants.ts` — classifyCacheWriteKey, hashCacheValue, buildCacheKey, SimpleKeyBuilder, SimpleKeyValidator, CacheWriteDimensions, …
 - `apps/website/server/utils/cache/wikipedia.ts` — sortLanguagesByPopularity, extractAvailableLanguages, cleanHeadingText, isDubbingSectionHeading, selectDubbingSections, filterValidSectionIndexes, …
 - `apps/website/server/utils/index.ts` — getCloudflareKv, useCache, useTmdbClient, useTvdbClient, useIgdbClient, useOpenLibraryClient, …
 - `apps/website/server/utils/services/media-preparation.ts` — checkMediaDubbingSections, checkGameDubbingSections, extractMediaDubbingCredits, extractGameDubbingCredits, prepareMedia, prepareGame, …
 - `apps/website/server/utils/queue-payload.ts` — queueRequester, queueRequesterRpcArgs, validateDiscoveryPayload, validateCheckPayload, validateExtractPayload, ValidQueueBase, …
 - `apps/website/server/utils/cache/index.ts` — createCacheNamespace, CacheNamespace, SimpleCache, CacheKv, CachePolicy, CacheTTLPreset, …
+- `apps/website/server/utils/cache/constants.ts` — classifyCacheWriteKey, hashCacheValue, buildCacheKey, SimpleKeyValidator, CacheWriteDimensions, CacheKeyInput, …
 - `apps/website/src/utils/media-cast.ts` — sameMediaId, matchCastWorks, CastActorReference, CharacterProfilePicture, CastWorkReference, DisplayCastActor, …
 - `apps/website/server/utils/cache/http.ts` — getPublicCacheControl, getCloudflareCacheControl, setNoCacheHeaders, setPublicCacheHeaders, CacheProfile, NO_STORE_CACHE_CONTROL
 - `apps/website/server/utils/llm.ts` — areAllLlmQuotasExhausted, getLlmQuotaCache, llmGenerate, llmGenerateObject, llmVision, llmVisionObject
 - `apps/website/server/utils/notifications/discord.ts` — normalizeDiscordUrl, buildDiscordEmbed, sendDiscordAdminNotification, DiscordWebhookOptions, QueueName, DiscordNotificationCategory
+- `apps/website/server/utils/retryable-request.ts` — isRetryableMediaRequestError, isRetryableMediaRequestStatus, createMediaResponseError, observeProviderRequest, fetchMediaRequest, RetryableMediaRequestError
 - `apps/website/server/utils/db/queries.ts` — getVoiceActorWithWork, getWorkByActor, getDubbingProjects, getWorkVotes, getTopContributors
 - `apps/website/server/utils/prepare-payload.ts` — validatePrepareGamePayload, prepareGameFromPayload, validatePrepareMediaPayload, PrepareGameInput, PrepareMediaInput
-- `apps/website/server/utils/retryable-request.ts` — isRetryableMediaRequestError, isRetryableMediaRequestStatus, createMediaResponseError, fetchMediaRequest, RetryableMediaRequestError
 - `apps/website/server/utils/services/voice-actor.ts` — upsertVoiceActor, upsertActor, upsertStudio, upsertWork, insertVoiceActorAndWork
 - `apps/website/server/utils/api/igdb.ts` — buildIgdbImageUrl, IgdbClient, IgdbTrendingGamesResult, IgdbPopularityPrimitive
 - `apps/website/server/utils/pagination.ts` — parsePagination, paginateArray, PaginationOptions, ParsedPagination
-- `apps/website/server/utils/services/media.ts` — MediaService, WIKIDATA_CLAIMS_NAMESPACE, WIKIPEDIA_ACTOR_URL_NAMESPACE, MEDIA_TVDB_CHARACTERS_NAMESPACE
 - `apps/website/server/utils/urls/tmdb.ts` — buildTmdbImageUrl, cleanCharacterName, processMedia, TMDB_CONFIG
-- `apps/website/server/utils/api/podcast.ts` — PodcastClient, ITunesPodcastResult, PODCAST_LOOKUP_NAMESPACE
-- `apps/website/server/utils/api/tvdb.ts` — TVDBClient, TVDB_AUTH_TOKEN_NAMESPACE, TVDB_API_RESPONSE_NAMESPACE
 - `apps/website/server/utils/media-request.ts` — parseSeasonQuery, parseEpisodeQuery, withMediaServiceTimeout
+- `apps/website/server/utils/services/media.ts` — MediaService, WIKIPEDIA_ACTOR_URL_NAMESPACE, MEDIA_TVDB_CHARACTERS_NAMESPACE
 - `apps/website/server/utils/api/openlibrary.ts` — buildOpenLibraryCoverUrl, OpenLibraryClient
+- `apps/website/server/utils/api/podcast.ts` — PodcastClient, ITunesPodcastResult
+- `apps/website/server/utils/api/tvdb.ts` — TVDBClient, TVDB_AUTH_TOKEN_NAMESPACE
 - `apps/website/server/utils/auth.ts` — requireUser, requireAdmin
 - `apps/website/server/utils/normalize.ts` — normalizeString, isExploitableVoiceActorName
 - `apps/website/server/utils/notifications/onesignal.ts` — sendOneSignalNotification, OneSignalOptions

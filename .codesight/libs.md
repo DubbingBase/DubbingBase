@@ -36,26 +36,20 @@
   - interface IgdbTrendingGamesResult
   - interface IgdbPopularityPrimitive
 - `apps/website/server/utils/api/openlibrary.ts` — function buildOpenLibraryCoverUrl: (coverId, size) => string, class OpenLibraryClient
-- `apps/website/server/utils/api/podcast.ts`
-  - class PodcastClient
-  - interface ITunesPodcastResult
-  - const PODCAST_LOOKUP_NAMESPACE
+- `apps/website/server/utils/api/podcast.ts` — class PodcastClient, interface ITunesPodcastResult
 - `apps/website/server/utils/api/tmdb.ts` — class TMDBClient
 - `apps/website/server/utils/api/toy.ts` — class ToyClient
-- `apps/website/server/utils/api/tvdb.ts`
-  - class TVDBClient
-  - const TVDB_AUTH_TOKEN_NAMESPACE
-  - const TVDB_API_RESPONSE_NAMESPACE
+- `apps/website/server/utils/api/tvdb.ts` — class TVDBClient, const TVDB_AUTH_TOKEN_NAMESPACE
 - `apps/website/server/utils/auth.ts` — function requireUser: (event) => User, function requireAdmin: (event) => User
 - `apps/website/server/utils/background.ts` — function scheduleBackgroundTask: (event, task, label) => void
 - `apps/website/server/utils/cache/constants.ts`
   - function classifyCacheWriteKey: (key) => CacheWriteDimensions
   - function hashCacheValue: (value) => string
   - function buildCacheKey: (input) => string
-  - class SimpleKeyBuilder
   - class SimpleKeyValidator
   - interface CacheWriteDimensions
-  - _...5 more_
+  - interface CacheKeyInput
+  - _...1 more_
 - `apps/website/server/utils/cache/http.ts`
   - function getPublicCacheControl: (profile) => string
   - function getCloudflareCacheControl: (profile) => string
@@ -93,7 +87,7 @@
 - `apps/website/server/utils/index.ts`
   - function getCloudflareKv: (event?) => CacheKv | null
   - function useCache: (event?) => SimpleCache
-  - function useTmdbClient: (cache?) => TMDBClient
+  - function useTmdbClient: () => TMDBClient
   - function useTvdbClient: () => TVDBClient
   - function useIgdbClient: (cache?) => IgdbClient
   - function useOpenLibraryClient: () => OpenLibraryClient
@@ -141,6 +135,7 @@
   - function isRetryableMediaRequestError: (error) => error is RetryableMediaRequestError
   - function isRetryableMediaRequestStatus: (status) => boolean
   - function createMediaResponseError: (provider, response) => Error
+  - function observeProviderRequest: (provider, request) => void
   - function fetchMediaRequest: (input, init?) => Promise<Response>
   - class RetryableMediaRequestError
 - `apps/website/server/utils/services/media-preparation.ts`
@@ -153,7 +148,6 @@
   - _...4 more_
 - `apps/website/server/utils/services/media.ts`
   - class MediaService
-  - const WIKIDATA_CLAIMS_NAMESPACE
   - const WIKIPEDIA_ACTOR_URL_NAMESPACE
   - const MEDIA_TVDB_CHARACTERS_NAMESPACE
 - `apps/website/server/utils/services/voice-actor.ts`
