@@ -216,24 +216,20 @@ describe("POST /api/process-media-queue requester propagation", () => {
     expect(routeMocks.checkMediaDubbingSections).not.toHaveBeenCalled();
   });
 
-  it("bypasses KV result caching for queue discovery metadata", async () => {
+  it("uses the standard stable Wikidata metadata lookup in queue discovery", async () => {
     await processQueue("discovery");
 
     const wikipediaCache = routeMocks.useWikipediaCache.mock.results[0]?.value;
-    expect(wikipediaCache.getAllSitelinksEntity).toHaveBeenCalledWith("Q42", {
-      cachePolicy: "none",
-    });
+    expect(wikipediaCache.getAllSitelinksEntity).toHaveBeenCalledWith("Q42");
   });
 
-  it("bypasses IGDB result caching while queue discovery resolves games", async () => {
+  it("uses the standard stable IGDB metadata lookup in queue discovery", async () => {
     await processQueue("discovery", {
       media_type: "video_game",
       wiki_id: undefined,
     });
 
-    expect(routeMocks.getGame).toHaveBeenCalledWith(42, {
-      cachePolicy: "none",
-    });
+    expect(routeMocks.getGame).toHaveBeenCalledWith(42);
   });
 
   it("preserves requested_by through discovery fan-out into every wiki_check", async () => {

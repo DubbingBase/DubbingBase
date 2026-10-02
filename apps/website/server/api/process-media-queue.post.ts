@@ -379,9 +379,7 @@ export default defineEventHandler(async (event) => {
           if (!wikiId) {
             if (payload.media_type === "video_game") {
               const igdbClient = useIgdbClient(cache);
-              const game = await igdbClient.getGame(payload.tmdb_id, {
-                cachePolicy: "none",
-              });
+              const game = await igdbClient.getGame(payload.tmdb_id);
               if (!game)
                 throw new Error(`IGDB game ${payload.tmdb_id} not found`);
               mediaTitle = game.name;
@@ -469,9 +467,7 @@ export default defineEventHandler(async (event) => {
           }
 
           const wikipediaCache = useWikipediaCache(cache);
-          const entity = await wikipediaCache.getAllSitelinksEntity(wikiId, {
-            cachePolicy: "none",
-          });
+          const entity = await wikipediaCache.getAllSitelinksEntity(wikiId);
           const sitelinks = entity.entities[wikiId]?.sitelinks;
           const allLanguages = extractAvailableLanguages(sitelinks);
           // ponytail: top 5 only to avoid 1:N blow-up (20 langs * 18/min = backlog)
