@@ -1,4 +1,4 @@
-import { SimpleKeyBuilder, SimpleKeyValidator } from "./constants";
+import { classifyCacheWriteKey, SimpleKeyBuilder, SimpleKeyValidator } from "./constants";
 
 interface CacheInFlightRequest<T> {
   cachePolicy: CachePolicy;
@@ -7,21 +7,14 @@ interface CacheInFlightRequest<T> {
 
 /** A stable, typed scope for sharing in-flight requests without type casts. */
 export class CacheNamespace<T> {
-  private readonly requests = new Map<
-    string,
-    Map<CachePolicy, CacheInFlightRequest<T>>
-  >();
+  private readonly requests = new Map<string, Map<CachePolicy, CacheInFlightRequest<T>>>();
 
-  get(
-    key: string,
-    cachePolicy: CachePolicy,
-  ): CacheInFlightRequest<T> | undefined {
+  get(key: string, cachePolicy: CachePolicy): CacheInFlightRequest<T> | undefined {
     return this.requests.get(key)?.get(cachePolicy);
   }
 
   set(key: string, request: CacheInFlightRequest<T>): void {
-    const requests =
-      this.requests.get(key) ?? new Map<CachePolicy, CacheInFlightRequest<T>>();
+    const requests = this.requests.get(key) ?? new Map<CachePolicy, CacheInFlightRequest<T>>();
     requests.set(request.cachePolicy, request);
     this.requests.set(key, requests);
   }
@@ -59,11 +52,7 @@ export type GetOrFetchOptions =
 
 export interface CacheKv {
   get<T>(key: string, options: { type: "json" }): Promise<T | null>;
-  put(
-    key: string,
-    value: string,
-    options: { expirationTtl: number },
-  ): Promise<void>;
+  put(key: string, value: string, options: { expirationTtl: number }): Promise<void>;
   delete?(key: string): Promise<void>;
 }
 
@@ -99,22 +88,27 @@ export class SimpleCache {
   }
 
   /** Persists a fetched value to KV using the selected expiration lifetime. */
-  private async set<T>(
-    key: string,
-    data: T,
-    ttl: CacheTTLPreset,
-  ): Promise<boolean> {
+  private async set<T>(key: string, data: T, ttl: CacheTTLPreset): Promise<boolean> {
     if (!this.enabled) return false;
     try {
       const kv = this.kvGetter();
       if (kv) {
-        await kv.put(
-          SimpleKeyValidator.sanitizeKey(key),
-          JSON.stringify(data),
-          {
-            expirationTtl: ttlSeconds(ttl),
-          },
-        );
+        const safeKey = SimpleKeyValidator.sanitizeKey(key);
+        const expirationTtl = ttlSeconds(ttl);
+        await kv.put(safeKey, JSON.stringify(data), {
+          expirationTtl,
+        });
+        const { provider, resource } = classifyCacheWriteKey(safeKey);
+        try {
+          console.info({
+            event: "kv_write",
+            provider,
+            resource,
+            ttl: expirationTtl,
+          });
+        } catch {
+          // Diagnostics must not change the outcome of a successful KV write.
+        }
         return true;
       }
     } catch (kvErr) {
@@ -155,11 +149,7 @@ export class SimpleCache {
       }
 
       const value = await fetcher();
-      if (
-        options.cachePolicy === "persistent" &&
-        value !== null &&
-        value !== undefined
-      ) {
+      if (options.cachePolicy === "persistent" && value !== null && value !== undefined) {
         await this.set(safeKey, value, options.ttl);
       }
       return value;
@@ -173,12 +163,7 @@ export class SimpleCache {
     return promise;
   }
 
-  generateKey(
-    api: string,
-    type: string,
-    id: string | number,
-    suffix?: string,
-  ): string {
+  generateKey(api: string, type: string, id: string | number, suffix?: string): string {
     return SimpleKeyBuilder.key(api, type, id, suffix);
   }
 
@@ -186,12 +171,7 @@ export class SimpleCache {
     return SimpleKeyBuilder.tmdb(type, id, suffix);
   }
 
-  tvdbKey(
-    type: string,
-    id: string | number,
-    suffix?: string,
-    language?: string,
-  ): string {
+  tvdbKey(type: string, id: string | number, suffix?: string, language?: string): string {
     return SimpleKeyBuilder.tvdb(type, id, suffix, language);
   }
 

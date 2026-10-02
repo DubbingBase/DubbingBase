@@ -1,20 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-  CACHE_TTL,
-  createCacheNamespace,
-  SimpleCache,
-  type GetOrFetchOptions,
-} from "./index";
-import { buildCacheKey } from "./constants";
+import { CACHE_TTL, createCacheNamespace, SimpleCache, type GetOrFetchOptions } from "./index";
+import { buildCacheKey, classifyCacheWriteKey } from "./constants";
 import { OpenLibraryClient } from "../api/openlibrary";
 
 interface FakeKv {
   get: (key: string, options: { type: "json" }) => Promise<unknown>;
-  put: (
-    key: string,
-    value: string,
-    options: { expirationTtl: number },
-  ) => Promise<void>;
+  put: (key: string, value: string, options: { expirationTtl: number }) => Promise<void>;
 }
 
 function makeCache(initial = new Map<string, unknown>()) {
@@ -60,11 +51,11 @@ describe("SimpleCache policies", () => {
       ttl: "STABLE",
     };
 
-    expect([
-      persistent.cachePolicy,
-      readOnly.cachePolicy,
-      none.cachePolicy,
-    ]).toEqual(["persistent", "read-only", "none"]);
+    expect([persistent.cachePolicy, readOnly.cachePolicy, none.cachePolicy]).toEqual([
+      "persistent",
+      "read-only",
+      "none",
+    ]);
     expect([missingTtl, ttlOnNone]).toHaveLength(2);
   });
 
@@ -102,12 +93,9 @@ describe("SimpleCache policies", () => {
     const namespace = createCacheNamespace<string>();
 
     await expect(
-      harness.cache.getOrFetch(
-        namespace,
-        "tvdb:characters:1",
-        async () => "upstream mapping",
-        { cachePolicy: "read-only" },
-      ),
+      harness.cache.getOrFetch(namespace, "tvdb:characters:1", async () => "upstream mapping", {
+        cachePolicy: "read-only",
+      }),
     ).resolves.toBe("upstream mapping");
 
     expect(harness.reads).toBe(1);
@@ -134,51 +122,35 @@ describe("SimpleCache policies", () => {
     const harness = makeCache();
     const namespace = createCacheNamespace<string>();
     let resolveFetch: ((value: string) => void) | undefined;
-    const fetcher = vi.fn(
-      () => new Promise<string>((resolve) => (resolveFetch = resolve)),
-    );
-    const first = harness.cache.getOrFetch(
-      namespace,
-      "provider:coalesced",
-      fetcher,
-      { cachePolicy: "persistent", ttl: "STABLE" },
-    );
-    const second = harness.cache.getOrFetch(
-      namespace,
-      "provider:coalesced",
-      fetcher,
-      { cachePolicy: "persistent", ttl: "STABLE" },
-    );
+    const fetcher = vi.fn(() => new Promise<string>((resolve) => (resolveFetch = resolve)));
+    const first = harness.cache.getOrFetch(namespace, "provider:coalesced", fetcher, {
+      cachePolicy: "persistent",
+      ttl: "STABLE",
+    });
+    const second = harness.cache.getOrFetch(namespace, "provider:coalesced", fetcher, {
+      cachePolicy: "persistent",
+      ttl: "STABLE",
+    });
 
     expect(second).toBe(first);
     await vi.waitFor(() => expect(fetcher).toHaveBeenCalledTimes(1));
     resolveFetch?.("shared result");
-    await expect(Promise.all([first, second])).resolves.toEqual([
-      "shared result",
-      "shared result",
-    ]);
+    await expect(Promise.all([first, second])).resolves.toEqual(["shared result", "shared result"]);
   });
 
   it("keeps the same key independent across different policies", async () => {
     const harness = makeCache();
     const namespace = createCacheNamespace<string>();
     const resolveFetches: Array<(value: string) => void> = [];
-    const fetcher = vi.fn(
-      () => new Promise<string>((resolve) => resolveFetches.push(resolve)),
-    );
+    const fetcher = vi.fn(() => new Promise<string>((resolve) => resolveFetches.push(resolve)));
 
-    const persistent = harness.cache.getOrFetch(
-      namespace,
-      "provider:mixed-policy",
-      fetcher,
-      { cachePolicy: "persistent", ttl: "STABLE" },
-    );
-    const readOnly = harness.cache.getOrFetch(
-      namespace,
-      "provider:mixed-policy",
-      fetcher,
-      { cachePolicy: "read-only" },
-    );
+    const persistent = harness.cache.getOrFetch(namespace, "provider:mixed-policy", fetcher, {
+      cachePolicy: "persistent",
+      ttl: "STABLE",
+    });
+    const readOnly = harness.cache.getOrFetch(namespace, "provider:mixed-policy", fetcher, {
+      cachePolicy: "read-only",
+    });
 
     expect(readOnly).not.toBe(persistent);
     await vi.waitFor(() => expect(fetcher).toHaveBeenCalledTimes(2));
@@ -280,35 +252,147 @@ describe("buildCacheKey", () => {
   });
 });
 
+describe("KV write diagnostics", () => {
+  it.each([
+    [buildCacheKey({ provider: "tmdb", resource: "movie", id: 42 }), "tmdb", "movie"],
+    [
+      buildCacheKey({
+        provider: "wikipedia",
+        resource: "entity-claims",
+        id: "Q42",
+      }),
+      "wikipedia",
+      "entity-claims",
+    ],
+    [buildCacheKey({ provider: "tmdb", resource: "season", id: 7 }), "tmdb", "season"],
+    [buildCacheKey({ provider: "tmdb", resource: "collection", id: 7 }), "tmdb", "collection"],
+    [
+      buildCacheKey({
+        provider: "tmdb",
+        resource: "unexpected-resource",
+        id: 7,
+      }),
+      "tmdb",
+      "other",
+    ],
+    ["igdb:auth_token", "igdb", "auth_token"],
+  ])("classifies cache keys without exposing their identities", (key, provider, resource) => {
+    expect(classifyCacheWriteKey(key)).toEqual({ provider, resource });
+  });
+
+  it("logs safe dimensions only after a successful KV write", async () => {
+    const harness = makeCache();
+    const namespace = createCacheNamespace<{ token: string }>();
+    const key = buildCacheKey({
+      provider: "tmdb",
+      resource: "movie",
+      query: "private-query-value",
+      language: "private-language-value",
+      params: { token: "private-param-value" },
+    });
+    const log = vi.spyOn(console, "info").mockImplementation(() => undefined);
+
+    try {
+      await harness.cache.getOrFetch(
+        namespace,
+        key,
+        async () => ({ token: "private-payload-value" }),
+        { cachePolicy: "persistent", ttl: "STABLE" },
+      );
+
+      expect(log).toHaveBeenCalledTimes(1);
+      expect(log).toHaveBeenCalledWith({
+        event: "kv_write",
+        provider: "tmdb",
+        resource: "movie",
+        ttl: CACHE_TTL.STABLE,
+      });
+      const loggedText = JSON.stringify(log.mock.calls);
+      expect(loggedText).not.toContain("private-query-value");
+      expect(loggedText).not.toContain("private-language-value");
+      expect(loggedText).not.toContain("private-param-value");
+      expect(loggedText).not.toContain("private-payload-value");
+      expect(harness.reads).toBe(1);
+      expect(harness.writes).toHaveLength(1);
+    } finally {
+      log.mockRestore();
+    }
+  });
+
+  it("does not log failed KV writes", async () => {
+    const log = vi.spyOn(console, "info").mockImplementation(() => undefined);
+    const cache = new SimpleCache(() => ({
+      get: async () => null,
+      put: async () => {
+        throw new Error("write failed");
+      },
+    }));
+
+    try {
+      await expect(
+        cache.getOrFetch(
+          createCacheNamespace<string>(),
+          buildCacheKey({ provider: "tvdb", resource: "series", id: 7 }),
+          async () => "value",
+          { cachePolicy: "persistent", ttl: "STABLE" },
+        ),
+      ).resolves.toBe("value");
+      expect(log).not.toHaveBeenCalled();
+    } finally {
+      log.mockRestore();
+    }
+  });
+
+  it("keeps cache behavior successful if diagnostic logging throws", async () => {
+    const harness = makeCache();
+    const log = vi.spyOn(console, "info").mockImplementation(() => {
+      throw new Error("logging unavailable");
+    });
+
+    try {
+      await expect(
+        harness.cache.getOrFetch(
+          createCacheNamespace<string>(),
+          buildCacheKey({ provider: "tmdb", resource: "movie", id: 42 }),
+          async () => "value",
+          { cachePolicy: "persistent", ttl: "STABLE" },
+        ),
+      ).resolves.toBe("value");
+      expect(log).toHaveBeenCalledTimes(1);
+      expect(harness.reads).toBe(1);
+      expect(harness.writes).toHaveLength(1);
+    } finally {
+      log.mockRestore();
+    }
+  });
+});
+
 describe("OpenLibrary author caching", () => {
   const invalidResponses: Array<[string, () => Response]> = [
     ["empty author responses", () => new Response(JSON.stringify({}))],
     ["upstream errors", () => new Response("unavailable", { status: 503 })],
   ];
 
-  it.each(invalidResponses)(
-    "does not cache %s",
-    async (_label, makeResponse) => {
-      let writes = 0;
-      const client = new OpenLibraryClient(
-        new SimpleCache(() => ({
-          get: async () => null,
-          put: async () => {
-            writes += 1;
-          },
-        })),
-      );
-      const fetchMock = vi.fn(async () => makeResponse());
-      vi.stubGlobal("fetch", fetchMock);
+  it.each(invalidResponses)("does not cache %s", async (_label, makeResponse) => {
+    let writes = 0;
+    const client = new OpenLibraryClient(
+      new SimpleCache(() => ({
+        get: async () => null,
+        put: async () => {
+          writes += 1;
+        },
+      })),
+    );
+    const fetchMock = vi.fn(async () => makeResponse());
+    vi.stubGlobal("fetch", fetchMock);
 
-      try {
-        await expect(client.getAuthorName("OL123A")).resolves.toBe("");
-        await expect(client.getAuthorName("OL123A")).resolves.toBe("");
-        expect(fetchMock).toHaveBeenCalledTimes(2);
-        expect(writes).toBe(0);
-      } finally {
-        vi.unstubAllGlobals();
-      }
-    },
-  );
+    try {
+      await expect(client.getAuthorName("OL123A")).resolves.toBe("");
+      await expect(client.getAuthorName("OL123A")).resolves.toBe("");
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(writes).toBe(0);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });
