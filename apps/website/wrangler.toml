@@ -18,17 +18,16 @@ id = "340974572b504ed2aa20c160e18f5697"
 crons = ["* * * * *", "0 6 * * *"]
 
 [observability]
-enabled = false
-head_sampling_rate = 1
-redact_query_string = false
+enabled = true
+redact_query_string = true
 
 [observability.logs]
-enabled = false
-head_sampling_rate = 1
-persist = false
+enabled = true
+# TEMPORARY DIAGNOSTIC: remove after 1–3 hours of KV write attribution.
+head_sampling_rate = 0.1
+persist = true
 invocation_logs = false
 
 [observability.traces]
 enabled = false
 persist = false
-head_sampling_rate = 1

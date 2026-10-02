@@ -10,6 +10,24 @@ export const API_PREFIXES = {
   PODCAST: "podcast",
 } as const;
 
+export interface CacheWriteDimensions {
+  provider: string;
+  resource: string;
+}
+
+/** Extracts only allowlisted labels; cache identity and params are never returned. */
+export function classifyCacheWriteKey(key: string): CacheWriteDimensions {
+  const match = /^external:v\d+:([^:]+):([^:]+):/.exec(key);
+  const legacyTokenMatch = /^(igdb|tvdb):(auth_token)$/.exec(key);
+  const provider = match?.[1] ?? legacyTokenMatch?.[1];
+  const resource = match?.[2] ?? legacyTokenMatch?.[2];
+
+  return {
+    provider: provider && CACHE_LOG_PROVIDERS.has(provider) ? provider : "other",
+    resource: resource && CACHE_LOG_RESOURCES.has(resource) ? resource : "other",
+  };
+}
+
 export const CONTENT_TYPES = {
   MOVIE: "movie",
   TV: "tv",
@@ -24,15 +42,37 @@ export const CONTENT_TYPES = {
   USER: "user",
 } as const;
 
+const CACHE_LOG_PROVIDERS = new Set<string>(Object.values(API_PREFIXES));
+const CACHE_LOG_RESOURCES = new Set([
+  ...Object.values(CONTENT_TYPES),
+  "auth_token",
+  "author",
+  "book",
+  "category",
+  "characters-by-tmdb-id",
+  "entity-claims",
+  "game",
+  "game-characters",
+  "image",
+  "page",
+  "page-html",
+  "page-info",
+  "page-sections",
+  "page-wikitext",
+  "podcast",
+  "season",
+  "collection",
+  "section-wikitext",
+  "voice-actor-url",
+]);
+
 export interface CacheKeyInput {
   provider: string;
   resource: string;
   id?: string | number;
   query?: string;
   language?: string;
-  params?: Readonly<
-    Record<string, string | number | boolean | null | undefined>
-  >;
+  params?: Readonly<Record<string, string | number | boolean | null | undefined>>;
 }
 
 /** A deterministic 64-bit FNV-1a hash over UTF-8 bytes; works in Node and Workers. */
@@ -61,8 +101,7 @@ function stableParams(params: CacheKeyInput["params"]): string | undefined {
 
 /** Shared key strategy for all external providers and result-changing inputs. */
 export function buildCacheKey(input: CacheKeyInput): string {
-  const identity =
-    input.query !== undefined ? `q-${input.query}` : `id-${input.id ?? ""}`;
+  const identity = input.query !== undefined ? `q-${input.query}` : `id-${input.id ?? ""}`;
   const params = stableParams(input.params);
   const components = [
     "external",
@@ -70,25 +109,16 @@ export function buildCacheKey(input: CacheKeyInput): string {
     input.provider.toLowerCase(),
     input.resource.toLowerCase(),
     segment(identity),
-    input.language !== undefined
-      ? `lang-${segment(input.language)}`
-      : undefined,
+    input.language !== undefined ? `lang-${segment(input.language)}` : undefined,
     params ? `params-${segment(params)}` : undefined,
   ];
-  return components
-    .filter((value): value is string => value !== undefined)
-    .join(":");
+  return components.filter((value): value is string => value !== undefined).join(":");
 }
 
 // Compatibility facade for existing provider call sites. New call sites should
 // pass language and parameters separately through buildCacheKey.
 export class SimpleKeyBuilder {
-  static key(
-    api: string,
-    type: string,
-    id: string | number,
-    suffix?: string,
-  ): string {
+  static key(api: string, type: string, id: string | number, suffix?: string): string {
     return buildCacheKey({
       provider: api,
       resource: type,
@@ -101,12 +131,7 @@ export class SimpleKeyBuilder {
     return this.key(API_PREFIXES.TMDB, type, id, suffix);
   }
 
-  static tvdb(
-    type: string,
-    id: string | number,
-    suffix?: string,
-    language?: string,
-  ): string {
+  static tvdb(type: string, id: string | number, suffix?: string, language?: string): string {
     return buildCacheKey({
       provider: API_PREFIXES.TVDB,
       resource: type,
@@ -124,16 +149,13 @@ export class SimpleKeyBuilder {
 export const CACHE_KEYS = {
   TMDB_MOVIE: (id: number, suffix?: string) =>
     SimpleKeyBuilder.tmdb(CONTENT_TYPES.MOVIE, id, suffix),
-  TMDB_TV: (id: number, suffix?: string) =>
-    SimpleKeyBuilder.tmdb(CONTENT_TYPES.TV, id, suffix),
+  TMDB_TV: (id: number, suffix?: string) => SimpleKeyBuilder.tmdb(CONTENT_TYPES.TV, id, suffix),
   TMDB_EPISODE: (id: number, suffix?: string) =>
     SimpleKeyBuilder.tmdb(CONTENT_TYPES.EPISODE, id, suffix),
   TMDB_PERSON: (id: number, suffix?: string) =>
     SimpleKeyBuilder.tmdb(CONTENT_TYPES.PERSON, id, suffix),
-  TMDB_TRENDING_MOVIES: () =>
-    SimpleKeyBuilder.tmdb(CONTENT_TYPES.TRENDING, "movies:v2"),
-  TMDB_TRENDING_SHOWS: () =>
-    SimpleKeyBuilder.tmdb(CONTENT_TYPES.TRENDING, "shows:v2"),
+  TMDB_TRENDING_MOVIES: () => SimpleKeyBuilder.tmdb(CONTENT_TYPES.TRENDING, "movies:v2"),
+  TMDB_TRENDING_SHOWS: () => SimpleKeyBuilder.tmdb(CONTENT_TYPES.TRENDING, "shows:v2"),
   TVDB_AUTH_TOKEN: () => "tvdb:auth_token",
   TVDB_SERIES: (id: number, suffix?: string, language?: string) =>
     SimpleKeyBuilder.tvdb(CONTENT_TYPES.SERIES, id, suffix, language),
