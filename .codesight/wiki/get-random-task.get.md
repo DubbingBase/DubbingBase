@@ -2,11 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Get-random-task.get subsystem handles **1 routes** and touches: auth, cache.
+The Get-random-task.get subsystem handles **1 routes** and touches: auth.
 
 ## Routes
 
-- `GET` `/api/get-random-task` [auth, cache]
+- `GET` `/api/get-random-task` [auth]
   `apps/website/server/api/get-random-task.get.ts`
 
 ## Source Files

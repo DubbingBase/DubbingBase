@@ -28,10 +28,12 @@
 - `apps/mobile/src/utils/language.ts` — function getLanguageDisplayName: (langCode, uiLocale) => string
 - `apps/website/server/api/movie/[id].get.ts` — function fetchMovieData: (event, movieId) => void
 - `apps/website/server/api/show/[id].get.ts` — function fetchShowData: (event, showId) => void
+- `apps/website/server/api/trending/games.get.ts` — function getTrendingGamesResponse: (event, language, config, igdbClient, language?) => Promise<IgdbTrendingGamesResult>;
 - `apps/website/server/utils/api/advertisement.ts` — class AdvertisementClient
 - `apps/website/server/utils/api/igdb.ts`
   - function buildIgdbImageUrl: (hash, size) => string
   - class IgdbClient
+  - interface IgdbTrendingGamesResult
   - interface IgdbPopularityPrimitive
 - `apps/website/server/utils/api/openlibrary.ts` — function buildOpenLibraryCoverUrl: (coverId, size) => string, class OpenLibraryClient
 - `apps/website/server/utils/api/podcast.ts`
@@ -55,21 +57,20 @@
   - const CACHE_SCHEMA_VERSION
   - _...3 more_
 - `apps/website/server/utils/cache/http.ts`
-  - function shouldDisableErrorCaching: (error) => boolean
-  - function setErrorCacheHeaders: (event, error) => void
   - function getPublicCacheControl: (profile) => string
+  - function getCloudflareCacheControl: (profile) => string
   - function setNoCacheHeaders: (event) => void
-  - function setNoStoreHeaders: (event) => void
   - function setPublicCacheHeaders: (event, profile) => void
-  - _...2 more_
+  - type CacheProfile
+  - const NO_STORE_CACHE_CONTROL
 - `apps/website/server/utils/cache/index.ts`
   - function createCacheNamespace: () => CacheNamespace<T>
   - class CacheNamespace
   - class SimpleCache
-  - interface GetOrFetchOptions
   - interface CacheKv
+  - type CachePolicy
   - type CacheTTLPreset
-  - _...1 more_
+  - _...2 more_
 - `apps/website/server/utils/cache/wikipedia.ts`
   - function sortLanguagesByPopularity: (languages) => string[]
   - function extractAvailableLanguages: (sitelinks, {...}) => string[]
@@ -92,11 +93,11 @@
 - `apps/website/server/utils/index.ts`
   - function getCloudflareKv: (event?) => CacheKv | null
   - function useCache: (event?) => SimpleCache
-  - function getOrFetch: (namespace, key, fetcher) => void
   - function useTmdbClient: (cache?) => TMDBClient
   - function useTvdbClient: () => TVDBClient
   - function useIgdbClient: (cache?) => IgdbClient
-  - _...5 more_
+  - function useOpenLibraryClient: () => OpenLibraryClient
+  - _...4 more_
 - `apps/website/server/utils/llm.ts`
   - function areAllLlmQuotasExhausted: () => boolean
   - function getLlmQuotaCache: () => void
@@ -169,6 +170,7 @@
   - const TMDB_CONFIG
 - `apps/website/server/utils/wiki-check-disposition.ts` — function wikiCheckDisposition: (hasDubbingSections, dubbingLanguage) => WikiCheckDisposition, type WikiCheckDisposition
 - `apps/website/server/utils/with-timeout.ts` — function withTimeout: (promise, timeoutMs, dependency) => Promise<T>
+- `apps/website/src/composables/getHydrationCachedData.ts` — function getHydrationCachedData: (key, nuxtApp) => T | undefined
 - `apps/website/src/composables/useContribute.ts` — function fetchRandomTask, function useContribute
 - `apps/website/src/composables/useDragScroll.ts` — function useDragScroll: (scrollRef) => void
 - `apps/website/src/composables/useReports.ts` — function useReports

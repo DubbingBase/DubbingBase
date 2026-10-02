@@ -3,95 +3,95 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 81 routes | 18 models | 197 components | 88 lib files | 61 env vars | 12 middleware | 18% test coverage
-> **Token savings:** this file is ~15,700 tokens. Without it, AI exploration would cost ~156,200 tokens. **Saves ~140,500 tokens per conversation.**
-> **Last scanned:** 2026-09-28 18:32 — re-run after significant changes
+> 81 routes | 18 models | 197 components | 90 lib files | 61 env vars | 14 middleware | 18% test coverage
+> **Token savings:** this file is ~15,800 tokens. Without it, AI exploration would cost ~157,200 tokens. **Saves ~141,400 tokens per conversation.**
+> **Last scanned:** 2026-10-02 09:32 — re-run after significant changes
 
 ---
 
 # Routes
 
-- `GET` `/api/actor/:id` params(id) [cache]
+- `GET` `/api/actor/:id` params(id)
 - `GET` `/api/admin/dubbing-project` [auth] ✓
 - `POST` `/api/admin/dubbing-project` [auth] ✓
 - `POST` `/api/admin/queue/clear` [auth, queue]
 - `DELETE` `/api/admin/queue/item` [auth, queue]
 - `POST` `/api/admin/queue/review` [auth, queue]
-- `GET` `/api/admin/queue` [auth, cache, queue]
-- `GET` `/api/advertisement/:id` params(id) [cache, queue]
-- `GET` `/api/audiobook/:id` params(id) [cache, queue]
+- `GET` `/api/admin/queue` [auth, queue]
+- `GET` `/api/advertisement/:id` params(id) [queue]
+- `GET` `/api/audiobook/:id` params(id) [queue]
 - `GET` `/api/career-grid` [cache]
 - `POST` `/api/cast-vote`
 - `POST` `/api/count-voice-actor-works`
 - `POST` `/api/create-user-profile` [auth, db]
-- `GET` `/api/dashboard-stats` [auth, cache]
+- `GET` `/api/dashboard-stats` [auth]
 - `POST` `/api/delete-user-voice-actor-link` [db]
 - `POST` `/api/delete-voice-actor-link` [auth, db]
 - `POST` `/api/delete-work-entry` [auth, db]
 - `POST` `/api/delete_user` [auth]
-- `GET` `/api/detail-collections` [cache] ✓
+- `GET` `/api/detail-collections` ✓
 - `GET` `/api/episode/index` [cache]
 - `POST` `/api/extract-credits-from-image` [upload]
 - `POST` `/api/extract-voice-actor-info` [auth]
-- `GET` `/api/find_duplicate_voice_actors` [auth, cache]
-- `GET` `/api/find_duplicate_work` [auth, cache]
-- `GET` `/api/game/:id` params(id) [cache, queue]
+- `GET` `/api/find_duplicate_voice_actors` [auth]
+- `GET` `/api/find_duplicate_work` [auth]
+- `GET` `/api/game/:id` params(id) [queue]
 - `POST` `/api/generate-social-content` [auth, email]
-- `GET` `/api/get-dubbing-project` [cache]
+- `GET` `/api/get-dubbing-project`
 - `GET` `/api/get-media-credits` [cache]
-- `GET` `/api/get-metadata` [cache]
-- `GET` `/api/get-random-task` [auth, cache]
-- `GET` `/api/get-studio-details` [cache]
-- `GET` `/api/get-user-profile` [auth, cache]
-- `ALL` `/api/get-user-voice-actor` [auth, cache]
-- `GET` `/api/get-user-voice-actors` [auth, cache]
-- `GET` `/api/get-work-votes` [cache]
-- `GET` `/api/home-stats` [cache]
+- `GET` `/api/get-metadata`
+- `GET` `/api/get-random-task` [auth]
+- `GET` `/api/get-studio-details`
+- `GET` `/api/get-user-profile` [auth]
+- `ALL` `/api/get-user-voice-actor` [auth]
+- `GET` `/api/get-user-voice-actors` [auth]
+- `GET` `/api/get-work-votes`
+- `GET` `/api/home-stats`
 - `POST` `/api/internal-media-create` [auth, db]
-- `GET` `/api/internal-media-credits` [cache]
-- `GET` `/api/internal-media-metadata` [cache]
+- `GET` `/api/internal-media-credits`
+- `GET` `/api/internal-media-metadata`
 - `POST` `/api/link-user-voice-actor` [db]
 - `POST` `/api/link-voice-actor` [auth, db]
-- `GET` `/api/list-voice-actors` [cache]
-- `GET` `/api/list_users` [auth, cache]
+- `GET` `/api/list-voice-actors`
+- `GET` `/api/list_users` [auth]
 - `POST` `/api/manage-subscription` [db]
-- `POST` `/api/media-queue` [auth, cache, queue] ✓
+- `POST` `/api/media-queue` [auth, queue] ✓
 - `POST` `/api/merge_voice_actor_duplicates` [auth]
-- `GET` `/api/movie/:id` params(id) [cache, queue]
+- `GET` `/api/movie/:id` params(id) [queue]
 - `POST` `/api/notify-subscribers` [auth, webhook]
 - `GET` `/api/og-image/index` [cache]
-- `GET` `/api/podcast/:id` params(id) [cache, queue]
+- `GET` `/api/podcast/:id` params(id) [queue]
 - `POST` `/api/prepare-trending-media` [auth, queue]
 - `POST` `/api/prepare_game` [auth] ✓
 - `POST` `/api/prepare_media` [auth]
 - `POST` `/api/process-credits` [auth, db]
 - `POST` `/api/process-media-queue` [auth, cache, queue] ✓
-- `GET` `/api/recent-voice-actors` [cache]
+- `GET` `/api/recent-voice-actors`
 - `POST` `/api/request-voice-actor-page` [auth, email]
 - `POST` `/api/revert-task` [db]
 - `POST` `/api/save-dubbing-project` [auth, db]
 - `POST` `/api/save-metadata` [db]
 - `POST` `/api/save-studio` [db]
-- `GET` `/api/search/index` [db, cache]
-- `GET` `/api/search-voice-actors` [cache]
+- `GET` `/api/search/index` [db]
+- `GET` `/api/search-voice-actors`
 - `GET` `/api/season/index` [cache]
-- `GET` `/api/show/:id` params(id) [cache, queue]
+- `GET` `/api/show/:id` params(id) [queue]
 - `POST` `/api/submit-task` [db, upload]
 - `POST` `/api/submit-user-report` [db]
-- `GET` `/api/top-contributors` [cache]
-- `GET` `/api/top-voice-actors` [cache]
-- `GET` `/api/toy/:id` params(id) [cache, queue]
+- `GET` `/api/top-contributors`
+- `GET` `/api/top-voice-actors`
+- `GET` `/api/toy/:id` params(id) [queue]
 - `GET` `/api/trending/games` [cache]
 - `GET` `/api/trending/movies` [cache]
 - `GET` `/api/trending/shows` [cache]
-- `GET` `/api/trending/voice-actors` [cache]
+- `GET` `/api/trending/voice-actors`
 - `POST` `/api/update-review-status` [db]
 - `POST` `/api/update-user-profile`
 - `POST` `/api/update-voice-actor` [auth, db, upload]
 - `POST` `/api/update_user_role` [auth]
 - `POST` `/api/update_voice_actor_link` [auth, db]
 - `POST` `/api/upload-profile-picture` [auth, db, upload]
-- `GET` `/api/voice-actor/:id` params(id) [cache]
+- `GET` `/api/voice-actor/:id` params(id)
 
 ---
 
@@ -450,10 +450,12 @@
 - `apps/mobile/src/utils/language.ts` — function getLanguageDisplayName: (langCode, uiLocale) => string
 - `apps/website/server/api/movie/[id].get.ts` — function fetchMovieData: (event, movieId) => void
 - `apps/website/server/api/show/[id].get.ts` — function fetchShowData: (event, showId) => void
+- `apps/website/server/api/trending/games.get.ts` — function getTrendingGamesResponse: (event, language, config, igdbClient, language?) => Promise<IgdbTrendingGamesResult>;
 - `apps/website/server/utils/api/advertisement.ts` — class AdvertisementClient
 - `apps/website/server/utils/api/igdb.ts`
   - function buildIgdbImageUrl: (hash, size) => string
   - class IgdbClient
+  - interface IgdbTrendingGamesResult
   - interface IgdbPopularityPrimitive
 - `apps/website/server/utils/api/openlibrary.ts` — function buildOpenLibraryCoverUrl: (coverId, size) => string, class OpenLibraryClient
 - `apps/website/server/utils/api/podcast.ts`
@@ -477,21 +479,20 @@
   - const CACHE_SCHEMA_VERSION
   - _...3 more_
 - `apps/website/server/utils/cache/http.ts`
-  - function shouldDisableErrorCaching: (error) => boolean
-  - function setErrorCacheHeaders: (event, error) => void
   - function getPublicCacheControl: (profile) => string
+  - function getCloudflareCacheControl: (profile) => string
   - function setNoCacheHeaders: (event) => void
-  - function setNoStoreHeaders: (event) => void
   - function setPublicCacheHeaders: (event, profile) => void
-  - _...2 more_
+  - type CacheProfile
+  - const NO_STORE_CACHE_CONTROL
 - `apps/website/server/utils/cache/index.ts`
   - function createCacheNamespace: () => CacheNamespace<T>
   - class CacheNamespace
   - class SimpleCache
-  - interface GetOrFetchOptions
   - interface CacheKv
+  - type CachePolicy
   - type CacheTTLPreset
-  - _...1 more_
+  - _...2 more_
 - `apps/website/server/utils/cache/wikipedia.ts`
   - function sortLanguagesByPopularity: (languages) => string[]
   - function extractAvailableLanguages: (sitelinks, {...}) => string[]
@@ -514,11 +515,11 @@
 - `apps/website/server/utils/index.ts`
   - function getCloudflareKv: (event?) => CacheKv | null
   - function useCache: (event?) => SimpleCache
-  - function getOrFetch: (namespace, key, fetcher) => void
   - function useTmdbClient: (cache?) => TMDBClient
   - function useTvdbClient: () => TVDBClient
   - function useIgdbClient: (cache?) => IgdbClient
-  - _...5 more_
+  - function useOpenLibraryClient: () => OpenLibraryClient
+  - _...4 more_
 - `apps/website/server/utils/llm.ts`
   - function areAllLlmQuotasExhausted: () => boolean
   - function getLlmQuotaCache: () => void
@@ -591,6 +592,7 @@
   - const TMDB_CONFIG
 - `apps/website/server/utils/wiki-check-disposition.ts` — function wikiCheckDisposition: (hasDubbingSections, dubbingLanguage) => WikiCheckDisposition, type WikiCheckDisposition
 - `apps/website/server/utils/with-timeout.ts` — function withTimeout: (promise, timeoutMs, dependency) => Promise<T>
+- `apps/website/src/composables/getHydrationCachedData.ts` — function getHydrationCachedData: (key, nuxtApp) => T | undefined
 - `apps/website/src/composables/useContribute.ts` — function fetchRandomTask, function useContribute
 - `apps/website/src/composables/useDragScroll.ts` — function useDragScroll: (scrollRef) => void
 - `apps/website/src/composables/useReports.ts` — function useReports
@@ -765,9 +767,11 @@
 - authenticated-fetch — `apps/website/src/plugins/authenticated-fetch.ts`
 
 ## custom
+- 00-cache-headers — `apps/website/server/middleware/00-cache-headers.ts`
 - 00-cache — `apps/website/server/middleware/00-cache.ts`
 - 00-e2e-mock — `apps/website/server/middleware/00-e2e-mock.ts`
 - 01-locale-redirect — `apps/website/server/middleware/01-locale-redirect.ts`
+- cache-headers-middleware.test — `apps/website/server/utils/cache/cache-headers-middleware.test.ts`
 - admin — `apps/website/src/middleware/admin.ts`
 - 20260618000000_migrate_to_pgmq — `packages/database/supabase/migrations/20260618000000_migrate_to_pgmq.sql`
 
@@ -781,22 +785,22 @@
 ## Most Imported Files (change these carefully)
 
 - `apps/website/server/utils/db/client.ts` — imported by **65** files
-- `apps/website/server/utils/cache/http.ts` — imported by **38** files
 - `apps/website/server/utils/auth.ts` — imported by **34** files
 - `apps/website/server/utils/index.ts` — imported by **23** files
-- `apps/website/server/utils/cache/index.ts` — imported by **13** files
+- `apps/website/server/utils/cache/index.ts` — imported by **21** files
 - `apps/website/server/utils/db/queries.ts` — imported by **12** files
+- `apps/website/server/utils/cache/constants.ts` — imported by **12** files
 - `apps/website/server/utils/dubbing-language.ts` — imported by **11** files
 - `apps/website/server/utils/notifications/discord.ts` — imported by **11** files
-- `apps/website/server/utils/cache/constants.ts` — imported by **11** files
+- `apps/website/server/utils/api/igdb.ts` — imported by **11** files
 - `apps/website/server/utils/urls/supabase.ts` — imported by **10** files
 - `apps/website/server/utils/urls/tmdb.ts` — imported by **10** files
-- `apps/website/server/utils/api/igdb.ts` — imported by **9** files
-- `apps/website/server/utils/api/cache-options.ts` — imported by **8** files
 - `e2e/helpers/mock-api.ts` — imported by **8** files
 - `packages/shared-logic/src/types/index.ts` — imported by **8** files
 - `apps/website/server/utils/background.ts` — imported by **7** files
+- `apps/website/server/utils/cache/http.ts` — imported by **7** files
 - `apps/website/server/utils/services/media.ts` — imported by **6** files
+- `apps/website/server/utils/api/cache-options.ts` — imported by **6** files
 - `apps/website/server/utils/error-message.ts` — imported by **5** files
 - `apps/website/server/utils/with-timeout.ts` — imported by **4** files
 - `apps/website/server/utils/llm.ts` — imported by **4** files
@@ -804,14 +808,14 @@
 ## Import Map (who imports what)
 
 - `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/review.post.ts` +60 more
-- `apps/website/server/utils/cache/http.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/admin/queue.get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts` +33 more
 - `apps/website/server/utils/auth.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/review.post.ts` +29 more
 - `apps/website/server/utils/index.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/episode/index.get.ts` +18 more
-- `apps/website/server/utils/cache/index.ts` ← `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/season/index.get.ts`, `apps/website/server/utils/api/igdb.test.ts`, `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.ts` +8 more
+- `apps/website/server/utils/cache/index.ts` ← `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/season/index.get.ts`, `apps/website/server/utils/api/cache-options.ts`, `apps/website/server/utils/api/igdb.test.ts`, `apps/website/server/utils/api/igdb.ts` +16 more
 - `apps/website/server/utils/db/queries.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/game/[id].get.ts` +7 more
+- `apps/website/server/utils/cache/constants.ts` ← `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/season/index.get.ts`, `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.ts`, `apps/website/server/utils/api/podcast.ts` +7 more
 - `apps/website/server/utils/dubbing-language.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/review.post.ts`, `apps/website/server/api/internal-media-create.post.ts`, `apps/website/server/api/link-voice-actor.post.ts` +6 more
 - `apps/website/server/utils/notifications/discord.ts` ← `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/media-queue.post.ts`, `apps/website/server/api/movie/[id].get.ts` +6 more
-- `apps/website/server/utils/cache/constants.ts` ← `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/season/index.get.ts`, `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.ts`, `apps/website/server/utils/api/podcast.ts` +6 more
+- `apps/website/server/utils/api/igdb.ts` ← `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/internal-media-credits.get.ts`, `apps/website/server/api/internal-media-metadata.get.ts`, `apps/website/server/api/search/index.get.ts`, `apps/website/server/api/trending/games.get.ts` +6 more
 - `apps/website/server/utils/urls/supabase.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/dashboard-stats.get.ts`, `apps/website/server/api/find_duplicate_voice_actors.get.ts`, `apps/website/server/api/recent-voice-actors.get.ts`, `apps/website/server/api/search/index.get.ts` +5 more
 
 ---
@@ -819,7 +823,7 @@
 # Test Coverage
 
 > **18%** of routes and models are covered by tests
-> 54 test files found
+> 61 test files found
 
 ## Covered Routes
 
@@ -854,7 +858,7 @@
 | Workflow | Triggers | Jobs | Deploy | Environments |
 |---|---|---|---|---|
 | codesight | push, workflow_dispatch | 1 | — | — |
-| Release and Deployment Pipeline | push, workflow_dispatch | 10 | netlify, cloudflare | — |
+| Release and Deployment Pipeline | push, workflow_dispatch | 12 | netlify, cloudflare | — |
 
 ### Release and Deployment Pipeline
 
@@ -880,6 +884,12 @@
   - `actions/checkout@v4`
   - `pnpm/action-setup@v4`
   - `actions/setup-node@v4`
+- **typecheck-website** on `ubuntu-latest` — 5 steps (needs: detect)
+  - `actions/checkout@v4`
+  - `pnpm/action-setup@v4`
+  - `actions/setup-node@v4`
+- **diff-check** on `ubuntu-latest` — 2 steps (needs: detect)
+  - `actions/checkout@v4`
 - **i18n-check** on `ubuntu-latest` — 5 steps (needs: detect)
   - `actions/checkout@v4`
   - `pnpm/action-setup@v4`
@@ -901,11 +911,11 @@
   - `actions/checkout@v4`
   - `actions/download-artifact@v4`
   - `KevinRohn/github-action-upload-play-store@v1.0.1`
-- **build-website** on `ubuntu-latest` — 5 steps (needs: detect, deploy-supabase, e2e-tests, frontend-tests, i18n-check)
+- **build-website** on `ubuntu-latest` — 5 steps
   - `actions/checkout@v4`
   - `pnpm/action-setup@v4`
   - `actions/setup-node@v4`
-- **deploy-website** on `ubuntu-latest` — 6 steps (needs: detect, deploy-supabase, e2e-tests, frontend-tests) → **cloudflare**
+- **deploy-website** on `ubuntu-latest` — 6 steps → **cloudflare**
   - `actions/checkout@v4`
   - `pnpm/action-setup@v4`
   - `actions/setup-node@v4`

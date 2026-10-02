@@ -2,11 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The List-voice-actors.get subsystem handles **1 routes** and touches: cache.
+The List-voice-actors.get subsystem handles **1 routes**.
 
 ## Routes
 
-- `GET` `/api/list-voice-actors` [cache]
+- `GET` `/api/list-voice-actors`
   `apps/website/server/api/list-voice-actors.get.ts`
 
 ## Related Models

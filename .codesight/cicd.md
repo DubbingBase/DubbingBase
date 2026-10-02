@@ -5,7 +5,7 @@
 | Workflow | Triggers | Jobs | Deploy | Environments |
 |---|---|---|---|---|
 | codesight | push, workflow_dispatch | 1 | — | — |
-| Release and Deployment Pipeline | push, workflow_dispatch | 10 | netlify, cloudflare | — |
+| Release and Deployment Pipeline | push, workflow_dispatch | 12 | netlify, cloudflare | — |
 
 ### Release and Deployment Pipeline
 
@@ -31,6 +31,12 @@
   - `actions/checkout@v4`
   - `pnpm/action-setup@v4`
   - `actions/setup-node@v4`
+- **typecheck-website** on `ubuntu-latest` — 5 steps (needs: detect)
+  - `actions/checkout@v4`
+  - `pnpm/action-setup@v4`
+  - `actions/setup-node@v4`
+- **diff-check** on `ubuntu-latest` — 2 steps (needs: detect)
+  - `actions/checkout@v4`
 - **i18n-check** on `ubuntu-latest` — 5 steps (needs: detect)
   - `actions/checkout@v4`
   - `pnpm/action-setup@v4`
@@ -52,11 +58,11 @@
   - `actions/checkout@v4`
   - `actions/download-artifact@v4`
   - `KevinRohn/github-action-upload-play-store@v1.0.1`
-- **build-website** on `ubuntu-latest` — 5 steps (needs: detect, deploy-supabase, e2e-tests, frontend-tests, i18n-check)
+- **build-website** on `ubuntu-latest` — 5 steps
   - `actions/checkout@v4`
   - `pnpm/action-setup@v4`
   - `actions/setup-node@v4`
-- **deploy-website** on `ubuntu-latest` — 6 steps (needs: detect, deploy-supabase, e2e-tests, frontend-tests) → **cloudflare**
+- **deploy-website** on `ubuntu-latest` — 6 steps → **cloudflare**
   - `actions/checkout@v4`
   - `pnpm/action-setup@v4`
   - `actions/setup-node@v4`

@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Admin subsystem handles **6 routes** and touches: auth, queue, cache.
+The Admin subsystem handles **6 routes** and touches: auth, queue.
 
 ## Routes
 
@@ -16,7 +16,7 @@ The Admin subsystem handles **6 routes** and touches: auth, queue, cache.
   `apps/website/server/api/admin/queue/item.delete.ts`
 - `POST` `/api/admin/queue/review` [auth, queue]
   `apps/website/server/api/admin/queue/review.post.ts`
-- `GET` `/api/admin/queue` [auth, cache, queue]
+- `GET` `/api/admin/queue` [auth, queue]
   `apps/website/server/api/admin/queue.get.ts`
 
 ## Source Files

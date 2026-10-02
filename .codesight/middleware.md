@@ -9,9 +9,11 @@
 - authenticated-fetch — `apps/website/src/plugins/authenticated-fetch.ts`
 
 ## custom
+- 00-cache-headers — `apps/website/server/middleware/00-cache-headers.ts`
 - 00-cache — `apps/website/server/middleware/00-cache.ts`
 - 00-e2e-mock — `apps/website/server/middleware/00-e2e-mock.ts`
 - 01-locale-redirect — `apps/website/server/middleware/01-locale-redirect.ts`
+- cache-headers-middleware.test — `apps/website/server/utils/cache/cache-headers-middleware.test.ts`
 - admin — `apps/website/src/middleware/admin.ts`
 - 20260618000000_migrate_to_pgmq — `packages/database/supabase/migrations/20260618000000_migrate_to_pgmq.sql`
 

@@ -8,48 +8,48 @@
 
 ## Scale
 
-81 API routes · 18 database models · 197 UI components · 88 library files · 12 middleware layers · 61 environment variables
+81 API routes · 18 database models · 197 UI components · 90 library files · 14 middleware layers · 61 environment variables
 
 ## Subsystems
 
-- **[[id].get](./[id].get.md)** — 9 routes — touches: cache, queue
-- **[Admin](./admin.md)** — 6 routes — touches: auth, queue, cache
+- **[[id].get](./[id].get.md)** — 9 routes — touches: queue
+- **[Admin](./admin.md)** — 6 routes — touches: auth, queue
 - **[Career-grid.get](./career-grid.get.md)** — 1 routes — touches: cache
 - **[Cast-vote.post](./cast-vote.post.md)** — 1 routes
 - **[Count-voice-actor-works.post](./count-voice-actor-works.post.md)** — 1 routes
 - **[Create-user-profile.post](./create-user-profile.post.md)** — 1 routes — touches: auth, db
-- **[Dashboard-stats.get](./dashboard-stats.get.md)** — 1 routes — touches: auth, cache
+- **[Dashboard-stats.get](./dashboard-stats.get.md)** — 1 routes — touches: auth
 - **[Delete-user-voice-actor-link.post](./delete-user-voice-actor-link.post.md)** — 1 routes — touches: db
 - **[Delete-voice-actor-link.post](./delete-voice-actor-link.post.md)** — 1 routes — touches: auth, db
 - **[Delete-work-entry.post](./delete-work-entry.post.md)** — 1 routes — touches: auth, db
 - **[Delete_user.post](./delete_user.post.md)** — 1 routes — touches: auth
-- **[Detail-collections.get](./detail-collections.get.md)** — 1 routes — touches: cache
+- **[Detail-collections.get](./detail-collections.get.md)** — 1 routes
 - **[Extract-credits-from-image.post](./extract-credits-from-image.post.md)** — 1 routes — touches: upload
 - **[Extract-voice-actor-info.post](./extract-voice-actor-info.post.md)** — 1 routes — touches: auth
-- **[Find_duplicate_voice_actors.get](./find_duplicate_voice_actors.get.md)** — 1 routes — touches: auth, cache
-- **[Find_duplicate_work.get](./find_duplicate_work.get.md)** — 1 routes — touches: auth, cache
+- **[Find_duplicate_voice_actors.get](./find_duplicate_voice_actors.get.md)** — 1 routes — touches: auth
+- **[Find_duplicate_work.get](./find_duplicate_work.get.md)** — 1 routes — touches: auth
 - **[Games.get](./games.get.md)** — 1 routes — touches: cache
 - **[Generate-social-content.post](./generate-social-content.post.md)** — 1 routes — touches: auth, email
-- **[Get-dubbing-project.get](./get-dubbing-project.get.md)** — 1 routes — touches: cache
+- **[Get-dubbing-project.get](./get-dubbing-project.get.md)** — 1 routes
 - **[Get-media-credits.get](./get-media-credits.get.md)** — 1 routes — touches: cache
-- **[Get-metadata.get](./get-metadata.get.md)** — 1 routes — touches: cache
-- **[Get-random-task.get](./get-random-task.get.md)** — 1 routes — touches: auth, cache
-- **[Get-studio-details.get](./get-studio-details.get.md)** — 1 routes — touches: cache
-- **[Get-user-profile.get](./get-user-profile.get.md)** — 1 routes — touches: auth, cache
-- **[Get-user-voice-actor](./get-user-voice-actor.md)** — 1 routes — touches: auth, cache
-- **[Get-user-voice-actors.get](./get-user-voice-actors.get.md)** — 1 routes — touches: auth, cache
-- **[Get-work-votes.get](./get-work-votes.get.md)** — 1 routes — touches: cache
-- **[Home-stats.get](./home-stats.get.md)** — 1 routes — touches: cache
+- **[Get-metadata.get](./get-metadata.get.md)** — 1 routes
+- **[Get-random-task.get](./get-random-task.get.md)** — 1 routes — touches: auth
+- **[Get-studio-details.get](./get-studio-details.get.md)** — 1 routes
+- **[Get-user-profile.get](./get-user-profile.get.md)** — 1 routes — touches: auth
+- **[Get-user-voice-actor](./get-user-voice-actor.md)** — 1 routes — touches: auth
+- **[Get-user-voice-actors.get](./get-user-voice-actors.get.md)** — 1 routes — touches: auth
+- **[Get-work-votes.get](./get-work-votes.get.md)** — 1 routes
+- **[Home-stats.get](./home-stats.get.md)** — 1 routes
 - **[Index.get](./index.get.md)** — 4 routes — touches: cache, db
 - **[Internal-media-create.post](./internal-media-create.post.md)** — 1 routes — touches: auth, db
-- **[Internal-media-credits.get](./internal-media-credits.get.md)** — 1 routes — touches: cache
-- **[Internal-media-metadata.get](./internal-media-metadata.get.md)** — 1 routes — touches: cache
+- **[Internal-media-credits.get](./internal-media-credits.get.md)** — 1 routes
+- **[Internal-media-metadata.get](./internal-media-metadata.get.md)** — 1 routes
 - **[Link-user-voice-actor.post](./link-user-voice-actor.post.md)** — 1 routes — touches: db
 - **[Link-voice-actor.post](./link-voice-actor.post.md)** — 1 routes — touches: auth, db
-- **[List-voice-actors.get](./list-voice-actors.get.md)** — 1 routes — touches: cache
-- **[List_users.get](./list_users.get.md)** — 1 routes — touches: auth, cache
+- **[List-voice-actors.get](./list-voice-actors.get.md)** — 1 routes
+- **[List_users.get](./list_users.get.md)** — 1 routes — touches: auth
 - **[Manage-subscription.post](./manage-subscription.post.md)** — 1 routes — touches: db
-- **[Media-queue.post](./media-queue.post.md)** — 1 routes — touches: auth, cache, queue
+- **[Media-queue.post](./media-queue.post.md)** — 1 routes — touches: auth, queue
 - **[Merge_voice_actor_duplicates.post](./merge_voice_actor_duplicates.post.md)** — 1 routes — touches: auth
 - **[Movies.get](./movies.get.md)** — 1 routes — touches: cache
 - **[Notify-subscribers.post](./notify-subscribers.post.md)** — 1 routes — touches: auth, webhook
@@ -58,42 +58,42 @@
 - **[Prepare_media.post](./prepare_media.post.md)** — 1 routes — touches: auth
 - **[Process-credits.post](./process-credits.post.md)** — 1 routes — touches: auth, db
 - **[Process-media-queue.post](./process-media-queue.post.md)** — 1 routes — touches: auth, cache, queue
-- **[Recent-voice-actors.get](./recent-voice-actors.get.md)** — 1 routes — touches: cache
+- **[Recent-voice-actors.get](./recent-voice-actors.get.md)** — 1 routes
 - **[Request-voice-actor-page.post](./request-voice-actor-page.post.md)** — 1 routes — touches: auth, email
 - **[Revert-task.post](./revert-task.post.md)** — 1 routes — touches: db
 - **[Save-dubbing-project.post](./save-dubbing-project.post.md)** — 1 routes — touches: auth, db
 - **[Save-metadata.post](./save-metadata.post.md)** — 1 routes — touches: db
 - **[Save-studio.post](./save-studio.post.md)** — 1 routes — touches: db
-- **[Search-voice-actors.get](./search-voice-actors.get.md)** — 1 routes — touches: cache
+- **[Search-voice-actors.get](./search-voice-actors.get.md)** — 1 routes
 - **[Shows.get](./shows.get.md)** — 1 routes — touches: cache
 - **[Submit-task.post](./submit-task.post.md)** — 1 routes — touches: db, upload
 - **[Submit-user-report.post](./submit-user-report.post.md)** — 1 routes — touches: db
-- **[Top-contributors.get](./top-contributors.get.md)** — 1 routes — touches: cache
-- **[Top-voice-actors.get](./top-voice-actors.get.md)** — 1 routes — touches: cache
+- **[Top-contributors.get](./top-contributors.get.md)** — 1 routes
+- **[Top-voice-actors.get](./top-voice-actors.get.md)** — 1 routes
 - **[Update-review-status.post](./update-review-status.post.md)** — 1 routes — touches: db
 - **[Update-user-profile.post](./update-user-profile.post.md)** — 1 routes
 - **[Update-voice-actor.post](./update-voice-actor.post.md)** — 1 routes — touches: auth, db, upload
 - **[Update_user_role.post](./update_user_role.post.md)** — 1 routes — touches: auth
 - **[Update_voice_actor_link.post](./update_voice_actor_link.post.md)** — 1 routes — touches: auth, db
 - **[Upload-profile-picture.post](./upload-profile-picture.post.md)** — 1 routes — touches: auth, db, upload
-- **[Voice-actors.get](./voice-actors.get.md)** — 1 routes — touches: cache
+- **[Voice-actors.get](./voice-actors.get.md)** — 1 routes
 
 **Database:** unknown, 18 models — see [database.md](./database.md)
 
 **UI:** 197 components (vue) — see [ui.md](./ui.md)
 
-**Libraries:** 88 files — see [libraries.md](./libraries.md)
+**Libraries:** 90 files — see [libraries.md](./libraries.md)
 
 ## High-Impact Files
 
 Changes to these files have the widest blast radius across the codebase:
 
 - `apps/website/server/utils/db/client.ts` — imported by **65** files
-- `apps/website/server/utils/cache/http.ts` — imported by **38** files
 - `apps/website/server/utils/auth.ts` — imported by **34** files
 - `apps/website/server/utils/index.ts` — imported by **23** files
-- `apps/website/server/utils/cache/index.ts` — imported by **13** files
+- `apps/website/server/utils/cache/index.ts` — imported by **21** files
 - `apps/website/server/utils/db/queries.ts` — imported by **12** files
+- `apps/website/server/utils/cache/constants.ts` — imported by **12** files
 
 ## Required Environment Variables
 
@@ -112,4 +112,4 @@ Changes to these files have the widest blast radius across the codebase:
 - _...31 more_
 
 ---
-_Back to [index.md](./index.md) · Generated 2026-09-28_
+_Back to [index.md](./index.md) · Generated 2026-10-02_

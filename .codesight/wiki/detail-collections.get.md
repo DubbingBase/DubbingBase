@@ -2,11 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Detail-collections.get subsystem handles **1 routes** and touches: cache.
+The Detail-collections.get subsystem handles **1 routes**.
 
 ## Routes
 
-- `GET` `/api/detail-collections` [cache]
+- `GET` `/api/detail-collections`
   `apps/website/server/api/detail-collections.get.ts`
 
 ## Source Files

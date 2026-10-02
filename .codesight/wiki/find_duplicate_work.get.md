@@ -2,11 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Find_duplicate_work.get subsystem handles **1 routes** and touches: auth, cache.
+The Find_duplicate_work.get subsystem handles **1 routes** and touches: auth.
 
 ## Routes
 
-- `GET` `/api/find_duplicate_work` [auth, cache]
+- `GET` `/api/find_duplicate_work` [auth]
   `apps/website/server/api/find_duplicate_work.get.ts`
 
 ## Source Files

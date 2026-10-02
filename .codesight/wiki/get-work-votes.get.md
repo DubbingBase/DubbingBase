@@ -2,11 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Get-work-votes.get subsystem handles **1 routes** and touches: cache.
+The Get-work-votes.get subsystem handles **1 routes**.
 
 ## Routes
 
-- `GET` `/api/get-work-votes` [cache]
+- `GET` `/api/get-work-votes`
   `apps/website/server/api/get-work-votes.get.ts`
 
 ## Related Models

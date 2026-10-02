@@ -2,11 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Internal-media-metadata.get subsystem handles **1 routes** and touches: cache.
+The Internal-media-metadata.get subsystem handles **1 routes**.
 
 ## Routes
 
-- `GET` `/api/internal-media-metadata` [cache]
+- `GET` `/api/internal-media-metadata`
   `apps/website/server/api/internal-media-metadata.get.ts`
 
 ## Source Files

@@ -1,83 +1,83 @@
 # Routes
 
-- `GET` `/api/actor/:id` params(id) [cache]
+- `GET` `/api/actor/:id` params(id)
 - `GET` `/api/admin/dubbing-project` [auth] ✓
 - `POST` `/api/admin/dubbing-project` [auth] ✓
 - `POST` `/api/admin/queue/clear` [auth, queue]
 - `DELETE` `/api/admin/queue/item` [auth, queue]
 - `POST` `/api/admin/queue/review` [auth, queue]
-- `GET` `/api/admin/queue` [auth, cache, queue]
-- `GET` `/api/advertisement/:id` params(id) [cache, queue]
-- `GET` `/api/audiobook/:id` params(id) [cache, queue]
+- `GET` `/api/admin/queue` [auth, queue]
+- `GET` `/api/advertisement/:id` params(id) [queue]
+- `GET` `/api/audiobook/:id` params(id) [queue]
 - `GET` `/api/career-grid` [cache]
 - `POST` `/api/cast-vote`
 - `POST` `/api/count-voice-actor-works`
 - `POST` `/api/create-user-profile` [auth, db]
-- `GET` `/api/dashboard-stats` [auth, cache]
+- `GET` `/api/dashboard-stats` [auth]
 - `POST` `/api/delete-user-voice-actor-link` [db]
 - `POST` `/api/delete-voice-actor-link` [auth, db]
 - `POST` `/api/delete-work-entry` [auth, db]
 - `POST` `/api/delete_user` [auth]
-- `GET` `/api/detail-collections` [cache] ✓
+- `GET` `/api/detail-collections` ✓
 - `GET` `/api/episode/index` [cache]
 - `POST` `/api/extract-credits-from-image` [upload]
 - `POST` `/api/extract-voice-actor-info` [auth]
-- `GET` `/api/find_duplicate_voice_actors` [auth, cache]
-- `GET` `/api/find_duplicate_work` [auth, cache]
-- `GET` `/api/game/:id` params(id) [cache, queue]
+- `GET` `/api/find_duplicate_voice_actors` [auth]
+- `GET` `/api/find_duplicate_work` [auth]
+- `GET` `/api/game/:id` params(id) [queue]
 - `POST` `/api/generate-social-content` [auth, email]
-- `GET` `/api/get-dubbing-project` [cache]
+- `GET` `/api/get-dubbing-project`
 - `GET` `/api/get-media-credits` [cache]
-- `GET` `/api/get-metadata` [cache]
-- `GET` `/api/get-random-task` [auth, cache]
-- `GET` `/api/get-studio-details` [cache]
-- `GET` `/api/get-user-profile` [auth, cache]
-- `ALL` `/api/get-user-voice-actor` [auth, cache]
-- `GET` `/api/get-user-voice-actors` [auth, cache]
-- `GET` `/api/get-work-votes` [cache]
-- `GET` `/api/home-stats` [cache]
+- `GET` `/api/get-metadata`
+- `GET` `/api/get-random-task` [auth]
+- `GET` `/api/get-studio-details`
+- `GET` `/api/get-user-profile` [auth]
+- `ALL` `/api/get-user-voice-actor` [auth]
+- `GET` `/api/get-user-voice-actors` [auth]
+- `GET` `/api/get-work-votes`
+- `GET` `/api/home-stats`
 - `POST` `/api/internal-media-create` [auth, db]
-- `GET` `/api/internal-media-credits` [cache]
-- `GET` `/api/internal-media-metadata` [cache]
+- `GET` `/api/internal-media-credits`
+- `GET` `/api/internal-media-metadata`
 - `POST` `/api/link-user-voice-actor` [db]
 - `POST` `/api/link-voice-actor` [auth, db]
-- `GET` `/api/list-voice-actors` [cache]
-- `GET` `/api/list_users` [auth, cache]
+- `GET` `/api/list-voice-actors`
+- `GET` `/api/list_users` [auth]
 - `POST` `/api/manage-subscription` [db]
-- `POST` `/api/media-queue` [auth, cache, queue] ✓
+- `POST` `/api/media-queue` [auth, queue] ✓
 - `POST` `/api/merge_voice_actor_duplicates` [auth]
-- `GET` `/api/movie/:id` params(id) [cache, queue]
+- `GET` `/api/movie/:id` params(id) [queue]
 - `POST` `/api/notify-subscribers` [auth, webhook]
 - `GET` `/api/og-image/index` [cache]
-- `GET` `/api/podcast/:id` params(id) [cache, queue]
+- `GET` `/api/podcast/:id` params(id) [queue]
 - `POST` `/api/prepare-trending-media` [auth, queue]
 - `POST` `/api/prepare_game` [auth] ✓
 - `POST` `/api/prepare_media` [auth]
 - `POST` `/api/process-credits` [auth, db]
 - `POST` `/api/process-media-queue` [auth, cache, queue] ✓
-- `GET` `/api/recent-voice-actors` [cache]
+- `GET` `/api/recent-voice-actors`
 - `POST` `/api/request-voice-actor-page` [auth, email]
 - `POST` `/api/revert-task` [db]
 - `POST` `/api/save-dubbing-project` [auth, db]
 - `POST` `/api/save-metadata` [db]
 - `POST` `/api/save-studio` [db]
-- `GET` `/api/search/index` [db, cache]
-- `GET` `/api/search-voice-actors` [cache]
+- `GET` `/api/search/index` [db]
+- `GET` `/api/search-voice-actors`
 - `GET` `/api/season/index` [cache]
-- `GET` `/api/show/:id` params(id) [cache, queue]
+- `GET` `/api/show/:id` params(id) [queue]
 - `POST` `/api/submit-task` [db, upload]
 - `POST` `/api/submit-user-report` [db]
-- `GET` `/api/top-contributors` [cache]
-- `GET` `/api/top-voice-actors` [cache]
-- `GET` `/api/toy/:id` params(id) [cache, queue]
+- `GET` `/api/top-contributors`
+- `GET` `/api/top-voice-actors`
+- `GET` `/api/toy/:id` params(id) [queue]
 - `GET` `/api/trending/games` [cache]
 - `GET` `/api/trending/movies` [cache]
 - `GET` `/api/trending/shows` [cache]
-- `GET` `/api/trending/voice-actors` [cache]
+- `GET` `/api/trending/voice-actors`
 - `POST` `/api/update-review-status` [db]
 - `POST` `/api/update-user-profile`
 - `POST` `/api/update-voice-actor` [auth, db, upload]
 - `POST` `/api/update_user_role` [auth]
 - `POST` `/api/update_voice_actor_link` [auth, db]
 - `POST` `/api/upload-profile-picture` [auth, db, upload]
-- `GET` `/api/voice-actor/:id` params(id) [cache]
+- `GET` `/api/voice-actor/:id` params(id)

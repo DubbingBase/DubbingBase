@@ -2,11 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Get-metadata.get subsystem handles **1 routes** and touches: cache.
+The Get-metadata.get subsystem handles **1 routes**.
 
 ## Routes
 
-- `GET` `/api/get-metadata` [cache]
+- `GET` `/api/get-metadata`
   `apps/website/server/api/get-metadata.get.ts`
 
 ## Source Files

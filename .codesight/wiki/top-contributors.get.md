@@ -2,11 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Top-contributors.get subsystem handles **1 routes** and touches: cache.
+The Top-contributors.get subsystem handles **1 routes**.
 
 ## Routes
 
-- `GET` `/api/top-contributors` [cache]
+- `GET` `/api/top-contributors`
   `apps/website/server/api/top-contributors.get.ts`
 
 ## Source Files
