@@ -1,9 +1,4 @@
-import {
-  classifyCacheWriteKey,
-  hashCacheValue,
-  SimpleKeyBuilder,
-  SimpleKeyValidator,
-} from "./constants";
+import { classifyCacheWriteKey, hashCacheValue, SimpleKeyValidator } from "./constants";
 
 interface CacheInFlightRequest<T> {
   cachePolicy: CachePolicy;
@@ -36,12 +31,12 @@ export function createCacheNamespace<T>(): CacheNamespace<T> {
   return new CacheNamespace<T>();
 }
 
-/** The three supported lifetimes, in seconds. */
+/** Named cache lifetimes, in seconds. */
 export const CACHE_TTL = {
   STABLE: 7 * 24 * 60 * 60,
 } as const;
 
-export type CachePolicy = "persistent" | "read-only" | "none";
+export type CachePolicy = "persistent" | "read-only";
 export type CacheTTLPreset = keyof typeof CACHE_TTL | number;
 export type GetOrFetchOptions =
   | {
@@ -50,8 +45,8 @@ export type GetOrFetchOptions =
       ttl: CacheTTLPreset;
     }
   | {
-      /** Read-only and bypass policies cannot carry an irrelevant TTL. */
-      cachePolicy: "read-only" | "none";
+      /** Read-only policies cannot carry an irrelevant TTL. */
+      cachePolicy: "read-only";
       ttl?: never;
     };
 
@@ -149,10 +144,8 @@ export class SimpleCache {
     if (existingRequest) return existingRequest.promise;
 
     const promise = Promise.resolve().then(async () => {
-      if (cachePolicy !== "none") {
-        const cached = await this.get<T>(safeKey);
-        if (cached !== null) return cached;
-      }
+      const cached = await this.get<T>(safeKey);
+      if (cached !== null) return cached;
 
       const value = await fetcher();
       if (options.cachePolicy === "persistent" && value !== null && value !== undefined) {
@@ -167,21 +160,5 @@ export class SimpleCache {
       () => namespace.delete(safeKey, request),
     );
     return promise;
-  }
-
-  generateKey(api: string, type: string, id: string | number, suffix?: string): string {
-    return SimpleKeyBuilder.key(api, type, id, suffix);
-  }
-
-  tmdbKey(type: string, id: string | number, suffix?: string): string {
-    return SimpleKeyBuilder.tmdb(type, id, suffix);
-  }
-
-  tvdbKey(type: string, id: string | number, suffix?: string, language?: string): string {
-    return SimpleKeyBuilder.tvdb(type, id, suffix, language);
-  }
-
-  wikipediaKey(type: string, id: string, suffix?: string): string {
-    return SimpleKeyBuilder.wikipedia(type, id, suffix);
   }
 }

@@ -82,8 +82,8 @@ export function useCache(event?: unknown): SimpleCache {
   return _cache;
 }
 
-export function useTmdbClient(cache?: SimpleCache): TMDBClient {
-  return new TMDBClient(cache ?? useCache());
+export function useTmdbClient(): TMDBClient {
+  return new TMDBClient();
 }
 
 export function useTvdbClient(): TVDBClient {
@@ -99,7 +99,7 @@ export function useOpenLibraryClient(): OpenLibraryClient {
 }
 
 export function usePodcastClient(): PodcastClient {
-  return new PodcastClient(useCache());
+  return new PodcastClient();
 }
 
 export function useAdvertisementClient(): AdvertisementClient {

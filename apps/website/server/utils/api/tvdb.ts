@@ -1,11 +1,7 @@
 import { createCacheNamespace, SimpleCache } from "../cache";
-import type { CacheFetchOptions } from "./cache-options";
-
-type TvdbApiResponse = Awaited<ReturnType<TVDBClient["get"]>>;
+import { observeProviderRequest } from "../retryable-request";
 
 export const TVDB_AUTH_TOKEN_NAMESPACE = createCacheNamespace<string>();
-export const TVDB_API_RESPONSE_NAMESPACE =
-  createCacheNamespace<TvdbApiResponse>();
 
 function debugLog(message: string, data?: any) {
   console.log(`[TVDB] ${message}`, data ? JSON.stringify(data, null, 2) : "");
@@ -35,12 +31,14 @@ export class TVDBClient {
       TVDB_AUTH_TOKEN_NAMESPACE,
       "tvdb:auth_token",
       async () => {
-        const response = await fetch(`${this.baseUrl}/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ apikey: this.apiKey }),
-          signal: AbortSignal.timeout(10000),
-        });
+        const response = await observeProviderRequest("tvdb", () =>
+          fetch(`${this.baseUrl}/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ apikey: this.apiKey }),
+            signal: AbortSignal.timeout(10000),
+          }),
+        );
 
         if (!response.ok) {
           throw new Error(`TVDB auth failed: ${response.status}`);
@@ -56,11 +54,7 @@ export class TVDBClient {
     return token;
   }
 
-  async get(
-    endpoint: string,
-    params?: Record<string, string>,
-    language?: string,
-  ) {
+  async get(endpoint: string, params?: Record<string, string>, language?: string) {
     const token = await this.authenticate();
     const url = new URL(`${this.baseUrl}${endpoint}`);
 
@@ -74,13 +68,15 @@ export class TVDBClient {
     }
 
     try {
-      const response = await fetch(url.toString(), {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
-        signal: AbortSignal.timeout(8000),
-      });
+      const response = await observeProviderRequest("tvdb", () =>
+        fetch(url.toString(), {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
+          signal: AbortSignal.timeout(8000),
+        }),
+      );
 
       if (!response.ok) {
         throw new Error(`TVDB API error: ${response.status}`);
@@ -99,100 +95,24 @@ export class TVDBClient {
     seriesId: number,
     extended?: { meta?: string; short?: boolean },
     language?: string,
-    options: CacheFetchOptions = { cachePolicy: "persistent", ttl: "STABLE" },
   ) {
-    const normalizedLanguage = language
-      ? (language.split(",")[0] || "en").trim()
-      : "default";
-    const suffix = extended
-      ? `meta-${extended.meta ?? "default"}-${extended.short ? "short" : "full"}`
-      : "basic";
-    const cacheKey = this.cache.tvdbKey(
-      "series",
-      seriesId,
-      suffix,
-      normalizedLanguage,
-    );
     const params: Record<string, string> = {};
     if (extended?.meta) params.meta = extended.meta;
     if (extended?.short) params.short = "true";
-    return this.cache.getOrFetch(
-      TVDB_API_RESPONSE_NAMESPACE,
-      cacheKey,
-      () => this.get(`/series/${seriesId}`, params, language),
-      options,
-    );
+    return this.get(`/series/${seriesId}`, params, language);
   }
 
   async getMovieById(
     movieId: number,
     extended?: { meta?: string; short?: boolean },
     language?: string,
-    options: CacheFetchOptions = { cachePolicy: "persistent", ttl: "STABLE" },
   ) {
-    const normalizedLanguage = language
-      ? (language.split(",")[0] || "en").trim()
-      : "default";
-    const suffix = extended
-      ? `meta-${extended.meta ?? "default"}-${extended.short ? "short" : "full"}`
-      : "basic";
-    const cacheKey = this.cache.tvdbKey(
-      "movie",
-      movieId,
-      suffix,
-      normalizedLanguage,
-    );
     const params: Record<string, string> = {};
     if (extended?.meta) params.meta = extended.meta;
-    return this.cache.getOrFetch(
-      TVDB_API_RESPONSE_NAMESPACE,
-      cacheKey,
-      () => this.get(`/movies/${movieId}`, params, language),
-      options,
-    );
-  }
-
-  async getCharacterById(
-    characterId: number,
-    options: CacheFetchOptions = { cachePolicy: "persistent", ttl: "STABLE" },
-  ) {
-    const cacheKey = this.cache.tvdbKey("character", characterId);
-    return this.cache.getOrFetch(
-      TVDB_API_RESPONSE_NAMESPACE,
-      cacheKey,
-      () => this.get(`/characters/${characterId}`),
-      options,
-    );
-  }
-
-  async getCharactersBySeries(
-    seriesId: number,
-    options: CacheFetchOptions = { cachePolicy: "persistent", ttl: "STABLE" },
-  ) {
-    const cacheKey = this.cache.tvdbKey("series", seriesId, "characters");
-    return this.cache.getOrFetch(
-      TVDB_API_RESPONSE_NAMESPACE,
-      cacheKey,
-      () => this.get(`/series/${seriesId}/characters`),
-      options,
-    );
-  }
-
-  async getCharactersByMovie(
-    movieId: number,
-    options: CacheFetchOptions = { cachePolicy: "persistent", ttl: "STABLE" },
-  ) {
-    const cacheKey = this.cache.tvdbKey("movie", movieId, "characters");
-    return this.cache.getOrFetch(
-      TVDB_API_RESPONSE_NAMESPACE,
-      cacheKey,
-      () => this.get(`/movies/${movieId}/characters`),
-      options,
-    );
+    return this.get(`/movies/${movieId}`, params, language);
   }
 
   async searchSeries(query: string, language?: string) {
-    // Search results bypass KV and are fetched on every request.
     return this.get("/search", { query, type: "series" }, language);
   }
 }
