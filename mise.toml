@@ -142,7 +142,7 @@ run = "npx supabase gen types --lang=typescript --local > src/database.types.ts"
 description = "Dumps production application data for a local reseed"
 depends = ["database-install"]
 dir = "packages/database"
-run = "npx supabase db dump --data-only --file supabase/seed.sql --linked"
+run = "npx supabase db dump --data-only --exclude storage.buckets -f supabase/seed.sql --linked"
 
 [tasks.sync-storage]
 description = "Refreshes local Storage bucket files from the linked production project"
