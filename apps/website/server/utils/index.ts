@@ -1,9 +1,4 @@
-import {
-  SimpleCache,
-  type CacheNamespace,
-  type CacheKv,
-  type GetOrFetchOptions,
-} from "./cache";
+import { SimpleCache, type CacheKv } from "./cache";
 import { TMDBClient } from "./api/tmdb";
 import { TVDBClient } from "./api/tvdb";
 import { IgdbClient } from "./api/igdb";
@@ -85,16 +80,6 @@ export function useCache(event?: unknown): SimpleCache {
     _cache = new SimpleCache(() => getCloudflareKv());
   }
   return _cache;
-}
-
-/** Fetches through the shared cache using the supplied persistence policy. */
-export function getOrFetch<T>(
-  namespace: CacheNamespace<T>,
-  key: string,
-  fetcher: () => Promise<T>,
-  options: GetOrFetchOptions,
-): Promise<T> {
-  return useCache().getOrFetch(namespace, key, fetcher, options);
 }
 
 export function useTmdbClient(cache?: SimpleCache): TMDBClient {

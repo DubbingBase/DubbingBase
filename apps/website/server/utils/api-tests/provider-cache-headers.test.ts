@@ -198,7 +198,10 @@ describe("provider-only endpoint response caching", () => {
       igdbClientId: "client",
       igdbClientSecret: "secret",
     };
-    routeMocks.getTrendingGames.mockResolvedValue([]);
+    routeMocks.getTrendingGames.mockResolvedValue({
+      games: [],
+      degraded: false,
+    });
 
     const success = await requestTrendingGames(config);
     expect(routeMocks.getTrendingGames).toHaveBeenCalledTimes(1);
@@ -209,7 +212,10 @@ describe("provider-only endpoint response caching", () => {
     expect(failure.status).toBe(200);
     expectNoStore(failure);
 
-    routeMocks.getTrendingGames.mockResolvedValue([null]);
+    routeMocks.getTrendingGames.mockResolvedValue({
+      games: [null],
+      degraded: false,
+    });
     const invalid = await requestTrendingGames(config);
     expect(invalid.status).toBe(200);
     expectNoStore(invalid);
@@ -251,7 +257,9 @@ describe("provider-only endpoint response caching", () => {
 
     expect(response.status).toBe(200);
     expectNoStore(response);
-    await expect(response.json()).resolves.toEqual([]);
+    await expect(response.json()).resolves.toEqual([
+      { id: 42, name: "Base Name", media_type: "video_game" },
+    ]);
     expect(fetchMock.mock.calls.map(([input]) => String(input))).toEqual(
       expect.arrayContaining([
         expect.stringContaining("/popularity_primitives"),

@@ -4,6 +4,7 @@ import { buildIgdbImageUrl } from "../../utils/api/igdb";
 import type { IgdbGame } from "@app/shared-logic";
 import { resolveLocaleLanguage } from "@app/shared-logic";
 import { setPublicCacheHeaders } from "../../utils/cache/http";
+import type { IgdbTrendingGamesResult } from "../../utils/api/igdb";
 
 function formatGame(game: IgdbGame) {
   return {
@@ -41,16 +42,28 @@ export async function getTrendingGamesResponse(
   language: string,
   config: { igdbClientId?: string; igdbClientSecret?: string },
   igdbClient: {
-    getTrendingGames(limit?: number, language?: string): Promise<unknown>;
+    getTrendingGames(
+      limit?: number,
+      language?: string,
+    ): Promise<IgdbTrendingGamesResult>;
   },
 ) {
   if (!config.igdbClientId || !config.igdbClientSecret) return [];
 
   try {
-    const games = await igdbClient.getTrendingGames(20, language);
-    if (!Array.isArray(games) || !games.every(isIgdbGame)) return [];
-    const formatted = games.map(formatGame);
+    const result = await igdbClient.getTrendingGames(20, language);
+    if (
+      typeof result !== "object" ||
+      result === null ||
+      !Array.isArray(result.games) ||
+      !result.games.every(isIgdbGame) ||
+      typeof result.degraded !== "boolean"
+    ) {
+      return [];
+    }
+    const formatted = result.games.map(formatGame);
 
+    if (result.degraded) return formatted;
     setPublicCacheHeaders(event, "discovery");
     return formatted;
   } catch (err) {

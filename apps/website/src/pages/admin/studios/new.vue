@@ -287,17 +287,21 @@ const showToast = (
 };
 
 const numId = Number(id);
-const { data: initialData } = await useAsyncData(`studio-${id}`, async () => {
-  if (!isEditMode.value || isNaN(numId)) return null;
-  const { data, error } = await supabase
-    .from("studios")
-    .select("*")
-    .eq("id", numId)
-    .single();
+const { data: initialData } = await useAsyncData(
+  `studio-${id}`,
+  async () => {
+    if (!isEditMode.value || isNaN(numId)) return null;
+    const { data, error } = await supabase
+      .from("studios")
+      .select("*")
+      .eq("id", numId)
+      .single();
 
-  if (error) throw error;
-  return data;
-});
+    if (error) throw error;
+    return data;
+  },
+  { getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp) },
+);
 
 watch(
   initialData,

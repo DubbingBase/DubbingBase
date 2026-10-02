@@ -322,15 +322,19 @@ const {
   data: initialLogs,
   pending,
   refresh: loadLogs,
-} = await useAsyncData("admin-audit-logs", async () => {
-  const { data, error } = await supabase
-    .from("audit_logs")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(50);
+} = await useAsyncData(
+  "admin-audit-logs",
+  async () => {
+    const { data, error } = await supabase
+      .from("audit_logs")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(50);
 
-  return data || [];
-});
+    return data || [];
+  },
+  { getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp) },
+);
 
 watch(
   initialLogs,

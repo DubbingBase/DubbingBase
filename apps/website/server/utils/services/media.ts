@@ -651,7 +651,6 @@ export class MediaService {
     contentType: "movie" | "tv",
     contentId: number,
     tmdbMedia: any,
-    options: CacheFetchOptions = { cachePolicy: "persistent", ttl: "STABLE" },
   ): Promise<{ characters: any[]; tvdbId: number | null }> {
     const cache = useCache();
     const tvdbClient = new TVDBClient(cache);
@@ -756,7 +755,6 @@ export class MediaService {
                 tvdbId,
                 { meta: "translations", short: false },
                 this.acceptLanguage,
-                options,
               );
               characters = res.data.characters || [];
             } else {
@@ -764,7 +762,6 @@ export class MediaService {
                 tvdbId,
                 { meta: "episodes", short: false },
                 this.acceptLanguage,
-                options,
               );
               characters = res.data.characters || [];
             }

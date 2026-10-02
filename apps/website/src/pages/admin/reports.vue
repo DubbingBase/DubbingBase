@@ -216,15 +216,19 @@ const {
   pending,
   error: fetchError,
   refresh: fetchReports,
-} = await useAsyncData("admin-reports", async () => {
-  const { data, error } = await supabase
-    .from("user_reports")
-    .select("*")
-    .order("created_at", { ascending: false });
+} = await useAsyncData(
+  "admin-reports",
+  async () => {
+    const { data, error } = await supabase
+      .from("user_reports")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-  if (error) throw error;
-  return data || [];
-});
+    if (error) throw error;
+    return data || [];
+  },
+  { getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp) },
+);
 
 watch(
   initialReports,

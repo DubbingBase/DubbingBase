@@ -20,7 +20,13 @@ interface IgdbCachedToken {
 const igdbTokenNamespace = createCacheNamespace<IgdbCachedToken>();
 const igdbGameNamespace = createCacheNamespace<IgdbGame | null>();
 const igdbCharactersNamespace = createCacheNamespace<IgdbCharacter[]>();
-const igdbTrendingGamesNamespace = createCacheNamespace<IgdbGame[]>();
+const igdbTrendingGamesNamespace =
+  createCacheNamespace<IgdbTrendingGamesResult>();
+
+export interface IgdbTrendingGamesResult {
+  games: IgdbGame[];
+  degraded: boolean;
+}
 
 export interface IgdbPopularityPrimitive {
   id: number;
@@ -298,7 +304,7 @@ export class IgdbClient {
   async getTrendingGames(
     limit = 20,
     language = DEFAULT_LANGUAGE,
-  ): Promise<IgdbGame[]> {
+  ): Promise<IgdbTrendingGamesResult> {
     // Trending results bypass KV; the provider-only route applies HTTP caching.
     const cacheKey = buildCacheKey({
       provider: "igdb",
@@ -331,7 +337,7 @@ export class IgdbClient {
           .slice(0, limit)
           .map(([id]) => id);
 
-        if (topIds.length === 0) return [];
+        if (topIds.length === 0) return { games: [], degraded: false };
 
         const games = await this.query<IgdbGame>(
           "games",
@@ -341,14 +347,23 @@ export class IgdbClient {
       limit ${limit};`,
         );
 
-        if (games.length === 0) return games;
+        if (games.length === 0) return { games, degraded: false };
 
-        const localizations = await this.query<IgdbGameLocalization>(
-          "game_localizations",
-          `fields game, name, region.identifier;
+        let localizations: IgdbGameLocalization[];
+        try {
+          localizations = await this.query<IgdbGameLocalization>(
+            "game_localizations",
+            `fields game, name, region.identifier;
          where game = (${topIds.join(",")});
          limit ${Math.max(topIds.length * 10, 100)};`,
-        );
+          );
+        } catch (error) {
+          console.warn(
+            "[IGDB] Game localization lookup failed; returning base names",
+            error,
+          );
+          return { games, degraded: true };
+        }
         const localizedNames = new Map<number, string>();
         for (const localization of localizations) {
           if (
@@ -363,7 +378,7 @@ export class IgdbClient {
           name: localizedNames.get(game.id) ?? game.name,
         }));
 
-        return localizedGames;
+        return { games: localizedGames, degraded: false };
       },
       { cachePolicy: "none" },
     );

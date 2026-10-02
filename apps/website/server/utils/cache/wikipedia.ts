@@ -302,14 +302,14 @@ export class WikipediaCache {
     return this.fetch(url);
   }
 
-  async getAllSitelinksEntity(entityId: string): Promise<any> {
+  async getAllSitelinksEntity(
+    entityId: string,
+    options: GetOrFetchOptions = { cachePolicy: "persistent", ttl: "STABLE" },
+  ): Promise<any> {
     // Wikidata sitelinks are stable cross-reference metadata.
     const cacheKey = CACHE_KEYS.WIKIPEDIA_ENTITY(entityId, "all");
     const url = getAllSitelinks(entityId);
-    return this.fetchWithCache(url, cacheKey, {
-      cachePolicy: "persistent",
-      ttl: "STABLE",
-    });
+    return this.fetchWithCache(url, cacheKey, options);
   }
 
   async getWikipediaPageInfo(title: string, language: string): Promise<any> {

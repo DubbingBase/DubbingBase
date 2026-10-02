@@ -344,6 +344,7 @@ const { data, pending, error, refresh } = await useAsyncData(
   },
   {
     watch: [page, searchQuery],
+    getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
 

@@ -629,8 +629,10 @@ import {
 
 const localePath = useLocalePath();
 
-const { data: initialData } = await useAsyncData("random-task", () =>
-  fetchRandomTask("any"),
+const { data: initialData } = await useAsyncData(
+  "random-task",
+  () => fetchRandomTask("any"),
+  { getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp) },
 );
 
 const initialTask = (initialData.value as any)?.task || null;

@@ -27,6 +27,8 @@ const routeMocks = vi.hoisted(() => ({
   extractMediaDubbingCredits: vi.fn(),
   extractGameDubbingCredits: vi.fn(),
   useWikipediaCache: vi.fn(),
+  useIgdbClient: vi.fn(),
+  getGame: vi.fn(),
   cacheGetOrFetch: vi.fn(),
 }));
 
@@ -50,7 +52,7 @@ vi.mock("../db/client", () => ({
 vi.mock("../auth", () => ({ requireAdmin: vi.fn() }));
 vi.mock("..", () => ({
   useWikipediaCache: routeMocks.useWikipediaCache,
-  useIgdbClient: vi.fn(),
+  useIgdbClient: routeMocks.useIgdbClient,
   useCache: vi.fn(() => ({ getOrFetch: routeMocks.cacheGetOrFetch })),
 }));
 vi.mock("../llm", () => ({ areAllLlmQuotasExhausted: vi.fn(() => false) }));
@@ -96,6 +98,7 @@ beforeEach(() => {
     creditsAdded: 1,
   });
   routeMocks.useWikipediaCache.mockReturnValue({
+    searchWikidataEntities: vi.fn(async () => ({ search: [{ id: "Q42" }] })),
     getAllSitelinksEntity: vi.fn(async (wikiId: string) => ({
       entities: {
         [wikiId]: {
@@ -107,6 +110,8 @@ beforeEach(() => {
       },
     })),
   });
+  routeMocks.useIgdbClient.mockReturnValue({ getGame: routeMocks.getGame });
+  routeMocks.getGame.mockResolvedValue({ name: "Test game" });
   routeMocks.rpc.mockImplementation(async (name: string) => {
     if (name === "pop_media_queue_batch") {
       return {
@@ -209,6 +214,26 @@ describe("POST /api/process-media-queue requester propagation", () => {
     );
     expect(routeMocks.cacheGetOrFetch).not.toHaveBeenCalled();
     expect(routeMocks.checkMediaDubbingSections).not.toHaveBeenCalled();
+  });
+
+  it("bypasses KV result caching for queue discovery metadata", async () => {
+    await processQueue("discovery");
+
+    const wikipediaCache = routeMocks.useWikipediaCache.mock.results[0]?.value;
+    expect(wikipediaCache.getAllSitelinksEntity).toHaveBeenCalledWith("Q42", {
+      cachePolicy: "none",
+    });
+  });
+
+  it("bypasses IGDB result caching while queue discovery resolves games", async () => {
+    await processQueue("discovery", {
+      media_type: "video_game",
+      wiki_id: undefined,
+    });
+
+    expect(routeMocks.getGame).toHaveBeenCalledWith(42, {
+      cachePolicy: "none",
+    });
   });
 
   it("preserves requested_by through discovery fan-out into every wiki_check", async () => {

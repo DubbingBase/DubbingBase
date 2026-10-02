@@ -47,6 +47,11 @@ jobs:
               - 'apps/website/**'
               - 'packages/shared-logic/**'
               - 'packages/locales/**'
+              - 'AGENTS.md'
+              - '.agents/AGENTS.md'
+              - '.changeset/**'
+              - 'package.json'
+              - 'playwright.config.ts'
               - 'e2e/**'
               - '.github/**'
               - 'pnpm-lock.yaml'
@@ -148,7 +153,6 @@ jobs:
   frontend-tests:
     needs: [detect]
     if: needs.detect.outputs.website == 'true'
-    continue-on-error: true
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -171,7 +175,67 @@ jobs:
       - name: Run Vitest tests
         run: pnpm --filter=@app/website run test --run
 
-  # Job 3.6: i18n Translation Check
+  # Job 3.55: Website TypeScript Check
+  typecheck-website:
+    needs: [detect]
+    if: needs.detect.outputs.website == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.4.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --config.minimum-release-age=0 --config.minimum-release-age-strict=false
+
+      - name: Typecheck website
+        run: pnpm --filter=@app/website run typecheck
+
+  # Job 3.6: Whitespace Check for Website-Scoped Changes
+  diff-check:
+    needs: [detect]
+    if: needs.detect.outputs.website == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check website-scoped diff whitespace
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          if [[ "$GITHUB_REF" == "refs/heads/main" && -n "$BEFORE_SHA" && ! "$BEFORE_SHA" =~ ^0+$ ]]; then
+            base_sha="$BEFORE_SHA"
+          else
+            base_sha="$(git merge-base origin/main HEAD)"
+          fi
+          git diff --check "$base_sha" HEAD -- \
+            AGENTS.md \
+            .agents/AGENTS.md \
+            .changeset \
+            .github/workflows/pipeline.yml \
+            apps/website \
+            e2e \
+            ':(exclude)e2e/mobile.spec.ts' \
+            package.json \
+            packages/locales \
+            packages/shared-logic \
+            playwright.config.ts \
+            pnpm-lock.yaml
+
+  # Job 3.7: i18n Translation Check
   i18n-check:
     needs: [detect]
     if: needs.detect.outputs.website == 'true' || needs.detect.outputs.mobile == 'true'
@@ -372,7 +436,16 @@ jobs:
 
   # Job 7: Build website (validates build on non-main branches)
   build-website:
-    needs: [detect, deploy-supabase, e2e-tests, frontend-tests, i18n-check]
+    needs:
+      [
+        detect,
+        deploy-supabase,
+        e2e-tests,
+        frontend-tests,
+        i18n-check,
+        typecheck-website,
+        diff-check,
+      ]
     if: |
       always() && 
       github.ref != 'refs/heads/main' &&
@@ -380,6 +453,8 @@ jobs:
       (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped') &&
       (needs.frontend-tests.result == 'success' || needs.frontend-tests.result == 'skipped') &&
       (needs.i18n-check.result == 'success' || needs.i18n-check.result == 'skipped') &&
+      needs.typecheck-website.result == 'success' &&
+      needs.diff-check.result == 'success' &&
       (needs.deploy-supabase.result == 'success' || needs.deploy-supabase.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
@@ -427,13 +502,25 @@ jobs:
 
   # Job 8: Deploy website to Cloudflare Workers (main only - builds once and deploys)
   deploy-website:
-    needs: [detect, deploy-supabase, e2e-tests, frontend-tests]
+    needs:
+      [
+        detect,
+        deploy-supabase,
+        e2e-tests,
+        frontend-tests,
+        i18n-check,
+        typecheck-website,
+        diff-check,
+      ]
     if: |
       always() &&
       github.ref == 'refs/heads/main' &&
       needs.detect.outputs.website == 'true' &&
-      (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped') &&
-      (needs.frontend-tests.result == 'success' || needs.frontend-tests.result == 'skipped') &&
+      needs.e2e-tests.result == 'success' &&
+      needs.frontend-tests.result == 'success' &&
+      needs.i18n-check.result == 'success' &&
+      needs.typecheck-website.result == 'success' &&
+      needs.diff-check.result == 'success' &&
       (needs.deploy-supabase.result == 'success' || needs.deploy-supabase.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
