@@ -22,7 +22,7 @@ BEGIN
     OR p_content_type IS NULL
     OR p_content_type NOT IN ('movie', 'tv', 'video_game', 'audiobook', 'podcast', 'advertisement', 'toy')
     OR p_dubbing_language IS NULL
-    OR p_dubbing_language !~ '^[a-z]{2,3}-[A-Z]{2}$' THEN
+    OR NOT public.is_valid_dubbing_language(p_dubbing_language) THEN
     RAISE EXCEPTION 'A valid media selection and regional dubbing language are required'
       USING ERRCODE = '22023';
   END IF;

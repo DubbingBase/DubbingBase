@@ -1,4 +1,4 @@
-import { isDubbingLanguage, type DubbingLanguage } from "@app/shared-logic";
+import { isDubbingLanguage, isWikipediaLanguage, type DubbingLanguage } from "@app/shared-logic";
 
 /** pgmq JSON is untrusted. Old `language` fields identify Wikipedia editions only. */
 export type QueueMediaType = "movie" | "tv" | "season" | "episode" | "video_game";
@@ -74,7 +74,7 @@ function validateBase(payload: unknown): Validated<ValidQueueBase> {
   };
   const source = property(payload, "wikipedia_language") ?? property(payload, "language");
   if (source !== undefined && source !== null && source !== "") {
-    if (typeof source !== "string" || !/^[a-z][a-z0-9-]*$/.test(source)) {
+    if (!isWikipediaLanguage(source)) {
       return { ok: false, reason: "invalid wikipedia_language" };
     }
     value.wikipediaLanguage = source;

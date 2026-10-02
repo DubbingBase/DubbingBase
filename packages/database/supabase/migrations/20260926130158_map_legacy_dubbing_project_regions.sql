@@ -1,11 +1,38 @@
+BEGIN;
+
 -- Convert legacy project language identifiers to regional dubbing codes.
 -- Historical mappings are product policy; they do not validate future codes.
 
 -- This migration runs under deployment transaction control. The guard only
 -- serialized ordinary writes while final uniqueness was not yet installed;
 -- its per-row advisory locks are unnecessary for this controlled migration.
+LOCK TABLE public.dubbing_projects IN SHARE ROW EXCLUSIVE MODE;
+
 DROP TRIGGER dubbing_project_regional_language_guard
 ON public.dubbing_projects;
+
+CREATE OR REPLACE FUNCTION public.is_valid_dubbing_language(p_language text)
+RETURNS boolean
+LANGUAGE sql
+IMMUTABLE
+STRICT
+PARALLEL SAFE
+SET search_path = ''
+AS $$
+  SELECT p_language = ANY (ARRAY[
+    'fr-FR', 'fr-CA', 'fr-BE', 'en-US', 'en-GB', 'ja-JP', 'ko-KR',
+    'es-ES', 'es-MX', 'de-DE', 'it-IT', 'pt-BR', 'pt-PT', 'sq-AL',
+    'ar-EG', 'ca-ES', 'ceb-PH', 'hr-HR', 'cs-CZ', 'da-DK', 'nl-NL',
+    'el-GR', 'ha-NG', 'he-IL', 'hu-HU', 'id-ID', 'la-VA', 'ms-MY',
+    'no-NO', 'pl-PL', 'ro-RO', 'ru-RU', 'sco-GB', 'sh-RS', 'sk-SK',
+    'sn-ZW', 'an-ES', 'sv-SE', 'gsw-CH', 'tl-PH', 'tr-TR', 'uk-UA',
+    'vi-VN', 'cy-GB', 'fy-NL', 'zh-CN', 'yue-HK'
+  ]::text[])
+$$;
+
+REVOKE ALL ON FUNCTION public.is_valid_dubbing_language(text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.is_valid_dubbing_language(text)
+  TO anon, authenticated, service_role;
 
 CREATE TEMP TABLE legacy_dubbing_language_mapping (
   legacy_code text PRIMARY KEY,
@@ -28,8 +55,33 @@ INSERT INTO pg_temp.legacy_dubbing_language_mapping(legacy_code, regional_code) 
   ('tl', 'tl-PH'), ('sk', 'sk-SK'), ('sco', 'sco-GB'),
   ('sq', 'sq-AL'), ('simple', 'en-US'), ('zh-yue', 'yue-HK');
 
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM pg_temp.legacy_dubbing_language_mapping
+    WHERE NOT public.is_valid_dubbing_language(regional_code)
+  ) THEN
+    RAISE EXCEPTION 'A legacy mapping target is not a supported dubbing language';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM public.dubbing_projects AS project
+    WHERE NOT public.is_valid_dubbing_language(project.language)
+      AND NOT EXISTS (
+        SELECT 1
+        FROM pg_temp.legacy_dubbing_language_mapping AS mapping
+        WHERE mapping.legacy_code = project.language
+      )
+  ) THEN
+    RAISE EXCEPTION 'Unmapped dubbing project languages remain; refusing to begin migration';
+  END IF;
+END;
+$$;
+
 -- The already-deployed project FK and merge RPC still require these targets.
--- This temporary population disappears when the registry is dropped below.
+-- The registry remains until 20260928141305 replaces its queue RPC consumers.
 INSERT INTO public.dubbing_languages(code)
 SELECT DISTINCT regional_code
 FROM pg_temp.legacy_dubbing_language_mapping
@@ -217,7 +269,7 @@ BEGIN
   IF EXISTS (
     SELECT 1 FROM public.dubbing_projects p
     WHERE p.language IS NULL
-       OR p.language !~ '^[a-z]{2,3}-[A-Z]{2}$'
+       OR NOT public.is_valid_dubbing_language(p.language)
   ) THEN
     RAISE EXCEPTION 'Unmapped legacy dubbing languages remain; refusing to finalize';
   END IF;
@@ -232,11 +284,10 @@ BEGIN
   ALTER TABLE public.dubbing_projects ALTER COLUMN language SET NOT NULL;
   ALTER TABLE public.dubbing_projects DROP CONSTRAINT IF EXISTS dubbing_projects_language_fkey;
   ALTER TABLE public.dubbing_projects ADD CONSTRAINT dubbing_projects_language_check
-    CHECK (language ~ '^[a-z]{2,3}-[A-Z]{2}$');
+    CHECK (public.is_valid_dubbing_language(language));
   ALTER TABLE public.dubbing_projects ADD CONSTRAINT dubbing_projects_media_region_key
     UNIQUE (content_id, content_type, language);
 
-  DROP TABLE public.dubbing_languages;
   DROP FUNCTION public.apply_reviewed_dubbing_languages(jsonb);
   DROP FUNCTION public.dubbing_language_review_snapshot(bigint);
   DROP FUNCTION public.finalize_dubbing_language_constraints();
@@ -246,3 +297,5 @@ $$;
 
 DROP TABLE pg_temp.legacy_dubbing_project_collisions;
 DROP TABLE pg_temp.legacy_dubbing_language_mapping;
+
+COMMIT;

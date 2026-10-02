@@ -1,10 +1,10 @@
--- Run with psql against an isolated database after applying the two deployed
--- regional-language staging migrations and before the mapping migration.
--- This fixture applies the mapping migration itself and verifies a bulk rename,
--- a legacy-only collision merge, a legacy-to-regional merge, and final constraints.
+-- Run with psql against a disposable database at the 20260926094824
+-- checkpoint. The mapping migration commits its own transaction, so this
+-- fixture leaves its test schema/data in place; reset the database afterward.
+-- It verifies the intermediate queue compatibility boundary before applying
+-- the final queue RPC replacement.
 \set ON_ERROR_STOP on
-BEGIN;
-SET LOCAL statement_timeout = '60s';
+SET statement_timeout = '60s';
 TRUNCATE public.dubbing_language_reviews, public.dubbing_projects CASCADE;
 
 DO $$
@@ -58,14 +58,18 @@ VALUES (-910001, 'Regional migration fixture');
 INSERT INTO public.dubbing_projects(id, content_id, content_type, language, status)
 VALUES (-910005, 980202, 'movie', 'fr-FR', 'validated');
 
-SET LOCAL session_replication_role = replica;
+BEGIN;
+ALTER TABLE public.dubbing_projects
+  DISABLE TRIGGER dubbing_project_regional_language_guard;
 INSERT INTO public.dubbing_projects(id, content_id, content_type, language, status)
 VALUES
   (-910001, 980201, 'movie', 'en', 'validated'),
   (-910002, 980201, 'movie', 'simple', 'validated'),
   (-910004, 980202, 'movie', 'fr', 'validated'),
   (-910006, 980203, 'movie', 'pt', 'validated');
-SET LOCAL session_replication_role = origin;
+ALTER TABLE public.dubbing_projects
+  ENABLE TRIGGER dubbing_project_regional_language_guard;
+COMMIT;
 
 INSERT INTO public.work(
   id, dubbing_project_id, actor_id, character_id, voice_actor_id,
@@ -106,6 +110,7 @@ INSERT INTO public.audit_logs(entity_type, entity_id, action, user_id) VALUES
 DO $$
 DECLARE
   invalid_code text;
+  old_queue_message_id bigint;
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_temp.regional_guard_observations) THEN
     RAISE EXCEPTION 'Mapping fixture did not exercise the language update observer';
@@ -149,12 +154,12 @@ BEGIN
   END IF;
   IF EXISTS (
     SELECT 1 FROM public.dubbing_projects p
-    WHERE p.language IS NULL OR p.language !~ '^[a-z]{2,3}-[A-Z]{2}$'
+    WHERE p.language IS NULL OR NOT public.is_valid_dubbing_language(p.language)
   ) THEN
-    RAISE EXCEPTION 'A project language does not match the regional language format';
+    RAISE EXCEPTION 'A project language is not a supported regional language';
   END IF;
-  IF to_regclass('public.dubbing_languages') IS NOT NULL THEN
-    RAISE EXCEPTION 'The temporary dubbing language table remains after mapping';
+  IF to_regclass('public.dubbing_languages') IS NULL THEN
+    RAISE EXCEPTION 'The temporary registry must remain until final queue RPCs are installed';
   END IF;
   IF to_regclass('pg_temp.legacy_dubbing_language_mapping') IS NOT NULL
     OR to_regclass('pg_temp.legacy_dubbing_project_collisions') IS NOT NULL THEN
@@ -239,7 +244,7 @@ BEGIN
     WHERE conrelid = 'public.dubbing_projects'::regclass
       AND conname = 'dubbing_projects_language_check'
       AND contype = 'c'
-      AND pg_get_constraintdef(oid) LIKE '%[a-z]{2,3}-[A-Z]{2}%'
+      AND pg_get_constraintdef(oid) LIKE '%is_valid_dubbing_language%'
   ) OR NOT EXISTS (
     SELECT 1 FROM pg_constraint
     WHERE conrelid = 'public.dubbing_projects'::regclass
@@ -264,7 +269,7 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'The final schema still has a language foreign key';
   END IF;
-  FOREACH invalid_code IN ARRAY ARRAY['fr', 'FR-fr', 'fr_fr', 'fr-FRA', 'fr-FR '] LOOP
+  FOREACH invalid_code IN ARRAY ARRAY['fr', 'FR-fr', 'fr_fr', 'fr-FRA', 'fr-FR ', 'zz-ZZ'] LOOP
     BEGIN
       INSERT INTO public.dubbing_projects(content_id, content_type, language)
       VALUES (989999, 'movie', invalid_code);
@@ -273,11 +278,11 @@ BEGIN
     END;
   END LOOP;
   INSERT INTO public.dubbing_projects(content_id, content_type, language)
-  VALUES (989996, 'movie', 'zz-ZZ');
+  VALUES (989996, 'movie', 'fr-BE');
   INSERT INTO public.dubbing_projects(content_id, content_type, language)
-  VALUES (989998, 'movie', 'fr-CH');
+  VALUES (989998, 'movie', 'ko-KR');
 
-  IF to_regprocedure('public.is_valid_dubbing_language(text)') IS NOT NULL
+  IF to_regprocedure('public.is_valid_dubbing_language(text)') IS NULL
     OR to_regprocedure('public.guard_dubbing_project_language()') IS NOT NULL
     OR to_regprocedure('public.finalize_dubbing_language_constraints()') IS NOT NULL
     OR to_regprocedure('public.apply_reviewed_dubbing_languages(jsonb)') IS NOT NULL
@@ -290,7 +295,88 @@ BEGIN
     RAISE EXCEPTION 'Invalid region casing was accepted';
   EXCEPTION WHEN check_violation THEN NULL;
   END;
+
+  old_queue_message_id := public.enqueue_media_fetch(
+    p_tmdb_id => 980204,
+    p_media_type => 'movie',
+    p_language => 'en',
+    p_is_manual => true,
+    p_wikipedia_language => 'en',
+    p_dubbing_language => 'fr-FR'
+  );
+  IF NOT EXISTS (
+    SELECT 1 FROM pgmq.q_wiki_check WHERE msg_id = old_queue_message_id
+  ) THEN
+    RAISE EXCEPTION 'The pre-28141305 enqueue RPC did not work after 30158';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.get_media_queue_items('wiki_check', 'active', 100, 0)
+    WHERE id = old_queue_message_id
+  ) THEN
+    RAISE EXCEPTION 'The pre-28141305 queue read RPC did not work after 30158';
+  END IF;
 END;
 $$;
 
-ROLLBACK;
+\ir ../supabase/migrations/20260928141305_preserve_queue_requester_and_admin_read_security.sql
+
+DO $$
+BEGIN
+  IF to_regclass('public.dubbing_languages') IS NOT NULL THEN
+    RAISE EXCEPTION 'The registry remains after the final queue RPC migration';
+  END IF;
+  IF to_regprocedure('public.is_valid_dubbing_language(text)') IS NULL
+    OR public.is_valid_dubbing_language('fr-BE') IS DISTINCT FROM true
+    OR public.is_valid_dubbing_language('zz-ZZ') IS DISTINCT FROM false THEN
+    RAISE EXCEPTION 'The final supported-language helper is missing or incorrect';
+  END IF;
+
+  BEGIN
+    PERFORM public.enqueue_media_fetch(
+      p_tmdb_id => 980206,
+      p_media_type => 'movie',
+      p_wikipedia_language => 'en',
+      p_dubbing_language => 'zz-ZZ'
+    );
+    RAISE EXCEPTION 'The final fetch RPC accepted an unsupported dubbing language';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM <> 'Invalid regional dubbing language' THEN RAISE; END IF;
+  END;
+
+  BEGIN
+    PERFORM public.enqueue_media_extract(
+      p_tmdb_id => 980207,
+      p_media_type => 'movie',
+      p_language => 'en',
+      p_page_id => 980207,
+      p_section_indexes => '[]'::jsonb,
+      p_wikipedia_language => 'en',
+      p_dubbing_language => 'zz-ZZ'
+    );
+    RAISE EXCEPTION 'The final extract RPC accepted an unsupported dubbing language';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM <> 'A regional dubbing language is required (for example fr-FR)' THEN RAISE; END IF;
+  END;
+
+  BEGIN
+    PERFORM public.resume_wiki_check_for_regional_review(999999, 'zz-ZZ');
+    RAISE EXCEPTION 'The final resume RPC accepted an unsupported dubbing language';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM <> 'Invalid regional dubbing language' THEN RAISE; END IF;
+  END;
+
+  BEGIN
+    PERFORM public.enqueue_media_fetch(
+      p_tmdb_id => 980205,
+      p_media_type => 'movie',
+      p_language => 'simple',
+      p_wikipedia_language => 'simple'
+    );
+    RAISE EXCEPTION 'The final queue RPC accepted Simple Wikipedia';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM <> 'Invalid Wikipedia source language' THEN
+      RAISE;
+    END IF;
+  END;
+END;
+$$;

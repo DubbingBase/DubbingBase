@@ -59,7 +59,7 @@ describe("regional voice cast assignments", () => {
     expect(france[101].voice_actor_id).toBe(201);
   });
 
-  it("accepts only registered regional route query values", () => {
+  it("accepts only regional route query values", () => {
     expect(regionalLanguageFromQuery("fr-FR")).toBe("fr-FR");
     expect(regionalLanguageFromQuery("fr")).toBe("");
     expect(regionalLanguageFromQuery("FR-fr")).toBe("");

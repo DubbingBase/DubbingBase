@@ -1,4 +1,4 @@
-import { isDubbingLanguage, type DubbingLanguage } from "@app/shared-logic";
+import { isDubbingLanguage, isWikipediaLanguage, type DubbingLanguage } from "@app/shared-logic";
 
 export interface PrepareGameRequestBody {
   igdbId: number;
@@ -15,8 +15,7 @@ export function buildPrepareGameRequest(
     typeof igdbId !== "number" ||
     !Number.isSafeInteger(igdbId) ||
     igdbId <= 0 ||
-    typeof wikipediaLanguage !== "string" ||
-    !/^[a-z][a-z0-9-]*$/.test(wikipediaLanguage) ||
+    !isWikipediaLanguage(wikipediaLanguage) ||
     !isDubbingLanguage(dubbingLanguage)
   ) {
     return null;

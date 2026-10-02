@@ -51,6 +51,14 @@ BEGIN
   EXCEPTION WHEN SQLSTATE '22023' THEN
     NULL;
   END;
+  BEGIN
+    PERFORM public.save_regional_project_actor_assignments(
+      -980209, 'movie', 'zz-ZZ', '[]'::jsonb
+    );
+    RAISE EXCEPTION 'An unsupported regional code was accepted by the assignment RPC';
+  EXCEPTION WHEN SQLSTATE '22023' THEN
+    NULL;
+  END;
   IF EXISTS (
     SELECT 1 FROM public.dubbing_projects
     WHERE content_id = -980204 AND content_type = 'movie'

@@ -1,6 +1,6 @@
 Apply production migrations through the CI/CD deployment workflow. Do not run `supabase db push` directly.
 
-`mise run db-reset` builds the local schema from migrations without production data. `dubbing_projects.language` is non-null text constrained by `^[a-z]{2,3}-[A-Z]{2}$`; shared TypeScript validates the same shape at request boundaries. This is structural validation, not an allow-list of CLDR/IANA codes.
+`mise run db-reset` builds the local schema from migrations without production data. `dubbing_projects.language` is non-null text constrained by the supported regional-code set in `public.is_valid_dubbing_language(text)`. Shared TypeScript uses the same supported-code list at request boundaries; this is a product-supported list, not a full CLDR/IANA registry.
 
 For a production-backed local refresh, reset the local database with the complete production data dump, then synchronize Storage separately:
 

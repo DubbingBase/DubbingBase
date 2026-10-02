@@ -805,6 +805,10 @@ export type Database = {
           work_id: number;
         }[];
       };
+      is_valid_dubbing_language: {
+        Args: { p_language: string };
+        Returns: boolean;
+      };
       match_voice_actor: {
         Args: { p_firstname: string; p_lastname: string };
         Returns: {

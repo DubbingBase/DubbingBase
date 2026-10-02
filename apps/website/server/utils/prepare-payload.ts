@@ -1,4 +1,4 @@
-import { isDubbingLanguage, type DubbingLanguage } from "@app/shared-logic";
+import { isDubbingLanguage, isWikipediaLanguage, type DubbingLanguage } from "@app/shared-logic";
 
 type Validated<T> = { ok: true; value: T } | { ok: false; reason: string };
 
@@ -35,9 +35,7 @@ function optionalNonNegativeInteger(value: unknown): number | null | undefined {
 function sourceLanguageFrom(value: unknown): string | null {
   // `language` remains a backwards-compatible alias for the Wikipedia source.
   const wikipediaLanguage = property(value, "wikipedia_language") ?? property(value, "language");
-  return typeof wikipediaLanguage === "string" && /^[a-z][a-z0-9-]*$/.test(wikipediaLanguage)
-    ? wikipediaLanguage
-    : null;
+  return isWikipediaLanguage(wikipediaLanguage) ? wikipediaLanguage : null;
 }
 
 export function validatePrepareGamePayload(payload: unknown): Validated<PrepareGameInput> {

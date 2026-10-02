@@ -1,4 +1,4 @@
--- Run after the regional review queue migrations and requester provenance migration.
+-- Run after all regional queue migrations, including requester provenance.
 -- This fixture exercises the enqueue/resume RPCs with local-only queue data.
 BEGIN;
 
@@ -36,8 +36,8 @@ BEGIN
   check_id := public.enqueue_media_fetch(
     p_tmdb_id => -980201,
     p_media_type => 'movie',
-    p_language => 'simple',
-    p_wikipedia_language => 'simple',
+    p_language => 'en',
+    p_wikipedia_language => 'en',
     p_requested_by => requester_id
   );
   IF NOT EXISTS (
@@ -66,7 +66,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pgmq.q_wiki_check
     WHERE message->>'tmdb_id' = '-980201'
-      AND message->>'wikipedia_language' = 'simple'
+      AND message->>'wikipedia_language' = 'en'
       AND message->>'dubbing_language' = 'en-US'
       AND message->>'requested_by' = requester_id::text
   ) THEN
@@ -76,7 +76,7 @@ BEGIN
   check_id := public.enqueue_media_fetch(
     p_tmdb_id => -980204,
     p_media_type => 'movie',
-    p_language => 'simple'
+    p_language => 'en'
   );
   IF NOT public.archive_wiki_check_for_regional_review(check_id, 'Choose a dubbing region.') THEN
     RAISE EXCEPTION 'Could not archive a review item without a requester';
@@ -96,17 +96,17 @@ BEGIN
   extract_id := public.enqueue_media_extract(
     p_tmdb_id => -980202,
     p_media_type => 'movie',
-    p_language => 'simple',
+    p_language => 'en',
     p_page_id => 2,
     p_section_indexes => '[1]'::jsonb,
-    p_wikipedia_language => 'simple',
+    p_wikipedia_language => 'en',
     p_dubbing_language => 'en-US',
     p_requested_by => requester_id
   );
   IF NOT EXISTS (
     SELECT 1 FROM pgmq.q_wiki_extract
     WHERE msg_id = extract_id
-      AND message->>'wikipedia_language' = 'simple'
+      AND message->>'wikipedia_language' = 'en'
       AND message->>'dubbing_language' = 'en-US'
       AND message->>'requested_by' = requester_id::text
   ) THEN
@@ -116,7 +116,7 @@ BEGIN
     SELECT 1 FROM public.get_media_queue_items('wiki_extract', 'active', 100, 0)
     WHERE id = extract_id
       AND requested_by = requester_id
-      AND wikipedia_language = 'simple'
+      AND wikipedia_language = 'en'
       AND dubbing_language = 'en-US'
   ) THEN
     RAISE EXCEPTION 'The admin queue read RPC lost the extract requester or regional target';

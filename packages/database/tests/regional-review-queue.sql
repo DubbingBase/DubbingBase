@@ -3,8 +3,9 @@
 -- 20260926094824_preserve_dubbing_review_dependencies.sql,
 -- 20260926130158_map_legacy_dubbing_project_regions.sql, and
 -- 20260926174115_queue_regional_review_resume.sql and
--- 20260926174116_atomic_regional_project_actor_assignments.sql and
--- 20260928083958_harden_regional_assignment_concurrency_and_queue_metadata.sql.
+-- 20260926174116_atomic_regional_project_actor_assignments.sql,
+-- 20260928083958_harden_regional_assignment_concurrency_and_queue_metadata.sql,
+-- and 20260928141305_preserve_queue_requester_and_admin_read_security.sql.
 -- Fixtures and queue transitions are rolled back.
 \set ON_ERROR_STOP on
 BEGIN;
@@ -17,19 +18,32 @@ DECLARE
   extract_id bigint;
   project_duplicate_review_id bigint;
   queue_duplicate_review_id bigint;
+  simple_review_id bigint;
   requester_id uuid := '11111111-1111-4111-8111-111111111111';
 BEGIN
+  BEGIN
+    PERFORM public.enqueue_media_fetch(
+      p_tmdb_id => 980100,
+      p_media_type => 'movie',
+      p_language => 'simple',
+      p_wikipedia_language => 'simple'
+    );
+    RAISE EXCEPTION 'Fetch RPC accepted Simple Wikipedia';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM <> 'Invalid Wikipedia source language' THEN RAISE; END IF;
+  END;
+
   -- Source-only queue work reaches wiki_check and becomes an explicit review item.
   message_id := public.enqueue_media_fetch(
     p_tmdb_id => 980101,
     p_media_type => 'tv',
-    p_language => 'simple',
+    p_language => 'en',
     p_requested_by => requester_id
   );
   IF NOT EXISTS (
     SELECT 1 FROM pgmq.q_wiki_check
     WHERE msg_id = message_id
-      AND message->>'wikipedia_language' = 'simple'
+      AND message->>'wikipedia_language' = 'en'
       AND message->>'dubbing_language' IS NULL
   ) THEN
     RAISE EXCEPTION 'Source-only check did not preserve Wikipedia language separately';
@@ -52,7 +66,7 @@ BEGIN
     SELECT 1 FROM public.get_regional_review_queue_items()
     WHERE id = message_id
       AND status = 'review_needed'
-      AND wikipedia_language = 'simple'
+      AND wikipedia_language = 'en'
       AND dubbing_language IS NULL
       AND requested_by = requester_id
       AND review_note LIKE '%regional selection required%'
@@ -70,10 +84,10 @@ BEGIN
     PERFORM public.enqueue_media_extract(
       p_tmdb_id => 980102,
       p_media_type => 'movie',
-      p_language => 'simple',
+      p_language => 'en',
       p_page_id => 980102,
       p_section_indexes => '[]'::jsonb,
-      p_wikipedia_language => 'simple',
+      p_wikipedia_language => 'en',
       p_dubbing_language => 'fr'
     );
     RAISE EXCEPTION 'Extract RPC accepted a non-regional dubbing language';
@@ -87,6 +101,43 @@ BEGIN
     WHERE message->>'tmdb_id' = '980102'
   ) THEN
     RAISE EXCEPTION 'Invalid regional language created an extract item';
+  END IF;
+
+  BEGIN
+    PERFORM public.enqueue_media_extract(
+      p_tmdb_id => 980108,
+      p_media_type => 'movie',
+      p_language => 'simple',
+      p_page_id => 980108,
+      p_section_indexes => '[1]'::jsonb,
+      p_wikipedia_language => 'simple',
+      p_dubbing_language => 'en-US'
+    );
+    RAISE EXCEPTION 'Extract RPC accepted Simple Wikipedia';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM <> 'Invalid Wikipedia source language' THEN RAISE; END IF;
+  END;
+
+  simple_review_id := public.enqueue_media_fetch(
+    p_tmdb_id => 980109,
+    p_media_type => 'movie',
+    p_wikipedia_language => 'en'
+  );
+  PERFORM public.archive_wiki_check_for_regional_review(
+    simple_review_id,
+    'Review source rejection regression.'
+  );
+  UPDATE pgmq.a_wiki_check
+  SET message = jsonb_set(message, '{wikipedia_language}', '"simple"'::jsonb)
+  WHERE msg_id = simple_review_id;
+  BEGIN
+    PERFORM public.resume_wiki_check_for_regional_review(simple_review_id, 'fr-FR');
+    RAISE EXCEPTION 'Resume RPC accepted a Simple Wikipedia review source';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM <> 'Review item has no valid Wikipedia source language' THEN RAISE; END IF;
+  END;
+  IF NOT EXISTS (SELECT 1 FROM pgmq.a_wiki_check WHERE msg_id = simple_review_id) THEN
+    RAISE EXCEPTION 'Rejected Simple Wikipedia review item was removed';
   END IF;
 
   BEGIN
@@ -110,7 +161,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pgmq.q_wiki_check
     WHERE message->>'tmdb_id' = '980101'
-      AND message->>'wikipedia_language' = 'simple'
+      AND message->>'wikipedia_language' = 'en'
       AND message->>'dubbing_language' = 'fr-FR'
   ) THEN
     RAISE EXCEPTION 'Resumed item did not restart wiki_check with the chosen region';
@@ -121,7 +172,7 @@ BEGIN
   project_duplicate_review_id := public.enqueue_media_fetch(
     p_tmdb_id => -980106,
     p_media_type => 'movie',
-    p_language => 'simple'
+    p_language => 'en'
   );
   PERFORM public.archive_wiki_check_for_regional_review(
     project_duplicate_review_id,
@@ -150,7 +201,7 @@ BEGIN
   queue_duplicate_review_id := public.enqueue_media_fetch(
     p_tmdb_id => -980107,
     p_media_type => 'movie',
-    p_language => 'simple'
+    p_language => 'en'
   );
   PERFORM public.archive_wiki_check_for_regional_review(
     queue_duplicate_review_id,
@@ -161,8 +212,8 @@ BEGIN
     jsonb_build_object(
       'tmdb_id', -980107,
       'media_type', 'movie',
-      'language', 'simple',
-      'wikipedia_language', 'simple',
+      'language', 'en',
+      'wikipedia_language', 'en',
       'dubbing_language', 'fr-FR'
     ),
     '{}'::jsonb
@@ -225,7 +276,7 @@ BEGIN
     PERFORM public.enqueue_media_extract(
       p_tmdb_id => 980104,
       p_media_type => 'movie',
-      p_language => 'simple',
+      p_language => 'en',
       p_page_id => 1,
       p_section_indexes => '[1]'::jsonb
     );
@@ -237,16 +288,16 @@ BEGIN
   extract_id := public.enqueue_media_extract(
     p_tmdb_id => 980105,
     p_media_type => 'movie',
-    p_language => 'simple',
+    p_language => 'en',
     p_page_id => 2,
     p_section_indexes => '[1]'::jsonb,
-    p_wikipedia_language => 'simple',
+    p_wikipedia_language => 'en',
     p_dubbing_language => 'en-US'
   );
   IF NOT EXISTS (
     SELECT 1 FROM pgmq.q_wiki_extract
     WHERE msg_id = extract_id
-      AND message->>'wikipedia_language' = 'simple'
+      AND message->>'wikipedia_language' = 'en'
       AND message->>'dubbing_language' = 'en-US'
   ) THEN
     RAISE EXCEPTION 'Valid source and target were not accepted by extract';

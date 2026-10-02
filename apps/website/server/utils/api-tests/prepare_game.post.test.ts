@@ -48,10 +48,14 @@ describe("POST /api/prepare_game", () => {
       "invalid Wikipedia source",
       { igdbId: 42, wikipedia_language: "FR-fr", dubbing_language: "fr-FR" },
     ],
-    ["missing dubbing region", { igdbId: 42, wikipedia_language: "simple" }],
+    [
+      "Simple Wikipedia source",
+      { igdbId: 42, wikipedia_language: "simple", dubbing_language: "en-US" },
+    ],
+    ["missing dubbing region", { igdbId: 42, wikipedia_language: "en" }],
     [
       "unregistered dubbing region",
-      { igdbId: 42, wikipedia_language: "simple", dubbing_language: "fr" },
+      { igdbId: 42, wikipedia_language: "en", dubbing_language: "fr" },
     ],
   ])("rejects %s with HTTP 400", async (_label, payload) => {
     const response = await postPayload(payload);
@@ -65,14 +69,14 @@ describe("POST /api/prepare_game", () => {
 
     const response = await postPayload({
       igdbId: 42,
-      wikipedia_language: "simple",
+      wikipedia_language: "en",
       dubbing_language: "en-US",
     });
 
     expect(response.status).toBe(200);
     expect(routeMocks.prepareGame).toHaveBeenCalledWith({
       igdbId: 42,
-      wikipediaLanguage: "simple",
+      wikipediaLanguage: "en",
       dubbingLanguage: "en-US",
     });
   });

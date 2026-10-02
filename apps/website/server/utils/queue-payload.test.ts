@@ -81,14 +81,14 @@ describe("source and target separation", () => {
     });
     expect(validateExtractPayload({ ...payload, dubbing_language: "fr-FR" }).ok).toBe(true);
   });
-  it.each(["fr", "de", "simple", "fr-Fr", "fr-FRA", ""])(
+  it.each(["fr", "de", "en", "fr-Fr", "fr-FRA", ""])(
     "rejects %s as a dubbing region",
     (dubbing_language) => {
       expect(
         validateExtractPayload({
           tmdb_id: 1,
           media_type: "tv",
-          wikipedia_language: "simple",
+          wikipedia_language: "en",
           dubbing_language,
           page_id: 2,
           section_indexes: [1],
@@ -104,7 +104,7 @@ describe("source and target separation", () => {
         validateExtractPayload({
           tmdb_id: 1,
           media_type: "movie",
-          wikipedia_language: "simple",
+          wikipedia_language: "en",
           dubbing_language,
           page_id: 1,
           section_indexes: [1],
@@ -113,17 +113,30 @@ describe("source and target separation", () => {
     },
   );
 
-  it("accepts a structurally valid code without checking a registry", () => {
+  it("accepts a supported regional code", () => {
     expect(
       validateExtractPayload({
         tmdb_id: 1,
         media_type: "movie",
-        wikipedia_language: "simple",
-        dubbing_language: "zz-ZZ",
+        wikipedia_language: "en",
+        dubbing_language: "fr-BE",
         page_id: 1,
         section_indexes: [1],
       }).ok,
     ).toBe(true);
+  });
+
+  it("rejects a structurally regional but unsupported code", () => {
+    expect(
+      validateExtractPayload({
+        tmdb_id: 1,
+        media_type: "movie",
+        wikipedia_language: "en",
+        dubbing_language: "zz-ZZ",
+        page_id: 1,
+        section_indexes: [1],
+      }).ok,
+    ).toBe(false);
   });
 
   it("requires a regional target before the extract stage", () => {
@@ -131,7 +144,7 @@ describe("source and target separation", () => {
       validateExtractPayload({
         tmdb_id: 1,
         media_type: "movie",
-        wikipedia_language: "simple",
+        wikipedia_language: "en",
         page_id: 1,
         section_indexes: [1],
       }),
@@ -145,13 +158,22 @@ describe("source and target separation", () => {
       validateCheckPayload({
         tmdb_id: 1,
         media_type: "tv",
-        wikipedia_language: "simple",
+        wikipedia_language: "en",
         dubbing_language: "en-US",
       }),
     ).toMatchObject({
       ok: true,
-      value: { wikipediaLanguage: "simple", dubbingLanguage: "en-US" },
+      value: { wikipediaLanguage: "en", dubbingLanguage: "en-US" },
     });
+  });
+
+  it("rejects Simple Wikipedia as a source identifier", () => {
+    expect(
+      validateDiscoveryPayload({ tmdb_id: 1, media_type: "movie", wikipedia_language: "simple" }),
+    ).toEqual({ ok: false, reason: "invalid wikipedia_language" });
+    expect(
+      validateCheckPayload({ tmdb_id: 1, media_type: "movie", wikipedia_language: "simple" }),
+    ).toEqual({ ok: false, reason: "invalid wikipedia_language" });
   });
 
   it("allows source-only discovery and preserves an explicit target when present", () => {
@@ -163,12 +185,12 @@ describe("source and target separation", () => {
       validateDiscoveryPayload({
         tmdb_id: 1,
         media_type: "movie",
-        wikipedia_language: "simple",
+        wikipedia_language: "en",
         dubbing_language: "en-US",
       }),
     ).toMatchObject({
       ok: true,
-      value: { wikipediaLanguage: "simple", dubbingLanguage: "en-US" },
+      value: { wikipediaLanguage: "en", dubbingLanguage: "en-US" },
     });
   });
 
@@ -217,7 +239,7 @@ describe("queue requester provenance", () => {
     const payload = {
       tmdb_id: 12,
       media_type: "movie",
-      wikipedia_language: "simple",
+      wikipedia_language: "en",
       dubbing_language: "en-US",
       requested_by: requester,
       page_id: 2,

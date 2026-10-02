@@ -444,7 +444,7 @@
     "prepareDialogTitle": "Extract game dubbing credits",
     "prepareDialogDescription": "Choose the Wikipedia edition to search and the regional dubbing project that should receive the credits.",
     "wikipediaSourceLanguage": "Wikipedia source language",
-    "wikipediaSourceHint": "Enter an edition code such as en, fr, or simple.",
+    "wikipediaSourceHint": "Enter an edition code such as en or fr.",
     "developer": "Developer",
     "publisher": "Publisher",
     "characters": "Characters",

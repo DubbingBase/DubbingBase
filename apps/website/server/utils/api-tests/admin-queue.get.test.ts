@@ -66,7 +66,7 @@ describe("GET /api/admin/queue", () => {
       queue_name: "wiki_check",
       tmdb_id: 211288,
       media_type: "tv",
-      wikipedia_language: "simple",
+      wikipedia_language: "en",
       dubbing_language: null,
       season_number: null,
       episode_number: null,

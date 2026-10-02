@@ -444,7 +444,7 @@
     "prepareDialogTitle": "Extraer créditos de doblaje del juego",
     "prepareDialogDescription": "Elige la edición de Wikipedia que se consultará y el proyecto regional de doblaje que recibirá los créditos.",
     "wikipediaSourceLanguage": "Idioma de origen de Wikipedia",
-    "wikipediaSourceHint": "Introduce un código de edición como en, fr o simple.",
+    "wikipediaSourceHint": "Introduce un código de edición como en o fr.",
     "developer": "Desarrollador",
     "publisher": "Editor",
     "characters": "Personajes",

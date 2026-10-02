@@ -1,4 +1,4 @@
-/** Suggested dubbing regions for UI controls; format validation is independent. */
+/** Supported dubbing regions for UI controls and request validation. */
 export const DUBBING_LANGUAGE_OPTIONS = [
   "fr-FR",
   "fr-CA",
@@ -49,13 +49,13 @@ export const DUBBING_LANGUAGE_OPTIONS = [
   "yue-HK",
 ] as const;
 
-export type DubbingLanguage = string;
+export type DubbingLanguage = (typeof DUBBING_LANGUAGE_OPTIONS)[number];
 
-export const DEFAULT_DUBBING_LANGUAGE = "fr-FR";
-const REGIONAL_DUBBING_LANGUAGE_RE = /^[a-z]{2,3}-[A-Z]{2}$/;
+export const DEFAULT_DUBBING_LANGUAGE: DubbingLanguage = "fr-FR";
+const DUBBING_LANGUAGE_SET: ReadonlySet<string> = new Set(DUBBING_LANGUAGE_OPTIONS);
 
 export function isDubbingLanguage(value: unknown): value is DubbingLanguage {
-  return typeof value === "string" && REGIONAL_DUBBING_LANGUAGE_RE.test(value);
+  return typeof value === "string" && DUBBING_LANGUAGE_SET.has(value);
 }
 
 export function validateDubbingLanguage(value: unknown): DubbingLanguage {

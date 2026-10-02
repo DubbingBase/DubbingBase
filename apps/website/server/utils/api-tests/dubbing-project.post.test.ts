@@ -95,7 +95,7 @@ describe("POST /api/admin/dubbing-project", () => {
     const { supabase, rpcCalls } = createSupabaseMock();
     routeMocks.useSupabaseAdmin.mockReturnValue(supabase);
 
-    for (const dubbingLanguage of ["fr", "FR-fr", "fr-FRA"]) {
+    for (const dubbingLanguage of ["fr", "FR-fr", "fr-FRA", "zz-ZZ"]) {
       const response = await post({
         content_id: 211288,
         content_type: "tv",
@@ -107,14 +107,14 @@ describe("POST /api/admin/dubbing-project", () => {
     expect(rpcCalls).toEqual([]);
   });
 
-  it("accepts any structurally valid regional code", async () => {
+  it("accepts a supported regional code", async () => {
     const { supabase, rpcCalls } = createSupabaseMock();
     routeMocks.useSupabaseAdmin.mockReturnValue(supabase);
 
     const response = await post({
       content_id: 211288,
       content_type: "tv",
-      dubbing_language: "zz-ZZ",
+      dubbing_language: "fr-BE",
       operations: [
         {
           actor_id: 101,
@@ -126,7 +126,7 @@ describe("POST /api/admin/dubbing-project", () => {
     });
 
     expect(response.status).toBe(200);
-    expect(rpcCalls[0]?.args).toMatchObject({ p_dubbing_language: "zz-ZZ" });
+    expect(rpcCalls[0]?.args).toMatchObject({ p_dubbing_language: "fr-BE" });
   });
 
   it("rejects duplicate actors and no-op operations", async () => {

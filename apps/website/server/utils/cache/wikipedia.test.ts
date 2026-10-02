@@ -1,27 +1,24 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { SimpleCache } from "./index";
 import {
+  extractAvailableLanguages,
   filterValidSectionIndexes,
   isDubbingSectionHeading,
   WikipediaCache,
 } from "./wikipedia";
 
-const noPersistentWikipediaRequests: Array<
-  [string, (cache: WikipediaCache) => Promise<unknown>]
-> = [
-  ["category lists", (cache) => cache.getMaleVoiceActors()],
-  ["category lists", (cache) => cache.getFemaleVoiceActors()],
-  ["section metadata", (cache) => cache.getPageSections(1, "fr")],
-  ["HTML sections", (cache) => cache.getPageContentAsHTML(1, "2", "fr")],
-  ["wikitext pages", (cache) => cache.getPageContentAsWikitext(1, "2", "fr")],
+const noPersistentWikipediaRequests: Array<[string, (cache: WikipediaCache) => Promise<unknown>]> =
   [
-    "wikitext sections",
-    (cache) => cache.getPageSectionAsWikitext(1, "2", "fr"),
-  ],
-  ["page info", (cache) => cache.getWikipediaPageInfo("Example", "fr")],
-  ["image URLs", (cache) => cache.getImageFromFilename("Example.jpg", "fr")],
-  ["Wikidata search", (cache) => cache.searchWikidataEntities("Example", "en")],
-];
+    ["category lists", (cache) => cache.getMaleVoiceActors()],
+    ["category lists", (cache) => cache.getFemaleVoiceActors()],
+    ["section metadata", (cache) => cache.getPageSections(1, "fr")],
+    ["HTML sections", (cache) => cache.getPageContentAsHTML(1, "2", "fr")],
+    ["wikitext pages", (cache) => cache.getPageContentAsWikitext(1, "2", "fr")],
+    ["wikitext sections", (cache) => cache.getPageSectionAsWikitext(1, "2", "fr")],
+    ["page info", (cache) => cache.getWikipediaPageInfo("Example", "fr")],
+    ["image URLs", (cache) => cache.getImageFromFilename("Example.jpg", "fr")],
+    ["Wikidata search", (cache) => cache.searchWikidataEntities("Example", "en")],
+  ];
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -31,10 +28,7 @@ describe("Wikipedia cache policies", () => {
     async (_label, request) => {
       let reads = 0;
       let writes = 0;
-      vi.stubGlobal(
-        "fetch",
-        async () => new Response(JSON.stringify({ parse: { sections: [] } })),
-      );
+      vi.stubGlobal("fetch", async () => new Response(JSON.stringify({ parse: { sections: [] } })));
       const cache = new WikipediaCache(
         new SimpleCache(() => ({
           get: async () => {
@@ -59,8 +53,7 @@ describe("Wikipedia cache policies", () => {
     let writes = 0;
     vi.stubGlobal(
       "fetch",
-      async () =>
-        new Response(JSON.stringify({ entities: { Q42: { sitelinks: {} } } })),
+      async () => new Response(JSON.stringify({ entities: { Q42: { sitelinks: {} } } })),
     );
     const cache = new WikipediaCache(
       new SimpleCache(() => ({
@@ -112,8 +105,18 @@ describe("filterValidSectionIndexes", () => {
   });
 
   it("keeps indexes that still match dubbing headings", async () => {
-    await expect(filterValidSectionIndexes(sections, [2, 3])).resolves.toEqual([
-      3,
-    ]);
+    await expect(filterValidSectionIndexes(sections, [2, 3])).resolves.toEqual([3]);
+  });
+});
+
+describe("extractAvailableLanguages", () => {
+  it("does not expose the Simple Wikipedia edition as a runtime source option", () => {
+    expect(
+      extractAvailableLanguages({
+        simplewiki: { title: "Simple English article" },
+        enwiki: { title: "English article" },
+        frwiki: { title: "Article français" },
+      }),
+    ).toEqual(["fr", "en"]);
   });
 });
