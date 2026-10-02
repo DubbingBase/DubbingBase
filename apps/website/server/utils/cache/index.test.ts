@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { CACHE_TTL, createCacheNamespace, SimpleCache, type GetOrFetchOptions } from "./index";
-import { buildCacheKey, classifyCacheWriteKey } from "./constants";
+import { buildCacheKey, classifyCacheWriteKey, hashCacheValue } from "./constants";
 import { OpenLibraryClient } from "../api/openlibrary";
 
 interface FakeKv {
@@ -306,8 +306,10 @@ describe("KV write diagnostics", () => {
         provider: "tmdb",
         resource: "movie",
         ttl: CACHE_TTL.STABLE,
+        keyFingerprint: hashCacheValue(key),
       });
       const loggedText = JSON.stringify(log.mock.calls);
+      expect(loggedText).not.toContain(key);
       expect(loggedText).not.toContain("private-query-value");
       expect(loggedText).not.toContain("private-language-value");
       expect(loggedText).not.toContain("private-param-value");
