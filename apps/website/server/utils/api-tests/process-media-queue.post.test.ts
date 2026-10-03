@@ -19,6 +19,7 @@ const routeMocks = vi.hoisted(() => ({
   extractMediaDubbingCredits: vi.fn(),
   extractGameDubbingCredits: vi.fn(),
   useWikipediaCache: vi.fn(),
+  getPageSectionAsWikitext: vi.fn(),
   useIgdbClient: vi.fn(),
   getGame: vi.fn(),
   cacheGetOrFetch: vi.fn(),
@@ -65,6 +66,9 @@ beforeAll(async () => {
 beforeEach(() => {
   vi.clearAllMocks();
   routeMocks.sendDiscordAdminNotification.mockResolvedValue(undefined);
+  routeMocks.getPageSectionAsWikitext.mockResolvedValue({
+    parse: { wikitext: "Original cast: actor names." },
+  });
   routeMocks.checkMediaDubbingSections.mockResolvedValue({
     ok: true,
     title: "Test movie",
@@ -90,6 +94,7 @@ beforeEach(() => {
     creditsAdded: 1,
   });
   routeMocks.useWikipediaCache.mockReturnValue({
+    getPageSectionAsWikitext: routeMocks.getPageSectionAsWikitext,
     searchWikidataEntities: vi.fn(async () => ({ search: [{ id: "Q42" }] })),
     getAllSitelinksEntity: vi.fn(async (wikiId: string) => ({
       entities: {
@@ -105,6 +110,9 @@ beforeEach(() => {
   routeMocks.useIgdbClient.mockReturnValue({ getGame: routeMocks.getGame });
   routeMocks.getGame.mockResolvedValue({ name: "Test game" });
   routeMocks.rpc.mockImplementation(async (name: string) => {
+    if (name === "archive_wiki_check_for_regional_review") {
+      return { data: true, error: null };
+    }
     if (name === "pop_media_queue_batch") {
       return {
         data: [
@@ -135,6 +143,9 @@ async function processQueue(
   payloadChanges: Record<string, unknown> = {},
 ) {
   routeMocks.rpc.mockImplementation(async (name: string) => {
+    if (name === "archive_wiki_check_for_regional_review") {
+      return { data: true, error: null };
+    }
     if (name === "pop_media_queue_batch" || name === "pop_media_queue_message") {
       return {
         data: [
@@ -240,6 +251,164 @@ describe("POST /api/process-media-queue requester propagation", () => {
     expect(routeMocks.rpc).toHaveBeenCalledWith(
       "enqueue_media_extract",
       expect.objectContaining({ p_requested_by: requester }),
+    );
+  });
+
+  it("archives ordinary cast candidates without review, extraction, retry, or warning", async () => {
+    await processQueue("check", { dubbing_language: undefined });
+
+    expect(routeMocks.rpc).toHaveBeenCalledWith(
+      "archive_media_queue_messages",
+      expect.objectContaining({ p_queue_name: "wiki_check", p_msg_ids: [17] }),
+    );
+    expect(routeMocks.rpc).not.toHaveBeenCalledWith(
+      "archive_wiki_check_for_regional_review",
+      expect.anything(),
+    );
+    expect(routeMocks.rpc).not.toHaveBeenCalledWith("enqueue_media_extract", expect.anything());
+    expect(routeMocks.rpc).not.toHaveBeenCalledWith("delay_media_queue_message", expect.anything());
+    expect(routeMocks.sendDiscordAdminNotification).not.toHaveBeenCalled();
+  });
+
+  it("automatically enqueues Digger-style VF credits for fr-FR", async () => {
+    routeMocks.getPageSectionAsWikitext.mockResolvedValue({
+      parse: { wikitext: "VF : voix française — Jean Dupont" },
+    });
+
+    await processQueue("check", { dubbing_language: undefined, wikipedia_language: "fr" });
+
+    expect(routeMocks.rpc).toHaveBeenCalledWith(
+      "enqueue_media_extract",
+      expect.objectContaining({
+        p_wikipedia_language: "fr",
+        p_dubbing_language: "fr-FR",
+        p_section_indexes: [2],
+      }),
+    );
+    expect(routeMocks.rpc).not.toHaveBeenCalledWith(
+      "archive_wiki_check_for_regional_review",
+      expect.anything(),
+    );
+  });
+
+  it("detects Kill Jackie-style inline VF beside the original cast", async () => {
+    routeMocks.getPageSectionAsWikitext.mockResolvedValue({
+      parse: {
+        wikitext: "Original cast: Actor One as Hero.\nVF : Jean Dupont as Hero.",
+      },
+    });
+
+    await processQueue("check", { dubbing_language: undefined, wikipedia_language: "fr" });
+
+    expect(routeMocks.rpc).toHaveBeenCalledWith(
+      "enqueue_media_extract",
+      expect.objectContaining({
+        p_dubbing_language: "fr-FR",
+        p_section_indexes: [2],
+      }),
+    );
+  });
+
+  it("enqueues separable VF and VQ sections as independent regional jobs", async () => {
+    routeMocks.checkMediaDubbingSections.mockResolvedValue({
+      ok: true,
+      title: "Test movie",
+      sectionIndexes: [3, 4],
+      sectionCandidates: [
+        { index: 3, heading: "Distribution", headingKind: "generic_cast" },
+        { index: 4, heading: "Version québécoise", headingKind: "explicit_dubbing" },
+      ],
+      pageId: 55,
+    });
+    routeMocks.getPageSectionAsWikitext.mockImplementation(
+      async (pageId: number, index: string) => {
+        expect(pageId).toBe(55);
+        return {
+          parse: {
+            wikitext: index === "3" ? "VF : Jean Dupont as Hero." : "VQ : Marie Roy as Hero.",
+          },
+        };
+      },
+    );
+
+    await processQueue("check", { dubbing_language: undefined });
+
+    expect(routeMocks.rpc).toHaveBeenCalledWith(
+      "enqueue_media_extract",
+      expect.objectContaining({ p_dubbing_language: "fr-FR", p_section_indexes: [3] }),
+    );
+    expect(routeMocks.rpc).toHaveBeenCalledWith(
+      "enqueue_media_extract",
+      expect.objectContaining({ p_dubbing_language: "fr-CA", p_section_indexes: [4] }),
+    );
+  });
+
+  it("extracts only the explicitly requested region when the page has multiple versions", async () => {
+    routeMocks.checkMediaDubbingSections.mockResolvedValue({
+      ok: true,
+      title: "Test movie",
+      sectionIndexes: [3, 4],
+      sectionCandidates: [
+        { index: 3, heading: "Distribution", headingKind: "generic_cast" },
+        { index: 4, heading: "Version québécoise", headingKind: "explicit_dubbing" },
+      ],
+      pageId: 55,
+    });
+    routeMocks.getPageSectionAsWikitext.mockImplementation(
+      async (_pageId: number, index: string) => ({
+        parse: {
+          wikitext: index === "3" ? "VF : Jean Dupont as Hero." : "VQ : Marie Roy as Hero.",
+        },
+      }),
+    );
+
+    await processQueue("check", { dubbing_language: "fr-FR" });
+
+    expect(routeMocks.rpc).toHaveBeenCalledWith(
+      "enqueue_media_extract",
+      expect.objectContaining({ p_dubbing_language: "fr-FR", p_section_indexes: [3] }),
+    );
+    expect(routeMocks.rpc).not.toHaveBeenCalledWith(
+      "enqueue_media_extract",
+      expect.objectContaining({ p_dubbing_language: "fr-CA" }),
+    );
+  });
+
+  it("does not overwrite an explicit region when evidence points elsewhere", async () => {
+    routeMocks.getPageSectionAsWikitext.mockResolvedValue({
+      parse: { wikitext: "VQ : voix québécoise — Marie Roy" },
+    });
+
+    await processQueue("check", { dubbing_language: "fr-FR" });
+
+    expect(routeMocks.rpc).toHaveBeenCalledWith(
+      "archive_wiki_check_for_regional_review",
+      expect.objectContaining({ p_msg_id: 17 }),
+    );
+    expect(routeMocks.rpc).not.toHaveBeenCalledWith("enqueue_media_extract", expect.anything());
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledWith(
+      expect.stringContaining("Dubbing Region Conflict"),
+      expect.any(String),
+      expect.anything(),
+    );
+  });
+
+  it("routes dubbing evidence with an unknown market to regional review", async () => {
+    routeMocks.getPageSectionAsWikitext.mockResolvedValue({
+      parse: { wikitext: "Japanese dub: Actor Name." },
+    });
+
+    await processQueue("check", { dubbing_language: undefined });
+
+    expect(routeMocks.rpc).toHaveBeenCalledWith(
+      "archive_wiki_check_for_regional_review",
+      expect.objectContaining({ p_msg_id: 17 }),
+    );
+    expect(routeMocks.rpc).not.toHaveBeenCalledWith("enqueue_media_extract", expect.anything());
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledWith(
+      expect.stringContaining("Regional Dubbing Review Required"),
+      expect.any(String),
+      expect.anything(),
     );
   });
 
