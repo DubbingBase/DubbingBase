@@ -245,7 +245,19 @@ export const sitelinkKey = (lang: string) => `${lang.replace(/-/g, "_")}wiki`;
  * ReDoS-safe with strict non-nested patterns.
  */
 export const DUBBING_SECTION_REGEX =
-  /(?:^|[\s_\-–—/])(?:distribution|doublages?|voix|casting|cast|characters?\s*and\s*cast|version\s*fran[cç]aise|com[eé]diens?\s*de\s*doublage|voice[- ]?(?:cast|over|acting|actor[s]?)?|dubbing|starring|besetzung|synchron(?:isation|sprecher|besetzung|fassung)?|stimmen|reparto[\s_\-–—/]+(?:de[\s_\-–—/]+)?(?:doblaje|voces)|doblaj[oe]s?|voces(?:[\s_\-–—/]+en[\s_\-–—/]+espa[ñn]ol)?|actores?[\s_\-–—/]+de[\s_\-–—/]+voz|dobragem|dublagem|doppiaggio|doppiatori|voci|nasynchronisatie|r[oö]ster|stemmer|g[lł]os(?:y|i)?|obsada|zn[eě]n[ií]|dabing|szinkron(?:hangok)?|дублир(?:ование|овали)?|дубляж|озвуч(?:ивание|ка)?|закадров(?:ый)?|дублюванн(?:я)?|актор[иы]\s+озвуч|dublaj|seslendirme|μεταγλ[ωώ]ττιση|דיבוב|دبلجة|الدبلجة|alih\s*suara|l[oồ]ng\s*ti[eế]ng|พากย์|डबिंग|더빙|성우|配音(?:員|演員|名單|陣容)?|聲優|声優|吹き替え|日本語吹替(?:版)?|キャスト|配役|登場人物)(?:[\s_\-–—/:]|$)/i;
+  /(?:^|[\s_\-–—/])(?:distribution|doublages?|voix|casting|cast|characters?\s*and\s*cast|version\s*(?:fran[cç]aise|qu[eé]b[eé]coise)|com[eé]diens?\s*de\s*doublage|voice[- ]?(?:cast|over|acting|actor[s]?)?|dubbing|starring|besetzung|synchron(?:isation|sprecher|besetzung|fassung)?|stimmen|reparto[\s_\-–—/]+(?:de[\s_\-–—/]+)?(?:doblaje|voces)|doblaj[oe]s?|voces(?:[\s_\-–—/]+en[\s_\-–—/]+espa[ñn]ol)?|actores?[\s_\-–—/]+de[\s_\-–—/]+voz|dobragem|dublagem|doppiaggio|doppiatori|voci|nasynchronisatie|r[oö]ster|stemmer|g[lł]os(?:y|i)?|obsada|zn[eě]n[ií]|dabing|szinkron(?:hangok)?|дублир(?:ование|овали)?|дубляж|озвуч(?:ивание|ка)?|закадров(?:ый)?|дублюванн(?:я)?|актор[иы]\s+озвуч|dublaj|seslendirme|μεταγλ[ωώ]ττιση|דיבוב|دبلجة|الدبلجة|alih\s*suara|l[oồ]ng\s*ti[eế]ng|พากย์|डबिंग|더빙|성우|配音(?:員|演員|名單|陣容)?|聲優|声優|吹き替え|日本語吹替(?:版)?|キャスト|配役|登場人物)(?:[\s_\-–—/:]|$)/i;
+
+const GENERIC_CAST_SECTION_REGEX =
+  /(?:^|[\s_\-–—/])(?:distribution|casting|cast|characters?\s*and\s*cast|starring|besetzung|reparto|obsada|キャスト|配役|登場人物)(?:[\s_\-–—/:]|$)/i;
+
+const EXPLICIT_DUBBING_CUE_REGEX =
+  /(?:doublage|voix|version\s*(?:fran[cç]aise|qu[eé]b[eé]coise)|com[eé]diens?\s*de\s*doublage|voice|dubbing|synchron|stimmen|doblaj[oe]s?|voces|actores?\s*de\s*voz|dobragem|dublagem|doppiaggio|doppiatori|voci|nasynchronisatie|r[oö]ster|stemmer|g[lł]os|zn[eě]n[ií]|dabing|szinkron|дублир|дубляж|озвуч|закадров|дублюван|актор[иы]\s+озвуч|dublaj|seslendirme|μεταγλ|דיבוב|دبلجة|alih\s*suara|l[oồ]ng\s*ti[eế]ng|พากย์|डबिंग|더빙|성우|配音|聲優|声優|吹き替え|日本語吹替)(?:[\s_\-–—/:]|$)/i;
+
+export type DubbingSectionCandidate = {
+  index: number;
+  heading: string;
+  headingKind: "explicit_dubbing" | "generic_cast";
+};
 
 /**
  * Clean wikitext heading markup (HTML, refs, wikilinks, templates, formatting).
@@ -269,44 +281,72 @@ export function cleanHeadingText(raw: string): string {
 }
 
 /**
- * Test whether a section heading corresponds to dubbing or voice cast information.
+ * Test whether a heading is a candidate for later inspection for dubbing evidence.
  */
 export function isDubbingSectionHeading(heading: string): boolean {
   const cleaned = cleanHeadingText(heading);
   if (!cleaned) return false;
-  return DUBBING_SECTION_REGEX.test(cleaned);
+  return DUBBING_SECTION_REGEX.test(cleaned) || GENERIC_CAST_SECTION_REGEX.test(cleaned);
 }
 
 /**
- * Pick the sections of a page that contain dubbing / voice-actor credits,
- * in ANY language, using high-speed multilingual regex parsing.
+ * Select headings worth inspecting for dubbing evidence. A heading is only a
+ * candidate: neither explicit wording nor a generic cast heading proves that
+ * the section contains dubbing credits.
  */
+export async function selectDubbingCandidateSections(
+  sections: Array<{ index: number | string; line: string }>,
+): Promise<DubbingSectionCandidate[]> {
+  if (!sections || sections.length === 0) return [];
+
+  const candidates: DubbingSectionCandidate[] = [];
+  for (const s of sections) {
+    if (!s || !s.line) continue;
+    const heading = cleanHeadingText(s.line);
+    if (
+      !heading ||
+      (!DUBBING_SECTION_REGEX.test(heading) && !GENERIC_CAST_SECTION_REGEX.test(heading))
+    ) {
+      continue;
+    }
+    const index = Number(s.index);
+    if (!Number.isInteger(index)) continue;
+    candidates.push({
+      index,
+      heading,
+      headingKind:
+        EXPLICIT_DUBBING_CUE_REGEX.test(heading) || !GENERIC_CAST_SECTION_REGEX.test(heading)
+          ? "explicit_dubbing"
+          : "generic_cast",
+    });
+  }
+
+  return candidates;
+}
+
+/** @deprecated Use selectDubbingCandidateSections; candidates do not prove dubbing exists. */
 export async function selectDubbingSections(
   sections: Array<{ index: number | string; line: string }>,
 ): Promise<string[]> {
   if (!sections || sections.length === 0) return [];
-
-  const matchedIndexes: string[] = [];
-  for (const s of sections) {
-    if (s && s.line && isDubbingSectionHeading(s.line)) {
-      matchedIndexes.push(String(s.index));
-    }
-  }
-
-  return matchedIndexes;
+  return sections
+    .filter(
+      (section) => section?.line && DUBBING_SECTION_REGEX.test(cleanHeadingText(section.line)),
+    )
+    .map(({ index }) => String(index));
 }
 
 /**
- * Drop requested section indexes that no longer match dubbing headings.
+ * Drop requested section indexes that no longer match candidate headings.
  * Queue check and extract run on different cron ticks, so a payload can go
- * stale (page edited, or detector fixed since enqueue, e.g. bare "Reparto").
+ * stale after the page or candidate detector changes.
  */
 export async function filterValidSectionIndexes(
   sections: Array<{ index: number | string; line: string }>,
   requested: number[],
 ): Promise<number[]> {
-  const valid = new Set(await selectDubbingSections(sections));
-  return requested.filter((i) => valid.has(String(i)));
+  const valid = new Set((await selectDubbingCandidateSections(sections)).map(({ index }) => index));
+  return requested.filter((index) => valid.has(index));
 }
 
 export class WikipediaCache {

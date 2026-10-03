@@ -4,6 +4,8 @@ import {
   extractAvailableLanguages,
   filterValidSectionIndexes,
   isDubbingSectionHeading,
+  selectDubbingCandidateSections,
+  selectDubbingSections,
   WikipediaCache,
 } from "./wikipedia";
 
@@ -75,20 +77,22 @@ describe("Wikipedia cache policies", () => {
 });
 
 describe("isDubbingSectionHeading", () => {
-  it.each([["Reparto principal"], ["Reparto"], ["Actores"], ["Argumento"]])(
-    "rejects plain cast heading %s",
+  it.each([["Reparto principal"], ["Reparto"], ["Distribution"], ["Cast"]])(
+    "recognizes generic heading %s as a candidate",
     (heading) => {
-      expect(isDubbingSectionHeading(heading)).toBe(false);
+      expect(isDubbingSectionHeading(heading)).toBe(true);
     },
   );
-
+  it.each([["Actores"], ["Argumento"]])("rejects unrelated heading %s", (heading) => {
+    expect(isDubbingSectionHeading(heading)).toBe(false);
+  });
   it.each([
     ["Reparto de doblaje"],
     ["Reparto de voces"],
     ["Doblaje"],
     ["Voces en español"],
     ["Doublage"],
-  ])("matches dubbing heading %s", (heading) => {
+  ])("recognizes explicit candidate heading %s", (heading) => {
     expect(isDubbingSectionHeading(heading)).toBe(true);
   });
 });
@@ -100,12 +104,67 @@ describe("filterValidSectionIndexes", () => {
     { index: 3, line: "Doblaje" },
   ];
 
-  it("drops stale indexes (e.g. bare Reparto enqueued before the fix)", async () => {
-    await expect(filterValidSectionIndexes(sections, [2])).resolves.toEqual([]);
+  it("keeps stale indexes when their headings remain valid candidates", async () => {
+    await expect(filterValidSectionIndexes(sections, [2])).resolves.toEqual([2]);
   });
 
-  it("keeps indexes that still match dubbing headings", async () => {
-    await expect(filterValidSectionIndexes(sections, [2, 3])).resolves.toEqual([3]);
+  it("drops indexes whose headings are no longer candidates", async () => {
+    await expect(
+      filterValidSectionIndexes([...sections, { index: 4, line: "Plot" }], [2, 3, 4]),
+    ).resolves.toEqual([2, 3]);
+  });
+});
+
+describe("selectDubbingCandidateSections", () => {
+  it.each([
+    ["Distribution", "generic_cast"],
+    ["Cast", "generic_cast"],
+    ["Reparto", "generic_cast"],
+    ["Reparto principal", "generic_cast"],
+    ["Besetzung", "generic_cast"],
+    ["Starring", "generic_cast"],
+    ["キャスト", "generic_cast"],
+    ["配役", "generic_cast"],
+    ["登場人物", "generic_cast"],
+    ["Doublage", "explicit_dubbing"],
+    ["Version française", "explicit_dubbing"],
+    ["Version québécoise", "explicit_dubbing"],
+    ["Voice cast", "explicit_dubbing"],
+    ["Synchronsprecher", "explicit_dubbing"],
+    ["Doblaje", "explicit_dubbing"],
+    ["Doppiaggio", "explicit_dubbing"],
+    ["吹き替え", "explicit_dubbing"],
+  ] as const)("classifies %s as a %s candidate", async (line, headingKind) => {
+    await expect(selectDubbingCandidateSections([{ index: 7, line }])).resolves.toEqual([
+      { index: 7, heading: line, headingKind },
+    ]);
+  });
+
+  it("keeps explicit terms in a generic heading as an explicit candidate", async () => {
+    await expect(
+      selectDubbingCandidateSections([{ index: 3, line: "Reparto de doblaje" }]),
+    ).resolves.toEqual([
+      {
+        index: 3,
+        heading: "Reparto de doblaje",
+        headingKind: "explicit_dubbing",
+      },
+    ]);
+  });
+
+  it("does not treat unrelated headings as candidates", async () => {
+    await expect(selectDubbingCandidateSections([{ index: 4, line: "Plot" }])).resolves.toEqual([]);
+  });
+});
+
+describe("selectDubbingSections compatibility", () => {
+  it("preserves the legacy strict detector until callers migrate", async () => {
+    await expect(
+      selectDubbingSections([
+        { index: 1, line: "Reparto" },
+        { index: 2, line: "Reparto de doblaje" },
+      ]),
+    ).resolves.toEqual(["2"]);
   });
 });
 
