@@ -4,8 +4,8 @@
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
 > 81 routes | 18 models | 197 components | 90 lib files | 61 env vars | 14 middleware | 19% test coverage
-> **Token savings:** this file is ~15,800 tokens. Without it, AI exploration would cost ~157,200 tokens. **Saves ~141,400 tokens per conversation.**
-> **Last scanned:** 2026-10-02 18:57 — re-run after significant changes
+> **Token savings:** this file is ~15,800 tokens. Without it, AI exploration would cost ~157,200 tokens. **Saves ~141,500 tokens per conversation.**
+> **Last scanned:** 2026-10-03 20:08 — re-run after significant changes
 
 ---
 
@@ -465,13 +465,11 @@
 - `apps/website/server/utils/auth.ts` — function requireUser: (event) => User, function requireAdmin: (event) => User
 - `apps/website/server/utils/background.ts` — function scheduleBackgroundTask: (event, task, label) => void
 - `apps/website/server/utils/cache/constants.ts`
-  - function classifyCacheWriteKey: (key) => CacheWriteDimensions
   - function hashCacheValue: (value) => string
   - function buildCacheKey: (input) => string
   - class SimpleKeyValidator
-  - interface CacheWriteDimensions
   - interface CacheKeyInput
-  - _...1 more_
+  - const CACHE_SCHEMA_VERSION
 - `apps/website/server/utils/cache/http.ts`
   - function getPublicCacheControl: (profile) => string
   - function getCloudflareCacheControl: (profile) => string
@@ -557,7 +555,6 @@
   - function isRetryableMediaRequestError: (error) => error is RetryableMediaRequestError
   - function isRetryableMediaRequestStatus: (status) => boolean
   - function createMediaResponseError: (provider, response) => Error
-  - function observeProviderRequest: (provider, request) => void
   - function fetchMediaRequest: (input, init?) => Promise<Response>
   - class RetryableMediaRequestError
 - `apps/website/server/utils/services/media-preparation.ts`
@@ -791,10 +788,10 @@
 - `apps/website/server/utils/background.ts` — imported by **7** files
 - `apps/website/server/utils/cache/http.ts` — imported by **7** files
 - `apps/website/server/utils/services/media.ts` — imported by **6** files
-- `apps/website/server/utils/retryable-request.ts` — imported by **6** files
 - `apps/website/server/utils/error-message.ts` — imported by **5** files
 - `apps/website/server/utils/with-timeout.ts` — imported by **4** files
 - `apps/website/server/utils/llm.ts` — imported by **4** files
+- `apps/website/server/utils/api/openlibrary.ts` — imported by **4** files
 
 ## Import Map (who imports what)
 

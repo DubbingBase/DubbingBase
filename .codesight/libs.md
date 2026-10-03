@@ -43,13 +43,11 @@
 - `apps/website/server/utils/auth.ts` — function requireUser: (event) => User, function requireAdmin: (event) => User
 - `apps/website/server/utils/background.ts` — function scheduleBackgroundTask: (event, task, label) => void
 - `apps/website/server/utils/cache/constants.ts`
-  - function classifyCacheWriteKey: (key) => CacheWriteDimensions
   - function hashCacheValue: (value) => string
   - function buildCacheKey: (input) => string
   - class SimpleKeyValidator
-  - interface CacheWriteDimensions
   - interface CacheKeyInput
-  - _...1 more_
+  - const CACHE_SCHEMA_VERSION
 - `apps/website/server/utils/cache/http.ts`
   - function getPublicCacheControl: (profile) => string
   - function getCloudflareCacheControl: (profile) => string
@@ -135,7 +133,6 @@
   - function isRetryableMediaRequestError: (error) => error is RetryableMediaRequestError
   - function isRetryableMediaRequestStatus: (status) => boolean
   - function createMediaResponseError: (provider, response) => Error
-  - function observeProviderRequest: (provider, request) => void
   - function fetchMediaRequest: (input, init?) => Promise<Response>
   - class RetryableMediaRequestError
 - `apps/website/server/utils/services/media-preparation.ts`
