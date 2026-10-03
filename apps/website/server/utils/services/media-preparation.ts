@@ -12,7 +12,12 @@ import type { SimpleCache } from "../cache";
 import { buildTmdbImageUrl } from "../urls/tmdb";
 import { buildIgdbImageUrl } from "../api/igdb";
 import { llmGenerateObject } from "../llm";
-import { selectDubbingSections, filterValidSectionIndexes, sitelinkKey } from "../cache/wikipedia";
+import {
+  selectDubbingCandidateSections,
+  filterValidSectionIndexes,
+  sitelinkKey,
+  type DubbingSectionCandidate,
+} from "../cache/wikipedia";
 
 const TMDB_API_BASE = "https://api.themoviedb.org/3";
 
@@ -127,6 +132,7 @@ export interface CheckSectionsResult {
   wikiId?: string;
   pageId?: number;
   sectionIndexes?: number[];
+  sectionCandidates?: DubbingSectionCandidate[];
   wikipediaUrl?: string;
   isAdult?: boolean;
   error?: string;
@@ -256,10 +262,8 @@ export async function checkMediaDubbingSections(options: {
     const sections =
       wikipediaPageSections.parse?.tocdata?.sections || wikipediaPageSections.parse?.sections || [];
 
-    const dubbingIndexes = await selectDubbingSections(sections);
-    const matchedSectionIndexes = sections
-      .filter((section) => dubbingIndexes.includes(String(section.index)))
-      .map((section) => section.index);
+    const sectionCandidates = await selectDubbingCandidateSections(sections);
+    const matchedSectionIndexes = sectionCandidates.map((candidate) => candidate.index);
 
     if (matchedSectionIndexes.length === 0) {
       throw new Error(`No voice actor / dubbing sections found on Wikipedia page: ${wikiPageUrl}`);
@@ -271,6 +275,7 @@ export async function checkMediaDubbingSections(options: {
       wikiId,
       pageId,
       sectionIndexes: matchedSectionIndexes,
+      sectionCandidates,
       wikipediaUrl: wikiPageUrl,
     };
   } catch (error) {
@@ -346,10 +351,8 @@ export async function checkGameDubbingSections(options: {
     const sections =
       wikipediaPageSections.parse?.tocdata?.sections || wikipediaPageSections.parse?.sections || [];
 
-    const dubbingIndexes = await selectDubbingSections(sections);
-    const matchedSectionIndexes = sections
-      .filter((section) => dubbingIndexes.includes(String(section.index)))
-      .map((section) => section.index);
+    const sectionCandidates = await selectDubbingCandidateSections(sections);
+    const matchedSectionIndexes = sectionCandidates.map((candidate) => candidate.index);
 
     if (matchedSectionIndexes.length === 0) {
       throw new Error(`No voice actor / dubbing sections found on Wikipedia page: ${wikiPageUrl}`);
@@ -361,6 +364,7 @@ export async function checkGameDubbingSections(options: {
       wikiId: bestMatch.id,
       pageId,
       sectionIndexes: matchedSectionIndexes,
+      sectionCandidates,
       wikipediaUrl: wikiPageUrl,
     };
   } catch (error) {
@@ -457,7 +461,7 @@ export async function extractMediaDubbingCredits(options: {
         creditsAdded: 0,
         title: mediaTitle,
         imageUrl,
-        error: `Stale queue element: section(s) [${sectionIndexes.join(", ")}] no longer match dubbing headings on the "${wikipediaLanguage}" Wikipedia page. The page likely has no dubbing section.`,
+        error: `Stale queue element: section(s) [${sectionIndexes.join(", ")}] no longer match candidate headings on the "${wikipediaLanguage}" Wikipedia page.`,
       };
     }
     let totalNewVoiceActors = 0;
@@ -633,7 +637,7 @@ export async function extractGameDubbingCredits(options: {
         creditsAdded: 0,
         title: gameTitle,
         imageUrl,
-        error: `Stale queue element: section(s) [${sectionIndexes.join(", ")}] no longer match dubbing headings on the "${wikipediaLanguage}" Wikipedia page. The page likely has no dubbing section.`,
+        error: `Stale queue element: section(s) [${sectionIndexes.join(", ")}] no longer match candidate headings on the "${wikipediaLanguage}" Wikipedia page.`,
       };
     }
     let totalNewVoiceActors = 0;
