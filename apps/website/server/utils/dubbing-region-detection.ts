@@ -122,9 +122,7 @@ export function detectDubbingRegionFromWikitext({
 
     // Evidence for dubbing exists, but the text does not name a supported,
     // unambiguous region. Do not infer one from the language edition.
-    if (/\b(?:french|fran[cç]ais|portuguese|portugu[eê]s|spanish|espa[nñ]ol)\b/i.test(text)) {
-      ambiguous.set(section.index, "unspecified_market");
-    }
+    ambiguous.set(section.index, "unspecified_market");
   }
 
   if (ambiguous.size > 0) {
