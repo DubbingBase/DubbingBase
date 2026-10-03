@@ -16,6 +16,7 @@ import { useSupabaseAdmin } from "../utils/db/client";
 import { requireAdmin } from "../utils/auth";
 import { useWikipediaCache, useIgdbClient, useCache } from "../utils";
 import { extractAvailableLanguages } from "../utils/cache/wikipedia";
+import { detectDubbingRegionFromWikitext } from "../utils/dubbing-region-detection";
 import { areAllLlmQuotasExhausted } from "../utils/llm";
 import { getErrorMessage } from "../utils/error-message";
 import {
@@ -632,11 +633,55 @@ export default defineEventHandler(async (event) => {
             return { ok: true, processed: 1, results, queue: targetQueue };
           }
 
+          const sectionCandidates =
+            checkResult.sectionCandidates ??
+            checkResult.sectionIndexes.map((index) => ({
+              index,
+              heading: "",
+              headingKind: "generic_cast" as const,
+            }));
+          const pageId = checkResult.pageId;
+          const wikipediaCache = useWikipediaCache(cache);
+          const candidateContents = await Promise.all(
+            sectionCandidates.map(async (candidate) => {
+              const section = await wikipediaCache.getPageSectionAsWikitext(
+                pageId,
+                String(candidate.index),
+                wikipediaLanguage,
+              );
+              const wikitext = section.parse?.wikitext;
+              if (typeof wikitext !== "string") {
+                throw new Error(`Could not read Wikipedia section ${candidate.index} as wikitext`);
+              }
+              return { index: candidate.index, heading: candidate.heading, wikitext };
+            }),
+          );
+          const evidence = detectDubbingRegionFromWikitext({
+            wikipediaLanguage,
+            sections: candidateContents,
+          });
+          const disposition = wikiCheckDisposition(
+            evidence,
+            sectionCandidates.map((candidate) => candidate.index),
+            valid.value.dubbingLanguage,
+          );
+
+          if (disposition.disposition === "no_dubbing_evidence") {
+            pendingArchiveIds.push(msgId);
+            results.push({
+              id: msgId,
+              ok: true,
+              changes: 0,
+              note: "No dubbing evidence in candidate sections; archived normally.",
+            });
+            return { ok: true, processed: 1, results, queue: targetQueue };
+          }
+
           if (
-            wikiCheckDisposition(true, valid.value.dubbingLanguage) === "regional_review_required"
+            disposition.disposition === "regional_review_required" ||
+            disposition.disposition === "target_conflict"
           ) {
-            const reviewNote =
-              "Dubbing sections were found on Wikipedia. Select a regional dubbing language in the admin queue, then resume review.";
+            const reviewNote = disposition.reason;
             const { data: archivedForReview, error: reviewArchiveError } = await supabaseAdmin.rpc(
               "archive_wiki_check_for_regional_review",
               {
@@ -657,31 +702,34 @@ export default defineEventHandler(async (event) => {
             });
 
             await sendDiscordAdminNotification(
-              `Regional Dubbing Review Required [${wikipediaLanguage.toUpperCase()}]`,
-              `Dubbing sections were found for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}), but no dubbing region was selected. Choose a regional dubbing language in the admin queue and resume review.`,
+              disposition.disposition === "target_conflict"
+                ? `Dubbing Region Conflict [${wikipediaLanguage.toUpperCase()}]`
+                : `Regional Dubbing Review Required [${wikipediaLanguage.toUpperCase()}]`,
+              `Dubbing evidence for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}) needs admin review: ${reviewNote}`,
               { event, queue: "wiki_check", color: 0xfee75c },
             );
 
             return { ok: true, processed: 1, results, queue: targetQueue };
           }
 
-          // Section(s) found! Enqueue to Queue 3: wiki_extract
-          const { error: extractEnqueueErr } = await supabaseAdmin.rpc("enqueue_media_extract", {
-            p_tmdb_id: payload.tmdb_id,
-            p_media_type: payload.media_type,
-            p_language: wikipediaLanguage,
-            p_wikipedia_language: wikipediaLanguage,
-            p_dubbing_language: valid.value.dubbingLanguage,
-            p_page_id: checkResult.pageId,
-            p_section_indexes: checkResult.sectionIndexes,
-            p_season_number: payload.season_number ?? undefined,
-            p_episode_number: payload.episode_number ?? undefined,
-            p_is_manual: payload.is_manual ?? false,
-            ...queueRequesterRpcArgs(valid.value.requestedBy),
-          });
+          for (const target of disposition.targets) {
+            const { error: extractEnqueueErr } = await supabaseAdmin.rpc("enqueue_media_extract", {
+              p_tmdb_id: payload.tmdb_id,
+              p_media_type: payload.media_type,
+              p_language: wikipediaLanguage,
+              p_wikipedia_language: wikipediaLanguage,
+              p_dubbing_language: target.dubbingLanguage,
+              p_page_id: checkResult.pageId,
+              p_section_indexes: target.sectionIndexes,
+              p_season_number: payload.season_number ?? undefined,
+              p_episode_number: payload.episode_number ?? undefined,
+              p_is_manual: payload.is_manual ?? false,
+              ...queueRequesterRpcArgs(valid.value.requestedBy),
+            });
 
-          if (extractEnqueueErr && !extractEnqueueErr.message?.includes("already in the")) {
-            throw new Error(`Failed to enqueue to wiki_extract: ${extractEnqueueErr.message}`);
+            if (extractEnqueueErr && !extractEnqueueErr.message?.includes("already in the")) {
+              throw new Error(`Failed to enqueue to wiki_extract: ${extractEnqueueErr.message}`);
+            }
           }
 
           pendingArchiveIds.push(msgId);
@@ -690,19 +738,19 @@ export default defineEventHandler(async (event) => {
             id: msgId,
             ok: true,
             changes: 0,
-            note: `Found ${checkResult.sectionIndexes.length} section(s). Enqueued to LLM extraction.`,
+            note: `Enqueued ${disposition.targets.length} regional extraction job(s).`,
           });
 
           console.log(
-            `[QUEUE] Check verified for ${mediaTitle} [${wikipediaLanguage}]: ${checkResult.sectionIndexes.length} sections enqueued to wiki_extract`,
+            `[QUEUE] Check verified for ${mediaTitle} [${wikipediaLanguage}]: ${disposition.targets.map((target) => `${target.dubbingLanguage} sections ${target.sectionIndexes.join(",")}`).join("; ")}`,
           );
 
           const checkWikiUrl = checkResult.wikipediaUrl;
           const checkWikiSection = checkWikiUrl ? `\n🔗 **Wikipedia Link:** ${checkWikiUrl}` : "";
 
           await sendDiscordAdminNotification(
-            `Dubbing Section Found [${wikipediaLanguage.toUpperCase()}]`,
-            `Found **${checkResult.sectionIndexes.length} section(s)** on Wikipedia for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}). Enqueued for LLM credit extraction.${checkWikiSection}`,
+            `Dubbing Detected [${wikipediaLanguage.toUpperCase()} → ${disposition.targets.map((target) => target.dubbingLanguage).join(", ")}]`,
+            `Enqueued **${disposition.targets.length} regional extraction job(s)** for **${mediaTitle}** (${payload.media_type} ${payload.tmdb_id}).${checkWikiSection}`,
             {
               event,
               queue: "wiki_check",
