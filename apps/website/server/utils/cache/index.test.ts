@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { CACHE_TTL, createCacheNamespace, SimpleCache, type GetOrFetchOptions } from "./index";
-import { buildCacheKey, classifyCacheWriteKey, hashCacheValue } from "./constants";
+import { buildCacheKey } from "./constants";
 import { OpenLibraryClient } from "../api/openlibrary";
 
 interface FakeKv {
@@ -211,121 +211,6 @@ describe("buildCacheKey", () => {
     expect(new Set([french, japanese, extended]).size).toBe(3);
     expect(accented).not.toBe(otherAccented);
     expect(accented).toMatch(/^[a-z0-9:_-]+$/);
-  });
-});
-
-describe("KV write diagnostics", () => {
-  it.each([
-    [buildCacheKey({ provider: "openlibrary", resource: "author", id: "OL42A" }), "openlibrary", "author"],
-    [
-      buildCacheKey({
-        provider: "wikipedia",
-        resource: "entity",
-        id: "Q42",
-      }),
-      "wikipedia",
-      "entity",
-    ],
-    [
-      buildCacheKey({
-        provider: "tmdb",
-        resource: "unexpected-resource",
-        id: 7,
-      }),
-      "tmdb",
-      "other",
-    ],
-    ["igdb:auth_token", "igdb", "auth_token"],
-  ])("classifies cache keys without exposing their identities", (key, provider, resource) => {
-    expect(classifyCacheWriteKey(key)).toEqual({ provider, resource });
-  });
-
-  it("logs safe dimensions only after a successful KV write", async () => {
-    const harness = makeCache();
-    const namespace = createCacheNamespace<{ token: string }>();
-    const key = buildCacheKey({
-      provider: "openlibrary",
-      resource: "author",
-      query: "private-query-value",
-      language: "private-language-value",
-      params: { token: "private-param-value" },
-    });
-    const log = vi.spyOn(console, "info").mockImplementation(() => undefined);
-
-    try {
-      await harness.cache.getOrFetch(
-        namespace,
-        key,
-        async () => ({ token: "private-payload-value" }),
-        { cachePolicy: "persistent", ttl: "STABLE" },
-      );
-
-      expect(log).toHaveBeenCalledTimes(1);
-      expect(log).toHaveBeenCalledWith({
-        event: "kv_write",
-        provider: "openlibrary",
-        resource: "author",
-        ttl: CACHE_TTL.STABLE,
-        keyFingerprint: hashCacheValue(key),
-      });
-      const loggedText = JSON.stringify(log.mock.calls);
-      expect(loggedText).not.toContain(key);
-      expect(loggedText).not.toContain("private-query-value");
-      expect(loggedText).not.toContain("private-language-value");
-      expect(loggedText).not.toContain("private-param-value");
-      expect(loggedText).not.toContain("private-payload-value");
-      expect(harness.reads).toBe(1);
-      expect(harness.writes).toHaveLength(1);
-    } finally {
-      log.mockRestore();
-    }
-  });
-
-  it("does not log failed KV writes", async () => {
-    const log = vi.spyOn(console, "info").mockImplementation(() => undefined);
-    const cache = new SimpleCache(() => ({
-      get: async () => null,
-      put: async () => {
-        throw new Error("write failed");
-      },
-    }));
-
-    try {
-      await expect(
-        cache.getOrFetch(
-          createCacheNamespace<string>(),
-          buildCacheKey({ provider: "tvdb", resource: "series", id: 7 }),
-          async () => "value",
-          { cachePolicy: "persistent", ttl: "STABLE" },
-        ),
-      ).resolves.toBe("value");
-      expect(log).not.toHaveBeenCalled();
-    } finally {
-      log.mockRestore();
-    }
-  });
-
-  it("keeps cache behavior successful if diagnostic logging throws", async () => {
-    const harness = makeCache();
-    const log = vi.spyOn(console, "info").mockImplementation(() => {
-      throw new Error("logging unavailable");
-    });
-
-    try {
-      await expect(
-        harness.cache.getOrFetch(
-          createCacheNamespace<string>(),
-          buildCacheKey({ provider: "openlibrary", resource: "author", id: 42 }),
-          async () => "value",
-          { cachePolicy: "persistent", ttl: "STABLE" },
-        ),
-      ).resolves.toBe("value");
-      expect(log).toHaveBeenCalledTimes(1);
-      expect(harness.reads).toBe(1);
-      expect(harness.writes).toHaveLength(1);
-    } finally {
-      log.mockRestore();
-    }
   });
 });
 

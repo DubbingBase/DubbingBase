@@ -1,4 +1,4 @@
-import { classifyCacheWriteKey, hashCacheValue, SimpleKeyValidator } from "./constants";
+import { SimpleKeyValidator } from "./constants";
 
 interface CacheInFlightRequest<T> {
   cachePolicy: CachePolicy;
@@ -98,18 +98,6 @@ export class SimpleCache {
         await kv.put(safeKey, JSON.stringify(data), {
           expirationTtl,
         });
-        const { provider, resource } = classifyCacheWriteKey(safeKey);
-        try {
-          console.info({
-            event: "kv_write",
-            provider,
-            resource,
-            ttl: expirationTtl,
-            keyFingerprint: hashCacheValue(safeKey),
-          });
-        } catch {
-          // Diagnostics must not change the outcome of a successful KV write.
-        }
         return true;
       }
     } catch (kvErr) {

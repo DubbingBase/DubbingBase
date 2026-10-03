@@ -1,40 +1,6 @@
 // Cache key schema is versioned so stale or ambiguous keys expire naturally.
 export const CACHE_SCHEMA_VERSION = "3";
 
-export interface CacheWriteDimensions {
-  provider: string;
-  resource: string;
-}
-
-const CACHE_LOG_PROVIDERS = new Set([
-  "tmdb",
-  "tvdb",
-  "igdb",
-  "wikipedia",
-  "openlibrary",
-  "podcast",
-]);
-const CACHE_LOG_RESOURCES = new Set([
-  "auth_token",
-  "author",
-  "characters-by-tmdb-id",
-  "entity",
-  "voice-actor-url",
-]);
-
-/** Extracts only allowlisted labels; cache identity and params are never returned. */
-export function classifyCacheWriteKey(key: string): CacheWriteDimensions {
-  const match = /^external:v\d+:([^:]+):([^:]+):/.exec(key);
-  const legacyTokenMatch = /^(igdb|tvdb):(auth_token)$/.exec(key);
-  const provider = match?.[1] ?? legacyTokenMatch?.[1];
-  const resource = match?.[2] ?? legacyTokenMatch?.[2];
-
-  return {
-    provider: provider && CACHE_LOG_PROVIDERS.has(provider) ? provider : "other",
-    resource: resource && CACHE_LOG_RESOURCES.has(resource) ? resource : "other",
-  };
-}
-
 export interface CacheKeyInput {
   provider: string;
   resource: string;

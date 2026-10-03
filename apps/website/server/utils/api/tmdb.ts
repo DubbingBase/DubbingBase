@@ -1,5 +1,4 @@
 type TmdbResponse = Record<string, unknown> & { cast?: unknown[] };
-import { observeProviderRequest } from "../retryable-request";
 
 function isTmdbResponse(value: unknown): value is TmdbResponse {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
@@ -41,16 +40,14 @@ export class TMDBClient {
     }
 
     try {
-      const response = await observeProviderRequest("tmdb", () =>
-        fetch(url.toString(), {
-          headers: {
-            Authorization: `Bearer ${this.apiKey}`,
-            Accept: "application/json",
-            ...(language ? { "Accept-Language": language } : {}),
-          },
-          signal: AbortSignal.timeout(5000),
-        }),
-      );
+      const response = await fetch(url.toString(), {
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          Accept: "application/json",
+          ...(language ? { "Accept-Language": language } : {}),
+        },
+        signal: AbortSignal.timeout(5000),
+      });
 
       if (!response.ok) {
         throw new Error(`TMDB API error: ${response.status}`);

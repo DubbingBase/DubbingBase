@@ -1,5 +1,4 @@
 import { createCacheNamespace, SimpleCache } from "../cache";
-import { observeProviderRequest } from "../retryable-request";
 
 export const TVDB_AUTH_TOKEN_NAMESPACE = createCacheNamespace<string>();
 
@@ -31,14 +30,12 @@ export class TVDBClient {
       TVDB_AUTH_TOKEN_NAMESPACE,
       "tvdb:auth_token",
       async () => {
-        const response = await observeProviderRequest("tvdb", () =>
-          fetch(`${this.baseUrl}/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ apikey: this.apiKey }),
-            signal: AbortSignal.timeout(10000),
-          }),
-        );
+        const response = await fetch(`${this.baseUrl}/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ apikey: this.apiKey }),
+          signal: AbortSignal.timeout(10000),
+        });
 
         if (!response.ok) {
           throw new Error(`TVDB auth failed: ${response.status}`);
@@ -68,15 +65,13 @@ export class TVDBClient {
     }
 
     try {
-      const response = await observeProviderRequest("tvdb", () =>
-        fetch(url.toString(), {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-          },
-          signal: AbortSignal.timeout(8000),
-        }),
-      );
+      const response = await fetch(url.toString(), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+        signal: AbortSignal.timeout(8000),
+      });
 
       if (!response.ok) {
         throw new Error(`TVDB API error: ${response.status}`);

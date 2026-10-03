@@ -7,7 +7,6 @@ import { useCache, useIgdbClient, useOpenLibraryClient } from "../index";
 import { buildIgdbImageUrl } from "../api/igdb";
 import { createCacheNamespace } from "../cache";
 import { buildCacheKey } from "../cache/constants";
-import { observeProviderRequest } from "../retryable-request";
 
 const WIKIPEDIA_USER_AGENT = "DubbingBase/1.0 (https://dubbingbase.com; contact@dubbingbase.com)";
 
@@ -70,9 +69,9 @@ async function fetchPotentialWikipediaUrl(
       async () => {
         // Search Wikidata for the person
         const searchUrl = `https://wikidata.org/w/api.php?action=wbsearchentities&format=json&search=${encodeURIComponent(name)}&language=fr`;
-        const searchRes = await observeProviderRequest("wikidata", () =>
-          fetch(searchUrl, { headers: { "User-Agent": WIKIPEDIA_USER_AGENT } }),
-        );
+        const searchRes = await fetch(searchUrl, {
+          headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
+        });
         if (!searchRes.ok) return null;
 
         const searchData = await searchRes.json();
@@ -82,9 +81,9 @@ async function fetchPotentialWikipediaUrl(
 
         // Get sitelinks for French Wikipedia
         const entityUrl = `https://www.wikidata.org/w/api.php?action=wbgetentities&props=sitelinks&format=json&ids=${bestMatch.id}&sitefilter=frwiki`;
-        const entityRes = await observeProviderRequest("wikidata", () =>
-          fetch(entityUrl, { headers: { "User-Agent": WIKIPEDIA_USER_AGENT } }),
-        );
+        const entityRes = await fetch(entityUrl, {
+          headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
+        });
         if (!entityRes.ok) return null;
 
         const entityData = await entityRes.json();
@@ -636,9 +635,9 @@ export class MediaService {
             const wikidataId = tmdbMedia.external_ids.wikidata_id;
             try {
               const url = `https://www.wikidata.org/w/api.php?action=wbgetclaims&entity=${wikidataId}&format=json`;
-              const response = await observeProviderRequest("wikidata", () =>
-                fetch(url, { headers: { "User-Agent": WIKIPEDIA_USER_AGENT } }),
-              );
+              const response = await fetch(url, {
+                headers: { "User-Agent": WIKIPEDIA_USER_AGENT },
+              });
               const data: WikidataClaimsResponse | null = response.ok
                 ? await response.json()
                 : null;

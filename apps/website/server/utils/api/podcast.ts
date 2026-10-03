@@ -1,6 +1,5 @@
 import { ofetch } from "ofetch";
 import type { Podcast, PodcastEpisode } from "@app/shared-logic";
-import { observeProviderRequest } from "../retryable-request";
 
 export interface ITunesPodcastResult {
   collectionId: number;
@@ -29,20 +28,18 @@ export class PodcastClient {
     const trimmedQuery = query.trim();
 
     try {
-      const response = await observeProviderRequest("podcast", () =>
-        ofetch<{
-          resultCount: number;
-          results: ITunesPodcastResult[];
-        }>(`${this.baseUrl}/search`, {
-          params: {
-            term: trimmedQuery,
-            media: "podcast",
-            entity: "podcast",
-            limit,
-          },
-          timeout: 5000,
-        }),
-      );
+      const response = await ofetch<{
+        resultCount: number;
+        results: ITunesPodcastResult[];
+      }>(`${this.baseUrl}/search`, {
+        params: {
+          term: trimmedQuery,
+          media: "podcast",
+          entity: "podcast",
+          limit,
+        },
+        timeout: 5000,
+      });
 
       if (!response?.results) return [];
 
@@ -67,19 +64,17 @@ export class PodcastClient {
 
   async getPodcast(id: number): Promise<Podcast | null> {
     try {
-      const response = await observeProviderRequest("podcast", () =>
-        ofetch<{
-          resultCount: number;
-          results: any[];
-        }>(`${this.baseUrl}/lookup`, {
-          params: {
-            id,
-            entity: "podcastEpisode",
-            limit: 50,
-          },
-          timeout: 6000,
-        }),
-      );
+      const response = await ofetch<{
+        resultCount: number;
+        results: any[];
+      }>(`${this.baseUrl}/lookup`, {
+        params: {
+          id,
+          entity: "podcastEpisode",
+          limit: 50,
+        },
+        timeout: 6000,
+      });
 
       if (!response?.results || response.results.length === 0) return null;
 
