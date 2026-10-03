@@ -180,6 +180,25 @@ describe("detectDubbingRegionFromWikitext", () => {
     });
   });
 
+  it("returns ambiguous when explicit dubbing evidence names an unknown market", () => {
+    expect(
+      detectDubbingRegionFromWikitext({
+        wikipediaLanguage: "en",
+        sections: [
+          {
+            index: 11,
+            heading: "Cast",
+            wikitext: "Japanese dub: Actor Name.",
+          },
+        ],
+      }),
+    ).toEqual({
+      kind: "ambiguous",
+      sectionIndexes: [11],
+      reasons: ["unspecified_market"],
+    });
+  });
+
   it("uses explicit content evidence rather than the Wikipedia edition", () => {
     expect(
       detectDubbingRegionFromWikitext({
