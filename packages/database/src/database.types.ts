@@ -653,6 +653,15 @@ export type Database = {
         };
         Returns: boolean;
       };
+      reprocess_legacy_wiki_check_reviews: {
+        Args: never;
+        Returns: {
+          archived_msg_id: number;
+          outcome: string;
+          queued_msg_id: number | null;
+          tmdb_id: number;
+        }[];
+      };
       clear_media_queue: { Args: never; Returns: boolean };
       delay_media_queue_message: {
         Args: {
