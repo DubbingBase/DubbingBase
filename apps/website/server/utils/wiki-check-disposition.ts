@@ -6,7 +6,8 @@ export type WikiCheckArchiveReason =
   | "no_dubbing_evidence"
   | "ambiguous_region"
   | "unsupported_region"
-  | "target_conflict";
+  | "target_conflict"
+  | "adult_content_excluded";
 
 export type WikiCheckSkippedResult = {
   sectionIndexes: number[];
@@ -35,7 +36,12 @@ function archive(
   details: string | undefined,
   skipped: WikiCheckSkippedResult[],
 ): WikiCheckDisposition {
-  return { disposition: "archive", reason, ...(details ? { details } : {}), skipped };
+  return {
+    disposition: "archive",
+    reason,
+    ...(details ? { details } : {}),
+    skipped,
+  };
 }
 
 export function wikiCheckDisposition(

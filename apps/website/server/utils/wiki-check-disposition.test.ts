@@ -31,7 +31,11 @@ describe("wikiCheckDisposition", () => {
         {
           resolved: [{ language: "fr-FR", sectionIndexes: [3] }],
           unresolved: [
-            { sectionIndexes: [7], reason: "ambiguous_region", details: "Unknown market." },
+            {
+              sectionIndexes: [7],
+              reason: "ambiguous_region",
+              details: "Unknown market.",
+            },
           ],
         },
         [3, 7],
@@ -39,7 +43,13 @@ describe("wikiCheckDisposition", () => {
     ).toEqual({
       disposition: "enqueue_extract",
       targets: [{ dubbingLanguage: "fr-FR", sectionIndexes: [3] }],
-      skipped: [{ sectionIndexes: [7], reason: "ambiguous_region", details: "Unknown market." }],
+      skipped: [
+        {
+          sectionIndexes: [7],
+          reason: "ambiguous_region",
+          details: "Unknown market.",
+        },
+      ],
     });
   });
 
@@ -78,13 +88,19 @@ describe("wikiCheckDisposition", () => {
   it("archives unresolved evidence as ambiguous or unsupported", () => {
     expect(
       wikiCheckDisposition(
-        { resolved: [], unresolved: [{ sectionIndexes: [5], reason: "ambiguous_region" }] },
+        {
+          resolved: [],
+          unresolved: [{ sectionIndexes: [5], reason: "ambiguous_region" }],
+        },
         [5],
       ),
     ).toMatchObject({ disposition: "archive", reason: "ambiguous_region" });
     expect(
       wikiCheckDisposition(
-        { resolved: [], unresolved: [{ sectionIndexes: [6], reason: "unsupported_region" }] },
+        {
+          resolved: [],
+          unresolved: [{ sectionIndexes: [6], reason: "unsupported_region" }],
+        },
         [6],
       ),
     ).toMatchObject({ disposition: "archive", reason: "unsupported_region" });
