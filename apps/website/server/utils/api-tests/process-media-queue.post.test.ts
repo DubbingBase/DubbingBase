@@ -7,6 +7,7 @@ import {
   readBody,
   toWebHandler,
 } from "h3";
+import * as dubbingRegionDetection from "../dubbing-region-detection";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const requester = "11111111-1111-4111-8111-111111111111";
@@ -311,6 +312,132 @@ describe("POST /api/process-media-queue requester propagation", () => {
       "Wikipedia Check Archived — No Dubbing",
       expect.stringContaining("no_dubbing_evidence"),
       expect.anything(),
+    );
+  });
+
+  it.each([
+    ["The Uprising French Distribution", "Distribution", "fr"],
+    ["The Uprising English Cast", "Cast", "en"],
+  ])("archives %s ordinary cast as no dubbing", async (_caseName, heading, wikipediaLanguage) => {
+    routeMocks.checkMediaDubbingSections.mockResolvedValue({
+      ok: true,
+      title: "The Uprising",
+      sectionIndexes: [2],
+      sectionCandidates: [{ index: 2, heading, headingKind: "generic_cast" }],
+      pageId: 55,
+    });
+    routeMocks.getPageSectionAsWikitext.mockResolvedValue({
+      parse: { wikitext: "* Character One — Actor One\n* Character Two — Actor Two" },
+    });
+
+    await processQueue("check", {
+      wikipedia_language: wikipediaLanguage,
+      dubbing_language: undefined,
+    });
+
+    expect(routeMocks.rpc).toHaveBeenCalledWith(
+      "archive_wiki_check_with_outcome",
+      expect.objectContaining({
+        p_archive_reason: "no_dubbing_evidence",
+        p_candidate_sections: [expect.objectContaining({ index: 2, heading })],
+      }),
+    );
+    expect(routeMocks.rpc).not.toHaveBeenCalledWith("enqueue_media_extract", expect.anything());
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps bare Reparto as a candidate without extracting ordinary credits", async () => {
+    routeMocks.checkMediaDubbingSections.mockResolvedValue({
+      ok: true,
+      title: "Test movie",
+      sectionIndexes: [9],
+      sectionCandidates: [{ index: 9, heading: "Reparto", headingKind: "generic_cast" }],
+      pageId: 55,
+    });
+    routeMocks.getPageSectionAsWikitext.mockResolvedValue({
+      parse: { wikitext: "* Actor One\n* Actor Two" },
+    });
+
+    await processQueue("check", { dubbing_language: undefined });
+
+    expect(routeMocks.rpc).toHaveBeenCalledWith(
+      "archive_wiki_check_with_outcome",
+      expect.objectContaining({
+        p_archive_reason: "no_dubbing_evidence",
+        p_candidate_sections: [expect.objectContaining({ heading: "Reparto" })],
+      }),
+    );
+    expect(routeMocks.rpc).not.toHaveBeenCalledWith("enqueue_media_extract", expect.anything());
+  });
+
+  it("retries a retryable Wikipedia API failure and sends one red error notification", async () => {
+    routeMocks.checkMediaDubbingSections.mockResolvedValue({
+      ok: false,
+      title: "Test movie",
+      error: "Wikipedia API error: 503 Service Unavailable",
+      retryable: true,
+    });
+
+    await processQueue("check");
+
+    expect(routeMocks.rpc).toHaveBeenCalledWith(
+      "delay_media_queue_message",
+      expect.objectContaining({ p_queue_name: "wiki_check", p_msg_id: 17 }),
+    );
+    expect(routeMocks.rpc).not.toHaveBeenCalledWith(
+      "archive_media_queue_message_with_error",
+      expect.anything(),
+    );
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledWith(
+      "Wikipedia Queue Error",
+      expect.stringContaining("retry scheduled in 60 seconds"),
+      expect.objectContaining({ color: 0xed4245, queue: "wiki_check" }),
+    );
+  });
+
+  it.each([
+    ["ambiguous", "Japanese dub: Actor Name.", "ambiguous_region"],
+    ["unsupported", "Argentine Spanish dubbing cast: Ana Pérez.", "unsupported_region"],
+  ] as const)(
+    "archives an explicit target with %s-only evidence without extraction",
+    async (_caseName, wikitext, reason) => {
+      routeMocks.getPageSectionAsWikitext.mockResolvedValue({
+        parse: { wikitext },
+      });
+
+      await processQueue("check", { dubbing_language: "fr-FR" });
+
+      expect(routeMocks.rpc).toHaveBeenCalledWith(
+        "archive_wiki_check_with_outcome",
+        expect.objectContaining({ p_archive_reason: reason }),
+      );
+      expect(routeMocks.rpc).not.toHaveBeenCalledWith("enqueue_media_extract", expect.anything());
+      expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it("archives and reports an unexpected classifier exception", async () => {
+    vi.spyOn(dubbingRegionDetection, "detectDubbingRegionFromWikitext").mockImplementationOnce(
+      () => {
+        throw new Error("classifier crashed");
+      },
+    );
+    routeMocks.getPageSectionAsWikitext.mockResolvedValue({
+      parse: { wikitext: "VF: Jean Dupont" },
+    });
+
+    await processQueue("check", { dubbing_language: undefined });
+
+    expect(routeMocks.rpc).toHaveBeenCalledWith(
+      "archive_media_queue_message_with_error",
+      expect.objectContaining({ p_error: "classifier crashed" }),
+    );
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledWith(
+      "Wikipedia Queue Error",
+      expect.stringContaining("Error: classifier crashed"),
+      expect.objectContaining({ color: 0xed4245 }),
     );
   });
 

@@ -118,15 +118,18 @@ describe("filterValidSectionIndexes", () => {
 describe("selectDubbingCandidateSections", () => {
   it.each([
     ["Distribution", "generic_cast"],
+    ["Casting", "generic_cast"],
     ["Cast", "generic_cast"],
     ["Reparto", "generic_cast"],
     ["Reparto principal", "generic_cast"],
     ["Besetzung", "generic_cast"],
+    ["Obsada", "generic_cast"],
     ["Starring", "generic_cast"],
     ["キャスト", "generic_cast"],
     ["配役", "generic_cast"],
     ["登場人物", "generic_cast"],
     ["Doublage", "explicit_dubbing"],
+    ["Dubbing", "explicit_dubbing"],
     ["Version française", "explicit_dubbing"],
     ["Version québécoise", "explicit_dubbing"],
     ["Voice cast", "explicit_dubbing"],
