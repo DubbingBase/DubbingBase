@@ -1,48 +1,40 @@
 import { describe, expect, it } from "vitest";
 import { detectDubbingRegionFromWikitext } from "./dubbing-region-detection";
 
+const noEvidence = { resolved: [], unresolved: [] };
+
 describe("detectDubbingRegionFromWikitext", () => {
-  it("does not treat generic cast sections or bare VF/VQ tokens as dubbing evidence", () => {
+  it.each(["Distribution", "Cast"])("ignores an ordinary cast under %s", (heading) => {
     expect(
       detectDubbingRegionFromWikitext({
         wikipediaLanguage: "fr",
         sections: [
           {
             index: 1,
-            heading: "Voice cast",
-            wikitext: "{{Cast list|Actor One}}",
-          },
-          {
-            index: 2,
-            heading: "VF",
-            wikitext: "The original cast appeared in VF Corporation's ad.",
-          },
-          {
-            index: 3,
-            heading: "Casting",
-            wikitext: "VQ is the name of a character.",
+            heading,
+            wikitext: "* Actor One\n* Actor Two",
           },
         ],
       }),
-    ).toEqual({ kind: "none" });
+    ).toEqual(noEvidence);
   });
 
-  it("does not treat a regional heading plus an original voice cast as dubbing evidence", () => {
+  it("ignores an explicitly original voice cast", () => {
     expect(
       detectDubbingRegionFromWikitext({
         wikipediaLanguage: "es",
         sections: [
           {
             index: 6,
-            heading: "LATAM voice cast",
+            heading: "Voice cast",
             wikitext: "The original voice cast includes Ana Pérez and Luis García.",
           },
         ],
       }),
-    ).toEqual({ kind: "none" });
+    ).toEqual(noEvidence);
   });
 
-  it("does not use a dubbing or region phrase in the heading as content evidence", () => {
+  it("does not let a regional dubbing heading alone establish evidence", () => {
     expect(
       detectDubbingRegionFromWikitext({
         wikipediaLanguage: "en",
@@ -54,10 +46,25 @@ describe("detectDubbingRegionFromWikitext", () => {
           },
         ],
       }),
-    ).toEqual({ kind: "none" });
+    ).toEqual(noEvidence);
   });
 
-  it("resolves French France and Quebec only when their markers appear with dubbing credits", () => {
+  it("ignores unrelated VF acronym text", () => {
+    expect(
+      detectDubbingRegionFromWikitext({
+        wikipediaLanguage: "fr",
+        sections: [
+          {
+            index: 12,
+            heading: "Cast",
+            wikitext: "VF Corporation sponsored the original actors.",
+          },
+        ],
+      }),
+    ).toEqual(noEvidence);
+  });
+
+  it("uses Version française plus a credit-shaped character/actor table", () => {
     expect(
       detectDubbingRegionFromWikitext({
         wikipediaLanguage: "en",
@@ -65,159 +72,257 @@ describe("detectDubbingRegionFromWikitext", () => {
           {
             index: 3,
             heading: "Version française",
-            wikitext: "VF : Jean Dupont as Hero.",
-          },
-          {
-            index: 7,
-            heading: "Version québécoise",
-            wikitext: "VQ : Marie Tremblay — Hero.",
+            wikitext: '{| class="wikitable"\n| Character || Actor\n| Hero || Jean Dupont\n|}',
           },
         ],
       }),
     ).toEqual({
-      kind: "resolved",
-      regions: [
+      resolved: [{ language: "fr-FR", sectionIndexes: [3] }],
+      unresolved: [],
+    });
+  });
+
+  it("uses Version québécoise plus a credit-shaped table", () => {
+    expect(
+      detectDubbingRegionFromWikitext({
+        wikipediaLanguage: "en",
+        sections: [
+          {
+            index: 4,
+            heading: "Version québécoise",
+            wikitext: '{| class="wikitable"\n| Character || Actor\n| Hero || Marie Tremblay\n|}',
+          },
+        ],
+      }),
+    ).toEqual({
+      resolved: [{ language: "fr-CA", sectionIndexes: [4] }],
+      unresolved: [],
+    });
+  });
+
+  it("resolves an inline VF credit without relying on its heading", () => {
+    expect(
+      detectDubbingRegionFromWikitext({
+        wikipediaLanguage: "en",
+        sections: [
+          {
+            index: 5,
+            heading: "Distribution",
+            wikitext: "VF : Jean Dupont as Hero.",
+          },
+        ],
+      }),
+    ).toEqual({
+      resolved: [{ language: "fr-FR", sectionIndexes: [5] }],
+      unresolved: [],
+    });
+  });
+
+  it("resolves Digger-style VF entries", () => {
+    expect(
+      detectDubbingRegionFromWikitext({
+        wikipediaLanguage: "fr",
+        sections: [
+          {
+            index: 8,
+            heading: "Distribution",
+            wikitext: "VF : John Digger\nVF : Jeanne Actrice",
+          },
+        ],
+      }),
+    ).toEqual({
+      resolved: [{ language: "fr-FR", sectionIndexes: [8] }],
+      unresolved: [],
+    });
+  });
+
+  it("resolves isolated VF credits in a mixed original cast section", () => {
+    expect(
+      detectDubbingRegionFromWikitext({
+        wikipediaLanguage: "en",
+        sections: [
+          {
+            index: 9,
+            heading: "Cast",
+            wikitext: "Original voice cast: Actor One and Actor Two.\n* Hero — VF: Jean Dupont",
+          },
+        ],
+      }),
+    ).toEqual({
+      resolved: [{ language: "fr-FR", sectionIndexes: [9] }],
+      unresolved: [],
+    });
+  });
+
+  it("resolves separate VF and VQ sections independently", () => {
+    expect(
+      detectDubbingRegionFromWikitext({
+        wikipediaLanguage: "fr",
+        sections: [
+          { index: 3, heading: "Distribution", wikitext: "VF : Jean Dupont" },
+          {
+            index: 7,
+            heading: "Distribution",
+            wikitext: "VQ : Marie Tremblay",
+          },
+        ],
+      }),
+    ).toEqual({
+      resolved: [
         { language: "fr-CA", sectionIndexes: [7] },
         { language: "fr-FR", sectionIndexes: [3] },
+      ],
+      unresolved: [],
+    });
+  });
+
+  it("returns resolved regions alongside a separate unknown-market section", () => {
+    expect(
+      detectDubbingRegionFromWikitext({
+        wikipediaLanguage: "fr",
+        sections: [
+          { index: 3, heading: "Distribution", wikitext: "VF : Jean Dupont" },
+          {
+            index: 7,
+            heading: "Dubbing",
+            wikitext: "Japanese dub: Actor Name",
+          },
+        ],
+      }),
+    ).toEqual({
+      resolved: [{ language: "fr-FR", sectionIndexes: [3] }],
+      unresolved: [{ sectionIndexes: [7], reason: "ambiguous_region" }],
+    });
+  });
+
+  it("returns resolved regions alongside a separate unsupported-market section", () => {
+    expect(
+      detectDubbingRegionFromWikitext({
+        wikipediaLanguage: "es",
+        sections: [
+          { index: 3, heading: "Distribution", wikitext: "VF : Jean Dupont" },
+          {
+            index: 7,
+            heading: "Dubbing",
+            wikitext: "Argentine Spanish dubbing cast: Ana Pérez.",
+          },
+        ],
+      }),
+    ).toEqual({
+      resolved: [{ language: "fr-FR", sectionIndexes: [3] }],
+      unresolved: [
+        {
+          sectionIndexes: [7],
+          reason: "unsupported_region",
+          details: "Argentine Spanish",
+        },
       ],
     });
   });
 
-  it("resolves supported Belgian French and Mexican Spanish markers from content", () => {
+  it("marks a known unsupported Argentine market as unsupported_region", () => {
+    expect(
+      detectDubbingRegionFromWikitext({
+        wikipediaLanguage: "es",
+        sections: [
+          {
+            index: 4,
+            heading: "Dubbing",
+            wikitext: "Argentine Spanish dubbing cast: Ana Pérez.",
+          },
+        ],
+      }),
+    ).toEqual({
+      resolved: [],
+      unresolved: [
+        {
+          sectionIndexes: [4],
+          reason: "unsupported_region",
+          details: "Argentine Spanish",
+        },
+      ],
+    });
+  });
+
+  it("uses supported Belgian French and Mexican Spanish markers", () => {
     expect(
       detectDubbingRegionFromWikitext({
         wikipediaLanguage: "en",
         sections: [
           {
             index: 2,
-            heading: "Voice cast",
-            wikitext: "Belgian French dubbing cast: Jean Dupont.",
+            heading: "Cast",
+            wikitext: "Belgian French dubbing cast: Jean.",
           },
           {
             index: 3,
-            heading: "Voice cast",
-            wikitext: "Mexican Spanish dubbing cast: Ana Pérez.",
+            heading: "Cast",
+            wikitext: "Mexican Spanish dubbing cast: Ana.",
           },
         ],
       }),
     ).toEqual({
-      kind: "resolved",
-      regions: [
+      resolved: [
         { language: "es-MX", sectionIndexes: [3] },
         { language: "fr-BE", sectionIndexes: [2] },
       ],
+      unresolved: [],
     });
   });
 
-  it("resolves Brazilian and European Portuguese markers independently", () => {
+  it("resolves Brazilian and European Portuguese, Spain and LATAM Spanish", () => {
     expect(
       detectDubbingRegionFromWikitext({
         wikipediaLanguage: "pt",
         sections: [
           {
             index: 1,
-            heading: "Brazilian Portuguese dub",
-            wikitext: "Dublagem brasileira: Ana Silva.",
+            heading: "Cast",
+            wikitext: "Brazilian Portuguese dubbing: Ana.",
           },
           {
             index: 2,
-            heading: "Dublagem portuguesa",
-            wikitext: "European Portuguese dubbing: Rui Costa.",
+            heading: "Cast",
+            wikitext: "European Portuguese dubbing: Rui.",
+          },
+          { index: 3, heading: "Cast", wikitext: "Doblaje español: Luis." },
+          {
+            index: 4,
+            heading: "Cast",
+            wikitext: "LATAM Spanish dubbing: Maria.",
           },
         ],
       }),
     ).toEqual({
-      kind: "resolved",
-      regions: [
+      resolved: [
+        { language: "es-ES", sectionIndexes: [3] },
+        { language: "es-MX", sectionIndexes: [4] },
         { language: "pt-BR", sectionIndexes: [1] },
         { language: "pt-PT", sectionIndexes: [2] },
       ],
+      unresolved: [],
     });
   });
 
-  it("resolves Spain and Latin American Spanish markers independently", () => {
-    expect(
-      detectDubbingRegionFromWikitext({
-        wikipediaLanguage: "es",
-        sections: [
-          {
-            index: 5,
-            heading: "Doblaje español",
-            wikitext: "Doblaje español: Ana Pérez.",
-          },
-          {
-            index: 9,
-            heading: "LATAM",
-            wikitext: "LATAM Spanish dubbing: Luis García voices the hero.",
-          },
-        ],
-      }),
-    ).toEqual({
-      kind: "resolved",
-      regions: [
-        { language: "es-ES", sectionIndexes: [5] },
-        { language: "es-MX", sectionIndexes: [9] },
-      ],
-    });
-  });
-
-  it("returns ambiguous for credible dubbing evidence from a market it cannot map", () => {
-    expect(
-      detectDubbingRegionFromWikitext({
-        wikipediaLanguage: "es",
-        sections: [
-          {
-            index: 4,
-            heading: "Argentine dub",
-            wikitext: "Argentine Spanish dubbing cast: Ana Pérez.",
-          },
-        ],
-      }),
-    ).toEqual({
-      kind: "ambiguous",
-      sectionIndexes: [4],
-      reasons: ["unsupported_market"],
-    });
-  });
-
-  it("returns ambiguous when explicit dubbing evidence names an unknown market", () => {
-    expect(
-      detectDubbingRegionFromWikitext({
-        wikipediaLanguage: "en",
-        sections: [
-          {
-            index: 11,
-            heading: "Cast",
-            wikitext: "Japanese dub: Actor Name.",
-          },
-        ],
-      }),
-    ).toEqual({
-      kind: "ambiguous",
-      sectionIndexes: [11],
-      reasons: ["unspecified_market"],
-    });
-  });
-
-  it("uses explicit content evidence rather than the Wikipedia edition", () => {
+  it("uses content evidence rather than the Wikipedia edition", () => {
     expect(
       detectDubbingRegionFromWikitext({
         wikipediaLanguage: "fr",
         sections: [
           {
             index: 4,
-            heading: "Dubbing",
+            heading: "Cast",
             wikitext: "Brazilian Portuguese dub: Ana Silva.",
           },
         ],
       }),
     ).toEqual({
-      kind: "resolved",
-      regions: [{ language: "pt-BR", sectionIndexes: [4] }],
+      resolved: [{ language: "pt-BR", sectionIndexes: [4] }],
+      unresolved: [],
     });
   });
 
-  it("returns ambiguous when a section makes conflicting regional claims", () => {
+  it("returns ambiguous_region when one section claims conflicting supported regions", () => {
     expect(
       detectDubbingRegionFromWikitext({
         wikipediaLanguage: "en",
@@ -231,9 +336,14 @@ describe("detectDubbingRegionFromWikitext", () => {
         ],
       }),
     ).toEqual({
-      kind: "ambiguous",
-      sectionIndexes: [8],
-      reasons: ["conflicting_markets"],
+      resolved: [],
+      unresolved: [
+        {
+          sectionIndexes: [8],
+          reason: "ambiguous_region",
+          details: "Conflicting regional markers",
+        },
+      ],
     });
   });
 });

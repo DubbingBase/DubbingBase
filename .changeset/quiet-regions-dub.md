@@ -2,4 +2,4 @@
 "@app/website": patch
 ---
 
-Add deterministic evidence for regional dubbing sections from Wikipedia content.
+Classify regional dubbing evidence from Wikipedia credits and credit-shaped sections, preserving resolved and unresolved regions together.
