@@ -285,6 +285,48 @@ describe("POST /api/process-media-queue requester propagation", () => {
       "enqueue_media_extract",
       expect.objectContaining({ p_requested_by: requester }),
     );
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
+  });
+
+  it("reports malformed Wikipedia section metadata as one operational queue error", async () => {
+    routeMocks.checkMediaDubbingSections.mockResolvedValue({
+      ok: false,
+      title: "Test movie",
+      error: "Wikipedia returned an invalid section list response",
+      retryable: false,
+    });
+
+    await processQueue("check");
+
+    expect(routeMocks.rpc).toHaveBeenCalledWith(
+      "archive_media_queue_message_with_error",
+      expect.objectContaining({
+        p_queue_name: "wiki_check",
+        p_error: "Wikipedia returned an invalid section list response",
+      }),
+    );
+    expect(routeMocks.rpc).not.toHaveBeenCalledWith(
+      "archive_wiki_check_with_outcome",
+      expect.objectContaining({ p_archive_reason: "no_candidate_sections" }),
+    );
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledWith(
+      "Wikipedia Queue Error",
+      expect.stringContaining("invalid section list response"),
+      expect.objectContaining({ queue: "wiki_check", color: 0xed4245 }),
+    );
+  });
+
+  it("sends exactly one terminal notification for successful extraction", async () => {
+    await processQueue("extract");
+
+    expect(routeMocks.extractMediaDubbingCredits).toHaveBeenCalledTimes(1);
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledWith(
+      "Queue Item Processed [EN]",
+      expect.stringContaining("Successfully processed **Media 42**"),
+      expect.objectContaining({ queue: "wiki_extract" }),
+    );
   });
 
   it("archives ordinary cast candidates with metadata and one terminal notification", async () => {
@@ -368,6 +410,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
       }),
     );
     expect(routeMocks.rpc).not.toHaveBeenCalledWith("enqueue_media_extract", expect.anything());
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
   });
 
   it("retries a retryable Wikipedia API failure and sends one red error notification", async () => {
@@ -470,6 +513,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
         p_section_indexes: [5],
       }),
     );
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
   });
 
   it("does not treat an original voice cast as dubbing evidence", async () => {
@@ -491,6 +535,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
       expect.objectContaining({ p_archive_reason: "no_dubbing_evidence" }),
     );
     expect(routeMocks.rpc).not.toHaveBeenCalledWith("enqueue_media_extract", expect.anything());
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
   });
 
   it("routes generic game cast candidates through evidence classification", async () => {
@@ -515,6 +560,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
       expect.objectContaining({ p_archive_reason: "no_dubbing_evidence" }),
     );
     expect(routeMocks.rpc).not.toHaveBeenCalledWith("enqueue_media_extract", expect.anything());
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
   });
 
   it("archives an empty candidate result as no_candidate_sections", async () => {
@@ -560,6 +606,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
         p_section_indexes: [2],
       }),
     );
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
   });
 
   it("detects Kill Jackie-style inline VF beside the original cast", async () => {
@@ -581,6 +628,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
         p_section_indexes: [2],
       }),
     );
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
   });
 
   it("enqueues separable VF and VQ sections as independent regional jobs", async () => {
@@ -618,6 +666,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
         p_section_indexes: [3],
       }),
     );
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
     expect(routeMocks.rpc).toHaveBeenCalledWith(
       "enqueue_media_extract",
       expect.objectContaining({
@@ -815,6 +864,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
       "enqueue_media_extract",
       expect.objectContaining({ p_dubbing_language: "fr-CA" }),
     );
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
   });
 
   it("does not overwrite an explicit region when evidence points elsewhere", async () => {
@@ -832,6 +882,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
       }),
     );
     expect(routeMocks.rpc).not.toHaveBeenCalledWith("enqueue_media_extract", expect.anything());
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
     expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledWith(
       expect.stringContaining("Wikipedia Check Archived — Target Conflict"),
       expect.any(String),
@@ -854,6 +905,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
       }),
     );
     expect(routeMocks.rpc).not.toHaveBeenCalledWith("enqueue_media_extract", expect.anything());
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
     expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledWith(
       expect.stringContaining("Wikipedia Check Archived — Ambiguous Region"),
       expect.any(String),
@@ -876,6 +928,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
       }),
     );
     expect(routeMocks.rpc).not.toHaveBeenCalledWith("enqueue_media_extract", expect.anything());
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
     expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledWith(
       "Wikipedia Check Archived — Unsupported Region",
       expect.stringContaining("unsupported_region"),
@@ -895,5 +948,6 @@ describe("POST /api/process-media-queue requester propagation", () => {
     const enqueue = routeMocks.rpc.mock.calls.find(([name]) => name === "enqueue_media_extract");
     expect(enqueue).toBeDefined();
     expect(enqueue?.[1]).not.toHaveProperty("p_requested_by");
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
   });
 });

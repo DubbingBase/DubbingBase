@@ -69,6 +69,19 @@ function isTmdbCastMember(value: unknown): value is TmdbCastMember {
   );
 }
 
+function requireWikipediaSections(response: {
+  parse?: {
+    tocdata?: { sections?: Array<{ index: number; line: string }> };
+    sections?: Array<{ index: number; line: string }>;
+  };
+}): Array<{ index: number; line: string }> {
+  const sections = response.parse?.tocdata?.sections ?? response.parse?.sections;
+  if (!Array.isArray(sections)) {
+    throw new Error("Wikipedia returned an invalid section list response");
+  }
+  return sections;
+}
+
 /** Map a Wikipedia language code to a TMDB ISO 639-1 (-3166) code. */
 function tmdbLang(lang: string): string {
   if (lang === "simple") return "en";
@@ -259,8 +272,7 @@ export async function checkMediaDubbingSections(options: {
 
     const wikipediaPageSections = await wikipediaCache.getPageSections(pageId, wikipediaLanguage);
 
-    const sections =
-      wikipediaPageSections.parse?.tocdata?.sections || wikipediaPageSections.parse?.sections || [];
+    const sections = requireWikipediaSections(wikipediaPageSections);
 
     const sectionCandidates = await selectDubbingCandidateSections(sections);
     const matchedSectionIndexes = sectionCandidates.map((candidate) => candidate.index);
@@ -344,8 +356,7 @@ export async function checkGameDubbingSections(options: {
 
     const wikipediaPageSections = await wikipediaCache.getPageSections(pageId, wikipediaLanguage);
 
-    const sections =
-      wikipediaPageSections.parse?.tocdata?.sections || wikipediaPageSections.parse?.sections || [];
+    const sections = requireWikipediaSections(wikipediaPageSections);
 
     const sectionCandidates = await selectDubbingCandidateSections(sections);
     const matchedSectionIndexes = sectionCandidates.map((candidate) => candidate.index);
