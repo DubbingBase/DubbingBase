@@ -19,6 +19,22 @@ describe("detectDubbingRegionFromWikitext", () => {
     ).toEqual(noEvidence);
   });
 
+  it("does not infer an unsupported dubbing market from an actor's nationality", () => {
+    expect(
+      detectDubbingRegionFromWikitext({
+        wikipediaLanguage: "es",
+        sections: [
+          {
+            index: 11,
+            heading: "Distribution",
+            wikitext:
+              '{| class="wikitable"\n| Character || Actor\n| Hero || Ana Pérez (Argentine actress)\n|}',
+          },
+        ],
+      }),
+    ).toEqual(noEvidence);
+  });
+
   it("ignores an explicitly original voice cast", () => {
     expect(
       detectDubbingRegionFromWikitext({
@@ -241,6 +257,25 @@ describe("detectDubbingRegionFromWikitext", () => {
           details: "Argentine Spanish",
         },
       ],
+    });
+  });
+
+  it("does not mistake an actor's nationality for an unsupported dubbing market", () => {
+    expect(
+      detectDubbingRegionFromWikitext({
+        wikipediaLanguage: "es",
+        sections: [
+          {
+            index: 5,
+            heading: "Dubbing",
+            wikitext:
+              '{| class="wikitable"\n| Character || Actor\n| Hero || Ana Pérez (Argentine actress)\n|}',
+          },
+        ],
+      }),
+    ).toEqual({
+      resolved: [],
+      unresolved: [{ sectionIndexes: [5], reason: "ambiguous_region" }],
     });
   });
 
