@@ -9,7 +9,9 @@ DECLARE
   v_existing_check_id bigint;
   v_extract_msg_id bigint;
   v_requested_by uuid := '11111111-1111-4111-8111-111111111111';
+  v_archive_mutated boolean := false;
   v_duplicate_blocked boolean := false;
+  v_constraint_name text;
 BEGIN
   IF EXISTS (
     SELECT 1
@@ -26,6 +28,11 @@ BEGIN
     WHERE (message->>'tmdb_id')::bigint = ANY (ARRAY[1492640, 284558, 977942, 1248832]::bigint[])
   ) THEN
     RAISE EXCEPTION 'Legacy review fixture IDs already have active wiki_check jobs';
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM pgmq.q_wiki_extract WHERE message->>'tmdb_id' = '-1492640')
+    OR EXISTS (SELECT 1 FROM public.dubbing_projects WHERE content_id = -11492640) THEN
+    RAISE EXCEPTION 'Synthetic extract or project uniqueness fixture IDs are already present';
   END IF;
 
   FOREACH v_target_id IN ARRAY ARRAY[1492640, 284558, 977942, 1248832]::bigint[] LOOP
@@ -55,15 +62,21 @@ BEGIN
     p_wikipedia_language => 'en'
   );
 
+  CREATE TEMP TABLE legacy_review_archive_snapshot AS
+    SELECT msg_id, message
+    FROM pgmq.a_wiki_check
+    WHERE message->>'review_needed' = 'true'
+      AND (message->>'tmdb_id')::bigint = ANY (ARRAY[1492640, 284558, 977942, 1248832]::bigint[]);
+
   IF (SELECT count(*) FROM public.reprocess_legacy_wiki_check_reviews()) <> 4 THEN
     RAISE EXCEPTION 'Expected one outcome per legacy review item';
   END IF;
 
   IF NOT EXISTS (
-    SELECT 1 FROM pgmq.a_wiki_check
-    WHERE message->>'tmdb_id' = '1492640'
-      AND message->'legacy_review_reprocess'->>'outcome' = 'already_enqueued'
-      AND message->'legacy_review_reprocess'->>'queued_msg_id' = v_existing_check_id::text
+    SELECT 1 FROM public.legacy_wiki_check_reprocesses
+    WHERE tmdb_id = 1492640
+      AND outcome = 'already_enqueued'
+      AND queued_msg_id = v_existing_check_id
   ) THEN
     RAISE EXCEPTION 'Existing active check was not recorded as already_enqueued';
   END IF;
@@ -97,10 +110,49 @@ BEGIN
     RAISE EXCEPTION 'Repeated operation did not return the idempotent outcome';
   END IF;
 
-  IF (SELECT count(*) FROM pgmq.a_wiki_check WHERE message->>'review_needed' = 'true'
-        AND message ? 'legacy_review_reprocess'
-        AND (message->>'tmdb_id')::bigint = ANY (ARRAY[1492640, 284558, 977942, 1248832]::bigint[])) <> 4 THEN
-    RAISE EXCEPTION 'Archived legacy history was deleted or lost its marker';
+  IF EXISTS (
+    SELECT 1
+    FROM legacy_review_archive_snapshot AS s
+    FULL JOIN pgmq.a_wiki_check AS a USING (msg_id)
+    WHERE s.message IS DISTINCT FROM a.message
+  ) THEN
+    v_archive_mutated := true;
+  END IF;
+
+  IF v_archive_mutated THEN
+    RAISE EXCEPTION 'Archived legacy payload was changed by reprocessing';
+  END IF;
+
+  IF (SELECT count(*) FROM public.legacy_wiki_check_reprocesses
+      WHERE tmdb_id = ANY (ARRAY[1492640, 284558, 977942, 1248832]::bigint[])) <> 4 THEN
+    RAISE EXCEPTION 'Expected one separate ledger entry per archived legacy item';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.dubbing_projects'::regclass
+      AND conname = 'dubbing_projects_media_region_key'
+      AND contype = 'u'
+  ) THEN
+    RAISE EXCEPTION 'Authoritative media+region project uniqueness constraint is missing';
+  END IF;
+
+  INSERT INTO public.dubbing_projects(content_id, content_type, language)
+  VALUES (-11492640, 'movie', 'fr-FR');
+
+  BEGIN
+    INSERT INTO public.dubbing_projects(content_id, content_type, language)
+    VALUES (-11492640, 'movie', 'fr-FR');
+  EXCEPTION WHEN unique_violation THEN
+    GET STACKED DIAGNOSTICS v_constraint_name = CONSTRAINT_NAME;
+    IF v_constraint_name <> 'dubbing_projects_media_region_key' THEN
+      RAISE EXCEPTION 'Duplicate project was rejected by unexpected constraint %', v_constraint_name;
+    END IF;
+    v_duplicate_blocked := true;
+  END;
+
+  IF NOT v_duplicate_blocked THEN
+    RAISE EXCEPTION 'The database allowed a duplicate project for the same media and region';
   END IF;
 
   v_extract_msg_id := public.enqueue_media_extract(
@@ -113,6 +165,7 @@ BEGIN
     p_dubbing_language => 'fr-FR'
   );
 
+  v_duplicate_blocked := false;
   BEGIN
     PERFORM public.enqueue_media_extract(
       p_tmdb_id => -1492640,
@@ -137,6 +190,7 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pgmq.q_wiki_extract WHERE msg_id = v_extract_msg_id) THEN
     RAISE EXCEPTION 'The original extraction job was not preserved';
   END IF;
+
 END;
 $$;
 
