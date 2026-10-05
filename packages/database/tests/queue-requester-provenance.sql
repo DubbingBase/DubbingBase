@@ -13,7 +13,7 @@ BEGIN
     OR to_regprocedure('public.resume_wiki_check_for_regional_review(bigint,text)') IS NOT NULL
     OR to_regprocedure('public.get_regional_review_queue_items(integer)') IS NOT NULL
     OR to_regprocedure('public.get_regional_review_queue_items(integer,integer)') IS NOT NULL THEN
-    RAISE EXCEPTION 'The removed regional queue workflow is still installed';
+    RAISE EXCEPTION 'Retired queue RPCs are still installed';
   END IF;
 
   IF has_function_privilege('anon', 'public.get_media_queue_items(text,text,integer,integer)', 'EXECUTE')

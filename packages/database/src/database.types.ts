@@ -643,10 +643,6 @@ export type Database = {
         Args: { p_msg_ids: number[]; p_queue_name: string };
         Returns: number;
       };
-      archive_wiki_check_for_regional_review: {
-        Args: { p_msg_id: number; p_review_note: string };
-        Returns: boolean;
-      };
       archive_wiki_check_with_outcome: {
         Args: {
           p_archive_details: string;
@@ -764,26 +760,6 @@ export type Database = {
           user_name: string;
         }[];
       };
-      get_regional_review_queue_items: {
-        Args: { p_limit?: number; p_offset?: number };
-        Returns: {
-          created_at: string;
-          dubbing_language: string;
-          episode_number: number;
-          error_message: string;
-          id: number;
-          is_manual: boolean;
-          media_type: string;
-          queue_name: string;
-          read_ct: number;
-          requested_by: string;
-          review_note: string;
-          season_number: number;
-          status: string;
-          tmdb_id: number;
-          wikipedia_language: string;
-        }[];
-      };
       get_top_contributors: {
         Args: { limit_param?: number };
         Returns: {
@@ -877,10 +853,6 @@ export type Database = {
           read_ct: number;
           vt: string;
         }[];
-      };
-      resume_wiki_check_for_regional_review: {
-        Args: { p_dubbing_language: string; p_msg_id: number };
-        Returns: boolean;
       };
       save_regional_project_actor_assignments: {
         Args: {
