@@ -58,11 +58,26 @@ const EXPLICIT_DUBBING_HEADING =
   /\b(?:dubbing|dubbed|doublage|doblaje|dublagem|doppiaggio|synchronsprecher)\b|吹き替え/i;
 
 const UNSUPPORTED_MARKETS: Array<{ marker: RegExp; label: string }> = [
-  { marker: /\bargentin(?:e|a)\b/i, label: "Argentine Spanish" },
-  { marker: /\bchilean\b/i, label: "Chilean Spanish" },
-  { marker: /\bcolombian\b/i, label: "Colombian Spanish" },
-  { marker: /\bvenezuelan\b/i, label: "Venezuelan Spanish" },
-  { marker: /\bperuvian\b/i, label: "Peruvian Spanish" },
+  {
+    marker: /\bargentin(?:e|ian|a)\s+(?:spanish\s+)?(?:dub(?:bing|bed|s)?|version)\b/i,
+    label: "Argentine Spanish",
+  },
+  {
+    marker: /\bchilean\s+(?:spanish\s+)?(?:dub(?:bing|bed|s)?|version)\b/i,
+    label: "Chilean Spanish",
+  },
+  {
+    marker: /\bcolombian\s+(?:spanish\s+)?(?:dub(?:bing|bed|s)?|version)\b/i,
+    label: "Colombian Spanish",
+  },
+  {
+    marker: /\bvenezuelan\s+(?:spanish\s+)?(?:dub(?:bing|bed|s)?|version)\b/i,
+    label: "Venezuelan Spanish",
+  },
+  {
+    marker: /\bperuvian\s+(?:spanish\s+)?(?:dub(?:bing|bed|s)?|version)\b/i,
+    label: "Peruvian Spanish",
+  },
 ];
 
 function normalizeWikitext(value: string): string {
