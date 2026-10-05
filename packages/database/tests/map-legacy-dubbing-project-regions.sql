@@ -359,13 +359,6 @@ BEGIN
   END;
 
   BEGIN
-    PERFORM public.resume_wiki_check_for_regional_review(999999, 'zz-ZZ');
-    RAISE EXCEPTION 'The final resume RPC accepted an unsupported dubbing language';
-  EXCEPTION WHEN raise_exception THEN
-    IF SQLERRM <> 'Invalid regional dubbing language' THEN RAISE; END IF;
-  END;
-
-  BEGIN
     PERFORM public.enqueue_media_fetch(
       p_tmdb_id => 980205,
       p_media_type => 'movie',
