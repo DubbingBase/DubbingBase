@@ -324,16 +324,11 @@ export async function selectDubbingCandidateSections(
   return candidates;
 }
 
-/** @deprecated Use selectDubbingCandidateSections; candidates do not prove dubbing exists. */
+/** @deprecated Use selectDubbingCandidateSections; this compatibility helper returns candidates. */
 export async function selectDubbingSections(
   sections: Array<{ index: number | string; line: string }>,
 ): Promise<string[]> {
-  if (!sections || sections.length === 0) return [];
-  return sections
-    .filter(
-      (section) => section?.line && DUBBING_SECTION_REGEX.test(cleanHeadingText(section.line)),
-    )
-    .map(({ index }) => String(index));
+  return (await selectDubbingCandidateSections(sections)).map(({ index }) => String(index));
 }
 
 /**
