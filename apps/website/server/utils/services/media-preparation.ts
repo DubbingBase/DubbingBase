@@ -265,10 +265,6 @@ export async function checkMediaDubbingSections(options: {
     const sectionCandidates = await selectDubbingCandidateSections(sections);
     const matchedSectionIndexes = sectionCandidates.map((candidate) => candidate.index);
 
-    if (matchedSectionIndexes.length === 0) {
-      throw new Error(`No voice actor / dubbing sections found on Wikipedia page: ${wikiPageUrl}`);
-    }
-
     return {
       ok: true,
       title: mediaTitle,
@@ -353,10 +349,6 @@ export async function checkGameDubbingSections(options: {
 
     const sectionCandidates = await selectDubbingCandidateSections(sections);
     const matchedSectionIndexes = sectionCandidates.map((candidate) => candidate.index);
-
-    if (matchedSectionIndexes.length === 0) {
-      throw new Error(`No voice actor / dubbing sections found on Wikipedia page: ${wikiPageUrl}`);
-    }
 
     return {
       ok: true,

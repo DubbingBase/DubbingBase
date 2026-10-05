@@ -647,6 +647,16 @@ export type Database = {
         Args: { p_msg_id: number; p_review_note: string };
         Returns: boolean;
       };
+      archive_wiki_check_with_outcome: {
+        Args: {
+          p_archive_details: string;
+          p_archive_reason: string;
+          p_candidate_sections: Json;
+          p_detected_regions: Json;
+          p_msg_id: number;
+        };
+        Returns: boolean;
+      };
       clear_media_queue: { Args: never; Returns: boolean };
       delay_media_queue_message: {
         Args: {

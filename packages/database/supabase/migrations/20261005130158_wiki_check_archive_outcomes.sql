@@ -15,6 +15,7 @@ DECLARE
 BEGIN
   IF p_archive_reason NOT IN (
     'extraction_enqueued',
+    'adult_content_excluded',
     'no_candidate_sections',
     'no_dubbing_evidence',
     'ambiguous_region',
