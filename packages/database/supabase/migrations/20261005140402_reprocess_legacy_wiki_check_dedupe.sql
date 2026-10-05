@@ -335,6 +335,7 @@ BEGIN
       tmdb_id := v_target_id;
       archived_msg_id := v_archive.msg_id;
       outcome := v_outcome;
+      queued_msg_id := v_queue_msg_id;
       RETURN NEXT;
     END LOOP;
 

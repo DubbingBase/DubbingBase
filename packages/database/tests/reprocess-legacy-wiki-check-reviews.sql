@@ -68,8 +68,32 @@ BEGIN
     WHERE message->>'review_needed' = 'true'
       AND (message->>'tmdb_id')::bigint = ANY (ARRAY[1492640, 284558, 977942, 1248832]::bigint[]);
 
-  IF (SELECT count(*) FROM public.reprocess_legacy_wiki_check_reviews()) <> 4 THEN
+  CREATE TEMP TABLE legacy_review_first_results AS
+    SELECT * FROM public.reprocess_legacy_wiki_check_reviews();
+
+  IF (SELECT count(*) FROM legacy_review_first_results) <> 4 THEN
     RAISE EXCEPTION 'Expected one outcome per legacy review item';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM legacy_review_first_results AS result
+    LEFT JOIN public.legacy_wiki_check_reprocesses AS ledger
+      ON ledger.archived_msg_id = result.archived_msg_id
+    WHERE result.queued_msg_id IS NULL
+      OR result.queued_msg_id IS DISTINCT FROM ledger.queued_msg_id
+  ) THEN
+    RAISE EXCEPTION 'Reprocess RPC did not return the queue ID recorded for every archived item';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM legacy_review_first_results
+    WHERE tmdb_id = 1492640
+      AND outcome = 'already_enqueued'
+      AND queued_msg_id = v_existing_check_id
+  ) THEN
+    RAISE EXCEPTION 'Reprocess RPC did not return the existing active check queue ID';
   END IF;
 
   IF NOT EXISTS (
@@ -106,8 +130,22 @@ BEGIN
     RAISE EXCEPTION 'Requeued item was forced to a dubbing region';
   END IF;
 
-  IF (SELECT count(*) FROM public.reprocess_legacy_wiki_check_reviews() WHERE outcome = 'already_reprocessed') <> 4 THEN
+  CREATE TEMP TABLE legacy_review_repeat_results AS
+    SELECT * FROM public.reprocess_legacy_wiki_check_reviews();
+
+  IF (SELECT count(*) FROM legacy_review_repeat_results WHERE outcome = 'already_reprocessed') <> 4 THEN
     RAISE EXCEPTION 'Repeated operation did not return the idempotent outcome';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM legacy_review_repeat_results AS result
+    LEFT JOIN public.legacy_wiki_check_reprocesses AS ledger
+      ON ledger.archived_msg_id = result.archived_msg_id
+    WHERE result.queued_msg_id IS NULL
+      OR result.queued_msg_id IS DISTINCT FROM ledger.queued_msg_id
+  ) THEN
+    RAISE EXCEPTION 'Repeated reprocess RPC did not return the original queue IDs';
   END IF;
 
   IF EXISTS (
