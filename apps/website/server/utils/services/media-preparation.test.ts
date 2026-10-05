@@ -80,6 +80,42 @@ describe("checkMediaDubbingSections", () => {
       }),
     );
   });
+
+  it("surfaces an all-malformed Wikipedia section array as a non-retryable error", async () => {
+    vi.stubGlobal("useRuntimeConfig", () => ({ tmdbApiKey: "test-key" }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        const body = url.includes("api.themoviedb.org")
+          ? { title: "Example", external_ids: { wikidata_id: "Q42" } }
+          : url.includes("wikidata.org/w/api.php")
+            ? { entities: { Q42: { sitelinks: { enwiki: { title: "Example" } } } } }
+            : url.includes("action=query")
+              ? { query: { pages: { "1": { pageid: 1 } } } }
+              : { parse: { tocdata: { sections: [{}, { line: "Cast" }] } } };
+        return new Response(JSON.stringify(body), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }),
+    );
+
+    await expect(
+      checkMediaDubbingSections({
+        tmdbId: 42,
+        type: "movie",
+        wikipediaLanguage: "en",
+        cache: new SimpleCache(() => null),
+      }),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        ok: false,
+        error: expect.stringContaining("invalid section list"),
+        retryable: false,
+      }),
+    );
+  });
 });
 
 describe("provider request diagnostics", () => {

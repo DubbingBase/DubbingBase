@@ -95,10 +95,20 @@ function parseWikipediaSections(value: unknown): WikipediaSectionsResponse {
   const parse = root.parse;
   const parseSections = (value: unknown): WikipediaSection[] | undefined => {
     if (!Array.isArray(value)) return undefined;
-    return value.flatMap((section) => {
-      if (!isJsonObject(section) || typeof section.line !== "string") return [];
+    return value.map((section) => {
+      if (
+        !isJsonObject(section) ||
+        typeof section.line !== "string" ||
+        (typeof section.index !== "number" && typeof section.index !== "string") ||
+        (typeof section.index === "string" && section.index.trim() === "")
+      ) {
+        throw new Error("Wikipedia returned an invalid section list response");
+      }
       const index = typeof section.index === "number" ? section.index : Number(section.index);
-      return Number.isInteger(index) ? [{ index, line: section.line }] : [];
+      if (!Number.isInteger(index)) {
+        throw new Error("Wikipedia returned an invalid section list response");
+      }
+      return { index, line: section.line };
     });
   };
   const tocdata = isJsonObject(parse.tocdata) ? parse.tocdata : undefined;
