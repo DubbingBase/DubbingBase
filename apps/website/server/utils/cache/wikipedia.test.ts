@@ -74,6 +74,17 @@ describe("Wikipedia cache policies", () => {
     expect(reads).toBe(1);
     expect(writes).toBe(1);
   });
+
+  it("rejects a section response containing only malformed sections", async () => {
+    vi.stubGlobal(
+      "fetch",
+      async () =>
+        new Response(JSON.stringify({ parse: { tocdata: { sections: [{}, { line: "Cast" }] } } })),
+    );
+    const cache = new WikipediaCache(new SimpleCache(() => null));
+
+    await expect(cache.getPageSections(1, "en")).rejects.toThrow("invalid section list response");
+  });
 });
 
 describe("isDubbingSectionHeading", () => {
