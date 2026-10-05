@@ -158,13 +158,13 @@ describe("selectDubbingCandidateSections", () => {
 });
 
 describe("selectDubbingSections compatibility", () => {
-  it("preserves the legacy strict detector until callers migrate", async () => {
+  it("forwards generic headings as candidates to legacy callers", async () => {
     await expect(
       selectDubbingSections([
         { index: 1, line: "Reparto" },
         { index: 2, line: "Reparto de doblaje" },
       ]),
-    ).resolves.toEqual(["2"]);
+    ).resolves.toEqual(["1", "2"]);
   });
 });
 

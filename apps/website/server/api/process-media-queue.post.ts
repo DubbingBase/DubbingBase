@@ -285,15 +285,25 @@ export default defineEventHandler(async (event) => {
 
       if (!payload) {
         const errorMessage = "Malformed message payload: missing tmdb_id or invalid media_type";
-        await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
-          p_queue_name: targetQueue,
-          p_msg_id: msgId,
-          p_error: errorMessage,
-        });
+        const { data: archived, error: archiveError } = await supabaseAdmin.rpc(
+          "archive_media_queue_message_with_error",
+          {
+            p_queue_name: targetQueue,
+            p_msg_id: msgId,
+            p_error: errorMessage,
+          },
+        );
         if (targetQueue === "wiki_check") {
+          const archiveState = archiveError
+            ? `archiving failed: ${archiveError.message}; item remains subject to queue visibility timeout`
+            : archived === false
+              ? "archive RPC reported that the item was not archived; visibility timeout permits retry"
+              : archived === true
+                ? "item archived as a non-retryable error"
+                : "archive state was not confirmed; visibility timeout permits retry";
           await sendDiscordAdminNotification(
             "Wikipedia Queue Error",
-            `TMDB ID: unavailable\nWikipedia language: unknown\nQueue: wiki_check\nOperation: validate queue payload\nError: ${errorMessage}\nAction: item archived as a non-retryable error.`,
+            `TMDB ID: unavailable\nWikipedia language: unknown\nQueue: wiki_check\nOperation: validate queue payload\nError: ${errorMessage}${archiveError ? `\nArchive error: ${archiveError.message}` : ""}\nAction: ${archiveState}.`,
             { event, queue: "wiki_check", color: 0xed4245 },
           );
         }
@@ -313,7 +323,11 @@ export default defineEventHandler(async (event) => {
 
       const results: QueueItemResult[] = [];
       let mediaTitle = payload.title || `Media ${payload.tmdb_id}`;
-      const deferForRetry = async (errorMsg: string, delaySeconds = 60) => {
+      const deferForRetry = async (
+        errorMsg: string,
+        delaySeconds = 60,
+        context?: { operation?: string; details?: string },
+      ) => {
         const { error } = await supabaseAdmin.rpc("delay_media_queue_message", {
           p_queue_name: targetQueue,
           p_msg_id: msgId,
@@ -326,7 +340,7 @@ export default defineEventHandler(async (event) => {
           const wikipediaLanguage = payload.wikipedia_language || payload.language || "unknown";
           await sendDiscordAdminNotification(
             "Wikipedia Queue Error",
-            `Media: **${mediaTitle}** (${payload.media_type}, TMDB ${payload.tmdb_id})\nWikipedia language: ${wikipediaLanguage}\nQueue: wiki_check\nOperation: process Wikipedia check\nError: ${errorMsg}${error ? `\nRetry scheduling error: ${error.message}` : ""}\nAction: ${error ? "retry scheduling failed" : `retry scheduled in ${delaySeconds} seconds`}.`,
+            `Media: **${mediaTitle}** (${payload.media_type}, TMDB ${payload.tmdb_id})\nWikipedia language: ${wikipediaLanguage}\nQueue: wiki_check\nOperation: ${context?.operation ?? "process Wikipedia check"}\nError: ${errorMsg}${context?.details ? `\n${context.details}` : ""}${error ? `\nRetry scheduling error: ${error.message}` : ""}\nAction: ${error ? "retry scheduling failed" : `retry scheduled in ${delaySeconds} seconds`}.`,
             { event, queue: "wiki_check", color: 0xed4245 },
           );
         }
@@ -562,21 +576,37 @@ export default defineEventHandler(async (event) => {
         if (!valid.ok) {
           const errMsg = `Broken queue element: ${valid.reason}`;
           const wikipediaLanguage = payload.wikipedia_language || payload.language || "unknown";
-          await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
-            p_queue_name: targetQueue,
-            p_msg_id: msgId,
-            p_error: errMsg,
-          });
+          const { data: archived, error: archiveError } = await supabaseAdmin.rpc(
+            "archive_media_queue_message_with_error",
+            {
+              p_queue_name: targetQueue,
+              p_msg_id: msgId,
+              p_error: errMsg,
+            },
+          );
+          const archiveState = archiveError
+            ? `archiving failed: ${archiveError.message}; visibility timeout permits retry`
+            : archived === false
+              ? "archive RPC reported that the item was not archived; visibility timeout permits retry"
+              : archived === true
+                ? "item archived as a non-retryable error"
+                : "archive state was not confirmed; visibility timeout permits retry";
           results.push({ id: msgId, ok: false, changes: 0, error: errMsg });
           await sendDiscordAdminNotification(
             "Wikipedia Queue Error",
-            `Media: **${mediaTitle}** (${payload.media_type}, TMDB ${payload.tmdb_id})\nWikipedia language: ${wikipediaLanguage}\nQueue: wiki_check\nOperation: validate queue payload\nError: ${errMsg}\nAction: item archived as a non-retryable error.`,
+            `Media: **${mediaTitle}** (${payload.media_type}, TMDB ${payload.tmdb_id})\nWikipedia language: ${wikipediaLanguage}\nQueue: wiki_check\nOperation: validate queue payload\nError: ${errMsg}${archiveError ? `\nArchive error: ${archiveError.message}` : ""}\nAction: ${archiveState}.`,
             { event, queue: "wiki_check", color: 0xed4245 },
           );
           return { ok: true, processed: 1, results, queue: targetQueue };
         }
         const wikipediaLanguage = valid.value.wikipediaLanguage;
         let operation = "fetch Wikipedia page and headings";
+        let enqueueRegionResults: Array<{
+          language: string;
+          sectionIndexes: number[];
+          status: "enqueued" | "already_queued" | "failed";
+          details?: string;
+        }> = [];
         try {
           let checkResult: CheckSectionsResult;
 
@@ -636,11 +666,21 @@ export default defineEventHandler(async (event) => {
             const errorMsg =
               checkResult.error || "Wikipedia check returned an invalid page response.";
             if (checkResult.retryable) return deferForRetry(errorMsg);
-            await supabaseAdmin.rpc("archive_media_queue_message_with_error", {
-              p_queue_name: targetQueue,
-              p_msg_id: msgId,
-              p_error: errorMsg,
-            });
+            const { data: archived, error: archiveError } = await supabaseAdmin.rpc(
+              "archive_media_queue_message_with_error",
+              {
+                p_queue_name: targetQueue,
+                p_msg_id: msgId,
+                p_error: errorMsg,
+              },
+            );
+            const archiveState = archiveError
+              ? `archiving failed: ${archiveError.message}; visibility timeout permits retry`
+              : archived === false
+                ? "archive RPC reported that the item was not archived; visibility timeout permits retry"
+                : archived === true
+                  ? "item archived as a non-retryable error"
+                  : "archive state was not confirmed; visibility timeout permits retry";
             results.push({ id: msgId, ok: false, changes: 0, error: errorMsg });
             await sendDiscordAdminNotification(
               "Wikipedia Queue Error",
@@ -654,7 +694,10 @@ export default defineEventHandler(async (event) => {
                 wikipediaLanguage +
                 "\nQueue: wiki_check\nOperation: resolve Wikipedia page and candidate sections\nError: " +
                 errorMsg +
-                "\nAction: item archived as a non-retryable error.",
+                (archiveError ? "\nArchive error: " + archiveError.message : "") +
+                "\nAction: " +
+                archiveState +
+                ".",
               { event, queue: "wiki_check", color: 0xed4245 },
             );
             return { ok: true, processed: 1, results, queue: targetQueue };
@@ -841,23 +884,70 @@ export default defineEventHandler(async (event) => {
           }
           operation = "enqueue wiki_extract jobs";
           for (const target of disposition.targets) {
-            const { error: extractEnqueueErr } = await supabaseAdmin.rpc("enqueue_media_extract", {
-              p_tmdb_id: payload.tmdb_id,
-              p_media_type: payload.media_type,
-              p_language: wikipediaLanguage,
-              p_wikipedia_language: wikipediaLanguage,
-              p_dubbing_language: target.dubbingLanguage,
-              p_page_id: checkResult.pageId,
-              p_section_indexes: target.sectionIndexes,
-              p_season_number: payload.season_number ?? undefined,
-              p_episode_number: payload.episode_number ?? undefined,
-              p_is_manual: payload.is_manual ?? false,
-              ...queueRequesterRpcArgs(valid.value.requestedBy),
-            });
+            try {
+              const { error: extractEnqueueErr } = await supabaseAdmin.rpc(
+                "enqueue_media_extract",
+                {
+                  p_tmdb_id: payload.tmdb_id,
+                  p_media_type: payload.media_type,
+                  p_language: wikipediaLanguage,
+                  p_wikipedia_language: wikipediaLanguage,
+                  p_dubbing_language: target.dubbingLanguage,
+                  p_page_id: checkResult.pageId,
+                  p_section_indexes: target.sectionIndexes,
+                  p_season_number: payload.season_number ?? undefined,
+                  p_episode_number: payload.episode_number ?? undefined,
+                  p_is_manual: payload.is_manual ?? false,
+                  ...queueRequesterRpcArgs(valid.value.requestedBy),
+                },
+              );
 
-            if (extractEnqueueErr && !extractEnqueueErr.message?.includes("already in the")) {
-              throw new Error(`Failed to enqueue to wiki_extract: ${extractEnqueueErr.message}`);
+              if (extractEnqueueErr) {
+                if (extractEnqueueErr.message?.includes("already in the")) {
+                  enqueueRegionResults.push({
+                    language: target.dubbingLanguage,
+                    sectionIndexes: target.sectionIndexes,
+                    status: "already_queued",
+                  });
+                } else {
+                  enqueueRegionResults.push({
+                    language: target.dubbingLanguage,
+                    sectionIndexes: target.sectionIndexes,
+                    status: "failed",
+                    details: extractEnqueueErr.message,
+                  });
+                }
+              } else {
+                enqueueRegionResults.push({
+                  language: target.dubbingLanguage,
+                  sectionIndexes: target.sectionIndexes,
+                  status: "enqueued",
+                });
+              }
+            } catch (error) {
+              enqueueRegionResults.push({
+                language: target.dubbingLanguage,
+                sectionIndexes: target.sectionIndexes,
+                status: "failed",
+                details: getErrorMessage(error),
+              });
             }
+          }
+
+          const failedEnqueues = enqueueRegionResults.filter(
+            (result) => result.status === "failed",
+          );
+          if (failedEnqueues.length > 0) {
+            const error = new Error(
+              failedEnqueues
+                .map(
+                  (result) =>
+                    `${result.language} section(s) ${result.sectionIndexes.join(", ")}: ${result.details}`,
+                )
+                .join("; "),
+            );
+            error.name = "RetryableQueueItemError";
+            throw error;
           }
 
           operation = "archive terminal wiki_check outcome";
@@ -940,11 +1030,22 @@ export default defineEventHandler(async (event) => {
           const errMsg = getErrorMessage(err);
           console.error(`[QUEUE] Error checking sections for message ${msgId}:`, errMsg);
 
-          if (isRetryableMediaRequestError(err)) {
-            return deferForRetry(errMsg);
+          if (
+            isRetryableMediaRequestError(err) ||
+            (err instanceof Error && err.name === "RetryableQueueItemError")
+          ) {
+            return deferForRetry(errMsg, 60, {
+              operation,
+              details: `Extraction enqueue results:\n${enqueueRegionResults
+                .map(
+                  (result) =>
+                    `- ${result.language} section(s) ${result.sectionIndexes.join(", ")}: ${result.status}${result.details ? ` — ${result.details}` : ""}`,
+                )
+                .join("\n")}`,
+            });
           }
 
-          const { error: archiveError } = await supabaseAdmin.rpc(
+          const { data: archived, error: archiveError } = await supabaseAdmin.rpc(
             "archive_media_queue_message_with_error",
             {
               p_queue_name: targetQueue,
@@ -952,12 +1053,19 @@ export default defineEventHandler(async (event) => {
               p_error: errMsg,
             },
           );
+          const archiveState = archiveError
+            ? `archiving failed: ${archiveError.message}; queue visibility timeout will permit a later retry`
+            : archived === false
+              ? "archive RPC reported that the item was not archived; queue visibility timeout will permit a later retry"
+              : archived === true
+                ? "item archived as a non-retryable error"
+                : "archive state was not confirmed; queue visibility timeout will permit a later retry";
 
           results.push({ id: msgId, ok: false, changes: 0, error: errMsg });
 
           await sendDiscordAdminNotification(
             "Wikipedia Queue Error",
-            `Media: **${mediaTitle}** (${payload.media_type}, TMDB ${payload.tmdb_id})\nWikipedia language: ${wikipediaLanguage}\nQueue: wiki_check\nOperation: ${operation}\nError: ${errMsg}${archiveError ? `\nArchive error: ${archiveError.message}` : ""}\nAction: ${archiveError ? "archiving failed; queue visibility timeout will permit a later retry" : "item archived as a non-retryable error"}.`,
+            `Media: **${mediaTitle}** (${payload.media_type}, TMDB ${payload.tmdb_id})\nWikipedia language: ${wikipediaLanguage}\nQueue: wiki_check\nOperation: ${operation}\nError: ${errMsg}${enqueueRegionResults.length ? `\nExtraction enqueue results:\n${enqueueRegionResults.map((result) => `- ${result.language} section(s) ${result.sectionIndexes.join(", ")}: ${result.status}${result.details ? ` — ${result.details}` : ""}`).join("\n")}` : ""}${archiveError ? `\nArchive error: ${archiveError.message}` : ""}\nAction: ${archiveState}.`,
             { event, queue: "wiki_check", color: 0xed4245 },
           );
 

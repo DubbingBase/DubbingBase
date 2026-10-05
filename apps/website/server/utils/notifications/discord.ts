@@ -1,9 +1,7 @@
 import type { H3Event } from "h3";
 
-export type QueueName =
-  "wiki_discovery" | "wiki_check" | "wiki_extract" | string;
-export type DiscordNotificationCategory =
-  "general" | "discovery" | "check" | "extract";
+export type QueueName = "wiki_discovery" | "wiki_check" | "wiki_extract" | string;
+export type DiscordNotificationCategory = "general" | "discovery" | "check" | "extract";
 
 export interface DiscordWebhookOptions {
   queue?: QueueName;
@@ -15,16 +13,20 @@ export interface DiscordWebhookOptions {
 }
 
 function getDiscordWebhookUrls(queue?: string, event?: H3Event): string[] {
-  let config: any;
+  let config: unknown;
   try {
     config = event ? useRuntimeConfig(event) : useRuntimeConfig();
   } catch {
     config = useRuntimeConfig();
   }
+  const configValue = (key: string): unknown => {
+    if (typeof config !== "object" || config === null) return undefined;
+    return Reflect.get(config, key);
+  };
   const cfEnv = event?.context?.cloudflare?.env;
   const targetUrls = new Set<string>();
 
-  const addUrls = (raw: string | undefined | null) => {
+  const addUrls = (raw: unknown) => {
     if (!raw || typeof raw !== "string") return;
     const split = raw
       .split(/[,;\n]+/)
@@ -39,7 +41,7 @@ function getDiscordWebhookUrls(queue?: string, event?: H3Event): string[] {
 
   // 1. Check queue-specific webhook variables
   if (queue === "wiki_discovery" || queue === "discovery") {
-    addUrls(config.discordWebhookDiscoveryUrl as string);
+    addUrls(configValue("discordWebhookDiscoveryUrl"));
     addUrls(cfEnv?.NUXT_DISCORD_WEBHOOK_DISCOVERY_URL);
     addUrls(cfEnv?.DISCORD_WEBHOOK_DISCOVERY_URL);
     addUrls(cfEnv?.DISCORD_DISCOVERY_WEBHOOK_URL);
@@ -47,7 +49,7 @@ function getDiscordWebhookUrls(queue?: string, event?: H3Event): string[] {
     addUrls(process.env.DISCORD_WEBHOOK_DISCOVERY_URL);
     addUrls(process.env.DISCORD_DISCOVERY_WEBHOOK_URL);
   } else if (queue === "wiki_check" || queue === "check") {
-    addUrls(config.discordWebhookCheckUrl as string);
+    addUrls(configValue("discordWebhookCheckUrl"));
     addUrls(cfEnv?.NUXT_DISCORD_WEBHOOK_CHECK_URL);
     addUrls(cfEnv?.DISCORD_WEBHOOK_CHECK_URL);
     addUrls(cfEnv?.DISCORD_CHECK_WEBHOOK_URL);
@@ -55,7 +57,7 @@ function getDiscordWebhookUrls(queue?: string, event?: H3Event): string[] {
     addUrls(process.env.DISCORD_WEBHOOK_CHECK_URL);
     addUrls(process.env.DISCORD_CHECK_WEBHOOK_URL);
   } else if (queue === "wiki_extract" || queue === "extract") {
-    addUrls(config.discordWebhookExtractUrl as string);
+    addUrls(configValue("discordWebhookExtractUrl"));
     addUrls(cfEnv?.NUXT_DISCORD_WEBHOOK_EXTRACT_URL);
     addUrls(cfEnv?.DISCORD_WEBHOOK_EXTRACT_URL);
     addUrls(cfEnv?.DISCORD_EXTRACT_WEBHOOK_URL);
@@ -66,9 +68,9 @@ function getDiscordWebhookUrls(queue?: string, event?: H3Event): string[] {
 
   // 2. Fallback to general admin webhooks if no queue-specific URL was configured
   if (targetUrls.size === 0) {
-    addUrls(config.discordWebhookUrl as string);
-    addUrls(config.discordWebhookUrl2 as string);
-    addUrls(config.discordWebhookUrl3 as string);
+    addUrls(configValue("discordWebhookUrl"));
+    addUrls(configValue("discordWebhookUrl2"));
+    addUrls(configValue("discordWebhookUrl3"));
     addUrls(cfEnv?.NUXT_DISCORD_WEBHOOK_URL);
     addUrls(cfEnv?.DISCORD_WEBHOOK_URL);
     addUrls(cfEnv?.DISCORD_ADMIN_WEBHOOK_LOG_URL);
@@ -93,9 +95,7 @@ export function normalizeDiscordUrl(url: string): string {
   return `https://dubbingbase.com/fr${withoutLocale}`;
 }
 
-function categoryFor(
-  options?: DiscordWebhookOptions,
-): DiscordNotificationCategory {
+function categoryFor(options?: DiscordWebhookOptions): DiscordNotificationCategory {
   if (options?.category) return options.category;
   if (options?.queue === "wiki_discovery" || options?.queue === "discovery") {
     return "discovery";
@@ -117,9 +117,7 @@ export function buildDiscordEmbed(
   const category = categoryFor(options);
   const label = category.charAt(0).toUpperCase() + category.slice(1);
   const description =
-    message.length > 2000
-      ? message.slice(0, 1980) + "\n... (truncated)"
-      : message;
+    message.length > 2000 ? message.slice(0, 1980) + "\n... (truncated)" : message;
   const embed: Record<string, unknown> = {
     title: `[${label}] ${title}`.slice(0, 250),
     description,
@@ -139,9 +137,17 @@ export async function sendDiscordAdminNotification(
   options?: DiscordWebhookOptions,
 ) {
   const webhookUrls = getDiscordWebhookUrls(options?.queue, options?.event);
+  const deliveryUrls =
+    options?.queue === "wiki_check" || options?.queue === "check"
+      ? webhookUrls.slice(0, 1)
+      : webhookUrls;
 
-  if (webhookUrls.length === 0) {
-    console.warn("[Discord] Webhook URL missing, skipping notification");
+  if (deliveryUrls.length === 0) {
+    const message =
+      options?.queue === "wiki_check" || options?.queue === "check"
+        ? "[Discord] wiki_check notification not attempted: no valid queue-specific or fallback webhook URL configured"
+        : "[Discord] Webhook URL missing, skipping notification";
+    console.error(message);
     return;
   }
 
@@ -151,7 +157,7 @@ export async function sendDiscordAdminNotification(
     const payload = JSON.stringify({ embeds: [embed] });
 
     await Promise.allSettled(
-      webhookUrls.map(async (webhookUrl) => {
+      deliveryUrls.map(async (webhookUrl) => {
         try {
           const res = await fetch(webhookUrl, {
             method: "POST",
@@ -162,13 +168,17 @@ export async function sendDiscordAdminNotification(
           if (!res.ok) {
             const errText = await res.text();
             console.error(
-              `[Discord] Webhook API error (${webhookUrl.slice(0, 35)}... status ${res.status}):`,
+              options?.queue === "wiki_check" || options?.queue === "check"
+                ? `[Discord] wiki_check notification POST failed (status ${res.status}):`
+                : `[Discord] Webhook API error (${webhookUrl.slice(0, 35)}... status ${res.status}):`,
               errText,
             );
           }
         } catch (err) {
           console.error(
-            `[Discord] Webhook fetch error (${webhookUrl.slice(0, 35)}...):`,
+            options?.queue === "wiki_check" || options?.queue === "check"
+              ? "[Discord] wiki_check notification POST failed:"
+              : `[Discord] Webhook fetch error (${webhookUrl.slice(0, 35)}...):`,
             err,
           );
         }
