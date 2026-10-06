@@ -47,9 +47,14 @@ BEGIN
 
   IF NOT EXISTS (
     SELECT 1 FROM public.get_media_queue_items('wiki_check', 'archived', 100, 0)
-    WHERE id = message_id AND requested_by = requester_id
+    WHERE id = message_id
+      AND requested_by = requester_id
+      AND archive_reason = 'ambiguous_region'
+      AND archive_details = 'Dubbing evidence did not identify a supported market.'
+      AND detected_regions = '[]'::jsonb
+      AND candidate_sections = '[{"index":3,"heading":"Distribution","heading_kind":"generic_cast"}]'::jsonb
   ) THEN
-    RAISE EXCEPTION 'The archived wiki_check is missing from the standard admin queue';
+    RAISE EXCEPTION 'The archived wiki_check outcome is missing from the standard admin queue';
   END IF;
 END;
 $$;

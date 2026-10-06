@@ -200,6 +200,7 @@ export default defineEventHandler(async (event) => {
     let targetQueue: "wiki_extract" | "wiki_check" | "wiki_discovery" =
       specificQueue ?? "wiki_extract";
     let queueRes: QueuePopResult;
+    let popRpcName: "pop_media_queue_message" | "pop_media_queue_batch" = "pop_media_queue_message";
 
     if (specificQueue) {
       if (specificQueue === "wiki_extract" && skipExtract) {
@@ -212,6 +213,8 @@ export default defineEventHandler(async (event) => {
           message: "All LLM quotas exhausted, extract queue skipped (element remains queued)",
         };
       }
+      popRpcName =
+        specificQueue === "wiki_extract" ? "pop_media_queue_message" : "pop_media_queue_batch";
       queueRes =
         specificQueue === "wiki_extract"
           ? await supabaseAdmin.rpc("pop_media_queue_message", {
@@ -226,6 +229,7 @@ export default defineEventHandler(async (event) => {
     } else {
       // Priority 1: wiki_extract (LLM ready) — skip if quotas exhausted
       if (!skipExtract) {
+        popRpcName = "pop_media_queue_message";
         queueRes = await supabaseAdmin.rpc("pop_media_queue_message", {
           p_queue_name: "wiki_extract",
           p_vt_seconds: 90,
@@ -237,6 +241,7 @@ export default defineEventHandler(async (event) => {
 
       // Priority 2: wiki_check (TOC regex check)
       if (!queueRes.error && (!queueRes.data || queueRes.data.length === 0)) {
+        popRpcName = "pop_media_queue_batch";
         queueRes = await supabaseAdmin.rpc("pop_media_queue_batch", {
           p_queue_name: "wiki_check",
           p_vt_seconds: FAST_QUEUE_VISIBILITY_TIMEOUT_SECONDS,
@@ -247,6 +252,7 @@ export default defineEventHandler(async (event) => {
 
       // Priority 3: wiki_discovery (Wikidata sitelinks)
       if (!queueRes.error && (!queueRes.data || queueRes.data.length === 0)) {
+        popRpcName = "pop_media_queue_batch";
         queueRes = await supabaseAdmin.rpc("pop_media_queue_batch", {
           p_queue_name: "wiki_discovery",
           p_vt_seconds: FAST_QUEUE_VISIBILITY_TIMEOUT_SECONDS,
@@ -259,10 +265,8 @@ export default defineEventHandler(async (event) => {
     const { data: rawQueueItems, error: popError } = queueRes;
 
     if (popError) {
-      console.error(`[QUEUE] RPC pop_media_queue_message error on ${targetQueue}:`, popError);
-      throw new Error(
-        `RPC pop_media_queue_message failed for ${targetQueue}: ${JSON.stringify(popError)}`,
-      );
+      console.error(`[QUEUE] RPC ${popRpcName} error on ${targetQueue}:`, popError);
+      throw new Error(`RPC ${popRpcName} failed for ${targetQueue}: ${JSON.stringify(popError)}`);
     }
 
     if (!rawQueueItems || rawQueueItems.length === 0) {

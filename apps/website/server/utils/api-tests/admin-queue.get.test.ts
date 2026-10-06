@@ -93,6 +93,36 @@ describe("GET /api/admin/queue", () => {
     });
   });
 
+  it("returns stored automatic wiki_check archive outcomes to the history inspector", async () => {
+    const row = {
+      id: 74,
+      queue_name: "wiki_check",
+      tmdb_id: 211290,
+      media_type: "movie",
+      language: "fr",
+      wikipedia_language: "fr",
+      dubbing_language: null,
+      season_number: null,
+      episode_number: null,
+      status: "completed",
+      error_message: null,
+      created_at: "2026-10-06T12:01:00.000Z",
+      read_ct: 1,
+      is_manual: false,
+      requested_by: null,
+      archive_reason: "ambiguous_region",
+      archive_details: "Dubbing evidence did not identify a supported market.",
+      detected_regions: [],
+      candidate_sections: [{ index: 3, heading: "Distribution", heading_kind: "generic_cast" }],
+    };
+    routeMocks.rpc.mockResolvedValue({ data: [row], error: null });
+
+    const response = await getQueue("?queue=wiki_check&status=archived");
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({ items: [row] });
+  });
+
   it.each(["active", "archived"] as const)(
     "accepts the %s filter used by the admin queue UI",
     async (status) => {

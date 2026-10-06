@@ -408,7 +408,7 @@ export async function extractMediaDubbingCredits(options: {
       ok: false,
       changes: 0,
       creditsAdded: 0,
-      error: "Regional dubbing language requires review",
+      error: "Regional dubbing language is required for extraction",
     };
   }
 
@@ -601,7 +601,7 @@ export async function extractGameDubbingCredits(options: {
       ok: false,
       changes: 0,
       creditsAdded: 0,
-      error: "Regional dubbing language requires review",
+      error: "Regional dubbing language is required for extraction",
     };
   }
 
@@ -758,7 +758,7 @@ export async function prepareMedia(options: {
   }
 
   if (!isDubbingLanguage(dubbingLanguage)) {
-    throw new Error("Regional dubbing language requires review");
+    throw new Error("Regional dubbing language is required for extraction");
   }
 
   const check = await checkMediaDubbingSections({
@@ -819,7 +819,7 @@ export async function prepareGame(options: {
   }
 
   if (!isDubbingLanguage(dubbingLanguage)) {
-    throw new Error("Regional dubbing language requires review");
+    throw new Error("Regional dubbing language is required for extraction");
   }
 
   const check = await checkGameDubbingSections({

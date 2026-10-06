@@ -2,6 +2,10 @@ import type { Database } from "@app/supabase";
 
 type QueueFieldsThatMayBeNull =
   | "dubbing_language"
+  | "archive_reason"
+  | "archive_details"
+  | "detected_regions"
+  | "candidate_sections"
   | "episode_number"
   | "error_message"
   | "language"
@@ -14,6 +18,10 @@ type QueueRow = Omit<
   QueueFieldsThatMayBeNull
 > & {
   dubbing_language: string | null;
+  archive_reason: string | null;
+  archive_details: string | null;
+  detected_regions: unknown;
+  candidate_sections: unknown;
   episode_number: number | null;
   error_message: string | null;
   language: string | null;

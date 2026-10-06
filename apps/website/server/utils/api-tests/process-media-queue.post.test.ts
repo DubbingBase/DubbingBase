@@ -25,6 +25,9 @@ const routeMocks = vi.hoisted(() => ({
   getGame: vi.fn(),
   cacheGetOrFetch: vi.fn(),
   enqueueMediaExtractError: "",
+  archiveWikiCheckError: "",
+  delayMediaQueueError: "",
+  queuePopError: "",
   archiveQueueResult: vi.fn(
     (): {
       data: boolean | null;
@@ -77,6 +80,9 @@ beforeAll(async () => {
 beforeEach(() => {
   vi.clearAllMocks();
   routeMocks.enqueueMediaExtractError = "";
+  routeMocks.archiveWikiCheckError = "";
+  routeMocks.delayMediaQueueError = "";
+  routeMocks.queuePopError = "";
   routeMocks.archiveQueueResult.mockReturnValue({ data: true, error: null });
   routeMocks.sendDiscordAdminNotification.mockResolvedValue(undefined);
   routeMocks.getPageSectionAsWikitext.mockResolvedValue({
@@ -130,7 +136,28 @@ beforeEach(() => {
       };
     }
     if (name === "archive_wiki_check_with_outcome") {
+      if (routeMocks.archiveWikiCheckError) {
+        return {
+          data: null,
+          error: { message: routeMocks.archiveWikiCheckError },
+        };
+      }
       return { data: true, error: null };
+    }
+    if (name === "delay_media_queue_message" && routeMocks.delayMediaQueueError) {
+      return {
+        data: null,
+        error: { message: routeMocks.delayMediaQueueError },
+      };
+    }
+    if (
+      (name === "pop_media_queue_batch" || name === "pop_media_queue_message") &&
+      routeMocks.queuePopError
+    ) {
+      return {
+        data: null,
+        error: { message: routeMocks.queuePopError },
+      };
     }
     if (name === "archive_media_queue_message_with_error") return routeMocks.archiveQueueResult();
     if (name === "pop_media_queue_batch") {
@@ -170,7 +197,28 @@ async function processQueue(
       };
     }
     if (name === "archive_wiki_check_with_outcome") {
+      if (routeMocks.archiveWikiCheckError) {
+        return {
+          data: null,
+          error: { message: routeMocks.archiveWikiCheckError },
+        };
+      }
       return { data: true, error: null };
+    }
+    if (name === "delay_media_queue_message" && routeMocks.delayMediaQueueError) {
+      return {
+        data: null,
+        error: { message: routeMocks.delayMediaQueueError },
+      };
+    }
+    if (
+      (name === "pop_media_queue_batch" || name === "pop_media_queue_message") &&
+      routeMocks.queuePopError
+    ) {
+      return {
+        data: null,
+        error: { message: routeMocks.queuePopError },
+      };
     }
     if (name === "archive_media_queue_message_with_error") return routeMocks.archiveQueueResult();
     if (name === "pop_media_queue_batch" || name === "pop_media_queue_message") {
@@ -317,6 +365,58 @@ describe("POST /api/process-media-queue requester propagation", () => {
     );
   });
 
+  it("archives a malformed wiki_check payload once and reports the successful archive", async () => {
+    await processQueue("check", { media_type: "invalid" });
+
+    expect(routeMocks.rpc).toHaveBeenCalledTimes(2);
+    expect(routeMocks.rpc).toHaveBeenCalledWith(
+      "archive_media_queue_message_with_error",
+      expect.objectContaining({
+        p_queue_name: "wiki_check",
+        p_msg_id: 17,
+        p_error: "Malformed message payload: missing tmdb_id or invalid media_type",
+      }),
+    );
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledWith(
+      "Wikipedia Queue Error",
+      expect.stringContaining(
+        "Error: Malformed message payload: missing tmdb_id or invalid media_type\nAction: item archived as a non-retryable error.",
+      ),
+      expect.objectContaining({ queue: "wiki_check", color: 0xed4245 }),
+    );
+  });
+
+  it("reports a wiki_check queue-pop RPC failure once with the underlying database error", async () => {
+    routeMocks.queuePopError = "queue database unavailable";
+
+    const response = await processQueue("check");
+    const responseBody = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(responseBody).toEqual(
+      expect.objectContaining({
+        statusMessage: "Queue processing failed",
+        data: {
+          error:
+            'RPC pop_media_queue_batch failed for wiki_check: {"message":"queue database unavailable"}',
+        },
+      }),
+    );
+    expect(routeMocks.rpc).toHaveBeenCalledWith(
+      "pop_media_queue_batch",
+      expect.objectContaining({ p_queue_name: "wiki_check" }),
+    );
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledWith(
+      "Queue Processor FAILED",
+      expect.stringContaining(
+        'RPC pop_media_queue_batch failed for wiki_check: {"message":"queue database unavailable"}',
+      ),
+      expect.objectContaining({ event: expect.anything() }),
+    );
+  });
+
   it("sends exactly one terminal notification for successful extraction", async () => {
     await processQueue("extract");
 
@@ -438,6 +538,112 @@ describe("POST /api/process-media-queue requester propagation", () => {
       "Wikipedia Queue Error",
       expect.stringContaining("retry scheduled in 60 seconds"),
       expect.objectContaining({ color: 0xed4245, queue: "wiki_check" }),
+    );
+  });
+
+  it("reports when terminal outcome archiving fails and the error archive succeeds", async () => {
+    routeMocks.archiveWikiCheckError = "terminal archive unavailable";
+    routeMocks.checkMediaDubbingSections.mockResolvedValue({
+      ok: true,
+      title: "Test movie",
+      sectionIndexes: [2],
+      sectionCandidates: [{ index: 2, heading: "Cast", headingKind: "generic_cast" }],
+      pageId: 55,
+    });
+
+    await processQueue("check", { dubbing_language: undefined });
+
+    expect(routeMocks.rpc).toHaveBeenCalledWith(
+      "archive_wiki_check_with_outcome",
+      expect.objectContaining({
+        p_msg_id: 17,
+        p_archive_reason: "no_dubbing_evidence",
+      }),
+    );
+    expect(routeMocks.rpc).toHaveBeenCalledWith(
+      "archive_media_queue_message_with_error",
+      expect.objectContaining({
+        p_queue_name: "wiki_check",
+        p_msg_id: 17,
+        p_error: '{"message":"terminal archive unavailable"}',
+      }),
+    );
+    expect(routeMocks.rpc).not.toHaveBeenCalledWith("enqueue_media_extract", expect.anything());
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledWith(
+      "Wikipedia Queue Error",
+      expect.stringContaining(
+        'Error: {"message":"terminal archive unavailable"}\nAction: item archived as a non-retryable error.',
+      ),
+      expect.objectContaining({ queue: "wiki_check", color: 0xed4245 }),
+    );
+  });
+
+  it("reports when retry scheduling fails instead of claiming a retry was scheduled", async () => {
+    routeMocks.delayMediaQueueError = "queue database unavailable";
+    routeMocks.checkMediaDubbingSections.mockResolvedValue({
+      ok: false,
+      title: "Test movie",
+      error: "Wikipedia API error: 503 Service Unavailable",
+      retryable: true,
+    });
+
+    await processQueue("check");
+
+    expect(routeMocks.rpc).toHaveBeenCalledWith(
+      "delay_media_queue_message",
+      expect.objectContaining({
+        p_queue_name: "wiki_check",
+        p_msg_id: 17,
+        p_delay_seconds: 60,
+      }),
+    );
+    expect(routeMocks.rpc).not.toHaveBeenCalledWith(
+      "archive_media_queue_message_with_error",
+      expect.anything(),
+    );
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledWith(
+      "Wikipedia Queue Error",
+      expect.stringContaining(
+        "Retry scheduling error: queue database unavailable\nAction: retry scheduling failed.",
+      ),
+      expect.objectContaining({ queue: "wiki_check", color: 0xed4245 }),
+    );
+    expect(routeMocks.sendDiscordAdminNotification).not.toHaveBeenCalledWith(
+      "Wikipedia Queue Error",
+      expect.stringContaining("Action: retry scheduled in 60 seconds."),
+      expect.anything(),
+    );
+  });
+
+  it("archives adult content without fetching sections or creating extraction work", async () => {
+    routeMocks.checkMediaDubbingSections.mockResolvedValue({
+      ok: true,
+      title: "Adult test movie",
+      isAdult: true,
+      sectionIndexes: [2],
+      pageId: 55,
+    });
+
+    await processQueue("check");
+
+    expect(routeMocks.rpc).toHaveBeenCalledWith(
+      "archive_wiki_check_with_outcome",
+      expect.objectContaining({
+        p_msg_id: 17,
+        p_archive_reason: "adult_content_excluded",
+        p_detected_regions: [],
+        p_candidate_sections: [],
+      }),
+    );
+    expect(routeMocks.getPageSectionAsWikitext).not.toHaveBeenCalled();
+    expect(routeMocks.rpc).not.toHaveBeenCalledWith("enqueue_media_extract", expect.anything());
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledWith(
+      "Wikipedia Check Archived — Adult Content",
+      expect.stringContaining("Action: archived — no extraction created."),
+      expect.objectContaining({ queue: "wiki_check" }),
     );
   });
 

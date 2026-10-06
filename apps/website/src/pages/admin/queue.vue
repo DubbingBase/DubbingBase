@@ -467,7 +467,39 @@
                       </svg>
                     </a>
                   </div>
-                  <div v-else class="text-xs theme-text-muted italic">—</div>
+                  <div v-if="item.archive_reason" class="mt-2 text-xs leading-relaxed">
+                    <div class="font-semibold theme-status-info-text">
+                      {{ $t("admin.queue.archiveOutcome") }}:
+                      {{ item.archive_reason }}
+                    </div>
+                    <p v-if="item.archive_details" class="mt-1 theme-text-secondary">
+                      {{ item.archive_details }}
+                    </p>
+                    <details v-if="item.detected_regions || item.candidate_sections" class="mt-1.5">
+                      <summary class="cursor-pointer theme-text-muted theme-hover-text">
+                        {{ $t("admin.queue.archiveDiagnostics") }}
+                      </summary>
+                      <div v-if="item.detected_regions" class="mt-1">
+                        <p class="font-semibold">
+                          {{ $t("admin.queue.detectedRegions") }}
+                        </p>
+                        <pre class="max-h-32 overflow-auto whitespace-pre-wrap">{{
+                          formatArchiveMetadata(item.detected_regions)
+                        }}</pre>
+                      </div>
+                      <div v-if="item.candidate_sections" class="mt-1">
+                        <p class="font-semibold">
+                          {{ $t("admin.queue.candidateSections") }}
+                        </p>
+                        <pre class="max-h-32 overflow-auto whitespace-pre-wrap">{{
+                          formatArchiveMetadata(item.candidate_sections)
+                        }}</pre>
+                      </div>
+                    </details>
+                  </div>
+                  <div v-else-if="!item.error_message" class="text-xs theme-text-muted italic">
+                    —
+                  </div>
                 </td>
 
                 <!-- Actions column -->
@@ -671,6 +703,11 @@ function getErrorMessage(err: unknown, fallback: string): string {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function formatArchiveMetadata(value: unknown): string {
+  const serialized = JSON.stringify(value ?? [], null, 2);
+  return typeof serialized === "string" ? serialized : "[]";
 }
 
 const getStatusClass = (status: string) => {

@@ -713,7 +713,11 @@ export type Database = {
           p_status?: string;
         };
         Returns: {
+          archive_details: string;
+          archive_reason: string;
+          candidate_sections: Json;
           created_at: string;
+          detected_regions: Json;
           dubbing_language: string;
           episode_number: number;
           error_message: string;
