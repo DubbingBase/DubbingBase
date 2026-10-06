@@ -11,10 +11,7 @@
         <p class="text-sm theme-text-muted">
           {{ $t("admin.queue.description") }}
         </p>
-        <p
-          v-if="pendingCount !== null"
-          class="text-xs theme-status-warning-text mt-1"
-        >
+        <p v-if="pendingCount !== null" class="text-xs theme-status-warning-text mt-1">
           {{ $t("admin.queue.pendingCount", { count: pendingCount }) }}
         </p>
       </div>
@@ -82,9 +79,7 @@
       v-if="isLoading"
       class="flex flex-col items-center justify-center py-24 space-y-3 theme-surface-overlay border theme-border rounded-2xl"
     >
-      <div
-        class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"
-      ></div>
+      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
       <p class="theme-text-muted text-sm">
         {{ $t("admin.queue.loadingQueue") }}
       </p>
@@ -97,9 +92,7 @@
         class="flex flex-wrap items-center gap-3 theme-surface-overlay p-4 rounded-2xl border theme-border"
       >
         <!-- Archive / Active Toggle -->
-        <div
-          class="flex items-center theme-input p-1 rounded-xl border theme-border"
-        >
+        <div class="flex items-center theme-input p-1 rounded-xl border theme-border">
           <button
             type="button"
             @click="selectArchiveFilter('active')"
@@ -137,18 +130,6 @@
             "
           >
             {{ $t("admin.queue.all") }} ({{ allQueueItems.length }})
-          </button>
-          <button
-            type="button"
-            @click="selectArchiveFilter('review_needed')"
-            class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-150"
-            :class="
-              filterStatus === 'review_needed'
-                ? 'theme-primary-bg shadow-md'
-                : 'theme-text-muted theme-hover-text'
-            "
-          >
-            {{ $t("admin.queue.reviewNeeded") }}
           </button>
         </div>
 
@@ -242,12 +223,7 @@
         <div
           class="h-12 w-12 rounded-full theme-surface-overlay flex items-center justify-center theme-text-muted mx-auto"
         >
-          <svg
-            class="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -344,9 +320,7 @@
                         class="text-xs font-semibold theme-status-info-text hover:text-[var(--app-color-info-text)] hover:underline flex items-center"
                         :title="$t('admin.queue.viewOnTmdb')"
                       >
-                        <span
-                          >{{ $t("common.tmdbLabel") }}{{ item.tmdb_id }}</span
-                        >
+                        <span>{{ $t("common.tmdbLabel") }}{{ item.tmdb_id }}</span>
                         <svg
                           class="w-3 h-3 ml-1"
                           fill="none"
@@ -387,10 +361,7 @@
                   </div>
                   <div class="mt-1 flex items-center space-x-2">
                     <span
-                      v-if="
-                        item.season_number !== null &&
-                        item.season_number !== undefined
-                      "
+                      v-if="item.season_number !== null && item.season_number !== undefined"
                       class="text-xs px-2 py-0.5 theme-input border theme-border theme-text-secondary rounded font-bold"
                     >
                       {{
@@ -400,10 +371,7 @@
                       }}
                     </span>
                     <span
-                      v-if="
-                        item.episode_number !== null &&
-                        item.episode_number !== undefined
-                      "
+                      v-if="item.episode_number !== null && item.episode_number !== undefined"
                       class="text-xs px-2 py-0.5 theme-input border theme-border theme-text-secondary rounded font-bold"
                     >
                       {{
@@ -499,59 +467,16 @@
                       </svg>
                     </a>
                   </div>
-                  <div
-                    v-else-if="item.status === 'review_needed'"
-                    class="text-xs theme-status-warning-text max-w-sm leading-relaxed theme-status-warning border theme-border rounded-xl p-2.5"
-                  >
-                    {{
-                      item.review_note || $t("admin.queue.regionalReviewNote")
-                    }}
-                  </div>
                   <div v-else class="text-xs theme-text-muted italic">—</div>
                 </td>
 
                 <!-- Actions column -->
                 <td class="py-4 px-6 text-right">
                   <div class="flex items-center justify-end space-x-1">
-                    <div
-                      v-if="item.status === 'review_needed'"
-                      class="flex items-center gap-2"
-                    >
-                      <label
-                        :for="`queue-review-language-${item.id}`"
-                        class="sr-only"
-                      >
-                        {{ $t("admin.regionalDubbingLanguage") }}
-                      </label>
-                      <AdminLanguageSelect
-                        :id="`queue-review-language-${item.id}`"
-                        :model-value="reviewDubbingLanguages[item.id] ?? ''"
-                        @update:model-value="
-                          setReviewDubbingLanguage(item.id, $event)
-                        "
-                        required
-                      />
-                      <button
-                        type="button"
-                        @click="resumeRegionalReview(item)"
-                        :disabled="
-                          reEnqueuingId === item.id ||
-                          !isDubbingLanguage(reviewDubbingLanguages[item.id])
-                        "
-                        :title="$t('admin.queue.resumeReview')"
-                        class="px-3 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold disabled:opacity-50"
-                      >
-                        {{ $t("admin.queue.resumeReview") }}
-                      </button>
-                    </div>
                     <button
-                      v-if="
-                        item.status === 'failed' || item.status === 'completed'
-                      "
+                      v-if="item.status === 'failed' || item.status === 'completed'"
                       @click="reEnqueueItem(item)"
-                      :disabled="
-                        reEnqueuingId === item.id || deletingId === item.id
-                      "
+                      :disabled="reEnqueuingId === item.id || deletingId === item.id"
                       :title="$t('admin.queue.reEnqueueItem')"
                       class="p-2 theme-text-muted hover:text-[var(--app-color-info-text)] hover:bg-[var(--app-color-info-bg)] rounded-lg transition-colors disabled:opacity-50"
                     >
@@ -593,9 +518,7 @@
                     </button>
                     <button
                       @click="deleteItem(item.id, item.queue_name)"
-                      :disabled="
-                        deletingId === item.id || reEnqueuingId === item.id
-                      "
+                      :disabled="deletingId === item.id || reEnqueuingId === item.id"
                       :title="$t('admin.queue.deleteItem')"
                       class="p-2 theme-text-muted hover:text-[var(--app-color-danger-text)] hover:bg-[var(--app-color-danger-bg)] rounded-lg transition-colors disabled:opacity-50"
                     >
@@ -663,14 +586,8 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import { isDubbingLanguage } from "@app/shared-logic";
 import type { Database } from "@app/supabase";
 import type { QueueItem } from "~/utils/queue-item";
-import {
-  queueFilterStateForSelection,
-  type QueueFilterSelection,
-  type QueueStatusFilter,
-} from "./queue-state";
 
 interface ListUsersResponse {
   users?: Array<{ id: string; email: string }>;
@@ -701,13 +618,12 @@ const isProcessing = ref(false);
 const isClearing = ref(false);
 const deletingId = ref<number | null>(null);
 const reEnqueuingId = ref<number | null>(null);
-const reviewDubbingLanguages = ref<Record<number, string>>({});
 const error = ref("");
 const isDev = import.meta.env.DEV;
 const pendingCount = ref<number | null>(null);
 
 const filterQueue = ref("all");
-const filterStatus = ref<QueueStatusFilter>("all");
+const filterStatus = ref<"all" | "pending" | "processing" | "completed" | "failed">("all");
 const filterType = ref("all");
 const filterSearch = ref("");
 const archiveFilter = ref<"active" | "archived" | "all">("active");
@@ -715,10 +631,8 @@ const archiveFilter = ref<"active" | "archived" | "all">("active");
 const activeCount = ref(0);
 const archivedCount = ref(0);
 
-function selectArchiveFilter(selection: QueueFilterSelection): void {
-  const next = queueFilterStateForSelection(selection, filterStatus.value);
-  archiveFilter.value = next.archiveFilter;
-  filterStatus.value = next.filterStatus;
+function selectArchiveFilter(selection: "active" | "archived" | "all"): void {
+  archiveFilter.value = selection;
 }
 
 const allQueueItems = computed(() => queueItems.value);
@@ -728,10 +642,7 @@ const filteredItems = computed(() => {
     if (filterType.value !== "all" && item.media_type !== filterType.value) {
       return false;
     }
-    if (
-      filterSearch.value &&
-      !String(item.tmdb_id).includes(filterSearch.value)
-    ) {
+    if (filterSearch.value && !String(item.tmdb_id).includes(filterSearch.value)) {
       return false;
     }
     return true;
@@ -744,18 +655,11 @@ const toast = ref<ToastState>({
   type: "info",
 });
 
-const showToast = (
-  message: string,
-  type: "success" | "error" | "info" = "info",
-) => {
+const showToast = (message: string, type: "success" | "error" | "info" = "info") => {
   toast.value = { show: true, message, type };
   setTimeout(() => {
     toast.value.show = false;
   }, 3000);
-};
-
-const setReviewDubbingLanguage = (itemId: number, dubbingLanguage: string) => {
-  reviewDubbingLanguages.value[itemId] = dubbingLanguage;
 };
 
 function getErrorMessage(err: unknown, fallback: string): string {
@@ -780,8 +684,6 @@ const getStatusClass = (status: string) => {
     case "failed":
     case "error":
       return "theme-status-danger";
-    case "review_needed":
-      return "theme-status-warning";
     default:
       return "theme-surface-muted theme-border theme-text-muted";
   }
@@ -814,10 +716,7 @@ const getTypeClass = (type: string) => {
 };
 
 const getAppMediaUrl = (
-  item: Pick<
-    QueueItem,
-    "tmdb_id" | "media_type" | "season_number" | "episode_number"
-  >,
+  item: Pick<QueueItem, "tmdb_id" | "media_type" | "season_number" | "episode_number">,
 ): string => {
   const tmdbId = item.tmdb_id;
   const mediaType = item.media_type;
@@ -828,12 +727,7 @@ const getAppMediaUrl = (
     case "movie":
       return `/movie/${tmdbId}`;
     case "tv":
-      if (
-        season !== null &&
-        season !== undefined &&
-        episode !== null &&
-        episode !== undefined
-      ) {
+      if (season !== null && season !== undefined && episode !== null && episode !== undefined) {
         return `/show/${tmdbId}/season/${season}/episode/${episode}`;
       }
       if (season !== null && season !== undefined) {
@@ -846,12 +740,7 @@ const getAppMediaUrl = (
       }
       return `/show/${tmdbId}`;
     case "episode":
-      if (
-        season !== null &&
-        season !== undefined &&
-        episode !== null &&
-        episode !== undefined
-      ) {
+      if (season !== null && season !== undefined && episode !== null && episode !== undefined) {
         return `/show/${tmdbId}/season/${season}/episode/${episode}`;
       }
       return `/show/${tmdbId}`;
@@ -941,17 +830,13 @@ const {
 
     const stats = isRecord(queueRes.stats) ? queueRes.stats : null;
     const totals = stats && isRecord(stats.totals) ? stats.totals : null;
-    const activeTotal =
-      typeof totals?.total_active === "number" ? totals.total_active : 0;
+    const activeTotal = typeof totals?.total_active === "number" ? totals.total_active : 0;
     const archivedTotal =
       (typeof totals?.completed === "number" ? totals.completed : 0) +
       (typeof totals?.error === "number" ? totals.error : 0);
 
     return {
-      queueItems:
-        statusParam === "review_needed" && queueParam
-          ? queueRes.items.filter((item) => item.queue_name === queueParam)
-          : queueRes.items,
+      queueItems: queueRes.items,
       usersMap: map,
       activeTotal,
       archivedTotal,
@@ -969,16 +854,6 @@ watch(
   (newData) => {
     if (newData) {
       queueItems.value = newData.queueItems;
-      const selections = { ...reviewDubbingLanguages.value };
-      for (const item of newData.queueItems) {
-        if (
-          item.status === "review_needed" &&
-          selections[item.id] === undefined
-        ) {
-          selections[item.id] = "";
-        }
-      }
-      reviewDubbingLanguages.value = selections;
       usersMap.value = newData.usersMap;
       pendingCount.value = newData.pendingCount;
       activeCount.value = newData.activeTotal;
@@ -1033,10 +908,7 @@ const startProcessing = async () => {
     });
 
     if (res.results && res.results.length > 0 && !res.results[0]?.ok) {
-      showToast(
-        res.results[0]?.error || t("admin.queue.failedToProcess"),
-        "error",
-      );
+      showToast(res.results[0]?.error || t("admin.queue.failedToProcess"), "error");
     } else if (res.processed > 0) {
       const result = res.results?.[0];
       const detail = result ? ` (+${result.creditsAdded ?? 0} credits)` : "";
@@ -1114,8 +986,7 @@ const reEnqueueItem = async (item: QueueItem) => {
         mediaType: item.media_type,
         seasonNumber: item.season_number ?? undefined,
         episodeNumber: item.episode_number ?? undefined,
-        wikipedia_language:
-          item.wikipedia_language ?? item.language ?? undefined,
+        wikipedia_language: item.wikipedia_language ?? item.language ?? undefined,
         dubbing_language: item.dubbing_language ?? undefined,
       },
     });
@@ -1141,34 +1012,7 @@ const reEnqueueItem = async (item: QueueItem) => {
     await fetchQueueAndUsers();
   } catch (err: unknown) {
     console.error("Error re-enqueuing item:", err);
-    showToast(
-      getErrorMessage(err, t("admin.queue.failedToReEnqueue")),
-      "error",
-    );
-  } finally {
-    reEnqueuingId.value = null;
-  }
-};
-
-const resumeRegionalReview = async (item: QueueItem) => {
-  const dubbingLanguage = reviewDubbingLanguages.value[item.id];
-  if (!isDubbingLanguage(dubbingLanguage)) return;
-
-  reEnqueuingId.value = item.id;
-  try {
-    await $fetch("/api/admin/queue/review", {
-      method: "POST",
-      body: { id: item.id, dubbing_language: dubbingLanguage },
-    });
-    showToast(t("admin.queue.reviewResumed"), "success");
-    delete reviewDubbingLanguages.value[item.id];
-    await fetchQueueAndUsers();
-  } catch (err: unknown) {
-    console.error("Error resuming regional review:", err);
-    showToast(
-      getErrorMessage(err, t("admin.queue.failedToReEnqueue")),
-      "error",
-    );
+    showToast(getErrorMessage(err, t("admin.queue.failedToReEnqueue")), "error");
   } finally {
     reEnqueuingId.value = null;
   }

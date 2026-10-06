@@ -1,5 +1,5 @@
--- Run after all regional queue migrations, including requester provenance.
--- This fixture exercises the enqueue/resume RPCs with local-only queue data.
+-- Run after all queue migrations, including requester provenance.
+-- This fixture exercises the enqueue/archive RPCs with local-only queue data.
 BEGIN;
 
 DO $$
@@ -9,17 +9,21 @@ DECLARE
   extract_id bigint;
   discovery_id bigint;
 BEGIN
+  IF to_regprocedure('public.archive_wiki_check_for_regional_review(bigint,text)') IS NOT NULL
+    OR to_regprocedure('public.resume_wiki_check_for_regional_review(bigint,text)') IS NOT NULL
+    OR to_regprocedure('public.get_regional_review_queue_items(integer)') IS NOT NULL
+    OR to_regprocedure('public.get_regional_review_queue_items(integer,integer)') IS NOT NULL THEN
+    RAISE EXCEPTION 'Retired queue RPCs are still installed';
+  END IF;
+
   IF has_function_privilege('anon', 'public.get_media_queue_items(text,text,integer,integer)', 'EXECUTE')
     OR has_function_privilege('authenticated', 'public.get_media_queue_items(text,text,integer,integer)', 'EXECUTE')
-    OR has_function_privilege('anon', 'public.get_regional_review_queue_items(integer,integer)', 'EXECUTE')
-    OR has_function_privilege('authenticated', 'public.get_regional_review_queue_items(integer,integer)', 'EXECUTE')
     OR has_function_privilege('anon', 'public.get_media_queue_stats()', 'EXECUTE')
     OR has_function_privilege('authenticated', 'public.get_media_queue_stats()', 'EXECUTE') THEN
     RAISE EXCEPTION 'A non-admin database role can execute a requester-bearing queue read RPC';
   END IF;
 
   IF NOT has_function_privilege('service_role', 'public.get_media_queue_items(text,text,integer,integer)', 'EXECUTE')
-    OR NOT has_function_privilege('service_role', 'public.get_regional_review_queue_items(integer,integer)', 'EXECUTE')
     OR NOT has_function_privilege('service_role', 'public.get_media_queue_stats()', 'EXECUTE')
     OR NOT has_function_privilege('service_role', 'public.enqueue_media_fetch(bigint,text,integer,integer,text,boolean,text,text,uuid)', 'EXECUTE')
     OR NOT has_function_privilege('service_role', 'public.enqueue_media_extract(bigint,text,text,bigint,jsonb,integer,integer,boolean,text,text,uuid)', 'EXECUTE') THEN
@@ -47,50 +51,22 @@ BEGIN
     RAISE EXCEPTION 'Initial check enqueue lost its original requester';
   END IF;
 
-  IF NOT public.archive_wiki_check_for_regional_review(check_id, 'Choose a dubbing region.') THEN
-    RAISE EXCEPTION 'Could not put the source-only check into regional review';
+  IF NOT public.archive_media_queue_message('wiki_check', check_id) THEN
+    RAISE EXCEPTION 'Could not archive the source-only check';
   END IF;
   IF NOT EXISTS (
-    SELECT 1 FROM public.get_regional_review_queue_items(100, 0)
+    SELECT 1 FROM public.get_media_queue_items('wiki_check', 'archived', 100, 0)
     WHERE id = check_id AND requested_by = requester_id
   ) THEN
-    RAISE EXCEPTION 'Review-needed state lost its original requester';
-  END IF;
-
-  IF NOT public.resume_wiki_check_for_regional_review(check_id, 'en-US') THEN
-    RAISE EXCEPTION 'Could not resume review with a regional dubbing target';
-  END IF;
-  IF EXISTS (SELECT 1 FROM pgmq.a_wiki_check WHERE msg_id = check_id) THEN
-    RAISE EXCEPTION 'Successfully resumed review was not removed from the archive';
+    RAISE EXCEPTION 'Archived queue item lost its original requester';
   END IF;
   IF NOT EXISTS (
-    SELECT 1 FROM pgmq.q_wiki_check
-    WHERE message->>'tmdb_id' = '-980201'
-      AND message->>'wikipedia_language' = 'en'
-      AND message->>'dubbing_language' = 'en-US'
+    SELECT 1 FROM pgmq.a_wiki_check
+    WHERE msg_id = check_id
       AND message->>'requested_by' = requester_id::text
+      AND message->>'wikipedia_language' = 'en'
   ) THEN
-    RAISE EXCEPTION 'Review resume changed or lost the original requester';
-  END IF;
-
-  check_id := public.enqueue_media_fetch(
-    p_tmdb_id => -980204,
-    p_media_type => 'movie',
-    p_language => 'en'
-  );
-  IF NOT public.archive_wiki_check_for_regional_review(check_id, 'Choose a dubbing region.') THEN
-    RAISE EXCEPTION 'Could not archive a review item without a requester';
-  END IF;
-  IF NOT public.resume_wiki_check_for_regional_review(check_id, 'fr-FR') THEN
-    RAISE EXCEPTION 'Could not resume a review item without a requester';
-  END IF;
-  IF NOT EXISTS (
-    SELECT 1 FROM pgmq.q_wiki_check
-    WHERE message->>'tmdb_id' = '-980204'
-      AND message->>'dubbing_language' = 'fr-FR'
-      AND message->>'requested_by' IS NULL
-  ) THEN
-    RAISE EXCEPTION 'Resume invented a requester for an anonymous queue item';
+    RAISE EXCEPTION 'Archived queue payload lost its requester or source language';
   END IF;
 
   extract_id := public.enqueue_media_extract(
