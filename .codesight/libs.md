@@ -80,6 +80,7 @@
   - function getWorkVotes: (workIds, userId?) => Promise<
   - function getTopContributors: (limit) => void
 - `apps/website/server/utils/dubbing-language.ts` — function requireDubbingLanguage: (value) => DubbingLanguage
+- `apps/website/server/utils/dubbing-region-detection.ts` — function detectDubbingRegionFromWikitext: ({...}, sections, }) => DubbingEvidence, type DubbingEvidence
 - `apps/website/server/utils/error-message.ts` — function getErrorMessage: (error) => string
 - `apps/website/server/utils/featureFlags.ts` — function isEnqueueOnNavigateEnabled: () => Promise<boolean>
 - `apps/website/server/utils/index.ts`

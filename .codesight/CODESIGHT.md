@@ -3,8 +3,8 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 81 routes | 18 models | 197 components | 90 lib files | 61 env vars | 14 middleware | 19% test coverage
-> **Token savings:** this file is ~15,800 tokens. Without it, AI exploration would cost ~157,200 tokens. **Saves ~141,500 tokens per conversation.**
+> 81 routes | 18 models | 197 components | 91 lib files | 61 env vars | 14 middleware | 19% test coverage
+> **Token savings:** this file is ~15,800 tokens. Without it, AI exploration would cost ~157,500 tokens. **Saves ~141,700 tokens per conversation.**
 > **Last scanned:** 2026-10-06 08:47 — re-run after significant changes
 
 ---
@@ -502,6 +502,7 @@
   - function getWorkVotes: (workIds, userId?) => Promise<
   - function getTopContributors: (limit) => void
 - `apps/website/server/utils/dubbing-language.ts` — function requireDubbingLanguage: (value) => DubbingLanguage
+- `apps/website/server/utils/dubbing-region-detection.ts` — function detectDubbingRegionFromWikitext: ({...}, sections, }) => DubbingEvidence, type DubbingEvidence
 - `apps/website/server/utils/error-message.ts` — function getErrorMessage: (error) => string
 - `apps/website/server/utils/featureFlags.ts` — function isEnqueueOnNavigateEnabled: () => Promise<boolean>
 - `apps/website/server/utils/index.ts`
@@ -791,7 +792,7 @@
 - `apps/website/server/utils/error-message.ts` — imported by **5** files
 - `apps/website/server/utils/with-timeout.ts` — imported by **4** files
 - `apps/website/server/utils/llm.ts` — imported by **4** files
-- `apps/website/server/utils/api/openlibrary.ts` — imported by **4** files
+- `apps/website/server/utils/cache/wikipedia.ts` — imported by **4** files
 
 ## Import Map (who imports what)
 
@@ -811,7 +812,7 @@
 # Test Coverage
 
 > **19%** of routes and models are covered by tests
-> 61 test files found
+> 63 test files found
 
 ## Covered Routes
 
