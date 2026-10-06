@@ -68,9 +68,9 @@
   - function extractAvailableLanguages: (sitelinks, {...}) => string[]
   - function cleanHeadingText: (raw) => string
   - function isDubbingSectionHeading: (heading) => boolean
+  - function selectDubbingCandidateSections: (sections) => Promise<DubbingSectionCandidate[]>
   - function selectDubbingSections: (sections) => Promise<string[]>
-  - function filterValidSectionIndexes: (sections, requested) => Promise<number[]>
-  - _...4 more_
+  - _...6 more_
 - `apps/website/server/utils/db/client.ts` — function useSupabaseAdmin: (event?) => SupabaseClient<Database>
 - `apps/website/server/utils/db/dubbing-project.ts` — function findOrCreateDubbingProject: (contentId, contentType, dubbingLanguage) => Promise<number>
 - `apps/website/server/utils/db/queries.ts`

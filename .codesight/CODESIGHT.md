@@ -5,7 +5,7 @@
 
 > 81 routes | 18 models | 197 components | 90 lib files | 61 env vars | 14 middleware | 19% test coverage
 > **Token savings:** this file is ~15,800 tokens. Without it, AI exploration would cost ~157,200 tokens. **Saves ~141,500 tokens per conversation.**
-> **Last scanned:** 2026-10-03 20:08 — re-run after significant changes
+> **Last scanned:** 2026-10-06 08:47 — re-run after significant changes
 
 ---
 
@@ -490,9 +490,9 @@
   - function extractAvailableLanguages: (sitelinks, {...}) => string[]
   - function cleanHeadingText: (raw) => string
   - function isDubbingSectionHeading: (heading) => boolean
+  - function selectDubbingCandidateSections: (sections) => Promise<DubbingSectionCandidate[]>
   - function selectDubbingSections: (sections) => Promise<string[]>
-  - function filterValidSectionIndexes: (sections, requested) => Promise<number[]>
-  - _...4 more_
+  - _...6 more_
 - `apps/website/server/utils/db/client.ts` — function useSupabaseAdmin: (event?) => SupabaseClient<Database>
 - `apps/website/server/utils/db/dubbing-project.ts` — function findOrCreateDubbingProject: (contentId, contentType, dubbingLanguage) => Promise<number>
 - `apps/website/server/utils/db/queries.ts`
