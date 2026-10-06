@@ -79,7 +79,11 @@ describe("Wikipedia cache policies", () => {
     vi.stubGlobal(
       "fetch",
       async () =>
-        new Response(JSON.stringify({ parse: { tocdata: { sections: [{}, { line: "Cast" }] } } })),
+        new Response(
+          JSON.stringify({
+            parse: { tocdata: { sections: [{}, { line: "Cast" }] } },
+          }),
+        ),
     );
     const cache = new WikipediaCache(new SimpleCache(() => null));
 

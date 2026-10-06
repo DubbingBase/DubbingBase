@@ -369,7 +369,9 @@ describe("POST /api/process-media-queue requester propagation", () => {
       pageId: 55,
     });
     routeMocks.getPageSectionAsWikitext.mockResolvedValue({
-      parse: { wikitext: "* Character One — Actor One\n* Character Two — Actor Two" },
+      parse: {
+        wikitext: "* Character One — Actor One\n* Character Two — Actor Two",
+      },
     });
 
     await processQueue("check", {
