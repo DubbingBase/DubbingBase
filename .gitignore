@@ -36,6 +36,8 @@ target/**
 supabase/.temp/
 .playwright-mcp/
 scripts/progress.json
+scripts/scratch/wikipedia-dubbing-corpus/
+scripts/scratch/wikipedia-research/
 packages/database/supabase/seed.sql
 packages/database/supabase/buckets
 

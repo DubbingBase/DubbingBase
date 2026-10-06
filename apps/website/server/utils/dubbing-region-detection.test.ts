@@ -4,6 +4,122 @@ import { detectDubbingRegionFromWikitext } from "./dubbing-region-detection";
 const noEvidence = { resolved: [], unresolved: [] };
 
 describe("detectDubbingRegionFromWikitext", () => {
+  it("keeps generic Spanish dubbing unresolved without Spain or LATAM evidence", () => {
+    expect(
+      detectDubbingRegionFromWikitext({
+        wikipediaLanguage: "es",
+        sections: [{ index: 1, heading: "Doblaje", wikitext: "Doblaje español: Luis." }],
+      }),
+    ).toEqual({
+      resolved: [],
+      unresolved: [{ sectionIndexes: [1], reason: "ambiguous_region" }],
+    });
+  });
+
+  it("does not identify translators or directors as Catalan performers", () => {
+    expect(
+      detectDubbingRegionFromWikitext({
+        wikipediaLanguage: "es",
+        sections: [
+          {
+            index: 1,
+            heading: "Doblaje",
+            wikitext:
+              "El director Enric Isasi-Isasmendi en la versión en catalán y el traductor Tacho González en la versión en gallego.",
+          },
+        ],
+      }),
+    ).toEqual(noEvidence);
+  });
+
+  it("requires a named dubbed actor beneath a regional column", () => {
+    expect(
+      detectDubbingRegionFromWikitext({
+        wikipediaLanguage: "pt",
+        sections: [
+          {
+            index: 2,
+            heading: "Elenco",
+            wikitext:
+              '{| class="wikitable"\n! Personagens !! Original !! Brasil !! Portugal\n|-\n| Alice || Mia Wasikowska || Ana Lúcia Menezes ||\n|}\n* Direcção de dobragem: Carlos Freixo',
+          },
+        ],
+      }),
+    ).toEqual({
+      resolved: [{ language: "pt-BR", sectionIndexes: [2] }],
+      unresolved: [],
+    });
+  });
+
+  it("does not treat country-labelled adaptation casts as dubbed voices", () => {
+    expect(
+      detectDubbingRegionFromWikitext({
+        wikipediaLanguage: "pt",
+        sections: [
+          {
+            index: 2,
+            heading: "Elenco",
+            wikitext:
+              '{| class="wikitable"\n! Personagens !! Original !! Brasil !! Portugal\n|-\n| Alice || Mia Wasikowska || Ana Lúcia Menezes || Tobias Monteiro\n|}',
+          },
+        ],
+      }),
+    ).toEqual(noEvidence);
+  });
+
+  it("ignores a regional voice column when only original performers are populated", () => {
+    expect(
+      detectDubbingRegionFromWikitext({
+        wikipediaLanguage: "fr",
+        sections: [
+          {
+            index: 1,
+            heading: "Distribution",
+            wikitext:
+              '{| class="wikitable"\n! Personnage !! Voix originale !! Voix française\n|-\n| Anna || Kristen Bell ||\n|}',
+          },
+        ],
+      }),
+    ).toEqual(noEvidence);
+  });
+
+  it("recognizes paired character and voice actor labels under a regional heading", () => {
+    expect(
+      detectDubbingRegionFromWikitext({
+        wikipediaLanguage: "fr",
+        sections: [
+          {
+            index: 2,
+            heading: "Version française",
+            wikitext: "Character: Hero\nVoice actor: Jean",
+          },
+        ],
+      }),
+    ).toEqual({
+      resolved: [{ language: "fr-FR", sectionIndexes: [2] }],
+      unresolved: [],
+    });
+  });
+
+  it("recognizes a dubbed cast table after an unrelated table", () => {
+    expect(
+      detectDubbingRegionFromWikitext({
+        wikipediaLanguage: "fr",
+        sections: [
+          {
+            index: 2,
+            heading: "Version française",
+            wikitext:
+              '{| class="wikitable"\n! Season !! Episodes\n|-\n| 1 || 10\n|}\n{| class="wikitable"\n! Character !! Actor\n|-\n| Hero || Jean\n|}',
+          },
+        ],
+      }),
+    ).toEqual({
+      resolved: [{ language: "fr-FR", sectionIndexes: [2] }],
+      unresolved: [],
+    });
+  });
+
   it.each(["Distribution", "Cast"])("ignores an ordinary cast under %s", (heading) => {
     expect(
       detectDubbingRegionFromWikitext({
@@ -320,7 +436,7 @@ describe("detectDubbingRegionFromWikitext", () => {
             heading: "Cast",
             wikitext: "European Portuguese dubbing: Rui.",
           },
-          { index: 3, heading: "Cast", wikitext: "Doblaje español: Luis." },
+          { index: 3, heading: "Cast", wikitext: "Doblaje castellano: Luis." },
           {
             index: 4,
             heading: "Cast",

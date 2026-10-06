@@ -163,6 +163,11 @@ Backend routes in `apps/website/server/api/` handle integration with TMDB, TVDB,
 
 ## 🤖 AI Agent Behavior Guidelines
 
+For changes to Wikipedia dubbing section selection, wikitext processing, regional
+evidence classification, or queue evidence handling, read
+[the Wikipedia corpus skill](skills/wikipedia-dubbing-corpus/SKILL.md) and run the
+relevant revision-pinned real-page regressions described there.
+
 1. **Research First**: Before writing code, inspect existing files, imports, and state to understand the setup.
 2. **Preserve Comments**: Keep existing comments and docstrings unless explicitly told to remove them.
 3. **Precise Code Changes**: Make targeted edits instead of rewriting large files.
