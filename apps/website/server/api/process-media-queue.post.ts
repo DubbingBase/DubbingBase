@@ -608,7 +608,7 @@ export default defineEventHandler(async (event) => {
         let enqueueRegionResults: Array<{
           language: string;
           sectionIndexes: number[];
-          status: "enqueued" | "already_queued" | "failed";
+          status: "enqueued" | "already_queued" | "already_exists" | "failed";
           details?: string;
         }> = [];
         try {
@@ -913,6 +913,14 @@ export default defineEventHandler(async (event) => {
                     sectionIndexes: target.sectionIndexes,
                     status: "already_queued",
                   });
+                } else if (
+                  extractEnqueueErr.message?.includes("Dubbing project already exists for")
+                ) {
+                  enqueueRegionResults.push({
+                    language: target.dubbingLanguage,
+                    sectionIndexes: target.sectionIndexes,
+                    status: "already_exists",
+                  });
                 } else {
                   enqueueRegionResults.push({
                     language: target.dubbingLanguage,
@@ -962,6 +970,7 @@ export default defineEventHandler(async (event) => {
               p_archive_reason: "extraction_enqueued",
               p_archive_details: JSON.stringify({
                 skipped: disposition.skipped,
+                extractionResults: enqueueRegionResults,
               }),
               p_detected_regions: detectedRegions,
               p_candidate_sections: candidateMetadata,
@@ -970,25 +979,47 @@ export default defineEventHandler(async (event) => {
           if (archiveError) throw archiveError;
           if (!archived) throw new Error(`Could not archive wiki_check item ${msgId}`);
 
+          const enqueuedCount = enqueueRegionResults.filter(
+            (result) => result.status === "enqueued",
+          ).length;
+          const alreadyQueuedCount = enqueueRegionResults.filter(
+            (result) => result.status === "already_queued",
+          ).length;
+          const existingProjectCount = enqueueRegionResults.filter(
+            (result) => result.status === "already_exists",
+          ).length;
+
           results.push({
             id: msgId,
             ok: true,
             changes: 0,
-            note: "Enqueued " + disposition.targets.length + " extraction job(s).",
+            note:
+              enqueuedCount +
+              " extraction job(s) enqueued; " +
+              alreadyQueuedCount +
+              " already queued; " +
+              existingProjectCount +
+              " dubbing project(s) already exist.",
           });
 
-          const targetSummary = disposition.targets
-            .map((target) => target.dubbingLanguage)
-            .join(", ");
-          const resolvedLines = disposition.targets
-            .map(
-              (target) =>
+          const targetSummary = enqueueRegionResults.map((target) => target.language).join(", ");
+          const resolvedLines = enqueueRegionResults
+            .map((result) => {
+              const finalAction =
+                result.status === "enqueued"
+                  ? "extraction enqueued"
+                  : result.status === "already_queued"
+                    ? "extraction was already queued"
+                    : "Dubbing project already exists; no duplicate extraction was created";
+              return (
                 "- " +
-                target.dubbingLanguage +
+                result.language +
                 " → #" +
-                target.sectionIndexes.join(", #") +
-                " → extraction enqueued",
-            )
+                result.sectionIndexes.join(", #") +
+                " → " +
+                finalAction
+              );
+            })
             .join("\n");
           const skippedLines = disposition.skipped
             .map(
@@ -1004,6 +1035,18 @@ export default defineEventHandler(async (event) => {
           const title = partial
             ? "Wikipedia Dubbing Partially Resolved"
             : "Wikipedia Dubbing Detected — " + targetSummary;
+          const actionParts = [
+            ...(enqueuedCount > 0 ? [enqueuedCount + " extraction job(s) enqueued"] : []),
+            ...(alreadyQueuedCount > 0
+              ? [alreadyQueuedCount + " extraction job(s) already queued"]
+              : []),
+            ...(existingProjectCount > 0
+              ? [
+                  existingProjectCount +
+                    " target(s) already had a dubbing project; No duplicate extraction was created",
+                ]
+              : []),
+          ];
           const message =
             "Media: **" +
             mediaTitle +
@@ -1019,8 +1062,7 @@ export default defineEventHandler(async (event) => {
             resolvedLines +
             (skippedLines ? "\nSkipped:\n" + skippedLines : "") +
             "\nAction: " +
-            disposition.targets.length +
-            " extraction job(s) enqueued" +
+            actionParts.join("; ") +
             (partial ? "; unresolved sections archived." : ".");
           await sendDiscordAdminNotification(title, message, {
             event,

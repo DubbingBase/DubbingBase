@@ -365,6 +365,28 @@ describe("POST /api/process-media-queue requester propagation", () => {
     );
   });
 
+  it("reports a section response without wikitext as an operational error", async () => {
+    routeMocks.getPageSectionAsWikitext.mockResolvedValue({ parse: {} });
+
+    await processQueue("check");
+
+    expect(routeMocks.rpc).toHaveBeenCalledWith(
+      "archive_media_queue_message_with_error",
+      expect.objectContaining({
+        p_queue_name: "wiki_check",
+        p_error: "Could not read Wikipedia section 2 as wikitext",
+      }),
+    );
+    expect(routeMocks.rpc).not.toHaveBeenCalledWith(
+      "archive_wiki_check_with_outcome",
+      expect.anything(),
+    );
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
+    const notification = routeMocks.sendDiscordAdminNotification.mock.calls[0]?.[1];
+    expect(notification).toContain("Operation: fetch candidate section wikitext");
+    expect(notification).toContain("Could not read Wikipedia section 2 as wikitext");
+  });
+
   it("archives a malformed wiki_check payload once and reports the successful archive", async () => {
     await processQueue("check", { media_type: "invalid" });
 
@@ -999,6 +1021,41 @@ describe("POST /api/process-media-queue requester propagation", () => {
     );
   });
 
+  it("archives an existing dubbing project without creating a duplicate extraction", async () => {
+    routeMocks.getPageSectionAsWikitext.mockResolvedValue({
+      parse: { wikitext: "VF : Jean Dupont as Hero." },
+    });
+    routeMocks.enqueueMediaExtractError = "Dubbing project already exists for TMDB 42";
+
+    await processQueue("check", {
+      wikipedia_language: "fr",
+      dubbing_language: undefined,
+    });
+
+    expect(routeMocks.rpc).toHaveBeenCalledWith(
+      "archive_wiki_check_with_outcome",
+      expect.objectContaining({
+        p_msg_id: 17,
+        p_archive_reason: "extraction_enqueued",
+        p_archive_details: expect.stringContaining("already_exists"),
+      }),
+    );
+    expect(routeMocks.rpc).not.toHaveBeenCalledWith("delay_media_queue_message", expect.anything());
+    expect(routeMocks.rpc).not.toHaveBeenCalledWith(
+      "archive_media_queue_message_with_error",
+      expect.anything(),
+    );
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledWith(
+      "Wikipedia Dubbing Detected — fr-FR",
+      expect.stringContaining("Dubbing project already exists"),
+      expect.objectContaining({ queue: "wiki_check", color: 0x57f287 }),
+    );
+    const notification = routeMocks.sendDiscordAdminNotification.mock.calls[0]?.[1];
+    expect(notification).toContain("No duplicate extraction was created");
+    expect(notification).not.toContain("extraction enqueued");
+  });
+
   it("reports when malformed wiki_check payload archiving fails", async () => {
     routeMocks.archiveQueueResult.mockReturnValue({
       data: false,
@@ -1096,6 +1153,9 @@ describe("POST /api/process-media-queue requester propagation", () => {
       expect.any(String),
       expect.anything(),
     );
+    const notification = routeMocks.sendDiscordAdminNotification.mock.calls[0]?.[1];
+    expect(notification).toContain("Requested: fr-FR");
+    expect(notification).toContain("Detected:\n- fr-CA → section #2");
   });
 
   it("archives dubbing evidence with an unknown market as ambiguous", async () => {
