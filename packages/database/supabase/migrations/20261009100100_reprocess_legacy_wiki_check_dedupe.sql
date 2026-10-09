@@ -63,7 +63,7 @@ CREATE OR REPLACE FUNCTION public.enqueue_media_extract(
 RETURNS bigint
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, pgmq
+SET search_path = ''
 AS $$
 DECLARE
   v_payload jsonb;
@@ -143,7 +143,7 @@ CREATE OR REPLACE FUNCTION public.enqueue_media_fetch(
 RETURNS bigint
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, pgmq
+SET search_path = ''
 AS $$
 DECLARE
   v_payload jsonb;
@@ -236,7 +236,7 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, pgmq
+SET search_path = ''
 AS $$
 DECLARE
   v_target_id bigint;

@@ -10,7 +10,7 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, pgmq
+SET search_path = ''
 AS $$
 DECLARE
   v_target_id bigint;

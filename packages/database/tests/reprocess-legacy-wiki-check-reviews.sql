@@ -13,6 +13,17 @@ DECLARE
   v_duplicate_blocked boolean := false;
   v_constraint_name text;
 BEGIN
+  IF has_function_privilege('anon', 'public.reprocess_legacy_wiki_check_reviews()', 'EXECUTE')
+    OR has_function_privilege('authenticated', 'public.reprocess_legacy_wiki_check_reviews()', 'EXECUTE')
+    OR NOT has_function_privilege('service_role', 'public.reprocess_legacy_wiki_check_reviews()', 'EXECUTE') THEN
+    RAISE EXCEPTION 'Legacy reprocessor execute privileges are not restricted to service_role';
+  END IF;
+
+  IF has_table_privilege('service_role', 'public.legacy_wiki_check_reprocesses', 'SELECT')
+    OR has_table_privilege('service_role', 'public.legacy_wiki_check_reprocesses', 'INSERT') THEN
+    RAISE EXCEPTION 'Reprocess ledger must remain inaccessible to service_role outside its definer function';
+  END IF;
+
   IF EXISTS (
     SELECT 1
     FROM pgmq.a_wiki_check
