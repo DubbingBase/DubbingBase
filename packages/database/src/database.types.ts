@@ -214,6 +214,30 @@ export type Database = {
         };
         Relationships: [];
       };
+      legacy_wiki_check_reprocesses: {
+        Row: {
+          archived_msg_id: number;
+          outcome: string;
+          processed_at: string;
+          queued_msg_id: number;
+          tmdb_id: number;
+        };
+        Insert: {
+          archived_msg_id: number;
+          outcome: string;
+          processed_at?: string;
+          queued_msg_id: number;
+          tmdb_id: number;
+        };
+        Update: {
+          archived_msg_id?: number;
+          outcome?: string;
+          processed_at?: string;
+          queued_msg_id?: number;
+          tmdb_id?: number;
+        };
+        Relationships: [];
+      };
       project_attachments: {
         Row: {
           created_at: string | null;
@@ -653,6 +677,15 @@ export type Database = {
         };
         Returns: boolean;
       };
+      reprocess_legacy_wiki_check_reviews: {
+        Args: never;
+        Returns: {
+          archived_msg_id: number;
+          outcome: string;
+          queued_msg_id: number | null;
+          tmdb_id: number;
+        }[];
+      };
       clear_media_queue: { Args: never; Returns: boolean };
       delay_media_queue_message: {
         Args: {
@@ -798,6 +831,18 @@ export type Database = {
       is_valid_dubbing_language: {
         Args: { p_language: string };
         Returns: boolean;
+      };
+      lock_media_queue_identity: {
+        Args: {
+          p_dubbing_language: string | null;
+          p_episode_number: number | null;
+          p_media_type: string;
+          p_queue: string;
+          p_season_number: number | null;
+          p_tmdb_id: number;
+          p_wikipedia_language: string | null;
+        };
+        Returns: undefined;
       };
       match_voice_actor: {
         Args: { p_firstname: string; p_lastname: string };
