@@ -21,6 +21,7 @@ const routeMocks = vi.hoisted(() => ({
   extractGameDubbingCredits: vi.fn(),
   useWikipediaCache: vi.fn(),
   getPageSectionAsWikitext: vi.fn(),
+  getPageSections: vi.fn(),
   useIgdbClient: vi.fn(),
   getGame: vi.fn(),
   cacheGetOrFetch: vi.fn(),
@@ -33,6 +34,12 @@ const routeMocks = vi.hoisted(() => ({
       data: boolean | null;
       error: { message: string } | null;
     } => ({
+      data: true,
+      error: null,
+    }),
+  ),
+  archiveWikiCheckResult: vi.fn(
+    (): { data: boolean | null; error: { message: string } | null } => ({
       data: true,
       error: null,
     }),
@@ -84,9 +91,13 @@ beforeEach(() => {
   routeMocks.delayMediaQueueError = "";
   routeMocks.queuePopError = "";
   routeMocks.archiveQueueResult.mockReturnValue({ data: true, error: null });
+  routeMocks.archiveWikiCheckResult.mockReturnValue({ data: true, error: null });
   routeMocks.sendDiscordAdminNotification.mockResolvedValue(undefined);
   routeMocks.getPageSectionAsWikitext.mockResolvedValue({
     parse: { wikitext: "Original cast: actor names." },
+  });
+  routeMocks.getPageSections.mockResolvedValue({
+    parse: { sections: [{ index: 2, line: "Cast" }] },
   });
   routeMocks.checkMediaDubbingSections.mockResolvedValue({
     ok: true,
@@ -114,6 +125,7 @@ beforeEach(() => {
   });
   routeMocks.useWikipediaCache.mockReturnValue({
     getPageSectionAsWikitext: routeMocks.getPageSectionAsWikitext,
+    getPageSections: routeMocks.getPageSections,
     searchWikidataEntities: vi.fn(async () => ({ search: [{ id: "Q42" }] })),
     getAllSitelinksEntity: vi.fn(async (wikiId: string) => ({
       entities: {
@@ -142,7 +154,7 @@ beforeEach(() => {
           error: { message: routeMocks.archiveWikiCheckError },
         };
       }
-      return { data: true, error: null };
+      return routeMocks.archiveWikiCheckResult();
     }
     if (name === "delay_media_queue_message" && routeMocks.delayMediaQueueError) {
       return {
@@ -203,7 +215,7 @@ async function processQueue(
           error: { message: routeMocks.archiveWikiCheckError },
         };
       }
-      return { data: true, error: null };
+      return routeMocks.archiveWikiCheckResult();
     }
     if (name === "delay_media_queue_message" && routeMocks.delayMediaQueueError) {
       return {
@@ -365,17 +377,17 @@ describe("POST /api/process-media-queue requester propagation", () => {
     );
   });
 
-  it("reports a section response without wikitext as an operational error", async () => {
+  it("refreshes and retries a section response without wikitext", async () => {
     routeMocks.getPageSectionAsWikitext.mockResolvedValue({ parse: {} });
 
-    await processQueue("check");
+    const response = await processQueue("check");
 
-    expect(routeMocks.rpc).toHaveBeenCalledWith(
+    expect(routeMocks.getPageSections).toHaveBeenCalledWith(55, "en");
+    expect(routeMocks.rpc).toHaveBeenCalledWith("delay_media_queue_message", expect.anything());
+    expect(await response.json()).toEqual(expect.objectContaining({ ok: false }));
+    expect(routeMocks.rpc).not.toHaveBeenCalledWith(
       "archive_media_queue_message_with_error",
-      expect.objectContaining({
-        p_queue_name: "wiki_check",
-        p_error: "Could not read Wikipedia section 2 as wikitext",
-      }),
+      expect.anything(),
     );
     expect(routeMocks.rpc).not.toHaveBeenCalledWith(
       "archive_wiki_check_with_outcome",
@@ -384,7 +396,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
     expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
     const notification = routeMocks.sendDiscordAdminNotification.mock.calls[0]?.[1];
     expect(notification).toContain("Operation: fetch candidate section wikitext");
-    expect(notification).toContain("Could not read Wikipedia section 2 as wikitext");
+    expect(notification).toContain("retrying the check");
   });
 
   it("archives a malformed wiki_check payload once and reports the successful archive", async () => {
@@ -563,7 +575,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
     );
   });
 
-  it("reports when terminal outcome archiving fails and the error archive succeeds", async () => {
+  it("defers when terminal outcome archiving fails without a generic archive", async () => {
     routeMocks.archiveWikiCheckError = "terminal archive unavailable";
     routeMocks.checkMediaDubbingSections.mockResolvedValue({
       ok: true,
@@ -573,7 +585,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
       pageId: 55,
     });
 
-    await processQueue("check", { dubbing_language: undefined });
+    const response = await processQueue("check", { dubbing_language: undefined });
 
     expect(routeMocks.rpc).toHaveBeenCalledWith(
       "archive_wiki_check_with_outcome",
@@ -582,21 +594,20 @@ describe("POST /api/process-media-queue requester propagation", () => {
         p_archive_reason: "no_dubbing_evidence",
       }),
     );
-    expect(routeMocks.rpc).toHaveBeenCalledWith(
+    expect(routeMocks.rpc).not.toHaveBeenCalledWith(
       "archive_media_queue_message_with_error",
-      expect.objectContaining({
-        p_queue_name: "wiki_check",
-        p_msg_id: 17,
-        p_error: '{"message":"terminal archive unavailable"}',
-      }),
+      expect.anything(),
     );
+    expect(routeMocks.rpc).toHaveBeenCalledWith(
+      "delay_media_queue_message",
+      expect.objectContaining({ p_msg_id: 17 }),
+    );
+    expect(await response.json()).toEqual(expect.objectContaining({ ok: false }));
     expect(routeMocks.rpc).not.toHaveBeenCalledWith("enqueue_media_extract", expect.anything());
     expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
     expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledWith(
       "Wikipedia Queue Error",
-      expect.stringContaining(
-        'Error: {"message":"terminal archive unavailable"}\nAction: item archived as a non-retryable error.',
-      ),
+      expect.stringContaining("retry scheduled in 60 seconds"),
       expect.objectContaining({ queue: "wiki_check", color: 0xed4245 }),
     );
   });
@@ -1085,12 +1096,79 @@ describe("POST /api/process-media-queue requester propagation", () => {
     });
     routeMocks.archiveQueueResult.mockReturnValue({ data: false, error: null });
 
-    await processQueue("check");
+    const response = await processQueue("check");
+    const body = await response.json();
 
     expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
+    expect(body).toEqual(expect.objectContaining({ ok: false }));
     expect(routeMocks.sendDiscordAdminNotification.mock.calls[0]?.[1]).toContain(
       "archive RPC reported that the item was not archived",
     );
+  });
+
+  it.each([
+    ["RPC error", "error"],
+    ["already finalized", "false"],
+  ] as const)(
+    "does not error-archive after wiki_check outcome archival returns %s",
+    async (_label, failure) => {
+      routeMocks.getPageSectionAsWikitext.mockResolvedValue({
+        parse: { wikitext: "Japanese dub: Actor Name." },
+      });
+      if (failure === "error") routeMocks.archiveWikiCheckError = "archive unavailable";
+      else routeMocks.archiveWikiCheckResult.mockReturnValue({ data: false, error: null });
+
+      const response = await processQueue("check", { dubbing_language: undefined });
+      const body = await response.json();
+
+      expect(routeMocks.rpc).not.toHaveBeenCalledWith(
+        "archive_media_queue_message_with_error",
+        expect.anything(),
+      );
+      expect(body).toEqual(expect.objectContaining({ ok: false }));
+      if (failure === "error") {
+        expect(routeMocks.rpc).toHaveBeenCalledWith(
+          "delay_media_queue_message",
+          expect.objectContaining({ p_msg_id: 17 }),
+        );
+      }
+    },
+  );
+
+  it("refreshes once for a stale candidate in a mixed candidate set and does not enqueue partial evidence", async () => {
+    routeMocks.checkMediaDubbingSections.mockResolvedValue({
+      ok: true,
+      title: "Test movie",
+      sectionCandidates: [
+        { index: 2, heading: "French dub", headingKind: "explicit_dubbing" },
+        { index: 3, heading: "Japanese dub", headingKind: "explicit_dubbing" },
+      ],
+      pageId: 55,
+    });
+    routeMocks.getPageSections.mockResolvedValue({
+      parse: {
+        sections: [
+          { index: 2, line: "French dub" },
+          { index: 3, line: "Japanese dub" },
+        ],
+      },
+    });
+    routeMocks.getPageSectionAsWikitext.mockImplementation(
+      async (_pageId: number, index: string) =>
+        index === "2" ? { parse: { wikitext: "VF : Jean Dupont." } } : {},
+    );
+
+    const response = await processQueue("check");
+    const body = await response.json();
+
+    expect(routeMocks.getPageSections).toHaveBeenCalledWith(55, "en");
+    expect(routeMocks.getPageSectionAsWikitext).toHaveBeenCalledTimes(3);
+    expect(routeMocks.rpc).not.toHaveBeenCalledWith("enqueue_media_extract", expect.anything());
+    expect(routeMocks.rpc).toHaveBeenCalledWith(
+      "delay_media_queue_message",
+      expect.objectContaining({ p_msg_id: 17 }),
+    );
+    expect(body).toEqual(expect.objectContaining({ ok: false }));
   });
 
   it("extracts only the explicitly requested region when the page has multiple versions", async () => {

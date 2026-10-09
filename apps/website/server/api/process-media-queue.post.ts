@@ -56,6 +56,30 @@ type QueuePayload = {
 };
 type QueueItemResult = Record<string, unknown>;
 
+class WikiCheckArchiveFailure extends Error {
+  constructor(
+    readonly kind: "rpc_error" | "unconfirmed",
+    message: string,
+  ) {
+    super(message);
+    this.name = "WikiCheckArchiveFailure";
+  }
+}
+
+function assertWikiCheckArchived(
+  archived: boolean | null,
+  error: { message: string } | null,
+  msgId: number,
+): void {
+  if (error) throw new WikiCheckArchiveFailure("rpc_error", error.message);
+  if (archived !== true) {
+    throw new WikiCheckArchiveFailure(
+      "unconfirmed",
+      `Wiki check item ${msgId} was not confirmed archived; it may already be finalized.`,
+    );
+  }
+}
+
 function readProperty(value: unknown, key: string): unknown {
   if (typeof value !== "object" || value === null) return undefined;
   return Reflect.get(value, key);
@@ -651,8 +675,7 @@ export default defineEventHandler(async (event) => {
                 p_candidate_sections: [],
               },
             );
-            if (archiveError) throw archiveError;
-            if (!archived) throw new Error(`Could not archive wiki_check item ${msgId}`);
+            assertWikiCheckArchived(archived, archiveError, msgId);
             await sendDiscordAdminNotification(
               "Wikipedia Check Archived — Adult Content",
               `Media: **${mediaTitle}** (${payload.media_type})\nTMDB ID: ${payload.tmdb_id}\nWikipedia language: ${wikipediaLanguage}\nQueue: wiki_check\nResult: adult_content_excluded\nAction: archived — no extraction created.`,
@@ -732,8 +755,7 @@ export default defineEventHandler(async (event) => {
                 p_candidate_sections: candidateMetadata,
               },
             );
-            if (archiveError) throw archiveError;
-            if (!archived) throw new Error(`Could not archive wiki_check item ${msgId}`);
+            assertWikiCheckArchived(archived, archiveError, msgId);
             results.push({
               id: msgId,
               ok: true,
@@ -766,20 +788,43 @@ export default defineEventHandler(async (event) => {
           operation = "fetch candidate section wikitext";
           const candidateContents = await Promise.all(
             sectionCandidates.map(async (candidate) => {
-              const section = await wikipediaCache.getPageSectionAsWikitext(
+              const sectionId = String(candidate.index);
+              let section = await wikipediaCache.getPageSectionAsWikitext(
                 pageId,
-                String(candidate.index),
+                sectionId,
                 wikipediaLanguage,
               );
-              const wikitext = section.parse?.wikitext;
+              let wikitext = section.parse?.wikitext;
               if (typeof wikitext !== "string") {
-                throw new Error(`Could not read Wikipedia section ${candidate.index} as wikitext`);
+                // Refresh the TOC once before retrying a possibly stale numeric section id.
+                const refreshed = await wikipediaCache.getPageSections(pageId, wikipediaLanguage);
+                const currentSection = refreshed.parse?.sections?.find(
+                  (item) =>
+                    item.index === candidate.index &&
+                    (!candidate.heading || item.line === candidate.heading),
+                );
+                if (!currentSection) {
+                  const retryError = new Error(
+                    `Wikipedia candidate section ${candidate.index} changed or disappeared; retrying the check.`,
+                  );
+                  retryError.name = "RetryableQueueItemError";
+                  throw retryError;
+                }
+                section = await wikipediaCache.getPageSectionAsWikitext(
+                  pageId,
+                  sectionId,
+                  wikipediaLanguage,
+                );
+                wikitext = section.parse?.wikitext;
               }
-              return {
-                index: candidate.index,
-                heading: candidate.heading,
-                wikitext,
-              };
+              if (typeof wikitext !== "string") {
+                const retryError = new Error(
+                  `Could not read Wikipedia section ${candidate.index} as wikitext after refreshing its TOC; retrying the check.`,
+                );
+                retryError.name = "RetryableQueueItemError";
+                throw retryError;
+              }
+              return { index: candidate.index, heading: candidate.heading, wikitext };
             }),
           );
           operation = "classify dubbing evidence";
@@ -814,8 +859,7 @@ export default defineEventHandler(async (event) => {
                 p_candidate_sections: candidateMetadata,
               },
             );
-            if (archiveError) throw archiveError;
-            if (!archived) throw new Error(`Could not archive wiki_check item ${msgId}`);
+            assertWikiCheckArchived(archived, archiveError, msgId);
             results.push({
               id: msgId,
               ok: true,
@@ -976,8 +1020,7 @@ export default defineEventHandler(async (event) => {
               p_candidate_sections: candidateMetadata,
             },
           );
-          if (archiveError) throw archiveError;
-          if (!archived) throw new Error(`Could not archive wiki_check item ${msgId}`);
+          assertWikiCheckArchived(archived, archiveError, msgId);
 
           const enqueuedCount = enqueueRegionResults.filter(
             (result) => result.status === "enqueued",
@@ -1075,6 +1118,21 @@ export default defineEventHandler(async (event) => {
         } catch (err) {
           const errMsg = getErrorMessage(err);
           console.error(`[QUEUE] Error checking sections for message ${msgId}:`, errMsg);
+
+          if (err instanceof WikiCheckArchiveFailure) {
+            if (err.kind === "rpc_error") {
+              return deferForRetry(errMsg, 60, {
+                operation: "archive terminal wiki_check outcome",
+              });
+            }
+            results.push({ id: msgId, ok: false, changes: 0, error: errMsg });
+            await sendDiscordAdminNotification(
+              "Wikipedia Queue Outcome Unconfirmed",
+              `Media: **${mediaTitle}** (${payload.media_type}, TMDB ${payload.tmdb_id})\nWikipedia language: ${wikipediaLanguage}\nQueue: wiki_check\nOperation: archive terminal outcome\nError: ${errMsg}\nAction: no fallback archive was attempted; existing archived state was preserved.`,
+              { event, queue: "wiki_check", color: 0xfee75c },
+            );
+            return { ok: false, processed: 1, results, queue: targetQueue };
+          }
 
           if (
             isRetryableMediaRequestError(err) ||
@@ -1333,7 +1391,11 @@ export default defineEventHandler(async (event) => {
     }
 
     return {
-      ok: batchResults.every((result) => result.ok !== false),
+      ok:
+        batchResults.every((result) => result.ok !== false) &&
+        batchResults
+          .flatMap((result) => result.results ?? [])
+          .every((result) => readProperty(result, "ok") !== false),
       processed: batchResults.reduce((total, result) => total + (result.processed ?? 0), 0),
       results: batchResults.flatMap((result) => result.results ?? []),
       queue: targetQueue,

@@ -56,6 +56,27 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'The archived wiki_check outcome is missing from the standard admin queue';
   END IF;
+
+  IF public.archive_media_queue_message_with_error(
+    'wiki_check',
+    message_id,
+    'stale worker error'
+  ) THEN
+    RAISE EXCEPTION 'A stale worker reported an already archived message as newly archived';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pgmq.a_wiki_check
+    WHERE msg_id = message_id
+      AND message->>'archive_reason' = 'ambiguous_region'
+      AND message->>'error_message' IS NULL
+  ) THEN
+    RAISE EXCEPTION 'A stale worker overwrote finalized wiki_check outcome metadata';
+  END IF;
+
+  IF public.archive_media_queue_message('wiki_check', -980302) THEN
+    RAISE EXCEPTION 'Archiving a missing queue message reported success';
+  END IF;
 END;
 $$;
 
