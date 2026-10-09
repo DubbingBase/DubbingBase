@@ -1,12 +1,13 @@
 # Test Coverage
 
-> **19%** of routes and models are covered by tests
-> 62 test files found
+> **21%** of routes and models are covered by tests
+> 64 test files found
 
 ## Covered Routes
 
 - GET:/api/admin/dubbing-project
 - POST:/api/admin/dubbing-project
+- POST:/api/admin/queue/reprocess-legacy-wiki-check-reviews
 - GET:/api/detail-collections
 - POST:/api/extract-voice-actor-info
 - POST:/api/media-queue
@@ -27,3 +28,4 @@
 - audit_logs
 - dubbing_languages
 - dubbing_language_reviews
+- legacy_wiki_check_reprocesses

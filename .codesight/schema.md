@@ -118,3 +118,10 @@
 - source_snapshot: jsonb (required)
 - target_snapshot: jsonb
 - applied_at: timestamp(tz) (required)
+
+### legacy_wiki_check_reprocesses
+- archived_msg_id: bigint (pk, fk)
+- tmdb_id: bigint (required, fk)
+- outcome: text (required)
+- queued_msg_id: bigint (required, fk)
+- processed_at: timestamp(tz) (required)
