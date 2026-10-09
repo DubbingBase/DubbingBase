@@ -74,6 +74,21 @@ describe("Wikipedia cache policies", () => {
     expect(reads).toBe(1);
     expect(writes).toBe(1);
   });
+
+  it("rejects a section response containing only malformed sections", async () => {
+    vi.stubGlobal(
+      "fetch",
+      async () =>
+        new Response(
+          JSON.stringify({
+            parse: { tocdata: { sections: [{}, { line: "Cast" }] } },
+          }),
+        ),
+    );
+    const cache = new WikipediaCache(new SimpleCache(() => null));
+
+    await expect(cache.getPageSections(1, "en")).rejects.toThrow("invalid section list response");
+  });
 });
 
 describe("isDubbingSectionHeading", () => {
@@ -118,15 +133,18 @@ describe("filterValidSectionIndexes", () => {
 describe("selectDubbingCandidateSections", () => {
   it.each([
     ["Distribution", "generic_cast"],
+    ["Casting", "generic_cast"],
     ["Cast", "generic_cast"],
     ["Reparto", "generic_cast"],
     ["Reparto principal", "generic_cast"],
     ["Besetzung", "generic_cast"],
+    ["Obsada", "generic_cast"],
     ["Starring", "generic_cast"],
     ["キャスト", "generic_cast"],
     ["配役", "generic_cast"],
     ["登場人物", "generic_cast"],
     ["Doublage", "explicit_dubbing"],
+    ["Dubbing", "explicit_dubbing"],
     ["Version française", "explicit_dubbing"],
     ["Version québécoise", "explicit_dubbing"],
     ["Voice cast", "explicit_dubbing"],
@@ -158,13 +176,13 @@ describe("selectDubbingCandidateSections", () => {
 });
 
 describe("selectDubbingSections compatibility", () => {
-  it("preserves the legacy strict detector until callers migrate", async () => {
+  it("forwards generic headings as candidates to legacy callers", async () => {
     await expect(
       selectDubbingSections([
         { index: 1, line: "Reparto" },
         { index: 2, line: "Reparto de doblaje" },
       ]),
-    ).resolves.toEqual(["2"]);
+    ).resolves.toEqual(["1", "2"]);
   });
 });
 

@@ -95,10 +95,20 @@ function parseWikipediaSections(value: unknown): WikipediaSectionsResponse {
   const parse = root.parse;
   const parseSections = (value: unknown): WikipediaSection[] | undefined => {
     if (!Array.isArray(value)) return undefined;
-    return value.flatMap((section) => {
-      if (!isJsonObject(section) || typeof section.line !== "string") return [];
+    return value.map((section) => {
+      if (
+        !isJsonObject(section) ||
+        typeof section.line !== "string" ||
+        (typeof section.index !== "number" && typeof section.index !== "string") ||
+        (typeof section.index === "string" && section.index.trim() === "")
+      ) {
+        throw new Error("Wikipedia returned an invalid section list response");
+      }
       const index = typeof section.index === "number" ? section.index : Number(section.index);
-      return Number.isInteger(index) ? [{ index, line: section.line }] : [];
+      if (!Number.isInteger(index)) {
+        throw new Error("Wikipedia returned an invalid section list response");
+      }
+      return { index, line: section.line };
     });
   };
   const tocdata = isJsonObject(parse.tocdata) ? parse.tocdata : undefined;
@@ -324,16 +334,11 @@ export async function selectDubbingCandidateSections(
   return candidates;
 }
 
-/** @deprecated Use selectDubbingCandidateSections; candidates do not prove dubbing exists. */
+/** @deprecated Use selectDubbingCandidateSections; this compatibility helper returns candidates. */
 export async function selectDubbingSections(
   sections: Array<{ index: number | string; line: string }>,
 ): Promise<string[]> {
-  if (!sections || sections.length === 0) return [];
-  return sections
-    .filter(
-      (section) => section?.line && DUBBING_SECTION_REGEX.test(cleanHeadingText(section.line)),
-    )
-    .map(({ index }) => String(index));
+  return (await selectDubbingCandidateSections(sections)).map(({ index }) => String(index));
 }
 
 /**

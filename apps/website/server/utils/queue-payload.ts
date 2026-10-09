@@ -116,7 +116,10 @@ export function validateExtractPayload(payload: unknown): Validated<ValidExtract
   const base = validateCheckPayload(payload);
   if (!base.ok) return base;
   if (!base.value.dubbingLanguage) {
-    return { ok: false, reason: "Regional dubbing language requires review" };
+    return {
+      ok: false,
+      reason: "Regional dubbing language is required for extraction",
+    };
   }
   const pageId = toInt(property(payload, "page_id"), 1);
   if (pageId === null) return { ok: false, reason: "invalid page_id" };

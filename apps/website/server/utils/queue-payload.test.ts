@@ -77,7 +77,7 @@ describe("source and target separation", () => {
     });
     expect(validateExtractPayload(payload)).toEqual({
       ok: false,
-      reason: "Regional dubbing language requires review",
+      reason: "Regional dubbing language is required for extraction",
     });
     expect(validateExtractPayload({ ...payload, dubbing_language: "fr-FR" }).ok).toBe(true);
   });
@@ -150,7 +150,7 @@ describe("source and target separation", () => {
       }),
     ).toEqual({
       ok: false,
-      reason: "Regional dubbing language requires review",
+      reason: "Regional dubbing language is required for extraction",
     });
   });
   it("accepts Wikipedia edition identifiers independently", () => {
@@ -169,10 +169,18 @@ describe("source and target separation", () => {
 
   it("rejects Simple Wikipedia as a source identifier", () => {
     expect(
-      validateDiscoveryPayload({ tmdb_id: 1, media_type: "movie", wikipedia_language: "simple" }),
+      validateDiscoveryPayload({
+        tmdb_id: 1,
+        media_type: "movie",
+        wikipedia_language: "simple",
+      }),
     ).toEqual({ ok: false, reason: "invalid wikipedia_language" });
     expect(
-      validateCheckPayload({ tmdb_id: 1, media_type: "movie", wikipedia_language: "simple" }),
+      validateCheckPayload({
+        tmdb_id: 1,
+        media_type: "movie",
+        wikipedia_language: "simple",
+      }),
     ).toEqual({ ok: false, reason: "invalid wikipedia_language" });
   });
 

@@ -60,36 +60,6 @@ describe("GET /api/admin/queue", () => {
     expect(routeMocks.rpc).not.toHaveBeenCalled();
   });
 
-  it("uses the regional review RPC for review_needed and preserves requested_by plus stats", async () => {
-    const row = {
-      id: 72,
-      queue_name: "wiki_check",
-      tmdb_id: 211288,
-      media_type: "tv",
-      wikipedia_language: "en",
-      dubbing_language: null,
-      season_number: null,
-      episode_number: null,
-      status: "review_needed",
-      error_message: null,
-      created_at: "2026-09-28T12:00:00.000Z",
-      read_ct: 1,
-      is_manual: false,
-      review_note: "Select a regional dubbing language.",
-      requested_by: "user-u1",
-    };
-    routeMocks.rpc.mockResolvedValue({ data: [row], error: null });
-
-    const response = await getQueue("?status=review_needed&limit=25");
-
-    expect(response.status).toBe(200);
-    const body: unknown = await response.json();
-    expect(body).toMatchObject({ items: [row], stats: expect.any(Object) });
-    expect(routeMocks.rpc).toHaveBeenCalledWith("get_regional_review_queue_items", {
-      p_limit: 25,
-    });
-  });
-
   it("uses the normal queue RPC for other statuses and forwards queue, status, limit, and offset", async () => {
     const row = {
       id: 73,
@@ -123,6 +93,36 @@ describe("GET /api/admin/queue", () => {
     });
   });
 
+  it("returns stored automatic wiki_check archive outcomes to the history inspector", async () => {
+    const row = {
+      id: 74,
+      queue_name: "wiki_check",
+      tmdb_id: 211290,
+      media_type: "movie",
+      language: "fr",
+      wikipedia_language: "fr",
+      dubbing_language: null,
+      season_number: null,
+      episode_number: null,
+      status: "completed",
+      error_message: null,
+      created_at: "2026-10-06T12:01:00.000Z",
+      read_ct: 1,
+      is_manual: false,
+      requested_by: null,
+      archive_reason: "ambiguous_region",
+      archive_details: "Dubbing evidence did not identify a supported market.",
+      detected_regions: [],
+      candidate_sections: [{ index: 3, heading: "Distribution", heading_kind: "generic_cast" }],
+    };
+    routeMocks.rpc.mockResolvedValue({ data: [row], error: null });
+
+    const response = await getQueue("?queue=wiki_check&status=archived");
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({ items: [row] });
+  });
+
   it.each(["active", "archived"] as const)(
     "accepts the %s filter used by the admin queue UI",
     async (status) => {
@@ -136,8 +136,8 @@ describe("GET /api/admin/queue", () => {
     },
   );
 
-  it("returns 400 for unsupported statuses", async () => {
-    const response = await getQueue("?status=unknown");
+  it.each(["unknown", "review_needed"])("returns 400 for unsupported status %s", async (status) => {
+    const response = await getQueue(`?status=${status}`);
 
     expect(response.status).toBe(400);
     expect(routeMocks.rpc).not.toHaveBeenCalled();

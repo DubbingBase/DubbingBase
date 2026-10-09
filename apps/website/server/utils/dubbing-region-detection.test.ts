@@ -232,6 +232,44 @@ describe("detectDubbingRegionFromWikitext", () => {
     });
   });
 
+  it("recognizes a regional credit table after an unrelated first table", () => {
+    expect(
+      detectDubbingRegionFromWikitext({
+        wikipediaLanguage: "en",
+        sections: [
+          {
+            index: 10,
+            heading: "Version française",
+            wikitext:
+              '{| class="wikitable"\n| Release date || Director\n| 2020 || Jane\n|}\n' +
+              '{| class="wikitable"\n| Character || Actor\n| Hero || Jean Dupont\n|}',
+          },
+        ],
+      }),
+    ).toEqual({
+      resolved: [{ language: "fr-FR", sectionIndexes: [10] }],
+      unresolved: [],
+    });
+  });
+
+  it("recognizes conservative colon-form character and actor lists", () => {
+    expect(
+      detectDubbingRegionFromWikitext({
+        wikipediaLanguage: "en",
+        sections: [
+          {
+            index: 11,
+            heading: "Version française",
+            wikitext: "Character: Hero\nVoice actor: Jean Dupont",
+          },
+        ],
+      }),
+    ).toEqual({
+      resolved: [{ language: "fr-FR", sectionIndexes: [11] }],
+      unresolved: [],
+    });
+  });
+
   it("resolves an inline VF credit without relying on its heading", () => {
     expect(
       detectDubbingRegionFromWikitext({

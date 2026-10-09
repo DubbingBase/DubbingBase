@@ -8,7 +8,6 @@ const QUEUE_STATUSES = [
   "processing",
   "completed",
   "failed",
-  "review_needed",
 ] as const;
 
 function queryValue(value: unknown, name: string): string | undefined {
@@ -53,21 +52,13 @@ export default defineEventHandler(async (event) => {
   const offset = queryInteger(query.offset, "offset", 0, 0, 100_000);
   const supabase = useSupabaseAdmin(event);
 
-  const queueRequest =
-    status === "review_needed"
-      ? supabase.rpc("get_regional_review_queue_items", {
-          p_limit: limit,
-          ...(query.offset === undefined ? {} : { p_offset: offset }),
-        })
-      : supabase.rpc("get_media_queue_items", {
-          p_queue_name: queueName ?? undefined,
-          p_status: status ?? undefined,
-          p_limit: limit,
-          p_offset: offset,
-        });
-
   const [queueResult, statsResult] = await Promise.all([
-    queueRequest,
+    supabase.rpc("get_media_queue_items", {
+      p_queue_name: queueName ?? undefined,
+      p_status: status ?? undefined,
+      p_limit: limit,
+      p_offset: offset,
+    }),
     supabase.rpc("get_media_queue_stats"),
   ]);
 

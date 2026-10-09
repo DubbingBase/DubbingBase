@@ -12,7 +12,12 @@ import type { SimpleCache } from "../cache";
 import { buildTmdbImageUrl } from "../urls/tmdb";
 import { buildIgdbImageUrl } from "../api/igdb";
 import { llmGenerateObject } from "../llm";
-import { selectDubbingSections, filterValidSectionIndexes, sitelinkKey } from "../cache/wikipedia";
+import {
+  selectDubbingCandidateSections,
+  filterValidSectionIndexes,
+  sitelinkKey,
+  type DubbingSectionCandidate,
+} from "../cache/wikipedia";
 
 const TMDB_API_BASE = "https://api.themoviedb.org/3";
 
@@ -62,6 +67,19 @@ function isTmdbCastMember(value: unknown): value is TmdbCastMember {
     (value.original_name === undefined || typeof value.original_name === "string") &&
     (value.character === undefined || typeof value.character === "string")
   );
+}
+
+function requireWikipediaSections(response: {
+  parse?: {
+    tocdata?: { sections?: Array<{ index: number; line: string }> };
+    sections?: Array<{ index: number; line: string }>;
+  };
+}): Array<{ index: number; line: string }> {
+  const sections = response.parse?.tocdata?.sections ?? response.parse?.sections;
+  if (!Array.isArray(sections)) {
+    throw new Error("Wikipedia returned an invalid section list response");
+  }
+  return sections;
 }
 
 /** Map a Wikipedia language code to a TMDB ISO 639-1 (-3166) code. */
@@ -127,6 +145,7 @@ export interface CheckSectionsResult {
   wikiId?: string;
   pageId?: number;
   sectionIndexes?: number[];
+  sectionCandidates?: DubbingSectionCandidate[];
   wikipediaUrl?: string;
   isAdult?: boolean;
   error?: string;
@@ -253,17 +272,10 @@ export async function checkMediaDubbingSections(options: {
 
     const wikipediaPageSections = await wikipediaCache.getPageSections(pageId, wikipediaLanguage);
 
-    const sections =
-      wikipediaPageSections.parse?.tocdata?.sections || wikipediaPageSections.parse?.sections || [];
+    const sections = requireWikipediaSections(wikipediaPageSections);
 
-    const dubbingIndexes = await selectDubbingSections(sections);
-    const matchedSectionIndexes = sections
-      .filter((section) => dubbingIndexes.includes(String(section.index)))
-      .map((section) => section.index);
-
-    if (matchedSectionIndexes.length === 0) {
-      throw new Error(`No voice actor / dubbing sections found on Wikipedia page: ${wikiPageUrl}`);
-    }
+    const sectionCandidates = await selectDubbingCandidateSections(sections);
+    const matchedSectionIndexes = sectionCandidates.map((candidate) => candidate.index);
 
     return {
       ok: true,
@@ -271,6 +283,7 @@ export async function checkMediaDubbingSections(options: {
       wikiId,
       pageId,
       sectionIndexes: matchedSectionIndexes,
+      sectionCandidates,
       wikipediaUrl: wikiPageUrl,
     };
   } catch (error) {
@@ -343,17 +356,10 @@ export async function checkGameDubbingSections(options: {
 
     const wikipediaPageSections = await wikipediaCache.getPageSections(pageId, wikipediaLanguage);
 
-    const sections =
-      wikipediaPageSections.parse?.tocdata?.sections || wikipediaPageSections.parse?.sections || [];
+    const sections = requireWikipediaSections(wikipediaPageSections);
 
-    const dubbingIndexes = await selectDubbingSections(sections);
-    const matchedSectionIndexes = sections
-      .filter((section) => dubbingIndexes.includes(String(section.index)))
-      .map((section) => section.index);
-
-    if (matchedSectionIndexes.length === 0) {
-      throw new Error(`No voice actor / dubbing sections found on Wikipedia page: ${wikiPageUrl}`);
-    }
+    const sectionCandidates = await selectDubbingCandidateSections(sections);
+    const matchedSectionIndexes = sectionCandidates.map((candidate) => candidate.index);
 
     return {
       ok: true,
@@ -361,6 +367,7 @@ export async function checkGameDubbingSections(options: {
       wikiId: bestMatch.id,
       pageId,
       sectionIndexes: matchedSectionIndexes,
+      sectionCandidates,
       wikipediaUrl: wikiPageUrl,
     };
   } catch (error) {
@@ -401,7 +408,7 @@ export async function extractMediaDubbingCredits(options: {
       ok: false,
       changes: 0,
       creditsAdded: 0,
-      error: "Regional dubbing language requires review",
+      error: "Regional dubbing language is required for extraction",
     };
   }
 
@@ -457,7 +464,7 @@ export async function extractMediaDubbingCredits(options: {
         creditsAdded: 0,
         title: mediaTitle,
         imageUrl,
-        error: `Stale queue element: section(s) [${sectionIndexes.join(", ")}] no longer match dubbing headings on the "${wikipediaLanguage}" Wikipedia page. The page likely has no dubbing section.`,
+        error: `Stale queue element: section(s) [${sectionIndexes.join(", ")}] no longer match candidate headings on the "${wikipediaLanguage}" Wikipedia page.`,
       };
     }
     let totalNewVoiceActors = 0;
@@ -594,7 +601,7 @@ export async function extractGameDubbingCredits(options: {
       ok: false,
       changes: 0,
       creditsAdded: 0,
-      error: "Regional dubbing language requires review",
+      error: "Regional dubbing language is required for extraction",
     };
   }
 
@@ -633,7 +640,7 @@ export async function extractGameDubbingCredits(options: {
         creditsAdded: 0,
         title: gameTitle,
         imageUrl,
-        error: `Stale queue element: section(s) [${sectionIndexes.join(", ")}] no longer match dubbing headings on the "${wikipediaLanguage}" Wikipedia page. The page likely has no dubbing section.`,
+        error: `Stale queue element: section(s) [${sectionIndexes.join(", ")}] no longer match candidate headings on the "${wikipediaLanguage}" Wikipedia page.`,
       };
     }
     let totalNewVoiceActors = 0;
@@ -751,7 +758,7 @@ export async function prepareMedia(options: {
   }
 
   if (!isDubbingLanguage(dubbingLanguage)) {
-    throw new Error("Regional dubbing language requires review");
+    throw new Error("Regional dubbing language is required for extraction");
   }
 
   const check = await checkMediaDubbingSections({
@@ -812,7 +819,7 @@ export async function prepareGame(options: {
   }
 
   if (!isDubbingLanguage(dubbingLanguage)) {
-    throw new Error("Regional dubbing language requires review");
+    throw new Error("Regional dubbing language is required for extraction");
   }
 
   const check = await checkGameDubbingSections({

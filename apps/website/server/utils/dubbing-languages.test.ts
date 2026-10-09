@@ -66,12 +66,12 @@ it("does not fetch, call an LLM, or create credits for source-only extraction", 
     expect(movie).toMatchObject({
       ok: false,
       creditsAdded: 0,
-      error: "Regional dubbing language requires review",
+      error: "Regional dubbing language is required for extraction",
     });
     expect(game).toMatchObject({
       ok: false,
       creditsAdded: 0,
-      error: "Regional dubbing language requires review",
+      error: "Regional dubbing language is required for extraction",
     });
     expect(fetch).not.toHaveBeenCalled();
   } finally {

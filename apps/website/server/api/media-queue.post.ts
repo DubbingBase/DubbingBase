@@ -130,6 +130,18 @@ export default defineEventHandler(async (event) => {
           message: error.message,
         };
       }
+      const queue = wikipediaLanguage ? "wiki_check" : "wiki_discovery";
+      await sendDiscordAdminNotification(
+        "Manual Media Enqueue Failed",
+        `Failed to enqueue **${mediaType}** (ID: ${targetId})${
+          numSeason ? ` Season ${numSeason}` : ""
+        }${numEpisode ? ` Episode ${numEpisode}` : ""} for ${
+          wikipediaLanguage
+            ? `Wikipedia source **${wikipediaLanguage}**`
+            : "all-languages discovery"
+        } on queue **${queue}**.\nError: ${error.message || "Failed to enqueue media"}`,
+        { event, queue, color: 0xed4245 },
+      );
       throw createError({
         statusCode: 400,
         message: error.message || "Failed to enqueue media",

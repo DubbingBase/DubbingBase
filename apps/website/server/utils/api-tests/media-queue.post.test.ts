@@ -100,4 +100,26 @@ describe("POST /api/media-queue", () => {
     expect(response.status).toBe(400);
     expect(routeMocks.rpc).not.toHaveBeenCalled();
   });
+
+  it("reports a failed wiki_check enqueue through Discord before returning the RPC error", async () => {
+    routeMocks.rpc.mockResolvedValue({
+      data: null,
+      error: { message: "database unavailable" },
+    });
+
+    const response = await post({
+      action: "enqueue",
+      mediaType: "movie",
+      mediaId: 42,
+      wikipedia_language: "fr",
+    });
+
+    expect(response.status).toBe(400);
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
+    expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledWith(
+      "Manual Media Enqueue Failed",
+      expect.stringContaining("database unavailable"),
+      expect.objectContaining({ queue: "wiki_check", color: 0xed4245 }),
+    );
+  });
 });
