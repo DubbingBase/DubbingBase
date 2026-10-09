@@ -37,8 +37,8 @@ afterEach(() => {
 
 describe("getReadyMediaQueueNames", () => {
   it("returns only supported ready queues in stable order", () => {
-    expect(getReadyMediaQueueNames(["wiki_extract", "unknown", "wiki_discovery"])).toEqual([
-      "wiki_discovery",
+    expect(getReadyMediaQueueNames(["wiki_extract", "unknown", "wiki_scan"])).toEqual([
+      "wiki_scan",
       "wiki_extract",
     ]);
   });
@@ -61,14 +61,14 @@ describe("dispatcher", () => {
   });
 
   it("starts only queue processors reported ready", async () => {
-    mocks.rpc.mockResolvedValue({ data: ["wiki_check"], error: null });
+    mocks.rpc.mockResolvedValue({ data: ["wiki_scan"], error: null });
 
     await runDispatcher({ context: {} });
 
     expect(mocks.localFetch).toHaveBeenCalledTimes(1);
     expect(mocks.localFetch).toHaveBeenCalledWith(
       "/api/process-media-queue",
-      expect.objectContaining({ body: { queue: "wiki_check" } }),
+      expect.objectContaining({ body: { queue: "wiki_scan" } }),
     );
   });
 
@@ -80,10 +80,9 @@ describe("dispatcher", () => {
 
     await runDispatcher({ context: {} });
 
-    expect(mocks.localFetch).toHaveBeenCalledTimes(3);
+    expect(mocks.localFetch).toHaveBeenCalledTimes(2);
     expect(mocks.localFetch.mock.calls.map((call) => call[1].body.queue)).toEqual([
-      "wiki_discovery",
-      "wiki_check",
+      "wiki_scan",
       "wiki_extract",
     ]);
   });

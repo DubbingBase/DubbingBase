@@ -144,6 +144,8 @@ export interface CheckSectionsResult {
   title?: string;
   wikiId?: string;
   pageId?: number;
+  pageTitle?: string;
+  revisionId?: number;
   sectionIndexes?: number[];
   sectionCandidates?: DubbingSectionCandidate[];
   wikipediaUrl?: string;
@@ -204,6 +206,7 @@ export async function checkMediaDubbingSections(options: {
   wikipediaLanguage: string;
   seasonNumber?: number | null;
   episodeNumber?: number | null;
+  resolvedMetadata?: { title: string; wikiId: string; pageTitle: string };
   cache?: SimpleCache;
 }): Promise<CheckSectionsResult> {
   const { tmdbId, type, wikipediaLanguage, cache } = options;
@@ -214,34 +217,37 @@ export async function checkMediaDubbingSections(options: {
     const config = useRuntimeConfig();
     const tmdbType = type === "season" || type === "episode" ? "tv" : type;
 
-    const response = await fetchMediaRequest(
-      `${TMDB_API_BASE}/${tmdbType}/${tmdbId}?append_to_response=external_ids`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${config.tmdbApiKey}`,
-          Accept: "application/json",
-        },
-        signal: AbortSignal.timeout(5000),
-      },
-    );
+    const response = options.resolvedMetadata
+      ? undefined
+      : await fetchMediaRequest(
+          `${TMDB_API_BASE}/${tmdbType}/${tmdbId}?append_to_response=external_ids`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${config.tmdbApiKey}`,
+              Accept: "application/json",
+            },
+            signal: AbortSignal.timeout(5000),
+          },
+        );
 
-    if (!response.ok) {
+    if (response && !response.ok) {
       throw createMediaResponseError("TMDB", response);
     }
 
-    const movieData: unknown = await response.json();
-    if (!isTmdbMediaDetails(movieData)) {
-      throw new Error("TMDB returned invalid media details");
+    let movie: TmdbMediaDetails | undefined;
+    if (response) {
+      const movieData: unknown = await response.json();
+      if (!isTmdbMediaDetails(movieData)) throw new Error("TMDB returned invalid media details");
+      movie = movieData;
     }
-    const movie = movieData;
-    mediaTitle = movie.title || movie.name || "Unknown title";
+    mediaTitle = options.resolvedMetadata?.title || movie?.title || movie?.name || "Unknown title";
 
-    if (movie.adult === true) {
+    if (movie?.adult === true) {
       return { ok: true, title: mediaTitle, isAdult: true };
     }
 
-    const wikiId = movie.external_ids?.wikidata_id;
+    const wikiId = options.resolvedMetadata?.wikiId || movie?.external_ids?.wikidata_id;
     if (!wikiId) {
       throw new Error("Could not find wikidata_id associated with this TMDB ID");
     }
@@ -250,7 +256,8 @@ export async function checkMediaDubbingSections(options: {
     const entityData = await wikipediaCache.getAllSitelinksEntity(wikiId);
     const sitelinks = entityData.entities[wikiId]?.sitelinks;
 
-    const pageTitle = sitelinks?.[sitelinkKey(wikipediaLanguage)]?.title;
+    const pageTitle =
+      options.resolvedMetadata?.pageTitle || sitelinks?.[sitelinkKey(wikipediaLanguage)]?.title;
     if (!pageTitle) {
       const wikidataUrl = `https://www.wikidata.org/wiki/${wikiId}`;
       throw new Error(
@@ -273,6 +280,8 @@ export async function checkMediaDubbingSections(options: {
     const wikipediaPageSections = await wikipediaCache.getPageSections(pageId, wikipediaLanguage);
 
     const sections = requireWikipediaSections(wikipediaPageSections);
+    const revisionId = wikipediaPageSections.parse?.revid;
+    if (!revisionId) throw new Error("Wikipedia did not return a revision ID for the section list");
 
     const sectionCandidates = await selectDubbingCandidateSections(sections);
     const matchedSectionIndexes = sectionCandidates.map((candidate) => candidate.index);
@@ -282,6 +291,8 @@ export async function checkMediaDubbingSections(options: {
       title: mediaTitle,
       wikiId,
       pageId,
+      pageTitle,
+      revisionId,
       sectionIndexes: matchedSectionIndexes,
       sectionCandidates,
       wikipediaUrl: wikiPageUrl,
@@ -302,6 +313,7 @@ export async function checkMediaDubbingSections(options: {
 export async function checkGameDubbingSections(options: {
   igdbId: number;
   wikipediaLanguage: string;
+  resolvedMetadata?: { title: string; wikiId: string; pageTitle: string };
   cache?: SimpleCache;
 }): Promise<CheckSectionsResult> {
   const { igdbId, wikipediaLanguage, cache } = options;
@@ -310,33 +322,40 @@ export async function checkGameDubbingSections(options: {
 
   try {
     const igdbClient = useIgdbClient(cache);
-    const game = await igdbClient.getGame(igdbId);
+    const game = options.resolvedMetadata ? undefined : await igdbClient.getGame(igdbId);
 
-    if (!game) {
+    if (!game && !options.resolvedMetadata) {
       throw new Error(`IGDB game ${igdbId} not found`);
     }
 
-    gameTitle = game.name;
+    gameTitle = options.resolvedMetadata?.title || game?.name || "Unknown title";
 
     const wikipediaCache = useWikipediaCache(cache);
-    const searchData = await wikipediaCache.searchWikidataEntities(game.name, "en");
+    const searchData = options.resolvedMetadata
+      ? undefined
+      : await wikipediaCache.searchWikidataEntities(gameTitle, "en");
 
-    if (!searchData.search || searchData.search.length === 0) {
+    if (!options.resolvedMetadata && (!searchData?.search || searchData.search.length === 0)) {
       throw new Error(
-        `No Wikidata entry found for video game "${game.name}" — skipping Wikipedia extraction.`,
+        `No Wikidata entry found for video game "${gameTitle}" — skipping Wikipedia extraction.`,
       );
     }
 
-    const bestMatch = searchData.search[0];
-    if (!bestMatch) {
-      throw new Error(`No Wikidata entry found for video game "${game.name}".`);
+    const bestMatch = options.resolvedMetadata ? undefined : searchData?.search[0];
+    if (!bestMatch && !options.resolvedMetadata) {
+      throw new Error(`No Wikidata entry found for video game "${gameTitle}".`);
     }
-    const entityData = await wikipediaCache.getAllSitelinksEntity(bestMatch.id);
-    const sitelinks = entityData.entities[bestMatch.id]?.sitelinks;
+    const wikiId = options.resolvedMetadata?.wikiId || bestMatch?.id;
+    if (!wikiId) throw new Error(`No Wikidata entry found for video game "${gameTitle}".`);
+    const entityData = options.resolvedMetadata
+      ? undefined
+      : await wikipediaCache.getAllSitelinksEntity(wikiId);
+    const sitelinks = entityData?.entities[wikiId]?.sitelinks;
 
-    const pageTitle = sitelinks?.[sitelinkKey(wikipediaLanguage)]?.title;
+    const pageTitle =
+      options.resolvedMetadata?.pageTitle || sitelinks?.[sitelinkKey(wikipediaLanguage)]?.title;
     if (!pageTitle) {
-      const wikidataUrl = `https://www.wikidata.org/wiki/${bestMatch.id}`;
+      const wikidataUrl = `https://www.wikidata.org/wiki/${wikiId}`;
       throw new Error(
         `No "${wikipediaLanguage}" Wikipedia sitelink found on Wikidata (${wikidataUrl}) for "${gameTitle}".`,
       );
@@ -357,6 +376,8 @@ export async function checkGameDubbingSections(options: {
     const wikipediaPageSections = await wikipediaCache.getPageSections(pageId, wikipediaLanguage);
 
     const sections = requireWikipediaSections(wikipediaPageSections);
+    const revisionId = wikipediaPageSections.parse?.revid;
+    if (!revisionId) throw new Error("Wikipedia did not return a revision ID for the section list");
 
     const sectionCandidates = await selectDubbingCandidateSections(sections);
     const matchedSectionIndexes = sectionCandidates.map((candidate) => candidate.index);
@@ -364,8 +385,10 @@ export async function checkGameDubbingSections(options: {
     return {
       ok: true,
       title: gameTitle,
-      wikiId: bestMatch.id,
+      wikiId,
       pageId,
+      pageTitle,
+      revisionId,
       sectionIndexes: matchedSectionIndexes,
       sectionCandidates,
       wikipediaUrl: wikiPageUrl,
@@ -396,6 +419,14 @@ export async function extractMediaDubbingCredits(options: {
   sectionIndexes: number[];
   seasonNumber?: number | null;
   episodeNumber?: number | null;
+  scanMetadata?: {
+    title?: string;
+    wikiId?: string;
+    pageTitle?: string;
+    revisionId?: number;
+    sectionHeadings?: string[];
+    posterPath?: string;
+  };
   cache?: SimpleCache;
 }): Promise<ExtractCreditsResult> {
   const { tmdbId, type, wikipediaLanguage, pageId, sectionIndexes, cache } = options;
@@ -416,29 +447,30 @@ export async function extractMediaDubbingCredits(options: {
     const config = useRuntimeConfig();
     const tmdbType = type === "season" || type === "episode" ? "tv" : type;
 
-    const response = await fetchMediaRequest(
-      `${TMDB_API_BASE}/${tmdbType}/${tmdbId}?append_to_response=credits`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${config.tmdbApiKey}`,
-          Accept: "application/json",
-        },
-        signal: AbortSignal.timeout(5000),
-      },
-    );
+    const response = options.scanMetadata?.title
+      ? undefined
+      : await fetchMediaRequest(
+          `${TMDB_API_BASE}/${tmdbType}/${tmdbId}?append_to_response=credits`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${config.tmdbApiKey}`,
+              Accept: "application/json",
+            },
+            signal: AbortSignal.timeout(5000),
+          },
+        );
 
-    if (!response.ok) throw createMediaResponseError("TMDB", response);
-
-    const movieData: unknown = await response.json();
-    if (!isTmdbMediaDetails(movieData)) {
-      throw new Error("TMDB returned invalid media details");
+    if (response) {
+      if (!response.ok) throw createMediaResponseError("TMDB", response);
+      const movieData: unknown = await response.json();
+      if (!isTmdbMediaDetails(movieData)) throw new Error("TMDB returned invalid media details");
+      mediaTitle = movieData.title || movieData.name || "Unknown title";
+      if (movieData.poster_path) imageUrl = buildTmdbImageUrl(movieData.poster_path) || undefined;
     }
-    const movie = movieData;
-    mediaTitle = movie.title || movie.name || "Unknown title";
-    if (movie.poster_path) {
-      imageUrl = buildTmdbImageUrl(movie.poster_path) || undefined;
-    }
+    mediaTitle = options.scanMetadata?.title || mediaTitle;
+    if (options.scanMetadata?.posterPath)
+      imageUrl = buildTmdbImageUrl(options.scanMetadata.posterPath) || imageUrl;
 
     // Cache localized cast lookups per language edition
     const langCastCache = new Map<string, TmdbCastMember[]>();
@@ -453,6 +485,9 @@ export async function extractMediaDubbingCredits(options: {
     // ponytail: check and extract run on different cron ticks — drop indexes
     // that no longer match (stale payloads, e.g. bare "Reparto" enqueued pre-fix)
     const pageSections = await wikipediaCache.getPageSections(pageId, wikipediaLanguage);
+    const extractionRevisionId = pageSections.parse?.revid;
+    if (!extractionRevisionId)
+      throw new Error("Wikipedia did not return a revision ID for the current section list");
     const validIndexes = await filterValidSectionIndexes(
       pageSections.parse?.tocdata?.sections || pageSections.parse?.sections || [],
       sectionIndexes,
@@ -467,6 +502,24 @@ export async function extractMediaDubbingCredits(options: {
         error: `Stale queue element: section(s) [${sectionIndexes.join(", ")}] no longer match candidate headings on the "${wikipediaLanguage}" Wikipedia page.`,
       };
     }
+    if (options.scanMetadata?.revisionId && options.scanMetadata.sectionHeadings) {
+      const currentSections =
+        pageSections.parse?.tocdata?.sections || pageSections.parse?.sections || [];
+      const headingsMatch = sectionIndexes.every((sectionIndex, index) => {
+        const current = currentSections.find((section) => section.index === sectionIndex);
+        return Boolean(current && current.line === options.scanMetadata?.sectionHeadings?.[index]);
+      });
+      if (!headingsMatch) {
+        return {
+          ok: false,
+          changes: 0,
+          creditsAdded: 0,
+          title: mediaTitle,
+          imageUrl,
+          error: `Stale queue element: Wikipedia headings changed since revision ${options.scanMetadata.revisionId}.`,
+        };
+      }
+    }
     let totalNewVoiceActors = 0;
     let totalNewCredits = 0;
     const extractedCredits: ExtractedCredit[] = [];
@@ -478,7 +531,15 @@ export async function extractMediaDubbingCredits(options: {
         pageId,
         String(sectionIndex),
         wikipediaLanguage,
+        extractionRevisionId,
       );
+      if (wikitextJSON.parse?.revid !== extractionRevisionId) {
+        const retryError = new Error(
+          "Wikipedia extraction section did not match the current TOC revision",
+        );
+        retryError.name = "RetryableQueueItemError";
+        throw retryError;
+      }
       const wikitext = wikitextJSON.parse?.wikitext;
       if (!wikitext) continue;
 
@@ -579,7 +640,9 @@ The requested target dubbing region is ${dubbingLanguage} (${displayDubbingLangu
       title: mediaTitle,
       imageUrl,
       error: errorMsg,
-      retryable: isRetryableMediaRequestError(error),
+      retryable:
+        isRetryableMediaRequestError(error) ||
+        (error instanceof Error && error.name === "RetryableQueueItemError"),
     };
   }
 }
@@ -591,6 +654,14 @@ export async function extractGameDubbingCredits(options: {
   dubbingLanguage?: DubbingLanguage;
   pageId: number;
   sectionIndexes: number[];
+  scanMetadata?: {
+    title?: string;
+    wikiId?: string;
+    pageTitle?: string;
+    revisionId?: number;
+    sectionHeadings?: string[];
+    posterPath?: string;
+  };
   cache?: SimpleCache;
 }): Promise<ExtractCreditsResult> {
   const { igdbId, wikipediaLanguage, pageId, sectionIndexes, cache } = options;
@@ -610,17 +681,18 @@ export async function extractGameDubbingCredits(options: {
   try {
     const igdbClient = useIgdbClient(cache);
     const [game, characters] = await Promise.all([
-      igdbClient.getGame(igdbId),
+      options.scanMetadata?.title ? Promise.resolve(null) : igdbClient.getGame(igdbId),
       igdbClient.getGameCharacters(igdbId),
     ]);
 
-    if (!game) {
+    if (!game && !options.scanMetadata?.title) {
       throw new Error(`IGDB game ${igdbId} not found`);
     }
 
-    gameTitle = game.name;
-    if (game.cover) {
-      imageUrl = buildIgdbImageUrl(game.cover.image_id, "cover_big") || undefined;
+    gameTitle = options.scanMetadata?.title || game?.name || "Unknown title";
+    const coverImageId = options.scanMetadata?.posterPath || game?.cover?.image_id;
+    if (coverImageId) {
+      imageUrl = buildIgdbImageUrl(coverImageId, "cover_big") || undefined;
     }
 
     const characterMap = new Map(
@@ -631,6 +703,9 @@ export async function extractGameDubbingCredits(options: {
     // ponytail: check and extract run on different cron ticks — drop indexes
     // that no longer match (stale payloads)
     const pageSections = await wikipediaCache.getPageSections(pageId, wikipediaLanguage);
+    const extractionRevisionId = pageSections.parse?.revid;
+    if (!extractionRevisionId)
+      throw new Error("Wikipedia did not return a revision ID for the current section list");
     const validIndexes = await filterValidSectionIndexes(
       pageSections.parse?.tocdata?.sections || pageSections.parse?.sections || [],
       sectionIndexes,
@@ -645,6 +720,24 @@ export async function extractGameDubbingCredits(options: {
         error: `Stale queue element: section(s) [${sectionIndexes.join(", ")}] no longer match candidate headings on the "${wikipediaLanguage}" Wikipedia page.`,
       };
     }
+    if (options.scanMetadata?.revisionId && options.scanMetadata.sectionHeadings) {
+      const currentSections =
+        pageSections.parse?.tocdata?.sections || pageSections.parse?.sections || [];
+      const headingsMatch = sectionIndexes.every((sectionIndex, index) => {
+        const current = currentSections.find((section) => section.index === sectionIndex);
+        return Boolean(current && current.line === options.scanMetadata?.sectionHeadings?.[index]);
+      });
+      if (!headingsMatch) {
+        return {
+          ok: false,
+          changes: 0,
+          creditsAdded: 0,
+          title: gameTitle,
+          imageUrl,
+          error: `Stale queue element: Wikipedia headings changed since revision ${options.scanMetadata.revisionId}.`,
+        };
+      }
+    }
     let totalNewVoiceActors = 0;
     let totalNewCredits = 0;
     const extractedCredits: ExtractedCredit[] = [];
@@ -656,7 +749,15 @@ export async function extractGameDubbingCredits(options: {
         pageId,
         String(sectionIndex),
         wikipediaLanguage,
+        extractionRevisionId,
       );
+      if (wikitextJSON.parse?.revid !== extractionRevisionId) {
+        const retryError = new Error(
+          "Wikipedia extraction section did not match the current TOC revision",
+        );
+        retryError.name = "RetryableQueueItemError";
+        throw retryError;
+      }
       const wikitext = wikitextJSON.parse?.wikitext;
       if (!wikitext) continue;
 
@@ -739,7 +840,9 @@ The requested target dubbing region is ${dubbingLanguage} (${displayDubbingLangu
       title: gameTitle,
       imageUrl,
       error: errorMsg,
-      retryable: isRetryableMediaRequestError(error),
+      retryable:
+        isRetryableMediaRequestError(error) ||
+        (error instanceof Error && error.name === "RetryableQueueItemError"),
     };
   }
 }

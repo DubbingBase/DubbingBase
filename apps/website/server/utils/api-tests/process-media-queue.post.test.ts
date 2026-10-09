@@ -91,7 +91,10 @@ beforeEach(() => {
   routeMocks.delayMediaQueueError = "";
   routeMocks.queuePopError = "";
   routeMocks.archiveQueueResult.mockReturnValue({ data: true, error: null });
-  routeMocks.archiveWikiCheckResult.mockReturnValue({ data: true, error: null });
+  routeMocks.archiveWikiCheckResult.mockReturnValue({
+    data: true,
+    error: null,
+  });
   routeMocks.sendDiscordAdminNotification.mockResolvedValue(undefined);
   routeMocks.getPageSectionAsWikitext.mockResolvedValue({
     parse: { wikitext: "Original cast: actor names." },
@@ -147,7 +150,7 @@ beforeEach(() => {
         error: { message: routeMocks.enqueueMediaExtractError },
       };
     }
-    if (name === "archive_wiki_check_with_outcome") {
+    if (name === "archive_wiki_scan_with_outcome") {
       if (routeMocks.archiveWikiCheckError) {
         return {
           data: null,
@@ -182,7 +185,7 @@ beforeEach(() => {
               tmdb_id: 42,
               media_type: "movie",
               wiki_id: "Q42",
-              wikipedia_language: "en",
+              ...(queue === "discovery" ? {} : { wikipedia_language: "en" }),
               dubbing_language: "en-US",
               is_manual: true,
             },
@@ -208,7 +211,7 @@ async function processQueue(
         error: { message: routeMocks.enqueueMediaExtractError },
       };
     }
-    if (name === "archive_wiki_check_with_outcome") {
+    if (name === "archive_wiki_scan_with_outcome") {
       if (routeMocks.archiveWikiCheckError) {
         return {
           data: null,
@@ -243,7 +246,7 @@ async function processQueue(
               tmdb_id: 42,
               media_type: "movie",
               wiki_id: "Q42",
-              wikipedia_language: "en",
+              ...(queue === "discovery" ? {} : { wikipedia_language: "en" }),
               dubbing_language: "en-US",
               is_manual: true,
               ...(queue === "check" || queue === "extract"
@@ -319,7 +322,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
     expect(routeMocks.getGame).toHaveBeenCalledWith(42);
   });
 
-  it("preserves requested_by through discovery fan-out into every wiki_check", async () => {
+  it("preserves requested_by through discovery fan-out into every wiki_scan", async () => {
     await processQueue("discovery", { requested_by: requester });
 
     const childEnqueues = routeMocks.rpc.mock.calls.filter(
@@ -329,10 +332,17 @@ describe("POST /api/process-media-queue requester propagation", () => {
     for (const [name, args] of childEnqueues) {
       expect(name).toBe("enqueue_media_fetch");
       expect(args).toEqual(expect.objectContaining({ p_requested_by: requester }));
+      expect(args).toEqual(
+        expect.objectContaining({
+          p_wiki_id: "Q42",
+          p_title: expect.any(String),
+          p_page_title: expect.any(String),
+        }),
+      );
     }
   });
 
-  it("preserves requested_by from wiki_check into wiki_extract", async () => {
+  it("preserves requested_by from wiki_scan into wiki_extract", async () => {
     routeMocks.getPageSectionAsWikitext.mockResolvedValue({
       parse: { wikitext: "VF : Jean Dupont as Hero." },
     });
@@ -348,6 +358,60 @@ describe("POST /api/process-media-queue requester propagation", () => {
     expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
   });
 
+  it("reuses resolved page metadata and revision when enqueuing extraction", async () => {
+    routeMocks.checkMediaDubbingSections.mockResolvedValue({
+      ok: true,
+      title: "Resolved title",
+      wikiId: "Q42",
+      pageTitle: "Resolved page",
+      revisionId: 123,
+      sectionIndexes: [2],
+      sectionCandidates: [
+        {
+          index: 2,
+          heading: "Version française",
+          headingKind: "explicit_dubbing",
+        },
+      ],
+      pageId: 55,
+      wikipediaUrl: "https://en.wikipedia.org/wiki/Resolved_page",
+    });
+    routeMocks.getPageSectionAsWikitext.mockResolvedValue({
+      parse: { revid: 123, wikitext: "VF : Jean Dupont as Hero." },
+    });
+
+    await processQueue("check", {
+      wiki_id: "Q42",
+      title: "Resolved title",
+      page_title: "Resolved page",
+      poster_path: "/poster.jpg",
+      dubbing_language: undefined,
+    });
+
+    expect(routeMocks.checkMediaDubbingSections).toHaveBeenCalledWith(
+      expect.objectContaining({
+        resolvedMetadata: {
+          title: "Resolved title",
+          wikiId: "Q42",
+          pageTitle: "Resolved page",
+        },
+      }),
+    );
+    expect(routeMocks.rpc).toHaveBeenCalledWith(
+      "enqueue_media_extract",
+      expect.objectContaining({
+        p_scan_metadata: expect.objectContaining({
+          title: "Resolved title",
+          wiki_id: "Q42",
+          page_title: "Resolved page",
+          revision_id: 123,
+          section_headings: ["Version française"],
+          poster_path: "/poster.jpg",
+        }),
+      }),
+    );
+  });
+
   it("reports malformed Wikipedia section metadata as one operational queue error", async () => {
     routeMocks.checkMediaDubbingSections.mockResolvedValue({
       ok: false,
@@ -361,19 +425,19 @@ describe("POST /api/process-media-queue requester propagation", () => {
     expect(routeMocks.rpc).toHaveBeenCalledWith(
       "archive_media_queue_message_with_error",
       expect.objectContaining({
-        p_queue_name: "wiki_check",
+        p_queue_name: "wiki_scan",
         p_error: "Wikipedia returned an invalid section list response",
       }),
     );
     expect(routeMocks.rpc).not.toHaveBeenCalledWith(
-      "archive_wiki_check_with_outcome",
+      "archive_wiki_scan_with_outcome",
       expect.objectContaining({ p_archive_reason: "no_candidate_sections" }),
     );
     expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
     expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledWith(
       "Wikipedia Queue Error",
       expect.stringContaining("invalid section list response"),
-      expect.objectContaining({ queue: "wiki_check", color: 0xed4245 }),
+      expect.objectContaining({ queue: "wiki_scan", color: 0xed4245 }),
     );
   });
 
@@ -390,7 +454,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
       expect.anything(),
     );
     expect(routeMocks.rpc).not.toHaveBeenCalledWith(
-      "archive_wiki_check_with_outcome",
+      "archive_wiki_scan_with_outcome",
       expect.anything(),
     );
     expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
@@ -399,14 +463,14 @@ describe("POST /api/process-media-queue requester propagation", () => {
     expect(notification).toContain("retrying the check");
   });
 
-  it("archives a malformed wiki_check payload once and reports the successful archive", async () => {
+  it("archives a malformed wiki_scan payload once and reports the successful archive", async () => {
     await processQueue("check", { media_type: "invalid" });
 
     expect(routeMocks.rpc).toHaveBeenCalledTimes(2);
     expect(routeMocks.rpc).toHaveBeenCalledWith(
       "archive_media_queue_message_with_error",
       expect.objectContaining({
-        p_queue_name: "wiki_check",
+        p_queue_name: "wiki_scan",
         p_msg_id: 17,
         p_error: "Malformed message payload: missing tmdb_id or invalid media_type",
       }),
@@ -417,11 +481,11 @@ describe("POST /api/process-media-queue requester propagation", () => {
       expect.stringContaining(
         "Error: Malformed message payload: missing tmdb_id or invalid media_type\nAction: item archived as a non-retryable error.",
       ),
-      expect.objectContaining({ queue: "wiki_check", color: 0xed4245 }),
+      expect.objectContaining({ queue: "wiki_scan", color: 0xed4245 }),
     );
   });
 
-  it("reports a wiki_check queue-pop RPC failure once with the underlying database error", async () => {
+  it("reports a wiki_scan queue-pop RPC failure once with the underlying database error", async () => {
     routeMocks.queuePopError = "queue database unavailable";
 
     const response = await processQueue("check");
@@ -433,19 +497,19 @@ describe("POST /api/process-media-queue requester propagation", () => {
         statusMessage: "Queue processing failed",
         data: {
           error:
-            'RPC pop_media_queue_batch failed for wiki_check: {"message":"queue database unavailable"}',
+            'RPC pop_media_queue_batch failed for wiki_scan: {"message":"queue database unavailable"}',
         },
       }),
     );
     expect(routeMocks.rpc).toHaveBeenCalledWith(
       "pop_media_queue_batch",
-      expect.objectContaining({ p_queue_name: "wiki_check" }),
+      expect.objectContaining({ p_queue_name: "wiki_scan" }),
     );
     expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledTimes(1);
     expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledWith(
       "Queue Processor FAILED",
       expect.stringContaining(
-        'RPC pop_media_queue_batch failed for wiki_check: {"message":"queue database unavailable"}',
+        'RPC pop_media_queue_batch failed for wiki_scan: {"message":"queue database unavailable"}',
       ),
       expect.objectContaining({ event: expect.anything() }),
     );
@@ -474,7 +538,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
     await processQueue("check", { dubbing_language: undefined });
 
     expect(routeMocks.rpc).toHaveBeenCalledWith(
-      "archive_wiki_check_with_outcome",
+      "archive_wiki_scan_with_outcome",
       expect.objectContaining({
         p_msg_id: 17,
         p_archive_reason: "no_dubbing_evidence",
@@ -514,7 +578,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
     });
 
     expect(routeMocks.rpc).toHaveBeenCalledWith(
-      "archive_wiki_check_with_outcome",
+      "archive_wiki_scan_with_outcome",
       expect.objectContaining({
         p_archive_reason: "no_dubbing_evidence",
         p_candidate_sections: [expect.objectContaining({ index: 2, heading })],
@@ -539,7 +603,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
     await processQueue("check", { dubbing_language: undefined });
 
     expect(routeMocks.rpc).toHaveBeenCalledWith(
-      "archive_wiki_check_with_outcome",
+      "archive_wiki_scan_with_outcome",
       expect.objectContaining({
         p_archive_reason: "no_dubbing_evidence",
         p_candidate_sections: [expect.objectContaining({ heading: "Reparto" })],
@@ -561,7 +625,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
 
     expect(routeMocks.rpc).toHaveBeenCalledWith(
       "delay_media_queue_message",
-      expect.objectContaining({ p_queue_name: "wiki_check", p_msg_id: 17 }),
+      expect.objectContaining({ p_queue_name: "wiki_scan", p_msg_id: 17 }),
     );
     expect(routeMocks.rpc).not.toHaveBeenCalledWith(
       "archive_media_queue_message_with_error",
@@ -571,7 +635,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
     expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledWith(
       "Wikipedia Queue Error",
       expect.stringContaining("retry scheduled in 60 seconds"),
-      expect.objectContaining({ color: 0xed4245, queue: "wiki_check" }),
+      expect.objectContaining({ color: 0xed4245, queue: "wiki_scan" }),
     );
   });
 
@@ -585,10 +649,12 @@ describe("POST /api/process-media-queue requester propagation", () => {
       pageId: 55,
     });
 
-    const response = await processQueue("check", { dubbing_language: undefined });
+    const response = await processQueue("check", {
+      dubbing_language: undefined,
+    });
 
     expect(routeMocks.rpc).toHaveBeenCalledWith(
-      "archive_wiki_check_with_outcome",
+      "archive_wiki_scan_with_outcome",
       expect.objectContaining({
         p_msg_id: 17,
         p_archive_reason: "no_dubbing_evidence",
@@ -608,7 +674,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
     expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledWith(
       "Wikipedia Queue Error",
       expect.stringContaining("retry scheduled in 60 seconds"),
-      expect.objectContaining({ queue: "wiki_check", color: 0xed4245 }),
+      expect.objectContaining({ queue: "wiki_scan", color: 0xed4245 }),
     );
   });
 
@@ -626,7 +692,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
     expect(routeMocks.rpc).toHaveBeenCalledWith(
       "delay_media_queue_message",
       expect.objectContaining({
-        p_queue_name: "wiki_check",
+        p_queue_name: "wiki_scan",
         p_msg_id: 17,
         p_delay_seconds: 60,
       }),
@@ -641,7 +707,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
       expect.stringContaining(
         "Retry scheduling error: queue database unavailable\nAction: retry scheduling failed.",
       ),
-      expect.objectContaining({ queue: "wiki_check", color: 0xed4245 }),
+      expect.objectContaining({ queue: "wiki_scan", color: 0xed4245 }),
     );
     expect(routeMocks.sendDiscordAdminNotification).not.toHaveBeenCalledWith(
       "Wikipedia Queue Error",
@@ -662,7 +728,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
     await processQueue("check");
 
     expect(routeMocks.rpc).toHaveBeenCalledWith(
-      "archive_wiki_check_with_outcome",
+      "archive_wiki_scan_with_outcome",
       expect.objectContaining({
         p_msg_id: 17,
         p_archive_reason: "adult_content_excluded",
@@ -676,7 +742,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
     expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledWith(
       "Wikipedia Check Archived — Adult Content",
       expect.stringContaining("Action: archived — no extraction created."),
-      expect.objectContaining({ queue: "wiki_check" }),
+      expect.objectContaining({ queue: "wiki_scan" }),
     );
   });
 
@@ -693,7 +759,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
       await processQueue("check", { dubbing_language: "fr-FR" });
 
       expect(routeMocks.rpc).toHaveBeenCalledWith(
-        "archive_wiki_check_with_outcome",
+        "archive_wiki_scan_with_outcome",
         expect.objectContaining({ p_archive_reason: reason }),
       );
       expect(routeMocks.rpc).not.toHaveBeenCalledWith("enqueue_media_extract", expect.anything());
@@ -772,7 +838,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
     await processQueue("check", { dubbing_language: undefined });
 
     expect(routeMocks.rpc).toHaveBeenCalledWith(
-      "archive_wiki_check_with_outcome",
+      "archive_wiki_scan_with_outcome",
       expect.objectContaining({ p_archive_reason: "no_dubbing_evidence" }),
     );
     expect(routeMocks.rpc).not.toHaveBeenCalledWith("enqueue_media_extract", expect.anything());
@@ -797,7 +863,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
       expect.objectContaining({ igdbId: 42 }),
     );
     expect(routeMocks.rpc).toHaveBeenCalledWith(
-      "archive_wiki_check_with_outcome",
+      "archive_wiki_scan_with_outcome",
       expect.objectContaining({ p_archive_reason: "no_dubbing_evidence" }),
     );
     expect(routeMocks.rpc).not.toHaveBeenCalledWith("enqueue_media_extract", expect.anything());
@@ -817,7 +883,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
     await processQueue("check", { dubbing_language: undefined });
 
     expect(routeMocks.rpc).toHaveBeenCalledWith(
-      "archive_wiki_check_with_outcome",
+      "archive_wiki_scan_with_outcome",
       expect.objectContaining({ p_archive_reason: "no_candidate_sections" }),
     );
     expect(routeMocks.rpc).not.toHaveBeenCalledWith("enqueue_media_extract", expect.anything());
@@ -946,7 +1012,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
       }),
     );
     expect(routeMocks.rpc).toHaveBeenCalledWith(
-      "archive_wiki_check_with_outcome",
+      "archive_wiki_scan_with_outcome",
       expect.objectContaining({
         p_archive_reason: "extraction_enqueued",
         p_archive_details: expect.stringContaining("ambiguous_region"),
@@ -997,7 +1063,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
       expect.objectContaining({ p_dubbing_language: "fr-CA" }),
     );
     expect(routeMocks.rpc).toHaveBeenCalledWith(
-      "archive_wiki_check_with_outcome",
+      "archive_wiki_scan_with_outcome",
       expect.objectContaining({
         p_archive_reason: "extraction_enqueued",
         p_archive_details: expect.stringContaining("ambiguous_region"),
@@ -1025,7 +1091,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
     );
     expect(routeMocks.rpc).toHaveBeenCalledWith(
       "delay_media_queue_message",
-      expect.objectContaining({ p_queue_name: "wiki_check", p_msg_id: 17 }),
+      expect.objectContaining({ p_queue_name: "wiki_scan", p_msg_id: 17 }),
     );
     expect(routeMocks.sendDiscordAdminNotification.mock.calls[0]?.[1]).toContain(
       "fr-FR section(s) 2: failed — database unavailable",
@@ -1044,7 +1110,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
     });
 
     expect(routeMocks.rpc).toHaveBeenCalledWith(
-      "archive_wiki_check_with_outcome",
+      "archive_wiki_scan_with_outcome",
       expect.objectContaining({
         p_msg_id: 17,
         p_archive_reason: "extraction_enqueued",
@@ -1060,14 +1126,14 @@ describe("POST /api/process-media-queue requester propagation", () => {
     expect(routeMocks.sendDiscordAdminNotification).toHaveBeenCalledWith(
       "Wikipedia Dubbing Detected — fr-FR",
       expect.stringContaining("Dubbing project already exists"),
-      expect.objectContaining({ queue: "wiki_check", color: 0x57f287 }),
+      expect.objectContaining({ queue: "wiki_scan", color: 0x57f287 }),
     );
     const notification = routeMocks.sendDiscordAdminNotification.mock.calls[0]?.[1];
     expect(notification).toContain("No duplicate extraction was created");
     expect(notification).not.toContain("extraction enqueued");
   });
 
-  it("reports when malformed wiki_check payload archiving fails", async () => {
+  it("reports when malformed wiki_scan payload archiving fails", async () => {
     routeMocks.archiveQueueResult.mockReturnValue({
       data: false,
       error: { message: "archive unavailable" },
@@ -1110,15 +1176,21 @@ describe("POST /api/process-media-queue requester propagation", () => {
     ["RPC error", "error"],
     ["already finalized", "false"],
   ] as const)(
-    "does not error-archive after wiki_check outcome archival returns %s",
+    "does not error-archive after wiki_scan outcome archival returns %s",
     async (_label, failure) => {
       routeMocks.getPageSectionAsWikitext.mockResolvedValue({
         parse: { wikitext: "Japanese dub: Actor Name." },
       });
       if (failure === "error") routeMocks.archiveWikiCheckError = "archive unavailable";
-      else routeMocks.archiveWikiCheckResult.mockReturnValue({ data: false, error: null });
+      else
+        routeMocks.archiveWikiCheckResult.mockReturnValue({
+          data: false,
+          error: null,
+        });
 
-      const response = await processQueue("check", { dubbing_language: undefined });
+      const response = await processQueue("check", {
+        dubbing_language: undefined,
+      });
       const body = await response.json();
 
       expect(routeMocks.rpc).not.toHaveBeenCalledWith(
@@ -1218,7 +1290,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
     await processQueue("check", { dubbing_language: "fr-FR" });
 
     expect(routeMocks.rpc).toHaveBeenCalledWith(
-      "archive_wiki_check_with_outcome",
+      "archive_wiki_scan_with_outcome",
       expect.objectContaining({
         p_msg_id: 17,
         p_archive_reason: "target_conflict",
@@ -1244,7 +1316,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
     await processQueue("check", { dubbing_language: undefined });
 
     expect(routeMocks.rpc).toHaveBeenCalledWith(
-      "archive_wiki_check_with_outcome",
+      "archive_wiki_scan_with_outcome",
       expect.objectContaining({
         p_msg_id: 17,
         p_archive_reason: "ambiguous_region",
@@ -1267,7 +1339,7 @@ describe("POST /api/process-media-queue requester propagation", () => {
     await processQueue("check", { dubbing_language: undefined });
 
     expect(routeMocks.rpc).toHaveBeenCalledWith(
-      "archive_wiki_check_with_outcome",
+      "archive_wiki_scan_with_outcome",
       expect.objectContaining({
         p_archive_reason: "unsupported_region",
         p_archive_details: expect.stringContaining("Argentine Spanish"),

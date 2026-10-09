@@ -15,6 +15,11 @@ describe("validateExtractPayload", () => {
     dubbing_language: "es-ES",
     page_id: 4620806,
     section_indexes: [2],
+    title: "Test movie",
+    wiki_id: "Q123",
+    page_title: "Example",
+    revision_id: 456,
+    section_headings: ["Cast"],
   };
 
   it("accepts a well-formed payload", () => {
@@ -28,6 +33,11 @@ describe("validateExtractPayload", () => {
         dubbingLanguage: "es-ES",
         pageId: 4620806,
         sectionIndexes: [2],
+        title: "Test movie",
+        wikiId: "Q123",
+        pageTitle: "Example",
+        revisionId: 456,
+        sectionHeadings: ["Cast"],
       });
     }
   });

@@ -29,13 +29,14 @@ interface WikipediaSection {
 
 interface WikipediaSectionsResponse {
   parse?: {
+    revid?: number;
     tocdata?: { sections?: WikipediaSection[] };
     sections?: WikipediaSection[];
   };
 }
 
 interface WikipediaWikitextResponse {
-  parse?: { wikitext?: string };
+  parse?: { wikitext?: string; revid?: number };
 }
 
 function isJsonObject(value: unknown): value is JsonObject {
@@ -113,8 +114,11 @@ function parseWikipediaSections(value: unknown): WikipediaSectionsResponse {
   };
   const tocdata = isJsonObject(parse.tocdata) ? parse.tocdata : undefined;
   const sections = parseSections(parse.sections);
+  const revid =
+    typeof parse.revid === "number" && Number.isSafeInteger(parse.revid) ? parse.revid : undefined;
   return {
     parse: {
+      ...(revid !== undefined ? { revid } : {}),
       ...(tocdata ? { tocdata: { sections: parseSections(tocdata.sections) } } : {}),
       ...(sections ? { sections } : {}),
     },
@@ -124,7 +128,16 @@ function parseWikipediaSections(value: unknown): WikipediaSectionsResponse {
 function parseWikipediaWikitext(value: unknown): WikipediaWikitextResponse {
   const root = isJsonObject(value) ? value : {};
   if (!isJsonObject(root.parse) || typeof root.parse.wikitext !== "string") return {};
-  return { parse: { wikitext: root.parse.wikitext } };
+  const revid =
+    typeof root.parse.revid === "number" && Number.isSafeInteger(root.parse.revid)
+      ? root.parse.revid
+      : undefined;
+  return {
+    parse: {
+      wikitext: root.parse.wikitext,
+      ...(revid !== undefined ? { revid } : {}),
+    },
+  };
 }
 
 const frenchMaleDubber = (cmContinue = "") =>
@@ -133,7 +146,7 @@ const frenchFemaleDubber = (cmContinue = "") =>
   `https://fr.wikipedia.org/w/api.php?action=query&list=categorymembers&cmtitle=Cat%C3%A9gorie:Actrice_fran%C3%A7aise_de_doublage&cmlimit=100&format=json&cmcontinue=${cmContinue}`;
 
 const wikipediaPageFindSections = (pageId: number, lang: string) =>
-  `https://${lang}.wikipedia.org/w/api.php?action=parse&format=json&pageid=${pageId}&prop=tocdata&formatversion=2`;
+  `https://${lang}.wikipedia.org/w/api.php?action=parse&format=json&pageid=${pageId}&prop=tocdata|revid&formatversion=2`;
 
 const parseDubberPageAsHTML = (pageId: number, sectionId: string, lang: string) =>
   `https://${lang}.wikipedia.org/w/api.php?action=parse&format=json&pageid=${pageId}&prop=text&formatversion=2&section=${sectionId}`;
@@ -147,8 +160,13 @@ const searchEntities = (search: string, lang: string) =>
 const getAllSitelinks = (entityId: string) =>
   `https://www.wikidata.org/w/api.php?action=wbgetentities&props=sitelinks&format=json&ids=${entityId}`;
 
-const getWikipediaPageSectionAsWikitext = (pageId: number, sectionId: string, lang: string) =>
-  `https://${lang}.wikipedia.org/w/api.php?action=parse&format=json&pageid=${pageId}&prop=wikitext&formatversion=2&section=${sectionId}`;
+const getWikipediaPageSectionAsWikitext = (
+  pageId: number,
+  sectionId: string,
+  lang: string,
+  revisionId?: number,
+) =>
+  `https://${lang}.wikipedia.org/w/api.php?action=parse&format=json&${revisionId ? `oldid=${revisionId}` : `pageid=${pageId}`}&prop=wikitext&formatversion=2&section=${sectionId}`;
 
 const getWikipediaPage = (title: string, language: string) =>
   `https://${language}.wikipedia.org/w/api.php?action=query&prop=pageprops&format=json&titles=${encodeURIComponent(title)}`;
@@ -390,8 +408,9 @@ export class WikipediaCache {
     pageId: number,
     sectionId: string,
     lang: string,
+    revisionId?: number,
   ): Promise<WikipediaWikitextResponse> {
-    const url = getWikipediaPageSectionAsWikitext(pageId, sectionId, lang);
+    const url = getWikipediaPageSectionAsWikitext(pageId, sectionId, lang, revisionId);
     return parseWikipediaWikitext(await this.fetch(url));
   }
 

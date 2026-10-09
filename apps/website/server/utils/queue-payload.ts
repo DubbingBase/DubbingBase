@@ -11,6 +11,12 @@ export interface ValidQueueBase {
   requestedBy: string | null;
   seasonNumber?: number;
   episodeNumber?: number;
+  title?: string;
+  wikiId?: string;
+  pageTitle?: string;
+  pageId?: number;
+  revisionId?: number;
+  posterPath?: string;
 }
 export interface ValidCheckPayload extends ValidQueueBase {
   wikipediaLanguage: string;
@@ -19,6 +25,7 @@ export interface ValidExtractPayload extends ValidCheckPayload {
   dubbingLanguage: DubbingLanguage;
   pageId: number;
   sectionIndexes: number[];
+  sectionHeadings?: string[];
 }
 type Validated<T> = { ok: true; value: T } | { ok: false; reason: string };
 
@@ -72,6 +79,31 @@ function validateBase(payload: unknown): Validated<ValidQueueBase> {
     mediaType,
     requestedBy: queueRequester(property(payload, "requested_by")),
   };
+  for (const [key, field] of [
+    ["title", "title"],
+    ["wiki_id", "wikiId"],
+    ["page_title", "pageTitle"],
+    ["poster_path", "posterPath"],
+  ] as const) {
+    const raw = property(payload, key);
+    if (raw !== undefined && raw !== null) {
+      if (typeof raw !== "string" || raw.length === 0 || raw.length > 512) {
+        return { ok: false, reason: `invalid ${key}` };
+      }
+      value[field] = raw;
+    }
+  }
+  for (const [key, field] of [
+    ["page_id", "pageId"],
+    ["revision_id", "revisionId"],
+  ] as const) {
+    const raw = property(payload, key);
+    if (raw !== undefined && raw !== null) {
+      const number = toInt(raw, 1);
+      if (number === null) return { ok: false, reason: `invalid ${key}` };
+      value[field] = number;
+    }
+  }
   const source = property(payload, "wikipedia_language") ?? property(payload, "language");
   if (source !== undefined && source !== null && source !== "") {
     if (!isWikipediaLanguage(source)) {
@@ -129,6 +161,14 @@ export function validateExtractPayload(payload: unknown): Validated<ValidExtract
     .map((raw: unknown) => toInt(raw, 0))
     .filter((n): n is number => n !== null);
   if (sectionIndexes.length === 0) return { ok: false, reason: "no usable section_indexes" };
+  const rawHeadings = property(payload, "section_headings");
+  const sectionHeadings =
+    Array.isArray(rawHeadings) && rawHeadings.every((item) => typeof item === "string")
+      ? rawHeadings
+      : undefined;
+  if (rawHeadings !== undefined && !sectionHeadings) {
+    return { ok: false, reason: "invalid section_headings" };
+  }
   return {
     ok: true,
     value: {
@@ -136,6 +176,7 @@ export function validateExtractPayload(payload: unknown): Validated<ValidExtract
       dubbingLanguage: base.value.dubbingLanguage,
       pageId,
       sectionIndexes,
+      ...(sectionHeadings ? { sectionHeadings } : {}),
     },
   };
 }
