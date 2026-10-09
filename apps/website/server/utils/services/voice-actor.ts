@@ -1,71 +1,59 @@
 import { requireDubbingLanguage } from "../dubbing-language";
 import { useSupabaseAdmin } from "../db/client";
-import { findOrCreateDubbingProject } from "../db/dubbing-project";
+import type { DubbingLanguage } from "@app/shared-logic";
+import type { Json } from "@app/supabase/types";
 
-export async function upsertVoiceActor(firstName: string, lastName: string) {
-  const supabase = useSupabaseAdmin();
-  const trimmedFirstName = firstName.trim();
-  const trimmedLastName = lastName.trim();
-
-  // Try exact match first
-  const { data: existingExact, error: selectExactError } = await supabase
-    .from("voice_actors")
-    .select("id")
-    .eq("firstname", trimmedFirstName)
-    .eq("lastname", trimmedLastName)
-    .maybeSingle();
-
-  if (selectExactError) throw selectExactError;
-  if (existingExact) {
-    return { data: existingExact, inserted: false };
-  }
-
-  // Try case-insensitive match
-  const { data: existingIlike, error: selectIlikeError } = await supabase
-    .from("voice_actors")
-    .select("id")
-    .ilike("firstname", trimmedFirstName)
-    .ilike("lastname", trimmedLastName)
-    .maybeSingle();
-
-  if (selectIlikeError) throw selectIlikeError;
-  if (existingIlike) {
-    return { data: existingIlike, inserted: false };
-  }
-
-  // Insert new voice actor
-  const { data, error } = await (supabase.from("voice_actors") as any)
-    .insert({
-      firstname: trimmedFirstName,
-      lastname: trimmedLastName,
-    })
-    .select()
-    .single();
-
-  if (error) throw error;
-  return { data, inserted: true };
+export interface ExtractedCredit {
+  firstname: string;
+  lastname: string;
+  actorId: number;
+  performance?: string;
+  characterId?: number | null;
+  characterName?: string | null;
 }
 
-export async function upsertActor(
-  id: number,
-  name: string,
-  profile_path?: string,
-) {
-  const supabase = useSupabaseAdmin();
-  const trimmedName = name.trim();
+export interface AppliedExtractedCredits {
+  newVoiceActors: number;
+  creditsAdded: number;
+}
 
-  const { data, error } = await (supabase as any)
-    .from("actors")
-    .upsert({
-      id,
-      name: trimmedName,
-      profile_path,
-    })
-    .select()
-    .single();
+function readCount(value: unknown, key: string): number {
+  if (typeof value !== "object" || value === null) return 0;
+  const count = Reflect.get(value, key);
+  return typeof count === "number" && Number.isInteger(count) && count >= 0 ? count : 0;
+}
+
+/** Persist all credits from an extraction in a single database transaction/RPC. */
+export async function applyExtractedCredits(
+  contentId: number,
+  contentType: "movie" | "tv" | "video_game",
+  dubbingLanguage: DubbingLanguage,
+  credits: ExtractedCredit[],
+): Promise<AppliedExtractedCredits> {
+  requireDubbingLanguage(dubbingLanguage);
+  if (credits.length === 0) return { newVoiceActors: 0, creditsAdded: 0 };
+
+  const payload: Json = credits.map((credit) => ({
+    firstname: credit.firstname,
+    lastname: credit.lastname,
+    actor_id: credit.actorId,
+    performance: credit.performance ?? null,
+    character_id: credit.characterId ?? null,
+    character_name: credit.characterName ?? null,
+  }));
+  const supabase = useSupabaseAdmin();
+  const { data, error } = await supabase.rpc("apply_extracted_credits", {
+    p_content_id: contentId,
+    p_content_type: contentType,
+    p_dubbing_language: dubbingLanguage,
+    p_credits: payload,
+  });
 
   if (error) throw error;
-  return data;
+  return {
+    newVoiceActors: readCount(data, "new_voice_actors"),
+    creditsAdded: readCount(data, "credits_added"),
+  };
 }
 
 export async function upsertStudio(name: string, logo_url?: string) {
@@ -83,7 +71,8 @@ export async function upsertStudio(name: string, logo_url?: string) {
     return { data: existing, inserted: false };
   }
 
-  const { data, error } = await (supabase.from("studios") as any)
+  const { data, error } = await supabase
+    .from("studios")
     .insert({
       name: trimmedName,
       logo_url,
@@ -93,92 +82,4 @@ export async function upsertStudio(name: string, logo_url?: string) {
 
   if (error) throw error;
   return { data, inserted: true };
-}
-
-export async function upsertWork(
-  voiceActorId: number,
-  contentId: number,
-  actorId: number | null,
-  contentType: string,
-  dubbingLanguage: string,
-  performance?: string,
-  characterId?: number | null,
-  characterName?: string | null,
-) {
-  const supabase = useSupabaseAdmin();
-  const dubbing_project_id = await findOrCreateDubbingProject(
-    contentId,
-    contentType,
-    dubbingLanguage,
-  );
-
-  let query = supabase
-    .from("work")
-    .select("id")
-    .eq("dubbing_project_id", dubbing_project_id)
-    .eq("voice_actor_id", voiceActorId);
-
-  if (actorId) {
-    query = query.eq("actor_id", actorId);
-  } else {
-    query = query.is("actor_id", null);
-  }
-
-  if (characterId) {
-    query = query.eq("character_id", characterId);
-  }
-
-  const { data: existing } = await query.maybeSingle();
-
-  if (existing) {
-    const { data, error } = await (supabase.from("work") as any)
-      .update({
-        performance: performance || null,
-        ...(characterName ? { character_name: characterName } : {}),
-      })
-      .eq("id", (existing as any).id)
-      .select();
-    if (error) throw error;
-    return data || [];
-  } else {
-    const { data, error } = await (supabase.from("work") as any)
-      .insert({
-        voice_actor_id: voiceActorId,
-        actor_id: actorId || null,
-        performance: performance || null,
-        dubbing_project_id,
-        character_id: characterId || null,
-        character_name: characterName || null,
-      })
-      .select();
-    if (error) throw error;
-    return data || [];
-  }
-}
-
-export async function insertVoiceActorAndWork(
-  firstName: string,
-  lastName: string,
-  contentId: number,
-  actorId: number,
-  contentType: string,
-  dubbingLanguage: string,
-  performance?: string,
-  characterId?: number | null,
-  characterName?: string | null,
-) {
-  requireDubbingLanguage(dubbingLanguage);
-  const voiceActorResult = await upsertVoiceActor(firstName, lastName);
-  const workResult = await upsertWork(
-    (voiceActorResult.data as any).id,
-    contentId,
-    actorId,
-    contentType,
-    dubbingLanguage,
-    performance,
-    characterId,
-    characterName,
-  );
-
-  return { voiceActorResult, workResult };
 }
