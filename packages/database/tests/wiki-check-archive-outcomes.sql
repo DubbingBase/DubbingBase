@@ -15,12 +15,10 @@ BEGIN
     RAISE EXCEPTION 'Retired queue RPCs are still installed';
   END IF;
 
-  message_id := public.enqueue_media_fetch(
-    p_tmdb_id => -980301,
-    p_media_type => 'movie',
-    p_wikipedia_language => 'en',
-    p_requested_by => requester_id
-  );
+  message_id := pgmq.send('wiki_check', jsonb_build_object(
+    'tmdb_id', -980301, 'media_type', 'movie', 'wikipedia_language', 'en',
+    'language', 'en', 'requested_by', requester_id
+  ));
 
   IF NOT public.archive_wiki_check_with_outcome(
     message_id,

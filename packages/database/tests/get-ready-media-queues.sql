@@ -1,6 +1,6 @@
 BEGIN;
 
-SELECT pgmq.send('wiki_discovery', '{"tmdb_id":991234569,"media_type":"movie"}'::jsonb);
+SELECT pgmq.send('wiki_scan', '{"tmdb_id":991234569,"media_type":"movie"}'::jsonb);
 
 DO $$
 DECLARE
@@ -13,7 +13,7 @@ BEGIN
   END IF;
 
   v_ready_queues := public.get_ready_media_queues();
-  IF NOT ('wiki_discovery' = ANY(v_ready_queues)) THEN
+  IF NOT ('wiki_scan' = ANY(v_ready_queues)) THEN
     RAISE EXCEPTION 'Visible discovery messages were not reported ready: %', v_ready_queues;
   END IF;
 END;

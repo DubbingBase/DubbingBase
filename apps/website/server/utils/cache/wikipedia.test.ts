@@ -89,6 +89,48 @@ describe("Wikipedia cache policies", () => {
 
     await expect(cache.getPageSections(1, "en")).rejects.toThrow("invalid section list response");
   });
+
+  it("keeps the Wikipedia revision returned with the candidate section list", async () => {
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            parse: {
+              revid: 123456,
+              tocdata: { sections: [{ index: 2, line: "Cast" }] },
+            },
+          }),
+        ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const cache = new WikipediaCache(new SimpleCache(() => null));
+
+    await expect(cache.getPageSections(42, "fr")).resolves.toMatchObject({
+      parse: {
+        revid: 123456,
+        tocdata: { sections: [{ index: 2, line: "Cast" }] },
+      },
+    });
+    expect(fetchMock.mock.calls[0]?.[0]).toContain("prop=tocdata|revid");
+  });
+
+  it("fetches section text pinned to the checked revision", async () => {
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            parse: { revid: 123456, wikitext: "Pinned section text" },
+          }),
+        ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const cache = new WikipediaCache(new SimpleCache(() => null));
+
+    await expect(cache.getPageSectionAsWikitext(42, "2", "fr", 123456)).resolves.toMatchObject({
+      parse: { revid: 123456, wikitext: "Pinned section text" },
+    });
+    expect(fetchMock.mock.calls[0]?.[0]).toContain("oldid=123456");
+  });
 });
 
 describe("isDubbingSectionHeading", () => {

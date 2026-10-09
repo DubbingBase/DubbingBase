@@ -25,15 +25,15 @@ BEGIN
 
   IF NOT has_function_privilege('service_role', 'public.get_media_queue_items(text,text,integer,integer)', 'EXECUTE')
     OR NOT has_function_privilege('service_role', 'public.get_media_queue_stats()', 'EXECUTE')
-    OR NOT has_function_privilege('service_role', 'public.enqueue_media_fetch(bigint,text,integer,integer,text,boolean,text,text,uuid)', 'EXECUTE')
-    OR NOT has_function_privilege('service_role', 'public.enqueue_media_extract(bigint,text,text,bigint,jsonb,integer,integer,boolean,text,text,uuid)', 'EXECUTE') THEN
+    OR NOT has_function_privilege('service_role', 'public.enqueue_media_fetch(bigint,text,integer,integer,text,boolean,text,text,uuid,text,text,text,text)', 'EXECUTE')
+    OR NOT has_function_privilege('service_role', 'public.enqueue_media_extract(bigint,text,text,bigint,jsonb,integer,integer,boolean,text,text,uuid,jsonb)', 'EXECUTE') THEN
     RAISE EXCEPTION 'The service-role queue API grants are incomplete';
   END IF;
 
-  IF has_function_privilege('anon', 'public.enqueue_media_fetch(bigint,text,integer,integer,text,boolean,text,text,uuid)', 'EXECUTE')
-    OR has_function_privilege('authenticated', 'public.enqueue_media_fetch(bigint,text,integer,integer,text,boolean,text,text,uuid)', 'EXECUTE')
-    OR has_function_privilege('anon', 'public.enqueue_media_extract(bigint,text,text,bigint,jsonb,integer,integer,boolean,text,text,uuid)', 'EXECUTE')
-    OR has_function_privilege('authenticated', 'public.enqueue_media_extract(bigint,text,text,bigint,jsonb,integer,integer,boolean,text,text,uuid)', 'EXECUTE') THEN
+  IF has_function_privilege('anon', 'public.enqueue_media_fetch(bigint,text,integer,integer,text,boolean,text,text,uuid,text,text,text,text)', 'EXECUTE')
+    OR has_function_privilege('authenticated', 'public.enqueue_media_fetch(bigint,text,integer,integer,text,boolean,text,text,uuid,text,text,text,text)', 'EXECUTE')
+    OR has_function_privilege('anon', 'public.enqueue_media_extract(bigint,text,text,bigint,jsonb,integer,integer,boolean,text,text,uuid,jsonb)', 'EXECUTE')
+    OR has_function_privilege('authenticated', 'public.enqueue_media_extract(bigint,text,text,bigint,jsonb,integer,integer,boolean,text,text,uuid,jsonb)', 'EXECUTE') THEN
     RAISE EXCEPTION 'A public database role can execute a service-role enqueue RPC';
   END IF;
 
@@ -45,23 +45,23 @@ BEGIN
     p_requested_by => requester_id
   );
   IF NOT EXISTS (
-    SELECT 1 FROM pgmq.q_wiki_check
+    SELECT 1 FROM pgmq.q_wiki_scan
     WHERE msg_id = check_id AND message->>'requested_by' = requester_id::text
   ) THEN
     RAISE EXCEPTION 'Initial check enqueue lost its original requester';
   END IF;
 
-  IF NOT public.archive_media_queue_message('wiki_check', check_id) THEN
+  IF NOT public.archive_media_queue_message('wiki_scan', check_id) THEN
     RAISE EXCEPTION 'Could not archive the source-only check';
   END IF;
   IF NOT EXISTS (
-    SELECT 1 FROM public.get_media_queue_items('wiki_check', 'archived', 100, 0)
+    SELECT 1 FROM public.get_media_queue_items('wiki_scan', 'archived', 100, 0)
     WHERE id = check_id AND requested_by = requester_id
   ) THEN
     RAISE EXCEPTION 'Archived queue item lost its original requester';
   END IF;
   IF NOT EXISTS (
-    SELECT 1 FROM pgmq.a_wiki_check
+    SELECT 1 FROM pgmq.a_wiki_scan
     WHERE msg_id = check_id
       AND message->>'requested_by' = requester_id::text
       AND message->>'wikipedia_language' = 'en'
@@ -103,7 +103,7 @@ BEGIN
     p_media_type => 'movie'
   );
   IF NOT EXISTS (
-    SELECT 1 FROM pgmq.q_wiki_discovery
+    SELECT 1 FROM pgmq.q_wiki_scan
     WHERE msg_id = discovery_id AND message->>'requested_by' IS NULL
   ) THEN
     RAISE EXCEPTION 'A discovery with no requester did not stay anonymous';

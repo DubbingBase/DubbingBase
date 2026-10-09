@@ -686,6 +686,16 @@ export type Database = {
         };
         Returns: boolean;
       };
+      archive_wiki_scan_with_outcome: {
+        Args: {
+          p_archive_details: string;
+          p_archive_reason: string;
+          p_candidate_sections: Json;
+          p_detected_regions: Json;
+          p_msg_id: number;
+        };
+        Returns: boolean;
+      };
       reprocess_legacy_wiki_check_reviews: {
         Args: never;
         Returns: {
@@ -721,6 +731,7 @@ export type Database = {
           p_media_type: string;
           p_page_id: number;
           p_requested_by?: string;
+          p_scan_metadata?: Json;
           p_season_number?: number;
           p_section_indexes: Json;
           p_tmdb_id: number;
@@ -736,6 +747,10 @@ export type Database = {
           p_language?: string;
           p_media_type: string;
           p_requested_by?: string;
+          p_wiki_id?: string;
+          p_title?: string;
+          p_page_title?: string;
+          p_poster_path?: string;
           p_season_number?: number;
           p_tmdb_id: number;
           p_wikipedia_language?: string;
