@@ -8,12 +8,12 @@
 
 ## Scale
 
-81 API routes · 18 database models · 197 UI components · 91 library files · 14 middleware layers · 61 environment variables
+80 API routes · 18 database models · 197 UI components · 91 library files · 14 middleware layers · 61 environment variables
 
 ## Subsystems
 
 - **[[id].get](./[id].get.md)** — 9 routes — touches: queue
-- **[Admin](./admin.md)** — 6 routes — touches: auth, queue
+- **[Admin](./admin.md)** — 5 routes — touches: auth, queue
 - **[Career-grid.get](./career-grid.get.md)** — 1 routes — touches: cache
 - **[Cast-vote.post](./cast-vote.post.md)** — 1 routes
 - **[Count-voice-actor-works.post](./count-voice-actor-works.post.md)** — 1 routes
@@ -88,12 +88,12 @@
 
 Changes to these files have the widest blast radius across the codebase:
 
-- `apps/website/server/utils/db/client.ts` — imported by **65** files
-- `apps/website/server/utils/auth.ts` — imported by **34** files
+- `apps/website/server/utils/db/client.ts` — imported by **64** files
+- `apps/website/server/utils/auth.ts` — imported by **33** files
 - `apps/website/server/utils/index.ts` — imported by **23** files
-- `apps/website/server/utils/cache/index.ts` — imported by **18** files
+- `apps/website/server/utils/cache/index.ts` — imported by **19** files
 - `apps/website/server/utils/db/queries.ts` — imported by **12** files
-- `apps/website/server/utils/dubbing-language.ts` — imported by **11** files
+- `apps/website/server/utils/notifications/discord.ts` — imported by **12** files
 
 ## Required Environment Variables
 
@@ -112,4 +112,4 @@ Changes to these files have the widest blast radius across the codebase:
 - _...31 more_
 
 ---
-_Back to [index.md](./index.md) · Generated 2026-10-06_
+_Back to [index.md](./index.md) · Generated 2026-10-09_

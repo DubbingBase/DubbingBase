@@ -160,7 +160,11 @@
   - function cleanCharacterName
   - function processMedia
   - const TMDB_CONFIG
-- `apps/website/server/utils/wiki-check-disposition.ts` — function wikiCheckDisposition: (hasDubbingSections, dubbingLanguage) => WikiCheckDisposition, type WikiCheckDisposition
+- `apps/website/server/utils/wiki-check-disposition.ts`
+  - function wikiCheckDisposition: (evidence, candidateSectionIndexes, requestedLanguage?) => WikiCheckDisposition
+  - type WikiCheckArchiveReason
+  - type WikiCheckSkippedResult
+  - type WikiCheckDisposition
 - `apps/website/server/utils/with-timeout.ts` — function withTimeout: (promise, timeoutMs, dependency) => Promise<T>
 - `apps/website/src/composables/getHydrationCachedData.ts` — function getHydrationCachedData: (key, nuxtApp) => T | undefined
 - `apps/website/src/composables/useContribute.ts` — function fetchRandomTask, function useContribute

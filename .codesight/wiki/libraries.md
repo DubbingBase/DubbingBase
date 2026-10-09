@@ -23,6 +23,7 @@
 - `apps/website/server/utils/api/igdb.ts` — buildIgdbImageUrl, IgdbClient, IgdbTrendingGamesResult, IgdbPopularityPrimitive
 - `apps/website/server/utils/pagination.ts` — parsePagination, paginateArray, PaginationOptions, ParsedPagination
 - `apps/website/server/utils/urls/tmdb.ts` — buildTmdbImageUrl, cleanCharacterName, processMedia, TMDB_CONFIG
+- `apps/website/server/utils/wiki-check-disposition.ts` — wikiCheckDisposition, WikiCheckArchiveReason, WikiCheckSkippedResult, WikiCheckDisposition
 - `apps/website/server/utils/media-request.ts` — parseSeasonQuery, parseEpisodeQuery, withMediaServiceTimeout
 - `apps/website/server/utils/services/media.ts` — MediaService, WIKIPEDIA_ACTOR_URL_NAMESPACE, MEDIA_TVDB_CHARACTERS_NAMESPACE
 - `apps/website/server/utils/api/openlibrary.ts` — buildOpenLibraryCoverUrl, OpenLibraryClient
@@ -30,7 +31,6 @@
 - `apps/website/server/utils/api/tvdb.ts` — TVDBClient, TVDB_AUTH_TOKEN_NAMESPACE
 - `apps/website/server/utils/auth.ts` — requireUser, requireAdmin
 - `apps/website/server/utils/dubbing-region-detection.ts` — detectDubbingRegionFromWikitext, DubbingEvidence
-- `apps/website/server/utils/normalize.ts` — normalizeString, isExploitableVoiceActorName
 - _…and 26 more files_
 
 ## Shared-logic (20 files)

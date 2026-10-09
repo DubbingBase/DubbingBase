@@ -5,7 +5,6 @@
 - `POST` `/api/admin/dubbing-project` [auth] ✓
 - `POST` `/api/admin/queue/clear` [auth, queue]
 - `DELETE` `/api/admin/queue/item` [auth, queue]
-- `POST` `/api/admin/queue/review` [auth, queue]
 - `GET` `/api/admin/queue` [auth, queue]
 - `GET` `/api/advertisement/:id` params(id) [queue]
 - `GET` `/api/audiobook/:id` params(id) [queue]
