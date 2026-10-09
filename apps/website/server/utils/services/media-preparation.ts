@@ -253,8 +253,10 @@ export async function checkMediaDubbingSections(options: {
     }
 
     const wikipediaCache = useWikipediaCache(cache);
-    const entityData = await wikipediaCache.getAllSitelinksEntity(wikiId);
-    const sitelinks = entityData.entities[wikiId]?.sitelinks;
+    const entityData = options.resolvedMetadata
+      ? undefined
+      : await wikipediaCache.getAllSitelinksEntity(wikiId);
+    const sitelinks = entityData?.entities[wikiId]?.sitelinks;
 
     const pageTitle =
       options.resolvedMetadata?.pageTitle || sitelinks?.[sitelinkKey(wikipediaLanguage)]?.title;
