@@ -1,4 +1,4 @@
--- Run after the legacy review workflow and reprocessor migrations.
+-- Run after the legacy review workflow and immutable reprocessor migration.
 \set ON_ERROR_STOP on
 BEGIN;
 

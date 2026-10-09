@@ -227,7 +227,7 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.reprocess_legacy_wiki_check_reviews()
+CREATE FUNCTION public.reprocess_legacy_wiki_check_reviews()
 RETURNS TABLE (
   tmdb_id bigint,
   archived_msg_id bigint,
