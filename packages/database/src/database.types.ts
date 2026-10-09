@@ -743,6 +743,7 @@ export type Database = {
         Returns: number;
       };
       find_duplicate_voice_actors_rpc: { Args: never; Returns: Json };
+      get_ready_media_queues: { Args: never; Returns: string[] };
       get_media_queue_depth: {
         Args: { p_queue_name?: string };
         Returns: number;
