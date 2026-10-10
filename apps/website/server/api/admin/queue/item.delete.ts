@@ -1,7 +1,7 @@
 import { requireAdmin } from "../../../utils/auth";
 import { useSupabaseAdmin } from "../../../utils/db/client";
 
-const validQueueNames = ["wiki_extract", "wiki_check", "wiki_discovery"];
+const validQueueNames = ["wiki_scan", "wiki_extract", "wiki_check", "wiki_discovery"];
 
 type DeleteQueueItemBody = {
   id?: unknown;
@@ -29,13 +29,10 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: "Invalid queue name" });
   }
 
-  const { data, error } = await useSupabaseAdmin(event).rpc(
-    "delete_media_queue_item",
-    {
-      p_id: id,
-      p_queue_name: typeof queueName === "string" ? queueName : undefined,
-    },
-  );
+  const { data, error } = await useSupabaseAdmin(event).rpc("delete_media_queue_item", {
+    p_id: id,
+    p_queue_name: typeof queueName === "string" ? queueName : undefined,
+  });
 
   if (error) {
     throw createError({

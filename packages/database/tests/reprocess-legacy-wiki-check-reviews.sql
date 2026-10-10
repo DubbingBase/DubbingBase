@@ -35,10 +35,10 @@ BEGIN
 
   IF EXISTS (
     SELECT 1
-    FROM pgmq.q_wiki_check
+    FROM pgmq.q_wiki_scan
     WHERE (message->>'tmdb_id')::bigint = ANY (ARRAY[1492640, 284558, 977942, 1248832]::bigint[])
   ) THEN
-    RAISE EXCEPTION 'Legacy review fixture IDs already have active wiki_check jobs';
+    RAISE EXCEPTION 'Legacy review fixture IDs already have active wiki_scan jobs';
   END IF;
 
   IF EXISTS (SELECT 1 FROM pgmq.q_wiki_extract WHERE message->>'tmdb_id' = '-1492640')
@@ -47,12 +47,7 @@ BEGIN
   END IF;
 
   FOREACH v_target_id IN ARRAY ARRAY[1492640, 284558, 977942, 1248832]::bigint[] LOOP
-    v_msg_id := public.enqueue_media_fetch(
-      p_tmdb_id => v_target_id,
-      p_media_type => 'movie',
-      p_wikipedia_language => 'en',
-      p_requested_by => v_requested_by
-    );
+    v_msg_id := pgmq.send('wiki_check', jsonb_build_object('tmdb_id',v_target_id,'media_type','movie','wikipedia_language','en','language','en','requested_by',v_requested_by));
 
     IF NOT public.archive_media_queue_message('wiki_check', v_msg_id) THEN
       RAISE EXCEPTION 'Could not archive legacy review fixture %', v_target_id;
@@ -104,7 +99,7 @@ BEGIN
       AND outcome = 'already_enqueued'
       AND queued_msg_id = v_existing_check_id
   ) THEN
-    RAISE EXCEPTION 'Reprocess RPC did not return the existing active check queue ID';
+    RAISE EXCEPTION 'Reprocess RPC did not return the existing active scan queue ID';
   END IF;
 
   IF NOT EXISTS (
@@ -113,20 +108,20 @@ BEGIN
       AND outcome = 'already_enqueued'
       AND queued_msg_id = v_existing_check_id
   ) THEN
-    RAISE EXCEPTION 'Existing active check was not recorded as already_enqueued';
+    RAISE EXCEPTION 'Existing active scan was not recorded as already_enqueued';
   END IF;
 
-  IF (SELECT count(*) FROM pgmq.q_wiki_check WHERE (message->>'tmdb_id')::bigint = 1492640) <> 1 THEN
-    RAISE EXCEPTION 'Reprocessing duplicated the already-active wiki_check job';
+  IF (SELECT count(*) FROM pgmq.q_wiki_scan WHERE (message->>'tmdb_id')::bigint = 1492640) <> 1 THEN
+    RAISE EXCEPTION 'Reprocessing duplicated the already-active wiki_scan job';
   END IF;
 
-  IF (SELECT count(*) FROM pgmq.q_wiki_check WHERE (message->>'tmdb_id')::bigint = ANY (ARRAY[284558, 977942, 1248832]::bigint[])) <> 3 THEN
+  IF (SELECT count(*) FROM pgmq.q_wiki_scan WHERE (message->>'tmdb_id')::bigint = ANY (ARRAY[284558, 977942, 1248832]::bigint[])) <> 3 THEN
     RAISE EXCEPTION 'Expected the other three legacy IDs to be requeued';
   END IF;
 
   IF EXISTS (
     SELECT 1
-    FROM pgmq.q_wiki_check
+    FROM pgmq.q_wiki_scan
     WHERE (message->>'tmdb_id')::bigint = ANY (ARRAY[284558, 977942, 1248832]::bigint[])
       AND message->>'requested_by' IS DISTINCT FROM v_requested_by::text
   ) THEN
@@ -134,9 +129,9 @@ BEGIN
   END IF;
 
   IF EXISTS (
-    SELECT 1 FROM pgmq.q_wiki_check
+    SELECT 1 FROM pgmq.q_wiki_scan
     WHERE (message->>'tmdb_id')::bigint = ANY (ARRAY[284558, 977942, 1248832]::bigint[])
-      AND message->'dubbing_language' IS DISTINCT FROM 'null'::jsonb
+      AND message->>'dubbing_language' IS NOT NULL
   ) THEN
     RAISE EXCEPTION 'Requeued item was forced to a dubbing region';
   END IF;

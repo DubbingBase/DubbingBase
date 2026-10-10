@@ -45,6 +45,37 @@ describe("isRetryableMediaRequestError", () => {
 describe("checkMediaDubbingSections", () => {
   afterEach(() => vi.unstubAllGlobals());
 
+  it("does not fetch Wikidata sitelinks when scan metadata is already resolved", async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      const body = url.includes("action=query")
+        ? { query: { pages: { "55": { pageid: 55 } } } }
+        : { parse: { revid: 123, tocdata: { sections: [{ index: 2, line: "Cast" }] } } };
+      return new Response(JSON.stringify(body), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await checkMediaDubbingSections({
+      tmdbId: 42,
+      type: "movie",
+      wikipediaLanguage: "en",
+      resolvedMetadata: {
+        title: "Example",
+        wikiId: "Q42",
+        pageTitle: "Example",
+      },
+      cache: new SimpleCache(() => null),
+    });
+
+    expect(result).toEqual(expect.objectContaining({ ok: true, revisionId: 123 }));
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const requestedUrls = fetchMock.mock.calls.map(([input]) => String(input));
+    expect(requestedUrls.some((url) => url.includes("wikidata.org"))).toBe(false);
+  });
+
   it("surfaces a malformed Wikipedia section-list response as an error", async () => {
     vi.stubGlobal("useRuntimeConfig", () => ({ tmdbApiKey: "test-key" }));
     vi.stubGlobal(

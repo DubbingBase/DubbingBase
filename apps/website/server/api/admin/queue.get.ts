@@ -1,6 +1,6 @@
 import { requireAdmin } from "../../utils/auth";
 import { useSupabaseAdmin } from "../../utils/db/client";
-const QUEUE_NAMES = ["wiki_discovery", "wiki_check", "wiki_extract"] as const;
+const QUEUE_NAMES = ["wiki_scan", "wiki_discovery", "wiki_check", "wiki_extract"] as const;
 const QUEUE_STATUSES = [
   "active",
   "archived",

@@ -1,4 +1,4 @@
-export const mediaQueueNames = ["wiki_discovery", "wiki_check", "wiki_extract"] as const;
+export const mediaQueueNames = ["wiki_scan", "wiki_extract"] as const;
 
 export type MediaQueueName = (typeof mediaQueueNames)[number];
 
