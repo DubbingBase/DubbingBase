@@ -2,19 +2,21 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vite
 
 const mocks = vi.hoisted(() => ({ rpc: vi.fn(), localFetch: vi.fn() }));
 
-vi.mock("../utils/db/client", () => ({
+vi.mock("../db/client", () => ({
   useSupabaseAdmin: () => ({ rpc: mocks.rpc }),
 }));
 
-import { getReadyMediaQueueNames } from "../utils/media-queue-readiness";
+import { getReadyMediaQueueNames } from "../media-queue-readiness";
 
-let runDispatcher: typeof import("./dispatcher").default.run;
+let runDispatcher: typeof import("../../tasks/dispatcher").default.run;
 
 beforeAll(async () => {
   vi.stubGlobal("defineTask", (task: unknown) => task);
-  vi.stubGlobal("useRuntimeConfig", () => ({ supabaseSecretKey: "queue-secret" }));
+  vi.stubGlobal("useRuntimeConfig", () => ({
+    supabaseSecretKey: "queue-secret",
+  }));
   vi.stubGlobal("useNitroApp", () => ({ localFetch: mocks.localFetch }));
-  runDispatcher = (await import("./dispatcher")).default.run;
+  runDispatcher = (await import("../../tasks/dispatcher")).default.run;
 });
 
 beforeEach(() => {
@@ -71,7 +73,10 @@ describe("dispatcher", () => {
   });
 
   it("fails open and dispatches every queue if readiness cannot be checked", async () => {
-    mocks.rpc.mockResolvedValue({ data: null, error: { message: "database unavailable" } });
+    mocks.rpc.mockResolvedValue({
+      data: null,
+      error: { message: "database unavailable" },
+    });
 
     await runDispatcher({ context: {} });
 
