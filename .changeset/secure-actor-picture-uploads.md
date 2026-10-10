@@ -2,4 +2,4 @@
 "@app/website": patch
 ---
 
-Secure voice actor profile picture uploads with owner authorization and verified image MIME types.
+Allow public first uploads of missing voice actor pictures, restrict replacements to admins, and guard concurrent uploads with conditional database updates.

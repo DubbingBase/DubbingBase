@@ -1,11 +1,16 @@
+import { getRequestHeader, getRequestIP, type H3Event } from "h3";
 import { randomUUID } from "node:crypto";
-import { requireUser } from "../utils/auth";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { buildSupabaseImageUrl } from "../utils/urls/supabase";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const RATE_LIMITER_BINDING = "PROFILE_PICTURE_UPLOAD_LIMITER";
+const RATE_LIMIT_KEY_PREFIX = "voice-actor-picture-upload:";
 
 type ImageContentType = "image/jpeg" | "image/png" | "image/webp";
+type UploadRateLimiter = {
+  limit: (options: { key: string }) => Promise<{ success: boolean }>;
+};
 
 const imageTypes = {
   "image/jpeg": {
@@ -32,10 +37,86 @@ function isImageContentType(value: string | undefined): value is ImageContentTyp
   return value !== undefined && Object.hasOwn(imageTypes, value);
 }
 
-export default defineEventHandler(async (event) => {
-  const user = requireUser(event);
+function readProperty(value: unknown, key: string): unknown {
+  if (typeof value !== "object" || value === null) return undefined;
+  return Reflect.get(value, key);
+}
 
+function isUploadRateLimiter(value: unknown): value is UploadRateLimiter {
+  return typeof readProperty(value, "limit") === "function";
+}
+
+function getUploadRateLimiter(event: H3Event): UploadRateLimiter | undefined {
+  const cloudflare = readProperty(event.context, "cloudflare");
+  const env = readProperty(cloudflare, "env");
+  const binding = readProperty(env, RATE_LIMITER_BINDING);
+  if (isUploadRateLimiter(binding)) return binding;
+  if (cloudflare) {
+    throw createError({
+      statusCode: 503,
+      message: "Upload protection is unavailable",
+    });
+  }
+  return undefined;
+}
+
+function isActorPicturePath(path: string, voiceActorId: number): boolean {
+  const legacyPath = new RegExp(`^${voiceActorId}\\.(?:jpe?g|png|webp)$`, "i");
+  const versionedPath = new RegExp(
+    `^${voiceActorId}/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\\.(?:jpe?g|png|webp)$`,
+    "i",
+  );
+  return legacyPath.test(path) || versionedPath.test(path);
+}
+
+async function removePictureBestEffort(
+  supabaseAdmin: ReturnType<typeof useSupabaseAdmin>,
+  path: string,
+  logMessage: string,
+): Promise<void> {
   try {
+    const { error } = await supabaseAdmin.storage
+      .from("voice_actor_profile_pictures")
+      .remove([path]);
+    if (error) console.error(logMessage);
+  } catch {
+    console.error(logMessage);
+  }
+}
+
+export default defineEventHandler(async (event) => {
+  try {
+    const rateLimiter = getUploadRateLimiter(event);
+    if (rateLimiter) {
+      const clientIp =
+        getRequestHeader(event, "cf-connecting-ip") ??
+        getRequestIP(event, { xForwardedFor: false });
+      if (!clientIp) {
+        throw createError({
+          statusCode: 503,
+          message: "Upload protection is unavailable",
+        });
+      }
+
+      let allowed: boolean;
+      try {
+        ({ success: allowed } = await rateLimiter.limit({
+          key: `${RATE_LIMIT_KEY_PREFIX}${clientIp}`,
+        }));
+      } catch {
+        throw createError({
+          statusCode: 503,
+          message: "Upload protection is unavailable",
+        });
+      }
+      if (!allowed) {
+        throw createError({
+          statusCode: 429,
+          message: "Too many picture uploads. Try again later.",
+        });
+      }
+    }
+
     const formData = await readMultipartFormData(event);
     if (!formData) {
       throw createError({ statusCode: 400, message: "No form data provided" });
@@ -71,22 +152,6 @@ export default defineEventHandler(async (event) => {
     const imageType = imageTypes[contentType];
 
     const supabaseAdmin = useSupabaseAdmin();
-    if (user.app_metadata?.role !== "admin") {
-      const { data: link, error: linkError } = await supabaseAdmin
-        .from("user_voice_actor_links")
-        .select("voice_actor_id")
-        .eq("user_id", user.id)
-        .eq("voice_actor_id", vaId)
-        .maybeSingle();
-
-      if (linkError || !link) {
-        throw createError({
-          statusCode: 403,
-          message: "Unauthorized to update this voice actor",
-        });
-      }
-    }
-
     const { data: voiceActor, error: voiceActorError } = await supabaseAdmin
       .from("voice_actors")
       .select("id, profile_picture")
@@ -104,6 +169,17 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 404, message: "Voice actor not found" });
     }
 
+    const user = event.context.user;
+    const isAdmin = user?.app_metadata?.role === "admin";
+    const previousPicture = voiceActor.profile_picture;
+    const isFirstUpload = previousPicture === null || previousPicture === "";
+    if (!isFirstUpload && !isAdmin) {
+      throw createError({
+        statusCode: 403,
+        message: "Only admins can replace a profile picture",
+      });
+    }
+
     const filePath = `${vaId}/${randomUUID()}.${imageType.extension}`;
     const { data: uploadedFile, error: uploadError } = await supabaseAdmin.storage
       .from("voice_actor_profile_pictures")
@@ -114,35 +190,45 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 502, message: "Image upload failed" });
     }
 
-    const { data: updatedVoiceActor, error: updateError } = await supabaseAdmin
+    let updateQuery = supabaseAdmin
       .from("voice_actors")
       .update({ profile_picture: uploadedFile.path })
-      .eq("id", vaId)
+      .eq("id", vaId);
+    if (previousPicture === null) {
+      updateQuery = updateQuery.is("profile_picture", null);
+    } else {
+      updateQuery = updateQuery.eq("profile_picture", previousPicture);
+    }
+
+    const { data: updatedVoiceActor, error: updateError } = await updateQuery
       .select("id")
       .maybeSingle();
 
     if (updateError || !updatedVoiceActor) {
-      const { error: cleanupError } = await supabaseAdmin.storage
-        .from("voice_actor_profile_pictures")
-        .remove([uploadedFile.path]);
-      if (cleanupError) {
-        console.error("Failed to clean up staged voice actor profile picture");
+      await removePictureBestEffort(
+        supabaseAdmin,
+        uploadedFile.path,
+        "Failed to clean up staged voice actor profile picture",
+      );
+      if (updateError) {
+        console.error("Failed to update voice actor profile picture");
+        throw createError({
+          statusCode: 500,
+          message: "Unable to save profile picture",
+        });
       }
-      console.error("Failed to update voice actor profile picture");
       throw createError({
-        statusCode: 500,
-        message: "Unable to save profile picture",
+        statusCode: 409,
+        message: "Profile picture changed during upload. Try again.",
       });
     }
 
-    const previousPath = voiceActor.profile_picture;
-    if (previousPath && !previousPath.startsWith("http") && previousPath !== uploadedFile.path) {
-      const { error: removeError } = await supabaseAdmin.storage
-        .from("voice_actor_profile_pictures")
-        .remove([previousPath]);
-      if (removeError) {
-        console.error("Failed to remove replaced voice actor profile picture");
-      }
+    if (previousPicture && isActorPicturePath(previousPicture, vaId)) {
+      await removePictureBestEffort(
+        supabaseAdmin,
+        previousPicture,
+        "Failed to remove replaced voice actor profile picture",
+      );
     }
 
     return {
