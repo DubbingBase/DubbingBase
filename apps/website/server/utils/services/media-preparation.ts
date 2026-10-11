@@ -6,7 +6,7 @@ import {
   fetchMediaRequest,
   isRetryableMediaRequestError,
 } from "../retryable-request";
-import { insertVoiceActorAndWork } from "./voice-actor";
+import { applyExtractedCredits, type ExtractedCredit } from "./voice-actor";
 import { useWikipediaCache, useIgdbClient } from "../index";
 import type { SimpleCache } from "../cache";
 import { buildTmdbImageUrl } from "../urls/tmdb";
@@ -469,6 +469,7 @@ export async function extractMediaDubbingCredits(options: {
     }
     let totalNewVoiceActors = 0;
     let totalNewCredits = 0;
+    const extractedCredits: ExtractedCredit[] = [];
 
     let llmModel: string | undefined;
     let llmQuota: string | undefined;
@@ -530,20 +531,12 @@ The requested target dubbing region is ${dubbingLanguage} (${displayDubbingLangu
 
           const { id: actorId } = foundActor;
 
-          const result = await insertVoiceActorAndWork(
-            voiceActorFirstname,
-            voiceActorName,
-            tmdbId,
+          extractedCredits.push({
+            firstname: voiceActorFirstname,
+            lastname: voiceActorName,
             actorId,
-            tmdbType,
-            dubbingLanguage,
-            entry.performance || undefined,
-          );
-
-          if (result.voiceActorResult.inserted) {
-            totalNewVoiceActors++;
-          }
-          totalNewCredits++;
+            performance: entry.performance || undefined,
+          });
         }
       }
 
@@ -553,6 +546,15 @@ The requested target dubbing region is ${dubbingLanguage} (${displayDubbingLangu
         );
       }
     }
+
+    const persistedCredits = await applyExtractedCredits(
+      tmdbId,
+      tmdbType,
+      dubbingLanguage,
+      extractedCredits,
+    );
+    totalNewVoiceActors = persistedCredits.newVoiceActors;
+    totalNewCredits = persistedCredits.creditsAdded;
 
     return {
       ok: true,
@@ -645,6 +647,7 @@ export async function extractGameDubbingCredits(options: {
     }
     let totalNewVoiceActors = 0;
     let totalNewCredits = 0;
+    const extractedCredits: ExtractedCredit[] = [];
 
     let llmModel: string | undefined;
     let llmQuota: string | undefined;
@@ -689,20 +692,12 @@ The requested target dubbing region is ${dubbingLanguage} (${displayDubbingLangu
                 .reduce((hash: number, c: string) => (hash * 31 + c.charCodeAt(0)) | 0, 0),
             ) + 8_000_000_000;
 
-        const result = await insertVoiceActorAndWork(
-          voiceActorFirstname,
-          voiceActorName,
-          igdbId,
+        extractedCredits.push({
+          firstname: voiceActorFirstname,
+          lastname: voiceActorName,
           actorId,
-          "video_game",
-          dubbingLanguage,
-          entry.performance || undefined,
-        );
-
-        if (result.voiceActorResult.inserted) {
-          totalNewVoiceActors++;
-        }
-        totalNewCredits++;
+          performance: entry.performance || undefined,
+        });
       }
 
       if (llmResult.data?.items?.length === 0) {
@@ -711,6 +706,15 @@ The requested target dubbing region is ${dubbingLanguage} (${displayDubbingLangu
         );
       }
     }
+
+    const persistedCredits = await applyExtractedCredits(
+      igdbId,
+      "video_game",
+      dubbingLanguage,
+      extractedCredits,
+    );
+    totalNewVoiceActors = persistedCredits.newVoiceActors;
+    totalNewCredits = persistedCredits.creditsAdded;
 
     return {
       ok: true,

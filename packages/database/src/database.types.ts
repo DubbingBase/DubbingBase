@@ -655,6 +655,15 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      apply_extracted_credits: {
+        Args: {
+          p_content_id: number;
+          p_content_type: string;
+          p_dubbing_language: string;
+          p_credits: Json;
+        };
+        Returns: Json;
+      };
       archive_media_queue_message: {
         Args: { p_msg_id: number; p_queue_name: string };
         Returns: boolean;
