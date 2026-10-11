@@ -5,7 +5,7 @@ export default defineEventHandler(async (event) => {
   const user = requireUser(event);
 
   const body = await readBody(event);
-  const { voice_actor_id, updates, targetUserId } = body;
+  const { voice_actor_id, updates } = body;
 
   if (!voice_actor_id) {
     throw createError({
@@ -15,6 +15,18 @@ export default defineEventHandler(async (event) => {
   }
 
   const isAdmin = user.app_metadata?.role === "admin";
+
+  if (
+    !isAdmin &&
+    typeof updates === "object" &&
+    updates !== null &&
+    Object.hasOwn(updates, "profile_picture")
+  ) {
+    throw createError({
+      statusCode: 403,
+      message: "Only admins can modify a profile picture",
+    });
+  }
 
   const supabaseAdmin = useSupabaseAdmin();
 
@@ -34,7 +46,7 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  const updateData: any = { ...updates };
+  const updateData = { ...updates };
   updateData.updated_at = new Date().toISOString();
 
   if (updateData.date_of_birth === "") {
@@ -56,8 +68,7 @@ export default defineEventHandler(async (event) => {
         if (imgRes.ok) {
           const arrayBuffer = await imgRes.arrayBuffer();
 
-          const ext =
-            updateData.profile_picture.split(".").pop()?.split("?")[0] || "jpg";
+          const ext = updateData.profile_picture.split(".").pop()?.split("?")[0] || "jpg";
           const path = `${voice_actor_id}-${Date.now()}.${ext}`;
 
           const { error: uploadError } = await supabaseAdmin.storage

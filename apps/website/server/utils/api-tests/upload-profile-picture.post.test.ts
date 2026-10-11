@@ -330,6 +330,27 @@ describe("POST /api/upload-profile-picture", () => {
     expect(remove).not.toHaveBeenCalledWith(["untrusted/other.png"]);
   });
 
+  it("cleans up the historical actor-timestamp image path", async () => {
+    const { response, remove } = await post({
+      user: { id: "admin", app_metadata: { role: "admin" } },
+      picture: "41-1700000000000.jpg",
+    });
+    expect(response.status).toBe(200);
+    expect(remove).toHaveBeenCalledWith(["41-1700000000000.jpg"]);
+  });
+
+  it.each(["42-1700000000000.jpg", "41-not-a-timestamp.jpg", "41/../42/photo.jpg"])(
+    "does not delete foreign or unrecognized path %s",
+    async (picture) => {
+      const { response, remove } = await post({
+        user: { id: "admin", app_metadata: { role: "admin" } },
+        picture,
+      });
+      expect(response.status).toBe(200);
+      expect(remove).not.toHaveBeenCalledWith([picture]);
+    },
+  );
+
   it("applies the public rate limit and rejects over-limit requests", async () => {
     const { response, upload, limiter } = await post({
       cloudflare: true,

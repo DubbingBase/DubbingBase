@@ -62,11 +62,12 @@ function getUploadRateLimiter(event: H3Event): UploadRateLimiter | undefined {
 
 function isActorPicturePath(path: string, voiceActorId: number): boolean {
   const legacyPath = new RegExp(`^${voiceActorId}\\.(?:jpe?g|png|webp)$`, "i");
+  const timestampPath = new RegExp(`^${voiceActorId}-\\d{10,13}\\.(?:jpe?g|png|webp)$`, "i");
   const versionedPath = new RegExp(
     `^${voiceActorId}/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\\.(?:jpe?g|png|webp)$`,
     "i",
   );
-  return legacyPath.test(path) || versionedPath.test(path);
+  return legacyPath.test(path) || timestampPath.test(path) || versionedPath.test(path);
 }
 
 async function removePictureBestEffort(
