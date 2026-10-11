@@ -12,12 +12,18 @@ import type { SimpleCache } from "../cache";
 import { buildTmdbImageUrl } from "../urls/tmdb";
 import { buildIgdbImageUrl } from "../api/igdb";
 import { llmGenerateObject } from "../llm";
+import { isExploitableVoiceActorName, normalizeString } from "../normalize";
 import {
   selectDubbingCandidateSections,
-  filterValidSectionIndexes,
   sitelinkKey,
   type DubbingSectionCandidate,
 } from "../cache/wikipedia";
+import { getValidatedExtractionSections } from "./wiki-extraction-sections";
+import {
+  buildWikipediaExtractionBatches,
+  deduplicateExtractedCredits,
+  type WikipediaExtractionSection,
+} from "./wiki-extraction-batching";
 
 const TMDB_API_BASE = "https://api.themoviedb.org/3";
 
@@ -137,7 +143,37 @@ Each row in a dubbing table = one credit. Output fields:
 
 Skip any row where the voice actor name is not an exploitable person name (e.g. "N/A", "?", unknown or placeholder/dash-only) — omit it from items. Keep original spelling exactly, preserving accents/diacritics and hyphens/dashes.
 
-If no dubbing or voice-actor data exists in the section, return { items: [] }.`;
+The input may contain multiple explicitly labeled Wikipedia sections. Treat each label as a source boundary: preserve each section's character/actor relationships, do not merge similar rows from different sections, and extract only the requested target dubbing region.
+
+If no dubbing or voice-actor data exists in the provided sections, return { items: [] }.`;
+
+async function extractWikipediaBatches(options: {
+  sections: WikipediaExtractionSection[];
+  mediaTitle: string;
+  wikipediaLanguage: string;
+  dubbingLanguage: DubbingLanguage;
+}) {
+  const batches = buildWikipediaExtractionBatches(
+    options.sections.filter((section) => section.wikitext.trim().length > 0),
+  );
+  const items: z.infer<typeof dubbingExtractionSchema>["items"] = [];
+  let llmModel: string | undefined;
+  let llmQuota: string | undefined;
+  for (const batch of batches) {
+    const llmResult = await llmGenerateObject(
+      `Media: ${options.mediaTitle}\nWikipedia edition: ${options.wikipediaLanguage}\nValidated section content:\n${batch.prompt}`,
+      dubbingExtractionSchema,
+      {
+        systemInstruction: `${dubbingExtractionSystemInstruction}\n\nThe requested target dubbing region is ${options.dubbingLanguage} (${displayDubbingLanguage(options.dubbingLanguage, "en")}). Extract only credits for this target. Exclude other regional versions and original-language casting. The Wikipedia edition is a source identifier, never evidence of the dubbing market.`,
+        temperature: 0,
+      },
+    );
+    llmModel = llmResult.model;
+    llmQuota = llmResult.quota ?? llmQuota;
+    items.push(...(llmResult.data?.items ?? []));
+  }
+  return { items, llmModel, llmQuota };
+}
 
 export interface CheckSectionsResult {
   ok: boolean;
@@ -484,129 +520,78 @@ export async function extractMediaDubbingCredits(options: {
     };
 
     const wikipediaCache = useWikipediaCache(cache);
-    // ponytail: check and extract run on different cron ticks — drop indexes
-    // that no longer match (stale payloads, e.g. bare "Reparto" enqueued pre-fix)
-    const pageSections = await wikipediaCache.getPageSections(pageId, wikipediaLanguage);
-    const extractionRevisionId = pageSections.parse?.revid;
-    if (!extractionRevisionId)
-      throw new Error("Wikipedia did not return a revision ID for the current section list");
-    const validIndexes = await filterValidSectionIndexes(
-      pageSections.parse?.tocdata?.sections || pageSections.parse?.sections || [],
+    const validated = await getValidatedExtractionSections({
+      wikipedia: wikipediaCache,
+      pageId,
+      language: wikipediaLanguage,
       sectionIndexes,
-    );
-    if (validIndexes.length === 0) {
+      scanMetadata: options.scanMetadata,
+    });
+    if (!validated.ok) {
       return {
         ok: false,
         changes: 0,
         creditsAdded: 0,
         title: mediaTitle,
         imageUrl,
-        error: `Stale queue element: section(s) [${sectionIndexes.join(", ")}] no longer match candidate headings on the "${wikipediaLanguage}" Wikipedia page.`,
+        error: validated.error,
       };
-    }
-    if (options.scanMetadata?.revisionId && options.scanMetadata.sectionHeadings) {
-      const currentSections =
-        pageSections.parse?.tocdata?.sections || pageSections.parse?.sections || [];
-      const headingsMatch = sectionIndexes.every((sectionIndex, index) => {
-        const current = currentSections.find((section) => section.index === sectionIndex);
-        return Boolean(current && current.line === options.scanMetadata?.sectionHeadings?.[index]);
-      });
-      if (!headingsMatch) {
-        return {
-          ok: false,
-          changes: 0,
-          creditsAdded: 0,
-          title: mediaTitle,
-          imageUrl,
-          error: `Stale queue element: Wikipedia headings changed since revision ${options.scanMetadata.revisionId}.`,
-        };
-      }
     }
     let totalNewVoiceActors = 0;
     let totalNewCredits = 0;
     const extractedCredits: ExtractedCredit[] = [];
+    const llmResult = await extractWikipediaBatches({
+      sections: validated.sections,
+      mediaTitle,
+      wikipediaLanguage,
+      dubbingLanguage,
+    });
+    for (const entry of llmResult.items) {
+      let { actor, voiceActorFirstname, voiceActorName } = entry;
 
-    let llmModel: string | undefined;
-    let llmQuota: string | undefined;
-    for (const sectionIndex of validIndexes) {
-      const wikitextJSON = await wikipediaCache.getPageSectionAsWikitext(
-        pageId,
-        String(sectionIndex),
-        wikipediaLanguage,
-        extractionRevisionId,
-      );
-      if (wikitextJSON.parse?.revid !== extractionRevisionId) {
-        const retryError = new Error(
-          "Wikipedia extraction section did not match the current TOC revision",
-        );
-        retryError.name = "RetryableQueueItemError";
-        throw retryError;
-      }
-      const wikitext = wikitextJSON.parse?.wikitext;
-      if (!wikitext) continue;
-
-      const llmResult = await llmGenerateObject(wikitext, dubbingExtractionSchema, {
-        systemInstruction: `${dubbingExtractionSystemInstruction}
-
-The requested target dubbing region is ${dubbingLanguage} (${displayDubbingLanguage(dubbingLanguage, "en")}). Extract only credits for this target. Exclude other regional versions and original-language casting. The Wikipedia edition is a source identifier, never evidence of the dubbing market.`,
-        temperature: 0,
-      });
-      llmModel = llmResult.model;
-      llmQuota = llmResult.quota ?? llmQuota;
-
-      for (const entry of llmResult.data?.items ?? []) {
-        let { actor, voiceActorFirstname, voiceActorName } = entry;
-
-        if (actor && voiceActorFirstname && voiceActorName) {
-          if (
-            !isExploitableVoiceActorName(voiceActorFirstname) ||
-            !isExploitableVoiceActorName(voiceActorName)
-          ) {
-            continue;
-          }
-          const langCast = await getLangCast(wikipediaLanguage);
-          const castPool = langCast.length ? langCast : [];
-
-          const targetActorNorm = normalizeString(actor);
-          const targetPerfNorm = entry.performance ? normalizeString(entry.performance) : null;
-
-          const foundActor = castPool.find((cast) => {
-            if (cast.name === actor) return true;
-            if (normalizeString(cast.name) === targetActorNorm) return true;
-            if (cast.original_name && normalizeString(cast.original_name) === targetActorNorm)
-              return true;
-            if (
-              targetPerfNorm &&
-              cast.character &&
-              normalizeString(cast.character) === targetPerfNorm
-            )
-              return true;
-            if (cast.character && normalizeString(cast.character) === targetActorNorm) return true;
-            return false;
-          });
-
-          if (!foundActor) {
-            console.log(
-              `actor from wikitext "${actor}" not found in tmdb cast (lang ${wikipediaLanguage})`,
-            );
-            continue;
-          }
-
-          const { id: actorId } = foundActor;
-
-          extractedCredits.push({
-            firstname: voiceActorFirstname,
-            lastname: voiceActorName,
-            actorId,
-            performance: entry.performance || undefined,
-          });
+      if (actor && voiceActorFirstname && voiceActorName) {
+        if (
+          !isExploitableVoiceActorName(voiceActorFirstname) ||
+          !isExploitableVoiceActorName(voiceActorName)
+        ) {
+          continue;
         }
-      }
+        const langCast = await getLangCast(wikipediaLanguage);
+        const castPool = langCast.length ? langCast : [];
 
-      if (llmResult.data?.items?.length === 0) {
-        console.log(
-          `[${llmResult.model}] No dubbing entries found in section ${sectionIndex} for "${mediaTitle}"`,
-        );
+        const targetActorNorm = normalizeString(actor);
+        const targetPerfNorm = entry.performance ? normalizeString(entry.performance) : null;
+
+        const foundActor = castPool.find((cast) => {
+          if (cast.name === actor) return true;
+          if (normalizeString(cast.name) === targetActorNorm) return true;
+          if (cast.original_name && normalizeString(cast.original_name) === targetActorNorm)
+            return true;
+          if (
+            targetPerfNorm &&
+            cast.character &&
+            normalizeString(cast.character) === targetPerfNorm
+          )
+            return true;
+          if (cast.character && normalizeString(cast.character) === targetActorNorm) return true;
+          return false;
+        });
+
+        if (!foundActor) {
+          console.log(
+            `actor from wikitext "${actor}" not found in tmdb cast (lang ${wikipediaLanguage})`,
+          );
+          continue;
+        }
+
+        const { id: actorId } = foundActor;
+
+        extractedCredits.push({
+          firstname: voiceActorFirstname,
+          lastname: voiceActorName,
+          actorId,
+          performance: entry.performance || undefined,
+        });
       }
     }
 
@@ -614,7 +599,7 @@ The requested target dubbing region is ${dubbingLanguage} (${displayDubbingLangu
       tmdbId,
       tmdbType,
       dubbingLanguage,
-      extractedCredits,
+      deduplicateExtractedCredits(extractedCredits),
     );
     totalNewVoiceActors = persistedCredits.newVoiceActors;
     totalNewCredits = persistedCredits.creditsAdded;
@@ -625,11 +610,11 @@ The requested target dubbing region is ${dubbingLanguage} (${displayDubbingLangu
       creditsAdded: totalNewCredits,
       title: mediaTitle,
       imageUrl,
-      llmModel,
-      llmQuota,
+      llmModel: llmResult.llmModel,
+      llmQuota: llmResult.llmQuota,
       note:
         totalNewCredits === 0
-          ? `No dubbing entries matched (LLM: ${llmModel || "unknown"}). Check if Wikipedia has dubbing tables for ${wikipediaLanguage}.`
+          ? `No dubbing entries matched (LLM: ${llmResult.llmModel || "unknown"}). Check if Wikipedia has dubbing tables for ${wikipediaLanguage}.`
           : undefined,
     };
   } catch (error) {
@@ -702,119 +687,68 @@ export async function extractGameDubbingCredits(options: {
     );
 
     const wikipediaCache = useWikipediaCache(cache);
-    // ponytail: check and extract run on different cron ticks — drop indexes
-    // that no longer match (stale payloads)
-    const pageSections = await wikipediaCache.getPageSections(pageId, wikipediaLanguage);
-    const extractionRevisionId = pageSections.parse?.revid;
-    if (!extractionRevisionId)
-      throw new Error("Wikipedia did not return a revision ID for the current section list");
-    const validIndexes = await filterValidSectionIndexes(
-      pageSections.parse?.tocdata?.sections || pageSections.parse?.sections || [],
+    const validated = await getValidatedExtractionSections({
+      wikipedia: wikipediaCache,
+      pageId,
+      language: wikipediaLanguage,
       sectionIndexes,
-    );
-    if (validIndexes.length === 0) {
+      scanMetadata: options.scanMetadata,
+    });
+    if (!validated.ok) {
       return {
         ok: false,
         changes: 0,
         creditsAdded: 0,
         title: gameTitle,
         imageUrl,
-        error: `Stale queue element: section(s) [${sectionIndexes.join(", ")}] no longer match candidate headings on the "${wikipediaLanguage}" Wikipedia page.`,
+        error: validated.error,
       };
-    }
-    if (options.scanMetadata?.revisionId && options.scanMetadata.sectionHeadings) {
-      const currentSections =
-        pageSections.parse?.tocdata?.sections || pageSections.parse?.sections || [];
-      const headingsMatch = sectionIndexes.every((sectionIndex, index) => {
-        const current = currentSections.find((section) => section.index === sectionIndex);
-        return Boolean(current && current.line === options.scanMetadata?.sectionHeadings?.[index]);
-      });
-      if (!headingsMatch) {
-        return {
-          ok: false,
-          changes: 0,
-          creditsAdded: 0,
-          title: gameTitle,
-          imageUrl,
-          error: `Stale queue element: Wikipedia headings changed since revision ${options.scanMetadata.revisionId}.`,
-        };
-      }
     }
     let totalNewVoiceActors = 0;
     let totalNewCredits = 0;
     const extractedCredits: ExtractedCredit[] = [];
+    const llmResult = await extractWikipediaBatches({
+      sections: validated.sections,
+      mediaTitle: gameTitle,
+      wikipediaLanguage,
+      dubbingLanguage,
+    });
+    for (const entry of llmResult.items) {
+      let { actor, voiceActorFirstname, voiceActorName } = entry;
 
-    let llmModel: string | undefined;
-    let llmQuota: string | undefined;
-    for (const sectionIndex of validIndexes) {
-      const wikitextJSON = await wikipediaCache.getPageSectionAsWikitext(
-        pageId,
-        String(sectionIndex),
-        wikipediaLanguage,
-        extractionRevisionId,
-      );
-      if (wikitextJSON.parse?.revid !== extractionRevisionId) {
-        const retryError = new Error(
-          "Wikipedia extraction section did not match the current TOC revision",
-        );
-        retryError.name = "RetryableQueueItemError";
-        throw retryError;
+      if (!actor || !voiceActorFirstname || !voiceActorName) {
+        continue;
       }
-      const wikitext = wikitextJSON.parse?.wikitext;
-      if (!wikitext) continue;
 
-      const llmResult = await llmGenerateObject(wikitext, dubbingExtractionSchema, {
-        systemInstruction: `${dubbingExtractionSystemInstruction}
+      if (
+        !isExploitableVoiceActorName(voiceActorFirstname) ||
+        !isExploitableVoiceActorName(voiceActorName)
+      ) {
+        continue;
+      }
 
-The requested target dubbing region is ${dubbingLanguage} (${displayDubbingLanguage(dubbingLanguage, "en")}). Extract only credits for this target. Exclude other regional versions and original-language casting. The Wikipedia edition is a source identifier, never evidence of the dubbing market.`,
-        temperature: 0,
+      const igdbChar = characterMap.get(actor.toLowerCase());
+      const actorId = igdbChar
+        ? igdbChar.id
+        : Math.abs(
+            actor
+              .split("")
+              .reduce((hash: number, c: string) => (hash * 31 + c.charCodeAt(0)) | 0, 0),
+          ) + 8_000_000_000;
+
+      extractedCredits.push({
+        firstname: voiceActorFirstname,
+        lastname: voiceActorName,
+        actorId,
+        performance: entry.performance || undefined,
       });
-      llmModel = llmResult.model;
-      llmQuota = llmResult.quota ?? llmQuota;
-
-      for (const entry of llmResult.data?.items ?? []) {
-        let { actor, voiceActorFirstname, voiceActorName } = entry;
-
-        if (!actor || !voiceActorFirstname || !voiceActorName) {
-          continue;
-        }
-
-        if (
-          !isExploitableVoiceActorName(voiceActorFirstname) ||
-          !isExploitableVoiceActorName(voiceActorName)
-        ) {
-          continue;
-        }
-
-        const igdbChar = characterMap.get(actor.toLowerCase());
-        const actorId = igdbChar
-          ? igdbChar.id
-          : Math.abs(
-              actor
-                .split("")
-                .reduce((hash: number, c: string) => (hash * 31 + c.charCodeAt(0)) | 0, 0),
-            ) + 8_000_000_000;
-
-        extractedCredits.push({
-          firstname: voiceActorFirstname,
-          lastname: voiceActorName,
-          actorId,
-          performance: entry.performance || undefined,
-        });
-      }
-
-      if (llmResult.data?.items?.length === 0) {
-        console.log(
-          `[${llmResult.model}] No dubbing entries found in section ${sectionIndex} for "${gameTitle}"`,
-        );
-      }
     }
 
     const persistedCredits = await applyExtractedCredits(
       igdbId,
       "video_game",
       dubbingLanguage,
-      extractedCredits,
+      deduplicateExtractedCredits(extractedCredits),
     );
     totalNewVoiceActors = persistedCredits.newVoiceActors;
     totalNewCredits = persistedCredits.creditsAdded;
@@ -825,11 +759,11 @@ The requested target dubbing region is ${dubbingLanguage} (${displayDubbingLangu
       creditsAdded: totalNewCredits,
       title: gameTitle,
       imageUrl,
-      llmModel,
-      llmQuota,
+      llmModel: llmResult.llmModel,
+      llmQuota: llmResult.llmQuota,
       note:
         totalNewCredits === 0
-          ? `No dubbing entries matched (LLM: ${llmModel || "unknown"}). Check if Wikipedia has dubbing tables for ${wikipediaLanguage}.`
+          ? `No dubbing entries matched (LLM: ${llmResult.llmModel || "unknown"}). Check if Wikipedia has dubbing tables for ${wikipediaLanguage}.`
           : undefined,
     };
   } catch (error) {
