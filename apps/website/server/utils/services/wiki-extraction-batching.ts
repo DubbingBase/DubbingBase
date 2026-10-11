@@ -51,6 +51,12 @@ function splitOversizedTable(lines: string[], maxChars: number): string[] {
   const table = lines.join("");
   if (table.length <= maxChars) return [table];
 
+  if (/\browspan\s*=/i.test(table)) {
+    throw new Error(
+      "Oversized Wikipedia table contains cross-row cell relationships; refusing partial extraction",
+    );
+  }
+
   let depth = 0;
   let closingIndex = -1;
   const rowStarts: number[] = [];

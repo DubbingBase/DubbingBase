@@ -602,6 +602,32 @@ describe("Wikipedia extraction prompt batching", () => {
     ).toThrow("refusing to split actor/character cells");
   });
 
+  it("refuses to split oversized tables with cross-row rowspan relationships", () => {
+    expect(() =>
+      buildWikipediaExtractionBatches(
+        [
+          {
+            index: 12,
+            heading: "Regional dubbing cast",
+            wikitext: [
+              '{| class="wikitable"',
+              "! Character",
+              "! Voice actor",
+              "|-",
+              "! Character Alpha",
+              '| rowspan="2" | Shared voice actor',
+              "|-",
+              "! Character Beta",
+              "| Another voice actor",
+              "|}",
+            ].join("\n"),
+          },
+        ],
+        200,
+      ),
+    ).toThrow("cross-row cell relationships");
+  });
+
   it("removes duplicate rows while retaining a voice actor's distinct roles", () => {
     const credit: ExtractedCredit = {
       actorId: 700,
