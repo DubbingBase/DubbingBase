@@ -1,8 +1,15 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { checkMediaDubbingSections, extractMediaDubbingCredits } from "./media-preparation";
+import {
+  checkMediaDubbingSections,
+  extractGameDubbingCredits,
+  extractMediaDubbingCredits,
+} from "./media-preparation";
 import { SimpleCache } from "../cache";
 import type { ExtractedCredit } from "./voice-actor";
-import { buildWikipediaExtractionBatches } from "./wiki-extraction-batching";
+import {
+  buildWikipediaExtractionBatches,
+  deduplicateExtractedCredits,
+} from "./wiki-extraction-batching";
 import {
   createMediaResponseError,
   fetchMediaRequest,
@@ -199,6 +206,7 @@ describe("batched media credit extraction", () => {
     stalePinnedRevision?: boolean;
     changedHeading?: boolean;
     partialFailure?: boolean;
+    largeSections?: boolean;
   }) {
     const requestedUrls: string[] = [];
     let activeSectionRequests = 0;
@@ -254,7 +262,9 @@ describe("batched media credit extraction", () => {
         JSON.stringify({
           parse: {
             revid: revision,
-            wikitext: `section body ${url.includes("section=2") ? "two" : "four"}`,
+            wikitext: options?.largeSections
+              ? `section ${url.includes("section=2") ? "two" : "four"}\n${"credit row\n".repeat(4_000)}`
+              : `section body ${url.includes("section=2") ? "two" : "four"}`,
           },
         }),
         { status: 200, headers: { "content-type": "application/json" } },
@@ -303,43 +313,46 @@ describe("batched media credit extraction", () => {
     sectionHeadings: ["Dubbing cast", "Voice cast"],
   };
 
-  it("fetches validated sections concurrently and uses one regional LLM call", async () => {
-    const extractionFetch = setupExtractionFetch();
-    const { requestedUrls } = extractionFetch;
-    const result = await extractMediaDubbingCredits({
-      tmdbId: 42,
-      type: "movie",
-      wikipediaLanguage: "fr",
-      dubbingLanguage: "fr-FR",
-      pageId: 123,
-      sectionIndexes: [2, 4],
-      scanMetadata: standardMetadata,
-      cache: new SimpleCache(() => null),
-    });
+  it.each(["movie", "tv"] as const)(
+    "fetches validated %s sections concurrently and uses one regional LLM call",
+    async (type) => {
+      const extractionFetch = setupExtractionFetch();
+      const { requestedUrls } = extractionFetch;
+      const result = await extractMediaDubbingCredits({
+        tmdbId: 42,
+        type,
+        wikipediaLanguage: "fr",
+        dubbingLanguage: "fr-FR",
+        pageId: 123,
+        sectionIndexes: [2, 4],
+        scanMetadata: standardMetadata,
+        cache: new SimpleCache(() => null),
+      });
 
-    expect(result).toMatchObject({
-      ok: true,
-      title: "Fixture Film",
-      llmModel: "fixture-model",
-    });
-    expect(extractionMocks.llmGenerateObject).toHaveBeenCalledTimes(1);
-    expect(extractionMocks.llmGenerateObject).toHaveBeenCalledWith(
-      expect.stringContaining("WIKIPEDIA SECTION #2: Dubbing cast"),
-      expect.anything(),
-      expect.anything(),
-    );
-    expect(extractionMocks.llmGenerateObject).toHaveBeenCalledWith(
-      expect.stringContaining("WIKIPEDIA SECTION #4: Voice cast"),
-      expect.anything(),
-      expect.anything(),
-    );
-    expect(requestedUrls.filter((url) => url.includes("prop=wikitext"))).toHaveLength(2);
-    expect(requestedUrls.some((url) => url.includes("prop=tocdata"))).toBe(false);
-    expect(extractionFetch.maxConcurrentSectionRequests).toBe(2);
-    expect(extractionMocks.applyExtractedCredits).toHaveBeenCalledWith(42, "movie", "fr-FR", [
-      expect.objectContaining({ actorId: 700, performance: "Role One" }),
-    ]);
-  });
+      expect(result).toMatchObject({
+        ok: true,
+        title: "Fixture Film",
+        llmModel: "fixture-model",
+      });
+      expect(extractionMocks.llmGenerateObject).toHaveBeenCalledTimes(1);
+      expect(extractionMocks.llmGenerateObject).toHaveBeenCalledWith(
+        expect.stringContaining("WIKIPEDIA SECTION #2: Dubbing cast"),
+        expect.anything(),
+        expect.anything(),
+      );
+      expect(extractionMocks.llmGenerateObject).toHaveBeenCalledWith(
+        expect.stringContaining("WIKIPEDIA SECTION #4: Voice cast"),
+        expect.anything(),
+        expect.anything(),
+      );
+      expect(requestedUrls.filter((url) => url.includes("prop=wikitext"))).toHaveLength(2);
+      expect(requestedUrls.some((url) => url.includes("prop=tocdata"))).toBe(false);
+      expect(extractionFetch.maxConcurrentSectionRequests).toBe(2);
+      expect(extractionMocks.applyExtractedCredits).toHaveBeenCalledWith(42, type, "fr-FR", [
+        expect.objectContaining({ actorId: 700, performance: "Role One" }),
+      ]);
+    },
+  );
 
   it("refreshes the TOC only when the pinned revision cannot be fetched", async () => {
     const { requestedUrls } = setupExtractionFetch({
@@ -404,6 +417,101 @@ describe("batched media credit extraction", () => {
     expect(extractionMocks.llmGenerateObject).not.toHaveBeenCalled();
     expect(extractionMocks.applyExtractedCredits).not.toHaveBeenCalled();
   });
+
+  it("does not persist earlier batch results when a later LLM batch fails", async () => {
+    setupExtractionFetch({ largeSections: true });
+    extractionMocks.llmGenerateObject
+      .mockResolvedValueOnce({
+        data: {
+          items: [
+            {
+              actor: "Target Actor",
+              voiceActorFirstname: "Alex",
+              voiceActorName: "Dubber",
+              performance: "Role One",
+            },
+          ],
+        },
+        model: "fixture-model",
+      })
+      .mockRejectedValueOnce(new Error("all LLM fallbacks failed"));
+
+    const result = await extractMediaDubbingCredits({
+      tmdbId: 42,
+      type: "movie",
+      wikipediaLanguage: "fr",
+      dubbingLanguage: "fr-FR",
+      pageId: 123,
+      sectionIndexes: [2, 4],
+      scanMetadata: standardMetadata,
+      cache: new SimpleCache(() => null),
+    });
+
+    expect(result.ok).toBe(false);
+    expect(extractionMocks.llmGenerateObject).toHaveBeenCalledTimes(2);
+    expect(extractionMocks.applyExtractedCredits).not.toHaveBeenCalled();
+  });
+
+  it("preserves IGDB character mappings while using the shared batched extraction", async () => {
+    vi.stubGlobal("useRuntimeConfig", () => ({
+      igdbClientId: "test-id",
+      igdbClientSecret: "test-secret",
+    }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes("id.twitch.tv")) {
+          return new Response(JSON.stringify({ access_token: "fixture-token", expires_in: 3600 }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        if (url.includes("api.igdb.com")) {
+          return new Response(JSON.stringify([{ id: 77, name: "Target Character" }]), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        return new Response(
+          JSON.stringify({ parse: { revid: 900, wikitext: "validated game credits" } }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      }),
+    );
+    extractionMocks.llmGenerateObject.mockResolvedValue({
+      data: {
+        items: [
+          {
+            actor: "Target Character",
+            voiceActorFirstname: "Alex",
+            voiceActorName: "Dubber",
+            performance: "Role One",
+          },
+        ],
+      },
+      model: "fixture-model",
+    });
+
+    const result = await extractGameDubbingCredits({
+      igdbId: 42,
+      wikipediaLanguage: "fr",
+      dubbingLanguage: "fr-FR",
+      pageId: 123,
+      sectionIndexes: [2],
+      scanMetadata: {
+        ...standardMetadata,
+        sectionHeadings: ["Dubbing cast"],
+      },
+      cache: new SimpleCache(() => null),
+    });
+
+    expect(result).toMatchObject({ ok: true, title: "Fixture Film" });
+    expect(extractionMocks.llmGenerateObject).toHaveBeenCalledTimes(1);
+    expect(extractionMocks.applyExtractedCredits).toHaveBeenCalledWith(42, "video_game", "fr-FR", [
+      expect.objectContaining({ actorId: 77, performance: "Role One" }),
+    ]);
+  });
 });
 
 describe("Wikipedia extraction prompt batching", () => {
@@ -422,5 +530,92 @@ describe("Wikipedia extraction prompt batching", () => {
         .map((batch) => batch.prompt.replace(/\n\n<<< WIKIPEDIA SECTION #[^\n]+ >>>\n/g, ""))
         .join(""),
     ).toBe(original);
+  });
+
+  it("keeps each multiline wikitable row and its table headings together", () => {
+    const batches = buildWikipediaExtractionBatches(
+      [
+        {
+          index: 12,
+          heading: "Regional dubbing cast",
+          wikitext: [
+            '{| class="wikitable"',
+            "! Character",
+            "! Actor",
+            "! Voice actor",
+            "|-",
+            "! Character Alpha",
+            "| Actor Alpha",
+            "| Voice Alpha",
+            "|-",
+            "! Character Beta",
+            "| Actor Beta",
+            "| Voice Beta",
+            "|}",
+            "",
+          ].join("\n"),
+        },
+      ],
+      200,
+    );
+
+    expect(batches.length).toBeGreaterThan(1);
+    expect(
+      batches.every(
+        (batch) => batch.prompt.includes('{| class="wikitable"') && batch.prompt.includes("|}"),
+      ),
+    ).toBe(true);
+    expect(
+      ["Alpha", "Beta"].every((name) =>
+        batches.some(
+          (batch) =>
+            batch.prompt.includes(`Character ${name}`) &&
+            batch.prompt.includes(`Actor ${name}`) &&
+            batch.prompt.includes(`Voice ${name}`),
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  it("refuses to split a single table row across actor and voice cells", () => {
+    expect(() =>
+      buildWikipediaExtractionBatches(
+        [
+          {
+            index: 12,
+            heading: "Regional dubbing cast",
+            wikitext: [
+              '{| class="wikitable"',
+              "! Character",
+              "! Actor",
+              "! Voice actor",
+              "|-",
+              `! ${"A".repeat(100)}`,
+              "| Actor Alpha",
+              "| Voice Alpha",
+              "|}",
+            ].join("\n"),
+          },
+        ],
+        150,
+      ),
+    ).toThrow("refusing to split actor/character cells");
+  });
+
+  it("removes duplicate rows while retaining a voice actor's distinct roles", () => {
+    const credit: ExtractedCredit = {
+      actorId: 700,
+      firstname: "Alex",
+      lastname: "Dubber",
+      performance: "Role One",
+    };
+
+    expect(
+      deduplicateExtractedCredits([
+        credit,
+        { ...credit, firstname: "alex", lastname: "DUBBER" },
+        { ...credit, performance: "Role Two" },
+      ]),
+    ).toEqual([credit, { ...credit, performance: "Role Two" }]);
   });
 });

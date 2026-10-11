@@ -27,10 +27,10 @@ function splitOversizedLine(line: string, maxChars: number): string[] {
   return chunks;
 }
 
-function splitSection(section: WikipediaExtractionSection, maxChars: number): string[] {
+function splitPlainText(text: string, maxChars: number): string[] {
   const fragments: string[] = [];
   let fragment = "";
-  for (const line of section.wikitext.match(/[^\n]*\n|[^\n]+$/g) ?? []) {
+  for (const line of text.match(/[^\n]*\n|[^\n]+$/g) ?? []) {
     if (line.length > maxChars) {
       if (fragment) fragments.push(fragment);
       fragment = "";
@@ -47,9 +47,89 @@ function splitSection(section: WikipediaExtractionSection, maxChars: number): st
   return fragments.length ? fragments : [""];
 }
 
+function splitOversizedTable(lines: string[], maxChars: number): string[] {
+  const table = lines.join("");
+  if (table.length <= maxChars) return [table];
+
+  let depth = 0;
+  let closingIndex = -1;
+  const rowStarts: number[] = [];
+  for (const [index, line] of lines.entries()) {
+    if (/^\s*\{\|/.test(line)) {
+      depth += 1;
+    } else if (/^\s*\|\}/.test(line)) {
+      depth -= 1;
+      if (depth === 0) {
+        closingIndex = index;
+        break;
+      }
+    } else if (depth === 1 && /^\s*\|-/.test(line)) {
+      rowStarts.push(index);
+    }
+  }
+
+  if (rowStarts.length === 0 || closingIndex < 0) {
+    throw new Error(
+      "Oversized Wikipedia table has no safe complete-row split; refusing partial extraction",
+    );
+  }
+
+  const tableHeader = lines.slice(0, rowStarts[0]!).join("");
+  const tableFooter = lines.slice(closingIndex).join("");
+  const fragments: string[] = [];
+  for (const [rowIndex, rowStart] of rowStarts.entries()) {
+    const nextRowStart = rowStarts[rowIndex + 1] ?? closingIndex;
+    const row = lines.slice(rowStart, nextRowStart).join("");
+    const fragment = `${tableHeader}${row}${tableFooter}`;
+    if (fragment.length > maxChars) {
+      throw new Error(
+        "An oversized Wikipedia table row exceeds the safe extraction input limit; refusing to split actor/character cells",
+      );
+    }
+    fragments.push(fragment);
+  }
+  return fragments;
+}
+
+function splitSection(section: WikipediaExtractionSection, maxChars: number): string[] {
+  const lines = section.wikitext.match(/[^\n]*\n|[^\n]+$/g) ?? [];
+  const fragments: string[] = [];
+  let plainText = "";
+  const flushPlainText = () => {
+    if (!plainText) return;
+    fragments.push(...splitPlainText(plainText, maxChars));
+    plainText = "";
+  };
+
+  for (let index = 0; index < lines.length;) {
+    if (!/^\s*\{\|/.test(lines[index]!)) {
+      plainText += lines[index]!;
+      index += 1;
+      continue;
+    }
+
+    flushPlainText();
+    const tableLines: string[] = [];
+    let depth = 0;
+    do {
+      const line = lines[index]!;
+      tableLines.push(line);
+      if (/^\s*\{\|/.test(line)) depth += 1;
+      else if (/^\s*\|\}/.test(line)) depth -= 1;
+      index += 1;
+    } while (index < lines.length && depth > 0);
+
+    fragments.push(...splitOversizedTable(tableLines, maxChars));
+  }
+
+  flushPlainText();
+  return fragments.length ? fragments : [""];
+}
+
 /**
- * Combine sections in input order. Oversized sections are split by line, then
- * by Unicode code point only for a single overlong line; no source text is dropped.
+ * Combine sections in input order. Plain text is split at line boundaries and
+ * oversized wikitable content only at complete row boundaries. An individual
+ * row that cannot fit is rejected instead of being sent with broken cell links.
  */
 export function buildWikipediaExtractionBatches(
   sections: WikipediaExtractionSection[],
