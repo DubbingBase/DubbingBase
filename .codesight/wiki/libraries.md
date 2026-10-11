@@ -19,9 +19,9 @@
 - `apps/website/server/utils/db/queries.ts` — getVoiceActorWithWork, getWorkByActor, getDubbingProjects, getWorkVotes, getTopContributors
 - `apps/website/server/utils/prepare-payload.ts` — validatePrepareGamePayload, prepareGameFromPayload, validatePrepareMediaPayload, PrepareGameInput, PrepareMediaInput
 - `apps/website/server/utils/retryable-request.ts` — isRetryableMediaRequestError, isRetryableMediaRequestStatus, createMediaResponseError, fetchMediaRequest, RetryableMediaRequestError
-- `apps/website/server/utils/services/voice-actor.ts` — upsertVoiceActor, upsertActor, upsertStudio, upsertWork, insertVoiceActorAndWork
 - `apps/website/server/utils/api/igdb.ts` — buildIgdbImageUrl, IgdbClient, IgdbTrendingGamesResult, IgdbPopularityPrimitive
 - `apps/website/server/utils/pagination.ts` — parsePagination, paginateArray, PaginationOptions, ParsedPagination
+- `apps/website/server/utils/services/voice-actor.ts` — applyExtractedCredits, upsertStudio, ExtractedCredit, AppliedExtractedCredits
 - `apps/website/server/utils/urls/tmdb.ts` — buildTmdbImageUrl, cleanCharacterName, processMedia, TMDB_CONFIG
 - `apps/website/server/utils/wiki-check-disposition.ts` — wikiCheckDisposition, WikiCheckArchiveReason, WikiCheckSkippedResult, WikiCheckDisposition
 - `apps/website/server/utils/media-request.ts` — parseSeasonQuery, parseEpisodeQuery, withMediaServiceTimeout

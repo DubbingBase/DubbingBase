@@ -8,7 +8,7 @@
 
 ## Scale
 
-81 API routes · 19 database models · 197 UI components · 91 library files · 14 middleware layers · 61 environment variables
+81 API routes · 19 database models · 197 UI components · 91 library files · 14 middleware layers · 63 environment variables
 
 ## Subsystems
 
@@ -112,4 +112,4 @@ Changes to these files have the widest blast radius across the codebase:
 - _...31 more_
 
 ---
-_Back to [index.md](./index.md) · Generated 2026-10-09_
+_Back to [index.md](./index.md) · Generated 2026-10-11_

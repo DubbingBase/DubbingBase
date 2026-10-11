@@ -149,11 +149,10 @@
   - const WIKIPEDIA_ACTOR_URL_NAMESPACE
   - const MEDIA_TVDB_CHARACTERS_NAMESPACE
 - `apps/website/server/utils/services/voice-actor.ts`
-  - function upsertVoiceActor: (firstName, lastName) => void
-  - function upsertActor: (id, name, profile_path?) => void
+  - function applyExtractedCredits: (contentId, contentType, dubbingLanguage, credits) => Promise<AppliedExtractedCredits>
   - function upsertStudio: (name, logo_url?) => void
-  - function upsertWork: (voiceActorId, contentId, actorId, contentType, dubbingLanguage, performance?, characterId?, characterName?) => void
-  - function insertVoiceActorAndWork: (firstName, lastName, contentId, actorId, contentType, dubbingLanguage, performance?, characterId?, characterName?) => void
+  - interface ExtractedCredit
+  - interface AppliedExtractedCredits
 - `apps/website/server/utils/urls/supabase.ts` — function buildSupabaseImageUrl: (imagePath, bucket, size) => string | null, function processVoiceActor
 - `apps/website/server/utils/urls/tmdb.ts`
   - function buildTmdbImageUrl: (imagePath, size) => string | null

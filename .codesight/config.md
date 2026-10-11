@@ -3,6 +3,8 @@
 ## Environment Variables
 
 - `ANDROID_HOME` **required** — .env.example
+- `BENCH_CREDITS` (has default) — packages/database/benchmarks/bulk-extracted-credits.mjs
+- `BENCH_REPETITIONS` (has default) — packages/database/benchmarks/bulk-extracted-credits.mjs
 - `CI` **required** — apps/mobile/capacitor.config.ts
 - `DEV` **required** — apps/mobile/src/api/supabase.ts
 - `DISCORD_ADMIN_WEBHOOK_LOG_URL` **required** — .env.example

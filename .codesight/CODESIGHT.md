@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 81 routes | 19 models | 197 components | 91 lib files | 61 env vars | 14 middleware | 21% test coverage
-> **Token savings:** this file is ~15,900 tokens. Without it, AI exploration would cost ~157,900 tokens. **Saves ~141,900 tokens per conversation.**
-> **Last scanned:** 2026-10-09 13:53 — re-run after significant changes
+> 81 routes | 19 models | 197 components | 91 lib files | 63 env vars | 14 middleware | 21% test coverage
+> **Token savings:** this file is ~15,900 tokens. Without it, AI exploration would cost ~158,100 tokens. **Saves ~142,200 tokens per conversation.**
+> **Last scanned:** 2026-10-11 08:30 — re-run after significant changes
 
 ---
 
@@ -578,11 +578,10 @@
   - const WIKIPEDIA_ACTOR_URL_NAMESPACE
   - const MEDIA_TVDB_CHARACTERS_NAMESPACE
 - `apps/website/server/utils/services/voice-actor.ts`
-  - function upsertVoiceActor: (firstName, lastName) => void
-  - function upsertActor: (id, name, profile_path?) => void
+  - function applyExtractedCredits: (contentId, contentType, dubbingLanguage, credits) => Promise<AppliedExtractedCredits>
   - function upsertStudio: (name, logo_url?) => void
-  - function upsertWork: (voiceActorId, contentId, actorId, contentType, dubbingLanguage, performance?, characterId?, characterName?) => void
-  - function insertVoiceActorAndWork: (firstName, lastName, contentId, actorId, contentType, dubbingLanguage, performance?, characterId?, characterName?) => void
+  - interface ExtractedCredit
+  - interface AppliedExtractedCredits
 - `apps/website/server/utils/urls/supabase.ts` — function buildSupabaseImageUrl: (imagePath, bucket, size) => string | null, function processVoiceActor
 - `apps/website/server/utils/urls/tmdb.ts`
   - function buildTmdbImageUrl: (imagePath, size) => string | null
@@ -688,6 +687,8 @@
 ## Environment Variables
 
 - `ANDROID_HOME` **required** — .env.example
+- `BENCH_CREDITS` (has default) — packages/database/benchmarks/bulk-extracted-credits.mjs
+- `BENCH_REPETITIONS` (has default) — packages/database/benchmarks/bulk-extracted-credits.mjs
 - `CI` **required** — apps/mobile/capacitor.config.ts
 - `DEV` **required** — apps/mobile/src/api/supabase.ts
 - `DISCORD_ADMIN_WEBHOOK_LOG_URL` **required** — .env.example
@@ -823,7 +824,7 @@
 # Test Coverage
 
 > **21%** of routes and models are covered by tests
-> 64 test files found
+> 66 test files found
 
 ## Covered Routes
 
