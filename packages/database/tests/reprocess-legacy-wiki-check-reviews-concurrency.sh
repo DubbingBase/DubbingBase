@@ -41,6 +41,7 @@ cleanup() {
   fi
   if [[ -n "$fixture_msg_id" ]]; then
     psql_local >/dev/null <<SQL || true
+DELETE FROM pgmq.q_wiki_scan WHERE message->>'tmdb_id' = '1492640';
 DELETE FROM pgmq.q_wiki_check WHERE message->>'tmdb_id' = '1492640';
 DELETE FROM public.legacy_wiki_check_reprocesses WHERE archived_msg_id = ${fixture_msg_id};
 DELETE FROM pgmq.a_wiki_check WHERE msg_id = ${fixture_msg_id};
@@ -56,13 +57,14 @@ DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pgmq.a_wiki_check WHERE message->>'review_needed' = 'true' AND message->>'tmdb_id' = '1492640')
     OR EXISTS (SELECT 1 FROM pgmq.q_wiki_check WHERE message->>'tmdb_id' = '1492640')
+    OR EXISTS (SELECT 1 FROM pgmq.q_wiki_scan WHERE message->>'tmdb_id' = '1492640')
     OR EXISTS (SELECT 1 FROM pgmq.q_wiki_extract WHERE message->>'tmdb_id' = '-1492640')
     OR EXISTS (SELECT 1 FROM public.dubbing_projects WHERE content_id = -1492640) THEN
     RAISE EXCEPTION 'Legacy reprocessor concurrency fixture ID is already in use';
   END IF;
 END;
 $$;
-SELECT public.enqueue_media_fetch(1492640, 'movie', p_wikipedia_language => 'en');
+SELECT pgmq.send('wiki_check', jsonb_build_object('tmdb_id',1492640,'media_type','movie','wikipedia_language','en','language','en'));
 SQL
 )"
 
@@ -140,14 +142,14 @@ else
   enqueue_pid=''
 fi
 
-if ! grep -q 'Item is already in the check queue' "$fixture_dir/enqueue.log"; then
+if ! grep -q 'Item is already in the wiki_scan queue' "$fixture_dir/enqueue.log"; then
   cat "$fixture_dir/enqueue.log" >&2
   printf '%s\n' 'Concurrent normal enqueue failed for an unexpected reason.' >&2
   exit 1
 fi
 
 psql_local -At <<SQL | grep -qx 't'
-SELECT (SELECT count(*) FROM pgmq.q_wiki_check WHERE message->>'tmdb_id' = '1492640') = 1
+SELECT (SELECT count(*) FROM pgmq.q_wiki_scan WHERE message->>'tmdb_id' = '1492640') = 1
   AND EXISTS (SELECT 1 FROM public.legacy_wiki_check_reprocesses WHERE archived_msg_id = ${fixture_msg_id})
   AND EXISTS (SELECT 1 FROM pgmq.a_wiki_check WHERE msg_id = ${fixture_msg_id} AND message->>'review_needed' = 'true');
 SQL

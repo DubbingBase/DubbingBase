@@ -147,6 +147,9 @@
             <option value="wiki_extract">
               {{ $t("admin.queue.llmExtractionReady") }}
             </option>
+            <option value="wiki_scan">
+              {{ $t("admin.queue.wikiScan") }}
+            </option>
             <option value="wiki_check">
               {{ $t("admin.queue.tocSectionCheck") }}
             </option>
@@ -280,6 +283,11 @@
                       v-if="item.queue_name === 'wiki_extract'"
                       class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase theme-status-info border"
                       >{{ $t("admin.queue.llmReady") }}</span
+                    >
+                    <span
+                      v-else-if="item.queue_name === 'wiki_scan'"
+                      class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase theme-status-warning border"
+                      >{{ $t("admin.queue.wikiScan") }}</span
                     >
                     <span
                       v-else-if="item.queue_name === 'wiki_check'"
