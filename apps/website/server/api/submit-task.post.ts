@@ -14,8 +14,7 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const getField = (name: string) =>
-      formData.find((f) => f.name === name)?.data?.toString();
+    const getField = (name: string) => formData.find((f) => f.name === name)?.data?.toString();
 
     const category = getField("category");
     const entityId = getField("entityId");
@@ -35,20 +34,28 @@ export default defineEventHandler(async (event) => {
 
     if (category === "enrich_voice_actor") {
       entityType = "voice_actor";
+      // oxlint-disable-next-line typescript/no-explicit-any
       const updates: any = {};
+      // oxlint-disable-next-line typescript/no-explicit-any
       const newValues: any = {};
 
       const fileField = formData.find((f) => f.name === "file");
       if (fileField?.data) {
+        if (user.app_metadata?.role !== "admin") {
+          throw createError({
+            statusCode: 403,
+            message: "Only admins can modify a voice actor profile picture",
+          });
+        }
+
         const fileExt = fileField.filename?.split(".").pop() || "bin";
         const fileName = `${crypto.randomUUID()}.${fileExt}`;
         const filePath = `${entityId}/${fileName}`;
-        const { error: uploadError, data: uploadData } =
-          await supabaseAdmin.storage
-            .from("voice_actor_profile_pictures")
-            .upload(filePath, fileField.data, {
-              contentType: fileField.type || "application/octet-stream",
-            });
+        const { error: uploadError, data: uploadData } = await supabaseAdmin.storage
+          .from("voice_actor_profile_pictures")
+          .upload(filePath, fileField.data, {
+            contentType: fileField.type || "application/octet-stream",
+          });
         if (!uploadError && uploadData) {
           updates.profile_picture = uploadData.path;
           newValues.profile_picture = uploadData.path;
@@ -109,6 +116,7 @@ export default defineEventHandler(async (event) => {
           .eq("id", parseInt(entityId, 10))
           .single();
         const currentLinks =
+          // oxlint-disable-next-line typescript/consistent-type-assertions
           (va?.social_media_links as Record<string, string>) || {};
 
         if (twitter) currentLinks.twitter = twitter;
@@ -124,10 +132,7 @@ export default defineEventHandler(async (event) => {
 
       if (Object.keys(updates).length > 0) {
         updates.updated_by = user.id;
-        await supabaseAdmin
-          .from("voice_actors")
-          .update(updates)
-          .eq("id", parseInt(entityId, 10));
+        await supabaseAdmin.from("voice_actors").update(updates).eq("id", parseInt(entityId, 10));
       } else {
         throw createError({
           statusCode: 400,
@@ -137,7 +142,9 @@ export default defineEventHandler(async (event) => {
       newValue = newValues;
     } else if (category === "enrich_studio") {
       entityType = "studio";
+      // oxlint-disable-next-line typescript/no-explicit-any
       const updates: any = {};
+      // oxlint-disable-next-line typescript/no-explicit-any
       const newValues: any = {};
 
       const fileField = formData.find((f) => f.name === "file");
@@ -145,12 +152,11 @@ export default defineEventHandler(async (event) => {
         const fileExt = fileField.filename?.split(".").pop() || "bin";
         const fileName = `${crypto.randomUUID()}.${fileExt}`;
         const filePath = `${entityId}/${fileName}`;
-        const { error: uploadError, data: uploadData } =
-          await supabaseAdmin.storage
-            .from("studio_logos")
-            .upload(filePath, fileField.data, {
-              contentType: fileField.type || "application/octet-stream",
-            });
+        const { error: uploadError, data: uploadData } = await supabaseAdmin.storage
+          .from("studio_logos")
+          .upload(filePath, fileField.data, {
+            contentType: fileField.type || "application/octet-stream",
+          });
         if (!uploadError && uploadData) {
           updates.logo_url = uploadData.path;
           newValues.logo_url = uploadData.path;
@@ -195,6 +201,7 @@ export default defineEventHandler(async (event) => {
           .eq("id", parseInt(entityId, 10))
           .single();
         const currentLinks =
+          // oxlint-disable-next-line typescript/consistent-type-assertions
           (std?.social_media_links as Record<string, string>) || {};
 
         if (twitter) currentLinks.twitter = twitter;
@@ -209,10 +216,7 @@ export default defineEventHandler(async (event) => {
       }
 
       if (Object.keys(updates).length > 0) {
-        await supabaseAdmin
-          .from("studios")
-          .update(updates)
-          .eq("id", parseInt(entityId, 10));
+        await supabaseAdmin.from("studios").update(updates).eq("id", parseInt(entityId, 10));
       } else {
         throw createError({
           statusCode: 400,
@@ -225,17 +229,15 @@ export default defineEventHandler(async (event) => {
     }
 
     action = action.trim();
-    const { error: auditError } = await supabaseAdmin
-      .from("audit_logs")
-      .insert({
-        user_id: user.id,
-        entity_type: entityType,
-        entity_id: entityId,
-        action: action,
-        previous_value: null,
-        new_value: newValue,
-        points_awarded: pointsAwarded,
-      });
+    const { error: auditError } = await supabaseAdmin.from("audit_logs").insert({
+      user_id: user.id,
+      entity_type: entityType,
+      entity_id: entityId,
+      action: action,
+      previous_value: null,
+      new_value: newValue,
+      points_awarded: pointsAwarded,
+    });
 
     if (auditError) {
       console.error("Failed to insert audit log:", auditError);
@@ -249,8 +251,7 @@ export default defineEventHandler(async (event) => {
 
     return { success: true, pointsAwarded };
   } catch (error) {
-    if (error && typeof error === "object" && "statusCode" in error)
-      throw error;
+    if (error && typeof error === "object" && "statusCode" in error) throw error;
     console.error("Unexpected error:", error);
     throw createError({ statusCode: 500, message: "Internal server error" });
   }

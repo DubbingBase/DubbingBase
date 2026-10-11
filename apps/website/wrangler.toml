@@ -14,6 +14,14 @@ binding = "ASSETS"
 binding = "CACHE_KV"
 id = "340974572b504ed2aa20c160e18f5697"
 
+[[ratelimits]]
+name = "PROFILE_PICTURE_UPLOAD_LIMITER"
+namespace_id = "5636541"
+
+  [ratelimits.simple]
+  limit = 10
+  period = 60
+
 [triggers]
 crons = ["* * * * *", "0 6 * * *"]
 
