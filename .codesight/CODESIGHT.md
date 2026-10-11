@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 81 routes | 19 models | 197 components | 91 lib files | 63 env vars | 14 middleware | 21% test coverage
-> **Token savings:** this file is ~15,900 tokens. Without it, AI exploration would cost ~158,100 tokens. **Saves ~142,200 tokens per conversation.**
-> **Last scanned:** 2026-10-11 08:30 — re-run after significant changes
+> 81 routes | 19 models | 197 components | 92 lib files | 63 env vars | 14 middleware | 21% test coverage
+> **Token savings:** this file is ~16,000 tokens. Without it, AI exploration would cost ~158,400 tokens. **Saves ~142,400 tokens per conversation.**
+> **Last scanned:** 2026-10-11 08:47 — re-run after significant changes
 
 ---
 
@@ -527,6 +527,10 @@
   - function llmGenerateObject: (prompt, schema, options?) => Promise<
   - function llmVision: (prompt, imageData, mimeType, options?) => Promise<
   - function llmVisionObject: (prompt, imageData, schema, mimeType, options?) => Promise<
+- `apps/website/server/utils/media-queue-readiness.ts`
+  - function getReadyMediaQueueNames: (value) => MediaQueueName[]
+  - type MediaQueueName
+  - const mediaQueueNames
 - `apps/website/server/utils/media-request.ts`
   - function parseSeasonQuery: (query, unknown>) => void
   - function parseEpisodeQuery: (query, unknown>) => void
@@ -785,7 +789,7 @@
 
 ## Most Imported Files (change these carefully)
 
-- `apps/website/server/utils/db/client.ts` — imported by **65** files
+- `apps/website/server/utils/db/client.ts` — imported by **66** files
 - `apps/website/server/utils/auth.ts` — imported by **34** files
 - `apps/website/server/utils/index.ts` — imported by **23** files
 - `apps/website/server/utils/cache/index.ts` — imported by **19** files
@@ -808,7 +812,7 @@
 
 ## Import Map (who imports what)
 
-- `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +60 more
+- `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +61 more
 - `apps/website/server/utils/auth.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +29 more
 - `apps/website/server/utils/index.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/episode/index.get.ts` +18 more
 - `apps/website/server/utils/cache/index.ts` ← `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/season/index.get.ts`, `apps/website/server/utils/api/igdb.test.ts`, `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.test.ts` +14 more
@@ -824,7 +828,7 @@
 # Test Coverage
 
 > **21%** of routes and models are covered by tests
-> 66 test files found
+> 68 test files found
 
 ## Covered Routes
 

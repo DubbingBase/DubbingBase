@@ -191,7 +191,7 @@ pk: `archived_msg_id` (bigint) · fk: archived_msg_id, tmdb_id, queued_msg_id
 
 Read and edit these files when adding columns, creating migrations, or changing relations:
 
-- `apps/website/server/utils/db/client.ts` — imported by **65** files
+- `apps/website/server/utils/db/client.ts` — imported by **66** files
 - `apps/website/server/utils/db/queries.ts` — imported by **12** files
 
 ---

@@ -2,9 +2,9 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**91 library files** across 5 modules
+**92 library files** across 5 modules
 
-## Website (51 files)
+## Website (52 files)
 
 - `apps/website/server/utils/cache/wikipedia.ts` — sortLanguagesByPopularity, extractAvailableLanguages, cleanHeadingText, isDubbingSectionHeading, selectDubbingCandidateSections, selectDubbingSections, …
 - `apps/website/server/utils/index.ts` — getCloudflareKv, useCache, useTmdbClient, useTvdbClient, useIgdbClient, useOpenLibraryClient, …
@@ -24,14 +24,14 @@
 - `apps/website/server/utils/services/voice-actor.ts` — applyExtractedCredits, upsertStudio, ExtractedCredit, AppliedExtractedCredits
 - `apps/website/server/utils/urls/tmdb.ts` — buildTmdbImageUrl, cleanCharacterName, processMedia, TMDB_CONFIG
 - `apps/website/server/utils/wiki-check-disposition.ts` — wikiCheckDisposition, WikiCheckArchiveReason, WikiCheckSkippedResult, WikiCheckDisposition
+- `apps/website/server/utils/media-queue-readiness.ts` — getReadyMediaQueueNames, MediaQueueName, mediaQueueNames
 - `apps/website/server/utils/media-request.ts` — parseSeasonQuery, parseEpisodeQuery, withMediaServiceTimeout
 - `apps/website/server/utils/services/media.ts` — MediaService, WIKIPEDIA_ACTOR_URL_NAMESPACE, MEDIA_TVDB_CHARACTERS_NAMESPACE
 - `apps/website/server/utils/api/openlibrary.ts` — buildOpenLibraryCoverUrl, OpenLibraryClient
 - `apps/website/server/utils/api/podcast.ts` — PodcastClient, ITunesPodcastResult
 - `apps/website/server/utils/api/tvdb.ts` — TVDBClient, TVDB_AUTH_TOKEN_NAMESPACE
 - `apps/website/server/utils/auth.ts` — requireUser, requireAdmin
-- `apps/website/server/utils/dubbing-region-detection.ts` — detectDubbingRegionFromWikitext, DubbingEvidence
-- _…and 26 more files_
+- _…and 27 more files_
 
 ## Shared-logic (20 files)
 
