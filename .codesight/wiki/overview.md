@@ -75,7 +75,7 @@
 - **[Update-voice-actor.post](./update-voice-actor.post.md)** — 1 routes — touches: auth, db, upload
 - **[Update_user_role.post](./update_user_role.post.md)** — 1 routes — touches: auth
 - **[Update_voice_actor_link.post](./update_voice_actor_link.post.md)** — 1 routes — touches: auth, db
-- **[Upload-profile-picture.post](./upload-profile-picture.post.md)** — 1 routes — touches: auth, db, upload
+- **[Upload-profile-picture.post](./upload-profile-picture.post.md)** — 1 routes — touches: db, upload
 - **[Voice-actors.get](./voice-actors.get.md)** — 1 routes
 
 **Database:** unknown, 19 models — see [database.md](./database.md)
@@ -89,7 +89,7 @@
 Changes to these files have the widest blast radius across the codebase:
 
 - `apps/website/server/utils/db/client.ts` — imported by **66** files
-- `apps/website/server/utils/auth.ts` — imported by **34** files
+- `apps/website/server/utils/auth.ts` — imported by **33** files
 - `apps/website/server/utils/index.ts` — imported by **23** files
 - `apps/website/server/utils/cache/index.ts` — imported by **19** files
 - `apps/website/server/utils/db/queries.ts` — imported by **12** files

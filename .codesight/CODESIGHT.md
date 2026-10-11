@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 81 routes | 19 models | 197 components | 92 lib files | 63 env vars | 14 middleware | 21% test coverage
+> 81 routes | 19 models | 197 components | 92 lib files | 63 env vars | 14 middleware | 24% test coverage
 > **Token savings:** this file is ~16,000 tokens. Without it, AI exploration would cost ~158,400 tokens. **Saves ~142,400 tokens per conversation.**
-> **Last scanned:** 2026-10-11 09:01 — re-run after significant changes
+> **Last scanned:** 2026-10-11 13:36 — re-run after significant changes
 
 ---
 
@@ -87,10 +87,10 @@
 - `GET` `/api/trending/voice-actors`
 - `POST` `/api/update-review-status` [db]
 - `POST` `/api/update-user-profile`
-- `POST` `/api/update-voice-actor` [auth, db, upload]
+- `POST` `/api/update-voice-actor` [auth, db, upload] ✓
 - `POST` `/api/update_user_role` [auth]
 - `POST` `/api/update_voice_actor_link` [auth, db]
-- `POST` `/api/upload-profile-picture` [auth, db, upload]
+- `POST` `/api/upload-profile-picture` [db, upload] ✓
 - `GET` `/api/voice-actor/:id` params(id)
 
 ---
@@ -790,7 +790,7 @@
 ## Most Imported Files (change these carefully)
 
 - `apps/website/server/utils/db/client.ts` — imported by **66** files
-- `apps/website/server/utils/auth.ts` — imported by **34** files
+- `apps/website/server/utils/auth.ts` — imported by **33** files
 - `apps/website/server/utils/index.ts` — imported by **23** files
 - `apps/website/server/utils/cache/index.ts` — imported by **19** files
 - `apps/website/server/utils/db/queries.ts` — imported by **12** files
@@ -813,7 +813,7 @@
 ## Import Map (who imports what)
 
 - `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +61 more
-- `apps/website/server/utils/auth.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +29 more
+- `apps/website/server/utils/auth.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +28 more
 - `apps/website/server/utils/index.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/episode/index.get.ts` +18 more
 - `apps/website/server/utils/cache/index.ts` ← `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/season/index.get.ts`, `apps/website/server/utils/api/igdb.test.ts`, `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.test.ts` +14 more
 - `apps/website/server/utils/db/queries.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/game/[id].get.ts` +7 more
@@ -827,8 +827,8 @@
 
 # Test Coverage
 
-> **21%** of routes and models are covered by tests
-> 69 test files found
+> **24%** of routes and models are covered by tests
+> 72 test files found
 
 ## Covered Routes
 
@@ -840,12 +840,15 @@
 - POST:/api/media-queue
 - POST:/api/prepare_game
 - POST:/api/process-media-queue
+- POST:/api/update-voice-actor
+- POST:/api/upload-profile-picture
 
 ## Covered Models
 
 - voice_actors
 - source
 - work
+- user_voice_actor_links
 - votes
 - dubbing_projects
 - studios

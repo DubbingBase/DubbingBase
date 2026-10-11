@@ -76,8 +76,8 @@
 - `GET` `/api/trending/voice-actors`
 - `POST` `/api/update-review-status` [db]
 - `POST` `/api/update-user-profile`
-- `POST` `/api/update-voice-actor` [auth, db, upload]
+- `POST` `/api/update-voice-actor` [auth, db, upload] ✓
 - `POST` `/api/update_user_role` [auth]
 - `POST` `/api/update_voice_actor_link` [auth, db]
-- `POST` `/api/upload-profile-picture` [auth, db, upload]
+- `POST` `/api/upload-profile-picture` [db, upload] ✓
 - `GET` `/api/voice-actor/:id` params(id)
