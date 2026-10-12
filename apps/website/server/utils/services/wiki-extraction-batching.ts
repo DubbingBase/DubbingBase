@@ -74,6 +74,24 @@ function splitOversizedTable(lines: string[], maxChars: number): string[] {
     }
   }
 
+  // Wikimedia permits the first body row directly after the table opening,
+  // without an initial `|-`. Keep that row in the row sequence instead of
+  // copying its credits into every fragment's repeated table header.
+  let initialDataRow = -1;
+  depth = 0;
+  for (const [index, line] of lines.entries()) {
+    if (/^\s*\{\|/.test(line)) depth += 1;
+    else if (/^\s*\|\}/.test(line)) depth -= 1;
+
+    if (depth !== 1) continue;
+    if (/^\s*\|-/.test(line)) break;
+    if (/^\s*\|(?![-}+])/.test(line)) {
+      initialDataRow = index;
+      break;
+    }
+  }
+  if (initialDataRow >= 0) rowStarts.unshift(initialDataRow);
+
   if (rowStarts.length === 0 || closingIndex < 0) {
     throw new Error(
       "Oversized Wikipedia table has no safe complete-row split; refusing partial extraction",

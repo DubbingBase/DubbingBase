@@ -627,6 +627,38 @@ describe("Wikipedia extraction prompt batching", () => {
     expect(batches.every(({ prompt }) => prompt.includes(section.heading))).toBe(true);
   });
 
+  it("does not repeat an initial data row when Wikimedia omits its first row separator", () => {
+    const firstDataRow = "| [[Character A]] || [[Actor A]] || [[Voice A]]";
+    const laterRows = [
+      '|- class="even"\n| [[Character B]] || [[Actor B]] || [[Voice B]]',
+      '|- class="odd"\n| [[Character C]] || [[Actor C]] || [[Voice C]]',
+      '|- class="even"\n| [[Character D]] || [[Actor D]] || [[Voice D]]',
+    ];
+    const section = {
+      index: 26,
+      heading: "Version française",
+      wikitext: [
+        '{| class="wikitable"',
+        "! Personnage !! Acteur original !! Voix française",
+        firstDataRow,
+        ...laterRows,
+        "|}",
+      ].join("\n"),
+    };
+
+    const batches = buildWikipediaExtractionBatches([section], 300);
+
+    expect(batches.length).toBeGreaterThan(1);
+    expect(
+      batches.every(({ prompt }) =>
+        prompt.includes("Personnage !! Acteur original !! Voix française"),
+      ),
+    ).toBe(true);
+    for (const row of [firstDataRow, ...laterRows]) {
+      expect(batches.filter(({ prompt }) => prompt.includes(row))).toHaveLength(1);
+    }
+  });
+
   it("keeps actual part labels within the prompt limit above 999 fragments", () => {
     const rows = Array.from(
       { length: 1_005 },
