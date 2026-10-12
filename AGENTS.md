@@ -1,11 +1,8 @@
-# DubbingBase — agent entrypoint
-
-1. Read [.agents/AGENTS.md](.agents/AGENTS.md) first. It takes precedence over everything else.
-2. For codebase orientation, read [.codesight/AGENTS.md](.codesight/AGENTS.md), then `.codesight/wiki/index.md` as needed.
-
 # AI Agent Instructions and Rules - DubbingBase
 
 This file defines the project architecture, key development commands, and coding rules/best practices that must be strictly followed when making any changes to the codebase.
+
+> **Precedence:** this root `AGENTS.md` is the repository’s single source of agent instructions. For generated codebase orientation (routes, schema, components, hot files), see [.codesight/AGENTS.md](.codesight/AGENTS.md) (codesight output — context only, not rules) and [.codesight/wiki/index.md](.codesight/wiki/index.md).
 
 ## Scope Boundary: Mobile Excluded
 
@@ -35,18 +32,18 @@ The project is structured as a **Monorepo** managed by `pnpm workspaces` and `tu
 
 All development tasks MUST be run via **Mise** to ensure environment consistency. Always check `mise.toml` first to see if a command exists before attempting to run raw bash commands or `pnpm` scripts directly. If a task is defined in `mise.toml` (e.g. `gen-types`), you must run it using `mise run <task>`.
 
-| Command                 | Description                                                                           |
-| :---------------------- | :------------------------------------------------------------------------------------ |
-| `mise run dev`          | Starts the entire development environment (local Supabase backend + app dev servers). |
-| `mise run backend`      | Starts the local Supabase database and environment.                                   |
-| `mise run backend-stop` | Stops the local Supabase backend.                                                     |
-| `mise run app`          | Starts only the development server for the mobile app in web mode (`apps/mobile`).    |
-| `mise run website`      | Starts only the development server for the website (`apps/website`).                  |
-| `mise run db-reset`     | Resets the local database and applies migrations without production seed data.        |
-| `mise run migrate-up`   | Applies pending migrations to the local database.                                     |
-| `mise run migrate-down` | Rolls back the last applied migration.                                                |
-| `mise run sync`         | Synchronizes mobile app builds with Capacitor platforms (Android, etc.).              |
-| `mise run android-dev`  | Launches the Android emulator and runs the app in development mode.                   |
+| Command                 | Description                                                                                   |
+| :---------------------- | :-------------------------------------------------------------------------------------------- |
+| `mise run dev`          | Starts the entire development environment (local Supabase backend + app dev servers).         |
+| `mise run backend`      | Starts the local Supabase database and environment.                                           |
+| `mise run backend-stop` | Stops the local Supabase backend.                                                             |
+| `mise run app`          | Maintainer-only: starts the mobile app in web mode (`apps/mobile`); agents MUST NOT run it.   |
+| `mise run website`      | Starts only the development server for the website (`apps/website`).                          |
+| `mise run db-reset`     | Resets the local schema and applies migrations without seed data.                             |
+| `mise run migrate-up`   | Applies pending migrations to the local database.                                             |
+| `mise run migrate-down` | Rolls back the last applied migration.                                                        |
+| `mise run sync`         | Maintainer-only: synchronizes mobile builds with Capacitor platforms; agents MUST NOT run it. |
+| `mise run android-dev`  | Maintainer-only: launches Android development; agents MUST NOT run it.                        |
 
 ### Generating Database TypeScript Types:
 
@@ -69,27 +66,18 @@ When testing the website from a mobile device or other clients over Tailscale/LA
 
 ### Website Development with Doppler
 
-Doppler is the source of truth for website environment variables. Agents must use the unprefixed secret names consumed by `apps/website/nuxt.config.ts` (for example, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `TMDB_API_KEY`, `TVDB_API_KEY`, `IGDB_CLIENT_ID`, and `IGDB_CLIENT_SECRET`). Do not duplicate values under `NUXT_*` names; those names exist only as compatibility fallbacks.
+Doppler is the source of truth for website environment variables. Use the unprefixed secret names consumed by `apps/website/nuxt.config.ts` (for example, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `TMDB_API_KEY`, `TVDB_API_KEY`, `IGDB_CLIENT_ID`, and `IGDB_CLIENT_SECRET`); do not duplicate values under `NUXT_*` names.
 
-Configure the repository once from its root:
+Configure once from the repository root with `doppler setup`, selecting project `dubbingbase` and config `dev` for local development. Never print secret values; inspect names only with `doppler secrets --only-names`.
 
-```bash
-doppler setup
-```
-
-Select the `dubbingbase` project and the appropriate config (`dev` for local development). Never print secret values. To diagnose configuration, inspect names only with `doppler secrets --only-names`.
-
-The website requires both the local Supabase backend and the website server. Start them as separate steps from the repository root:
+The website requires both the local Supabase backend and the website server. Start them separately:
 
 ```bash
-# Start local Supabase first.
 mise run backend
-
-# Then start the website with Doppler-injected variables.
 doppler run -- mise run website
 ```
 
-`mise run website` does not depend on the backend task, so starting only the website is insufficient. Do not use `mise run dev`: it invokes the root workspace development task and can include `apps/mobile`, which is forbidden by the mobile scope boundary. Stop the local backend with `mise run backend-stop` when finished.
+`mise run website` does not start the backend. Do not use `mise run dev` for agent work because it can include `apps/mobile`. Stop the local backend with `mise run backend-stop` when finished.
 
 ---
 
@@ -144,7 +132,26 @@ doppler run -- mise run website
   - The local Supabase database runs on port `55322` (you can verify this by running `npx supabase status`).
   - To query the local DB from the terminal, use: `PGPASSWORD=postgres psql -h 127.0.0.1 -p 55322 -U postgres -d postgres -c "<query>"`.
 - **Seed Data**:
-  - `seed.sql` is a production-derived local data copy. Migrations own schema and supported-language rules; the application owns mutable business records.
+  - `seed.sql` is a production-derived local copy of mutable business data. Migrations own schema and constrain `dubbing_projects.language` to the supported regional dubbing-language set; shared TypeScript validates membership in the same set at application boundaries.
+
+### Production-backed local refresh
+
+Production-backed refresh is opt-in. Production access is read-only; all database resets and file replacement target local Supabase. Never push migrations, mutate remote data, or deploy as part of a refresh.
+
+Migrations own schema and enforce supported regional dubbing-language membership through `public.is_valid_dubbing_language(text)` and the `dubbing_projects.language` CHECK constraint. Shared TypeScript validates membership in the matching list. The temporary `dubbing_languages` table exists only between the deployed staging migration and the final queue-RPC replacement. Database refresh uses the full data-only production dump and normal local reset after production has completed regional migration; before then, use the documented migration-checkpoint rehearsal. Storage objects are synchronized separately through Supabase Storage CLI commands.
+
+Use Doppler project `dubbingbase`, config `prd`, for read-only production dumps and Storage downloads. The required CLI credentials are `SUPABASE_ACCESS_TOKEN` and `SUPABASE_DB_PASSWORD`; never print or commit their values. To avoid browser login and interactive project selection in a headless environment:
+
+- From `packages/database`, link a fresh checkout explicitly with `doppler run --project dubbingbase --config prd -- mise exec -- npx supabase link --project-ref rrjgbneefiwoqvsjwzrz`.
+- If `db dump` fails while initializing a temporary login role with `401 Unauthorized`, or asks for a database password, check that the command is running with the `prd` Doppler config. Do not persist either secret in the repository.
+- If the CLI is already authenticated and the project is linked, no login or link step is needed. The project ref is not a credential; use it instead of the interactive project picker.
+- The database tasks use `database-install`, which installs only `@app/supabase` dependencies. From the repository root, run:
+
+  ```bash
+  doppler run --project dubbingbase --config prd -- mise run reseed
+  ```
+
+  `fetch-seed` writes the full data-only dump to ignored `packages/database/supabase/seed.sql`; `reseed` runs the normal local `supabase db reset` flow. Run `mise run sync-storage` separately after the database reset. The linked production project still needs the regional mapping migration before its project rows satisfy the final regional-language CHECK; until then, use migration-only resets and SQL fixtures for local validation. Use `mise run db-reset` when only a fresh schema is needed.
 
 ---
 
@@ -156,14 +163,22 @@ Backend routes in `apps/website/server/api/` handle integration with TMDB, TVDB,
 
 ## 🤖 AI Agent Behavior Guidelines
 
+For changes to Wikipedia dubbing section selection, wikitext processing, regional
+evidence classification, or queue evidence handling, read
+[the Wikipedia corpus skill](.agents/skills/wikipedia-dubbing-corpus/SKILL.md) and run the
+relevant revision-pinned real-page regressions described there.
+
 1. **Research First**: Before writing code, inspect existing files, imports, and state to understand the setup.
 2. **Preserve Comments**: Keep existing comments and docstrings unless explicitly told to remove them.
 3. **Precise Code Changes**: Make targeted edits instead of rewriting large files.
 4. **Validation**: Test compilation and run formatter tools before completing your turn.
-5. **Local Environment Only**: NEVER execute or run production environment commands or actions (e.g., production database pushes, live deployments, remote mutations). Only target local development environments, and do NOT suggest production actions unless strictly and explicitly asked by the user. **Specifically, NEVER run `supabase db push` or `supabase functions deploy` directly.** All remote deployments must happen strictly through the CI/CD pipeline on the `main` branch.
-6. **Token Saving**: Use `rtk` (binary) (https://github.com/rtk-ai/rtk) to save tokens whenever possible.
-7. **Scratch & Test Scripts**: Do NOT leave one-off test scripts (like `test_*.ts`) in the root of the project. If you need a script to test an external API or debug a function, place it in `scripts/scratch/` or use the `.gemini/scratch` folder.
-8. **Caching Rules**:
+5. **Wrangler / Cloudflare deploys**: `apps/website` deploys via `git push` to `main` (CI/CD pipeline). Do NOT run `wrangler deploy` locally — `CLOUDFLARE_API_TOKEN` is not set in the dev environment. To pause or resume cron triggers, edit `crons` in `apps/website/wrangler.toml`, commit, and push to `main`.
+6. **Production and local environments**: Never perform production writes, remote migrations, or live deployments. By default, target local development only. A production read to refresh local data is allowed only when the user explicitly requests it and the destination is local. **Never run `supabase db push` or `supabase functions deploy` directly.** All remote deployments must happen strictly through the CI/CD pipeline on the `main` branch.
+7. **Token Saving**: Use `rtk` (binary) (https://github.com/rtk-ai/rtk) to save tokens whenever possible.
+8. **Scratch & Test Scripts**: Do NOT leave one-off test scripts (like `test_*.ts`) in the root of the project. If you need a script to test an external API or debug a function, place it in `scripts/scratch/` or use the `.gemini/scratch` folder.
+9. **Caching Rules**:
    - Remember that there is no local Redis cache in the development environment.
    - When doing your fetches (e.g. testing APIs via scratch scripts), save the output locally (e.g. in JSON files in the scratch folder) so you don't have to fetch it again repeatedly.
-9. **Changesets**: Every code or configuration change must include an appropriate Changesets file in `.changeset/`. Keep the entry scoped to the affected package(s), and never include `@app/mobile` unless mobile work was explicitly authorized.
+10. **GitHub Actions — Use `gh run watch <run-id>` to monitor CI**: After getting a run ID via `gh run list`, always use `gh run watch <run-id>` instead of repeatedly polling `gh run view` or `gh run list`. `gh run watch` streams live job status and blocks until the run finishes.
+11. **Changesets**: Every code or configuration change must include an appropriate Changesets file in `.changeset/`, scoped to the affected package(s). Never include `@app/mobile` unless mobile work is explicitly authorized.
+12. **GitHub reviewers**: Never assign or request reviewers on GitHub pull requests.
