@@ -157,6 +157,16 @@
   - function upsertStudio: (name, logo_url?) => void
   - interface ExtractedCredit
   - interface AppliedExtractedCredits
+- `apps/website/server/utils/services/wiki-extraction-batching.ts`
+  - function buildWikipediaExtractionBatches: (sections, maxPromptChars) => WikipediaExtractionBatch[]
+  - function deduplicateExtractedCredits: (credits) => ExtractedCredit[]
+  - interface WikipediaExtractionSection
+  - interface WikipediaExtractionBatch
+  - const MAX_WIKIPEDIA_EXTRACTION_PROMPT_CHARS
+- `apps/website/server/utils/services/wiki-extraction-sections.ts`
+  - function getValidatedExtractionSections: (options) => Promise<ValidatedExtractionSections>
+  - interface ScanSectionMetadata
+  - type ValidatedExtractionSections
 - `apps/website/server/utils/urls/supabase.ts` — function buildSupabaseImageUrl: (imagePath, bucket, size) => string | null, function processVoiceActor
 - `apps/website/server/utils/urls/tmdb.ts`
   - function buildTmdbImageUrl: (imagePath, size) => string | null

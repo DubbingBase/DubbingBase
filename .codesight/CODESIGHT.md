@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 81 routes | 19 models | 197 components | 92 lib files | 63 env vars | 14 middleware | 24% test coverage
-> **Token savings:** this file is ~16,000 tokens. Without it, AI exploration would cost ~158,400 tokens. **Saves ~142,400 tokens per conversation.**
-> **Last scanned:** 2026-10-11 13:36 — re-run after significant changes
+> 81 routes | 19 models | 197 components | 94 lib files | 63 env vars | 14 middleware | 24% test coverage
+> **Token savings:** this file is ~16,200 tokens. Without it, AI exploration would cost ~158,900 tokens. **Saves ~142,700 tokens per conversation.**
+> **Last scanned:** 2026-10-12 08:32 — re-run after significant changes
 
 ---
 
@@ -586,6 +586,16 @@
   - function upsertStudio: (name, logo_url?) => void
   - interface ExtractedCredit
   - interface AppliedExtractedCredits
+- `apps/website/server/utils/services/wiki-extraction-batching.ts`
+  - function buildWikipediaExtractionBatches: (sections, maxPromptChars) => WikipediaExtractionBatch[]
+  - function deduplicateExtractedCredits: (credits) => ExtractedCredit[]
+  - interface WikipediaExtractionSection
+  - interface WikipediaExtractionBatch
+  - const MAX_WIKIPEDIA_EXTRACTION_PROMPT_CHARS
+- `apps/website/server/utils/services/wiki-extraction-sections.ts`
+  - function getValidatedExtractionSections: (options) => Promise<ValidatedExtractionSections>
+  - interface ScanSectionMetadata
+  - type ValidatedExtractionSections
 - `apps/website/server/utils/urls/supabase.ts` — function buildSupabaseImageUrl: (imagePath, bucket, size) => string | null, function processVoiceActor
 - `apps/website/server/utils/urls/tmdb.ts`
   - function buildTmdbImageUrl: (imagePath, size) => string | null
@@ -805,10 +815,10 @@
 - `apps/website/server/utils/background.ts` — imported by **7** files
 - `apps/website/server/utils/cache/http.ts` — imported by **7** files
 - `apps/website/server/utils/services/media.ts` — imported by **6** files
+- `apps/website/server/utils/cache/wikipedia.ts` — imported by **5** files
 - `apps/website/server/utils/dubbing-region-detection.ts` — imported by **5** files
 - `apps/website/server/utils/error-message.ts` — imported by **5** files
 - `apps/website/server/utils/with-timeout.ts` — imported by **4** files
-- `apps/website/server/utils/llm.ts` — imported by **4** files
 
 ## Import Map (who imports what)
 
@@ -828,7 +838,7 @@
 # Test Coverage
 
 > **24%** of routes and models are covered by tests
-> 72 test files found
+> 73 test files found
 
 ## Covered Routes
 
