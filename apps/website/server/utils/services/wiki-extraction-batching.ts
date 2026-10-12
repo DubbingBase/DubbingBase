@@ -80,20 +80,51 @@ function splitOversizedTable(lines: string[], maxChars: number): string[] {
     );
   }
 
-  const tableHeader = lines.slice(0, rowStarts[0]!).join("");
+  const isHeaderOnlyRow = (start: number, end: number) => {
+    const cells = lines.slice(start + 1, end).filter((line) => line.trim());
+    return cells.length > 0 && cells.every((line) => /^\s*!/.test(line));
+  };
+  let leadingHeaderRows = 0;
+  while (
+    leadingHeaderRows < rowStarts.length &&
+    isHeaderOnlyRow(rowStarts[leadingHeaderRows]!, rowStarts[leadingHeaderRows + 1] ?? closingIndex)
+  ) {
+    leadingHeaderRows += 1;
+  }
+
+  if (leadingHeaderRows === rowStarts.length) {
+    throw new Error(
+      "Oversized Wikipedia table has no data rows after its column headers; refusing partial extraction",
+    );
+  }
+
+  const firstDataRow = rowStarts[leadingHeaderRows]!;
+  const tableHeader = lines.slice(0, firstDataRow).join("");
   const tableFooter = lines.slice(closingIndex).join("");
+  if (tableHeader.length + tableFooter.length >= maxChars) {
+    throw new Error(
+      "Oversized Wikipedia table headers and footer exceed the safe extraction input limit",
+    );
+  }
+
   const fragments: string[] = [];
+  let rows = "";
   for (const [rowIndex, rowStart] of rowStarts.entries()) {
+    if (rowIndex < leadingHeaderRows) continue;
     const nextRowStart = rowStarts[rowIndex + 1] ?? closingIndex;
     const row = lines.slice(rowStart, nextRowStart).join("");
-    const fragment = `${tableHeader}${row}${tableFooter}`;
-    if (fragment.length > maxChars) {
+    if (tableHeader.length + row.length + tableFooter.length > maxChars) {
       throw new Error(
         "An oversized Wikipedia table row exceeds the safe extraction input limit; refusing to split actor/character cells",
       );
     }
-    fragments.push(fragment);
+    if (rows && tableHeader.length + rows.length + row.length + tableFooter.length > maxChars) {
+      fragments.push(`${tableHeader}${rows}${tableFooter}`);
+      rows = "";
+    }
+    rows += row;
   }
+  if (rows) fragments.push(`${tableHeader}${rows}${tableFooter}`);
   return fragments;
 }
 
@@ -151,17 +182,32 @@ export function buildWikipediaExtractionBatches(
       heading:
         section.heading.length <= 256 ? section.heading : `${section.heading.slice(0, 255)}…`,
     };
-    const largestHeader = `\n\n<<< WIKIPEDIA SECTION #${section.index}: ${boundedSection.heading}, part 999/999 >>>\n`;
-    const sectionLimit = maxPromptChars - largestHeader.length;
-    if (sectionLimit < 1) throw new Error("Wikipedia section label exceeds the prompt limit");
-    return splitSection(boundedSection, sectionLimit).map(
-      (wikitext, fragmentIndex, allFragments) => ({
-        section: boundedSection,
-        wikitext,
-        fragmentIndex,
-        fragmentCount: allFragments.length,
-      }),
-    );
+    const sectionPrefix = `\n\n<<< WIKIPEDIA SECTION #${section.index}: ${boundedSection.heading}`;
+    const sectionSuffix = " >>>\n";
+    const sectionLabel = `${sectionPrefix}${sectionSuffix}`;
+    const unfragmentedLimit = maxPromptChars - sectionLabel.length;
+    if (unfragmentedLimit < 1) throw new Error("Wikipedia section label exceeds the prompt limit");
+    let wikitextFragments = splitSection(boundedSection, unfragmentedLimit);
+
+    if (wikitextFragments.length > 1) {
+      // Every fragment contains at least one original UTF-16 code unit, so a
+      // section cannot produce more fragments than its original text length.
+      // Reserve enough label space for that upper-bound part number, not 999.
+      const maxPartDigits = String(Math.max(1, section.wikitext.length)).length;
+      const largestPartNumber = "9".repeat(maxPartDigits);
+      const partLabel = `, part ${largestPartNumber}/${largestPartNumber}`;
+      const fragmentLimit =
+        maxPromptChars - sectionPrefix.length - partLabel.length - sectionSuffix.length;
+      if (fragmentLimit < 1) throw new Error("Wikipedia section label exceeds the prompt limit");
+      wikitextFragments = splitSection(boundedSection, fragmentLimit);
+    }
+
+    return wikitextFragments.map((wikitext, fragmentIndex, allFragments) => ({
+      section: boundedSection,
+      wikitext,
+      fragmentIndex,
+      fragmentCount: allFragments.length,
+    }));
   });
   const batches: WikipediaExtractionBatch[] = [];
   let prompt = "";

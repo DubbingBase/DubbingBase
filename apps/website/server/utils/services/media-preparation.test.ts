@@ -345,6 +345,13 @@ describe("batched media credit extraction", () => {
         expect.anything(),
         expect.anything(),
       );
+      expect(extractionMocks.llmGenerateObject).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.anything(),
+        expect.objectContaining({
+          systemInstruction: expect.stringContaining("requested target dubbing region is fr-FR"),
+        }),
+      );
       expect(requestedUrls.filter((url) => url.includes("prop=wikitext"))).toHaveLength(2);
       expect(requestedUrls.some((url) => url.includes("prop=tocdata"))).toBe(false);
       expect(extractionFetch.maxConcurrentSectionRequests).toBe(2);
@@ -575,6 +582,77 @@ describe("Wikipedia extraction prompt batching", () => {
         ),
       ),
     ).toBe(true);
+  });
+
+  it("repeats leading Wikimedia column headers and packs complete rows", () => {
+    const rows = Array.from({ length: 8 }, (_, index) => {
+      const id = String(index + 1).padStart(2, "0");
+      return `|- class="${index % 2 === 0 ? "even" : "odd"}"\n| [[Character ${id}]] || [[Actor ${id}]] || [[Voice ${id}]]`;
+    });
+    const section = {
+      index: 24,
+      heading: "Version française — distribution doublée",
+      wikitext: [
+        '{| class="wikitable sortable"',
+        "|-",
+        '! scope="col" | Personnage !! Acteur original !! Voix française',
+        ...rows,
+        "|}",
+        "",
+      ].join("\n"),
+    };
+
+    const batches = buildWikipediaExtractionBatches([section], 400);
+    const repeated = buildWikipediaExtractionBatches([section], 400);
+
+    expect(batches.length).toBeGreaterThan(1);
+    expect(batches.length).toBeLessThan(rows.length);
+    expect(repeated).toEqual(batches);
+    expect(batches.every((batch) => batch.prompt.length <= 400)).toBe(true);
+    const fragmentLabels = batches.flatMap(
+      ({ prompt }) => prompt.match(/<<< WIKIPEDIA SECTION #24:.*part \d+\/\d+ >>>/g) ?? [],
+    );
+    expect(fragmentLabels.length).toBeLessThan(rows.length);
+    expect(
+      batches.every(
+        ({ prompt }) =>
+          prompt.includes("Personnage !! Acteur original !! Voix française") &&
+          prompt.includes('{| class="wikitable sortable"') &&
+          prompt.includes("|}"),
+      ),
+    ).toBe(true);
+    for (const row of rows) {
+      expect(batches.filter(({ prompt }) => prompt.includes(row))).toHaveLength(1);
+    }
+    expect(batches.every(({ prompt }) => prompt.includes(section.heading))).toBe(true);
+  });
+
+  it("keeps actual part labels within the prompt limit above 999 fragments", () => {
+    const rows = Array.from(
+      { length: 1_005 },
+      (_, index) =>
+        `|-\n| Character ${index} || Actor ${index} || Voice ${index} | ${"x".repeat(24)}`,
+    );
+    const section = {
+      index: 25,
+      heading: "Dubbing cast",
+      wikitext: ['{| class="wikitable"', "|-", "! Character !! Actor !! Voice", ...rows, "|}"].join(
+        "\n",
+      ),
+    };
+
+    const batches = buildWikipediaExtractionBatches([section], 250);
+    const fragmentLabels = batches.flatMap(
+      ({ prompt }) => prompt.match(/<<< WIKIPEDIA SECTION #25:.*part \d+\/\d+ >>>/g) ?? [],
+    );
+
+    expect(fragmentLabels.length).toBeGreaterThan(999);
+    expect(batches.every((batch) => batch.prompt.length <= 250)).toBe(true);
+    expect(batches[0]?.prompt).toContain("part 1/");
+    expect(batches.at(-1)?.prompt).toContain(`part ${batches.length}/${batches.length}`);
+    expect(batches.every(({ prompt }) => prompt.includes("! Character !! Actor !! Voice"))).toBe(
+      true,
+    );
   });
 
   it("refuses to split a single table row across actor and voice cells", () => {
