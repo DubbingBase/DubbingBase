@@ -2,6 +2,10 @@ import { useSupabaseAdmin } from "../utils/db/client";
 import { requireAdmin } from "../utils/auth";
 import { findOrCreateDubbingProject } from "../utils/db/dubbing-project";
 import { requireDubbingLanguage } from "../utils/dubbing-language";
+import {
+  findUniqueWorkRoleMatch,
+  workRoleIdentityKey,
+} from "../utils/work-role-identity";
 
 export default defineEventHandler(async (event) => {
   requireAdmin(event);
@@ -83,19 +87,77 @@ export default defineEventHandler(async (event) => {
             vaId = newVa.id;
           }
 
-          const { error: workErr } = await (
-            supabaseAdmin.from("work") as any
-          ).upsert(
-            {
-              dubbing_project_id: projectId,
-              actor_id: credit.matchedActorId || null,
-              voice_actor_id: vaId,
-              performance: "dialogues",
-              status: "validated",
-            },
-            { onConflict: "dubbing_project_id,voice_actor_id" },
+          const actorId = credit.matchedActorId || null;
+          const roleName =
+            typeof credit.role === "string" && credit.role.trim()
+              ? credit.role
+              : null;
+          const roleKey = workRoleIdentityKey(null, roleName);
+          let workLookup = supabaseAdmin
+            .from("work")
+            .select("id, character_id, character_name")
+            .eq("dubbing_project_id", projectId)
+            .eq("voice_actor_id", vaId);
+          workLookup = actorId
+            ? workLookup.eq("actor_id", actorId)
+            : workLookup.is("actor_id", null);
+          const { data: existingWorks, error: workLookupError } =
+            await workLookup;
+          if (workLookupError) throw workLookupError;
+
+          const existingWork = findUniqueWorkRoleMatch(
+            existingWorks ?? [],
+            roleKey,
           );
-          if (workErr) throw workErr;
+          const workMutation = existingWork
+            ? (supabaseAdmin.from("work") as any)
+                .update({
+                  performance: "dialogues",
+                  status: "validated",
+                  character_name: roleName,
+                })
+                .eq("id", existingWork.id)
+            : (supabaseAdmin.from("work") as any).insert({
+                dubbing_project_id: projectId,
+                actor_id: actorId,
+                voice_actor_id: vaId,
+                character_name: roleName,
+                performance: "dialogues",
+                status: "validated",
+              });
+          const { error: workErr } = await workMutation;
+          if (workErr?.code === "23505" && !existingWork) {
+            let retryLookup = supabaseAdmin
+              .from("work")
+              .select("id, character_id, character_name")
+              .eq("dubbing_project_id", projectId)
+              .eq("voice_actor_id", vaId);
+            retryLookup = actorId
+              ? retryLookup.eq("actor_id", actorId)
+              : retryLookup.is("actor_id", null);
+            const { data: retryWorks, error: retryLookupError } =
+              await retryLookup;
+            if (retryLookupError) throw retryLookupError;
+
+            const concurrentWork = findUniqueWorkRoleMatch(
+              retryWorks ?? [],
+              roleKey,
+            );
+            if (!concurrentWork) throw workErr;
+
+            const { error: retryUpdateError } = await (
+              supabaseAdmin.from("work") as any
+            )
+              .update({
+                performance: "dialogues",
+                status: "validated",
+                character_name: roleName,
+              })
+              .eq("id", concurrentWork.id);
+            if (retryUpdateError) throw retryUpdateError;
+          } else if (workErr) {
+            throw workErr;
+          }
 
           successCount++;
         } catch (err) {

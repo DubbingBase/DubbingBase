@@ -836,6 +836,7 @@
       "performance": "Interpretación",
       "reviewStatus": "Estado de revisión",
       "characterName": "Nombre del personaje",
+      "roleIdentityLocked": "Los nombres de rol definen este grupo duplicado y no se pueden cambiar durante la fusión.",
       "suggestions": "Sugerencias",
       "highlight": "Destacar",
       "source": "ID de origen",

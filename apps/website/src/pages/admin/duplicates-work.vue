@@ -185,8 +185,20 @@
                 :value="finalValues[field.key] ?? ''"
                 @input="setFinalText(field.key, $event)"
                 :aria-label="t(field.label)"
+                :disabled="
+                  field.key === 'character_name' &&
+                  currentCanonical?.character_id === null
+                "
                 class="mt-1 w-full rounded-md border theme-border theme-input px-3 py-2 text-sm theme-text focus-visible:outline-2 focus-visible:outline-[var(--app-color-focus)]"
               />
+              <small
+                v-if="
+                  field.key === 'character_name' &&
+                  currentCanonical?.character_id === null
+                "
+                class="mt-1 block font-normal"
+                >{{ t("admin.duplicatesWork.roleIdentityLocked") }}</small
+              >
             </label>
             <label class="block text-xs font-semibold theme-text-muted"
               >{{ t("admin.duplicatesWork.reviewStatus") }}
@@ -404,8 +416,20 @@
                   ><input
                     :value="finalValues[field.key] ?? ''"
                     @input="setFinalText(field.key, $event)"
+                    :disabled="
+                      field.key === 'character_name' &&
+                      currentCanonical?.character_id === null
+                    "
                     class="w-full rounded-md border theme-border theme-input px-2 py-2 text-sm theme-text"
-                /></template>
+                  /><small
+                    v-if="
+                      field.key === 'character_name' &&
+                      currentCanonical?.character_id === null
+                    "
+                    class="mt-1 block text-[10px] theme-text-muted"
+                    >{{ t("admin.duplicatesWork.roleIdentityLocked") }}</small
+                  ></template
+                >
                 <small class="mt-1 block text-[10px] theme-text-muted">{{
                   t("admin.duplicatesWork.prefilledFrom", {
                     id: provenance[field.key],

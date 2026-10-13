@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   canPrefetchDuplicateWorkPage,
+  duplicateWorkRoleKey,
   duplicateWorkDraftHasChanges,
   prefillDuplicateWork,
   rankDuplicateWorks,
@@ -38,6 +39,15 @@ const work = (
 });
 
 describe("duplicate work comparison", () => {
+  it("uses character IDs before names and normalizes free-text roles", () => {
+    expect(duplicateWorkRoleKey(12, "Different name")).toBe("id:12");
+    expect(duplicateWorkRoleKey(null, " Alice ")).toBe("name:alice");
+    expect(duplicateWorkRoleKey(null, "alice")).toBe("name:alice");
+    expect(duplicateWorkRoleKey(null, "Bob")).toBe("name:bob");
+    expect(duplicateWorkRoleKey(null, "  ")).toBeNull();
+    expect(duplicateWorkRoleKey(null, null)).toBeNull();
+  });
+
   it("detects unsaved edits while treating equal false values as unchanged", () => {
     const original: EditableWorkValues = {
       performance: null,

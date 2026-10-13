@@ -2,6 +2,10 @@ import { requireUser } from "../utils/auth";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { findOrCreateDubbingProject } from "../utils/db/dubbing-project";
 import { requireDubbingLanguage } from "../utils/dubbing-language";
+import {
+  findUniqueWorkRoleMatch,
+  workRoleIdentityKey,
+} from "../utils/work-role-identity";
 
 export default defineEventHandler(async (event) => {
   const user = requireUser(event);
@@ -111,14 +115,17 @@ export default defineEventHandler(async (event) => {
   } else {
     query = query.is("actor_id", null);
   }
-  const { data: existingLink, error: linkCheckError } =
-    await query.maybeSingle();
+  const { data: existingLinks, error: linkCheckError } = await query;
 
   if (linkCheckError) {
     console.error("Error checking for existing link:", linkCheckError);
     throw createError({ statusCode: 500, message: linkCheckError.message });
   }
 
+  const existingLink = findUniqueWorkRoleMatch(
+    existingLinks ?? [],
+    workRoleIdentityKey(null, character_name),
+  );
   if (existingLink) {
     return { ...existingLink, voiceActorDetails: voiceActor };
   }

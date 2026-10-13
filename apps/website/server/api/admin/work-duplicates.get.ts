@@ -46,6 +46,7 @@ const responseSchema = z.object({
         actorId: nullableNumber,
         characterId: nullableNumber,
         voiceActorId: nullableNumber,
+        roleKey: z.string(),
       }),
       project: z.object({
         id: z.number(),

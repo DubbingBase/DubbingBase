@@ -836,6 +836,7 @@
       "performance": "演技",
       "reviewStatus": "確認状況",
       "characterName": "キャラクター名",
+      "roleIdentityLocked": "役名はこの重複グループの識別情報のため、統合中に変更できません。",
       "suggestions": "候補",
       "highlight": "注目表示",
       "source": "ソース ID",

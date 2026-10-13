@@ -44,6 +44,7 @@ export interface DuplicateWorkGroup {
     actorId: number | null;
     characterId: number | null;
     voiceActorId: number | null;
+    roleKey: string;
   };
   project: {
     id: number;
@@ -52,6 +53,15 @@ export interface DuplicateWorkGroup {
     language: string | null;
   };
   works: DuplicateWorkEntry[];
+}
+
+export function duplicateWorkRoleKey(
+  characterId: number | null,
+  characterName: string | null,
+): string | null {
+  if (characterId !== null) return `id:${characterId}`;
+  const normalizedName = characterName?.trim().toLowerCase();
+  return normalizedName ? `name:${normalizedName}` : null;
 }
 
 export interface DuplicateWorkPage {

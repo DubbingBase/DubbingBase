@@ -836,6 +836,7 @@
       "performance": "Performance",
       "reviewStatus": "Review status",
       "characterName": "Character name",
+      "roleIdentityLocked": "Role names define this duplicate group and cannot be changed during merge.",
       "suggestions": "Suggestions",
       "highlight": "Highlight",
       "source": "Source ID",

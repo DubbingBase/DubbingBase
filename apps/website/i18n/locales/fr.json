@@ -835,6 +835,7 @@
       "performance": "Performance",
       "reviewStatus": "État de validation",
       "characterName": "Nom du personnage",
+      "roleIdentityLocked": "Les noms de rôle définissent ce groupe et ne peuvent pas être modifiés pendant la fusion.",
       "suggestions": "Suggestions",
       "highlight": "À la une",
       "source": "ID de la source",

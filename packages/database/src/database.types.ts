@@ -796,6 +796,13 @@ export type Database = {
           wikipedia_language: string;
         }[];
       };
+      work_role_identity_key: {
+        Args: {
+          p_character_id: number | null;
+          p_character_name: string | null;
+        };
+        Returns: string | null;
+      };
       get_media_queue_locked_count: {
         Args: { p_queue_name?: string };
         Returns: number;
