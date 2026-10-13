@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Admin subsystem handles **6 routes** and touches: auth, queue.
+The Admin subsystem handles **8 routes** and touches: auth, queue, cache.
 
 ## Routes
 
@@ -18,6 +18,10 @@ The Admin subsystem handles **6 routes** and touches: auth, queue.
   `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts`
 - `GET` `/api/admin/queue` [auth, queue]
   `apps/website/server/api/admin/queue.get.ts`
+- `POST` `/api/admin/work-duplicates/merge` [auth]
+  `apps/website/server/api/admin/work-duplicates/merge.post.ts`
+- `GET` `/api/admin/work-duplicates` [auth, cache]
+  `apps/website/server/api/admin/work-duplicates.get.ts`
 
 ## Source Files
 
@@ -28,6 +32,8 @@ Read these before implementing or modifying this subsystem:
 - `apps/website/server/api/admin/queue/item.delete.ts`
 - `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts`
 - `apps/website/server/api/admin/queue.get.ts`
+- `apps/website/server/api/admin/work-duplicates/merge.post.ts`
+- `apps/website/server/api/admin/work-duplicates.get.ts`
 
 ---
 _Back to [overview.md](./overview.md)_

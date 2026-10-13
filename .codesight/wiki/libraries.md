@@ -2,13 +2,14 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**94 library files** across 5 modules
+**96 library files** across 5 modules
 
-## Website (54 files)
+## Website (56 files)
 
 - `apps/website/server/utils/cache/wikipedia.ts` — sortLanguagesByPopularity, extractAvailableLanguages, cleanHeadingText, isDubbingSectionHeading, selectDubbingCandidateSections, selectDubbingSections, …
 - `apps/website/server/utils/index.ts` — getCloudflareKv, useCache, useTmdbClient, useTvdbClient, useIgdbClient, useOpenLibraryClient, …
 - `apps/website/server/utils/services/media-preparation.ts` — checkMediaDubbingSections, checkGameDubbingSections, extractMediaDubbingCredits, extractGameDubbingCredits, prepareMedia, prepareGame, …
+- `apps/website/src/utils/duplicate-work.ts` — duplicateWorkDraftHasChanges, canPrefetchDuplicateWorkPage, rankDuplicateWorks, prefillDuplicateWork, DuplicateWorkEntry, DuplicateWorkGroup, …
 - `apps/website/server/utils/queue-payload.ts` — queueRequester, queueRequesterRpcArgs, validateDiscoveryPayload, validateCheckPayload, validateExtractPayload, ValidQueueBase, …
 - `apps/website/server/utils/cache/index.ts` — createCacheNamespace, CacheNamespace, SimpleCache, CacheKv, CachePolicy, CacheTTLPreset, …
 - `apps/website/src/utils/media-cast.ts` — sameMediaId, matchCastWorks, CastActorReference, CharacterProfilePicture, CastWorkReference, DisplayCastActor, …
@@ -30,8 +31,7 @@
 - `apps/website/server/utils/services/media.ts` — MediaService, WIKIPEDIA_ACTOR_URL_NAMESPACE, MEDIA_TVDB_CHARACTERS_NAMESPACE
 - `apps/website/server/utils/services/wiki-extraction-sections.ts` — getValidatedExtractionSections, ScanSectionMetadata, ValidatedExtractionSections
 - `apps/website/server/utils/api/openlibrary.ts` — buildOpenLibraryCoverUrl, OpenLibraryClient
-- `apps/website/server/utils/api/podcast.ts` — PodcastClient, ITunesPodcastResult
-- _…and 29 more files_
+- _…and 31 more files_
 
 ## Shared-logic (20 files)
 

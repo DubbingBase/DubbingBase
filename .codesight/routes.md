@@ -7,6 +7,8 @@
 - `DELETE` `/api/admin/queue/item` [auth, queue]
 - `POST` `/api/admin/queue/reprocess-legacy-wiki-check-reviews` [auth] ✓
 - `GET` `/api/admin/queue` [auth, queue]
+- `POST` `/api/admin/work-duplicates/merge` [auth]
+- `GET` `/api/admin/work-duplicates` [auth, cache]
 - `GET` `/api/advertisement/:id` params(id) [queue]
 - `GET` `/api/audiobook/:id` params(id) [queue]
 - `GET` `/api/career-grid` [cache]
@@ -16,14 +18,12 @@
 - `GET` `/api/dashboard-stats` [auth]
 - `POST` `/api/delete-user-voice-actor-link` [db]
 - `POST` `/api/delete-voice-actor-link` [auth, db]
-- `POST` `/api/delete-work-entry` [auth, db]
 - `POST` `/api/delete_user` [auth]
 - `GET` `/api/detail-collections` ✓
 - `GET` `/api/episode/index` [cache]
 - `POST` `/api/extract-credits-from-image` [upload]
 - `POST` `/api/extract-voice-actor-info` [auth] ✓
 - `GET` `/api/find_duplicate_voice_actors` [auth]
-- `GET` `/api/find_duplicate_work` [auth]
 - `GET` `/api/game/:id` params(id) [queue]
 - `POST` `/api/generate-social-content` [auth, email]
 - `GET` `/api/get-dubbing-project`

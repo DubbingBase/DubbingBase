@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 81 routes | 19 models | 197 components | 94 lib files | 63 env vars | 14 middleware | 24% test coverage
-> **Token savings:** this file is ~16,200 tokens. Without it, AI exploration would cost ~158,900 tokens. **Saves ~142,700 tokens per conversation.**
-> **Last scanned:** 2026-10-12 09:06 — re-run after significant changes
+> 81 routes | 19 models | 197 components | 96 lib files | 63 env vars | 14 middleware | 24% test coverage
+> **Token savings:** this file is ~16,400 tokens. Without it, AI exploration would cost ~159,400 tokens. **Saves ~143,100 tokens per conversation.**
+> **Last scanned:** 2026-10-13 20:11 — re-run after significant changes
 
 ---
 
@@ -18,6 +18,8 @@
 - `DELETE` `/api/admin/queue/item` [auth, queue]
 - `POST` `/api/admin/queue/reprocess-legacy-wiki-check-reviews` [auth] ✓
 - `GET` `/api/admin/queue` [auth, queue]
+- `POST` `/api/admin/work-duplicates/merge` [auth]
+- `GET` `/api/admin/work-duplicates` [auth, cache]
 - `GET` `/api/advertisement/:id` params(id) [queue]
 - `GET` `/api/audiobook/:id` params(id) [queue]
 - `GET` `/api/career-grid` [cache]
@@ -27,14 +29,12 @@
 - `GET` `/api/dashboard-stats` [auth]
 - `POST` `/api/delete-user-voice-actor-link` [db]
 - `POST` `/api/delete-voice-actor-link` [auth, db]
-- `POST` `/api/delete-work-entry` [auth, db]
 - `POST` `/api/delete_user` [auth]
 - `GET` `/api/detail-collections` ✓
 - `GET` `/api/episode/index` [cache]
 - `POST` `/api/extract-credits-from-image` [upload]
 - `POST` `/api/extract-voice-actor-info` [auth] ✓
 - `GET` `/api/find_duplicate_voice_actors` [auth]
-- `GET` `/api/find_duplicate_work` [auth]
 - `GET` `/api/game/:id` params(id) [queue]
 - `POST` `/api/generate-social-content` [auth, email]
 - `GET` `/api/get-dubbing-project`
@@ -608,6 +608,7 @@
   - type WikiCheckSkippedResult
   - type WikiCheckDisposition
 - `apps/website/server/utils/with-timeout.ts` — function withTimeout: (promise, timeoutMs, dependency) => Promise<T>
+- `apps/website/server/utils/work-role-identity.ts` — function findUniqueWorkRoleMatch: (works, matchingWorkIds) => T | undefined
 - `apps/website/src/composables/getHydrationCachedData.ts` — function getHydrationCachedData: (key, nuxtApp) => T | undefined
 - `apps/website/src/composables/useContribute.ts` — function fetchRandomTask, function useContribute
 - `apps/website/src/composables/useDragScroll.ts` — function useDragScroll: (scrollRef) => void
@@ -616,6 +617,14 @@
 - `apps/website/src/composables/useUrlPagination.ts` — function readUrlPage: (value) => number, function useUrlPagination: (queryKey) => void
 - `apps/website/src/lib/media-editor-routes.ts` — function getMediaEditorRoute: ({...}, mediaId, projectId }) => string | null
 - `apps/website/src/lib/mediaQueue.ts` — function enqueueMedia: (params) => Promise<void>
+- `apps/website/src/utils/duplicate-work.ts`
+  - function duplicateWorkDraftHasChanges: (initial, current) => boolean
+  - function canPrefetchDuplicateWorkPage: (requestSucceeded, currentIndex, groupCount, nextCursor) => boolean
+  - function rankDuplicateWorks: (works) => DuplicateWorkEntry[]
+  - function prefillDuplicateWork: (canonical, works) => void
+  - interface DuplicateWorkEntry
+  - interface DuplicateWorkGroup
+  - _...4 more_
 - `apps/website/src/utils/media-cast.ts`
   - function sameMediaId: (left, right) => boolean
   - function matchCastWorks: (actors, works) => CastWorkMatchResult<Actor, Work>
@@ -809,11 +818,11 @@
 - `apps/website/server/utils/urls/supabase.ts` — imported by **10** files
 - `apps/website/server/utils/urls/tmdb.ts` — imported by **10** files
 - `apps/website/server/utils/dubbing-language.ts` — imported by **10** files
+- `apps/website/server/utils/cache/http.ts` — imported by **8** files
 - `apps/website/server/utils/cache/constants.ts` — imported by **8** files
 - `e2e/helpers/mock-api.ts` — imported by **8** files
 - `packages/shared-logic/src/types/index.ts` — imported by **8** files
 - `apps/website/server/utils/background.ts` — imported by **7** files
-- `apps/website/server/utils/cache/http.ts` — imported by **7** files
 - `apps/website/server/utils/services/media.ts` — imported by **6** files
 - `apps/website/server/utils/cache/wikipedia.ts` — imported by **5** files
 - `apps/website/server/utils/dubbing-region-detection.ts` — imported by **5** files
@@ -838,7 +847,7 @@
 # Test Coverage
 
 > **24%** of routes and models are covered by tests
-> 73 test files found
+> 76 test files found
 
 ## Covered Routes
 

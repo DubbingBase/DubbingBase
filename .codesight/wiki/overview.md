@@ -8,12 +8,12 @@
 
 ## Scale
 
-81 API routes · 19 database models · 197 UI components · 94 library files · 14 middleware layers · 63 environment variables
+81 API routes · 19 database models · 197 UI components · 96 library files · 14 middleware layers · 63 environment variables
 
 ## Subsystems
 
 - **[[id].get](./[id].get.md)** — 9 routes — touches: queue
-- **[Admin](./admin.md)** — 6 routes — touches: auth, queue
+- **[Admin](./admin.md)** — 8 routes — touches: auth, queue, cache
 - **[Career-grid.get](./career-grid.get.md)** — 1 routes — touches: cache
 - **[Cast-vote.post](./cast-vote.post.md)** — 1 routes
 - **[Count-voice-actor-works.post](./count-voice-actor-works.post.md)** — 1 routes
@@ -21,13 +21,11 @@
 - **[Dashboard-stats.get](./dashboard-stats.get.md)** — 1 routes — touches: auth
 - **[Delete-user-voice-actor-link.post](./delete-user-voice-actor-link.post.md)** — 1 routes — touches: db
 - **[Delete-voice-actor-link.post](./delete-voice-actor-link.post.md)** — 1 routes — touches: auth, db
-- **[Delete-work-entry.post](./delete-work-entry.post.md)** — 1 routes — touches: auth, db
 - **[Delete_user.post](./delete_user.post.md)** — 1 routes — touches: auth
 - **[Detail-collections.get](./detail-collections.get.md)** — 1 routes
 - **[Extract-credits-from-image.post](./extract-credits-from-image.post.md)** — 1 routes — touches: upload
 - **[Extract-voice-actor-info.post](./extract-voice-actor-info.post.md)** — 1 routes — touches: auth
 - **[Find_duplicate_voice_actors.get](./find_duplicate_voice_actors.get.md)** — 1 routes — touches: auth
-- **[Find_duplicate_work.get](./find_duplicate_work.get.md)** — 1 routes — touches: auth
 - **[Games.get](./games.get.md)** — 1 routes — touches: cache
 - **[Generate-social-content.post](./generate-social-content.post.md)** — 1 routes — touches: auth, email
 - **[Get-dubbing-project.get](./get-dubbing-project.get.md)** — 1 routes
@@ -82,7 +80,7 @@
 
 **UI:** 197 components (vue) — see [ui.md](./ui.md)
 
-**Libraries:** 94 files — see [libraries.md](./libraries.md)
+**Libraries:** 96 files — see [libraries.md](./libraries.md)
 
 ## High-Impact Files
 
@@ -112,4 +110,4 @@ Changes to these files have the widest blast radius across the codebase:
 - _...31 more_
 
 ---
-_Back to [index.md](./index.md) · Generated 2026-10-12_
+_Back to [index.md](./index.md) · Generated 2026-10-13_
