@@ -6,6 +6,7 @@ DECLARE
   v_first jsonb;
   v_replay jsonb;
   v_work_id bigint;
+  v_ambiguous_count integer;
 BEGIN
   v_actor_id := 999999998;
 
@@ -56,6 +57,53 @@ BEGIN
     OR (SELECT count(*) FROM public.voice_actors WHERE lower(firstname) = 'bulk' AND lower(lastname) = 'fixture') <> 1
     OR (SELECT count(*) FROM public.work WHERE id = v_work_id) <> 1 THEN
     RAISE EXCEPTION 'Case-insensitive voice actor resolution created a duplicate';
+  END IF;
+
+  PERFORM public.apply_extracted_credits(
+    991234567, 'movie', 'fr-FR',
+    jsonb_build_array(
+      jsonb_build_object(
+        'firstname', 'Bulk', 'lastname', 'Fixture', 'actor_id', 999999996,
+        'performance', 'anonymous whitespace', 'character_id', NULL, 'character_name', '  '
+      ),
+      jsonb_build_object(
+        'firstname', 'Bulk', 'lastname', 'Fixture', 'actor_id', 999999996,
+        'performance', 'anonymous null', 'character_id', NULL, 'character_name', NULL
+      )
+    )
+  );
+  SELECT count(*) INTO v_ambiguous_count
+  FROM public.work AS work
+  JOIN public.dubbing_projects AS project ON project.id = work.dubbing_project_id
+  WHERE project.content_id = 991234567 AND project.content_type = 'movie'
+    AND project.language = 'fr-FR' AND work.actor_id = 999999996;
+  IF v_ambiguous_count <> 2 THEN
+    RAISE EXCEPTION 'Distinct ambiguous credits were collapsed: %', v_ambiguous_count;
+  END IF;
+
+  PERFORM public.apply_extracted_credits(
+    991234567, 'movie', 'fr-FR',
+    jsonb_build_array(
+      jsonb_build_object(
+        'firstname', 'Bulk', 'lastname', 'Fixture', 'actor_id', 999999996,
+        'performance', 'replayed whitespace', 'character_id', NULL, 'character_name', '  '
+      ),
+      jsonb_build_object(
+        'firstname', 'Bulk', 'lastname', 'Fixture', 'actor_id', 999999996,
+        'performance', 'replayed null', 'character_id', NULL, 'character_name', NULL
+      )
+    )
+  );
+  IF (SELECT count(*) FROM public.work AS work
+      JOIN public.dubbing_projects AS project ON project.id = work.dubbing_project_id
+      WHERE project.content_id = 991234567 AND project.content_type = 'movie'
+        AND project.language = 'fr-FR' AND work.actor_id = 999999996) <> 2
+    OR (SELECT count(*) FROM public.work AS work
+        JOIN public.dubbing_projects AS project ON project.id = work.dubbing_project_id
+        WHERE project.content_id = 991234567 AND project.content_type = 'movie'
+          AND project.language = 'fr-FR' AND work.actor_id = 999999996
+          AND work.performance IN ('replayed whitespace', 'replayed null')) <> 2 THEN
+    RAISE EXCEPTION 'Ambiguous credit replay lost or duplicated rows';
   END IF;
 
   UPDATE public.work SET status = 'validated', performance = 'human edit'

@@ -3,4 +3,4 @@
 "@app/supabase": patch
 ---
 
-Improve duplicate voice actor resolution with clear names, editable merged values, external profile links, disjoint duplicate groups, and relationship-safe atomic merges.
+Improve duplicate work resolution with side-by-side comparisons, editable final fields, role-aware identity across scans and writes, and atomic merges that preserve each voter's newest vote. Keep voice actor duplicate resolution relationship-safe.
