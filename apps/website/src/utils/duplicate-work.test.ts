@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   canPrefetchDuplicateWorkPage,
-  duplicateWorkRoleKey,
   duplicateWorkDraftHasChanges,
   prefillDuplicateWork,
   rankDuplicateWorks,
@@ -9,10 +8,7 @@ import {
   type EditableWorkValues,
 } from "./duplicate-work";
 
-const work = (
-  id: number,
-  overrides: Partial<DuplicateWorkEntry> = {},
-): DuplicateWorkEntry => ({
+const work = (id: number, overrides: Partial<DuplicateWorkEntry> = {}): DuplicateWorkEntry => ({
   id,
   dubbing_project_id: 5,
   actor_id: 7,
@@ -39,15 +35,6 @@ const work = (
 });
 
 describe("duplicate work comparison", () => {
-  it("uses character IDs before names and normalizes free-text roles", () => {
-    expect(duplicateWorkRoleKey(12, "Different name")).toBe("id:12");
-    expect(duplicateWorkRoleKey(null, " Alice ")).toBe("name:alice");
-    expect(duplicateWorkRoleKey(null, "alice")).toBe("name:alice");
-    expect(duplicateWorkRoleKey(null, "Bob")).toBe("name:bob");
-    expect(duplicateWorkRoleKey(null, "  ")).toBeNull();
-    expect(duplicateWorkRoleKey(null, null)).toBeNull();
-  });
-
   it("detects unsaved edits while treating equal false values as unchanged", () => {
     const original: EditableWorkValues = {
       performance: null,
@@ -61,12 +48,8 @@ describe("duplicate work comparison", () => {
     };
 
     expect(duplicateWorkDraftHasChanges(original, { ...original })).toBe(false);
-    expect(
-      duplicateWorkDraftHasChanges(original, { ...original, note: "edited" }),
-    ).toBe(true);
-    expect(
-      duplicateWorkDraftHasChanges(original, { ...original, highlight: null }),
-    ).toBe(true);
+    expect(duplicateWorkDraftHasChanges(original, { ...original, note: "edited" })).toBe(true);
+    expect(duplicateWorkDraftHasChanges(original, { ...original, highlight: null })).toBe(true);
   });
 
   it("prefetches only after successful requests near the end of the list", () => {

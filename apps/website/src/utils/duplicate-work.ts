@@ -55,15 +55,6 @@ export interface DuplicateWorkGroup {
   works: DuplicateWorkEntry[];
 }
 
-export function duplicateWorkRoleKey(
-  characterId: number | null,
-  characterName: string | null,
-): string | null {
-  if (characterId !== null) return `id:${characterId}`;
-  const normalizedName = characterName?.trim().toLowerCase();
-  return normalizedName ? `name:${normalizedName}` : null;
-}
-
 export interface DuplicateWorkPage {
   items: DuplicateWorkGroup[];
   nextCursor: number | null;
@@ -85,14 +76,10 @@ export function canPrefetchDuplicateWorkPage(
   groupCount: number,
   nextCursor: number | null,
 ): boolean {
-  return (
-    requestSucceeded && currentIndex >= groupCount - 2 && nextCursor !== null
-  );
+  return requestSucceeded && currentIndex >= groupCount - 2 && nextCursor !== null;
 }
 
-const reviewPriority = (
-  status: DuplicateWorkEntry["reviewed_status"],
-): number => {
+const reviewPriority = (status: DuplicateWorkEntry["reviewed_status"]): number => {
   switch (status) {
     case "accepted":
       return 3;
@@ -107,9 +94,7 @@ const reviewPriority = (
 
 const isPopulated = (value: unknown): boolean =>
   typeof value === "boolean" ||
-  (typeof value === "string"
-    ? value.trim().length > 0
-    : value !== null && value !== undefined);
+  (typeof value === "string" ? value.trim().length > 0 : value !== null && value !== undefined);
 
 const populatedFieldCount = (work: DuplicateWorkEntry): number =>
   editableWorkFields.filter((field) => isPopulated(work[field])).length;
@@ -119,17 +104,13 @@ const activityTime = (work: DuplicateWorkEntry): number => {
   return value ? Date.parse(value) || 0 : 0;
 };
 
-export function rankDuplicateWorks(
-  works: DuplicateWorkEntry[],
-): DuplicateWorkEntry[] {
+export function rankDuplicateWorks(works: DuplicateWorkEntry[]): DuplicateWorkEntry[] {
   return [...works].sort((left, right) => {
     const reviewDifference =
-      reviewPriority(right.reviewed_status) -
-      reviewPriority(left.reviewed_status);
+      reviewPriority(right.reviewed_status) - reviewPriority(left.reviewed_status);
     if (reviewDifference !== 0) return reviewDifference;
 
-    const fieldDifference =
-      populatedFieldCount(right) - populatedFieldCount(left);
+    const fieldDifference = populatedFieldCount(right) - populatedFieldCount(left);
     if (fieldDifference !== 0) return fieldDifference;
 
     const timeDifference = activityTime(right) - activityTime(left);
@@ -146,9 +127,7 @@ export function prefillDuplicateWork(
   values: EditableWorkValues;
   provenance: Record<EditableWorkField, number>;
 } {
-  const rankedSources = rankDuplicateWorks(works).filter(
-    (work) => work.id !== canonical.id,
-  );
+  const rankedSources = rankDuplicateWorks(works).filter((work) => work.id !== canonical.id);
   const values: EditableWorkValues = {
     performance: canonical.performance,
     status: canonical.status,

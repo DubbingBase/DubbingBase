@@ -1,6 +1,7 @@
 -- Use the same role identity for duplicate scans, write protection, and merges.
--- A real character ID is authoritative; otherwise a non-empty normalized name
--- identifies the role. Rows without either value remain intentionally ambiguous.
+-- A real character ID is authoritative; otherwise a trimmed, lowercased
+-- non-empty name identifies the role. Trim semantics match JavaScript String.trim.
+-- Rows without either value remain intentionally ambiguous.
 CREATE OR REPLACE FUNCTION public.work_role_identity_key(
   p_character_id bigint,
   p_character_name text
@@ -11,12 +12,26 @@ IMMUTABLE
 PARALLEL SAFE
 SET search_path = ''
 AS $$
+  WITH normalized AS (
+    SELECT pg_catalog.lower(pg_catalog.btrim(
+      p_character_name,
+      pg_catalog.chr(9) || pg_catalog.chr(10) || pg_catalog.chr(11) ||
+      pg_catalog.chr(12) || pg_catalog.chr(13) || pg_catalog.chr(32) ||
+      pg_catalog.chr(160) || pg_catalog.chr(5760) ||
+      pg_catalog.chr(8192) || pg_catalog.chr(8193) || pg_catalog.chr(8194) ||
+      pg_catalog.chr(8195) || pg_catalog.chr(8196) || pg_catalog.chr(8197) ||
+      pg_catalog.chr(8198) || pg_catalog.chr(8199) || pg_catalog.chr(8200) ||
+      pg_catalog.chr(8201) || pg_catalog.chr(8202) || pg_catalog.chr(8232) ||
+      pg_catalog.chr(8233) || pg_catalog.chr(8239) || pg_catalog.chr(8287) ||
+      pg_catalog.chr(12288) || pg_catalog.chr(65279)
+    )) AS name
+  )
   SELECT CASE
     WHEN p_character_id IS NOT NULL THEN 'id:' || p_character_id::text
-    WHEN NULLIF(pg_catalog.lower(pg_catalog.btrim(p_character_name)), '') IS NOT NULL
-      THEN 'name:' || pg_catalog.lower(pg_catalog.btrim(p_character_name))
+    WHEN NULLIF(normalized.name, '') IS NOT NULL THEN 'name:' || normalized.name
     ELSE NULL
-  END;
+  END
+  FROM normalized;
 $$;
 
 CREATE OR REPLACE FUNCTION public.prevent_duplicate_work_assignment()
@@ -92,6 +107,29 @@ $$;
 REVOKE ALL ON FUNCTION public.prevent_duplicate_work_assignment() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.work_role_identity_key(bigint, text) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.work_role_identity_key(bigint, text) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.find_work_role_identity_matches(
+  p_work_ids bigint[],
+  p_character_id bigint,
+  p_character_name text
+)
+RETURNS bigint[]
+LANGUAGE sql
+STABLE
+SET search_path = ''
+AS $$
+  SELECT COALESCE(pg_catalog.array_agg(work.id), ARRAY[]::bigint[])
+  FROM public.work
+  WHERE work.id = ANY(p_work_ids)
+    AND public.work_role_identity_key(p_character_id, p_character_name) IS NOT NULL
+    AND public.work_role_identity_key(work.character_id, work.character_name)
+      = public.work_role_identity_key(p_character_id, p_character_name);
+$$;
+
+REVOKE ALL ON FUNCTION public.find_work_role_identity_matches(bigint[], bigint, text)
+  FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.find_work_role_identity_matches(bigint[], bigint, text)
+  TO service_role;
 
 DROP TRIGGER IF EXISTS prevent_duplicate_work_assignment_trigger ON public.work;
 CREATE TRIGGER prevent_duplicate_work_assignment_trigger
@@ -642,11 +680,28 @@ BEGIN
       ) AS vote_rank
     FROM duplicate_work
     JOIN public.votes AS vote ON vote.work_id = duplicate_work.id
-  ), deleted_votes AS (
-    DELETE FROM public.votes AS vote
-    USING ranked_votes
-    WHERE vote.id = ranked_votes.id AND ranked_votes.vote_rank > 1
-    RETURNING vote.id
+  )
+  DELETE FROM public.votes AS vote
+  USING ranked_votes
+  WHERE vote.id = ranked_votes.id AND ranked_votes.vote_rank > 1;
+
+  WITH duplicate_work AS (
+    SELECT id, first_value(id) OVER (
+      PARTITION BY dubbing_project_id, actor_id,
+        public.work_role_identity_key(character_id, character_name)
+      ORDER BY (voice_actor_id = p_keep_id) DESC, id
+    ) AS keeper_id
+    FROM public.work
+    WHERE (voice_actor_id = p_keep_id OR voice_actor_id = ANY(v_other_ids))
+      AND public.work_role_identity_key(character_id, character_name) IS NOT NULL
+  ), ranked_votes AS (
+    SELECT vote.id, duplicate_work.keeper_id,
+      row_number() OVER (
+        PARTITION BY duplicate_work.keeper_id, vote.user_id
+        ORDER BY vote.created_at DESC NULLS LAST, vote.id DESC
+      ) AS vote_rank
+    FROM duplicate_work
+    JOIN public.votes AS vote ON vote.work_id = duplicate_work.id
   )
   UPDATE public.votes AS vote
   SET work_id = ranked_votes.keeper_id
@@ -655,16 +710,20 @@ BEGIN
     AND ranked_votes.vote_rank = 1
     AND vote.work_id <> ranked_votes.keeper_id;
 
+  WITH duplicate_work AS (
+    SELECT id, first_value(id) OVER (
+      PARTITION BY dubbing_project_id, actor_id,
+        public.work_role_identity_key(character_id, character_name)
+      ORDER BY (voice_actor_id = p_keep_id) DESC, id
+    ) AS keeper_id
+    FROM public.work
+    WHERE (voice_actor_id = p_keep_id OR voice_actor_id = ANY(v_other_ids))
+      AND public.work_role_identity_key(character_id, character_name) IS NOT NULL
+  )
   DELETE FROM public.work AS duplicate
-  USING public.work AS keeper
-  WHERE duplicate.voice_actor_id = ANY(v_other_ids)
-    AND keeper.voice_actor_id = p_keep_id
-    AND duplicate.id <> keeper.id
-    AND duplicate.dubbing_project_id IS NOT DISTINCT FROM keeper.dubbing_project_id
-    AND duplicate.actor_id IS NOT DISTINCT FROM keeper.actor_id
-    AND public.work_role_identity_key(duplicate.character_id, duplicate.character_name) IS NOT NULL
-    AND public.work_role_identity_key(duplicate.character_id, duplicate.character_name)
-      = public.work_role_identity_key(keeper.character_id, keeper.character_name);
+  USING duplicate_work
+  WHERE duplicate.id = duplicate_work.id
+    AND duplicate_work.id <> duplicate_work.keeper_id;
 
   UPDATE public.work
   SET voice_actor_id = p_keep_id

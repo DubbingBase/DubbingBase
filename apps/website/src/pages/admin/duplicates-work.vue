@@ -2,9 +2,7 @@
   <section class="space-y-5">
     <header class="flex flex-wrap items-end justify-between gap-4">
       <div>
-        <p
-          class="text-xs font-semibold uppercase tracking-[0.18em] theme-status-info-text"
-        >
+        <p class="text-xs font-semibold uppercase tracking-[0.18em] theme-status-info-text">
           {{ t("admin.duplicatesWork.reviewEyebrow") }}
         </p>
         <h1 class="mt-1 text-2xl font-bold theme-text">
@@ -34,12 +32,7 @@
       class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[var(--app-color-danger-border)] theme-status-danger px-4 py-3 text-sm theme-status-danger-text"
     >
       <span>{{ error }}</span>
-      <button
-        v-if="stale"
-        type="button"
-        @click="scan"
-        class="font-semibold underline"
-      >
+      <button v-if="stale" type="button" @click="scan" class="font-semibold underline">
         {{ t("admin.duplicatesWork.reloadGroup") }}
       </button>
     </div>
@@ -60,7 +53,7 @@
     </div>
 
     <div
-      v-else-if="!currentGroup"
+      v-else-if="!currentGroup && scanCompleted"
       role="status"
       class="rounded-lg border theme-border theme-surface-overlay px-6 py-16 text-center"
     >
@@ -72,7 +65,7 @@
       </p>
     </div>
 
-    <template v-else>
+    <template v-else-if="currentGroup">
       <div
         class="flex flex-wrap items-center justify-between gap-3 rounded-lg border theme-border theme-surface-overlay px-4 py-3"
       >
@@ -126,9 +119,7 @@
           <p class="mt-1 text-xs theme-text-muted">
             {{
               t("admin.duplicatesWork.language", {
-                language:
-                  currentGroup.project.language ||
-                  t("admin.duplicatesWork.none"),
+                language: currentGroup.project.language || t("admin.duplicatesWork.none"),
               })
             }}
           </p>
@@ -151,9 +142,7 @@
       </div>
 
       <section class="space-y-3 lg:hidden">
-        <div
-          class="rounded-lg border-2 theme-primary-border theme-surface-overlay p-4"
-        >
+        <div class="rounded-lg border-2 theme-primary-border theme-surface-overlay p-4">
           <div class="mb-4 flex items-center justify-between">
             <h2 class="font-bold theme-text">
               {{ t("admin.duplicatesWork.finalResult") }}
@@ -165,11 +154,7 @@
                 @change="onCanonicalChange"
                 class="ml-2 max-w-36 rounded-md border theme-border theme-input px-2 py-1 theme-text"
               >
-                <option
-                  v-for="work in currentGroup.works"
-                  :key="work.id"
-                  :value="work.id"
-                >
+                <option v-for="work in currentGroup.works" :key="work.id" :value="work.id">
                   #{{ work.id }}
                 </option>
               </select>
@@ -186,16 +171,12 @@
                 @input="setFinalText(field.key, $event)"
                 :aria-label="t(field.label)"
                 :disabled="
-                  field.key === 'character_name' &&
-                  currentCanonical?.character_id === null
+                  field.key === 'character_name' && currentCanonical?.character_id === null
                 "
                 class="mt-1 w-full rounded-md border theme-border theme-input px-3 py-2 text-sm theme-text focus-visible:outline-2 focus-visible:outline-[var(--app-color-focus)]"
               />
               <small
-                v-if="
-                  field.key === 'character_name' &&
-                  currentCanonical?.character_id === null
-                "
+                v-if="field.key === 'character_name' && currentCanonical?.character_id === null"
                 class="mt-1 block font-normal"
                 >{{ t("admin.duplicatesWork.roleIdentityLocked") }}</small
               >
@@ -230,8 +211,7 @@
                 class="mt-1 w-full rounded-md border theme-border theme-input px-3 py-2 text-sm theme-text"
               />
             </label>
-            <label
-              class="block text-xs font-semibold theme-text-muted sm:col-span-2"
+            <label class="block text-xs font-semibold theme-text-muted sm:col-span-2"
               >{{ t("admin.duplicatesWork.note") }}
               <textarea
                 v-model="finalValues.note"
@@ -275,10 +255,7 @@
                 {{
                   t("admin.duplicatesWork.updatedAt", {
                     date: formatDate(work.updated_at || work.created_at),
-                    user:
-                      work.updated_by ||
-                      work.created_by ||
-                      t("admin.duplicatesWork.none"),
+                    user: work.updated_by || work.created_by || t("admin.duplicatesWork.none"),
                   })
                 }}
               </p>
@@ -302,13 +279,9 @@
         </div>
       </section>
 
-      <section
-        class="hidden overflow-x-auto rounded-lg border theme-border lg:block"
-      >
+      <section class="hidden overflow-x-auto rounded-lg border theme-border lg:block">
         <table class="w-full min-w-[1100px] border-collapse text-left text-sm">
-          <thead
-            class="theme-surface-raised text-xs uppercase tracking-wide theme-text-muted"
-          >
+          <thead class="theme-surface-raised text-xs uppercase tracking-wide theme-text-muted">
             <tr>
               <th
                 class="sticky left-0 z-20 w-40 border-b theme-border theme-surface-raised px-4 py-3"
@@ -336,11 +309,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="field in matrixFields"
-              :key="field.key"
-              class="border-b theme-border"
-            >
+            <tr v-for="field in matrixFields" :key="field.key" class="border-b theme-border">
               <th
                 scope="row"
                 class="sticky left-0 z-10 theme-surface-overlay px-4 py-3 text-xs font-semibold theme-text-muted"
@@ -379,8 +348,7 @@
                   </select></template
                 >
                 <template v-else-if="field.key === 'highlight'"
-                  ><label
-                    class="flex items-center gap-2 py-2 text-sm theme-text"
+                  ><label class="flex items-center gap-2 py-2 text-sm theme-text"
                     ><input
                       v-model="finalValues.highlight"
                       type="checkbox"
@@ -399,11 +367,9 @@
                     min="1"
                     @input="setFinalNumber('source_id', $event)"
                     class="w-full rounded-md border theme-border theme-input px-2 py-2 text-sm theme-text"
-                  /><small
-                    v-if="sourceLabel"
-                    class="mt-1 block theme-text-muted"
-                    >{{ sourceLabel }}</small
-                  ></template
+                  /><small v-if="sourceLabel" class="mt-1 block theme-text-muted">{{
+                    sourceLabel
+                  }}</small></template
                 >
                 <template v-else-if="field.key === 'note'">
                   <textarea
@@ -417,15 +383,11 @@
                     :value="finalValues[field.key] ?? ''"
                     @input="setFinalText(field.key, $event)"
                     :disabled="
-                      field.key === 'character_name' &&
-                      currentCanonical?.character_id === null
+                      field.key === 'character_name' && currentCanonical?.character_id === null
                     "
                     class="w-full rounded-md border theme-border theme-input px-2 py-2 text-sm theme-text"
                   /><small
-                    v-if="
-                      field.key === 'character_name' &&
-                      currentCanonical?.character_id === null
-                    "
+                    v-if="field.key === 'character_name' && currentCanonical?.character_id === null"
                     class="mt-1 block text-[10px] theme-text-muted"
                     >{{ t("admin.duplicatesWork.roleIdentityLocked") }}</small
                   ></template
@@ -491,9 +453,7 @@
           class="rounded-md bg-[var(--app-color-primary)] px-4 py-2.5 text-sm font-bold text-[var(--app-color-on-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--app-color-focus)] disabled:opacity-50"
         >
           {{
-            merging
-              ? t("admin.duplicatesWork.merging")
-              : t("admin.duplicatesWork.reviewAndMerge")
+            merging ? t("admin.duplicatesWork.merging") : t("admin.duplicatesWork.reviewAndMerge")
           }}
         </button>
       </footer>
@@ -501,9 +461,7 @@
 
     <DialogRoot v-model:open="confirmOpen">
       <DialogPortal>
-        <DialogOverlay
-          class="fixed inset-0 z-40 bg-black/65 backdrop-blur-sm"
-        />
+        <DialogOverlay class="fixed inset-0 z-40 bg-black/65 backdrop-blur-sm" />
         <DialogContent
           class="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-lg border theme-border theme-surface p-6 shadow-2xl focus:outline-none"
         >
@@ -529,9 +487,7 @@
               class="rounded-md bg-[var(--app-color-danger-bg)] px-4 py-2 text-sm font-bold theme-status-danger-text disabled:opacity-50"
             >
               {{
-                merging
-                  ? t("admin.duplicatesWork.merging")
-                  : t("admin.duplicatesWork.confirmMerge")
+                merging ? t("admin.duplicatesWork.merging") : t("admin.duplicatesWork.confirmMerge")
               }}
             </button>
           </div>
@@ -573,6 +529,7 @@ const cursor = ref<number | null>(0);
 const currentIndex = ref(0);
 const totalGroups = ref(0);
 const loading = ref(true);
+const scanCompleted = ref(false);
 const merging = ref(false);
 const stale = ref(false);
 const error = ref("");
@@ -621,27 +578,20 @@ const matrixFields = editableWorkFields.map((key) => ({
 }));
 const currentGroup = computed(() => groups.value[currentIndex.value] ?? null);
 const currentCanonical = computed(
-  () =>
-    currentGroup.value?.works.find((work) => work.id === canonicalId.value) ??
-    null,
+  () => currentGroup.value?.works.find((work) => work.id === canonicalId.value) ?? null,
 );
 const voteCount = computed(
-  () =>
-    currentGroup.value?.works.reduce((sum, work) => sum + work.voteCount, 0) ??
-    0,
+  () => currentGroup.value?.works.reduce((sum, work) => sum + work.voteCount, 0) ?? 0,
 );
 const sourceLabel = computed(
   () =>
-    currentGroup.value?.works.find(
-      (work) => work.id === provenance.value.source_id,
-    )?.sourceName ?? "",
+    currentGroup.value?.works.find((work) => work.id === provenance.value.source_id)?.sourceName ??
+    "",
 );
 const mediaPath = computed(() => {
   const project = currentGroup.value?.project;
   if (!project) return localePath("/");
-  const type = ["tv", "series"].includes(project.contentType)
-    ? "show"
-    : project.contentType;
+  const type = ["tv", "series"].includes(project.contentType) ? "show" : project.contentType;
   return localePath(`/${type}/${project.contentId}`);
 });
 
@@ -663,9 +613,7 @@ function displayVoiceActor(group: DuplicateWorkGroup): string {
 function formatValue(value: string | number | boolean | null): string {
   if (value === null || value === "") return t("admin.duplicatesWork.none");
   if (typeof value === "boolean")
-    return value
-      ? t("admin.duplicatesWork.enabled")
-      : t("admin.duplicatesWork.disabled");
+    return value ? t("admin.duplicatesWork.enabled") : t("admin.duplicatesWork.disabled");
   return String(value);
 }
 function formatWorkValue(
@@ -677,9 +625,7 @@ function formatWorkValue(
   return formatValue(work[field]);
 }
 function formatDate(value: string | null): string {
-  return value
-    ? new Date(value).toLocaleString(locale.value)
-    : t("admin.duplicatesWork.none");
+  return value ? new Date(value).toLocaleString(locale.value) : t("admin.duplicatesWork.none");
 }
 function setFinalText(field: EditableWorkField, event: Event): void {
   const target = event.target;
@@ -707,20 +653,13 @@ function setFinalNumber(field: "source_id", event: Event): void {
   if (target instanceof HTMLInputElement)
     finalValues.value[field] = target.value ? Number(target.value) : null;
 }
-function isDifferent(
-  field: EditableWorkField,
-  work: DuplicateWorkGroup["works"][number],
-): boolean {
-  return (
-    currentGroup.value?.works.some((entry) => entry[field] !== work[field]) ??
-    false
-  );
+function isDifferent(field: EditableWorkField, work: DuplicateWorkGroup["works"][number]): boolean {
+  return currentGroup.value?.works.some((entry) => entry[field] !== work[field]) ?? false;
 }
 function resetFinalValues(): void {
   if (!currentGroup.value) return;
   const ranked = rankDuplicateWorks(currentGroup.value.works);
-  const canonical =
-    ranked.find((work) => work.id === canonicalId.value) ?? ranked[0];
+  const canonical = ranked.find((work) => work.id === canonicalId.value) ?? ranked[0];
   if (!canonical) return;
   canonicalId.value = canonical.id;
   const result = prefillDuplicateWork(canonical, ranked);
@@ -730,8 +669,7 @@ function resetFinalValues(): void {
 }
 function confirmDiscardChanges(): boolean {
   return (
-    !hasUnsavedChanges.value ||
-    window.confirm(t("admin.duplicatesWork.discardChangesConfirm"))
+    !hasUnsavedChanges.value || window.confirm(t("admin.duplicatesWork.discardChangesConfirm"))
   );
 }
 function chooseCanonicalId(id: number): void {
@@ -757,9 +695,7 @@ function move(direction: -1 | 1): void {
   notice.value = "";
 }
 async function loadPage(after: number): Promise<DuplicateWorkPage> {
-  return await $fetch<DuplicateWorkPage>(
-    `/api/admin/work-duplicates?after=${after}&limit=20`,
-  );
+  return await $fetch<DuplicateWorkPage>(`/api/admin/work-duplicates?after=${after}&limit=20`);
 }
 async function scan(): Promise<void> {
   if (!confirmDiscardChanges()) return;
@@ -770,17 +706,16 @@ async function scan(): Promise<void> {
   cursor.value = 0;
   groups.value = [];
   currentIndex.value = 0;
+  scanCompleted.value = false;
   try {
     const page = await loadPage(0);
     groups.value = page.items;
     cursor.value = page.nextCursor;
     totalGroups.value = page.totalGroups;
     resetFinalValues();
+    scanCompleted.value = true;
   } catch (cause: unknown) {
-    error.value =
-      cause instanceof Error
-        ? cause.message
-        : t("admin.duplicatesWork.scanFailed");
+    error.value = cause instanceof Error ? cause.message : t("admin.duplicatesWork.scanFailed");
   } finally {
     loading.value = false;
   }
@@ -796,19 +731,11 @@ async function loadNextPage(): Promise<void> {
     totalGroups.value = page.totalGroups;
     succeeded = true;
   } catch (cause: unknown) {
-    error.value =
-      cause instanceof Error
-        ? cause.message
-        : t("admin.duplicatesWork.scanFailed");
+    error.value = cause instanceof Error ? cause.message : t("admin.duplicatesWork.scanFailed");
   } finally {
     loading.value = false;
     if (
-      canPrefetchDuplicateWorkPage(
-        succeeded,
-        currentIndex.value,
-        groups.value.length,
-        cursor.value,
-      )
+      canPrefetchDuplicateWorkPage(succeeded, currentIndex.value, groups.value.length, cursor.value)
     ) {
       void loadNextPage();
     }
@@ -840,8 +767,7 @@ async function mergeGroup(): Promise<void> {
     if (groups.value.length === 0 && cursor.value !== null) await scan();
     else resetFinalValues();
   } catch (cause: unknown) {
-    const response =
-      cause && typeof cause === "object" && "data" in cause ? cause.data : null;
+    const response = cause && typeof cause === "object" && "data" in cause ? cause.data : null;
     const statusMessage =
       response && typeof response === "object" && "statusMessage" in response
         ? response.statusMessage
@@ -858,8 +784,7 @@ async function mergeGroup(): Promise<void> {
 }
 
 watch(currentIndex, async () => {
-  if (currentIndex.value >= groups.value.length - 2 && cursor.value !== null)
-    await loadNextPage();
+  if (currentIndex.value >= groups.value.length - 2 && cursor.value !== null) await loadNextPage();
 });
 onMounted(scan);
 </script>

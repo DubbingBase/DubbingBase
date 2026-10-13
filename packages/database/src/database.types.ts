@@ -762,6 +762,14 @@ export type Database = {
         Args: { p_after_group_id?: number; p_limit?: number };
         Returns: Json;
       };
+      find_work_role_identity_matches: {
+        Args: {
+          p_character_id: number | null;
+          p_character_name: string | null;
+          p_work_ids: number[];
+        };
+        Returns: number[];
+      };
       get_ready_media_queues: { Args: never; Returns: string[] };
       get_media_queue_depth: {
         Args: { p_queue_name?: string };

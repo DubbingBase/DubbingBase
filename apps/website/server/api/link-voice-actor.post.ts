@@ -2,10 +2,7 @@ import { requireUser } from "../utils/auth";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { findOrCreateDubbingProject } from "../utils/db/dubbing-project";
 import { requireDubbingLanguage } from "../utils/dubbing-language";
-import {
-  findUniqueWorkRoleMatch,
-  workRoleIdentityKey,
-} from "../utils/work-role-identity";
+import { findUniqueWorkRoleMatch } from "../utils/work-role-identity";
 
 export default defineEventHandler(async (event) => {
   const user = requireUser(event);
@@ -71,19 +68,15 @@ export default defineEventHandler(async (event) => {
   }
 
   if (!isAdmin) {
-    const { data: voiceActorLink, error: voiceActorLinkError } =
-      await supabaseAdmin
-        .from("user_voice_actor_links")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("voice_actor_id", voice_actor_id)
-        .maybeSingle();
+    const { data: voiceActorLink, error: voiceActorLinkError } = await supabaseAdmin
+      .from("user_voice_actor_links")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("voice_actor_id", voice_actor_id)
+      .maybeSingle();
 
     if (voiceActorLinkError) {
-      console.error(
-        "Error checking voice actor ownership:",
-        voiceActorLinkError,
-      );
+      console.error("Error checking voice actor ownership:", voiceActorLinkError);
       throw createError({
         statusCode: 500,
         message: "Failed to authorize voice actor",
@@ -122,10 +115,17 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, message: linkCheckError.message });
   }
 
-  const existingLink = findUniqueWorkRoleMatch(
-    existingLinks ?? [],
-    workRoleIdentityKey(null, character_name),
+  const { data: matchingWorkIds, error: identityMatchError } = await supabaseAdmin.rpc(
+    "find_work_role_identity_matches",
+    {
+      p_work_ids: (existingLinks ?? []).map(({ id }) => id),
+      p_character_id: null,
+      p_character_name: character_name,
+    },
   );
+  if (identityMatchError) throw identityMatchError;
+
+  const existingLink = findUniqueWorkRoleMatch(existingLinks ?? [], matchingWorkIds ?? []);
   if (existingLink) {
     return { ...existingLink, voiceActorDetails: voiceActor };
   }
@@ -139,11 +139,7 @@ export default defineEventHandler(async (event) => {
     ...(actor_id ? { actor_id } : {}),
   } satisfies Record<string, unknown>;
 
-  const { data, error } = await supabaseAdmin
-    .from("work")
-    .insert(insertData)
-    .select()
-    .single();
+  const { data, error } = await supabaseAdmin.from("work").insert(insertData).select().single();
 
   if (error) throw error;
 
