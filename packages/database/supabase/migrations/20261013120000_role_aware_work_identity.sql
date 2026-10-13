@@ -476,8 +476,13 @@ BEGIN
     FROM raw_credits
     ORDER BY lower(firstname), lower(lastname), actor_id,
       COALESCE(role_key, 'ambiguous:' || ordinal::text), ordinal DESC
-  ), resolved AS (
-    SELECT credits.*, actor.id AS voice_actor_id, existing.id AS existing_work_id
+  ), actor_resolved AS (
+    -- Keep ambiguous credits distinct, while matching each occurrence on replay.
+    SELECT credits.*, actor.id AS voice_actor_id,
+      row_number() OVER (
+        PARTITION BY actor.id, credits.actor_id, credits.role_key
+        ORDER BY credits.ordinal
+      ) AS match_ordinal
     FROM credits
     JOIN LATERAL (
       SELECT candidate.id FROM public.voice_actors AS candidate
@@ -487,14 +492,19 @@ BEGIN
         candidate.id
       LIMIT 1
     ) AS actor ON true
+  ), resolved AS (
+    SELECT credits.*, existing.id AS existing_work_id
+    FROM actor_resolved AS credits
     LEFT JOIN LATERAL (
       SELECT candidate.id FROM public.work AS candidate
-      WHERE credits.role_key IS NOT NULL
-        AND candidate.dubbing_project_id = v_project_id
-        AND candidate.voice_actor_id = actor.id
+      WHERE candidate.dubbing_project_id = v_project_id
+        AND candidate.voice_actor_id = credits.voice_actor_id
         AND candidate.actor_id = credits.actor_id
-        AND public.work_role_identity_key(candidate.character_id, candidate.character_name) = credits.role_key
-      ORDER BY candidate.id LIMIT 1
+        AND public.work_role_identity_key(candidate.character_id, candidate.character_name)
+          IS NOT DISTINCT FROM credits.role_key
+      ORDER BY candidate.id
+      OFFSET (credits.match_ordinal - 1)
+      LIMIT 1
     ) AS existing ON true
   )
   UPDATE public.work AS work
@@ -523,8 +533,12 @@ BEGIN
     FROM raw_credits
     ORDER BY lower(firstname), lower(lastname), actor_id,
       COALESCE(role_key, 'ambiguous:' || ordinal::text), ordinal DESC
-  ), resolved AS (
-    SELECT credits.*, actor.id AS voice_actor_id, existing.id AS existing_work_id
+  ), actor_resolved AS (
+    SELECT credits.*, actor.id AS voice_actor_id,
+      row_number() OVER (
+        PARTITION BY actor.id, credits.actor_id, credits.role_key
+        ORDER BY credits.ordinal
+      ) AS match_ordinal
     FROM credits
     JOIN LATERAL (
       SELECT candidate.id FROM public.voice_actors AS candidate
@@ -534,14 +548,19 @@ BEGIN
         candidate.id
       LIMIT 1
     ) AS actor ON true
+  ), resolved AS (
+    SELECT credits.*, existing.id AS existing_work_id
+    FROM actor_resolved AS credits
     LEFT JOIN LATERAL (
       SELECT candidate.id FROM public.work AS candidate
-      WHERE credits.role_key IS NOT NULL
-        AND candidate.dubbing_project_id = v_project_id
-        AND candidate.voice_actor_id = actor.id
+      WHERE candidate.dubbing_project_id = v_project_id
+        AND candidate.voice_actor_id = credits.voice_actor_id
         AND candidate.actor_id = credits.actor_id
-        AND public.work_role_identity_key(candidate.character_id, candidate.character_name) = credits.role_key
-      ORDER BY candidate.id LIMIT 1
+        AND public.work_role_identity_key(candidate.character_id, candidate.character_name)
+          IS NOT DISTINCT FROM credits.role_key
+      ORDER BY candidate.id
+      OFFSET (credits.match_ordinal - 1)
+      LIMIT 1
     ) AS existing ON true
   )
   INSERT INTO public.work(
@@ -551,6 +570,7 @@ BEGIN
     resolved.character_name, resolved.performance
   FROM resolved
   WHERE resolved.existing_work_id IS NULL
+  ORDER BY resolved.actor_id, resolved.voice_actor_id, resolved.role_key, resolved.match_ordinal
   ON CONFLICT DO NOTHING;
 
   RETURN jsonb_build_object('new_voice_actors', v_inserted_actors,
