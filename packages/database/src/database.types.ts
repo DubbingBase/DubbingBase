@@ -711,6 +711,15 @@ export type Database = {
         Args: { p_claim_id: string; p_user_id: string };
         Returns: { category: string; entity_id: string }[];
       };
+      submit_gamification_task_contribution: {
+        Args: {
+          p_claim_id: string;
+          p_is_admin?: boolean;
+          p_updates: Json;
+          p_user_id: string;
+        };
+        Returns: { points_awarded: number; status: string }[];
+      };
       archive_wiki_scan_with_outcome: {
         Args: {
           p_archive_details: string;

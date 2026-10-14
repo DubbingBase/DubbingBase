@@ -23,7 +23,7 @@ beforeAll(async () => {
 afterAll(() => vi.unstubAllGlobals());
 
 describe("voice actor profile-picture mutation paths", () => {
-  it("blocks non-admin profile-picture contributions before privileged storage writes", async () => {
+  it("rejects legacy unclaimed picture submissions before privileged storage writes", async () => {
     const upload = vi.fn();
     const supabaseAdmin = { storage: { from: vi.fn(() => ({ upload })) } };
     const form = new FormData();
@@ -43,7 +43,7 @@ describe("voice actor profile-picture mutation paths", () => {
     const response = await toWebHandler(app)(
       new Request("http://localhost/", { method: "POST", body: form }),
     );
-    expect(response.status).toBe(403);
+    expect(response.status).toBe(400);
     expect(upload).not.toHaveBeenCalled();
   });
 

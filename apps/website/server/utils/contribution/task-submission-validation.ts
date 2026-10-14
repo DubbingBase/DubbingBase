@@ -24,6 +24,7 @@ export type TaskContribution = {
 
 const MAX_UPLOAD_SIZE = 5 * 1024 * 1024;
 const socialFields = ["twitter", "instagram", "tiktok", "facebook"] as const;
+const claimIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const contributionFields: Record<TaskCategory, readonly string[]> = {
   enrich_voice_actor: [
@@ -44,6 +45,10 @@ const uploadField: Record<TaskCategory, string> = {
 
 function isTaskCategory(value: string): value is TaskCategory {
   return Object.hasOwn(contributionFields, value);
+}
+
+export function isTaskClaimId(value: unknown): value is string {
+  return typeof value === "string" && claimIdPattern.test(value);
 }
 
 function assertHttpUrl(value: string): void {
@@ -69,6 +74,7 @@ function assertDate(value: string): void {
   const year = Number(yearText);
   const month = Number(monthText);
   const day = Number(dayText);
+  if (year < 1) throw new Error("Invalid date");
   const date = new Date(0);
   date.setUTCHours(0, 0, 0, 0);
   date.setUTCFullYear(year, month - 1, day);
@@ -132,9 +138,7 @@ export function authorizeTaskContribution(input: {
 }
 
 export function validateTaskContribution(input: TaskContributionInput): TaskContribution {
-  if (typeof input.claimId !== "string" || !input.claimId.trim() || input.claimId.length > 256) {
-    throw new Error("Invalid claim id");
-  }
+  if (!isTaskClaimId(input.claimId)) throw new Error("Invalid claim id");
   if (!isTaskCategory(input.category)) throw new Error("Invalid category");
   if (!/^[1-9]\d*$/.test(input.entityId)) throw new Error("Invalid entity id");
   const entityId = Number(input.entityId);

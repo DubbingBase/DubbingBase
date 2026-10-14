@@ -9,7 +9,7 @@ const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
 function validInput(overrides: Partial<TaskContributionInput> = {}): TaskContributionInput {
   return {
-    claimId: "opaque-claim-id",
+    claimId: "c2e7345d-8f16-450a-b903-4f8c7b917f6a",
     category: "enrich_voice_actor",
     entityId: "42",
     fields: { nationality: "French" },
@@ -42,6 +42,7 @@ describe("task contribution validation", () => {
   );
 
   it("requires claim metadata and a concrete supported category", () => {
+    expect(() => validateTaskContribution(validInput({ claimId: "not-a-uuid" }))).toThrow();
     expect(() => validateTaskContribution(validInput({ claimId: " " }))).toThrow();
     expect(() => validateTaskContribution(validInput({ claimId: undefined }))).toThrow();
     expect(() => validateTaskContribution(validInput({ category: "any" }))).toThrow();
@@ -77,6 +78,14 @@ describe("task contribution validation", () => {
       validateTaskContribution(
         validInput({
           fields: { date_of_birth: "2023-02-29" },
+          currentValues: { date_of_birth: null },
+        }),
+      ),
+    ).toThrow();
+    expect(() =>
+      validateTaskContribution(
+        validInput({
+          fields: { date_of_birth: "0000-01-01" },
           currentValues: { date_of_birth: null },
         }),
       ),
