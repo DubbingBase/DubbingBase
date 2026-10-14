@@ -513,7 +513,6 @@ import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import { useRoute, useRouter } from "vue-router";
 import { NuxtLink } from "#components";
 
-import { fetchShowData } from "@app/shared-logic";
 import { computed, ref, watch } from "vue";
 import { refDebounced } from "@vueuse/core";
 import {
@@ -534,8 +533,11 @@ const route = useRoute();
 const isShowRoute = computed(() => route.params.seasonNumber === undefined);
 const router = useRouter();
 const supabase = useSupabaseClient();
-const showId =
-  (Array.isArray(route.params.id) ? route.params.id[0] : route.params.id) || "";
+const showId = computed(
+  () =>
+    (Array.isArray(route.params.id) ? route.params.id[0] : route.params.id) ||
+    "",
+);
 const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
 
 const user = useSupabaseUser();
@@ -546,18 +548,12 @@ const isAdmin = computed(() => {
 const { locale, t } = useI18n();
 const localePath = useLocalePath();
 
-const cacheKey = `show-${showId}-${locale.value}`;
+const { data, pending } = useShowPageData(showId, locale);
 
-const { data, pending } = useAsyncData(
-  cacheKey,
-  () => fetchShowData(showId, locale.value),
-  {
-    lazy: true,
-    getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
-  },
-);
-
-const serie = computed(() => data.value?.serie);
+const serie = computed(() => {
+  const show = data.value?.serie;
+  return show && String(show.id) === showId.value ? show : undefined;
+});
 type ShowSeasonItem = {
   season_number: number;
   name?: string | null;
@@ -870,7 +866,7 @@ useHead({
             property: "og:url",
             content: computed(
               () =>
-                `https://dubbingbase.com/show/${showId}${activeDubId.value ? `?dub=${activeDubId.value}` : ""}`,
+                `https://dubbingbase.com/show/${showId.value}${activeDubId.value ? `?dub=${activeDubId.value}` : ""}`,
             ),
           },
           {
@@ -933,7 +929,7 @@ useHead({
       {
         rel: "canonical",
         href: (() => {
-          const baseUrl = "https://dubbingbase.com/show/" + showId;
+          const baseUrl = "https://dubbingbase.com/show/" + showId.value;
           return activeDubId.value
             ? `${baseUrl}?dub=${activeDubId.value}`
             : baseUrl;
@@ -963,7 +959,7 @@ useHead({
               const json = JSON.stringify({
                 "@context": "https://schema.org",
                 "@type": "TVSeries",
-                url: `https://dubbingbase.com/show/${showId}`,
+                url: `https://dubbingbase.com/show/${showId.value}`,
                 name: title || t("search.tv", "Série"),
                 image: posterUrl.value || backdropUrl.value || "",
                 description:

@@ -1,6 +1,44 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import { setupMockApi, waitForVueHydration } from "./helpers/mock-api";
-import { MOCK_EPISODE, MOCK_MOVIE, MOCK_SEASON } from "./fixtures/mock-data";
+import {
+  MOCK_EPISODE,
+  MOCK_MOVIE,
+  MOCK_SEASON,
+  MOCK_SHOW,
+} from "./fixtures/mock-data";
+
+declare global {
+  interface HTMLElement {
+    __vue_app__?: {
+      config: {
+        globalProperties: {
+          $router?: { push: (path: string) => Promise<unknown> };
+        };
+      };
+    };
+  }
+}
+
+async function navigateClientSide(page: Page, path: string) {
+  await page.waitForFunction(() => {
+    return Boolean(
+      document.getElementById("__nuxt")?.__vue_app__?.config.globalProperties
+        .$router,
+    );
+  });
+  await page.evaluate(async (nextPath) => {
+    const router =
+      document.getElementById("__nuxt")?.__vue_app__?.config.globalProperties
+        .$router;
+    if (!router)
+      throw new Error("Nuxt router is not available after hydration");
+    await router.push(nextPath);
+  }, path);
+}
+
+function getAttribute(tag: string, name: string): string {
+  return tag.match(new RegExp(`\\b${name}="([^"]*)"`))?.[1] || "";
+}
 
 test.describe("Media Detail Pages", () => {
   test.beforeEach(async ({ page }) => {
@@ -179,11 +217,134 @@ test.describe("Media Detail Pages", () => {
     );
   });
 
+  test("server-renders season and episode metadata for every supported locale", async ({
+    page,
+  }) => {
+    test.setTimeout(120000);
+    const locales = [
+      { code: "en-US", prefix: "", seasonLabel: "Season 1" },
+      { code: "fr-FR", prefix: "/fr", seasonLabel: "Saison 1" },
+      { code: "es-ES", prefix: "/es", seasonLabel: "Temporada 1" },
+      { code: "ja-JP", prefix: "/ja", seasonLabel: "シーズン 1" },
+    ];
+
+    for (const locale of locales) {
+      await page.context().clearCookies();
+      await page.context().addCookies([
+        {
+          name: "user_lang",
+          value: locale.code.slice(0, 2).toLowerCase(),
+          url: "http://localhost:3050",
+          sameSite: "Lax",
+        },
+      ]);
+
+      for (const route of [
+        {
+          path: `${locale.prefix}/show/1396/season/1`,
+          canonicalPath: "/show/1396/season/1?dub=139601",
+          title: "Breaking Bad",
+          titleParts: ["Breaking Bad", locale.seasonLabel],
+        },
+        {
+          path: `${locale.prefix}/show/1396/season/1/episode/1`,
+          canonicalPath: "/show/1396/season/1/episode/1?dub=139601",
+          title: "Pilot",
+          titleParts: [locale.seasonLabel, "Pilot"],
+        },
+      ]) {
+        const response = await page.goto(route.path, {
+          waitUntil: "domcontentloaded",
+        });
+        const html = response ? await response.text() : "";
+        expect(html).not.toBe("");
+        expect(html).toMatch(
+          new RegExp(`<html\\b[^>]*\\blang="${locale.code}"`),
+        );
+
+        const canonicalTags =
+          html.match(/<link\b(?=[^>]*\brel="canonical")[^>]*>/g) || [];
+        const ogUrlTags =
+          html.match(/<meta\b(?=[^>]*\bproperty="og:url")[^>]*>/g) || [];
+        expect(canonicalTags).toHaveLength(1);
+        expect(ogUrlTags).toHaveLength(1);
+        expect(getAttribute(canonicalTags[0], "href")).toBe(
+          `https://dubbingbase.com${route.canonicalPath}`,
+        );
+        expect(getAttribute(ogUrlTags[0], "content")).toBe(
+          `https://dubbingbase.com${route.canonicalPath}`,
+        );
+        const alternateTags =
+          html.match(
+            /<link\b(?=[^>]*\brel="alternate")(?=[^>]*\bhreflang="[^"]+")[^>]*>/g,
+          ) || [];
+        const supportedAlternates = [
+          { code: "en-US", prefix: "" },
+          { code: "fr-FR", prefix: "/fr" },
+          { code: "es-ES", prefix: "/es" },
+          { code: "ja-JP", prefix: "/ja" },
+        ];
+        for (const alternate of supportedAlternates) {
+          const matchingTags = alternateTags.filter(
+            (tag) => getAttribute(tag, "hreflang") === alternate.code,
+          );
+          expect(matchingTags).toHaveLength(1);
+          const alternateUrl = new URL(getAttribute(matchingTags[0], "href"));
+          expect(alternateUrl.origin).toBe("https://dubbingbase.com");
+          expect(alternateUrl.pathname).toBe(
+            `${alternate.prefix}${route.canonicalPath.split("?")[0]}`,
+          );
+        }
+        const titleTag = html.match(/<title>(.*?)<\/title>/s)?.[1] || "";
+        for (const titlePart of route.titleParts) {
+          expect(titleTag).toContain(titlePart);
+        }
+        expect(html).toContain(route.title);
+        expect(html).not.toContain("Show 1396");
+      }
+    }
+  });
+
+  test("updates season locale and metadata after client-side locale navigation", async ({
+    page,
+  }) => {
+    await page.goto("/show/1396/season/1", { waitUntil: "domcontentloaded" });
+    await page.waitForFunction(() => {
+      return Boolean(document.getElementById("__nuxt")?.__vue_app__);
+    });
+
+    await expect(page.locator("html")).toHaveAttribute("lang", "en-US");
+    await expect(page).toHaveTitle(/Season 1/);
+
+    await page.locator('button[aria-label="Toggle language"]').click();
+    await page.getByText("Français", { exact: true }).click();
+
+    await expect(page.locator("html")).toHaveAttribute("lang", "fr-FR");
+    await expect(page).toHaveTitle(/Saison 1/);
+    await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
+    await expect(page.locator('meta[property="og:url"]')).toHaveCount(1);
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      "href",
+      "https://dubbingbase.com/show/1396/season/1?dub=139601",
+    );
+    await expect(page.locator('meta[property="og:url"]')).toHaveAttribute(
+      "content",
+      "https://dubbingbase.com/show/1396/season/1?dub=139601",
+    );
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
+      "content",
+      /Saison 1/,
+    );
+    await expect(
+      page.locator('link[rel="alternate"][hreflang="fr-FR"]'),
+    ).toHaveCount(1);
+  });
+
   test("navigates show to season to episode and preserves the selected dub", async ({
     page,
   }) => {
     await setupMockApi(page);
-    await page.goto("/show/1396");
+    await page.goto("/show/1396", { waitUntil: "domcontentloaded" });
 
     const seasonLink = page.locator('a[href*="/show/1396/season/1"]').first();
     await expect(seasonLink).toHaveAttribute("href", /dub=139601/);
@@ -220,27 +381,87 @@ test.describe("Media Detail Pages", () => {
     await expect(episodeImage).toHaveAttribute("decoding", "async");
   });
 
-  test("keeps the selected season after a slower previous request resolves", async ({
+  test("updates season show data across A to B to A with out-of-order responses", async ({
     page,
   }) => {
-    const firstSeason = structuredClone(MOCK_SEASON);
-    firstSeason.season.name = "Delayed season one";
-    const secondSeason = structuredClone(MOCK_SEASON);
-    secondSeason.season.season_number = 2;
-    secondSeason.season.name = "Selected season two";
-    let finishFirstSeasonRequest = () => {};
-    const firstSeasonRequestFinished = new Promise<void>((resolve) => {
-      finishFirstSeasonRequest = resolve;
+    const showA = structuredClone(MOCK_SHOW);
+    const showB = structuredClone(MOCK_SHOW);
+    showB.serie.id = 108978;
+    showB.serie.name = "Fargo";
+    showB.serie.title = "Fargo";
+
+    const seasonA = structuredClone(MOCK_SEASON);
+    seasonA.season.name = "Breaking Bad Season One";
+    const seasonB = structuredClone(MOCK_SEASON);
+    seasonB.season.id = 108978;
+    seasonB.season.season_number = 2;
+    seasonB.season.name = "Fargo Season Two";
+
+    let releaseSeasonA = () => {};
+    const seasonAGate = new Promise<void>((resolve) => {
+      releaseSeasonA = resolve;
+    });
+    let markSeasonAStarted = () => {};
+    const seasonAStarted = new Promise<void>((resolve) => {
+      markSeasonAStarted = resolve;
+    });
+    let releaseShowB = () => {};
+    const showBGate = new Promise<void>((resolve) => {
+      releaseShowB = resolve;
+    });
+    let markShowBStarted = () => {};
+    const showBStarted = new Promise<void>((resolve) => {
+      markShowBStarted = resolve;
+    });
+    let markSeasonBFinished = () => {};
+    const seasonBFinished = new Promise<void>((resolve) => {
+      markSeasonBFinished = resolve;
+    });
+    let releaseSeasonB = () => {};
+    const seasonBGate = new Promise<void>((resolve) => {
+      releaseSeasonB = resolve;
+    });
+    let markSeasonBStarted = () => {};
+    const seasonBStarted = new Promise<void>((resolve) => {
+      markSeasonBStarted = resolve;
+    });
+    let seasonARequests = 0;
+
+    await page.route("**/api/show/**", async (route) => {
+      const url = new URL(route.request().url());
+      if (url.pathname.endsWith("/108978")) {
+        markShowBStarted();
+        await showBGate;
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(showB),
+        });
+        return;
+      }
+
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(showA),
+      });
     });
 
     await page.route("**/api/season?**", async (route) => {
-      const seasonNumber = new URL(route.request().url()).searchParams.get(
-        "season_number",
-      );
-      const data = seasonNumber === "2" ? secondSeason : firstSeason;
+      const url = new URL(route.request().url());
+      const showId = url.searchParams.get("id");
+      const seasonNumber = url.searchParams.get("season_number");
+      const data = showId === "108978" ? seasonB : seasonA;
 
-      if (seasonNumber === "1") {
-        await new Promise((resolve) => setTimeout(resolve, 500));
+      if (showId === "108978") {
+        markSeasonBStarted();
+        await seasonBGate;
+      }
+
+      if (showId === "1396" && seasonNumber === "1" && seasonARequests === 0) {
+        seasonARequests += 1;
+        markSeasonAStarted();
+        await seasonAGate;
       }
 
       await route.fulfill({
@@ -248,120 +469,162 @@ test.describe("Media Detail Pages", () => {
         contentType: "application/json",
         body: JSON.stringify(data),
       });
-      if (seasonNumber === "1") finishFirstSeasonRequest();
+      if (showId === "108978") markSeasonBFinished();
     });
 
-    await page.goto("/show/1396");
-    const firstSeasonRequest = page.waitForRequest((request) => {
-      const url = new URL(request.url());
-      return (
-        url.pathname === "/api/season" &&
-        url.searchParams.get("id") === "1396" &&
-        url.searchParams.get("season_number") === "1"
-      );
-    });
-    await page.locator('a[href*="/show/1396/season/1"]').first().click();
-    await firstSeasonRequest;
-
-    const secondSeasonRequest = page.waitForRequest((request) => {
-      const url = new URL(request.url());
-      return (
-        url.pathname === "/api/season" &&
-        url.searchParams.get("id") === "108978" &&
-        url.searchParams.get("season_number") === "2"
-      );
-    });
-    await page.evaluate((path) => {
-      const state = window.history.state;
-      window.history.pushState(state, "", path);
-      window.dispatchEvent(new PopStateEvent("popstate", { state }));
-    }, "/show/108978/season/2");
-    await secondSeasonRequest;
+    await page.goto("/show/1396", { waitUntil: "domcontentloaded" });
+    await navigateClientSide(page, "/show/1396/season/1");
+    await seasonAStarted;
+    await navigateClientSide(page, "/show/108978/season/2");
+    await Promise.all([showBStarted, seasonBStarted]);
 
     await expect(page).toHaveURL(/\/show\/108978\/season\/2/);
+    await expect(page.locator(".animate-pulse").first()).toBeVisible();
+    await expect(page.locator("body")).not.toContainText("Breaking Bad");
+    await expect(page).not.toHaveTitle(/Breaking Bad/);
+    await expect(page.locator('meta[property="og:title"]')).not.toHaveAttribute(
+      "content",
+      /Breaking Bad/,
+    );
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       "href",
       /show\/108978\/season\/2/,
     );
-    await expect(page.locator("body")).toContainText(
-      "Show 108978 - Selected season two",
+    await expect(page).not.toHaveTitle(/Show 108978/);
+
+    releaseSeasonB();
+    await seasonBFinished;
+    await expect(page.locator("body")).toContainText("Fargo Season Two");
+
+    releaseShowB();
+    await expect(page).toHaveTitle(/Fargo/);
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
+      "content",
+      /Fargo/,
     );
-    await expect(page.locator("body")).not.toContainText("Breaking Bad");
-    await expect(page.locator("body")).toContainText("Selected season two");
-    await firstSeasonRequestFinished;
-    await expect(page.locator("body")).toContainText("Selected season two");
-    await expect(page.locator("body")).not.toContainText("Delayed season one");
+
+    releaseSeasonA();
+    await seasonAGate;
+    await expect(page.locator("body")).toContainText("Fargo Season Two");
+    await expect(page.locator("body")).not.toContainText(
+      "Breaking Bad Season One",
+    );
+
+    await navigateClientSide(page, "/show/1396/season/1");
+    await expect(page.locator("body")).toContainText("Breaking Bad Season One");
+    await expect(page).toHaveTitle(/Breaking Bad/);
   });
 
-  test("keeps the selected episode after a slower previous request resolves", async ({
+  test("updates episode data across A to B to A with out-of-order responses", async ({
     page,
   }) => {
-    const firstEpisode = structuredClone(MOCK_EPISODE);
-    firstEpisode.episode.name = "Delayed episode one";
-    const secondEpisode = structuredClone(MOCK_EPISODE);
-    secondEpisode.episode.episode_number = 2;
-    secondEpisode.episode.name = "Selected episode two";
-    let finishFirstEpisodeRequest = () => {};
-    const firstEpisodeRequestFinished = new Promise<void>((resolve) => {
-      finishFirstEpisodeRequest = resolve;
+    const episodeA = structuredClone(MOCK_EPISODE);
+    episodeA.episode.name = "Breaking Bad Delayed Episode One";
+    const episodeB = structuredClone(MOCK_EPISODE);
+    episodeB.episode.season_number = 2;
+    episodeB.episode.episode_number = 2;
+    episodeB.episode.name = "Fargo Selected Episode Two";
+    episodeB.episode.overview = "A new Fargo story begins.";
+    episodeB.episode.credits.cast[0].name = "Fargo Cast Actor";
+    episodeB.episode.credits.cast[0].character = "Fargo Character";
+    for (const project of episodeB.dubbingProjects) {
+      for (const work of project.works || []) {
+        if (work.actor_id === 17419) work.character_name = "Fargo Character";
+      }
+      for (const work of project.work || []) {
+        if (work.actor_id === 17419) work.character_name = "Fargo Character";
+      }
+    }
+
+    let releaseEpisodeA = () => {};
+    const episodeAGate = new Promise<void>((resolve) => {
+      releaseEpisodeA = resolve;
     });
+    let markEpisodeAStarted = () => {};
+    const episodeAStarted = new Promise<void>((resolve) => {
+      markEpisodeAStarted = resolve;
+    });
+    let releaseEpisodeB = () => {};
+    const episodeBGate = new Promise<void>((resolve) => {
+      releaseEpisodeB = resolve;
+    });
+    let markEpisodeBStarted = () => {};
+    const episodeBStarted = new Promise<void>((resolve) => {
+      markEpisodeBStarted = resolve;
+    });
+    let episodeARequests = 0;
 
     await page.route("**/api/episode?**", async (route) => {
-      const episodeNumber = new URL(route.request().url()).searchParams.get(
-        "episode_number",
-      );
-      const data = episodeNumber === "2" ? secondEpisode : firstEpisode;
+      const url = new URL(route.request().url());
+      const showId = url.searchParams.get("id");
 
-      if (episodeNumber === "1") {
-        await new Promise((resolve) => setTimeout(resolve, 500));
+      if (showId === "108978") {
+        markEpisodeBStarted();
+        await episodeBGate;
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(episodeB),
+        });
+        return;
       }
 
+      if (episodeARequests === 0) {
+        episodeARequests += 1;
+        markEpisodeAStarted();
+        await episodeAGate;
+      }
       await route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify(data),
+        body: JSON.stringify(episodeA),
       });
-      if (episodeNumber === "1") finishFirstEpisodeRequest();
     });
 
     await page.goto("/show/1396");
-    await page.locator('a[href*="/show/1396/season/1"]').first().click();
-    const firstEpisodeRequest = page.waitForRequest((request) => {
-      const url = new URL(request.url());
-      return (
-        url.pathname === "/api/episode" &&
-        url.searchParams.get("id") === "1396" &&
-        url.searchParams.get("episode_number") === "1"
-      );
-    });
-    await page.getByRole("link", { name: /Pilot/ }).first().click();
-    await firstEpisodeRequest;
+    await navigateClientSide(page, "/show/1396/season/1");
+    await navigateClientSide(page, "/show/1396/season/1/episode/1");
+    await episodeAStarted;
+    await navigateClientSide(page, "/show/108978/season/2/episode/2");
+    await episodeBStarted;
 
-    const secondEpisodeRequest = page.waitForRequest((request) => {
-      const url = new URL(request.url());
-      return (
-        url.pathname === "/api/episode" &&
-        url.searchParams.get("id") === "108978" &&
-        url.searchParams.get("season_number") === "1" &&
-        url.searchParams.get("episode_number") === "2"
-      );
-    });
-    await page.evaluate((path) => {
-      const state = window.history.state;
-      window.history.pushState(state, "", path);
-      window.dispatchEvent(new PopStateEvent("popstate", { state }));
-    }, "/show/108978/season/1/episode/2");
-    await secondEpisodeRequest;
-
-    await expect(page).toHaveURL(/\/show\/108978\/season\/1\/episode\/2/);
+    await expect(page).toHaveURL(/\/show\/108978\/season\/2\/episode\/2/);
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       "href",
-      /show\/108978\/season\/1\/episode\/2/,
+      /show\/108978\/season\/2\/episode\/2/,
     );
-    await expect(page.locator("body")).toContainText("Selected episode two");
-    await firstEpisodeRequestFinished;
-    await expect(page.locator("body")).toContainText("Selected episode two");
-    await expect(page.locator("body")).not.toContainText("Delayed episode one");
+    await expect(page.locator('meta[property="og:url"]')).toHaveAttribute(
+      "content",
+      /show\/108978\/season\/2\/episode\/2/,
+    );
+    await expect(page.locator("body")).not.toContainText(
+      "Breaking Bad Delayed Episode One",
+    );
+    await expect(page.locator("body")).not.toContainText("Walter White");
+
+    releaseEpisodeB();
+    await expect(page.locator("body")).toContainText(
+      "Fargo Selected Episode Two",
+    );
+    await expect(page.locator("body")).toContainText("Fargo Cast Actor");
+
+    releaseEpisodeA();
+    await episodeAGate;
+    await expect(page.locator("body")).toContainText(
+      "Fargo Selected Episode Two",
+    );
+    await expect(page.locator("body")).not.toContainText(
+      "Breaking Bad Delayed Episode One",
+    );
+
+    await navigateClientSide(page, "/show/1396/season/1/episode/1");
+    await expect(page.locator("body")).toContainText(
+      "Breaking Bad Delayed Episode One",
+    );
+    await expect(page.locator('meta[property="og:url"]')).toHaveAttribute(
+      "content",
+      /show\/1396\/season\/1\/episode\/1/,
+    );
   });
 
   test("mounts the season skeleton while the season request is delayed", async ({
