@@ -2,4 +2,4 @@
 "@app/website": patch
 ---
 
-Refresh show metadata with reactive route keys so season titles, page metadata, and rendered content follow cross-show navigation.
+Keep show, season, and episode data and metadata tied to the active route during cross-show navigation, clearing stale episode content while the next response loads.
