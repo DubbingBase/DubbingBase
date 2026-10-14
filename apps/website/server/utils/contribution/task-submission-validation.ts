@@ -7,7 +7,7 @@ export type TaskUpload = {
 };
 
 export type TaskContributionInput = {
-  claimId: string;
+  claimId: unknown;
   category: string;
   entityId: string;
   fields: Record<string, string>;
@@ -82,6 +82,7 @@ function assertDate(value: string): void {
 }
 
 function assertUpload(upload: TaskUpload): void {
+  if (!Buffer.isBuffer(upload.data)) throw new Error("Invalid image upload");
   if (!upload.data.length || upload.data.length > MAX_UPLOAD_SIZE)
     throw new Error("Invalid upload size");
   const type = upload.type?.toLowerCase();
@@ -131,7 +132,9 @@ export function authorizeTaskContribution(input: {
 }
 
 export function validateTaskContribution(input: TaskContributionInput): TaskContribution {
-  if (!input.claimId.trim() || input.claimId.length > 256) throw new Error("Invalid claim id");
+  if (typeof input.claimId !== "string" || !input.claimId.trim() || input.claimId.length > 256) {
+    throw new Error("Invalid claim id");
+  }
   if (!isTaskCategory(input.category)) throw new Error("Invalid category");
   if (!/^[1-9]\d*$/.test(input.entityId)) throw new Error("Invalid entity id");
   const entityId = Number(input.entityId);
@@ -155,11 +158,16 @@ export function validateTaskContribution(input: TaskContributionInput): TaskCont
   const updates: TaskContribution["updates"] = {};
   const socials: Record<string, string> = {};
   for (const [field, rawValue] of Object.entries(input.fields)) {
+    if (typeof rawValue !== "string") throw new Error("Contribution fields must be strings");
     const value = rawValue.trim();
     if (!value) throw new Error("Contribution fields cannot be empty");
     if (value.length > 10_000) throw new Error("Contribution field is too long");
     if (socialFields.some((socialField) => socialField === field)) {
+      if (!Object.hasOwn(input.currentValues, "social_media_links"))
+        throw new Error("Current value is required");
       const existing = input.currentValues.social_media_links;
+      if (existing !== null && (typeof existing !== "object" || Array.isArray(existing)))
+        throw new Error("Invalid current social links");
       const links = typeof existing === "object" && existing !== null ? existing : {};
       assertEmpty(Reflect.get(links, field), true);
       assertHttpUrl(value);
