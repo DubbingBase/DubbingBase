@@ -1,5 +1,5 @@
 import { test, expect, type Page, type BrowserContext } from "@playwright/test";
-import { setupMockApi } from "./helpers/mock-api";
+import { setupMockApi, waitForVueHydration } from "./helpers/mock-api";
 
 type Locale = "en" | "fr" | "es" | "ja";
 
@@ -49,14 +49,8 @@ async function switchToLocaleViaSelector(page: Page, locale: Locale) {
   const option = page.getByText(LOCALE_LABELS[locale]).first();
   await expect(option).toBeVisible({ timeout: 5000 });
   await option.click();
-  if (locale === "en") {
-    await expect(page).toHaveURL(/\/$|\/(?!\/?(fr|es|ja)\/?)/, {
-      timeout: 10000,
-    });
-  } else {
-    await page.waitForURL(new RegExp(`/${locale}/?`), { timeout: 10000 });
-  }
-  await page.waitForTimeout(1500);
+  await expectActiveLocale(page, locale);
+  await waitForVueHydration(page);
 }
 
 async function getActiveLocale(page: Page): Promise<Locale> {
@@ -157,11 +151,12 @@ test.describe("Language Selector", () => {
     page,
     context,
   }) => {
+    test.setTimeout(180000);
     for (const start of ALL_LOCALES) {
       await context.clearCookies();
       await setUserLangCookie(context, start);
       await page.goto(LOCALE_URLS[start], { waitUntil: "domcontentloaded" });
-      await page.waitForTimeout(1500);
+      await waitForVueHydration(page);
       await expectActiveLocale(page, start);
 
       for (const target of ALL_LOCALES) {

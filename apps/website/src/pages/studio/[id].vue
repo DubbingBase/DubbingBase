@@ -130,6 +130,7 @@
               >
                 <NuxtImg
                   v-if="project.media?.poster_path"
+                  loading="lazy"
                   :src="
                     project.media.poster_path.startsWith('http')
                       ? project.media.poster_path
@@ -249,6 +250,7 @@
                   <img
                     v-if="va.profile_picture"
                     :src="getProfileUrl(va.profile_picture)"
+                    loading="lazy"
                     decoding="async"
                     class="w-full h-full object-cover"
                     :alt="`${va.firstname} ${va.lastname}`"

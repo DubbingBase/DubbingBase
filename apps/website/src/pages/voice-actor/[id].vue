@@ -137,6 +137,7 @@
                     :src="studio.logo_url"
                     :alt="studio.name"
                     decoding="async"
+                    loading="lazy"
                     class="max-w-full max-h-full object-contain"
                   />
                 </div>
@@ -307,6 +308,7 @@
                         <NuxtImg
                           format="webp"
                           decoding="async"
+                          loading="lazy"
                           v-if="item.media.poster_path"
                           :src="resolveImageUrl(item.media.poster_path)"
                           :alt="getMediaTitle(item.media)"
@@ -359,6 +361,7 @@
                         <NuxtImg
                           format="webp"
                           decoding="async"
+                          loading="lazy"
                           v-if="item.data.actor.profile_picture"
                           :src="
                             resolveImageUrl(item.data.actor.profile_picture)
@@ -419,6 +422,7 @@
                         <NuxtImg
                           format="webp"
                           decoding="async"
+                          loading="lazy"
                           v-if="item.data.characterImage"
                           :src="resolveImageUrl(item.data.characterImage)"
                           :alt="item.data.character"
@@ -481,6 +485,7 @@
                     <NuxtImg
                       format="webp"
                       decoding="async"
+                      loading="lazy"
                       v-if="group.actor.profile_picture"
                       :src="resolveImageUrl(group.actor.profile_picture)"
                       :alt="group.actor.name || $t('voiceActor.unknownActor')"
@@ -512,6 +517,7 @@
                     <NuxtImg
                       format="webp"
                       decoding="async"
+                      loading="lazy"
                       v-if="group.actor.profile_picture"
                       :src="resolveImageUrl(group.actor.profile_picture)"
                       :alt="group.actor.name || $t('voiceActor.unknownActor')"
@@ -562,6 +568,7 @@
                           <NuxtImg
                             format="webp"
                             decoding="async"
+                            loading="lazy"
                             v-if="item.media.poster_path"
                             :src="resolveImageUrl(item.media.poster_path)"
                             :alt="getMediaTitle(item.media)"
@@ -610,6 +617,7 @@
                           <NuxtImg
                             format="webp"
                             decoding="async"
+                            loading="lazy"
                             v-if="item.data.characterImage"
                             :src="resolveImageUrl(item.data.characterImage)"
                             :alt="item.data.character"

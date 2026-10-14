@@ -3,7 +3,7 @@
     <MediaSkeleton v-if="pending && !season" />
     <MediaDetailsLayout
       v-else-if="season"
-      :title="`${serieName} - ${season.name || $t('details.season', { num: seasonNumber })}`"
+      :title="seasonPageTitle"
       :backdrop-url="backdropUrl"
       :poster-url="posterUrl"
       :loading="pending"
@@ -225,6 +225,7 @@
                 >
                   <NuxtImg
                     format="webp"
+                    loading="lazy"
                     v-if="episode.still_path"
                     :src="
                       episode.still_path.startsWith('http')
@@ -325,7 +326,6 @@
 import MediaDetailsLayout from "../../../../components/layout/MediaDetailsLayout.vue";
 import { useRoute, useRouter } from "vue-router";
 
-import { fetchShowData } from "@app/shared-logic";
 import { fetchSeasonPageData } from "../../../../utils/season-data";
 import { computed, ref } from "vue";
 import { ClapperboardIcon, ExternalLinkIcon, StarIcon } from "lucide-vue-next";
@@ -337,13 +337,15 @@ const route = useRoute();
 const isSeasonRoute = computed(() => route.params.episodeNumber === undefined);
 const router = useRouter();
 const supabase = useSupabaseClient();
-const showId = String(
-  Array.isArray(route.params.id) ? route.params.id[0] : route.params.id,
+const showId = computed(() =>
+  String(Array.isArray(route.params.id) ? route.params.id[0] : route.params.id),
 );
-const seasonNumber = Number(
-  Array.isArray(route.params.seasonNumber)
-    ? route.params.seasonNumber[0]
-    : route.params.seasonNumber,
+const seasonNumber = computed(() =>
+  Number(
+    Array.isArray(route.params.seasonNumber)
+      ? route.params.seasonNumber[0]
+      : route.params.seasonNumber,
+  ),
 );
 const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
 
@@ -356,15 +358,69 @@ const { locale, t } = useI18n();
 const localePath = useLocalePath();
 
 // Fetch show data for basic info
-const showCacheKey = `show-${showId}-${locale.value}`;
-const { data: showData } =
-  useNuxtData<Awaited<ReturnType<typeof fetchShowData>>>(showCacheKey);
+const { currentData: showData } = useShowPageData(showId, locale);
 
-const serie = computed(() => showData.value?.serie);
-const serieName = computed(() => serie.value?.name || `Show ${showId}`);
+const serie = computed(() => {
+  const show = showData.value?.serie;
+  return show && String(show.id) === showId.value ? show : undefined;
+});
+const serieName = computed(() => serie.value?.name || "");
+const seasonLabel = computed(
+  () => season.value?.name || t("details.season", { num: seasonNumber.value }),
+);
+const localizedSeasonNumber = computed(() =>
+  t("details.season", { num: seasonNumber.value }),
+);
+const seasonPageTitle = computed(() =>
+  serieName.value
+    ? `${serieName.value} - ${seasonLabel.value}`
+    : seasonLabel.value,
+);
+const seasonSeoTitle = computed(() => {
+  const year = season.value?.air_date
+    ? ` (${new Date(season.value.air_date).getFullYear()})`
+    : "";
+  let base = serieName.value
+    ? `${serieName.value} - ${localizedSeasonNumber.value}${year}`
+    : `${localizedSeasonNumber.value}${year}`;
+  if (activeDubProject.value) {
+    base += ` - ${t("details.dubbing", { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
+  }
+  return base.length > 55 ? base.substring(0, 52) + "..." : base;
+});
+const seasonSeoDescription = computed(() => {
+  const title = serieName.value
+    ? `${serieName.value} - ${localizedSeasonNumber.value}`
+    : "";
+  let description =
+    season.value?.overview ||
+    (title
+      ? t("seo.showDescription", { title })
+      : t("seo.showDescriptionFallback"));
+  if (activeDubProject.value && title) {
+    description =
+      t("seo.showDescriptionDubbing", {
+        lang: getDisplayLanguage(activeDubProject.value.language),
+        title,
+      }) +
+      " " +
+      description;
+  }
+  return description.length > 160
+    ? description.substring(0, 157) + "..."
+    : description;
+});
 
 // Fetch season data
-const seasonCacheKey = `season-${showId}-${seasonNumber}-${locale.value}`;
+const seasonRequestIdentity = computed(() => ({
+  showId: showId.value,
+  seasonNumber: seasonNumber.value,
+  locale: locale.value,
+}));
+const seasonCacheKey = computed(() => {
+  const { showId, seasonNumber, locale } = seasonRequestIdentity.value;
+  return `season-${showId}-${seasonNumber}-${locale}`;
+});
 const {
   data: seasonData,
   pending: seasonPending,
@@ -372,7 +428,14 @@ const {
 } = useAsyncData(
   seasonCacheKey,
   async () => {
-    return await fetchSeasonPageData(showId, seasonNumber, locale.value);
+    const requestIdentity = seasonRequestIdentity.value;
+    const response = await fetchSeasonPageData(
+      requestIdentity.showId,
+      requestIdentity.seasonNumber,
+      requestIdentity.locale,
+    );
+
+    return { requestIdentity, response };
   },
   {
     lazy: true,
@@ -380,10 +443,28 @@ const {
   },
 );
 
-const season = computed(() => seasonData.value?.season);
+const currentSeasonData = computed(() => {
+  const result = seasonData.value;
+  if (!result) return undefined;
+
+  const currentIdentity = seasonRequestIdentity.value;
+  const requestIdentity = result.requestIdentity;
+
+  if (
+    requestIdentity.showId !== currentIdentity.showId ||
+    requestIdentity.seasonNumber !== currentIdentity.seasonNumber ||
+    requestIdentity.locale !== currentIdentity.locale
+  ) {
+    return undefined;
+  }
+
+  return result.response;
+});
+
+const season = computed(() => currentSeasonData.value?.season);
 const dubbingProjects = computed(() => {
-  const projects = [...(seasonData.value?.dubbingProjects || [])].filter((p) =>
-    projectHasVoiceActor(p),
+  const projects = [...(currentSeasonData.value?.dubbingProjects || [])].filter(
+    (p) => projectHasVoiceActor(p),
   );
   const currentLocale = locale.value.toLowerCase();
   return projects.sort((a, b) => {
@@ -491,41 +572,14 @@ const formatDate = (dateString: string) => {
 useHead({
   title: computed(() => {
     if (!isSeasonRoute.value) return undefined;
-    const year = season.value?.air_date
-      ? ` (${new Date(season.value.air_date).getFullYear()})`
-      : "";
-    let base = `${serieName.value} - Saison ${seasonNumber}${year}`;
-    if (activeDubProject.value) {
-      base += ` - ${t("details.dubbing", { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
-    }
-    return base.length > 55 ? base.substring(0, 52) + "..." : base;
+    return seasonSeoTitle.value;
   }),
   meta: computed(() =>
     isSeasonRoute.value
       ? [
           {
             name: "description",
-            content: computed(() => {
-              const title = `${serieName.value} - Saison ${seasonNumber}`;
-              let desc =
-                season.value?.overview ||
-                (title
-                  ? t("seo.showDescription", { title })
-                  : t(
-                      "seo.showDescriptionFallback",
-                      "Découvrez le casting et les voix de la série.",
-                    ));
-              if (activeDubProject.value && title) {
-                desc =
-                  t("seo.showDescriptionDubbing", {
-                    lang: getDisplayLanguage(activeDubProject.value.language),
-                    title,
-                  }) +
-                  " " +
-                  desc;
-              }
-              return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
-            }),
+            content: seasonSeoDescription,
           },
           {
             name: "keywords",
@@ -537,40 +591,11 @@ useHead({
           },
           {
             property: "og:title",
-            content: computed(() => {
-              const year = season.value?.air_date
-                ? ` (${new Date(season.value.air_date).getFullYear()})`
-                : "";
-              let base = `${serieName.value} - Saison ${seasonNumber}${year}`;
-              if (activeDubProject.value) {
-                base += ` - ${t("details.dubbing", { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
-              }
-              return base.length > 55 ? base.substring(0, 52) + "..." : base;
-            }),
+            content: seasonSeoTitle,
           },
           {
             property: "og:description",
-            content: computed(() => {
-              const title = `${serieName.value} - Saison ${seasonNumber}`;
-              let desc =
-                season.value?.overview ||
-                (title
-                  ? t("seo.showDescription", { title })
-                  : t(
-                      "seo.showDescriptionFallback",
-                      "Découvrez le casting et les voix de la série.",
-                    ));
-              if (activeDubProject.value && title) {
-                desc =
-                  t("seo.showDescriptionDubbing", {
-                    lang: getDisplayLanguage(activeDubProject.value.language),
-                    title,
-                  }) +
-                  " " +
-                  desc;
-              }
-              return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
-            }),
+            content: seasonSeoDescription,
           },
           {
             property: "og:type",
@@ -580,7 +605,7 @@ useHead({
             property: "og:url",
             content: computed(
               () =>
-                `https://dubbingbase.com/show/${showId}/season/${seasonNumber}${activeDubId.value ? `?dub=${activeDubId.value}` : ""}`,
+                `https://dubbingbase.com/show/${showId.value}/season/${seasonNumber.value}${activeDubId.value ? `?dub=${activeDubId.value}` : ""}`,
             ),
           },
           {
@@ -593,40 +618,11 @@ useHead({
           },
           {
             name: "twitter:title",
-            content: computed(() => {
-              const year = season.value?.air_date
-                ? ` (${new Date(season.value.air_date).getFullYear()})`
-                : "";
-              let base = `${serieName.value} - Saison ${seasonNumber}${year}`;
-              if (activeDubProject.value) {
-                base += ` - ${t("details.dubbing", { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
-              }
-              return base.length > 55 ? base.substring(0, 52) + "..." : base;
-            }),
+            content: seasonSeoTitle,
           },
           {
             name: "twitter:description",
-            content: computed(() => {
-              const title = `${serieName.value} - Saison ${seasonNumber}`;
-              let desc =
-                season.value?.overview ||
-                (title
-                  ? t("seo.showDescription", { title })
-                  : t(
-                      "seo.showDescriptionFallback",
-                      "Découvrez le casting et les voix de la série.",
-                    ));
-              if (activeDubProject.value && title) {
-                desc =
-                  t("seo.showDescriptionDubbing", {
-                    lang: getDisplayLanguage(activeDubProject.value.language),
-                    title,
-                  }) +
-                  " " +
-                  desc;
-              }
-              return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
-            }),
+            content: seasonSeoDescription,
           },
           {
             name: "twitter:image",
@@ -645,7 +641,7 @@ useHead({
       {
         rel: "canonical",
         href: (() => {
-          const baseUrl = `https://dubbingbase.com/show/${showId}/season/${seasonNumber}`;
+          const baseUrl = `https://dubbingbase.com/show/${showId.value}/season/${seasonNumber.value}`;
           return activeDubId.value
             ? `${baseUrl}?dub=${activeDubId.value}`
             : baseUrl;

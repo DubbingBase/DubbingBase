@@ -298,6 +298,7 @@
                       <NuxtImg
                         format="webp"
                         decoding="async"
+                        loading="lazy"
                         v-if="char.mug_shot?.url"
                         :src="char.mug_shot.url"
                         class="w-full h-full object-cover"
@@ -342,6 +343,7 @@
                         <NuxtImg
                           format="webp"
                           decoding="async"
+                          loading="lazy"
                           v-if="char.voiceActor.profile_picture"
                           :src="char.voiceActor.profile_picture"
                           class="w-full h-full object-cover transition-transform duration-300"

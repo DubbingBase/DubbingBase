@@ -142,6 +142,7 @@
                   <NuxtImg
                     format="webp"
                     decoding="async"
+                    loading="lazy"
                     v-if="va.profile_picture"
                     :src="va.profile_picture"
                     :alt="`${va.firstname} ${va.lastname}`"
@@ -219,6 +220,7 @@
                       <NuxtImg
                         format="webp"
                         decoding="async"
+                        loading="lazy"
                         v-if="item.poster_path"
                         :src="resolveImageUrl(item.poster_path)"
                         :alt="item.title || item.name"
@@ -264,6 +266,7 @@
                       <NuxtImg
                         format="webp"
                         decoding="async"
+                        loading="lazy"
                         v-if="item.voice_actors[0].profile_picture"
                         :src="item.voice_actors[0].profile_picture"
                         :alt="`${item.voice_actors[0].firstname} ${item.voice_actors[0].lastname}`"

@@ -208,6 +208,7 @@
                   <NuxtImg
                     format="webp"
                     decoding="async"
+                    loading="lazy"
                     v-if="season.poster_path"
                     :src="season.poster_path"
                     class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
@@ -309,6 +310,7 @@
                       <NuxtImg
                         format="webp"
                         decoding="async"
+                        loading="lazy"
                         v-if="actor.profile_path"
                         :src="actor.profile_path"
                         class="w-full h-full object-cover transition-transform duration-300"
@@ -351,6 +353,7 @@
                       <NuxtImg
                         format="webp"
                         decoding="async"
+                        loading="lazy"
                         v-if="actor.characterImage"
                         :src="actor.characterImage"
                         class="w-full h-full object-cover"
@@ -410,6 +413,7 @@
                         <NuxtImg
                           format="webp"
                           decoding="async"
+                          loading="lazy"
                           v-if="actor.voiceActor.profile_picture"
                           :src="actor.voiceActor.profile_picture"
                           class="w-full h-full object-cover transition-transform duration-300"
@@ -509,7 +513,6 @@ import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import { useRoute, useRouter } from "vue-router";
 import { NuxtLink } from "#components";
 
-import { fetchShowData } from "@app/shared-logic";
 import { computed, ref, watch } from "vue";
 import { refDebounced } from "@vueuse/core";
 import {
@@ -530,8 +533,11 @@ const route = useRoute();
 const isShowRoute = computed(() => route.params.seasonNumber === undefined);
 const router = useRouter();
 const supabase = useSupabaseClient();
-const showId =
-  (Array.isArray(route.params.id) ? route.params.id[0] : route.params.id) || "";
+const showId = computed(
+  () =>
+    (Array.isArray(route.params.id) ? route.params.id[0] : route.params.id) ||
+    "",
+);
 const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
 
 const user = useSupabaseUser();
@@ -542,18 +548,12 @@ const isAdmin = computed(() => {
 const { locale, t } = useI18n();
 const localePath = useLocalePath();
 
-const cacheKey = `show-${showId}-${locale.value}`;
+const { currentData: data, pending } = useShowPageData(showId, locale);
 
-const { data, pending } = useAsyncData(
-  cacheKey,
-  () => fetchShowData(showId, locale.value),
-  {
-    lazy: true,
-    getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
-  },
-);
-
-const serie = computed(() => data.value?.serie);
+const serie = computed(() => {
+  const show = data.value?.serie;
+  return show && String(show.id) === showId.value ? show : undefined;
+});
 type ShowSeasonItem = {
   season_number: number;
   name?: string | null;
@@ -737,12 +737,13 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
 
 const searchQuery = ref("");
 const searchInput = ref("");
-const { page: castPage, setPage: setCastPage } = useUrlPagination("castPage");
+const { page: requestedCastPage, setPage: setCastPage } =
+  useUrlPagination("castPage");
 const debouncedSearch = refDebounced(searchInput, 150);
 watch(debouncedSearch, (val) => {
   searchQuery.value = val;
 });
-watch([searchQuery, activeDubId], () => void setCastPage(1));
+watch([searchQuery, () => route.query.dub], () => void setCastPage(1));
 
 const filteredCast = computed(() =>
   formattedCast.value.filter((actor: DisplayCastActor) => {
@@ -765,6 +766,12 @@ const filteredCast = computed(() =>
   }),
 );
 const castTotal = computed(() => filteredCast.value.length);
+// Keep pending or smaller result sets from handing an invalid page to the grid,
+// which would otherwise replace the active route while clamping it.
+const castPage = computed(() => {
+  const totalPages = Math.max(1, Math.ceil(castTotal.value / 12));
+  return requestedCastPage.value <= totalPages ? requestedCastPage.value : 1;
+});
 const castItems = computed(() => {
   const start = (castPage.value - 1) * 12;
   return filteredCast.value.slice(start, start + 12);
@@ -866,7 +873,7 @@ useHead({
             property: "og:url",
             content: computed(
               () =>
-                `https://dubbingbase.com/show/${showId}${activeDubId.value ? `?dub=${activeDubId.value}` : ""}`,
+                `https://dubbingbase.com/show/${showId.value}${activeDubId.value ? `?dub=${activeDubId.value}` : ""}`,
             ),
           },
           {
@@ -929,7 +936,7 @@ useHead({
       {
         rel: "canonical",
         href: (() => {
-          const baseUrl = "https://dubbingbase.com/show/" + showId;
+          const baseUrl = "https://dubbingbase.com/show/" + showId.value;
           return activeDubId.value
             ? `${baseUrl}?dub=${activeDubId.value}`
             : baseUrl;
@@ -959,7 +966,7 @@ useHead({
               const json = JSON.stringify({
                 "@context": "https://schema.org",
                 "@type": "TVSeries",
-                url: `https://dubbingbase.com/show/${showId}`,
+                url: `https://dubbingbase.com/show/${showId.value}`,
                 name: title || t("search.tv", "Série"),
                 image: posterUrl.value || backdropUrl.value || "",
                 description:
