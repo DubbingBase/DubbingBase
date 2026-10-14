@@ -24,6 +24,9 @@ test.describe("Studio Profile & Dubbed Projects", () => {
 
     // Verify voice actor roster
     await expect(page.locator("body")).toContainText("Richard Darbois");
+    await expect(
+      page.getByRole("img", { name: "Richard Darbois" }).first(),
+    ).toHaveAttribute("loading", "lazy");
 
     api.expectNoErrors();
   });

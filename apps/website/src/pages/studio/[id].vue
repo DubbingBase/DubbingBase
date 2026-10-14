@@ -250,6 +250,7 @@
                   <img
                     v-if="va.profile_picture"
                     :src="getProfileUrl(va.profile_picture)"
+                    loading="lazy"
                     decoding="async"
                     class="w-full h-full object-cover"
                     :alt="`${va.firstname} ${va.lastname}`"
