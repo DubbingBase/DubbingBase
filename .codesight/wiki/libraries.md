@@ -2,9 +2,9 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**96 library files** across 5 modules
+**97 library files** across 5 modules
 
-## Website (56 files)
+## Website (57 files)
 
 - `apps/website/server/utils/cache/wikipedia.ts` — sortLanguagesByPopularity, extractAvailableLanguages, cleanHeadingText, isDubbingSectionHeading, selectDubbingCandidateSections, selectDubbingSections, …
 - `apps/website/server/utils/index.ts` — getCloudflareKv, useCache, useTmdbClient, useTvdbClient, useIgdbClient, useOpenLibraryClient, …
@@ -31,7 +31,7 @@
 - `apps/website/server/utils/services/media.ts` — MediaService, WIKIPEDIA_ACTOR_URL_NAMESPACE, MEDIA_TVDB_CHARACTERS_NAMESPACE
 - `apps/website/server/utils/services/wiki-extraction-sections.ts` — getValidatedExtractionSections, ScanSectionMetadata, ValidatedExtractionSections
 - `apps/website/server/utils/api/openlibrary.ts` — buildOpenLibraryCoverUrl, OpenLibraryClient
-- _…and 31 more files_
+- _…and 32 more files_
 
 ## Shared-logic (20 files)
 
