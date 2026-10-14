@@ -91,7 +91,7 @@ doppler run -- mise run website
   - **Complex requests** (multi-table joins, mutations with side effects, calls to external APIs, or any logic requiring elevated privileges) **MUST go through a Nuxt Nitro Server Route (`/api/...`)**.
   - If a composable is wrapping only simple DB queries, it does not need to route through a server API route. If the composable's logic grows in complexity, migrate it to a Nitro server route at that point.
 - **Vue 3**: Use the **Composition API** exclusively with `<script setup lang="ts">` syntax.
-- **Formatting**: Always run `pnpm format` to format code with Prettier before committing.
+- **Formatting**: Format only changed, in-scope files with the applicable formatter. `mise run format-staged` is suitable when the staged set is in scope. Do not run repository-wide `pnpm format` for agent work: it can touch excluded `apps/mobile` and unrelated files.
 - **Design & Theme**: The app follows a premium dark theme. Ensure consistent UI/UX when creating or modifying components. Avoid using default Ionic variables if they result in poor contrast. Instead, explicitly use the established dark theme colors (e.g., `#1d1d1d` for card backgrounds, `#e0e0e0` for primary text, `#a0a0a0` for secondary text, `#2a2a2a` for borders) or the app's custom CSS variables to maintain a cohesive design.
 - **Presentation Layer Unified Types**: Create unified interfaces for display purposes (e.g., `DisplayMedia`, `DisplayVoiceActor`) instead of passing raw, complex database types (like union types such as `Movie | Serie`) directly to UI components. This allows the presentation layer to have unified and clean types, and isolates UI templates from underlying database schema complexities.
 
@@ -161,6 +161,102 @@ Backend routes in `apps/website/server/api/` handle integration with TMDB, TVDB,
 
 ---
 
+## ✅ Verification — ship efficiently, protect production data
+
+Shipping correct changes is the goal. Verification should provide useful
+confidence in the affected behavior, not grow into repetitive test runs.
+Use the smallest risk-appropriate checks that establish the task's acceptance
+criteria. The mobile exclusion, production safety rules, and area-specific
+mandatory regressions in this file always remain in force.
+
+### Iteration and stopping rule
+
+- Implement a coherent change before routine validation. Run a focused
+  check sooner only when it resolves a concrete uncertainty.
+- Plan one focused verification pass near completion. Do not run tests,
+  typechecks, formatting or builds after every small edit.
+- If a check fails, fix the cause and rerun the failed check and any other
+  checks affected by that fix. Do not repeat previously successful checks
+  when their relevant inputs have not changed.
+- Prefer existing focused tests and meaningful regression assertions over
+  testing incidental implementation details. Use browser journeys or
+  screenshots when the actual user-facing interaction needs checking, not
+  as an automatic second test suite.
+- **Stop** when the acceptance criteria are met and the appropriate checks
+  pass. Do not add a full build or another test round merely for reassurance.
+  A genuine failure or unverified material risk is a reason to continue,
+  not a reason to declare success.
+
+### Choose verification by risk
+
+- **Low risk** — docs, copy, isolated styling, and nonfunctional edits:
+  inspect the diff and relevant rendered output if needed. Application
+  tests, typechecks and builds are not required without a specific reason.
+- **Normal risk** — website UI behavior, ordinary read-only API logic,
+  typed interfaces, and bug fixes: run focused relevant tests; typecheck
+  the affected website/package when types or contracts might be affected.
+  Run a targeted browser check when unit tests cannot validate the changed
+  interaction. Avoid unrelated workspace-wide checks.
+- **High risk** — authentication/authorization, RLS or grants, privileged
+  server routes, writes to user or editorial data, bulk imports, workflow
+  queues, data transformations, schema migrations, backfills, and release
+  behavior: use targeted integration/SQL tests in an isolated local
+  environment, the affected typechecks/builds, and additional verification
+  for plausible failure modes. These checks are required where relevant;
+  shipping-first is not permission to skip data-safety evidence.
+
+Prefer Mise tasks and scoped website/database commands over broad monorepo
+commands. CI should handle routine full-suite verification; do not duplicate
+it locally unless the change's risk, scope, or a failing CI job requires
+investigation. Do not run commands that include `apps/mobile`.
+
+### Database migrations and production-data safeguards
+
+For any migration, backfill, destructive update, constraint, RLS/grant, or
+data-integrity change, complete these gates **before claiming readiness**:
+
+1. Inspect the existing migrations, current intended schema, dependencies,
+   and deployment ordering. Review affected rows, constraints, foreign keys,
+   triggers, permissions/RLS, and compatibility with the running website.
+2. Rehearse migrations on isolated **local** Supabase, starting from the
+   applicable prior schema or migration checkpoint. For data-dependent
+   changes, use synthetic edge-case fixtures or a representative,
+   authorized local snapshot. Check before/after row counts, relationships,
+   uniqueness, security denials, and preservation of unrelated or manually
+   curated data. A clean-schema migration pass alone is not sufficient
+   evidence for a risky data transformation.
+3. Inspect destructive or irreversible operations and define a practical
+   rollback or forward-recovery strategy, including backup/restore
+   considerations and whether the migration can safely coexist with a
+   rolling application deployment. Regenerate database types with
+   `mise run gen-types` when the schema changes.
+4. Before any local reset or data-replacement command, confirm that the
+   target is local and that disposable test data, not work worth preserving,
+   will be erased. Never test writes against production or a linked remote
+   database. No production write, remote migration, or manual deployment is
+   authorized by this verification policy.
+5. Production-derived fixtures are **not required by default**. Read-only
+   production access or refresh requires the user's explicit request under
+   the existing production-backed refresh rules. Never log, commit, or
+   expose production records, dumps, tokens, or personal data.
+
+If the needed local rehearsal or critical integrity evidence is unavailable,
+report the gap and keep the high-risk change unverified; do not replace it
+with repetitive unrelated tests. Preserve any more specific validation
+requirements, including the revision-pinned Wikipedia dubbing corpus
+regressions for relevant classifier/evidence changes.
+
+### Report verification once
+
+Summarize checks actually run, what passed or failed, material omissions,
+and residual risk. Do not claim a check passed unless it ran successfully.
+Reviewers should inspect the diff, Plane acceptance criteria, and available
+evidence before repeating expensive checks. Shipping-first changes only
+the amount of redundant validation, never the required product behavior,
+security, or data-integrity guarantees.
+
+---
+
 ## 🤖 AI Agent Behavior Guidelines
 
 For changes to Wikipedia dubbing section selection, wikitext processing, regional
@@ -171,7 +267,7 @@ relevant revision-pinned real-page regressions described there.
 1. **Research First**: Before writing code, inspect existing files, imports, and state to understand the setup.
 2. **Preserve Comments**: Keep existing comments and docstrings unless explicitly told to remove them.
 3. **Precise Code Changes**: Make targeted edits instead of rewriting large files.
-4. **Validation**: Test compilation and run formatter tools before completing your turn.
+4. **Validation**: Follow the risk-based **Verification** policy below. Do not require compilation or a repository-wide formatter run for every change; use the relevant focused checks and changed-file formatting.
 5. **Wrangler / Cloudflare deploys**: `apps/website` deploys via `git push` to `main` (CI/CD pipeline). Do NOT run `wrangler deploy` locally — `CLOUDFLARE_API_TOKEN` is not set in the dev environment. To pause or resume cron triggers, edit `crons` in `apps/website/wrangler.toml`, commit, and push to `main`.
 6. **Production and local environments**: Never perform production writes, remote migrations, or live deployments. By default, target local development only. A production read to refresh local data is allowed only when the user explicitly requests it and the destination is local. **Never run `supabase db push` or `supabase functions deploy` directly.** All remote deployments must happen strictly through the CI/CD pipeline on the `main` branch.
 7. **Token Saving**: Use `rtk` (binary) (https://github.com/rtk-ai/rtk) to save tokens whenever possible.
