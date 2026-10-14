@@ -181,18 +181,30 @@ export type Database = {
       gamification_task_locks: {
         Row: {
           category: string;
+          claim_id: string;
+          consumed_at: string | null;
           entity_id: string;
+          expires_at: string;
           locked_at: string | null;
+          user_id: string | null;
         };
         Insert: {
           category: string;
+          claim_id?: string;
+          consumed_at?: string | null;
           entity_id: string;
+          expires_at?: string;
           locked_at?: string | null;
+          user_id?: string | null;
         };
         Update: {
           category?: string;
+          claim_id?: string;
+          consumed_at?: string | null;
           entity_id?: string;
+          expires_at?: string;
           locked_at?: string | null;
+          user_id?: string | null;
         };
         Relationships: [];
       };
@@ -685,6 +697,19 @@ export type Database = {
           p_msg_id: number;
         };
         Returns: boolean;
+      };
+      claim_gamification_task: {
+        Args: { p_category: string; p_user_id: string };
+        Returns: {
+          category: string;
+          claim_id: string | null;
+          expires_at: string | null;
+          task: Json | null;
+        }[];
+      };
+      consume_gamification_task_claim: {
+        Args: { p_claim_id: string; p_user_id: string };
+        Returns: { category: string; entity_id: string }[];
       };
       archive_wiki_scan_with_outcome: {
         Args: {
