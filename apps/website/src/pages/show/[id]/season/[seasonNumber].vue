@@ -225,6 +225,7 @@
                 >
                   <NuxtImg
                     format="webp"
+                    loading="lazy"
                     v-if="episode.still_path"
                     :src="
                       episode.still_path.startsWith('http')
@@ -337,13 +338,15 @@ const route = useRoute();
 const isSeasonRoute = computed(() => route.params.episodeNumber === undefined);
 const router = useRouter();
 const supabase = useSupabaseClient();
-const showId = String(
-  Array.isArray(route.params.id) ? route.params.id[0] : route.params.id,
+const showId = computed(() =>
+  String(Array.isArray(route.params.id) ? route.params.id[0] : route.params.id),
 );
-const seasonNumber = Number(
-  Array.isArray(route.params.seasonNumber)
-    ? route.params.seasonNumber[0]
-    : route.params.seasonNumber,
+const seasonNumber = computed(() =>
+  Number(
+    Array.isArray(route.params.seasonNumber)
+      ? route.params.seasonNumber[0]
+      : route.params.seasonNumber,
+  ),
 );
 const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
 
@@ -356,15 +359,20 @@ const { locale, t } = useI18n();
 const localePath = useLocalePath();
 
 // Fetch show data for basic info
-const showCacheKey = `show-${showId}-${locale.value}`;
+const showCacheKey = `show-${showId.value}-${locale.value}`;
 const { data: showData } =
   useNuxtData<Awaited<ReturnType<typeof fetchShowData>>>(showCacheKey);
 
-const serie = computed(() => showData.value?.serie);
-const serieName = computed(() => serie.value?.name || `Show ${showId}`);
+const serie = computed(() => {
+  const show = showData.value?.serie;
+  return show && String(show.id) === showId.value ? show : undefined;
+});
+const serieName = computed(() => serie.value?.name || `Show ${showId.value}`);
 
 // Fetch season data
-const seasonCacheKey = `season-${showId}-${seasonNumber}-${locale.value}`;
+const seasonCacheKey = computed(
+  () => `season-${showId.value}-${seasonNumber.value}-${locale.value}`,
+);
 const {
   data: seasonData,
   pending: seasonPending,
@@ -372,7 +380,11 @@ const {
 } = useAsyncData(
   seasonCacheKey,
   async () => {
-    return await fetchSeasonPageData(showId, seasonNumber, locale.value);
+    return await fetchSeasonPageData(
+      showId.value,
+      seasonNumber.value,
+      locale.value,
+    );
   },
   {
     lazy: true,
@@ -494,7 +506,7 @@ useHead({
     const year = season.value?.air_date
       ? ` (${new Date(season.value.air_date).getFullYear()})`
       : "";
-    let base = `${serieName.value} - Saison ${seasonNumber}${year}`;
+    let base = `${serieName.value} - Saison ${seasonNumber.value}${year}`;
     if (activeDubProject.value) {
       base += ` - ${t("details.dubbing", { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
     }
@@ -506,7 +518,7 @@ useHead({
           {
             name: "description",
             content: computed(() => {
-              const title = `${serieName.value} - Saison ${seasonNumber}`;
+              const title = `${serieName.value} - Saison ${seasonNumber.value}`;
               let desc =
                 season.value?.overview ||
                 (title
@@ -541,7 +553,7 @@ useHead({
               const year = season.value?.air_date
                 ? ` (${new Date(season.value.air_date).getFullYear()})`
                 : "";
-              let base = `${serieName.value} - Saison ${seasonNumber}${year}`;
+              let base = `${serieName.value} - Saison ${seasonNumber.value}${year}`;
               if (activeDubProject.value) {
                 base += ` - ${t("details.dubbing", { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
               }
@@ -551,7 +563,7 @@ useHead({
           {
             property: "og:description",
             content: computed(() => {
-              const title = `${serieName.value} - Saison ${seasonNumber}`;
+              const title = `${serieName.value} - Saison ${seasonNumber.value}`;
               let desc =
                 season.value?.overview ||
                 (title
@@ -580,7 +592,7 @@ useHead({
             property: "og:url",
             content: computed(
               () =>
-                `https://dubbingbase.com/show/${showId}/season/${seasonNumber}${activeDubId.value ? `?dub=${activeDubId.value}` : ""}`,
+                `https://dubbingbase.com/show/${showId.value}/season/${seasonNumber.value}${activeDubId.value ? `?dub=${activeDubId.value}` : ""}`,
             ),
           },
           {
@@ -597,7 +609,7 @@ useHead({
               const year = season.value?.air_date
                 ? ` (${new Date(season.value.air_date).getFullYear()})`
                 : "";
-              let base = `${serieName.value} - Saison ${seasonNumber}${year}`;
+              let base = `${serieName.value} - Saison ${seasonNumber.value}${year}`;
               if (activeDubProject.value) {
                 base += ` - ${t("details.dubbing", { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
               }
@@ -607,7 +619,7 @@ useHead({
           {
             name: "twitter:description",
             content: computed(() => {
-              const title = `${serieName.value} - Saison ${seasonNumber}`;
+              const title = `${serieName.value} - Saison ${seasonNumber.value}`;
               let desc =
                 season.value?.overview ||
                 (title
@@ -645,7 +657,7 @@ useHead({
       {
         rel: "canonical",
         href: (() => {
-          const baseUrl = `https://dubbingbase.com/show/${showId}/season/${seasonNumber}`;
+          const baseUrl = `https://dubbingbase.com/show/${showId.value}/season/${seasonNumber.value}`;
           return activeDubId.value
             ? `${baseUrl}?dub=${activeDubId.value}`
             : baseUrl;

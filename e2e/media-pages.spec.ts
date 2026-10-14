@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { setupMockApi, waitForVueHydration } from "./helpers/mock-api";
-import { MOCK_MOVIE, MOCK_SEASON } from "./fixtures/mock-data";
+import { MOCK_EPISODE, MOCK_MOVIE, MOCK_SEASON } from "./fixtures/mock-data";
 
 test.describe("Media Detail Pages", () => {
   test.beforeEach(async ({ page }) => {
@@ -207,6 +207,161 @@ test.describe("Media Detail Pages", () => {
     await page.goto("/show/1396/season/0");
     await expect(page.locator("body")).toContainText("Specials");
     await expect(page.getByRole("heading", { name: "Episodes" })).toBeVisible();
+  });
+
+  test("lazy-loads and asynchronously decodes season episode thumbnails", async ({
+    page,
+  }) => {
+    await setupMockApi(page);
+    await page.goto("/show/1396/season/1");
+
+    const episodeImage = page.locator('img[alt="Episode"]').first();
+    await expect(episodeImage).toHaveAttribute("loading", "lazy");
+    await expect(episodeImage).toHaveAttribute("decoding", "async");
+  });
+
+  test("keeps the selected season after a slower previous request resolves", async ({
+    page,
+  }) => {
+    const firstSeason = structuredClone(MOCK_SEASON);
+    firstSeason.season.name = "Delayed season one";
+    const secondSeason = structuredClone(MOCK_SEASON);
+    secondSeason.season.season_number = 2;
+    secondSeason.season.name = "Selected season two";
+    let finishFirstSeasonRequest = () => {};
+    const firstSeasonRequestFinished = new Promise<void>((resolve) => {
+      finishFirstSeasonRequest = resolve;
+    });
+
+    await page.route("**/api/season?**", async (route) => {
+      const seasonNumber = new URL(route.request().url()).searchParams.get(
+        "season_number",
+      );
+      const data = seasonNumber === "2" ? secondSeason : firstSeason;
+
+      if (seasonNumber === "1") {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(data),
+      });
+      if (seasonNumber === "1") finishFirstSeasonRequest();
+    });
+
+    await page.goto("/show/1396");
+    const firstSeasonRequest = page.waitForRequest((request) => {
+      const url = new URL(request.url());
+      return (
+        url.pathname === "/api/season" &&
+        url.searchParams.get("id") === "1396" &&
+        url.searchParams.get("season_number") === "1"
+      );
+    });
+    await page.locator('a[href*="/show/1396/season/1"]').first().click();
+    await firstSeasonRequest;
+
+    const secondSeasonRequest = page.waitForRequest((request) => {
+      const url = new URL(request.url());
+      return (
+        url.pathname === "/api/season" &&
+        url.searchParams.get("id") === "108978" &&
+        url.searchParams.get("season_number") === "2"
+      );
+    });
+    await page.evaluate((path) => {
+      const state = window.history.state;
+      window.history.pushState(state, "", path);
+      window.dispatchEvent(new PopStateEvent("popstate", { state }));
+    }, "/show/108978/season/2");
+    await secondSeasonRequest;
+
+    await expect(page).toHaveURL(/\/show\/108978\/season\/2/);
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      "href",
+      /show\/108978\/season\/2/,
+    );
+    await expect(page.locator("body")).toContainText(
+      "Show 108978 - Selected season two",
+    );
+    await expect(page.locator("body")).not.toContainText("Breaking Bad");
+    await expect(page.locator("body")).toContainText("Selected season two");
+    await firstSeasonRequestFinished;
+    await expect(page.locator("body")).toContainText("Selected season two");
+    await expect(page.locator("body")).not.toContainText("Delayed season one");
+  });
+
+  test("keeps the selected episode after a slower previous request resolves", async ({
+    page,
+  }) => {
+    const firstEpisode = structuredClone(MOCK_EPISODE);
+    firstEpisode.episode.name = "Delayed episode one";
+    const secondEpisode = structuredClone(MOCK_EPISODE);
+    secondEpisode.episode.episode_number = 2;
+    secondEpisode.episode.name = "Selected episode two";
+    let finishFirstEpisodeRequest = () => {};
+    const firstEpisodeRequestFinished = new Promise<void>((resolve) => {
+      finishFirstEpisodeRequest = resolve;
+    });
+
+    await page.route("**/api/episode?**", async (route) => {
+      const episodeNumber = new URL(route.request().url()).searchParams.get(
+        "episode_number",
+      );
+      const data = episodeNumber === "2" ? secondEpisode : firstEpisode;
+
+      if (episodeNumber === "1") {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(data),
+      });
+      if (episodeNumber === "1") finishFirstEpisodeRequest();
+    });
+
+    await page.goto("/show/1396");
+    await page.locator('a[href*="/show/1396/season/1"]').first().click();
+    const firstEpisodeRequest = page.waitForRequest((request) => {
+      const url = new URL(request.url());
+      return (
+        url.pathname === "/api/episode" &&
+        url.searchParams.get("id") === "1396" &&
+        url.searchParams.get("episode_number") === "1"
+      );
+    });
+    await page.getByRole("link", { name: /Pilot/ }).first().click();
+    await firstEpisodeRequest;
+
+    const secondEpisodeRequest = page.waitForRequest((request) => {
+      const url = new URL(request.url());
+      return (
+        url.pathname === "/api/episode" &&
+        url.searchParams.get("id") === "108978" &&
+        url.searchParams.get("season_number") === "1" &&
+        url.searchParams.get("episode_number") === "2"
+      );
+    });
+    await page.evaluate((path) => {
+      const state = window.history.state;
+      window.history.pushState(state, "", path);
+      window.dispatchEvent(new PopStateEvent("popstate", { state }));
+    }, "/show/108978/season/1/episode/2");
+    await secondEpisodeRequest;
+
+    await expect(page).toHaveURL(/\/show\/108978\/season\/1\/episode\/2/);
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      "href",
+      /show\/108978\/season\/1\/episode\/2/,
+    );
+    await expect(page.locator("body")).toContainText("Selected episode two");
+    await firstEpisodeRequestFinished;
+    await expect(page.locator("body")).toContainText("Selected episode two");
+    await expect(page.locator("body")).not.toContainText("Delayed episode one");
   });
 
   test("mounts the season skeleton while the season request is delayed", async ({

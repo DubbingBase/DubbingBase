@@ -265,6 +265,7 @@
                         v-if="actor.profile_path"
                         :src="actor.profile_path"
                         decoding="async"
+                        loading="lazy"
                         class="w-full h-full object-cover transition-transform duration-300"
                         alt="Actor"
                       />
@@ -307,6 +308,7 @@
                         v-if="actor.characterImage"
                         :src="actor.characterImage"
                         decoding="async"
+                        loading="lazy"
                         class="w-full h-full object-cover"
                         alt="Character"
                       />
@@ -358,6 +360,7 @@
                           v-if="actor.voiceActor.profile_picture"
                           :src="actor.voiceActor.profile_picture"
                           decoding="async"
+                          loading="lazy"
                           class="w-full h-full object-cover transition-transform duration-300"
                           alt="Voice Actor"
                         />
@@ -518,16 +521,23 @@ const { page: castPage, setPage: setCastPage } = useUrlPagination("castPage");
 const route = useRoute();
 const router = useRouter();
 const supabase = useSupabaseClient();
-const showId =
-  (Array.isArray(route.params.id) ? route.params.id[0] : route.params.id) || "";
-const seasonNumber =
-  (Array.isArray(route.params.seasonNumber)
-    ? route.params.seasonNumber[0]
-    : route.params.seasonNumber) || "1";
-const episodeNumber =
-  (Array.isArray(route.params.episodeNumber)
-    ? route.params.episodeNumber[0]
-    : route.params.episodeNumber) || "1";
+const showId = computed(
+  () =>
+    (Array.isArray(route.params.id) ? route.params.id[0] : route.params.id) ||
+    "",
+);
+const seasonNumber = computed(
+  () =>
+    (Array.isArray(route.params.seasonNumber)
+      ? route.params.seasonNumber[0]
+      : route.params.seasonNumber) || "1",
+);
+const episodeNumber = computed(
+  () =>
+    (Array.isArray(route.params.episodeNumber)
+      ? route.params.episodeNumber[0]
+      : route.params.episodeNumber) || "1",
+);
 const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
 
 const user = useSupabaseUser();
@@ -538,15 +548,18 @@ const isAdmin = computed(() => {
 const { locale, t } = useI18n();
 const localePath = useLocalePath();
 
-const cacheKey = `episode-${showId}-${seasonNumber}-${episodeNumber}-${locale.value}`;
+const cacheKey = computed(
+  () =>
+    `episode-${showId.value}-${seasonNumber.value}-${episodeNumber.value}-${locale.value}`,
+);
 
 const { data, pending, error } = useAsyncData(
   cacheKey,
   async () => {
     return await fetchEpisodePageData(
-      showId,
-      seasonNumber,
-      episodeNumber,
+      showId.value,
+      seasonNumber.value,
+      episodeNumber.value,
       locale.value,
     );
   },
@@ -595,7 +608,7 @@ const title = computed(() => {
   const episodeName =
     episode.value.name ||
     t("details.episode", { num: episode.value.episode_number });
-  return `${t("details.season", { num: seasonNumber })} · ${t("details.episode", { num: episode.value.episode_number })} - ${episodeName}`;
+  return `${t("details.season", { num: seasonNumber.value })} · ${t("details.episode", { num: episode.value.episode_number })} - ${episodeName}`;
 });
 
 const backdropUrl = computed(() => {
@@ -830,7 +843,7 @@ useHead({
       property: "og:url",
       content: computed(
         () =>
-          `https://dubbingbase.com/show/${showId}/season/${seasonNumber}/episode/${episodeNumber}${activeDubId.value ? `?dub=${activeDubId.value}` : ""}`,
+          `https://dubbingbase.com/show/${showId.value}/season/${seasonNumber.value}/episode/${episodeNumber.value}${activeDubId.value ? `?dub=${activeDubId.value}` : ""}`,
       ),
     },
     {
@@ -891,7 +904,7 @@ useHead({
       {
         rel: "canonical",
         href: (() => {
-          const baseUrl = `https://dubbingbase.com/show/${showId}/season/${seasonNumber}/episode/${episodeNumber}`;
+          const baseUrl = `https://dubbingbase.com/show/${showId.value}/season/${seasonNumber.value}/episode/${episodeNumber.value}`;
           return activeDubId.value
             ? `${baseUrl}?dub=${activeDubId.value}`
             : baseUrl;

@@ -130,6 +130,8 @@
               >
                 <NuxtImg
                   v-if="project.media?.poster_path"
+                  decoding="async"
+                  loading="lazy"
                   :src="
                     project.media.poster_path.startsWith('http')
                       ? project.media.poster_path

@@ -246,6 +246,7 @@
                       <NuxtImg
                         format="webp"
                         decoding="async"
+                        loading="lazy"
                         v-if="actor.profile_path"
                         :src="actor.profile_path"
                         class="w-full h-full object-cover transition-transform duration-300"
@@ -288,6 +289,7 @@
                       <NuxtImg
                         format="webp"
                         decoding="async"
+                        loading="lazy"
                         v-if="actor.characterImage"
                         :src="actor.characterImage"
                         class="w-full h-full object-cover"
@@ -340,6 +342,7 @@
                         <NuxtImg
                           format="webp"
                           decoding="async"
+                          loading="lazy"
                           v-if="actor.voiceActor.profile_picture"
                           :src="actor.voiceActor.profile_picture"
                           class="w-full h-full object-cover transition-transform duration-300"
