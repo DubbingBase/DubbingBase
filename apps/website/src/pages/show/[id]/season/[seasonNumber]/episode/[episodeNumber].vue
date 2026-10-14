@@ -553,15 +553,21 @@ const cacheKey = computed(
     `episode-${showId.value}-${seasonNumber.value}-${episodeNumber.value}-${locale.value}`,
 );
 
-const { data, pending, error } = useAsyncData(
+const {
+  data: pageData,
+  pending,
+  error,
+} = useAsyncData(
   cacheKey,
   async () => {
-    return await fetchEpisodePageData(
+    const requestKey = cacheKey.value;
+    const response = await fetchEpisodePageData(
       showId.value,
       seasonNumber.value,
       episodeNumber.value,
       locale.value,
     );
+    return { requestKey, response };
   },
   {
     lazy: true,
@@ -569,6 +575,11 @@ const { data, pending, error } = useAsyncData(
   },
 );
 
+const data = computed(() =>
+  pageData.value?.requestKey === cacheKey.value
+    ? pageData.value.response
+    : undefined,
+);
 const episode = computed(() => data.value?.episode);
 const requestError = computed(() =>
   Boolean(error.value && error.value.statusCode !== 404),

@@ -515,6 +515,88 @@ test.describe("Media Detail Pages", () => {
     await expect(page).toHaveTitle(/Breaking Bad/);
   });
 
+  test("clears rendered episode metadata while the next route is loading", async ({
+    page,
+  }) => {
+    const episodeB = structuredClone(MOCK_EPISODE);
+    episodeB.episode.season_number = 2;
+    episodeB.episode.episode_number = 2;
+    episodeB.episode.name = "Fargo Selected Episode Two";
+    episodeB.episode.overview = "A new Fargo story begins.";
+    episodeB.episode.credits.cast[0].name = "Fargo Cast Actor";
+
+    let releaseEpisodeB = () => {};
+    const episodeBGate = new Promise<void>((resolve) => {
+      releaseEpisodeB = resolve;
+    });
+    let markEpisodeBStarted = () => {};
+    const episodeBStarted = new Promise<void>((resolve) => {
+      markEpisodeBStarted = resolve;
+    });
+
+    await page.route("**/api/episode?**", async (route) => {
+      const url = new URL(route.request().url());
+      if (url.searchParams.get("id") !== "108978") {
+        await route.fallback();
+        return;
+      }
+
+      markEpisodeBStarted();
+      await episodeBGate;
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(episodeB),
+      });
+    });
+
+    await page.goto("/show/1396/season/1/episode/1", {
+      waitUntil: "domcontentloaded",
+    });
+    await expect(page.locator("body")).toContainText(
+      "Walter White starts cooking methamphetamine.",
+    );
+    await expect(page).toHaveTitle(/Pilot/);
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
+      "content",
+      /Pilot/,
+    );
+
+    await navigateClientSide(page, "/show/108978/season/2/episode/2");
+    await episodeBStarted;
+
+    await expect(page).not.toHaveTitle(/Pilot/);
+    await expect(page.locator('meta[property="og:title"]')).not.toHaveAttribute(
+      "content",
+      /Pilot/,
+    );
+    await expect(page.locator("body")).not.toContainText(
+      "Walter White starts cooking methamphetamine.",
+    );
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      "href",
+      /show\/108978\/season\/2\/episode\/2/,
+    );
+    await expect(page.locator('meta[property="og:url"]')).toHaveAttribute(
+      "content",
+      /show\/108978\/season\/2\/episode\/2/,
+    );
+
+    releaseEpisodeB();
+    await expect(page.locator("body")).toContainText(
+      "Fargo Selected Episode Two",
+    );
+    await expect(page.locator("body")).toContainText("Fargo Cast Actor");
+    await expect(page).toHaveTitle(/Fargo Selected Episode Two/);
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
+      "content",
+      /Fargo Selected Episode Two/,
+    );
+    await expect(
+      page.locator('meta[property="og:description"]'),
+    ).toHaveAttribute("content", /A new Fargo story begins\./);
+  });
+
   test("updates episode data across A to B to A with out-of-order responses", async ({
     page,
   }) => {
