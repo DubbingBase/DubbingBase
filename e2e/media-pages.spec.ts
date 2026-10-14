@@ -124,6 +124,186 @@ test.describe("Media Detail Pages", () => {
     api.expectNoErrors();
   });
 
+  test("keeps the cast page valid while navigating between shows", async ({
+    page,
+  }) => {
+    const showB = structuredClone(MOCK_SHOW);
+    showB.serie.id = 108978;
+    showB.serie.name = "Fargo";
+    showB.serie.title = "Fargo";
+    showB.aggregateCredits.cast = [
+      {
+        ...showB.aggregateCredits.cast[0],
+        id: 30000,
+        name: "Fargo Lead",
+        character: "Fargo Character",
+        roles: [{ character: "Fargo Character" }],
+      },
+    ];
+    const showBProject = structuredClone(showB.dubbingProjects[0]);
+    showBProject.id = 10897801;
+    showBProject.content_id = 108978;
+    showBProject.works = [
+      {
+        ...showBProject.works[0],
+        id: 108978001,
+        actor_id: 30000,
+        character_name: "Fargo Character",
+      },
+    ];
+    showB.dubbingProjects = [showBProject];
+
+    let releaseShowB = () => {};
+    const showBGate = new Promise<void>((resolve) => {
+      releaseShowB = resolve;
+    });
+    let markShowBStarted = () => {};
+    const showBStarted = new Promise<void>((resolve) => {
+      markShowBStarted = resolve;
+    });
+    let markShowBFinished = () => {};
+    const showBFinished = new Promise<void>((resolve) => {
+      markShowBFinished = resolve;
+    });
+
+    await page.goto("/show/1396", { waitUntil: "domcontentloaded" });
+    await waitForVueHydration(page);
+
+    await page.route("**/api/show/**", async (route) => {
+      const url = new URL(route.request().url());
+      const isShowB = url.pathname.endsWith("/108978");
+      if (isShowB) {
+        markShowBStarted();
+        await showBGate;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(showB),
+      });
+      if (isShowB) markShowBFinished();
+    });
+
+    await navigateClientSide(page, "/show/108978?castPage=2");
+    await showBStarted;
+    await expect(page).toHaveURL(/\/show\/108978\?castPage=2$/);
+
+    releaseShowB();
+    await showBFinished;
+    await expect(page.getByText("Fargo Lead", { exact: true })).toBeVisible();
+    await expect(page.locator("body")).not.toContainText("Walter White");
+    await expect(page).toHaveURL(/\/show\/108978\?castPage=2$/);
+  });
+
+  test("keeps locale navigation intact when its implicit default dub changes", async ({
+    page,
+  }) => {
+    const show = structuredClone(MOCK_SHOW);
+    show.serie.id = 108978;
+    show.serie.name = "Default Dub Show";
+    show.serie.title = "Default Dub Show";
+    show.dubbingProjects[0].content_id = 108978;
+    const englishProject = structuredClone(show.dubbingProjects[0]);
+    englishProject.id = 10897802;
+    englishProject.content_id = 108978;
+    englishProject.language = "en-US";
+    englishProject.works = Array.from({ length: 13 }, (_, index) => ({
+      id: 1396100 + index,
+      actor_id: null,
+      voice_actor_id: 500 + index,
+      character_name: `English default role ${index + 1}`,
+      performance: "dialogues",
+      voice_actor: {
+        id: 500 + index,
+        firstname: "English",
+        lastname: `Voice Actor ${index + 1}`,
+        profile_picture: null,
+      },
+      voice_actors: {
+        id: 500 + index,
+        firstname: "English",
+        lastname: `Voice Actor ${index + 1}`,
+        profile_picture: null,
+      },
+    }));
+    show.dubbingProjects.push(englishProject);
+
+    const frenchShow = structuredClone(show);
+    frenchShow.serie.name = "Default Dub Show en français";
+    frenchShow.serie.title = "Default Dub Show en français";
+
+    let releaseFrenchShow = () => {};
+    const frenchShowGate = new Promise<void>((resolve) => {
+      releaseFrenchShow = resolve;
+    });
+    let markFrenchShowStarted = () => {};
+    const frenchShowStarted = new Promise<void>((resolve) => {
+      markFrenchShowStarted = resolve;
+    });
+    let markFrenchShowFinished = () => {};
+    const frenchShowFinished = new Promise<void>((resolve) => {
+      markFrenchShowFinished = resolve;
+    });
+
+    await page.goto("/show/1396", { waitUntil: "domcontentloaded" });
+    await waitForVueHydration(page);
+    await page.route("**/api/show/**", async (route) => {
+      const isFrench =
+        route.request().headers()["accept-language"]?.startsWith("fr") ?? false;
+      if (isFrench) {
+        markFrenchShowStarted();
+        await frenchShowGate;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(isFrench ? frenchShow : show),
+      });
+      if (isFrench) markFrenchShowFinished();
+    });
+
+    await navigateClientSide(page, "/show/108978");
+    await expect(
+      page.getByRole("heading", { name: "Default Dub Show" }),
+    ).toBeVisible();
+    await navigateClientSide(page, "/show/108978?castPage=2");
+    await expect(
+      page.getByText("English default role 13", { exact: true }).first(),
+    ).toBeVisible();
+
+    await page.locator('button[aria-label="Toggle language"]').click();
+    await page.getByText("Français", { exact: true }).click();
+    await frenchShowStarted;
+
+    await expect(page.locator("html")).toHaveAttribute("lang", "fr-FR");
+    await expect(page).toHaveURL(/\/fr\/show\/108978\?castPage=2$/);
+
+    releaseFrenchShow();
+    await frenchShowFinished;
+    await expect(page).toHaveURL(/\/fr\/show\/108978\?castPage=2$/);
+    await expect(
+      page.getByRole("heading", { name: "Default Dub Show en français" }),
+    ).toBeVisible();
+    await expect(page.getByText("Jean-Louis Faure").first()).toBeVisible();
+    await expect(
+      page.getByText("English default role 13", { exact: true }),
+    ).toHaveCount(0);
+    await expect(page.locator('nav[aria-label="Pagination"]')).toHaveCount(0);
+  });
+
+  test("shows the first cast page for an out-of-range castPage query", async ({
+    page,
+  }) => {
+    await page.goto("/show/1396", { waitUntil: "domcontentloaded" });
+    await waitForVueHydration(page);
+    await navigateClientSide(page, "/show/1396?castPage=99");
+    await expect(page).toHaveURL(/\/show\/1396\?castPage=99$/);
+
+    await expect(page.getByText("Bryan Cranston").first()).toBeVisible();
+    await expect(page.getByText("Aaron Paul").first()).toBeVisible();
+    await expect(page).toHaveURL(/\/show\/1396\?castPage=99$/);
+  });
+
   test("uses TMDB actor IDs and leaves unmatched cast works unlinked", async ({
     page,
   }) => {

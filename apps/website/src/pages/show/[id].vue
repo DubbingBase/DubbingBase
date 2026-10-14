@@ -737,7 +737,8 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
 
 const searchQuery = ref("");
 const searchInput = ref("");
-const { page: castPage, setPage: setCastPage } = useUrlPagination("castPage");
+const { page: requestedCastPage, setPage: setCastPage } =
+  useUrlPagination("castPage");
 const debouncedSearch = refDebounced(searchInput, 150);
 watch(debouncedSearch, (val) => {
   searchQuery.value = val;
@@ -765,6 +766,12 @@ const filteredCast = computed(() =>
   }),
 );
 const castTotal = computed(() => filteredCast.value.length);
+// Keep pending or smaller result sets from handing an invalid page to the grid,
+// which would otherwise replace the active route while clamping it.
+const castPage = computed(() => {
+  const totalPages = Math.max(1, Math.ceil(castTotal.value / 12));
+  return requestedCastPage.value <= totalPages ? requestedCastPage.value : 1;
+});
 const castItems = computed(() => {
   const start = (castPage.value - 1) * 12;
   return filteredCast.value.slice(start, start + 12);
