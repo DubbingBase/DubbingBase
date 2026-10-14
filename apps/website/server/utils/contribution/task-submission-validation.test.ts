@@ -43,6 +43,7 @@ describe("task contribution validation", () => {
 
   it("requires claim metadata and a concrete supported category", () => {
     expect(() => validateTaskContribution(validInput({ claimId: " " }))).toThrow();
+    expect(() => validateTaskContribution(validInput({ claimId: undefined }))).toThrow();
     expect(() => validateTaskContribution(validInput({ category: "any" }))).toThrow();
   });
 
@@ -52,6 +53,14 @@ describe("task contribution validation", () => {
     ).toThrow();
     expect(() =>
       validateTaskContribution(validInput({ currentValues: { nationality: "Canadian" } })),
+    ).toThrow();
+    expect(() =>
+      validateTaskContribution(
+        validInput({
+          fields: { twitter: "https://twitter.com/example" },
+          currentValues: { nationality: null },
+        }),
+      ),
     ).toThrow();
   });
 
