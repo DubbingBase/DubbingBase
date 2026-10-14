@@ -143,13 +143,26 @@ if [[ -z "$claim_first_result" || -z "$claim_second_result" || "$claim_first_tas
   exit 1
 fi
 
-claim_owner_counts="$(psql_local -v first_user="$first_user" -v second_user="$second_user" -c "SELECT count(*) || ':' || count(DISTINCT entity_id) FROM public.gamification_task_locks WHERE user_id IN (:'first_user'::UUID, :'second_user'::UUID) AND category = 'enrich_voice_actor'")"
+claim_owner_counts="$(
+  psql_local -v first_user="$first_user" -v second_user="$second_user" <<'SQL'
+SELECT count(*)::TEXT || ':' || count(DISTINCT entity_id)::TEXT
+FROM public.gamification_task_locks
+WHERE user_id IN (:'first_user'::UUID, :'second_user'::UUID)
+  AND category = 'enrich_voice_actor';
+SQL
+)"
 if [[ "$claim_owner_counts" != "2:2" ]]; then
   printf 'Expected two separately owned claims, got %s.\n' "$claim_owner_counts" >&2
   exit 1
 fi
 
-submission_actor="$(psql_local -v first_user="$first_user" -c "INSERT INTO public.voice_actors (firstname, lastname) VALUES ('AtomicSubmit-' || :'first_user', 'Fixture') RETURNING id")"
+submission_actor="$(
+  psql_local -v first_user="$first_user" <<'SQL'
+INSERT INTO public.voice_actors (firstname, lastname)
+VALUES ('AtomicSubmit-' || :'first_user', 'Fixture')
+RETURNING id;
+SQL
+)"
 psql_local -v first_user="$first_user" -v submission_claim="$submission_claim" \
   -v submission_actor="$submission_actor" <<'SQL' >/dev/null
 INSERT INTO public.gamification_task_locks
@@ -241,9 +254,25 @@ if [[ "$first_submission_result" != "submitted|10" || "$second_submission_result
   exit 1
 fi
 
-submission_state="$(psql_local -v first_user="$first_user" -v submission_actor="$submission_actor" -c "SELECT (SELECT count(*) FROM public.audit_logs WHERE user_id = :'first_user'::UUID AND entity_type = 'voice_actor' AND entity_id = :'submission_actor') || ':' || (SELECT COALESCE(sum(points_awarded), 0) FROM public.audit_logs WHERE user_id = :'first_user'::UUID AND entity_type = 'voice_actor' AND entity_id = :'submission_actor') || ':' || (SELECT count(*) FROM public.voice_actors WHERE id = :'submission_actor'::BIGINT AND bio = 'First concurrent contribution' AND updated_by = :'first_user'::UUID)")"
-if [[ "$submission_state" != "1:10:1" ]]; then
-  printf 'Expected one accurate audit, ten points, and one attributed entity write; got %s.\n' "$submission_state" >&2
+submission_state="$(
+  psql_local -v first_user="$first_user" -v submission_actor="$submission_actor" -v submission_claim="$submission_claim" <<'SQL'
+SELECT
+  (SELECT count(*) FROM public.audit_logs
+    WHERE user_id = :'first_user'::UUID AND entity_type = 'voice_actor' AND entity_id = :'submission_actor')::TEXT
+  || ':' || (SELECT COALESCE(sum(points_awarded), 0) FROM public.audit_logs
+    WHERE user_id = :'first_user'::UUID AND entity_type = 'voice_actor' AND entity_id = :'submission_actor')::TEXT
+  || ':' || (SELECT count(*) FROM public.voice_actors
+    WHERE id = :'submission_actor'::BIGINT AND bio = 'First concurrent contribution' AND updated_by = :'first_user'::UUID)::TEXT
+  || ':' || (SELECT count(*) FROM public.gamification_task_locks
+    WHERE claim_id = :'submission_claim'::UUID AND user_id = :'first_user'::UUID
+      AND category = 'enrich_voice_actor' AND entity_id = :'submission_actor')::TEXT
+  || ':' || (SELECT count(*) FROM public.gamification_task_locks
+    WHERE claim_id = :'submission_claim'::UUID AND user_id = :'first_user'::UUID
+      AND consumed_at IS NOT NULL AND expires_at <= clock_timestamp())::TEXT;
+SQL
+)"
+if [[ "$submission_state" != "1:10:1:1:1" ]]; then
+  printf 'Expected one accurate audit, ten points, one attributed update, and one consumed claim; got %s.\n' "$submission_state" >&2
   exit 1
 fi
 

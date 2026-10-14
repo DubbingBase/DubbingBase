@@ -54,7 +54,7 @@ BEGIN
         (category, entity_id, locked_at, claim_id, user_id, expires_at, consumed_at)
       VALUES
         (selected_category, candidate.entity_id, clock_timestamp(), gen_random_uuid(), p_user_id, next_expiration, NULL)
-      ON CONFLICT (category, entity_id) DO UPDATE
+      ON CONFLICT ON CONSTRAINT gamification_task_locks_pkey DO UPDATE
         SET locked_at = EXCLUDED.locked_at,
             claim_id = EXCLUDED.claim_id,
             user_id = EXCLUDED.user_id,
@@ -82,7 +82,7 @@ BEGIN
         (category, entity_id, locked_at, claim_id, user_id, expires_at, consumed_at)
       VALUES
         (selected_category, candidate.entity_id, clock_timestamp(), gen_random_uuid(), p_user_id, next_expiration, NULL)
-      ON CONFLICT (category, entity_id) DO UPDATE
+      ON CONFLICT ON CONSTRAINT gamification_task_locks_pkey DO UPDATE
         SET locked_at = EXCLUDED.locked_at,
             claim_id = EXCLUDED.claim_id,
             user_id = EXCLUDED.user_id,
