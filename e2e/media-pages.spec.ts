@@ -597,6 +597,11 @@ test.describe("Media Detail Pages", () => {
       "content",
       /show\/108978\/season\/2\/episode\/2/,
     );
+    await expect(page).not.toHaveTitle(/Breaking Bad/);
+    await expect(page.locator('meta[property="og:title"]')).not.toHaveAttribute(
+      "content",
+      /Breaking Bad/,
+    );
     await expect(page.locator("body")).not.toContainText(
       "Breaking Bad Delayed Episode One",
     );
@@ -607,6 +612,15 @@ test.describe("Media Detail Pages", () => {
       "Fargo Selected Episode Two",
     );
     await expect(page.locator("body")).toContainText("Fargo Cast Actor");
+    await expect(page).toHaveTitle(/Fargo Selected Episode Two/);
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
+      "content",
+      /Fargo Selected Episode Two/,
+    );
+    await expect(
+      page.locator('meta[property="og:description"]'),
+    ).toHaveAttribute("content", /A new Fargo story begins\./);
+    await expect(page).not.toHaveTitle(/^Series$/);
 
     releaseEpisodeA();
     await episodeAGate;
