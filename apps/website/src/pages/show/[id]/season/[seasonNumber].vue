@@ -358,7 +358,7 @@ const { locale, t } = useI18n();
 const localePath = useLocalePath();
 
 // Fetch show data for basic info
-const { data: showData } = useShowPageData(showId, locale);
+const { currentData: showData } = useShowPageData(showId, locale);
 
 const serie = computed(() => {
   const show = showData.value?.serie;

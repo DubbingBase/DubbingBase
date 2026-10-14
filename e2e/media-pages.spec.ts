@@ -382,6 +382,73 @@ test.describe("Media Detail Pages", () => {
     ).toHaveCount(1);
   });
 
+  test("hides stale show data while the next locale response is pending", async ({
+    page,
+  }) => {
+    const frenchShow = structuredClone(MOCK_SHOW);
+    frenchShow.serie.name = "Breaking Bad en français";
+    frenchShow.serie.title = "Breaking Bad en français";
+    let markFrenchShowRequested = () => {};
+    const frenchShowRequested = new Promise<void>((resolve) => {
+      markFrenchShowRequested = resolve;
+    });
+    let releaseFrenchShow = () => {};
+    const frenchShowGate = new Promise<void>((resolve) => {
+      releaseFrenchShow = resolve;
+    });
+    let markFrenchShowFinished = () => {};
+    const frenchShowFinished = new Promise<void>((resolve) => {
+      markFrenchShowFinished = resolve;
+    });
+
+    await page.route("**/api/show/1396**", async (route) => {
+      const acceptLanguage = route.request().headers()["accept-language"];
+      const isFrench = acceptLanguage?.startsWith("fr") ?? false;
+      if (isFrench) {
+        markFrenchShowRequested();
+        await frenchShowGate;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(isFrench ? frenchShow : MOCK_SHOW),
+      });
+      if (isFrench) markFrenchShowFinished();
+    });
+
+    await page.goto("/show/1396/season/1", { waitUntil: "domcontentloaded" });
+    await page.waitForFunction(() => {
+      return Boolean(document.getElementById("__nuxt")?.__vue_app__);
+    });
+    await expect(page.locator("html")).toHaveAttribute("lang", "en-US");
+    await expect(page).toHaveTitle(/Breaking Bad.*Season 1/);
+
+    await page.locator('button[aria-label="Toggle language"]').click();
+    await page.getByText("Français", { exact: true }).click();
+
+    await frenchShowRequested;
+    await expect(page.locator("html")).toHaveAttribute("lang", "fr-FR");
+    await expect(page.locator("body")).not.toContainText("Breaking Bad");
+    await expect(page).not.toHaveTitle(/Breaking Bad/);
+    await expect(page.locator('meta[property="og:title"]')).not.toHaveAttribute(
+      "content",
+      /Breaking Bad/,
+    );
+
+    releaseFrenchShow();
+    await frenchShowFinished;
+    await expect(page).toHaveTitle(/Breaking Bad en français.*Saison 1/);
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
+      "content",
+      /Saison 1/,
+    );
+    await expect
+      .poll(() =>
+        page.evaluate(() => performance.getEntriesByType("navigation").length),
+      )
+      .toBe(1);
+  });
+
   test("navigates show to season to episode and preserves the selected dub", async ({
     page,
   }) => {

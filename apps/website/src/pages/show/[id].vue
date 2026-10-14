@@ -548,7 +548,7 @@ const isAdmin = computed(() => {
 const { locale, t } = useI18n();
 const localePath = useLocalePath();
 
-const { data, pending } = useShowPageData(showId, locale);
+const { currentData: data, pending } = useShowPageData(showId, locale);
 
 const serie = computed(() => {
   const show = data.value?.serie;
@@ -742,7 +742,7 @@ const debouncedSearch = refDebounced(searchInput, 150);
 watch(debouncedSearch, (val) => {
   searchQuery.value = val;
 });
-watch([searchQuery, activeDubId], () => void setCastPage(1));
+watch([searchQuery, () => route.query.dub], () => void setCastPage(1));
 
 const filteredCast = computed(() =>
   formattedCast.value.filter((actor: DisplayCastActor) => {
