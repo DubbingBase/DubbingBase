@@ -36,6 +36,15 @@ async function navigateClientSide(page: Page, path: string) {
   }, path);
 }
 
+async function waitForBrowserPaint(page: Page): Promise<void> {
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      }),
+  );
+}
+
 function getAttribute(tag: string, name: string): string {
   return tag.match(new RegExp(`\\b${name}="([^"]*)"`))?.[1] || "";
 }
@@ -238,6 +247,12 @@ test.describe("Media Detail Pages", () => {
           sameSite: "Lax",
         },
       ]);
+      const localeCookie = await page
+        .context()
+        .cookies("http://localhost:3050");
+      expect(
+        localeCookie.find((cookie) => cookie.name === "user_lang")?.value,
+      ).toBe(locale.code.slice(0, 2).toLowerCase());
 
       for (const route of [
         {
@@ -256,6 +271,7 @@ test.describe("Media Detail Pages", () => {
         const response = await page.goto(route.path, {
           waitUntil: "domcontentloaded",
         });
+        expect(response && new URL(response.url()).pathname).toBe(route.path);
         const html = response ? await response.text() : "";
         expect(html).not.toBe("");
         expect(html).toMatch(
@@ -308,6 +324,25 @@ test.describe("Media Detail Pages", () => {
   test("updates season locale and metadata after client-side locale navigation", async ({
     page,
   }) => {
+    const frenchShow = structuredClone(MOCK_SHOW);
+    frenchShow.serie.name = "Breaking Bad en français";
+    frenchShow.serie.title = "Breaking Bad en français";
+    let markFrenchShowRequested = () => {};
+    const frenchShowRequested = new Promise<void>((resolve) => {
+      markFrenchShowRequested = resolve;
+    });
+
+    await page.route("**/api/show/1396**", async (route) => {
+      const acceptLanguage = route.request().headers()["accept-language"];
+      const isFrench = acceptLanguage?.startsWith("fr") ?? false;
+      if (isFrench) markFrenchShowRequested();
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(isFrench ? frenchShow : MOCK_SHOW),
+      });
+    });
+
     await page.goto("/show/1396/season/1", { waitUntil: "domcontentloaded" });
     await page.waitForFunction(() => {
       return Boolean(document.getElementById("__nuxt")?.__vue_app__);
@@ -319,8 +354,15 @@ test.describe("Media Detail Pages", () => {
     await page.locator('button[aria-label="Toggle language"]').click();
     await page.getByText("Français", { exact: true }).click();
 
+    await frenchShowRequested;
     await expect(page.locator("html")).toHaveAttribute("lang", "fr-FR");
-    await expect(page).toHaveTitle(/Saison 1/);
+    await expect(page).toHaveTitle(/Breaking Bad en français.*Saison 1/);
+    await expect(page).toHaveURL(/\/fr\/show\/1396\/season\/1/);
+    await expect
+      .poll(() =>
+        page.evaluate(() => performance.getEntriesByType("navigation").length),
+      )
+      .toBe(1);
     await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
     await expect(page.locator('meta[property="og:url"]')).toHaveCount(1);
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
@@ -417,6 +459,10 @@ test.describe("Media Detail Pages", () => {
     const seasonBFinished = new Promise<void>((resolve) => {
       markSeasonBFinished = resolve;
     });
+    let markSeasonAFinished = () => {};
+    const seasonAFinished = new Promise<void>((resolve) => {
+      markSeasonAFinished = resolve;
+    });
     let releaseSeasonB = () => {};
     const seasonBGate = new Promise<void>((resolve) => {
       releaseSeasonB = resolve;
@@ -470,6 +516,9 @@ test.describe("Media Detail Pages", () => {
         body: JSON.stringify(data),
       });
       if (showId === "108978") markSeasonBFinished();
+      if (showId === "1396" && seasonNumber === "1" && seasonARequests === 1) {
+        markSeasonAFinished();
+      }
     });
 
     await page.goto("/show/1396", { waitUntil: "domcontentloaded" });
@@ -504,7 +553,8 @@ test.describe("Media Detail Pages", () => {
     );
 
     releaseSeasonA();
-    await seasonAGate;
+    await seasonAFinished;
+    await waitForBrowserPaint(page);
     await expect(page.locator("body")).toContainText("Fargo Season Two");
     await expect(page.locator("body")).not.toContainText(
       "Breaking Bad Season One",
@@ -513,6 +563,113 @@ test.describe("Media Detail Pages", () => {
     await navigateClientSide(page, "/show/1396/season/1");
     await expect(page.locator("body")).toContainText("Breaking Bad Season One");
     await expect(page).toHaveTitle(/Breaking Bad/);
+  });
+
+  test("hides loaded season A content and metadata while season B is pending", async ({
+    page,
+  }) => {
+    const showB = structuredClone(MOCK_SHOW);
+    showB.serie.id = 108978;
+    showB.serie.name = "Fargo";
+    showB.serie.title = "Fargo";
+
+    const seasonA = structuredClone(MOCK_SEASON);
+    seasonA.season.name = "Breaking Bad Season One";
+    seasonA.season.overview = "Breaking Bad season synopsis must disappear.";
+    seasonA.dubbingProjects[0].language = "sv-SE";
+
+    const seasonB = structuredClone(MOCK_SEASON);
+    seasonB.season.id = 108978;
+    seasonB.season.season_number = 2;
+    seasonB.season.name = "Fargo Season Two";
+    seasonB.season.overview = "Fargo season synopsis.";
+    seasonB.dubbingProjects = [];
+
+    let releaseSeasonB = () => {};
+    const seasonBGate = new Promise<void>((resolve) => {
+      releaseSeasonB = resolve;
+    });
+    let markSeasonBStarted = () => {};
+    const seasonBStarted = new Promise<void>((resolve) => {
+      markSeasonBStarted = resolve;
+    });
+    let markShowBFinished = () => {};
+    const showBFinished = new Promise<void>((resolve) => {
+      markShowBFinished = resolve;
+    });
+    let markSeasonBFinished = () => {};
+    const seasonBFinished = new Promise<void>((resolve) => {
+      markSeasonBFinished = resolve;
+    });
+
+    await page.route("**/api/show/**", async (route) => {
+      const url = new URL(route.request().url());
+      const isShowB = url.pathname.endsWith("/108978");
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(isShowB ? showB : MOCK_SHOW),
+      });
+      if (isShowB) markShowBFinished();
+    });
+
+    await page.route("**/api/season?**", async (route) => {
+      const url = new URL(route.request().url());
+      const showId = url.searchParams.get("id");
+      if (showId === "108978") {
+        markSeasonBStarted();
+        await seasonBGate;
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(seasonB),
+        });
+        markSeasonBFinished();
+        return;
+      }
+
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(seasonA),
+      });
+    });
+
+    await page.goto("/show/1396", { waitUntil: "domcontentloaded" });
+    await navigateClientSide(page, "/show/1396/season/1");
+    await expect(page.locator("body")).toContainText("Breaking Bad Season One");
+    await expect(page).toHaveTitle(/Breaking Bad.*Swedish/);
+    await expect(
+      page.locator('meta[property="og:description"]'),
+    ).toHaveAttribute(
+      "content",
+      /Breaking Bad season synopsis must disappear\./,
+    );
+
+    await navigateClientSide(page, "/show/108978/season/2");
+    await Promise.all([seasonBStarted, showBFinished]);
+
+    await expect(page.locator(".animate-pulse").first()).toBeVisible();
+    await expect(page.locator("body")).not.toContainText(
+      "Breaking Bad Season One",
+    );
+    await expect(page.locator("body")).not.toContainText(
+      "Breaking Bad season synopsis must disappear.",
+    );
+    await expect(page.locator("body")).not.toContainText("Swedish");
+    await expect(page).not.toHaveTitle(/Breaking Bad|Swedish/);
+    await expect(page.locator('meta[property="og:title"]')).not.toHaveAttribute(
+      "content",
+      /Breaking Bad|Swedish/,
+    );
+    await expect(
+      page.locator('meta[property="og:description"]'),
+    ).not.toHaveAttribute("content", /Breaking Bad season synopsis/);
+
+    releaseSeasonB();
+    await seasonBFinished;
+    await expect(page.locator("body")).toContainText("Fargo Season Two");
+    await expect(page).toHaveTitle(/Fargo/);
   });
 
   test("clears rendered episode metadata while the next route is loading", async ({
@@ -533,7 +690,6 @@ test.describe("Media Detail Pages", () => {
     const episodeBStarted = new Promise<void>((resolve) => {
       markEpisodeBStarted = resolve;
     });
-
     await page.route("**/api/episode?**", async (route) => {
       const url = new URL(route.request().url());
       if (url.searchParams.get("id") !== "108978") {
@@ -634,6 +790,10 @@ test.describe("Media Detail Pages", () => {
     const episodeBStarted = new Promise<void>((resolve) => {
       markEpisodeBStarted = resolve;
     });
+    let markEpisodeAFinished = () => {};
+    const episodeAFinished = new Promise<void>((resolve) => {
+      markEpisodeAFinished = resolve;
+    });
     let episodeARequests = 0;
 
     await page.route("**/api/episode?**", async (route) => {
@@ -661,6 +821,7 @@ test.describe("Media Detail Pages", () => {
         contentType: "application/json",
         body: JSON.stringify(episodeA),
       });
+      if (episodeARequests === 1) markEpisodeAFinished();
     });
 
     await page.goto("/show/1396");
@@ -705,7 +866,8 @@ test.describe("Media Detail Pages", () => {
     await expect(page).not.toHaveTitle(/^Series$/);
 
     releaseEpisodeA();
-    await episodeAGate;
+    await episodeAFinished;
+    await waitForBrowserPaint(page);
     await expect(page.locator("body")).toContainText(
       "Fargo Selected Episode Two",
     );

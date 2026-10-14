@@ -7,16 +7,20 @@ async function fetchShowDataForCurrentRoute(nuxtApp: NuxtApp) {
   const { id, locale } = await nuxtApp.runWithContext(() => {
     const route = useRouter().currentRoute.value;
     const routeId = route.params.id;
-    const { locale } = useI18n();
 
     return {
       id: Array.isArray(routeId) ? (routeId[0] ?? "") : (routeId ?? ""),
-      locale: locale.value,
+      locale: nuxtApp.$i18n.locale.value,
     };
   });
 
   return fetchShowData(id, locale);
 }
+
+const SHOW_PAGE_DATA_OPTIONS = {
+  lazy: true,
+  getCachedData: getHydrationCachedData,
+};
 
 export function useShowPageData(
   showId: Readonly<Ref<string>>,
@@ -24,8 +28,9 @@ export function useShowPageData(
 ) {
   const key = computed(() => `show-${showId.value}-${locale.value}`);
 
-  return useAsyncData(key, fetchShowDataForCurrentRoute, {
-    lazy: true,
-    getCachedData: getHydrationCachedData,
-  });
+  return useAsyncData(
+    key,
+    fetchShowDataForCurrentRoute,
+    SHOW_PAGE_DATA_OPTIONS,
+  );
 }

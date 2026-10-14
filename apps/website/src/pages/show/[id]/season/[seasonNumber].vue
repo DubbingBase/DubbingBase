@@ -412,9 +412,15 @@ const seasonSeoDescription = computed(() => {
 });
 
 // Fetch season data
-const seasonCacheKey = computed(
-  () => `season-${showId.value}-${seasonNumber.value}-${locale.value}`,
-);
+const seasonRequestIdentity = computed(() => ({
+  showId: showId.value,
+  seasonNumber: seasonNumber.value,
+  locale: locale.value,
+}));
+const seasonCacheKey = computed(() => {
+  const { showId, seasonNumber, locale } = seasonRequestIdentity.value;
+  return `season-${showId}-${seasonNumber}-${locale}`;
+});
 const {
   data: seasonData,
   pending: seasonPending,
@@ -422,11 +428,14 @@ const {
 } = useAsyncData(
   seasonCacheKey,
   async () => {
-    return await fetchSeasonPageData(
-      showId.value,
-      seasonNumber.value,
-      locale.value,
+    const requestIdentity = seasonRequestIdentity.value;
+    const response = await fetchSeasonPageData(
+      requestIdentity.showId,
+      requestIdentity.seasonNumber,
+      requestIdentity.locale,
     );
+
+    return { requestIdentity, response };
   },
   {
     lazy: true,
@@ -434,10 +443,28 @@ const {
   },
 );
 
-const season = computed(() => seasonData.value?.season);
+const currentSeasonData = computed(() => {
+  const result = seasonData.value;
+  if (!result) return undefined;
+
+  const currentIdentity = seasonRequestIdentity.value;
+  const requestIdentity = result.requestIdentity;
+
+  if (
+    requestIdentity.showId !== currentIdentity.showId ||
+    requestIdentity.seasonNumber !== currentIdentity.seasonNumber ||
+    requestIdentity.locale !== currentIdentity.locale
+  ) {
+    return undefined;
+  }
+
+  return result.response;
+});
+
+const season = computed(() => currentSeasonData.value?.season);
 const dubbingProjects = computed(() => {
-  const projects = [...(seasonData.value?.dubbingProjects || [])].filter((p) =>
-    projectHasVoiceActor(p),
+  const projects = [...(currentSeasonData.value?.dubbingProjects || [])].filter(
+    (p) => projectHasVoiceActor(p),
   );
   const currentLocale = locale.value.toLowerCase();
   return projects.sort((a, b) => {
