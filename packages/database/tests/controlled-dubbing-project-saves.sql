@@ -685,6 +685,20 @@ $$;
 RESET ROLE;
 
 SET LOCAL ROLE service_role;
+SELECT pg_catalog.to_regprocedure(
+  'public.save_regional_project_actor_assignments(bigint,text,text,jsonb,uuid,uuid)'
+) IS NOT NULL AS has_audited_regional_rpc \gset
+\if :has_audited_regional_rpc
+SELECT public.save_regional_project_actor_assignments(
+  563651918, 'movie', 'fr-FR',
+  jsonb_build_array(jsonb_build_object(
+    'actor_id', 563651102, 'work_id', NULL,
+    'expected_voice_actor_id', NULL, 'voice_actor_id', 563651003
+  )),
+  '00000000-0000-0000-0000-000000563651',
+  '21000000-0000-4000-8000-000000563651'
+);
+\else
 SELECT public.save_regional_project_actor_assignments(
   563651918, 'movie', 'fr-FR',
   jsonb_build_array(jsonb_build_object(
@@ -692,6 +706,7 @@ SELECT public.save_regional_project_actor_assignments(
     'expected_voice_actor_id', NULL, 'voice_actor_id', 563651003
   ))
 );
+\endif
 RESET ROLE;
 
 -- A role with table grants still cannot change or delete immutable audit history.
