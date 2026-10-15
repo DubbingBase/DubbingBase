@@ -449,6 +449,7 @@
 
 <script setup lang="ts">
 import { isDubbingLanguage } from "@app/shared-logic";
+import { createStableRequestIdFactory } from "~/utils/dubbing-project-save";
 import {
   assignmentsForActors,
   canSaveRegionalAssignments,
@@ -461,6 +462,7 @@ import {
 } from "./voice-cast-assignments";
 const supabase = useSupabaseClient();
 const localePath = useLocalePath();
+const manualVoiceLinkRequestIds = createStableRequestIdFactory();
 
 definePageMeta({
   layout: "admin",
@@ -876,23 +878,29 @@ const quickCreateVoiceActorForManual = async () => {
 };
 
 const saveManualEntry = async () => {
+  if (isSaving.value) return;
   if (!isValidDubbingLanguage.value || !manualCharacterName.value || !selectedManualVA.value) {
     showToast("Character name and voice actor are required.", "error");
     return;
   }
   isSaving.value = true;
   try {
+    const request = {
+      media_type: mediaTypeParam.value,
+      media_id: mediaId.value,
+      dubbing_language: dubbingLanguage.value,
+      voice_actor_id: selectedManualVA.value.id,
+      character_name: manualCharacterName.value,
+      performance: manualPerformance.value,
+    };
     await $fetch("/api/link-voice-actor", {
       method: "POST",
       body: {
-        media_type: mediaTypeParam.value,
-        media_id: mediaId.value,
-        dubbing_language: dubbingLanguage.value,
-        voice_actor_id: selectedManualVA.value.id,
-        character_name: manualCharacterName.value,
-        performance: manualPerformance.value,
+        ...request,
+        request_id: manualVoiceLinkRequestIds.forPayload(request),
       },
     });
+    manualVoiceLinkRequestIds.clear();
     showToast("Mapping created successfully!", "success");
     manualCharacterName.value = "";
     manualActorName.value = "";

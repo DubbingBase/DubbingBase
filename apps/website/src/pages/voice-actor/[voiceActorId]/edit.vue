@@ -957,6 +957,7 @@ const route = useRoute();
 const router = useRouter();
 const localePath = useLocalePath();
 const internalMediaRequestIds = createStableRequestIdFactory();
+const voiceActorWorkRequestIds = createStableRequestIdFactory();
 const voiceActorId = route.params.voiceActorId as string | undefined;
 const id = voiceActorId;
 const isEditMode = computed(() => !!id && id !== "new");
@@ -1358,21 +1359,26 @@ async function submitWorkLink(opts: {
   actorName?: string;
   characterName?: string;
 }) {
-  if (!selectedMedia.value) return;
+  if (!selectedMedia.value || isSubmittingWorkLink.value) return;
   isSubmittingWorkLink.value = true;
   try {
+    const request = {
+      voice_actor_id: numId,
+      media_type: selectedMediaType.value,
+      media_id: selectedMedia.value.id,
+      actor_id: opts.actorId ?? 0,
+      character_name: opts.characterName ?? "",
+      performance: linkWorkPerformance.value,
+      dubbing_language: dubbingLanguage.value,
+    };
     await $fetch("/api/link-voice-actor", {
       method: "POST",
       body: {
-        voice_actor_id: numId,
-        media_type: selectedMediaType.value,
-        media_id: selectedMedia.value.id,
-        actor_id: opts.actorId ?? 0,
-        character_name: opts.characterName ?? "",
-        performance: linkWorkPerformance.value,
-        dubbing_language: dubbingLanguage.value,
+        ...request,
+        request_id: voiceActorWorkRequestIds.forPayload(request),
       },
     });
+    voiceActorWorkRequestIds.clear();
     showToast(
       `Linked to "${selectedMedia.value.title || selectedMedia.value.name}"`,
       "success",
