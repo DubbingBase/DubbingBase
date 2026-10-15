@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 82 routes | 19 models | 197 components | 98 lib files | 63 env vars | 14 middleware | 28% test coverage
-> **Token savings:** this file is ~16,600 tokens. Without it, AI exploration would cost ~160,500 tokens. **Saves ~143,900 tokens per conversation.**
-> **Last scanned:** 2026-10-15 12:27 — re-run after significant changes
+> 82 routes | 19 models | 197 components | 99 lib files | 63 env vars | 14 middleware | 28% test coverage
+> **Token savings:** this file is ~16,600 tokens. Without it, AI exploration would cost ~160,700 tokens. **Saves ~144,100 tokens per conversation.**
+> **Last scanned:** 2026-10-15 16:02 — re-run after significant changes
 
 ---
 
@@ -651,6 +651,11 @@
   - _...1 more_
 - `apps/website/src/utils/search-routes.ts` — function getSearchResultRoute: (result, "id" | "media_type">) => string, type SearchFilter
 - `apps/website/src/utils/season-data.ts` — function fetchSeasonPageData: (showId, seasonNumber, locale?) => Promise<SeasonDataResponse>, function fetchEpisodePageData: (showId, seasonNumber, episodeNumber, locale?) => Promise<EpisodeDataResponse>
+- `apps/website/src/utils/voice-actor-og-image.ts`
+  - function isVoiceActorOgImagesEnabled: (value) => boolean
+  - function getVoiceActorOgImageMetadata: (enabled, voiceActorId) => VoiceActorOgImageMetadata
+  - type VoiceActorOgImageMetadata
+  - const STATIC_VOICE_ACTOR_OG_IMAGE_URL
 - `e2e/helpers/mock-api.ts`
   - function waitForVueHydration: (page) => Promise<void>
   - function setupMockApi: (page, options) => void
@@ -834,10 +839,10 @@
 - `apps/website/server/utils/urls/supabase.ts` — imported by **10** files
 - `apps/website/server/utils/urls/tmdb.ts` — imported by **10** files
 - `apps/website/server/utils/dubbing-language.ts` — imported by **10** files
-- `apps/website/server/utils/cache/http.ts` — imported by **8** files
 - `apps/website/server/utils/cache/constants.ts` — imported by **8** files
 - `e2e/helpers/mock-api.ts` — imported by **8** files
 - `packages/shared-logic/src/types/index.ts` — imported by **8** files
+- `apps/website/server/utils/cache/http.ts` — imported by **7** files
 - `apps/website/server/utils/background.ts` — imported by **7** files
 - `apps/website/server/utils/services/media.ts` — imported by **6** files
 - `apps/website/server/utils/cache/wikipedia.ts` — imported by **5** files
@@ -863,7 +868,7 @@
 # Test Coverage
 
 > **28%** of routes and models are covered by tests
-> 84 test files found
+> 86 test files found
 
 ## Covered Routes
 
