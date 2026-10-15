@@ -3,10 +3,7 @@
     class="min-h-screen theme-bg theme-text py-12 px-4 sm:px-6 lg:px-8 font-sans relative overflow-hidden"
   >
     <!-- Optional: Confetti Container -->
-    <div
-      id="confetti-container"
-      class="absolute inset-0 pointer-events-none z-50"
-    ></div>
+    <div id="confetti-container" class="absolute inset-0 pointer-events-none z-50"></div>
 
     <div class="max-w-3xl mx-auto space-y-8">
       <!-- Header -->
@@ -15,12 +12,7 @@
           :to="localePath('/contribute')"
           class="theme-text-muted theme-hover-text transition-colors p-2 rounded-full theme-hover-surface-muted"
         >
-          <svg
-            class="w-6 h-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -34,13 +26,32 @@
         </h1>
       </div>
 
+      <label for="contribution-category" class="block text-sm font-medium theme-text">
+        {{ $t("common.filter") }}
+        <select
+          id="contribution-category"
+          v-model="selectedCategory"
+          :disabled="isSubmitting"
+          class="mt-2 w-full theme-input rounded-lg px-4 py-3 theme-focus"
+        >
+          <option value="any">{{ $t("contribute.categoryAll") }}</option>
+          <option value="enrich_voice_actor">{{ $t("contribute.categoryVoiceActors") }}</option>
+          <option value="enrich_studio">{{ $t("contribute.categoryStudios") }}</option>
+        </select>
+      </label>
+
       <!-- Main Task Card -->
-      <div
-        class="theme-surface rounded-2xl border theme-border p-8 shadow-2xl relative"
-      >
+      <div class="theme-surface rounded-2xl border theme-border p-8 shadow-2xl relative">
+        <div v-if="requiresLogin || (mounted && !user)" class="text-center py-12">
+          <NuxtLink :to="loginLocation" class="theme-primary-text underline">
+            {{ $t("nav.login") }}
+          </NuxtLink>
+        </div>
         <!-- Loading State -->
         <div
-          v-if="isLoading"
+          v-else-if="!mounted || isLoading"
+          role="status"
+          aria-live="polite"
           class="flex flex-col items-center justify-center py-12 space-y-4"
         >
           <div
@@ -52,16 +63,11 @@
         </div>
 
         <!-- Error / No Tasks State -->
-        <div v-else-if="error" class="text-center py-12 space-y-6">
+        <div v-else-if="error && !currentTask" role="alert" class="text-center py-12 space-y-6">
           <div
             class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-500/10 theme-status-danger-text"
           >
-            <svg
-              class="w-8 h-8"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
+            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -78,9 +84,21 @@
           </div>
           <button
             @click="loadTask"
+            data-test="retry-task"
             class="px-6 py-2 theme-surface-muted theme-hover-surface-muted theme-text rounded-lg transition-colors"
           >
             {{ $t("contribute.tryAgain") }}
+          </button>
+        </div>
+
+        <div v-else-if="noTask" role="status" class="text-center py-12 space-y-6">
+          <p class="theme-text-muted">{{ $t("contribute.noTasksAvailable") }}</p>
+          <button
+            data-test="retry-task"
+            @click="loadTask"
+            class="px-6 py-2 theme-surface-muted theme-hover-surface-muted rounded-lg theme-focus"
+          >
+            {{ $t("common.retry") }}
           </button>
         </div>
 
@@ -95,7 +113,6 @@
             <p class="text-xl theme-text">
               {{
                 currentTask.name ||
-                currentTask.title ||
                 (currentTask.firstname
                   ? `${currentTask.firstname} ${currentTask.lastname || ""}`.trim()
                   : null) ||
@@ -108,18 +125,23 @@
           </div>
 
           <!-- Form Area -->
+          <p v-if="error" role="alert" class="theme-status-danger-text">
+            {{ error }}
+          </p>
           <form class="space-y-6" @submit.prevent="submit">
             <!-- Voice Actor Fields -->
             <template v-if="activeCategory === 'enrich_voice_actor'">
-              <div
-                v-if="currentTask.profile_picture === null"
-                class="space-y-2"
-              >
+              <div v-if="currentTask.profile_picture === null" class="space-y-2">
                 <label class="block text-sm font-medium theme-text">{{
                   $t("contribute.profilePicture")
                 }}</label>
                 <div
                   class="border-2 border-dashed theme-border rounded-xl p-8 text-center hover:border-blue-500/50 hover:bg-blue-500/5 transition-all cursor-pointer relative"
+                  role="button"
+                  tabindex="0"
+                  :aria-label="$t('contribute.clickOrDropImage')"
+                  @keydown.enter.prevent="triggerFileInput"
+                  @keydown.space.prevent="triggerFileInput"
                   @click="triggerFileInput"
                   @dragover.prevent="isDragging = true"
                   @dragleave.prevent="isDragging = false"
@@ -127,10 +149,11 @@
                   :class="{ 'border-blue-500 bg-blue-500/10': isDragging }"
                 >
                   <input
+                    :disabled="isSubmitting"
                     type="file"
                     ref="fileInput"
                     class="hidden"
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
                     @change="handleFileSelect"
                   />
                   <div v-if="previewUrl" class="space-y-4">
@@ -150,12 +173,7 @@
                     <div
                       class="mx-auto w-12 h-12 rounded-full theme-surface-muted flex items-center justify-center theme-text-muted"
                     >
-                      <svg
-                        class="w-6 h-6"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
+                      <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path
                           stroke-linecap="round"
                           stroke-linejoin="round"
@@ -176,6 +194,7 @@
                   $t("profile.nationality")
                 }}</label>
                 <select
+                  :disabled="isSubmitting"
                   v-model="formFields.nationality"
                   class="w-full theme-input border-none rounded-lg theme-text px-4 py-3 theme-focus outline-none appearance-none"
                 >
@@ -212,6 +231,7 @@
                   $t("voiceActorEdit.dateOfBirth")
                 }}</label>
                 <input
+                  :disabled="isSubmitting"
                   v-model="formFields.date_of_birth"
                   type="date"
                   class="w-full theme-input border-none rounded-lg theme-text px-4 py-3 theme-focus outline-none"
@@ -223,6 +243,7 @@
                   $t("profile.biography")
                 }}</label>
                 <textarea
+                  :disabled="isSubmitting"
                   v-model="formFields.bio"
                   rows="4"
                   placeholder="Brief biography..."
@@ -241,20 +262,12 @@
                     $t("voiceActorEdit.tmdbId")
                   }}</label>
                   <input
-                    :value="
-                      currentTask.tmdb_id != null
-                        ? currentTask.tmdb_id
-                        : formFields.tmdb_id
-                    "
-                    @input="
-                      formFields.tmdb_id = (
-                        $event.target as HTMLInputElement
-                      ).value
-                    "
+                    :value="currentTask.tmdb_id != null ? currentTask.tmdb_id : formFields.tmdb_id"
+                    @input="formFields.tmdb_id = readInput($event)"
                     type="number"
                     placeholder="e.g. 12345"
                     class="w-full theme-input border-none rounded-lg theme-text px-4 py-3 theme-focus outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                    :disabled="currentTask.tmdb_id != null"
+                    :disabled="isSubmitting || currentTask.tmdb_id != null"
                   />
                 </div>
 
@@ -268,15 +281,11 @@
                         ? currentTask.wikidata_id
                         : formFields.wikidata_id
                     "
-                    @input="
-                      formFields.wikidata_id = (
-                        $event.target as HTMLInputElement
-                      ).value
-                    "
+                    @input="formFields.wikidata_id = readInput($event)"
                     type="text"
                     placeholder="e.g. Q12345"
                     class="w-full theme-input border-none rounded-lg theme-text px-4 py-3 theme-focus outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                    :disabled="currentTask.wikidata_id != null"
+                    :disabled="isSubmitting || currentTask.wikidata_id != null"
                   />
                 </div>
               </div>
@@ -293,21 +302,12 @@
                       $t("contribute.twitter")
                     }}</label>
                     <input
-                      :value="
-                        currentTask.social_media_links?.twitter ||
-                        formFields.twitter
-                      "
-                      @input="
-                        formFields.twitter = (
-                          $event.target as HTMLInputElement
-                        ).value
-                      "
+                      :value="currentTask.social_media_links?.twitter || formFields.twitter"
+                      @input="formFields.twitter = readInput($event)"
                       type="url"
                       placeholder="https://x.com/..."
                       class="w-full theme-input border-none rounded-lg theme-text px-4 py-3 theme-focus outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                      :disabled="
-                        currentTask.social_media_links?.twitter != null
-                      "
+                      :disabled="isSubmitting || currentTask.social_media_links?.twitter != null"
                     />
                   </div>
                   <div class="space-y-2">
@@ -315,21 +315,12 @@
                       $t("voiceActorEdit.instagram")
                     }}</label>
                     <input
-                      :value="
-                        currentTask.social_media_links?.instagram ||
-                        formFields.instagram
-                      "
-                      @input="
-                        formFields.instagram = (
-                          $event.target as HTMLInputElement
-                        ).value
-                      "
+                      :value="currentTask.social_media_links?.instagram || formFields.instagram"
+                      @input="formFields.instagram = readInput($event)"
                       type="url"
                       placeholder="https://instagram.com/..."
                       class="w-full theme-input border-none rounded-lg theme-text px-4 py-3 theme-focus outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                      :disabled="
-                        currentTask.social_media_links?.instagram != null
-                      "
+                      :disabled="isSubmitting || currentTask.social_media_links?.instagram != null"
                     />
                   </div>
                   <div class="space-y-2">
@@ -337,19 +328,12 @@
                       $t("voiceActorEdit.tiktok")
                     }}</label>
                     <input
-                      :value="
-                        currentTask.social_media_links?.tiktok ||
-                        formFields.tiktok
-                      "
-                      @input="
-                        formFields.tiktok = (
-                          $event.target as HTMLInputElement
-                        ).value
-                      "
+                      :value="currentTask.social_media_links?.tiktok || formFields.tiktok"
+                      @input="formFields.tiktok = readInput($event)"
                       type="url"
                       placeholder="https://tiktok.com/@..."
                       class="w-full theme-input border-none rounded-lg theme-text px-4 py-3 theme-focus outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                      :disabled="currentTask.social_media_links?.tiktok != null"
+                      :disabled="isSubmitting || currentTask.social_media_links?.tiktok != null"
                     />
                   </div>
                   <div class="space-y-2">
@@ -357,21 +341,12 @@
                       $t("voiceActorEdit.facebook")
                     }}</label>
                     <input
-                      :value="
-                        currentTask.social_media_links?.facebook ||
-                        formFields.facebook
-                      "
-                      @input="
-                        formFields.facebook = (
-                          $event.target as HTMLInputElement
-                        ).value
-                      "
+                      :value="currentTask.social_media_links?.facebook || formFields.facebook"
+                      @input="formFields.facebook = readInput($event)"
                       type="url"
                       placeholder="https://facebook.com/..."
                       class="w-full theme-input border-none rounded-lg theme-text px-4 py-3 theme-focus outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                      :disabled="
-                        currentTask.social_media_links?.facebook != null
-                      "
+                      :disabled="isSubmitting || currentTask.social_media_links?.facebook != null"
                     />
                   </div>
                 </div>
@@ -386,17 +361,25 @@
                 }}</label>
                 <div
                   class="border-2 border-dashed theme-border rounded-xl p-8 text-center hover:border-purple-500/50 hover:bg-purple-500/5 transition-all cursor-pointer relative"
+                  role="button"
+                  tabindex="0"
+                  :aria-label="$t('contribute.clickOrDropImage')"
+                  @keydown.enter.prevent="triggerFileInput"
+                  @keydown.space.prevent="triggerFileInput"
                   @click="triggerFileInput"
                   @dragover.prevent="isDragging = true"
                   @dragleave.prevent="isDragging = false"
                   @drop.prevent="handleDrop"
-                  :class="{ 'border-purple-500 bg-purple-500/10': isDragging }"
+                  :class="{
+                    'border-purple-500 bg-purple-500/10': isDragging,
+                  }"
                 >
                   <input
+                    :disabled="isSubmitting"
                     type="file"
                     ref="fileInput"
                     class="hidden"
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
                     @change="handleFileSelect"
                   />
                   <div v-if="previewUrl" class="space-y-4">
@@ -416,12 +399,7 @@
                     <div
                       class="mx-auto w-12 h-12 rounded-full theme-surface-muted flex items-center justify-center theme-text-muted"
                     >
-                      <svg
-                        class="w-6 h-6"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
+                      <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path
                           stroke-linecap="round"
                           stroke-linejoin="round"
@@ -442,6 +420,7 @@
                   $t("common.country")
                 }}</label>
                 <input
+                  :disabled="isSubmitting"
                   v-model="formFields.country"
                   type="text"
                   placeholder="e.g. United States"
@@ -450,10 +429,9 @@
               </div>
 
               <div v-if="currentTask.city === null" class="space-y-2">
-                <label class="block text-sm font-medium theme-text">{{
-                  $t("common.city")
-                }}</label>
+                <label class="block text-sm font-medium theme-text">{{ $t("common.city") }}</label>
                 <input
+                  :disabled="isSubmitting"
                   v-model="formFields.city"
                   type="text"
                   placeholder="e.g. Los Angeles"
@@ -466,6 +444,7 @@
                   $t("admin.studios.websiteUrl")
                 }}</label>
                 <input
+                  :disabled="isSubmitting"
                   v-model="formFields.website_url"
                   type="url"
                   placeholder="https://..."
@@ -485,21 +464,12 @@
                       $t("contribute.twitter")
                     }}</label>
                     <input
-                      :value="
-                        currentTask.social_media_links?.twitter ||
-                        formFields.twitter
-                      "
-                      @input="
-                        formFields.twitter = (
-                          $event.target as HTMLInputElement
-                        ).value
-                      "
+                      :value="currentTask.social_media_links?.twitter || formFields.twitter"
+                      @input="formFields.twitter = readInput($event)"
                       type="url"
                       placeholder="https://x.com/..."
                       class="w-full theme-input border-none rounded-lg theme-text px-4 py-3 theme-focus outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                      :disabled="
-                        currentTask.social_media_links?.twitter != null
-                      "
+                      :disabled="isSubmitting || currentTask.social_media_links?.twitter != null"
                     />
                   </div>
                   <div class="space-y-2">
@@ -507,21 +477,12 @@
                       $t("voiceActorEdit.instagram")
                     }}</label>
                     <input
-                      :value="
-                        currentTask.social_media_links?.instagram ||
-                        formFields.instagram
-                      "
-                      @input="
-                        formFields.instagram = (
-                          $event.target as HTMLInputElement
-                        ).value
-                      "
+                      :value="currentTask.social_media_links?.instagram || formFields.instagram"
+                      @input="formFields.instagram = readInput($event)"
                       type="url"
                       placeholder="https://instagram.com/..."
                       class="w-full theme-input border-none rounded-lg theme-text px-4 py-3 theme-focus outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                      :disabled="
-                        currentTask.social_media_links?.instagram != null
-                      "
+                      :disabled="isSubmitting || currentTask.social_media_links?.instagram != null"
                     />
                   </div>
                   <div class="space-y-2">
@@ -529,19 +490,12 @@
                       $t("voiceActorEdit.tiktok")
                     }}</label>
                     <input
-                      :value="
-                        currentTask.social_media_links?.tiktok ||
-                        formFields.tiktok
-                      "
-                      @input="
-                        formFields.tiktok = (
-                          $event.target as HTMLInputElement
-                        ).value
-                      "
+                      :value="currentTask.social_media_links?.tiktok || formFields.tiktok"
+                      @input="formFields.tiktok = readInput($event)"
                       type="url"
                       placeholder="https://tiktok.com/@..."
                       class="w-full theme-input border-none rounded-lg theme-text px-4 py-3 theme-focus outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                      :disabled="currentTask.social_media_links?.tiktok != null"
+                      :disabled="isSubmitting || currentTask.social_media_links?.tiktok != null"
                     />
                   </div>
                   <div class="space-y-2">
@@ -549,21 +503,12 @@
                       $t("voiceActorEdit.facebook")
                     }}</label>
                     <input
-                      :value="
-                        currentTask.social_media_links?.facebook ||
-                        formFields.facebook
-                      "
-                      @input="
-                        formFields.facebook = (
-                          $event.target as HTMLInputElement
-                        ).value
-                      "
+                      :value="currentTask.social_media_links?.facebook || formFields.facebook"
+                      @input="formFields.facebook = readInput($event)"
                       type="url"
                       placeholder="https://facebook.com/..."
                       class="w-full theme-input border-none rounded-lg theme-text px-4 py-3 theme-focus outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                      :disabled="
-                        currentTask.social_media_links?.facebook != null
-                      "
+                      :disabled="isSubmitting || currentTask.social_media_links?.facebook != null"
                     />
                   </div>
                 </div>
@@ -607,9 +552,7 @@
                   ></path>
                 </svg>
                 <span>{{
-                  isSubmitting
-                    ? $t("contribute.submitting")
-                    : $t("contribute.submitAndEarnPoints")
+                  isSubmitting ? $t("contribute.submitting") : $t("contribute.submitAndEarnPoints")
                 }}</span>
               </button>
             </div>
@@ -621,32 +564,40 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive } from "vue";
-import {
-  useContribute,
-  fetchRandomTask,
-} from "../../../composables/useContribute";
+import { ref, computed, reactive, watch, onMounted, onBeforeUnmount } from "vue";
+import { useContribute, type ContributionCategory } from "../../../composables/useContribute";
 
 const localePath = useLocalePath();
-
-const { data: initialData } = await useAsyncData(
-  "random-task",
-  () => fetchRandomTask("any"),
-  { getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp) },
-);
-
-const initialTask = (initialData.value as any)?.task || null;
-const initialCategory = (initialData.value as any)?.category || null;
+const route = useRoute();
+const router = useRouter();
+const user = useSupabaseUser();
+const mounted = ref(false);
+const selectedCategory = computed<ContributionCategory>({
+  get: () => {
+    const category = route.query.category;
+    return category === "enrich_voice_actor" || category === "enrich_studio" ? category : "any";
+  },
+  set: (category) => {
+    void router.replace({ query: { ...route.query, category } });
+  },
+});
+const loginLocation = computed(() => ({
+  path: localePath("/login"),
+  query: { redirect: route.fullPath },
+}));
 
 const {
   getRandomTask,
   submitTask,
+  reset,
   currentTask,
   activeCategory,
   isLoading,
   isSubmitting,
   error,
-} = useContribute(initialTask, initialCategory);
+  noTask,
+  requiresLogin,
+} = useContribute();
 
 const fileInput = ref<HTMLInputElement | null>(null);
 const isDragging = ref(false);
@@ -676,8 +627,14 @@ const resetForm = () => {
 };
 
 const loadTask = async () => {
+  if (isSubmitting.value) return;
   resetForm();
-  await getRandomTask("any");
+  if (!user.value) {
+    reset();
+    await navigateTo(loginLocation.value);
+    return;
+  }
+  await getRandomTask(selectedCategory.value);
 };
 
 const hasAnyInput = computed(() => {
@@ -686,12 +643,18 @@ const hasAnyInput = computed(() => {
 });
 
 const triggerFileInput = () => {
+  if (isSubmitting.value) return;
   fileInput.value?.click();
 };
 
 const handleFileSelect = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  if (target.files && target.files.length > 0 && target.files[0]) {
+  const target = event.target;
+  if (
+    target instanceof HTMLInputElement &&
+    target.files &&
+    target.files.length > 0 &&
+    target.files[0]
+  ) {
     setFile(target.files[0]);
   }
 };
@@ -708,10 +671,12 @@ const handleDrop = (event: DragEvent) => {
 };
 
 const setFile = (file: File) => {
+  if (isSubmitting.value) return;
   if (!file.type.startsWith("image/")) {
     alert("Please select an image file.");
     return;
   }
+  clearFile();
   selectedFile.value = file;
   previewUrl.value = URL.createObjectURL(file);
 };
@@ -737,8 +702,7 @@ const playConfetti = () => {
     confetti.style.left = Math.random() * 100 + "vw";
     confetti.style.top = "-10px";
     const colors = ["#3b82f6", "#8b5cf6", "#10b981", "#ef4444"];
-    confetti.style.backgroundColor =
-      colors[Math.floor(Math.random() * colors.length)] || "#3b82f6";
+    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)] || "#3b82f6";
     confetti.style.transition = "all 2s ease-out";
 
     container.appendChild(confetti);
@@ -766,16 +730,33 @@ const submit = async () => {
     }
   });
 
-  const result: any = await submitTask(
-    activeCategory.value,
-    currentTask.value.id.toString(),
-    payload,
-  );
+  const result = await submitTask(payload);
   if (result?.success) {
     playConfetti();
-    setTimeout(() => {
-      loadTask(); // Load next task
-    }, 1500);
+    await loadTask(); // Load next task after confirmed success.
   }
 };
+const readInput = (event: Event): string =>
+  event.target instanceof HTMLInputElement ? event.target.value : "";
+
+// Claims are mutations: never acquire them during SSR or speculative prefetch.
+// Starting after mount also avoids repeating a server claim during hydration.
+onMounted(() => {
+  mounted.value = true;
+  watch(
+    [selectedCategory, () => user.value?.id],
+    (value, previous) => {
+      if (value[1] !== previous?.[1]) reset();
+      void loadTask();
+    },
+    { immediate: true },
+  );
+});
+watch(requiresLogin, (required) => {
+  if (required) void navigateTo(loginLocation.value);
+});
+onBeforeUnmount(() => {
+  reset(); // Ignore any response that arrives after navigation.
+  clearFile();
+});
 </script>
