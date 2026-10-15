@@ -7,7 +7,6 @@ import {
   type EventHandler,
 } from "h3";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { mockNuxtImport } from "@nuxt/test-utils/runtime";
 import cacheHeadersMiddleware from "../../middleware/00-cache-headers";
 import {
   getCloudflareCacheControl,
@@ -28,7 +27,14 @@ const routeMocks = vi.hoisted(() => ({
   render: vi.fn(),
 }));
 
-mockNuxtImport("useRuntimeConfig", () => routeMocks.useRuntimeConfig);
+vi.mock("#imports", () => ({
+  createError,
+  defineEventHandler,
+  getQuery,
+  useRuntimeConfig: routeMocks.useRuntimeConfig,
+  useStorage: routeMocks.useStorage,
+  useSupabaseAdmin: routeMocks.useSupabaseAdmin,
+}));
 
 vi.mock("@cf-wasm/satori/workerd", () => {
   routeMocks.satoriModuleLoads();
