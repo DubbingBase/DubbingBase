@@ -834,6 +834,38 @@ export type Database = {
           project_id: number;
           replayed: boolean;
           updated_at: string;
+        };
+      };
+      create_voice_actor_work_link: {
+        Args: {
+          p_actor_person_id: number | null;
+          p_character_name: string;
+          p_content_id: number;
+          p_content_type: string;
+          p_language: string;
+          p_performance: string;
+          p_request_id: string;
+          p_user_id: string;
+          p_voice_actor_id: number;
+        };
+        Returns: {
+          audit_log_id: string;
+          project_id: number;
+          replayed: boolean;
+          work_id: number;
+        }[];
+      };
+      delete_voice_actor_work_link: {
+        Args: {
+          p_expected_updated_at?: string | null;
+          p_request_id: string;
+          p_user_id: string;
+          p_work_id: number;
+        };
+        Returns: {
+          audit_log_id: string;
+          replayed: boolean;
+          work_id: number;
         }[];
       };
       consume_gamification_task_claim: {
@@ -1158,6 +1190,20 @@ export type Database = {
           project_id: number;
           replayed: boolean;
           updated_at: string | null;
+        }[];
+      };
+      update_voice_actor_work_performance: {
+        Args: {
+          p_expected_updated_at: string | null;
+          p_performance: string;
+          p_request_id: string;
+          p_user_id: string;
+          p_work_id: number;
+        };
+        Returns: {
+          audit_log_id: string;
+          replayed: boolean;
+          work_id: number;
         }[];
       };
       save_regional_project_actor_assignments:
