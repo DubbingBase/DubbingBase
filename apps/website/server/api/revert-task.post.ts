@@ -1,7 +1,12 @@
 import type { Json } from "@app/supabase";
 
 function getAuditValue(value: Json | null): Json | null {
-  if (value !== null && typeof value === "object" && !Array.isArray(value) && "value" in value) {
+  if (
+    value !== null &&
+    typeof value === "object" &&
+    !Array.isArray(value) &&
+    "value" in value
+  ) {
     return value.value ?? null;
   }
   return null;
@@ -39,7 +44,18 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    if (auditLog.entity_type === "voice_actor" && user.app_metadata?.role !== "admin") {
+    if (auditLog.entity_type !== "voice_actor") {
+      throw createError({
+        statusCode: 422,
+        message:
+          "This audit event does not have a supported rollback operation",
+      });
+    }
+
+    if (
+      auditLog.entity_type === "voice_actor" &&
+      user.app_metadata?.role !== "admin"
+    ) {
       throw createError({
         statusCode: 403,
         message: "Only admins can modify a voice actor profile picture",
@@ -73,7 +89,9 @@ export default defineEventHandler(async (event) => {
     }
 
     const finalValue =
-      resolvedValue !== undefined ? resolvedValue : getAuditValue(auditLog.previous_value);
+      resolvedValue !== undefined
+        ? resolvedValue
+        : getAuditValue(auditLog.previous_value);
 
     if (auditLog.entity_type === "voice_actor") {
       await supabaseAdmin
@@ -97,7 +115,8 @@ export default defineEventHandler(async (event) => {
 
     return { success: true };
   } catch (error) {
-    if (error && typeof error === "object" && "statusCode" in error) throw error;
+    if (error && typeof error === "object" && "statusCode" in error)
+      throw error;
     console.error("Unexpected error:", error);
     throw createError({ statusCode: 500, message: "Internal server error" });
   }

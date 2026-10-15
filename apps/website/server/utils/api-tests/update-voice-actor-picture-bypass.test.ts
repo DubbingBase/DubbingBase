@@ -92,4 +92,48 @@ describe("voice actor profile-picture mutation paths", () => {
     expect(response.status).toBe(403);
     expect(actorUpdate).not.toHaveBeenCalled();
   });
+
+  it("does not mark unsupported project audit events as reverted", async () => {
+    const auditQuery = {
+      select: vi.fn(() => auditQuery),
+      eq: vi.fn(() => auditQuery),
+      single: vi.fn(async () => ({
+        data: {
+          entity_type: "dubbing_project",
+          entity_id: "51",
+          new_value: { project: { language: "fr-FR" } },
+          previous_value: { project: { language: "fr-CA" } },
+          reverted_at: null,
+        },
+        error: null,
+      })),
+      update: vi.fn(() => auditQuery),
+      insert: vi.fn(() => auditQuery),
+    };
+    const supabaseAdmin = { from: vi.fn(() => auditQuery) };
+    const app = createApp();
+    app.use(
+      "/",
+      defineEventHandler((event) => {
+        event.context.user = {
+          id: "admin-user",
+          app_metadata: { role: "admin" },
+        };
+        event.context.supabaseAdmin = supabaseAdmin;
+        return revertTask(event);
+      }),
+    );
+
+    const response = await toWebHandler(app)(
+      new Request("http://localhost/", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ auditLogId: "audit-project-1" }),
+      }),
+    );
+
+    expect(response.status).toBe(422);
+    expect(auditQuery.update).not.toHaveBeenCalled();
+    expect(auditQuery.insert).not.toHaveBeenCalled();
+  });
 });
