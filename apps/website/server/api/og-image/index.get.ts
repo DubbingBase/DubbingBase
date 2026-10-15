@@ -422,6 +422,9 @@ export default defineEventHandler(async (event) => {
 
     const pngData = resvg.render();
     const pngBuffer = pngData.asPng();
+    if (pngBuffer.byteLength === 0) {
+      throw new Error("OG image renderer returned an empty PNG");
+    }
 
     if (allowPublicCache) {
       setPublicCacheHeaders(event, "og-image");

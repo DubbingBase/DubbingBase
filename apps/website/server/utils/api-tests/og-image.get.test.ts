@@ -32,11 +32,6 @@ vi.mock("@cf-wasm/satori/workerd", () => {
   return { default: routeMocks.satori };
 });
 
-vi.mock("@cf-wasm/resvg/workerd", () => {
-  routeMocks.resvgModuleLoads();
-  return { Resvg: { async: routeMocks.resvgAsync } };
-});
-
 vi.mock("satori", () => {
   routeMocks.fallbackSatoriModuleLoads();
   return { default: routeMocks.satori };
@@ -57,6 +52,10 @@ beforeAll(() => {
 beforeEach(async () => {
   vi.clearAllMocks();
   vi.resetModules();
+  vi.doMock("@cf-wasm/resvg/workerd", () => {
+    routeMocks.resvgModuleLoads();
+    return { Resvg: { async: routeMocks.resvgAsync } };
+  });
 
   routeMocks.useRuntimeConfig.mockReturnValue({
     public: { ogImagesEnabled: false, supabaseUrl: "https://db.example" },
@@ -226,5 +225,38 @@ describe("GET /api/og-image", () => {
 
     expect(response.status).toBe(500);
     expectNoStore(response);
+  });
+
+  it("rejects empty rendering output without caching it", async () => {
+    routeMocks.useRuntimeConfig.mockReturnValue({
+      public: { ogImagesEnabled: true },
+    });
+    configureActor();
+    routeMocks.render.mockReturnValue({
+      asPng: vi.fn(() => new Uint8Array()),
+    });
+
+    const response = await request("/?type=voice-actor&id=42");
+
+    expect(response.status).toBe(500);
+    expectNoStore(response);
+  });
+
+  it("keeps dependency initialization fallbacks no-store on repeated requests", async () => {
+    routeMocks.useRuntimeConfig.mockReturnValue({
+      public: { ogImagesEnabled: true },
+    });
+    configureActor();
+    vi.doMock("@cf-wasm/resvg/workerd", () => {
+      throw new Error("renderer unavailable");
+    });
+
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const response = await request("/?type=voice-actor&id=42");
+
+      expect(response.status).toBe(500);
+      expectNoStore(response);
+    }
+    expect(routeMocks.fallbackSatoriModuleLoads).toHaveBeenCalledTimes(1);
   });
 });
