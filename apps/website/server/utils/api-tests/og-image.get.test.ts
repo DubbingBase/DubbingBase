@@ -31,6 +31,10 @@ vi.mock("nitropack/runtime/internal/storage", () => ({
   useStorage: routeMocks.useStorage,
 }));
 
+vi.mock("nitropack/runtime/internal/config", () => ({
+  useRuntimeConfig: routeMocks.useRuntimeConfig,
+}));
+
 vi.mock("../db/client", () => ({
   useSupabaseAdmin: routeMocks.useSupabaseAdmin,
 }));
@@ -94,9 +98,6 @@ async function request(path: string): Promise<Response> {
   app.use(
     "/",
     defineEventHandler((event) => {
-      event.context.nitro = {
-        runtimeConfig: routeMocks.useRuntimeConfig(),
-      };
       return handler(event);
     }),
   );
