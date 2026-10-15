@@ -31,37 +31,49 @@ export type Database = {
       audit_logs: {
         Row: {
           action: string;
+          changed_fields: string[];
           created_at: string | null;
           entity_id: string;
           entity_type: string;
           id: string;
+          metadata: Json;
           new_value: Json | null;
           points_awarded: number | null;
           previous_value: Json | null;
+          request_fingerprint: string | null;
+          request_id: string | null;
           reverted_at: string | null;
           user_id: string;
         };
         Insert: {
           action: string;
+          changed_fields?: string[];
           created_at?: string | null;
           entity_id: string;
           entity_type: string;
           id?: string;
+          metadata?: Json;
           new_value?: Json | null;
           points_awarded?: number | null;
           previous_value?: Json | null;
+          request_fingerprint?: string | null;
+          request_id?: string | null;
           reverted_at?: string | null;
           user_id: string;
         };
         Update: {
           action?: string;
+          changed_fields?: string[];
           created_at?: string | null;
           entity_id?: string;
           entity_type?: string;
           id?: string;
+          metadata?: Json;
           new_value?: Json | null;
           points_awarded?: number | null;
           previous_value?: Json | null;
+          request_fingerprint?: string | null;
+          request_id?: string | null;
           reverted_at?: string | null;
           user_id?: string;
         };
@@ -705,6 +717,20 @@ export type Database = {
           claim_id: string | null;
           expires_at: string | null;
           task: Json | null;
+        }[];
+      };
+      controlled_save_studio: {
+        Args: {
+          p_actor_id: string;
+          p_expected_updated_at: string | null;
+          p_request_id: string;
+          p_studio_id: number | null;
+          p_updates: Json;
+        };
+        Returns: {
+          audit_log_id: string | null;
+          replayed: boolean;
+          studio_id: number;
         }[];
       };
       consume_gamification_task_claim: {

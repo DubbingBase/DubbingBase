@@ -4,37 +4,25 @@
       <div class="mb-8 flex items-center justify-between">
         <div>
           <h1 class="text-3xl font-bold">
-            {{
-              isEditMode
-                ? $t("studioEdit.titleEdit")
-                : $t("studioEdit.titleCreate")
-            }}
+            {{ isEditMode ? $t("studioEdit.titleEdit") : $t("studioEdit.titleCreate") }}
           </h1>
           <p class="theme-text-muted mt-2">
             {{
               $t("studioEdit.fillInfo", {
-                verb: isEditMode
-                  ? $t("studioEdit.saveUpdate")
-                  : $t("studioEdit.saveCreate"),
+                verb: isEditMode ? $t("studioEdit.saveUpdate") : $t("studioEdit.saveCreate"),
               })
             }}
           </p>
         </div>
         <NuxtLink
-          :to="
-            isEditMode
-              ? localePath(`/studio/${studioId}`)
-              : localePath('/studios')
-          "
+          :to="isEditMode ? localePath(`/studio/${studioId}`) : localePath('/studios')"
           class="px-4 py-2 theme-surface-muted theme-hover-surface-muted rounded-lg transition-colors text-sm font-medium"
           >{{ $t("common.cancelButton") }}</NuxtLink
         >
       </div>
 
       <div v-if="loading" class="flex justify-center py-12">
-        <div
-          class="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"
-        ></div>
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
       </div>
 
       <form
@@ -44,10 +32,9 @@
       >
         <div class="space-y-6">
           <div>
-            <label
-              class="block text-sm font-semibold mb-2 theme-text-secondary"
-              >{{ $t("studioEdit.studioName") }}</label
-            >
+            <label class="block text-sm font-semibold mb-2 theme-text-secondary">{{
+              $t("studioEdit.studioName")
+            }}</label>
             <input
               v-model="form.name"
               type="text"
@@ -59,10 +46,9 @@
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label
-                class="block text-sm font-semibold mb-2 theme-text-secondary"
-                >{{ $t("common.country") }}</label
-              >
+              <label class="block text-sm font-semibold mb-2 theme-text-secondary">{{
+                $t("common.country")
+              }}</label>
               <input
                 v-model="form.country"
                 type="text"
@@ -71,10 +57,9 @@
               />
             </div>
             <div>
-              <label
-                class="block text-sm font-semibold mb-2 theme-text-secondary"
-                >{{ $t("common.city") }}</label
-              >
+              <label class="block text-sm font-semibold mb-2 theme-text-secondary">{{
+                $t("common.city")
+              }}</label>
               <input
                 v-model="form.city"
                 type="text"
@@ -85,10 +70,9 @@
           </div>
 
           <div>
-            <label
-              class="block text-sm font-semibold mb-2 theme-text-secondary"
-              >{{ $t("studioEdit.website") }}</label
-            >
+            <label class="block text-sm font-semibold mb-2 theme-text-secondary">{{
+              $t("studioEdit.website")
+            }}</label>
             <input
               v-model="form.website_url"
               type="url"
@@ -98,10 +82,9 @@
           </div>
 
           <div class="space-y-2">
-            <label
-              class="block text-sm font-semibold mb-2 theme-text-secondary"
-              >{{ $t("admin.studios.studioLogo") }}</label
-            >
+            <label class="block text-sm font-semibold mb-2 theme-text-secondary">{{
+              $t("admin.studios.studioLogo")
+            }}</label>
             <div class="flex items-center gap-4">
               <div
                 class="relative h-16 w-16 rounded-xl overflow-hidden border theme-border-subtle theme-border theme-surface-raised theme-input flex shrink-0 items-center justify-center theme-text-muted shadow-inner group"
@@ -128,7 +111,7 @@
                   />
                 </svg>
               </div>
-              <div class="flex-1 space-y-2">
+              <div v-if="canEditStudioLogo" class="flex-1 space-y-2">
                 <input
                   ref="fileInput"
                   type="file"
@@ -142,11 +125,7 @@
                     @click="triggerFileInput"
                     class="py-2 px-4 theme-surface-muted theme-hover-surface-muted theme-text text-xs font-semibold rounded-lg transition-colors"
                   >
-                    {{
-                      logoPreview
-                        ? $t("studioEdit.changeLogo")
-                        : $t("studioEdit.uploadLogo")
-                    }}
+                    {{ logoPreview ? $t("studioEdit.changeLogo") : $t("studioEdit.uploadLogo") }}
                   </button>
                   <button
                     v-if="logoPreview || form.logo_url"
@@ -162,10 +141,9 @@
           </div>
 
           <div>
-            <label
-              class="block text-sm font-semibold mb-2 theme-text-secondary"
-              >{{ $t("common.description") }}</label
-            >
+            <label class="block text-sm font-semibold mb-2 theme-text-secondary">{{
+              $t("common.description")
+            }}</label>
             <textarea
               v-model="form.description"
               rows="5"
@@ -175,10 +153,7 @@
           </div>
         </div>
 
-        <div
-          v-if="errorMsg"
-          class="mt-6 p-4 theme-status-danger rounded-xl border"
-        >
+        <div v-if="errorMsg" class="mt-6 p-4 theme-status-danger rounded-xl border">
           {{ errorMsg }}
         </div>
 
@@ -208,8 +183,14 @@ const route = useRoute();
 const router = useRouter();
 const localePath = useLocalePath();
 const supabase = useSupabaseClient();
+const user = useSupabaseUser();
+const canEditStudioLogo = computed(() => {
+  const role = user.value?.app_metadata?.role;
+  return role === "admin" || role === "editor";
+});
 
-const studioId = route.params.studioId as string;
+const studioRouteParam = route.params.studioId;
+const studioId = Array.isArray(studioRouteParam) ? (studioRouteParam[0] ?? "") : studioRouteParam;
 const isEditMode = computed(() => studioId && studioId !== "new");
 
 const form = ref({
@@ -224,12 +205,22 @@ const form = ref({
 const logoFile = ref<File | null>(null);
 const logoPreview = ref<string | null>(null);
 const fileInput = ref<HTMLInputElement | null>(null);
+const pendingRequestId = ref<string | null>(null);
+
+watch(
+  form,
+  () => {
+    pendingRequestId.value = null;
+  },
+  { deep: true },
+);
 
 const triggerFileInput = () => {
   fileInput.value?.click();
 };
 
 const clearLogo = () => {
+  pendingRequestId.value = null;
   if (fileInput.value) fileInput.value.value = "";
   logoFile.value = null;
   logoPreview.value = null;
@@ -237,13 +228,17 @@ const clearLogo = () => {
 };
 
 const onLogoChange = (event: Event) => {
-  const files = (event.target as HTMLInputElement).files;
+  if (!(event.target instanceof HTMLInputElement)) return;
+  const files = event.target.files;
   if (files && files.length > 0 && files[0]) {
+    pendingRequestId.value = null;
     const file = files[0];
     logoFile.value = file;
     const reader = new FileReader();
-    reader.onload = (e) => {
-      logoPreview.value = e.target?.result as string;
+    reader.onload = (loadEvent) => {
+      if (loadEvent.target instanceof FileReader && typeof loadEvent.target.result === "string") {
+        logoPreview.value = loadEvent.target.result;
+      }
     };
     reader.readAsDataURL(file);
   }
@@ -292,6 +287,8 @@ const saveStudio = async () => {
   errorMsg.value = null;
 
   try {
+    const requestId = pendingRequestId.value ?? crypto.randomUUID();
+    pendingRequestId.value = requestId;
     let finalLogoUrl = form.value.logo_url.trim() || null;
     if (logoFile.value) {
       const options = {
@@ -301,8 +298,8 @@ const saveStudio = async () => {
       };
       const compressedFile = await imageCompression(logoFile.value, options);
       const fileExt = logoFile.value.name.split(".").pop() || "jpg";
-      const actualStudioId = isEditMode.value ? studioId : "temp_" + Date.now();
-      const filePath = `${actualStudioId}/${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+      const actualStudioId = isEditMode.value ? studioId : `pending_${requestId}`;
+      const filePath = `${actualStudioId}/${requestId}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from("studio_logos")
@@ -331,21 +328,24 @@ const saveStudio = async () => {
         country: form.value.country.trim() || null,
         city: form.value.city.trim() || null,
         website_url: form.value.website_url.trim() || null,
-        logo_url: finalLogoUrl,
+        ...(canEditStudioLogo.value ? { logo_url: finalLogoUrl } : {}),
       },
-      isEditMode: isEditMode.value,
+      expectedUpdatedAt: initialStudio.value?.updated_at ?? null,
+      requestId,
     };
 
-    await $fetch("/api/save-studio", {
+    const result = await $fetch<{ studioId: number }>("/api/save-studio", {
       method: "POST",
       body: payload,
     });
 
-    router.push(localePath(`/studio/${isEditMode.value ? studioId : ""}`));
-  } catch (err: any) {
+    pendingRequestId.value = null;
+    router.push(localePath(`/studio/${isEditMode.value ? studioId : result.studioId}`));
+  } catch (err: unknown) {
     console.error("Error saving studio:", err);
     errorMsg.value =
-      err.message || "Une erreur s'est produite lors de la sauvegarde.";
+      (err instanceof Error ? err.message : null) ||
+      "Une erreur s'est produite lors de la sauvegarde.";
   } finally {
     isSaving.value = false;
   }
