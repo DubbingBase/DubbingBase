@@ -31,7 +31,7 @@ const requestSchema = z
   .passthrough();
 
 export default defineEventHandler(async (event) => {
-  requireAdmin(event);
+  const admin = requireAdmin(event);
   try {
     const parsedBody = requestSchema.safeParse(await readBody(event));
     if (!parsedBody.success) {
@@ -94,6 +94,9 @@ export default defineEventHandler(async (event) => {
         Number(mediaId),
         mediaType,
         requireDubbingLanguage(dubbing_language),
+        admin.id,
+        null,
+        crypto.randomUUID(),
       );
 
       let successCount = 0;
@@ -125,7 +128,9 @@ export default defineEventHandler(async (event) => {
 
           const actorId = credit.matchedActorId ?? null;
           const roleName =
-            typeof credit.role === "string" && credit.role.trim() ? credit.role : null;
+            typeof credit.role === "string" && credit.role.trim()
+              ? credit.role
+              : null;
           let workLookup = supabaseAdmin
             .from("work")
             .select("id, character_id, character_name")
@@ -134,20 +139,22 @@ export default defineEventHandler(async (event) => {
           workLookup = actorId
             ? workLookup.eq("actor_id", actorId)
             : workLookup.is("actor_id", null);
-          const { data: existingWorks, error: workLookupError } = await workLookup;
+          const { data: existingWorks, error: workLookupError } =
+            await workLookup;
           if (workLookupError) throw workLookupError;
 
-          const { data: matchingWorkIds, error: identityMatchError } = await supabaseAdmin.rpc(
-            "find_work_role_identity_matches",
-            {
+          const { data: matchingWorkIds, error: identityMatchError } =
+            await supabaseAdmin.rpc("find_work_role_identity_matches", {
               p_work_ids: (existingWorks ?? []).map(({ id }) => id),
               p_character_id: null,
               p_character_name: roleName,
-            },
-          );
+            });
           if (identityMatchError) throw identityMatchError;
 
-          const existingWork = findUniqueWorkRoleMatch(existingWorks ?? [], matchingWorkIds ?? []);
+          const existingWork = findUniqueWorkRoleMatch(
+            existingWorks ?? [],
+            matchingWorkIds ?? [],
+          );
           const workUpdate = {
             performance: "dialogues",
             status: "validated",
@@ -180,15 +187,18 @@ export default defineEventHandler(async (event) => {
             retryLookup = actorId
               ? retryLookup.eq("actor_id", actorId)
               : retryLookup.is("actor_id", null);
-            const { data: retryWorks, error: retryLookupError } = await retryLookup;
+            const { data: retryWorks, error: retryLookupError } =
+              await retryLookup;
             if (retryLookupError) throw retryLookupError;
 
-            const { data: retryMatchingWorkIds, error: retryIdentityMatchError } =
-              await supabaseAdmin.rpc("find_work_role_identity_matches", {
-                p_work_ids: (retryWorks ?? []).map(({ id }) => id),
-                p_character_id: null,
-                p_character_name: roleName,
-              });
+            const {
+              data: retryMatchingWorkIds,
+              error: retryIdentityMatchError,
+            } = await supabaseAdmin.rpc("find_work_role_identity_matches", {
+              p_work_ids: (retryWorks ?? []).map(({ id }) => id),
+              p_character_id: null,
+              p_character_name: roleName,
+            });
             if (retryIdentityMatchError) throw retryIdentityMatchError;
 
             const concurrentWork = findUniqueWorkRoleMatch(
@@ -222,11 +232,13 @@ export default defineEventHandler(async (event) => {
 
     throw createError({ statusCode: 400, message: "Invalid action" });
   } catch (error) {
-    if (error && typeof error === "object" && "statusCode" in error) throw error;
+    if (error && typeof error === "object" && "statusCode" in error)
+      throw error;
     console.error("Error in process-credits:", error);
     throw createError({
       statusCode: 500,
-      message: error instanceof Error ? error.message : "An unknown error occurred",
+      message:
+        error instanceof Error ? error.message : "An unknown error occurred",
     });
   }
 });

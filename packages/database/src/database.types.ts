@@ -733,6 +733,24 @@ export type Database = {
           studio_id: number;
         }[];
       };
+      create_internal_dubbing_project: {
+        Args: {
+          p_actor_id: string;
+          p_brand: string | null;
+          p_description: string | null;
+          p_language: string;
+          p_manufacturer: string | null;
+          p_media_type: string;
+          p_name: string;
+          p_request_id: string;
+        };
+        Returns: {
+          audit_log_id: string;
+          content_id: number;
+          project_id: number;
+          replayed: boolean;
+        }[];
+      };
       consume_gamification_task_claim: {
         Args: { p_claim_id: string; p_user_id: string };
         Returns: { category: string; entity_id: string }[];
@@ -821,6 +839,21 @@ export type Database = {
       find_duplicate_work_groups: {
         Args: { p_after_group_id?: number; p_limit?: number };
         Returns: Json;
+      };
+      find_or_create_dubbing_project: {
+        Args: {
+          p_actor_id: string;
+          p_content_id: number;
+          p_content_type: string;
+          p_language: string;
+          p_request_id: string;
+          p_voice_actor_id: number | null;
+        };
+        Returns: {
+          audit_log_id: string | null;
+          project_id: number;
+          replayed: boolean;
+        }[];
       };
       find_work_role_identity_matches: {
         Args: {
@@ -1014,6 +1047,23 @@ export type Database = {
           msg_id: number;
           read_ct: number;
           vt: string;
+        }[];
+      };
+      save_dubbing_project_editor: {
+        Args: {
+          p_actor_id: string;
+          p_cast: Json;
+          p_crew: Json;
+          p_expected_updated_at: string | null;
+          p_project: Json;
+          p_project_id: number | null;
+          p_request_id: string;
+        };
+        Returns: {
+          audit_log_id: string;
+          project_id: number;
+          replayed: boolean;
+          updated_at: string | null;
         }[];
       };
       save_regional_project_actor_assignments: {
