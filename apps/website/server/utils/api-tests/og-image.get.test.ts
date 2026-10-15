@@ -7,6 +7,7 @@ import {
   type EventHandler,
 } from "h3";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { useNuxtApp } from "nuxt/app";
 import cacheHeadersMiddleware from "../../middleware/00-cache-headers";
 import {
   getCloudflareCacheControl,
@@ -15,7 +16,6 @@ import {
 } from "../cache/http";
 
 const routeMocks = vi.hoisted(() => ({
-  useRuntimeConfig: vi.fn(),
   useStorage: vi.fn(),
   useSupabaseAdmin: vi.fn(),
   fetch: vi.fn(),
@@ -29,10 +29,6 @@ const routeMocks = vi.hoisted(() => ({
 
 vi.mock("nitropack/runtime/internal/storage", () => ({
   useStorage: routeMocks.useStorage,
-}));
-
-vi.mock("nitropack/runtime/internal/config", () => ({
-  useRuntimeConfig: routeMocks.useRuntimeConfig,
 }));
 
 vi.mock("../db/client", () => ({
@@ -50,12 +46,12 @@ vi.mock("satori", () => {
 });
 
 let handler: EventHandler;
+let runtimeConfig: ReturnType<typeof useNuxtApp>["$config"];
 
 beforeAll(() => {
   vi.stubGlobal("createError", createError);
   vi.stubGlobal("defineEventHandler", defineEventHandler);
   vi.stubGlobal("getQuery", getQuery);
-  vi.stubGlobal("useRuntimeConfig", routeMocks.useRuntimeConfig);
   vi.stubGlobal("useStorage", routeMocks.useStorage);
   vi.stubGlobal("useSupabaseAdmin", routeMocks.useSupabaseAdmin);
   vi.stubGlobal("fetch", routeMocks.fetch);
@@ -64,15 +60,13 @@ beforeAll(() => {
 beforeEach(async () => {
   vi.clearAllMocks();
   vi.resetModules();
+  runtimeConfig = useNuxtApp().$config;
+  runtimeConfig.public.ogImagesEnabled = false;
   vi.doMock("@cf-wasm/resvg/workerd", () => {
     routeMocks.resvgModuleLoads();
     return { Resvg: { async: routeMocks.resvgAsync } };
   });
 
-  routeMocks.useRuntimeConfig.mockReturnValue({
-    public: { ogImagesEnabled: false, supabaseUrl: "https://db.example" },
-    supabaseUrl: "https://db.example",
-  });
   routeMocks.useStorage.mockReturnValue({
     getItemRaw: vi.fn().mockResolvedValue(new Uint8Array([1])),
   });
@@ -98,6 +92,7 @@ async function request(path: string): Promise<Response> {
   app.use(
     "/",
     defineEventHandler((event) => {
+      event.context.nitro = { runtimeConfig };
       return handler(event);
     }),
   );
@@ -145,6 +140,10 @@ function expectPublic(response: Response, profile: "og-image" | "og-image-redire
   expect(response.headers.has("expires")).toBe(false);
 }
 
+function enableOgImages(): void {
+  runtimeConfig.public.ogImagesEnabled = true;
+}
+
 describe("GET /api/og-image", () => {
   it("redirects disabled image requests before any rendering or upstream work", async () => {
     const response = await request("/?type=voice-actor&id=42");
@@ -168,10 +167,7 @@ describe("GET /api/og-image", () => {
     ["zero id", "/?type=voice-actor&id=0"],
     ["unsafe id", "/?type=voice-actor&id=9007199254740992"],
   ])("keeps %s requests malformed and no-store", async (_label, path) => {
-    routeMocks.useRuntimeConfig.mockReturnValue({
-      public: { ogImagesEnabled: "true", supabaseUrl: "https://db.example" },
-      supabaseUrl: "https://db.example",
-    });
+    enableOgImages();
     const response = await request(path);
 
     expect(response.status).toBe(400);
@@ -181,10 +177,7 @@ describe("GET /api/og-image", () => {
   });
 
   it("returns a rendered PNG with one-hour browser and one-day edge caching when enabled", async () => {
-    routeMocks.useRuntimeConfig.mockReturnValue({
-      public: { ogImagesEnabled: "true", supabaseUrl: "https://db.example" },
-      supabaseUrl: "https://db.example",
-    });
+    enableOgImages();
     configureActor();
 
     const response = await request("/?type=voice-actor&id=42");
@@ -198,10 +191,7 @@ describe("GET /api/og-image", () => {
   });
 
   it("keeps unknown actors no-store", async () => {
-    routeMocks.useRuntimeConfig.mockReturnValue({
-      public: { ogImagesEnabled: "true", supabaseUrl: "https://db.example" },
-      supabaseUrl: "https://db.example",
-    });
+    enableOgImages();
     const query = configureActor();
     query.single.mockResolvedValue({ data: null, error: { message: "missing" } });
 
@@ -213,10 +203,7 @@ describe("GET /api/og-image", () => {
   });
 
   it("keeps avatar-fetch fallbacks no-store", async () => {
-    routeMocks.useRuntimeConfig.mockReturnValue({
-      public: { ogImagesEnabled: "true", supabaseUrl: "https://db.example" },
-      supabaseUrl: "https://db.example",
-    });
+    enableOgImages();
     configureActor("https://cdn.example/avatar.png");
     routeMocks.fetch.mockRejectedValue(new Error("avatar unavailable"));
 
@@ -228,10 +215,7 @@ describe("GET /api/og-image", () => {
   });
 
   it("keeps rendering failures no-store", async () => {
-    routeMocks.useRuntimeConfig.mockReturnValue({
-      public: { ogImagesEnabled: "true", supabaseUrl: "https://db.example" },
-      supabaseUrl: "https://db.example",
-    });
+    enableOgImages();
     configureActor();
     routeMocks.satori.mockRejectedValue(new Error("render failed"));
 
@@ -242,9 +226,7 @@ describe("GET /api/og-image", () => {
   });
 
   it("rejects empty rendering output without caching it", async () => {
-    routeMocks.useRuntimeConfig.mockReturnValue({
-      public: { ogImagesEnabled: true },
-    });
+    enableOgImages();
     configureActor();
     routeMocks.render.mockReturnValue({
       asPng: vi.fn(() => new Uint8Array()),
@@ -257,9 +239,7 @@ describe("GET /api/og-image", () => {
   });
 
   it("keeps dependency initialization fallbacks no-store on repeated requests", async () => {
-    routeMocks.useRuntimeConfig.mockReturnValue({
-      public: { ogImagesEnabled: true },
-    });
+    enableOgImages();
     configureActor();
     vi.doMock("@cf-wasm/resvg/workerd", () => {
       throw new Error("renderer unavailable");
