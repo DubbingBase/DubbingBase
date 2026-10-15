@@ -4,6 +4,7 @@ import { fetchRandomTask, useContribute } from "./useContribute";
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }));
 mockNuxtImport("$fetch", () => fetchMock);
+mockNuxtImport("useI18n", () => () => ({ t: (key: string) => key }));
 const claimed = {
   task: { id: 1, firstname: "Actor", bio: null },
   category: "enrich_voice_actor",
@@ -171,10 +172,31 @@ describe("contribution claims", () => {
     fetchMock.mockRejectedValueOnce(new Error("offline"));
     expect(await state.submitTask({ bio: "Retry me" })).toBeNull();
     expect(state.currentTask.value?.id).toBe(1);
-    expect(state.error.value).toBeTruthy();
+    expect(state.error.value).toContain("please try again");
     fetchMock.mockRejectedValueOnce({ statusCode: 409 });
     await state.submitTask({ bio: "Expired" });
     expect(state.claimId.value).toBeNull();
+    expect(state.isSubmitting.value).toBe(false);
+  });
+
+  it.each([
+    [413, "contribute.uploadTooLarge"],
+    [415, "contribute.unsupportedUploadFormat"],
+  ])("shows a non-retryable upload message for HTTP %i", async (status, messageKey) => {
+    const state = useContribute();
+    fetchMock.mockResolvedValueOnce(claimed);
+    await state.getRandomTask("any");
+    fetchMock.mockRejectedValueOnce({ statusCode: status });
+
+    expect(
+      await state.submitTask({
+        file: new File(["image"], "selected-image.gif", { type: "image/gif" }),
+      }),
+    ).toBeNull();
+    expect(state.error.value).toBe(messageKey);
+    expect(state.error.value).not.toContain("try again");
+    expect(state.currentTask.value?.id).toBe(1);
+    expect(state.claimId.value).toBe("opaque-claim");
     expect(state.isSubmitting.value).toBe(false);
   });
 });

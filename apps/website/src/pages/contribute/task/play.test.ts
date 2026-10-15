@@ -9,6 +9,7 @@ import Play from "./play.vue";
 const mocks = vi.hoisted(() => ({ fetch: vi.fn(), navigate: vi.fn() }));
 const user = ref<{ id: string } | null>({ id: "user-1" });
 mockNuxtImport("$fetch", () => mocks.fetch);
+mockNuxtImport("useI18n", () => () => ({ t: (key: string) => key }));
 mockNuxtImport("useSupabaseUser", () => () => user);
 mockNuxtImport("navigateTo", () => mocks.navigate);
 mockNuxtImport("useLocalePath", () => () => (path: string) => path);
@@ -68,7 +69,12 @@ describe("contribution page", () => {
     });
     const wrapper = await mountPage();
     expect(mocks.fetch).toHaveBeenCalledTimes(1);
-    expect(wrapper.text()).toContain("No tasks available");
+    expect(wrapper.text()).toContain("contribute.noTasksAvailable");
+    expect(wrapper.get('option[value="any"]').text()).toBe("contribute.categoryAll");
+    expect(wrapper.get('option[value="enrich_voice_actor"]').text()).toBe(
+      "contribute.categoryVoiceActors",
+    );
+    expect(wrapper.get('option[value="enrich_studio"]').text()).toBe("contribute.categoryStudios");
     await wrapper.get('[data-test="retry-task"]').trigger("click");
     await flushPromises();
     expect(mocks.fetch).toHaveBeenCalledTimes(2);
@@ -164,7 +170,7 @@ describe("contribution page", () => {
     });
     resolveSubmission({ success: true, pointsAwarded: 10 });
     await flushPromises();
-    expect(wrapper.text()).toContain("No tasks available");
+    expect(wrapper.text()).toContain("contribute.noTasksAvailable");
   });
 
   it("redirects a rejected session and does not loop on the failed request", async () => {

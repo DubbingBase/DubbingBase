@@ -87,6 +87,7 @@ const errorStatus = (error: unknown): number | undefined => {
 };
 
 export const useContribute = () => {
+  const { t } = useI18n();
   const isLoading = ref(false);
   const isSubmitting = ref(false);
   const error = ref<string | null>(null);
@@ -129,6 +130,10 @@ export const useContribute = () => {
         action === "load"
           ? "This contribution category is not supported."
           : "Please check your contribution and try again.";
+    } else if (action === "submit" && status === 413) {
+      error.value = t("contribute.uploadTooLarge");
+    } else if (action === "submit" && status === 415) {
+      error.value = t("contribute.unsupportedUploadFormat");
     } else {
       error.value =
         action === "load"

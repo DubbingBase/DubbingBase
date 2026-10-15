@@ -34,9 +34,9 @@
           :disabled="isSubmitting"
           class="mt-2 w-full theme-input rounded-lg px-4 py-3 theme-focus"
         >
-          <option value="any">All contributions</option>
-          <option value="enrich_voice_actor">Voice actors</option>
-          <option value="enrich_studio">Studios</option>
+          <option value="any">{{ $t("contribute.categoryAll") }}</option>
+          <option value="enrich_voice_actor">{{ $t("contribute.categoryVoiceActors") }}</option>
+          <option value="enrich_studio">{{ $t("contribute.categoryStudios") }}</option>
         </select>
       </label>
 
@@ -92,7 +92,7 @@
         </div>
 
         <div v-else-if="noTask" role="status" class="text-center py-12 space-y-6">
-          <p class="theme-text-muted">No tasks available in this category.</p>
+          <p class="theme-text-muted">{{ $t("contribute.noTasksAvailable") }}</p>
           <button
             data-test="retry-task"
             @click="loadTask"
@@ -153,7 +153,7 @@
                     type="file"
                     ref="fileInput"
                     class="hidden"
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
                     @change="handleFileSelect"
                   />
                   <div v-if="previewUrl" class="space-y-4">
@@ -379,7 +379,7 @@
                     type="file"
                     ref="fileInput"
                     class="hidden"
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
                     @change="handleFileSelect"
                   />
                   <div v-if="previewUrl" class="space-y-4">

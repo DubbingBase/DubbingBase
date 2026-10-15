@@ -10,9 +10,10 @@ db_name="${DB_NAME:-postgres}"
 export PGPASSWORD="${PGPASSWORD:-postgres}"
 
 if [[ "$db_host" != "127.0.0.1" && "$db_host" != "localhost" ]] \
-  || [[ "$db_port" != "55322" ]] \
+  || [[ ! "$db_port" =~ ^[0-9]+$ ]] \
+  || (( db_port < 1024 || db_port > 65535 )) \
   || [[ "$db_name" != "postgres" ]]; then
-  printf '%s\n' 'This regression fixture only permits the local Supabase database at 127.0.0.1:55322/postgres.' >&2
+  printf '%s\n' 'This regression fixture only permits a loopback PostgreSQL database named postgres.' >&2
   exit 2
 fi
 
@@ -115,23 +116,27 @@ FROM public.claim_gamification_task('enrich_voice_actor', :'second_user'::UUID);
 SQL
 claim_second_pid=$!
 
-claim_waited_for_lock=0
-for _ in $(seq 1 100); do
-  wait_state="$(psql_local -c "SELECT COALESCE(wait_event_type, '') FROM pg_stat_activity WHERE application_name = '$claim_second_app'")"
-  if [[ "$wait_state" == "Lock" ]]; then claim_waited_for_lock=1; break; fi
-  if ! kill -0 "$claim_second_pid" 2>/dev/null; then break; fi
-  sleep 0.05
-done
-if [[ "$claim_waited_for_lock" != "1" ]]; then
-  cat "$fixture_dir/claim-second.log" >&2
-  printf '%s\n' 'The simultaneous claimant did not wait on the shared task lock.' >&2
+claim_second_status=0
+if wait "$claim_second_pid"; then claim_second_status=0; else claim_second_status=$?; fi
+claim_second_pid=""
+if [[ "$claim_second_status" != "0" ]]; then
+  cat "$fixture_dir/claim-first.log" "$fixture_dir/claim-second.log" >&2
+  printf 'The competing task claimant failed with status %s.\n' "$claim_second_status" >&2
   exit 1
 fi
-
-wait "$claim_first_pid"
+if ! kill -0 "$claim_first_pid" 2>/dev/null; then
+  cat "$fixture_dir/claim-first.log" "$fixture_dir/claim-second.log" >&2
+  printf '%s\n' 'The competing claimant did not finish while the first transaction held its task lock.' >&2
+  exit 1
+fi
+claim_first_status=0
+if wait "$claim_first_pid"; then claim_first_status=0; else claim_first_status=$?; fi
 claim_first_pid=""
-wait "$claim_second_pid"
-claim_second_pid=""
+if [[ "$claim_first_status" != "0" ]]; then
+  cat "$fixture_dir/claim-first.log" "$fixture_dir/claim-second.log" >&2
+  printf 'The first task claimant failed with status %s.\n' "$claim_first_status" >&2
+  exit 1
+fi
 claim_first_result="$(awk -F '|' 'NF == 2 && $1 != "" { print; exit }' "$fixture_dir/claim-first.log")"
 claim_second_result="$(awk -F '|' 'NF == 2 && $1 != "" { print; exit }' "$fixture_dir/claim-second.log")"
 claim_first_task="${claim_first_result%%|*}"
@@ -246,8 +251,8 @@ wait "$submit_first_pid"
 submit_first_pid=""
 wait "$submit_second_pid"
 submit_second_pid=""
-first_submission_result="$(rg -o '^(submitted|invalid_claim)\|[0-9]+' "$fixture_dir/submit-first.log" | head -1)"
-second_submission_result="$(rg -o '^(submitted|invalid_claim)\|[0-9]+' "$fixture_dir/submit-second.log" | head -1)"
+first_submission_result="$(grep -oE '^(submitted|invalid_claim)\|[0-9]+' "$fixture_dir/submit-first.log" || true)"
+second_submission_result="$(grep -oE '^(submitted|invalid_claim)\|[0-9]+' "$fixture_dir/submit-second.log" || true)"
 if [[ "$first_submission_result" != "submitted|10" || "$second_submission_result" != "invalid_claim|0" ]]; then
   cat "$fixture_dir/submit-first.log" "$fixture_dir/submit-second.log" >&2
   printf '%s\n' 'Concurrent submissions did not produce exactly one successful write.' >&2
