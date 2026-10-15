@@ -27,10 +27,6 @@ const routeMocks = vi.hoisted(() => ({
   render: vi.fn(),
 }));
 
-vi.mock("nitropack/runtime/internal/config", () => ({
-  useRuntimeConfig: routeMocks.useRuntimeConfig,
-}));
-
 vi.mock("nitropack/runtime/internal/storage", () => ({
   useStorage: routeMocks.useStorage,
 }));
@@ -97,7 +93,12 @@ async function request(path: string): Promise<Response> {
   app.use("/", cacheHeadersMiddleware);
   app.use(
     "/",
-    defineEventHandler((event) => handler(event)),
+    defineEventHandler((event) => {
+      event.context.nitro = {
+        runtimeConfig: routeMocks.useRuntimeConfig(),
+      };
+      return handler(event);
+    }),
   );
   return toWebHandler(app)(new Request(`http://localhost${path}`));
 }
