@@ -578,6 +578,7 @@ const isCreatingPerson = ref(false);
 // Assignments
 const voiceActorAssignments = ref<Record<number, VoiceCastAssignment>>({});
 const initialAssignments = ref<Record<number, VoiceCastAssignment>>({});
+const pendingAssignmentRequest = ref<{ fingerprint: string; requestId: string } | null>(null);
 
 const activeSearchDropdown = ref<number | null>(null);
 const actorSearchQueries = ref<Record<number, string>>({});
@@ -819,17 +820,24 @@ const saveVoiceCast = async () => {
     initialAssignments.value,
   );
   if (operations.length === 0) return;
+  const requestBody = {
+    content_id: mediaId.value,
+    content_type: mediaTypeParam.value,
+    dubbing_language: savedDubbingLanguage,
+    operations,
+  };
+  const fingerprint = JSON.stringify(requestBody);
+  if (pendingAssignmentRequest.value?.fingerprint !== fingerprint) {
+    pendingAssignmentRequest.value = { fingerprint, requestId: crypto.randomUUID() };
+  }
+
   isSaving.value = true;
   try {
     await $fetch("/api/admin/dubbing-project", {
       method: "POST",
-      body: {
-        content_id: mediaId.value,
-        content_type: mediaTypeParam.value,
-        dubbing_language: savedDubbingLanguage,
-        operations,
-      },
+      body: { ...requestBody, request_id: pendingAssignmentRequest.value.requestId },
     });
+    pendingAssignmentRequest.value = null;
     showToast("Voice cast mappings saved successfully!", "success");
     if (dubbingLanguage.value === savedDubbingLanguage) {
       await loadRegionalAssignments();
