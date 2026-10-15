@@ -36,7 +36,7 @@ export const CACHE_TTL = {
   STABLE: 7 * 24 * 60 * 60,
 } as const;
 
-export type CachePolicy = "persistent" | "read-only";
+export type CachePolicy = "persistent" | "read-only" | "none";
 export type CacheTTLPreset = keyof typeof CACHE_TTL | number;
 export type GetOrFetchOptions =
   | {
@@ -47,6 +47,11 @@ export type GetOrFetchOptions =
   | {
       /** Read-only policies cannot carry an irrelevant TTL. */
       cachePolicy: "read-only";
+      ttl?: never;
+    }
+  | {
+      /** Bypasses KV reads and writes while still coalescing in-flight work. */
+      cachePolicy: "none";
       ttl?: never;
     };
 
@@ -88,7 +93,7 @@ export class SimpleCache {
   }
 
   /** Persists a fetched value to KV using the selected expiration lifetime. */
-  private async set<T>(key: string, data: T, ttl: CacheTTLPreset): Promise<boolean> {
+  async set<T>(key: string, data: T, ttl: CacheTTLPreset): Promise<boolean> {
     if (!this.enabled) return false;
     try {
       const kv = this.kvGetter();
@@ -132,7 +137,7 @@ export class SimpleCache {
     if (existingRequest) return existingRequest.promise;
 
     const promise = Promise.resolve().then(async () => {
-      const cached = await this.get<T>(safeKey);
+      const cached = cachePolicy === "none" ? null : await this.get<T>(safeKey);
       if (cached !== null) return cached;
 
       const value = await fetcher();
