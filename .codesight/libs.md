@@ -71,6 +71,14 @@
   - function selectDubbingCandidateSections: (sections) => Promise<DubbingSectionCandidate[]>
   - function selectDubbingSections: (sections) => Promise<string[]>
   - _...6 more_
+- `apps/website/server/utils/contribution/task-submission-validation.ts`
+  - function isTaskClaimId: (value) => value is string
+  - function authorizeTaskContribution: (input) => void
+  - function validateTaskContribution: (input) => TaskContribution
+  - type TaskCategory
+  - type TaskUpload
+  - type TaskContributionInput
+  - _...1 more_
 - `apps/website/server/utils/db/client.ts` — function useSupabaseAdmin: (event?) => SupabaseClient<Database>
 - `apps/website/server/utils/db/dubbing-project.ts` — function findOrCreateDubbingProject: (contentId, contentType, dubbingLanguage) => Promise<number>
 - `apps/website/server/utils/db/queries.ts`
@@ -181,7 +189,13 @@
 - `apps/website/server/utils/with-timeout.ts` — function withTimeout: (promise, timeoutMs, dependency) => Promise<T>
 - `apps/website/server/utils/work-role-identity.ts` — function findUniqueWorkRoleMatch: (works, matchingWorkIds) => T | undefined
 - `apps/website/src/composables/getHydrationCachedData.ts` — function getHydrationCachedData: (key, nuxtApp) => T | undefined
-- `apps/website/src/composables/useContribute.ts` — function fetchRandomTask, function useContribute
+- `apps/website/src/composables/useContribute.ts`
+  - function fetchRandomTask
+  - function useContribute
+  - interface ContributionTask
+  - type ContributionCategory
+  - type ClaimedCategory
+  - type ContributionClaim
 - `apps/website/src/composables/useDragScroll.ts` — function useDragScroll: (scrollRef) => void
 - `apps/website/src/composables/useReports.ts` — function useReports
 - `apps/website/src/composables/useShowPageData.ts` — function useShowPageData: (showId, locale) => void

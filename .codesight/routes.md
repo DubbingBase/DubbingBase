@@ -29,7 +29,8 @@
 - `GET` `/api/get-dubbing-project`
 - `GET` `/api/get-media-credits` [cache]
 - `GET` `/api/get-metadata`
-- `GET` `/api/get-random-task` [auth]
+- `GET` `/api/get-random-task` ✓
+- `POST` `/api/get-random-task` [auth] ✓
 - `GET` `/api/get-studio-details`
 - `GET` `/api/get-user-profile` [auth]
 - `ALL` `/api/get-user-voice-actor` [auth]
@@ -65,7 +66,7 @@
 - `GET` `/api/search-voice-actors`
 - `GET` `/api/season/index` [cache]
 - `GET` `/api/show/:id` params(id) [queue]
-- `POST` `/api/submit-task` [db, upload]
+- `POST` `/api/submit-task` [auth, upload] ✓
 - `POST` `/api/submit-user-report` [db]
 - `GET` `/api/top-contributors`
 - `GET` `/api/top-voice-actors`

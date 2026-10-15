@@ -8,7 +8,7 @@
 
 ## Scale
 
-81 API routes · 19 database models · 197 UI components · 97 library files · 14 middleware layers · 63 environment variables
+82 API routes · 19 database models · 197 UI components · 98 library files · 14 middleware layers · 63 environment variables
 
 ## Subsystems
 
@@ -31,7 +31,8 @@
 - **[Get-dubbing-project.get](./get-dubbing-project.get.md)** — 1 routes
 - **[Get-media-credits.get](./get-media-credits.get.md)** — 1 routes — touches: cache
 - **[Get-metadata.get](./get-metadata.get.md)** — 1 routes
-- **[Get-random-task.get](./get-random-task.get.md)** — 1 routes — touches: auth
+- **[Get-random-task.get](./get-random-task.get.md)** — 1 routes
+- **[Get-random-task.post](./get-random-task.post.md)** — 1 routes — touches: auth
 - **[Get-studio-details.get](./get-studio-details.get.md)** — 1 routes
 - **[Get-user-profile.get](./get-user-profile.get.md)** — 1 routes — touches: auth
 - **[Get-user-voice-actor](./get-user-voice-actor.md)** — 1 routes — touches: auth
@@ -64,7 +65,7 @@
 - **[Save-studio.post](./save-studio.post.md)** — 1 routes — touches: db
 - **[Search-voice-actors.get](./search-voice-actors.get.md)** — 1 routes
 - **[Shows.get](./shows.get.md)** — 1 routes — touches: cache
-- **[Submit-task.post](./submit-task.post.md)** — 1 routes — touches: db, upload
+- **[Submit-task.post](./submit-task.post.md)** — 1 routes — touches: auth, upload
 - **[Submit-user-report.post](./submit-user-report.post.md)** — 1 routes — touches: db
 - **[Top-contributors.get](./top-contributors.get.md)** — 1 routes
 - **[Top-voice-actors.get](./top-voice-actors.get.md)** — 1 routes
@@ -80,14 +81,14 @@
 
 **UI:** 197 components (vue) — see [ui.md](./ui.md)
 
-**Libraries:** 97 files — see [libraries.md](./libraries.md)
+**Libraries:** 98 files — see [libraries.md](./libraries.md)
 
 ## High-Impact Files
 
 Changes to these files have the widest blast radius across the codebase:
 
-- `apps/website/server/utils/db/client.ts` — imported by **66** files
-- `apps/website/server/utils/auth.ts` — imported by **33** files
+- `apps/website/server/utils/db/client.ts` — imported by **67** files
+- `apps/website/server/utils/auth.ts` — imported by **34** files
 - `apps/website/server/utils/index.ts` — imported by **23** files
 - `apps/website/server/utils/cache/index.ts` — imported by **19** files
 - `apps/website/server/utils/db/queries.ts` — imported by **12** files
@@ -110,4 +111,4 @@ Changes to these files have the widest blast radius across the codebase:
 - _...31 more_
 
 ---
-_Back to [index.md](./index.md) · Generated 2026-10-14_
+_Back to [index.md](./index.md) · Generated 2026-10-15_

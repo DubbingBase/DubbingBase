@@ -2,11 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Submit-task.post subsystem handles **1 routes** and touches: db.
+The Submit-task.post subsystem handles **1 routes** and touches: auth.
 
 ## Routes
 
-- `POST` `/api/submit-task` [db, upload]
+- `POST` `/api/submit-task` [auth, upload]
   `apps/website/server/api/submit-task.post.ts`
 
 ## Source Files
