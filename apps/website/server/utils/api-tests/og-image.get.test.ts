@@ -27,12 +27,15 @@ const routeMocks = vi.hoisted(() => ({
   render: vi.fn(),
 }));
 
-vi.mock("#imports", () => ({
-  createError,
-  defineEventHandler,
-  getQuery,
+vi.mock("nitropack/runtime/internal/config", () => ({
   useRuntimeConfig: routeMocks.useRuntimeConfig,
+}));
+
+vi.mock("nitropack/runtime/internal/storage", () => ({
   useStorage: routeMocks.useStorage,
+}));
+
+vi.mock("../db/client", () => ({
   useSupabaseAdmin: routeMocks.useSupabaseAdmin,
 }));
 
@@ -52,6 +55,7 @@ beforeAll(() => {
   vi.stubGlobal("createError", createError);
   vi.stubGlobal("defineEventHandler", defineEventHandler);
   vi.stubGlobal("getQuery", getQuery);
+  vi.stubGlobal("useRuntimeConfig", routeMocks.useRuntimeConfig);
   vi.stubGlobal("useStorage", routeMocks.useStorage);
   vi.stubGlobal("useSupabaseAdmin", routeMocks.useSupabaseAdmin);
   vi.stubGlobal("fetch", routeMocks.fetch);
