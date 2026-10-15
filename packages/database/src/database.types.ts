@@ -667,6 +667,16 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      controlled_update_voice_actor: {
+        Args: {
+          p_actor_id: string;
+          p_expected_updated_at: string;
+          p_payload: Json;
+          p_request_id: string;
+          p_voice_actor_id: number;
+        };
+        Returns: Json;
+      };
       apply_extracted_credits: {
         Args: {
           p_content_id: number;
