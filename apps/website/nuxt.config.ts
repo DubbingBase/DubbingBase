@@ -81,6 +81,8 @@ export default defineNuxtConfig({
     resendToEmail: env("RESEND_TO_EMAIL"),
     adminEmail: env("ADMIN_EMAIL"),
     public: {
+      // Temporarily enable actor-specific previews with NUXT_PUBLIC_OG_IMAGES_ENABLED=true.
+      ogImagesEnabled: false,
       supabaseUrl: supabaseUrl || "https://mock.supabase.co",
       supabaseKey: supabasePublishableKey || "mock-publishable-key",
     },

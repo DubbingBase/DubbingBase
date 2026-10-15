@@ -685,6 +685,10 @@
 <script setup lang="ts">
 import PersonDetailsLayout from "../../components/layout/PersonDetailsLayout.vue";
 import {
+  getVoiceActorOgImageMetadata,
+  isVoiceActorOgImagesEnabled,
+} from "../../utils/voice-actor-og-image";
+import {
   useVoiceActorData,
   fetchVoiceActorData,
   paginateVoiceActorWorks,
@@ -834,10 +838,14 @@ const canonicalUrl = computed(
   () => `https://dubbingbase.com/voice-actor/${voiceActorId}`,
 );
 
-const ogImageUrl = computed(() => {
-  if (!voiceActorId) return "";
-  return `https://dubbingbase.com/api/og-image?type=voice-actor&id=${voiceActorId}`;
-});
+const publicRuntimeConfig = useRuntimeConfig().public;
+const voiceActorOgImage = computed(() =>
+  getVoiceActorOgImageMetadata(
+    isVoiceActorOgImagesEnabled(publicRuntimeConfig.ogImagesEnabled),
+    voiceActorId,
+  ),
+);
+const ogImageUrl = computed(() => voiceActorOgImage.value.url);
 const actorDescription = computed(() => {
   if (!actorName.value)
     return t(
@@ -899,9 +907,20 @@ useHead({
     { property: "og:logo", content: "https://dubbingbase.com/logo.png" },
     { property: "og:url", content: canonicalUrl },
     { property: "og:image", content: ogImageUrl },
+    {
+      property: "og:image:width",
+      content: computed(() => String(voiceActorOgImage.value.width)),
+    },
+    {
+      property: "og:image:height",
+      content: computed(() => String(voiceActorOgImage.value.height)),
+    },
     { property: "og:site_name", content: "DubbingBase" },
     // Twitter Card
-    { name: "twitter:card", content: "summary_large_image" },
+    {
+      name: "twitter:card",
+      content: computed(() => voiceActorOgImage.value.twitterCard),
+    },
     {
       name: "twitter:title",
       content: computed(() =>

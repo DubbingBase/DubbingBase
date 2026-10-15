@@ -1,17 +1,25 @@
 import { removeResponseHeader, setHeader, type H3Event } from "h3";
 
-export type CacheProfile = "discovery" | "static";
+export type CacheProfile =
+  | "discovery"
+  | "static"
+  | "og-image"
+  | "og-image-redirect";
 
 export const NO_STORE_CACHE_CONTROL = "no-store, no-cache, must-revalidate";
 
 const PUBLIC_CACHE_CONTROL: Record<CacheProfile, string> = {
   discovery: "public, max-age=60, stale-while-revalidate=3600",
   static: "public, max-age=86400, stale-while-revalidate=2592000",
+  "og-image": "public, max-age=3600",
+  "og-image-redirect": "public, max-age=60",
 };
 
 const CLOUDFLARE_CACHE_CONTROL: Record<CacheProfile, string> = {
   discovery: "public, max-age=600, stale-while-revalidate=3600",
   static: "public, max-age=604800, stale-while-revalidate=2592000",
+  "og-image": "public, max-age=86400",
+  "og-image-redirect": "public, max-age=60",
 };
 
 export function getPublicCacheControl(profile: CacheProfile): string {
