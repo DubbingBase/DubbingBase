@@ -1,5 +1,29 @@
 import { ref, computed, watch, unref, type MaybeRef } from "vue";
-import type { MovieModel, SerieModel } from "../types";
+
+type ActorVoiceActor = {
+  id: number;
+  firstname: string;
+  lastname: string;
+  profile_picture: string | null;
+};
+
+type ActorVoiceRole = {
+  id: number;
+  performance: string | null;
+  voice_actors: ActorVoiceActor[];
+  mediaDetails: {
+    id: number;
+    title: string;
+    original_title: string;
+    poster_path: string | null;
+    release_date: string;
+    media_type: string;
+    overview: string;
+  } | null;
+  dubbing_projects?: {
+    language: string;
+  } | null;
+};
 
 export type ActorResponse = {
   actor: {
@@ -23,30 +47,9 @@ export type ActorResponse = {
         media_type: "movie" | "tv";
       }>;
     };
-    voice_roles: Array<{
-      id: number;
-      performance: string | null;
-      voice_actors: Array<{
-        id: number;
-        firstname: string;
-        lastname: string;
-        profile_picture: string | null;
-      }>;
-      mediaDetails: {
-        id: number;
-        title: string;
-        original_title: string;
-        poster_path: string | null;
-        release_date: string;
-        media_type: string;
-        overview: string;
-      } | null;
-      dubbing_projects?: {
-        language: string;
-      } | null;
-    }>;
+    voice_roles: ActorVoiceRole[];
   };
-  voiceActors: Array<any>;
+  voiceActors: ActorVoiceRole[];
 };
 
 export type ActorDataPayload = {
@@ -54,9 +57,7 @@ export type ActorDataPayload = {
   voiceRoles: NonNullable<ActorResponse["actor"]["voice_roles"]>;
 };
 
-export async function fetchActorData(
-  id: string | number,
-): Promise<ActorDataPayload | null> {
+export async function fetchActorData(id: string | number): Promise<ActorDataPayload | null> {
   try {
     const response = await $fetch<ActorResponse>(`/api/actor/${id}`);
 
@@ -75,9 +76,7 @@ export async function fetchActorData(
   }
 }
 
-export function useActorData(
-  initialData?: MaybeRef<ActorDataPayload | null | undefined>,
-) {
+export function useActorData(initialData?: MaybeRef<ActorDataPayload | null | undefined>) {
   const initial = unref(initialData);
   const actor = ref<ActorResponse["actor"] | undefined>(initial?.actor);
   const voiceRoles = ref<NonNullable<ActorResponse["actor"]["voice_roles"]>>(
@@ -115,8 +114,7 @@ export function useActorData(
     availableLanguages,
     (langs) => {
       if (langs.length > 0 && !selectedLanguage.value) {
-        selectedLanguage.value =
-          (langs.includes("fr-FR") ? "fr-FR" : langs[0]) || "";
+        selectedLanguage.value = (langs.includes("fr-FR") ? "fr-FR" : langs[0]) || "";
       }
     },
     { immediate: true },
@@ -143,54 +141,51 @@ export function useActorData(
   const filteredCredits = computed(() => {
     if (!actor.value?.credits?.cast) return [];
 
-    const query = searchQuery.value.toLowerCase();
+    const query = searchQuery.value.trim().toLowerCase();
     const cast = actor.value.credits.cast;
 
     if (!query) return cast;
 
     return cast.filter((item) => {
-      const title = (item.title || item.name || "").toLowerCase();
+      const title = (item.title || "").trim().toLowerCase();
+      const name = (item.name || "").trim().toLowerCase();
       const character = (item.character || "").toLowerCase();
 
-      return title.includes(query) || character.includes(query);
+      return title.includes(query) || name.includes(query) || character.includes(query);
     });
   });
 
   const enhancedFilmography = computed(() => {
     if (!actor.value?.credits?.cast) return [];
 
-    const query = searchQuery.value.toLowerCase();
+    const query = searchQuery.value.trim().toLowerCase();
     const cast = actor.value.credits.cast;
 
-    const rolesByMedia = new Map();
+    const rolesByMedia = new Map<number, ActorVoiceRole[]>();
     for (const role of voiceRoles.value) {
       if (!role.mediaDetails?.id) continue;
-      if (!rolesByMedia.has(role.mediaDetails.id)) {
-        rolesByMedia.set(role.mediaDetails.id, []);
-      }
-      rolesByMedia.get(role.mediaDetails.id).push(role);
+      const mediaRoles = rolesByMedia.get(role.mediaDetails.id);
+      if (mediaRoles) mediaRoles.push(role);
+      else rolesByMedia.set(role.mediaDetails.id, [role]);
     }
 
     let items = cast;
     if (query) {
       items = cast.filter((item) => {
-        const title = (item.title || item.name || "").toLowerCase();
+        const title = (item.title || "").trim().toLowerCase();
+        const name = (item.name || "").trim().toLowerCase();
         const character = (item.character || "").toLowerCase();
-        return title.includes(query) || character.includes(query);
+        return title.includes(query) || name.includes(query) || character.includes(query);
       });
     }
 
     return items.map((item) => {
       const mediaRoles = rolesByMedia.get(item.id) || [];
       const languageRoles = selectedLanguage.value
-        ? mediaRoles.filter(
-            (r: any) => r.dubbing_projects?.language === selectedLanguage.value,
-          )
+        ? mediaRoles.filter((role) => role.dubbing_projects?.language === selectedLanguage.value)
         : mediaRoles;
 
-      const voiceActors = languageRoles.flatMap(
-        (r: any) => r.voice_actors || [],
-      );
+      const voiceActors = languageRoles.flatMap((role) => role.voice_actors || []);
 
       return {
         ...item,
@@ -203,7 +198,7 @@ export function useActorData(
   const uniqueVoiceActorsByLanguage = computed(() => {
     if (!voiceRoles.value || !selectedLanguage.value) return [];
 
-    const vaMap = new Map();
+    const vaMap = new Map<number, ActorVoiceActor & { rolesCount: number }>();
     for (const role of voiceRoles.value) {
       if (role.dubbing_projects?.language !== selectedLanguage.value) continue;
 
@@ -216,25 +211,23 @@ export function useActorData(
             });
           } else {
             const existing = vaMap.get(va.id);
-            existing.rolesCount++;
+            if (existing) existing.rolesCount++;
           }
         }
       }
     }
 
-    return Array.from(vaMap.values()).sort(
-      (a, b) => b.rolesCount - a.rolesCount,
-    );
+    return Array.from(vaMap.values()).sort((a, b) => b.rolesCount - a.rolesCount);
   });
 
   const filteredUniqueVoiceActorsByLanguage = computed(() => {
-    const query = searchQuery.value.toLowerCase();
+    const query = searchQuery.value.trim().toLowerCase();
     if (!query) return uniqueVoiceActorsByLanguage.value;
 
     return uniqueVoiceActorsByLanguage.value.filter((va) => {
-      const fullname =
-        `${va.firstname || ""} ${va.lastname || ""}`.toLowerCase();
-      return fullname.includes(query);
+      return [va.firstname, va.lastname].some((name) =>
+        (name || "").trim().toLowerCase().includes(query),
+      );
     });
   });
 

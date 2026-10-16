@@ -11,9 +11,7 @@
       :title="advertisement.title"
       :original-title="advertisement.brand"
       :media-type="'advertisement'"
-      :release-year="
-        advertisement.year ? String(advertisement.year) : undefined
-      "
+      :release-year="advertisement.year ? String(advertisement.year) : undefined"
       :overview="advertisement.description"
       :dubbing-projects="dubbingProjects"
       :active-dub-id="activeDubId"
@@ -31,9 +29,7 @@
             "
             class="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 theme-status-success-text text-xs font-semibold rounded-xl border border-emerald-500/30 flex items-center gap-1.5 transition-colors"
           >
-            <span>{{
-              activeDubProject ? "Modifier le projet" : "Ajouter un projet"
-            }}</span>
+            <span>{{ activeDubProject ? "Modifier le projet" : "Ajouter un projet" }}</span>
           </NuxtLink>
 
           <ForceEnqueueButton
@@ -45,34 +41,26 @@
       </template>
 
       <template #details-extra>
-        <div
-          class="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-4 border-t theme-border"
-        >
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-4 border-t theme-border">
           <div v-if="advertisement.brand">
             <span class="text-xs theme-text-muted block mb-0.5">{{
               $t("advertisement.brand")
             }}</span>
-            <span class="text-sm font-semibold theme-text">{{
-              advertisement.brand
-            }}</span>
+            <span class="text-sm font-semibold theme-text">{{ advertisement.brand }}</span>
           </div>
 
           <div v-if="advertisement.agency">
             <span class="text-xs theme-text-muted block mb-0.5">{{
               $t("advertisement.agencyLabel")
             }}</span>
-            <span class="text-sm font-semibold theme-text">{{
-              advertisement.agency
-            }}</span>
+            <span class="text-sm font-semibold theme-text">{{ advertisement.agency }}</span>
           </div>
 
           <div v-if="advertisement.country">
             <span class="text-xs theme-text-muted block mb-0.5">{{
               $t("advertisement.countryBroadcast")
             }}</span>
-            <span class="text-sm font-semibold theme-text">{{
-              advertisement.country
-            }}</span>
+            <span class="text-sm font-semibold theme-text">{{ advertisement.country }}</span>
           </div>
         </div>
       </template>
@@ -83,14 +71,10 @@
           v-if="advertisement.video_id"
           class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-4 mb-8 shadow-xl"
         >
-          <h3
-            class="text-xs font-bold theme-text-muted uppercase tracking-wider"
-          >
+          <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider">
             {{ $t("advertisement.videoSpot") }}
           </h3>
-          <div
-            class="aspect-video w-full rounded-xl overflow-hidden bg-black shadow-lg"
-          >
+          <div class="aspect-video w-full rounded-xl overflow-hidden bg-black shadow-lg">
             <iframe
               :src="`https://www.youtube.com/embed/${advertisement.video_id}`"
               class="w-full h-full"
@@ -111,23 +95,16 @@
       <!-- Technical Crew / Studio Section -->
       <template #crew-section>
         <div
-          v-if="
-            activeDubProject?.studios ||
-            activeDubProject?.dubbing_project_crew?.length
-          "
+          v-if="activeDubProject?.studios || activeDubProject?.dubbing_project_crew?.length"
           class="theme-surface-overlay backdrop-blur border theme-border rounded-2xl p-6 space-y-4 mb-8 shadow-xl"
         >
-          <h3
-            class="text-xs font-bold theme-text-muted uppercase tracking-wider"
-          >
+          <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider">
             {{ $t("advertisement.studioAndSoundProduction") }}
           </h3>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div v-if="activeDubProject?.studios" class="space-y-1">
-              <span class="text-xs theme-text-muted">{{
-                $t("studio.recordingStudio")
-              }}</span>
+              <span class="text-xs theme-text-muted">{{ $t("studio.recordingStudio") }}</span>
               <NuxtLink
                 :to="localePath(`/studio/${activeDubProject.studios.id}`)"
                 class="text-sm font-semibold theme-status-success-text hover:underline block"
@@ -141,9 +118,7 @@
               :key="member.id"
               class="space-y-1"
             >
-              <span class="text-xs theme-text-muted">{{
-                member.jobs?.name || "Équipe"
-              }}</span>
+              <span class="text-xs theme-text-muted">{{ member.jobs?.name || "Équipe" }}</span>
               <NuxtLink
                 v-if="member.voice_actors"
                 :to="localePath(`/voice-actor/${member.voice_actors.id}`)"
@@ -160,9 +135,7 @@
       <!-- Voice Cast Section -->
       <template #cast-section>
         <section class="space-y-6">
-          <div
-            class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
-          >
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h2 class="text-xl font-bold text-white flex items-center gap-2">
                 <span>{{ $t("advertisementEditor.voiceOffActors") }}</span>
@@ -227,11 +200,9 @@
                   <span class="text-xs theme-text-muted block truncate mt-0.5">
                     {{ item.character_name || item.performance || "Voix off" }}
                   </span>
-                  <span
-                    v-if="item.note"
-                    class="text-xs theme-text-muted block truncate mt-1"
-                    >{{ item.note }}</span
-                  >
+                  <span v-if="item.note" class="text-xs theme-text-muted block truncate mt-1">{{
+                    item.note
+                  }}</span>
                 </div>
               </div>
             </template>
@@ -257,13 +228,11 @@ import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import ReportModal from "../../components/ReportModal.vue";
 import {
   fetchAdvertisementData,
-  fetchDetailCollection,
+  formatMediaWorkCastCards,
+  paginateDetailCollection,
+  selectDetailCollectionProject,
 } from "@app/shared-logic";
-import type {
-  Advertisement,
-  AdvertisementResponse,
-  PaginatedResponse,
-} from "@app/shared-logic";
+import type { Advertisement, DetailCollectionProject } from "@app/shared-logic";
 
 const route = useRoute();
 const router = useRouter();
@@ -276,7 +245,7 @@ const isAdmin = computed(() => {
 
 const adId = computed(() => {
   const idParam = route.params.id;
-  const num = parseInt(idParam as string, 10);
+  const num = parseInt(String(idParam), 10);
   return isNaN(num) ? 0 : num;
 });
 
@@ -293,9 +262,7 @@ const { data, pending } = await useAsyncData(
   },
 );
 
-const advertisement = computed<Advertisement | null>(
-  () => data.value?.advertisement || null,
-);
+const advertisement = computed<Advertisement | null>(() => data.value?.advertisement || null);
 const dubbingProjects = computed(() => data.value?.dubbingProjects || []);
 
 const activeDubId = computed(() => {
@@ -307,7 +274,7 @@ const activeDubId = computed(() => {
 
 const activeDubProject = computed(() => {
   return (
-    dubbingProjects.value.find((p: any) => p.id === activeDubId.value) ||
+    dubbingProjects.value.find((p: DetailCollectionProject) => p.id === activeDubId.value) ||
     dubbingProjects.value[0] ||
     null
   );
@@ -319,41 +286,14 @@ const posterUrl = computed(() => {
   return advertisement.value?.poster_url || null;
 });
 
-interface FormattedCastItem {
-  work_id: number;
-  voice_actor_id: number;
-  firstname: string;
-  lastname: string;
-  character_name?: string;
-  performance?: string;
-  note?: string;
-  profile_picture?: string | null;
-}
-
-const castRequest = computed(() => ({
-  collection: "media-cast" as const,
-  type: "advertisement",
-  id: adId.value,
-  projectId: activeDubId.value || undefined,
-  page: castPage.value,
-  pageSize: 12,
-}));
-const { data: castPageData } = useAsyncData<
-  PaginatedResponse<FormattedCastItem>
->(
-  computed(
-    () =>
-      `advertisement-cast-${adId.value}-${locale.value}-${castPage.value}-${activeDubId.value}`,
+const completeCastItems = computed(() =>
+  formatMediaWorkCastCards(
+    selectDetailCollectionProject(dubbingProjects.value, activeDubId.value || undefined),
   ),
-  () => fetchDetailCollection<FormattedCastItem>(castRequest.value),
-  {
-    watch: [castRequest],
-    getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
-  },
 );
-const castItems = computed(() => castPageData.value?.data || []);
-const castTotal = computed(
-  () => castPageData.value?.pagination.totalItems || 0,
+const castTotal = computed(() => completeCastItems.value.length);
+const castItems = computed(() =>
+  paginateDetailCollection(completeCastItems.value, castPage.value, 12),
 );
 
 useHead({

@@ -53,12 +53,7 @@
           </NuxtLink>
         </div>
         <div v-else class="text-sm theme-text-muted font-medium">
-          {{
-            $t(
-              "details.noDubbingProjects",
-              "Aucun projet de doublage disponible",
-            )
-          }}
+          {{ $t("details.noDubbingProjects", "Aucun projet de doublage disponible") }}
         </div>
       </template>
 
@@ -74,11 +69,7 @@
             <ExternalLinkIcon class="w-3 h-3 opacity-60" />
           </button>
 
-          <ForceEnqueueButton
-            v-if="podcast?.id"
-            media-type="podcast"
-            :media-id="podcast.id"
-          />
+          <ForceEnqueueButton v-if="podcast?.id" media-type="podcast" :media-id="podcast.id" />
 
           <NuxtLink
             v-if="isAdmin"
@@ -93,9 +84,7 @@
             "
             class="px-3 py-1.5 bg-pink-600/20 hover:bg-pink-600/30 theme-primary-text text-xs font-semibold rounded-xl border border-pink-500/30 flex items-center gap-1.5 transition-colors"
           >
-            <span>{{
-              activeDubId ? $t("common.edit") : $t("common.create")
-            }}</span>
+            <span>{{ activeDubId ? $t("common.edit") : $t("common.create") }}</span>
           </NuxtLink>
         </div>
       </template>
@@ -113,23 +102,16 @@
 
         <!-- Technical Crew / Studio Section -->
         <div
-          v-if="
-            activeDubProject?.studios ||
-            activeDubProject?.dubbing_project_crew?.length
-          "
+          v-if="activeDubProject?.studios || activeDubProject?.dubbing_project_crew?.length"
           class="theme-surface-raised theme-surface-overlay backdrop-blur border theme-border-subtle theme-border rounded-2xl p-6 space-y-4 mb-8 shadow-xl"
         >
-          <h3
-            class="text-xs font-bold theme-text-muted uppercase tracking-wider"
-          >
+          <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider">
             {{ $t("podcast.productionTeam") }}
           </h3>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div v-if="activeDubProject?.studios" class="space-y-1">
-              <span class="text-xs theme-text-muted">{{
-                $t("studio.recordingStudio")
-              }}</span>
+              <span class="text-xs theme-text-muted">{{ $t("studio.recordingStudio") }}</span>
               <NuxtLink
                 :to="localePath(`/studio/${activeDubProject.studios.id}`)"
                 class="text-sm font-semibold theme-primary-text hover:underline block"
@@ -143,9 +125,7 @@
               :key="member.id"
               class="space-y-1"
             >
-              <span class="text-xs theme-text-muted">{{
-                member.jobs?.name || "Équipe"
-              }}</span>
+              <span class="text-xs theme-text-muted">{{ member.jobs?.name || "Équipe" }}</span>
               <NuxtLink
                 v-if="member.voice_actors"
                 :to="localePath(`/voice-actor/${member.voice_actors.id}`)"
@@ -160,9 +140,7 @@
 
         <!-- Server-paginated cast roster -->
         <section class="space-y-6">
-          <div
-            class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
-          >
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h2 class="text-xl font-bold theme-text flex items-center gap-2">
                 <span>{{ $t("podcast.castSection") }}</span>
@@ -242,15 +220,11 @@
                     {{ item.firstname }} {{ item.lastname }}
                   </NuxtLink>
                   <span class="text-xs theme-text-muted block truncate mt-0.5">
-                    {{
-                      item.character_name || item.performance || "Voix / Rôle"
-                    }}
+                    {{ item.character_name || item.performance || "Voix / Rôle" }}
                   </span>
-                  <span
-                    v-if="item.note"
-                    class="text-xs theme-text-muted block truncate mt-1"
-                    >{{ item.note }}</span
-                  >
+                  <span v-if="item.note" class="text-xs theme-text-muted block truncate mt-1">{{
+                    item.note
+                  }}</span>
                 </div>
               </div>
             </template>
@@ -275,12 +249,14 @@ import { refDebounced } from "@vueuse/core";
 import MediaSkeleton from "../../components/MediaSkeleton.vue";
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import ReportModal from "../../components/ReportModal.vue";
-import { fetchPodcastData, fetchDetailCollection } from "@app/shared-logic";
-import type {
-  Podcast,
-  PodcastResponse,
-  PaginatedResponse,
+import {
+  fetchPodcastData,
+  filterDetailCollectionItems,
+  formatMediaWorkCastCards,
+  paginateDetailCollection,
+  selectDetailCollectionProject,
 } from "@app/shared-logic";
+import type { DetailCollectionProject, Podcast } from "@app/shared-logic";
 import {
   ExternalLink as ExternalLinkIcon,
   Search as SearchIcon,
@@ -298,7 +274,7 @@ const isAdmin = computed(() => {
 
 const podcastId = computed(() => {
   const idParam = route.params.id;
-  const num = parseInt(idParam as string, 10);
+  const num = parseInt(String(idParam), 10);
   return isNaN(num) ? 0 : num;
 });
 
@@ -317,12 +293,12 @@ const { data, pending } = await useAsyncData(
 
 const podcast = computed<Podcast | null>(() => data.value?.podcast || null);
 const dubbingProjects = computed(() => {
-  return (data.value?.dubbingProjects || []).filter((p: any) =>
-    (p.works || []).some((w: any) => w.voice_actor),
+  return (data.value?.dubbingProjects || []).filter((p: DetailCollectionProject) =>
+    (p.works || []).some((w) => w.voice_actor),
   );
 });
 
-function projectVoiceActorCount(project: any): number {
+function projectVoiceActorCount(project: DetailCollectionProject): number {
   const ids = new Set<number>();
   for (const w of project.works || []) {
     if (w.voice_actor?.id) ids.add(w.voice_actor.id);
@@ -339,7 +315,7 @@ const activeDubId = computed(() => {
 
 const activeDubProject = computed(() => {
   return (
-    dubbingProjects.value.find((p: any) => p.id === activeDubId.value) ||
+    dubbingProjects.value.find((p: DetailCollectionProject) => p.id === activeDubId.value) ||
     dubbingProjects.value[0] ||
     null
   );
@@ -364,18 +340,7 @@ const coverUrl = computed(() => {
   return podcast.value?.cover_url || null;
 });
 
-interface FormattedCastItem {
-  work_id: number;
-  voice_actor_id: number;
-  firstname: string;
-  lastname: string;
-  character_name?: string;
-  performance?: string;
-  note?: string;
-  profile_picture?: string | null;
-}
-
-// Debounced search is sent to the server-backed collection endpoint.
+// Keep search responsive without fetching the same detail payload again.
 const castSearchQuery = ref("");
 const debouncedCastSearch = refDebounced(castSearchQuery, 150);
 
@@ -383,31 +348,17 @@ watch([debouncedCastSearch, activeDubId], () => {
   void setCastPage(1);
 });
 
-const castRequest = computed(() => ({
-  collection: "media-cast" as const,
-  type: "podcast",
-  id: podcastId.value,
-  projectId: activeDubId.value || undefined,
-  query: debouncedCastSearch.value,
-  page: castPage.value,
-  pageSize: 12,
-}));
-const { data: castPageData } = useAsyncData<
-  PaginatedResponse<FormattedCastItem>
->(
-  computed(
-    () =>
-      `podcast-cast-${podcastId.value}-${locale.value}-${castPage.value}-${activeDubId.value}-${debouncedCastSearch.value}`,
+const completeCastItems = computed(() =>
+  formatMediaWorkCastCards(
+    selectDetailCollectionProject(dubbingProjects.value, activeDubId.value || undefined),
   ),
-  () => fetchDetailCollection<FormattedCastItem>(castRequest.value),
-  {
-    watch: [castRequest],
-    getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
-  },
 );
-const castItems = computed(() => castPageData.value?.data || []);
-const castTotal = computed(
-  () => castPageData.value?.pagination.totalItems || 0,
+const filteredCastItems = computed(() =>
+  filterDetailCollectionItems(completeCastItems.value, debouncedCastSearch.value),
+);
+const castTotal = computed(() => filteredCastItems.value.length);
+const castItems = computed(() =>
+  paginateDetailCollection(filteredCastItems.value, castPage.value, 12),
 );
 
 function openExternalUrl(url?: string) {

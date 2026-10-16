@@ -4,9 +4,7 @@
     <PersonDetailsLayout
       v-else-if="actor"
       :name="actor.name"
-      :profile-url="
-        actor.profile_path ? resolveImageUrl(actor.profile_path) : null
-      "
+      :profile-url="actor.profile_path ? resolveImageUrl(actor.profile_path) : null"
       :loading="loading"
     >
       <template #metadata>
@@ -56,9 +54,7 @@
             stroke-linecap="round"
             stroke-linejoin="round"
           >
-            <path
-              d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"
-            />
+            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
             <line x1="4" y1="22" x2="4" y2="15" />
           </svg>
           {{ t("report.button", "Signaler cette fiche") }}
@@ -120,7 +116,6 @@
           <PaginatedResponsiveGrid
             v-if="voiceActorsTotal > 0"
             :items="voiceActorItems"
-            :total-items="voiceActorsTotal"
             :page="voicesPage"
             :page-size="12"
             grid-class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
@@ -192,7 +187,6 @@
           <PaginatedResponsiveGrid
             v-else
             :items="filmographyItems"
-            :total-items="filmographyTotal"
             :page="filmographyPage"
             :page-size="12"
             grid-class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
@@ -207,11 +201,7 @@
                 <div class="flex flex-col sm:grid sm:grid-cols-3 gap-4 h-full">
                   <!-- Column 1: Media -->
                   <NuxtLink
-                    :to="
-                      localePath(
-                        `/${item.media_type === 'tv' ? 'show' : 'movie'}/${item.id}`,
-                      )
-                    "
+                    :to="localePath(`/${item.media_type === 'tv' ? 'show' : 'movie'}/${item.id}`)"
                     class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start hover:opacity-80 transition-opacity cursor-pointer"
                   >
                     <div
@@ -230,9 +220,7 @@
                         v-else
                         class="w-full h-full flex items-center justify-center theme-text-muted"
                       >
-                        <ClapperboardIcon
-                          class="w-6 h-6 sm:w-8 sm:h-8 opacity-20"
-                        />
+                        <ClapperboardIcon class="w-6 h-6 sm:w-8 sm:h-8 opacity-20" />
                       </div>
                     </div>
                     <div class="flex flex-col min-w-0 flex-1">
@@ -313,10 +301,9 @@
                         class="text-[10px] theme-text-muted font-semibold uppercase tracking-wider mb-0.5"
                         >{{ $t("details.voicedBy") }}</span
                       >
-                      <span
-                        class="font-medium text-sm theme-text-muted italic"
-                        >{{ $t("details.unknownCharacter") }}</span
-                      >
+                      <span class="font-medium text-sm theme-text-muted italic">{{
+                        $t("details.unknownCharacter")
+                      }}</span>
                     </div>
                   </div>
 
@@ -328,9 +315,7 @@
                       class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden theme-surface-raised theme-surface-muted sm:mb-3 relative flex-shrink-0"
                     >
                       <!-- Note: character image from db is not fully integrated in item yet, falling back to a placeholder -->
-                      <div
-                        class="w-full h-full flex items-center justify-center theme-text-muted"
-                      >
+                      <div class="w-full h-full flex items-center justify-center theme-text-muted">
                         <UserIcon class="w-6 h-6 sm:w-8 sm:h-8 opacity-20" />
                       </div>
                     </div>
@@ -341,9 +326,7 @@
                       >
                       <span
                         class="font-medium text-sm theme-text-secondary leading-tight line-clamp-2"
-                        >{{
-                          item.character || $t("details.unknownCharacter")
-                        }}</span
+                        >{{ item.character || $t("details.unknownCharacter") }}</span
                       >
                     </div>
                   </div>
@@ -365,12 +348,7 @@ import { onMounted, ref, watch, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { refDebounced } from "@vueuse/core";
 import { ArrowLeftIcon, ClapperboardIcon, UserIcon } from "lucide-vue-next";
-import {
-  useActorData,
-  fetchActorData,
-  fetchDetailCollection,
-} from "@app/shared-logic";
-import type { PaginatedResponse } from "@app/shared-logic";
+import { useActorData, fetchActorData } from "@app/shared-logic";
 import ReportModal from "../../components/ReportModal.vue";
 
 const isReportModalOpen = ref(false);
@@ -381,25 +359,26 @@ const supabase = useSupabaseClient();
 const { locale, t } = useI18n();
 const localePath = useLocalePath();
 
-const id = route.params.id as string;
+const id = String(route.params.id);
 const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
 
-const { data: initialData } = await useAsyncData(
-  `actor-${id}`,
-  () => fetchActorData(id),
-  {
-    getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
-  },
-);
+const { data: initialData } = await useAsyncData(`actor-${id}`, () => fetchActorData(id), {
+  getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
+});
 
-const { actor, loading, searchQuery, availableLanguages, selectedLanguage } =
-  useActorData(initialData);
+const {
+  actor,
+  loading,
+  searchQuery,
+  availableLanguages,
+  selectedLanguage,
+  filteredUniqueVoiceActorsByLanguage,
+  enhancedFilmography,
+} = useActorData(initialData);
 
 const searchInput = ref("");
-const { page: voicesPage, setPage: setVoicesPage } =
-  useUrlPagination("voicesPage");
-const { page: filmographyPage, setPage: setFilmographyPage } =
-  useUrlPagination("filmographyPage");
+const { page: voicesPage, setPage: setVoicesPage } = useUrlPagination("voicesPage");
+const { page: filmographyPage, setPage: setFilmographyPage } = useUrlPagination("filmographyPage");
 const debouncedSearch = refDebounced(searchInput, 150);
 watch(debouncedSearch, (val) => {
   searchQuery.value = val;
@@ -409,66 +388,14 @@ watch([searchQuery, selectedLanguage], () => {
   void setFilmographyPage(1);
 });
 
-type ActorCollectionItem = Record<string, any>;
-const voiceActorsRequest = computed(() => ({
-  collection: "actor-voice-actors" as const,
-  id,
-  language:
-    selectedLanguage.value === "all" ? undefined : selectedLanguage.value,
-  query: searchQuery.value,
-  page: voicesPage.value,
-  pageSize: 12,
-}));
-const { data: voiceActorsPageData } = useAsyncData<
-  PaginatedResponse<ActorCollectionItem>
->(
-  computed(
-    () =>
-      `actor-voice-actors-${id}-${voicesPage.value}-${searchQuery.value}-${selectedLanguage.value}`,
-  ),
-  () => fetchDetailCollection<ActorCollectionItem>(voiceActorsRequest.value),
-  {
-    watch: [voiceActorsRequest],
-    getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
-  },
-);
-const voiceActorItems = computed(() => voiceActorsPageData.value?.data || []);
-const voiceActorsTotal = computed(
-  () => voiceActorsPageData.value?.pagination.totalItems || 0,
-);
-
-const filmographyRequest = computed(() => ({
-  collection: "actor-filmography" as const,
-  id,
-  language:
-    selectedLanguage.value === "all" ? undefined : selectedLanguage.value,
-  query: searchQuery.value,
-  page: filmographyPage.value,
-  pageSize: 12,
-}));
-const { data: filmographyPageData } = useAsyncData<
-  PaginatedResponse<ActorCollectionItem>
->(
-  computed(
-    () =>
-      `actor-filmography-${id}-${filmographyPage.value}-${searchQuery.value}-${selectedLanguage.value}`,
-  ),
-  () => fetchDetailCollection<ActorCollectionItem>(filmographyRequest.value),
-  {
-    watch: [filmographyRequest],
-    getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
-  },
-);
-const filmographyItems = computed(() => filmographyPageData.value?.data || []);
-const filmographyTotal = computed(
-  () => filmographyPageData.value?.pagination.totalItems || 0,
-);
+const voiceActorItems = filteredUniqueVoiceActorsByLanguage;
+const voiceActorsTotal = computed(() => voiceActorItems.value.length);
+const filmographyItems = enhancedFilmography;
+const filmographyTotal = computed(() => filmographyItems.value.length);
 
 useHead({
   titleTemplate: null,
-  title: computed(() =>
-    actor.value?.name ? actor.value.name : t("search.actor", "Acteur"),
-  ),
+  title: computed(() => (actor.value?.name ? actor.value.name : t("search.actor", "Acteur"))),
   meta: [
     {
       name: "description",
@@ -478,10 +405,7 @@ useHead({
           actor.value?.biography ||
           (name
             ? t("seo.actorDescription", { name })
-            : t(
-                "seo.actorDescriptionFallback",
-                "Discover filmography and voice actors.",
-              ));
+            : t("seo.actorDescriptionFallback", "Discover filmography and voice actors."));
         return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
       }),
     },
@@ -494,9 +418,7 @@ useHead({
     },
     {
       property: "og:title",
-      content: computed(() =>
-        actor.value?.name ? actor.value.name : t("search.actor", "Acteur"),
-      ),
+      content: computed(() => (actor.value?.name ? actor.value.name : t("search.actor", "Acteur"))),
     },
     {
       property: "og:description",
@@ -506,10 +428,7 @@ useHead({
           actor.value?.biography ||
           (name
             ? t("seo.actorDescription", { name })
-            : t(
-                "seo.actorDescriptionFallback",
-                "Discover filmography and voice actors.",
-              ));
+            : t("seo.actorDescriptionFallback", "Discover filmography and voice actors."));
         return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
       }),
     },
@@ -535,9 +454,7 @@ useHead({
     },
     {
       name: "twitter:title",
-      content: computed(() =>
-        actor.value?.name ? actor.value.name : t("search.actor", "Acteur"),
-      ),
+      content: computed(() => (actor.value?.name ? actor.value.name : t("search.actor", "Acteur"))),
     },
     {
       name: "twitter:description",
@@ -547,10 +464,7 @@ useHead({
           actor.value?.biography ||
           (name
             ? t("seo.actorDescription", { name })
-            : t(
-                "seo.actorDescriptionFallback",
-                "Discover filmography and voice actors.",
-              ));
+            : t("seo.actorDescriptionFallback", "Discover filmography and voice actors."));
         return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
       }),
     },
@@ -577,23 +491,15 @@ useHead({
           "@type": "Person",
           url: `https://dubbingbase.com/actor/${id}`,
           name: name || t("search.actor", "Acteur"),
-          image: actor.value?.profile_path
-            ? resolveImageUrl(actor.value.profile_path)
-            : "",
+          image: actor.value?.profile_path ? resolveImageUrl(actor.value.profile_path) : "",
           description:
             actor.value?.biography ||
             (name
               ? t("seo.actorDescription", { name })
-              : t(
-                  "seo.actorDescriptionFallback",
-                  "Discover filmography and voice actors.",
-                )),
+              : t("seo.actorDescriptionFallback", "Discover filmography and voice actors.")),
         });
         // HTML-escape the serialized JSON to prevent script-breaking sequences
-        return json
-          .replace(/</g, "\\u003c")
-          .replace(/>/g, "\\u003e")
-          .replace(/&/g, "\\u0026");
+        return json.replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026");
       }),
     },
   ],
