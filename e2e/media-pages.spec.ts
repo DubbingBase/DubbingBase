@@ -504,22 +504,21 @@ test.describe("Media Detail Pages", () => {
   test("updates season locale and metadata after client-side locale navigation", async ({
     page,
   }) => {
-    const frenchShow = structuredClone(MOCK_SHOW);
-    frenchShow.serie.name = "Breaking Bad en français";
-    frenchShow.serie.title = "Breaking Bad en français";
-    let markFrenchShowRequested = () => {};
-    const frenchShowRequested = new Promise<void>((resolve) => {
-      markFrenchShowRequested = resolve;
+    const frenchSeason = structuredClone(MOCK_SEASON);
+    frenchSeason.serie.name = "Breaking Bad en français";
+    let markFrenchSeasonRequested = () => {};
+    const frenchSeasonRequested = new Promise<void>((resolve) => {
+      markFrenchSeasonRequested = resolve;
     });
 
-    await page.route("**/api/show/1396**", async (route) => {
+    await page.route("**/api/season?**", async (route) => {
       const acceptLanguage = route.request().headers()["accept-language"];
       const isFrench = acceptLanguage?.startsWith("fr") ?? false;
-      if (isFrench) markFrenchShowRequested();
+      if (isFrench) markFrenchSeasonRequested();
       await route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify(isFrench ? frenchShow : MOCK_SHOW),
+        body: JSON.stringify(isFrench ? frenchSeason : MOCK_SEASON),
       });
     });
 
@@ -534,7 +533,7 @@ test.describe("Media Detail Pages", () => {
     await page.locator('button[aria-label="Toggle language"]').click();
     await page.getByText("Français", { exact: true }).click();
 
-    await frenchShowRequested;
+    await frenchSeasonRequested;
     await expect(page.locator("html")).toHaveAttribute("lang", "fr-FR");
     await expect(page).toHaveTitle(/Breaking Bad en français.*Saison 1/);
     await expect(page).toHaveURL(/\/fr\/show\/1396\/season\/1/);
@@ -673,15 +672,11 @@ test.describe("Media Detail Pages", () => {
   test("updates season show data across A to B to A with out-of-order responses", async ({
     page,
   }) => {
-    const showA = structuredClone(MOCK_SHOW);
-    const showB = structuredClone(MOCK_SHOW);
-    showB.serie.id = 108978;
-    showB.serie.name = "Fargo";
-    showB.serie.title = "Fargo";
-
     const seasonA = structuredClone(MOCK_SEASON);
     seasonA.season.name = "Breaking Bad Season One";
     const seasonB = structuredClone(MOCK_SEASON);
+    seasonB.serie.id = 108978;
+    seasonB.serie.name = "Fargo";
     seasonB.season.id = 108978;
     seasonB.season.season_number = 2;
     seasonB.season.name = "Fargo Season Two";
@@ -693,14 +688,6 @@ test.describe("Media Detail Pages", () => {
     let markSeasonAStarted = () => {};
     const seasonAStarted = new Promise<void>((resolve) => {
       markSeasonAStarted = resolve;
-    });
-    let releaseShowB = () => {};
-    const showBGate = new Promise<void>((resolve) => {
-      releaseShowB = resolve;
-    });
-    let markShowBStarted = () => {};
-    const showBStarted = new Promise<void>((resolve) => {
-      markShowBStarted = resolve;
     });
     let markSeasonBFinished = () => {};
     const seasonBFinished = new Promise<void>((resolve) => {
@@ -719,26 +706,6 @@ test.describe("Media Detail Pages", () => {
       markSeasonBStarted = resolve;
     });
     let seasonARequests = 0;
-
-    await page.route("**/api/show/**", async (route) => {
-      const url = new URL(route.request().url());
-      if (url.pathname.endsWith("/108978")) {
-        markShowBStarted();
-        await showBGate;
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify(showB),
-        });
-        return;
-      }
-
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify(showA),
-      });
-    });
 
     await page.route("**/api/season?**", async (route) => {
       const url = new URL(route.request().url());
@@ -772,7 +739,7 @@ test.describe("Media Detail Pages", () => {
     await navigateClientSide(page, "/show/1396/season/1");
     await seasonAStarted;
     await navigateClientSide(page, "/show/108978/season/2");
-    await Promise.all([showBStarted, seasonBStarted]);
+    await seasonBStarted;
 
     await expect(page).toHaveURL(/\/show\/108978\/season\/2/);
     await expect(page.locator(".animate-pulse").first()).toBeVisible();
@@ -792,7 +759,6 @@ test.describe("Media Detail Pages", () => {
     await seasonBFinished;
     await expect(page.locator("body")).toContainText("Fargo Season Two");
 
-    releaseShowB();
     await expect(page).toHaveTitle(/Fargo/);
     await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
       "content",
@@ -815,17 +781,14 @@ test.describe("Media Detail Pages", () => {
   test("hides loaded season A content and metadata while season B is pending", async ({
     page,
   }) => {
-    const showB = structuredClone(MOCK_SHOW);
-    showB.serie.id = 108978;
-    showB.serie.name = "Fargo";
-    showB.serie.title = "Fargo";
-
     const seasonA = structuredClone(MOCK_SEASON);
     seasonA.season.name = "Breaking Bad Season One";
     seasonA.season.overview = "Breaking Bad season synopsis must disappear.";
     seasonA.dubbingProjects[0].language = "sv-SE";
 
     const seasonB = structuredClone(MOCK_SEASON);
+    seasonB.serie.id = 108978;
+    seasonB.serie.name = "Fargo";
     seasonB.season.id = 108978;
     seasonB.season.season_number = 2;
     seasonB.season.name = "Fargo Season Two";
@@ -840,24 +803,9 @@ test.describe("Media Detail Pages", () => {
     const seasonBStarted = new Promise<void>((resolve) => {
       markSeasonBStarted = resolve;
     });
-    let markShowBFinished = () => {};
-    const showBFinished = new Promise<void>((resolve) => {
-      markShowBFinished = resolve;
-    });
     let markSeasonBFinished = () => {};
     const seasonBFinished = new Promise<void>((resolve) => {
       markSeasonBFinished = resolve;
-    });
-
-    await page.route("**/api/show/**", async (route) => {
-      const url = new URL(route.request().url());
-      const isShowB = url.pathname.endsWith("/108978");
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify(isShowB ? showB : MOCK_SHOW),
-      });
-      if (isShowB) markShowBFinished();
     });
 
     await page.route("**/api/season?**", async (route) => {
@@ -894,7 +842,7 @@ test.describe("Media Detail Pages", () => {
     );
 
     await navigateClientSide(page, "/show/108978/season/2");
-    await Promise.all([seasonBStarted, showBFinished]);
+    await seasonBStarted;
 
     await expect(page.locator(".animate-pulse").first()).toBeVisible();
     await expect(page.locator("body")).not.toContainText(

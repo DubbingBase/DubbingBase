@@ -780,6 +780,12 @@ export const MOCK_SHOW = {
 };
 
 export const MOCK_SEASON = {
+  serie: {
+    id: MOCK_SHOW.serie.id,
+    name: MOCK_SHOW.serie.name,
+    backdrop_path: MOCK_SHOW.serie.backdrop_path,
+    poster_path: MOCK_SHOW.serie.poster_path,
+  },
   season: {
     id: 1396,
     season_number: 1,
