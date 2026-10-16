@@ -2,7 +2,13 @@ import { createCacheNamespace, SimpleCache } from "../cache";
 
 export const TVDB_AUTH_TOKEN_NAMESPACE = createCacheNamespace<string>();
 
-function debugLog(message: string, data?: any) {
+const AUTH_TOKEN_TTL = 23 * 60 * 60;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function debugLog(message: string, data?: unknown) {
   console.log(`[TVDB] ${message}`, data ? JSON.stringify(data, null, 2) : "");
 }
 
@@ -12,11 +18,13 @@ export class TVDBClient {
   private cache: SimpleCache;
   private token: string | null = null;
   private tokenExpiry: Date | null = null;
+  private tokenNeedsPersistence = false;
+  private tokenWritePromise: Promise<void> | null = null;
 
   constructor(cache: SimpleCache) {
     const config = useRuntimeConfig();
-    this.apiKey = (config.tvdbApiKey as string) || "";
-    this.baseUrl = "https://api.thetvdb.com/v4";
+    this.apiKey = config.tvdbApiKey || "";
+    this.baseUrl = "https://api4.thetvdb.com/v4";
     this.cache = cache;
     debugLog("TVDB Client initialized", { hasApiKey: !!this.apiKey });
   }
@@ -26,29 +34,87 @@ export class TVDBClient {
       return this.token;
     }
 
+    this.tokenNeedsPersistence = false;
     const token = await this.cache.getOrFetch(
       TVDB_AUTH_TOKEN_NAMESPACE,
       "tvdb:auth_token",
       async () => {
-        const response = await fetch(`${this.baseUrl}/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ apikey: this.apiKey }),
-          signal: AbortSignal.timeout(10000),
-        });
-
-        if (!response.ok) {
-          throw new Error(`TVDB auth failed: ${response.status}`);
-        }
-
-        const data = await response.json();
-        return data.data.token as string;
+        const token = await this.login();
+        this.tokenNeedsPersistence = true;
+        return token;
       },
-      { ttl: 23 * 60 * 60, cachePolicy: "persistent" },
+      { cachePolicy: "read-only" },
     );
     this.token = token;
-    this.tokenExpiry = new Date(Date.now() + 23 * 60 * 60 * 1000);
+    this.tokenExpiry = new Date(Date.now() + AUTH_TOKEN_TTL * 1000);
     return token;
+  }
+
+  private async login(): Promise<string> {
+    const response = await fetch(`${this.baseUrl}/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ apikey: this.apiKey }),
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!response.ok) {
+      throw new Error(`TVDB auth failed: ${response.status}`);
+    }
+
+    const data: unknown = await response.json();
+    if (
+      !isRecord(data) ||
+      !isRecord(data.data) ||
+      typeof data.data.token !== "string" ||
+      !data.data.token
+    ) {
+      throw new Error("TVDB auth response did not contain a token");
+    }
+    return data.data.token;
+  }
+
+  private async refreshRejectedToken(rejectedToken: string): Promise<string> {
+    if (
+      this.token &&
+      this.token !== rejectedToken &&
+      this.tokenExpiry &&
+      new Date() < this.tokenExpiry
+    ) {
+      return this.token;
+    }
+
+    this.token = null;
+    this.tokenExpiry = null;
+    this.tokenNeedsPersistence = false;
+
+    const token = await this.cache.getOrFetch(
+      TVDB_AUTH_TOKEN_NAMESPACE,
+      "tvdb:auth_token",
+      () => this.login(),
+      { cachePolicy: "none" },
+    );
+    this.token = token;
+    this.tokenExpiry = new Date(Date.now() + AUTH_TOKEN_TTL * 1000);
+    this.tokenNeedsPersistence = true;
+    return token;
+  }
+
+  private async persistAuthenticatedToken(token: string): Promise<void> {
+    while (this.tokenWritePromise) await this.tokenWritePromise;
+    if (!this.tokenNeedsPersistence || this.token !== token) return;
+
+    let writePromise: Promise<void>;
+    writePromise = this.cache
+      .set("tvdb:auth_token", token, AUTH_TOKEN_TTL)
+      .then(() => {
+        if (this.token === token) this.tokenNeedsPersistence = false;
+      })
+      .finally(() => {
+        if (this.tokenWritePromise === writePromise) this.tokenWritePromise = null;
+      });
+    this.tokenWritePromise = writePromise;
+    await writePromise;
   }
 
   async get(endpoint: string, params?: Record<string, string>, language?: string) {
@@ -65,21 +131,35 @@ export class TVDBClient {
     }
 
     try {
-      const response = await fetch(url.toString(), {
+      let activeToken = token;
+      let response = await fetch(url.toString(), {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${activeToken}`,
           Accept: "application/json",
         },
         signal: AbortSignal.timeout(8000),
       });
 
+      if (response.status === 401) {
+        if (response.body) await response.body.cancel().catch(() => {});
+        activeToken = await this.refreshRejectedToken(activeToken);
+        response = await fetch(url.toString(), {
+          headers: {
+            Authorization: `Bearer ${activeToken}`,
+            Accept: "application/json",
+          },
+          signal: AbortSignal.timeout(8000),
+        });
+      }
+
+      if (response.ok) await this.persistAuthenticatedToken(activeToken);
       if (!response.ok) {
         throw new Error(`TVDB API error: ${response.status}`);
       }
 
       return await response.json();
-    } catch (e: any) {
-      if (e.name === "TimeoutError" || e.name === "AbortError") {
+    } catch (e) {
+      if (e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError")) {
         throw new Error(`TVDB API timeout: ${endpoint}`);
       }
       throw e;
