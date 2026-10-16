@@ -254,7 +254,7 @@ import {
   filterDetailCollectionItems,
   formatMediaWorkCastCards,
   paginateDetailCollection,
-  selectDetailCollectionProject,
+  resolveDetailCollectionProject,
 } from "@app/shared-logic";
 import type { DetailCollectionProject, Podcast } from "@app/shared-logic";
 import {
@@ -306,20 +306,10 @@ function projectVoiceActorCount(project: DetailCollectionProject): number {
   return ids.size;
 }
 
-const activeDubId = computed(() => {
-  if (route.query.dub) {
-    return Number(route.query.dub);
-  }
-  return dubbingProjects.value[0]?.id || 0;
-});
-
-const activeDubProject = computed(() => {
-  return (
-    dubbingProjects.value.find((p: DetailCollectionProject) => p.id === activeDubId.value) ||
-    dubbingProjects.value[0] ||
-    null
-  );
-});
+const activeDubProject = computed(() =>
+  resolveDetailCollectionProject(dubbingProjects.value, route.query.dub),
+);
+const activeDubId = computed(() => activeDubProject.value?.id || 0);
 
 const getDisplayLanguage = (langCode: string | undefined | null) => {
   if (!langCode) return t("details.notSpecified", "Not specified");
@@ -348,11 +338,7 @@ watch([debouncedCastSearch, activeDubId], () => {
   void setCastPage(1);
 });
 
-const completeCastItems = computed(() =>
-  formatMediaWorkCastCards(
-    selectDetailCollectionProject(dubbingProjects.value, activeDubId.value || undefined),
-  ),
-);
+const completeCastItems = computed(() => formatMediaWorkCastCards(activeDubProject.value));
 const filteredCastItems = computed(() =>
   filterDetailCollectionItems(completeCastItems.value, debouncedCastSearch.value),
 );

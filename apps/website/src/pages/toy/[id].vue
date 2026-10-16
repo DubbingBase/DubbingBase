@@ -195,7 +195,7 @@ import {
   fetchToyData,
   formatMediaWorkCastCards,
   paginateDetailCollection,
-  selectDetailCollectionProject,
+  resolveDetailCollectionProject,
 } from "@app/shared-logic";
 import type { DetailCollectionProject, Toy } from "@app/shared-logic";
 
@@ -230,20 +230,10 @@ const { data, pending } = await useAsyncData(
 const toy = computed<Toy | null>(() => data.value?.toy || null);
 const dubbingProjects = computed(() => data.value?.dubbingProjects || []);
 
-const activeDubId = computed(() => {
-  if (route.query.dub) {
-    return Number(route.query.dub);
-  }
-  return dubbingProjects.value[0]?.id || 0;
-});
-
-const activeDubProject = computed(() => {
-  return (
-    dubbingProjects.value.find((p: DetailCollectionProject) => p.id === activeDubId.value) ||
-    dubbingProjects.value[0] ||
-    null
-  );
-});
+const activeDubProject = computed(() =>
+  resolveDetailCollectionProject(dubbingProjects.value, route.query.dub),
+);
+const activeDubId = computed(() => activeDubProject.value?.id || 0);
 
 watch(activeDubId, () => void setCastPage(1));
 
@@ -251,11 +241,7 @@ const coverUrl = computed(() => {
   return toy.value?.cover_url || null;
 });
 
-const completeCastItems = computed(() =>
-  formatMediaWorkCastCards(
-    selectDetailCollectionProject(dubbingProjects.value, activeDubId.value || undefined),
-  ),
-);
+const completeCastItems = computed(() => formatMediaWorkCastCards(activeDubProject.value));
 const castTotal = computed(() => completeCastItems.value.length);
 const castItems = computed(() =>
   paginateDetailCollection(completeCastItems.value, castPage.value, 12),

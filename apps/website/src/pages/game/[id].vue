@@ -478,7 +478,7 @@ import {
   filterDetailCollectionItems,
   formatGameDetailCastCards,
   paginateDetailCollection,
-  selectDetailCollectionProject,
+  resolveDetailCollectionProject,
 } from "@app/shared-logic";
 import type { GameDetailCastCard } from "@app/shared-logic";
 import type { IgdbGame } from "@app/shared-logic";
@@ -588,19 +588,10 @@ const coverUrl = computed(() => {
   return game.value.cover.url;
 });
 
-const activeDubId = computed(() => {
-  if (route.query.dub) {
-    return Number(route.query.dub);
-  }
-  return dubbingProjects.value[0]?.id || null;
-});
-
-const activeDubProject = computed(() => {
-  return (
-    dubbingProjects.value.find((project) => project.id === activeDubId.value) ||
-    dubbingProjects.value[0]
-  );
-});
+const activeDubProject = computed(() =>
+  resolveDetailCollectionProject(dubbingProjects.value, route.query.dub),
+);
+const activeDubId = computed(() => activeDubProject.value?.id || null);
 
 const getDisplayLanguage = (langCode: string | undefined | null) => {
   if (!langCode) return "Unknown";
@@ -639,10 +630,7 @@ watch(debouncedSearch, (val) => {
 watch([searchQuery, activeDubId], () => void setCastPage(1));
 
 const completeCastItems = computed<GameDetailCastCard[]>(() =>
-  formatGameDetailCastCards(
-    data.value?.characters || [],
-    selectDetailCollectionProject(dubbingProjects.value, activeDubId.value || undefined),
-  ),
+  formatGameDetailCastCards(data.value?.characters || [], activeDubProject.value),
 );
 const filteredCastItems = computed(() =>
   filterDetailCollectionItems(completeCastItems.value, searchQuery.value),

@@ -326,7 +326,7 @@ import {
   filterDetailCollectionItems,
   formatMediaWorkCastCards,
   paginateDetailCollection,
-  selectDetailCollectionProject,
+  resolveDetailCollectionProject,
 } from "@app/shared-logic";
 import { ref, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -382,20 +382,10 @@ function projectVoiceActorCount(project: DetailCollectionProject): number {
   return ids.size;
 }
 
-const activeDubId = computed(() => {
-  if (route.query.dub) {
-    return Number(route.query.dub);
-  }
-  return dubbingProjects.value[0]?.id || 0;
-});
-
-const activeDubProject = computed(() => {
-  return (
-    dubbingProjects.value.find((p: DetailCollectionProject) => p.id === activeDubId.value) ||
-    dubbingProjects.value[0] ||
-    null
-  );
-});
+const activeDubProject = computed(() =>
+  resolveDetailCollectionProject(dubbingProjects.value, route.query.dub),
+);
+const activeDubId = computed(() => activeDubProject.value?.id || 0);
 
 const coverUrl = computed(() => {
   return audiobook.value?.cover_url || null;
@@ -421,11 +411,7 @@ watch([debouncedSearch, activeDubId], () => {
   void setCastPage(1);
 });
 
-const completeCastItems = computed(() =>
-  formatMediaWorkCastCards(
-    selectDetailCollectionProject(dubbingProjects.value, activeDubId.value || undefined),
-  ),
-);
+const completeCastItems = computed(() => formatMediaWorkCastCards(activeDubProject.value));
 const filteredCastItems = computed(() =>
   filterDetailCollectionItems(completeCastItems.value, debouncedSearch.value),
 );

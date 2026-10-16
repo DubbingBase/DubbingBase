@@ -130,6 +130,13 @@ export function selectDetailCollectionProject<T>(
   return projects[0];
 }
 
+export function resolveDetailCollectionProject<T>(
+  projects: readonly T[],
+  projectId: unknown,
+): T | undefined {
+  return selectDetailCollectionProject(projects, projectId) ?? projects[0];
+}
+
 export function formatMediaWorkCastCards(project: unknown): MediaWorkCastCard[] {
   return projectWorks(project).map((work) => {
     const voiceActor = workVoiceActor(work);

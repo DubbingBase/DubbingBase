@@ -6,6 +6,7 @@ import {
   formatGameDetailCastCards,
   formatMediaWorkCastCards,
   paginateDetailCollection,
+  resolveDetailCollectionProject,
   selectDetailCollectionProject,
   type ActorDataPayload,
   type PaginatedResponse,
@@ -147,6 +148,27 @@ const actorPayload: ActorDataPayload = {
   voiceRoles: [],
 };
 actorPayload.voiceRoles = actorPayload.actor?.voice_roles || [];
+
+describe("resolveDetailCollectionProject", () => {
+  it("falls back to the displayed project when the query ID is stale", () => {
+    const projects = [{ id: 11 }, { id: 12 }];
+
+    expect(resolveDetailCollectionProject(projects, "999")?.id).toBe(11);
+  });
+
+  it("falls back to the first eligible project when the query ID was filtered out", () => {
+    const projects = [
+      { id: 11, works: [{ id: 101, voice_actor: { id: 1, firstname: "A" } }] },
+      { id: 12, works: [{ id: 102, voice_actor: null }] },
+    ].filter((project) => project.works.some((work) => work.voice_actor));
+    const selectedProject = resolveDetailCollectionProject(projects, "12");
+
+    expect(selectedProject?.id).toBe(11);
+    expect(formatMediaWorkCastCards(selectedProject)).toMatchObject([
+      { work_id: 101, firstname: "A" },
+    ]);
+  });
+});
 
 describe("GET /api/detail-collections", () => {
   it("keeps generic pagination for other collection types", async () => {
