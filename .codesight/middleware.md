@@ -13,6 +13,7 @@
 - 00-cache — `apps/website/server/middleware/00-cache.ts`
 - 00-e2e-mock — `apps/website/server/middleware/00-e2e-mock.ts`
 - 01-locale-redirect — `apps/website/server/middleware/01-locale-redirect.ts`
+- 99-route-cpu-diagnostic — `apps/website/server/middleware/99-route-cpu-diagnostic.ts`
 - cache-headers-middleware.test — `apps/website/server/utils/cache/cache-headers-middleware.test.ts`
 - admin — `apps/website/src/middleware/admin.ts`
 - 20260618000000_migrate_to_pgmq — `packages/database/supabase/migrations/20260618000000_migrate_to_pgmq.sql`

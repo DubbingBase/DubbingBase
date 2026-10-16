@@ -73,7 +73,7 @@
 - `GET` `/api/toy/:id` params(id) [queue]
 - `GET` `/api/trending/games` [cache]
 - `GET` `/api/trending/movies` [cache]
-- `GET` `/api/trending/shows` [cache]
+- `GET` `/api/trending/shows` [cache] ✓
 - `GET` `/api/trending/voice-actors`
 - `POST` `/api/update-review-status` [db]
 - `POST` `/api/update-user-profile`
