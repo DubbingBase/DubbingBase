@@ -33,8 +33,81 @@ interface TmdbCastMember {
   profile_path?: string | null;
 }
 
+interface CharacterProfilePicture {
+  id: number | string;
+  name: string;
+  image: string;
+  tvdbPeopleId: number | string | null;
+  movieId?: number;
+  seriesId?: number;
+}
+
+interface TvdbSearchResult {
+  id: string;
+  type?: string;
+  name?: string;
+  tvdb_id?: number;
+  translations?: { eng?: string };
+}
+
+interface TvdbCharacter {
+  id: number | string;
+  name: string;
+  image: string;
+  peopleId?: number | string | null;
+}
+
+type MediaContentType =
+  | "movie"
+  | "tv"
+  | "video_game"
+  | "audiobook"
+  | "advertisement"
+  | "podcast"
+  | "toy";
+
+type MediaTarget = { contentType: MediaContentType; contentId: number };
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isTvdbSearchResult(value: unknown): value is TvdbSearchResult {
+  return (
+    isRecord(value) &&
+    typeof value.id === "string" &&
+    (value.type === undefined || typeof value.type === "string") &&
+    (value.name === undefined || typeof value.name === "string") &&
+    (value.tvdb_id === undefined || typeof value.tvdb_id === "number") &&
+    (value.translations === undefined ||
+      (isRecord(value.translations) &&
+        (value.translations.eng === undefined || typeof value.translations.eng === "string")))
+  );
+}
+
+function isTvdbCharacter(value: unknown): value is TvdbCharacter {
+  return (
+    isRecord(value) &&
+    (typeof value.id === "number" || typeof value.id === "string") &&
+    typeof value.name === "string" &&
+    typeof value.image === "string" &&
+    (value.peopleId === undefined ||
+      value.peopleId === null ||
+      typeof value.peopleId === "number" ||
+      typeof value.peopleId === "string")
+  );
+}
+
+function isMediaContentType(value: string | null | undefined): value is MediaContentType {
+  return (
+    value === "movie" ||
+    value === "tv" ||
+    value === "video_game" ||
+    value === "audiobook" ||
+    value === "advertisement" ||
+    value === "podcast" ||
+    value === "toy"
+  );
 }
 
 function isTmdbCredit(value: unknown): value is TmdbCredit {
@@ -51,21 +124,13 @@ function tmdbCastCredits(value: unknown): TmdbCredit[] {
 }
 
 function indexTmdbCastByActorId(media: unknown): Map<number, TmdbCastMember> {
-  if (
-    !isRecord(media) ||
-    !isRecord(media.credits) ||
-    !Array.isArray(media.credits.cast)
-  ) {
+  if (!isRecord(media) || !isRecord(media.credits) || !Array.isArray(media.credits.cast)) {
     return new Map();
   }
 
   const castByActorId = new Map<number, TmdbCastMember>();
   for (const value of media.credits.cast) {
-    if (
-      !isRecord(value) ||
-      typeof value.id !== "number" ||
-      castByActorId.has(value.id)
-    ) {
+    if (!isRecord(value) || typeof value.id !== "number" || castByActorId.has(value.id)) {
       continue;
     }
 
@@ -161,32 +226,14 @@ export class MediaService {
     if (vaError || !voiceActor) throw new Error("Voice actor not found");
 
     const voiceActorWithImages = processVoiceActor(voiceActor);
-    const workItems = (voiceActor as any).work || [];
+    const workItems = voiceActor.work || [];
 
     // 1. Deduplicate media requests by (contentType + contentId)
-    type MediaTarget = {
-      contentType:
-        | "movie"
-        | "tv"
-        | "video_game"
-        | "audiobook"
-        | "advertisement"
-        | "podcast"
-        | "toy";
-      contentId: number;
-    };
     const uniqueTargetsMap = new Map<string, MediaTarget>();
     for (const work of workItems) {
       const contentId = work.dubbing_projects?.content_id;
-      const contentType = work.dubbing_projects?.content_type as
-        | "movie"
-        | "tv"
-        | "video_game"
-        | "audiobook"
-        | "advertisement"
-        | "podcast"
-        | "toy";
-      if (contentId && contentType) {
+      const contentType = work.dubbing_projects?.content_type;
+      if (contentId && isMediaContentType(contentType)) {
         uniqueTargetsMap.set(`${contentType}:${contentId}`, {
           contentType,
           contentId,
@@ -198,11 +245,6 @@ export class MediaService {
     // 2. Fetch unique media items with a concurrency-limited pool.
     // Serial batches stall on the slowest straggler; a pool keeps CONCURRENCY
     // requests in flight and starts the next target as soon as one finishes.
-    const fetchedResultsMap = new Map<
-      string,
-      { media: any; characterProfilePictures: any[]; tvdbId: number | null }
-    >();
-
     const CONCURRENCY = 15;
 
     // Independent tail work (backdrop person credits, Wikipedia fallback)
@@ -236,7 +278,7 @@ export class MediaService {
               key: `${contentType}:${contentId}`,
               data: {
                 media: null,
-                characterProfilePictures: [],
+                characterProfilePictures: new Array<CharacterProfilePicture>(),
                 tvdbId: null,
               },
             };
@@ -262,7 +304,7 @@ export class MediaService {
             key: `${contentType}:${contentId}`,
             data: {
               media: processedBook,
-              characterProfilePictures: [],
+              characterProfilePictures: new Array<CharacterProfilePicture>(),
               tvdbId: null,
             },
           };
@@ -272,7 +314,7 @@ export class MediaService {
             key: `${contentType}:${contentId}`,
             data: {
               media: null,
-              characterProfilePictures: [],
+              characterProfilePictures: new Array<CharacterProfilePicture>(),
               tvdbId: null,
             },
           };
@@ -288,7 +330,7 @@ export class MediaService {
               key: `${contentType}:${contentId}`,
               data: {
                 media: null,
-                characterProfilePictures: [],
+                characterProfilePictures: new Array<CharacterProfilePicture>(),
                 tvdbId: null,
               },
             };
@@ -318,7 +360,7 @@ export class MediaService {
             key: `${contentType}:${contentId}`,
             data: {
               media: processedGame,
-              characterProfilePictures: [],
+              characterProfilePictures: new Array<CharacterProfilePicture>(),
               tvdbId: null,
             },
           };
@@ -328,7 +370,7 @@ export class MediaService {
             key: `${contentType}:${contentId}`,
             data: {
               media: null,
-              characterProfilePictures: [],
+              characterProfilePictures: new Array<CharacterProfilePicture>(),
               tvdbId: null,
             },
           };
@@ -344,7 +386,7 @@ export class MediaService {
               key: `${contentType}:${contentId}`,
               data: {
                 media: null,
-                characterProfilePictures: [],
+                characterProfilePictures: new Array<CharacterProfilePicture>(),
                 tvdbId: null,
               },
             };
@@ -366,7 +408,7 @@ export class MediaService {
             key: `${contentType}:${contentId}`,
             data: {
               media: processedPodcast,
-              characterProfilePictures: [],
+              characterProfilePictures: new Array<CharacterProfilePicture>(),
               tvdbId: null,
             },
           };
@@ -376,7 +418,7 @@ export class MediaService {
             key: `${contentType}:${contentId}`,
             data: {
               media: null,
-              characterProfilePictures: [],
+              characterProfilePictures: new Array<CharacterProfilePicture>(),
               tvdbId: null,
             },
           };
@@ -404,7 +446,7 @@ export class MediaService {
             key: `${contentType}:${contentId}`,
             data: {
               media: processedAd,
-              characterProfilePictures: [],
+              characterProfilePictures: new Array<CharacterProfilePicture>(),
               tvdbId: null,
             },
           };
@@ -414,7 +456,7 @@ export class MediaService {
             key: `${contentType}:${contentId}`,
             data: {
               media: null,
-              characterProfilePictures: [],
+              characterProfilePictures: new Array<CharacterProfilePicture>(),
               tvdbId: null,
             },
           };
@@ -442,7 +484,7 @@ export class MediaService {
             key: `${contentType}:${contentId}`,
             data: {
               media: processedToy,
-              characterProfilePictures: [],
+              characterProfilePictures: new Array<CharacterProfilePicture>(),
               tvdbId: null,
             },
           };
@@ -452,7 +494,7 @@ export class MediaService {
             key: `${contentType}:${contentId}`,
             data: {
               media: null,
-              characterProfilePictures: [],
+              characterProfilePictures: new Array<CharacterProfilePicture>(),
               tvdbId: null,
             },
           };
@@ -476,7 +518,7 @@ export class MediaService {
           key: `${contentType}:${contentId}`,
           data: {
             media: processMedia(tmdbMedia),
-            characterProfilePictures: [],
+            characterProfilePictures: new Array<CharacterProfilePicture>(),
             tvdbId: null,
           },
         };
@@ -486,12 +528,15 @@ export class MediaService {
           key: `${contentType}:${contentId}`,
           data: {
             media: null,
-            characterProfilePictures: [],
+            characterProfilePictures: new Array<CharacterProfilePicture>(),
             tvdbId: null,
           },
         };
       }
     };
+
+    type FetchTargetData = Awaited<ReturnType<typeof fetchTarget>>["data"];
+    const fetchedResultsMap = new Map<string, FetchTargetData>();
 
     let nextIndex = 0;
     await Promise.all(
@@ -499,7 +544,8 @@ export class MediaService {
         while (true) {
           const idx = nextIndex++;
           if (idx >= uniqueTargets.length) return;
-          const target = uniqueTargets[idx] as MediaTarget;
+          const target = uniqueTargets[idx];
+          if (!target) return;
           const res = await fetchTarget(target);
           if (res?.data) fetchedResultsMap.set(res.key, res.data);
         }
@@ -508,17 +554,27 @@ export class MediaService {
 
     // 3. Construct compact enhancedWorks on the server (avoids sending massive raw cast lists)
     const enhancedWorks = [];
-    const compactMediasMap = new Map<number, any>();
+    const compactMediasMap = new Map<
+      number,
+      {
+        id: number;
+        title: string;
+        name: string;
+        poster_path: string | null;
+        backdrop_path: string | null;
+        release_date: string | undefined;
+        first_air_date: string | undefined;
+        media_type: string;
+        popularity: number;
+        credits?: { cast?: TmdbCastMember[] };
+      }
+    >();
     const castByMediaAndActorId = new Map<string, Map<number, TmdbCastMember>>();
 
     for (const work of workItems) {
       const contentId = work.dubbing_projects?.content_id;
-      const contentType = work.dubbing_projects?.content_type as
-        | "movie"
-        | "tv"
-        | "video_game"
-        | "audiobook";
-      if (!contentId || !contentType) continue;
+      const contentType = work.dubbing_projects?.content_type;
+      if (!contentId || !isMediaContentType(contentType)) continue;
 
       const mediaResult = fetchedResultsMap.get(`${contentType}:${contentId}`);
       if (!mediaResult || !mediaResult.media) continue;
@@ -546,9 +602,7 @@ export class MediaService {
       let characterImage: string | undefined;
 
       const castMember =
-        typeof work.actor_id === "number"
-          ? castByActorId.get(work.actor_id)
-          : undefined;
+        typeof work.actor_id === "number" ? castByActorId.get(work.actor_id) : undefined;
       if (castMember) {
         actorData = {
           id: castMember.id,
@@ -557,7 +611,7 @@ export class MediaService {
           profile_picture: castMember.profile_path || undefined,
         };
         if (!characterName) {
-          characterName = castMember.character;
+          characterName = castMember.character || undefined;
         }
       }
 
@@ -568,13 +622,13 @@ export class MediaService {
       ) {
         const lowerChar = characterName.toLowerCase();
         const pic = mediaResult.characterProfilePictures.find(
-          (cp: any) =>
-            (cp.movieId === contentId || cp.showId === contentId) &&
+          (cp) =>
+            (cp.movieId === contentId || cp.seriesId === contentId) &&
             cp.name &&
             cp.name.toLowerCase() === lowerChar,
         );
         if (pic) {
-          characterImage = pic.image || pic.profile_path || undefined;
+          characterImage = pic.image || undefined;
         }
       }
 
@@ -637,8 +691,8 @@ export class MediaService {
         const sorted = [...enhancedWorks].sort(
           (a, b) => (b.media.popularity || 0) - (a.media.popularity || 0),
         );
-        const best = sorted.find((w) => (w.media as { backdrop_path?: string }).backdrop_path);
-        if (best) backdropPath = (best.media as { backdrop_path?: string }).backdrop_path || null;
+        const best = sorted.find((w) => w.media.backdrop_path);
+        if (best) backdropPath = best.media.backdrop_path || null;
       }
     } catch (e) {
       console.error("Failed to compute voice actor backdrop:", e);
@@ -651,7 +705,7 @@ export class MediaService {
       voiceActor: voiceActorWithImages,
       enhancedWorks,
       medias: Array.from(compactMediasMap.values()),
-      characterProfilePictures: [],
+      characterProfilePictures: new Array<CharacterProfilePicture>(),
       potentialWikipediaUrl,
       backdropPath,
     };
@@ -660,8 +714,9 @@ export class MediaService {
   async getCharacterProfilePictures(
     contentType: "movie" | "tv",
     contentId: number,
-    tmdbMedia: any,
-  ): Promise<{ characters: any[]; tvdbId: number | null }> {
+    tmdbMedia: unknown,
+  ): Promise<{ characters: CharacterProfilePicture[]; tvdbId: number | null }> {
+    const tmdbData = isRecord(tmdbMedia) ? tmdbMedia : {};
     const cache = useCache();
     const tvdbClient = new TVDBClient(cache);
     const normalizedLanguage = this.acceptLanguage
@@ -681,12 +736,13 @@ export class MediaService {
         cacheKey,
         async () => {
           let tvdbId: number | null = null;
-          if (tmdbMedia.external_ids?.tvdb_id) {
-            tvdbId = tmdbMedia.external_ids.tvdb_id;
+          const externalIds = isRecord(tmdbData.external_ids) ? tmdbData.external_ids : {};
+          if (typeof externalIds.tvdb_id === "number") {
+            tvdbId = externalIds.tvdb_id;
           }
 
-          if (!tvdbId && tmdbMedia.external_ids?.wikidata_id) {
-            const wikidataId = tmdbMedia.external_ids.wikidata_id;
+          if (!tvdbId && typeof externalIds.wikidata_id === "string") {
+            const wikidataId = externalIds.wikidata_id;
             try {
               const url = `https://www.wikidata.org/w/api.php?action=wbgetclaims&entity=${wikidataId}&format=json`;
               const response = await fetch(url, {
@@ -708,17 +764,23 @@ export class MediaService {
           }
 
           if (!tvdbId) {
-            const searchQuery =
-              tmdbMedia.title ||
-              tmdbMedia.name ||
-              tmdbMedia.original_title ||
-              tmdbMedia.original_name;
+            const searchQuery = [
+              tmdbData.title,
+              tmdbData.name,
+              tmdbData.original_title,
+              tmdbData.original_name,
+            ].find((value): value is string => typeof value === "string");
 
-            const searchResults = await tvdbClient.searchSeries(searchQuery, this.acceptLanguage);
+            if (!searchQuery) return null;
+            const searchResponse: unknown = await tvdbClient.searchSeries(
+              searchQuery,
+              this.acceptLanguage,
+            );
 
-            if (searchResults && searchResults.data) {
-              const typeMatchedResults = searchResults.data.filter(
-                (item: any) =>
+            if (isRecord(searchResponse) && Array.isArray(searchResponse.data)) {
+              const searchResults = searchResponse.data.filter(isTvdbSearchResult);
+              const typeMatchedResults = searchResults.filter(
+                (item) =>
                   item.type === contentType ||
                   (contentType === "movie" && item.id.startsWith("movie-")) ||
                   (contentType === "tv" && item.id.startsWith("series-")),
@@ -726,41 +788,46 @@ export class MediaService {
 
               const bestMatch =
                 typeMatchedResults.find(
-                  (item: any) =>
+                  (item) =>
                     item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                     item.translations?.eng?.toLowerCase().includes(searchQuery.toLowerCase()),
                 ) || typeMatchedResults[0];
 
-              tvdbId =
-                contentType === "movie" ? bestMatch?.tvdb_id || bestMatch?.id : bestMatch?.id;
+              const id =
+                contentType === "movie" ? (bestMatch?.tvdb_id ?? bestMatch?.id) : bestMatch?.id;
+              if (typeof id === "number") tvdbId = id;
+              else if (typeof id === "string") {
+                const parsedId = Number(id.replace(/^(movie|series)-/, ""));
+                if (Number.isInteger(parsedId)) tvdbId = parsedId;
+              }
             }
           }
 
           if (tvdbId) {
-            let characters: any[] = [];
+            let characters: unknown[] = [];
             if (contentType === "movie") {
               const res = await tvdbClient.getMovieById(
                 tvdbId,
                 { meta: "translations", short: false },
                 this.acceptLanguage,
               );
-              characters = res.data.characters || [];
+              characters = Array.isArray(res.data.characters) ? res.data.characters : [];
             } else {
               const res = await tvdbClient.getSeriesById(
                 tvdbId,
                 { meta: "episodes", short: false },
                 this.acceptLanguage,
               );
-              characters = res.data.characters || [];
+              characters = Array.isArray(res.data.characters) ? res.data.characters : [];
             }
 
             const characterProfilePictures = characters
-              .filter((character: any) => character.image)
-              .map((character: any) => ({
+              .filter(isTvdbCharacter)
+              .map((character) => ({
                 id: character.id,
                 name: cleanCharacterName(character.name),
                 image: character.image,
-                tvdbPeopleId: character.peopleId,
+                tvdbPeopleId: character.peopleId ?? null,
                 movieId: contentType === "movie" ? contentId : undefined,
                 seriesId: contentType === "tv" ? contentId : undefined,
               }));
@@ -786,16 +853,8 @@ export class MediaService {
   async getMediaWithVoiceActors(contentType: "movie" | "tv", contentId: number) {
     const media =
       contentType === "movie"
-        ? await this.tmdbClient.getMediaWithCredits(
-            contentType,
-            contentId,
-            this.acceptLanguage,
-          )
-        : await this.tmdbClient.getMediaDetails(
-            contentType,
-            contentId,
-            this.acceptLanguage,
-          );
+        ? await this.tmdbClient.getMediaWithCredits(contentType, contentId, this.acceptLanguage)
+        : await this.tmdbClient.getMediaDetails(contentType, contentId, this.acceptLanguage);
 
     let collection: Record<string, unknown> | null = null;
     const belongsToCollection = media.belongs_to_collection;
