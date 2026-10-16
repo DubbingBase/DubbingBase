@@ -59,12 +59,14 @@
 </template>
 
 <script setup lang="ts">
+const { t } = useI18n();
+
 useHead({
-  title: "CGV API - DubbingBase",
+  title: computed(() => t("legal.termsApi.title")),
   meta: [
     {
       name: "description",
-      content: "Conditions Générales de Vente pour l'API DubbingBase.",
+      content: computed(() => t("legal.termsApi.metaDescription")),
     },
   ],
 });

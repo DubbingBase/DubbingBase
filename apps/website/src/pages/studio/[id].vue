@@ -93,7 +93,7 @@
             <input
               v-model="searchInput"
               type="search"
-              :placeholder="$t('search.placeholder', 'Rechercher...')"
+              :placeholder="$t('studio.searchPlaceholder')"
               class="w-full theme-input border theme-border-subtle theme-border rounded-xl pl-10 pr-4 py-2 text-sm theme-focus transition-all theme-text"
             />
           </div>
@@ -282,14 +282,14 @@ function getMediaLink(contentType?: string, mediaId?: number | string) {
 }
 
 function getMediaTypeLabel(contentType?: string) {
-  if (contentType === "movie") return t("search.movie") || "Film";
-  if (contentType === "tv") return t("search.tv") || "Série";
-  if (contentType === "video_game") return t("search.videoGame") || "Jeu vidéo";
-  if (contentType === "audiobook") return t("search.audiobook") || "Livre audio";
-  if (contentType === "podcast") return t("search.podcast") || "Podcast";
-  if (contentType === "advertisement") return t("search.advertisement") || "Publicité";
-  if (contentType === "toy") return t("search.toy") || "Jouet / Objet";
-  return contentType || "Média";
+  if (contentType === "movie") return t("search.movie");
+  if (contentType === "tv") return t("search.tv");
+  if (contentType === "video_game") return t("search.videoGame");
+  if (contentType === "audiobook") return t("search.audiobook");
+  if (contentType === "podcast") return t("search.podcast");
+  if (contentType === "advertisement") return t("search.advertisement");
+  if (contentType === "toy") return t("search.toy");
+  return contentType || t("common.noInfo");
 }
 
 const isAdmin = computed(() => {
@@ -338,8 +338,22 @@ const getProfileUrl = (path: string) => {
 
 useHead({
   title: computed(() =>
-    studio.value ? `${studio.value.name} - DubbingBase` : "Studio - DubbingBase",
+    studio.value?.name || t("seo.studiosPageTitle"),
   ),
+  meta: [
+    {
+      name: "description",
+      content: computed(() => {
+        const name = studio.value?.name || "";
+        return (
+          studio.value?.description ||
+          (name
+            ? t("seo.studioDescription", { name })
+            : t("seo.studioDescriptionFallback"))
+        );
+      }),
+    },
+  ],
   link: [
     { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
     { rel: "dns-prefetch", href: "https://image.tmdb.org" },

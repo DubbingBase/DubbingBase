@@ -112,6 +112,7 @@
     "pendingValidation": "Pending validation",
     "language": "Language *",
     "characterRole": "Character / Role",
+    "team": "Team",
     "production": "Production",
     "roleCharacter": "Role / Character",
     "performanceType": "Performance Type",
@@ -144,8 +145,8 @@
   },
   "seo": {
     "voiceActors": "Voice Actors - DubbingBase",
-    "voiceActorTitle": "{name} - Voice Actor | DubbingBase",
-    "voiceActorTitleFallback": "Voice Actor | DubbingBase",
+    "voiceActorTitle": "{name} - Voice Actor",
+    "voiceActorTitleFallback": "Voice Actor",
     "voiceActorDescription": "Discover the biography, filmography, and dubbing roles of {name}.",
     "voiceActorKeywords": "{name}, voice actor, dubbing, anime, voice over",
     "movies": "Movies - DubbingBase",
@@ -161,7 +162,28 @@
     "actorDescription": "Discover the filmography and voice actors of {name}.",
     "actorDescriptionFallback": "Discover filmography and voice actors.",
     "actorKeywords": "{name}, actor, filmography, movies, series",
-    "voiceActorDescriptionFallback": "Voice actor dubbing profile."
+    "voiceActorDescriptionFallback": "Voice actor dubbing profile.",
+    "moviesPageTitle": "All Movies",
+    "moviesPageDescription": "Browse popular movies and discover their dubbing voice actors.",
+    "seriesPageTitle": "All Series",
+    "seriesPageDescription": "Browse popular series and discover their dubbing voice actors.",
+    "voiceActorsPageTitle": "Voice Actors",
+    "voiceActorsPageDescription": "Browse voice actors and explore their dubbing roles.",
+    "studiosPageTitle": "Dubbing Studios",
+    "studiosPageDescription": "Discover dubbing studios and the productions they work on.",
+    "gameDescription": "Discover the voice cast and dubbing credits for {title}.",
+    "gameDescriptionDubbing": "Discover the {lang} voice cast for {title}.",
+    "gameDescriptionFallback": "Explore voice casts and dubbing credits for video games.",
+    "audiobookDescription": "Discover the narrators and voice cast for {title}.",
+    "audiobookDescriptionFallback": "Explore audiobook narrators and voice casts.",
+    "podcastDescription": "Discover the voices and dubbing information for {title}.",
+    "podcastDescriptionFallback": "Explore voice casts and dubbing information for podcasts and audio drama.",
+    "advertisementDescription": "Discover the voiceover cast for {title}.",
+    "advertisementDescriptionFallback": "Explore voiceovers and voice actors for this commercial.",
+    "toyDescription": "Discover the voices and narration for {title}.",
+    "toyDescriptionFallback": "Explore voices and narration for interactive toys and stories.",
+    "studioDescription": "Discover dubbing projects and voice actors at {name}.",
+    "studioDescriptionFallback": "Discover dubbing studios and their voice actors."
   },
   "profile": {
     "userProfile": "My User Profile",
@@ -264,7 +286,8 @@
     "noWorksFound": "No works found for this actor.",
     "notFound": "Actor not found.",
     "active": "Active:",
-    "noResultsFor": "No actor found for \"{query}\"."
+    "noResultsFor": "No actor found for \"{query}\".",
+    "directorySearchPlaceholder": "Search voice actors by name..."
   },
   "actor": {
     "title": "Actor",
@@ -353,6 +376,7 @@
     "notFound": "Not found",
     "backToShow": "Back to Show",
     "notFoundDesc": "Unable to load information for this season.",
+    "episodeNotFoundDesc": "Unable to load information for this episode.",
     "requestError": "Unable to load this media right now."
   },
   "search": {
@@ -933,7 +957,10 @@
     "castSection": "Cast & Voices",
     "productionTeam": "Production Team & Studio",
     "rssFeed": "RSS Feed / Podcast",
-    "notFound": "Podcast / Audio drama not found."
+    "notFound": "Podcast / Audio drama not found.",
+    "castSearchPlaceholder": "Filter the cast...",
+    "noCastInfo": "No cast information available yet.",
+    "noCastMatch": "No voice actors match your search."
   },
   "advertisement": {
     "title": "Commercial & Ad",
@@ -1086,6 +1113,7 @@
       "warranty": "You warrant that you have the necessary rights to submit these\n      Contributions and that they do not violate the intellectual property\n      rights of third parties."
     },
     "termsApi": {
+      "metaDescription": "Read the terms governing use of the DubbingBase API.",
       "dataProvided": "\"Data provided by DubbingBase\"",
       "section1": "1. Purpose of the Service",
       "section2": "2. Payment Terms and Billing",
@@ -1366,7 +1394,8 @@
     "voiceActorsCount": "Voice Actors ({count})",
     "actorsCount": "{shown} / {total} actors",
     "noResultsFor": "No studio found for \"{query}\".",
-    "studiosCount": "{shown} / {total} studios"
+    "studiosCount": "{shown} / {total} studios",
+    "searchPlaceholder": "Search studios..."
   },
   "series": {
     "notFound": "Series not found",

@@ -111,6 +111,7 @@
     "pendingValidation": "En attente de validation",
     "language": "Langue *",
     "characterRole": "Personnage / Rôle",
+    "team": "Équipe",
     "production": "Production",
     "roleCharacter": "Rôle / Personnage",
     "performanceType": "Type de performance",
@@ -143,8 +144,8 @@
   },
   "seo": {
     "voiceActors": "Doubleurs - DubbingBase",
-    "voiceActorTitle": "{name} - Comédien de doublage | DubbingBase",
-    "voiceActorTitleFallback": "Comédien de doublage | DubbingBase",
+    "voiceActorTitle": "{name} - Comédien de doublage",
+    "voiceActorTitleFallback": "Comédien de doublage",
     "voiceActorDescription": "Découvrez la biographie, la filmographie et les rôles de doublage de {name}.",
     "voiceActorKeywords": "{name}, comédien, doublage, anime, voix",
     "movies": "Films - DubbingBase",
@@ -160,7 +161,28 @@
     "actorDescription": "Découvrez la filmographie et les doubleurs de {name}.",
     "actorDescriptionFallback": "Découvrez la filmographie et les doubleurs.",
     "actorKeywords": "{name}, acteur, filmographie, films, séries",
-    "voiceActorDescriptionFallback": "Fiche comédien(ne) de doublage."
+    "voiceActorDescriptionFallback": "Fiche comédien(ne) de doublage.",
+    "moviesPageTitle": "Tous les films",
+    "moviesPageDescription": "Parcourez les films populaires et découvrez leurs comédiens de doublage.",
+    "seriesPageTitle": "Toutes les séries",
+    "seriesPageDescription": "Parcourez les séries populaires et découvrez leurs comédiens de doublage.",
+    "voiceActorsPageTitle": "Comédiens de doublage",
+    "voiceActorsPageDescription": "Parcourez les profils des comédiens de doublage et leurs rôles.",
+    "studiosPageTitle": "Studios de doublage",
+    "studiosPageDescription": "Découvrez les studios de doublage et les productions auxquelles ils participent.",
+    "gameDescription": "Découvrez le casting vocal et les crédits de doublage de {title}.",
+    "gameDescriptionDubbing": "Découvrez le casting vocal en {lang} de {title}.",
+    "gameDescriptionFallback": "Découvrez les castings vocaux et crédits de doublage de jeux vidéo.",
+    "audiobookDescription": "Découvrez les narrateurs et le casting vocal du livre audio {title}.",
+    "audiobookDescriptionFallback": "Découvrez les narrateurs et castings vocaux de livres audio.",
+    "podcastDescription": "Découvrez les voix et les informations de doublage de {title}.",
+    "podcastDescriptionFallback": "Découvrez les castings vocaux et les informations de doublage des podcasts et fictions audio.",
+    "advertisementDescription": "Découvrez les voix off et le casting vocal de {title}.",
+    "advertisementDescriptionFallback": "Découvrez les voix off et les comédiens de cette publicité.",
+    "toyDescription": "Découvrez les voix et les narrations de {title}.",
+    "toyDescriptionFallback": "Découvrez les voix et narrations de jouets et histoires interactifs.",
+    "studioDescription": "Découvrez les projets de doublage et les comédiens du studio {name}.",
+    "studioDescriptionFallback": "Découvrez les studios de doublage et leurs comédiens."
   },
   "profile": {
     "userProfile": "Mon profil utilisateur",
@@ -263,7 +285,8 @@
     "noWorksFound": "Aucune œuvre trouvée pour ce comédien.",
     "notFound": "Acteur introuvable.",
     "active": "Actif(ve) :",
-    "noResultsFor": "Aucun comédien trouvé pour \"{query}\"."
+    "noResultsFor": "Aucun comédien trouvé pour \"{query}\".",
+    "directorySearchPlaceholder": "Rechercher des comédiens par nom..."
   },
   "actor": {
     "title": "Acteur",
@@ -352,6 +375,7 @@
     "notFound": "Introuvable",
     "backToShow": "Retour à la série",
     "notFoundDesc": "Impossible de charger les informations de cette saison.",
+    "episodeNotFoundDesc": "Impossible de charger les informations de cet épisode.",
     "requestError": "Impossible de charger ce contenu pour le moment."
   },
   "search": {
@@ -933,7 +957,10 @@
     "castSection": "Distribution & Voix",
     "productionTeam": "Équipe de Production & Studio",
     "rssFeed": "Flux RSS / Podcast",
-    "notFound": "Podcast / Fiction audio introuvable."
+    "notFound": "Podcast / Fiction audio introuvable.",
+    "castSearchPlaceholder": "Filtrer le casting...",
+    "noCastInfo": "Aucune information de casting n’est encore disponible.",
+    "noCastMatch": "Aucun comédien ne correspond à votre recherche."
   },
   "advertisement": {
     "title": "Publicité & Spot",
@@ -1086,6 +1113,7 @@
       "warranty": "Vous garantissez que vous disposez des droits nécessaires pour soumettre\n      ces Contributions et qu'elles ne violent pas les droits de propriété\n      intellectuelle de tiers."
     },
     "termsApi": {
+      "metaDescription": "Consultez les conditions régissant l’utilisation de l’API DubbingBase.",
       "dataProvided": "\"Données fournies par DubbingBase\"",
       "section1": "1. Objet du Service",
       "section2": "2. Modalités de paiement et facturation",
@@ -1366,7 +1394,8 @@
     "voiceActorsCount": "Comédiens ({count})",
     "actorsCount": "{shown} / {total} comédiens",
     "noResultsFor": "Aucun studio trouvé pour \"{query}\".",
-    "studiosCount": "{shown} / {total} studios"
+    "studiosCount": "{shown} / {total} studios",
+    "searchPlaceholder": "Rechercher un studio..."
   },
   "series": {
     "notFound": "Série introuvable",

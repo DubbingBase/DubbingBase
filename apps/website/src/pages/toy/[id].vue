@@ -250,8 +250,8 @@ const castItems = computed(() =>
 useHead({
   title: computed(() =>
     toy.value
-      ? `${toy.value.name} - Voix & Narrateurs | DubbingBase`
-      : "Jouet Connecté / Conteuse | DubbingBase",
+      ? toy.value.name + " - " + t("toy.title")
+      : t("toy.title"),
   ),
   meta: [
     {
@@ -259,7 +259,9 @@ useHead({
       content: computed(
         () =>
           toy.value?.description?.substring(0, 160) ||
-          "Retrouvez toutes les voix et narrations de ce jouet connecté sur DubbingBase.",
+          (toy.value?.name
+            ? t("seo.toyDescription", { title: toy.value.name })
+            : t("seo.toyDescriptionFallback")),
       ),
     },
   ],

@@ -71,12 +71,11 @@ const trendingLanguage = computed(
 );
 
 useHead({
-  title: "Tous les Films - DubbingBase",
+  title: computed(() => t("seo.moviesPageTitle")),
   meta: [
     {
       name: "description",
-      content:
-        "Parcourez la liste des films populaires et découvrez leurs comédiens de doublage.",
+      content: computed(() => t("seo.moviesPageDescription")),
     },
     {
       name: "keywords",

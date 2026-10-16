@@ -100,7 +100,7 @@
             <Loader2Icon v-if="isPreparing" class="w-4 h-4 animate-spin" />
             <Gamepad2Icon v-else class="w-4 h-4" />
             <span class="hidden sm:inline">{{
-              $t("game.prepareCredits", "Extraire les crédits")
+              $t("game.prepareCredits")
             }}</span>
           </button>
 
@@ -155,10 +155,10 @@
         <div class="mb-12 max-w-4xl">
           <section>
             <h2 class="text-2xl font-bold mb-4">
-              {{ $t("details.synopsis", "Synopsis") }}
+              {{ $t("details.synopsis") }}
             </h2>
             <p class="theme-text-secondary leading-relaxed text-lg mb-8">
-              {{ game.summary || $t("details.noSynopsis", "Aucun synopsis disponible.") }}
+              {{ game.summary || $t("details.noSynopsis") }}
             </p>
 
             <div
@@ -166,7 +166,7 @@
             >
               <div>
                 <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2">
-                  {{ $t("game.developer", "Développeur") }}
+                  {{ $t("game.developer") }}
                 </h3>
                 <p class="font-medium text-sm">
                   {{ getDevelopers(game) || "-" }}
@@ -174,7 +174,7 @@
               </div>
               <div>
                 <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2">
-                  {{ $t("game.publisher", "Éditeur") }}
+                  {{ $t("game.publisher") }}
                 </h3>
                 <p class="font-medium text-sm">
                   {{ getPublishers(game) || "-" }}
@@ -182,7 +182,7 @@
               </div>
               <div class="col-span-2 md:col-span-1">
                 <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2">
-                  {{ $t("game.genres", "Genres") }}
+                  {{ $t("game.genres") }}
                 </h3>
                 <div class="flex flex-wrap gap-1.5">
                   <span
@@ -196,7 +196,7 @@
               </div>
               <div class="col-span-2 md:col-span-1">
                 <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2">
-                  {{ $t("game.platforms", "Plateformes") }}
+                  {{ $t("game.platforms") }}
                 </h3>
                 <div class="flex flex-wrap gap-1.5">
                   <span
@@ -218,7 +218,7 @@
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
               <div>
                 <h2 class="text-2xl font-bold">
-                  {{ $t("details.castAndCrew", "Casting") }}
+                  {{ $t("details.castAndCrew") }}
                 </h2>
                 <div class="theme-text-muted text-sm mt-1">
                   {{
@@ -237,7 +237,7 @@
                 <input
                   v-model="searchInput"
                   type="search"
-                  :placeholder="$t('search.placeholder', 'Rechercher...')"
+                  :placeholder="$t('search.placeholder')"
                   class="w-full theme-input border theme-border-subtle theme-border rounded-xl pl-10 pr-4 py-2 text-sm theme-focus transition-all theme-text"
                 />
               </div>
@@ -290,7 +290,7 @@
                       >
                         <UserIcon class="w-3 h-3 flex-shrink-0" />
                         <span class="truncate block w-full">{{
-                          $t("details.character", "Personnage")
+                          $t("details.character")
                         }}</span>
                       </div>
                       <div
@@ -333,7 +333,7 @@
                         >
                           <MicIcon class="w-3 h-3 flex-shrink-0" />
                           <span class="truncate block w-full">{{
-                            $t("details.voiceActor", "Voice Actor")
+                            $t("details.voiceActor")
                           }}</span>
                         </div>
                         <NuxtLink
@@ -371,11 +371,11 @@
                         >
                           <MicIcon class="w-3 h-3 opacity-50 flex-shrink-0" />
                           <span class="truncate block w-full">{{
-                            $t("details.voiceActor", "Voice Actor")
+                            $t("details.voiceActor")
                           }}</span>
                         </div>
                         <div class="text-sm theme-text-muted italic truncate block w-full">
-                          {{ $t("details.notSpecified", "Non spécifié") }}
+                          {{ $t("details.notSpecified") }}
                         </div>
                       </div>
                     </template>
@@ -395,7 +395,7 @@
     </MediaDetailsLayout>
 
     <div v-else-if="!pending" class="text-center py-20 theme-text-muted min-h-screen">
-      {{ $t("details.notFound", "Jeu vidéo introuvable.") }}
+      {{ $t("game.notFound") }}
     </div>
 
     <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
@@ -670,14 +670,17 @@ async function triggerPrepareGame() {
 }
 
 useHead({
-  titleTemplate: null,
   title: computed(() => {
     const year = game.value?.first_release_date
       ? ` (${formatReleaseYear(game.value.first_release_date)})`
       : "";
-    let base = game.value ? `${game.value.name}${year}` : "Jeu Vidéo";
+    let base = game.value ? game.value.name + year : t("search.videoGame");
     if (activeDubProject.value) {
-      base += ` - Doublage ${getDisplayLanguage(activeDubProject.value.language)}`;
+      base +=
+        " - " +
+        t("details.dubbing", {
+          lang: getDisplayLanguage(activeDubProject.value.language),
+        });
     }
     return base;
   }),
@@ -685,12 +688,19 @@ useHead({
     {
       name: "description",
       content: computed(() => {
+        const title = game.value?.name || "";
         let desc =
           game.value?.summary ||
-          `Découvrez les voix françaises et le casting du jeu vidéo ${game.value?.name}.`;
-        if (activeDubProject.value) {
+          (title
+            ? t("seo.gameDescription", { title })
+            : t("seo.gameDescriptionFallback"));
+        if (activeDubProject.value && title) {
           desc =
-            `Découvrez le casting complet des voix pour le doublage ${getDisplayLanguage(activeDubProject.value.language)} du jeu ${game.value?.name}. ` +
+            t("seo.gameDescriptionDubbing", {
+              lang: getDisplayLanguage(activeDubProject.value.language),
+              title,
+            }) +
+            " " +
             desc;
         }
         return desc;

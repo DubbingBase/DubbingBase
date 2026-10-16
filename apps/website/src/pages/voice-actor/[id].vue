@@ -163,7 +163,7 @@
             >
               <div>
                 <h2 class="text-2xl font-bold">
-                  {{ $t("voiceActor.filmography", "Filmography") }}
+                  {{ $t("voiceActor.filmography") }}
                 </h2>
               </div>
 
@@ -175,12 +175,7 @@
                   <input
                     v-model="searchInput"
                     type="search"
-                    :placeholder="
-                      $t(
-                        'voiceActor.searchPlaceholder',
-                        'Search roles, titles or actors...',
-                      )
-                    "
+                    :placeholder="$t('voiceActor.searchPlaceholder')"
                     class="w-full theme-input border theme-border-subtle theme-border rounded-xl pl-10 pr-4 py-2 text-sm theme-focus transition-all theme-text"
                   />
                 </div>
@@ -198,7 +193,7 @@
                         : 'theme-text-muted theme-hover-text',
                     ]"
                   >
-                    {{ $t("voiceActor.grouped", "Grouped") }}
+                    {{ $t("voiceActor.grouped") }}
                   </button>
                   <button
                     @click="displayMode = 'list'"
@@ -209,7 +204,7 @@
                         : 'theme-text-muted theme-hover-text',
                     ]"
                   >
-                    {{ $t("voiceActor.list", "List") }}
+                    {{ $t("voiceActor.list") }}
                   </button>
                 </div>
 
@@ -220,10 +215,10 @@
                   class="theme-input border theme-border-subtle theme-border theme-text text-sm rounded-lg theme-focus block p-2 cursor-pointer"
                 >
                   <option value="newest">
-                    {{ $t("voiceActor.newestFirst", "Newest First") }}
+                    {{ $t("voiceActor.newestFirst") }}
                   </option>
                   <option value="oldest">
-                    {{ $t("voiceActor.oldestFirst", "Oldest First") }}
+                    {{ $t("voiceActor.oldestFirst") }}
                   </option>
                 </select>
               </div>
@@ -267,7 +262,7 @@
             class="theme-text-muted text-center py-12 theme-input rounded-2xl border theme-border-subtle theme-border"
           >
             {{
-              $t("voiceActor.noWorksFound", "No works found for this actor.")
+              $t("voiceActor.noWorksFound")
             }}
           </div>
 
@@ -848,10 +843,7 @@ const voiceActorOgImage = computed(() =>
 const ogImageUrl = computed(() => voiceActorOgImage.value.url);
 const actorDescription = computed(() => {
   if (!actorName.value)
-    return t(
-      "seo.voiceActorDescriptionFallback",
-      "Fiche comédien(ne) de doublage.",
-    );
+    return t("seo.voiceActorDescriptionFallback");
   const workCount = voiceActor.value?.work?.length || 0;
   const desc = t("seo.voiceActorDescription", {
     name: actorName.value,
@@ -865,7 +857,7 @@ useHead({
   title: computed(() =>
     actorName.value
       ? t("seo.voiceActorTitle", { name: actorName.value })
-      : t("seo.voiceActorTitleFallback", "Voice Actor"),
+      : t("seo.voiceActorTitleFallback"),
   ),
   meta: [
     {
@@ -887,7 +879,7 @@ useHead({
       content: computed(() =>
         actorName.value
           ? t("seo.voiceActorTitle", { name: actorName.value })
-          : t("seo.voiceActorTitleFallback", "Voice Actor"),
+          : t("seo.voiceActorTitleFallback"),
       ),
     },
     { property: "og:description", content: actorDescription },
@@ -926,7 +918,7 @@ useHead({
       content: computed(() =>
         actorName.value
           ? t("seo.voiceActorTitle", { name: actorName.value })
-          : t("seo.voiceActorTitleFallback", "Voice Actor"),
+          : t("seo.voiceActorTitleFallback"),
       ),
     },
     { name: "twitter:description", content: actorDescription },
@@ -946,14 +938,14 @@ useHead({
           "@type": "ProfilePage",
           url: canonicalUrl.value,
           name: actorName.value
-            ? `${actorName.value} - Voice Actor`
-            : "Voice Actor",
+              ? actorName.value + " - " + t("seo.voiceActorTitleFallback")
+              : t("seo.voiceActorTitleFallback"),
           mainEntity: {
             "@type": "Person",
             name:
               actorName.value ||
-              t("seo.voiceActorTitleFallback", "Voice Actor"),
-            jobTitle: t("seo.voiceActorTitleFallback", "Voice Actor"),
+              t("seo.voiceActorTitleFallback"),
+            jobTitle: t("seo.voiceActorTitleFallback"),
             image: profilePicture.value || ogImageUrl.value,
             url: canonicalUrl.value,
           },
@@ -1023,39 +1015,34 @@ const worksTotal = computed(() => worksPageData.value.pagination.totalItems);
 const currentWorksPage = computed(() => worksPageData.value.pagination.page);
 
 const CATEGORY_TABS_CONFIG = [
-  { id: "all", labelKey: "search.all", defaultLabel: "All", icon: LayersIcon },
+  { id: "all", labelKey: "search.all", icon: LayersIcon },
   {
     id: "movie",
     labelKey: "search.movie",
-    defaultLabel: "Movies",
     icon: FilmIcon,
   },
-  { id: "tv", labelKey: "search.tv", defaultLabel: "Series", icon: TvIcon },
+  { id: "tv", labelKey: "search.tv", icon: TvIcon },
   {
     id: "video_game",
     labelKey: "search.videoGame",
-    defaultLabel: "Video Games",
     icon: Gamepad2Icon,
   },
   {
     id: "audiobook",
     labelKey: "search.audiobook",
-    defaultLabel: "Audiobooks",
     icon: BookOpenIcon,
   },
   {
     id: "podcast",
     labelKey: "search.podcast",
-    defaultLabel: "Podcasts",
     icon: RadioIcon,
   },
   {
     id: "advertisement",
     labelKey: "search.advertisement",
-    defaultLabel: "Commercials",
     icon: MegaphoneIcon,
   },
-  { id: "toy", labelKey: "search.toy", defaultLabel: "Toys", icon: SmileIcon },
+  { id: "toy", labelKey: "search.toy", icon: SmileIcon },
 ] as const;
 
 const categoryTabs = computed(() => {
@@ -1104,7 +1091,7 @@ const categoryTabs = computed(() => {
   }).map((cfg) => {
     return {
       id: cfg.id,
-      label: $te(cfg.labelKey) ? $t(cfg.labelKey) : cfg.defaultLabel,
+      label: $t(cfg.labelKey),
       icon: cfg.icon,
       count: filteredCounts[cfg.id] || 0,
       totalCount: totalCounts[cfg.id] || 0,

@@ -112,6 +112,7 @@
     "pendingValidation": "検証待ち",
     "language": "言語 *",
     "characterRole": "キャラクター / 役",
+    "team": "チーム",
     "production": "制作",
     "roleCharacter": "役 / キャラクター",
     "performanceType": "演技タイプ",
@@ -144,8 +145,8 @@
   },
   "seo": {
     "voiceActors": "声優 - DubbingBase",
-    "voiceActorTitle": "{name} - 声優 | DubbingBase",
-    "voiceActorTitleFallback": "声優 | DubbingBase",
+    "voiceActorTitle": "{name} - 声優",
+    "voiceActorTitleFallback": "声優",
     "voiceActorDescription": "{name}の略歴、フィルモグラフィー、吹き替えの役を発見してください。",
     "voiceActorKeywords": "{name}, 声優, 吹き替え, アニメ, ボイス",
     "movies": "映画 - DubbingBase",
@@ -161,7 +162,28 @@
     "actorDescription": "{name}のフィルモグラフィーと声優を発見してください。",
     "actorDescriptionFallback": "フィルモグラフィーと声優を発見してください。",
     "actorKeywords": "{name}, 俳優, フィルモグラフィー, 映画, テレビ番組",
-    "voiceActorDescriptionFallback": "声優の吹き替えプロフィール。"
+    "voiceActorDescriptionFallback": "声優の吹き替えプロフィール。",
+    "moviesPageTitle": "すべての映画",
+    "moviesPageDescription": "人気の映画を見て、吹き替え声優をチェックしましょう。",
+    "seriesPageTitle": "すべてのシリーズ",
+    "seriesPageDescription": "人気のシリーズを見て、吹き替え声優をチェックしましょう。",
+    "voiceActorsPageTitle": "声優",
+    "voiceActorsPageDescription": "声優のプロフィールや吹き替え作品を探しましょう。",
+    "studiosPageTitle": "吹き替えスタジオ",
+    "studiosPageDescription": "吹き替えスタジオと参加作品を見つけましょう。",
+    "gameDescription": "{title}の声優キャストと吹き替えクレジットを見つけましょう。",
+    "gameDescriptionDubbing": "{title}の{lang}吹き替えキャストを見つけましょう。",
+    "gameDescriptionFallback": "ゲームの声優キャストや吹き替えクレジットを探しましょう。",
+    "audiobookDescription": "{title}のナレーターと声優キャストを見つけましょう。",
+    "audiobookDescriptionFallback": "オーディオブックのナレーターや声優キャストを探しましょう。",
+    "podcastDescription": "{title}の声優と吹き替え情報を見つけましょう。",
+    "podcastDescriptionFallback": "ポッドキャストやボイスドラマの声優と吹き替え情報を探しましょう。",
+    "advertisementDescription": "{title}のナレーションと声優キャストを見つけましょう。",
+    "advertisementDescriptionFallback": "この広告のナレーションと声優を探しましょう。",
+    "toyDescription": "{title}の声優とナレーションを見つけましょう。",
+    "toyDescriptionFallback": "インタラクティブなおもちゃやストーリーの声優とナレーションを探しましょう。",
+    "studioDescription": "{name}の吹き替え作品や声優を見つけましょう。",
+    "studioDescriptionFallback": "吹き替えスタジオや所属する声優を探しましょう。"
   },
   "profile": {
     "userProfile": "マイユーザープロフィール",
@@ -264,7 +286,8 @@
     "noWorksFound": "この声優の作品は見つかりませんでした。",
     "notFound": "俳優が見つかりません。",
     "active": "活動期間：",
-    "noResultsFor": "「{query}」に一致する声優は見つかりませんでした。"
+    "noResultsFor": "「{query}」に一致する声優は見つかりませんでした。",
+    "directorySearchPlaceholder": "声優を名前で検索..."
   },
   "actor": {
     "title": "俳優",
@@ -353,6 +376,7 @@
     "notFound": "見つかりません",
     "backToShow": "ショーに戻る",
     "notFoundDesc": "このシーズンの情報を読み込めませんでした。",
+    "episodeNotFoundDesc": "このエピソードの情報を読み込めませんでした。",
     "requestError": "現在このコンテンツを読み込めません。"
   },
   "search": {
@@ -933,7 +957,10 @@
     "castSection": "キャスト＆声優",
     "productionTeam": "制作チーム＆スタジオ",
     "rssFeed": "RSSフィード / ポッドキャスト",
-    "notFound": "ポッドキャスト / オーディオドラマが見つかりません。"
+    "notFound": "ポッドキャスト / オーディオドラマが見つかりません。",
+    "castSearchPlaceholder": "キャストを絞り込む...",
+    "noCastInfo": "キャスト情報はまだありません。",
+    "noCastMatch": "検索に一致する声優はいません。"
   },
   "advertisement": {
     "title": "CM・広告",
@@ -1086,6 +1113,7 @@
       "warranty": "お客様は、これらの投稿コンテンツを提出するために必要な権利を有し、それらが第三者の知的財産権を侵害しないことを保証するものとします。"
     },
     "termsApi": {
+      "metaDescription": "DubbingBase APIの利用条件をご確認ください。",
       "dataProvided": "\"DubbingBase提供のデータ\"",
       "section1": "1. サービスの目的",
       "section2": "2. 支払条件および請求",
@@ -1366,7 +1394,8 @@
     "voiceActorsCount": "声優（{count}）",
     "actorsCount": "{shown}／{total} 声優",
     "noResultsFor": "「{query}」に一致するスタジオは見つかりませんでした。",
-    "studiosCount": "{shown}／{total} スタジオ"
+    "studiosCount": "{shown}／{total} スタジオ",
+    "searchPlaceholder": "スタジオを検索..."
   },
   "series": {
     "notFound": "シリーズが見つかりません",

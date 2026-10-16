@@ -285,8 +285,8 @@ const castItems = computed(() =>
 useHead({
   title: computed(() =>
     advertisement.value
-      ? `${advertisement.value.title} - Voix Off | DubbingBase`
-      : "Publicité | DubbingBase",
+      ? advertisement.value.title + " - " + t("advertisement.title")
+      : t("advertisement.title"),
   ),
   meta: [
     {
@@ -294,7 +294,11 @@ useHead({
       content: computed(
         () =>
           advertisement.value?.description?.substring(0, 160) ||
-          "Retrouvez les voix off et comédiens de cette publicité sur DubbingBase.",
+          (advertisement.value?.title
+            ? t("seo.advertisementDescription", {
+                title: advertisement.value.title,
+              })
+            : t("seo.advertisementDescriptionFallback")),
       ),
     },
   ],

@@ -14,7 +14,7 @@
           <input
             v-model="searchInput"
             type="text"
-            placeholder="Rechercher un comédien..."
+            :placeholder="t('voiceActor.directorySearchPlaceholder')"
             class="w-full theme-surface-raised theme-surface-muted theme-text border-0 rounded-full px-6 py-3 theme-focus transition-shadow outline-none"
           />
           <div
@@ -154,12 +154,11 @@ watch(debouncedSearch, () => {
 });
 
 useHead({
-  title: "Tous les Comédiens de doublage - DubbingBase",
+  title: computed(() => t("seo.voiceActorsPageTitle")),
   meta: [
     {
       name: "description",
-      content:
-        "Parcourez la base de données complète des comédiens de doublage et voix françaises.",
+      content: computed(() => t("seo.voiceActorsPageDescription")),
     },
     {
       name: "keywords",
