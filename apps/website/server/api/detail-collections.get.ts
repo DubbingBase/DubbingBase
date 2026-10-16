@@ -1,8 +1,75 @@
 import type { PaginatedResponse } from "@app/shared-logic";
+import {
+  filterDetailCollectionItems,
+  formatGameDetailCastCards,
+  formatMediaWorkCastCards,
+  selectDetailCollectionProject,
+} from "@app/shared-logic";
+import type { IgdbCharacter } from "@app/shared-logic";
+import type { H3Event$Fetch } from "nitropack/types";
 import { paginateArray } from "../utils/pagination";
 
-type DetailPayload = Record<string, any>;
-type CollectionItem = Record<string, any>;
+type CollectionItem = {
+  id?: number | string;
+  actorId?: number | string;
+  actor_id?: number | string | null;
+  character_id?: number | string | null;
+  character_name?: string | null;
+  character?: string | null;
+  characterImage?: string | null;
+  title?: string | null;
+  original_title?: string | null;
+  name?: string | null;
+  firstname?: string | null;
+  lastname?: string | null;
+  profile_picture?: string | null;
+  profile_path?: string | null;
+  image?: string | null;
+  note?: string | null;
+  performance?: string | null;
+  work_id?: number | string;
+  workCharacterName?: string | null;
+  rolesCount?: number;
+  voiceActor?: Record<string, unknown> | null;
+  voice_actor?: CollectionItem | null;
+  voice_actors?: CollectionItem[] | CollectionItem | null;
+  works?: CollectionItem[];
+  work?: { performance?: string | null } | null;
+  credits?: { cast?: CollectionItem[] } | null;
+  media?: { title?: string | null; name?: string | null } | null;
+  data?: {
+    character?: string | null;
+    actor?: { name?: string | null } | null;
+  } | null;
+};
+
+type VoiceActorRecord = CollectionItem & {
+  id: number;
+};
+
+type ActorVoiceRole = {
+  mediaDetails?: { id: number } | null;
+  voice_actors?: VoiceActorRecord[];
+  dubbing_projects?: { language?: string | null } | null;
+};
+
+type DetailPayload = {
+  movie?: CollectionItem | null;
+  serie?: CollectionItem | null;
+  episode?: CollectionItem | null;
+  aggregateCredits?: { cast?: CollectionItem[] } | null;
+  characterProfilePictures?: CollectionItem[];
+  dubbingProjects?: CollectionItem[];
+  characters?: IgdbCharacter[];
+  actor?: {
+    credits?: { cast?: CollectionItem[] };
+    voice_roles?: ActorVoiceRole[];
+  };
+  dubbedProjects?: CollectionItem[];
+  voiceActorsRoster?: CollectionItem[];
+};
+
+type CollectionQuery = Record<string, string | string[] | undefined>;
 
 const COLLECTIONS = new Set([
   "media-cast",
@@ -15,6 +82,22 @@ const COLLECTIONS = new Set([
 function queryValue(value: unknown): string | undefined {
   if (Array.isArray(value)) return queryValue(value[0]);
   return typeof value === "string" ? value : undefined;
+}
+
+function collectionQuery(value: unknown): CollectionQuery {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return {};
+  }
+
+  const result: CollectionQuery = {};
+  for (const [key, entry] of Object.entries(value)) {
+    if (typeof entry === "string") {
+      result[key] = entry;
+    } else if (Array.isArray(entry) && entry.every((item) => typeof item === "string")) {
+      result[key] = entry;
+    }
+  }
+  return result;
 }
 
 function requiredId(value: unknown, name: string): number {
@@ -49,38 +132,6 @@ function normalized(value: unknown): string {
     .toLowerCase();
 }
 
-function searchMatch(item: CollectionItem, query: string): boolean {
-  if (!query) return true;
-  return [
-    item.name,
-    item.title,
-    item.character,
-    item.character_name,
-    item.performance,
-    item.note,
-    item.voiceActor?.firstname,
-    item.voiceActor?.lastname,
-    item.firstname,
-    item.lastname,
-    item.media?.title,
-    item.media?.name,
-    item.data?.character,
-    item.data?.actor?.name,
-    item.work?.performance,
-  ].some((value) => normalized(value).includes(query));
-}
-
-function selectedProject(
-  projects: CollectionItem[],
-  projectId: unknown,
-): CollectionItem | undefined {
-  const requestedId = queryValue(projectId);
-  if (requestedId) {
-    return projects.find((project) => String(project.id) === requestedId);
-  }
-  return projects[0];
-}
-
 function mediaEndpoint(type: string, id: number): string {
   switch (type) {
     case "movie":
@@ -103,37 +154,19 @@ function mediaEndpoint(type: string, id: number): string {
 }
 
 function workVoiceActor(work: CollectionItem): CollectionItem | null {
-  const voiceActor = work.voice_actor || work.voice_actors;
+  const voiceActor =
+    work.voice_actor || (Array.isArray(work.voice_actors) ? null : work.voice_actors);
   return voiceActor ? { ...voiceActor, note: work.note } : null;
-}
-
-function formatWorkCards(
-  project: CollectionItem | undefined,
-): CollectionItem[] {
-  const works = project?.works || project?.work || [];
-  return works.map((work: CollectionItem) => {
-    const voiceActor = workVoiceActor(work);
-    return {
-      work_id: work.id,
-      voice_actor_id: voiceActor?.id || work.voice_actor_id,
-      firstname: voiceActor?.firstname || "",
-      lastname: voiceActor?.lastname || "",
-      character_name: work.character_name || "",
-      performance: work.performance || "",
-      note: work.note || "",
-      profile_picture: voiceActor?.profile_picture || null,
-    };
-  });
 }
 
 function formatTmdbCards(
   detail: DetailPayload,
   project: CollectionItem | undefined,
 ): CollectionItem[] {
-  const media = detail.movie || detail.serie || detail.episode || {};
+  const media: CollectionItem = detail.movie || detail.serie || detail.episode || {};
   const cast = detail.aggregateCredits?.cast || media.credits?.cast || [];
   const works = project?.works || [];
-  const matchedWorkIds = new Set<number>();
+  const matchedWorkIds = new Set<number | string | undefined>();
   const cards: CollectionItem[] = [];
 
   for (const actor of cast) {
@@ -147,8 +180,7 @@ function formatTmdbCards(
     for (const work of actorWorks) {
       const characterName = actor.character || work?.character_name || null;
       const characterPicture = (detail.characterProfilePictures || []).find(
-        (picture: CollectionItem) =>
-          normalized(picture.name) === normalized(characterName),
+        (picture: CollectionItem) => normalized(picture.name) === normalized(characterName),
       );
       const voiceActor = work ? workVoiceActor(work) : null;
       cards.push({
@@ -180,67 +212,12 @@ function formatTmdbCards(
   return cards;
 }
 
-function formatGameCards(
-  detail: DetailPayload,
-  project: CollectionItem | undefined,
-): CollectionItem[] {
-  const works = project?.works || [];
-  const characters = detail.characters || [];
-  const matchedWorkIds = new Set<number>();
-  const cards = characters.flatMap((character: CollectionItem) => {
-    const mappedCharacterId = 9_000_000_000 + Number(character.id);
-    const fallbackCharacterId =
-      Math.abs(
-        String(character.name || "")
-          .split("")
-          .reduce(
-            (hash: number, value: string) =>
-              (hash * 31 + value.charCodeAt(0)) | 0,
-            0,
-          ),
-      ) + 8_000_000_000;
-    const characterIds = new Set([
-      String(character.id),
-      String(mappedCharacterId),
-      String(fallbackCharacterId),
-    ]);
-    const matchingWorks = works.filter((work: CollectionItem) => {
-      const matches =
-        characterIds.has(String(work.character_id)) ||
-        characterIds.has(String(work.actor_id));
-      if (matches) matchedWorkIds.add(work.id);
-      return matches;
-    });
-    const cardsForCharacter = matchingWorks.length > 0 ? matchingWorks : [null];
-    return cardsForCharacter.map((work: CollectionItem | null) => ({
-      ...character,
-      id: work ? `${character.id}-${work.id}` : character.id,
-      work_id: work?.id,
-      voiceActor: work ? workVoiceActor(work) : null,
-    }));
-  });
-
-  return [
-    ...cards,
-    ...works
-      .filter((work: CollectionItem) => !matchedWorkIds.has(work.id))
-      .map((work: CollectionItem) => ({
-        id: `work-${work.id}`,
-        work_id: work.id,
-        name: work.character_name || "Unknown character",
-        mug_shot: null,
-        voiceActor: workVoiceActor(work),
-      })),
-  ];
-}
-
 async function getMediaCast(
-  event: any,
-  query: Record<string, any>,
+  requestFetch: H3Event$Fetch,
+  query: CollectionQuery,
 ): Promise<CollectionItem[]> {
   const type = queryValue(query.type) || "";
   const id = requiredId(query.id, "id");
-  const requestFetch = event.$fetch;
   const detailQuery =
     type === "episode"
       ? {
@@ -249,56 +226,53 @@ async function getMediaCast(
           episode_number: requiredId(query.episodeNumber, "episodeNumber"),
         }
       : undefined;
-  const detail = await requestFetch(
+  const detail = await requestFetch<DetailPayload>(
     type === "episode" ? "/api/episode" : mediaEndpoint(type, id),
     { query: detailQuery },
   );
   const projects = detail.dubbingProjects || [];
-  const project = selectedProject(projects, query.projectId);
+  const project = selectDetailCollectionProject<CollectionItem>(projects, query.projectId);
 
   if (["audiobook", "podcast", "advertisement", "toy"].includes(type)) {
-    return formatWorkCards(project);
+    return formatMediaWorkCastCards(project);
   }
-  if (type === "game") return formatGameCards(detail, project);
+  if (type === "game") {
+    return formatGameDetailCastCards(detail.characters || [], project);
+  }
   return formatTmdbCards(detail, project);
 }
 
 async function getCollectionItems(
-  event: any,
-  query: Record<string, any>,
+  requestFetch: H3Event$Fetch,
+  query: CollectionQuery,
 ): Promise<CollectionItem[]> {
   const collection = queryValue(query.collection) || "";
   const id = ["studio-projects", "studio-voice-actors"].includes(collection)
     ? requiredTextId(query.id, "id")
     : requiredId(query.id, "id");
-  const requestFetch = event.$fetch;
-
   switch (collection) {
     case "media-cast":
-      return await getMediaCast(event, query);
+      return await getMediaCast(requestFetch, query);
     case "actor-filmography": {
-      const detail = await requestFetch(`/api/actor/${id}`);
+      const detail = await requestFetch<DetailPayload>(`/api/actor/${id}`);
       const roles = detail.actor?.voice_roles || [];
-      return (detail.actor?.credits?.cast || []).map(
-        (item: CollectionItem) => ({
-          ...item,
-          voice_actors: roles
-            .filter(
-              (role: CollectionItem) =>
-                String(role.mediaDetails?.id) === String(item.id) &&
-                (!queryValue(query.language) ||
-                  queryValue(query.language) === "all" ||
-                  role.dubbing_projects?.language ===
-                    queryValue(query.language)),
-            )
-            .flatMap((role: CollectionItem) => role.voice_actors || []),
-        }),
-      );
+      return (detail.actor?.credits?.cast || []).map((item) => ({
+        ...item,
+        voice_actors: roles
+          .filter(
+            (role) =>
+              String(role.mediaDetails?.id) === String(item.id) &&
+              (!queryValue(query.language) ||
+                queryValue(query.language) === "all" ||
+                role.dubbing_projects?.language === queryValue(query.language)),
+          )
+          .flatMap((role) => role.voice_actors || []),
+      }));
     }
     case "actor-voice-actors": {
-      const detail = await requestFetch(`/api/actor/${id}`);
+      const detail = await requestFetch<DetailPayload>(`/api/actor/${id}`);
       const roles = detail.actor?.voice_roles || [];
-      const voiceActors = new Map<number, CollectionItem>();
+      const voiceActors = new Map<number, VoiceActorRecord>();
       for (const role of roles) {
         if (
           queryValue(query.language) &&
@@ -316,20 +290,18 @@ async function getCollectionItems(
         }
       }
       return Array.from(voiceActors.values()).sort(
-        (left, right) => right.rolesCount - left.rolesCount,
+        (left, right) => (right.rolesCount ?? 0) - (left.rolesCount ?? 0),
       );
     }
     case "studio-projects": {
-      const detail = await requestFetch(`/api/get-studio-details`, {
+      const detail = await requestFetch<DetailPayload>(`/api/get-studio-details`, {
         query: { studioId: id },
       });
       const text = normalized(queryValue(query.query));
-      return (detail.dubbedProjects || []).filter((item: CollectionItem) =>
-        searchMatch(item, text),
-      );
+      return filterDetailCollectionItems(detail.dubbedProjects || [], text);
     }
     case "studio-voice-actors": {
-      const detail = await requestFetch(`/api/get-studio-details`, {
+      const detail = await requestFetch<DetailPayload>(`/api/get-studio-details`, {
         query: { studioId: id },
       });
       return detail.voiceActorsRoster || [];
@@ -339,25 +311,21 @@ async function getCollectionItems(
   }
 }
 
-export default defineEventHandler(
-  async (event): Promise<PaginatedResponse<CollectionItem>> => {
-    const query = getQuery(event);
-    const collection = queryValue(query.collection) || "";
-    if (!COLLECTIONS.has(collection)) {
-      throw createError({ statusCode: 400, message: "Invalid collection" });
-    }
-    const items = await getCollectionItems(event, query);
-    const filteredItems = items.filter((item) =>
-      searchMatch(item, normalized(queryValue(query.query))),
-    );
-    const result = paginateArray(filteredItems, {
-      page: query.page,
-      pageSize: query.pageSize,
-    });
+export default defineEventHandler(async (event): Promise<PaginatedResponse<CollectionItem>> => {
+  const query = collectionQuery(getQuery(event));
+  const collection = queryValue(query.collection) || "";
+  if (!COLLECTIONS.has(collection)) {
+    throw createError({ statusCode: 400, message: "Invalid collection" });
+  }
+  const items = await getCollectionItems(event.$fetch, query);
+  const filteredItems = filterDetailCollectionItems(items, normalized(queryValue(query.query)));
+  const result = paginateArray(filteredItems, {
+    page: queryValue(query.page),
+    pageSize: queryValue(query.pageSize),
+  });
 
-    return {
-      data: result.items,
-      pagination: result.pagination,
-    };
-  },
-);
+  return {
+    data: result.items,
+    pagination: result.pagination,
+  };
+});

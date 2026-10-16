@@ -30,8 +30,7 @@
             target="_blank"
             rel="noopener noreferrer"
             class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg theme-surface-overlay theme-text theme-hover-surface-muted transition-colors backdrop-blur-md uppercase tracking-wider"
-            >{{ $t("common.tmdb")
-            }}<ExternalLinkIcon class="w-3 h-3 opacity-70" />
+            >{{ $t("common.tmdb") }}<ExternalLinkIcon class="w-3 h-3 opacity-70" />
           </a>
         </div>
       </template>
@@ -98,12 +97,7 @@
           :to="localePath(`/show/${showId}`)"
           class="text-sm theme-primary-text theme-hover-primary-text transition-colors flex items-center gap-1.5 font-medium"
         >
-          <svg
-            class="w-4 h-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -111,9 +105,7 @@
               d="M11 17l-5-5m0 0l5-5m-5 5h12"
             />
           </svg>
-          <span class="hidden sm:inline">{{
-            $t("details.backToShow", "Retour à la série")
-          }}</span>
+          <span class="hidden sm:inline">{{ $t("details.backToShow", "Retour à la série") }}</span>
         </NuxtLink>
 
         <NuxtLink
@@ -127,12 +119,7 @@
           "
           class="text-sm theme-primary-text theme-hover-primary-text transition-colors flex items-center gap-1.5 font-medium"
         >
-          <svg
-            class="w-4 h-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -165,9 +152,7 @@
             stroke-linecap="round"
             stroke-linejoin="round"
           >
-            <path
-              d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"
-            />
+            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
             <line x1="4" y1="22" x2="4" y2="15" />
           </svg>
         </button>
@@ -189,9 +174,7 @@
         <!-- Episodes List -->
         <section>
           <div class="flex flex-col mb-6 gap-2">
-            <div
-              class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4"
-            >
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
               <div>
                 <h2 class="text-2xl font-bold">
                   {{ $t("details.episodes") }}
@@ -246,19 +229,14 @@
                     class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2"
                   >
                     <span class="text-white text-xs font-bold">
-                      {{
-                        $t("details.episode", { num: episode.episode_number })
-                      }}
+                      {{ $t("details.episode", { num: episode.episode_number }) }}
                     </span>
                   </div>
                 </div>
                 <h3
                   class="font-semibold text-sm theme-text line-clamp-2 theme-hover-primary-text transition-colors mb-1"
                 >
-                  {{
-                    episode.name ||
-                    $t("details.episode", { num: episode.episode_number })
-                  }}
+                  {{ episode.name || $t("details.episode", { num: episode.episode_number }) }}
                 </h3>
                 <div class="flex items-center gap-2 text-xs theme-text-muted">
                   <span v-if="episode.air_date">
@@ -302,12 +280,7 @@
         {{ $t("details.notFound", "Saison introuvable") }}
       </h1>
       <p class="theme-text-secondary theme-text-muted mb-6">
-        {{
-          $t(
-            "details.notFoundDesc",
-            "Impossible de charger les informations de cette saison.",
-          )
-        }}
+        {{ $t("details.notFoundDesc", "Impossible de charger les informations de cette saison.") }}
       </p>
       <NuxtLink
         :to="localePath(`/show/${showId}`)"
@@ -325,6 +298,8 @@
 <script setup lang="ts">
 import MediaDetailsLayout from "../../../../components/layout/MediaDetailsLayout.vue";
 import { useRoute, useRouter } from "vue-router";
+import type { Link as HeadLink } from "@unhead/vue";
+import type { DetailCollectionProject } from "@app/shared-logic";
 
 import { fetchSeasonPageData } from "../../../../utils/season-data";
 import { computed, ref } from "vue";
@@ -357,29 +332,15 @@ const isAdmin = computed(() => {
 const { locale, t } = useI18n();
 const localePath = useLocalePath();
 
-// Fetch show data for basic info
-const { currentData: showData } = useShowPageData(showId, locale);
-
-const serie = computed(() => {
-  const show = showData.value?.serie;
-  return show && String(show.id) === showId.value ? show : undefined;
-});
-const serieName = computed(() => serie.value?.name || "");
 const seasonLabel = computed(
   () => season.value?.name || t("details.season", { num: seasonNumber.value }),
 );
-const localizedSeasonNumber = computed(() =>
-  t("details.season", { num: seasonNumber.value }),
-);
+const localizedSeasonNumber = computed(() => t("details.season", { num: seasonNumber.value }));
 const seasonPageTitle = computed(() =>
-  serieName.value
-    ? `${serieName.value} - ${seasonLabel.value}`
-    : seasonLabel.value,
+  serieName.value ? `${serieName.value} - ${seasonLabel.value}` : seasonLabel.value,
 );
 const seasonSeoTitle = computed(() => {
-  const year = season.value?.air_date
-    ? ` (${new Date(season.value.air_date).getFullYear()})`
-    : "";
+  const year = season.value?.air_date ? ` (${new Date(season.value.air_date).getFullYear()})` : "";
   let base = serieName.value
     ? `${serieName.value} - ${localizedSeasonNumber.value}${year}`
     : `${localizedSeasonNumber.value}${year}`;
@@ -389,14 +350,10 @@ const seasonSeoTitle = computed(() => {
   return base.length > 55 ? base.substring(0, 52) + "..." : base;
 });
 const seasonSeoDescription = computed(() => {
-  const title = serieName.value
-    ? `${serieName.value} - ${localizedSeasonNumber.value}`
-    : "";
+  const title = serieName.value ? `${serieName.value} - ${localizedSeasonNumber.value}` : "";
   let description =
     season.value?.overview ||
-    (title
-      ? t("seo.showDescription", { title })
-      : t("seo.showDescriptionFallback"));
+    (title ? t("seo.showDescription", { title }) : t("seo.showDescriptionFallback"));
   if (activeDubProject.value && title) {
     description =
       t("seo.showDescriptionDubbing", {
@@ -406,9 +363,7 @@ const seasonSeoDescription = computed(() => {
       " " +
       description;
   }
-  return description.length > 160
-    ? description.substring(0, 157) + "..."
-    : description;
+  return description.length > 160 ? description.substring(0, 157) + "..." : description;
 });
 
 // Fetch season data
@@ -461,10 +416,12 @@ const currentSeasonData = computed(() => {
   return result.response;
 });
 
+const serie = computed(() => currentSeasonData.value?.serie);
+const serieName = computed(() => serie.value?.name || "");
 const season = computed(() => currentSeasonData.value?.season);
 const dubbingProjects = computed(() => {
-  const projects = [...(currentSeasonData.value?.dubbingProjects || [])].filter(
-    (p) => projectHasVoiceActor(p),
+  const projects = [...(currentSeasonData.value?.dubbingProjects || [])].filter((p) =>
+    projectHasVoiceActor(p),
   );
   const currentLocale = locale.value.toLowerCase();
   return projects.sort((a, b) => {
@@ -481,11 +438,11 @@ const dubbingProjects = computed(() => {
   });
 });
 
-function projectHasVoiceActor(project: any): boolean {
-  return (project.works || []).some((w: any) => w.voice_actor);
+function projectHasVoiceActor(project: DetailCollectionProject): boolean {
+  return (project.works || []).some((work) => work.voice_actor);
 }
 
-function projectVoiceActorCount(project: any): number {
+function projectVoiceActorCount(project: DetailCollectionProject): number {
   const ids = new Set<number>();
   for (const w of project.works || []) {
     if (w.voice_actor?.id) ids.add(w.voice_actor.id);
@@ -493,8 +450,7 @@ function projectVoiceActorCount(project: any): number {
   return ids.size;
 }
 
-const { page: episodesPage, setPage: setEpisodesPage } =
-  useUrlPagination("episodesPage");
+const { page: episodesPage, setPage: setEpisodesPage } = useUrlPagination("episodesPage");
 type SeasonEpisode = {
   episode_number: number;
   name?: string | null;
@@ -539,7 +495,7 @@ const activeDubId = computed(() => {
 
 const activeDubProject = computed(() => {
   return (
-    dubbingProjects.value.find((p: any) => p.id === activeDubId.value) ||
+    dubbingProjects.value.find((p: DetailCollectionProject) => p.id === activeDubId.value) ||
     dubbingProjects.value[0]
   );
 });
@@ -631,9 +587,9 @@ useHead({
         ]
       : [],
   ),
-  link: computed<any[]>(() => {
+  link: computed<HeadLink[]>(() => {
     if (!isSeasonRoute.value) return [];
-    const links: any[] = [
+    const links: HeadLink[] = [
       { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
       { rel: "dns-prefetch", href: "https://image.tmdb.org" },
       { rel: "preconnect", href: "https://thetvdb.com", crossorigin: "" },
@@ -642,18 +598,12 @@ useHead({
         rel: "canonical",
         href: (() => {
           const baseUrl = `https://dubbingbase.com/show/${showId.value}/season/${seasonNumber.value}`;
-          return activeDubId.value
-            ? `${baseUrl}?dub=${activeDubId.value}`
-            : baseUrl;
+          return activeDubId.value ? `${baseUrl}?dub=${activeDubId.value}` : baseUrl;
         })(),
       },
     ];
     if (backdropUrl.value) {
-      links.push({
-        rel: "preload",
-        as: "image",
-        href: backdropUrl.value,
-      } as any);
+      links.push({ rel: "preload", as: "image", href: backdropUrl.value });
     }
     return links;
   }),
