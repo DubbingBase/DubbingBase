@@ -1,4 +1,4 @@
-const ROUTE_CPU_SAMPLE_RATE = 0.05;
+const ROUTE_CPU_SAMPLE_RATE = 1;
 // Remove this temporary diagnostic after investigation or when it expires.
 const ROUTE_CPU_DIAGNOSTICS_EXPIRES_AT = Date.parse("2026-10-23T00:00:00Z");
 
@@ -40,7 +40,7 @@ export interface RouteCpuSample {
   event: "route_cpu_sample";
   routeFamily: string;
   method: "GET" | "OTHER";
-  sampleRate: 0.05;
+  sampleRate: 1;
 }
 
 export function routeCpuFamily(pathname: string): string {
