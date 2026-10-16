@@ -17,7 +17,11 @@ export async function fetchSeasonPageData(
   return await $fetch("/api/season", {
     headers,
     timeout: 20_000,
-    query: { id: showId, season_number: seasonNumber },
+    query: {
+      id: showId,
+      season_number: seasonNumber,
+      projection: "media-page",
+    },
   });
 }
 
@@ -37,6 +41,7 @@ export async function fetchEpisodePageData(
       id: showId,
       season_number: seasonNumber,
       episode_number: episodeNumber,
+      projection: "media-page",
     },
   });
 }

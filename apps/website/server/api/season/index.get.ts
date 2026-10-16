@@ -1,6 +1,6 @@
 import { useCache, useTmdbClient } from "../../utils";
 import { MediaService } from "../../utils/services/media";
-import { getMediaPageDubbingProjects } from "../../utils/db/queries";
+import { getDubbingProjectsForMediaEndpoint } from "../../utils/db/queries";
 import { parseSeasonQuery, withMediaServiceTimeout } from "../../utils/media-request";
 import { withTimeout } from "../../utils/with-timeout";
 import type { CharacterProfilePicture } from "../../../src/utils/media-cast";
@@ -60,7 +60,7 @@ export default defineEventHandler(async (event) => {
       });
 
     const dbDataPromise = withTimeout(
-      getMediaPageDubbingProjects(id, "tv"),
+      getDubbingProjectsForMediaEndpoint(id, "tv", getQuery(event).projection),
       10_000,
       "Supabase dubbing projects query",
     ).then((dubbingProjects) => ({ dubbingProjects, voteData: {} }));

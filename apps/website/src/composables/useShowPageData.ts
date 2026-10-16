@@ -24,7 +24,9 @@ async function fetchShowDataForCurrentRoute(nuxtApp: NuxtApp) {
 
   return {
     requestKey: request.requestKey,
-    response: await fetchShowData(request.id, request.locale),
+    response: await fetchShowData(request.id, request.locale, {
+      projection: "media-page",
+    }),
   } satisfies ShowPageDataResult;
 }
 
@@ -33,17 +35,10 @@ const SHOW_PAGE_DATA_OPTIONS = {
   getCachedData: getHydrationCachedData,
 };
 
-export function useShowPageData(
-  showId: Readonly<Ref<string>>,
-  locale: Readonly<Ref<string>>,
-) {
+export function useShowPageData(showId: Readonly<Ref<string>>, locale: Readonly<Ref<string>>) {
   const key = computed(() => `show-${showId.value}-${locale.value}`);
 
-  const asyncData = useAsyncData(
-    key,
-    fetchShowDataForCurrentRoute,
-    SHOW_PAGE_DATA_OPTIONS,
-  );
+  const asyncData = useAsyncData(key, fetchShowDataForCurrentRoute, SHOW_PAGE_DATA_OPTIONS);
 
   const currentData = computed(() => {
     const result = asyncData.data.value;

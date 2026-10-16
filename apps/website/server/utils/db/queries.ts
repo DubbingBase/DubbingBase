@@ -74,6 +74,16 @@ const MEDIA_PAGE_DUBBING_PROJECTS_SELECT = `id,
     voice_actor:voice_actors(id, firstname, lastname, profile_picture, voice_actor_name)
   )`;
 
+export async function getDubbingProjectsForMediaEndpoint(
+  contentId: number,
+  contentType: string,
+  projection: unknown,
+) {
+  return projection === "media-page"
+    ? await getMediaPageDubbingProjects(contentId, contentType)
+    : await getDubbingProjects(contentId, contentType);
+}
+
 export async function getMediaPageDubbingProjects(contentId: number, contentType: string) {
   const supabase = useSupabaseAdmin();
   const { data, error } = await supabase

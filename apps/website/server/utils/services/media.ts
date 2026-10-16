@@ -118,6 +118,25 @@ function isTmdbCredit(value: unknown): value is TmdbCredit {
   );
 }
 
+function sanitizeMediaCastForProcessing(media: unknown): unknown {
+  if (!isRecord(media) || !isRecord(media.credits)) return media;
+
+  const cast = Array.isArray(media.credits.cast)
+    ? media.credits.cast.filter(
+        (credit) =>
+          isRecord(credit) &&
+          (credit.character === undefined ||
+            credit.character === null ||
+            typeof credit.character === "string") &&
+          (credit.profile_path === undefined ||
+            credit.profile_path === null ||
+            typeof credit.profile_path === "string"),
+      )
+    : [];
+
+  return { ...media, credits: { ...media.credits, cast } };
+}
+
 function tmdbCastCredits(value: unknown): TmdbCredit[] {
   if (!isRecord(value) || !Array.isArray(value.cast)) return [];
   return value.cast.filter(isTmdbCredit);
@@ -517,7 +536,7 @@ export class MediaService {
         return {
           key: `${contentType}:${contentId}`,
           data: {
-            media: processMedia(tmdbMedia),
+            media: processMedia(sanitizeMediaCastForProcessing(tmdbMedia)),
             characterProfilePictures: new Array<CharacterProfilePicture>(),
             tvdbId: null,
           },

@@ -1,7 +1,7 @@
 import type { H3Event } from "h3";
 import { useTmdbClient } from "../../utils";
 import { MediaService } from "../../utils/services/media";
-import { getMediaPageDubbingProjects } from "../../utils/db/queries";
+import { getDubbingProjectsForMediaEndpoint } from "../../utils/db/queries";
 import { processMedia } from "../../utils/urls/tmdb";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
@@ -68,7 +68,11 @@ export async function fetchShowData(event: H3Event, showId: number) {
       };
     });
 
-  const dbDataPromise = getMediaPageDubbingProjects(showId, "tv");
+  const dbDataPromise = getDubbingProjectsForMediaEndpoint(
+    showId,
+    "tv",
+    getQuery(event).projection,
+  );
 
   const [apiData, dubbingProjects] = await Promise.all([apiDataPromise, dbDataPromise]);
 
