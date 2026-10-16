@@ -15,23 +15,23 @@ describe("route CPU diagnostics", () => {
     expect(routeCpuFamily("/arbitrary-user-value/secret")).toBe("page:other");
   });
 
-  it("samples 5% of requests and emits only bounded fields", () => {
+  it("emits sanitized route markers for every request during bounded capture", () => {
     expect(
       createRouteCpuSample(
         "/movie/12345?token=private",
         "GET",
         Date.parse("2026-10-16T12:00:00Z"),
-        0.049,
+        0.999,
       ),
     ).toEqual({
       event: "route_cpu_sample",
       routeFamily: "page:movie",
       method: "GET",
-      sampleRate: 0.05,
+      sampleRate: 1,
     });
 
     expect(
-      createRouteCpuSample("/movie/12345", "POST", Date.parse("2026-10-16T12:00:00Z"), 0.05),
+      createRouteCpuSample("/movie/12345", "POST", Date.parse("2026-10-16T12:00:00Z"), 1),
     ).toBeNull();
   });
 
