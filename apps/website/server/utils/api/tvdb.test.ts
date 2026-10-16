@@ -96,6 +96,26 @@ describe("TVDB authentication", () => {
     expect(harness.values.get(TOKEN_KEY)).toBe("fresh-token");
   });
 
+  it.each([403, 404, 429, 500])(
+    "does not persist a newly issued token after an authenticated HTTP %i response",
+    async (status) => {
+      const harness = makeHarness({
+        fetch: (url) =>
+          url.pathname.endsWith("/login")
+            ? response({ data: { token: "fresh-token" } })
+            : response({}, status),
+      });
+
+      await expect(harness.client.getSeriesById(42)).rejects.toThrow(
+        `TVDB API error: ${status}`,
+      );
+
+      expect(harness.fetchMock).toHaveBeenCalledTimes(2);
+      expect(harness.writes).toEqual([]);
+      expect(harness.values.has(TOKEN_KEY)).toBe(false);
+    },
+  );
+
   it("refreshes a rejected token and retries the authenticated request once", async () => {
     const harness = makeHarness({
       values: new Map([[TOKEN_KEY, "stale-token"]]),

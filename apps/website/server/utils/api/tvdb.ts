@@ -152,7 +152,7 @@ export class TVDBClient {
         });
       }
 
-      if (response.status !== 401) await this.persistAuthenticatedToken(activeToken);
+      if (response.ok) await this.persistAuthenticatedToken(activeToken);
       if (!response.ok) {
         throw new Error(`TVDB API error: ${response.status}`);
       }
