@@ -564,35 +564,34 @@ test.describe("Media Detail Pages", () => {
   test("hides stale show data while the next locale response is pending", async ({
     page,
   }) => {
-    const frenchShow = structuredClone(MOCK_SHOW);
-    frenchShow.serie.name = "Breaking Bad en français";
-    frenchShow.serie.title = "Breaking Bad en français";
-    let markFrenchShowRequested = () => {};
-    const frenchShowRequested = new Promise<void>((resolve) => {
-      markFrenchShowRequested = resolve;
+    const frenchSeason = structuredClone(MOCK_SEASON);
+    frenchSeason.serie.name = "Breaking Bad en français";
+    let markFrenchSeasonRequested = () => {};
+    const frenchSeasonRequested = new Promise<void>((resolve) => {
+      markFrenchSeasonRequested = resolve;
     });
-    let releaseFrenchShow = () => {};
-    const frenchShowGate = new Promise<void>((resolve) => {
-      releaseFrenchShow = resolve;
+    let releaseFrenchSeason = () => {};
+    const frenchSeasonGate = new Promise<void>((resolve) => {
+      releaseFrenchSeason = resolve;
     });
-    let markFrenchShowFinished = () => {};
-    const frenchShowFinished = new Promise<void>((resolve) => {
-      markFrenchShowFinished = resolve;
+    let markFrenchSeasonFinished = () => {};
+    const frenchSeasonFinished = new Promise<void>((resolve) => {
+      markFrenchSeasonFinished = resolve;
     });
 
-    await page.route("**/api/show/1396**", async (route) => {
+    await page.route("**/api/season?**", async (route) => {
       const acceptLanguage = route.request().headers()["accept-language"];
       const isFrench = acceptLanguage?.startsWith("fr") ?? false;
       if (isFrench) {
-        markFrenchShowRequested();
-        await frenchShowGate;
+        markFrenchSeasonRequested();
+        await frenchSeasonGate;
       }
       await route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify(isFrench ? frenchShow : MOCK_SHOW),
+        body: JSON.stringify(isFrench ? frenchSeason : MOCK_SEASON),
       });
-      if (isFrench) markFrenchShowFinished();
+      if (isFrench) markFrenchSeasonFinished();
     });
 
     await page.goto("/show/1396/season/1", { waitUntil: "domcontentloaded" });
@@ -605,7 +604,7 @@ test.describe("Media Detail Pages", () => {
     await page.locator('button[aria-label="Toggle language"]').click();
     await page.getByText("Français", { exact: true }).click();
 
-    await frenchShowRequested;
+    await frenchSeasonRequested;
     await expect(page.locator("html")).toHaveAttribute("lang", "fr-FR");
     await expect(page.locator("body")).not.toContainText("Breaking Bad");
     await expect(page).not.toHaveTitle(/Breaking Bad/);
@@ -614,8 +613,8 @@ test.describe("Media Detail Pages", () => {
       /Breaking Bad/,
     );
 
-    releaseFrenchShow();
-    await frenchShowFinished;
+    releaseFrenchSeason();
+    await frenchSeasonFinished;
     await expect(page).toHaveTitle(/Breaking Bad en français.*Saison 1/);
     await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
       "content",
