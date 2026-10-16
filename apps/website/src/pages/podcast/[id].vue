@@ -53,7 +53,7 @@
           </NuxtLink>
         </div>
         <div v-else class="text-sm theme-text-muted font-medium">
-          {{ $t("details.noDubbingProjects", "Aucun projet de doublage disponible") }}
+          {{ $t("details.noDubbingProjects") }}
         </div>
       </template>
 
@@ -93,7 +93,7 @@
         <!-- Synopsis / Description -->
         <section v-if="podcast.description" class="mb-10">
           <h2 class="text-2xl font-bold mb-4 theme-text">
-            {{ $t("details.synopsis", "Synopsis") }}
+            {{ $t("details.synopsis") }}
           </h2>
           <p class="theme-text-secondary leading-relaxed text-base md:text-lg">
             {{ podcast.description }}
@@ -125,7 +125,9 @@
               :key="member.id"
               class="space-y-1"
             >
-              <span class="text-xs theme-text-muted">{{ member.jobs?.name || "Équipe" }}</span>
+              <span class="text-xs theme-text-muted">
+                {{ member.jobs?.name || $t("common.team") }}
+              </span>
               <NuxtLink
                 v-if="member.voice_actors"
                 :to="localePath(`/voice-actor/${member.voice_actors.id}`)"
@@ -164,7 +166,7 @@
               <input
                 v-model="castSearchQuery"
                 type="text"
-                placeholder="Filtrer le casting..."
+                :placeholder="$t('podcast.castSearchPlaceholder')"
                 class="w-full theme-surface-raised theme-surface-overlay border theme-border-subtle theme-border rounded-xl pl-9 pr-4 py-2 text-xs theme-text theme-placeholder focus:outline-none theme-focus transition-all"
               />
             </div>
@@ -175,9 +177,9 @@
             class="text-center py-16 theme-surface-raised theme-surface-overlay rounded-2xl border theme-border-subtle theme-border theme-text-muted text-sm"
           >
             {{
-              castTotal === 0
-                ? "Aucune information de casting enregistrée pour le moment."
-                : "Aucun comédien ne correspond à votre recherche."
+              completeCastItems.length === 0
+                ? $t("podcast.noCastInfo")
+                : $t("podcast.noCastMatch")
             }}
           </div>
 
@@ -220,7 +222,11 @@
                     {{ item.firstname }} {{ item.lastname }}
                   </NuxtLink>
                   <span class="text-xs theme-text-muted block truncate mt-0.5">
-                    {{ item.character_name || item.performance || "Voix / Rôle" }}
+                    {{
+                      item.character_name ||
+                      item.performance ||
+                      $t("common.roleCharacter")
+                    }}
                   </span>
                   <span v-if="item.note" class="text-xs theme-text-muted block truncate mt-1">{{
                     item.note
@@ -312,7 +318,7 @@ const activeDubProject = computed(() =>
 const activeDubId = computed(() => activeDubProject.value?.id || 0);
 
 const getDisplayLanguage = (langCode: string | undefined | null) => {
-  if (!langCode) return t("details.notSpecified", "Not specified");
+  if (!langCode) return t("details.notSpecified");
   try {
     const displayNames = new Intl.DisplayNames([locale.value || "en"], {
       type: "language",
@@ -356,17 +362,23 @@ function openExternalUrl(url?: string) {
 useHead({
   title: computed(() =>
     podcast.value
-      ? `${podcast.value.title} - Casting & Voix | DubbingBase`
-      : "Fiction Audio / Podcast | DubbingBase",
+      ? podcast.value.title + " - " + t("podcast.castSection")
+      : t("podcast.title"),
   ),
   meta: [
     {
       name: "description",
-      content: computed(
-        () =>
-          podcast.value?.description?.substring(0, 160) ||
-          "Retrouvez toutes les voix et informations de doublage sur DubbingBase.",
-      ),
+      content: computed(() => {
+        const title = podcast.value?.title || "";
+        const description =
+          podcast.value?.description ||
+          (title
+            ? t("seo.podcastDescription", { title })
+            : t("seo.podcastDescriptionFallback"));
+        return description.length > 160
+          ? description.substring(0, 157) + "..."
+          : description;
+      }),
     },
   ],
 });

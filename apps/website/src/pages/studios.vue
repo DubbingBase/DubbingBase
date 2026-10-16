@@ -17,7 +17,7 @@
             <input
               v-model="searchInput"
               type="text"
-              placeholder="Rechercher un studio..."
+              :placeholder="t('studio.searchPlaceholder')"
               class="w-full theme-surface-raised theme-surface-muted theme-text border-0 rounded-full px-6 py-2.5 text-sm theme-focus transition-shadow outline-none"
             />
           </div>
@@ -127,6 +127,7 @@ import { ref, computed, watch } from "vue";
 import { refDebounced } from "@vueuse/core";
 
 const localePath = useLocalePath();
+const { t } = useI18n();
 
 const searchInput = ref("");
 const debouncedSearch = refDebounced(searchInput, 150);
@@ -175,12 +176,11 @@ watch(debouncedSearch, () => {
 });
 
 useHead({
-  title: "Studios de Doublage - DubbingBase",
+  title: computed(() => t("seo.studiosPageTitle")),
   meta: [
     {
       name: "description",
-      content:
-        "Parcourez la liste des studios de doublage et leurs projets associés.",
+      content: computed(() => t("seo.studiosPageDescription")),
     },
   ],
 });

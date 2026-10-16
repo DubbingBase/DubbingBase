@@ -105,7 +105,7 @@
               d="M11 17l-5-5m0 0l5-5m-5 5h12"
             />
           </svg>
-          <span class="hidden sm:inline">{{ $t("details.backToShow", "Retour à la série") }}</span>
+          <span class="hidden sm:inline">{{ $t("details.backToShow") }}</span>
         </NuxtLink>
 
         <NuxtLink
@@ -259,7 +259,7 @@
       class="min-h-[50vh] flex flex-col items-center justify-center p-8 text-center"
     >
       <h1 class="text-2xl font-bold theme-text mb-2">
-        {{ $t("common.error", "Une erreur est survenue") }}
+        {{ $t("common.error") }}
       </h1>
       <p class="theme-text-secondary theme-text-muted mb-6">
         {{ $t("details.requestError") }}
@@ -268,7 +268,7 @@
         :to="localePath(`/show/${showId}`)"
         class="px-4 py-2 theme-primary-bg font-semibold rounded-lg hover:opacity-90 transition-opacity"
       >
-        {{ $t("details.backToShow", "Retour à la série") }}
+        {{ $t("details.backToShow") }}
       </NuxtLink>
     </div>
 
@@ -277,16 +277,16 @@
       class="min-h-[50vh] flex flex-col items-center justify-center p-8 text-center"
     >
       <h1 class="text-2xl font-bold theme-text mb-2">
-        {{ $t("details.notFound", "Saison introuvable") }}
+        {{ $t("details.notFound") }}
       </h1>
       <p class="theme-text-secondary theme-text-muted mb-6">
-        {{ $t("details.notFoundDesc", "Impossible de charger les informations de cette saison.") }}
+        {{ $t("details.notFoundDesc") }}
       </p>
       <NuxtLink
         :to="localePath(`/show/${showId}`)"
         class="px-4 py-2 theme-primary-bg font-semibold rounded-lg"
       >
-        {{ $t("details.backToShow", "Retour à la série") }}
+        {{ $t("details.backToShow") }}
       </NuxtLink>
     </div>
 
@@ -501,7 +501,7 @@ const activeDubProject = computed(() => {
 });
 
 const getDisplayLanguage = (langCode: string | undefined | null) => {
-  if (!langCode) return t("details.notSpecified", "Not specified");
+  if (!langCode) return t("details.notSpecified");
   try {
     const displayNames = new Intl.DisplayNames([locale.value || "en"], {
       type: "language",

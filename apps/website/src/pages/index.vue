@@ -31,7 +31,7 @@
                 class="text-[var(--app-color-primary)] font-bold opacity-90"
                 >{{ homeStats.voiceActorCount.toLocaleString() }}</span
               >
-              <span>{{ $t("home.stats.voiceActors", "Voice Actors") }}</span>
+              <span>{{ $t("home.stats.voiceActors") }}</span>
             </span>
             <span class="w-px h-3.5 theme-surface-muted"></span>
             <span
@@ -41,7 +41,7 @@
                 class="text-[var(--app-color-primary)] font-bold opacity-90"
                 >{{ homeStats.dubbingProjectCount.toLocaleString() }}</span
               >
-              <span>{{ $t("home.stats.projects", "Dubs") }}</span>
+              <span>{{ $t("home.stats.projects") }}</span>
             </span>
             <span class="w-px h-3.5 theme-surface-muted"></span>
             <span
@@ -51,7 +51,7 @@
                 class="text-[var(--app-color-primary)] font-bold opacity-90"
                 >{{ homeStats.workCount.toLocaleString() }}</span
               >
-              <span>{{ $t("home.stats.works", "Roles") }}</span>
+              <span>{{ $t("home.stats.works") }}</span>
             </span>
           </div>
         </div>
@@ -190,7 +190,7 @@
           <h2
             class="text-xl md:text-2xl font-bold mb-4 md:mb-6 theme-text tracking-wide"
           >
-            {{ $t("game.trendingGames", "Jeux du moment") }}
+            {{ $t("game.trendingGames") }}
           </h2>
           <div v-if="isLoadingGames" class="flex gap-4 overflow-x-auto pb-4">
             <div
@@ -595,19 +595,19 @@ useHead({
               {
                 "@type": "SiteNavigationElement",
                 position: 1,
-                name: t("footer.movies", "Films"),
+                name: t("footer.movies"),
                 url: "https://dubbingbase.com/movies",
               },
               {
                 "@type": "SiteNavigationElement",
                 position: 2,
-                name: t("footer.series", "Séries"),
+                name: t("footer.series"),
                 url: "https://dubbingbase.com/series",
               },
               {
                 "@type": "SiteNavigationElement",
                 position: 3,
-                name: t("footer.voiceActors", "Voice Actors"),
+                name: t("footer.voiceActors"),
                 url: "https://dubbingbase.com/voice-actors",
               },
             ],

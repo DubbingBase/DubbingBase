@@ -564,7 +564,7 @@ const isOriginalLanguage = computed(() => {
 });
 
 const getDisplayLanguage = (langCode: string | undefined | null) => {
-  if (!langCode) return t("details.notSpecified", "Not specified");
+  if (!langCode) return t("details.notSpecified");
   try {
     const displayNames = new Intl.DisplayNames([locale.value || "en"], {
       type: "language",
@@ -689,7 +689,7 @@ useHead({
       : "";
     let base = movie.value
       ? `${movie.value.title}${year}`
-      : t("search.movie", "Movie");
+      : t("search.movie");
     if (activeDubProject.value) {
       base += ` - ${t("details.dubbing", { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
     }
@@ -704,10 +704,7 @@ useHead({
           movie.value?.overview ||
           (title
             ? t("seo.movieDescription", { title })
-            : t(
-                "seo.movieDescriptionFallback",
-                "Découvrez le casting et les voix du film.",
-              ));
+            : t("seo.movieDescriptionFallback"));
         if (activeDubProject.value && title) {
           desc =
             t("seo.movieDescriptionDubbing", {
@@ -736,7 +733,7 @@ useHead({
           : "";
         let base = movie.value
           ? `${movie.value.title}${year}`
-          : t("search.movie", "Movie");
+          : t("search.movie");
         if (activeDubProject.value) {
           base += ` - ${t("details.dubbing", { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
         }
@@ -751,10 +748,7 @@ useHead({
           movie.value?.overview ||
           (title
             ? t("seo.movieDescription", { title })
-            : t(
-                "seo.movieDescriptionFallback",
-                "Découvrez le casting et les voix du film.",
-              ));
+            : t("seo.movieDescriptionFallback"));
         if (activeDubProject.value && title) {
           desc =
             t("seo.movieDescriptionDubbing", {
@@ -794,7 +788,7 @@ useHead({
           : "";
         let base = movie.value
           ? `${movie.value.title}${year}`
-          : t("search.movie", "Movie");
+          : t("search.movie");
         if (activeDubProject.value) {
           base += ` - ${t("details.dubbing", { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
         }
@@ -809,10 +803,7 @@ useHead({
           movie.value?.overview ||
           (title
             ? t("seo.movieDescription", { title })
-            : t(
-                "seo.movieDescriptionFallback",
-                "Découvrez le casting et les voix du film.",
-              ));
+            : t("seo.movieDescriptionFallback"));
         if (activeDubProject.value && title) {
           desc =
             t("seo.movieDescriptionDubbing", {
@@ -869,16 +860,13 @@ useHead({
           "@context": "https://schema.org",
           "@type": "Movie",
           url: `https://dubbingbase.com/movie/${movieId}`,
-          name: title || t("search.movie", "Film"),
+          name: title || t("search.movie"),
           image: posterUrl.value || backdropUrl.value || "",
           description:
             movie.value?.overview ||
             (title
               ? t("seo.movieDescription", { title })
-              : t(
-                  "seo.movieDescriptionFallback",
-                  "Découvrez le casting et les voix du film.",
-                )),
+              : t("seo.movieDescriptionFallback")),
           datePublished: movie.value?.release_date || undefined,
           actor: formattedCast.value.map((actor: any) => ({
             "@type": "PerformanceRole",

@@ -71,12 +71,11 @@ const trendingLanguage = computed(
 );
 
 useHead({
-  title: "Toutes les Séries - DubbingBase",
+  title: computed(() => t("seo.seriesPageTitle")),
   meta: [
     {
       name: "description",
-      content:
-        "Parcourez la liste des séries populaires et découvrez leurs comédiens de doublage.",
+      content: computed(() => t("seo.seriesPageDescription")),
     },
     {
       name: "keywords",

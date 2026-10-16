@@ -644,7 +644,7 @@ const isOriginalLanguage = computed(() => {
 });
 
 const getDisplayLanguage = (langCode: string | undefined | null) => {
-  if (!langCode) return t("details.notSpecified", "Not specified");
+  if (!langCode) return t("details.notSpecified");
   try {
     const displayNames = new Intl.DisplayNames([locale.value || "en"], {
       type: "language",
@@ -785,7 +785,7 @@ useHead({
       : "";
     let base = serie.value
       ? `${serie.value.name}${year}`
-      : t("search.tv", "Series");
+      : t("search.tv");
     if (activeDubProject.value) {
       base += ` - ${t("details.dubbing", { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
     }
@@ -802,10 +802,7 @@ useHead({
                 serie.value?.overview ||
                 (title
                   ? t("seo.showDescription", { title })
-                  : t(
-                      "seo.showDescriptionFallback",
-                      "Découvrez le casting et les voix de la série.",
-                    ));
+                  : t("seo.showDescriptionFallback"));
               if (activeDubProject.value && title) {
                 desc =
                   t("seo.showDescriptionDubbing", {
@@ -834,7 +831,7 @@ useHead({
                 : "";
               let base = serie.value
                 ? `${serie.value.name}${year}`
-                : t("search.tv", "Series");
+                : t("search.tv");
               if (activeDubProject.value) {
                 base += ` - ${t("details.dubbing", { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
               }
@@ -849,10 +846,7 @@ useHead({
                 serie.value?.overview ||
                 (title
                   ? t("seo.showDescription", { title })
-                  : t(
-                      "seo.showDescriptionFallback",
-                      "Découvrez le casting et les voix de la série.",
-                    ));
+                  : t("seo.showDescriptionFallback"));
               if (activeDubProject.value && title) {
                 desc =
                   t("seo.showDescriptionDubbing", {
@@ -892,7 +886,7 @@ useHead({
                 : "";
               let base = serie.value
                 ? `${serie.value.name}${year}`
-                : t("search.tv", "Series");
+                : t("search.tv");
               if (activeDubProject.value) {
                 base += ` - ${t("details.dubbing", { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
               }
@@ -907,10 +901,7 @@ useHead({
                 serie.value?.overview ||
                 (title
                   ? t("seo.showDescription", { title })
-                  : t(
-                      "seo.showDescriptionFallback",
-                      "Découvrez le casting et les voix de la série.",
-                    ));
+                  : t("seo.showDescriptionFallback"));
               if (activeDubProject.value && title) {
                 desc =
                   t("seo.showDescriptionDubbing", {
@@ -967,16 +958,13 @@ useHead({
                 "@context": "https://schema.org",
                 "@type": "TVSeries",
                 url: `https://dubbingbase.com/show/${showId.value}`,
-                name: title || t("search.tv", "Série"),
+                name: title || t("search.tv"),
                 image: posterUrl.value || backdropUrl.value || "",
                 description:
                   serie.value?.overview ||
                   (title
                     ? t("seo.showDescription", { title })
-                    : t(
-                        "seo.showDescriptionFallback",
-                        "Découvrez le casting et les voix de la série.",
-                      )),
+                    : t("seo.showDescriptionFallback")),
                 startDate: serie.value?.first_air_date || undefined,
                 actor: formattedCast.value.map((actor: any) => ({
                   "@type": "PerformanceRole",
