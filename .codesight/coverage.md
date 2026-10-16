@@ -1,7 +1,7 @@
 # Test Coverage
 
-> **29%** of routes and models are covered by tests
-> 87 test files found
+> **30%** of routes and models are covered by tests
+> 89 test files found
 
 ## Covered Routes
 
@@ -12,6 +12,7 @@
 - POST:/api/extract-voice-actor-info
 - GET:/api/get-random-task
 - POST:/api/get-random-task
+- GET:/api/get-studio-details
 - POST:/api/media-queue
 - POST:/api/prepare_game
 - POST:/api/process-media-queue

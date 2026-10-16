@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 82 routes | 19 models | 197 components | 100 lib files | 63 env vars | 15 middleware | 29% test coverage
-> **Token savings:** this file is ~16,700 tokens. Without it, AI exploration would cost ~161,300 tokens. **Saves ~144,500 tokens per conversation.**
-> **Last scanned:** 2026-10-16 13:21 — re-run after significant changes
+> 82 routes | 19 models | 197 components | 100 lib files | 63 env vars | 15 middleware | 30% test coverage
+> **Token savings:** this file is ~16,800 tokens. Without it, AI exploration would cost ~161,300 tokens. **Saves ~144,400 tokens per conversation.**
+> **Last scanned:** 2026-10-16 16:05 — re-run after significant changes
 
 ---
 
@@ -42,7 +42,7 @@
 - `GET` `/api/get-metadata`
 - `GET` `/api/get-random-task` ✓
 - `POST` `/api/get-random-task` [auth] ✓
-- `GET` `/api/get-studio-details`
+- `GET` `/api/get-studio-details` ✓
 - `GET` `/api/get-user-profile` [auth]
 - `ALL` `/api/get-user-voice-actor` [auth]
 - `GET` `/api/get-user-voice-actors` [auth]
@@ -677,9 +677,13 @@
 - `packages/shared-logic/src/composables/useAdvertisementData.ts` — function fetchAdvertisementData: (id, locale?) => Promise<AdvertisementResponse | null>
 - `packages/shared-logic/src/composables/useAudiobookData.ts` — function fetchAudiobookData: (id, locale?) => Promise<AudiobookResponse | null>
 - `packages/shared-logic/src/composables/useDetailCollections.ts`
-  - function fetchDetailCollection: (params) => Promise<PaginatedResponse<T>>
-  - type DetailCollection
-  - type DetailCollectionParams
+  - function selectDetailCollectionProject: (projects, projectId) => T | undefined
+  - function resolveDetailCollectionProject: (projects, projectId) => T | undefined
+  - function formatMediaWorkCastCards: (project) => MediaWorkCastCard[]
+  - function formatGameDetailCastCards: (characters, project) => GameDetailCastCard[]
+  - function matchesDetailCollectionSearch: (item, query) => boolean
+  - function filterDetailCollectionItems: (items, query) => T[]
+  - _...7 more_
 - `packages/shared-logic/src/composables/useEpisodeData.ts` — function fetchEpisodeData: (showId, seasonNumber, episodeNumber, locale?) => Promise<any | null>
 - `packages/shared-logic/src/composables/useGameData.ts` — function fetchGameData: (id, locale?) => Promise<any | null>
 - `packages/shared-logic/src/composables/useHomeData.ts`
@@ -872,8 +876,8 @@
 
 # Test Coverage
 
-> **29%** of routes and models are covered by tests
-> 87 test files found
+> **30%** of routes and models are covered by tests
+> 89 test files found
 
 ## Covered Routes
 
@@ -884,6 +888,7 @@
 - POST:/api/extract-voice-actor-info
 - GET:/api/get-random-task
 - POST:/api/get-random-task
+- GET:/api/get-studio-details
 - POST:/api/media-queue
 - POST:/api/prepare_game
 - POST:/api/process-media-queue

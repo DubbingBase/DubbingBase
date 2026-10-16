@@ -247,9 +247,13 @@
 - `packages/shared-logic/src/composables/useAdvertisementData.ts` — function fetchAdvertisementData: (id, locale?) => Promise<AdvertisementResponse | null>
 - `packages/shared-logic/src/composables/useAudiobookData.ts` — function fetchAudiobookData: (id, locale?) => Promise<AudiobookResponse | null>
 - `packages/shared-logic/src/composables/useDetailCollections.ts`
-  - function fetchDetailCollection: (params) => Promise<PaginatedResponse<T>>
-  - type DetailCollection
-  - type DetailCollectionParams
+  - function selectDetailCollectionProject: (projects, projectId) => T | undefined
+  - function resolveDetailCollectionProject: (projects, projectId) => T | undefined
+  - function formatMediaWorkCastCards: (project) => MediaWorkCastCard[]
+  - function formatGameDetailCastCards: (characters, project) => GameDetailCastCard[]
+  - function matchesDetailCollectionSearch: (item, query) => boolean
+  - function filterDetailCollectionItems: (items, query) => T[]
+  - _...7 more_
 - `packages/shared-logic/src/composables/useEpisodeData.ts` — function fetchEpisodeData: (showId, seasonNumber, episodeNumber, locale?) => Promise<any | null>
 - `packages/shared-logic/src/composables/useGameData.ts` — function fetchGameData: (id, locale?) => Promise<any | null>
 - `packages/shared-logic/src/composables/useHomeData.ts`

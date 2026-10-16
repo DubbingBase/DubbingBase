@@ -31,7 +31,7 @@
 - `GET` `/api/get-metadata`
 - `GET` `/api/get-random-task` ✓
 - `POST` `/api/get-random-task` [auth] ✓
-- `GET` `/api/get-studio-details`
+- `GET` `/api/get-studio-details` ✓
 - `GET` `/api/get-user-profile` [auth]
 - `ALL` `/api/get-user-voice-actor` [auth]
 - `GET` `/api/get-user-voice-actors` [auth]
