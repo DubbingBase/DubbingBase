@@ -1,6 +1,6 @@
 import { useTmdbClient } from "../../utils";
 import { MediaService } from "../../utils/services/media";
-import { getDubbingProjects } from "../../utils/db/queries";
+import { getMediaPageDubbingProjects } from "../../utils/db/queries";
 import { processMedia } from "../../utils/urls/tmdb";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
@@ -60,7 +60,7 @@ export async function fetchMovieData(event: any, movieId: number) {
       };
     });
 
-  const dbDataPromise = getDubbingProjects(movieId, "movie");
+  const dbDataPromise = getMediaPageDubbingProjects(movieId, "movie");
 
   const [apiData, dubbingProjects] = await Promise.all([
     apiDataPromise,

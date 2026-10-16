@@ -26,6 +26,13 @@ interface TmdbCredit {
   popularity?: number;
 }
 
+interface TmdbCastMember {
+  id: number;
+  name?: string;
+  character?: string | null;
+  profile_path?: string | null;
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -41,6 +48,40 @@ function isTmdbCredit(value: unknown): value is TmdbCredit {
 function tmdbCastCredits(value: unknown): TmdbCredit[] {
   if (!isRecord(value) || !Array.isArray(value.cast)) return [];
   return value.cast.filter(isTmdbCredit);
+}
+
+function indexTmdbCastByActorId(media: unknown): Map<number, TmdbCastMember> {
+  if (
+    !isRecord(media) ||
+    !isRecord(media.credits) ||
+    !Array.isArray(media.credits.cast)
+  ) {
+    return new Map();
+  }
+
+  const castByActorId = new Map<number, TmdbCastMember>();
+  for (const value of media.credits.cast) {
+    if (
+      !isRecord(value) ||
+      typeof value.id !== "number" ||
+      castByActorId.has(value.id)
+    ) {
+      continue;
+    }
+
+    castByActorId.set(value.id, {
+      id: value.id,
+      ...(typeof value.name === "string" ? { name: value.name } : {}),
+      ...(typeof value.character === "string" || value.character === null
+        ? { character: value.character }
+        : {}),
+      ...(typeof value.profile_path === "string" || value.profile_path === null
+        ? { profile_path: value.profile_path }
+        : {}),
+    });
+  }
+
+  return castByActorId;
 }
 
 export const WIKIPEDIA_ACTOR_URL_NAMESPACE = createCacheNamespace<string | null>();
@@ -468,6 +509,7 @@ export class MediaService {
     // 3. Construct compact enhancedWorks on the server (avoids sending massive raw cast lists)
     const enhancedWorks = [];
     const compactMediasMap = new Map<number, any>();
+    const castByMediaAndActorId = new Map<string, Map<number, TmdbCastMember>>();
 
     for (const work of workItems) {
       const contentId = work.dubbing_projects?.content_id;
@@ -482,28 +524,40 @@ export class MediaService {
       if (!mediaResult || !mediaResult.media) continue;
 
       const fullMedia = mediaResult.media;
+      const mediaKey = `${contentType}:${contentId}`;
+      let castByActorId = castByMediaAndActorId.get(mediaKey);
+      if (!castByActorId) {
+        castByActorId = indexTmdbCastByActorId(fullMedia);
+        castByMediaAndActorId.set(mediaKey, castByActorId);
+      }
 
-      let actorData = {
+      let actorData: {
+        id: number;
+        name: string | undefined;
+        character: string | null | undefined;
+        profile_picture: string | undefined;
+      } = {
         id: work.actor_id || 0,
         name: "",
         character: "",
-        profile_picture: undefined as string | undefined,
+        profile_picture: undefined,
       };
       let characterName = work.character_name || undefined;
       let characterImage: string | undefined;
 
-      if (fullMedia.credits?.cast) {
-        const castMember = fullMedia.credits.cast.find((c: any) => c.id === work.actor_id);
-        if (castMember) {
-          actorData = {
-            id: castMember.id,
-            name: castMember.name,
-            character: castMember.character,
-            profile_picture: castMember.profile_path || undefined,
-          };
-          if (!characterName) {
-            characterName = castMember.character;
-          }
+      const castMember =
+        typeof work.actor_id === "number"
+          ? castByActorId.get(work.actor_id)
+          : undefined;
+      if (castMember) {
+        actorData = {
+          id: castMember.id,
+          name: castMember.name,
+          character: castMember.character,
+          profile_picture: castMember.profile_path || undefined,
+        };
+        if (!characterName) {
+          characterName = castMember.character;
         }
       }
 
@@ -730,11 +784,18 @@ export class MediaService {
   }
 
   async getMediaWithVoiceActors(contentType: "movie" | "tv", contentId: number) {
-    const media = await this.tmdbClient.getMediaWithCredits(
-      contentType,
-      contentId,
-      this.acceptLanguage,
-    );
+    const media =
+      contentType === "movie"
+        ? await this.tmdbClient.getMediaWithCredits(
+            contentType,
+            contentId,
+            this.acceptLanguage,
+          )
+        : await this.tmdbClient.getMediaDetails(
+            contentType,
+            contentId,
+            this.acceptLanguage,
+          );
 
     let collection: Record<string, unknown> | null = null;
     const belongsToCollection = media.belongs_to_collection;

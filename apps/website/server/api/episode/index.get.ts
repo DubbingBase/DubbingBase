@@ -1,6 +1,6 @@
 import { useCache, useTmdbClient } from "../../utils";
 import { MediaService } from "../../utils/services/media";
-import { getDubbingProjects } from "../../utils/db/queries";
+import { getMediaPageDubbingProjects } from "../../utils/db/queries";
 import {
   parseEpisodeQuery,
   withMediaServiceTimeout,
@@ -56,7 +56,7 @@ export default defineEventHandler(async (event) => {
     }, "TMDB episode request");
 
     const dbDataPromise = withTimeout(
-      getDubbingProjects(id, "tv"),
+      getMediaPageDubbingProjects(id, "tv"),
       10_000,
       "Supabase dubbing projects query",
     ).then((dubbingProjects) => ({ dubbingProjects, voteData: {} }));

@@ -65,6 +65,42 @@ export async function getDubbingProjects(
   }));
 }
 
+const MEDIA_PAGE_DUBBING_PROJECTS_SELECT = `id,
+  language,
+  studio_data:studios(id, name, logo_url),
+  works:work(
+    id,
+    actor_id,
+    character_name,
+    performance,
+    note,
+    voice_actor:voice_actors(id, firstname, lastname, profile_picture, voice_actor_name)
+  )`;
+
+export async function getMediaPageDubbingProjects(
+  contentId: number,
+  contentType: string,
+) {
+  const supabase = useSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("dubbing_projects")
+    .select(MEDIA_PAGE_DUBBING_PROJECTS_SELECT)
+    .eq("content_id", contentId)
+    .eq("content_type", contentType);
+
+  if (error) return [];
+
+  return (data || []).map((project) => ({
+    ...project,
+    works: (project.works || []).map((work) => ({
+      ...work,
+      voice_actor: processVoiceActor(work.voice_actor),
+    })),
+    studio_data: project.studio_data || null,
+    crew: [],
+  }));
+}
+
 export async function getWorkVotes(
   workIds: number[],
   userId?: string,

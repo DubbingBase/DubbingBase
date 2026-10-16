@@ -75,6 +75,14 @@ export class TMDBClient {
     );
   }
 
+  async getMediaDetails(contentType: "movie" | "tv", id: number, language?: string) {
+    return this.get(
+      `${contentType}/${id}`,
+      { append_to_response: "external_ids" },
+      language,
+    );
+  }
+
   async getSeasonWithCredits(seriesId: number, seasonNumber: number, language?: string) {
     return this.get(
       `tv/${seriesId}/season/${seasonNumber}`,
