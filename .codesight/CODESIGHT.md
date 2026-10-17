@@ -4,8 +4,8 @@
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
 > 82 routes | 19 models | 197 components | 100 lib files | 63 env vars | 15 middleware | 30% test coverage
-> **Token savings:** this file is ~16,800 tokens. Without it, AI exploration would cost ~161,300 tokens. **Saves ~144,400 tokens per conversation.**
-> **Last scanned:** 2026-10-16 17:11 — re-run after significant changes
+> **Token savings:** this file is ~16,900 tokens. Without it, AI exploration would cost ~161,300 tokens. **Saves ~144,400 tokens per conversation.**
+> **Last scanned:** 2026-10-17 20:01 — re-run after significant changes
 
 ---
 
@@ -515,8 +515,10 @@
   - function getVoiceActorWithWork: (id) => void
   - function getWorkByActor: (actorId) => void
   - function getDubbingProjects: (contentId, contentType) => void
-  - function getWorkVotes: (workIds, userId?) => Promise<
-  - function getTopContributors: (limit) => void
+  - function getDubbingProjectsForMediaEndpoint: (contentId, contentType, projection) => void
+  - function getMediaPageDubbingProjects: (contentId, contentType) => void
+  - function getWorkVotes: (workIds, userId?) => Promise<Record<number,
+  - _...1 more_
 - `apps/website/server/utils/dubbing-language.ts` — function requireDubbingLanguage: (value) => DubbingLanguage
 - `apps/website/server/utils/dubbing-region-detection.ts` — function detectDubbingRegionFromWikitext: ({...}, sections, }) => DubbingEvidence, type DubbingEvidence
 - `apps/website/server/utils/error-message.ts` — function getErrorMessage: (error) => string
@@ -690,11 +692,11 @@
   - function fetchHomeData: (language) => Promise<HomeDataPayload>
   - function useHomeData: (initialData?) => void
   - type HomeDataPayload
-- `packages/shared-logic/src/composables/useMovieData.ts` — function fetchMovieData: (id, locale?) => Promise<any | null>
+- `packages/shared-logic/src/composables/useMovieData.ts` — function fetchMovieData: (id, locale?, options) => Promise<MovieDetailResponse | null>
 - `packages/shared-logic/src/composables/usePodcastData.ts` — function fetchPodcastData: (id, locale?) => Promise<PodcastResponse | null>
 - `packages/shared-logic/src/composables/useSearchData.ts` — function fetchSearchData: (query) => Promise<SearchResult[]>, type SearchResult
 - `packages/shared-logic/src/composables/useSeasonData.ts` — function fetchSeasonData: (showId, seasonNumber, locale?) => Promise<any | null>
-- `packages/shared-logic/src/composables/useShowData.ts` — function fetchShowData: (id, locale?) => Promise<any | null>
+- `packages/shared-logic/src/composables/useShowData.ts` — function fetchShowData: (id, locale?, options) => Promise<ShowDetailResponse | null>
 - `packages/shared-logic/src/composables/useStudioData.ts`
   - function fetchStudioDetails: (studioId) => Promise<StudioDetailsResponse | null>
   - function fetchStudiosData: () => Promise<Studio[]>
@@ -853,7 +855,7 @@
 - `packages/shared-logic/src/types/index.ts` — imported by **8** files
 - `apps/website/server/utils/cache/http.ts` — imported by **7** files
 - `apps/website/server/utils/background.ts` — imported by **7** files
-- `apps/website/server/utils/services/media.ts` — imported by **6** files
+- `apps/website/server/utils/services/media.ts` — imported by **7** files
 - `apps/website/server/utils/cache/wikipedia.ts` — imported by **5** files
 - `apps/website/server/utils/dubbing-region-detection.ts` — imported by **5** files
 - `apps/website/server/utils/error-message.ts` — imported by **5** files
@@ -877,7 +879,7 @@
 # Test Coverage
 
 > **30%** of routes and models are covered by tests
-> 89 test files found
+> 93 test files found
 
 ## Covered Routes
 

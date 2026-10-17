@@ -85,8 +85,10 @@
   - function getVoiceActorWithWork: (id) => void
   - function getWorkByActor: (actorId) => void
   - function getDubbingProjects: (contentId, contentType) => void
-  - function getWorkVotes: (workIds, userId?) => Promise<
-  - function getTopContributors: (limit) => void
+  - function getDubbingProjectsForMediaEndpoint: (contentId, contentType, projection) => void
+  - function getMediaPageDubbingProjects: (contentId, contentType) => void
+  - function getWorkVotes: (workIds, userId?) => Promise<Record<number,
+  - _...1 more_
 - `apps/website/server/utils/dubbing-language.ts` — function requireDubbingLanguage: (value) => DubbingLanguage
 - `apps/website/server/utils/dubbing-region-detection.ts` — function detectDubbingRegionFromWikitext: ({...}, sections, }) => DubbingEvidence, type DubbingEvidence
 - `apps/website/server/utils/error-message.ts` — function getErrorMessage: (error) => string
@@ -260,11 +262,11 @@
   - function fetchHomeData: (language) => Promise<HomeDataPayload>
   - function useHomeData: (initialData?) => void
   - type HomeDataPayload
-- `packages/shared-logic/src/composables/useMovieData.ts` — function fetchMovieData: (id, locale?) => Promise<any | null>
+- `packages/shared-logic/src/composables/useMovieData.ts` — function fetchMovieData: (id, locale?, options) => Promise<MovieDetailResponse | null>
 - `packages/shared-logic/src/composables/usePodcastData.ts` — function fetchPodcastData: (id, locale?) => Promise<PodcastResponse | null>
 - `packages/shared-logic/src/composables/useSearchData.ts` — function fetchSearchData: (query) => Promise<SearchResult[]>, type SearchResult
 - `packages/shared-logic/src/composables/useSeasonData.ts` — function fetchSeasonData: (showId, seasonNumber, locale?) => Promise<any | null>
-- `packages/shared-logic/src/composables/useShowData.ts` — function fetchShowData: (id, locale?) => Promise<any | null>
+- `packages/shared-logic/src/composables/useShowData.ts` — function fetchShowData: (id, locale?, options) => Promise<ShowDetailResponse | null>
 - `packages/shared-logic/src/composables/useStudioData.ts`
   - function fetchStudioDetails: (studioId) => Promise<StudioDetailsResponse | null>
   - function fetchStudiosData: () => Promise<Studio[]>

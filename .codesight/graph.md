@@ -17,7 +17,7 @@
 - `packages/shared-logic/src/types/index.ts` — imported by **8** files
 - `apps/website/server/utils/cache/http.ts` — imported by **7** files
 - `apps/website/server/utils/background.ts` — imported by **7** files
-- `apps/website/server/utils/services/media.ts` — imported by **6** files
+- `apps/website/server/utils/services/media.ts` — imported by **7** files
 - `apps/website/server/utils/cache/wikipedia.ts` — imported by **5** files
 - `apps/website/server/utils/dubbing-region-detection.ts` — imported by **5** files
 - `apps/website/server/utils/error-message.ts` — imported by **5** files

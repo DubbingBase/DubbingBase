@@ -1,7 +1,7 @@
 # Test Coverage
 
 > **30%** of routes and models are covered by tests
-> 89 test files found
+> 93 test files found
 
 ## Covered Routes
 
