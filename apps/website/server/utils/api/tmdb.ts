@@ -108,6 +108,10 @@ export class TMDBClient {
     );
   }
 
+  async fetchMediaSummary(contentId: number, contentType: string, language?: string) {
+    return this.get(`${contentType}/${contentId}`, undefined, language);
+  }
+
   async fetchMediaCredits(
     mediaType: "movie" | "tv",
     mediaId: number,

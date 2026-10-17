@@ -30,14 +30,18 @@ function getCastMembers(value: unknown): TmdbCastMember[] {
   return value.cast.filter(isTmdbCastMember);
 }
 
-function getStringProperty(
-  value: Record<string, unknown>,
-  key: string,
-): string | null | undefined {
+function getStringProperty(value: Record<string, unknown>, key: string): string | null | undefined {
   const property = value[key];
-  return typeof property === "string" || property === null
-    ? property
-    : undefined;
+  return typeof property === "string" || property === null ? property : undefined;
+}
+
+function getNumberProperty(value: Record<string, unknown>, key: string): number | undefined {
+  const property = value[key];
+  return typeof property === "number" ? property : undefined;
+}
+
+function hasStatusCode(value: unknown): value is { statusCode: number } {
+  return isRecord(value) && typeof value.statusCode === "number";
 }
 
 async function getActor(
@@ -64,8 +68,7 @@ async function getVoiceRoles(
 
     // Deduplicate media details requests
     const mediaKeySet = new Set<string>();
-    const uniqueMediaItems: Array<{ contentId: number; contentType: string }> =
-      [];
+    const uniqueMediaItems: Array<{ contentId: number; contentType: string }> = [];
     for (const row of workData) {
       const cId = row.dubbing_projects?.content_id;
       const cType = row.dubbing_projects?.content_type;
@@ -79,24 +82,21 @@ async function getVoiceRoles(
     }
 
     // Fetch unique media details in concurrency-limited batches
-    const mediaMap = new Map<string, any>();
+    const mediaMap = new Map<string, Record<string, unknown>>();
     const BATCH_SIZE = 15;
     for (let i = 0; i < uniqueMediaItems.length; i += BATCH_SIZE) {
       const batch = uniqueMediaItems.slice(i, i + BATCH_SIZE);
       const results = await Promise.all(
         batch.map(async ({ contentId, contentType }) => {
           try {
-            const details = await tmdbClient.fetchMediaDetails(
+            const details = await tmdbClient.fetchMediaSummary(
               contentId,
               contentType,
               acceptLanguage,
             );
             return { key: `${contentType}:${contentId}`, details };
           } catch (err) {
-            console.error(
-              `Error fetching TMDB media ${contentType}:${contentId}:`,
-              err,
-            );
+            console.error(`Error fetching TMDB media ${contentType}:${contentId}:`, err);
             return { key: `${contentType}:${contentId}`, details: null };
           }
         }),
@@ -112,8 +112,7 @@ async function getVoiceRoles(
       const { voice_actors, ...work } = row;
       const cId = work.dubbing_projects?.content_id;
       const cType = work.dubbing_projects?.content_type;
-      const mediaDetails =
-        cId && cType ? mediaMap.get(`${cType}:${cId}`) : null;
+      const mediaDetails = cId && cType ? mediaMap.get(`${cType}:${cId}`) : null;
 
       return {
         ...work,
@@ -121,23 +120,24 @@ async function getVoiceRoles(
           ? [
               {
                 ...voice_actors,
-                profile_picture: buildSupabaseImageUrl(
-                  (voice_actors as any).profile_picture,
-                ),
+                profile_picture: buildSupabaseImageUrl(voice_actors.profile_picture),
               },
             ]
           : [],
         mediaDetails: mediaDetails
           ? {
-              id: mediaDetails.id,
-              title: mediaDetails.title || mediaDetails.name,
+              id: getNumberProperty(mediaDetails, "id"),
+              title:
+                getStringProperty(mediaDetails, "title") || getStringProperty(mediaDetails, "name"),
               original_title:
-                mediaDetails.original_title || mediaDetails.original_name,
-              poster_path: buildTmdbImageUrl(mediaDetails.poster_path),
+                getStringProperty(mediaDetails, "original_title") ||
+                getStringProperty(mediaDetails, "original_name"),
+              poster_path: buildTmdbImageUrl(getStringProperty(mediaDetails, "poster_path")),
               release_date:
-                mediaDetails.release_date || mediaDetails.first_air_date,
+                getStringProperty(mediaDetails, "release_date") ||
+                getStringProperty(mediaDetails, "first_air_date"),
               media_type: work.dubbing_projects?.content_type || "",
-              overview: mediaDetails.overview,
+              overview: getStringProperty(mediaDetails, "overview"),
             }
           : null,
       };
@@ -192,9 +192,7 @@ export default defineEventHandler(async (event) => {
     return {
       actor: {
         ...actor,
-        profile_path: buildTmdbImageUrl(
-          getStringProperty(actor, "profile_path"),
-        ),
+        profile_path: buildTmdbImageUrl(getStringProperty(actor, "profile_path")),
         credits: {
           cast: actorCredits,
         },
@@ -202,13 +200,12 @@ export default defineEventHandler(async (event) => {
       },
       voiceActors: voiceRoles,
     };
-  } catch (error: any) {
-    if (error.statusCode) throw error;
+  } catch (error: unknown) {
+    if (hasStatusCode(error)) throw error;
     console.error("Error in actor route:", error);
     throw createError({
       statusCode: 500,
-      message:
-        error instanceof Error ? error.message : "An unknown error occurred",
+      message: error instanceof Error ? error.message : "An unknown error occurred",
     });
   }
 });
