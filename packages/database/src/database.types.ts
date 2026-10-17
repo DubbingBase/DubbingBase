@@ -862,6 +862,15 @@ export type Database = {
         };
         Returns: string;
       };
+      controlled_save_metadata: {
+        Args: {
+          p_actor_id: string;
+          p_entity_type: string;
+          p_payload: Json;
+          p_request_id?: string;
+        };
+        Returns: Json;
+      };
       get_recent_contributions: {
         Args: { limit_param?: number };
         Returns: {
