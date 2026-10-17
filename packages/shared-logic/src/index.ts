@@ -1,4 +1,17 @@
 export * from "./types";
+export type {
+  MediaDetailCastMember,
+  MediaDetailCharacterProfilePicture,
+  MediaDetailCredits,
+  MediaDetailDubbingProject,
+  MediaDetailMedia,
+  MediaDetailSeason,
+  MediaDetailStudio,
+  MediaDetailVoiceActor,
+  MediaDetailWork,
+  MovieDetailResponse,
+  ShowDetailResponse,
+} from "./types/media-detail";
 export * from "./constants";
 export * from "./dubbing-languages";
 export * from "./wikipedia-language";

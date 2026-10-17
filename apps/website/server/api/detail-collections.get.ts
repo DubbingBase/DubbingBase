@@ -224,8 +224,11 @@ async function getMediaCast(
           id,
           season_number: requiredSeasonNumber(query.seasonNumber),
           episode_number: requiredId(query.episodeNumber, "episodeNumber"),
+          projection: "media-page",
         }
-      : undefined;
+      : ["movie", "show"].includes(type)
+        ? { projection: "media-page" }
+        : undefined;
   const detail = await requestFetch<DetailPayload>(
     type === "episode" ? "/api/episode" : mediaEndpoint(type, id),
     { query: detailQuery },
