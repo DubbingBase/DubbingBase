@@ -5,6 +5,8 @@ const routeMocks = vi.hoisted(() => ({
   requireAdmin: vi.fn(),
   useSupabaseAdmin: vi.fn(),
 }));
+const adminId = "00000000-0000-4000-8000-000000563660";
+const requestId = "8f43b9a3-659f-4a97-9dc4-dd45166e5e68";
 
 vi.mock("../auth", () => ({
   requireAdmin: routeMocks.requireAdmin,
@@ -22,7 +24,10 @@ beforeAll(async () => {
   handler = (await import("../../api/admin/dubbing-project.post")).default;
 });
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  routeMocks.requireAdmin.mockReturnValue({ id: adminId });
+});
 afterAll(() => vi.unstubAllGlobals());
 
 function createSupabaseMock(
@@ -42,6 +47,13 @@ function createSupabaseMock(
 }
 
 async function post(body: unknown): Promise<Response> {
+  const requestBody =
+    typeof body === "object" &&
+    body !== null &&
+    !Array.isArray(body) &&
+    !Object.hasOwn(body, "request_id")
+      ? { ...body, request_id: requestId }
+      : body;
   const app = createApp();
   app.use(
     "/",
@@ -51,12 +63,33 @@ async function post(body: unknown): Promise<Response> {
     new Request("http://localhost/", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify(requestBody),
     }),
   );
 }
 
 describe("POST /api/admin/dubbing-project", () => {
+  it("rejects callers who do not pass admin authorization before creating a service client", async () => {
+    routeMocks.requireAdmin.mockImplementation(() => {
+      throw createError({ statusCode: 403, message: "Admin access required" });
+    });
+    const { supabase, rpcCalls } = createSupabaseMock();
+    routeMocks.useSupabaseAdmin.mockReturnValue(supabase);
+
+    const response = await post({
+      content_id: 211288,
+      content_type: "tv",
+      dubbing_language: "fr-FR",
+      operations: [
+        { actor_id: 101, work_id: null, expected_voice_actor_id: null, voice_actor_id: 201 },
+      ],
+    });
+
+    expect(response.status).toBe(403);
+    expect(routeMocks.useSupabaseAdmin).not.toHaveBeenCalled();
+    expect(rpcCalls).toEqual([]);
+  });
+
   it("sends exact work operations and the selected regional project inputs to one RPC", async () => {
     const { supabase, rpcCalls } = createSupabaseMock();
     routeMocks.useSupabaseAdmin.mockReturnValue(supabase);
@@ -81,6 +114,8 @@ describe("POST /api/admin/dubbing-project", () => {
           p_content_id: 211288,
           p_content_type: "tv",
           p_dubbing_language: "fr-FR",
+          p_actor_id: adminId,
+          p_request_id: requestId,
           p_operations: [
             { actor_id: 101, work_id: 305, expected_voice_actor_id: 199, voice_actor_id: 201 },
             { actor_id: 102, work_id: null, expected_voice_actor_id: null, voice_actor_id: 202 },
@@ -156,6 +191,33 @@ describe("POST /api/admin/dubbing-project", () => {
     expect(rpcCalls).toEqual([]);
   });
 
+  it("rejects unknown request fields and invalid request IDs", async () => {
+    const { supabase, rpcCalls } = createSupabaseMock();
+    routeMocks.useSupabaseAdmin.mockReturnValue(supabase);
+
+    const base = {
+      content_id: 211288,
+      content_type: "tv",
+      dubbing_language: "fr-FR",
+      operations: [
+        { actor_id: 101, work_id: 305, expected_voice_actor_id: 199, voice_actor_id: 201 },
+      ],
+    };
+    const unknownField = await post({ ...base, protected: true });
+    const missingRequestId = await post({ ...base, request_id: null });
+    const invalidRequestId = await post({ ...base, request_id: "not-a-uuid" });
+    const unknownOperationField = await post({
+      ...base,
+      operations: [{ ...base.operations[0], status: "validated" }],
+    });
+
+    expect(unknownField.status).toBe(400);
+    expect(missingRequestId.status).toBe(400);
+    expect(invalidRequestId.status).toBe(400);
+    expect(unknownOperationField.status).toBe(400);
+    expect(rpcCalls).toEqual([]);
+  });
+
   it("requires an optional positive expected voice actor ID", async () => {
     const { supabase, rpcCalls } = createSupabaseMock();
     routeMocks.useSupabaseAdmin.mockReturnValue(supabase);
@@ -175,9 +237,17 @@ describe("POST /api/admin/dubbing-project", () => {
         { actor_id: 101, work_id: 305, expected_voice_actor_id: -1, voice_actor_id: 201 },
       ],
     });
+    const unsafeContentId = await post({
+      ...base,
+      content_id: Number.MAX_SAFE_INTEGER + 1,
+      operations: [
+        { actor_id: 101, work_id: 305, expected_voice_actor_id: 199, voice_actor_id: 201 },
+      ],
+    });
 
     expect(missingExpectedValue.status).toBe(400);
     expect(invalidExpectedValue.status).toBe(400);
+    expect(unsafeContentId.status).toBe(400);
     expect(rpcCalls).toEqual([]);
   });
 
