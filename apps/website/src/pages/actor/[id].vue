@@ -485,17 +485,22 @@ function resolveImageUrl(path: string | null | undefined): string | undefined {
   return `https://image.tmdb.org/t/p/w342${path}`;
 }
 
+const languageDisplayNames = computed(() => {
+  try {
+    return new Intl.DisplayNames([locale.value || "en"], { type: "language" });
+  } catch {
+    return undefined;
+  }
+});
+
 const getDisplayLanguage = (langCode: string | undefined | null) => {
   if (!langCode) return "Unknown";
   try {
-    const displayNames = new Intl.DisplayNames([locale.value || "en"], {
-      type: "language",
-    });
-    const name = displayNames.of(langCode);
+    const name = languageDisplayNames.value?.of(langCode);
     return typeof name === "string" && name.length > 0
       ? name.charAt(0).toUpperCase() + name.slice(1)
       : langCode;
-  } catch (e) {
+  } catch {
     return langCode;
   }
 };
