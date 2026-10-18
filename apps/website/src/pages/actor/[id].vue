@@ -351,6 +351,7 @@ import { refDebounced } from "@vueuse/core";
 import { ArrowLeftIcon, ClapperboardIcon, UserIcon } from "lucide-vue-next";
 import { useActorData, fetchActorData } from "@app/shared-logic";
 import ReportModal from "../../components/ReportModal.vue";
+import { prepareActorSsrData } from "../../utils/actor-ssr-data";
 
 const isReportModalOpen = ref(false);
 
@@ -373,6 +374,8 @@ const { data: initialData } = await useAsyncData(
 
 const { page: voicesPage, setPage: setVoicesPage } = useUrlPagination("voicesPage");
 const { page: filmographyPage, setPage: setFilmographyPage } = useUrlPagination("filmographyPage");
+
+if (import.meta.server) prepareActorSsrData(initialData.value);
 
 const {
   actor,

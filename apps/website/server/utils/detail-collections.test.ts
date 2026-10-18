@@ -1,5 +1,6 @@
 import { createApp, createError, defineEventHandler, getQuery, toWebHandler } from "h3";
-import { effectScope, ref } from "vue";
+import { effectScope, isReactive, ref } from "vue";
+import { prepareActorSsrData } from "../../src/utils/actor-ssr-data";
 import {
   useActorData,
   filterDetailCollectionItems,
@@ -150,6 +151,44 @@ const actorPayload: ActorDataPayload = {
 actorPayload.voiceRoles = actorPayload.actor?.voice_roles || [];
 
 describe("actor filmography pagination", () => {
+  it("keeps SSR snapshots plain without changing serialized data or browser reactivity", () => {
+    const payload = structuredClone(actorPayload);
+    const serialized = JSON.stringify(payload);
+    prepareActorSsrData(payload);
+    const scope = effectScope();
+    const data = scope.run(() => ({
+      server: useActorData(payload),
+      client: useActorData(structuredClone(payload)),
+    }));
+    if (!data) throw new Error("Actor data scope was not created");
+
+    try {
+      expect(isReactive(data.server.actor.value)).toBe(false);
+      expect(isReactive(data.server.voiceRoles.value)).toBe(false);
+      expect(isReactive(data.client.actor.value)).toBe(true);
+      expect(isReactive(data.client.voiceRoles.value)).toBe(true);
+      expect(data.server.enhancedFilmography.value).toEqual(data.client.enhancedFilmography.value);
+      expect(data.server.filteredUniqueVoiceActorsByLanguage.value).toEqual(
+        data.client.filteredUniqueVoiceActorsByLanguage.value,
+      );
+      expect(JSON.stringify(payload)).toBe(serialized);
+
+      data.client.searchQuery.value = "Support";
+      expect(data.client.enhancedFilmography.value.map((credit) => credit.id)).toEqual([3]);
+      data.client.searchQuery.value = "";
+      data.client.selectedLanguage.value = "en-US";
+      expect(
+        data.client.filteredUniqueVoiceActorsByLanguage.value.map((actor) => actor.id),
+      ).toEqual([10]);
+    } finally {
+      scope.stop();
+    }
+
+    expect(() => prepareActorSsrData(null)).not.toThrow();
+    expect(() => prepareActorSsrData(undefined)).not.toThrow();
+    expect(() => prepareActorSsrData({ voiceRoles: [] })).not.toThrow();
+  });
+
   it("enriches the selected page after full-collection filtering", () => {
     const scope = effectScope();
     const pagination = ref({ page: 3, pageSize: 1 });
