@@ -108,6 +108,7 @@
   - function llmGenerateObject: (prompt, schema, options?) => Promise<
   - function llmVision: (prompt, imageData, mimeType, options?) => Promise<
   - function llmVisionObject: (prompt, imageData, schema, mimeType, options?) => Promise<
+- `apps/website/server/utils/media-page-credits.ts` — function mediaPageAggregateCredits: (credits) => void
 - `apps/website/server/utils/media-queue-readiness.ts`
   - function getReadyMediaQueueNames: (value) => MediaQueueName[]
   - type MediaQueueName

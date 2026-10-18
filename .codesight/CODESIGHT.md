@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 82 routes | 19 models | 197 components | 100 lib files | 63 env vars | 15 middleware | 30% test coverage
-> **Token savings:** this file is ~16,900 tokens. Without it, AI exploration would cost ~161,300 tokens. **Saves ~144,400 tokens per conversation.**
-> **Last scanned:** 2026-10-17 20:31 — re-run after significant changes
+> 82 routes | 19 models | 197 components | 101 lib files | 63 env vars | 15 middleware | 30% test coverage
+> **Token savings:** this file is ~16,900 tokens. Without it, AI exploration would cost ~161,500 tokens. **Saves ~144,600 tokens per conversation.**
+> **Last scanned:** 2026-10-18 07:13 — re-run after significant changes
 
 ---
 
@@ -538,6 +538,7 @@
   - function llmGenerateObject: (prompt, schema, options?) => Promise<
   - function llmVision: (prompt, imageData, mimeType, options?) => Promise<
   - function llmVisionObject: (prompt, imageData, schema, mimeType, options?) => Promise<
+- `apps/website/server/utils/media-page-credits.ts` — function mediaPageAggregateCredits: (credits) => void
 - `apps/website/server/utils/media-queue-readiness.ts`
   - function getReadyMediaQueueNames: (value) => MediaQueueName[]
   - type MediaQueueName
