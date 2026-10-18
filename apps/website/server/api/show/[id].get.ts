@@ -6,8 +6,10 @@ import { processMedia } from "../../utils/urls/tmdb";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 import { scheduleBackgroundTask } from "../../utils/background";
+import { mediaPageAggregateCredits } from "../../utils/media-page-credits";
 export async function fetchShowData(event: H3Event, showId: number) {
   const acceptLanguage = getHeader(event, "accept-language") || undefined;
+  const projection = getQuery(event).projection;
 
   const tmdbClient = useTmdbClient();
   const mediaService = new MediaService(tmdbClient, acceptLanguage);
@@ -29,7 +31,12 @@ export async function fetchShowData(event: H3Event, showId: number) {
 
       const aggregateCredits = result.media.aggregate_credits || (await aggregateCreditsPromise);
 
-      const creditsWithImages = processMedia({ credits: aggregateCredits });
+      const creditsWithImages = processMedia({
+        credits:
+          projection === "media-page"
+            ? mediaPageAggregateCredits(aggregateCredits)
+            : aggregateCredits,
+      });
       return {
         serieWithImageUrls: result.media,
         aggregateCredits: creditsWithImages.credits,
@@ -68,11 +75,7 @@ export async function fetchShowData(event: H3Event, showId: number) {
       };
     });
 
-  const dbDataPromise = getDubbingProjectsForMediaEndpoint(
-    showId,
-    "tv",
-    getQuery(event).projection,
-  );
+  const dbDataPromise = getDubbingProjectsForMediaEndpoint(showId, "tv", projection);
 
   const [apiData, dubbingProjects] = await Promise.all([apiDataPromise, dbDataPromise]);
 
