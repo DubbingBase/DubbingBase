@@ -62,6 +62,7 @@ async function getVoiceRoles(
   actorId: number,
   tmdbClient: ReturnType<typeof useTmdbClient>,
   acceptLanguage?: string,
+  personRequest?: ReturnType<typeof getActor>,
 ) {
   try {
     const workData = await getWorkByActor(actorId);
@@ -82,11 +83,39 @@ async function getVoiceRoles(
       }
     }
 
-    // Fetch unique media details in concurrency-limited batches
+    // Person credits already contain media summaries. Reuse complete entries
+    // on actor pages, and fetch only titles missing from those credits.
     const mediaMap = new Map<string, Record<string, unknown>>();
+    const person = personRequest ? await personRequest : null;
+    if (person) {
+      const groups: Array<{ contentType: "movie" | "tv"; cast: TmdbCastMember[] }> = [
+        { contentType: "movie", cast: getCastMembers(person.movie_credits) },
+        { contentType: "tv", cast: getCastMembers(person.tv_credits) },
+      ];
+      for (const { contentType, cast } of groups) {
+        const fields =
+          contentType === "movie"
+            ? ["title", "original_title", "release_date", "overview"]
+            : ["name", "original_name", "first_air_date", "overview"];
+        for (const credit of cast) {
+          const id = getNumberProperty(credit, "id");
+          if (id === undefined) continue;
+          const key = `${contentType}:${id}`;
+          if (!mediaKeySet.has(key) || !fields.every((field) => typeof credit[field] === "string"))
+            continue;
+          if (credit.poster_path !== null && typeof credit.poster_path !== "string") continue;
+          mediaMap.set(key, credit);
+        }
+      }
+    }
+
+    // Fetch unique missing media details in concurrency-limited batches.
+    const missingMediaItems = uniqueMediaItems.filter(
+      ({ contentId, contentType }) => !mediaMap.has(`${contentType}:${contentId}`),
+    );
     const BATCH_SIZE = 15;
-    for (let i = 0; i < uniqueMediaItems.length; i += BATCH_SIZE) {
-      const batch = uniqueMediaItems.slice(i, i + BATCH_SIZE);
+    for (let i = 0; i < missingMediaItems.length; i += BATCH_SIZE) {
+      const batch = missingMediaItems.slice(i, i + BATCH_SIZE);
       const results = await Promise.all(
         batch.map(async ({ contentId, contentType }) => {
           try {
@@ -163,11 +192,18 @@ export default defineEventHandler(async (event) => {
   }
   const acceptLanguage = getHeader(event, "accept-language") || undefined;
   const tmdbClient = useTmdbClient();
+  const projection = getQuery(event).projection;
 
   try {
+    const personRequest = getActor(actorId, tmdbClient, acceptLanguage);
     const [actor, voiceRoles] = await Promise.all([
-      getActor(actorId, tmdbClient, acceptLanguage),
-      getVoiceRoles(actorId, tmdbClient, acceptLanguage),
+      personRequest,
+      getVoiceRoles(
+        actorId,
+        tmdbClient,
+        acceptLanguage,
+        projection === "actor-page" ? personRequest : undefined,
+      ),
     ]);
 
     if (!actor) {
@@ -201,7 +237,7 @@ export default defineEventHandler(async (event) => {
       },
       voiceActors: voiceRoles,
     };
-    return getQuery(event).projection === "actor-page" ? actorPageResponse(response) : response;
+    return projection === "actor-page" ? actorPageResponse(response) : response;
   } catch (error: unknown) {
     if (hasStatusCode(error)) throw error;
     console.error("Error in actor route:", error);
