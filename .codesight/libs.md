@@ -212,6 +212,14 @@
 - `apps/website/src/composables/useUrlPagination.ts` — function readUrlPage: (value) => number, function useUrlPagination: (queryKey) => void
 - `apps/website/src/lib/media-editor-routes.ts` — function getMediaEditorRoute: ({...}, mediaId, projectId }) => string | null
 - `apps/website/src/lib/mediaQueue.ts` — function enqueueMedia: (params) => Promise<void>
+- `apps/website/src/utils/actor-grid-html.ts`
+  - function escapeActorHtml: (value) => string
+  - function renderActorImageHtml: (attributes) => string
+  - function renderActorVoiceActorCardHtml: (actor, href, rolesLabel, getImageAttributes) => string
+  - function renderActorFilmographyCardHtml: (item, mediaHref, voiceActorHref, copy, getImageAttributes, resolveImageUrl) => void
+  - interface ActorImageAttributes
+  - interface ActorFilmographyCopy
+  - _...3 more_
 - `apps/website/src/utils/actor-ssr-data.ts` — function prepareActorSsrData: (payload) => void
 - `apps/website/src/utils/duplicate-work.ts`
   - function duplicateWorkDraftHasChanges: (initial, current) => boolean

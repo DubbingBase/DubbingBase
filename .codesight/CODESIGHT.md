@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 82 routes | 19 models | 197 components | 104 lib files | 63 env vars | 17 middleware | 30% test coverage
-> **Token savings:** this file is ~17,100 tokens. Without it, AI exploration would cost ~162,800 tokens. **Saves ~145,700 tokens per conversation.**
-> **Last scanned:** 2026-10-18 19:57 — re-run after significant changes
+> 82 routes | 19 models | 197 components | 105 lib files | 63 env vars | 17 middleware | 30% test coverage
+> **Token savings:** this file is ~17,200 tokens. Without it, AI exploration would cost ~163,100 tokens. **Saves ~145,900 tokens per conversation.**
+> **Last scanned:** 2026-10-18 21:04 — re-run after significant changes
 
 ---
 
@@ -642,6 +642,14 @@
 - `apps/website/src/composables/useUrlPagination.ts` — function readUrlPage: (value) => number, function useUrlPagination: (queryKey) => void
 - `apps/website/src/lib/media-editor-routes.ts` — function getMediaEditorRoute: ({...}, mediaId, projectId }) => string | null
 - `apps/website/src/lib/mediaQueue.ts` — function enqueueMedia: (params) => Promise<void>
+- `apps/website/src/utils/actor-grid-html.ts`
+  - function escapeActorHtml: (value) => string
+  - function renderActorImageHtml: (attributes) => string
+  - function renderActorVoiceActorCardHtml: (actor, href, rolesLabel, getImageAttributes) => string
+  - function renderActorFilmographyCardHtml: (item, mediaHref, voiceActorHref, copy, getImageAttributes, resolveImageUrl) => void
+  - interface ActorImageAttributes
+  - interface ActorFilmographyCopy
+  - _...3 more_
 - `apps/website/src/utils/actor-ssr-data.ts` — function prepareActorSsrData: (payload) => void
 - `apps/website/src/utils/duplicate-work.ts`
   - function duplicateWorkDraftHasChanges: (initial, current) => boolean
@@ -885,7 +893,7 @@
 # Test Coverage
 
 > **30%** of routes and models are covered by tests
-> 95 test files found
+> 96 test files found
 
 ## Covered Routes
 
