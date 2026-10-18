@@ -1,5 +1,5 @@
 import { useTmdbClient } from "../../utils";
-import { getWorkByActor } from "../../utils/db/queries";
+import { getActorPageWorkByActor, getWorkByActor } from "../../utils/db/queries";
 import { buildSupabaseImageUrl } from "../../utils/urls/supabase";
 import { buildTmdbImageUrl } from "../../utils/urls/tmdb";
 import { actorPageResponse } from "../../utils/actor-page-response";
@@ -78,9 +78,12 @@ async function getVoiceRoles(
   tmdbClient: ReturnType<typeof useTmdbClient>,
   acceptLanguage?: string,
   personRequest?: ReturnType<typeof getActor>,
+  actorPageProjection = false,
 ) {
   try {
-    const workData = await getWorkByActor(actorId);
+    const workData = actorPageProjection
+      ? await getActorPageWorkByActor(actorId)
+      : await getWorkByActor(actorId);
     if (!workData.length) return [];
 
     // Deduplicate media details requests
@@ -218,6 +221,7 @@ export default defineEventHandler(async (event) => {
         tmdbClient,
         acceptLanguage,
         projection === "actor-page" ? personRequest : undefined,
+        projection === "actor-page",
       ),
     ]);
 

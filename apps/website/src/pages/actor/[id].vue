@@ -134,14 +134,15 @@
                 <div
                   class="relative w-20 h-20 rounded-full overflow-hidden mb-3 border-2 border-transparent theme-hover-primary-border transition-colors"
                 >
-                  <NuxtImg
-                    format="webp"
-                    decoding="async"
-                    loading="lazy"
+                  <img
                     v-if="va.profile_picture"
-                    :src="va.profile_picture"
-                    :alt="`${va.firstname} ${va.lastname}`"
-                    class="object-cover w-full h-full"
+                    v-bind="
+                      getActorImageAttrs(
+                        va.profile_picture,
+                        `${va.firstname} ${va.lastname}`,
+                        'object-cover w-full h-full',
+                      )
+                    "
                   />
                   <div
                     v-else
@@ -208,14 +209,15 @@
                     <div
                       class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden theme-surface-raised theme-surface-muted sm:mb-3 flex-shrink-0"
                     >
-                      <NuxtImg
-                        format="webp"
-                        decoding="async"
-                        loading="lazy"
+                      <img
                         v-if="item.poster_path"
-                        :src="resolveImageUrl(item.poster_path)"
-                        :alt="item.title || item.name"
-                        class="w-full h-full object-cover transition-transform duration-300"
+                        v-bind="
+                          getActorImageAttrs(
+                            resolveImageUrl(item.poster_path),
+                            item.title || item.name,
+                            'w-full h-full object-cover transition-transform duration-300',
+                          )
+                        "
                       />
                       <div
                         v-else
@@ -252,14 +254,15 @@
                     <div
                       class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden theme-surface-raised theme-surface-muted sm:mb-3 flex-shrink-0"
                     >
-                      <NuxtImg
-                        format="webp"
-                        decoding="async"
-                        loading="lazy"
+                      <img
                         v-if="item.voice_actors[0].profile_picture"
-                        :src="item.voice_actors[0].profile_picture"
-                        :alt="`${item.voice_actors[0].firstname} ${item.voice_actors[0].lastname}`"
-                        class="w-full h-full object-cover"
+                        v-bind="
+                          getActorImageAttrs(
+                            item.voice_actors[0].profile_picture,
+                            `${item.voice_actors[0].firstname} ${item.voice_actors[0].lastname}`,
+                            'w-full h-full object-cover',
+                          )
+                        "
                       />
                       <div
                         v-else
@@ -359,6 +362,50 @@ const route = useRoute();
 const router = useRouter();
 const { locale, t } = useI18n();
 const localePath = useLocalePath();
+const imageProcessor = useImage();
+const imageModifiers = {
+  format: "webp",
+  quality: imageProcessor.options.quality,
+};
+
+// Keep NuxtImg's responsive attributes without creating a component per card.
+function getActorImageAttrs(
+  src: string | null | undefined,
+  alt: string | undefined,
+  imageClass: string,
+): {
+  "data-nuxt-img": "";
+  sizes: string | undefined;
+  srcset: string;
+  onerror?: string;
+  alt: string | undefined;
+  class: string;
+  decoding: "async";
+  loading: "lazy";
+  src: string;
+} {
+  const source = src ?? "";
+  const sizes = imageProcessor.getSizes(source, {
+    provider: undefined,
+    preset: undefined,
+    modifiers: imageModifiers,
+  });
+
+  return {
+    "data-nuxt-img": "",
+    sizes: sizes.sizes,
+    srcset: sizes.srcset,
+    ...(import.meta.server ? { onerror: "this.setAttribute('data-error', 1)" } : {}),
+    alt,
+    class: imageClass,
+    decoding: "async",
+    loading: "lazy",
+    src: imageProcessor(source, imageModifiers, {
+      provider: undefined,
+      preset: undefined,
+    }),
+  };
+}
 
 const id = String(route.params.id);
 const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
