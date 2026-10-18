@@ -1,5 +1,5 @@
 import { createApp, createError, defineEventHandler, getQuery, toWebHandler } from "h3";
-import { effectScope } from "vue";
+import { effectScope, ref } from "vue";
 import {
   useActorData,
   filterDetailCollectionItems,
@@ -148,6 +148,54 @@ const actorPayload: ActorDataPayload = {
   voiceRoles: [],
 };
 actorPayload.voiceRoles = actorPayload.actor?.voice_roles || [];
+
+describe("actor filmography pagination", () => {
+  it("enriches the selected page after full-collection filtering", () => {
+    const scope = effectScope();
+    const pagination = ref({ page: 3, pageSize: 1 });
+    const data = scope.run(() => ({
+      full: useActorData(actorPayload),
+      paged: useActorData(actorPayload, { filmographyPagination: pagination }),
+    }));
+    if (!data) throw new Error("Actor data scope was not created");
+
+    try {
+      expect(data.full.enhancedFilmography.value).toHaveLength(3);
+      expect(data.paged.filteredCredits.value).toHaveLength(3);
+      expect(data.paged.enhancedFilmography.value).toEqual(
+        data.full.enhancedFilmography.value.slice(2, 3),
+      );
+      expect(data.paged.availableLanguages.value).toEqual(data.full.availableLanguages.value);
+      expect(data.paged.filteredUniqueVoiceActorsByLanguage.value).toEqual(
+        data.full.filteredUniqueVoiceActorsByLanguage.value,
+      );
+
+      pagination.value = { page: 2, pageSize: 1 };
+      data.full.selectedLanguage.value = "en-US";
+      data.paged.selectedLanguage.value = "en-US";
+      expect(data.paged.enhancedFilmography.value).toEqual(
+        data.full.enhancedFilmography.value.slice(1, 2),
+      );
+      expect(
+        data.paged.enhancedFilmography.value[0]?.voice_actors.map((actor) => actor.id),
+      ).toEqual([10]);
+
+      pagination.value = { page: 1, pageSize: 1 };
+      data.full.searchQuery.value = " Support ";
+      data.paged.searchQuery.value = " Support ";
+      expect(data.paged.filteredCredits.value.map((credit) => credit.id)).toEqual([3]);
+      expect(data.paged.enhancedFilmography.value).toEqual(data.full.enhancedFilmography.value);
+      expect(data.paged.enhancedFilmography.value[0]?.id).toBe(3);
+
+      data.paged.searchQuery.value = "missing title";
+      expect(data.paged.filteredCredits.value).toHaveLength(0);
+      expect(data.paged.enhancedFilmography.value).toHaveLength(0);
+      expect(actorPayload.actor?.credits.cast).toHaveLength(3);
+    } finally {
+      scope.stop();
+    }
+  });
+});
 
 describe("resolveDetailCollectionProject", () => {
   it("falls back to the displayed project when the query ID is stale", () => {
