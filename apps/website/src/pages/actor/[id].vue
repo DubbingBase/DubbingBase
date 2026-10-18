@@ -192,6 +192,10 @@ const route = useRoute();
 const router = useRouter();
 const { locale, t } = useI18n();
 const localePath = useLocalePath();
+const actorLocalePrefix = computed(() => {
+  const localizedRoot = localePath("/");
+  return localizedRoot === "/" ? "" : localizedRoot.replace(/\/$/, "");
+});
 const imageProcessor = useImage();
 const imageModifiers = {
   format: "webp",
@@ -232,6 +236,10 @@ const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
 const { page: voicesPage, setPage: setVoicesPage } = useUrlPagination("voicesPage");
 const { page: filmographyPage, setPage: setFilmographyPageUrl } =
   useUrlPagination("filmographyPage");
+
+function actorLocalePath(path: string): string {
+  return `${actorLocalePrefix.value}${path}`;
+}
 
 const { data: initialData } = await useAsyncData(
   `actor-${id}`,
@@ -304,7 +312,7 @@ const voiceActorCardsHtml = computed(() => {
     .map((voiceActor) =>
       renderActorVoiceActorCardHtml(
         voiceActor,
-        localePath(`/voice-actor/${voiceActor.id}`),
+        actorLocalePath(`/voice-actor/${voiceActor.id}`),
         t("actor.roles"),
         getActorImageAttrs,
       ),
@@ -324,8 +332,8 @@ const filmographyCardsHtml = computed(() =>
 
       return renderActorFilmographyCardHtml(
         item,
-        localePath(`/${mediaType}/${item.id}`),
-        voiceActor ? localePath(`/voice-actor/${voiceActor.id}`) : undefined,
+        actorLocalePath(`/${mediaType}/${item.id}`),
+        voiceActor ? actorLocalePath(`/voice-actor/${voiceActor.id}`) : undefined,
         actorFilmographyCopy.value,
         getActorImageAttrs,
         resolveImageUrl,
