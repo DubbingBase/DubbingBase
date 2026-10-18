@@ -357,7 +357,6 @@ const isReportModalOpen = ref(false);
 
 const route = useRoute();
 const router = useRouter();
-const supabase = useSupabaseClient();
 const { locale, t } = useI18n();
 const localePath = useLocalePath();
 
