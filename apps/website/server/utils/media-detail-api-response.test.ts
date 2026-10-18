@@ -153,9 +153,12 @@ beforeEach(() => {
         id: 55,
         name: "Aggregate Actor",
         character: "Character",
-        roles: [{ character: "Character", episode_count: 4 }],
+        profile_path: "https://example.com/actor.png",
+        popularity: 100,
+        roles: [{ character: "Character", episode_count: 4, credit_id: "provider-credit" }],
       },
     ],
+    crew: [{ id: 99, jobs: [{ job: "Director", episode_count: 40 }] }],
   });
 });
 
@@ -315,8 +318,10 @@ describe("movie and show detail API payload compatibility", () => {
             id: 55,
             name: "Aggregate Actor",
             roles: [{ character: "Character", episode_count: 4 }],
+            popularity: 100,
           },
         ],
+        crew: [{ id: 99 }],
       },
       dubbingProjects: [
         {
@@ -366,5 +371,24 @@ describe("movie and show detail API payload compatibility", () => {
       "media-page",
     );
     expect(apiMocks.getMediaPageDubbingProjects).toHaveBeenCalledWith(123, "tv");
+    expect(response).toMatchObject({
+      aggregateCredits: {
+        cast: [
+          {
+            id: 55,
+            name: "Aggregate Actor",
+            profile_path: "https://example.com/actor.png",
+            character: "Character",
+            roles: [{ character: "Character", episode_count: 4 }],
+          },
+        ],
+      },
+    });
+    if (!isRecord(response) || !isRecord(response.aggregateCredits)) {
+      throw new Error("Show response is missing aggregate credits");
+    }
+    expect(response.aggregateCredits).not.toHaveProperty("crew");
+    expect(response.aggregateCredits).not.toHaveProperty("cast.0.popularity");
+    expect(response.aggregateCredits).not.toHaveProperty("cast.0.roles.0.credit_id");
   });
 });
