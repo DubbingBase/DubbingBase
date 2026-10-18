@@ -5,7 +5,7 @@
 
 > 82 routes | 19 models | 197 components | 104 lib files | 63 env vars | 17 middleware | 30% test coverage
 > **Token savings:** this file is ~17,100 tokens. Without it, AI exploration would cost ~162,800 tokens. **Saves ~145,700 tokens per conversation.**
-> **Last scanned:** 2026-10-18 18:57 — re-run after significant changes
+> **Last scanned:** 2026-10-18 19:57 — re-run after significant changes
 
 ---
 
@@ -516,11 +516,11 @@
 - `apps/website/server/utils/db/queries.ts`
   - function getVoiceActorWithWork: (id) => void
   - function getWorkByActor: (actorId) => void
+  - function getActorPageWorkByActor: (actorId) => void
   - function getDubbingProjects: (contentId, contentType) => void
   - function getDubbingProjectsForMediaEndpoint: (contentId, contentType, projection) => void
   - function getMediaPageDubbingProjects: (contentId, contentType) => void
-  - function getWorkVotes: (workIds, userId?) => Promise<Record<number,
-  - _...1 more_
+  - _...2 more_
 - `apps/website/server/utils/dubbing-language.ts` — function requireDubbingLanguage: (value) => DubbingLanguage
 - `apps/website/server/utils/dubbing-region-detection.ts` — function detectDubbingRegionFromWikitext: ({...}, sections, }) => DubbingEvidence, type DubbingEvidence
 - `apps/website/server/utils/error-message.ts` — function getErrorMessage: (error) => string
