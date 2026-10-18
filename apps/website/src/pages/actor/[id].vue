@@ -362,9 +362,13 @@ const localePath = useLocalePath();
 const id = String(route.params.id);
 const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
 
-const { data: initialData } = await useAsyncData(`actor-${id}`, () => fetchActorData(id), {
-  getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
-});
+const { data: initialData } = await useAsyncData(
+  `actor-${id}`,
+  () => fetchActorData(id, { projection: "actor-page" }),
+  {
+    getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
+  },
+);
 
 const {
   actor,
