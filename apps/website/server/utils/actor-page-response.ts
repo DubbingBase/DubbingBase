@@ -10,18 +10,15 @@ function pickFields(value: Record<string, unknown>, fields: readonly string[]) {
   return result;
 }
 
-interface ActorDetailResponse {
-  actor: Record<string, unknown> & {
-    credits: { cast: Record<string, unknown>[] };
-    voice_roles: Record<string, unknown>[];
-  };
-  voiceActors: Record<string, unknown>[];
-}
-
 // Keep all entries used for search, language selection and pagination. Raw
 // provider credits and editorial metadata remain in the default API response.
-export function actorPageResponse(response: ActorDetailResponse) {
-  const voiceRoles = response.actor.voice_roles.map((role) => ({
+export function actorPageResponse(
+  actor: Record<string, unknown>,
+  actorCredits: Record<string, unknown>[],
+  voiceRoles: Record<string, unknown>[],
+  profilePath: string | null,
+) {
+  const projectedVoiceRoles = voiceRoles.map((role) => ({
     ...pickFields(role, ["id", "performance", "mediaDetails"]),
     dubbing_projects: isRecord(role.dubbing_projects)
       ? pickFields(role.dubbing_projects, ["language"])
@@ -41,36 +38,23 @@ export function actorPageResponse(response: ActorDetailResponse) {
       : [],
   }));
 
+  const projectedActor = pickFields(actor, [
+    "id",
+    "name",
+    "biography",
+    "birthday",
+    "deathday",
+    "place_of_birth",
+    "known_for_department",
+  ]);
+  projectedActor.profile_path = profilePath;
+
   return {
     actor: {
-      ...pickFields(response.actor, [
-        "id",
-        "name",
-        "biography",
-        "birthday",
-        "deathday",
-        "place_of_birth",
-        "profile_path",
-        "known_for_department",
-      ]),
-      credits: {
-        cast: response.actor.credits.cast.map((credit) =>
-          pickFields(credit, [
-            "id",
-            "title",
-            "name",
-            "original_title",
-            "original_name",
-            "character",
-            "poster_path",
-            "release_date",
-            "first_air_date",
-            "media_type",
-          ]),
-        ),
-      },
-      voice_roles: voiceRoles,
+      ...projectedActor,
+      credits: { cast: actorCredits },
+      voice_roles: projectedVoiceRoles,
     },
-    voiceActors: voiceRoles,
+    voiceActors: projectedVoiceRoles,
   };
 }

@@ -31,6 +31,21 @@ function getCastMembers(value: unknown): TmdbCastMember[] {
   return value.cast.filter(isTmdbCastMember);
 }
 
+function getActorPageCredits(value: unknown, mediaType: "movie" | "tv") {
+  return getCastMembers(value).map((credit) => ({
+    id: credit.id,
+    title: credit.title,
+    name: credit.name,
+    original_title: credit.original_title,
+    original_name: credit.original_name,
+    character: credit.character,
+    poster_path: buildTmdbImageUrl(credit.poster_path),
+    release_date: credit.release_date,
+    first_air_date: credit.first_air_date,
+    media_type: mediaType,
+  }));
+}
+
 function getStringProperty(value: Record<string, unknown>, key: string): string | null | undefined {
   const property = value[key];
   return typeof property === "string" || property === null ? property : undefined;
@@ -210,13 +225,27 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 404, message: "Actor not found" });
     }
 
+    if (projection === "actor-page") {
+      const actorCredits = [
+        ...getActorPageCredits(actor.movie_credits, "movie"),
+        ...getActorPageCredits(actor.tv_credits, "tv"),
+      ];
+
+      return actorPageResponse(
+        actor,
+        actorCredits,
+        voiceRoles,
+        buildTmdbImageUrl(getStringProperty(actor, "profile_path")),
+      );
+    }
+
     const actorCredits = [
-      ...getCastMembers(actor.movie_credits).map((x) => ({
-        ...x,
+      ...getCastMembers(actor.movie_credits).map((credit) => ({
+        ...credit,
         media_type: "movie",
       })),
-      ...getCastMembers(actor.tv_credits).map((x) => ({
-        ...x,
+      ...getCastMembers(actor.tv_credits).map((credit) => ({
+        ...credit,
         media_type: "tv",
       })),
     ].map((castMember) => ({
@@ -237,7 +266,7 @@ export default defineEventHandler(async (event) => {
       },
       voiceActors: voiceRoles,
     };
-    return projection === "actor-page" ? actorPageResponse(response) : response;
+    return response;
   } catch (error: unknown) {
     if (hasStatusCode(error)) throw error;
     console.error("Error in actor route:", error);
