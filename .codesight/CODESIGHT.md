@@ -5,7 +5,7 @@
 
 > 82 routes | 19 models | 197 components | 102 lib files | 63 env vars | 15 middleware | 30% test coverage
 > **Token savings:** this file is ~17,000 tokens. Without it, AI exploration would cost ~161,800 tokens. **Saves ~144,800 tokens per conversation.**
-> **Last scanned:** 2026-10-18 12:30 — re-run after significant changes
+> **Last scanned:** 2026-10-18 12:55 — re-run after significant changes
 
 ---
 
@@ -675,7 +675,7 @@
 - `packages/og-image/src/voice-actor.ts` — function voiceActorGenerator: (params) => void, interface VoiceActorOgParams
 - `packages/shared-logic/src/composables/useActorData.ts`
   - function fetchActorData: (id, options) => Promise<ActorDataPayload | null>
-  - function useActorData: (initialData?) => void
+  - function useActorData: (initialData?, options) => void
   - type ActorResponse
   - type ActorDataPayload
 - `packages/shared-logic/src/composables/useAdvertisementData.ts` — function fetchAdvertisementData: (id, locale?) => Promise<AdvertisementResponse | null>

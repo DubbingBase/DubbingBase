@@ -245,7 +245,7 @@
 - `packages/og-image/src/voice-actor.ts` — function voiceActorGenerator: (params) => void, interface VoiceActorOgParams
 - `packages/shared-logic/src/composables/useActorData.ts`
   - function fetchActorData: (id, options) => Promise<ActorDataPayload | null>
-  - function useActorData: (initialData?) => void
+  - function useActorData: (initialData?, options) => void
   - type ActorResponse
   - type ActorDataPayload
 - `packages/shared-logic/src/composables/useAdvertisementData.ts` — function fetchAdvertisementData: (id, locale?) => Promise<AdvertisementResponse | null>
