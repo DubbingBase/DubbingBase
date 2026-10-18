@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 82 routes | 19 models | 197 components | 103 lib files | 63 env vars | 15 middleware | 30% test coverage
-> **Token savings:** this file is ~17,000 tokens. Without it, AI exploration would cost ~162,000 tokens. **Saves ~145,000 tokens per conversation.**
-> **Last scanned:** 2026-10-18 17:57 — re-run after significant changes
+> 82 routes | 19 models | 197 components | 104 lib files | 63 env vars | 17 middleware | 30% test coverage
+> **Token savings:** this file is ~17,100 tokens. Without it, AI exploration would cost ~162,800 tokens. **Saves ~145,700 tokens per conversation.**
+> **Last scanned:** 2026-10-18 18:57 — re-run after significant changes
 
 ---
 
@@ -471,6 +471,7 @@
 - `apps/website/server/utils/api/tmdb.ts` — class TMDBClient
 - `apps/website/server/utils/api/toy.ts` — class ToyClient
 - `apps/website/server/utils/api/tvdb.ts` — class TVDBClient, const TVDB_AUTH_TOKEN_NAMESPACE
+- `apps/website/server/utils/auth-session.ts` — function hasSupabaseAuthCookie: (cookieHeader, cookiePrefix) => boolean
 - `apps/website/server/utils/auth.ts` — function requireUser: (event) => User, function requireAdmin: (event) => User
 - `apps/website/server/utils/background.ts` — function scheduleBackgroundTask: (event, task, label) => void
 - `apps/website/server/utils/cache/constants.ts`
@@ -820,6 +821,8 @@
 - auth — `apps/mobile/src/stores/auth.ts`
 - generate-social-content.post — `apps/website/server/api/generate-social-content.post.ts`
 - auth — `apps/website/server/middleware/auth.ts`
+- auth-session.test — `apps/website/server/utils/auth-session.test.ts`
+- auth-session — `apps/website/server/utils/auth-session.ts`
 - auth — `apps/website/server/utils/auth.ts`
 - auth — `apps/website/src/middleware/auth.ts`
 - authenticated-fetch — `apps/website/src/plugins/authenticated-fetch.ts`
@@ -882,7 +885,7 @@
 # Test Coverage
 
 > **30%** of routes and models are covered by tests
-> 94 test files found
+> 95 test files found
 
 ## Covered Routes
 
