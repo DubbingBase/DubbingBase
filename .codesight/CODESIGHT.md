@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 82 routes | 19 models | 197 components | 105 lib files | 63 env vars | 17 middleware | 30% test coverage
-> **Token savings:** this file is ~17,200 tokens. Without it, AI exploration would cost ~163,100 tokens. **Saves ~145,900 tokens per conversation.**
-> **Last scanned:** 2026-10-18 22:08 — re-run after significant changes
+> 82 routes | 19 models | 197 components | 104 lib files | 63 env vars | 16 middleware | 29% test coverage
+> **Token savings:** this file is ~17,100 tokens. Without it, AI exploration would cost ~162,600 tokens. **Saves ~145,400 tokens per conversation.**
+> **Last scanned:** 2026-10-18 22:30 — re-run after significant changes
 
 ---
 
@@ -84,7 +84,7 @@
 - `GET` `/api/toy/:id` params(id) [queue]
 - `GET` `/api/trending/games` [cache]
 - `GET` `/api/trending/movies` [cache]
-- `GET` `/api/trending/shows` [cache] ✓
+- `GET` `/api/trending/shows` [cache]
 - `GET` `/api/trending/voice-actors`
 - `POST` `/api/update-review-status` [db]
 - `POST` `/api/update-user-profile`
@@ -583,10 +583,6 @@
   - function createMediaResponseError: (provider, response) => Error
   - function fetchMediaRequest: (input, init?) => Promise<Response>
   - class RetryableMediaRequestError
-- `apps/website/server/utils/route-cpu-diagnostics.ts`
-  - function routeCpuFamily: (pathname) => string
-  - function createRouteCpuSample: (pathname, method, now) => void
-  - interface RouteCpuSample
 - `apps/website/server/utils/services/media-preparation.ts`
   - function checkMediaDubbingSections: (options) => Promise<CheckSectionsResult>
   - function checkGameDubbingSections: (options) => Promise<CheckSectionsResult>
@@ -840,7 +836,6 @@
 - 00-cache — `apps/website/server/middleware/00-cache.ts`
 - 00-e2e-mock — `apps/website/server/middleware/00-e2e-mock.ts`
 - 01-locale-redirect — `apps/website/server/middleware/01-locale-redirect.ts`
-- 99-route-cpu-diagnostic — `apps/website/server/middleware/99-route-cpu-diagnostic.ts`
 - cache-headers-middleware.test — `apps/website/server/utils/cache/cache-headers-middleware.test.ts`
 - admin — `apps/website/src/middleware/admin.ts`
 - 20260618000000_migrate_to_pgmq — `packages/database/supabase/migrations/20260618000000_migrate_to_pgmq.sql`
@@ -892,8 +887,8 @@
 
 # Test Coverage
 
-> **30%** of routes and models are covered by tests
-> 96 test files found
+> **29%** of routes and models are covered by tests
+> 95 test files found
 
 ## Covered Routes
 
@@ -909,7 +904,6 @@
 - POST:/api/prepare_game
 - POST:/api/process-media-queue
 - POST:/api/submit-task
-- GET:/api/trending/shows
 - POST:/api/update-voice-actor
 - POST:/api/upload-profile-picture
 
