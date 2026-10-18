@@ -27,6 +27,7 @@ type ActorVoiceRole = {
 };
 
 export type ActorResponse = {
+  filmographyCount?: number;
   actor: {
     id: number;
     name: string;
@@ -56,15 +57,20 @@ export type ActorResponse = {
 export type ActorDataPayload = {
   actor?: ActorResponse["actor"];
   voiceRoles: NonNullable<ActorResponse["actor"]["voice_roles"]>;
+  filmographyCount?: number;
 };
 
 export async function fetchActorData(
   id: string | number,
-  options: { projection?: "actor-page" } = {},
+  options: { projection?: "actor-page"; filmographyPage?: number } = {},
 ): Promise<ActorDataPayload | null> {
   try {
+    const query: Record<string, string | number> = {};
+    if (options.projection) query.projection = options.projection;
+    if (options.filmographyPage !== undefined) query.filmographyPage = options.filmographyPage;
+
     const response = await $fetch<ActorResponse>(`/api/actor/${id}`, {
-      ...(options.projection ? { query: { projection: options.projection } } : {}),
+      ...(Object.keys(query).length > 0 ? { query } : {}),
     });
 
     if (!response || !response.actor) {
@@ -75,6 +81,9 @@ export async function fetchActorData(
     return {
       actor: response.actor,
       voiceRoles: response.actor.voice_roles || [],
+      ...(response.filmographyCount !== undefined
+        ? { filmographyCount: response.filmographyCount }
+        : {}),
     };
   } catch (e) {
     console.error("fetchActorData error:", e);
@@ -94,19 +103,55 @@ export function useActorData(
     initial?.voiceRoles || [],
   );
   const loading = ref<boolean>(!initial);
+  const filmographyCount = ref(
+    initial?.filmographyCount ?? initial?.actor?.credits.cast.length ?? 0,
+  );
+  const filmographyComplete = ref(
+    Boolean(initial?.actor && initial.filmographyCount === undefined),
+  );
   const searchQuery = ref("");
+
+  const applyPayload = (payload: ActorDataPayload) => {
+    actor.value = payload.actor;
+    voiceRoles.value = payload.voiceRoles || [];
+    filmographyCount.value = payload.filmographyCount ?? payload.actor?.credits.cast.length ?? 0;
+    filmographyComplete.value = payload.filmographyCount === undefined;
+    loading.value = false;
+  };
 
   watch(
     () => unref(initialData),
     (payload) => {
-      if (payload) {
-        actor.value = payload.actor;
-        voiceRoles.value = payload.voiceRoles || [];
-        loading.value = false;
-      }
+      if (payload) applyPayload(payload);
     },
-    { immediate: true, deep: true },
+    { immediate: true },
   );
+
+  let fullFilmographyRequest: Promise<boolean> | undefined;
+
+  const loadActorData = async (id: string | number): Promise<boolean> => {
+    if (filmographyComplete.value) return true;
+    if (fullFilmographyRequest) return fullFilmographyRequest;
+
+    const request = (async () => {
+      if (!actor.value) loading.value = true;
+
+      try {
+        const payload = await fetchActorData(id, { projection: "actor-page" });
+        if (!payload) return false;
+        applyPayload(payload);
+        return true;
+      } catch (error) {
+        console.error("Error fetching actor:", error);
+        return false;
+      } finally {
+        loading.value = false;
+        fullFilmographyRequest = undefined;
+      }
+    })();
+    fullFilmographyRequest = request;
+    return request;
+  };
 
   const availableLanguages = computed(() => {
     if (!voiceRoles.value) return [];
@@ -130,24 +175,6 @@ export function useActorData(
     },
     { immediate: true },
   );
-
-  const loadActorData = async (id: string | number) => {
-    loading.value = true;
-
-    try {
-      const payload = await fetchActorData(id);
-
-      if (!payload) return;
-
-      actor.value = payload.actor;
-      voiceRoles.value = payload.voiceRoles;
-    } catch (error) {
-      console.error("Error fetching actor:", error);
-      throw error;
-    } finally {
-      loading.value = false;
-    }
-  };
 
   const filteredCredits = computed(() => {
     if (!actor.value?.credits?.cast) return [];
@@ -180,7 +207,7 @@ export function useActorData(
 
     let items = filteredCredits.value;
     const pagination = unref(options.filmographyPagination);
-    if (pagination) {
+    if (pagination && filmographyComplete.value) {
       // Filter the complete collection before enriching only the visible page.
       const start = (pagination.page - 1) * pagination.pageSize;
       items = items.slice(start, start + pagination.pageSize);
@@ -242,6 +269,8 @@ export function useActorData(
     actor,
     voiceRoles,
     loading,
+    filmographyCount,
+    filmographyComplete,
     searchQuery,
     filteredCredits,
     enhancedFilmography,

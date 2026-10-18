@@ -10,13 +10,14 @@ function pickFields(value: Record<string, unknown>, fields: readonly string[]) {
   return result;
 }
 
-// Keep all entries used for search, language selection and pagination. Raw
-// provider credits and editorial metadata remain in the default API response.
+// Keep only fields used by actor-page rendering. Raw provider credits and
+// editorial metadata remain in the default API response.
 export function actorPageResponse(
   actor: Record<string, unknown>,
   actorCredits: Record<string, unknown>[],
   voiceRoles: Record<string, unknown>[],
   profilePath: string | null,
+  options?: { filmographyCount: number },
 ) {
   const projectedVoiceRoles = voiceRoles.map((role) => ({
     ...pickFields(role, ["id", "performance"]),
@@ -42,6 +43,7 @@ export function actorPageResponse(
   projectedActor.profile_path = profilePath;
 
   return {
+    ...(options ? { filmographyCount: options.filmographyCount } : {}),
     actor: {
       ...projectedActor,
       credits: { cast: actorCredits },
