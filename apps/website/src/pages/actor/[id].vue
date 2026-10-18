@@ -187,6 +187,7 @@
           <PaginatedResponsiveGrid
             v-else
             :items="filmographyItems"
+            :total-items="filmographyTotal"
             :page="filmographyPage"
             :page-size="12"
             grid-class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
@@ -370,6 +371,9 @@ const { data: initialData } = await useAsyncData(
   },
 );
 
+const { page: voicesPage, setPage: setVoicesPage } = useUrlPagination("voicesPage");
+const { page: filmographyPage, setPage: setFilmographyPage } = useUrlPagination("filmographyPage");
+
 const {
   actor,
   loading,
@@ -377,12 +381,13 @@ const {
   availableLanguages,
   selectedLanguage,
   filteredUniqueVoiceActorsByLanguage,
+  filteredCredits,
   enhancedFilmography,
-} = useActorData(initialData);
+} = useActorData(initialData, {
+  filmographyPagination: computed(() => ({ page: filmographyPage.value, pageSize: 12 })),
+});
 
 const searchInput = ref("");
-const { page: voicesPage, setPage: setVoicesPage } = useUrlPagination("voicesPage");
-const { page: filmographyPage, setPage: setFilmographyPage } = useUrlPagination("filmographyPage");
 const debouncedSearch = refDebounced(searchInput, 150);
 watch(debouncedSearch, (val) => {
   searchQuery.value = val;
@@ -395,7 +400,7 @@ watch([searchQuery, selectedLanguage], () => {
 const voiceActorItems = filteredUniqueVoiceActorsByLanguage;
 const voiceActorsTotal = computed(() => voiceActorItems.value.length);
 const filmographyItems = enhancedFilmography;
-const filmographyTotal = computed(() => filmographyItems.value.length);
+const filmographyTotal = computed(() => filteredCredits.value.length);
 
 useHead({
   titleTemplate: null,

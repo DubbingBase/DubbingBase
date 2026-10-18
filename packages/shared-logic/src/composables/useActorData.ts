@@ -81,7 +81,12 @@ export async function fetchActorData(
   }
 }
 
-export function useActorData(initialData?: MaybeRef<ActorDataPayload | null | undefined>) {
+export function useActorData(
+  initialData?: MaybeRef<ActorDataPayload | null | undefined>,
+  options: {
+    filmographyPagination?: MaybeRef<{ page: number; pageSize: number }>;
+  } = {},
+) {
   const initial = unref(initialData);
   const actor = ref<ActorResponse["actor"] | undefined>(initial?.actor);
   const voiceRoles = ref<NonNullable<ActorResponse["actor"]["voice_roles"]>>(
@@ -163,9 +168,6 @@ export function useActorData(initialData?: MaybeRef<ActorDataPayload | null | un
   const enhancedFilmography = computed(() => {
     if (!actor.value?.credits?.cast) return [];
 
-    const query = searchQuery.value.trim().toLowerCase();
-    const cast = actor.value.credits.cast;
-
     const rolesByMedia = new Map<number, ActorVoiceRole[]>();
     for (const role of voiceRoles.value) {
       if (!role.mediaDetails?.id) continue;
@@ -174,14 +176,12 @@ export function useActorData(initialData?: MaybeRef<ActorDataPayload | null | un
       else rolesByMedia.set(role.mediaDetails.id, [role]);
     }
 
-    let items = cast;
-    if (query) {
-      items = cast.filter((item) => {
-        const title = (item.title || "").trim().toLowerCase();
-        const name = (item.name || "").trim().toLowerCase();
-        const character = (item.character || "").toLowerCase();
-        return title.includes(query) || name.includes(query) || character.includes(query);
-      });
+    let items = filteredCredits.value;
+    const pagination = unref(options.filmographyPagination);
+    if (pagination) {
+      // Filter the complete collection before enriching only the visible page.
+      const start = (pagination.page - 1) * pagination.pageSize;
+      items = items.slice(start, start + pagination.pageSize);
     }
 
     return items.map((item) => {
