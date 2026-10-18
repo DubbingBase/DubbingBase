@@ -224,10 +224,12 @@ function getActorImageAttrs(
     class: imageClass,
     decoding: "async",
     loading: "lazy",
-    src: imageProcessor(source, imageModifiers, {
-      provider: undefined,
-      preset: undefined,
-    }),
+    src:
+      sizes.src ??
+      imageProcessor(source, imageModifiers, {
+        provider: undefined,
+        preset: undefined,
+      }),
   };
 }
 
