@@ -36,8 +36,6 @@ function getActorPageCredits(value: unknown, mediaType: "movie" | "tv") {
     id: credit.id,
     title: credit.title,
     name: credit.name,
-    original_title: credit.original_title,
-    original_name: credit.original_name,
     character: credit.character,
     poster_path: buildTmdbImageUrl(credit.poster_path),
     release_date: credit.release_date,
@@ -77,13 +75,27 @@ async function getVoiceRoles(
   actorId: number,
   tmdbClient: ReturnType<typeof useTmdbClient>,
   acceptLanguage?: string,
-  personRequest?: ReturnType<typeof getActor>,
   actorPageProjection = false,
 ) {
   try {
-    const workData = actorPageProjection
-      ? await getActorPageWorkByActor(actorId)
-      : await getWorkByActor(actorId);
+    if (actorPageProjection) {
+      const workData = await getActorPageWorkByActor(actorId);
+      return workData.map((row) => ({
+        id: row.id,
+        performance: row.performance,
+        dubbing_projects: row.dubbing_projects,
+        voice_actors: row.voice_actors
+          ? [
+              {
+                ...row.voice_actors,
+                profile_picture: buildSupabaseImageUrl(row.voice_actors.profile_picture),
+              },
+            ]
+          : [],
+      }));
+    }
+
+    const workData = await getWorkByActor(actorId);
     if (!workData.length) return [];
 
     // Deduplicate media details requests
@@ -101,32 +113,8 @@ async function getVoiceRoles(
       }
     }
 
-    // Person credits already contain media summaries. Reuse complete entries
-    // on actor pages, and fetch only titles missing from those credits.
+    // Fetch only summaries needed by the full API response.
     const mediaMap = new Map<string, Record<string, unknown>>();
-    const person = personRequest ? await personRequest : null;
-    if (person) {
-      const groups: Array<{ contentType: "movie" | "tv"; cast: TmdbCastMember[] }> = [
-        { contentType: "movie", cast: getCastMembers(person.movie_credits) },
-        { contentType: "tv", cast: getCastMembers(person.tv_credits) },
-      ];
-      for (const { contentType, cast } of groups) {
-        const fields =
-          contentType === "movie"
-            ? ["title", "original_title", "release_date", "overview"]
-            : ["name", "original_name", "first_air_date", "overview"];
-        for (const credit of cast) {
-          const id = getNumberProperty(credit, "id");
-          if (id === undefined) continue;
-          const key = `${contentType}:${id}`;
-          if (!mediaKeySet.has(key) || !fields.every((field) => typeof credit[field] === "string"))
-            continue;
-          if (credit.poster_path !== null && typeof credit.poster_path !== "string") continue;
-          mediaMap.set(key, credit);
-        }
-      }
-    }
-
     // Fetch unique missing media details in concurrency-limited batches.
     const missingMediaItems = uniqueMediaItems.filter(
       ({ contentId, contentType }) => !mediaMap.has(`${contentType}:${contentId}`),
@@ -216,13 +204,7 @@ export default defineEventHandler(async (event) => {
     const personRequest = getActor(actorId, tmdbClient, acceptLanguage);
     const [actor, voiceRoles] = await Promise.all([
       personRequest,
-      getVoiceRoles(
-        actorId,
-        tmdbClient,
-        acceptLanguage,
-        projection === "actor-page" ? personRequest : undefined,
-        projection === "actor-page",
-      ),
+      getVoiceRoles(actorId, tmdbClient, acceptLanguage, projection === "actor-page"),
     ]);
 
     if (!actor) {

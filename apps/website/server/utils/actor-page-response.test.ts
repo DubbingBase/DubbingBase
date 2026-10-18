@@ -189,7 +189,6 @@ describe("actor page API projection", () => {
         },
         voice_roles: expectedRoles(),
       },
-      voiceActors: expectedRoles(),
     });
     expect(mocks.getActorPageWorkByActor).toHaveBeenCalledOnce();
     expect(mocks.getWorkByActor).not.toHaveBeenCalled();
@@ -200,7 +199,7 @@ describe("actor page API projection", () => {
     expect(await response.json()).toHaveProperty("actor.movie_credits.crew.0.id", 90);
   });
 
-  it("reuses complete person-credit summaries without fetching each dubbed title", async () => {
+  it("joins page roles by content id without returning media summaries", async () => {
     mocks.getPersonWithCredits.mockResolvedValueOnce({
       id: 31,
       name: "Actor",
@@ -244,23 +243,11 @@ describe("actor page API projection", () => {
         voice_roles: [
           {
             id: 1,
-            mediaDetails: {
-              id: 10,
-              title: "Movie",
-              original_title: "Original movie",
-              poster_path: "https://image.tmdb.org/t/p/w500/movie.png",
-              overview: "Movie synopsis",
-            },
+            dubbing_projects: { content_id: 10 },
           },
           {
             id: 2,
-            mediaDetails: {
-              id: 20,
-              title: "Show",
-              original_title: "Original show",
-              release_date: "2022-01-01",
-              overview: "Show synopsis",
-            },
+            dubbing_projects: { content_id: 20 },
           },
         ],
       },
@@ -269,7 +256,7 @@ describe("actor page API projection", () => {
     expect(mocks.getPersonWithCredits).toHaveBeenCalledTimes(1);
   });
 
-  it("fetches missing or incomplete summaries once per title while retaining every role", async () => {
+  it("retains all role ids without fetching unused media summaries", async () => {
     mocks.getPersonWithCredits.mockResolvedValueOnce({
       id: 31,
       name: "Actor",
@@ -318,16 +305,14 @@ describe("actor page API projection", () => {
     expect(await response.json()).toMatchObject({
       actor: {
         voice_roles: [
-          { id: 1, mediaDetails: { title: "Movie" } },
-          { id: 2, mediaDetails: { title: "Media 20" } },
-          { id: 3, mediaDetails: { title: "Media 20" } },
-          { id: 4, mediaDetails: { title: "Media 30" } },
+          { id: 1, dubbing_projects: { content_id: 10 } },
+          { id: 2, dubbing_projects: { content_id: 20 } },
+          { id: 3, dubbing_projects: { content_id: 20 } },
+          { id: 4, dubbing_projects: { content_id: 30 } },
         ],
       },
     });
-    expect(mocks.fetchMediaSummary).toHaveBeenCalledTimes(2);
-    expect(mocks.fetchMediaSummary).toHaveBeenCalledWith(20, "tv", undefined);
-    expect(mocks.fetchMediaSummary).toHaveBeenCalledWith(30, "movie", undefined);
+    expect(mocks.fetchMediaSummary).not.toHaveBeenCalled();
   });
 });
 
@@ -336,7 +321,7 @@ function expectedRoles() {
     {
       id: 1,
       performance: "Lead",
-      dubbing_projects: { language: "fr-FR" },
+      dubbing_projects: { language: "fr-FR", content_id: 10 },
       voice_actors: [
         {
           id: 5,
@@ -345,30 +330,12 @@ function expectedRoles() {
           profile_picture: "https://example.com/voice.png",
         },
       ],
-      mediaDetails: {
-        id: 10,
-        title: "Media 10",
-        original_title: "Original 10",
-        poster_path: null,
-        release_date: "2020-01-01",
-        media_type: "movie",
-        overview: "Media overview",
-      },
     },
     {
       id: 2,
       performance: "Guest",
-      dubbing_projects: { language: "es-ES" },
+      dubbing_projects: { language: "es-ES", content_id: 20 },
       voice_actors: [],
-      mediaDetails: {
-        id: 20,
-        title: "Media 20",
-        original_title: "Original 20",
-        poster_path: null,
-        release_date: "2020-01-01",
-        media_type: "tv",
-        overview: "Media overview",
-      },
     },
   ];
 }

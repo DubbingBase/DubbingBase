@@ -31,8 +31,8 @@ export async function getActorPageWorkByActor(actorId: number) {
     .select(
       `id,
       performance,
-      voice_actors(id, firstname, lastname, profile_picture, voice_actor_name),
-      dubbing_projects(language, content_id, content_type)`,
+      voice_actors(id, firstname, lastname, profile_picture),
+      dubbing_projects(language, content_id)`,
     )
     .eq("actor_id", actorId);
 
