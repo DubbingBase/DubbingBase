@@ -13,10 +13,14 @@ const mocks = vi.hoisted(() => ({
   getPersonWithCredits: vi.fn(),
   fetchMediaSummary: vi.fn(),
   getWorkByActor: vi.fn(),
+  getActorPageWorkByActor: vi.fn(),
 }));
 
 vi.mock("./index", () => ({ useTmdbClient: () => mocks }));
-vi.mock("./db/queries", () => ({ getWorkByActor: mocks.getWorkByActor }));
+vi.mock("./db/queries", () => ({
+  getWorkByActor: mocks.getWorkByActor,
+  getActorPageWorkByActor: mocks.getActorPageWorkByActor,
+}));
 
 let handler: typeof import("../api/actor/[id].get").default;
 
@@ -76,7 +80,7 @@ beforeEach(() => {
       crew: [],
     },
   });
-  mocks.getWorkByActor.mockResolvedValue([
+  const actorWorkRows = [
     {
       id: 1,
       performance: "Lead",
@@ -97,7 +101,9 @@ beforeEach(() => {
       dubbing_projects: { id: 101, content_id: 20, content_type: "tv", language: "es-ES" },
       voice_actors: null,
     },
-  ]);
+  ];
+  mocks.getWorkByActor.mockResolvedValue(actorWorkRows);
+  mocks.getActorPageWorkByActor.mockResolvedValue(actorWorkRows);
   mocks.fetchMediaSummary.mockImplementation(async (id: number) => ({
     id,
     title: `Media ${id}`,
@@ -136,6 +142,8 @@ describe("actor page API projection", () => {
         ],
       },
     });
+    expect(mocks.getWorkByActor).toHaveBeenCalledOnce();
+    expect(mocks.getActorPageWorkByActor).not.toHaveBeenCalled();
   });
 
   it("preserves complete display, search and language data while omitting duplicate and unused fields", async () => {
@@ -183,6 +191,8 @@ describe("actor page API projection", () => {
       },
       voiceActors: expectedRoles(),
     });
+    expect(mocks.getActorPageWorkByActor).toHaveBeenCalledOnce();
+    expect(mocks.getWorkByActor).not.toHaveBeenCalled();
   });
 
   it("retains the full response for unrecognized projections", async () => {
@@ -277,7 +287,7 @@ describe("actor page API projection", () => {
       },
       tv_credits: { cast: [{ id: 20, name: "Incomplete show" }] },
     });
-    mocks.getWorkByActor.mockResolvedValueOnce([
+    mocks.getActorPageWorkByActor.mockResolvedValueOnce([
       {
         id: 1,
         performance: "Lead",

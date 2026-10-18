@@ -373,7 +373,17 @@ function getActorImageAttrs(
   src: string | null | undefined,
   alt: string | undefined,
   imageClass: string,
-) {
+): {
+  "data-nuxt-img": "";
+  sizes: string | undefined;
+  srcset: string;
+  onerror?: string;
+  alt: string | undefined;
+  class: string;
+  decoding: "async";
+  loading: "lazy";
+  src: string;
+} {
   const source = src ?? "";
   const sizes = imageProcessor.getSizes(source, {
     provider: undefined,
