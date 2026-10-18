@@ -31,8 +31,13 @@ function getCastMembers(value: unknown): TmdbCastMember[] {
   return value.cast.filter(isTmdbCastMember);
 }
 
-function getActorPageCredits(value: unknown, mediaType: "movie" | "tv") {
-  return getCastMembers(value).map((credit) => ({
+function projectActorPageCredits(
+  credits: TmdbCastMember[],
+  mediaType: "movie" | "tv",
+  start: number,
+  end: number,
+) {
+  return credits.slice(start, end).map((credit) => ({
     id: credit.id,
     title: credit.title,
     name: credit.name,
@@ -42,6 +47,37 @@ function getActorPageCredits(value: unknown, mediaType: "movie" | "tv") {
     first_air_date: credit.first_air_date,
     media_type: mediaType,
   }));
+}
+
+function getActorPageCredits(movieCreditsValue: unknown, tvCreditsValue: unknown, page?: number) {
+  const movieCredits = getCastMembers(movieCreditsValue);
+  const tvCredits = getCastMembers(tvCreditsValue);
+  const filmographyCount = movieCredits.length + tvCredits.length;
+  const pageSize = 12;
+  const start = page === undefined ? 0 : (page - 1) * pageSize;
+  const end = page === undefined ? filmographyCount : start + pageSize;
+  const movieEnd = Math.min(end, movieCredits.length);
+  const tvStart = Math.max(0, start - movieCredits.length);
+  const tvEnd = Math.max(0, end - movieCredits.length);
+
+  return {
+    filmographyCount,
+    credits: [
+      ...projectActorPageCredits(
+        movieCredits,
+        "movie",
+        Math.min(start, movieCredits.length),
+        movieEnd,
+      ),
+      ...projectActorPageCredits(tvCredits, "tv", tvStart, tvEnd),
+    ],
+  };
+}
+
+function readPage(value: unknown): number | undefined {
+  const pageValue = Array.isArray(value) ? value[0] : value;
+  const page = Number.parseInt(String(pageValue ?? ""), 10);
+  return Number.isInteger(page) && page > 0 ? page : undefined;
 }
 
 function getStringProperty(value: Record<string, unknown>, key: string): string | null | undefined {
@@ -198,7 +234,10 @@ export default defineEventHandler(async (event) => {
   }
   const acceptLanguage = getHeader(event, "accept-language") || undefined;
   const tmdbClient = useTmdbClient();
-  const projection = getQuery(event).projection;
+  const query = getQuery(event);
+  const projection = query.projection;
+  const filmographyPage =
+    query.filmographyPage === undefined ? undefined : (readPage(query.filmographyPage) ?? 1);
 
   try {
     const personRequest = getActor(actorId, tmdbClient, acceptLanguage);
@@ -212,16 +251,20 @@ export default defineEventHandler(async (event) => {
     }
 
     if (projection === "actor-page") {
-      const actorCredits = [
-        ...getActorPageCredits(actor.movie_credits, "movie"),
-        ...getActorPageCredits(actor.tv_credits, "tv"),
-      ];
+      const actorPageCredits = getActorPageCredits(
+        actor.movie_credits,
+        actor.tv_credits,
+        filmographyPage,
+      );
 
       return actorPageResponse(
         actor,
-        actorCredits,
+        actorPageCredits.credits,
         voiceRoles,
         buildTmdbImageUrl(getStringProperty(actor, "profile_path")),
+        filmographyPage === undefined
+          ? undefined
+          : { filmographyCount: actorPageCredits.filmographyCount },
       );
     }
 

@@ -158,7 +158,7 @@
             :page="filmographyPage"
             :page-size="12"
             grid-class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
-            @update:page="setFilmographyPage"
+            @update:page="setFilmographyPageWithData"
           >
             <template #default>
               <div class="contents" v-html="filmographyCardsHtml" @click="navigateActorCard" />
@@ -229,29 +229,36 @@ function getActorImageAttrs(
 
 const id = String(route.params.id);
 const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
+const { page: voicesPage, setPage: setVoicesPage } = useUrlPagination("voicesPage");
+const { page: filmographyPage, setPage: setFilmographyPageUrl } =
+  useUrlPagination("filmographyPage");
 
 const { data: initialData } = await useAsyncData(
   `actor-${id}`,
-  () => fetchActorData(id, { projection: "actor-page" }),
+  () =>
+    fetchActorData(id, {
+      projection: "actor-page",
+      filmographyPage: filmographyPage.value,
+    }),
   {
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
-
-const { page: voicesPage, setPage: setVoicesPage } = useUrlPagination("voicesPage");
-const { page: filmographyPage, setPage: setFilmographyPage } = useUrlPagination("filmographyPage");
 
 if (import.meta.server) prepareActorSsrData(initialData.value);
 
 const {
   actor,
   loading,
+  filmographyCount,
+  filmographyComplete,
   searchQuery,
   availableLanguages,
   selectedLanguage,
   filteredUniqueVoiceActorsByLanguage,
   filteredCredits,
   enhancedFilmography,
+  loadActorData,
 } = useActorData(initialData, {
   filmographyPagination: computed(() => ({
     page: filmographyPage.value,
@@ -261,18 +268,33 @@ const {
 
 const searchInput = ref("");
 const debouncedSearch = refDebounced(searchInput, 150);
-watch(debouncedSearch, (val) => {
+watch(debouncedSearch, async (val) => {
+  if (val.trim() && !filmographyComplete.value) {
+    const loaded = await loadActorData(id);
+    if (!loaded) return;
+  }
+  if (debouncedSearch.value !== val) return;
   searchQuery.value = val;
 });
 watch([searchQuery, selectedLanguage], () => {
   void setVoicesPage(1);
-  void setFilmographyPage(1);
+  void setFilmographyPageUrl(1);
 });
+watch(filmographyPage, () => {
+  if (!filmographyComplete.value) void loadActorData(id);
+});
+
+async function setFilmographyPageWithData(page: number): Promise<void> {
+  if (!filmographyComplete.value && !(await loadActorData(id))) return;
+  await setFilmographyPageUrl(page);
+}
 
 const voiceActorItems = filteredUniqueVoiceActorsByLanguage;
 const voiceActorsTotal = computed(() => voiceActorItems.value.length);
 const filmographyItems = enhancedFilmography;
-const filmographyTotal = computed(() => filteredCredits.value.length);
+const filmographyTotal = computed(() =>
+  filmographyComplete.value ? filteredCredits.value.length : filmographyCount.value,
+);
 const actorGridPlaceholder = [0];
 const voiceActorCardsHtml = computed(() => {
   const start = (voicesPage.value - 1) * 12;
