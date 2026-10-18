@@ -5,7 +5,7 @@
 
 > 82 routes | 19 models | 197 components | 105 lib files | 63 env vars | 17 middleware | 30% test coverage
 > **Token savings:** this file is ~17,200 tokens. Without it, AI exploration would cost ~163,100 tokens. **Saves ~145,900 tokens per conversation.**
-> **Last scanned:** 2026-10-18 21:43 — re-run after significant changes
+> **Last scanned:** 2026-10-18 22:08 — re-run after significant changes
 
 ---
 
@@ -459,7 +459,7 @@
 - `apps/website/server/api/movie/[id].get.ts` — function fetchMovieData: (event, movieId) => void
 - `apps/website/server/api/show/[id].get.ts` — function fetchShowData: (event, showId) => void
 - `apps/website/server/api/trending/games.get.ts` — function getTrendingGamesResponse: (event, language, config, igdbClient, language?) => Promise<IgdbTrendingGamesResult>;
-- `apps/website/server/utils/actor-page-response.ts` — function actorPageResponse: (actor, unknown>, actorCredits, unknown>[], voiceRoles, unknown>[], profilePath) => void
+- `apps/website/server/utils/actor-page-response.ts` — function actorPageResponse: (actor, unknown>, actorCredits, unknown>[], voiceRoles, unknown>[], profilePath, options?) => void
 - `apps/website/server/utils/api/advertisement.ts` — class AdvertisementClient
 - `apps/website/server/utils/api/igdb.ts`
   - function buildIgdbImageUrl: (hash, size) => string

@@ -29,7 +29,7 @@
 - `apps/website/server/api/movie/[id].get.ts` — function fetchMovieData: (event, movieId) => void
 - `apps/website/server/api/show/[id].get.ts` — function fetchShowData: (event, showId) => void
 - `apps/website/server/api/trending/games.get.ts` — function getTrendingGamesResponse: (event, language, config, igdbClient, language?) => Promise<IgdbTrendingGamesResult>;
-- `apps/website/server/utils/actor-page-response.ts` — function actorPageResponse: (actor, unknown>, actorCredits, unknown>[], voiceRoles, unknown>[], profilePath) => void
+- `apps/website/server/utils/actor-page-response.ts` — function actorPageResponse: (actor, unknown>, actorCredits, unknown>[], voiceRoles, unknown>[], profilePath, options?) => void
 - `apps/website/server/utils/api/advertisement.ts` — class AdvertisementClient
 - `apps/website/server/utils/api/igdb.ts`
   - function buildIgdbImageUrl: (hash, size) => string
