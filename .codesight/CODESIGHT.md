@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 82 routes | 19 models | 197 components | 101 lib files | 63 env vars | 15 middleware | 30% test coverage
-> **Token savings:** this file is ~16,900 tokens. Without it, AI exploration would cost ~161,500 tokens. **Saves ~144,600 tokens per conversation.**
-> **Last scanned:** 2026-10-18 07:13 — re-run after significant changes
+> 82 routes | 19 models | 197 components | 102 lib files | 63 env vars | 15 middleware | 30% test coverage
+> **Token savings:** this file is ~17,000 tokens. Without it, AI exploration would cost ~161,800 tokens. **Saves ~144,800 tokens per conversation.**
+> **Last scanned:** 2026-10-18 08:01 — re-run after significant changes
 
 ---
 
@@ -459,6 +459,7 @@
 - `apps/website/server/api/movie/[id].get.ts` — function fetchMovieData: (event, movieId) => void
 - `apps/website/server/api/show/[id].get.ts` — function fetchShowData: (event, showId) => void
 - `apps/website/server/api/trending/games.get.ts` — function getTrendingGamesResponse: (event, language, config, igdbClient, language?) => Promise<IgdbTrendingGamesResult>;
+- `apps/website/server/utils/actor-page-response.ts` — function actorPageResponse: (response) => void
 - `apps/website/server/utils/api/advertisement.ts` — class AdvertisementClient
 - `apps/website/server/utils/api/igdb.ts`
   - function buildIgdbImageUrl: (hash, size) => string
@@ -673,7 +674,7 @@
   - type GeneratorType
 - `packages/og-image/src/voice-actor.ts` — function voiceActorGenerator: (params) => void, interface VoiceActorOgParams
 - `packages/shared-logic/src/composables/useActorData.ts`
-  - function fetchActorData: (id) => Promise<ActorDataPayload | null>
+  - function fetchActorData: (id, options) => Promise<ActorDataPayload | null>
   - function useActorData: (initialData?) => void
   - type ActorResponse
   - type ActorDataPayload
@@ -880,7 +881,7 @@
 # Test Coverage
 
 > **30%** of routes and models are covered by tests
-> 93 test files found
+> 94 test files found
 
 ## Covered Routes
 

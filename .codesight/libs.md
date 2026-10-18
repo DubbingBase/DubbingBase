@@ -29,6 +29,7 @@
 - `apps/website/server/api/movie/[id].get.ts` — function fetchMovieData: (event, movieId) => void
 - `apps/website/server/api/show/[id].get.ts` — function fetchShowData: (event, showId) => void
 - `apps/website/server/api/trending/games.get.ts` — function getTrendingGamesResponse: (event, language, config, igdbClient, language?) => Promise<IgdbTrendingGamesResult>;
+- `apps/website/server/utils/actor-page-response.ts` — function actorPageResponse: (response) => void
 - `apps/website/server/utils/api/advertisement.ts` — class AdvertisementClient
 - `apps/website/server/utils/api/igdb.ts`
   - function buildIgdbImageUrl: (hash, size) => string
@@ -243,7 +244,7 @@
   - type GeneratorType
 - `packages/og-image/src/voice-actor.ts` — function voiceActorGenerator: (params) => void, interface VoiceActorOgParams
 - `packages/shared-logic/src/composables/useActorData.ts`
-  - function fetchActorData: (id) => Promise<ActorDataPayload | null>
+  - function fetchActorData: (id, options) => Promise<ActorDataPayload | null>
   - function useActorData: (initialData?) => void
   - type ActorResponse
   - type ActorDataPayload
