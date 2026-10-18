@@ -24,6 +24,22 @@ export async function getWorkByActor(actorId: number) {
   return data || [];
 }
 
+export async function getActorPageWorkByActor(actorId: number) {
+  const supabase = useSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("work")
+    .select(
+      `id,
+      performance,
+      voice_actors(id, firstname, lastname, profile_picture, voice_actor_name),
+      dubbing_projects(language, content_id, content_type)`,
+    )
+    .eq("actor_id", actorId);
+
+  if (error) return [];
+  return data || [];
+}
+
 export async function getDubbingProjects(contentId: number, contentType: string) {
   const supabase = useSupabaseAdmin();
   const { data, error } = await supabase
