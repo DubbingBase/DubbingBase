@@ -57,9 +57,14 @@ export type ActorDataPayload = {
   voiceRoles: NonNullable<ActorResponse["actor"]["voice_roles"]>;
 };
 
-export async function fetchActorData(id: string | number): Promise<ActorDataPayload | null> {
+export async function fetchActorData(
+  id: string | number,
+  options: { projection?: "actor-page" } = {},
+): Promise<ActorDataPayload | null> {
   try {
-    const response = await $fetch<ActorResponse>(`/api/actor/${id}`);
+    const response = await $fetch<ActorResponse>(`/api/actor/${id}`, {
+      ...(options.projection ? { query: { projection: options.projection } } : {}),
+    });
 
     if (!response || !response.actor) {
       console.error("Actor response is null");

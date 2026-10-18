@@ -2,6 +2,7 @@ import { useTmdbClient } from "../../utils";
 import { getWorkByActor } from "../../utils/db/queries";
 import { buildSupabaseImageUrl } from "../../utils/urls/supabase";
 import { buildTmdbImageUrl } from "../../utils/urls/tmdb";
+import { actorPageResponse } from "../../utils/actor-page-response";
 type TmdbCastMember = Record<string, unknown> & {
   profile_path?: string | null;
   poster_path?: string | null;
@@ -189,7 +190,7 @@ export default defineEventHandler(async (event) => {
       backdrop_path: buildTmdbImageUrl(castMember.backdrop_path),
     }));
 
-    return {
+    const response = {
       actor: {
         ...actor,
         profile_path: buildTmdbImageUrl(getStringProperty(actor, "profile_path")),
@@ -200,6 +201,7 @@ export default defineEventHandler(async (event) => {
       },
       voiceActors: voiceRoles,
     };
+    return getQuery(event).projection === "actor-page" ? actorPageResponse(response) : response;
   } catch (error: unknown) {
     if (hasStatusCode(error)) throw error;
     console.error("Error in actor route:", error);
