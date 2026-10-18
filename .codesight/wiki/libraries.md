@@ -2,9 +2,9 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**102 library files** across 5 modules
+**103 library files** across 5 modules
 
-## Website (62 files)
+## Website (63 files)
 
 - `apps/website/server/utils/cache/wikipedia.ts` — sortLanguagesByPopularity, extractAvailableLanguages, cleanHeadingText, isDubbingSectionHeading, selectDubbingCandidateSections, selectDubbingSections, …
 - `apps/website/server/utils/index.ts` — getCloudflareKv, useCache, useTmdbClient, useTvdbClient, useIgdbClient, useOpenLibraryClient, …
@@ -31,7 +31,7 @@
 - `apps/website/src/utils/voice-actor-og-image.ts` — isVoiceActorOgImagesEnabled, getVoiceActorOgImageMetadata, VoiceActorOgImageMetadata, STATIC_VOICE_ACTOR_OG_IMAGE_URL
 - `apps/website/server/utils/media-queue-readiness.ts` — getReadyMediaQueueNames, MediaQueueName, mediaQueueNames
 - `apps/website/server/utils/media-request.ts` — parseSeasonQuery, parseEpisodeQuery, withMediaServiceTimeout
-- _…and 37 more files_
+- _…and 38 more files_
 
 ## Shared-logic (20 files)
 

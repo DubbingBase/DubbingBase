@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 82 routes | 19 models | 197 components | 102 lib files | 63 env vars | 15 middleware | 30% test coverage
-> **Token savings:** this file is ~17,000 tokens. Without it, AI exploration would cost ~161,800 tokens. **Saves ~144,800 tokens per conversation.**
-> **Last scanned:** 2026-10-18 12:55 — re-run after significant changes
+> 82 routes | 19 models | 197 components | 103 lib files | 63 env vars | 15 middleware | 30% test coverage
+> **Token savings:** this file is ~17,000 tokens. Without it, AI exploration would cost ~162,000 tokens. **Saves ~145,100 tokens per conversation.**
+> **Last scanned:** 2026-10-18 17:14 — re-run after significant changes
 
 ---
 
@@ -641,6 +641,7 @@
 - `apps/website/src/composables/useUrlPagination.ts` — function readUrlPage: (value) => number, function useUrlPagination: (queryKey) => void
 - `apps/website/src/lib/media-editor-routes.ts` — function getMediaEditorRoute: ({...}, mediaId, projectId }) => string | null
 - `apps/website/src/lib/mediaQueue.ts` — function enqueueMedia: (params) => Promise<void>
+- `apps/website/src/utils/actor-ssr-data.ts` — function prepareActorSsrData: (payload) => void
 - `apps/website/src/utils/duplicate-work.ts`
   - function duplicateWorkDraftHasChanges: (initial, current) => boolean
   - function canPrefetchDuplicateWorkPage: (requestSucceeded, currentIndex, groupCount, nextCursor) => boolean
