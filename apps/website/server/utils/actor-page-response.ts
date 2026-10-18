@@ -19,22 +19,14 @@ export function actorPageResponse(
   profilePath: string | null,
 ) {
   const projectedVoiceRoles = voiceRoles.map((role) => ({
-    ...pickFields(role, ["id", "performance", "mediaDetails"]),
+    ...pickFields(role, ["id", "performance"]),
     dubbing_projects: isRecord(role.dubbing_projects)
-      ? pickFields(role.dubbing_projects, ["language"])
+      ? pickFields(role.dubbing_projects, ["language", "content_id"])
       : null,
     voice_actors: Array.isArray(role.voice_actors)
       ? role.voice_actors
           .filter(isRecord)
-          .map((actor) =>
-            pickFields(actor, [
-              "id",
-              "firstname",
-              "lastname",
-              "profile_picture",
-              "voice_actor_name",
-            ]),
-          )
+          .map((actor) => pickFields(actor, ["id", "firstname", "lastname", "profile_picture"]))
       : [],
   }));
 
@@ -55,6 +47,5 @@ export function actorPageResponse(
       credits: { cast: actorCredits },
       voice_roles: projectedVoiceRoles,
     },
-    voiceActors: projectedVoiceRoles,
   };
 }

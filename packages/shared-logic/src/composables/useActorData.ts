@@ -11,17 +11,18 @@ type ActorVoiceRole = {
   id: number;
   performance: string | null;
   voice_actors: ActorVoiceActor[];
-  mediaDetails: {
+  mediaDetails?: {
     id: number;
-    title: string;
-    original_title: string;
-    poster_path: string | null;
-    release_date: string;
-    media_type: string;
-    overview: string;
+    title?: string;
+    original_title?: string;
+    poster_path?: string | null;
+    release_date?: string;
+    media_type?: string;
+    overview?: string;
   } | null;
   dubbing_projects?: {
     language: string;
+    content_id?: number;
   } | null;
 };
 
@@ -49,7 +50,7 @@ export type ActorResponse = {
     };
     voice_roles: ActorVoiceRole[];
   };
-  voiceActors: ActorVoiceRole[];
+  voiceActors?: ActorVoiceRole[];
 };
 
 export type ActorDataPayload = {
@@ -170,10 +171,11 @@ export function useActorData(
 
     const rolesByMedia = new Map<number, ActorVoiceRole[]>();
     for (const role of voiceRoles.value) {
-      if (!role.mediaDetails?.id) continue;
-      const mediaRoles = rolesByMedia.get(role.mediaDetails.id);
+      const mediaId = role.dubbing_projects?.content_id ?? role.mediaDetails?.id;
+      if (!mediaId) continue;
+      const mediaRoles = rolesByMedia.get(mediaId);
       if (mediaRoles) mediaRoles.push(role);
-      else rolesByMedia.set(role.mediaDetails.id, [role]);
+      else rolesByMedia.set(mediaId, [role]);
     }
 
     let items = filteredCredits.value;
