@@ -189,6 +189,136 @@ describe("actor page API projection", () => {
     const response = await request("other");
     expect(await response.json()).toHaveProperty("actor.movie_credits.crew.0.id", 90);
   });
+
+  it("reuses complete person-credit summaries without fetching each dubbed title", async () => {
+    mocks.getPersonWithCredits.mockResolvedValueOnce({
+      id: 31,
+      name: "Actor",
+      movie_credits: {
+        cast: [
+          {
+            id: 10,
+            title: "Movie",
+            original_title: "Original movie",
+            release_date: "2020-01-01",
+            overview: "Movie synopsis",
+            poster_path: "/movie.png",
+          },
+          {
+            id: 20,
+            title: "Different movie",
+            original_title: "Different movie",
+            release_date: "2021-01-01",
+            overview: "Other synopsis",
+            poster_path: null,
+          },
+        ],
+      },
+      tv_credits: {
+        cast: [
+          {
+            id: 20,
+            name: "Show",
+            original_name: "Original show",
+            first_air_date: "2022-01-01",
+            overview: "Show synopsis",
+            poster_path: "/show.png",
+          },
+        ],
+      },
+    });
+    const response = await request("actor-page");
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      actor: {
+        voice_roles: [
+          {
+            id: 1,
+            mediaDetails: {
+              id: 10,
+              title: "Movie",
+              original_title: "Original movie",
+              poster_path: "https://image.tmdb.org/t/p/w500/movie.png",
+              overview: "Movie synopsis",
+            },
+          },
+          {
+            id: 2,
+            mediaDetails: {
+              id: 20,
+              title: "Show",
+              original_title: "Original show",
+              release_date: "2022-01-01",
+              overview: "Show synopsis",
+            },
+          },
+        ],
+      },
+    });
+    expect(mocks.fetchMediaSummary).not.toHaveBeenCalled();
+    expect(mocks.getPersonWithCredits).toHaveBeenCalledTimes(1);
+  });
+
+  it("fetches missing or incomplete summaries once per title while retaining every role", async () => {
+    mocks.getPersonWithCredits.mockResolvedValueOnce({
+      id: 31,
+      name: "Actor",
+      movie_credits: {
+        cast: [
+          {
+            id: 10,
+            title: "Movie",
+            original_title: "Original movie",
+            release_date: "2020-01-01",
+            overview: "Movie synopsis",
+            poster_path: null,
+          },
+        ],
+      },
+      tv_credits: { cast: [{ id: 20, name: "Incomplete show" }] },
+    });
+    mocks.getWorkByActor.mockResolvedValueOnce([
+      {
+        id: 1,
+        performance: "Lead",
+        dubbing_projects: { content_id: 10, content_type: "movie", language: "fr-FR" },
+        voice_actors: null,
+      },
+      {
+        id: 2,
+        performance: "Guest",
+        dubbing_projects: { content_id: 20, content_type: "tv", language: "fr-FR" },
+        voice_actors: null,
+      },
+      {
+        id: 3,
+        performance: "Other voice",
+        dubbing_projects: { content_id: 20, content_type: "tv", language: "es-ES" },
+        voice_actors: null,
+      },
+      {
+        id: 4,
+        performance: "Missing title",
+        dubbing_projects: { content_id: 30, content_type: "movie", language: "fr-FR" },
+        voice_actors: null,
+      },
+    ]);
+    const response = await request("actor-page");
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      actor: {
+        voice_roles: [
+          { id: 1, mediaDetails: { title: "Movie" } },
+          { id: 2, mediaDetails: { title: "Media 20" } },
+          { id: 3, mediaDetails: { title: "Media 20" } },
+          { id: 4, mediaDetails: { title: "Media 30" } },
+        ],
+      },
+    });
+    expect(mocks.fetchMediaSummary).toHaveBeenCalledTimes(2);
+    expect(mocks.fetchMediaSummary).toHaveBeenCalledWith(20, "tv", undefined);
+    expect(mocks.fetchMediaSummary).toHaveBeenCalledWith(30, "movie", undefined);
+  });
 });
 
 function expectedRoles() {
