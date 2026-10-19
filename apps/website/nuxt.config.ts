@@ -1,7 +1,9 @@
+import { execFileSync } from "node:child_process";
 import tailwindcss from "@tailwindcss/vite";
 import { resolve } from "node:path";
 import { defineNuxtConfig } from "nuxt/config";
 import { APP_LOCALES, DEFAULT_LOCALE } from "@app/shared-logic";
+import type { Plugin } from "vite";
 
 function env(name: string): string | undefined {
   return process.env[name] ?? process.env[`NUXT_${name}`];
@@ -10,6 +12,24 @@ function env(name: string): string | undefined {
 const supabaseUrl = env("SUPABASE_URL") ?? env("PUBLIC_SUPABASE_URL");
 const supabasePublishableKey = env("SUPABASE_PUBLISHABLE_KEY");
 const ABOUT_PRERENDER_ROUTES = new Set(["/about", "/fr/about", "/es/about", "/ja/about"]);
+
+function clientBundleBudgetPlugin(): Plugin {
+  return {
+    name: "dubbingbase:client-bundle-budget",
+    apply: "build" as const,
+    enforce: "post" as const,
+    writeBundle(outputOptions) {
+      const outputDirectory = outputOptions.dir?.replaceAll("\\", "/");
+      if (!outputDirectory?.match(/(?:^|\/)\.nuxt\/dist\/client$/)) return;
+
+      execFileSync(
+        process.execPath,
+        [resolve(import.meta.dirname, "scripts/check-client-bundle-budget.mjs")],
+        { stdio: "inherit" },
+      );
+    },
+  };
+}
 
 function stripAboutClientRuntime(html: string): string {
   return (
@@ -180,7 +200,7 @@ export default defineNuxtConfig({
   },
 
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [tailwindcss(), clientBundleBudgetPlugin()],
     build: {
       manifest: true,
     },

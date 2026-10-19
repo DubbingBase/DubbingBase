@@ -500,9 +500,6 @@ jobs:
           NITRO_PRESET: cloudflare-module
         run: pnpm --filter=@app/website build
 
-      - name: Check client bundle budget
-        run: node apps/website/scripts/check-client-bundle-budget.mjs
-
   # Job 8: Deploy website to Cloudflare Workers (main only - builds once and deploys)
   deploy-website:
     needs:
@@ -568,9 +565,6 @@ jobs:
           NUXT_ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
           NITRO_PRESET: cloudflare-module
         run: pnpm --filter=@app/website build
-
-      - name: Check client bundle budget
-        run: node apps/website/scripts/check-client-bundle-budget.mjs
 
       - name: Deploy to Cloudflare Workers
         working-directory: apps/website
