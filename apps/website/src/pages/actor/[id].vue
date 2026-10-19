@@ -215,27 +215,18 @@ function getActorImageAttrs(
   imageClass: string,
 ): ActorImageAttributes {
   const source = src ?? "";
-  const sizes = imageProcessor.getSizes(source, {
-    provider: undefined,
-    preset: undefined,
-    modifiers: imageModifiers,
-  });
 
   return {
     "data-nuxt-img": "",
-    sizes: sizes.sizes,
-    srcset: sizes.srcset,
     onerror: "this.setAttribute('data-error', 1)",
     alt,
     class: imageClass,
     decoding: "async",
     loading: "lazy",
-    src:
-      sizes.src ??
-      imageProcessor(source, imageModifiers, {
-        provider: undefined,
-        preset: undefined,
-      }),
+    src: imageProcessor(source, imageModifiers, {
+      provider: undefined,
+      preset: undefined,
+    }),
   };
 }
 
