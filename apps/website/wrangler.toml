@@ -35,7 +35,7 @@ redact_query_string = true
 [observability.logs]
 enabled = true
 head_sampling_rate = 1
-persist = false
+persist = true
 invocation_logs = true
 
 [observability.traces]
