@@ -181,6 +181,9 @@ export default defineNuxtConfig({
 
   vite: {
     plugins: [tailwindcss()],
+    build: {
+      manifest: true,
+    },
     resolve: {
       dedupe: [
         "vue",
