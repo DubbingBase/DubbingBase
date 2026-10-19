@@ -52,7 +52,6 @@
     "@vue/test-utils": "^2.4.11",
     "happy-dom": "^20.11.2",
     "nuxt": "latest",
-    "nuxt-swiper": "^2.0.2",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.8.2",
     "vitest": "^4.1.10",
