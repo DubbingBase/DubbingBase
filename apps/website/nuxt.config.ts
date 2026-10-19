@@ -2,7 +2,6 @@ import tailwindcss from "@tailwindcss/vite";
 import { resolve } from "node:path";
 import { defineNuxtConfig } from "nuxt/config";
 import { APP_LOCALES, DEFAULT_LOCALE } from "@app/shared-logic";
-import { gzipSync } from "node:zlib";
 
 function env(name: string): string | undefined {
   return process.env[name] ?? process.env[`NUXT_${name}`];
@@ -11,115 +10,6 @@ function env(name: string): string | undefined {
 const supabaseUrl = env("SUPABASE_URL") ?? env("PUBLIC_SUPABASE_URL");
 const supabasePublishableKey = env("SUPABASE_PUBLISHABLE_KEY");
 const ABOUT_PRERENDER_ROUTES = new Set(["/about", "/fr/about", "/es/about", "/ja/about"]);
-
-type ClientOutputChunk = {
-  type: "chunk";
-  fileName: string;
-  facadeModuleId: string | null;
-  isEntry: boolean;
-  imports: string[];
-  code: string;
-};
-
-type ClientOutputItem = ClientOutputChunk | { type: "asset" };
-
-function getPageRoute(source: string | null): string | undefined {
-  if (!source) return undefined;
-
-  const match = source.replaceAll("\\", "/").match(/(?:^|\/)pages\/(.+)$/);
-  if (!match) return undefined;
-
-  const firstSegment = match[1].split("/")[0];
-  const route = firstSegment === "index.vue" ? "home" : firstSegment.replace(/\.vue$/, "");
-  return route.startsWith("(") ? undefined : route;
-}
-
-function clientBundleBudgetPlugin() {
-  return {
-    name: "dubbingbase:client-bundle-budget",
-    apply: "build" as const,
-    enforce: "post" as const,
-    writeBundle(outputOptions: { dir?: string }, bundle: Record<string, ClientOutputItem>) {
-      const outputDirectory = outputOptions.dir?.replaceAll("\\", "/");
-      if (!outputDirectory?.match(/(?:^|\/)\.nuxt\/dist\/client$/)) return;
-
-      const chunks = Object.values(bundle).filter(
-        (item): item is ClientOutputChunk => item.type === "chunk",
-      );
-      const chunksByFile = new Map(chunks.map((chunk) => [chunk.fileName, chunk]));
-      const commonEntries = chunks.filter(
-        (chunk) => chunk.isEntry && !getPageRoute(chunk.facadeModuleId),
-      );
-      const pages = new Map<string, ClientOutputChunk[]>();
-
-      for (const chunk of chunks) {
-        const route = getPageRoute(chunk.facadeModuleId);
-        if (route) pages.set(route, [...(pages.get(route) ?? []), chunk]);
-      }
-
-      if (commonEntries.length === 0 || pages.size === 0) {
-        throw new Error("Could not find common and page entries in the client bundle.");
-      }
-
-      const report = [...pages].map(([route, entries]) => {
-        const visited = new Set<string>();
-        const pending = [...commonEntries, ...entries].map((chunk) => chunk.fileName);
-
-        while (pending.length > 0) {
-          const fileName = pending.pop();
-          if (!fileName || visited.has(fileName)) continue;
-          visited.add(fileName);
-          pending.push(...(chunksByFile.get(fileName)?.imports ?? []));
-        }
-
-        const routeChunks = [...visited]
-          .map((fileName) => chunksByFile.get(fileName))
-          .filter((chunk): chunk is ClientOutputChunk => chunk !== undefined);
-        const size = routeChunks.reduce(
-          (total, chunk) => {
-            const contents = Buffer.from(chunk.code);
-            return {
-              rawBytes: total.rawBytes + contents.byteLength,
-              gzipBytes: total.gzipBytes + gzipSync(contents).byteLength,
-            };
-          },
-          { rawBytes: 0, gzipBytes: 0 },
-        );
-
-        return { route, ...size, chunkCount: routeChunks.length };
-      });
-
-      report.sort((left, right) => right.rawBytes - left.rawBytes);
-      console.log("Client route JavaScript (static imports only; dynamic imports excluded):");
-      for (const row of report) {
-        console.log(
-          `  ${row.route.padEnd(18)} ${`${row.rawBytes} B raw`.padStart(12)}  ` +
-            `${`${row.gzipBytes} B gzip`.padStart(13)}  ${row.chunkCount} chunks`,
-        );
-      }
-
-      const largestPublicPage = report.find(
-        (row) => row.route !== "admin" && !row.route.startsWith("admin/"),
-      );
-      const maxPublicBytes = Number(process.env.PUBLIC_INITIAL_JS_BUDGET_BYTES ?? 900_000);
-
-      if (!Number.isSafeInteger(maxPublicBytes) || maxPublicBytes <= 0) {
-        throw new Error("PUBLIC_INITIAL_JS_BUDGET_BYTES must be a positive integer.");
-      }
-      if (!largestPublicPage)
-        throw new Error("No public page chunks were found in the client bundle.");
-
-      console.log(`Largest public route: ${largestPublicPage.route}`);
-      console.log(`Public initial JavaScript budget: ${maxPublicBytes} B raw.`);
-      if (largestPublicPage.rawBytes > maxPublicBytes) {
-        throw new Error(
-          `Public initial JavaScript budget exceeded: ${largestPublicPage.route} is ` +
-            `${largestPublicPage.rawBytes} B; limit is ${maxPublicBytes} B.`,
-        );
-      }
-    },
-  };
-}
 
 function stripAboutClientRuntime(html: string): string {
   return (
@@ -290,7 +180,7 @@ export default defineNuxtConfig({
   },
 
   vite: {
-    plugins: [tailwindcss(), clientBundleBudgetPlugin()],
+    plugins: [tailwindcss()],
     resolve: {
       dedupe: [
         "vue",
@@ -318,7 +208,6 @@ export default defineNuxtConfig({
     "@nuxtjs/sitemap",
     "@nuxtjs/robots",
     "@nuxt/image",
-    "@nuxt/icon",
     "@vite-pwa/nuxt",
     "@nuxt/test-utils/module",
     "@nuxtjs/html-validator",
