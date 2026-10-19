@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 82 routes | 19 models | 197 components | 104 lib files | 63 env vars | 16 middleware | 29% test coverage
-> **Token savings:** this file is ~17,100 tokens. Without it, AI exploration would cost ~162,600 tokens. **Saves ~145,400 tokens per conversation.**
-> **Last scanned:** 2026-10-19 00:16 — re-run after significant changes
+> 82 routes | 19 models | 197 components | 105 lib files | 63 env vars | 16 middleware | 29% test coverage
+> **Token savings:** this file is ~17,200 tokens. Without it, AI exploration would cost ~162,800 tokens. **Saves ~145,700 tokens per conversation.**
+> **Last scanned:** 2026-10-19 00:52 — re-run after significant changes
 
 ---
 
@@ -632,6 +632,7 @@
   - type ClaimedCategory
   - type ContributionClaim
 - `apps/website/src/composables/useDragScroll.ts` — function useDragScroll: (scrollRef) => void
+- `apps/website/src/composables/useLocalePathPrefix.ts` — function useLocalePathPrefix: () => (path: string) => string
 - `apps/website/src/composables/useReports.ts` — function useReports
 - `apps/website/src/composables/useShowPageData.ts` — function useShowPageData: (showId, locale) => void
 - `apps/website/src/composables/useTheme.ts` — function useTheme: () => void
