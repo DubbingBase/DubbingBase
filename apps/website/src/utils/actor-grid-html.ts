@@ -16,8 +16,6 @@ export type ActorFilmographyCard = ActorCredit & {
 
 export interface ActorImageAttributes {
   "data-nuxt-img": "";
-  sizes: string | undefined;
-  srcset: string;
   onerror?: string;
   alt: string | undefined;
   class: string;
@@ -57,13 +55,11 @@ export function escapeActorHtml(value: string): string {
 }
 
 export function renderActorImageHtml(attributes: ActorImageAttributes): string {
-  const sizes =
-    attributes.sizes === undefined ? "" : ` sizes="${escapeActorHtml(attributes.sizes)}"`;
   const onerror =
     attributes.onerror === undefined ? "" : ` onerror="${escapeActorHtml(attributes.onerror)}"`;
   const alt = attributes.alt === undefined ? "" : ` alt="${escapeActorHtml(attributes.alt)}"`;
 
-  return `<img data-nuxt-img=""${sizes} srcset="${escapeActorHtml(attributes.srcset)}"${onerror}${alt} class="${escapeActorHtml(attributes.class)}" decoding="async" loading="lazy" src="${escapeActorHtml(attributes.src)}">`;
+  return `<img data-nuxt-img=""${onerror}${alt} class="${escapeActorHtml(attributes.class)}" decoding="async" loading="lazy" src="${escapeActorHtml(attributes.src)}">`;
 }
 
 export function renderActorVoiceActorCardHtml(
