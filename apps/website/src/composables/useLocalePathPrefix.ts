@@ -7,5 +7,8 @@ export function useLocalePathPrefix(): (path: string) => string {
     return localizedRoot === "/" ? "" : localizedRoot.replace(/\/$/, "");
   });
 
-  return (path: string) => `${prefix.value}${path}`;
+  return (path: string) => {
+    if (path === "/") return prefix.value || "/";
+    return `${prefix.value}${path}`;
+  };
 }
