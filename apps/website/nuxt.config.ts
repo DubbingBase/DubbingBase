@@ -194,7 +194,6 @@ export default defineNuxtConfig({
     },
     define: {
       __VERSION__: JSON.stringify(process.env.npm_package_version || "1.0.0"),
-      __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: "true",
     },
   },
 
