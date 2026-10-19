@@ -11,6 +11,16 @@ enabled = true
 [assets]
 directory = ".output/public"
 binding = "ASSETS"
+run_worker_first = [
+  "/about",
+  "/about/",
+  "/fr/about",
+  "/fr/about/",
+  "/es/about",
+  "/es/about/",
+  "/ja/about",
+  "/ja/about/",
+]
 
 [[kv_namespaces]]
 binding = "CACHE_KV"

@@ -9,7 +9,7 @@
           class="w-9 h-9 rounded-xl overflow-hidden shadow-sm ring-1 theme-ring-subtle group-hover:shadow-md transition-all"
         >
           <img
-            :src="useNewLogo ? '/logo2.png' : '/apple-touch-icon.png'"
+            :src="isAboutRoute ? '/favicon-96x96.png' : '/apple-touch-icon.png'"
             alt="Logo"
             class="w-full h-full object-cover"
           />
@@ -66,105 +66,59 @@
         :to="localePath('/search')"
         data-testid="mobile-search-trigger"
         :aria-label="t('search.placeholder')"
-        class="sm:hidden p-2 theme-text-muted theme-hover-text theme-text-muted theme-hover-text theme-hover-surface-muted rounded-full transition-colors flex items-center justify-center"
+        class="sm:hidden p-2 theme-text-muted theme-hover-text theme-hover-surface-muted rounded-full transition-colors flex items-center justify-center"
       >
         <SearchIcon :size="20" />
       </NuxtLink>
 
-      <!-- Theme Toggle -->
       <ClientOnly>
-        <SelectRoot v-model="theme">
-          <SelectTrigger
-            class="flex items-center justify-center w-10 h-10 theme-text-secondary theme-hover-text theme-hover-surface-muted rounded-full transition-colors bg-transparent border-none cursor-pointer outline-none"
-            aria-label="Toggle theme"
-          >
-            <SunIcon v-if="theme === 'light'" :size="20" />
-            <MoonIcon v-else-if="theme === 'dark'" :size="20" />
-            <MonitorIcon v-else :size="20" />
-          </SelectTrigger>
-          <SelectPortal>
-            <SelectContent
-              position="popper"
-              class="z-50 theme-surface-overlay backdrop-blur-md border theme-border rounded-xl shadow-xl overflow-hidden min-w-[140px] theme-text"
-              :sideOffset="8"
-            >
-              <SelectViewport class="p-1.5">
-                <SelectItem
-                  value="light"
-                  class="flex items-center gap-2.5 px-3 py-2 text-sm font-medium theme-hover-surface-muted cursor-pointer outline-none rounded-lg data-[highlighted]:bg-[var(--app-color-surface-muted)] data-[highlighted]:text-[var(--app-color-text)] transition-colors"
-                >
-                  <SunIcon :size="16" />
-                  <SelectItemText>{{ t("theme.light") }}</SelectItemText>
-                </SelectItem>
-                <SelectItem
-                  value="dark"
-                  class="flex items-center gap-2.5 px-3 py-2 text-sm font-medium theme-hover-surface-muted cursor-pointer outline-none rounded-lg data-[highlighted]:bg-[var(--app-color-surface-muted)] data-[highlighted]:text-[var(--app-color-text)] transition-colors"
-                >
-                  <MoonIcon :size="16" />
-                  <SelectItemText>{{ t("theme.dark") }}</SelectItemText>
-                </SelectItem>
-                <SelectItem
-                  value="system"
-                  class="flex items-center gap-2.5 px-3 py-2 text-sm font-medium theme-hover-surface-muted cursor-pointer outline-none rounded-lg data-[highlighted]:bg-[var(--app-color-surface-muted)] data-[highlighted]:text-[var(--app-color-text)] transition-colors"
-                >
-                  <MonitorIcon :size="16" />
-                  <SelectItemText>{{ t("theme.system") }}</SelectItemText>
-                </SelectItem>
-              </SelectViewport>
-            </SelectContent>
-          </SelectPortal>
-        </SelectRoot>
+        <LazyHeaderPreferences />
         <template #fallback>
-          <div class="w-10 h-10 rounded-full theme-surface-raised animate-pulse"></div>
-        </template>
-      </ClientOnly>
-
-      <!-- Locale Toggle -->
-      <ClientOnly>
-        <SelectRoot :modelValue="locale" @update:modelValue="setLocale">
-          <SelectTrigger
-            class="flex items-center justify-center w-10 h-10 theme-text-secondary theme-hover-text theme-hover-surface-muted rounded-full transition-colors bg-transparent border-none cursor-pointer outline-none"
-            aria-label="Toggle language"
-          >
-            <GlobeIcon :size="20" />
-          </SelectTrigger>
-          <SelectPortal>
-            <SelectContent
-              position="popper"
-              class="z-50 theme-surface-overlay backdrop-blur-md border theme-border rounded-xl shadow-xl overflow-hidden min-w-[140px] theme-text"
-              :sideOffset="8"
+          <details v-if="isAboutRoute" class="relative">
+            <summary
+              class="flex h-10 cursor-pointer list-none items-center rounded-full px-3 text-xs font-medium theme-text-secondary theme-hover-text theme-hover-surface-muted"
             >
-              <SelectViewport class="p-1.5">
-                <SelectItem
-                  value="en"
-                  class="flex items-center px-3 py-2 text-sm font-medium theme-hover-surface-muted cursor-pointer outline-none rounded-lg data-[highlighted]:bg-[var(--app-color-surface-muted)] data-[highlighted]:text-[var(--app-color-text)] transition-colors"
-                >
-                  <SelectItemText>{{ t("language.en") }}</SelectItemText>
-                </SelectItem>
-                <SelectItem
-                  value="fr"
-                  class="flex items-center px-3 py-2 text-sm font-medium theme-hover-surface-muted cursor-pointer outline-none rounded-lg data-[highlighted]:bg-[var(--app-color-surface-muted)] data-[highlighted]:text-[var(--app-color-text)] transition-colors"
-                >
-                  <SelectItemText>{{ t("language.fr") }}</SelectItemText>
-                </SelectItem>
-                <SelectItem
-                  value="es"
-                  class="flex items-center px-3 py-2 text-sm font-medium theme-hover-surface-muted cursor-pointer outline-none rounded-lg data-[highlighted]:bg-[var(--app-color-surface-muted)] data-[highlighted]:text-[var(--app-color-text)] transition-colors"
-                >
-                  <SelectItemText>{{ t("language.es") }}</SelectItemText>
-                </SelectItem>
-                <SelectItem
-                  value="ja"
-                  class="flex items-center px-3 py-2 text-sm font-medium theme-hover-surface-muted cursor-pointer outline-none rounded-lg data-[highlighted]:bg-[var(--app-color-surface-muted)] data-[highlighted]:text-[var(--app-color-text)] transition-colors"
-                >
-                  <SelectItemText>{{ t("language.ja") }}</SelectItemText>
-                </SelectItem>
-              </SelectViewport>
-            </SelectContent>
-          </SelectPortal>
-        </SelectRoot>
-        <template #fallback>
-          <div class="w-10 h-10 rounded-full theme-surface-raised animate-pulse"></div>
+              {{ t("settings.preferences") }}
+            </summary>
+            <div
+              class="absolute right-0 z-50 mt-2 grid w-64 gap-4 rounded-xl border theme-border theme-surface-overlay p-3 shadow-xl"
+            >
+              <div>
+                <p class="mb-2 text-xs font-semibold theme-text">
+                  {{ t("settings.theme") }}
+                </p>
+                <div class="flex flex-wrap gap-1">
+                  <a
+                    v-for="theme in themePreferences"
+                    :key="theme"
+                    :href="aboutPreferenceHref('theme', theme)"
+                    class="rounded-lg px-2.5 py-1.5 text-xs theme-text-secondary theme-hover-surface-muted"
+                  >
+                    {{ t(`theme.${theme}`) }}
+                  </a>
+                </div>
+              </div>
+              <div>
+                <p class="mb-2 text-xs font-semibold theme-text">
+                  {{ t("language.switchNow") }}
+                </p>
+                <div class="flex flex-wrap gap-1">
+                  <a
+                    v-for="language in aboutLanguages"
+                    :key="language"
+                    :href="aboutPreferenceHref('lang', language)"
+                    class="rounded-lg px-2.5 py-1.5 text-xs theme-text-secondary theme-hover-surface-muted"
+                  >
+                    {{ t(`language.${language}`) }}
+                  </a>
+                </div>
+              </div>
+            </div>
+          </details>
+          <template v-else>
+            <div class="w-10 h-10 rounded-full theme-surface-raised animate-pulse"></div>
+            <div class="w-10 h-10 rounded-full theme-surface-raised animate-pulse"></div>
+          </template>
         </template>
       </ClientOnly>
 
@@ -198,7 +152,15 @@
         </template>
 
         <template #fallback>
+          <NuxtLink
+            v-if="isAboutRoute"
+            :to="localePath('/login')"
+            class="flex h-9 items-center rounded-full px-4 text-sm font-semibold theme-contrast theme-hover-contrast"
+          >
+            {{ t("nav.login") }}
+          </NuxtLink>
           <div
+            v-else
             class="w-9 h-9 md:w-10 md:h-10 ml-1 rounded-full theme-surface-raised theme-surface-muted animate-pulse"
           ></div>
         </template>
@@ -208,33 +170,22 @@
 </template>
 
 <script setup lang="ts">
-import type { SupportedLocale } from "@app/shared-logic";
 import { nextTick, onMounted, onUnmounted, ref, computed } from "vue";
-
-const useNewLogo = ref(false);
 import { useRoute } from "vue-router";
-import { useTheme } from "../composables/useTheme";
-import { SunIcon, MoonIcon, UserIcon, GlobeIcon, MonitorIcon, SearchIcon } from "lucide-vue-next";
-import {
-  SelectRoot,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-  SelectPortal,
-  SelectViewport,
-  SelectItemText,
-} from "reka-ui";
-
-const { theme } = useTheme();
-const { t, locale } = useI18n();
-const switchLocalePath = useSwitchLocalePath();
+import { UserIcon, SearchIcon } from "lucide-vue-next";
+const { t } = useI18n();
 const localePath = useLocalePathPrefix();
-const setLocale = (val: SupportedLocale) => {
-  navigateTo(switchLocalePath(val));
-};
 const user = useSupabaseUser();
 const route = useRoute();
+const ABOUT_ROUTES = new Set(["/about", "/fr/about", "/es/about", "/ja/about"]);
+const themePreferences = ["system", "dark", "light"] as const;
+const aboutLanguages = ["en", "fr", "es", "ja"] as const;
+const isAboutRoute = computed(() => ABOUT_ROUTES.has(route.path));
+
+const aboutPreferenceHref = (key: "lang" | "theme", value: string): string => {
+  const query = new URLSearchParams({ [key]: value });
+  return `${route.path}?${query.toString()}`;
+};
 
 const isHomePage = computed(() => {
   const homePath = localePath("/");
