@@ -208,7 +208,6 @@ export default defineNuxtConfig({
     "@nuxtjs/sitemap",
     "@nuxtjs/robots",
     "@nuxt/image",
-    "@nuxt/icon",
     "@vite-pwa/nuxt",
     "@nuxt/test-utils/module",
     "@nuxtjs/html-validator",
