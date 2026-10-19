@@ -41,7 +41,7 @@
       <template #actions>
         <button
           type="button"
-          @click="isReportModalOpen = true"
+          @click="openReportModal"
           class="text-sm theme-text-muted theme-hover-danger-text transition-colors flex items-center gap-2"
         >
           <svg
@@ -168,7 +168,11 @@
       </template>
     </PersonDetailsLayout>
 
-    <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
+    <ReportModal
+      v-if="hasOpenedReportModal"
+      v-model:open="isReportModalOpen"
+      :target-url="currentUrl"
+    />
   </div>
 </template>
 
@@ -187,6 +191,12 @@ import {
 } from "../../utils/actor-grid-html";
 
 const isReportModalOpen = ref(false);
+const hasOpenedReportModal = ref(false);
+
+function openReportModal(): void {
+  hasOpenedReportModal.value = true;
+  isReportModalOpen.value = true;
+}
 
 const route = useRoute();
 const router = useRouter();
