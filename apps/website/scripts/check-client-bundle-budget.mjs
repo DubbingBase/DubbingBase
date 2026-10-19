@@ -4,7 +4,9 @@ import { dirname, resolve } from "node:path";
 
 const websiteRoot = resolve(import.meta.dirname, "..");
 const manifestCandidates = [
+  resolve(websiteRoot, ".nuxt/dist/client/manifest.json"),
   resolve(websiteRoot, ".nuxt/dist/client/.vite/manifest.json"),
+  resolve(websiteRoot, ".output/public/_nuxt/manifest.json"),
   resolve(websiteRoot, ".output/public/_nuxt/.vite/manifest.json"),
 ];
 
@@ -31,7 +33,9 @@ if (!manifestPath || !manifestText) {
 
 const manifest = JSON.parse(manifestText);
 const manifestEntries = Object.entries(manifest);
-const clientOutputDirectory = dirname(dirname(manifestPath));
+const clientOutputDirectory = manifestPath.endsWith("/.vite/manifest.json")
+  ? dirname(dirname(manifestPath))
+  : dirname(manifestPath);
 
 function getPageRoute(source) {
   const normalizedSource = source.replaceAll("\\", "/");
