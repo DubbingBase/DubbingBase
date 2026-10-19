@@ -1,4 +1,4 @@
-export default defineNuxtRouteMiddleware((to, from) => {
+export default defineNuxtRouteMiddleware(async (to) => {
   const user = useSupabaseUser();
   const localePath = useLocalePath();
 
@@ -13,5 +13,36 @@ export default defineNuxtRouteMiddleware((to, from) => {
 
   if (!isAdmin) {
     return navigateTo(localePath("/"));
+  }
+
+  const isDashboard = to.path.replace(/\/$/, "").endsWith("/admin");
+
+  if (import.meta.client && isDashboard) {
+    const {
+      ArcElement,
+      BarElement,
+      CategoryScale,
+      Chart: ChartJS,
+      Filler,
+      Legend,
+      LinearScale,
+      LineElement,
+      PointElement,
+      Title,
+      Tooltip,
+    } = await import("chart.js");
+
+    ChartJS.register(
+      Title,
+      Tooltip,
+      Legend,
+      BarElement,
+      CategoryScale,
+      LinearScale,
+      PointElement,
+      LineElement,
+      ArcElement,
+      Filler,
+    );
   }
 });
