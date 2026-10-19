@@ -230,7 +230,6 @@ const { theme } = useTheme();
 const { t, locale } = useI18n();
 const switchLocalePath = useSwitchLocalePath();
 const localePath = useLocalePathPrefix();
-const resolvedLocalePath = useLocalePath();
 const setLocale = (val: SupportedLocale) => {
   navigateTo(switchLocalePath(val));
 };
@@ -238,7 +237,7 @@ const user = useSupabaseUser();
 const route = useRoute();
 
 const isHomePage = computed(() => {
-  const homePath = resolvedLocalePath("/");
+  const homePath = localePath("/");
   return route.path === homePath;
 });
 
