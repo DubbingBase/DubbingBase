@@ -3,7 +3,6 @@ import tailwindcss from "@tailwindcss/vite";
 import { resolve } from "node:path";
 import { defineNuxtConfig } from "nuxt/config";
 import { APP_LOCALES, DEFAULT_LOCALE } from "@app/shared-logic";
-import type { Plugin } from "vite";
 
 function env(name: string): string | undefined {
   return process.env[name] ?? process.env[`NUXT_${name}`];
@@ -13,12 +12,12 @@ const supabaseUrl = env("SUPABASE_URL") ?? env("PUBLIC_SUPABASE_URL");
 const supabasePublishableKey = env("SUPABASE_PUBLISHABLE_KEY");
 const ABOUT_PRERENDER_ROUTES = new Set(["/about", "/fr/about", "/es/about", "/ja/about"]);
 
-function clientBundleBudgetPlugin(): Plugin {
+function clientBundleBudgetPlugin() {
   return {
     name: "dubbingbase:client-bundle-budget",
     apply: "build" as const,
     enforce: "post" as const,
-    writeBundle(outputOptions) {
+    writeBundle(outputOptions: { dir?: string }) {
       const outputDirectory = outputOptions.dir?.replaceAll("\\", "/");
       if (!outputDirectory?.match(/(?:^|\/)\.nuxt\/dist\/client$/)) return;
 
