@@ -4,10 +4,7 @@
   >
     <!-- Left Section: Logo & Nav -->
     <div class="flex items-center gap-6 w-full sm:w-auto sm:flex-none">
-      <NuxtLink
-        :to="localePath('/')"
-        class="flex items-center gap-3 group shrink-0"
-      >
+      <NuxtLink :to="localePath('/')" class="flex items-center gap-3 group shrink-0">
         <div
           class="w-9 h-9 rounded-xl overflow-hidden shadow-sm ring-1 theme-ring-subtle group-hover:shadow-md transition-all"
         >
@@ -17,9 +14,7 @@
             class="w-full h-full object-cover"
           />
         </div>
-        <span
-          class="text-xl font-bold tracking-tight theme-text hidden sm:block"
-        >
+        <span class="text-xl font-bold tracking-tight theme-text hidden sm:block">
           {{ t("app.title") }}
         </span>
       </NuxtLink>
@@ -120,9 +115,7 @@
           </SelectPortal>
         </SelectRoot>
         <template #fallback>
-          <div
-            class="w-10 h-10 rounded-full theme-surface-raised animate-pulse"
-          ></div>
+          <div class="w-10 h-10 rounded-full theme-surface-raised animate-pulse"></div>
         </template>
       </ClientOnly>
 
@@ -171,15 +164,11 @@
           </SelectPortal>
         </SelectRoot>
         <template #fallback>
-          <div
-            class="w-10 h-10 rounded-full theme-surface-raised animate-pulse"
-          ></div>
+          <div class="w-10 h-10 rounded-full theme-surface-raised animate-pulse"></div>
         </template>
       </ClientOnly>
 
-      <div
-        class="w-px h-5 theme-surface-muted mx-1 md:mx-2 hidden sm:block"
-      ></div>
+      <div class="w-px h-5 theme-surface-muted mx-1 md:mx-2 hidden sm:block"></div>
 
       <!-- User Profile -->
       <ClientOnly>
@@ -219,19 +208,13 @@
 </template>
 
 <script setup lang="ts">
+import type { SupportedLocale } from "@app/shared-logic";
 import { nextTick, onMounted, onUnmounted, ref, computed } from "vue";
 
 const useNewLogo = ref(false);
 import { useRoute } from "vue-router";
 import { useTheme } from "../composables/useTheme";
-import {
-  SunIcon,
-  MoonIcon,
-  UserIcon,
-  GlobeIcon,
-  MonitorIcon,
-  SearchIcon,
-} from "lucide-vue-next";
+import { SunIcon, MoonIcon, UserIcon, GlobeIcon, MonitorIcon, SearchIcon } from "lucide-vue-next";
 import {
   SelectRoot,
   SelectTrigger,
@@ -246,15 +229,16 @@ import {
 const { theme } = useTheme();
 const { t, locale } = useI18n();
 const switchLocalePath = useSwitchLocalePath();
-const localePath = useLocalePath();
-const setLocale = (val: any) => {
+const localePath = useLocalePathPrefix();
+const resolvedLocalePath = useLocalePath();
+const setLocale = (val: SupportedLocale) => {
   navigateTo(switchLocalePath(val));
 };
 const user = useSupabaseUser();
 const route = useRoute();
 
 const isHomePage = computed(() => {
-  const homePath = localePath("/");
+  const homePath = resolvedLocalePath("/");
   return route.path === homePath;
 });
 
@@ -263,9 +247,7 @@ const isAdmin = computed(() => {
 });
 
 const focusSearchInput = (): void => {
-  document
-    .querySelector<HTMLInputElement>("[data-testid='search-input']")
-    ?.focus();
+  document.querySelector<HTMLInputElement>("[data-testid='search-input']")?.focus();
 };
 
 const goToSearch = async (): Promise<void> => {
@@ -278,10 +260,7 @@ const goToSearch = async (): Promise<void> => {
 
 const isEditableTarget = (target: EventTarget | null): boolean => {
   if (!(target instanceof HTMLElement)) return false;
-  return (
-    target.isContentEditable ||
-    ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)
-  );
+  return target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName);
 };
 
 const handleGlobalKeydown = (event: KeyboardEvent): void => {
@@ -294,10 +273,7 @@ const handleGlobalKeydown = (event: KeyboardEvent): void => {
     return;
   }
 
-  if (
-    (event.key === "/" || event.code === "Slash") &&
-    !isEditableTarget(event.target)
-  ) {
+  if ((event.key === "/" || event.code === "Slash") && !isEditableTarget(event.target)) {
     event.preventDefault();
     void goToSearch();
   }

@@ -201,11 +201,7 @@ function openReportModal(): void {
 const route = useRoute();
 const router = useRouter();
 const { locale, t } = useI18n();
-const localePath = useLocalePath();
-const actorLocalePrefix = computed(() => {
-  const localizedRoot = localePath("/");
-  return localizedRoot === "/" ? "" : localizedRoot.replace(/\/$/, "");
-});
+const actorLocalePath = useLocalePathPrefix();
 const imageProcessor = useImage();
 const imageModifiers = {
   format: "webp",
@@ -248,10 +244,6 @@ const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
 const { page: voicesPage, setPage: setVoicesPage } = useUrlPagination("voicesPage");
 const { page: filmographyPage, setPage: setFilmographyPageUrl } =
   useUrlPagination("filmographyPage");
-
-function actorLocalePath(path: string): string {
-  return `${actorLocalePrefix.value}${path}`;
-}
 
 const { data: initialData } = await useAsyncData(
   `actor-${id}`,
