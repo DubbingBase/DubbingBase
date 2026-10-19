@@ -1,58 +1,93 @@
 <template>
-  <div
-    class="relative flex items-center justify-center w-10 h-10 rounded-full theme-text-secondary theme-hover-text theme-hover-surface-muted transition-colors"
-  >
-    <SunIcon v-if="theme === 'light'" :size="20" aria-hidden="true" />
-    <MoonIcon v-else-if="theme === 'dark'" :size="20" aria-hidden="true" />
-    <MonitorIcon v-else :size="20" aria-hidden="true" />
-    <select
-      v-model="theme"
+  <SelectRoot v-model="theme">
+    <SelectTrigger
+      class="flex items-center justify-center w-10 h-10 theme-text-secondary theme-hover-text theme-hover-surface-muted rounded-full transition-colors bg-transparent border-none cursor-pointer outline-none"
       aria-label="Toggle theme"
-      class="absolute inset-0 h-full w-full cursor-pointer rounded-full opacity-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--app-color-border-strong)]"
     >
-      <option value="system">{{ t("theme.system") }}</option>
-      <option value="dark">{{ t("theme.dark") }}</option>
-      <option value="light">{{ t("theme.light") }}</option>
-    </select>
-  </div>
-
-  <div
-    class="relative flex items-center justify-center w-10 h-10 rounded-full theme-text-secondary theme-hover-text theme-hover-surface-muted transition-colors"
-  >
-    <GlobeIcon :size="20" aria-hidden="true" />
-    <select
-      :value="locale"
-      aria-label="Toggle language"
-      class="absolute inset-0 h-full w-full cursor-pointer rounded-full opacity-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--app-color-border-strong)]"
-      @change="setLocale"
-    >
-      <option
-        v-for="supportedLocale in SUPPORTED_LOCALES"
-        :key="supportedLocale"
-        :value="supportedLocale"
+      <SunIcon v-if="theme === 'light'" :size="20" />
+      <MoonIcon v-else-if="theme === 'dark'" :size="20" />
+      <MonitorIcon v-else :size="20" />
+    </SelectTrigger>
+    <SelectPortal>
+      <SelectContent
+        position="popper"
+        class="z-50 theme-surface-overlay backdrop-blur-md border theme-border rounded-xl shadow-xl overflow-hidden min-w-[140px] theme-text"
+        :sideOffset="8"
       >
-        {{ t(`language.${supportedLocale}`) }}
-      </option>
-    </select>
-  </div>
+        <SelectViewport class="p-1.5">
+          <SelectItem
+            value="light"
+            class="flex items-center gap-2.5 px-3 py-2 text-sm font-medium theme-hover-surface-muted cursor-pointer outline-none rounded-lg data-[highlighted]:bg-[var(--app-color-surface-muted)] data-[highlighted]:text-[var(--app-color-text)] transition-colors"
+          >
+            <SunIcon :size="16" />
+            <SelectItemText>{{ t("theme.light") }}</SelectItemText>
+          </SelectItem>
+          <SelectItem
+            value="dark"
+            class="flex items-center gap-2.5 px-3 py-2 text-sm font-medium theme-hover-surface-muted cursor-pointer outline-none rounded-lg data-[highlighted]:bg-[var(--app-color-surface-muted)] data-[highlighted]:text-[var(--app-color-text)] transition-colors"
+          >
+            <MoonIcon :size="16" />
+            <SelectItemText>{{ t("theme.dark") }}</SelectItemText>
+          </SelectItem>
+          <SelectItem
+            value="system"
+            class="flex items-center gap-2.5 px-3 py-2 text-sm font-medium theme-hover-surface-muted cursor-pointer outline-none rounded-lg data-[highlighted]:bg-[var(--app-color-surface-muted)] data-[highlighted]:text-[var(--app-color-text)] transition-colors"
+          >
+            <MonitorIcon :size="16" />
+            <SelectItemText>{{ t("theme.system") }}</SelectItemText>
+          </SelectItem>
+        </SelectViewport>
+      </SelectContent>
+    </SelectPortal>
+  </SelectRoot>
+
+  <SelectRoot :modelValue="locale" @update:modelValue="setLocale">
+    <SelectTrigger
+      class="flex items-center justify-center w-10 h-10 theme-text-secondary theme-hover-text theme-hover-surface-muted rounded-full transition-colors bg-transparent border-none cursor-pointer outline-none"
+      aria-label="Toggle language"
+    >
+      <GlobeIcon :size="20" />
+    </SelectTrigger>
+    <SelectPortal>
+      <SelectContent
+        position="popper"
+        class="z-50 theme-surface-overlay backdrop-blur-md border theme-border rounded-xl shadow-xl overflow-hidden min-w-[140px] theme-text"
+        :sideOffset="8"
+      >
+        <SelectViewport class="p-1.5">
+          <SelectItem
+            v-for="language in SUPPORTED_LOCALES"
+            :key="language"
+            :value="language"
+            class="flex items-center px-3 py-2 text-sm font-medium theme-hover-surface-muted cursor-pointer outline-none rounded-lg data-[highlighted]:bg-[var(--app-color-surface-muted)] data-[highlighted]:text-[var(--app-color-text)] transition-colors"
+          >
+            <SelectItemText>{{ t(`language.${language}`) }}</SelectItemText>
+          </SelectItem>
+        </SelectViewport>
+      </SelectContent>
+    </SelectPortal>
+  </SelectRoot>
 </template>
 
 <script setup lang="ts">
-import { SUPPORTED_LOCALES } from "@app/shared-logic";
-import { GlobeIcon, MoonIcon, MonitorIcon, SunIcon } from "lucide-vue-next";
+import { SUPPORTED_LOCALES, type SupportedLocale } from "@app/shared-logic";
+import { GlobeIcon, MonitorIcon, MoonIcon, SunIcon } from "lucide-vue-next";
+import {
+  SelectContent,
+  SelectItem,
+  SelectItemText,
+  SelectPortal,
+  SelectRoot,
+  SelectTrigger,
+  SelectViewport,
+} from "reka-ui";
 import { useTheme } from "../composables/useTheme";
 
 const { theme } = useTheme();
 const { t, locale } = useI18n();
 const switchLocalePath = useSwitchLocalePath();
 
-const setLocale = (event: Event): void => {
-  const target = event.currentTarget;
-  if (!(target instanceof HTMLSelectElement)) return;
-
-  const nextLocale = SUPPORTED_LOCALES.find((supportedLocale) => supportedLocale === target.value);
-  if (!nextLocale) return;
-
-  void navigateTo(switchLocalePath(nextLocale));
+const setLocale = (value: SupportedLocale): void => {
+  void navigateTo(switchLocalePath(value));
 };
 </script>
