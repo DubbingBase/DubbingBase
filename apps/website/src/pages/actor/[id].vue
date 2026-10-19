@@ -113,17 +113,19 @@
             </div>
           </div>
 
-          <div v-if="voiceActorsTotal > 0">
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <PaginatedResponsiveGrid
+            v-if="voiceActorsTotal > 0"
+            :items="actorGridPlaceholder"
+            :total-items="voiceActorsTotal"
+            :page="voicesPage"
+            :page-size="12"
+            grid-class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+            @update:page="setVoicesPage"
+          >
+            <template #default>
               <div class="contents" v-html="voiceActorCardsHtml" @click="navigateActorCard" />
-            </div>
-            <PaginationControls
-              :page="voicesPage"
-              :total-items="voiceActorsTotal"
-              :page-size="actorGridPageSize"
-              @update:page="setVoicesPage"
-            />
-          </div>
+            </template>
+          </PaginatedResponsiveGrid>
           <div
             v-else
             class="theme-text-muted text-center py-8 theme-input rounded-2xl border theme-border-subtle theme-border"
@@ -149,19 +151,19 @@
             {{ $t("actor.noWorks") }}
           </div>
 
-          <div v-else>
-            <div
-              class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
-            >
+          <PaginatedResponsiveGrid
+            v-else
+            :items="actorGridPlaceholder"
+            :total-items="filmographyTotal"
+            :page="filmographyPage"
+            :page-size="12"
+            grid-class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+            @update:page="setFilmographyPageWithData"
+          >
+            <template #default>
               <div class="contents" v-html="filmographyCardsHtml" @click="navigateActorCard" />
-            </div>
-            <PaginationControls
-              :page="filmographyPage"
-              :total-items="filmographyTotal"
-              :page-size="actorGridPageSize"
-              @update:page="setFilmographyPageWithData"
-            />
-          </div>
+            </template>
+          </PaginatedResponsiveGrid>
         </section>
       </template>
     </PersonDetailsLayout>
@@ -291,33 +293,17 @@ async function setFilmographyPageWithData(page: number): Promise<void> {
 }
 
 const voiceActorItems = filteredUniqueVoiceActorsByLanguage;
-const actorGridPageSize = 12;
 const voiceActorsTotal = computed(() => voiceActorItems.value.length);
 const filmographyItems = enhancedFilmography;
 const filmographyTotal = computed(() =>
   filmographyComplete.value ? filteredCredits.value.length : filmographyCount.value,
 );
-function clampPaginationPage(
-  page: number,
-  totalItems: number,
-  setPage: (page: number) => Promise<void>,
-): void {
-  const totalPages = Math.max(1, Math.ceil(totalItems / actorGridPageSize));
-  if (page > totalPages) void setPage(totalPages);
-}
-
-watch([voicesPage, voiceActorsTotal], ([page, totalItems]) => {
-  clampPaginationPage(page, totalItems, setVoicesPage);
-});
-watch([filmographyPage, filmographyTotal], ([page, totalItems]) => {
-  clampPaginationPage(page, totalItems, setFilmographyPageWithData);
-});
-
+const actorGridPlaceholder = [0];
 const voiceActorCardsHtml = computed(() => {
-  const start = (voicesPage.value - 1) * actorGridPageSize;
+  const start = (voicesPage.value - 1) * 12;
 
   return voiceActorItems.value
-    .slice(start, start + actorGridPageSize)
+    .slice(start, start + 12)
     .map((voiceActor) =>
       renderActorVoiceActorCardHtml(
         voiceActor,
