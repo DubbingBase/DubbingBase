@@ -13,7 +13,7 @@ export default defineNuxtPlugin({
     const langCookie = useCookie("user_lang");
     const user = useSupabaseUser();
 
-    nuxtApp.hook("app:mounted", () => {
+    const initializePostHog = () => {
       void import("posthog-js")
         .then(({ default: posthog }) => {
           posthog.init("phc_me2esmRfMkokDSbTzKQfNHaUZgpBOAqgi2921wCYOtP", {
@@ -55,6 +55,17 @@ export default defineNuxtPlugin({
         .catch((error: unknown) => {
           console.error("Failed to load PostHog", error);
         });
+    };
+
+    nuxtApp.hook("app:mounted", () => {
+      const requestIdleCallback = Reflect.get(window, "requestIdleCallback");
+
+      if (typeof requestIdleCallback === "function") {
+        Reflect.apply(requestIdleCallback, window, [initializePostHog, { timeout: 2000 }]);
+        return;
+      }
+
+      window.setTimeout(initializePostHog, 1000);
     });
   },
 });
