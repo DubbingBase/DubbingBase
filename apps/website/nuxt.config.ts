@@ -230,10 +230,6 @@ export default defineNuxtConfig({
     format: ["avif", "webp"],
   },
 
-  icon: {
-    fallbackToApi: false,
-  },
-
   i18n: {
     langDir: "locales",
     locales: APP_LOCALES.map((locale) => ({ ...locale })),
