@@ -9,6 +9,38 @@ function env(name: string): string | undefined {
 
 const supabaseUrl = env("SUPABASE_URL") ?? env("PUBLIC_SUPABASE_URL");
 const supabasePublishableKey = env("SUPABASE_PUBLISHABLE_KEY");
+const ABOUT_PRERENDER_ROUTES = new Set(["/about", "/fr/about", "/es/about", "/ja/about"]);
+
+function stripAboutClientRuntime(html: string): string {
+  return (
+    html
+      .replace(
+        /<link\b(?=[^>]*\brel=["'](?:modulepreload|prefetch)["'])(?=[^>]*\bhref=["']\/_nuxt\/)[^>]*>\s*/g,
+        "",
+      )
+      .replace(
+        /<link\b(?=[^>]*\brel=["']preload["'])(?=[^>]*\bas=["']fetch["'])(?=[^>]*\bhref=["'][^"']*_payload\.json)[^>]*>\s*/g,
+        "",
+      )
+      // Nuxt Fonts 0.14 preloads an unused italic Cyrillic face on these pages.
+      .replace(/<link\b(?=[^>]*\brel=["']preload["'])(?=[^>]*\bas=["']font["'])[^>]*>\s*/g, "")
+      .replace(/<link\b(?=[^>]*\bhref=["']\/favicon\.ico["'])[^>]*>\s*/g, "")
+      .replace(
+        /<body\b/,
+        `<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',` +
+          'Roboto,Helvetica,Arial,sans-serif"',
+      )
+      .replace(/<script\b(?=[^>]*\btype=["']importmap["'])[^>]*>[\s\S]*?<\/script>\s*/g, "")
+      .replace(
+        /<script\b(?=[^>]*\btype=["']module["'])(?=[^>]*\bsrc=["']\/_nuxt\/)[^>]*>\s*<\/script>\s*/g,
+        "",
+      )
+      .replace(/<script\b(?=[^>]*\bid=["']__NUXT_DATA__["'])[^>]*>[\s\S]*?<\/script>\s*/g, "")
+      .replace(/<script\b[^>]*>\s*window\.__NUXT_SITE_CONFIG__\s*=[\s\S]*?<\/script>\s*/g, "")
+      .replace(/<script\b[^>]*>\s*window\.__NUXT__\s*=[\s\S]*?<\/script>\s*/g, "")
+  );
+}
+
 export default defineNuxtConfig({
   rootDir: resolve(import.meta.dirname),
   compatibilityDate: "2024-09-23",
@@ -23,6 +55,15 @@ export default defineNuxtConfig({
 
   nitro: {
     preset: process.env.NITRO_PRESET || "node-server",
+    prerender: {
+      routes: [...ABOUT_PRERENDER_ROUTES],
+    },
+    hooks: {
+      "prerender:generate": (route) => {
+        if (!ABOUT_PRERENDER_ROUTES.has(route.route) || !route.contents) return;
+        route.contents = stripAboutClientRuntime(route.contents);
+      },
+    },
     experimental: {
       tasks: true,
     },
