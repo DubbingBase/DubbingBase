@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Component inventory and prop signatures extracted via AST. Read the source files before adding props or modifying component logic.
 
-**197 components** (vue)
+**198 components** (vue)
 
 ## Client Components
 
@@ -107,6 +107,7 @@
 - **Footer** — `apps/website/src/components/Footer.vue`
 - **ForceEnqueueButton** — props: mediaType, mediaId, seasonNumber, episodeNumber, wikipediaLanguage — `apps/website/src/components/ForceEnqueueButton.vue`
 - **Header** — `apps/website/src/components/Header.vue`
+- **HeaderPreferences** — `apps/website/src/components/HeaderPreferences.vue`
 - **LanguageBanner** — `apps/website/src/components/LanguageBanner.vue`
 - **MediaSkeleton** — `apps/website/src/components/MediaSkeleton.vue`
 - **PaginatedResponsiveGrid** — props: items, pageSize, totalItems, page, gridClass, itemKey — `apps/website/src/components/PaginatedResponsiveGrid.vue`

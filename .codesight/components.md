@@ -101,6 +101,7 @@
 - **Footer** [client] — `apps/website/src/components/Footer.vue`
 - **ForceEnqueueButton** [client] — props: mediaType, mediaId, seasonNumber, episodeNumber, wikipediaLanguage — `apps/website/src/components/ForceEnqueueButton.vue`
 - **Header** [client] — `apps/website/src/components/Header.vue`
+- **HeaderPreferences** [client] — `apps/website/src/components/HeaderPreferences.vue`
 - **LanguageBanner** [client] — `apps/website/src/components/LanguageBanner.vue`
 - **MediaSkeleton** [client] — `apps/website/src/components/MediaSkeleton.vue`
 - **PaginatedResponsiveGrid** [client] — props: items, pageSize, totalItems, page, gridClass, itemKey — `apps/website/src/components/PaginatedResponsiveGrid.vue`
