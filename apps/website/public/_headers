@@ -6,3 +6,6 @@
 
 /offline.html
   Cache-Control: no-cache
+
+/favicon-96x96.png
+  Cache-Control: public, max-age=604800
