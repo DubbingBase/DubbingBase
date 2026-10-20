@@ -9,7 +9,7 @@
           class="w-9 h-9 rounded-xl overflow-hidden shadow-sm ring-1 theme-ring-subtle group-hover:shadow-md transition-all"
         >
           <img
-            :src="isAboutRoute ? '/favicon-96x96.png' : '/apple-touch-icon.png'"
+            src="/favicon-96x96.png"
             alt="Logo"
             class="w-full h-full object-cover"
           />
