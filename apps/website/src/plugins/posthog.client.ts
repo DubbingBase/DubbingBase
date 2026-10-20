@@ -13,7 +13,7 @@ export default defineNuxtPlugin({
     const langCookie = useCookie("user_lang");
     const user = useSupabaseUser();
 
-    nuxtApp.hook("app:mounted", () => {
+    const initializePostHog = (landingUrl: string, landingTime: Date) => {
       void import("posthog-js")
         .then(({ default: posthog }) => {
           posthog.init("phc_me2esmRfMkokDSbTzKQfNHaUZgpBOAqgi2921wCYOtP", {
@@ -29,6 +29,11 @@ export default defineNuxtPlugin({
               capture_console_errors: true,
             },
           });
+
+          // PostHog captures the current URL on init; preserve the landing page if navigation happened while loading.
+          if (window.location.href !== landingUrl) {
+            posthog.capture("$pageview", { $current_url: landingUrl }, { timestamp: landingTime });
+          }
 
           posthog.register({
             application: "website",
@@ -55,6 +60,20 @@ export default defineNuxtPlugin({
         .catch((error: unknown) => {
           console.error("Failed to load PostHog", error);
         });
+    };
+
+    nuxtApp.hook("app:mounted", () => {
+      const landingUrl = window.location.href;
+      const landingTime = new Date();
+      const initializeWithLandingUrl = () => initializePostHog(landingUrl, landingTime);
+      const requestIdleCallback = Reflect.get(window, "requestIdleCallback");
+
+      if (typeof requestIdleCallback === "function") {
+        Reflect.apply(requestIdleCallback, window, [initializeWithLandingUrl, { timeout: 2000 }]);
+        return;
+      }
+
+      window.setTimeout(initializeWithLandingUrl, 1000);
     });
   },
 });
