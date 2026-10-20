@@ -139,6 +139,14 @@ export default defineNuxtConfig({
 
   experimental: {
     inlineRouteRules: true,
+    defaults: {
+      nuxtLink: {
+        prefetchOn: {
+          interaction: true,
+          visibility: false,
+        },
+      },
+    },
   },
 
   pwa: {
