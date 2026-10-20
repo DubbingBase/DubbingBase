@@ -461,9 +461,13 @@
 </template>
 
 <script setup lang="ts">
-import { fetchHomeData, resolveLocaleLanguage } from "@app/shared-logic";
+import {
+  fetchHomeData,
+  resolveLocaleLanguage,
+  type HomeDataPayload,
+} from "@app/shared-logic";
 import { useDragScroll } from "../composables/useDragScroll";
-import { ref, computed } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 
 const user = useSupabaseUser();
 const isAdmin = computed(() => {
@@ -638,14 +642,97 @@ const trendingLanguage = computed(
   () => resolveLocaleLanguage(locale.value) || "en-US",
 );
 
-const { data, pending } = useAsyncData(
-  () => `home-data:${trendingLanguage.value}`,
-  () => fetchHomeData(trendingLanguage.value),
+const HOME_DATA_NAVIGATION_CACHE_TTL_MS = 5 * 60_000;
+const homeDataNavigationCache = useState<{
+  key: string;
+  cachedAt: number;
+  data: HomeDataPayload;
+} | null>("home-data-navigation-cache", () => null);
+const getFreshCachedHomeData = (key: string) => {
+  const cached = homeDataNavigationCache.value;
+  if (!cached || cached.key !== key) return undefined;
+
+  const age = Date.now() - cached.cachedAt;
+  return age >= 0 && age < HOME_DATA_NAVIGATION_CACHE_TTL_MS
+    ? cached
+    : undefined;
+};
+const hasHomeDataErrors = (payload: HomeDataPayload) =>
+  Boolean(
+    payload.errorMovies ||
+      payload.errorSeries ||
+      payload.errorGames ||
+      payload.errorVoiceActors ||
+      payload.errorTopVoiceActors ||
+      payload.errorTrendingVoiceActors ||
+      payload.errorTopContributors ||
+      payload.errorHomeStats,
+  );
+const homeDataKey = computed(() => `home-data:${trendingLanguage.value}`);
+const cachedHomeDataAtEntry = import.meta.client
+  ? getFreshCachedHomeData(homeDataKey.value)
+  : undefined;
+
+const loadHomeData = async (): Promise<HomeDataPayload> => {
+  const language = trendingLanguage.value;
+  const key = `home-data:${language}`;
+  const freshData = await fetchHomeData(language);
+
+  if (!hasHomeDataErrors(freshData)) {
+    if (import.meta.client) {
+      homeDataNavigationCache.value = {
+        key,
+        cachedAt: Date.now(),
+        data: freshData,
+      };
+    }
+
+    return freshData;
+  }
+
+  return getFreshCachedHomeData(key)?.data || freshData;
+};
+
+const { data, pending, refresh } = useAsyncData(
+  () => homeDataKey.value,
+  loadHomeData,
   {
-    getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
+    getCachedData: (key, nuxtApp, { cause }) => {
+      const hydrationData = getHydrationCachedData<HomeDataPayload>(
+        key,
+        nuxtApp,
+      );
+      if (hydrationData) return hydrationData;
+      if (!import.meta.client || cause !== "initial") return undefined;
+
+      return getFreshCachedHomeData(key)?.data;
+    },
     watch: [trendingLanguage],
   },
 );
+
+if (import.meta.client && !cachedHomeDataAtEntry) {
+  watch(
+    data,
+    (payload) => {
+      if (!payload || hasHomeDataErrors(payload)) return;
+
+      const key = homeDataKey.value;
+      if (!homeDataNavigationCache.value) {
+        homeDataNavigationCache.value = {
+          key,
+          cachedAt: Date.now(),
+          data: payload,
+        };
+      }
+    },
+    { immediate: true },
+  );
+}
+
+onMounted(() => {
+  if (cachedHomeDataAtEntry) void refresh();
+});
 
 const trendingMovies = computed(() => data.value?.trendingMovies || []);
 const trendingSeries = computed(() => data.value?.trendingSeries || []);
@@ -657,13 +744,14 @@ const topVoiceActors = computed(() => data.value?.topVoiceActors || []);
 const topContributors = computed(() => data.value?.topContributors || []);
 const homeStats = computed(() => data.value?.homeStats || null);
 
-const isLoadingMovies = computed(() => pending.value);
-const isLoadingSeries = computed(() => pending.value);
-const isLoadingGames = computed(() => pending.value);
-const isLoadingTrendingVoiceActors = computed(() => pending.value);
-const isLoadingTopVoiceActors = computed(() => pending.value);
-const isLoadingTopContributors = computed(() => pending.value);
-const isLoadingHomeStats = computed(() => pending.value);
+const isLoadingHomeData = computed(() => pending.value && !data.value);
+const isLoadingMovies = isLoadingHomeData;
+const isLoadingSeries = isLoadingHomeData;
+const isLoadingGames = isLoadingHomeData;
+const isLoadingTrendingVoiceActors = isLoadingHomeData;
+const isLoadingTopVoiceActors = isLoadingHomeData;
+const isLoadingTopContributors = isLoadingHomeData;
+const isLoadingHomeStats = isLoadingHomeData;
 
 const errorMovies = computed(() => data.value?.errorMovies || "");
 const errorSeries = computed(() => data.value?.errorSeries || "");
