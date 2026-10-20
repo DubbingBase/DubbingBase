@@ -1,4 +1,5 @@
 import { API_CLIENT_HEADER, API_CLIENT_VALUE } from "@app/shared-logic";
+import { createAccessTokenCache } from "../utils/access-token-cache";
 
 export default defineNuxtPlugin({
   name: "authenticated-fetch",
@@ -6,28 +7,7 @@ export default defineNuxtPlugin({
     const originalFetch = globalThis.$fetch;
     if (!originalFetch || Reflect.get(originalFetch, "__authWrapped")) return;
 
-    let pendingAccessToken: Promise<string | undefined> | undefined;
-
-    const getAccessToken = (): Promise<string | undefined> => {
-      if (pendingAccessToken) return pendingAccessToken;
-
-      const request = (async () => {
-        try {
-          const {
-            data: { session },
-          } = await useSupabaseClient().auth.getSession();
-          return session?.access_token;
-        } catch {
-          // Ignore when Supabase client is not configured
-          return undefined;
-        }
-      })().finally(() => {
-        pendingAccessToken = undefined;
-      });
-
-      pendingAccessToken = request;
-      return request;
-    };
+    let accessTokenCache: ReturnType<typeof createAccessTokenCache> | undefined;
 
     globalThis.$fetch = new Proxy(originalFetch, {
       apply(target, thisArg, args) {
@@ -56,7 +36,12 @@ export default defineNuxtPlugin({
               }
             } else {
               if (!headers.authorization && !headers.Authorization) {
-                const accessToken = await getAccessToken();
+                try {
+                  accessTokenCache ??= createAccessTokenCache(useSupabaseClient().auth);
+                } catch {
+                  // Ignore when Supabase client is not configured.
+                }
+                const accessToken = await accessTokenCache?.getAccessToken();
                 if (accessToken) {
                   headers.authorization = `Bearer ${accessToken}`;
                 }
