@@ -125,8 +125,11 @@
                   <NuxtImg
                     v-if="movie.poster_path"
                     :src="movie.poster_path"
+                    :srcset="getTmdbPosterSrcset(movie.poster_path)"
                     :alt="movie.title"
                     format="webp"
+                    width="192"
+                    height="288"
                     class="object-cover w-full h-full transition duration-300"
                     loading="lazy"
                     decoding="async"
@@ -174,8 +177,11 @@
                   <NuxtImg
                     v-if="show.poster_path"
                     :src="show.poster_path"
+                    :srcset="getTmdbPosterSrcset(show.poster_path)"
                     :alt="(show as any).name || (show as any).title"
                     format="webp"
+                    width="192"
+                    height="288"
                     class="object-cover w-full h-full transition duration-300"
                     loading="lazy"
                     decoding="async"
@@ -738,6 +744,17 @@ const trendingVoiceActors = computed(
 const topVoiceActors = computed(() => topVoiceActorsData.data.value);
 const topContributors = computed(() => topContributorsData.data.value);
 const homeStats = computed(() => homeStatsData.data.value);
+
+function getTmdbPosterSrcset(
+  imageUrl: string | null | undefined,
+): string | undefined {
+  if (!imageUrl?.startsWith("https://image.tmdb.org/t/p/w342/")) {
+    return undefined;
+  }
+
+  const standardDensityUrl = imageUrl.replace("/w342/", "/w185/");
+  return `${standardDensityUrl} 1x, ${imageUrl} 2x`;
+}
 
 const isLoadingMovies = moviesData.pending;
 const isLoadingSeries = seriesData.pending;
