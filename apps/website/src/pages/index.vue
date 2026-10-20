@@ -128,6 +128,8 @@
                     :alt="movie.title"
                     format="webp"
                     class="object-cover w-full h-full transition duration-300"
+                    loading="lazy"
+                    decoding="async"
                   />
                 </div>
                 <h3 class="font-semibold text-sm theme-text line-clamp-2">
@@ -175,6 +177,8 @@
                     :alt="(show as any).name || (show as any).title"
                     format="webp"
                     class="object-cover w-full h-full transition duration-300"
+                    loading="lazy"
+                    decoding="async"
                   />
                 </div>
                 <h3 class="font-semibold text-sm theme-text line-clamp-2">
@@ -222,6 +226,8 @@
                     :alt="game.name"
                     format="webp"
                     class="object-cover w-full h-full transition duration-300"
+                    loading="lazy"
+                    decoding="async"
                   />
                 </div>
                 <h3 class="font-semibold text-sm theme-text line-clamp-2">
@@ -284,6 +290,8 @@
                     :alt="va.firstname + ' ' + va.lastname"
                     format="webp"
                     class="object-cover w-full h-full"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div
                     v-else
@@ -348,6 +356,8 @@
                     :alt="va.firstname + ' ' + va.lastname"
                     format="webp"
                     class="object-cover w-full h-full"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div
                     v-else
@@ -419,6 +429,8 @@
                     "
                     format="webp"
                     class="object-cover w-full h-full"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div
                     v-else
