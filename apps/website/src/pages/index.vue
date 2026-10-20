@@ -124,7 +124,7 @@
                 >
                   <NuxtImg
                     v-if="movie.poster_path"
-                    :src="'https://image.tmdb.org/t/p/w342' + movie.poster_path"
+                    :src="movie.poster_path"
                     :alt="movie.title"
                     format="webp"
                     class="object-cover w-full h-full transition duration-300"
@@ -171,7 +171,7 @@
                 >
                   <NuxtImg
                     v-if="show.poster_path"
-                    :src="'https://image.tmdb.org/t/p/w342' + show.poster_path"
+                    :src="show.poster_path"
                     :alt="(show as any).name || (show as any).title"
                     format="webp"
                     class="object-cover w-full h-full transition duration-300"
