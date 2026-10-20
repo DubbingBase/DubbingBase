@@ -23,6 +23,7 @@ export default defineNuxtPlugin({
             persistence: "cookie",
             autocapture: true,
             capture_pageview: true,
+            disable_surveys: true,
             capture_exceptions: {
               capture_unhandled_errors: true,
               capture_unhandled_rejections: true,
