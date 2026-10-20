@@ -217,7 +217,7 @@ export default defineNuxtConfig({
     experimental: {
       processCSSVariables: true,
     },
-    families: [{ name: "Inter", provider: "google", display: "block", preload: true }],
+    families: [{ name: "Inter", provider: "google", display: "swap", preload: true }],
   },
 
   site: {
