@@ -461,7 +461,8 @@
 </template>
 
 <script setup lang="ts">
-import { fetchHomeData, resolveLocaleLanguage } from "@app/shared-logic";
+import { resolveLocaleLanguage } from "@app/shared-logic";
+import type { HomeDataPayload } from "@app/shared-logic";
 import { useDragScroll } from "../composables/useDragScroll";
 import { ref, computed } from "vue";
 
@@ -638,44 +639,116 @@ const trendingLanguage = computed(
   () => resolveLocaleLanguage(locale.value) || "en-US",
 );
 
-const { data, pending } = useAsyncData(
-  () => `home-data:${trendingLanguage.value}`,
-  () => fetchHomeData(trendingLanguage.value),
-  {
-    getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
-    watch: [trendingLanguage],
+function useHomeSection<T>(
+  section: string,
+  handler: () => Promise<T>,
+  defaultValue: () => T,
+) {
+  return useAsyncData(
+    () => `home-${section}:${trendingLanguage.value}`,
+    handler,
+    {
+      default: defaultValue,
+      getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
+      lazy: true,
+      watch: [trendingLanguage],
+    },
+  );
+}
+
+const moviesData = useHomeSection(
+  "movies",
+  async () => {
+    const response = await $fetch<{
+      results?: HomeDataPayload["trendingMovies"];
+    }>("/api/trending/movies", { params: { lang: trendingLanguage.value } });
+    return response.results ?? [];
   },
+  () => [],
 );
 
-const trendingMovies = computed(() => data.value?.trendingMovies || []);
-const trendingSeries = computed(() => data.value?.trendingSeries || []);
-const trendingGames = computed(() => data.value?.trendingGames || []);
+const seriesData = useHomeSection(
+  "series",
+  async () => {
+    const response = await $fetch<{
+      results?: HomeDataPayload["trendingSeries"];
+    }>("/api/trending/shows", { params: { lang: trendingLanguage.value } });
+    return response.results ?? [];
+  },
+  () => [],
+);
+
+const gamesData = useHomeSection(
+  "games",
+  () =>
+    $fetch<HomeDataPayload["trendingGames"]>("/api/trending/games", {
+      params: { lang: trendingLanguage.value },
+    }),
+  () => [],
+);
+
+const trendingVoiceActorsData = useHomeSection(
+  "trending-voice-actors",
+  () =>
+    $fetch<HomeDataPayload["trendingVoiceActors"]>(
+      "/api/trending/voice-actors",
+    ),
+  () => [],
+);
+
+const topVoiceActorsData = useHomeSection(
+  "top-voice-actors",
+  () =>
+    $fetch<HomeDataPayload["topVoiceActors"]>("/api/top-voice-actors", {
+      params: { limit: 10 },
+    }),
+  () => [],
+);
+
+const topContributorsData = useHomeSection(
+  "top-contributors",
+  () =>
+    $fetch<HomeDataPayload["topContributors"]>("/api/top-contributors", {
+      params: { limit: 10 },
+    }),
+  () => [],
+);
+
+const homeStatsData = useHomeSection(
+  "stats",
+  () => $fetch<HomeDataPayload["homeStats"]>("/api/home-stats"),
+  () => ({ voiceActorCount: 0, dubbingProjectCount: 0, workCount: 0 }),
+);
+
+const trendingMovies = computed(() => moviesData.data.value);
+const trendingSeries = computed(() => seriesData.data.value);
+const trendingGames = computed(() => gamesData.data.value);
 const trendingVoiceActors = computed(
-  () => data.value?.trendingVoiceActors || [],
+  () => trendingVoiceActorsData.data.value,
 );
-const topVoiceActors = computed(() => data.value?.topVoiceActors || []);
-const topContributors = computed(() => data.value?.topContributors || []);
-const homeStats = computed(() => data.value?.homeStats || null);
+const topVoiceActors = computed(() => topVoiceActorsData.data.value);
+const topContributors = computed(() => topContributorsData.data.value);
+const homeStats = computed(() => homeStatsData.data.value);
 
-const isLoadingMovies = computed(() => pending.value);
-const isLoadingSeries = computed(() => pending.value);
-const isLoadingGames = computed(() => pending.value);
-const isLoadingTrendingVoiceActors = computed(() => pending.value);
-const isLoadingTopVoiceActors = computed(() => pending.value);
-const isLoadingTopContributors = computed(() => pending.value);
-const isLoadingHomeStats = computed(() => pending.value);
+const isLoadingMovies = moviesData.pending;
+const isLoadingSeries = seriesData.pending;
+const isLoadingGames = gamesData.pending;
+const isLoadingTrendingVoiceActors = trendingVoiceActorsData.pending;
+const isLoadingTopVoiceActors = topVoiceActorsData.pending;
+const isLoadingTopContributors = topContributorsData.pending;
+const isLoadingHomeStats = homeStatsData.pending;
 
-const errorMovies = computed(() => data.value?.errorMovies || "");
-const errorSeries = computed(() => data.value?.errorSeries || "");
-const errorGames = computed(() => data.value?.errorGames || "");
+const errorMovies = computed(() => moviesData.error.value?.message || "");
+const errorSeries = computed(() => seriesData.error.value?.message || "");
+const errorGames = computed(() => gamesData.error.value?.message || "");
 const errorTrendingVoiceActors = computed(
-  () => data.value?.errorTrendingVoiceActors || "",
+  () => trendingVoiceActorsData.error.value?.message || "",
 );
 const errorTopVoiceActors = computed(
-  () => data.value?.errorTopVoiceActors || "",
+  () => topVoiceActorsData.error.value?.message || "",
 );
 const errorTopContributors = computed(
-  () => data.value?.errorTopContributors || "",
+  () => topContributorsData.error.value?.message || "",
 );
 </script>
 
