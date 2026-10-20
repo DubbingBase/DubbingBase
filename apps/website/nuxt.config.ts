@@ -190,6 +190,12 @@ export default defineNuxtConfig({
   vite: {
     plugins: [tailwindcss()],
     resolve: {
+      alias: {
+        "@supabase/realtime-js": resolve(
+          import.meta.dirname,
+          "tooling/supabase-realtime-disabled.ts",
+        ),
+      },
       dedupe: [
         "vue",
         "@vue/runtime-core",
