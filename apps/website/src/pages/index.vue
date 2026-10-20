@@ -464,7 +464,7 @@
 import { resolveLocaleLanguage } from "@app/shared-logic";
 import type { HomeDataPayload } from "@app/shared-logic";
 import { useDragScroll } from "../composables/useDragScroll";
-import { ref, computed } from "vue";
+import { ref, computed, watch, type MaybeRefOrGetter } from "vue";
 
 const user = useSupabaseUser();
 const isAdmin = computed(() => {
@@ -643,6 +643,7 @@ function useHomeSection<T>(
   section: string,
   handler: () => Promise<T>,
   defaultValue: () => T,
+  enabled: MaybeRefOrGetter<boolean> = true,
 ) {
   return useAsyncData(
     () => `home-${section}:${trendingLanguage.value}`,
@@ -652,6 +653,7 @@ function useHomeSection<T>(
       getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
       lazy: true,
       watch: [trendingLanguage],
+      enabled,
     },
   );
 }
@@ -712,7 +714,14 @@ const topContributorsData = useHomeSection(
       params: { limit: 10 },
     }),
   () => [],
+  isAdmin,
 );
+
+watch(isAdmin, (enabled) => {
+  if (enabled && topContributorsData.status.value === "idle") {
+    void topContributorsData.execute();
+  }
+});
 
 const homeStatsData = useHomeSection(
   "stats",
