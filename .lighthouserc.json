@@ -2,7 +2,7 @@
   "ci": {
     "collect": {
       "url": ["http://127.0.0.1:8787/"],
-      "startServerCommand": "cd apps/website && pnpm exec wrangler dev --local --ip 127.0.0.1 --port 8787 --var E2E_TEST:true --compatibility-flag nodejs_compat_populate_process_env",
+      "startServerCommand": "cd apps/website && pnpm exec wrangler dev --local --ip 127.0.0.1 --port 8787 --var E2E_TEST:true --compatibility-flag nodejs_compat --compatibility-flag disable_nodejs_process_v2 --compatibility-flag nodejs_compat_populate_process_env",
       "startServerReadyPattern": "Ready on",
       "startServerReadyTimeout": 120000,
       "numberOfRuns": 3,

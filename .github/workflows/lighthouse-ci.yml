@@ -82,4 +82,5 @@ jobs:
           name: lighthouse-desktop-${{ github.run_id }}-${{ github.run_attempt }}
           path: .lighthouseci/
           if-no-files-found: warn
+          include-hidden-files: true
           retention-days: 14
