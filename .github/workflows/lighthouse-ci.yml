@@ -82,7 +82,7 @@ jobs:
             if ! kill -0 "$worker_pid" 2>/dev/null; then
               break
             fi
-            if rg -q "Ready on" /tmp/wrangler-lhci.log; then
+            if grep -q "Ready on" /tmp/wrangler-lhci.log; then
               http_status=$(curl --silent --output /tmp/lhci-homepage.html --write-out "%{http_code}" http://127.0.0.1:8787/ || true)
               if [ "$http_status" = "200" ]; then
                 echo "Local production Worker homepage returned HTTP 200."
