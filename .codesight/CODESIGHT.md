@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 82 routes | 19 models | 198 components | 106 lib files | 63 env vars | 17 middleware | 29% test coverage
-> **Token savings:** this file is ~17,300 tokens. Without it, AI exploration would cost ~163,700 tokens. **Saves ~146,400 tokens per conversation.**
-> **Last scanned:** 2026-10-20 20:12 — re-run after significant changes
+> 82 routes | 19 models | 199 components | 106 lib files | 63 env vars | 17 middleware | 29% test coverage
+> **Token savings:** this file is ~17,300 tokens. Without it, AI exploration would cost ~164,000 tokens. **Saves ~146,700 tokens per conversation.**
+> **Last scanned:** 2026-10-21 18:42 — re-run after significant changes
 
 ---
 
@@ -330,6 +330,7 @@
 - **ForceEnqueueButton** [client] — props: mediaType, mediaId, seasonNumber, episodeNumber, wikipediaLanguage — `apps/website/src/components/ForceEnqueueButton.vue`
 - **Header** [client] — `apps/website/src/components/Header.vue`
 - **HeaderPreferences** [client] — `apps/website/src/components/HeaderPreferences.vue`
+- **HomeBelowFoldSections** [client] — `apps/website/src/components/HomeBelowFoldSections.vue`
 - **LanguageBanner** [client] — `apps/website/src/components/LanguageBanner.vue`
 - **MediaSkeleton** [client] — `apps/website/src/components/MediaSkeleton.vue`
 - **PaginatedResponsiveGrid** [client] — props: items, pageSize, totalItems, page, gridClass, itemKey — `apps/website/src/components/PaginatedResponsiveGrid.vue`
