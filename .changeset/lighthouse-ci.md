@@ -2,4 +2,4 @@
 "@app/website": patch
 ---
 
-Add desktop Lighthouse CI for the production-like Cloudflare Worker build.
+Add desktop Lighthouse CI for a locally served production website build.

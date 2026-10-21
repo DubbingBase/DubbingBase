@@ -66,48 +66,51 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --config.minimum-release-age=0 --config.minimum-release-age-strict=false
 
-      - name: Build production-like Cloudflare Worker
+      - name: Build production-like website
         run: mise run check
         env:
           E2E_TEST: "true"
-          NITRO_PRESET: cloudflare-module
+          NITRO_PRESET: node-server
 
-      - name: Start local production Worker
+      - name: Start local production server
+        env:
+          E2E_TEST: "true"
+          HOST: 127.0.0.1
+          PORT: 8787
         run: |
-          cd apps/website
-          pnpm exec wrangler dev --local --ip 127.0.0.1 --port 8787 --var E2E_TEST:true --compatibility-flag nodejs_compat --compatibility-flag disable_nodejs_process_v2 --compatibility-flag nodejs_compat_populate_process_env --log-level info > /tmp/wrangler-lhci.log 2>&1 &
-          worker_pid=$!
+          node apps/website/.output/server/index.mjs > /tmp/lhci-server.log 2>&1 &
+          server_pid=$!
 
-          for attempt in {1..120}; do
-            if ! kill -0 "$worker_pid" 2>/dev/null; then
+          for attempt in {1..60}; do
+            if ! kill -0 "$server_pid" 2>/dev/null; then
               break
             fi
-            if grep -q "Ready on" /tmp/wrangler-lhci.log; then
-              http_status=$(curl --silent --output /tmp/lhci-homepage.html --write-out "%{http_code}" http://127.0.0.1:8787/ || true)
-              if [ "$http_status" = "200" ]; then
-                echo "Local production Worker homepage returned HTTP 200."
-                exit 0
-              fi
-              echo "Local production Worker homepage returned HTTP $http_status."
+            http_status=$(curl --silent --output /tmp/lhci-homepage.html --write-out "%{http_code}" http://127.0.0.1:8787/ || true)
+            if [ "$http_status" = "200" ]; then
+              echo "Local production server homepage returned HTTP 200."
+              exit 0
+            fi
+            if [ "$http_status" != "000" ]; then
+              echo "Local production server homepage returned HTTP $http_status."
               head -c 4000 /tmp/lhci-homepage.html
-              tail -n 200 /tmp/wrangler-lhci.log
+              tail -n 200 /tmp/lhci-server.log
               exit 1
             fi
             sleep 1
           done
 
-          echo "Local production Worker did not become ready."
-          tail -n 200 /tmp/wrangler-lhci.log
+          echo "Local production server did not become ready."
+          tail -n 200 /tmp/lhci-server.log
           exit 1
 
       - name: Run desktop Lighthouse CI
         run: pnpm dlx @lhci/cli@0.15.1 autorun
 
-      - name: Show local Worker logs if Lighthouse fails
+      - name: Show local server logs if Lighthouse fails
         if: failure()
         run: |
-          if [ -f /tmp/wrangler-lhci.log ]; then
-            tail -n 200 /tmp/wrangler-lhci.log
+          if [ -f /tmp/lhci-server.log ]; then
+            tail -n 200 /tmp/lhci-server.log
           else
             echo "No Wrangler log was captured."
           fi
