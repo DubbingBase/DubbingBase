@@ -1,0 +1,85 @@
+name: Lighthouse CI
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "apps/website/**"
+      - "packages/shared-logic/**"
+      - "packages/locales/**"
+      - "AGENTS.md"
+      - "mise.toml"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "turbo.json"
+      - ".lighthouserc.json"
+      - ".github/workflows/lighthouse-ci.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/website/**"
+      - "packages/shared-logic/**"
+      - "packages/locales/**"
+      - "AGENTS.md"
+      - "mise.toml"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "turbo.json"
+      - ".lighthouserc.json"
+      - ".github/workflows/lighthouse-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lighthouse-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lighthouse-desktop:
+    name: Desktop Lighthouse on local production Worker
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.4.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+
+      - name: Setup mise
+        uses: jdx/mise-action@v2
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --config.minimum-release-age=0 --config.minimum-release-age-strict=false
+
+      - name: Build production-like Cloudflare Worker
+        run: mise run check
+        env:
+          E2E_TEST: "true"
+          NITRO_PRESET: cloudflare-module
+
+      - name: Run desktop Lighthouse CI
+        run: pnpm dlx @lhci/cli@0.15.1 autorun
+
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-desktop-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .lighthouseci/
+          if-no-files-found: warn
+          retention-days: 14
