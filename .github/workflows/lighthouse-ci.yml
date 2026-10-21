@@ -42,7 +42,7 @@ concurrency:
 
 jobs:
   lighthouse-desktop:
-    name: Desktop Lighthouse on local production server
+    name: Desktop Lighthouse on local production Worker
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -66,20 +66,23 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --config.minimum-release-age=0 --config.minimum-release-age-strict=false
 
-      - name: Build production-like website
+      - name: Build production Cloudflare Worker
         run: mise run check
         env:
           E2E_TEST: "true"
-          NITRO_PRESET: node-server
+          NODE_ENV: production
+          NITRO_PRESET: cloudflare-module
 
-      - name: Start local production server
+      - name: Start local Cloudflare Worker
         env:
           E2E_TEST: "true"
-          NODE_ENV: production
-          HOST: 127.0.0.1
-          PORT: 8787
         run: |
-          pnpm --filter @app/website exec nuxt preview > /tmp/lhci-server.log 2>&1 &
+          pnpm --filter @app/website exec wrangler dev --local --ip 127.0.0.1 --port 8787 \
+            --var E2E_TEST:true \
+            --compatibility-flag nodejs_compat \
+            --compatibility-flag disable_nodejs_process_v2 \
+            --compatibility-flag nodejs_compat_populate_process_env \
+            > /tmp/lhci-worker.log 2>&1 &
           server_pid=$!
 
           for attempt in {1..60}; do
@@ -88,32 +91,32 @@ jobs:
             fi
             http_status=$(curl --silent --output /tmp/lhci-page.html --write-out "%{http_code}" http://127.0.0.1:8787/about || true)
             if [ "$http_status" = "200" ]; then
-              echo "Local production server /about returned HTTP 200."
+              echo "Local production Cloudflare Worker /about returned HTTP 200."
               exit 0
             fi
             if [ "$http_status" != "000" ]; then
-              echo "Local production server /about returned HTTP $http_status."
+              echo "Local production Cloudflare Worker /about returned HTTP $http_status."
               head -c 4000 /tmp/lhci-page.html
-              tail -n 200 /tmp/lhci-server.log
+              tail -n 200 /tmp/lhci-worker.log
               exit 1
             fi
             sleep 1
           done
 
-          echo "Local production server did not become ready."
-          tail -n 200 /tmp/lhci-server.log
+          echo "Local production Cloudflare Worker did not become ready."
+          tail -n 200 /tmp/lhci-worker.log
           exit 1
 
       - name: Run desktop Lighthouse CI
         run: pnpm dlx @lhci/cli@0.15.1 autorun
 
-      - name: Show local server logs if Lighthouse fails
+      - name: Show local Worker logs if Lighthouse fails
         if: failure()
         run: |
-          if [ -f /tmp/lhci-server.log ]; then
-            tail -n 200 /tmp/lhci-server.log
+          if [ -f /tmp/lhci-worker.log ]; then
+            tail -n 200 /tmp/lhci-worker.log
           else
-            echo "No local server log was captured."
+            echo "No local Worker log was captured."
           fi
 
       - name: Upload Lighthouse reports
