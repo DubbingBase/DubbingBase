@@ -75,6 +75,15 @@ jobs:
       - name: Run desktop Lighthouse CI
         run: pnpm dlx @lhci/cli@0.15.1 autorun
 
+      - name: Show local Worker logs if Lighthouse fails
+        if: failure()
+        run: |
+          if [ -f /tmp/wrangler-lhci.log ]; then
+            tail -n 200 /tmp/wrangler-lhci.log
+          else
+            echo "No Wrangler log was captured."
+          fi
+
       - name: Upload Lighthouse reports
         if: always()
         uses: actions/upload-artifact@v4
