@@ -5,20 +5,14 @@
       class="shrink-0 theme-surface-overlay p-6 rounded-2xl border theme-border flex flex-col md:flex-row md:items-center justify-between gap-4"
     >
       <div class="flex-1 max-w-md">
-        <label
-          class="block text-xs font-semibold theme-text-muted uppercase tracking-wider mb-2"
-          >{{ $t("admin.spreadsheet.searchDirectory") }}</label
-        >
+        <label class="block text-xs font-semibold theme-text-muted uppercase tracking-wider mb-2">{{
+          $t("admin.spreadsheet.searchDirectory")
+        }}</label>
         <div class="relative">
           <span
             class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none theme-text-muted"
           >
-            <svg
-              class="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -41,12 +35,7 @@
           :to="localePath('/voice-actor/new')"
           class="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-4 rounded-xl text-sm transition-all duration-150 flex items-center space-x-2 shrink-0 shadow-lg shadow-blue-500/10 border border-[var(--app-color-info-border)]"
         >
-          <svg
-            class="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -102,11 +91,8 @@
         {{ $t("admin.spreadsheet.showing")
         }}<span class="font-bold theme-text">{{ (page - 1) * limit + 1 }}</span
         >{{ $t("common.to")
-        }}<span class="font-bold theme-text">{{
-          Math.min(page * limit, total)
-        }}</span
-        >{{ $t("common.of")
-        }}<span class="font-bold theme-text">{{ total }}</span
+        }}<span class="font-bold theme-text">{{ Math.min(page * limit, total) }}</span
+        >{{ $t("common.of") }}<span class="font-bold theme-text">{{ total }}</span
         >{{ $t("admin.spreadsheet.results") }}
       </div>
       <div class="flex items-center space-x-2">
@@ -134,16 +120,12 @@
     </div>
 
     <!-- Table -->
-    <div
-      class="theme-surface-overlay border theme-border rounded-2xl overflow-x-auto relative"
-    >
+    <div class="theme-surface-overlay border theme-border rounded-2xl overflow-x-auto relative">
       <div
         v-if="pending"
         class="absolute inset-0 theme-surface-overlay backdrop-blur-sm z-10 flex flex-col items-center justify-center"
       >
-        <div
-          class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"
-        ></div>
+        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
       </div>
       <table class="w-full text-left border-collapse text-sm whitespace-nowrap">
         <thead>
@@ -222,15 +204,19 @@
             </td>
             <td class="py-2 px-2">
               <input
-                v-model="actor.social_media_links"
-                @change="handleCellEdit(actor, 'social_media_links')"
+                :value="
+                  actor.social_media_links === null ? '' : JSON.stringify(actor.social_media_links)
+                "
+                @change="handleSocialMediaLinksEdit(actor, $event)"
                 class="w-32 theme-input border border-transparent theme-hover-border focus:border-[var(--app-color-focus)] rounded px-2 py-1 theme-text transition-colors"
               />
             </td>
             <td class="py-2 px-2">
               <input
-                v-model="actor.tmdb_id"
-                @change="handleCellEdit(actor, 'tmdb_id')"
+                :value="actor.tmdb_id ?? ''"
+                type="number"
+                step="1"
+                @change="handleTmdbIdEdit(actor, $event)"
                 class="w-24 theme-input border border-transparent theme-hover-border focus:border-[var(--app-color-focus)] rounded px-2 py-1 theme-text transition-colors"
               />
             </td>
@@ -262,13 +248,7 @@
           v-if="isBulkSaving"
           class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"
         ></span>
-        <svg
-          v-else
-          class="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
+        <svg v-else class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -277,9 +257,7 @@
           />
         </svg>
         <span>{{
-          isBulkSaving
-            ? "Saving changes..."
-            : `Save All Changes (${pendingChanges.size})`
+          isBulkSaving ? "Saving changes..." : `Save All Changes (${pendingChanges.size})`
         }}</span>
       </button>
     </div>
@@ -302,8 +280,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onUnmounted } from "vue";
+import { ref, shallowRef, computed, watch, onUnmounted } from "vue";
 import type { Database } from "@app/supabase";
+import type { Json } from "@app/supabase/types";
 
 const supabase = useSupabaseClient();
 const localePath = useLocalePath();
@@ -313,14 +292,43 @@ definePageMeta({
   middleware: "admin",
 });
 
-type VoiceActor = any;
-type CellChange = { id: number; prop: string; newValue: any };
+type VoiceActor = Pick<
+  Database["public"]["Tables"]["voice_actors"]["Row"],
+  | "id"
+  | "firstname"
+  | "lastname"
+  | "bio"
+  | "nationality"
+  | "date_of_birth"
+  | "profile_picture"
+  | "social_media_links"
+  | "tmdb_id"
+  | "wikidata_id"
+  | "updated_at"
+>;
+type EditableVoiceActorField =
+  | "firstname"
+  | "lastname"
+  | "bio"
+  | "nationality"
+  | "date_of_birth"
+  | "profile_picture"
+  | "social_media_links"
+  | "tmdb_id"
+  | "wikidata_id";
+type CellChange = {
+  id: number;
+  prop: EditableVoiceActorField;
+  newValue: unknown;
+  expectedUpdatedAt: string;
+  requestId: string;
+};
 
 const page = ref(1);
 const limit = ref(50);
 const searchQuery = ref("");
 const searchInput = ref("");
-const tableData = ref<VoiceActor[]>([]);
+const tableData = shallowRef<VoiceActor[]>([]);
 const total = ref(0);
 
 // Debouncing for search
@@ -331,16 +339,13 @@ let autoSaveTimer: ReturnType<typeof setTimeout> | null = null;
 const { data, pending, error, refresh } = await useAsyncData(
   `voice-actors-spreadsheet-${page.value}-${searchQuery.value}`,
   async () => {
-    return await $fetch<{ voice_actors: VoiceActor[]; total: number }>(
-      "/api/list-voice-actors",
-      {
-        params: {
-          limit: limit.value,
-          offset: (page.value - 1) * limit.value,
-          query: searchQuery.value,
-        },
+    return await $fetch<{ voice_actors: VoiceActor[]; total: number }>("/api/list-voice-actors", {
+      params: {
+        limit: limit.value,
+        offset: (page.value - 1) * limit.value,
+        query: searchQuery.value,
       },
-    );
+    });
   },
   {
     watch: [page, searchQuery],
@@ -354,7 +359,7 @@ watch(
   (newData) => {
     if (newData) {
       // Clone data so we can mutate it locally for inputs
-      tableData.value = JSON.parse(JSON.stringify(newData.voice_actors || []));
+      tableData.value = structuredClone(newData.voice_actors || []);
       total.value = newData.total || 0;
     }
   },
@@ -362,7 +367,7 @@ watch(
 );
 
 function handleSearchInput(event: Event) {
-  const val = (event.target as HTMLInputElement).value || "";
+  const val = event.target instanceof HTMLInputElement ? event.target.value : "";
   if (searchTimer) clearTimeout(searchTimer);
   searchTimer = setTimeout(() => {
     searchQuery.value = val;
@@ -384,26 +389,78 @@ const toast = ref<{
   type: "info",
 });
 
-function showToast(
-  message: string,
-  type: "success" | "error" | "info" = "info",
-) {
+function showToast(message: string, type: "success" | "error" | "info" = "info") {
   toast.value = { show: true, message, type };
   setTimeout(() => {
     toast.value.show = false;
   }, 3000);
 }
 
-function handleCellEdit(actor: VoiceActor, prop: string) {
-  const key = `${actor.id}-${prop}`;
-  const val = (actor as any)[prop];
+function handleCellEdit(actor: VoiceActor, prop: EditableVoiceActorField) {
+  queueCellEdit(actor, prop, actor[prop]);
+}
 
+function handleSocialMediaLinksEdit(actor: VoiceActor, event: Event) {
+  if (!(event.target instanceof HTMLInputElement)) return;
+  const input = event.target.value.trim();
+  let value: VoiceActor["social_media_links"] = null;
+
+  if (input !== "") {
+    try {
+      const parsed: unknown = JSON.parse(input);
+      if (
+        typeof parsed !== "object" ||
+        parsed === null ||
+        Array.isArray(parsed) ||
+        !isJson(parsed)
+      ) {
+        showToast("Social media links must be a JSON object or empty.", "error");
+        return;
+      }
+      value = parsed;
+    } catch {
+      showToast("Social media links must be valid JSON.", "error");
+      return;
+    }
+  }
+
+  actor.social_media_links = value;
+  queueCellEdit(actor, "social_media_links", actor.social_media_links);
+}
+
+function handleTmdbIdEdit(actor: VoiceActor, event: Event) {
+  if (!(event.target instanceof HTMLInputElement)) return;
+  const input = event.target.value.trim();
+  const value = input === "" ? null : Number(input);
+  if (value !== null && !Number.isSafeInteger(value)) {
+    showToast("TMDB ID must be a whole number or empty.", "error");
+    return;
+  }
+  actor.tmdb_id = value;
+  queueCellEdit(actor, "tmdb_id", actor.tmdb_id);
+}
+
+function isJson(value: unknown): value is Json {
+  if (value === null || typeof value === "string" || typeof value === "boolean") return true;
+  if (typeof value === "number") return Number.isFinite(value);
+  if (Array.isArray(value)) return value.every(isJson);
+  if (typeof value === "object") return Object.values(value).every(isJson);
+  return false;
+}
+
+function queueCellEdit(actor: VoiceActor, prop: EditableVoiceActorField, newValue: unknown) {
+  if (typeof actor.updated_at !== "string") {
+    showToast("Unable to save this change. Refresh the voice actor list and try again.", "error");
+    return;
+  }
+  const key = `${actor.id}-${prop}`;
   pendingChanges.value.set(key, {
     id: actor.id,
     prop,
-    newValue: val,
+    newValue,
+    expectedUpdatedAt: actor.updated_at,
+    requestId: crypto.randomUUID(),
   });
-
   debounceAutoSave();
 }
 
@@ -414,29 +471,57 @@ function debounceAutoSave() {
   }, 1000);
 }
 
-async function savePendingChanges() {
-  if (pendingChanges.value.size === 0) return;
+async function savePendingChanges(): Promise<boolean> {
+  if (pendingChanges.value.size === 0) return true;
 
   const changesToSave = Array.from(pendingChanges.value.entries());
-  for (const [key, change] of changesToSave) {
-    await saveSingleChange(key, change);
+  let allSaved = true;
+  for (const [key] of changesToSave) {
+    if (!(await saveSingleChange(key))) allSaved = false;
   }
+  return allSaved;
 }
 
-async function saveSingleChange(key: string, change: CellChange) {
-  try {
-    await $fetch("/api/update-voice-actor", {
-      method: "POST",
-      body: {
-        voice_actor_id: change.id,
-        updates: { [change.prop]: change.newValue },
-      },
-    });
+async function saveSingleChange(key: string): Promise<boolean> {
+  const pendingChange = pendingChanges.value.get(key);
+  if (!pendingChange) return true;
 
-    pendingChanges.value.delete(key);
-  } catch (err: any) {
+  try {
+    const result = await $fetch<{ profile: { id: number; updated_at: string } }>(
+      "/api/update-voice-actor",
+      {
+        method: "POST",
+        body: {
+          voice_actor_id: pendingChange.id,
+          updates: { [pendingChange.prop]: pendingChange.newValue },
+          expected_updated_at: pendingChange.expectedUpdatedAt,
+          request_id: pendingChange.requestId,
+        },
+      },
+    );
+
+    const actor = tableData.value.find((item: VoiceActor) => item.id === pendingChange.id);
+    if (actor) actor.updated_at = result.profile.updated_at;
+
+    for (const [pendingKey, queuedChange] of pendingChanges.value.entries()) {
+      if (
+        queuedChange.id === pendingChange.id &&
+        queuedChange.expectedUpdatedAt === pendingChange.expectedUpdatedAt
+      ) {
+        pendingChanges.value.set(pendingKey, {
+          ...queuedChange,
+          expectedUpdatedAt: result.profile.updated_at,
+        });
+      }
+    }
+    if (pendingChanges.value.get(key)?.requestId === pendingChange.requestId) {
+      pendingChanges.value.delete(key);
+    }
+    return true;
+  } catch (err: unknown) {
     console.error("Error saving change:", err);
-    showToast(`Failed to save ${change.prop}`, "error");
+    showToast(`Failed to save ${pendingChange.prop}`, "error");
+    return false;
   }
 }
 
@@ -444,8 +529,11 @@ async function handleBulkSave() {
   if (pendingChanges.value.size === 0) return;
   isBulkSaving.value = true;
   try {
-    await savePendingChanges();
-    showToast("All changes saved successfully", "success");
+    const allSaved = await savePendingChanges();
+    showToast(
+      allSaved ? "All changes saved successfully" : "Some changes failed to save",
+      allSaved ? "success" : "error",
+    );
   } catch (err) {
     showToast("Some changes failed to save", "error");
   } finally {
