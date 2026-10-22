@@ -14,6 +14,7 @@ The Voice-actors.get subsystem handles **1 routes**.
 - **voice_actors** (2 fields) → [database.md](./database.md)
 - **user_voice_actor_links** (3 fields) → [database.md](./database.md)
 - **voice_actor_subscriptions** (2 fields) → [database.md](./database.md)
+- **voice_actor_write_requests** (6 fields) → [database.md](./database.md)
 
 ## Source Files
 

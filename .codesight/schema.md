@@ -134,3 +134,11 @@
 - entity_id: text (required, fk)
 - audit_log_id: uuid (required, fk)
 - result: jsonb (required)
+
+### voice_actor_write_requests
+- actor_id: uuid (required, fk)
+- request_id: uuid (required, fk)
+- voice_actor_id: bigint (required, fk)
+- payload_fingerprint: text (required)
+- audit_log_id: uuid (fk)
+- result: jsonb (required)
