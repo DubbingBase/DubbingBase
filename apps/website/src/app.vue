@@ -17,6 +17,14 @@
 
 <script setup lang="ts">
 const { effectiveTheme } = useTheme();
+const route = useRoute();
+const isAdminRoute = computed(() => {
+  const middleware = route.meta.middleware;
+  return (
+    middleware === "admin" ||
+    (Array.isArray(middleware) && middleware.includes("admin"))
+  );
+});
 const i18nHead = useLocaleHead({
   dir: true,
   seo: true,
@@ -59,6 +67,9 @@ useHead(() => ({
       content: "#f8fafc",
       media: "(prefers-color-scheme: light)",
     },
+    ...(isAdminRoute.value
+      ? [{ name: "robots", content: "noindex, nofollow" }]
+      : []),
     ...(i18nHead.value.meta || []),
   ],
 }));
