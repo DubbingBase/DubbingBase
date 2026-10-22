@@ -141,3 +141,108 @@ jobs:
           if-no-files-found: warn
           include-hidden-files: true
           retention-days: 14
+
+  publish-lighthouse-trends:
+    name: Publish Lighthouse trends
+    needs: lighthouse-desktop
+    if: >-
+      ${{
+        github.event_name != 'pull_request' ||
+        github.event.pull_request.head.repo.full_name == github.repository
+      }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    steps:
+      - name: Download Lighthouse reports
+        uses: actions/download-artifact@v4
+        with:
+          name: lighthouse-desktop-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .lighthouseci
+
+      - name: Summarize desktop Lighthouse runs
+        run: |
+          node --input-type=module <<'NODE'
+          import { readdir, readFile, writeFile } from "node:fs/promises";
+
+          const routeNames = new Map([
+            ["/", "home"],
+            ["/movie/85", "movie"],
+            ["/show/1396", "show"],
+            ["/actor/3", "actor"],
+            ["/voice-actor/1", "voice_actor"],
+          ]);
+          const metricDefinitions = [
+            { name: "performance", category: "performance", unit: "%", better: "higher", decimals: 1, scale: 100 },
+            { name: "accessibility", category: "accessibility", unit: "%", better: "higher", decimals: 1, scale: 100 },
+            { name: "best_practices", category: "best-practices", unit: "%", better: "higher", decimals: 1, scale: 100 },
+            { name: "seo", category: "seo", unit: "%", better: "higher", decimals: 1, scale: 100 },
+            { name: "lcp", audit: "largest-contentful-paint", unit: "ms", better: "lower", decimals: 1 },
+            { name: "cls", audit: "cumulative-layout-shift", unit: "score", better: "lower", decimals: 4 },
+            { name: "tbt", audit: "total-blocking-time", unit: "ms", better: "lower", decimals: 1 },
+            { name: "speed_index", audit: "speed-index", unit: "ms", better: "lower", decimals: 1 },
+          ];
+          const expectedRunsPerRoute = 3;
+          const files = (await readdir(".lighthouseci"))
+            .filter((file) => file.startsWith("lhr-") && file.endsWith(".json"));
+          const reportsByRoute = new Map([...routeNames.values()].map((route) => [route, []]));
+
+          for (const file of files) {
+            const report = JSON.parse(await readFile(`.lighthouseci/${file}`, "utf8"));
+            const url = report.finalUrl ?? report.requestedUrl;
+            if (!url) {
+              throw new Error(`Lighthouse report ${file} has no finalUrl or requestedUrl`);
+            }
+            const pathname = new URL(url).pathname.replace(/\/+$/, "") || "/";
+            const route = routeNames.get(pathname) ?? [...routeNames.entries()]
+              .find(([path]) => path !== "/" && pathname.endsWith(path))?.[1]
+              ?? (pathname.split("/").filter(Boolean).length <= 1 ? "home" : undefined);
+            if (!route) {
+              continue;
+            }
+            reportsByRoute.get(route).push(report);
+          }
+
+          function median(values) {
+            const sorted = [...values].sort((left, right) => left - right);
+            const middle = Math.floor(sorted.length / 2);
+            return sorted.length % 2 === 0
+              ? (sorted[middle - 1] + sorted[middle]) / 2
+              : sorted[middle];
+          }
+
+          const metrics = {};
+          for (const [route, reports] of reportsByRoute) {
+            if (reports.length !== expectedRunsPerRoute) {
+              throw new Error(`Expected ${expectedRunsPerRoute} Lighthouse reports for ${route}, found ${reports.length}`);
+            }
+            for (const definition of metricDefinitions) {
+              const values = reports.map((report) => {
+                const value = definition.category
+                  ? report.categories?.[definition.category]?.score
+                  : report.audits?.[definition.audit]?.numericValue;
+                if (!Number.isFinite(value)) {
+                  throw new Error(`Missing numeric Lighthouse value for ${definition.name}/${route}`);
+                }
+                return value * (definition.scale ?? 1);
+              });
+              const factor = 10 ** definition.decimals;
+              metrics[`lighthouse_${definition.name}_${route}`] = {
+                value: Math.round(median(values) * factor) / factor,
+                unit: definition.unit,
+                better: definition.better,
+              };
+            }
+          }
+
+          await writeFile("buildstats-metrics.json", `${JSON.stringify(metrics, null, 2)}\n`);
+          console.log(`Prepared ${Object.keys(metrics).length} Lighthouse trend metrics from ${files.length} reports.`);
+          NODE
+
+      - name: Upload Lighthouse metrics to Buildstats
+        uses: buildstats-io/action@v1
+        with:
+          claim: ${{ secrets.BUILDSTATS_CLAIM }}
+          file: buildstats-metrics.json
