@@ -60,6 +60,9 @@ GRANT INSERT ON public.audit_logs TO service_role;
 GRANT UPDATE (reverted_at) ON public.audit_logs TO service_role;
 REVOKE TRUNCATE ON public.audit_logs FROM PUBLIC, anon, authenticated, service_role;
 
+-- Creation must go through the service-only RPC, including for administrators.
+REVOKE INSERT ON public.jobs, public.voice_actors FROM PUBLIC, anon, authenticated, service_role;
+
 CREATE OR REPLACE FUNCTION public.controlled_save_metadata(
   p_actor_id UUID,
   p_entity_type TEXT,
@@ -170,6 +173,14 @@ BEGIN
       RAISE EXCEPTION 'date_of_birth must be an ISO date string' USING ERRCODE = '22023';
     END IF;
 
+    IF jsonb_typeof(p_payload -> 'date_of_birth') = 'string' THEN
+      BEGIN
+        PERFORM (p_payload ->> 'date_of_birth')::DATE;
+      EXCEPTION WHEN datetime_field_overflow THEN
+        RAISE EXCEPTION 'date_of_birth must be a valid calendar date' USING ERRCODE = '22023';
+      END;
+    END IF;
+
     IF p_payload ? 'tmdb_id'
        AND jsonb_typeof(p_payload -> 'tmdb_id') NOT IN ('number', 'null') THEN
       RAISE EXCEPTION 'tmdb_id must be a positive integer or null' USING ERRCODE = '22023';
@@ -222,7 +233,8 @@ BEGIN
         IF jsonb_typeof(v_social_value) = 'string' THEN
           v_url := v_social_value #>> '{}';
           IF length(v_url) > 2048
-             OR v_url !~* '^https?://[^/[:space:]?#@]+(/[^?#[:space:]]*)?$' THEN
+             OR v_url !~* '^https?://[^/[:space:]?#@]+(/[^?[:space:]#]*)?(\?[^[:space:]#]*)?(#[^[:space:]]*)?$'
+             OR v_url ~* '[?&](access[_-]?token|refresh[_-]?token|id[_-]?token|token|api[_-]?key|apikey|client[_-]?secret|secret|password|passwd|authorization)=' THEN
             RAISE EXCEPTION 'social_media_links values must be safe HTTP(S) URLs' USING ERRCODE = '22023';
           END IF;
         END IF;
@@ -231,10 +243,7 @@ BEGIN
   END IF;
 
   v_payload_fingerprint := md5(p_entity_type || ':' || p_payload::TEXT);
-  v_request_id := COALESCE(
-    p_request_id,
-    md5(p_actor_id::TEXT || ':' || p_entity_type || ':' || p_payload::TEXT)::UUID
-  );
+  v_request_id := COALESCE(p_request_id, gen_random_uuid());
 
   PERFORM pg_catalog.pg_advisory_xact_lock(
     pg_catalog.hashtextextended(p_actor_id::TEXT || ':' || v_request_id::TEXT, 0)
@@ -317,4 +326,4 @@ GRANT EXECUTE ON FUNCTION public.controlled_save_metadata(UUID, TEXT, JSONB, UUI
   TO service_role;
 
 COMMENT ON FUNCTION public.controlled_save_metadata(UUID, TEXT, JSONB, UUID) IS
-  'Creates an allowlisted job or voice actor for a verified administrator and atomically records its full audit snapshot and idempotency metadata.';
+  'Creates an allowlisted job or voice actor for a verified administrator and atomically records its full audit snapshot. Reuse p_request_id only when retrying the same creation operation.';

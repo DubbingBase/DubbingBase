@@ -92,4 +92,46 @@ describe("voice actor profile-picture mutation paths", () => {
     expect(response.status).toBe(403);
     expect(actorUpdate).not.toHaveBeenCalled();
   });
+
+  it("rejects creation audit reverts before changing the entity or audit history", async () => {
+    const auditQuery = {
+      select: vi.fn(() => auditQuery),
+      eq: vi.fn(() => auditQuery),
+      single: vi.fn(async () => ({
+        data: {
+          entity_type: "voice_actor",
+          entity_id: "41",
+          action: "create",
+          new_value: { firstname: "Created", lastname: "Actor" },
+          previous_value: null,
+          reverted_at: null,
+        },
+        error: null,
+      })),
+    };
+    const supabaseAdmin = { from: vi.fn(() => auditQuery) };
+    const app = createApp();
+    app.use(
+      "/",
+      defineEventHandler((event) => {
+        event.context.user = {
+          id: "linked-user",
+          app_metadata: { role: "admin" },
+        };
+        event.context.supabaseAdmin = supabaseAdmin;
+        return revertTask(event);
+      }),
+    );
+
+    const response = await toWebHandler(app)(
+      new Request("http://localhost/", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ auditLogId: "audit-create", force: true }),
+      }),
+    );
+
+    expect(response.status).toBe(409);
+    expect(supabaseAdmin.from).toHaveBeenCalledTimes(1);
+  });
 });

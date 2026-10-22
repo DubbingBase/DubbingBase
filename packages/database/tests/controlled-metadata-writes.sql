@@ -47,6 +47,14 @@ BEGIN
      OR has_table_privilege('service_role', 'public.audit_logs', 'TRUNCATE') THEN
     RAISE EXCEPTION 'service_role can modify or delete audit history';
   END IF;
+  IF has_table_privilege('authenticated', 'public.jobs', 'INSERT')
+     OR has_table_privilege('authenticated', 'public.voice_actors', 'INSERT') THEN
+    RAISE EXCEPTION 'authenticated users can bypass controlled metadata creation';
+  END IF;
+  IF has_table_privilege('service_role', 'public.jobs', 'INSERT')
+     OR has_table_privilege('service_role', 'public.voice_actors', 'INSERT') THEN
+    RAISE EXCEPTION 'service_role can bypass controlled metadata creation';
+  END IF;
 END;
 $$;
 
@@ -69,6 +77,25 @@ RESET ROLE;
 SET LOCAL ROLE authenticated;
 DO $$
 BEGIN
+  -- A stale administrator JWT must not allow a demoted user to bypass the RPC.
+  PERFORM set_config('request.jwt.claims', jsonb_build_object(
+    'sub', current_setting('test.metadata_non_admin_id'),
+    'role', 'authenticated',
+    'app_metadata', jsonb_build_object('role', 'admin')
+  )::TEXT, TRUE);
+  BEGIN
+    INSERT INTO public.jobs (name) VALUES ('Direct metadata bypass');
+    RAISE EXCEPTION 'authenticated user inserted a job directly';
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
+  BEGIN
+    INSERT INTO public.voice_actors (firstname, lastname, created_by, profile_picture)
+    VALUES ('Direct', 'Bypass', current_setting('test.metadata_admin_id')::UUID, 'javascript:alert(1)');
+    RAISE EXCEPTION 'authenticated user inserted protected voice actor fields directly';
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
   BEGIN
     PERFORM public.controlled_save_metadata(
       current_setting('test.metadata_admin_id')::UUID,
@@ -81,6 +108,8 @@ BEGIN
 END;
 $$;
 RESET ROLE;
+
+SELECT set_config('request.jwt.claims', '{}', TRUE);
 
 SET LOCAL ROLE service_role;
 DO $$
@@ -95,6 +124,20 @@ DECLARE
   voice_result JSONB;
   audit_count BIGINT;
 BEGIN
+  BEGIN
+    INSERT INTO public.jobs (name) VALUES ('Direct service metadata bypass');
+    RAISE EXCEPTION 'service_role inserted a job directly';
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
+  BEGIN
+    INSERT INTO public.voice_actors (firstname, lastname)
+    VALUES ('DirectService', 'Bypass');
+    RAISE EXCEPTION 'service_role inserted a voice actor directly';
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
+
   BEGIN
     PERFORM public.controlled_save_metadata(
       non_admin_id, 'job', '{"name":"Non-admin metadata write"}'::JSONB, gen_random_uuid()
@@ -122,12 +165,18 @@ BEGIN
   END IF;
 
   retry_result := public.controlled_save_metadata(
-    admin_id, 'job', '{"name":"Deterministic retry job"}'::JSONB
+    admin_id, 'job', '{"name":"No-key operation job"}'::JSONB
   );
-  IF (public.controlled_save_metadata(
-        admin_id, 'job', '{"name":"Deterministic retry job"}'::JSONB
-      ) ->> 'replayed')::BOOLEAN IS DISTINCT FROM TRUE THEN
-    RAISE EXCEPTION 'request without a client key was not retry-safe';
+  UPDATE public.jobs
+  SET name = 'Renamed no-key operation job'
+  WHERE name = 'No-key operation job';
+  job_result := public.controlled_save_metadata(
+    admin_id, 'job', '{"name":"No-key operation job"}'::JSONB
+  );
+  IF (job_result ->> 'replayed')::BOOLEAN IS DISTINCT FROM FALSE
+     OR job_result -> 'record' ->> 'id' IS NOT DISTINCT FROM retry_result -> 'record' ->> 'id'
+     OR job_result ->> 'audit_log_id' IS NOT DISTINCT FROM retry_result ->> 'audit_log_id' THEN
+    RAISE EXCEPTION 'new operation without a client key replayed an old creation';
   END IF;
 
   BEGIN
@@ -168,6 +217,14 @@ BEGIN
       admin_id, 'voice_actor', '{"firstname":"Large","lastname":"Identifier","tmdb_id":9223372036854775808}'::JSONB, gen_random_uuid()
     );
     RAISE EXCEPTION 'out-of-range TMDB identifier was accepted';
+  EXCEPTION WHEN invalid_parameter_value THEN
+    NULL;
+  END;
+  BEGIN
+    PERFORM public.controlled_save_metadata(
+      admin_id, 'voice_actor', '{"firstname":"Invalid","lastname":"Birthday","date_of_birth":"2026-02-30"}'::JSONB, gen_random_uuid()
+    );
+    RAISE EXCEPTION 'invalid calendar date was accepted';
   EXCEPTION WHEN invalid_parameter_value THEN
     NULL;
   END;
@@ -265,6 +322,31 @@ UPDATE public.audit_logs
 SET reverted_at = clock_timestamp()
 WHERE id = current_setting('test.metadata_audit_id')::UUID;
 RESET ROLE;
+
+-- Editing existing profiles must remain possible after removing INSERT access.
+SET LOCAL ROLE authenticated;
+DO $$
+DECLARE
+  updated_count INTEGER;
+BEGIN
+  PERFORM set_config('request.jwt.claims', jsonb_build_object(
+    'sub', current_setting('test.metadata_admin_id'),
+    'role', 'authenticated',
+    'app_metadata', jsonb_build_object('role', 'admin')
+  )::TEXT, TRUE);
+  UPDATE public.voice_actors SET bio = 'Updated existing profile'
+  WHERE id::TEXT = (
+    SELECT entity_id FROM public.audit_logs
+    WHERE id = current_setting('test.metadata_voice_audit_id')::UUID
+  );
+  GET DIAGNOSTICS updated_count = ROW_COUNT;
+  IF updated_count <> 1 THEN
+    RAISE EXCEPTION 'authenticated administrator could not update an existing profile';
+  END IF;
+END;
+$$;
+RESET ROLE;
+SELECT set_config('request.jwt.claims', '{}', TRUE);
 
 CREATE ROLE controlled_metadata_audit_attacker NOLOGIN;
 GRANT controlled_metadata_audit_attacker TO postgres;

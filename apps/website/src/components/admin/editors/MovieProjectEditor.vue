@@ -611,26 +611,30 @@
             <input
               v-model="newVaFirstname"
               type="text"
+              required
               placeholder="First Name"
               class="w-full px-4 py-2 theme-input border theme-border rounded-lg theme-text"
             />
             <input
               v-model="newVaLastname"
               type="text"
+              required
               placeholder="Last Name"
               class="w-full px-4 py-2 theme-input border theme-border rounded-lg theme-text"
             />
           </div>
           <div class="flex justify-end gap-2">
             <button
-              @click="isCreateVaOpen = false"
+              @click="cancelCreateVaDialog"
               class="px-4 py-2 theme-text-secondary theme-hover-text"
             >
               {{ $t("common.cancel") }}
             </button>
             <button
               @click="createVoiceActor"
-              :disabled="!newVaFirstname || isCreatingVa"
+              :disabled="
+                !newVaFirstname.trim() || !newVaLastname.trim() || isCreatingVa
+              "
               class="px-4 py-2 theme-primary-bg theme-primary-border rounded-lg disabled:opacity-50 flex items-center gap-2"
             >
               <Loader2Icon v-if="isCreatingVa" class="w-4 h-4 animate-spin" />
@@ -721,6 +725,8 @@ const isCreateVaOpen = ref(false);
 const newVaFirstname = ref("");
 const newVaLastname = ref("");
 let pendingVaSelectCallback: ((id: number) => void) | null = null;
+let pendingVaCreationRequest: { payload: string; requestId: string } | null =
+  null;
 
 // Cast Rows
 interface CastRow {
@@ -894,26 +900,50 @@ const createStudio = async () => {
 };
 
 const openCreateVaDialog = (query: string, callback?: (id: number) => void) => {
-  const parts = query.split(" ");
+  const parts = query.trim().split(/\s+/);
   newVaFirstname.value = parts[0] || "";
   newVaLastname.value = parts.slice(1).join(" ") || "";
   pendingVaSelectCallback = callback || null;
+  const queryPayload = JSON.stringify({
+    firstname: newVaFirstname.value.trim(),
+    lastname: newVaLastname.value.trim(),
+  });
+  if (pendingVaCreationRequest?.payload !== queryPayload) {
+    pendingVaCreationRequest = null;
+  }
   isCreateVaOpen.value = true;
+};
+
+const cancelCreateVaDialog = () => {
+  isCreateVaOpen.value = false;
+  pendingVaCreationRequest = null;
 };
 
 const isCreatingVa = ref(false);
 const createVoiceActor = async () => {
+  const payload = {
+    firstname: newVaFirstname.value.trim(),
+    lastname: newVaLastname.value.trim(),
+  };
+  if (!payload.firstname || !payload.lastname) {
+    showToast("First name and last name are required.", "error");
+    return;
+  }
+
+  const payloadKey = JSON.stringify(payload);
+  if (pendingVaCreationRequest?.payload !== payloadKey) {
+    pendingVaCreationRequest = {
+      payload: payloadKey,
+      requestId: crypto.randomUUID(),
+    };
+  }
+
   isCreatingVa.value = true;
   try {
-    const payload = {
-      firstname: newVaFirstname.value,
-      lastname: newVaLastname.value,
-    };
-    const { data } = await supabase
-      .from("voice_actors")
-      .insert(payload)
-      .select()
-      .single();
+    const { data } = await useMetadataCreation().createVoiceActor(
+      payload,
+      pendingVaCreationRequest.requestId,
+    );
     if (data) {
       const name = `${data.firstname || ""} ${data.lastname || ""}`.trim();
       optionsCache.value.set(data.id, name);
@@ -924,7 +954,13 @@ const createVoiceActor = async () => {
       }
       isCreateVaOpen.value = false;
       showToast(`Created ${name}`, "success");
+      pendingVaCreationRequest = null;
     }
+  } catch (error: unknown) {
+    showToast(
+      error instanceof Error ? error.message : "Failed to create voice actor.",
+      "error",
+    );
   } finally {
     isCreatingVa.value = false;
   }
