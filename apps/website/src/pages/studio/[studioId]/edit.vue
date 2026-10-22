@@ -320,6 +320,9 @@ const saveStudio = async () => {
       }
     }
 
+    const shouldUpdateLogo =
+      canEditStudioLogo.value && finalLogoUrl !== (initialStudio.value?.logo_url ?? null);
+
     const payload = {
       id: isEditMode.value ? studioId : null,
       updates: {
@@ -328,7 +331,7 @@ const saveStudio = async () => {
         country: form.value.country.trim() || null,
         city: form.value.city.trim() || null,
         website_url: form.value.website_url.trim() || null,
-        ...(canEditStudioLogo.value ? { logo_url: finalLogoUrl } : {}),
+        ...(shouldUpdateLogo ? { logo_url: finalLogoUrl } : {}),
       },
       expectedUpdatedAt: initialStudio.value?.updated_at ?? null,
       requestId,

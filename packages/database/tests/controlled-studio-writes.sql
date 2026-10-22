@@ -170,6 +170,7 @@ DECLARE
   v_replayed BOOLEAN;
   v_updated_at TIMESTAMP WITHOUT TIME ZONE;
   v_second_audit UUID;
+  v_noop_audit_id UUID;
   v_count INTEGER;
 BEGIN
   SELECT result.studio_id, result.audit_log_id, result.replayed
@@ -269,6 +270,44 @@ BEGIN
   SELECT studio.updated_at INTO v_updated_at
   FROM public.studios AS studio WHERE studio.id = v_studio_id;
 
+  SELECT result.audit_log_id, result.replayed
+  INTO v_noop_audit_id, v_replayed
+  FROM public.controlled_save_studio(
+    '00000000-0000-0000-0000-000000563651', v_studio_id, v_updated_at,
+    '45f4df18-7c72-4a4d-b738-d4f886745d1a', '{"city":"Lyon"}'::JSONB
+  ) AS result;
+  IF v_noop_audit_id IS NULL OR v_replayed THEN
+    RAISE EXCEPTION 'no-op studio save did not create a retry receipt';
+  END IF;
+
+  SELECT count(*) INTO v_count
+  FROM public.audit_logs AS audit
+  WHERE audit.id = v_noop_audit_id
+    AND audit.action = 'noop'
+    AND audit.previous_value = '{}'::JSONB
+    AND audit.new_value = '{}'::JSONB
+    AND audit.changed_fields = ARRAY[]::TEXT[];
+  IF v_count <> 1 THEN
+    RAISE EXCEPTION 'no-op retry receipt did not retain an empty audit delta';
+  END IF;
+
+  SELECT result.audit_log_id, result.replayed
+  INTO v_second_audit, v_replayed
+  FROM public.controlled_save_studio(
+    '00000000-0000-0000-0000-000000563651', v_studio_id, v_updated_at,
+    '45f4df18-7c72-4a4d-b738-d4f886745d1a', '{"city":"Lyon"}'::JSONB
+  ) AS result;
+  IF v_second_audit IS DISTINCT FROM v_noop_audit_id OR NOT v_replayed THEN
+    RAISE EXCEPTION 'identical no-op retry did not return its original receipt';
+  END IF;
+
+  SELECT count(*) INTO v_count
+  FROM public.get_recent_contributions(1000) AS contribution
+  WHERE contribution.id = v_noop_audit_id;
+  IF v_count <> 0 THEN
+    RAISE EXCEPTION 'no-op retry receipt appeared in the public contribution feed';
+  END IF;
+
   BEGIN
     PERFORM * FROM public.controlled_save_studio(
       '00000000-0000-0000-0000-000000563651', v_studio_id, NULL,
@@ -303,8 +342,8 @@ BEGIN
   FROM public.audit_logs
   WHERE user_id = '00000000-0000-0000-0000-000000563651'
     AND entity_id = v_studio_id::TEXT;
-  IF v_count <> 2 THEN
-    RAISE EXCEPTION 'rejected, stale, or replayed requests wrote extra audit events';
+  IF v_count <> 3 THEN
+    RAISE EXCEPTION 'create, update, and no-op save did not each persist one audit event';
   END IF;
 
   IF (SELECT city FROM public.studios WHERE id = v_studio_id) <> 'Lyon' THEN
