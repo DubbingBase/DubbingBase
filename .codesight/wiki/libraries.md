@@ -29,8 +29,8 @@
 - `apps/website/server/utils/services/voice-actor.ts` — applyExtractedCredits, upsertStudio, ExtractedCredit, AppliedExtractedCredits
 - `apps/website/server/utils/urls/tmdb.ts` — buildTmdbImageUrl, cleanCharacterName, processMedia, TMDB_CONFIG
 - `apps/website/server/utils/wiki-check-disposition.ts` — wikiCheckDisposition, WikiCheckArchiveReason, WikiCheckSkippedResult, WikiCheckDisposition
-- `apps/website/src/utils/voice-actor-og-image.ts` — isVoiceActorOgImagesEnabled, getVoiceActorOgImageMetadata, VoiceActorOgImageMetadata, STATIC_VOICE_ACTOR_OG_IMAGE_URL
 - `apps/website/server/utils/media-queue-readiness.ts` — getReadyMediaQueueNames, MediaQueueName, mediaQueueNames
+- `apps/website/server/utils/media-request.ts` — parseSeasonQuery, parseEpisodeQuery, withMediaServiceTimeout
 - _…and 41 more files_
 
 ## Shared-logic (20 files)

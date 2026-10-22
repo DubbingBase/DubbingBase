@@ -239,9 +239,8 @@
 - `apps/website/src/utils/season-data.ts` — function fetchSeasonPageData: (showId, seasonNumber, locale?) => Promise<SeasonDataResponse>, function fetchEpisodePageData: (showId, seasonNumber, episodeNumber, locale?) => Promise<EpisodeDataResponse>
 - `apps/website/src/utils/voice-actor-og-image.ts`
   - function isVoiceActorOgImagesEnabled: (value) => boolean
-  - function getVoiceActorOgImageMetadata: (enabled, voiceActorId) => VoiceActorOgImageMetadata
+  - function getVoiceActorOgImageMetadata: (enabled, voiceActorId, siteUrl) => VoiceActorOgImageMetadata
   - type VoiceActorOgImageMetadata
-  - const STATIC_VOICE_ACTOR_OG_IMAGE_URL
 - `e2e/helpers/mock-api.ts`
   - function waitForVueHydration: (page) => Promise<void>
   - function setupMockApi: (page, options) => void

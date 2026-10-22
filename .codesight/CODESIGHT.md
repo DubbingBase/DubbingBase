@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 82 routes | 19 models | 199 components | 106 lib files | 63 env vars | 17 middleware | 29% test coverage
-> **Token savings:** this file is ~17,400 tokens. Without it, AI exploration would cost ~164,000 tokens. **Saves ~146,600 tokens per conversation.**
-> **Last scanned:** 2026-10-22 07:57 — re-run after significant changes
+> 82 routes | 19 models | 199 components | 106 lib files | 63 env vars | 16 middleware | 29% test coverage
+> **Token savings:** this file is ~17,400 tokens. Without it, AI exploration would cost ~163,700 tokens. **Saves ~146,300 tokens per conversation.**
+> **Last scanned:** 2026-10-22 08:09 — re-run after significant changes
 
 ---
 
@@ -671,9 +671,8 @@
 - `apps/website/src/utils/season-data.ts` — function fetchSeasonPageData: (showId, seasonNumber, locale?) => Promise<SeasonDataResponse>, function fetchEpisodePageData: (showId, seasonNumber, episodeNumber, locale?) => Promise<EpisodeDataResponse>
 - `apps/website/src/utils/voice-actor-og-image.ts`
   - function isVoiceActorOgImagesEnabled: (value) => boolean
-  - function getVoiceActorOgImageMetadata: (enabled, voiceActorId) => VoiceActorOgImageMetadata
+  - function getVoiceActorOgImageMetadata: (enabled, voiceActorId, siteUrl) => VoiceActorOgImageMetadata
   - type VoiceActorOgImageMetadata
-  - const STATIC_VOICE_ACTOR_OG_IMAGE_URL
 - `e2e/helpers/mock-api.ts`
   - function waitForVueHydration: (page) => Promise<void>
   - function setupMockApi: (page, options) => void
@@ -840,7 +839,6 @@
 - 00-cache-headers — `apps/website/server/middleware/00-cache-headers.ts`
 - 00-cache — `apps/website/server/middleware/00-cache.ts`
 - 00-e2e-mock — `apps/website/server/middleware/00-e2e-mock.ts`
-- 01-locale-redirect — `apps/website/server/middleware/01-locale-redirect.ts`
 - cache-headers-middleware.test — `apps/website/server/utils/cache/cache-headers-middleware.test.ts`
 - admin — `apps/website/src/middleware/admin.ts`
 - 20260618000000_migrate_to_pgmq — `packages/database/supabase/migrations/20260618000000_migrate_to_pgmq.sql`
