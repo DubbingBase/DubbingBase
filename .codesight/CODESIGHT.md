@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 82 routes | 19 models | 199 components | 106 lib files | 63 env vars | 16 middleware | 30% test coverage
-> **Token savings:** this file is ~17,400 tokens. Without it, AI exploration would cost ~163,700 tokens. **Saves ~146,300 tokens per conversation.**
-> **Last scanned:** 2026-10-22 12:36 — re-run after significant changes
+> 82 routes | 20 models | 199 components | 107 lib files | 63 env vars | 16 middleware | 31% test coverage
+> **Token savings:** this file is ~17,600 tokens. Without it, AI exploration would cost ~164,400 tokens. **Saves ~146,800 tokens per conversation.**
+> **Last scanned:** 2026-10-22 15:01 — re-run after significant changes
 
 ---
 
@@ -71,7 +71,7 @@
 - `POST` `/api/request-voice-actor-page` [auth, email]
 - `POST` `/api/revert-task` [db]
 - `POST` `/api/save-dubbing-project` [auth, db]
-- `POST` `/api/save-metadata` [db]
+- `POST` `/api/save-metadata` [auth] ✓
 - `POST` `/api/save-studio` [auth] ✓
 - `GET` `/api/search/index` [db]
 - `GET` `/api/search-voice-actors`
@@ -223,6 +223,15 @@
 - outcome: text (required)
 - queued_msg_id: bigint (required, fk)
 - processed_at: timestamp(tz) (required)
+
+### metadata_write_requests
+- actor_id: uuid (required, fk)
+- request_id: uuid (required, fk)
+- entity_type: text (required)
+- payload_fingerprint: text (required)
+- entity_id: text (required, fk)
+- audit_log_id: uuid (required, fk)
+- result: jsonb (required)
 
 ---
 
@@ -635,6 +644,10 @@
   - type ContributionClaim
 - `apps/website/src/composables/useDragScroll.ts` — function useDragScroll: (scrollRef) => void
 - `apps/website/src/composables/useLocalePathPrefix.ts` — function useLocalePathPrefix: () => (path: string) => string
+- `apps/website/src/composables/useMetadataCreation.ts`
+  - function isMetadataValidationError: (error) => boolean
+  - function useMetadataCreation: () => void
+  - type VoiceActorCreationPayload
 - `apps/website/src/composables/useReports.ts` — function useReports
 - `apps/website/src/composables/useShowPageData.ts` — function useShowPageData: (showId, locale) => void
 - `apps/website/src/composables/useTheme.ts` — function useTheme: () => void
@@ -853,7 +866,7 @@
 ## Most Imported Files (change these carefully)
 
 - `apps/website/server/utils/db/client.ts` — imported by **67** files
-- `apps/website/server/utils/auth.ts` — imported by **35** files
+- `apps/website/server/utils/auth.ts` — imported by **36** files
 - `apps/website/server/utils/index.ts` — imported by **23** files
 - `apps/website/server/utils/cache/index.ts` — imported by **19** files
 - `apps/website/server/utils/db/queries.ts` — imported by **12** files
@@ -876,7 +889,7 @@
 ## Import Map (who imports what)
 
 - `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +62 more
-- `apps/website/server/utils/auth.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +30 more
+- `apps/website/server/utils/auth.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +31 more
 - `apps/website/server/utils/index.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/episode/index.get.ts` +18 more
 - `apps/website/server/utils/cache/index.ts` ← `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/season/index.get.ts`, `apps/website/server/utils/api/igdb.test.ts`, `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.test.ts` +14 more
 - `apps/website/server/utils/db/queries.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/game/[id].get.ts` +7 more
@@ -890,8 +903,8 @@
 
 # Test Coverage
 
-> **30%** of routes and models are covered by tests
-> 98 test files found
+> **31%** of routes and models are covered by tests
+> 101 test files found
 
 ## Covered Routes
 
@@ -906,6 +919,7 @@
 - POST:/api/media-queue
 - POST:/api/prepare_game
 - POST:/api/process-media-queue
+- POST:/api/save-metadata
 - POST:/api/save-studio
 - POST:/api/submit-task
 - POST:/api/update-voice-actor
@@ -928,6 +942,7 @@
 - dubbing_languages
 - dubbing_language_reviews
 - legacy_wiki_check_reprocesses
+- metadata_write_requests
 
 ---
 

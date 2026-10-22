@@ -125,3 +125,12 @@
 - outcome: text (required)
 - queued_msg_id: bigint (required, fk)
 - processed_at: timestamp(tz) (required)
+
+### metadata_write_requests
+- actor_id: uuid (required, fk)
+- request_id: uuid (required, fk)
+- entity_type: text (required)
+- payload_fingerprint: text (required)
+- entity_id: text (required, fk)
+- audit_log_id: uuid (required, fk)
+- result: jsonb (required)
