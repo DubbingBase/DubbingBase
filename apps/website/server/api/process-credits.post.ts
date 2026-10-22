@@ -1,3 +1,5 @@
+import type { Json } from "@app/supabase/types";
+import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { requireAdmin } from "../utils/auth";
@@ -10,6 +12,7 @@ const creditSchema = z
     voiceActor: z.string().nullish(),
     role: z.string().nullish(),
     matchedActorId: z.number().nullish(),
+    request_id: z.string().uuid().optional(),
     matchedVoiceActor: z
       .object({
         id: z.number(),
@@ -30,8 +33,17 @@ const requestSchema = z
   })
   .passthrough();
 
+function getCreatedVoiceActorId(result: Json | null): number | null {
+  if (typeof result !== "object" || result === null || Array.isArray(result))
+    return null;
+  const record = result.record;
+  if (typeof record !== "object" || record === null || Array.isArray(record))
+    return null;
+  return typeof record.id === "number" ? record.id : null;
+}
+
 export default defineEventHandler(async (event) => {
-  requireAdmin(event);
+  const user = requireAdmin(event);
   try {
     const parsedBody = requestSchema.safeParse(await readBody(event));
     if (!parsedBody.success) {
@@ -76,6 +88,7 @@ export default defineEventHandler(async (event) => {
           }
           return {
             ...credit,
+            request_id: credit.request_id ?? randomUUID(),
             matchedVoiceActor,
           };
         }),
@@ -86,6 +99,19 @@ export default defineEventHandler(async (event) => {
         throw createError({
           statusCode: 400,
           message: "Invalid parameters for save",
+        });
+      }
+      if (
+        credits.some(
+          (credit) =>
+            !credit.matchedVoiceActor?.id &&
+            credit.voiceActor?.trim() &&
+            !credit.request_id,
+        )
+      ) {
+        throw createError({
+          statusCode: 400,
+          message: "Match credits before saving unmatched voice actors",
         });
       }
 
@@ -113,19 +139,29 @@ export default defineEventHandler(async (event) => {
             const firstname = parts[0] ?? "";
             const lastname = parts.slice(1).join(" ");
 
-            const { data: newVa, error: vaError } = await supabaseAdmin
-              .from("voice_actors")
-              .insert({ firstname, lastname })
-              .select("id")
-              .single();
+            const { data: createdActor, error: vaError } =
+              await supabaseAdmin.rpc("controlled_save_metadata", {
+                p_actor_id: user.id,
+                p_entity_type: "voice_actor",
+                p_payload: { firstname, lastname },
+                p_request_id: credit.request_id,
+              });
 
             if (vaError) throw vaError;
-            vaId = newVa.id;
+            const createdActorId = getCreatedVoiceActorId(createdActor);
+            if (createdActorId === null) {
+              throw new Error(
+                "Metadata creation returned an invalid voice actor",
+              );
+            }
+            vaId = createdActorId;
           }
 
           const actorId = credit.matchedActorId ?? null;
           const roleName =
-            typeof credit.role === "string" && credit.role.trim() ? credit.role : null;
+            typeof credit.role === "string" && credit.role.trim()
+              ? credit.role
+              : null;
           let workLookup = supabaseAdmin
             .from("work")
             .select("id, character_id, character_name")
@@ -134,20 +170,22 @@ export default defineEventHandler(async (event) => {
           workLookup = actorId
             ? workLookup.eq("actor_id", actorId)
             : workLookup.is("actor_id", null);
-          const { data: existingWorks, error: workLookupError } = await workLookup;
+          const { data: existingWorks, error: workLookupError } =
+            await workLookup;
           if (workLookupError) throw workLookupError;
 
-          const { data: matchingWorkIds, error: identityMatchError } = await supabaseAdmin.rpc(
-            "find_work_role_identity_matches",
-            {
+          const { data: matchingWorkIds, error: identityMatchError } =
+            await supabaseAdmin.rpc("find_work_role_identity_matches", {
               p_work_ids: (existingWorks ?? []).map(({ id }) => id),
               p_character_id: null,
               p_character_name: roleName,
-            },
-          );
+            });
           if (identityMatchError) throw identityMatchError;
 
-          const existingWork = findUniqueWorkRoleMatch(existingWorks ?? [], matchingWorkIds ?? []);
+          const existingWork = findUniqueWorkRoleMatch(
+            existingWorks ?? [],
+            matchingWorkIds ?? [],
+          );
           const workUpdate = {
             performance: "dialogues",
             status: "validated",
@@ -180,15 +218,18 @@ export default defineEventHandler(async (event) => {
             retryLookup = actorId
               ? retryLookup.eq("actor_id", actorId)
               : retryLookup.is("actor_id", null);
-            const { data: retryWorks, error: retryLookupError } = await retryLookup;
+            const { data: retryWorks, error: retryLookupError } =
+              await retryLookup;
             if (retryLookupError) throw retryLookupError;
 
-            const { data: retryMatchingWorkIds, error: retryIdentityMatchError } =
-              await supabaseAdmin.rpc("find_work_role_identity_matches", {
-                p_work_ids: (retryWorks ?? []).map(({ id }) => id),
-                p_character_id: null,
-                p_character_name: roleName,
-              });
+            const {
+              data: retryMatchingWorkIds,
+              error: retryIdentityMatchError,
+            } = await supabaseAdmin.rpc("find_work_role_identity_matches", {
+              p_work_ids: (retryWorks ?? []).map(({ id }) => id),
+              p_character_id: null,
+              p_character_name: roleName,
+            });
             if (retryIdentityMatchError) throw retryIdentityMatchError;
 
             const concurrentWork = findUniqueWorkRoleMatch(
@@ -222,11 +263,13 @@ export default defineEventHandler(async (event) => {
 
     throw createError({ statusCode: 400, message: "Invalid action" });
   } catch (error) {
-    if (error && typeof error === "object" && "statusCode" in error) throw error;
+    if (error && typeof error === "object" && "statusCode" in error)
+      throw error;
     console.error("Error in process-credits:", error);
     throw createError({
       statusCode: 500,
-      message: error instanceof Error ? error.message : "An unknown error occurred",
+      message:
+        error instanceof Error ? error.message : "An unknown error occurred",
     });
   }
 });

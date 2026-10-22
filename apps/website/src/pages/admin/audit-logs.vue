@@ -126,7 +126,7 @@
               </td>
               <td class="p-4 text-right">
                 <button
-                  v-if="!log.reverted_at"
+                  v-if="!log.reverted_at && log.action !== 'create'"
                   @click="openRevertModal(log)"
                   class="text-xs px-3 py-1 theme-status-danger theme-status-danger-text hover:bg-[var(--app-color-danger-bg)] rounded border border-[var(--app-color-danger-border)] transition-colors"
                 >
