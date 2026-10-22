@@ -1,12 +1,15 @@
+import type { H3Event } from "h3";
 import { useTmdbClient } from "../../utils";
 import { MediaService } from "../../utils/services/media";
-import { getDubbingProjects } from "../../utils/db/queries";
+import { getDubbingProjectsForMediaEndpoint } from "../../utils/db/queries";
 import { processMedia } from "../../utils/urls/tmdb";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 import { scheduleBackgroundTask } from "../../utils/background";
-export async function fetchShowData(event: any, showId: number) {
+import { mediaPageAggregateCredits } from "../../utils/media-page-credits";
+export async function fetchShowData(event: H3Event, showId: number) {
   const acceptLanguage = getHeader(event, "accept-language") || undefined;
+  const projection = getQuery(event).projection;
 
   const tmdbClient = useTmdbClient();
   const mediaService = new MediaService(tmdbClient, acceptLanguage);
@@ -24,16 +27,16 @@ export async function fetchShowData(event: any, showId: number) {
     .getMediaWithVoiceActors("tv", showId)
     .then(async (result) => {
       const { characters: characterProfilePictures, tvdbId } =
-        await mediaService.getCharacterProfilePictures(
-          "tv",
-          showId,
-          result.media,
-        );
+        await mediaService.getCharacterProfilePictures("tv", showId, result.media);
 
-      const aggregateCredits =
-        result.media.aggregate_credits || (await aggregateCreditsPromise);
+      const aggregateCredits = result.media.aggregate_credits || (await aggregateCreditsPromise);
 
-      const creditsWithImages = processMedia({ credits: aggregateCredits });
+      const creditsWithImages = processMedia({
+        credits:
+          projection === "media-page"
+            ? mediaPageAggregateCredits(aggregateCredits)
+            : aggregateCredits,
+      });
       return {
         serieWithImageUrls: result.media,
         aggregateCredits: creditsWithImages.credits,
@@ -58,8 +61,7 @@ export async function fetchShowData(event: any, showId: number) {
         name: "Information indisponible (Timeout)",
         poster_path: null,
         backdrop_path: null,
-        overview:
-          "Ce contenu n'a pas pu être chargé car les serveurs TMDB sont inaccessibles.",
+        overview: "Ce contenu n'a pas pu être chargé car les serveurs TMDB sont inaccessibles.",
         credits: { cast: [] },
         release_date: "1970-01-01",
         first_air_date: "1970-01-01",
@@ -67,25 +69,17 @@ export async function fetchShowData(event: any, showId: number) {
       };
       return {
         serieWithImageUrls: processMedia(mockSerie),
-        aggregateCredits: { cast: [] } as any,
-        characterProfilePictures: [] as any[],
+        aggregateCredits: { cast: [] },
+        characterProfilePictures: [],
         tvdbId: null,
       };
     });
 
-  const dbDataPromise = getDubbingProjects(showId, "tv");
+  const dbDataPromise = getDubbingProjectsForMediaEndpoint(showId, "tv", projection);
 
-  const [apiData, dubbingProjects] = await Promise.all([
-    apiDataPromise,
-    dbDataPromise,
-  ]);
+  const [apiData, dubbingProjects] = await Promise.all([apiDataPromise, dbDataPromise]);
 
-  const {
-    serieWithImageUrls,
-    aggregateCredits,
-    characterProfilePictures,
-    tvdbId,
-  } = apiData;
+  const { serieWithImageUrls, aggregateCredits, characterProfilePictures, tvdbId } = apiData;
 
   // ── Lazy Wikipedia Queue Enqueue ─────────────────────────────────
   // Gated by PostHog 'enqueue-on-navigate' (server-side)

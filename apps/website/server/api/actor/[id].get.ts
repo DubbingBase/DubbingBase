@@ -1,7 +1,8 @@
 import { useTmdbClient } from "../../utils";
-import { getWorkByActor } from "../../utils/db/queries";
+import { getActorPageWorkByActor, getWorkByActor } from "../../utils/db/queries";
 import { buildSupabaseImageUrl } from "../../utils/urls/supabase";
 import { buildTmdbImageUrl } from "../../utils/urls/tmdb";
+import { actorPageResponse } from "../../utils/actor-page-response";
 type TmdbCastMember = Record<string, unknown> & {
   profile_path?: string | null;
   poster_path?: string | null;
@@ -30,14 +31,67 @@ function getCastMembers(value: unknown): TmdbCastMember[] {
   return value.cast.filter(isTmdbCastMember);
 }
 
-function getStringProperty(
-  value: Record<string, unknown>,
-  key: string,
-): string | null | undefined {
+function projectActorPageCredits(
+  credits: TmdbCastMember[],
+  mediaType: "movie" | "tv",
+  start: number,
+  end: number,
+) {
+  return credits.slice(start, end).map((credit) => ({
+    id: credit.id,
+    title: credit.title,
+    name: credit.name,
+    character: credit.character,
+    poster_path: buildTmdbImageUrl(credit.poster_path),
+    release_date: credit.release_date,
+    first_air_date: credit.first_air_date,
+    media_type: mediaType,
+  }));
+}
+
+function getActorPageCredits(movieCreditsValue: unknown, tvCreditsValue: unknown, page?: number) {
+  const movieCredits = getCastMembers(movieCreditsValue);
+  const tvCredits = getCastMembers(tvCreditsValue);
+  const filmographyCount = movieCredits.length + tvCredits.length;
+  const pageSize = 12;
+  const start = page === undefined ? 0 : (page - 1) * pageSize;
+  const end = page === undefined ? filmographyCount : start + pageSize;
+  const movieEnd = Math.min(end, movieCredits.length);
+  const tvStart = Math.max(0, start - movieCredits.length);
+  const tvEnd = Math.max(0, end - movieCredits.length);
+
+  return {
+    filmographyCount,
+    credits: [
+      ...projectActorPageCredits(
+        movieCredits,
+        "movie",
+        Math.min(start, movieCredits.length),
+        movieEnd,
+      ),
+      ...projectActorPageCredits(tvCredits, "tv", tvStart, tvEnd),
+    ],
+  };
+}
+
+function readPage(value: unknown): number | undefined {
+  const pageValue = Array.isArray(value) ? value[0] : value;
+  const page = Number.parseInt(String(pageValue ?? ""), 10);
+  return Number.isInteger(page) && page > 0 ? page : undefined;
+}
+
+function getStringProperty(value: Record<string, unknown>, key: string): string | null | undefined {
   const property = value[key];
-  return typeof property === "string" || property === null
-    ? property
-    : undefined;
+  return typeof property === "string" || property === null ? property : undefined;
+}
+
+function getNumberProperty(value: Record<string, unknown>, key: string): number | undefined {
+  const property = value[key];
+  return typeof property === "number" ? property : undefined;
+}
+
+function hasStatusCode(value: unknown): value is { statusCode: number } {
+  return isRecord(value) && typeof value.statusCode === "number";
 }
 
 async function getActor(
@@ -57,15 +111,32 @@ async function getVoiceRoles(
   actorId: number,
   tmdbClient: ReturnType<typeof useTmdbClient>,
   acceptLanguage?: string,
+  actorPageProjection = false,
 ) {
   try {
+    if (actorPageProjection) {
+      const workData = await getActorPageWorkByActor(actorId);
+      return workData.map((row) => ({
+        id: row.id,
+        performance: row.performance,
+        dubbing_projects: row.dubbing_projects,
+        voice_actors: row.voice_actors
+          ? [
+              {
+                ...row.voice_actors,
+                profile_picture: buildSupabaseImageUrl(row.voice_actors.profile_picture),
+              },
+            ]
+          : [],
+      }));
+    }
+
     const workData = await getWorkByActor(actorId);
     if (!workData.length) return [];
 
     // Deduplicate media details requests
     const mediaKeySet = new Set<string>();
-    const uniqueMediaItems: Array<{ contentId: number; contentType: string }> =
-      [];
+    const uniqueMediaItems: Array<{ contentId: number; contentType: string }> = [];
     for (const row of workData) {
       const cId = row.dubbing_projects?.content_id;
       const cType = row.dubbing_projects?.content_type;
@@ -78,25 +149,26 @@ async function getVoiceRoles(
       }
     }
 
-    // Fetch unique media details in concurrency-limited batches
-    const mediaMap = new Map<string, any>();
+    // Fetch only summaries needed by the full API response.
+    const mediaMap = new Map<string, Record<string, unknown>>();
+    // Fetch unique missing media details in concurrency-limited batches.
+    const missingMediaItems = uniqueMediaItems.filter(
+      ({ contentId, contentType }) => !mediaMap.has(`${contentType}:${contentId}`),
+    );
     const BATCH_SIZE = 15;
-    for (let i = 0; i < uniqueMediaItems.length; i += BATCH_SIZE) {
-      const batch = uniqueMediaItems.slice(i, i + BATCH_SIZE);
+    for (let i = 0; i < missingMediaItems.length; i += BATCH_SIZE) {
+      const batch = missingMediaItems.slice(i, i + BATCH_SIZE);
       const results = await Promise.all(
         batch.map(async ({ contentId, contentType }) => {
           try {
-            const details = await tmdbClient.fetchMediaDetails(
+            const details = await tmdbClient.fetchMediaSummary(
               contentId,
               contentType,
               acceptLanguage,
             );
             return { key: `${contentType}:${contentId}`, details };
           } catch (err) {
-            console.error(
-              `Error fetching TMDB media ${contentType}:${contentId}:`,
-              err,
-            );
+            console.error(`Error fetching TMDB media ${contentType}:${contentId}:`, err);
             return { key: `${contentType}:${contentId}`, details: null };
           }
         }),
@@ -112,8 +184,7 @@ async function getVoiceRoles(
       const { voice_actors, ...work } = row;
       const cId = work.dubbing_projects?.content_id;
       const cType = work.dubbing_projects?.content_type;
-      const mediaDetails =
-        cId && cType ? mediaMap.get(`${cType}:${cId}`) : null;
+      const mediaDetails = cId && cType ? mediaMap.get(`${cType}:${cId}`) : null;
 
       return {
         ...work,
@@ -121,23 +192,24 @@ async function getVoiceRoles(
           ? [
               {
                 ...voice_actors,
-                profile_picture: buildSupabaseImageUrl(
-                  (voice_actors as any).profile_picture,
-                ),
+                profile_picture: buildSupabaseImageUrl(voice_actors.profile_picture),
               },
             ]
           : [],
         mediaDetails: mediaDetails
           ? {
-              id: mediaDetails.id,
-              title: mediaDetails.title || mediaDetails.name,
+              id: getNumberProperty(mediaDetails, "id"),
+              title:
+                getStringProperty(mediaDetails, "title") || getStringProperty(mediaDetails, "name"),
               original_title:
-                mediaDetails.original_title || mediaDetails.original_name,
-              poster_path: buildTmdbImageUrl(mediaDetails.poster_path),
+                getStringProperty(mediaDetails, "original_title") ||
+                getStringProperty(mediaDetails, "original_name"),
+              poster_path: buildTmdbImageUrl(getStringProperty(mediaDetails, "poster_path")),
               release_date:
-                mediaDetails.release_date || mediaDetails.first_air_date,
+                getStringProperty(mediaDetails, "release_date") ||
+                getStringProperty(mediaDetails, "first_air_date"),
               media_type: work.dubbing_projects?.content_type || "",
-              overview: mediaDetails.overview,
+              overview: getStringProperty(mediaDetails, "overview"),
             }
           : null,
       };
@@ -162,24 +234,47 @@ export default defineEventHandler(async (event) => {
   }
   const acceptLanguage = getHeader(event, "accept-language") || undefined;
   const tmdbClient = useTmdbClient();
+  const query = getQuery(event);
+  const projection = query.projection;
+  const filmographyPage =
+    query.filmographyPage === undefined ? undefined : (readPage(query.filmographyPage) ?? 1);
 
   try {
+    const personRequest = getActor(actorId, tmdbClient, acceptLanguage);
     const [actor, voiceRoles] = await Promise.all([
-      getActor(actorId, tmdbClient, acceptLanguage),
-      getVoiceRoles(actorId, tmdbClient, acceptLanguage),
+      personRequest,
+      getVoiceRoles(actorId, tmdbClient, acceptLanguage, projection === "actor-page"),
     ]);
 
     if (!actor) {
       throw createError({ statusCode: 404, message: "Actor not found" });
     }
 
+    if (projection === "actor-page") {
+      const actorPageCredits = getActorPageCredits(
+        actor.movie_credits,
+        actor.tv_credits,
+        filmographyPage,
+      );
+
+      return actorPageResponse(
+        actor,
+        actorPageCredits.credits,
+        voiceRoles,
+        buildTmdbImageUrl(getStringProperty(actor, "profile_path")),
+        filmographyPage === undefined
+          ? undefined
+          : { filmographyCount: actorPageCredits.filmographyCount },
+      );
+    }
+
     const actorCredits = [
-      ...getCastMembers(actor.movie_credits).map((x) => ({
-        ...x,
+      ...getCastMembers(actor.movie_credits).map((credit) => ({
+        ...credit,
         media_type: "movie",
       })),
-      ...getCastMembers(actor.tv_credits).map((x) => ({
-        ...x,
+      ...getCastMembers(actor.tv_credits).map((credit) => ({
+        ...credit,
         media_type: "tv",
       })),
     ].map((castMember) => ({
@@ -189,12 +284,10 @@ export default defineEventHandler(async (event) => {
       backdrop_path: buildTmdbImageUrl(castMember.backdrop_path),
     }));
 
-    return {
+    const response = {
       actor: {
         ...actor,
-        profile_path: buildTmdbImageUrl(
-          getStringProperty(actor, "profile_path"),
-        ),
+        profile_path: buildTmdbImageUrl(getStringProperty(actor, "profile_path")),
         credits: {
           cast: actorCredits,
         },
@@ -202,13 +295,13 @@ export default defineEventHandler(async (event) => {
       },
       voiceActors: voiceRoles,
     };
-  } catch (error: any) {
-    if (error.statusCode) throw error;
+    return response;
+  } catch (error: unknown) {
+    if (hasStatusCode(error)) throw error;
     console.error("Error in actor route:", error);
     throw createError({
       statusCode: 500,
-      message:
-        error instanceof Error ? error.message : "An unknown error occurred",
+      message: error instanceof Error ? error.message : "An unknown error occurred",
     });
   }
 });

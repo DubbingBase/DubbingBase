@@ -60,32 +60,24 @@
           </h3>
           <ul class="space-y-3 text-sm">
             <li>
-              <NuxtLink
-                :to="localePath('/movies')"
-                class="theme-hover-text transition"
-                >{{ t("footer.movies") }}</NuxtLink
-              >
+              <NuxtLink :to="localePath('/movies')" class="theme-hover-text transition">{{
+                t("footer.movies")
+              }}</NuxtLink>
             </li>
             <li>
-              <NuxtLink
-                :to="localePath('/series')"
-                class="theme-hover-text transition"
-                >{{ t("footer.series") }}</NuxtLink
-              >
+              <NuxtLink :to="localePath('/series')" class="theme-hover-text transition">{{
+                t("footer.series")
+              }}</NuxtLink>
             </li>
             <li>
-              <NuxtLink
-                :to="localePath('/voice-actors')"
-                class="theme-hover-text transition"
-                >{{ t("footer.voiceActors") }}</NuxtLink
-              >
+              <NuxtLink :to="localePath('/voice-actors')" class="theme-hover-text transition">{{
+                t("footer.voiceActors")
+              }}</NuxtLink>
             </li>
             <li>
-              <NuxtLink
-                :to="localePath('/studios')"
-                class="theme-hover-text transition"
-                >{{ t("footer.studios") }}</NuxtLink
-              >
+              <NuxtLink :to="localePath('/studios')" class="theme-hover-text transition">{{
+                t("footer.studios")
+              }}</NuxtLink>
             </li>
           </ul>
         </div>
@@ -97,25 +89,19 @@
           </h3>
           <ul class="space-y-3 text-sm">
             <li>
-              <NuxtLink
-                :to="localePath('/guidelines')"
-                class="theme-hover-text transition"
-                >{{ t("footer.guidelines") }}</NuxtLink
-              >
+              <NuxtLink :to="localePath('/guidelines')" class="theme-hover-text transition">{{
+                t("footer.guidelines")
+              }}</NuxtLink>
             </li>
             <li>
-              <NuxtLink
-                :to="localePath('/discussions')"
-                class="theme-hover-text transition"
-                >{{ t("footer.discussions") }}</NuxtLink
-              >
+              <NuxtLink :to="localePath('/discussions')" class="theme-hover-text transition">{{
+                t("footer.discussions")
+              }}</NuxtLink>
             </li>
             <li>
-              <NuxtLink
-                :to="localePath('/leaderboard')"
-                class="theme-hover-text transition"
-                >{{ t("footer.leaderboard") }}</NuxtLink
-              >
+              <NuxtLink :to="localePath('/leaderboard')" class="theme-hover-text transition">{{
+                t("footer.leaderboard")
+              }}</NuxtLink>
             </li>
           </ul>
         </div>
@@ -127,39 +113,29 @@
           </h3>
           <ul class="space-y-3 text-sm">
             <li>
-              <NuxtLink
-                :to="localePath('/about')"
-                class="theme-hover-text transition"
-                >{{ t("about.title") }}</NuxtLink
-              >
+              <NuxtLink :to="localePath('/about')" class="theme-hover-text transition">{{
+                t("about.title")
+              }}</NuxtLink>
             </li>
             <li>
-              <NuxtLink
-                :to="localePath('/legal')"
-                class="theme-hover-text transition"
-                >{{ t("footer.legalNotice") }}</NuxtLink
-              >
+              <NuxtLink :to="localePath('/legal')" class="theme-hover-text transition">{{
+                t("footer.legalNotice")
+              }}</NuxtLink>
             </li>
             <li>
-              <NuxtLink
-                :to="localePath('/privacy')"
-                class="theme-hover-text transition"
-                >{{ t("footer.privacy") }}</NuxtLink
-              >
+              <NuxtLink :to="localePath('/privacy')" class="theme-hover-text transition">{{
+                t("footer.privacy")
+              }}</NuxtLink>
             </li>
             <li>
-              <NuxtLink
-                :to="localePath('/terms')"
-                class="theme-hover-text transition"
-                >{{ t("footer.terms") }}</NuxtLink
-              >
+              <NuxtLink :to="localePath('/terms')" class="theme-hover-text transition">{{
+                t("footer.terms")
+              }}</NuxtLink>
             </li>
             <li>
-              <a
-                href="mailto:contact@dubbingbase.com"
-                class="theme-hover-text transition"
-                >{{ t("footer.contact") }}</a
-              >
+              <a href="mailto:contact@dubbingbase.com" class="theme-hover-text transition">{{
+                t("footer.contact")
+              }}</a>
             </li>
           </ul>
         </div>
@@ -178,13 +154,8 @@
 </template>
 
 <script setup lang="ts">
-import {
-  TwitterIcon,
-  InstagramIcon,
-  MailIcon,
-  MessageSquareIcon,
-} from "lucide-vue-next";
+import { TwitterIcon, InstagramIcon, MailIcon, MessageSquareIcon } from "lucide-vue-next";
 
 const { t } = useI18n();
-const localePath = useLocalePath();
+const localePath = useLocalePathPrefix();
 </script>

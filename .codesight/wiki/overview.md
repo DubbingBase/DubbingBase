@@ -8,7 +8,7 @@
 
 ## Scale
 
-82 API routes · 19 database models · 197 UI components · 98 library files · 14 middleware layers · 63 environment variables
+82 API routes · 19 database models · 199 UI components · 106 library files · 16 middleware layers · 63 environment variables
 
 ## Subsystems
 
@@ -62,7 +62,7 @@
 - **[Revert-task.post](./revert-task.post.md)** — 1 routes — touches: db
 - **[Save-dubbing-project.post](./save-dubbing-project.post.md)** — 1 routes — touches: auth, db
 - **[Save-metadata.post](./save-metadata.post.md)** — 1 routes — touches: db
-- **[Save-studio.post](./save-studio.post.md)** — 1 routes — touches: db
+- **[Save-studio.post](./save-studio.post.md)** — 1 routes — touches: auth
 - **[Search-voice-actors.get](./search-voice-actors.get.md)** — 1 routes
 - **[Shows.get](./shows.get.md)** — 1 routes — touches: cache
 - **[Submit-task.post](./submit-task.post.md)** — 1 routes — touches: auth, upload
@@ -79,16 +79,16 @@
 
 **Database:** unknown, 19 models — see [database.md](./database.md)
 
-**UI:** 197 components (vue) — see [ui.md](./ui.md)
+**UI:** 199 components (vue) — see [ui.md](./ui.md)
 
-**Libraries:** 98 files — see [libraries.md](./libraries.md)
+**Libraries:** 106 files — see [libraries.md](./libraries.md)
 
 ## High-Impact Files
 
 Changes to these files have the widest blast radius across the codebase:
 
 - `apps/website/server/utils/db/client.ts` — imported by **67** files
-- `apps/website/server/utils/auth.ts` — imported by **34** files
+- `apps/website/server/utils/auth.ts` — imported by **35** files
 - `apps/website/server/utils/index.ts` — imported by **23** files
 - `apps/website/server/utils/cache/index.ts` — imported by **19** files
 - `apps/website/server/utils/db/queries.ts` — imported by **12** files
@@ -111,4 +111,4 @@ Changes to these files have the widest blast radius across the codebase:
 - _...31 more_
 
 ---
-_Back to [index.md](./index.md) · Generated 2026-10-15_
+_Back to [index.md](./index.md) · Generated 2026-10-22_

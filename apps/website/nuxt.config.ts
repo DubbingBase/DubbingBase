@@ -9,6 +9,39 @@ function env(name: string): string | undefined {
 
 const supabaseUrl = env("SUPABASE_URL") ?? env("PUBLIC_SUPABASE_URL");
 const supabasePublishableKey = env("SUPABASE_PUBLISHABLE_KEY");
+const siteUrl = env("SITE_URL") ?? "https://dubbingbase.com";
+const ABOUT_PRERENDER_ROUTES = new Set(["/about", "/fr/about", "/es/about", "/ja/about"]);
+
+function stripAboutClientRuntime(html: string): string {
+  return (
+    html
+      .replace(
+        /<link\b(?=[^>]*\brel=["'](?:modulepreload|prefetch)["'])(?=[^>]*\bhref=["']\/_nuxt\/)[^>]*>\s*/g,
+        "",
+      )
+      .replace(
+        /<link\b(?=[^>]*\brel=["']preload["'])(?=[^>]*\bas=["']fetch["'])(?=[^>]*\bhref=["'][^"']*_payload\.json)[^>]*>\s*/g,
+        "",
+      )
+      // Nuxt Fonts 0.14 preloads an unused italic Cyrillic face on these pages.
+      .replace(/<link\b(?=[^>]*\brel=["']preload["'])(?=[^>]*\bas=["']font["'])[^>]*>\s*/g, "")
+      .replace(/<link\b(?=[^>]*\bhref=["']\/favicon\.ico["'])[^>]*>\s*/g, "")
+      .replace(
+        /<body\b/,
+        `<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',` +
+          'Roboto,Helvetica,Arial,sans-serif"',
+      )
+      .replace(/<script\b(?=[^>]*\btype=["']importmap["'])[^>]*>[\s\S]*?<\/script>\s*/g, "")
+      .replace(
+        /<script\b(?=[^>]*\btype=["']module["'])(?=[^>]*\bsrc=["']\/_nuxt\/)[^>]*>\s*<\/script>\s*/g,
+        "",
+      )
+      .replace(/<script\b(?=[^>]*\bid=["']__NUXT_DATA__["'])[^>]*>[\s\S]*?<\/script>\s*/g, "")
+      .replace(/<script\b[^>]*>\s*window\.__NUXT_SITE_CONFIG__\s*=[\s\S]*?<\/script>\s*/g, "")
+      .replace(/<script\b[^>]*>\s*window\.__NUXT__\s*=[\s\S]*?<\/script>\s*/g, "")
+  );
+}
+
 export default defineNuxtConfig({
   rootDir: resolve(import.meta.dirname),
   compatibilityDate: "2024-09-23",
@@ -23,6 +56,15 @@ export default defineNuxtConfig({
 
   nitro: {
     preset: process.env.NITRO_PRESET || "node-server",
+    prerender: {
+      routes: [...ABOUT_PRERENDER_ROUTES],
+    },
+    hooks: {
+      "prerender:generate": (route) => {
+        if (!ABOUT_PRERENDER_ROUTES.has(route.route) || !route.contents) return;
+        route.contents = stripAboutClientRuntime(route.contents);
+      },
+    },
     experimental: {
       tasks: true,
     },
@@ -68,19 +110,18 @@ export default defineNuxtConfig({
     onesignalAppId: env("ONESIGNAL_APP_ID"),
     onesignalRestApiKey: env("ONESIGNAL_REST_API_KEY"),
     discordWebhookDiscoveryUrl:
-      env("DISCORD_WEBHOOK_DISCOVERY_URL") ||
-      env("DISCORD_DISCOVERY_WEBHOOK_URL"),
-    discordWebhookCheckUrl:
-      env("DISCORD_WEBHOOK_CHECK_URL") || env("DISCORD_CHECK_WEBHOOK_URL"),
+      env("DISCORD_WEBHOOK_DISCOVERY_URL") || env("DISCORD_DISCOVERY_WEBHOOK_URL"),
+    discordWebhookCheckUrl: env("DISCORD_WEBHOOK_CHECK_URL") || env("DISCORD_CHECK_WEBHOOK_URL"),
     discordWebhookExtractUrl:
       env("DISCORD_WEBHOOK_EXTRACT_URL") || env("DISCORD_EXTRACT_WEBHOOK_URL"),
-    discordWebhookUrl:
-      env("DISCORD_WEBHOOK_URL") || env("DISCORD_ADMIN_WEBHOOK_LOG_URL"),
+    discordWebhookUrl: env("DISCORD_WEBHOOK_URL") || env("DISCORD_ADMIN_WEBHOOK_LOG_URL"),
     resendApiKey: env("RESEND_API_KEY"),
     resendFromEmail: env("RESEND_FROM_EMAIL"),
     resendToEmail: env("RESEND_TO_EMAIL"),
     adminEmail: env("ADMIN_EMAIL"),
     public: {
+      // Temporarily enable actor-specific previews with NUXT_PUBLIC_OG_IMAGES_ENABLED=true.
+      ogImagesEnabled: false,
       supabaseUrl: supabaseUrl || "https://mock.supabase.co",
       supabaseKey: supabasePublishableKey || "mock-publishable-key",
     },
@@ -90,10 +131,7 @@ export default defineNuxtConfig({
     url: supabaseUrl || "https://mock.supabase.co",
     key: supabasePublishableKey || "mock-publishable-key",
     redirect: false,
-    types: resolve(
-      import.meta.dirname,
-      "../../packages/database/src/database.types.ts",
-    ),
+    types: resolve(import.meta.dirname, "../../packages/database/src/database.types.ts"),
     cookieOptions: {
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
@@ -102,6 +140,14 @@ export default defineNuxtConfig({
 
   experimental: {
     inlineRouteRules: true,
+    defaults: {
+      nuxtLink: {
+        prefetchOn: {
+          interaction: true,
+          visibility: false,
+        },
+      },
+    },
   },
 
   pwa: {
@@ -113,8 +159,7 @@ export default defineNuxtConfig({
       id: "/",
       name: "DubbingBase",
       short_name: "DubbingBase",
-      description:
-        "The ultimate database for voice actors and dubbing projects.",
+      description: "The ultimate database for voice actors and dubbing projects.",
       start_url: "/",
       scope: "/",
       display: "standalone",
@@ -158,7 +203,6 @@ export default defineNuxtConfig({
     },
     define: {
       __VERSION__: JSON.stringify(process.env.npm_package_version || "1.0.0"),
-      __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: "true",
     },
   },
 
@@ -172,9 +216,7 @@ export default defineNuxtConfig({
     "@nuxtjs/sitemap",
     "@nuxtjs/robots",
     "@nuxt/image",
-    "@nuxt/icon",
     "@vite-pwa/nuxt",
-    "nuxt-swiper",
     "@nuxt/test-utils/module",
     "@nuxtjs/html-validator",
   ],
@@ -184,13 +226,11 @@ export default defineNuxtConfig({
     experimental: {
       processCSSVariables: true,
     },
-    families: [
-      { name: "Inter", provider: "google", display: "block", preload: true },
-    ],
+    families: [{ name: "Inter", provider: "google", display: "swap", preload: true }],
   },
 
   site: {
-    url: "https://dubbingbase.com",
+    url: siteUrl,
     name: "DubbingBase",
   },
 
@@ -199,20 +239,16 @@ export default defineNuxtConfig({
     format: ["avif", "webp"],
   },
 
-  icon: {
-    fallbackToApi: false,
-  },
-
   i18n: {
     langDir: "locales",
     locales: APP_LOCALES.map((locale) => ({ ...locale })),
     defaultLocale: DEFAULT_LOCALE,
     strategy: "prefix_except_default",
-    baseUrl: "https://dubbingbase.com",
+    baseUrl: siteUrl,
     detectBrowserLanguage: {
       useCookie: true,
       cookieKey: "user_lang",
-      redirectOn: "all",
+      redirectOn: "root",
     },
   },
 

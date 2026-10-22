@@ -1,4 +1,11 @@
-import { NO_STORE_CACHE_CONTROL } from "../../utils/cache/http";
+import { sendRedirect } from "h3";
+import {
+  setNoCacheHeaders,
+  setPublicCacheHeaders,
+} from "../../utils/cache/http";
+import { isVoiceActorOgImagesEnabled } from "../../../src/utils/voice-actor-og-image";
+
+const STATIC_OG_IMAGE_PATH = "/android-chrome-512x512.png";
 
 let _satori: any = null;
 let _Resvg: any = null;
@@ -293,7 +300,7 @@ export const prerender = false;
 export default defineEventHandler(async (event) => {
   try {
     const query = getQuery(event);
-    const type = query.type as string;
+    const type = typeof query.type === "string" ? query.type : "";
 
     if (!type) {
       throw createError({
@@ -302,20 +309,37 @@ export default defineEventHandler(async (event) => {
       });
     }
 
+    if (type !== "voice-actor") {
+      throw createError({
+        statusCode: 400,
+        message: `Unsupported type: ${type}`,
+      });
+    }
+
+    const id = typeof query.id === "string" ? query.id : "";
+    if (!id) {
+      throw createError({
+        statusCode: 400,
+        message: "Missing id parameter",
+      });
+    }
+    if (!/^[1-9]\d*$/.test(id) || !Number.isSafeInteger(Number(id))) {
+      throw createError({ statusCode: 400, message: "Invalid id parameter" });
+    }
+
+    const config = useRuntimeConfig(event);
+    if (!isVoiceActorOgImagesEnabled(config.public.ogImagesEnabled)) {
+      setPublicCacheHeaders(event, "og-image-redirect");
+      return sendRedirect(event, STATIC_OG_IMAGE_PATH, 302);
+    }
+
     await initialize();
     const { satori, Resvg } = await getOgDependencies();
 
     let template;
+    let allowPublicCache = true;
 
     if (type === "voice-actor") {
-      const id = query.id as string;
-      if (!id) {
-        throw createError({
-          statusCode: 400,
-          message: "Missing id parameter",
-        });
-      }
-
       const supabaseAdmin = useSupabaseAdmin();
       const { data: voiceActor, error } = await supabaseAdmin
         .from("voice_actors")
@@ -338,10 +362,9 @@ export default defineEventHandler(async (event) => {
 
       let imageDataUri: string | null = null;
       if (voiceActor.profile_picture) {
-        const config = useRuntimeConfig();
         const supabaseUrl =
-          (config.supabaseUrl as string) ||
-          (config.public?.supabaseUrl as string) ||
+          config.supabaseUrl ||
+          config.public?.supabaseUrl ||
           process.env.NUXT_SUPABASE_URL ||
           process.env.NUXT_PUBLIC_SUPABASE_URL ||
           process.env.SUPABASE_URL ||
@@ -356,6 +379,7 @@ export default defineEventHandler(async (event) => {
           imageDataUri = await fetchImageAsDataUri(storageUrl);
         }
       }
+      allowPublicCache = !voiceActor.profile_picture || imageDataUri !== null;
 
       template = buildVoiceActorOg({
         name,
@@ -398,14 +422,23 @@ export default defineEventHandler(async (event) => {
 
     const pngData = resvg.render();
     const pngBuffer = pngData.asPng();
+    if (pngBuffer.byteLength === 0) {
+      throw new Error("OG image renderer returned an empty PNG");
+    }
 
-    return new Response(pngBuffer as any, {
+    if (allowPublicCache) {
+      setPublicCacheHeaders(event, "og-image");
+    } else {
+      setNoCacheHeaders(event);
+    }
+
+    return new Response(toArrayBuffer(pngBuffer), {
       headers: {
         "Content-Type": "image/png",
-        "Cache-Control": NO_STORE_CACHE_CONTROL,
       },
     });
   } catch (error) {
+    setNoCacheHeaders(event);
     console.error("Error generating OG image:", error);
     if (error instanceof Error && "statusCode" in error) throw error;
     const detail =

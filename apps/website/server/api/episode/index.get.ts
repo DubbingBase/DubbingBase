@@ -1,20 +1,18 @@
 import { useCache, useTmdbClient } from "../../utils";
 import { MediaService } from "../../utils/services/media";
-import { getDubbingProjects } from "../../utils/db/queries";
-import {
-  parseEpisodeQuery,
-  withMediaServiceTimeout,
-} from "../../utils/media-request";
+import { getDubbingProjectsForMediaEndpoint } from "../../utils/db/queries";
+import { parseEpisodeQuery, withMediaServiceTimeout } from "../../utils/media-request";
 import { withTimeout } from "../../utils/with-timeout";
 import type { CharacterProfilePicture } from "../../../src/utils/media-cast";
 import { buildCacheKey } from "../../utils/cache/constants";
 import { createCacheNamespace } from "../../utils/cache";
 
 type CachedTvdbCharacterData =
-  CharacterProfilePicture[] | { characters?: CharacterProfilePicture[] } | null;
+  | CharacterProfilePicture[]
+  | { characters?: CharacterProfilePicture[] }
+  | null;
 
-const tvdbCharacterCacheNamespace =
-  createCacheNamespace<CachedTvdbCharacterData>();
+const tvdbCharacterCacheNamespace = createCacheNamespace<CachedTvdbCharacterData>();
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
@@ -33,9 +31,7 @@ export default defineEventHandler(async (event) => {
         episodeNumber,
       );
       // Fetch character profile pictures from cache for the parent TV show if available
-      const language = acceptLanguage
-        ? (acceptLanguage.split(",")[0] || "en").trim()
-        : "default";
+      const language = acceptLanguage ? (acceptLanguage.split(",")[0] || "en").trim() : "default";
       const showCacheKey = buildCacheKey({
         provider: "tvdb",
         resource: "characters-by-tmdb-id",
@@ -56,15 +52,12 @@ export default defineEventHandler(async (event) => {
     }, "TMDB episode request");
 
     const dbDataPromise = withTimeout(
-      getDubbingProjects(id, "tv"),
+      getDubbingProjectsForMediaEndpoint(id, "tv", getQuery(event).projection),
       10_000,
       "Supabase dubbing projects query",
     ).then((dubbingProjects) => ({ dubbingProjects, voteData: {} }));
 
-    const [apiData, dbData] = await Promise.all([
-      apiDataPromise,
-      dbDataPromise,
-    ]);
+    const [apiData, dbData] = await Promise.all([apiDataPromise, dbDataPromise]);
 
     if (!apiData.episode) {
       throw createError({
@@ -93,8 +86,7 @@ export default defineEventHandler(async (event) => {
     console.error("Error fetching episode:", error);
     throw createError({
       statusCode: 500,
-      message:
-        error instanceof Error ? error.message : "Failed to fetch episode data",
+      message: error instanceof Error ? error.message : "Failed to fetch episode data",
     });
   }
 });

@@ -93,6 +93,44 @@ describe("voice actor profile-picture mutation paths", () => {
     expect(actorUpdate).not.toHaveBeenCalled();
   });
 
+  it("rejects audit reverts for entity types without a supported rollback", async () => {
+    const auditQuery = {
+      select: vi.fn(() => auditQuery),
+      eq: vi.fn(() => auditQuery),
+      single: vi.fn(async () => ({
+        data: {
+          entity_type: "studio",
+          entity_id: "41",
+          new_value: { name: "Studio" },
+          previous_value: { name: "Old studio" },
+          reverted_at: null,
+        },
+        error: null,
+      })),
+    };
+    const from = vi.fn(() => auditQuery);
+    const supabaseAdmin = { from };
+    const app = createApp();
+    app.use(
+      "/",
+      defineEventHandler((event) => {
+        event.context.user = { id: "admin", app_metadata: { role: "admin" } };
+        event.context.supabaseAdmin = supabaseAdmin;
+        return revertTask(event);
+      }),
+    );
+
+    const response = await toWebHandler(app)(
+      new Request("http://localhost/", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ auditLogId: "audit-studio", force: true }),
+      }),
+    );
+    expect(response.status).toBe(400);
+    expect(from).toHaveBeenCalledOnce();
+  });
+
   it("rejects creation audit reverts before changing the entity or audit history", async () => {
     const auditQuery = {
       select: vi.fn(() => auditQuery),
@@ -109,7 +147,8 @@ describe("voice actor profile-picture mutation paths", () => {
         error: null,
       })),
     };
-    const supabaseAdmin = { from: vi.fn(() => auditQuery) };
+    const from = vi.fn(() => auditQuery);
+    const supabaseAdmin = { from };
     const app = createApp();
     app.use(
       "/",
@@ -132,6 +171,6 @@ describe("voice actor profile-picture mutation paths", () => {
     );
 
     expect(response.status).toBe(409);
-    expect(supabaseAdmin.from).toHaveBeenCalledTimes(1);
+    expect(from).toHaveBeenCalledOnce();
   });
 });

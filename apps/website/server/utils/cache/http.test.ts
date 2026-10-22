@@ -11,7 +11,7 @@ import {
 } from "./http";
 
 describe("HTTP cache headers", () => {
-  it("defines only cache windows used by provider-only responses", () => {
+  it("defines cache windows for provider and OG image responses", () => {
     expect(getPublicCacheControl("discovery")).toBe(
       "public, max-age=60, stale-while-revalidate=3600",
     );
@@ -23,6 +23,16 @@ describe("HTTP cache headers", () => {
     );
     expect(getCloudflareCacheControl("static")).toBe(
       "public, max-age=604800, stale-while-revalidate=2592000",
+    );
+    expect(getPublicCacheControl("og-image")).toBe("public, max-age=3600");
+    expect(getCloudflareCacheControl("og-image")).toBe(
+      "public, max-age=86400",
+    );
+    expect(getPublicCacheControl("og-image-redirect")).toBe(
+      "public, max-age=60",
+    );
+    expect(getCloudflareCacheControl("og-image-redirect")).toBe(
+      "public, max-age=60",
     );
   });
 

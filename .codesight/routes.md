@@ -31,7 +31,7 @@
 - `GET` `/api/get-metadata`
 - `GET` `/api/get-random-task` ✓
 - `POST` `/api/get-random-task` [auth] ✓
-- `GET` `/api/get-studio-details`
+- `GET` `/api/get-studio-details` ✓
 - `GET` `/api/get-user-profile` [auth]
 - `ALL` `/api/get-user-voice-actor` [auth]
 - `GET` `/api/get-user-voice-actors` [auth]
@@ -61,7 +61,7 @@
 - `POST` `/api/revert-task` [db]
 - `POST` `/api/save-dubbing-project` [auth, db]
 - `POST` `/api/save-metadata` [db]
-- `POST` `/api/save-studio` [db]
+- `POST` `/api/save-studio` [auth] ✓
 - `GET` `/api/search/index` [db]
 - `GET` `/api/search-voice-actors`
 - `GET` `/api/season/index` [cache]

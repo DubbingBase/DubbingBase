@@ -6,7 +6,7 @@ function isTmdbResponse(value: unknown): value is TmdbResponse {
   return cast === undefined || Array.isArray(cast);
 }
 
-function debugLog(message: string, data?: any) {
+function debugLog(message: string, data?: unknown) {
   console.log(`[TMDB] ${message}`, data ? JSON.stringify(data, null, 2) : "");
 }
 
@@ -16,7 +16,7 @@ export class TMDBClient {
 
   constructor() {
     const config = useRuntimeConfig();
-    this.apiKey = (config.tmdbApiKey as string) || "";
+    this.apiKey = typeof config.tmdbApiKey === "string" ? config.tmdbApiKey : "";
     this.baseUrl = "https://api.themoviedb.org/3";
     debugLog("TMDB Client initialized", {
       hasApiKey: !!this.apiKey,
@@ -58,8 +58,8 @@ export class TMDBClient {
         throw new Error(`TMDB API returned an invalid response for ${endpoint}`);
       }
       return data;
-    } catch (e: any) {
-      if (e.name === "TimeoutError" || e.name === "AbortError") {
+    } catch (e: unknown) {
+      if (e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError")) {
         console.warn(`[TMDB] Request timed out for ${endpoint}`);
         throw new Error(`TMDB API timeout: ${endpoint}`);
       }
@@ -73,6 +73,10 @@ export class TMDBClient {
       { append_to_response: "credits,external_ids" },
       language,
     );
+  }
+
+  async getMediaDetails(contentType: "movie" | "tv", id: number, language?: string) {
+    return this.get(`${contentType}/${id}`, { append_to_response: "external_ids" }, language);
   }
 
   async getSeasonWithCredits(seriesId: number, seasonNumber: number, language?: string) {
@@ -102,6 +106,10 @@ export class TMDBClient {
       { append_to_response: "credits,external_ids" },
       language,
     );
+  }
+
+  async fetchMediaSummary(contentId: number, contentType: string, language?: string) {
+    return this.get(`${contentType}/${contentId}`, undefined, language);
   }
 
   async fetchMediaCredits(

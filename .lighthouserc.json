@@ -1,0 +1,22 @@
+{
+  "ci": {
+    "collect": {
+      "url": [
+        "http://127.0.0.1:8787/",
+        "http://127.0.0.1:8787/movie/85",
+        "http://127.0.0.1:8787/show/1396",
+        "http://127.0.0.1:8787/actor/3",
+        "http://127.0.0.1:8787/voice-actor/1"
+      ],
+      "numberOfRuns": 3,
+      "settings": {
+        "preset": "desktop",
+        "chromeFlags": "--headless --no-sandbox --disable-dev-shm-usage"
+      }
+    },
+    "upload": {
+      "target": "filesystem",
+      "outputDir": ".lighthouseci"
+    }
+  }
+}

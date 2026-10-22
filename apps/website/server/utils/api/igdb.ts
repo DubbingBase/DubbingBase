@@ -286,7 +286,7 @@ export class IgdbClient {
 
     if (topIds.length === 0) return { games: [], degraded: false };
 
-    const games = await this.query<IgdbGame>(
+    const gamesRequest = this.query<IgdbGame>(
       "games",
       `fields id, name, summary, rating, first_release_date,
               cover.image_id, genres.name, platforms.name;
@@ -294,20 +294,29 @@ export class IgdbClient {
       limit ${limit};`,
     );
 
+    const localizationsRequest = this.query<IgdbGameLocalization>(
+      "game_localizations",
+      `fields game, name, region.identifier;
+       where game = (${topIds.join(",")});
+       limit ${Math.max(topIds.length * 10, 100)};`,
+    ).then(
+      (localizations) => ({ localizations }),
+      (error: unknown) => ({ error }),
+    );
+
+    const games = await gamesRequest;
     if (games.length === 0) return { games, degraded: false };
 
-    let localizations: IgdbGameLocalization[];
-    try {
-      localizations = await this.query<IgdbGameLocalization>(
-        "game_localizations",
-        `fields game, name, region.identifier;
-         where game = (${topIds.join(",")});
-         limit ${Math.max(topIds.length * 10, 100)};`,
+    const localizationResult = await localizationsRequest;
+    if ("error" in localizationResult) {
+      console.warn(
+        "[IGDB] Game localization lookup failed; returning base names",
+        localizationResult.error,
       );
-    } catch (error) {
-      console.warn("[IGDB] Game localization lookup failed; returning base names", error);
       return { games, degraded: true };
     }
+
+    const { localizations } = localizationResult;
     const localizedNames = new Map<number, string>();
     for (const localization of localizations) {
       if (localization.region?.identifier === language && !localizedNames.has(localization.game)) {
