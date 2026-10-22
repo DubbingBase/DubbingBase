@@ -437,13 +437,13 @@ test.describe("Media Detail Pages", () => {
       for (const route of [
         {
           path: `${locale.prefix}/show/1396/season/1`,
-          canonicalPath: "/show/1396/season/1?dub=139601",
+          canonicalPath: "/show/1396/season/1",
           title: "Breaking Bad",
           titleParts: ["Breaking Bad", locale.seasonLabel],
         },
         {
           path: `${locale.prefix}/show/1396/season/1/episode/1`,
-          canonicalPath: "/show/1396/season/1/episode/1?dub=139601",
+          canonicalPath: "/show/1396/season/1/episode/1",
           title: "Pilot",
           titleParts: [locale.seasonLabel, "Pilot"],
         },
@@ -488,7 +488,7 @@ test.describe("Media Detail Pages", () => {
           const alternateUrl = new URL(getAttribute(matchingTags[0], "href"));
           expect(alternateUrl.origin).toBe("https://dubbingbase.com");
           expect(alternateUrl.pathname).toBe(
-            `${alternate.prefix}${route.canonicalPath.split("?")[0]}`,
+            `${alternate.prefix}${route.canonicalPath}`,
           );
         }
         const titleTag = html.match(/<title>(.*?)<\/title>/s)?.[1] || "";
@@ -546,11 +546,11 @@ test.describe("Media Detail Pages", () => {
     await expect(page.locator('meta[property="og:url"]')).toHaveCount(1);
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       "href",
-      "https://dubbingbase.com/fr/show/1396/season/1?dub=139601",
+      "https://dubbingbase.com/fr/show/1396/season/1",
     );
     await expect(page.locator('meta[property="og:url"]')).toHaveAttribute(
       "content",
-      "https://dubbingbase.com/fr/show/1396/season/1?dub=139601",
+      "https://dubbingbase.com/fr/show/1396/season/1",
     );
     await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
       "content",
