@@ -858,7 +858,7 @@ useHead({
   ),
   link: computed<HeadLink[]>(() => {
     if (!isShowRoute.value) return [];
-    const links = [
+    const links: HeadLink[] = [
       { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
       { rel: "dns-prefetch", href: "https://image.tmdb.org" },
       { rel: "preconnect", href: "https://thetvdb.com", crossorigin: "" },
