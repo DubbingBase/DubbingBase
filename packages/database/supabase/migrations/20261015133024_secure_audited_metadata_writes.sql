@@ -243,7 +243,10 @@ BEGIN
   END IF;
 
   v_payload_fingerprint := md5(p_entity_type || ':' || p_payload::TEXT);
-  v_request_id := COALESCE(p_request_id, gen_random_uuid());
+  v_request_id := COALESCE(
+    p_request_id,
+    md5(p_actor_id::TEXT || ':' || v_payload_fingerprint)::UUID
+  );
 
   PERFORM pg_catalog.pg_advisory_xact_lock(
     pg_catalog.hashtextextended(p_actor_id::TEXT || ':' || v_request_id::TEXT, 0)
@@ -326,4 +329,4 @@ GRANT EXECUTE ON FUNCTION public.controlled_save_metadata(UUID, TEXT, JSONB, UUI
   TO service_role;
 
 COMMENT ON FUNCTION public.controlled_save_metadata(UUID, TEXT, JSONB, UUID) IS
-  'Creates an allowlisted job or voice actor for a verified administrator and atomically records its full audit snapshot. Reuse p_request_id only when retrying the same creation operation.';
+  'Creates an allowlisted job or voice actor for a verified administrator and atomically records its full audit snapshot. Omitted p_request_id derives a stable actor and payload key; supplied keys are for retries of the same creation operation.';

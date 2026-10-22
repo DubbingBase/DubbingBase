@@ -164,19 +164,17 @@ BEGIN
     RAISE EXCEPTION 'identical retry did not replay the original audit result';
   END IF;
 
-  retry_result := public.controlled_save_metadata(
-    admin_id, 'job', '{"name":"No-key operation job"}'::JSONB
-  );
-  UPDATE public.jobs
-  SET name = 'Renamed no-key operation job'
-  WHERE name = 'No-key operation job';
   job_result := public.controlled_save_metadata(
     admin_id, 'job', '{"name":"No-key operation job"}'::JSONB
   );
+  retry_result := public.controlled_save_metadata(
+    admin_id, 'job', '{"name":"No-key operation job"}'::JSONB
+  );
   IF (job_result ->> 'replayed')::BOOLEAN IS DISTINCT FROM FALSE
-     OR job_result -> 'record' ->> 'id' IS NOT DISTINCT FROM retry_result -> 'record' ->> 'id'
-     OR job_result ->> 'audit_log_id' IS NOT DISTINCT FROM retry_result ->> 'audit_log_id' THEN
-    RAISE EXCEPTION 'new operation without a client key replayed an old creation';
+     OR (retry_result ->> 'replayed')::BOOLEAN IS DISTINCT FROM TRUE
+     OR job_result -> 'record' ->> 'id' IS DISTINCT FROM retry_result -> 'record' ->> 'id'
+     OR job_result ->> 'audit_log_id' IS DISTINCT FROM retry_result ->> 'audit_log_id' THEN
+    RAISE EXCEPTION 'identical no-key retry did not replay the original creation';
   END IF;
 
   BEGIN
