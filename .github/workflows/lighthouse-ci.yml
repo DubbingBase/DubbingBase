@@ -89,13 +89,13 @@ jobs:
             if ! kill -0 "$server_pid" 2>/dev/null; then
               break
             fi
-            http_status=$(curl --silent --output /tmp/lhci-page.html --write-out "%{http_code}" http://127.0.0.1:8787/about || true)
+            http_status=$(curl --silent --max-time 15 --output /tmp/lhci-page.html --write-out "%{http_code}" http://127.0.0.1:8787/ || true)
             if [ "$http_status" = "200" ]; then
-              echo "Local production Cloudflare Worker /about returned HTTP 200."
-              exit 0
+              echo "Local production Cloudflare Worker / returned HTTP 200."
+              break
             fi
             if [ "$http_status" != "000" ]; then
-              echo "Local production Cloudflare Worker /about returned HTTP $http_status."
+              echo "Local production Cloudflare Worker / returned HTTP $http_status."
               head -c 4000 /tmp/lhci-page.html
               tail -n 200 /tmp/lhci-worker.log
               exit 1
@@ -103,9 +103,22 @@ jobs:
             sleep 1
           done
 
-          echo "Local production Cloudflare Worker did not become ready."
-          tail -n 200 /tmp/lhci-worker.log
-          exit 1
+          if [ "$http_status" != "200" ]; then
+            echo "Local production Cloudflare Worker homepage did not become ready (HTTP $http_status)."
+            tail -n 200 /tmp/lhci-worker.log
+            exit 1
+          fi
+
+          for route in /movie/85 /show/1396 /actor/3 /voice-actor/1; do
+            http_status=$(curl --silent --max-time 15 --output /tmp/lhci-page.html --write-out "%{http_code}" "http://127.0.0.1:8787$route" || true)
+            if [ "$http_status" != "200" ]; then
+              echo "Local production Cloudflare Worker $route returned HTTP $http_status."
+              head -c 4000 /tmp/lhci-page.html
+              tail -n 200 /tmp/lhci-worker.log
+              exit 1
+            fi
+            echo "Local production Cloudflare Worker $route returned HTTP 200."
+          done
 
       - name: Run desktop Lighthouse CI
         run: pnpm dlx @lhci/cli@0.15.1 autorun
