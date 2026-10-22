@@ -62,7 +62,7 @@
 - **[Revert-task.post](./revert-task.post.md)** — 1 routes — touches: db
 - **[Save-dubbing-project.post](./save-dubbing-project.post.md)** — 1 routes — touches: auth, db
 - **[Save-metadata.post](./save-metadata.post.md)** — 1 routes — touches: db
-- **[Save-studio.post](./save-studio.post.md)** — 1 routes — touches: db
+- **[Save-studio.post](./save-studio.post.md)** — 1 routes — touches: auth
 - **[Search-voice-actors.get](./search-voice-actors.get.md)** — 1 routes
 - **[Shows.get](./shows.get.md)** — 1 routes — touches: cache
 - **[Submit-task.post](./submit-task.post.md)** — 1 routes — touches: auth, upload
@@ -88,7 +88,7 @@
 Changes to these files have the widest blast radius across the codebase:
 
 - `apps/website/server/utils/db/client.ts` — imported by **67** files
-- `apps/website/server/utils/auth.ts` — imported by **34** files
+- `apps/website/server/utils/auth.ts` — imported by **35** files
 - `apps/website/server/utils/index.ts` — imported by **23** files
 - `apps/website/server/utils/cache/index.ts` — imported by **19** files
 - `apps/website/server/utils/db/queries.ts` — imported by **12** files

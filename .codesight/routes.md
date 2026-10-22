@@ -61,7 +61,7 @@
 - `POST` `/api/revert-task` [db]
 - `POST` `/api/save-dubbing-project` [auth, db]
 - `POST` `/api/save-metadata` [db]
-- `POST` `/api/save-studio` [db]
+- `POST` `/api/save-studio` [auth] ✓
 - `GET` `/api/search/index` [db]
 - `GET` `/api/search-voice-actors`
 - `GET` `/api/season/index` [cache]
