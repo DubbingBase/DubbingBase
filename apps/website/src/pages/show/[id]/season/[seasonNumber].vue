@@ -331,6 +331,10 @@ const isAdmin = computed(() => {
 
 const { locale, t } = useI18n();
 const localePath = useLocalePath();
+const pageUrl = computed(
+  () =>
+    `https://dubbingbase.com${localePath(`/show/${showId.value}/season/${seasonNumber.value}`)}`,
+);
 
 const seasonLabel = computed(
   () => season.value?.name || t("details.season", { num: seasonNumber.value }),
@@ -559,10 +563,7 @@ useHead({
           },
           {
             property: "og:url",
-            content: computed(
-              () =>
-                `https://dubbingbase.com/show/${showId.value}/season/${seasonNumber.value}${activeDubId.value ? `?dub=${activeDubId.value}` : ""}`,
-            ),
+            content: pageUrl,
           },
           {
             property: "og:image",
@@ -594,13 +595,6 @@ useHead({
       { rel: "dns-prefetch", href: "https://image.tmdb.org" },
       { rel: "preconnect", href: "https://thetvdb.com", crossorigin: "" },
       { rel: "dns-prefetch", href: "https://thetvdb.com" },
-      {
-        rel: "canonical",
-        href: (() => {
-          const baseUrl = `https://dubbingbase.com/show/${showId.value}/season/${seasonNumber.value}`;
-          return activeDubId.value ? `${baseUrl}?dub=${activeDubId.value}` : baseUrl;
-        })(),
-      },
     ];
     if (backdropUrl.value) {
       links.push({ rel: "preload", as: "image", href: backdropUrl.value });

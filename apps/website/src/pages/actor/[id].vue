@@ -231,6 +231,7 @@ function getActorImageAttrs(
 }
 
 const id = String(route.params.id);
+const pageUrl = computed(() => `https://dubbingbase.com${actorLocalePath(`/actor/${id}`)}`);
 const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
 const { page: voicesPage, setPage: setVoicesPage } = useUrlPagination("voicesPage");
 const { page: filmographyPage, setPage: setFilmographyPageUrl } =
@@ -405,7 +406,7 @@ useHead({
     },
     {
       property: "og:url",
-      content: computed(() => `https://dubbingbase.com/actor/${id}`),
+      content: pageUrl,
     },
     {
       property: "og:image",
@@ -456,7 +457,7 @@ useHead({
         const json = JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Person",
-          url: `https://dubbingbase.com/actor/${id}`,
+          url: pageUrl.value,
           name: name || t("search.actor", "Acteur"),
           image: actor.value?.profile_path ? resolveImageUrl(actor.value.profile_path) : "",
           description:

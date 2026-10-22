@@ -22,11 +22,11 @@ const i18nHead = useLocaleHead({
   seo: true,
 });
 
-useHead({
+useHead(() => ({
   htmlAttrs: {
-    "data-theme": effectiveTheme,
-    lang: () => i18nHead.value.htmlAttrs?.lang || "en",
-    dir: () => i18nHead.value.htmlAttrs?.dir || "ltr",
+    "data-theme": effectiveTheme.value,
+    lang: i18nHead.value.htmlAttrs?.lang || "en",
+    dir: i18nHead.value.htmlAttrs?.dir || "ltr",
   },
   titleTemplate: (titleChunk) => {
     return titleChunk ? `${titleChunk} | DubbingBase` : "DubbingBase";
@@ -48,7 +48,7 @@ useHead({
     { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ...(i18nHead.value.link || []),
   ],
-  meta: () => [
+  meta: [
     {
       name: "theme-color",
       content: "#10131a",
@@ -61,7 +61,7 @@ useHead({
     },
     ...(i18nHead.value.meta || []),
   ],
-});
+}));
 
 useSeoMeta({
   ogSiteName: "DubbingBase",

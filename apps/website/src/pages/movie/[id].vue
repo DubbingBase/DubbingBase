@@ -388,6 +388,7 @@
 <script setup lang="ts">
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import { useRoute, useRouter } from "vue-router";
+import type { Link as HeadLink } from "@unhead/vue";
 import { NuxtLink } from "#components";
 
 import {
@@ -410,12 +411,6 @@ import {
 import ReportModal from "../../components/ReportModal.vue";
 import { matchCastWorks, type DisplayCastActor } from "../../utils/media-cast";
 
-type MovieHeadLink =
-  | { rel: "canonical"; href: string }
-  | { rel: "preload"; as: "image"; href: string }
-  | { rel: "preconnect"; href: string; crossorigin: "" }
-  | { rel: "dns-prefetch"; href: string };
-
 const isReportModalOpen = ref(false);
 
 const route = useRoute();
@@ -431,6 +426,7 @@ const isAdmin = computed(() => {
 
 const { locale, t } = useI18n();
 const localePath = useLocalePath();
+const pageUrl = computed(() => `https://dubbingbase.com${localePath(`/movie/${movieId}`)}`);
 
 const cacheKey = `movie-${movieId}-${locale.value}`;
 
@@ -703,10 +699,7 @@ useHead({
     },
     {
       property: "og:url",
-      content: computed(
-        () =>
-          `https://dubbingbase.com/movie/${movieId}${activeDubId.value ? `?dub=${activeDubId.value}` : ""}`,
-      ),
+      content: pageUrl,
     },
     {
       property: "og:image",
@@ -755,15 +748,8 @@ useHead({
       content: computed(() => backdropUrl.value || posterUrl.value || ""),
     },
   ],
-  link: computed<MovieHeadLink[]>(() => {
-    const links: MovieHeadLink[] = [
-      {
-        rel: "canonical",
-        href: (() => {
-          const baseUrl = `https://dubbingbase.com${localePath(`/movie/${movieId}`)}`;
-          return activeDubId.value ? `${baseUrl}?dub=${activeDubId.value}` : baseUrl;
-        })(),
-      },
+  link: computed<HeadLink[]>(() => {
+    const links: HeadLink[] = [
       { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
       { rel: "dns-prefetch", href: "https://image.tmdb.org" },
       { rel: "preconnect", href: "https://thetvdb.com", crossorigin: "" },
@@ -786,7 +772,7 @@ useHead({
         const json = JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Movie",
-          url: `https://dubbingbase.com/movie/${movieId}`,
+          url: pageUrl.value,
           name: title || t("search.movie", "Film"),
           image: posterUrl.value || backdropUrl.value || "",
           description:
