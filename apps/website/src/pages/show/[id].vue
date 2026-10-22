@@ -936,7 +936,7 @@ useHead({
       {
         rel: "canonical",
         href: (() => {
-          const baseUrl = "https://dubbingbase.com/show/" + showId.value;
+          const baseUrl = `https://dubbingbase.com${localePath(`/show/${showId.value}`)}`;
           return activeDubId.value
             ? `${baseUrl}?dub=${activeDubId.value}`
             : baseUrl;

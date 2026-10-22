@@ -835,7 +835,7 @@ const actorName = computed(() => {
 });
 
 const canonicalUrl = computed(
-  () => `https://dubbingbase.com/voice-actor/${voiceActorId}`,
+  () => `https://dubbingbase.com${localePath(`/voice-actor/${voiceActorId}`)}`,
 );
 
 const publicRuntimeConfig = useRuntimeConfig().public;

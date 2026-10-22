@@ -24,6 +24,7 @@ export default defineEventHandler((event) => {
   ) {
     return;
   }
+  if (url.pathname !== "/") return;
 
   const pathSegments = url.pathname.split("/").filter(Boolean);
   const routeLocale = LOCALES.find((locale) => locale === pathSegments[0]);

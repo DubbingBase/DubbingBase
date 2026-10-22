@@ -305,6 +305,7 @@ const isAdmin = computed(() => {
 
 const { t, locale } = useI18n();
 const localePath = useLocalePath();
+const canonicalUrl = computed(() => `https://dubbingbase.com${localePath("/")}`);
 const homeSearchQuery = ref("");
 const homeSearchInput = ref<HTMLInputElement | null>(null);
 const canSubmitHomeSearch = computed(
@@ -372,7 +373,7 @@ useHead({
       }),
     },
     { property: "og:type", content: "website" },
-    { property: "og:url", content: "https://dubbingbase.com/" },
+    { property: "og:url", content: canonicalUrl },
     {
       property: "og:image",
       content: "https://dubbingbase.com/android-chrome-512x512.png",
@@ -394,7 +395,7 @@ useHead({
     },
   ],
   link: [
-    { rel: "canonical", href: "https://dubbingbase.com/" },
+    { rel: "canonical", href: canonicalUrl },
     { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
     { rel: "dns-prefetch", href: "https://image.tmdb.org" },
     { rel: "preconnect", href: "https://images.igdb.com", crossorigin: "" },
@@ -409,7 +410,7 @@ useHead({
             "@context": "https://schema.org",
             "@type": "WebSite",
             name: "DubbingBase",
-            url: "https://dubbingbase.com/",
+            url: canonicalUrl.value,
             description: t("home.meta.description"),
             inLanguage: ogLocale.value,
             potentialAction: {

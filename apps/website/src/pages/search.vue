@@ -205,7 +205,10 @@ watch(
 useHead({
   title: computed(() => t("search.title")),
   link: [
-    { rel: "canonical", href: "https://dubbingbase.com/search" },
+    {
+      rel: "canonical",
+      href: computed(() => `https://dubbingbase.com${localePath("/search")}`),
+    },
     { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
     { rel: "dns-prefetch", href: "https://image.tmdb.org" },
     { rel: "preconnect", href: "https://images.igdb.com", crossorigin: "" },
