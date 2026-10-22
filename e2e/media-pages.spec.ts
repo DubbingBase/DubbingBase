@@ -465,10 +465,10 @@ test.describe("Media Detail Pages", () => {
         expect(canonicalTags).toHaveLength(1);
         expect(ogUrlTags).toHaveLength(1);
         expect(getAttribute(canonicalTags[0], "href")).toBe(
-          `https://dubbingbase.com${route.canonicalPath}`,
+          `https://dubbingbase.com${locale.prefix}${route.canonicalPath}`,
         );
         expect(getAttribute(ogUrlTags[0], "content")).toBe(
-          `https://dubbingbase.com${route.canonicalPath}`,
+          `https://dubbingbase.com${locale.prefix}${route.canonicalPath}`,
         );
         const alternateTags =
           html.match(
@@ -546,11 +546,11 @@ test.describe("Media Detail Pages", () => {
     await expect(page.locator('meta[property="og:url"]')).toHaveCount(1);
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       "href",
-      "https://dubbingbase.com/show/1396/season/1?dub=139601",
+      "https://dubbingbase.com/fr/show/1396/season/1?dub=139601",
     );
     await expect(page.locator('meta[property="og:url"]')).toHaveAttribute(
       "content",
-      "https://dubbingbase.com/show/1396/season/1?dub=139601",
+      "https://dubbingbase.com/fr/show/1396/season/1?dub=139601",
     );
     await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
       "content",

@@ -126,7 +126,8 @@ test.describe("Language Selector", () => {
   for (const cookie of ALL_LOCALES) {
     for (const url of ALL_LOCALES) {
       if (cookie === url) continue;
-      test(`mix: cookie=${cookie} visits URL /${url === "en" ? "" : url} → redirected to cookie locale ${cookie}`, async ({
+      const expectedLocale = url === "en" ? cookie : url;
+      test(`cookie=${cookie} visits URL /${url === "en" ? "" : url} → ${url === "en" ? "root redirect honors cookie" : "explicit URL locale wins"}`, async ({
         page,
         context,
       }) => {
@@ -138,10 +139,10 @@ test.describe("Language Selector", () => {
           .poll(() => getActiveLocale(page), {
             timeout: 10000,
             intervals: [250, 500, 1000],
-            message: `cookie=${cookie} should redirect away from /${url} to /${cookie === "en" ? "" : cookie}`,
+            message: `cookie=${cookie} visiting /${url === "en" ? "" : url} should select ${expectedLocale}`,
           })
-          .toBe(cookie);
-        await assertLocaleFooter(page, cookie);
+          .toBe(expectedLocale);
+        await assertLocaleFooter(page, expectedLocale);
         await assertNoRawKeys(page);
       });
     }
