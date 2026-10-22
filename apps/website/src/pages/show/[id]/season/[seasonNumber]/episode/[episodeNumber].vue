@@ -471,7 +471,8 @@ const episodeNumber = computed(
       ? route.params.episodeNumber[0]
       : route.params.episodeNumber) || "1",
 );
-const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
+const siteUrl = useSiteConfig().url;
+const currentUrl = computed(() => new URL(route.fullPath, siteUrl).href);
 
 const user = useSupabaseUser();
 const isAdmin = computed(() => {
@@ -482,7 +483,12 @@ const { locale, t } = useI18n();
 const localePath = useLocalePath();
 const pageUrl = computed(
   () =>
-    `https://dubbingbase.com${localePath(`/show/${showId.value}/season/${seasonNumber.value}/episode/${episodeNumber.value}`)}`,
+    new URL(
+      localePath(
+        `/show/${showId.value}/season/${seasonNumber.value}/episode/${episodeNumber.value}`,
+      ),
+      siteUrl,
+    ).href,
 );
 
 const cacheKey = computed(

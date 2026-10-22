@@ -284,7 +284,9 @@ const isAdmin = computed(() => {
 
 const { t, locale } = useI18n();
 const localePath = useLocalePath();
-const pageUrl = computed(() => `https://dubbingbase.com${localePath("/")}`);
+const siteUrl = useSiteConfig().url;
+const siteAssetUrl = (path: string): string => new URL(path, siteUrl).href;
+const pageUrl = computed(() => siteAssetUrl(localePath("/")));
 const homeSearchQuery = ref("");
 const homeSearchInput = ref<HTMLInputElement | null>(null);
 const canSubmitHomeSearch = computed(() => homeSearchQuery.value.trim().length >= 2);
@@ -353,7 +355,7 @@ useHead({
     { property: "og:url", content: pageUrl },
     {
       property: "og:image",
-      content: "https://dubbingbase.com/android-chrome-512x512.png",
+      content: computed(() => siteAssetUrl("/android-chrome-512x512.png")),
     },
     { property: "og:site_name", content: "DubbingBase" },
     { property: "og:locale", content: ogLocale },
@@ -368,7 +370,7 @@ useHead({
     },
     {
       name: "twitter:image",
-      content: "https://dubbingbase.com/android-chrome-512x512.png",
+      content: computed(() => siteAssetUrl("/android-chrome-512x512.png")),
     },
   ],
   link: [
@@ -391,7 +393,7 @@ useHead({
             inLanguage: ogLocale.value,
             potentialAction: {
               "@type": "SearchAction",
-              target: "https://dubbingbase.com/search?q={search_term_string}",
+              target: siteAssetUrl("/search?q={search_term_string}"),
               "query-input": "required name=search_term_string",
             },
           },
@@ -399,8 +401,8 @@ useHead({
             "@context": "https://schema.org",
             "@type": "Organization",
             name: "DubbingBase",
-            url: "https://dubbingbase.com/",
-            logo: "https://dubbingbase.com/android-chrome-512x512.png",
+            url: siteAssetUrl("/"),
+            logo: siteAssetUrl("/android-chrome-512x512.png"),
             sameAs: ["https://x.com/DubbingBase", "https://instagram.com/dubbingbase"],
           },
           {
@@ -411,19 +413,19 @@ useHead({
                 "@type": "SiteNavigationElement",
                 position: 1,
                 name: t("footer.movies", "Films"),
-                url: "https://dubbingbase.com/movies",
+                url: siteAssetUrl("/movies"),
               },
               {
                 "@type": "SiteNavigationElement",
                 position: 2,
                 name: t("footer.series", "Séries"),
-                url: "https://dubbingbase.com/series",
+                url: siteAssetUrl("/series"),
               },
               {
                 "@type": "SiteNavigationElement",
                 position: 3,
                 name: t("footer.voiceActors", "Voice Actors"),
-                url: "https://dubbingbase.com/voice-actors",
+                url: siteAssetUrl("/voice-actors"),
               },
             ],
           },

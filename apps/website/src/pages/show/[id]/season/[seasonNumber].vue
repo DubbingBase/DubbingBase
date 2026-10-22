@@ -322,7 +322,8 @@ const seasonNumber = computed(() =>
       : route.params.seasonNumber,
   ),
 );
-const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
+const siteUrl = useSiteConfig().url;
+const currentUrl = computed(() => new URL(route.fullPath, siteUrl).href);
 
 const user = useSupabaseUser();
 const isAdmin = computed(() => {
@@ -332,8 +333,7 @@ const isAdmin = computed(() => {
 const { locale, t } = useI18n();
 const localePath = useLocalePath();
 const pageUrl = computed(
-  () =>
-    `https://dubbingbase.com${localePath(`/show/${showId.value}/season/${seasonNumber.value}`)}`,
+  () => new URL(localePath(`/show/${showId.value}/season/${seasonNumber.value}`), siteUrl).href,
 );
 
 const seasonLabel = computed(

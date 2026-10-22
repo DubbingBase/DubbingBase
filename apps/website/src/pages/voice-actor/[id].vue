@@ -675,7 +675,8 @@ const router = useRouter();
 
 const route = useRoute();
 const voiceActorId = Number(route.params.id);
-const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
+const siteUrl = useSiteConfig().url;
+const currentUrl = computed(() => new URL(route.fullPath, siteUrl).href);
 const { locale, t, te } = useI18n();
 const $t = t;
 const $te = te;
@@ -781,15 +782,14 @@ const actorName = computed(() => {
   );
 });
 
-const pageUrl = computed(
-  () => `https://dubbingbase.com${localePath(`/voice-actor/${voiceActorId}`)}`,
-);
+const pageUrl = computed(() => new URL(localePath(`/voice-actor/${voiceActorId}`), siteUrl).href);
 
 const publicRuntimeConfig = useRuntimeConfig().public;
 const voiceActorOgImage = computed(() =>
   getVoiceActorOgImageMetadata(
     isVoiceActorOgImagesEnabled(publicRuntimeConfig.ogImagesEnabled),
     voiceActorId,
+    siteUrl,
   ),
 );
 const ogImageUrl = computed(() => voiceActorOgImage.value.url);
@@ -848,7 +848,7 @@ useHead({
         return map[locale.value] || "en_US";
       }),
     },
-    { property: "og:logo", content: "https://dubbingbase.com/logo.png" },
+    { property: "og:logo", content: computed(() => new URL("/logo.png", siteUrl).href) },
     { property: "og:url", content: pageUrl },
     { property: "og:image", content: ogImageUrl },
     {

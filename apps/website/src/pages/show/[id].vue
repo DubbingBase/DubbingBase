@@ -482,7 +482,8 @@ const supabase = useSupabaseClient();
 const showId = computed(
   () => (Array.isArray(route.params.id) ? route.params.id[0] : route.params.id) || "",
 );
-const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
+const siteUrl = useSiteConfig().url;
+const currentUrl = computed(() => new URL(route.fullPath, siteUrl).href);
 
 const user = useSupabaseUser();
 const isAdmin = computed(() => {
@@ -491,7 +492,7 @@ const isAdmin = computed(() => {
 
 const { locale, t } = useI18n();
 const localePath = useLocalePath();
-const pageUrl = computed(() => `https://dubbingbase.com${localePath(`/show/${showId.value}`)}`);
+const pageUrl = computed(() => new URL(localePath(`/show/${showId.value}`), siteUrl).href);
 
 const { currentData: data, pending } = useShowPageData(showId, locale);
 
