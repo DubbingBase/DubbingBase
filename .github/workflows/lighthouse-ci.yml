@@ -244,5 +244,4 @@ jobs:
       - name: Upload Lighthouse metrics to Buildstats
         uses: buildstats-io/action@v1
         with:
-          claim: ${{ secrets.BUILDSTATS_CLAIM }}
           file: buildstats-metrics.json
