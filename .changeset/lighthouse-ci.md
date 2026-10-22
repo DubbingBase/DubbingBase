@@ -2,4 +2,4 @@
 "@app/website": patch
 ---
 
-Add desktop Lighthouse CI for a locally served production website build.
+Add desktop Lighthouse audits for the production Cloudflare Worker and fix homepage route localization.

@@ -168,6 +168,7 @@ type Props = {
 };
 
 const props = defineProps<Props>();
+const localePath = useLocalePathPrefix();
 
 const {
   trendingGames,
