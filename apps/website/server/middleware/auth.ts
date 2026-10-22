@@ -1,6 +1,7 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 import { serverSupabaseClient } from "#supabase/server";
 import { useSupabaseAdmin } from "../utils/db/client";
+import { hasSupabaseAuthCookie } from "../utils/auth-session";
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
@@ -17,14 +18,17 @@ export default defineEventHandler(async (event) => {
   const authHeader = getHeader(event, "authorization");
   const token = authHeader?.replace(/^Bearer\s+/i, "").trim();
 
+  if (
+    !token &&
+    !hasSupabaseAuthCookie(getHeader(event, "cookie"), config.public.supabase.cookiePrefix)
+  ) {
+    return;
+  }
+
   if (token) {
-    const supabase = createClient(
-      config.supabaseUrl,
-      config.public.supabaseKey,
-      {
-        global: { headers: { Authorization: `Bearer ${token}` } },
-      },
-    );
+    const supabase = createClient(config.supabaseUrl, config.public.supabaseKey, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
 
     try {
       const {
@@ -34,11 +38,11 @@ export default defineEventHandler(async (event) => {
 
       if (!error && user) {
         event.context.user = user;
-        event.context.supabase = supabase as SupabaseClient;
+        event.context.supabase = supabase;
         return;
       }
-    } catch (err) {
-      console.warn("[Auth Middleware] Failed to resolve user from token:", err);
+    } catch (error) {
+      console.warn("[Auth Middleware] Failed to resolve user from token:", error);
     }
   }
 
@@ -52,7 +56,7 @@ export default defineEventHandler(async (event) => {
 
     if (!error && user) {
       event.context.user = user;
-      event.context.supabase = client as unknown as SupabaseClient;
+      event.context.supabase = client;
     }
   } catch (err) {
     // Cookie resolution failed or no cookie present; ignore for public endpoints

@@ -1,9 +1,7 @@
 <template>
-  <div
-    class="flex flex-col items-center justify-center min-h-[60vh] text-center px-4"
-  >
+  <div class="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
     <div class="mb-6 rounded-full bg-primary/10 p-4">
-      <Icon name="lucide:hammer" class="h-12 w-12 text-primary" />
+      <HammerIcon class="h-12 w-12 text-primary" aria-hidden="true" />
     </div>
     <h1 class="mb-2 text-3xl font-bold tracking-tight">
       {{ $t("common.underConstruction") }}
@@ -20,6 +18,8 @@
 </template>
 
 <script setup lang="ts">
+import { HammerIcon } from "lucide-vue-next";
+
 const { t } = useI18n();
 const localePath = useLocalePath();
 </script>

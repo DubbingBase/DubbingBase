@@ -16,9 +16,7 @@
 
         <!-- Subtle Interactive Stats Pill -->
         <div
-          v-if="
-            !isLoadingHomeStats && homeStats && homeStats.voiceActorCount > 0
-          "
+          v-if="!isLoadingHomeStats && homeStats && homeStats.voiceActorCount > 0"
           class="flex flex-wrap justify-center mb-8"
         >
           <div
@@ -27,30 +25,27 @@
             <span
               class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors theme-hover-text theme-hover-surface-muted cursor-default"
             >
-              <span
-                class="text-[var(--app-color-primary)] font-bold opacity-90"
-                >{{ homeStats.voiceActorCount.toLocaleString() }}</span
-              >
+              <span class="text-[var(--app-color-primary)] font-bold opacity-90">{{
+                homeStats.voiceActorCount.toLocaleString()
+              }}</span>
               <span>{{ $t("home.stats.voiceActors", "Voice Actors") }}</span>
             </span>
             <span class="w-px h-3.5 theme-surface-muted"></span>
             <span
               class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors theme-hover-text theme-hover-surface-muted cursor-default"
             >
-              <span
-                class="text-[var(--app-color-primary)] font-bold opacity-90"
-                >{{ homeStats.dubbingProjectCount.toLocaleString() }}</span
-              >
+              <span class="text-[var(--app-color-primary)] font-bold opacity-90">{{
+                homeStats.dubbingProjectCount.toLocaleString()
+              }}</span>
               <span>{{ $t("home.stats.projects", "Dubs") }}</span>
             </span>
             <span class="w-px h-3.5 theme-surface-muted"></span>
             <span
               class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors theme-hover-text theme-hover-surface-muted cursor-default"
             >
-              <span
-                class="text-[var(--app-color-primary)] font-bold opacity-90"
-                >{{ homeStats.workCount.toLocaleString() }}</span
-              >
+              <span class="text-[var(--app-color-primary)] font-bold opacity-90">{{
+                homeStats.workCount.toLocaleString()
+              }}</span>
               <span>{{ $t("home.stats.works", "Roles") }}</span>
             </span>
           </div>
@@ -93,12 +88,10 @@
       <main class="space-y-8 md:space-y-12">
         <!-- Trending Movies -->
         <section v-if="!errorMovies">
-          <h2
-            class="text-xl md:text-2xl font-bold mb-4 md:mb-6 theme-text tracking-wide"
-          >
+          <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 theme-text tracking-wide">
             {{ $t("home.trendingMovies") }}
           </h2>
-          <div v-if="isLoadingMovies" class="flex gap-4 overflow-x-auto pb-4">
+          <div v-if="isLoadingMovies" class="home-card-rail flex gap-4 overflow-x-auto pb-4">
             <div
               v-for="i in 4"
               :key="i"
@@ -108,7 +101,7 @@
           <div
             v-else
             ref="moviesScrollRef"
-            class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 custom-scrollbar"
+            class="home-card-rail flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 custom-scrollbar"
           >
             <div
               v-for="movie in trendingMovies"
@@ -124,10 +117,15 @@
                 >
                   <NuxtImg
                     v-if="movie.poster_path"
-                    :src="'https://image.tmdb.org/t/p/w342' + movie.poster_path"
+                    :src="movie.poster_path"
+                    :srcset="getTmdbPosterSrcset(movie.poster_path)"
                     :alt="movie.title"
                     format="webp"
+                    width="192"
+                    height="288"
                     class="object-cover w-full h-full transition duration-300"
+                    loading="lazy"
+                    decoding="async"
                   />
                 </div>
                 <h3 class="font-semibold text-sm theme-text line-clamp-2">
@@ -140,12 +138,10 @@
 
         <!-- Trending Series -->
         <section v-if="!errorSeries">
-          <h2
-            class="text-xl md:text-2xl font-bold mb-4 md:mb-6 theme-text tracking-wide"
-          >
+          <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 theme-text tracking-wide">
             {{ $t("home.trendingSeries") }}
           </h2>
-          <div v-if="isLoadingSeries" class="flex gap-4 overflow-x-auto pb-4">
+          <div v-if="isLoadingSeries" class="home-card-rail flex gap-4 overflow-x-auto pb-4">
             <div
               v-for="i in 4"
               :key="i"
@@ -155,7 +151,7 @@
           <div
             v-else
             ref="seriesScrollRef"
-            class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 custom-scrollbar"
+            class="home-card-rail flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 custom-scrollbar"
           >
             <div
               v-for="show in trendingSeries"
@@ -171,10 +167,15 @@
                 >
                   <NuxtImg
                     v-if="show.poster_path"
-                    :src="'https://image.tmdb.org/t/p/w342' + show.poster_path"
+                    :src="show.poster_path"
+                    :srcset="getTmdbPosterSrcset(show.poster_path)"
                     :alt="(show as any).name || (show as any).title"
                     format="webp"
+                    width="192"
+                    height="288"
                     class="object-cover w-full h-full transition duration-300"
+                    loading="lazy"
+                    decoding="async"
                   />
                 </div>
                 <h3 class="font-semibold text-sm theme-text line-clamp-2">
@@ -185,214 +186,40 @@
           </div>
         </section>
 
-        <!-- Trending Games -->
-        <section v-if="!errorGames">
-          <h2
-            class="text-xl md:text-2xl font-bold mb-4 md:mb-6 theme-text tracking-wide"
-          >
-            {{ $t("game.trendingGames", "Jeux du moment") }}
-          </h2>
-          <div v-if="isLoadingGames" class="flex gap-4 overflow-x-auto pb-4">
-            <div
-              v-for="i in 4"
-              :key="i"
-              class="w-48 h-72 theme-surface-muted animate-pulse rounded-xl flex-shrink-0"
-            ></div>
-          </div>
-          <div
-            v-else
-            ref="gamesScrollRef"
-            class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 custom-scrollbar"
-          >
-            <div
-              v-for="game in trendingGames"
-              :key="game.id"
-              class="w-48 flex-shrink-0 snap-start"
-            >
-              <NuxtLink
-                :to="localePath('/game/' + game.id)"
-                class="group transition-transform hover:-translate-y-1 block"
-              >
-                <div
-                  class="relative w-full h-72 rounded-xl overflow-hidden mb-3 theme-surface-muted"
-                >
-                  <NuxtImg
-                    v-if="game.cover?.url"
-                    :src="game.cover.url"
-                    :alt="game.name"
-                    format="webp"
-                    class="object-cover w-full h-full transition duration-300"
-                  />
-                </div>
-                <h3 class="font-semibold text-sm theme-text line-clamp-2">
-                  {{ game.name }}
-                </h3>
-              </NuxtLink>
-            </div>
-          </div>
-        </section>
-
-        <!-- Trending Voice Actors -->
-        <section v-if="!errorTrendingVoiceActors">
-          <h2
-            class="text-xl md:text-2xl font-bold mb-4 md:mb-6 theme-text tracking-wide"
-          >
-            {{ $t("home.trendingVoiceActors") }}
-          </h2>
-          <div
-            v-if="isLoadingTrendingVoiceActors"
-            class="flex gap-4 overflow-x-auto pb-4 pt-4 px-2"
-          >
-            <div
-              v-for="i in 4"
-              :key="i"
-              class="w-36 flex-shrink-0 flex flex-col items-center gap-3"
-            >
-              <div
-                class="w-28 h-28 theme-surface-muted rounded-full animate-pulse"
-              ></div>
-              <div
-                class="h-4 w-20 theme-surface-muted rounded animate-pulse"
-              ></div>
-            </div>
-          </div>
-          <div
-            v-else
-            ref="vaScrollRef"
-            class="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4 pt-4 px-2 custom-scrollbar"
-          >
-            <div
-              v-for="va in trendingVoiceActors"
-              :key="va.id"
-              class="w-36 flex-shrink-0 snap-start"
-            >
-              <NuxtLink
-                :to="localePath('/voice-actor/' + va.id)"
-                class="flex flex-col items-center gap-3 group transition-transform hover:-translate-y-1 relative"
-              >
-                <div
-                  class="absolute top-0 right-2 bg-gradient-to-br from-cyan-400 to-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-lg border-2 border-white theme-border flex items-center justify-center min-w-[28px] z-10 transition-transform group-hover:scale-110 group-hover:rotate-6"
-                >
-                  {{ va.work_count }}
-                </div>
-                <div
-                  class="relative w-28 h-28 rounded-full overflow-hidden theme-surface-muted border-2 border-transparent theme-hover-primary-border transition-colors shadow-md"
-                >
-                  <NuxtImg
-                    v-if="va.profile_picture"
-                    :src="va.profile_picture"
-                    :alt="va.firstname + ' ' + va.lastname"
-                    format="webp"
-                    class="object-cover w-full h-full"
-                  />
-                  <div
-                    v-else
-                    class="w-full h-full flex items-center justify-center theme-surface-muted theme-text-muted text-3xl font-bold uppercase"
-                  >
-                    {{ va.firstname?.[0] }}{{ va.lastname?.[0] }}
-                  </div>
-                </div>
-                <h3
-                  class="font-semibold text-sm text-center theme-text w-full px-2"
-                >
-                  {{ va.firstname }} {{ va.lastname }}
-                </h3>
-              </NuxtLink>
-            </div>
-          </div>
-        </section>
-
-        <!-- Top Voice Actors -->
-        <section v-if="!errorTopVoiceActors">
-          <h2
-            class="text-xl md:text-2xl font-bold mb-4 md:mb-6 theme-text tracking-wide"
-          >
-            {{ $t("home.topVoiceActors") }}
-          </h2>
-          <div
-            v-if="isLoadingTopVoiceActors"
-            class="flex gap-4 overflow-x-auto pb-4 pt-4 px-2"
-          >
-            <div
-              v-for="i in 4"
-              :key="i"
-              class="w-36 flex-shrink-0 flex flex-col items-center gap-3"
-            >
-              <div
-                class="w-28 h-28 theme-surface-muted rounded-full animate-pulse"
-              ></div>
-              <div
-                class="h-4 w-20 theme-surface-muted rounded animate-pulse"
-              ></div>
-            </div>
-          </div>
-          <div
-            v-else
-            class="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4 pt-4 px-2 custom-scrollbar"
-          >
-            <div
-              v-for="va in topVoiceActors"
-              :key="va.id"
-              class="w-36 flex-shrink-0 snap-start"
-            >
-              <NuxtLink
-                :to="localePath('/voice-actor/' + va.id)"
-                class="flex flex-col items-center gap-3 group transition-transform hover:-translate-y-1"
-              >
-                <div
-                  class="relative w-28 h-28 rounded-full overflow-hidden theme-surface-muted border-2 border-transparent theme-hover-primary-border transition-colors shadow-md"
-                >
-                  <NuxtImg
-                    v-if="va.profile_picture"
-                    :src="va.profile_picture"
-                    :alt="va.firstname + ' ' + va.lastname"
-                    format="webp"
-                    class="object-cover w-full h-full"
-                  />
-                  <div
-                    v-else
-                    class="w-full h-full flex items-center justify-center theme-surface-muted theme-text-muted text-3xl font-bold uppercase"
-                  >
-                    {{ va.firstname?.[0] }}{{ va.lastname?.[0] }}
-                  </div>
-                </div>
-                <h3
-                  class="font-semibold text-sm text-center theme-text w-full px-2"
-                >
-                  {{ va.firstname }} {{ va.lastname }}
-                </h3>
-              </NuxtLink>
-            </div>
-          </div>
-        </section>
+        <LazyHomeBelowFoldSections
+          hydrate-on-visible
+          :trending-games="trendingGames"
+          :is-loading-games="isLoadingGames"
+          :error-games="errorGames"
+          :trending-voice-actors="trendingVoiceActors"
+          :is-loading-trending-voice-actors="isLoadingTrendingVoiceActors"
+          :error-trending-voice-actors="errorTrendingVoiceActors"
+          :top-voice-actors="topVoiceActors"
+          :is-loading-top-voice-actors="isLoadingTopVoiceActors"
+          :error-top-voice-actors="errorTopVoiceActors"
+        />
         <!-- Top Contributors (Admin Only) -->
         <section v-if="isAdmin && !errorTopContributors">
-          <h2
-            class="text-xl md:text-2xl font-bold mb-4 md:mb-6 theme-text tracking-wide"
-          >
+          <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 theme-text tracking-wide">
             {{ $t("home.topContributorsAdmin") }}
           </h2>
           <div
             v-if="isLoadingTopContributors"
-            class="flex gap-4 overflow-x-auto pb-4"
+            class="home-actor-rail flex gap-4 overflow-x-auto pb-4"
           >
             <div
               v-for="i in 4"
               :key="i"
               class="w-32 flex-shrink-0 flex flex-col items-center gap-3"
             >
-              <div
-                class="w-24 h-24 theme-surface-muted rounded-full animate-pulse"
-              ></div>
-              <div
-                class="h-4 w-20 theme-surface-muted rounded animate-pulse"
-              ></div>
+              <div class="w-24 h-24 theme-surface-muted rounded-full animate-pulse"></div>
+              <div class="h-4 w-20 theme-surface-muted rounded animate-pulse"></div>
             </div>
           </div>
           <div
             v-else
             ref="contributorsScrollRef"
-            class="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4 pt-4 px-2 custom-scrollbar"
+            class="home-actor-rail flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4 pt-4 px-2 custom-scrollbar"
           >
             <div
               v-for="(contributor, index) in topContributors"
@@ -414,11 +241,11 @@
                   <NuxtImg
                     v-if="contributor.raw_user_meta_data?.avatar_url"
                     :src="contributor.raw_user_meta_data.avatar_url"
-                    :alt="
-                      contributor.raw_user_meta_data?.username || 'Utilisateur'
-                    "
+                    :alt="contributor.raw_user_meta_data?.username || 'Utilisateur'"
                     format="webp"
                     class="object-cover w-full h-full"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div
                     v-else
@@ -428,12 +255,8 @@
                   </div>
                 </div>
                 <div class="text-center w-full">
-                  <h3
-                    class="font-semibold text-sm theme-text truncate w-full px-2"
-                  >
-                    {{
-                      contributor.raw_user_meta_data?.username || "Utilisateur"
-                    }}
+                  <h3 class="font-semibold text-sm theme-text truncate w-full px-2">
+                    {{ contributor.raw_user_meta_data?.username || "Utilisateur" }}
                   </h3>
                   <p class="text-xs theme-text-muted">
                     {{ contributor.score }}{{ $t("home.contributions") }}
@@ -449,9 +272,10 @@
 </template>
 
 <script setup lang="ts">
-import { fetchHomeData, resolveLocaleLanguage } from "@app/shared-logic";
+import { resolveLocaleLanguage } from "@app/shared-logic";
+import type { HomeDataPayload } from "@app/shared-logic";
 import { useDragScroll } from "../composables/useDragScroll";
-import { ref, computed } from "vue";
+import { ref, computed, watch, type MaybeRefOrGetter } from "vue";
 
 const user = useSupabaseUser();
 const isAdmin = computed(() => {
@@ -460,11 +284,12 @@ const isAdmin = computed(() => {
 
 const { t, locale } = useI18n();
 const localePath = useLocalePath();
+const siteUrl = useSiteConfig().url;
+const siteAssetUrl = (path: string): string => new URL(path, siteUrl).href;
+const pageUrl = computed(() => siteAssetUrl(localePath("/")));
 const homeSearchQuery = ref("");
 const homeSearchInput = ref<HTMLInputElement | null>(null);
-const canSubmitHomeSearch = computed(
-  () => homeSearchQuery.value.trim().length >= 2,
-);
+const canSubmitHomeSearch = computed(() => homeSearchQuery.value.trim().length >= 2);
 
 const submitHomeSearch = (): void => {
   const query = homeSearchQuery.value.trim();
@@ -493,14 +318,10 @@ const supabase = useSupabaseClient();
 
 const moviesScrollRef = ref<HTMLElement | null>(null);
 const seriesScrollRef = ref<HTMLElement | null>(null);
-const gamesScrollRef = ref<HTMLElement | null>(null);
-const vaScrollRef = ref<HTMLElement | null>(null);
 const contributorsScrollRef = ref<HTMLElement | null>(null);
 
 useDragScroll(moviesScrollRef);
 useDragScroll(seriesScrollRef);
-useDragScroll(gamesScrollRef);
-useDragScroll(vaScrollRef);
 useDragScroll(contributorsScrollRef);
 
 useHead({
@@ -531,10 +352,10 @@ useHead({
       }),
     },
     { property: "og:type", content: "website" },
-    { property: "og:url", content: "https://dubbingbase.com/" },
+    { property: "og:url", content: pageUrl },
     {
       property: "og:image",
-      content: "https://dubbingbase.com/android-chrome-512x512.png",
+      content: computed(() => siteAssetUrl("/android-chrome-512x512.png")),
     },
     { property: "og:site_name", content: "DubbingBase" },
     { property: "og:locale", content: ogLocale },
@@ -549,11 +370,10 @@ useHead({
     },
     {
       name: "twitter:image",
-      content: "https://dubbingbase.com/android-chrome-512x512.png",
+      content: computed(() => siteAssetUrl("/android-chrome-512x512.png")),
     },
   ],
   link: [
-    { rel: "canonical", href: "https://dubbingbase.com/" },
     { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
     { rel: "dns-prefetch", href: "https://image.tmdb.org" },
     { rel: "preconnect", href: "https://images.igdb.com", crossorigin: "" },
@@ -568,12 +388,12 @@ useHead({
             "@context": "https://schema.org",
             "@type": "WebSite",
             name: "DubbingBase",
-            url: "https://dubbingbase.com/",
+            url: pageUrl.value,
             description: t("home.meta.description"),
             inLanguage: ogLocale.value,
             potentialAction: {
               "@type": "SearchAction",
-              target: "https://dubbingbase.com/search?q={search_term_string}",
+              target: siteAssetUrl("/search?q={search_term_string}"),
               "query-input": "required name=search_term_string",
             },
           },
@@ -581,12 +401,9 @@ useHead({
             "@context": "https://schema.org",
             "@type": "Organization",
             name: "DubbingBase",
-            url: "https://dubbingbase.com/",
-            logo: "https://dubbingbase.com/android-chrome-512x512.png",
-            sameAs: [
-              "https://x.com/DubbingBase",
-              "https://instagram.com/dubbingbase",
-            ],
+            url: siteAssetUrl("/"),
+            logo: siteAssetUrl("/android-chrome-512x512.png"),
+            sameAs: ["https://x.com/DubbingBase", "https://instagram.com/dubbingbase"],
           },
           {
             "@context": "https://schema.org",
@@ -596,78 +413,158 @@ useHead({
                 "@type": "SiteNavigationElement",
                 position: 1,
                 name: t("footer.movies", "Films"),
-                url: "https://dubbingbase.com/movies",
+                url: siteAssetUrl("/movies"),
               },
               {
                 "@type": "SiteNavigationElement",
                 position: 2,
                 name: t("footer.series", "Séries"),
-                url: "https://dubbingbase.com/series",
+                url: siteAssetUrl("/series"),
               },
               {
                 "@type": "SiteNavigationElement",
                 position: 3,
                 name: t("footer.voiceActors", "Voice Actors"),
-                url: "https://dubbingbase.com/voice-actors",
+                url: siteAssetUrl("/voice-actors"),
               },
             ],
           },
         ]);
-        return json
-          .replace(/</g, "\\u003c")
-          .replace(/>/g, "\\u003e")
-          .replace(/&/g, "\\u0026");
+        return json.replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026");
       }),
     },
   ],
 });
 
-const trendingLanguage = computed(
-  () => resolveLocaleLanguage(locale.value) || "en-US",
-);
+const trendingLanguage = computed(() => resolveLocaleLanguage(locale.value) || "en-US");
 
-const { data, pending } = useAsyncData(
-  () => `home-data:${trendingLanguage.value}`,
-  () => fetchHomeData(trendingLanguage.value),
-  {
+function useHomeSection<T>(
+  section: string,
+  handler: () => Promise<T>,
+  defaultValue: () => T,
+  enabled: MaybeRefOrGetter<boolean> = true,
+) {
+  return useAsyncData(() => `home-${section}:${trendingLanguage.value}`, handler, {
+    default: defaultValue,
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
+    lazy: true,
     watch: [trendingLanguage],
+    enabled,
+  });
+}
+
+const moviesData = useHomeSection(
+  "movies",
+  async () => {
+    const response = await $fetch<{
+      results?: HomeDataPayload["trendingMovies"];
+    }>("/api/trending/movies", { params: { lang: trendingLanguage.value } });
+    return response.results ?? [];
   },
+  () => [],
 );
 
-const trendingMovies = computed(() => data.value?.trendingMovies || []);
-const trendingSeries = computed(() => data.value?.trendingSeries || []);
-const trendingGames = computed(() => data.value?.trendingGames || []);
-const trendingVoiceActors = computed(
-  () => data.value?.trendingVoiceActors || [],
+const seriesData = useHomeSection(
+  "series",
+  async () => {
+    const response = await $fetch<{
+      results?: HomeDataPayload["trendingSeries"];
+    }>("/api/trending/shows", { params: { lang: trendingLanguage.value } });
+    return response.results ?? [];
+  },
+  () => [],
 );
-const topVoiceActors = computed(() => data.value?.topVoiceActors || []);
-const topContributors = computed(() => data.value?.topContributors || []);
-const homeStats = computed(() => data.value?.homeStats || null);
 
-const isLoadingMovies = computed(() => pending.value);
-const isLoadingSeries = computed(() => pending.value);
-const isLoadingGames = computed(() => pending.value);
-const isLoadingTrendingVoiceActors = computed(() => pending.value);
-const isLoadingTopVoiceActors = computed(() => pending.value);
-const isLoadingTopContributors = computed(() => pending.value);
-const isLoadingHomeStats = computed(() => pending.value);
+const gamesData = useHomeSection(
+  "games",
+  () =>
+    $fetch<HomeDataPayload["trendingGames"]>("/api/trending/games", {
+      params: { lang: trendingLanguage.value },
+    }),
+  () => [],
+);
 
-const errorMovies = computed(() => data.value?.errorMovies || "");
-const errorSeries = computed(() => data.value?.errorSeries || "");
-const errorGames = computed(() => data.value?.errorGames || "");
-const errorTrendingVoiceActors = computed(
-  () => data.value?.errorTrendingVoiceActors || "",
+const trendingVoiceActorsData = useHomeSection(
+  "trending-voice-actors",
+  () => $fetch<HomeDataPayload["trendingVoiceActors"]>("/api/trending/voice-actors"),
+  () => [],
 );
-const errorTopVoiceActors = computed(
-  () => data.value?.errorTopVoiceActors || "",
+
+const topVoiceActorsData = useHomeSection(
+  "top-voice-actors",
+  () =>
+    $fetch<HomeDataPayload["topVoiceActors"]>("/api/top-voice-actors", {
+      params: { limit: 10 },
+    }),
+  () => [],
 );
-const errorTopContributors = computed(
-  () => data.value?.errorTopContributors || "",
+
+const topContributorsData = useHomeSection(
+  "top-contributors",
+  () =>
+    $fetch<HomeDataPayload["topContributors"]>("/api/top-contributors", {
+      params: { limit: 10 },
+    }),
+  () => [],
+  isAdmin,
 );
+
+watch(isAdmin, (enabled) => {
+  if (enabled && topContributorsData.status.value === "idle") {
+    void topContributorsData.execute();
+  }
+});
+
+const homeStatsData = useHomeSection(
+  "stats",
+  () => $fetch<HomeDataPayload["homeStats"]>("/api/home-stats"),
+  () => ({ voiceActorCount: 0, dubbingProjectCount: 0, workCount: 0 }),
+);
+
+const trendingMovies = computed(() => moviesData.data.value);
+const trendingSeries = computed(() => seriesData.data.value);
+const trendingGames = computed(() => gamesData.data.value);
+const trendingVoiceActors = computed(() => trendingVoiceActorsData.data.value);
+const topVoiceActors = computed(() => topVoiceActorsData.data.value);
+const topContributors = computed(() => topContributorsData.data.value);
+const homeStats = computed(() => homeStatsData.data.value);
+
+function getTmdbPosterSrcset(imageUrl: string | null | undefined): string | undefined {
+  if (!imageUrl?.startsWith("https://image.tmdb.org/t/p/w342/")) {
+    return undefined;
+  }
+
+  const standardDensityUrl = imageUrl.replace("/w342/", "/w185/");
+  return `${standardDensityUrl} 1x, ${imageUrl} 2x`;
+}
+
+const isLoadingMovies = moviesData.pending;
+const isLoadingSeries = seriesData.pending;
+const isLoadingGames = gamesData.pending;
+const isLoadingTrendingVoiceActors = trendingVoiceActorsData.pending;
+const isLoadingTopVoiceActors = topVoiceActorsData.pending;
+const isLoadingTopContributors = topContributorsData.pending;
+const isLoadingHomeStats = homeStatsData.pending;
+
+const errorMovies = computed(() => moviesData.error.value?.message || "");
+const errorSeries = computed(() => seriesData.error.value?.message || "");
+const errorGames = computed(() => gamesData.error.value?.message || "");
+const errorTrendingVoiceActors = computed(() => trendingVoiceActorsData.error.value?.message || "");
+const errorTopVoiceActors = computed(() => topVoiceActorsData.error.value?.message || "");
+const errorTopContributors = computed(() => topContributorsData.error.value?.message || "");
 </script>
 
 <style scoped>
+.home-card-rail {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 22rem;
+}
+
+.home-actor-rail {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 12rem;
+}
+
 .custom-scrollbar::-webkit-scrollbar {
   height: 6px;
 }

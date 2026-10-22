@@ -1,7 +1,3 @@
-const SITE_ORIGIN = "https://dubbingbase.com";
-
-export const STATIC_VOICE_ACTOR_OG_IMAGE_URL = `${SITE_ORIGIN}/android-chrome-512x512.png`;
-
 export function isVoiceActorOgImagesEnabled(value: boolean | string): boolean {
   return String(value).toLowerCase() === "true";
 }
@@ -16,10 +12,11 @@ export type VoiceActorOgImageMetadata = {
 export function getVoiceActorOgImageMetadata(
   enabled: boolean,
   voiceActorId: number,
+  siteUrl: string,
 ): VoiceActorOgImageMetadata {
   if (!enabled || !Number.isSafeInteger(voiceActorId) || voiceActorId <= 0) {
     return {
-      url: STATIC_VOICE_ACTOR_OG_IMAGE_URL,
+      url: new URL("/android-chrome-512x512.png", siteUrl).href,
       width: 512,
       height: 512,
       twitterCard: "summary",
@@ -27,7 +24,7 @@ export function getVoiceActorOgImageMetadata(
   }
 
   return {
-    url: `${SITE_ORIGIN}/api/og-image?type=voice-actor&id=${voiceActorId}`,
+    url: new URL(`/api/og-image?type=voice-actor&id=${voiceActorId}`, siteUrl).href,
     width: 1200,
     height: 630,
     twitterCard: "summary_large_image",

@@ -1,20 +1,18 @@
 import { useCache, useTmdbClient } from "../../utils";
 import { MediaService } from "../../utils/services/media";
-import { getDubbingProjects } from "../../utils/db/queries";
-import {
-  parseSeasonQuery,
-  withMediaServiceTimeout,
-} from "../../utils/media-request";
+import { getDubbingProjectsForMediaEndpoint } from "../../utils/db/queries";
+import { parseSeasonQuery, withMediaServiceTimeout } from "../../utils/media-request";
 import { withTimeout } from "../../utils/with-timeout";
 import type { CharacterProfilePicture } from "../../../src/utils/media-cast";
 import { buildCacheKey } from "../../utils/cache/constants";
 import { createCacheNamespace } from "../../utils/cache";
 
 type CachedTvdbCharacterData =
-  CharacterProfilePicture[] | { characters?: CharacterProfilePicture[] } | null;
+  | CharacterProfilePicture[]
+  | { characters?: CharacterProfilePicture[] }
+  | null;
 
-const tvdbCharacterCacheNamespace =
-  createCacheNamespace<CachedTvdbCharacterData>();
+const tvdbCharacterCacheNamespace = createCacheNamespace<CachedTvdbCharacterData>();
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
@@ -26,15 +24,9 @@ export default defineEventHandler(async (event) => {
 
   try {
     const apiDataPromise = withMediaServiceTimeout(async () => {
-      const result = await mediaService.getMediaWithVoiceActorsExtended(
-        "season",
-        id,
-        seasonNumber,
-      );
+      const result = await mediaService.getMediaWithVoiceActorsExtended("season", id, seasonNumber);
       // Fetch character profile pictures from cache for the parent TV show if available
-      const language = acceptLanguage
-        ? (acceptLanguage.split(",")[0] || "en").trim()
-        : "default";
+      const language = acceptLanguage ? (acceptLanguage.split(",")[0] || "en").trim() : "default";
       const showCacheKey = buildCacheKey({
         provider: "tvdb",
         resource: "characters-by-tmdb-id",
@@ -54,15 +46,29 @@ export default defineEventHandler(async (event) => {
       return { season: result.media, characterProfilePictures };
     }, "TMDB season request");
 
+    const parentSeriePromise = tmdbClient
+      .get(`tv/${id}`, undefined, acceptLanguage)
+      .then((serie) => ({
+        id,
+        name: typeof serie.name === "string" ? serie.name : "",
+        backdrop_path: typeof serie.backdrop_path === "string" ? serie.backdrop_path : null,
+        poster_path: typeof serie.poster_path === "string" ? serie.poster_path : null,
+      }))
+      .catch((error: unknown) => {
+        console.error(`Failed to fetch parent TV show ${id} for season:`, error);
+        return null;
+      });
+
     const dbDataPromise = withTimeout(
-      getDubbingProjects(id, "tv"),
+      getDubbingProjectsForMediaEndpoint(id, "tv", getQuery(event).projection),
       10_000,
       "Supabase dubbing projects query",
     ).then((dubbingProjects) => ({ dubbingProjects, voteData: {} }));
 
-    const [apiData, dbData] = await Promise.all([
+    const [apiData, dbData, serie] = await Promise.all([
       apiDataPromise,
       dbDataPromise,
+      parentSeriePromise,
     ]);
 
     if (!apiData.season) {
@@ -74,6 +80,7 @@ export default defineEventHandler(async (event) => {
 
     const responseData = {
       season: apiData.season,
+      serie,
       dubbingProjects: dbData.dubbingProjects,
       characterProfilePictures: apiData.characterProfilePictures,
       votes: dbData.voteData,
@@ -92,8 +99,7 @@ export default defineEventHandler(async (event) => {
     console.error("Error fetching season:", error);
     throw createError({
       statusCode: 500,
-      message:
-        error instanceof Error ? error.message : "Failed to fetch season data",
+      message: error instanceof Error ? error.message : "Failed to fetch season data",
     });
   }
 });

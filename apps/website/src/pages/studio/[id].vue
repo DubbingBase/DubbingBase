@@ -34,8 +34,7 @@
           :href="studio.website_url"
           target="_blank"
           class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border theme-border-subtle theme-border theme-surface theme-text-secondary theme-hover-surface-muted flex items-center gap-2"
-          >{{ $t("studio.visitWebsite")
-          }}<ExternalLinkIcon class="w-4 h-4 opacity-70" />
+          >{{ $t("studio.visitWebsite") }}<ExternalLinkIcon class="w-4 h-4 opacity-70" />
         </a>
       </template>
       <template #right v-if="isAdmin">
@@ -43,12 +42,7 @@
           :to="localePath(`/studio/${studio.id}/edit`)"
           class="text-sm theme-primary-text theme-hover-primary-text transition-colors flex items-center gap-1.5 font-medium"
         >
-          <svg
-            class="w-4 h-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -95,9 +89,7 @@
             </div>
           </div>
           <div class="relative w-full sm:w-64" v-if="projectTotal > 8">
-            <SearchIcon
-              class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 theme-text-muted"
-            />
+            <SearchIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 theme-text-muted" />
             <input
               v-model="searchInput"
               type="search"
@@ -118,11 +110,7 @@
           <template #default="{ item: project }">
             <NuxtLink
               :key="project.id"
-              :to="
-                localePath(
-                  getMediaLink(project.content_type, project.content_id),
-                )
-              "
+              :to="localePath(getMediaLink(project.content_type, project.content_id))"
               class="group transition-transform hover:-translate-y-1 block flex flex-col"
             >
               <div
@@ -134,18 +122,14 @@
                   :src="
                     project.media.poster_path.startsWith('http')
                       ? project.media.poster_path
-                      : 'https://image.tmdb.org/t/p/w342' +
-                        project.media.poster_path
+                      : 'https://image.tmdb.org/t/p/w342' + project.media.poster_path
                   "
                   :alt="project.media?.title || project.media?.name"
                   format="webp"
                   decoding="async"
                   class="object-cover w-full h-full transition duration-300"
                 />
-                <div
-                  v-else
-                  class="w-full h-full flex items-center justify-center theme-text-muted"
-                >
+                <div v-else class="w-full h-full flex items-center justify-center theme-text-muted">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     class="w-12 h-12 opacity-50"
@@ -156,14 +140,7 @@
                     stroke-linecap="round"
                     stroke-linejoin="round"
                   >
-                    <rect
-                      x="2"
-                      y="2"
-                      width="20"
-                      height="20"
-                      rx="2.18"
-                      ry="2.18"
-                    ></rect>
+                    <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
                     <line x1="7" y1="2" x2="7" y2="22"></line>
                     <line x1="17" y1="2" x2="17" y2="22"></line>
                     <line x1="2" y1="12" x2="22" y2="12"></line>
@@ -186,18 +163,10 @@
                 </div>
               </div>
 
-              <h3
-                class="font-semibold text-sm md:text-base theme-text line-clamp-2"
-              >
-                {{
-                  project.media?.title ||
-                  project.media?.name ||
-                  `Media #${project.content_id}`
-                }}
+              <h3 class="font-semibold text-sm md:text-base theme-text line-clamp-2">
+                {{ project.media?.title || project.media?.name || `Media #${project.content_id}` }}
               </h3>
-              <div
-                class="text-xs theme-text-muted mt-1 uppercase font-bold tracking-wider"
-              >
+              <div class="text-xs theme-text-muted mt-1 uppercase font-bold tracking-wider">
                 {{ getMediaTypeLabel(project.content_type) }}
               </div>
             </NuxtLink>
@@ -236,11 +205,7 @@
           @update:page="setRosterPage"
         >
           <template #default="{ item: va }">
-            <NuxtLink
-              :key="va.id"
-              :to="localePath(`/voice-actor/${va.id}`)"
-              class="group"
-            >
+            <NuxtLink :key="va.id" :to="localePath(`/voice-actor/${va.id}`)" class="group">
               <div
                 class="theme-surface border theme-border-subtle theme-border rounded-xl overflow-hidden theme-hover-primary-border transition-colors flex flex-col items-center p-4 text-center"
               >
@@ -259,8 +224,7 @@
                     v-else
                     class="w-full h-full flex items-center justify-center font-bold text-xl theme-text-muted"
                   >
-                    {{ va.firstname?.charAt(0) || ""
-                    }}{{ va.lastname?.charAt(0) || "" }}
+                    {{ va.firstname?.charAt(0) || "" }}{{ va.lastname?.charAt(0) || "" }}
                   </div>
                 </div>
                 <h3
@@ -278,24 +242,20 @@
 
   <PersonSkeleton v-else-if="loading" />
 
-  <div
-    v-else-if="error"
-    class="container mx-auto p-8 text-center theme-status-danger-text"
-  >
+  <div v-else-if="error" class="container mx-auto p-8 text-center theme-status-danger-text">
     {{ error }}
   </div>
 </template>
 
 <script setup lang="ts">
-import { displayDubbingLanguage } from "@app/shared-logic";
+import {
+  displayDubbingLanguage,
+  filterDetailCollectionItems,
+  paginateDetailCollection,
+} from "@app/shared-logic";
 import { computed, ref, watch } from "vue";
 import { useRoute } from "vue-router";
-import {
-  useStudioData,
-  fetchStudioDetails,
-  fetchDetailCollection,
-} from "@app/shared-logic";
-import type { PaginatedResponse } from "@app/shared-logic";
+import { useStudioData, fetchStudioDetails } from "@app/shared-logic";
 import { ExternalLinkIcon, SearchIcon } from "lucide-vue-next";
 import { refDebounced } from "@vueuse/core";
 import DetailsPage from "../../components/layout/details/DetailsPage.vue";
@@ -325,11 +285,9 @@ function getMediaTypeLabel(contentType?: string) {
   if (contentType === "movie") return t("search.movie") || "Film";
   if (contentType === "tv") return t("search.tv") || "Série";
   if (contentType === "video_game") return t("search.videoGame") || "Jeu vidéo";
-  if (contentType === "audiobook")
-    return t("search.audiobook") || "Livre audio";
+  if (contentType === "audiobook") return t("search.audiobook") || "Livre audio";
   if (contentType === "podcast") return t("search.podcast") || "Podcast";
-  if (contentType === "advertisement")
-    return t("search.advertisement") || "Publicité";
+  if (contentType === "advertisement") return t("search.advertisement") || "Publicité";
   if (contentType === "toy") return t("search.toy") || "Jouet / Objet";
   return contentType || "Média";
 }
@@ -340,86 +298,47 @@ const isAdmin = computed(() => {
 
 const { data: initialStudioDetails } = await useAsyncData(
   `studio-${route.params.id}`,
-  () => fetchStudioDetails(route.params.id as string),
+  () => fetchStudioDetails(String(route.params.id)),
   {
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
 
-const { studio, dubbedProjects, voiceActorsRoster, loading, error } =
-  useStudioData([], initialStudioDetails.value);
+const { studio, dubbedProjects, voiceActorsRoster, loading, error } = useStudioData(
+  [],
+  initialStudioDetails.value,
+);
 
 const searchInput = ref("");
-const { page: projectsPage, setPage: setProjectsPage } =
-  useUrlPagination("projectsPage");
-const { page: rosterPage, setPage: setRosterPage } =
-  useUrlPagination("rosterPage");
+const { page: projectsPage, setPage: setProjectsPage } = useUrlPagination("projectsPage");
+const { page: rosterPage, setPage: setRosterPage } = useUrlPagination("rosterPage");
 const debouncedSearch = refDebounced(searchInput, 150);
 
 watch(debouncedSearch, () => {
   void setProjectsPage(1);
 });
 
-type StudioCollectionItem = Record<string, any>;
-const projectRequest = computed(() => ({
-  collection: "studio-projects" as const,
-  id: String(route.params.id),
-  query: debouncedSearch.value,
-  page: projectsPage.value,
-  pageSize: 12,
-}));
-const { data: projectPageData } = useAsyncData<
-  PaginatedResponse<StudioCollectionItem>
->(
-  computed(
-    () =>
-      `studio-projects-${route.params.id}-${projectsPage.value}-${debouncedSearch.value}`,
-  ),
-  () => fetchDetailCollection<StudioCollectionItem>(projectRequest.value),
-  {
-    watch: [projectRequest],
-    getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
-  },
+const filteredProjects = computed(() =>
+  filterDetailCollectionItems(dubbedProjects.value, debouncedSearch.value),
 );
-const projectItems = computed(() => projectPageData.value?.data || []);
-const projectTotal = computed(
-  () => projectPageData.value?.pagination.totalItems || 0,
+const projectTotal = computed(() => filteredProjects.value.length);
+const projectItems = computed(() =>
+  paginateDetailCollection(filteredProjects.value, projectsPage.value, 12),
 );
-
-const rosterRequest = computed(() => ({
-  collection: "studio-voice-actors" as const,
-  id: String(route.params.id),
-  page: rosterPage.value,
-  pageSize: 12,
-}));
-const { data: rosterPageData } = useAsyncData<
-  PaginatedResponse<StudioCollectionItem>
->(
-  computed(() => `studio-voice-actors-${route.params.id}-${rosterPage.value}`),
-  () => fetchDetailCollection<StudioCollectionItem>(rosterRequest.value),
-  {
-    watch: [rosterRequest],
-    getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
-  },
-);
-const rosterItems = computed(() => rosterPageData.value?.data || []);
-const rosterTotal = computed(
-  () => rosterPageData.value?.pagination.totalItems || 0,
+const rosterTotal = computed(() => voiceActorsRoster.value.length);
+const rosterItems = computed(() =>
+  paginateDetailCollection(voiceActorsRoster.value, rosterPage.value, 12),
 );
 
 const getProfileUrl = (path: string) => {
   if (path.startsWith("http")) return path;
-  const { data } = supabase.storage
-    .from("voice_actor_profile_pictures")
-    .getPublicUrl(path);
+  const { data } = supabase.storage.from("voice_actor_profile_pictures").getPublicUrl(path);
   return data.publicUrl;
 };
 
 useHead({
   title: computed(() =>
-    studio.value
-      ? `${studio.value.name} - DubbingBase`
-      : "Studio - DubbingBase",
+    studio.value ? `${studio.value.name} - DubbingBase` : "Studio - DubbingBase",
   ),
   link: [
     { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },

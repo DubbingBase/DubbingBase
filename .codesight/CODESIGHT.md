@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 82 routes | 19 models | 197 components | 100 lib files | 63 env vars | 15 middleware | 29% test coverage
-> **Token savings:** this file is ~16,700 tokens. Without it, AI exploration would cost ~161,300 tokens. **Saves ~144,500 tokens per conversation.**
-> **Last scanned:** 2026-10-16 10:32 — re-run after significant changes
+> 82 routes | 19 models | 199 components | 106 lib files | 63 env vars | 16 middleware | 29% test coverage
+> **Token savings:** this file is ~17,400 tokens. Without it, AI exploration would cost ~163,700 tokens. **Saves ~146,300 tokens per conversation.**
+> **Last scanned:** 2026-10-22 09:13 — re-run after significant changes
 
 ---
 
@@ -42,7 +42,7 @@
 - `GET` `/api/get-metadata`
 - `GET` `/api/get-random-task` ✓
 - `POST` `/api/get-random-task` [auth] ✓
-- `GET` `/api/get-studio-details`
+- `GET` `/api/get-studio-details` ✓
 - `GET` `/api/get-user-profile` [auth]
 - `ALL` `/api/get-user-voice-actor` [auth]
 - `GET` `/api/get-user-voice-actors` [auth]
@@ -84,7 +84,7 @@
 - `GET` `/api/toy/:id` params(id) [queue]
 - `GET` `/api/trending/games` [cache]
 - `GET` `/api/trending/movies` [cache]
-- `GET` `/api/trending/shows` [cache] ✓
+- `GET` `/api/trending/shows` [cache]
 - `GET` `/api/trending/voice-actors`
 - `POST` `/api/update-review-status` [db]
 - `POST` `/api/update-user-profile`
@@ -329,6 +329,8 @@
 - **Footer** [client] — `apps/website/src/components/Footer.vue`
 - **ForceEnqueueButton** [client] — props: mediaType, mediaId, seasonNumber, episodeNumber, wikipediaLanguage — `apps/website/src/components/ForceEnqueueButton.vue`
 - **Header** [client] — `apps/website/src/components/Header.vue`
+- **HeaderPreferences** [client] — `apps/website/src/components/HeaderPreferences.vue`
+- **HomeBelowFoldSections** [client] — `apps/website/src/components/HomeBelowFoldSections.vue`
 - **LanguageBanner** [client] — `apps/website/src/components/LanguageBanner.vue`
 - **MediaSkeleton** [client] — `apps/website/src/components/MediaSkeleton.vue`
 - **PaginatedResponsiveGrid** [client] — props: items, pageSize, totalItems, page, gridClass, itemKey — `apps/website/src/components/PaginatedResponsiveGrid.vue`
@@ -459,6 +461,7 @@
 - `apps/website/server/api/movie/[id].get.ts` — function fetchMovieData: (event, movieId) => void
 - `apps/website/server/api/show/[id].get.ts` — function fetchShowData: (event, showId) => void
 - `apps/website/server/api/trending/games.get.ts` — function getTrendingGamesResponse: (event, language, config, igdbClient, language?) => Promise<IgdbTrendingGamesResult>;
+- `apps/website/server/utils/actor-page-response.ts` — function actorPageResponse: (actor, unknown>, actorCredits, unknown>[], voiceRoles, unknown>[], profilePath, options?) => void
 - `apps/website/server/utils/api/advertisement.ts` — class AdvertisementClient
 - `apps/website/server/utils/api/igdb.ts`
   - function buildIgdbImageUrl: (hash, size) => string
@@ -470,6 +473,7 @@
 - `apps/website/server/utils/api/tmdb.ts` — class TMDBClient
 - `apps/website/server/utils/api/toy.ts` — class ToyClient
 - `apps/website/server/utils/api/tvdb.ts` — class TVDBClient, const TVDB_AUTH_TOKEN_NAMESPACE
+- `apps/website/server/utils/auth-session.ts` — function hasSupabaseAuthCookie: (cookieHeader, cookiePrefix) => boolean
 - `apps/website/server/utils/auth.ts` — function requireUser: (event) => User, function requireAdmin: (event) => User
 - `apps/website/server/utils/background.ts` — function scheduleBackgroundTask: (event, task, label) => void
 - `apps/website/server/utils/cache/constants.ts`
@@ -514,9 +518,11 @@
 - `apps/website/server/utils/db/queries.ts`
   - function getVoiceActorWithWork: (id) => void
   - function getWorkByActor: (actorId) => void
+  - function getActorPageWorkByActor: (actorId) => void
   - function getDubbingProjects: (contentId, contentType) => void
-  - function getWorkVotes: (workIds, userId?) => Promise<
-  - function getTopContributors: (limit) => void
+  - function getDubbingProjectsForMediaEndpoint: (contentId, contentType, projection) => void
+  - function getMediaPageDubbingProjects: (contentId, contentType) => void
+  - _...2 more_
 - `apps/website/server/utils/dubbing-language.ts` — function requireDubbingLanguage: (value) => DubbingLanguage
 - `apps/website/server/utils/dubbing-region-detection.ts` — function detectDubbingRegionFromWikitext: ({...}, sections, }) => DubbingEvidence, type DubbingEvidence
 - `apps/website/server/utils/error-message.ts` — function getErrorMessage: (error) => string
@@ -536,6 +542,7 @@
   - function llmGenerateObject: (prompt, schema, options?) => Promise<
   - function llmVision: (prompt, imageData, mimeType, options?) => Promise<
   - function llmVisionObject: (prompt, imageData, schema, mimeType, options?) => Promise<
+- `apps/website/server/utils/media-page-credits.ts` — function mediaPageAggregateCredits: (credits) => void
 - `apps/website/server/utils/media-queue-readiness.ts`
   - function getReadyMediaQueueNames: (value) => MediaQueueName[]
   - type MediaQueueName
@@ -578,10 +585,6 @@
   - function createMediaResponseError: (provider, response) => Error
   - function fetchMediaRequest: (input, init?) => Promise<Response>
   - class RetryableMediaRequestError
-- `apps/website/server/utils/route-cpu-diagnostics.ts`
-  - function routeCpuFamily: (pathname) => string
-  - function createRouteCpuSample: (pathname, method, now) => void
-  - interface RouteCpuSample
 - `apps/website/server/utils/services/media-preparation.ts`
   - function checkMediaDubbingSections: (options) => Promise<CheckSectionsResult>
   - function checkGameDubbingSections: (options) => Promise<CheckSectionsResult>
@@ -631,12 +634,23 @@
   - type ClaimedCategory
   - type ContributionClaim
 - `apps/website/src/composables/useDragScroll.ts` — function useDragScroll: (scrollRef) => void
+- `apps/website/src/composables/useLocalePathPrefix.ts` — function useLocalePathPrefix: () => (path: string) => string
 - `apps/website/src/composables/useReports.ts` — function useReports
 - `apps/website/src/composables/useShowPageData.ts` — function useShowPageData: (showId, locale) => void
 - `apps/website/src/composables/useTheme.ts` — function useTheme: () => void
 - `apps/website/src/composables/useUrlPagination.ts` — function readUrlPage: (value) => number, function useUrlPagination: (queryKey) => void
 - `apps/website/src/lib/media-editor-routes.ts` — function getMediaEditorRoute: ({...}, mediaId, projectId }) => string | null
 - `apps/website/src/lib/mediaQueue.ts` — function enqueueMedia: (params) => Promise<void>
+- `apps/website/src/utils/access-token-cache.ts` — function createAccessTokenCache: (auth) => void, interface AccessTokenAuthClient
+- `apps/website/src/utils/actor-grid-html.ts`
+  - function escapeActorHtml: (value) => string
+  - function renderActorImageHtml: (attributes) => string
+  - function renderActorVoiceActorCardHtml: (actor, href, rolesLabel, getImageAttributes) => string
+  - function renderActorFilmographyCardHtml: (item, mediaHref, voiceActorHref, copy, getImageAttributes, resolveImageUrl) => void
+  - interface ActorImageAttributes
+  - interface ActorFilmographyCopy
+  - _...3 more_
+- `apps/website/src/utils/actor-ssr-data.ts` — function prepareActorSsrData: (payload) => void
 - `apps/website/src/utils/duplicate-work.ts`
   - function duplicateWorkDraftHasChanges: (initial, current) => boolean
   - function canPrefetchDuplicateWorkPage: (requestSucceeded, currentIndex, groupCount, nextCursor) => boolean
@@ -657,9 +671,8 @@
 - `apps/website/src/utils/season-data.ts` — function fetchSeasonPageData: (showId, seasonNumber, locale?) => Promise<SeasonDataResponse>, function fetchEpisodePageData: (showId, seasonNumber, episodeNumber, locale?) => Promise<EpisodeDataResponse>
 - `apps/website/src/utils/voice-actor-og-image.ts`
   - function isVoiceActorOgImagesEnabled: (value) => boolean
-  - function getVoiceActorOgImageMetadata: (enabled, voiceActorId) => VoiceActorOgImageMetadata
+  - function getVoiceActorOgImageMetadata: (enabled, voiceActorId, siteUrl) => VoiceActorOgImageMetadata
   - type VoiceActorOgImageMetadata
-  - const STATIC_VOICE_ACTOR_OG_IMAGE_URL
 - `e2e/helpers/mock-api.ts`
   - function waitForVueHydration: (page) => Promise<void>
   - function setupMockApi: (page, options) => void
@@ -670,27 +683,31 @@
   - type GeneratorType
 - `packages/og-image/src/voice-actor.ts` — function voiceActorGenerator: (params) => void, interface VoiceActorOgParams
 - `packages/shared-logic/src/composables/useActorData.ts`
-  - function fetchActorData: (id) => Promise<ActorDataPayload | null>
-  - function useActorData: (initialData?) => void
+  - function fetchActorData: (id, options) => Promise<ActorDataPayload | null>
+  - function useActorData: (initialData?, options) => void
   - type ActorResponse
   - type ActorDataPayload
 - `packages/shared-logic/src/composables/useAdvertisementData.ts` — function fetchAdvertisementData: (id, locale?) => Promise<AdvertisementResponse | null>
 - `packages/shared-logic/src/composables/useAudiobookData.ts` — function fetchAudiobookData: (id, locale?) => Promise<AudiobookResponse | null>
 - `packages/shared-logic/src/composables/useDetailCollections.ts`
-  - function fetchDetailCollection: (params) => Promise<PaginatedResponse<T>>
-  - type DetailCollection
-  - type DetailCollectionParams
+  - function selectDetailCollectionProject: (projects, projectId) => T | undefined
+  - function resolveDetailCollectionProject: (projects, projectId) => T | undefined
+  - function formatMediaWorkCastCards: (project) => MediaWorkCastCard[]
+  - function formatGameDetailCastCards: (characters, project) => GameDetailCastCard[]
+  - function matchesDetailCollectionSearch: (item, query) => boolean
+  - function filterDetailCollectionItems: (items, query) => T[]
+  - _...7 more_
 - `packages/shared-logic/src/composables/useEpisodeData.ts` — function fetchEpisodeData: (showId, seasonNumber, episodeNumber, locale?) => Promise<any | null>
 - `packages/shared-logic/src/composables/useGameData.ts` — function fetchGameData: (id, locale?) => Promise<any | null>
 - `packages/shared-logic/src/composables/useHomeData.ts`
   - function fetchHomeData: (language) => Promise<HomeDataPayload>
   - function useHomeData: (initialData?) => void
   - type HomeDataPayload
-- `packages/shared-logic/src/composables/useMovieData.ts` — function fetchMovieData: (id, locale?) => Promise<any | null>
+- `packages/shared-logic/src/composables/useMovieData.ts` — function fetchMovieData: (id, locale?, options) => Promise<MovieDetailResponse | null>
 - `packages/shared-logic/src/composables/usePodcastData.ts` — function fetchPodcastData: (id, locale?) => Promise<PodcastResponse | null>
 - `packages/shared-logic/src/composables/useSearchData.ts` — function fetchSearchData: (query) => Promise<SearchResult[]>, type SearchResult
 - `packages/shared-logic/src/composables/useSeasonData.ts` — function fetchSeasonData: (showId, seasonNumber, locale?) => Promise<any | null>
-- `packages/shared-logic/src/composables/useShowData.ts` — function fetchShowData: (id, locale?) => Promise<any | null>
+- `packages/shared-logic/src/composables/useShowData.ts` — function fetchShowData: (id, locale?, options) => Promise<ShowDetailResponse | null>
 - `packages/shared-logic/src/composables/useStudioData.ts`
   - function fetchStudioDetails: (studioId) => Promise<StudioDetailsResponse | null>
   - function fetchStudiosData: () => Promise<Studio[]>
@@ -810,7 +827,10 @@
 ## auth
 - auth — `apps/mobile/src/stores/auth.ts`
 - generate-social-content.post — `apps/website/server/api/generate-social-content.post.ts`
+- 00-about-static — `apps/website/server/middleware/00-about-static.ts`
 - auth — `apps/website/server/middleware/auth.ts`
+- auth-session.test — `apps/website/server/utils/auth-session.test.ts`
+- auth-session — `apps/website/server/utils/auth-session.ts`
 - auth — `apps/website/server/utils/auth.ts`
 - auth — `apps/website/src/middleware/auth.ts`
 - authenticated-fetch — `apps/website/src/plugins/authenticated-fetch.ts`
@@ -819,8 +839,6 @@
 - 00-cache-headers — `apps/website/server/middleware/00-cache-headers.ts`
 - 00-cache — `apps/website/server/middleware/00-cache.ts`
 - 00-e2e-mock — `apps/website/server/middleware/00-e2e-mock.ts`
-- 01-locale-redirect — `apps/website/server/middleware/01-locale-redirect.ts`
-- 99-route-cpu-diagnostic — `apps/website/server/middleware/99-route-cpu-diagnostic.ts`
 - cache-headers-middleware.test — `apps/website/server/utils/cache/cache-headers-middleware.test.ts`
 - admin — `apps/website/src/middleware/admin.ts`
 - 20260618000000_migrate_to_pgmq — `packages/database/supabase/migrations/20260618000000_migrate_to_pgmq.sql`
@@ -849,7 +867,7 @@
 - `packages/shared-logic/src/types/index.ts` — imported by **8** files
 - `apps/website/server/utils/cache/http.ts` — imported by **7** files
 - `apps/website/server/utils/background.ts` — imported by **7** files
-- `apps/website/server/utils/services/media.ts` — imported by **6** files
+- `apps/website/server/utils/services/media.ts` — imported by **7** files
 - `apps/website/server/utils/cache/wikipedia.ts` — imported by **5** files
 - `apps/website/server/utils/dubbing-region-detection.ts` — imported by **5** files
 - `apps/website/server/utils/error-message.ts` — imported by **5** files
@@ -873,7 +891,7 @@
 # Test Coverage
 
 > **29%** of routes and models are covered by tests
-> 87 test files found
+> 96 test files found
 
 ## Covered Routes
 
@@ -884,11 +902,11 @@
 - POST:/api/extract-voice-actor-info
 - GET:/api/get-random-task
 - POST:/api/get-random-task
+- GET:/api/get-studio-details
 - POST:/api/media-queue
 - POST:/api/prepare_game
 - POST:/api/process-media-queue
 - POST:/api/submit-task
-- GET:/api/trending/shows
 - POST:/api/update-voice-actor
 - POST:/api/upload-profile-picture
 
@@ -914,12 +932,29 @@
 
 # CI/CD Pipelines
 
-## GitHub Actions (2 workflows)
+## GitHub Actions (3 workflows)
 
 | Workflow | Triggers | Jobs | Deploy | Environments |
 |---|---|---|---|---|
 | codesight | push, workflow_dispatch | 1 | — | — |
+| Lighthouse CI | pull_request, push, workflow_dispatch | 2 | cloudflare | — |
 | Release and Deployment Pipeline | push, workflow_dispatch | 12 | netlify, cloudflare | — |
+
+### Lighthouse CI
+
+> `.github/workflows/lighthouse-ci.yml`
+
+> Concurrency: `lighthouse-ci-${{ github.ref }}`
+
+- **lighthouse-desktop** on `ubuntu-latest` — 10 steps → **cloudflare**
+  - `actions/checkout@v4`
+  - `pnpm/action-setup@v4`
+  - `actions/setup-node@v4`
+  - `jdx/mise-action@v2`
+  - `actions/upload-artifact@v4`
+- **publish-lighthouse-trends** on `ubuntu-latest` — 3 steps (needs: lighthouse-desktop)
+  - `actions/download-artifact@v4`
+  - `buildstats-io/action@v1`
 
 ### Release and Deployment Pipeline
 
@@ -1009,7 +1044,7 @@
 - `TVDB_API_KEY`
 
 ---
-_Source: .github/workflows/codesight.yml, .github/workflows/pipeline.yml_
+_Source: .github/workflows/codesight.yml, .github/workflows/lighthouse-ci.yml, .github/workflows/pipeline.yml_
 _Generated by codesight-cicd-plugin_
 
 ---

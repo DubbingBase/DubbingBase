@@ -1,11 +1,12 @@
+import type { H3Event } from "h3";
 import { useTmdbClient } from "../../utils";
 import { MediaService } from "../../utils/services/media";
-import { getDubbingProjects } from "../../utils/db/queries";
+import { getDubbingProjectsForMediaEndpoint } from "../../utils/db/queries";
 import { processMedia } from "../../utils/urls/tmdb";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 import { scheduleBackgroundTask } from "../../utils/background";
-export async function fetchMovieData(event: any, movieId: number) {
+export async function fetchMovieData(event: H3Event, movieId: number) {
   const acceptLanguage = getHeader(event, "accept-language") || undefined;
 
   const tmdbClient = useTmdbClient();
@@ -16,11 +17,7 @@ export async function fetchMovieData(event: any, movieId: number) {
     .getMediaWithVoiceActors("movie", movieId)
     .then(async (result) => {
       const { characters: characterProfilePictures, tvdbId } =
-        await mediaService.getCharacterProfilePictures(
-          "movie",
-          movieId,
-          result.media,
-        );
+        await mediaService.getCharacterProfilePictures("movie", movieId, result.media);
       return {
         movieWithImageUrls: result.media,
         characterProfilePictures,
@@ -45,8 +42,7 @@ export async function fetchMovieData(event: any, movieId: number) {
         name: "Information indisponible (Timeout)",
         poster_path: null,
         backdrop_path: null,
-        overview:
-          "Ce contenu n'a pas pu être chargé car les serveurs TMDB sont inaccessibles.",
+        overview: "Ce contenu n'a pas pu être chargé car les serveurs TMDB sont inaccessibles.",
         credits: { cast: [] },
         release_date: "1970-01-01",
         first_air_date: "1970-01-01",
@@ -54,21 +50,21 @@ export async function fetchMovieData(event: any, movieId: number) {
       };
       return {
         movieWithImageUrls: processMedia(mockMovie),
-        characterProfilePictures: [] as any[],
+        characterProfilePictures: [],
         collection: null,
         tvdbId: null,
       };
     });
 
-  const dbDataPromise = getDubbingProjects(movieId, "movie");
+  const dbDataPromise = getDubbingProjectsForMediaEndpoint(
+    movieId,
+    "movie",
+    getQuery(event).projection,
+  );
 
-  const [apiData, dubbingProjects] = await Promise.all([
-    apiDataPromise,
-    dbDataPromise,
-  ]);
+  const [apiData, dubbingProjects] = await Promise.all([apiDataPromise, dbDataPromise]);
 
-  const { movieWithImageUrls, characterProfilePictures, collection, tvdbId } =
-    apiData;
+  const { movieWithImageUrls, characterProfilePictures, collection, tvdbId } = apiData;
 
   // ── Lazy Wikipedia Queue Enqueue ─────────────────────────────────
   // Gated by PostHog 'enqueue-on-navigate' (server-side)

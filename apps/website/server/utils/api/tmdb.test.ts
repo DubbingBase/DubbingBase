@@ -23,9 +23,11 @@ describe("TMDB metadata fetches", () => {
     const client = new TMDBClient();
     await client.getMediaWithCredits("movie", 1);
     await client.getMediaWithCredits("tv", 2);
+    await client.getMediaDetails("tv", 7);
     await client.getSeasonWithCredits(2, 3);
     await client.getEpisodeWithCredits(2, 3, 4);
     await client.fetchMediaDetails(3, "movie");
+    await client.fetchMediaSummary(3, "tv");
     await client.fetchMediaCredits("tv", 4);
     await client.getPersonWithCredits(5);
     await client.getCollection(6);
@@ -34,14 +36,20 @@ describe("TMDB metadata fetches", () => {
     expect(urls.map((url) => url.pathname)).toEqual([
       "/3/movie/1",
       "/3/tv/2",
+      "/3/tv/7",
       "/3/tv/2/season/3",
       "/3/tv/2/season/3/episode/4",
       "/3/movie/3",
+      "/3/tv/3",
       "/3/tv/4/aggregate_credits",
       "/3/person/5",
       "/3/collection/6",
       "/3/trending/movie/day",
     ]);
+    expect(urls[5]?.searchParams.get("append_to_response")).toBe("credits,external_ids");
+    expect(urls[6]?.searchParams.has("append_to_response")).toBe(false);
+    expect(urls[1]?.searchParams.get("append_to_response")).toBe("credits,external_ids");
+    expect(urls[2]?.searchParams.get("append_to_response")).toBe("external_ids");
     expect(getOrFetch).not.toHaveBeenCalled();
     expect(get).not.toHaveBeenCalled();
     expect(put).not.toHaveBeenCalled();

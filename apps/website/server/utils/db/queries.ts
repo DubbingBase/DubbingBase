@@ -24,10 +24,23 @@ export async function getWorkByActor(actorId: number) {
   return data || [];
 }
 
-export async function getDubbingProjects(
-  contentId: number,
-  contentType: string,
-) {
+export async function getActorPageWorkByActor(actorId: number) {
+  const supabase = useSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("work")
+    .select(
+      `id,
+      performance,
+      voice_actors(id, firstname, lastname, profile_picture),
+      dubbing_projects(language, content_id)`,
+    )
+    .eq("actor_id", actorId);
+
+  if (error) return [];
+  return data || [];
+}
+
+export async function getDubbingProjects(contentId: number, contentType: string) {
   const supabase = useSupabaseAdmin();
   const { data, error } = await supabase
     .from("dubbing_projects")
@@ -51,29 +64,67 @@ export async function getDubbingProjects(
 
   if (error) return [];
 
-  return (data || []).map((project: any) => ({
+  return (data || []).map((project) => ({
     ...project,
-    works: (project.works || []).map((work: any) => ({
+    works: (project.works || []).map((work) => ({
       ...work,
       voice_actor: processVoiceActor(work.voice_actor),
     })),
     studio_data: project.studio_data || null,
-    crew: (project.crew || []).map((member: any) => ({
+    crew: (project.crew || []).map((member) => ({
       ...member,
       person: processVoiceActor(member.person),
     })),
   }));
 }
 
+const MEDIA_PAGE_DUBBING_PROJECTS_SELECT = `id,
+  language,
+  studio_data:studios(id, name, logo_url),
+  works:work(
+    id,
+    actor_id,
+    character_name,
+    performance,
+    note,
+    voice_actor:voice_actors(id, firstname, lastname, profile_picture, voice_actor_name)
+  )`;
+
+export async function getDubbingProjectsForMediaEndpoint(
+  contentId: number,
+  contentType: string,
+  projection: unknown,
+) {
+  return projection === "media-page"
+    ? await getMediaPageDubbingProjects(contentId, contentType)
+    : await getDubbingProjects(contentId, contentType);
+}
+
+export async function getMediaPageDubbingProjects(contentId: number, contentType: string) {
+  const supabase = useSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("dubbing_projects")
+    .select(MEDIA_PAGE_DUBBING_PROJECTS_SELECT)
+    .eq("content_id", contentId)
+    .eq("content_type", contentType);
+
+  if (error) return [];
+
+  return (data || []).map((project) => ({
+    ...project,
+    works: (project.works || []).map((work) => ({
+      ...work,
+      voice_actor: processVoiceActor(work.voice_actor),
+    })),
+    studio_data: project.studio_data || null,
+    crew: [],
+  }));
+}
+
 export async function getWorkVotes(
   workIds: number[],
   userId?: string,
-): Promise<
-  Record<
-    number,
-    { up_count: number; down_count: number; user_vote: string | null }
-  >
-> {
+): Promise<Record<number, { up_count: number; down_count: number; user_vote: string | null }>> {
   if (workIds.length === 0) return {};
 
   const supabase = useSupabaseAdmin();
