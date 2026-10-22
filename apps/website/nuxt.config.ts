@@ -9,6 +9,7 @@ function env(name: string): string | undefined {
 
 const supabaseUrl = env("SUPABASE_URL") ?? env("PUBLIC_SUPABASE_URL");
 const supabasePublishableKey = env("SUPABASE_PUBLISHABLE_KEY");
+const siteUrl = env("SITE_URL") ?? "https://dubbingbase.com";
 const ABOUT_PRERENDER_ROUTES = new Set(["/about", "/fr/about", "/es/about", "/ja/about"]);
 
 function stripAboutClientRuntime(html: string): string {
@@ -229,7 +230,7 @@ export default defineNuxtConfig({
   },
 
   site: {
-    url: "https://dubbingbase.com",
+    url: siteUrl,
     name: "DubbingBase",
   },
 
@@ -243,11 +244,11 @@ export default defineNuxtConfig({
     locales: APP_LOCALES.map((locale) => ({ ...locale })),
     defaultLocale: DEFAULT_LOCALE,
     strategy: "prefix_except_default",
-    baseUrl: "https://dubbingbase.com",
+    baseUrl: siteUrl,
     detectBrowserLanguage: {
       useCookie: true,
       cookieKey: "user_lang",
-      redirectOn: "all",
+      redirectOn: "root",
     },
   },
 

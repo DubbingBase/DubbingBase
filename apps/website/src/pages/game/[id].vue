@@ -519,7 +519,8 @@ const route = useRoute();
 const router = useRouter();
 const supabase = useSupabaseClient();
 const gameId = (Array.isArray(route.params.id) ? route.params.id[0] : route.params.id) || "";
-const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
+const siteUrl = useSiteConfig().url;
+const currentUrl = computed(() => new URL(route.fullPath, siteUrl).href);
 
 const user = useSupabaseUser();
 const isAdmin = computed(() => {

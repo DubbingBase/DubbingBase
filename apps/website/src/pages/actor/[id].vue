@@ -231,7 +231,9 @@ function getActorImageAttrs(
 }
 
 const id = String(route.params.id);
-const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
+const siteUrl = useSiteConfig().url;
+const pageUrl = computed(() => new URL(actorLocalePath(`/actor/${id}`), siteUrl).href);
+const currentUrl = computed(() => new URL(route.fullPath, siteUrl).href);
 const { page: voicesPage, setPage: setVoicesPage } = useUrlPagination("voicesPage");
 const { page: filmographyPage, setPage: setFilmographyPageUrl } =
   useUrlPagination("filmographyPage");
@@ -405,14 +407,14 @@ useHead({
     },
     {
       property: "og:url",
-      content: computed(() => `https://dubbingbase.com/actor/${id}`),
+      content: pageUrl,
     },
     {
       property: "og:image",
       content: computed(() =>
         actor.value?.profile_path
           ? resolveImageUrl(actor.value.profile_path)
-          : "https://dubbingbase.com/default-og.jpg",
+          : new URL("/default-og.jpg", siteUrl).href,
       ),
     },
     {
@@ -440,7 +442,7 @@ useHead({
       content: computed(() =>
         actor.value?.profile_path
           ? resolveImageUrl(actor.value.profile_path)
-          : "https://dubbingbase.com/default-og.jpg",
+          : new URL("/default-og.jpg", siteUrl).href,
       ),
     },
   ],
@@ -456,7 +458,7 @@ useHead({
         const json = JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Person",
-          url: `https://dubbingbase.com/actor/${id}`,
+          url: pageUrl.value,
           name: name || t("search.actor", "Acteur"),
           image: actor.value?.profile_path ? resolveImageUrl(actor.value.profile_path) : "",
           description:

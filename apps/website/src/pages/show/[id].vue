@@ -36,8 +36,7 @@
             target="_blank"
             rel="noopener noreferrer"
             class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg theme-surface-overlay theme-text theme-hover-surface-muted transition-colors backdrop-blur-md uppercase tracking-wider"
-            >{{ $t("common.tmdb")
-            }}<ExternalLinkIcon class="w-3 h-3 opacity-70" />
+            >{{ $t("common.tmdb") }}<ExternalLinkIcon class="w-3 h-3 opacity-70" />
           </a>
           <a
             v-if="tvdbId"
@@ -45,8 +44,7 @@
             target="_blank"
             rel="noopener noreferrer"
             class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg theme-surface-overlay theme-text theme-hover-surface-muted transition-colors backdrop-blur-md uppercase tracking-wider"
-            >{{ $t("common.tvdb")
-            }}<ExternalLinkIcon class="w-3 h-3 opacity-70" />
+            >{{ $t("common.tvdb") }}<ExternalLinkIcon class="w-3 h-3 opacity-70" />
           </a>
         </div>
       </template>
@@ -120,12 +118,7 @@
           "
           class="text-sm theme-primary-text theme-hover-primary-text transition-colors flex items-center gap-1.5 font-medium"
         >
-          <svg
-            class="w-4 h-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -136,11 +129,7 @@
           <span class="hidden sm:inline">{{ $t("details.modify") }}</span>
         </NuxtLink>
 
-        <ForceEnqueueButton
-          v-if="serie?.id"
-          media-type="tv"
-          :media-id="serie.id"
-        />
+        <ForceEnqueueButton v-if="serie?.id" media-type="tv" :media-id="serie.id" />
 
         <button
           @click="isReportModalOpen = true"
@@ -157,9 +146,7 @@
             stroke-linecap="round"
             stroke-linejoin="round"
           >
-            <path
-              d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"
-            />
+            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
             <line x1="4" y1="22" x2="4" y2="15" />
           </svg>
         </button>
@@ -227,10 +214,7 @@
                   >
                     {{ season.name }}
                   </h3>
-                  <div
-                    v-if="season.episode_count"
-                    class="text-xs theme-text-muted mt-0.5"
-                  >
+                  <div v-if="season.episode_count" class="text-xs theme-text-muted mt-0.5">
                     {{ season.episode_count }} {{ $t("details.episodes") }}
                   </div>
                 </div>
@@ -242,9 +226,7 @@
         <!-- Voice Cast -->
         <section>
           <div class="flex flex-col mb-6 gap-2">
-            <div
-              class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4"
-            >
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
               <div>
                 <h2 class="text-2xl font-bold">
                   {{ $t("details.castAndCrew") }}
@@ -290,9 +272,7 @@
               >
                 <div
                   class="flex flex-col sm:grid gap-4"
-                  :class="
-                    isOriginalLanguage ? 'sm:grid-cols-2' : 'sm:grid-cols-3'
-                  "
+                  :class="isOriginalLanguage ? 'sm:grid-cols-2' : 'sm:grid-cols-3'"
                 >
                   <!-- Original Actor -->
                   <div
@@ -300,11 +280,7 @@
                   >
                     <component
                       :is="actor.actorId ? NuxtLink : 'div'"
-                      :to="
-                        actor.actorId
-                          ? localePath(`/actor/${actor.actorId}`)
-                          : undefined
-                      "
+                      :to="actor.actorId ? localePath(`/actor/${actor.actorId}`) : undefined"
                       class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                     >
                       <NuxtImg
@@ -317,24 +293,16 @@
                         alt="Actor"
                       />
                     </component>
-                    <div
-                      class="flex flex-col min-w-0 flex-1 w-full overflow-hidden"
-                    >
+                    <div class="flex flex-col min-w-0 flex-1 w-full overflow-hidden">
                       <div
                         class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
                       >
                         <ClapperboardIcon class="w-3 h-3 flex-shrink-0" />
-                        <span class="truncate block w-full">{{
-                          $t("details.actor")
-                        }}</span>
+                        <span class="truncate block w-full">{{ $t("details.actor") }}</span>
                       </div>
                       <component
                         :is="actor.actorId ? NuxtLink : 'div'"
-                        :to="
-                          actor.actorId
-                            ? localePath(`/actor/${actor.actorId}`)
-                            : undefined
-                        "
+                        :to="actor.actorId ? localePath(`/actor/${actor.actorId}`) : undefined"
                         class="font-bold text-sm theme-text truncate hover:underline block w-full"
                         :title="actor.name"
                       >
@@ -360,25 +328,21 @@
                         alt="Character"
                       />
                     </div>
-                    <div
-                      class="flex flex-col min-w-0 flex-1 w-full overflow-hidden"
-                    >
+                    <div class="flex flex-col min-w-0 flex-1 w-full overflow-hidden">
                       <div
                         class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
                       >
                         <UserIcon class="w-3 h-3 flex-shrink-0" />
-                        <span class="truncate block w-full">{{
-                          $t("details.character")
-                        }}</span>
+                        <span class="truncate block w-full">{{ $t("details.character") }}</span>
                       </div>
                       <div
                         class="font-bold text-sm theme-text truncate block w-full"
                         :title="
                           actor.roles
-                            ?.map((r: any) =>
-                              r.episode_count
-                                ? `${r.character} (${r.episode_count} eps)`
-                                : r.character,
+                            ?.map((role) =>
+                              role.episode_count
+                                ? `${role.character} (${role.episode_count} eps)`
+                                : role.character,
                             )
                             .join(', ') ||
                           actor.workCharacterName ||
@@ -387,10 +351,10 @@
                       >
                         {{
                           actor.roles
-                            ?.map((r: any) =>
-                              r.episode_count
-                                ? `${r.character} (${r.episode_count} eps)`
-                                : r.character,
+                            ?.map((role) =>
+                              role.episode_count
+                                ? `${role.character} (${role.episode_count} eps)`
+                                : role.character,
                             )
                             .join(", ") ||
                           actor.workCharacterName ||
@@ -423,39 +387,25 @@
                           v-else
                           class="w-full h-full flex items-center justify-center text-2xl font-bold theme-text-muted"
                         >
-                          {{ actor.voiceActor.firstname?.[0]
-                          }}{{ actor.voiceActor.lastname?.[0] }}
+                          {{ actor.voiceActor.firstname?.[0] }}{{ actor.voiceActor.lastname?.[0] }}
                         </div>
                       </NuxtLink>
-                      <div
-                        class="flex flex-col min-w-0 flex-1 w-full overflow-hidden"
-                      >
+                      <div class="flex flex-col min-w-0 flex-1 w-full overflow-hidden">
                         <div
                           class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
                         >
                           <MicIcon class="w-3 h-3 flex-shrink-0" />
-                          <span class="truncate block w-full">{{
-                            $t("details.voiceActor")
-                          }}</span>
+                          <span class="truncate block w-full">{{ $t("details.voiceActor") }}</span>
                         </div>
                         <NuxtLink
-                          :to="
-                            localePath(`/voice-actor/${actor.voiceActor.id}`)
-                          "
+                          :to="localePath(`/voice-actor/${actor.voiceActor.id}`)"
                           class="font-bold text-sm theme-text truncate hover:underline block w-full"
-                          :title="
-                            actor.voiceActor.firstname +
-                            ' ' +
-                            actor.voiceActor.lastname
-                          "
+                          :title="actor.voiceActor.firstname + ' ' + actor.voiceActor.lastname"
                         >
                           {{ actor.voiceActor.firstname }}
                           {{ actor.voiceActor.lastname }}
                         </NuxtLink>
-                        <div
-                          v-if="actor.voiceActor.note"
-                          class="text-xs theme-text-muted mt-1"
-                        >
+                        <div v-if="actor.voiceActor.note" class="text-xs theme-text-muted mt-1">
                           {{ actor.voiceActor.note }}
                         </div>
                       </div>
@@ -464,25 +414,18 @@
                       <div
                         class="w-16 sm:w-full relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-raised theme-input sm:mb-3 flex items-center justify-center border border-dashed theme-border-subtle theme-border flex-shrink-0"
                       >
-                        <span
-                          class="theme-text-muted theme-text-secondary text-xs text-center px-2"
+                        <span class="theme-text-muted theme-text-secondary text-xs text-center px-2"
                           >?</span
                         >
                       </div>
-                      <div
-                        class="flex flex-col min-w-0 flex-1 w-full overflow-hidden"
-                      >
+                      <div class="flex flex-col min-w-0 flex-1 w-full overflow-hidden">
                         <div
                           class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
                         >
                           <MicIcon class="w-3 h-3 opacity-50 flex-shrink-0" />
-                          <span class="truncate block w-full">{{
-                            $t("details.voiceActor")
-                          }}</span>
+                          <span class="truncate block w-full">{{ $t("details.voiceActor") }}</span>
                         </div>
-                        <div
-                          class="text-sm theme-text-muted italic truncate block w-full"
-                        >
+                        <div class="text-sm theme-text-muted italic truncate block w-full">
                           {{ $t("details.notSpecified") }}
                         </div>
                       </div>
@@ -496,10 +439,7 @@
       </template>
     </MediaDetailsLayout>
 
-    <div
-      v-else-if="!pending"
-      class="text-center py-20 theme-text-muted min-h-screen"
-    >
+    <div v-else-if="!pending" class="text-center py-20 theme-text-muted min-h-screen">
       {{ $t("series.notFound") }}
     </div>
 
@@ -511,8 +451,14 @@
 <script setup lang="ts">
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import { useRoute, useRouter } from "vue-router";
+import type { Link as HeadLink } from "@unhead/vue";
 import { NuxtLink } from "#components";
 
+import type {
+  MediaDetailCharacterProfilePicture,
+  MediaDetailCredits,
+  MediaDetailDubbingProject,
+} from "@app/shared-logic";
 import { computed, ref, watch } from "vue";
 import { refDebounced } from "@vueuse/core";
 import {
@@ -534,11 +480,10 @@ const isShowRoute = computed(() => route.params.seasonNumber === undefined);
 const router = useRouter();
 const supabase = useSupabaseClient();
 const showId = computed(
-  () =>
-    (Array.isArray(route.params.id) ? route.params.id[0] : route.params.id) ||
-    "",
+  () => (Array.isArray(route.params.id) ? route.params.id[0] : route.params.id) || "",
 );
-const currentUrl = computed(() => `https://dubbingbase.com${route.fullPath}`);
+const siteUrl = useSiteConfig().url;
+const currentUrl = computed(() => new URL(route.fullPath, siteUrl).href);
 
 const user = useSupabaseUser();
 const isAdmin = computed(() => {
@@ -547,6 +492,7 @@ const isAdmin = computed(() => {
 
 const { locale, t } = useI18n();
 const localePath = useLocalePath();
+const pageUrl = computed(() => new URL(localePath(`/show/${showId.value}`), siteUrl).href);
 
 const { currentData: data, pending } = useShowPageData(showId, locale);
 
@@ -561,16 +507,15 @@ type ShowSeasonItem = {
   episode_count?: number | null;
 };
 const seasons = computed<ShowSeasonItem[]>(() => serie.value?.seasons || []);
-const { page: seasonsPage, setPage: setSeasonsPage } =
-  useUrlPagination("seasonsPage");
+const { page: seasonsPage, setPage: setSeasonsPage } = useUrlPagination("seasonsPage");
 const seasonTotal = computed(() => seasons.value.length);
 const seasonItems = computed(() => {
   const start = (seasonsPage.value - 1) * 12;
   return seasons.value.slice(start, start + 12);
 });
 const dubbingProjects = computed(() => {
-  const projects = [...(data.value?.dubbingProjects || [])].filter((p) =>
-    projectHasVoiceActor(p),
+  const projects: MediaDetailDubbingProject[] = [...(data.value?.dubbingProjects || [])].filter(
+    projectHasVoiceActor,
   );
   const currentLocale = locale.value.toLowerCase();
   return projects.sort((a, b) => {
@@ -587,36 +532,34 @@ const dubbingProjects = computed(() => {
   });
 });
 
-function projectHasVoiceActor(project: any): boolean {
-  return (project.works || []).some((w: any) => w.voice_actor);
+function projectHasVoiceActor(project: MediaDetailDubbingProject): boolean {
+  return (project.works || []).some((work) => work.voice_actor);
 }
 
-function projectVoiceActorCount(project: any): number {
+function projectVoiceActorCount(project: MediaDetailDubbingProject): number {
   const ids = new Set<number>();
-  for (const w of project.works || []) {
-    if (w.voice_actor?.id) ids.add(w.voice_actor.id);
+  for (const work of project.works || []) {
+    if (work.voice_actor?.id) ids.add(work.voice_actor.id);
   }
   return ids.size;
 }
-const characterProfilePictures = computed(
+const characterProfilePictures = computed<MediaDetailCharacterProfilePicture[]>(
   () => data.value?.characterProfilePictures || [],
 );
-const aggregateCredits = computed(
+const aggregateCredits = computed<MediaDetailCredits>(
   () => data.value?.aggregateCredits || { cast: [] },
 );
 const tvdbId = computed(() => data.value?.tvdbId);
 
 const backdropUrl = computed(() => {
   if (!serie.value?.backdrop_path) return null;
-  if (serie.value.backdrop_path.startsWith("http"))
-    return serie.value.backdrop_path;
+  if (serie.value.backdrop_path.startsWith("http")) return serie.value.backdrop_path;
   return `https://image.tmdb.org/t/p/original${serie.value.backdrop_path}`;
 });
 
 const posterUrl = computed(() => {
   if (!serie.value?.poster_path) return null;
-  if (serie.value.poster_path.startsWith("http"))
-    return serie.value.poster_path;
+  if (serie.value.poster_path.startsWith("http")) return serie.value.poster_path;
   return `https://image.tmdb.org/t/p/original${serie.value.poster_path}`;
 });
 
@@ -629,7 +572,7 @@ const activeDubId = computed(() => {
 
 const activeDubProject = computed(() => {
   return (
-    dubbingProjects.value.find((p: any) => p.id === activeDubId.value) ||
+    dubbingProjects.value.find((project) => project.id === activeDubId.value) ||
     dubbingProjects.value[0]
   );
 });
@@ -638,9 +581,7 @@ const isOriginalLanguage = computed(() => {
   const orig = serie.value?.original_language?.toLowerCase();
   const dub = activeDubProject.value?.language?.toLowerCase();
   if (!orig || !dub) return false;
-  return (
-    orig === dub || dub.startsWith(`${orig}-`) || orig.startsWith(`${dub}-`)
-  );
+  return orig === dub || dub.startsWith(`${orig}-`) || orig.startsWith(`${dub}-`);
 });
 
 const getDisplayLanguage = (langCode: string | undefined | null) => {
@@ -660,15 +601,13 @@ const getDisplayLanguage = (langCode: string | undefined | null) => {
 
 // Format cast and attach voice actors
 const formattedCast = computed<DisplayCastActor[]>(() => {
-  if (!aggregateCredits.value?.cast) return [];
+  const cast = aggregateCredits.value.cast;
+  if (!cast) return [];
 
   // Get works (dubbing links) for the currently active dubbing project
   const works = activeDubProject.value?.works || [];
 
-  const { matches, unmatchedWorks } = matchCastWorks(
-    aggregateCredits.value.cast,
-    works,
-  );
+  const { matches, unmatchedWorks } = matchCastWorks(cast, works);
 
   const matchedCards = matches.flatMap(({ actor, works: actorWorks }) => {
     let profilePath = actor.profile_path;
@@ -679,7 +618,7 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
     // Find the voice actor work for this physical actor
     const cards = actorWorks.length > 0 ? actorWorks : [null];
 
-    return cards.map((work: any) => {
+    return cards.map((work) => {
       const voiceActor = work?.voice_actor;
       // Fallback character name from DB when TMDB returns no roles
       const workCharacterName = work?.character_name || null;
@@ -687,17 +626,16 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
       // Find character picture matching the character name
       let characterImage = null;
       const characterName =
-        actor.roles?.map((r: any) => r.character).join(", ") ||
-        workCharacterName;
+        actor.roles?.map((role) => role.character).join(", ") || workCharacterName;
       if (characterName) {
         // Try to match any of the roles, then fallback to workCharacterName
         const namesToTry = [
-          ...(actor.roles || []).map((r: any) => r.character).filter(Boolean),
+          ...(actor.roles || []).map((role) => role.character).filter(Boolean),
           ...(workCharacterName ? [workCharacterName] : []),
         ];
         for (const name of namesToTry) {
           const match = characterProfilePictures.value.find(
-            (c: any) => c.name && c.name.toLowerCase() === name.toLowerCase(),
+            (picture) => picture.name && picture.name.toLowerCase() === name.toLowerCase(),
           );
           if (match && match.image) {
             characterImage = match.image;
@@ -711,7 +649,7 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
         actorId: actor.id,
         id: work ? `${actor.id}-${work.id}` : actor.id,
         profile_path: profilePath,
-        voiceActor: voiceActor ? { ...voiceActor, note: work.note } : null,
+        voiceActor: voiceActor ? { ...voiceActor, note: work?.note } : null,
         characterImage,
         workCharacterName,
       };
@@ -720,14 +658,12 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
 
   // Keep manually entered works visible even when TMDB no longer returns the
   // linked actor (or the work has no TMDB actor id).
-  const unmatchedCards = unmatchedWorks.map((work: any) => ({
+  const unmatchedCards = unmatchedWorks.map((work) => ({
     id: `work-${work.id}`,
     name: work.character_name || t("details.unknownCharacter"),
     profile_path: null,
     character: work.character_name || null,
-    voiceActor: work.voice_actor
-      ? { ...work.voice_actor, note: work.note }
-      : null,
+    voiceActor: work.voice_actor ? { ...work.voice_actor, note: work.note } : null,
     characterImage: null,
     workCharacterName: work.character_name || null,
   }));
@@ -737,8 +673,7 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
 
 const searchQuery = ref("");
 const searchInput = ref("");
-const { page: requestedCastPage, setPage: setCastPage } =
-  useUrlPagination("castPage");
+const { page: requestedCastPage, setPage: setCastPage } = useUrlPagination("castPage");
 const debouncedSearch = refDebounced(searchInput, 150);
 watch(debouncedSearch, (val) => {
   searchQuery.value = val;
@@ -783,9 +718,7 @@ useHead({
     const year = serie.value?.first_air_date
       ? ` (${new Date(serie.value.first_air_date).getFullYear()})`
       : "";
-    let base = serie.value
-      ? `${serie.value.name}${year}`
-      : t("search.tv", "Series");
+    let base = serie.value ? `${serie.value.name}${year}` : t("search.tv", "Series");
     if (activeDubProject.value) {
       base += ` - ${t("details.dubbing", { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
     }
@@ -832,9 +765,7 @@ useHead({
               const year = serie.value?.first_air_date
                 ? ` (${new Date(serie.value.first_air_date).getFullYear()})`
                 : "";
-              let base = serie.value
-                ? `${serie.value.name}${year}`
-                : t("search.tv", "Series");
+              let base = serie.value ? `${serie.value.name}${year}` : t("search.tv", "Series");
               if (activeDubProject.value) {
                 base += ` - ${t("details.dubbing", { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
               }
@@ -871,10 +802,7 @@ useHead({
           },
           {
             property: "og:url",
-            content: computed(
-              () =>
-                `https://dubbingbase.com/show/${showId.value}${activeDubId.value ? `?dub=${activeDubId.value}` : ""}`,
-            ),
+            content: pageUrl,
           },
           {
             property: "og:image",
@@ -890,9 +818,7 @@ useHead({
               const year = serie.value?.first_air_date
                 ? ` (${new Date(serie.value.first_air_date).getFullYear()})`
                 : "";
-              let base = serie.value
-                ? `${serie.value.name}${year}`
-                : t("search.tv", "Series");
+              let base = serie.value ? `${serie.value.name}${year}` : t("search.tv", "Series");
               if (activeDubProject.value) {
                 base += ` - ${t("details.dubbing", { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
               }
@@ -930,18 +856,9 @@ useHead({
         ]
       : [],
   ),
-  link: computed<any[]>(() => {
+  link: computed<HeadLink[]>(() => {
     if (!isShowRoute.value) return [];
     const links = [
-      {
-        rel: "canonical",
-        href: (() => {
-          const baseUrl = "https://dubbingbase.com/show/" + showId.value;
-          return activeDubId.value
-            ? `${baseUrl}?dub=${activeDubId.value}`
-            : baseUrl;
-        })(),
-      },
       { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
       { rel: "dns-prefetch", href: "https://image.tmdb.org" },
       { rel: "preconnect", href: "https://thetvdb.com", crossorigin: "" },
@@ -952,7 +869,7 @@ useHead({
         rel: "preload",
         as: "image",
         href: backdropUrl.value,
-      } as any);
+      });
     }
     return links;
   }),
@@ -966,7 +883,7 @@ useHead({
               const json = JSON.stringify({
                 "@context": "https://schema.org",
                 "@type": "TVSeries",
-                url: `https://dubbingbase.com/show/${showId.value}`,
+                url: pageUrl.value,
                 name: title || t("search.tv", "Série"),
                 image: posterUrl.value || backdropUrl.value || "",
                 description:
@@ -978,7 +895,7 @@ useHead({
                         "Découvrez le casting et les voix de la série.",
                       )),
                 startDate: serie.value?.first_air_date || undefined,
-                actor: formattedCast.value.map((actor: any) => ({
+                actor: formattedCast.value.map((actor) => ({
                   "@type": "PerformanceRole",
                   actor: {
                     "@type": "Person",

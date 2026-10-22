@@ -60,10 +60,7 @@
           />
         </div>
 
-        <div
-          v-else-if="queryReady"
-          class="py-16 text-center text-sm theme-text-muted"
-        >
+        <div v-else-if="queryReady" class="py-16 text-center text-sm theme-text-muted">
           {{ t("search.noResults") }}
         </div>
         <div v-else class="py-16 text-center text-sm theme-text-muted">
@@ -90,8 +87,7 @@ const route = useRoute();
 const router = useRouter();
 const localePath = useLocalePath();
 
-const queryFromRoute = (value: unknown): string =>
-  typeof value === "string" ? value : "";
+const queryFromRoute = (value: unknown): string => (typeof value === "string" ? value : "");
 
 const query = ref(queryFromRoute(route.query.q));
 const results = ref<SearchResult[]>([]);
@@ -104,9 +100,7 @@ const hasQuery = computed(() => query.value.trim().length > 0);
 const queryReady = computed(() => query.value.trim().length >= 2);
 const filteredResults = computed(() => {
   if (selectedFilter.value === "all") return results.value;
-  return results.value.filter(
-    (item) => item.media_type === selectedFilter.value,
-  );
+  return results.value.filter((item) => item.media_type === selectedFilter.value);
 });
 
 const mediaTypeLabelKeys: Record<SearchResult["media_type"], string> = {
@@ -121,8 +115,7 @@ const mediaTypeLabelKeys: Record<SearchResult["media_type"], string> = {
   toy: "search.toy",
 };
 
-const getMediaTypeLabel = (type: SearchResult["media_type"]): string =>
-  t(mediaTypeLabelKeys[type]);
+const getMediaTypeLabel = (type: SearchResult["media_type"]): string => t(mediaTypeLabelKeys[type]);
 
 let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
 let searchVersion = 0;
@@ -139,10 +132,7 @@ const syncQueryToUrl = (value: string): void => {
   });
 };
 
-const performSearch = async (
-  searchTerm: string,
-  version: number,
-): Promise<void> => {
+const performSearch = async (searchTerm: string, version: number): Promise<void> => {
   try {
     const data = await fetchSearchData(searchTerm);
     if (version === searchVersion) results.value = data;
@@ -205,7 +195,6 @@ watch(
 useHead({
   title: computed(() => t("search.title")),
   link: [
-    { rel: "canonical", href: "https://dubbingbase.com/search" },
     { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
     { rel: "dns-prefetch", href: "https://image.tmdb.org" },
     { rel: "preconnect", href: "https://images.igdb.com", crossorigin: "" },
@@ -215,9 +204,7 @@ useHead({
 
 useSeoMeta({
   description: () => t("search.description"),
-  robots: computed(() =>
-    hasQuery.value ? "noindex, follow" : "index, follow",
-  ),
+  robots: computed(() => (hasQuery.value ? "noindex, follow" : "index, follow")),
 });
 
 onMounted(() => {

@@ -1,9 +1,7 @@
 import { describe, expect, it } from "vitest";
-import {
-  getVoiceActorOgImageMetadata,
-  isVoiceActorOgImagesEnabled,
-  STATIC_VOICE_ACTOR_OG_IMAGE_URL,
-} from "./voice-actor-og-image";
+import { getVoiceActorOgImageMetadata, isVoiceActorOgImagesEnabled } from "./voice-actor-og-image";
+
+const siteUrl = "https://example.com";
 
 describe("voice actor OG image metadata", () => {
   it.each([
@@ -16,10 +14,10 @@ describe("voice actor OG image metadata", () => {
   });
 
   it("uses the square static preview and summary card while disabled", () => {
-    const metadata = getVoiceActorOgImageMetadata(false, 42);
+    const metadata = getVoiceActorOgImageMetadata(false, 42, siteUrl);
 
     expect(metadata).toEqual({
-      url: STATIC_VOICE_ACTOR_OG_IMAGE_URL,
+      url: "https://example.com/android-chrome-512x512.png",
       width: 512,
       height: 512,
       twitterCard: "summary",
@@ -28,8 +26,8 @@ describe("voice actor OG image metadata", () => {
   });
 
   it("restores actor-specific metadata when enabled", () => {
-    expect(getVoiceActorOgImageMetadata(true, 42)).toEqual({
-      url: "https://dubbingbase.com/api/og-image?type=voice-actor&id=42",
+    expect(getVoiceActorOgImageMetadata(true, 42, siteUrl)).toEqual({
+      url: "https://example.com/api/og-image?type=voice-actor&id=42",
       width: 1200,
       height: 630,
       twitterCard: "summary_large_image",
@@ -37,9 +35,11 @@ describe("voice actor OG image metadata", () => {
   });
 
   it("keeps invalid actor IDs on the static preview", () => {
-    expect(getVoiceActorOgImageMetadata(true, 0).url).toBe(STATIC_VOICE_ACTOR_OG_IMAGE_URL);
-    expect(getVoiceActorOgImageMetadata(true, Number.MAX_SAFE_INTEGER + 1).url).toBe(
-      STATIC_VOICE_ACTOR_OG_IMAGE_URL,
+    expect(getVoiceActorOgImageMetadata(true, 0, siteUrl).url).toBe(
+      "https://example.com/android-chrome-512x512.png",
+    );
+    expect(getVoiceActorOgImageMetadata(true, Number.MAX_SAFE_INTEGER + 1, siteUrl).url).toBe(
+      "https://example.com/android-chrome-512x512.png",
     );
   });
 });

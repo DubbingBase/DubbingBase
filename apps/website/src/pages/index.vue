@@ -16,9 +16,7 @@
 
         <!-- Subtle Interactive Stats Pill -->
         <div
-          v-if="
-            !isLoadingHomeStats && homeStats && homeStats.voiceActorCount > 0
-          "
+          v-if="!isLoadingHomeStats && homeStats && homeStats.voiceActorCount > 0"
           class="flex flex-wrap justify-center mb-8"
         >
           <div
@@ -27,30 +25,27 @@
             <span
               class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors theme-hover-text theme-hover-surface-muted cursor-default"
             >
-              <span
-                class="text-[var(--app-color-primary)] font-bold opacity-90"
-                >{{ homeStats.voiceActorCount.toLocaleString() }}</span
-              >
+              <span class="text-[var(--app-color-primary)] font-bold opacity-90">{{
+                homeStats.voiceActorCount.toLocaleString()
+              }}</span>
               <span>{{ $t("home.stats.voiceActors", "Voice Actors") }}</span>
             </span>
             <span class="w-px h-3.5 theme-surface-muted"></span>
             <span
               class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors theme-hover-text theme-hover-surface-muted cursor-default"
             >
-              <span
-                class="text-[var(--app-color-primary)] font-bold opacity-90"
-                >{{ homeStats.dubbingProjectCount.toLocaleString() }}</span
-              >
+              <span class="text-[var(--app-color-primary)] font-bold opacity-90">{{
+                homeStats.dubbingProjectCount.toLocaleString()
+              }}</span>
               <span>{{ $t("home.stats.projects", "Dubs") }}</span>
             </span>
             <span class="w-px h-3.5 theme-surface-muted"></span>
             <span
               class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors theme-hover-text theme-hover-surface-muted cursor-default"
             >
-              <span
-                class="text-[var(--app-color-primary)] font-bold opacity-90"
-                >{{ homeStats.workCount.toLocaleString() }}</span
-              >
+              <span class="text-[var(--app-color-primary)] font-bold opacity-90">{{
+                homeStats.workCount.toLocaleString()
+              }}</span>
               <span>{{ $t("home.stats.works", "Roles") }}</span>
             </span>
           </div>
@@ -93,9 +88,7 @@
       <main class="space-y-8 md:space-y-12">
         <!-- Trending Movies -->
         <section v-if="!errorMovies">
-          <h2
-            class="text-xl md:text-2xl font-bold mb-4 md:mb-6 theme-text tracking-wide"
-          >
+          <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 theme-text tracking-wide">
             {{ $t("home.trendingMovies") }}
           </h2>
           <div v-if="isLoadingMovies" class="home-card-rail flex gap-4 overflow-x-auto pb-4">
@@ -145,9 +138,7 @@
 
         <!-- Trending Series -->
         <section v-if="!errorSeries">
-          <h2
-            class="text-xl md:text-2xl font-bold mb-4 md:mb-6 theme-text tracking-wide"
-          >
+          <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 theme-text tracking-wide">
             {{ $t("home.trendingSeries") }}
           </h2>
           <div v-if="isLoadingSeries" class="home-card-rail flex gap-4 overflow-x-auto pb-4">
@@ -209,9 +200,7 @@
         />
         <!-- Top Contributors (Admin Only) -->
         <section v-if="isAdmin && !errorTopContributors">
-          <h2
-            class="text-xl md:text-2xl font-bold mb-4 md:mb-6 theme-text tracking-wide"
-          >
+          <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 theme-text tracking-wide">
             {{ $t("home.topContributorsAdmin") }}
           </h2>
           <div
@@ -223,12 +212,8 @@
               :key="i"
               class="w-32 flex-shrink-0 flex flex-col items-center gap-3"
             >
-              <div
-                class="w-24 h-24 theme-surface-muted rounded-full animate-pulse"
-              ></div>
-              <div
-                class="h-4 w-20 theme-surface-muted rounded animate-pulse"
-              ></div>
+              <div class="w-24 h-24 theme-surface-muted rounded-full animate-pulse"></div>
+              <div class="h-4 w-20 theme-surface-muted rounded animate-pulse"></div>
             </div>
           </div>
           <div
@@ -256,9 +241,7 @@
                   <NuxtImg
                     v-if="contributor.raw_user_meta_data?.avatar_url"
                     :src="contributor.raw_user_meta_data.avatar_url"
-                    :alt="
-                      contributor.raw_user_meta_data?.username || 'Utilisateur'
-                    "
+                    :alt="contributor.raw_user_meta_data?.username || 'Utilisateur'"
                     format="webp"
                     class="object-cover w-full h-full"
                     loading="lazy"
@@ -272,12 +255,8 @@
                   </div>
                 </div>
                 <div class="text-center w-full">
-                  <h3
-                    class="font-semibold text-sm theme-text truncate w-full px-2"
-                  >
-                    {{
-                      contributor.raw_user_meta_data?.username || "Utilisateur"
-                    }}
+                  <h3 class="font-semibold text-sm theme-text truncate w-full px-2">
+                    {{ contributor.raw_user_meta_data?.username || "Utilisateur" }}
                   </h3>
                   <p class="text-xs theme-text-muted">
                     {{ contributor.score }}{{ $t("home.contributions") }}
@@ -305,11 +284,12 @@ const isAdmin = computed(() => {
 
 const { t, locale } = useI18n();
 const localePath = useLocalePath();
+const siteUrl = useSiteConfig().url;
+const siteAssetUrl = (path: string): string => new URL(path, siteUrl).href;
+const pageUrl = computed(() => siteAssetUrl(localePath("/")));
 const homeSearchQuery = ref("");
 const homeSearchInput = ref<HTMLInputElement | null>(null);
-const canSubmitHomeSearch = computed(
-  () => homeSearchQuery.value.trim().length >= 2,
-);
+const canSubmitHomeSearch = computed(() => homeSearchQuery.value.trim().length >= 2);
 
 const submitHomeSearch = (): void => {
   const query = homeSearchQuery.value.trim();
@@ -372,10 +352,10 @@ useHead({
       }),
     },
     { property: "og:type", content: "website" },
-    { property: "og:url", content: "https://dubbingbase.com/" },
+    { property: "og:url", content: pageUrl },
     {
       property: "og:image",
-      content: "https://dubbingbase.com/android-chrome-512x512.png",
+      content: computed(() => siteAssetUrl("/android-chrome-512x512.png")),
     },
     { property: "og:site_name", content: "DubbingBase" },
     { property: "og:locale", content: ogLocale },
@@ -390,11 +370,10 @@ useHead({
     },
     {
       name: "twitter:image",
-      content: "https://dubbingbase.com/android-chrome-512x512.png",
+      content: computed(() => siteAssetUrl("/android-chrome-512x512.png")),
     },
   ],
   link: [
-    { rel: "canonical", href: "https://dubbingbase.com/" },
     { rel: "preconnect", href: "https://image.tmdb.org", crossorigin: "" },
     { rel: "dns-prefetch", href: "https://image.tmdb.org" },
     { rel: "preconnect", href: "https://images.igdb.com", crossorigin: "" },
@@ -409,12 +388,12 @@ useHead({
             "@context": "https://schema.org",
             "@type": "WebSite",
             name: "DubbingBase",
-            url: "https://dubbingbase.com/",
+            url: pageUrl.value,
             description: t("home.meta.description"),
             inLanguage: ogLocale.value,
             potentialAction: {
               "@type": "SearchAction",
-              target: "https://dubbingbase.com/search?q={search_term_string}",
+              target: siteAssetUrl("/search?q={search_term_string}"),
               "query-input": "required name=search_term_string",
             },
           },
@@ -422,12 +401,9 @@ useHead({
             "@context": "https://schema.org",
             "@type": "Organization",
             name: "DubbingBase",
-            url: "https://dubbingbase.com/",
-            logo: "https://dubbingbase.com/android-chrome-512x512.png",
-            sameAs: [
-              "https://x.com/DubbingBase",
-              "https://instagram.com/dubbingbase",
-            ],
+            url: siteAssetUrl("/"),
+            logo: siteAssetUrl("/android-chrome-512x512.png"),
+            sameAs: ["https://x.com/DubbingBase", "https://instagram.com/dubbingbase"],
           },
           {
             "@context": "https://schema.org",
@@ -437,35 +413,30 @@ useHead({
                 "@type": "SiteNavigationElement",
                 position: 1,
                 name: t("footer.movies", "Films"),
-                url: "https://dubbingbase.com/movies",
+                url: siteAssetUrl("/movies"),
               },
               {
                 "@type": "SiteNavigationElement",
                 position: 2,
                 name: t("footer.series", "Séries"),
-                url: "https://dubbingbase.com/series",
+                url: siteAssetUrl("/series"),
               },
               {
                 "@type": "SiteNavigationElement",
                 position: 3,
                 name: t("footer.voiceActors", "Voice Actors"),
-                url: "https://dubbingbase.com/voice-actors",
+                url: siteAssetUrl("/voice-actors"),
               },
             ],
           },
         ]);
-        return json
-          .replace(/</g, "\\u003c")
-          .replace(/>/g, "\\u003e")
-          .replace(/&/g, "\\u0026");
+        return json.replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026");
       }),
     },
   ],
 });
 
-const trendingLanguage = computed(
-  () => resolveLocaleLanguage(locale.value) || "en-US",
-);
+const trendingLanguage = computed(() => resolveLocaleLanguage(locale.value) || "en-US");
 
 function useHomeSection<T>(
   section: string,
@@ -473,17 +444,13 @@ function useHomeSection<T>(
   defaultValue: () => T,
   enabled: MaybeRefOrGetter<boolean> = true,
 ) {
-  return useAsyncData(
-    () => `home-${section}:${trendingLanguage.value}`,
-    handler,
-    {
-      default: defaultValue,
-      getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
-      lazy: true,
-      watch: [trendingLanguage],
-      enabled,
-    },
-  );
+  return useAsyncData(() => `home-${section}:${trendingLanguage.value}`, handler, {
+    default: defaultValue,
+    getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
+    lazy: true,
+    watch: [trendingLanguage],
+    enabled,
+  });
 }
 
 const moviesData = useHomeSection(
@@ -519,10 +486,7 @@ const gamesData = useHomeSection(
 
 const trendingVoiceActorsData = useHomeSection(
   "trending-voice-actors",
-  () =>
-    $fetch<HomeDataPayload["trendingVoiceActors"]>(
-      "/api/trending/voice-actors",
-    ),
+  () => $fetch<HomeDataPayload["trendingVoiceActors"]>("/api/trending/voice-actors"),
   () => [],
 );
 
@@ -560,16 +524,12 @@ const homeStatsData = useHomeSection(
 const trendingMovies = computed(() => moviesData.data.value);
 const trendingSeries = computed(() => seriesData.data.value);
 const trendingGames = computed(() => gamesData.data.value);
-const trendingVoiceActors = computed(
-  () => trendingVoiceActorsData.data.value,
-);
+const trendingVoiceActors = computed(() => trendingVoiceActorsData.data.value);
 const topVoiceActors = computed(() => topVoiceActorsData.data.value);
 const topContributors = computed(() => topContributorsData.data.value);
 const homeStats = computed(() => homeStatsData.data.value);
 
-function getTmdbPosterSrcset(
-  imageUrl: string | null | undefined,
-): string | undefined {
+function getTmdbPosterSrcset(imageUrl: string | null | undefined): string | undefined {
   if (!imageUrl?.startsWith("https://image.tmdb.org/t/p/w342/")) {
     return undefined;
   }
@@ -589,15 +549,9 @@ const isLoadingHomeStats = homeStatsData.pending;
 const errorMovies = computed(() => moviesData.error.value?.message || "");
 const errorSeries = computed(() => seriesData.error.value?.message || "");
 const errorGames = computed(() => gamesData.error.value?.message || "");
-const errorTrendingVoiceActors = computed(
-  () => trendingVoiceActorsData.error.value?.message || "",
-);
-const errorTopVoiceActors = computed(
-  () => topVoiceActorsData.error.value?.message || "",
-);
-const errorTopContributors = computed(
-  () => topContributorsData.error.value?.message || "",
-);
+const errorTrendingVoiceActors = computed(() => trendingVoiceActorsData.error.value?.message || "");
+const errorTopVoiceActors = computed(() => topVoiceActorsData.error.value?.message || "");
+const errorTopContributors = computed(() => topContributorsData.error.value?.message || "");
 </script>
 
 <style scoped>
