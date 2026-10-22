@@ -38,12 +38,12 @@ namespace_id = "5636541"
 crons = ["* * * * *", "0 6 * * *"]
 
 [observability]
-enabled = true
+enabled = false
 head_sampling_rate = 1
-redact_query_string = true
+redact_query_string = false
 
 [observability.logs]
-enabled = true
+enabled = false
 head_sampling_rate = 0.1
 persist = true
 invocation_logs = true
