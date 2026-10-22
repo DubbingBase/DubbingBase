@@ -204,15 +204,19 @@
             </td>
             <td class="py-2 px-2">
               <input
-                v-model="actor.social_media_links"
-                @change="handleCellEdit(actor, 'social_media_links')"
+                :value="
+                  actor.social_media_links === null ? '' : JSON.stringify(actor.social_media_links)
+                "
+                @change="handleSocialMediaLinksEdit(actor, $event)"
                 class="w-32 theme-input border border-transparent theme-hover-border focus:border-[var(--app-color-focus)] rounded px-2 py-1 theme-text transition-colors"
               />
             </td>
             <td class="py-2 px-2">
               <input
-                v-model="actor.tmdb_id"
-                @change="handleCellEdit(actor, 'tmdb_id')"
+                :value="actor.tmdb_id ?? ''"
+                type="number"
+                step="1"
+                @change="handleTmdbIdEdit(actor, $event)"
                 class="w-24 theme-input border border-transparent theme-hover-border focus:border-[var(--app-color-focus)] rounded px-2 py-1 theme-text transition-colors"
               />
             </td>
@@ -278,6 +282,7 @@
 <script setup lang="ts">
 import { ref, shallowRef, computed, watch, onUnmounted } from "vue";
 import type { Database } from "@app/supabase";
+import type { Json } from "@app/supabase/types";
 
 const supabase = useSupabaseClient();
 const localePath = useLocalePath();
@@ -392,21 +397,70 @@ function showToast(message: string, type: "success" | "error" | "info" = "info")
 }
 
 function handleCellEdit(actor: VoiceActor, prop: EditableVoiceActorField) {
+  queueCellEdit(actor, prop, actor[prop]);
+}
+
+function handleSocialMediaLinksEdit(actor: VoiceActor, event: Event) {
+  if (!(event.target instanceof HTMLInputElement)) return;
+  const input = event.target.value.trim();
+  let value: VoiceActor["social_media_links"] = null;
+
+  if (input !== "") {
+    try {
+      const parsed: unknown = JSON.parse(input);
+      if (
+        typeof parsed !== "object" ||
+        parsed === null ||
+        Array.isArray(parsed) ||
+        !isJson(parsed)
+      ) {
+        showToast("Social media links must be a JSON object or empty.", "error");
+        return;
+      }
+      value = parsed;
+    } catch {
+      showToast("Social media links must be valid JSON.", "error");
+      return;
+    }
+  }
+
+  actor.social_media_links = value;
+  queueCellEdit(actor, "social_media_links", actor.social_media_links);
+}
+
+function handleTmdbIdEdit(actor: VoiceActor, event: Event) {
+  if (!(event.target instanceof HTMLInputElement)) return;
+  const input = event.target.value.trim();
+  const value = input === "" ? null : Number(input);
+  if (value !== null && !Number.isSafeInteger(value)) {
+    showToast("TMDB ID must be a whole number or empty.", "error");
+    return;
+  }
+  actor.tmdb_id = value;
+  queueCellEdit(actor, "tmdb_id", actor.tmdb_id);
+}
+
+function isJson(value: unknown): value is Json {
+  if (value === null || typeof value === "string" || typeof value === "boolean") return true;
+  if (typeof value === "number") return Number.isFinite(value);
+  if (Array.isArray(value)) return value.every(isJson);
+  if (typeof value === "object") return Object.values(value).every(isJson);
+  return false;
+}
+
+function queueCellEdit(actor: VoiceActor, prop: EditableVoiceActorField, newValue: unknown) {
   if (typeof actor.updated_at !== "string") {
     showToast("Unable to save this change. Refresh the voice actor list and try again.", "error");
     return;
   }
   const key = `${actor.id}-${prop}`;
-  const val = actor[prop];
-
   pendingChanges.value.set(key, {
     id: actor.id,
     prop,
-    newValue: val,
+    newValue,
     expectedUpdatedAt: actor.updated_at,
     requestId: crypto.randomUUID(),
   });
-
   debounceAutoSave();
 }
 
