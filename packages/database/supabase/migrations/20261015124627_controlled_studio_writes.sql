@@ -4,6 +4,14 @@ ALTER TABLE public.audit_logs
   ADD COLUMN request_fingerprint TEXT,
   ADD COLUMN metadata JSONB NOT NULL DEFAULT '{}'::JSONB;
 
+UPDATE public.studios
+SET updated_at = COALESCE(updated_at, created_at, clock_timestamp())
+WHERE updated_at IS NULL;
+
+ALTER TABLE public.studios
+  ALTER COLUMN updated_at SET DEFAULT now(),
+  ALTER COLUMN updated_at SET NOT NULL;
+
 UPDATE public.audit_logs AS audit
 SET changed_fields = COALESCE(
   (

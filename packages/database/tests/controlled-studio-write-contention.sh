@@ -130,7 +130,7 @@ SQL
 loser_status=$?
 set -e
 wait "$winner_pid"
-if [[ "$loser_status" -eq 0 ]] || ! rg -q '40001' "$scratch_dir/stale-loser.log"; then
+if [[ "$loser_status" -eq 0 ]] || ! grep -q '40001' "$scratch_dir/stale-loser.log"; then
   cat "$scratch_dir/stale-loser.log"
   echo "A stale concurrent studio write was not rejected with SQLSTATE 40001" >&2
   exit 1

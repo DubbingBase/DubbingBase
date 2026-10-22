@@ -346,9 +346,15 @@ const saveStudio = async () => {
     router.push(localePath(`/studio/${isEditMode.value ? studioId : result.studioId}`));
   } catch (err: unknown) {
     console.error("Error saving studio:", err);
-    errorMsg.value =
-      (err instanceof Error ? err.message : null) ||
-      "Une erreur s'est produite lors de la sauvegarde.";
+    const errorData = typeof err === "object" && err !== null && "data" in err ? err.data : null;
+    const serverMessage =
+      typeof errorData === "object" &&
+      errorData !== null &&
+      "message" in errorData &&
+      typeof errorData.message === "string"
+        ? errorData.message
+        : null;
+    errorMsg.value = serverMessage || "Une erreur s'est produite lors de la sauvegarde.";
   } finally {
     isSaving.value = false;
   }

@@ -1,5 +1,21 @@
 BEGIN;
 
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'studios'
+      AND column_name = 'updated_at'
+      AND is_nullable = 'NO'
+      AND column_default IS NOT NULL
+  ) THEN
+    RAISE EXCEPTION 'studio updated_at must have a default and be NOT NULL';
+  END IF;
+END;
+$$;
+
 INSERT INTO auth.users (id, raw_app_meta_data) VALUES
   ('00000000-0000-0000-0000-000000563651', '{}'::JSONB),
   ('00000000-0000-0000-0000-000000563652', '{"role":"editor"}'::JSONB);
