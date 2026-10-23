@@ -684,6 +684,17 @@ END;
 $$;
 RESET ROLE;
 
+-- The voice-actor merge RPC also writes guarded project crew as service_role.
+INSERT INTO public.voice_actors (id, firstname, lastname) VALUES
+  (563651004, 'Project Save Guard', 'Keep'),
+  (563651005, 'Project Save Guard', 'Merge');
+INSERT INTO public.dubbing_projects (content_id, content_type, language)
+VALUES (563651924, 'movie', 'fr-FR');
+INSERT INTO public.dubbing_project_crew (dubbing_project_id, job_id, person_id)
+SELECT project.id, 1, 563651005
+FROM public.dubbing_projects AS project
+WHERE project.content_id = 563651924 AND project.content_type = 'movie';
+
 SET LOCAL ROLE service_role;
 SELECT pg_catalog.to_regprocedure(
   'public.save_regional_project_actor_assignments(bigint,text,text,jsonb,uuid,uuid)'
@@ -707,7 +718,29 @@ SELECT public.save_regional_project_actor_assignments(
   ))
 );
 \endif
+SELECT public.merge_voice_actor_duplicates_atomic(
+  563651004, ARRAY[563651005], '{}'::JSONB
+);
 RESET ROLE;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.dubbing_projects AS project
+    JOIN public.dubbing_project_crew AS crew
+      ON crew.dubbing_project_id = project.id
+    WHERE project.content_id = 563651924
+      AND project.content_type = 'movie'
+      AND crew.job_id = 1
+      AND crew.person_id = 563651004
+  ) OR EXISTS (
+    SELECT 1 FROM public.voice_actors WHERE id = 563651005
+  ) THEN
+    RAISE EXCEPTION 'voice-actor merge did not preserve guarded project crew';
+  END IF;
+END;
+$$;
 
 -- A role with table grants still cannot change or delete immutable audit history.
 CREATE ROLE project_save_audit_probe NOLOGIN;

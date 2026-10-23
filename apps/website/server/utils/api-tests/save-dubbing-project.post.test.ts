@@ -19,6 +19,7 @@ const routeMocks = vi.hoisted(() => ({
   requireAdmin: vi.fn(),
   useSupabaseAdmin: vi.fn(),
   fetchTmdb: vi.fn(),
+  fetchTmdbCredits: vi.fn(),
 }));
 
 vi.mock("../auth", () => ({ requireAdmin: routeMocks.requireAdmin }));
@@ -26,7 +27,10 @@ vi.mock("../db/client", () => ({
   useSupabaseAdmin: routeMocks.useSupabaseAdmin,
 }));
 vi.mock("../../utils", () => ({
-  useTmdbClient: () => ({ fetchMediaDetails: routeMocks.fetchTmdb }),
+  useTmdbClient: () => ({
+    fetchMediaDetails: routeMocks.fetchTmdb,
+    fetchMediaCredits: routeMocks.fetchTmdbCredits,
+  }),
   useIgdbClient: () => ({ getGame: vi.fn(), getGameCharacters: vi.fn() }),
   useOpenLibraryClient: () => ({ getBook: vi.fn() }),
   usePodcastClient: () => ({ getPodcast: vi.fn() }),
@@ -51,6 +55,7 @@ beforeEach(() => {
     id: 90,
     credits: { cast: [{ id: 12 }] },
   });
+  routeMocks.fetchTmdbCredits.mockResolvedValue({ cast: [{ id: 12 }] });
 });
 afterAll(() => vi.unstubAllGlobals());
 
@@ -178,6 +183,29 @@ describe("POST /api/save-dubbing-project", () => {
       p_crew: body.crew,
       p_cast: body.cast,
     });
+  });
+
+  it("validates TV actors against aggregate credits", async () => {
+    routeMocks.fetchTmdb.mockResolvedValue({ id: 90, credits: { cast: [] } });
+    const { rpc } = createSupabaseMock({
+      data: [
+        {
+          project_id: 51,
+          updated_at: "2026-10-15T12:05:00",
+          audit_log_id: "f20d747e-c98e-43ea-9356-133fcbf0b496",
+          replayed: false,
+        },
+      ],
+      error: null,
+    });
+    const body = validBody();
+    body.project.content_type = "tv";
+
+    const response = await post(body);
+
+    expect(response.status).toBe(200);
+    expect(routeMocks.fetchTmdbCredits).toHaveBeenCalledWith("tv", 90);
+    expect(rpc).toHaveBeenCalledOnce();
   });
 
   it("returns a conflict instead of success for a stale RPC result", async () => {

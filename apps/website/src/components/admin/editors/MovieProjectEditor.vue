@@ -1,5 +1,9 @@
 <template>
-  <div class="admin-project-editor max-w-6xl mx-auto space-y-6">
+  <div
+    class="admin-project-editor max-w-6xl mx-auto space-y-6"
+    :inert="isSaving"
+    :aria-busy="isSaving"
+  >
     <!-- Header -->
     <div
       class="theme-surface-overlay p-6 rounded-2xl border theme-border flex justify-between items-center shadow-xl"
@@ -675,6 +679,7 @@ import { FilmIcon, Loader2Icon, ImageIcon, XIcon } from "lucide-vue-next";
 import {
   createDubbingProjectSaveClient,
   getDubbingProjectSaveErrorMessage,
+  getEditableDubbingProjectStatus,
   type DubbingProjectCastSaveRow,
   type DubbingProjectSaveResponse,
   type WorkExpectedValues,
@@ -1013,7 +1018,9 @@ const saveMovieProject = async () => {
     projectUpdatedAt.value = result.updatedAt;
 
     showToast("Project saved successfully!", "success");
-    if (!isEditMode.value && projectId && contentId.value) {
+    if (isEditMode.value) {
+      await refreshProject();
+    } else if (projectId && contentId.value) {
       await router.push(
         localePath(`/movie/${contentId.value}/projects/${projectId}/edit`),
       );
@@ -1025,7 +1032,11 @@ const saveMovieProject = async () => {
   }
 };
 
-const { data: initialData, error: initialDataError } = await useAsyncData(
+const {
+  data: initialData,
+  error: initialDataError,
+  refresh: refreshProject,
+} = await useAsyncData(
   `movie-edit-${tmdbMovieId.value}-${projectIdParam}`,
   async () => {
     let tmdbData: any = null;
@@ -1136,7 +1147,7 @@ watch(
         contentId.value = data.project.content_id;
         contentType.value = data.project.content_type;
         dubbingLanguage.value = data.project.language;
-        status.value = data.project.status;
+        status.value = getEditableDubbingProjectStatus(data.project.status);
         selectedStudioId.value = data.project.studio_id;
         projectUpdatedAt.value = data.project.updated_at;
         if (data.studioName) {
@@ -1144,6 +1155,13 @@ watch(
         }
       }
 
+      artisticDirectorId.value = null;
+      adaptationId.value = null;
+      recordingId.value = null;
+      editingId.value = null;
+      mixingId.value = null;
+      projectManagerId.value = null;
+      creativeSupervisionId.value = null;
       if (data.crew) {
         data.crew.forEach((c: any) => {
           const name =

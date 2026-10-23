@@ -39,4 +39,38 @@ describe("admin project editors", () => {
       expect(source).toContain("loadError");
     },
   );
+
+  it.each([
+    "MovieProjectEditor.vue",
+    "ShowProjectEditor.vue",
+    "GameProjectEditor.vue",
+  ])(
+    "normalizes status, locks save refresh, and clears omitted crew in %s",
+    (name) => {
+      const source = editorSource(name);
+
+      expect(source).toContain(':inert="isSaving"');
+      expect(source).toContain("await refreshProject();");
+      expect(source).toContain(
+        "status.value = getEditableDubbingProjectStatus(data.project.status);",
+      );
+
+      const crewFields = [
+        "artisticDirectorId",
+        "adaptationId",
+        "recordingId",
+        "editingId",
+        "mixingId",
+        "projectManagerId",
+        "creativeSupervisionId",
+      ];
+      const crewRows = source.indexOf("if (data.crew)");
+
+      for (const field of crewFields) {
+        const resetIndex = source.indexOf(`${field}.value = null;`);
+        expect(resetIndex).toBeGreaterThanOrEqual(0);
+        expect(crewRows).toBeGreaterThan(resetIndex);
+      }
+    },
+  );
 });

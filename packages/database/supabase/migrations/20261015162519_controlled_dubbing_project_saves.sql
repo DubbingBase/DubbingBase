@@ -614,9 +614,7 @@ LANGUAGE plpgsql
 SET search_path = ''
 AS $$
 BEGIN
-  IF current_user IN ('postgres', 'supabase_admin')
-     OR (current_user = 'service_role'
-       AND current_query() ~* '^\s*select\s+public\.save_regional_project_actor_assignments\s*\(') THEN
+  IF current_user IN ('postgres', 'supabase_admin') THEN
     RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
   END IF;
 
@@ -626,6 +624,41 @@ END;
 $$;
 
 REVOKE ALL ON FUNCTION public.guard_dubbing_project_controlled_write() FROM PUBLIC, anon, authenticated, service_role;
+
+-- Existing service-role RPC writers remain callable, but execute as their
+-- postgres owner so controlled writes pass this guard through PostgREST.
+DO $$
+DECLARE
+  v_function REGPROCEDURE;
+  v_function_name TEXT;
+  v_found_names TEXT[] := ARRAY[]::TEXT[];
+BEGIN
+  FOR v_function, v_function_name IN
+    SELECT routine.oid::REGPROCEDURE, routine.proname
+    FROM pg_catalog.pg_proc AS routine
+    JOIN pg_catalog.pg_namespace AS schema ON schema.oid = routine.pronamespace
+    WHERE schema.nspname = 'public'
+      AND routine.proname IN (
+        'save_regional_project_actor_assignments',
+        'merge_voice_actor_duplicates_atomic'
+      )
+  LOOP
+    EXECUTE pg_catalog.format('ALTER FUNCTION %s OWNER TO postgres', v_function);
+    EXECUTE pg_catalog.format('ALTER FUNCTION %s SECURITY DEFINER', v_function);
+    EXECUTE pg_catalog.format('ALTER FUNCTION %s SET search_path = %L', v_function, '');
+    EXECUTE pg_catalog.format(
+      'REVOKE EXECUTE ON FUNCTION %s FROM PUBLIC, anon, authenticated',
+      v_function
+    );
+    EXECUTE pg_catalog.format('GRANT EXECUTE ON FUNCTION %s TO service_role', v_function);
+    v_found_names := pg_catalog.array_append(v_found_names, v_function_name);
+  END LOOP;
+  IF NOT ('save_regional_project_actor_assignments' = ANY(v_found_names))
+     OR NOT ('merge_voice_actor_duplicates_atomic' = ANY(v_found_names)) THEN
+    RAISE EXCEPTION 'A required controlled-write RPC was not found';
+  END IF;
+END;
+$$;
 DROP TRIGGER IF EXISTS guard_dubbing_projects_controlled_write ON public.dubbing_projects;
 CREATE TRIGGER guard_dubbing_projects_controlled_write
   BEFORE INSERT OR UPDATE OR DELETE ON public.dubbing_projects

@@ -349,17 +349,18 @@ async function validateExternalReferences(body: ProjectSaveBody) {
 
   if (contentType === "movie" || contentType === "tv") {
     try {
-      const media = await useTmdbClient().fetchMediaDetails(
-        contentId,
-        contentType,
-      );
+      const tmdbClient = useTmdbClient();
+      const media = await tmdbClient.fetchMediaDetails(contentId, contentType);
       if (recordField(media, "id") !== contentId) {
         throw projectSaveError(
           422,
           "The selected media does not exist in TMDB",
         );
       }
-      const credits = recordField(media, "credits");
+      const credits =
+        contentType === "tv"
+          ? await tmdbClient.fetchMediaCredits("tv", contentId)
+          : recordField(media, "credits");
       const cast = recordField(credits, "cast");
       const actorIds = new Set(
         Array.isArray(cast)
