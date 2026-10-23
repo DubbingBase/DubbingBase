@@ -52,13 +52,17 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    if (
-      auditLog.entity_type === "voice_actor" &&
-      user.app_metadata?.role !== "admin"
-    ) {
+    if (user.app_metadata?.role !== "admin") {
       throw createError({
         statusCode: 403,
         message: "Only admins can modify a voice actor profile picture",
+      });
+    }
+
+    if (auditLog.action === "create") {
+      throw createError({
+        statusCode: 409,
+        message: "Creation audit entries cannot be reverted",
       });
     }
 

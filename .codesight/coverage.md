@@ -1,7 +1,7 @@
 # Test Coverage
 
-> **28%** of routes and models are covered by tests
-> 84 test files found
+> **33%** of routes and models are covered by tests
+> 103 test files found
 
 ## Covered Routes
 
@@ -12,9 +12,12 @@
 - POST:/api/extract-voice-actor-info
 - GET:/api/get-random-task
 - POST:/api/get-random-task
+- GET:/api/get-studio-details
 - POST:/api/media-queue
 - POST:/api/prepare_game
 - POST:/api/process-media-queue
+- POST:/api/save-metadata
+- POST:/api/save-studio
 - POST:/api/submit-task
 - POST:/api/update-voice-actor
 - POST:/api/upload-profile-picture
@@ -36,3 +39,7 @@
 - dubbing_languages
 - dubbing_language_reviews
 - legacy_wiki_check_reprocesses
+- metadata_write_requests
+- voice_actor_write_requests
+- regional_assignment_requests
+- regional_assignment_request_audits

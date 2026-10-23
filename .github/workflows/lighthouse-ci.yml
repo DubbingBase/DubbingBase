@@ -1,0 +1,247 @@
+name: Lighthouse CI
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "apps/website/**"
+      - "packages/shared-logic/**"
+      - "packages/locales/**"
+      - "AGENTS.md"
+      - "mise.toml"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "turbo.json"
+      - ".lighthouserc.json"
+      - ".github/workflows/lighthouse-ci.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/website/**"
+      - "packages/shared-logic/**"
+      - "packages/locales/**"
+      - "AGENTS.md"
+      - "mise.toml"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "turbo.json"
+      - ".lighthouserc.json"
+      - ".github/workflows/lighthouse-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lighthouse-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lighthouse-desktop:
+    name: Desktop Lighthouse on local production Worker
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.4.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+
+      - name: Setup mise
+        uses: jdx/mise-action@v2
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --config.minimum-release-age=0 --config.minimum-release-age-strict=false
+
+      - name: Build production Cloudflare Worker
+        run: mise run check
+        env:
+          E2E_TEST: "true"
+          NODE_ENV: production
+          NITRO_PRESET: cloudflare-module
+
+      - name: Start local Cloudflare Worker
+        env:
+          E2E_TEST: "true"
+        run: |
+          pnpm --filter @app/website exec wrangler dev --local --ip 127.0.0.1 --port 8787 \
+            --var E2E_TEST:true \
+            --compatibility-flag nodejs_compat \
+            --compatibility-flag disable_nodejs_process_v2 \
+            --compatibility-flag nodejs_compat_populate_process_env \
+            > /tmp/lhci-worker.log 2>&1 &
+          server_pid=$!
+
+          for attempt in {1..60}; do
+            if ! kill -0 "$server_pid" 2>/dev/null; then
+              break
+            fi
+            http_status=$(curl --silent --max-time 15 --output /tmp/lhci-page.html --write-out "%{http_code}" http://127.0.0.1:8787/ || true)
+            if [ "$http_status" = "200" ]; then
+              echo "Local production Cloudflare Worker / returned HTTP 200."
+              break
+            fi
+            if [ "$http_status" != "000" ]; then
+              echo "Local production Cloudflare Worker / returned HTTP $http_status."
+              head -c 4000 /tmp/lhci-page.html
+              tail -n 200 /tmp/lhci-worker.log
+              exit 1
+            fi
+            sleep 1
+          done
+
+          if [ "$http_status" != "200" ]; then
+            echo "Local production Cloudflare Worker homepage did not become ready (HTTP $http_status)."
+            tail -n 200 /tmp/lhci-worker.log
+            exit 1
+          fi
+
+          for route in /movie/85 /show/1396 /actor/3 /voice-actor/1; do
+            http_status=$(curl --silent --max-time 15 --output /tmp/lhci-page.html --write-out "%{http_code}" "http://127.0.0.1:8787$route" || true)
+            if [ "$http_status" != "200" ]; then
+              echo "Local production Cloudflare Worker $route returned HTTP $http_status."
+              head -c 4000 /tmp/lhci-page.html
+              tail -n 200 /tmp/lhci-worker.log
+              exit 1
+            fi
+            echo "Local production Cloudflare Worker $route returned HTTP 200."
+          done
+
+      - name: Run desktop Lighthouse CI
+        run: pnpm dlx @lhci/cli@0.15.1 autorun
+
+      - name: Show local Worker logs if Lighthouse fails
+        if: failure()
+        run: |
+          if [ -f /tmp/lhci-worker.log ]; then
+            tail -n 200 /tmp/lhci-worker.log
+          else
+            echo "No local Worker log was captured."
+          fi
+
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-desktop-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .lighthouseci/
+          if-no-files-found: warn
+          include-hidden-files: true
+          retention-days: 14
+
+  publish-lighthouse-trends:
+    name: Publish Lighthouse trends
+    needs: lighthouse-desktop
+    if: >-
+      ${{
+        github.event_name != 'pull_request' ||
+        github.event.pull_request.head.repo.full_name == github.repository
+      }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    steps:
+      - name: Download Lighthouse reports
+        uses: actions/download-artifact@v4
+        with:
+          name: lighthouse-desktop-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .lighthouseci
+
+      - name: Summarize desktop Lighthouse runs
+        run: |
+          node --input-type=module <<'NODE'
+          import { readdir, readFile, writeFile } from "node:fs/promises";
+
+          const routeNames = new Map([
+            ["/", "home"],
+            ["/movie/85", "movie"],
+            ["/show/1396", "show"],
+            ["/actor/3", "actor"],
+            ["/voice-actor/1", "voice_actor"],
+          ]);
+          const metricDefinitions = [
+            { name: "performance", category: "performance", unit: "%", better: "higher", decimals: 1, scale: 100 },
+            { name: "accessibility", category: "accessibility", unit: "%", better: "higher", decimals: 1, scale: 100 },
+            { name: "best_practices", category: "best-practices", unit: "%", better: "higher", decimals: 1, scale: 100 },
+            { name: "seo", category: "seo", unit: "%", better: "higher", decimals: 1, scale: 100 },
+            { name: "lcp", audit: "largest-contentful-paint", unit: "ms", better: "lower", decimals: 1 },
+            { name: "cls", audit: "cumulative-layout-shift", unit: "score", better: "lower", decimals: 4 },
+            { name: "tbt", audit: "total-blocking-time", unit: "ms", better: "lower", decimals: 1 },
+            { name: "speed_index", audit: "speed-index", unit: "ms", better: "lower", decimals: 1 },
+          ];
+          const expectedRunsPerRoute = 3;
+          const files = (await readdir(".lighthouseci"))
+            .filter((file) => file.startsWith("lhr-") && file.endsWith(".json"));
+          const reportsByRoute = new Map([...routeNames.values()].map((route) => [route, []]));
+
+          for (const file of files) {
+            const report = JSON.parse(await readFile(`.lighthouseci/${file}`, "utf8"));
+            const url = report.finalUrl ?? report.requestedUrl;
+            if (!url) {
+              throw new Error(`Lighthouse report ${file} has no finalUrl or requestedUrl`);
+            }
+            const pathname = new URL(url).pathname.replace(/\/+$/, "") || "/";
+            const route = routeNames.get(pathname) ?? [...routeNames.entries()]
+              .find(([path]) => path !== "/" && pathname.endsWith(path))?.[1]
+              ?? (pathname.split("/").filter(Boolean).length <= 1 ? "home" : undefined);
+            if (!route) {
+              continue;
+            }
+            reportsByRoute.get(route).push(report);
+          }
+
+          function median(values) {
+            const sorted = [...values].sort((left, right) => left - right);
+            const middle = Math.floor(sorted.length / 2);
+            return sorted.length % 2 === 0
+              ? (sorted[middle - 1] + sorted[middle]) / 2
+              : sorted[middle];
+          }
+
+          const metrics = {};
+          for (const [route, reports] of reportsByRoute) {
+            if (reports.length !== expectedRunsPerRoute) {
+              throw new Error(`Expected ${expectedRunsPerRoute} Lighthouse reports for ${route}, found ${reports.length}`);
+            }
+            for (const definition of metricDefinitions) {
+              const values = reports.map((report) => {
+                const value = definition.category
+                  ? report.categories?.[definition.category]?.score
+                  : report.audits?.[definition.audit]?.numericValue;
+                if (!Number.isFinite(value)) {
+                  throw new Error(`Missing numeric Lighthouse value for ${definition.name}/${route}`);
+                }
+                return value * (definition.scale ?? 1);
+              });
+              const factor = 10 ** definition.decimals;
+              metrics[`lighthouse_${definition.name}_${route}`] = {
+                value: Math.round(median(values) * factor) / factor,
+                unit: definition.unit,
+                better: definition.better,
+              };
+            }
+          }
+
+          await writeFile("buildstats-metrics.json", `${JSON.stringify(metrics, null, 2)}\n`);
+          console.log(`Prepared ${Object.keys(metrics).length} Lighthouse trend metrics from ${files.length} reports.`);
+          NODE
+
+      - name: Upload Lighthouse metrics to Buildstats
+        uses: buildstats-io/action@v1
+        with:
+          file: buildstats-metrics.json

@@ -73,4 +73,10 @@ describe("admin project editors", () => {
       }
     },
   );
+
+  it("serializes game cast through the refresh-safe role mapper", () => {
+    const source = editorSource("GameProjectEditor.vue");
+
+    expect(source).toContain("serializeGameProjectCastRows(castRows.value)");
+  });
 });

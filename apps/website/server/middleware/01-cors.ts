@@ -1,25 +1,15 @@
-import { API_CLIENT_HEADER, API_CLIENT_VALUE } from "@app/shared-logic";
-const ALLOWED_ORIGINS = [
+import { API_CLIENT_HEADER } from "@app/shared-logic";
+
+const ALLOWED_ORIGINS = new Set([
   "https://dubbingbase.com",
   "https://www.dubbingbase.com",
-];
+]);
 
-function isAllowedOrigin(origin: string, host?: string): boolean {
-  if (!origin) return true;
+function isAllowedOrigin(origin: string, host: string): boolean {
   if (host && (origin === `http://${host}` || origin === `https://${host}`)) {
     return true;
   }
-  return (
-    ALLOWED_ORIGINS.some((a) => origin === a || origin.startsWith(a + "/")) ||
-    origin.includes("localhost") ||
-    origin.includes("127.0.0.1") ||
-    origin.endsWith(".pages.dev") ||
-    origin.endsWith(".workers.dev") ||
-    origin.startsWith("http://100.") || // Tailscale
-    origin.startsWith("https://100.") ||
-    origin.startsWith("http://192.168.") || // LAN
-    origin.startsWith("http://10.")
-  );
+  return ALLOWED_ORIGINS.has(origin);
 }
 
 export default defineEventHandler((event) => {
@@ -29,7 +19,13 @@ export default defineEventHandler((event) => {
   // API responses default to private; public handlers opt in with short cache headers.
   const origin = getHeader(event, "origin") || "";
   const host = getHeader(event, "host") || "";
-  const client = getHeader(event, API_CLIENT_HEADER) || "";
+
+  if (origin && !isAllowedOrigin(origin, host)) {
+    throw createError({
+      statusCode: 403,
+      message: "Forbidden (Invalid Origin)",
+    });
+  }
 
   setResponseHeader(
     event,
@@ -44,37 +40,13 @@ export default defineEventHandler((event) => {
   setResponseHeader(event, "Access-Control-Max-Age", "86400");
   setResponseHeader(event, "Vary", "Origin");
 
-  if (isAllowedOrigin(origin, host)) {
-    setResponseHeader(event, "Access-Control-Allow-Origin", origin || "*");
+  if (origin) {
+    setResponseHeader(event, "Access-Control-Allow-Origin", origin);
     setResponseHeader(event, "Access-Control-Allow-Credentials", "true");
   }
 
   if (getMethod(event) === "OPTIONS") {
     setResponseStatus(event, 204);
     return;
-  }
-
-  if (origin && !isAllowedOrigin(origin, host)) {
-    throw createError({
-      statusCode: 403,
-      message: "Forbidden (Invalid Origin)",
-    });
-  }
-
-  const isSameOrigin =
-    !origin ||
-    (host && (origin === `http://${host}` || origin === `https://${host}`));
-
-  // If request has an origin from another domain and is missing the client header, reject
-  if (
-    origin &&
-    !isSameOrigin &&
-    !isAllowedOrigin(origin, host) &&
-    client !== API_CLIENT_VALUE
-  ) {
-    throw createError({
-      statusCode: 403,
-      message: "Forbidden (Missing Client Header)",
-    });
   }
 });

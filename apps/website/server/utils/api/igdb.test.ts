@@ -179,6 +179,74 @@ describe("IgdbClient token cache expiry", () => {
     });
   });
 
+  it("fetches game details and localizations concurrently without changing game order", async () => {
+    const values = new Map<string, unknown>([
+      ["igdb:auth_token", { accessToken: "cached-token", expiresAt: Date.now() + 60_000 }],
+    ]);
+    const pendingRequests = new Map<string, (response: Response) => void>();
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith("/popularity_primitives")) {
+        return new Response(
+          JSON.stringify([
+            { game_id: 42, popularity_type: 1, value: 100 },
+            { game_id: 7, popularity_type: 1, value: 80 },
+          ]),
+        );
+      }
+
+      const endpoint = url.endsWith("/games")
+        ? "games"
+        : url.endsWith("/game_localizations")
+          ? "game_localizations"
+          : null;
+      if (endpoint === null) throw new Error(`Unexpected IGDB request: ${url}`);
+
+      return new Promise<Response>((resolve) => {
+        pendingRequests.set(endpoint, resolve);
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal("useRuntimeConfig", () => ({
+      igdbClientId: "client-id",
+      igdbClientSecret: "client-secret",
+    }));
+
+    const client = new IgdbClient(createCache(values));
+    const trendingGames = client.getTrendingGames(2, "fr-FR");
+
+    await vi.waitFor(() => {
+      expect([...pendingRequests.keys()]).toEqual(
+        expect.arrayContaining(["games", "game_localizations"]),
+      );
+    });
+
+    pendingRequests.get("games")?.(
+      new Response(
+        JSON.stringify([
+          { id: 7, name: "Seven" },
+          { id: 42, name: "Forty-two" },
+        ]),
+      ),
+    );
+    pendingRequests.get("game_localizations")?.(
+      new Response(
+        JSON.stringify([
+          { game: 42, name: "Quarante-deux", region: { identifier: "fr-FR" } },
+          { game: 7, name: "Sept", region: { identifier: "fr-FR" } },
+        ]),
+      ),
+    );
+
+    await expect(trendingGames).resolves.toMatchObject({
+      degraded: false,
+      games: [
+        { id: 7, name: "Sept" },
+        { id: 42, name: "Quarante-deux" },
+      ],
+    });
+  });
+
   it.each([
     ["empty access token", '{"access_token":"","expires_in":7200}'],
     ["whitespace access token", '{"access_token":" ","expires_in":7200}'],

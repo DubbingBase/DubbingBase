@@ -41,6 +41,7 @@ describe("SimpleCache policies", () => {
       ttl: "STABLE",
     };
     const readOnly: GetOrFetchOptions = { cachePolicy: "read-only" };
+    const none: GetOrFetchOptions = { cachePolicy: "none" };
     // @ts-expect-error persistent writes must select an explicit TTL
     const missingTtl: GetOrFetchOptions = { cachePolicy: "persistent" };
     const ttlOnReadOnly: GetOrFetchOptions = {
@@ -48,9 +49,18 @@ describe("SimpleCache policies", () => {
       // @ts-expect-error read-only policy cannot carry a TTL
       ttl: "STABLE",
     };
+    const ttlOnNone: GetOrFetchOptions = {
+      cachePolicy: "none",
+      // @ts-expect-error cache bypass cannot carry a TTL
+      ttl: "STABLE",
+    };
 
-    expect([persistent.cachePolicy, readOnly.cachePolicy]).toEqual(["persistent", "read-only"]);
-    expect([missingTtl, ttlOnReadOnly]).toHaveLength(2);
+    expect([persistent.cachePolicy, readOnly.cachePolicy, none.cachePolicy]).toEqual([
+      "persistent",
+      "read-only",
+      "none",
+    ]);
+    expect([missingTtl, ttlOnReadOnly, ttlOnNone]).toHaveLength(3);
   });
 
   it("persistent reads KV, fetches and writes on a miss, then serves the hit", async () => {
@@ -114,6 +124,28 @@ describe("SimpleCache policies", () => {
     await vi.waitFor(() => expect(fetcher).toHaveBeenCalledTimes(1));
     resolveFetch?.("shared result");
     await expect(Promise.all([first, second])).resolves.toEqual(["shared result", "shared result"]);
+  });
+
+  it("bypasses KV and coalesces in-flight fetches for the none policy", async () => {
+    const harness = makeCache(new Map([["provider:no-cache", "old value"]]));
+    const namespace = createCacheNamespace<string>();
+    let resolveFetch: ((value: string) => void) | undefined;
+    const fetcher = vi.fn(() => new Promise<string>((resolve) => (resolveFetch = resolve)));
+    const first = harness.cache.getOrFetch(namespace, "provider:no-cache", fetcher, {
+      cachePolicy: "none",
+    });
+    const second = harness.cache.getOrFetch(namespace, "provider:no-cache", fetcher, {
+      cachePolicy: "none",
+    });
+
+    expect(second).toBe(first);
+    expect(harness.reads).toBe(0);
+    await vi.waitFor(() => expect(fetcher).toHaveBeenCalledTimes(1));
+    resolveFetch?.("fresh value");
+    await expect(Promise.all([first, second])).resolves.toEqual(["fresh value", "fresh value"]);
+    expect(harness.reads).toBe(0);
+    expect(harness.writes).toEqual([]);
+    expect(harness.values.get("provider:no-cache")).toBe("old value");
   });
 
   it("keeps the same key independent across different policies", async () => {

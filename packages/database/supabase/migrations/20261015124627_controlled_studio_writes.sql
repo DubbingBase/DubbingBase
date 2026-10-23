@@ -4,6 +4,14 @@ ALTER TABLE public.audit_logs
   ADD COLUMN request_fingerprint TEXT,
   ADD COLUMN metadata JSONB NOT NULL DEFAULT '{}'::JSONB;
 
+UPDATE public.studios
+SET updated_at = COALESCE(updated_at, created_at, clock_timestamp())
+WHERE updated_at IS NULL;
+
+ALTER TABLE public.studios
+  ALTER COLUMN updated_at SET DEFAULT now(),
+  ALTER COLUMN updated_at SET NOT NULL;
+
 UPDATE public.audit_logs AS audit
 SET changed_fields = COALESCE(
   (
@@ -466,8 +474,7 @@ BEGIN
         v_new := v_new || jsonb_build_object(v_key, to_jsonb(v_studio) -> v_key);
       END LOOP;
     ELSE
-      RETURN QUERY SELECT v_studio.id, NULL::UUID, FALSE;
-      RETURN;
+      v_action := 'noop';
     END IF;
   END IF;
 
@@ -502,3 +509,55 @@ GRANT EXECUTE ON FUNCTION public.controlled_save_studio(UUID, BIGINT, TIMESTAMP 
 
 COMMENT ON FUNCTION public.controlled_save_studio(UUID, BIGINT, TIMESTAMP WITHOUT TIME ZONE, UUID, JSONB) IS
   'Serializes authorized studio creation and edits, validates the field allowlist, and commits a typed before/after audit event atomically. Retries are keyed by user and request UUID.';
+
+CREATE OR REPLACE FUNCTION public.get_recent_contributions(limit_param INTEGER DEFAULT 10)
+RETURNS TABLE(
+  id UUID,
+  user_name TEXT,
+  action TEXT,
+  entity_type TEXT,
+  entity_id TEXT,
+  entity_name TEXT,
+  points_awarded INTEGER,
+  created_at TIMESTAMPTZ
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    audit.id,
+    COALESCE(
+      auth_user.raw_user_meta_data->>'username',
+      auth_user.raw_user_meta_data->>'full_name',
+      'Anonymous Contributor'
+    ) AS user_name,
+    audit.action,
+    audit.entity_type,
+    audit.entity_id,
+    CASE
+      WHEN audit.entity_type IN ('voice_actors', 'voice_actor') THEN (
+        SELECT actor.firstname || COALESCE(' ' || actor.lastname, '')
+        FROM public.voice_actors AS actor
+        WHERE actor.id::TEXT = audit.entity_id
+        LIMIT 1
+      )
+      WHEN audit.entity_type IN ('studios', 'studio') THEN (
+        SELECT studio.name
+        FROM public.studios AS studio
+        WHERE studio.id::TEXT = audit.entity_id
+        LIMIT 1
+      )
+      ELSE 'Unknown'
+    END AS entity_name,
+    audit.points_awarded,
+    audit.created_at
+  FROM public.audit_logs AS audit
+  JOIN auth.users AS auth_user ON auth_user.id = audit.user_id
+  WHERE audit.action <> 'noop'
+  ORDER BY audit.created_at DESC
+  LIMIT limit_param;
+END;
+$$;

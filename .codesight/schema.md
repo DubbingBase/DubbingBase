@@ -125,3 +125,33 @@
 - outcome: text (required)
 - queued_msg_id: bigint (required, fk)
 - processed_at: timestamp(tz) (required)
+
+### metadata_write_requests
+- actor_id: uuid (required, fk)
+- request_id: uuid (required, fk)
+- entity_type: text (required)
+- payload_fingerprint: text (required)
+- entity_id: text (required, fk)
+- audit_log_id: uuid (required, fk)
+- result: jsonb (required)
+
+### voice_actor_write_requests
+- actor_id: uuid (required, fk)
+- request_id: uuid (required, fk)
+- voice_actor_id: bigint (required, fk)
+- payload_fingerprint: text (required)
+- audit_log_id: uuid (fk)
+- result: jsonb (required)
+
+### regional_assignment_requests
+- actor_id: uuid (required, fk)
+- request_id: uuid (required, fk)
+- request_fingerprint: text (required)
+- result_project_id: bigint (required, fk)
+- metadata: jsonb (required)
+
+### regional_assignment_request_audits
+- actor_id: uuid (required, fk)
+- request_id: uuid (required, fk)
+- audit_log_id: uuid (required, fk)
+- metadata: jsonb (required)

@@ -320,6 +320,9 @@ const saveStudio = async () => {
       }
     }
 
+    const shouldUpdateLogo =
+      canEditStudioLogo.value && finalLogoUrl !== (initialStudio.value?.logo_url ?? null);
+
     const payload = {
       id: isEditMode.value ? studioId : null,
       updates: {
@@ -328,7 +331,7 @@ const saveStudio = async () => {
         country: form.value.country.trim() || null,
         city: form.value.city.trim() || null,
         website_url: form.value.website_url.trim() || null,
-        ...(canEditStudioLogo.value ? { logo_url: finalLogoUrl } : {}),
+        ...(shouldUpdateLogo ? { logo_url: finalLogoUrl } : {}),
       },
       expectedUpdatedAt: initialStudio.value?.updated_at ?? null,
       requestId,
@@ -343,9 +346,15 @@ const saveStudio = async () => {
     router.push(localePath(`/studio/${isEditMode.value ? studioId : result.studioId}`));
   } catch (err: unknown) {
     console.error("Error saving studio:", err);
-    errorMsg.value =
-      (err instanceof Error ? err.message : null) ||
-      "Une erreur s'est produite lors de la sauvegarde.";
+    const errorData = typeof err === "object" && err !== null && "data" in err ? err.data : null;
+    const serverMessage =
+      typeof errorData === "object" &&
+      errorData !== null &&
+      "message" in errorData &&
+      typeof errorData.message === "string"
+        ? errorData.message
+        : null;
+    errorMsg.value = serverMessage || "Une erreur s'est produite lors de la sauvegarde.";
   } finally {
     isSaving.value = false;
   }

@@ -1,11 +1,11 @@
 {
   "name": "@app/website",
-  "private": true,
   "version": "1.2.3",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "nuxt dev",
-    "build": "nuxt build && node scripts/patch-wasm.mjs",
+    "build": "nuxt build && node scripts/ensure-sitemap-alias.mjs && node scripts/prepare-static-about-assets.mjs && node scripts/patch-wasm.mjs",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "typecheck": "nuxt typecheck",
@@ -40,7 +40,6 @@
   },
   "devDependencies": {
     "@nuxt/fonts": "^0.14.0",
-    "@nuxt/icon": "^2.4.1",
     "@nuxt/image": "^2.1.0",
     "@nuxt/test-utils": "^4.1.0",
     "@nuxtjs/html-validator": "2.1.0",
@@ -52,7 +51,6 @@
     "@vue/test-utils": "^2.4.11",
     "happy-dom": "^20.11.2",
     "nuxt": "latest",
-    "nuxt-swiper": "^2.0.2",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.8.2",
     "vitest": "^4.1.10",

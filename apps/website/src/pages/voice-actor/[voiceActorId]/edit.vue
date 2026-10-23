@@ -949,6 +949,10 @@
 <script setup lang="ts">
 const supabase = useSupabaseClient();
 
+import {
+  isMetadataValidationError,
+  type VoiceActorCreationPayload,
+} from "~/composables/useMetadataCreation";
 import { ref, onMounted, computed, watch } from "vue";
 import { getMediaEditorRoute } from "~/lib/media-editor-routes";
 import { createStableRequestIdFactory } from "~/utils/dubbing-project-save";
@@ -998,6 +1002,11 @@ const profilePictureFile = ref<File | null>(null);
 const previewImage = ref<string | null>(null);
 const fileInput = ref<HTMLInputElement | null>(null);
 const isSaving = ref(false);
+let pendingVoiceActorCreation: {
+  payload: VoiceActorCreationPayload;
+  requestId: string;
+  createdVoiceActorId: number | null;
+} | null = null;
 
 const toast = ref({
   show: false,
@@ -1152,7 +1161,7 @@ const saveVoiceActor = async () => {
   }
 
   isSaving.value = true;
-  const upsertData: any = {
+  const upsertData: VoiceActorCreationPayload = {
     firstname: firstname.value,
     lastname: lastname.value,
     bio: bio.value || null,
@@ -1160,27 +1169,55 @@ const saveVoiceActor = async () => {
     date_of_birth: dateOfBirth.value || null,
     awards: awards.value || null,
     years_active: yearsActive.value || null,
-    social_media_links: socialMedia.value,
+    social_media_links: Object.fromEntries(
+      Object.entries(socialMedia.value).filter(([, url]) => url.trim()),
+    ),
     tmdb_id: tmdbId.value ? parseInt(tmdbId.value, 10) : null,
     wikidata_id: wikidataId.value || null,
     profile_picture: profilePicture.value || null,
   };
 
-  if (isEditMode.value) {
-    upsertData.id = numId;
+  if (!isEditMode.value) {
+    if (!pendingVoiceActorCreation) {
+      pendingVoiceActorCreation = {
+        payload: { ...upsertData },
+        requestId: crypto.randomUUID(),
+        createdVoiceActorId: null,
+      };
+    }
   }
 
   try {
-    const { data, error: upsertErr } = await supabase
-      .from("voice_actors")
-      .upsert([upsertData])
-      .select();
-
-    if (upsertErr) throw upsertErr;
-
-    let voiceActorId = id;
-    if (!isEditMode.value && data && data.length > 0 && data[0]) {
-      voiceActorId = String(data[0].id);
+    let voiceActorId = id ? String(id) : undefined;
+    if (isEditMode.value) {
+      const { error } = await supabase
+        .from("voice_actors")
+        .update(upsertData)
+        .eq("id", numId);
+      if (error) throw error;
+    } else {
+      const pendingCreation = pendingVoiceActorCreation;
+      if (!pendingCreation)
+        throw new Error("Voice actor creation was not initialized");
+      if (pendingCreation.createdVoiceActorId === null) {
+        const { data } = await useMetadataCreation().createVoiceActor(
+          pendingCreation.payload,
+          pendingCreation.requestId,
+        );
+        pendingCreation.createdVoiceActorId = data.id;
+      }
+      if (
+        pendingCreation.createdVoiceActorId !== null &&
+        JSON.stringify(pendingCreation.payload) !== JSON.stringify(upsertData)
+      ) {
+        const { error } = await supabase
+          .from("voice_actors")
+          .update(upsertData)
+          .eq("id", pendingCreation.createdVoiceActorId);
+        if (error) throw error;
+        pendingCreation.payload = { ...upsertData };
+      }
+      voiceActorId = String(pendingCreation.createdVoiceActorId);
     }
 
     // Upload profile picture if chosen
@@ -1188,10 +1225,20 @@ const saveVoiceActor = async () => {
       await uploadProfilePicture(voiceActorId);
     }
 
+    pendingVoiceActorCreation = null;
     showToast("Voice actor profile saved successfully!", "success");
-  } catch (err: any) {
+  } catch (err: unknown) {
+    if (
+      pendingVoiceActorCreation?.createdVoiceActorId === null &&
+      isMetadataValidationError(err)
+    ) {
+      pendingVoiceActorCreation = null;
+    }
     console.error("Error saving voice actor profile:", err);
-    showToast(err.message || "Failed to save voice actor.", "error");
+    showToast(
+      err instanceof Error ? err.message : "Failed to save voice actor.",
+      "error",
+    );
   } finally {
     isSaving.value = false;
   }

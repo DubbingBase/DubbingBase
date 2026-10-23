@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Schema shapes and field types extracted via AST. Read the actual schema source files before writing migrations or query logic.
 
-**unknown** — 19 models
+**unknown** — 23 models
 
 ### voice_actors
 
@@ -186,6 +186,48 @@ pk: `archived_msg_id` (bigint) · fk: archived_msg_id, tmdb_id, queued_msg_id
 - `outcome`: text _(required)_
 - `queued_msg_id`: bigint _(required, fk)_
 - `processed_at`: timestamp(tz) _(required)_
+
+### metadata_write_requests
+
+fk: actor_id, request_id, entity_id, audit_log_id
+
+- `actor_id`: uuid _(required, fk)_
+- `request_id`: uuid _(required, fk)_
+- `entity_type`: text _(required)_
+- `payload_fingerprint`: text _(required)_
+- `entity_id`: text _(required, fk)_
+- `audit_log_id`: uuid _(required, fk)_
+- `result`: jsonb _(required)_
+
+### voice_actor_write_requests
+
+fk: actor_id, request_id, voice_actor_id, audit_log_id
+
+- `actor_id`: uuid _(required, fk)_
+- `request_id`: uuid _(required, fk)_
+- `voice_actor_id`: bigint _(required, fk)_
+- `payload_fingerprint`: text _(required)_
+- `audit_log_id`: uuid _(fk)_
+- `result`: jsonb _(required)_
+
+### regional_assignment_requests
+
+fk: actor_id, request_id, result_project_id
+
+- `actor_id`: uuid _(required, fk)_
+- `request_id`: uuid _(required, fk)_
+- `request_fingerprint`: text _(required)_
+- `result_project_id`: bigint _(required, fk)_
+- `metadata`: jsonb _(required)_
+
+### regional_assignment_request_audits
+
+fk: actor_id, request_id, audit_log_id
+
+- `actor_id`: uuid _(required, fk)_
+- `request_id`: uuid _(required, fk)_
+- `audit_log_id`: uuid _(required, fk)_
+- `metadata`: jsonb _(required)_
 
 ## Schema Source Files
 

@@ -41,6 +41,59 @@ export interface DubbingProjectCastSaveRow {
   highlight?: boolean | null;
 }
 
+export interface GameProjectCastEditorRow {
+  id?: number;
+  character_id: number | string | null;
+  character_name: string;
+  voice_actor_id: number | null;
+  performance: string;
+  note: string;
+  highlight: boolean;
+  expectedUpdatedAt?: string | null;
+  expected?: WorkExpectedValues;
+}
+
+export function serializeGameProjectCastRows(
+  rows: readonly GameProjectCastEditorRow[],
+): DubbingProjectCastSaveRow[] {
+  return rows.flatMap((row) => {
+    if (!row.voice_actor_id && !row.character_name) return [];
+    if (
+      row.id !== undefined &&
+      (row.expected === undefined || row.expectedUpdatedAt === undefined)
+    ) {
+      throw new Error("Reload this project before saving its cast.");
+    }
+
+    const isCustom =
+      typeof row.character_id === "string" &&
+      row.character_id.startsWith("custom_");
+    const hasNoProviderCharacter = !row.character_id;
+
+    return [
+      {
+        ...(row.id === undefined
+          ? {}
+          : {
+              id: row.id,
+              expected_updated_at: row.expectedUpdatedAt,
+              expected: row.expected,
+            }),
+        character_id:
+          isCustom || hasNoProviderCharacter
+            ? null
+            : Number(row.character_id),
+        character_name:
+          isCustom || hasNoProviderCharacter ? row.character_name || null : null,
+        voice_actor_id: row.voice_actor_id || null,
+        performance: row.performance || "dialogues",
+        note: row.note || null,
+        highlight: row.highlight ? true : false,
+      },
+    ];
+  });
+}
+
 export interface DubbingProjectSaveRequest {
   project_id: number | null;
   expected_updated_at: string | null;

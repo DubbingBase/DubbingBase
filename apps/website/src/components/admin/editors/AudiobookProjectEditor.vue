@@ -580,24 +580,38 @@ function openCreateStudioDialog(name: string, cb: (id: number) => void) {
   }
 }
 
+const pendingVaCreationRequests = new Map<string, string>();
+
 function openCreateVaDialog(name: string, cb: (id: number) => void) {
-  const parts = name.split(" ");
+  const parts = name.trim().split(/\s+/);
   const firstname = parts[0] || "";
-  const lastname = parts.slice(1).join(" ") || "";
+  const providedLastname =
+    parts.slice(1).join(" ") || prompt("Nom de famille du comédien :", "");
+  if (!firstname || !providedLastname?.trim()) return;
+
+  const payload = {
+    firstname,
+    lastname: providedLastname.trim(),
+    status: "active" as const,
+  };
+  const payloadKey = JSON.stringify(payload);
+  const requestId =
+    pendingVaCreationRequests.get(payloadKey) ?? crypto.randomUUID();
+  pendingVaCreationRequests.set(payloadKey, requestId);
+
   void (async () => {
-    const { data } = await supabase
-      .from("voice_actors")
-      .insert({
-        firstname,
-        lastname,
-        status: "active",
-      })
-      .select("id, firstname, lastname")
-      .single();
-    if (data) {
+    try {
+      const { data } = await useMetadataCreation().createVoiceActor(
+        payload,
+        requestId,
+      );
+      pendingVaCreationRequests.delete(payloadKey);
       const item = { id: data.id, name: `${data.firstname} ${data.lastname}` };
       voiceActorOptions.value.push(item);
       cb(data.id);
+    } catch (error) {
+      console.error("Failed to create voice actor:", error);
+      alert("Impossible de créer le comédien. Veuillez réessayer.");
     }
   })();
 }

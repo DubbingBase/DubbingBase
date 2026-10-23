@@ -1,3 +1,5 @@
+import type { Json } from "@app/supabase/types";
+import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { requireAdmin } from "../utils/auth";
@@ -10,6 +12,7 @@ const creditSchema = z
     voiceActor: z.string().nullish(),
     role: z.string().nullish(),
     matchedActorId: z.number().nullish(),
+    request_id: z.string().uuid().optional(),
     matchedVoiceActor: z
       .object({
         id: z.number(),
@@ -30,8 +33,17 @@ const requestSchema = z
   })
   .passthrough();
 
+function getCreatedVoiceActorId(result: Json | null): number | null {
+  if (typeof result !== "object" || result === null || Array.isArray(result))
+    return null;
+  const record = result.record;
+  if (typeof record !== "object" || record === null || Array.isArray(record))
+    return null;
+  return typeof record.id === "number" ? record.id : null;
+}
+
 export default defineEventHandler(async (event) => {
-  const admin = requireAdmin(event);
+  const user = requireAdmin(event);
   try {
     const parsedBody = requestSchema.safeParse(await readBody(event));
     if (!parsedBody.success) {
@@ -76,6 +88,7 @@ export default defineEventHandler(async (event) => {
           }
           return {
             ...credit,
+            request_id: credit.request_id ?? randomUUID(),
             matchedVoiceActor,
           };
         }),
@@ -88,15 +101,28 @@ export default defineEventHandler(async (event) => {
           message: "Invalid parameters for save",
         });
       }
+      if (
+        credits.some(
+          (credit) =>
+            !credit.matchedVoiceActor?.id &&
+            credit.voiceActor?.trim() &&
+            !credit.request_id,
+        )
+      ) {
+        throw createError({
+          statusCode: 400,
+          message: "Match credits before saving unmatched voice actors",
+        });
+      }
 
       const supabaseAdmin = useSupabaseAdmin();
       const projectId = await findOrCreateDubbingProject(
         Number(mediaId),
         mediaType,
         requireDubbingLanguage(dubbing_language),
-        admin.id,
+        user.id,
         null,
-        crypto.randomUUID(),
+        randomUUID(),
       );
 
       let successCount = 0;
@@ -116,14 +142,22 @@ export default defineEventHandler(async (event) => {
             const firstname = parts[0] ?? "";
             const lastname = parts.slice(1).join(" ");
 
-            const { data: newVa, error: vaError } = await supabaseAdmin
-              .from("voice_actors")
-              .insert({ firstname, lastname })
-              .select("id")
-              .single();
+            const { data: createdActor, error: vaError } =
+              await supabaseAdmin.rpc("controlled_save_metadata", {
+                p_actor_id: user.id,
+                p_entity_type: "voice_actor",
+                p_payload: { firstname, lastname },
+                p_request_id: credit.request_id,
+              });
 
             if (vaError) throw vaError;
-            vaId = newVa.id;
+            const createdActorId = getCreatedVoiceActorId(createdActor);
+            if (createdActorId === null) {
+              throw new Error(
+                "Metadata creation returned an invalid voice actor",
+              );
+            }
+            vaId = createdActorId;
           }
 
           const actorId = credit.matchedActorId ?? null;

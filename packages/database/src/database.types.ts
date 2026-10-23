@@ -679,6 +679,16 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      controlled_update_voice_actor: {
+        Args: {
+          p_actor_id: string;
+          p_expected_updated_at: string;
+          p_payload: Json;
+          p_request_id: string;
+          p_voice_actor_id: number;
+        };
+        Returns: Json;
+      };
       apply_extracted_credits: {
         Args: {
           p_content_id: number;
@@ -921,6 +931,15 @@ export type Database = {
         };
         Returns: string;
       };
+      controlled_save_metadata: {
+        Args: {
+          p_actor_id: string;
+          p_entity_type: string;
+          p_payload: Json;
+          p_request_id?: string;
+        };
+        Returns: Json;
+      };
       get_recent_contributions: {
         Args: { limit_param?: number };
         Returns: {
@@ -1066,15 +1085,27 @@ export type Database = {
           updated_at: string | null;
         }[];
       };
-      save_regional_project_actor_assignments: {
-        Args: {
-          p_content_id: number;
-          p_content_type: string;
-          p_dubbing_language: string;
-          p_operations: Json;
-        };
-        Returns: number;
-      };
+      save_regional_project_actor_assignments:
+        | {
+            Args: {
+              p_content_id: number;
+              p_content_type: string;
+              p_dubbing_language: string;
+              p_operations: Json;
+            };
+            Returns: number;
+          }
+        | {
+            Args: {
+              p_actor_id: string;
+              p_content_id: number;
+              p_content_type: string;
+              p_dubbing_language: string;
+              p_operations: Json;
+              p_request_id: string;
+            };
+            Returns: number;
+          };
       unaccent: { Args: { "": string }; Returns: string };
       voice_actor_completeness: {
         Args: { va: Database["public"]["Tables"]["voice_actors"]["Row"] };

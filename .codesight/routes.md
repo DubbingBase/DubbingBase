@@ -31,7 +31,7 @@
 - `GET` `/api/get-metadata`
 - `GET` `/api/get-random-task` ✓
 - `POST` `/api/get-random-task` [auth] ✓
-- `GET` `/api/get-studio-details`
+- `GET` `/api/get-studio-details` ✓
 - `GET` `/api/get-user-profile` [auth]
 - `ALL` `/api/get-user-voice-actor` [auth]
 - `GET` `/api/get-user-voice-actors` [auth]
@@ -60,8 +60,8 @@
 - `POST` `/api/request-voice-actor-page` [auth, email]
 - `POST` `/api/revert-task` [db]
 - `POST` `/api/save-dubbing-project` [auth, db]
-- `POST` `/api/save-metadata` [db]
-- `POST` `/api/save-studio` [db]
+- `POST` `/api/save-metadata` [auth] ✓
+- `POST` `/api/save-studio` [auth] ✓
 - `GET` `/api/search/index` [db]
 - `GET` `/api/search-voice-actors`
 - `GET` `/api/season/index` [cache]
@@ -77,7 +77,7 @@
 - `GET` `/api/trending/voice-actors`
 - `POST` `/api/update-review-status` [db]
 - `POST` `/api/update-user-profile`
-- `POST` `/api/update-voice-actor` [auth, db, upload] ✓
+- `POST` `/api/update-voice-actor` [auth, upload] ✓
 - `POST` `/api/update_user_role` [auth]
 - `POST` `/api/update_voice_actor_link` [auth, db]
 - `POST` `/api/upload-profile-picture` [db, upload] ✓
