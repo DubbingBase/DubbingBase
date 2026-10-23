@@ -1,7 +1,7 @@
 # Test Coverage
 
-> **32%** of routes and models are covered by tests
-> 102 test files found
+> **33%** of routes and models are covered by tests
+> 103 test files found
 
 ## Covered Routes
 
@@ -41,3 +41,5 @@
 - legacy_wiki_check_reprocesses
 - metadata_write_requests
 - voice_actor_write_requests
+- regional_assignment_requests
+- regional_assignment_request_audits

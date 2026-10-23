@@ -8,7 +8,7 @@
 
 ## Scale
 
-82 API routes · 21 database models · 199 UI components · 107 library files · 16 middleware layers · 63 environment variables
+82 API routes · 23 database models · 199 UI components · 107 library files · 16 middleware layers · 63 environment variables
 
 ## Subsystems
 
@@ -77,7 +77,7 @@
 - **[Upload-profile-picture.post](./upload-profile-picture.post.md)** — 1 routes — touches: db, upload
 - **[Voice-actors.get](./voice-actors.get.md)** — 1 routes
 
-**Database:** unknown, 21 models — see [database.md](./database.md)
+**Database:** unknown, 23 models — see [database.md](./database.md)
 
 **UI:** 199 components (vue) — see [ui.md](./ui.md)
 
@@ -111,4 +111,4 @@ Changes to these files have the widest blast radius across the codebase:
 - _...31 more_
 
 ---
-_Back to [index.md](./index.md) · Generated 2026-10-22_
+_Back to [index.md](./index.md) · Generated 2026-10-23_

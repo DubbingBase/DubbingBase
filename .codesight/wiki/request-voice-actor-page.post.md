@@ -15,6 +15,7 @@ The Request-voice-actor-page.post subsystem handles **1 routes** and touches: au
 - **user_voice_actor_links** (3 fields) → [database.md](./database.md)
 - **voice_actor_subscriptions** (2 fields) → [database.md](./database.md)
 - **voice_actor_write_requests** (6 fields) → [database.md](./database.md)
+- **regional_assignment_request_audits** (4 fields) → [database.md](./database.md)
 
 ## Source Files
 

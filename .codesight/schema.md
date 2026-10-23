@@ -142,3 +142,16 @@
 - payload_fingerprint: text (required)
 - audit_log_id: uuid (fk)
 - result: jsonb (required)
+
+### regional_assignment_requests
+- actor_id: uuid (required, fk)
+- request_id: uuid (required, fk)
+- request_fingerprint: text (required)
+- result_project_id: bigint (required, fk)
+- metadata: jsonb (required)
+
+### regional_assignment_request_audits
+- actor_id: uuid (required, fk)
+- request_id: uuid (required, fk)
+- audit_log_id: uuid (required, fk)
+- metadata: jsonb (required)

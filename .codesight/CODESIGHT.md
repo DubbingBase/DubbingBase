@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 82 routes | 21 models | 199 components | 107 lib files | 63 env vars | 16 middleware | 32% test coverage
-> **Token savings:** this file is ~17,600 tokens. Without it, AI exploration would cost ~164,800 tokens. **Saves ~147,100 tokens per conversation.**
-> **Last scanned:** 2026-10-22 20:50 — re-run after significant changes
+> 82 routes | 23 models | 199 components | 107 lib files | 63 env vars | 16 middleware | 33% test coverage
+> **Token savings:** this file is ~17,800 tokens. Without it, AI exploration would cost ~165,600 tokens. **Saves ~147,800 tokens per conversation.**
+> **Last scanned:** 2026-10-23 11:18 — re-run after significant changes
 
 ---
 
@@ -240,6 +240,19 @@
 - payload_fingerprint: text (required)
 - audit_log_id: uuid (fk)
 - result: jsonb (required)
+
+### regional_assignment_requests
+- actor_id: uuid (required, fk)
+- request_id: uuid (required, fk)
+- request_fingerprint: text (required)
+- result_project_id: bigint (required, fk)
+- metadata: jsonb (required)
+
+### regional_assignment_request_audits
+- actor_id: uuid (required, fk)
+- request_id: uuid (required, fk)
+- audit_log_id: uuid (required, fk)
+- metadata: jsonb (required)
 
 ---
 
@@ -911,8 +924,8 @@
 
 # Test Coverage
 
-> **32%** of routes and models are covered by tests
-> 102 test files found
+> **33%** of routes and models are covered by tests
+> 103 test files found
 
 ## Covered Routes
 
@@ -952,6 +965,8 @@
 - legacy_wiki_check_reprocesses
 - metadata_write_requests
 - voice_actor_write_requests
+- regional_assignment_requests
+- regional_assignment_request_audits
 
 ---
 
