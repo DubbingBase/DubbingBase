@@ -2,6 +2,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { resolve } from "node:path";
 import { defineNuxtConfig } from "nuxt/config";
 import { APP_LOCALES, DEFAULT_LOCALE } from "@app/shared-logic";
+import { deferPosthogPrefetch } from "./src/utils/posthog-prefetch-manifest";
 
 function env(name: string): string | undefined {
   return process.env[name] ?? process.env[`NUXT_${name}`];
@@ -204,6 +205,10 @@ export default defineNuxtConfig({
     define: {
       __VERSION__: JSON.stringify(process.env.npm_package_version || "1.0.0"),
     },
+  },
+
+  hooks: {
+    "build:manifest": (manifest) => deferPosthogPrefetch(manifest),
   },
 
   css: ["~/assets/main.css"],
