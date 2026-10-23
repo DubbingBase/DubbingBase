@@ -155,3 +155,12 @@
 - request_id: uuid (required, fk)
 - audit_log_id: uuid (required, fk)
 - metadata: jsonb (required)
+
+### toy_metadata
+- content_id: bigint (pk, fk)
+- name: text (required)
+- manufacturer: text check (manufacturer is
+- product_line: text check (product_line is
+- release_year: integer check (release_year is
+- cover_url: text check (
+    cover_url is

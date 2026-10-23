@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The [id].get subsystem handles **9 routes** and touches: queue.
+The [id].get subsystem handles **10 routes** and touches: queue.
 
 ## Routes
 
@@ -22,6 +22,8 @@ The [id].get subsystem handles **9 routes** and touches: queue.
   `apps/website/server/api/show/[id].get.ts`
 - `GET` `/api/toy/:id` params(id) [queue]
   `apps/website/server/api/toy/[id].get.ts`
+- `GET` `/api/toy-metadata/:id` params(id)
+  `apps/website/server/api/toy-metadata/[id].get.ts`
 - `GET` `/api/voice-actor/:id` params(id)
   `apps/website/server/api/voice-actor/[id].get.ts`
 
@@ -36,6 +38,7 @@ Read these before implementing or modifying this subsystem:
 - `apps/website/server/api/podcast/[id].get.ts`
 - `apps/website/server/api/show/[id].get.ts`
 - `apps/website/server/api/toy/[id].get.ts`
+- `apps/website/server/api/toy-metadata/[id].get.ts`
 - `apps/website/server/api/voice-actor/[id].get.ts`
 
 ---

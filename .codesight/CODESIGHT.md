@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 82 routes | 23 models | 199 components | 108 lib files | 63 env vars | 16 middleware | 35% test coverage
-> **Token savings:** this file is ~17,900 tokens. Without it, AI exploration would cost ~165,800 tokens. **Saves ~147,900 tokens per conversation.**
-> **Last scanned:** 2026-10-23 15:06 — re-run after significant changes
+> 84 routes | 24 models | 199 components | 108 lib files | 63 env vars | 16 middleware | 36% test coverage
+> **Token savings:** this file is ~18,000 tokens. Without it, AI exploration would cost ~167,200 tokens. **Saves ~149,200 tokens per conversation.**
+> **Last scanned:** 2026-10-23 20:41 — re-run after significant changes
 
 ---
 
@@ -73,6 +73,7 @@
 - `POST` `/api/save-dubbing-project` [auth] ✓
 - `POST` `/api/save-metadata` [auth] ✓
 - `POST` `/api/save-studio` [auth] ✓
+- `POST` `/api/save-toy-metadata` [auth] ✓
 - `GET` `/api/search/index` [db]
 - `GET` `/api/search-voice-actors`
 - `GET` `/api/season/index` [cache]
@@ -82,6 +83,7 @@
 - `GET` `/api/top-contributors`
 - `GET` `/api/top-voice-actors`
 - `GET` `/api/toy/:id` params(id) [queue]
+- `GET` `/api/toy-metadata/:id` params(id)
 - `GET` `/api/trending/games` [cache]
 - `GET` `/api/trending/movies` [cache]
 - `GET` `/api/trending/shows` [cache]
@@ -253,6 +255,15 @@
 - request_id: uuid (required, fk)
 - audit_log_id: uuid (required, fk)
 - metadata: jsonb (required)
+
+### toy_metadata
+- content_id: bigint (pk, fk)
+- name: text (required)
+- manufacturer: text check (manufacturer is
+- product_line: text check (product_line is
+- release_year: integer check (release_year is
+- cover_url: text check (
+    cover_url is
 
 ---
 
@@ -894,9 +905,9 @@
 
 ## Most Imported Files (change these carefully)
 
-- `apps/website/server/utils/db/client.ts` — imported by **67** files
-- `apps/website/server/utils/auth.ts` — imported by **36** files
-- `apps/website/server/utils/index.ts` — imported by **23** files
+- `apps/website/server/utils/db/client.ts` — imported by **68** files
+- `apps/website/server/utils/auth.ts` — imported by **37** files
+- `apps/website/server/utils/index.ts` — imported by **24** files
 - `apps/website/server/utils/cache/index.ts` — imported by **19** files
 - `apps/website/server/utils/db/queries.ts` — imported by **12** files
 - `apps/website/server/utils/notifications/discord.ts` — imported by **12** files
@@ -917,9 +928,9 @@
 
 ## Import Map (who imports what)
 
-- `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +62 more
-- `apps/website/server/utils/auth.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +31 more
-- `apps/website/server/utils/index.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/episode/index.get.ts` +18 more
+- `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +63 more
+- `apps/website/server/utils/auth.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +32 more
+- `apps/website/server/utils/index.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/episode/index.get.ts` +19 more
 - `apps/website/server/utils/cache/index.ts` ← `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/season/index.get.ts`, `apps/website/server/utils/api/igdb.test.ts`, `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.test.ts` +14 more
 - `apps/website/server/utils/db/queries.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/game/[id].get.ts` +7 more
 - `apps/website/server/utils/notifications/discord.ts` ← `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/media-queue.post.ts`, `apps/website/server/api/movie/[id].get.ts` +7 more
@@ -932,8 +943,8 @@
 
 # Test Coverage
 
-> **35%** of routes and models are covered by tests
-> 107 test files found
+> **36%** of routes and models are covered by tests
+> 110 test files found
 
 ## Covered Routes
 
@@ -952,6 +963,7 @@
 - POST:/api/save-dubbing-project
 - POST:/api/save-metadata
 - POST:/api/save-studio
+- POST:/api/save-toy-metadata
 - POST:/api/submit-task
 - POST:/api/update-voice-actor
 - POST:/api/upload-profile-picture
@@ -977,6 +989,7 @@
 - voice_actor_write_requests
 - regional_assignment_requests
 - regional_assignment_request_audits
+- toy_metadata
 
 ---
 

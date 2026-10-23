@@ -62,6 +62,7 @@
 - `POST` `/api/save-dubbing-project` [auth] ✓
 - `POST` `/api/save-metadata` [auth] ✓
 - `POST` `/api/save-studio` [auth] ✓
+- `POST` `/api/save-toy-metadata` [auth] ✓
 - `GET` `/api/search/index` [db]
 - `GET` `/api/search-voice-actors`
 - `GET` `/api/season/index` [cache]
@@ -71,6 +72,7 @@
 - `GET` `/api/top-contributors`
 - `GET` `/api/top-voice-actors`
 - `GET` `/api/toy/:id` params(id) [queue]
+- `GET` `/api/toy-metadata/:id` params(id)
 - `GET` `/api/trending/games` [cache]
 - `GET` `/api/trending/movies` [cache]
 - `GET` `/api/trending/shows` [cache]

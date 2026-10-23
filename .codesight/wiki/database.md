@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Schema shapes and field types extracted via AST. Read the actual schema source files before writing migrations or query logic.
 
-**unknown** — 23 models
+**unknown** — 24 models
 
 ### voice_actors
 
@@ -229,11 +229,23 @@ fk: actor_id, request_id, audit_log_id
 - `audit_log_id`: uuid _(required, fk)_
 - `metadata`: jsonb _(required)_
 
+### toy_metadata
+
+pk: `content_id` (bigint) · fk: content_id
+
+- `content_id`: bigint _(pk, fk)_
+- `name`: text _(required)_
+- `manufacturer`: text check (manufacturer is
+- `product_line`: text check (product_line is
+- `release_year`: integer check (release_year is
+- `cover_url`: text check (
+    cover_url is
+
 ## Schema Source Files
 
 Read and edit these files when adding columns, creating migrations, or changing relations:
 
-- `apps/website/server/utils/db/client.ts` — imported by **67** files
+- `apps/website/server/utils/db/client.ts` — imported by **68** files
 - `apps/website/server/utils/db/queries.ts` — imported by **12** files
 
 ---

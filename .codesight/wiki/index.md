@@ -61,6 +61,7 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 - [Save-dubbing-project.post](./save-dubbing-project.post.md)
 - [Save-metadata.post](./save-metadata.post.md)
 - [Save-studio.post](./save-studio.post.md)
+- [Save-toy-metadata.post](./save-toy-metadata.post.md)
 - [Search-voice-actors.get](./search-voice-actors.get.md)
 - [Shows.get](./shows.get.md)
 - [Submit-task.post](./submit-task.post.md)
@@ -79,8 +80,8 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 
 ## Quick Stats
 
-- Routes: **82**
-- Models: **23**
+- Routes: **84**
+- Models: **24**
 - Components: **199**
 - Env vars: **43** required, **20** with defaults
 
@@ -109,4 +110,4 @@ These exist in your codebase but are **not** reflected in wiki articles:
 When in doubt, search the source. The wiki is a starting point, not a complete inventory.
 
 ---
-_Last compiled: 2026-10-23 · 69 articles · [codesight](https://github.com/Houseofmvps/codesight)_
+_Last compiled: 2026-10-23 · 70 articles · [codesight](https://github.com/Houseofmvps/codesight)_
