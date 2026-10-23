@@ -1,11 +1,37 @@
 -- Run against an isolated database after
 -- 20260926174116_atomic_regional_project_actor_assignments.sql and
 -- 20260927171839_save_regional_project_actor_assignments.sql and
--- 20260928083958_harden_regional_assignment_concurrency_and_queue_metadata.sql.
+-- 20260928083958_harden_regional_assignment_concurrency_and_queue_metadata.sql and
+-- 20261015150040_audit_regional_voice_cast_assignments.sql.
 -- The test exercises transaction rollback and leaves no fixture data behind.
 \set ON_ERROR_STOP on
 BEGIN;
 SET LOCAL statement_timeout = '30s';
+
+INSERT INTO auth.users (id, raw_app_meta_data)
+VALUES (
+  '00000000-0000-4000-8000-000000563660',
+  '{"role":"admin"}'::JSONB
+);
+
+CREATE FUNCTION pg_temp.test_save_regional_project_actor_assignments(
+  p_content_id BIGINT,
+  p_content_type TEXT,
+  p_dubbing_language TEXT,
+  p_operations JSONB
+)
+RETURNS BIGINT
+LANGUAGE SQL
+AS $test$
+  SELECT public.save_regional_project_actor_assignments(
+    p_content_id,
+    p_content_type,
+    p_dubbing_language,
+    p_operations,
+    '00000000-0000-4000-8000-000000563660'::UUID,
+    gen_random_uuid()
+  );
+$test$;
 
 DO $$
 DECLARE
@@ -44,16 +70,16 @@ BEGIN
   INSERT INTO public.source(name) VALUES ('Regional RPC fixture') RETURNING id INTO v_source_id;
 
   BEGIN
-    PERFORM public.save_regional_project_actor_assignments(
-      -980204, 'movie', 'fr', '[]'::jsonb
+    PERFORM pg_temp.test_save_regional_project_actor_assignments(
+      980204, 'movie', 'fr', '[]'::jsonb
     );
     RAISE EXCEPTION 'A legacy language code was accepted by the assignment RPC';
   EXCEPTION WHEN SQLSTATE '22023' THEN
     NULL;
   END;
   BEGIN
-    PERFORM public.save_regional_project_actor_assignments(
-      -980209, 'movie', 'zz-ZZ', '[]'::jsonb
+    PERFORM pg_temp.test_save_regional_project_actor_assignments(
+      980209, 'movie', 'zz-ZZ', '[]'::jsonb
     );
     RAISE EXCEPTION 'An unsupported regional code was accepted by the assignment RPC';
   EXCEPTION WHEN SQLSTATE '22023' THEN
@@ -61,14 +87,14 @@ BEGIN
   END;
   IF EXISTS (
     SELECT 1 FROM public.dubbing_projects
-    WHERE content_id = -980204 AND content_type = 'movie'
+    WHERE content_id = 980204 AND content_type = 'movie'
   ) THEN
     RAISE EXCEPTION 'An invalid regional language created a project';
   END IF;
 
   -- A new project and its first assignment are created atomically and validated.
-  project_id := public.save_regional_project_actor_assignments(
-    -980201,
+  project_id := pg_temp.test_save_regional_project_actor_assignments(
+    980201,
     'movie',
     'fr-FR',
     jsonb_build_array(jsonb_build_object(
@@ -89,8 +115,8 @@ BEGIN
 
   -- An invalid voice actor on a new media selection must leave no project behind.
   BEGIN
-    PERFORM public.save_regional_project_actor_assignments(
-      -980202,
+    PERFORM pg_temp.test_save_regional_project_actor_assignments(
+      980202,
       'movie',
       'fr-FR',
       jsonb_build_array(jsonb_build_object(
@@ -106,15 +132,15 @@ BEGIN
   END;
   IF EXISTS (
     SELECT 1 FROM public.dubbing_projects
-    WHERE content_id = -980202 AND content_type = 'movie' AND language = 'fr-FR'
+    WHERE content_id = 980202 AND content_type = 'movie' AND language = 'fr-FR'
   ) THEN
     RAISE EXCEPTION 'A failed assignment left an empty project behind';
   END IF;
 
   -- Updating a rich existing work changes only voice_actor_id and preserves
   -- both the work identity and the existing project status.
-  project_id := public.save_regional_project_actor_assignments(
-    -980203,
+  project_id := pg_temp.test_save_regional_project_actor_assignments(
+    980203,
     'tv',
     'fr-FR',
     jsonb_build_array(jsonb_build_object(
@@ -138,8 +164,8 @@ BEGIN
   WHERE dubbing_project_id = project_id AND actor_id = actor_rich
   RETURNING id INTO rich_work_id;
 
-  PERFORM public.save_regional_project_actor_assignments(
-    -980203,
+  PERFORM pg_temp.test_save_regional_project_actor_assignments(
+    980203,
     'tv',
     'fr-FR',
     jsonb_build_array(jsonb_build_object(
@@ -171,7 +197,7 @@ BEGIN
 
   -- Multiple works for one actor are intentionally non-editable in this form.
   INSERT INTO public.dubbing_projects(content_id, content_type, language, status)
-  VALUES (-980204, 'movie', 'fr-FR', 'validated') RETURNING id INTO project_id;
+  VALUES (980204, 'movie', 'fr-FR', 'validated') RETURNING id INTO project_id;
   INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_id)
   VALUES (project_id, actor_ambiguous, va_one, 80401)
   RETURNING id INTO ambiguous_work_one;
@@ -179,8 +205,8 @@ BEGIN
   VALUES (project_id, actor_ambiguous, va_two, 80402)
   RETURNING id INTO ambiguous_work_two;
   BEGIN
-    PERFORM public.save_regional_project_actor_assignments(
-      -980204,
+    PERFORM pg_temp.test_save_regional_project_actor_assignments(
+      980204,
       'movie',
       'fr-FR',
       jsonb_build_array(jsonb_build_object(
@@ -202,13 +228,13 @@ BEGIN
 
   -- Clearing one assignment deletes its exact work ID and leaves other actors alone.
   INSERT INTO public.dubbing_projects(content_id, content_type, language, status)
-  VALUES (-980205, 'movie', 'fr-FR', 'validated') RETURNING id INTO project_id;
+  VALUES (980205, 'movie', 'fr-FR', 'validated') RETURNING id INTO project_id;
   INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id)
   VALUES (project_id, actor_clear, va_one) RETURNING id INTO clear_work_id;
   INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id)
   VALUES (project_id, actor_keep, va_two) RETURNING id INTO keep_work_id;
-  PERFORM public.save_regional_project_actor_assignments(
-    -980205,
+  PERFORM pg_temp.test_save_regional_project_actor_assignments(
+    980205,
     'movie',
     'fr-FR',
     jsonb_build_array(jsonb_build_object(
@@ -228,8 +254,8 @@ BEGIN
 
   -- A stale ID on a new project fails the whole transaction, including creation.
   BEGIN
-    PERFORM public.save_regional_project_actor_assignments(
-      -980206,
+    PERFORM pg_temp.test_save_regional_project_actor_assignments(
+      980206,
       'movie',
       'fr-CA',
       jsonb_build_array(jsonb_build_object(
@@ -245,23 +271,23 @@ BEGIN
   END;
   IF EXISTS (
     SELECT 1 FROM public.dubbing_projects
-    WHERE content_id = -980206 AND content_type = 'movie' AND language = 'fr-CA'
+    WHERE content_id = 980206 AND content_type = 'movie' AND language = 'fr-CA'
   ) THEN
     RAISE EXCEPTION 'A stale work ID left a newly created project behind';
   END IF;
 
   -- France and Canada projects for one title keep exact work IDs and assignments isolated.
   INSERT INTO public.dubbing_projects(content_id, content_type, language, status)
-  VALUES (-980207, 'movie', 'fr-FR', 'validated') RETURNING id INTO project_id;
+  VALUES (980207, 'movie', 'fr-FR', 'validated') RETURNING id INTO project_id;
   INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id)
   VALUES (project_id, actor_fr, va_one) RETURNING id INTO france_work_id;
   INSERT INTO public.dubbing_projects(content_id, content_type, language, status)
-  VALUES (-980207, 'movie', 'fr-CA', 'validated') RETURNING id INTO project_id;
+  VALUES (980207, 'movie', 'fr-CA', 'validated') RETURNING id INTO project_id;
   INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id)
   VALUES (project_id, actor_fr, va_four) RETURNING id INTO canada_work_id;
 
-  PERFORM public.save_regional_project_actor_assignments(
-    -980207,
+  PERFORM pg_temp.test_save_regional_project_actor_assignments(
+    980207,
     'movie',
     'fr-FR',
     jsonb_build_array(jsonb_build_object(
@@ -281,8 +307,8 @@ BEGIN
 
   -- The voice actor loaded by an admin is a compare-and-set guard against
   -- overwriting another admin's newer assignment.
-  project_id := public.save_regional_project_actor_assignments(
-    -980208,
+  project_id := pg_temp.test_save_regional_project_actor_assignments(
+    980208,
     'movie',
     'fr-FR',
     jsonb_build_array(jsonb_build_object(
@@ -306,8 +332,8 @@ BEGIN
   -- Simulate a second admin saving after the first admin loaded VA One.
   UPDATE public.work SET voice_actor_id = va_two WHERE id = concurrent_work_id;
   BEGIN
-    PERFORM public.save_regional_project_actor_assignments(
-      -980208,
+    PERFORM pg_temp.test_save_regional_project_actor_assignments(
+      980208,
       'movie',
       'fr-FR',
       jsonb_build_array(
@@ -338,7 +364,7 @@ BEGIN
       AND work.character_id = 80801
       AND work.character_name = 'Concurrency character'
       AND work.note = 'Preserve after conflict'
-      AND project.content_id = -980208
+      AND project.content_id = 980208
       AND project.language = 'fr-FR'
       AND project.status = 'in_progress'
   ) OR NOT EXISTS (

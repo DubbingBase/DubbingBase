@@ -566,6 +566,24 @@ interface RegionalProjectResponse {
 
 type ToastType = "success" | "error" | "info";
 
+function createRequestId(): string {
+  if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
+
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  const uuidBytes = new DataView(bytes.buffer);
+  uuidBytes.setUint8(6, (uuidBytes.getUint8(6) & 0x0f) | 0x40);
+  uuidBytes.setUint8(8, (uuidBytes.getUint8(8) & 0x3f) | 0x80);
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+
+  return [
+    hex.slice(0, 8),
+    hex.slice(8, 12),
+    hex.slice(12, 16),
+    hex.slice(16, 20),
+    hex.slice(20),
+  ].join("-");
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -657,6 +675,7 @@ const pendingManualVoiceActorCreation = ref<{
 // Assignments
 const voiceActorAssignments = ref<Record<number, VoiceCastAssignment>>({});
 const initialAssignments = ref<Record<number, VoiceCastAssignment>>({});
+const pendingAssignmentRequest = ref<{ fingerprint: string; requestId: string } | null>(null);
 
 const activeSearchDropdown = ref<number | null>(null);
 const actorSearchQueries = ref<Record<number, string>>({});
@@ -929,17 +948,24 @@ const saveVoiceCast = async () => {
     initialAssignments.value,
   );
   if (operations.length === 0) return;
+  const requestBody = {
+    content_id: mediaId.value,
+    content_type: mediaTypeParam.value,
+    dubbing_language: savedDubbingLanguage,
+    operations,
+  };
+  const fingerprint = JSON.stringify(requestBody);
+  if (pendingAssignmentRequest.value?.fingerprint !== fingerprint) {
+    pendingAssignmentRequest.value = { fingerprint, requestId: createRequestId() };
+  }
+
   isSaving.value = true;
   try {
     await $fetch("/api/admin/dubbing-project", {
       method: "POST",
-      body: {
-        content_id: mediaId.value,
-        content_type: mediaTypeParam.value,
-        dubbing_language: savedDubbingLanguage,
-        operations,
-      },
+      body: { ...requestBody, request_id: pendingAssignmentRequest.value.requestId },
     });
+    pendingAssignmentRequest.value = null;
     showToast("Voice cast mappings saved successfully!", "success");
     if (dubbingLanguage.value === savedDubbingLanguage) {
       await loadRegionalAssignments();

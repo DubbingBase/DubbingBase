@@ -1035,15 +1035,27 @@ export type Database = {
           vt: string;
         }[];
       };
-      save_regional_project_actor_assignments: {
-        Args: {
-          p_content_id: number;
-          p_content_type: string;
-          p_dubbing_language: string;
-          p_operations: Json;
-        };
-        Returns: number;
-      };
+      save_regional_project_actor_assignments:
+        | {
+            Args: {
+              p_content_id: number;
+              p_content_type: string;
+              p_dubbing_language: string;
+              p_operations: Json;
+            };
+            Returns: number;
+          }
+        | {
+            Args: {
+              p_actor_id: string;
+              p_content_id: number;
+              p_content_type: string;
+              p_dubbing_language: string;
+              p_operations: Json;
+              p_request_id: string;
+            };
+            Returns: number;
+          };
       unaccent: { Args: { "": string }; Returns: string };
       voice_actor_completeness: {
         Args: { va: Database["public"]["Tables"]["voice_actors"]["Row"] };
