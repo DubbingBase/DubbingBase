@@ -374,18 +374,58 @@ export interface PodcastResponse {
 export interface Toy {
   id: number;
   name: string;
-  manufacturer: string;
+  manufacturer: string | null;
   product_line?: string;
   release_year?: number | string;
   cover_url?: string | null;
-  description?: string;
+  description?: string | null;
+  updated_at?: string;
   media_type: "toy";
   popularity?: number;
 }
 
+export interface ToyMetadataInput {
+  name: string;
+  manufacturer: string | null;
+  product_line: string | null;
+  release_year: number | null;
+  cover_url: string | null;
+  description: string | null;
+}
+
+export interface ToyMetadataSaveResponse {
+  toy: Toy;
+  auditLogId: string;
+  replayed: boolean;
+}
+
+export interface ToyDubbingProject {
+  id: number;
+  language?: string | null;
+  studio_data?: { id: number; name: string } | null;
+  crew?: Array<{
+    id: number;
+    job?: { name: string } | null;
+    person?: { id: number; firstname?: string; lastname?: string } | null;
+  }>;
+  works?: Array<{
+    id: number;
+    voice_actor_id?: number | null;
+    voice_actor?: {
+      id: number;
+      firstname?: string;
+      lastname?: string;
+      profile_picture?: string | null;
+    } | null;
+    character_name?: string | null;
+    performance?: string | null;
+    note?: string | null;
+  }>;
+}
+
 export interface ToyResponse {
   toy: Toy | null;
-  dubbingProjects: any[];
+  dubbingProjects: ToyDubbingProject[];
   votes: Record<
     number,
     { up_count: number; down_count: number; user_vote: string | null }

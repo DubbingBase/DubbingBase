@@ -956,6 +956,7 @@
     "manufacturer": "Manufacturer",
     "productLine": "Product Line / Device",
     "releaseYear": "Release Year",
+    "coverImageLabel": "Cover Image URL",
     "description": "Description",
     "editProject": "Edit Smart Toy Project",
     "createProject": "Create Smart Toy Project",

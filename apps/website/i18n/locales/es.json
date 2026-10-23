@@ -956,6 +956,7 @@
     "manufacturer": "Fabricante",
     "productLine": "Gama / Dispositivo",
     "releaseYear": "Año de lanzamiento",
+    "coverImageLabel": "URL de la imagen de portada",
     "description": "Descripción",
     "editProject": "Editar proyecto de juguete conectado",
     "createProject": "Crear proyecto de juguete conectado",

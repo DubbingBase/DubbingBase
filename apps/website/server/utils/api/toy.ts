@@ -1,26 +1,50 @@
 import type { Toy } from "@app/shared-logic";
+import type { Database } from "@app/supabase/types";
 import { useSupabaseAdmin } from "../db/client";
+
+type ToyMetadataRow = Pick<
+  Database["public"]["Tables"]["toy_metadata"]["Row"],
+  | "content_id"
+  | "name"
+  | "manufacturer"
+  | "product_line"
+  | "release_year"
+  | "cover_url"
+  | "description"
+  | "updated_at"
+>;
+
+function mapToy(row: ToyMetadataRow): Toy {
+  return {
+    id: row.content_id,
+    name: row.name,
+    manufacturer: row.manufacturer,
+    ...(row.product_line === null ? {} : { product_line: row.product_line }),
+    ...(row.release_year === null ? {} : { release_year: row.release_year }),
+    cover_url: row.cover_url,
+    description: row.description,
+    updated_at: row.updated_at,
+    media_type: "toy",
+  };
+}
 
 export class ToyClient {
   async searchToys(query: string, limit = 15): Promise<Toy[]> {
-    if (!query || query.trim().length < 2) return [];
+    const trimmedQuery = query.trim();
+    if (trimmedQuery.length < 2) return [];
 
     try {
       const supabase = useSupabaseAdmin();
-      const { data } = await supabase
-        .from("dubbing_projects")
-        .select("content_id, created_at, studios(name)")
-        .eq("content_type", "toy")
+      const { data, error } = await supabase
+        .from("toy_metadata")
+        .select(
+          "content_id, name, manufacturer, product_line, release_year, cover_url, description, updated_at",
+        )
+        .ilike("name", `%${trimmedQuery}%`)
         .limit(limit);
 
-      if (!data) return [];
-
-      return data.map((item: any) => ({
-        id: item.content_id,
-        name: `Objet / Jouet Connecté #${item.content_id}`,
-        manufacturer: item.studios?.name || "Fabricant",
-        media_type: "toy" as const,
-      }));
+      if (error) throw error;
+      return (data || []).map(mapToy);
     } catch (err) {
       console.error("Toy search failed:", err);
       return [];
@@ -30,31 +54,19 @@ export class ToyClient {
   async getToy(id: number): Promise<Toy | null> {
     try {
       const supabase = useSupabaseAdmin();
-      const { data: project } = await supabase
-        .from("dubbing_projects")
-        .select("*, studios(id, name)")
+      const { data, error } = await supabase
+        .from("toy_metadata")
+        .select(
+          "content_id, name, manufacturer, product_line, release_year, cover_url, description, updated_at",
+        )
         .eq("content_id", id)
-        .eq("content_type", "toy")
         .maybeSingle();
 
-      return {
-        id,
-        name: `Jouet Connecté / Histoire #${id}`,
-        manufacturer: project?.studios?.name || "Lunii / VTech / Tonies",
-        product_line: "Conteuse / Jouet interactif",
-        media_type: "toy" as const,
-        release_year: project?.created_at
-          ? new Date(project.created_at).getFullYear()
-          : undefined,
-      };
+      if (error) throw error;
+      return data ? mapToy(data) : null;
     } catch (err) {
       console.error(`Failed to fetch toy #${id}:`, err);
-      return {
-        id,
-        name: `Objet Connecté #${id}`,
-        manufacturer: "Fabricant",
-        media_type: "toy" as const,
-      };
+      return null;
     }
   }
 }

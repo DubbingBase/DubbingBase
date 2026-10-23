@@ -1,23 +1,52 @@
 <template>
   <div class="min-h-screen">
-    <!-- Skeleton loader during SSR/fetch -->
-    <MediaSkeleton v-if="pending && !data" />
+    <MediaSkeleton v-if="pending && !toy" />
 
-    <!-- Main Content -->
     <MediaDetailsLayout
       v-else-if="toy"
-      :backdrop-src="null"
-      :poster-src="coverUrl"
       :title="toy.name"
-      :original-title="toy.manufacturer"
-      :media-type="'toy'"
-      :release-year="toy.release_year ? String(toy.release_year) : undefined"
-      :overview="toy.description"
-      :dubbing-projects="dubbingProjects"
-      :active-dub-id="activeDubId"
+      :backdrop-url="null"
+      :poster-url="toy.cover_url"
+      :loading="pending"
     >
-      <template #header-actions>
-        <div class="flex items-center gap-2">
+      <template #metadata>
+        <span
+          v-if="toy.manufacturer"
+          class="theme-text font-semibold text-base md:text-lg theme-surface-overlay backdrop-blur-md px-3 py-1 rounded-lg"
+        >
+          {{ toy.manufacturer }}
+        </span>
+        <span
+          v-if="toy.release_year"
+          class="theme-text font-semibold text-base md:text-lg theme-surface-overlay backdrop-blur-md px-3 py-1 rounded-lg"
+        >
+          {{ toy.release_year }}
+        </span>
+      </template>
+
+      <template #actions-left>
+        <div v-if="dubbingProjects.length > 0" class="flex flex-wrap gap-2">
+          <NuxtLink
+            v-for="project in dubbingProjects"
+            :key="project.id"
+            :to="{ query: { dub: project.id } }"
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border theme-border-subtle theme-border flex items-center gap-1.5"
+            :class="
+              activeDubId === project.id
+                ? 'theme-primary-bg theme-primary-border'
+                : 'theme-surface theme-text-secondary theme-hover-surface-muted'
+            "
+          >
+            {{ getDisplayLanguage(project.language) }}
+          </NuxtLink>
+        </div>
+        <div v-else class="text-sm theme-text-muted font-medium">
+          {{ $t("game.noDubbingProjects") }}
+        </div>
+      </template>
+
+      <template #actions-right>
+        <ClientOnly>
           <NuxtLink
             v-if="isAdmin"
             :to="
@@ -27,82 +56,78 @@
                   : `/toy/${toy.id}/projects/new`,
               )
             "
-            class="px-3 py-1.5 bg-amber-600/20 hover:bg-amber-600/30 theme-status-warning-text text-xs font-semibold rounded-xl border border-amber-500/30 flex items-center gap-1.5 transition-colors"
+            class="text-sm theme-primary-text theme-hover-primary-text transition-colors flex items-center gap-1.5 font-medium"
           >
-            <span>{{ activeDubProject ? "Modifier le projet" : "Ajouter un projet" }}</span>
+            {{ activeDubProject ? $t("common.edit") : $t("common.addVoice") }}
           </NuxtLink>
-
-          <ForceEnqueueButton v-if="toy?.id" media-type="toy" :media-id="toy.id" />
-        </div>
+        </ClientOnly>
+        <ForceEnqueueButton media-type="toy" :media-id="toy.id" />
       </template>
 
-      <template #details-extra>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-4 border-t theme-border">
+      <template #content>
+        <div v-if="toy.description" class="mb-10 max-w-4xl">
+          <h2 class="text-2xl font-bold mb-4">{{ $t("details.synopsis") }}</h2>
+          <p class="theme-text-secondary leading-relaxed text-lg">
+            {{ toy.description }}
+          </p>
+        </div>
+
+        <div
+          v-if="toy.product_line || toy.manufacturer || toy.release_year"
+          class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-10 p-6 rounded-xl border theme-border theme-surface"
+        >
           <div v-if="toy.manufacturer">
-            <span class="text-xs theme-text-muted block mb-0.5">{{
-              $t("toy.manufacturerLabel")
-            }}</span>
+            <span class="text-xs theme-text-muted block mb-0.5">
+              {{ $t("toy.manufacturerLabel") }}
+            </span>
             <span class="text-sm font-semibold theme-text">{{ toy.manufacturer }}</span>
           </div>
-
           <div v-if="toy.product_line">
             <span class="text-xs theme-text-muted block mb-0.5">{{ $t("toy.productLine") }}</span>
             <span class="text-sm font-semibold theme-text">{{ toy.product_line }}</span>
           </div>
-
           <div v-if="toy.release_year">
             <span class="text-xs theme-text-muted block mb-0.5">{{ $t("toy.releaseYear") }}</span>
             <span class="text-sm font-semibold theme-text">{{ toy.release_year }}</span>
           </div>
         </div>
-      </template>
 
-      <!-- Technical Crew / Studio Section -->
-      <template #crew-section>
-        <div
-          v-if="activeDubProject?.studios || activeDubProject?.dubbing_project_crew?.length"
-          class="theme-surface-overlay backdrop-blur border theme-border rounded-2xl p-6 space-y-4 mb-8 shadow-xl"
+        <section
+          v-if="activeDubProject?.studio_data || activeDubProject?.crew?.length"
+          class="theme-surface-overlay backdrop-blur border theme-border rounded-2xl p-6 space-y-4 mb-10 shadow-xl"
         >
-          <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider">
+          <h2 class="text-xs font-bold theme-text-muted uppercase tracking-wider">
             {{ $t("toy.studioAndProduction") }}
-          </h3>
-
+          </h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            <div v-if="activeDubProject?.studios" class="space-y-1">
-              <span class="text-xs theme-text-muted">{{ $t("toyEditor.studioManufacturer") }}</span>
+            <div v-if="activeDubProject.studio_data" class="space-y-1">
+              <span class="text-xs theme-text-muted">{{ $t("common.production") }}</span>
               <NuxtLink
-                :to="localePath(`/studio/${activeDubProject.studios.id}`)"
+                :to="localePath(`/studio/${activeDubProject.studio_data.id}`)"
                 class="text-sm font-semibold theme-status-warning-text hover:underline block"
               >
-                {{ activeDubProject.studios.name }}
+                {{ activeDubProject.studio_data.name }}
               </NuxtLink>
             </div>
-
-            <div
-              v-for="member in activeDubProject?.dubbing_project_crew || []"
-              :key="member.id"
-              class="space-y-1"
-            >
-              <span class="text-xs theme-text-muted">{{ member.jobs?.name || "Équipe" }}</span>
+            <div v-for="member in activeDubProject.crew" :key="member.id" class="space-y-1">
+              <span class="text-xs theme-text-muted">{{
+                member.job?.name || $t("common.crew")
+              }}</span>
               <NuxtLink
-                v-if="member.voice_actors"
-                :to="localePath(`/voice-actor/${member.voice_actors.id}`)"
-                class="text-sm font-semibold text-white hover:underline block"
+                v-if="member.person"
+                :to="localePath(`/voice-actor/${member.person.id}`)"
+                class="text-sm font-semibold theme-text hover:underline block"
               >
-                {{ member.voice_actors.firstname }}
-                {{ member.voice_actors.lastname }}
+                {{ member.person.firstname }} {{ member.person.lastname }}
               </NuxtLink>
             </div>
           </div>
-        </div>
-      </template>
+        </section>
 
-      <!-- Cast Roster Section -->
-      <template #cast-section>
         <section class="space-y-6">
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h2 class="text-xl font-bold text-white flex items-center gap-2">
+              <h2 class="text-xl font-bold theme-text flex items-center gap-2">
                 <span>{{ $t("toyEditor.voiceNarrators") }}</span>
                 <span
                   v-if="castTotal > 0"
@@ -111,9 +136,7 @@
                   {{ castTotal }}
                 </span>
               </h2>
-              <p class="text-xs theme-text-muted mt-1">
-                {{ $t("toy.voiceCastDescription") }}
-              </p>
+              <p class="text-xs theme-text-muted mt-1">{{ $t("toy.voiceCastDescription") }}</p>
             </div>
           </div>
 
@@ -136,7 +159,6 @@
           >
             <template #default="{ item }">
               <div
-                :key="item.work_id"
                 class="theme-surface-overlay border theme-border rounded-2xl p-4 flex gap-4 items-center theme-hover-border transition-colors group shadow-md"
               >
                 <NuxtLink
@@ -146,28 +168,28 @@
                   <NuxtImg
                     v-if="item.profile_picture"
                     :src="item.profile_picture"
-                    :alt="item.firstname + ' ' + item.lastname"
+                    :alt="`${item.firstname} ${item.lastname}`"
                     class="w-full h-full object-cover"
+                    loading="lazy"
                     decoding="async"
                   />
                   <span v-else class="text-sm font-bold theme-text-muted">
                     {{ item.firstname?.[0] }}{{ item.lastname?.[0] }}
                   </span>
                 </NuxtLink>
-
                 <div class="flex-1 min-w-0">
                   <NuxtLink
                     :to="localePath(`/voice-actor/${item.voice_actor_id}`)"
-                    class="text-sm font-bold text-white theme-status-warning-text transition-colors truncate block"
+                    class="text-sm font-bold theme-status-warning-text transition-colors truncate block"
                   >
                     {{ item.firstname }} {{ item.lastname }}
                   </NuxtLink>
                   <span class="text-xs theme-text-muted block truncate mt-0.5">
-                    {{ item.character_name || item.performance || "Voix / Personnage" }}
+                    {{ item.character_name || item.performance || $t("toy.voiceCastDescription") }}
                   </span>
-                  <span v-if="item.note" class="text-xs theme-text-muted block truncate mt-1">{{
-                    item.note
-                  }}</span>
+                  <span v-if="item.note" class="text-xs theme-text-muted block truncate mt-1">
+                    {{ item.note }}
+                  </span>
                 </div>
               </div>
             </template>
@@ -176,7 +198,7 @@
       </template>
     </MediaDetailsLayout>
 
-    <div v-else class="text-center py-24 theme-text-muted">
+    <div v-else-if="!pending" class="text-center py-24 theme-text-muted">
       {{ $t("toy.notFound") }}
     </div>
 
@@ -185,8 +207,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { computed, ref, watch } from "vue";
+import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 import MediaSkeleton from "../../components/MediaSkeleton.vue";
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
@@ -197,55 +219,55 @@ import {
   paginateDetailCollection,
   resolveDetailCollectionProject,
 } from "@app/shared-logic";
-import type { DetailCollectionProject, Toy } from "@app/shared-logic";
+import type { Toy, ToyDubbingProject } from "@app/shared-logic";
 
 const route = useRoute();
-const router = useRouter();
-const { t, locale } = useI18n();
+const { locale } = useI18n();
 const localePath = useLocalePath();
 const user = useSupabaseUser();
-const isAdmin = computed(() => {
-  return user.value?.app_metadata?.role === "admin";
-});
-
+const isAdmin = computed(() => user.value?.app_metadata?.role === "admin");
 const toyId = computed(() => {
   const idParam = route.params.id;
-  const num = parseInt(String(idParam), 10);
-  return isNaN(num) ? 0 : num;
+  const num = Number.parseInt(String(idParam), 10);
+  return Number.isSafeInteger(num) ? num : 0;
 });
-
 const isReportModalOpen = ref(false);
 const { page: castPage, setPage: setCastPage } = useUrlPagination("castPage");
 const currentUrl = computed(() => route.fullPath);
 
-// Instant Hydration Data Fetching
 const { data, pending } = await useAsyncData(
   `toy-${toyId.value}-${locale.value}`,
   () => fetchToyData(toyId.value, locale.value),
   {
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
+    watch: [toyId, locale],
   },
 );
 
 const toy = computed<Toy | null>(() => data.value?.toy || null);
-const dubbingProjects = computed(() => data.value?.dubbingProjects || []);
-
+const dubbingProjects = computed<ToyDubbingProject[]>(() => data.value?.dubbingProjects || []);
 const activeDubProject = computed(() =>
   resolveDetailCollectionProject(dubbingProjects.value, route.query.dub),
 );
 const activeDubId = computed(() => activeDubProject.value?.id || 0);
-
 watch(activeDubId, () => void setCastPage(1));
-
-const coverUrl = computed(() => {
-  return toy.value?.cover_url || null;
-});
 
 const completeCastItems = computed(() => formatMediaWorkCastCards(activeDubProject.value));
 const castTotal = computed(() => completeCastItems.value.length);
 const castItems = computed(() =>
   paginateDetailCollection(completeCastItems.value, castPage.value, 12),
 );
+
+function getDisplayLanguage(langCode?: string | null): string {
+  if (!langCode) return "";
+  try {
+    return (
+      new Intl.DisplayNames([locale.value || "en"], { type: "language" }).of(langCode) || langCode
+    );
+  } catch {
+    return langCode;
+  }
+}
 
 useHead({
   title: computed(() =>

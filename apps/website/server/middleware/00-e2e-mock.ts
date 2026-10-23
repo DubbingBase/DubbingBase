@@ -1289,6 +1289,61 @@ export default defineEventHandler(async (event) => {
   const url = getRequestURL(event);
   const path = url.pathname;
 
+  // Toy detail pages use two records so E2E navigation can verify route-driven refresh.
+  if (path.startsWith("/api/toy/")) {
+    const toyId = Number(path.slice("/api/toy/".length));
+    const firstToy = toyId === 1 || toyId === 701;
+    const toy = firstToy
+      ? {
+          id: toyId,
+          name: "Lunii Storyteller",
+          manufacturer: "Lunii",
+          product_line: "My Fabulous Storyteller",
+          release_year: 2022,
+          cover_url: null,
+          description: "A screen-free audio storyteller.",
+          media_type: "toy",
+        }
+      : {
+          id: toyId,
+          name: "Tonies Audio Player",
+          manufacturer: "Tonies",
+          product_line: "Toniebox",
+          release_year: 2024,
+          cover_url: null,
+          description: "A child-friendly audio player.",
+          media_type: "toy",
+        };
+    const dubbingProjects = [
+      {
+        id: 11,
+        language: "fr-FR",
+        studio_data: { id: 16, name: "Lunii Studio", logo_url: null },
+        crew: [
+          {
+            id: 1,
+            job: { name: "Direction artistique" },
+            person: { id: 1, firstname: "Richard", lastname: "Darbois" },
+          },
+        ],
+        works: [
+          {
+            id: 101,
+            character_name: "Le narrateur",
+            performance: "Narration",
+            voice_actor: {
+              id: 1,
+              firstname: "Richard",
+              lastname: "Darbois",
+              profile_picture: null,
+            },
+          },
+        ],
+      },
+    ];
+    return send(event, JSON.stringify({ toy, dubbingProjects, votes: {} }), "application/json");
+  }
+
   // 1. Voice Actor Detail
   if (path.startsWith("/api/voice-actor/")) {
     const response =

@@ -956,6 +956,7 @@
     "manufacturer": "Fabricant",
     "productLine": "Gamme / Appareil",
     "releaseYear": "Année de sortie",
+    "coverImageLabel": "URL de l’image de couverture",
     "description": "Description",
     "editProject": "Modifier le projet d'objet connecté",
     "createProject": "Créer un projet d'objet connecté",

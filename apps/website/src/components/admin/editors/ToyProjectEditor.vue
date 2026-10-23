@@ -30,10 +30,7 @@
     </div>
 
     <!-- Navigation Tabs -->
-    <div
-      v-if="parsedToyId"
-      class="flex flex-wrap gap-2 pb-2 border-b theme-border"
-    >
+    <div v-if="parsedToyId" class="flex flex-wrap gap-2 pb-2 border-b theme-border">
       <NuxtLink
         v-for="project in toyDubbingProjects"
         :key="project.id"
@@ -87,11 +84,10 @@
           </h4>
 
           <!-- Content ID -->
-          <div class="space-y-1">
-            <label
-              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("toyEditor.toyId") }}</label
-            >
+          <div v-if="parsedToyId" class="space-y-1">
+            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+              $t("toyEditor.toyId")
+            }}</label>
             <input
               v-model.number="contentId"
               type="number"
@@ -104,15 +100,75 @@
 
           <!-- Name -->
           <div class="space-y-1">
-            <label
-              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("toyEditor.productName") }}</label
-            >
+            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+              $t("toyEditor.productName")
+            }}</label>
             <input
               v-model="mediaTitle"
               type="text"
               required
               placeholder="Ex: Lunii - Les Histoires de Suzanne et Gaston"
+              class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
+            />
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">
+              {{ $t("toy.manufacturerLabel") }}
+            </label>
+            <input
+              v-model="manufacturer"
+              type="text"
+              maxlength="300"
+              class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
+            />
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">
+              {{ $t("toy.productLine") }}
+            </label>
+            <input
+              v-model="productLine"
+              type="text"
+              maxlength="300"
+              class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
+            />
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">
+              {{ $t("toy.releaseYear") }}
+            </label>
+            <input
+              v-model="releaseYear"
+              type="number"
+              min="1800"
+              max="2200"
+              class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
+            />
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">
+              {{ $t("toy.coverImageLabel") }}
+            </label>
+            <input
+              v-model="coverUrl"
+              type="url"
+              maxlength="2048"
+              class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
+            />
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">
+              {{ $t("toy.description") }}
+            </label>
+            <textarea
+              v-model="description"
+              rows="4"
+              maxlength="10000"
               class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
             />
           </div>
@@ -133,10 +189,9 @@
 
           <!-- Status -->
           <div class="space-y-1">
-            <label
-              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("common.status") }}</label
-            >
+            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+              $t("common.status")
+            }}</label>
             <select
               v-model="status"
               class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
@@ -158,18 +213,15 @@
             class="text-sm font-bold theme-text uppercase tracking-wider border-b theme-border pb-3 flex items-center justify-between"
           >
             <span>{{ $t("toyEditor.manufacturerStudio") }}</span>
-            <span class="text-xs theme-text-muted">{{
-              $t("common.production")
-            }}</span>
+            <span class="text-xs theme-text-muted">{{ $t("common.production") }}</span>
           </h4>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <!-- Studio / Manufacturer -->
             <div class="space-y-1">
-              <label
-                class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-                >{{ $t("toyEditor.studioManufacturer") }}</label
-              >
+              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("toyEditor.studioManufacturer")
+              }}</label>
               <AdminAsyncAutocomplete
                 v-model="selectedStudioId"
                 :options="studioOptions"
@@ -179,21 +231,16 @@
                 :display-fn="getStudioName"
                 @search="searchStudios"
                 @create="
-                  (q: string) =>
-                    openCreateStudioDialog(
-                      q,
-                      (id: number) => (selectedStudioId = id),
-                    )
+                  (q: string) => openCreateStudioDialog(q, (id: number) => (selectedStudioId = id))
                 "
               />
             </div>
 
             <!-- Direction Artistique -->
             <div class="space-y-1">
-              <label
-                class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-                >{{ $t("toyEditor.artisticDirection") }}</label
-              >
+              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("toyEditor.artisticDirection")
+              }}</label>
               <AdminAsyncAutocomplete
                 v-model="artisticDirectorId"
                 :options="voiceActorOptions"
@@ -203,21 +250,16 @@
                 :display-fn="getVoiceActorName"
                 @search="searchVoiceActors"
                 @create="
-                  (q: string) =>
-                    openCreateVaDialog(
-                      q,
-                      (id: number) => (artisticDirectorId = id),
-                    )
+                  (q: string) => openCreateVaDialog(q, (id: number) => (artisticDirectorId = id))
                 "
               />
             </div>
 
             <!-- Prise de son -->
             <div class="space-y-1">
-              <label
-                class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-                >{{ $t("toyEditor.recording") }}</label
-              >
+              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("toyEditor.recording")
+              }}</label>
               <AdminAsyncAutocomplete
                 v-model="recordingId"
                 :options="voiceActorOptions"
@@ -226,19 +268,15 @@
                 :allow-create="true"
                 :display-fn="getVoiceActorName"
                 @search="searchVoiceActors"
-                @create="
-                  (q: string) =>
-                    openCreateVaDialog(q, (id: number) => (recordingId = id))
-                "
+                @create="(q: string) => openCreateVaDialog(q, (id: number) => (recordingId = id))"
               />
             </div>
 
             <!-- Mixage -->
             <div class="space-y-1">
-              <label
-                class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-                >{{ $t("toyEditor.mixing") }}</label
-              >
+              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("toyEditor.mixing")
+              }}</label>
               <AdminAsyncAutocomplete
                 v-model="mixingId"
                 :options="voiceActorOptions"
@@ -247,10 +285,7 @@
                 :allow-create="true"
                 :display-fn="getVoiceActorName"
                 @search="searchVoiceActors"
-                @create="
-                  (q: string) =>
-                    openCreateVaDialog(q, (id: number) => (mixingId = id))
-                "
+                @create="(q: string) => openCreateVaDialog(q, (id: number) => (mixingId = id))"
               />
             </div>
           </div>
@@ -258,9 +293,7 @@
       </div>
 
       <!-- Cast Roster Section -->
-      <div
-        class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-6 shadow-xl"
-      >
+      <div class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-6 shadow-xl">
         <div
           class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b theme-border pb-4"
         >
@@ -281,10 +314,7 @@
           </button>
         </div>
 
-        <div
-          v-if="castList.length === 0"
-          class="text-center py-8 theme-text-muted text-sm"
-        >
+        <div v-if="castList.length === 0" class="text-center py-8 theme-text-muted text-sm">
           {{ $t("common.noVoiceRecorded") }}
         </div>
 
@@ -296,10 +326,9 @@
           >
             <!-- Voice Actor -->
             <div class="md:col-span-4 space-y-1">
-              <label
-                class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider"
-                >{{ $t("common.actor") }}</label
-              >
+              <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("common.actor")
+              }}</label>
               <AdminAsyncAutocomplete
                 v-model="row.voice_actor_id"
                 :options="voiceActorOptions"
@@ -309,21 +338,16 @@
                 :display-fn="getVoiceActorName"
                 @search="searchVoiceActors"
                 @create="
-                  (q: string) =>
-                    openCreateVaDialog(
-                      q,
-                      (id: number) => (row.voice_actor_id = id),
-                    )
+                  (q: string) => openCreateVaDialog(q, (id: number) => (row.voice_actor_id = id))
                 "
               />
             </div>
 
             <!-- Role / Character Name -->
             <div class="md:col-span-2 space-y-1">
-              <label
-                class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider"
-                >{{ $t("common.characterRole") }}</label
-              >
+              <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("common.characterRole")
+              }}</label>
               <input
                 v-model="row.character_name"
                 type="text"
@@ -333,10 +357,9 @@
             </div>
 
             <div class="md:col-span-2 space-y-1">
-              <label
-                class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider"
-                >{{ $t("projectEditor.castNote") }}</label
-              >
+              <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("projectEditor.castNote")
+              }}</label>
               <input
                 v-model="row.note"
                 type="text"
@@ -346,10 +369,9 @@
 
             <!-- Performance Type -->
             <div class="md:col-span-3 space-y-1">
-              <label
-                class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider"
-                >{{ $t("common.performanceType") }}</label
-              >
+              <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("common.performanceType")
+              }}</label>
               <input
                 v-model="row.performance"
                 type="text"
@@ -391,9 +413,7 @@
           class="px-6 py-2.5 theme-primary-bg hover:bg-[var(--app-color-primary-hover)] disabled:opacity-50 text-xs font-bold rounded-xl transition-all shadow-lg flex items-center gap-2"
         >
           <Loader2Icon v-if="isSaving" class="w-4 h-4 animate-spin" />
-          <span>{{
-            isEditMode ? "Enregistrer les modifications" : "Créer le projet"
-          }}</span>
+          <span>{{ isEditMode ? "Enregistrer les modifications" : "Créer le projet" }}</span>
         </button>
       </div>
     </form>
@@ -401,17 +421,11 @@
 </template>
 
 <script setup lang="ts">
-import {
-  validateDubbingLanguage,
-  displayDubbingLanguage,
-} from "@app/shared-logic";
+import { validateDubbingLanguage, displayDubbingLanguage } from "@app/shared-logic";
+import type { Toy, ToyMetadataInput } from "@app/shared-logic";
 import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import {
-  Smile as SmileIcon,
-  Loader2 as Loader2Icon,
-  Trash2 as Trash2Icon,
-} from "lucide-vue-next";
+import { Smile as SmileIcon, Loader2 as Loader2Icon, Trash2 as Trash2Icon } from "lucide-vue-next";
 import {
   createDubbingProjectSaveClient,
   getEditableDubbingProjectStatus,
@@ -431,13 +445,21 @@ const saveDubbingProject = createDubbingProjectSaveClient((body) =>
     body,
   }),
 );
+const saveToyMetadata = (body: {
+  request_id: string;
+  content_id: number;
+  expected_updated_at: string | null;
+  metadata: ToyMetadataInput;
+}) =>
+  $fetch<{ toy: { updated_at?: string }; auditLogId: string; replayed: boolean }>(
+    "/api/save-toy-metadata",
+    { method: "POST", body },
+  );
 
 const toyIdParam = computed(() => route.params.toyId as string);
 const projectIdParam = computed(() => route.params.projectId as string);
 
-const isEditMode = computed(
-  () => projectIdParam.value && projectIdParam.value !== "new",
-);
+const isEditMode = computed(() => projectIdParam.value && projectIdParam.value !== "new");
 
 const parsedToyId = computed(() => {
   const num = parseInt(toyIdParam.value, 10);
@@ -446,6 +468,22 @@ const parsedToyId = computed(() => {
 
 const contentId = ref<number | null>(parsedToyId.value);
 const mediaTitle = ref("");
+const manufacturer = ref("");
+const productLine = ref("");
+const releaseYear = ref<number | string | null>(null);
+const coverUrl = ref("");
+const description = ref("");
+const toyMetadataUpdatedAt = ref<string | null>(null);
+const loadedToyMetadata = ref<ToyMetadataInput | null>(null);
+const toyMetadataLoadFailed = ref(false);
+const createdToy = ref<{
+  contentId: number;
+  projectId: number;
+  projectUpdatedAt: string;
+  metadataUpdatedAt: string;
+  metadata: ToyMetadataInput;
+} | null>(null);
+const internalMediaRequestId = ref<string | null>(null);
 const dubbingLanguage = ref("");
 const status = ref<"validated" | "pending" | "draft">("validated");
 const selectedStudioId = ref<number | null>(null);
@@ -540,8 +578,7 @@ const pendingVaCreationRequests = new Map<string, string>();
 function openCreateVaDialog(name: string, cb: (id: number) => void) {
   const parts = name.trim().split(/\s+/);
   const firstname = parts[0] || "";
-  const providedLastname =
-    parts.slice(1).join(" ") || prompt("Nom de famille du comédien :", "");
+  const providedLastname = parts.slice(1).join(" ") || prompt("Nom de famille du comédien :", "");
   if (!firstname || !providedLastname?.trim()) return;
 
   const payload = {
@@ -550,16 +587,12 @@ function openCreateVaDialog(name: string, cb: (id: number) => void) {
     status: "active" as const,
   };
   const payloadKey = JSON.stringify(payload);
-  const requestId =
-    pendingVaCreationRequests.get(payloadKey) ?? crypto.randomUUID();
+  const requestId = pendingVaCreationRequests.get(payloadKey) ?? crypto.randomUUID();
   pendingVaCreationRequests.set(payloadKey, requestId);
 
   void (async () => {
     try {
-      const { data } = await useMetadataCreation().createVoiceActor(
-        payload,
-        requestId,
-      );
+      const { data } = await useMetadataCreation().createVoiceActor(payload, requestId);
       pendingVaCreationRequests.delete(payloadKey);
       const item = { id: data.id, name: `${data.firstname} ${data.lastname}` };
       voiceActorOptions.value.push(item);
@@ -591,6 +624,25 @@ function getDisplayLanguage(langCode?: string): string {
 onMounted(async () => {
   try {
     if (parsedToyId.value) {
+      try {
+        const response = await $fetch<{ toy: Toy | null }>(
+          `/api/toy-metadata/${parsedToyId.value}`,
+        );
+        if (response.toy) {
+          mediaTitle.value = response.toy.name;
+          manufacturer.value = response.toy.manufacturer || "";
+          productLine.value = response.toy.product_line || "";
+          releaseYear.value = response.toy.release_year ?? null;
+          coverUrl.value = response.toy.cover_url || "";
+          description.value = response.toy.description || "";
+          toyMetadataUpdatedAt.value = response.toy.updated_at || null;
+          loadedToyMetadata.value = readToyMetadataForm();
+        }
+      } catch (err) {
+        toyMetadataLoadFailed.value = true;
+        console.error("Error loading toy metadata:", err);
+      }
+
       const { data: projects } = await supabase
         .from("dubbing_projects")
         .select("*, studios(id, name)")
@@ -633,8 +685,7 @@ onMounted(async () => {
                 name: `${va.firstname} ${va.lastname}`,
               });
             }
-            if (member.job_id === 1)
-              artisticDirectorId.value = member.person_id;
+            if (member.job_id === 1) artisticDirectorId.value = member.person_id;
             if (member.job_id === 3) recordingId.value = member.person_id;
             if (member.job_id === 5) mixingId.value = member.person_id;
           }
@@ -678,20 +729,90 @@ onMounted(async () => {
 });
 
 async function saveToyProject() {
-  if (!contentId.value) return;
+  if (parsedToyId.value !== null && (contentId.value === null || contentId.value === 0)) return;
   isSaving.value = true;
 
   try {
-    const currentProjectId = isEditMode.value
-      ? Number(projectIdParam.value)
-      : null;
+    let savedContentId = contentId.value;
+    let currentProjectId = isEditMode.value ? Number(projectIdParam.value) : null;
+    let expectedProjectUpdatedAt = projectUpdatedAt.value;
+    const metadata = readToyMetadataForm();
+
+    if (parsedToyId.value === null) {
+      if (!createdToy.value) {
+        internalMediaRequestId.value ||= crypto.randomUUID();
+        const response = await $fetch<{
+          media: { id: number };
+          project: { id: number; updated_at: string; metadata_updated_at: string | null };
+        }>("/api/internal-media-create", {
+          method: "POST",
+          body: {
+            request_id: internalMediaRequestId.value,
+            media_type: "toy",
+            name: metadata.name,
+            brand: metadata.manufacturer,
+            manufacturer: metadata.manufacturer,
+            product_line: metadata.product_line,
+            release_year: metadata.release_year,
+            cover_url: metadata.cover_url,
+            description: metadata.description,
+            dubbing_language: validateDubbingLanguage(dubbingLanguage.value),
+          },
+        });
+        if (!response.project.metadata_updated_at) {
+          throw new Error("Toy metadata was not returned after creation.");
+        }
+        createdToy.value = {
+          contentId: response.media.id,
+          projectId: response.project.id,
+          projectUpdatedAt: response.project.updated_at,
+          metadataUpdatedAt: response.project.metadata_updated_at,
+          metadata,
+        };
+      } else if (JSON.stringify(metadata) !== JSON.stringify(createdToy.value.metadata)) {
+        const savedMetadata = await saveToyMetadata({
+          request_id: crypto.randomUUID(),
+          content_id: createdToy.value.contentId,
+          expected_updated_at: createdToy.value.metadataUpdatedAt,
+          metadata,
+        });
+        createdToy.value.metadataUpdatedAt =
+          savedMetadata.toy.updated_at || createdToy.value.metadataUpdatedAt;
+        createdToy.value.metadata = metadata;
+      }
+
+      savedContentId = createdToy.value.contentId;
+      contentId.value = savedContentId;
+      currentProjectId = createdToy.value.projectId;
+      expectedProjectUpdatedAt = createdToy.value.projectUpdatedAt;
+      toyMetadataUpdatedAt.value = createdToy.value.metadataUpdatedAt;
+      loadedToyMetadata.value = createdToy.value.metadata;
+    } else {
+      if (toyMetadataLoadFailed.value) {
+        throw new Error("Reload this toy metadata before saving.");
+      }
+      if (JSON.stringify(metadata) !== JSON.stringify(loadedToyMetadata.value)) {
+        const savedMetadata = await saveToyMetadata({
+          request_id: crypto.randomUUID(),
+          content_id: parsedToyId.value,
+          expected_updated_at: toyMetadataUpdatedAt.value,
+          metadata,
+        });
+        toyMetadataUpdatedAt.value = savedMetadata.toy.updated_at || null;
+        loadedToyMetadata.value = metadata;
+      }
+      savedContentId = parsedToyId.value;
+    }
+
+    if (savedContentId === null || savedContentId === 0) {
+      throw new Error("A toy content id is required.");
+    }
+
     const crew: Array<{ job_id: number; person_id: number }> = [];
     if (artisticDirectorId.value !== null)
       crew.push({ job_id: 1, person_id: artisticDirectorId.value });
-    if (recordingId.value !== null)
-      crew.push({ job_id: 3, person_id: recordingId.value });
-    if (mixingId.value !== null)
-      crew.push({ job_id: 5, person_id: mixingId.value });
+    if (recordingId.value !== null) crew.push({ job_id: 3, person_id: recordingId.value });
+    if (mixingId.value !== null) crew.push({ job_id: 5, person_id: mixingId.value });
 
     const cast: DubbingProjectCastSaveRow[] = castList.value.flatMap((row) => {
       if (!row.voice_actor_id) return [];
@@ -720,10 +841,9 @@ async function saveToyProject() {
 
     const result = await saveDubbingProject({
       project_id: currentProjectId,
-      expected_updated_at:
-        currentProjectId === null ? null : projectUpdatedAt.value,
+      expected_updated_at: currentProjectId === null ? null : expectedProjectUpdatedAt,
       project: {
-        content_id: contentId.value,
+        content_id: savedContentId,
         content_type: "toy",
         language: validateDubbingLanguage(dubbingLanguage.value),
         status: status.value,
@@ -734,12 +854,35 @@ async function saveToyProject() {
     });
     projectUpdatedAt.value = result.updatedAt;
 
-    router.push(localePath(`/toy/${contentId.value}`));
+    router.push(localePath(`/toy/${savedContentId}`));
   } catch (err) {
     console.error("Failed to save toy project:", err);
     alert(getDubbingProjectSaveErrorMessage(err));
   } finally {
     isSaving.value = false;
   }
+}
+
+function readToyMetadataForm(): ToyMetadataInput {
+  const rawReleaseYear = releaseYear.value;
+  const parsedReleaseYear =
+    rawReleaseYear === null || rawReleaseYear === "" ? null : Number(rawReleaseYear);
+  if (
+    parsedReleaseYear !== null &&
+    (!Number.isSafeInteger(parsedReleaseYear) ||
+      parsedReleaseYear < 1800 ||
+      parsedReleaseYear > 2200)
+  ) {
+    throw new Error("Release year must be between 1800 and 2200.");
+  }
+
+  return {
+    name: mediaTitle.value.trim(),
+    manufacturer: manufacturer.value.trim() || null,
+    product_line: productLine.value.trim() || null,
+    release_year: parsedReleaseYear,
+    cover_url: coverUrl.value.trim() || null,
+    description: description.value.trim() || null,
+  };
 }
 </script>
