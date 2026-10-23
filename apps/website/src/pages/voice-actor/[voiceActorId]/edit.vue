@@ -955,10 +955,12 @@ import {
 } from "~/composables/useMetadataCreation";
 import { ref, onMounted, computed, watch } from "vue";
 import { getMediaEditorRoute } from "~/lib/media-editor-routes";
+import { createStableRequestIdFactory } from "~/utils/dubbing-project-save";
 
 const route = useRoute();
 const router = useRouter();
 const localePath = useLocalePath();
+const internalMediaRequestIds = createStableRequestIdFactory();
 const voiceActorId = route.params.voiceActorId as string | undefined;
 const id = voiceActorId;
 const isEditMode = computed(() => !!id && id !== "new");
@@ -1444,27 +1446,44 @@ async function createAndLink() {
   linkWorkCastLoading.value = false;
   isCreatingMedia.value = true;
   try {
-    const result = await $fetch<any>("/api/internal-media-create", {
+    const mediaRequest = {
+      media_type: selectedMediaType.value,
+      name: createMediaName.value,
+      brand: createMediaBrand.value || undefined,
+      manufacturer: createMediaBrand.value || undefined,
+      dubbing_language: dubbingLanguage.value,
+    };
+    const result = await $fetch<{
+      media: {
+        id: number;
+        content_id: number;
+        project_id: number;
+        title: string;
+        name: string;
+        media_type: "advertisement" | "toy";
+        brand: string | null;
+        manufacturer: string | null;
+        description: string | null;
+      };
+      auditLogId: string;
+      replayed: boolean;
+    }>("/api/internal-media-create", {
       method: "POST",
       body: {
-        media_type: selectedMediaType.value,
-        name: createMediaName.value,
-        brand: createMediaBrand.value || undefined,
-        manufacturer: createMediaBrand.value || undefined,
-        dubbing_language: dubbingLanguage.value,
+        ...mediaRequest,
+        request_id: internalMediaRequestIds.forPayload(mediaRequest),
       },
     });
-    if (result?.media) {
-      selectedMedia.value = {
-        ...result.media,
-        media_type: selectedMediaType.value,
-      };
-      showCreateMedia.value = false;
-      createMediaName.value = "";
-      createMediaBrand.value = "";
-      linkWorkStep.value = 3;
-      linkWorkCast.value = [];
-    }
+    internalMediaRequestIds.clear();
+    selectedMedia.value = {
+      ...result.media,
+      media_type: selectedMediaType.value,
+    };
+    showCreateMedia.value = false;
+    createMediaName.value = "";
+    createMediaBrand.value = "";
+    linkWorkStep.value = 3;
+    linkWorkCast.value = [];
   } catch (err: any) {
     showToast(
       err?.data?.message || err?.message || "Failed to create media",

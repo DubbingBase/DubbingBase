@@ -2,74 +2,118 @@ import { requireAdmin } from "../utils/auth";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { requireDubbingLanguage } from "../utils/dubbing-language";
 
+function internalMediaError(statusCode: number, message: string) {
+  return createError({ statusCode, statusMessage: message, message });
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function optionalText(value: unknown): value is string | undefined {
+  return value === undefined || typeof value === "string";
+}
+
+function hasOnlyKeys(
+  value: Record<string, unknown>,
+  allowed: readonly string[],
+) {
+  return Object.keys(value).every((key) => allowed.includes(key));
+}
+
 export default defineEventHandler(async (event) => {
-  requireAdmin(event);
-
-  const body = await readBody(event);
-  const {
-    media_type,
-    name,
-    brand,
-    manufacturer,
-    description,
-    dubbing_language,
-  } = body;
-  const dubbingLanguage = requireDubbingLanguage(dubbing_language);
-
-  if (!media_type || !name) {
-    throw createError({
-      statusCode: 400,
-      message: "media_type and name are required",
-    });
+  const user = requireAdmin(event);
+  const body: unknown = await readBody(event);
+  if (
+    !isRecord(body) ||
+    !hasOnlyKeys(body, [
+      "request_id",
+      "media_type",
+      "name",
+      "brand",
+      "manufacturer",
+      "description",
+      "dubbing_language",
+    ])
+  ) {
+    throw internalMediaError(400, "Invalid internal media request");
   }
 
-  const validInternalTypes = ["advertisement", "toy"];
-  if (!validInternalTypes.includes(media_type)) {
-    throw createError({
-      statusCode: 400,
-      message: `Can only create internal records for: ${validInternalTypes.join(", ")}. For other types, search for existing entries instead.`,
-    });
+  const mediaType = body.media_type;
+  const name = body.name;
+  const requestId = body.request_id;
+  if (
+    (mediaType !== "advertisement" && mediaType !== "toy") ||
+    typeof name !== "string" ||
+    name.trim().length === 0 ||
+    name.length > 300 ||
+    typeof requestId !== "string" ||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      requestId,
+    ) ||
+    !optionalText(body.brand) ||
+    !optionalText(body.manufacturer) ||
+    !optionalText(body.description)
+  ) {
+    throw internalMediaError(400, "Internal media fields are invalid");
   }
 
-  const supabase = useSupabaseAdmin();
+  const language = requireDubbingLanguage(body.dubbing_language);
+  const supabase = event.context.supabaseAdmin || useSupabaseAdmin(event);
+  const { data, error } = await supabase.rpc(
+    "create_internal_dubbing_project",
+    {
+      p_actor_id: user.id,
+      p_request_id: requestId,
+      p_media_type: mediaType,
+      p_language: language,
+      p_name: name,
+      p_brand: body.brand ?? null,
+      p_manufacturer: body.manufacturer ?? null,
+      p_description: body.description ?? null,
+    },
+  );
 
-  // Generate content_id for internal types (ad/toy).
-  // Use negative IDs — external APIs (TMDB, IGDB, OpenLibrary) are always positive,
-  // so there's zero collision risk without any magic numbers or sequences.
-  const { data: minRow } = await supabase
-    .from("dubbing_projects")
-    .select("content_id")
-    .eq("content_type", media_type)
-    .order("content_id", { ascending: true })
-    .limit(1)
-    .maybeSingle();
+  if (error) {
+    if (error.code === "42501") {
+      throw internalMediaError(
+        403,
+        "Internal media creation is not authorized",
+      );
+    }
+    if (["55000", "23505", "40001"].includes(error.code)) {
+      throw internalMediaError(
+        409,
+        "This internal media request is stale or was reused",
+      );
+    }
+    if (["22023", "23503", "22P02", "22003"].includes(error.code)) {
+      throw internalMediaError(422, "Internal media fields are invalid");
+    }
+    console.error("Controlled internal media creation failed", {
+      code: error.code,
+    });
+    throw internalMediaError(500, "Internal media creation failed");
+  }
 
-  const newContentId = minRow ? Number(minRow.content_id) - 1 : -1;
-
-  const { data: newProject, error } = await supabase
-    .from("dubbing_projects")
-    .insert({
-      content_id: newContentId,
-      content_type: media_type,
-      language: dubbingLanguage,
-      status: "validated",
-    })
-    .select()
-    .single();
-
-  if (error) throw error;
+  const project = data?.[0];
+  if (!project) {
+    throw internalMediaError(500, "Internal media creation failed");
+  }
 
   return {
     media: {
-      id: newProject.content_id,
-      content_id: newProject.content_id,
-      project_id: newProject.id,
+      id: project.content_id,
+      content_id: project.content_id,
+      project_id: project.project_id,
       title: name,
       name,
-      media_type,
-      brand: brand || null,
-      manufacturer: manufacturer || null,
-      description: description || null,
+      media_type: mediaType,
+      brand: body.brand ?? null,
+      manufacturer: body.manufacturer ?? null,
+      description: body.description ?? null,
     },
+    auditLogId: project.audit_log_id,
+    replayed: project.replayed,
   };
 });

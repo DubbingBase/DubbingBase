@@ -1,5 +1,9 @@
 <template>
-  <div class="admin-project-editor max-w-6xl mx-auto space-y-6">
+  <div
+    class="admin-project-editor max-w-6xl mx-auto space-y-6"
+    :inert="isSaving"
+    :aria-busy="isSaving"
+  >
     <!-- Header -->
     <div
       class="theme-surface-overlay p-6 rounded-2xl border theme-border flex justify-between items-center shadow-xl"
@@ -676,8 +680,22 @@ import {
   VisuallyHidden,
 } from "reka-ui";
 import { FilmIcon, Loader2Icon, ImageIcon, XIcon } from "lucide-vue-next";
+import {
+  createDubbingProjectSaveClient,
+  getDubbingProjectSaveErrorMessage,
+  getEditableDubbingProjectStatus,
+  type DubbingProjectCastSaveRow,
+  type DubbingProjectSaveResponse,
+  type WorkExpectedValues,
+} from "~/utils/dubbing-project-save";
 
 const supabase = useSupabaseClient();
+const saveDubbingProject = createDubbingProjectSaveClient((body) =>
+  $fetch<DubbingProjectSaveResponse>("/api/save-dubbing-project", {
+    method: "POST",
+    body,
+  }),
+);
 const route = useRoute();
 const router = useRouter();
 const localePath = useLocalePath();
@@ -699,8 +717,9 @@ const mediaTitle = ref("");
 const contentType = ref("movie");
 const dubbingLanguage = ref("");
 const posterUrl = ref("");
-const status = ref("validated");
+const status = ref<"validated" | "pending" | "draft">("validated");
 const selectedStudioId = ref<number | null>(null);
+const projectUpdatedAt = ref<string | null>(null);
 
 // Crew state
 const artisticDirectorId = ref<number | null>(null);
@@ -737,6 +756,8 @@ interface CastRow {
   performance: string;
   note: string;
   highlight: boolean;
+  expectedUpdatedAt?: string | null;
+  expected?: WorkExpectedValues;
 }
 const castRows = ref<CastRow[]>([]);
 
@@ -971,95 +992,87 @@ const saveMovieProject = async () => {
   if (!dubbingLanguage.value) return showToast("Language required", "error");
   isSaving.value = true;
   try {
-    const projectPayload = {
-      content_id: contentId.value,
-      content_type: contentType.value,
-      language: validateDubbingLanguage(dubbingLanguage.value),
-      studio_id: selectedStudioId.value || null,
-      status: status.value || "validated",
-    };
-
     let projectId = isEditMode.value ? Number(projectIdParam) : null;
+    const crew: Array<{ job_id: number; person_id: number }> = [];
+    if (artisticDirectorId.value !== null)
+      crew.push({ job_id: 1, person_id: artisticDirectorId.value });
+    if (adaptationId.value !== null)
+      crew.push({ job_id: 2, person_id: adaptationId.value });
+    if (recordingId.value !== null)
+      crew.push({ job_id: 3, person_id: recordingId.value });
+    if (editingId.value !== null)
+      crew.push({ job_id: 4, person_id: editingId.value });
+    if (mixingId.value !== null)
+      crew.push({ job_id: 5, person_id: mixingId.value });
+    if (projectManagerId.value !== null)
+      crew.push({ job_id: 6, person_id: projectManagerId.value });
+    if (creativeSupervisionId.value !== null)
+      crew.push({ job_id: 7, person_id: creativeSupervisionId.value });
 
-    if (isEditMode.value && projectId) {
-      await supabase
-        .from("dubbing_projects")
-        .update(projectPayload)
-        .eq("id", projectId);
-    } else {
-      const { data } = await supabase
-        .from("dubbing_projects")
-        .insert([projectPayload])
-        .select()
-        .single();
-      projectId = data?.id ?? null;
-
-      if (projectId && contentId.value) {
-        showToast("Project created!", "success");
+    const cast: DubbingProjectCastSaveRow[] = castRows.value.flatMap((row) => {
+      if (!row.voice_actor_id && !row.character_name) return [];
+      if (
+        row.id !== undefined &&
+        (row.expected === undefined || row.expectedUpdatedAt === undefined)
+      ) {
+        throw new Error("Reload this project before saving its cast.");
       }
-    }
-
-    if (!projectId) throw new Error("No project ID returned");
-
-    // Save Crew
-    const crewJobs = [
-      { job_id: 1, person_id: artisticDirectorId.value },
-      { job_id: 2, person_id: adaptationId.value },
-      { job_id: 3, person_id: recordingId.value },
-      { job_id: 4, person_id: editingId.value },
-      { job_id: 5, person_id: mixingId.value },
-      { job_id: 6, person_id: projectManagerId.value },
-      { job_id: 7, person_id: creativeSupervisionId.value },
-    ].filter((j) => j.person_id !== null);
-
-    // Delete old crew & insert new
-    await supabase
-      .from("dubbing_project_crew")
-      .delete()
-      .eq("dubbing_project_id", projectId);
-    if (crewJobs.length > 0) {
-      const crewPayload = crewJobs.map((j) => ({
-        dubbing_project_id: projectId!,
-        job_id: j.job_id,
-        person_id: Number(j.person_id),
-      }));
-      await supabase.from("dubbing_project_crew").insert(crewPayload as any);
-    }
-
-    // Save Works (Cast)
-    for (const row of castRows.value) {
-      if (!row.voice_actor_id && !row.character_name) continue;
       const isCustom =
         typeof row.actor_id === "string" && row.actor_id.startsWith("custom_");
-      const actorId = isCustom || !row.actor_id ? null : row.actor_id;
-      const workPayload: any = {
-        dubbing_project_id: projectId,
-        actor_id: actorId,
-        character_id: null,
+      const savedRow: DubbingProjectCastSaveRow = {
+        ...(row.id === undefined
+          ? {}
+          : {
+              id: row.id,
+              expected_updated_at: row.expectedUpdatedAt,
+              expected: row.expected,
+            }),
+        actor_id: isCustom || !row.actor_id ? null : Number(row.actor_id),
         character_name: row.character_name || null,
         voice_actor_id: row.voice_actor_id || null,
         performance: row.performance || "dialogues",
         note: row.note || null,
         highlight: row.highlight ? true : false,
       };
-      if (row.id) workPayload.id = row.id;
-      await supabase.from("work").upsert([workPayload]);
-    }
+      return [savedRow];
+    });
+
+    const result = await saveDubbingProject({
+      project_id: projectId,
+      expected_updated_at: projectId === null ? null : projectUpdatedAt.value,
+      project: {
+        content_id: contentId.value,
+        content_type: "movie",
+        language: validateDubbingLanguage(dubbingLanguage.value),
+        studio_id: selectedStudioId.value,
+        status: status.value,
+      },
+      crew,
+      cast,
+    });
+    projectId = result.projectId;
+    projectUpdatedAt.value = result.updatedAt;
 
     showToast("Project saved successfully!", "success");
-    if (!isEditMode.value && projectId && contentId.value) {
+    if (isEditMode.value) {
+      await refreshProject();
+    } else if (projectId && contentId.value) {
       await router.push(
         localePath(`/movie/${contentId.value}/projects/${projectId}/edit`),
       );
     }
   } catch (err: any) {
-    showToast(err.message, "error");
+    showToast(getDubbingProjectSaveErrorMessage(err), "error");
   } finally {
     isSaving.value = false;
   }
 };
 
-const { data: initialData, error: initialDataError } = await useAsyncData(
+const {
+  data: initialData,
+  error: initialDataError,
+  refresh: refreshProject,
+} = await useAsyncData(
   `movie-edit-${tmdbMovieId.value}-${projectIdParam}`,
   async () => {
     let tmdbData: any = null;
@@ -1170,13 +1183,21 @@ watch(
         contentId.value = data.project.content_id;
         contentType.value = data.project.content_type;
         dubbingLanguage.value = data.project.language;
-        status.value = data.project.status;
+        status.value = getEditableDubbingProjectStatus(data.project.status);
         selectedStudioId.value = data.project.studio_id;
+        projectUpdatedAt.value = data.project.updated_at;
         if (data.studioName) {
           optionsCache.value.set(data.project.studio_id, data.studioName);
         }
       }
 
+      artisticDirectorId.value = null;
+      adaptationId.value = null;
+      recordingId.value = null;
+      editingId.value = null;
+      mixingId.value = null;
+      projectManagerId.value = null;
+      creativeSupervisionId.value = null;
       if (data.crew) {
         data.crew.forEach((c: any) => {
           const name =
@@ -1207,6 +1228,17 @@ watch(
             performance: w.performance,
             note: w.note || "",
             highlight: w.highlight,
+            expectedUpdatedAt: w.updated_at,
+            expected: {
+              actor_id: w.actor_id,
+              character_id: w.character_id,
+              character_name: w.character_name,
+              voice_actor_id: w.voice_actor_id,
+              performance: w.performance,
+              note: w.note,
+              highlight: w.highlight,
+              status: w.status,
+            },
           };
         });
       }

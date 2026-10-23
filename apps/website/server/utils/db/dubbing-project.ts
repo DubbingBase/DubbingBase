@@ -5,45 +5,23 @@ export async function findOrCreateDubbingProject(
   contentId: number,
   contentType: string,
   dubbingLanguage: string,
+  actorId: string,
+  voiceActorId: number | null,
+  requestId: string,
 ): Promise<number> {
-  requireDubbingLanguage(dubbingLanguage);
+  const language = requireDubbingLanguage(dubbingLanguage);
   const supabase = useSupabaseAdmin();
+  const { data, error } = await supabase.rpc("find_or_create_dubbing_project", {
+    p_actor_id: actorId,
+    p_voice_actor_id: voiceActorId,
+    p_request_id: requestId,
+    p_content_id: contentId,
+    p_content_type: contentType,
+    p_language: language,
+  });
 
-  const { data: existing, error: lookupError } = await supabase
-    .from("dubbing_projects")
-    .select("id")
-    .eq("content_id", contentId)
-    .eq("content_type", contentType)
-    .eq("language", dubbingLanguage)
-    .maybeSingle();
-
-  if (lookupError) throw lookupError;
-
-  if (existing) {
-    return existing.id;
-  }
-
-  const { data: newProject, error } = await supabase
-    .from("dubbing_projects")
-    .insert({
-      content_id: contentId,
-      content_type: contentType,
-      language: dubbingLanguage,
-    })
-    .select("id")
-    .single();
-
-  if (error?.code === "23505") {
-    const { data: concurrent, error: concurrentError } = await supabase
-      .from("dubbing_projects")
-      .select("id")
-      .eq("content_id", contentId)
-      .eq("content_type", contentType)
-      .eq("language", dubbingLanguage)
-      .single();
-    if (concurrentError) throw concurrentError;
-    return concurrent.id;
-  }
   if (error) throw error;
-  return newProject.id;
+  const project = data?.[0];
+  if (!project) throw new Error("Unable to resolve dubbing project");
+  return project.project_id;
 }

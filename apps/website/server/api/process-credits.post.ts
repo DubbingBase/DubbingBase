@@ -120,6 +120,9 @@ export default defineEventHandler(async (event) => {
         Number(mediaId),
         mediaType,
         requireDubbingLanguage(dubbing_language),
+        user.id,
+        null,
+        randomUUID(),
       );
 
       let successCount = 0;

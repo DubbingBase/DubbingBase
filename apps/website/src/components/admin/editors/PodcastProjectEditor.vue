@@ -452,11 +452,25 @@ import {
   Loader2 as Loader2Icon,
   Trash2 as Trash2Icon,
 } from "lucide-vue-next";
+import {
+  createDubbingProjectSaveClient,
+  getEditableDubbingProjectStatus,
+  getDubbingProjectSaveErrorMessage,
+  type DubbingProjectCastSaveRow,
+  type DubbingProjectSaveResponse,
+  type WorkExpectedValues,
+} from "~/utils/dubbing-project-save";
 
 const route = useRoute();
 const router = useRouter();
 const localePath = useLocalePath();
 const supabase = useSupabaseClient();
+const saveDubbingProject = createDubbingProjectSaveClient((body) =>
+  $fetch<DubbingProjectSaveResponse>("/api/save-dubbing-project", {
+    method: "POST",
+    body,
+  }),
+);
 
 const podcastIdParam = computed(() => route.params.podcastId as string);
 const projectIdParam = computed(() => route.params.projectId as string);
@@ -474,8 +488,9 @@ const contentId = ref<number | null>(parsedPodcastId.value);
 const mediaTitle = ref("");
 const posterUrl = ref<string | null>(null);
 const dubbingLanguage = ref("");
-const status = ref("validated");
+const status = ref<"validated" | "pending" | "draft">("validated");
 const selectedStudioId = ref<number | null>(null);
+const projectUpdatedAt = ref<string | null>(null);
 const artisticDirectorId = ref<number | null>(null);
 const recordingId = ref<number | null>(null);
 const mixingId = ref<number | null>(null);
@@ -486,6 +501,8 @@ interface CastRow {
   character_name: string;
   performance: string;
   note: string;
+  expectedUpdatedAt?: string | null;
+  expected?: WorkExpectedValues;
 }
 
 const castList = ref<CastRow[]>([]);
@@ -655,8 +672,9 @@ onMounted(async () => {
 
       if (project) {
         dubbingLanguage.value = project.language || "";
-        status.value = project.status || "validated";
+        status.value = getEditableDubbingProjectStatus(project.status);
         selectedStudioId.value = project.studio_id;
+        projectUpdatedAt.value = project.updated_at;
         if (project.studios) {
           studioOptions.value = [project.studios];
         }
@@ -696,6 +714,17 @@ onMounted(async () => {
               character_name: w.character_name || "Voix",
               performance: w.performance || "",
               note: w.note || "",
+              expectedUpdatedAt: w.updated_at,
+              expected: {
+                actor_id: w.actor_id,
+                character_id: w.character_id,
+                character_name: w.character_name,
+                voice_actor_id: w.voice_actor_id,
+                performance: w.performance,
+                note: w.note,
+                highlight: w.highlight,
+                status: w.status,
+              },
             };
           });
         }
@@ -713,101 +742,62 @@ async function savePodcastProject() {
   isSaving.value = true;
 
   try {
-    let currentProjectId: number;
+    const currentProjectId = isEditMode.value
+      ? Number(projectIdParam.value)
+      : null;
+    const crew: Array<{ job_id: number; person_id: number }> = [];
+    if (artisticDirectorId.value !== null)
+      crew.push({ job_id: 1, person_id: artisticDirectorId.value });
+    if (recordingId.value !== null)
+      crew.push({ job_id: 3, person_id: recordingId.value });
+    if (mixingId.value !== null)
+      crew.push({ job_id: 5, person_id: mixingId.value });
 
-    if (isEditMode.value) {
-      currentProjectId = Number(projectIdParam.value);
-      const { error: projectError } = await supabase
-        .from("dubbing_projects")
-        .update({
-          language: validateDubbingLanguage(dubbingLanguage.value),
-          status: status.value,
-          studio_id: selectedStudioId.value,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", currentProjectId);
-      if (projectError) throw projectError;
-    } else {
-      const { data: newProject, error } = await supabase
-        .from("dubbing_projects")
-        .insert({
-          content_id: contentId.value,
-          content_type: "podcast",
-          language: validateDubbingLanguage(dubbingLanguage.value),
-          status: status.value,
-          studio_id: selectedStudioId.value,
-        })
-        .select("id")
-        .single();
-
-      if (error || !newProject)
-        throw error || new Error("Failed to create project");
-      currentProjectId = newProject.id;
-    }
-
-    // Save technical crew
-    await supabase
-      .from("dubbing_project_crew")
-      .delete()
-      .eq("dubbing_project_id", currentProjectId);
-
-    const crewInserts: any[] = [];
-    if (artisticDirectorId.value) {
-      crewInserts.push({
-        dubbing_project_id: currentProjectId,
-        person_id: artisticDirectorId.value,
-        job_id: 1, // D.A.
-      });
-    }
-    if (recordingId.value) {
-      crewInserts.push({
-        dubbing_project_id: currentProjectId,
-        person_id: recordingId.value,
-        job_id: 3, // Enregistrement
-      });
-    }
-    if (mixingId.value) {
-      crewInserts.push({
-        dubbing_project_id: currentProjectId,
-        person_id: mixingId.value,
-        job_id: 5, // Mixage
-      });
-    }
-    if (crewInserts.length > 0) {
-      await supabase.from("dubbing_project_crew").insert(crewInserts);
-    }
-
-    // Save works / cast
-    for (const cast of castList.value) {
-      if (!cast.voice_actor_id) continue;
-      if (cast.id) {
-        await supabase
-          .from("work")
-          .update({
-            voice_actor_id: cast.voice_actor_id,
-            character_name: cast.character_name,
-            performance: cast.performance,
-            note: cast.note || null,
-            status: "validated",
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", cast.id);
-      } else {
-        await supabase.from("work").insert({
-          dubbing_project_id: currentProjectId,
-          voice_actor_id: cast.voice_actor_id,
-          character_name: cast.character_name,
-          performance: cast.performance,
-          note: cast.note || null,
-          status: "validated",
-        });
+    const cast: DubbingProjectCastSaveRow[] = castList.value.flatMap((row) => {
+      if (!row.voice_actor_id) return [];
+      if (
+        row.id !== undefined &&
+        (row.expected === undefined || row.expectedUpdatedAt === undefined)
+      ) {
+        throw new Error("Reload this project before saving its cast.");
       }
-    }
+      return [
+        {
+          ...(row.id === undefined
+            ? {}
+            : {
+                id: row.id,
+                expected_updated_at: row.expectedUpdatedAt,
+                expected: row.expected,
+              }),
+          voice_actor_id: row.voice_actor_id,
+          character_name: row.character_name,
+          performance: row.performance,
+          note: row.note || null,
+        },
+      ];
+    });
+
+    const result = await saveDubbingProject({
+      project_id: currentProjectId,
+      expected_updated_at:
+        currentProjectId === null ? null : projectUpdatedAt.value,
+      project: {
+        content_id: contentId.value,
+        content_type: "podcast",
+        language: validateDubbingLanguage(dubbingLanguage.value),
+        status: status.value,
+        studio_id: selectedStudioId.value,
+      },
+      crew,
+      cast,
+    });
+    projectUpdatedAt.value = result.updatedAt;
 
     router.push(localePath(`/podcast/${contentId.value}`));
   } catch (err) {
     console.error("Failed to save podcast project:", err);
-    alert("Erreur lors de l'enregistrement.");
+    alert(getDubbingProjectSaveErrorMessage(err));
   } finally {
     isSaving.value = false;
   }

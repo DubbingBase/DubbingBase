@@ -46,8 +46,9 @@ export default defineEventHandler(async (event) => {
 
     if (auditLog.entity_type !== "voice_actor") {
       throw createError({
-        statusCode: 400,
-        message: "This audit log type cannot be reverted",
+        statusCode: 422,
+        message:
+          "This audit event does not have a supported rollback operation",
       });
     }
 
