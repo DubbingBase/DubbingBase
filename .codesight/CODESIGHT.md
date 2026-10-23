@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 84 routes | 24 models | 199 components | 108 lib files | 63 env vars | 16 middleware | 36% test coverage
-> **Token savings:** this file is ~18,000 tokens. Without it, AI exploration would cost ~167,200 tokens. **Saves ~149,200 tokens per conversation.**
-> **Last scanned:** 2026-10-23 20:41 — re-run after significant changes
+> 84 routes | 24 models | 199 components | 109 lib files | 63 env vars | 16 middleware | 36% test coverage
+> **Token savings:** this file is ~18,100 tokens. Without it, AI exploration would cost ~167,500 tokens. **Saves ~149,400 tokens per conversation.**
+> **Last scanned:** 2026-10-23 20:47 — re-run after significant changes
 
 ---
 
@@ -720,6 +720,7 @@
   - interface CastWorkReference
   - interface DisplayCastActor
   - _...1 more_
+- `apps/website/src/utils/posthog-prefetch-manifest.ts` — function deferPosthogPrefetch: (manifest, ClientManifestEntry>) => void, interface ClientManifestEntry
 - `apps/website/src/utils/search-routes.ts` — function getSearchResultRoute: (result, "id" | "media_type">) => string, type SearchFilter
 - `apps/website/src/utils/season-data.ts` — function fetchSeasonPageData: (showId, seasonNumber, locale?) => Promise<SeasonDataResponse>, function fetchEpisodePageData: (showId, seasonNumber, episodeNumber, locale?) => Promise<EpisodeDataResponse>
 - `apps/website/src/utils/voice-actor-og-image.ts`
@@ -944,7 +945,7 @@
 # Test Coverage
 
 > **36%** of routes and models are covered by tests
-> 110 test files found
+> 111 test files found
 
 ## Covered Routes
 
