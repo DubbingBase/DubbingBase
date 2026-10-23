@@ -8,7 +8,7 @@
 
 ## Scale
 
-82 API routes · 23 database models · 199 UI components · 107 library files · 16 middleware layers · 63 environment variables
+82 API routes · 23 database models · 199 UI components · 108 library files · 16 middleware layers · 63 environment variables
 
 ## Subsystems
 
@@ -40,7 +40,7 @@
 - **[Get-work-votes.get](./get-work-votes.get.md)** — 1 routes
 - **[Home-stats.get](./home-stats.get.md)** — 1 routes
 - **[Index.get](./index.get.md)** — 4 routes — touches: cache, db
-- **[Internal-media-create.post](./internal-media-create.post.md)** — 1 routes — touches: auth, db
+- **[Internal-media-create.post](./internal-media-create.post.md)** — 1 routes — touches: auth
 - **[Internal-media-credits.get](./internal-media-credits.get.md)** — 1 routes
 - **[Internal-media-metadata.get](./internal-media-metadata.get.md)** — 1 routes
 - **[Link-user-voice-actor.post](./link-user-voice-actor.post.md)** — 1 routes — touches: db
@@ -60,7 +60,7 @@
 - **[Recent-voice-actors.get](./recent-voice-actors.get.md)** — 1 routes
 - **[Request-voice-actor-page.post](./request-voice-actor-page.post.md)** — 1 routes — touches: auth, email
 - **[Revert-task.post](./revert-task.post.md)** — 1 routes — touches: db
-- **[Save-dubbing-project.post](./save-dubbing-project.post.md)** — 1 routes — touches: auth, db
+- **[Save-dubbing-project.post](./save-dubbing-project.post.md)** — 1 routes — touches: auth
 - **[Save-metadata.post](./save-metadata.post.md)** — 1 routes — touches: auth
 - **[Save-studio.post](./save-studio.post.md)** — 1 routes — touches: auth
 - **[Search-voice-actors.get](./search-voice-actors.get.md)** — 1 routes
@@ -81,7 +81,7 @@
 
 **UI:** 199 components (vue) — see [ui.md](./ui.md)
 
-**Libraries:** 107 files — see [libraries.md](./libraries.md)
+**Libraries:** 108 files — see [libraries.md](./libraries.md)
 
 ## High-Impact Files
 

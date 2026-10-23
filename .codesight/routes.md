@@ -37,7 +37,7 @@
 - `GET` `/api/get-user-voice-actors` [auth]
 - `GET` `/api/get-work-votes`
 - `GET` `/api/home-stats`
-- `POST` `/api/internal-media-create` [auth, db]
+- `POST` `/api/internal-media-create` [auth] ✓
 - `GET` `/api/internal-media-credits`
 - `GET` `/api/internal-media-metadata`
 - `POST` `/api/link-user-voice-actor` [db]
@@ -59,7 +59,7 @@
 - `GET` `/api/recent-voice-actors`
 - `POST` `/api/request-voice-actor-page` [auth, email]
 - `POST` `/api/revert-task` [db]
-- `POST` `/api/save-dubbing-project` [auth, db]
+- `POST` `/api/save-dubbing-project` [auth] ✓
 - `POST` `/api/save-metadata` [auth] ✓
 - `POST` `/api/save-studio` [auth] ✓
 - `GET` `/api/search/index` [db]

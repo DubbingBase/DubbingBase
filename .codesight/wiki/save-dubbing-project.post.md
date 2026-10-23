@@ -2,11 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Save-dubbing-project.post subsystem handles **1 routes** and touches: auth, db.
+The Save-dubbing-project.post subsystem handles **1 routes** and touches: auth.
 
 ## Routes
 
-- `POST` `/api/save-dubbing-project` [auth, db]
+- `POST` `/api/save-dubbing-project` [auth]
   `apps/website/server/api/save-dubbing-project.post.ts`
 
 ## Related Models

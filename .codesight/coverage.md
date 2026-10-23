@@ -1,7 +1,7 @@
 # Test Coverage
 
-> **33%** of routes and models are covered by tests
-> 103 test files found
+> **35%** of routes and models are covered by tests
+> 107 test files found
 
 ## Covered Routes
 
@@ -13,9 +13,11 @@
 - GET:/api/get-random-task
 - POST:/api/get-random-task
 - GET:/api/get-studio-details
+- POST:/api/internal-media-create
 - POST:/api/media-queue
 - POST:/api/prepare_game
 - POST:/api/process-media-queue
+- POST:/api/save-dubbing-project
 - POST:/api/save-metadata
 - POST:/api/save-studio
 - POST:/api/submit-task

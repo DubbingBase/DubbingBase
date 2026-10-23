@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 82 routes | 23 models | 199 components | 107 lib files | 63 env vars | 16 middleware | 33% test coverage
-> **Token savings:** this file is ~17,800 tokens. Without it, AI exploration would cost ~165,600 tokens. **Saves ~147,800 tokens per conversation.**
-> **Last scanned:** 2026-10-23 11:18 — re-run after significant changes
+> 82 routes | 23 models | 199 components | 108 lib files | 63 env vars | 16 middleware | 35% test coverage
+> **Token savings:** this file is ~17,900 tokens. Without it, AI exploration would cost ~165,800 tokens. **Saves ~147,900 tokens per conversation.**
+> **Last scanned:** 2026-10-23 15:06 — re-run after significant changes
 
 ---
 
@@ -48,7 +48,7 @@
 - `GET` `/api/get-user-voice-actors` [auth]
 - `GET` `/api/get-work-votes`
 - `GET` `/api/home-stats`
-- `POST` `/api/internal-media-create` [auth, db]
+- `POST` `/api/internal-media-create` [auth] ✓
 - `GET` `/api/internal-media-credits`
 - `GET` `/api/internal-media-metadata`
 - `POST` `/api/link-user-voice-actor` [db]
@@ -70,7 +70,7 @@
 - `GET` `/api/recent-voice-actors`
 - `POST` `/api/request-voice-actor-page` [auth, email]
 - `POST` `/api/revert-task` [db]
-- `POST` `/api/save-dubbing-project` [auth, db]
+- `POST` `/api/save-dubbing-project` [auth] ✓
 - `POST` `/api/save-metadata` [auth] ✓
 - `POST` `/api/save-studio` [auth] ✓
 - `GET` `/api/search/index` [db]
@@ -544,7 +544,7 @@
   - type TaskContributionInput
   - _...1 more_
 - `apps/website/server/utils/db/client.ts` — function useSupabaseAdmin: (event?) => SupabaseClient<Database>
-- `apps/website/server/utils/db/dubbing-project.ts` — function findOrCreateDubbingProject: (contentId, contentType, dubbingLanguage) => Promise<number>
+- `apps/website/server/utils/db/dubbing-project.ts` — function findOrCreateDubbingProject: (contentId, contentType, dubbingLanguage, actorId, voiceActorId, requestId) => Promise<number>
 - `apps/website/server/utils/db/queries.ts`
   - function getVoiceActorWithWork: (id) => void
   - function getWorkByActor: (actorId) => void
@@ -685,6 +685,14 @@
   - interface ActorFilmographyCopy
   - _...3 more_
 - `apps/website/src/utils/actor-ssr-data.ts` — function prepareActorSsrData: (payload) => void
+- `apps/website/src/utils/dubbing-project-save.ts`
+  - function getEditableDubbingProjectStatus: (value) => DubbingProjectStatus
+  - function serializeGameProjectCastRows: (rows) => DubbingProjectCastSaveRow[]
+  - function createStableRequestIdFactory: (randomUUID) => void
+  - function createDubbingProjectSaveClient: (transport, randomUUID) => void
+  - function isDubbingProjectSaveConflict: (error) => boolean
+  - function getDubbingProjectSaveErrorMessage: (error) => string
+  - _...8 more_
 - `apps/website/src/utils/duplicate-work.ts`
   - function duplicateWorkDraftHasChanges: (initial, current) => boolean
   - function canPrefetchDuplicateWorkPage: (requestSucceeded, currentIndex, groupCount, nextCursor) => boolean
@@ -924,8 +932,8 @@
 
 # Test Coverage
 
-> **33%** of routes and models are covered by tests
-> 103 test files found
+> **35%** of routes and models are covered by tests
+> 107 test files found
 
 ## Covered Routes
 
@@ -937,9 +945,11 @@
 - GET:/api/get-random-task
 - POST:/api/get-random-task
 - GET:/api/get-studio-details
+- POST:/api/internal-media-create
 - POST:/api/media-queue
 - POST:/api/prepare_game
 - POST:/api/process-media-queue
+- POST:/api/save-dubbing-project
 - POST:/api/save-metadata
 - POST:/api/save-studio
 - POST:/api/submit-task

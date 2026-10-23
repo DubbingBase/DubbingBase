@@ -82,7 +82,7 @@
   - type TaskContributionInput
   - _...1 more_
 - `apps/website/server/utils/db/client.ts` — function useSupabaseAdmin: (event?) => SupabaseClient<Database>
-- `apps/website/server/utils/db/dubbing-project.ts` — function findOrCreateDubbingProject: (contentId, contentType, dubbingLanguage) => Promise<number>
+- `apps/website/server/utils/db/dubbing-project.ts` — function findOrCreateDubbingProject: (contentId, contentType, dubbingLanguage, actorId, voiceActorId, requestId) => Promise<number>
 - `apps/website/server/utils/db/queries.ts`
   - function getVoiceActorWithWork: (id) => void
   - function getWorkByActor: (actorId) => void
@@ -223,6 +223,14 @@
   - interface ActorFilmographyCopy
   - _...3 more_
 - `apps/website/src/utils/actor-ssr-data.ts` — function prepareActorSsrData: (payload) => void
+- `apps/website/src/utils/dubbing-project-save.ts`
+  - function getEditableDubbingProjectStatus: (value) => DubbingProjectStatus
+  - function serializeGameProjectCastRows: (rows) => DubbingProjectCastSaveRow[]
+  - function createStableRequestIdFactory: (randomUUID) => void
+  - function createDubbingProjectSaveClient: (transport, randomUUID) => void
+  - function isDubbingProjectSaveConflict: (error) => boolean
+  - function getDubbingProjectSaveErrorMessage: (error) => string
+  - _...8 more_
 - `apps/website/src/utils/duplicate-work.ts`
   - function duplicateWorkDraftHasChanges: (initial, current) => boolean
   - function canPrefetchDuplicateWorkPage: (requestSucceeded, currentIndex, groupCount, nextCursor) => boolean
