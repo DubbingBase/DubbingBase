@@ -498,6 +498,24 @@ interface RegionalProjectResponse {
 
 type ToastType = "success" | "error" | "info";
 
+function createRequestId(): string {
+  if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
+
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  const uuidBytes = new DataView(bytes.buffer);
+  uuidBytes.setUint8(6, (uuidBytes.getUint8(6) & 0x0f) | 0x40);
+  uuidBytes.setUint8(8, (uuidBytes.getUint8(8) & 0x3f) | 0x80);
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+
+  return [
+    hex.slice(0, 8),
+    hex.slice(8, 12),
+    hex.slice(12, 16),
+    hex.slice(16, 20),
+    hex.slice(20),
+  ].join("-");
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -828,7 +846,7 @@ const saveVoiceCast = async () => {
   };
   const fingerprint = JSON.stringify(requestBody);
   if (pendingAssignmentRequest.value?.fingerprint !== fingerprint) {
-    pendingAssignmentRequest.value = { fingerprint, requestId: crypto.randomUUID() };
+    pendingAssignmentRequest.value = { fingerprint, requestId: createRequestId() };
   }
 
   isSaving.value = true;
