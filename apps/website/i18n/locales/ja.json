@@ -956,6 +956,7 @@
     "manufacturer": "メーカー",
     "productLine": "製品ライン / デバイス",
     "releaseYear": "発売年",
+    "coverImageLabel": "カバー画像のURL",
     "description": "説明",
     "editProject": "スマートトイプロジェクトを編集",
     "createProject": "スマートトイプロジェクトを作成",

@@ -360,6 +360,48 @@ export type Database = {
         };
         Relationships: [];
       };
+      toy_metadata: {
+        Row: {
+          content_id: number;
+          cover_url: string | null;
+          created_at: string;
+          created_by: string | null;
+          description: string | null;
+          manufacturer: string | null;
+          name: string;
+          product_line: string | null;
+          release_year: number | null;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          content_id: number;
+          cover_url?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          manufacturer?: string | null;
+          name: string;
+          product_line?: string | null;
+          release_year?: number | null;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          content_id?: number;
+          cover_url?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          manufacturer?: string | null;
+          name?: string;
+          product_line?: string | null;
+          release_year?: number | null;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [];
+      };
       user_profiles: {
         Row: {
           bio: string | null;
@@ -743,6 +785,16 @@ export type Database = {
           studio_id: number;
         }[];
       };
+      controlled_save_toy_metadata: {
+        Args: {
+          p_actor_id: string;
+          p_content_id: number;
+          p_expected_updated_at: string | null;
+          p_payload: Json;
+          p_request_id: string;
+        };
+        Returns: Json;
+      };
       create_internal_dubbing_project: {
         Args: {
           p_actor_id: string;
@@ -759,6 +811,29 @@ export type Database = {
           content_id: number;
           project_id: number;
           replayed: boolean;
+        }[];
+      };
+      create_internal_dubbing_project_with_metadata: {
+        Args: {
+          p_actor_id: string;
+          p_brand: string | null;
+          p_cover_url: string | null;
+          p_description: string | null;
+          p_language: string;
+          p_manufacturer: string | null;
+          p_media_type: string;
+          p_name: string;
+          p_product_line: string | null;
+          p_release_year: number | null;
+          p_request_id: string;
+        };
+        Returns: {
+          audit_log_id: string;
+          content_id: number;
+          metadata_updated_at: string;
+          project_id: number;
+          replayed: boolean;
+          updated_at: string;
         }[];
       };
       consume_gamification_task_claim: {
