@@ -11,6 +11,12 @@ BEGIN
     RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
   END IF;
 
+  IF TG_OP = 'UPDATE'
+     AND OLD.voice_actor_id IS DISTINCT FROM NEW.voice_actor_id THEN
+    RAISE EXCEPTION 'Voice actor work assignment changes must use a controlled operation'
+      USING ERRCODE = '42501';
+  END IF;
+
   IF TG_OP = 'INSERT'
      AND NEW.voice_actor_id IS NOT NULL
      AND NEW.status = 'user' THEN
@@ -213,13 +219,13 @@ BEGIN
     RAISE EXCEPTION 'Authenticated actor not found' USING ERRCODE = '42501';
   END IF;
 
-  IF v_role = 'admin' THEN
-    RETURN TRUE;
-  END IF;
-
   IF p_voice_actor_id IS NULL THEN
     RAISE EXCEPTION 'A voice actor is required for this operation'
       USING ERRCODE = '42501';
+  END IF;
+
+  IF v_role = 'admin' THEN
+    RETURN TRUE;
   END IF;
   SELECT link.id
   INTO v_link_id

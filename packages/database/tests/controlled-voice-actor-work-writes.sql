@@ -1,5 +1,5 @@
 -- Run on a disposable database after migrations through
--- 20261015204215_controlled_voice_actor_work_writes.sql. The outer
+-- 20261023120000_allow_controlled_voice_actor_merges.sql. The outer
 -- transaction removes all fixtures and temporary failure constraints.
 \set ON_ERROR_STOP on
 BEGIN;
@@ -13,7 +13,9 @@ INSERT INTO auth.users (id, raw_app_meta_data) VALUES
 
 INSERT INTO public.voice_actors (id, firstname, lastname) VALUES
   (563681001, 'Work Link', 'One'),
-  (563681002, 'Work Link', 'Two');
+  (563681002, 'Work Link', 'Two'),
+  (563681003, 'Merge Profile', 'Keep'),
+  (563681004, 'Merge Profile', 'Remove');
 
 INSERT INTO public.user_voice_actor_links (id, user_id, voice_actor_id) VALUES
   ('56368100-0000-4000-8000-000000000001', '00000000-0000-0000-0000-000000563682', 563681001),
@@ -49,6 +51,21 @@ BEGIN
   EXCEPTION WHEN insufficient_privilege THEN
     NULL;
   END;
+  BEGIN
+    PERFORM public.merge_work_duplicates_atomic(
+      1, ARRAY[1, 2]::BIGINT[], '{}'::JSONB,
+      '00000000-0000-0000-0000-000000563681'
+    );
+    RAISE EXCEPTION 'authenticated unexpectedly executed the admin work merge';
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
+  BEGIN
+    PERFORM public.merge_voice_actor_duplicates_atomic(1, ARRAY[2]::INTEGER[], '{}'::JSONB);
+    RAISE EXCEPTION 'authenticated unexpectedly executed the voice actor merge';
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
 END;
 $$;
 RESET ROLE;
@@ -67,6 +84,7 @@ DECLARE
   v_delete_request UUID := '56368100-0000-4000-8000-000000000015';
   v_work_id BIGINT;
   v_second_work_id BIGINT;
+  v_import_work_id BIGINT;
   v_project_id BIGINT;
   v_import_project_id BIGINT;
   v_admin_work_id BIGINT;
@@ -75,6 +93,7 @@ DECLARE
   v_replayed BOOLEAN;
   v_expected_updated_at TIMESTAMPTZ;
   v_admin_expected_updated_at TIMESTAMPTZ;
+  v_import_updated_at TIMESTAMPTZ;
   v_count INTEGER;
 BEGIN
   -- A linked user creates a free-text role; NULL actor_id remains supported.
@@ -251,7 +270,7 @@ BEGIN
     dubbing_project_id, actor_id, character_name, performance, status
   ) VALUES (
     v_import_project_id, 563681402, 'Imported Role', 'dialogues', 'validated'
-  );
+  ) RETURNING id, updated_at INTO v_import_work_id, v_import_updated_at;
   IF NOT EXISTS (
     SELECT 1 FROM public.work
     WHERE dubbing_project_id = v_import_project_id
@@ -259,6 +278,39 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'T08 guard blocked the existing validated credits importer';
   END IF;
+
+  BEGIN
+    PERFORM * FROM public.update_voice_actor_work_performance(
+      v_admin, '56368100-0000-4000-8000-000000000043', v_import_work_id,
+      v_import_updated_at, 'voice'
+    );
+    RAISE EXCEPTION 'voice actor update RPC unexpectedly accepted non-voice work';
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
+  BEGIN
+    PERFORM * FROM public.delete_voice_actor_work_link(
+      v_admin, '56368100-0000-4000-8000-000000000044', v_import_work_id,
+      v_import_updated_at
+    );
+    RAISE EXCEPTION 'voice actor delete RPC unexpectedly accepted non-voice work';
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.work
+    WHERE id = v_import_work_id AND voice_actor_id IS NULL
+      AND performance = 'dialogues' AND status = 'validated'
+  ) OR EXISTS (
+    SELECT 1 FROM public.audit_logs
+    WHERE request_id IN (
+      '56368100-0000-4000-8000-000000000043',
+      '56368100-0000-4000-8000-000000000044'
+    )
+  ) THEN
+    RAISE EXCEPTION 'voice actor RPC mutated non-voice work or added an audit';
+  END IF;
+
   UPDATE public.work
   SET performance = 'dialogues', status = 'validated', character_name = 'Admin role'
   WHERE id = v_admin_work_id;
@@ -387,6 +439,24 @@ BEGIN
     NULL;
   END;
   BEGIN
+    UPDATE public.work SET voice_actor_id = NULL WHERE id = v_work_id;
+    RAISE EXCEPTION 'direct voice actor assignment removal unexpectedly bypassed the RPC';
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
+  BEGIN
+    UPDATE public.work SET voice_actor_id = 563681002 WHERE id = v_work_id;
+    RAISE EXCEPTION 'direct voice actor reassignment unexpectedly bypassed the RPC';
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.work
+    WHERE id = v_work_id AND voice_actor_id = 563681001
+  ) THEN
+    RAISE EXCEPTION 'direct assignment updates changed the voice actor';
+  END IF;
+  BEGIN
     DELETE FROM public.work WHERE id = v_work_id;
     RAISE EXCEPTION 'direct work DELETE unexpectedly bypassed the RPC';
   EXCEPTION WHEN insufficient_privilege THEN
@@ -412,6 +482,96 @@ BEGIN
   WHERE user_id = v_owner AND request_id = v_request;
   IF v_count <> 1 THEN
     RAISE EXCEPTION 'create request did not retain exactly one audit event';
+  END IF;
+
+  PERFORM pg_catalog.set_config('test.voice_actor_work_id', v_work_id::TEXT, TRUE);
+  PERFORM pg_catalog.set_config('test.voice_actor_admin_id', v_admin::TEXT, TRUE);
+END;
+$$;
+RESET ROLE;
+
+-- Seed legacy duplicate rows with the database owner; normal writes cannot
+-- create these duplicate assignment identities after the identity guard.
+DO $$
+DECLARE
+  v_work_id BIGINT := current_setting('test.voice_actor_work_id')::BIGINT;
+  v_duplicate_work_id BIGINT;
+  v_voice_merge_project_id BIGINT;
+  v_voice_merge_remove_work_id BIGINT;
+BEGIN
+  ALTER TABLE public.work DISABLE TRIGGER prevent_duplicate_work_assignment_trigger;
+  INSERT INTO public.work (
+    dubbing_project_id, actor_id, voice_actor_id, character_name, performance, status
+  )
+  SELECT work.dubbing_project_id, work.actor_id, work.voice_actor_id,
+    work.character_name, 'chant', 'validated'
+  FROM public.work AS work
+  WHERE work.id = v_work_id
+  RETURNING id INTO v_duplicate_work_id;
+  ALTER TABLE public.work ENABLE TRIGGER prevent_duplicate_work_assignment_trigger;
+  IF v_duplicate_work_id IS NULL THEN
+    RAISE EXCEPTION 'could not seed the legacy duplicate work fixture';
+  END IF;
+  PERFORM pg_catalog.set_config('test.voice_actor_duplicate_work_id', v_duplicate_work_id::TEXT, TRUE);
+
+  INSERT INTO public.dubbing_projects (content_id, content_type, language)
+  VALUES (563681105, 'movie', 'fr-FR')
+  RETURNING id INTO v_voice_merge_project_id;
+  INSERT INTO public.work (
+    dubbing_project_id, actor_id, voice_actor_id, character_name, performance, status
+  ) VALUES (
+    v_voice_merge_project_id, NULL, 563681003, 'Consolidation role', 'dialogues', 'validated'
+  );
+  INSERT INTO public.work (
+    dubbing_project_id, actor_id, voice_actor_id, character_name, performance, status
+  ) VALUES (
+    v_voice_merge_project_id, NULL, 563681004, 'Consolidation role', 'chant', 'validated'
+  ) RETURNING id INTO v_voice_merge_remove_work_id;
+  PERFORM pg_catalog.set_config('test.voice_actor_merge_project_id', v_voice_merge_project_id::TEXT, TRUE);
+  PERFORM pg_catalog.set_config('test.voice_actor_merge_remove_work_id', v_voice_merge_remove_work_id::TEXT, TRUE);
+END;
+$$;
+
+SET LOCAL ROLE service_role;
+DO $$
+DECLARE
+  v_admin UUID := current_setting('test.voice_actor_admin_id')::UUID;
+  v_work_id BIGINT := current_setting('test.voice_actor_work_id')::BIGINT;
+  v_duplicate_work_id BIGINT := current_setting('test.voice_actor_duplicate_work_id')::BIGINT;
+  v_voice_merge_project_id BIGINT := current_setting('test.voice_actor_merge_project_id')::BIGINT;
+  v_voice_merge_remove_work_id BIGINT := current_setting('test.voice_actor_merge_remove_work_id')::BIGINT;
+  v_merge_result JSONB;
+BEGIN
+  -- Existing admin duplicate-work consolidation remains available for
+  -- voice-actor assignments and keeps its full pre-merge audit snapshot.
+  v_merge_result := public.merge_work_duplicates_atomic(
+    v_work_id, ARRAY[v_work_id, v_duplicate_work_id]::BIGINT[], '{}'::JSONB, v_admin
+  );
+  IF EXISTS (SELECT 1 FROM public.work WHERE id = v_duplicate_work_id)
+     OR NOT EXISTS (
+       SELECT 1 FROM public.audit_logs AS audit
+       WHERE audit.user_id = v_admin
+         AND audit.entity_type = 'work'
+         AND audit.entity_id = v_work_id::TEXT
+         AND audit.action = 'merge_duplicate'
+         AND jsonb_array_length(audit.previous_value -> 'works') = 2
+         AND audit.new_value -> 'mergedIds' @> to_jsonb(ARRAY[v_duplicate_work_id])
+     )
+     OR v_merge_result ->> 'canonicalId' <> v_work_id::TEXT THEN
+    RAISE EXCEPTION 'admin work merge was blocked or lost its audit snapshot';
+  END IF;
+
+  -- Voice actor consolidation must still collapse duplicate work rows and
+  -- move the surviving assignment to the kept profile through the guard.
+  v_merge_result := public.merge_voice_actor_duplicates_atomic(
+    563681003, ARRAY[563681004]::INTEGER[], '{}'::JSONB
+  );
+  IF (SELECT count(*) FROM public.work
+      WHERE dubbing_project_id = v_voice_merge_project_id AND voice_actor_id = 563681003) <> 1
+     OR EXISTS (SELECT 1 FROM public.work WHERE id = v_voice_merge_remove_work_id)
+     OR EXISTS (SELECT 1 FROM public.voice_actors WHERE id = 563681004)
+     OR v_merge_result ->> 'mergedCount' <> '1' THEN
+    RAISE EXCEPTION 'voice actor merge was blocked or failed to preserve one assignment';
   END IF;
 END;
 $$;
