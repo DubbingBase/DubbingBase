@@ -72,10 +72,13 @@ interface ContributionSuccess {
   pointsAwarded: number;
 }
 
-export const fetchRandomTask = (category: ContributionCategory): Promise<ContributionClaim> =>
+export const fetchRandomTask = (
+  category: ContributionCategory,
+  skipClaimId?: string,
+): Promise<ContributionClaim> =>
   $fetch<ContributionClaim>("/api/get-random-task", {
     method: "POST",
-    body: { category },
+    body: { category, ...(skipClaimId ? { skipClaimId } : {}) },
     // Retrying a claim can create another reservation after a lost response.
     retry: 0,
   });
@@ -142,14 +145,17 @@ export const useContribute = () => {
     }
   };
 
-  const getRandomTask = async (category: ContributionCategory): Promise<void> => {
+  const getRandomTask = async (
+    category: ContributionCategory,
+    skipClaimId?: string,
+  ): Promise<void> => {
     if (isSubmitting.value) return;
     reset();
     const request = requestId;
     activeCategory.value = category;
     isLoading.value = true;
     try {
-      const data = await fetchRandomTask(category);
+      const data = await fetchRandomTask(category, skipClaimId);
       if (request !== requestId) return;
       if (
         (data.category !== "enrich_voice_actor" && data.category !== "enrich_studio") ||

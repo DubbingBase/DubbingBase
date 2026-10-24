@@ -66,7 +66,7 @@ beforeEach(() => {
   });
   routeMocks.studioResult.mockResolvedValue({ data: null, error: null });
   routeMocks.rpc.mockResolvedValue({
-    data: [{ status: "submitted", points_awarded: 10 }],
+    data: [{ status: "submitted", points_awarded: 10, replayed: false }],
     error: null,
   });
   routeMocks.upload.mockResolvedValue({
@@ -113,12 +113,16 @@ describe("POST /api/submit-task", () => {
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ success: true, pointsAwarded: 10 });
-    expect(routeMocks.rpc).toHaveBeenCalledWith("submit_gamification_task_contribution", {
-      p_claim_id: "c2e7345d-8f16-450a-b903-4f8c7b917f6a",
-      p_user_id: "user-1",
-      p_updates: { bio: "Voice actor biography" },
-      p_is_admin: false,
-    });
+    expect(routeMocks.rpc).toHaveBeenCalledWith(
+      "submit_gamification_task_contribution_retry_safe",
+      {
+        p_claim_id: "c2e7345d-8f16-450a-b903-4f8c7b917f6a",
+        p_user_id: "user-1",
+        p_updates: { bio: "Voice actor biography" },
+        p_is_admin: false,
+        p_submission_fingerprint: expect.stringMatching(/^[a-f0-9]{64}$/),
+      },
+    );
   });
 
   it("rejects client-supplied category and entity authority before database reads", async () => {
@@ -134,7 +138,7 @@ describe("POST /api/submit-task", () => {
     expect(routeMocks.rpc).not.toHaveBeenCalled();
   });
 
-  it("rejects invalid, wrong-owner, expired, and consumed claims without submitting", async () => {
+  it("rejects invalid, unknown, wrong-owner, and expired claims without submitting", async () => {
     const invalidId = new FormData();
     invalidId.append("claimId", "not-a-uuid");
     invalidId.append("bio", "Bio");
@@ -147,11 +151,221 @@ describe("POST /api/submit-task", () => {
     form.append("bio", "Bio");
     const response = await postForm(form);
     expect(response.status).toBe(409);
-    expect(routeMocks.rpc).not.toHaveBeenCalled();
+    expect(routeMocks.rpc).toHaveBeenCalledWith(
+      "submit_gamification_task_contribution_retry_safe",
+      {
+        p_claim_id: "c2e7345d-8f16-450a-b903-4f8c7b917f6a",
+        p_user_id: "user-1",
+        p_updates: {},
+        p_is_admin: false,
+        p_submission_fingerprint: expect.stringMatching(/^[a-f0-9]{64}$/),
+      },
+    );
   });
 
-  it("does not report success or leave a staged image when the atomic write fails", async () => {
-    routeMocks.rpc.mockResolvedValueOnce({ data: null, error: new Error("audit insert failed") });
+  it("returns the prior success for the owner's identical consumed-claim retry", async () => {
+    routeMocks.claimResult.mockResolvedValue({
+      data: {
+        claim_id: "c2e7345d-8f16-450a-b903-4f8c7b917f6a",
+        category: "enrich_voice_actor",
+        entity_id: "41",
+        user_id: "user-1",
+        expires_at: "2099-01-01T00:00:00.000Z",
+        consumed_at: "2026-10-24T20:00:00.000Z",
+      },
+      error: null,
+    });
+    routeMocks.rpc.mockResolvedValueOnce({
+      data: [{ status: "submitted", points_awarded: 10, replayed: true }],
+      error: null,
+    });
+    const form = new FormData();
+    form.append("claimId", "c2e7345d-8f16-450a-b903-4f8c7b917f6a");
+    form.append("bio", "Voice actor biography");
+
+    const response = await postForm(form);
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ success: true, pointsAwarded: 10 });
+    expect(routeMocks.actorResult).not.toHaveBeenCalled();
+    expect(routeMocks.upload).not.toHaveBeenCalled();
+    expect(routeMocks.rpc).toHaveBeenCalledWith(
+      "submit_gamification_task_contribution_retry_safe",
+      {
+        p_claim_id: "c2e7345d-8f16-450a-b903-4f8c7b917f6a",
+        p_user_id: "user-1",
+        p_updates: {},
+        p_is_admin: false,
+        p_submission_fingerprint: expect.stringMatching(/^[a-f0-9]{64}$/),
+      },
+    );
+  });
+
+  it("recovers the prior success after another claim reused the temporary lock row", async () => {
+    routeMocks.claimResult.mockResolvedValue({ data: null, error: null });
+    routeMocks.rpc.mockResolvedValueOnce({
+      data: [{ status: "submitted", points_awarded: 10, replayed: true }],
+      error: null,
+    });
+    const form = new FormData();
+    form.append("claimId", "c2e7345d-8f16-450a-b903-4f8c7b917f6a");
+    form.append("bio", "Voice actor biography");
+
+    const response = await postForm(form);
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ success: true, pointsAwarded: 10 });
+    expect(routeMocks.rpc).toHaveBeenCalledWith(
+      "submit_gamification_task_contribution_retry_safe",
+      {
+        p_claim_id: "c2e7345d-8f16-450a-b903-4f8c7b917f6a",
+        p_user_id: "user-1",
+        p_updates: {},
+        p_is_admin: false,
+        p_submission_fingerprint: expect.stringMatching(/^[a-f0-9]{64}$/),
+      },
+    );
+  });
+
+  it("recovers an identical retry when the first request filled its field before validation", async () => {
+    routeMocks.actorResult.mockResolvedValue({
+      data: {
+        nationality: null,
+        date_of_birth: null,
+        bio: "Voice actor biography",
+        tmdb_id: null,
+        wikidata_id: null,
+        profile_picture: null,
+        social_media_links: null,
+      },
+      error: null,
+    });
+    routeMocks.rpc.mockResolvedValueOnce({
+      data: [{ status: "submitted", points_awarded: 10, replayed: true }],
+      error: null,
+    });
+    const form = new FormData();
+    form.append("claimId", "c2e7345d-8f16-450a-b903-4f8c7b917f6a");
+    form.append("bio", "Voice actor biography");
+
+    const response = await postForm(form);
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ success: true, pointsAwarded: 10 });
+    expect(routeMocks.rpc).toHaveBeenCalledOnce();
+    expect(routeMocks.rpc).toHaveBeenCalledWith(
+      "submit_gamification_task_contribution_retry_safe",
+      {
+        p_claim_id: "c2e7345d-8f16-450a-b903-4f8c7b917f6a",
+        p_user_id: "user-1",
+        p_updates: {},
+        p_is_admin: false,
+        p_submission_fingerprint: expect.stringMatching(/^[a-f0-9]{64}$/),
+      },
+    );
+  });
+
+  it("rejects a consumed-claim retry with a different payload", async () => {
+    routeMocks.claimResult.mockResolvedValue({
+      data: {
+        claim_id: "c2e7345d-8f16-450a-b903-4f8c7b917f6a",
+        category: "enrich_voice_actor",
+        entity_id: "41",
+        user_id: "user-1",
+        expires_at: "2099-01-01T00:00:00.000Z",
+        consumed_at: "2026-10-24T20:00:00.000Z",
+      },
+      error: null,
+    });
+    routeMocks.rpc.mockResolvedValueOnce({
+      data: [{ status: "invalid_claim", points_awarded: 0, replayed: false }],
+      error: null,
+    });
+    const form = new FormData();
+    form.append("claimId", "c2e7345d-8f16-450a-b903-4f8c7b917f6a");
+    form.append("bio", "A different contribution");
+
+    const response = await postForm(form);
+
+    expect(response.status).toBe(409);
+    expect(routeMocks.actorResult).not.toHaveBeenCalled();
+    expect(routeMocks.upload).not.toHaveBeenCalled();
+  });
+
+  it("reuses the same upload object for concurrent identical submissions", async () => {
+    routeMocks.rpc.mockResolvedValueOnce({
+      data: [{ status: "submitted", points_awarded: 10, replayed: false }],
+      error: null,
+    });
+    routeMocks.rpc.mockResolvedValueOnce({
+      data: [{ status: "submitted", points_awarded: 10, replayed: true }],
+      error: null,
+    });
+    const form = new FormData();
+    form.append("claimId", "c2e7345d-8f16-450a-b903-4f8c7b917f6a");
+    form.append(
+      "file",
+      new Blob([Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])], {
+        type: "image/png",
+      }),
+      "actor.png",
+    );
+
+    const response = await postForm(form);
+    const retryResponse = await postForm(form);
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ success: true, pointsAwarded: 10 });
+    expect(retryResponse.status).toBe(200);
+    expect(await retryResponse.json()).toEqual({
+      success: true,
+      pointsAwarded: 10,
+    });
+    expect(routeMocks.upload).toHaveBeenCalledTimes(2);
+    expect(routeMocks.upload.mock.calls[0]?.[0]).toBe(routeMocks.upload.mock.calls[1]?.[0]);
+    expect(routeMocks.upload.mock.calls[0]?.[0]).toMatch(
+      /^41\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\.png$/,
+    );
+    expect(routeMocks.upload.mock.calls[0]?.[2]).toMatchObject({
+      contentType: "image/png",
+      upsert: true,
+    });
+    expect(routeMocks.remove).not.toHaveBeenCalled();
+  });
+
+  it("recovers an uploaded contribution after its first RPC response is lost", async () => {
+    routeMocks.rpc.mockResolvedValueOnce({
+      data: null,
+      error: new Error("response lost after commit"),
+    });
+    routeMocks.rpc.mockResolvedValueOnce({
+      data: [{ status: "submitted", points_awarded: 10, replayed: true }],
+      error: null,
+    });
+    const form = new FormData();
+    form.append("claimId", "c2e7345d-8f16-450a-b903-4f8c7b917f6a");
+    form.append(
+      "file",
+      new Blob([Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])], {
+        type: "image/png",
+      }),
+      "actor.png",
+    );
+
+    const response = await postForm(form);
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ success: true, pointsAwarded: 10 });
+    expect(routeMocks.rpc).toHaveBeenCalledTimes(2);
+    expect(routeMocks.upload).toHaveBeenCalledOnce();
+    expect(routeMocks.remove).not.toHaveBeenCalled();
+  });
+
+  it("preserves the shared image path when both submission RPC responses are uncertain", async () => {
+    routeMocks.rpc.mockResolvedValue({
+      data: null,
+      error: new Error("database response unavailable"),
+    });
     const form = new FormData();
     form.append("claimId", "c2e7345d-8f16-450a-b903-4f8c7b917f6a");
     form.append(
@@ -165,8 +379,29 @@ describe("POST /api/submit-task", () => {
     const response = await postForm(form);
 
     expect(response.status).toBe(500);
-    expect(await response.json()).not.toEqual({ success: true, pointsAwarded: 10 });
+    expect(routeMocks.rpc).toHaveBeenCalledTimes(2);
     expect(routeMocks.upload).toHaveBeenCalledOnce();
+    expect(routeMocks.remove).not.toHaveBeenCalled();
+  });
+
+  it("cleans up an uploaded image after a definitive stale-task result", async () => {
+    routeMocks.rpc.mockResolvedValueOnce({
+      data: [{ status: "stale_task", points_awarded: 0, replayed: false }],
+      error: null,
+    });
+    const form = new FormData();
+    form.append("claimId", "c2e7345d-8f16-450a-b903-4f8c7b917f6a");
+    form.append(
+      "file",
+      new Blob([Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])], {
+        type: "image/png",
+      }),
+      "actor.png",
+    );
+
+    const response = await postForm(form);
+
+    expect(response.status).toBe(409);
     expect(routeMocks.remove).toHaveBeenCalledOnce();
   });
 
@@ -236,6 +471,10 @@ describe("POST /api/submit-task", () => {
     const response = await postForm(replaceForm);
     expect(response.status).toBe(403);
     expect(routeMocks.upload).not.toHaveBeenCalled();
-    expect(routeMocks.rpc).not.toHaveBeenCalled();
+    expect(routeMocks.rpc).toHaveBeenCalledOnce();
+    expect(routeMocks.rpc).toHaveBeenCalledWith(
+      "submit_gamification_task_contribution_retry_safe",
+      expect.objectContaining({ p_updates: {} }),
+    );
   });
 });

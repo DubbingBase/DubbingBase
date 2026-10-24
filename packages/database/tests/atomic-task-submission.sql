@@ -144,6 +144,8 @@ DECLARE
   consumption_actor_id BIGINT;
   update_actor_id BIGINT;
   retry_actor_id BIGINT;
+  idempotent_actor_id BIGINT;
+  stale_retry_actor_id BIGINT;
   valid_claim_id UUID := gen_random_uuid();
   wrong_owner_claim_id UUID := gen_random_uuid();
   expired_claim_id UUID := gen_random_uuid();
@@ -154,9 +156,15 @@ DECLARE
   consumption_failure_claim_id UUID := gen_random_uuid();
   update_failure_claim_id UUID := gen_random_uuid();
   retry_claim_id UUID := gen_random_uuid();
+  idempotent_claim_id UUID := gen_random_uuid();
+  stale_retry_claim_id UUID := gen_random_uuid();
   missing_claim_id UUID := gen_random_uuid();
   result_status TEXT;
   result_points INTEGER;
+  safe_retry_status TEXT;
+  safe_retry_points INTEGER;
+  safe_retry_replayed BOOLEAN;
+  safe_retry_fingerprint TEXT := repeat('c', 64);
   audit_count INTEGER;
   points_sum BIGINT;
   claim_consumed_at TIMESTAMPTZ;
@@ -165,8 +173,27 @@ DECLARE
 BEGIN
   IF has_function_privilege('anon', 'public.submit_gamification_task_contribution(uuid, uuid, jsonb, boolean)', 'EXECUTE')
     OR has_function_privilege('authenticated', 'public.submit_gamification_task_contribution(uuid, uuid, jsonb, boolean)', 'EXECUTE')
-    OR NOT has_function_privilege('service_role', 'public.submit_gamification_task_contribution(uuid, uuid, jsonb, boolean)', 'EXECUTE') THEN
+    OR NOT has_function_privilege('service_role', 'public.submit_gamification_task_contribution(uuid, uuid, jsonb, boolean)', 'EXECUTE')
+    OR has_function_privilege('anon', 'public.submit_gamification_task_contribution_retry_safe(uuid, uuid, jsonb, boolean, text)', 'EXECUTE')
+    OR has_function_privilege('authenticated', 'public.submit_gamification_task_contribution_retry_safe(uuid, uuid, jsonb, boolean, text)', 'EXECUTE')
+    OR NOT has_function_privilege('service_role', 'public.submit_gamification_task_contribution_retry_safe(uuid, uuid, jsonb, boolean, text)', 'EXECUTE') THEN
     RAISE EXCEPTION 'Submission RPC grants are not service-role only';
+  END IF;
+
+  IF has_table_privilege('anon', 'public.gamification_task_submission_results', 'SELECT')
+    OR has_table_privilege('authenticated', 'public.gamification_task_submission_results', 'SELECT')
+    OR NOT has_table_privilege('service_role', 'public.gamification_task_submission_results', 'SELECT')
+    OR NOT has_table_privilege('service_role', 'public.gamification_task_submission_results', 'INSERT')
+    OR has_table_privilege('service_role', 'public.gamification_task_submission_results', 'UPDATE')
+    OR has_table_privilege('service_role', 'public.gamification_task_submission_results', 'DELETE')
+    OR NOT EXISTS (
+      SELECT 1 FROM pg_catalog.pg_class AS relation
+      JOIN pg_catalog.pg_namespace AS schema ON schema.oid = relation.relnamespace
+      WHERE schema.nspname = 'public'
+        AND relation.relname = 'gamification_task_submission_results'
+        AND relation.relrowsecurity
+    ) THEN
+    RAISE EXCEPTION 'Submission replay receipts are not protected for service-role access';
   END IF;
 
   INSERT INTO auth.users (id) VALUES
@@ -390,6 +417,136 @@ BEGIN
       WHERE claim_id = retry_claim_id AND consumed_at IS NOT NULL AND expires_at <= clock_timestamp()
     ) THEN
     RAISE EXCEPTION 'Retry did not atomically persist all four successful effects';
+  END IF;
+
+  INSERT INTO public.voice_actors (firstname, lastname)
+  VALUES ('Atomic idempotent submission', 'Fixture')
+  RETURNING id INTO idempotent_actor_id;
+  INSERT INTO public.gamification_task_locks
+    (category, entity_id, locked_at, claim_id, user_id, expires_at)
+  VALUES
+    ('enrich_voice_actor', idempotent_actor_id::TEXT, clock_timestamp(),
+      idempotent_claim_id, retry_user_id, future_expiry);
+
+  SELECT status, points_awarded, replayed
+  INTO safe_retry_status, safe_retry_points, safe_retry_replayed
+  FROM public.submit_gamification_task_contribution_retry_safe(
+    idempotent_claim_id, retry_user_id, '{"bio":"Response lost"}'::JSONB,
+    FALSE, safe_retry_fingerprint
+  );
+  IF safe_retry_status <> 'submitted' OR safe_retry_points <> 10 OR safe_retry_replayed THEN
+    RAISE EXCEPTION 'Initial retry-safe submission returned %, %, replayed %',
+      safe_retry_status, safe_retry_points, safe_retry_replayed;
+  END IF;
+
+  SELECT status, points_awarded, replayed
+  INTO safe_retry_status, safe_retry_points, safe_retry_replayed
+  FROM public.submit_gamification_task_contribution_retry_safe(
+    idempotent_claim_id, retry_user_id, '{}'::JSONB,
+    FALSE, safe_retry_fingerprint
+  );
+  IF safe_retry_status <> 'submitted' OR safe_retry_points <> 10 OR NOT safe_retry_replayed THEN
+    RAISE EXCEPTION 'Identical retry did not return the committed result: %, %, replayed %',
+      safe_retry_status, safe_retry_points, safe_retry_replayed;
+  END IF;
+
+  SELECT status, points_awarded, replayed
+  INTO safe_retry_status, safe_retry_points, safe_retry_replayed
+  FROM public.submit_gamification_task_contribution_retry_safe(
+    idempotent_claim_id, retry_user_id, '{}'::JSONB,
+    FALSE, repeat('d', 64)
+  );
+  IF safe_retry_status <> 'invalid_claim' OR safe_retry_points <> 0 OR safe_retry_replayed THEN
+    RAISE EXCEPTION 'Different-payload retry returned %, %, replayed %',
+      safe_retry_status, safe_retry_points, safe_retry_replayed;
+  END IF;
+
+  SELECT status, points_awarded, replayed
+  INTO safe_retry_status, safe_retry_points, safe_retry_replayed
+  FROM public.submit_gamification_task_contribution_retry_safe(
+    idempotent_claim_id, other_user_id, '{}'::JSONB,
+    FALSE, safe_retry_fingerprint
+  );
+  IF safe_retry_status <> 'invalid_claim' OR safe_retry_points <> 0 OR safe_retry_replayed THEN
+    RAISE EXCEPTION 'Wrong-owner replay returned %, %, replayed %',
+      safe_retry_status, safe_retry_points, safe_retry_replayed;
+  END IF;
+
+  UPDATE public.gamification_task_locks AS claim
+  SET claim_id = gen_random_uuid(),
+      user_id = other_user_id,
+      locked_at = clock_timestamp(),
+      expires_at = future_expiry,
+      consumed_at = NULL
+  WHERE claim.claim_id = idempotent_claim_id;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Could not simulate reuse of the temporary claim row';
+  END IF;
+
+  SELECT status, points_awarded, replayed
+  INTO safe_retry_status, safe_retry_points, safe_retry_replayed
+  FROM public.submit_gamification_task_contribution_retry_safe(
+    idempotent_claim_id, retry_user_id, '{}'::JSONB,
+    FALSE, safe_retry_fingerprint
+  );
+  IF safe_retry_status <> 'submitted' OR safe_retry_points <> 10 OR NOT safe_retry_replayed THEN
+    RAISE EXCEPTION 'Replay receipt did not survive temporary claim-row reuse: %, %, replayed %',
+      safe_retry_status, safe_retry_points, safe_retry_replayed;
+  END IF;
+
+  SELECT status, points_awarded, replayed
+  INTO safe_retry_status, safe_retry_points, safe_retry_replayed
+  FROM public.submit_gamification_task_contribution_retry_safe(
+    idempotent_claim_id, other_user_id, '{}'::JSONB,
+    FALSE, safe_retry_fingerprint
+  );
+  IF safe_retry_status <> 'invalid_claim' OR safe_retry_points <> 0 OR safe_retry_replayed THEN
+    RAISE EXCEPTION 'Reassigned owner could replay another user’s receipt: %, %, replayed %',
+      safe_retry_status, safe_retry_points, safe_retry_replayed;
+  END IF;
+
+  INSERT INTO public.voice_actors (firstname, lastname)
+  VALUES ('Atomic stale retry submission', 'Fixture')
+  RETURNING id INTO stale_retry_actor_id;
+  INSERT INTO public.gamification_task_locks
+    (category, entity_id, locked_at, claim_id, user_id, expires_at)
+  VALUES
+    ('enrich_voice_actor', stale_retry_actor_id::TEXT, clock_timestamp(),
+      stale_retry_claim_id, retry_user_id, future_expiry);
+
+  SELECT status, points_awarded, replayed
+  INTO safe_retry_status, safe_retry_points, safe_retry_replayed
+  FROM public.submit_gamification_task_contribution_retry_safe(
+    stale_retry_claim_id, retry_user_id, '{"unexpected":"value"}'::JSONB,
+    FALSE, repeat('e', 64)
+  );
+  IF safe_retry_status <> 'stale_task' OR safe_retry_points <> 0 OR safe_retry_replayed
+    OR EXISTS (
+      SELECT 1 FROM public.gamification_task_locks
+      WHERE claim_id = stale_retry_claim_id AND consumed_at IS NOT NULL
+    ) THEN
+    RAISE EXCEPTION 'Stale retry-safe submission returned %, %, replayed %',
+      safe_retry_status, safe_retry_points, safe_retry_replayed;
+  END IF;
+
+  SELECT count(*), COALESCE(sum(points_awarded), 0)
+  INTO audit_count, points_sum
+  FROM public.audit_logs
+  WHERE user_id = retry_user_id AND entity_type = 'voice_actor'
+    AND entity_id = idempotent_actor_id::TEXT;
+  IF audit_count <> 1 OR points_sum <> 10
+    OR NOT EXISTS (
+      SELECT 1 FROM public.voice_actors
+      WHERE id = idempotent_actor_id AND bio = 'Response lost' AND updated_by = retry_user_id
+    )
+    OR NOT EXISTS (
+      SELECT 1 FROM public.gamification_task_submission_results
+      WHERE claim_id = idempotent_claim_id
+        AND user_id = retry_user_id
+        AND submission_fingerprint = safe_retry_fingerprint
+        AND points_awarded = 10
+    ) THEN
+    RAISE EXCEPTION 'Retry-safe replay changed or lost committed submission state';
   END IF;
 END;
 $$;
