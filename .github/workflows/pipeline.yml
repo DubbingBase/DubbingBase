@@ -41,6 +41,7 @@ jobs:
           filters: |
             database:
               - 'packages/database/**'
+              - '.github/workflows/pipeline.yml'
             mobile:
               - 'apps/mobile/**'
             website:
