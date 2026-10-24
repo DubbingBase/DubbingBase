@@ -99,7 +99,8 @@ jobs:
 
       - name: Run database migrations
         if: github.ref == 'refs/heads/main'
-        run: supabase db push
+        # Stacked PRs can merge migration files out of timestamp order.
+        run: supabase db push --include-all
         working-directory: packages/database
 
   # Job 3: E2E Tests
