@@ -14,12 +14,10 @@
           <input
             v-model="searchInput"
             type="text"
-            placeholder="Rechercher un comédien..."
+            :placeholder="t('voiceActor.directorySearchPlaceholder')"
             class="w-full theme-surface-raised theme-surface-muted theme-text border-0 rounded-full px-6 py-3 theme-focus transition-shadow outline-none"
           />
-          <div
-            class="absolute right-4 top-1/2 -translate-y-1/2 theme-text-muted"
-          >
+          <div class="absolute right-4 top-1/2 -translate-y-1/2 theme-text-muted">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               class="h-5 w-5"
@@ -44,14 +42,8 @@
       v-if="isLoading"
       class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 md:gap-8 pt-4"
     >
-      <div
-        v-for="i in 12"
-        :key="i"
-        class="flex flex-col items-center animate-pulse"
-      >
-        <div
-          class="w-24 h-24 md:w-32 md:h-32 rounded-full theme-surface-muted mb-4"
-        ></div>
+      <div v-for="i in 12" :key="i" class="flex flex-col items-center animate-pulse">
+        <div class="w-24 h-24 md:w-32 md:h-32 rounded-full theme-surface-muted mb-4"></div>
         <div class="w-20 h-4 theme-surface-muted rounded"></div>
       </div>
     </div>
@@ -63,10 +55,7 @@
     </div>
 
     <!-- Empty State -->
-    <div
-      v-else-if="filteredActors.length === 0"
-      class="text-center py-12 theme-text-muted"
-    >
+    <div v-else-if="filteredActors.length === 0" class="text-center py-12 theme-text-muted">
       {{ $t("voiceActor.noResultsFor", { query: searchInput }) }}
     </div>
 
@@ -102,8 +91,7 @@
                 v-else
                 class="w-full h-full flex items-center justify-center text-3xl theme-text-muted font-bold theme-surface-raised theme-surface-muted"
               >
-                {{ actor.firstname?.charAt(0) || ""
-                }}{{ actor.lastname?.charAt(0) || "" }}
+                {{ actor.firstname?.charAt(0) || "" }}{{ actor.lastname?.charAt(0) || "" }}
               </div>
             </div>
             <h3
@@ -154,12 +142,11 @@ watch(debouncedSearch, () => {
 });
 
 useHead({
-  title: "Tous les Comédiens de doublage - DubbingBase",
+  title: computed(() => t("seo.voiceActorsPageTitle")),
   meta: [
     {
       name: "description",
-      content:
-        "Parcourez la base de données complète des comédiens de doublage et voix françaises.",
+      content: computed(() => t("seo.voiceActorsPageDescription")),
     },
     {
       name: "keywords",

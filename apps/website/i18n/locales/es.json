@@ -113,6 +113,7 @@
     "pendingValidation": "Pendiente de validación",
     "language": "Idioma *",
     "characterRole": "Personaje / Rol",
+    "team": "Equipo",
     "production": "Producción",
     "roleCharacter": "Rol / Personaje",
     "performanceType": "Tipo de interpretación",
@@ -145,8 +146,8 @@
   },
   "seo": {
     "voiceActors": "Actores de doblaje - DubbingBase",
-    "voiceActorTitle": "{name} - Actor de doblaje | DubbingBase",
-    "voiceActorTitleFallback": "Actor de doblaje | DubbingBase",
+    "voiceActorTitle": "{name} - Actor de doblaje",
+    "voiceActorTitleFallback": "Actor de doblaje",
     "voiceActorDescription": "Descubre la biografía, filmografía y roles de doblaje de {name}.",
     "voiceActorKeywords": "{name}, actor de doblaje, doblaje, anime, voz",
     "movies": "Películas - DubbingBase",
@@ -162,7 +163,28 @@
     "actorDescription": "Descubre la filmografía y los actores de doblaje de {name}.",
     "actorDescriptionFallback": "Descubre la filmografía y los actores de doblaje.",
     "actorKeywords": "{name}, actor, filmografía, películas, series",
-    "voiceActorDescriptionFallback": "Perfil de actor de doblaje."
+    "voiceActorDescriptionFallback": "Perfil de actor de doblaje.",
+    "moviesPageTitle": "Todas las películas",
+    "moviesPageDescription": "Explora las películas populares y descubre sus actores de doblaje.",
+    "seriesPageTitle": "Todas las series",
+    "seriesPageDescription": "Explora las series populares y descubre sus actores de doblaje.",
+    "voiceActorsPageTitle": "Actores de doblaje",
+    "voiceActorsPageDescription": "Explora los perfiles de actores de doblaje y sus trabajos.",
+    "studiosPageTitle": "Estudios de doblaje",
+    "studiosPageDescription": "Descubre estudios de doblaje y las producciones en las que trabajan.",
+    "gameDescription": "Descubre el reparto de voces y los créditos de doblaje de {title}.",
+    "gameDescriptionDubbing": "Descubre el reparto de voces en {lang} de {title}.",
+    "gameDescriptionFallback": "Explora repartos de voces y créditos de doblaje de videojuegos.",
+    "audiobookDescription": "Descubre los narradores y el reparto de voces del audiolibro {title}.",
+    "audiobookDescriptionFallback": "Explora narradores y repartos de voces de audiolibros.",
+    "podcastDescription": "Descubre las voces y la información de doblaje de {title}.",
+    "podcastDescriptionFallback": "Explora repartos de voces e información de doblaje de podcasts y ficción sonora.",
+    "advertisementDescription": "Descubre las voces en off y el reparto de voces de {title}.",
+    "advertisementDescriptionFallback": "Explora las voces en off y los actores de doblaje de este anuncio.",
+    "toyDescription": "Descubre las voces y la narración de {title}.",
+    "toyDescriptionFallback": "Explora voces y narración de juguetes e historias interactivas.",
+    "studioDescription": "Descubre los proyectos de doblaje y los actores de voz de {name}.",
+    "studioDescriptionFallback": "Descubre estudios de doblaje y sus actores de voz."
   },
   "profile": {
     "userProfile": "Mi perfil de usuario",
@@ -265,7 +287,8 @@
     "noWorksFound": "No se encontraron obras para este actor.",
     "notFound": "Actor no encontrado.",
     "active": "Activo/a:",
-    "noResultsFor": "No se encontró ningún actor para \"{query}\"."
+    "noResultsFor": "No se encontró ningún actor para \"{query}\".",
+    "directorySearchPlaceholder": "Buscar actores de doblaje por nombre..."
   },
   "actor": {
     "title": "Actor",
@@ -354,7 +377,10 @@
     "notFound": "No encontrado",
     "backToShow": "Volver a la serie",
     "notFoundDesc": "No se pudo cargar la información de esta temporada.",
-    "requestError": "No se pudo cargar este contenido en este momento."
+    "episodeNotFoundDesc": "No se pudo cargar la información de este episodio.",
+    "requestError": "No se pudo cargar este contenido en este momento.",
+    "seasonNotFound": "Temporada no encontrada",
+    "episodeNotFound": "Episodio no encontrado"
   },
   "search": {
     "actor": "Actor",
@@ -372,7 +398,8 @@
     "toy": "Juguetes",
     "title": "Búsqueda",
     "description": "Buscar películas, series, actores de doblaje y más",
-    "typeMore": "Escriba al menos 2 caracteres..."
+    "typeMore": "Escriba al menos 2 caracteres...",
+    "media": "Medio"
   },
   "auth": {
     "loginRequiredForSubscription": "Debe iniciar sesión para suscribirse",
@@ -919,7 +946,9 @@
     "createProject": "Crear proyecto de audiolibro",
     "notFound": "Audiolibro no encontrado.",
     "subjects": "Temas",
-    "castCount": "{shown} / {total} narradores y actores"
+    "castCount": "{shown} / {total} narradores y actores",
+    "noDescription": "No hay descripción disponible para este audiolibro.",
+    "noCast": "No hay información disponible sobre narradores o reparto."
   },
   "podcast": {
     "title": "Podcast y Ficción Sonora",
@@ -934,7 +963,10 @@
     "castSection": "Reparto & Voces",
     "productionTeam": "Equipo de Producción & Estudio",
     "rssFeed": "Feed RSS / Podcast",
-    "notFound": "Podcast / drama de audio no encontrado."
+    "notFound": "Podcast / drama de audio no encontrado.",
+    "castSearchPlaceholder": "Filtrar el reparto...",
+    "noCastInfo": "Aún no hay información del reparto.",
+    "noCastMatch": "Ningún actor de doblaje coincide con tu búsqueda."
   },
   "advertisement": {
     "title": "Publicidad y Spot",
@@ -950,7 +982,8 @@
     "countryBroadcast": "País / Transmisión",
     "notFound": "Anuncio no encontrado.",
     "videoSpot": "Spot publicitario",
-    "studioAndSoundProduction": "Estudio & Producción de Sonido"
+    "studioAndSoundProduction": "Estudio & Producción de Sonido",
+    "voiceOver": "Voz en off"
   },
   "toy": {
     "title": "Juguete Conectado y Cuentacuentos",
@@ -1088,6 +1121,7 @@
       "warranty": "Usted garantiza que tiene los derechos necesarios para enviar estas\n      Contribuciones y que estas no violan los derechos de propiedad\n      intelectual de terceros."
     },
     "termsApi": {
+      "metaDescription": "Consulta las condiciones que rigen el uso de la API de DubbingBase.",
       "dataProvided": "\"Datos proporcionados por DubbingBase\"",
       "section1": "1. Objeto del servicio",
       "section2": "2. Modalidades de pago y facturación",
@@ -1368,7 +1402,9 @@
     "voiceActorsCount": "Actores de voz ({count})",
     "actorsCount": "{shown} / {total} actores",
     "noResultsFor": "No se encontró ningún estudio para \"{query}\".",
-    "studiosCount": "{shown} / {total} estudios"
+    "studiosCount": "{shown} / {total} estudios",
+    "searchPlaceholder": "Buscar estudios...",
+    "projectSearchPlaceholder": "Buscar proyectos de doblaje..."
   },
   "series": {
     "notFound": "Serie no encontrada",

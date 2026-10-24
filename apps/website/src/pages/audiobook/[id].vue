@@ -61,7 +61,7 @@
           </NuxtLink>
         </div>
         <div v-else class="text-sm theme-text-muted font-medium">
-          {{ $t("details.noDubbingProjects", "Aucun projet de doublage disponible") }}
+          {{ $t("details.noDubbingProjects") }}
         </div>
       </template>
 
@@ -70,7 +70,7 @@
           <NuxtLink
             :to="localePath(`/studio/${activeDubProject.studio_data.id}`)"
             class="flex items-center gap-2 px-3 py-1.5 rounded-lg border theme-border-subtle theme-border theme-hover-primary-border transition-colors group theme-surface-raised theme-surface"
-            title="Studio d'enregistrement"
+            :title="$t('studio.recordingStudio')"
           >
             <div
               class="w-6 h-6 rounded flex items-center justify-center overflow-hidden shrink-0 theme-surface-muted"
@@ -122,7 +122,7 @@
         <button
           @click="isReportModalOpen = true"
           class="text-sm theme-text-muted theme-hover-danger-text transition-colors flex items-center gap-1.5"
-          title="Signaler cette fiche"
+          :title="$t('report.title')"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -145,13 +145,10 @@
         <div class="mb-12 max-w-4xl">
           <section>
             <h2 class="text-2xl font-bold mb-4">
-              {{ $t("details.synopsis", "Synopsis / Description") }}
+              {{ $t("details.synopsis") }}
             </h2>
             <p class="theme-text-secondary leading-relaxed text-lg mb-8 whitespace-pre-line">
-              {{
-                audiobook.description ||
-                $t("details.noSynopsis", "Aucune description disponible pour ce livre.")
-              }}
+              {{ audiobook.description || $t("audiobook.noDescription") }}
             </p>
 
             <div
@@ -159,7 +156,7 @@
             >
               <div>
                 <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2">
-                  {{ $t("audiobook.author", "Auteur(s)") }}
+                  {{ $t("audiobook.author") }}
                 </h3>
                 <p class="font-medium text-sm">
                   {{ authorsText || "-" }}
@@ -167,7 +164,7 @@
               </div>
               <div>
                 <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2">
-                  {{ $t("audiobook.publishYear", "Publication") }}
+                  {{ $t("audiobook.publishYear") }}
                 </h3>
                 <p class="font-medium text-sm">
                   {{ audiobook.first_publish_year || audiobook.first_publish_date || "-" }}
@@ -175,7 +172,7 @@
               </div>
               <div v-if="audiobook.isbn">
                 <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2">
-                  {{ $t("audiobook.isbn", "ISBN") }}
+                  {{ $t("audiobook.isbn") }}
                 </h3>
                 <p class="font-medium text-sm">
                   {{ audiobook.isbn }}
@@ -208,7 +205,7 @@
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
               <div>
                 <h2 class="text-2xl font-bold">
-                  {{ $t("details.castAndCrew", "Voix & Narration") }}
+                  {{ $t("details.castAndCrew") }}
                 </h2>
                 <div class="theme-text-muted text-sm mt-1">
                   {{
@@ -227,7 +224,7 @@
                 <input
                   v-model="searchInput"
                   type="search"
-                  :placeholder="$t('search.placeholder', 'Rechercher un comédien...')"
+                  :placeholder="$t('search.placeholder')"
                   class="w-full theme-input border theme-border-subtle theme-border rounded-xl pl-10 pr-4 py-2 text-sm theme-focus transition-all theme-text"
                 />
               </div>
@@ -238,7 +235,7 @@
             v-if="castTotal === 0"
             class="theme-text-muted text-center py-12 theme-input rounded-2xl border theme-border-subtle theme-border"
           >
-            {{ $t("details.noCast", "Aucun narrateur ou comédien renseigné pour ce projet.") }}
+            {{ $t("audiobook.noCast") }}
           </div>
 
           <PaginatedResponsiveGrid
@@ -286,11 +283,7 @@
                         {{ item.firstname }} {{ item.lastname }}
                       </NuxtLink>
                       <span class="text-xs theme-text-muted font-medium truncate block mt-0.5">
-                        {{
-                          item.character_name ||
-                          item.performance ||
-                          $t("audiobook.narrator", "Narrateur")
-                        }}
+                        {{ item.character_name || item.performance || $t("audiobook.narrator") }}
                       </span>
                       <div v-if="item.performance" class="mt-1">
                         <span
@@ -423,18 +416,20 @@ const castItems = computed(() =>
 // SEO Meta
 useHead({
   title: computed(() =>
-    audiobook.value
-      ? `${audiobook.value.title} - Doublage & Voix | DubbingBase`
-      : "Livre Audio | DubbingBase",
+    audiobook.value ? audiobook.value.title + " - " + t("audiobook.title") : t("audiobook.title"),
   ),
   meta: [
     {
       name: "description",
-      content: computed(() =>
-        audiobook.value
-          ? `Découvrez le casting vocal et les narrateurs du livre audio ${audiobook.value.title} sur DubbingBase.`
-          : "Informations de doublage de livre audio sur DubbingBase.",
-      ),
+      content: computed(() => {
+        const title = audiobook.value?.title || "";
+        const description =
+          audiobook.value?.description ||
+          (title
+            ? t("seo.audiobookDescription", { title })
+            : t("seo.audiobookDescriptionFallback"));
+        return description.length > 160 ? description.substring(0, 157) + "..." : description;
+      }),
     },
   ],
 });

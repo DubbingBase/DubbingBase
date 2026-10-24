@@ -66,17 +66,14 @@ import { resolveLocaleLanguage } from "@app/shared-logic";
 
 const { t, locale } = useI18n();
 const localePath = useLocalePath();
-const trendingLanguage = computed(
-  () => resolveLocaleLanguage(locale.value) || "en-US",
-);
+const trendingLanguage = computed(() => resolveLocaleLanguage(locale.value) || "en-US");
 
 useHead({
-  title: "Tous les Films - DubbingBase",
+  title: computed(() => t("seo.moviesPageTitle")),
   meta: [
     {
       name: "description",
-      content:
-        "Parcourez la liste des films populaires et découvrez leurs comédiens de doublage.",
+      content: computed(() => t("seo.moviesPageDescription")),
     },
     {
       name: "keywords",

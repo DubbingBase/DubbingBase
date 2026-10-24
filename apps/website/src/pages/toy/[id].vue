@@ -111,7 +111,7 @@
             </div>
             <div v-for="member in activeDubProject.crew" :key="member.id" class="space-y-1">
               <span class="text-xs theme-text-muted">{{
-                member.job?.name || $t("common.crew")
+                member.job?.name || $t("common.team")
               }}</span>
               <NuxtLink
                 v-if="member.person"
@@ -222,7 +222,7 @@ import {
 import type { Toy, ToyDubbingProject } from "@app/shared-logic";
 
 const route = useRoute();
-const { locale } = useI18n();
+const { locale, t } = useI18n();
 const localePath = useLocalePath();
 const user = useSupabaseUser();
 const isAdmin = computed(() => user.value?.app_metadata?.role === "admin");
@@ -270,18 +270,16 @@ function getDisplayLanguage(langCode?: string | null): string {
 }
 
 useHead({
-  title: computed(() =>
-    toy.value
-      ? `${toy.value.name} - Voix & Narrateurs | DubbingBase`
-      : "Jouet Connecté / Conteuse | DubbingBase",
-  ),
+  title: computed(() => (toy.value ? toy.value.name + " - " + t("toy.title") : t("toy.title"))),
   meta: [
     {
       name: "description",
       content: computed(
         () =>
           toy.value?.description?.substring(0, 160) ||
-          "Retrouvez toutes les voix et narrations de ce jouet connecté sur DubbingBase.",
+          (toy.value?.name
+            ? t("seo.toyDescription", { title: toy.value.name })
+            : t("seo.toyDescriptionFallback")),
       ),
     },
   ],

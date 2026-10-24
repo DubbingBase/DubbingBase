@@ -505,7 +505,7 @@ const isOriginalLanguage = computed(() => {
 });
 
 const getDisplayLanguage = (langCode: string | undefined | null) => {
-  if (!langCode) return t("details.notSpecified", "Not specified");
+  if (!langCode) return t("details.notSpecified");
   try {
     const displayNames = new Intl.DisplayNames([locale.value || "en"], {
       type: "language",
@@ -624,7 +624,7 @@ useHead({
     const year = movie.value?.release_date
       ? ` (${new Date(movie.value.release_date).getFullYear()})`
       : "";
-    let base = movie.value ? `${movie.value.title}${year}` : t("search.movie", "Movie");
+    let base = movie.value ? `${movie.value.title}${year}` : t("search.movie");
     if (activeDubProject.value) {
       base += ` - ${t("details.dubbing", { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
     }
@@ -637,9 +637,7 @@ useHead({
         const title = movie.value?.title || "";
         let desc =
           movie.value?.overview ||
-          (title
-            ? t("seo.movieDescription", { title })
-            : t("seo.movieDescriptionFallback", "Découvrez le casting et les voix du film."));
+          (title ? t("seo.movieDescription", { title }) : t("seo.movieDescriptionFallback"));
         if (activeDubProject.value && title) {
           desc =
             t("seo.movieDescriptionDubbing", {
@@ -666,7 +664,7 @@ useHead({
         const year = movie.value?.release_date
           ? ` (${new Date(movie.value.release_date).getFullYear()})`
           : "";
-        let base = movie.value ? `${movie.value.title}${year}` : t("search.movie", "Movie");
+        let base = movie.value ? `${movie.value.title}${year}` : t("search.movie");
         if (activeDubProject.value) {
           base += ` - ${t("details.dubbing", { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
         }
@@ -679,9 +677,7 @@ useHead({
         const title = movie.value?.title || "";
         let desc =
           movie.value?.overview ||
-          (title
-            ? t("seo.movieDescription", { title })
-            : t("seo.movieDescriptionFallback", "Découvrez le casting et les voix du film."));
+          (title ? t("seo.movieDescription", { title }) : t("seo.movieDescriptionFallback"));
         if (activeDubProject.value && title) {
           desc =
             t("seo.movieDescriptionDubbing", {
@@ -716,7 +712,7 @@ useHead({
         const year = movie.value?.release_date
           ? ` (${new Date(movie.value.release_date).getFullYear()})`
           : "";
-        let base = movie.value ? `${movie.value.title}${year}` : t("search.movie", "Movie");
+        let base = movie.value ? `${movie.value.title}${year}` : t("search.movie");
         if (activeDubProject.value) {
           base += ` - ${t("details.dubbing", { lang: getDisplayLanguage(activeDubProject.value.language) })}`;
         }
@@ -729,9 +725,7 @@ useHead({
         const title = movie.value?.title || "";
         let desc =
           movie.value?.overview ||
-          (title
-            ? t("seo.movieDescription", { title })
-            : t("seo.movieDescriptionFallback", "Découvrez le casting et les voix du film."));
+          (title ? t("seo.movieDescription", { title }) : t("seo.movieDescriptionFallback"));
         if (activeDubProject.value && title) {
           desc =
             t("seo.movieDescriptionDubbing", {
@@ -774,13 +768,11 @@ useHead({
           "@context": "https://schema.org",
           "@type": "Movie",
           url: pageUrl.value,
-          name: title || t("search.movie", "Film"),
+          name: title || t("search.movie"),
           image: posterUrl.value || backdropUrl.value || "",
           description:
             movie.value?.overview ||
-            (title
-              ? t("seo.movieDescription", { title })
-              : t("seo.movieDescriptionFallback", "Découvrez le casting et les voix du film.")),
+            (title ? t("seo.movieDescription", { title }) : t("seo.movieDescriptionFallback")),
           datePublished: movie.value?.release_date || undefined,
           actor: formattedCast.value.map((actor) => ({
             "@type": "PerformanceRole",
