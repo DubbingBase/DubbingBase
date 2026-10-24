@@ -22,8 +22,8 @@ fixtures_created=0
 
 cleanup() {
   if [[ "$fixtures_created" == "1" ]]; then
-    psql_local >/dev/null <<'SQL' || true
-# This session only cleans disposable fixtures; the setting ends when psql exits.
+    psql_local >/dev/null <<'SQL'
+-- This session only cleans disposable fixtures; the setting ends when psql exits.
 SET session_replication_role = replica;
 DELETE FROM public.audit_logs
 WHERE user_id = '00000000-0000-0000-0000-000056368201';
