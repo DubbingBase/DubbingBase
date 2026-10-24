@@ -84,6 +84,14 @@ describe("task contribution validation", () => {
     expect(() =>
       validateTaskContribution(
         validInput({
+          fields: { date_of_birth: "0000-01-01" },
+          currentValues: { date_of_birth: null },
+        }),
+      ),
+    ).toThrow();
+    expect(() =>
+      validateTaskContribution(
+        validInput({
           category: "enrich_studio",
           fields: { website_url: "javascript:alert(1)" },
           currentValues: { website_url: null },
