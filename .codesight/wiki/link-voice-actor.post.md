@@ -2,11 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Link-voice-actor.post subsystem handles **1 routes** and touches: auth, db.
+The Link-voice-actor.post subsystem handles **1 routes** and touches: auth.
 
 ## Routes
 
-- `POST` `/api/link-voice-actor` [auth, db]
+- `POST` `/api/link-voice-actor` [auth]
   `apps/website/server/api/link-voice-actor.post.ts`
 
 ## Related Models

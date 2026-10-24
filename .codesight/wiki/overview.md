@@ -20,7 +20,7 @@
 - **[Create-user-profile.post](./create-user-profile.post.md)** — 1 routes — touches: auth, db
 - **[Dashboard-stats.get](./dashboard-stats.get.md)** — 1 routes — touches: auth
 - **[Delete-user-voice-actor-link.post](./delete-user-voice-actor-link.post.md)** — 1 routes — touches: db
-- **[Delete-voice-actor-link.post](./delete-voice-actor-link.post.md)** — 1 routes — touches: auth, db
+- **[Delete-voice-actor-link.post](./delete-voice-actor-link.post.md)** — 1 routes — touches: auth
 - **[Delete_user.post](./delete_user.post.md)** — 1 routes — touches: auth
 - **[Detail-collections.get](./detail-collections.get.md)** — 1 routes
 - **[Extract-credits-from-image.post](./extract-credits-from-image.post.md)** — 1 routes — touches: upload
@@ -44,7 +44,7 @@
 - **[Internal-media-credits.get](./internal-media-credits.get.md)** — 1 routes
 - **[Internal-media-metadata.get](./internal-media-metadata.get.md)** — 1 routes
 - **[Link-user-voice-actor.post](./link-user-voice-actor.post.md)** — 1 routes — touches: db
-- **[Link-voice-actor.post](./link-voice-actor.post.md)** — 1 routes — touches: auth, db
+- **[Link-voice-actor.post](./link-voice-actor.post.md)** — 1 routes — touches: auth
 - **[List-voice-actors.get](./list-voice-actors.get.md)** — 1 routes
 - **[List_users.get](./list_users.get.md)** — 1 routes — touches: auth
 - **[Manage-subscription.post](./manage-subscription.post.md)** — 1 routes — touches: db
@@ -74,7 +74,7 @@
 - **[Update-user-profile.post](./update-user-profile.post.md)** — 1 routes
 - **[Update-voice-actor.post](./update-voice-actor.post.md)** — 1 routes — touches: auth, upload
 - **[Update_user_role.post](./update_user_role.post.md)** — 1 routes — touches: auth
-- **[Update_voice_actor_link.post](./update_voice_actor_link.post.md)** — 1 routes — touches: auth, db
+- **[Update_voice_actor_link.post](./update_voice_actor_link.post.md)** — 1 routes — touches: auth
 - **[Upload-profile-picture.post](./upload-profile-picture.post.md)** — 1 routes — touches: db, upload
 - **[Voice-actors.get](./voice-actors.get.md)** — 1 routes
 
@@ -90,7 +90,7 @@ Changes to these files have the widest blast radius across the codebase:
 
 - `apps/website/server/utils/db/client.ts` — imported by **68** files
 - `apps/website/server/utils/auth.ts` — imported by **37** files
-- `apps/website/server/utils/index.ts` — imported by **24** files
+- `apps/website/server/utils/index.ts` — imported by **25** files
 - `apps/website/server/utils/cache/index.ts` — imported by **19** files
 - `apps/website/server/utils/db/queries.ts` — imported by **12** files
 - `apps/website/server/utils/notifications/discord.ts` — imported by **12** files
@@ -112,4 +112,4 @@ Changes to these files have the widest blast radius across the codebase:
 - _...31 more_
 
 ---
-_Back to [index.md](./index.md) · Generated 2026-10-23_
+_Back to [index.md](./index.md) · Generated 2026-10-24_

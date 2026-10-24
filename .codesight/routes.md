@@ -17,7 +17,7 @@
 - `POST` `/api/create-user-profile` [auth, db]
 - `GET` `/api/dashboard-stats` [auth]
 - `POST` `/api/delete-user-voice-actor-link` [db]
-- `POST` `/api/delete-voice-actor-link` [auth, db]
+- `POST` `/api/delete-voice-actor-link` [auth] ✓
 - `POST` `/api/delete_user` [auth]
 - `GET` `/api/detail-collections` ✓
 - `GET` `/api/episode/index` [cache]
@@ -41,7 +41,7 @@
 - `GET` `/api/internal-media-credits`
 - `GET` `/api/internal-media-metadata`
 - `POST` `/api/link-user-voice-actor` [db]
-- `POST` `/api/link-voice-actor` [auth, db]
+- `POST` `/api/link-voice-actor` [auth] ✓
 - `GET` `/api/list-voice-actors`
 - `GET` `/api/list_users` [auth]
 - `POST` `/api/manage-subscription` [db]
@@ -81,6 +81,6 @@
 - `POST` `/api/update-user-profile`
 - `POST` `/api/update-voice-actor` [auth, upload] ✓
 - `POST` `/api/update_user_role` [auth]
-- `POST` `/api/update_voice_actor_link` [auth, db]
+- `POST` `/api/update_voice_actor_link` [auth] ✓
 - `POST` `/api/upload-profile-picture` [db, upload] ✓
 - `GET` `/api/voice-actor/:id` params(id)
