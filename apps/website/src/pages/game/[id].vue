@@ -68,7 +68,7 @@
           <NuxtLink
             :to="localePath(`/studio/${activeDubProject.studio_data.id}`)"
             class="flex items-center gap-2 px-3 py-1.5 rounded-lg border theme-border-subtle theme-border theme-hover-primary-border transition-colors group theme-surface-raised theme-surface"
-            title="Studio de doublage"
+            :title="$t('details.dubbingStudio')"
           >
             <div
               class="w-6 h-6 rounded flex items-center justify-center overflow-hidden shrink-0 theme-surface-muted"
@@ -99,9 +99,7 @@
           >
             <Loader2Icon v-if="isPreparing" class="w-4 h-4 animate-spin" />
             <Gamepad2Icon v-else class="w-4 h-4" />
-            <span class="hidden sm:inline">{{
-              $t("game.prepareCredits", "Extraire les crédits")
-            }}</span>
+            <span class="hidden sm:inline">{{ $t("game.prepareCredits") }}</span>
           </button>
 
           <NuxtLink
@@ -132,7 +130,7 @@
         <button
           @click="isReportModalOpen = true"
           class="text-sm theme-text-muted theme-hover-danger-text transition-colors flex items-center gap-1.5"
-          title="Signaler cette fiche"
+          :title="$t('report.title')"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -155,10 +153,10 @@
         <div class="mb-12 max-w-4xl">
           <section>
             <h2 class="text-2xl font-bold mb-4">
-              {{ $t("details.synopsis", "Synopsis") }}
+              {{ $t("details.synopsis") }}
             </h2>
             <p class="theme-text-secondary leading-relaxed text-lg mb-8">
-              {{ game.summary || $t("details.noSynopsis", "Aucun synopsis disponible.") }}
+              {{ game.summary || $t("details.noSynopsis") }}
             </p>
 
             <div
@@ -166,7 +164,7 @@
             >
               <div>
                 <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2">
-                  {{ $t("game.developer", "Développeur") }}
+                  {{ $t("game.developer") }}
                 </h3>
                 <p class="font-medium text-sm">
                   {{ getDevelopers(game) || "-" }}
@@ -174,7 +172,7 @@
               </div>
               <div>
                 <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2">
-                  {{ $t("game.publisher", "Éditeur") }}
+                  {{ $t("game.publisher") }}
                 </h3>
                 <p class="font-medium text-sm">
                   {{ getPublishers(game) || "-" }}
@@ -182,7 +180,7 @@
               </div>
               <div class="col-span-2 md:col-span-1">
                 <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2">
-                  {{ $t("game.genres", "Genres") }}
+                  {{ $t("game.genres") }}
                 </h3>
                 <div class="flex flex-wrap gap-1.5">
                   <span
@@ -196,7 +194,7 @@
               </div>
               <div class="col-span-2 md:col-span-1">
                 <h3 class="text-xs font-bold theme-text-muted uppercase tracking-wider mb-2">
-                  {{ $t("game.platforms", "Plateformes") }}
+                  {{ $t("game.platforms") }}
                 </h3>
                 <div class="flex flex-wrap gap-1.5">
                   <span
@@ -218,7 +216,7 @@
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
               <div>
                 <h2 class="text-2xl font-bold">
-                  {{ $t("details.castAndCrew", "Casting") }}
+                  {{ $t("details.castAndCrew") }}
                 </h2>
                 <div class="theme-text-muted text-sm mt-1">
                   {{
@@ -237,7 +235,7 @@
                 <input
                   v-model="searchInput"
                   type="search"
-                  :placeholder="$t('search.placeholder', 'Rechercher...')"
+                  :placeholder="$t('search.placeholder')"
                   class="w-full theme-input border theme-border-subtle theme-border rounded-xl pl-10 pr-4 py-2 text-sm theme-focus transition-all theme-text"
                 />
               </div>
@@ -289,9 +287,7 @@
                         class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
                       >
                         <UserIcon class="w-3 h-3 flex-shrink-0" />
-                        <span class="truncate block w-full">{{
-                          $t("details.character", "Personnage")
-                        }}</span>
+                        <span class="truncate block w-full">{{ $t("details.character") }}</span>
                       </div>
                       <div
                         class="font-bold text-sm theme-text truncate block w-full"
@@ -332,9 +328,7 @@
                           class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
                         >
                           <MicIcon class="w-3 h-3 flex-shrink-0" />
-                          <span class="truncate block w-full">{{
-                            $t("details.voiceActor", "Voice Actor")
-                          }}</span>
+                          <span class="truncate block w-full">{{ $t("details.voiceActor") }}</span>
                         </div>
                         <NuxtLink
                           :to="localePath(`/voice-actor/${char.voiceActor.id}`)"
@@ -370,12 +364,10 @@
                           class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
                         >
                           <MicIcon class="w-3 h-3 opacity-50 flex-shrink-0" />
-                          <span class="truncate block w-full">{{
-                            $t("details.voiceActor", "Voice Actor")
-                          }}</span>
+                          <span class="truncate block w-full">{{ $t("details.voiceActor") }}</span>
                         </div>
                         <div class="text-sm theme-text-muted italic truncate block w-full">
-                          {{ $t("details.notSpecified", "Non spécifié") }}
+                          {{ $t("details.notSpecified") }}
                         </div>
                       </div>
                     </template>
@@ -395,7 +387,7 @@
     </MediaDetailsLayout>
 
     <div v-else-if="!pending" class="text-center py-20 theme-text-muted min-h-screen">
-      {{ $t("details.notFound", "Jeu vidéo introuvable.") }}
+      {{ $t("game.notFound") }}
     </div>
 
     <ReportModal v-model:open="isReportModalOpen" :target-url="currentUrl" />
@@ -671,14 +663,17 @@ async function triggerPrepareGame() {
 }
 
 useHead({
-  titleTemplate: null,
   title: computed(() => {
     const year = game.value?.first_release_date
       ? ` (${formatReleaseYear(game.value.first_release_date)})`
       : "";
-    let base = game.value ? `${game.value.name}${year}` : "Jeu Vidéo";
+    let base = game.value ? game.value.name + year : t("search.videoGame");
     if (activeDubProject.value) {
-      base += ` - Doublage ${getDisplayLanguage(activeDubProject.value.language)}`;
+      base +=
+        " - " +
+        t("details.dubbing", {
+          lang: getDisplayLanguage(activeDubProject.value.language),
+        });
     }
     return base;
   }),
@@ -686,12 +681,17 @@ useHead({
     {
       name: "description",
       content: computed(() => {
+        const title = game.value?.name || "";
         let desc =
           game.value?.summary ||
-          `Découvrez les voix françaises et le casting du jeu vidéo ${game.value?.name}.`;
-        if (activeDubProject.value) {
+          (title ? t("seo.gameDescription", { title }) : t("seo.gameDescriptionFallback"));
+        if (activeDubProject.value && title) {
           desc =
-            `Découvrez le casting complet des voix pour le doublage ${getDisplayLanguage(activeDubProject.value.language)} du jeu ${game.value?.name}. ` +
+            t("seo.gameDescriptionDubbing", {
+              lang: getDisplayLanguage(activeDubProject.value.language),
+              title,
+            }) +
+            " " +
             desc;
         }
         return desc;

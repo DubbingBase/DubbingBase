@@ -36,8 +36,7 @@
       {{ $t("legal.termsApi.section4") }}
     </h2>
     <p class="mb-4">
-      {{ $t("legal.termsApi.apiKeyIntro")
-      }}<strong>{{ $t("legal.termsApi.suspendRevoke") }}</strong
+      {{ $t("legal.termsApi.apiKeyIntro") }}<strong>{{ $t("legal.termsApi.suspendRevoke") }}</strong
       >{{ $t("legal.termsApi.revocationCases") }}
     </p>
     <ul class="list-disc pl-6 mb-6 space-y-2">
@@ -59,12 +58,14 @@
 </template>
 
 <script setup lang="ts">
+const { t } = useI18n();
+
 useHead({
-  title: "CGV API - DubbingBase",
+  title: computed(() => t("legal.termsApi.title")),
   meta: [
     {
       name: "description",
-      content: "Conditions Générales de Vente pour l'API DubbingBase.",
+      content: computed(() => t("legal.termsApi.metaDescription")),
     },
   ],
 });

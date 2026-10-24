@@ -387,7 +387,7 @@
       class="min-h-[50vh] flex flex-col items-center justify-center p-8 text-center"
     >
       <h1 class="text-2xl font-bold theme-text mb-2">
-        {{ $t("common.error", "Une erreur est survenue") }}
+        {{ $t("common.error") }}
       </h1>
       <p class="theme-text-secondary theme-text-muted mb-6">
         {{ $t("details.requestError") }}
@@ -396,7 +396,7 @@
         :to="localePath(`/show/${showId}/season/${seasonNumber}`)"
         class="px-4 py-2 theme-primary-bg font-semibold rounded-lg hover:opacity-90 transition-opacity"
       >
-        {{ $t("details.backToSeason", "Retour à la saison") }}
+        {{ $t("details.backToSeason") }}
       </NuxtLink>
     </div>
 
@@ -405,16 +405,16 @@
       class="min-h-[50vh] flex flex-col items-center justify-center p-8 text-center"
     >
       <h1 class="text-2xl font-bold theme-text mb-2">
-        {{ $t("details.notFound", "Épisode introuvable") }}
+        {{ $t("details.episodeNotFound") }}
       </h1>
       <p class="text-sm theme-text-secondary theme-text-muted mb-6">
-        {{ $t("details.notFoundDesc", "Impossible de charger les informations de cet épisode.") }}
+        {{ $t("details.episodeNotFoundDesc") }}
       </p>
       <NuxtLink
         :to="localePath(`/show/${showId}/season/${seasonNumber}`)"
         class="px-4 py-2 theme-primary-bg font-semibold rounded-lg"
       >
-        {{ $t("details.backToSeason", "Retour à la saison") }}
+        {{ $t("details.backToSeason") }}
       </NuxtLink>
     </div>
 
@@ -553,7 +553,7 @@ function projectVoiceActorCount(project: MediaDetailDubbingProject): number {
   return ids.size;
 }
 const title = computed(() => {
-  if (!episode.value) return t("search.tv", "Series");
+  if (!episode.value) return t("search.tv");
   const episodeName =
     episode.value.name || t("details.episode", { num: episode.value.episode_number });
   return `${t("details.season", { num: seasonNumber.value })} · ${t("details.episode", { num: episode.value.episode_number })} - ${episodeName}`;
@@ -595,7 +595,7 @@ const isOriginalLanguage = computed(() => {
 });
 
 const getDisplayLanguage = (langCode: string | undefined | null) => {
-  if (!langCode) return t("details.notSpecified", "Not specified");
+  if (!langCode) return t("details.notSpecified");
   try {
     const displayNames = new Intl.DisplayNames([locale.value || "en"], {
       type: "language",
@@ -711,7 +711,7 @@ useHead({
           episode.value?.overview ||
           (episodeName
             ? t("seo.showDescription", { title: episodeName })
-            : t("seo.showDescriptionFallback", "Découvrez le casting et les voix de l'épisode."));
+            : t("seo.showDescriptionFallback"));
         if (activeDubProject.value && episodeName) {
           desc =
             t("seo.showDescriptionDubbing", {
@@ -752,7 +752,7 @@ useHead({
           episode.value?.overview ||
           (episodeName
             ? t("seo.showDescription", { title: episodeName })
-            : t("seo.showDescriptionFallback", "Découvrez le casting et les voix de l'épisode."));
+            : t("seo.showDescriptionFallback"));
         if (activeDubProject.value && episodeName) {
           desc =
             t("seo.showDescriptionDubbing", {
@@ -800,7 +800,7 @@ useHead({
           episode.value?.overview ||
           (episodeName
             ? t("seo.showDescription", { title: episodeName })
-            : t("seo.showDescriptionFallback", "Découvrez le casting et les voix de l'épisode."));
+            : t("seo.showDescriptionFallback"));
         if (activeDubProject.value && episodeName) {
           desc =
             t("seo.showDescriptionDubbing", {

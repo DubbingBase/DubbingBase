@@ -1,8 +1,6 @@
 <template>
   <div class="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 min-h-screen">
-    <div
-      class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4"
-    >
+    <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
         <h1 class="text-3xl md:text-4xl font-bold theme-text mb-2">
           {{ $t("footer.studios") }}
@@ -17,7 +15,7 @@
             <input
               v-model="searchInput"
               type="text"
-              placeholder="Rechercher un studio..."
+              :placeholder="t('studio.searchPlaceholder')"
               class="w-full theme-surface-raised theme-surface-muted theme-text border-0 rounded-full px-6 py-2.5 text-sm theme-focus transition-shadow outline-none"
             />
           </div>
@@ -62,10 +60,7 @@
     </div>
 
     <!-- Empty Search State -->
-    <div
-      v-else-if="studios.length === 0"
-      class="text-center py-12 theme-text-muted"
-    >
+    <div v-else-if="studios.length === 0" class="text-center py-12 theme-text-muted">
       {{ $t("studio.noResultsFor", { query: searchInput }) }}
     </div>
 
@@ -80,10 +75,7 @@
         @update:page="page = $event"
       >
         <template #default="{ item: studio }">
-          <NuxtLink
-            :to="localePath('/studio/' + studio.id)"
-            class="group cursor-pointer block"
-          >
+          <NuxtLink :to="localePath('/studio/' + studio.id)" class="group cursor-pointer block">
             <div
               class="relative w-full aspect-square rounded-xl overflow-hidden mb-3 theme-surface-muted flex items-center justify-center shadow-md transition-transform duration-300 group-hover:-translate-y-1 group-hover:shadow-xl"
             >
@@ -103,10 +95,7 @@
             >
               {{ studio.name }}
             </h3>
-            <p
-              v-if="studio.city || studio.country"
-              class="text-xs theme-text-muted mt-1"
-            >
+            <p v-if="studio.city || studio.country" class="text-xs theme-text-muted mt-1">
               {{ [studio.city, studio.country].filter(Boolean).join(", ") }}
             </p>
           </NuxtLink>
@@ -127,6 +116,7 @@ import { ref, computed, watch } from "vue";
 import { refDebounced } from "@vueuse/core";
 
 const localePath = useLocalePath();
+const { t } = useI18n();
 
 const searchInput = ref("");
 const debouncedSearch = refDebounced(searchInput, 150);
@@ -175,12 +165,11 @@ watch(debouncedSearch, () => {
 });
 
 useHead({
-  title: "Studios de Doublage - DubbingBase",
+  title: computed(() => t("seo.studiosPageTitle")),
   meta: [
     {
       name: "description",
-      content:
-        "Parcourez la liste des studios de doublage et leurs projets associés.",
+      content: computed(() => t("seo.studiosPageDescription")),
     },
   ],
 });

@@ -29,7 +29,9 @@
             "
             class="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 theme-status-success-text text-xs font-semibold rounded-xl border border-emerald-500/30 flex items-center gap-1.5 transition-colors"
           >
-            <span>{{ activeDubProject ? "Modifier le projet" : "Ajouter un projet" }}</span>
+            <span>{{
+              activeDubProject ? $t("advertisement.editProject") : $t("advertisement.createProject")
+            }}</span>
           </NuxtLink>
 
           <ForceEnqueueButton
@@ -118,7 +120,9 @@
               :key="member.id"
               class="space-y-1"
             >
-              <span class="text-xs theme-text-muted">{{ member.jobs?.name || "Équipe" }}</span>
+              <span class="text-xs theme-text-muted">{{
+                member.jobs?.name || $t("common.team")
+              }}</span>
               <NuxtLink
                 v-if="member.voice_actors"
                 :to="localePath(`/voice-actor/${member.voice_actors.id}`)"
@@ -198,7 +202,7 @@
                     {{ item.firstname }} {{ item.lastname }}
                   </NuxtLink>
                   <span class="text-xs theme-text-muted block truncate mt-0.5">
-                    {{ item.character_name || item.performance || "Voix off" }}
+                    {{ item.character_name || item.performance || $t("advertisement.voiceOver") }}
                   </span>
                   <span v-if="item.note" class="text-xs theme-text-muted block truncate mt-1">{{
                     item.note
@@ -285,8 +289,8 @@ const castItems = computed(() =>
 useHead({
   title: computed(() =>
     advertisement.value
-      ? `${advertisement.value.title} - Voix Off | DubbingBase`
-      : "Publicité | DubbingBase",
+      ? advertisement.value.title + " - " + t("advertisement.title")
+      : t("advertisement.title"),
   ),
   meta: [
     {
@@ -294,7 +298,11 @@ useHead({
       content: computed(
         () =>
           advertisement.value?.description?.substring(0, 160) ||
-          "Retrouvez les voix off et comédiens de cette publicité sur DubbingBase.",
+          (advertisement.value?.title
+            ? t("seo.advertisementDescription", {
+                title: advertisement.value.title,
+              })
+            : t("seo.advertisementDescriptionFallback")),
       ),
     },
   ],

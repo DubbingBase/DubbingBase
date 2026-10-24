@@ -170,8 +170,7 @@ export const MOCK_VOICE_ACTOR = {
         },
       },
       sortDate: "1981-06-12",
-      searchText:
-        "raiders of the lost ark indiana jones harrison ford dialogues",
+      searchText: "raiders of the lost ark indiana jones harrison ford dialogues",
     },
     {
       media: {
@@ -233,8 +232,7 @@ export const MOCK_VOICE_ACTOR = {
         },
       },
       sortDate: "1992-09-05",
-      searchText:
-        "batman the animated series bruce wayne kevin conroy dialogues",
+      searchText: "batman the animated series bruce wayne kevin conroy dialogues",
     },
     {
       media: {
@@ -265,8 +263,7 @@ export const MOCK_VOICE_ACTOR = {
         },
       },
       sortDate: "2015-05-19",
-      searchText:
-        "the witcher 3 wild hunt geralt of rivia doug cockle dialogues",
+      searchText: "the witcher 3 wild hunt geralt of rivia doug cockle dialogues",
     },
     {
       media: {
@@ -437,20 +434,10 @@ const MOCK_VOICE_ACTOR_WITH_UNRESOLVED_WORK = {
   enhancedWorks: [
     ...MOCK_VOICE_ACTOR.enhancedWorks,
     ...Array.from({ length: 13 }, (_, index) =>
-      createMockVoiceActorWork(
-        2000 + index,
-        3,
-        "Harrison Ford",
-        `${2010 + index}-01-01`,
-      ),
+      createMockVoiceActorWork(2000 + index, 3, "Harrison Ford", `${2010 + index}-01-01`),
     ),
     ...Array.from({ length: 11 }, (_, index) =>
-      createMockVoiceActorWork(
-        2100 + index,
-        1000 + index,
-        `Actor ${index}`,
-        "2024-01-02",
-      ),
+      createMockVoiceActorWork(2100 + index, 1000 + index, `Actor ${index}`, "2024-01-02"),
     ),
     {
       media: {
@@ -561,15 +548,13 @@ export const MOCK_MOVIE = {
             id: 1,
             firstname: "Richard",
             lastname: "Darbois",
-            profile_picture:
-              "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
+            profile_picture: "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
           },
           voice_actors: {
             id: 1,
             firstname: "Richard",
             lastname: "Darbois",
-            profile_picture:
-              "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
+            profile_picture: "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
           },
         },
       ],
@@ -584,15 +569,13 @@ export const MOCK_MOVIE = {
             id: 1,
             firstname: "Richard",
             lastname: "Darbois",
-            profile_picture:
-              "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
+            profile_picture: "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
           },
           voice_actors: {
             id: 1,
             firstname: "Richard",
             lastname: "Darbois",
-            profile_picture:
-              "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
+            profile_picture: "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
           },
         },
       ],
@@ -840,8 +823,7 @@ export const MOCK_GAME = {
     cover: {
       url: "https://images.igdb.com/igdb/image/upload/t_cover_big/witcher3.jpg",
     },
-    cover_url:
-      "https://images.igdb.com/igdb/image/upload/t_cover_big/witcher3.jpg",
+    cover_url: "https://images.igdb.com/igdb/image/upload/t_cover_big/witcher3.jpg",
     first_release_date: 1431993600,
     rating: 94.5,
   },
@@ -924,8 +906,7 @@ export const MOCK_AUDIOBOOK = {
     id: 401,
     title: "Dune",
     name: "Dune",
-    description:
-      "Set on the desert planet Arrakis, Dune is the story of the boy Paul Atreides.",
+    description: "Set on the desert planet Arrakis, Dune is the story of the boy Paul Atreides.",
     cover_url: "https://covers.openlibrary.org/b/id/8225266-L.jpg",
     first_publish_year: 1965,
     release_date: "1965-08-01",
@@ -937,8 +918,7 @@ export const MOCK_AUDIOBOOK = {
     id: 401,
     title: "Dune",
     name: "Dune",
-    description:
-      "Set on the desert planet Arrakis, Dune is the story of the boy Paul Atreides.",
+    description: "Set on the desert planet Arrakis, Dune is the story of the boy Paul Atreides.",
     cover_url: "https://covers.openlibrary.org/b/id/8225266-L.jpg",
     first_publish_year: 1965,
     release_date: "1965-08-01",
@@ -970,15 +950,13 @@ export const MOCK_AUDIOBOOK = {
             id: 1,
             firstname: "Richard",
             lastname: "Darbois",
-            profile_picture:
-              "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
+            profile_picture: "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
           },
           voice_actors: {
             id: 1,
             firstname: "Richard",
             lastname: "Darbois",
-            profile_picture:
-              "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
+            profile_picture: "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
           },
         },
       ],
@@ -992,15 +970,13 @@ export const MOCK_AUDIOBOOK = {
             id: 1,
             firstname: "Richard",
             lastname: "Darbois",
-            profile_picture:
-              "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
+            profile_picture: "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
           },
           voice_actors: {
             id: 1,
             firstname: "Richard",
             lastname: "Darbois",
-            profile_picture:
-              "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
+            profile_picture: "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
           },
         },
       ],
@@ -1015,10 +991,8 @@ export const MOCK_PODCAST = {
     title: "L'Ombre du Doute",
     name: "L'Ombre du Doute",
     description: "Une saga audio policière captivante.",
-    cover_url:
-      "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=500",
-    poster_path:
-      "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=500",
+    cover_url: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=500",
+    poster_path: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=500",
     release_date: "2023-09-01",
     author: "Studio Sonore",
     author_name: "Studio Sonore",
@@ -1050,15 +1024,13 @@ export const MOCK_PODCAST = {
             id: 1,
             firstname: "Richard",
             lastname: "Darbois",
-            profile_picture:
-              "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
+            profile_picture: "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
           },
           voice_actors: {
             id: 1,
             firstname: "Richard",
             lastname: "Darbois",
-            profile_picture:
-              "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
+            profile_picture: "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
           },
         },
       ],
@@ -1072,15 +1044,13 @@ export const MOCK_PODCAST = {
             id: 1,
             firstname: "Richard",
             lastname: "Darbois",
-            profile_picture:
-              "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
+            profile_picture: "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
           },
           voice_actors: {
             id: 1,
             firstname: "Richard",
             lastname: "Darbois",
-            profile_picture:
-              "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
+            profile_picture: "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
           },
         },
       ],
@@ -1122,8 +1092,7 @@ export const MOCK_ACTOR = {
             id: 1,
             firstname: "Richard",
             lastname: "Darbois",
-            profile_picture:
-              "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
+            profile_picture: "https://image.tmdb.org/t/p/w185/richard_darbois.jpg",
           },
         ],
         mediaDetails: {
@@ -1159,8 +1128,7 @@ export const MOCK_STUDIO = {
     country: "France",
     city: "La Plaine Saint-Denis",
     logo_url: "https://dubbingbase.com/studios/dubbing_brothers.png",
-    description:
-      "L'un des plus grands studios de doublage en France et en Europe.",
+    description: "L'un des plus grands studios de doublage en France et en Europe.",
   },
   dubbedProjects: [
     {
@@ -1226,8 +1194,7 @@ export const MOCK_SEARCH_RESULTS = [
   {
     id: 1942,
     name: "The Witcher 3: Wild Hunt",
-    poster_path:
-      "https://images.igdb.com/igdb/image/upload/t_cover_big/witcher3.jpg",
+    poster_path: "https://images.igdb.com/igdb/image/upload/t_cover_big/witcher3.jpg",
     media_type: "video_game",
     popularity: 85,
   },
@@ -1264,8 +1231,7 @@ export const MOCK_HOME_DATA = {
     {
       id: 1942,
       name: "The Witcher 3: Wild Hunt",
-      cover_url:
-        "https://images.igdb.com/igdb/image/upload/t_cover_big/witcher3.jpg",
+      cover_url: "https://images.igdb.com/igdb/image/upload/t_cover_big/witcher3.jpg",
       first_release_date: 1431993600,
     },
   ],
@@ -1288,6 +1254,26 @@ export default defineEventHandler(async (event) => {
 
   const url = getRequestURL(event);
   const path = url.pathname;
+
+  if (path.startsWith("/api/advertisement/")) {
+    const id = Number(path.slice("/api/advertisement/".length));
+    return send(
+      event,
+      JSON.stringify({
+        advertisement: {
+          id,
+          title: "Example Summer Commercial",
+          brand: "Example Brand",
+          year: 2025,
+          description: "A short example commercial.",
+          media_type: "advertisement",
+        },
+        dubbingProjects: [],
+        votes: {},
+      }),
+      "application/json",
+    );
+  }
 
   // Toy detail pages use two records so E2E navigation can verify route-driven refresh.
   if (path.startsWith("/api/toy/")) {
@@ -1347,9 +1333,7 @@ export default defineEventHandler(async (event) => {
   // 1. Voice Actor Detail
   if (path.startsWith("/api/voice-actor/")) {
     const response =
-      path === "/api/voice-actor/999"
-        ? MOCK_VOICE_ACTOR_WITH_UNRESOLVED_WORK
-        : MOCK_VOICE_ACTOR;
+      path === "/api/voice-actor/999" ? MOCK_VOICE_ACTOR_WITH_UNRESOLVED_WORK : MOCK_VOICE_ACTOR;
     return send(event, JSON.stringify(response), "application/json");
   }
 
@@ -1364,10 +1348,19 @@ export default defineEventHandler(async (event) => {
   }
 
   if (path === "/api/season") {
-    if (
-      url.searchParams.get("id") === "108978" &&
-      url.searchParams.get("season_number") === "1"
-    ) {
+    if (url.searchParams.get("season_number") === "404") {
+      setResponseStatus(event, 404);
+      return send(
+        event,
+        JSON.stringify({
+          statusCode: 404,
+          statusMessage: "Mock season not found",
+        }),
+        "application/json",
+      );
+    }
+
+    if (url.searchParams.get("id") === "108978" && url.searchParams.get("season_number") === "1") {
       await new Promise((resolve) => setTimeout(resolve, 700));
       setResponseStatus(event, 504);
       return send(
@@ -1386,14 +1379,21 @@ export default defineEventHandler(async (event) => {
       season_number: seasonNumber,
       name: seasonNumber === 0 ? "Specials" : MOCK_SEASON.season.name,
     };
-    return send(
-      event,
-      JSON.stringify({ ...MOCK_SEASON, season }),
-      "application/json",
-    );
+    return send(event, JSON.stringify({ ...MOCK_SEASON, season }), "application/json");
   }
 
   if (path === "/api/episode") {
+    if (url.searchParams.get("episode_number") === "404") {
+      setResponseStatus(event, 404);
+      return send(
+        event,
+        JSON.stringify({
+          statusCode: 404,
+          statusMessage: "Mock episode not found",
+        }),
+        "application/json",
+      );
+    }
     return send(event, JSON.stringify(MOCK_EPISODE), "application/json");
   }
 
@@ -1404,6 +1404,27 @@ export default defineEventHandler(async (event) => {
 
   // 5. Audiobook Detail
   if (path.startsWith("/api/audiobook/")) {
+    if (path.endsWith("/402")) {
+      const audiobook = {
+        id: 402,
+        title: "A Book Without Details",
+        description: "",
+        cover_url: null,
+        first_publish_year: null,
+        author: null,
+        authors: [],
+      };
+      return send(
+        event,
+        JSON.stringify({
+          audiobook,
+          book: audiobook,
+          dubbingProjects: [],
+          votes: {},
+        }),
+        "application/json",
+      );
+    }
     return send(event, JSON.stringify(MOCK_AUDIOBOOK), "application/json");
   }
 
@@ -1419,6 +1440,46 @@ export default defineEventHandler(async (event) => {
 
   // 8. Studio Details
   if (path.includes("/api/get-studio-details")) {
+    if (url.searchParams.get("id") === "12" || url.searchParams.get("studioId") === "12") {
+      return send(
+        event,
+        JSON.stringify({
+          ...MOCK_STUDIO,
+          studio: { ...MOCK_STUDIO.studio, id: 12 },
+          dubbedProjects: Array.from({ length: 9 }, (_, index) => ({
+            id: 12000 + index,
+            content_id: 12000 + index,
+            content_type: "movie",
+            language: "fr-FR",
+            media: {
+              id: 12000 + index,
+              title: `Fixture Project ${index + 1}`,
+              poster_path: "/project.jpg",
+            },
+          })),
+        }),
+        "application/json",
+      );
+    }
+    if (url.searchParams.get("id") === "11" || url.searchParams.get("studioId") === "11") {
+      return send(
+        event,
+        JSON.stringify({
+          ...MOCK_STUDIO,
+          studio: { ...MOCK_STUDIO.studio, id: 11 },
+          dubbedProjects: [
+            ...MOCK_STUDIO.dubbedProjects,
+            {
+              id: 1101,
+              content_id: 110,
+              language: "en-US",
+              media: { id: 110, title: "Unclassified Production" },
+            },
+          ],
+        }),
+        "application/json",
+      );
+    }
     return send(event, JSON.stringify(MOCK_STUDIO), "application/json");
   }
 
@@ -1429,36 +1490,20 @@ export default defineEventHandler(async (event) => {
 
   // 10. Trending & Home APIs
   if (path.includes("/api/trending/movies")) {
-    return send(
-      event,
-      JSON.stringify(MOCK_HOME_DATA.trendingMovies),
-      "application/json",
-    );
+    return send(event, JSON.stringify(MOCK_HOME_DATA.trendingMovies), "application/json");
   }
   if (path.includes("/api/trending/shows")) {
-    return send(
-      event,
-      JSON.stringify(MOCK_HOME_DATA.trendingShows),
-      "application/json",
-    );
+    return send(event, JSON.stringify(MOCK_HOME_DATA.trendingShows), "application/json");
   }
   if (path.includes("/api/trending/games")) {
-    return send(
-      event,
-      JSON.stringify(MOCK_HOME_DATA.trendingGames),
-      "application/json",
-    );
+    return send(event, JSON.stringify(MOCK_HOME_DATA.trendingGames), "application/json");
   }
   if (
     path.includes("/api/trending/voice-actors") ||
     path.includes("/api/top-voice-actors") ||
     path.includes("/api/recent-voice-actors")
   ) {
-    return send(
-      event,
-      JSON.stringify(MOCK_HOME_DATA.topVoiceActors),
-      "application/json",
-    );
+    return send(event, JSON.stringify(MOCK_HOME_DATA.topVoiceActors), "application/json");
   }
 
   // 11. Home stats
