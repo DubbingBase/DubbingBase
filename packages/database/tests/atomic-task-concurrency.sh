@@ -50,29 +50,43 @@ submit_first_pid=""
 submit_second_pid=""
 
 cleanup() {
+  local exit_status=$?
+  local cleanup_failed=0
+  trap - EXIT
+
   for pid in "$claim_first_pid" "$claim_second_pid" "$submit_first_pid" "$submit_second_pid"; do
     if [[ -n "$pid" ]]; then wait "$pid" 2>/dev/null || true; fi
   done
   if [[ -n "$first_user" && -n "$second_user" ]]; then
-    if [[ -n "$delay_trigger" ]]; then
-      psql_local -v delay_trigger="$delay_trigger" -v delay_function="$delay_function" >/dev/null 2>&1 <<'SQL' || true
+    if ! psql_local -v first_user="$first_user" -v second_user="$second_user" \
+      -v delay_trigger="$delay_trigger" -v delay_function="$delay_function" \
+      >/dev/null 2>&1 <<'SQL'; then
+BEGIN;
 DROP TRIGGER IF EXISTS :"delay_trigger" ON public.audit_logs;
 DROP FUNCTION IF EXISTS public.:"delay_function"();
-SQL
-    fi
-    psql_local -v first_user="$first_user" -v second_user="$second_user" \
-      >/dev/null 2>&1 <<'SQL' || true
 DELETE FROM public.gamification_task_locks
 WHERE user_id IN (:'first_user'::UUID, :'second_user'::UUID);
+-- Audit history is immutable; bypass triggers only in this cleanup transaction.
+SET LOCAL session_replication_role = replica;
 DELETE FROM public.audit_logs
 WHERE user_id IN (:'first_user'::UUID, :'second_user'::UUID);
+SET LOCAL session_replication_role = origin;
 DELETE FROM public.voice_actors
 WHERE firstname IN ('AtomicClaim-' || :'first_user', 'AtomicClaim-' || :'second_user', 'AtomicSubmit-' || :'first_user');
 DELETE FROM auth.users
 WHERE id IN (:'first_user'::UUID, :'second_user'::UUID);
+COMMIT;
 SQL
+      printf '%s\n' 'Failed to clean up the local concurrency-test fixtures.' >&2
+      cleanup_failed=1
+    fi
   fi
   rm -rf "$fixture_dir"
+
+  if (( cleanup_failed != 0 && exit_status == 0 )); then
+    exit_status=1
+  fi
+  exit "$exit_status"
 }
 trap cleanup EXIT
 
