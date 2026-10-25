@@ -29,8 +29,10 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       database: ${{ steps.filter.outputs.database }}
+      database_validation: ${{ steps.filter.outputs.database_validation }}
       mobile: ${{ steps.filter.outputs.mobile }}
       website: ${{ steps.filter.outputs.website }}
+      website_validation: ${{ steps.filter.outputs.website_validation }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -42,10 +44,18 @@ jobs:
           filters: |
             database:
               - 'packages/database/**'
+            database_validation:
+              - 'packages/database/**'
               - '.github/workflows/pipeline.yml'
             mobile:
               - 'apps/mobile/**'
             website:
+              - 'apps/website/**'
+              - 'packages/shared-logic/**'
+              - 'packages/locales/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+            website_validation:
               - 'apps/website/**'
               - 'packages/shared-logic/**'
               - 'packages/locales/**'
@@ -61,7 +71,7 @@ jobs:
   # Job 2: Validate database migrations and pgTAP tests against local Supabase
   database-checks:
     needs: detect
-    if: needs.detect.outputs.database == 'true'
+    if: needs.detect.outputs.database_validation == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -108,8 +118,8 @@ jobs:
     needs: [detect]
     if: |
       needs.detect.outputs.mobile == 'true' ||
-      needs.detect.outputs.website == 'true' ||
-      needs.detect.outputs.database == 'true'
+      needs.detect.outputs.website_validation == 'true' ||
+      needs.detect.outputs.database_validation == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -141,7 +151,7 @@ jobs:
   # Job 3.5: Frontend Unit Tests
   frontend-tests:
     needs: [detect]
-    if: needs.detect.outputs.website == 'true' || needs.detect.outputs.database == 'true'
+    if: needs.detect.outputs.website_validation == 'true' || needs.detect.outputs.database_validation == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -167,7 +177,7 @@ jobs:
   # Job 3.55: Website TypeScript Check
   typecheck-website:
     needs: [detect]
-    if: needs.detect.outputs.website == 'true' || needs.detect.outputs.database == 'true'
+    if: needs.detect.outputs.website_validation == 'true' || needs.detect.outputs.database_validation == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -219,7 +229,7 @@ jobs:
   # Job 3.6: Whitespace Check for Website-Scoped Changes
   diff-check:
     needs: [detect]
-    if: needs.detect.outputs.website == 'true' || needs.detect.outputs.database == 'true'
+    if: needs.detect.outputs.website_validation == 'true' || needs.detect.outputs.database_validation == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -254,7 +264,7 @@ jobs:
   # Job 3.7: i18n Translation Check
   i18n-check:
     needs: [detect]
-    if: needs.detect.outputs.website == 'true' || needs.detect.outputs.mobile == 'true' || needs.detect.outputs.database == 'true'
+    if: needs.detect.outputs.website_validation == 'true' || needs.detect.outputs.mobile == 'true' || needs.detect.outputs.database_validation == 'true'
     continue-on-error: false
     runs-on: ubuntu-latest
     steps:
@@ -477,8 +487,8 @@ jobs:
   build-website:
     needs: [detect]
     if: |
-      needs.detect.outputs.website == 'true' ||
-      needs.detect.outputs.database == 'true'
+      needs.detect.outputs.website_validation == 'true' ||
+      needs.detect.outputs.database_validation == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -594,15 +604,22 @@ jobs:
       always() &&
       !cancelled() &&
       needs.detect.result == 'success' &&
-      (needs.detect.outputs.website == 'true' || needs.detect.outputs.database == 'true') &&
+      (needs.detect.outputs.website_validation == 'true' || needs.detect.outputs.database_validation == 'true') &&
       needs.e2e-tests.result == 'success' &&
       needs.frontend-tests.result == 'success' &&
-      needs.lint-website.result == 'success' &&
+      (
+        needs.lint-website.result == 'success' ||
+        (
+          needs.detect.outputs.website != 'true' &&
+          needs.detect.outputs.database != 'true' &&
+          needs.lint-website.result == 'skipped'
+        )
+      ) &&
       needs.typecheck-website.result == 'success' &&
       needs.diff-check.result == 'success' &&
       needs.i18n-check.result == 'success' &&
       needs.build-website.result == 'success' &&
-      (needs.detect.outputs.database != 'true' || needs.database-checks.result == 'success')
+      (needs.detect.outputs.database_validation != 'true' || needs.database-checks.result == 'success')
     runs-on: ubuntu-latest
     steps:
       - name: Confirm release preflight passed
