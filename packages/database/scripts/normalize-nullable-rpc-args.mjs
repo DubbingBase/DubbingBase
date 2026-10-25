@@ -25,7 +25,7 @@ let types = await readFile(filePath, "utf8");
 
 for (const [functionName, argumentTypes] of Object.entries(nullableArguments)) {
   const functionPattern = new RegExp(
-    `(^      ${functionName}: \\{\\n        Args: \\{\\n)([\\s\\S]*?)(\\n        \\};)`,
+    `(\\b${functionName}:\\s*\\{\\s*Args:\\s*\\{)([\\s\\S]*?)(\\}\\s*;?\\s*Returns:)`,
     "m",
   );
   const functionMatch = functionPattern.exec(types);
@@ -38,18 +38,21 @@ for (const [functionName, argumentTypes] of Object.entries(nullableArguments)) {
 
   for (const [argumentName, expectedType] of Object.entries(argumentTypes)) {
     const argumentPattern = new RegExp(
-      `^(\\s+${argumentName}: )([^;]+);$`,
+      `\\b${argumentName}:\\s*([^;\\n}]+)`,
       "m",
     );
     const argumentMatch = argumentPattern.exec(args);
 
-    if (!argumentMatch || argumentMatch[2] !== expectedType) {
+    if (!argumentMatch || argumentMatch[1].trim() !== expectedType) {
       throw new Error(
         `Expected ${functionName}.${argumentName} to be generated as ${expectedType}.`,
       );
     }
 
-    args = args.replace(argumentPattern, `$1${expectedType} | null;`);
+    args = args.replace(
+      argumentPattern,
+      `${argumentName}: ${expectedType} | null`,
+    );
   }
 
   types = [
