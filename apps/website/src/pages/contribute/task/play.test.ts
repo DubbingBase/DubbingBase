@@ -80,6 +80,30 @@ describe("contribution page", () => {
     expect(mocks.fetch).toHaveBeenCalledTimes(2);
   });
 
+  it("skips the current claim and requests another task", async () => {
+    mocks.fetch.mockResolvedValueOnce(claimed);
+    const wrapper = await mountPage();
+    mocks.fetch.mockResolvedValueOnce({
+      ...claimed,
+      claimId: "claim-2",
+      task: { ...claimed.task, id: 2, firstname: "Grace" },
+    });
+
+    const skipButton = wrapper
+      .findAll("button")
+      .find((button) => button.text() === "contribute.skipTask");
+    if (!skipButton) throw new Error("Skip task button was not rendered");
+    await skipButton.trigger("click");
+    await flushPromises();
+
+    expect(mocks.fetch).toHaveBeenLastCalledWith("/api/get-random-task", {
+      method: "POST",
+      body: { category: "any", skipClaimId: "claim-1" },
+      retry: 0,
+    });
+    expect(wrapper.text()).toContain("Grace Actor");
+  });
+
   it("resets input when changing category and posts that category", async () => {
     mocks.fetch.mockResolvedValueOnce(claimed);
     mocks.fetch.mockResolvedValueOnce({

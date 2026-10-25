@@ -220,6 +220,30 @@ export type Database = {
         };
         Relationships: [];
       };
+      gamification_task_submission_results: {
+        Row: {
+          claim_id: string;
+          created_at: string;
+          points_awarded: number;
+          submission_fingerprint: string;
+          user_id: string;
+        };
+        Insert: {
+          claim_id: string;
+          created_at?: string;
+          points_awarded: number;
+          submission_fingerprint: string;
+          user_id: string;
+        };
+        Update: {
+          claim_id?: string;
+          created_at?: string;
+          points_awarded?: number;
+          submission_fingerprint?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       jobs: {
         Row: {
           created_at: string | null;
@@ -771,6 +795,15 @@ export type Database = {
           task: Json | null;
         }[];
       };
+      claim_gamification_task_retry_safe: {
+        Args: { p_category: string; p_user_id: string };
+        Returns: {
+          category: string;
+          claim_id: string | null;
+          expires_at: string | null;
+          task: Json | null;
+        }[];
+      };
       controlled_save_studio: {
         Args: {
           p_actor_id: string;
@@ -872,6 +905,19 @@ export type Database = {
         Args: { p_claim_id: string; p_user_id: string };
         Returns: { category: string; entity_id: string }[];
       };
+      skip_gamification_task_retry_safe: {
+        Args: {
+          p_category: string;
+          p_skip_claim_id: string;
+          p_user_id: string;
+        };
+        Returns: {
+          category: string;
+          claim_id: string | null;
+          expires_at: string | null;
+          task: Json | null;
+        }[];
+      };
       submit_gamification_task_contribution: {
         Args: {
           p_claim_id: string;
@@ -898,6 +944,20 @@ export type Database = {
           outcome: string;
           queued_msg_id: number | null;
           tmdb_id: number;
+        }[];
+      };
+      submit_gamification_task_contribution_retry_safe: {
+        Args: {
+          p_claim_id: string;
+          p_is_admin: boolean;
+          p_submission_fingerprint: string;
+          p_updates: Json;
+          p_user_id: string;
+        };
+        Returns: {
+          points_awarded: number;
+          replayed: boolean;
+          status: string;
         }[];
       };
       clear_media_queue: { Args: never; Returns: boolean };

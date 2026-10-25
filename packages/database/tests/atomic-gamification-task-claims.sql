@@ -31,6 +31,10 @@ DECLARE
   other_user_id UUID := gen_random_uuid();
   first_claim RECORD;
   second_claim RECORD;
+  recovered_claim RECORD;
+  repeated_claim RECORD;
+  skipped_claim RECORD;
+  recovered_skip_claim RECORD;
   empty_claim RECORD;
   studio_fallback_claim RECORD;
   explicit_studio_empty RECORD;
@@ -61,6 +65,12 @@ BEGIN
   IF has_function_privilege('anon', 'public.claim_gamification_task(text, uuid)', 'EXECUTE')
     OR has_function_privilege('authenticated', 'public.claim_gamification_task(text, uuid)', 'EXECUTE')
     OR NOT has_function_privilege('service_role', 'public.claim_gamification_task(text, uuid)', 'EXECUTE')
+    OR has_function_privilege('anon', 'public.claim_gamification_task_retry_safe(text, uuid)', 'EXECUTE')
+    OR has_function_privilege('authenticated', 'public.claim_gamification_task_retry_safe(text, uuid)', 'EXECUTE')
+    OR NOT has_function_privilege('service_role', 'public.claim_gamification_task_retry_safe(text, uuid)', 'EXECUTE')
+    OR has_function_privilege('anon', 'public.skip_gamification_task_retry_safe(text, uuid, uuid)', 'EXECUTE')
+    OR has_function_privilege('authenticated', 'public.skip_gamification_task_retry_safe(text, uuid, uuid)', 'EXECUTE')
+    OR NOT has_function_privilege('service_role', 'public.skip_gamification_task_retry_safe(text, uuid, uuid)', 'EXECUTE')
     OR has_function_privilege('anon', 'public.consume_gamification_task_claim(uuid, uuid)', 'EXECUTE')
     OR has_function_privilege('authenticated', 'public.consume_gamification_task_claim(uuid, uuid)', 'EXECUTE')
     OR NOT has_function_privilege('service_role', 'public.consume_gamification_task_claim(uuid, uuid)', 'EXECUTE') THEN
@@ -160,15 +170,43 @@ BEGIN
   END IF;
 
   INSERT INTO public.voice_actors (firstname, lastname)
-  VALUES ('Atomic claim fixture A', 'Test'), ('Atomic claim fixture B', 'Test');
+  VALUES ('Atomic claim fixture A', 'Test'), ('Atomic claim fixture B', 'Test'),
+    ('Atomic claim fixture C', 'Test');
 
   SELECT * INTO first_claim
   FROM public.claim_gamification_task('enrich_voice_actor', owner_id);
+  SELECT * INTO recovered_claim
+  FROM public.claim_gamification_task_retry_safe('enrich_voice_actor', owner_id);
+  SELECT * INTO repeated_claim
+  FROM public.claim_gamification_task_retry_safe('enrich_voice_actor', owner_id);
   SELECT * INTO second_claim
   FROM public.claim_gamification_task('enrich_voice_actor', other_user_id);
+  SELECT * INTO skipped_claim
+  FROM public.skip_gamification_task_retry_safe('any', other_user_id, second_claim.claim_id);
+  SELECT * INTO recovered_skip_claim
+  FROM public.skip_gamification_task_retry_safe('any', other_user_id, second_claim.claim_id);
 
   IF first_claim.claim_id IS NULL OR second_claim.claim_id IS NULL
     OR first_claim.task->>'id' = second_claim.task->>'id'
+    OR recovered_claim.claim_id IS DISTINCT FROM first_claim.claim_id
+    OR recovered_claim.task->>'id' IS DISTINCT FROM first_claim.task->>'id'
+    OR repeated_claim.claim_id IS DISTINCT FROM first_claim.claim_id
+    OR repeated_claim.task->>'id' IS DISTINCT FROM first_claim.task->>'id'
+    OR skipped_claim.claim_id IS NULL
+    OR skipped_claim.claim_id = second_claim.claim_id
+    OR skipped_claim.task->>'id' IS NOT DISTINCT FROM second_claim.task->>'id'
+    OR recovered_skip_claim.claim_id IS DISTINCT FROM skipped_claim.claim_id
+    OR recovered_skip_claim.task->>'id' IS DISTINCT FROM skipped_claim.task->>'id'
+    OR NOT EXISTS (
+      SELECT 1 FROM public.gamification_task_locks AS claim
+      WHERE claim.claim_id = second_claim.claim_id
+        AND claim.user_id = other_user_id
+        AND claim.consumed_at IS NOT NULL
+        AND claim.expires_at > clock_timestamp()
+    )
+    OR (SELECT count(*) FROM public.gamification_task_locks AS claim
+        WHERE claim.user_id = other_user_id AND claim.expires_at > clock_timestamp()
+          AND claim.consumed_at IS NULL) <> 1
     OR first_claim.category <> 'enrich_voice_actor'
     OR first_claim.expires_at <= clock_timestamp() THEN
     RAISE EXCEPTION 'Two active claimants were not given distinct owned tasks';

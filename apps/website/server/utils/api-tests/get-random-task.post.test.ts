@@ -1,10 +1,4 @@
-import {
-  createApp,
-  createError,
-  defineEventHandler,
-  readBody,
-  toWebHandler,
-} from "h3";
+import { createApp, createError, defineEventHandler, readBody, toWebHandler } from "h3";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const routeMocks = vi.hoisted(() => ({
@@ -37,7 +31,10 @@ afterAll(() => vi.unstubAllGlobals());
 
 async function postPayload(payload: unknown): Promise<Response> {
   const app = createApp();
-  app.use("/", defineEventHandler((event) => handler(event)));
+  app.use(
+    "/",
+    defineEventHandler((event) => handler(event)),
+  );
   return await toWebHandler(app)(
     new Request("http://localhost/", {
       method: "POST",
@@ -49,7 +46,10 @@ async function postPayload(payload: unknown): Promise<Response> {
 
 async function getRequest(): Promise<Response> {
   const app = createApp();
-  app.use("/", defineEventHandler((event) => getHandler(event)));
+  app.use(
+    "/",
+    defineEventHandler((event) => getHandler(event)),
+  );
   return await toWebHandler(app)(new Request("http://localhost/"));
 }
 
@@ -81,12 +81,14 @@ describe("POST /api/get-random-task", () => {
 
   it("resolves an any request to the concrete category returned by the database", async () => {
     routeMocks.rpc.mockResolvedValue({
-      data: [{
-        task: { id: 3, logo_url: null },
-        category: "enrich_studio",
-        claim_id: "claim-2",
-        expires_at: "2026-10-14T18:37:00.000Z",
-      }],
+      data: [
+        {
+          task: { id: 3, logo_url: null },
+          category: "enrich_studio",
+          claim_id: "claim-2",
+          expires_at: "2026-10-14T18:37:00.000Z",
+        },
+      ],
       error: null,
     });
 
@@ -99,7 +101,7 @@ describe("POST /api/get-random-task", () => {
       claimId: "claim-2",
       expiresAt: "2026-10-14T18:37:00.000Z",
     });
-    expect(routeMocks.rpc).toHaveBeenCalledWith("claim_gamification_task", {
+    expect(routeMocks.rpc).toHaveBeenCalledWith("claim_gamification_task_retry_safe", {
       p_category: "any",
       p_user_id: "user-1",
     });
@@ -107,12 +109,14 @@ describe("POST /api/get-random-task", () => {
 
   it("returns the opaque claim details from the atomic database acquisition", async () => {
     routeMocks.rpc.mockResolvedValue({
-      data: [{
-        task: { id: 7, bio: null },
-        category: "enrich_voice_actor",
-        claim_id: "opaque-id",
-        expires_at: "2026-10-14T18:37:00.000Z",
-      }],
+      data: [
+        {
+          task: { id: 7, bio: null },
+          category: "enrich_voice_actor",
+          claim_id: "opaque-id",
+          expires_at: "2026-10-14T18:37:00.000Z",
+        },
+      ],
       error: null,
     });
 
@@ -125,15 +129,49 @@ describe("POST /api/get-random-task", () => {
       claimId: "opaque-id",
       expiresAt: "2026-10-14T18:37:00.000Z",
     });
-    expect(routeMocks.rpc).toHaveBeenCalledWith("claim_gamification_task", {
+    expect(routeMocks.rpc).toHaveBeenCalledWith("claim_gamification_task_retry_safe", {
       p_category: "enrich_voice_actor",
       p_user_id: "user-1",
     });
   });
 
+  it("uses the skip RPC only when an owned claim ID is provided", async () => {
+    const skipClaimId = "11111111-1111-4111-8111-111111111111";
+    routeMocks.rpc.mockResolvedValue({
+      data: [
+        {
+          task: { id: 8, bio: null },
+          category: "enrich_voice_actor",
+          claim_id: "22222222-2222-4222-8222-222222222222",
+          expires_at: "2026-10-14T18:37:00.000Z",
+        },
+      ],
+      error: null,
+    });
+
+    const response = await postPayload({
+      category: "enrich_voice_actor",
+      skipClaimId,
+    });
+
+    expect(response.status).toBe(200);
+    expect(routeMocks.rpc).toHaveBeenCalledWith("skip_gamification_task_retry_safe", {
+      p_category: "enrich_voice_actor",
+      p_user_id: "user-1",
+      p_skip_claim_id: skipClaimId,
+    });
+  });
+
   it("preserves all four response keys when no task can be claimed", async () => {
     routeMocks.rpc.mockResolvedValue({
-      data: [{ task: null, category: "enrich_studio", claim_id: null, expires_at: null }],
+      data: [
+        {
+          task: null,
+          category: "enrich_studio",
+          claim_id: null,
+          expires_at: null,
+        },
+      ],
       error: null,
     });
 

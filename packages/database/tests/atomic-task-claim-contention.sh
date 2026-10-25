@@ -154,7 +154,7 @@ SET LOCAL lock_timeout = '5s';
 SET LOCAL statement_timeout = '10s';
 SELECT setseed(:'seed'::DOUBLE PRECISION);
 SELECT COALESCE(task->>'id', '') || '|' || COALESCE(claim_id::TEXT, '') || '|' || COALESCE(category, '')
-FROM public.claim_gamification_task('enrich_voice_actor', :'claim_user'::UUID);
+FROM public.claim_gamification_task_retry_safe('enrich_voice_actor', :'claim_user'::UUID);
 SELECT pg_sleep(2);
 COMMIT;
 SQL
@@ -183,7 +183,7 @@ SET LOCAL lock_timeout = '5s';
 SET LOCAL statement_timeout = '10s';
 SELECT setseed(:'seed'::DOUBLE PRECISION);
 SELECT COALESCE(task->>'id', '') || '|' || COALESCE(claim_id::TEXT, '') || '|' || COALESCE(category, '')
-FROM public.claim_gamification_task('enrich_voice_actor', :'claim_user'::UUID);
+FROM public.claim_gamification_task_retry_safe('enrich_voice_actor', :'claim_user'::UUID);
 COMMIT;
 SQL
   second_pid=$!
@@ -298,4 +298,97 @@ WHERE firstname LIKE :'fixture_prefix' || '%';
 SQL
 done
 
-printf '%s two-session randomized claim races passed; each had 16 unchanged active claims, one available task, one winner, and zero PostgreSQL errors.\n' "$race_runs"
+same_actor="${fixture_root}same-user-free"
+same_actor_id="$(psql_local -v same_actor="$same_actor" <<'SQL'
+INSERT INTO public.voice_actors (firstname, lastname)
+VALUES (:'same_actor', 'Fixture')
+RETURNING id;
+SQL
+)"
+same_first_app="atomic_claim_retry_${run_suffix}_first"
+same_second_app="atomic_claim_retry_${run_suffix}_second"
+same_first_log="$fixture_dir/claim-same-user-first.log"
+same_second_log="$fixture_dir/claim-same-user-second.log"
+
+PGAPPNAME="$same_first_app" psql_local -v claim_user="$first_user" \
+  >"$same_first_log" 2>&1 <<'SQL' &
+BEGIN;
+SET LOCAL lock_timeout = '5s';
+SET LOCAL statement_timeout = '10s';
+SELECT COALESCE(task->>'id', '') || '|' || COALESCE(claim_id::TEXT, '') || '|' || COALESCE(category, '')
+FROM public.claim_gamification_task_retry_safe('enrich_voice_actor', :'claim_user'::UUID);
+SELECT pg_sleep(2);
+COMMIT;
+SQL
+first_pid=$!
+
+same_first_sleeping=0
+for _ in $(seq 1 200); do
+  same_state="$(psql_local -c "SELECT count(*) FROM pg_stat_activity WHERE application_name = '$same_first_app' AND state = 'active' AND wait_event = 'PgSleep'")"
+  if [[ "$same_state" == "1" ]]; then same_first_sleeping=1; break; fi
+  if ! kill -0 "$first_pid" 2>/dev/null; then break; fi
+  sleep 0.01
+done
+if [[ "$same_first_sleeping" != "1" ]]; then
+  cat "$same_first_log" >&2
+  printf '%s\n' 'The first same-user claim did not hold its transaction open.' >&2
+  exit 1
+fi
+
+PGAPPNAME="$same_second_app" psql_local -v claim_user="$first_user" \
+  >"$same_second_log" 2>&1 <<'SQL' &
+BEGIN;
+SET LOCAL lock_timeout = '5s';
+SET LOCAL statement_timeout = '10s';
+SELECT COALESCE(task->>'id', '') || '|' || COALESCE(claim_id::TEXT, '') || '|' || COALESCE(category, '')
+FROM public.claim_gamification_task_retry_safe('enrich_voice_actor', :'claim_user'::UUID);
+COMMIT;
+SQL
+second_pid=$!
+
+same_second_waiting=0
+for _ in $(seq 1 200); do
+  same_wait="$(psql_local -c "SELECT COALESCE(wait_event_type, '') FROM pg_stat_activity WHERE application_name = '$same_second_app'")"
+  if [[ "$same_wait" == "Lock" ]]; then same_second_waiting=1; break; fi
+  if ! kill -0 "$second_pid" 2>/dev/null; then break; fi
+  sleep 0.01
+done
+if [[ "$same_second_waiting" != "1" ]]; then
+  cat "$same_second_log" >&2
+  printf '%s\n' 'The same-user retry did not wait on the user-scoped advisory lock.' >&2
+  exit 1
+fi
+
+wait "$first_pid"
+first_pid=""
+wait "$second_pid"
+second_pid=""
+same_first_result="$(awk -F '|' 'NF == 3 { print; exit }' "$same_first_log")"
+same_second_result="$(awk -F '|' 'NF == 3 { print; exit }' "$same_second_log")"
+IFS='|' read -r same_first_task same_first_claim same_first_category <<<"$same_first_result"
+IFS='|' read -r same_second_task same_second_claim same_second_category <<<"$same_second_result"
+if [[ "$same_first_result" != "$same_second_result" \
+  || "$same_first_task" != "$same_actor_id" || -z "$same_first_claim" \
+  || "$same_first_category" != "enrich_voice_actor" \
+  || "$same_second_task" != "$same_actor_id" || -z "$same_second_claim" \
+  || "$same_second_category" != "enrich_voice_actor" ]]; then
+  cat "$same_first_log" "$same_second_log" >&2
+  printf '%s\n' 'Same-user retries did not recover the original task and claim.' >&2
+  exit 1
+fi
+same_claim_count="$(psql_local -v same_actor_id="$same_actor_id" -v first_user="$first_user" <<'SQL'
+SELECT count(*)
+FROM public.gamification_task_locks AS claim
+WHERE claim.category = 'enrich_voice_actor'
+  AND claim.entity_id = :'same_actor_id'
+  AND claim.user_id = :'first_user'::UUID
+  AND claim.expires_at > clock_timestamp()
+  AND claim.consumed_at IS NULL;
+SQL
+)"
+if [[ "$same_claim_count" != "1" ]]; then
+  printf 'Same-user retry persisted %s active claims instead of one.\n' "$same_claim_count" >&2
+  exit 1
+fi
+
+printf '%s two-session randomized claim races and one same-user lost-response retry passed; claims stayed unique with zero PostgreSQL errors.\n' "$race_runs"

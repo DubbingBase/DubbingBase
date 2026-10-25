@@ -50,29 +50,43 @@ submit_first_pid=""
 submit_second_pid=""
 
 cleanup() {
+  local exit_status=$?
+  local cleanup_failed=0
+  trap - EXIT
+
   for pid in "$claim_first_pid" "$claim_second_pid" "$submit_first_pid" "$submit_second_pid"; do
     if [[ -n "$pid" ]]; then wait "$pid" 2>/dev/null || true; fi
   done
   if [[ -n "$first_user" && -n "$second_user" ]]; then
-    if [[ -n "$delay_trigger" ]]; then
-      psql_local -v delay_trigger="$delay_trigger" -v delay_function="$delay_function" >/dev/null 2>&1 <<'SQL' || true
+    if ! psql_local -v first_user="$first_user" -v second_user="$second_user" \
+      -v delay_trigger="$delay_trigger" -v delay_function="$delay_function" \
+      >/dev/null 2>&1 <<'SQL'; then
+BEGIN;
 DROP TRIGGER IF EXISTS :"delay_trigger" ON public.audit_logs;
 DROP FUNCTION IF EXISTS public.:"delay_function"();
-SQL
-    fi
-    psql_local -v first_user="$first_user" -v second_user="$second_user" \
-      >/dev/null 2>&1 <<'SQL' || true
 DELETE FROM public.gamification_task_locks
 WHERE user_id IN (:'first_user'::UUID, :'second_user'::UUID);
+-- Audit history is immutable; bypass triggers only in this cleanup transaction.
+SET LOCAL session_replication_role = replica;
 DELETE FROM public.audit_logs
 WHERE user_id IN (:'first_user'::UUID, :'second_user'::UUID);
+SET LOCAL session_replication_role = origin;
 DELETE FROM public.voice_actors
 WHERE firstname IN ('AtomicClaim-' || :'first_user', 'AtomicClaim-' || :'second_user', 'AtomicSubmit-' || :'first_user');
 DELETE FROM auth.users
 WHERE id IN (:'first_user'::UUID, :'second_user'::UUID);
+COMMIT;
 SQL
+      printf '%s\n' 'Failed to clean up the local concurrency-test fixtures.' >&2
+      cleanup_failed=1
+    fi
   fi
   rm -rf "$fixture_dir"
+
+  if (( cleanup_failed != 0 && exit_status == 0 )); then
+    exit_status=1
+  fi
+  exit "$exit_status"
 }
 trap cleanup EXIT
 
@@ -198,10 +212,10 @@ PGAPPNAME="$submit_first_app" psql_local -v first_user="$first_user" \
   >"$fixture_dir/submit-first.log" 2>&1 <<'SQL' &
 BEGIN;
 SELECT set_config('app.atomic_task_test_user', :'first_user', TRUE);
-SELECT status || '|' || points_awarded::TEXT
-FROM public.submit_gamification_task_contribution(
+SELECT status || '|' || points_awarded::TEXT || '|' || replayed::TEXT
+FROM public.submit_gamification_task_contribution_retry_safe(
   :'submission_claim'::UUID, :'first_user'::UUID,
-  '{"bio":"First concurrent contribution"}'::JSONB, FALSE
+  '{"bio":"Concurrent contribution"}'::JSONB, FALSE, repeat('c', 64)
 );
 COMMIT;
 SQL
@@ -225,10 +239,10 @@ PGAPPNAME="$submit_second_app" psql_local -v first_user="$first_user" \
   >"$fixture_dir/submit-second.log" 2>&1 <<'SQL' &
 BEGIN;
 SELECT set_config('app.atomic_task_test_user', :'first_user', TRUE);
-SELECT status || '|' || points_awarded::TEXT
-FROM public.submit_gamification_task_contribution(
+SELECT status || '|' || points_awarded::TEXT || '|' || replayed::TEXT
+FROM public.submit_gamification_task_contribution_retry_safe(
   :'submission_claim'::UUID, :'first_user'::UUID,
-  '{"bio":"Duplicate concurrent contribution"}'::JSONB, FALSE
+  '{"bio":"Concurrent contribution"}'::JSONB, FALSE, repeat('c', 64)
 );
 COMMIT;
 SQL
@@ -251,11 +265,11 @@ wait "$submit_first_pid"
 submit_first_pid=""
 wait "$submit_second_pid"
 submit_second_pid=""
-first_submission_result="$(grep -oE '^(submitted|invalid_claim)\|[0-9]+' "$fixture_dir/submit-first.log" || true)"
-second_submission_result="$(grep -oE '^(submitted|invalid_claim)\|[0-9]+' "$fixture_dir/submit-second.log" || true)"
-if [[ "$first_submission_result" != "submitted|10" || "$second_submission_result" != "invalid_claim|0" ]]; then
+first_submission_result="$(grep -oE '^(submitted|invalid_claim)\|[0-9]+\|(true|false)$' "$fixture_dir/submit-first.log" || true)"
+second_submission_result="$(grep -oE '^(submitted|invalid_claim)\|[0-9]+\|(true|false)$' "$fixture_dir/submit-second.log" || true)"
+if [[ "$first_submission_result" != "submitted|10|false" || "$second_submission_result" != "submitted|10|true" ]]; then
   cat "$fixture_dir/submit-first.log" "$fixture_dir/submit-second.log" >&2
-  printf '%s\n' 'Concurrent submissions did not produce exactly one successful write.' >&2
+  printf '%s\n' 'Concurrent identical submissions did not produce one write and one successful replay.' >&2
   exit 1
 fi
 
@@ -267,7 +281,7 @@ SELECT
   || ':' || (SELECT COALESCE(sum(points_awarded), 0) FROM public.audit_logs
     WHERE user_id = :'first_user'::UUID AND entity_type = 'voice_actor' AND entity_id = :'submission_actor')::TEXT
   || ':' || (SELECT count(*) FROM public.voice_actors
-    WHERE id = :'submission_actor'::BIGINT AND bio = 'First concurrent contribution' AND updated_by = :'first_user'::UUID)::TEXT
+    WHERE id = :'submission_actor'::BIGINT AND bio = 'Concurrent contribution' AND updated_by = :'first_user'::UUID)::TEXT
   || ':' || (SELECT count(*) FROM public.gamification_task_locks
     WHERE claim_id = :'submission_claim'::UUID AND user_id = :'first_user'::UUID
       AND category = 'enrich_voice_actor' AND entity_id = :'submission_actor')::TEXT
@@ -281,4 +295,4 @@ if [[ "$submission_state" != "1:10:1:1:1" ]]; then
   exit 1
 fi
 
-printf '%s\n' 'Concurrent task claims and duplicate contribution submissions passed.'
+printf '%s\n' 'Concurrent task claims and idempotent duplicate contribution submissions passed.'

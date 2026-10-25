@@ -83,7 +83,7 @@
             <p class="theme-text-muted">{{ error }}</p>
           </div>
           <button
-            @click="loadTask"
+            @click="retryTask"
             data-test="retry-task"
             class="px-6 py-2 theme-surface-muted theme-hover-surface-muted theme-text rounded-lg transition-colors"
           >
@@ -95,7 +95,7 @@
           <p class="theme-text-muted">{{ $t("contribute.noTasksAvailable") }}</p>
           <button
             data-test="retry-task"
-            @click="loadTask"
+            @click="retryTask"
             class="px-6 py-2 theme-surface-muted theme-hover-surface-muted rounded-lg theme-focus"
           >
             {{ $t("common.retry") }}
@@ -519,7 +519,7 @@
             <div class="flex items-center gap-4 pt-4 border-t theme-border">
               <button
                 type="button"
-                @click="loadTask"
+                @click="skipTask"
                 class="flex-1 py-3 px-4 theme-surface-muted theme-hover-surface-muted theme-text rounded-xl font-medium transition-colors"
                 :disabled="isSubmitting"
               >
@@ -592,6 +592,7 @@ const {
   reset,
   currentTask,
   activeCategory,
+  claimId,
   isLoading,
   isSubmitting,
   error,
@@ -626,7 +627,7 @@ const resetForm = () => {
   clearFile();
 };
 
-const loadTask = async () => {
+const loadTask = async (skipClaimId?: string) => {
   if (isSubmitting.value) return;
   resetForm();
   if (!user.value) {
@@ -634,8 +635,14 @@ const loadTask = async () => {
     await navigateTo(loginLocation.value);
     return;
   }
-  await getRandomTask(selectedCategory.value);
+  await getRandomTask(selectedCategory.value, skipClaimId);
 };
+
+const skipTask = async () => {
+  if (claimId.value) await loadTask(claimId.value);
+};
+
+const retryTask = async () => loadTask();
 
 const hasAnyInput = computed(() => {
   if (selectedFile.value) return true;
