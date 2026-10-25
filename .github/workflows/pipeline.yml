@@ -102,6 +102,7 @@ jobs:
         run: mise run db-reset
 
       - name: Verify generated database types
+        id: verify-generated-types
         run: |
           mise run gen-types
           expected_types="$(mktemp --suffix=.ts)"
@@ -113,6 +114,15 @@ jobs:
             git diff --no-index --unified=0 "$expected_types" packages/database/src/database.types.ts | head -n 120 || true
             exit 1
           }
+
+      - name: Upload generated database types after mismatch
+        if: failure() && steps.verify-generated-types.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-database-types-${{ github.run_id }}
+          path: packages/database/src/database.types.ts
+          if-no-files-found: error
+          retention-days: 1
 
       - name: Typecheck database package
         run: pnpm --filter=@app/supabase run typecheck
