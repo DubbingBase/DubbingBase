@@ -108,7 +108,10 @@ jobs:
           trap 'rm -f "$expected_types"' EXIT
           git show "HEAD:packages/database/src/database.types.ts" > "$expected_types"
           pnpm exec prettier --write "$expected_types" packages/database/src/database.types.ts
-          diff --exit-code -- "$expected_types" packages/database/src/database.types.ts
+          cmp -s "$expected_types" packages/database/src/database.types.ts || {
+            echo "::error::Generated database types differ after formatting."
+            exit 1
+          }
 
       - name: Typecheck database package
         run: pnpm --filter=@app/supabase run typecheck
