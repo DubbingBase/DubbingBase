@@ -110,6 +110,7 @@ jobs:
           pnpm exec prettier --write "$expected_types" packages/database/src/database.types.ts
           cmp -s "$expected_types" packages/database/src/database.types.ts || {
             echo "::error::Generated database types differ after formatting."
+            git diff --no-index --unified=0 "$expected_types" packages/database/src/database.types.ts | head -n 120 || true
             exit 1
           }
 
