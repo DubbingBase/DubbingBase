@@ -92,7 +92,7 @@ jobs:
         uses: jdx/mise-action@v2
 
       - name: Install database dependencies
-        run: pnpm install --filter @app/supabase... --config.minimum-release-age=0 --config.minimum-release-age-strict=false
+        run: pnpm install --filter @app/supabase... --filter dubbing-base-monorepo --config.minimum-release-age=0 --config.minimum-release-age-strict=false
 
       - name: Start isolated local Supabase
         id: local-supabase
