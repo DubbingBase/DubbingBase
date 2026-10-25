@@ -35,9 +35,9 @@ SELECT ok(NOT has_function_privilege('anon', 'public.archive_media_queue_message
 SELECT ok(NOT has_function_privilege('authenticated', 'public.archive_media_queue_messages(text, bigint[])', 'EXECUTE'), 'authenticated cannot execute archive_media_queue_messages');
 SELECT ok(has_function_privilege('service_role', 'public.archive_media_queue_messages(text, bigint[])', 'EXECUTE'), 'service_role can execute archive_media_queue_messages');
 
-SELECT ok(NOT has_function_privilege('anon', 'public.enqueue_media_fetch(bigint, text, integer, integer, text, boolean)', 'EXECUTE'), 'anon cannot execute enqueue_media_fetch');
-SELECT ok(NOT has_function_privilege('authenticated', 'public.enqueue_media_fetch(bigint, text, integer, integer, text, boolean)', 'EXECUTE'), 'authenticated cannot execute enqueue_media_fetch');
-SELECT ok(has_function_privilege('service_role', 'public.enqueue_media_fetch(bigint, text, integer, integer, text, boolean)', 'EXECUTE'), 'service_role can execute enqueue_media_fetch');
+SELECT ok(NOT has_function_privilege('anon', 'public.enqueue_media_fetch(bigint, text, integer, integer, text, boolean, text, text, uuid, text, text, text, text)', 'EXECUTE'), 'anon cannot execute enqueue_media_fetch');
+SELECT ok(NOT has_function_privilege('authenticated', 'public.enqueue_media_fetch(bigint, text, integer, integer, text, boolean, text, text, uuid, text, text, text, text)', 'EXECUTE'), 'authenticated cannot execute enqueue_media_fetch');
+SELECT ok(has_function_privilege('service_role', 'public.enqueue_media_fetch(bigint, text, integer, integer, text, boolean, text, text, uuid, text, text, text, text)', 'EXECUTE'), 'service_role can execute enqueue_media_fetch');
 
 SELECT ok(NOT has_function_privilege('anon', 'public.enqueue_media_extract(bigint, text, text, bigint, jsonb, integer, integer, boolean)', 'EXECUTE'), 'anon cannot execute enqueue_media_extract');
 SELECT ok(NOT has_function_privilege('authenticated', 'public.enqueue_media_extract(bigint, text, text, bigint, jsonb, integer, integer, boolean)', 'EXECUTE'), 'authenticated cannot execute enqueue_media_extract');

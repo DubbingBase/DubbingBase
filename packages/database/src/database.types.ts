@@ -843,9 +843,9 @@ export type Database = {
       controlled_save_studio: {
         Args: {
           p_actor_id: string;
-          p_expected_updated_at: string;
+          p_expected_updated_at: string | null;
           p_request_id: string;
-          p_studio_id: number;
+          p_studio_id: number | null;
           p_updates: Json;
         };
         Returns: {
@@ -858,7 +858,7 @@ export type Database = {
         Args: {
           p_actor_id: string;
           p_content_id: number;
-          p_expected_updated_at: string;
+          p_expected_updated_at: string | null;
           p_payload: Json;
           p_request_id: string;
         };
@@ -1014,7 +1014,7 @@ export type Database = {
           p_content_type: string;
           p_language: string;
           p_request_id: string;
-          p_voice_actor_id: number;
+          p_voice_actor_id: number | null;
         };
         Returns: {
           audit_log_id: string;
@@ -1024,8 +1024,8 @@ export type Database = {
       };
       find_work_role_identity_matches: {
         Args: {
-          p_character_id: number;
-          p_character_name: string;
+          p_character_id: number | null;
+          p_character_name: string | null;
           p_work_ids: number[];
         };
         Returns: number[];
