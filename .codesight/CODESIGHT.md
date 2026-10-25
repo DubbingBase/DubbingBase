@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 84 routes | 24 models | 199 components | 109 lib files | 63 env vars | 16 middleware | 39% test coverage
-> **Token savings:** this file is ~18,100 tokens. Without it, AI exploration would cost ~167,500 tokens. **Saves ~149,400 tokens per conversation.**
-> **Last scanned:** 2026-10-24 21:14 — re-run after significant changes
+> 84 routes | 25 models | 199 components | 109 lib files | 63 env vars | 16 middleware | 39% test coverage
+> **Token savings:** this file is ~18,200 tokens. Without it, AI exploration would cost ~167,900 tokens. **Saves ~149,700 tokens per conversation.**
+> **Last scanned:** 2026-10-25 19:01 — re-run after significant changes
 
 ---
 
@@ -78,7 +78,7 @@
 - `GET` `/api/search-voice-actors`
 - `GET` `/api/season/index` [cache]
 - `GET` `/api/show/:id` params(id) [queue]
-- `POST` `/api/submit-task` [auth, upload] ✓
+- `POST` `/api/submit-task` [auth, db, upload] ✓
 - `POST` `/api/submit-user-report` [db]
 - `GET` `/api/top-contributors`
 - `GET` `/api/top-voice-actors`
@@ -264,6 +264,12 @@
 - release_year: integer check (release_year is
 - cover_url: text check (
     cover_url is
+
+### gamification_task_submission_results
+- claim_id: uuid (pk, fk)
+- user_id: uuid (required, fk)
+- submission_fingerprint: text (required)
+- points_awarded: integer (required)
 
 ---
 
@@ -994,6 +1000,7 @@
 - regional_assignment_requests
 - regional_assignment_request_audits
 - toy_metadata
+- gamification_task_submission_results
 
 ---
 

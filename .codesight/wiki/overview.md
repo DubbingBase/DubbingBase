@@ -8,7 +8,7 @@
 
 ## Scale
 
-84 API routes · 24 database models · 199 UI components · 109 library files · 16 middleware layers · 63 environment variables
+84 API routes · 25 database models · 199 UI components · 109 library files · 16 middleware layers · 63 environment variables
 
 ## Subsystems
 
@@ -66,7 +66,7 @@
 - **[Save-toy-metadata.post](./save-toy-metadata.post.md)** — 1 routes — touches: auth
 - **[Search-voice-actors.get](./search-voice-actors.get.md)** — 1 routes
 - **[Shows.get](./shows.get.md)** — 1 routes — touches: cache
-- **[Submit-task.post](./submit-task.post.md)** — 1 routes — touches: auth, upload
+- **[Submit-task.post](./submit-task.post.md)** — 1 routes — touches: auth, db, upload
 - **[Submit-user-report.post](./submit-user-report.post.md)** — 1 routes — touches: db
 - **[Top-contributors.get](./top-contributors.get.md)** — 1 routes
 - **[Top-voice-actors.get](./top-voice-actors.get.md)** — 1 routes
@@ -78,7 +78,7 @@
 - **[Upload-profile-picture.post](./upload-profile-picture.post.md)** — 1 routes — touches: db, upload
 - **[Voice-actors.get](./voice-actors.get.md)** — 1 routes
 
-**Database:** unknown, 24 models — see [database.md](./database.md)
+**Database:** unknown, 25 models — see [database.md](./database.md)
 
 **UI:** 199 components (vue) — see [ui.md](./ui.md)
 
@@ -112,4 +112,4 @@ Changes to these files have the widest blast radius across the codebase:
 - _...31 more_
 
 ---
-_Back to [index.md](./index.md) · Generated 2026-10-24_
+_Back to [index.md](./index.md) · Generated 2026-10-25_

@@ -50,3 +50,4 @@
 - regional_assignment_requests
 - regional_assignment_request_audits
 - toy_metadata
+- gamification_task_submission_results

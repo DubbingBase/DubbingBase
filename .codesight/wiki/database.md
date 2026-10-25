@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Schema shapes and field types extracted via AST. Read the actual schema source files before writing migrations or query logic.
 
-**unknown** — 24 models
+**unknown** — 25 models
 
 ### voice_actors
 
@@ -240,6 +240,15 @@ pk: `content_id` (bigint) · fk: content_id
 - `release_year`: integer check (release_year is
 - `cover_url`: text check (
     cover_url is
+
+### gamification_task_submission_results
+
+pk: `claim_id` (uuid) · fk: claim_id, user_id
+
+- `claim_id`: uuid _(pk, fk)_
+- `user_id`: uuid _(required, fk)_
+- `submission_fingerprint`: text _(required)_
+- `points_awarded`: integer _(required)_
 
 ## Schema Source Files
 

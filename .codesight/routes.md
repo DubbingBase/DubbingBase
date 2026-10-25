@@ -67,7 +67,7 @@
 - `GET` `/api/search-voice-actors`
 - `GET` `/api/season/index` [cache]
 - `GET` `/api/show/:id` params(id) [queue]
-- `POST` `/api/submit-task` [auth, upload] ✓
+- `POST` `/api/submit-task` [auth, db, upload] ✓
 - `POST` `/api/submit-user-report` [db]
 - `GET` `/api/top-contributors`
 - `GET` `/api/top-voice-actors`

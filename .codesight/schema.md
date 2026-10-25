@@ -164,3 +164,9 @@
 - release_year: integer check (release_year is
 - cover_url: text check (
     cover_url is
+
+### gamification_task_submission_results
+- claim_id: uuid (pk, fk)
+- user_id: uuid (required, fk)
+- submission_fingerprint: text (required)
+- points_awarded: integer (required)
