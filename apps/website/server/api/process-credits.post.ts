@@ -1,11 +1,8 @@
-import type { Json } from "@app/supabase/types";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { z } from "zod";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { requireAdmin } from "../utils/auth";
-import { findOrCreateDubbingProject } from "../utils/db/dubbing-project";
 import { requireDubbingLanguage } from "../utils/dubbing-language";
-import { findUniqueWorkRoleMatch } from "../utils/work-role-identity";
 
 const creditSchema = z
   .object({
@@ -33,13 +30,25 @@ const requestSchema = z
   })
   .passthrough();
 
-function getCreatedVoiceActorId(result: Json | null): number | null {
-  if (typeof result !== "object" || result === null || Array.isArray(result))
-    return null;
-  const record = result.record;
-  if (typeof record !== "object" || record === null || Array.isArray(record))
-    return null;
-  return typeof record.id === "number" ? record.id : null;
+function createStableCreditRequestId(
+  adminId: string,
+  mediaType: string,
+  mediaId: number,
+  language: string,
+  credit: z.infer<typeof creditSchema>,
+): string {
+  const identity = JSON.stringify({
+    adminId,
+    mediaType,
+    mediaId,
+    language,
+    voiceActorId: credit.matchedVoiceActor?.id ?? null,
+    actorId: credit.matchedActorId ?? null,
+    role: typeof credit.role === "string" && credit.role.trim() ? credit.role : null,
+  });
+  const digest = createHash("sha256").update(identity).digest("hex");
+  const variant = (Number.parseInt(digest.charAt(16), 16) & 0x3) | 0x8;
+  return `${digest.slice(0, 8)}-${digest.slice(8, 12)}-8${digest.slice(13, 16)}-${variant.toString(16)}${digest.slice(17, 20)}-${digest.slice(20, 32)}`;
 }
 
 export default defineEventHandler(async (event) => {
@@ -104,9 +113,7 @@ export default defineEventHandler(async (event) => {
       if (
         credits.some(
           (credit) =>
-            !credit.matchedVoiceActor?.id &&
-            credit.voiceActor?.trim() &&
-            !credit.request_id,
+            !credit.matchedVoiceActor?.id && credit.voiceActor?.trim() && !credit.request_id,
         )
       ) {
         throw createError({
@@ -116,14 +123,8 @@ export default defineEventHandler(async (event) => {
       }
 
       const supabaseAdmin = useSupabaseAdmin();
-      const projectId = await findOrCreateDubbingProject(
-        Number(mediaId),
-        mediaType,
-        requireDubbingLanguage(dubbing_language),
-        user.id,
-        null,
-        randomUUID(),
-      );
+      const contentId = Number(mediaId);
+      const dubbingLanguage = requireDubbingLanguage(dubbing_language);
 
       let successCount = 0;
       const failedCredits: {
@@ -131,127 +132,39 @@ export default defineEventHandler(async (event) => {
         error: unknown;
       }[] = [];
 
+      // Each RPC call is the transaction boundary for one credit. The loop
+      // intentionally continues after a failure so the batch can report
+      // partial success without leaving that credit's project, actor, work,
+      // or audit writes partially persisted.
       for (const credit of credits) {
         try {
-          let vaId = credit.matchedVoiceActor?.id;
-
-          if (!vaId) {
-            const voiceActor = credit.voiceActor?.trim();
-            if (!voiceActor) throw new Error("Voice actor name is required");
-            const parts = voiceActor.split(" ");
-            const firstname = parts[0] ?? "";
-            const lastname = parts.slice(1).join(" ");
-
-            const { data: createdActor, error: vaError } =
-              await supabaseAdmin.rpc("controlled_save_metadata", {
-                p_actor_id: user.id,
-                p_entity_type: "voice_actor",
-                p_payload: { firstname, lastname },
-                p_request_id: credit.request_id,
-              });
-
-            if (vaError) throw vaError;
-            const createdActorId = getCreatedVoiceActorId(createdActor);
-            if (createdActorId === null) {
-              throw new Error(
-                "Metadata creation returned an invalid voice actor",
-              );
-            }
-            vaId = createdActorId;
+          const voiceActorName = credit.voiceActor?.trim() ?? "";
+          if (!credit.matchedVoiceActor?.id && !voiceActorName) {
+            throw new Error("Voice actor name is required");
           }
-
-          const actorId = credit.matchedActorId ?? null;
+          const voiceActorNameParts = voiceActorName.split(" ");
+          const requestId =
+            credit.request_id ??
+            createStableCreditRequestId(user.id, mediaType, contentId, dubbingLanguage, credit);
           const roleName =
-            typeof credit.role === "string" && credit.role.trim()
-              ? credit.role
-              : null;
-          let workLookup = supabaseAdmin
-            .from("work")
-            .select("id, character_id, character_name")
-            .eq("dubbing_project_id", projectId)
-            .eq("voice_actor_id", vaId);
-          workLookup = actorId
-            ? workLookup.eq("actor_id", actorId)
-            : workLookup.is("actor_id", null);
-          const { data: existingWorks, error: workLookupError } =
-            await workLookup;
-          if (workLookupError) throw workLookupError;
+            typeof credit.role === "string" && credit.role.trim() ? credit.role : null;
+          const { data, error } = await supabaseAdmin.rpc("save_admin_credit_import", {
+            p_admin_id: user.id,
+            p_request_id: requestId,
+            p_content_id: contentId,
+            p_content_type: mediaType,
+            p_language: dubbingLanguage,
+            p_voice_actor_id: credit.matchedVoiceActor?.id ?? null,
+            p_voice_actor_firstname: voiceActorNameParts[0] ?? "",
+            p_voice_actor_lastname: voiceActorNameParts.slice(1).join(" "),
+            p_work_actor_id: credit.matchedActorId ?? null,
+            p_character_id: null,
+            p_character_name: roleName,
+          });
 
-          const { data: matchingWorkIds, error: identityMatchError } =
-            await supabaseAdmin.rpc("find_work_role_identity_matches", {
-              p_work_ids: (existingWorks ?? []).map(({ id }) => id),
-              p_character_id: null,
-              p_character_name: roleName,
-            });
-          if (identityMatchError) throw identityMatchError;
-
-          const existingWork = findUniqueWorkRoleMatch(
-            existingWorks ?? [],
-            matchingWorkIds ?? [],
-          );
-          const workUpdate = {
-            performance: "dialogues",
-            status: "validated",
-            character_name: roleName,
-          };
-          let workErr: { code?: string } | null = null;
-          if (existingWork) {
-            const { error } = await supabaseAdmin
-              .from("work")
-              .update(workUpdate)
-              .eq("id", existingWork.id);
-            workErr = error;
-          } else {
-            const { error } = await supabaseAdmin.from("work").insert({
-              dubbing_project_id: projectId,
-              actor_id: actorId,
-              voice_actor_id: vaId,
-              character_name: roleName,
-              performance: "dialogues",
-              status: "validated",
-            });
-            workErr = error;
-          }
-          if (workErr?.code === "23505" && !existingWork) {
-            let retryLookup = supabaseAdmin
-              .from("work")
-              .select("id, character_id, character_name")
-              .eq("dubbing_project_id", projectId)
-              .eq("voice_actor_id", vaId);
-            retryLookup = actorId
-              ? retryLookup.eq("actor_id", actorId)
-              : retryLookup.is("actor_id", null);
-            const { data: retryWorks, error: retryLookupError } =
-              await retryLookup;
-            if (retryLookupError) throw retryLookupError;
-
-            const {
-              data: retryMatchingWorkIds,
-              error: retryIdentityMatchError,
-            } = await supabaseAdmin.rpc("find_work_role_identity_matches", {
-              p_work_ids: (retryWorks ?? []).map(({ id }) => id),
-              p_character_id: null,
-              p_character_name: roleName,
-            });
-            if (retryIdentityMatchError) throw retryIdentityMatchError;
-
-            const concurrentWork = findUniqueWorkRoleMatch(
-              retryWorks ?? [],
-              retryMatchingWorkIds ?? [],
-            );
-            if (!concurrentWork) throw workErr;
-
-            const { error: retryUpdateError } = await supabaseAdmin
-              .from("work")
-              .update({
-                performance: "dialogues",
-                status: "validated",
-                character_name: roleName,
-              })
-              .eq("id", concurrentWork.id);
-            if (retryUpdateError) throw retryUpdateError;
-          } else if (workErr) {
-            throw workErr;
+          if (error) throw error;
+          if (!data || data.length !== 1) {
+            throw new Error("Credit import returned an invalid result");
           }
 
           successCount++;
@@ -266,13 +179,11 @@ export default defineEventHandler(async (event) => {
 
     throw createError({ statusCode: 400, message: "Invalid action" });
   } catch (error) {
-    if (error && typeof error === "object" && "statusCode" in error)
-      throw error;
+    if (error && typeof error === "object" && "statusCode" in error) throw error;
     console.error("Error in process-credits:", error);
     throw createError({
       statusCode: 500,
-      message:
-        error instanceof Error ? error.message : "An unknown error occurred",
+      message: error instanceof Error ? error.message : "An unknown error occurred",
     });
   }
 });

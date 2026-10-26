@@ -1,10 +1,4 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[];
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
   graphql_public: {
@@ -361,7 +355,7 @@ export type Database = {
           logo_url: string | null;
           name: string;
           social_media_links: Json | null;
-          updated_at: string;
+          updated_at: string | null;
           website_url: string | null;
         };
         Insert: {
@@ -373,7 +367,7 @@ export type Database = {
           logo_url?: string | null;
           name: string;
           social_media_links?: Json | null;
-          updated_at?: string;
+          updated_at?: string | null;
           website_url?: string | null;
         };
         Update: {
@@ -385,7 +379,7 @@ export type Database = {
           logo_url?: string | null;
           name?: string;
           social_media_links?: Json | null;
-          updated_at?: string;
+          updated_at?: string | null;
           website_url?: string | null;
         };
         Relationships: [];
@@ -1252,6 +1246,28 @@ export type Database = {
         Args: { p_user_id: string; p_voice_actor_id: number };
         Returns: boolean;
       };
+      save_admin_credit_import: {
+        Args: {
+          p_admin_id: string;
+          p_character_id: number | null;
+          p_character_name: string | null;
+          p_content_id: number;
+          p_content_type: string;
+          p_language: string;
+          p_request_id: string;
+          p_voice_actor_firstname: string | null;
+          p_voice_actor_id: number | null;
+          p_voice_actor_lastname: string | null;
+          p_work_actor_id: number | null;
+        };
+        Returns: {
+          audit_log_id: string;
+          project_id: number;
+          replayed: boolean;
+          voice_actor_id: number;
+          work_id: number;
+        }[];
+      };
       save_dubbing_project_editor: {
         Args: {
           p_actor_id: string;
@@ -1371,10 +1387,7 @@ export type Database = {
 
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">;
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<
-  keyof Database,
-  "public"
->];
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">];
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
@@ -1395,10 +1408,8 @@ export type Tables<
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] & DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R;
       }
       ? R
@@ -1407,7 +1418,8 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
@@ -1431,7 +1443,8 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
@@ -1455,7 +1468,8 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    keyof DefaultSchema["Enums"] | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
