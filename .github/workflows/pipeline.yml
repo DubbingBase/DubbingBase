@@ -6,10 +6,11 @@ on:
       - "**"
   workflow_dispatch:
 
-# Prevent concurrent deployments from clashing (cancel obsolete builds on new commit)
+# Keep branch checks current and serialize main releases around production migrations.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Let an in-flight production migration and deployment finish before a newer main run.
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 # Grant permissions required for posting Netlify deployments, comments, and statuses
 permissions:
@@ -28,8 +29,10 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       database: ${{ steps.filter.outputs.database }}
+      database_validation: ${{ steps.filter.outputs.database_validation }}
       mobile: ${{ steps.filter.outputs.mobile }}
       website: ${{ steps.filter.outputs.website }}
+      website_validation: ${{ steps.filter.outputs.website_validation }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -41,10 +44,18 @@ jobs:
           filters: |
             database:
               - 'packages/database/**'
+            database_validation:
+              - 'packages/database/**'
               - '.github/workflows/pipeline.yml'
             mobile:
               - 'apps/mobile/**'
             website:
+              - 'apps/website/**'
+              - 'packages/shared-logic/**'
+              - 'packages/locales/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+            website_validation:
               - 'apps/website/**'
               - 'packages/shared-logic/**'
               - 'packages/locales/**'
@@ -57,14 +68,11 @@ jobs:
               - '.github/**'
               - 'pnpm-lock.yaml'
 
-  # Job 2: Deploy Supabase (runs first if database needs updating)
-  deploy-supabase:
+  # Job 2: Validate database migrations and pgTAP tests against local Supabase
+  database-checks:
     needs: detect
-    if: needs.detect.outputs.database == 'true'
+    if: needs.detect.outputs.database_validation == 'true'
     runs-on: ubuntu-latest
-    env:
-      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      PROJECT_ID: rrjgbneefiwoqvsjwzrz
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -80,37 +88,45 @@ jobs:
           node-version: "24"
           cache: "pnpm"
 
-      - name: Setup Deno
-        uses: denoland/setup-deno@v2.0.5
-        with:
-          deno-version: "2.1.9"
+      - name: Setup mise
+        uses: jdx/mise-action@v2
 
-      - name: Install dependencies
-        run: pnpm install --config.minimum-release-age=0 --config.minimum-release-age-strict=false
+      - name: Install database dependencies
+        run: pnpm install --filter @app/supabase... --filter dubbing-base-monorepo --config.minimum-release-age=0 --config.minimum-release-age-strict=false
 
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v3
-        with:
-          version: 2.111.0
+      - name: Start isolated local Supabase
+        id: local-supabase
+        run: mise run backend
 
-      - name: Link Project
-        if: github.ref == 'refs/heads/main'
-        run: supabase link --project-ref $PROJECT_ID
-        working-directory: packages/database
+      - name: Replay migrations on local Supabase
+        run: mise run db-reset
 
-      - name: Run database migrations
-        if: github.ref == 'refs/heads/main'
-        # Stacked PRs can merge migration files out of timestamp order.
-        run: supabase db push --include-all
+      - name: Verify generated database types
+        run: |
+          mise run gen-types
+          expected_types="$(mktemp --suffix=.ts)"
+          trap 'rm -f "$expected_types"' EXIT
+          git show "HEAD:packages/database/src/database.types.ts" > "$expected_types"
+          pnpm exec prettier --write "$expected_types" packages/database/src/database.types.ts
+          cmp -s "$expected_types" packages/database/src/database.types.ts || {
+            echo "::error::Generated database types differ after formatting."
+            exit 1
+          }
+
+      - name: Typecheck database package
+        run: pnpm --filter=@app/supabase run typecheck
+
+      - name: Run local database tests
+        run: pnpm supabase test db
         working-directory: packages/database
 
   # Job 3: E2E Tests
   e2e-tests:
-    needs: [detect, deploy-supabase]
+    needs: [detect]
     if: |
-      always() &&
-      (needs.detect.outputs.mobile == 'true' || needs.detect.outputs.website == 'true') &&
-      (needs.deploy-supabase.result == 'success' || needs.deploy-supabase.result == 'skipped')
+      needs.detect.outputs.mobile == 'true' ||
+      needs.detect.outputs.website_validation == 'true' ||
+      needs.detect.outputs.database_validation == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -131,30 +147,18 @@ jobs:
         uses: jdx/mise-action@v2
 
       - name: Install dependencies
-        run: pnpm install --config.minimum-release-age=0 --config.minimum-release-age-strict=false
+        run: pnpm install --filter=@app/website... --filter=dubbing-base-monorepo --config.minimum-release-age=0 --config.minimum-release-age-strict=false
 
       - name: Install Playwright Browsers
         run: pnpm exec playwright install --with-deps
 
       - name: Run Playwright tests
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
-          VITE_ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}
-          VITE_API_BASE_URL: https://dubbingbase.com
-          NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          NUXT_PUBLIC_SUPABASE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
-          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
-          IGDB_CLIENT_ID: ${{ secrets.IGDB_CLIENT_ID }}
-          IGDB_CLIENT_SECRET: ${{ secrets.IGDB_CLIENT_SECRET }}
         run: pnpm exec playwright test --project=website
 
   # Job 3.5: Frontend Unit Tests
   frontend-tests:
     needs: [detect]
-    if: needs.detect.outputs.website == 'true'
+    if: needs.detect.outputs.website_validation == 'true' || needs.detect.outputs.database_validation == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -172,7 +176,7 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install --config.minimum-release-age=0 --config.minimum-release-age-strict=false
+        run: pnpm install --filter=@app/website... --filter=dubbing-base-monorepo --config.minimum-release-age=0 --config.minimum-release-age-strict=false
 
       - name: Run Vitest tests
         run: pnpm --filter=@app/website run test --run
@@ -180,7 +184,7 @@ jobs:
   # Job 3.55: Website TypeScript Check
   typecheck-website:
     needs: [detect]
-    if: needs.detect.outputs.website == 'true'
+    if: needs.detect.outputs.website_validation == 'true' || needs.detect.outputs.database_validation == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -198,15 +202,93 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install --config.minimum-release-age=0 --config.minimum-release-age-strict=false
+        run: pnpm install --filter=@app/website... --filter=dubbing-base-monorepo --config.minimum-release-age=0 --config.minimum-release-age-strict=false
 
       - name: Typecheck website
         run: pnpm --filter=@app/website run typecheck
 
+  # Job 3.56: Lint changed website source and prevent release lint regressions
+  lint-website:
+    needs: [detect]
+    if: needs.detect.outputs.website == 'true' || needs.detect.outputs.database_validation == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.4.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "pnpm"
+
+      - name: Install website dependencies
+        run: pnpm install --filter=@app/website... --filter=dubbing-base-monorepo --config.minimum-release-age=0 --config.minimum-release-age-strict=false
+
+      - name: Compare full website lint with the base revision
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "$BASE_SHA" ] || [[ "$BASE_SHA" =~ ^0+$ ]]; then
+            BASE_SHA="$(git rev-parse HEAD^)"
+          fi
+          git cat-file -e "$BASE_SHA^{commit}"
+
+          baseline_dir="$(mktemp -d)"
+          baseline_results="$(mktemp)"
+          head_results="$(mktemp)"
+          trap 'rm -rf "$baseline_dir"; rm -f "$baseline_results" "$head_results"' EXIT
+          git archive "$BASE_SHA" .gitignore apps/website | tar -x -C "$baseline_dir"
+
+          node --check scripts/compare-oxlint-results.mjs
+
+          set +e
+          (
+            cd "$baseline_dir"
+            "$GITHUB_WORKSPACE/node_modules/.bin/oxlint" \
+              -c "$GITHUB_WORKSPACE/.oxlintrc.json" \
+              --vue-plugin --format json --ignore-path .gitignore apps/website
+          ) > "$baseline_results"
+          baseline_status=$?
+          pnpm exec oxlint -c .oxlintrc.json --vue-plugin --format json apps/website > "$head_results"
+          head_status=$?
+          set -e
+
+          node scripts/compare-oxlint-results.mjs \
+            "$baseline_results" "$baseline_status" \
+            "$head_results" "$head_status"
+
+          mapfile -d '' -t changed_files < <(
+            git diff --name-only --diff-filter=ACMR -z "$BASE_SHA" HEAD -- apps/website
+          )
+          lint_files=()
+          for file in "${changed_files[@]}"; do
+            case "$file" in
+              *.js|*.jsx|*.mjs|*.cjs|*.ts|*.tsx|*.mts|*.cts|*.vue)
+                lint_files+=("$file")
+                ;;
+            esac
+          done
+
+          if [ "${#lint_files[@]}" -eq 0 ]; then
+            echo "No changed website source files to lint."
+          else
+            pnpm exec oxlint -c .oxlintrc.json --vue-plugin --deny-warnings "${lint_files[@]}"
+          fi
+
   # Job 3.6: Whitespace Check for Website-Scoped Changes
   diff-check:
     needs: [detect]
-    if: needs.detect.outputs.website == 'true'
+    if: needs.detect.outputs.website_validation == 'true' || needs.detect.outputs.database_validation == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -233,6 +315,7 @@ jobs:
             ':(exclude)e2e/mobile.spec.ts' \
             package.json \
             packages/locales \
+            packages/database \
             packages/shared-logic \
             playwright.config.ts \
             pnpm-lock.yaml
@@ -240,7 +323,7 @@ jobs:
   # Job 3.7: i18n Translation Check
   i18n-check:
     needs: [detect]
-    if: needs.detect.outputs.website == 'true' || needs.detect.outputs.mobile == 'true'
+    if: needs.detect.outputs.website_validation == 'true' || needs.detect.outputs.mobile == 'true' || needs.detect.outputs.database_validation == 'true'
     continue-on-error: false
     runs-on: ubuntu-latest
     steps:
@@ -259,22 +342,45 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install --config.minimum-release-age=0 --config.minimum-release-age-strict=false
+        run: pnpm install --filter=dubbing-base-monorepo --config.minimum-release-age=0 --config.minimum-release-age-strict=false
 
       - name: Check i18n keys
         run: pnpm i18n:check
 
   # Job 4: Deploy Mobile App as Website
   deploy-mobile-web:
-    needs: [detect, deploy-supabase, e2e-tests, frontend-tests, i18n-check]
-    # Run if mobile has changes, and if database job succeeded (or wasn't needed)
+    needs: [detect, deploy-supabase, release-validation, e2e-tests, frontend-tests, i18n-check]
+    # A skipped migration is expected only when no database files changed.
     if: |
-      always() && 
-      needs.detect.outputs.mobile == 'true' && 
-      (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped') &&
-      (needs.frontend-tests.result == 'success' || needs.frontend-tests.result == 'skipped') &&
-      (needs.i18n-check.result == 'success' || needs.i18n-check.result == 'skipped') &&
-      (needs.deploy-supabase.result == 'success' || needs.deploy-supabase.result == 'skipped')
+      always() &&
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      needs.detect.outputs.mobile == 'true' &&
+      needs.e2e-tests.result == 'success' &&
+      needs.i18n-check.result == 'success' &&
+      (
+        needs.frontend-tests.result == 'success' ||
+        (
+          needs.detect.outputs.database != 'true' &&
+          needs.detect.outputs.website != 'true' &&
+          needs.frontend-tests.result == 'skipped'
+        )
+      ) &&
+      (
+        needs.release-validation.result == 'success' ||
+        (
+          needs.detect.outputs.database != 'true' &&
+          needs.detect.outputs.website != 'true' &&
+          needs.release-validation.result == 'skipped'
+        )
+      ) &&
+      (
+        needs.deploy-supabase.result == 'success' ||
+        (
+          needs.detect.outputs.database != 'true' &&
+          needs.deploy-supabase.result == 'skipped'
+        )
+      )
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -436,28 +542,12 @@ jobs:
           track: internal
           release_status: "completed"
 
-  # Job 7: Build website (validates build on non-main branches)
+  # Job 7: Build website before release validation; main deployment reuses this artifact
   build-website:
-    needs:
-      [
-        detect,
-        deploy-supabase,
-        e2e-tests,
-        frontend-tests,
-        i18n-check,
-        typecheck-website,
-        diff-check,
-      ]
+    needs: [detect]
     if: |
-      always() && 
-      github.ref != 'refs/heads/main' &&
-      needs.detect.outputs.website == 'true' && 
-      (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped') &&
-      (needs.frontend-tests.result == 'success' || needs.frontend-tests.result == 'skipped') &&
-      (needs.i18n-check.result == 'success' || needs.i18n-check.result == 'skipped') &&
-      needs.typecheck-website.result == 'success' &&
-      needs.diff-check.result == 'success' &&
-      (needs.deploy-supabase.result == 'success' || needs.deploy-supabase.result == 'skipped')
+      needs.detect.outputs.website_validation == 'true' ||
+      needs.detect.outputs.database_validation == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -475,9 +565,10 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install --config.minimum-release-age=0 --config.minimum-release-age-strict=false
+        run: pnpm install --filter=@app/website... --filter=dubbing-base-monorepo --config.minimum-release-age=0 --config.minimum-release-age-strict=false
 
       - name: Build website
+        if: github.ref == 'refs/heads/main'
         env:
           NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
@@ -502,28 +593,163 @@ jobs:
           NITRO_PRESET: cloudflare-module
         run: pnpm --filter=@app/website build
 
-  # Job 8: Deploy website to Cloudflare Workers (main only - builds once and deploys)
-  deploy-website:
+      - name: Build website with non-production values
+        if: github.ref != 'refs/heads/main'
+        env:
+          NUXT_PUBLIC_SUPABASE_URL: https://mock.supabase.co
+          NUXT_PUBLIC_SUPABASE_KEY: mock-publishable-key
+          SUPABASE_PUBLISHABLE_KEY: mock-publishable-key
+          NUXT_SUPABASE_URL: https://mock.supabase.co
+          NUXT_SUPABASE_SECRET_KEY: mock-secret-key
+          NUXT_TMDB_API_KEY: mock-tmdb-key
+          NUXT_TVDB_API_KEY: mock-tvdb-key
+          NUXT_IGDB_CLIENT_ID: mock-igdb-client-id
+          NUXT_IGDB_CLIENT_SECRET: mock-igdb-client-secret
+          NUXT_GOOGLE_AI_KEY: mock-google-ai-key
+          NUXT_GROQ_API_KEY: mock-groq-api-key
+          NUXT_ONESIGNAL_APP_ID: mock-onesignal-app-id
+          NUXT_ONESIGNAL_REST_API_KEY: mock-onesignal-rest-api-key
+          NUXT_DISCORD_WEBHOOK_DISCOVERY_URL: https://example.invalid/discovery
+          NUXT_DISCORD_WEBHOOK_CHECK_URL: https://example.invalid/check
+          NUXT_DISCORD_WEBHOOK_EXTRACT_URL: https://example.invalid/extract
+          NUXT_DISCORD_WEBHOOK_URL: https://example.invalid/admin
+          NUXT_RESEND_API_KEY: mock-resend-api-key
+          NUXT_RESEND_FROM_EMAIL: no-reply@example.invalid
+          NUXT_RESEND_TO_EMAIL: admin@example.invalid
+          NUXT_ADMIN_EMAIL: admin@example.invalid
+          NITRO_PRESET: cloudflare-module
+        run: pnpm --filter=@app/website build
+
+      - name: Verify hidden production build output
+        if: github.ref == 'refs/heads/main' && needs.detect.outputs.website == 'true'
+        run: |
+          test -f apps/website/.output/public/.well-known/assetlinks.json
+          well_known_entry_count="$(find apps/website/.output/public/.well-known -mindepth 1 -print | wc -l | tr -d '[:space:]')"
+          if [ "$well_known_entry_count" -ne 1 ]; then
+            echo "Unexpected files in .well-known build output." >&2
+            exit 1
+          fi
+          unexpected_hidden_paths="$(find apps/website/.output -mindepth 1 \( -type d -o -type f -o -type l \) -name '.*' ! -path 'apps/website/.output/public/.well-known' -print)"
+          if [ -n "$unexpected_hidden_paths" ]; then
+            printf 'Unexpected hidden build output:\n%s\n' "$unexpected_hidden_paths" >&2
+            exit 1
+          fi
+
+      - name: Upload production website build
+        if: github.ref == 'refs/heads/main' && needs.detect.outputs.website == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-build
+          path: apps/website/.output/**
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+
+  # Job 7.5: Require every relevant preflight check to succeed
+  release-validation:
     needs:
       [
         detect,
-        deploy-supabase,
+        database-checks,
         e2e-tests,
         frontend-tests,
-        i18n-check,
+        lint-website,
         typecheck-website,
         diff-check,
+        i18n-check,
+        build-website,
       ]
     if: |
       always() &&
-      github.ref == 'refs/heads/main' &&
-      needs.detect.outputs.website == 'true' &&
+      !cancelled() &&
+      needs.detect.result == 'success' &&
+      (needs.detect.outputs.website_validation == 'true' || needs.detect.outputs.database_validation == 'true') &&
       needs.e2e-tests.result == 'success' &&
       needs.frontend-tests.result == 'success' &&
-      needs.i18n-check.result == 'success' &&
+      needs.lint-website.result == 'success' &&
       needs.typecheck-website.result == 'success' &&
       needs.diff-check.result == 'success' &&
-      (needs.deploy-supabase.result == 'success' || needs.deploy-supabase.result == 'skipped')
+      needs.i18n-check.result == 'success' &&
+      needs.build-website.result == 'success' &&
+      (needs.detect.outputs.database_validation != 'true' || needs.database-checks.result == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Confirm release preflight passed
+        run: echo "Required release validation passed."
+
+  # Job 7.6: Apply production migrations only after release validation
+  deploy-supabase:
+    needs: [detect, release-validation]
+    if: |
+      !cancelled() &&
+      github.ref == 'refs/heads/main' &&
+      needs.detect.outputs.database == 'true' &&
+      needs.release-validation.result == 'success'
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_ID: rrjgbneefiwoqvsjwzrz
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.4.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "pnpm"
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2.0.5
+        with:
+          deno-version: "2.1.9"
+
+      - name: Install database dependencies
+        run: pnpm install --filter @app/supabase... --config.minimum-release-age=0 --config.minimum-release-age-strict=false
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: 2.111.0
+
+      - name: Link Project
+        if: github.ref == 'refs/heads/main'
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase link --project-ref $PROJECT_ID
+        working-directory: packages/database
+
+      - name: Run database migrations
+        if: github.ref == 'refs/heads/main'
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        # Keep stacked migrations deployable when their timestamps merge out of order.
+        run: supabase db push --include-all
+        working-directory: packages/database
+
+  # Job 8: Deploy website to Cloudflare Workers (main only)
+  deploy-website:
+    needs: [detect, release-validation, deploy-supabase]
+    if: |
+      always() &&
+      !cancelled() &&
+      github.ref == 'refs/heads/main' &&
+      needs.detect.outputs.website == 'true' &&
+      needs.release-validation.result == 'success' &&
+      (
+        (
+          needs.detect.outputs.database == 'true' &&
+          needs.deploy-supabase.result == 'success'
+        ) ||
+        (
+          needs.detect.outputs.database != 'true' &&
+          needs.deploy-supabase.result == 'skipped'
+        )
+      )
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -541,32 +767,13 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install --config.minimum-release-age=0 --config.minimum-release-age-strict=false
+        run: pnpm install --filter=@app/website... --filter=dubbing-base-monorepo --config.minimum-release-age=0 --config.minimum-release-age-strict=false
 
-      - name: Build website
-        env:
-          NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
-          NUXT_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          NUXT_SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
-          NUXT_TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
-          NUXT_TVDB_API_KEY: ${{ secrets.TVDB_API_KEY }}
-          NUXT_IGDB_CLIENT_ID: ${{ secrets.IGDB_CLIENT_ID }}
-          NUXT_IGDB_CLIENT_SECRET: ${{ secrets.IGDB_CLIENT_SECRET }}
-          NUXT_GOOGLE_AI_KEY: ${{ secrets.GOOGLE_AI_KEY || secrets.NUXT_GOOGLE_AI_KEY || secrets.GEMINI_API_KEY }}
-          NUXT_GROQ_API_KEY: ${{ secrets.GROQ_API_KEY || secrets.NUXT_GROQ_API_KEY }}
-          NUXT_ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}
-          NUXT_ONESIGNAL_REST_API_KEY: ${{ secrets.ONESIGNAL_REST_API_KEY }}
-          NUXT_DISCORD_WEBHOOK_DISCOVERY_URL: ${{ secrets.DISCORD_WEBHOOK_DISCOVERY_URL || secrets.NUXT_DISCORD_WEBHOOK_DISCOVERY_URL || secrets.DISCORD_DISCOVERY_WEBHOOK_URL }}
-          NUXT_DISCORD_WEBHOOK_CHECK_URL: ${{ secrets.DISCORD_WEBHOOK_CHECK_URL || secrets.NUXT_DISCORD_WEBHOOK_CHECK_URL || secrets.DISCORD_CHECK_WEBHOOK_URL }}
-          NUXT_DISCORD_WEBHOOK_EXTRACT_URL: ${{ secrets.DISCORD_WEBHOOK_EXTRACT_URL || secrets.NUXT_DISCORD_WEBHOOK_EXTRACT_URL || secrets.DISCORD_EXTRACT_WEBHOOK_URL }}
-          NUXT_DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL || secrets.NUXT_DISCORD_WEBHOOK_URL || secrets.DISCORD_ADMIN_WEBHOOK_LOG_URL }}
-          NUXT_RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          NUXT_RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
-          NUXT_RESEND_TO_EMAIL: ${{ secrets.RESEND_TO_EMAIL }}
-          NUXT_ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
-          NITRO_PRESET: cloudflare-module
-        run: pnpm --filter=@app/website build
+      - name: Download production-compatible website build
+        uses: actions/download-artifact@v4
+        with:
+          name: website-build
+          path: apps/website/.output
 
       - name: Deploy to Cloudflare Workers
         working-directory: apps/website

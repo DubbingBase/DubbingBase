@@ -35,13 +35,13 @@ SELECT ok(NOT has_function_privilege('anon', 'public.archive_media_queue_message
 SELECT ok(NOT has_function_privilege('authenticated', 'public.archive_media_queue_messages(text, bigint[])', 'EXECUTE'), 'authenticated cannot execute archive_media_queue_messages');
 SELECT ok(has_function_privilege('service_role', 'public.archive_media_queue_messages(text, bigint[])', 'EXECUTE'), 'service_role can execute archive_media_queue_messages');
 
-SELECT ok(NOT has_function_privilege('anon', 'public.enqueue_media_fetch(bigint, text, integer, integer, text, boolean)', 'EXECUTE'), 'anon cannot execute enqueue_media_fetch');
-SELECT ok(NOT has_function_privilege('authenticated', 'public.enqueue_media_fetch(bigint, text, integer, integer, text, boolean)', 'EXECUTE'), 'authenticated cannot execute enqueue_media_fetch');
-SELECT ok(has_function_privilege('service_role', 'public.enqueue_media_fetch(bigint, text, integer, integer, text, boolean)', 'EXECUTE'), 'service_role can execute enqueue_media_fetch');
+SELECT ok(NOT has_function_privilege('anon', 'public.enqueue_media_fetch(bigint, text, integer, integer, text, boolean, text, text, uuid, text, text, text, text)', 'EXECUTE'), 'anon cannot execute enqueue_media_fetch');
+SELECT ok(NOT has_function_privilege('authenticated', 'public.enqueue_media_fetch(bigint, text, integer, integer, text, boolean, text, text, uuid, text, text, text, text)', 'EXECUTE'), 'authenticated cannot execute enqueue_media_fetch');
+SELECT ok(has_function_privilege('service_role', 'public.enqueue_media_fetch(bigint, text, integer, integer, text, boolean, text, text, uuid, text, text, text, text)', 'EXECUTE'), 'service_role can execute enqueue_media_fetch');
 
-SELECT ok(NOT has_function_privilege('anon', 'public.enqueue_media_extract(bigint, text, text, bigint, jsonb, integer, integer, boolean)', 'EXECUTE'), 'anon cannot execute enqueue_media_extract');
-SELECT ok(NOT has_function_privilege('authenticated', 'public.enqueue_media_extract(bigint, text, text, bigint, jsonb, integer, integer, boolean)', 'EXECUTE'), 'authenticated cannot execute enqueue_media_extract');
-SELECT ok(has_function_privilege('service_role', 'public.enqueue_media_extract(bigint, text, text, bigint, jsonb, integer, integer, boolean)', 'EXECUTE'), 'service_role can execute enqueue_media_extract');
+SELECT ok(NOT has_function_privilege('anon', 'public.enqueue_media_extract(bigint, text, text, bigint, jsonb, integer, integer, boolean, text, text, uuid, jsonb)', 'EXECUTE'), 'anon cannot execute enqueue_media_extract');
+SELECT ok(NOT has_function_privilege('authenticated', 'public.enqueue_media_extract(bigint, text, text, bigint, jsonb, integer, integer, boolean, text, text, uuid, jsonb)', 'EXECUTE'), 'authenticated cannot execute enqueue_media_extract');
+SELECT ok(has_function_privilege('service_role', 'public.enqueue_media_extract(bigint, text, text, bigint, jsonb, integer, integer, boolean, text, text, uuid, jsonb)', 'EXECUTE'), 'service_role can execute enqueue_media_extract');
 
 SET LOCAL ROLE authenticated;
 SELECT set_config(
@@ -53,7 +53,7 @@ SELECT throws_ok(
   $$INSERT INTO public.dubbing_projects (content_id, content_type) VALUES (910001, 'security_test_user_metadata')$$,
   '42501',
   NULL,
-  'user_metadata admin cannot grant database write access'
+  'user_metadata admin cannot grant direct table write access'
 );
 
 SELECT set_config(
@@ -61,9 +61,11 @@ SELECT set_config(
   '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated","user_metadata":{"role":"user"},"app_metadata":{"role":"admin"}}',
   true
 );
-SELECT lives_ok(
+SELECT throws_ok(
   $$INSERT INTO public.dubbing_projects (content_id, content_type) VALUES (910002, 'security_test_app_admin')$$,
-  'admin from app_metadata retains database write access'
+  '42501',
+  NULL,
+  'app_metadata admin cannot bypass controlled project writes'
 );
 
 SELECT set_config(
@@ -71,9 +73,11 @@ SELECT set_config(
   '{"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated","user_metadata":{"role":"user"},"app_metadata":{"role":"editor"}}',
   true
 );
-SELECT lives_ok(
+SELECT throws_ok(
   $$INSERT INTO public.dubbing_projects (content_id, content_type) VALUES (910003, 'security_test_app_editor')$$,
-  'editor from app_metadata retains database write access'
+  '42501',
+  NULL,
+  'app_metadata editor cannot bypass controlled project writes'
 );
 
 RESET ROLE;

@@ -1,4 +1,10 @@
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
 
 export type Database = {
   graphql_public: {
@@ -355,7 +361,7 @@ export type Database = {
           logo_url: string | null;
           name: string;
           social_media_links: Json | null;
-          updated_at: string | null;
+          updated_at: string;
           website_url: string | null;
         };
         Insert: {
@@ -367,7 +373,7 @@ export type Database = {
           logo_url?: string | null;
           name: string;
           social_media_links?: Json | null;
-          updated_at?: string | null;
+          updated_at?: string;
           website_url?: string | null;
         };
         Update: {
@@ -379,7 +385,7 @@ export type Database = {
           logo_url?: string | null;
           name?: string;
           social_media_links?: Json | null;
-          updated_at?: string | null;
+          updated_at?: string;
           website_url?: string | null;
         };
         Relationships: [];
@@ -745,22 +751,12 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      controlled_update_voice_actor: {
-        Args: {
-          p_actor_id: string;
-          p_expected_updated_at: string;
-          p_payload: Json;
-          p_request_id: string;
-          p_voice_actor_id: number;
-        };
-        Returns: Json;
-      };
       apply_extracted_credits: {
         Args: {
           p_content_id: number;
           p_content_type: string;
-          p_dubbing_language: string;
           p_credits: Json;
+          p_dubbing_language: string;
         };
         Returns: Json;
       };
@@ -786,23 +782,63 @@ export type Database = {
         };
         Returns: boolean;
       };
+      archive_wiki_scan_with_outcome: {
+        Args: {
+          p_archive_details: string;
+          p_archive_reason: string;
+          p_candidate_sections: Json;
+          p_detected_regions: Json;
+          p_msg_id: number;
+        };
+        Returns: boolean;
+      };
+      audit_voice_actor_work_mutation: {
+        Args: {
+          p_action: string;
+          p_after: Json;
+          p_before: Json;
+          p_metadata: Json;
+          p_request_fingerprint: string;
+          p_request_id: string;
+          p_user_id: string;
+          p_work_id: number;
+        };
+        Returns: string;
+      };
       claim_gamification_task: {
         Args: { p_category: string; p_user_id: string };
         Returns: {
           category: string;
-          claim_id: string | null;
-          expires_at: string | null;
-          task: Json | null;
+          claim_id: string;
+          expires_at: string;
+          task: Json;
         }[];
       };
       claim_gamification_task_retry_safe: {
         Args: { p_category: string; p_user_id: string };
         Returns: {
           category: string;
-          claim_id: string | null;
-          expires_at: string | null;
-          task: Json | null;
+          claim_id: string;
+          expires_at: string;
+          task: Json;
         }[];
+      };
+      clear_media_queue: { Args: never; Returns: boolean };
+      consume_gamification_task_claim: {
+        Args: { p_claim_id: string; p_user_id: string };
+        Returns: {
+          category: string;
+          entity_id: string;
+        }[];
+      };
+      controlled_save_metadata: {
+        Args: {
+          p_actor_id: string;
+          p_entity_type: string;
+          p_payload: Json;
+          p_request_id?: string;
+        };
+        Returns: Json;
       };
       controlled_save_studio: {
         Args: {
@@ -813,7 +849,7 @@ export type Database = {
           p_updates: Json;
         };
         Returns: {
-          audit_log_id: string | null;
+          audit_log_id: string;
           replayed: boolean;
           studio_id: number;
         }[];
@@ -828,13 +864,23 @@ export type Database = {
         };
         Returns: Json;
       };
+      controlled_update_voice_actor: {
+        Args: {
+          p_actor_id: string;
+          p_expected_updated_at: string;
+          p_payload: Json;
+          p_request_id: string;
+          p_voice_actor_id: number;
+        };
+        Returns: Json;
+      };
       create_internal_dubbing_project: {
         Args: {
           p_actor_id: string;
-          p_brand: string | null;
-          p_description: string | null;
+          p_brand: string;
+          p_description: string;
           p_language: string;
-          p_manufacturer: string | null;
+          p_manufacturer: string;
           p_media_type: string;
           p_name: string;
           p_request_id: string;
@@ -849,15 +895,15 @@ export type Database = {
       create_internal_dubbing_project_with_metadata: {
         Args: {
           p_actor_id: string;
-          p_brand: string | null;
-          p_cover_url: string | null;
-          p_description: string | null;
+          p_brand: string;
+          p_cover_url: string;
+          p_description: string;
           p_language: string;
-          p_manufacturer: string | null;
+          p_manufacturer: string;
           p_media_type: string;
           p_name: string;
-          p_product_line: string | null;
-          p_release_year: number | null;
+          p_product_line: string;
+          p_release_year: number;
           p_request_id: string;
         };
         Returns: {
@@ -867,11 +913,11 @@ export type Database = {
           project_id: number;
           replayed: boolean;
           updated_at: string;
-        };
+        }[];
       };
       create_voice_actor_work_link: {
         Args: {
-          p_actor_person_id: number | null;
+          p_actor_person_id: number;
           p_character_name: string;
           p_content_id: number;
           p_content_type: string;
@@ -888,79 +934,6 @@ export type Database = {
           work_id: number;
         }[];
       };
-      delete_voice_actor_work_link: {
-        Args: {
-          p_expected_updated_at?: string | null;
-          p_request_id: string;
-          p_user_id: string;
-          p_work_id: number;
-        };
-        Returns: {
-          audit_log_id: string;
-          replayed: boolean;
-          work_id: number;
-        }[];
-      };
-      consume_gamification_task_claim: {
-        Args: { p_claim_id: string; p_user_id: string };
-        Returns: { category: string; entity_id: string }[];
-      };
-      skip_gamification_task_retry_safe: {
-        Args: {
-          p_category: string;
-          p_skip_claim_id: string;
-          p_user_id: string;
-        };
-        Returns: {
-          category: string;
-          claim_id: string | null;
-          expires_at: string | null;
-          task: Json | null;
-        }[];
-      };
-      submit_gamification_task_contribution: {
-        Args: {
-          p_claim_id: string;
-          p_is_admin?: boolean;
-          p_updates: Json;
-          p_user_id: string;
-        };
-        Returns: { points_awarded: number; status: string }[];
-      };
-      archive_wiki_scan_with_outcome: {
-        Args: {
-          p_archive_details: string;
-          p_archive_reason: string;
-          p_candidate_sections: Json;
-          p_detected_regions: Json;
-          p_msg_id: number;
-        };
-        Returns: boolean;
-      };
-      reprocess_legacy_wiki_check_reviews: {
-        Args: never;
-        Returns: {
-          archived_msg_id: number;
-          outcome: string;
-          queued_msg_id: number | null;
-          tmdb_id: number;
-        }[];
-      };
-      submit_gamification_task_contribution_retry_safe: {
-        Args: {
-          p_claim_id: string;
-          p_is_admin: boolean;
-          p_submission_fingerprint: string;
-          p_updates: Json;
-          p_user_id: string;
-        };
-        Returns: {
-          points_awarded: number;
-          replayed: boolean;
-          status: string;
-        }[];
-      };
-      clear_media_queue: { Args: never; Returns: boolean };
       delay_media_queue_message: {
         Args: {
           p_delay_seconds?: number;
@@ -972,6 +945,23 @@ export type Database = {
       delete_media_queue_item: {
         Args: { p_id: number; p_queue_name?: string };
         Returns: boolean;
+      };
+      delete_media_queue_item_without_scan: {
+        Args: { p_id: number; p_queue_name?: string };
+        Returns: boolean;
+      };
+      delete_voice_actor_work_link: {
+        Args: {
+          p_expected_updated_at?: string;
+          p_request_id: string;
+          p_user_id: string;
+          p_work_id: number;
+        };
+        Returns: {
+          audit_log_id: string;
+          replayed: boolean;
+          work_id: number;
+        }[];
       };
       dubbing_project_completeness: {
         Args: { dp: Database["public"]["Tables"]["dubbing_projects"]["Row"] };
@@ -1001,13 +991,13 @@ export type Database = {
           p_is_manual?: boolean;
           p_language?: string;
           p_media_type: string;
-          p_requested_by?: string;
-          p_wiki_id?: string;
-          p_title?: string;
           p_page_title?: string;
           p_poster_path?: string;
+          p_requested_by?: string;
           p_season_number?: number;
+          p_title?: string;
           p_tmdb_id: number;
+          p_wiki_id?: string;
           p_wikipedia_language?: string;
         };
         Returns: number;
@@ -1027,7 +1017,7 @@ export type Database = {
           p_voice_actor_id: number | null;
         };
         Returns: {
-          audit_log_id: string | null;
+          audit_log_id: string;
           project_id: number;
           replayed: boolean;
         }[];
@@ -1040,7 +1030,6 @@ export type Database = {
         };
         Returns: number[];
       };
-      get_ready_media_queues: { Args: never; Returns: string[] };
       get_media_queue_depth: {
         Args: { p_queue_name?: string };
         Returns: number;
@@ -1074,18 +1063,41 @@ export type Database = {
           wikipedia_language: string;
         }[];
       };
-      work_role_identity_key: {
+      get_media_queue_items_without_scan: {
         Args: {
-          p_character_id: number | null;
-          p_character_name: string | null;
+          p_limit?: number;
+          p_offset?: number;
+          p_queue_name?: string;
+          p_status?: string;
         };
-        Returns: string | null;
+        Returns: {
+          archive_details: string;
+          archive_reason: string;
+          candidate_sections: Json;
+          created_at: string;
+          detected_regions: Json;
+          dubbing_language: string;
+          episode_number: number;
+          error_message: string;
+          id: number;
+          is_manual: boolean;
+          language: string;
+          media_type: string;
+          queue_name: string;
+          read_ct: number;
+          requested_by: string;
+          season_number: number;
+          status: string;
+          tmdb_id: number;
+          wikipedia_language: string;
+        }[];
       };
       get_media_queue_locked_count: {
         Args: { p_queue_name?: string };
         Returns: number;
       };
       get_media_queue_stats: { Args: never; Returns: Json };
+      get_media_queue_stats_without_scan: { Args: never; Returns: Json };
       get_media_queue_status: {
         Args: {
           p_dubbing_language?: string;
@@ -1098,15 +1110,7 @@ export type Database = {
         };
         Returns: string;
       };
-      controlled_save_metadata: {
-        Args: {
-          p_actor_id: string;
-          p_entity_type: string;
-          p_payload: Json;
-          p_request_id?: string;
-        };
-        Returns: Json;
-      };
+      get_ready_media_queues: { Args: never; Returns: string[] };
       get_recent_contributions: {
         Args: { limit_param?: number };
         Returns: {
@@ -1157,13 +1161,13 @@ export type Database = {
       };
       lock_media_queue_identity: {
         Args: {
-          p_dubbing_language: string | null;
-          p_episode_number: number | null;
+          p_dubbing_language: string;
+          p_episode_number: number;
           p_media_type: string;
           p_queue: string;
-          p_season_number: number | null;
+          p_season_number: number;
           p_tmdb_id: number;
-          p_wikipedia_language: string | null;
+          p_wikipedia_language: string;
         };
         Returns: undefined;
       };
@@ -1201,7 +1205,6 @@ export type Database = {
         Args: { p_keep_id: number; p_other_ids: number[]; p_updates?: Json };
         Returns: Json;
       };
-      normalize_actor_name: { Args: { str: string }; Returns: string };
       merge_work_duplicates_atomic: {
         Args: {
           p_admin_id: string;
@@ -1211,6 +1214,7 @@ export type Database = {
         };
         Returns: Json;
       };
+      normalize_actor_name: { Args: { str: string }; Returns: string };
       pop_media_queue_batch: {
         Args: {
           p_batch_size: number;
@@ -1235,35 +1239,34 @@ export type Database = {
           vt: string;
         }[];
       };
+      reprocess_legacy_wiki_check_reviews: {
+        Args: never;
+        Returns: {
+          archived_msg_id: number;
+          outcome: string;
+          queued_msg_id: number;
+          tmdb_id: number;
+        }[];
+      };
+      require_voice_actor_work_permission: {
+        Args: { p_user_id: string; p_voice_actor_id: number };
+        Returns: boolean;
+      };
       save_dubbing_project_editor: {
         Args: {
           p_actor_id: string;
           p_cast: Json;
           p_crew: Json;
-          p_expected_updated_at: string | null;
+          p_expected_updated_at: string;
           p_project: Json;
-          p_project_id: number | null;
+          p_project_id: number;
           p_request_id: string;
         };
         Returns: {
           audit_log_id: string;
           project_id: number;
           replayed: boolean;
-          updated_at: string | null;
-        }[];
-      };
-      update_voice_actor_work_performance: {
-        Args: {
-          p_expected_updated_at: string | null;
-          p_performance: string;
-          p_request_id: string;
-          p_user_id: string;
-          p_work_id: number;
-        };
-        Returns: {
-          audit_log_id: string;
-          replayed: boolean;
-          work_id: number;
+          updated_at: string;
         }[];
       };
       save_regional_project_actor_assignments:
@@ -1287,7 +1290,60 @@ export type Database = {
             };
             Returns: number;
           };
+      skip_gamification_task_retry_safe: {
+        Args: {
+          p_category: string;
+          p_skip_claim_id: string;
+          p_user_id: string;
+        };
+        Returns: {
+          category: string;
+          claim_id: string;
+          expires_at: string;
+          task: Json;
+        }[];
+      };
+      submit_gamification_task_contribution: {
+        Args: {
+          p_claim_id: string;
+          p_is_admin?: boolean;
+          p_updates: Json;
+          p_user_id: string;
+        };
+        Returns: {
+          points_awarded: number;
+          status: string;
+        }[];
+      };
+      submit_gamification_task_contribution_retry_safe: {
+        Args: {
+          p_claim_id: string;
+          p_is_admin: boolean;
+          p_submission_fingerprint: string;
+          p_updates: Json;
+          p_user_id: string;
+        };
+        Returns: {
+          points_awarded: number;
+          replayed: boolean;
+          status: string;
+        }[];
+      };
       unaccent: { Args: { "": string }; Returns: string };
+      update_voice_actor_work_performance: {
+        Args: {
+          p_expected_updated_at: string;
+          p_performance: string;
+          p_request_id: string;
+          p_user_id: string;
+          p_work_id: number;
+        };
+        Returns: {
+          audit_log_id: string;
+          replayed: boolean;
+          work_id: number;
+        }[];
+      };
       voice_actor_completeness: {
         Args: { va: Database["public"]["Tables"]["voice_actors"]["Row"] };
         Returns: number;
@@ -1297,6 +1353,10 @@ export type Database = {
         Returns: {
           error: true;
         } & "the function public.voice_actor_name with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache";
+      };
+      work_role_identity_key: {
+        Args: { p_character_id: number; p_character_name: string };
+        Returns: string;
       };
     };
     Enums: {
@@ -1311,7 +1371,10 @@ export type Database = {
 
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">;
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">];
+type DefaultSchema = DatabaseWithoutInternals[Extract<
+  keyof Database,
+  "public"
+>];
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
@@ -1332,8 +1395,10 @@ export type Tables<
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] & DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R;
       }
       ? R
@@ -1342,8 +1407,7 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
@@ -1367,8 +1431,7 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
@@ -1392,8 +1455,7 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema["Enums"] | { schema: keyof DatabaseWithoutInternals },
   EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
