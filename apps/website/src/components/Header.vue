@@ -179,7 +179,7 @@
 import { nextTick, onMounted, onUnmounted, ref, computed } from "vue";
 import { useRoute } from "vue-router";
 import { UserIcon, SearchIcon } from "lucide-vue-next";
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const localePath = useLocalePathPrefix();
 const user = useSupabaseUser();
 const supabaseCookiePrefix = useRuntimeConfig().public.supabase.cookiePrefix;
@@ -190,14 +190,7 @@ const aboutLanguages = ["en", "fr", "es", "ja"] as const;
 const isAboutRoute = computed(() => ABOUT_ROUTES.has(route.path));
 
 const aboutPreferenceHref = (key: "lang" | "theme", value: string): string => {
-  const routeLocale = route.path.startsWith("/fr/")
-    ? "fr"
-    : route.path.startsWith("/es/")
-      ? "es"
-      : route.path.startsWith("/ja/")
-        ? "ja"
-        : "en";
-  const query = new URLSearchParams({ locale: routeLocale, [key]: value });
+  const query = new URLSearchParams({ locale: locale.value, [key]: value });
   return `/api/about-preference?${query.toString()}`;
 };
 
