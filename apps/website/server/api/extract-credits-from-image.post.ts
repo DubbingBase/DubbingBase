@@ -28,27 +28,19 @@ export default defineEventHandler(async (event) => {
     let knownActorsText = "";
     if (actorsField?.data) {
       try {
-        const actorsSchema = z.array(
-          z.object({
-            name: z.string(),
-            id: z.number(),
-            roles: z.array(z.string()),
-          }),
-        );
-        const parsedActors = actorsSchema.safeParse(JSON.parse(actorsField.data.toString()));
-        if (parsedActors.success && parsedActors.data.length > 0) {
+        const actors = JSON.parse(actorsField.data.toString());
+        if (Array.isArray(actors) && actors.length > 0) {
           knownActorsText =
             "\nHere is the list of known actors and their roles in this media:\n" +
-            parsedActors.data
+            actors
               .map(
-                (actor) => `- ${actor.name} (ID: ${actor.id}) | Roles: ${actor.roles.join(", ")}`,
+                (a: any) =>
+                  `- ${a.name} (ID: ${a.id}) | Roles: ${a.roles.join(", ")}`,
               )
               .join("\n");
-        } else if (!parsedActors.success) {
-          console.error("Known actors payload has an invalid shape");
         }
-      } catch (error: unknown) {
-        console.error("Failed to parse actors:", error);
+      } catch (e) {
+        console.error("Failed to parse actors:", e);
       }
     }
 
@@ -72,13 +64,21 @@ export default defineEventHandler(async (event) => {
         ),
       });
 
-      const parsed = await llmVisionObject(promptText, imageBase64, schemaWithMatch, mimeType, {
-        temperature: 0,
-      });
+      const parsed = await llmVisionObject(
+        promptText,
+        imageBase64,
+        schemaWithMatch,
+        mimeType,
+        {
+          temperature: 0,
+        },
+      );
 
       return {
         ok: true,
-        result: parsed.data.extract.filter((r) => isExploitableVoiceActorName(r.voiceActor)),
+        result: parsed.data.extract.filter((r) =>
+          isExploitableVoiceActorName(r.voiceActor),
+        ),
         llmModel: parsed.model,
         llmQuota: parsed.quota,
       };
@@ -88,22 +88,31 @@ export default defineEventHandler(async (event) => {
       extract: z.array(baseCreditSchema),
     });
 
-    const parsed = await llmVisionObject(promptText, imageBase64, schema, mimeType, {
-      temperature: 0,
-    });
+    const parsed = await llmVisionObject(
+      promptText,
+      imageBase64,
+      schema,
+      mimeType,
+      {
+        temperature: 0,
+      },
+    );
 
     return {
       ok: true,
-      result: parsed.data.extract.filter((r) => isExploitableVoiceActorName(r.voiceActor)),
+      result: parsed.data.extract.filter((r) =>
+        isExploitableVoiceActorName(r.voiceActor),
+      ),
       llmModel: parsed.model,
       llmQuota: parsed.quota,
     };
-  } catch (error: unknown) {
-    if (error && typeof error === "object" && "statusCode" in error) throw error;
+  } catch (error: any) {
+    if (error && typeof error === "object" && "statusCode" in error)
+      throw error;
     console.error("Error extracting credits:", error);
     throw createError({
       statusCode: 500,
-      message: error instanceof Error ? error.message : "Internal server error",
+      message: error.message || "Internal server error",
     });
   }
 });

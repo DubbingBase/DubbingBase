@@ -27,7 +27,9 @@
       v-if="loading"
       class="flex flex-col items-center justify-center py-24 space-y-3 theme-surface-raised theme-surface border theme-border-subtle theme-border rounded-2xl"
     >
-      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+      <div
+        class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"
+      ></div>
       <p class="theme-text-muted text-sm">
         {{ $t("admin.dashboard.loadingData") }}
       </p>
@@ -78,7 +80,9 @@
       <div
         class="theme-surface p-6 rounded-2xl border theme-border-subtle theme-border shadow-xl max-w-full"
       >
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div
+          class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6"
+        >
           <h2 class="text-lg font-bold theme-text">
             {{ $t("admin.dashboard.voiceActorGrowth") }}
           </h2>
@@ -128,31 +132,16 @@ import BarChart from "../../components/admin/charts/BarChart.vue";
 import LineChart from "../../components/admin/charts/LineChart.vue";
 import PieChart from "../../components/admin/charts/PieChart.vue";
 import type { ChartData, ChartOptions } from "chart.js";
-import type { Database } from "@app/supabase";
-
-type DateCount = { date: string; count: number };
-type PeriodCount = { period: string; count: number };
-type TopVoiceActor = Pick<
-  Database["public"]["Tables"]["voice_actors"]["Row"],
-  "firstname" | "lastname"
-> & { role_count: number };
-type DashboardStats = {
-  userCount: number;
-  voiceActorCount: number;
-  userGrowth: DateCount[];
-  voiceActorGrowth: DateCount[];
-  topVoiceActors: TopVoiceActor[];
-};
 
 // Reactive state
 const loading = ref(true);
 const error = ref<string | null>(null);
 const userCount = ref(0);
 const voiceActorCount = ref(0);
-const userRegistrations = ref<Array<{ month: string; count: number }>>([]);
-const voiceActorGrowth = ref<DateCount[]>([]);
-const topVoiceActors = ref<TopVoiceActor[]>([]);
-const selectedUnit = ref<"day" | "week" | "month">("day");
+const userRegistrations = ref<any[]>([]);
+const voiceActorGrowth = ref<any[]>([]);
+const topVoiceActors = ref<any[]>([]);
+const selectedUnit = ref("day");
 
 // Utility functions
 function getISOWeek(date: Date): number {
@@ -163,29 +152,35 @@ function getISOWeek(date: Date): number {
   return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
 }
 
-function aggregateData(data: DateCount[], unit: "day" | "week" | "month"): PeriodCount[] {
+function aggregateData(data: { date: string; count: number }[], unit: string) {
   if (unit === "day") {
     return data
       .map((item) => ({ period: item.date, count: item.count }))
       .sort((a, b) => a.period.localeCompare(b.period));
   } else if (unit === "month") {
-    const grouped = data.reduce<Record<string, number>>((acc, item) => {
-      const month = item.date.slice(0, 7); // YYYY-MM
-      acc[month] = (acc[month] || 0) + item.count;
-      return acc;
-    }, {});
+    const grouped = data.reduce(
+      (acc, item) => {
+        const month = item.date.slice(0, 7); // YYYY-MM
+        acc[month] = (acc[month] || 0) + item.count;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
     return Object.entries(grouped)
       .map(([period, count]) => ({ period, count }))
       .sort((a, b) => a.period.localeCompare(b.period));
   } else if (unit === "week") {
-    const grouped = data.reduce<Record<string, number>>((acc, item) => {
-      const date = new Date(item.date);
-      const year = date.getFullYear();
-      const week = getISOWeek(date);
-      const key = `${year}-W${week.toString().padStart(2, "0")}`;
-      acc[key] = (acc[key] || 0) + item.count;
-      return acc;
-    }, {});
+    const grouped = data.reduce(
+      (acc, item) => {
+        const date = new Date(item.date);
+        const year = date.getFullYear();
+        const week = getISOWeek(date);
+        const key = `${year}-W${week.toString().padStart(2, "0")}`;
+        acc[key] = (acc[key] || 0) + item.count;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
     return Object.entries(grouped)
       .map(([period, count]) => ({ period, count }))
       .sort((a, b) => a.period.localeCompare(b.period));
@@ -214,11 +209,14 @@ const userRegistrationsData = ref<ChartData>({
 
 const voiceActorGrowthData = computed<ChartData>(() => {
   const aggregated = aggregateData(voiceActorGrowth.value, selectedUnit.value);
-  const cumulative = aggregated.reduce<number[]>((acc, item, index) => {
-    const prev = index > 0 ? (acc[index - 1] ?? 0) : 0;
+  const cumulative = aggregated.reduce((acc, item, index) => {
+    const prev =
+      index > 0 && acc[index - 1] !== undefined
+        ? (acc[index - 1] as number)
+        : 0;
     acc.push(prev + item.count);
     return acc;
-  }, []);
+  }, [] as number[]);
   return {
     labels: aggregated.map((item) => item.period),
     datasets: [
@@ -374,7 +372,13 @@ const {
 } = await useAsyncData(
   "admin-dashboard",
   async () => {
-    return await $fetch<DashboardStats>("/api/dashboard-stats");
+    return (await $fetch("/api/dashboard-stats")) as {
+      userCount: number;
+      voiceActorCount: number;
+      userGrowth: { date: string; count: number }[];
+      voiceActorGrowth: { date: string; count: number }[];
+      topVoiceActors: any[];
+    };
   },
   { getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp) },
 );
@@ -387,19 +391,20 @@ watch(
       voiceActorCount.value = stats.voiceActorCount;
 
       // Group user growth by month
-      const userGrouped = stats.userGrowth.reduce<Record<string, number>>((acc, item) => {
+      const userGrouped = stats.userGrowth.reduce((acc: any, item) => {
         const month = item.date.slice(0, 7); // YYYY-MM
         acc[month] = (acc[month] || 0) + item.count;
         return acc;
       }, {});
 
-      userRegistrations.value = Object.entries(userGrouped).map(([month, count]) => ({
-        month,
-        count,
-      }));
+      userRegistrations.value = Object.entries(userGrouped).map(
+        ([month, count]) => ({ month, count }),
+      );
 
       // Update user registrations chart data
-      userRegistrationsData.value.labels = userRegistrations.value.map((item) => item.month);
+      userRegistrationsData.value.labels = userRegistrations.value.map(
+        (item) => item.month,
+      );
       const userDataset = userRegistrationsData.value.datasets[0];
       if (userDataset) {
         userDataset.data = userRegistrations.value.map((item) => item.count);

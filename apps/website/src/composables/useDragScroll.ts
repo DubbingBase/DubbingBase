@@ -8,6 +8,7 @@ export function useDragScroll(scrollRef: Ref<HTMLElement | null>) {
     let pos = { left: 0, x: 0 };
     let isDragging = false;
     let hasDragged = false;
+    let originalSnapType = "";
 
     const mouseDownHandler = function (e: MouseEvent) {
       if (e.button !== 0) return;
@@ -15,6 +16,9 @@ export function useDragScroll(scrollRef: Ref<HTMLElement | null>) {
       isDragging = true;
       hasDragged = false;
 
+      originalSnapType = window
+        .getComputedStyle(ele)
+        .getPropertyValue("scroll-snap-type");
       ele.style.setProperty("scroll-snap-type", "none", "important");
       ele.style.cursor = "grabbing";
       ele.style.userSelect = "none";
@@ -40,7 +44,7 @@ export function useDragScroll(scrollRef: Ref<HTMLElement | null>) {
       ele.scrollLeft = pos.left - dx;
     };
 
-    const mouseUpHandler = function () {
+    const mouseUpHandler = function (e: MouseEvent) {
       isDragging = false;
       ele.style.cursor = "grab";
       ele.style.removeProperty("user-select");
@@ -50,7 +54,7 @@ export function useDragScroll(scrollRef: Ref<HTMLElement | null>) {
       let closestChild: Element | null = null;
       let minDiff = Infinity;
 
-      for (const child of Array.from(ele.children)) {
+      Array.from(ele.children).forEach((child) => {
         const childRect = child.getBoundingClientRect();
         // Since we use snap-start, we measure distance from left edge
         const diff = Math.abs(childRect.left - containerRect.left);
@@ -58,9 +62,9 @@ export function useDragScroll(scrollRef: Ref<HTMLElement | null>) {
           minDiff = diff;
           closestChild = child;
         }
-      }
+      });
 
-      const targetChild = closestChild;
+      const targetChild = closestChild as Element | null;
       if (targetChild) {
         ele.style.scrollBehavior = "smooth";
         ele.scrollBy({

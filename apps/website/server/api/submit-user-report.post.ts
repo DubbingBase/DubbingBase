@@ -47,7 +47,7 @@ export default defineEventHandler(async (event) => {
     );
 
     return { success: true, data };
-  } catch (err: unknown) {
+  } catch (err: any) {
     if (err && typeof err === "object" && "statusCode" in err) throw err;
     console.error("Exception in submit-user-report:", err);
     throw createError({ statusCode: 500, message: "Internal server error" });

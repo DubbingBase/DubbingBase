@@ -1,7 +1,7 @@
 import { useSupabaseAdmin } from "../utils/db/client";
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
-  const type = query.type;
+  const type = query.type as string | undefined;
   const supabaseAdmin = useSupabaseAdmin();
 
   try {
@@ -51,12 +51,14 @@ export default defineEventHandler(async (event) => {
       statusCode: 400,
       message: "Invalid type parameter",
     });
-  } catch (error: unknown) {
-    if (error && typeof error === "object" && "statusCode" in error) throw error;
+  } catch (error: any) {
+    if (error && typeof error === "object" && "statusCode" in error)
+      throw error;
     console.error("Error in get-metadata route:", error);
     throw createError({
       statusCode: 500,
-      message: error instanceof Error ? error.message : "An unknown error occurred",
+      message:
+        error instanceof Error ? error.message : "An unknown error occurred",
     });
   }
 });

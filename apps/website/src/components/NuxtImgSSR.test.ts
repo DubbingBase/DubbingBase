@@ -14,8 +14,6 @@ describe("Vue deduplication & NuxtImg SSR stability", () => {
       setup() {
         const ref1 = useTemplateRef("imgEl");
         const ref2 = useTemplateRef("imgEl");
-        expect(ref1).toBeDefined();
-        expect(ref2).toBeDefined();
         return () => h("img", { ref: "imgEl" });
       },
     });

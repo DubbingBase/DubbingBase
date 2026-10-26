@@ -43,7 +43,7 @@ describe("AsyncAutocomplete.vue", () => {
   const defaultProps = {
     modelValue: null,
     options: [],
-    displayFn: (val: number | string | null) => `Display for ${val}`,
+    displayFn: (val: any) => `Display for ${val}`,
   };
 
   it("renders correctly with placeholder", async () => {
@@ -119,7 +119,7 @@ describe("AsyncAutocomplete.vue", () => {
       props: {
         ...defaultProps,
         options,
-        displayFn: (val: number | string | null) => `Item ${val}`,
+        displayFn: (val: any) => `Item ${val}`,
       },
     });
 
@@ -175,7 +175,7 @@ describe("AsyncAutocomplete.vue", () => {
         ...defaultProps,
         allowCreate: true,
         modelValue: 1, // User has selected item with ID 1
-        displayFn: (val: number | string | null) => `Item ${val}`, // Which displays as "Item 1"
+        displayFn: (val: any) => `Item ${val}`, // Which displays as "Item 1"
       },
     });
 
@@ -196,7 +196,7 @@ describe("AsyncAutocomplete.vue", () => {
       props: {
         ...defaultProps,
         options,
-        displayFn: (val: number | string | null) => `Item ${val}`,
+        displayFn: (val: any) => `Item ${val}`,
       },
     });
 
@@ -217,7 +217,9 @@ describe("AsyncAutocomplete.vue", () => {
     await nextTick();
 
     const newSearchCalls = wrapper.emitted("search")?.length || 0;
-    expect(newSearchCalls, "Should not emit search after selection").toBe(previousSearchCalls);
+    expect(newSearchCalls, "Should not emit search after selection").toBe(
+      previousSearchCalls,
+    );
   });
 
   it("syncs search term when modelValue is changed externally", async () => {
@@ -226,7 +228,7 @@ describe("AsyncAutocomplete.vue", () => {
       props: {
         ...defaultProps,
         modelValue: 1,
-        displayFn: (val: number | string | null) => `Item ${val}`,
+        displayFn: (val: any) => `Item ${val}`,
       },
     });
 

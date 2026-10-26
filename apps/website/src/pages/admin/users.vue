@@ -20,7 +20,12 @@
           class="w-full pl-10 pr-4 py-2.5 theme-input border theme-border rounded-xl theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] transition-all text-sm"
         />
         <span class="absolute left-3.5 top-3 theme-text-muted">
-          <svg class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg
+            class="h-4.5 w-4.5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -54,17 +59,27 @@
     </div>
 
     <!-- Users Table Card -->
-    <div class="theme-surface-overlay border theme-border rounded-2xl overflow-hidden">
+    <div
+      class="theme-surface-overlay border theme-border rounded-2xl overflow-hidden"
+    >
       <!-- Loading indicator -->
-      <div v-if="loading" class="flex flex-col items-center justify-center py-20 space-y-3">
-        <div class="animate-spin rounded-full h-9 w-9 border-b-2 border-blue-500"></div>
+      <div
+        v-if="loading"
+        class="flex flex-col items-center justify-center py-20 space-y-3"
+      >
+        <div
+          class="animate-spin rounded-full h-9 w-9 border-b-2 border-blue-500"
+        ></div>
         <p class="theme-text-muted text-sm">
           {{ $t("admin.users.fetchingList") }}
         </p>
       </div>
 
       <!-- Empty state -->
-      <div v-else-if="filteredUsers.length === 0" class="text-center py-16 space-y-2">
+      <div
+        v-else-if="filteredUsers.length === 0"
+        class="text-center py-16 space-y-2"
+      >
         <p class="theme-text-muted font-medium">
           {{ $t("admin.users.noUsersFound") }}
         </p>
@@ -97,7 +112,8 @@
                   {{ user.email || $t("admin.users.anonymousUser") }}
                 </div>
                 <div class="text-xs theme-text-muted">
-                  {{ $t("admin.users.registered") }}{{ formatDate(user.created_at) }}
+                  {{ $t("admin.users.registered")
+                  }}{{ formatDate(user.created_at) }}
                 </div>
               </td>
               <td class="py-4 px-6 font-mono text-xs theme-text-muted">
@@ -139,7 +155,12 @@
         class="theme-surface-overlay border theme-border rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4"
       >
         <div class="flex items-center space-x-3 theme-status-danger-text">
-          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg
+            class="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -205,11 +226,11 @@ import { ref, onMounted, computed } from "vue";
 
 interface User {
   id: string;
-  email: string | null;
+  email: string;
   created_at: string;
   app_metadata: {
-    role?: unknown;
-    [key: string]: unknown;
+    role?: string;
+    [key: string]: any;
   };
 }
 
@@ -231,7 +252,10 @@ const toast = ref({
   type: "info",
 });
 
-const showToast = (message: string, type: "success" | "error" | "info" = "info") => {
+const showToast = (
+  message: string,
+  type: "success" | "error" | "info" = "info",
+) => {
   toast.value = { show: true, message, type };
   setTimeout(() => {
     toast.value.show = false;
@@ -259,8 +283,7 @@ watch(
       users.value = newUsers;
       userRole.value = {};
       for (const u of newUsers) {
-        const role = u.app_metadata.role;
-        userRole.value[u.id] = typeof role === "string" ? role : "user";
+        userRole.value[u.id] = u.app_metadata?.role || "user";
       }
     }
   },
@@ -296,9 +319,9 @@ const updateRole = async (userObj: User) => {
     });
     showToast(`Rôle mis à jour pour ${userObj.email} (${role})`, "success");
     await fetchUsers();
-  } catch (err: unknown) {
+  } catch (err: any) {
     console.error("Error updating user role:", err);
-    showToast(err instanceof Error ? err.message : "Failed to update role", "error");
+    showToast(err.message || "Failed to update role", "error");
   } finally {
     updatingRole.value[userObj.id] = false;
   }
@@ -319,13 +342,16 @@ const deleteUser = async () => {
       body: { userId: userToDelete.value.id },
     });
 
-    showToast(`Utilisateur ${userToDelete.value.email} supprimé avec succès`, "success");
+    showToast(
+      `Utilisateur ${userToDelete.value.email} supprimé avec succès`,
+      "success",
+    );
     showConfirm.value = false;
     userToDelete.value = null;
     await fetchUsers();
-  } catch (err: unknown) {
+  } catch (err: any) {
     console.error("Error deleting user:", err);
-    showToast(err instanceof Error ? err.message : "Failed to delete user", "error");
+    showToast(err.message || "Failed to delete user", "error");
   } finally {
     deleting.value = false;
   }

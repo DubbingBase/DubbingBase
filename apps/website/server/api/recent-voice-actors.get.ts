@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
 
     if (error) throw error;
 
-    const results = (rows || []).map((row) => ({
+    const results = (rows || []).map((row: any) => ({
       ...row,
       profile_picture: buildSupabaseImageUrl(
         row.profile_picture,

@@ -9,7 +9,9 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, message: error.message });
   }
 
-  const registeredUsers = data.users.filter((u) => !u.is_anonymous && u.email);
+  const registeredUsers = data.users.filter(
+    (u: any) => !u.is_anonymous && u.email,
+  );
 
   return { users: registeredUsers };
 });

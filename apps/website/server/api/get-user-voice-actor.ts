@@ -26,48 +26,6 @@ function getTmdbCast(value: unknown): TmdbCastMember[] {
   return credits.cast.filter(isTmdbCastMember);
 }
 
-type SupabaseAdmin = ReturnType<typeof useSupabaseAdmin>;
-
-function getVoiceActorWithWork(supabase: SupabaseAdmin, voiceActorId: number) {
-  return supabase
-    .from("voice_actors")
-    .select(
-      `*,
-      work (
-        *,
-        dubbing_projects (
-          content_id,
-          content_type
-        )
-      )`,
-    )
-    .eq("id", voiceActorId)
-    .single();
-}
-
-type VoiceActorWithWork = NonNullable<Awaited<ReturnType<typeof getVoiceActorWithWork>>["data"]>;
-type VoiceActorWork = VoiceActorWithWork["work"][number];
-type TmdbMediaWithType = Awaited<
-  ReturnType<ReturnType<typeof useTmdbClient>["getMediaWithCredits"]>
-> & { media_type: "movie" | "tv" };
-type PopulatedWork = VoiceActorWork & {
-  character_name: string;
-  media: TmdbMediaWithType;
-};
-type VoiceActorResponse = {
-  voiceActor: VoiceActorWithWork;
-  medias: PopulatedWork[];
-};
-
-function readString(value: unknown): string | undefined {
-  return typeof value === "string" ? value : undefined;
-}
-
-function readPositiveId(value: unknown): number | undefined {
-  const id = typeof value === "number" ? value : Number(value);
-  return Number.isSafeInteger(id) && id > 0 ? id : undefined;
-}
-
 export default defineEventHandler(async (event) => {
   const user = requireUser(event);
   const supabaseAdmin = useSupabaseAdmin();
@@ -79,15 +37,17 @@ export default defineEventHandler(async (event) => {
   let providedVoiceActorId: number | undefined;
 
   if (event.method === "POST") {
-    const body: unknown = await readBody(event).catch(() => ({}));
-    if (isRecord(body)) {
-      targetUserId = readString(body.targetUserId);
-      providedVoiceActorId = readPositiveId(body.voiceActorId);
-    }
+    const body = await readBody(event).catch(() => ({}));
+    targetUserId = body?.targetUserId;
+    providedVoiceActorId = body?.voiceActorId
+      ? Number(body.voiceActorId)
+      : undefined;
   } else {
     const query = getQuery(event);
-    targetUserId = readString(query.targetUserId);
-    providedVoiceActorId = readPositiveId(query.voiceActorId);
+    targetUserId = query.targetUserId ? String(query.targetUserId) : undefined;
+    providedVoiceActorId = query.voiceActorId
+      ? Number(query.voiceActorId)
+      : undefined;
   }
 
   if (providedVoiceActorId) {
@@ -117,13 +77,17 @@ export default defineEventHandler(async (event) => {
       .eq("user_id", targetUserId);
 
     if (targetLinkError) {
-      console.error("Error fetching target user voice actor links:", targetLinkError);
+      console.error(
+        "Error fetching target user voice actor links:",
+        targetLinkError,
+      );
       throw createError({
         statusCode: 500,
         message: "Failed to fetch target user voice actors",
       });
     }
-    voiceActorIds = targetLinkData?.map((link) => link.voice_actor_id) || [];
+    voiceActorIds =
+      targetLinkData?.map((link: any) => link.voice_actor_id) || [];
   }
 
   if (voiceActorIds.length === 0) {
@@ -139,35 +103,43 @@ export default defineEventHandler(async (event) => {
         message: "Failed to fetch user voice actors",
       });
     }
-    voiceActorIds = userLinkData?.map((link) => link.voice_actor_id) || [];
+    voiceActorIds = userLinkData?.map((link: any) => link.voice_actor_id) || [];
   }
 
   if (voiceActorIds.length === 0) {
     return { voiceActors: [] };
   }
 
-  const results: VoiceActorResponse[] = [];
+  const results: { voiceActor: any; medias: any[] }[] = [];
 
   for (const vaId of voiceActorIds) {
-    const { data: voiceActorData, error: vaError } = await getVoiceActorWithWork(
-      supabaseAdmin,
-      vaId,
-    );
+    const { data: voiceActorData, error: vaError } = await supabaseAdmin
+      .from("voice_actors")
+      .select(
+        `*,
+        work (
+          *,
+          dubbing_projects (
+            content_id,
+            content_type
+          )
+        )`,
+      )
+      .eq("id", vaId)
+      .single();
 
     if (vaError) {
       console.error("Error fetching voice actor:", vaError);
       continue;
     }
 
-    if (!voiceActorData) continue;
-
-    const result: VoiceActorResponse = {
+    const result = {
       voiceActor: voiceActorData,
-      medias: [],
+      medias: [] as any[],
     };
 
-    const workEntries = voiceActorData.work || [];
-    const populatedWorkEntries: PopulatedWork[] = [];
+    const workEntries = (voiceActorData as any).work || [];
+    const populatedWorkEntries = [];
 
     for (const work of workEntries) {
       try {
@@ -177,17 +149,25 @@ export default defineEventHandler(async (event) => {
 
         if (contentType !== "movie" && contentType !== "tv") continue;
 
-        const tmdbMedia = await tmdbClient.getMediaWithCredits(contentType, contentId, "fr-FR");
+        const tmdbMedia = await tmdbClient.getMediaWithCredits(
+          contentType,
+          contentId,
+          "fr-FR",
+        );
 
         let tmdbCharacterName: string | undefined;
         if (work.actor_id) {
-          const castMember = getTmdbCast(tmdbMedia).find((member) => member.id === work.actor_id);
+          const castMember = getTmdbCast(tmdbMedia).find(
+            (member) => member.id === work.actor_id,
+          );
           tmdbCharacterName = castMember?.character;
         }
 
         const allCharacterNames = new Set<string>();
         if (tmdbCharacterName) {
-          tmdbCharacterName.split("/").forEach((name) => allCharacterNames.add(name.trim()));
+          tmdbCharacterName
+            .split("/")
+            .forEach((name) => allCharacterNames.add(name.trim()));
         }
         const finalCharacterName = Array.from(allCharacterNames).join(" / ");
 
@@ -196,7 +176,7 @@ export default defineEventHandler(async (event) => {
           character_name: finalCharacterName,
           media: {
             ...tmdbMedia,
-            media_type: contentType,
+            media_type: contentType as "movie" | "tv",
           },
         });
       } catch (e) {

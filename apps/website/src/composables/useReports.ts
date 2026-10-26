@@ -5,7 +5,11 @@ export const useReports = () => {
   const isSubmitting = ref(false);
   const error = ref<string | null>(null);
 
-  const submitReport = async (targetUrl: string, reason: string, details: string) => {
+  const submitReport = async (
+    targetUrl: string,
+    reason: string,
+    details: string,
+  ) => {
     isSubmitting.value = true;
     error.value = null;
 
@@ -21,9 +25,9 @@ export const useReports = () => {
       });
 
       return true;
-    } catch (err: unknown) {
+    } catch (err: any) {
       error.value =
-        err instanceof Error ? err.message : "An error occurred while submitting the report.";
+        err.message || "An error occurred while submitting the report.";
       console.error("Error submitting report:", err);
       return false;
     } finally {

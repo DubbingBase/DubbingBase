@@ -6,7 +6,8 @@ import { z } from "zod";
 export default defineEventHandler(async (event) => {
   const internalSecret = getHeader(event, "x-internal-secret");
   const config = useRuntimeConfig();
-  const isInternalTrigger = Boolean(internalSecret) && internalSecret === config.supabaseSecretKey;
+  const isInternalTrigger =
+    Boolean(internalSecret) && internalSecret === config.supabaseSecretKey;
 
   if (!isInternalTrigger) {
     requireAdmin(event);
@@ -25,19 +26,20 @@ export default defineEventHandler(async (event) => {
       .select("*")
       .like("date_of_birth", `%-${birthdaySuffix}`);
 
-    let contextData: unknown = null;
+    let contextData: any = null;
     let imageContextUrl = null;
     let promptTopic = "";
 
     if (voiceActors && voiceActors.length > 0) {
-      promptTopic = "C'est l'anniversaire de ces comédiens de doublage aujourd'hui !";
-      contextData = voiceActors.map((va) => ({
+      promptTopic =
+        "C'est l'anniversaire de ces comédiens de doublage aujourd'hui !";
+      contextData = voiceActors.map((va: any) => ({
         name: `${va.firstname} ${va.lastname}`,
         bio: va.bio,
         date_of_birth: va.date_of_birth,
       }));
 
-      const imageActor = voiceActors.find((va) => va.profile_picture);
+      const imageActor = voiceActors.find((va: any) => va.profile_picture);
       if (imageActor) {
         imageContextUrl = imageActor.profile_picture;
       }
@@ -49,7 +51,8 @@ export default defineEventHandler(async (event) => {
         .limit(50);
 
       if (topActors && topActors.length > 0) {
-        const randomActor = topActors[Math.floor(Math.random() * topActors.length)]!;
+        const randomActor =
+          topActors[Math.floor(Math.random() * topActors.length)]!;
         promptTopic = "Mise en lumière sur un comédien de doublage !";
         contextData = {
           name: `${randomActor.firstname} ${randomActor.lastname}`,
@@ -126,11 +129,8 @@ Instagram constraints:
       success: true,
       message: "Content generated and email sent.",
     };
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error("Error in generate-social-content:", error);
-    throw createError({
-      statusCode: 500,
-      message: error instanceof Error ? error.message : "Internal server error",
-    });
+    throw createError({ statusCode: 500, message: error.message });
   }
 });

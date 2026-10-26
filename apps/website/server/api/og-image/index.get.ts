@@ -1,14 +1,14 @@
 import { sendRedirect } from "h3";
-import { setNoCacheHeaders, setPublicCacheHeaders } from "../../utils/cache/http";
+import {
+  setNoCacheHeaders,
+  setPublicCacheHeaders,
+} from "../../utils/cache/http";
 import { isVoiceActorOgImagesEnabled } from "../../../src/utils/voice-actor-og-image";
 
 const STATIC_OG_IMAGE_PATH = "/android-chrome-512x512.png";
 
-type SatoriFunction = typeof import("satori").default;
-type ResvgAdapter = Pick<typeof import("@cf-wasm/resvg/workerd").Resvg, "async">;
-
-let _satori: SatoriFunction | null = null;
-let _Resvg: ResvgAdapter | null = null;
+let _satori: any = null;
+let _Resvg: any = null;
 
 async function getOgDependencies() {
   if (!_satori || !_Resvg) {
@@ -17,20 +17,17 @@ async function getOgDependencies() {
         import("@cf-wasm/satori/workerd"),
         import("@cf-wasm/resvg/workerd"),
       ]);
-      _satori = satoriMod.default;
+      _satori = satoriMod.default || satoriMod;
       _Resvg = resvgMod.Resvg;
     } catch {
       const satoriMod = await import("satori");
-      _satori = satoriMod.default;
+      _satori = satoriMod.default || satoriMod;
       _Resvg = {
-        async: async (_svg, _options) => ({
+        async: async () => ({
           render: () => ({ asPng: () => new Uint8Array([]) }),
         }),
       };
     }
-  }
-  if (!_satori || !_Resvg) {
-    throw new Error("OG image renderer is unavailable");
   }
   return { satori: _satori, Resvg: _Resvg };
 }
@@ -57,9 +54,8 @@ async function loadAsset(path: string): Promise<Uint8Array> {
   for (const ns of namespaces) {
     for (const v of variants) {
       try {
-        const data: unknown = await useStorage(ns).getItemRaw(v);
-        if (data instanceof Uint8Array) return data;
-        if (data instanceof ArrayBuffer) return new Uint8Array(data);
+        const data = await useStorage(ns).getItemRaw(v);
+        if (data) return data as Uint8Array;
       } catch (e) {
         lastErr = e;
       }
@@ -79,14 +75,17 @@ async function loadAsset(path: string): Promise<Uint8Array> {
 }
 
 function toArrayBuffer(data: Uint8Array): ArrayBuffer {
-  const copy = new Uint8Array(data.byteLength);
-  copy.set(data);
-  return copy.buffer;
+  return data.buffer.slice(
+    data.byteOffset,
+    data.byteOffset + data.byteLength,
+  ) as ArrayBuffer;
 }
 
 async function initialize() {
   if (!fontDataRegular) {
-    fontDataRegular = toArrayBuffer(await loadAsset("og-image/Inter-Regular.ttf"));
+    fontDataRegular = toArrayBuffer(
+      await loadAsset("og-image/Inter-Regular.ttf"),
+    );
   }
 
   if (!fontDataBold) {
@@ -103,9 +102,7 @@ function uint8ArrayToBase64(bytes: Uint8Array): string {
   const chunkSize = 8192;
   for (let i = 0; i < len; i += chunkSize) {
     const chunk = bytes.subarray(i, Math.min(i + chunkSize, len));
-    for (const byte of chunk) {
-      binary += String.fromCharCode(byte);
-    }
+    binary += String.fromCharCode.apply(null, chunk as unknown as number[]);
   }
   return btoa(binary);
 }
@@ -180,7 +177,8 @@ function buildVoiceActorOg(params: {
         justifyContent: "center",
         width: "1200px",
         height: "630px",
-        background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
+        background:
+          "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
         color: "white",
         fontFamily: "Inter",
         padding: "64px 80px",
@@ -345,7 +343,9 @@ export default defineEventHandler(async (event) => {
       const supabaseAdmin = useSupabaseAdmin();
       const { data: voiceActor, error } = await supabaseAdmin
         .from("voice_actors")
-        .select("id, firstname, lastname, voice_actor_name, profile_picture, nationality, work(id)")
+        .select(
+          "id, firstname, lastname, voice_actor_name, profile_picture, nationality, work(id)",
+        )
         .eq("id", Number(id))
         .single();
 
@@ -441,7 +441,8 @@ export default defineEventHandler(async (event) => {
     setNoCacheHeaders(event);
     console.error("Error generating OG image:", error);
     if (error instanceof Error && "statusCode" in error) throw error;
-    const detail = error instanceof Error ? error.stack || error.message : String(error);
+    const detail =
+      error instanceof Error ? error.stack || error.message : String(error);
     throw createError({
       statusCode: 500,
       message: `Failed to generate OG image: ${error instanceof Error ? error.message : String(error)} | ${detail}`,

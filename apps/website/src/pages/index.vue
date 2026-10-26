@@ -169,7 +169,7 @@
                     v-if="show.poster_path"
                     :src="show.poster_path"
                     :srcset="getTmdbPosterSrcset(show.poster_path)"
-                    :alt="getTrendingShowTitle(show)"
+                    :alt="(show as any).name || (show as any).title"
                     format="webp"
                     width="192"
                     height="288"
@@ -179,7 +179,7 @@
                   />
                 </div>
                 <h3 class="font-semibold text-sm theme-text line-clamp-2">
-                  {{ getTrendingShowTitle(show) }}
+                  {{ (show as any).name || (show as any).title }}
                 </h3>
               </NuxtLink>
             </div>
@@ -528,12 +528,6 @@ const trendingVoiceActors = computed(() => trendingVoiceActorsData.data.value);
 const topVoiceActors = computed(() => topVoiceActorsData.data.value);
 const topContributors = computed(() => topContributorsData.data.value);
 const homeStats = computed(() => homeStatsData.data.value);
-
-function getTrendingShowTitle(show: HomeDataPayload["trendingSeries"][number]): string {
-  if ("name" in show && typeof show.name === "string") return show.name;
-  if ("title" in show && typeof show.title === "string") return show.title;
-  return "";
-}
 
 function getTmdbPosterSrcset(imageUrl: string | null | undefined): string | undefined {
   if (!imageUrl?.startsWith("https://image.tmdb.org/t/p/w342/")) {

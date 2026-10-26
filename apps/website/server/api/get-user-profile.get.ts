@@ -1,6 +1,5 @@
 import { useSupabaseAdmin } from "../utils/db/client";
 import { requireUser } from "../utils/auth";
-import type { Database } from "@app/supabase";
 export default defineEventHandler(async (event) => {
   const user = requireUser(event);
   const supabaseAdmin = useSupabaseAdmin();
@@ -36,8 +35,9 @@ export default defineEventHandler(async (event) => {
     }
 
     // Fetch voice actor profiles in a single query
-    const voiceActorIds = voiceActorLinks?.map((link) => link.voice_actor_id) || [];
-    let voiceActors: Database["public"]["Tables"]["voice_actors"]["Row"][] = [];
+    const voiceActorIds =
+      voiceActorLinks?.map((l: any) => l.voice_actor_id) || [];
+    let voiceActors: any[] = [];
 
     if (voiceActorIds.length > 0) {
       const { data: vaData, error: vaError } = await supabaseAdmin

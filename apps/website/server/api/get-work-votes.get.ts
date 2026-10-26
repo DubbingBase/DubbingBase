@@ -1,7 +1,7 @@
 import { getWorkVotes } from "../utils/db/queries";
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
-  const rawWorkIds = query.work_ids;
+  const rawWorkIds = query.work_ids as any;
 
   let workIds: number[] = [];
 
@@ -36,7 +36,8 @@ export default defineEventHandler(async (event) => {
     console.error("Error in get-work-votes route:", error);
     throw createError({
       statusCode: 500,
-      message: error instanceof Error ? error.message : "An unknown error occurred",
+      message:
+        error instanceof Error ? error.message : "An unknown error occurred",
     });
   }
 });

@@ -1,6 +1,5 @@
 import { SimpleCache, createCacheNamespace } from "../cache";
 import { DEFAULT_LANGUAGE, type IgdbGame, type IgdbCharacter } from "@app/shared-logic";
-import { z } from "zod";
 import {
   createMediaResponseError,
   fetchMediaRequest,
@@ -20,122 +19,13 @@ export interface IgdbTrendingGamesResult {
 }
 
 export interface IgdbPopularityPrimitive {
+  id: number;
   game_id: number;
   popularity_type: number;
   value: number;
 }
 
-const optionalString = z
-  .string()
-  .nullable()
-  .optional()
-  .transform((value) => value ?? undefined);
-const optionalNumber = z
-  .number()
-  .nullable()
-  .optional()
-  .transform((value) => value ?? undefined);
-const optionalRecord = <T extends z.ZodRawShape>(shape: T) =>
-  z
-    .object(shape)
-    .passthrough()
-    .nullable()
-    .optional()
-    .transform((value) => value ?? undefined);
-
-const igdbGameSchema: z.ZodType<IgdbGame> = z
-  .object({
-    id: z.number(),
-    name: z.string(),
-    slug: optionalString,
-    summary: optionalString,
-    rating: optionalNumber,
-    rating_count: optionalNumber,
-    first_release_date: optionalNumber,
-    cover: optionalRecord({ image_id: z.string(), url: optionalString }),
-    artworks: z
-      .array(
-        z.object({ id: optionalNumber, image_id: z.string(), url: optionalString }).passthrough(),
-      )
-      .nullable()
-      .optional()
-      .transform((value) => value ?? undefined),
-    screenshots: z
-      .array(
-        z.object({ id: optionalNumber, image_id: z.string(), url: optionalString }).passthrough(),
-      )
-      .nullable()
-      .optional()
-      .transform((value) => value ?? undefined),
-    genres: z
-      .array(z.object({ id: z.number(), name: z.string() }).passthrough())
-      .nullable()
-      .optional()
-      .transform((value) => value ?? undefined),
-    platforms: z
-      .array(z.object({ id: z.number(), name: z.string(), slug: optionalString }).passthrough())
-      .nullable()
-      .optional()
-      .transform((value) => value ?? undefined),
-    involved_companies: z
-      .array(
-        z
-          .object({
-            id: z.number(),
-            company: z.object({ id: z.number(), name: z.string() }).passthrough(),
-            developer: z.boolean(),
-            publisher: z.boolean(),
-          })
-          .passthrough(),
-      )
-      .nullable()
-      .optional()
-      .transform((value) => value ?? undefined),
-    external_games: z
-      .array(z.object({ id: z.number(), uid: z.string(), category: z.number() }).passthrough())
-      .nullable()
-      .optional()
-      .transform((value) => value ?? undefined),
-    websites: z
-      .array(z.object({ url: z.string(), category: z.number() }).passthrough())
-      .nullable()
-      .optional()
-      .transform((value) => value ?? undefined),
-    media_type: z.literal("video_game").optional(),
-  })
-  .passthrough();
-
-const igdbCharacterSchema: z.ZodType<IgdbCharacter> = z
-  .object({
-    id: z.number(),
-    name: z.string(),
-    description: optionalString,
-    mug_shot: optionalRecord({ image_id: z.string(), url: optionalString }),
-    species: optionalRecord({ id: z.number(), name: z.string() }),
-    gender: optionalNumber,
-    games: z
-      .array(z.number())
-      .nullable()
-      .optional()
-      .transform((value) => value ?? undefined),
-  })
-  .passthrough();
-
-const igdbPopularitySchema: z.ZodType<IgdbPopularityPrimitive> = z.object({
-  game_id: z.number(),
-  popularity_type: z.number(),
-  value: z.number(),
-});
-
-const igdbGameLocalizationSchema: z.ZodType<IgdbGameLocalization> = z
-  .object({
-    game: z.number(),
-    name: z.string(),
-    region: optionalRecord({ identifier: optionalString }),
-  })
-  .passthrough();
-
-function debugLog(message: string, data?: unknown) {
+function debugLog(message: string, data?: any) {
   console.log(`[IGDB] ${message}`, data ? JSON.stringify(data, null, 2) : "");
 }
 
@@ -172,8 +62,8 @@ export class IgdbClient {
 
   constructor(cache: SimpleCache) {
     const config = useRuntimeConfig();
-    this.clientId = typeof config.igdbClientId === "string" ? config.igdbClientId : "";
-    this.clientSecret = typeof config.igdbClientSecret === "string" ? config.igdbClientSecret : "";
+    this.clientId = (config.igdbClientId as string) || "";
+    this.clientSecret = (config.igdbClientSecret as string) || "";
     this.baseUrl = "https://api.igdb.com/v4";
     this.tokenUrl = "https://id.twitch.tv/oauth2/token";
     this.cache = cache;
@@ -272,7 +162,7 @@ export class IgdbClient {
     return result.accessToken;
   }
 
-  async query<T>(endpoint: string, body: string, itemSchema: z.ZodType<T>): Promise<T[]> {
+  async query<T>(endpoint: string, body: string): Promise<T[]> {
     let token = await this.authenticate();
 
     try {
@@ -314,11 +204,7 @@ export class IgdbClient {
         throw createMediaResponseError("IGDB", response);
       }
 
-      const payload: unknown = await response.json();
-      if (!Array.isArray(payload)) {
-        throw new Error(`IGDB returned an invalid response for /${endpoint}`);
-      }
-      return payload.map((item: unknown) => itemSchema.parse(item));
+      return (await response.json()) as T[];
     } catch (error: unknown) {
       if (
         error instanceof Error &&
@@ -333,7 +219,7 @@ export class IgdbClient {
   }
 
   async getGame(id: number): Promise<IgdbGame | null> {
-    const results = await this.query(
+    const results = await this.query<IgdbGame>(
       "games",
       `fields id, name, slug, summary, rating, rating_count, first_release_date,
        cover.image_id, cover.url,
@@ -345,35 +231,32 @@ export class IgdbClient {
        external_games.uid, external_games.category,
        websites.url, websites.category;
        where id = ${id};`,
-      igdbGameSchema,
     );
     return results[0] ?? null;
   }
 
   async searchGames(queryText: string): Promise<IgdbGame[]> {
     const escapedQuery = queryText.replace(/"/g, '\\"');
-    const results = await this.query(
+    const results = await this.query<IgdbGame>(
       "games",
       `search "${escapedQuery}";
        fields id, name, summary, rating, rating_count, first_release_date,
               cover.image_id, genres.name, platforms.name;
        where version_parent = null;
        limit 10;`,
-      igdbGameSchema,
     );
 
     return results;
   }
 
   async getGameCharacters(gameId: number): Promise<IgdbCharacter[]> {
-    return this.query(
+    return this.query<IgdbCharacter>(
       "characters",
       `fields id, name, description, species, gender,
               mug_shot.image_id, mug_shot.url,
               games;
        where games = (${gameId});
        limit 50;`,
-      igdbCharacterSchema,
     );
   }
 
@@ -381,13 +264,12 @@ export class IgdbClient {
     limit = 20,
     language = DEFAULT_LANGUAGE,
   ): Promise<IgdbTrendingGamesResult> {
-    const primitives = await this.query(
+    const primitives = await this.query<IgdbPopularityPrimitive>(
       "popularity_primitives",
       `fields game_id, value, popularity_type;
        where popularity_type = (1, 2);
        sort value desc;
        limit 100;`,
-      igdbPopularitySchema,
     );
 
     const scoreMap = new Map<number, number>();
@@ -404,21 +286,19 @@ export class IgdbClient {
 
     if (topIds.length === 0) return { games: [], degraded: false };
 
-    const gamesRequest = this.query(
+    const gamesRequest = this.query<IgdbGame>(
       "games",
       `fields id, name, summary, rating, first_release_date,
               cover.image_id, genres.name, platforms.name;
        where id = (${topIds.join(",")}) & (themes != (42) | themes = null);
       limit ${limit};`,
-      igdbGameSchema,
     );
 
-    const localizationsRequest = this.query(
+    const localizationsRequest = this.query<IgdbGameLocalization>(
       "game_localizations",
       `fields game, name, region.identifier;
        where game = (${topIds.join(",")});
        limit ${Math.max(topIds.length * 10, 100)};`,
-      igdbGameLocalizationSchema,
     ).then(
       (localizations) => ({ localizations }),
       (error: unknown) => ({ error }),

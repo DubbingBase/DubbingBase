@@ -1,36 +1,8 @@
 import { useSupabaseAdmin } from "../utils/db/client";
-
-type SupabaseAdmin = ReturnType<typeof useSupabaseAdmin>;
-
-function findProject(supabase: SupabaseAdmin, id: number) {
-  return supabase
-    .from("dubbing_projects")
-    .select("*")
-    .or(`id.eq.${id},content_id.eq.${id}`)
-    .limit(1);
-}
-
-function getProjectCrew(supabase: SupabaseAdmin, projectId: number) {
-  return supabase
-    .from("dubbing_project_crew")
-    .select("*, voice_actors(firstname, lastname)")
-    .eq("dubbing_project_id", projectId);
-}
-
-function getProjectWorks(supabase: SupabaseAdmin, projectId: number) {
-  return supabase
-    .from("work")
-    .select("*, voice_actors(id, firstname, lastname)")
-    .eq("dubbing_project_id", projectId);
-}
-
-type ProjectRow = NonNullable<Awaited<ReturnType<typeof findProject>>["data"]>[number];
-type CrewRows = NonNullable<Awaited<ReturnType<typeof getProjectCrew>>["data"]>;
-type WorkRows = NonNullable<Awaited<ReturnType<typeof getProjectWorks>>["data"]>;
-
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
-  const numericId = query.numericId !== undefined ? Number(query.numericId) : undefined;
+  const numericId =
+    query.numericId !== undefined ? Number(query.numericId) : undefined;
 
   if (numericId === undefined || isNaN(numericId)) {
     throw createError({
@@ -42,8 +14,12 @@ export default defineEventHandler(async (event) => {
   const supabaseAdmin = useSupabaseAdmin();
 
   try {
-    let project: ProjectRow | null = null;
-    const { data: projects, error: projErr } = await findProject(supabaseAdmin, numericId);
+    let project = null;
+    const { data: projects, error: projErr } = await supabaseAdmin
+      .from("dubbing_projects")
+      .select("*")
+      .or(`id.eq.${numericId},content_id.eq.${numericId}`)
+      .limit(1);
 
     if (projErr) throw projErr;
 
@@ -51,16 +27,22 @@ export default defineEventHandler(async (event) => {
       project = projects[0];
     }
 
-    let crewData: CrewRows = [];
-    let worksData: WorkRows = [];
+    let crewData: any[] = [];
+    let worksData: any[] = [];
 
     if (project) {
-      const { data: crew, error: crewErr } = await getProjectCrew(supabaseAdmin, project.id);
+      const { data: crew, error: crewErr } = await supabaseAdmin
+        .from("dubbing_project_crew")
+        .select("*, voice_actors(firstname, lastname)")
+        .eq("dubbing_project_id", project.id);
 
       if (crewErr) throw crewErr;
       crewData = crew || [];
 
-      const { data: works, error: worksErr } = await getProjectWorks(supabaseAdmin, project.id);
+      const { data: works, error: worksErr } = await supabaseAdmin
+        .from("work")
+        .select("*, voice_actors(id, firstname, lastname)")
+        .eq("dubbing_project_id", project.id);
 
       if (worksErr) throw worksErr;
       worksData = works || [];
@@ -90,11 +72,13 @@ export default defineEventHandler(async (event) => {
       },
     };
   } catch (error) {
-    if (error && typeof error === "object" && "statusCode" in error) throw error;
+    if (error && typeof error === "object" && "statusCode" in error)
+      throw error;
     console.error("Error in get-dubbing-project route:", error);
     throw createError({
       statusCode: 500,
-      message: error instanceof Error ? error.message : "An unknown error occurred",
+      message:
+        error instanceof Error ? error.message : "An unknown error occurred",
     });
   }
 });

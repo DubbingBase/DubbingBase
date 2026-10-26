@@ -4,15 +4,13 @@ export default defineTask({
     description: "Enqueues the daily trending movies and TV shows",
   },
   async run(event) {
-    const taskContext: unknown = event?.context;
-    const cloudflare = isRecord(taskContext) ? Reflect.get(taskContext, "cloudflare") : undefined;
-    const cloudflareEnv = isRecord(cloudflare) ? Reflect.get(cloudflare, "env") : undefined;
+    const cf = (event?.context as any)?.cloudflare;
     const config = useRuntimeConfig();
     const nitroApp = useNitroApp();
     const secretKey =
-      (typeof config.supabaseSecretKey === "string" ? config.supabaseSecretKey : "") ||
-      getRecordString(cloudflareEnv, "SUPABASE_SECRET_KEY") ||
-      getRecordString(cloudflareEnv, "NUXT_SUPABASE_SECRET_KEY") ||
+      (config.supabaseSecretKey as string) ||
+      cf?.env?.SUPABASE_SECRET_KEY ||
+      cf?.env?.NUXT_SUPABASE_SECRET_KEY ||
       process.env.SUPABASE_SECRET_KEY ||
       process.env.NUXT_SUPABASE_SECRET_KEY ||
       "";
@@ -28,7 +26,9 @@ export default defineTask({
 
     if (!response.ok) {
       const errorBody = await response.text().catch(() => "");
-      throw new Error(`Trending media enqueue returned status ${response.status}: ${errorBody}`);
+      throw new Error(
+        `Trending media enqueue returned status ${response.status}: ${errorBody}`,
+      );
     }
 
     const result = await response.json();
@@ -36,13 +36,3 @@ export default defineTask({
     return result;
   },
 });
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function getRecordString(value: unknown, key: string): string | undefined {
-  if (!isRecord(value)) return undefined;
-  const result = value[key];
-  return typeof result === "string" ? result : undefined;
-}

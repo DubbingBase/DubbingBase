@@ -1,14 +1,8 @@
 import { useSupabaseAdmin } from "../utils/db/client";
 import { useTmdbClient } from "../utils";
-import type { Database } from "@app/supabase";
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
-  const studioId =
-    typeof query.studioId === "string"
-      ? query.studioId
-      : typeof query.studioid === "string"
-        ? query.studioid
-        : undefined;
+  const studioId = (query.studioId as string) || (query.studioid as string);
   const supabase = useSupabaseAdmin();
 
   // If no studioId, return all studios (for the studios listing page)
@@ -17,11 +11,14 @@ export default defineEventHandler(async (event) => {
       const search = typeof query.query === "string" ? query.query.trim() : "";
       const requestedLimit = Number.parseInt(String(query.limit), 10);
       const requestedOffset = Number.parseInt(String(query.offset), 10);
-      const hasPagination = Number.isFinite(requestedLimit) || Number.isFinite(requestedOffset);
+      const hasPagination =
+        Number.isFinite(requestedLimit) || Number.isFinite(requestedOffset);
       const limit = Number.isFinite(requestedLimit)
         ? Math.min(Math.max(requestedLimit, 1), 100)
         : 100;
-      const offset = Number.isFinite(requestedOffset) ? Math.max(requestedOffset, 0) : 0;
+      const offset = Number.isFinite(requestedOffset)
+        ? Math.max(requestedOffset, 0)
+        : 0;
 
       let studiosQuery = supabase
         .from("studios")
@@ -42,12 +39,15 @@ export default defineEventHandler(async (event) => {
 
       const { data: rows, count, error } = await studiosQuery;
       if (error) throw error;
-      return hasPagination ? { studios: rows || [], total: count ?? 0 } : rows || [];
+      return hasPagination
+        ? { studios: rows || [], total: count ?? 0 }
+        : rows || [];
     } catch (error) {
       console.error("Error fetching studios:", error);
       throw createError({
         statusCode: 500,
-        message: error instanceof Error ? error.message : "An unknown error occurred",
+        message:
+          error instanceof Error ? error.message : "An unknown error occurred",
       });
     }
   }
@@ -90,7 +90,10 @@ export default defineEventHandler(async (event) => {
     const { data: projects } = await supabase
       .from("dubbing_projects")
       .select("*")
-      .eq("studio_id", studio.id && !isNaN(Number(studio.id)) ? Number(studio.id) : 0);
+      .eq(
+        "studio_id",
+        studio.id && !isNaN(Number(studio.id)) ? Number(studio.id) : 0,
+      );
 
     // 3. Fetch media info for projects (deduplicated & batched)
     const tmdbClient = useTmdbClient();
@@ -104,12 +107,12 @@ export default defineEventHandler(async (event) => {
     const uniqueMediaKeys = Array.from(
       new Set(
         (projects || []).map(
-          (project) => `${project.content_type || "movie"}:${project.content_id}`,
+          (p: any) => `${p.content_type || "movie"}:${p.content_id}`,
         ),
       ),
     );
 
-    const mediaMap = new Map<string, Record<string, unknown> | null>();
+    const mediaMap = new Map<string, any>();
     const BATCH_SIZE = 15;
     for (let i = 0; i < uniqueMediaKeys.length; i += BATCH_SIZE) {
       const batch = uniqueMediaKeys.slice(i, i + BATCH_SIZE);
@@ -120,19 +123,32 @@ export default defineEventHandler(async (event) => {
           try {
             if (contentType === "audiobook") {
               const book = await openLibraryClient.getBook(contentId);
-              mediaMap.set(key, book ? { title: book.title, poster_path: book.cover_url } : null);
+              mediaMap.set(
+                key,
+                book
+                  ? { title: book.title, poster_path: book.cover_url }
+                  : null,
+              );
             } else if (contentType === "podcast") {
               const podcast = await podcastClient.getPodcast(contentId);
               mediaMap.set(
                 key,
-                podcast ? { title: podcast.title, poster_path: podcast.cover_url } : null,
+                podcast
+                  ? { title: podcast.title, poster_path: podcast.cover_url }
+                  : null,
               );
             } else if (contentType === "advertisement") {
               const ad = await adClient.getAdvertisement(contentId);
-              mediaMap.set(key, ad ? { title: ad.title, poster_path: ad.poster_url } : null);
+              mediaMap.set(
+                key,
+                ad ? { title: ad.title, poster_path: ad.poster_url } : null,
+              );
             } else if (contentType === "toy") {
               const toy = await toyClient.getToy(contentId);
-              mediaMap.set(key, toy ? { title: toy.name, poster_path: toy.cover_url } : null);
+              mediaMap.set(
+                key,
+                toy ? { title: toy.name, poster_path: toy.cover_url } : null,
+              );
             } else if (contentType === "video_game") {
               const game = await igdbClient.getGame(contentId);
               mediaMap.set(
@@ -155,27 +171,26 @@ export default defineEventHandler(async (event) => {
               mediaMap.set(key, mediaDetails);
             }
           } catch (e) {
-            console.error(`Failed to fetch details for ${contentType} ${contentId}`, e);
+            console.error(
+              `Failed to fetch details for ${contentType} ${contentId}`,
+              e,
+            );
             mediaMap.set(key, null);
           }
         }),
       );
     }
 
-    const projectsWithMedia = (projects || []).map((project) => {
-      const contentType = project.content_type || "movie";
-      const key = `${contentType}:${project.content_id}`;
-      return { ...project, media: mediaMap.get(key) || null };
+    const projectsWithMedia = (projects || []).map((p: any) => {
+      const contentType = p.content_type || "movie";
+      const key = `${contentType}:${p.content_id}`;
+      return { ...p, media: mediaMap.get(key) || null };
     });
 
     // 4. Fetch linked voice actors from work table
-    type VoiceActorRoster = Pick<
-      Database["public"]["Tables"]["voice_actors"]["Row"],
-      "id" | "firstname" | "lastname" | "profile_picture"
-    >[];
-    let voiceActorsRoster: VoiceActorRoster = [];
+    let voiceActorsRoster: any[] = [];
     if (projects && projects.length > 0) {
-      const projectIds = projects.map((project) => project.id);
+      const projectIds = projects.map((p: any) => p.id);
       const { data: works } = await supabase
         .from("work")
         .select("voice_actor_id")
@@ -185,7 +200,9 @@ export default defineEventHandler(async (event) => {
       if (works && works.length > 0) {
         const vaIds = [
           ...new Set(
-            works.map((work) => work.voice_actor_id).filter((id): id is number => id !== null),
+            works
+              .map((w: any) => w.voice_actor_id)
+              .filter((id: any): id is number => id !== null),
           ),
         ];
         if (vaIds.length > 0) {
@@ -207,7 +224,8 @@ export default defineEventHandler(async (event) => {
     console.error("Error in get-studio-details:", error);
     throw createError({
       statusCode: 500,
-      message: error instanceof Error ? error.message : "An unknown error occurred",
+      message:
+        error instanceof Error ? error.message : "An unknown error occurred",
     });
   }
 });

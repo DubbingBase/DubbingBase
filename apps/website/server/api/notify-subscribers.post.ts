@@ -14,7 +14,8 @@ export default defineEventHandler(async (event) => {
       console.error("[Notify] Invalid payload", body);
       throw createError({
         statusCode: 400,
-        message: "Invalid payload: missing record.voice_actor_id or record.dubbing_project_id",
+        message:
+          "Invalid payload: missing record.voice_actor_id or record.dubbing_project_id",
       });
     }
 
@@ -73,13 +74,16 @@ export default defineEventHandler(async (event) => {
     }
 
     if (!subscriptions || subscriptions.length === 0) {
-      console.log(`[Notify] No subscribers found for voice actor ${voiceActorId}`);
+      console.log(
+        `[Notify] No subscribers found for voice actor ${voiceActorId}`,
+      );
       return { ok: true, notified: 0 };
     }
 
-    const targetUserIds = subscriptions.map((sub) => sub.user_id);
+    const targetUserIds = subscriptions.map((sub: any) => sub.user_id);
 
-    const voiceActorName = `${voiceActor.firstname} ${voiceActor.lastname}`.trim();
+    const voiceActorName =
+      `${voiceActor.firstname} ${voiceActor.lastname}`.trim();
 
     console.log(
       `[Notify] Sending notification to ${targetUserIds.length} users for ${voiceActorName} in ${mediaTitle}`,

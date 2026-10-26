@@ -7,21 +7,21 @@
 </template>
 
 <script setup lang="ts">
-import { Line } from "vue-chartjs";
-import type { ChartData, ChartOptions } from "chart.js";
-import { computed } from "vue";
+import { Line } from 'vue-chartjs'
+import type { ChartData, ChartOptions } from 'chart.js'
+import { computed } from 'vue'
 
 interface Props {
-  data: ChartData<"line">;
-  options: ChartOptions<"line">;
+  data: ChartData<any>
+  options: ChartOptions<any>
 }
 
-const props = defineProps<Props>();
+const props = defineProps<Props>()
 
 const mergedOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   height: 200,
-  ...props.options,
-}));
+  ...props.options
+}))
 </script>

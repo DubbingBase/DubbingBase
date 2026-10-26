@@ -44,7 +44,9 @@
     <!-- Selection Area -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <!-- Actor A Selection -->
-      <div class="theme-surface-overlay border theme-border rounded-2xl p-5 space-y-3 shadow-lg">
+      <div
+        class="theme-surface-overlay border theme-border rounded-2xl p-5 space-y-3 shadow-lg"
+      >
         <h4 class="font-bold theme-text text-sm">
           {{ $t("admin.manualMerge.voiceActorA") }}
         </h4>
@@ -80,7 +82,12 @@
             @click="actorA = null"
             class="p-1.5 theme-text-muted hover:text-[var(--app-color-danger-text)] theme-hover-surface-muted rounded-lg transition-colors"
           >
-            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg
+              class="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -132,24 +139,36 @@
                 </p>
                 <div class="text-xs theme-text-muted mt-1 space-y-0.5">
                   <p v-if="va.date_of_birth || va.nationality">
-                    <span v-if="va.date_of_birth">🎂 {{ formatDate(va.date_of_birth) }}</span>
-                    <span v-if="va.date_of_birth && va.nationality" class="mx-1">•</span>
+                    <span v-if="va.date_of_birth"
+                      >🎂 {{ formatDate(va.date_of_birth) }}</span
+                    >
+                    <span v-if="va.date_of_birth && va.nationality" class="mx-1"
+                      >•</span
+                    >
                     <span v-if="va.nationality">🌍 {{ va.nationality }}</span>
                   </p>
                   <p v-if="va.tmdb_id || va.wikidata_id">
-                    <span v-if="va.tmdb_id">{{ $t("common.tmdbLabel") }}{{ va.tmdb_id }}</span>
-                    <span v-if="va.tmdb_id && va.wikidata_id" class="mx-1">•</span>
+                    <span v-if="va.tmdb_id"
+                      >{{ $t("common.tmdbLabel") }}{{ va.tmdb_id }}</span
+                    >
+                    <span v-if="va.tmdb_id && va.wikidata_id" class="mx-1"
+                      >•</span
+                    >
                     <span v-if="va.wikidata_id"
                       >{{ $t("common.wikiLabel") }}{{ va.wikidata_id }}</span
                     >
                   </p>
-                  <p v-if="va.bio" class="line-clamp-2 italic opacity-80 mt-1">"{{ va.bio }}"</p>
+                  <p v-if="va.bio" class="line-clamp-2 italic opacity-80 mt-1">
+                    "{{ va.bio }}"
+                  </p>
                 </div>
               </div>
             </div>
           </div>
           <div
-            v-else-if="activeSearch === 'A' && searchQueryA.trim() && searchLoadingA"
+            v-else-if="
+              activeSearch === 'A' && searchQueryA.trim() && searchLoadingA
+            "
             class="absolute z-40 left-0 right-0 mt-2 p-4 theme-surface-overlay border theme-border rounded-xl text-center theme-text-muted text-xs"
           >
             {{ $t("admin.manualMerge.searching") }}
@@ -158,7 +177,9 @@
       </div>
 
       <!-- Actor B Selection -->
-      <div class="theme-surface-overlay border theme-border rounded-2xl p-5 space-y-3 shadow-lg">
+      <div
+        class="theme-surface-overlay border theme-border rounded-2xl p-5 space-y-3 shadow-lg"
+      >
         <h4 class="font-bold theme-text text-sm">
           {{ $t("admin.manualMerge.voiceActorB") }}
         </h4>
@@ -194,7 +215,12 @@
             @click="actorB = null"
             class="p-1.5 theme-text-muted hover:text-[var(--app-color-danger-text)] theme-hover-surface-muted rounded-lg transition-colors"
           >
-            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg
+              class="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -246,24 +272,36 @@
                 </p>
                 <div class="text-xs theme-text-muted mt-1 space-y-0.5">
                   <p v-if="va.date_of_birth || va.nationality">
-                    <span v-if="va.date_of_birth">🎂 {{ formatDate(va.date_of_birth) }}</span>
-                    <span v-if="va.date_of_birth && va.nationality" class="mx-1">•</span>
+                    <span v-if="va.date_of_birth"
+                      >🎂 {{ formatDate(va.date_of_birth) }}</span
+                    >
+                    <span v-if="va.date_of_birth && va.nationality" class="mx-1"
+                      >•</span
+                    >
                     <span v-if="va.nationality">🌍 {{ va.nationality }}</span>
                   </p>
                   <p v-if="va.tmdb_id || va.wikidata_id">
-                    <span v-if="va.tmdb_id">{{ $t("common.tmdbLabel") }}{{ va.tmdb_id }}</span>
-                    <span v-if="va.tmdb_id && va.wikidata_id" class="mx-1">•</span>
+                    <span v-if="va.tmdb_id"
+                      >{{ $t("common.tmdbLabel") }}{{ va.tmdb_id }}</span
+                    >
+                    <span v-if="va.tmdb_id && va.wikidata_id" class="mx-1"
+                      >•</span
+                    >
                     <span v-if="va.wikidata_id"
                       >{{ $t("common.wikiLabel") }}{{ va.wikidata_id }}</span
                     >
                   </p>
-                  <p v-if="va.bio" class="line-clamp-2 italic opacity-80 mt-1">"{{ va.bio }}"</p>
+                  <p v-if="va.bio" class="line-clamp-2 italic opacity-80 mt-1">
+                    "{{ va.bio }}"
+                  </p>
                 </div>
               </div>
             </div>
           </div>
           <div
-            v-else-if="activeSearch === 'B' && searchQueryB.trim() && searchLoadingB"
+            v-else-if="
+              activeSearch === 'B' && searchQueryB.trim() && searchLoadingB
+            "
             class="absolute z-40 left-0 right-0 mt-2 p-4 theme-surface-overlay border theme-border rounded-xl text-center theme-text-muted text-xs"
           >
             {{ $t("admin.manualMerge.searching") }}
@@ -281,8 +319,13 @@
         <h4 class="text-md font-bold theme-text flex items-center space-x-2">
           <span>{{ $t("admin.manualMerge.compareAndMerge") }}</span>
         </h4>
-        <span v-if="loadingWorks" class="text-xs theme-text-muted flex items-center">
-          <span class="animate-spin rounded-full h-3 w-3 border-b-2 theme-border-strong mr-2"></span
+        <span
+          v-if="loadingWorks"
+          class="text-xs theme-text-muted flex items-center"
+        >
+          <span
+            class="animate-spin rounded-full h-3 w-3 border-b-2 theme-border-strong mr-2"
+          ></span
           >{{ $t("admin.manualMerge.loadingWorkHistory") }}</span
         >
       </div>
@@ -345,7 +388,9 @@
           <tbody class="divide-y theme-divide">
             <!-- Name Row -->
             <tr>
-              <td class="p-4 theme-text-muted font-medium theme-surface-overlay">
+              <td
+                class="p-4 theme-text-muted font-medium theme-surface-overlay"
+              >
                 {{ $t("voiceActor.name") }}
               </td>
               <td
@@ -359,7 +404,9 @@
             </tr>
             <!-- Work Count Row -->
             <tr>
-              <td class="p-4 theme-text-muted font-medium theme-surface-overlay">
+              <td
+                class="p-4 theme-text-muted font-medium theme-surface-overlay"
+              >
                 {{ $t("admin.manualMerge.linkedWorks") }}
               </td>
               <td
@@ -367,15 +414,23 @@
                 :key="'w-' + actor.id"
                 class="p-4 border-l theme-border font-semibold"
                 :class="
-                  (worksCount[actor.id] ?? 0) > 0 ? 'theme-status-success-text' : 'theme-text-muted'
+                  (worksCount[actor.id] ?? 0) > 0
+                    ? 'theme-status-success-text'
+                    : 'theme-text-muted'
                 "
               >
-                {{ loadingWorks ? "..." : (worksCount[actor.id] || 0) + " credits" }}
+                {{
+                  loadingWorks
+                    ? "..."
+                    : (worksCount[actor.id] || 0) + " credits"
+                }}
               </td>
             </tr>
             <!-- Nationality Row -->
             <tr v-if="hasAny('nationality')">
-              <td class="p-4 theme-text-muted font-medium theme-surface-overlay">
+              <td
+                class="p-4 theme-text-muted font-medium theme-surface-overlay"
+              >
                 {{ $t("profile.nationality") }}
               </td>
               <td
@@ -389,7 +444,9 @@
             </tr>
             <!-- Born Row -->
             <tr v-if="hasAny('date_of_birth')">
-              <td class="p-4 theme-text-muted font-medium theme-surface-overlay">
+              <td
+                class="p-4 theme-text-muted font-medium theme-surface-overlay"
+              >
                 {{ $t("admin.duplicates.born") }}
               </td>
               <td
@@ -398,12 +455,16 @@
                 class="p-4 border-l theme-border"
                 :class="getDiffClass('date_of_birth')"
               >
-                {{ actor.date_of_birth ? formatDate(actor.date_of_birth) : "-" }}
+                {{
+                  actor.date_of_birth ? formatDate(actor.date_of_birth) : "-"
+                }}
               </td>
             </tr>
             <!-- TMDB Row -->
             <tr v-if="hasAny('tmdb_id')">
-              <td class="p-4 theme-text-muted font-medium theme-surface-overlay">
+              <td
+                class="p-4 theme-text-muted font-medium theme-surface-overlay"
+              >
                 {{ $t("voiceActorEdit.tmdbId") }}
               </td>
               <td
@@ -417,7 +478,9 @@
             </tr>
             <!-- Wikidata Row -->
             <tr v-if="hasAny('wikidata_id')">
-              <td class="p-4 theme-text-muted font-medium theme-surface-overlay">
+              <td
+                class="p-4 theme-text-muted font-medium theme-surface-overlay"
+              >
                 {{ $t("admin.duplicates.wikidata") }}
               </td>
               <td
@@ -431,7 +494,9 @@
             </tr>
             <!-- Bio Row -->
             <tr v-if="hasAny('bio')">
-              <td class="p-4 theme-text-muted font-medium theme-surface-overlay align-top">
+              <td
+                class="p-4 theme-text-muted font-medium theme-surface-overlay align-top"
+              >
                 {{ $t("admin.duplicates.bio") }}
               </td>
               <td
@@ -450,7 +515,9 @@
             </tr>
             <!-- Action Row -->
             <tr>
-              <td class="p-4 theme-text-muted font-medium theme-surface-overlay">
+              <td
+                class="p-4 theme-text-muted font-medium theme-surface-overlay"
+              >
                 {{ $t("admin.auditLogs.action") }}
               </td>
               <td
@@ -463,7 +530,9 @@
                     : 'theme-hover-surface-muted'
                 "
               >
-                <label class="flex items-center space-x-3 cursor-pointer w-full h-full p-4">
+                <label
+                  class="flex items-center space-x-3 cursor-pointer w-full h-full p-4"
+                >
                   <input
                     type="radio"
                     name="keepId"
@@ -582,7 +651,10 @@ const toast = ref({
   type: "info",
 });
 
-const showToast = (message: string, type: "success" | "error" | "info" = "info") => {
+const showToast = (
+  message: string,
+  type: "success" | "error" | "info" = "info",
+) => {
   toast.value = { show: true, message, type };
   setTimeout(() => {
     toast.value.show = false;
@@ -621,15 +693,18 @@ const fetchWorksCount = async (ids: number[]) => {
   loadingWorks.value = true;
   worksCount.value = {};
   try {
-    const data = await $fetch<Record<number, number>>("/api/count-voice-actor-works", {
-      method: "POST",
-      body: { ids },
-    });
+    const data = await $fetch<Record<number, number>>(
+      "/api/count-voice-actor-works",
+      {
+        method: "POST",
+        body: { ids },
+      },
+    );
 
     if (data) {
       worksCount.value = data;
     }
-  } catch (err: unknown) {
+  } catch (err: any) {
     console.error("Error fetching works count:", err);
   } finally {
     loadingWorks.value = false;
@@ -670,15 +745,22 @@ const calculateScore = (actor: VoiceActorCandidate) => {
 
 // Comparison Helpers
 const isDifferent = (field: keyof VoiceActorCandidate) => {
-  if (actorsToCompare.value.length < 2 || !actorsToCompare.value[0]) return false;
+  if (actorsToCompare.value.length < 2 || !actorsToCompare.value[0])
+    return false;
   const firstVal = actorsToCompare.value[0][field];
   return actorsToCompare.value.some((a) => a[field] !== firstVal);
 };
 
 const isDifferentName = () => {
-  if (actorsToCompare.value.length < 2 || !actorsToCompare.value[0]) return false;
-  const firstName = actorsToCompare.value[0].firstname + " " + actorsToCompare.value[0].lastname;
-  return actorsToCompare.value.some((a) => a.firstname + " " + a.lastname !== firstName);
+  if (actorsToCompare.value.length < 2 || !actorsToCompare.value[0])
+    return false;
+  const firstName =
+    actorsToCompare.value[0].firstname +
+    " " +
+    actorsToCompare.value[0].lastname;
+  return actorsToCompare.value.some(
+    (a) => a.firstname + " " + a.lastname !== firstName,
+  );
 };
 
 const getDiffClass = (field: keyof VoiceActorCandidate) => {
@@ -711,7 +793,8 @@ const triggerSearch = (type: "A" | "B") => {
 };
 
 const executeSearch = async (type: "A" | "B") => {
-  const query = type === "A" ? searchQueryA.value.trim() : searchQueryB.value.trim();
+  const query =
+    type === "A" ? searchQueryA.value.trim() : searchQueryB.value.trim();
   const loadingRef = type === "A" ? searchLoadingA : searchLoadingB;
   const resultsRef = type === "A" ? searchResultsA : searchResultsB;
 
@@ -722,12 +805,13 @@ const executeSearch = async (type: "A" | "B") => {
 
   loadingRef.value = true;
   try {
-    const data = await $fetch<VoiceActorCandidate[]>("/api/search-voice-actors", {
-      params: { query, limit: "10" },
-    });
+    const data = await $fetch<VoiceActorCandidate[]>(
+      "/api/search-voice-actors",
+      { params: { query, limit: "10" } },
+    );
 
     resultsRef.value = data || [];
-  } catch (err: unknown) {
+  } catch (err: any) {
     console.error(`Error searching voice actors (${type}):`, err);
   } finally {
     loadingRef.value = false;
@@ -763,7 +847,10 @@ const mergeActors = async () => {
   error.value = "";
 
   try {
-    const otherId = selectedKeepId.value === actorA.value.id ? actorB.value.id : actorA.value.id;
+    const otherId =
+      selectedKeepId.value === actorA.value.id
+        ? actorB.value.id
+        : actorA.value.id;
 
     await $fetch("/api/merge_voice_actor_duplicates", {
       method: "POST",
@@ -777,9 +864,9 @@ const mergeActors = async () => {
 
     // Reset after success
     reset();
-  } catch (err: unknown) {
+  } catch (err: any) {
     console.error("Error merging voice actors:", err);
-    showToast(err instanceof Error ? err.message : "Failed to merge profiles", "error");
+    showToast(err.message || "Failed to merge profiles", "error");
   } finally {
     merging.value = false;
   }
@@ -798,8 +885,7 @@ const formatDate = (dateStr: string) => {
 };
 
 const handleOutsideClick = (e: MouseEvent) => {
-  const target = e.target;
-  if (!(target instanceof Element)) return;
+  const target = e.target as HTMLElement;
   if (!target.closest(".relative")) {
     activeSearch.value = null;
   }

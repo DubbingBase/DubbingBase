@@ -1,4 +1,4 @@
-export default defineNuxtRouteMiddleware((to, _from) => {
+export default defineNuxtRouteMiddleware((to, from) => {
   const user = useSupabaseUser();
   const localePath = useLocalePath();
 

@@ -11,12 +11,15 @@
     </div>
 
     <!-- Form Panel -->
-    <div class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-6 shadow-xl">
+    <div
+      class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-6 shadow-xl"
+    >
       <!-- User Autocomplete -->
       <div class="space-y-2 relative">
-        <label class="text-xs font-bold theme-text-muted uppercase tracking-wider block">{{
-          $t("admin.userVaProfiles.selectUserAccount")
-        }}</label>
+        <label
+          class="text-xs font-bold theme-text-muted uppercase tracking-wider block"
+          >{{ $t("admin.userVaProfiles.selectUserAccount") }}</label
+        >
         <div class="flex items-center space-x-2">
           <div class="relative flex-1">
             <input
@@ -28,7 +31,12 @@
               class="w-full px-4 py-3 theme-input border theme-border rounded-xl theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
             />
             <span class="absolute right-3.5 top-3.5 theme-text-muted">
-              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                class="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -44,7 +52,12 @@
             @click="clearUserSelection"
             class="p-3 theme-input border theme-border theme-text-muted theme-hover-text rounded-xl theme-hover-surface-muted transition-colors"
           >
-            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg
+              class="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -67,7 +80,9 @@
             class="px-4 py-3 theme-hover-surface-muted cursor-pointer flex flex-col transition-colors"
           >
             <span class="text-sm font-semibold theme-text">{{ u.email }}</span>
-            <span class="text-xs theme-text-muted font-mono mt-0.5">{{ u.id }}</span>
+            <span class="text-xs theme-text-muted font-mono mt-0.5">{{
+              u.id
+            }}</span>
           </div>
         </div>
         <!-- Loader / Empty feedback in dropdown -->
@@ -78,7 +93,9 @@
           {{ $t("admin.userVaProfiles.loadingUsersList") }}
         </div>
         <div
-          v-else-if="isUserDropdownOpen && userQuery.trim() && filteredUsers.length === 0"
+          v-else-if="
+            isUserDropdownOpen && userQuery.trim() && filteredUsers.length === 0
+          "
           class="absolute z-40 left-0 right-0 mt-1.5 p-4 theme-surface-overlay border theme-border rounded-xl text-center theme-text-muted text-xs"
         >
           {{ $t("admin.userVaProfiles.noMatchingUser") }}
@@ -87,9 +104,10 @@
 
       <!-- Voice Actor Autocomplete -->
       <div class="space-y-2 relative">
-        <label class="text-xs font-bold theme-text-muted uppercase tracking-wider block">{{
-          $t("admin.userVaProfiles.selectVoiceActorProfile")
-        }}</label>
+        <label
+          class="text-xs font-bold theme-text-muted uppercase tracking-wider block"
+          >{{ $t("admin.userVaProfiles.selectVoiceActorProfile") }}</label
+        >
         <div class="flex items-center space-x-2">
           <div class="relative flex-1">
             <input
@@ -101,7 +119,12 @@
               class="w-full px-4 py-3 theme-input border theme-border rounded-xl theme-text theme-placeholder focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
             />
             <span class="absolute right-3.5 top-3.5 theme-text-muted">
-              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                class="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -117,7 +140,12 @@
             @click="clearVoiceActorSelection"
             class="p-3 theme-input border theme-border theme-text-muted theme-hover-text rounded-xl theme-hover-surface-muted transition-colors"
           >
-            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg
+              class="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -148,7 +176,13 @@
                 :src="getProfilePictureUrl(va.profile_picture) || undefined"
                 class="h-full w-full object-cover"
               />
-              <svg v-else class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                v-else
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -164,14 +198,20 @@
         </div>
         <!-- Loader / Empty feedback in dropdown -->
         <div
-          v-else-if="isVoiceActorDropdownOpen && voiceActorQuery.trim() && voiceActorSearching"
+          v-else-if="
+            isVoiceActorDropdownOpen &&
+            voiceActorQuery.trim() &&
+            voiceActorSearching
+          "
           class="absolute z-40 left-0 right-0 mt-1.5 p-4 theme-surface-overlay border theme-border rounded-xl text-center theme-text-muted text-xs"
         >
           {{ $t("admin.userVaProfiles.searchingVoiceActors") }}
         </div>
         <div
           v-else-if="
-            isVoiceActorDropdownOpen && voiceActorQuery.trim() && voiceActorResults.length === 0
+            isVoiceActorDropdownOpen &&
+            voiceActorQuery.trim() &&
+            voiceActorResults.length === 0
           "
           class="absolute z-40 left-0 right-0 mt-1.5 p-4 theme-surface-overlay border theme-border rounded-xl text-center theme-text-muted text-xs"
         >
@@ -184,7 +224,10 @@
         v-if="selectedUser || selectedVoiceActor"
         class="p-4 theme-input border theme-border rounded-xl space-y-2.5"
       >
-        <div v-if="selectedUser" class="flex justify-between items-center text-xs">
+        <div
+          v-if="selectedUser"
+          class="flex justify-between items-center text-xs"
+        >
           <span class="theme-text-muted font-bold uppercase tracking-wider">{{
             $t("admin.userVaProfiles.targetUser")
           }}</span>
@@ -192,12 +235,16 @@
             selectedUser.email
           }}</span>
         </div>
-        <div v-if="selectedVoiceActor" class="flex justify-between items-center text-xs">
+        <div
+          v-if="selectedVoiceActor"
+          class="flex justify-between items-center text-xs"
+        >
           <span class="theme-text-muted font-bold uppercase tracking-wider">{{
             $t("admin.userVaProfiles.voiceActorProfile")
           }}</span>
           <span class="font-semibold theme-status-info-text font-mono"
-            >{{ selectedVoiceActor.firstname }} {{ selectedVoiceActor.lastname }}</span
+            >{{ selectedVoiceActor.firstname }}
+            {{ selectedVoiceActor.lastname }}</span
           >
         </div>
       </div>
@@ -217,7 +264,9 @@
     </div>
 
     <!-- Existing Links Panel -->
-    <div class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-6 shadow-xl mt-8">
+    <div
+      class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-6 shadow-xl mt-8"
+    >
       <div class="flex items-center justify-between">
         <h3 class="text-lg font-bold theme-text">
           {{ $t("admin.userVaProfiles.existingLinks") }}
@@ -227,7 +276,12 @@
           class="p-2 theme-input border theme-border theme-text-muted theme-hover-text rounded-xl theme-hover-surface-muted transition-colors"
           title="Refresh List"
         >
-          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg
+            class="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -237,10 +291,16 @@
           </svg>
         </button>
       </div>
-      <div v-if="linksLoading" class="theme-text-muted text-sm py-4 text-center">
+      <div
+        v-if="linksLoading"
+        class="theme-text-muted text-sm py-4 text-center"
+      >
         {{ $t("admin.userVaProfiles.loadingLinks") }}
       </div>
-      <div v-else-if="existingLinks.length === 0" class="theme-text-muted text-sm py-4 text-center">
+      <div
+        v-else-if="existingLinks.length === 0"
+        class="theme-text-muted text-sm py-4 text-center"
+      >
         {{ $t("admin.userVaProfiles.noProfilesLinked") }}
       </div>
       <div v-else class="space-y-3">
@@ -250,8 +310,12 @@
           class="flex items-center justify-between p-4 theme-input border theme-border rounded-xl"
         >
           <div class="flex flex-col gap-1">
-            <span class="text-sm font-bold theme-text">{{ link.userEmail }}</span>
-            <span class="text-xs theme-text-muted font-mono">{{ link.user_id }}</span>
+            <span class="text-sm font-bold theme-text">{{
+              link.userEmail
+            }}</span>
+            <span class="text-xs theme-text-muted font-mono">{{
+              link.user_id
+            }}</span>
           </div>
           <svg
             class="h-4 w-4 theme-text-secondary mx-4 shrink-0"
@@ -267,7 +331,9 @@
             />
           </svg>
           <div class="flex items-center space-x-3 text-right">
-            <span class="text-sm font-bold theme-status-info-text">{{ link.voiceActorName }}</span>
+            <span class="text-sm font-bold theme-status-info-text">{{
+              link.voiceActorName
+            }}</span>
             <div
               class="h-8 w-8 rounded-full overflow-hidden border theme-border theme-input shrink-0 flex items-center justify-center theme-text-muted"
             >
@@ -277,7 +343,13 @@
                 :src="getProfilePictureUrl(link.voiceActorImage) || undefined"
                 class="h-full w-full object-cover"
               />
-              <svg v-else class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                v-else
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -320,13 +392,15 @@ const supabase = useSupabaseClient();
 const getProfilePictureUrl = (path: string | null) => {
   if (!path) return null;
   if (path.startsWith("http://") || path.startsWith("https://")) return path;
-  const { data } = supabase.storage.from("voice_actor_profile_pictures").getPublicUrl(path);
+  const { data } = supabase.storage
+    .from("voice_actor_profile_pictures")
+    .getPublicUrl(path);
   return data.publicUrl;
 };
 
 interface User {
   id: string;
-  email: string | null;
+  email: string;
 }
 
 interface VoiceActor {
@@ -334,14 +408,6 @@ interface VoiceActor {
   firstname: string;
   lastname: string;
   profile_picture: string | null;
-}
-
-interface ExistingLink {
-  id: string;
-  user_id: string;
-  userEmail: string;
-  voiceActorName: string;
-  voiceActorImage: string | null;
 }
 
 // Selections
@@ -365,7 +431,7 @@ const voiceActorResults = ref<VoiceActor[]>([]);
 const voiceActorSearching = ref(false);
 const linking = ref(false);
 
-const existingLinks = ref<ExistingLink[]>([]);
+const existingLinks = ref<any[]>([]);
 const linksLoading = ref(false);
 
 // Debouncing helpers
@@ -377,7 +443,10 @@ const toast = ref({
   type: "info",
 });
 
-const showToast = (message: string, type: "success" | "error" | "info" = "info") => {
+const showToast = (
+  message: string,
+  type: "success" | "error" | "info" = "info",
+) => {
   toast.value = { show: true, message, type };
   setTimeout(() => {
     toast.value.show = false;
@@ -392,13 +461,15 @@ const {
   "admin-user-va-links",
   async () => {
     // Fetch users
-    const userData = await $fetch<{ users: User[] }>("/api/list_users");
+    const userData = await $fetch<{ users: any[] }>("/api/list_users");
     const users = userData?.users || [];
 
     // Fetch existing links
     const { data: linksData, error: linksError } = await supabase
       .from("user_voice_actor_links")
-      .select("id, user_id, voice_actors(id, firstname, lastname, profile_picture)")
+      .select(
+        "id, user_id, voice_actors(id, firstname, lastname, profile_picture)",
+      )
       .order("created_at", { ascending: false });
     if (linksError) throw linksError;
 
@@ -417,10 +488,12 @@ watch(
       allUsers.value = data.users;
       usersFetched.value = true;
 
-      existingLinks.value = data.links.map((link) => ({
+      existingLinks.value = data.links.map((link: any) => ({
         id: link.id,
         user_id: link.user_id,
-        userEmail: data.users.find((u) => u.id === link.user_id)?.email || "Unknown User",
+        userEmail:
+          data.users.find((u: any) => u.id === link.user_id)?.email ||
+          "Unknown User",
         voiceActorName: link.voice_actors
           ? `${link.voice_actors.firstname} ${link.voice_actors.lastname}`
           : "Unknown Actor",
@@ -485,7 +558,7 @@ const searchVoiceActors = async () => {
     });
 
     voiceActorResults.value = data || [];
-  } catch (err: unknown) {
+  } catch (err: any) {
     console.error("Error searching voice actors:", err);
     showToast("Failed to search voice actors", "error");
   } finally {
@@ -519,15 +592,18 @@ const linkUserVoiceActor = async () => {
       },
     });
 
-    showToast("User account successfully linked to voice actor profile", "success");
+    showToast(
+      "User account successfully linked to voice actor profile",
+      "success",
+    );
 
     // Reset inputs
     clearUserSelection();
     clearVoiceActorSelection();
     fetchExistingLinks();
-  } catch (err: unknown) {
+  } catch (err: any) {
     console.error("Error linking user to voice actor:", err);
-    showToast(err instanceof Error ? err.message : "Failed to link profile", "error");
+    showToast(err.message || "Failed to link profile", "error");
   } finally {
     linking.value = false;
   }
@@ -536,8 +612,7 @@ const linkUserVoiceActor = async () => {
 // Global click handler to close dropdowns
 const setupClickListeners = () => {
   document.addEventListener("click", (e) => {
-    const target = e.target;
-    if (!(target instanceof Element)) return;
+    const target = e.target as HTMLElement;
     if (!target.closest(".relative")) {
       isUserDropdownOpen.value = false;
       isVoiceActorDropdownOpen.value = false;

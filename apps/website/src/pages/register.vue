@@ -19,9 +19,11 @@
         <form class="space-y-5" @submit.prevent="handleRegister">
           <!-- Username Field -->
           <div class="space-y-2">
-            <label for="username" class="text-sm font-medium theme-text-secondary">{{
-              $t("auth.username")
-            }}</label>
+            <label
+              for="username"
+              class="text-sm font-medium theme-text-secondary"
+              >{{ $t("auth.username") }}</label
+            >
             <input
               id="username"
               v-model="username"
@@ -34,7 +36,9 @@
 
           <!-- Full Name Field -->
           <div class="space-y-2">
-            <label for="full_name" class="text-sm font-medium theme-text-secondary"
+            <label
+              for="full_name"
+              class="text-sm font-medium theme-text-secondary"
               >{{ $t("auth.fullName")
               }}<span class="theme-text-muted font-normal">{{
                 $t("auth.register.optional")
@@ -51,9 +55,11 @@
 
           <!-- Email Field -->
           <div class="space-y-2">
-            <label for="email" class="text-sm font-medium theme-text-secondary">{{
-              $t("auth.email")
-            }}</label>
+            <label
+              for="email"
+              class="text-sm font-medium theme-text-secondary"
+              >{{ $t("auth.email") }}</label
+            >
             <input
               id="email"
               v-model="email"
@@ -66,9 +72,11 @@
 
           <!-- Password Field -->
           <div class="space-y-2">
-            <label for="password" class="text-sm font-medium theme-text-secondary">{{
-              $t("auth.password")
-            }}</label>
+            <label
+              for="password"
+              class="text-sm font-medium theme-text-secondary"
+              >{{ $t("auth.password") }}</label
+            >
             <input
               id="password"
               v-model="password"
@@ -114,7 +122,9 @@
             <span
               :class="[
                 'text-sm font-medium',
-                isError ? 'theme-status-danger-text' : 'theme-status-success-text',
+                isError
+                  ? 'theme-status-danger-text'
+                  : 'theme-status-success-text',
               ]"
               >{{ authMessage }}</span
             >
@@ -123,9 +133,10 @@
           <!-- Terms Agreement -->
           <p class="text-xs theme-text-muted text-center px-4 leading-relaxed">
             {{ $t("auth.register.agreeToTerms")
-            }}<NuxtLink :to="localePath('/terms')" class="theme-primary-text hover:underline">{{
-              $t("footer.terms")
-            }}</NuxtLink
+            }}<NuxtLink
+              :to="localePath('/terms')"
+              class="theme-primary-text hover:underline"
+              >{{ $t("footer.terms") }}</NuxtLink
             >.
           </p>
 
@@ -149,7 +160,9 @@
               v-if="loading"
               class="animate-spin rounded-full h-5 w-5 border-b-2 theme-border mr-2"
             ></span>
-            <span>{{ loading ? $t("auth.register.creating") : $t("auth.signUp") }}</span>
+            <span>{{
+              loading ? $t("auth.register.creating") : $t("auth.signUp")
+            }}</span>
           </button>
         </form>
       </div>
@@ -160,7 +173,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import { readSingleRouteParam } from "~/utils/admin-project-editor-types";
 
 // SEO configuration
 useSeoMeta({
@@ -188,14 +200,14 @@ const localePath = useLocalePath();
 // Redirect if already logged in
 onMounted(() => {
   if (user.value) {
-    const redirect = readSingleRouteParam(route.query.redirect);
+    const redirect = route.query.redirect as string;
     router.push(redirect ? redirect : localePath("/profile"));
   }
 });
 
 watch(user, (newUser) => {
   if (newUser) {
-    const redirect = readSingleRouteParam(route.query.redirect);
+    const redirect = route.query.redirect as string;
     router.push(redirect ? redirect : localePath("/profile"));
   }
 });
@@ -229,12 +241,11 @@ const handleRegister = async () => {
         "Registration successful! Please check your email to verify your account.";
     } else {
       isError.value = false;
-      const redirect = readSingleRouteParam(route.query.redirect);
+      const redirect = route.query.redirect as string;
       router.push(redirect ? redirect : localePath("/profile"));
     }
-  } catch (err: unknown) {
-    authMessage.value =
-      err instanceof Error ? err.message : "An error occurred during registration";
+  } catch (err: any) {
+    authMessage.value = err.message || "An error occurred during registration";
   } finally {
     loading.value = false;
   }
