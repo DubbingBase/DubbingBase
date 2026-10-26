@@ -7,11 +7,7 @@
       <div>
         <h3 class="text-xl font-bold theme-text flex items-center gap-2">
           <MegaphoneIcon class="w-6 h-6 theme-status-success-text" />
-          {{
-            isEditMode
-              ? "Modifier le projet publicitaire"
-              : "Créer un projet publicitaire"
-          }}
+          {{ isEditMode ? "Modifier le projet publicitaire" : "Créer un projet publicitaire" }}
         </h3>
         <p class="text-sm theme-text-muted mt-1">
           {{
@@ -22,11 +18,7 @@
         </p>
       </div>
       <NuxtLink
-        :to="
-          parsedAdId
-            ? localePath(`/advertisement/${parsedAdId}`)
-            : localePath('/')
-        "
+        :to="parsedAdId ? localePath(`/advertisement/${parsedAdId}`) : localePath('/')"
         class="text-xs font-semibold px-4 py-2.5 theme-surface-muted theme-hover-surface-muted theme-text-secondary theme-hover-text rounded-xl border theme-border transition-colors flex items-center space-x-2"
       >
         <span>{{ parsedAdId ? "← Retour au spot" : "← Accueil" }}</span>
@@ -34,16 +26,11 @@
     </div>
 
     <!-- Navigation Tabs -->
-    <div
-      v-if="parsedAdId"
-      class="flex flex-wrap gap-2 pb-2 border-b theme-border"
-    >
+    <div v-if="parsedAdId" class="flex flex-wrap gap-2 pb-2 border-b theme-border">
       <NuxtLink
         v-for="project in adDubbingProjects"
         :key="project.id"
-        :to="
-          localePath(`/advertisement/${parsedAdId}/projects/${project.id}/edit`)
-        "
+        :to="localePath(`/advertisement/${parsedAdId}/projects/${project.id}/edit`)"
         class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border"
         :class="
           project.id === Number(projectIdParam)
@@ -94,10 +81,9 @@
 
           <!-- Content ID -->
           <div class="space-y-1">
-            <label
-              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("advertisementEditor.adId") }}</label
-            >
+            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+              $t("advertisementEditor.adId")
+            }}</label>
             <input
               v-model.number="contentId"
               type="number"
@@ -110,10 +96,9 @@
 
           <!-- Title / Campaign Name -->
           <div class="space-y-1">
-            <label
-              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("advertisementEditor.spotTitle") }}</label
-            >
+            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+              $t("advertisementEditor.spotTitle")
+            }}</label>
             <input
               v-model="mediaTitle"
               type="text"
@@ -139,10 +124,9 @@
 
           <!-- Status -->
           <div class="space-y-1">
-            <label
-              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("common.status") }}</label
-            >
+            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+              $t("common.status")
+            }}</label>
             <select
               v-model="status"
               class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
@@ -164,18 +148,15 @@
             class="text-sm font-bold theme-text uppercase tracking-wider border-b theme-border pb-3 flex items-center justify-between"
           >
             <span>{{ $t("advertisementEditor.advertiserStudio") }}</span>
-            <span class="text-xs theme-text-muted">{{
-              $t("common.production")
-            }}</span>
+            <span class="text-xs theme-text-muted">{{ $t("common.production") }}</span>
           </h4>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <!-- Studio / Brand -->
             <div class="space-y-1">
-              <label
-                class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-                >{{ $t("advertisementEditor.soundStudioAgency") }}</label
-              >
+              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("advertisementEditor.soundStudioAgency")
+              }}</label>
               <AdminAsyncAutocomplete
                 v-model="selectedStudioId"
                 :options="studioOptions"
@@ -185,21 +166,16 @@
                 :display-fn="getStudioName"
                 @search="searchStudios"
                 @create="
-                  (q: string) =>
-                    openCreateStudioDialog(
-                      q,
-                      (id: number) => (selectedStudioId = id),
-                    )
+                  (q: string) => openCreateStudioDialog(q, (id: number) => (selectedStudioId = id))
                 "
               />
             </div>
 
             <!-- Direction Artistique -->
             <div class="space-y-1">
-              <label
-                class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-                >{{ $t("advertisementEditor.artisticDirectionCasting") }}</label
-              >
+              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("advertisementEditor.artisticDirectionCasting")
+              }}</label>
               <AdminAsyncAutocomplete
                 v-model="artisticDirectorId"
                 :options="voiceActorOptions"
@@ -209,21 +185,16 @@
                 :display-fn="getVoiceActorName"
                 @search="searchVoiceActors"
                 @create="
-                  (q: string) =>
-                    openCreateVaDialog(
-                      q,
-                      (id: number) => (artisticDirectorId = id),
-                    )
+                  (q: string) => openCreateVaDialog(q, (id: number) => (artisticDirectorId = id))
                 "
               />
             </div>
 
             <!-- Prise de son -->
             <div class="space-y-1">
-              <label
-                class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-                >{{ $t("audiobookEditor.recordingEngineer") }}</label
-              >
+              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("audiobookEditor.recordingEngineer")
+              }}</label>
               <AdminAsyncAutocomplete
                 v-model="recordingId"
                 :options="voiceActorOptions"
@@ -232,19 +203,15 @@
                 :allow-create="true"
                 :display-fn="getVoiceActorName"
                 @search="searchVoiceActors"
-                @create="
-                  (q: string) =>
-                    openCreateVaDialog(q, (id: number) => (recordingId = id))
-                "
+                @create="(q: string) => openCreateVaDialog(q, (id: number) => (recordingId = id))"
               />
             </div>
 
             <!-- Mixage -->
             <div class="space-y-1">
-              <label
-                class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-                >{{ $t("advertisementEditor.mixagePub") }}</label
-              >
+              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("advertisementEditor.mixagePub")
+              }}</label>
               <AdminAsyncAutocomplete
                 v-model="mixingId"
                 :options="voiceActorOptions"
@@ -253,10 +220,7 @@
                 :allow-create="true"
                 :display-fn="getVoiceActorName"
                 @search="searchVoiceActors"
-                @create="
-                  (q: string) =>
-                    openCreateVaDialog(q, (id: number) => (mixingId = id))
-                "
+                @create="(q: string) => openCreateVaDialog(q, (id: number) => (mixingId = id))"
               />
             </div>
           </div>
@@ -264,9 +228,7 @@
       </div>
 
       <!-- Cast Roster Section -->
-      <div
-        class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-6 shadow-xl"
-      >
+      <div class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-6 shadow-xl">
         <div
           class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b theme-border pb-4"
         >
@@ -287,10 +249,7 @@
           </button>
         </div>
 
-        <div
-          v-if="castList.length === 0"
-          class="text-center py-8 theme-text-muted text-sm"
-        >
+        <div v-if="castList.length === 0" class="text-center py-8 theme-text-muted text-sm">
           {{ $t("common.noVoiceRecorded") }}
         </div>
 
@@ -302,10 +261,9 @@
           >
             <!-- Voice Actor -->
             <div class="md:col-span-4 space-y-1">
-              <label
-                class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider"
-                >{{ $t("common.actor") }}</label
-              >
+              <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("common.actor")
+              }}</label>
               <AdminAsyncAutocomplete
                 v-model="row.voice_actor_id"
                 :options="voiceActorOptions"
@@ -315,21 +273,16 @@
                 :display-fn="getVoiceActorName"
                 @search="searchVoiceActors"
                 @create="
-                  (q: string) =>
-                    openCreateVaDialog(
-                      q,
-                      (id: number) => (row.voice_actor_id = id),
-                    )
+                  (q: string) => openCreateVaDialog(q, (id: number) => (row.voice_actor_id = id))
                 "
               />
             </div>
 
             <!-- Role / Character Name -->
             <div class="md:col-span-2 space-y-1">
-              <label
-                class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider"
-                >{{ $t("common.roleCharacter") }}</label
-              >
+              <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("common.roleCharacter")
+              }}</label>
               <input
                 v-model="row.character_name"
                 type="text"
@@ -339,10 +292,9 @@
             </div>
 
             <div class="md:col-span-2 space-y-1">
-              <label
-                class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider"
-                >{{ $t("projectEditor.castNote") }}</label
-              >
+              <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("projectEditor.castNote")
+              }}</label>
               <input
                 v-model="row.note"
                 type="text"
@@ -352,10 +304,9 @@
 
             <!-- Performance Type -->
             <div class="md:col-span-3 space-y-1">
-              <label
-                class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider"
-                >{{ $t("common.performanceType") }}</label
-              >
+              <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("common.performanceType")
+              }}</label>
               <input
                 v-model="row.performance"
                 type="text"
@@ -397,9 +348,7 @@
           class="px-6 py-2.5 theme-primary-bg hover:bg-[var(--app-color-primary-hover)] disabled:opacity-50 text-xs font-bold rounded-xl transition-all shadow-lg flex items-center gap-2"
         >
           <Loader2Icon v-if="isSaving" class="w-4 h-4 animate-spin" />
-          <span>{{
-            isEditMode ? "Enregistrer les modifications" : "Créer le projet"
-          }}</span>
+          <span>{{ isEditMode ? "Enregistrer les modifications" : "Créer le projet" }}</span>
         </button>
       </div>
     </form>
@@ -407,10 +356,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  validateDubbingLanguage,
-  displayDubbingLanguage,
-} from "@app/shared-logic";
+import { validateDubbingLanguage, displayDubbingLanguage } from "@app/shared-logic";
 import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
@@ -426,6 +372,8 @@ import {
   type DubbingProjectSaveResponse,
   type WorkExpectedValues,
 } from "~/utils/dubbing-project-save";
+import { readSingleRouteParam, type DubbingProjectTab } from "~/utils/admin-project-editor-types";
+import type { VoiceActorCreationPayload } from "~/composables/useMetadataCreation";
 
 const route = useRoute();
 const router = useRouter();
@@ -438,12 +386,10 @@ const saveDubbingProject = createDubbingProjectSaveClient((body) =>
   }),
 );
 
-const adIdParam = computed(() => route.params.adId as string);
-const projectIdParam = computed(() => route.params.projectId as string);
+const adIdParam = computed(() => readSingleRouteParam(route.params.adId) ?? "");
+const projectIdParam = computed(() => readSingleRouteParam(route.params.projectId) ?? "");
 
-const isEditMode = computed(
-  () => projectIdParam.value && projectIdParam.value !== "new",
-);
+const isEditMode = computed(() => projectIdParam.value && projectIdParam.value !== "new");
 
 const parsedAdId = computed(() => {
   const num = parseInt(adIdParam.value, 10);
@@ -471,7 +417,7 @@ interface CastRow {
 }
 
 const castList = ref<CastRow[]>([]);
-const adDubbingProjects = ref<any[]>([]);
+const adDubbingProjects = ref<DubbingProjectTab[]>([]);
 const isLoading = ref(true);
 const isSaving = ref(false);
 
@@ -497,10 +443,7 @@ async function searchStudios(query: string) {
       .select("id, name")
       .ilike("name", `%${query}%`)
       .limit(10);
-    studioOptions.value = (data || []).map((s: any) => ({
-      id: s.id,
-      name: s.name,
-    }));
+    studioOptions.value = data || [];
   } finally {
     isSearchingStudios.value = false;
   }
@@ -515,7 +458,7 @@ async function searchVoiceActors(query: string) {
       .select("id, firstname, lastname")
       .or(`firstname.ilike.%${query}%,lastname.ilike.%${query}%`)
       .limit(15);
-    voiceActorOptions.value = (data || []).map((v: any) => ({
+    voiceActorOptions.value = (data || []).map((v) => ({
       id: v.id,
       name: `${v.firstname} ${v.lastname}`.trim(),
     }));
@@ -546,26 +489,21 @@ const pendingVaCreationRequests = new Map<string, string>();
 function openCreateVaDialog(name: string, cb: (id: number) => void) {
   const parts = name.trim().split(/\s+/);
   const firstname = parts[0] || "";
-  const providedLastname =
-    parts.slice(1).join(" ") || prompt("Nom de famille du comédien :", "");
+  const providedLastname = parts.slice(1).join(" ") || prompt("Nom de famille du comédien :", "");
   if (!firstname || !providedLastname?.trim()) return;
 
-  const payload = {
+  const payload: VoiceActorCreationPayload = {
     firstname,
     lastname: providedLastname.trim(),
-    status: "active" as const,
+    status: "active",
   };
   const payloadKey = JSON.stringify(payload);
-  const requestId =
-    pendingVaCreationRequests.get(payloadKey) ?? crypto.randomUUID();
+  const requestId = pendingVaCreationRequests.get(payloadKey) ?? crypto.randomUUID();
   pendingVaCreationRequests.set(payloadKey, requestId);
 
   void (async () => {
     try {
-      const { data } = await useMetadataCreation().createVoiceActor(
-        payload,
-        requestId,
-      );
+      const { data } = await useMetadataCreation().createVoiceActor(payload, requestId);
       pendingVaCreationRequests.delete(payloadKey);
       const item = { id: data.id, name: `${data.firstname} ${data.lastname}` };
       voiceActorOptions.value.push(item);
@@ -639,15 +577,14 @@ onMounted(async () => {
                 name: `${va.firstname} ${va.lastname}`,
               });
             }
-            if (member.job_id === 1)
-              artisticDirectorId.value = member.person_id;
+            if (member.job_id === 1) artisticDirectorId.value = member.person_id;
             if (member.job_id === 3) recordingId.value = member.person_id;
             if (member.job_id === 5) mixingId.value = member.person_id;
           }
         }
 
         if (project.work) {
-          castList.value = project.work.map((w: any) => {
+          castList.value = project.work.map((w) => {
             if (w.voice_actors) {
               voiceActorOptions.value.push({
                 id: w.voice_actors.id,
@@ -688,16 +625,12 @@ async function saveAdProject() {
   isSaving.value = true;
 
   try {
-    const currentProjectId = isEditMode.value
-      ? Number(projectIdParam.value)
-      : null;
+    const currentProjectId = isEditMode.value ? Number(projectIdParam.value) : null;
     const crew: Array<{ job_id: number; person_id: number }> = [];
     if (artisticDirectorId.value !== null)
       crew.push({ job_id: 1, person_id: artisticDirectorId.value });
-    if (recordingId.value !== null)
-      crew.push({ job_id: 3, person_id: recordingId.value });
-    if (mixingId.value !== null)
-      crew.push({ job_id: 5, person_id: mixingId.value });
+    if (recordingId.value !== null) crew.push({ job_id: 3, person_id: recordingId.value });
+    if (mixingId.value !== null) crew.push({ job_id: 5, person_id: mixingId.value });
 
     const cast: DubbingProjectCastSaveRow[] = castList.value.flatMap((row) => {
       if (!row.voice_actor_id) return [];
@@ -726,8 +659,7 @@ async function saveAdProject() {
 
     const result = await saveDubbingProject({
       project_id: currentProjectId,
-      expected_updated_at:
-        currentProjectId === null ? null : projectUpdatedAt.value,
+      expected_updated_at: currentProjectId === null ? null : projectUpdatedAt.value,
       project: {
         content_id: contentId.value,
         content_type: "advertisement",

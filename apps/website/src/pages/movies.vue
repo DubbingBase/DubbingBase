@@ -64,6 +64,12 @@
 import { computed } from "vue";
 import { resolveLocaleLanguage } from "@app/shared-logic";
 
+interface TrendingMovie {
+  id: number;
+  title: string;
+  poster_path: string | null;
+}
+
 const { t, locale } = useI18n();
 const localePath = useLocalePath();
 const trendingLanguage = computed(() => resolveLocaleLanguage(locale.value) || "en-US");
@@ -93,7 +99,7 @@ const {
 } = useAsyncData(
   () => `movies-page:${trendingLanguage.value}`,
   async () => {
-    const data = await $fetch<{ results: any[] }>("/api/trending/movies", {
+    const data = await $fetch<{ results: TrendingMovie[] }>("/api/trending/movies", {
       params: { lang: trendingLanguage.value },
     });
     return data?.results || [];

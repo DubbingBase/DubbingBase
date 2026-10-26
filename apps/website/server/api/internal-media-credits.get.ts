@@ -13,11 +13,7 @@ export default defineEventHandler(async (event) => {
   }
 
   if (mediaType === "movie" || mediaType === "tv") {
-    const data = await useTmdbClient().fetchMediaCredits(
-      mediaType,
-      mediaId,
-      "fr-FR",
-    );
+    const data = await useTmdbClient().fetchMediaCredits(mediaType, mediaId, "fr-FR");
     return { cast: data.cast ?? [] };
   }
 
@@ -25,13 +21,11 @@ export default defineEventHandler(async (event) => {
     const igdbClient = useIgdbClient();
     const characters = await igdbClient.getGameCharacters(mediaId);
     return {
-      cast: characters.map((c: any) => ({
+      cast: characters.map((c) => ({
         id: c.id,
         name: c.name,
         character: c.name,
-        profile_path: c.mug_shot?.image_id
-          ? buildIgdbImageUrl(c.mug_shot.image_id, "1080p")
-          : null,
+        profile_path: c.mug_shot?.image_id ? buildIgdbImageUrl(c.mug_shot.image_id, "1080p") : null,
         gender: c.gender ?? null,
       })),
     };

@@ -1,12 +1,7 @@
 import { normalizeString } from "../utils/normalize";
 import { useSupabaseAdmin } from "../utils/db/client";
-interface SearchParams {
-  query: string;
-  limit?: number;
-}
-
 async function searchVoiceActors(
-  supabaseAdmin: any,
+  supabaseAdmin: ReturnType<typeof useSupabaseAdmin>,
   query: string,
   limit = 10,
 ) {
@@ -28,18 +23,17 @@ async function searchVoiceActors(
 
   const lowerWords = words;
 
-  const matches = data.filter((actor: any) => {
+  const matches = data.filter((actor) => {
     const first = normalizeString(actor.firstname);
     const last = normalizeString(actor.lastname);
     const fullName = `${first} ${last}`;
 
     return lowerWords.every(
-      (word) =>
-        first.includes(word) || last.includes(word) || fullName.includes(word),
+      (word) => first.includes(word) || last.includes(word) || fullName.includes(word),
     );
   });
 
-  const scored = matches.map((actor: any) => {
+  const scored = matches.map((actor) => {
     const first = normalizeString(actor.firstname);
     const last = normalizeString(actor.lastname);
 
@@ -48,10 +42,7 @@ async function searchVoiceActors(
 
     if (first === primaryQuery || last === primaryQuery) {
       score += 100;
-    } else if (
-      first.startsWith(primaryQuery) ||
-      last.startsWith(primaryQuery)
-    ) {
+    } else if (first.startsWith(primaryQuery) || last.startsWith(primaryQuery)) {
       score += 50;
     } else {
       score += 10;
@@ -62,7 +53,7 @@ async function searchVoiceActors(
     return { actor, score };
   });
 
-  scored.sort((a: any, b: any) => {
+  scored.sort((a, b) => {
     if (b.score !== a.score) {
       return b.score - a.score;
     }
@@ -71,12 +62,12 @@ async function searchVoiceActors(
     return lastA.localeCompare(lastB);
   });
 
-  return scored.slice(0, limit).map((s: any) => s.actor);
+  return scored.slice(0, limit).map((result) => result.actor);
 }
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
-  const searchQuery = query.query as string | undefined;
+  const searchQuery = typeof query.query === "string" ? query.query : undefined;
   const limit = query.limit ? Number(query.limit) : 10;
 
   if (!searchQuery || typeof searchQuery !== "string") {

@@ -49,17 +49,10 @@
     </div>
 
     <!-- Reports Table Card -->
-    <div
-      class="theme-surface-overlay border theme-border rounded-2xl overflow-hidden"
-    >
+    <div class="theme-surface-overlay border theme-border rounded-2xl overflow-hidden">
       <!-- Loading indicator -->
-      <div
-        v-if="loading"
-        class="flex flex-col items-center justify-center py-20 space-y-3"
-      >
-        <div
-          class="animate-spin rounded-full h-9 w-9 border-b-2 border-blue-500"
-        ></div>
+      <div v-if="loading" class="flex flex-col items-center justify-center py-20 space-y-3">
+        <div class="animate-spin rounded-full h-9 w-9 border-b-2 border-blue-500"></div>
         <p class="theme-text-muted text-sm">
           {{ $t("admin.reports.fetchingReports") }}
         </p>
@@ -112,12 +105,7 @@
                   target="_blank"
                   class="hover:underline flex items-center space-x-1"
                 >
-                  <svg
-                    class="h-3.5 w-3.5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
+                  <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
@@ -179,6 +167,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import type { Database } from "@app/supabase";
+
+type UserReport = Database["public"]["Tables"]["user_reports"]["Row"];
 
 definePageMeta({
   layout: "admin",
@@ -189,7 +180,7 @@ const supabase = useSupabaseClient();
 const localePath = useLocalePath();
 const { t } = useI18n();
 
-const reports = ref<any[]>([]);
+const reports = ref<UserReport[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const updatingStatus = ref<Record<string, boolean>>({});
@@ -234,7 +225,7 @@ watch(
   initialReports,
   (newReports) => {
     if (newReports) {
-      reports.value = newReports as any[];
+      reports.value = newReports;
     }
   },
   { immediate: true },
@@ -261,7 +252,7 @@ watch(
   { immediate: true },
 );
 
-const updateStatus = async (report: any) => {
+const updateStatus = async (report: UserReport) => {
   updatingStatus.value[report.id] = true;
 
   try {
@@ -273,7 +264,7 @@ const updateStatus = async (report: any) => {
     if (updateError) throw updateError;
 
     showToast(t("admin.reports.statusUpdated"), "success");
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error updating status:", err);
     showToast(t("admin.reports.failedToUpdateStatus"), "error");
     // Revert status on failure (simple reload for now)

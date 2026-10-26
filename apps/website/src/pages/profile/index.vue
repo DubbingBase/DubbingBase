@@ -5,18 +5,13 @@
     </h2>
 
     <div class="space-y-6">
-      <div
-        v-if="user"
-        class="theme-surface-raised p-4 rounded-xl border theme-border-subtle"
-      >
+      <div v-if="user" class="theme-surface-raised p-4 rounded-xl border theme-border-subtle">
         <form @submit.prevent="updateProfile" class="mb-6 space-y-4">
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label
-                for="username"
-                class="block text-sm font-medium theme-text-secondary mb-1"
-                >{{ $t("profile.username") }}</label
-              >
+              <label for="username" class="block text-sm font-medium theme-text-secondary mb-1">{{
+                $t("profile.username")
+              }}</label>
               <input
                 id="username"
                 v-model="username"
@@ -25,11 +20,9 @@
               />
             </div>
             <div>
-              <label
-                for="full_name"
-                class="block text-sm font-medium theme-text-secondary mb-1"
-                >{{ $t("auth.fullName") }}</label
-              >
+              <label for="full_name" class="block text-sm font-medium theme-text-secondary mb-1">{{
+                $t("auth.fullName")
+              }}</label>
               <input
                 id="full_name"
                 v-model="full_name"
@@ -43,9 +36,7 @@
               v-if="updateMessage"
               :class="[
                 'mt-2 text-sm flex-1',
-                isError
-                  ? 'theme-status-danger-text'
-                  : 'theme-status-success-text',
+                isError ? 'theme-status-danger-text' : 'theme-status-success-text',
               ]"
             >
               {{ updateMessage }}
@@ -59,16 +50,12 @@
               "
               class="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 theme-text font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {{
-                isUpdating ? $t("profile.saving") : $t("profile.saveChanges")
-              }}
+              {{ isUpdating ? $t("profile.saving") : $t("profile.saveChanges") }}
             </button>
           </div>
         </form>
 
-        <dl
-          class="divide-y theme-divide border-t theme-border-subtle theme-border pt-4"
-        >
+        <dl class="divide-y theme-divide border-t theme-border-subtle theme-border pt-4">
           <div class="py-3 flex justify-between">
             <dt class="text-sm font-medium theme-text-muted">
               {{ $t("auth.email") }}
@@ -105,10 +92,9 @@
       </div>
       <div v-else-if="auditLogs.length === 0" class="text-sm theme-text-muted">
         {{ $t("profile.noGamifiedContributionsYet")
-        }}<NuxtLink
-          :to="localePath('/contribute')"
-          class="text-cyan-500 hover:underline"
-          >{{ $t("profile.contributionHub") }}</NuxtLink
+        }}<NuxtLink :to="localePath('/contribute')" class="text-cyan-500 hover:underline">{{
+          $t("profile.contributionHub")
+        }}</NuxtLink
         >{{ $t("profile.toStartEarningPoints") }}
       </div>
       <div
@@ -132,7 +118,7 @@
                 }}</span>
               </p>
               <p class="text-xs theme-text-muted mt-1">
-                {{ new Date(log.created_at).toLocaleString() }}
+                {{ new Date(log.created_at || "").toLocaleString() }}
               </p>
             </div>
             <div class="flex items-center gap-3">
@@ -141,13 +127,9 @@
                 class="text-xs theme-status-danger-text px-2 py-1 bg-red-500/10 rounded"
                 >{{ $t("admin.auditLogs.reverted") }}</span
               >
-              <span
-                v-else
-                class="text-sm font-mono theme-status-success-text font-bold"
-                >{{
-                  $t("profile.pointsAwarded", { pts: log.points_awarded })
-                }}</span
-              >
+              <span v-else class="text-sm font-mono theme-status-success-text font-bold">{{
+                $t("profile.pointsAwarded", { pts: log.points_awarded })
+              }}</span>
             </div>
           </li>
         </ul>
@@ -158,6 +140,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import type { Database } from "@app/supabase";
+
+type AuditLog = Database["public"]["Tables"]["audit_logs"]["Row"];
 
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
@@ -169,7 +154,7 @@ const isUpdating = ref(false);
 const updateMessage = ref("");
 const isError = ref(false);
 
-const auditLogs = ref<any[]>([]);
+const auditLogs = ref<AuditLog[]>([]);
 
 const updateProfile = async () => {
   if (!username.value.trim()) {

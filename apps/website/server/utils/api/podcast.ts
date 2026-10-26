@@ -2,7 +2,7 @@ import { ofetch } from "ofetch";
 import type { Podcast, PodcastEpisode } from "@app/shared-logic";
 
 export interface ITunesPodcastResult {
-  collectionId: number;
+  collectionId?: number;
   trackId?: number;
   collectionName?: string;
   trackName?: string;
@@ -16,6 +16,8 @@ export interface ITunesPodcastResult {
   genres?: string[];
   description?: string;
   shortDescription?: string;
+  trackTimeMillis?: number;
+  episodeUrl?: string;
 }
 
 export class PodcastClient {
@@ -66,7 +68,7 @@ export class PodcastClient {
     try {
       const response = await ofetch<{
         resultCount: number;
-        results: any[];
+        results: ITunesPodcastResult[];
       }>(`${this.baseUrl}/lookup`, {
         params: {
           id,
@@ -78,10 +80,10 @@ export class PodcastClient {
 
       if (!response?.results || response.results.length === 0) return null;
 
-      const podcastHeader = response.results[0] as ITunesPodcastResult;
+      const podcastHeader = response.results[0];
       const rawEpisodes = response.results.slice(1);
 
-      const episodes: PodcastEpisode[] = rawEpisodes.map((ep: any) => ({
+      const episodes: PodcastEpisode[] = rawEpisodes.map((ep) => ({
         id: ep.trackId || ep.collectionId || 0,
         title: ep.trackName || "Épisode",
         description: ep.description || ep.shortDescription || "",

@@ -11,6 +11,76 @@ import { normalizeString } from "../../utils/normalize";
 import { processMedia } from "../../utils/urls/tmdb";
 import { buildSupabaseImageUrl } from "../../utils/urls/supabase";
 import { useSupabaseAdmin } from "../../utils/db/client";
+
+interface SearchItem {
+  id?: number | string;
+  media_type?: string;
+  title?: string;
+  name?: string;
+  voice_actor_name?: string;
+  firstname?: string | null;
+  lastname?: string | null;
+  tmdb_id?: number | null;
+  profile_picture?: string | null;
+  profile_path?: string | null;
+  popularity?: number;
+  vote_average?: number;
+  vote_count?: number;
+  release_date?: string | null;
+  first_air_date?: string | null;
+  first_release_date?: number;
+  [key: string]: unknown;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isSearchItem(value: unknown): value is SearchItem {
+  if (!isRecord(value)) return false;
+  if (typeof value.id !== "number" && typeof value.id !== "string") {
+    return false;
+  }
+
+  const stringFields: Array<
+    | "media_type"
+    | "title"
+    | "name"
+    | "voice_actor_name"
+    | "firstname"
+    | "lastname"
+    | "profile_path"
+    | "release_date"
+    | "first_air_date"
+  > = [
+    "media_type",
+    "title",
+    "name",
+    "voice_actor_name",
+    "firstname",
+    "lastname",
+    "profile_path",
+    "release_date",
+    "first_air_date",
+  ];
+  if (
+    stringFields.some(
+      (field) =>
+        value[field] !== undefined && value[field] !== null && typeof value[field] !== "string",
+    )
+  ) {
+    return false;
+  }
+
+  const numberFields: Array<
+    "tmdb_id" | "popularity" | "vote_average" | "vote_count" | "first_release_date"
+  > = ["tmdb_id", "popularity", "vote_average", "vote_count", "first_release_date"];
+  return numberFields.every(
+    (field) =>
+      value[field] === undefined || value[field] === null || typeof value[field] === "number",
+  );
+}
+
 function sanitizeForTextSearch(query: string): string {
   return query.replace(/[&|!():*<>@\\'"]/g, " ").trim();
 }
@@ -25,12 +95,15 @@ function buildTextSearchQuery(query: string): string {
   return words.join(" | ");
 }
 
-function calculateScore(item: any, trimmedQuery: string): number {
+function calculateScore(item: SearchItem, trimmedQuery: string): number {
   let score = 0;
 
   const queryLower = normalizeString(trimmedQuery);
 
-  let itemDisplayName = item.title || item.name || item.voice_actor_name || "";
+  let itemDisplayName =
+    [item.title, item.name, item.voice_actor_name].find(
+      (value): value is string => typeof value === "string",
+    ) || "";
   if (!itemDisplayName && item.firstname && item.lastname) {
     itemDisplayName = `${item.firstname} ${item.lastname}`;
   }
@@ -46,30 +119,25 @@ function calculateScore(item: any, trimmedQuery: string): number {
     }
   }
 
-  const pop = item.popularity || 0;
+  const pop = typeof item.popularity === "number" ? item.popularity : 0;
   score += Math.sqrt(pop) * 3;
 
-  score += (item.vote_average || 0) * 0.1;
+  const voteAverage = typeof item.vote_average === "number" ? item.vote_average : 0;
+  score += voteAverage * 0.1;
 
-  const vc = item.vote_count || 0;
+  const vc = typeof item.vote_count === "number" ? item.vote_count : 0;
   score += Math.log10(vc + 1) * 3;
 
   let releaseMs: number | null = null;
   const isoDate = item.release_date || item.first_air_date;
   if (isoDate) {
     releaseMs = new Date(isoDate).getTime();
-  } else if (
-    item.first_release_date &&
-    typeof item.first_release_date === "number"
-  ) {
+  } else if (item.first_release_date && typeof item.first_release_date === "number") {
     releaseMs = item.first_release_date * 1000;
   }
 
   if (releaseMs && !isNaN(releaseMs)) {
-    const ageYears = Math.max(
-      0,
-      (Date.now() - releaseMs) / (365.25 * 24 * 3600 * 1000),
-    );
+    const ageYears = Math.max(0, (Date.now() - releaseMs) / (365.25 * 24 * 3600 * 1000));
     score += Math.max(0, 15 - ageYears * 1.5);
   }
 
@@ -78,7 +146,8 @@ function calculateScore(item: any, trimmedQuery: string): number {
 
 export default defineEventHandler(async (event) => {
   try {
-    const query = getQuery(event).query as string | undefined;
+    const rawQuery = getQuery(event).query;
+    const query = typeof rawQuery === "string" ? rawQuery : undefined;
 
     if (!query) {
       return [];
@@ -100,19 +169,17 @@ export default defineEventHandler(async (event) => {
 
     // 1. TMDB multi-search
     const tmdbSearchPromise = (async () => {
-      const results: any[] = [];
+      const results: SearchItem[] = [];
       try {
         const pageResponses = await Promise.all(
-          [1, 2].map((page) =>
-            tmdbClient.searchMulti(trimmedQuery, page, "fr-FR"),
-          ),
+          [1, 2].map((page) => tmdbClient.searchMulti(trimmedQuery, page, "fr-FR")),
         );
 
         for (const response of pageResponses) {
           if (response.results && Array.isArray(response.results)) {
             const withImages = response.results
-              .filter((x: any) => x !== null)
-              .map((x: any) => processMedia(x));
+              .filter(isSearchItem)
+              .map((result) => processMedia(result));
             results.push(...withImages);
           }
         }
@@ -124,7 +191,7 @@ export default defineEventHandler(async (event) => {
 
     // 2. Voice actor DB search
     const voiceActorSearchPromise = (async () => {
-      const results: any[] = [];
+      const results: SearchItem[] = [];
       try {
         const searchQuery = buildTextSearchQuery(trimmedQuery);
         if (searchQuery) {
@@ -135,7 +202,7 @@ export default defineEventHandler(async (event) => {
             .limit(20);
 
           if (ftsData && Array.isArray(ftsData)) {
-            results.push(...ftsData);
+            results.push(...ftsData.map((voiceActor) => ({ ...voiceActor })));
           }
         }
 
@@ -143,13 +210,11 @@ export default defineEventHandler(async (event) => {
         const { data: ilikeData } = await supabase
           .from("voice_actors")
           .select("*")
-          .or(
-            `firstname.ilike.%${trimmedQuery}%,lastname.ilike.%${trimmedQuery}%`,
-          )
+          .or(`firstname.ilike.%${trimmedQuery}%,lastname.ilike.%${trimmedQuery}%`)
           .limit(20);
 
         if (ilikeData && Array.isArray(ilikeData)) {
-          const seenIds = new Set(results.map((va: any) => va.id));
+          const seenIds = new Set(results.map((voiceActor) => voiceActor.id));
           for (const va of ilikeData) {
             if (!seenIds.has(va.id)) {
               results.push(va);
@@ -165,7 +230,7 @@ export default defineEventHandler(async (event) => {
 
     // 3. IGDB game search
     const igdbSearchPromise = (async () => {
-      const results: any[] = [];
+      const results: SearchItem[] = [];
       try {
         const igdbGames = await igdbClient.searchGames(trimmedQuery);
         for (const game of igdbGames) {
@@ -266,7 +331,7 @@ export default defineEventHandler(async (event) => {
       toySearchPromise,
     ]);
 
-    let resp: any[] = [...tmdbResults];
+    let resp: SearchItem[] = [...tmdbResults];
 
     // Deduplicate IGDB games
     const igdbKeySet = new Set<string>();
@@ -312,7 +377,7 @@ export default defineEventHandler(async (event) => {
 
     // 5. Merge voice actors with TMDB entities
     if (voiceActorResults.length > 0) {
-      const respMap = new Map<string, any>();
+      const respMap = new Map<string, SearchItem>();
       resp.forEach((item) => {
         if (item && item.id != null) {
           const key = `${item.media_type ?? "unknown"}:${item.id}`;
@@ -320,19 +385,18 @@ export default defineEventHandler(async (event) => {
         }
       });
 
-      voiceActorResults.forEach((voiceActor: any) => {
+      voiceActorResults.forEach((voiceActor) => {
         const vaKey = `voice_actor:${voiceActor.id}`;
         if (voiceActor.tmdb_id != null) {
           const tmdbKey = `person:${voiceActor.tmdb_id}`;
-          if (respMap.has(tmdbKey)) {
-            const person = respMap.get(tmdbKey);
+          const person = respMap.get(tmdbKey);
+          if (person) {
             respMap.delete(tmdbKey);
             respMap.set(vaKey, {
               ...voiceActor,
               actor: person,
               profile_path:
-                buildSupabaseImageUrl(voiceActor.profile_picture) ??
-                person.profile_path,
+                buildSupabaseImageUrl(voiceActor.profile_picture) ?? person.profile_path,
               popularity: person.popularity ?? 50,
               media_type: "voice_actor",
             });
@@ -362,10 +426,7 @@ export default defineEventHandler(async (event) => {
     // Sort by composite score
     resp = resp
       .filter((item) => item != null)
-      .sort(
-        (a, b) =>
-          calculateScore(b, trimmedQuery) - calculateScore(a, trimmedQuery),
-      );
+      .sort((a, b) => calculateScore(b, trimmedQuery) - calculateScore(a, trimmedQuery));
 
     // Attach score for debugging/transparency
     resp = resp.map((item) => ({

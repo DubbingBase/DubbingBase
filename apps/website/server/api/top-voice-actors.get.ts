@@ -1,5 +1,10 @@
 import { useSupabaseAdmin } from "../utils/db/client";
 import { buildSupabaseImageUrl } from "../utils/urls/supabase";
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const limit = Number(query.limit) || 10;
@@ -19,15 +24,23 @@ export default defineEventHandler(async (event) => {
 
     if (error) throw error;
 
-    const results = (data || []).map((result: any) => ({
-      ...result.voice_actor,
-      role_count: result.role_count,
-      profile_picture: buildSupabaseImageUrl(
-        result.voice_actor.profile_picture,
-        "voice_actor_profile_pictures",
-        "500",
-      ),
-    }));
+    const results = (data || []).flatMap((result) => {
+      const voiceActor = result.voice_actor;
+      if (!isRecord(voiceActor)) return [];
+      const profilePicture = voiceActor.profile_picture;
+
+      return [
+        {
+          ...voiceActor,
+          role_count: result.role_count,
+          profile_picture: buildSupabaseImageUrl(
+            typeof profilePicture === "string" ? profilePicture : null,
+            "voice_actor_profile_pictures",
+            "500",
+          ),
+        },
+      ];
+    });
 
     return results;
   } catch (error) {

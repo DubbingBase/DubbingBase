@@ -9,9 +9,7 @@
       </p>
     </div>
 
-    <div
-      class="theme-surface-overlay border theme-border rounded-2xl p-5 shadow-lg"
-    >
+    <div class="theme-surface-overlay border theme-border rounded-2xl p-5 shadow-lg">
       <h4 class="font-bold theme-text text-sm mb-4">
         {{ $t("admin.careerGrid.searchVoiceActor") }}
       </h4>
@@ -47,12 +45,7 @@
           @click="resetSelection"
           class="p-1.5 theme-text-muted hover:text-[var(--app-color-danger-text)] theme-hover-surface-muted rounded-lg transition-colors"
         >
-          <svg
-            class="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -132,9 +125,7 @@
             class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"
           ></span>
           {{
-            generating
-              ? $t("admin.careerGrid.generating")
-              : $t("admin.careerGrid.generateImage")
+            generating ? $t("admin.careerGrid.generating") : $t("admin.careerGrid.generateImage")
           }}
         </button>
       </div>
@@ -150,9 +141,7 @@
         <h4 class="font-bold theme-text text-sm">
           {{ $t("admin.careerGrid.preview") }}
         </h4>
-        <div
-          class="rounded-xl overflow-hidden border theme-border theme-input p-4 inline-block"
-        >
+        <div class="rounded-xl overflow-hidden border theme-border theme-input p-4 inline-block">
           <NuxtImg
             format="webp"
             :src="imageUrl"
@@ -165,12 +154,7 @@
             @click="downloadImage"
             class="py-2 px-4 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-xl text-sm transition-all inline-flex items-center space-x-2"
           >
-            <svg
-              class="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -228,12 +212,11 @@ const executeSearch = async () => {
   }
   searchLoading.value = true;
   try {
-    const data = await $fetch<VoiceActorCandidate[]>(
-      "/api/search-voice-actors",
-      { params: { query, limit: "10" } },
-    );
+    const data = await $fetch<VoiceActorCandidate[]>("/api/search-voice-actors", {
+      params: { query, limit: "10" },
+    });
     searchResults.value = data || [];
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error searching voice actors:", err);
   } finally {
     searchLoading.value = false;
@@ -269,9 +252,9 @@ const generateImage = async () => {
 
     const blob = await response.blob();
     imageUrl.value = URL.createObjectURL(blob);
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error generating image:", err);
-    errorMsg.value = err.message || "Failed to generate image.";
+    errorMsg.value = err instanceof Error ? err.message : "Failed to generate image.";
   } finally {
     generating.value = false;
   }
@@ -289,7 +272,8 @@ const downloadImage = () => {
 };
 
 const handleOutsideClick = (e: MouseEvent) => {
-  const target = e.target as HTMLElement;
+  const target = e.target;
+  if (!(target instanceof Element)) return;
   if (!target.closest(".relative")) {
     activeSearch.value = false;
   }

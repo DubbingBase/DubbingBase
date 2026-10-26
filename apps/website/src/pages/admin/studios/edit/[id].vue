@@ -6,12 +6,7 @@
     >
       <div>
         <h3 class="text-xl font-bold theme-text flex items-center gap-2">
-          <svg
-            class="h-6 w-6 text-blue-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
+          <svg class="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -49,8 +44,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
         <!-- Studio Name -->
         <div class="space-y-1 md:col-span-2">
-          <label
-            class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
+          <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
             >{{ $t("admin.studios.studioName") }} *</label
           >
           <input
@@ -64,10 +58,9 @@
 
         <!-- Country -->
         <div class="space-y-1">
-          <label
-            class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-            >{{ $t("common.country") }}</label
-          >
+          <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+            $t("common.country")
+          }}</label>
           <input
             v-model="country"
             type="text"
@@ -78,10 +71,9 @@
 
         <!-- City -->
         <div class="space-y-1">
-          <label
-            class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-            >{{ $t("common.city") }}</label
-          >
+          <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+            $t("common.city")
+          }}</label>
           <input
             v-model="city"
             type="text"
@@ -92,10 +84,9 @@
 
         <!-- Website URL -->
         <div class="space-y-1">
-          <label
-            class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-            >{{ $t("admin.studios.websiteUrl") }}</label
-          >
+          <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+            $t("admin.studios.websiteUrl")
+          }}</label>
           <input
             v-model="websiteUrl"
             type="url"
@@ -106,10 +97,9 @@
 
         <!-- Studio Logo -->
         <div class="space-y-2">
-          <label
-            class="text-xs font-semibold theme-text-muted uppercase tracking-wider block"
-            >{{ $t("admin.studios.studioLogo") }}</label
-          >
+          <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider block">{{
+            $t("admin.studios.studioLogo")
+          }}</label>
           <div class="flex items-center gap-4">
             <div
               class="relative h-16 w-16 rounded-xl overflow-hidden border theme-border theme-input flex shrink-0 items-center justify-center theme-text-muted shadow-inner group"
@@ -151,9 +141,7 @@
                   class="py-2 px-3 theme-surface-muted theme-hover-surface-muted theme-text text-xs font-semibold rounded-lg transition-colors border theme-border"
                 >
                   {{
-                    logoPreview
-                      ? $t("admin.studios.changeLogo")
-                      : $t("admin.studios.uploadLogo")
+                    logoPreview ? $t("admin.studios.changeLogo") : $t("admin.studios.uploadLogo")
                   }}
                 </button>
                 <button
@@ -172,10 +160,9 @@
 
       <!-- Description -->
       <div class="space-y-1">
-        <label
-          class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-          >{{ $t("common.description") }}</label
-        >
+        <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+          $t("common.description")
+        }}</label>
         <textarea
           v-model="description"
           rows="4"
@@ -220,6 +207,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
 import imageCompression from "browser-image-compression";
+import { readSingleRouteParam } from "~/utils/admin-project-editor-types";
 
 definePageMeta({
   layout: "admin",
@@ -232,7 +220,7 @@ const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const localePath = useLocalePath();
-const id = route.params.id as string | undefined;
+const id = readSingleRouteParam(route.params.id);
 const isEditMode = computed(() => !!id && id !== "new");
 
 const name = ref("");
@@ -257,29 +245,32 @@ const clearLogo = () => {
 };
 
 const onLogoChange = (event: Event) => {
-  const files = (event.target as HTMLInputElement).files;
+  const target = event.target;
+  if (!(target instanceof HTMLInputElement)) return;
+  const files = target.files;
   if (files && files.length > 0 && files[0]) {
     const file = files[0];
     logoFile.value = file;
     const reader = new FileReader();
-    reader.onload = (e) => {
-      logoPreview.value = e.target?.result as string;
+    reader.onload = () => {
+      logoPreview.value = typeof reader.result === "string" ? reader.result : null;
     };
     reader.readAsDataURL(file);
   }
 };
 const isSaving = ref(false);
 
-const toast = ref({
+const toast = ref<{
+  show: boolean;
+  message: string;
+  type: "success" | "error" | "info";
+}>({
   show: false,
   message: "",
-  type: "info" as "success" | "error" | "info",
+  type: "info",
 });
 
-const showToast = (
-  message: string,
-  type: "success" | "error" | "info" = "info",
-) => {
+const showToast = (message: string, type: "success" | "error" | "info" = "info") => {
   toast.value = { show: true, message, type };
   setTimeout(() => {
     toast.value.show = false;
@@ -291,11 +282,7 @@ const { data: initialData } = await useAsyncData(
   `studio-${id}`,
   async () => {
     if (!isEditMode.value || isNaN(numId)) return null;
-    const { data, error } = await supabase
-      .from("studios")
-      .select("*")
-      .eq("id", numId)
-      .single();
+    const { data, error } = await supabase.from("studios").select("*").eq("id", numId).single();
 
     if (error) throw error;
     return data;
@@ -334,17 +321,10 @@ const saveStudio = async () => {
     let studioId = id;
 
     if (isEditMode.value && !isNaN(numId)) {
-      const { error } = await supabase
-        .from("studios")
-        .update(payload)
-        .eq("id", numId);
+      const { error } = await supabase.from("studios").update(payload).eq("id", numId);
       if (error) throw error;
     } else {
-      const { data, error } = await supabase
-        .from("studios")
-        .insert([payload])
-        .select()
-        .single();
+      const { data, error } = await supabase.from("studios").insert([payload]).select().single();
       if (error) throw error;
       studioId = data.id.toString();
     }
@@ -385,9 +365,9 @@ const saveStudio = async () => {
     setTimeout(() => {
       router.push(localePath("/admin"));
     }, 1200);
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error saving studio:", err);
-    showToast(err.message || t("admin.studios.failedToSave"), "error");
+    showToast(err instanceof Error ? err.message : t("admin.studios.failedToSave"), "error");
   } finally {
     isSaving.value = false;
   }

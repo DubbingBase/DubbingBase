@@ -7,11 +7,7 @@
       <div>
         <h3 class="text-xl font-bold theme-text flex items-center gap-2">
           <BookOpenIcon class="w-6 h-6 theme-status-warning-text" />
-          {{
-            isEditMode
-              ? "Modifier le projet de livre audio"
-              : "Créer un projet de livre audio"
-          }}
+          {{ isEditMode ? "Modifier le projet de livre audio" : "Créer un projet de livre audio" }}
         </h3>
         <p class="text-sm theme-text-muted mt-1">
           {{
@@ -22,11 +18,7 @@
         </p>
       </div>
       <NuxtLink
-        :to="
-          openLibraryBookId
-            ? localePath(`/audiobook/${openLibraryBookId}`)
-            : localePath('/')
-        "
+        :to="openLibraryBookId ? localePath(`/audiobook/${openLibraryBookId}`) : localePath('/')"
         class="text-xs font-semibold px-4 py-2.5 theme-surface-muted theme-hover-surface-muted theme-text-secondary theme-hover-text rounded-xl border theme-border transition-colors flex items-center space-x-2"
       >
         <span>{{ openLibraryBookId ? "← Retour au livre" : "← Accueil" }}</span>
@@ -34,18 +26,11 @@
     </div>
 
     <!-- Navigation Tabs -->
-    <div
-      v-if="openLibraryBookId"
-      class="flex flex-wrap gap-2 pb-2 border-b theme-border"
-    >
+    <div v-if="openLibraryBookId" class="flex flex-wrap gap-2 pb-2 border-b theme-border">
       <NuxtLink
         v-for="project in bookDubbingProjects"
         :key="project.id"
-        :to="
-          localePath(
-            `/audiobook/${openLibraryBookId}/projects/${project.id}/edit`,
-          )
-        "
+        :to="localePath(`/audiobook/${openLibraryBookId}/projects/${project.id}/edit`)"
         class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border"
         :class="
           project.id === Number(projectIdParam)
@@ -108,19 +93,16 @@
               />
               <div v-else class="text-center p-3 theme-text-secondary">
                 <BookOpenIcon class="h-10 w-10 mx-auto mb-1 opacity-50" />
-                <span class="text-[10px]">{{
-                  $t("audiobookEditor.noCover")
-                }}</span>
+                <span class="text-[10px]">{{ $t("audiobookEditor.noCover") }}</span>
               </div>
             </div>
           </div>
 
           <!-- Content ID / OpenLibrary Work ID -->
           <div class="space-y-1">
-            <label
-              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("audiobookEditor.openLibraryWorkId") }}</label
-            >
+            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+              $t("audiobookEditor.openLibraryWorkId")
+            }}</label>
             <div class="flex space-x-2">
               <input
                 v-model.number="contentId"
@@ -136,10 +118,7 @@
                 :disabled="isFetchingMetadata || !contentId"
                 class="px-3 py-2 theme-surface-muted theme-hover-surface-muted disabled:opacity-50 theme-text text-xs font-semibold rounded-xl border theme-border whitespace-nowrap"
               >
-                <Loader2Icon
-                  v-if="isFetchingMetadata"
-                  class="w-4 h-4 animate-spin"
-                />
+                <Loader2Icon v-if="isFetchingMetadata" class="w-4 h-4 animate-spin" />
                 <span v-else>{{ $t("common.fetch") }}</span>
               </button>
             </div>
@@ -147,10 +126,9 @@
 
           <!-- Media Name / Title -->
           <div class="space-y-1">
-            <label
-              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("audiobookEditor.bookTitle") }}</label
-            >
+            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+              $t("audiobookEditor.bookTitle")
+            }}</label>
             <input
               v-model="mediaTitle"
               type="text"
@@ -175,10 +153,9 @@
 
           <!-- Status -->
           <div class="space-y-1">
-            <label
-              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("common.status") }}</label
-            >
+            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+              $t("common.status")
+            }}</label>
             <select
               v-model="status"
               class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text focus:outline-none focus:ring-2 focus:ring-[var(--app-color-focus)] text-sm"
@@ -208,10 +185,9 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <!-- Studio / Publisher -->
             <div class="space-y-1">
-              <label
-                class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-                >{{ $t("audiobookEditor.recordingStudio") }}</label
-              >
+              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("audiobookEditor.recordingStudio")
+              }}</label>
               <AdminAsyncAutocomplete
                 v-model="selectedStudioId"
                 :options="studioOptions"
@@ -221,21 +197,16 @@
                 :display-fn="getStudioName"
                 @search="searchStudios"
                 @create="
-                  (q: string) =>
-                    openCreateStudioDialog(
-                      q,
-                      (id: number) => (selectedStudioId = id),
-                    )
+                  (q: string) => openCreateStudioDialog(q, (id: number) => (selectedStudioId = id))
                 "
               />
             </div>
 
             <!-- Direction Artistique -->
             <div class="space-y-1">
-              <label
-                class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-                >{{ $t("audiobookEditor.artisticDirection") }}</label
-              >
+              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("audiobookEditor.artisticDirection")
+              }}</label>
               <AdminAsyncAutocomplete
                 v-model="artisticDirectorId"
                 :options="voiceActorOptions"
@@ -245,21 +216,16 @@
                 :display-fn="getVoiceActorName"
                 @search="searchVoiceActors"
                 @create="
-                  (q: string) =>
-                    openCreateVaDialog(
-                      q,
-                      (id: number) => (artisticDirectorId = id),
-                    )
+                  (q: string) => openCreateVaDialog(q, (id: number) => (artisticDirectorId = id))
                 "
               />
             </div>
 
             <!-- Prise de son -->
             <div class="space-y-1">
-              <label
-                class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-                >{{ $t("audiobookEditor.recordingEngineer") }}</label
-              >
+              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("audiobookEditor.recordingEngineer")
+              }}</label>
               <AdminAsyncAutocomplete
                 v-model="recordingId"
                 :options="voiceActorOptions"
@@ -268,19 +234,15 @@
                 :allow-create="true"
                 :display-fn="getVoiceActorName"
                 @search="searchVoiceActors"
-                @create="
-                  (q: string) =>
-                    openCreateVaDialog(q, (id: number) => (recordingId = id))
-                "
+                @create="(q: string) => openCreateVaDialog(q, (id: number) => (recordingId = id))"
               />
             </div>
 
             <!-- Montage / Mixage -->
             <div class="space-y-1">
-              <label
-                class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-                >{{ $t("audiobookEditor.mixing") }}</label
-              >
+              <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("audiobookEditor.mixing")
+              }}</label>
               <AdminAsyncAutocomplete
                 v-model="mixingId"
                 :options="voiceActorOptions"
@@ -289,10 +251,7 @@
                 :allow-create="true"
                 :display-fn="getVoiceActorName"
                 @search="searchVoiceActors"
-                @create="
-                  (q: string) =>
-                    openCreateVaDialog(q, (id: number) => (mixingId = id))
-                "
+                @create="(q: string) => openCreateVaDialog(q, (id: number) => (mixingId = id))"
               />
             </div>
           </div>
@@ -300,9 +259,7 @@
       </div>
 
       <!-- Narrators & Voice Cast Section -->
-      <div
-        class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-6 shadow-xl"
-      >
+      <div class="theme-surface-overlay border theme-border rounded-2xl p-6 space-y-6 shadow-xl">
         <div
           class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b theme-border pb-4"
         >
@@ -323,10 +280,7 @@
           </button>
         </div>
 
-        <div
-          v-if="castList.length === 0"
-          class="text-center py-8 theme-text-muted text-sm"
-        >
+        <div v-if="castList.length === 0" class="text-center py-8 theme-text-muted text-sm">
           {{ $t("audiobookEditor.noRoleNarrator") }}
         </div>
 
@@ -338,10 +292,9 @@
           >
             <!-- Voice Actor (Narrator) -->
             <div class="md:col-span-4 space-y-1">
-              <label
-                class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider"
-                >{{ $t("audiobookEditor.actorNarrator") }}</label
-              >
+              <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("audiobookEditor.actorNarrator")
+              }}</label>
               <AdminAsyncAutocomplete
                 v-model="row.voice_actor_id"
                 :options="voiceActorOptions"
@@ -351,21 +304,16 @@
                 :display-fn="getVoiceActorName"
                 @search="searchVoiceActors"
                 @create="
-                  (q: string) =>
-                    openCreateVaDialog(
-                      q,
-                      (id: number) => (row.voice_actor_id = id),
-                    )
+                  (q: string) => openCreateVaDialog(q, (id: number) => (row.voice_actor_id = id))
                 "
               />
             </div>
 
             <!-- Role / Character Name -->
             <div class="md:col-span-2 space-y-1">
-              <label
-                class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider"
-                >{{ $t("common.roleCharacter") }}</label
-              >
+              <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("common.roleCharacter")
+              }}</label>
               <input
                 v-model="row.character_name"
                 type="text"
@@ -375,10 +323,9 @@
             </div>
 
             <div class="md:col-span-2 space-y-1">
-              <label
-                class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider"
-                >{{ $t("projectEditor.castNote") }}</label
-              >
+              <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("projectEditor.castNote")
+              }}</label>
               <input
                 v-model="row.note"
                 type="text"
@@ -388,10 +335,9 @@
 
             <!-- Performance Type -->
             <div class="md:col-span-3 space-y-1">
-              <label
-                class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider"
-                >{{ $t("common.performanceType") }}</label
-              >
+              <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("common.performanceType")
+              }}</label>
               <input
                 v-model="row.performance"
                 type="text"
@@ -433,9 +379,7 @@
           class="px-6 py-2.5 theme-primary-bg hover:bg-[var(--app-color-primary-hover)] disabled:opacity-50 text-xs font-bold rounded-xl transition-all shadow-lg flex items-center gap-2"
         >
           <Loader2Icon v-if="isSaving" class="w-4 h-4 animate-spin" />
-          <span>{{
-            isEditMode ? "Enregistrer les modifications" : "Créer le projet"
-          }}</span>
+          <span>{{ isEditMode ? "Enregistrer les modifications" : "Créer le projet" }}</span>
         </button>
       </div>
     </form>
@@ -443,10 +387,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  validateDubbingLanguage,
-  displayDubbingLanguage,
-} from "@app/shared-logic";
+import { validateDubbingLanguage, displayDubbingLanguage } from "@app/shared-logic";
 import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
@@ -462,6 +403,8 @@ import {
   type DubbingProjectSaveResponse,
   type WorkExpectedValues,
 } from "~/utils/dubbing-project-save";
+import { readSingleRouteParam, type DubbingProjectTab } from "~/utils/admin-project-editor-types";
+import type { VoiceActorCreationPayload } from "~/composables/useMetadataCreation";
 
 const route = useRoute();
 const router = useRouter();
@@ -474,12 +417,10 @@ const saveDubbingProject = createDubbingProjectSaveClient((body) =>
   }),
 );
 
-const audiobookIdParam = computed(() => route.params.audiobookId as string);
-const projectIdParam = computed(() => route.params.projectId as string);
+const audiobookIdParam = computed(() => readSingleRouteParam(route.params.audiobookId) ?? "");
+const projectIdParam = computed(() => readSingleRouteParam(route.params.projectId) ?? "");
 
-const isEditMode = computed(
-  () => projectIdParam.value && projectIdParam.value !== "new",
-);
+const isEditMode = computed(() => projectIdParam.value && projectIdParam.value !== "new");
 
 const openLibraryBookId = computed(() => {
   const num = parseInt(audiobookIdParam.value, 10);
@@ -508,7 +449,7 @@ interface CastRow {
 }
 
 const castList = ref<CastRow[]>([]);
-const bookDubbingProjects = ref<any[]>([]);
+const bookDubbingProjects = ref<DubbingProjectTab[]>([]);
 const isLoading = ref(true);
 const isSaving = ref(false);
 const isFetchingMetadata = ref(false);
@@ -536,10 +477,7 @@ async function searchStudios(query: string) {
       .select("id, name")
       .ilike("name", `%${query}%`)
       .limit(10);
-    studioOptions.value = (data || []).map((s: any) => ({
-      id: s.id,
-      name: s.name,
-    }));
+    studioOptions.value = data || [];
   } finally {
     isSearchingStudios.value = false;
   }
@@ -554,7 +492,7 @@ async function searchVoiceActors(query: string) {
       .select("id, firstname, lastname")
       .or(`firstname.ilike.%${query}%,lastname.ilike.%${query}%`)
       .limit(15);
-    voiceActorOptions.value = (data || []).map((v: any) => ({
+    voiceActorOptions.value = (data || []).map((v) => ({
       id: v.id,
       name: `${v.firstname} ${v.lastname}`.trim(),
     }));
@@ -585,26 +523,21 @@ const pendingVaCreationRequests = new Map<string, string>();
 function openCreateVaDialog(name: string, cb: (id: number) => void) {
   const parts = name.trim().split(/\s+/);
   const firstname = parts[0] || "";
-  const providedLastname =
-    parts.slice(1).join(" ") || prompt("Nom de famille du comédien :", "");
+  const providedLastname = parts.slice(1).join(" ") || prompt("Nom de famille du comédien :", "");
   if (!firstname || !providedLastname?.trim()) return;
 
-  const payload = {
+  const payload: VoiceActorCreationPayload = {
     firstname,
     lastname: providedLastname.trim(),
-    status: "active" as const,
+    status: "active",
   };
   const payloadKey = JSON.stringify(payload);
-  const requestId =
-    pendingVaCreationRequests.get(payloadKey) ?? crypto.randomUUID();
+  const requestId = pendingVaCreationRequests.get(payloadKey) ?? crypto.randomUUID();
   pendingVaCreationRequests.set(payloadKey, requestId);
 
   void (async () => {
     try {
-      const { data } = await useMetadataCreation().createVoiceActor(
-        payload,
-        requestId,
-      );
+      const { data } = await useMetadataCreation().createVoiceActor(payload, requestId);
       pendingVaCreationRequests.delete(payloadKey);
       const item = { id: data.id, name: `${data.firstname} ${data.lastname}` };
       voiceActorOptions.value.push(item);
@@ -637,7 +570,9 @@ async function fetchBookMetadata() {
   if (!contentId.value) return;
   isFetchingMetadata.value = true;
   try {
-    const data = await $fetch<any>(`/api/audiobook/${contentId.value}`);
+    const data = await $fetch<{
+      audiobook?: { title: string; cover_url?: string | null } | null;
+    }>(`/api/audiobook/${contentId.value}`);
     if (data?.audiobook) {
       mediaTitle.value = data.audiobook.title;
       posterUrl.value = data.audiobook.cover_url || null;
@@ -699,8 +634,7 @@ onMounted(async () => {
                 name: `${va.firstname} ${va.lastname}`,
               });
             }
-            if (member.job_id === 1)
-              artisticDirectorId.value = member.person_id;
+            if (member.job_id === 1) artisticDirectorId.value = member.person_id;
             if (member.job_id === 3) recordingId.value = member.person_id;
             if (member.job_id === 5) mixingId.value = member.person_id;
           }
@@ -708,7 +642,7 @@ onMounted(async () => {
 
         // Populate cast
         if (project.work) {
-          castList.value = project.work.map((w: any) => {
+          castList.value = project.work.map((w) => {
             if (w.voice_actors) {
               voiceActorOptions.value.push({
                 id: w.voice_actors.id,
@@ -749,16 +683,12 @@ async function saveBookProject() {
   isSaving.value = true;
 
   try {
-    const currentProjectId = isEditMode.value
-      ? Number(projectIdParam.value)
-      : null;
+    const currentProjectId = isEditMode.value ? Number(projectIdParam.value) : null;
     const crew: Array<{ job_id: number; person_id: number }> = [];
     if (artisticDirectorId.value !== null)
       crew.push({ job_id: 1, person_id: artisticDirectorId.value });
-    if (recordingId.value !== null)
-      crew.push({ job_id: 3, person_id: recordingId.value });
-    if (mixingId.value !== null)
-      crew.push({ job_id: 5, person_id: mixingId.value });
+    if (recordingId.value !== null) crew.push({ job_id: 3, person_id: recordingId.value });
+    if (mixingId.value !== null) crew.push({ job_id: 5, person_id: mixingId.value });
 
     const cast: DubbingProjectCastSaveRow[] = castList.value.flatMap((row) => {
       if (!row.voice_actor_id) return [];
@@ -787,8 +717,7 @@ async function saveBookProject() {
 
     const result = await saveDubbingProject({
       project_id: currentProjectId,
-      expected_updated_at:
-        currentProjectId === null ? null : projectUpdatedAt.value,
+      expected_updated_at: currentProjectId === null ? null : projectUpdatedAt.value,
       project: {
         content_id: contentId.value,
         content_type: "audiobook",

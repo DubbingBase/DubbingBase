@@ -6,18 +6,10 @@
     >
       <div>
         <h3 class="text-lg font-bold theme-text">
-          {{
-            isEditMode
-              ? $t("voiceActorEdit.titleEdit")
-              : $t("voiceActorEdit.titleCreate")
-          }}
+          {{ isEditMode ? $t("voiceActorEdit.titleEdit") : $t("voiceActorEdit.titleCreate") }}
         </h3>
         <p class="text-sm theme-text-muted mt-0.5">
-          {{
-            isEditMode
-              ? `Updating database entry ID #${id}`
-              : $t("voiceActorEdit.fillInfo")
-          }}
+          {{ isEditMode ? `Updating database entry ID #${id}` : $t("voiceActorEdit.fillInfo") }}
         </p>
       </div>
       <NuxtLink
@@ -69,12 +61,7 @@
             @click="triggerFileInput"
             class="w-full py-2.5 px-4 theme-surface-muted theme-hover-surface-muted theme-text theme-hover-text font-semibold rounded-xl text-xs border theme-border theme-hover-border transition-all flex items-center justify-center space-x-2"
           >
-            <svg
-              class="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -89,9 +76,7 @@
               />
             </svg>
             <span>{{
-              previewImage
-                ? $t("voiceActorEdit.changeImage")
-                : $t("voiceActorEdit.uploadImage")
+              previewImage ? $t("voiceActorEdit.changeImage") : $t("voiceActorEdit.uploadImage")
             }}</span>
           </button>
           <input
@@ -123,10 +108,9 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
           <!-- First Name -->
           <div class="space-y-1">
-            <label
-              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("admin.movieEditor.firstName") }}</label
-            >
+            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+              $t("admin.movieEditor.firstName")
+            }}</label>
             <input
               v-model="firstname"
               type="text"
@@ -138,10 +122,9 @@
 
           <!-- Last Name -->
           <div class="space-y-1">
-            <label
-              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("admin.movieEditor.lastName") }}</label
-            >
+            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+              $t("admin.movieEditor.lastName")
+            }}</label>
             <input
               v-model="lastname"
               type="text"
@@ -153,10 +136,9 @@
 
           <!-- Nationality -->
           <div class="space-y-1">
-            <label
-              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("profile.nationality") }}</label
-            >
+            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+              $t("profile.nationality")
+            }}</label>
             <input
               v-model="nationality"
               type="text"
@@ -167,10 +149,9 @@
 
           <!-- Date of birth -->
           <div class="space-y-1">
-            <label
-              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("voiceActorEdit.dateOfBirth") }}</label
-            >
+            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+              $t("voiceActorEdit.dateOfBirth")
+            }}</label>
             <input
               v-model="dateOfBirth"
               type="date"
@@ -180,10 +161,9 @@
 
           <!-- TMDB ID -->
           <div class="space-y-1">
-            <label
-              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("voiceActorEdit.tmdbId") }}</label
-            >
+            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+              $t("voiceActorEdit.tmdbId")
+            }}</label>
             <input
               v-model="tmdbId"
               type="number"
@@ -194,10 +174,9 @@
 
           <!-- Wikidata ID -->
           <div class="space-y-1">
-            <label
-              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("voiceActorEdit.wikidataId") }}</label
-            >
+            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+              $t("voiceActorEdit.wikidataId")
+            }}</label>
             <input
               v-model="wikidataId"
               type="text"
@@ -209,10 +188,9 @@
 
         <!-- Biography -->
         <div class="space-y-1">
-          <label
-            class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-            >{{ $t("profile.biography") }}</label
-          >
+          <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+            $t("profile.biography")
+          }}</label>
           <textarea
             v-model="bio"
             rows="4"
@@ -224,10 +202,9 @@
         <!-- Social Media Links -->
         <div class="space-y-1">
           <div class="flex justify-between items-center">
-            <label
-              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("voiceActorEdit.socialMediaLinksJson") }}</label
-            >
+            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+              $t("voiceActorEdit.socialMediaLinksJson")
+            }}</label>
             <span class="text-[10px] theme-text-muted"
               >e.g. {"facebook": "https://...", "twitter": "..."}</span
             >
@@ -320,10 +297,7 @@ const toast = ref({
   type: "info",
 });
 
-const showToast = (
-  message: string,
-  type: "success" | "error" | "info" = "info",
-) => {
+const showToast = (message: string, type: "success" | "error" | "info" = "info") => {
   toast.value = { show: true, message, type };
   setTimeout(() => {
     toast.value.show = false;
@@ -341,15 +315,17 @@ const clearImage = () => {
 };
 
 const onProfilePictureChange = (event: Event) => {
-  const files = (event.target as HTMLInputElement).files;
+  const target = event.target;
+  if (!(target instanceof HTMLInputElement)) return;
+  const files = target.files;
   if (files && files.length > 0 && files[0]) {
     const file = files[0];
     profilePictureFile.value = file;
 
     // Create file reader object for thumbnail preview
     const reader = new FileReader();
-    reader.onload = (e) => {
-      previewImage.value = e.target?.result as string;
+    reader.onload = () => {
+      previewImage.value = typeof reader.result === "string" ? reader.result : null;
     };
     reader.readAsDataURL(file);
   }
@@ -413,15 +389,11 @@ const saveVoiceActor = async () => {
   try {
     let voiceActorId: string | undefined = id ? String(id) : undefined;
     if (isEditMode.value && id) {
-      const { error } = await supabase
-        .from("voice_actors")
-        .update(upsertData)
-        .eq("id", id);
+      const { error } = await supabase.from("voice_actors").update(upsertData).eq("id", id);
       if (error) throw error;
     } else {
       const pendingCreation = pendingVoiceActorCreation;
-      if (!pendingCreation)
-        throw new Error("Voice actor creation was not initialized");
+      if (!pendingCreation) throw new Error("Voice actor creation was not initialized");
       if (pendingCreation.createdVoiceActorId === null) {
         const { data } = await useMetadataCreation().createVoiceActor(
           pendingCreation.payload,
@@ -456,17 +428,11 @@ const saveVoiceActor = async () => {
       router.push(localePath("/admin/voice-actor-spreadsheet"));
     }, 1500);
   } catch (err: unknown) {
-    if (
-      pendingVoiceActorCreation?.createdVoiceActorId === null &&
-      isMetadataValidationError(err)
-    ) {
+    if (pendingVoiceActorCreation?.createdVoiceActorId === null && isMetadataValidationError(err)) {
       pendingVoiceActorCreation = null;
     }
     console.error("Error saving voice actor profile:", err);
-    showToast(
-      err instanceof Error ? err.message : "Failed to save voice actor.",
-      "error",
-    );
+    showToast(err instanceof Error ? err.message : "Failed to save voice actor.", "error");
   } finally {
     isSaving.value = false;
   }

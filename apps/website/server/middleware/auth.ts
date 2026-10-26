@@ -58,7 +58,7 @@ export default defineEventHandler(async (event) => {
       event.context.user = user;
       event.context.supabase = client;
     }
-  } catch (err) {
+  } catch {
     // Cookie resolution failed or no cookie present; ignore for public endpoints
   }
 });

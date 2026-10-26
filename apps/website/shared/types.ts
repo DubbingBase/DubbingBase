@@ -1,3 +1,15 @@
+import type { Database } from "@app/supabase";
+import type { MediaDetailCredits, MediaDetailDubbingProject } from "@app/shared-logic";
+
+type VoiceActorRow = Database["public"]["Tables"]["voice_actors"]["Row"];
+type WorkRow = Database["public"]["Tables"]["work"]["Row"];
+
+export interface WorkVoteSummary {
+  up_count: number;
+  down_count: number;
+  user_vote: string | null;
+}
+
 export interface Movie {
   adult: boolean;
   backdrop_path: string;
@@ -29,31 +41,34 @@ export interface TrendingResponse {
   total_results: number;
 }
 
-export interface VoiceActorDetails {
-  id: number;
-  bio: any;
-  awards: any;
-  lastname: string;
-  firstname: string;
-  nationality: any;
-  years_active: any;
-  date_of_birth: any;
-  social_media_links: any;
-  profile_picture?: string;
-}
+export type VoiceActorDetails = Pick<
+  VoiceActorRow,
+  | "id"
+  | "bio"
+  | "awards"
+  | "lastname"
+  | "firstname"
+  | "nationality"
+  | "years_active"
+  | "date_of_birth"
+  | "social_media_links"
+  | "profile_picture"
+>;
 
-export interface WorkAndVoiceActor {
-  id: number;
+export type WorkAndVoiceActor = Pick<
+  WorkRow,
+  | "id"
+  | "actor_id"
+  | "voice_actor_id"
+  | "highlight"
+  | "suggestions"
+  | "status"
+  | "source_id"
+  | "performance"
+> & {
   content_id: number;
-  actor_id: number;
-  voice_actor_id: number;
-  highlight: boolean;
-  suggestions: any;
-  status: string;
-  source_id: any;
   voiceActorDetails: VoiceActorDetails;
-  performance?: string;
-}
+};
 
 export interface MovieResponse {
   movie: Movie & WithCast & WithExtrernalIds;
@@ -64,8 +79,8 @@ export interface MovieResponse {
     tvdbPeopleId: number;
     showId: number;
   }>;
-  dubbingProjects?: any[];
-  votes?: Record<number, any>;
+  dubbingProjects?: MediaDetailDubbingProject[];
+  votes?: Record<number, WorkVoteSummary>;
   collection?: {
     id: number;
     name: string;
@@ -115,12 +130,12 @@ export interface SerieTrendingResponse {
 
 export interface SerieResponse {
   serie: Serie & WithCast & WithExtrernalIds;
-  votes?: Record<number, any>;
+  votes?: Record<number, WorkVoteSummary>;
 }
 
 export interface ShowResponse {
   serie: Serie & WithCast & WithExtrernalIds;
-  aggregateCredits?: any;
+  aggregateCredits?: MediaDetailCredits;
   characterProfilePictures?: Array<{
     id: number;
     name: string;
@@ -128,8 +143,8 @@ export interface ShowResponse {
     tvdbPeopleId: number;
     showId: number;
   }>;
-  dubbingProjects?: any[];
-  votes?: Record<number, any>;
+  dubbingProjects?: MediaDetailDubbingProject[];
+  votes?: Record<number, WorkVoteSummary>;
 }
 
 export interface ActorCredits {
@@ -286,11 +301,8 @@ export interface IgdbPopularityPrimitive {
 export interface GameResponse {
   game: IgdbGame | null;
   characters: IgdbCharacter[];
-  dubbingProjects: any[];
-  votes: Record<
-    number,
-    { up_count: number; down_count: number; user_vote: string | null }
-  >;
+  dubbingProjects: MediaDetailDubbingProject[];
+  votes: Record<number, WorkVoteSummary>;
 }
 
 export interface OpenLibraryAuthor {
@@ -321,11 +333,8 @@ export interface Audiobook {
 
 export interface AudiobookResponse {
   audiobook: Audiobook | null;
-  dubbingProjects: any[];
-  votes: Record<
-    number,
-    { up_count: number; down_count: number; user_vote: string | null }
-  >;
+  dubbingProjects: MediaDetailDubbingProject[];
+  votes: Record<number, WorkVoteSummary>;
 }
 
 export interface Advertisement {
@@ -345,11 +354,8 @@ export interface Advertisement {
 
 export interface AdvertisementResponse {
   advertisement: Advertisement | null;
-  dubbingProjects: any[];
-  votes: Record<
-    number,
-    { up_count: number; down_count: number; user_vote: string | null }
-  >;
+  dubbingProjects: MediaDetailDubbingProject[];
+  votes: Record<number, WorkVoteSummary>;
 }
 
 export interface PodcastEpisode {
@@ -378,11 +384,8 @@ export interface Podcast {
 
 export interface PodcastResponse {
   podcast: Podcast | null;
-  dubbingProjects: any[];
-  votes: Record<
-    number,
-    { up_count: number; down_count: number; user_vote: string | null }
-  >;
+  dubbingProjects: MediaDetailDubbingProject[];
+  votes: Record<number, WorkVoteSummary>;
 }
 
 export interface Toy {
@@ -399,9 +402,6 @@ export interface Toy {
 
 export interface ToyResponse {
   toy: Toy | null;
-  dubbingProjects: any[];
-  votes: Record<
-    number,
-    { up_count: number; down_count: number; user_vote: string | null }
-  >;
+  dubbingProjects: MediaDetailDubbingProject[];
+  votes: Record<number, WorkVoteSummary>;
 }

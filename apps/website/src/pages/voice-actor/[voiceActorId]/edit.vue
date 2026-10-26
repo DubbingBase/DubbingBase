@@ -6,18 +6,10 @@
     >
       <div>
         <h3 class="text-lg font-bold theme-text">
-          {{
-            isEditMode
-              ? $t("voiceActorEdit.titleEdit")
-              : $t("voiceActorEdit.titleCreate")
-          }}
+          {{ isEditMode ? $t("voiceActorEdit.titleEdit") : $t("voiceActorEdit.titleCreate") }}
         </h3>
         <p class="text-sm theme-text-muted mt-0.5">
-          {{
-            isEditMode
-              ? `Updating database entry ID #${id}`
-              : $t("voiceActorEdit.fillInfo")
-          }}
+          {{ isEditMode ? `Updating database entry ID #${id}` : $t("voiceActorEdit.fillInfo") }}
         </p>
       </div>
       <NuxtLink
@@ -25,11 +17,7 @@
         class="text-xs font-semibold px-4 py-2.5 theme-surface-muted theme-hover-surface-muted theme-text-secondary theme-hover-text rounded-xl border theme-border transition-colors"
       >
         ←
-        {{
-          id
-            ? $t("voiceActorEdit.backToVoiceActor")
-            : $t("voiceActorEdit.backHome")
-        }}
+        {{ id ? $t("voiceActorEdit.backToVoiceActor") : $t("voiceActorEdit.backHome") }}
       </NuxtLink>
     </div>
 
@@ -81,12 +69,7 @@
             @click="triggerFileInput"
             class="w-full py-2.5 px-4 theme-surface-muted theme-hover-surface-muted theme-text theme-hover-text font-semibold rounded-xl text-xs border theme-border theme-hover-border transition-all flex items-center justify-center space-x-2"
           >
-            <svg
-              class="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -101,9 +84,7 @@
               />
             </svg>
             <span>{{
-              previewImage
-                ? $t("voiceActorEdit.changeImage")
-                : $t("voiceActorEdit.uploadImage")
+              previewImage ? $t("voiceActorEdit.changeImage") : $t("voiceActorEdit.uploadImage")
             }}</span>
           </button>
           <input
@@ -135,10 +116,9 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
           <!-- First Name -->
           <div class="space-y-1">
-            <label
-              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("admin.movieEditor.firstName") }}</label
-            >
+            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+              $t("admin.movieEditor.firstName")
+            }}</label>
             <input
               v-model="firstname"
               type="text"
@@ -150,10 +130,9 @@
 
           <!-- Last Name -->
           <div class="space-y-1">
-            <label
-              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("admin.movieEditor.lastName") }}</label
-            >
+            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+              $t("admin.movieEditor.lastName")
+            }}</label>
             <input
               v-model="lastname"
               type="text"
@@ -165,10 +144,9 @@
 
           <!-- Nationality -->
           <div class="space-y-1">
-            <label
-              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("profile.nationality") }}</label
-            >
+            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+              $t("profile.nationality")
+            }}</label>
             <select
               v-model="nationality"
               class="w-full px-4 py-2.5 theme-input border theme-border rounded-xl theme-text theme-placeholder theme-focus text-sm appearance-none"
@@ -201,10 +179,9 @@
 
           <!-- Date of birth -->
           <div class="space-y-1">
-            <label
-              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("voiceActorEdit.dateOfBirth") }}</label
-            >
+            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+              $t("voiceActorEdit.dateOfBirth")
+            }}</label>
             <input
               v-model="dateOfBirth"
               type="date"
@@ -214,10 +191,9 @@
 
           <!-- TMDB ID -->
           <div class="space-y-1">
-            <label
-              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("voiceActorEdit.tmdbId") }}</label
-            >
+            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+              $t("voiceActorEdit.tmdbId")
+            }}</label>
             <input
               v-model="tmdbId"
               type="number"
@@ -228,10 +204,9 @@
 
           <!-- Wikidata ID -->
           <div class="space-y-1">
-            <label
-              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("voiceActorEdit.wikidataId") }}</label
-            >
+            <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+              $t("voiceActorEdit.wikidataId")
+            }}</label>
             <input
               v-model="wikidataId"
               type="text"
@@ -243,10 +218,9 @@
 
         <!-- Biography -->
         <div class="space-y-1">
-          <label
-            class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-            >{{ $t("profile.biography") }}</label
-          >
+          <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+            $t("profile.biography")
+          }}</label>
           <textarea
             v-model="bio"
             rows="4"
@@ -257,16 +231,14 @@
 
         <!-- Social Media Links -->
         <div class="space-y-4">
-          <label
-            class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-            >{{ $t("voiceActorEdit.socialMediaLinks") }}</label
-          >
+          <label class="text-xs font-semibold theme-text-muted uppercase tracking-wider">{{
+            $t("voiceActorEdit.socialMediaLinks")
+          }}</label>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="space-y-1">
-              <label
-                class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider"
-                >{{ $t("voiceActorEdit.instagram") }}</label
-              >
+              <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("voiceActorEdit.instagram")
+              }}</label>
               <input
                 v-model="socialMedia.instagram"
                 type="url"
@@ -275,10 +247,9 @@
               />
             </div>
             <div class="space-y-1">
-              <label
-                class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider"
-                >{{ $t("voiceActorEdit.twitterX") }}</label
-              >
+              <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("voiceActorEdit.twitterX")
+              }}</label>
               <input
                 v-model="socialMedia.twitter"
                 type="url"
@@ -287,10 +258,9 @@
               />
             </div>
             <div class="space-y-1">
-              <label
-                class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider"
-                >{{ $t("voiceActorEdit.tiktok") }}</label
-              >
+              <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("voiceActorEdit.tiktok")
+              }}</label>
               <input
                 v-model="socialMedia.tiktok"
                 type="url"
@@ -299,10 +269,9 @@
               />
             </div>
             <div class="space-y-1">
-              <label
-                class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider"
-                >{{ $t("voiceActorEdit.facebook") }}</label
-              >
+              <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("voiceActorEdit.facebook")
+              }}</label>
               <input
                 v-model="socialMedia.facebook"
                 type="url"
@@ -311,10 +280,9 @@
               />
             </div>
             <div class="space-y-1 md:col-span-2">
-              <label
-                class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider"
-                >{{ $t("voiceActorEdit.website") }}</label
-              >
+              <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("voiceActorEdit.website")
+              }}</label>
               <input
                 v-model="socialMedia.website"
                 type="url"
@@ -385,35 +353,19 @@
             </tr>
           </thead>
           <tbody class="divide-y theme-divide">
-            <tr
-              v-for="work in linkedWorks as any[]"
-              :key="work.id"
-              class="theme-input transition-colors"
-            >
-              <td class="px-4 py-3 font-mono text-xs theme-text-muted">
-                #{{ work.id }}
-              </td>
+            <tr v-for="work in linkedWorks" :key="work.id" class="theme-input transition-colors">
+              <td class="px-4 py-3 font-mono text-xs theme-text-muted">#{{ work.id }}</td>
               <td class="px-4 py-3 font-mono text-xs theme-status-info-text">
-                {{ $t("voiceActorEdit.projectNumber")
-                }}{{ work.dubbing_project_id }}
+                {{ $t("voiceActorEdit.projectNumber") }}{{ work.dubbing_project_id }}
                 <span
                   v-if="work.dubbing_projects?.content_id"
                   class="theme-text-muted text-[10px] block"
-                  >{{ $t("voiceActorEdit.contentNumber")
-                  }}{{ work.dubbing_projects.content_id }}
+                  >{{ $t("voiceActorEdit.contentNumber") }}{{ work.dubbing_projects.content_id }}
                 </span>
               </td>
-              <td
-                class="px-4 py-3 uppercase text-[10px] font-bold tracking-wider theme-text-muted"
-              >
-                <span
-                  class="px-2 py-0.5 rounded theme-surface-muted border theme-border"
-                >
-                  {{
-                    work.dubbing_projects?.content_type ||
-                    work.content_type ||
-                    "movie"
-                  }}
+              <td class="px-4 py-3 uppercase text-[10px] font-bold tracking-wider theme-text-muted">
+                <span class="px-2 py-0.5 rounded theme-surface-muted border theme-border">
+                  {{ work.dubbing_projects?.content_type || work.content_type || "movie" }}
                 </span>
               </td>
               <td class="px-4 py-3 font-medium theme-text">
@@ -444,12 +396,7 @@
                 >
                   <span
                     >{{ $t("common.edit")
-                    }}{{
-                      getMediaTypeLabel(
-                        work.dubbing_projects?.content_type ||
-                          work.content_type,
-                      )
-                    }}</span
+                    }}{{ getMediaTypeLabel(work.dubbing_projects?.content_type) }}</span
                   >
                   <span>↗</span>
                 </NuxtLink>
@@ -480,9 +427,7 @@
       <div
         class="theme-surface-overlay border theme-border rounded-2xl p-6 w-full max-w-2xl shadow-2xl my-8"
       >
-        <div
-          class="flex justify-between items-center pb-4 border-b theme-border"
-        >
+        <div class="flex justify-between items-center pb-4 border-b theme-border">
           <div>
             <h3 class="text-base font-bold theme-text">
               {{ $t("voiceActorEdit.linkNewWork") }}
@@ -495,12 +440,7 @@
             @click="closeLinkWorkModal"
             class="theme-text-muted theme-hover-text p-1 theme-hover-surface-muted rounded-lg transition-colors"
           >
-            <svg
-              class="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -512,9 +452,7 @@
         </div>
 
         <div v-if="linkWorkStep === 1" class="space-y-4 pt-4">
-          <p
-            class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-          >
+          <p class="text-xs font-semibold theme-text-muted uppercase tracking-wider">
             1. {{ $t("voiceActorEdit.selectMediaType") }}
           </p>
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -533,14 +471,10 @@
               "
             >
               <span class="text-lg block mb-1">{{ mt.icon }}</span>
-              <span class="text-xs font-semibold theme-text">{{
-                mt.label
+              <span class="text-xs font-semibold theme-text">{{ mt.label }}</span>
+              <span v-if="mt.note" class="block text-[9px] theme-text-muted mt-0.5">{{
+                mt.note
               }}</span>
-              <span
-                v-if="mt.note"
-                class="block text-[9px] theme-text-muted mt-0.5"
-                >{{ mt.note }}</span
-              >
             </button>
           </div>
         </div>
@@ -551,12 +485,7 @@
               @click="linkWorkStep = 1"
               class="theme-text-muted theme-hover-text p-1 theme-hover-surface-muted rounded transition-colors"
             >
-              <svg
-                class="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -565,9 +494,7 @@
                 />
               </svg>
             </button>
-            <p
-              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-            >
+            <p class="text-xs font-semibold theme-text-muted uppercase tracking-wider">
               2. {{ $t("voiceActorEdit.searchOrCreate") }} —
               <span class="theme-status-info-text">{{ mediaTypeLabel }}</span>
             </p>
@@ -592,15 +519,11 @@
           </div>
 
           <div v-if="mediaSearchLoading" class="flex justify-center py-6">
-            <div
-              class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"
-            ></div>
+            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
           </div>
 
           <div
-            v-else-if="
-              mediaSearchResults.length === 0 && mediaSearchQuery.length >= 2
-            "
+            v-else-if="mediaSearchResults.length === 0 && mediaSearchQuery.length >= 2"
             class="text-center py-6"
           >
             <p class="theme-text-muted text-sm mb-3">
@@ -614,10 +537,7 @@
             </button>
           </div>
 
-          <div
-            v-else-if="mediaSearchResults.length > 0"
-            class="space-y-2 max-h-64 overflow-y-auto"
-          >
+          <div v-else-if="mediaSearchResults.length > 0" class="space-y-2 max-h-64 overflow-y-auto">
             <button
               v-for="item in mediaSearchResults"
               :key="`${item.media_type}-${item.id}`"
@@ -638,17 +558,11 @@
                 <p class="text-sm font-semibold theme-text truncate">
                   {{ item.title || item.name }}
                 </p>
-                <p
-                  class="text-[10px] theme-text-muted uppercase tracking-wider"
-                >
+                <p class="text-[10px] theme-text-muted uppercase tracking-wider">
                   {{ getMediaTypeLabel(item.media_type) }}
                   <span v-if="item.release_date || item.first_air_date">
                     ·
-                    {{
-                      (item.release_date || item.first_air_date || "").split(
-                        "-",
-                      )[0]
-                    }}</span
+                    {{ (item.release_date || item.first_air_date || "").split("-")[0] }}</span
                   >
                   <span v-if="item.author"> · {{ item.author }}</span>
                   <span v-if="item.brand"> · {{ item.brand }}</span>
@@ -674,12 +588,7 @@
               @click="linkWorkStep = 2"
               class="theme-text-muted theme-hover-text p-1 theme-hover-surface-muted rounded transition-colors"
             >
-              <svg
-                class="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -688,16 +597,12 @@
                 />
               </svg>
             </button>
-            <p
-              class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-            >
+            <p class="text-xs font-semibold theme-text-muted uppercase tracking-wider">
               3. {{ $t("voiceActorEdit.linkRole") }}
             </p>
           </div>
 
-          <div
-            class="flex items-center gap-3 p-3 theme-input rounded-xl border theme-border"
-          >
+          <div class="flex items-center gap-3 p-3 theme-input rounded-xl border theme-border">
             <div
               class="h-14 w-10 rounded overflow-hidden border theme-border theme-surface-overlay shrink-0 flex items-center justify-center theme-text-secondary"
             >
@@ -719,18 +624,11 @@
           </div>
 
           <div v-if="linkWorkCastLoading" class="flex justify-center py-6">
-            <div
-              class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"
-            ></div>
+            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
           </div>
 
-          <div
-            v-else-if="linkWorkCast.length > 0"
-            class="space-y-2 max-h-56 overflow-y-auto"
-          >
-            <p
-              class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider"
-            >
+          <div v-else-if="linkWorkCast.length > 0" class="space-y-2 max-h-56 overflow-y-auto">
+            <p class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">
               {{ $t("voiceActorEdit.selectRole") }}
             </p>
             <button
@@ -793,10 +691,9 @@
               </div>
             </div>
             <div class="space-y-1">
-              <label
-                class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider"
-                >{{ $t("admin.movieEditor.performance") }}</label
-              >
+              <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
+                $t("admin.movieEditor.performance")
+              }}</label>
               <select
                 v-model="linkWorkPerformance"
                 class="w-full px-3 py-2 theme-input border theme-border rounded-xl theme-text text-xs"
@@ -841,16 +738,13 @@
           v-if="showCreateMedia"
           class="mt-4 p-4 theme-input border theme-border rounded-xl space-y-3"
         >
-          <p
-            class="text-xs font-semibold theme-text-muted uppercase tracking-wider"
-          >
+          <p class="text-xs font-semibold theme-text-muted uppercase tracking-wider">
             {{ $t("voiceActorEdit.createNew") }} {{ mediaTypeLabel }}
           </p>
           <div class="space-y-1">
-            <label
-              class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("voiceActorEdit.name") }}</label
-            >
+            <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
+              $t("voiceActorEdit.name")
+            }}</label>
             <input
               v-model="createMediaName"
               type="text"
@@ -859,10 +753,9 @@
             />
           </div>
           <div v-if="selectedMediaType === 'advertisement'" class="space-y-1">
-            <label
-              class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("voiceActorEdit.brand") }}</label
-            >
+            <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
+              $t("voiceActorEdit.brand")
+            }}</label>
             <input
               v-model="createMediaBrand"
               type="text"
@@ -871,10 +764,9 @@
             />
           </div>
           <div v-if="selectedMediaType === 'toy'" class="space-y-1">
-            <label
-              class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("voiceActorEdit.manufacturer") }}</label
-            >
+            <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
+              $t("voiceActorEdit.manufacturer")
+            }}</label>
             <input
               v-model="createMediaBrand"
               type="text"
@@ -883,10 +775,9 @@
             />
           </div>
           <div v-if="selectedMediaType === 'audiobook'" class="space-y-1">
-            <label
-              class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("voiceActorEdit.author") }}</label
-            >
+            <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
+              $t("voiceActorEdit.author")
+            }}</label>
             <input
               v-model="createMediaBrand"
               type="text"
@@ -895,10 +786,9 @@
             />
           </div>
           <div v-if="selectedMediaType === 'podcast'" class="space-y-1">
-            <label
-              class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider"
-              >{{ $t("voiceActorEdit.podcastAuthor") }}</label
-            >
+            <label class="text-[10px] font-semibold theme-text-muted uppercase tracking-wider">{{
+              $t("voiceActorEdit.podcastAuthor")
+            }}</label>
             <input
               v-model="createMediaBrand"
               type="text"
@@ -947,8 +837,6 @@
 </template>
 
 <script setup lang="ts">
-const supabase = useSupabaseClient();
-
 import {
   isMetadataValidationError,
   type VoiceActorCreationPayload,
@@ -956,13 +844,54 @@ import {
 import { ref, onMounted, computed, watch } from "vue";
 import { getMediaEditorRoute } from "~/lib/media-editor-routes";
 import { createStableRequestIdFactory } from "~/utils/dubbing-project-save";
+import { readSingleRouteParam } from "~/utils/admin-project-editor-types";
+import type { Database, Json } from "@app/supabase";
+
+type VoiceActorLinkedWork = Database["public"]["Tables"]["work"]["Row"] & {
+  dubbing_projects: Pick<
+    Database["public"]["Tables"]["dubbing_projects"]["Row"],
+    "id" | "content_id" | "content_type"
+  > | null;
+};
+
+type MediaType = "movie" | "tv" | "video_game" | "audiobook" | "podcast" | "advertisement" | "toy";
+
+interface MediaSearchItem {
+  id: number | string;
+  media_type: string;
+  title?: string;
+  name?: string;
+  poster_path?: string | null;
+  cover_url?: string | null;
+  release_date?: string | null;
+  first_air_date?: string | null;
+  author?: string | null;
+  brand?: string | null;
+}
+
+interface LinkWorkCastMember {
+  id: number;
+  name: string;
+  character?: string | null;
+  profile_path?: string | null;
+}
+
+function isJsonRecord(value: Json | null): value is { [key: string]: Json | undefined } {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function readString(value: Json | undefined): string {
+  return typeof value === "string" ? value : "";
+}
+
+const supabase = useSupabaseClient();
 
 const route = useRoute();
 const router = useRouter();
 const localePath = useLocalePath();
 const internalMediaRequestIds = createStableRequestIdFactory();
 const voiceActorWorkRequestIds = createStableRequestIdFactory();
-const voiceActorId = route.params.voiceActorId as string | undefined;
+const voiceActorId = readSingleRouteParam(route.params.voiceActorId);
 const id = voiceActorId;
 const isEditMode = computed(() => !!id && id !== "new");
 
@@ -993,9 +922,8 @@ const profilePicture = ref("");
 const resolvedProfilePicture = computed(() => {
   if (!profilePicture.value) return "";
   if (profilePicture.value.startsWith("http")) return profilePicture.value;
-  return supabase.storage
-    .from("voice_actor_profile_pictures")
-    .getPublicUrl(profilePicture.value).data.publicUrl;
+  return supabase.storage.from("voice_actor_profile_pictures").getPublicUrl(profilePicture.value)
+    .data.publicUrl;
 });
 
 // Upload properties
@@ -1015,10 +943,7 @@ const toast = ref({
   type: "info",
 });
 
-const showToast = (
-  message: string,
-  type: "success" | "error" | "info" = "info",
-) => {
+const showToast = (message: string, type: "success" | "error" | "info" = "info") => {
   toast.value = { show: true, message, type };
   setTimeout(() => {
     toast.value.show = false;
@@ -1036,15 +961,17 @@ const clearImage = () => {
 };
 
 const onProfilePictureChange = (event: Event) => {
-  const files = (event.target as HTMLInputElement).files;
+  const target = event.target;
+  if (!(target instanceof HTMLInputElement)) return;
+  const files = target.files;
   if (files && files.length > 0 && files[0]) {
     const file = files[0];
     profilePictureFile.value = file;
 
     // Create file reader object for thumbnail preview
     const reader = new FileReader();
-    reader.onload = (e) => {
-      previewImage.value = e.target?.result as string;
+    reader.onload = () => {
+      previewImage.value = typeof reader.result === "string" ? reader.result : null;
     };
     reader.readAsDataURL(file);
   }
@@ -1054,11 +981,7 @@ const uploadProfilePicture = async (voiceActorId: string | number) => {
   if (!profilePictureFile.value) return profilePicture.value;
 
   const formData = new FormData();
-  formData.append(
-    "file",
-    profilePictureFile.value,
-    profilePictureFile.value.name,
-  );
+  formData.append("file", profilePictureFile.value, profilePictureFile.value.name);
   formData.append("voice_actor_id", String(voiceActorId));
 
   const result = await $fetch<{ ok: boolean }>("/api/upload-profile-picture", {
@@ -1072,7 +995,7 @@ const uploadProfilePicture = async (voiceActorId: string | number) => {
   return profilePicture.value;
 };
 
-const linkedWorks = ref<any[]>([]);
+const linkedWorks = ref<VoiceActorLinkedWork[]>([]);
 
 function getProjectEditLink(
   contentType?: string | null,
@@ -1132,18 +1055,18 @@ watch(
         awards.value = data.voiceActor.awards || "";
         yearsActive.value = data.voiceActor.years_active || "";
 
-        const links = (data.voiceActor.social_media_links as any) || {};
+        const links = isRecord(data.voiceActor.social_media_links)
+          ? data.voiceActor.social_media_links
+          : {};
         socialMedia.value = {
-          instagram: links.instagram || "",
-          twitter: links.twitter || "",
-          tiktok: links.tiktok || "",
-          facebook: links.facebook || "",
-          website: links.website || "",
+          instagram: readString(links.instagram),
+          twitter: readString(links.twitter),
+          tiktok: readString(links.tiktok),
+          facebook: readString(links.facebook),
+          website: readString(links.website),
         };
 
-        tmdbId.value = data.voiceActor.tmdb_id
-          ? String(data.voiceActor.tmdb_id)
-          : "";
+        tmdbId.value = data.voiceActor.tmdb_id ? String(data.voiceActor.tmdb_id) : "";
         profilePicture.value = data.voiceActor.profile_picture || "";
         wikidataId.value = data.voiceActor.wikidata_id || "";
       }
@@ -1191,15 +1114,11 @@ const saveVoiceActor = async () => {
   try {
     let voiceActorId = id ? String(id) : undefined;
     if (isEditMode.value) {
-      const { error } = await supabase
-        .from("voice_actors")
-        .update(upsertData)
-        .eq("id", numId);
+      const { error } = await supabase.from("voice_actors").update(upsertData).eq("id", numId);
       if (error) throw error;
     } else {
       const pendingCreation = pendingVoiceActorCreation;
-      if (!pendingCreation)
-        throw new Error("Voice actor creation was not initialized");
+      if (!pendingCreation) throw new Error("Voice actor creation was not initialized");
       if (pendingCreation.createdVoiceActorId === null) {
         const { data } = await useMetadataCreation().createVoiceActor(
           pendingCreation.payload,
@@ -1229,17 +1148,11 @@ const saveVoiceActor = async () => {
     pendingVoiceActorCreation = null;
     showToast("Voice actor profile saved successfully!", "success");
   } catch (err: unknown) {
-    if (
-      pendingVoiceActorCreation?.createdVoiceActorId === null &&
-      isMetadataValidationError(err)
-    ) {
+    if (pendingVoiceActorCreation?.createdVoiceActorId === null && isMetadataValidationError(err)) {
       pendingVoiceActorCreation = null;
     }
     console.error("Error saving voice actor profile:", err);
-    showToast(
-      err instanceof Error ? err.message : "Failed to save voice actor.",
-      "error",
-    );
+    showToast(err instanceof Error ? err.message : "Failed to save voice actor.", "error");
   } finally {
     isSaving.value = false;
   }
@@ -1248,13 +1161,13 @@ const saveVoiceActor = async () => {
 // Link Work Modal
 const showLinkWorkModal = ref(false);
 const linkWorkStep = ref(1);
-const selectedMediaType = ref("movie");
+const selectedMediaType = ref<MediaType>("movie");
 const mediaSearchQuery = ref("");
 const dubbingLanguage = ref("");
 const mediaSearchLoading = ref(false);
-const mediaSearchResults = ref<any[]>([]);
-const selectedMedia = ref<any | null>(null);
-const linkWorkCast = ref<any[]>([]);
+const mediaSearchResults = ref<MediaSearchItem[]>([]);
+const selectedMedia = ref<MediaSearchItem | null>(null);
+const linkWorkCast = ref<LinkWorkCastMember[]>([]);
 const linkWorkCastLoading = ref(false);
 const linkWorkActorName = ref("");
 const linkWorkCharacterName = ref("");
@@ -1268,7 +1181,12 @@ const mediaSearchTimer = ref<ReturnType<typeof setTimeout> | null>(null);
 let mediaSearchRequestId = 0;
 let creditsRequestId = 0;
 
-const mediaTypes = [
+const mediaTypes: Array<{
+  value: MediaType;
+  label: string;
+  icon: string;
+  note: string;
+}> = [
   { value: "movie", label: "Movie", icon: "🎬", note: "TMDB" },
   { value: "tv", label: "Series", icon: "📺", note: "TMDB" },
   { value: "video_game", label: "Video Game", icon: "🎮", note: "IGDB" },
@@ -1280,8 +1198,7 @@ const mediaTypes = [
 
 const mediaTypeLabel = computed(() => {
   return (
-    mediaTypes.find((m) => m.value === selectedMediaType.value)?.label ??
-    selectedMediaType.value
+    mediaTypes.find((m) => m.value === selectedMediaType.value)?.label ?? selectedMediaType.value
   );
 });
 
@@ -1323,24 +1240,13 @@ async function executeMediaSearch(requestId: number) {
   }
   mediaSearchLoading.value = true;
   try {
-    const results = await $fetch<any[]>("/api/search", {
+    const results = await $fetch<MediaSearchItem[]>("/api/search", {
       params: { query: q },
     });
     if (requestId !== mediaSearchRequestId) return;
-    mediaSearchResults.value = (results ?? []).filter((r: any) => {
-      if (selectedMediaType.value === "movie") return r.media_type === "movie";
-      if (selectedMediaType.value === "tv") return r.media_type === "tv";
-      if (selectedMediaType.value === "video_game")
-        return r.media_type === "video_game";
-      if (selectedMediaType.value === "audiobook")
-        return r.media_type === "audiobook";
-      if (selectedMediaType.value === "podcast")
-        return r.media_type === "podcast";
-      if (selectedMediaType.value === "advertisement")
-        return r.media_type === "advertisement";
-      if (selectedMediaType.value === "toy") return r.media_type === "toy";
-      return true;
-    });
+    mediaSearchResults.value = results.filter(
+      (item) => item.media_type === selectedMediaType.value,
+    );
   } catch (err) {
     console.error(err);
   } finally {
@@ -1348,7 +1254,7 @@ async function executeMediaSearch(requestId: number) {
   }
 }
 
-async function selectMediaItem(item: any) {
+async function selectMediaItem(item: MediaSearchItem) {
   const requestId = ++creditsRequestId;
   const mediaType = selectedMediaType.value;
   selectedMedia.value = item;
@@ -1358,8 +1264,8 @@ async function selectMediaItem(item: any) {
   if (supportsCast) {
     linkWorkCastLoading.value = true;
     try {
-      const credits: any = await $fetch("/api/internal-media-credits", {
-        params: { media_type: mediaType, media_id: item.id },
+      const credits = await $fetch<{ cast: LinkWorkCastMember[] }>("/api/internal-media-credits", {
+        params: { media_type: mediaType, media_id: Number(item.id) },
       });
       if (
         requestId !== creditsRequestId ||
@@ -1367,7 +1273,7 @@ async function selectMediaItem(item: any) {
         selectedMediaType.value !== mediaType
       )
         return;
-      linkWorkCast.value = (credits.cast ?? []).map((c: any) => ({
+      linkWorkCast.value = (credits.cast ?? []).map((c) => ({
         id: c.id,
         name: c.name,
         character: c.character ?? c.name,
@@ -1426,21 +1332,15 @@ async function submitWorkLink(opts: {
       },
     });
     voiceActorWorkRequestIds.clear();
-    showToast(
-      `Linked to "${selectedMedia.value.title || selectedMedia.value.name}"`,
-      "success",
-    );
+    showToast(`Linked to "${selectedMedia.value.title || selectedMedia.value.name}"`, "success");
     const { data: refreshed } = await supabase
       .from("work")
       .select("*, dubbing_projects(id, content_id, content_type)")
       .eq("voice_actor_id", numId);
     if (refreshed) linkedWorks.value = refreshed;
     closeLinkWorkModal();
-  } catch (err: any) {
-    showToast(
-      err?.data?.message || err?.message || "Failed to link work",
-      "error",
-    );
+  } catch (err: unknown) {
+    showToast(err instanceof Error ? err.message : "Failed to link work", "error");
   } finally {
     isSubmittingWorkLink.value = false;
   }
@@ -1490,11 +1390,8 @@ async function createAndLink() {
     createMediaBrand.value = "";
     linkWorkStep.value = 3;
     linkWorkCast.value = [];
-  } catch (err: any) {
-    showToast(
-      err?.data?.message || err?.message || "Failed to create media",
-      "error",
-    );
+  } catch (err: unknown) {
+    showToast(err instanceof Error ? err.message : "Failed to create media", "error");
   } finally {
     isCreatingMedia.value = false;
   }

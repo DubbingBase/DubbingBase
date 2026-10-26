@@ -1,10 +1,5 @@
-import { useSupabaseAdmin } from "../utils/db/client";
-import { useTmdbClient, useCache } from "../utils";
+import { useTmdbClient } from "../utils";
 import { MediaService } from "../utils/services/media";
-async function initialize(cache: ReturnType<typeof useCache>) {
-  // Font data would be loaded here in a real implementation
-  // For Cloudflare Workers, fonts must be bundled or fetched
-}
 
 async function fetchImageAsDataUri(url: string): Promise<string | null> {
   if (!url) return null;
@@ -12,7 +7,7 @@ async function fetchImageAsDataUri(url: string): Promise<string | null> {
 
   if (finalUrl.includes("127.0.0.1") || finalUrl.includes("localhost")) {
     const config = useRuntimeConfig();
-    const supabaseUrl = config.supabaseUrl as string;
+    const supabaseUrl = typeof config.supabaseUrl === "string" ? config.supabaseUrl : "";
     if (supabaseUrl) {
       try {
         const urlObj = new URL(finalUrl);
@@ -51,8 +46,7 @@ function buildHomeOgImage(lang: string) {
           flexDirection: "column",
           width: "1200px",
           height: "630px",
-          background:
-            "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
+          background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
           color: "white",
           fontFamily: "Inter",
           alignItems: "center",
@@ -97,7 +91,13 @@ function buildHomeOgImage(lang: string) {
 }
 
 function buildMediaOgImage(
-  media: any,
+  media: {
+    title?: string | null;
+    name?: string | null;
+    release_date?: string | null;
+    first_air_date?: string | null;
+    overview?: string | null;
+  },
   posterDataUri: string | null,
   lang: string,
 ) {
@@ -117,8 +117,7 @@ function buildMediaOgImage(
           display: "flex",
           width: "1200px",
           height: "630px",
-          background:
-            "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
+          background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
           color: "white",
           fontFamily: "Inter",
           padding: "60px",
@@ -198,10 +197,7 @@ function buildMediaOgImage(
                       maxHeight: "180px",
                       overflow: "hidden",
                     },
-                    children:
-                      overview.length > 200
-                        ? overview.substring(0, 200) + "..."
-                        : overview,
+                    children: overview.length > 200 ? overview.substring(0, 200) + "..." : overview,
                   },
                 },
                 {
@@ -282,8 +278,7 @@ function buildCareerGridImage(params: {
   const gridX = (svgWidth - rowWidth) / 2;
   const gridHeight = Math.max(0, rows * WORK_HEIGHT + (rows - 1) * WORK_GAP);
 
-  const totalHeight =
-    PADDING + HEADER_HEIGHT + PADDING + gridHeight + PADDING + FOOTER_HEIGHT;
+  const totalHeight = PADDING + HEADER_HEIGHT + PADDING + gridHeight + PADDING + FOOTER_HEIGHT;
 
   const avatarNode = params.avatarDataUri
     ? {
@@ -322,8 +317,7 @@ function buildCareerGridImage(params: {
     const col = i % MAX_COLS;
     const row = Math.floor(i / MAX_COLS);
     const x = gridX + col * (WORK_WIDTH + WORK_GAP);
-    const y =
-      PADDING + HEADER_HEIGHT + PADDING + row * (WORK_HEIGHT + WORK_GAP);
+    const y = PADDING + HEADER_HEIGHT + PADDING + row * (WORK_HEIGHT + WORK_GAP);
 
     const mediaPoster = work.mediaDataUri
       ? {
@@ -426,9 +420,7 @@ function buildCareerGridImage(params: {
                       overflow: "hidden",
                       textOverflow: "ellipsis",
                     },
-                    children: work.characterName
-                      ? `${tAs} ${work.characterName}`
-                      : "",
+                    children: work.characterName ? `${tAs} ${work.characterName}` : "",
                   },
                 },
               ],
@@ -451,8 +443,7 @@ function buildCareerGridImage(params: {
           flexDirection: "column",
           width: `${svgWidth}px`,
           height: `${totalHeight}px`,
-          background:
-            "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
+          background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
           color: "white",
           fontFamily: "Inter",
           padding: `${PADDING}px`,
@@ -545,15 +536,32 @@ function buildCareerGridImage(params: {
   };
 }
 
+type VoiceActorCareerResult = Awaited<ReturnType<MediaService["getVoiceActorWithWorkAndMedia"]>>;
+type MappedCareerWork = {
+  title: string;
+  characterName: string;
+  popularity: number;
+  mediaPosterUrl: string | null;
+  characterImageUrl: string | null;
+};
+
+function getQueryString(value: unknown): string | undefined {
+  return typeof value === "string" ? value : undefined;
+}
+
 export default defineEventHandler(async (event) => {
   try {
     const query = getQuery(event);
-    const typeParam = (query.type as string) || "actor";
-    const langParam = (query.lang as string) || "fr-FR";
+    const typeParam = getQueryString(query.type) || "actor";
+    const langParam = getQueryString(query.lang) || "fr-FR";
 
     let svgWidth = 1200;
     let svgHeight = 630;
-    let template: any = null;
+    let template:
+      | ReturnType<typeof buildHomeOgImage>["template"]
+      | ReturnType<typeof buildMediaOgImage>["template"]
+      | ReturnType<typeof buildCareerGridImage>["template"]
+      | null = null;
 
     const tmdbClient = useTmdbClient();
     const acceptLanguage = getHeader(event, "accept-language") || undefined;
@@ -565,7 +573,7 @@ export default defineEventHandler(async (event) => {
       svgHeight = result.svgHeight;
       template = result.template;
     } else if (typeParam === "movie" || typeParam === "series") {
-      const idParam = query.id as string | undefined;
+      const idParam = getQueryString(query.id);
       if (!idParam) {
         throw createError({ statusCode: 400, message: "Missing id parameter" });
       }
@@ -585,9 +593,7 @@ export default defineEventHandler(async (event) => {
 
       let posterDataUri = null;
       if (media.poster_path) {
-        posterDataUri = await fetchImageAsDataUri(
-          media.poster_path.replace("/w500/", "/w780/"),
-        );
+        posterDataUri = await fetchImageAsDataUri(media.poster_path.replace("/w500/", "/w780/"));
       }
 
       const result = buildMediaOgImage(media, posterDataUri, langParam);
@@ -595,7 +601,7 @@ export default defineEventHandler(async (event) => {
       svgHeight = result.svgHeight;
       template = result.template;
     } else {
-      const idParam = query.id as string | undefined;
+      const idParam = getQueryString(query.id);
       if (!idParam) {
         throw createError({ statusCode: 400, message: "Missing id parameter" });
       }
@@ -604,7 +610,7 @@ export default defineEventHandler(async (event) => {
         throw createError({ statusCode: 400, message: "Invalid id parameter" });
       }
 
-      const result = await mediaService.getVoiceActorWithWorkAndMedia(
+      const result: VoiceActorCareerResult = await mediaService.getVoiceActorWithWorkAndMedia(
         id,
         langParam,
       );
@@ -616,117 +622,44 @@ export default defineEventHandler(async (event) => {
         });
       }
 
-      const { voiceActor, enhancedWorks, medias, characterProfilePictures } =
-        result;
+      const { voiceActor } = result;
+      let mappedWorks: MappedCareerWork[] = result.enhancedWorks.map((item) => {
+        let characterName = item.data?.character || item.work?.performance || "";
+        if (characterName.toLowerCase().includes("dialogue")) {
+          characterName = "";
+        }
 
-      let mappedWorks: any[] = [];
+        let characterImage = item.data?.characterImage || null;
+        if (characterImage && characterImage.includes("/w185/")) {
+          characterImage = characterImage.replace("/w185/", "/w92/");
+        }
 
-      if (enhancedWorks && Array.isArray(enhancedWorks)) {
-        mappedWorks = enhancedWorks.map((item: any) => {
-          let characterName =
-            item.data?.character || item.work?.performance || "";
-          if (characterName.toLowerCase().includes("dialogue")) {
-            characterName = "";
-          }
+        let mediaPoster = item.media?.poster_path || null;
+        if (mediaPoster && mediaPoster.includes("/w500/")) {
+          mediaPoster = mediaPoster.replace("/w500/", "/w92/");
+        } else if (mediaPoster && !mediaPoster.startsWith("http")) {
+          mediaPoster = `https://image.tmdb.org/t/p/w92${mediaPoster}`;
+        }
 
-          let characterImage = item.data?.characterImage || null;
-          if (characterImage && characterImage.includes("/w185/")) {
-            characterImage = characterImage.replace("/w185/", "/w92/");
-          }
+        return {
+          title: item.media?.title || item.media?.name || "Unknown Work",
+          characterName: characterName || "",
+          popularity: item.media?.popularity || 0,
+          mediaPosterUrl: mediaPoster,
+          characterImageUrl: characterImage,
+        };
+      });
 
-          let mediaPoster = item.media?.poster_path || null;
-          if (mediaPoster && mediaPoster.includes("/w500/")) {
-            mediaPoster = mediaPoster.replace("/w500/", "/w92/");
-          } else if (mediaPoster && !mediaPoster.startsWith("http")) {
-            mediaPoster = `https://image.tmdb.org/t/p/w92${mediaPoster}`;
-          }
-
-          return {
-            title: item.media?.title || item.media?.name || "Unknown Work",
-            characterName: characterName || "",
-            popularity: item.media?.popularity || 0,
-            mediaPosterUrl: mediaPoster,
-            characterImageUrl: characterImage,
-          };
-        });
-      } else {
-        mappedWorks = (voiceActor.work || []).reduce((acc: any[], w: any) => {
-          const contentId = w.dubbing_projects?.content_id;
-          const media = (medias || []).find((m: any) => m.id === contentId);
-
-          if (!media || !media.credits?.cast) return acc;
-
-          const castMember = media.credits.cast.find(
-            (c: any) => c.id === w.actor_id,
-          );
-          if (!castMember) return acc;
-
-          let characterName = castMember.character || w.performance || "";
-          if (characterName.toLowerCase().includes("dialogue")) {
-            characterName = "";
-          }
-
-          let characterImage = null;
-          if (castMember.profile_path) {
-            characterImage = castMember.profile_path.replace("/w500/", "/w92/");
-          }
-
-          if (
-            !characterImage &&
-            characterProfilePictures &&
-            Array.isArray(characterProfilePictures)
-          ) {
-            const pic = characterProfilePictures.find(
-              (cp: any) =>
-                (cp.movieId === contentId || cp.showId === contentId) &&
-                cp.name &&
-                characterName &&
-                cp.name.toLowerCase() === characterName.toLowerCase(),
-            );
-            if (pic) {
-              const p = pic as { image?: string; profile_path?: string };
-              characterImage = p.image || p.profile_path || null;
-            }
-          }
-
-          let title = "Unknown Work";
-          let popularity = 0;
-          let mediaPoster = null;
-
-          if (media) {
-            title = media.title || media.name || title;
-            popularity = media.popularity || 0;
-            if (media.poster_path) {
-              mediaPoster = media.poster_path.replace("/w500/", "/w92/");
-            }
-          } else {
-            title = contentId ? `Work #${contentId}` : title;
-          }
-
-          acc.push({
-            title,
-            characterName: characterName || "",
-            popularity,
-            mediaPosterUrl: mediaPoster,
-            characterImageUrl: characterImage,
-          });
-
-          return acc;
-        }, []);
-      }
-
-      mappedWorks.sort((a: any, b: any) => b.popularity - a.popularity);
+      mappedWorks.sort((a, b) => b.popularity - a.popularity);
 
       const totalWorks = mappedWorks.length;
       const DISPLAY_LIMIT = 50;
       const otherRolesCount = Math.max(0, totalWorks - DISPLAY_LIMIT);
       mappedWorks = mappedWorks.slice(0, DISPLAY_LIMIT);
 
-      const worksPromises = mappedWorks.map(async (work: any) => {
+      const worksPromises = mappedWorks.map(async (work) => {
         const [mediaDataUri, characterDataUri] = await Promise.all([
-          work.mediaPosterUrl
-            ? fetchImageAsDataUri(work.mediaPosterUrl)
-            : Promise.resolve(null),
+          work.mediaPosterUrl ? fetchImageAsDataUri(work.mediaPosterUrl) : Promise.resolve(null),
           work.characterImageUrl
             ? fetchImageAsDataUri(work.characterImageUrl)
             : Promise.resolve(null),

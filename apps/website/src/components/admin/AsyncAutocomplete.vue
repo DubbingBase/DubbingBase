@@ -2,7 +2,7 @@
   <div class="relative w-full">
     <ComboboxRoot
       :model-value="modelValue"
-      @update:model-value="(val: any) => $emit('update:modelValue', val)"
+      @update:model-value="updateModelValue"
       :ignore-filter="true"
       :open-on-click="true"
       :open-on-focus="true"
@@ -16,9 +16,7 @@
           :placeholder="placeholder"
           :disabled="disabled"
         />
-        <div
-          class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1"
-        >
+        <div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
           <button
             v-if="modelValue && !disabled"
             type="button"
@@ -42,9 +40,7 @@
           position="popper"
         >
           <ComboboxViewport class="max-h-[300px] overflow-y-auto p-1">
-            <ComboboxEmpty
-              class="theme-text-muted text-sm py-3 px-4 text-center"
-            >
+            <ComboboxEmpty class="theme-text-muted text-sm py-3 px-4 text-center">
               <span v-if="loading">{{ $t("common.searching") }}</span>
               <span v-else>{{ $t("search.noResults") }}</span>
             </ComboboxEmpty>
@@ -108,12 +104,12 @@ const { t } = useI18n();
 
 const props = defineProps<{
   modelValue: number | string | null;
-  options: any[];
+  options: Array<{ id: number | string; [key: string]: unknown }>;
   loading?: boolean;
   placeholder?: string;
   disabled?: boolean;
   allowCreate?: boolean;
-  displayFn: (val: any) => string;
+  displayFn: (val: number | string) => string;
 }>();
 
 const emit = defineEmits<{
@@ -121,6 +117,10 @@ const emit = defineEmits<{
   (e: "search", query: string): void;
   (e: "create", query: string): void;
 }>();
+
+function updateModelValue(value: number | string | null) {
+  emit("update:modelValue", value);
+}
 
 const searchTerm = ref("");
 
@@ -138,10 +138,7 @@ watch(
 
 const debouncedSearch = useDebounceFn((query: string) => {
   // Prevent searching when the input just synced with the selected model value
-  if (
-    props.modelValue !== null &&
-    query === props.displayFn(props.modelValue)
-  ) {
+  if (props.modelValue !== null && query === props.displayFn(props.modelValue)) {
     return;
   }
   emit("search", query);

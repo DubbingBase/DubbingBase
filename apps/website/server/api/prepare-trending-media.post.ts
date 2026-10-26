@@ -2,17 +2,52 @@ import { useSupabaseAdmin } from "../utils/db/client";
 import { buildTmdbImageUrl } from "../utils/urls/tmdb";
 import { sendDiscordAdminNotification } from "../utils/notifications/discord";
 import { requireAdmin } from "../utils/auth";
+import { z } from "zod";
+
+const trendingResponseSchema = z.object({
+  results: z.array(
+    z
+      .object({
+        id: z.number(),
+        adult: z.boolean().optional(),
+        popularity: z.number().optional(),
+        poster_path: z.string().nullable().optional(),
+      })
+      .passthrough(),
+  ),
+});
+
+async function readJson(response: Response): Promise<unknown> {
+  return response.json();
+}
+
+type TrendingResult = z.infer<typeof trendingResponseSchema>["results"][number];
+type TrendingMedia = TrendingResult & {
+  popularity: number;
+  type: "movie" | "tv";
+};
+
+function prepareTrendingItems(
+  items: TrendingResult[],
+  type: TrendingMedia["type"],
+): TrendingMedia[] {
+  return items
+    .filter((item) => item.adult !== true)
+    .map((item) => ({
+      ...item,
+      popularity: item.popularity ?? 0,
+      type,
+    }));
+}
 
 export default defineEventHandler(async (event) => {
   const internalSecret = getHeader(event, "x-internal-secret");
   const authHeader = getHeader(event, "authorization");
   const apiKeyHeader = getHeader(event, "apikey");
-  const bearerToken = authHeader?.startsWith("Bearer ")
-    ? authHeader.slice(7).trim()
-    : null;
+  const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
   const config = useRuntimeConfig(event);
   const secretKey =
-    (config.supabaseSecretKey as string) ||
+    (typeof config.supabaseSecretKey === "string" ? config.supabaseSecretKey : "") ||
     process.env.SUPABASE_SECRET_KEY ||
     process.env.NUXT_SUPABASE_SECRET_KEY ||
     "";
@@ -56,31 +91,18 @@ export default defineEventHandler(async (event) => {
       throw new Error(`TV Shows API request failed: ${showsResponse.status}`);
     }
 
-    const [moviesData, showsData] = await Promise.all([
-      moviesResponse.json(),
-      showsResponse.json(),
+    const [moviesPayload, showsPayload] = await Promise.all([
+      readJson(moviesResponse),
+      readJson(showsResponse),
     ]);
+    const moviesData = trendingResponseSchema.parse(moviesPayload);
+    const showsData = trendingResponseSchema.parse(showsPayload);
 
-    const movies = (moviesData.results || [])
-      .filter((item: any) => item.adult !== true)
-      .map((item: any) => ({
-        ...item,
-        type: "movie" as const,
-      }));
+    const movies = prepareTrendingItems(moviesData.results, "movie");
+    const shows = prepareTrendingItems(showsData.results, "tv");
 
-    const shows = (showsData.results || [])
-      .filter((item: any) => item.adult !== true)
-      .map((item: any) => ({
-        ...item,
-        type: "tv" as const,
-      }));
-
-    const topMovies = movies
-      .sort((a: any, b: any) => b.popularity - a.popularity)
-      .slice(0, 10);
-    const topShows = shows
-      .sort((a: any, b: any) => b.popularity - a.popularity)
-      .slice(0, 10);
+    const topMovies = movies.sort((a, b) => b.popularity - a.popularity).slice(0, 10);
+    const topShows = shows.sort((a, b) => b.popularity - a.popularity).slice(0, 10);
     const itemsToProcess = [...topMovies, ...topShows];
 
     const supabaseAdmin = useSupabaseAdmin(event);
@@ -92,15 +114,11 @@ export default defineEventHandler(async (event) => {
       .in("content_id", contentIds);
 
     if (projectsError) {
-      throw new Error(
-        `Failed to fetch existing projects: ${projectsError.message}`,
-      );
+      throw new Error(`Failed to fetch existing projects: ${projectsError.message}`);
     }
 
     const itemsWithVoiceActors = new Set(
-      (existingProjects || []).map(
-        (p: any) => `${p.content_type}-${p.content_id}`,
-      ),
+      (existingProjects || []).map((project) => `${project.content_type}-${project.content_id}`),
     );
 
     let enqueuedCount = 0;
@@ -137,15 +155,11 @@ export default defineEventHandler(async (event) => {
       imageUrl = buildTmdbImageUrl(itemsToProcess[0].poster_path) || undefined;
     }
 
-    await sendDiscordAdminNotification(
-      "DubbingBase Trending Media Report",
-      summaryMessage,
-      {
-        event,
-        queue: "wiki_discovery",
-        ...(imageUrl ? { imageUrl } : {}),
-      },
-    );
+    await sendDiscordAdminNotification("DubbingBase Trending Media Report", summaryMessage, {
+      event,
+      queue: "wiki_discovery",
+      ...(imageUrl ? { imageUrl } : {}),
+    });
 
     return {
       ok: true,
@@ -158,8 +172,7 @@ export default defineEventHandler(async (event) => {
       },
     };
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error occurred";
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
     console.error("Trending media queuing failed:", errorMessage);
 
     await sendDiscordAdminNotification(

@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
       throw error;
     }
 
-    const subscriptions = data.map((sub: any) => ({
+    const subscriptions = data.map((sub) => ({
       voice_actor_id: sub.voice_actor_id,
       firstname: Array.isArray(sub.voice_actors)
         ? sub.voice_actors[0]?.firstname
@@ -58,10 +58,7 @@ export default defineEventHandler(async (event) => {
         .insert({ user_id: userId, voice_actor_id: voiceActorId });
 
       if (error && error.code !== "23505") {
-        console.error(
-          "[manage-subscription] DB Error during subscribe:",
-          error,
-        );
+        console.error("[manage-subscription] DB Error during subscribe:", error);
         throw error;
       }
     } else if (action === "unsubscribe") {
@@ -72,10 +69,7 @@ export default defineEventHandler(async (event) => {
         .eq("voice_actor_id", voiceActorId);
 
       if (error) {
-        console.error(
-          "[manage-subscription] DB Error during unsubscribe:",
-          error,
-        );
+        console.error("[manage-subscription] DB Error during unsubscribe:", error);
         throw error;
       }
     }

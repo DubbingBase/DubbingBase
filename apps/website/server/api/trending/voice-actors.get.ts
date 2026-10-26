@@ -1,5 +1,10 @@
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { buildSupabaseImageUrl } from "../../utils/urls/supabase";
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const limit = query.limit === undefined ? 10 : Number(query.limit);
@@ -27,16 +32,24 @@ export default defineEventHandler(async (event) => {
 
     if (error) throw error;
 
-    return (data || []).map((result: any) => ({
-      ...result.voice_actor,
-      work_count: result.work_count,
-      profile_picture: buildSupabaseImageUrl(
-        result.voice_actor.profile_picture,
-        "voice_actor_profile_pictures",
-        "500",
-      ),
-    }));
-  } catch (error: any) {
+    return (data || []).flatMap((result) => {
+      const voiceActor = result.voice_actor;
+      if (!isRecord(voiceActor)) return [];
+      const profilePicture = voiceActor.profile_picture;
+
+      return [
+        {
+          ...voiceActor,
+          work_count: result.work_count,
+          profile_picture: buildSupabaseImageUrl(
+            typeof profilePicture === "string" ? profilePicture : null,
+            "voice_actor_profile_pictures",
+            "500",
+          ),
+        },
+      ];
+    });
+  } catch (error: unknown) {
     console.error("Error in trending voice actors:", error);
     throw createError({
       statusCode: 500,

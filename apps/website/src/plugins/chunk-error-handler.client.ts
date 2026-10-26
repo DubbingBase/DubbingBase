@@ -1,4 +1,4 @@
-export default defineNuxtPlugin((nuxtApp) => {
+export default defineNuxtPlugin(() => {
   const router = useRouter();
 
   router.onError((error, to) => {
@@ -8,9 +8,7 @@ export default defineNuxtPlugin((nuxtApp) => {
       error.message.includes("dynamically imported module");
 
     if (isChunkError) {
-      console.warn(
-        "Chunk loading failed (likely due to a new deployment). Reloading page...",
-      );
+      console.warn("Chunk loading failed (likely due to a new deployment). Reloading page...");
       window.location.href = to.fullPath;
     }
   });

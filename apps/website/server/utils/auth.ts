@@ -1,6 +1,7 @@
 import type { User } from "@supabase/supabase-js";
+import type { H3Event } from "h3";
 
-export function requireUser(event: any): User {
+export function requireUser(event: H3Event): User {
   const user = event.context.user;
   if (!user) {
     throw createError({ statusCode: 401, message: "Unauthorized" });
@@ -8,7 +9,7 @@ export function requireUser(event: any): User {
   return user;
 }
 
-export function requireAdmin(event: any): User {
+export function requireAdmin(event: H3Event): User {
   const user = requireUser(event);
   const isAdmin = user.app_metadata?.role === "admin";
 

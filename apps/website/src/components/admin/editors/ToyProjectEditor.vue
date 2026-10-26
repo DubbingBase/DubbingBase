@@ -434,6 +434,8 @@ import {
   type DubbingProjectSaveResponse,
   type WorkExpectedValues,
 } from "~/utils/dubbing-project-save";
+import { readSingleRouteParam, type DubbingProjectTab } from "~/utils/admin-project-editor-types";
+import type { VoiceActorCreationPayload } from "~/composables/useMetadataCreation";
 
 const route = useRoute();
 const router = useRouter();
@@ -456,8 +458,8 @@ const saveToyMetadata = (body: {
     { method: "POST", body },
   );
 
-const toyIdParam = computed(() => route.params.toyId as string);
-const projectIdParam = computed(() => route.params.projectId as string);
+const toyIdParam = computed(() => readSingleRouteParam(route.params.toyId) ?? "");
+const projectIdParam = computed(() => readSingleRouteParam(route.params.projectId) ?? "");
 
 const isEditMode = computed(() => projectIdParam.value && projectIdParam.value !== "new");
 
@@ -503,7 +505,7 @@ interface CastRow {
 }
 
 const castList = ref<CastRow[]>([]);
-const toyDubbingProjects = ref<any[]>([]);
+const toyDubbingProjects = ref<DubbingProjectTab[]>([]);
 const isLoading = ref(true);
 const isSaving = ref(false);
 
@@ -529,10 +531,7 @@ async function searchStudios(query: string) {
       .select("id, name")
       .ilike("name", `%${query}%`)
       .limit(10);
-    studioOptions.value = (data || []).map((s: any) => ({
-      id: s.id,
-      name: s.name,
-    }));
+    studioOptions.value = data || [];
   } finally {
     isSearchingStudios.value = false;
   }
@@ -547,7 +546,7 @@ async function searchVoiceActors(query: string) {
       .select("id, firstname, lastname")
       .or(`firstname.ilike.%${query}%,lastname.ilike.%${query}%`)
       .limit(15);
-    voiceActorOptions.value = (data || []).map((v: any) => ({
+    voiceActorOptions.value = (data || []).map((v) => ({
       id: v.id,
       name: `${v.firstname} ${v.lastname}`.trim(),
     }));
@@ -581,10 +580,10 @@ function openCreateVaDialog(name: string, cb: (id: number) => void) {
   const providedLastname = parts.slice(1).join(" ") || prompt("Nom de famille du comédien :", "");
   if (!firstname || !providedLastname?.trim()) return;
 
-  const payload = {
+  const payload: VoiceActorCreationPayload = {
     firstname,
     lastname: providedLastname.trim(),
-    status: "active" as const,
+    status: "active",
   };
   const payloadKey = JSON.stringify(payload);
   const requestId = pendingVaCreationRequests.get(payloadKey) ?? crypto.randomUUID();
@@ -692,7 +691,7 @@ onMounted(async () => {
         }
 
         if (project.work) {
-          castList.value = project.work.map((w: any) => {
+          castList.value = project.work.map((w) => {
             if (w.voice_actors) {
               voiceActorOptions.value.push({
                 id: w.voice_actors.id,

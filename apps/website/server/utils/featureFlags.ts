@@ -11,8 +11,14 @@ export async function isEnqueueOnNavigateEnabled(): Promise<boolean> {
       }),
     });
     if (!res.ok) throw new Error(`${res.status}`);
-    const data: any = await res.json();
-    return !!data.featureFlags?.["enqueue-on-navigate"];
+    const data: unknown = await res.json();
+    if (typeof data !== "object" || data === null) return false;
+    const featureFlags = Reflect.get(data, "featureFlags");
+    return (
+      typeof featureFlags === "object" &&
+      featureFlags !== null &&
+      Reflect.get(featureFlags, "enqueue-on-navigate") === true
+    );
   } catch {
     return false;
   }

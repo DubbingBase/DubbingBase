@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="min-h-screen theme-bg theme-text py-8 px-4 sm:px-6 lg:px-8 font-sans"
-  >
+  <div class="min-h-screen theme-bg theme-text py-8 px-4 sm:px-6 lg:px-8 font-sans">
     <div class="max-w-7xl mx-auto space-y-6">
       <div class="flex justify-between items-center">
         <div>
@@ -16,12 +14,7 @@
           @click="() => loadLogs()"
           class="p-2 theme-surface theme-hover-surface-muted rounded-lg border theme-border transition-colors theme-text-muted theme-hover-text"
         >
-          <svg
-            class="w-5 h-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -81,20 +74,13 @@
                   >{{ log.entity_type }} ({{ log.entity_id }})</span
                 >
               </td>
-              <td class="p-4 theme-status-success-text font-mono">
-                +{{ log.points_awarded }}
-              </td>
+              <td class="p-4 theme-status-success-text font-mono">+{{ log.points_awarded }}</td>
               <td class="p-4">
                 <span
                   v-if="log.reverted_at"
                   class="theme-status-danger-text flex items-center gap-1"
                 >
-                  <svg
-                    class="w-4 h-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
@@ -104,16 +90,8 @@
                   </svg>
                   {{ $t("admin.auditLogs.reverted") }}
                 </span>
-                <span
-                  v-else
-                  class="theme-status-success-text flex items-center gap-1"
-                >
-                  <svg
-                    class="w-4 h-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
+                <span v-else class="theme-status-success-text flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
@@ -186,15 +164,8 @@
           v-if="conflictError"
           class="p-4 theme-status-warning border border-[var(--app-color-warning-border)] rounded-lg space-y-3"
         >
-          <p
-            class="theme-status-warning-text font-bold flex items-center gap-2"
-          >
-            <svg
-              class="w-5 h-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
+          <p class="theme-status-warning-text font-bold flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -213,9 +184,7 @@
               <span class="theme-text-muted uppercase block text-[10px]">{{
                 $t("admin.auditLogs.previousSafe")
               }}</span>
-              <div
-                class="theme-bg p-2 rounded border theme-border break-all truncate"
-              >
+              <div class="theme-bg p-2 rounded border theme-border break-all truncate">
                 {{ conflictError.previousValue || "null" }}
               </div>
             </div>
@@ -223,20 +192,15 @@
               <span class="theme-text-muted uppercase block text-[10px]">{{
                 $t("admin.auditLogs.whatTheySet")
               }}</span>
-              <div
-                class="theme-bg p-2 rounded border theme-border break-all truncate"
-              >
+              <div class="theme-bg p-2 rounded border theme-border break-all truncate">
                 {{ conflictError.loggedValue || "null" }}
               </div>
             </div>
             <div class="space-y-1">
-              <span
-                class="theme-status-success-text uppercase block text-[10px]"
-                >{{ $t("admin.auditLogs.currentDbState") }}</span
-              >
-              <div
-                class="theme-bg p-2 rounded border theme-border break-all truncate"
-              >
+              <span class="theme-status-success-text uppercase block text-[10px]">{{
+                $t("admin.auditLogs.currentDbState")
+              }}</span>
+              <div class="theme-bg p-2 rounded border theme-border break-all truncate">
                 {{ conflictError.currentValue || "null" }}
               </div>
             </div>
@@ -288,9 +252,7 @@
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               ></path>
             </svg>
-            <span v-if="conflictError">{{
-              $t("admin.auditLogs.forceResolve")
-            }}</span>
+            <span v-if="conflictError">{{ $t("admin.auditLogs.forceResolve") }}</span>
             <span v-else>{{ $t("admin.auditLogs.confirmRevert") }}</span>
           </button>
         </div>
@@ -301,6 +263,15 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import type { Database } from "@app/supabase";
+import type { Json } from "@app/supabase";
+
+type AuditLog = Database["public"]["Tables"]["audit_logs"]["Row"];
+type RevertTaskResult = {
+  success?: boolean;
+  error?: string;
+  previousValue?: Json | null;
+};
 
 definePageMeta({
   layout: "admin",
@@ -309,13 +280,13 @@ definePageMeta({
 
 const supabase = useSupabaseClient();
 const { t } = useI18n();
-const logs = ref<any[]>([]);
+const logs = ref<AuditLog[]>([]);
 const isLoading = ref(true);
 
 const showModal = ref(false);
-const selectedLog = ref<any>(null);
+const selectedLog = ref<AuditLog | null>(null);
 const isReverting = ref(false);
-const conflictError = ref<any>(null);
+const conflictError = ref<RevertTaskResult | null>(null);
 const resolvedValue = ref<string>("");
 
 const {
@@ -352,7 +323,7 @@ watch(
   { immediate: true },
 );
 
-const openRevertModal = (log: any) => {
+const openRevertModal = (log: AuditLog) => {
   selectedLog.value = log;
   conflictError.value = null;
   resolvedValue.value = "";
@@ -370,7 +341,11 @@ const confirmRevert = async () => {
   isReverting.value = true;
 
   try {
-    const payload: any = { auditLogId: selectedLog.value.id };
+    const payload: {
+      auditLogId: string;
+      force?: boolean;
+      resolvedValue?: string;
+    } = { auditLogId: selectedLog.value.id };
 
     // If we're resolving a conflict, send the forced value
     if (conflictError.value) {
@@ -378,7 +353,7 @@ const confirmRevert = async () => {
       payload.resolvedValue = resolvedValue.value;
     }
 
-    const data = await $fetch<any>("/api/revert-task", {
+    const data = await $fetch<RevertTaskResult>("/api/revert-task", {
       method: "POST",
       body: payload,
     });
@@ -386,7 +361,7 @@ const confirmRevert = async () => {
     if (data?.error === "ERR_STATE_CHANGED") {
       conflictError.value = data;
       // Pre-fill with previous safe value
-      resolvedValue.value = data.previousValue || "";
+      resolvedValue.value = typeof data.previousValue === "string" ? data.previousValue : "";
       return; // Stop here and let them see the conflict modal
     }
 
