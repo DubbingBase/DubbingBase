@@ -1,4 +1,4 @@
--- Run after migration 20261009184547_consolidate_wikipedia_scan_queue.sql.
+-- Run after migration 20261026195011_allow_enqueue_for_empty_projects.sql.
 \set ON_ERROR_STOP on
 BEGIN;
 
@@ -10,6 +10,10 @@ DECLARE
   v_message jsonb;
   v_ready text[];
   v_blocked boolean := false;
+  v_empty_project_id bigint;
+  v_populated_project_id bigint;
+  v_empty_scan_id bigint;
+  v_empty_extract_id bigint;
 BEGIN
   IF has_function_privilege('anon','public.get_ready_media_queues()','EXECUTE')
     OR has_function_privilege('authenticated','public.get_ready_media_queues()','EXECUTE')
@@ -65,6 +69,61 @@ BEGIN
     v_blocked := SQLERRM LIKE '%unsupported fields%';
   END;
   IF NOT v_blocked THEN RAISE EXCEPTION 'Untrusted scan metadata overwrote protected extraction identity'; END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM public.dubbing_projects
+    WHERE content_id IN (-980505, -980506) AND content_type = 'movie' AND language = 'fr-FR'
+  ) THEN
+    RAISE EXCEPTION 'Empty-project enqueue fixtures are already present';
+  END IF;
+
+  INSERT INTO public.dubbing_projects(content_id, content_type, language)
+  VALUES (-980505, 'movie', 'fr-FR')
+  RETURNING id INTO v_empty_project_id;
+
+  v_empty_scan_id := public.enqueue_media_fetch(
+    p_tmdb_id => -980505, p_media_type => 'movie',
+    p_wikipedia_language => 'fr', p_dubbing_language => 'fr-FR'
+  );
+  v_empty_extract_id := public.enqueue_media_extract(
+    p_tmdb_id => -980505, p_media_type => 'movie',
+    p_language => 'fr', p_page_id => 12345, p_section_indexes => '[2]'::jsonb,
+    p_wikipedia_language => 'fr', p_dubbing_language => 'fr-FR'
+  );
+  IF NOT EXISTS (SELECT 1 FROM pgmq.q_wiki_scan WHERE msg_id = v_empty_scan_id)
+    OR NOT EXISTS (SELECT 1 FROM pgmq.q_wiki_extract WHERE msg_id = v_empty_extract_id)
+    OR EXISTS (SELECT 1 FROM public.work WHERE dubbing_project_id = v_empty_project_id) THEN
+    RAISE EXCEPTION 'An empty regional project did not allow both enqueue stages';
+  END IF;
+
+  INSERT INTO public.dubbing_projects(content_id, content_type, language)
+  VALUES (-980506, 'movie', 'fr-FR')
+  RETURNING id INTO v_populated_project_id;
+  INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_id, character_name)
+  VALUES (v_populated_project_id, NULL, NULL, NULL, 'Existing fixture credit');
+
+  v_blocked := false;
+  BEGIN
+    PERFORM public.enqueue_media_fetch(
+      p_tmdb_id => -980506, p_media_type => 'movie',
+      p_wikipedia_language => 'fr', p_dubbing_language => 'fr-FR'
+    );
+  EXCEPTION WHEN raise_exception THEN
+    v_blocked := SQLERRM LIKE 'Dubbing project already exists for %';
+  END;
+  IF NOT v_blocked THEN RAISE EXCEPTION 'A populated project did not block wiki_scan enqueue'; END IF;
+
+  v_blocked := false;
+  BEGIN
+    PERFORM public.enqueue_media_extract(
+      p_tmdb_id => -980506, p_media_type => 'movie',
+      p_language => 'fr', p_page_id => 12346, p_section_indexes => '[2]'::jsonb,
+      p_wikipedia_language => 'fr', p_dubbing_language => 'fr-FR'
+    );
+  EXCEPTION WHEN raise_exception THEN
+    v_blocked := SQLERRM LIKE 'Dubbing project already exists for %';
+  END;
+  IF NOT v_blocked THEN RAISE EXCEPTION 'A populated project did not block extraction enqueue'; END IF;
 
   UPDATE pgmq.q_wiki_scan SET vt=clock_timestamp()-interval '1 second';
   UPDATE pgmq.q_wiki_extract SET vt=clock_timestamp()-interval '1 second';
