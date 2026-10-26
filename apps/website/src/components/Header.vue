@@ -8,11 +8,7 @@
         <div
           class="w-9 h-9 rounded-xl overflow-hidden shadow-sm ring-1 theme-ring-subtle group-hover:shadow-md transition-all"
         >
-          <img
-            src="/favicon-96x96.png"
-            alt="Logo"
-            class="w-full h-full object-cover"
-          />
+          <img src="/favicon-96x96.png" alt="Logo" class="w-full h-full object-cover" />
         </div>
         <span class="text-xl font-bold tracking-tight theme-text hidden sm:block">
           {{ t("app.title") }}
@@ -92,6 +88,8 @@
                     v-for="theme in themePreferences"
                     :key="theme"
                     :href="aboutPreferenceHref('theme', theme)"
+                    data-about-preference="theme"
+                    :data-preference-value="theme"
                     class="rounded-lg px-2.5 py-1.5 text-xs theme-text-secondary theme-hover-surface-muted"
                   >
                     {{ t(`theme.${theme}`) }}
@@ -107,6 +105,8 @@
                     v-for="language in aboutLanguages"
                     :key="language"
                     :href="aboutPreferenceHref('lang', language)"
+                    data-about-preference="lang"
+                    :data-preference-value="language"
                     class="rounded-lg px-2.5 py-1.5 text-xs theme-text-secondary theme-hover-surface-muted"
                   >
                     {{ t(`language.${language}`) }}
@@ -183,8 +183,8 @@ const aboutLanguages = ["en", "fr", "es", "ja"] as const;
 const isAboutRoute = computed(() => ABOUT_ROUTES.has(route.path));
 
 const aboutPreferenceHref = (key: "lang" | "theme", value: string): string => {
-  const query = new URLSearchParams({ [key]: value });
-  return `${route.path}?${query.toString()}`;
+  if (key === "lang") return value === "en" ? "/about" : `/${value}/about`;
+  return `?theme=${encodeURIComponent(value)}`;
 };
 
 const isHomePage = computed(() => {

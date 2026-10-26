@@ -9,6 +9,10 @@ const aboutPages = [
   "es/about/index.html",
   "ja/about/index.html",
 ];
+const aboutPreferencesScript = await readFile(
+  resolve(import.meta.dirname, "about-preferences.js"),
+  "utf8",
+);
 
 function getStylesheetHref(html, pagePath) {
   const links = [...html.matchAll(/<link\b[^>]*\brel=["']stylesheet["'][^>]*>/g)];
@@ -56,21 +60,17 @@ for (const pagePath of aboutPages) {
   }
 
   const htmlWithAboutStylesheet = html.replace(stylesheetHref, aboutStylesheetHref);
-  const lightHtml = htmlWithAboutStylesheet.replace(
-    'data-theme="dark"',
-    'data-theme="light"',
-  );
-  if (lightHtml === htmlWithAboutStylesheet) {
-    throw new Error(`Expected a prerendered theme attribute in ${pagePath}`);
+  if (!htmlWithAboutStylesheet.includes("</head>")) {
+    throw new Error(`Expected a head close tag in ${pagePath}`);
   }
 
-  const lightPagePath = pagePath.replace(/\/index\.html$/, ".light.html");
-  await Promise.all([
-    writeFile(resolve(publicDirectory, pagePath), htmlWithAboutStylesheet),
-    writeFile(resolve(publicDirectory, lightPagePath), lightHtml),
-  ]);
+  const htmlWithAboutPreferences = htmlWithAboutStylesheet.replace(
+    "</head>",
+    `<script id="about-preferences">${aboutPreferencesScript}</script></head>`,
+  );
+  await writeFile(resolve(publicDirectory, pagePath), htmlWithAboutPreferences);
 }
 
 console.log(
-  `About assets: removed ${fontFaces.length} unused font-face rules (${Buffer.byteLength(stylesheet) - Buffer.byteLength(aboutStylesheet)} bytes before compression) and generated light-theme pages`,
+  `About assets: removed ${fontFaces.length} unused font-face rules (${Buffer.byteLength(stylesheet) - Buffer.byteLength(aboutStylesheet)} bytes before compression) and injected static preference behavior`,
 );
