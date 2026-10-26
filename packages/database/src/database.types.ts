@@ -355,7 +355,7 @@ export type Database = {
           logo_url: string | null;
           name: string;
           social_media_links: Json | null;
-          updated_at: string | null;
+          updated_at: string;
           website_url: string | null;
         };
         Insert: {
@@ -367,7 +367,7 @@ export type Database = {
           logo_url?: string | null;
           name: string;
           social_media_links?: Json | null;
-          updated_at?: string | null;
+          updated_at?: string;
           website_url?: string | null;
         };
         Update: {
@@ -379,7 +379,7 @@ export type Database = {
           logo_url?: string | null;
           name?: string;
           social_media_links?: Json | null;
-          updated_at?: string | null;
+          updated_at?: string;
           website_url?: string | null;
         };
         Relationships: [];
