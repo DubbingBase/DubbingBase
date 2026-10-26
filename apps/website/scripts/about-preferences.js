@@ -30,6 +30,9 @@
   };
   if (languages.includes(selectedLocale)) writeCookie("user_lang", selectedLocale);
   if (themes.includes(selectedTheme)) writeCookie("dubbingbase-theme", selectedTheme);
+  if (lightThemePage && theme === "light" && themeCookie !== "light") {
+    writeCookie("dubbingbase-theme", "light");
+  }
 
   if (languages.includes(selectedLocale) || themes.includes(selectedTheme)) {
     if (languages.includes(selectedLocale)) query.delete("lang");
