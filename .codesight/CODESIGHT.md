@@ -3,14 +3,15 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 84 routes | 25 models | 199 components | 109 lib files | 63 env vars | 16 middleware | 39% test coverage
-> **Token savings:** this file is ~18,300 tokens. Without it, AI exploration would cost ~167,900 tokens. **Saves ~149,600 tokens per conversation.**
-> **Last scanned:** 2026-10-26 12:16 — re-run after significant changes
+> 85 routes | 25 models | 199 components | 109 lib files | 63 env vars | 15 middleware | 40% test coverage
+> **Token savings:** this file is ~18,300 tokens. Without it, AI exploration would cost ~168,200 tokens. **Saves ~149,800 tokens per conversation.**
+> **Last scanned:** 2026-10-26 13:13 — re-run after significant changes
 
 ---
 
 # Routes
 
+- `GET` `/api/about-preference` ✓
 - `GET` `/api/actor/:id` params(id)
 - `GET` `/api/admin/dubbing-project` [auth] ✓
 - `POST` `/api/admin/dubbing-project` [auth] ✓
@@ -887,7 +888,6 @@
 ## auth
 - auth — `apps/mobile/src/stores/auth.ts`
 - generate-social-content.post — `apps/website/server/api/generate-social-content.post.ts`
-- 00-about-static — `apps/website/server/middleware/00-about-static.ts`
 - auth — `apps/website/server/middleware/auth.ts`
 - auth-session.test — `apps/website/server/utils/auth-session.test.ts`
 - auth-session — `apps/website/server/utils/auth-session.ts`
@@ -922,10 +922,10 @@
 - `apps/website/server/utils/urls/supabase.ts` — imported by **10** files
 - `apps/website/server/utils/urls/tmdb.ts` — imported by **10** files
 - `apps/website/server/utils/dubbing-language.ts` — imported by **10** files
+- `apps/website/server/utils/cache/http.ts` — imported by **8** files
 - `apps/website/server/utils/cache/constants.ts` — imported by **8** files
 - `e2e/helpers/mock-api.ts` — imported by **8** files
 - `packages/shared-logic/src/types/index.ts` — imported by **8** files
-- `apps/website/server/utils/cache/http.ts` — imported by **7** files
 - `apps/website/server/utils/background.ts` — imported by **7** files
 - `apps/website/server/utils/services/media.ts` — imported by **7** files
 - `apps/website/server/utils/cache/wikipedia.ts` — imported by **5** files
@@ -950,11 +950,12 @@
 
 # Test Coverage
 
-> **39%** of routes and models are covered by tests
-> 116 test files found
+> **40%** of routes and models are covered by tests
+> 117 test files found
 
 ## Covered Routes
 
+- GET:/api/about-preference
 - GET:/api/admin/dubbing-project
 - POST:/api/admin/dubbing-project
 - POST:/api/admin/queue/reprocess-legacy-wiki-check-reviews

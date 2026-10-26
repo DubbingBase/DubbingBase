@@ -1,5 +1,6 @@
 # Routes
 
+- `GET` `/api/about-preference` ✓
 - `GET` `/api/actor/:id` params(id)
 - `GET` `/api/admin/dubbing-project` [auth] ✓
 - `POST` `/api/admin/dubbing-project` [auth] ✓

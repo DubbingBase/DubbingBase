@@ -11,6 +11,7 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 - [Overview](./overview.md)
 - [Database](./database.md)
 - [[id].get](./[id].get.md)
+- [About-preference.get](./about-preference.get.md)
 - [Admin](./admin.md)
 - [Career-grid.get](./career-grid.get.md)
 - [Cast-vote.post](./cast-vote.post.md)
@@ -80,7 +81,7 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 
 ## Quick Stats
 
-- Routes: **84**
+- Routes: **85**
 - Models: **25**
 - Components: **199**
 - Env vars: **43** required, **20** with defaults
@@ -110,4 +111,4 @@ These exist in your codebase but are **not** reflected in wiki articles:
 When in doubt, search the source. The wiki is a starting point, not a complete inventory.
 
 ---
-_Last compiled: 2026-10-26 · 70 articles · [codesight](https://github.com/Houseofmvps/codesight)_
+_Last compiled: 2026-10-26 · 71 articles · [codesight](https://github.com/Houseofmvps/codesight)_

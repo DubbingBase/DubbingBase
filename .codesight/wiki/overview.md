@@ -8,11 +8,12 @@
 
 ## Scale
 
-84 API routes · 25 database models · 199 UI components · 109 library files · 16 middleware layers · 63 environment variables
+85 API routes · 25 database models · 199 UI components · 109 library files · 15 middleware layers · 63 environment variables
 
 ## Subsystems
 
 - **[[id].get](./[id].get.md)** — 10 routes — touches: queue
+- **[About-preference.get](./about-preference.get.md)** — 1 routes
 - **[Admin](./admin.md)** — 8 routes — touches: auth, queue, cache
 - **[Career-grid.get](./career-grid.get.md)** — 1 routes — touches: cache
 - **[Cast-vote.post](./cast-vote.post.md)** — 1 routes

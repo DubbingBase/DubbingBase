@@ -1,10 +1,11 @@
 # Test Coverage
 
-> **39%** of routes and models are covered by tests
-> 116 test files found
+> **40%** of routes and models are covered by tests
+> 117 test files found
 
 ## Covered Routes
 
+- GET:/api/about-preference
 - GET:/api/admin/dubbing-project
 - POST:/api/admin/dubbing-project
 - POST:/api/admin/queue/reprocess-legacy-wiki-check-reviews
