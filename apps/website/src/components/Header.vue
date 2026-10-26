@@ -8,11 +8,7 @@
         <div
           class="w-9 h-9 rounded-xl overflow-hidden shadow-sm ring-1 theme-ring-subtle group-hover:shadow-md transition-all"
         >
-          <img
-            src="/favicon-96x96.png"
-            alt="Logo"
-            class="w-full h-full object-cover"
-          />
+          <img src="/favicon-96x96.png" alt="Logo" class="w-full h-full object-cover" />
         </div>
         <span class="text-xl font-bold tracking-tight theme-text hidden sm:block">
           {{ t("app.title") }}
@@ -92,6 +88,8 @@
                     v-for="theme in themePreferences"
                     :key="theme"
                     :href="aboutPreferenceHref('theme', theme)"
+                    data-about-preference="theme"
+                    :data-preference-value="theme"
                     class="rounded-lg px-2.5 py-1.5 text-xs theme-text-secondary theme-hover-surface-muted"
                   >
                     {{ t(`theme.${theme}`) }}
@@ -107,6 +105,9 @@
                     v-for="language in aboutLanguages"
                     :key="language"
                     :href="aboutPreferenceHref('lang', language)"
+                    data-about-preference="lang"
+                    :data-preference-value="language"
+                    :data-preference-target="aboutLanguageTarget(language)"
                     class="rounded-lg px-2.5 py-1.5 text-xs theme-text-secondary theme-hover-surface-muted"
                   >
                     {{ t(`language.${language}`) }}
@@ -155,6 +156,11 @@
           <NuxtLink
             v-if="isAboutRoute"
             :to="localePath('/login')"
+            data-about-auth-fallback
+            :data-profile-href="localePath('/profile')"
+            :data-profile-label="t('nav.profile', 'Profile')"
+            :data-supabase-cookie-prefix="supabaseCookiePrefix"
+            :aria-label="t('nav.login')"
             class="flex h-9 items-center rounded-full px-4 text-sm font-semibold theme-contrast theme-hover-contrast"
           >
             {{ t("nav.login") }}
@@ -173,9 +179,10 @@
 import { nextTick, onMounted, onUnmounted, ref, computed } from "vue";
 import { useRoute } from "vue-router";
 import { UserIcon, SearchIcon } from "lucide-vue-next";
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const localePath = useLocalePathPrefix();
 const user = useSupabaseUser();
+const supabaseCookiePrefix = useRuntimeConfig().public.supabase.cookiePrefix;
 const route = useRoute();
 const ABOUT_ROUTES = new Set(["/about", "/fr/about", "/es/about", "/ja/about"]);
 const themePreferences = ["system", "dark", "light"] as const;
@@ -183,8 +190,12 @@ const aboutLanguages = ["en", "fr", "es", "ja"] as const;
 const isAboutRoute = computed(() => ABOUT_ROUTES.has(route.path));
 
 const aboutPreferenceHref = (key: "lang" | "theme", value: string): string => {
-  const query = new URLSearchParams({ [key]: value });
-  return `${route.path}?${query.toString()}`;
+  const query = new URLSearchParams({ locale: locale.value, [key]: value });
+  return `/api/about-preference?${query.toString()}`;
+};
+
+const aboutLanguageTarget = (language: string): string => {
+  return language === "en" ? "/about" : `/${language}/about`;
 };
 
 const isHomePage = computed(() => {

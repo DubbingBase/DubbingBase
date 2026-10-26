@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "nuxt dev",
-    "build": "nuxt build && node scripts/ensure-sitemap-alias.mjs && node scripts/prepare-static-about-assets.mjs && node scripts/patch-wasm.mjs",
+    "build": "nuxt build && node scripts/ensure-sitemap-alias.mjs && node scripts/patch-wasm.mjs",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "typecheck": "nuxt typecheck",

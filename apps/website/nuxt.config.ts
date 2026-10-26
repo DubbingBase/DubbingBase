@@ -1,4 +1,5 @@
 import tailwindcss from "@tailwindcss/vite";
+import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 import { defineNuxtConfig } from "nuxt/config";
 import { APP_LOCALES, DEFAULT_LOCALE } from "@app/shared-logic";
@@ -209,6 +210,13 @@ export default defineNuxtConfig({
 
   hooks: {
     "build:manifest": (manifest) => deferPosthogPrefetch(manifest),
+    "nitro:build:public-assets": () => {
+      execFileSync(
+        process.execPath,
+        [resolve(import.meta.dirname, "scripts/prepare-static-about-assets.mjs")],
+        { stdio: "inherit" },
+      );
+    },
   },
 
   css: ["~/assets/main.css"],
