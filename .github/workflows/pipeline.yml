@@ -207,10 +207,10 @@ jobs:
       - name: Typecheck website
         run: pnpm --filter=@app/website run typecheck
 
-  # Job 3.56: Lint changed website source with Vue rules
+  # Job 3.56: Lint changed website source and prevent release lint regressions
   lint-website:
     needs: [detect]
-    if: needs.detect.outputs.website == 'true'
+    if: needs.detect.outputs.website == 'true' || needs.detect.outputs.database_validation == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -232,13 +232,40 @@ jobs:
       - name: Install website dependencies
         run: pnpm install --filter=@app/website... --filter=dubbing-base-monorepo --config.minimum-release-age=0 --config.minimum-release-age-strict=false
 
-      - name: Lint changed website source files
+      - name: Compare full website lint with the base revision
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
+          set -euo pipefail
+
           if [ -z "$BASE_SHA" ] || [[ "$BASE_SHA" =~ ^0+$ ]]; then
             BASE_SHA="$(git rev-parse HEAD^)"
           fi
+          git cat-file -e "$BASE_SHA^{commit}"
+
+          baseline_dir="$(mktemp -d)"
+          baseline_results="$(mktemp)"
+          head_results="$(mktemp)"
+          trap 'rm -rf "$baseline_dir"; rm -f "$baseline_results" "$head_results"' EXIT
+          git archive "$BASE_SHA" .gitignore apps/website | tar -x -C "$baseline_dir"
+
+          node --check scripts/compare-oxlint-results.mjs
+
+          set +e
+          (
+            cd "$baseline_dir"
+            "$GITHUB_WORKSPACE/node_modules/.bin/oxlint" \
+              -c "$GITHUB_WORKSPACE/.oxlintrc.json" \
+              --vue-plugin --format json --ignore-path .gitignore apps/website
+          ) > "$baseline_results"
+          baseline_status=$?
+          pnpm exec oxlint -c .oxlintrc.json --vue-plugin --format json apps/website > "$head_results"
+          head_status=$?
+          set -e
+
+          node scripts/compare-oxlint-results.mjs \
+            "$baseline_results" "$baseline_status" \
+            "$head_results" "$head_status"
 
           mapfile -d '' -t changed_files < <(
             git diff --name-only --diff-filter=ACMR -z "$BASE_SHA" HEAD -- apps/website
@@ -255,7 +282,7 @@ jobs:
           if [ "${#lint_files[@]}" -eq 0 ]; then
             echo "No changed website source files to lint."
           else
-            pnpm exec oxlint -c .oxlintrc.json --vue-plugin "${lint_files[@]}"
+            pnpm exec oxlint -c .oxlintrc.json --vue-plugin --deny-warnings "${lint_files[@]}"
           fi
 
   # Job 3.6: Whitespace Check for Website-Scoped Changes
@@ -639,13 +666,7 @@ jobs:
       (needs.detect.outputs.website_validation == 'true' || needs.detect.outputs.database_validation == 'true') &&
       needs.e2e-tests.result == 'success' &&
       needs.frontend-tests.result == 'success' &&
-      (
-        needs.lint-website.result == 'success' ||
-        (
-          needs.detect.outputs.website != 'true' &&
-          needs.lint-website.result == 'skipped'
-        )
-      ) &&
+      needs.lint-website.result == 'success' &&
       needs.typecheck-website.result == 'success' &&
       needs.diff-check.result == 'success' &&
       needs.i18n-check.result == 'success' &&
