@@ -39,9 +39,9 @@ SELECT ok(NOT has_function_privilege('anon', 'public.enqueue_media_fetch(bigint,
 SELECT ok(NOT has_function_privilege('authenticated', 'public.enqueue_media_fetch(bigint, text, integer, integer, text, boolean, text, text, uuid, text, text, text, text)', 'EXECUTE'), 'authenticated cannot execute enqueue_media_fetch');
 SELECT ok(has_function_privilege('service_role', 'public.enqueue_media_fetch(bigint, text, integer, integer, text, boolean, text, text, uuid, text, text, text, text)', 'EXECUTE'), 'service_role can execute enqueue_media_fetch');
 
-SELECT ok(NOT has_function_privilege('anon', 'public.enqueue_media_extract(bigint, text, text, bigint, jsonb, integer, integer, boolean)', 'EXECUTE'), 'anon cannot execute enqueue_media_extract');
-SELECT ok(NOT has_function_privilege('authenticated', 'public.enqueue_media_extract(bigint, text, text, bigint, jsonb, integer, integer, boolean)', 'EXECUTE'), 'authenticated cannot execute enqueue_media_extract');
-SELECT ok(has_function_privilege('service_role', 'public.enqueue_media_extract(bigint, text, text, bigint, jsonb, integer, integer, boolean)', 'EXECUTE'), 'service_role can execute enqueue_media_extract');
+SELECT ok(NOT has_function_privilege('anon', 'public.enqueue_media_extract(bigint, text, text, bigint, jsonb, integer, integer, boolean, text, text, uuid, jsonb)', 'EXECUTE'), 'anon cannot execute enqueue_media_extract');
+SELECT ok(NOT has_function_privilege('authenticated', 'public.enqueue_media_extract(bigint, text, text, bigint, jsonb, integer, integer, boolean, text, text, uuid, jsonb)', 'EXECUTE'), 'authenticated cannot execute enqueue_media_extract');
+SELECT ok(has_function_privilege('service_role', 'public.enqueue_media_extract(bigint, text, text, bigint, jsonb, integer, integer, boolean, text, text, uuid, jsonb)', 'EXECUTE'), 'service_role can execute enqueue_media_extract');
 
 SET LOCAL ROLE authenticated;
 SELECT set_config(
