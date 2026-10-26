@@ -68,9 +68,18 @@ for (const pagePath of aboutPages) {
     "</head>",
     `<script id="about-preferences">${aboutPreferencesScript}</script></head>`,
   );
-  await writeFile(resolve(publicDirectory, pagePath), htmlWithAboutPreferences);
+  const lightHtml = htmlWithAboutPreferences.replace('data-theme="dark"', 'data-theme="light"');
+  if (lightHtml === htmlWithAboutPreferences) {
+    throw new Error(`Expected a prerendered theme attribute in ${pagePath}`);
+  }
+
+  const lightPagePath = pagePath.replace(/\/index\.html$/, ".light.html");
+  await Promise.all([
+    writeFile(resolve(publicDirectory, pagePath), htmlWithAboutPreferences),
+    writeFile(resolve(publicDirectory, lightPagePath), lightHtml),
+  ]);
 }
 
 console.log(
-  `About assets: removed ${fontFaces.length} unused font-face rules (${Buffer.byteLength(stylesheet) - Buffer.byteLength(aboutStylesheet)} bytes before compression) and injected static preference behavior`,
+  `About assets: removed ${fontFaces.length} unused font-face rules (${Buffer.byteLength(stylesheet) - Buffer.byteLength(aboutStylesheet)} bytes before compression), generated light-theme pages, and injected static preference behavior`,
 );

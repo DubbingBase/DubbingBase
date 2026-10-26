@@ -11,6 +11,7 @@
       : location.pathname.startsWith("/ja/")
         ? "ja"
         : "en";
+  const lightThemePage = location.pathname.endsWith(".light.html");
   const query = new URLSearchParams(location.search);
   const selectedLocale = query.get("lang");
   const selectedTheme = query.get("theme");
@@ -19,7 +20,9 @@
     ? selectedTheme
     : themes.includes(themeCookie)
       ? themeCookie
-      : "system";
+      : lightThemePage
+        ? "light"
+        : "system";
 
   const writeCookie = (name, value) => {
     const secure = location.protocol === "https:" ? "; Secure" : "";
@@ -41,6 +44,32 @@
       theme === "light" || (theme === "system" && systemTheme.matches) ? "light" : "dark";
   };
   applyTheme();
+
+  const updateAuthFallback = () => {
+    const link = document.querySelector("a[data-about-auth-fallback]");
+    const cookiePrefix = link?.dataset.supabaseCookiePrefix;
+    const hasAuthCookie = cookies.some((value) => {
+      const name = value.slice(0, value.indexOf("=")).trim();
+      return cookiePrefix
+        ? name === cookiePrefix || name.startsWith(`${cookiePrefix}.`)
+        : name.startsWith("sb-");
+    });
+    if (!link || !hasAuthCookie) return;
+
+    const profileHref = link.dataset.profileHref;
+    const profileLabel = link.dataset.profileLabel;
+    if (!profileHref || !profileLabel) return;
+
+    link.href = profileHref;
+    link.textContent = profileLabel;
+    link.setAttribute("aria-label", profileLabel);
+  };
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", updateAuthFallback, { once: true });
+  } else {
+    updateAuthFallback();
+  }
+
   systemTheme.addEventListener("change", () => {
     if (theme === "system") applyTheme();
   });
@@ -62,9 +91,17 @@
       const search = remainingQuery.size ? `?${remainingQuery}` : "";
       history.replaceState(null, "", `${location.pathname}${search}${location.hash}`);
     } else if (preference === "lang" && languages.includes(value)) {
+      clickEvent.preventDefault();
       writeCookie("user_lang", value);
+      const target = link.dataset.preferenceTarget;
+      if (target) location.assign(target);
     }
   });
+
+  if (lightThemePage) {
+    const prefix = routeLocale === "en" ? "" : `/${routeLocale}`;
+    history.replaceState(null, "", `${prefix}/about${location.search}${location.hash}`);
+  }
 
   if (languages.includes(selectedLocale)) {
     const prefix = selectedLocale === "en" ? "" : `/${selectedLocale}`;

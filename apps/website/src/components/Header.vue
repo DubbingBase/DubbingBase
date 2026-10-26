@@ -107,6 +107,7 @@
                     :href="aboutPreferenceHref('lang', language)"
                     data-about-preference="lang"
                     :data-preference-value="language"
+                    :data-preference-target="aboutLanguageTarget(language)"
                     class="rounded-lg px-2.5 py-1.5 text-xs theme-text-secondary theme-hover-surface-muted"
                   >
                     {{ t(`language.${language}`) }}
@@ -155,6 +156,11 @@
           <NuxtLink
             v-if="isAboutRoute"
             :to="localePath('/login')"
+            data-about-auth-fallback
+            :data-profile-href="localePath('/profile')"
+            :data-profile-label="t('nav.profile', 'Profile')"
+            :data-supabase-cookie-prefix="supabaseCookiePrefix"
+            :aria-label="t('nav.login')"
             class="flex h-9 items-center rounded-full px-4 text-sm font-semibold theme-contrast theme-hover-contrast"
           >
             {{ t("nav.login") }}
@@ -176,6 +182,7 @@ import { UserIcon, SearchIcon } from "lucide-vue-next";
 const { t } = useI18n();
 const localePath = useLocalePathPrefix();
 const user = useSupabaseUser();
+const supabaseCookiePrefix = useRuntimeConfig().public.supabase.cookiePrefix;
 const route = useRoute();
 const ABOUT_ROUTES = new Set(["/about", "/fr/about", "/es/about", "/ja/about"]);
 const themePreferences = ["system", "dark", "light"] as const;
@@ -183,8 +190,19 @@ const aboutLanguages = ["en", "fr", "es", "ja"] as const;
 const isAboutRoute = computed(() => ABOUT_ROUTES.has(route.path));
 
 const aboutPreferenceHref = (key: "lang" | "theme", value: string): string => {
-  if (key === "lang") return value === "en" ? "/about" : `/${value}/about`;
-  return `?theme=${encodeURIComponent(value)}`;
+  const routeLocale = route.path.startsWith("/fr/")
+    ? "fr"
+    : route.path.startsWith("/es/")
+      ? "es"
+      : route.path.startsWith("/ja/")
+        ? "ja"
+        : "en";
+  const query = new URLSearchParams({ locale: routeLocale, [key]: value });
+  return `/api/about-preference?${query.toString()}`;
+};
+
+const aboutLanguageTarget = (language: string): string => {
+  return language === "en" ? "/about" : `/${language}/about`;
 };
 
 const isHomePage = computed(() => {
