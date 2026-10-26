@@ -1,6 +1,7 @@
 import {
   createError,
   defineEventHandler,
+  getCookie,
   getQuery,
   getRequestURL,
   sendRedirect,
@@ -28,9 +29,11 @@ function aboutPath(locale: Locale, theme?: Theme): string {
 
 export default defineEventHandler((event) => {
   const query = getQuery(event);
+  const savedThemeCookie = getCookie(event, "dubbingbase-theme");
   const locale = isLocale(query.locale) ? query.locale : undefined;
   const selectedLocale = isLocale(query.lang) ? query.lang : undefined;
   const selectedTheme = isTheme(query.theme) ? query.theme : undefined;
+  const savedTheme = isTheme(savedThemeCookie) ? savedThemeCookie : undefined;
 
   if (
     !locale ||
@@ -57,5 +60,5 @@ export default defineEventHandler((event) => {
     setCookie(event, "dubbingbase-theme", selectedTheme, cookieOptions);
   }
 
-  return sendRedirect(event, aboutPath(selectedLocale ?? locale, selectedTheme), 302);
+  return sendRedirect(event, aboutPath(selectedLocale ?? locale, selectedTheme ?? savedTheme), 302);
 });
