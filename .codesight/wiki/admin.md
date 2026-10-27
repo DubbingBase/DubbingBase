@@ -23,6 +23,10 @@ The Admin subsystem handles **8 routes** and touches: auth, queue, cache.
 - `GET` `/api/admin/work-duplicates` [auth, cache]
   `apps/website/server/api/admin/work-duplicates.get.ts`
 
+## Related Models
+
+- **admin_credit_import_requests** (4 fields) → [database.md](./database.md)
+
 ## Source Files
 
 Read these before implementing or modifying this subsystem:

@@ -33,7 +33,7 @@
 - **detect** on `ubuntu-latest` — 2 steps
   - `actions/checkout@v4`
   - `dorny/paths-filter@v3`
-- **database-checks** on `ubuntu-latest` — 10 steps (needs: detect)
+- **database-checks** on `ubuntu-latest` — 11 steps (needs: detect)
   - `actions/checkout@v4`
   - `pnpm/action-setup@v4`
   - `actions/setup-node@v4`

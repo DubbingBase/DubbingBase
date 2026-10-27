@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 85 routes | 25 models | 199 components | 109 lib files | 63 env vars | 15 middleware | 40% test coverage
-> **Token savings:** this file is ~18,300 tokens. Without it, AI exploration would cost ~168,200 tokens. **Saves ~149,800 tokens per conversation.**
-> **Last scanned:** 2026-10-27 09:00 — re-run after significant changes
+> 85 routes | 26 models | 199 components | 109 lib files | 63 env vars | 15 middleware | 41% test coverage
+> **Token savings:** this file is ~18,400 tokens. Without it, AI exploration would cost ~168,500 tokens. **Saves ~150,200 tokens per conversation.**
+> **Last scanned:** 2026-10-27 10:27 — re-run after significant changes
 
 ---
 
@@ -271,6 +271,12 @@
 - user_id: uuid (required, fk)
 - submission_fingerprint: text (required)
 - points_awarded: integer (required)
+
+### admin_credit_import_requests
+- admin_id: uuid (required, fk)
+- request_id: uuid (required, fk)
+- request_fingerprint: text (required)
+- result: jsonb (required)
 
 ---
 
@@ -950,8 +956,8 @@
 
 # Test Coverage
 
-> **40%** of routes and models are covered by tests
-> 117 test files found
+> **41%** of routes and models are covered by tests
+> 118 test files found
 
 ## Covered Routes
 
@@ -1002,6 +1008,7 @@
 - regional_assignment_request_audits
 - toy_metadata
 - gamification_task_submission_results
+- admin_credit_import_requests
 
 ---
 
@@ -1040,7 +1047,7 @@
 - **detect** on `ubuntu-latest` — 2 steps
   - `actions/checkout@v4`
   - `dorny/paths-filter@v3`
-- **database-checks** on `ubuntu-latest` — 10 steps (needs: detect)
+- **database-checks** on `ubuntu-latest` — 11 steps (needs: detect)
   - `actions/checkout@v4`
   - `pnpm/action-setup@v4`
   - `actions/setup-node@v4`

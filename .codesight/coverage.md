@@ -1,7 +1,7 @@
 # Test Coverage
 
-> **40%** of routes and models are covered by tests
-> 117 test files found
+> **41%** of routes and models are covered by tests
+> 118 test files found
 
 ## Covered Routes
 
@@ -52,3 +52,4 @@
 - regional_assignment_request_audits
 - toy_metadata
 - gamification_task_submission_results
+- admin_credit_import_requests

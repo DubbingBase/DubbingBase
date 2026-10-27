@@ -170,3 +170,9 @@
 - user_id: uuid (required, fk)
 - submission_fingerprint: text (required)
 - points_awarded: integer (required)
+
+### admin_credit_import_requests
+- admin_id: uuid (required, fk)
+- request_id: uuid (required, fk)
+- request_fingerprint: text (required)
+- result: jsonb (required)

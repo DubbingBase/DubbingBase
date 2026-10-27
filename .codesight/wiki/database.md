@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Schema shapes and field types extracted via AST. Read the actual schema source files before writing migrations or query logic.
 
-**unknown** — 25 models
+**unknown** — 26 models
 
 ### voice_actors
 
@@ -249,6 +249,15 @@ pk: `claim_id` (uuid) · fk: claim_id, user_id
 - `user_id`: uuid _(required, fk)_
 - `submission_fingerprint`: text _(required)_
 - `points_awarded`: integer _(required)_
+
+### admin_credit_import_requests
+
+fk: admin_id, request_id
+
+- `admin_id`: uuid _(required, fk)_
+- `request_id`: uuid _(required, fk)_
+- `request_fingerprint`: text _(required)_
+- `result`: jsonb _(required)_
 
 ## Schema Source Files
 
