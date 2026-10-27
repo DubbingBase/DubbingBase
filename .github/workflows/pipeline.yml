@@ -16,6 +16,10 @@ on:
         required: false
         type: boolean
         default: false
+      database_baseline_sha:
+        description: "For the website override, latest successful main release commit to verify no database changes are pending."
+        required: false
+        type: string
 
 # Keep branch checks current and serialize main releases around production migrations.
 concurrency:
@@ -39,7 +43,7 @@ jobs:
   detect:
     runs-on: ubuntu-latest
     outputs:
-      database: ${{ steps.filter.outputs.database }}
+      database: ${{ steps.filter.outputs.database == 'true' && !(github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.force_website_deploy) }}
       database_validation: ${{ steps.filter.outputs.database_validation }}
       mobile: ${{ steps.filter.outputs.mobile }}
       website: ${{ steps.filter.outputs.website == 'true' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.force_website_deploy) }}
@@ -673,10 +677,52 @@ jobs:
           retention-days: 1
 
   # Job 7.5: Require every relevant preflight check to succeed
+  manual-website-guard:
+    needs: [detect]
+    if: |
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/main' &&
+      inputs.force_website_deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify database baseline has no pending database changes
+        env:
+          DATABASE_BASELINE_SHA: ${{ inputs.database_baseline_sha }}
+        shell: bash
+        run: |
+          if [[ ! "$DATABASE_BASELINE_SHA" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "::error::Provide database_baseline_sha from the latest successful main release."
+            exit 1
+          fi
+
+          if ! git cat-file -e "${DATABASE_BASELINE_SHA}^{commit}"; then
+            echo "::error::database_baseline_sha is not an available commit."
+            exit 1
+          fi
+
+          if ! git merge-base --is-ancestor "$DATABASE_BASELINE_SHA" "$GITHUB_SHA"; then
+            echo "::error::database_baseline_sha must be an ancestor of this main commit."
+            exit 1
+          fi
+
+          if ! git diff --quiet "$DATABASE_BASELINE_SHA" "$GITHUB_SHA" -- packages/database/; then
+            echo "::error::Database changes exist since the baseline; use the regular release path."
+            git diff --name-only "$DATABASE_BASELINE_SHA" "$GITHUB_SHA" -- packages/database/
+            exit 1
+          fi
+
+          echo "No database changes exist since $DATABASE_BASELINE_SHA."
+
   release-validation:
     needs:
       [
         detect,
+        manual-website-guard,
         database-checks,
         e2e-tests,
         frontend-tests,
@@ -691,6 +737,18 @@ jobs:
       !cancelled() &&
       needs.detect.result == 'success' &&
       (needs.detect.outputs.website_validation == 'true' || needs.detect.outputs.database_validation == 'true') &&
+      (
+        (
+          github.event_name == 'workflow_dispatch' &&
+          github.ref == 'refs/heads/main' &&
+          inputs.force_website_deploy &&
+          needs.manual-website-guard.result == 'success'
+        ) ||
+        (
+          !(github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.force_website_deploy) &&
+          needs.manual-website-guard.result == 'skipped'
+        )
+      ) &&
       (
         needs.e2e-tests.result == 'success' ||
         (
@@ -720,6 +778,7 @@ jobs:
       !cancelled() &&
       github.ref == 'refs/heads/main' &&
       needs.detect.outputs.database == 'true' &&
+      !(github.event_name == 'workflow_dispatch' && inputs.force_website_deploy) &&
       needs.release-validation.result == 'success'
     runs-on: ubuntu-latest
     env:

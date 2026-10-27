@@ -78,7 +78,7 @@ Use this runbook when investigating CPU spikes in the production website Worker.
 
 ## Deployment when E2E browser installation stalls
 
-The regular main push still requires every release check, including E2E. If a user explicitly authorizes proceeding while only E2E is pending, manually dispatch **Release and Deployment Pipeline** on `main` with `force_website_deploy` and `allow_e2e_pending` enabled. The workflow skips only E2E for that manual run; website lint, typecheck, frontend tests, i18n, build, and release validation still have to pass before deployment.
+The regular main push still requires every release check, including E2E. If a user explicitly authorizes proceeding while only E2E is pending, first confirm the push run is still blocked installing Playwright browsers and no deployment or migration job is active, then cancel that run; main workflow runs are serialized, so the manual run otherwise waits behind it. Manually dispatch **Release and Deployment Pipeline** on `main` with `force_website_deploy` and `allow_e2e_pending` enabled, and set `database_baseline_sha` to the head SHA of the latest successful main release. The workflow verifies that this baseline is an ancestor and that no `packages/database/` files changed since it. If the check fails, use the regular release path. For an accepted website-only override, the workflow forces website checks, keeps applicable local database validation, skips production database deployment, and skips only E2E. Website lint, typecheck, frontend tests, i18n, build, release validation, and any applicable local database checks still have to pass before deployment.
 
 ## Route attribution
 
