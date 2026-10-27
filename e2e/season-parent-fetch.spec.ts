@@ -25,7 +25,10 @@ async function navigateClientSide(page: Page, path: string) {
   }, path);
 }
 
-test("skips hidden season data on episode routes and loads it when returning", async ({ page }) => {
+test("skips hidden season data on episode routes and loads it when returning", async ({
+  page,
+  request,
+}) => {
   test.setTimeout(60000);
   const api = await setupMockApi(page);
   const seasonRequests: Array<{ id: string | null; season: string | null; locale: string }> = [];
@@ -55,6 +58,8 @@ test("skips hidden season data on episode routes and loads it when returning", a
     });
   });
 
+  await request.delete("/api/e2e/media-requests");
+
   const response = await page.goto("/show/1396/season/1/episode/1", {
     waitUntil: "domcontentloaded",
   });
@@ -64,10 +69,14 @@ test("skips hidden season data on episode routes and loads it when returning", a
   expect(html).not.toContain(MOCK_SEASON.season.overview);
   await waitForVueHydration(page);
   expect(seasonRequests).toHaveLength(0);
+  const episodeSsrRequests = await request.get("/api/e2e/media-requests");
+  expect(await episodeSsrRequests.text()).toBe(JSON.stringify(["/api/episode"]));
 
   await navigateClientSide(page, "/show/1396/season/1");
   await expect.poll(() => seasonRequests.length).toBe(1);
-  await expect(page.getByText("Season data 1396/1/en-US")).toBeVisible();
+  const firstSeasonRequest = seasonRequests[0];
+  if (!firstSeasonRequest) throw new Error("Season request was not recorded");
+  await expect(page.getByText(`Season data 1396/1/${firstSeasonRequest.locale}`)).toBeVisible();
 
   const initialEpisodeRequests = episodeRequests;
   await navigateClientSide(page, "/show/1396/season/1/episode/1");
@@ -79,13 +88,17 @@ test("skips hidden season data on episode routes and loads it when returning", a
 
   await navigateClientSide(page, "/fr/show/108978/season/2");
   await expect.poll(() => seasonRequests.length).toBe(2);
-  expect(seasonRequests[1]).toEqual({ id: "108978", season: "2", locale: "fr-FR" });
-  await expect(page.getByText("Season data 108978/2/fr-FR")).toBeVisible();
+  const frenchSeasonRequest = seasonRequests[1];
+  if (!frenchSeasonRequest) throw new Error("French season request was not recorded");
+  expect(frenchSeasonRequest).toEqual({ id: "108978", season: "2", locale: "fr" });
+  await expect(page.getByText(`Season data 108978/2/${frenchSeasonRequest.locale}`)).toBeVisible();
 
   const seasonResponse = await page.goto("/show/1396/season/1", {
     waitUntil: "domcontentloaded",
   });
   if (!seasonResponse) throw new Error("Season navigation returned no response");
   expect(await seasonResponse.text()).toContain(MOCK_SEASON.season.overview);
+  const seasonSsrRequests = await request.get("/api/e2e/media-requests");
+  expect(await seasonSsrRequests.text()).toBe(JSON.stringify(["/api/episode", "/api/season"]));
   api.expectNoErrors();
 });

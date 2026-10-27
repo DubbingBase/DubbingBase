@@ -401,6 +401,7 @@ const {
   },
   {
     lazy: true,
+    dedupe: "defer",
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
