@@ -217,8 +217,8 @@
                     class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start"
                   >
                     <component
-                      :is="actor.actorId ? NuxtLink : 'div'"
-                      :to="actor.actorId ? localePath(`/actor/${actor.actorId}`) : undefined"
+                      :is="actor.actorProfilePath ? NuxtLink : 'div'"
+                      :to="actor.actorProfilePath"
                       class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                       :aria-label="actor.name"
                     >
@@ -240,8 +240,8 @@
                         <span class="truncate block w-full">{{ $t("details.actor") }}</span>
                       </div>
                       <component
-                        :is="actor.actorId ? NuxtLink : 'div'"
-                        :to="actor.actorId ? localePath(`/actor/${actor.actorId}`) : undefined"
+                        :is="actor.actorProfilePath ? NuxtLink : 'div'"
+                        :to="actor.actorProfilePath"
                         class="font-bold text-sm theme-text truncate hover:underline block w-full"
                         :title="actor.name"
                       >
@@ -616,7 +616,10 @@ const filteredCast = computed(() =>
 const castTotal = computed(() => filteredCast.value.length);
 const castItems = computed(() => {
   const start = (castPage.value - 1) * 12;
-  return filteredCast.value.slice(start, start + 12);
+  return filteredCast.value.slice(start, start + 12).map((actor) => ({
+    ...actor,
+    actorProfilePath: actor.actorId ? localePath(`/actor/${actor.actorId}`) : undefined,
+  }));
 });
 
 useHead({
