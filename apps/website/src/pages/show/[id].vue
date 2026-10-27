@@ -472,6 +472,10 @@ import {
 } from "lucide-vue-next";
 import ReportModal from "../../components/ReportModal.vue";
 import { matchCastWorks, type DisplayCastActor } from "../../utils/media-cast";
+import {
+  findCharacterImage,
+  indexCharacterPictures,
+} from "../../utils/show-character-pictures";
 
 const isReportModalOpen = ref(false);
 
@@ -545,6 +549,9 @@ function projectVoiceActorCount(project: MediaDetailDubbingProject): number {
 }
 const characterProfilePictures = computed<MediaDetailCharacterProfilePicture[]>(
   () => data.value?.characterProfilePictures || [],
+);
+const characterPictureIndex = computed(() =>
+  indexCharacterPictures(characterProfilePictures.value),
 );
 const aggregateCredits = computed<MediaDetailCredits>(
   () => data.value?.aggregateCredits || { cast: [] },
@@ -624,24 +631,16 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
       const workCharacterName = work?.character_name || null;
 
       // Find character picture matching the character name
-      let characterImage = null;
       const characterName =
         actor.roles?.map((role) => role.character).join(", ") || workCharacterName;
+      let characterImage: string | null = null;
       if (characterName) {
         // Try to match any of the roles, then fallback to workCharacterName
         const namesToTry = [
           ...(actor.roles || []).map((role) => role.character).filter(Boolean),
           ...(workCharacterName ? [workCharacterName] : []),
         ];
-        for (const name of namesToTry) {
-          const match = characterProfilePictures.value.find(
-            (picture) => picture.name && picture.name.toLowerCase() === name.toLowerCase(),
-          );
-          if (match && match.image) {
-            characterImage = match.image;
-            break;
-          }
-        }
+        characterImage = findCharacterImage(characterPictureIndex.value, namesToTry);
       }
 
       return {
