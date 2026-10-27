@@ -297,6 +297,9 @@ describe("movie and show detail API payload compatibility", () => {
       "https://example.com/voice.png",
     );
     expect(work).toMatchObject({ actor_id: 55, voice_actor: { id: 5 } });
+    expect(apiMocks.getMediaWithVoiceActors).toHaveBeenCalledWith("movie", 123, {
+      includeCollection: false,
+    });
     expect(apiMocks.getMediaPageDubbingProjects).toHaveBeenCalledWith(123, "movie");
     expect(apiMocks.getDubbingProjects).not.toHaveBeenCalled();
   });

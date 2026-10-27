@@ -13,8 +13,11 @@ export async function fetchMovieData(event: H3Event, movieId: number) {
   const mediaService = new MediaService(tmdbClient, acceptLanguage);
 
   // ── Parallel: TMDB + DB ──────────────────────────────────────────
+  const projection = getQuery(event).projection;
   const apiDataPromise = mediaService
-    .getMediaWithVoiceActors("movie", movieId)
+    .getMediaWithVoiceActors("movie", movieId, {
+      includeCollection: projection !== "media-page",
+    })
     .then(async (result) => {
       const { characters: characterProfilePictures, tvdbId } =
         await mediaService.getCharacterProfilePictures("movie", movieId, result.media);
@@ -56,11 +59,7 @@ export async function fetchMovieData(event: H3Event, movieId: number) {
       };
     });
 
-  const dbDataPromise = getDubbingProjectsForMediaEndpoint(
-    movieId,
-    "movie",
-    getQuery(event).projection,
-  );
+  const dbDataPromise = getDubbingProjectsForMediaEndpoint(movieId, "movie", projection);
 
   const [apiData, dubbingProjects] = await Promise.all([apiDataPromise, dbDataPromise]);
 

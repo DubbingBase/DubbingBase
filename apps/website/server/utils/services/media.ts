@@ -869,7 +869,11 @@ export class MediaService {
     return { characters: [], tvdbId: null };
   }
 
-  async getMediaWithVoiceActors(contentType: "movie" | "tv", contentId: number) {
+  async getMediaWithVoiceActors(
+    contentType: "movie" | "tv",
+    contentId: number,
+    options: { includeCollection?: boolean } = {},
+  ) {
     const media =
       contentType === "movie"
         ? await this.tmdbClient.getMediaWithCredits(contentType, contentId, this.acceptLanguage)
@@ -878,7 +882,11 @@ export class MediaService {
     let collection: Record<string, unknown> | null = null;
     const belongsToCollection = media.belongs_to_collection;
     const collectionId = isRecord(belongsToCollection) ? belongsToCollection.id : undefined;
-    if (contentType === "movie" && typeof collectionId === "number") {
+    if (
+      options.includeCollection !== false &&
+      contentType === "movie" &&
+      typeof collectionId === "number"
+    ) {
       const collectionData = await this.tmdbClient.getCollection(collectionId);
       if (collectionData) {
         const parts = Array.isArray(collectionData.parts)

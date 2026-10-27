@@ -152,6 +152,28 @@ describe("MediaService voice actor media indexing", () => {
     expect(urls[0]?.searchParams.get("append_to_response")).toBe("credits,external_ids");
   });
 
+  it("skips loading and transforming a movie collection for compact media pages", async () => {
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            id: 89,
+            belongs_to_collection: { id: 900 },
+            credits: { cast: [] },
+          }),
+        ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const service = new MediaService(new TMDBClient());
+    const result = await service.getMediaWithVoiceActors("movie", 89, {
+      includeCollection: false,
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(result.collection).toBeNull();
+  });
+
   it("keeps cast indexes separate for movie and TV works with the same TMDB id", async () => {
     const works: VoiceActorWorkFixture[] = [
       {
