@@ -6,7 +6,7 @@
 |---|---|---|---|---|
 | codesight | push, workflow_dispatch | 1 | — | — |
 | Lighthouse CI | pull_request, push, workflow_dispatch | 2 | cloudflare | — |
-| Release and Deployment Pipeline | push, workflow_dispatch | 15 | netlify, cloudflare | — |
+| Release and Deployment Pipeline | push, workflow_dispatch | 16 | netlify, cloudflare | — |
 
 ### Lighthouse CI
 
@@ -83,6 +83,8 @@
   - `pnpm/action-setup@v4`
   - `actions/setup-node@v4`
   - `actions/upload-artifact@v4`
+- **manual-website-guard** on `ubuntu-latest` — 2 steps (needs: detect)
+  - `actions/checkout@v4`
 - **release-validation** on `ubuntu-latest` — 1 steps
 - **deploy-supabase** on `ubuntu-latest` — 8 steps (needs: detect, release-validation)
   - `actions/checkout@v4`
