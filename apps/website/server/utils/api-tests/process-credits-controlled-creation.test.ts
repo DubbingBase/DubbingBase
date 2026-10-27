@@ -1,24 +1,9 @@
-import {
-  createApp,
-  createError,
-  defineEventHandler,
-  readBody,
-  toWebHandler,
-} from "h3";
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from "vitest";
+import { createApp, createError, defineEventHandler, readBody, toWebHandler } from "h3";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const routeMocks = vi.hoisted(() => ({
   requireAdmin: vi.fn(),
   useSupabaseAdmin: vi.fn(),
-  findOrCreateDubbingProject: vi.fn(),
   requireDubbingLanguage: vi.fn(),
   rpc: vi.fn(),
   from: vi.fn(),
@@ -27,9 +12,6 @@ const routeMocks = vi.hoisted(() => ({
 vi.mock("../auth", () => ({ requireAdmin: routeMocks.requireAdmin }));
 vi.mock("../db/client", () => ({
   useSupabaseAdmin: routeMocks.useSupabaseAdmin,
-}));
-vi.mock("../db/dubbing-project", () => ({
-  findOrCreateDubbingProject: routeMocks.findOrCreateDubbingProject,
 }));
 vi.mock("../dubbing-language", () => ({
   requireDubbingLanguage: routeMocks.requireDubbingLanguage,
@@ -50,30 +32,21 @@ beforeEach(() => {
     id: "current-admin-id",
     app_metadata: { role: "admin" },
   });
-  routeMocks.findOrCreateDubbingProject.mockResolvedValue(13);
   routeMocks.requireDubbingLanguage.mockReturnValue("en-US");
-  routeMocks.rpc.mockImplementation(async (functionName: string) =>
-    functionName === "controlled_save_metadata"
-      ? { data: { record: { id: 91 } }, error: null }
-      : { data: [], error: null },
-  );
-  const workQuery = {
+  routeMocks.rpc.mockResolvedValue({
+    data: [{ work_id: 13, project_id: 42, voice_actor_id: 91 }],
+    error: null,
+  });
+  const query = {
     select: vi.fn(),
-    eq: vi.fn(),
-    is: vi.fn(),
     ilike: vi.fn(),
     limit: vi.fn(),
     maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-    insert: vi.fn().mockResolvedValue({ error: null }),
-    then: (resolve: (value: { data: never[]; error: null }) => unknown) =>
-      Promise.resolve({ data: [], error: null }).then(resolve),
   };
-  workQuery.select.mockReturnValue(workQuery);
-  workQuery.eq.mockReturnValue(workQuery);
-  workQuery.is.mockReturnValue(workQuery);
-  workQuery.ilike.mockReturnValue(workQuery);
-  workQuery.limit.mockReturnValue(workQuery);
-  routeMocks.from.mockReturnValue(workQuery);
+  query.select.mockReturnValue(query);
+  query.ilike.mockReturnValue(query);
+  query.limit.mockReturnValue(query);
+  routeMocks.from.mockReturnValue(query);
   routeMocks.useSupabaseAdmin.mockReturnValue({
     from: routeMocks.from,
     rpc: routeMocks.rpc,
@@ -98,13 +71,10 @@ async function postPayload(payload: unknown): Promise<Response> {
 }
 
 describe("POST /api/process-credits", () => {
-  it("preserves a fresh match operation ID when saving and retrying a voice actor", async () => {
-    const consoleError = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => undefined);
+  it("passes a stable per-credit request ID to the atomic save on retries", async () => {
     const matchPayload = {
       action: "match",
-      credits: [{ voiceActor: "Ada Lovelace" }],
+      credits: [{ voiceActor: "Ada Lovelace", role: "Misty", matchedActorId: 42 }],
     };
     const matchResponse = await postPayload(matchPayload);
     const matchedCredits = (await matchResponse.json()).credits;
@@ -114,10 +84,6 @@ describe("POST /api/process-credits", () => {
     expect(requestId).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
     );
-
-    const secondMatchResponse = await postPayload(matchPayload);
-    const secondMatchedCredits = (await secondMatchResponse.json()).credits;
-    expect(secondMatchedCredits[0].request_id).not.toBe(requestId);
 
     const savePayload = {
       action: "save",
@@ -131,30 +97,27 @@ describe("POST /api/process-credits", () => {
 
     expect(response.status).toBe(200);
     expect(retryResponse.status).toBe(200);
+    expect(routeMocks.rpc).toHaveBeenNthCalledWith(1, "save_admin_credit_import", {
+      p_admin_id: "current-admin-id",
+      p_request_id: requestId,
+      p_content_id: 42,
+      p_content_type: "movie",
+      p_language: "en-US",
+      p_voice_actor_id: null,
+      p_voice_actor_firstname: "Ada",
+      p_voice_actor_lastname: "Lovelace",
+      p_work_actor_id: 42,
+      p_character_id: null,
+      p_character_name: "Misty",
+    });
     expect(routeMocks.rpc).toHaveBeenNthCalledWith(
-      1,
-      "controlled_save_metadata",
-      {
-        p_actor_id: "current-admin-id",
-        p_entity_type: "voice_actor",
-        p_payload: { firstname: "Ada", lastname: "Lovelace" },
-        p_request_id: requestId,
-      },
+      2,
+      "save_admin_credit_import",
+      expect.objectContaining({ p_request_id: requestId }),
     );
-    expect(routeMocks.rpc).toHaveBeenNthCalledWith(
-      3,
-      "controlled_save_metadata",
-      {
-        p_actor_id: "current-admin-id",
-        p_entity_type: "voice_actor",
-        p_payload: { firstname: "Ada", lastname: "Lovelace" },
-        p_request_id: requestId,
-      },
-    );
-    consoleError.mockRestore();
   });
 
-  it("rejects unmatched voice actor saves without a request ID", async () => {
+  it("rejects an unmatched voice actor save without its match request ID", async () => {
     const response = await postPayload({
       action: "save",
       credits: [{ voiceActor: "Ada Lovelace" }],
@@ -165,5 +128,75 @@ describe("POST /api/process-credits", () => {
 
     expect(response.status).toBe(400);
     expect(routeMocks.rpc).not.toHaveBeenCalled();
+  });
+
+  it("derives a stable request ID for matched credits from legacy callers", async () => {
+    const payload = {
+      action: "save",
+      credits: [
+        {
+          role: "Misty",
+          matchedActorId: 42,
+          matchedVoiceActor: {
+            id: 91,
+            firstname: "Ada",
+            lastname: "Lovelace",
+          },
+        },
+      ],
+      mediaType: "movie",
+      mediaId: 42,
+      dubbing_language: "en-US",
+    };
+
+    const firstResponse = await postPayload(payload);
+    const retryResponse = await postPayload(payload);
+
+    expect(firstResponse.status).toBe(200);
+    expect(retryResponse.status).toBe(200);
+    expect(routeMocks.rpc).toHaveBeenCalledTimes(2);
+    expect(routeMocks.rpc.mock.calls[1]?.[1]).toEqual(routeMocks.rpc.mock.calls[0]?.[1]);
+    expect(routeMocks.rpc.mock.calls[0]?.[1].p_request_id).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-8[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+    );
+  });
+
+  it("continues a batch after one credit fails", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    routeMocks.rpc
+      .mockResolvedValueOnce({
+        data: [{ work_id: 13, project_id: 42, voice_actor_id: 91 }],
+        error: null,
+      })
+      .mockResolvedValueOnce({ data: null, error: { message: "work failed" } });
+
+    const response = await postPayload({
+      action: "save",
+      credits: [
+        {
+          request_id: "56368400-0000-4000-8000-000000000001",
+          matchedActorId: 42,
+          matchedVoiceActor: { id: 91, firstname: "Ada", lastname: "Lovelace" },
+          role: "Misty",
+        },
+        {
+          request_id: "56368400-0000-4000-8000-000000000002",
+          matchedActorId: 43,
+          matchedVoiceActor: { id: 92, firstname: "Grace", lastname: "Hopper" },
+          role: "Brittany",
+        },
+      ],
+      mediaType: "movie",
+      mediaId: 42,
+      dubbing_language: "en-US",
+    });
+    const result = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(result.successCount).toBe(1);
+    expect(result.failedCredits).toHaveLength(1);
+    expect(result.failedCredits[0].credit.role).toBe("Brittany");
+    expect(routeMocks.rpc).toHaveBeenCalledTimes(2);
+    consoleError.mockRestore();
   });
 });

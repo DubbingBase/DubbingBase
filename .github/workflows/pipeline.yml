@@ -120,6 +120,14 @@ jobs:
         run: pnpm supabase test db
         working-directory: packages/database
 
+      - name: Run credit import transaction and concurrency regressions
+        run: |
+          PGPASSWORD=postgres psql -X -v ON_ERROR_STOP=1 \
+            -h 127.0.0.1 -p 55322 -U postgres -d postgres \
+            -f tests/admin-credit-imports.sql
+          bash tests/admin-credit-imports-concurrency.sh
+        working-directory: packages/database
+
   # Job 3: E2E Tests
   e2e-tests:
     needs: [detect]

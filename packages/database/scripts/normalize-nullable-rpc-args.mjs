@@ -19,6 +19,14 @@ const nullableArguments = {
     p_character_id: "number",
     p_character_name: "string",
   },
+  save_admin_credit_import: {
+    p_character_id: "number",
+    p_character_name: "string",
+    p_voice_actor_firstname: "string",
+    p_voice_actor_id: "number",
+    p_voice_actor_lastname: "string",
+    p_work_actor_id: "number",
+  },
 };
 
 let types = await readFile(filePath, "utf8");
