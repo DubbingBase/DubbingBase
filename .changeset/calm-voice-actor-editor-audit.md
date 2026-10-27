@@ -3,4 +3,4 @@
 "@app/supabase": patch
 ---
 
-Save voice actor profile edits through the audited, versioned update operation.
+Save voice actor profile and review-status edits through controlled operations with atomic audit history and stale-write protection where supported.

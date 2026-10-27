@@ -1360,6 +1360,20 @@ export type Database = {
           work_id: number;
         }[];
       };
+      update_work_review_status_controlled: {
+        Args: {
+          p_actor_id: string;
+          p_expected_updated_at: string;
+          p_request_id: string | null;
+          p_reviewed_status: string;
+          p_work_id: number;
+        };
+        Returns: {
+          audit_log_id: string | null;
+          replayed: boolean;
+          work_id: number;
+        }[];
+      };
       voice_actor_completeness: {
         Args: { va: Database["public"]["Tables"]["voice_actors"]["Row"] };
         Returns: number;
