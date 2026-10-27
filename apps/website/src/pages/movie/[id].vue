@@ -213,14 +213,14 @@
                   :class="isOriginalLanguage ? 'sm:grid-cols-2' : 'sm:grid-cols-3'"
                 >
                   <!-- Original Actor -->
-                  <div
+                  <component
+                    :is="actor.actorProfilePath ? NuxtLink : 'div'"
+                    :to="actor.actorProfilePath"
+                    :aria-label="actor.actorProfilePath ? actor.name : undefined"
                     class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start"
                   >
-                    <component
-                      :is="actor.actorProfilePath ? NuxtLink : 'div'"
-                      :to="actor.actorProfilePath"
+                    <div
                       class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
-                      :aria-label="actor.name"
                     >
                       <NuxtImg
                         format="webp"
@@ -231,7 +231,7 @@
                         class="w-full h-full object-cover transition-transform duration-300"
                         alt="Actor"
                       />
-                    </component>
+                    </div>
                     <div class="flex flex-col min-w-0 flex-1 w-full overflow-hidden">
                       <div
                         class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
@@ -239,16 +239,14 @@
                         <ClapperboardIcon class="w-3 h-3 flex-shrink-0" />
                         <span class="truncate block w-full">{{ $t("details.actor") }}</span>
                       </div>
-                      <component
-                        :is="actor.actorProfilePath ? NuxtLink : 'div'"
-                        :to="actor.actorProfilePath"
+                      <div
                         class="font-bold text-sm theme-text truncate hover:underline block w-full"
                         :title="actor.name"
                       >
                         {{ actor.name }}
-                      </component>
+                      </div>
                     </div>
-                  </div>
+                  </component>
 
                   <!-- Character -->
                   <div
@@ -301,44 +299,50 @@
                     <template v-if="actor.voiceActor">
                       <NuxtLink
                         :to="actor.voiceActorProfilePath"
-                        class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
+                        class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start w-full"
                         :aria-label="`${actor.voiceActor.firstname} ${actor.voiceActor.lastname}`"
                       >
-                        <NuxtImg
-                          format="webp"
-                          decoding="async"
-                          loading="lazy"
-                          v-if="actor.voiceActor.profile_picture"
-                          :src="actor.voiceActor.profile_picture"
-                          class="w-full h-full object-cover transition-transform duration-300"
-                          alt="Voice Actor"
-                        />
                         <div
-                          v-else
-                          class="w-full h-full flex items-center justify-center text-2xl font-bold theme-text-muted"
+                          class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                         >
-                          {{ actor.voiceActor.firstname?.[0] }}{{ actor.voiceActor.lastname?.[0] }}
+                          <NuxtImg
+                            format="webp"
+                            decoding="async"
+                            loading="lazy"
+                            v-if="actor.voiceActor.profile_picture"
+                            :src="actor.voiceActor.profile_picture"
+                            class="w-full h-full object-cover transition-transform duration-300"
+                            alt="Voice Actor"
+                          />
+                          <div
+                            v-else
+                            class="w-full h-full flex items-center justify-center text-2xl font-bold theme-text-muted"
+                          >
+                            {{ actor.voiceActor.firstname?.[0]
+                            }}{{ actor.voiceActor.lastname?.[0] }}
+                          </div>
+                        </div>
+                        <div class="flex flex-col min-w-0 flex-1 w-full overflow-hidden">
+                          <div
+                            class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
+                          >
+                            <MicIcon class="w-3 h-3 flex-shrink-0" />
+                            <span class="truncate block w-full">{{
+                              $t("details.voiceActor")
+                            }}</span>
+                          </div>
+                          <div
+                            class="font-bold text-sm theme-text truncate hover:underline block w-full"
+                            :title="actor.voiceActor.firstname + ' ' + actor.voiceActor.lastname"
+                          >
+                            {{ actor.voiceActor.firstname }}
+                            {{ actor.voiceActor.lastname }}
+                          </div>
+                          <div v-if="actor.voiceActor.note" class="text-xs theme-text-muted mt-1">
+                            {{ actor.voiceActor.note }}
+                          </div>
                         </div>
                       </NuxtLink>
-                      <div class="flex flex-col min-w-0 flex-1 w-full overflow-hidden">
-                        <div
-                          class="flex items-center gap-1.5 text-[10px] theme-text-muted uppercase tracking-widest font-semibold mb-1"
-                        >
-                          <MicIcon class="w-3 h-3 flex-shrink-0" />
-                          <span class="truncate block w-full">{{ $t("details.voiceActor") }}</span>
-                        </div>
-                        <NuxtLink
-                          :to="actor.voiceActorProfilePath"
-                          class="font-bold text-sm theme-text truncate hover:underline block w-full"
-                          :title="actor.voiceActor.firstname + ' ' + actor.voiceActor.lastname"
-                        >
-                          {{ actor.voiceActor.firstname }}
-                          {{ actor.voiceActor.lastname }}
-                        </NuxtLink>
-                        <div v-if="actor.voiceActor.note" class="text-xs theme-text-muted mt-1">
-                          {{ actor.voiceActor.note }}
-                        </div>
-                      </div>
                     </template>
                     <template v-else>
                       <div
