@@ -76,6 +76,10 @@ Use this runbook when investigating CPU spikes in the production website Worker.
 
    The arguments are active version ID, duration in seconds (1–900), and sample rate (greater than 0 and less than 1). Inspect only the sanitized file; delete it when analysis is complete.
 
+## Deployment when E2E browser installation stalls
+
+The regular main push still requires every release check, including E2E. If a user explicitly authorizes proceeding while only E2E is pending, manually dispatch **Release and Deployment Pipeline** on `main` with `force_website_deploy` and `allow_e2e_pending` enabled. The workflow skips only E2E for that manual run; website lint, typecheck, frontend tests, i18n, build, and release validation still have to pass before deployment.
+
 ## Route attribution
 
 Use the tail's sampled per-invocation CPU to rank routes during the capture window. Compare those route patterns with the CPU pprof from the same active version and UTC window. A profile can show Worker function stacks, but it cannot link each stack sample to a route; present route-to-function conclusions as correlation, not request-level proof. Cloudflare GraphQL can add aggregate Worker CPU and request metrics, while HTTP Analytics route groups add request volume.

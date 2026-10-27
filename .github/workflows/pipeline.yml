@@ -5,6 +5,17 @@ on:
     branches:
       - "**"
   workflow_dispatch:
+    inputs:
+      force_website_deploy:
+        description: "Run website checks and deployment for the current main commit."
+        required: false
+        type: boolean
+        default: false
+      allow_e2e_pending:
+        description: "With explicit user authorization, allow deployment while only E2E is pending. All other required checks must pass."
+        required: false
+        type: boolean
+        default: false
 
 # Keep branch checks current and serialize main releases around production migrations.
 concurrency:
@@ -31,8 +42,8 @@ jobs:
       database: ${{ steps.filter.outputs.database }}
       database_validation: ${{ steps.filter.outputs.database_validation }}
       mobile: ${{ steps.filter.outputs.mobile }}
-      website: ${{ steps.filter.outputs.website }}
-      website_validation: ${{ steps.filter.outputs.website_validation }}
+      website: ${{ steps.filter.outputs.website == 'true' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.force_website_deploy) }}
+      website_validation: ${{ steps.filter.outputs.website_validation == 'true' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.force_website_deploy) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -132,9 +143,17 @@ jobs:
   e2e-tests:
     needs: [detect]
     if: |
-      needs.detect.outputs.mobile == 'true' ||
-      needs.detect.outputs.website_validation == 'true' ||
-      needs.detect.outputs.database_validation == 'true'
+      !(
+        github.event_name == 'workflow_dispatch' &&
+        github.ref == 'refs/heads/main' &&
+        inputs.force_website_deploy &&
+        inputs.allow_e2e_pending
+      ) &&
+      (
+        needs.detect.outputs.mobile == 'true' ||
+        needs.detect.outputs.website_validation == 'true' ||
+        needs.detect.outputs.database_validation == 'true'
+      )
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -672,7 +691,16 @@ jobs:
       !cancelled() &&
       needs.detect.result == 'success' &&
       (needs.detect.outputs.website_validation == 'true' || needs.detect.outputs.database_validation == 'true') &&
-      needs.e2e-tests.result == 'success' &&
+      (
+        needs.e2e-tests.result == 'success' ||
+        (
+          github.event_name == 'workflow_dispatch' &&
+          github.ref == 'refs/heads/main' &&
+          inputs.force_website_deploy &&
+          inputs.allow_e2e_pending &&
+          needs.e2e-tests.result == 'skipped'
+        )
+      ) &&
       needs.frontend-tests.result == 'success' &&
       needs.lint-website.result == 'success' &&
       needs.typecheck-website.result == 'success' &&
