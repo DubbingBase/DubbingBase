@@ -1,6 +1,5 @@
 name = "dubbingbase-website"
 main = ".output/server/index.mjs"
-upload_source_maps = true # Temporary: enable readable production CPU profiles.
 # Avoid runtime name-restoration helpers during per-request SSR setup.
 keep_names = false
 compatibility_date = "2024-09-23"
