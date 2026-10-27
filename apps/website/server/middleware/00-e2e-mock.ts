@@ -1,5 +1,7 @@
 import { defineEventHandler, getRequestURL, send, setResponseStatus } from "h3";
 
+const e2eMediaRequestPaths: string[] = [];
+
 export const MOCK_VOICE_ACTOR = {
   voiceActor: {
     id: 1,
@@ -1254,6 +1256,15 @@ export default defineEventHandler(async (event) => {
 
   const url = getRequestURL(event);
   const path = url.pathname;
+
+  if (path === "/api/e2e/media-requests") {
+    if (event.method === "DELETE") e2eMediaRequestPaths.length = 0;
+    return send(event, JSON.stringify(e2eMediaRequestPaths), "application/json");
+  }
+
+  if (path === "/api/season" || path === "/api/episode") {
+    e2eMediaRequestPaths.push(path);
+  }
 
   if (path.startsWith("/api/advertisement/")) {
     const id = Number(path.slice("/api/advertisement/".length));

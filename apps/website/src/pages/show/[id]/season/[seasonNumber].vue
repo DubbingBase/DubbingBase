@@ -375,10 +375,11 @@ const seasonRequestIdentity = computed(() => ({
   showId: showId.value,
   seasonNumber: seasonNumber.value,
   locale: locale.value,
+  active: isSeasonRoute.value,
 }));
 const seasonCacheKey = computed(() => {
-  const { showId, seasonNumber, locale } = seasonRequestIdentity.value;
-  return `season-${showId}-${seasonNumber}-${locale}`;
+  const { showId, seasonNumber, locale, active } = seasonRequestIdentity.value;
+  return `season-${showId}-${seasonNumber}-${locale}${active ? "" : "-nested"}`;
 });
 const {
   data: seasonData,
@@ -388,6 +389,8 @@ const {
   seasonCacheKey,
   async () => {
     const requestIdentity = seasonRequestIdentity.value;
+    if (!requestIdentity.active) return { requestIdentity, response: null };
+
     const response = await fetchSeasonPageData(
       requestIdentity.showId,
       requestIdentity.seasonNumber,
@@ -398,6 +401,7 @@ const {
   },
   {
     lazy: true,
+    dedupe: "defer",
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
@@ -410,6 +414,8 @@ const currentSeasonData = computed(() => {
   const requestIdentity = result.requestIdentity;
 
   if (
+    !currentIdentity.active ||
+    !requestIdentity.active ||
     requestIdentity.showId !== currentIdentity.showId ||
     requestIdentity.seasonNumber !== currentIdentity.seasonNumber ||
     requestIdentity.locale !== currentIdentity.locale
