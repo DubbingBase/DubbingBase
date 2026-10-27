@@ -17,15 +17,24 @@ export function buildTmdbImageUrl(
 export const cleanCharacterName = (name: string): string => {
   if (!name) return name;
   return name
-    .replace(
-      /\s*\([^)]*(?:voice|uncredited|voix|non cr[ée]dit[ée]?)[^)]*\)\s*/gi,
-      "",
-    )
+    .replace(/\s*\([^)]*(?:voice|uncredited|voix|non cr[ée]dit[ée]?)[^)]*\)\s*/gi, "")
     .trim();
 };
 
-export const processMedia = (media: any) => {
+export const processMedia = (media: any, options: { includeCreditsCrew?: boolean } = {}) => {
   if (!media) return null;
+
+  const credits = media.credits
+    ? {
+        ...media.credits,
+        cast: media.credits.cast?.map((castMember: any) => ({
+          ...castMember,
+          character: cleanCharacterName(castMember.character),
+          profile_path: buildTmdbImageUrl(castMember.profile_path),
+        })),
+      }
+    : {};
+  if (options.includeCreditsCrew === false) delete credits.crew;
 
   return {
     ...media,
@@ -33,16 +42,7 @@ export const processMedia = (media: any) => {
     poster_path: buildTmdbImageUrl(media.poster_path, "original"),
     profile_path: buildTmdbImageUrl(media.profile_path),
     still_path: buildTmdbImageUrl(media.still_path, "original"),
-    credits: media.credits
-      ? {
-          ...media.credits,
-          cast: media.credits.cast?.map((castMember: any) => ({
-            ...castMember,
-            character: cleanCharacterName(castMember.character),
-            profile_path: buildTmdbImageUrl(castMember.profile_path),
-          })),
-        }
-      : {},
+    credits,
     guest_stars: media.guest_stars
       ? media.guest_stars.map((guest: any) => ({
           ...guest,

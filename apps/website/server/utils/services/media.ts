@@ -872,7 +872,7 @@ export class MediaService {
   async getMediaWithVoiceActors(
     contentType: "movie" | "tv",
     contentId: number,
-    options: { includeCollection?: boolean } = {},
+    options: { includeCollection?: boolean; includeCreditsCrew?: boolean } = {},
   ) {
     const media =
       contentType === "movie"
@@ -917,7 +917,9 @@ export class MediaService {
       }
     }
 
-    const processedMedia = processMedia(media);
+    const processedMedia = processMedia(media, {
+      includeCreditsCrew: options.includeCreditsCrew,
+    });
 
     return { media: processedMedia, collection };
   }

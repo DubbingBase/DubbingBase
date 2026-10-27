@@ -142,14 +142,46 @@ describe("MediaService voice actor media indexing", () => {
       "fetch",
       vi.fn(async (input: RequestInfo | URL) => {
         urls.push(new URL(String(input)));
-        return new Response(JSON.stringify({ id: 89, credits: { cast: [{ id: 1 }] } }));
+        return new Response(
+          JSON.stringify({
+            id: 89,
+            credits: { cast: [{ id: 1 }], crew: [{ id: 3, name: "Crew member" }] },
+          }),
+        );
       }),
     );
 
     const service = new MediaService(new TMDBClient());
-    await service.getMediaWithVoiceActors("movie", 89);
+    const result = await service.getMediaWithVoiceActors("movie", 89);
 
     expect(urls[0]?.searchParams.get("append_to_response")).toBe("credits,external_ids");
+    expect(result.media.credits).toHaveProperty("crew", [{ id: 3, name: "Crew member" }]);
+  });
+
+  it("omits unused movie crew from compact media page responses", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              id: 89,
+              credits: {
+                cast: [{ id: 1, character: "Role" }],
+                crew: [{ id: 3, name: "Crew member" }],
+              },
+            }),
+          ),
+      ),
+    );
+
+    const result = await new MediaService(new TMDBClient()).getMediaWithVoiceActors("movie", 89, {
+      includeCreditsCrew: false,
+    });
+
+    expect(result.media.credits).toEqual({
+      cast: [{ id: 1, character: "Role", profile_path: null }],
+    });
   });
 
   it("skips unused appended data for season media pages", async () => {
@@ -163,13 +195,9 @@ describe("MediaService voice actor media indexing", () => {
     );
 
     const service = new MediaService(new TMDBClient());
-    const result = await service.getMediaWithVoiceActorsExtended(
-      "season",
-      90,
-      1,
-      undefined,
-      { includeCredits: false },
-    );
+    const result = await service.getMediaWithVoiceActorsExtended("season", 90, 1, undefined, {
+      includeCredits: false,
+    });
 
     expect(urls).toHaveLength(1);
     expect(urls[0]?.searchParams.has("append_to_response")).toBe(false);
