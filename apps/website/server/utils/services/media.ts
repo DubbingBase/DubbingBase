@@ -874,10 +874,16 @@ export class MediaService {
     contentId: number,
     options: { includeCollection?: boolean; includeCreditsCrew?: boolean } = {},
   ) {
-    const media =
+    let media =
       contentType === "movie"
         ? await this.tmdbClient.getMediaWithCredits(contentType, contentId, this.acceptLanguage)
         : await this.tmdbClient.getMediaDetails(contentType, contentId, this.acceptLanguage);
+
+    if (options.includeCreditsCrew === false && isRecord(media.credits)) {
+      const credits = { ...media.credits };
+      delete credits.crew;
+      media = { ...media, credits };
+    }
 
     let collection: Record<string, unknown> | null = null;
     const belongsToCollection = media.belongs_to_collection;
@@ -917,9 +923,7 @@ export class MediaService {
       }
     }
 
-    const processedMedia = processMedia(media, {
-      includeCreditsCrew: options.includeCreditsCrew,
-    });
+    const processedMedia = processMedia(media);
 
     return { media: processedMedia, collection };
   }
