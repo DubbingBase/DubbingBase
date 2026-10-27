@@ -31,46 +31,41 @@ function getCastMembers(value: unknown): TmdbCastMember[] {
   return value.cast.filter(isTmdbCastMember);
 }
 
-function projectActorPageCredits(
-  credits: TmdbCastMember[],
-  mediaType: "movie" | "tv",
-  start: number,
-  end: number,
-) {
-  return credits.slice(start, end).map((credit) => ({
-    id: credit.id,
-    title: credit.title,
-    name: credit.name,
-    character: credit.character,
-    poster_path: buildTmdbImageUrl(credit.poster_path),
-    release_date: credit.release_date,
-    first_air_date: credit.first_air_date,
-    media_type: mediaType,
-  }));
-}
-
 function getActorPageCredits(movieCreditsValue: unknown, tvCreditsValue: unknown, page?: number) {
-  const movieCredits = getCastMembers(movieCreditsValue);
-  const tvCredits = getCastMembers(tvCreditsValue);
-  const filmographyCount = movieCredits.length + tvCredits.length;
   const pageSize = 12;
   const start = page === undefined ? 0 : (page - 1) * pageSize;
-  const end = page === undefined ? filmographyCount : start + pageSize;
-  const movieEnd = Math.min(end, movieCredits.length);
-  const tvStart = Math.max(0, start - movieCredits.length);
-  const tvEnd = Math.max(0, end - movieCredits.length);
+  const end = page === undefined ? Number.POSITIVE_INFINITY : start + pageSize;
+  const credits: Array<Record<string, unknown>> = [];
+  let filmographyCount = 0;
 
+  function appendCredits(value: unknown, mediaType: "movie" | "tv") {
+    if (!isRecord(value) || !Array.isArray(value.cast)) return;
+
+    for (const candidate of value.cast) {
+      if (!isTmdbCastMember(candidate)) continue;
+
+      const index = filmographyCount;
+      filmographyCount += 1;
+      if (index < start || index >= end) continue;
+
+      credits.push({
+        id: candidate.id,
+        title: candidate.title,
+        name: candidate.name,
+        character: candidate.character,
+        poster_path: buildTmdbImageUrl(candidate.poster_path),
+        release_date: candidate.release_date,
+        first_air_date: candidate.first_air_date,
+        media_type: mediaType,
+      });
+    }
+  }
+
+  appendCredits(movieCreditsValue, "movie");
+  appendCredits(tvCreditsValue, "tv");
   return {
     filmographyCount,
-    credits: [
-      ...projectActorPageCredits(
-        movieCredits,
-        "movie",
-        Math.min(start, movieCredits.length),
-        movieEnd,
-      ),
-      ...projectActorPageCredits(tvCredits, "tv", tvStart, tvEnd),
-    ],
+    credits,
   };
 }
 

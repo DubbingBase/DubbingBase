@@ -114,8 +114,11 @@ beforeEach(() => {
   }));
 });
 
-async function request(projection?: string) {
+async function request(projection?: string, filmographyPage?: number) {
   const app = createApp();
+  const query = new URLSearchParams();
+  if (projection) query.set("projection", projection);
+  if (filmographyPage !== undefined) query.set("filmographyPage", String(filmographyPage));
   app.use(
     defineEventHandler((event) => {
       event.context.params = { id: "31" };
@@ -123,7 +126,7 @@ async function request(projection?: string) {
     }),
   );
   return await toWebHandler(app)(
-    new Request(`http://localhost/api/actor/31${projection ? `?projection=${projection}` : ""}`),
+    new Request(`http://localhost/api/actor/31${query.size ? `?${query}` : ""}`),
   );
 }
 
@@ -192,6 +195,52 @@ describe("actor page API projection", () => {
     });
     expect(mocks.getActorPageWorkByActor).toHaveBeenCalledOnce();
     expect(mocks.getWorkByActor).not.toHaveBeenCalled();
+  });
+
+  it("counts valid credits and returns only the requested global movie-then-TV page", async () => {
+    mocks.getPersonWithCredits.mockResolvedValue({
+      id: 31,
+      name: "Actor",
+      movie_credits: {
+        cast: [
+          ...Array.from({ length: 13 }, (_, index) => ({
+            id: 100 + index,
+            title: `Movie ${index + 1}`,
+            poster_path: null,
+          })),
+          { id: 999, title: "Invalid movie", poster_path: 42 },
+        ],
+      },
+      tv_credits: {
+        cast: [
+          { id: 200, name: "Show one", poster_path: null },
+          { id: 201, name: "Show two", poster_path: null },
+          { id: 998, name: "Invalid show", profile_path: false },
+        ],
+      },
+    });
+
+    const response = await request("actor-page", 2);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      filmographyCount: 15,
+      actor: {
+        credits: {
+          cast: [
+            { id: 112, title: "Movie 13", media_type: "movie" },
+            { id: 200, name: "Show one", media_type: "tv" },
+            { id: 201, name: "Show two", media_type: "tv" },
+          ],
+        },
+      },
+    });
+
+    const outOfRangeResponse = await request("actor-page", 3);
+    expect(outOfRangeResponse.status).toBe(200);
+    expect(await outOfRangeResponse.json()).toMatchObject({
+      filmographyCount: 15,
+      actor: { credits: { cast: [] } },
+    });
   });
 
   it("preserves nullable role fields and role ordering in page responses", async () => {
