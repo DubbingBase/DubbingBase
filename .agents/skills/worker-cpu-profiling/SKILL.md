@@ -71,6 +71,18 @@ Use this runbook when investigating CPU spikes in the production website Worker.
 
    Replace `<ACTIVE_VERSION_ID>` with the deployed UUID from step 2. `cf` is a separate CLI from Wrangler; it reads `CLOUDFLARE_API_TOKEN`, so map Doppler's `CLOUDFLARE_READ_ONLY_TOKEN` only in this command. The token needs Workers Scripts Read access. Do not use `cf auth login` or persist the token. The CLI writes raw pprof data to standard output. Capture records live work on one active isolate; it neither replays past requests nor associates stack samples with request paths. Ensure representative traffic is reaching the Worker before and during the capture.
 
+   To generate a small, controlled stream for the movie route, start Autocannon alongside the profile and sanitized tail:
+
+   ```sh
+   mise exec -- npm exec --yes --package=autocannon@8.0.0 -- autocannon \
+     -c 1 -R 1 -O 70 -d 70 -t 10 -j \
+     -H 'User-Agent=DubbingBase-CPU-Profiling/1' \
+     https://dubbingbase.com/movie/550 \
+     > /tmp/dubbingbase-worker-profiles/autocannon-movie.json
+   ```
+
+   This caps the sample at one connection, one request per second, and 70 requests. The default Autocannon User-Agent received HTTP 403 at Cloudflare before reaching the Worker; the profiling User-Agent above returned HTTP 200. Check `statusCodeStats` and confirm there are no errors, timeouts, or non-2xx responses before treating the run as Worker traffic. Start Autocannon first, then capture the 50-second profile while it is running.
+
 4. The existing helper is an alternative if `cf` is unavailable. It captures through the read-only profile API:
 
    ```sh
@@ -82,7 +94,7 @@ Use this runbook when investigating CPU spikes in the production website Worker.
 
    The API returns HTTP 429 when rate limited; wait for `Retry-After` before retrying. “No recent executions” or “no loaded isolate” means the selected version needs recent traffic before another capture.
 
-5. Inspect the profile with `go tool pprof -top /tmp/dubbingbase-worker-profiles/<profile>.pprof` when available. For readable file and line names, the source maps must be uploaded for that exact deployed version. Cloudflare dashboard flamegraphs are also available under **Workers & Pages → dubbingbase-website → Observability → Flamegraph** when that UI is enabled. If the pprof shows only `(idle)` or garbage-collector samples, the selected isolate did not capture useful application work; repeat during a busier interval rather than attributing CPU to a function.
+5. Inspect the profile with `go tool pprof -top /tmp/dubbingbase-worker-profiles/<profile>.pprof` when available. To annotate a source-mapped frame against this checkout, use `go tool pprof -source_path=apps/website -list=<FUNCTION> <profile>.pprof`; for example, `-list=nextPage` mapped the captured movie-page render frame to `src/components/PaginatedResponsiveGrid.vue`. Check both flat and cumulative values: cumulative time includes callees. Cloudflare dashboard flamegraphs are also available under **Workers & Pages → dubbingbase-website → Observability → Flamegraph** when that UI is enabled. If the pprof shows only `(idle)` or garbage-collector samples, the selected isolate did not capture useful application work; repeat during a busier interval rather than attributing CPU to a function.
 
 6. Capture a short real-time tail during the same UTC window to rank routes by per-invocation CPU. This does not persist logs in Cloudflare. It discards headers, query strings, and identifying numeric/UUID path segments, and writes only reduced events to `/tmp`:
 
