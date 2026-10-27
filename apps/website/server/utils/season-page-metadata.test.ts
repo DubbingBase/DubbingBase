@@ -61,9 +61,24 @@ beforeEach(() => {
     poster_path: "/poster.jpg",
     credits: { cast: [{ name: "Not returned" }] },
   });
-  routeMocks.getSeason.mockResolvedValue({
-    media: { id: 42, season_number: 2, name: "Season 2" },
-  });
+  routeMocks.getSeason.mockImplementation(
+    (
+      _contentType: unknown,
+      _id: unknown,
+      seasonNumber: unknown,
+      _episodeNumber: unknown,
+      options: unknown,
+    ) => ({
+      media: {
+        id: 42,
+        season_number: seasonNumber,
+        name: "Season 2",
+        ...(isRecord(options) && options.includeCredits === false
+          ? {}
+          : { credits: { cast: [{ name: "Unused cast" }] } }),
+      },
+    }),
+  );
   routeMocks.getDubbingProjects.mockResolvedValue([
     {
       id: 7,
@@ -178,6 +193,7 @@ describe("GET /api/season parent metadata", () => {
       ],
     });
     expect(body.serie).not.toHaveProperty("credits");
+    expect(body.season).toHaveProperty("credits");
     expect(routeMocks.tmdbGet).toHaveBeenCalledTimes(1);
     expect(routeMocks.tmdbGet).toHaveBeenCalledWith("tv/42", undefined, "fr-FR");
     expect(routeMocks.getSeason).toHaveBeenCalledTimes(1);
@@ -228,5 +244,31 @@ describe("GET /api/season parent metadata", () => {
     );
     expect(routeMocks.getMediaPageDubbingProjects).toHaveBeenCalledWith(42, "tv");
     expect(routeMocks.getDubbingProjects).not.toHaveBeenCalled();
+    expect(routeMocks.getSeason).toHaveBeenCalledWith(
+      "season",
+      42,
+      2,
+      undefined,
+      { includeCredits: false },
+    );
+    expect(responseBody).toMatchObject({ characterProfilePictures: [] });
+    expect(routeMocks.cacheGetOrFetch).not.toHaveBeenCalled();
+  });
+
+  it("keeps season credits and TVDB character pictures for the full projection", async () => {
+    routeMocks.cacheGetOrFetch.mockResolvedValue([{ id: 10, name: "Character", image: null }]);
+    const app = createApp();
+    app.use("/", defineEventHandler((event) => handler(event)));
+    const response = await toWebHandler(app)(
+      new Request("http://localhost/?id=42&season_number=2"),
+    );
+    const responseBody: unknown = await response.json();
+
+    expect(responseBody).toMatchObject({
+      season: { credits: { cast: [{ name: "Unused cast" }] } },
+      characterProfilePictures: [{ id: 10, name: "Character", image: null }],
+    });
+    expect(routeMocks.getSeason).toHaveBeenCalledWith("season", 42, 2);
+    expect(routeMocks.cacheGetOrFetch).toHaveBeenCalledTimes(1);
   });
 });

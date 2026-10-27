@@ -152,6 +152,46 @@ describe("MediaService voice actor media indexing", () => {
     expect(urls[0]?.searchParams.get("append_to_response")).toBe("credits,external_ids");
   });
 
+  it("skips unused appended data for season media pages", async () => {
+    const urls: URL[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        urls.push(new URL(String(input)));
+        return new Response(JSON.stringify({ id: 90, season_number: 1, episodes: [] }));
+      }),
+    );
+
+    const service = new MediaService(new TMDBClient());
+    const result = await service.getMediaWithVoiceActorsExtended(
+      "season",
+      90,
+      1,
+      undefined,
+      { includeCredits: false },
+    );
+
+    expect(urls).toHaveLength(1);
+    expect(urls[0]?.searchParams.has("append_to_response")).toBe(false);
+    expect(result.media?.credits).toEqual({});
+  });
+
+  it("keeps appended season data for the default full response", async () => {
+    const urls: URL[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        urls.push(new URL(String(input)));
+        return new Response(JSON.stringify({ id: 91, season_number: 1, credits: { cast: [] } }));
+      }),
+    );
+
+    const service = new MediaService(new TMDBClient());
+    await service.getMediaWithVoiceActorsExtended("season", 91, 1);
+
+    expect(urls[0]?.searchParams.get("append_to_response")).toBe("credits,external_ids");
+  });
+
   it("skips loading and transforming a movie collection for compact media pages", async () => {
     const fetchMock = vi.fn(
       async () =>

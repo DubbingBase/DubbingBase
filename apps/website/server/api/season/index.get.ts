@@ -21,10 +21,24 @@ export default defineEventHandler(async (event) => {
   const cache = useCache(event);
   const tmdbClient = useTmdbClient();
   const mediaService = new MediaService(tmdbClient, acceptLanguage);
+  const isMediaPageProjection = query.projection === "media-page";
 
   try {
     const apiDataPromise = withMediaServiceTimeout(async () => {
-      const result = await mediaService.getMediaWithVoiceActorsExtended("season", id, seasonNumber);
+      const result = isMediaPageProjection
+        ? await mediaService.getMediaWithVoiceActorsExtended(
+            "season",
+            id,
+            seasonNumber,
+            undefined,
+            { includeCredits: false },
+          )
+        : await mediaService.getMediaWithVoiceActorsExtended("season", id, seasonNumber);
+
+      if (isMediaPageProjection) {
+        return { season: result.media, characterProfilePictures: [] };
+      }
+
       // Fetch character profile pictures from cache for the parent TV show if available
       const language = acceptLanguage ? (acceptLanguage.split(",")[0] || "en").trim() : "default";
       const showCacheKey = buildCacheKey({
@@ -60,7 +74,7 @@ export default defineEventHandler(async (event) => {
       });
 
     const dbDataPromise = withTimeout(
-      getDubbingProjectsForMediaEndpoint(id, "tv", getQuery(event).projection),
+      getDubbingProjectsForMediaEndpoint(id, "tv", query.projection),
       10_000,
       "Supabase dubbing projects query",
     ).then((dubbingProjects) => ({ dubbingProjects, voteData: {} }));
