@@ -13,7 +13,7 @@ Use this runbook when investigating CPU spikes in the production website Worker.
 - CPU and heap profiles can still be captured through the Cloudflare profile API with a token that has Workers Scripts Read / Content Read-Only access.
 - Source maps only help versions deployed after this setting is enabled. Until CI deploys a new version, the active version may still show generated bundle frames. Do not claim source-level function attribution unless the capture is symbolized.
 - The profile covers sampled work on one active isolate. It does not associate stack samples with individual request paths.
-- Persistent Workers Logs and traces are disabled. The bounded `wrangler tail` helper is the no-retention way to capture live request paths and per-invocation CPU/wall time; do not enable persistence just to take a live sample.
+- Workers Logs permanently stores 10% of invocation events, with query strings redacted; traces remain disabled. This gives short-term history for request path, CPU, wall time, and outcome. The bounded `wrangler tail` helper remains available for a denser live sample and only saves sanitized records under `/tmp`.
 
 ## Capture a production profile
 
@@ -75,6 +75,12 @@ Use this runbook when investigating CPU spikes in the production website Worker.
    ```
 
    The arguments are active version ID, duration in seconds (1–900), and sample rate (greater than 0 and less than 1). Inspect only the sanitized file; delete it when analysis is complete.
+
+## Inspect persistent sampled invocation logs
+
+In **Workers & Pages → dubbingbase-website → Observability → Events**, select a time range and inspect invocation events. Logs are sampled at 10%, retain query-string redaction, and include route, CPU time, wall time, and outcome. Use these events to find when CPU rose and which routes were active, then capture a profile and sanitized tail during a matching busy window. The current Cloudflare plan retains Workers Logs for up to 3 days on Free or 7 days on Paid; check account usage if traffic grows. Traces are disabled.
+
+For source-level function attribution, use **Observability → Flamegraph** on a deployed version with source maps. The pprof API may produce only idle/runtime samples when its selected isolate was not busy; do not treat a GC-only or idle-only capture as evidence of an application hotspot. Repeat during representative traffic or use the dashboard flamegraph when source-mapped function names are needed.
 
 ## Deployment when E2E browser installation stalls
 
