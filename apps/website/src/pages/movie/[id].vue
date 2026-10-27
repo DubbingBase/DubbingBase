@@ -300,7 +300,7 @@
                   >
                     <template v-if="actor.voiceActor">
                       <NuxtLink
-                        :to="localePath(`/voice-actor/${actor.voiceActor.id}`)"
+                        :to="actor.voiceActorProfilePath"
                         class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                         :aria-label="`${actor.voiceActor.firstname} ${actor.voiceActor.lastname}`"
                       >
@@ -328,7 +328,7 @@
                           <span class="truncate block w-full">{{ $t("details.voiceActor") }}</span>
                         </div>
                         <NuxtLink
-                          :to="localePath(`/voice-actor/${actor.voiceActor.id}`)"
+                          :to="actor.voiceActorProfilePath"
                           class="font-bold text-sm theme-text truncate hover:underline block w-full"
                           :title="actor.voiceActor.firstname + ' ' + actor.voiceActor.lastname"
                         >
@@ -619,6 +619,9 @@ const castItems = computed(() => {
   return filteredCast.value.slice(start, start + 12).map((actor) => ({
     ...actor,
     actorProfilePath: actor.actorId ? localePath(`/actor/${actor.actorId}`) : undefined,
+    voiceActorProfilePath: actor.voiceActor
+      ? localePath(`/voice-actor/${actor.voiceActor.id}`)
+      : undefined,
   }));
 });
 
