@@ -264,6 +264,11 @@ evidence classification, or queue evidence handling, read
 [the Wikipedia corpus skill](.agents/skills/wikipedia-dubbing-corpus/SKILL.md) and run the
 relevant revision-pinned real-page regressions described there.
 
+For production Worker CPU investigations, follow the
+[Worker CPU profiling skill](.agents/skills/worker-cpu-profiling/SKILL.md). It documents
+read-only Cloudflare CLI profile capture, the paired sanitized route tail, and the
+single-isolate attribution limits.
+
 1. **Research First**: Before writing code, inspect existing files, imports, and state to understand the setup.
 2. **Preserve Comments**: Keep existing comments and docstrings unless explicitly told to remove them.
 3. **Precise Code Changes**: Make targeted edits instead of rewriting large files.

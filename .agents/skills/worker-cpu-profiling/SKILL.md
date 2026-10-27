@@ -54,7 +54,24 @@ Use this runbook when investigating CPU spikes in the production website Worker.
 
    Check the deployment timestamp if more than one version is receiving traffic. Record the active version ID and UTC capture interval.
 
-3. Capture a 50-second CPU profile while the Worker is receiving representative traffic:
+3. Capture through Cloudflare's `cf` CLI while the Worker is receiving representative traffic, ideally during the known high-CPU window (08:00–14:00 UTC):
+
+   ```sh
+   # Install the separate Cloudflare CLI if it is not available: npm install --global cf
+   doppler run --project dubbingbase --config prd -- bash -lc '
+     export CLOUDFLARE_API_TOKEN="$CLOUDFLARE_READ_ONLY_TOKEN"
+     mkdir -p /tmp/dubbingbase-worker-profiles
+     cf workers versions profile "<ACTIVE_VERSION_ID>" \
+       --worker-id dubbingbase-website \
+       --duration-ms 50000 \
+       --profile-type cpu \
+       > /tmp/dubbingbase-worker-profiles/dubbingbase-website-cpu.pprof
+   '
+   ```
+
+   Replace `<ACTIVE_VERSION_ID>` with the deployed UUID from step 2. `cf` is a separate CLI from Wrangler; it reads `CLOUDFLARE_API_TOKEN`, so map Doppler's `CLOUDFLARE_READ_ONLY_TOKEN` only in this command. The token needs Workers Scripts Read access. Do not use `cf auth login` or persist the token. The CLI writes raw pprof data to standard output. Capture records live work on one active isolate; it neither replays past requests nor associates stack samples with request paths. Ensure representative traffic is reaching the Worker before and during the capture.
+
+4. The existing helper is an alternative if `cf` is unavailable. It captures through the read-only profile API:
 
    ```sh
    doppler run --project dubbingbase --config prd -- \
@@ -65,9 +82,9 @@ Use this runbook when investigating CPU spikes in the production website Worker.
 
    The API returns HTTP 429 when rate limited; wait for `Retry-After` before retrying. “No recent executions” or “no loaded isolate” means the selected version needs recent traffic before another capture.
 
-4. Inspect the profile with `go tool pprof -top /tmp/dubbingbase-worker-profiles/<profile>.pprof` when available. For readable file and line names, the source maps must be uploaded for that exact deployed version. Cloudflare dashboard flamegraphs are also available under **Workers & Pages → dubbingbase-website → Observability → Flamegraph** when that UI is enabled.
+5. Inspect the profile with `go tool pprof -top /tmp/dubbingbase-worker-profiles/<profile>.pprof` when available. For readable file and line names, the source maps must be uploaded for that exact deployed version. Cloudflare dashboard flamegraphs are also available under **Workers & Pages → dubbingbase-website → Observability → Flamegraph** when that UI is enabled. If the pprof shows only `(idle)` or garbage-collector samples, the selected isolate did not capture useful application work; repeat during a busier interval rather than attributing CPU to a function.
 
-5. Capture a short real-time tail during the same UTC window to rank routes by per-invocation CPU. This does not persist logs in Cloudflare. It discards headers, query strings, and identifying numeric/UUID path segments, and writes only reduced events to `/tmp`:
+6. Capture a short real-time tail during the same UTC window to rank routes by per-invocation CPU. This does not persist logs in Cloudflare. It discards headers, query strings, and identifying numeric/UUID path segments, and writes only reduced events to `/tmp`:
 
    ```sh
    doppler run --project dubbingbase --config prd -- \
@@ -142,6 +159,7 @@ Only request persistent Workers Logs when historical investigation across separa
 ## References
 
 - [Cloudflare production profiling](https://developers.cloudflare.com/workers/observability/profiling-in-production/)
+- [Cloudflare CLI profiling instructions](https://developers.cloudflare.com/workers/observability/profiling-in-production/#use-cloudflare-cli)
 - [Cloudflare Workers Logs](https://developers.cloudflare.com/workers/observability/logs/workers-logs/)
 - [Cloudflare real-time logs and `wrangler tail`](https://developers.cloudflare.com/workers/observability/logs/real-time-logs/)
 - [Wrangler observability configuration](https://developers.cloudflare.com/workers/wrangler/configuration/#observability)
