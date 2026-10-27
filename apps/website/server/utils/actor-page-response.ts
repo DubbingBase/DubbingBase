@@ -1,6 +1,14 @@
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
+export type ActorPageVoiceRole = {
+  id: number;
+  performance: string | null;
+  dubbing_projects: { language: string; content_id: number } | null;
+  voice_actors: Array<{
+    id: number;
+    firstname: string;
+    lastname: string;
+    profile_picture: string | null;
+  }>;
+};
 
 function pickFields(value: Record<string, unknown>, fields: readonly string[]) {
   const result: Record<string, unknown> = {};
@@ -15,22 +23,10 @@ function pickFields(value: Record<string, unknown>, fields: readonly string[]) {
 export function actorPageResponse(
   actor: Record<string, unknown>,
   actorCredits: Record<string, unknown>[],
-  voiceRoles: Record<string, unknown>[],
+  voiceRoles: ActorPageVoiceRole[],
   profilePath: string | null,
   options?: { filmographyCount: number },
 ) {
-  const projectedVoiceRoles = voiceRoles.map((role) => ({
-    ...pickFields(role, ["id", "performance"]),
-    dubbing_projects: isRecord(role.dubbing_projects)
-      ? pickFields(role.dubbing_projects, ["language", "content_id"])
-      : null,
-    voice_actors: Array.isArray(role.voice_actors)
-      ? role.voice_actors
-          .filter(isRecord)
-          .map((actor) => pickFields(actor, ["id", "firstname", "lastname", "profile_picture"]))
-      : [],
-  }));
-
   const projectedActor = pickFields(actor, [
     "id",
     "name",
@@ -47,7 +43,7 @@ export function actorPageResponse(
     actor: {
       ...projectedActor,
       credits: { cast: actorCredits },
-      voice_roles: projectedVoiceRoles,
+      voice_roles: voiceRoles,
     },
   };
 }
