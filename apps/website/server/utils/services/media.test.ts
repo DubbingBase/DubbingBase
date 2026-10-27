@@ -223,7 +223,7 @@ describe("MediaService voice actor media indexing", () => {
 
     expect(urls[0]?.searchParams.get("append_to_response")).toBe("credits");
     expect(result.media).not.toHaveProperty("external_ids");
-    expect(result.media).not.toHaveProperty("guest_stars");
+    expect(result.media?.guest_stars).toEqual([]);
     expect(result.media?.credits).not.toHaveProperty("crew");
     expect(result.media?.credits.cast).toMatchObject([
       { id: 8, character: "Lead", profile_path: "https://image.tmdb.org/t/p/w500/lead.jpg" },
