@@ -1319,6 +1319,7 @@
     "nationalityQuebecois": "Québécois",
     "resetImageSelection": "Reset image selection",
     "saveProfile": "Save Profile",
+    "saveConflict": "This profile changed in another editor. Your edits remain on this page; copy anything you want to keep before reloading.",
     "selectNationality": "Select nationality",
     "socialMediaLinks": "Social Media & Links",
     "socialMediaLinksJson": "Social Media Links (JSON format)",

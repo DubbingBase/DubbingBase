@@ -1319,6 +1319,7 @@
     "nationalityQuebecois": "ケベック人",
     "resetImageSelection": "画像の選択をリセット",
     "saveProfile": "プロフィールを保存",
+    "saveConflict": "このプロフィールは別の編集者によって変更されました。入力内容はこのページに残っています。再読み込みの前に、残したい内容をコピーしてください。",
     "selectNationality": "国籍を選択",
     "socialMediaLinks": "ソーシャルメディアとリンク",
     "socialMediaLinksJson": "ソーシャルメディアリンク（JSON形式）",
