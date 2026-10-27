@@ -72,6 +72,19 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function omitUnusedEpisodeFields(media: unknown): unknown {
+  if (!isRecord(media)) return media;
+
+  const episode = { ...media };
+  delete episode.external_ids;
+  delete episode.guest_stars;
+  if (!isRecord(episode.credits)) return episode;
+
+  const credits = { ...episode.credits };
+  delete credits.crew;
+  return { ...episode, credits };
+}
+
 function isTvdbSearchResult(value: unknown): value is TvdbSearchResult {
   return (
     isRecord(value) &&
@@ -927,7 +940,7 @@ export class MediaService {
     id: number,
     seasonNumber?: number,
     episodeNumber?: number,
-    options: { includeCredits?: boolean } = {},
+    options: { includeCredits?: boolean; projection?: "media-page" } = {},
   ) {
     let media;
 
@@ -963,7 +976,11 @@ export class MediaService {
           seasonNumber,
           episodeNumber,
           this.acceptLanguage,
+          { includeExternalIds: options.projection !== "media-page" },
         );
+        if (options.projection === "media-page") {
+          media = omitUnusedEpisodeFields(media);
+        }
         break;
     }
 

@@ -96,10 +96,14 @@ export class TMDBClient {
     seasonNumber: number,
     episodeNumber: number,
     language?: string,
+    options: { includeExternalIds?: boolean } = {},
   ) {
     return this.get(
       `tv/${seriesId}/season/${seasonNumber}/episode/${episodeNumber}`,
-      { append_to_response: "credits,external_ids" },
+      {
+        append_to_response:
+          options.includeExternalIds === false ? "credits" : "credits,external_ids",
+      },
       language,
     );
   }
