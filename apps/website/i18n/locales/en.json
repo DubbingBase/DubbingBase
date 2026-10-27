@@ -1320,6 +1320,8 @@
     "resetImageSelection": "Reset image selection",
     "saveProfile": "Save Profile",
     "saveConflict": "This profile changed in another editor. Your edits remain on this page; copy anything you want to keep before reloading.",
+    "profileRefreshFailed": "The picture uploaded, but the profile could not be refreshed. Your edits are still here; retry the refresh or save again.",
+    "retryProfileRefresh": "Retry profile refresh",
     "selectNationality": "Select nationality",
     "socialMediaLinks": "Social Media & Links",
     "socialMediaLinksJson": "Social Media Links (JSON format)",

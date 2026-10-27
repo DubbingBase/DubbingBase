@@ -3,10 +3,14 @@ import type { VoiceActorCreationPayload } from "../composables/useMetadataCreati
 import {
   changedVoiceActorProfileFields,
   createVoiceActorProfileSaveClient,
+  assertVoiceActorCreationCanSave,
   displayedSocialLinks,
   isVoiceActorProfileConflict,
   mergeDisplayedSocialLinks,
   profileUnchangedExceptPicture,
+  refreshVoiceActorProfilePicture,
+  refreshVoiceActorCreationProfilePicture,
+  VoiceActorProfileRefreshError,
   type VoiceActorProfile,
 } from "./voice-actor-profile-save";
 
@@ -141,5 +145,78 @@ describe("voice actor profile saves", () => {
         profile({ bio: "Other edit", profile_picture: "new.png" }),
       ),
     ).toBe(false);
+  });
+
+  it("retries a failed picture refresh without turning it into a profile conflict", async () => {
+    const saved = profile();
+    const refreshed = profile({
+      profile_picture: "new.png",
+      updated_at: "later",
+    });
+    const getProfile = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("temporary read failure"))
+      .mockResolvedValueOnce(refreshed);
+
+    await expect(
+      refreshVoiceActorProfilePicture(saved, "new.png", getProfile),
+    ).rejects.toBeInstanceOf(VoiceActorProfileRefreshError);
+    await expect(refreshVoiceActorProfilePicture(saved, "new.png", getProfile)).resolves.toEqual(
+      refreshed,
+    );
+    expect(getProfile).toHaveBeenCalledTimes(2);
+  });
+
+  it("blocks stale saves after a new profile picture refresh detects a conflict", async () => {
+    const createdProfile = profile();
+    const pending = {
+      payload,
+      requestId: "create-id",
+      createdProfile,
+      conflicted: false,
+    };
+    const saveProfile = vi.fn();
+    const createVoiceActor = vi.fn();
+    const saveOrCreate = vi.fn(() => {
+      assertVoiceActorCreationCanSave(pending);
+      return pending.createdProfile ? saveProfile() : createVoiceActor();
+    });
+
+    await expect(
+      refreshVoiceActorCreationProfilePicture(pending, createdProfile, "new.png", async () =>
+        profile({ bio: "Concurrent edit", profile_picture: "new.png" }),
+      ),
+    ).rejects.toThrow();
+
+    expect(pending.createdProfile?.id).toBe(createdProfile.id);
+    expect(pending.conflicted).toBe(true);
+    expect(saveOrCreate).toThrow();
+    expect(saveOrCreate).toHaveBeenCalledOnce();
+    expect(saveProfile).not.toHaveBeenCalled();
+    expect(createVoiceActor).not.toHaveBeenCalled();
+  });
+
+  it("keeps a successful new-profile refresh saveable with the uploaded picture path", async () => {
+    const createdProfile = profile();
+    const pending = {
+      payload,
+      requestId: "create-id",
+      createdProfile,
+      conflicted: false,
+    };
+
+    await expect(
+      refreshVoiceActorCreationProfilePicture(pending, createdProfile, "new.png", async () =>
+        profile({ profile_picture: "new.png", updated_at: "later" }),
+      ),
+    ).resolves.toMatchObject({
+      id: createdProfile.id,
+      profile_picture: "new.png",
+    });
+
+    expect(pending.createdProfile?.id).toBe(createdProfile.id);
+    expect(pending.payload.profile_picture).toBe("new.png");
+    expect(pending.conflicted).toBe(false);
+    expect(() => assertVoiceActorCreationCanSave(pending)).not.toThrow();
   });
 });

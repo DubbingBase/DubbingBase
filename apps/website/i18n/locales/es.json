@@ -1320,6 +1320,8 @@
     "resetImageSelection": "Restablecer selección de imagen",
     "saveProfile": "Guardar perfil",
     "saveConflict": "Otra persona modificó este perfil. Tus cambios siguen en esta página; copia lo que quieras conservar antes de recargar.",
+    "profileRefreshFailed": "La imagen se subió, pero no se pudo actualizar el perfil. Tus cambios siguen aquí; vuelve a intentar actualizar o guardar.",
+    "retryProfileRefresh": "Reintentar actualización del perfil",
     "selectNationality": "Seleccionar nacionalidad",
     "socialMediaLinks": "Redes sociales y enlaces",
     "socialMediaLinksJson": "Enlaces de redes sociales (formato JSON)",

@@ -296,6 +296,15 @@
         <p v-if="saveError" role="alert" class="theme-status-danger rounded-xl p-3 text-sm">
           {{ saveError }}
         </p>
+        <button
+          v-if="pendingPictureRefresh"
+          type="button"
+          class="text-sm underline theme-text-muted"
+          :disabled="isSaving"
+          @click="retryPictureRefresh"
+        >
+          {{ $t("voiceActorEdit.retryProfileRefresh") }}
+        </button>
 
         <!-- Form Submit Bar -->
         <div class="flex justify-end pt-4 border-t theme-border">
@@ -859,13 +868,17 @@ import { getMediaEditorRoute } from "~/lib/media-editor-routes";
 import { createStableRequestIdFactory } from "~/utils/dubbing-project-save";
 import {
   changedVoiceActorProfileFields,
+  assertVoiceActorCreationCanSave,
   createVoiceActorProfileSaveClient,
   displayedSocialLinks,
   isVoiceActorProfileConflict,
   mergeDisplayedSocialLinks,
-  profileUnchangedExceptPicture,
+  refreshVoiceActorProfilePicture,
+  refreshVoiceActorCreationProfilePicture,
+  type PendingVoiceActorCreation,
   type VoiceActorProfile,
   VoiceActorProfileConflict,
+  VoiceActorProfileRefreshError,
   voiceActorProfilePayload,
 } from "~/utils/voice-actor-profile-save";
 
@@ -924,12 +937,9 @@ const fileInput = ref<HTMLInputElement | null>(null);
 const isSaving = ref(false);
 const saveError = ref("");
 const profileRecord = shallowRef<VoiceActorProfile | null>(null);
+const pendingPictureRefresh = shallowRef<{ profile: VoiceActorProfile; uploadedPath: string } | null>(null);
 let profileBaseline: VoiceActorCreationPayload | null = null;
-let pendingVoiceActorCreation: {
-  payload: VoiceActorCreationPayload;
-  requestId: string;
-  createdProfile: VoiceActorProfile | null;
-} | null = null;
+let pendingVoiceActorCreation: PendingVoiceActorCreation | null = null;
 
 const toast = ref({
   show: false,
@@ -1058,6 +1068,40 @@ watch(
 
 const fetchVoiceActor = async () => {}; // Dummy
 
+const retryPictureRefresh = async (): Promise<boolean> => {
+  const pending = pendingPictureRefresh.value;
+  if (!pending) return true;
+  const alreadySaving = isSaving.value;
+  isSaving.value = true;
+  try {
+    const refreshed = pendingVoiceActorCreation
+      ? await refreshVoiceActorCreationProfilePicture(
+          pendingVoiceActorCreation,
+          pending.profile,
+          pending.uploadedPath,
+          getProfile,
+        )
+      : await refreshVoiceActorProfilePicture(pending.profile, pending.uploadedPath, getProfile);
+    profileRecord.value = refreshed;
+    profileBaseline = voiceActorProfilePayload(refreshed);
+    pendingPictureRefresh.value = null;
+    saveError.value = "";
+    return true;
+  } catch (err: unknown) {
+    if (err instanceof VoiceActorProfileConflict) {
+      pendingPictureRefresh.value = null;
+      profileRecord.value = null;
+      profileBaseline = null;
+      saveError.value = t("voiceActorEdit.saveConflict");
+    } else {
+      saveError.value = t("voiceActorEdit.profileRefreshFailed");
+    }
+    return false;
+  } finally {
+    if (!alreadySaving) isSaving.value = false;
+  }
+};
+
 const saveVoiceActor = async () => {
   if (isSaving.value) return;
   if (!firstname.value || !lastname.value) {
@@ -1091,11 +1135,13 @@ const saveVoiceActor = async () => {
         payload: { ...upsertData },
         requestId: crypto.randomUUID(),
         createdProfile: null,
+        conflicted: false,
       };
     }
   }
 
   try {
+    if (pendingPictureRefresh.value && !(await retryPictureRefresh())) return;
     let savedProfile = profileRecord.value;
     if (isEditMode.value) {
       if (
@@ -1123,6 +1169,7 @@ const saveVoiceActor = async () => {
     } else {
       const pendingCreation = pendingVoiceActorCreation;
       if (!pendingCreation) throw new Error("Voice actor creation was not initialized");
+      assertVoiceActorCreationCanSave(pendingCreation);
       if (pendingCreation.createdProfile === null) {
         const { data } = await useMetadataCreation().createVoiceActor(
           pendingCreation.payload,
@@ -1151,29 +1198,18 @@ const saveVoiceActor = async () => {
       const uploadedPath = await uploadProfilePicture(savedProfile.id, selectedPicture);
       if (profilePictureFile.value === selectedPicture) clearImage();
       if (profilePicture.value === displayedPicture) profilePicture.value = uploadedPath;
-      let refreshedProfile: VoiceActorProfile;
-      try {
-        refreshedProfile = await getProfile(savedProfile.id);
-      } catch {
-        profileRecord.value = null;
-        throw new VoiceActorProfileConflict();
-      }
-      if (
-        refreshedProfile.profile_picture !== uploadedPath ||
-        !profileUnchangedExceptPicture(savedProfile, refreshedProfile)
-      ) {
-        profileRecord.value = null;
-        throw new VoiceActorProfileConflict();
-      }
+      pendingPictureRefresh.value = { profile: savedProfile, uploadedPath };
+      const refreshedProfile = pendingVoiceActorCreation
+        ? await refreshVoiceActorCreationProfilePicture(
+            pendingVoiceActorCreation,
+            savedProfile,
+            uploadedPath,
+            getProfile,
+          )
+        : await refreshVoiceActorProfilePicture(savedProfile, uploadedPath, getProfile);
       profileRecord.value = refreshedProfile;
       profileBaseline = voiceActorProfilePayload(refreshedProfile);
-      if (pendingVoiceActorCreation) {
-        pendingVoiceActorCreation.createdProfile = refreshedProfile;
-        pendingVoiceActorCreation.payload = {
-          ...upsertData,
-          profile_picture: uploadedPath,
-        };
-      }
+      pendingPictureRefresh.value = null;
     }
 
     pendingVoiceActorCreation = null;
@@ -1183,8 +1219,15 @@ const saveVoiceActor = async () => {
       pendingVoiceActorCreation = null;
     }
     console.error("Error saving voice actor profile:", err);
-    saveError.value = isVoiceActorProfileConflict(err)
-      ? t("voiceActorEdit.saveConflict")
+    if (err instanceof VoiceActorProfileConflict && pendingPictureRefresh.value) {
+      pendingPictureRefresh.value = null;
+      profileRecord.value = null;
+      profileBaseline = null;
+    }
+    saveError.value = err instanceof VoiceActorProfileRefreshError
+      ? t("voiceActorEdit.profileRefreshFailed")
+      : isVoiceActorProfileConflict(err)
+        ? t("voiceActorEdit.saveConflict")
       : err instanceof Error
         ? err.message
         : "Failed to save voice actor.";

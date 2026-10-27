@@ -19,6 +19,13 @@ export interface VoiceActorProfileSaveRequest {
   updates: Record<string, Json>;
 }
 
+export interface PendingVoiceActorCreation {
+  payload: VoiceActorCreationPayload;
+  requestId: string;
+  createdProfile: VoiceActorProfile | null;
+  conflicted: boolean;
+}
+
 type VoiceActorProfileSaveTransport = (
   request: VoiceActorProfileSaveRequest & { request_id: string },
 ) => Promise<{ profile: VoiceActorProfile }>;
@@ -127,6 +134,48 @@ export function profileUnchangedExceptPicture(
   return stableValue(comparable(before)) === stableValue(comparable(after));
 }
 
+export async function refreshVoiceActorProfilePicture(
+  before: VoiceActorProfile,
+  uploadedPath: string,
+  getProfile: (id: number) => Promise<VoiceActorProfile>,
+): Promise<VoiceActorProfile> {
+  let refreshed: VoiceActorProfile;
+  try {
+    refreshed = await getProfile(before.id);
+  } catch (cause) {
+    throw new VoiceActorProfileRefreshError(cause);
+  }
+  if (
+    refreshed.profile_picture !== uploadedPath ||
+    !profileUnchangedExceptPicture(before, refreshed)
+  ) {
+    throw new VoiceActorProfileConflict();
+  }
+  return refreshed;
+}
+
+export function assertVoiceActorCreationCanSave(pending: PendingVoiceActorCreation): void {
+  if (pending.conflicted) throw new VoiceActorProfileConflict();
+}
+
+export async function refreshVoiceActorCreationProfilePicture(
+  pending: PendingVoiceActorCreation,
+  before: VoiceActorProfile,
+  uploadedPath: string,
+  getProfile: (id: number) => Promise<VoiceActorProfile>,
+): Promise<VoiceActorProfile> {
+  let refreshed: VoiceActorProfile;
+  try {
+    refreshed = await refreshVoiceActorProfilePicture(before, uploadedPath, getProfile);
+  } catch (error) {
+    if (error instanceof VoiceActorProfileConflict) pending.conflicted = true;
+    throw error;
+  }
+  pending.createdProfile = refreshed;
+  pending.payload = { ...pending.payload, profile_picture: uploadedPath };
+  return refreshed;
+}
+
 export function createVoiceActorProfileSaveClient(
   transport: VoiceActorProfileSaveTransport,
   randomUUID?: () => string,
@@ -160,4 +209,12 @@ export function isVoiceActorProfileConflict(error: unknown): boolean {
 
 export class VoiceActorProfileConflict extends Error {
   readonly statusCode = 409;
+}
+
+export class VoiceActorProfileRefreshError extends Error {
+  constructor(cause: unknown) {
+    super("Failed to refresh voice actor profile after picture upload", {
+      cause,
+    });
+  }
 }
