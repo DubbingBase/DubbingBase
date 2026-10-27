@@ -927,6 +927,7 @@ export class MediaService {
     id: number,
     seasonNumber?: number,
     episodeNumber?: number,
+    options: { includeCredits?: boolean } = {},
   ) {
     let media;
 
@@ -941,7 +942,10 @@ export class MediaService {
         if (seasonNumber === undefined || seasonNumber === null || isNaN(seasonNumber)) {
           throw new Error("seasonNumber required");
         }
-        media = await this.tmdbClient.getSeasonWithCredits(id, seasonNumber, this.acceptLanguage);
+        media =
+          options.includeCredits === false
+            ? await this.tmdbClient.getSeason(id, seasonNumber, this.acceptLanguage)
+            : await this.tmdbClient.getSeasonWithCredits(id, seasonNumber, this.acceptLanguage);
         break;
       case "episode":
         if (

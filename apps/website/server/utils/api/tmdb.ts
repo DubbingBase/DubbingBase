@@ -87,6 +87,10 @@ export class TMDBClient {
     );
   }
 
+  async getSeason(seriesId: number, seasonNumber: number, language?: string) {
+    return this.get(`tv/${seriesId}/season/${seasonNumber}`, undefined, language);
+  }
+
   async getEpisodeWithCredits(
     seriesId: number,
     seasonNumber: number,
