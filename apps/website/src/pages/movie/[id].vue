@@ -471,6 +471,21 @@ function projectVoiceActorCount(project: MediaDetailDubbingProject): number {
 const characterProfilePictures = computed(() => data.value?.characterProfilePictures || []);
 const tvdbId = computed(() => data.value?.tvdbId);
 
+function findCharacterImage(actor: DisplayCastActor): string | null {
+  // Manually entered works do not have TMDB character profile pictures.
+  if (actor.actorId === undefined) return null;
+
+  // Find the character picture only when this card is on the current page.
+  const characterName = actor.character || actor.workCharacterName;
+  if (!characterName) return null;
+
+  const match = characterProfilePictures.value.find(
+    (picture: MediaDetailCharacterProfilePicture) =>
+      picture.name && findCharacter(picture.name, characterName),
+  );
+  return match?.image || null;
+}
+
 const backdropUrl = computed(() => {
   if (!movie.value?.backdrop_path) return null;
   if (movie.value.backdrop_path.startsWith("http")) return movie.value.backdrop_path;
@@ -545,26 +560,12 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
       // Fallback character name from DB when TMDB returns no character
       const workCharacterName = work?.character_name || null;
 
-      // Find character picture matching the character name
-      let characterImage = null;
-      const characterName = actor.character || workCharacterName;
-      if (characterName) {
-        const match = characterProfilePictures.value.find(
-          (picture: MediaDetailCharacterProfilePicture) =>
-            picture.name && findCharacter(picture.name, characterName),
-        );
-        if (match && match.image) {
-          characterImage = match.image;
-        }
-      }
-
       return {
         ...actor,
         actorId: actor.id,
         id: work ? `${actor.id}-${work.id}` : actor.id,
         profile_path: profilePath,
         voiceActor: voiceActor ? { ...voiceActor, note: work?.note } : null,
-        characterImage,
         workCharacterName,
       };
     });
@@ -616,7 +617,10 @@ const filteredCast = computed(() =>
 const castTotal = computed(() => filteredCast.value.length);
 const castItems = computed(() => {
   const start = (castPage.value - 1) * 12;
-  return filteredCast.value.slice(start, start + 12);
+  return filteredCast.value.slice(start, start + 12).map((actor) => ({
+    ...actor,
+    characterImage: findCharacterImage(actor),
+  }));
 });
 
 useHead({
