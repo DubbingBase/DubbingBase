@@ -80,6 +80,8 @@ Use this runbook when investigating CPU spikes in the production website Worker.
 
 In **Workers & Pages → dubbingbase-website → Observability → Events**, select a time range and inspect invocation events. Logs are sampled at 10%, retain query-string redaction, and include route, CPU time, wall time, and outcome. Use these events to find when CPU rose and which routes were active, then capture a profile and sanitized tail during a matching busy window. The current Cloudflare plan retains Workers Logs for up to 3 days on Free or 7 days on Paid; check account usage if traffic grows. Traces are disabled.
 
+Use the dashboard for historical log queries. Cloudflare's Workers Observability REST query endpoint currently requires the `Workers Observability Write` token permission even for a read query, so do not use it with or broaden the Doppler read-only profiling token. `wrangler tail` remains the read-only CLI path for live captures.
+
 For source-level function attribution, use **Observability → Flamegraph** on a deployed version with source maps. The pprof API may produce only idle/runtime samples when its selected isolate was not busy; do not treat a GC-only or idle-only capture as evidence of an application hotspot. Repeat during representative traffic or use the dashboard flamegraph when source-mapped function names are needed.
 
 ## Deployment when E2E browser installation stalls
