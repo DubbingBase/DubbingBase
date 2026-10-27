@@ -2,7 +2,7 @@ import { useTmdbClient } from "../../utils";
 import { getActorPageWorkByActor, getWorkByActor } from "../../utils/db/queries";
 import { buildSupabaseImageUrl } from "../../utils/urls/supabase";
 import { buildTmdbImageUrl } from "../../utils/urls/tmdb";
-import { actorPageResponse } from "../../utils/actor-page-response";
+import { actorPageResponse, type ActorPageVoiceRole } from "../../utils/actor-page-response";
 type TmdbCastMember = Record<string, unknown> & {
   profile_path?: string | null;
   poster_path?: string | null;
@@ -107,30 +107,41 @@ async function getActor(
   }
 }
 
+async function getActorPageVoiceRoles(actorId: number): Promise<ActorPageVoiceRole[]> {
+  try {
+    const workData = await getActorPageWorkByActor(actorId);
+    return workData.map((row) => ({
+      id: row.id,
+      performance: row.performance,
+      dubbing_projects: isRecord(row.dubbing_projects)
+        ? {
+            language: row.dubbing_projects.language,
+            content_id: row.dubbing_projects.content_id,
+          }
+        : null,
+      voice_actors: row.voice_actors
+        ? [
+            {
+              id: row.voice_actors.id,
+              firstname: row.voice_actors.firstname,
+              lastname: row.voice_actors.lastname,
+              profile_picture: buildSupabaseImageUrl(row.voice_actors.profile_picture),
+            },
+          ]
+        : [],
+    }));
+  } catch (e) {
+    console.error("Error fetching voice roles:", e);
+    return [];
+  }
+}
+
 async function getVoiceRoles(
   actorId: number,
   tmdbClient: ReturnType<typeof useTmdbClient>,
   acceptLanguage?: string,
-  actorPageProjection = false,
 ) {
   try {
-    if (actorPageProjection) {
-      const workData = await getActorPageWorkByActor(actorId);
-      return workData.map((row) => ({
-        id: row.id,
-        performance: row.performance,
-        dubbing_projects: row.dubbing_projects,
-        voice_actors: row.voice_actors
-          ? [
-              {
-                ...row.voice_actors,
-                profile_picture: buildSupabaseImageUrl(row.voice_actors.profile_picture),
-              },
-            ]
-          : [],
-      }));
-    }
-
     const workData = await getWorkByActor(actorId);
     if (!workData.length) return [];
 
@@ -241,16 +252,15 @@ export default defineEventHandler(async (event) => {
 
   try {
     const personRequest = getActor(actorId, tmdbClient, acceptLanguage);
-    const [actor, voiceRoles] = await Promise.all([
-      personRequest,
-      getVoiceRoles(actorId, tmdbClient, acceptLanguage, projection === "actor-page"),
-    ]);
-
-    if (!actor) {
-      throw createError({ statusCode: 404, message: "Actor not found" });
-    }
-
     if (projection === "actor-page") {
+      const [actor, voiceRoles] = await Promise.all([
+        personRequest,
+        getActorPageVoiceRoles(actorId),
+      ]);
+      if (!actor) {
+        throw createError({ statusCode: 404, message: "Actor not found" });
+      }
+
       const actorPageCredits = getActorPageCredits(
         actor.movie_credits,
         actor.tv_credits,
@@ -266,6 +276,14 @@ export default defineEventHandler(async (event) => {
           ? undefined
           : { filmographyCount: actorPageCredits.filmographyCount },
       );
+    }
+
+    const [actor, voiceRoles] = await Promise.all([
+      personRequest,
+      getVoiceRoles(actorId, tmdbClient, acceptLanguage),
+    ]);
+    if (!actor) {
+      throw createError({ statusCode: 404, message: "Actor not found" });
     }
 
     const actorCredits = [

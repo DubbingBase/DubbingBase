@@ -194,6 +194,48 @@ describe("actor page API projection", () => {
     expect(mocks.getWorkByActor).not.toHaveBeenCalled();
   });
 
+  it("preserves nullable role fields and role ordering in page responses", async () => {
+    mocks.getActorPageWorkByActor.mockResolvedValueOnce([
+      {
+        id: 9,
+        performance: null,
+        dubbing_projects: null,
+        voice_actors: {
+          id: 6,
+          firstname: "Voice",
+          lastname: "Two",
+          profile_picture: null,
+          bio: "Omitted biography",
+        },
+        suggestions: "Omitted editorial metadata",
+      },
+      {
+        id: 10,
+        performance: "Lead",
+        dubbing_projects: { language: "fr-FR", content_id: 10, id: 100 },
+        voice_actors: null,
+      },
+    ]);
+
+    const response = await request("actor-page");
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.actor.voice_roles).toEqual([
+      {
+        id: 9,
+        performance: null,
+        dubbing_projects: null,
+        voice_actors: [{ id: 6, firstname: "Voice", lastname: "Two", profile_picture: null }],
+      },
+      {
+        id: 10,
+        performance: "Lead",
+        dubbing_projects: { language: "fr-FR", content_id: 10 },
+        voice_actors: [],
+      },
+    ]);
+  });
+
   it("retains the full response for unrecognized projections", async () => {
     const response = await request("other");
     expect(await response.json()).toHaveProperty("actor.movie_credits.crew.0.id", 90);
