@@ -92,6 +92,51 @@ The regular main push still requires every release check, including E2E. If a us
 
 Use the tail's sampled per-invocation CPU to rank routes during the capture window. Compare those route patterns with the CPU pprof from the same active version and UTC window. A profile can show Worker function stacks, but it cannot link each stack sample to a route; present route-to-function conclusions as correlation, not request-level proof. Cloudflare GraphQL can add aggregate Worker CPU and request metrics, while HTTP Analytics route groups add request volume.
 
+### Attribute route traffic sources with zone analytics
+
+Use Cloudflare's read-only GraphQL Analytics API to identify the visitors behind the high-CPU page routes. Get the zone ID with `GET /zones?name=dubbingbase.com` using the same Doppler token, then query `httpRequestsAdaptiveGroups` for the same UTC window as Worker CPU metrics:
+
+```graphql
+query RouteSources($zoneTag: string!, $start: Time!, $end: Time!) {
+  viewer {
+    zones(filter: { zoneTag: $zoneTag }) {
+      httpRequestsAdaptiveGroups(
+        limit: 5000
+        filter: {
+          datetime_geq: $start
+          datetime_lt: $end
+          clientRequestHTTPHost_in: ["dubbingbase.com", "www.dubbingbase.com"]
+          OR: [
+            { clientRequestPath_ilike: "%/movie/%" }
+            { clientRequestPath_ilike: "%/actor/%" }
+            { clientRequestPath_ilike: "%/show/%" }
+          ]
+          requestSource: "eyeball"
+        }
+      ) {
+        confidence(level: 0.95) {
+          count {
+            estimate
+            lower
+            upper
+            isValid
+            sampleSize
+          }
+        }
+        dimensions {
+          datetimeHour
+          verifiedBotCategory
+        }
+      }
+    }
+  }
+}
+```
+
+`requestSource: "eyeball"` excludes `earlyHintsCache` requests. Use `datetimeHour` and `verifiedBotCategory` to compare categories with Worker CPU. Run a second query over the same filter with `dimensions { userAgent verifiedBotCategory clientCountryName userAgentBrowser }` to identify named crawlers. Run the path filter separately for each route family to compare actor, movie, and show traffic. Avoid grouping a full week by raw path unless you need a bounded path sample; IDs create many groups. These are adaptively sampled estimates, not exact request totals. Use confidence bounds, and report correlations as associations rather than proof that a source caused CPU.
+
+With the current read-only token, `clientAsn`, `clientASNDescription`, and `botManagementDecision` return authorization errors. Keep the profiling token read-only and avoid retrieving visitor IPs; use the verified bot category, browser family, country, and user agent fields the token permits. An `Unknown` browser or empty bot category does not establish automated traffic. ASN-level attribution requires Cloudflare credentials or a signed-in dashboard with access to those fields.
+
 Only request persistent Workers Logs when historical investigation across separate runs is needed. It changes data retention and may incur usage charges; query strings should remain redacted and traces can stay disabled.
 
 ## References
