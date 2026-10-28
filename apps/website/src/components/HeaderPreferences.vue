@@ -1,5 +1,5 @@
 <template>
-  <template v-if="!openedPreference">
+  <template v-if="!selectorsReady">
     <button
       type="button"
       class="flex items-center justify-center w-10 h-10 theme-text-secondary theme-hover-text theme-hover-surface-muted rounded-full transition-colors bg-transparent border-none cursor-pointer outline-none"
@@ -27,7 +27,12 @@
       <GlobeIcon :size="20" />
     </button>
   </template>
-  <component :is="HeaderPreferenceSelects" v-else :initial-open="openedPreference" />
+  <component
+    :is="HeaderPreferenceSelects"
+    v-if="openedPreference"
+    :initial-open="openedPreference"
+    @ready="onSelectorsReady"
+  />
 </template>
 
 <script setup lang="ts">
@@ -37,12 +42,18 @@ import { useTheme } from "../composables/useTheme";
 
 type PreferenceMenu = "theme" | "language";
 
-const HeaderPreferenceSelects = defineAsyncComponent(
-  () => import("./HeaderPreferenceSelects.vue"),
-);
-
 const { theme } = useTheme();
 const openedPreference = ref<PreferenceMenu | null>(null);
+const selectorsReady = ref(false);
+
+const HeaderPreferenceSelects = defineAsyncComponent({
+  loader: () => import("./HeaderPreferenceSelects.vue"),
+  onError(_error, _retry, fail) {
+    openedPreference.value = null;
+    selectorsReady.value = false;
+    fail();
+  },
+});
 
 const openPreference = (preference: PreferenceMenu): void => {
   openedPreference.value = preference;
@@ -52,5 +63,9 @@ const onPreferenceKeydown = (event: KeyboardEvent, preference: PreferenceMenu): 
   if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
   event.preventDefault();
   openPreference(preference);
+};
+
+const onSelectorsReady = (): void => {
+  selectorsReady.value = true;
 };
 </script>
