@@ -46,7 +46,7 @@ import { BellIcon, BellOffIcon } from "lucide-vue-next";
 import { enablePushNotifications } from "../composables/usePushNotifications";
 
 const props = defineProps<{ voiceActorId: number }>();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const user = useSupabaseUser();
 const subscribed = ref(false);
 const loading = ref(false);
@@ -98,7 +98,7 @@ async function toggleFollow(): Promise<void> {
 
 async function enablePush(): Promise<void> {
   loading.value = true;
-  const result = await enablePushNotifications();
+  const result = await enablePushNotifications(locale.value);
   if (result.ok) {
     showOffer.value = false;
   } else if (result.reason === "install-required") {

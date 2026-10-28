@@ -10,9 +10,7 @@
         <h3 class="text-lg font-medium theme-text mb-4">
           {{ $t("settings.preferences") }}
         </h3>
-        <div
-          class="theme-surface-raised p-4 rounded-xl border theme-border-subtle mb-4"
-        >
+        <div class="theme-surface-raised p-4 rounded-xl border theme-border-subtle mb-4">
           <div class="flex items-center justify-between gap-4">
             <div>
               <p class="text-sm font-medium theme-text">
@@ -42,9 +40,7 @@
             </button>
           </div>
         </div>
-        <div
-          class="theme-surface-raised p-4 rounded-xl border theme-border-subtle"
-        >
+        <div class="theme-surface-raised p-4 rounded-xl border theme-border-subtle">
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm font-medium theme-text">
@@ -74,9 +70,7 @@
           {{ $t("settings.dangerZone") }}
         </h3>
         <div class="theme-status-danger p-4 rounded-xl border">
-          <div
-            class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-          >
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <p class="text-sm font-medium theme-status-danger-text">
                 {{ $t("settings.deleteAccount") }}
@@ -102,7 +96,7 @@
 import { enablePushNotifications } from "../../composables/usePushNotifications";
 import { detectPushSupport } from "../../utils/push-support";
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const pushEnabled = ref(false);
 const pushLoading = ref(false);
 const pushMessage = ref("");
@@ -146,7 +140,7 @@ async function togglePush(): Promise<void> {
     return;
   }
 
-  const result = await enablePushNotifications();
+  const result = await enablePushNotifications(locale.value);
   if (result.ok) {
     pushEnabled.value = true;
   } else if (result.reason === "denied") {

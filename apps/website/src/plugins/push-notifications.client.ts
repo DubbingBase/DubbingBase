@@ -3,15 +3,15 @@ import { getMessaging, isSupported, onMessage } from "firebase/messaging";
 import { detectPushSupport } from "../utils/push-support";
 import { reconcilePushInstallation } from "../composables/usePushNotifications";
 
-export default defineNuxtPlugin(() => {
+export default defineNuxtPlugin((nuxtApp) => {
   const user = useSupabaseUser();
-  const { locale } = useI18n();
+  const locale = nuxtApp.$i18n.locale;
   let currentUserId: string | null = null;
   let stopListening: (() => void) | null = null;
 
   const reconcile = async () => {
     if (!user.value) return;
-    await reconcilePushInstallation();
+    await reconcilePushInstallation(locale.value);
     const support = detectPushSupport();
     if (support.eligibility !== "ready" || Notification.permission !== "granted") return;
 
@@ -73,7 +73,7 @@ export default defineNuxtPlugin(() => {
   );
 
   watch(locale, () => {
-    if (user.value) void reconcilePushInstallation();
+    if (user.value) void reconcilePushInstallation(locale.value);
   });
 
   const onVisible = () => {
