@@ -58,12 +58,14 @@ jobs:
 
           results_dir="$RUNNER_TEMP/route-cpu-results"
           benchmark_copy="$RUNNER_TEMP/route-cpu.bench.test.ts"
+          config_copy="$RUNNER_TEMP/route-cpu.vitest.config.ts"
           mkdir -p "$results_dir/base" "$results_dir/head" .route-cpu-results
           copy_results() {
             cp -a "$results_dir/." .route-cpu-results/ || true
           }
           trap copy_results EXIT
           cp apps/website/scripts/route-cpu.bench.test.ts "$benchmark_copy"
+          cp apps/website/scripts/route-cpu.vitest.config.ts "$config_copy"
 
           collect_revision() {
             local label="$1"
@@ -72,6 +74,7 @@ jobs:
             git checkout --detach "$revision"
             mkdir -p apps/website/scripts
             cp "$benchmark_copy" apps/website/scripts/route-cpu.bench.test.ts
+            cp "$config_copy" apps/website/scripts/route-cpu.vitest.config.ts
 
             mise exec -- pnpm install \
               --filter '@app/website...' \
@@ -96,12 +99,13 @@ jobs:
                 "ROUTE_CPU_BENCHMARK=true" \
                 "ROUTE_CPU_OUTPUT=$results_dir/$label/route-cpu.json" \
                 "$mise_bin" exec -- ./node_modules/.bin/vitest run \
-                  --environment node --pool forks --maxWorkers 1 \
+                  --config scripts/route-cpu.vitest.config.ts \
                   scripts/route-cpu.bench.test.ts
             )
 
             if [ "$label" = "base" ]; then
               rm apps/website/scripts/route-cpu.bench.test.ts
+              rm apps/website/scripts/route-cpu.vitest.config.ts
             fi
           }
 
@@ -170,9 +174,10 @@ jobs:
               issue_number,
               per_page: 100,
             });
+            const reportAuthors = new Set(['github-actions', 'github-actions[bot]']);
             const existing = comments.find(
               (comment) =>
-                comment.user?.login === 'github-actions[bot]' &&
+                reportAuthors.has(comment.user?.login ?? '') &&
                 comment.body?.includes(marker),
             );
             if (existing) {
