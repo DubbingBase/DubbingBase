@@ -167,6 +167,7 @@ describe("actor filmography pagination", () => {
       expect(isReactive(data.server.voiceRoles.value)).toBe(false);
       expect(isReactive(data.client.actor.value)).toBe(true);
       expect(isReactive(data.client.voiceRoles.value)).toBe(true);
+      expect(payload.voiceRoles[0]?.voice_actors[0]).toBe(payload.voiceRoles[1]?.voice_actors[0]);
       expect(data.server.enhancedFilmography.value).toEqual(data.client.enhancedFilmography.value);
       expect(data.server.filteredUniqueVoiceActorsByLanguage.value).toEqual(
         data.client.filteredUniqueVoiceActorsByLanguage.value,

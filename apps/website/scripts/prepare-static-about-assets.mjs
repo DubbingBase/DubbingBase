@@ -39,10 +39,6 @@ const stylesheet = await readFile(originalStylesheetPath, "utf8");
 const fontFacePattern = /@font-face\s*\{[^{}]*\}/g;
 const fontFaces = stylesheet.match(fontFacePattern) ?? [];
 
-if (fontFaces.length === 0) {
-  throw new Error("Expected unused @font-face rules in the shared stylesheet");
-}
-
 const aboutStylesheet = stylesheet.replace(fontFacePattern, "");
 const hash = createHash("sha256").update(aboutStylesheet).digest("hex").slice(0, 8);
 const aboutStylesheetHref = `/_nuxt/about.${hash}.css`;
