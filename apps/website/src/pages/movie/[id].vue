@@ -598,10 +598,12 @@ watch(debouncedSearch, (val) => {
 });
 watch([searchQuery, activeDubId], () => void setCastPage(1));
 
-const filteredCast = computed(() =>
-  formattedCast.value.filter((actor: DisplayCastActor) => {
-    const query = searchQuery.value.trim().toLowerCase();
-    if (!query) return true;
+const filteredCast = computed(() => {
+  const cast = formattedCast.value;
+  const query = searchQuery.value.trim().toLowerCase();
+  if (!query) return cast;
+
+  return cast.filter((actor: DisplayCastActor) => {
     const searchable = [
       actor.name,
       actor.character,
@@ -615,8 +617,8 @@ const filteredCast = computed(() =>
         .toLowerCase()
         .includes(query),
     );
-  }),
-);
+  });
+});
 const castTotal = computed(() => filteredCast.value.length);
 const castItems = computed(() => {
   const start = (castPage.value - 1) * 12;

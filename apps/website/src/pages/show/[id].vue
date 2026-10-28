@@ -680,10 +680,12 @@ watch(debouncedSearch, (val) => {
 });
 watch([searchQuery, () => route.query.dub], () => void setCastPage(1));
 
-const filteredCast = computed(() =>
-  formattedCast.value.filter((actor: DisplayCastActor) => {
-    const query = searchQuery.value.trim().toLowerCase();
-    if (!query) return true;
+const filteredCast = computed(() => {
+  const cast = formattedCast.value;
+  const query = searchQuery.value.trim().toLowerCase();
+  if (!query) return cast;
+
+  return cast.filter((actor: DisplayCastActor) => {
     const searchable = [
       actor.name,
       actor.character,
@@ -698,8 +700,8 @@ const filteredCast = computed(() =>
         .toLowerCase()
         .includes(query),
     );
-  }),
-);
+  });
+});
 const castTotal = computed(() => filteredCast.value.length);
 // Keep pending or smaller result sets from handing an invalid page to the grid,
 // which would otherwise replace the active route while clamping it.

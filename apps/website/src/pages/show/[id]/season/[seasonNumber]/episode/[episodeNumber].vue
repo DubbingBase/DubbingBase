@@ -678,9 +678,11 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
   return [...matchedCards, ...unmatchedCards];
 });
 const filteredCast = computed(() => {
+  const cast = formattedCast.value;
   const query = debouncedSearch.value.trim().toLowerCase();
-  return formattedCast.value.filter((actor: DisplayCastActor) => {
-    if (!query) return true;
+  if (!query) return cast;
+
+  return cast.filter((actor: DisplayCastActor) => {
     const searchable = [
       actor.name,
       actor.character,
