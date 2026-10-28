@@ -447,10 +447,26 @@ const { data, pending } = useAsyncData(
 );
 
 const movie = computed(() => data.value?.movie);
-const dubbingProjects = computed(() => {
-  const projects = [...(data.value?.dubbingProjects || [])].filter((p) => projectHasVoiceActor(p));
+const dubbingProjectData = computed(() => {
+  const projects: MediaDetailDubbingProject[] = [];
+  const projectVoiceActorCounts = new WeakMap<MediaDetailDubbingProject, number>();
+
+  for (const project of data.value?.dubbingProjects || []) {
+    let hasVoiceActor = false;
+    const voiceActorIds = new Set<number>();
+    for (const work of project.works || []) {
+      const voiceActor = work.voice_actor;
+      if (voiceActor) hasVoiceActor = true;
+      if (voiceActor?.id) voiceActorIds.add(voiceActor.id);
+    }
+
+    if (!hasVoiceActor) continue;
+    projects.push(project);
+    projectVoiceActorCounts.set(project, voiceActorIds.size);
+  }
+
   const currentLocale = locale.value.toLowerCase();
-  return projects.sort((a, b) => {
+  projects.sort((a, b) => {
     const aIsPref = a.language?.toLowerCase().startsWith(currentLocale) ? 1 : 0;
     const bIsPref = b.language?.toLowerCase().startsWith(currentLocale) ? 1 : 0;
 
@@ -462,18 +478,13 @@ const dubbingProjects = computed(() => {
     const bWorks = b.works?.length || 0;
     return bWorks - aWorks;
   });
-});
 
-function projectHasVoiceActor(project: MediaDetailDubbingProject): boolean {
-  return (project.works || []).some((work) => Boolean(work.voice_actor));
-}
+  return { projects, projectVoiceActorCounts };
+});
+const dubbingProjects = computed(() => dubbingProjectData.value.projects);
 
 function projectVoiceActorCount(project: MediaDetailDubbingProject): number {
-  const ids = new Set<number>();
-  for (const w of project.works || []) {
-    if (w.voice_actor?.id) ids.add(w.voice_actor.id);
-  }
-  return ids.size;
+  return dubbingProjectData.value.projectVoiceActorCounts.get(project) ?? 0;
 }
 const characterProfilePictures = computed(() => data.value?.characterProfilePictures || []);
 const tvdbId = computed(() => data.value?.tvdbId);
