@@ -121,6 +121,19 @@ The regular main push still requires every release check, including E2E. If a us
 
 Use the tail's sampled per-invocation CPU to rank routes during the capture window. Compare those route patterns with the CPU pprof from the same active version and UTC window. A profile can show Worker function stacks, but it cannot link each stack sample to a route; present route-to-function conclusions as correlation, not request-level proof. Cloudflare GraphQL can add aggregate Worker CPU and request metrics, while HTTP Analytics route groups add request volume.
 
+## Evaluate a CPU optimization
+
+Before changing code, write down the route and source-level hypothesis separately. The route tail identifies which requests used CPU; the pprof identifies functions sampled on one isolate. Neither alone proves that a named function caused the route's CPU.
+
+For a production before/after comparison:
+
+1. Record the active deployed version, UTC interval, route pattern, sample count, status/error counts, and per-invocation CPU distribution from the sanitized tail. Keep profile files outside Git.
+2. Capture the baseline before the change, then repeat after the change is deployed. Keep the route, request shape, rate, concurrency, duration, sampling rate, and cache state as close as practical. Use comparable traffic windows and the same capture commands; disclose any differences.
+3. Compare route CPU distributions and response outcomes. Use pprof to confirm which source-mapped functions were sampled on the selected isolate, but do not assign a stack to a particular route. Treat small or unmatched samples as inconclusive.
+4. Preserve the default/full API response while optimizing a page projection. Add focused regressions for both the optimized projection and the unprojected behavior, and include a website Changeset with each code PR.
+
+If comparable production samples are unavailable, use a local synthetic benchmark to test the specific algorithm or projection with representative input sizes. Record the workload shape, iterations, warmup, output size where relevant, and timing method. Label those results as synthetic; they support the code-level hypothesis but do not establish production CPU savings. Keep a candidate only when its behavior is covered and the measured workload shows a useful reduction. After deployment, collect a matched route tail before describing its production impact.
+
 ### Attribute route traffic sources with zone analytics
 
 Use Cloudflare's read-only GraphQL Analytics API to identify the visitors behind the high-CPU page routes. Get the zone ID with `GET /zones?name=dubbingbase.com` using the same Doppler token, then query `httpRequestsAdaptiveGroups` for the same UTC window as Worker CPU metrics:

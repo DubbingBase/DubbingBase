@@ -269,6 +269,13 @@ For production Worker CPU investigations, follow the
 read-only Cloudflare CLI profile capture, the paired sanitized route tail, and the
 single-isolate attribution limits.
 
+For Worker CPU optimization PRs, state the route/source hypothesis, add focused
+behavior regressions and a website Changeset, and include a representative local
+synthetic benchmark when a matched production comparison is not yet available.
+Label synthetic results clearly; claim production savings only after a comparable
+deployed route-tail comparison. Preserve and test the default/full response when
+adding a page-specific projection. Follow the profiling skill's evaluation steps.
+
 1. **Research First**: Before writing code, inspect existing files, imports, and state to understand the setup.
 2. **Preserve Comments**: Keep existing comments and docstrings unless explicitly told to remove them.
 3. **Precise Code Changes**: Make targeted edits instead of rewriting large files.
