@@ -2,4 +2,4 @@
 "@app/shared-logic": patch
 ---
 
-Share one voice-role scan across actor filmography and voice-actor projections.
+Share one language-filtered voice-role scan across filmography and voice-actor projections.

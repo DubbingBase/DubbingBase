@@ -200,15 +200,13 @@ export function useActorData(
 
     for (const role of voiceRoles.value) {
       const mediaId = role.dubbing_projects?.content_id ?? role.mediaDetails?.id;
-      if (mediaId) {
+      if (mediaId && (!language || role.dubbing_projects?.language === language)) {
         const mediaRoles = rolesByMedia.get(mediaId);
         if (mediaRoles) mediaRoles.push(role);
         else rolesByMedia.set(mediaId, [role]);
       }
 
-      if (!language || role.dubbing_projects?.language !== language) {
-        continue;
-      }
+      if (!language || role.dubbing_projects?.language !== language) continue;
 
       for (const voiceActor of role.voice_actors || []) {
         const existing = voiceActorsById.get(voiceActor.id);
@@ -238,15 +236,11 @@ export function useActorData(
 
     return items.map((item) => {
       const mediaRoles = roleIndexes.value.rolesByMedia.get(item.id) || [];
-      const languageRoles = selectedLanguage.value
-        ? mediaRoles.filter((role) => role.dubbing_projects?.language === selectedLanguage.value)
-        : mediaRoles;
-
-      const voiceActors = languageRoles.flatMap((role) => role.voice_actors || []);
+      const voiceActors = mediaRoles.flatMap((role) => role.voice_actors || []);
 
       return {
         ...item,
-        dubbing_roles: languageRoles,
+        dubbing_roles: mediaRoles,
         voice_actors: voiceActors,
       };
     });
