@@ -4,7 +4,9 @@
     <PersonDetailsLayout
       v-else-if="actor"
       :name="actor.name"
-      :profile-url="actor.profile_path ? resolveImageUrl(actor.profile_path) : null"
+      :profile-url="
+        actor.profile_path ? resolveImageUrl(actor.profile_path) : null
+      "
       :loading="loading"
     >
       <template #metadata>
@@ -54,7 +56,9 @@
             stroke-linecap="round"
             stroke-linejoin="round"
           >
-            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+            <path
+              d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"
+            />
             <line x1="4" y1="22" x2="4" y2="15" />
           </svg>
           {{ t("report.button", "Signaler cette fiche") }}
@@ -113,19 +117,49 @@
             </div>
           </div>
 
-          <PaginatedResponsiveGrid
-            v-if="voiceActorsTotal > 0"
-            :items="actorGridPlaceholder"
-            :total-items="voiceActorsTotal"
-            :page="voicesPage"
-            :page-size="12"
-            grid-class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
-            @update:page="setVoicesPage"
-          >
-            <template #default>
-              <div class="contents" v-html="voiceActorCardsHtml" @click="navigateActorCard" />
-            </template>
-          </PaginatedResponsiveGrid>
+          <div v-if="voiceActorsTotal > 0" @click="navigateActorCard">
+            <PaginatedResponsiveGrid
+              :items="voiceActorItems"
+              :page="voicesPage"
+              :page-size="12"
+              grid-class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+              :item-key="(va) => va.id"
+              @update:page="setVoicesPage"
+            >
+              <template #default="{ item: va }">
+                <a
+                  data-actor-nav
+                  :href="actorLocalePath(`/voice-actor/${va.id}`)"
+                  class="flex flex-col items-center p-4 rounded-xl border transition group hover:-translate-y-1 theme-input theme-border-subtle theme-border theme-hover-surface-muted"
+                >
+                  <div
+                    class="relative w-20 h-20 rounded-full overflow-hidden mb-3 border-2 border-transparent theme-hover-primary-border transition-colors"
+                  >
+                    <img
+                      v-if="va.profile_picture"
+                      :src="getActorImageSrc(va.profile_picture)"
+                      :alt="`${va.firstname} ${va.lastname}`"
+                      class="object-cover w-full h-full"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    <div
+                      v-else
+                      class="w-full h-full flex items-center justify-center theme-surface-raised theme-surface-muted theme-text-muted font-bold"
+                    >
+                      {{ va.firstname[0] }}{{ va.lastname[0] }}
+                    </div>
+                  </div>
+                  <span class="block font-bold text-center text-sm theme-text">
+                    {{ va.firstname }} {{ va.lastname }}
+                  </span>
+                  <span class="text-xs theme-text-muted mt-1"
+                    >{{ va.rolesCount }}{{ $t("actor.roles") }}</span
+                  >
+                </a>
+              </template>
+            </PaginatedResponsiveGrid>
+          </div>
           <div
             v-else
             class="theme-text-muted text-center py-8 theme-input rounded-2xl border theme-border-subtle theme-border"
@@ -151,19 +185,218 @@
             {{ $t("actor.noWorks") }}
           </div>
 
-          <PaginatedResponsiveGrid
-            v-else
-            :items="actorGridPlaceholder"
-            :total-items="filmographyTotal"
-            :page="filmographyPage"
-            :page-size="12"
-            grid-class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
-            @update:page="setFilmographyPageWithData"
-          >
-            <template #default>
-              <div class="contents" v-html="filmographyCardsHtml" @click="navigateActorCard" />
-            </template>
-          </PaginatedResponsiveGrid>
+          <div v-else @click="navigateActorCard">
+            <PaginatedResponsiveGrid
+              :items="filmographyItems"
+              :total-items="filmographyTotal"
+              :page="filmographyPage"
+              :page-size="12"
+              grid-class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+              :item-key="(item) => `${item.media_type}-${item.id}`"
+              @update:page="setFilmographyPageWithData"
+            >
+              <template #default="{ item }">
+                <div
+                  class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border block group"
+                >
+                  <div
+                    class="flex flex-col sm:grid sm:grid-cols-3 gap-4 h-full"
+                  >
+                    <a
+                      data-actor-nav
+                      :href="
+                        actorLocalePath(
+                          `/${item.media_type === 'tv' ? 'show' : 'movie'}/${item.id}`,
+                        )
+                      "
+                      class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start hover:opacity-80 transition-opacity cursor-pointer"
+                    >
+                      <div
+                        class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden theme-surface-raised theme-surface-muted sm:mb-3 flex-shrink-0"
+                      >
+                        <img
+                          v-if="item.poster_path"
+                          :src="
+                            getActorImageSrc(resolveImageUrl(item.poster_path))
+                          "
+                          :alt="item.title || item.name || ''"
+                          class="w-full h-full object-cover transition-transform duration-300"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                        <div
+                          v-else
+                          class="w-full h-full flex items-center justify-center theme-text-muted"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                            class="w-6 h-6 sm:w-8 sm:h-8 opacity-20"
+                          >
+                            <path
+                              d="M4 11h16v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"
+                            />
+                            <path d="m4 11 2-7" />
+                            <path d="m10 11 2-7" />
+                            <path d="m16 11 2-7" />
+                            <path d="M2 15h20" />
+                          </svg>
+                        </div>
+                      </div>
+                      <div class="flex flex-col min-w-0 flex-1">
+                        <span
+                          class="text-[10px] theme-text-muted font-semibold uppercase tracking-wider mb-0.5"
+                        >
+                          {{
+                            item.release_date
+                              ? new Date(item.release_date).getFullYear()
+                              : item.first_air_date
+                                ? new Date(item.first_air_date).getFullYear()
+                                : "N/A"
+                          }}
+                        </span>
+                        <span
+                          class="font-bold text-sm theme-text leading-tight line-clamp-2"
+                          :title="item.title || item.name"
+                        >
+                          {{ item.title || item.name }}
+                        </span>
+                      </div>
+                    </a>
+
+                    <a
+                      v-if="item.voice_actors?.[0]"
+                      data-actor-nav
+                      :href="
+                        actorLocalePath(
+                          `/voice-actor/${item.voice_actors[0].id}`,
+                        )
+                      "
+                      class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t theme-border-subtle theme-border sm:border-t-0 pt-3 sm:pt-0 hover:opacity-80 transition-opacity cursor-pointer"
+                    >
+                      <div
+                        class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden theme-surface-raised theme-surface-muted sm:mb-3 flex-shrink-0"
+                      >
+                        <img
+                          v-if="item.voice_actors[0].profile_picture"
+                          :src="
+                            getActorImageSrc(
+                              item.voice_actors[0].profile_picture,
+                            )
+                          "
+                          :alt="`${item.voice_actors[0].firstname} ${item.voice_actors[0].lastname}`"
+                          class="w-full h-full object-cover"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                        <div
+                          v-else
+                          class="w-full h-full flex items-center justify-center theme-text-muted text-xs font-bold theme-surface-raised theme-input"
+                        >
+                          {{ item.voice_actors[0].firstname[0]
+                          }}{{ item.voice_actors[0].lastname[0] }}
+                        </div>
+                      </div>
+                      <div class="flex flex-col min-w-0 flex-1">
+                        <span
+                          class="text-[10px] theme-text-muted font-semibold uppercase tracking-wider mb-0.5"
+                          >{{ $t("details.voicedBy") }}</span
+                        >
+                        <span
+                          class="font-medium text-sm theme-text-secondary leading-tight line-clamp-2"
+                        >
+                          {{ item.voice_actors[0].firstname }}
+                          {{ item.voice_actors[0].lastname }}
+                        </span>
+                      </div>
+                    </a>
+                    <div
+                      v-else
+                      class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t theme-border-subtle theme-border sm:border-t-0 pt-3 sm:pt-0"
+                    >
+                      <div
+                        class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden theme-surface-raised theme-surface-muted sm:mb-3 flex-shrink-0"
+                      >
+                        <div
+                          class="w-full h-full flex items-center justify-center theme-text-muted text-xs font-bold theme-surface-raised theme-input"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                            class="w-6 h-6 sm:w-8 sm:h-8 opacity-20"
+                          >
+                            <circle cx="12" cy="8" r="5" />
+                            <path d="M20 21a8 8 0 0 0-16 0" />
+                          </svg>
+                        </div>
+                      </div>
+                      <div class="flex flex-col min-w-0 flex-1">
+                        <span
+                          class="text-[10px] theme-text-muted font-semibold uppercase tracking-wider mb-0.5"
+                          >{{ $t("details.voicedBy") }}</span
+                        >
+                        <span
+                          class="font-medium text-sm theme-text-muted italic"
+                        >
+                          {{ $t("details.unknownCharacter") }}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div
+                      class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t theme-border-subtle theme-border sm:border-t-0 pt-3 sm:pt-0"
+                    >
+                      <div
+                        class="w-16 sm:w-full aspect-[2/3] rounded-xl overflow-hidden theme-surface-raised theme-surface-muted sm:mb-3 relative flex-shrink-0"
+                      >
+                        <div
+                          class="w-full h-full flex items-center justify-center theme-text-muted"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                            class="w-6 h-6 sm:w-8 sm:h-8 opacity-20"
+                          >
+                            <circle cx="12" cy="8" r="5" />
+                            <path d="M20 21a8 8 0 0 0-16 0" />
+                          </svg>
+                        </div>
+                      </div>
+                      <div class="flex flex-col min-w-0 flex-1">
+                        <span
+                          class="text-[10px] theme-text-muted font-semibold uppercase tracking-wider mb-0.5"
+                          >{{ $t("details.as") }}</span
+                        >
+                        <span
+                          class="font-medium text-sm theme-text-secondary leading-tight line-clamp-2"
+                        >
+                          {{ item.character || $t("details.unknownCharacter") }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </PaginatedResponsiveGrid>
+          </div>
         </section>
       </template>
     </PersonDetailsLayout>
@@ -184,11 +417,6 @@ import { refDebounced } from "@vueuse/core";
 import { useActorData, fetchActorData } from "@app/shared-logic";
 import ReportModal from "../../components/ReportModal.vue";
 import { prepareActorSsrData } from "../../utils/actor-ssr-data";
-import {
-  renderActorFilmographyCardHtml,
-  renderActorVoiceActorCardHtml,
-  type ActorImageAttributes,
-} from "../../utils/actor-grid-html";
 
 const isReportModalOpen = ref(false);
 const hasOpenedReportModal = ref(false);
@@ -208,33 +436,21 @@ const imageModifiers = {
   quality: imageProcessor.options.quality,
 };
 
-// Keep NuxtImg's responsive attributes without creating a component per card.
-function getActorImageAttrs(
-  src: string | null | undefined,
-  alt: string | undefined,
-  imageClass: string,
-): ActorImageAttributes {
-  const source = src ?? "";
-
-  return {
-    "data-nuxt-img": "",
-    onerror: "this.setAttribute('data-error', 1)",
-    alt,
-    class: imageClass,
-    decoding: "async",
-    loading: "lazy",
-    src: imageProcessor(source, imageModifiers, {
-      provider: undefined,
-      preset: undefined,
-    }),
-  };
+function getActorImageSrc(src: string | null | undefined): string {
+  return imageProcessor(src ?? "", imageModifiers, {
+    provider: undefined,
+    preset: undefined,
+  });
 }
 
 const id = String(route.params.id);
 const siteUrl = useSiteConfig().url;
-const pageUrl = computed(() => new URL(actorLocalePath(`/actor/${id}`), siteUrl).href);
+const pageUrl = computed(
+  () => new URL(actorLocalePath(`/actor/${id}`), siteUrl).href,
+);
 const currentUrl = computed(() => new URL(route.fullPath, siteUrl).href);
-const { page: voicesPage, setPage: setVoicesPage } = useUrlPagination("voicesPage");
+const { page: voicesPage, setPage: setVoicesPage } =
+  useUrlPagination("voicesPage");
 const { page: filmographyPage, setPage: setFilmographyPageUrl } =
   useUrlPagination("filmographyPage");
 
@@ -298,45 +514,9 @@ const voiceActorItems = filteredUniqueVoiceActorsByLanguage;
 const voiceActorsTotal = computed(() => voiceActorItems.value.length);
 const filmographyItems = enhancedFilmography;
 const filmographyTotal = computed(() =>
-  filmographyComplete.value ? filteredCredits.value.length : filmographyCount.value,
-);
-const actorGridPlaceholder = [0];
-const voiceActorCardsHtml = computed(() => {
-  const start = (voicesPage.value - 1) * 12;
-
-  return voiceActorItems.value
-    .slice(start, start + 12)
-    .map((voiceActor) =>
-      renderActorVoiceActorCardHtml(
-        voiceActor,
-        actorLocalePath(`/voice-actor/${voiceActor.id}`),
-        t("actor.roles"),
-        getActorImageAttrs,
-      ),
-    )
-    .join("");
-});
-const actorFilmographyCopy = computed(() => ({
-  voicedBy: t("details.voicedBy"),
-  as: t("details.as"),
-  unknownCharacter: t("details.unknownCharacter"),
-}));
-const filmographyCardsHtml = computed(() =>
-  filmographyItems.value
-    .map((item) => {
-      const voiceActor = item.voice_actors?.[0];
-      const mediaType = item.media_type === "tv" ? "show" : "movie";
-
-      return renderActorFilmographyCardHtml(
-        item,
-        actorLocalePath(`/${mediaType}/${item.id}`),
-        voiceActor ? actorLocalePath(`/voice-actor/${voiceActor.id}`) : undefined,
-        actorFilmographyCopy.value,
-        getActorImageAttrs,
-        resolveImageUrl,
-      );
-    })
-    .join(""),
+  filmographyComplete.value
+    ? filteredCredits.value.length
+    : filmographyCount.value,
 );
 
 function navigateActorCard(event: MouseEvent): void {
@@ -359,12 +539,16 @@ function navigateActorCard(event: MouseEvent): void {
   if (destination.origin !== window.location.origin) return;
 
   event.preventDefault();
-  void router.push(`${destination.pathname}${destination.search}${destination.hash}`);
+  void router.push(
+    `${destination.pathname}${destination.search}${destination.hash}`,
+  );
 }
 
 useHead({
   titleTemplate: null,
-  title: computed(() => (actor.value?.name ? actor.value.name : t("search.actor", "Acteur"))),
+  title: computed(() =>
+    actor.value?.name ? actor.value.name : t("search.actor", "Acteur"),
+  ),
   meta: [
     {
       name: "description",
@@ -374,7 +558,10 @@ useHead({
           actor.value?.biography ||
           (name
             ? t("seo.actorDescription", { name })
-            : t("seo.actorDescriptionFallback", "Discover filmography and voice actors."));
+            : t(
+                "seo.actorDescriptionFallback",
+                "Discover filmography and voice actors.",
+              ));
         return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
       }),
     },
@@ -387,7 +574,9 @@ useHead({
     },
     {
       property: "og:title",
-      content: computed(() => (actor.value?.name ? actor.value.name : t("search.actor", "Acteur"))),
+      content: computed(() =>
+        actor.value?.name ? actor.value.name : t("search.actor", "Acteur"),
+      ),
     },
     {
       property: "og:description",
@@ -397,7 +586,10 @@ useHead({
           actor.value?.biography ||
           (name
             ? t("seo.actorDescription", { name })
-            : t("seo.actorDescriptionFallback", "Discover filmography and voice actors."));
+            : t(
+                "seo.actorDescriptionFallback",
+                "Discover filmography and voice actors.",
+              ));
         return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
       }),
     },
@@ -423,7 +615,9 @@ useHead({
     },
     {
       name: "twitter:title",
-      content: computed(() => (actor.value?.name ? actor.value.name : t("search.actor", "Acteur"))),
+      content: computed(() =>
+        actor.value?.name ? actor.value.name : t("search.actor", "Acteur"),
+      ),
     },
     {
       name: "twitter:description",
@@ -433,7 +627,10 @@ useHead({
           actor.value?.biography ||
           (name
             ? t("seo.actorDescription", { name })
-            : t("seo.actorDescriptionFallback", "Discover filmography and voice actors."));
+            : t(
+                "seo.actorDescriptionFallback",
+                "Discover filmography and voice actors.",
+              ));
         return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
       }),
     },
@@ -460,15 +657,23 @@ useHead({
           "@type": "Person",
           url: pageUrl.value,
           name: name || t("search.actor", "Acteur"),
-          image: actor.value?.profile_path ? resolveImageUrl(actor.value.profile_path) : "",
+          image: actor.value?.profile_path
+            ? resolveImageUrl(actor.value.profile_path)
+            : "",
           description:
             actor.value?.biography ||
             (name
               ? t("seo.actorDescription", { name })
-              : t("seo.actorDescriptionFallback", "Discover filmography and voice actors.")),
+              : t(
+                  "seo.actorDescriptionFallback",
+                  "Discover filmography and voice actors.",
+                )),
         });
         // HTML-escape the serialized JSON to prevent script-breaking sequences
-        return json.replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026");
+        return json
+          .replace(/</g, "\\u003c")
+          .replace(/>/g, "\\u003e")
+          .replace(/&/g, "\\u0026");
       }),
     },
   ],
