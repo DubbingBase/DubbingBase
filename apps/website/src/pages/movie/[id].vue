@@ -393,7 +393,7 @@ import { NuxtLink } from "#components";
 
 import {
   fetchMovieData,
-  findCharacter,
+  createCharacterMatcher,
   type MediaDetailCharacterProfilePicture,
   type MediaDetailDubbingProject,
 } from "@app/shared-logic";
@@ -553,9 +553,10 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
       let characterImage = null;
       const characterName = actor.character || workCharacterName;
       if (characterName) {
+        const matchesCharacter = createCharacterMatcher(characterName);
         const match = characterProfilePictures.value.find(
           (picture: MediaDetailCharacterProfilePicture) =>
-            picture.name && findCharacter(picture.name, characterName),
+            picture.name && matchesCharacter(picture.name),
         );
         if (match && match.image) {
           characterImage = match.image;

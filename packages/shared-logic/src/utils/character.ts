@@ -8,44 +8,51 @@ export const normalizeCharacterName = (name: string): string => {
     .trim();
 };
 
-export const findCharacter = (
-  characterName: string,
-  roleName: string,
-): boolean => {
-  if (!characterName || !roleName) return false;
+type NormalizedCharacterName = {
+  value: string;
+  words: string[];
+};
 
-  const charNames = characterName
+function splitCharacterNames(name: string): NormalizedCharacterName[] {
+  return name
     .split("/")
     .map(normalizeCharacterName)
-    .filter(Boolean);
-  const roleNames = roleName
-    .split("/")
-    .map(normalizeCharacterName)
-    .filter(Boolean);
+    .filter(Boolean)
+    .map((value) => ({ value, words: value.split(" ") }));
+}
 
-  for (const cName of charNames) {
-    for (const rName of roleNames) {
+function characterNamesMatch(
+  charNames: readonly NormalizedCharacterName[],
+  roleNames: readonly NormalizedCharacterName[],
+): boolean {
+  for (const charName of charNames) {
+    for (const roleName of roleNames) {
       // Fast exact match
-      if (cName === rName) {
+      if (charName.value === roleName.value) {
         return true;
       }
 
       // Word-boundary partial matching (to prevent "Sam" matching "Samantha")
-      // We check if the shorter name is a full word inside the longer name
-      if (cName.length > 0 && rName.length > 0) {
-        const cWords = cName.split(" ");
-        const rWords = rName.split(" ");
-
-        // If all words in cName exist in rName, or vice-versa
-        if (
-          cWords.every((w) => rWords.includes(w)) ||
-          rWords.every((w) => cWords.includes(w))
-        ) {
-          return true;
-        }
+      // If all words in either name exist in the other, they match.
+      if (
+        charName.words.every((word) => roleName.words.includes(word)) ||
+        roleName.words.every((word) => charName.words.includes(word))
+      ) {
+        return true;
       }
     }
   }
 
   return false;
+}
+
+export function createCharacterMatcher(roleName: string): (characterName: string) => boolean {
+  const normalizedRoleNames = splitCharacterNames(roleName);
+  return (characterName) =>
+    characterNamesMatch(splitCharacterNames(characterName), normalizedRoleNames);
+}
+
+export const findCharacter = (characterName: string, roleName: string): boolean => {
+  if (!characterName || !roleName) return false;
+  return characterNamesMatch(splitCharacterNames(characterName), splitCharacterNames(roleName));
 };
