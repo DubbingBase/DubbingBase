@@ -192,6 +192,71 @@ describe("MediaService voice actor media indexing", () => {
     expect(urls[0]?.searchParams.get("append_to_response")).toBe("credits,external_ids");
   });
 
+  it("omits unused episode fields before media processing for page projections", async () => {
+    const urls: URL[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        urls.push(new URL(String(input)));
+        return new Response(
+          JSON.stringify({
+            id: 92,
+            external_ids: { imdb_id: "tt123" },
+            guest_stars: [{ id: 7, character: "Guest", profile_path: "/guest.jpg" }],
+            credits: {
+              cast: [{ id: 8, character: "Lead", profile_path: "/lead.jpg" }],
+              crew: [{ id: 9, job: "Director" }],
+            },
+          }),
+        );
+      }),
+    );
+
+    const service = new MediaService(new TMDBClient());
+    const result = await service.getMediaWithVoiceActorsExtended(
+      "episode",
+      92,
+      1,
+      2,
+      { projection: "media-page" },
+    );
+
+    expect(urls[0]?.searchParams.get("append_to_response")).toBe("credits");
+    expect(result.media).not.toHaveProperty("external_ids");
+    expect(result.media?.guest_stars).toEqual([]);
+    expect(result.media?.credits).not.toHaveProperty("crew");
+    expect(result.media?.credits.cast).toMatchObject([
+      { id: 8, character: "Lead", profile_path: "https://image.tmdb.org/t/p/w500/lead.jpg" },
+    ]);
+  });
+
+  it("preserves unused episode fields in the default full response", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            id: 93,
+            external_ids: { imdb_id: "tt456" },
+            guest_stars: [{ id: 7, character: "Guest", profile_path: "/guest.jpg" }],
+            credits: {
+              cast: [{ id: 8, character: "Lead", profile_path: "/lead.jpg" }],
+              crew: [{ id: 9, job: "Director" }],
+            },
+          }),
+        ),
+      ),
+    );
+
+    const service = new MediaService(new TMDBClient());
+    const result = await service.getMediaWithVoiceActorsExtended("episode", 93, 1, 2);
+
+    expect(result.media).toHaveProperty("external_ids.imdb_id", "tt456");
+    expect(result.media?.guest_stars).toHaveLength(1);
+    expect(result.media?.credits.crew).toHaveLength(1);
+    expect(result.media?.credits.cast).toHaveLength(1);
+  });
+
   it("skips loading and transforming a movie collection for compact media pages", async () => {
     const fetchMock = vi.fn(
       async () =>

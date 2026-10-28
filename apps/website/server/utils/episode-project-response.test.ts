@@ -179,6 +179,13 @@ describe("GET /api/episode dubbing project response", () => {
       "tv",
       "media-page",
     );
+    expect(routeMocks.getMedia).toHaveBeenCalledWith(
+      "episode",
+      42,
+      2,
+      3,
+      { projection: "media-page" },
+    );
     expect(routeMocks.getMediaPageDubbingProjects).toHaveBeenCalledWith(42, "tv");
     expect(routeMocks.getDubbingProjects).not.toHaveBeenCalled();
   });

@@ -29,6 +29,7 @@ export default defineEventHandler(async (event) => {
         id,
         seasonNumber,
         episodeNumber,
+        { projection: query.projection === "media-page" ? "media-page" : undefined },
       );
       // Fetch character profile pictures from cache for the parent TV show if available
       const language = acceptLanguage ? (acceptLanguage.split(",")[0] || "en").trim() : "default";

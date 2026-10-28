@@ -47,11 +47,30 @@ describe("TMDB metadata fetches", () => {
       "/3/trending/movie/day",
     ]);
     expect(urls[5]?.searchParams.get("append_to_response")).toBe("credits,external_ids");
+    expect(urls[4]?.searchParams.get("append_to_response")).toBe("credits,external_ids");
     expect(urls[6]?.searchParams.has("append_to_response")).toBe(false);
     expect(urls[1]?.searchParams.get("append_to_response")).toBe("credits,external_ids");
     expect(urls[2]?.searchParams.get("append_to_response")).toBe("external_ids");
     expect(getOrFetch).not.toHaveBeenCalled();
     expect(get).not.toHaveBeenCalled();
     expect(put).not.toHaveBeenCalled();
+  });
+
+  it("skips external IDs for an episode media-page request", async () => {
+    const urls: URL[] = [];
+    vi.stubGlobal("useRuntimeConfig", () => ({ tmdbApiKey: "test-key" }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        urls.push(new URL(String(input)));
+        return new Response(JSON.stringify({ id: 4, credits: { cast: [] } }));
+      }),
+    );
+
+    await new TMDBClient().getEpisodeWithCredits(2, 3, 4, undefined, {
+      includeExternalIds: false,
+    });
+
+    expect(urls[0]?.searchParams.get("append_to_response")).toBe("credits");
   });
 });
