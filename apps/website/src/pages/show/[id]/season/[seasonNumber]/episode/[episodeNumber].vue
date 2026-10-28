@@ -717,9 +717,12 @@ const castItems = computed<EpisodeDisplayCastActor[]>(() => {
   const start = (castPage.value - 1) * 12;
   return filteredCast.value.slice(start, start + 12).map((actor) => {
     const characterName = actor.character || actor.workCharacterName;
-    const characterImage = characterName
-      ? characterPictureIndex.value.get(characterName.toLowerCase())
-      : characterProfilePictures.value.find((picture) => !picture.name)?.image;
+    let characterImage: string | null = null;
+    if (actor.actorId !== undefined) {
+      characterImage = characterName
+        ? characterPictureIndex.value.get(characterName.toLowerCase()) || null
+        : characterProfilePictures.value.find((picture) => !picture.name)?.image || null;
+    }
 
     return {
       ...actor,
