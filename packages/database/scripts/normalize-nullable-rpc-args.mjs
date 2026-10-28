@@ -19,6 +19,9 @@ const nullableArguments = {
     p_character_id: "number",
     p_character_name: "string",
   },
+  update_work_review_status_controlled: {
+    p_request_id: "string",
+  },
   save_admin_credit_import: {
     p_character_id: "number",
     p_character_name: "string",
@@ -26,6 +29,14 @@ const nullableArguments = {
     p_voice_actor_id: "number",
     p_voice_actor_lastname: "string",
     p_work_actor_id: "number",
+  },
+};
+
+// Supabase CLI cannot infer nullable columns from a RETURNS TABLE function.
+// Keep only result fields that the SQL function can intentionally return NULL.
+const nullableReturns = {
+  update_work_review_status_controlled: {
+    audit_log_id: "string",
   },
 };
 
@@ -67,6 +78,44 @@ for (const [functionName, argumentTypes] of Object.entries(nullableArguments)) {
     types.slice(0, functionMatch.index),
     functionMatch[1],
     args,
+    functionMatch[3],
+    types.slice(functionMatch.index + functionMatch[0].length),
+  ].join("");
+}
+
+for (const [functionName, returnTypes] of Object.entries(nullableReturns)) {
+  const functionPattern = new RegExp(
+    `(\\b${functionName}:\\s*\\{[\\s\\S]*?\\bReturns:\\s*\\{)([\\s\\S]*?)(\\}\\[\\])`,
+    "m",
+  );
+  const functionMatch = functionPattern.exec(types);
+
+  if (!functionMatch) {
+    throw new Error(`Generated types do not contain ${functionName}.Returns.`);
+  }
+
+  let returns = functionMatch[2];
+
+  for (const [columnName, expectedType] of Object.entries(returnTypes)) {
+    const columnPattern = new RegExp(`\\b${columnName}:\\s*([^;\\n}]+)`, "m");
+    const columnMatch = columnPattern.exec(returns);
+
+    if (!columnMatch || columnMatch[1].trim() !== expectedType) {
+      throw new Error(
+        `Expected ${functionName}.${columnName} to be generated as ${expectedType}.`,
+      );
+    }
+
+    returns = returns.replace(
+      columnPattern,
+      `${columnName}: ${expectedType} | null`,
+    );
+  }
+
+  types = [
+    types.slice(0, functionMatch.index),
+    functionMatch[1],
+    returns,
     functionMatch[3],
     types.slice(functionMatch.index + functionMatch[0].length),
   ].join("");

@@ -366,11 +366,7 @@
             </tr>
           </thead>
           <tbody class="divide-y theme-divide">
-            <tr
-              v-for="work in linkedWorks as any[]"
-              :key="work.id"
-              class="theme-input transition-colors"
-            >
+            <tr v-for="work in linkedWorks" :key="work.id" class="theme-input transition-colors">
               <td class="px-4 py-3 font-mono text-xs theme-text-muted">#{{ work.id }}</td>
               <td class="px-4 py-3 font-mono text-xs theme-status-info-text">
                 {{ $t("voiceActorEdit.projectNumber") }}{{ work.dubbing_project_id }}
@@ -382,7 +378,7 @@
               </td>
               <td class="px-4 py-3 uppercase text-[10px] font-bold tracking-wider theme-text-muted">
                 <span class="px-2 py-0.5 rounded theme-surface-muted border theme-border">
-                  {{ work.dubbing_projects?.content_type || work.content_type || "movie" }}
+                  {{ work.dubbing_projects?.content_type || "movie" }}
                 </span>
               </td>
               <td class="px-4 py-3 font-medium theme-text">
@@ -413,9 +409,7 @@
                 >
                   <span
                     >{{ $t("common.edit")
-                    }}{{
-                      getMediaTypeLabel(work.dubbing_projects?.content_type || work.content_type)
-                    }}</span
+                    }}{{ getMediaTypeLabel(work.dubbing_projects?.content_type) }}</span
                   >
                   <span>↗</span>
                 </NuxtLink>
@@ -568,7 +562,7 @@
               >
                 <img
                   v-if="item.poster_path || item.cover_url"
-                  :src="item.poster_path || item.cover_url"
+                  :src="item.poster_path || item.cover_url || undefined"
                   class="h-full w-full object-cover"
                 />
                 <span v-else class="text-[8px]">N/A</span>
@@ -627,7 +621,7 @@
             >
               <img
                 v-if="selectedMedia?.poster_path || selectedMedia?.cover_url"
-                :src="selectedMedia.poster_path || selectedMedia.cover_url"
+                :src="selectedMedia.poster_path || selectedMedia.cover_url || undefined"
                 class="h-full w-full object-cover"
               />
               <span v-else class="text-[8px]">N/A</span>
@@ -881,6 +875,48 @@ import {
   VoiceActorProfileRefreshError,
   voiceActorProfilePayload,
 } from "~/utils/voice-actor-profile-save";
+import type { Tables } from "@app/supabase/types";
+
+type LinkedWork = Tables<"work"> & {
+  dubbing_projects: Pick<Tables<"dubbing_projects">, "id" | "content_id" | "content_type"> | null;
+};
+
+type MediaSearchItem = {
+  id: number | string;
+  media_type: string;
+  title?: string | null;
+  name?: string | null;
+  poster_path?: string | null;
+  cover_url?: string | null;
+  release_date?: string | null;
+  first_air_date?: string | null;
+  author?: string | null;
+  brand?: string | null;
+};
+
+type InternalMediaCastMember = {
+  id: number;
+  name: string;
+  character?: string | null;
+  profile_path?: string | null;
+};
+
+type InternalMediaCredits = { cast?: InternalMediaCastMember[] };
+
+function getRequestErrorMessage(error: unknown, fallback: string): string {
+  if (typeof error !== "object" || error === null) return fallback;
+
+  if ("data" in error && typeof error.data === "object" && error.data !== null) {
+    if ("message" in error.data && typeof error.data.message === "string") {
+      return error.data.message;
+    }
+  }
+
+  if ("message" in error && typeof error.message === "string") {
+    return error.message;
+  }
+  return fallback;
+}
 
 const route = useRoute();
 const router = useRouter();
@@ -895,7 +931,8 @@ const saveProfile = createVoiceActorProfileSaveClient((body) =>
     body,
   }),
 );
-const voiceActorId = route.params.voiceActorId as string | undefined;
+const voiceActorId =
+  typeof route.params.voiceActorId === "string" ? route.params.voiceActorId : undefined;
 const id = voiceActorId;
 const isEditMode = computed(() => !!id && id !== "new");
 
@@ -937,7 +974,10 @@ const fileInput = ref<HTMLInputElement | null>(null);
 const isSaving = ref(false);
 const saveError = ref("");
 const profileRecord = shallowRef<VoiceActorProfile | null>(null);
-const pendingPictureRefresh = shallowRef<{ profile: VoiceActorProfile; uploadedPath: string } | null>(null);
+const pendingPictureRefresh = shallowRef<{
+  profile: VoiceActorProfile;
+  uploadedPath: string;
+} | null>(null);
 let profileBaseline: VoiceActorCreationPayload | null = null;
 let pendingVoiceActorCreation: PendingVoiceActorCreation | null = null;
 
@@ -965,15 +1005,16 @@ const clearImage = () => {
 };
 
 const onProfilePictureChange = (event: Event) => {
-  const files = (event.target as HTMLInputElement).files;
+  if (!(event.currentTarget instanceof HTMLInputElement)) return;
+  const files = event.currentTarget.files;
   if (files && files.length > 0 && files[0]) {
     const file = files[0];
     profilePictureFile.value = file;
 
     // Create file reader object for thumbnail preview
     const reader = new FileReader();
-    reader.onload = (e) => {
-      previewImage.value = e.target?.result as string;
+    reader.onload = () => {
+      if (typeof reader.result === "string") previewImage.value = reader.result;
     };
     reader.readAsDataURL(file);
   }
@@ -992,7 +1033,7 @@ const uploadProfilePicture = async (voiceActorId: string | number, file: File) =
   return result.fullPath;
 };
 
-const linkedWorks = ref<any[]>([]);
+const linkedWorks = ref<LinkedWork[]>([]);
 
 function getProjectEditLink(
   contentType?: string | null,
@@ -1224,13 +1265,14 @@ const saveVoiceActor = async () => {
       profileRecord.value = null;
       profileBaseline = null;
     }
-    saveError.value = err instanceof VoiceActorProfileRefreshError
-      ? t("voiceActorEdit.profileRefreshFailed")
-      : isVoiceActorProfileConflict(err)
-        ? t("voiceActorEdit.saveConflict")
-      : err instanceof Error
-        ? err.message
-        : "Failed to save voice actor.";
+    saveError.value =
+      err instanceof VoiceActorProfileRefreshError
+        ? t("voiceActorEdit.profileRefreshFailed")
+        : isVoiceActorProfileConflict(err)
+          ? t("voiceActorEdit.saveConflict")
+          : err instanceof Error
+            ? err.message
+            : "Failed to save voice actor.";
     showToast(saveError.value, "error");
   } finally {
     isSaving.value = false;
@@ -1244,9 +1286,9 @@ const selectedMediaType = ref("movie");
 const mediaSearchQuery = ref("");
 const dubbingLanguage = ref("");
 const mediaSearchLoading = ref(false);
-const mediaSearchResults = ref<any[]>([]);
-const selectedMedia = ref<any | null>(null);
-const linkWorkCast = ref<any[]>([]);
+const mediaSearchResults = ref<MediaSearchItem[]>([]);
+const selectedMedia = ref<MediaSearchItem | null>(null);
+const linkWorkCast = ref<InternalMediaCastMember[]>([]);
 const linkWorkCastLoading = ref(false);
 const linkWorkActorName = ref("");
 const linkWorkCharacterName = ref("");
@@ -1314,20 +1356,13 @@ async function executeMediaSearch(requestId: number) {
   }
   mediaSearchLoading.value = true;
   try {
-    const results = await $fetch<any[]>("/api/search", {
+    const results = await $fetch<MediaSearchItem[]>("/api/search", {
       params: { query: q },
     });
     if (requestId !== mediaSearchRequestId) return;
-    mediaSearchResults.value = (results ?? []).filter((r: any) => {
-      if (selectedMediaType.value === "movie") return r.media_type === "movie";
-      if (selectedMediaType.value === "tv") return r.media_type === "tv";
-      if (selectedMediaType.value === "video_game") return r.media_type === "video_game";
-      if (selectedMediaType.value === "audiobook") return r.media_type === "audiobook";
-      if (selectedMediaType.value === "podcast") return r.media_type === "podcast";
-      if (selectedMediaType.value === "advertisement") return r.media_type === "advertisement";
-      if (selectedMediaType.value === "toy") return r.media_type === "toy";
-      return true;
-    });
+    mediaSearchResults.value = results.filter(
+      (result) => result.media_type === selectedMediaType.value,
+    );
   } catch (err) {
     console.error(err);
   } finally {
@@ -1335,7 +1370,7 @@ async function executeMediaSearch(requestId: number) {
   }
 }
 
-async function selectMediaItem(item: any) {
+async function selectMediaItem(item: MediaSearchItem) {
   const requestId = ++creditsRequestId;
   const mediaType = selectedMediaType.value;
   selectedMedia.value = item;
@@ -1345,7 +1380,7 @@ async function selectMediaItem(item: any) {
   if (supportsCast) {
     linkWorkCastLoading.value = true;
     try {
-      const credits: any = await $fetch("/api/internal-media-credits", {
+      const credits = await $fetch<InternalMediaCredits>("/api/internal-media-credits", {
         params: { media_type: mediaType, media_id: item.id },
       });
       if (
@@ -1354,11 +1389,11 @@ async function selectMediaItem(item: any) {
         selectedMediaType.value !== mediaType
       )
         return;
-      linkWorkCast.value = (credits.cast ?? []).map((c: any) => ({
-        id: c.id,
-        name: c.name,
-        character: c.character ?? c.name,
-        profile_path: c.profile_path ?? null,
+      linkWorkCast.value = (credits.cast ?? []).map((castMember) => ({
+        id: castMember.id,
+        name: castMember.name,
+        character: castMember.character ?? castMember.name,
+        profile_path: castMember.profile_path ?? null,
       }));
     } catch (err) {
       console.error("Failed to load cast:", err);
@@ -1420,8 +1455,8 @@ async function submitWorkLink(opts: {
       .eq("voice_actor_id", numId);
     if (refreshed) linkedWorks.value = refreshed;
     closeLinkWorkModal();
-  } catch (err: any) {
-    showToast(err?.data?.message || err?.message || "Failed to link work", "error");
+  } catch (err: unknown) {
+    showToast(getRequestErrorMessage(err, "Failed to link work"), "error");
   } finally {
     isSubmittingWorkLink.value = false;
   }
@@ -1471,8 +1506,8 @@ async function createAndLink() {
     createMediaBrand.value = "";
     linkWorkStep.value = 3;
     linkWorkCast.value = [];
-  } catch (err: any) {
-    showToast(err?.data?.message || err?.message || "Failed to create media", "error");
+  } catch (err: unknown) {
+    showToast(getRequestErrorMessage(err, "Failed to create media"), "error");
   } finally {
     isCreatingMedia.value = false;
   }
