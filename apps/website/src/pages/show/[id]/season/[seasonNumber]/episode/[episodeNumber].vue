@@ -444,10 +444,13 @@ import { fetchEpisodePageData } from "../../../../../../utils/season-data";
 import {
   type CastActorReference,
   type CastWorkReference,
-  type CharacterProfilePicture,
   matchCastWorks,
   type DisplayCastActor,
 } from "../../../../../../utils/media-cast";
+import {
+  indexCharacterPictures,
+  type CharacterProfilePicture,
+} from "../../../../../../utils/show-character-pictures";
 import type { MediaDetailDubbingProject } from "@app/shared-logic";
 
 const isReportModalOpen = ref(false);
@@ -526,6 +529,12 @@ const {
 
 const data = computed(() =>
   pageData.value?.requestKey === cacheKey.value ? pageData.value.response : undefined,
+);
+const characterProfilePictures = computed<CharacterProfilePicture[]>(
+  () => data.value?.characterProfilePictures || [],
+);
+const characterPictureIndex = computed(() =>
+  indexCharacterPictures(characterProfilePictures.value),
 );
 const episode = computed(() => data.value?.episode);
 const requestError = computed(() => Boolean(error.value && error.value.statusCode !== 404));
@@ -634,16 +643,13 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
   const cast: CastActorReference[] =
     data.value?.aggregateCredits?.cast || episode.value?.credits?.cast || [];
   const works: CastWorkReference[] = activeDubProject.value?.works || [];
-  const characterProfilePictures: CharacterProfilePicture[] =
-    data.value?.characterProfilePictures || [];
   const { matches, unmatchedWorks } = matchCastWorks(cast, works);
   const matchedCards = matches.flatMap(({ actor, works: actorWorks }) =>
     actorWorks.map((work) => {
       const characterName = actor.character || work.character_name;
-      const characterImage = characterProfilePictures.find(
-        (picture) =>
-          String(picture.name || "").toLowerCase() === String(characterName || "").toLowerCase(),
-      )?.image;
+      const characterImage = characterName
+        ? characterPictureIndex.value.get(characterName.toLowerCase())
+        : characterProfilePictures.value.find((picture) => !picture.name)?.image;
       let profilePath = actor.profile_path;
       if (profilePath?.startsWith("/")) {
         profilePath = `https://image.tmdb.org/t/p/w185${profilePath}`;
