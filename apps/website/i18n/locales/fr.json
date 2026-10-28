@@ -448,6 +448,24 @@
     "generateApiKeyDescription": "Générer une nouvelle clé API pour accéder à l'API programmatiquement",
     "generateNewKey": "Générer une nouvelle clé"
   },
+  "push": {
+    "follow": "Suivre la comédienne ou le comédien",
+    "unfollow": "Ne plus suivre",
+    "offerTitle": "Recevez les nouveaux rôles publiés",
+    "offerDescription": "Autorisez les notifications push pour les comédiens suivis sur cette application mobile installée.",
+    "enable": "Activer les notifications push",
+    "notNow": "Pas maintenant",
+    "settingsTitle": "Notifications des comédiens suivis",
+    "settingsDescription": "Recevez des alertes sur les comédiens suivis dans vos applications mobiles installées.",
+    "installGuidance": "Installez DubbingBase sur votre appareil mobile depuis le menu du navigateur, puis activez les notifications ici.",
+    "deniedGuidance": "Les notifications sont bloquées. Autorisez-les dans les réglages de votre appareil.",
+    "unsupported": "Les notifications push sont disponibles uniquement dans l’application Android ou iOS installée.",
+    "followFailed": "Impossible d’enregistrer votre abonnement. Réessayez.",
+    "enableFailed": "Impossible d’activer les notifications push. Réessayez.",
+    "settingsLoadFailed": "Impossible de charger les réglages des notifications push.",
+    "settingsSaveFailed": "Impossible d’enregistrer les réglages des notifications push. Réessayez.",
+    "logoutFailed": "Impossible de déconnecter les notifications push en toute sécurité. Vérifiez votre connexion et réessayez."
+  },
   "about": {
     "title": "À propos",
     "attributions": "Attributions",
