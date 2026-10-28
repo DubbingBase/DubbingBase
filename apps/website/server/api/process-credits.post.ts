@@ -1,8 +1,12 @@
 import { createHash, randomUUID } from "node:crypto";
 import { z } from "zod";
 import { useSupabaseAdmin } from "../utils/db/client";
+import { scheduleBackgroundTask } from "../utils/background";
 import { requireAdmin } from "../utils/auth";
 import { requireDubbingLanguage } from "../utils/dubbing-language";
+import { notifyVoiceActorFollowers } from "../utils/notifications/fcm";
+import { publishedContentLink } from "../utils/notifications/published-content-link";
+import { isNewlyValidatedWork } from "../utils/notifications/publication-events";
 
 const creditSchema = z
   .object({
@@ -127,6 +131,11 @@ export default defineEventHandler(async (event) => {
       const dubbingLanguage = requireDubbingLanguage(dubbing_language);
 
       let successCount = 0;
+      const committedCredits: Array<{
+        voiceActorId: number;
+        projectId: number;
+        auditLogId: string;
+      }> = [];
       const failedCredits: {
         credit: z.infer<typeof creditSchema>;
         error: unknown;
@@ -167,10 +176,88 @@ export default defineEventHandler(async (event) => {
             throw new Error("Credit import returned an invalid result");
           }
 
+          const importedCredit = data[0];
+          if (importedCredit && !importedCredit.replayed && importedCredit.voice_actor_id) {
+            committedCredits.push({
+              voiceActorId: importedCredit.voice_actor_id,
+              projectId: importedCredit.project_id,
+              auditLogId: importedCredit.audit_log_id,
+            });
+          }
+
           successCount++;
         } catch (err) {
           console.error("Failed to process credit:", credit, err);
           failedCredits.push({ credit, error: err });
+        }
+      }
+
+      if (committedCredits.length > 0) {
+        const auditLogIds = [...new Set(committedCredits.map((credit) => credit.auditLogId))];
+        const link = publishedContentLink(mediaType, contentId);
+        if (link) {
+          const eventId = createHash("sha256")
+            .update(auditLogIds.sort().join(":"))
+            .digest("hex");
+          scheduleBackgroundTask(
+            event,
+            async () => {
+              const { data: auditRows, error: auditLookupError } = await supabaseAdmin
+                .from("audit_logs")
+                .select("id, previous_value, new_value")
+                .in("id", auditLogIds);
+              if (auditLookupError) {
+                console.warn("[FCM] Could not verify imported publication events", {
+                  code: auditLookupError.code,
+                });
+                return;
+              }
+
+              const newlyPublishedAuditIds = new Set(
+                (auditRows ?? [])
+                  .filter((row) => isNewlyValidatedWork(row.previous_value, row.new_value))
+                  .map((row) => row.id),
+              );
+              const publicationRows = committedCredits.filter((credit) =>
+                newlyPublishedAuditIds.has(credit.auditLogId),
+              );
+              const projectIds = [...new Set(publicationRows.map((credit) => credit.projectId))];
+              if (projectIds.length === 0) return;
+
+              const { data: projects, error: projectLookupError } = await supabaseAdmin
+                .from("dubbing_projects")
+                .select("id, status")
+                .in("id", projectIds);
+              if (projectLookupError) {
+                console.warn("[FCM] Could not verify imported project publication", {
+                  code: projectLookupError.code,
+                });
+                return;
+              }
+
+              const publishedProjectIds = new Set(
+                (projects ?? [])
+                  .filter((project) => project.status === "validated")
+                  .map((project) => project.id),
+              );
+              const voiceActorIds = [
+                ...new Set(
+                  publicationRows
+                    .filter((credit) => publishedProjectIds.has(credit.projectId))
+                    .map((credit) => credit.voiceActorId),
+                ),
+              ];
+              if (voiceActorIds.length === 0) return;
+
+              await notifyVoiceActorFollowers(voiceActorIds, {
+                title: "New voice roles",
+                body: "Newly published voice roles are available.",
+                link,
+                eventId,
+              });
+            },
+            "voice-actor-fcm",
+          );
         }
       }
 

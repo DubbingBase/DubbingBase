@@ -449,6 +449,24 @@
     "generateApiKeyDescription": "Generar una nueva clave API para acceder a la API programáticamente",
     "generateNewKey": "Generar nueva clave"
   },
+  "push": {
+    "follow": "Seguir actor de doblaje",
+    "unfollow": "Dejar de seguir",
+    "offerTitle": "Recibe avisos de nuevos papeles publicados",
+    "offerDescription": "Permite las notificaciones push de los actores seguidos en esta aplicación móvil instalada.",
+    "enable": "Activar notificaciones push",
+    "notNow": "Ahora no",
+    "settingsTitle": "Notificaciones de actores seguidos",
+    "settingsDescription": "Recibe avisos en tus aplicaciones móviles instaladas sobre los actores que sigues.",
+    "installGuidance": "Instala DubbingBase en tu dispositivo móvil desde el menú del navegador y activa aquí las notificaciones.",
+    "deniedGuidance": "Las notificaciones están bloqueadas. Permítelas en los ajustes de tu dispositivo.",
+    "unsupported": "Las notificaciones push solo están disponibles en la aplicación instalada de Android o iOS.",
+    "followFailed": "No se pudo guardar el seguimiento. Inténtalo de nuevo.",
+    "enableFailed": "No se pudieron activar las notificaciones push. Inténtalo de nuevo.",
+    "settingsLoadFailed": "No se pudo cargar la configuración de notificaciones push.",
+    "settingsSaveFailed": "No se pudo guardar la configuración de notificaciones push. Inténtalo de nuevo.",
+    "logoutFailed": "No se pudieron desconectar las notificaciones push de forma segura. Comprueba tu conexión e inténtalo de nuevo."
+  },
   "about": {
     "title": "Acerca de",
     "attributions": "Atribuciones",

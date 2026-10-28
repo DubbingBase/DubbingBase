@@ -449,6 +449,24 @@
     "generateApiKeyDescription": "APIにプログラムでアクセスする新しいAPIキーを生成",
     "generateNewKey": "新しいキーを生成"
   },
+  "push": {
+    "follow": "声優をフォロー",
+    "unfollow": "フォローを解除",
+    "offerTitle": "新しい出演情報を受け取る",
+    "offerDescription": "このインストール済みモバイルアプリで、フォロー中の声優のプッシュ通知を許可します。",
+    "enable": "プッシュ通知を有効にする",
+    "notNow": "今はしない",
+    "settingsTitle": "フォロー中の声優の通知",
+    "settingsDescription": "インストール済みモバイルアプリで、フォロー中の声優の更新を受け取ります。",
+    "installGuidance": "ブラウザーのメニューからDubbingBaseをモバイル端末にインストールし、ここで通知を有効にしてください。",
+    "deniedGuidance": "通知はブロックされています。端末の設定で許可してください。",
+    "unsupported": "プッシュ通知はインストール済みのAndroidまたはiOSアプリでのみ利用できます。",
+    "followFailed": "フォローを保存できませんでした。もう一度お試しください。",
+    "enableFailed": "プッシュ通知を有効にできませんでした。もう一度お試しください。",
+    "settingsLoadFailed": "プッシュ通知の設定を読み込めませんでした。",
+    "settingsSaveFailed": "プッシュ通知の設定を保存できませんでした。もう一度お試しください。",
+    "logoutFailed": "プッシュ通知を安全に切断できませんでした。接続を確認してもう一度お試しください。"
+  },
   "about": {
     "title": "概要",
     "attributions": "帰属",

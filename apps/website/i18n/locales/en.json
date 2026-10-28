@@ -449,6 +449,24 @@
     "generateApiKeyDescription": "Generate a new API key to access the API programmatically",
     "generateNewKey": "Generate New Key"
   },
+  "push": {
+    "follow": "Follow voice actor",
+    "unfollow": "Unfollow voice actor",
+    "offerTitle": "Get updates when new roles are published",
+    "offerDescription": "Allow push notifications for followed voice actors on this installed mobile app.",
+    "enable": "Enable push notifications",
+    "notNow": "Not now",
+    "settingsTitle": "Voice-actor push notifications",
+    "settingsDescription": "Receive updates for followed voice actors on your installed mobile PWAs.",
+    "installGuidance": "Install DubbingBase on your mobile device from the browser menu, then enable push here.",
+    "deniedGuidance": "Notifications are blocked. Allow them in your device settings to enable push.",
+    "unsupported": "Push notifications are available in the installed Android or iOS app only.",
+    "followFailed": "Your follow could not be saved. Please try again.",
+    "enableFailed": "Push notifications could not be enabled. Please try again.",
+    "settingsLoadFailed": "Push settings could not be loaded.",
+    "settingsSaveFailed": "Push settings could not be saved. Please try again.",
+    "logoutFailed": "Push could not be safely disconnected. Check your connection and try again."
+  },
   "about": {
     "title": "About",
     "attributions": "Attributions",

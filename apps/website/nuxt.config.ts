@@ -109,8 +109,9 @@ export default defineNuxtConfig({
     groqApiKey: env("GROQ_API_KEY"),
     groqModel: env("GROQ_MODEL") || "openai/gpt-oss-120b",
     llmProvider: env("LLM_PROVIDER") || "gemini",
-    onesignalAppId: env("ONESIGNAL_APP_ID"),
-    onesignalRestApiKey: env("ONESIGNAL_REST_API_KEY"),
+    firebaseProjectId: env("FIREBASE_PROJECT_ID"),
+    firebaseClientEmail: env("FIREBASE_CLIENT_EMAIL"),
+    firebasePrivateKey: env("FIREBASE_PRIVATE_KEY"),
     discordWebhookDiscoveryUrl:
       env("DISCORD_WEBHOOK_DISCOVERY_URL") || env("DISCORD_DISCOVERY_WEBHOOK_URL"),
     discordWebhookCheckUrl: env("DISCORD_WEBHOOK_CHECK_URL") || env("DISCORD_CHECK_WEBHOOK_URL"),
@@ -126,6 +127,11 @@ export default defineNuxtConfig({
       ogImagesEnabled: false,
       supabaseUrl: supabaseUrl || "https://mock.supabase.co",
       supabaseKey: supabasePublishableKey || "mock-publishable-key",
+      firebaseApiKey: env("FIREBASE_API_KEY"),
+      firebaseAppId: env("FIREBASE_APP_ID"),
+      firebaseMessagingSenderId: env("FIREBASE_MESSAGING_SENDER_ID"),
+      firebaseProjectId: env("FIREBASE_PROJECT_ID"),
+      firebaseVapidKey: env("FIREBASE_VAPID_KEY"),
     },
   },
 
@@ -153,6 +159,12 @@ export default defineNuxtConfig({
   },
 
   pwa: {
+    strategies: "injectManifest",
+    srcDir: "src",
+    filename: "service-worker.ts",
+    injectManifest: {
+      globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,webmanifest}"],
+    },
     registerType: "prompt",
     client: {
       installPrompt: "dubbingbase:pwa-install-dismissed",
@@ -192,6 +204,15 @@ export default defineNuxtConfig({
 
   vite: {
     plugins: [tailwindcss()],
+    define: {
+      __VERSION__: JSON.stringify(process.env.npm_package_version || "1.0.0"),
+      __FIREBASE_CONFIG__: JSON.stringify({
+        apiKey: env("FIREBASE_API_KEY") || "",
+        appId: env("FIREBASE_APP_ID") || "",
+        messagingSenderId: env("FIREBASE_MESSAGING_SENDER_ID") || "",
+        projectId: env("FIREBASE_PROJECT_ID") || "",
+      }),
+    },
     resolve: {
       dedupe: [
         "vue",
@@ -202,9 +223,6 @@ export default defineNuxtConfig({
         "@vue/shared",
         "@vue/compiler-sfc",
       ],
-    },
-    define: {
-      __VERSION__: JSON.stringify(process.env.npm_package_version || "1.0.0"),
     },
   },
 
