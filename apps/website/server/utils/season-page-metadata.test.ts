@@ -213,7 +213,7 @@ describe("GET /api/season parent metadata", () => {
     expect(routeMocks.getDubbingProjects).toHaveBeenCalledWith(42, "tv");
   });
 
-  it("uses compact project fields only when the page projection is requested", async () => {
+  it("requests the compact season response only for the page projection", async () => {
     const app = createApp();
     app.use(
       "/",
@@ -244,7 +244,7 @@ describe("GET /api/season parent metadata", () => {
       42,
       2,
       undefined,
-      { includeCredits: false },
+      { includeCredits: false, projection: "media-page" },
     );
     expect(responseBody).toMatchObject({ characterProfilePictures: [] });
     expect(routeMocks.cacheGetOrFetch).not.toHaveBeenCalled();

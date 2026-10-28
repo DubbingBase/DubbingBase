@@ -34,7 +34,7 @@ export default defineEventHandler(async (event) => {
             id,
             seasonNumber,
             undefined,
-            { includeCredits: false },
+            { includeCredits: false, projection: "media-page" },
           )
         : await mediaService.getMediaWithVoiceActorsExtended("season", id, seasonNumber);
 
