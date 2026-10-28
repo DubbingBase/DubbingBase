@@ -299,7 +299,7 @@
 import MediaDetailsLayout from "../../../../components/layout/MediaDetailsLayout.vue";
 import { useRoute, useRouter } from "vue-router";
 import type { Link as HeadLink } from "@unhead/vue";
-import type { DetailCollectionProject } from "@app/shared-logic";
+import type { DetailCollectionProject, MediaDetailDubbingProject } from "@app/shared-logic";
 
 import { fetchSeasonPageData } from "../../../../utils/season-data";
 import { computed, ref } from "vue";
@@ -429,12 +429,26 @@ const currentSeasonData = computed(() => {
 const serie = computed(() => currentSeasonData.value?.serie);
 const serieName = computed(() => serie.value?.name || "");
 const season = computed(() => currentSeasonData.value?.season);
-const dubbingProjects = computed(() => {
-  const projects = [...(currentSeasonData.value?.dubbingProjects || [])].filter((p) =>
-    projectHasVoiceActor(p),
-  );
+const projectVoiceActorMetrics = computed(() => {
+  const actorCounts = new Map<number, number>();
+  const projects: MediaDetailDubbingProject[] = currentSeasonData.value?.dubbingProjects || [];
+  const visibleProjects = projects.filter((project) => {
+    let hasVoiceActor = false;
+    const actorIds = new Set<number>();
+
+    for (const work of project.works || []) {
+      if (work.voice_actor) {
+        hasVoiceActor = true;
+        if (work.voice_actor.id) actorIds.add(work.voice_actor.id);
+      }
+    }
+
+    actorCounts.set(project.id, actorIds.size);
+    return hasVoiceActor;
+  });
+
   const currentLocale = locale.value.toLowerCase();
-  return projects.sort((a, b) => {
+  visibleProjects.sort((a, b) => {
     const aIsPref = a.language?.toLowerCase().startsWith(currentLocale) ? 1 : 0;
     const bIsPref = b.language?.toLowerCase().startsWith(currentLocale) ? 1 : 0;
 
@@ -446,18 +460,13 @@ const dubbingProjects = computed(() => {
     const bWorks = b.works?.length || 0;
     return bWorks - aWorks;
   });
-});
 
-function projectHasVoiceActor(project: DetailCollectionProject): boolean {
-  return (project.works || []).some((work) => work.voice_actor);
-}
+  return { projects: visibleProjects, actorCounts };
+});
+const dubbingProjects = computed(() => projectVoiceActorMetrics.value.projects);
 
 function projectVoiceActorCount(project: DetailCollectionProject): number {
-  const ids = new Set<number>();
-  for (const w of project.works || []) {
-    if (w.voice_actor?.id) ids.add(w.voice_actor.id);
-  }
-  return ids.size;
+  return projectVoiceActorMetrics.value.actorCounts.get(project.id) || 0;
 }
 
 const { page: episodesPage, setPage: setEpisodesPage } = useUrlPagination("episodesPage");
