@@ -7,6 +7,7 @@ const routeMocks = vi.hoisted(() => ({
   getDubbingProjects: vi.fn(),
   getMediaPageDubbingProjects: vi.fn(),
   getDubbingProjectsForMediaEndpoint: vi.fn(),
+  getSeasonPageDubbingProjects: vi.fn(),
   cacheGetOrFetch: vi.fn(),
 }));
 
@@ -25,6 +26,7 @@ vi.mock("./db/queries", () => ({
   getDubbingProjects: routeMocks.getDubbingProjects,
   getMediaPageDubbingProjects: routeMocks.getMediaPageDubbingProjects,
   getDubbingProjectsForMediaEndpoint: routeMocks.getDubbingProjectsForMediaEndpoint,
+  getSeasonPageDubbingProjects: routeMocks.getSeasonPageDubbingProjects,
 }));
 vi.mock("./media-request", () => ({
   parseSeasonQuery: () => ({ id: 42, seasonNumber: 2 }),
@@ -134,6 +136,14 @@ beforeEach(() => {
         ? routeMocks.getMediaPageDubbingProjects(id, type)
         : routeMocks.getDubbingProjects(id, type),
   );
+  routeMocks.getSeasonPageDubbingProjects.mockResolvedValue([
+    {
+      id: 7,
+      language: "fr-FR",
+      studio_data: { id: 3, name: "Studio", logo_url: "https://example.com/logo.png" },
+      works: [{ voice_actor: { id: 5 } }],
+    },
+  ]);
   routeMocks.cacheGetOrFetch.mockResolvedValue(null);
 });
 
@@ -222,27 +232,12 @@ describe("GET /api/season parent metadata", () => {
         id: 7,
         language: "fr-FR",
         studio_data: { id: 3, name: "Studio", logo_url: "https://example.com/logo.png" },
-        works: [
-          {
-            id: 12,
-            actor_id: 99,
-            character_name: "Character",
-            voice_actor: {
-              id: 5,
-              firstname: "Voice",
-              profile_picture: "https://example.com/voice.png",
-            },
-          },
-        ],
-        crew: [],
+        works: [{ voice_actor: { id: 5 } }],
       },
     ]);
-    expect(routeMocks.getDubbingProjectsForMediaEndpoint).toHaveBeenCalledWith(
-      42,
-      "tv",
-      "media-page",
-    );
-    expect(routeMocks.getMediaPageDubbingProjects).toHaveBeenCalledWith(42, "tv");
+    expect(routeMocks.getSeasonPageDubbingProjects).toHaveBeenCalledWith(42, "tv");
+    expect(routeMocks.getDubbingProjectsForMediaEndpoint).not.toHaveBeenCalled();
+    expect(routeMocks.getMediaPageDubbingProjects).not.toHaveBeenCalled();
     expect(routeMocks.getDubbingProjects).not.toHaveBeenCalled();
     expect(routeMocks.getSeason).toHaveBeenCalledWith(
       "season",
