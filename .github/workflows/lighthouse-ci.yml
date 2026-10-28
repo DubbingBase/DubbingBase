@@ -84,9 +84,11 @@ jobs:
 
           head_lighthouse_config=/tmp/lhci-head-config.json
           reports_root=/tmp/lhci-comparison
+          actor_cpu_benchmark=/tmp/actor-route-cpu.bench.test.ts
           rm -rf "$reports_root"
           mkdir -p "$reports_root/base" "$reports_root/head"
           cp .lighthouserc.json "$head_lighthouse_config"
+          cp apps/website/scripts/actor-route-cpu.bench.test.ts "$actor_cpu_benchmark"
 
           server_pid=""
           cleanup_server() {
@@ -102,6 +104,8 @@ jobs:
             local label="$1"
             local revision="$2"
             local log_file="/tmp/lhci-worker-${label}.log"
+            local original_benchmark="/tmp/lhci-actor-route-cpu-${label}.original.ts"
+            local benchmark_was_tracked=false
 
             git checkout -- .lighthouserc.json
             if ! git cat-file -e "${revision}^{commit}" 2>/dev/null; then
@@ -111,6 +115,12 @@ jobs:
 
             # Use one route list and Lighthouse configuration for both revisions.
             cp "$head_lighthouse_config" .lighthouserc.json
+            rm -f "$original_benchmark"
+            if git cat-file -e "$revision:apps/website/scripts/actor-route-cpu.bench.test.ts" 2>/dev/null; then
+              git show "$revision:apps/website/scripts/actor-route-cpu.bench.test.ts" > "$original_benchmark"
+              benchmark_was_tracked=true
+            fi
+            cp "$actor_cpu_benchmark" apps/website/scripts/actor-route-cpu.bench.test.ts
             rm -rf apps/website/.nuxt apps/website/.output apps/website/.wrangler .lighthouseci
 
             mise exec -- pnpm install --filter '@app/website...' \
@@ -118,7 +128,21 @@ jobs:
               --frozen-lockfile \
               --config.minimum-release-age=0 \
               --config.minimum-release-age-strict=false
+
             E2E_TEST=true NODE_ENV=production NITRO_PRESET=cloudflare-module mise run check
+
+            ACTOR_ROUTE_CPU_BENCHMARK=true \
+              ACTOR_ROUTE_CPU_OUTPUT="$reports_root/$label/actor-route-cpu.json" \
+              mise exec -- pnpm --filter @app/website exec vitest run \
+                --environment node --pool forks --maxWorkers 1 \
+                scripts/actor-route-cpu.bench.test.ts
+            if [ "$label" = "base" ]; then
+              if [ "$benchmark_was_tracked" = "true" ]; then
+                cp "$original_benchmark" apps/website/scripts/actor-route-cpu.bench.test.ts
+              else
+                rm apps/website/scripts/actor-route-cpu.bench.test.ts
+              fi
+            fi
 
             setsid env E2E_TEST=true mise exec -- pnpm --filter @app/website exec wrangler dev \
               --local --ip 127.0.0.1 --port 8787 \
