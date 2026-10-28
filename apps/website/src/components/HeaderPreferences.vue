@@ -7,6 +7,7 @@
       role="combobox"
       aria-haspopup="listbox"
       aria-expanded="false"
+      data-preference-trigger
       @click="openPreference('theme')"
       @keydown="onPreferenceKeydown($event, 'theme')"
     >
@@ -21,6 +22,7 @@
       role="combobox"
       aria-haspopup="listbox"
       aria-expanded="false"
+      data-preference-trigger
       @click="openPreference('language')"
       @keydown="onPreferenceKeydown($event, 'language')"
     >
@@ -37,7 +39,7 @@
 
 <script setup lang="ts">
 import { GlobeIcon, MonitorIcon, MoonIcon, SunIcon } from "lucide-vue-next";
-import { defineAsyncComponent, ref } from "vue";
+import { defineAsyncComponent, onBeforeUnmount, ref } from "vue";
 import { useTheme } from "../composables/useTheme";
 
 type PreferenceMenu = "theme" | "language";
@@ -46,9 +48,31 @@ const { theme } = useTheme();
 const openedPreference = ref<PreferenceMenu | null>(null);
 const selectorsReady = ref(false);
 
+const removePendingOpenListeners = (): void => {
+  document.removeEventListener("keydown", onPendingKeydown);
+  document.removeEventListener("pointerdown", onOutsidePointerdown);
+};
+
+const cancelPendingOpen = (): void => {
+  if (!openedPreference.value || selectorsReady.value) return;
+  openedPreference.value = null;
+  removePendingOpenListeners();
+};
+
+const onPendingKeydown = (event: KeyboardEvent): void => {
+  if (event.key === "Escape" || event.key === "Tab") cancelPendingOpen();
+};
+
+const onOutsidePointerdown = (event: PointerEvent): void => {
+  const target = event.target;
+  if (target instanceof Element && target.closest("[data-preference-trigger]")) return;
+  cancelPendingOpen();
+};
+
 const HeaderPreferenceSelects = defineAsyncComponent({
   loader: () => import("./HeaderPreferenceSelects.vue"),
   onError(_error, _retry, fail) {
+    removePendingOpenListeners();
     openedPreference.value = null;
     selectorsReady.value = false;
     fail();
@@ -57,6 +81,8 @@ const HeaderPreferenceSelects = defineAsyncComponent({
 
 const openPreference = (preference: PreferenceMenu): void => {
   openedPreference.value = preference;
+  document.addEventListener("keydown", onPendingKeydown);
+  document.addEventListener("pointerdown", onOutsidePointerdown);
 };
 
 const onPreferenceKeydown = (event: KeyboardEvent, preference: PreferenceMenu): void => {
@@ -66,6 +92,13 @@ const onPreferenceKeydown = (event: KeyboardEvent, preference: PreferenceMenu): 
 };
 
 const onSelectorsReady = (): void => {
+  if (!openedPreference.value) {
+    removePendingOpenListeners();
+    return;
+  }
   selectorsReady.value = true;
+  removePendingOpenListeners();
 };
+
+onBeforeUnmount(removePendingOpenListeners);
 </script>

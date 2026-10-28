@@ -81,7 +81,7 @@ import {
   SelectTrigger,
   SelectViewport,
 } from "reka-ui";
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { useTheme } from "../composables/useTheme";
 
 const props = defineProps<{ initialOpen: "theme" | "language" }>();
@@ -92,6 +92,14 @@ const { t, locale } = useI18n();
 const switchLocalePath = useSwitchLocalePath();
 const themeOpen = ref(props.initialOpen === "theme");
 const languageOpen = ref(props.initialOpen === "language");
+
+watch(
+  () => props.initialOpen,
+  (preference) => {
+    themeOpen.value = preference === "theme";
+    languageOpen.value = preference === "language";
+  },
+);
 
 onMounted(() => emit("ready"));
 

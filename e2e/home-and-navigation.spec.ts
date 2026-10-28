@@ -7,9 +7,7 @@ test.describe("Home Page & Global Navigation", () => {
     await setupMockApi(page);
   });
 
-  test("loads home page with trending carousels and top voice actors", async ({
-    page,
-  }) => {
+  test("loads home page with trending carousels and top voice actors", async ({ page }) => {
     const api = await setupMockApi(page);
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await waitForVueHydration(page);
@@ -43,6 +41,66 @@ test.describe("Home Page & Global Navigation", () => {
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   });
 
+  test("keeps preference controls visible and cancels a delayed selector open", async ({
+    page,
+  }) => {
+    let releaseImport = (): void => {};
+    const importGate = new Promise<void>((resolve) => {
+      releaseImport = resolve;
+    });
+    await page.route("**/HeaderPreferenceSelects.vue*", async (route) => {
+      await importGate;
+      await route.continue();
+    });
+
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await waitForVueHydration(page);
+
+    const themeTrigger = page.locator('button[aria-label="Toggle theme"]');
+    const importRequest = page.waitForRequest((request) =>
+      request.url().includes("HeaderPreferenceSelects.vue"),
+    );
+    const importResponse = page.waitForResponse((response) =>
+      response.url().includes("HeaderPreferenceSelects.vue"),
+    );
+
+    await themeTrigger.click();
+    await importRequest;
+    await expect(themeTrigger).toBeVisible();
+
+    await page.keyboard.press("Escape");
+    releaseImport();
+    await importResponse;
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+        }),
+    );
+
+    await expect(themeTrigger).toBeVisible();
+    await expect(page.getByRole("listbox")).toHaveCount(0);
+  });
+
+  test("keeps preference controls available when the selector import fails", async ({ page }) => {
+    await page.route("**/HeaderPreferenceSelects.vue*", (route) => route.abort());
+
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await waitForVueHydration(page);
+
+    const themeTrigger = page.locator('button[aria-label="Toggle theme"]');
+    const languageTrigger = page.locator('button[aria-label="Toggle language"]');
+    const failedImport = page.waitForEvent("requestfailed", (request) =>
+      request.url().includes("HeaderPreferenceSelects.vue"),
+    );
+
+    await themeTrigger.click();
+    await failedImport;
+
+    await expect(themeTrigger).toBeVisible();
+    await expect(languageTrigger).toBeVisible();
+  });
+
   test("language switcher updates application language and renders translations", async ({
     page,
   }) => {
@@ -57,18 +115,13 @@ test.describe("Home Page & Global Navigation", () => {
     await expect(page.locator("footer")).not.toContainText("footer.movies");
 
     // Open the language switcher
-    const langTrigger = page
-      .locator("button[aria-label*='language' i]")
-      .first();
+    const langTrigger = page.locator("button[aria-label*='language' i]").first();
     await expect(langTrigger).toBeVisible({ timeout: 5000 });
     await langTrigger.click();
 
     // Switch to French — the SelectContent renders as a fixed-position overlay
     const frOption = page.getByText("Français").first();
-    await Promise.all([
-      page.waitForURL(/\/fr\/?/, { timeout: 10000 }),
-      frOption.click(),
-    ]);
+    await Promise.all([page.waitForURL(/\/fr\/?/, { timeout: 10000 }), frOption.click()]);
     await waitForVueHydration(page);
 
     // Verify French translations are loaded — footer should say "Films"
