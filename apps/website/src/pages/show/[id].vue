@@ -616,6 +616,9 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
     if (profilePath && profilePath.startsWith("/")) {
       profilePath = `https://image.tmdb.org/t/p/w185${profilePath}`;
     }
+    const roleNames = (actor.roles || []).map((role) => role.character);
+    const roleLabel = roleNames.join(", ");
+    const roleNameCandidates = roleNames.filter(Boolean);
 
     // Find the voice actor work for this physical actor
     const cards = actorWorks.length > 0 ? actorWorks : [null];
@@ -625,13 +628,12 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
       const workCharacterName = work?.character_name || null;
 
       // Find character picture matching the character name
-      const characterName =
-        actor.roles?.map((role) => role.character).join(", ") || workCharacterName;
+      const characterName = roleLabel || workCharacterName;
       let characterImage: string | null = null;
       if (characterName) {
         // Try to match any of the roles, then fallback to workCharacterName
         const namesToTry = [
-          ...(actor.roles || []).map((role) => role.character).filter(Boolean),
+          ...roleNameCandidates,
           ...(workCharacterName ? [workCharacterName] : []),
         ];
         characterImage = findCharacterImage(characterPictureIndex.value, namesToTry);
