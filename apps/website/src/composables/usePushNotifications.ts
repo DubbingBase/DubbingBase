@@ -17,6 +17,7 @@ function getInstallationId(): string {
 }
 
 async function registerCurrentToken(platform: PushPlatform): Promise<boolean> {
+  const { locale } = useI18n();
   const config = useRuntimeConfig().public;
   if (
     !config.firebaseApiKey ||
@@ -32,14 +33,15 @@ async function registerCurrentToken(platform: PushPlatform): Promise<boolean> {
     const [{ getApp, getApps, initializeApp }, { getMessaging, getToken, isSupported }] =
       await Promise.all([import("firebase/app"), import("firebase/messaging")]);
     if (!(await isSupported())) return false;
-    const app = getApps().length > 0
-      ? getApp()
-      : initializeApp({
-          apiKey: config.firebaseApiKey,
-          appId: config.firebaseAppId,
-          messagingSenderId: config.firebaseMessagingSenderId,
-          projectId: config.firebaseProjectId,
-        });
+    const app =
+      getApps().length > 0
+        ? getApp()
+        : initializeApp({
+            apiKey: config.firebaseApiKey,
+            appId: config.firebaseAppId,
+            messagingSenderId: config.firebaseMessagingSenderId,
+            projectId: config.firebaseProjectId,
+          });
     const messaging = await getMessaging(app);
     const registration = await navigator.serviceWorker.ready;
     const token = await getToken(messaging, {
@@ -49,7 +51,7 @@ async function registerCurrentToken(platform: PushPlatform): Promise<boolean> {
     if (!token) return false;
     await $fetch("/api/push/installation", {
       method: "POST",
-      body: { installation_id: getInstallationId(), platform, token },
+      body: { installation_id: getInstallationId(), platform, token, locale: locale.value },
     });
     return true;
   } catch (error) {
@@ -69,9 +71,10 @@ export async function enablePushNotifications(): Promise<PushEnableResult> {
   if (!useSupabaseUser().value) return { ok: false, reason: "failed" };
 
   try {
-    const permission = Notification.permission === "default"
-      ? await Notification.requestPermission()
-      : Notification.permission;
+    const permission =
+      Notification.permission === "default"
+        ? await Notification.requestPermission()
+        : Notification.permission;
     if (permission !== "granted") return { ok: false, reason: "denied" };
     const registered = await registerCurrentToken(support.platform);
     if (!registered) return { ok: false, reason: "configuration" };
@@ -84,11 +87,7 @@ export async function enablePushNotifications(): Promise<PushEnableResult> {
 
 export async function reconcilePushInstallation(): Promise<void> {
   const support = detectPushSupport();
-  if (
-    support.eligibility !== "ready" ||
-    !support.platform ||
-    !useSupabaseUser().value
-  ) {
+  if (support.eligibility !== "ready" || !support.platform || !useSupabaseUser().value) {
     return;
   }
   if (Notification.permission !== "granted") {
@@ -136,14 +135,15 @@ export async function detachPushInstallation(): Promise<boolean> {
       if (!(await isSupported())) {
         tokenDeleted = true;
       } else {
-        const app = getApps().length > 0
-          ? getApp()
-          : initializeApp({
-              apiKey: config.firebaseApiKey,
-              appId: config.firebaseAppId,
-              messagingSenderId: config.firebaseMessagingSenderId,
-              projectId: config.firebaseProjectId,
-            });
+        const app =
+          getApps().length > 0
+            ? getApp()
+            : initializeApp({
+                apiKey: config.firebaseApiKey,
+                appId: config.firebaseAppId,
+                messagingSenderId: config.firebaseMessagingSenderId,
+                projectId: config.firebaseProjectId,
+              });
         await deleteToken(getMessaging(app));
         tokenDeleted = true;
       }

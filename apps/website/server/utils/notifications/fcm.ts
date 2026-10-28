@@ -1,4 +1,5 @@
 import { useSupabaseAdmin } from "../db/client";
+import { localizePublishedContentLink } from "./published-content-link";
 
 const FCM_SCOPE = "https://www.googleapis.com/auth/firebase.messaging";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
@@ -37,31 +38,37 @@ export interface PushSendResult {
 export interface PushInstallationCandidate {
   user_id: string;
   fcm_token: string;
+  locale: string;
   platform: string;
   enabled: boolean;
 }
 
-export function eligiblePushTokens(
+export interface EligiblePushInstallation {
+  token: string;
+  locale: string;
+}
+
+export function eligiblePushInstallations(
   subscriptions: Array<{ user_id: string }>,
   enabledPreferences: Array<{ user_id: string }>,
   installations: PushInstallationCandidate[],
-): string[] {
+): EligiblePushInstallation[] {
   const followers = new Set(subscriptions.map((row) => row.user_id));
   const enabledUsers = new Set(
     enabledPreferences.map((row) => row.user_id).filter((userId) => followers.has(userId)),
   );
-  return [
-    ...new Set(
-      installations
-        .filter(
-          (installation) =>
-            enabledUsers.has(installation.user_id) &&
-            installation.enabled &&
-            (installation.platform === "android" || installation.platform === "ios"),
-        )
-        .map((installation) => installation.fcm_token),
-    ),
-  ];
+  const eligible = new Map<string, string>();
+  for (const installation of installations) {
+    if (
+      enabledUsers.has(installation.user_id) &&
+      installation.enabled &&
+      (installation.platform === "android" || installation.platform === "ios") &&
+      !eligible.has(installation.fcm_token)
+    ) {
+      eligible.set(installation.fcm_token, installation.locale);
+    }
+  }
+  return [...eligible].map(([token, locale]) => ({ token, locale }));
 }
 
 function encodeBase64Url(value: string | Uint8Array): string {
@@ -71,7 +78,8 @@ function encodeBase64Url(value: string | Uint8Array): string {
   return btoa(binary).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
 }
 
-function decodePem(value: string): Uint8Array {
+function decodePrivateKeyPem(value: string): Uint8Array {
+  // Web Crypto imports the DER bytes inside the service-account PKCS#8 PEM.
   const encoded = value
     .replace(/\\n/g, "\n")
     .replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\s/g, "");
@@ -91,7 +99,7 @@ async function createAccessToken(config: FcmRuntimeConfig, deadline: number): Pr
     }),
   );
   const unsignedToken = `${header}.${claims}`;
-  const privateKeyBytes = decodePem(config.firebasePrivateKey);
+  const privateKeyBytes = decodePrivateKeyPem(config.firebasePrivateKey);
   const privateKeyBuffer = new ArrayBuffer(privateKeyBytes.byteLength);
   new Uint8Array(privateKeyBuffer).set(privateKeyBytes);
   const key = await crypto.subtle.importKey(
@@ -261,24 +269,35 @@ export async function sendToken(
 async function sendInBatches(
   projectId: string,
   accessToken: string,
-  tokens: string[],
+  installations: EligiblePushInstallation[],
   message: PushMessage,
   deadline: number,
 ): Promise<{ attempted: number; sent: number; invalidTokens: string[] }> {
   let attempted = 0;
   let sent = 0;
   const invalidTokens: string[] = [];
-  for (let offset = 0; offset < tokens.length; offset += SEND_CONCURRENCY) {
+  for (let offset = 0; offset < installations.length; offset += SEND_CONCURRENCY) {
     if (Date.now() >= deadline) break;
-    const batch = tokens.slice(offset, offset + SEND_CONCURRENCY);
+    const batch = installations.slice(offset, offset + SEND_CONCURRENCY);
     attempted += batch.length;
     const results = await Promise.all(
-      batch.map((token) => sendToken(projectId, accessToken, token, message, deadline)),
+      batch.map((installation) =>
+        sendToken(
+          projectId,
+          accessToken,
+          installation.token,
+          {
+            ...message,
+            link: localizePublishedContentLink(message.link, installation.locale) ?? message.link,
+          },
+          deadline,
+        ),
+      ),
     );
     for (let index = 0; index < results.length; index += 1) {
       if (results[index] === "sent") sent += 1;
-      const token = batch[index];
-      if (results[index] === "invalid" && token) invalidTokens.push(token);
+      const installation = batch[index];
+      if (results[index] === "invalid" && installation) invalidTokens.push(installation.token);
     }
   }
   return { attempted, sent, invalidTokens };
@@ -336,26 +355,32 @@ export async function notifyVoiceActorFollowers(
     }
     const { data: installations, error: installationError } = await supabase
       .from("push_installations")
-      .select("user_id, fcm_token, platform, enabled")
+      .select("user_id, fcm_token, locale, platform, enabled")
       .in("user_id", enabledUserIds)
       .eq("enabled", true)
       .limit(MAX_INSTALLATIONS_PER_EVENT + 1);
     if (installationError) throw installationError;
-    const tokens = eligiblePushTokens(subscriptions ?? [], preferences ?? [], installations ?? []);
-    const truncated = tokens.length > MAX_INSTALLATIONS_PER_EVENT;
-    const boundedTokens = tokens.slice(0, MAX_INSTALLATIONS_PER_EVENT);
-    if (boundedTokens.length === 0) return { attempted: 0, sent: 0, invalidTokens: 0, truncated };
+    const eligibleInstallations = eligiblePushInstallations(
+      subscriptions ?? [],
+      preferences ?? [],
+      installations ?? [],
+    );
+    const truncated = eligibleInstallations.length > MAX_INSTALLATIONS_PER_EVENT;
+    const boundedInstallations = eligibleInstallations.slice(0, MAX_INSTALLATIONS_PER_EVENT);
+    if (boundedInstallations.length === 0) {
+      return { attempted: 0, sent: 0, invalidTokens: 0, truncated };
+    }
 
     const dispatchDeadline = Date.now() + MAX_DISPATCH_TIME_MS;
     const accessToken = await createAccessToken(firebaseConfig, dispatchDeadline);
     const result = await sendInBatches(
       firebaseConfig.firebaseProjectId,
       accessToken,
-      boundedTokens,
+      boundedInstallations,
       { ...message, link },
       dispatchDeadline,
     );
-    const dispatchTruncated = truncated || result.attempted < boundedTokens.length;
+    const dispatchTruncated = truncated || result.attempted < boundedInstallations.length;
     if (result.invalidTokens.length > 0) {
       const { error } = await supabase
         .from("push_installations")
