@@ -91,9 +91,12 @@ async function createAccessToken(config: FcmRuntimeConfig, deadline: number): Pr
     }),
   );
   const unsignedToken = `${header}.${claims}`;
+  const privateKeyBytes = decodePem(config.firebasePrivateKey);
+  const privateKeyBuffer = new ArrayBuffer(privateKeyBytes.byteLength);
+  new Uint8Array(privateKeyBuffer).set(privateKeyBytes);
   const key = await crypto.subtle.importKey(
     "pkcs8",
-    decodePem(config.firebasePrivateKey),
+    privateKeyBuffer,
     { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
     false,
     ["sign"],
