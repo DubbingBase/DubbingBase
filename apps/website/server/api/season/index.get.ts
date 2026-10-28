@@ -77,9 +77,11 @@ export default defineEventHandler(async (event) => {
       });
 
     const dbDataPromise = withTimeout(
-      isMediaPageProjection
-        ? getSeasonPageDubbingProjects(id, "tv")
-        : getDubbingProjectsForMediaEndpoint(id, "tv", query.projection),
+      Promise.resolve(
+        isMediaPageProjection
+          ? getSeasonPageDubbingProjects(id, "tv")
+          : getDubbingProjectsForMediaEndpoint(id, "tv", query.projection),
+      ),
       10_000,
       "Supabase dubbing projects query",
     ).then((dubbingProjects) => ({ dubbingProjects, voteData: {} }));
