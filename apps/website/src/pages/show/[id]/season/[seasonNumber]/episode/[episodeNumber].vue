@@ -232,7 +232,7 @@
                   >
                     <component
                       :is="actor.actorId ? NuxtLink : 'div'"
-                      :to="actor.actorId ? localePath(`/actor/${actor.actorId}`) : undefined"
+                      :to="actor.actorPath"
                       class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                     >
                       <NuxtImg
@@ -254,7 +254,7 @@
                       </div>
                       <component
                         :is="actor.actorId ? NuxtLink : 'div'"
-                        :to="actor.actorId ? localePath(`/actor/${actor.actorId}`) : undefined"
+                        :to="actor.actorPath"
                         class="font-bold text-sm theme-text truncate hover:underline block w-full"
                         :title="actor.name"
                       >
@@ -290,13 +290,13 @@
                       <div
                         class="font-bold text-sm theme-text truncate block w-full"
                         :title="
-                          actor.roles?.map((role) => role.character).join(', ') ||
+                          actor.roleNames.join(', ') ||
                           actor.workCharacterName ||
                           ''
                         "
                       >
                         {{
-                          actor.roles?.map((role) => role.character).join(", ") ||
+                          actor.roleNames.join(", ") ||
                           actor.workCharacterName ||
                           $t("details.unknownCharacter")
                         }}
@@ -311,7 +311,7 @@
                   >
                     <template v-if="actor.voiceActor">
                       <NuxtLink
-                        :to="localePath(`/voice-actor/${actor.voiceActor.id}`)"
+                        :to="actor.voiceActorPath"
                         class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                       >
                         <NuxtImg
@@ -338,7 +338,7 @@
                           <span class="truncate block w-full">{{ $t("details.voiceActor") }}</span>
                         </div>
                         <NuxtLink
-                          :to="localePath(`/voice-actor/${actor.voiceActor.id}`)"
+                          :to="actor.voiceActorPath"
                           class="font-bold text-sm theme-text truncate hover:underline block w-full"
                           :title="actor.voiceActor.firstname + ' ' + actor.voiceActor.lastname"
                         >
@@ -639,6 +639,12 @@ watch([debouncedSearch, activeDubId], () => {
   void setCastPage(1);
 });
 
+type EpisodeDisplayCastActor = DisplayCastActor & {
+  actorPath?: string;
+  roleNames: string[];
+  voiceActorPath: string;
+};
+
 const formattedCast = computed<DisplayCastActor[]>(() => {
   const cast: CastActorReference[] =
     data.value?.aggregateCredits?.cast || episode.value?.credits?.cast || [];
@@ -700,9 +706,16 @@ const filteredCast = computed(() => {
   });
 });
 const castTotal = computed(() => filteredCast.value.length);
-const castItems = computed(() => {
+const castItems = computed<EpisodeDisplayCastActor[]>(() => {
   const start = (castPage.value - 1) * 12;
-  return filteredCast.value.slice(start, start + 12);
+  return filteredCast.value.slice(start, start + 12).map((actor) => ({
+    ...actor,
+    actorPath: actor.actorId ? localePath(`/actor/${actor.actorId}`) : undefined,
+    roleNames: (actor.roles || []).map((role) => role.character),
+    voiceActorPath: actor.voiceActor
+      ? localePath(`/voice-actor/${actor.voiceActor.id}`)
+      : "",
+  }));
 });
 
 useHead({
