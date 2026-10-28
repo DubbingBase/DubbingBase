@@ -1009,7 +1009,7 @@ export class MediaService {
         break;
     }
 
-    if (contentType === "season" && options.includeCredits === false) {
+    if (contentType === "season" && options.projection === "media-page") {
       media = projectSeasonForMediaPage(media);
     }
 
