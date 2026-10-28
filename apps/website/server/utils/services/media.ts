@@ -85,6 +85,25 @@ function omitUnusedEpisodeFields(media: unknown): unknown {
   return { ...episode, credits };
 }
 
+function projectSeasonForMediaPage(media: unknown): unknown {
+  if (!isRecord(media) || !Array.isArray(media.episodes)) return media;
+
+  return {
+    ...media,
+    episodes: media.episodes.map((episode) => {
+      if (!isRecord(episode)) return episode;
+
+      return {
+        episode_number: episode.episode_number,
+        name: episode.name,
+        air_date: episode.air_date,
+        still_path: episode.still_path,
+        vote_average: episode.vote_average,
+      };
+    }),
+  };
+}
+
 function isTvdbSearchResult(value: unknown): value is TvdbSearchResult {
   return (
     isRecord(value) &&
@@ -990,7 +1009,11 @@ export class MediaService {
         break;
     }
 
-    const processedMedia = processMedia(media);
+    const mediaForProcessing =
+      contentType === "season" && options.projection === "media-page"
+        ? projectSeasonForMediaPage(media)
+        : media;
+    const processedMedia = processMedia(mediaForProcessing);
     return { media: processedMedia };
   }
 }

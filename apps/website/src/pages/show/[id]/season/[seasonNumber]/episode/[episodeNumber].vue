@@ -664,10 +664,6 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
   const { matches, unmatchedWorks } = matchCastWorks(cast, works);
   const matchedCards = matches.flatMap(({ actor, works: actorWorks }) =>
     actorWorks.map((work) => {
-      const characterName = actor.character || work.character_name;
-      const characterImage = characterName
-        ? characterPictureIndex.value.get(characterName.toLowerCase())
-        : characterProfilePictures.value.find((picture) => !picture.name)?.image;
       let profilePath = actor.profile_path;
       if (profilePath?.startsWith("/")) {
         profilePath = `https://image.tmdb.org/t/p/w185${profilePath}`;
@@ -679,7 +675,6 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
         id: `${actor.id}-${work.id}`,
         profile_path: profilePath,
         voiceActor: work.voice_actor ? { ...work.voice_actor, note: work.note } : null,
-        characterImage: characterImage || null,
         workCharacterName: work.character_name || null,
       };
     }),
@@ -720,14 +715,25 @@ const filteredCast = computed(() => {
 const castTotal = computed(() => filteredCast.value.length);
 const castItems = computed<EpisodeDisplayCastActor[]>(() => {
   const start = (castPage.value - 1) * 12;
-  return filteredCast.value.slice(start, start + 12).map((actor) => ({
-    ...actor,
-    actorPath: actor.actorId ? localePath(`/actor/${actor.actorId}`) : undefined,
-    roleNames: (actor.roles || []).map((role) => role.character),
-    voiceActorPath: actor.voiceActor
-      ? localePath(`/voice-actor/${actor.voiceActor.id}`)
-      : "",
-  }));
+  return filteredCast.value.slice(start, start + 12).map((actor) => {
+    const characterName = actor.character || actor.workCharacterName;
+    let characterImage: string | null = null;
+    if (actor.actorId !== undefined) {
+      characterImage = characterName
+        ? characterPictureIndex.value.get(characterName.toLowerCase()) || null
+        : characterProfilePictures.value.find((picture) => !picture.name)?.image || null;
+    }
+
+    return {
+      ...actor,
+      actorPath: actor.actorId ? localePath(`/actor/${actor.actorId}`) : undefined,
+      roleNames: (actor.roles || []).map((role) => role.character),
+      voiceActorPath: actor.voiceActor
+        ? localePath(`/voice-actor/${actor.voiceActor.id}`)
+        : "",
+      characterImage: characterImage || null,
+    };
+  });
 });
 
 useHead({
