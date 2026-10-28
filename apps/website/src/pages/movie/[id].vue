@@ -622,7 +622,7 @@ const castItems = computed(() => {
   return filteredCast.value.slice(start, start + 12).map((actor) => {
     const characterName = actor.character || actor.workCharacterName;
     let characterImage = null;
-    if (characterName) {
+    if (actor.actorId !== undefined && characterName) {
       const matchesCharacter = createCharacterMatcher(characterName);
       const match = characterProfilePictures.value.find(
         (picture: MediaDetailCharacterProfilePicture) =>
