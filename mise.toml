@@ -7,7 +7,7 @@ node = "24"
 _.file = '.env.development'
 
 [tasks.install]
-description = "Installs dependencies"
+description = "Installs every workspace, including mobile; maintainer-only"
 run = "pnpm install"
 
 [tasks.backend]
@@ -18,13 +18,13 @@ run = "pnpm supabase start"
 
 [tasks.backend-stop]
 description = "Stop the Supabase backend"
-depends = ["install"]
+depends = ["database-install"]
 dir = "packages/database"
 run = "pnpm supabase stop"
 
 
 [tasks.format]
-description = "Format codebase using Prettier"
+description = "Formats the whole repository, including mobile; maintainer-only"
 run = "pnpm run format"
 
 [tasks.format-staged]
@@ -32,20 +32,20 @@ description = "Format only staged files using lint-staged"
 run = "npx lint-staged"
 
 [tasks.dev]
-description = "Runs the development server"
+description = "Runs every workspace development server, including mobile; maintainer-only"
 depends = ["install", "backend"]
 run = "pnpm run dev"
 
 [tasks.sync]
-description = "Sync capacitor assets"
+description = "Syncs mobile Capacitor assets; maintainer-only"
 depends = ["build-web"]
 dir = "apps/mobile"
 run = "pnpm cap sync"
 
 [tasks.build-web]
 description = "Builds the web app"
-depends = ["install"]
-run = "pnpm build"
+depends = ["website-install"]
+run = "pnpm --filter @app/website build"
 
 [tasks.migrate-up]
 description = "Runs the database migration"
@@ -63,6 +63,10 @@ run = "pnpm supabase migration down"
 description = "Installs only the database workspace dependencies"
 run = "pnpm install --filter @app/supabase..."
 
+[tasks.website-install]
+description = "Installs only the website workspace and its dependencies"
+run = "pnpm install --filter @app/website..."
+
 [tasks.pull-production]
 description = "Alias for fetching the production reseed data"
 run = "mise run fetch-seed"
@@ -75,43 +79,42 @@ run = "npx supabase db reset --local --no-seed --yes"
 
 [tasks.backup-db]
 description = "Backups the database"
-depends = ["install"]
+depends = ["database-install"]
 run = "./backup_db.sh"
 
 [tasks.start-emulator]
-description = "Starts the Android emulator"
+description = "Starts an Android emulator for mobile; maintainer-only"
 depends = ["install"]
 run = "$ANDROID_HOME/emulator/emulator -avd Medium_Phone_API_36.0"
 
 [tasks.android-dev]
-description = "Runs the Android app in development"
+description = "Runs the mobile Android app; maintainer-only"
 depends = ["install", "start-emulator"]
 dir = "apps/mobile"
 run = "pnpm cap run android"
 env = { "VITE_SUPABASE_URL" = "http://10.0.2.2:55321", "VITE_SUPABASE_PUBLISHABLE_KEY" = "sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH" }
 
 [tasks.android-app-install]
-description = "Installs the Android app"
+description = "Installs the mobile Android app; maintainer-only"
 depends = ["android-build-prod"]
 run = "adb install -r apps/mobile/android/app/build/outputs/apk/universal/release/app-universal-release.apk"
 
 [tasks.app]
-description = "Starts the mobile app in web mode"
+description = "Starts the mobile app in web mode; maintainer-only"
 depends = ["install"]
 dir = "apps/mobile"
 run = "pnpm dev"
 
 [tasks.website]
 description = "Runs the website"
-depends = ["install"]
+depends = ["website-install"]
 dir = "apps/website"
 run = "doppler run -- sh -c 'node ../../scripts/check-local-supabase-env.mjs && exec pnpm dev --host 0.0.0.0'"
 
-[tasks.landing]
-description = "Runs the public facing landing website"
-depends = ["install"]
-dir = "apps/landing"
-run = "pnpm dev"
+[tasks.website-typecheck]
+description = "Type checks only the website workspace"
+depends = ["website-install"]
+run = "pnpm --filter @app/website typecheck"
 
 [tasks.changeset]
 description = "Create a new changeset to describe package changes"
@@ -157,13 +160,13 @@ dir = "packages/database"
 run = "npx supabase db reset --local --yes"
 
 [tasks.typecheck]
-description = "Run TypeScript type checking across all workspaces"
+description = "Type checks all workspaces, including mobile; maintainer-only"
 depends = ["install"]
 run = "pnpm typecheck"
 
 [tasks.fetch-dubbing]
 description = "Fetches dubbing data from Wikipedia and enqueues to Supabase"
-depends = ["install"]
+depends = ["website-install"]
 run = "npx --yes tsx scripts/fetch_wikipedia_dubbing.ts"
 
 [tasks.check]

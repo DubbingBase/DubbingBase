@@ -12,38 +12,35 @@ The mobile application is permanently out of scope for agent work. Agents MUST N
 
 ## 🏗️ Project Architecture & Hierarchy
 
-The project is structured as a **Monorepo** managed by `pnpm workspaces` and `turbo`. The global system tool configurations (Node.js, Deno, etc.) are managed by **Mise** via [mise.toml](file:///run/media/armaldio/SSD/Projects/DubbingBase/App/mise.toml).
+The project is a **pnpm workspace** orchestrated by Turborepo. Node.js and Deno versions are managed by Mise in [mise.toml](mise.toml).
 
 ```
-├── apps/
-│   ├── mobile/       # Mobile application (Vue 3, Capacitor)
-│   └── website/      # Web application / admin dashboard (Vue 3, Tailwind v4)
-├── packages/
-│   ├── database/     # Supabase configuration, local migrations, seeds, and generated TypeScript types
-│   └── common/       # Shared package (currently empty, intended for common types/utilities)
-├── package.json      # Global monorepo configuration
-├── mise.toml         # Environment and task manager (Mise)
-└── turbo.json        # Turbo Repo configuration to orchestrate builds and tasks
+apps/website/             # Nuxt website and admin dashboard
+packages/database/        # Supabase configuration, migrations, seeds, generated types
+packages/locales/
+packages/og-image/
+packages/shared-logic/
 ```
 
 ---
 
 ## 🛠️ Development Commands (via `mise`)
 
-All development tasks MUST be run via **Mise** to ensure environment consistency. Always check `mise.toml` first to see if a command exists before attempting to run raw bash commands or `pnpm` scripts directly. If a task is defined in `mise.toml` (e.g. `gen-types`), you must run it using `mise run <task>`.
+Use **Mise** for development tasks. Check `mise.toml` first; if it defines the task, run it with `mise run <task>`. Agent-safe scoped tasks include:
 
-| Command                 | Description                                                                                   |
-| :---------------------- | :-------------------------------------------------------------------------------------------- |
-| `mise run dev`          | Starts the entire development environment (local Supabase backend + app dev servers).         |
-| `mise run backend`      | Starts the local Supabase database and environment.                                           |
-| `mise run backend-stop` | Stops the local Supabase backend.                                                             |
-| `mise run app`          | Maintainer-only: starts the mobile app in web mode (`apps/mobile`); agents MUST NOT run it.   |
-| `mise run website`      | Starts only the development server for the website (`apps/website`).                          |
-| `mise run db-reset`     | Resets the local schema and applies migrations without seed data.                             |
-| `mise run migrate-up`   | Applies pending migrations to the local database.                                             |
-| `mise run migrate-down` | Rolls back the last applied migration.                                                        |
-| `mise run sync`         | Maintainer-only: synchronizes mobile builds with Capacitor platforms; agents MUST NOT run it. |
-| `mise run android-dev`  | Maintainer-only: launches Android development; agents MUST NOT run it.                        |
+| Command                      | Description                                                       |
+| :--------------------------- | :---------------------------------------------------------------- |
+| `mise run website`           | Runs the website with Doppler and checks local Supabase settings. |
+| `mise run website-typecheck` | Type checks only the website workspace.                           |
+| `mise run build-web`         | Builds only the website workspace.                                |
+| `mise run backend`           | Starts the local Supabase backend.                                |
+| `mise run backend-stop`      | Stops the local Supabase backend.                                 |
+| `mise run db-reset`          | Resets the local schema without seed data.                        |
+| `mise run migrate-up`        | Applies pending local migrations.                                 |
+| `mise run migrate-down`      | Rolls back the last local migration.                              |
+| `mise run gen-types`         | Regenerates local database TypeScript types.                      |
+
+Do not run repository-wide install, dev, formatting, build, or typecheck tasks: they include the excluded mobile workspace. The website and database install tasks are workspace-filtered.
 
 ### Generating Database TypeScript Types:
 
@@ -55,12 +52,12 @@ mise run gen-types
 
 _(This command generates types to `packages/database/src/database.types.ts`)._
 
-### Remote / Mobile Testing via Tailscale or LAN:
+### Remote Website Testing via Tailscale or LAN:
 
 When testing the website from a mobile device or other clients over Tailscale/LAN:
 
 - Ensure the Supabase backend is running (`mise run backend`).
-- Run the website dev server bound to all network interfaces with `mise run website` (or `HOST=0.0.0.0 pnpm --filter @app/website dev --host 0.0.0.0`).
+- Run the website dev server bound to all network interfaces with `mise run website`.
 - Find your Tailscale IP on the `tailscale0` interface using `ip a` (e.g. `100.111.167.123`).
 - Connect from the client browser at `http://<tailscale-ip>:3000` (or `3001` if port 3000 is occupied).
 
@@ -74,10 +71,10 @@ The website requires both the local Supabase backend and the website server. Sta
 
 ```bash
 mise run backend
-doppler run -- mise run website
+mise run website
 ```
 
-`mise run website` does not start the backend. Do not use `mise run dev` for agent work because it can include `apps/mobile`. Stop the local backend with `mise run backend-stop` when finished.
+The website task starts Doppler and checks the local Supabase environment; it does not start the backend. Stop the local backend with `mise run backend-stop` when finished.
 
 ---
 
@@ -92,37 +89,20 @@ doppler run -- mise run website
   - If a composable is wrapping only simple DB queries, it does not need to route through a server API route. If the composable's logic grows in complexity, migrate it to a Nitro server route at that point.
 - **Vue 3**: Use the **Composition API** exclusively with `<script setup lang="ts">` syntax.
 - **Formatting**: Format only changed, in-scope files with the applicable formatter. `mise run format-staged` is suitable when the staged set is in scope. Do not run repository-wide `pnpm format` for agent work: it can touch excluded `apps/mobile` and unrelated files.
-- **Design & Theme**: The app follows a premium dark theme. Ensure consistent UI/UX when creating or modifying components. Avoid using default Ionic variables if they result in poor contrast. Instead, explicitly use the established dark theme colors (e.g., `#1d1d1d` for card backgrounds, `#e0e0e0` for primary text, `#a0a0a0` for secondary text, `#2a2a2a` for borders) or the app's custom CSS variables to maintain a cohesive design.
+- **Design & Theme**: The website supports dark, light, and system themes. Use its semantic CSS tokens and preserve contrast across themes; avoid hard-coded palette values and default framework variables that do not match the active theme.
 - **Presentation Layer Unified Types**: Create unified interfaces for display purposes (e.g., `DisplayMedia`, `DisplayVoiceActor`) instead of passing raw, complex database types (like union types such as `Movie | Serie`) directly to UI components. This allows the presentation layer to have unified and clean types, and isolates UI templates from underlying database schema complexities.
 
-### 2. Mobile Application (`apps/mobile`)
-
-- **UI Framework**:
-  - **IMPORTANT**: The project is migrating away from Ionic, but **it is OK to use basic Ionic components** (like `ion-content`, `ion-refresher`, `ion-router`, `ion-action-sheet`, etc.). Avoid introducing or relying heavily on complex Ionic components.
-  - Use standard HTML/Vue elements styled with Tailwind CSS or Sass where possible for new UI features.
-- **Capacitor**:
-  - Keep Capacitor for native features/APIs (Camera, Haptics, Keyboard, StatusBar, etc.).
-- **State Management**: Use **Pinia** for all global stores.
-- **Styles**: Use scoped SCSS (`<style scoped lang="scss">`) or Tailwind CSS.
-- **Translations/i18n**: All new user-facing strings must be localized using `vue-i18n`. Use the `useI18n` composable and the `t()` function rather than hardcoding text in templates. Do NOT use fallback strings in the `t()` function; you must implement actual translations in the locale files.
-- **Feature Flags & Permissions**: Use `useFeatureFlags` for PostHog-driven feature toggles. Use `usePermissions` and `authStore` for role-based access control.
-- **Browser APIs over Plugins**: Prefer standard HTML5/Browser APIs over Capacitor plugins where applicable (e.g., standard `<input type="file">` over the Capacitor Camera plugin) to ensure seamless cross-platform functionality on the web.
-
-### 3. Web Application (`apps/website`)
+### 2. Web Application (`apps/website`)
 
 - **Styling**: The website uses **Tailwind CSS v4**. Use Tailwind classes for all layouts and UI.
 - **Data Grids**: Use **RevoGrid** (`@revolist/vue3-datagrid`) for complex tables.
 - **Charts**: Use **Chart.js** via `vue-chartjs`.
-- **Route Performance & Caching Architecture**:
-  - **Three-layer freshness architecture**:
-    - Nuxt `useAsyncData` may reuse `nuxtApp.payload.data[key]` only when `nuxtApp.isHydrating` is true. Never read `nuxtApp.static.data` or configure page/Nitro SWR.
-    - Workers HTTP caching is enabled in `apps/website/wrangler.toml`. The global `00-cache-headers.ts` middleware sets `no-store` on every dynamic Nitro response; static `ASSETS` responses bypass Nitro. Public caching is explicit opt-in for complete provider-only responses and is set only after upstream data is validated and the response is ready to return. Missing credentials, failures, fallbacks, authenticated data, and all Supabase/mixed responses retain no-store.
-    - Cloudflare KV is the only persistent server-side value cache. Every raw `getOrFetch` call must use the discriminated policy options: `persistent` requires an explicit `ttl`, while `read-only` and `none` reject TTLs. There is no implicit TTL fallback. Persistent reads and writes, read-only reads without writes, and none bypasses KV completely. Stable metadata and mappings use an explicit `STABLE` lifetime; provider auth tokens declare their lifetime at their callsites. Do not cache searches, trending, volatile Wikipedia content, or queue state. Do not add Redis, in-memory value caches, additional Nitro caches, or purge-after-write logic.
-  - **Progressive DOM Windowing**: When rendering dynamic rosters or long lists of cards (cast, episodes, filmography, etc.), never render hundreds of DOM nodes at once. Use the `useProgressiveBatch` composable or `useIntersectionObserver` with a batch size of 24–36 and a bottom sentinel element.
+- **Route Performance & Caching**: Follow [the website cache architecture skill](.agents/skills/website-cache-architecture/SKILL.md) when changing freshness, response headers, or persistent provider caching.
+- **Progressive DOM Windowing**: Keep dynamic rosters and long card lists bounded. Use `PaginatedResponsiveGrid` or an equivalent bounded rendering pattern; do not render hundreds of cards at once.
   - **Client-side Search Filtering**: When filtering in-memory arrays via text search inputs, always debounce the query with `refDebounced(query, 150)` from `@vueuse/core` to prevent frame drops while typing.
   - **Resource Hints & Image Optimization**: Media pages must declare `preconnect` and `dns-prefetch` links in `useHead.link` for external CDNs (`https://image.tmdb.org`, `https://thetvdb.com`, `https://images.igdb.com`). Always add `loading="lazy"` and `decoding="async"` to non-hero `NuxtImg` elements.
 
-### 4. Database & Supabase (`packages/database`)
+### 3. Database & Supabase (`packages/database`)
 
 - **SQL Migrations**:
   - Never modify the local/remote schema directly. All database schema changes must go through a migration file.
@@ -136,26 +116,11 @@ doppler run -- mise run website
 
 ### Production-backed local refresh
 
-Production-backed refresh is opt-in. Production access is read-only; all database resets and file replacement target local Supabase. Never push migrations, mutate remote data, or deploy as part of a refresh.
-
-Migrations own schema and enforce supported regional dubbing-language membership through `public.is_valid_dubbing_language(text)` and the `dubbing_projects.language` CHECK constraint. Shared TypeScript validates membership in the matching list. The temporary `dubbing_languages` table exists only between the deployed staging migration and the final queue-RPC replacement. Database refresh uses the full data-only production dump and normal local reset after production has completed regional migration; before then, use the documented migration-checkpoint rehearsal. Storage objects are synchronized separately through Supabase Storage CLI commands.
-
-Use Doppler project `dubbingbase`, config `prd`, for read-only production dumps and Storage downloads. The required CLI credentials are `SUPABASE_ACCESS_TOKEN` and `SUPABASE_DB_PASSWORD`; never print or commit their values. To avoid browser login and interactive project selection in a headless environment:
-
-- From `packages/database`, link a fresh checkout explicitly with `doppler run --project dubbingbase --config prd -- mise exec -- npx supabase link --project-ref rrjgbneefiwoqvsjwzrz`.
-- If `db dump` fails while initializing a temporary login role with `401 Unauthorized`, or asks for a database password, check that the command is running with the `prd` Doppler config. Do not persist either secret in the repository.
-- If the CLI is already authenticated and the project is linked, no login or link step is needed. The project ref is not a credential; use it instead of the interactive project picker.
-- The database tasks use `database-install`, which installs only `@app/supabase` dependencies. From the repository root, run:
-
-  ```bash
-  doppler run --project dubbingbase --config prd -- mise run reseed
-  ```
-
-  `fetch-seed` writes the full data-only dump to ignored `packages/database/supabase/seed.sql`; `reseed` runs the normal local `supabase db reset` flow. Run `mise run sync-storage` separately after the database reset. The linked production project still needs the regional mapping migration before its project rows satisfy the final regional-language CHECK; until then, use migration-only resets and SQL fixtures for local validation. Use `mise run db-reset` when only a fresh schema is needed.
+Production-backed local refresh is opt-in and production access stays read-only. Follow [the production-backed local refresh skill](.agents/skills/production-backed-local-refresh/SKILL.md) for credentials, migration checkpoint checks, data dumps, and local reset/storage sync steps. Do not infer production migration status from the files in this repository.
 
 ---
 
-### 5. External APIs (TMDB, TVDB, IGDB)
+### 4. External APIs (TMDB, TVDB, IGDB)
 
 Backend routes in `apps/website/server/api/` handle integration with TMDB, TVDB, and IGDB with server-side caching.
 
@@ -264,34 +229,23 @@ evidence classification, or queue evidence handling, read
 [the Wikipedia corpus skill](.agents/skills/wikipedia-dubbing-corpus/SKILL.md) and run the
 relevant revision-pinned real-page regressions described there.
 
-For production Worker CPU investigations, follow the
-[Worker CPU profiling skill](.agents/skills/worker-cpu-profiling/SKILL.md). It documents
-read-only Cloudflare CLI profile capture, the paired sanitized route tail, and the
-single-isolate attribution limits.
+For production Worker CPU investigations and optimizations, follow the
+[Worker CPU profiling skill](.agents/skills/worker-cpu-profiling/SKILL.md), which owns
+the capture, attribution, comparison, and reporting procedures.
 
 For local CPU profiling of a website route with deterministic upstream mocks, follow
 the [local route CPU profiling skill](.agents/skills/local-route-cpu-profiling/SKILL.md).
 It covers both API handlers and full Nuxt SSR routes and requires verifying that test
 middleware did not bypass the real route code.
 
-For Worker CPU optimization PRs, state the route/source hypothesis, add focused
-behavior regressions and a website Changeset, and include a representative local
-synthetic benchmark when a matched production comparison is not yet available.
-Label synthetic results clearly; claim production savings only after a comparable
-deployed route-tail comparison. Preserve and test the default/full response when
-adding a page-specific projection. Follow the profiling skill's evaluation steps.
-
 1. **Research First**: Before writing code, inspect existing files, imports, and state to understand the setup.
 2. **Preserve Comments**: Keep existing comments and docstrings unless explicitly told to remove them.
 3. **Precise Code Changes**: Make targeted edits instead of rewriting large files.
 4. **Validation**: Follow the risk-based **Verification** policy below. Do not require compilation or a repository-wide formatter run for every change; use the relevant focused checks and changed-file formatting.
-5. **Wrangler / Cloudflare deploys**: `apps/website` deploys via `git push` to `main` (CI/CD pipeline). Do NOT run `wrangler deploy` locally — `CLOUDFLARE_API_TOKEN` is not set in the dev environment. To pause or resume cron triggers, edit `crons` in `apps/website/wrangler.toml`, commit, and push to `main`.
-   - For production CPU investigations, follow [the Worker CPU profiling skill](.agents/skills/worker-cpu-profiling/SKILL.md). Use the active deployment version and the Doppler read-only profiling token; keep profile and tail artifacts outside git. `upload_source_maps = true` keeps future production profiles symbolized; source maps can contain bundled server source and stay attached to private Worker versions. Persist 10% sampled invocation logs with query strings redacted for short-term route/CPU history; keep traces disabled. Use the sanitized real-time tail helper when a denser, non-persistent route CPU sample is needed. For traffic-source attribution, use the skill's zone GraphQL query for route families and verified bot categories; counts are adaptive estimates, and the current token cannot read client ASN or bot-management decisions.
+5. **Wrangler / Cloudflare deploys**: Website deployments run through CI/CD on `main`. Do NOT run `wrangler deploy` locally. To pause or resume cron triggers, edit `crons` in `apps/website/wrangler.toml` and use the `main` branch deployment process.
 6. **Production and local environments**: Never perform production writes, remote migrations, or live deployments. By default, target local development only. A production read to refresh local data is allowed only when the user explicitly requests it and the destination is local. **Never run `supabase db push` or `supabase functions deploy` directly.** All remote deployments must happen strictly through the CI/CD pipeline on the `main` branch.
 7. **Scratch & Test Scripts**: Do NOT leave one-off test scripts (like `test_*.ts`) in the root of the project. If you need a script to test an external API or debug a function, place it in `scripts/scratch/` or use the `.gemini/scratch` folder.
-8. **Caching Rules**:
-   - Remember that there is no local Redis cache in the development environment.
-   - When doing your fetches (e.g. testing APIs via scratch scripts), save the output locally (e.g. in JSON files in the scratch folder) so you don't have to fetch it again repeatedly.
+8. **Caching Rules**: There is no local Redis cache. Save external fetch responses in `scripts/scratch/` when they need to be reused during the task.
 9. **GitHub Actions — Use `gh run watch <run-id>` to monitor CI**: After getting a run ID via `gh run list`, always use `gh run watch <run-id>` instead of repeatedly polling `gh run view` or `gh run list`. `gh run watch` streams live job status and blocks until the run finishes.
 10. **Changesets**: Every code or configuration change must include an appropriate Changesets file in `.changeset/`, scoped to the affected package(s). Never include `@app/mobile` unless mobile work is explicitly authorized.
 11. **GitHub reviewers**: Never assign or request reviewers on GitHub pull requests.
