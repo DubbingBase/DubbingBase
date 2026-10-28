@@ -626,10 +626,6 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
     if (profilePath && profilePath.startsWith("/")) {
       profilePath = `https://image.tmdb.org/t/p/w185${profilePath}`;
     }
-    const roleNames = (actor.roles || []).map((role) => role.character);
-    const roleLabel = roleNames.join(", ");
-    const roleNameCandidates = roleNames.filter(Boolean);
-
     // Find the voice actor work for this physical actor
     const cards = actorWorks.length > 0 ? actorWorks : [null];
     return cards.map((work) => {
@@ -637,25 +633,12 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
       // Fallback character name from DB when TMDB returns no roles
       const workCharacterName = work?.character_name || null;
 
-      // Find character picture matching the character name
-      const characterName = roleLabel || workCharacterName;
-      let characterImage: string | null = null;
-      if (characterName) {
-        // Try to match any of the roles, then fallback to workCharacterName
-        const namesToTry = [
-          ...roleNameCandidates,
-          ...(workCharacterName ? [workCharacterName] : []),
-        ];
-        characterImage = findCharacterImage(characterPictureIndex.value, namesToTry);
-      }
-
       return {
         ...actor,
         actorId: actor.id,
         id: work ? `${actor.id}-${work.id}` : actor.id,
         profile_path: profilePath,
         voiceActor: voiceActor ? { ...voiceActor, note: work?.note } : null,
-        characterImage,
         workCharacterName,
       };
     });
@@ -716,18 +699,32 @@ const castPage = computed(() => {
 });
 const castItems = computed<ShowDisplayCastActor[]>(() => {
   const start = (castPage.value - 1) * 12;
-  return filteredCast.value.slice(start, start + 12).map((actor) => ({
-    ...actor,
-    actorLinkPath: actor.actorId ? localePath(`/actor/${actor.actorId}`) : undefined,
-    voiceActorLinkPath: actor.voiceActor
-      ? localePath(`/voice-actor/${actor.voiceActor.id}`)
-      : "",
-    roleLabels: (actor.roles || []).map((role) =>
-      role.episode_count
-        ? `${role.character} (${role.episode_count} eps)`
-        : role.character,
-    ),
-  }));
+  return filteredCast.value.slice(start, start + 12).map((actor) => {
+    const roles = actor.roles || [];
+    const roleNames = roles.map((role) => role.character);
+    const roleLabel = roleNames.join(", ");
+    let characterImage: string | null = null;
+    if (roleLabel || actor.workCharacterName) {
+      // Try to match any of the roles, then fallback to workCharacterName
+      const namesToTry = [
+        ...roleNames.filter(Boolean),
+        ...(actor.workCharacterName ? [actor.workCharacterName] : []),
+      ];
+      characterImage = findCharacterImage(characterPictureIndex.value, namesToTry);
+    }
+
+    return {
+      ...actor,
+      actorLinkPath: actor.actorId ? localePath(`/actor/${actor.actorId}`) : undefined,
+      voiceActorLinkPath: actor.voiceActor
+        ? localePath(`/voice-actor/${actor.voiceActor.id}`)
+        : "",
+      roleLabels: roles.map((role) =>
+        role.episode_count ? `${role.character} (${role.episode_count} eps)` : role.character,
+      ),
+      characterImage,
+    };
+  });
 });
 
 useHead({
