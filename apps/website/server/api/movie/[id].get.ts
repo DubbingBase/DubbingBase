@@ -17,6 +17,7 @@ export async function fetchMovieData(event: H3Event, movieId: number) {
   const apiDataPromise = mediaService
     .getMediaWithVoiceActors("movie", movieId, {
       includeCollection: projection !== "media-page",
+      includeCreditsCrew: projection !== "media-page",
     })
     .then(async (result) => {
       const { characters: characterProfilePictures, tvdbId } =
