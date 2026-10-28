@@ -560,27 +560,12 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
       // Fallback character name from DB when TMDB returns no character
       const workCharacterName = work?.character_name || null;
 
-      // Find character picture matching the character name
-      let characterImage = null;
-      const characterName = actor.character || workCharacterName;
-      if (characterName) {
-        const matchesCharacter = createCharacterMatcher(characterName);
-        const match = characterProfilePictures.value.find(
-          (picture: MediaDetailCharacterProfilePicture) =>
-            picture.name && matchesCharacter(picture.name),
-        );
-        if (match && match.image) {
-          characterImage = match.image;
-        }
-      }
-
       return {
         ...actor,
         actorId: actor.id,
         id: work ? `${actor.id}-${work.id}` : actor.id,
         profile_path: profilePath,
         voiceActor: voiceActor ? { ...voiceActor, note: work?.note } : null,
-        characterImage,
         workCharacterName,
       };
     });
@@ -634,13 +619,29 @@ const filteredCast = computed(() => {
 const castTotal = computed(() => filteredCast.value.length);
 const castItems = computed(() => {
   const start = (castPage.value - 1) * 12;
-  return filteredCast.value.slice(start, start + 12).map((actor) => ({
-    ...actor,
-    actorProfilePath: actor.actorId ? localePath(`/actor/${actor.actorId}`) : undefined,
-    voiceActorProfilePath: actor.voiceActor
-      ? localePath(`/voice-actor/${actor.voiceActor.id}`)
-      : undefined,
-  }));
+  return filteredCast.value.slice(start, start + 12).map((actor) => {
+    const characterName = actor.character || actor.workCharacterName;
+    let characterImage = null;
+    if (actor.actorId !== undefined && characterName) {
+      const matchesCharacter = createCharacterMatcher(characterName);
+      const match = characterProfilePictures.value.find(
+        (picture: MediaDetailCharacterProfilePicture) =>
+          picture.name && matchesCharacter(picture.name),
+      );
+      if (match && match.image) {
+        characterImage = match.image;
+      }
+    }
+
+    return {
+      ...actor,
+      actorProfilePath: actor.actorId ? localePath(`/actor/${actor.actorId}`) : undefined,
+      voiceActorProfilePath: actor.voiceActor
+        ? localePath(`/voice-actor/${actor.voiceActor.id}`)
+        : undefined,
+      characterImage,
+    };
+  });
 });
 
 useHead({
