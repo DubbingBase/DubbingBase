@@ -1,5 +1,8 @@
 import { requireUser } from "../utils/auth";
 import { useSupabaseAdmin } from "../utils/db/client";
+import { scheduleBackgroundTask } from "../utils/background";
+import { notifyVoiceActorFollowers } from "../utils/notifications/fcm";
+import { publishedContentLink } from "../utils/notifications/published-content-link";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -72,24 +75,25 @@ export default defineEventHandler(async (event) => {
   }
 
   const supabase = event.context.supabaseAdmin || useSupabaseAdmin(event);
+  const { data: before, error: beforeError } = await supabase
+    .from("work")
+    .select("updated_at, voice_actor_id, reviewed_status, status, dubbing_project_id")
+    .eq("id", workId)
+    .maybeSingle();
+  if (beforeError) {
+    console.error("Unable to read work version for review status update", {
+      code: beforeError.code,
+    });
+    throw updateError(500, "Review status update failed; no changes were saved");
+  }
+  if (!before) throw updateError(404, "Work not found");
+
   let expectedUpdatedAt: string;
   if (body.expected_updated_at === undefined) {
     // Compatibility for callers without a loaded version only protects the
     // read-to-write race here. Editors must send expected_updated_at to detect
     // that their snapshot was already stale before this request began.
-    const { data: version, error: versionError } = await supabase
-      .from("work")
-      .select("updated_at")
-      .eq("id", workId)
-      .maybeSingle();
-    if (versionError) {
-      console.error("Unable to read work version for review status update", {
-        code: versionError.code,
-      });
-      throw updateError(500, "Review status update failed; no changes were saved");
-    }
-    if (!version) throw updateError(404, "Work not found");
-    expectedUpdatedAt = version.updated_at;
+    expectedUpdatedAt = before.updated_at;
   } else if (isTimestamp(body.expected_updated_at)) {
     expectedUpdatedAt = body.expected_updated_at;
   } else {
@@ -122,6 +126,36 @@ export default defineEventHandler(async (event) => {
     throw updateError(
       500,
       "Review status was saved but the result could not be loaded; retry safely",
+    );
+  }
+
+  if (
+    !mutation.replayed &&
+    reviewedStatus === "accepted" &&
+    before.reviewed_status !== "accepted" &&
+    before.status !== "validated" &&
+    data.voice_actor_id &&
+    data.dubbing_project_id
+  ) {
+    scheduleBackgroundTask(
+      event,
+      async () => {
+        const { data: project, error: projectError } = await supabase
+          .from("dubbing_projects")
+          .select("content_id, content_type, status")
+          .eq("id", data.dubbing_project_id)
+          .maybeSingle();
+        if (projectError || !project || project.status !== "validated") return;
+        const link = publishedContentLink(project.content_type, project.content_id);
+        if (!link) return;
+        await notifyVoiceActorFollowers(data.voice_actor_id, {
+          title: "Voice role published",
+          body: "A newly reviewed voice role is now published.",
+          link,
+          eventId: `review-${workId}`,
+        });
+      },
+      "voice-actor-fcm",
     );
   }
 

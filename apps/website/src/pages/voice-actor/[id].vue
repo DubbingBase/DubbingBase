@@ -42,6 +42,10 @@
       </template>
 
       <template #actions>
+        <VoiceActorFollowButton
+          v-if="user"
+          :voice-actor-id="Number(voiceActorId)"
+        />
         <!-- Completeness Score -->
         <div v-if="user" class="flex items-center gap-4">
           <div class="relative w-8 h-8 flex-shrink-0">

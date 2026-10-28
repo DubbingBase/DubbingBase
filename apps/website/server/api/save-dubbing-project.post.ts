@@ -6,7 +6,11 @@ import {
   usePodcastClient,
   useTmdbClient,
 } from "../utils";
+import { scheduleBackgroundTask } from "../utils/background";
 import { requireDubbingLanguage } from "../utils/dubbing-language";
+import { notifyVoiceActorFollowers } from "../utils/notifications/fcm";
+import { publishedContentLink } from "../utils/notifications/published-content-link";
+import { projectPublicationActorIds } from "../utils/notifications/publication-events";
 
 type MediaType =
   | "movie"
@@ -508,6 +512,42 @@ export default defineEventHandler(async (event) => {
   if (!result) {
     console.error("Controlled project save returned no result");
     throw projectSaveError(500, "Project save failed; no changes were saved");
+  }
+
+  if (!result.replayed && body.project.status === "validated") {
+    const link = publishedContentLink(body.project.content_type, body.project.content_id);
+    if (link) {
+      scheduleBackgroundTask(
+        event,
+        async () => {
+          const { data: audit, error: auditError } = await supabase
+            .from("audit_logs")
+            .select("previous_value, new_value")
+            .eq("id", result.audit_log_id)
+            .maybeSingle();
+          if (auditError) {
+            console.warn("[FCM] Could not verify project publication event", {
+              code: auditError.code,
+            });
+            return;
+          }
+          if (!audit) return;
+
+          const actorIds = projectPublicationActorIds(
+            audit.previous_value,
+            audit.new_value,
+          );
+          if (actorIds.length === 0) return;
+          await notifyVoiceActorFollowers(actorIds, {
+            title: "New dubbing information",
+            body: "Newly published dubbing information is available.",
+            link,
+            eventId: result.audit_log_id,
+          });
+        },
+        "voice-actor-fcm",
+      );
+    }
   }
 
   return {

@@ -11,6 +11,38 @@
           {{ $t("settings.preferences") }}
         </h3>
         <div
+          class="theme-surface-raised p-4 rounded-xl border theme-border-subtle mb-4"
+        >
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <p class="text-sm font-medium theme-text">
+                {{ $t("push.settingsTitle") }}
+              </p>
+              <p class="text-sm theme-text-muted">
+                {{ $t("push.settingsDescription") }}
+              </p>
+              <p v-if="pushMessage" class="mt-2 text-sm theme-text-muted" aria-live="polite">
+                {{ pushMessage }}
+              </p>
+            </div>
+            <button
+              type="button"
+              class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none theme-focus focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              :class="pushEnabled ? 'bg-primary-600' : 'theme-surface-muted'"
+              role="switch"
+              :aria-checked="pushEnabled"
+              :aria-label="$t('push.settingsTitle')"
+              :disabled="pushLoading"
+              @click="togglePush"
+            >
+              <span
+                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                :class="pushEnabled ? 'translate-x-5' : 'translate-x-0'"
+              ></span>
+            </button>
+          </div>
+        </div>
+        <div
           class="theme-surface-raised p-4 rounded-xl border theme-border-subtle"
         >
           <div class="flex items-center justify-between">
@@ -67,5 +99,65 @@
 </template>
 
 <script setup lang="ts">
-// Settings logic
+import { enablePushNotifications } from "../../composables/usePushNotifications";
+import { detectPushSupport } from "../../utils/push-support";
+
+const { t } = useI18n();
+const pushEnabled = ref(false);
+const pushLoading = ref(false);
+const pushMessage = ref("");
+
+onMounted(async () => {
+  try {
+    const settings = await $fetch<{ enabled: boolean }>("/api/push/settings");
+    pushEnabled.value = settings.enabled;
+  } catch {
+    pushMessage.value = t("push.settingsLoadFailed");
+  }
+});
+
+async function togglePush(): Promise<void> {
+  pushLoading.value = true;
+  pushMessage.value = "";
+  if (pushEnabled.value) {
+    try {
+      await $fetch("/api/push/settings", {
+        method: "POST",
+        body: { enabled: false },
+      });
+      pushEnabled.value = false;
+    } catch {
+      pushMessage.value = t("push.settingsSaveFailed");
+    } finally {
+      pushLoading.value = false;
+    }
+    return;
+  }
+
+  const support = detectPushSupport();
+  if (support.eligibility === "install-required") {
+    pushMessage.value = t("push.installGuidance");
+    pushLoading.value = false;
+    return;
+  }
+  if (support.eligibility !== "ready") {
+    pushMessage.value = t("push.unsupported");
+    pushLoading.value = false;
+    return;
+  }
+
+  const result = await enablePushNotifications();
+  if (result.ok) {
+    pushEnabled.value = true;
+  } else if (result.reason === "denied") {
+    pushMessage.value = t("push.deniedGuidance");
+  } else if (result.reason === "install-required") {
+    pushMessage.value = t("push.installGuidance");
+  } else if (result.reason === "unsupported") {
+    pushMessage.value = t("push.unsupported");
+  } else {
+    pushMessage.value = t("push.enableFailed");
+  }
+  pushLoading.value = false;
+}
 </script>
