@@ -322,7 +322,10 @@
   - type DubbingLanguage
   - const DUBBING_LANGUAGE_OPTIONS
   - const DEFAULT_DUBBING_LANGUAGE: DubbingLanguage
-- `packages/shared-logic/src/utils/character.ts` — function normalizeCharacterName, function findCharacter
+- `packages/shared-logic/src/utils/character.ts`
+  - function createCharacterMatcher: (roleName) => (characterName: string) => boolean
+  - function normalizeCharacterName
+  - function findCharacter
 - `packages/shared-logic/src/utils/voice-actor-work-groups.ts`
   - function groupVoiceActorWorks: (works) => VoiceActorWorkGroup<T>[]
   - function paginateVoiceActorWorks: (works, view, page, pageSize) => void

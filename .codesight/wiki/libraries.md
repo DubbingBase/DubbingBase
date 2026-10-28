@@ -43,8 +43,8 @@
 - `packages/shared-logic/src/utils/voice-actor-work-groups.ts` — groupVoiceActorWorks, paginateVoiceActorWorks, VoiceActorWorkLike, VoiceActorWorkGroup, VoiceActorWorksPageItem
 - `packages/shared-logic/src/composables/useActorData.ts` — fetchActorData, useActorData, ActorResponse, ActorDataPayload
 - `packages/shared-logic/src/composables/useHomeData.ts` — fetchHomeData, useHomeData, HomeDataPayload
+- `packages/shared-logic/src/utils/character.ts` — createCharacterMatcher, normalizeCharacterName, findCharacter
 - `packages/shared-logic/src/composables/useSearchData.ts` — fetchSearchData, SearchResult
-- `packages/shared-logic/src/utils/character.ts` — normalizeCharacterName, findCharacter
 - `packages/shared-logic/src/composables/useAdvertisementData.ts` — fetchAdvertisementData
 - `packages/shared-logic/src/composables/useAudiobookData.ts` — fetchAudiobookData
 - `packages/shared-logic/src/composables/useEpisodeData.ts` — fetchEpisodeData
