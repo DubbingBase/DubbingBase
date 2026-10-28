@@ -78,10 +78,7 @@ function decodePem(value: string): Uint8Array {
   return Uint8Array.from(atob(encoded), (character) => character.charCodeAt(0));
 }
 
-async function createAccessToken(
-  config: FcmRuntimeConfig,
-  deadline: number,
-): Promise<string> {
+async function createAccessToken(config: FcmRuntimeConfig, deadline: number): Promise<string> {
   const issuedAt = Math.floor(Date.now() / 1000);
   const header = encodeBase64Url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
   const claims = encodeBase64Url(
@@ -107,14 +104,18 @@ async function createAccessToken(
     new TextEncoder().encode(unsignedToken),
   );
   const assertion = `${unsignedToken}.${encodeBase64Url(new Uint8Array(signature))}`;
-  const response = await fetchWithTimeout(GOOGLE_TOKEN_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-      assertion,
-    }),
-  }, deadline);
+  const response = await fetchWithTimeout(
+    GOOGLE_TOKEN_URL,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+        assertion,
+      }),
+    },
+    deadline,
+  );
   if (!response.ok) {
     console.error("[FCM] OAuth token request failed", { status: response.status });
     throw new Error("FCM authentication failed");
@@ -165,22 +166,21 @@ function parseFcmError(payload: unknown): FcmErrorResponse {
   if (typeof payload !== "object" || payload === null || !("error" in payload)) return {};
   const value = payload.error;
   if (typeof value !== "object" || value === null) return {};
-  const status = "status" in value && typeof value.status === "string"
-    ? value.status
-    : undefined;
-  const details = "details" in value && Array.isArray(value.details)
-    ? value.details.flatMap((detail) => {
-        if (
-          typeof detail === "object" &&
-          detail !== null &&
-          "errorCode" in detail &&
-          typeof detail.errorCode === "string"
-        ) {
-          return [{ errorCode: detail.errorCode }];
-        }
-        return [];
-      })
-    : undefined;
+  const status = "status" in value && typeof value.status === "string" ? value.status : undefined;
+  const details =
+    "details" in value && Array.isArray(value.details)
+      ? value.details.flatMap((detail) => {
+          if (
+            typeof detail === "object" &&
+            detail !== null &&
+            "errorCode" in detail &&
+            typeof detail.errorCode === "string"
+          ) {
+            return [{ errorCode: detail.errorCode }];
+          }
+          return [];
+        })
+      : undefined;
   return { error: { status, details } };
 }
 
@@ -211,14 +211,18 @@ export async function sendToken(
   for (let attempt = 0; attempt < 2; attempt += 1) {
     let response: Response;
     try {
-      response = await fetchWithTimeout(endpoint, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
+      response = await fetchWithTimeout(
+        endpoint,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body,
         },
-        body,
-      }, deadline);
+        deadline,
+      );
     } catch {
       if (attempt === 0) {
         await new Promise((resolve) => setTimeout(resolve, 250));
@@ -270,7 +274,8 @@ async function sendInBatches(
     );
     for (let index = 0; index < results.length; index += 1) {
       if (results[index] === "sent") sent += 1;
-      if (results[index] === "invalid") invalidTokens.push(batch[index]);
+      const token = batch[index];
+      if (results[index] === "invalid" && token) invalidTokens.push(token);
     }
   }
   return { attempted, sent, invalidTokens };
