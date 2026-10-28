@@ -530,14 +530,30 @@ const getDisplayLanguage = (langCode: string | undefined | null) => {
   }
 };
 
+const seasonEpisodeDateFormatOptions: Intl.DateTimeFormatOptions = {
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+};
+const seasonEpisodeDateFormatter = computed<Intl.DateTimeFormat | undefined>(() => {
+  try {
+    return new Intl.DateTimeFormat(locale.value, seasonEpisodeDateFormatOptions);
+  } catch {
+    return undefined;
+  }
+});
+
 const formatDate = (dateString: string) => {
   if (!dateString) return "";
   const date = new Date(dateString);
-  return date.toLocaleDateString(locale.value, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+  if (Number.isNaN(date.getTime())) {
+    return date.toLocaleDateString(locale.value, seasonEpisodeDateFormatOptions);
+  }
+
+  return (
+    seasonEpisodeDateFormatter.value?.format(date) ??
+    date.toLocaleDateString(locale.value, seasonEpisodeDateFormatOptions)
+  );
 };
 
 useHead({
