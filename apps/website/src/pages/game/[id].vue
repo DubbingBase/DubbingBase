@@ -586,13 +586,14 @@ const activeDubProject = computed(() =>
 );
 const activeDubId = computed(() => activeDubProject.value?.id || null);
 
+const languageDisplayNames = computed(
+  () => new Intl.DisplayNames([locale.value || "en"], { type: "language" }),
+);
+
 const getDisplayLanguage = (langCode: string | undefined | null) => {
   if (!langCode) return "Unknown";
   try {
-    const displayNames = new Intl.DisplayNames([locale.value || "en"], {
-      type: "language",
-    });
-    const name = displayNames.of(langCode);
+    const name = languageDisplayNames.value.of(langCode);
     return typeof name === "string" && name.length > 0
       ? name.charAt(0).toUpperCase() + name.slice(1)
       : langCode;
