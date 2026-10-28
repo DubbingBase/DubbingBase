@@ -7,7 +7,11 @@ import {
   type ActorImageAttributesFactory,
 } from "./actor-grid-html";
 
-const getImageAttributes: ActorImageAttributesFactory = (src, alt, imageClass) => ({
+const getImageAttributes: ActorImageAttributesFactory = (
+  src,
+  alt,
+  imageClass,
+) => ({
   "data-nuxt-img": "",
   sizes: "100vw",
   srcset: `${src ?? ""} 1x`,
@@ -20,7 +24,9 @@ const getImageAttributes: ActorImageAttributesFactory = (src, alt, imageClass) =
 
 describe("actor SSR card HTML", () => {
   it("escapes text and attribute values", () => {
-    expect(escapeActorHtml(`<A & "B">'`)).toBe("&lt;A &amp; &quot;B&quot;&gt;&#39;");
+    expect(escapeActorHtml(`<A & "B">'`)).toBe(
+      "&lt;A &amp; &quot;B&quot;&gt;&#39;",
+    );
     expect(
       renderActorImageHtml({
         "data-nuxt-img": "",
@@ -51,6 +57,7 @@ describe("actor SSR card HTML", () => {
 
     expect(html).toContain('href="/fr/voice-actor/7"');
     expect(html).toContain("Ari &lt;Lee&gt;");
+    expect(html).toContain(">A&lt;</div>");
     expect(html).toContain("3 rôles");
     expect(html).toContain('data-actor-nav=""');
   });
@@ -67,8 +74,8 @@ describe("actor SSR card HTML", () => {
         voice_actors: [
           {
             id: 12,
-            firstname: "Sam",
-            lastname: "Voice",
+            firstname: "Sam <One>",
+            lastname: "Voice & Test",
             profile_picture: "/voice.jpg",
           },
         ],
@@ -84,6 +91,8 @@ describe("actor SSR card HTML", () => {
     expect(html).toContain('href="/fr/voice-actor/12"');
     expect(html).toContain("A &lt;Film&gt; &amp; &quot;Title&quot;");
     expect(html).toContain("Hero &amp; Friend");
+    expect(html).toContain('alt="Sam &lt;One&gt; Voice &amp; Test"');
+    expect(html).toContain("Sam &lt;One&gt; Voice &amp; Test");
     expect(html).toContain('data-nuxt-img=""');
     expect(html).toContain("2001");
   });
