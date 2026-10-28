@@ -193,22 +193,17 @@ export function useActorData(
     });
   });
 
-  const rolesByMedia = computed(() => {
-    const rolesByMediaId = new Map<number, ActorVoiceRole[]>();
-    for (const role of voiceRoles.value) {
-      const mediaId = role.dubbing_projects?.content_id ?? role.mediaDetails?.id;
-      if (!mediaId) continue;
-      const mediaRoles = rolesByMediaId.get(mediaId);
-      if (mediaRoles) mediaRoles.push(role);
-      else rolesByMediaId.set(mediaId, [role]);
-    }
-    return rolesByMediaId;
-  });
-
   const enhancedFilmography = computed(() => {
     if (!actor.value?.credits?.cast) return [];
 
-    const mediaRolesById = rolesByMedia.value;
+    const rolesByMedia = new Map<number, ActorVoiceRole[]>();
+    for (const role of voiceRoles.value) {
+      const mediaId = role.dubbing_projects?.content_id ?? role.mediaDetails?.id;
+      if (!mediaId) continue;
+      const mediaRoles = rolesByMedia.get(mediaId);
+      if (mediaRoles) mediaRoles.push(role);
+      else rolesByMedia.set(mediaId, [role]);
+    }
 
     let items = filteredCredits.value;
     const pagination = unref(options.filmographyPagination);
@@ -219,7 +214,7 @@ export function useActorData(
     }
 
     return items.map((item) => {
-      const mediaRoles = mediaRolesById.get(item.id) || [];
+      const mediaRoles = rolesByMedia.get(item.id) || [];
       const languageRoles = selectedLanguage.value
         ? mediaRoles.filter((role) => role.dubbing_projects?.language === selectedLanguage.value)
         : mediaRoles;
