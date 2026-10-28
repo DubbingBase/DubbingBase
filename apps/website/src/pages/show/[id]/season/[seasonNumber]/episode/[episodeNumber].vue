@@ -538,12 +538,27 @@ const characterPictureIndex = computed(() =>
 );
 const episode = computed(() => data.value?.episode);
 const requestError = computed(() => Boolean(error.value && error.value.statusCode !== 404));
-const dubbingProjects = computed<MediaDetailDubbingProject[]>(() => {
-  const projects: MediaDetailDubbingProject[] = [...(data.value?.dubbingProjects || [])].filter(
-    projectHasVoiceActor,
-  );
+const projectVoiceActorMetrics = computed(() => {
+  const visibleProjects: MediaDetailDubbingProject[] = [];
+  const actorCounts = new Map<number, number>();
+
+  for (const project of data.value?.dubbingProjects || []) {
+    let hasVoiceActor = false;
+    const actorIds = new Set<number>();
+
+    for (const work of project.works || []) {
+      if (work.voice_actor) {
+        hasVoiceActor = true;
+        if (work.voice_actor.id) actorIds.add(work.voice_actor.id);
+      }
+    }
+
+    actorCounts.set(project.id, actorIds.size);
+    if (hasVoiceActor) visibleProjects.push(project);
+  }
+
   const currentLocale = locale.value.toLowerCase();
-  return projects.sort((a, b) => {
+  visibleProjects.sort((a, b) => {
     const aIsPref = a.language?.toLowerCase().startsWith(currentLocale) ? 1 : 0;
     const bIsPref = b.language?.toLowerCase().startsWith(currentLocale) ? 1 : 0;
 
@@ -555,18 +570,15 @@ const dubbingProjects = computed<MediaDetailDubbingProject[]>(() => {
     const bWorks = b.works?.length || 0;
     return bWorks - aWorks;
   });
-});
 
-function projectHasVoiceActor(project: MediaDetailDubbingProject): boolean {
-  return (project.works || []).some((work) => work.voice_actor);
-}
+  return { projects: visibleProjects, actorCounts };
+});
+const dubbingProjects = computed<MediaDetailDubbingProject[]>(
+  () => projectVoiceActorMetrics.value.projects,
+);
 
 function projectVoiceActorCount(project: MediaDetailDubbingProject): number {
-  const ids = new Set<number>();
-  for (const work of project.works || []) {
-    if (work.voice_actor?.id) ids.add(work.voice_actor.id);
-  }
-  return ids.size;
+  return projectVoiceActorMetrics.value.actorCounts.get(project.id) || 0;
 }
 const title = computed(() => {
   if (!episode.value) return t("search.tv");
