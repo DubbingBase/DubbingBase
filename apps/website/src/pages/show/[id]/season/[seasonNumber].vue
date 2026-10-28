@@ -510,14 +510,18 @@ const activeDubProject = computed(() => {
   );
 });
 
-const languageDisplayNames = computed(
-  () => new Intl.DisplayNames([locale.value || "en"], { type: "language" }),
-);
+const languageDisplayNames = computed(() => {
+  try {
+    return new Intl.DisplayNames([locale.value || "en"], { type: "language" });
+  } catch {
+    return undefined;
+  }
+});
 
 const getDisplayLanguage = (langCode: string | undefined | null) => {
   if (!langCode) return t("details.notSpecified");
   try {
-    const name = languageDisplayNames.value.of(langCode);
+    const name = languageDisplayNames.value?.of(langCode);
     return typeof name === "string" && name.length > 0
       ? name.charAt(0).toUpperCase() + name.slice(1)
       : langCode;

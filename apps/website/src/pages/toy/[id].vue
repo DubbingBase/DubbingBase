@@ -258,14 +258,18 @@ const castItems = computed(() =>
   paginateDetailCollection(completeCastItems.value, castPage.value, 12),
 );
 
-const languageDisplayNames = computed(
-  () => new Intl.DisplayNames([locale.value || "en"], { type: "language" }),
-);
+const languageDisplayNames = computed(() => {
+  try {
+    return new Intl.DisplayNames([locale.value || "en"], { type: "language" });
+  } catch {
+    return undefined;
+  }
+});
 
 function getDisplayLanguage(langCode?: string | null): string {
   if (!langCode) return "";
   try {
-    return languageDisplayNames.value.of(langCode) || langCode;
+    return languageDisplayNames.value?.of(langCode) || langCode;
   } catch {
     return langCode;
   }
