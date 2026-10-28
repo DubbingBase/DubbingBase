@@ -4,6 +4,9 @@
       type="button"
       class="flex items-center justify-center w-10 h-10 theme-text-secondary theme-hover-text theme-hover-surface-muted rounded-full transition-colors bg-transparent border-none cursor-pointer outline-none"
       aria-label="Toggle theme"
+      role="combobox"
+      aria-haspopup="listbox"
+      aria-expanded="false"
       @click="openPreference('theme')"
       @keydown="onPreferenceKeydown($event, 'theme')"
     >
@@ -15,6 +18,9 @@
       type="button"
       class="flex items-center justify-center w-10 h-10 theme-text-secondary theme-hover-text theme-hover-surface-muted rounded-full transition-colors bg-transparent border-none cursor-pointer outline-none"
       aria-label="Toggle language"
+      role="combobox"
+      aria-haspopup="listbox"
+      aria-expanded="false"
       @click="openPreference('language')"
       @keydown="onPreferenceKeydown($event, 'language')"
     >
