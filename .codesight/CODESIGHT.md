@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 85 routes | 26 models | 199 components | 109 lib files | 63 env vars | 15 middleware | 41% test coverage
-> **Token savings:** this file is ~18,400 tokens. Without it, AI exploration would cost ~168,500 tokens. **Saves ~150,200 tokens per conversation.**
-> **Last scanned:** 2026-10-27 21:11 — re-run after significant changes
+> 85 routes | 26 models | 199 components | 110 lib files | 63 env vars | 15 middleware | 41% test coverage
+> **Token savings:** this file is ~18,500 tokens. Without it, AI exploration would cost ~168,800 tokens. **Saves ~150,300 tokens per conversation.**
+> **Last scanned:** 2026-10-28 06:31 — re-run after significant changes
 
 ---
 
@@ -736,6 +736,11 @@
 - `apps/website/src/utils/posthog-prefetch-manifest.ts` — function deferPosthogPrefetch: (manifest, ClientManifestEntry>) => void, interface ClientManifestEntry
 - `apps/website/src/utils/search-routes.ts` — function getSearchResultRoute: (result, "id" | "media_type">) => string, type SearchFilter
 - `apps/website/src/utils/season-data.ts` — function fetchSeasonPageData: (showId, seasonNumber, locale?) => Promise<SeasonDataResponse>, function fetchEpisodePageData: (showId, seasonNumber, episodeNumber, locale?) => Promise<EpisodeDataResponse>
+- `apps/website/src/utils/show-character-pictures.ts`
+  - function indexCharacterPictures: (pictures) => CharacterPictureIndex
+  - function findCharacterImage: (index, namesToTry) => void
+  - interface CharacterProfilePicture
+  - type CharacterPictureIndex
 - `apps/website/src/utils/voice-actor-og-image.ts`
   - function isVoiceActorOgImagesEnabled: (value) => boolean
   - function getVoiceActorOgImageMetadata: (enabled, voiceActorId, siteUrl) => VoiceActorOgImageMetadata
@@ -957,7 +962,7 @@
 # Test Coverage
 
 > **41%** of routes and models are covered by tests
-> 119 test files found
+> 120 test files found
 
 ## Covered Routes
 
