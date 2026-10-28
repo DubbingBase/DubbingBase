@@ -5,6 +5,7 @@ CREATE TABLE public.push_installations (
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   installation_id UUID NOT NULL,
   fcm_token TEXT NOT NULL,
+  locale TEXT NOT NULL DEFAULT 'en' CHECK (locale IN ('en', 'fr', 'es', 'ja')),
   platform TEXT NOT NULL CHECK (platform IN ('android', 'ios')),
   enabled BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),

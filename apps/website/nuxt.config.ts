@@ -159,6 +159,7 @@ export default defineNuxtConfig({
   },
 
   pwa: {
+    // Keep FCM background handling and the existing Workbox cache in one worker.
     strategies: "injectManifest",
     srcDir: ".",
     filename: "service-worker.ts",

@@ -5,6 +5,7 @@ import { reconcilePushInstallation } from "../composables/usePushNotifications";
 
 export default defineNuxtPlugin(() => {
   const user = useSupabaseUser();
+  const { locale } = useI18n();
   let currentUserId: string | null = null;
   let stopListening: (() => void) | null = null;
 
@@ -70,6 +71,10 @@ export default defineNuxtPlugin(() => {
     },
     { immediate: true },
   );
+
+  watch(locale, () => {
+    if (user.value) void reconcilePushInstallation();
+  });
 
   const onVisible = () => {
     if (document.visibilityState === "visible") void reconcile();

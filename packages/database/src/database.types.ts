@@ -331,6 +331,7 @@ export type Database = {
           fcm_token: string;
           installation_id: string;
           last_seen_at: string;
+          locale: string;
           platform: string;
           user_id: string;
         };
@@ -340,6 +341,7 @@ export type Database = {
           fcm_token: string;
           installation_id: string;
           last_seen_at?: string;
+          locale?: string;
           platform: string;
           user_id: string;
         };
@@ -349,6 +351,7 @@ export type Database = {
           fcm_token?: string;
           installation_id?: string;
           last_seen_at?: string;
+          locale?: string;
           platform?: string;
           user_id?: string;
         };
