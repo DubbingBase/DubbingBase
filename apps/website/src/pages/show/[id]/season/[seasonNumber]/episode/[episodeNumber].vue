@@ -447,7 +447,10 @@ import {
   matchCastWorks,
   type DisplayCastActor,
 } from "../../../../../../utils/media-cast";
-import { indexCharacterPictures } from "../../../../../../utils/show-character-pictures";
+import {
+  indexCharacterPictures,
+  type CharacterProfilePicture,
+} from "../../../../../../utils/show-character-pictures";
 import type { MediaDetailDubbingProject } from "@app/shared-logic";
 
 const isReportModalOpen = ref(false);
@@ -520,7 +523,9 @@ const {
 const data = computed(() =>
   pageData.value?.requestKey === cacheKey.value ? pageData.value.response : undefined,
 );
-const characterProfilePictures = computed(() => data.value?.characterProfilePictures || []);
+const characterProfilePictures = computed<CharacterProfilePicture[]>(
+  () => data.value?.characterProfilePictures || [],
+);
 const characterPictureIndex = computed(() =>
   indexCharacterPictures(characterProfilePictures.value),
 );
