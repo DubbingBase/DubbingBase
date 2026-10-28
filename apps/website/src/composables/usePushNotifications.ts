@@ -16,8 +16,7 @@ function getInstallationId(): string {
   return installationId;
 }
 
-async function registerCurrentToken(platform: PushPlatform): Promise<boolean> {
-  const { locale } = useI18n();
+async function registerCurrentToken(platform: PushPlatform, locale: string): Promise<boolean> {
   const config = useRuntimeConfig().public;
   if (
     !config.firebaseApiKey ||
@@ -51,7 +50,7 @@ async function registerCurrentToken(platform: PushPlatform): Promise<boolean> {
     if (!token) return false;
     await $fetch("/api/push/installation", {
       method: "POST",
-      body: { installation_id: getInstallationId(), platform, token, locale: locale.value },
+      body: { installation_id: getInstallationId(), platform, token, locale },
     });
     return true;
   } catch (error) {
@@ -60,7 +59,7 @@ async function registerCurrentToken(platform: PushPlatform): Promise<boolean> {
   }
 }
 
-export async function enablePushNotifications(): Promise<PushEnableResult> {
+export async function enablePushNotifications(locale: string): Promise<PushEnableResult> {
   const support = detectPushSupport();
   if (support.eligibility === "install-required") {
     return { ok: false, reason: "install-required" };
@@ -76,7 +75,7 @@ export async function enablePushNotifications(): Promise<PushEnableResult> {
         ? await Notification.requestPermission()
         : Notification.permission;
     if (permission !== "granted") return { ok: false, reason: "denied" };
-    const registered = await registerCurrentToken(support.platform);
+    const registered = await registerCurrentToken(support.platform, locale);
     if (!registered) return { ok: false, reason: "configuration" };
     await $fetch("/api/push/settings", { method: "POST", body: { enabled: true } });
     return { ok: true };
@@ -85,7 +84,7 @@ export async function enablePushNotifications(): Promise<PushEnableResult> {
   }
 }
 
-export async function reconcilePushInstallation(): Promise<void> {
+export async function reconcilePushInstallation(locale: string): Promise<void> {
   const support = detectPushSupport();
   if (support.eligibility !== "ready" || !support.platform || !useSupabaseUser().value) {
     return;
@@ -96,7 +95,7 @@ export async function reconcilePushInstallation(): Promise<void> {
   }
   try {
     const settings = await $fetch<{ enabled: boolean }>("/api/push/settings");
-    if (settings.enabled) await registerCurrentToken(support.platform);
+    if (settings.enabled) await registerCurrentToken(support.platform, locale);
   } catch (error) {
     console.warn("Push installation reconciliation failed", error);
   }
