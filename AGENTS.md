@@ -269,6 +269,11 @@ For production Worker CPU investigations, follow the
 read-only Cloudflare CLI profile capture, the paired sanitized route tail, and the
 single-isolate attribution limits.
 
+For local CPU profiling of a website route with deterministic upstream mocks, follow
+the [local route CPU profiling skill](.agents/skills/local-route-cpu-profiling/SKILL.md).
+It covers both API handlers and full Nuxt SSR routes and requires verifying that test
+middleware did not bypass the real route code.
+
 For Worker CPU optimization PRs, state the route/source hypothesis, add focused
 behavior regressions and a website Changeset, and include a representative local
 synthetic benchmark when a matched production comparison is not yet available.
