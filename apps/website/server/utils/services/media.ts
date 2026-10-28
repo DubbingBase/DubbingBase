@@ -85,8 +85,8 @@ function omitUnusedEpisodeFields(media: unknown): unknown {
   return { ...episode, credits };
 }
 
-function projectSeasonForMediaPage(media: Record<string, unknown>): Record<string, unknown> {
-  if (!Array.isArray(media.episodes)) return media;
+function projectSeasonForMediaPage(media: unknown): unknown {
+  if (!isRecord(media) || !Array.isArray(media.episodes)) return media;
 
   return {
     ...media,
@@ -1009,11 +1009,11 @@ export class MediaService {
         break;
     }
 
-    if (contentType === "season" && options.projection === "media-page") {
-      media = projectSeasonForMediaPage(media);
-    }
-
-    const processedMedia = processMedia(media);
+    const mediaForProcessing =
+      contentType === "season" && options.projection === "media-page"
+        ? projectSeasonForMediaPage(media)
+        : media;
+    const processedMedia = processMedia(mediaForProcessing);
     return { media: processedMedia };
   }
 }
