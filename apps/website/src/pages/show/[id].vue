@@ -472,10 +472,7 @@ import {
 } from "lucide-vue-next";
 import ReportModal from "../../components/ReportModal.vue";
 import { matchCastWorks, type DisplayCastActor } from "../../utils/media-cast";
-import {
-  findCharacterImage,
-  indexCharacterPictures,
-} from "../../utils/show-character-pictures";
+import { findCharacterImage, indexCharacterPictures } from "../../utils/show-character-pictures";
 
 const isReportModalOpen = ref(false);
 
@@ -496,6 +493,13 @@ const isAdmin = computed(() => {
 
 const { locale, t } = useI18n();
 const localePath = useLocalePath();
+const languageDisplayNames = computed(() => {
+  try {
+    return new Intl.DisplayNames([locale.value || "en"], { type: "language" });
+  } catch {
+    return undefined;
+  }
+});
 const pageUrl = computed(() => new URL(localePath(`/show/${showId.value}`), siteUrl).href);
 
 const { currentData: data, pending } = useShowPageData(showId, locale);
@@ -594,14 +598,11 @@ const isOriginalLanguage = computed(() => {
 const getDisplayLanguage = (langCode: string | undefined | null) => {
   if (!langCode) return t("details.notSpecified");
   try {
-    const displayNames = new Intl.DisplayNames([locale.value || "en"], {
-      type: "language",
-    });
-    const name = displayNames.of(langCode);
+    const name = languageDisplayNames.value?.of(langCode);
     return typeof name === "string" && name.length > 0
       ? name.charAt(0).toUpperCase() + name.slice(1)
       : langCode;
-  } catch (e) {
+  } catch {
     return langCode;
   }
 };
