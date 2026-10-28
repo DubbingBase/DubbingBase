@@ -303,6 +303,7 @@ import type { DetailCollectionProject } from "@app/shared-logic";
 
 import { fetchSeasonPageData } from "../../../../utils/season-data";
 import { computed, ref } from "vue";
+import { countProjectVoiceActors } from "../../../../utils/project-voice-actor-counts";
 import { ClapperboardIcon, ExternalLinkIcon, StarIcon } from "lucide-vue-next";
 import ReportModal from "../../../../components/ReportModal.vue";
 
@@ -429,9 +430,12 @@ const currentSeasonData = computed(() => {
 const serie = computed(() => currentSeasonData.value?.serie);
 const serieName = computed(() => serie.value?.name || "");
 const season = computed(() => currentSeasonData.value?.season);
+const projectVoiceActorCounts = computed(() =>
+  countProjectVoiceActors(currentSeasonData.value?.dubbingProjects || []),
+);
 const dubbingProjects = computed(() => {
   const projects = [...(currentSeasonData.value?.dubbingProjects || [])].filter((p) =>
-    projectHasVoiceActor(p),
+    projectVoiceActorCounts.value.visibleProjectIds.has(p.id),
   );
   const currentLocale = locale.value.toLowerCase();
   return projects.sort((a, b) => {
@@ -448,16 +452,8 @@ const dubbingProjects = computed(() => {
   });
 });
 
-function projectHasVoiceActor(project: DetailCollectionProject): boolean {
-  return (project.works || []).some((work) => work.voice_actor);
-}
-
 function projectVoiceActorCount(project: DetailCollectionProject): number {
-  const ids = new Set<number>();
-  for (const w of project.works || []) {
-    if (w.voice_actor?.id) ids.add(w.voice_actor.id);
-  }
-  return ids.size;
+  return projectVoiceActorCounts.value.countsByProjectId.get(project.id) || 0;
 }
 
 const { page: episodesPage, setPage: setEpisodesPage } = useUrlPagination("episodesPage");

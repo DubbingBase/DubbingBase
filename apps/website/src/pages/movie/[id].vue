@@ -398,6 +398,7 @@ import {
   type MediaDetailDubbingProject,
 } from "@app/shared-logic";
 import { computed, ref, watch } from "vue";
+import { countProjectVoiceActors } from "../../utils/project-voice-actor-counts";
 import { refDebounced } from "@vueuse/core";
 import {
   ArrowLeftIcon,
@@ -440,8 +441,13 @@ const { data, pending } = useAsyncData(
 );
 
 const movie = computed(() => data.value?.movie);
+const projectVoiceActorCounts = computed(() =>
+  countProjectVoiceActors(data.value?.dubbingProjects || []),
+);
 const dubbingProjects = computed(() => {
-  const projects = [...(data.value?.dubbingProjects || [])].filter((p) => projectHasVoiceActor(p));
+  const projects = [...(data.value?.dubbingProjects || [])].filter((project) =>
+    projectVoiceActorCounts.value.visibleProjectIds.has(project.id),
+  );
   const currentLocale = locale.value.toLowerCase();
   return projects.sort((a, b) => {
     const aIsPref = a.language?.toLowerCase().startsWith(currentLocale) ? 1 : 0;
@@ -457,16 +463,8 @@ const dubbingProjects = computed(() => {
   });
 });
 
-function projectHasVoiceActor(project: MediaDetailDubbingProject): boolean {
-  return (project.works || []).some((work) => Boolean(work.voice_actor));
-}
-
 function projectVoiceActorCount(project: MediaDetailDubbingProject): number {
-  const ids = new Set<number>();
-  for (const w of project.works || []) {
-    if (w.voice_actor?.id) ids.add(w.voice_actor.id);
-  }
-  return ids.size;
+  return projectVoiceActorCounts.value.countsByProjectId.get(project.id) || 0;
 }
 const characterProfilePictures = computed(() => data.value?.characterProfilePictures || []);
 const tvdbId = computed(() => data.value?.tvdbId);
