@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Component inventory and prop signatures extracted via AST. Read the source files before adding props or modifying component logic.
 
-**199 components** (vue)
+**200 components** (vue)
 
 ## Client Components
 
@@ -107,6 +107,7 @@
 - **Footer** — `apps/website/src/components/Footer.vue`
 - **ForceEnqueueButton** — props: mediaType, mediaId, seasonNumber, episodeNumber, wikipediaLanguage — `apps/website/src/components/ForceEnqueueButton.vue`
 - **Header** — `apps/website/src/components/Header.vue`
+- **HeaderPreferenceSelects** — props: initialOpen — `apps/website/src/components/HeaderPreferenceSelects.vue`
 - **HeaderPreferences** — `apps/website/src/components/HeaderPreferences.vue`
 - **HomeBelowFoldSections** — `apps/website/src/components/HomeBelowFoldSections.vue`
 - **LanguageBanner** — `apps/website/src/components/LanguageBanner.vue`

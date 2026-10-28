@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 85 routes | 26 models | 199 components | 109 lib files | 63 env vars | 15 middleware | 41% test coverage
-> **Token savings:** this file is ~18,400 tokens. Without it, AI exploration would cost ~168,500 tokens. **Saves ~150,200 tokens per conversation.**
-> **Last scanned:** 2026-10-28 19:36 — re-run after significant changes
+> 85 routes | 26 models | 200 components | 109 lib files | 63 env vars | 15 middleware | 41% test coverage
+> **Token savings:** this file is ~18,400 tokens. Without it, AI exploration would cost ~168,900 tokens. **Saves ~150,500 tokens per conversation.**
+> **Last scanned:** 2026-10-28 19:37 — re-run after significant changes
 
 ---
 
@@ -383,6 +383,7 @@
 - **Footer** [client] — `apps/website/src/components/Footer.vue`
 - **ForceEnqueueButton** [client] — props: mediaType, mediaId, seasonNumber, episodeNumber, wikipediaLanguage — `apps/website/src/components/ForceEnqueueButton.vue`
 - **Header** [client] — `apps/website/src/components/Header.vue`
+- **HeaderPreferenceSelects** [client] — props: initialOpen — `apps/website/src/components/HeaderPreferenceSelects.vue`
 - **HeaderPreferences** [client] — `apps/website/src/components/HeaderPreferences.vue`
 - **HomeBelowFoldSections** [client] — `apps/website/src/components/HomeBelowFoldSections.vue`
 - **LanguageBanner** [client] — `apps/website/src/components/LanguageBanner.vue`

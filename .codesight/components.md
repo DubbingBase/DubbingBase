@@ -101,6 +101,7 @@
 - **Footer** [client] — `apps/website/src/components/Footer.vue`
 - **ForceEnqueueButton** [client] — props: mediaType, mediaId, seasonNumber, episodeNumber, wikipediaLanguage — `apps/website/src/components/ForceEnqueueButton.vue`
 - **Header** [client] — `apps/website/src/components/Header.vue`
+- **HeaderPreferenceSelects** [client] — props: initialOpen — `apps/website/src/components/HeaderPreferenceSelects.vue`
 - **HeaderPreferences** [client] — `apps/website/src/components/HeaderPreferences.vue`
 - **HomeBelowFoldSections** [client] — `apps/website/src/components/HomeBelowFoldSections.vue`
 - **LanguageBanner** [client] — `apps/website/src/components/LanguageBanner.vue`
