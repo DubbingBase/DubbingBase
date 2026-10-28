@@ -280,7 +280,7 @@
                   >
                     <component
                       :is="actor.actorId ? NuxtLink : 'div'"
-                      :to="actor.actorId ? localePath(`/actor/${actor.actorId}`) : undefined"
+                      :to="actor.actorLinkPath"
                       class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                     >
                       <NuxtImg
@@ -302,7 +302,7 @@
                       </div>
                       <component
                         :is="actor.actorId ? NuxtLink : 'div'"
-                        :to="actor.actorId ? localePath(`/actor/${actor.actorId}`) : undefined"
+                        :to="actor.actorLinkPath"
                         class="font-bold text-sm theme-text truncate hover:underline block w-full"
                         :title="actor.name"
                       >
@@ -338,25 +338,13 @@
                       <div
                         class="font-bold text-sm theme-text truncate block w-full"
                         :title="
-                          actor.roles
-                            ?.map((role) =>
-                              role.episode_count
-                                ? `${role.character} (${role.episode_count} eps)`
-                                : role.character,
-                            )
-                            .join(', ') ||
+                          actor.roleLabels.join(', ') ||
                           actor.workCharacterName ||
                           ''
                         "
                       >
                         {{
-                          actor.roles
-                            ?.map((role) =>
-                              role.episode_count
-                                ? `${role.character} (${role.episode_count} eps)`
-                                : role.character,
-                            )
-                            .join(", ") ||
+                          actor.roleLabels.join(", ") ||
                           actor.workCharacterName ||
                           $t("details.unknownCharacter")
                         }}
@@ -371,7 +359,7 @@
                   >
                     <template v-if="actor.voiceActor">
                       <NuxtLink
-                        :to="localePath(`/voice-actor/${actor.voiceActor.id}`)"
+                        :to="actor.voiceActorLinkPath"
                         class="w-16 sm:w-full group relative block overflow-hidden rounded-xl aspect-[2/3] theme-surface-muted sm:mb-3 flex-shrink-0"
                       >
                         <NuxtImg
@@ -398,7 +386,7 @@
                           <span class="truncate block w-full">{{ $t("details.voiceActor") }}</span>
                         </div>
                         <NuxtLink
-                          :to="localePath(`/voice-actor/${actor.voiceActor.id}`)"
+                          :to="actor.voiceActorLinkPath"
                           class="font-bold text-sm theme-text truncate hover:underline block w-full"
                           :title="actor.voiceActor.firstname + ' ' + actor.voiceActor.lastname"
                         >
@@ -608,6 +596,12 @@ const getDisplayLanguage = (langCode: string | undefined | null) => {
 };
 
 // Format cast and attach voice actors
+type ShowDisplayCastActor = DisplayCastActor & {
+  actorLinkPath?: string;
+  roleLabels: string[];
+  voiceActorLinkPath: string;
+};
+
 const formattedCast = computed<DisplayCastActor[]>(() => {
   const cast = aggregateCredits.value.cast;
   if (!cast) return [];
@@ -625,7 +619,6 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
 
     // Find the voice actor work for this physical actor
     const cards = actorWorks.length > 0 ? actorWorks : [null];
-
     return cards.map((work) => {
       const voiceActor = work?.voice_actor;
       // Fallback character name from DB when TMDB returns no roles
@@ -709,9 +702,20 @@ const castPage = computed(() => {
   const totalPages = Math.max(1, Math.ceil(castTotal.value / 12));
   return requestedCastPage.value <= totalPages ? requestedCastPage.value : 1;
 });
-const castItems = computed(() => {
+const castItems = computed<ShowDisplayCastActor[]>(() => {
   const start = (castPage.value - 1) * 12;
-  return filteredCast.value.slice(start, start + 12);
+  return filteredCast.value.slice(start, start + 12).map((actor) => ({
+    ...actor,
+    actorLinkPath: actor.actorId ? localePath(`/actor/${actor.actorId}`) : undefined,
+    voiceActorLinkPath: actor.voiceActor
+      ? localePath(`/voice-actor/${actor.voiceActor.id}`)
+      : "",
+    roleLabels: (actor.roles || []).map((role) =>
+      role.episode_count
+        ? `${role.character} (${role.episode_count} eps)`
+        : role.character,
+    ),
+  }));
 });
 
 useHead({
