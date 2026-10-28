@@ -193,17 +193,40 @@ export function useActorData(
     });
   });
 
-  const enhancedFilmography = computed(() => {
-    if (!actor.value?.credits?.cast) return [];
-
+  const roleIndexes = computed(() => {
     const rolesByMedia = new Map<number, ActorVoiceRole[]>();
+    const voiceActorsById = new Map<number, ActorVoiceActor & { rolesCount: number }>();
+    const language = selectedLanguage.value;
+
     for (const role of voiceRoles.value) {
       const mediaId = role.dubbing_projects?.content_id ?? role.mediaDetails?.id;
-      if (!mediaId) continue;
-      const mediaRoles = rolesByMedia.get(mediaId);
-      if (mediaRoles) mediaRoles.push(role);
-      else rolesByMedia.set(mediaId, [role]);
+      if (mediaId) {
+        const mediaRoles = rolesByMedia.get(mediaId);
+        if (mediaRoles) mediaRoles.push(role);
+        else rolesByMedia.set(mediaId, [role]);
+      }
+
+      if (!language || role.dubbing_projects?.language !== language) {
+        continue;
+      }
+
+      for (const voiceActor of role.voice_actors || []) {
+        const existing = voiceActorsById.get(voiceActor.id);
+        if (existing) existing.rolesCount++;
+        else voiceActorsById.set(voiceActor.id, { ...voiceActor, rolesCount: 1 });
+      }
     }
+
+    return {
+      rolesByMedia,
+      uniqueVoiceActors: Array.from(voiceActorsById.values()).sort(
+        (a, b) => b.rolesCount - a.rolesCount,
+      ),
+    };
+  });
+
+  const enhancedFilmography = computed(() => {
+    if (!actor.value?.credits?.cast) return [];
 
     let items = filteredCredits.value;
     const pagination = unref(options.filmographyPagination);
@@ -214,7 +237,7 @@ export function useActorData(
     }
 
     return items.map((item) => {
-      const mediaRoles = rolesByMedia.get(item.id) || [];
+      const mediaRoles = roleIndexes.value.rolesByMedia.get(item.id) || [];
       const languageRoles = selectedLanguage.value
         ? mediaRoles.filter((role) => role.dubbing_projects?.language === selectedLanguage.value)
         : mediaRoles;
@@ -229,30 +252,7 @@ export function useActorData(
     });
   });
 
-  const uniqueVoiceActorsByLanguage = computed(() => {
-    if (!voiceRoles.value || !selectedLanguage.value) return [];
-
-    const vaMap = new Map<number, ActorVoiceActor & { rolesCount: number }>();
-    for (const role of voiceRoles.value) {
-      if (role.dubbing_projects?.language !== selectedLanguage.value) continue;
-
-      if (role.voice_actors && role.voice_actors.length > 0) {
-        for (const va of role.voice_actors) {
-          if (!vaMap.has(va.id)) {
-            vaMap.set(va.id, {
-              ...va,
-              rolesCount: 1,
-            });
-          } else {
-            const existing = vaMap.get(va.id);
-            if (existing) existing.rolesCount++;
-          }
-        }
-      }
-    }
-
-    return Array.from(vaMap.values()).sort((a, b) => b.rolesCount - a.rolesCount);
-  });
+  const uniqueVoiceActorsByLanguage = computed(() => roleIndexes.value.uniqueVoiceActors);
 
   const filteredUniqueVoiceActorsByLanguage = computed(() => {
     const query = searchQuery.value.trim().toLowerCase();
