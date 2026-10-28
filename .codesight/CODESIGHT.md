@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 85 routes | 26 models | 199 components | 110 lib files | 63 env vars | 15 middleware | 41% test coverage
-> **Token savings:** this file is ~18,500 tokens. Without it, AI exploration would cost ~168,800 tokens. **Saves ~150,300 tokens per conversation.**
-> **Last scanned:** 2026-10-28 13:18 — re-run after significant changes
+> 85 routes | 26 models | 199 components | 109 lib files | 63 env vars | 15 middleware | 41% test coverage
+> **Token savings:** this file is ~18,400 tokens. Without it, AI exploration would cost ~168,500 tokens. **Saves ~150,200 tokens per conversation.**
+> **Last scanned:** 2026-10-28 13:41 — re-run after significant changes
 
 ---
 
@@ -700,14 +700,6 @@
 - `apps/website/src/lib/media-editor-routes.ts` — function getMediaEditorRoute: ({...}, mediaId, projectId }) => string | null
 - `apps/website/src/lib/mediaQueue.ts` — function enqueueMedia: (params) => Promise<void>
 - `apps/website/src/utils/access-token-cache.ts` — function createAccessTokenCache: (auth) => void, interface AccessTokenAuthClient
-- `apps/website/src/utils/actor-grid-html.ts`
-  - function escapeActorHtml: (value) => string
-  - function renderActorImageHtml: (attributes) => string
-  - function renderActorVoiceActorCardHtml: (actor, href, rolesLabel, getImageAttributes) => string
-  - function renderActorFilmographyCardHtml: (item, mediaHref, voiceActorHref, copy, getImageAttributes, resolveImageUrl) => void
-  - interface ActorImageAttributes
-  - interface ActorFilmographyCopy
-  - _...3 more_
 - `apps/website/src/utils/actor-ssr-data.ts` — function prepareActorSsrData: (payload) => void
 - `apps/website/src/utils/dubbing-project-save.ts`
   - function getEditableDubbingProjectStatus: (value) => DubbingProjectStatus
@@ -965,7 +957,7 @@
 # Test Coverage
 
 > **41%** of routes and models are covered by tests
-> 120 test files found
+> 119 test files found
 
 ## Covered Routes
 

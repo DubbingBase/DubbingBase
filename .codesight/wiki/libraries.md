@@ -2,9 +2,9 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**110 library files** across 5 modules
+**109 library files** across 5 modules
 
-## Website (70 files)
+## Website (69 files)
 
 - `apps/website/src/utils/dubbing-project-save.ts` — getEditableDubbingProjectStatus, serializeGameProjectCastRows, createStableRequestIdFactory, createDubbingProjectSaveClient, isDubbingProjectSaveConflict, getDubbingProjectSaveErrorMessage, …
 - `apps/website/server/utils/cache/wikipedia.ts` — sortLanguagesByPopularity, extractAvailableLanguages, cleanHeadingText, isDubbingSectionHeading, selectDubbingCandidateSections, selectDubbingSections, …
@@ -13,7 +13,6 @@
 - `apps/website/src/utils/duplicate-work.ts` — duplicateWorkDraftHasChanges, canPrefetchDuplicateWorkPage, rankDuplicateWorks, prefillDuplicateWork, DuplicateWorkEntry, DuplicateWorkGroup, …
 - `apps/website/server/utils/db/queries.ts` — getVoiceActorWithWork, getWorkByActor, getActorPageWorkByActor, getDubbingProjects, getDubbingProjectsForMediaEndpoint, getMediaPageDubbingProjects, …
 - `apps/website/server/utils/queue-payload.ts` — queueRequester, queueRequesterRpcArgs, validateDiscoveryPayload, validateCheckPayload, validateExtractPayload, ValidQueueBase, …
-- `apps/website/src/utils/actor-grid-html.ts` — escapeActorHtml, renderActorImageHtml, renderActorVoiceActorCardHtml, renderActorFilmographyCardHtml, ActorImageAttributes, ActorFilmographyCopy, …
 - `apps/website/server/utils/cache/index.ts` — createCacheNamespace, CacheNamespace, SimpleCache, CacheKv, CachePolicy, CacheTTLPreset, …
 - `apps/website/server/utils/contribution/task-submission-validation.ts` — isTaskClaimId, authorizeTaskContribution, validateTaskContribution, TaskCategory, TaskUpload, TaskContributionInput, …
 - `apps/website/src/utils/media-cast.ts` — sameMediaId, matchCastWorks, CastActorReference, CharacterProfilePicture, CastWorkReference, DisplayCastActor, …
@@ -31,7 +30,8 @@
 - `apps/website/server/utils/urls/tmdb.ts` — buildTmdbImageUrl, cleanCharacterName, processMedia, TMDB_CONFIG
 - `apps/website/server/utils/wiki-check-disposition.ts` — wikiCheckDisposition, WikiCheckArchiveReason, WikiCheckSkippedResult, WikiCheckDisposition
 - `apps/website/src/utils/show-character-pictures.ts` — indexCharacterPictures, findCharacterImage, CharacterProfilePicture, CharacterPictureIndex
-- _…and 45 more files_
+- `apps/website/server/utils/media-queue-readiness.ts` — getReadyMediaQueueNames, MediaQueueName, mediaQueueNames
+- _…and 44 more files_
 
 ## Shared-logic (20 files)
 
