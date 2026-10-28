@@ -160,7 +160,7 @@ export default defineNuxtConfig({
 
   pwa: {
     strategies: "injectManifest",
-    srcDir: "src",
+    srcDir: ".",
     filename: "service-worker.ts",
     injectManifest: {
       globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,webmanifest}"],
