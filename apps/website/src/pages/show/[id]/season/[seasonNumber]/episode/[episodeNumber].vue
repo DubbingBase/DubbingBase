@@ -449,7 +449,6 @@ import {
   type DisplayCastActor,
 } from "../../../../../../utils/media-cast";
 import type { MediaDetailDubbingProject } from "@app/shared-logic";
-import { countProjectVoiceActors } from "../../../../../../utils/project-voice-actor-counts";
 
 const isReportModalOpen = ref(false);
 const { page: castPage, setPage: setCastPage } = useUrlPagination("castPage");
@@ -523,12 +522,9 @@ const data = computed(() =>
 );
 const episode = computed(() => data.value?.episode);
 const requestError = computed(() => Boolean(error.value && error.value.statusCode !== 404));
-const projectVoiceActorCounts = computed(() =>
-  countProjectVoiceActors(data.value?.dubbingProjects || []),
-);
 const dubbingProjects = computed<MediaDetailDubbingProject[]>(() => {
   const projects: MediaDetailDubbingProject[] = [...(data.value?.dubbingProjects || [])].filter(
-    (project) => projectVoiceActorCounts.value.visibleProjectIds.has(project.id),
+    projectHasVoiceActor,
   );
   const currentLocale = locale.value.toLowerCase();
   return projects.sort((a, b) => {
@@ -545,8 +541,16 @@ const dubbingProjects = computed<MediaDetailDubbingProject[]>(() => {
   });
 });
 
+function projectHasVoiceActor(project: MediaDetailDubbingProject): boolean {
+  return (project.works || []).some((work) => work.voice_actor);
+}
+
 function projectVoiceActorCount(project: MediaDetailDubbingProject): number {
-  return projectVoiceActorCounts.value.countsByProjectId.get(project.id) || 0;
+  const ids = new Set<number>();
+  for (const work of project.works || []) {
+    if (work.voice_actor?.id) ids.add(work.voice_actor.id);
+  }
+  return ids.size;
 }
 const title = computed(() => {
   if (!episode.value) return t("search.tv");

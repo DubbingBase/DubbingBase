@@ -460,7 +460,6 @@ import type {
   MediaDetailDubbingProject,
 } from "@app/shared-logic";
 import { computed, ref, watch } from "vue";
-import { countProjectVoiceActors } from "../../utils/project-voice-actor-counts";
 import { refDebounced } from "@vueuse/core";
 import {
   ArrowLeftIcon,
@@ -473,7 +472,10 @@ import {
 } from "lucide-vue-next";
 import ReportModal from "../../components/ReportModal.vue";
 import { matchCastWorks, type DisplayCastActor } from "../../utils/media-cast";
-import { findCharacterImage, indexCharacterPictures } from "../../utils/show-character-pictures";
+import {
+  findCharacterImage,
+  indexCharacterPictures,
+} from "../../utils/show-character-pictures";
 
 const isReportModalOpen = ref(false);
 
@@ -515,12 +517,9 @@ const seasonItems = computed(() => {
   const start = (seasonsPage.value - 1) * 12;
   return seasons.value.slice(start, start + 12);
 });
-const projectVoiceActorCounts = computed(() =>
-  countProjectVoiceActors(data.value?.dubbingProjects || []),
-);
 const dubbingProjects = computed(() => {
   const projects: MediaDetailDubbingProject[] = [...(data.value?.dubbingProjects || [])].filter(
-    (project) => projectVoiceActorCounts.value.visibleProjectIds.has(project.id),
+    projectHasVoiceActor,
   );
   const currentLocale = locale.value.toLowerCase();
   return projects.sort((a, b) => {
@@ -537,8 +536,16 @@ const dubbingProjects = computed(() => {
   });
 });
 
+function projectHasVoiceActor(project: MediaDetailDubbingProject): boolean {
+  return (project.works || []).some((work) => work.voice_actor);
+}
+
 function projectVoiceActorCount(project: MediaDetailDubbingProject): number {
-  return projectVoiceActorCounts.value.countsByProjectId.get(project.id) || 0;
+  const ids = new Set<number>();
+  for (const work of project.works || []) {
+    if (work.voice_actor?.id) ids.add(work.voice_actor.id);
+  }
+  return ids.size;
 }
 const characterProfilePictures = computed<MediaDetailCharacterProfilePicture[]>(
   () => data.value?.characterProfilePictures || [],
