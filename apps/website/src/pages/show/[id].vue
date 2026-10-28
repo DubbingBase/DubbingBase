@@ -704,7 +704,7 @@ const castItems = computed<ShowDisplayCastActor[]>(() => {
     const roleNames = roles.map((role) => role.character);
     const roleLabel = roleNames.join(", ");
     let characterImage: string | null = null;
-    if (roleLabel || actor.workCharacterName) {
+    if (actor.actorId !== undefined && (roleLabel || actor.workCharacterName)) {
       // Try to match any of the roles, then fallback to workCharacterName
       const namesToTry = [
         ...roleNames.filter(Boolean),
