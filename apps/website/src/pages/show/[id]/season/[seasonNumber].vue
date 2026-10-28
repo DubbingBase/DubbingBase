@@ -299,7 +299,7 @@
 import MediaDetailsLayout from "../../../../components/layout/MediaDetailsLayout.vue";
 import { useRoute, useRouter } from "vue-router";
 import type { Link as HeadLink } from "@unhead/vue";
-import type { DetailCollectionProject } from "@app/shared-logic";
+import type { DetailCollectionProject, MediaDetailDubbingProject } from "@app/shared-logic";
 
 import { fetchSeasonPageData } from "../../../../utils/season-data";
 import { computed, ref } from "vue";
@@ -431,7 +431,8 @@ const serieName = computed(() => serie.value?.name || "");
 const season = computed(() => currentSeasonData.value?.season);
 const projectVoiceActorMetrics = computed(() => {
   const actorCounts = new Map<number, number>();
-  const visibleProjects = (currentSeasonData.value?.dubbingProjects || []).filter((project) => {
+  const projects: MediaDetailDubbingProject[] = currentSeasonData.value?.dubbingProjects || [];
+  const visibleProjects = projects.filter((project) => {
     let hasVoiceActor = false;
     const actorIds = new Set<number>();
 
