@@ -58,17 +58,31 @@ export function sameMediaId(
   );
 }
 
-export function matchCastWorks<
-  Actor extends CastActorReference,
-  Work extends CastWorkReference,
->(actors: Actor[], works: Work[]): CastWorkMatchResult<Actor, Work> {
+export function matchCastWorks<Actor extends CastActorReference, Work extends CastWorkReference>(
+  actors: Actor[],
+  works: Work[],
+): CastWorkMatchResult<Actor, Work> {
+  const actorIds = new Set(actors.map((actor) => String(actor.id)));
+  const worksByActorId = new Map<string, Work[]>();
   const matchedWorkIds = new Set<number>();
+
+  for (const work of works) {
+    if (work.actor_id === null) continue;
+
+    const actorId = String(work.actor_id);
+    if (!actorIds.has(actorId)) continue;
+
+    const actorWorks = worksByActorId.get(actorId);
+    if (actorWorks) {
+      actorWorks.push(work);
+    } else {
+      worksByActorId.set(actorId, [work]);
+    }
+    matchedWorkIds.add(work.id);
+  }
+
   const matches = actors.map((actor) => {
-    const actorWorks = works.filter((work) =>
-      sameMediaId(work.actor_id, actor.id),
-    );
-    actorWorks.forEach((work) => matchedWorkIds.add(work.id));
-    return { actor, works: actorWorks };
+    return { actor, works: worksByActorId.get(String(actor.id))?.slice() ?? [] };
   });
 
   return {
