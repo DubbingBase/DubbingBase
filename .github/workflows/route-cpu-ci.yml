@@ -1,0 +1,187 @@
+name: Route CPU comparison
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+permissions:
+  contents: read
+
+concurrency:
+  group: route-cpu-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  profile:
+    name: Local multi-route CPU comparison
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout repository without mobile workspace
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            .github/scripts
+            .husky
+            apps/website
+            packages
+            patches
+            scripts
+          sparse-checkout-cone-mode: true
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.4.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+
+      - name: Setup mise
+        uses: jdx/mise-action@v2
+
+      - name: Compare mocked route handlers on the same runner
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          results_dir="$RUNNER_TEMP/route-cpu-results"
+          benchmark_copy="$RUNNER_TEMP/route-cpu.bench.test.ts"
+          mkdir -p "$results_dir/base" "$results_dir/head" .route-cpu-results
+          copy_results() {
+            cp -a "$results_dir/." .route-cpu-results/ || true
+          }
+          trap copy_results EXIT
+          cp apps/website/scripts/route-cpu.bench.test.ts "$benchmark_copy"
+
+          collect_revision() {
+            local label="$1"
+            local revision="$2"
+
+            git checkout --detach "$revision"
+            mkdir -p apps/website/scripts
+            cp "$benchmark_copy" apps/website/scripts/route-cpu.bench.test.ts
+
+            mise exec -- pnpm install \
+              --filter '@app/website...' \
+              --filter 'dubbing-base-monorepo' \
+              --frozen-lockfile \
+              --config.minimum-release-age=0 \
+              --config.minimum-release-age-strict=false
+
+            local runner_uid
+            local runner_gid
+            local mise_bin
+            runner_uid="$(id -u)"
+            runner_gid="$(id -g)"
+            mise_bin="$(command -v mise)"
+            (
+              cd apps/website
+              sudo unshare --net --setuid "$runner_uid" --setgid "$runner_gid" \
+                /usr/bin/env \
+                "PATH=$PATH" \
+                "HOME=$HOME" \
+                "E2E_TEST=" \
+                "ROUTE_CPU_BENCHMARK=true" \
+                "ROUTE_CPU_OUTPUT=$results_dir/$label/route-cpu.json" \
+                "$mise_bin" exec -- ./node_modules/.bin/vitest run \
+                  --environment node --pool forks --maxWorkers 1 \
+                  scripts/route-cpu.bench.test.ts
+            )
+
+            if [ "$label" = "base" ]; then
+              rm apps/website/scripts/route-cpu.bench.test.ts
+            fi
+          }
+
+          git fetch --no-tags --depth=1 origin "$BASE_SHA"
+          collect_revision base "$BASE_SHA"
+          collect_revision head "$HEAD_SHA"
+
+          BASE_SHA="$BASE_SHA" HEAD_SHA="$HEAD_SHA" \
+            node .github/scripts/summarize-route-cpu-comparison.mjs \
+              "$results_dir/base/route-cpu.json" \
+              "$results_dir/head/route-cpu.json" \
+              "$results_dir/route-cpu-comparison.md"
+
+      - name: Upload route CPU reports and V8 profiles
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: route-cpu-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .route-cpu-results/
+          if-no-files-found: warn
+          include-hidden-files: true
+          retention-days: 14
+
+  update-pr-report:
+    name: Update pull request CPU report
+    needs: profile
+    if: >-
+      ${{
+        always() &&
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        needs.profile.result != 'cancelled'
+      }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      pull-requests: write
+    steps:
+      - name: Download route CPU report
+        if: needs.profile.result == 'success'
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: route-cpu-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .route-cpu-report
+
+      - name: Create or update the route CPU comparison comment
+        uses: actions/github-script@v7
+        env:
+          PROFILE_RESULT: ${{ needs.profile.result }}
+        with:
+          script: |
+            const fs = require('node:fs');
+            const marker = '<!-- route-cpu-profile-comparison -->';
+            const reportPath = '.route-cpu-report/route-cpu-comparison.md';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = fs.existsSync(reportPath)
+              ? `${marker}\n${fs.readFileSync(reportPath, 'utf8')}`
+              : `${marker}\n## Local synthetic route CPU comparison\n\nThe latest comparison run did not produce a complete report (${process.env.PROFILE_RESULT}). [See the workflow run](${runUrl}) for the failure details. Any measurements from an earlier push are stale.`;
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+            const existing = comments.find(
+              (comment) =>
+                comment.user?.login === 'github-actions[bot]' &&
+                comment.body?.includes(marker),
+            );
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
