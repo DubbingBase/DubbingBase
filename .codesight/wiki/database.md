@@ -264,7 +264,7 @@ fk: admin_id, request_id
 Read and edit these files when adding columns, creating migrations, or changing relations:
 
 - `apps/website/server/utils/db/client.ts` — imported by **68** files
-- `apps/website/server/utils/db/queries.ts` — imported by **12** files
+- `apps/website/server/utils/db/queries.ts` — imported by **11** files
 
 ---
 _Back to [overview.md](./overview.md)_
