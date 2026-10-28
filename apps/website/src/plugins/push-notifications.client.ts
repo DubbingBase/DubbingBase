@@ -20,28 +20,32 @@ export default defineNuxtPlugin(() => {
       !config.firebaseAppId ||
       !config.firebaseMessagingSenderId ||
       !config.firebaseProjectId
-    ) return;
+    )
+      return;
 
     try {
       if (!(await isSupported())) return;
-      const app = getApps().length > 0
-        ? getApp()
-        : initializeApp({
-            apiKey: config.firebaseApiKey,
-            appId: config.firebaseAppId,
-            messagingSenderId: config.firebaseMessagingSenderId,
-            projectId: config.firebaseProjectId,
-          });
+      const app =
+        getApps().length > 0
+          ? getApp()
+          : initializeApp({
+              apiKey: config.firebaseApiKey,
+              appId: config.firebaseAppId,
+              messagingSenderId: config.firebaseMessagingSenderId,
+              projectId: config.firebaseProjectId,
+            });
       const messaging = await getMessaging(app);
       stopListening?.();
       stopListening = onMessage(messaging, (payload) => {
-        const data = payload.data;
-        if (!data?.title || !data.body || !data.link) return;
+        const title = payload.data?.title;
+        const body = payload.data?.body;
+        const link = payload.data?.link;
+        if (!title || !body || !link) return;
         void navigator.serviceWorker.ready.then((registration) =>
-          registration.showNotification(data.title, {
-            body: data.body,
-            tag: data.eventId || undefined,
-            data: { link: data.link },
+          registration.showNotification(title, {
+            body,
+            tag: payload.data?.eventId || undefined,
+            data: { link },
           }),
         );
       });
