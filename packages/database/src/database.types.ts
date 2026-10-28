@@ -464,11 +464,11 @@ export type Database = {
           date_of_birth: string | null;
           id: string;
           nationality: string | null;
+          push_enabled: boolean;
           social_media_links: Json | null;
           updated_at: string | null;
           updated_by: string | null;
           user_id: string;
-          push_enabled: boolean;
         };
         Insert: {
           bio?: string | null;
@@ -477,11 +477,11 @@ export type Database = {
           date_of_birth?: string | null;
           id?: string;
           nationality?: string | null;
+          push_enabled?: boolean;
           social_media_links?: Json | null;
           updated_at?: string | null;
           updated_by?: string | null;
           user_id: string;
-          push_enabled?: boolean;
         };
         Update: {
           bio?: string | null;
@@ -490,11 +490,11 @@ export type Database = {
           date_of_birth?: string | null;
           id?: string;
           nationality?: string | null;
+          push_enabled?: boolean;
           social_media_links?: Json | null;
           updated_at?: string | null;
           updated_by?: string | null;
           user_id?: string;
-          push_enabled?: boolean;
         };
         Relationships: [];
       };
