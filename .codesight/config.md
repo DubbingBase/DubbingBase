@@ -2,6 +2,8 @@
 
 ## Environment Variables
 
+- `ACTOR_ROUTE_CPU_BENCHMARK` **required** — apps/website/scripts/actor-route-cpu.bench.test.ts
+- `ACTOR_ROUTE_CPU_OUTPUT` (has default) — apps/website/scripts/actor-route-cpu.bench.test.ts
 - `ANDROID_HOME` **required** — .env.example
 - `BENCH_CREDITS` (has default) — packages/database/benchmarks/bulk-extracted-credits.mjs
 - `BENCH_REPETITIONS` (has default) — packages/database/benchmarks/bulk-extracted-credits.mjs

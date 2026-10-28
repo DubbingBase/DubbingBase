@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 85 routes | 26 models | 200 components | 109 lib files | 63 env vars | 15 middleware | 41% test coverage
-> **Token savings:** this file is ~18,400 tokens. Without it, AI exploration would cost ~168,900 tokens. **Saves ~150,500 tokens per conversation.**
-> **Last scanned:** 2026-10-28 19:37 — re-run after significant changes
+> 85 routes | 26 models | 200 components | 109 lib files | 65 env vars | 15 middleware | 41% test coverage
+> **Token savings:** this file is ~18,500 tokens. Without it, AI exploration would cost ~169,100 tokens. **Saves ~150,700 tokens per conversation.**
+> **Last scanned:** 2026-10-28 19:42 — re-run after significant changes
 
 ---
 
@@ -819,6 +819,8 @@
 
 ## Environment Variables
 
+- `ACTOR_ROUTE_CPU_BENCHMARK` **required** — apps/website/scripts/actor-route-cpu.bench.test.ts
+- `ACTOR_ROUTE_CPU_OUTPUT` (has default) — apps/website/scripts/actor-route-cpu.bench.test.ts
 - `ANDROID_HOME` **required** — .env.example
 - `BENCH_CREDITS` (has default) — packages/database/benchmarks/bulk-extracted-credits.mjs
 - `BENCH_REPETITIONS` (has default) — packages/database/benchmarks/bulk-extracted-credits.mjs
@@ -938,7 +940,7 @@
 - `apps/website/server/utils/cache/wikipedia.ts` — imported by **5** files
 - `apps/website/server/utils/dubbing-region-detection.ts` — imported by **5** files
 - `apps/website/server/utils/error-message.ts` — imported by **5** files
-- `apps/website/server/utils/with-timeout.ts` — imported by **4** files
+- `apps/website/server/api/actor/[id].get.ts` — imported by **4** files
 
 ## Import Map (who imports what)
 
@@ -958,7 +960,7 @@
 # Test Coverage
 
 > **41%** of routes and models are covered by tests
-> 119 test files found
+> 120 test files found
 
 ## Covered Routes
 
@@ -1029,7 +1031,7 @@
 
 > Concurrency: `lighthouse-ci-${{ github.ref }}`
 
-- **lighthouse-desktop** on `ubuntu-latest` — 10 steps → **cloudflare**
+- **lighthouse-desktop** on `ubuntu-latest` — 7 steps → **cloudflare**
   - `actions/checkout@v4`
   - `pnpm/action-setup@v4`
   - `actions/setup-node@v4`

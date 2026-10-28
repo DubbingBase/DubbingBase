@@ -14,7 +14,7 @@
 
 > Concurrency: `lighthouse-ci-${{ github.ref }}`
 
-- **lighthouse-desktop** on `ubuntu-latest` — 10 steps → **cloudflare**
+- **lighthouse-desktop** on `ubuntu-latest` — 7 steps → **cloudflare**
   - `actions/checkout@v4`
   - `pnpm/action-setup@v4`
   - `actions/setup-node@v4`
