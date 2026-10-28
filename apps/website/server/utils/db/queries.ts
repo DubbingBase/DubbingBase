@@ -121,6 +121,28 @@ export async function getMediaPageDubbingProjects(contentId: number, contentType
   }));
 }
 
+const SEASON_PAGE_DUBBING_PROJECTS_SELECT = `id,
+  language,
+  studio_data:studios(id, name, logo_url),
+  works:work(voice_actor:voice_actors(id))`;
+
+export async function getSeasonPageDubbingProjects(contentId: number, contentType: string) {
+  const supabase = useSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("dubbing_projects")
+    .select(SEASON_PAGE_DUBBING_PROJECTS_SELECT)
+    .eq("content_id", contentId)
+    .eq("content_type", contentType);
+
+  if (error) return [];
+
+  return (data || []).map((project) => ({
+    ...project,
+    works: project.works || [],
+    studio_data: project.studio_data || null,
+  }));
+}
+
 export async function getWorkVotes(
   workIds: number[],
   userId?: string,
