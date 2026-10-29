@@ -1,0 +1,227 @@
+name: Local Nuxt SSR route CPU comparison
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+permissions:
+  contents: read
+
+concurrency:
+  group: route-cpu-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  profile:
+    name: Compare local route SSR CPU
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout repository without mobile workspace
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+          sparse-checkout: |
+            .github/scripts
+            .husky
+            apps/website
+            packages
+            patches
+            scripts
+          sparse-checkout-cone-mode: true
+
+      - name: Fetch pull request base commit before installing dependencies
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          auth_header="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 --wrap=0)"
+          git -c "http.extraheader=AUTHORIZATION: basic $auth_header" \
+            fetch --no-tags --depth=1 origin "$BASE_SHA"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.4.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+
+      - name: Setup mise
+        uses: jdx/mise-action@v2
+
+      - name: Build and measure both revisions offline
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          results_dir="$RUNNER_TEMP/route-cpu-results"
+          benchmark_dir="$RUNNER_TEMP/route-cpu-benchmark"
+          base_dir="$RUNNER_TEMP/route-cpu-base"
+          mkdir -p "$results_dir/base" "$results_dir/head" "$benchmark_dir" .route-cpu-results
+          cp apps/website/scripts/route-cpu-ssr.mjs "$benchmark_dir/route-cpu-ssr.mjs"
+          cp apps/website/scripts/route-cpu-upstream.mjs "$benchmark_dir/route-cpu-upstream.mjs"
+          cp .github/scripts/summarize-route-cpu-comparison.mjs "$benchmark_dir/summarize-route-cpu-comparison.mjs"
+          cleanup() {
+            git worktree remove --force "$base_dir" >/dev/null 2>&1 || true
+            cp -a "$results_dir/." .route-cpu-results/ || true
+          }
+          trap cleanup EXIT
+
+          git worktree add --detach --no-checkout "$base_dir" "$BASE_SHA"
+          git -C "$base_dir" sparse-checkout init --cone
+          git -C "$base_dir" sparse-checkout set .github/scripts .husky apps/website packages patches scripts
+          git -C "$base_dir" checkout --detach "$BASE_SHA"
+
+          build_revision() {
+            local revision_dir="$1"
+            mkdir -p "$revision_dir/apps/website/scripts"
+            cp "$benchmark_dir/route-cpu-ssr.mjs" "$revision_dir/apps/website/scripts/route-cpu-ssr.mjs"
+            cp "$benchmark_dir/route-cpu-upstream.mjs" "$revision_dir/apps/website/scripts/route-cpu-upstream.mjs"
+
+            (
+              cd "$revision_dir"
+              mise exec -- pnpm install \
+                --filter '@app/website...' \
+                --filter 'dubbing-base-monorepo' \
+                --frozen-lockfile \
+                --config.minimum-release-age=0 \
+                --config.minimum-release-age-strict=false
+            )
+
+            runner_uid="$(id -u)"
+            runner_gid="$(id -g)"
+            mise_bin="$(command -v mise)"
+            host_network_namespace="$(readlink /proc/self/ns/net)"
+            sudo unshare --net -- /usr/bin/env \
+              "PATH=$PATH" \
+              "HOME=$HOME" \
+              "MISE_BIN=$mise_bin" \
+              "ROUTE_CPU_HOST_NETWORK_NAMESPACE=$host_network_namespace" \
+              "ROUTE_CPU_REPO_DIR=$revision_dir" \
+              "ROUTE_CPU_UID=$runner_uid" \
+              "ROUTE_CPU_GID=$runner_gid" \
+              /bin/bash -c '
+                ip link set lo up
+                cd "$ROUTE_CPU_REPO_DIR"
+                exec setpriv --reuid "$ROUTE_CPU_UID" --regid "$ROUTE_CPU_GID" --clear-groups \
+                  "$MISE_BIN" exec -- node apps/website/scripts/route-cpu-ssr.mjs build
+              '
+          }
+
+          build_revision "$base_dir"
+          build_revision "$GITHUB_WORKSPACE"
+
+          runner_uid="$(id -u)"
+          runner_gid="$(id -g)"
+          mise_bin="$(command -v mise)"
+          host_network_namespace="$(readlink /proc/self/ns/net)"
+          sudo unshare --net -- /usr/bin/env \
+            "PATH=$PATH" \
+            "HOME=$HOME" \
+            "MISE_BIN=$mise_bin" \
+            "ROUTE_CPU_HOST_NETWORK_NAMESPACE=$host_network_namespace" \
+            "ROUTE_CPU_BASE_WEBSITE_DIR=$base_dir/apps/website" \
+            "ROUTE_CPU_HEAD_WEBSITE_DIR=$GITHUB_WORKSPACE/apps/website" \
+            "ROUTE_CPU_BASE_OUTPUT=$results_dir/base/route-cpu.json" \
+            "ROUTE_CPU_HEAD_OUTPUT=$results_dir/head/route-cpu.json" \
+            "ROUTE_CPU_PROFILE_ROOT=$results_dir" \
+            "ROUTE_CPU_METRICS_ROOT=$RUNNER_TEMP" \
+            "ROUTE_CPU_UID=$runner_uid" \
+            "ROUTE_CPU_GID=$runner_gid" \
+            /bin/bash -c '
+              ip link set lo up
+              cd "$ROUTE_CPU_HEAD_WEBSITE_DIR"
+              exec setpriv --reuid "$ROUTE_CPU_UID" --regid "$ROUTE_CPU_GID" --clear-groups \
+                "$MISE_BIN" exec -- node scripts/route-cpu-ssr.mjs measure-paired
+            '
+
+          BASE_SHA="$BASE_SHA" HEAD_SHA="$HEAD_SHA" \
+            mise exec -- node "$benchmark_dir/summarize-route-cpu-comparison.mjs" \
+              "$results_dir/base/route-cpu.json" \
+              "$results_dir/head/route-cpu.json" \
+              "$results_dir/route-cpu-comparison.md"
+
+      - name: Upload local route CPU reports and V8 profiles
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: route-cpu-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .route-cpu-results/
+          if-no-files-found: warn
+          include-hidden-files: true
+          retention-days: 14
+
+  update-pr-report:
+    name: Update pull request CPU report
+    needs: profile
+    if: >-
+      ${{
+        always() &&
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        needs.profile.result != 'cancelled'
+      }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      pull-requests: write
+    steps:
+      - name: Download local route CPU report
+        if: needs.profile.result == 'success'
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: route-cpu-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .route-cpu-report
+
+      - name: Create or update the route CPU comparison comment
+        uses: actions/github-script@v7
+        env:
+          PROFILE_RESULT: ${{ needs.profile.result }}
+        with:
+          script: |
+            const fs = require('node:fs');
+            const marker = '<!-- route-cpu-profile-comparison -->';
+            const reportPath = '.route-cpu-report/route-cpu-comparison.md';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = fs.existsSync(reportPath)
+              ? `${marker}\n${fs.readFileSync(reportPath, 'utf8')}`
+              : `${marker}\n## Local Nuxt SSR route CPU comparison\n\nThe latest comparison run did not produce a complete report (${process.env.PROFILE_RESULT}). [See the workflow run](${runUrl}) for the failure details. Any measurements from an earlier push are stale.`;
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+            const reportAuthors = new Set(['github-actions', 'github-actions[bot]']);
+            const existing = comments.find(
+              (comment) =>
+                reportAuthors.has(comment.user?.login ?? '') &&
+                comment.body?.includes(marker),
+            );
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
