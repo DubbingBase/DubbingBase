@@ -1,5 +1,6 @@
 import { useSupabaseAdmin } from "./client";
 import { processVoiceActor } from "../urls/supabase";
+import type { ToyDubbingProject } from "@app/shared-logic";
 
 export async function getVoiceActorWithWork(id: number) {
   const supabase = useSupabaseAdmin();
@@ -118,6 +119,47 @@ export async function getMediaPageDubbingProjects(contentId: number, contentType
     })),
     studio_data: project.studio_data || null,
     crew: [],
+  }));
+}
+
+const TOY_PAGE_DUBBING_PROJECTS_SELECT = `id,
+  language,
+  studio_data:studios(id, name),
+  works:work(
+    id,
+    actor_id,
+    character_name,
+    performance,
+    note,
+    voice_actor:voice_actors(id, firstname, lastname, profile_picture)
+  ),
+  crew:dubbing_project_crew(
+    id,
+    job:jobs(name),
+    person:voice_actors(id, firstname, lastname)
+  )`;
+
+export async function getToyPageDubbingProjects(contentId: number): Promise<ToyDubbingProject[]> {
+  const supabase = useSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("dubbing_projects")
+    .select(TOY_PAGE_DUBBING_PROJECTS_SELECT)
+    .eq("content_id", contentId)
+    .eq("content_type", "toy");
+
+  if (error) return [];
+
+  return (data || []).map((project) => ({
+    ...project,
+    works: (project.works || []).map((work) => ({
+      ...work,
+      voice_actor: processVoiceActor(work.voice_actor),
+    })),
+    studio_data: project.studio_data || null,
+    crew: (project.crew || []).map((member) => ({
+      ...member,
+      person: processVoiceActor(member.person),
+    })),
   }));
 }
 

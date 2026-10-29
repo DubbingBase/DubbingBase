@@ -13,6 +13,7 @@ import {
   getDubbingProjects,
   getDubbingProjectsForMediaEndpoint,
   getMediaPageDubbingProjects,
+  getToyPageDubbingProjects,
 } from "./queries";
 
 function createSupabaseMock(rows: unknown[]) {
@@ -167,6 +168,49 @@ describe("dubbing project detail queries", () => {
     expect(queryMocks.selectedColumns[0]).not.toContain("*");
     expect(queryMocks.selectedColumns[0]).toContain("studio_data:studios");
     expect(queryMocks.selectedColumns[0]).toContain("voice_actor:voice_actors");
+  });
+
+  it("selects toy page fields while retaining crew, cast, and studio data", async () => {
+    const rows = [
+      {
+        id: 17,
+        language: "fr-FR",
+        studio_data: { id: 3, name: "Studio" },
+        works: [
+          {
+            id: 12,
+            actor_id: 44,
+            character_name: "Character",
+            performance: "Role",
+            note: "Note",
+            voice_actor: {
+              id: 5,
+              firstname: "Voice",
+              lastname: "Actor",
+              profile_picture: "https://example.com/voice-actor.png",
+            },
+          },
+        ],
+        crew: [
+          {
+            id: 20,
+            job: { name: "Director" },
+            person: { id: 5, firstname: "Voice", lastname: "Actor" },
+          },
+        ],
+      },
+    ];
+    queryMocks.useSupabaseAdmin.mockReturnValue(createSupabaseMock(rows));
+
+    const projects = await getToyPageDubbingProjects(31);
+
+    expect(projects).toMatchObject(rows);
+    expect(projects[0]?.crew?.[0]?.person?.profile_picture).toBeNull();
+    expect(queryMocks.selectedColumns[0]).not.toContain("*");
+    expect(queryMocks.selectedColumns[0]).toContain("studio_data:studios(id, name)");
+    expect(queryMocks.selectedColumns[0]).toContain("voice_actor:voice_actors(id");
+    expect(queryMocks.selectedColumns[0]).toContain("crew:dubbing_project_crew");
+    expect(queryMocks.selectedColumns[0]).toContain("job:jobs(name)");
   });
 
   it("returns an empty array when the requested dubbing project list is empty", async () => {
