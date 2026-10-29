@@ -69,27 +69,37 @@ jobs:
 
           results_dir="$RUNNER_TEMP/route-cpu-results"
           benchmark_dir="$RUNNER_TEMP/route-cpu-benchmark"
+          base_dir="$RUNNER_TEMP/route-cpu-base"
           mkdir -p "$results_dir/base" "$results_dir/head" "$benchmark_dir" .route-cpu-results
           cp apps/website/scripts/route-cpu-ssr.mjs "$benchmark_dir/route-cpu-ssr.mjs"
           cp apps/website/scripts/route-cpu-upstream.mjs "$benchmark_dir/route-cpu-upstream.mjs"
           cp .github/scripts/summarize-route-cpu-comparison.mjs "$benchmark_dir/summarize-route-cpu-comparison.mjs"
-          trap 'cp -a "$results_dir/." .route-cpu-results/ || true' EXIT
+          cleanup() {
+            git worktree remove --force "$base_dir" >/dev/null 2>&1 || true
+            cp -a "$results_dir/." .route-cpu-results/ || true
+          }
+          trap cleanup EXIT
 
-          collect_revision() {
-            local label="$1"
-            local revision="$2"
+          git worktree add --detach --no-checkout "$base_dir" "$BASE_SHA"
+          git -C "$base_dir" sparse-checkout init --cone
+          git -C "$base_dir" sparse-checkout set .github/scripts .husky apps/website packages patches scripts
+          git -C "$base_dir" checkout --detach "$BASE_SHA"
 
-            git checkout --detach "$revision"
-            mkdir -p apps/website/scripts
-            cp "$benchmark_dir/route-cpu-ssr.mjs" apps/website/scripts/route-cpu-ssr.mjs
-            cp "$benchmark_dir/route-cpu-upstream.mjs" apps/website/scripts/route-cpu-upstream.mjs
+          build_revision() {
+            local revision_dir="$1"
+            mkdir -p "$revision_dir/apps/website/scripts"
+            cp "$benchmark_dir/route-cpu-ssr.mjs" "$revision_dir/apps/website/scripts/route-cpu-ssr.mjs"
+            cp "$benchmark_dir/route-cpu-upstream.mjs" "$revision_dir/apps/website/scripts/route-cpu-upstream.mjs"
 
-            mise exec -- pnpm install \
-              --filter '@app/website...' \
-              --filter 'dubbing-base-monorepo' \
-              --frozen-lockfile \
-              --config.minimum-release-age=0 \
-              --config.minimum-release-age-strict=false
+            (
+              cd "$revision_dir"
+              mise exec -- pnpm install \
+                --filter '@app/website...' \
+                --filter 'dubbing-base-monorepo' \
+                --frozen-lockfile \
+                --config.minimum-release-age=0 \
+                --config.minimum-release-age-strict=false
+            )
 
             runner_uid="$(id -u)"
             runner_gid="$(id -g)"
@@ -100,42 +110,43 @@ jobs:
               "HOME=$HOME" \
               "MISE_BIN=$mise_bin" \
               "ROUTE_CPU_HOST_NETWORK_NAMESPACE=$host_network_namespace" \
-              "ROUTE_CPU_WEBSITE_DIR=$PWD/apps/website" \
+              "ROUTE_CPU_REPO_DIR=$revision_dir" \
               "ROUTE_CPU_UID=$runner_uid" \
               "ROUTE_CPU_GID=$runner_gid" \
               /bin/bash -c '
                 ip link set lo up
-                cd "$ROUTE_CPU_WEBSITE_DIR"
+                cd "$ROUTE_CPU_REPO_DIR"
                 exec setpriv --reuid "$ROUTE_CPU_UID" --regid "$ROUTE_CPU_GID" --clear-groups \
-                  "$MISE_BIN" exec -- node scripts/route-cpu-ssr.mjs build
+                  "$MISE_BIN" exec -- node apps/website/scripts/route-cpu-ssr.mjs build
               '
-
-            sudo unshare --net -- /usr/bin/env \
-              "PATH=$PATH" \
-              "HOME=$HOME" \
-              "MISE_BIN=$mise_bin" \
-              "ROUTE_CPU_HOST_NETWORK_NAMESPACE=$host_network_namespace" \
-              "ROUTE_CPU_WEBSITE_DIR=$PWD/apps/website" \
-              "ROUTE_CPU_UID=$runner_uid" \
-              "ROUTE_CPU_GID=$runner_gid" \
-              "ROUTE_CPU_OUTPUT=$results_dir/$label/route-cpu.json" \
-              "ROUTE_CPU_PROFILE_DIR=$results_dir/$label" \
-              "ROUTE_CPU_METRICS_PATH=$RUNNER_TEMP/$label-route-cpu-metrics.jsonl" \
-              /bin/bash -c '
-                ip link set lo up
-                cd "$ROUTE_CPU_WEBSITE_DIR"
-                exec setpriv --reuid "$ROUTE_CPU_UID" --regid "$ROUTE_CPU_GID" --clear-groups \
-                  "$MISE_BIN" exec -- node scripts/route-cpu-ssr.mjs measure
-              '
-
-            if [ "$label" = "base" ]; then
-              rm apps/website/scripts/route-cpu-ssr.mjs
-              rm apps/website/scripts/route-cpu-upstream.mjs
-            fi
           }
 
-          collect_revision base "$BASE_SHA"
-          collect_revision head "$HEAD_SHA"
+          build_revision "$base_dir"
+          build_revision "$GITHUB_WORKSPACE"
+
+          runner_uid="$(id -u)"
+          runner_gid="$(id -g)"
+          mise_bin="$(command -v mise)"
+          host_network_namespace="$(readlink /proc/self/ns/net)"
+          sudo unshare --net -- /usr/bin/env \
+            "PATH=$PATH" \
+            "HOME=$HOME" \
+            "MISE_BIN=$mise_bin" \
+            "ROUTE_CPU_HOST_NETWORK_NAMESPACE=$host_network_namespace" \
+            "ROUTE_CPU_BASE_WEBSITE_DIR=$base_dir/apps/website" \
+            "ROUTE_CPU_HEAD_WEBSITE_DIR=$GITHUB_WORKSPACE/apps/website" \
+            "ROUTE_CPU_BASE_OUTPUT=$results_dir/base/route-cpu.json" \
+            "ROUTE_CPU_HEAD_OUTPUT=$results_dir/head/route-cpu.json" \
+            "ROUTE_CPU_PROFILE_ROOT=$results_dir" \
+            "ROUTE_CPU_METRICS_ROOT=$RUNNER_TEMP" \
+            "ROUTE_CPU_UID=$runner_uid" \
+            "ROUTE_CPU_GID=$runner_gid" \
+            /bin/bash -c '
+              ip link set lo up
+              cd "$ROUTE_CPU_HEAD_WEBSITE_DIR"
+              exec setpriv --reuid "$ROUTE_CPU_UID" --regid "$ROUTE_CPU_GID" --clear-groups \
+                "$MISE_BIN" exec -- node scripts/route-cpu-ssr.mjs measure-paired
+            '
 
           BASE_SHA="$BASE_SHA" HEAD_SHA="$HEAD_SHA" \
             mise exec -- node "$benchmark_dir/summarize-route-cpu-comparison.mjs" \

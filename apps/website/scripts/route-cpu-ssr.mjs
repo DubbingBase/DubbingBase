@@ -9,11 +9,12 @@ import { fileURLToPath } from "node:url";
 
 const websiteDir = resolve(import.meta.dirname, "..");
 const repoDir = resolve(websiteDir, "../..");
-const metricPath = resolve(process.env.ROUTE_CPU_METRICS_PATH ?? "/tmp/route-cpu-metrics.jsonl");
-const outputPath = resolve(process.env.ROUTE_CPU_OUTPUT ?? "/tmp/route-cpu.json");
-const profileDir = resolve(process.env.ROUTE_CPU_PROFILE_DIR ?? dirname(outputPath));
-const warmupRequests = 10;
-const measuredRounds = 5;
+const baseOutputPath = resolve(process.env.ROUTE_CPU_BASE_OUTPUT ?? "/tmp/route-cpu-base.json");
+const headOutputPath = resolve(process.env.ROUTE_CPU_HEAD_OUTPUT ?? "/tmp/route-cpu-head.json");
+const profileRoot = resolve(process.env.ROUTE_CPU_PROFILE_ROOT ?? "/tmp/route-cpu-profiles");
+const metricsRoot = resolve(process.env.ROUTE_CPU_METRICS_ROOT ?? "/tmp");
+const warmupRequests = 20;
+const measuredRounds = 20;
 const requestsPerRound = 20;
 const profileRequests = 50;
 const requireFromNuxt = createRequire(import.meta.resolve("nuxt"));
@@ -188,6 +189,7 @@ async function buildWebsite() {
 }
 
 let activeChild;
+const activeServers = new Set();
 async function runCommand(command, args, options) {
   const child = spawn(command, args, { ...options, stdio: "inherit" });
   activeChild = child;
@@ -213,9 +215,9 @@ function metricsFromFile(content) {
     .map((line) => JSON.parse(line));
 }
 
-async function readMetrics() {
+async function readMetrics(path) {
   try {
-    return metricsFromFile(await readFile(metricPath, "utf8"));
+    return metricsFromFile(await readFile(path, "utf8"));
   } catch (error) {
     if (error && typeof error === "object" && Reflect.get(error, "code") === "ENOENT") return [];
     throw error;
@@ -230,7 +232,7 @@ function summarize(values) {
   return { median, minimum: ordered[0], maximum: ordered.at(-1) };
 }
 
-async function cpuProfileSummary(profile) {
+async function cpuProfileSummary(profile, profileWebsiteDir) {
   const nodesById = new Map(profile.nodes.map((node) => [node.id, node]));
   const frames = new Map();
   const sourceMaps = new Map();
@@ -245,7 +247,7 @@ async function cpuProfileSummary(profile) {
     if (!frameUrl.includes("/.output/server/")) continue;
     relevantSampleCount += 1;
     const filePath = frameUrl.startsWith("file:") ? fileURLToPath(frameUrl) : frameUrl;
-    const generatedSource = relative(websiteDir, filePath).replaceAll("\\", "/");
+    const generatedSource = relative(profileWebsiteDir, filePath).replaceAll("\\", "/");
     const functionName = node.callFrame.functionName || "(anonymous)";
     const key = `${generatedSource}:${node.callFrame.lineNumber + 1}:${node.callFrame.columnNumber}:${functionName}`;
     const current = frames.get(key);
@@ -275,7 +277,7 @@ async function cpuProfileSummary(profile) {
         : null;
       const source =
         original?.source && original.line
-          ? `${relative(websiteDir, resolve(dirname(frame.filePath), original.source)).replaceAll("\\", "/")}:${original.line}`
+          ? `${relative(profileWebsiteDir, resolve(dirname(frame.filePath), original.source)).replaceAll("\\", "/")}:${original.line}`
           : `${frame.generatedSource}:${frame.line}`;
       return { ...frame, source };
     }),
@@ -339,20 +341,23 @@ async function freePort() {
   return port;
 }
 
-async function startServer(dataset) {
-  await rm(metricPath, { force: true });
+async function startServer(serverWebsiteDir, dataset, side) {
+  const metricsPath = join(metricsRoot, `${side}-${dataset}-route-cpu-metrics.jsonl`);
+  const serverProfileDir = join(profileRoot, side);
+  await rm(metricsPath, { force: true });
+  await mkdir(serverProfileDir, { recursive: true });
   const port = await freePort();
-  const serverPath = join(websiteDir, ".output/server/index.mjs");
-  const preloadPath = join(websiteDir, "scripts/route-cpu-upstream.mjs");
+  const serverPath = join(serverWebsiteDir, ".output/server/index.mjs");
+  const preloadPath = join(serverWebsiteDir, "scripts/route-cpu-upstream.mjs");
   const server = spawn(process.execPath, ["--import", preloadPath, serverPath], {
-    cwd: websiteDir,
+    cwd: serverWebsiteDir,
     env: {
       ...localBenchmarkEnvironment(),
       NODE_ENV: "production",
       ROUTE_CPU_BENCHMARK: "true",
       ROUTE_CPU_DATASET: dataset,
-      ROUTE_CPU_METRICS_PATH: metricPath,
-      ROUTE_CPU_PROFILE_DIR: profileDir,
+      ROUTE_CPU_METRICS_PATH: metricsPath,
+      ROUTE_CPU_PROFILE_DIR: serverProfileDir,
       SUPABASE_URL: "https://mock.supabase.co",
       SUPABASE_PUBLISHABLE_KEY: "local-route-cpu-fixture",
       SUPABASE_SECRET_KEY: "local-route-cpu-fixture",
@@ -363,10 +368,8 @@ async function startServer(dataset) {
     },
     stdio: ["ignore", "ignore", "pipe"],
   });
-  activeChild = server;
-  server.once("exit", () => {
-    if (activeChild === server) activeChild = undefined;
-  });
+  activeServers.add(server);
+  server.once("exit", () => activeServers.delete(server));
 
   const stderrLines = [];
   server.stderr.setEncoding("utf8");
@@ -389,11 +392,13 @@ async function startServer(dataset) {
       if (response.ok) {
         return {
           baseUrl,
+          websiteDir: serverWebsiteDir,
+          metricsPath,
+          profileDir: serverProfileDir,
           async stop() {
             if (server.exitCode !== null) return;
             server.kill("SIGTERM");
             await new Promise((resolve) => server.once("exit", resolve));
-            if (activeChild === server) activeChild = undefined;
           },
           stderrLines,
         };
@@ -439,26 +444,26 @@ async function requestPage(baseUrl, route) {
   return { id, bytes: body.byteLength, html: Buffer.from(body).toString("utf8") };
 }
 
-async function readRequestMetrics(ids) {
+async function readRequestMetrics(metricsPath, ids) {
   const deadline = Date.now() + 5_000;
   while (Date.now() < deadline) {
-    const rows = new Map((await readMetrics()).map((row) => [row.id, row]));
+    const rows = new Map((await readMetrics(metricsPath)).map((row) => [row.id, row]));
     if (ids.every((id) => rows.has(id))) return rows;
     await new Promise((resolve) => setTimeout(resolve, 10));
   }
   throw new Error("The Nitro server did not finish recording the page request CPU metrics.");
 }
 
-async function requestBatch(baseUrl, route, count) {
+async function requestBatch(server, route, count) {
   const ids = [];
   let responseBytes = 0;
   for (let index = 0; index < count; index += 1) {
-    const response = await requestPage(baseUrl, route);
+    const response = await requestPage(server.baseUrl, route);
     ids.push(response.id);
     responseBytes += response.bytes;
   }
 
-  const rows = await readRequestMetrics(ids);
+  const rows = await readRequestMetrics(server.metricsPath, ids);
   const samples = ids.map((id) => {
     const row = rows.get(id);
     if (!row)
@@ -474,8 +479,8 @@ async function requestBatch(baseUrl, route, count) {
   };
 }
 
-async function currentDependencies(baseUrl) {
-  const response = await fetch(`${baseUrl}/__route_cpu__/dependencies`);
+async function currentDependencies(server) {
+  const response = await fetch(`${server.baseUrl}/__route_cpu__/dependencies`);
   if (!response.ok) throw new Error("Could not read local mock dependency counters.");
   return response.json();
 }
@@ -488,117 +493,196 @@ function assertRouteDependencies(route, before, after) {
   }
 }
 
-async function measureDataset(dataset) {
-  const server = await startServer(dataset);
-  const workloads = [];
-  try {
-    for (const route of routes) {
-      const before = await currentDependencies(server.baseUrl);
-      const validation = await requestPage(server.baseUrl, route);
-      if (!validation.html.includes(route.marker) || !validation.html.includes("__NUXT_DATA__")) {
-        throw new Error(`${route.path} did not SSR the expected fixture data.`);
-      }
-      const after = await currentDependencies(server.baseUrl);
-      assertRouteDependencies(route, before, after);
+function fixtureFor(dataset) {
+  return {
+    mediaCredits: dataset === "large" ? 1200 : 180,
+    dubbingProjects: dataset === "large" ? 500 : 40,
+    actorCredits: dataset === "large" ? 1200 : 640,
+    actorRoles: dataset === "large" ? 500 : 24,
+    voiceActorWorks: dataset === "large" ? 500 : 24,
+    uniqueVoiceActorMedia: dataset === "large" ? 100 : 12,
+  };
+}
 
-      await postJson(server.baseUrl, "/__route_cpu__/dependencies/reset");
-      for (let index = 0; index < warmupRequests; index += 1) {
-        await requestPage(server.baseUrl, route);
-      }
+async function validateRoute(server, route) {
+  const before = await currentDependencies(server);
+  const validation = await requestPage(server.baseUrl, route);
+  if (!validation.html.includes(route.marker) || !validation.html.includes("__NUXT_DATA__")) {
+    throw new Error(`${route.path} did not SSR the expected fixture data.`);
+  }
+  assertRouteDependencies(route, before, await currentDependencies(server));
+  await postJson(server.baseUrl, "/__route_cpu__/dependencies/reset");
+}
+
+async function warmServers(baseServer, headServer, route) {
+  for (let request = 0; request < warmupRequests; request += 1) {
+    const order = request % 2 === 0 ? [baseServer, headServer] : [headServer, baseServer];
+    for (const server of order) await requestPage(server.baseUrl, route);
+  }
+}
+
+async function captureProfile(server, route) {
+  await postJson(server.baseUrl, `/__route_cpu__/profile/start?name=${route.name}`);
+  for (let request = 0; request < profileRequests; request += 1) {
+    await requestPage(server.baseUrl, route);
+  }
+  const result = await postJson(server.baseUrl, "/__route_cpu__/profile/stop");
+  const profilePath = join(server.profileDir, `${route.name}.cpuprofile`);
+  const rawProfile = JSON.parse(await readFile(profilePath, "utf8"));
+  const profile = await cpuProfileSummary(rawProfile, server.websiteDir);
+  if (profile.relevantSampleCount === 0 || result.samples === 0) {
+    throw new Error(`V8 did not sample server frames for ${route.path}.`);
+  }
+  return profile;
+}
+
+function workloadFor(server, route, dataset, rounds, pairedDeltas, dependencies, profile) {
+  const samples = rounds.map((round) => round[server.side]);
+  return {
+    name: route.name,
+    path: route.path,
+    dataset,
+    fixture: fixtureFor(dataset),
+    warmupRequests,
+    measuredRounds,
+    requestsPerRound,
+    pairedCpuDeltaSamplesMicrosPerRequest: pairedDeltas,
+    profileRequests: dataset === "large" ? profileRequests : 0,
+    cpuMicrosPerRequest: {
+      user: summarize(samples.map((sample) => sample.userMicrosPerRequest)),
+      system: summarize(samples.map((sample) => sample.systemMicrosPerRequest)),
+      total: summarize(samples.map((sample) => sample.totalMicrosPerRequest)),
+    },
+    htmlBytesPerRequest: summarize(samples.map((sample) => sample.htmlBytesPerRequest)),
+    upstreamRequests: dependencies,
+    profile,
+  };
+}
+
+async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
+  const servers = [];
+  try {
+    const baseServer = await startServer(baseWebsiteDir, dataset, "base");
+    servers.push(baseServer);
+    baseServer.side = "base";
+    const headServer = await startServer(headWebsiteDir, dataset, "head");
+    servers.push(headServer);
+    headServer.side = "head";
+
+    const baseWorkloads = [];
+    const headWorkloads = [];
+    for (const route of routes) {
+      await validateRoute(baseServer, route);
+      await validateRoute(headServer, route);
+      await warmServers(baseServer, headServer, route);
 
       const rounds = [];
       for (let round = 0; round < measuredRounds; round += 1) {
-        rounds.push(await requestBatch(server.baseUrl, route, requestsPerRound));
+        const order = round % 2 === 0
+          ? [["base", baseServer], ["head", headServer]]
+          : [["head", headServer], ["base", baseServer]];
+        const result = {};
+        for (const [side, server] of order) {
+          result[side] = await requestBatch(server, route, requestsPerRound);
+        }
+        rounds.push(result);
       }
 
-      let profile;
+      const pairedDeltas = rounds.map(
+        (round) => round.head.totalMicrosPerRequest - round.base.totalMicrosPerRequest,
+      );
+      let baseProfile;
+      let headProfile;
       if (dataset === "large") {
-        await postJson(server.baseUrl, `/__route_cpu__/profile/start?name=${route.name}`);
-        for (let index = 0; index < profileRequests; index += 1) {
-          await requestPage(server.baseUrl, route);
-        }
-        const profileResult = await postJson(server.baseUrl, "/__route_cpu__/profile/stop");
-        const profilePath = join(profileDir, `${route.name}.cpuprofile`);
-        const rawProfile = JSON.parse(await readFile(profilePath, "utf8"));
-        profile = await cpuProfileSummary(rawProfile);
-        if (profile.relevantSampleCount === 0 || profileResult.samples === 0) {
-          throw new Error(`V8 did not sample server frames for ${route.path}.`);
-        }
+        baseProfile = await captureProfile(baseServer, route);
+        headProfile = await captureProfile(headServer, route);
       }
 
-      const dependencies = await currentDependencies(server.baseUrl);
-      workloads.push({
-        name: route.name,
-        path: route.path,
-        dataset,
-        fixture: {
-          mediaCredits: dataset === "large" ? 1200 : 180,
-          dubbingProjects: dataset === "large" ? 500 : 40,
-          actorCredits: dataset === "large" ? 1200 : 640,
-          actorRoles: dataset === "large" ? 500 : 24,
-          voiceActorWorks: dataset === "large" ? 500 : 24,
-          uniqueVoiceActorMedia: dataset === "large" ? 100 : 12,
-        },
-        warmupRequests,
-        measuredRounds,
-        requestsPerRound,
-        profileRequests: dataset === "large" ? profileRequests : 0,
-        cpuMicrosPerRequest: {
-          user: summarize(rounds.map((round) => round.userMicrosPerRequest)),
-          system: summarize(rounds.map((round) => round.systemMicrosPerRequest)),
-          total: summarize(rounds.map((round) => round.totalMicrosPerRequest)),
-        },
-        htmlBytesPerRequest: summarize(rounds.map((round) => round.htmlBytesPerRequest)),
-        upstreamRequests: dependencies,
-        profile,
-      });
+      baseWorkloads.push(
+        workloadFor(
+          baseServer,
+          route,
+          dataset,
+          rounds,
+          pairedDeltas,
+          await currentDependencies(baseServer),
+          baseProfile,
+        ),
+      );
+      headWorkloads.push(
+        workloadFor(
+          headServer,
+          route,
+          dataset,
+          rounds,
+          pairedDeltas,
+          await currentDependencies(headServer),
+          headProfile,
+        ),
+      );
     }
+    return { baseWorkloads, headWorkloads };
   } catch (error) {
-    if (server.stderrLines.length > 0) {
+    const serverWithOutput = servers.find((server) => server.stderrLines.length > 0);
+    if (serverWithOutput) {
       throw new Error(
-        `${error instanceof Error ? error.message : String(error)}\nNitro stderr:\n${server.stderrLines.join("\n")}`,
+        `${error instanceof Error ? error.message : String(error)}\nNitro stderr:\n${serverWithOutput.stderrLines.join("\n")}`,
       );
     }
     throw error;
   } finally {
-    await server.stop();
+    for (const server of servers) await server.stop();
   }
-  return workloads;
 }
 
-async function measure() {
+async function measurePaired() {
   await assertIsolatedNetworkNamespace("route profiling");
+  const baseWebsiteDir = process.env.ROUTE_CPU_BASE_WEBSITE_DIR;
+  const headWebsiteDir = process.env.ROUTE_CPU_HEAD_WEBSITE_DIR ?? websiteDir;
+  if (!baseWebsiteDir) throw new Error("Set ROUTE_CPU_BASE_WEBSITE_DIR to the baseline website build.");
 
-  await rm(profileDir, { recursive: true, force: true });
-  await mkdir(profileDir, { recursive: true });
-  const workloads = [];
+  await rm(join(profileRoot, "base"), { recursive: true, force: true });
+  await rm(join(profileRoot, "head"), { recursive: true, force: true });
+  await mkdir(join(profileRoot, "base"), { recursive: true });
+  await mkdir(join(profileRoot, "head"), { recursive: true });
+  const baseWorkloads = [];
+  const headWorkloads = [];
   for (const dataset of ["representative", "large"]) {
-    workloads.push(...(await measureDataset(dataset)));
+    const result = await measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir);
+    baseWorkloads.push(...result.baseWorkloads);
+    headWorkloads.push(...result.headWorkloads);
   }
 
-  const report = {
+  const report = (workloads) => ({
     runtime: process.version,
     method:
-      "Full page SSR through the built Nuxt/Nitro Node server. The server process records process.cpuUsage from Nitro request handling through the Node response finish event; the HTTP driver is separate. TMDB, TVDB, and Supabase HTTP responses are deterministic in-memory fixtures, and the server runs in a network namespace with loopback only.",
+      "Built Nuxt/Nitro SSR with deterministic in-memory upstream fixtures. Each revision receives 20 warmups and 20 paired rounds of 20 serial requests per route; base/head batch order alternates. The server records process.cpuUsage from Nitro request handling through response finish; profiles are captured separately. Egress is limited to loopback.",
     scope:
-      "Measures real page and API route code, provider response parsing/transforms, Supabase query handling, SSR data preparation, HTML generation, and response writing. It excludes browser rendering, real upstream latency/client infrastructure, Cloudflare Workers runtime/accounting, and production traffic. V8 profiles are sampled self-time approximations; source map locations are used when available, with generated chunk locations as fallback.",
+      "Measures real page/API logic, upstream fixture parsing, Supabase query handling, SSR rendering, and response writing. Excludes browser rendering, upstream latency, Cloudflare Workers accounting, and production traffic.",
     warmupRequests,
     measuredRounds,
     requestsPerRound,
     workloads,
-  };
-  await writeFile(outputPath, `${JSON.stringify(report, null, 2)}\n`);
-  console.log(`Local Nuxt SSR route CPU report written to ${outputPath}`);
+  });
+  await writeFile(baseOutputPath, `${JSON.stringify(report(baseWorkloads), null, 2)}\n`);
+  await writeFile(headOutputPath, `${JSON.stringify(report(headWorkloads), null, 2)}\n`);
+  console.log(`Paired route CPU reports written to ${baseOutputPath} and ${headOutputPath}`);
 }
 
-process.on("SIGTERM", () => activeChild?.kill("SIGTERM"));
-process.on("SIGINT", () => activeChild?.kill("SIGINT"));
+process.on("SIGTERM", () => {
+  activeChild?.kill("SIGTERM");
+  for (const server of activeServers) server.kill("SIGTERM");
+});
+process.on("SIGINT", () => {
+  activeChild?.kill("SIGTERM");
+  for (const server of activeServers) server.kill("SIGTERM");
+});
 
 const action = process.argv[2];
 if (action === "build") {
   await buildWebsite();
-} else if (action === "measure") {
-  await measure();
+} else if (action === "measure-paired") {
+  await measurePaired();
 } else {
-  throw new Error("Usage: node scripts/route-cpu-ssr.mjs <build|measure>");
+  throw new Error("Usage: node scripts/route-cpu-ssr.mjs <build|measure-paired>");
 }

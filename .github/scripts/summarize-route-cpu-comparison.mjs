@@ -10,6 +10,15 @@ const headReport = JSON.parse(await readFile(headPath, "utf8"));
 if (baseReport.runtime !== headReport.runtime) {
   throw new Error("Base and pull request route CPU reports use different Node versions.");
 }
+if (
+  !Number.isSafeInteger(baseReport.measuredRounds) ||
+  baseReport.measuredRounds < 1 ||
+  baseReport.measuredRounds !== headReport.measuredRounds ||
+  baseReport.warmupRequests !== headReport.warmupRequests ||
+  baseReport.requestsPerRound !== headReport.requestsPerRound
+) {
+  throw new Error("Base and pull request reports use different or invalid paired workloads.");
+}
 
 const routeNames = ["movie", "show", "actor", "voice-actor"];
 const datasets = ["representative", "large"];
@@ -31,19 +40,57 @@ const baseWorkloads = readWorkloads(baseReport, "Base");
 const headWorkloads = readWorkloads(headReport, "PR");
 
 function formatCpu(stats) {
-  const format = (micros) => (micros / 1000).toFixed(1);
-  return `${format(stats.median)} (${format(stats.minimum)}–${format(stats.maximum)}) ms`;
+  return `${(stats.median / 1000).toFixed(1)} ms`;
 }
 
-function formatDelta(baseMicros, headMicros) {
-  const milliseconds = (headMicros - baseMicros) / 1000;
-  const percentage = ((headMicros - baseMicros) / baseMicros) * 100;
+function median(values) {
+  const sorted = [...values].sort((left, right) => left - right);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0
+    ? (sorted[middle - 1] + sorted[middle]) / 2
+    : sorted[middle];
+}
+
+function percentile(sortedValues, probability) {
+  const position = (sortedValues.length - 1) * probability;
+  const lower = Math.floor(position);
+  const upper = Math.ceil(position);
+  return sortedValues[lower] + (sortedValues[upper] - sortedValues[lower]) * (position - lower);
+}
+
+function bootstrapMedianInterval(values, seedText) {
+  let state = 2166136261;
+  for (const character of seedText) {
+    state = Math.imul(state ^ character.charCodeAt(0), 16777619) >>> 0;
+  }
+  const random = () => {
+    state = (Math.imul(1664525, state) + 1013904223) >>> 0;
+    return state / 0x100000000;
+  };
+  const estimates = [];
+  for (let iteration = 0; iteration < 5000; iteration += 1) {
+    const sample = Array.from(
+      { length: values.length },
+      () => values[Math.floor(random() * values.length)],
+    );
+    estimates.push(median(sample));
+  }
+  estimates.sort((left, right) => left - right);
+  return { lower: percentile(estimates, 0.025), upper: percentile(estimates, 0.975) };
+}
+
+function formatDelta(baseMedianMicros, pairedDeltasMicros, intervalMicros) {
+  const deltaMicros = median(pairedDeltasMicros);
+  const milliseconds = deltaMicros / 1000;
+  const percentage = (deltaMicros / baseMedianMicros) * 100;
+  const lower = intervalMicros.lower / 1000;
+  const upper = intervalMicros.upper / 1000;
   const marker = milliseconds > 0 ? "🔴" : milliseconds < 0 ? "🟢" : "⚪";
   const formatSigned = (value, decimals) => {
     const sign = value > 0 ? "+" : value < 0 ? "−" : "";
     return `${sign}${Math.abs(value).toFixed(decimals)}`;
   };
-  return `${marker} ${formatSigned(milliseconds, 2)} ms (${formatSigned(percentage, 1)}%)`;
+  return `${marker} ${formatSigned(milliseconds, 2)} ms (${formatSigned(percentage, 1)}%; ${formatSigned(lower, 2)} to ${formatSigned(upper, 2)} ms)`;
 }
 
 function safeCell(value) {
@@ -73,19 +120,38 @@ for (const route of routeNames) {
     sameFixture(base, head, route, dataset);
     const baseCpu = base.cpuMicrosPerRequest.total;
     const headCpu = head.cpuMicrosPerRequest.total;
-    cpuComparisons.push({ base: baseCpu, head: headCpu });
+    const baseDeltas = base.pairedCpuDeltaSamplesMicrosPerRequest;
+    const headDeltas = head.pairedCpuDeltaSamplesMicrosPerRequest;
+    if (
+      !Array.isArray(baseDeltas) ||
+      !Array.isArray(headDeltas) ||
+      baseDeltas.length !== baseReport.measuredRounds ||
+      baseDeltas.some((delta) => !Number.isFinite(delta)) ||
+      JSON.stringify(baseDeltas) !== JSON.stringify(headDeltas)
+    ) {
+      throw new Error(`Base and PR reports have invalid paired samples for ${route} ${dataset}.`);
+    }
+    if (
+      !Number.isFinite(baseCpu.median) ||
+      baseCpu.median <= 0 ||
+      !Number.isFinite(headCpu.median)
+    ) {
+      throw new Error(`Base and PR reports have invalid CPU medians for ${route} ${dataset}.`);
+    }
+    const interval = bootstrapMedianInterval(headDeltas, `${route}:${dataset}`);
+    cpuComparisons.push({ interval });
     rows.push(
-      `| ${route} (${dataset}) | ${formatCpu(baseCpu)} | ${formatCpu(headCpu)} | ${formatDelta(baseCpu.median, headCpu.median)} |`,
+      `| ${route} (${dataset}) | ${formatCpu(baseCpu)} | ${formatCpu(headCpu)} | ${formatDelta(baseCpu.median, headDeltas, interval)} |`,
     );
   }
 }
-const overlappingRanges = cpuComparisons.filter(
-  ({ base, head }) => base.minimum <= head.maximum && head.minimum <= base.maximum,
+const intervalsContainingZero = cpuComparisons.filter(
+  ({ interval }) => interval.lower <= 0 && interval.upper >= 0,
 ).length;
-const rangeSummary =
-  overlappingRanges === cpuComparisons.length
-    ? `The observed ranges overlap in all ${cpuComparisons.length} comparisons, so this run shows no clear CPU change.`
-    : `The observed ranges overlap in ${overlappingRanges} of ${cpuComparisons.length} comparisons; min–max ranges are descriptive, not statistical confidence intervals.`;
+const resultSummary =
+  intervalsContainingZero === cpuComparisons.length
+    ? `All ${cpuComparisons.length} paired 95% intervals include zero; this run shows no clear CPU change.`
+    : `${cpuComparisons.length - intervalsContainingZero} of ${cpuComparisons.length} paired 95% intervals exclude zero.`;
 function isApplicationSource(source) {
   const normalized = source.replaceAll("\\", "/");
   return (
@@ -134,11 +200,11 @@ const markdown = [
   "",
   `Built Nuxt SSR · Node ${baseReport.runtime} · same runner · ${workflowRun}`,
   "",
-  "CPU/request = server user + system time; values are median (observed min–max) over 5 × 20 requests after 10 warmups. Change = PR − base.",
+  "20 warmups; 20 alternating paired batches of 20 requests per route. Change is the median paired PR − base delta; interval is a deterministic 95% bootstrap.",
   "",
-  `**Result:** ${rangeSummary} 🔴 more CPU · 🟢 less CPU · ⚪ unchanged median; markers show direction only. This PR changes CI benchmarking, not route code.`,
+  `**Result:** ${resultSummary} 🔴 more CPU · 🟢 less CPU · ⚪ unchanged median; markers show direction only. This PR changes CI benchmarking, not route code.`,
   "",
-  "| Route / workload | Base CPU / request | PR CPU / request | Change (PR − base) |",
+  "| Route / workload | Base median CPU / request | PR median CPU / request | Paired change (95% bootstrap interval) |",
   "| --- | ---: | ---: | ---: |",
   ...rows,
   "",
