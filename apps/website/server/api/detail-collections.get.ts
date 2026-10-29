@@ -264,17 +264,24 @@ async function getCollectionItems(
     case "actor-filmography": {
       const detail = await requestFetch<DetailPayload>(`/api/actor/${id}`);
       const roles = detail.actor?.voice_roles || [];
+      const language = queryValue(query.language);
+      const rolesByMediaId = new Map<string, typeof roles>();
+      for (const role of roles) {
+        if (language && language !== "all" && role.dubbing_projects?.language !== language) {
+          continue;
+        }
+
+        const mediaId = String(role.mediaDetails?.id);
+        const mediaRoles = rolesByMediaId.get(mediaId);
+        if (mediaRoles) mediaRoles.push(role);
+        else rolesByMediaId.set(mediaId, [role]);
+      }
+
       return (detail.actor?.credits?.cast || []).map((item) => ({
         ...item,
-        voice_actors: roles
-          .filter(
-            (role) =>
-              String(role.mediaDetails?.id) === String(item.id) &&
-              (!queryValue(query.language) ||
-                queryValue(query.language) === "all" ||
-                role.dubbing_projects?.language === queryValue(query.language)),
-          )
-          .flatMap((role) => role.voice_actors || []),
+        voice_actors: (rolesByMediaId.get(String(item.id)) || []).flatMap(
+          (role) => role.voice_actors || [],
+        ),
       }));
     }
     case "actor-voice-actors": {

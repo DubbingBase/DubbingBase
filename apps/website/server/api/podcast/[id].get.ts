@@ -1,5 +1,5 @@
 import { usePodcastClient } from "../../utils";
-import { getDubbingProjects } from "../../utils/db/queries";
+import { getDubbingProjectsForMediaEndpoint } from "../../utils/db/queries";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 import { scheduleBackgroundTask } from "../../utils/background";
@@ -39,7 +39,7 @@ export default defineEventHandler(async (event): Promise<PodcastResponse> => {
     })(),
 
     // DB: dubbing projects
-    getDubbingProjects(podcastId, "podcast"),
+    getDubbingProjectsForMediaEndpoint(podcastId, "podcast", getQuery(event).projection),
   ]);
 
   const { podcast } = apiData;

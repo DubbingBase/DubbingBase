@@ -184,6 +184,49 @@ describe("MediaService voice actor media indexing", () => {
     });
   });
 
+  it("projects movie media-page cast to fields used by the page", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              id: 89,
+              credits: {
+                cast: [
+                  {
+                    id: 1,
+                    name: "Actor",
+                    profile_path: "/actor.jpg",
+                    character: "Role",
+                    credit_id: "unused-credit",
+                    popularity: 12,
+                  },
+                ],
+                crew: [{ id: 3, name: "Unused crew" }],
+              },
+            }),
+          ),
+      ),
+    );
+
+    const result = await new MediaService(new TMDBClient()).getMediaWithVoiceActors("movie", 89, {
+      includeCreditsCrew: false,
+      projection: "media-page",
+    });
+
+    expect(result.media.credits).toEqual({
+      cast: [
+        {
+          id: 1,
+          name: "Actor",
+          profile_path: "https://image.tmdb.org/t/p/w500/actor.jpg",
+          character: "Role",
+        },
+      ],
+    });
+  });
+
   it("skips unused appended data for season media pages", async () => {
     const urls: URL[] = [];
     vi.stubGlobal(
@@ -241,13 +284,9 @@ describe("MediaService voice actor media indexing", () => {
     );
 
     const service = new MediaService(new TMDBClient());
-    const result = await service.getMediaWithVoiceActorsExtended(
-      "episode",
-      92,
-      1,
-      2,
-      { projection: "media-page" },
-    );
+    const result = await service.getMediaWithVoiceActorsExtended("episode", 92, 1, 2, {
+      projection: "media-page",
+    });
 
     expect(urls[0]?.searchParams.get("append_to_response")).toBe("credits");
     expect(result.media).not.toHaveProperty("external_ids");
@@ -261,18 +300,19 @@ describe("MediaService voice actor media indexing", () => {
   it("preserves unused episode fields in the default full response", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () =>
-        new Response(
-          JSON.stringify({
-            id: 93,
-            external_ids: { imdb_id: "tt456" },
-            guest_stars: [{ id: 7, character: "Guest", profile_path: "/guest.jpg" }],
-            credits: {
-              cast: [{ id: 8, character: "Lead", profile_path: "/lead.jpg" }],
-              crew: [{ id: 9, job: "Director" }],
-            },
-          }),
-        ),
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              id: 93,
+              external_ids: { imdb_id: "tt456" },
+              guest_stars: [{ id: 7, character: "Guest", profile_path: "/guest.jpg" }],
+              credits: {
+                cast: [{ id: 8, character: "Lead", profile_path: "/lead.jpg" }],
+                crew: [{ id: 9, job: "Director" }],
+              },
+            }),
+          ),
       ),
     );
 

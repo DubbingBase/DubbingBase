@@ -3,6 +3,7 @@ import { TMDBClient } from "../api/tmdb";
 import { TVDBClient } from "../api/tvdb";
 import { processVoiceActor } from "../urls/supabase";
 import { processMedia, cleanCharacterName } from "../urls/tmdb";
+import { mediaPageMovieCredits } from "../media-page-credits";
 import { useCache, useIgdbClient, useOpenLibraryClient } from "../index";
 import { buildIgdbImageUrl } from "../api/igdb";
 import { createCacheNamespace } from "../cache";
@@ -150,13 +151,18 @@ function isTmdbCredit(value: unknown): value is TmdbCredit {
   );
 }
 
-function sanitizeMediaCastForProcessing(media: unknown): unknown {
+function sanitizeMediaCastForProcessing(
+  media: unknown,
+  relevantActorIds: ReadonlySet<number>,
+): unknown {
   if (!isRecord(media) || !isRecord(media.credits)) return media;
 
   const cast = Array.isArray(media.credits.cast)
     ? media.credits.cast.filter(
         (credit) =>
           isRecord(credit) &&
+          typeof credit.id === "number" &&
+          relevantActorIds.has(credit.id) &&
           (credit.character === undefined ||
             credit.character === null ||
             typeof credit.character === "string") &&
@@ -278,6 +284,10 @@ export class MediaService {
 
     const voiceActorWithImages = processVoiceActor(voiceActor);
     const workItems = voiceActor.work || [];
+    const relevantActorIds = new Set<number>();
+    for (const work of workItems) {
+      if (typeof work.actor_id === "number") relevantActorIds.add(work.actor_id);
+    }
 
     // 1. Deduplicate media requests by (contentType + contentId)
     const uniqueTargetsMap = new Map<string, MediaTarget>();
@@ -568,7 +578,7 @@ export class MediaService {
         return {
           key: `${contentType}:${contentId}`,
           data: {
-            media: processMedia(sanitizeMediaCastForProcessing(tmdbMedia)),
+            media: processMedia(sanitizeMediaCastForProcessing(tmdbMedia, relevantActorIds)),
             characterProfilePictures: new Array<CharacterProfilePicture>(),
             tvdbId: null,
           },
@@ -904,7 +914,11 @@ export class MediaService {
   async getMediaWithVoiceActors(
     contentType: "movie" | "tv",
     contentId: number,
-    options: { includeCollection?: boolean; includeCreditsCrew?: boolean } = {},
+    options: {
+      includeCollection?: boolean;
+      includeCreditsCrew?: boolean;
+      projection?: "media-page";
+    } = {},
   ) {
     let media =
       contentType === "movie"
@@ -912,9 +926,13 @@ export class MediaService {
         : await this.tmdbClient.getMediaDetails(contentType, contentId, this.acceptLanguage);
 
     if (options.includeCreditsCrew === false && isRecord(media.credits)) {
-      const credits = { ...media.credits };
-      delete credits.crew;
-      media = { ...media, credits };
+      if (options.projection === "media-page" && contentType === "movie") {
+        media = { ...media, credits: mediaPageMovieCredits(media.credits) };
+      } else {
+        const credits = { ...media.credits };
+        delete credits.crew;
+        media = { ...media, credits };
+      }
     }
 
     let collection: Record<string, unknown> | null = null;
