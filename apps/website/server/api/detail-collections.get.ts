@@ -166,18 +166,23 @@ function formatTmdbCards(
   const media: CollectionItem = detail.movie || detail.serie || detail.episode || {};
   const cast = detail.aggregateCredits?.cast || media.credits?.cast || [];
   const works = project?.works || [];
+  const worksByActorId = new Map<string, CollectionItem[]>();
+  for (const work of works) {
+    const actorId = String(work.actor_id);
+    const actorWorks = worksByActorId.get(actorId);
+    if (actorWorks) actorWorks.push(work);
+    else worksByActorId.set(actorId, [work]);
+  }
+
   const matchedWorkIds = new Set<number | string | undefined>();
   const cards: CollectionItem[] = [];
 
   for (const actor of cast) {
-    const actorWorks = works.filter((work: CollectionItem) => {
-      const matches = String(work.actor_id) === String(actor.id);
-      if (matches) matchedWorkIds.add(work.id);
-      return matches;
-    });
+    const actorWorks = worksByActorId.get(String(actor.id)) || [];
     if (actorWorks.length === 0) continue;
 
     for (const work of actorWorks) {
+      matchedWorkIds.add(work.id);
       const characterName = actor.character || work?.character_name || null;
       const characterPicture = (detail.characterProfilePictures || []).find(
         (picture: CollectionItem) => normalized(picture.name) === normalized(characterName),
@@ -259,17 +264,24 @@ async function getCollectionItems(
     case "actor-filmography": {
       const detail = await requestFetch<DetailPayload>(`/api/actor/${id}`);
       const roles = detail.actor?.voice_roles || [];
+      const language = queryValue(query.language);
+      const rolesByMediaId = new Map<string, typeof roles>();
+      for (const role of roles) {
+        if (language && language !== "all" && role.dubbing_projects?.language !== language) {
+          continue;
+        }
+
+        const mediaId = String(role.mediaDetails?.id);
+        const mediaRoles = rolesByMediaId.get(mediaId);
+        if (mediaRoles) mediaRoles.push(role);
+        else rolesByMediaId.set(mediaId, [role]);
+      }
+
       return (detail.actor?.credits?.cast || []).map((item) => ({
         ...item,
-        voice_actors: roles
-          .filter(
-            (role) =>
-              String(role.mediaDetails?.id) === String(item.id) &&
-              (!queryValue(query.language) ||
-                queryValue(query.language) === "all" ||
-                role.dubbing_projects?.language === queryValue(query.language)),
-          )
-          .flatMap((role) => role.voice_actors || []),
+        voice_actors: (rolesByMediaId.get(String(item.id)) || []).flatMap(
+          (role) => role.voice_actors || [],
+        ),
       }));
     }
     case "actor-voice-actors": {
