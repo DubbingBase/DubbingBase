@@ -282,15 +282,24 @@ async function cpuProfileSummary(profile) {
   );
 
   const totalSampledMicros = mappedFrames.reduce((total, frame) => total + frame.sampledMicros, 0);
+  const displayedFrames = mappedFrames.filter((frame) => {
+    if (frame.functionName !== "flatten") return true;
+    const sourcePaths = [frame.source, frame.generatedSource].map((source) =>
+      source.replaceAll("\\", "/"),
+    );
+    return !sourcePaths.some((source) => source.includes("/devalue/"));
+  });
+
   return {
     sampleCount: profile.samples.length,
     relevantSampleCount,
-    topSampledFrames: mappedFrames
+    topSampledFrames: displayedFrames
       .sort((left, right) => right.sampledMicros - left.sampledMicros)
       .slice(0, 16)
-      .map(({ functionName, source, sampledMicros }) => ({
+      .map(({ functionName, source, generatedSource, sampledMicros }) => ({
         functionName,
         source,
+        generatedSource,
         sampledMicros,
         sampleSharePercent: totalSampledMicros > 0 ? (sampledMicros / totalSampledMicros) * 100 : 0,
       })),

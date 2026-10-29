@@ -79,10 +79,17 @@ function formatFrames(workload) {
     throw new Error(`Large workload ${workload.name} is missing its V8 profile summary.`);
   }
   const frames = sampledFrames.filter((frame) => {
-    const source = frame.source.replaceAll("\\", "/");
-    return !(frame.functionName === "flatten" && source.includes("/devalue/"));
+    const sourcePaths = [frame.source, frame.generatedSource]
+      .filter((source) => typeof source === "string")
+      .map((source) => source.replaceAll("\\", "/"));
+    return !(
+      frame.functionName === "flatten" &&
+      sourcePaths.some((source) => source.includes("/devalue/"))
+    );
   });
-  if (frames.length === 0) return "No other frames sampled after excluding devalue.flatten";
+  if (frames.length === 0) {
+    return "No other frames sampled after filtering identified devalue.flatten frames";
+  }
   return `${profile.relevantSampleCount}/${profile.sampleCount} server samples; ${frames
     .slice(0, 5)
     .map(
@@ -110,7 +117,7 @@ const markdown = [
   "",
   "### Large-fixture V8 profile samples",
   "",
-  "Profiles were captured separately from CPU measurements with a 1 ms V8 sampling interval over 50 serial requests for each large fixture. The displayed hotspot list omits `devalue.flatten`; end-to-end CPU/request still includes its work. Other frame shares represent sampled server JavaScript self-time, including bundled framework code, and are approximations rather than exact timings. Locations map to source files when source maps are emitted and otherwise refer to generated server chunks. Raw `.cpuprofile` files are attached to this run's artifact.",
+  "Profiles were captured separately from CPU measurements with a 1 ms V8 sampling interval over 50 serial requests for each large fixture. The displayed hotspot list filters frames named `flatten` when either the mapped or generated source path identifies the `devalue` package; ambiguous frames without that path may remain. Per-request CPU and profile share percentages include all route work, including devalue. Other frame shares represent sampled server JavaScript self-time, including bundled framework code, and are approximations rather than exact timings. Locations map to source files when source maps are emitted and otherwise refer to generated server chunks. Raw `.cpuprofile` files are attached to this run's artifact.",
   "",
   "| Route | Base top sampled frames | PR top sampled frames |",
   "| --- | --- | --- |",
