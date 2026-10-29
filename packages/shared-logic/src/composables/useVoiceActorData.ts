@@ -29,7 +29,7 @@ export async function fetchVoiceActorData(
   }
 }
 
-import { ref, computed, watch, unref, type MaybeRef } from "vue";
+import { ref, shallowRef, computed, watch, unref, type MaybeRef } from "vue";
 import type { MovieModel, SerieModel, PersonData, Actor } from "../types";
 
 export type VoiceActorResponse = {
@@ -134,14 +134,14 @@ export function useVoiceActorData(
   initialData?: MaybeRef<VoiceActorDataPayload | null | undefined>,
 ) {
   const initial = unref(initialData);
-  const voiceActor = ref<VoiceActorResponse["voiceActor"] | undefined>(
+  const voiceActor = shallowRef<VoiceActorResponse["voiceActor"] | undefined>(
     initial?.voiceActor,
   );
-  const enhancedWorksRef = ref<EnhancedWorkItem[]>(
+  const enhancedWorksRef = shallowRef<EnhancedWorkItem[]>(
     initial?.enhancedWorks || [],
   );
-  const medias = ref<VoiceActorResponse["medias"]>(initial?.medias || []);
-  const characterProfilePictures = ref<
+  const medias = shallowRef<VoiceActorResponse["medias"]>(initial?.medias || []);
+  const characterProfilePictures = shallowRef<
     NonNullable<VoiceActorResponse["characterProfilePictures"]>
   >(initial?.characterProfilePictures || []);
   const profilePicture = ref<string | null | undefined>(
@@ -170,7 +170,7 @@ export function useVoiceActorData(
         loading.value = false;
       }
     },
-    { immediate: true, deep: true },
+    { immediate: true },
   );
 
   const loadVoiceActorData = async (id: string | number, lang?: string) => {
