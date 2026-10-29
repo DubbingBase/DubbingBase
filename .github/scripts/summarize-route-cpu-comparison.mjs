@@ -161,7 +161,7 @@ function isApplicationSource(source) {
   );
 }
 
-function formatApplicationFrames(workload) {
+function formatTopApplicationCpuConsumers(workload, route, revision) {
   const profile = workload.profile;
   const hasFullApplicationFrames = Array.isArray(profile?.topApplicationFrames);
   const sampledFrames =
@@ -173,26 +173,24 @@ function formatApplicationFrames(workload) {
     throw new Error(`Large workload ${workload.name} is missing its V8 profile summary.`);
   }
   if (sampledFrames.length === 0) {
-    return hasFullApplicationFrames
+    const reason = hasFullApplicationFrames
       ? "No application-code frame sampled"
-      : "No application-code frame in top 16";
+      : "No application-code frame in top 16 sampled frames";
+    return [`| ${route} | ${revision} | — | — | ${reason} | — |`];
   }
   return sampledFrames
-    .slice(0, 3)
-    .map(
-      (frame) =>
-        `\`${safeCell(frame.functionName)}\` — \`${safeCell(frame.source)}\` (${frame.sampleSharePercent.toFixed(1)}%)`,
-    )
-    .join("; ");
+    .slice(0, 10)
+    .map((frame, index) =>
+      `| ${route} | ${revision} | ${index + 1} | \`${safeCell(frame.functionName)}\` | \`${safeCell(frame.source)}\` | ${frame.sampleSharePercent.toFixed(1)}% |`,
+    );
 }
 
 const frameRows = [];
 for (const route of routeNames) {
   const base = getWorkload(baseWorkloads, route, "large", "Base");
   const head = getWorkload(headWorkloads, route, "large", "PR");
-  frameRows.push(
-    `| ${route} | ${formatApplicationFrames(base)} | ${formatApplicationFrames(head)} |`,
-  );
+  frameRows.push(...formatTopApplicationCpuConsumers(base, route, "Base"));
+  frameRows.push(...formatTopApplicationCpuConsumers(head, route, "PR"));
 }
 
 const markdown = [
@@ -208,13 +206,18 @@ const markdown = [
   "| --- | ---: | ---: | ---: |",
   ...rows,
   "",
-  "### Top application-code frames (large workload)",
+  "### Top 10 app CPU consumers (large workload)",
   "",
-  "Top three source-mapped website/workspace functions by sampled self-time; percentages are shares of server JS samples, not milliseconds. `devalue.flatten` is absent from this list but remains in CPU totals. Full profiles are in the artifact.",
+  "V8 sampled self-time ranked by app-owned function. Source shows the mapped file and line; shares are of sampled generated-server JavaScript time. `devalue.flatten` is excluded from this list but remains in CPU totals. Full profiles are in the artifact.",
   "",
-  "| Route | Base function — source (share) | PR function — source (share) |",
-  "| --- | --- | --- |",
+  "<details>",
+  "<summary>Show function names, source locations, and shares</summary>",
+  "",
+  "| Route | Revision | Rank | Function | Source location | Sample share |",
+  "| --- | --- | ---: | --- | --- | ---: |",
   ...frameRows,
+  "",
+  "</details>",
 ].join("\n");
 
 await writeFile(outputPath, `${markdown}\n`);
