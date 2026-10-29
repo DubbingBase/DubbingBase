@@ -105,6 +105,47 @@ describe("dubbing project detail queries", () => {
     expect(queryMocks.selectedColumns[0]).toContain("person:voice_actors(*)");
   });
 
+  it("projects podcast detail projects while retaining cast, studio, and crew data", async () => {
+    const rows = [
+      {
+        id: 17,
+        language: "fr-FR",
+        studio_data: { id: 3, name: "Studio", logo_url: "https://example.com/logo.png" },
+        works: [
+          {
+            id: 12,
+            actor_id: 44,
+            character_name: "Character",
+            performance: "Role",
+            note: "Note",
+            voice_actor: {
+              id: 5,
+              firstname: "Voice",
+              lastname: "Actor",
+              profile_picture: "https://example.com/actor.png",
+            },
+          },
+        ],
+        crew: [
+          {
+            id: 20,
+            job: { name: "Director" },
+            person: { id: 5, firstname: "Voice", lastname: "Actor" },
+          },
+        ],
+      },
+    ];
+    queryMocks.useSupabaseAdmin.mockReturnValue(createSupabaseMock(rows));
+
+    const projects = await getDubbingProjectsForMediaEndpoint(1, "podcast", "podcast-page");
+
+    expect(queryMocks.selectedColumns[0]).not.toContain("*");
+    expect(queryMocks.selectedColumns[0]).toContain("studio_data:studios");
+    expect(queryMocks.selectedColumns[0]).toContain("crew:dubbing_project_crew");
+    expect(queryMocks.selectedColumns[0]).toContain("voice_actor:voice_actors");
+    expect(projects).toMatchObject(rows);
+  });
+
   it("preserves the complete public payload when no page projection is requested", async () => {
     const rows = [
       {
