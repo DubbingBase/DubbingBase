@@ -20,9 +20,13 @@ export default defineEventHandler(async (event) => {
         ? Math.max(requestedOffset, 0)
         : 0;
 
+      const columns =
+        query.view === "directory"
+          ? "id,name,city,country,logo_url"
+          : "*";
       let studiosQuery = supabase
         .from("studios")
-        .select("*", { count: hasPagination ? "exact" : undefined });
+        .select(columns, { count: hasPagination ? "exact" : undefined });
 
       if (search) {
         const escapedSearch = search.replace(/[%_,()]/g, " ");
