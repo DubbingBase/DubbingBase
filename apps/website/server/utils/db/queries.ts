@@ -163,6 +163,38 @@ export async function getToyPageDubbingProjects(contentId: number): Promise<ToyD
   }));
 }
 
+const GAME_PAGE_DUBBING_PROJECTS_SELECT = `id,
+  language,
+  studio_data:studios(id, name, logo_url),
+  works:work(
+    id,
+    actor_id,
+    character_id,
+    character_name,
+    voice_actor:voice_actors(id, firstname, lastname, profile_picture)
+  )`;
+
+export async function getGamePageDubbingProjects(contentId: number) {
+  const supabase = useSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("dubbing_projects")
+    .select(GAME_PAGE_DUBBING_PROJECTS_SELECT)
+    .eq("content_id", contentId)
+    .eq("content_type", "video_game");
+
+  if (error) return [];
+
+  return (data || []).map((project) => ({
+    ...project,
+    works: (project.works || []).map((work) => ({
+      ...work,
+      voice_actor: processVoiceActor(work.voice_actor),
+    })),
+    studio_data: project.studio_data || null,
+    crew: [],
+  }));
+}
+
 const SEASON_PAGE_DUBBING_PROJECTS_SELECT = `id,
   language,
   studio_data:studios(id, name, logo_url),
