@@ -495,6 +495,51 @@ export type Database = {
         };
         Relationships: [];
       };
+      user_voice_actor_link_requests: {
+        Row: {
+          actor_id: string;
+          audit_log_id: string | null;
+          completed_at: string | null;
+          created_at: string;
+          expected_link_id: string | null;
+          operation: string;
+          payload_fingerprint: string;
+          request_id: string;
+          result_changed: boolean | null;
+          result_link_id: string | null;
+          target_user_id: string;
+          voice_actor_id: number;
+        };
+        Insert: {
+          actor_id: string;
+          audit_log_id?: string | null;
+          completed_at?: string | null;
+          created_at?: string;
+          expected_link_id?: string | null;
+          operation: string;
+          payload_fingerprint: string;
+          request_id: string;
+          result_changed?: boolean | null;
+          result_link_id?: string | null;
+          target_user_id: string;
+          voice_actor_id: number;
+        };
+        Update: {
+          actor_id?: string;
+          audit_log_id?: string | null;
+          completed_at?: string | null;
+          created_at?: string;
+          expected_link_id?: string | null;
+          operation?: string;
+          payload_fingerprint?: string;
+          request_id?: string;
+          result_changed?: boolean | null;
+          result_link_id?: string | null;
+          target_user_id?: string;
+          voice_actor_id?: number;
+        };
+        Relationships: [];
+      };
       user_voice_actor_links: {
         Row: {
           created_at: string | null;
@@ -745,6 +790,20 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      admin_link_user_voice_actor_controlled: {
+        Args: {
+          p_actor_id: string;
+          p_request_id: string;
+          p_user_id: string;
+          p_voice_actor_id: number;
+        };
+        Returns: {
+          audit_log_id: string;
+          created: boolean;
+          link_id: string;
+          replayed: boolean;
+        }[];
+      };
       apply_extracted_credits: {
         Args: {
           p_content_id: number;
@@ -943,6 +1002,20 @@ export type Database = {
       delete_media_queue_item_without_scan: {
         Args: { p_id: number; p_queue_name?: string };
         Returns: boolean;
+      };
+      delete_user_voice_actor_link_controlled: {
+        Args: {
+          p_actor_id: string;
+          p_expected_link_id: string;
+          p_request_id: string;
+          p_user_id: string;
+          p_voice_actor_id: number;
+        };
+        Returns: {
+          audit_log_id: string;
+          deleted: boolean;
+          replayed: boolean;
+        }[];
       };
       delete_voice_actor_work_link: {
         Args: {

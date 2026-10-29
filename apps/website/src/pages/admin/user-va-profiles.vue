@@ -430,6 +430,11 @@ const usersFetched = ref(false);
 const voiceActorResults = ref<VoiceActor[]>([]);
 const voiceActorSearching = ref(false);
 const linking = ref(false);
+const pendingLinkRequest = ref<{
+  requestId: string;
+  userId: string;
+  voiceActorId: number;
+} | null>(null);
 
 const existingLinks = ref<any[]>([]);
 const linksLoading = ref(false);
@@ -582,15 +587,33 @@ const clearVoiceActorSelection = () => {
 const linkUserVoiceActor = async () => {
   if (!selectedUser.value || !selectedVoiceActor.value) return;
 
+  const userId = selectedUser.value.id;
+  const voiceActorId = selectedVoiceActor.value.id;
+  let request = pendingLinkRequest.value;
+  if (
+    !request ||
+    request.userId !== userId ||
+    request.voiceActorId !== voiceActorId
+  ) {
+    request = {
+      requestId: crypto.randomUUID(),
+      userId,
+      voiceActorId,
+    };
+    pendingLinkRequest.value = request;
+  }
+
   linking.value = true;
   try {
     await $fetch("/api/link-user-voice-actor", {
       method: "POST",
       body: {
-        user_id: selectedUser.value.id,
-        voice_actor_id: selectedVoiceActor.value.id,
+        request_id: request.requestId,
+        user_id: userId,
+        voice_actor_id: voiceActorId,
       },
     });
+    pendingLinkRequest.value = null;
 
     showToast(
       "User account successfully linked to voice actor profile",
