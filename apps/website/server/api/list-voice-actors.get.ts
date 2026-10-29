@@ -9,8 +9,9 @@ type VoiceActorDirectoryRow = Pick<
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
-  const searchQuery = query.query as string | undefined;
+  const searchQuery = typeof query.query === "string" ? query.query : undefined;
   const directoryView = query.view === "directory";
+  const spreadsheetView = query.view === "spreadsheet";
   const requestedLimit = Number.parseInt(String(query.limit), 10);
   const requestedOffset = Number.parseInt(String(query.offset), 10);
   const limit = Number.isFinite(requestedLimit) ? Math.min(Math.max(requestedLimit, 1), 100) : 100;
@@ -53,7 +54,10 @@ export default defineEventHandler(async (event) => {
       };
     }
 
-    let queryBuilder = supabaseAdmin.from("voice_actors").select("*", { count: "exact" });
+    const columns = spreadsheetView
+      ? "id,firstname,lastname,bio,nationality,date_of_birth,profile_picture,social_media_links,tmdb_id,wikidata_id,updated_at"
+      : "*";
+    let queryBuilder = supabaseAdmin.from("voice_actors").select(columns, { count: "exact" });
 
     if (searchQuery && searchQuery.trim()) {
       const search = searchQuery.trim();
