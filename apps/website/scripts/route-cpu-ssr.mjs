@@ -241,12 +241,12 @@ function topUniqueApplicationCpuConsumers(frames, totalSampledMicros) {
     const current = byFunction.get(key);
     if (current) {
       current.sampledMicros += frame.sampledMicros;
-      if (frame.sampledMicros > current.hottestLineMicros) {
+      if (frame.sampledMicros > current.mostSampledLocationMicros) {
         current.source = frame.source;
-        current.hottestLineMicros = frame.sampledMicros;
+        current.mostSampledLocationMicros = frame.sampledMicros;
       }
     } else {
-      byFunction.set(key, { ...frame, hottestLineMicros: frame.sampledMicros });
+      byFunction.set(key, { ...frame, mostSampledLocationMicros: frame.sampledMicros });
     }
   }
 
@@ -309,7 +309,7 @@ async function cpuProfileSummary(profile, profileWebsiteDir) {
         original?.source && original.line
           ? `${relative(profileWebsiteDir, resolve(dirname(frame.filePath), original.source)).replaceAll("\\", "/")}:${original.line}`
           : `${frame.generatedSource}:${frame.line}`;
-      return { ...frame, functionName: original?.name || frame.functionName, source };
+      return { ...frame, source };
     }),
   );
 
