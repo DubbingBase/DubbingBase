@@ -20,12 +20,13 @@ export type StudioDetailsResponse = {
 
 export async function fetchStudioDetails(
   studioId: string | number,
+  projection?: "studio-page",
 ): Promise<StudioDetailsResponse | null> {
   try {
     const data = await $fetch<StudioDetailsResponse>(
       "/api/get-studio-details",
       {
-        params: { studioId },
+        params: { studioId, ...(projection ? { projection } : {}) },
       },
     );
     return data;

@@ -538,7 +538,7 @@ const localePath = useLocalePath();
 const cacheKey = `game-${gameId}-${locale.value}`;
 const { data, pending, refresh } = useAsyncData(
   cacheKey,
-  () => fetchGameData(gameId, locale.value),
+  () => fetchGameData(gameId, locale.value, "media-page"),
   {
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },

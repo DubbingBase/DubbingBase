@@ -260,7 +260,7 @@ const currentUrl = computed(() => route.fullPath);
 // Instant Hydration Data Fetching
 const { data, pending } = await useAsyncData(
   `ad-${adId.value}-${locale.value}`,
-  () => fetchAdvertisementData(adId.value, locale.value),
+  () => fetchAdvertisementData(adId.value, locale.value, { projection: "advertisement-page" }),
   {
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
