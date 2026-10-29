@@ -1,6 +1,5 @@
--- Run on a disposable database after migrations through
--- 20261023120000_allow_controlled_voice_actor_merges.sql. The outer
--- transaction removes all fixtures and temporary failure constraints.
+-- Run on a disposable database after all migrations. The outer transaction
+-- removes all fixtures and temporary failure constraints.
 \set ON_ERROR_STOP on
 BEGIN;
 SET LOCAL statement_timeout = '30s';
@@ -542,8 +541,19 @@ DECLARE
   v_voice_merge_remove_work_id BIGINT := current_setting('test.voice_actor_merge_remove_work_id')::BIGINT;
   v_merge_result JSONB;
 BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_catalog.pg_proc AS proc
+    WHERE proc.oid = 'public.merge_work_duplicates_atomic(bigint,bigint[],jsonb,uuid)'::REGPROCEDURE
+      AND proc.prosecdef
+      AND pg_catalog.pg_get_userbyid(proc.proowner) = 'postgres'
+  ) THEN
+    RAISE EXCEPTION 'duplicate work merge must run through its postgres-owned audited path';
+  END IF;
+
   -- Existing admin duplicate-work consolidation remains available for
-  -- voice-actor assignments and keeps its full pre-merge audit snapshot.
+  -- voice-actor assignments and keeps its full pre-merge audit snapshot. Its
+  -- SECURITY DEFINER mode is installed before the review-status guard, so the
+  -- guard sees postgres for this audited RPC.
   v_merge_result := public.merge_work_duplicates_atomic(
     v_work_id, ARRAY[v_work_id, v_duplicate_work_id]::BIGINT[], '{}'::JSONB, v_admin
   );

@@ -321,30 +321,51 @@ SET reverted_at = clock_timestamp()
 WHERE id = current_setting('test.metadata_audit_id')::UUID;
 RESET ROLE;
 
--- Editing existing profiles must remain possible after removing INSERT access.
+-- Existing profiles remain editable through the controlled update operation.
 SET LOCAL ROLE authenticated;
 DO $$
-DECLARE
-  updated_count INTEGER;
 BEGIN
   PERFORM set_config('request.jwt.claims', jsonb_build_object(
     'sub', current_setting('test.metadata_admin_id'),
     'role', 'authenticated',
     'app_metadata', jsonb_build_object('role', 'admin')
   )::TEXT, TRUE);
-  UPDATE public.voice_actors SET bio = 'Updated existing profile'
-  WHERE id::TEXT = (
-    SELECT entity_id FROM public.audit_logs
-    WHERE id = current_setting('test.metadata_voice_audit_id')::UUID
-  );
-  GET DIAGNOSTICS updated_count = ROW_COUNT;
-  IF updated_count <> 1 THEN
-    RAISE EXCEPTION 'authenticated administrator could not update an existing profile';
-  END IF;
+  BEGIN
+    UPDATE public.voice_actors SET bio = 'Direct browser update';
+    RAISE EXCEPTION 'authenticated administrator updated a profile directly';
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
 END;
 $$;
 RESET ROLE;
 SELECT set_config('request.jwt.claims', '{}', TRUE);
+SELECT set_config('test.fail_metadata_audit_actor', '', TRUE);
+
+SET LOCAL ROLE service_role;
+DO $$
+DECLARE
+  voice_actor_id BIGINT;
+  version TIMESTAMPTZ;
+  result JSONB;
+BEGIN
+  SELECT entity_id::BIGINT INTO voice_actor_id
+  FROM public.audit_logs WHERE id = current_setting('test.metadata_voice_audit_id')::UUID;
+  SELECT updated_at INTO version FROM public.voice_actors WHERE id = voice_actor_id;
+  result := public.controlled_update_voice_actor(
+    current_setting('test.metadata_admin_id')::UUID,
+    voice_actor_id,
+    '{"bio":"Updated existing profile"}'::JSONB,
+    version,
+    gen_random_uuid()
+  );
+  IF result -> 'record' ->> 'bio' IS DISTINCT FROM 'Updated existing profile'
+     OR result ->> 'audit_log_id' IS NULL THEN
+    RAISE EXCEPTION 'controlled update after metadata creation failed or lacked audit';
+  END IF;
+END;
+$$;
+RESET ROLE;
 
 CREATE ROLE controlled_metadata_audit_attacker NOLOGIN;
 GRANT controlled_metadata_audit_attacker TO postgres;

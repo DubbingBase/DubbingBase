@@ -674,7 +674,7 @@ export type Database = {
           source_id: number | null;
           status: string | null;
           suggestions: string | null;
-          updated_at: string | null;
+          updated_at: string;
           updated_by: string | null;
           voice_actor_id: number | null;
         };
@@ -693,7 +693,7 @@ export type Database = {
           source_id?: number | null;
           status?: string | null;
           suggestions?: string | null;
-          updated_at?: string | null;
+          updated_at?: string;
           updated_by?: string | null;
           voice_actor_id?: number | null;
         };
@@ -712,7 +712,7 @@ export type Database = {
           source_id?: number | null;
           status?: string | null;
           suggestions?: string | null;
-          updated_at?: string | null;
+          updated_at?: string;
           updated_by?: string | null;
           voice_actor_id?: number | null;
         };
@@ -1356,6 +1356,20 @@ export type Database = {
         };
         Returns: {
           audit_log_id: string;
+          replayed: boolean;
+          work_id: number;
+        }[];
+      };
+      update_work_review_status_controlled: {
+        Args: {
+          p_actor_id: string;
+          p_expected_updated_at: string;
+          p_request_id: string | null;
+          p_reviewed_status: string;
+          p_work_id: number;
+        };
+        Returns: {
+          audit_log_id: string | null;
           replayed: boolean;
           work_id: number;
         }[];

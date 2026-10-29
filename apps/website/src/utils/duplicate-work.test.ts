@@ -25,7 +25,7 @@ const work = (id: number, overrides: Partial<DuplicateWorkEntry> = {}): Duplicat
   suggestions: null,
   created_at: null,
   created_by: null,
-  updated_at: null,
+  updated_at: "2026-09-01T00:00:00Z",
   updated_by: null,
   voteCount: 0,
   upVotes: 0,

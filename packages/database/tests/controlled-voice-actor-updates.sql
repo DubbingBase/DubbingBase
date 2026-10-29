@@ -13,6 +13,10 @@ INSERT INTO public.voice_actors (firstname, lastname, bio)
 VALUES ('Controlled', 'Voice Actor', 'Before')
 RETURNING id AS voice_actor_id \gset
 
+INSERT INTO public.voice_actors (firstname, lastname)
+VALUES ('Picture', 'Compatibility')
+RETURNING id AS picture_voice_actor_id \gset
+
 INSERT INTO public.user_voice_actor_links (user_id, voice_actor_id)
 VALUES ('00000000-0000-0000-0000-000000563656', :voice_actor_id);
 
@@ -48,6 +52,33 @@ CREATE TRIGGER reject_voice_actor_update
 
 DO $$
 BEGIN
+  IF has_table_privilege('anon', 'public.voice_actors', 'INSERT')
+     OR has_table_privilege('anon', 'public.voice_actors', 'UPDATE')
+     OR has_table_privilege('anon', 'public.voice_actors', 'DELETE')
+     OR has_table_privilege('anon', 'public.voice_actors', 'TRUNCATE')
+     OR has_table_privilege('anon', 'public.voice_actors', 'REFERENCES')
+     OR has_table_privilege('anon', 'public.voice_actors', 'TRIGGER')
+     OR has_table_privilege('authenticated', 'public.voice_actors', 'INSERT')
+     OR has_table_privilege('authenticated', 'public.voice_actors', 'UPDATE')
+     OR has_table_privilege('authenticated', 'public.voice_actors', 'DELETE')
+     OR has_table_privilege('authenticated', 'public.voice_actors', 'TRUNCATE')
+     OR has_table_privilege('authenticated', 'public.voice_actors', 'REFERENCES')
+     OR has_table_privilege('authenticated', 'public.voice_actors', 'TRIGGER')
+     OR NOT has_table_privilege('anon', 'public.voice_actors', 'SELECT')
+     OR NOT has_table_privilege('authenticated', 'public.voice_actors', 'SELECT')
+     OR NOT has_table_privilege('service_role', 'public.voice_actors', 'UPDATE') THEN
+    RAISE EXCEPTION 'voice actor browser write or service-role grants are incorrect';
+  END IF;
+  IF has_sequence_privilege('anon', 'public.voice_actors_id_seq', 'USAGE')
+     OR has_sequence_privilege('anon', 'public.voice_actors_id_seq', 'SELECT')
+     OR has_sequence_privilege('anon', 'public.voice_actors_id_seq', 'UPDATE')
+     OR has_sequence_privilege('authenticated', 'public.voice_actors_id_seq', 'USAGE')
+     OR has_sequence_privilege('authenticated', 'public.voice_actors_id_seq', 'SELECT')
+     OR has_sequence_privilege('authenticated', 'public.voice_actors_id_seq', 'UPDATE')
+     OR NOT has_sequence_privilege('service_role', 'public.voice_actors_id_seq', 'USAGE')
+     OR NOT has_sequence_privilege('service_role', 'public.voice_actors_id_seq', 'UPDATE') THEN
+    RAISE EXCEPTION 'voice actor browser or service-role sequence grants are incorrect';
+  END IF;
   IF has_function_privilege('anon', 'public.controlled_update_voice_actor(uuid,bigint,jsonb,timestamptz,uuid)', 'EXECUTE')
      OR has_function_privilege('authenticated', 'public.controlled_update_voice_actor(uuid,bigint,jsonb,timestamptz,uuid)', 'EXECUTE')
      OR NOT has_function_privilege('service_role', 'public.controlled_update_voice_actor(uuid,bigint,jsonb,timestamptz,uuid)', 'EXECUTE') THEN
@@ -62,10 +93,17 @@ END;
 $$;
 
 SELECT set_config('test.voice_actor_id', :'voice_actor_id', TRUE);
+SELECT set_config('test.picture_voice_actor_id', :'picture_voice_actor_id', TRUE);
 
 SET LOCAL ROLE anon;
 DO $$
 BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public.voice_actors WHERE id = current_setting('test.voice_actor_id')::BIGINT
+  ) THEN
+    RAISE EXCEPTION 'anonymous users lost public profile read access';
+  END IF;
+
   BEGIN
     PERFORM public.controlled_update_voice_actor(
       '00000000-0000-0000-0000-000000563656',
@@ -82,8 +120,43 @@ $$;
 RESET ROLE;
 
 SET LOCAL ROLE authenticated;
+SELECT set_config(
+  'request.jwt.claims',
+  '{"sub":"00000000-0000-0000-0000-000000563655","role":"authenticated","app_metadata":{"role":"admin"}}',
+  TRUE
+);
 DO $$
 BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public.voice_actors WHERE id = current_setting('test.voice_actor_id')::BIGINT
+  ) THEN
+    RAISE EXCEPTION 'authenticated users lost public profile read access';
+  END IF;
+
+  BEGIN
+    UPDATE public.voice_actors SET bio = 'Direct bypass'
+    WHERE id = current_setting('test.voice_actor_id')::BIGINT;
+    RAISE EXCEPTION 'authenticated admin performed a direct update';
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
+  BEGIN
+    INSERT INTO public.voice_actors (firstname, lastname) VALUES ('Direct', 'Insert');
+    RAISE EXCEPTION 'authenticated admin performed a direct insert';
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
+  BEGIN
+    DELETE FROM public.voice_actors WHERE id = current_setting('test.voice_actor_id')::BIGINT;
+    RAISE EXCEPTION 'authenticated admin performed a direct delete';
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
+  IF (SELECT bio FROM public.voice_actors WHERE id = current_setting('test.voice_actor_id')::BIGINT)
+       IS DISTINCT FROM 'Before' THEN
+    RAISE EXCEPTION 'a denied direct write changed the persisted profile';
+  END IF;
+
   BEGIN
     PERFORM public.controlled_update_voice_actor(
       '00000000-0000-0000-0000-000000563656',
@@ -100,6 +173,21 @@ $$;
 RESET ROLE;
 
 SET LOCAL ROLE service_role;
+DO $$
+BEGIN
+  UPDATE public.voice_actors
+  SET profile_picture = 'test/picture.png'
+  WHERE id = current_setting('test.picture_voice_actor_id')::BIGINT;
+  IF NOT FOUND OR NOT EXISTS (
+    SELECT 1 FROM public.voice_actors
+    WHERE id = current_setting('test.picture_voice_actor_id')::BIGINT
+      AND profile_picture = 'test/picture.png'
+  ) THEN
+    RAISE EXCEPTION 'service-role picture upload compatibility was broken';
+  END IF;
+END;
+$$;
+
 DO $$
 DECLARE
   voice_actor_id BIGINT := current_setting('test.voice_actor_id')::BIGINT;
