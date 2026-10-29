@@ -4,6 +4,8 @@ import { setPublicCacheHeaders } from "../../utils/cache/http";
 import { resolveLocaleLanguage } from "@app/shared-logic";
 
 function isTrendingMovie(value: unknown): value is {
+  id: number;
+  title?: string;
   adult?: boolean;
   backdrop_path?: string | null;
   poster_path?: string | null;
@@ -13,11 +15,13 @@ function isTrendingMovie(value: unknown): value is {
   }
   const id = Reflect.get(value, "id");
   const adult = Reflect.get(value, "adult");
+  const title = Reflect.get(value, "title");
   const backdropPath = Reflect.get(value, "backdrop_path");
   const posterPath = Reflect.get(value, "poster_path");
   return (
     typeof id === "number" &&
     Number.isFinite(id) &&
+    (title === undefined || typeof title === "string") &&
     (adult === undefined || typeof adult === "boolean") &&
     (backdropPath === undefined ||
       backdropPath === null ||
@@ -57,11 +61,19 @@ export default defineEventHandler(async (event) => {
     ...json,
     results: json.results
       .filter((movie) => movie.adult !== true)
-      .map((result) => ({
-        ...result,
-        backdrop_path: buildTmdbImageUrl(result.backdrop_path, "w780"),
-        poster_path: buildTmdbImageUrl(result.poster_path, "w342"),
-      })),
+      .map((result) => {
+        const posterPath = buildTmdbImageUrl(result.poster_path, "w342");
+
+        if (query.projection === "card") {
+          return { id: result.id, title: result.title, poster_path: posterPath };
+        }
+
+        return {
+          ...result,
+          backdrop_path: buildTmdbImageUrl(result.backdrop_path, "w780"),
+          poster_path: posterPath,
+        };
+      }),
   };
 
   setPublicCacheHeaders(event, "discovery");

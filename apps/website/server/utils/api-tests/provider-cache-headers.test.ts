@@ -128,6 +128,59 @@ describe("provider-only endpoint response caching", () => {
     },
   );
 
+  it("projects movie card fields only when requested", async () => {
+    routeMocks.getTrending.mockResolvedValue({
+      page: 1,
+      total_pages: 1,
+      total_results: 1,
+      results: [
+        {
+          id: 1,
+          title: "Fixture movie",
+          adult: false,
+          poster_path: "/poster.jpg",
+          backdrop_path: "/backdrop.jpg",
+          overview: "Full movie overview",
+        },
+      ],
+    });
+
+    const fullResponse = await request(
+      trendingMoviesHandler,
+      "/?lang=fr-FR",
+    );
+    const projectedResponse = await request(
+      trendingMoviesHandler,
+      "/?lang=fr-FR&projection=card",
+    );
+
+    await expect(fullResponse.json()).resolves.toMatchObject({
+      results: [
+        {
+          id: 1,
+          title: "Fixture movie",
+          overview: "Full movie overview",
+          poster_path: "https://image.tmdb.org/t/p/w342/poster.jpg",
+          backdrop_path: "https://image.tmdb.org/t/p/w780/backdrop.jpg",
+        },
+      ],
+    });
+    const projected = await projectedResponse.json();
+    expect(projected).toMatchObject({
+      page: 1,
+      total_pages: 1,
+      total_results: 1,
+    });
+    expect(projected.results).toEqual([
+      {
+        id: 1,
+        title: "Fixture movie",
+        poster_path: "https://image.tmdb.org/t/p/w342/poster.jpg",
+      },
+    ]);
+    expectPublic(projectedResponse, "discovery");
+  });
+
   it.each(["movies", "shows"])(
     "keeps malformed trending %s fallback no-store",
     async (name) => {

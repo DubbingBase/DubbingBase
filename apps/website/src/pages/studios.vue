@@ -149,6 +149,7 @@ const {
         limit: pageSize,
         offset: (page.value - 1) * pageSize,
         query: debouncedSearch.value.trim() || undefined,
+        view: "directory",
       },
     }),
   {
