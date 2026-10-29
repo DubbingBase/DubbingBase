@@ -337,11 +337,7 @@
                       </div>
                       <div
                         class="font-bold text-sm theme-text truncate block w-full"
-                        :title="
-                          actor.roleLabels.join(', ') ||
-                          actor.workCharacterName ||
-                          ''
-                        "
+                        :title="actor.roleLabels.join(', ') || actor.workCharacterName || ''"
                       >
                         {{
                           actor.roleLabels.join(", ") ||
@@ -716,9 +712,7 @@ const castItems = computed<ShowDisplayCastActor[]>(() => {
     return {
       ...actor,
       actorLinkPath: actor.actorId ? localePath(`/actor/${actor.actorId}`) : undefined,
-      voiceActorLinkPath: actor.voiceActor
-        ? localePath(`/voice-actor/${actor.voiceActor.id}`)
-        : "",
+      voiceActorLinkPath: actor.voiceActor ? localePath(`/voice-actor/${actor.voiceActor.id}`) : "",
       roleLabels: roles.map((role) =>
         role.episode_count ? `${role.character} (${role.episode_count} eps)` : role.character,
       ),
@@ -899,10 +893,11 @@ useHead({
                   characterName: actor.character,
                 })),
               });
-              return json
-                .replace(/</g, "\\u003c")
-                .replace(/>/g, "\\u003e")
-                .replace(/&/g, "\\u0026");
+              return json.replace(/[<>&]/g, (character) => {
+                if (character === "<") return "\\u003c";
+                if (character === ">") return "\\u003e";
+                return "\\u0026";
+              });
             }),
           },
         ]

@@ -808,7 +808,11 @@ useHead({
             characterName: actor.character,
           })),
         });
-        return json.replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026");
+        return json.replace(/[<>&]/g, (character) => {
+          if (character === "<") return "\\u003c";
+          if (character === ">") return "\\u003e";
+          return "\\u0026";
+        });
       }),
     },
   ],

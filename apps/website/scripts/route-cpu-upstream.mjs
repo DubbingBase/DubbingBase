@@ -12,6 +12,8 @@ const sizes =
         actorRoles: 24,
         voiceActorWorks: 24,
         uniqueMedia: 12,
+      audiobookProjects: 2,
+      audiobookWorks: 12,
       }
     : {
         mediaCredits: 1200,
@@ -20,6 +22,8 @@ const sizes =
         actorRoles: 500,
         voiceActorWorks: 500,
         uniqueMedia: 100,
+      audiobookProjects: 20,
+      audiobookWorks: 48,
       };
 
 function makeCast(count, mediaType = "movie") {
@@ -135,6 +139,26 @@ const voiceActor = {
   })),
 };
 
+const audiobookProjects = Array.from({ length: sizes.audiobookProjects }, (_, projectIndex) => ({
+  id: 30_100 + projectIndex,
+  language: projectIndex % 2 === 0 ? "fr-FR" : "en-US",
+  studio_data: { id: 40_100 + projectIndex, name: `CI audiobook studio ${projectIndex}`, logo_url: null },
+  works: Array.from({ length: sizes.audiobookWorks }, (_, workIndex) => ({
+    id: 50_000 + projectIndex * sizes.audiobookWorks + workIndex,
+    actor_id: 60_000 + workIndex,
+    character_name: `CI audiobook character ${projectIndex}-${workIndex}`,
+    performance: `CI audiobook performance ${workIndex}`,
+    note: null,
+    voice_actor: {
+      id: 70_000 + workIndex,
+      firstname: `CI audiobook voice ${workIndex}`,
+      lastname: "Actor",
+      profile_picture: null,
+      voice_actor_name: null,
+    },
+  })),
+}));
+
 const encodedResponses = new Map();
 function addJsonResponse(key, value) {
   encodedResponses.set(key, JSON.stringify(value));
@@ -151,6 +175,12 @@ addJsonResponse("tmdb:/3/person/12001", {
   movie_credits: { cast: makeCast(20, "movie") },
   tv_credits: { cast: makeCast(20, "tv") },
 });
+addJsonResponse("openlibrary:/works/OL31W.json", {
+  title: "CI fixture audiobook 31",
+  description: "Deterministic local route CPU fixture.",
+  covers: [31],
+  first_publish_date: "2020",
+});
 
 for (let index = 0; index < sizes.uniqueMedia; index += 1) {
   const mediaType = index % 2 === 0 ? "movie" : "tv";
@@ -158,13 +188,18 @@ for (let index = 0; index < sizes.uniqueMedia; index += 1) {
   addJsonResponse(`tmdb:/3/${mediaType}/${mediaId}`, makeMedia(mediaId, mediaType));
 }
 
-const supabaseResponse = (path) => {
-  const table = path.replace(/^\/rest\/v1\//, "").split("?")[0];
+const supabaseResponse = (url) => {
+  const table = url.pathname.replace(/^\/rest\/v1\//, "");
   if (table === "voice_actors") {
     return { value: voiceActor, single: true };
   }
   if (table === "work") return { value: actorRoles, single: false };
-  if (table === "dubbing_projects") return { value: dubbingProjects, single: false };
+  if (table === "dubbing_projects") {
+    const audiobook =
+      url.searchParams.get("content_id") === "eq.31" &&
+      url.searchParams.get("content_type") === "eq.audiobook";
+    return { value: audiobook ? audiobookProjects : dubbingProjects, single: false };
+  }
   throw new Error(`Unexpected mocked Supabase table: ${table}`);
 };
 
@@ -181,7 +216,7 @@ globalThis.fetch = async (input, init = {}) => {
     body = encodedResponses.get(key);
     if (body === undefined) throw new Error(`Unexpected mocked TMDB request: ${url.pathname}`);
   } else if (url.hostname === "mock.supabase.co") {
-    const response = supabaseResponse(url.pathname);
+    const response = supabaseResponse(url);
     key = `supabase:${url.pathname.split("/").at(-1)}`;
     const inputHeaders = input instanceof Request ? input.headers : undefined;
     const acceptsSingle = new Headers(init.headers ?? inputHeaders)
@@ -196,6 +231,10 @@ globalThis.fetch = async (input, init = {}) => {
         : url.pathname === "/v4/search"
           ? JSON.stringify({ data: [] })
           : JSON.stringify({ data: { characters: [] } });
+  } else if (url.hostname === "openlibrary.org") {
+    key = `openlibrary:${url.pathname}`;
+    body = encodedResponses.get(key);
+    if (body === undefined) throw new Error(`Unexpected mocked Open Library request: ${url.pathname}`);
   } else {
     throw new Error(`Blocked unexpected outbound request: ${url.origin}${url.pathname}`);
   }
