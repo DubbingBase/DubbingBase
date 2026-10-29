@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import {
   DUBBING_LANGUAGE_OPTIONS,
+  displayDubbingLanguage,
   isDubbingLanguage,
   validateDubbingLanguage,
 } from "@app/shared-logic";
@@ -43,6 +44,21 @@ describe("dubbing language validation", () => {
       (match) => match[1],
     );
     expect(sqlLanguages).toEqual([...DUBBING_LANGUAGE_OPTIONS]);
+  });
+});
+
+describe("displayDubbingLanguage", () => {
+  it("keeps displaying names in the requested locale", () => {
+    expect(displayDubbingLanguage("fr-FR", "en")).toBe("French (France)");
+    expect(displayDubbingLanguage("fr-FR", "fr")).toBe("Français (France)");
+  });
+
+  it("returns the language code when the locale is invalid", () => {
+    expect(displayDubbingLanguage("fr-FR", "en_US")).toBe("fr-FR");
+  });
+
+  it("preserves the existing capitalization fallback for unknown language codes", () => {
+    expect(displayDubbingLanguage("zz-ZZ", "en")).toBe("Zz (Unknown Region)");
   });
 });
 
