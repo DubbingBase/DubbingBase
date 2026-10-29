@@ -466,7 +466,7 @@ const {
   "admin-user-va-links",
   async () => {
     // Fetch users
-    const userData = await $fetch<{ users: any[] }>("/api/list_users");
+    const userData = await $fetch<{ users: User[] }>("/api/list_users?projection=admin-list");
     const users = userData?.users || [];
 
     // Fetch existing links

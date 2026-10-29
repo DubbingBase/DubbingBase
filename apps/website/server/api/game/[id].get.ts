@@ -1,14 +1,12 @@
 import { useIgdbClient } from "../../utils";
 import { buildIgdbImageUrl } from "../../utils/api/igdb";
-import { getDubbingProjects } from "../../utils/db/queries";
+import { getDubbingProjects, getGamePageDubbingProjects } from "../../utils/db/queries";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 import { scheduleBackgroundTask } from "../../utils/background";
 import type { IgdbGame, IgdbCharacter } from "@app/shared-logic";
 
-function processIgdbGame(
-  game: IgdbGame,
-): IgdbGame & { media_type: "video_game" } {
+function processIgdbGame(game: IgdbGame): IgdbGame & { media_type: "video_game" } {
   return {
     ...game,
     media_type: "video_game",
@@ -78,7 +76,10 @@ export default defineEventHandler(async (event) => {
   const metadata = { game, characters };
 
   // Lazy enqueue if not yet processed - Gated by PostHog 'enqueue-on-navigate' (server-side)
-  const dubbingProjects = await getDubbingProjects(gameId, "video_game");
+  const dubbingProjects =
+    getQuery(event).projection === "media-page"
+      ? await getGamePageDubbingProjects(gameId)
+      : await getDubbingProjects(gameId, "video_game");
   const isProcessed = dubbingProjects.length > 0;
   if (!isProcessed) {
     scheduleBackgroundTask(
