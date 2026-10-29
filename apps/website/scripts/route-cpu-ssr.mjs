@@ -45,6 +45,12 @@ const routes = [
     marker: "CI fixture voice actor",
     expected: ["tmdb:/3/person/12001", "supabase:voice_actors"],
   },
+  {
+    name: "audiobook",
+    path: "/fr/audiobook/31",
+    marker: "CI fixture audiobook 31",
+    expected: ["openlibrary:/works/OL31W.json", "supabase:dubbing_projects"],
+  },
 ];
 
 const profilePlugin = `
