@@ -53,6 +53,15 @@ describe("displayDubbingLanguage", () => {
     expect(displayDubbingLanguage("fr-FR", "fr")).toBe("Français (France)");
   });
 
+  it("preserves every supported language label", () => {
+    const displayNames = new Intl.DisplayNames(["en"], { type: "language" });
+    for (const code of DUBBING_LANGUAGE_OPTIONS) {
+      const name = displayNames.of(code);
+      const expected = name ? name.charAt(0).toUpperCase() + name.slice(1) : code;
+      expect(displayDubbingLanguage(code, "en")).toBe(expected);
+    }
+  });
+
   it("returns the language code when the locale is invalid", () => {
     expect(displayDubbingLanguage("fr-FR", "en_US")).toBe("fr-FR");
   });
