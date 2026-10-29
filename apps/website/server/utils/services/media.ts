@@ -150,13 +150,18 @@ function isTmdbCredit(value: unknown): value is TmdbCredit {
   );
 }
 
-function sanitizeMediaCastForProcessing(media: unknown): unknown {
+function sanitizeMediaCastForProcessing(
+  media: unknown,
+  relevantActorIds: ReadonlySet<number>,
+): unknown {
   if (!isRecord(media) || !isRecord(media.credits)) return media;
 
   const cast = Array.isArray(media.credits.cast)
     ? media.credits.cast.filter(
         (credit) =>
           isRecord(credit) &&
+          typeof credit.id === "number" &&
+          relevantActorIds.has(credit.id) &&
           (credit.character === undefined ||
             credit.character === null ||
             typeof credit.character === "string") &&
@@ -174,22 +179,14 @@ function tmdbCastCredits(value: unknown): TmdbCredit[] {
   return value.cast.filter(isTmdbCredit);
 }
 
-function indexTmdbCastByActorId(
-  media: unknown,
-  relevantActorIds: ReadonlySet<number>,
-): Map<number, TmdbCastMember> {
+function indexTmdbCastByActorId(media: unknown): Map<number, TmdbCastMember> {
   if (!isRecord(media) || !isRecord(media.credits) || !Array.isArray(media.credits.cast)) {
     return new Map();
   }
 
   const castByActorId = new Map<number, TmdbCastMember>();
   for (const value of media.credits.cast) {
-    if (
-      !isRecord(value) ||
-      typeof value.id !== "number" ||
-      !relevantActorIds.has(value.id) ||
-      castByActorId.has(value.id)
-    ) {
+    if (!isRecord(value) || typeof value.id !== "number" || castByActorId.has(value.id)) {
       continue;
     }
 
@@ -580,7 +577,7 @@ export class MediaService {
         return {
           key: `${contentType}:${contentId}`,
           data: {
-            media: processMedia(sanitizeMediaCastForProcessing(tmdbMedia)),
+            media: processMedia(sanitizeMediaCastForProcessing(tmdbMedia, relevantActorIds)),
             characterProfilePictures: new Array<CharacterProfilePicture>(),
             tvdbId: null,
           },
@@ -646,7 +643,7 @@ export class MediaService {
       const mediaKey = `${contentType}:${contentId}`;
       let castByActorId = castByMediaAndActorId.get(mediaKey);
       if (!castByActorId) {
-        castByActorId = indexTmdbCastByActorId(fullMedia, relevantActorIds);
+        castByActorId = indexTmdbCastByActorId(fullMedia);
         castByMediaAndActorId.set(mediaKey, castByActorId);
       }
 
