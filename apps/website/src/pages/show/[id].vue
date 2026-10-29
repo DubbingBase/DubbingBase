@@ -337,11 +337,7 @@
                       </div>
                       <div
                         class="font-bold text-sm theme-text truncate block w-full"
-                        :title="
-                          actor.roleLabels.join(', ') ||
-                          actor.workCharacterName ||
-                          ''
-                        "
+                        :title="actor.roleLabels.join(', ') || actor.workCharacterName || ''"
                       >
                         {{
                           actor.roleLabels.join(", ") ||
@@ -593,14 +589,23 @@ const isOriginalLanguage = computed(() => {
   return orig === dub || dub.startsWith(`${orig}-`) || orig.startsWith(`${dub}-`);
 });
 
+const displayLanguageCache = new Map<string, string>();
+
 const getDisplayLanguage = (langCode: string | undefined | null) => {
   if (!langCode) return t("details.notSpecified");
+  const cacheKey = `${locale.value}:${langCode}`;
+  const cachedName = displayLanguageCache.get(cacheKey);
+  if (cachedName) return cachedName;
   try {
     const name = languageDisplayNames.value?.of(langCode);
-    return typeof name === "string" && name.length > 0
-      ? name.charAt(0).toUpperCase() + name.slice(1)
-      : langCode;
+    const displayName =
+      typeof name === "string" && name.length > 0
+        ? name.charAt(0).toUpperCase() + name.slice(1)
+        : langCode;
+    displayLanguageCache.set(cacheKey, displayName);
+    return displayName;
   } catch {
+    displayLanguageCache.set(cacheKey, langCode);
     return langCode;
   }
 };
@@ -716,9 +721,7 @@ const castItems = computed<ShowDisplayCastActor[]>(() => {
     return {
       ...actor,
       actorLinkPath: actor.actorId ? localePath(`/actor/${actor.actorId}`) : undefined,
-      voiceActorLinkPath: actor.voiceActor
-        ? localePath(`/voice-actor/${actor.voiceActor.id}`)
-        : "",
+      voiceActorLinkPath: actor.voiceActor ? localePath(`/voice-actor/${actor.voiceActor.id}`) : "",
       roleLabels: roles.map((role) =>
         role.episode_count ? `${role.character} (${role.episode_count} eps)` : role.character,
       ),
