@@ -891,7 +891,7 @@ const executeSearch = async (actorId: number) => {
   searchLoading.value[actorId] = true;
   try {
     const data = await $fetch<VoiceActor[]>("/api/search-voice-actors", {
-      params: { query, limit: "10" },
+      params: { query, limit: "10", projection: "admin-search" },
     });
     searchResults.value[actorId] = data || [];
   } catch (err) {
@@ -911,7 +911,7 @@ const triggerVoiceActorSearch = (_source: string) => {
     }
     try {
       const data = await $fetch<VoiceActor[]>("/api/search-voice-actors", {
-        params: { query: q, limit: "10" },
+        params: { query: q, limit: "10", projection: "admin-search" },
       });
       manualVAOptions.value = data || [];
     } catch (err) {

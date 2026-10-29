@@ -285,7 +285,7 @@ const { page: castPage, setPage: setCastPage } = useUrlPagination("castPage");
 // Instant Hydration Data Fetching
 const { data, pending } = await useAsyncData(
   `podcast-${podcastId.value}-${locale.value}`,
-  () => fetchPodcastData(podcastId.value, locale.value),
+  () => fetchPodcastData(podcastId.value, locale.value, { projection: "podcast-page" }),
   {
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
