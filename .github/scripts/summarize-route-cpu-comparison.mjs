@@ -33,7 +33,7 @@ const headWorkloads = readWorkloads(headReport, "PR");
 
 function formatCpu(stats) {
   const format = (micros) => (micros / 1000).toFixed(1);
-  return `${format(stats.median)} ms (${format(stats.minimum)}–${format(stats.maximum)})`;
+  return `${format(stats.median)} (${format(stats.minimum)}–${format(stats.maximum)}) ms`;
 }
 
 function formatDelta(baseMicros, headMicros) {
@@ -53,21 +53,21 @@ function formatBytes(base, head) {
     base.median === head.median &&
     base.minimum === head.minimum &&
     base.maximum === head.maximum;
-  return same ? `${baseBytes} B (same)` : `${baseBytes} B → ${headBytes} B`;
+  return same ? `${baseBytes} B` : `${baseBytes} → ${headBytes} B`;
 }
 
 function formatFixture(route, fixture) {
   const format = (value) => formatInteger.format(value);
   if (route === "movie") {
-    return `${format(fixture.mediaCredits)} cast credits + ${format(fixture.dubbingProjects)} dubbing projects`;
+    return `${format(fixture.mediaCredits)} cast credits, ${format(fixture.dubbingProjects)} projects`;
   }
   if (route === "show") {
-    return `${format(fixture.mediaCredits)} aggregate credits + ${format(fixture.dubbingProjects)} dubbing projects`;
+    return `${format(fixture.mediaCredits)} cast/episode credits, ${format(fixture.dubbingProjects)} projects`;
   }
   if (route === "actor") {
-    return `${format(fixture.actorCredits)} TMDB credits + ${format(fixture.actorRoles)} voice roles`;
+    return `${format(fixture.actorCredits)} credits, ${format(fixture.actorRoles)} voice roles`;
   }
-  return `${format(fixture.voiceActorWorks)} works across ${format(fixture.uniqueVoiceActorMedia)} media titles`;
+  return `${format(fixture.voiceActorWorks)} works / ${format(fixture.uniqueVoiceActorMedia)} titles`;
 }
 
 function safeCell(value) {
@@ -90,6 +90,7 @@ function sameFixture(base, head, route, dataset) {
 
 const rows = [];
 const cpuComparisons = [];
+let unchangedHtmlComparisons = 0;
 for (const route of routeNames) {
   for (const dataset of datasets) {
     const base = getWorkload(baseWorkloads, route, dataset, "Base");
@@ -99,6 +100,13 @@ for (const route of routeNames) {
     const headCpu = head.cpuMicrosPerRequest.total;
     const fixture = formatFixture(route, head.fixture);
     cpuComparisons.push({ base: baseCpu, head: headCpu });
+    if (
+      base.htmlBytesPerRequest.median === head.htmlBytesPerRequest.median &&
+      base.htmlBytesPerRequest.minimum === head.htmlBytesPerRequest.minimum &&
+      base.htmlBytesPerRequest.maximum === head.htmlBytesPerRequest.maximum
+    ) {
+      unchangedHtmlComparisons += 1;
+    }
     rows.push(
       `| ${route} (${dataset}) | ${fixture} | ${formatCpu(baseCpu)} | ${formatCpu(headCpu)} | ${formatDelta(baseCpu.median, headCpu.median)} | ${formatBytes(base.htmlBytesPerRequest, head.htmlBytesPerRequest)} |`,
     );
@@ -111,6 +119,10 @@ const rangeSummary =
   overlappingRanges === cpuComparisons.length
     ? `The observed ranges overlap in all ${cpuComparisons.length} comparisons, so this run shows no clear CPU change.`
     : `The observed ranges overlap in ${overlappingRanges} of ${cpuComparisons.length} comparisons; min–max ranges are descriptive, not statistical confidence intervals.`;
+const htmlSummary =
+  unchangedHtmlComparisons === cpuComparisons.length
+    ? `HTML size is unchanged in all ${unchangedHtmlComparisons} comparisons.`
+    : `HTML size changed in ${cpuComparisons.length - unchangedHtmlComparisons} of ${cpuComparisons.length} comparisons.`;
 
 function frameArea(workload, frame) {
   const source = frame.source.replaceAll("\\", "/");
@@ -143,12 +155,12 @@ function formatFrames(workload) {
   if (frames.length === 0) {
     return "No other frames sampled after filtering identified devalue.flatten frames";
   }
-  return `${formatInteger.format(profile.relevantSampleCount)} server samples: ${frames
-    .slice(0, 3)
+  return frames
+    .slice(0, 2)
     .map(
-      (frame) => `${frameArea(workload, frame)} ${safeCell(frame.functionName)} ${frame.sampleSharePercent.toFixed(1)}%`,
+      (frame) => `${safeCell(frame.functionName)} (${frameArea(workload, frame)}, ${frame.sampleSharePercent.toFixed(1)}%)`,
     )
-    .join("; ")}`;
+    .join("; ");
 }
 
 const frameRows = [];
@@ -159,27 +171,25 @@ for (const route of routeNames) {
 }
 
 const markdown = [
-  "## Local Nuxt SSR CPU comparison",
+  "## Local route CPU comparison",
   "",
-  `Base <code>${process.env.BASE_SHA ?? "unknown"}</code> and PR merge revision <code>${process.env.HEAD_SHA ?? "unknown"}</code> ran one after the other on the same GitHub runner with Node ${baseReport.runtime} (${workflowRun}). The benchmark used deterministic mock data and exercised the built Nuxt/Nitro server. This PR changes the benchmark workflow, not the website routes, so these numbers check that the comparison works; they do not show an application performance improvement.`,
+  `Built Nuxt SSR · Node ${baseReport.runtime} · same runner · ${workflowRun}`,
   "",
-  "**How to read this:** CPU/request is server user+system CPU for one complete server-rendered page response; lower is less CPU. The change is PR minus base, so `+` means the PR used more and `−` means it used less. Each value is the median of five batches of 20 serial requests after 10 warmups; the range is the observed batch min–max, not a confidence interval.",
+  "CPU/request = server user + system time; values are median (observed min–max) over 5 × 20 requests after 10 warmups. Change = PR − base.",
   "",
-  `**Takeaway:** ${rangeSummary}`,
+  `**Result:** ${rangeSummary} ${htmlSummary} This PR changes CI benchmarking, not route code.`,
   "",
-  "| Route / workload | Mocked data size | Base CPU/request | PR CPU/request | Change (PR − base) | HTML bytes/request (base → PR) |",
+  "| Route / workload | Mock data | Base CPU / request | PR CPU / request | Change | HTML / response (base → PR) |",
   "| --- | --- | ---: | ---: | ---: | ---: |",
   ...rows,
   "",
-  "### What the V8 profiles sampled",
+  "### Largest sampled JS hotspots (large workload)",
   "",
-  "Separate profiles used a 1 ms V8 sampling interval over 50 large-workload requests. Percentages below are approximate shares of sampled server JavaScript time, not milliseconds. Identified `devalue.flatten` frames are hidden from this list only; their CPU remains in the full-request measurements. Raw profiles are attached to this run's artifact.",
+  "Top two sampled functions (% share) from 50 requests; `devalue.flatten` is omitted here but included in CPU totals. Full profiles are in the artifact.",
   "",
-  "| Route | Base: most sampled functions | PR: most sampled functions |",
+  "| Route | Base | PR |",
   "| --- | --- | --- |",
   ...frameRows,
-  "",
-  "Vue/Vue SSR names refer to page rendering; devalue refers to Nuxt payload serialization; Nitro and Vue Router refer to request handling. Fixture sizes are synthetic input counts, not production traffic distributions. Mocked upstream responses still pass through the real page and Nitro code; network wait, browser rendering, and Cloudflare Worker accounting are excluded. CPU changes this small should be treated as inconclusive, especially because the route code is unchanged.",
 ].join("\n");
 
 await writeFile(outputPath, `${markdown}\n`);
