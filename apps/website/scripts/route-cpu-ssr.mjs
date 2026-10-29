@@ -467,7 +467,7 @@ async function requestPage(baseUrl, route) {
     "$1/_nuxt/[build-asset]$2",
   );
   const htmlSha256 = createHash("sha256").update(canonicalHtml).digest("hex");
-  return { id, bytes: body.byteLength, html, htmlSha256 };
+  return { id, bytes: body.byteLength, html, canonicalHtml, htmlSha256 };
 }
 
 async function readRequestMetrics(metricsPath, ids) {
@@ -484,11 +484,13 @@ async function requestBatch(server, route, count) {
   const ids = [];
   let responseBytes = 0;
   const responseHashes = new Set();
+  let canonicalHtmlSample;
   for (let index = 0; index < count; index += 1) {
     const response = await requestPage(server.baseUrl, route);
     ids.push(response.id);
     responseBytes += response.bytes;
     responseHashes.add(response.htmlSha256);
+    canonicalHtmlSample ??= response.canonicalHtml;
   }
   if (responseHashes.size !== 1) {
     throw new Error(`${route.path} returned different SSR HTML across identical fixture requests.`);
@@ -508,7 +510,20 @@ async function requestBatch(server, route, count) {
       samples.reduce((total, row) => total + row.userMicros + row.systemMicros, 0) / count,
     htmlBytesPerRequest: responseBytes / count,
     htmlSha256: responseHashes.values().next().value,
+    canonicalHtmlSample,
   };
+}
+
+function describeHtmlDifference(baseHtml, headHtml) {
+  let index = 0;
+  while (
+    index < baseHtml.length &&
+    index < headHtml.length &&
+    baseHtml[index] === headHtml[index]
+  ) {
+    index += 1;
+  }
+  return `first difference at character ${index}; base=${JSON.stringify(baseHtml.slice(index, index + 120))}; PR=${JSON.stringify(headHtml.slice(index, index + 120))}`;
 }
 
 async function currentDependencies(server) {
@@ -644,7 +659,9 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
         headHtmlHashes.size !== 1 ||
         baseHtmlHashes.values().next().value !== headHtmlHashes.values().next().value
       ) {
-        throw new Error(`${route.path} rendered different canonical SSR HTML between base and PR.`);
+        throw new Error(
+          `${route.path} rendered different canonical SSR HTML between base and PR; ${describeHtmlDifference(rounds[0].base.canonicalHtmlSample, rounds[0].head.canonicalHtmlSample)}`,
+        );
       }
       let baseProfile;
       let headProfile;
