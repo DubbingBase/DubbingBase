@@ -494,7 +494,10 @@ const gamesData = useHomeSection(
 
 const trendingVoiceActorsData = useHomeSection(
   "trending-voice-actors",
-  () => $fetch<HomeDataPayload["trendingVoiceActors"]>("/api/trending/voice-actors"),
+  () =>
+    $fetch<HomeDataPayload["trendingVoiceActors"]>("/api/trending/voice-actors", {
+      params: { projection: "home" },
+    }),
   () => [],
 );
 
