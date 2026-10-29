@@ -514,7 +514,7 @@ const topContributorsData = useHomeSection(
   "top-contributors",
   () =>
     $fetch<HomeDataPayload["topContributors"]>("/api/top-contributors", {
-      params: { limit: 10 },
+      params: { limit: 10, projection: "home" },
     }),
   () => [],
   isAdmin,
