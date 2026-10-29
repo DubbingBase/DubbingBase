@@ -38,11 +38,12 @@ function formatCpu(stats) {
 function formatDelta(baseMicros, headMicros) {
   const milliseconds = (headMicros - baseMicros) / 1000;
   const percentage = ((headMicros - baseMicros) / baseMicros) * 100;
+  const marker = milliseconds > 0 ? "🔴" : milliseconds < 0 ? "🟢" : "⚪";
   const formatSigned = (value, decimals) => {
     const sign = value > 0 ? "+" : value < 0 ? "−" : "";
     return `${sign}${Math.abs(value).toFixed(decimals)}`;
   };
-  return `${formatSigned(milliseconds, 2)} ms (${formatSigned(percentage, 1)}%)`;
+  return `${marker} ${formatSigned(milliseconds, 2)} ms (${formatSigned(percentage, 1)}%)`;
 }
 
 function safeCell(value) {
@@ -135,7 +136,7 @@ const markdown = [
   "",
   "CPU/request = server user + system time; values are median (observed min–max) over 5 × 20 requests after 10 warmups. Change = PR − base.",
   "",
-  `**Result:** ${rangeSummary} This PR changes CI benchmarking, not route code.`,
+  `**Result:** ${rangeSummary} 🔴 more CPU · 🟢 less CPU · ⚪ unchanged median; markers show direction only. This PR changes CI benchmarking, not route code.`,
   "",
   "| Route / workload | Base CPU / request | PR CPU / request | Change (PR − base) |",
   "| --- | ---: | ---: | ---: |",
