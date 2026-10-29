@@ -35,14 +35,14 @@ export function groupVoiceActorWorks<T extends VoiceActorWorkLike>(
   for (const work of works) {
     const actorId = positiveActorId(work.work?.actor_id) ?? positiveActorId(work.data?.actor?.id);
     const key = actorId === null ? "actor:unknown" : `actor:${actorId}`;
-    const actorName = work.data?.actor?.name?.trim() || null;
-    const profilePicture = work.data?.actor?.profile_picture || null;
     const group = groups.get(key);
 
     if (group) {
       group.works.push(work);
       group.worksCount += 1;
-      if (actorId !== null) {
+      if (actorId !== null && (!group.actor.name || !group.actor.profile_picture)) {
+        const actorName = work.data?.actor?.name?.trim() || null;
+        const profilePicture = work.data?.actor?.profile_picture || null;
         if (!group.actor.name && actorName) group.actor.name = actorName;
         if (!group.actor.profile_picture && profilePicture) {
           group.actor.profile_picture = profilePicture;
@@ -51,6 +51,8 @@ export function groupVoiceActorWorks<T extends VoiceActorWorkLike>(
       continue;
     }
 
+    const actorName = actorId === null ? null : work.data?.actor?.name?.trim() || null;
+    const profilePicture = actorId === null ? null : work.data?.actor?.profile_picture || null;
     groups.set(key, {
       key,
       actorId,
