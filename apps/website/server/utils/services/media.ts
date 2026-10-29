@@ -3,6 +3,7 @@ import { TMDBClient } from "../api/tmdb";
 import { TVDBClient } from "../api/tvdb";
 import { processVoiceActor } from "../urls/supabase";
 import { processMedia, cleanCharacterName } from "../urls/tmdb";
+import { mediaPageMovieCredits } from "../media-page-credits";
 import { useCache, useIgdbClient, useOpenLibraryClient } from "../index";
 import { buildIgdbImageUrl } from "../api/igdb";
 import { createCacheNamespace } from "../cache";
@@ -913,7 +914,11 @@ export class MediaService {
   async getMediaWithVoiceActors(
     contentType: "movie" | "tv",
     contentId: number,
-    options: { includeCollection?: boolean; includeCreditsCrew?: boolean } = {},
+    options: {
+      includeCollection?: boolean;
+      includeCreditsCrew?: boolean;
+      projection?: "media-page";
+    } = {},
   ) {
     let media =
       contentType === "movie"
@@ -921,9 +926,13 @@ export class MediaService {
         : await this.tmdbClient.getMediaDetails(contentType, contentId, this.acceptLanguage);
 
     if (options.includeCreditsCrew === false && isRecord(media.credits)) {
-      const credits = { ...media.credits };
-      delete credits.crew;
-      media = { ...media, credits };
+      if (options.projection === "media-page" && contentType === "movie") {
+        media = { ...media, credits: mediaPageMovieCredits(media.credits) };
+      } else {
+        const credits = { ...media.credits };
+        delete credits.crew;
+        media = { ...media, credits };
+      }
     }
 
     let collection: Record<string, unknown> | null = null;

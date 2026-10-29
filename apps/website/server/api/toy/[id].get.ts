@@ -1,5 +1,5 @@
 import { useToyClient } from "../../utils";
-import { getDubbingProjects } from "../../utils/db/queries";
+import { getDubbingProjects, getToyPageDubbingProjects } from "../../utils/db/queries";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 import { scheduleBackgroundTask } from "../../utils/background";
@@ -17,6 +17,7 @@ export default defineEventHandler(async (event): Promise<ToyResponse> => {
     throw createError({ statusCode: 400, message: "Invalid id parameter" });
   }
   const toyClient = useToyClient();
+  const projection = getQuery(event).projection;
   const [apiData, dbData] = await Promise.all([
     (async () => {
       try {
@@ -40,7 +41,9 @@ export default defineEventHandler(async (event): Promise<ToyResponse> => {
     })(),
 
     // DB: dubbing projects
-    getDubbingProjects(toyId, "toy"),
+    projection === "media-page"
+      ? getToyPageDubbingProjects(toyId)
+      : getDubbingProjects(toyId, "toy"),
   ]);
 
   const { toy } = apiData;
