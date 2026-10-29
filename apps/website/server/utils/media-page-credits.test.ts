@@ -1,5 +1,33 @@
 import { describe, expect, it } from "vitest";
-import { mediaPageMovieCredits } from "./media-page-credits";
+import { mediaPageAggregateCredits, mediaPageMovieCredits } from "./media-page-credits";
+
+describe("mediaPageAggregateCredits", () => {
+  it("keeps page fields and roles without provider-only names or crew", () => {
+    expect(
+      mediaPageAggregateCredits({
+        cast: [
+          {
+            id: 1,
+            name: "Localized name",
+            original_name: "Provider original name",
+            profile_path: "/actor.jpg",
+            roles: [{ character: "Lead", episode_count: 12, credit_id: "unused-credit" }],
+          },
+        ],
+        crew: [{ id: 2, name: "Unused crew" }],
+      }),
+    ).toEqual({
+      cast: [
+        {
+          id: 1,
+          name: "Localized name",
+          profile_path: "/actor.jpg",
+          roles: [{ character: "Lead", episode_count: 12 }],
+        },
+      ],
+    });
+  });
+});
 
 describe("mediaPageMovieCredits", () => {
   it("keeps the movie page cast fields and source order", () => {
