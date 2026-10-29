@@ -208,7 +208,7 @@ const markdown = [
   "",
   "### Top 10 app CPU consumers (large workload)",
   "",
-  "Top 10 unique app-owned functions, grouped by V8 function name and source file. The location is the source-mapped function location; shares are of sampled generated-server JavaScript time. `devalue.flatten` is excluded from this list but remains in CPU totals. Full profiles are in the artifact.",
+  "Top 10 unique app-owned functions, grouped by V8 function name and source-mapped function location. Shares are of sampled generated-server JavaScript time. `devalue.flatten` is excluded from this list but remains in CPU totals. Full profiles are in the artifact.",
   "",
   "<details>",
   "<summary>Show function names, source locations, and shares</summary>",

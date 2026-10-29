@@ -235,18 +235,12 @@ function summarize(values) {
 function topUniqueApplicationCpuConsumers(frames, totalSampledMicros) {
   const byFunction = new Map();
   for (const frame of frames) {
-    const lineSeparator = frame.source.lastIndexOf(":");
-    const sourceFile = frame.source.slice(0, lineSeparator);
-    const key = `${frame.functionName}\0${sourceFile}`;
+    const key = `${frame.functionName}\0${frame.source}`;
     const current = byFunction.get(key);
     if (current) {
       current.sampledMicros += frame.sampledMicros;
-      if (frame.sampledMicros > current.mostSampledLocationMicros) {
-        current.source = frame.source;
-        current.mostSampledLocationMicros = frame.sampledMicros;
-      }
     } else {
-      byFunction.set(key, { ...frame, mostSampledLocationMicros: frame.sampledMicros });
+      byFunction.set(key, { ...frame });
     }
   }
 
