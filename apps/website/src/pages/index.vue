@@ -453,12 +453,20 @@ function useHomeSection<T>(
   });
 }
 
+type TrendingMovieCard = {
+  id: number;
+  title?: string;
+  poster_path: string | null;
+};
+
 const moviesData = useHomeSection(
   "movies",
   async () => {
     const response = await $fetch<{
-      results?: HomeDataPayload["trendingMovies"];
-    }>("/api/trending/movies", { params: { lang: trendingLanguage.value } });
+      results?: TrendingMovieCard[];
+    }>("/api/trending/movies", {
+      params: { lang: trendingLanguage.value, projection: "card" },
+    });
     return response.results ?? [];
   },
   () => [],
