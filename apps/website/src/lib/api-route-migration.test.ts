@@ -9,9 +9,7 @@ const readWebsiteSource = (relativePath: string): string =>
 
 describe("canonical GET API consumers", () => {
   it("uses query params for the admin voice actor spreadsheet", () => {
-    const source = readWebsiteSource(
-      "src/pages/admin/voice-actor-spreadsheet.vue",
-    );
+    const source = readWebsiteSource("src/pages/admin/voice-actor-spreadsheet.vue");
 
     expect(source).toMatch(
       /['"]\/api\/list-voice-actors['"][\s\S]{0,300}params:\s*\{\s*limit:\s*limit\.value,\s*offset:/,
@@ -25,7 +23,7 @@ describe("canonical GET API consumers", () => {
     const source = readWebsiteSource("src/pages/admin/user-va-profiles.vue");
 
     expect(source).toMatch(
-      /['"]\/api\/search-voice-actors['"][\s\S]{0,300}params:\s*\{\s*query,\s*limit:\s*10\s*\}/,
+      /['"]\/api\/search-voice-actors['"][\s\S]{0,300}params:\s*\{\s*query,\s*limit:\s*10,\s*projection:\s*['"]admin-search['"]\s*\}/,
     );
     expect(source).not.toMatch(
       /['"]\/api\/search-voice-actors['"][\s\S]{0,300}method:\s*['"]POST['"]/,
@@ -33,12 +31,8 @@ describe("canonical GET API consumers", () => {
   });
 
   it("loads movie and show editor metadata through dynamic-id GET routes", () => {
-    const movieEditor = readWebsiteSource(
-      "src/components/admin/editors/MovieProjectEditor.vue",
-    );
-    const showEditor = readWebsiteSource(
-      "src/components/admin/editors/ShowProjectEditor.vue",
-    );
+    const movieEditor = readWebsiteSource("src/components/admin/editors/MovieProjectEditor.vue");
+    const showEditor = readWebsiteSource("src/components/admin/editors/ShowProjectEditor.vue");
 
     expect(movieEditor).toContain("`/api/movie/${tmdbMovieId.value}`");
     expect(movieEditor).not.toContain('"/api/movie",');
@@ -60,10 +54,8 @@ describe("retired legacy API route files", () => {
   });
 
   it("keeps bulk voice actor work counts on POST", () => {
-    expect(
-      existsSync(
-        resolve(websiteRoot, "server/api/count-voice-actor-works.post.ts"),
-      ),
-    ).toBe(true);
+    expect(existsSync(resolve(websiteRoot, "server/api/count-voice-actor-works.post.ts"))).toBe(
+      true,
+    );
   });
 });

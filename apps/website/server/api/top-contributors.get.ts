@@ -1,7 +1,19 @@
 import { getTopContributors } from "../utils/db/queries";
+import type { Json } from "@app/supabase/types";
+
+function getMetadataString(metadata: Json, key: string): string | undefined {
+  if (typeof metadata !== "object" || metadata === null || Array.isArray(metadata)) {
+    return undefined;
+  }
+
+  const value = Reflect.get(metadata, key);
+  return typeof value === "string" ? value : undefined;
+}
+
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const limit = Number(query.limit) || 10;
+  const homeProjection = query.projection === "home";
 
   if (typeof limit !== "number" || limit < 1 || limit > 100) {
     throw createError({
@@ -12,7 +24,16 @@ export default defineEventHandler(async (event) => {
 
   try {
     const results = await getTopContributors(limit);
-    return results;
+
+    if (!homeProjection) return results;
+
+    return results.map((contributor) => ({
+      ...contributor,
+      raw_user_meta_data: {
+        username: getMetadataString(contributor.raw_user_meta_data, "username"),
+        avatar_url: getMetadataString(contributor.raw_user_meta_data, "avatar_url"),
+      },
+    }));
   } catch (error) {
     console.error("Error in top-contributors:", error);
     throw createError({

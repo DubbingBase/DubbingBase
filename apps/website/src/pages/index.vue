@@ -494,7 +494,10 @@ const gamesData = useHomeSection(
 
 const trendingVoiceActorsData = useHomeSection(
   "trending-voice-actors",
-  () => $fetch<HomeDataPayload["trendingVoiceActors"]>("/api/trending/voice-actors"),
+  () =>
+    $fetch<HomeDataPayload["trendingVoiceActors"]>("/api/trending/voice-actors", {
+      params: { projection: "home" },
+    }),
   () => [],
 );
 
@@ -502,7 +505,7 @@ const topVoiceActorsData = useHomeSection(
   "top-voice-actors",
   () =>
     $fetch<HomeDataPayload["topVoiceActors"]>("/api/top-voice-actors", {
-      params: { limit: 10 },
+      params: { limit: 10, projection: "home" },
     }),
   () => [],
 );
@@ -511,7 +514,7 @@ const topContributorsData = useHomeSection(
   "top-contributors",
   () =>
     $fetch<HomeDataPayload["topContributors"]>("/api/top-contributors", {
-      params: { limit: 10 },
+      params: { limit: 10, projection: "home" },
     }),
   () => [],
   isAdmin,
