@@ -124,41 +124,36 @@ const htmlSummary =
     ? `HTML size is unchanged in all ${unchangedHtmlComparisons} comparisons.`
     : `HTML size changed in ${cpuComparisons.length - unchangedHtmlComparisons} of ${cpuComparisons.length} comparisons.`;
 
-function frameArea(workload, frame) {
-  const source = frame.source.replaceAll("\\", "/");
-  if (source.includes("/@vue/runtime-core/")) return "Vue";
-  if (source.includes("/@vue/server-renderer/")) return "Vue SSR";
-  if (source.includes("/@vue/reactivity/")) return "Vue reactivity";
-  if (source.includes("/vue-router/")) return "Vue Router";
-  if (source.includes("/@supabase/")) return "Supabase";
-  if (source.includes("/devalue/")) return "devalue";
-  if (source.includes("src/pages/")) return `${workload.name} page`;
-  if (source.includes("/chunks/nitro/")) return "Nitro";
-  return source.split("/").at(-1)?.split(":")[0] ?? "server";
+function isApplicationSource(source) {
+  const normalized = source.replaceAll("\\", "/");
+  return (
+    normalized.startsWith("src/") ||
+    normalized.startsWith("../../packages/") ||
+    normalized.startsWith("packages/")
+  );
 }
 
-function formatFrames(workload) {
+function formatApplicationFrames(workload) {
   const profile = workload.profile;
-  const sampledFrames = profile?.topSampledFrames;
+  const hasFullApplicationFrames = Array.isArray(profile?.topApplicationFrames);
+  const sampledFrames =
+    profile?.topApplicationFrames ??
+    profile?.topSampledFrames?.filter((frame) =>
+      isApplicationSource(frame.source),
+    );
   if (!profile || !Array.isArray(sampledFrames)) {
     throw new Error(`Large workload ${workload.name} is missing its V8 profile summary.`);
   }
-  const frames = sampledFrames.filter((frame) => {
-    const sourcePaths = [frame.source, frame.generatedSource]
-      .filter((source) => typeof source === "string")
-      .map((source) => source.replaceAll("\\", "/"));
-    return !(
-      frame.functionName === "flatten" &&
-      sourcePaths.some((source) => source.includes("/devalue/"))
-    );
-  });
-  if (frames.length === 0) {
-    return "No other frames sampled after filtering identified devalue.flatten frames";
+  if (sampledFrames.length === 0) {
+    return hasFullApplicationFrames
+      ? "No application-code frame sampled"
+      : "No application-code frame in top 16";
   }
-  return frames
-    .slice(0, 2)
+  return sampledFrames
+    .slice(0, 3)
     .map(
-      (frame) => `${safeCell(frame.functionName)} (${frameArea(workload, frame)}, ${frame.sampleSharePercent.toFixed(1)}%)`,
+      (frame) =>
+        `\`${safeCell(frame.functionName)}\` — \`${safeCell(frame.source)}\` (${frame.sampleSharePercent.toFixed(1)}%)`,
     )
     .join("; ");
 }
@@ -167,7 +162,9 @@ const frameRows = [];
 for (const route of routeNames) {
   const base = getWorkload(baseWorkloads, route, "large", "Base");
   const head = getWorkload(headWorkloads, route, "large", "PR");
-  frameRows.push(`| ${route} | ${formatFrames(base)} | ${formatFrames(head)} |`);
+  frameRows.push(
+    `| ${route} | ${formatApplicationFrames(base)} | ${formatApplicationFrames(head)} |`,
+  );
 }
 
 const markdown = [
@@ -183,11 +180,11 @@ const markdown = [
   "| --- | --- | ---: | ---: | ---: | ---: |",
   ...rows,
   "",
-  "### Largest sampled JS hotspots (large workload)",
+  "### Top application-code frames (large workload)",
   "",
-  "Top two sampled functions (% share) from 50 requests; `devalue.flatten` is omitted here but included in CPU totals. Full profiles are in the artifact.",
+  "Top three source-mapped website/workspace functions by sampled self-time; percentages are shares of server JS samples, not milliseconds. `devalue.flatten` is absent from this list but remains in CPU totals. Full profiles are in the artifact.",
   "",
-  "| Route | Base | PR |",
+  "| Route | Base function — source (share) | PR function — source (share) |",
   "| --- | --- | --- |",
   ...frameRows,
 ].join("\n");

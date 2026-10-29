@@ -282,6 +282,14 @@ async function cpuProfileSummary(profile) {
   );
 
   const totalSampledMicros = mappedFrames.reduce((total, frame) => total + frame.sampledMicros, 0);
+  const applicationFrames = mappedFrames.filter((frame) => {
+    const source = frame.source.replaceAll("\\", "/");
+    return (
+      source.startsWith("src/") ||
+      source.startsWith("../../packages/") ||
+      source.startsWith("packages/")
+    );
+  });
   const displayedFrames = mappedFrames.filter((frame) => {
     if (frame.functionName !== "flatten") return true;
     const sourcePaths = [frame.source, frame.generatedSource].map((source) =>
@@ -293,6 +301,16 @@ async function cpuProfileSummary(profile) {
   return {
     sampleCount: profile.samples.length,
     relevantSampleCount,
+    topApplicationFrames: applicationFrames
+      .sort((left, right) => right.sampledMicros - left.sampledMicros)
+      .slice(0, 16)
+      .map(({ functionName, source, sampledMicros }) => ({
+        functionName,
+        source,
+        sampledMicros,
+        sampleSharePercent:
+          totalSampledMicros > 0 ? (sampledMicros / totalSampledMicros) * 100 : 0,
+      })),
     topSampledFrames: displayedFrames
       .sort((left, right) => right.sampledMicros - left.sampledMicros)
       .slice(0, 16)
