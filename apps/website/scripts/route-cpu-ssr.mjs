@@ -462,10 +462,7 @@ async function requestPage(baseUrl, route) {
     );
   }
   const html = Buffer.from(body).toString("utf8");
-  const canonicalHtml = html.replace(
-    /((?:src|href)=["'])\/_nuxt\/[^"']+(["'])/g,
-    "$1/_nuxt/[build-asset]$2",
-  );
+  const canonicalHtml = html.replace(/\/_nuxt\/[^"'\s<]+/g, "/_nuxt/[build-asset]");
   const htmlSha256 = createHash("sha256").update(canonicalHtml).digest("hex");
   return { id, bytes: body.byteLength, html, canonicalHtml, htmlSha256 };
 }
