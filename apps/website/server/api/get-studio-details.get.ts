@@ -3,6 +3,7 @@ import { useTmdbClient } from "../utils";
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const studioId = (query.studioId as string) || (query.studioid as string);
+  const studioPageProjection = query.projection === "studio-page";
   const supabase = useSupabaseAdmin();
 
   // If no studioId, return all studios (for the studios listing page)
@@ -20,9 +21,13 @@ export default defineEventHandler(async (event) => {
         ? Math.max(requestedOffset, 0)
         : 0;
 
+      const columns =
+        query.view === "directory"
+          ? "id,name,city,country,logo_url"
+          : "*";
       let studiosQuery = supabase
         .from("studios")
-        .select("*", { count: hasPagination ? "exact" : undefined });
+        .select(columns, { count: hasPagination ? "exact" : undefined });
 
       if (search) {
         const escapedSearch = search.replace(/[%_,()]/g, " ");
@@ -56,19 +61,37 @@ export default defineEventHandler(async (event) => {
     // 1. Fetch studio by ID or name
     let studio;
     if (!isNaN(Number(studioId))) {
-      const { data } = await supabase
-        .from("studios")
-        .select("*")
-        .eq("id", Number(studioId))
-        .maybeSingle();
-      studio = data;
+      if (studioPageProjection) {
+        const { data } = await supabase
+          .from("studios")
+          .select("id,name,city,country,description,logo_url,website_url")
+          .eq("id", Number(studioId))
+          .maybeSingle();
+        studio = data;
+      } else {
+        const { data } = await supabase
+          .from("studios")
+          .select("*")
+          .eq("id", Number(studioId))
+          .maybeSingle();
+        studio = data;
+      }
     } else {
-      const { data } = await supabase
-        .from("studios")
-        .select("*")
-        .ilike("name", studioId)
-        .maybeSingle();
-      studio = data;
+      if (studioPageProjection) {
+        const { data } = await supabase
+          .from("studios")
+          .select("id,name,city,country,description,logo_url,website_url")
+          .ilike("name", studioId)
+          .maybeSingle();
+        studio = data;
+      } else {
+        const { data } = await supabase
+          .from("studios")
+          .select("*")
+          .ilike("name", studioId)
+          .maybeSingle();
+        studio = data;
+      }
     }
 
     if (!studio) {
@@ -89,7 +112,9 @@ export default defineEventHandler(async (event) => {
     // 2. Fetch dubbed projects by studio_id
     const { data: projects } = await supabase
       .from("dubbing_projects")
-      .select("*")
+      .select(
+        studioPageProjection ? "id,content_type,content_id,language" : "*",
+      )
       .eq(
         "studio_id",
         studio.id && !isNaN(Number(studio.id)) ? Number(studio.id) : 0,
@@ -163,12 +188,31 @@ export default defineEventHandler(async (event) => {
                   : null,
               );
             } else {
-              const mediaDetails = await tmdbClient.fetchMediaDetails(
-                contentId,
-                contentType === "movie" ? "movie" : "tv",
-                acceptLanguage,
-              );
-              mediaMap.set(key, mediaDetails);
+              const mediaType = contentType === "movie" ? "movie" : "tv";
+              if (studioPageProjection) {
+                const mediaSummary = await tmdbClient.fetchMediaSummary(
+                  contentId,
+                  mediaType,
+                  acceptLanguage,
+                );
+                mediaMap.set(
+                  key,
+                  mediaSummary
+                    ? {
+                        title: mediaSummary.title,
+                        name: mediaSummary.name,
+                        poster_path: mediaSummary.poster_path,
+                      }
+                    : null,
+                );
+              } else {
+                const mediaDetails = await tmdbClient.fetchMediaDetails(
+                  contentId,
+                  mediaType,
+                  acceptLanguage,
+                );
+                mediaMap.set(key, mediaDetails);
+              }
             }
           } catch (e) {
             console.error(

@@ -3,6 +3,7 @@ import type { ToyResponse } from "../types";
 export async function fetchToyData(
   id: string | number,
   locale?: string,
+  projection?: "media-page",
 ): Promise<ToyResponse | null> {
   const headers: Record<string, string> = {};
   if (locale) {
@@ -12,6 +13,7 @@ export async function fetchToyData(
   try {
     const data = await $fetch<ToyResponse>(`/api/toy/${id}`, {
       headers,
+      ...(projection ? { query: { projection } } : {}),
     });
     if (!data || !data.toy) {
       console.error("fetchToyData: Response is null or missing toy property");

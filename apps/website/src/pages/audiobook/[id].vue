@@ -354,7 +354,7 @@ const { page: castPage, setPage: setCastPage } = useUrlPagination("castPage");
 // Instant Hydration Data Fetching
 const { data, pending } = await useAsyncData(
   `audiobook-${audiobookId.value}-${locale.value}`,
-  () => fetchAudiobookData(audiobookId.value, locale.value),
+  () => fetchAudiobookData(audiobookId.value, locale.value, { projection: "media-page" }),
   {
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },

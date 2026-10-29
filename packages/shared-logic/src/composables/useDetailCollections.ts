@@ -159,6 +159,18 @@ export function formatGameDetailCastCards(
   project: unknown,
 ): GameDetailCastCard[] {
   const works = projectWorks(project);
+  const worksByCharacterId = new Map<string, number[]>();
+  for (let index = 0; index < works.length; index += 1) {
+    const work = works[index];
+    if (!work) continue;
+
+    for (const id of new Set([String(work.character_id), String(work.actor_id)])) {
+      const workIndexes = worksByCharacterId.get(id);
+      if (workIndexes) workIndexes.push(index);
+      else worksByCharacterId.set(id, [index]);
+    }
+  }
+
   const matchedWorkIds = new Set<unknown>();
   const cards = characters.flatMap((character) => {
     const mappedCharacterId = 9_000_000_000 + Number(character.id);
@@ -173,12 +185,17 @@ export function formatGameDetailCastCards(
       String(mappedCharacterId),
       String(fallbackCharacterId),
     ]);
-    const matchingWorks = works.filter((work) => {
-      const matches =
-        characterIds.has(String(work.character_id)) || characterIds.has(String(work.actor_id));
-      if (matches) matchedWorkIds.add(work.id);
-      return matches;
-    });
+    const matchingWorkIndexes = new Set<number>();
+    for (const id of characterIds) {
+      for (const index of worksByCharacterId.get(id) || []) matchingWorkIndexes.add(index);
+    }
+    const matchingWorks: DetailRecord[] = [];
+    for (const index of [...matchingWorkIndexes].sort((left, right) => left - right)) {
+      const work = works[index];
+      if (!work) continue;
+      matchedWorkIds.add(work.id);
+      matchingWorks.push(work);
+    }
     const cardsForCharacter = matchingWorks.length > 0 ? matchingWorks : [null];
     return cardsForCharacter.map((work) => ({
       ...character,
