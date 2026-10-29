@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { copyFile, mkdir, mkdtemp, readFile, readlink, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
@@ -257,8 +257,7 @@ function topUniqueApplicationCpuConsumers(frames, totalSampledMicros) {
       functionName,
       source,
       sampledMicros,
-      sampleSharePercent:
-        totalSampledMicros > 0 ? (sampledMicros / totalSampledMicros) * 100 : 0,
+      sampleSharePercent: totalSampledMicros > 0 ? (sampledMicros / totalSampledMicros) * 100 : 0,
     }));
 }
 
@@ -462,7 +461,13 @@ async function requestPage(baseUrl, route) {
       `${route.path} returned ${response.headers.get("content-type")}, not SSR HTML.`,
     );
   }
-  return { id, bytes: body.byteLength, html: Buffer.from(body).toString("utf8") };
+  const html = Buffer.from(body).toString("utf8");
+  const canonicalHtml = html.replace(
+    /((?:src|href)=["'])\/_nuxt\/[^"']+(["'])/g,
+    "$1/_nuxt/[build-asset]$2",
+  );
+  const htmlSha256 = createHash("sha256").update(canonicalHtml).digest("hex");
+  return { id, bytes: body.byteLength, html, htmlSha256 };
 }
 
 async function readRequestMetrics(metricsPath, ids) {
@@ -478,10 +483,15 @@ async function readRequestMetrics(metricsPath, ids) {
 async function requestBatch(server, route, count) {
   const ids = [];
   let responseBytes = 0;
+  const responseHashes = new Set();
   for (let index = 0; index < count; index += 1) {
     const response = await requestPage(server.baseUrl, route);
     ids.push(response.id);
     responseBytes += response.bytes;
+    responseHashes.add(response.htmlSha256);
+  }
+  if (responseHashes.size !== 1) {
+    throw new Error(`${route.path} returned different SSR HTML across identical fixture requests.`);
   }
 
   const rows = await readRequestMetrics(server.metricsPath, ids);
@@ -497,6 +507,7 @@ async function requestBatch(server, route, count) {
     totalMicrosPerRequest:
       samples.reduce((total, row) => total + row.userMicros + row.systemMicros, 0) / count,
     htmlBytesPerRequest: responseBytes / count,
+    htmlSha256: responseHashes.values().next().value,
   };
 }
 
@@ -514,7 +525,13 @@ function assertRouteDependencies(route, before, after) {
   }
 }
 
-function fixtureFor(dataset) {
+function fixtureFor(dataset, route) {
+  if (route.name === "audiobook") {
+    const projects = dataset === "large" ? 20 : 2;
+    const worksPerProject = dataset === "large" ? 48 : 12;
+    return { projects, worksPerProject, works: projects * worksPerProject };
+  }
+
   return {
     mediaCredits: dataset === "large" ? 1200 : 180,
     dubbingProjects: dataset === "large" ? 500 : 40,
@@ -563,7 +580,7 @@ function workloadFor(server, route, dataset, rounds, pairedDeltas, dependencies,
     name: route.name,
     path: route.path,
     dataset,
-    fixture: fixtureFor(dataset),
+    fixture: fixtureFor(dataset, route),
     warmupRequests,
     measuredRounds,
     requestsPerRound,
@@ -575,6 +592,7 @@ function workloadFor(server, route, dataset, rounds, pairedDeltas, dependencies,
       total: summarize(samples.map((sample) => sample.totalMicrosPerRequest)),
     },
     htmlBytesPerRequest: summarize(samples.map((sample) => sample.htmlBytesPerRequest)),
+    renderedHtmlSha256: [...new Set(samples.map((sample) => sample.htmlSha256))],
     upstreamRequests: dependencies,
     profile,
   };
@@ -599,9 +617,16 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
 
       const rounds = [];
       for (let round = 0; round < measuredRounds; round += 1) {
-        const order = round % 2 === 0
-          ? [["base", baseServer], ["head", headServer]]
-          : [["head", headServer], ["base", baseServer]];
+        const order =
+          round % 2 === 0
+            ? [
+                ["base", baseServer],
+                ["head", headServer],
+              ]
+            : [
+                ["head", headServer],
+                ["base", baseServer],
+              ];
         const result = {};
         for (const [side, server] of order) {
           result[side] = await requestBatch(server, route, requestsPerRound);
@@ -612,6 +637,15 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
       const pairedDeltas = rounds.map(
         (round) => round.head.totalMicrosPerRequest - round.base.totalMicrosPerRequest,
       );
+      const baseHtmlHashes = new Set(rounds.map((round) => round.base.htmlSha256));
+      const headHtmlHashes = new Set(rounds.map((round) => round.head.htmlSha256));
+      if (
+        baseHtmlHashes.size !== 1 ||
+        headHtmlHashes.size !== 1 ||
+        baseHtmlHashes.values().next().value !== headHtmlHashes.values().next().value
+      ) {
+        throw new Error(`${route.path} rendered different canonical SSR HTML between base and PR.`);
+      }
       let baseProfile;
       let headProfile;
       if (dataset === "large") {
@@ -660,7 +694,8 @@ async function measurePaired() {
   await assertIsolatedNetworkNamespace("route profiling");
   const baseWebsiteDir = process.env.ROUTE_CPU_BASE_WEBSITE_DIR;
   const headWebsiteDir = process.env.ROUTE_CPU_HEAD_WEBSITE_DIR ?? websiteDir;
-  if (!baseWebsiteDir) throw new Error("Set ROUTE_CPU_BASE_WEBSITE_DIR to the baseline website build.");
+  if (!baseWebsiteDir)
+    throw new Error("Set ROUTE_CPU_BASE_WEBSITE_DIR to the baseline website build.");
 
   await rm(join(profileRoot, "base"), { recursive: true, force: true });
   await rm(join(profileRoot, "head"), { recursive: true, force: true });
@@ -677,7 +712,7 @@ async function measurePaired() {
   const report = (workloads) => ({
     runtime: process.version,
     method:
-      "Built Nuxt/Nitro SSR with deterministic in-memory upstream fixtures. Each revision receives 20 warmups and 20 paired rounds of 20 serial requests per route; base/head batch order alternates. The server records process.cpuUsage from Nitro request handling through response finish; profiles are captured separately. Egress is limited to loopback.",
+      "Built Nuxt/Nitro SSR with deterministic in-memory upstream fixtures. Each revision receives 20 warmups and 20 paired rounds of 20 serial requests per route; base/head batch order alternates. The server records process.cpuUsage from Nitro request handling through response finish; profiles are captured separately. SSR HTML SHA-256 values are compared after normalizing build-specific /_nuxt asset URLs. Egress is limited to loopback.",
     scope:
       "Measures real page/API logic, upstream fixture parsing, Supabase query handling, SSR rendering, and response writing. Excludes browser rendering, upstream latency, Cloudflare Workers accounting, and production traffic.",
     warmupRequests,

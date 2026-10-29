@@ -20,7 +20,7 @@ if (
   throw new Error("Base and pull request reports use different or invalid paired workloads.");
 }
 
-const routeNames = ["movie", "show", "actor", "voice-actor"];
+const routeNames = ["movie", "show", "actor", "voice-actor", "audiobook"];
 const datasets = ["representative", "large"];
 const workflowRun =
   process.env.GITHUB_RUN_ID && process.env.GITHUB_REPOSITORY
@@ -46,9 +46,7 @@ function formatCpu(stats) {
 function median(values) {
   const sorted = [...values].sort((left, right) => left - right);
   const middle = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 0
-    ? (sorted[middle - 1] + sorted[middle]) / 2
-    : sorted[middle];
+  return sorted.length % 2 === 0 ? (sorted[middle - 1] + sorted[middle]) / 2 : sorted[middle];
 }
 
 function percentile(sortedValues, probability) {
@@ -111,13 +109,30 @@ function sameFixture(base, head, route, dataset) {
   }
 }
 
+function sameRenderedHtml(base, head, route, dataset) {
+  const baseHashes = base.renderedHtmlSha256;
+  const headHashes = head.renderedHtmlSha256;
+  if (
+    !Array.isArray(baseHashes) ||
+    !Array.isArray(headHashes) ||
+    baseHashes.length !== 1 ||
+    headHashes.length !== 1 ||
+    baseHashes[0] !== headHashes[0]
+  ) {
+    throw new Error(`Base and PR rendered different canonical SSR HTML for ${route} ${dataset}.`);
+  }
+  return baseHashes[0];
+}
+
 const rows = [];
 const cpuComparisons = [];
+const responseRows = [];
 for (const route of routeNames) {
   for (const dataset of datasets) {
     const base = getWorkload(baseWorkloads, route, dataset, "Base");
     const head = getWorkload(headWorkloads, route, dataset, "PR");
     sameFixture(base, head, route, dataset);
+    const renderedHtmlSha256 = sameRenderedHtml(base, head, route, dataset);
     const baseCpu = base.cpuMicrosPerRequest.total;
     const headCpu = head.cpuMicrosPerRequest.total;
     const baseDeltas = base.pairedCpuDeltaSamplesMicrosPerRequest;
@@ -143,6 +158,7 @@ for (const route of routeNames) {
     rows.push(
       `| ${route} (${dataset}) | ${formatCpu(baseCpu)} | ${formatCpu(headCpu)} | ${formatDelta(baseCpu.median, headDeltas, interval)} |`,
     );
+    responseRows.push(`| ${route} (${dataset}) | \`${renderedHtmlSha256}\` |`);
   }
 }
 const intervalsContainingZero = cpuComparisons.filter(
@@ -166,9 +182,7 @@ function formatTopApplicationCpuConsumers(workload, route, revision) {
   const hasFullApplicationFrames = Array.isArray(profile?.topApplicationFrames);
   const sampledFrames =
     profile?.topApplicationFrames ??
-    profile?.topSampledFrames?.filter((frame) =>
-      isApplicationSource(frame.source),
-    );
+    profile?.topSampledFrames?.filter((frame) => isApplicationSource(frame.source));
   if (!profile || !Array.isArray(sampledFrames)) {
     throw new Error(`Large workload ${workload.name} is missing its V8 profile summary.`);
   }
@@ -180,8 +194,9 @@ function formatTopApplicationCpuConsumers(workload, route, revision) {
   }
   return sampledFrames
     .slice(0, 10)
-    .map((frame, index) =>
-      `| ${route} | ${revision} | ${index + 1} | \`${safeCell(frame.functionName)}\` | \`${safeCell(frame.source)}\` | ${frame.sampleSharePercent.toFixed(1)}% |`,
+    .map(
+      (frame, index) =>
+        `| ${route} | ${revision} | ${index + 1} | \`${safeCell(frame.functionName)}\` | \`${safeCell(frame.source)}\` | ${frame.sampleSharePercent.toFixed(1)}% |`,
     );
 }
 
@@ -200,11 +215,19 @@ const markdown = [
   "",
   "20 warmups; 20 alternating paired batches of 20 requests per route. Change is the median paired PR − base delta; interval is a deterministic 95% bootstrap.",
   "",
-  `**Result:** ${resultSummary} 🔴 more CPU · 🟢 less CPU · ⚪ unchanged median; markers show direction only. This PR changes CI benchmarking, not route code.`,
+  `**Result:** ${resultSummary} 🔴 more CPU · 🟢 less CPU · ⚪ unchanged median; markers show direction only.`,
   "",
   "| Route / workload | Base median CPU / request | PR median CPU / request | Paired change (95% bootstrap interval) |",
   "| --- | ---: | ---: | ---: |",
   ...rows,
+  "",
+  "### SSR output equivalence",
+  "",
+  "Base and PR HTML matched for every route and workload after normalizing only build-specific `/_nuxt/` asset URLs. Each digest is the SHA-256 of that canonical HTML.",
+  "",
+  "| Route / workload | Canonical SSR HTML SHA-256 |",
+  "| --- | --- |",
+  ...responseRows,
   "",
   "### Top 10 app CPU consumers (large workload)",
   "",
