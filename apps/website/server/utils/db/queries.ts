@@ -1,5 +1,6 @@
 import { useSupabaseAdmin } from "./client";
 import { processVoiceActor } from "../urls/supabase";
+import type { ToyDubbingProject } from "@app/shared-logic";
 
 export async function getVoiceActorWithWork(id: number) {
   const supabase = useSupabaseAdmin();
@@ -95,9 +96,60 @@ export async function getDubbingProjectsForMediaEndpoint(
   contentType: string,
   projection: unknown,
 ) {
+  if (projection === "advertisement-page") {
+    return await getAdvertisementPageDubbingProjects(contentId);
+  }
+
+  if (projection === "podcast-page") {
+    return await getPodcastPageDubbingProjects(contentId);
+  }
+
   return projection === "media-page"
     ? await getMediaPageDubbingProjects(contentId, contentType)
     : await getDubbingProjects(contentId, contentType);
+}
+
+const ADVERTISEMENT_PAGE_DUBBING_PROJECTS_SELECT = `id,
+  language,
+  studio_data:studios(id, name, logo_url),
+  works:work(
+    id,
+    actor_id,
+    character_name,
+    performance,
+    note,
+    voice_actor:voice_actors(id, firstname, lastname, profile_picture)
+  ),
+  crew:dubbing_project_crew(
+    id,
+    person_id,
+    job_id,
+    job:jobs(name),
+    person:voice_actors(id, firstname, lastname, profile_picture)
+  )`;
+
+export async function getAdvertisementPageDubbingProjects(contentId: number) {
+  const supabase = useSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("dubbing_projects")
+    .select(ADVERTISEMENT_PAGE_DUBBING_PROJECTS_SELECT)
+    .eq("content_id", contentId)
+    .eq("content_type", "advertisement");
+
+  if (error) return [];
+
+  return (data || []).map((project) => ({
+    ...project,
+    works: (project.works || []).map((work) => ({
+      ...work,
+      voice_actor: processVoiceActor(work.voice_actor),
+    })),
+    studio_data: project.studio_data || null,
+    crew: (project.crew || []).map((member) => ({
+      ...member,
+      person: processVoiceActor(member.person),
+    })),
+  }));
 }
 
 export async function getMediaPageDubbingProjects(contentId: number, contentType: string) {
@@ -107,6 +159,120 @@ export async function getMediaPageDubbingProjects(contentId: number, contentType
     .select(MEDIA_PAGE_DUBBING_PROJECTS_SELECT)
     .eq("content_id", contentId)
     .eq("content_type", contentType);
+
+  if (error) return [];
+
+  return (data || []).map((project) => ({
+    ...project,
+    works: (project.works || []).map((work) => ({
+      ...work,
+      voice_actor: processVoiceActor(work.voice_actor),
+    })),
+    studio_data: project.studio_data || null,
+    crew: [],
+  }));
+}
+
+const PODCAST_PAGE_DUBBING_PROJECTS_SELECT = `id,
+  language,
+  studio_data:studios(id, name, logo_url),
+  works:work(
+    id,
+    actor_id,
+    character_name,
+    performance,
+    note,
+    voice_actor:voice_actors(id, firstname, lastname, profile_picture)
+  ),
+  crew:dubbing_project_crew(
+    id,
+    job:jobs(name),
+    person:voice_actors(id, firstname, lastname)
+  )`;
+
+export async function getPodcastPageDubbingProjects(contentId: number) {
+  const supabase = useSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("dubbing_projects")
+    .select(PODCAST_PAGE_DUBBING_PROJECTS_SELECT)
+    .eq("content_id", contentId)
+    .eq("content_type", "podcast");
+
+  if (error) return [];
+
+  return (data || []).map((project) => ({
+    ...project,
+    works: (project.works || []).map((work) => ({
+      ...work,
+      voice_actor: processVoiceActor(work.voice_actor),
+    })),
+    studio_data: project.studio_data || null,
+    crew: (project.crew || []).map((member) => ({
+      ...member,
+      person: processVoiceActor(member.person),
+    })),
+  }));
+}
+
+const TOY_PAGE_DUBBING_PROJECTS_SELECT = `id,
+  language,
+  studio_data:studios(id, name),
+  works:work(
+    id,
+    actor_id,
+    character_name,
+    performance,
+    note,
+    voice_actor:voice_actors(id, firstname, lastname, profile_picture)
+  ),
+  crew:dubbing_project_crew(
+    id,
+    job:jobs(name),
+    person:voice_actors(id, firstname, lastname)
+  )`;
+
+export async function getToyPageDubbingProjects(contentId: number): Promise<ToyDubbingProject[]> {
+  const supabase = useSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("dubbing_projects")
+    .select(TOY_PAGE_DUBBING_PROJECTS_SELECT)
+    .eq("content_id", contentId)
+    .eq("content_type", "toy");
+
+  if (error) return [];
+
+  return (data || []).map((project) => ({
+    ...project,
+    works: (project.works || []).map((work) => ({
+      ...work,
+      voice_actor: processVoiceActor(work.voice_actor),
+    })),
+    studio_data: project.studio_data || null,
+    crew: (project.crew || []).map((member) => ({
+      ...member,
+      person: processVoiceActor(member.person),
+    })),
+  }));
+}
+
+const GAME_PAGE_DUBBING_PROJECTS_SELECT = `id,
+  language,
+  studio_data:studios(id, name, logo_url),
+  works:work(
+    id,
+    actor_id,
+    character_id,
+    character_name,
+    voice_actor:voice_actors(id, firstname, lastname, profile_picture)
+  )`;
+
+export async function getGamePageDubbingProjects(contentId: number) {
+  const supabase = useSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("dubbing_projects")
+    .select(GAME_PAGE_DUBBING_PROJECTS_SELECT)
+    .eq("content_id", contentId)
+    .eq("content_type", "video_game");
 
   if (error) return [];
 

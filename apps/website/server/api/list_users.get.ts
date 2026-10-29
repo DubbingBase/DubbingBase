@@ -9,9 +9,18 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, message: error.message });
   }
 
-  const registeredUsers = data.users.filter(
-    (u: any) => !u.is_anonymous && u.email,
-  );
+  const registeredUsers = data.users.filter((user) => !user.is_anonymous && user.email);
+
+  if (getQuery(event).projection === "admin-list") {
+    return {
+      users: registeredUsers.map((user) => ({
+        id: user.id,
+        email: user.email ?? "",
+        created_at: user.created_at,
+        app_metadata: { role: user.app_metadata?.role },
+      })),
+    };
+  }
 
   return { users: registeredUsers };
 });

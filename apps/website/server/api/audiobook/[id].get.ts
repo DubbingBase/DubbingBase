@@ -1,5 +1,5 @@
 import { useOpenLibraryClient } from "../../utils";
-import { getDubbingProjects } from "../../utils/db/queries";
+import { getDubbingProjectsForMediaEndpoint } from "../../utils/db/queries";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 import { scheduleBackgroundTask } from "../../utils/background";
@@ -41,7 +41,7 @@ export default defineEventHandler(async (event): Promise<AudiobookResponse> => {
     })(),
 
     // DB: dubbing projects
-    getDubbingProjects(bookId, "audiobook"),
+    getDubbingProjectsForMediaEndpoint(bookId, "audiobook", getQuery(event).projection),
   ]);
 
   const { book } = apiData;
