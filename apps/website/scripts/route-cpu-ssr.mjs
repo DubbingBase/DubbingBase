@@ -232,6 +232,36 @@ function summarize(values) {
   return { median, minimum: ordered[0], maximum: ordered.at(-1) };
 }
 
+function topUniqueApplicationCpuConsumers(frames, totalSampledMicros) {
+  const byFunction = new Map();
+  for (const frame of frames) {
+    const lineSeparator = frame.source.lastIndexOf(":");
+    const sourceFile = frame.source.slice(0, lineSeparator);
+    const key = `${frame.functionName}\0${sourceFile}`;
+    const current = byFunction.get(key);
+    if (current) {
+      current.sampledMicros += frame.sampledMicros;
+      if (frame.sampledMicros > current.hottestLineMicros) {
+        current.source = frame.source;
+        current.hottestLineMicros = frame.sampledMicros;
+      }
+    } else {
+      byFunction.set(key, { ...frame, hottestLineMicros: frame.sampledMicros });
+    }
+  }
+
+  return [...byFunction.values()]
+    .sort((left, right) => right.sampledMicros - left.sampledMicros)
+    .slice(0, 10)
+    .map(({ functionName, source, sampledMicros }) => ({
+      functionName,
+      source,
+      sampledMicros,
+      sampleSharePercent:
+        totalSampledMicros > 0 ? (sampledMicros / totalSampledMicros) * 100 : 0,
+    }));
+}
+
 async function cpuProfileSummary(profile, profileWebsiteDir) {
   const nodesById = new Map(profile.nodes.map((node) => [node.id, node]));
   const frames = new Map();
@@ -279,7 +309,7 @@ async function cpuProfileSummary(profile, profileWebsiteDir) {
         original?.source && original.line
           ? `${relative(profileWebsiteDir, resolve(dirname(frame.filePath), original.source)).replaceAll("\\", "/")}:${original.line}`
           : `${frame.generatedSource}:${frame.line}`;
-      return { ...frame, source };
+      return { ...frame, functionName: original?.name || frame.functionName, source };
     }),
   );
 
@@ -303,16 +333,7 @@ async function cpuProfileSummary(profile, profileWebsiteDir) {
   return {
     sampleCount: profile.samples.length,
     relevantSampleCount,
-    topApplicationFrames: applicationFrames
-      .sort((left, right) => right.sampledMicros - left.sampledMicros)
-      .slice(0, 10)
-      .map(({ functionName, source, sampledMicros }) => ({
-        functionName,
-        source,
-        sampledMicros,
-        sampleSharePercent:
-          totalSampledMicros > 0 ? (sampledMicros / totalSampledMicros) * 100 : 0,
-      })),
+    topApplicationFrames: topUniqueApplicationCpuConsumers(applicationFrames, totalSampledMicros),
     topSampledFrames: displayedFrames
       .sort((left, right) => right.sampledMicros - left.sampledMicros)
       .slice(0, 16)
