@@ -8,7 +8,7 @@
 
 ## Scale
 
-85 API routes · 26 database models · 200 UI components · 111 library files · 15 middleware layers · 65 environment variables
+85 API routes · 26 database models · 200 UI components · 111 library files · 15 middleware layers · 74 environment variables
 
 ## Subsystems
 
@@ -98,7 +98,6 @@ Changes to these files have the widest blast radius across the codebase:
 
 ## Required Environment Variables
 
-- `ACTOR_ROUTE_CPU_BENCHMARK` — `apps/website/scripts/actor-route-cpu.bench.test.ts`
 - `ANDROID_HOME` — `.env.example`
 - `CI` — `apps/mobile/capacitor.config.ts`
 - `DEV` — `apps/mobile/src/api/supabase.ts`
@@ -110,7 +109,8 @@ Changes to these files have the widest blast radius across the codebase:
 - `DISCORD_WEBHOOK_DISCOVERY_URL` — `apps/website/server/utils/notifications/discord.ts`
 - `DISCORD_WEBHOOK_EXTRACT_URL` — `apps/website/server/utils/notifications/discord.ts`
 - `DISCORD_WEBHOOK_URL` — `apps/website/server/utils/notifications/discord.ts`
-- _...32 more_
+- `DISCORD_WEBHOOK_URL_1` — `apps/website/server/utils/notifications/discord.ts`
+- _...37 more_
 
 ---
 _Back to [index.md](./index.md) · Generated 2026-10-29_

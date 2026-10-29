@@ -2,8 +2,6 @@
 
 ## Environment Variables
 
-- `ACTOR_ROUTE_CPU_BENCHMARK` **required** — apps/website/scripts/actor-route-cpu.bench.test.ts
-- `ACTOR_ROUTE_CPU_OUTPUT` (has default) — apps/website/scripts/actor-route-cpu.bench.test.ts
 - `ANDROID_HOME` **required** — .env.example
 - `BENCH_CREDITS` (has default) — packages/database/benchmarks/bulk-extracted-credits.mjs
 - `BENCH_REPETITIONS` (has default) — packages/database/benchmarks/bulk-extracted-credits.mjs
@@ -57,6 +55,17 @@
 - `RESEND_API_KEY` **required** — .env.example
 - `RESEND_FROM_EMAIL` (has default) — .env.example
 - `RESEND_TO_EMAIL` (has default) — .env.example
+- `ROUTE_CPU_BASE_OUTPUT` (has default) — apps/website/scripts/route-cpu-ssr.mjs
+- `ROUTE_CPU_BASE_WEBSITE_DIR` **required** — apps/website/scripts/route-cpu-ssr.mjs
+- `ROUTE_CPU_BENCHMARK` **required** — apps/website/scripts/route-cpu-ssr.mjs
+- `ROUTE_CPU_DATASET` **required** — apps/website/scripts/route-cpu-upstream.mjs
+- `ROUTE_CPU_HEAD_OUTPUT` (has default) — apps/website/scripts/route-cpu-ssr.mjs
+- `ROUTE_CPU_HEAD_WEBSITE_DIR` (has default) — apps/website/scripts/route-cpu-ssr.mjs
+- `ROUTE_CPU_HOST_NETWORK_NAMESPACE` **required** — apps/website/scripts/route-cpu-ssr.mjs
+- `ROUTE_CPU_METRICS_PATH` **required** — apps/website/scripts/route-cpu-ssr.mjs
+- `ROUTE_CPU_METRICS_ROOT` (has default) — apps/website/scripts/route-cpu-ssr.mjs
+- `ROUTE_CPU_PROFILE_DIR` **required** — apps/website/scripts/route-cpu-ssr.mjs
+- `ROUTE_CPU_PROFILE_ROOT` (has default) — apps/website/scripts/route-cpu-ssr.mjs
 - `SUPABASE_PUBLISHABLE_KEY` **required** — .env.example
 - `SUPABASE_SECRET_KEY` **required** — .env.example
 - `SUPABASE_URL` (has default) — .env.example

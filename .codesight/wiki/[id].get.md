@@ -27,10 +27,6 @@ The [id].get subsystem handles **10 routes** and touches: queue.
 - `GET` `/api/voice-actor/:id` params(id)
   `apps/website/server/api/voice-actor/[id].get.ts`
 
-## High-Impact Files
-
-- `apps/website/server/api/actor/[id].get.ts` — imported by 4 files
-
 ## Source Files
 
 Read these before implementing or modifying this subsystem:
