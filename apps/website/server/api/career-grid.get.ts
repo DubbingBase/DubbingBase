@@ -30,7 +30,20 @@ async function fetchImageAsDataUri(url: string): Promise<string | null> {
     const res = await fetch(finalUrl);
     if (!res.ok) return null;
     const buffer = await res.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+    const bytes = new Uint8Array(buffer);
+    let base64: string;
+    if (typeof Buffer !== "undefined") {
+      base64 = Buffer.from(bytes).toString("base64");
+    } else {
+      let binary = "";
+      const chunkSize = 8192;
+      for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+        binary += String.fromCharCode(
+          ...bytes.subarray(offset, Math.min(offset + chunkSize, bytes.length)),
+        );
+      }
+      base64 = btoa(binary);
+    }
     const contentType = res.headers.get("content-type") || "image/jpeg";
     return `data:${contentType};base64,${base64}`;
   } catch {
