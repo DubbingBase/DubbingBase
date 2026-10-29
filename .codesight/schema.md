@@ -176,3 +176,16 @@
 - request_id: uuid (required, fk)
 - request_fingerprint: text (required)
 - result: jsonb (required)
+
+### user_voice_actor_link_requests
+- actor_id: uuid (required, fk)
+- request_id: uuid (required, fk)
+- operation: text (required)
+- payload_fingerprint: text (required)
+- target_user_id: uuid (required, fk)
+- voice_actor_id: integer (required, fk)
+- expected_link_id: uuid (fk)
+- result_link_id: uuid (fk)
+- result_changed: boolean
+- audit_log_id: uuid (fk)
+- completed_at: timestamp(tz)

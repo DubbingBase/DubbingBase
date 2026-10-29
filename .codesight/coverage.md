@@ -1,7 +1,7 @@
 # Test Coverage
 
-> **41%** of routes and models are covered by tests
-> 122 test files found
+> **44%** of routes and models are covered by tests
+> 125 test files found
 
 ## Covered Routes
 
@@ -9,6 +9,7 @@
 - GET:/api/admin/dubbing-project
 - POST:/api/admin/dubbing-project
 - POST:/api/admin/queue/reprocess-legacy-wiki-check-reviews
+- POST:/api/delete-user-voice-actor-link
 - POST:/api/delete-voice-actor-link
 - GET:/api/detail-collections
 - POST:/api/extract-voice-actor-info
@@ -16,6 +17,7 @@
 - POST:/api/get-random-task
 - GET:/api/get-studio-details
 - POST:/api/internal-media-create
+- POST:/api/link-user-voice-actor
 - POST:/api/link-voice-actor
 - POST:/api/media-queue
 - POST:/api/prepare_game
@@ -54,3 +56,4 @@
 - toy_metadata
 - gamification_task_submission_results
 - admin_credit_import_requests
+- user_voice_actor_link_requests

@@ -2,7 +2,7 @@
 
 > **Navigation aid.** Schema shapes and field types extracted via AST. Read the actual schema source files before writing migrations or query logic.
 
-**unknown** — 26 models
+**unknown** — 27 models
 
 ### voice_actors
 
@@ -258,6 +258,22 @@ fk: admin_id, request_id
 - `request_id`: uuid _(required, fk)_
 - `request_fingerprint`: text _(required)_
 - `result`: jsonb _(required)_
+
+### user_voice_actor_link_requests
+
+fk: actor_id, request_id, target_user_id, voice_actor_id, expected_link_id, result_link_id, audit_log_id
+
+- `actor_id`: uuid _(required, fk)_
+- `request_id`: uuid _(required, fk)_
+- `operation`: text _(required)_
+- `payload_fingerprint`: text _(required)_
+- `target_user_id`: uuid _(required, fk)_
+- `voice_actor_id`: integer _(required, fk)_
+- `expected_link_id`: uuid _(fk)_
+- `result_link_id`: uuid _(fk)_
+- `result_changed`: boolean
+- `audit_log_id`: uuid _(fk)_
+- `completed_at`: timestamp(tz)
 
 ## Schema Source Files
 

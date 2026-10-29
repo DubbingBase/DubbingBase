@@ -17,7 +17,7 @@
 - `POST` `/api/count-voice-actor-works`
 - `POST` `/api/create-user-profile` [auth, db]
 - `GET` `/api/dashboard-stats` [auth]
-- `POST` `/api/delete-user-voice-actor-link` [db]
+- `POST` `/api/delete-user-voice-actor-link` [auth] ✓
 - `POST` `/api/delete-voice-actor-link` [auth] ✓
 - `POST` `/api/delete_user` [auth]
 - `GET` `/api/detail-collections` ✓
@@ -41,7 +41,7 @@
 - `POST` `/api/internal-media-create` [auth] ✓
 - `GET` `/api/internal-media-credits`
 - `GET` `/api/internal-media-metadata`
-- `POST` `/api/link-user-voice-actor` [db]
+- `POST` `/api/link-user-voice-actor` [auth] ✓
 - `POST` `/api/link-voice-actor` [auth] ✓
 - `GET` `/api/list-voice-actors`
 - `GET` `/api/list_users` [auth]

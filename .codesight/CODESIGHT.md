@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 85 routes | 26 models | 200 components | 111 lib files | 74 env vars | 15 middleware | 41% test coverage
-> **Token savings:** this file is ~18,800 tokens. Without it, AI exploration would cost ~170,800 tokens. **Saves ~152,000 tokens per conversation.**
-> **Last scanned:** 2026-10-29 15:01 — re-run after significant changes
+> 85 routes | 27 models | 200 components | 111 lib files | 74 env vars | 15 middleware | 44% test coverage
+> **Token savings:** this file is ~19,000 tokens. Without it, AI exploration would cost ~171,200 tokens. **Saves ~152,200 tokens per conversation.**
+> **Last scanned:** 2026-10-29 15:28 — re-run after significant changes
 
 ---
 
@@ -28,7 +28,7 @@
 - `POST` `/api/count-voice-actor-works`
 - `POST` `/api/create-user-profile` [auth, db]
 - `GET` `/api/dashboard-stats` [auth]
-- `POST` `/api/delete-user-voice-actor-link` [db]
+- `POST` `/api/delete-user-voice-actor-link` [auth] ✓
 - `POST` `/api/delete-voice-actor-link` [auth] ✓
 - `POST` `/api/delete_user` [auth]
 - `GET` `/api/detail-collections` ✓
@@ -52,7 +52,7 @@
 - `POST` `/api/internal-media-create` [auth] ✓
 - `GET` `/api/internal-media-credits`
 - `GET` `/api/internal-media-metadata`
-- `POST` `/api/link-user-voice-actor` [db]
+- `POST` `/api/link-user-voice-actor` [auth] ✓
 - `POST` `/api/link-voice-actor` [auth] ✓
 - `GET` `/api/list-voice-actors`
 - `GET` `/api/list_users` [auth]
@@ -277,6 +277,19 @@
 - request_id: uuid (required, fk)
 - request_fingerprint: text (required)
 - result: jsonb (required)
+
+### user_voice_actor_link_requests
+- actor_id: uuid (required, fk)
+- request_id: uuid (required, fk)
+- operation: text (required)
+- payload_fingerprint: text (required)
+- target_user_id: uuid (required, fk)
+- voice_actor_id: integer (required, fk)
+- expected_link_id: uuid (fk)
+- result_link_id: uuid (fk)
+- result_changed: boolean
+- audit_log_id: uuid (fk)
+- completed_at: timestamp(tz)
 
 ---
 
@@ -940,7 +953,7 @@
 ## Most Imported Files (change these carefully)
 
 - `apps/website/server/utils/db/client.ts` — imported by **68** files
-- `apps/website/server/utils/auth.ts` — imported by **38** files
+- `apps/website/server/utils/auth.ts` — imported by **40** files
 - `apps/website/server/utils/index.ts` — imported by **25** files
 - `apps/website/server/utils/cache/index.ts` — imported by **19** files
 - `apps/website/server/utils/notifications/discord.ts` — imported by **12** files
@@ -963,7 +976,7 @@
 ## Import Map (who imports what)
 
 - `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +63 more
-- `apps/website/server/utils/auth.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +33 more
+- `apps/website/server/utils/auth.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +35 more
 - `apps/website/server/utils/index.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/episode/index.get.ts` +20 more
 - `apps/website/server/utils/cache/index.ts` ← `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/season/index.get.ts`, `apps/website/server/utils/api/igdb.test.ts`, `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.test.ts` +14 more
 - `apps/website/server/utils/notifications/discord.ts` ← `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/media-queue.post.ts`, `apps/website/server/api/movie/[id].get.ts` +7 more
@@ -977,8 +990,8 @@
 
 # Test Coverage
 
-> **41%** of routes and models are covered by tests
-> 122 test files found
+> **44%** of routes and models are covered by tests
+> 125 test files found
 
 ## Covered Routes
 
@@ -986,6 +999,7 @@
 - GET:/api/admin/dubbing-project
 - POST:/api/admin/dubbing-project
 - POST:/api/admin/queue/reprocess-legacy-wiki-check-reviews
+- POST:/api/delete-user-voice-actor-link
 - POST:/api/delete-voice-actor-link
 - GET:/api/detail-collections
 - POST:/api/extract-voice-actor-info
@@ -993,6 +1007,7 @@
 - POST:/api/get-random-task
 - GET:/api/get-studio-details
 - POST:/api/internal-media-create
+- POST:/api/link-user-voice-actor
 - POST:/api/link-voice-actor
 - POST:/api/media-queue
 - POST:/api/prepare_game
@@ -1031,6 +1046,7 @@
 - toy_metadata
 - gamification_task_submission_results
 - admin_credit_import_requests
+- user_voice_actor_link_requests
 
 ---
 

@@ -15,6 +15,7 @@ The Update_user_role.post subsystem handles **1 routes** and touches: auth.
 - **user_profile_links** (3 fields) → [database.md](./database.md)
 - **user_voice_actor_links** (3 fields) → [database.md](./database.md)
 - **user_reports** (5 fields) → [database.md](./database.md)
+- **user_voice_actor_link_requests** (11 fields) → [database.md](./database.md)
 
 ## Source Files
 

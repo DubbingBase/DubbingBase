@@ -2,11 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Delete-user-voice-actor-link.post subsystem handles **1 routes** and touches: db.
+The Delete-user-voice-actor-link.post subsystem handles **1 routes** and touches: auth.
 
 ## Routes
 
-- `POST` `/api/delete-user-voice-actor-link` [db]
+- `POST` `/api/delete-user-voice-actor-link` [auth]
   `apps/website/server/api/delete-user-voice-actor-link.post.ts`
 
 ## Related Models
