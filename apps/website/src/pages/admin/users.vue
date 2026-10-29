@@ -230,7 +230,6 @@ interface User {
   created_at: string;
   app_metadata: {
     role?: string;
-    [key: string]: any;
   };
 }
 
@@ -270,7 +269,7 @@ const {
 } = await useAsyncData(
   "admin-users",
   async () => {
-    const data = await $fetch<{ users: User[] }>("/api/list_users");
+    const data = await $fetch<{ users: User[] }>("/api/list_users?projection=admin-list");
     return data?.users || [];
   },
   { getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp) },
