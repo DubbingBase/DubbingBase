@@ -185,6 +185,8 @@ async function buildWebsite() {
       env: {
         ...localBenchmarkEnvironment(),
         NODE_ENV: "production",
+        pnpm_config_minimum_release_age: "0",
+        pnpm_config_minimum_release_age_strict: "false",
         ROUTE_CPU_BENCHMARK: "true",
         NITRO_PRESET: "node-server",
         SUPABASE_URL: "https://mock.supabase.co",
