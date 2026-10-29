@@ -25,7 +25,7 @@ export function mediaPageAggregateCredits(credits: unknown) {
   const cast = isRecord(credits) && Array.isArray(credits.cast) ? credits.cast : [];
   return {
     cast: cast.filter(isRecord).map((member) => ({
-      ...pickFields(member, ["id", "name", "original_name", "profile_path", "character"]),
+      ...pickFields(member, ["id", "name", "profile_path", "character"]),
       ...(Array.isArray(member.roles)
         ? {
             roles: member.roles
