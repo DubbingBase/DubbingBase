@@ -174,14 +174,22 @@ function tmdbCastCredits(value: unknown): TmdbCredit[] {
   return value.cast.filter(isTmdbCredit);
 }
 
-function indexTmdbCastByActorId(media: unknown): Map<number, TmdbCastMember> {
+function indexTmdbCastByActorId(
+  media: unknown,
+  relevantActorIds: ReadonlySet<number>,
+): Map<number, TmdbCastMember> {
   if (!isRecord(media) || !isRecord(media.credits) || !Array.isArray(media.credits.cast)) {
     return new Map();
   }
 
   const castByActorId = new Map<number, TmdbCastMember>();
   for (const value of media.credits.cast) {
-    if (!isRecord(value) || typeof value.id !== "number" || castByActorId.has(value.id)) {
+    if (
+      !isRecord(value) ||
+      typeof value.id !== "number" ||
+      !relevantActorIds.has(value.id) ||
+      castByActorId.has(value.id)
+    ) {
       continue;
     }
 
@@ -278,6 +286,10 @@ export class MediaService {
 
     const voiceActorWithImages = processVoiceActor(voiceActor);
     const workItems = voiceActor.work || [];
+    const relevantActorIds = new Set<number>();
+    for (const work of workItems) {
+      if (typeof work.actor_id === "number") relevantActorIds.add(work.actor_id);
+    }
 
     // 1. Deduplicate media requests by (contentType + contentId)
     const uniqueTargetsMap = new Map<string, MediaTarget>();
@@ -634,7 +646,7 @@ export class MediaService {
       const mediaKey = `${contentType}:${contentId}`;
       let castByActorId = castByMediaAndActorId.get(mediaKey);
       if (!castByActorId) {
-        castByActorId = indexTmdbCastByActorId(fullMedia);
+        castByActorId = indexTmdbCastByActorId(fullMedia, relevantActorIds);
         castByMediaAndActorId.set(mediaKey, castByActorId);
       }
 
