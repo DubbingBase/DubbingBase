@@ -13,7 +13,6 @@ if (baseReport.runtime !== headReport.runtime) {
 
 const routeNames = ["movie", "show", "actor", "voice-actor"];
 const datasets = ["representative", "large"];
-const formatInteger = new Intl.NumberFormat("en-US");
 const workflowRun =
   process.env.GITHUB_RUN_ID && process.env.GITHUB_REPOSITORY
     ? `[workflow run ${process.env.GITHUB_RUN_ID}](${process.env.GITHUB_SERVER_URL ?? "https://github.com"}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID})`
@@ -46,30 +45,6 @@ function formatDelta(baseMicros, headMicros) {
   return `${formatSigned(milliseconds, 2)} ms (${formatSigned(percentage, 1)}%)`;
 }
 
-function formatBytes(base, head) {
-  const baseBytes = formatInteger.format(Math.round(base.median));
-  const headBytes = formatInteger.format(Math.round(head.median));
-  const same =
-    base.median === head.median &&
-    base.minimum === head.minimum &&
-    base.maximum === head.maximum;
-  return same ? `${baseBytes} B` : `${baseBytes} → ${headBytes} B`;
-}
-
-function formatFixture(route, fixture) {
-  const format = (value) => formatInteger.format(value);
-  if (route === "movie") {
-    return `${format(fixture.mediaCredits)} cast credits, ${format(fixture.dubbingProjects)} projects`;
-  }
-  if (route === "show") {
-    return `${format(fixture.mediaCredits)} cast/episode credits, ${format(fixture.dubbingProjects)} projects`;
-  }
-  if (route === "actor") {
-    return `${format(fixture.actorCredits)} credits, ${format(fixture.actorRoles)} voice roles`;
-  }
-  return `${format(fixture.voiceActorWorks)} works / ${format(fixture.uniqueVoiceActorMedia)} titles`;
-}
-
 function safeCell(value) {
   return String(value).replaceAll("|", "\\|").replaceAll("`", "\\`");
 }
@@ -90,7 +65,6 @@ function sameFixture(base, head, route, dataset) {
 
 const rows = [];
 const cpuComparisons = [];
-let unchangedHtmlComparisons = 0;
 for (const route of routeNames) {
   for (const dataset of datasets) {
     const base = getWorkload(baseWorkloads, route, dataset, "Base");
@@ -98,17 +72,9 @@ for (const route of routeNames) {
     sameFixture(base, head, route, dataset);
     const baseCpu = base.cpuMicrosPerRequest.total;
     const headCpu = head.cpuMicrosPerRequest.total;
-    const fixture = formatFixture(route, head.fixture);
     cpuComparisons.push({ base: baseCpu, head: headCpu });
-    if (
-      base.htmlBytesPerRequest.median === head.htmlBytesPerRequest.median &&
-      base.htmlBytesPerRequest.minimum === head.htmlBytesPerRequest.minimum &&
-      base.htmlBytesPerRequest.maximum === head.htmlBytesPerRequest.maximum
-    ) {
-      unchangedHtmlComparisons += 1;
-    }
     rows.push(
-      `| ${route} (${dataset}) | ${fixture} | ${formatCpu(baseCpu)} | ${formatCpu(headCpu)} | ${formatDelta(baseCpu.median, headCpu.median)} | ${formatBytes(base.htmlBytesPerRequest, head.htmlBytesPerRequest)} |`,
+      `| ${route} (${dataset}) | ${formatCpu(baseCpu)} | ${formatCpu(headCpu)} | ${formatDelta(baseCpu.median, headCpu.median)} |`,
     );
   }
 }
@@ -119,11 +85,6 @@ const rangeSummary =
   overlappingRanges === cpuComparisons.length
     ? `The observed ranges overlap in all ${cpuComparisons.length} comparisons, so this run shows no clear CPU change.`
     : `The observed ranges overlap in ${overlappingRanges} of ${cpuComparisons.length} comparisons; min–max ranges are descriptive, not statistical confidence intervals.`;
-const htmlSummary =
-  unchangedHtmlComparisons === cpuComparisons.length
-    ? `HTML size is unchanged in all ${unchangedHtmlComparisons} comparisons.`
-    : `HTML size changed in ${cpuComparisons.length - unchangedHtmlComparisons} of ${cpuComparisons.length} comparisons.`;
-
 function isApplicationSource(source) {
   const normalized = source.replaceAll("\\", "/");
   return (
@@ -174,10 +135,10 @@ const markdown = [
   "",
   "CPU/request = server user + system time; values are median (observed min–max) over 5 × 20 requests after 10 warmups. Change = PR − base.",
   "",
-  `**Result:** ${rangeSummary} ${htmlSummary} This PR changes CI benchmarking, not route code.`,
+  `**Result:** ${rangeSummary} This PR changes CI benchmarking, not route code.`,
   "",
-  "| Route / workload | Mock data | Base CPU / request | PR CPU / request | Change | HTML / response (base → PR) |",
-  "| --- | --- | ---: | ---: | ---: | ---: |",
+  "| Route / workload | Base CPU / request | PR CPU / request | Change (PR − base) |",
+  "| --- | ---: | ---: | ---: |",
   ...rows,
   "",
   "### Top application-code frames (large workload)",
