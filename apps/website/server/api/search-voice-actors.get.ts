@@ -9,6 +9,7 @@ async function searchVoiceActors(
   supabaseAdmin: any,
   query: string,
   limit = 10,
+  useAdminSearchProjection = false,
 ) {
   const trimmedQuery = normalizeString(query);
   if (!trimmedQuery) return [];
@@ -20,7 +21,11 @@ async function searchVoiceActors(
 
   const { data, error } = await supabaseAdmin
     .from("voice_actors")
-    .select("*")
+    .select(
+      useAdminSearchProjection
+        ? "id, firstname, lastname, bio, nationality, date_of_birth, tmdb_id, wikidata_id, profile_picture"
+        : "*",
+    )
     .or(`firstname.ilike.%${longestWord}%,lastname.ilike.%${longestWord}%`)
     .limit(300);
 
@@ -89,7 +94,12 @@ export default defineEventHandler(async (event) => {
   const supabaseAdmin = event.context.supabaseAdmin || useSupabaseAdmin();
 
   try {
-    return await searchVoiceActors(supabaseAdmin, searchQuery, limit);
+    return await searchVoiceActors(
+      supabaseAdmin,
+      searchQuery,
+      limit,
+      query.projection === "admin-search",
+    );
   } catch (error) {
     console.error("Error in search-voice-actors route:", error);
     throw createError({

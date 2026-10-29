@@ -681,7 +681,7 @@ watch([actorA, actorB], async ([newA, newB]) => {
     error.value = "";
     selectedKeepId.value = null; // Reset selection
 
-    // Full profiles are already fetched by search-voice-actors, so we just need works count
+    // Actor details are already fetched by search-voice-actors, so we just need works count
     await fetchWorksCount([newA.id, newB.id]);
 
     // Auto-preselect the one with the most works or most info
@@ -807,7 +807,7 @@ const executeSearch = async (type: "A" | "B") => {
   try {
     const data = await $fetch<VoiceActorCandidate[]>(
       "/api/search-voice-actors",
-      { params: { query, limit: "10" } },
+      { params: { query, limit: "10", projection: "admin-search" } },
     );
 
     resultsRef.value = data || [];

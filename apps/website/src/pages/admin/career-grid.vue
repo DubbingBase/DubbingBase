@@ -230,7 +230,7 @@ const executeSearch = async () => {
   try {
     const data = await $fetch<VoiceActorCandidate[]>(
       "/api/search-voice-actors",
-      { params: { query, limit: "10" } },
+      { params: { query, limit: "10", projection: "admin-search" } },
     );
     searchResults.value = data || [];
   } catch (err: any) {

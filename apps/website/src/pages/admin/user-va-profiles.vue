@@ -559,7 +559,7 @@ const searchVoiceActors = async () => {
   voiceActorSearching.value = true;
   try {
     const data = await $fetch<VoiceActor[]>("/api/search-voice-actors", {
-      params: { query, limit: 10 },
+      params: { query, limit: 10, projection: "admin-search" },
     });
 
     voiceActorResults.value = data || [];
