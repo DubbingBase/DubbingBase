@@ -863,7 +863,7 @@ const {
           offset: 0,
         },
       }),
-      $fetch<ListUsersResponse>("/api/list_users").catch(() => null),
+      $fetch<ListUsersResponse>("/api/list_users?projection=admin-list").catch(() => null),
     ]);
 
     const map: Record<string, string> = {};

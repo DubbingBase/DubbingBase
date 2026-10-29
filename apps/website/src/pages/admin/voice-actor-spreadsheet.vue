@@ -344,6 +344,7 @@ const { data, pending, error, refresh } = await useAsyncData(
         limit: limit.value,
         offset: (page.value - 1) * limit.value,
         query: searchQuery.value,
+        view: "spreadsheet",
       },
     });
   },

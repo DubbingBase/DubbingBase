@@ -86,6 +86,12 @@ useHead({
   ],
 });
 
+type TrendingMovieCard = {
+  id: number;
+  title?: string;
+  poster_path: string | null;
+};
+
 const {
   data,
   pending: isLoading,
@@ -93,10 +99,10 @@ const {
 } = useAsyncData(
   () => `movies-page:${trendingLanguage.value}`,
   async () => {
-    const data = await $fetch<{ results: any[] }>("/api/trending/movies", {
-      params: { lang: trendingLanguage.value },
+    const data = await $fetch<{ results?: TrendingMovieCard[] }>("/api/trending/movies", {
+      params: { lang: trendingLanguage.value, projection: "card" },
     });
-    return data?.results || [];
+    return data?.results ?? [];
   },
   {
     watch: [trendingLanguage],

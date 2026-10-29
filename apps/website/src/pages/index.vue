@@ -453,12 +453,20 @@ function useHomeSection<T>(
   });
 }
 
+type TrendingMovieCard = {
+  id: number;
+  title?: string;
+  poster_path: string | null;
+};
+
 const moviesData = useHomeSection(
   "movies",
   async () => {
     const response = await $fetch<{
-      results?: HomeDataPayload["trendingMovies"];
-    }>("/api/trending/movies", { params: { lang: trendingLanguage.value } });
+      results?: TrendingMovieCard[];
+    }>("/api/trending/movies", {
+      params: { lang: trendingLanguage.value, projection: "card" },
+    });
     return response.results ?? [];
   },
   () => [],
@@ -486,7 +494,10 @@ const gamesData = useHomeSection(
 
 const trendingVoiceActorsData = useHomeSection(
   "trending-voice-actors",
-  () => $fetch<HomeDataPayload["trendingVoiceActors"]>("/api/trending/voice-actors"),
+  () =>
+    $fetch<HomeDataPayload["trendingVoiceActors"]>("/api/trending/voice-actors", {
+      params: { projection: "home" },
+    }),
   () => [],
 );
 
@@ -494,7 +505,7 @@ const topVoiceActorsData = useHomeSection(
   "top-voice-actors",
   () =>
     $fetch<HomeDataPayload["topVoiceActors"]>("/api/top-voice-actors", {
-      params: { limit: 10 },
+      params: { limit: 10, projection: "home" },
     }),
   () => [],
 );
@@ -503,7 +514,7 @@ const topContributorsData = useHomeSection(
   "top-contributors",
   () =>
     $fetch<HomeDataPayload["topContributors"]>("/api/top-contributors", {
-      params: { limit: 10 },
+      params: { limit: 10, projection: "home" },
     }),
   () => [],
   isAdmin,
