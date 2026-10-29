@@ -300,6 +300,7 @@ describe("movie and show detail API payload compatibility", () => {
     expect(apiMocks.getMediaWithVoiceActors).toHaveBeenCalledWith("movie", 123, {
       includeCollection: false,
       includeCreditsCrew: false,
+      projection: "media-page",
     });
     expect(apiMocks.getMediaPageDubbingProjects).toHaveBeenCalledWith(123, "movie");
     expect(apiMocks.getDubbingProjects).not.toHaveBeenCalled();
