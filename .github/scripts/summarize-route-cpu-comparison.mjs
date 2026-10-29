@@ -74,11 +74,15 @@ for (const dataset of datasets) {
 
 function formatFrames(workload) {
   const profile = workload.profile;
-  const frames = profile?.topSampledFrames;
-  if (!profile || !Array.isArray(frames)) {
+  const sampledFrames = profile?.topSampledFrames;
+  if (!profile || !Array.isArray(sampledFrames)) {
     throw new Error(`Large workload ${workload.name} is missing its V8 profile summary.`);
   }
-  if (frames.length === 0) return "No application frames sampled";
+  const frames = sampledFrames.filter((frame) => {
+    const source = frame.source.replaceAll("\\", "/");
+    return !(frame.functionName === "flatten" && source.includes("/devalue/"));
+  });
+  if (frames.length === 0) return "No other frames sampled after excluding devalue.flatten";
   return `${profile.relevantSampleCount}/${profile.sampleCount} server samples; ${frames
     .slice(0, 5)
     .map(
@@ -106,7 +110,7 @@ const markdown = [
   "",
   "### Large-fixture V8 profile samples",
   "",
-  "Profiles were captured separately from CPU measurements with a 1 ms V8 sampling interval over 50 serial requests for each large fixture. Frame shares represent sampled server JavaScript self-time, including bundled framework code; they are approximations, not exact timings. Locations map to source files when source maps are emitted and otherwise refer to generated server chunks. Raw `.cpuprofile` files are attached to this run's artifact.",
+  "Profiles were captured separately from CPU measurements with a 1 ms V8 sampling interval over 50 serial requests for each large fixture. The displayed hotspot list omits `devalue.flatten`; end-to-end CPU/request still includes its work. Other frame shares represent sampled server JavaScript self-time, including bundled framework code, and are approximations rather than exact timings. Locations map to source files when source maps are emitted and otherwise refer to generated server chunks. Raw `.cpuprofile` files are attached to this run's artifact.",
   "",
   "| Route | Base top sampled frames | PR top sampled frames |",
   "| --- | --- | --- |",

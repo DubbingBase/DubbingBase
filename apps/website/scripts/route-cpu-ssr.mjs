@@ -298,7 +298,7 @@ async function cpuProfileSummary(profile) {
     relevantSampleCount,
     topSampledFrames: mappedFrames
       .sort((left, right) => right.sampledMicros - left.sampledMicros)
-      .slice(0, 8)
+      .slice(0, 16)
       .map(({ functionName, source, sampledMicros }) => ({
         functionName,
         source,
