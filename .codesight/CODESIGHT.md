@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 85 routes | 27 models | 200 components | 111 lib files | 74 env vars | 15 middleware | 44% test coverage
-> **Token savings:** this file is ~19,000 tokens. Without it, AI exploration would cost ~171,200 tokens. **Saves ~152,200 tokens per conversation.**
-> **Last scanned:** 2026-10-29 16:28 — re-run after significant changes
+> 88 routes | 27 models | 200 components | 113 lib files | 74 env vars | 15 middleware | 45% test coverage
+> **Token savings:** this file is ~19,200 tokens. Without it, AI exploration would cost ~173,300 tokens. **Saves ~154,100 tokens per conversation.**
+> **Last scanned:** 2026-10-29 19:54 — re-run after significant changes
 
 ---
 
@@ -81,14 +81,17 @@
 - `GET` `/api/show/:id` params(id) [queue]
 - `POST` `/api/submit-task` [auth, db, upload] ✓
 - `POST` `/api/submit-user-report` [db]
-- `GET` `/api/top-contributors`
-- `GET` `/api/top-voice-actors`
+- `ALL` `/api/top-contributors.get.test`
+- `GET` `/api/top-contributors` ✓
+- `ALL` `/api/top-voice-actors.get.test`
+- `GET` `/api/top-voice-actors` ✓
 - `GET` `/api/toy/:id` params(id) [queue]
 - `GET` `/api/toy-metadata/:id` params(id)
 - `GET` `/api/trending/games` [cache]
 - `GET` `/api/trending/movies` [cache]
 - `GET` `/api/trending/shows` [cache]
-- `GET` `/api/trending/voice-actors`
+- `ALL` `/api/trending/voice-actors.get.test`
+- `GET` `/api/trending/voice-actors` ✓
 - `POST` `/api/update-review-status` [auth] ✓
 - `POST` `/api/update-user-profile`
 - `POST` `/api/update-voice-actor` [auth, upload] ✓
@@ -589,8 +592,8 @@
   - function getActorPageWorkByActor: (actorId) => void
   - function getDubbingProjects: (contentId, contentType) => void
   - function getDubbingProjectsForMediaEndpoint: (contentId, contentType, projection) => void
-  - function getMediaPageDubbingProjects: (contentId, contentType) => void
-  - _...3 more_
+  - function getAdvertisementPageDubbingProjects: (contentId) => void
+  - _...7 more_
 - `apps/website/server/utils/dubbing-language.ts` — function requireDubbingLanguage: (value) => DubbingLanguage
 - `apps/website/server/utils/dubbing-region-detection.ts` — function detectDubbingRegionFromWikitext: ({...}, sections, }) => DubbingEvidence, type DubbingEvidence
 - `apps/website/server/utils/error-message.ts` — function getErrorMessage: (error) => string
@@ -610,7 +613,7 @@
   - function llmGenerateObject: (prompt, schema, options?) => Promise<
   - function llmVision: (prompt, imageData, mimeType, options?) => Promise<
   - function llmVisionObject: (prompt, imageData, schema, mimeType, options?) => Promise<
-- `apps/website/server/utils/media-page-credits.ts` — function mediaPageAggregateCredits: (credits) => void
+- `apps/website/server/utils/media-page-credits.ts` — function mediaPageMovieCredits: (credits) => void, function mediaPageAggregateCredits: (credits) => void
 - `apps/website/server/utils/media-queue-readiness.ts`
   - function getReadyMediaQueueNames: (value) => MediaQueueName[]
   - type MediaQueueName
@@ -694,6 +697,8 @@
 - `apps/website/server/utils/with-timeout.ts` — function withTimeout: (promise, timeoutMs, dependency) => Promise<T>
 - `apps/website/server/utils/work-role-identity.ts` — function findUniqueWorkRoleMatch: (works, matchingWorkIds) => T | undefined
 - `apps/website/src/composables/getHydrationCachedData.ts` — function getHydrationCachedData: (key, nuxtApp) => T | undefined
+- `apps/website/src/composables/useAdminAuditLogs.ts` — function useAdminAuditLogs, type AdminAuditLog
+- `apps/website/src/composables/useAdminReports.ts` — function useAdminReports, const ADMIN_REPORTS_PAGE_SIZE
 - `apps/website/src/composables/useContribute.ts`
   - function fetchRandomTask
   - function useContribute
@@ -774,8 +779,8 @@
   - function useActorData: (initialData?, options) => void
   - type ActorResponse
   - type ActorDataPayload
-- `packages/shared-logic/src/composables/useAdvertisementData.ts` — function fetchAdvertisementData: (id, locale?) => Promise<AdvertisementResponse | null>
-- `packages/shared-logic/src/composables/useAudiobookData.ts` — function fetchAudiobookData: (id, locale?) => Promise<AudiobookResponse | null>
+- `packages/shared-logic/src/composables/useAdvertisementData.ts` — function fetchAdvertisementData: (id, locale?, options?) => Promise<AdvertisementResponse | null>
+- `packages/shared-logic/src/composables/useAudiobookData.ts` — function fetchAudiobookData: (id, locale?, options) => Promise<AudiobookResponse | null>
 - `packages/shared-logic/src/composables/useDetailCollections.ts`
   - function selectDetailCollectionProject: (projects, projectId) => T | undefined
   - function resolveDetailCollectionProject: (projects, projectId) => T | undefined
@@ -785,23 +790,23 @@
   - function filterDetailCollectionItems: (items, query) => T[]
   - _...7 more_
 - `packages/shared-logic/src/composables/useEpisodeData.ts` — function fetchEpisodeData: (showId, seasonNumber, episodeNumber, locale?) => Promise<any | null>
-- `packages/shared-logic/src/composables/useGameData.ts` — function fetchGameData: (id, locale?) => Promise<any | null>
+- `packages/shared-logic/src/composables/useGameData.ts` — function fetchGameData: (id, locale?, projection?) => Promise<GamePageData | null>
 - `packages/shared-logic/src/composables/useHomeData.ts`
   - function fetchHomeData: (language) => Promise<HomeDataPayload>
   - function useHomeData: (initialData?) => void
   - type HomeDataPayload
 - `packages/shared-logic/src/composables/useMovieData.ts` — function fetchMovieData: (id, locale?, options) => Promise<MovieDetailResponse | null>
-- `packages/shared-logic/src/composables/usePodcastData.ts` — function fetchPodcastData: (id, locale?) => Promise<PodcastResponse | null>
+- `packages/shared-logic/src/composables/usePodcastData.ts` — function fetchPodcastData: (id, locale?, options) => Promise<PodcastResponse | null>
 - `packages/shared-logic/src/composables/useSearchData.ts` — function fetchSearchData: (query) => Promise<SearchResult[]>, type SearchResult
 - `packages/shared-logic/src/composables/useSeasonData.ts` — function fetchSeasonData: (showId, seasonNumber, locale?) => Promise<any | null>
 - `packages/shared-logic/src/composables/useShowData.ts` — function fetchShowData: (id, locale?, options) => Promise<ShowDetailResponse | null>
 - `packages/shared-logic/src/composables/useStudioData.ts`
-  - function fetchStudioDetails: (studioId) => Promise<StudioDetailsResponse | null>
+  - function fetchStudioDetails: (studioId, projection?) => Promise<StudioDetailsResponse | null>
   - function fetchStudiosData: () => Promise<Studio[]>
   - function useStudioData: (initialStudios?, initialStudioDetails?) => void
   - type Studio
   - type StudioDetailsResponse
-- `packages/shared-logic/src/composables/useToyData.ts` — function fetchToyData: (id, locale?) => Promise<ToyResponse | null>
+- `packages/shared-logic/src/composables/useToyData.ts` — function fetchToyData: (id, locale?, projection?) => Promise<ToyResponse | null>
 - `packages/shared-logic/src/composables/useVoiceActorData.ts`
   - function fetchVoiceActorData: (id, lang?) => Promise<VoiceActorDataPayload | null>
   - function useVoiceActorData: (initialData?) => void
@@ -958,14 +963,14 @@
 - `apps/website/server/utils/cache/index.ts` — imported by **19** files
 - `apps/website/server/utils/notifications/discord.ts` — imported by **12** files
 - `apps/website/server/utils/db/queries.ts` — imported by **11** files
+- `apps/website/server/utils/urls/supabase.ts` — imported by **11** files
 - `apps/website/server/utils/api/igdb.ts` — imported by **11** files
-- `apps/website/server/utils/urls/supabase.ts` — imported by **10** files
 - `apps/website/server/utils/urls/tmdb.ts` — imported by **10** files
 - `apps/website/server/utils/dubbing-language.ts` — imported by **10** files
 - `e2e/helpers/mock-api.ts` — imported by **9** files
+- `packages/shared-logic/src/types/index.ts` — imported by **9** files
 - `apps/website/server/utils/cache/http.ts` — imported by **8** files
 - `apps/website/server/utils/cache/constants.ts` — imported by **8** files
-- `packages/shared-logic/src/types/index.ts` — imported by **8** files
 - `apps/website/server/utils/background.ts` — imported by **7** files
 - `apps/website/server/utils/services/media.ts` — imported by **7** files
 - `apps/website/server/utils/cache/wikipedia.ts` — imported by **5** files
@@ -981,8 +986,8 @@
 - `apps/website/server/utils/cache/index.ts` ← `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/season/index.get.ts`, `apps/website/server/utils/api/igdb.test.ts`, `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.test.ts` +14 more
 - `apps/website/server/utils/notifications/discord.ts` ← `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/media-queue.post.ts`, `apps/website/server/api/movie/[id].get.ts` +7 more
 - `apps/website/server/utils/db/queries.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/game/[id].get.ts` +6 more
+- `apps/website/server/utils/urls/supabase.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/dashboard-stats.get.ts`, `apps/website/server/api/find_duplicate_voice_actors.get.ts`, `apps/website/server/api/list-voice-actors.get.ts`, `apps/website/server/api/recent-voice-actors.get.ts` +6 more
 - `apps/website/server/utils/api/igdb.ts` ← `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/internal-media-credits.get.ts`, `apps/website/server/api/internal-media-metadata.get.ts`, `apps/website/server/api/search/index.get.ts`, `apps/website/server/api/trending/games.get.ts` +6 more
-- `apps/website/server/utils/urls/supabase.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/dashboard-stats.get.ts`, `apps/website/server/api/find_duplicate_voice_actors.get.ts`, `apps/website/server/api/recent-voice-actors.get.ts`, `apps/website/server/api/search/index.get.ts` +5 more
 - `apps/website/server/utils/urls/tmdb.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/movie/[id].get.ts`, `apps/website/server/api/notify-subscribers.post.ts`, `apps/website/server/api/prepare-trending-media.post.ts`, `apps/website/server/api/search/index.get.ts` +5 more
 - `apps/website/server/utils/dubbing-language.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/internal-media-create.post.ts`, `apps/website/server/api/link-voice-actor.post.ts`, `apps/website/server/api/media-queue.post.ts` +5 more
 
@@ -990,8 +995,8 @@
 
 # Test Coverage
 
-> **44%** of routes and models are covered by tests
-> 125 test files found
+> **45%** of routes and models are covered by tests
+> 130 test files found
 
 ## Covered Routes
 
@@ -1017,6 +1022,9 @@
 - POST:/api/save-studio
 - POST:/api/save-toy-metadata
 - POST:/api/submit-task
+- GET:/api/top-contributors
+- GET:/api/top-voice-actors
+- GET:/api/trending/voice-actors
 - POST:/api/update-review-status
 - POST:/api/update-voice-actor
 - POST:/api/update_voice_actor_link

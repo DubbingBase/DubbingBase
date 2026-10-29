@@ -1,7 +1,7 @@
 # Test Coverage
 
-> **44%** of routes and models are covered by tests
-> 125 test files found
+> **45%** of routes and models are covered by tests
+> 130 test files found
 
 ## Covered Routes
 
@@ -27,6 +27,9 @@
 - POST:/api/save-studio
 - POST:/api/save-toy-metadata
 - POST:/api/submit-task
+- GET:/api/top-contributors
+- GET:/api/top-voice-actors
+- GET:/api/trending/voice-actors
 - POST:/api/update-review-status
 - POST:/api/update-voice-actor
 - POST:/api/update_voice_actor_link

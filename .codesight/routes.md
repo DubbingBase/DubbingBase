@@ -70,14 +70,17 @@
 - `GET` `/api/show/:id` params(id) [queue]
 - `POST` `/api/submit-task` [auth, db, upload] ✓
 - `POST` `/api/submit-user-report` [db]
-- `GET` `/api/top-contributors`
-- `GET` `/api/top-voice-actors`
+- `ALL` `/api/top-contributors.get.test`
+- `GET` `/api/top-contributors` ✓
+- `ALL` `/api/top-voice-actors.get.test`
+- `GET` `/api/top-voice-actors` ✓
 - `GET` `/api/toy/:id` params(id) [queue]
 - `GET` `/api/toy-metadata/:id` params(id)
 - `GET` `/api/trending/games` [cache]
 - `GET` `/api/trending/movies` [cache]
 - `GET` `/api/trending/shows` [cache]
-- `GET` `/api/trending/voice-actors`
+- `ALL` `/api/trending/voice-actors.get.test`
+- `GET` `/api/trending/voice-actors` ✓
 - `POST` `/api/update-review-status` [auth] ✓
 - `POST` `/api/update-user-profile`
 - `POST` `/api/update-voice-actor` [auth, upload] ✓

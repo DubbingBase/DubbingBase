@@ -8,7 +8,7 @@
 
 ## Scale
 
-85 API routes · 27 database models · 200 UI components · 111 library files · 15 middleware layers · 74 environment variables
+88 API routes · 27 database models · 200 UI components · 113 library files · 15 middleware layers · 74 environment variables
 
 ## Subsystems
 
@@ -70,7 +70,9 @@
 - **[Submit-task.post](./submit-task.post.md)** — 1 routes — touches: auth, db, upload
 - **[Submit-user-report.post](./submit-user-report.post.md)** — 1 routes — touches: db
 - **[Top-contributors.get](./top-contributors.get.md)** — 1 routes
+- **[Top-contributors.get.test](./top-contributors.get.test.md)** — 1 routes
 - **[Top-voice-actors.get](./top-voice-actors.get.md)** — 1 routes
+- **[Top-voice-actors.get.test](./top-voice-actors.get.test.md)** — 1 routes
 - **[Update-review-status.post](./update-review-status.post.md)** — 1 routes — touches: auth
 - **[Update-user-profile.post](./update-user-profile.post.md)** — 1 routes
 - **[Update-voice-actor.post](./update-voice-actor.post.md)** — 1 routes — touches: auth, upload
@@ -78,12 +80,13 @@
 - **[Update_voice_actor_link.post](./update_voice_actor_link.post.md)** — 1 routes — touches: auth
 - **[Upload-profile-picture.post](./upload-profile-picture.post.md)** — 1 routes — touches: db, upload
 - **[Voice-actors.get](./voice-actors.get.md)** — 1 routes
+- **[Voice-actors.get.test](./voice-actors.get.test.md)** — 1 routes
 
 **Database:** unknown, 27 models — see [database.md](./database.md)
 
 **UI:** 200 components (vue) — see [ui.md](./ui.md)
 
-**Libraries:** 111 files — see [libraries.md](./libraries.md)
+**Libraries:** 113 files — see [libraries.md](./libraries.md)
 
 ## High-Impact Files
 
