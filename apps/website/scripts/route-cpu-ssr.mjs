@@ -153,14 +153,18 @@ function localBenchmarkEnvironment() {
   return environment;
 }
 
-async function buildWebsite() {
-  const [networkNamespace, initNetworkNamespace] = await Promise.all([
-    readlink("/proc/self/ns/net"),
-    readlink("/proc/1/ns/net"),
-  ]);
-  if (networkNamespace === initNetworkNamespace) {
-    throw new Error("Run the website build inside the isolated network namespace.");
+async function assertIsolatedNetworkNamespace(action) {
+  const hostNetworkNamespace = process.env.ROUTE_CPU_HOST_NETWORK_NAMESPACE;
+  if (!hostNetworkNamespace) {
+    throw new Error(`Capture the host network namespace before running ${action}.`);
   }
+  if ((await readlink("/proc/self/ns/net")) === hostNetworkNamespace) {
+    throw new Error(`Run ${action} inside the isolated network namespace.`);
+  }
+}
+
+async function buildWebsite() {
+  await assertIsolatedNetworkNamespace("the website build");
 
   const middlewarePath = join(websiteDir, "server/middleware/00-e2e-mock.ts");
   const nuxtConfigPath = join(websiteDir, "nuxt.config.ts");
@@ -551,13 +555,7 @@ async function measureDataset(dataset) {
 }
 
 async function measure() {
-  const [networkNamespace, initNetworkNamespace] = await Promise.all([
-    readlink("/proc/self/ns/net"),
-    readlink("/proc/1/ns/net"),
-  ]);
-  if (networkNamespace === initNetworkNamespace) {
-    throw new Error("Run route profiling inside the isolated network namespace.");
-  }
+  await assertIsolatedNetworkNamespace("route profiling");
 
   await rm(profileDir, { recursive: true, force: true });
   await mkdir(profileDir, { recursive: true });

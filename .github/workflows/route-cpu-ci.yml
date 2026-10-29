@@ -83,10 +83,12 @@ jobs:
             runner_uid="$(id -u)"
             runner_gid="$(id -g)"
             mise_bin="$(command -v mise)"
+            host_network_namespace="$(readlink /proc/self/ns/net)"
             sudo unshare --net -- /usr/bin/env \
               "PATH=$PATH" \
               "HOME=$HOME" \
               "MISE_BIN=$mise_bin" \
+              "ROUTE_CPU_HOST_NETWORK_NAMESPACE=$host_network_namespace" \
               "ROUTE_CPU_WEBSITE_DIR=$PWD/apps/website" \
               "ROUTE_CPU_UID=$runner_uid" \
               "ROUTE_CPU_GID=$runner_gid" \
@@ -101,6 +103,7 @@ jobs:
               "PATH=$PATH" \
               "HOME=$HOME" \
               "MISE_BIN=$mise_bin" \
+              "ROUTE_CPU_HOST_NETWORK_NAMESPACE=$host_network_namespace" \
               "ROUTE_CPU_WEBSITE_DIR=$PWD/apps/website" \
               "ROUTE_CPU_UID=$runner_uid" \
               "ROUTE_CPU_GID=$runner_gid" \
