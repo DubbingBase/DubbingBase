@@ -166,18 +166,23 @@ function formatTmdbCards(
   const media: CollectionItem = detail.movie || detail.serie || detail.episode || {};
   const cast = detail.aggregateCredits?.cast || media.credits?.cast || [];
   const works = project?.works || [];
+  const worksByActorId = new Map<string, CollectionItem[]>();
+  for (const work of works) {
+    const actorId = String(work.actor_id);
+    const actorWorks = worksByActorId.get(actorId);
+    if (actorWorks) actorWorks.push(work);
+    else worksByActorId.set(actorId, [work]);
+  }
+
   const matchedWorkIds = new Set<number | string | undefined>();
   const cards: CollectionItem[] = [];
 
   for (const actor of cast) {
-    const actorWorks = works.filter((work: CollectionItem) => {
-      const matches = String(work.actor_id) === String(actor.id);
-      if (matches) matchedWorkIds.add(work.id);
-      return matches;
-    });
+    const actorWorks = worksByActorId.get(String(actor.id)) || [];
     if (actorWorks.length === 0) continue;
 
     for (const work of actorWorks) {
+      matchedWorkIds.add(work.id);
       const characterName = actor.character || work?.character_name || null;
       const characterPicture = (detail.characterProfilePictures || []).find(
         (picture: CollectionItem) => normalized(picture.name) === normalized(characterName),
