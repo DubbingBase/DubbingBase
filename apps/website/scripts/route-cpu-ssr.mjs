@@ -125,17 +125,6 @@ export default defineNitroPlugin(async (nitroApp) => {
 });
 `;
 
-function middlewarePatch(source) {
-  const pattern = /if \(process\.env\.E2E_TEST !== "true"\) \{\s*return;\s*\}/;
-  if (!pattern.test(source)) {
-    throw new Error("Could not find the E2E mock guard to keep benchmark requests on real routes.");
-  }
-  return source.replace(
-    pattern,
-    'if (process.env.ROUTE_CPU_BENCHMARK !== "true") {\n    return;\n  }',
-  );
-}
-
 function scheduledTasksPatch(source) {
   const guard = 'process.env.E2E_TEST === "true"';
   if (source.split(guard).length !== 2) {
@@ -166,18 +155,13 @@ async function assertIsolatedNetworkNamespace(action) {
 async function buildWebsite() {
   await assertIsolatedNetworkNamespace("the website build");
 
-  const middlewarePath = join(websiteDir, "server/middleware/00-e2e-mock.ts");
   const nuxtConfigPath = join(websiteDir, "nuxt.config.ts");
   const pluginPath = join(websiteDir, "server/plugins/route-cpu-profile.ts");
-  const originalMiddleware = await readFile(middlewarePath, "utf8");
   const originalNuxtConfig = await readFile(nuxtConfigPath, "utf8");
   const tempDir = await mkdtemp(join(tmpdir(), "route-cpu-build-"));
-  const backupPath = join(tempDir, "00-e2e-mock.ts");
   const configBackupPath = join(tempDir, "nuxt.config.ts");
-  await copyFile(middlewarePath, backupPath);
   await copyFile(nuxtConfigPath, configBackupPath);
   try {
-    await writeFile(middlewarePath, middlewarePatch(originalMiddleware));
     await writeFile(nuxtConfigPath, scheduledTasksPatch(originalNuxtConfig));
     await writeFile(pluginPath, profilePlugin);
     await runCommand("mise", ["run", "check"], {
@@ -197,7 +181,6 @@ async function buildWebsite() {
       },
     });
   } finally {
-    await copyFile(backupPath, middlewarePath);
     await copyFile(configBackupPath, nuxtConfigPath);
     await rm(pluginPath, { force: true });
     await rm(tempDir, { recursive: true, force: true });
