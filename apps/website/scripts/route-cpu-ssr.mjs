@@ -232,6 +232,30 @@ function summarize(values) {
   return { median, minimum: ordered[0], maximum: ordered.at(-1) };
 }
 
+function topUniqueApplicationCpuConsumers(frames, totalSampledMicros) {
+  const byFunction = new Map();
+  for (const frame of frames) {
+    const key = `${frame.functionName}\0${frame.source}`;
+    const current = byFunction.get(key);
+    if (current) {
+      current.sampledMicros += frame.sampledMicros;
+    } else {
+      byFunction.set(key, { ...frame });
+    }
+  }
+
+  return [...byFunction.values()]
+    .sort((left, right) => right.sampledMicros - left.sampledMicros)
+    .slice(0, 10)
+    .map(({ functionName, source, sampledMicros }) => ({
+      functionName,
+      source,
+      sampledMicros,
+      sampleSharePercent:
+        totalSampledMicros > 0 ? (sampledMicros / totalSampledMicros) * 100 : 0,
+    }));
+}
+
 async function cpuProfileSummary(profile, profileWebsiteDir) {
   const nodesById = new Map(profile.nodes.map((node) => [node.id, node]));
   const frames = new Map();
@@ -303,16 +327,7 @@ async function cpuProfileSummary(profile, profileWebsiteDir) {
   return {
     sampleCount: profile.samples.length,
     relevantSampleCount,
-    topApplicationFrames: applicationFrames
-      .sort((left, right) => right.sampledMicros - left.sampledMicros)
-      .slice(0, 16)
-      .map(({ functionName, source, sampledMicros }) => ({
-        functionName,
-        source,
-        sampledMicros,
-        sampleSharePercent:
-          totalSampledMicros > 0 ? (sampledMicros / totalSampledMicros) * 100 : 0,
-      })),
+    topApplicationFrames: topUniqueApplicationCpuConsumers(applicationFrames, totalSampledMicros),
     topSampledFrames: displayedFrames
       .sort((left, right) => right.sampledMicros - left.sampledMicros)
       .slice(0, 16)
