@@ -462,7 +462,9 @@ async function requestPage(baseUrl, route) {
     );
   }
   const html = Buffer.from(body).toString("utf8");
-  const canonicalHtml = html.replace(/\/_nuxt\/[^"'\s<]+/g, "/_nuxt/[build-asset]");
+  const canonicalHtml = html
+    .replace(/\/_nuxt\/[^"'\s<]+/g, "/_nuxt/[build-asset]")
+    .replace(/buildId:"[^"]+"/g, 'buildId:"[build-id]"');
   const htmlSha256 = createHash("sha256").update(canonicalHtml).digest("hex");
   return { id, bytes: body.byteLength, html, canonicalHtml, htmlSha256 };
 }
@@ -726,7 +728,7 @@ async function measurePaired() {
   const report = (workloads) => ({
     runtime: process.version,
     method:
-      "Built Nuxt/Nitro SSR with deterministic in-memory upstream fixtures. Each revision receives 20 warmups and 20 paired rounds of 20 serial requests per route; base/head batch order alternates. The server records process.cpuUsage from Nitro request handling through response finish; profiles are captured separately. SSR HTML SHA-256 values are compared after normalizing build-specific /_nuxt asset URLs. Egress is limited to loopback.",
+      "Built Nuxt/Nitro SSR with deterministic in-memory upstream fixtures. Each revision receives 20 warmups and 20 paired rounds of 20 serial requests per route; base/head batch order alternates. The server records process.cpuUsage from Nitro request handling through response finish; profiles are captured separately. SSR HTML SHA-256 values are compared after normalizing build-specific /_nuxt asset URLs and Nuxt build IDs. Egress is limited to loopback.",
     scope:
       "Measures real page/API logic, upstream fixture parsing, Supabase query handling, SSR rendering, and response writing. Excludes browser rendering, upstream latency, Cloudflare Workers accounting, and production traffic.",
     warmupRequests,
