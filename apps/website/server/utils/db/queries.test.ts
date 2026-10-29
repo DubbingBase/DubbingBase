@@ -12,7 +12,10 @@ vi.mock("./client", () => ({
 import {
   getDubbingProjects,
   getDubbingProjectsForMediaEndpoint,
+  getAdvertisementPageDubbingProjects,
   getMediaPageDubbingProjects,
+  getGamePageDubbingProjects,
+  getToyPageDubbingProjects,
 } from "./queries";
 
 function createSupabaseMock(rows: unknown[]) {
@@ -103,6 +106,94 @@ describe("dubbing project detail queries", () => {
     expect(queryMocks.selectedColumns[0]).toContain("person:voice_actors(*)");
   });
 
+  it("projects podcast detail projects while retaining cast, studio, and crew data", async () => {
+    const rows = [
+      {
+        id: 17,
+        language: "fr-FR",
+        studio_data: { id: 3, name: "Studio", logo_url: "https://example.com/logo.png" },
+        works: [
+          {
+            id: 12,
+            actor_id: 44,
+            character_name: "Character",
+            performance: "Role",
+            note: "Note",
+            voice_actor: {
+              id: 5,
+              firstname: "Voice",
+              lastname: "Actor",
+              profile_picture: "https://example.com/actor.png",
+            },
+          },
+        ],
+        crew: [
+          {
+            id: 20,
+            job: { name: "Director" },
+            person: { id: 5, firstname: "Voice", lastname: "Actor" },
+          },
+        ],
+      },
+    ];
+    queryMocks.useSupabaseAdmin.mockReturnValue(createSupabaseMock(rows));
+
+    const projects = await getDubbingProjectsForMediaEndpoint(1, "podcast", "podcast-page");
+
+    expect(queryMocks.selectedColumns[0]).not.toContain("*");
+    expect(queryMocks.selectedColumns[0]).toContain("studio_data:studios");
+    expect(queryMocks.selectedColumns[0]).toContain("crew:dubbing_project_crew");
+    expect(queryMocks.selectedColumns[0]).toContain("voice_actor:voice_actors");
+    expect(projects).toMatchObject(rows);
+  });
+
+  it("projects advertisement detail projects while retaining cast, studio, and crew data", async () => {
+    const rows = [
+      {
+        id: 17,
+        language: "fr-FR",
+        studio_data: { id: 3, name: "Studio", logo_url: "https://example.com/logo.png" },
+        works: [
+          {
+            id: 12,
+            actor_id: 44,
+            character_name: "Character",
+            performance: "Role",
+            note: "Note",
+            voice_actor: { id: 5, firstname: "Voice", lastname: "Actor", profile_picture: null },
+          },
+        ],
+        crew: [
+          {
+            id: 20,
+            person_id: 5,
+            job_id: 9,
+            job: { name: "Director" },
+            person: { id: 5, firstname: "Voice", lastname: "Actor", profile_picture: null },
+          },
+        ],
+      },
+    ];
+    queryMocks.useSupabaseAdmin.mockReturnValue(createSupabaseMock(rows));
+
+    const projects = await getAdvertisementPageDubbingProjects(31);
+
+    expect(projects).toEqual(rows);
+    expect(queryMocks.selectedColumns[0]).not.toContain("*");
+    expect(queryMocks.selectedColumns[0]).toContain("voice_actor:voice_actors");
+    expect(queryMocks.selectedColumns[0]).toContain("studio_data:studios");
+    expect(queryMocks.selectedColumns[0]).toContain("crew:dubbing_project_crew");
+  });
+
+  it("routes advertisement page projection requests to the compact query", async () => {
+    queryMocks.useSupabaseAdmin.mockReturnValue(createSupabaseMock([]));
+
+    await getDubbingProjectsForMediaEndpoint(31, "advertisement", "advertisement-page");
+
+    expect(queryMocks.selectedColumns[0]).not.toContain("*");
+    expect(queryMocks.selectedColumns[0]).toContain("studio_data:studios");
+  });
+
   it("preserves the complete public payload when no page projection is requested", async () => {
     const rows = [
       {
@@ -167,6 +258,83 @@ describe("dubbing project detail queries", () => {
     expect(queryMocks.selectedColumns[0]).not.toContain("*");
     expect(queryMocks.selectedColumns[0]).toContain("studio_data:studios");
     expect(queryMocks.selectedColumns[0]).toContain("voice_actor:voice_actors");
+  });
+
+  it("selects toy page fields while retaining crew, cast, and studio data", async () => {
+    const rows = [
+      {
+        id: 17,
+        language: "fr-FR",
+        studio_data: { id: 3, name: "Studio" },
+        works: [
+          {
+            id: 12,
+            actor_id: 44,
+            character_name: "Character",
+            performance: "Role",
+            note: "Note",
+            voice_actor: {
+              id: 5,
+              firstname: "Voice",
+              lastname: "Actor",
+              profile_picture: "https://example.com/voice-actor.png",
+            },
+          },
+        ],
+        crew: [
+          {
+            id: 20,
+            job: { name: "Director" },
+            person: { id: 5, firstname: "Voice", lastname: "Actor" },
+          },
+        ],
+      },
+    ];
+    queryMocks.useSupabaseAdmin.mockReturnValue(createSupabaseMock(rows));
+
+    const projects = await getToyPageDubbingProjects(31);
+
+    expect(projects).toMatchObject(rows);
+    expect(projects[0]?.crew?.[0]?.person?.profile_picture).toBeNull();
+    expect(queryMocks.selectedColumns[0]).not.toContain("*");
+    expect(queryMocks.selectedColumns[0]).toContain("studio_data:studios(id, name)");
+    expect(queryMocks.selectedColumns[0]).toContain("voice_actor:voice_actors(id");
+    expect(queryMocks.selectedColumns[0]).toContain("crew:dubbing_project_crew");
+    expect(queryMocks.selectedColumns[0]).toContain("job:jobs(name)");
+  });
+
+  it("selects game page fields while retaining character links and studio data", async () => {
+    const rows = [
+      {
+        id: 21,
+        language: "fr-FR",
+        studio_data: { id: 7, name: "Game Studio", logo_url: "https://example.com/logo.jpg" },
+        works: [
+          {
+            id: 91,
+            actor_id: 42,
+            character_id: 17,
+            character_name: "Character",
+            voice_actor: {
+              id: 42,
+              firstname: "Voice",
+              lastname: "Actor",
+              profile_picture: "https://example.com/voice-actor.png",
+            },
+          },
+        ],
+      },
+    ];
+    queryMocks.useSupabaseAdmin.mockReturnValue(createSupabaseMock(rows));
+
+    const projects = await getGamePageDubbingProjects(31);
+
+    expect(projects).toMatchObject([{ ...rows[0], crew: [] }]);
+    expect(queryMocks.selectedColumns[0]).not.toContain("*");
+    expect(queryMocks.selectedColumns[0]).toContain("studio_data:studios(id, name, logo_url)");
+    expect(queryMocks.selectedColumns[0]).toContain("character_id");
+    expect(queryMocks.selectedColumns[0]).toContain("voice_actor:voice_actors(id");
+    expect(projects[0]?.crew).toEqual([]);
   });
 
   it("returns an empty array when the requested dubbing project list is empty", async () => {

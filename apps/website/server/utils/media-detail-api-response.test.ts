@@ -152,6 +152,7 @@ beforeEach(() => {
       {
         id: 55,
         name: "Aggregate Actor",
+        original_name: "Aggregate Actor Original",
         character: "Character",
         profile_path: "https://example.com/actor.png",
         popularity: 100,
@@ -300,6 +301,7 @@ describe("movie and show detail API payload compatibility", () => {
     expect(apiMocks.getMediaWithVoiceActors).toHaveBeenCalledWith("movie", 123, {
       includeCollection: false,
       includeCreditsCrew: false,
+      projection: "media-page",
     });
     expect(apiMocks.getMediaPageDubbingProjects).toHaveBeenCalledWith(123, "movie");
     expect(apiMocks.getDubbingProjects).not.toHaveBeenCalled();
@@ -321,6 +323,7 @@ describe("movie and show detail API payload compatibility", () => {
           {
             id: 55,
             name: "Aggregate Actor",
+            original_name: "Aggregate Actor Original",
             roles: [{ character: "Character", episode_count: 4 }],
             popularity: 100,
           },
@@ -393,6 +396,7 @@ describe("movie and show detail API payload compatibility", () => {
     }
     expect(response.aggregateCredits).not.toHaveProperty("crew");
     expect(response.aggregateCredits).not.toHaveProperty("cast.0.popularity");
+    expect(response.aggregateCredits).not.toHaveProperty("cast.0.original_name");
     expect(response.aggregateCredits).not.toHaveProperty("cast.0.roles.0.credit_id");
   });
 });

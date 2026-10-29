@@ -416,6 +416,28 @@ describe("GET /api/detail-collections", () => {
     expect(body.data[0]?.name).toBe("Rin's Shadow");
   });
 
+  it("keeps game cast work order while deduplicating a work matched by two character IDs", () => {
+    const name = "Cedar";
+    const fallbackCharacterId =
+      Math.abs(name.split("").reduce((hash, value) => (hash * 31 + value.charCodeAt(0)) | 0, 0)) +
+      8_000_000_000;
+    const cards = formatGameDetailCastCards([{ id: 1, name }], {
+      works: [
+        { id: 301, character_id: 1, actor_id: 9_000_000_001 },
+        { id: 302, character_id: 9_000_000_001 },
+        { id: 303, actor_id: fallbackCharacterId },
+        { id: 304, character_id: 99, character_name: "Unmatched" },
+      ],
+    });
+
+    expect(cards.map(({ id, work_id }) => ({ id, work_id }))).toEqual([
+      { id: "1-301", work_id: 301 },
+      { id: "1-302", work_id: 302 },
+      { id: "1-303", work_id: 303 },
+      { id: "work-304", work_id: 304 },
+    ]);
+  });
+
   it("keeps studio project and roster filtering and pagination aligned with page projections", async () => {
     const projects = Array.from({ length: 16 }, (_, index) => ({
       id: index + 1,
