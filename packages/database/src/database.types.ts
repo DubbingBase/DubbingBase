@@ -674,7 +674,7 @@ export type Database = {
           source_id: number | null;
           status: string | null;
           suggestions: string | null;
-          updated_at: string | null;
+          updated_at: string;
           updated_by: string | null;
           voice_actor_id: number | null;
         };
@@ -693,7 +693,7 @@ export type Database = {
           source_id?: number | null;
           status?: string | null;
           suggestions?: string | null;
-          updated_at?: string | null;
+          updated_at?: string;
           updated_by?: string | null;
           voice_actor_id?: number | null;
         };
@@ -712,7 +712,7 @@ export type Database = {
           source_id?: number | null;
           status?: string | null;
           suggestions?: string | null;
-          updated_at?: string | null;
+          updated_at?: string;
           updated_by?: string | null;
           voice_actor_id?: number | null;
         };

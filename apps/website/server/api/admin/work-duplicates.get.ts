@@ -26,14 +26,12 @@ const workSchema = z.object({
   suggestions: z.string().nullable(),
   created_at: z.string().nullable(),
   created_by: z.string().nullable(),
-  updated_at: z.string().nullable(),
+  updated_at: z.string(),
   updated_by: z.string().nullable(),
   voteCount: z.number(),
   upVotes: z.number(),
   downVotes: z.number(),
-  voiceActor: z
-    .object({ id: z.number(), firstName: z.string(), lastName: z.string() })
-    .nullable(),
+  voiceActor: z.object({ id: z.number(), firstName: z.string(), lastName: z.string() }).nullable(),
 });
 
 const responseSchema = z.object({
@@ -73,13 +71,10 @@ export default defineEventHandler(async (event) => {
   }
 
   const supabaseAdmin = useSupabaseAdmin(event);
-  const { data, error } = await supabaseAdmin.rpc(
-    "find_duplicate_work_groups",
-    {
-      p_after_group_id: parsedQuery.data.after,
-      p_limit: parsedQuery.data.limit,
-    },
-  );
+  const { data, error } = await supabaseAdmin.rpc("find_duplicate_work_groups", {
+    p_after_group_id: parsedQuery.data.after,
+    p_limit: parsedQuery.data.limit,
+  });
 
   if (error) {
     console.error("Failed to scan duplicate work groups:", error);

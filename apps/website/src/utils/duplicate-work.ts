@@ -28,7 +28,7 @@ export interface DuplicateWorkEntry {
   suggestions: string | null;
   created_at: string | null;
   created_by: string | null;
-  updated_at: string | null;
+  updated_at: string;
   updated_by: string | null;
   voteCount: number;
   upVotes: number;

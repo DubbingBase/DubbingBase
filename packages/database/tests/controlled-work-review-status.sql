@@ -14,6 +14,17 @@ BEGIN
       RAISE EXCEPTION '% retains a work-table TRUNCATE or TRIGGER privilege', v_role;
     END IF;
   END LOOP;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_catalog.pg_attribute AS attribute
+    WHERE attribute.attrelid = 'public.work'::REGCLASS
+      AND attribute.attname = 'updated_at'
+      AND attribute.attnotnull
+      AND NOT attribute.attisdropped
+  ) THEN
+    RAISE EXCEPTION 'work.updated_at must be non-null for optimistic concurrency';
+  END IF;
 END;
 $$;
 
@@ -82,6 +93,26 @@ BEGIN
   ) AS result;
   SELECT work.updated_at INTO v_expected_updated_at
   FROM public.work AS work WHERE work.id = v_work_id;
+  IF v_expected_updated_at IS NULL THEN
+    RAISE EXCEPTION 'new work row has no optimistic concurrency version';
+  END IF;
+  BEGIN
+    INSERT INTO public.work (
+      dubbing_project_id, character_name, performance, status, updated_at
+    )
+    SELECT work.dubbing_project_id, 'null-version-rejected', 'dialogues', 'validated', NULL
+    FROM public.work AS work WHERE work.id = v_work_id;
+    RAISE EXCEPTION 'work unexpectedly accepted a null update version';
+  EXCEPTION WHEN not_null_violation THEN
+    NULL;
+  END;
+  IF EXISTS (
+    SELECT 1 FROM public.work
+    WHERE dubbing_project_id = (SELECT dubbing_project_id FROM public.work WHERE id = v_work_id)
+      AND character_name = 'null-version-rejected'
+  ) THEN
+    RAISE EXCEPTION 'failed null-version insert changed persisted work';
+  END IF;
 
   -- An unrelated and an unlinked authenticated identity cannot mutate it.
   BEGIN
