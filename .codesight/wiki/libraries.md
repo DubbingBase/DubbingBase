@@ -2,10 +2,11 @@
 
 > **Navigation aid.** Library inventory extracted via AST. Read the source files listed here before modifying exported functions.
 
-**109 library files** across 5 modules
+**111 library files** across 5 modules
 
-## Website (69 files)
+## Website (71 files)
 
+- `apps/website/src/utils/voice-actor-profile-save.ts` — voiceActorProfilePayload, changedVoiceActorProfileFields, displayedSocialLinks, mergeDisplayedSocialLinks, profileUnchangedExceptPicture, refreshVoiceActorProfilePicture, …
 - `apps/website/src/utils/dubbing-project-save.ts` — getEditableDubbingProjectStatus, serializeGameProjectCastRows, createStableRequestIdFactory, createDubbingProjectSaveClient, isDubbingProjectSaveConflict, getDubbingProjectSaveErrorMessage, …
 - `apps/website/server/utils/cache/wikipedia.ts` — sortLanguagesByPopularity, extractAvailableLanguages, cleanHeadingText, isDubbingSectionHeading, selectDubbingCandidateSections, selectDubbingSections, …
 - `apps/website/server/utils/index.ts` — getCloudflareKv, useCache, useTmdbClient, useTvdbClient, useIgdbClient, useOpenLibraryClient, …
@@ -30,8 +31,7 @@
 - `apps/website/server/utils/urls/tmdb.ts` — buildTmdbImageUrl, cleanCharacterName, processMedia, TMDB_CONFIG
 - `apps/website/server/utils/wiki-check-disposition.ts` — wikiCheckDisposition, WikiCheckArchiveReason, WikiCheckSkippedResult, WikiCheckDisposition
 - `apps/website/src/utils/show-character-pictures.ts` — indexCharacterPictures, findCharacterImage, CharacterProfilePicture, CharacterPictureIndex
-- `apps/website/server/utils/media-queue-readiness.ts` — getReadyMediaQueueNames, MediaQueueName, mediaQueueNames
-- _…and 44 more files_
+- _…and 46 more files_
 
 ## Shared-logic (20 files)
 

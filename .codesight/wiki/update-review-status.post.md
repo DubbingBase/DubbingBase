@@ -2,11 +2,11 @@
 
 > **Navigation aid.** Route list and file locations extracted via AST. Read the source files listed below before implementing or modifying this subsystem.
 
-The Update-review-status.post subsystem handles **1 routes** and touches: db.
+The Update-review-status.post subsystem handles **1 routes** and touches: auth.
 
 ## Routes
 
-- `POST` `/api/update-review-status` [db]
+- `POST` `/api/update-review-status` [auth]
   `apps/website/server/api/update-review-status.post.ts`
 
 ## Source Files

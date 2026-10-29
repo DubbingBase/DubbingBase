@@ -211,6 +211,7 @@
 - `apps/website/src/composables/useShowPageData.ts` — function useShowPageData: (showId, locale) => void
 - `apps/website/src/composables/useTheme.ts` — function useTheme: () => void
 - `apps/website/src/composables/useUrlPagination.ts` — function readUrlPage: (value) => number, function useUrlPagination: (queryKey) => void
+- `apps/website/src/composables/useVoiceActorProfileRecord.ts` — function useVoiceActorProfileRecord: () => void
 - `apps/website/src/lib/media-editor-routes.ts` — function getMediaEditorRoute: ({...}, mediaId, projectId }) => string | null
 - `apps/website/src/lib/mediaQueue.ts` — function enqueueMedia: (params) => Promise<void>
 - `apps/website/src/utils/access-token-cache.ts` — function createAccessTokenCache: (auth) => void, interface AccessTokenAuthClient
@@ -251,6 +252,14 @@
   - function isVoiceActorOgImagesEnabled: (value) => boolean
   - function getVoiceActorOgImageMetadata: (enabled, voiceActorId, siteUrl) => VoiceActorOgImageMetadata
   - type VoiceActorOgImageMetadata
+- `apps/website/src/utils/voice-actor-profile-save.ts`
+  - function voiceActorProfilePayload: (profile) => VoiceActorCreationPayload
+  - function changedVoiceActorProfileFields: (previous, current) => Record<string, Json>
+  - function displayedSocialLinks: (value) => DisplayedSocialLinks
+  - function mergeDisplayedSocialLinks: (original, displayed) => Json | null
+  - function profileUnchangedExceptPicture: (before, after) => boolean
+  - function refreshVoiceActorProfilePicture: (before, uploadedPath, getProfile) => void
+  - _...10 more_
 - `e2e/helpers/mock-api.ts`
   - function waitForVueHydration: (page) => Promise<void>
   - function setupMockApi: (page, options) => void

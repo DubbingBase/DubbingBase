@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 85 routes | 26 models | 200 components | 109 lib files | 65 env vars | 15 middleware | 41% test coverage
-> **Token savings:** this file is ~18,500 tokens. Without it, AI exploration would cost ~169,100 tokens. **Saves ~150,700 tokens per conversation.**
-> **Last scanned:** 2026-10-28 21:31 — re-run after significant changes
+> 85 routes | 26 models | 200 components | 111 lib files | 65 env vars | 15 middleware | 41% test coverage
+> **Token savings:** this file is ~18,600 tokens. Without it, AI exploration would cost ~169,700 tokens. **Saves ~151,000 tokens per conversation.**
+> **Last scanned:** 2026-10-29 10:29 — re-run after significant changes
 
 ---
 
@@ -89,7 +89,7 @@
 - `GET` `/api/trending/movies` [cache]
 - `GET` `/api/trending/shows` [cache]
 - `GET` `/api/trending/voice-actors`
-- `POST` `/api/update-review-status` [db]
+- `POST` `/api/update-review-status` [auth] ✓
 - `POST` `/api/update-user-profile`
 - `POST` `/api/update-voice-actor` [auth, upload] ✓
 - `POST` `/api/update_user_role` [auth]
@@ -698,6 +698,7 @@
 - `apps/website/src/composables/useShowPageData.ts` — function useShowPageData: (showId, locale) => void
 - `apps/website/src/composables/useTheme.ts` — function useTheme: () => void
 - `apps/website/src/composables/useUrlPagination.ts` — function readUrlPage: (value) => number, function useUrlPagination: (queryKey) => void
+- `apps/website/src/composables/useVoiceActorProfileRecord.ts` — function useVoiceActorProfileRecord: () => void
 - `apps/website/src/lib/media-editor-routes.ts` — function getMediaEditorRoute: ({...}, mediaId, projectId }) => string | null
 - `apps/website/src/lib/mediaQueue.ts` — function enqueueMedia: (params) => Promise<void>
 - `apps/website/src/utils/access-token-cache.ts` — function createAccessTokenCache: (auth) => void, interface AccessTokenAuthClient
@@ -738,6 +739,14 @@
   - function isVoiceActorOgImagesEnabled: (value) => boolean
   - function getVoiceActorOgImageMetadata: (enabled, voiceActorId, siteUrl) => VoiceActorOgImageMetadata
   - type VoiceActorOgImageMetadata
+- `apps/website/src/utils/voice-actor-profile-save.ts`
+  - function voiceActorProfilePayload: (profile) => VoiceActorCreationPayload
+  - function changedVoiceActorProfileFields: (previous, current) => Record<string, Json>
+  - function displayedSocialLinks: (value) => DisplayedSocialLinks
+  - function mergeDisplayedSocialLinks: (original, displayed) => Json | null
+  - function profileUnchangedExceptPicture: (before, after) => boolean
+  - function refreshVoiceActorProfilePicture: (before, uploadedPath, getProfile) => void
+  - _...10 more_
 - `e2e/helpers/mock-api.ts`
   - function waitForVueHydration: (page) => Promise<void>
   - function setupMockApi: (page, options) => void
@@ -922,7 +931,7 @@
 ## Most Imported Files (change these carefully)
 
 - `apps/website/server/utils/db/client.ts` — imported by **68** files
-- `apps/website/server/utils/auth.ts` — imported by **37** files
+- `apps/website/server/utils/auth.ts` — imported by **38** files
 - `apps/website/server/utils/index.ts` — imported by **25** files
 - `apps/website/server/utils/cache/index.ts` — imported by **19** files
 - `apps/website/server/utils/notifications/discord.ts` — imported by **12** files
@@ -945,7 +954,7 @@
 ## Import Map (who imports what)
 
 - `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +63 more
-- `apps/website/server/utils/auth.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +32 more
+- `apps/website/server/utils/auth.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +33 more
 - `apps/website/server/utils/index.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/episode/index.get.ts` +20 more
 - `apps/website/server/utils/cache/index.ts` ← `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/season/index.get.ts`, `apps/website/server/utils/api/igdb.test.ts`, `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.test.ts` +14 more
 - `apps/website/server/utils/notifications/discord.ts` ← `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/media-queue.post.ts`, `apps/website/server/api/movie/[id].get.ts` +7 more
@@ -960,7 +969,7 @@
 # Test Coverage
 
 > **41%** of routes and models are covered by tests
-> 120 test files found
+> 123 test files found
 
 ## Covered Routes
 
@@ -984,6 +993,7 @@
 - POST:/api/save-studio
 - POST:/api/save-toy-metadata
 - POST:/api/submit-task
+- POST:/api/update-review-status
 - POST:/api/update-voice-actor
 - POST:/api/update_voice_actor_link
 - POST:/api/upload-profile-picture
