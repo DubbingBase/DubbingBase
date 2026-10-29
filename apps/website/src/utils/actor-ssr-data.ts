@@ -7,14 +7,17 @@ function shareVoiceActorReferences(voiceRoles: ActorDataPayload["voiceRoles"]): 
   const voiceActorsById = new Map<number, ActorVoiceActor>();
 
   for (const role of voiceRoles) {
-    role.voice_actors.forEach((voiceActor, index) => {
+    for (let index = 0; index < role.voice_actors.length; index += 1) {
+      const voiceActor = role.voice_actors[index];
+      if (!voiceActor) continue;
+
       const existingVoiceActor = voiceActorsById.get(voiceActor.id);
       if (existingVoiceActor) {
         role.voice_actors[index] = existingVoiceActor;
       } else {
         voiceActorsById.set(voiceActor.id, voiceActor);
       }
-    });
+    }
   }
 }
 
