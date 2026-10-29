@@ -298,7 +298,7 @@ const isAdmin = computed(() => {
 
 const { data: initialStudioDetails } = await useAsyncData(
   `studio-${route.params.id}`,
-  () => fetchStudioDetails(String(route.params.id)),
+  () => fetchStudioDetails(String(route.params.id), "studio-page"),
   {
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },

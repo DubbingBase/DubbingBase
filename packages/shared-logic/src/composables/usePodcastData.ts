@@ -3,6 +3,7 @@ import type { PodcastResponse } from "../types";
 export async function fetchPodcastData(
   id: string | number,
   locale?: string,
+  options: { projection?: "podcast-page" } = {},
 ): Promise<PodcastResponse | null> {
   const headers: Record<string, string> = {};
   if (locale) {
@@ -12,11 +13,10 @@ export async function fetchPodcastData(
   try {
     const data = await $fetch<PodcastResponse>(`/api/podcast/${id}`, {
       headers,
+      ...(options.projection ? { query: { projection: options.projection } } : {}),
     });
     if (!data || !data.podcast) {
-      console.error(
-        "fetchPodcastData: Response is null or missing podcast property",
-      );
+      console.error("fetchPodcastData: Response is null or missing podcast property");
       return null;
     }
     return data;
