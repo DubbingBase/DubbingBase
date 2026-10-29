@@ -237,7 +237,7 @@ const currentUrl = computed(() => route.fullPath);
 
 const { data, pending } = await useAsyncData(
   `toy-${toyId.value}-${locale.value}`,
-  () => fetchToyData(toyId.value, locale.value),
+  () => fetchToyData(toyId.value, locale.value, "media-page"),
   {
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
     watch: [toyId, locale],
