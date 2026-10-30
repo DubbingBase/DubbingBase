@@ -277,6 +277,65 @@ describe("POST /api/save-dubbing-project", () => {
     );
   });
 
+  it("preserves an IGDB character credit when editing a video game project", async () => {
+    const { rpc } = createSupabaseMock({
+      data: [
+        {
+          project_id: 51,
+          updated_at: "2026-10-15T12:05:00",
+          audit_log_id: "f20d747e-c98e-43ea-9356-133fcbf0b496",
+          replayed: false,
+        },
+      ],
+      error: null,
+    });
+    const body = validBody();
+    body.project.content_id = 42;
+    body.project.content_type = "video_game";
+    body.cast = [
+      {
+        id: 27,
+        expected_updated_at: "2026-10-15T12:00:00.000Z",
+        expected: {
+          actor_id: null,
+          character_id: 7,
+          character_name: "IGDB Role",
+          game_character_id: null,
+          voice_actor_id: 8,
+          performance: "dialogues",
+          note: null,
+          highlight: false,
+          status: "validated",
+        },
+        character_id: 7,
+        character_name: "IGDB Role",
+        game_character_id: null,
+        voice_actor_id: 8,
+        performance: "dialogues",
+        note: null,
+        highlight: false,
+      },
+    ];
+
+    const response = await post(body);
+
+    expect(response.status, await response.clone().text()).toBe(200);
+    expect(routeMocks.getIgdbGame).toHaveBeenCalledWith(42);
+    expect(routeMocks.getIgdbGameCharacters).toHaveBeenCalledWith(42);
+    expect(rpc).toHaveBeenCalledWith(
+      "save_dubbing_project_editor",
+      expect.objectContaining({
+        p_cast: [
+          expect.objectContaining({
+            character_id: 7,
+            game_character_id: null,
+            character_name: "IGDB Role",
+          }),
+        ],
+      }),
+    );
+  });
+
   it("rejects an IGDB character id that is not the confirmed local mapping", async () => {
     const { rpc, localCharacterQuery } = createSupabaseMock({
       data: null,
