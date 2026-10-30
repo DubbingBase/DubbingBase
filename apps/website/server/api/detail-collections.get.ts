@@ -316,8 +316,7 @@ async function getCollectionItems(
       const detail = await requestFetch<DetailPayload>(`/api/get-studio-details`, {
         query: { studioId: id },
       });
-      const text = normalized(queryValue(query.query));
-      return filterDetailCollectionItems(detail.dubbedProjects || [], text);
+      return detail.dubbedProjects || [];
     }
     case "studio-voice-actors": {
       const detail = await requestFetch<DetailPayload>(`/api/get-studio-details`, {

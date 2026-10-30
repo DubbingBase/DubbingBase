@@ -2,4 +2,4 @@
 "@app/website": patch
 ---
 
-Profile deterministic detail-collection search workloads with source-mapped local route CPU reports.
+Avoid filtering studio detail projects twice when serving paginated collection results.
