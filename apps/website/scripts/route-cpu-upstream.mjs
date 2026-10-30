@@ -22,6 +22,26 @@ const sizes =
         uniqueMedia: 100,
       };
 
+const adminUser = {
+  id: "00000000-0000-4000-8000-000000000999",
+  email: "admin@example.test",
+  role: "authenticated",
+  aud: "authenticated",
+  app_metadata: { role: "admin" },
+  user_metadata: {},
+  created_at: "2020-01-01T00:00:00Z",
+};
+const reportCount = dataset === "large" ? 1000 : 24;
+const userReports = Array.from({ length: reportCount }, (_, index) => ({
+  id: `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
+  reporter_id: adminUser.id,
+  target_url: `/movie/${index + 1}`,
+  reason: `CI fixture report ${String(index).padStart(4, "0")}`,
+  details: "Deterministic local report fixture.",
+  status: index % 2 === 0 ? "pending" : "resolved",
+  created_at: new Date(Date.UTC(2026, 9, 1, 0, index)).toISOString(),
+})).toReversed();
+
 function makeCast(count, mediaType = "movie") {
   return Array.from({ length: count }, (_, index) => ({
     id: 200_000 + index,
@@ -175,19 +195,41 @@ globalThis.fetch = async (input, init = {}) => {
   const url = new URL(typeof input === "string" || input instanceof URL ? input : input.url);
   let key;
   let body;
+  let responseHeaders = { "content-type": "application/json; charset=utf-8" };
 
   if (url.hostname === "api.themoviedb.org") {
     key = `tmdb:${url.pathname}`;
     body = encodedResponses.get(key);
     if (body === undefined) throw new Error(`Unexpected mocked TMDB request: ${url.pathname}`);
   } else if (url.hostname === "mock.supabase.co") {
-    const response = supabaseResponse(url.pathname);
-    key = `supabase:${url.pathname.split("/").at(-1)}`;
-    const inputHeaders = input instanceof Request ? input.headers : undefined;
-    const acceptsSingle = new Headers(init.headers ?? inputHeaders)
-      .get("accept")
-      ?.includes("vnd.pgrst.object");
-    body = JSON.stringify(response.single && !acceptsSingle ? [response.value] : response.value);
+    if (url.pathname === "/auth/v1/user") {
+      key = "supabase:auth_user";
+      body = JSON.stringify(adminUser);
+    } else if (url.pathname === "/rest/v1/user_reports") {
+      if (
+        url.searchParams.get("select") !== "id,reason,details,target_url,reporter_id,status,created_at" ||
+        url.searchParams.get("order") !== "created_at.desc,id.asc" ||
+        url.searchParams.get("offset") !== "0" ||
+        url.searchParams.get("limit") !== "50"
+      ) {
+        throw new Error(`Unexpected mocked user_reports query: ${url.search}`);
+      }
+      key = "supabase:user_reports";
+      const rows = userReports.slice(0, 50);
+      body = JSON.stringify(rows);
+      responseHeaders = {
+        ...responseHeaders,
+        "content-range": `0-${rows.length - 1}/${reportCount}`,
+      };
+    } else {
+      const response = supabaseResponse(url.pathname);
+      key = `supabase:${url.pathname.split("/").at(-1)}`;
+      const inputHeaders = input instanceof Request ? input.headers : undefined;
+      const acceptsSingle = new Headers(init.headers ?? inputHeaders)
+        .get("accept")
+        ?.includes("vnd.pgrst.object");
+      body = JSON.stringify(response.single && !acceptsSingle ? [response.value] : response.value);
+    }
   } else if (url.hostname === "api4.thetvdb.com") {
     key = `tvdb:${url.pathname}`;
     body =
@@ -203,6 +245,6 @@ globalThis.fetch = async (input, init = {}) => {
   requestCounts.set(key, (requestCounts.get(key) ?? 0) + 1);
   return new Response(body, {
     status: 200,
-    headers: { "content-type": "application/json; charset=utf-8" },
+    headers: responseHeaders,
   });
 };

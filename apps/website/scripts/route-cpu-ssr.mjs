@@ -20,6 +20,38 @@ const profileRequests = 50;
 const requireFromNuxt = createRequire(import.meta.resolve("nuxt"));
 const { TraceMap, originalPositionFor } = requireFromNuxt("@jridgewell/trace-mapping");
 
+const adminUser = {
+  id: "00000000-0000-4000-8000-000000000999",
+  email: "admin@example.test",
+  role: "authenticated",
+  aud: "authenticated",
+  app_metadata: { role: "admin" },
+  user_metadata: {},
+  created_at: "2020-01-01T00:00:00Z",
+};
+const adminTokenHeader = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString(
+  "base64url",
+);
+const adminTokenPayload = Buffer.from(
+  JSON.stringify({
+    sub: adminUser.id,
+    aud: "authenticated",
+    role: "authenticated",
+    exp: 4_102_444_800,
+    app_metadata: { role: "admin" },
+    user_metadata: {},
+  }),
+).toString("base64url");
+const adminSession = {
+  access_token: `${adminTokenHeader}.${adminTokenPayload}.c2ln`,
+  refresh_token: "local-route-cpu-fixture",
+  token_type: "bearer",
+  expires_in: 3600,
+  expires_at: 4_102_444_800,
+  user: adminUser,
+};
+const adminCookie = `sb-mock-auth-token=base64-${Buffer.from(JSON.stringify(adminSession)).toString("base64url")}`;
+
 const routes = [
   {
     name: "movie",
@@ -44,6 +76,13 @@ const routes = [
     path: "/voice-actor/1",
     marker: "CI fixture voice actor",
     expected: ["tmdb:/3/person/12001", "supabase:voice_actors"],
+  },
+  {
+    name: "admin-reports",
+    path: "/admin/reports",
+    marker: "CI fixture report",
+    cookie: adminCookie,
+    expected: ["supabase:auth_user", "supabase:user_reports"],
   },
 ];
 
@@ -439,11 +478,13 @@ async function postJson(baseUrl, path) {
 
 async function requestPage(baseUrl, route) {
   const id = randomUUID();
+  const headers = {
+    "accept-language": "fr-FR",
+    "x-route-cpu-request-id": id,
+  };
+  if (route.cookie) headers.cookie = route.cookie;
   const response = await fetch(`${baseUrl}${route.path}`, {
-    headers: {
-      "accept-language": "fr-FR",
-      "x-route-cpu-request-id": id,
-    },
+    headers,
     signal: AbortSignal.timeout(120_000),
   });
   const body = await response.arrayBuffer();
@@ -508,7 +549,13 @@ function assertRouteDependencies(route, before, after) {
   }
 }
 
-function fixtureFor(dataset) {
+function fixtureFor(dataset, routeName) {
+  if (routeName === "admin-reports") {
+    return {
+      reports: dataset === "large" ? 1000 : 24,
+      renderedReports: dataset === "large" ? 50 : 24,
+    };
+  }
   return {
     mediaCredits: dataset === "large" ? 1200 : 180,
     dubbingProjects: dataset === "large" ? 500 : 40,
@@ -557,7 +604,7 @@ function workloadFor(server, route, dataset, rounds, pairedDeltas, dependencies,
     name: route.name,
     path: route.path,
     dataset,
-    fixture: fixtureFor(dataset),
+    fixture: fixtureFor(dataset, route.name),
     warmupRequests,
     measuredRounds,
     requestsPerRound,

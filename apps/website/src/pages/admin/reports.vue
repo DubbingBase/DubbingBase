@@ -193,6 +193,7 @@ const totalReports = ref(0);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const updatingStatus = ref<Record<string, boolean>>({});
+const reportDateFormatter = new Intl.DateTimeFormat();
 
 const toast = ref({
   show: false,
@@ -208,7 +209,7 @@ const showToast = (message: string, type: "success" | "error" = "success") => {
 };
 
 const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleString();
+  return reportDateFormatter.format(new Date(dateStr));
 };
 
 const {
