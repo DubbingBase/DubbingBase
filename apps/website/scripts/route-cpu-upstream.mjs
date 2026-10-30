@@ -253,9 +253,13 @@ globalThis.fetch = async (input, init = {}) => {
   } else if (url.hostname === "mock.supabase.co") {
     const response = supabaseResponse(`${url.pathname}${url.search}`);
     const table = url.pathname.split("/").at(-1);
-    key = table === "voice_actors"
-      ? `supabase:voice_actors_${url.searchParams.has("voice_actor_name") ? "fts" : "ilike"}`
-      : `supabase:${table}`;
+    if (table === "voice_actors" && url.searchParams.has("voice_actor_name")) {
+      key = "supabase:voice_actors_fts";
+    } else if (table === "voice_actors" && url.searchParams.has("or")) {
+      key = "supabase:voice_actors_ilike";
+    } else {
+      key = `supabase:${table}`;
+    }
     const inputHeaders = input instanceof Request ? input.headers : undefined;
     const acceptsSingle = new Headers(init.headers ?? inputHeaders)
       .get("accept")
