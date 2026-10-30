@@ -20,7 +20,16 @@ if (
   throw new Error("Base and pull request reports use different or invalid paired workloads.");
 }
 
-const routeNames = ["movie", "show", "episode", "actor", "voice-actor", "admin-dubbing-project"];
+const routeNames = [
+  "movie",
+  "show",
+  "episode",
+  "season",
+  "season-api",
+  "actor",
+  "voice-actor",
+  "admin-dubbing-project",
+];
 const datasets = ["representative", "large"];
 const workflowRun =
   process.env.GITHUB_RUN_ID && process.env.GITHUB_REPOSITORY
@@ -46,9 +55,7 @@ function formatCpu(stats) {
 function median(values) {
   const sorted = [...values].sort((left, right) => left - right);
   const middle = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 0
-    ? (sorted[middle - 1] + sorted[middle]) / 2
-    : sorted[middle];
+  return sorted.length % 2 === 0 ? (sorted[middle - 1] + sorted[middle]) / 2 : sorted[middle];
 }
 
 function percentile(sortedValues, probability) {
@@ -187,9 +194,7 @@ function formatTopApplicationCpuConsumers(workload, route, revision) {
   const hasFullApplicationFrames = Array.isArray(profile?.topApplicationFrames);
   const sampledFrames =
     profile?.topApplicationFrames ??
-    profile?.topSampledFrames?.filter((frame) =>
-      isApplicationSource(frame.source),
-    );
+    profile?.topSampledFrames?.filter((frame) => isApplicationSource(frame.source));
   if (!profile || !Array.isArray(sampledFrames)) {
     throw new Error(`Large workload ${workload.name} is missing its V8 profile summary.`);
   }
@@ -201,8 +206,9 @@ function formatTopApplicationCpuConsumers(workload, route, revision) {
   }
   return sampledFrames
     .slice(0, 10)
-    .map((frame, index) =>
-      `| ${route} | ${revision} | ${index + 1} | \`${safeCell(frame.functionName)}\` | \`${safeCell(frame.source)}\` | ${frame.sampleSharePercent.toFixed(1)}% |`,
+    .map(
+      (frame, index) =>
+        `| ${route} | ${revision} | ${index + 1} | \`${safeCell(frame.functionName)}\` | \`${safeCell(frame.source)}\` | ${frame.sampleSharePercent.toFixed(1)}% |`,
     );
 }
 

@@ -132,9 +132,14 @@ const episodeDubbingProjects = Array.from(
   (_, projectIndex) => ({
     id: 100_000 + projectIndex,
     language: projectIndex % 2 === 0 ? "fr-FR" : "en-US",
-    studio_data: { id: 20_000 + projectIndex, name: `CI episode studio ${projectIndex}`, logo_url: null },
+    studio_data: {
+      id: 20_000 + projectIndex,
+      name: `CI episode studio ${projectIndex}`,
+      logo_url: null,
+    },
     works: Array.from({ length: sizes.episodeWorksPerProject }, (_, workIndex) => {
-      const voiceActorId = 70_000 + ((projectIndex * sizes.episodeWorksPerProject + workIndex) % 500);
+      const voiceActorId =
+        70_000 + ((projectIndex * sizes.episodeWorksPerProject + workIndex) % 500);
       return {
         id: projectIndex * sizes.episodeWorksPerProject + workIndex + 1,
         actor_id: 200_000 + workIndex,
@@ -150,6 +155,27 @@ const episodeDubbingProjects = Array.from(
         },
       };
     }),
+  }),
+);
+
+const seasonDubbingProjects = Array.from(
+  { length: sizes.episodeDubbingProjects },
+  (_, projectIndex) => ({
+    id: 80_000 + projectIndex,
+    language: projectIndex % 2 === 0 ? "fr-FR" : "en-US",
+    studio_data: {
+      id: 90_000 + projectIndex,
+      name: `CI season studio ${projectIndex}`,
+      logo_url: null,
+    },
+    works: Array.from({ length: sizes.episodeWorksPerProject }, (_, workIndex) => ({
+      voice_actor:
+        projectIndex === 0
+          ? null
+          : {
+              id: 70_000 + (workIndex % Math.max(1, Math.floor(sizes.episodeWorksPerProject / 2))),
+            },
+    })),
   }),
 );
 
@@ -175,24 +201,21 @@ const voiceActor = {
   })),
 };
 
-const adminDubbingWorks = Array.from(
-  { length: dataset === "large" ? 2400 : 50 },
-  (_, index) => {
-    const actorIndex = Math.floor(index / 2);
-    const voiceActorId = 60_000 + actorIndex;
-    return {
-      id: index + 1,
-      actor_id: 300_000 + actorIndex,
-      voice_actor_id: voiceActorId,
-      voice_actor: {
-        id: voiceActorId,
-        firstname: `CI fixture voice actor ${actorIndex}`,
-        lastname: "Actor",
-        profile_picture: `regional-voice-actor-${actorIndex}.jpg`,
-      },
-    };
-  },
-);
+const adminDubbingWorks = Array.from({ length: dataset === "large" ? 2400 : 50 }, (_, index) => {
+  const actorIndex = Math.floor(index / 2);
+  const voiceActorId = 60_000 + actorIndex;
+  return {
+    id: index + 1,
+    actor_id: 300_000 + actorIndex,
+    voice_actor_id: voiceActorId,
+    voice_actor: {
+      id: voiceActorId,
+      firstname: `CI fixture voice actor ${actorIndex}`,
+      lastname: "Actor",
+      profile_picture: `regional-voice-actor-${actorIndex}.jpg`,
+    },
+  };
+});
 
 const encodedResponses = new Map();
 function addJsonResponse(key, value) {
@@ -213,6 +236,27 @@ addJsonResponse("tmdb:/3/tv/1397/season/1/episode/1", {
   air_date: "2021-01-01",
   still_path: "/episode.jpg",
   credits: { cast: makeCast(sizes.episodeCast, "episode") },
+});
+addJsonResponse("tmdb:/3/tv/31", makeMedia(31, "tv"));
+addJsonResponse("tmdb:/3/tv/31/aggregate_credits", { id: 31, cast: [], crew: [] });
+addJsonResponse("tmdb:/3/tv/31/season/1", {
+  id: 31,
+  season_number: 1,
+  name: "CI fixture season 31/1",
+  air_date: "2021-01-01",
+  episode_count: 24,
+  overview: "Deterministic local route CPU fixture.",
+  poster_path: "/season.jpg",
+  backdrop_path: "/season-backdrop.jpg",
+  vote_average: 7.5,
+  episodes: Array.from({ length: 24 }, (_, index) => ({
+    id: index + 1,
+    episode_number: index + 1,
+    name: `CI fixture season 31 episode ${index + 1}`,
+    air_date: "2021-01-01",
+    still_path: `/season-episode-${index + 1}.jpg`,
+    vote_average: 7.5,
+  })),
 });
 addJsonResponse("tmdb:/3/person/6384", actor);
 addJsonResponse("tmdb:/3/person/12001", {
@@ -252,7 +296,9 @@ const supabaseResponse = (url) => {
       value:
         query.get("content_id") === "eq.1397" && query.get("content_type") === "eq.tv"
           ? episodeDubbingProjects
-          : dubbingProjects,
+          : query.get("content_id") === "eq.31" && query.get("content_type") === "eq.tv"
+            ? seasonDubbingProjects
+            : dubbingProjects,
       single: false,
     };
   }

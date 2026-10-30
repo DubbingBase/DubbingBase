@@ -16,6 +16,7 @@ import {
   getMediaPageDubbingProjects,
   getEpisodePageDubbingProjectData,
   getGamePageDubbingProjects,
+  getSeasonPageDubbingProjects,
   getToyPageDubbingProjects,
 } from "./queries";
 
@@ -426,5 +427,51 @@ describe("dubbing project detail queries", () => {
     queryMocks.useSupabaseAdmin.mockReturnValue(createSupabaseMock([]));
 
     await expect(getDubbingProjectsForMediaEndpoint(1, "movie", "media-page")).resolves.toEqual([]);
+  });
+
+  it("returns season project metrics instead of serializing each work", async () => {
+    const rows = [
+      {
+        id: 17,
+        language: "fr-FR",
+        studio_data: { id: 3, name: "Studio", logo_url: "https://example.com/studio.png" },
+        works: [
+          { voice_actor: { id: 5 } },
+          { voice_actor: { id: 5 } },
+          { voice_actor: { id: 8 } },
+          { voice_actor: null },
+        ],
+      },
+      {
+        id: 18,
+        language: "en-US",
+        studio_data: null,
+        works: [{ voice_actor: null }],
+      },
+    ];
+    queryMocks.useSupabaseAdmin.mockReturnValue(createSupabaseMock(rows));
+
+    const projects = await getSeasonPageDubbingProjects(31, "tv");
+
+    expect(projects).toEqual([
+      {
+        id: 17,
+        language: "fr-FR",
+        studio_data: rows[0]?.studio_data,
+        has_voice_actor: true,
+        voice_actor_count: 2,
+        work_count: 4,
+      },
+      {
+        id: 18,
+        language: "en-US",
+        studio_data: null,
+        has_voice_actor: false,
+        voice_actor_count: 0,
+        work_count: 1,
+      },
+    ]);
+    expect(projects[0]).not.toHaveProperty("works");
+    expect(queryMocks.selectedColumns[0]).toContain("voice_actor:voice_actors(id)");
   });
 });

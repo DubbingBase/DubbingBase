@@ -59,7 +59,10 @@ const routes = [
     marker: "CI fixture movie 85",
     expectedHtml: ["English", "French", "invalid_code", "Not specified"],
     localeVariants: [
-      { path: "/fr/movie/85", expectedHtml: ["Anglais", "Français", "invalid_code", "Non spécifié"] },
+      {
+        path: "/fr/movie/85",
+        expectedHtml: ["Anglais", "Français", "invalid_code", "Non spécifié"],
+      },
     ],
     expected: ["tmdb:/3/movie/85", "supabase:dubbing_projects"],
   },
@@ -75,6 +78,31 @@ const routes = [
     path: "/show/1397/season/1/episode/1",
     marker: "CI fixture episode cast 0",
     expected: ["tmdb:/3/tv/1397/season/1/episode/1", "supabase:dubbing_projects"],
+  },
+  {
+    name: "season",
+    path: "/show/31/season/1",
+    marker: "CI fixture season 31/1",
+    expectedHtml: ["English", "French"],
+    expected: [
+      "tmdb:/3/tv/31/season/1",
+      "tmdb:/3/tv/31",
+      "tmdb:/3/tv/31/aggregate_credits",
+      "supabase:dubbing_projects",
+    ],
+  },
+  {
+    name: "season-api",
+    path: "/api/season?id=31&season_number=1&projection=media-page",
+    marker: "CI fixture season 31/1",
+    kind: "api",
+    semanticParity: "season-page-project-summary",
+    expected: [
+      "tmdb:/3/tv/31/season/1",
+      "tmdb:/3/tv/31",
+      "tmdb:/3/tv/31/aggregate_credits",
+      "supabase:dubbing_projects",
+    ],
   },
   {
     name: "actor",
@@ -97,6 +125,13 @@ const routes = [
     expected: ["supabase:auth_user", "supabase:dubbing_projects", "supabase:work"],
   },
 ];
+const requestedRouteNames = process.env.ROUTE_CPU_ROUTES?.split(",").filter(Boolean);
+const measuredRoutes = requestedRouteNames
+  ? routes.filter((route) => requestedRouteNames.includes(route.name))
+  : routes;
+if (requestedRouteNames && measuredRoutes.length !== requestedRouteNames.length) {
+  throw new Error(`Unknown route CPU route: ${requestedRouteNames.join(", ")}`);
+}
 
 const profilePlugin = `
 import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
@@ -104,7 +139,7 @@ import inspector from "node:inspector";
 import { join } from "node:path";
 import { defineEventHandler, getQuery } from "h3";
 
-const pageRoutes = new Set(${JSON.stringify(routes.map((route) => route.path.split("?")[0]))});
+const pageRoutes = new Set(${JSON.stringify(measuredRoutes.map((route) => route.path.split("?")[0]))});
 
 function post(session, method, params = {}) {
   return new Promise((resolve, reject) => {
@@ -188,6 +223,21 @@ function scheduledTasksPatch(source) {
   );
 }
 
+function offlineProfilingNuxtConfig(source) {
+  let config = scheduledTasksPatch(source);
+  const fontsModule = /^    "@nuxt\/fonts",\r?\n/m;
+  const fontsConfig =
+    /^  \/\/ @ts-ignore\r?\n  fonts: \{\r?\n[\s\S]*?^  \},\r?\n\r?\n(?=  site: \{)/m;
+  if (!fontsModule.test(config) || !fontsConfig.test(config)) {
+    throw new Error(
+      "Could not find the Nuxt fonts module and configuration to disable profiling egress.",
+    );
+  }
+
+  config = config.replace(fontsModule, "").replace(fontsConfig, "");
+  return config;
+}
+
 function localBenchmarkEnvironment() {
   const environment = { ...process.env };
   delete environment.E2E_TEST;
@@ -214,7 +264,7 @@ async function buildWebsite() {
   const configBackupPath = join(tempDir, "nuxt.config.ts");
   await copyFile(nuxtConfigPath, configBackupPath);
   try {
-    await writeFile(nuxtConfigPath, scheduledTasksPatch(originalNuxtConfig));
+    await writeFile(nuxtConfigPath, offlineProfilingNuxtConfig(originalNuxtConfig));
     await writeFile(pluginPath, profilePlugin);
     await runCommand("mise", ["run", "check"], {
       cwd: repoDir,
@@ -569,6 +619,13 @@ function assertRouteDependencies(route, before, after) {
 }
 
 function fixtureFor(dataset, routeName) {
+  if (routeName === "season" || routeName === "season-api") {
+    return {
+      projects: dataset === "large" ? 80 : 12,
+      worksPerProject: dataset === "large" ? 40 : 12,
+      episodes: 24,
+    };
+  }
   if (routeName === "episode") {
     const episodeProjects = dataset === "large" ? 80 : 12;
     const worksPerEpisodeProject = dataset === "large" ? 40 : 12;
@@ -602,19 +659,38 @@ async function validateRoute(server, route, dataset) {
   if (route.kind === "api") {
     const response = JSON.parse(validation.html);
     const fixture = fixtureFor(dataset, route.name);
-    const voiceActors = dubbingProjectVoiceActors(response);
-    if (
-      response.projectId !== 1 ||
-      !Array.isArray(response.works) ||
-      response.works.length !== fixture.works ||
-      voiceActors.length !== fixture.uniqueActors ||
-      !voiceActors[0]?.firstname?.startsWith(route.marker) ||
-      response.works.some((work) => work.editable !== false)
-    ) {
-      throw new Error(`${route.path} returned unexpected dubbing project assignments.`);
-    }
-    if (server.side === "head" && response.works.some((work) => "voice_actor" in work)) {
-      throw new Error(`${route.path} repeated voice actor records in each work row.`);
+    if (route.name === "season-api") {
+      const projects = response.dubbingProjects;
+      if (
+        response.season?.name !== route.marker ||
+        !Array.isArray(projects) ||
+        projects.length !== fixture.projects ||
+        seasonProjectSummaries(projects).reduce(
+          (total, project) => total + project.work_count,
+          0,
+        ) !==
+          fixture.projects * fixture.worksPerProject
+      ) {
+        throw new Error(`${route.path} returned unexpected season page data.`);
+      }
+      if (server.side === "head" && projects.some((project) => Object.hasOwn(project, "works"))) {
+        throw new Error(`${route.path} sent per-work rows in the season page projection.`);
+      }
+    } else {
+      const voiceActors = dubbingProjectVoiceActors(response);
+      if (
+        response.projectId !== 1 ||
+        !Array.isArray(response.works) ||
+        response.works.length !== fixture.works ||
+        voiceActors.length !== fixture.uniqueActors ||
+        !voiceActors[0]?.firstname?.startsWith(route.marker) ||
+        response.works.some((work) => work.editable !== false)
+      ) {
+        throw new Error(`${route.path} returned unexpected dubbing project assignments.`);
+      }
+      if (server.side === "head" && response.works.some((work) => "voice_actor" in work)) {
+        throw new Error(`${route.path} repeated voice actor records in each work row.`);
+      }
     }
   } else if (route.name === "episode") {
     const renderedHtml = validation.html.replace(/<script\b[\s\S]*?<\/script>/gi, "");
@@ -625,7 +701,10 @@ async function validateRoute(server, route, dataset) {
     ) {
       throw new Error(`${route.path} did not render the expected episode cast and actor links.`);
     }
-  } else if (!validation.html.includes(route.marker) || !validation.html.includes("__NUXT_DATA__")) {
+  } else if (
+    !validation.html.includes(route.marker) ||
+    !validation.html.includes("__NUXT_DATA__")
+  ) {
     throw new Error(`${route.path} did not SSR the expected fixture data.`);
   }
   const after = await currentDependencies(server);
@@ -641,7 +720,9 @@ function episodeCastLinks(html) {
   const renderedHtml = html.replace(/<script\b[\s\S]*?<\/script>/gi, "");
   return {
     actors: [...renderedHtml.matchAll(/href="[^"]*\/actor\/(\d+)"/g)].map((match) => match[1]),
-    voiceActors: [...renderedHtml.matchAll(/href="[^"]*\/voice-actor\/(\d+)"/g)].map((match) => match[1]),
+    voiceActors: [...renderedHtml.matchAll(/href="[^"]*\/voice-actor\/(\d+)"/g)].map(
+      (match) => match[1],
+    ),
   };
 }
 
@@ -672,6 +753,48 @@ function dubbingProjectVoiceActors(response) {
   return [...voiceActors.values()];
 }
 
+function seasonProjectSummaries(projects) {
+  return projects.map((project) => {
+    if (!Array.isArray(project.works))
+      return {
+        id: project.id,
+        language: project.language,
+        studio_data: project.studio_data,
+        has_voice_actor: project.has_voice_actor,
+        voice_actor_count: project.voice_actor_count,
+        work_count: project.work_count,
+      };
+
+    const voiceActorIds = new Set();
+    let hasVoiceActor = false;
+    for (const work of project.works) {
+      if (work.voice_actor) {
+        hasVoiceActor = true;
+        if (work.voice_actor.id) voiceActorIds.add(work.voice_actor.id);
+      }
+    }
+    return {
+      id: project.id,
+      language: project.language,
+      studio_data: project.studio_data,
+      has_voice_actor: hasVoiceActor,
+      voice_actor_count: voiceActorIds.size,
+      work_count: project.works.length,
+    };
+  });
+}
+
+function seasonPageData(body) {
+  const response = JSON.parse(body);
+  return {
+    season: response.season,
+    serie: response.serie,
+    dubbingProjects: seasonProjectSummaries(response.dubbingProjects),
+    characterProfilePictures: response.characterProfilePictures,
+    votes: response.votes,
+  };
+}
+
 async function warmServers(baseServer, headServer, route) {
   for (let request = 0; request < warmupRequests; request += 1) {
     const order = request % 2 === 0 ? [baseServer, headServer] : [headServer, baseServer];
@@ -694,7 +817,16 @@ async function captureProfile(server, route) {
   return profile;
 }
 
-function workloadFor(server, route, dataset, rounds, pairedDeltas, dependencies, profile, responseHash) {
+function workloadFor(
+  server,
+  route,
+  dataset,
+  rounds,
+  pairedDeltas,
+  dependencies,
+  profile,
+  responseHash,
+) {
   const samples = rounds.map((round) => round[server.side]);
   return {
     name: route.name,
@@ -712,13 +844,14 @@ function workloadFor(server, route, dataset, rounds, pairedDeltas, dependencies,
       total: summarize(samples.map((sample) => sample.totalMicrosPerRequest)),
     },
     responseBytesPerRequest: summarize(samples.map((sample) => sample.responseBytesPerRequest)),
-    responseBodySha256: route.kind === "api" ? responseHash : undefined,
+    responseBodySha256: route.kind === "api" && !route.semanticParity ? responseHash : undefined,
     responseSemanticParity:
-      route.name === "admin-dubbing-project"
+      route.semanticParity ??
+      (route.name === "admin-dubbing-project"
         ? "regional-assignment-data"
         : route.name === "episode"
           ? "episode-cast-links"
-          : undefined,
+          : undefined),
     upstreamRequests: dependencies,
     profile,
   };
@@ -744,7 +877,7 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
 
     const baseWorkloads = [];
     const headWorkloads = [];
-    for (const route of routes) {
+    for (const route of measuredRoutes) {
       const baseValidation = await validateRoute(baseServer, route, dataset);
       const headValidation = await validateRoute(headServer, route, dataset);
       if (route.name === "admin-dubbing-project") {
@@ -760,7 +893,19 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
           JSON.stringify(episodeCastLinks(headValidation.html))
       ) {
         throw new Error(`${route.path} changed the rendered episode cast links.`);
-      } else if (route.kind === "api" && baseValidation.hash !== headValidation.hash) {
+      } else if (
+        route.name === "season-api" &&
+        JSON.stringify(seasonPageData(baseValidation.html)) !==
+          JSON.stringify(seasonPageData(headValidation.html))
+      ) {
+        throw new Error(
+          `${route.path} changed season page data while compacting its project summary.`,
+        );
+      } else if (
+        route.kind === "api" &&
+        route.name !== "season-api" &&
+        baseValidation.hash !== headValidation.hash
+      ) {
         throw new Error(`${route.path} changed its response body in the CPU comparison.`);
       }
       await warmServers(baseServer, headServer, route);
