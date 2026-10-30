@@ -21,6 +21,7 @@ const sizes =
         voiceActorWorks: 500,
         uniqueMedia: 100,
       };
+const searchResultsPerSource = dataset === "large" ? 20 : 10;
 
 function makeCast(count, mediaType = "movie") {
   return Array.from({ length: count }, (_, index) => ({
@@ -186,10 +187,19 @@ const supabaseResponse = (url) => {
     return { value: adminDubbingWorks, single: false };
   }
   if (table === "voice_actors") {
+    const query = new URLSearchParams(path.split("?")[1] ?? "");
+    if (query.has("voice_actor_name")) return { value: searchVoiceActors, single: false };
+    if (query.has("or")) return { value: searchVoiceActors, single: false };
     return { value: voiceActor, single: true };
   }
   if (table === "work") return { value: actorRoles, single: false };
-  if (table === "dubbing_projects") return { value: dubbingProjects, single: false };
+  if (table === "toy_metadata") return { value: searchToys, single: false };
+  if (table === "dubbing_projects") {
+    const query = new URLSearchParams(path.split("?")[1] ?? "");
+    return query.get("content_type") === "eq.advertisement"
+      ? { value: searchAdvertisements, single: false }
+      : { value: dubbingProjects, single: false };
+  }
   throw new Error(`Unexpected mocked Supabase table: ${table}`);
 };
 
@@ -202,8 +212,21 @@ globalThis.fetch = async (input, init = {}) => {
   let body;
 
   if (url.hostname === "api.themoviedb.org") {
-    key = `tmdb:${url.pathname}`;
-    body = encodedResponses.get(key);
+    key =
+      url.pathname === "/3/search/multi"
+        ? `tmdb:${url.pathname}?page=${url.searchParams.get("page")}`
+        : `tmdb:${url.pathname}`;
+    body =
+      url.pathname === "/3/search/multi"
+        ? JSON.stringify({
+            results: searchTmdbResults.slice(
+              Number(url.searchParams.get("page") ?? "1") === 1 ? 0 : searchResultsPerSource,
+              Number(url.searchParams.get("page") ?? "1") === 1
+                ? searchResultsPerSource
+                : searchResultsPerSource * 2,
+            ),
+          })
+        : encodedResponses.get(key);
     if (body === undefined) throw new Error(`Unexpected mocked TMDB request: ${url.pathname}`);
   } else if (url.hostname === "mock.supabase.co") {
     if (url.pathname === "/auth/v1/user") {
@@ -230,6 +253,18 @@ globalThis.fetch = async (input, init = {}) => {
       .get("accept")
       ?.includes("vnd.pgrst.object");
     body = JSON.stringify(response.single && !acceptsSingle ? [response.value] : response.value);
+  } else if (url.hostname === "id.twitch.tv" && url.pathname === "/oauth2/token") {
+    key = "igdb:token";
+    body = JSON.stringify({ access_token: "local-route-cpu-fixture", expires_in: 7_200 });
+  } else if (url.hostname === "api.igdb.com" && url.pathname === "/v4/games") {
+    key = "igdb:games";
+    body = JSON.stringify(searchGames);
+  } else if (url.hostname === "openlibrary.org" && url.pathname === "/search.json") {
+    key = "openlibrary:search";
+    body = JSON.stringify({ docs: searchBooks });
+  } else if (url.hostname === "itunes.apple.com" && url.pathname === "/search") {
+    key = "itunes:search";
+    body = JSON.stringify({ resultCount: searchPodcasts.length, results: searchPodcasts });
   } else if (url.hostname === "api4.thetvdb.com") {
     key = `tvdb:${url.pathname}`;
     body =

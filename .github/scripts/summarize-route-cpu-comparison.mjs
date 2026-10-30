@@ -109,6 +109,9 @@ function sameFixture(base, head, route, dataset) {
   if (base.path !== head.path || JSON.stringify(base.fixture) !== JSON.stringify(head.fixture)) {
     throw new Error(`Base and PR fixtures differ for ${route} ${dataset}.`);
   }
+  if (route === "global-search" && base.responseBodySha256 !== head.responseBodySha256) {
+    throw new Error(`Base and PR response bodies differ for ${route} ${dataset}.`);
+  }
 }
 
 const rows = [];
@@ -141,7 +144,7 @@ for (const route of routeNames) {
     const interval = bootstrapMedianInterval(headDeltas, `${route}:${dataset}`);
     cpuComparisons.push({ interval });
     rows.push(
-      `| ${route} (${dataset}) | ${formatCpu(baseCpu)} | ${formatCpu(headCpu)} | ${formatDelta(baseCpu.median, headDeltas, interval)} |`,
+      `| ${route} (${dataset}) | ${formatCpu(baseCpu)} | ${formatCpu(headCpu)} | ${formatDelta(baseCpu.median, headDeltas, interval)} | ${Math.round(base.htmlBytesPerRequest.median)} → ${Math.round(head.htmlBytesPerRequest.median)} | ${base.responseBodySha256 ?? "—"} |`,
     );
   }
 }
@@ -156,6 +159,7 @@ function isApplicationSource(source) {
   const normalized = source.replaceAll("\\", "/");
   return (
     normalized.startsWith("src/") ||
+    normalized.startsWith("server/") ||
     normalized.startsWith("../../packages/") ||
     normalized.startsWith("packages/")
   );
@@ -202,8 +206,8 @@ const markdown = [
   "",
   `**Result:** ${resultSummary} 🔴 more CPU · 🟢 less CPU · ⚪ unchanged median; markers show direction only. This PR changes route code, and this comparison measures its effect.`,
   "",
-  "| Route / workload | Base median CPU / request | PR median CPU / request | Paired change (95% bootstrap interval) |",
-  "| --- | ---: | ---: | ---: |",
+  "| Route / workload | Base median CPU / request | PR median CPU / request | Paired change (95% bootstrap interval) | Response bytes (base → PR) | API body SHA-256 |",
+  "| --- | ---: | ---: | ---: | ---: | --- |",
   ...rows,
   "",
   "### Top 10 app CPU consumers (large workload)",

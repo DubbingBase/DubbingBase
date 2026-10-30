@@ -291,8 +291,7 @@ function topUniqueApplicationCpuConsumers(frames, totalSampledMicros) {
       functionName,
       source,
       sampledMicros,
-      sampleSharePercent:
-        totalSampledMicros > 0 ? (sampledMicros / totalSampledMicros) * 100 : 0,
+      sampleSharePercent: totalSampledMicros > 0 ? (sampledMicros / totalSampledMicros) * 100 : 0,
     }));
 }
 
@@ -572,6 +571,7 @@ function fixtureFor(dataset, routeName) {
     actorRoles: dataset === "large" ? 500 : 24,
     voiceActorWorks: dataset === "large" ? 500 : 24,
     uniqueVoiceActorMedia: dataset === "large" ? 100 : 12,
+    searchResultsPerSource,
   };
 }
 
@@ -710,9 +710,16 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
 
       const rounds = [];
       for (let round = 0; round < measuredRounds; round += 1) {
-        const order = round % 2 === 0
-          ? [["base", baseServer], ["head", headServer]]
-          : [["head", headServer], ["base", baseServer]];
+        const order =
+          round % 2 === 0
+            ? [
+                ["base", baseServer],
+                ["head", headServer],
+              ]
+            : [
+                ["head", headServer],
+                ["base", baseServer],
+              ];
         const result = {};
         for (const [side, server] of order) {
           result[side] = await requestBatch(server, route, requestsPerRound);
@@ -773,7 +780,8 @@ async function measurePaired() {
   await assertIsolatedNetworkNamespace("route profiling");
   const baseWebsiteDir = process.env.ROUTE_CPU_BASE_WEBSITE_DIR;
   const headWebsiteDir = process.env.ROUTE_CPU_HEAD_WEBSITE_DIR ?? websiteDir;
-  if (!baseWebsiteDir) throw new Error("Set ROUTE_CPU_BASE_WEBSITE_DIR to the baseline website build.");
+  if (!baseWebsiteDir)
+    throw new Error("Set ROUTE_CPU_BASE_WEBSITE_DIR to the baseline website build.");
 
   await rm(join(profileRoot, "base"), { recursive: true, force: true });
   await rm(join(profileRoot, "head"), { recursive: true, force: true });
