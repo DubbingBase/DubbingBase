@@ -1346,7 +1346,7 @@ export default defineEventHandler(async (event) => {
               payload.season_number ? ` (Season ${payload.season_number})` : ""
             }${
               payload.episode_number ? ` (Episode ${payload.episode_number})` : ""
-            } [${wikipediaLanguage.toUpperCase()}].\n• Added **${extractResult.creditsAdded ?? 0}** roles\n• Added **${extractResult.changes ?? 0}** new voice actors.\n• LLM model: **${extractResult.llmModel ?? "unknown"}**${extractResult.llmQuota ? ` (quota: ${extractResult.llmQuota})` : ""}${extractResult.note ? `\n• Note: ${extractResult.note}` : ""}`,
+            } [${wikipediaLanguage.toUpperCase()}].\n• Added **${extractResult.creditsAdded ?? 0}** roles\n• Existing overlaps: **${extractResult.creditsOverlapped ?? 0}**; mismatched: **${extractResult.creditsMismatched ?? 0}**${extractResult.creditsMismatched ? " (existing values kept)" : extractResult.creditsOverlapped ? " (all matched)" : ""}\n• Added **${extractResult.changes ?? 0}** new voice actors.\n• LLM model: **${extractResult.llmModel ?? "unknown"}**${extractResult.llmQuota ? ` (quota: ${extractResult.llmQuota})` : ""}${extractResult.note ? `\n• Note: ${extractResult.note}` : ""}`,
             {
               event,
               queue: "wiki_extract",

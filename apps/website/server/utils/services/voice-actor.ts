@@ -15,6 +15,8 @@ export interface ExtractedCredit {
 export interface AppliedExtractedCredits {
   newVoiceActors: number;
   creditsAdded: number;
+  creditsOverlapped: number;
+  creditsMismatched: number;
 }
 
 function readCount(value: unknown, key: string): number {
@@ -31,7 +33,9 @@ export async function applyExtractedCredits(
   credits: ExtractedCredit[],
 ): Promise<AppliedExtractedCredits> {
   requireDubbingLanguage(dubbingLanguage);
-  if (credits.length === 0) return { newVoiceActors: 0, creditsAdded: 0 };
+  if (credits.length === 0) {
+    return { newVoiceActors: 0, creditsAdded: 0, creditsOverlapped: 0, creditsMismatched: 0 };
+  }
 
   const payload: Json = credits.map((credit) => ({
     firstname: credit.firstname,
@@ -53,6 +57,8 @@ export async function applyExtractedCredits(
   return {
     newVoiceActors: readCount(data, "new_voice_actors"),
     creditsAdded: readCount(data, "credits_added"),
+    creditsOverlapped: readCount(data, "credits_overlapped"),
+    creditsMismatched: readCount(data, "credits_mismatched"),
   };
 }
 

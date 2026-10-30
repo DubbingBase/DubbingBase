@@ -14,6 +14,8 @@ DECLARE
   v_populated_project_id bigint;
   v_empty_scan_id bigint;
   v_empty_extract_id bigint;
+  v_populated_scan_id bigint;
+  v_populated_extract_id bigint;
 BEGIN
   IF has_function_privilege('anon','public.get_ready_media_queues()','EXECUTE')
     OR has_function_privilege('authenticated','public.get_ready_media_queues()','EXECUTE')
@@ -102,28 +104,25 @@ BEGIN
   INSERT INTO public.work(dubbing_project_id, actor_id, voice_actor_id, character_id, character_name)
   VALUES (v_populated_project_id, NULL, NULL, NULL, 'Existing fixture credit');
 
-  v_blocked := false;
-  BEGIN
-    PERFORM public.enqueue_media_fetch(
-      p_tmdb_id => -980506, p_media_type => 'movie',
-      p_wikipedia_language => 'fr', p_dubbing_language => 'fr-FR'
-    );
-  EXCEPTION WHEN raise_exception THEN
-    v_blocked := SQLERRM LIKE 'Dubbing project already exists for %';
-  END;
-  IF NOT v_blocked THEN RAISE EXCEPTION 'A populated project did not block wiki_scan enqueue'; END IF;
-
-  v_blocked := false;
-  BEGIN
-    PERFORM public.enqueue_media_extract(
-      p_tmdb_id => -980506, p_media_type => 'movie',
-      p_language => 'fr', p_page_id => 12346, p_section_indexes => '[2]'::jsonb,
-      p_wikipedia_language => 'fr', p_dubbing_language => 'fr-FR'
-    );
-  EXCEPTION WHEN raise_exception THEN
-    v_blocked := SQLERRM LIKE 'Dubbing project already exists for %';
-  END;
-  IF NOT v_blocked THEN RAISE EXCEPTION 'A populated project did not block extraction enqueue'; END IF;
+  v_populated_scan_id := public.enqueue_media_fetch(
+    p_tmdb_id => -980506, p_media_type => 'movie',
+    p_wikipedia_language => 'fr', p_dubbing_language => 'fr-FR'
+  );
+  v_populated_extract_id := public.enqueue_media_extract(
+    p_tmdb_id => -980506, p_media_type => 'movie',
+    p_language => 'fr', p_page_id => 12346, p_section_indexes => '[2]'::jsonb,
+    p_wikipedia_language => 'fr', p_dubbing_language => 'fr-FR'
+  );
+  IF NOT EXISTS (SELECT 1 FROM pgmq.q_wiki_scan WHERE msg_id = v_populated_scan_id)
+    OR NOT EXISTS (SELECT 1 FROM pgmq.q_wiki_extract WHERE msg_id = v_populated_extract_id)
+    OR (SELECT count(*) FROM public.work WHERE dubbing_project_id = v_populated_project_id) <> 1
+    OR NOT EXISTS (
+      SELECT 1 FROM public.work
+      WHERE dubbing_project_id = v_populated_project_id
+        AND character_name = 'Existing fixture credit'
+    ) THEN
+    RAISE EXCEPTION 'A populated project did not allow enqueue while preserving its existing work';
+  END IF;
 
   UPDATE pgmq.q_wiki_scan SET vt=clock_timestamp()-interval '1 second';
   UPDATE pgmq.q_wiki_extract SET vt=clock_timestamp()-interval '1 second';
