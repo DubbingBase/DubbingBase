@@ -120,7 +120,7 @@ const voiceActor = {
   voice_actor_name: "CI fixture voice actor Actor",
   bio: "Deterministic local route CPU fixture. ".repeat(20),
   profile_picture: "voice-actor.jpg",
-  tmdb_id: 12_001,
+  tmdb_id: null,
   work: Array.from({ length: sizes.voiceActorWorks }, (_, index) => ({
     id: index + 1,
     actor_id: 200_000 + index,
@@ -155,7 +155,10 @@ addJsonResponse("tmdb:/3/person/12001", {
 for (let index = 0; index < sizes.uniqueMedia; index += 1) {
   const mediaType = index % 2 === 0 ? "movie" : "tv";
   const mediaId = 300_000 + index;
-  addJsonResponse(`tmdb:/3/${mediaType}/${mediaId}`, makeMedia(mediaId, mediaType));
+  const media = makeMedia(mediaId, mediaType);
+  media.popularity = index;
+  if (index % 7 === 0) media.backdrop_path = null;
+  addJsonResponse(`tmdb:/3/${mediaType}/${mediaId}`, media);
 }
 
 const supabaseResponse = (path) => {
@@ -188,6 +191,9 @@ globalThis.fetch = async (input, init = {}) => {
       .get("accept")
       ?.includes("vnd.pgrst.object");
     body = JSON.stringify(response.single && !acceptsSingle ? [response.value] : response.value);
+  } else if (url.hostname === "wikidata.org" && url.pathname === "/w/api.php") {
+    key = "wikidata:search";
+    body = JSON.stringify({ search: [] });
   } else if (url.hostname === "api4.thetvdb.com") {
     key = `tvdb:${url.pathname}`;
     body =

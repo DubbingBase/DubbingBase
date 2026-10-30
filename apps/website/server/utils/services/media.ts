@@ -749,10 +749,15 @@ export class MediaService {
           if (best) backdropPath = buildTmdbImageUrl(best.backdrop_path, "original");
         }
       } else {
-        const sorted = [...enhancedWorks].sort(
-          (a, b) => (b.media.popularity || 0) - (a.media.popularity || 0),
-        );
-        const best = sorted.find((w) => w.media.backdrop_path);
+        let best: (typeof enhancedWorks)[number] | undefined;
+        for (const work of enhancedWorks) {
+          if (
+            work.media.backdrop_path &&
+            (!best || work.media.popularity > best.media.popularity)
+          ) {
+            best = work;
+          }
+        }
         if (best) backdropPath = best.media.backdrop_path || null;
       }
     } catch (e) {

@@ -156,6 +156,7 @@ function isApplicationSource(source) {
   const normalized = source.replaceAll("\\", "/");
   return (
     normalized.startsWith("src/") ||
+    normalized.startsWith("server/") ||
     normalized.startsWith("../../packages/") ||
     normalized.startsWith("packages/")
   );

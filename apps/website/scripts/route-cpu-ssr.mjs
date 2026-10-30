@@ -43,7 +43,7 @@ const routes = [
     name: "voice-actor",
     path: "/voice-actor/1",
     marker: "CI fixture voice actor",
-    expected: ["tmdb:/3/person/12001", "supabase:voice_actors"],
+    expected: ["tmdb:/3/movie/300000", "supabase:voice_actors", "wikidata:search"],
   },
 ];
 
@@ -312,6 +312,7 @@ async function cpuProfileSummary(profile, profileWebsiteDir) {
     const source = frame.source.replaceAll("\\", "/");
     return (
       source.startsWith("src/") ||
+      source.startsWith("server/") ||
       source.startsWith("../../packages/") ||
       source.startsWith("packages/")
     );
