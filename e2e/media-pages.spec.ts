@@ -49,6 +49,42 @@ function getAttribute(tag: string, name: string): string {
   return tag.match(new RegExp(`\\b${name}="([^"]*)"`))?.[1] || "";
 }
 
+function localizedPath(locale: string, path: string): string {
+  if (locale === "en") return path;
+  return path === "/" ? `/${locale}` : `/${locale}${path}`;
+}
+
+function absoluteUrl(path: string): string {
+  return `https://dubbingbase.com${path === "/" ? "" : path}`;
+}
+
+async function expectLocaleUrlHead(
+  page: Page,
+  locale: { code: string; shortCode: string },
+  path: string,
+): Promise<void> {
+  const expectedUrl = absoluteUrl(localizedPath(locale.shortCode, path));
+  await expect(page.locator("html")).toHaveAttribute("lang", locale.code);
+  await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    "href",
+    expectedUrl,
+  );
+  await expect(page.locator('meta[property="og:url"]')).toHaveCount(1);
+  await expect(page.locator('meta[property="og:url"]')).toHaveAttribute(
+    "content",
+    expectedUrl,
+  );
+  await expect(page.locator('meta[name="twitter:url"]')).toHaveCount(1);
+  await expect(page.locator('meta[name="twitter:url"]')).toHaveAttribute(
+    "content",
+    expectedUrl,
+  );
+  await expect(
+    page.locator('link[rel="alternate"][hreflang="x-default"]'),
+  ).toHaveAttribute("href", absoluteUrl(path));
+}
+
 test.describe("Media Detail Pages", () => {
   test.beforeEach(async ({ page }) => {
     test.setTimeout(60000);
@@ -498,6 +534,169 @@ test.describe("Media Detail Pages", () => {
         expect(html).toContain(route.title);
         expect(html).not.toContain("Show 1396");
       }
+    }
+  });
+
+  test("server-renders locale-aware URLs across indexable public routes", async ({
+    page,
+  }) => {
+    test.setTimeout(240000);
+    const locales = [
+      { code: "en-US", shortCode: "en" },
+      { code: "fr-FR", shortCode: "fr" },
+      { code: "es-ES", shortCode: "es" },
+      { code: "ja-JP", shortCode: "ja" },
+    ];
+    const paths = [
+      "/",
+      "/movie/85",
+      "/show/1396",
+      "/show/1396/season/1",
+      "/show/1396/season/1/episode/1",
+      "/actor/17419",
+      "/voice-actor/1",
+      "/search",
+    ];
+
+    for (const locale of locales) {
+      await page.context().clearCookies();
+      await page.context().addCookies([
+        {
+          name: "user_lang",
+          value: locale.shortCode,
+          url: "http://localhost:3050",
+          sameSite: "Lax",
+        },
+      ]);
+
+      for (const path of paths) {
+        const localizedUrl = localizedPath(locale.shortCode, path);
+        const response = await page.request.get(
+          `http://localhost:3050${localizedUrl}`,
+        );
+        expect(response.status(), `${locale.shortCode} ${path}`).toBe(200);
+        const html = await response.text();
+        const expectedUrl = absoluteUrl(localizedUrl);
+        expect(html).toMatch(
+          new RegExp(`<html\\b[^>]*\\blang="${locale.code}"`),
+        );
+
+        const canonicalTags =
+          html.match(/<link\b(?=[^>]*\brel="canonical")[^>]*>/g) || [];
+        const ogUrlTags =
+          html.match(/<meta\b(?=[^>]*\bproperty="og:url")[^>]*>/g) || [];
+        const twitterUrlTags =
+          html.match(/<meta\b(?=[^>]*\bname="twitter:url")[^>]*>/g) || [];
+        expect(
+          canonicalTags,
+          `${locale.shortCode} ${path} canonical`,
+        ).toHaveLength(1);
+        expect(ogUrlTags, `${locale.shortCode} ${path} og:url`).toHaveLength(1);
+        expect(
+          twitterUrlTags,
+          `${locale.shortCode} ${path} twitter:url`,
+        ).toHaveLength(1);
+        expect(getAttribute(canonicalTags[0], "href")).toBe(expectedUrl);
+        expect(getAttribute(ogUrlTags[0], "content")).toBe(expectedUrl);
+        expect(getAttribute(twitterUrlTags[0], "content")).toBe(expectedUrl);
+
+        const alternates =
+          html.match(
+            /<link\b(?=[^>]*\brel="alternate")(?=[^>]*\bhreflang="[^"]+")[^>]*>/g,
+          ) || [];
+        expect(
+          alternates,
+          `${locale.shortCode} ${path} alternates`,
+        ).toHaveLength(5);
+        for (const alternate of locales) {
+          const tags = alternates.filter(
+            (tag) => getAttribute(tag, "hreflang") === alternate.code,
+          );
+          expect(
+            tags,
+            `${locale.shortCode} ${path} ${alternate.code}`,
+          ).toHaveLength(1);
+          expect(getAttribute(tags[0], "href")).toBe(
+            absoluteUrl(localizedPath(alternate.shortCode, path)),
+          );
+        }
+        const defaultTags = alternates.filter(
+          (tag) => getAttribute(tag, "hreflang") === "x-default",
+        );
+        expect(defaultTags).toHaveLength(1);
+        expect(getAttribute(defaultTags[0], "href")).toBe(absoluteUrl(path));
+      }
+    }
+  });
+
+  test("keeps canonical, alternate, and social URLs current during client navigation", async ({
+    browser,
+  }) => {
+    test.setTimeout(180000);
+    const locales = [
+      { code: "en-US", shortCode: "en" },
+      { code: "fr-FR", shortCode: "fr" },
+      { code: "es-ES", shortCode: "es" },
+      { code: "ja-JP", shortCode: "ja" },
+    ];
+    const paths = [
+      "/",
+      "/movie/85",
+      "/show/1396",
+      "/show/1396/season/1",
+      "/show/1396/season/1/episode/1",
+      "/actor/17419",
+      "/voice-actor/1",
+      "/search",
+    ];
+
+    for (const locale of locales) {
+      const context = await browser.newContext({
+        baseURL: "http://localhost:3050",
+        serviceWorkers: "block",
+      });
+      const page = await context.newPage();
+      await setupMockApi(page);
+      await context.addCookies([
+        {
+          name: "user_lang",
+          value: locale.shortCode,
+          url: "http://localhost:3050",
+          sameSite: "Lax",
+        },
+      ]);
+      await page.goto(localizedPath(locale.shortCode, "/"), {
+        waitUntil: "domcontentloaded",
+      });
+      await page.waitForFunction(
+        () => {
+          return Boolean(
+            document.getElementById("__nuxt")?.__vue_app__?.config
+              .globalProperties.$router,
+          );
+        },
+        undefined,
+        { timeout: 30000 },
+      );
+
+      for (const path of paths) {
+        const localizedUrl = localizedPath(locale.shortCode, path);
+        await navigateClientSide(page, localizedUrl);
+        await expect(page).toHaveURL(`http://localhost:3050${localizedUrl}`);
+        await expectLocaleUrlHead(page, locale, path);
+        await expect(
+          page.locator('link[rel="alternate"][hreflang="en-US"]'),
+        ).toHaveAttribute("href", absoluteUrl(localizedPath("en", path)));
+        for (const alternate of locales) {
+          await expect(
+            page.locator(`link[rel="alternate"][hreflang="${alternate.code}"]`),
+          ).toHaveAttribute(
+            "href",
+            absoluteUrl(localizedPath(alternate.shortCode, path)),
+          );
+        }
+      }
+      await context.close();
     }
   });
 

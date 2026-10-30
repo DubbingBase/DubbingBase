@@ -843,7 +843,6 @@ useHead({
       }),
     },
     { property: "og:logo", content: computed(() => new URL("/logo.png", siteUrl).href) },
-    { property: "og:url", content: pageUrl },
     { property: "og:image", content: ogImageUrl },
     {
       property: "og:image:width",

@@ -828,10 +828,6 @@ useHead({
       content: "video.episode",
     },
     {
-      property: "og:url",
-      content: pageUrl,
-    },
-    {
       property: "og:image",
       content: computed(() => backdropUrl.value || posterUrl.value || ""),
     },

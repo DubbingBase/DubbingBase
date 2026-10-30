@@ -598,10 +598,6 @@ useHead({
       content: "profile",
     },
     {
-      property: "og:url",
-      content: pageUrl,
-    },
-    {
       property: "og:image",
       content: computed(() =>
         actor.value?.profile_path

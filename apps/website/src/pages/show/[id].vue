@@ -810,10 +810,6 @@ useHead({
             content: "video.tv_show",
           },
           {
-            property: "og:url",
-            content: pageUrl,
-          },
-          {
             property: "og:image",
             content: computed(() => backdropUrl.value || posterUrl.value || ""),
           },
