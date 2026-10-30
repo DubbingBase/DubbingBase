@@ -12,6 +12,10 @@ const sizes =
         actorRoles: 24,
         voiceActorWorks: 24,
         uniqueMedia: 12,
+        seasonProjects: 12,
+        seasonWorksPerProject: 12,
+        seasonEpisodes: 10,
+        seasonCast: 120,
       }
     : {
         mediaCredits: 1200,
@@ -20,6 +24,10 @@ const sizes =
         actorRoles: 500,
         voiceActorWorks: 500,
         uniqueMedia: 100,
+        seasonProjects: 80,
+        seasonWorksPerProject: 40,
+        seasonEpisodes: 24,
+        seasonCast: 500,
       };
 
 function makeCast(count, mediaType = "movie") {
@@ -135,6 +143,76 @@ const voiceActor = {
   })),
 };
 
+const seasonProjects = Array.from({ length: sizes.seasonProjects }, (_, projectIndex) => ({
+  id: 5_000 + projectIndex,
+  language: projectIndex % 2 === 0 ? "fr-FR" : "fr-BE",
+  studio_data: {
+    id: 900 + (projectIndex % 6),
+    name: `CI fixture season studio ${projectIndex % 6}`,
+    logo_url: null,
+  },
+  works: Array.from({ length: sizes.seasonWorksPerProject }, (_, workIndex) => ({
+    voice_actor: {
+      id: 70_000 + ((projectIndex * sizes.seasonWorksPerProject + workIndex) % 120),
+    },
+  })),
+}));
+
+const showProjects = Array.from({ length: sizes.seasonProjects }, (_, projectIndex) => ({
+  id: 6_000 + projectIndex,
+  language: projectIndex % 2 === 0 ? "fr-FR" : "fr-BE",
+  studio_data: {
+    id: 900 + (projectIndex % 6),
+    name: `CI fixture show studio ${projectIndex % 6}`,
+    logo_url: null,
+  },
+  works: Array.from({ length: sizes.seasonWorksPerProject }, (_, workIndex) => {
+    const index = projectIndex * sizes.seasonWorksPerProject + workIndex;
+    const voiceActorId = 70_000 + (index % 120);
+    return {
+      id: 200_000 + index,
+      actor_id: 200_000 + (index % sizes.seasonCast),
+      character_name: `CI fixture show character ${index}`,
+      performance: "dialogues",
+      note: null,
+      voice_actor: {
+        id: voiceActorId,
+        firstname: `CI show voice ${voiceActorId}`,
+        lastname: "Actor",
+        profile_picture: null,
+        voice_actor_name: `CI show voice ${voiceActorId} Actor`,
+      },
+    };
+  }),
+}));
+
+const season = {
+  id: 1,
+  name: "CI fixture season 1",
+  overview: "Deterministic local route CPU fixture.",
+  season_number: 1,
+  air_date: "2021-01-01",
+  poster_path: "/season-1.jpg",
+  episodes: Array.from({ length: sizes.seasonEpisodes }, (_, index) => ({
+    id: 40_000 + index,
+    episode_number: index + 1,
+    name: `CI fixture episode ${index + 1}`,
+    air_date: "2021-01-01",
+    still_path: `/episode-${index + 1}.jpg`,
+    vote_average: 7.5,
+    overview: "Deterministic local episode fixture.",
+  })),
+  credits: { cast: [], crew: [] },
+  external_ids: { tvdb_id: 99001 },
+};
+
+const show = {
+  ...makeMedia(31, "tv"),
+  name: "CI fixture parent show",
+  original_language: "en",
+  seasons: [],
+};
+
 const encodedResponses = new Map();
 function addJsonResponse(key, value) {
   encodedResponses.set(key, JSON.stringify(value));
@@ -151,6 +229,12 @@ addJsonResponse("tmdb:/3/person/12001", {
   movie_credits: { cast: makeCast(20, "movie") },
   tv_credits: { cast: makeCast(20, "tv") },
 });
+addJsonResponse("tmdb:/3/tv/31", show);
+addJsonResponse("tmdb:/3/tv/31/season/1", season);
+addJsonResponse("tmdb:/3/tv/31/aggregate_credits", {
+  cast: makeCast(sizes.seasonCast, "tv"),
+  crew: [],
+});
 
 for (let index = 0; index < sizes.uniqueMedia; index += 1) {
   const mediaType = index % 2 === 0 ? "movie" : "tv";
@@ -158,13 +242,20 @@ for (let index = 0; index < sizes.uniqueMedia; index += 1) {
   addJsonResponse(`tmdb:/3/${mediaType}/${mediaId}`, makeMedia(mediaId, mediaType));
 }
 
-const supabaseResponse = (path) => {
-  const table = path.replace(/^\/rest\/v1\//, "").split("?")[0];
+const supabaseResponse = (url) => {
+  const table = url.pathname.replace(/^\/rest\/v1\//, "");
   if (table === "voice_actors") {
     return { value: voiceActor, single: true };
   }
   if (table === "work") return { value: actorRoles, single: false };
-  if (table === "dubbing_projects") return { value: dubbingProjects, single: false };
+  if (table === "dubbing_projects") {
+    const isSeason = url.searchParams.get("content_id") === "eq.31";
+    const isShowProjection = url.searchParams.get("select")?.includes("character_name");
+    return {
+      value: isSeason ? (isShowProjection ? showProjects : seasonProjects) : dubbingProjects,
+      single: false,
+    };
+  }
   throw new Error(`Unexpected mocked Supabase table: ${table}`);
 };
 
@@ -181,7 +272,7 @@ globalThis.fetch = async (input, init = {}) => {
     body = encodedResponses.get(key);
     if (body === undefined) throw new Error(`Unexpected mocked TMDB request: ${url.pathname}`);
   } else if (url.hostname === "mock.supabase.co") {
-    const response = supabaseResponse(url.pathname);
+    const response = supabaseResponse(url);
     key = `supabase:${url.pathname.split("/").at(-1)}`;
     const inputHeaders = input instanceof Request ? input.headers : undefined;
     const acceptsSingle = new Headers(init.headers ?? inputHeaders)
@@ -194,7 +285,7 @@ globalThis.fetch = async (input, init = {}) => {
       url.pathname === "/v4/login"
         ? JSON.stringify({ data: { token: "local-route-cpu-fixture" } })
         : url.pathname === "/v4/search"
-          ? JSON.stringify({ data: [] })
+          ? JSON.stringify({ data: [{ id: "series-99001", type: "series", name: "CI fixture parent show" }] })
           : JSON.stringify({ data: { characters: [] } });
   } else {
     throw new Error(`Blocked unexpected outbound request: ${url.origin}${url.pathname}`);

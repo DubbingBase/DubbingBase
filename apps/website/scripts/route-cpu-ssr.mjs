@@ -45,6 +45,20 @@ const routes = [
     marker: "CI fixture voice actor",
     expected: ["tmdb:/3/person/12001", "supabase:voice_actors"],
   },
+  {
+    name: "season",
+    path: "/fr/show/31/season/1",
+    marker: "CI fixture season 1",
+    expected: [
+      "tmdb:/3/tv/31",
+      "tmdb:/3/tv/31/season/1",
+      "tmdb:/3/tv/31/aggregate_credits",
+      "tvdb:/v4/login",
+      "tvdb:/v4/search",
+      "tvdb:/v4/series/99001",
+      "supabase:dubbing_projects",
+    ],
+  },
 ];
 
 const profilePlugin = `
@@ -508,7 +522,15 @@ function assertRouteDependencies(route, before, after) {
   }
 }
 
-function fixtureFor(dataset) {
+function fixtureFor(dataset, routeName) {
+  if (routeName === "season") {
+    return {
+      seasonProjects: dataset === "large" ? 80 : 12,
+      seasonWorks: dataset === "large" ? 3200 : 144,
+      seasonEpisodes: dataset === "large" ? 24 : 10,
+      seasonCast: dataset === "large" ? 500 : 120,
+    };
+  }
   return {
     mediaCredits: dataset === "large" ? 1200 : 180,
     dubbingProjects: dataset === "large" ? 500 : 40,
@@ -557,7 +579,7 @@ function workloadFor(server, route, dataset, rounds, pairedDeltas, dependencies,
     name: route.name,
     path: route.path,
     dataset,
-    fixture: fixtureFor(dataset),
+    fixture: fixtureFor(dataset, route.name),
     warmupRequests,
     measuredRounds,
     requestsPerRound,
