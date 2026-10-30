@@ -58,6 +58,7 @@ export default defineNuxtConfig({
 
   nitro: {
     preset: process.env.NITRO_PRESET || "node-server",
+    ignore: ["**/*.test.ts"],
     prerender: {
       routes: [...ABOUT_PRERENDER_ROUTES],
     },
