@@ -136,58 +136,24 @@ const voiceActor = {
   })),
 };
 
-const searchTmdbResults = Array.from({ length: searchResultsPerSource * 2 }, (_, index) => ({
-  id: 700_000 + index,
-  title: `CI fixture search movie ${index}`,
-  media_type: "movie",
-  popularity: index === 0 ? null : index + 1,
-  vote_average: index === 0 ? null : 7.5,
-  vote_count: index === 0 ? null : index + 10,
-  release_date: index % 2 === 0 ? "1990-01-01" : "2099-01-01",
-}));
-const searchVoiceActors = Array.from({ length: searchResultsPerSource }, (_, index) => ({
-  id: 800_000 + index,
-  firstname: `CI fixture search voice ${index}`,
-  lastname: "Actor",
-  voice_actor_name: `CI fixture search voice ${index} Actor`,
-  profile_picture: null,
-  popularity: index + 1,
-  vote_average: 0,
-  vote_count: index + 1,
-}));
-const searchGames = Array.from({ length: Math.min(searchResultsPerSource, 10) }, (_, index) => ({
-  id: 810_000 + index,
-  name: `CI fixture search game ${index}`,
-  rating: 75,
-  rating_count: index + 1,
-  first_release_date: index === 0 ? null : index % 2 === 0 ? 631_152_000 : 4_070_908_800,
-}));
-const searchBooks = Array.from({ length: searchResultsPerSource }, (_, index) => ({
-  key: `/works/OL${820_000 + index}W`,
-  title: `CI fixture search book ${index}`,
-  author_name: [`CI fixture author ${index}`],
-}));
-const searchPodcasts = Array.from({ length: searchResultsPerSource }, (_, index) => ({
-  collectionId: 830_000 + index,
-  collectionName: `CI fixture search podcast ${index}`,
-}));
-const searchAdvertisements = Array.from(
-  { length: Math.min(searchResultsPerSource, 15) },
-  (_, index) => ({
-    content_id: 840_000 + index,
-    studios: { name: `CI fixture studio ${index}` },
-  }),
+const adminDubbingWorks = Array.from(
+  { length: dataset === "large" ? 2400 : 50 },
+  (_, index) => {
+    const actorIndex = Math.floor(index / 2);
+    const voiceActorId = 60_000 + actorIndex;
+    return {
+      id: index + 1,
+      actor_id: 300_000 + actorIndex,
+      voice_actor_id: voiceActorId,
+      voice_actor: {
+        id: voiceActorId,
+        firstname: `CI fixture voice actor ${actorIndex}`,
+        lastname: "Actor",
+        profile_picture: `regional-voice-actor-${actorIndex}.jpg`,
+      },
+    };
+  },
 );
-const searchToys = Array.from({ length: Math.min(searchResultsPerSource, 15) }, (_, index) => ({
-  content_id: 850_000 + index,
-  name: `CI fixture search toy ${index}`,
-  manufacturer: "CI fixture manufacturer",
-  product_line: null,
-  release_year: null,
-  cover_url: null,
-  description: null,
-  updated_at: null,
-}));
 
 const encodedResponses = new Map();
 function addJsonResponse(key, value) {
@@ -212,8 +178,14 @@ for (let index = 0; index < sizes.uniqueMedia; index += 1) {
   addJsonResponse(`tmdb:/3/${mediaType}/${mediaId}`, makeMedia(mediaId, mediaType));
 }
 
-const supabaseResponse = (path) => {
-  const table = path.replace(/^\/rest\/v1\//, "").split("?")[0];
+const supabaseResponse = (url) => {
+  const table = url.pathname.replace(/^\/rest\/v1\//, "").split("?")[0];
+  if (table === "dubbing_projects" && url.searchParams.get("select") === "id") {
+    return { value: { id: 1 }, single: true };
+  }
+  if (table === "work" && url.searchParams.has("dubbing_project_id")) {
+    return { value: adminDubbingWorks, single: false };
+  }
   if (table === "voice_actors") {
     const query = new URLSearchParams(path.split("?")[1] ?? "");
     if (query.has("voice_actor_name")) return { value: searchVoiceActors, single: false };
@@ -257,15 +229,25 @@ globalThis.fetch = async (input, init = {}) => {
         : encodedResponses.get(key);
     if (body === undefined) throw new Error(`Unexpected mocked TMDB request: ${url.pathname}`);
   } else if (url.hostname === "mock.supabase.co") {
-    const response = supabaseResponse(`${url.pathname}${url.search}`);
-    const table = url.pathname.split("/").at(-1);
-    if (table === "voice_actors" && url.searchParams.has("voice_actor_name")) {
-      key = "supabase:voice_actors_fts";
-    } else if (table === "voice_actors" && url.searchParams.has("or")) {
-      key = "supabase:voice_actors_ilike";
-    } else {
-      key = `supabase:${table}`;
+    if (url.pathname === "/auth/v1/user") {
+      key = "supabase:auth_user";
+      body = JSON.stringify({
+        id: "00000000-0000-4000-8000-000000000999",
+        email: "admin@example.test",
+        role: "authenticated",
+        aud: "authenticated",
+        app_metadata: { role: "admin" },
+        user_metadata: {},
+        created_at: "2020-01-01T00:00:00Z",
+      });
+      requestCounts.set(key, (requestCounts.get(key) ?? 0) + 1);
+      return new Response(body, {
+        status: 200,
+        headers: { "content-type": "application/json; charset=utf-8" },
+      });
     }
+    const response = supabaseResponse(url);
+    key = `supabase:${url.pathname.split("/").at(-1)}`;
     const inputHeaders = input instanceof Request ? input.headers : undefined;
     const acceptsSingle = new Headers(init.headers ?? inputHeaders)
       .get("accept")

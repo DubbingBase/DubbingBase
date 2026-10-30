@@ -20,7 +20,7 @@ if (
   throw new Error("Base and pull request reports use different or invalid paired workloads.");
 }
 
-const routeNames = ["movie", "show", "actor", "voice-actor", "global-search"];
+const routeNames = ["movie", "show", "actor", "voice-actor", "admin-dubbing-project"];
 const datasets = ["representative", "large"];
 const workflowRun =
   process.env.GITHUB_RUN_ID && process.env.GITHUB_REPOSITORY
@@ -204,7 +204,7 @@ const markdown = [
   "",
   "20 warmups; 20 alternating paired batches of 20 requests per route. Change is the median paired PR − base delta; interval is a deterministic 95% bootstrap.",
   "",
-  `**Result:** ${resultSummary} 🔴 more CPU · 🟢 less CPU · ⚪ unchanged median; markers show direction only. Synthetic Node/Nitro measurements do not represent production traffic or Cloudflare Worker CPU.`,
+  `**Result:** ${resultSummary} 🔴 more CPU · 🟢 less CPU · ⚪ unchanged median; markers show direction only. This PR changes route code, and this comparison measures its effect.`,
   "",
   "| Route / workload | Base median CPU / request | PR median CPU / request | Paired change (95% bootstrap interval) | Response bytes (base → PR) | API body SHA-256 |",
   "| --- | ---: | ---: | ---: | ---: | --- |",
