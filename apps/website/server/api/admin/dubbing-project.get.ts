@@ -7,6 +7,7 @@ const MEDIA_TYPES = ["movie", "tv", "video_game", "audiobook", "podcast", "adver
 export default defineEventHandler(async (event) => {
   requireAdmin(event);
   const query = getQuery(event);
+  const compactVoiceActors = query.compact_voice_actors === "true";
   const contentId = Number(query.content_id);
   const contentType = query.content_type;
   const dubbingLanguage = requireDubbingLanguage(query.dubbing_language);
@@ -30,7 +31,7 @@ export default defineEventHandler(async (event) => {
     .maybeSingle();
 
   if (projectError) throw projectError;
-  if (!project) return { projectId: null, works: [], voiceActors: [] };
+  if (!project) return { projectId: null, works: [] };
 
   const { data: works, error: worksError } = await supabase
     .from("work")
@@ -61,7 +62,7 @@ export default defineEventHandler(async (event) => {
         work_id: work.id,
         actor_id: work.actor_id,
         voice_actor_id: work.voice_actor_id,
-        voice_actor: voiceActorIsNew ? work.voice_actor : null,
+        voice_actor: compactVoiceActors && !voiceActorIsNew ? null : work.voice_actor,
         editable: work.actor_id !== null && workCountByActor.get(work.actor_id) === 1,
       };
     }),

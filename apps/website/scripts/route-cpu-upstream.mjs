@@ -212,30 +212,25 @@ globalThis.fetch = async (input, init = {}) => {
     if (url.pathname === "/auth/v1/user") {
       key = "supabase:auth_user";
       body = JSON.stringify(adminUser);
-    } else if (url.pathname === "/rest/v1/dubbing_projects") {
-      if (
-        url.searchParams.get("select") !== "id" ||
-        url.searchParams.get("content_id") !== "eq.31" ||
-        url.searchParams.get("content_type") !== "eq.tv" ||
-        url.searchParams.get("language") !== "eq.fr-FR"
-      ) {
-        throw new Error(`Unexpected mocked admin project query: ${url.search}`);
-      }
+    } else if (
+      url.pathname === "/rest/v1/dubbing_projects" &&
+      url.searchParams.get("select") === "id" &&
+      url.searchParams.get("content_id") === "eq.31" &&
+      url.searchParams.get("content_type") === "eq.tv" &&
+      url.searchParams.get("language") === "eq.fr-FR"
+    ) {
       key = "supabase:dubbing_projects";
       const inputHeaders = input instanceof Request ? input.headers : undefined;
       const acceptsSingle = new Headers(init.headers ?? inputHeaders)
         .get("accept")
         ?.includes("vnd.pgrst.object");
       body = JSON.stringify(acceptsSingle ? { id: 31 } : [{ id: 31 }]);
-    } else if (url.pathname === "/rest/v1/work") {
-      const expectedSelect =
-        "id, actor_id, voice_actor_id, voice_actor:voice_actors(id, firstname, lastname, profile_picture)";
-      if (
-        url.searchParams.get("select") !== expectedSelect ||
-        url.searchParams.get("dubbing_project_id") !== "eq.31"
-      ) {
-        throw new Error(`Unexpected mocked admin work query: ${url.search}`);
-      }
+    } else if (
+      url.pathname === "/rest/v1/work" &&
+      url.searchParams.get("select") ===
+        "id,actor_id,voice_actor_id,voice_actor:voice_actors(id,firstname,lastname,profile_picture)" &&
+      url.searchParams.get("dubbing_project_id") === "eq.31"
+    ) {
       key = "supabase:work";
       body = JSON.stringify(adminWorks);
     } else {

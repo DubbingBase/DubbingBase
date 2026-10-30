@@ -93,7 +93,7 @@ function createSupabaseMock() {
 }
 
 describe("GET /api/admin/dubbing-project", () => {
-  it("returns exact work IDs and marks every row for ambiguous actors non-editable", async () => {
+  it("preserves voice actor relations by default", async () => {
     const { supabase, selectedColumns } = createSupabaseMock();
     routeMocks.useSupabaseAdmin.mockReturnValue(supabase);
     const app = createApp();
@@ -145,7 +145,12 @@ describe("GET /api/admin/dubbing-project", () => {
           work_id: 308,
           actor_id: null,
           voice_actor_id: 201,
-          voice_actor: null,
+          voice_actor: {
+            id: 201,
+            firstname: "One",
+            lastname: "Voice",
+            profile_picture: null,
+          },
           editable: false,
         },
       ],
@@ -153,5 +158,66 @@ describe("GET /api/admin/dubbing-project", () => {
     expect(selectedColumns).toContain(
       "id, actor_id, voice_actor_id, voice_actor:voice_actors(id, firstname, lastname, profile_picture)",
     );
+  });
+
+  it("deduplicates voice actor objects for the compact editor projection", async () => {
+    const { supabase } = createSupabaseMock();
+    routeMocks.useSupabaseAdmin.mockReturnValue(supabase);
+    const app = createApp();
+    app.use(
+      "/",
+      defineEventHandler((event) => handler(event)),
+    );
+
+    const response = await toWebHandler(app)(
+      new Request(
+        "http://localhost/?content_id=211288&content_type=tv&dubbing_language=fr-FR&compact_voice_actors=true",
+      ),
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      projectId: 501,
+      works: [
+        {
+          work_id: 305,
+          actor_id: 101,
+          voice_actor_id: 201,
+          voice_actor: {
+            id: 201,
+            firstname: "One",
+            lastname: "Voice",
+            profile_picture: null,
+          },
+          editable: false,
+        },
+        {
+          work_id: 306,
+          actor_id: 101,
+          voice_actor_id: 202,
+          voice_actor: {
+            id: 202,
+            firstname: "Two",
+            lastname: "Voice",
+            profile_picture: null,
+          },
+          editable: false,
+        },
+        {
+          work_id: 307,
+          actor_id: 102,
+          voice_actor_id: 203,
+          voice_actor: null,
+          editable: true,
+        },
+        {
+          work_id: 308,
+          actor_id: null,
+          voice_actor_id: 201,
+          voice_actor: null,
+          editable: false,
+        },
+      ],
+    });
   });
 });

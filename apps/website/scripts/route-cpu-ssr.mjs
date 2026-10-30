@@ -79,7 +79,7 @@ const routes = [
   },
   {
     name: "admin-dubbing-project",
-    path: "/api/admin/dubbing-project?content_id=31&content_type=tv&dubbing_language=fr-FR",
+    path: "/api/admin/dubbing-project?content_id=31&content_type=tv&dubbing_language=fr-FR&compact_voice_actors=true",
     marker: "CI fixture admin voice actor",
     kind: "api",
     cookie: adminCookie,
