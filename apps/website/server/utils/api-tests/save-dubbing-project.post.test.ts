@@ -336,7 +336,7 @@ describe("POST /api/save-dubbing-project", () => {
     );
   });
 
-  it("rejects an IGDB character id that is not the confirmed local mapping", async () => {
+  it("rejects a preexisting IGDB id that does not match a selected local character", async () => {
     const { rpc, localCharacterQuery } = createSupabaseMock({
       data: null,
       error: null,
@@ -360,6 +360,19 @@ describe("POST /api/save-dubbing-project", () => {
       },
       cast: [
         {
+          id: 27,
+          expected_updated_at: "2026-10-15T12:00:00.000Z",
+          expected: {
+            actor_id: null,
+            character_id: 8,
+            character_name: "Legacy IGDB role",
+            game_character_id: null,
+            voice_actor_id: 8,
+            performance: "dialogues",
+            note: null,
+            highlight: false,
+            status: "validated",
+          },
           character_id: 8,
           character_name: "Local character",
           game_character_id: "11111111-1111-4111-8111-111111111111",
@@ -374,6 +387,58 @@ describe("POST /api/save-dubbing-project", () => {
     expect(response.status).toBe(422);
     expect(rpc).not.toHaveBeenCalled();
     expect(routeMocks.getIgdbGameCharacters).not.toHaveBeenCalled();
+  });
+
+  it("accepts a selected local character with its confirmed IGDB mapping", async () => {
+    const { rpc, localCharacterQuery } = createSupabaseMock({
+      data: [
+        {
+          project_id: 51,
+          updated_at: "2026-10-15T12:05:00",
+          audit_log_id: "f20d747e-c98e-43ea-9356-133fcbf0b496",
+          replayed: false,
+        },
+      ],
+      error: null,
+    });
+    localCharacterQuery.in.mockResolvedValue({
+      data: [
+        {
+          id: "11111111-1111-4111-8111-111111111111",
+          igdb_character_id: 7,
+        },
+      ],
+      error: null,
+    });
+    const body = validBody();
+    body.project.content_type = "video_game";
+    body.project.content_id = 42;
+    body.cast = [
+      {
+        character_id: 7,
+        character_name: "Linked local character",
+        game_character_id: "11111111-1111-4111-8111-111111111111",
+        voice_actor_id: 8,
+        performance: "dialogues",
+      },
+    ];
+
+    const response = await post(body);
+
+    expect(response.status, await response.clone().text()).toBe(200);
+    expect(routeMocks.getIgdbGame).not.toHaveBeenCalled();
+    expect(routeMocks.getIgdbGameCharacters).not.toHaveBeenCalled();
+    expect(rpc).toHaveBeenCalledWith(
+      "save_dubbing_project_editor",
+      expect.objectContaining({
+        p_cast: [
+          expect.objectContaining({
+            character_id: 7,
+            game_character_id: "11111111-1111-4111-8111-111111111111",
+          }),
+        ],
+      }),
+    );
   });
 
   it("returns a conflict instead of success for a stale RPC result", async () => {

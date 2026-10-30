@@ -383,10 +383,7 @@ async function validateExternalReferences(body: ProjectSaveBody, event: H3EventT
       for (const row of body.cast) {
         if (!row.game_character_id || row.character_id == null) continue;
         const confirmedCharacterId = localCharacters.get(row.game_character_id);
-        const preservedExistingId =
-          row.expected?.game_character_id == null &&
-          row.expected?.character_id === row.character_id;
-        if (confirmedCharacterId !== row.character_id && !preservedExistingId) {
+        if (confirmedCharacterId !== row.character_id) {
           throw projectSaveError(422, "The IGDB character does not match this local character");
         }
       }
