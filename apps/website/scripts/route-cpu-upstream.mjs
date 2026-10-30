@@ -142,9 +142,10 @@ const searchTmdbResults = Array.from(
     id: 700_000 + index,
     title: `CI fixture search movie ${index}`,
     media_type: "movie",
-    popularity: index + 1,
-    vote_average: 7.5,
-    vote_count: index + 10,
+    popularity: index === 0 ? null : index + 1,
+    vote_average: index === 0 ? null : 7.5,
+    vote_count: index === 0 ? null : index + 10,
+    release_date: index % 2 === 0 ? "1990-01-01" : "2099-01-01",
   }),
 );
 const searchVoiceActors = Array.from({ length: searchResultsPerSource }, (_, index) => ({
@@ -162,6 +163,8 @@ const searchGames = Array.from({ length: Math.min(searchResultsPerSource, 10) },
   name: `CI fixture search game ${index}`,
   rating: 75,
   rating_count: index + 1,
+  first_release_date:
+    index === 0 ? null : index % 2 === 0 ? 631_152_000 : 4_070_908_800,
 }));
 const searchBooks = Array.from({ length: searchResultsPerSource }, (_, index) => ({
   key: `/works/OL${820_000 + index}W`,

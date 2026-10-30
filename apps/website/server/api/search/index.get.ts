@@ -20,12 +20,12 @@ type SearchItem = {
   voice_actor_name?: string | null;
   firstname?: string | null;
   lastname?: string | null;
-  popularity?: number;
-  vote_average?: number;
-  vote_count?: number;
+  popularity?: number | null;
+  vote_average?: number | null;
+  vote_count?: number | null;
   release_date?: string | null;
   first_air_date?: string | null;
-  first_release_date?: number;
+  first_release_date?: number | null;
   tmdb_id?: number | null;
   profile_picture?: string | null;
   profile_path?: string | null;
@@ -48,10 +48,6 @@ function isSearchItem(value: unknown): value is SearchItem {
       typeof property === "number"
     );
   };
-  const isOptionalNumber = (key: string) => {
-    const property = Reflect.get(value, key);
-    return property === undefined || typeof property === "number";
-  };
   const isOptionalNullableString = (key: string) => {
     const property = Reflect.get(value, key);
     return property === undefined || property === null || typeof property === "string";
@@ -71,10 +67,10 @@ function isSearchItem(value: unknown): value is SearchItem {
     isOptionalNullableString("first_air_date") &&
     isOptionalString("media_type") &&
     isOptionalId() &&
-    isOptionalNumber("popularity") &&
-    isOptionalNumber("vote_average") &&
-    isOptionalNumber("vote_count") &&
-    isOptionalNumber("first_release_date") &&
+    isOptionalNullableNumber("popularity") &&
+    isOptionalNullableNumber("vote_average") &&
+    isOptionalNullableNumber("vote_count") &&
+    isOptionalNullableNumber("first_release_date") &&
     isOptionalNullableNumber("tmdb_id") &&
     isOptionalNullableString("profile_picture") &&
     isOptionalNullableString("profile_path")
