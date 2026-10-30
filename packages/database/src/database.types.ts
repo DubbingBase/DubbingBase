@@ -190,6 +190,42 @@ export type Database = {
           },
         ];
       };
+      game_characters: {
+        Row: {
+          created_at: string;
+          created_by: string;
+          id: string;
+          igdb_character_id: number | null;
+          igdb_game_id: number;
+          name: string;
+          updated_at: string;
+          updated_by: string;
+          wikidata_qid: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          igdb_character_id?: number | null;
+          igdb_game_id: number;
+          name: string;
+          updated_at?: string;
+          updated_by: string;
+          wikidata_qid?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          igdb_character_id?: number | null;
+          igdb_game_id?: number;
+          name?: string;
+          updated_at?: string;
+          updated_by?: string;
+          wikidata_qid?: string | null;
+        };
+        Relationships: [];
+      };
       gamification_task_locks: {
         Row: {
           category: string;
@@ -711,6 +747,7 @@ export type Database = {
           created_at: string | null;
           created_by: string | null;
           dubbing_project_id: number;
+          game_character_id: string | null;
           highlight: boolean | null;
           id: number;
           note: string | null;
@@ -730,6 +767,7 @@ export type Database = {
           created_at?: string | null;
           created_by?: string | null;
           dubbing_project_id: number;
+          game_character_id?: string | null;
           highlight?: boolean | null;
           id?: number;
           note?: string | null;
@@ -749,6 +787,7 @@ export type Database = {
           created_at?: string | null;
           created_by?: string | null;
           dubbing_project_id?: number;
+          game_character_id?: string | null;
           highlight?: boolean | null;
           id?: number;
           note?: string | null;
@@ -767,6 +806,13 @@ export type Database = {
             columns: ["dubbing_project_id"];
             isOneToOne: false;
             referencedRelation: "dubbing_projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "work_game_character_id_fkey";
+            columns: ["game_character_id"];
+            isOneToOne: false;
+            referencedRelation: "game_characters";
             referencedColumns: ["id"];
           },
           {
@@ -927,6 +973,19 @@ export type Database = {
         };
         Returns: Json;
       };
+      create_game_character: {
+        Args: {
+          p_actor_id: string;
+          p_igdb_game_id: number;
+          p_name: string;
+          p_request_id: string;
+        };
+        Returns: {
+          audit_log_id: string;
+          game_character_id: string;
+          replayed: boolean;
+        }[];
+      };
       create_internal_dubbing_project: {
         Args: {
           p_actor_id: string;
@@ -974,6 +1033,7 @@ export type Database = {
           p_character_name: string;
           p_content_id: number;
           p_content_type: string;
+          p_game_character_id?: string | null;
           p_language: string;
           p_performance: string;
           p_request_id: string;
@@ -1419,6 +1479,21 @@ export type Database = {
         }[];
       };
       unaccent: { Args: { "": string }; Returns: string };
+      update_game_character_references: {
+        Args: {
+          p_actor_id: string;
+          p_expected_updated_at: string;
+          p_game_character_id: string;
+          p_references: Json;
+          p_request_id: string;
+        };
+        Returns: {
+          audit_log_id: string;
+          game_character_id: string;
+          replayed: boolean;
+          updated_at: string;
+        }[];
+      };
       update_voice_actor_work_performance: {
         Args: {
           p_expected_updated_at: string;
@@ -1460,6 +1535,14 @@ export type Database = {
       work_role_identity_key: {
         Args: { p_character_id: number; p_character_name: string };
         Returns: string;
+      };
+      work_assignment_role_identity_key: {
+        Args: {
+          p_game_character_id: string | null;
+          p_character_id: number | null;
+          p_character_name: string | null;
+        };
+        Returns: string | null;
       };
     };
     Enums: {

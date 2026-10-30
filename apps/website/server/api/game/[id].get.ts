@@ -4,7 +4,8 @@ import { getDubbingProjects, getGamePageDubbingProjects } from "../../utils/db/q
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 import { scheduleBackgroundTask } from "../../utils/background";
-import type { IgdbGame, IgdbCharacter } from "@app/shared-logic";
+import type { IgdbGame } from "@app/shared-logic";
+import { loadGameCharacterCatalog, type ResolvedGameCharacter } from "../../utils/game-characters";
 
 function processIgdbGame(game: IgdbGame): IgdbGame & { media_type: "video_game" } {
   return {
@@ -27,7 +28,7 @@ function processIgdbGame(game: IgdbGame): IgdbGame & { media_type: "video_game" 
   };
 }
 
-function processIgdbCharacter(char: IgdbCharacter) {
+function processIgdbCharacter(char: ResolvedGameCharacter) {
   return {
     ...char,
     mug_shot: char.mug_shot
@@ -53,15 +54,13 @@ export default defineEventHandler(async (event) => {
   const igdbClient = useIgdbClient();
 
   let game: (IgdbGame & { media_type: "video_game" }) | null = null;
-  let characters: ReturnType<typeof processIgdbCharacter>[] = [];
+  const characterCatalog = await loadGameCharacterCatalog(event, gameId, () =>
+    igdbClient.getGameCharacters(gameId),
+  );
 
   try {
-    const [igdbGame, igdbCharacters] = await Promise.all([
-      igdbClient.getGame(gameId),
-      igdbClient.getGameCharacters(gameId),
-    ]);
+    const igdbGame = await igdbClient.getGame(gameId);
     game = igdbGame ? processIgdbGame(igdbGame) : null;
-    characters = igdbCharacters.map(processIgdbCharacter);
   } catch (err) {
     console.error(`Failed to fetch IGDB game ${gameId}:`, err);
     game = {
@@ -73,7 +72,11 @@ export default defineEventHandler(async (event) => {
     };
   }
 
-  const metadata = { game, characters };
+  const metadata = {
+    game,
+    characters: characterCatalog.characters.map(processIgdbCharacter),
+    character_catalog_status: characterCatalog.providerStatus,
+  };
 
   // Lazy enqueue if not yet processed - Gated by PostHog 'enqueue-on-navigate' (server-side)
   const dubbingProjects =

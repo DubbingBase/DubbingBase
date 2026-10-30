@@ -9,17 +9,15 @@ export type DubbingProjectMediaType =
 
 export type DubbingProjectStatus = "validated" | "pending" | "draft";
 
-export function getEditableDubbingProjectStatus(
-  value: string | null,
-): DubbingProjectStatus {
-  if (value === "validated" || value === "pending" || value === "draft")
-    return value;
+export function getEditableDubbingProjectStatus(value: string | null): DubbingProjectStatus {
+  if (value === "validated" || value === "pending" || value === "draft") return value;
   return "validated";
 }
 
 export interface WorkExpectedValues {
   actor_id: number | null;
   character_id: number | null;
+  game_character_id?: string | null;
   character_name: string | null;
   voice_actor_id: number | null;
   performance: string | null;
@@ -34,6 +32,7 @@ export interface DubbingProjectCastSaveRow {
   expected?: WorkExpectedValues;
   actor_id?: number | null;
   character_id?: number | null;
+  game_character_id?: string | null;
   character_name?: string | null;
   voice_actor_id?: number | null;
   performance?: string | null;
@@ -43,7 +42,9 @@ export interface DubbingProjectCastSaveRow {
 
 export interface GameProjectCastEditorRow {
   id?: number;
+  character_ref: number | string | null;
   character_id: number | string | null;
+  game_character_id?: string | null;
   character_name: string;
   voice_actor_id: number | null;
   performance: string;
@@ -65,9 +66,9 @@ export function serializeGameProjectCastRows(
       throw new Error("Reload this project before saving its cast.");
     }
 
+    const selectedCharacter = row.character_ref ?? row.character_id;
     const isCustom =
-      typeof row.character_id === "string" &&
-      row.character_id.startsWith("custom_");
+      typeof selectedCharacter === "string" && selectedCharacter.startsWith("custom_");
     const hasNoProviderCharacter = !row.character_id;
 
     return [
@@ -79,12 +80,12 @@ export function serializeGameProjectCastRows(
               expected_updated_at: row.expectedUpdatedAt,
               expected: row.expected,
             }),
-        character_id:
-          isCustom || hasNoProviderCharacter
-            ? null
-            : Number(row.character_id),
+        character_id: isCustom || hasNoProviderCharacter ? null : Number(row.character_id),
         character_name:
-          isCustom || hasNoProviderCharacter ? row.character_name || null : null,
+          row.game_character_id || isCustom || hasNoProviderCharacter
+            ? row.character_name || null
+            : null,
+        game_character_id: row.game_character_id ?? null,
         voice_actor_id: row.voice_actor_id || null,
         performance: row.performance || "dialogues",
         note: row.note || null,
@@ -120,9 +121,7 @@ export type DubbingProjectSaveTransport = (
   request: DubbingProjectSaveRequest & { request_id: string },
 ) => Promise<DubbingProjectSaveResponse>;
 
-export function createStableRequestIdFactory(
-  randomUUID: () => string = () => crypto.randomUUID(),
-) {
+export function createStableRequestIdFactory(randomUUID: () => string = () => crypto.randomUUID()) {
   let previousPayload: string | null = null;
   let previousRequestId: string | null = null;
 
@@ -164,18 +163,15 @@ function readProperty(value: unknown, key: string): unknown {
 }
 
 export function isDubbingProjectSaveConflict(error: unknown): boolean {
-  const status =
-    readProperty(error, "statusCode") ?? readProperty(error, "status");
+  const status = readProperty(error, "statusCode") ?? readProperty(error, "status");
   const dataStatus = readProperty(readProperty(error, "data"), "statusCode");
   return status === 409 || dataStatus === 409;
 }
 
 export function getDubbingProjectSaveErrorMessage(error: unknown): string {
   const data = readProperty(error, "data");
-  const dataMessage =
-    readProperty(data, "statusMessage") ?? readProperty(data, "message");
-  const message =
-    readProperty(error, "statusMessage") ?? readProperty(error, "message");
+  const dataMessage = readProperty(data, "statusMessage") ?? readProperty(data, "message");
+  const message = readProperty(error, "statusMessage") ?? readProperty(error, "message");
   if (isDubbingProjectSaveConflict(error)) {
     return "This project changed in another editor. Your changes are still here; reload before saving again.";
   }

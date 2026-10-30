@@ -270,3 +270,132 @@ describe("IgdbClient token cache expiry", () => {
     expect(values.has("igdb:auth_token")).toBe(false);
   });
 });
+
+describe("IgdbClient game characters", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it.each([0, 50, 51, 1001])("retrieves all %i matching characters", async (count) => {
+    const requests: string[] = [];
+    const characters = Array.from({ length: count }, (_, index) => ({
+      id: index + 1,
+      name: `Character ${index + 1}`,
+    }));
+    vi.stubGlobal("useRuntimeConfig", () => ({
+      igdbClientId: "client-id",
+      igdbClientSecret: "client-secret",
+    }));
+    vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (String(input) === tokenUrl) {
+        return new Response(
+          JSON.stringify({
+            access_token: "fresh-token",
+            expires_in: 7200,
+            token_type: "bearer",
+          }),
+        );
+      }
+      requests.push(String(init?.body));
+      const offset = requests.length === 1 ? 0 : requests.length === 2 ? 500 : 1000;
+      return new Response(JSON.stringify(characters.slice(offset, offset + 500)));
+    });
+    const client = new IgdbClient(createCache(new Map()));
+
+    const result = await client.getGameCharacters(42);
+
+    expect(result).toHaveLength(count);
+    expect(result[0]?.id).toBe(count > 0 ? 1 : undefined);
+    expect(result.at(-1)?.id).toBe(count > 0 ? count : undefined);
+    expect(requests).toHaveLength(count > 500 ? Math.ceil(count / 500) : 1);
+    expect(requests[0]).toContain("sort id asc;");
+    expect(requests[0]).toContain("limit 500;");
+    expect(requests[0]).toContain("offset 0;");
+    if (requests[1]) expect(requests[1]).toContain("offset 500;");
+    if (requests[2]) expect(requests[2]).toContain("offset 1000;");
+  });
+
+  it("deduplicates IDs across pages", async () => {
+    const requests: string[] = [];
+    vi.stubGlobal("useRuntimeConfig", () => ({
+      igdbClientId: "client-id",
+      igdbClientSecret: "client-secret",
+    }));
+    vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (String(input) === tokenUrl) {
+        return new Response(JSON.stringify({ access_token: "token", expires_in: 7200 }));
+      }
+      requests.push(String(init?.body));
+      const page =
+        requests.length === 1
+          ? Array.from({ length: 500 }, (_, index) => ({
+              id: index + 1,
+              name: `Character ${index + 1}`,
+            }))
+          : [
+              { id: 500, name: "Duplicate" },
+              { id: 501, name: "Character 501" },
+            ];
+      return new Response(JSON.stringify(page));
+    });
+    const client = new IgdbClient(createCache(new Map()));
+
+    const result = await client.getGameCharacters(42);
+
+    expect(result).toHaveLength(501);
+    expect(result.at(-1)?.id).toBe(501);
+  });
+
+  it("rejects a result beyond its bounded request window", async () => {
+    const requests: string[] = [];
+    vi.stubGlobal("useRuntimeConfig", () => ({
+      igdbClientId: "client-id",
+      igdbClientSecret: "client-secret",
+    }));
+    vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (String(input) === tokenUrl) {
+        return new Response(JSON.stringify({ access_token: "token", expires_in: 7200 }));
+      }
+      requests.push(String(init?.body));
+      return new Response(
+        JSON.stringify(
+          Array.from({ length: 500 }, (_, index) => ({
+            id: index + 1,
+            name: `Character ${index + 1}`,
+          })),
+        ),
+      );
+    });
+    const client = new IgdbClient(createCache(new Map()));
+
+    await expect(client.getGameCharacters(42)).rejects.toThrow("at least 2500 characters");
+    expect(requests).toHaveLength(5);
+  });
+
+  it("rejects a later page failure instead of returning a partial catalog", async () => {
+    let characterRequests = 0;
+    vi.stubGlobal("useRuntimeConfig", () => ({
+      igdbClientId: "client-id",
+      igdbClientSecret: "client-secret",
+    }));
+    vi.stubGlobal("fetch", async (input: RequestInfo | URL) => {
+      if (String(input) === tokenUrl) {
+        return new Response(JSON.stringify({ access_token: "token", expires_in: 7200 }));
+      }
+      characterRequests++;
+      if (characterRequests === 1) {
+        return new Response(
+          JSON.stringify(
+            Array.from({ length: 500 }, (_, index) => ({
+              id: index + 1,
+              name: `Character ${index + 1}`,
+            })),
+          ),
+        );
+      }
+      return new Response("provider unavailable", { status: 503 });
+    });
+    const client = new IgdbClient(createCache(new Map()));
+
+    await expect(client.getGameCharacters(42)).rejects.toThrow("IGDB API error: 503");
+    expect(characterRequests).toBe(2);
+  });
+});
