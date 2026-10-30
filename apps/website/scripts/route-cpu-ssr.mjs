@@ -25,7 +25,10 @@ const routes = [
     name: "movie",
     path: "/movie/85",
     marker: "CI fixture movie 85",
-    expectedHtml: ["English", "French"],
+    expectedHtml: ["English", "French", "invalid_code", "Not specified"],
+    localeVariants: [
+      { path: "/fr/movie/85", expectedHtml: ["Anglais", "Français", "invalid_code", "Non spécifié"] },
+    ],
     expected: ["tmdb:/3/movie/85", "supabase:dubbing_projects"],
   },
   {
@@ -528,19 +531,30 @@ function fixtureFor(dataset) {
 }
 
 async function validateRoute(server, route) {
-  const before = await currentDependencies(server);
-  const validation = await requestPage(server.baseUrl, route);
-  if (!validation.html.includes(route.marker) || !validation.html.includes("__NUXT_DATA__")) {
-    throw new Error(`${route.path} did not SSR the expected fixture data.`);
-  }
-  for (const marker of route.expectedHtml ?? []) {
-    if (!validation.html.includes(marker)) {
-      throw new Error(`${route.path} did not SSR the expected output marker ${marker}.`);
+  const variants = [
+    route,
+    ...(route.localeVariants ?? []).map((variant) => ({ ...route, ...variant })),
+  ];
+  const renderedHtml = [];
+  for (const variant of variants) {
+    const before = await currentDependencies(server);
+    const validation = await requestPage(server.baseUrl, variant);
+    if (
+      !validation.html.includes(variant.marker) ||
+      !validation.html.includes("__NUXT_DATA__")
+    ) {
+      throw new Error(`${variant.path} did not SSR the expected fixture data.`);
     }
+    for (const marker of variant.expectedHtml ?? []) {
+      if (!validation.html.includes(marker)) {
+        throw new Error(`${variant.path} did not SSR the expected output marker ${marker}.`);
+      }
+    }
+    assertRouteDependencies(variant, before, await currentDependencies(server));
+    await postJson(server.baseUrl, "/__route_cpu__/dependencies/reset");
+    renderedHtml.push({ path: variant.path, html: normalizedRenderedHtml(validation.html) });
   }
-  assertRouteDependencies(route, before, await currentDependencies(server));
-  await postJson(server.baseUrl, "/__route_cpu__/dependencies/reset");
-  return normalizedRenderedHtml(validation.html);
+  return renderedHtml;
 }
 
 async function warmServers(baseServer, headServer, route) {
@@ -591,31 +605,45 @@ function workloadFor(server, route, dataset, rounds, pairedDeltas, dependencies,
 async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
   const servers = [];
   try {
-    const baseServer = await startServer(baseWebsiteDir, dataset, "base");
-    servers.push(baseServer);
-    baseServer.side = "base";
-    const headServer = await startServer(headWebsiteDir, dataset, "head");
-    servers.push(headServer);
-    headServer.side = "head";
+    const startOrder = dataset === "large" ? ["head", "base"] : ["base", "head"];
+    const startedServers = new Map();
+    for (const side of startOrder) {
+      const server = await startServer(
+        side === "base" ? baseWebsiteDir : headWebsiteDir,
+        dataset,
+        side,
+      );
+      servers.push(server);
+      server.side = side;
+      startedServers.set(side, server);
+    }
+    const baseServer = startedServers.get("base");
+    const headServer = startedServers.get("head");
 
     const baseWorkloads = [];
     const headWorkloads = [];
     for (const route of routes) {
       const baseHtml = await validateRoute(baseServer, route);
       const headHtml = await validateRoute(headServer, route);
-      if (route.name === "movie" && baseHtml !== headHtml) {
-        let firstDifference = 0;
-        while (
-          firstDifference < baseHtml.length &&
-          baseHtml[firstDifference] === headHtml[firstDifference]
-        ) {
-          firstDifference += 1;
+      if (route.name === "movie") {
+        for (let index = 0; index < baseHtml.length; index += 1) {
+          const baseVariant = baseHtml[index];
+          const headVariant = headHtml[index];
+          if (!headVariant || baseVariant.html === headVariant.html) continue;
+
+          let firstDifference = 0;
+          while (
+            firstDifference < baseVariant.html.length &&
+            baseVariant.html[firstDifference] === headVariant.html[firstDifference]
+          ) {
+            firstDifference += 1;
+          }
+          const contextStart = Math.max(firstDifference - 80, 0);
+          const contextEnd = firstDifference + 120;
+          throw new Error(
+            `${baseVariant.path} SSR HTML differs at ${firstDifference}: base=${JSON.stringify(baseVariant.html.slice(contextStart, contextEnd))}; PR=${JSON.stringify(headVariant.html.slice(contextStart, contextEnd))}`,
+          );
         }
-        const contextStart = Math.max(firstDifference - 80, 0);
-        const contextEnd = firstDifference + 120;
-        throw new Error(
-          `/movie/85 SSR HTML differs at ${firstDifference}: base=${JSON.stringify(baseHtml.slice(contextStart, contextEnd))}; PR=${JSON.stringify(headHtml.slice(contextStart, contextEnd))}`,
-        );
       }
       await warmServers(baseServer, headServer, route);
 
@@ -637,8 +665,8 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
       let baseProfile;
       let headProfile;
       if (dataset === "large") {
-        baseProfile = await captureProfile(baseServer, route);
         headProfile = await captureProfile(headServer, route);
+        baseProfile = await captureProfile(baseServer, route);
       }
 
       baseWorkloads.push(
