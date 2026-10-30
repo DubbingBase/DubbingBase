@@ -939,7 +939,7 @@ const handleCharacterFreeText = (row: CastRow) => {
     showToast("Enter a role name before choosing free text.", "error");
     return;
   }
-  row.character_ref = null;
+  row.character_ref = `custom_${name}`;
   row.character_id = null;
   row.game_character_id = null;
   row.character_name = name;
