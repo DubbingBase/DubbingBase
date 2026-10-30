@@ -710,6 +710,7 @@ const saveDubbingProject = createDubbingProjectSaveClient((body) =>
 );
 const characterReferenceRequestIds = createStableRequestIdFactory();
 const gameCharacterCreateRequestIds = createStableRequestIdFactory();
+const voiceActorCreateRequestIds = createStableRequestIdFactory();
 const route = useRoute();
 const router = useRouter();
 const localePath = useLocalePath();
@@ -1160,6 +1161,7 @@ const openCreateVaDialog = (query: string, callback?: (id: number) => void) => {
 const cancelCreateVaDialog = () => {
   isCreateVaOpen.value = false;
   pendingVaCreationRequest = null;
+  voiceActorCreateRequestIds.clear();
 };
 
 const isCreatingVa = ref(false);
@@ -1177,7 +1179,7 @@ const createVoiceActor = async () => {
   if (pendingVaCreationRequest?.payload !== payloadKey) {
     pendingVaCreationRequest = {
       payload: payloadKey,
-      requestId: crypto.randomUUID(),
+      requestId: voiceActorCreateRequestIds.forPayload(payload),
     };
   }
 
@@ -1198,6 +1200,7 @@ const createVoiceActor = async () => {
       isCreateVaOpen.value = false;
       showToast(`Created ${name}`, "success");
       pendingVaCreationRequest = null;
+      voiceActorCreateRequestIds.clear();
     }
   } catch (error: unknown) {
     showToast(error instanceof Error ? error.message : "Failed to create voice actor.", "error");

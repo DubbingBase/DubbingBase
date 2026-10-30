@@ -1027,26 +1027,46 @@ export type Database = {
           updated_at: string;
         }[];
       };
-      create_voice_actor_work_link: {
-        Args: {
-          p_actor_person_id: number;
-          p_character_name: string;
-          p_content_id: number;
-          p_content_type: string;
-          p_game_character_id?: string | null;
-          p_language: string;
-          p_performance: string;
-          p_request_id: string;
-          p_user_id: string;
-          p_voice_actor_id: number;
-        };
-        Returns: {
-          audit_log_id: string;
-          project_id: number;
-          replayed: boolean;
-          work_id: number;
-        }[];
-      };
+      create_voice_actor_work_link:
+        | {
+            Args: {
+              p_actor_person_id: number;
+              p_character_name: string;
+              p_content_id: number;
+              p_content_type: string;
+              p_language: string;
+              p_performance: string;
+              p_request_id: string;
+              p_user_id: string;
+              p_voice_actor_id: number;
+            };
+            Returns: {
+              audit_log_id: string;
+              project_id: number;
+              replayed: boolean;
+              work_id: number;
+            }[];
+          }
+        | {
+            Args: {
+              p_actor_person_id: number;
+              p_character_name: string;
+              p_content_id: number;
+              p_content_type: string;
+              p_game_character_id: string;
+              p_language: string;
+              p_performance: string;
+              p_request_id: string;
+              p_user_id: string;
+              p_voice_actor_id: number;
+            };
+            Returns: {
+              audit_log_id: string;
+              project_id: number;
+              replayed: boolean;
+              work_id: number;
+            }[];
+          };
       delay_media_queue_message: {
         Args: {
           p_delay_seconds?: number;
@@ -1532,17 +1552,17 @@ export type Database = {
           error: true;
         } & "the function public.voice_actor_name with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache";
       };
+      work_assignment_role_identity_key: {
+        Args: {
+          p_character_id: number;
+          p_character_name: string;
+          p_game_character_id: string;
+        };
+        Returns: string;
+      };
       work_role_identity_key: {
         Args: { p_character_id: number; p_character_name: string };
         Returns: string;
-      };
-      work_assignment_role_identity_key: {
-        Args: {
-          p_game_character_id: string | null;
-          p_character_id: number | null;
-          p_character_name: string | null;
-        };
-        Returns: string | null;
       };
     };
     Enums: {
