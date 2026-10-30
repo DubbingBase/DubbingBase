@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { createHash, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { copyFile, mkdir, mkdtemp, readFile, readlink, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
@@ -460,9 +460,8 @@ async function requestPage(baseUrl, route) {
   return { id, bytes: body.byteLength, html: Buffer.from(body).toString("utf8") };
 }
 
-function hashRenderedHtml(html) {
-  const normalizedHtml = html.replaceAll(/\/_nuxt\/[^"'\s<>]+/g, "/_nuxt/[asset]");
-  return createHash("sha256").update(normalizedHtml).digest("hex");
+function normalizedRenderedHtml(html) {
+  return html.replaceAll(/\/_nuxt\/[^"'\s<>]+/g, "/_nuxt/[asset]");
 }
 
 async function readRequestMetrics(metricsPath, ids) {
@@ -538,7 +537,7 @@ async function validateRoute(server, route) {
   }
   assertRouteDependencies(route, before, await currentDependencies(server));
   await postJson(server.baseUrl, "/__route_cpu__/dependencies/reset");
-  return hashRenderedHtml(validation.html);
+  return normalizedRenderedHtml(validation.html);
 }
 
 async function warmServers(baseServer, headServer, route) {
@@ -599,10 +598,21 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
     const baseWorkloads = [];
     const headWorkloads = [];
     for (const route of routes) {
-      const baseHtmlHash = await validateRoute(baseServer, route);
-      const headHtmlHash = await validateRoute(headServer, route);
-      if (route.name === "movie" && baseHtmlHash !== headHtmlHash) {
-        throw new Error("/movie/85 returned different SSR HTML for base and PR.");
+      const baseHtml = await validateRoute(baseServer, route);
+      const headHtml = await validateRoute(headServer, route);
+      if (route.name === "movie" && baseHtml !== headHtml) {
+        let firstDifference = 0;
+        while (
+          firstDifference < baseHtml.length &&
+          baseHtml[firstDifference] === headHtml[firstDifference]
+        ) {
+          firstDifference += 1;
+        }
+        const contextStart = Math.max(firstDifference - 80, 0);
+        const contextEnd = firstDifference + 120;
+        throw new Error(
+          `/movie/85 SSR HTML differs at ${firstDifference}: base=${JSON.stringify(baseHtml.slice(contextStart, contextEnd))}; PR=${JSON.stringify(headHtml.slice(contextStart, contextEnd))}`,
+        );
       }
       await warmServers(baseServer, headServer, route);
 
