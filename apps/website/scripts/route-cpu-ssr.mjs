@@ -461,7 +461,9 @@ async function requestPage(baseUrl, route) {
 }
 
 function normalizedRenderedHtml(html) {
-  return html.replaceAll(/\/_nuxt\/[^"'\s<>]+/g, "/_nuxt/[asset]");
+  return html
+    .replaceAll(/\/_nuxt\/[^"'\s<>]+/g, "/_nuxt/[asset]")
+    .replaceAll(/http:\/\/127\.0\.0\.1:\d+/g, "http://127.0.0.1:[port]");
 }
 
 async function readRequestMetrics(metricsPath, ids) {
