@@ -102,12 +102,7 @@ const routes = [
     marker: "CI fixture season 31/1",
     kind: "api",
     semanticParity: "season-page-project-summary",
-    expected: [
-      "tmdb:/3/tv/31/season/1",
-      "tmdb:/3/tv/31",
-      "tmdb:/3/tv/31/aggregate_credits",
-      "supabase:dubbing_projects",
-    ],
+    expected: ["tmdb:/3/tv/31/season/1", "tmdb:/3/tv/31", "supabase:dubbing_projects"],
   },
   {
     name: "actor",
