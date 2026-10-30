@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { copyFile, mkdir, mkdtemp, readFile, readlink, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
@@ -533,6 +533,7 @@ async function validateRoute(server, route) {
   }
   assertRouteDependencies(route, before, await currentDependencies(server));
   await postJson(server.baseUrl, "/__route_cpu__/dependencies/reset");
+  return createHash("sha256").update(validation.html).digest("hex");
 }
 
 async function warmServers(baseServer, headServer, route) {
@@ -593,8 +594,11 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
     const baseWorkloads = [];
     const headWorkloads = [];
     for (const route of routes) {
-      await validateRoute(baseServer, route);
-      await validateRoute(headServer, route);
+      const baseHtmlHash = await validateRoute(baseServer, route);
+      const headHtmlHash = await validateRoute(headServer, route);
+      if (route.name === "movie" && baseHtmlHash !== headHtmlHash) {
+        throw new Error("/movie/85 returned different SSR HTML for base and PR.");
+      }
       await warmServers(baseServer, headServer, route);
 
       const rounds = [];
