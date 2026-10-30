@@ -1,7 +1,7 @@
 # Test Coverage
 
-> **45%** of routes and models are covered by tests
-> 130 test files found
+> **46%** of routes and models are covered by tests
+> 131 test files found
 
 ## Covered Routes
 
@@ -13,6 +13,7 @@
 - POST:/api/delete-voice-actor-link
 - GET:/api/detail-collections
 - POST:/api/extract-voice-actor-info
+- GET:/api/find_duplicate_voice_actors
 - GET:/api/get-random-task
 - POST:/api/get-random-task
 - GET:/api/get-studio-details

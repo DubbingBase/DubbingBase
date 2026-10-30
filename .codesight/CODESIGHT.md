@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 88 routes | 27 models | 200 components | 113 lib files | 74 env vars | 15 middleware | 45% test coverage
-> **Token savings:** this file is ~19,200 tokens. Without it, AI exploration would cost ~173,300 tokens. **Saves ~154,100 tokens per conversation.**
-> **Last scanned:** 2026-10-30 18:54 — re-run after significant changes
+> 89 routes | 27 models | 200 components | 113 lib files | 74 env vars | 15 middleware | 46% test coverage
+> **Token savings:** this file is ~19,200 tokens. Without it, AI exploration would cost ~173,800 tokens. **Saves ~154,600 tokens per conversation.**
+> **Last scanned:** 2026-10-30 18:55 — re-run after significant changes
 
 ---
 
@@ -35,7 +35,8 @@
 - `GET` `/api/episode/index` [cache]
 - `POST` `/api/extract-credits-from-image` [upload]
 - `POST` `/api/extract-voice-actor-info` [auth] ✓
-- `GET` `/api/find_duplicate_voice_actors` [auth]
+- `ALL` `/api/find_duplicate_voice_actors.get.test` [auth]
+- `GET` `/api/find_duplicate_voice_actors` [auth] ✓
 - `GET` `/api/game/:id` params(id) [queue]
 - `POST` `/api/generate-social-content` [auth, email]
 - `GET` `/api/get-dubbing-project`
@@ -995,8 +996,8 @@
 
 # Test Coverage
 
-> **45%** of routes and models are covered by tests
-> 130 test files found
+> **46%** of routes and models are covered by tests
+> 131 test files found
 
 ## Covered Routes
 
@@ -1008,6 +1009,7 @@
 - POST:/api/delete-voice-actor-link
 - GET:/api/detail-collections
 - POST:/api/extract-voice-actor-info
+- GET:/api/find_duplicate_voice_actors
 - GET:/api/get-random-task
 - POST:/api/get-random-task
 - GET:/api/get-studio-details
@@ -1066,7 +1068,7 @@
 |---|---|---|---|---|
 | codesight | push, workflow_dispatch | 1 | — | — |
 | Release and Deployment Pipeline | push, workflow_dispatch | 16 | netlify, cloudflare | — |
-| Local Nuxt SSR route CPU comparison | pull_request | 2 | — | — |
+| Local Nuxt route CPU comparison | pull_request | 2 | — | — |
 
 ### Release and Deployment Pipeline
 
@@ -1142,7 +1144,7 @@
   - `actions/setup-node@v4`
   - `actions/download-artifact@v4`
 
-### Local Nuxt SSR route CPU comparison
+### Local Nuxt route CPU comparison
 
 > `.github/workflows/route-cpu-ci.yml`
 

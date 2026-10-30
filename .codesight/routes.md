@@ -24,7 +24,8 @@
 - `GET` `/api/episode/index` [cache]
 - `POST` `/api/extract-credits-from-image` [upload]
 - `POST` `/api/extract-voice-actor-info` [auth] ✓
-- `GET` `/api/find_duplicate_voice_actors` [auth]
+- `ALL` `/api/find_duplicate_voice_actors.get.test` [auth]
+- `GET` `/api/find_duplicate_voice_actors` [auth] ✓
 - `GET` `/api/game/:id` params(id) [queue]
 - `POST` `/api/generate-social-content` [auth, email]
 - `GET` `/api/get-dubbing-project`

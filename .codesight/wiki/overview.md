@@ -8,7 +8,7 @@
 
 ## Scale
 
-88 API routes · 27 database models · 200 UI components · 113 library files · 15 middleware layers · 74 environment variables
+89 API routes · 27 database models · 200 UI components · 113 library files · 15 middleware layers · 74 environment variables
 
 ## Subsystems
 
@@ -27,6 +27,7 @@
 - **[Extract-credits-from-image.post](./extract-credits-from-image.post.md)** — 1 routes — touches: upload
 - **[Extract-voice-actor-info.post](./extract-voice-actor-info.post.md)** — 1 routes — touches: auth
 - **[Find_duplicate_voice_actors.get](./find_duplicate_voice_actors.get.md)** — 1 routes — touches: auth
+- **[Find_duplicate_voice_actors.get.test](./find_duplicate_voice_actors.get.test.md)** — 1 routes — touches: auth
 - **[Games.get](./games.get.md)** — 1 routes — touches: cache
 - **[Generate-social-content.post](./generate-social-content.post.md)** — 1 routes — touches: auth, email
 - **[Get-dubbing-project.get](./get-dubbing-project.get.md)** — 1 routes

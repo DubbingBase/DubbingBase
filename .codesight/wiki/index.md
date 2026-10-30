@@ -25,6 +25,7 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 - [Extract-credits-from-image.post](./extract-credits-from-image.post.md)
 - [Extract-voice-actor-info.post](./extract-voice-actor-info.post.md)
 - [Find_duplicate_voice_actors.get](./find_duplicate_voice_actors.get.md)
+- [Find_duplicate_voice_actors.get.test](./find_duplicate_voice_actors.get.test.md)
 - [Games.get](./games.get.md)
 - [Generate-social-content.post](./generate-social-content.post.md)
 - [Get-dubbing-project.get](./get-dubbing-project.get.md)
@@ -84,7 +85,7 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 
 ## Quick Stats
 
-- Routes: **88**
+- Routes: **89**
 - Models: **27**
 - Components: **200**
 - Env vars: **49** required, **25** with defaults
@@ -114,4 +115,4 @@ These exist in your codebase but are **not** reflected in wiki articles:
 When in doubt, search the source. The wiki is a starting point, not a complete inventory.
 
 ---
-_Last compiled: 2026-10-30 · 74 articles · [codesight](https://github.com/Houseofmvps/codesight)_
+_Last compiled: 2026-10-30 · 75 articles · [codesight](https://github.com/Houseofmvps/codesight)_
