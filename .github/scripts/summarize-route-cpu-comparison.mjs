@@ -20,7 +20,7 @@ if (
   throw new Error("Base and pull request reports use different or invalid paired workloads.");
 }
 
-const routeNames = ["movie", "show", "actor", "voice-actor"];
+const routeNames = ["movie", "show", "actor", "voice-actor", "admin-dubbing-project"];
 const datasets = ["representative", "large"];
 const workflowRun =
   process.env.GITHUB_RUN_ID && process.env.GITHUB_REPOSITORY
@@ -43,12 +43,14 @@ function formatCpu(stats) {
   return `${(stats.median / 1000).toFixed(1)} ms`;
 }
 
+function formatBytes(stats) {
+  return `${Math.round(stats.median).toLocaleString("en-US")} B`;
+}
+
 function median(values) {
   const sorted = [...values].sort((left, right) => left - right);
   const middle = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 0
-    ? (sorted[middle - 1] + sorted[middle]) / 2
-    : sorted[middle];
+  return sorted.length % 2 === 0 ? (sorted[middle - 1] + sorted[middle]) / 2 : sorted[middle];
 }
 
 function percentile(sortedValues, probability) {
@@ -134,14 +136,16 @@ for (const route of routeNames) {
     if (
       !Number.isFinite(baseCpu.median) ||
       baseCpu.median <= 0 ||
-      !Number.isFinite(headCpu.median)
+      !Number.isFinite(headCpu.median) ||
+      !Number.isFinite(base.responseBytesPerRequest.median) ||
+      !Number.isFinite(head.responseBytesPerRequest.median)
     ) {
       throw new Error(`Base and PR reports have invalid CPU medians for ${route} ${dataset}.`);
     }
     const interval = bootstrapMedianInterval(headDeltas, `${route}:${dataset}`);
     cpuComparisons.push({ interval });
     rows.push(
-      `| ${route} (${dataset}) | ${formatCpu(baseCpu)} | ${formatCpu(headCpu)} | ${formatDelta(baseCpu.median, headDeltas, interval)} |`,
+      `| ${route} (${dataset}) | ${formatCpu(baseCpu)} | ${formatCpu(headCpu)} | ${formatDelta(baseCpu.median, headDeltas, interval)} | ${formatBytes(base.responseBytesPerRequest)} → ${formatBytes(head.responseBytesPerRequest)} |`,
     );
   }
 }
@@ -166,9 +170,7 @@ function formatTopApplicationCpuConsumers(workload, route, revision) {
   const hasFullApplicationFrames = Array.isArray(profile?.topApplicationFrames);
   const sampledFrames =
     profile?.topApplicationFrames ??
-    profile?.topSampledFrames?.filter((frame) =>
-      isApplicationSource(frame.source),
-    );
+    profile?.topSampledFrames?.filter((frame) => isApplicationSource(frame.source));
   if (!profile || !Array.isArray(sampledFrames)) {
     throw new Error(`Large workload ${workload.name} is missing its V8 profile summary.`);
   }
@@ -180,8 +182,9 @@ function formatTopApplicationCpuConsumers(workload, route, revision) {
   }
   return sampledFrames
     .slice(0, 10)
-    .map((frame, index) =>
-      `| ${route} | ${revision} | ${index + 1} | \`${safeCell(frame.functionName)}\` | \`${safeCell(frame.source)}\` | ${frame.sampleSharePercent.toFixed(1)}% |`,
+    .map(
+      (frame, index) =>
+        `| ${route} | ${revision} | ${index + 1} | \`${safeCell(frame.functionName)}\` | \`${safeCell(frame.source)}\` | ${frame.sampleSharePercent.toFixed(1)}% |`,
     );
 }
 
@@ -196,14 +199,14 @@ for (const route of routeNames) {
 const markdown = [
   "## Local route CPU comparison",
   "",
-  `Built Nuxt SSR · Node ${baseReport.runtime} · same runner · ${workflowRun}`,
+  `Built Nuxt/Nitro Node server · Node ${baseReport.runtime} · same runner · ${workflowRun}`,
   "",
   "20 warmups; 20 alternating paired batches of 20 requests per route. Change is the median paired PR − base delta; interval is a deterministic 95% bootstrap.",
   "",
-  `**Result:** ${resultSummary} 🔴 more CPU · 🟢 less CPU · ⚪ unchanged median; markers show direction only. This PR changes CI benchmarking, not route code.`,
+  `**Result:** ${resultSummary} 🔴 more CPU · 🟢 less CPU · ⚪ unchanged median; markers show direction only. Measurements use synthetic local Node/Nitro workloads and do not represent production traffic or Cloudflare Worker CPU.`,
   "",
-  "| Route / workload | Base median CPU / request | PR median CPU / request | Paired change (95% bootstrap interval) |",
-  "| --- | ---: | ---: | ---: |",
+  "| Route / workload | Base median CPU / request | PR median CPU / request | Paired change (95% bootstrap interval) | Response bytes (base → PR) |",
+  "| --- | ---: | ---: | ---: | ---: |",
   ...rows,
   "",
   "### Top 10 app CPU consumers (large workload)",

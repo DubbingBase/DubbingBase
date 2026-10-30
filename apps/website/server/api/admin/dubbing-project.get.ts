@@ -2,15 +2,7 @@ import { requireAdmin } from "../../utils/auth";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { requireDubbingLanguage } from "../../utils/dubbing-language";
 
-const MEDIA_TYPES = [
-  "movie",
-  "tv",
-  "video_game",
-  "audiobook",
-  "podcast",
-  "advertisement",
-  "toy",
-];
+const MEDIA_TYPES = ["movie", "tv", "video_game", "audiobook", "podcast", "advertisement", "toy"];
 
 export default defineEventHandler(async (event) => {
   requireAdmin(event);
@@ -38,7 +30,7 @@ export default defineEventHandler(async (event) => {
     .maybeSingle();
 
   if (projectError) throw projectError;
-  if (!project) return { projectId: null, works: [] };
+  if (!project) return { projectId: null, works: [], voiceActors: [] };
 
   const { data: works, error: worksError } = await supabase
     .from("work")
@@ -52,21 +44,26 @@ export default defineEventHandler(async (event) => {
   const workCountByActor = new Map<number, number>();
   for (const work of workRows) {
     if (work.actor_id === null) continue;
-    workCountByActor.set(
-      work.actor_id,
-      (workCountByActor.get(work.actor_id) ?? 0) + 1,
-    );
+    workCountByActor.set(work.actor_id, (workCountByActor.get(work.actor_id) ?? 0) + 1);
   }
 
+  const includedVoiceActorIds = new Set<number>();
   return {
     projectId: project.id,
-    works: workRows.map((work) => ({
-      work_id: work.id,
-      actor_id: work.actor_id,
-      voice_actor_id: work.voice_actor_id,
-      voice_actor: work.voice_actor,
-      editable:
-        work.actor_id !== null && workCountByActor.get(work.actor_id) === 1,
-    })),
+    works: workRows.map((work) => {
+      const voiceActorIsNew =
+        work.voice_actor !== null && !includedVoiceActorIds.has(work.voice_actor.id);
+      if (voiceActorIsNew && work.voice_actor) {
+        includedVoiceActorIds.add(work.voice_actor.id);
+      }
+
+      return {
+        work_id: work.id,
+        actor_id: work.actor_id,
+        voice_actor_id: work.voice_actor_id,
+        voice_actor: voiceActorIsNew ? work.voice_actor : null,
+        editable: work.actor_id !== null && workCountByActor.get(work.actor_id) === 1,
+      };
+    }),
   };
 });

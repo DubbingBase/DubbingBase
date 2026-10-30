@@ -91,6 +91,34 @@ const actorRoles = Array.from({ length: sizes.actorRoles }, (_, index) => {
   };
 });
 
+const adminWorkCount = dataset === "large" ? 2400 : 50;
+const adminActorCount = dataset === "large" ? 1200 : 25;
+const adminVoiceActorCount = dataset === "large" ? 500 : 25;
+const adminVoiceActors = Array.from({ length: adminVoiceActorCount }, (_, index) => ({
+  id: index + 1,
+  firstname: `CI fixture admin voice actor ${index + 1}`,
+  lastname: "Actor",
+  profile_picture: null,
+}));
+const adminWorks = Array.from({ length: adminWorkCount }, (_, index) => {
+  const voiceActor = adminVoiceActors[index % adminVoiceActorCount];
+  return {
+    id: index + 1,
+    actor_id: (index % adminActorCount) + 1,
+    voice_actor_id: voiceActor.id,
+    voice_actor: voiceActor,
+  };
+});
+const adminUser = {
+  id: "00000000-0000-4000-8000-000000000999",
+  email: "admin@example.test",
+  role: "authenticated",
+  aud: "authenticated",
+  app_metadata: { role: "admin" },
+  user_metadata: {},
+  created_at: "2020-01-01T00:00:00Z",
+};
+
 const dubbingProjects = Array.from({ length: sizes.dubbingProjects }, (_, index) => ({
   id: index + 1,
   language: index % 2 === 0 ? "fr-FR" : "en-US",
@@ -181,13 +209,44 @@ globalThis.fetch = async (input, init = {}) => {
     body = encodedResponses.get(key);
     if (body === undefined) throw new Error(`Unexpected mocked TMDB request: ${url.pathname}`);
   } else if (url.hostname === "mock.supabase.co") {
-    const response = supabaseResponse(url.pathname);
-    key = `supabase:${url.pathname.split("/").at(-1)}`;
-    const inputHeaders = input instanceof Request ? input.headers : undefined;
-    const acceptsSingle = new Headers(init.headers ?? inputHeaders)
-      .get("accept")
-      ?.includes("vnd.pgrst.object");
-    body = JSON.stringify(response.single && !acceptsSingle ? [response.value] : response.value);
+    if (url.pathname === "/auth/v1/user") {
+      key = "supabase:auth_user";
+      body = JSON.stringify(adminUser);
+    } else if (url.pathname === "/rest/v1/dubbing_projects") {
+      if (
+        url.searchParams.get("select") !== "id" ||
+        url.searchParams.get("content_id") !== "eq.31" ||
+        url.searchParams.get("content_type") !== "eq.tv" ||
+        url.searchParams.get("language") !== "eq.fr-FR"
+      ) {
+        throw new Error(`Unexpected mocked admin project query: ${url.search}`);
+      }
+      key = "supabase:dubbing_projects";
+      const inputHeaders = input instanceof Request ? input.headers : undefined;
+      const acceptsSingle = new Headers(init.headers ?? inputHeaders)
+        .get("accept")
+        ?.includes("vnd.pgrst.object");
+      body = JSON.stringify(acceptsSingle ? { id: 31 } : [{ id: 31 }]);
+    } else if (url.pathname === "/rest/v1/work") {
+      const expectedSelect =
+        "id, actor_id, voice_actor_id, voice_actor:voice_actors(id, firstname, lastname, profile_picture)";
+      if (
+        url.searchParams.get("select") !== expectedSelect ||
+        url.searchParams.get("dubbing_project_id") !== "eq.31"
+      ) {
+        throw new Error(`Unexpected mocked admin work query: ${url.search}`);
+      }
+      key = "supabase:work";
+      body = JSON.stringify(adminWorks);
+    } else {
+      const response = supabaseResponse(url.pathname);
+      key = `supabase:${url.pathname.split("/").at(-1)}`;
+      const inputHeaders = input instanceof Request ? input.headers : undefined;
+      const acceptsSingle = new Headers(init.headers ?? inputHeaders)
+        .get("accept")
+        ?.includes("vnd.pgrst.object");
+      body = JSON.stringify(response.single && !acceptsSingle ? [response.value] : response.value);
+    }
   } else if (url.hostname === "api4.thetvdb.com") {
     key = `tvdb:${url.pathname}`;
     body =

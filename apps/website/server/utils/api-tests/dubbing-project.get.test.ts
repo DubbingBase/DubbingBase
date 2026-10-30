@@ -56,6 +56,17 @@ function createSupabaseMock() {
       voice_actor_id: 203,
       voice_actor: null,
     },
+    {
+      id: 308,
+      actor_id: null,
+      voice_actor_id: 201,
+      voice_actor: {
+        id: 201,
+        firstname: "One",
+        lastname: "Voice",
+        profile_picture: null,
+      },
+    },
   ];
   const selectedColumns: string[] = [];
 
@@ -129,6 +140,13 @@ describe("GET /api/admin/dubbing-project", () => {
           voice_actor_id: 203,
           voice_actor: null,
           editable: true,
+        },
+        {
+          work_id: 308,
+          actor_id: null,
+          voice_actor_id: 201,
+          voice_actor: null,
+          editable: false,
         },
       ],
     });
