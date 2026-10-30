@@ -559,7 +559,7 @@ async function requestBatch(server, route, count) {
     systemMicrosPerRequest: samples.reduce((total, row) => total + row.systemMicros, 0) / count,
     totalMicrosPerRequest:
       samples.reduce((total, row) => total + row.userMicros + row.systemMicros, 0) / count,
-    htmlBytesPerRequest: responseBytes / count,
+    responseBytesPerRequest: responseBytes / count,
   };
 }
 
