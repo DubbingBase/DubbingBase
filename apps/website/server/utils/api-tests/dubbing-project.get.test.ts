@@ -98,36 +98,37 @@ describe("GET /api/admin/dubbing-project", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
       projectId: 501,
+      voiceActors: [
+        {
+          id: 201,
+          firstname: "One",
+          lastname: "Voice",
+          profile_picture: null,
+        },
+        {
+          id: 202,
+          firstname: "Two",
+          lastname: "Voice",
+          profile_picture: null,
+        },
+      ],
       works: [
         {
           work_id: 305,
           actor_id: 101,
           voice_actor_id: 201,
-          voice_actor: {
-            id: 201,
-            firstname: "One",
-            lastname: "Voice",
-            profile_picture: null,
-          },
           editable: false,
         },
         {
           work_id: 306,
           actor_id: 101,
           voice_actor_id: 202,
-          voice_actor: {
-            id: 202,
-            firstname: "Two",
-            lastname: "Voice",
-            profile_picture: null,
-          },
           editable: false,
         },
         {
           work_id: 307,
           actor_id: 102,
           voice_actor_id: 203,
-          voice_actor: null,
           editable: true,
         },
       ],

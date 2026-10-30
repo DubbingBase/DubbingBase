@@ -135,6 +135,25 @@ const voiceActor = {
   })),
 };
 
+const adminDubbingWorks = Array.from(
+  { length: dataset === "large" ? 2400 : 50 },
+  (_, index) => {
+    const actorIndex = Math.floor(index / 2);
+    const voiceActorId = 60_000 + actorIndex;
+    return {
+      id: index + 1,
+      actor_id: 300_000 + actorIndex,
+      voice_actor_id: voiceActorId,
+      voice_actor: {
+        id: voiceActorId,
+        firstname: `CI fixture voice actor ${actorIndex}`,
+        lastname: "Actor",
+        profile_picture: `regional-voice-actor-${actorIndex}.jpg`,
+      },
+    };
+  },
+);
+
 const encodedResponses = new Map();
 function addJsonResponse(key, value) {
   encodedResponses.set(key, JSON.stringify(value));
@@ -158,8 +177,14 @@ for (let index = 0; index < sizes.uniqueMedia; index += 1) {
   addJsonResponse(`tmdb:/3/${mediaType}/${mediaId}`, makeMedia(mediaId, mediaType));
 }
 
-const supabaseResponse = (path) => {
-  const table = path.replace(/^\/rest\/v1\//, "").split("?")[0];
+const supabaseResponse = (url) => {
+  const table = url.pathname.replace(/^\/rest\/v1\//, "").split("?")[0];
+  if (table === "dubbing_projects" && url.searchParams.get("select") === "id") {
+    return { value: { id: 1 }, single: true };
+  }
+  if (table === "work" && url.searchParams.has("dubbing_project_id")) {
+    return { value: adminDubbingWorks, single: false };
+  }
   if (table === "voice_actors") {
     return { value: voiceActor, single: true };
   }
@@ -181,7 +206,24 @@ globalThis.fetch = async (input, init = {}) => {
     body = encodedResponses.get(key);
     if (body === undefined) throw new Error(`Unexpected mocked TMDB request: ${url.pathname}`);
   } else if (url.hostname === "mock.supabase.co") {
-    const response = supabaseResponse(url.pathname);
+    if (url.pathname === "/auth/v1/user") {
+      key = "supabase:auth_user";
+      body = JSON.stringify({
+        id: "00000000-0000-4000-8000-000000000999",
+        email: "admin@example.test",
+        role: "authenticated",
+        aud: "authenticated",
+        app_metadata: { role: "admin" },
+        user_metadata: {},
+        created_at: "2020-01-01T00:00:00Z",
+      });
+      requestCounts.set(key, (requestCounts.get(key) ?? 0) + 1);
+      return new Response(body, {
+        status: 200,
+        headers: { "content-type": "application/json; charset=utf-8" },
+      });
+    }
+    const response = supabaseResponse(url);
     key = `supabase:${url.pathname.split("/").at(-1)}`;
     const inputHeaders = input instanceof Request ? input.headers : undefined;
     const acceptsSingle = new Headers(init.headers ?? inputHeaders)
