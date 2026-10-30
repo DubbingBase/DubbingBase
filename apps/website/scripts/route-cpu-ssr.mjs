@@ -269,8 +269,7 @@ function topUniqueApplicationCpuConsumers(frames, totalSampledMicros) {
       functionName,
       source,
       sampledMicros,
-      sampleSharePercent:
-        totalSampledMicros > 0 ? (sampledMicros / totalSampledMicros) * 100 : 0,
+      sampleSharePercent: totalSampledMicros > 0 ? (sampledMicros / totalSampledMicros) * 100 : 0,
     }));
 }
 
@@ -542,20 +541,42 @@ function fixtureFor(dataset) {
   };
 }
 
-async function validateRoute(server, route) {
+async function validateRoute(server, route, dataset) {
   const before = await currentDependencies(server);
   const validation = await requestPage(server.baseUrl, route);
   if (route.kind === "api") {
     const results = JSON.parse(validation.body);
+    const expectedPerSource = dataset === "large" ? 20 : 10;
+    const expectedCounts = new Map([
+      ["movie", expectedPerSource * 2],
+      ["voice_actor", expectedPerSource],
+      ["video_game", Math.min(expectedPerSource, 10)],
+      ["audiobook", expectedPerSource],
+      ["podcast", expectedPerSource],
+      ["advertisement", Math.min(expectedPerSource, 15)],
+      ["toy", Math.min(expectedPerSource, 15)],
+    ]);
+    const actualCounts = new Map();
+    if (Array.isArray(results)) {
+      for (const result of results) {
+        actualCounts.set(result.media_type, (actualCounts.get(result.media_type) ?? 0) + 1);
+      }
+    }
     if (
       !Array.isArray(results) ||
-      results.length < 50 ||
-      !results.some((result) => result.title?.startsWith(route.marker)) ||
-      results.some((result) => typeof result.score !== "number")
+      results.length !== [...expectedCounts.values()].reduce((sum, count) => sum + count, 0) ||
+      !results.some(
+        (result) => typeof result.title === "string" && result.title.startsWith(route.marker),
+      ) ||
+      results.some((result) => typeof result.score !== "number") ||
+      [...expectedCounts].some(([mediaType, count]) => actualCounts.get(mediaType) !== count)
     ) {
       throw new Error(`${route.path} returned unexpected search fixture data.`);
     }
-  } else if (!validation.html.includes(route.marker) || !validation.html.includes("__NUXT_DATA__")) {
+  } else if (
+    !validation.html.includes(route.marker) ||
+    !validation.html.includes("__NUXT_DATA__")
+  ) {
     throw new Error(`${route.path} did not SSR the expected fixture data.`);
   }
   assertRouteDependencies(route, before, await currentDependencies(server));
@@ -587,7 +608,16 @@ async function captureProfile(server, route) {
   return profile;
 }
 
-function workloadFor(server, route, dataset, rounds, pairedDeltas, dependencies, profile, responseHash) {
+function workloadFor(
+  server,
+  route,
+  dataset,
+  rounds,
+  pairedDeltas,
+  dependencies,
+  profile,
+  responseHash,
+) {
   const samples = rounds.map((round) => round[server.side]);
   return {
     name: route.name,
@@ -624,8 +654,8 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
     const baseWorkloads = [];
     const headWorkloads = [];
     for (const route of routes) {
-      const baseResponseHash = await validateRoute(baseServer, route);
-      const headResponseHash = await validateRoute(headServer, route);
+      const baseResponseHash = await validateRoute(baseServer, route, dataset);
+      const headResponseHash = await validateRoute(headServer, route, dataset);
       if (route.kind === "api" && baseResponseHash !== headResponseHash) {
         throw new Error(`${route.path} changed its response body in the CPU comparison.`);
       }
@@ -633,9 +663,16 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
 
       const rounds = [];
       for (let round = 0; round < measuredRounds; round += 1) {
-        const order = round % 2 === 0
-          ? [["base", baseServer], ["head", headServer]]
-          : [["head", headServer], ["base", baseServer]];
+        const order =
+          round % 2 === 0
+            ? [
+                ["base", baseServer],
+                ["head", headServer],
+              ]
+            : [
+                ["head", headServer],
+                ["base", baseServer],
+              ];
         const result = {};
         for (const [side, server] of order) {
           result[side] = await requestBatch(server, route, requestsPerRound);
@@ -696,7 +733,8 @@ async function measurePaired() {
   await assertIsolatedNetworkNamespace("route profiling");
   const baseWebsiteDir = process.env.ROUTE_CPU_BASE_WEBSITE_DIR;
   const headWebsiteDir = process.env.ROUTE_CPU_HEAD_WEBSITE_DIR ?? websiteDir;
-  if (!baseWebsiteDir) throw new Error("Set ROUTE_CPU_BASE_WEBSITE_DIR to the baseline website build.");
+  if (!baseWebsiteDir)
+    throw new Error("Set ROUTE_CPU_BASE_WEBSITE_DIR to the baseline website build.");
 
   await rm(join(profileRoot, "base"), { recursive: true, force: true });
   await rm(join(profileRoot, "head"), { recursive: true, force: true });

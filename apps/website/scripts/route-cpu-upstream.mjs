@@ -136,18 +136,15 @@ const voiceActor = {
   })),
 };
 
-const searchTmdbResults = Array.from(
-  { length: searchResultsPerSource * 2 },
-  (_, index) => ({
-    id: 700_000 + index,
-    title: `CI fixture search movie ${index}`,
-    media_type: "movie",
-    popularity: index === 0 ? null : index + 1,
-    vote_average: index === 0 ? null : 7.5,
-    vote_count: index === 0 ? null : index + 10,
-    release_date: index % 2 === 0 ? "1990-01-01" : "2099-01-01",
-  }),
-);
+const searchTmdbResults = Array.from({ length: searchResultsPerSource * 2 }, (_, index) => ({
+  id: 700_000 + index,
+  title: `CI fixture search movie ${index}`,
+  media_type: "movie",
+  popularity: index === 0 ? null : index + 1,
+  vote_average: index === 0 ? null : 7.5,
+  vote_count: index === 0 ? null : index + 10,
+  release_date: index % 2 === 0 ? "1990-01-01" : "2099-01-01",
+}));
 const searchVoiceActors = Array.from({ length: searchResultsPerSource }, (_, index) => ({
   id: 800_000 + index,
   firstname: `CI fixture search voice ${index}`,
@@ -163,8 +160,7 @@ const searchGames = Array.from({ length: Math.min(searchResultsPerSource, 10) },
   name: `CI fixture search game ${index}`,
   rating: 75,
   rating_count: index + 1,
-  first_release_date:
-    index === 0 ? null : index % 2 === 0 ? 631_152_000 : 4_070_908_800,
+  first_release_date: index === 0 ? null : index % 2 === 0 ? 631_152_000 : 4_070_908_800,
 }));
 const searchBooks = Array.from({ length: searchResultsPerSource }, (_, index) => ({
   key: `/works/OL${820_000 + index}W`,
@@ -175,11 +171,14 @@ const searchPodcasts = Array.from({ length: searchResultsPerSource }, (_, index)
   collectionId: 830_000 + index,
   collectionName: `CI fixture search podcast ${index}`,
 }));
-const searchAdvertisements = Array.from({ length: searchResultsPerSource }, (_, index) => ({
-  content_id: 840_000 + index,
-  studios: { name: `CI fixture studio ${index}` },
-}));
-const searchToys = Array.from({ length: searchResultsPerSource }, (_, index) => ({
+const searchAdvertisements = Array.from(
+  { length: Math.min(searchResultsPerSource, 15) },
+  (_, index) => ({
+    content_id: 840_000 + index,
+    studios: { name: `CI fixture studio ${index}` },
+  }),
+);
+const searchToys = Array.from({ length: Math.min(searchResultsPerSource, 15) }, (_, index) => ({
   content_id: 850_000 + index,
   name: `CI fixture search toy ${index}`,
   manufacturer: "CI fixture manufacturer",
@@ -241,17 +240,21 @@ globalThis.fetch = async (input, init = {}) => {
   let body;
 
   if (url.hostname === "api.themoviedb.org") {
-    key = url.pathname === "/3/search/multi"
-      ? `tmdb:${url.pathname}?page=${url.searchParams.get("page")}`
-      : `tmdb:${url.pathname}`;
-    body = url.pathname === "/3/search/multi"
-      ? JSON.stringify({ results: searchTmdbResults.slice(
-          Number(url.searchParams.get("page") ?? "1") === 1 ? 0 : searchResultsPerSource,
-          Number(url.searchParams.get("page") ?? "1") === 1
-            ? searchResultsPerSource
-            : searchResultsPerSource * 2,
-        ) })
-      : encodedResponses.get(key);
+    key =
+      url.pathname === "/3/search/multi"
+        ? `tmdb:${url.pathname}?page=${url.searchParams.get("page")}`
+        : `tmdb:${url.pathname}`;
+    body =
+      url.pathname === "/3/search/multi"
+        ? JSON.stringify({
+            results: searchTmdbResults.slice(
+              Number(url.searchParams.get("page") ?? "1") === 1 ? 0 : searchResultsPerSource,
+              Number(url.searchParams.get("page") ?? "1") === 1
+                ? searchResultsPerSource
+                : searchResultsPerSource * 2,
+            ),
+          })
+        : encodedResponses.get(key);
     if (body === undefined) throw new Error(`Unexpected mocked TMDB request: ${url.pathname}`);
   } else if (url.hostname === "mock.supabase.co") {
     const response = supabaseResponse(`${url.pathname}${url.search}`);
