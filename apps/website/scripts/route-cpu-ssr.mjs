@@ -77,7 +77,12 @@ const routes = [
     name: "episode",
     path: "/show/1397/season/1/episode/1",
     marker: "CI fixture episode cast 0",
-    expected: ["tmdb:/3/tv/1397/season/1/episode/1", "supabase:dubbing_projects"],
+    expected: [
+      "tmdb:/3/tv/1397/season/1/episode/1",
+      "tmdb:/3/tv/1397",
+      "tmdb:/3/tv/1397/aggregate_credits",
+      "supabase:dubbing_projects",
+    ],
   },
   {
     name: "season",

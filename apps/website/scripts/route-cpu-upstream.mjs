@@ -227,6 +227,8 @@ addJsonResponse("tmdb:/3/tv/1396", makeMedia(1396, "tv"));
 addJsonResponse("tmdb:/3/tv/1396/aggregate_credits", {
   cast: makeCast(sizes.mediaCredits, "tv"),
 });
+addJsonResponse("tmdb:/3/tv/1397", makeMedia(1397, "tv"));
+addJsonResponse("tmdb:/3/tv/1397/aggregate_credits", { id: 1397, cast: [], crew: [] });
 addJsonResponse("tmdb:/3/tv/1397/season/1/episode/1", {
   id: 1,
   name: "CI fixture episode",
