@@ -98,38 +98,6 @@ const actorRoles = Array.from({ length: sizes.actorRoles }, (_, index) => {
   };
 });
 
-const duplicateVoiceActorGroups = Array.from(
-  { length: dataset === "large" ? 1200 : 50 },
-  (_, groupIndex) => ({
-    actors: Array.from({ length: 3 }, (_, actorIndex) => {
-      const id = groupIndex * 3 + actorIndex + 1;
-      return {
-        id,
-        firstname: `CI fixture duplicate actor ${id}`,
-        lastname: "Actor",
-        bio: "x".repeat(792),
-        awards: "CI fixture award ".repeat(8),
-        created_at: "2020-01-01T00:00:00Z",
-        created_by: "00000000-0000-4000-8000-000000000999",
-        nationality: "Fixture",
-        date_of_birth: "1980-01-01",
-        duplicate_first_name_tokens: ["ci", "fixture", "duplicate"],
-        duplicate_last_name_tokens: ["actor"],
-        tmdb_id: id,
-        wikidata_id: `Q${id}`,
-        profile_picture: `duplicate-actor-${id}.jpg`,
-        social_media_links: [{ platform: "fixture", url: `https://example.test/${id}` }],
-        status: "active",
-        updated_at: "2025-01-01T00:00:00Z",
-        updated_by: "00000000-0000-4000-8000-000000000999",
-        years_active: "2000-2020",
-        voice_actor_name: `CI fixture duplicate actor ${id} Actor`,
-      };
-    }),
-  }),
-);
-const encodedDuplicateVoiceActorGroups = JSON.stringify(duplicateVoiceActorGroups);
-
 const dubbingProjects = Array.from({ length: sizes.dubbingProjects }, (_, index) => ({
   id: index + 1,
   language:
