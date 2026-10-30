@@ -157,7 +157,8 @@ for (let index = 0; index < sizes.uniqueMedia; index += 1) {
   const mediaId = 300_000 + index;
   const media = makeMedia(mediaId, mediaType);
   media.popularity = index;
-  if (index % 7 === 0) media.backdrop_path = null;
+  if (index >= sizes.uniqueMedia - 4) media.popularity = 1_000;
+  if (index % 7 === 0 || index === sizes.uniqueMedia - 1) media.backdrop_path = null;
   addJsonResponse(`tmdb:/3/${mediaType}/${mediaId}`, media);
 }
 

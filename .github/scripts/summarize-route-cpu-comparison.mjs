@@ -201,7 +201,7 @@ const markdown = [
   "",
   "20 warmups; 20 alternating paired batches of 20 requests per route. Change is the median paired PR − base delta; interval is a deterministic 95% bootstrap.",
   "",
-  `**Result:** ${resultSummary} 🔴 more CPU · 🟢 less CPU · ⚪ unchanged median; markers show direction only. This PR changes CI benchmarking, not route code.`,
+  `**Result:** ${resultSummary} 🔴 more CPU · 🟢 less CPU · ⚪ unchanged median; markers show direction only. Results are from synthetic local SSR fixtures and do not establish production Worker CPU impact.`,
   "",
   "| Route / workload | Base median CPU / request | PR median CPU / request | Paired change (95% bootstrap interval) |",
   "| --- | ---: | ---: | ---: |",

@@ -526,6 +526,16 @@ async function validateRoute(server, route) {
   if (!validation.html.includes(route.marker) || !validation.html.includes("__NUXT_DATA__")) {
     throw new Error(`${route.path} did not SSR the expected fixture data.`);
   }
+  if (route.name === "voice-actor") {
+    const fixture = fixtureFor(route.dataset);
+    const expectedBackdropIndex = fixture.uniqueVoiceActorMedia - 4;
+    const expectedBackdrop = `/backdrop-${300_000 + expectedBackdropIndex}.jpg`;
+    if (!validation.html.includes(expectedBackdrop)) {
+      throw new Error(
+        `${route.path} did not SSR the expected selected backdrop ${expectedBackdrop}.`,
+      );
+    }
+  }
   assertRouteDependencies(route, before, await currentDependencies(server));
   await postJson(server.baseUrl, "/__route_cpu__/dependencies/reset");
 }
@@ -588,8 +598,8 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
     const baseWorkloads = [];
     const headWorkloads = [];
     for (const route of routes) {
-      await validateRoute(baseServer, route);
-      await validateRoute(headServer, route);
+      await validateRoute(baseServer, { ...route, dataset });
+      await validateRoute(headServer, { ...route, dataset });
       await warmServers(baseServer, headServer, route);
 
       const rounds = [];
