@@ -81,19 +81,69 @@ function createSupabaseMock() {
   return { supabase, selectedColumns };
 }
 
-describe("GET /api/admin/dubbing-project", () => {
-  it("returns exact work IDs and marks every row for ambiguous actors non-editable", async () => {
-    const { supabase, selectedColumns } = createSupabaseMock();
-    routeMocks.useSupabaseAdmin.mockReturnValue(supabase);
-    const app = createApp();
-    app.use(
-      "/",
-      defineEventHandler((event) => handler(event)),
-    );
+async function requestProject(projection = "") {
+  const { supabase, selectedColumns } = createSupabaseMock();
+  routeMocks.useSupabaseAdmin.mockReturnValue(supabase);
+  const app = createApp();
+  app.use(
+    "/",
+    defineEventHandler((event) => handler(event)),
+  );
+  const response = await toWebHandler(app)(
+    new Request(
+      `http://localhost/?content_id=211288&content_type=tv&dubbing_language=fr-FR${projection}`,
+    ),
+  );
+  return { response, selectedColumns };
+}
 
-    const response = await toWebHandler(app)(
-      new Request("http://localhost/?content_id=211288&content_type=tv&dubbing_language=fr-FR"),
+describe("GET /api/admin/dubbing-project", () => {
+  it("preserves voice actor records on each work in the default response", async () => {
+    const { response, selectedColumns } = await requestProject();
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      projectId: 501,
+      works: [
+        {
+          work_id: 305,
+          actor_id: 101,
+          voice_actor_id: 201,
+          editable: false,
+          voice_actor: {
+            id: 201,
+            firstname: "One",
+            lastname: "Voice",
+            profile_picture: null,
+          },
+        },
+        {
+          work_id: 306,
+          actor_id: 101,
+          voice_actor_id: 202,
+          editable: false,
+          voice_actor: {
+            id: 202,
+            firstname: "Two",
+            lastname: "Voice",
+            profile_picture: null,
+          },
+        },
+        {
+          work_id: 307,
+          actor_id: 102,
+          voice_actor_id: 203,
+          editable: true,
+          voice_actor: null,
+        },
+      ],
+    });
+    expect(selectedColumns).toContain(
+      "id, actor_id, voice_actor_id, voice_actor:voice_actors(id, firstname, lastname, profile_picture)",
     );
+  });
+
+  it("returns deduplicated voice actors only for the editor projection", async () => {
+    const { response } = await requestProject("&projection=editor");
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
@@ -113,28 +163,10 @@ describe("GET /api/admin/dubbing-project", () => {
         },
       ],
       works: [
-        {
-          work_id: 305,
-          actor_id: 101,
-          voice_actor_id: 201,
-          editable: false,
-        },
-        {
-          work_id: 306,
-          actor_id: 101,
-          voice_actor_id: 202,
-          editable: false,
-        },
-        {
-          work_id: 307,
-          actor_id: 102,
-          voice_actor_id: 203,
-          editable: true,
-        },
+        { work_id: 305, actor_id: 101, voice_actor_id: 201, editable: false },
+        { work_id: 306, actor_id: 101, voice_actor_id: 202, editable: false },
+        { work_id: 307, actor_id: 102, voice_actor_id: 203, editable: true },
       ],
     });
-    expect(selectedColumns).toContain(
-      "id, actor_id, voice_actor_id, voice_actor:voice_actors(id, firstname, lastname, profile_picture)",
-    );
   });
 });

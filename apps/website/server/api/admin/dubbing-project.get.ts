@@ -10,6 +10,7 @@ export default defineEventHandler(async (event) => {
   const contentId = Number(query.content_id);
   const contentType = query.content_type;
   const dubbingLanguage = requireDubbingLanguage(query.dubbing_language);
+  const editorProjection = query.projection === "editor";
 
   if (
     !Number.isSafeInteger(contentId) ||
@@ -30,7 +31,11 @@ export default defineEventHandler(async (event) => {
     .maybeSingle();
 
   if (projectError) throw projectError;
-  if (!project) return { projectId: null, works: [], voiceActors: [] };
+  if (!project) {
+    return editorProjection
+      ? { projectId: null, works: [], voiceActors: [] }
+      : { projectId: null, works: [] };
+  }
 
   const { data: works, error: worksError } = await supabase
     .from("work")
@@ -53,12 +58,13 @@ export default defineEventHandler(async (event) => {
 
   return {
     projectId: project.id,
-    voiceActors: [...voiceActorsById.values()],
+    ...(editorProjection ? { voiceActors: [...voiceActorsById.values()] } : {}),
     works: workRows.map((work) => ({
       work_id: work.id,
       actor_id: work.actor_id,
       voice_actor_id: work.voice_actor_id,
       editable: work.actor_id !== null && workCountByActor.get(work.actor_id) === 1,
+      ...(editorProjection ? {} : { voice_actor: work.voice_actor }),
     })),
   };
 });

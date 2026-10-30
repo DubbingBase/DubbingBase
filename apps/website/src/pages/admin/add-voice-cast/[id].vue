@@ -752,6 +752,7 @@ async function loadRegionalAssignments() {
           content_id: mediaId.value,
           content_type: mediaTypeParam.value,
           dubbing_language: dubbingLanguage.value,
+          projection: "editor",
         },
       },
     );
