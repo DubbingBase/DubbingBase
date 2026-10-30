@@ -90,7 +90,7 @@
   - function getDubbingProjects: (contentId, contentType) => void
   - function getDubbingProjectsForMediaEndpoint: (contentId, contentType, projection) => void
   - function getAdvertisementPageDubbingProjects: (contentId) => void
-  - _...7 more_
+  - _...8 more_
 - `apps/website/server/utils/dubbing-language.ts` — function requireDubbingLanguage: (value) => DubbingLanguage
 - `apps/website/server/utils/dubbing-region-detection.ts` — function detectDubbingRegionFromWikitext: ({...}, sections, }) => DubbingEvidence, type DubbingEvidence
 - `apps/website/server/utils/error-message.ts` — function getErrorMessage: (error) => string
@@ -244,7 +244,12 @@
   - _...1 more_
 - `apps/website/src/utils/posthog-prefetch-manifest.ts` — function deferPosthogPrefetch: (manifest, ClientManifestEntry>) => void, interface ClientManifestEntry
 - `apps/website/src/utils/search-routes.ts` — function getSearchResultRoute: (result, "id" | "media_type">) => string, type SearchFilter
-- `apps/website/src/utils/season-data.ts` — function fetchSeasonPageData: (showId, seasonNumber, locale?) => Promise<SeasonDataResponse>, function fetchEpisodePageData: (showId, seasonNumber, episodeNumber, locale?) => Promise<EpisodeDataResponse>
+- `apps/website/src/utils/season-data.ts`
+  - function fetchSeasonPageData: (showId, seasonNumber, locale?) => Promise<SeasonDataResponse>
+  - function fetchEpisodePageData: (showId, seasonNumber, episodeNumber, locale?) => Promise<EpisodePageDataResponse>
+  - interface EpisodePageDubbingProject
+  - interface EpisodePageVoiceActor
+  - interface EpisodePageDataResponse
 - `apps/website/src/utils/show-character-pictures.ts`
   - function indexCharacterPictures: (pictures) => CharacterPictureIndex
   - function findCharacterImage: (index, namesToTry) => void

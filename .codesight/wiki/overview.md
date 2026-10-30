@@ -98,7 +98,7 @@ Changes to these files have the widest blast radius across the codebase:
 - `apps/website/server/utils/index.ts` — imported by **25** files
 - `apps/website/server/utils/cache/index.ts` — imported by **19** files
 - `apps/website/server/utils/notifications/discord.ts` — imported by **12** files
-- `apps/website/server/utils/db/queries.ts` — imported by **11** files
+- `apps/website/server/utils/urls/supabase.ts` — imported by **11** files
 
 ## Required Environment Variables
 
