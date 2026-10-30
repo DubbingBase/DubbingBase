@@ -1,10 +1,37 @@
-import type {
-  fetchEpisodeData as fetchSharedEpisodeData,
-  fetchSeasonData as fetchSharedSeasonData,
-} from "@app/shared-logic";
+import type { fetchSeasonData as fetchSharedSeasonData } from "@app/shared-logic";
+import type { MediaDetailMedia } from "@app/shared-logic";
+import type { CastActorReference, CastWorkReference } from "./media-cast";
+import type { CharacterProfilePicture } from "./show-character-pictures";
 
 type SeasonDataResponse = Awaited<ReturnType<typeof fetchSharedSeasonData>>;
-type EpisodeDataResponse = Awaited<ReturnType<typeof fetchSharedEpisodeData>>;
+
+export interface EpisodePageDubbingProject {
+  id: number;
+  language?: string | null;
+  studio_data?: { id: number; name: string; logo_url?: string | null } | null;
+  works?: CastWorkReference[];
+}
+
+export interface EpisodePageVoiceActor {
+  id: number;
+  firstname?: string | null;
+  lastname?: string | null;
+  profile_picture?: string | null;
+}
+
+export interface EpisodePageDataResponse {
+  episode: MediaDetailMedia & {
+    episode_number: number;
+    air_date?: string | null;
+    still_path?: string | null;
+    show_original_language?: string | null;
+  };
+  aggregateCredits?: { cast?: CastActorReference[] };
+  dubbingProjects: EpisodePageDubbingProject[];
+  voiceActors: EpisodePageVoiceActor[];
+  characterProfilePictures: CharacterProfilePicture[];
+  votes: Record<number, unknown>;
+}
 
 export async function fetchSeasonPageData(
   showId: string | number,
@@ -30,18 +57,18 @@ export async function fetchEpisodePageData(
   seasonNumber: string | number,
   episodeNumber: string | number,
   locale?: string,
-): Promise<EpisodeDataResponse> {
+): Promise<EpisodePageDataResponse> {
   const headers: Record<string, string> = {};
   if (locale) headers["Accept-Language"] = locale;
 
-  return await $fetch("/api/episode", {
+  return await $fetch<EpisodePageDataResponse>("/api/episode", {
     headers,
     timeout: 20_000,
     query: {
       id: showId,
       season_number: seasonNumber,
       episode_number: episodeNumber,
-      projection: "media-page",
+      projection: "episode-page",
     },
   });
 }

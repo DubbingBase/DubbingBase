@@ -8,6 +8,9 @@ const sizes =
     ? {
         mediaCredits: 180,
         dubbingProjects: 40,
+        episodeCast: 120,
+        episodeDubbingProjects: 12,
+        episodeWorksPerProject: 12,
         actorCredits: 640,
         actorRoles: 24,
         voiceActorWorks: 24,
@@ -16,6 +19,9 @@ const sizes =
     : {
         mediaCredits: 1200,
         dubbingProjects: 500,
+        episodeCast: 500,
+        episodeDubbingProjects: 80,
+        episodeWorksPerProject: 40,
         actorCredits: 1200,
         actorRoles: 500,
         voiceActorWorks: 500,
@@ -153,6 +159,32 @@ const dubbingProjects = Array.from({ length: sizes.dubbingProjects }, (_, index)
   ],
 }));
 
+const episodeDubbingProjects = Array.from(
+  { length: sizes.episodeDubbingProjects },
+  (_, projectIndex) => ({
+    id: 100_000 + projectIndex,
+    language: projectIndex % 2 === 0 ? "fr-FR" : "en-US",
+    studio_data: { id: 20_000 + projectIndex, name: `CI episode studio ${projectIndex}`, logo_url: null },
+    works: Array.from({ length: sizes.episodeWorksPerProject }, (_, workIndex) => {
+      const voiceActorId = 70_000 + ((projectIndex * sizes.episodeWorksPerProject + workIndex) % 500);
+      return {
+        id: projectIndex * sizes.episodeWorksPerProject + workIndex + 1,
+        actor_id: 200_000 + workIndex,
+        character_name: `CI episode character ${workIndex}`,
+        performance: `CI episode performance ${workIndex}`,
+        note: null,
+        voice_actor: {
+          id: voiceActorId,
+          firstname: `CI episode voice ${voiceActorId}`,
+          lastname: "Actor",
+          profile_picture: `episode-voice-actor-${voiceActorId}.jpg`,
+          voice_actor_name: `CI episode voice ${voiceActorId} Actor`,
+        },
+      };
+    }),
+  }),
+);
+
 const voiceActor = {
   id: 1,
   firstname: "CI fixture voice actor",
@@ -204,6 +236,16 @@ addJsonResponse("tmdb:/3/tv/1396", makeMedia(1396, "tv"));
 addJsonResponse("tmdb:/3/tv/1396/aggregate_credits", {
   cast: makeCast(sizes.mediaCredits, "tv"),
 });
+addJsonResponse("tmdb:/3/tv/1397/season/1/episode/1", {
+  id: 1,
+  name: "CI fixture episode",
+  overview: "Deterministic local route CPU fixture.",
+  episode_number: 1,
+  season_number: 1,
+  air_date: "2021-01-01",
+  still_path: "/episode.jpg",
+  credits: { cast: makeCast(sizes.episodeCast, "episode") },
+});
 addJsonResponse("tmdb:/3/person/6384", actor);
 addJsonResponse("tmdb:/3/person/12001", {
   id: 12_001,
@@ -226,7 +268,7 @@ const supabaseResponse = (url) => {
     return { value: adminDubbingWorks, single: false };
   }
   if (table === "voice_actors") {
-    const query = new URLSearchParams(path.split("?")[1] ?? "");
+    const query = url.searchParams;
     if (query.has("voice_actor_name")) return { value: searchVoiceActors, single: false };
     if (query.has("or")) return { value: searchVoiceActors, single: false };
     return { value: voiceActor, single: true };
@@ -234,10 +276,17 @@ const supabaseResponse = (url) => {
   if (table === "work") return { value: actorRoles, single: false };
   if (table === "toy_metadata") return { value: searchToys, single: false };
   if (table === "dubbing_projects") {
-    const query = new URLSearchParams(path.split("?")[1] ?? "");
-    return query.get("content_type") === "eq.advertisement"
-      ? { value: searchAdvertisements, single: false }
-      : { value: dubbingProjects, single: false };
+    const query = url.searchParams;
+    if (query.get("content_type") === "eq.advertisement") {
+      return { value: searchAdvertisements, single: false };
+    }
+    return {
+      value:
+        query.get("content_id") === "eq.1397" && query.get("content_type") === "eq.tv"
+          ? episodeDubbingProjects
+          : dubbingProjects,
+      single: false,
+    };
   }
   throw new Error(`Unexpected mocked Supabase table: ${table}`);
 };

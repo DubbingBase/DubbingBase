@@ -14,6 +14,7 @@ import {
   getDubbingProjectsForMediaEndpoint,
   getAdvertisementPageDubbingProjects,
   getMediaPageDubbingProjects,
+  getEpisodePageDubbingProjectData,
   getGamePageDubbingProjects,
   getToyPageDubbingProjects,
 } from "./queries";
@@ -95,6 +96,90 @@ describe("dubbing project detail queries", () => {
       voice_actor_name: "Voice Actor",
       profile_picture: "https://example.com/voice-actor.png",
     });
+  });
+
+  it("returns unique voice actors separately for episode page work rows", async () => {
+    queryMocks.useSupabaseAdmin.mockReturnValue(
+      createSupabaseMock([
+        {
+          id: 17,
+          language: "fr-FR",
+          studio_data: { id: 3, name: "Studio", logo_url: null },
+          works: [
+            {
+              id: 12,
+              actor_id: 44,
+              character_name: "Character",
+              note: "First note",
+              voice_actor: {
+                id: 5,
+                firstname: "Voice",
+                lastname: "Actor",
+                profile_picture: "voice-actor.png",
+                voice_actor_name: "Unused name",
+              },
+            },
+            {
+              id: 13,
+              actor_id: 45,
+              character_name: "Second character",
+              note: null,
+              voice_actor: {
+                id: 5,
+                firstname: "Voice",
+                lastname: "Actor",
+                profile_picture: "voice-actor.png",
+                voice_actor_name: "Unused name",
+              },
+            },
+            {
+              id: 14,
+              actor_id: null,
+              character_name: "Unassigned",
+              note: null,
+              voice_actor: null,
+            },
+          ],
+        },
+      ]),
+    );
+
+    const result = await getEpisodePageDubbingProjectData(1);
+
+    expect(result.dubbingProjects).toEqual([
+      {
+        id: 17,
+        language: "fr-FR",
+        studio_data: { id: 3, name: "Studio", logo_url: null },
+        works: [
+          {
+            id: 12,
+            actor_id: 44,
+            character_name: "Character",
+            note: "First note",
+            voice_actor_id: 5,
+          },
+          {
+            id: 13,
+            actor_id: 45,
+            character_name: "Second character",
+            note: null,
+            voice_actor_id: 5,
+          },
+          {
+            id: 14,
+            actor_id: null,
+            character_name: "Unassigned",
+            note: null,
+            voice_actor_id: null,
+          },
+        ],
+      },
+    ]);
+    expect(result.voiceActors).toHaveLength(1);
+    expect(result.voiceActors[0]).toMatchObject({ id: 5, firstname: "Voice", lastname: "Actor" });
+    expect(queryMocks.selectedColumns[0]).not.toContain("performance");
+    expect(queryMocks.selectedColumns[0]).not.toContain("voice_actor_name");
   });
 
   it("keeps the full projection available to pages that render crew", async () => {

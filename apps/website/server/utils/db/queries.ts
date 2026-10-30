@@ -287,6 +287,64 @@ export async function getGamePageDubbingProjects(contentId: number) {
   }));
 }
 
+const EPISODE_PAGE_DUBBING_PROJECTS_SELECT = `id,
+  language,
+  studio_data:studios(id, name, logo_url),
+  works:work(
+    id,
+    actor_id,
+    character_name,
+    note,
+    voice_actor:voice_actors(id, firstname, lastname, profile_picture)
+  )`;
+
+export async function getEpisodePageDubbingProjectData(contentId: number) {
+  const supabase = useSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("dubbing_projects")
+    .select(EPISODE_PAGE_DUBBING_PROJECTS_SELECT)
+    .eq("content_id", contentId)
+    .eq("content_type", "tv");
+
+  if (error) return { dubbingProjects: [], voiceActors: [] };
+
+  const voiceActorsById = new Map<
+    number,
+    {
+      id: number;
+      firstname?: string | null;
+      lastname?: string | null;
+      profile_picture?: string | null;
+    }
+  >();
+  const dubbingProjects = (data || []).map((project) => ({
+    ...project,
+    works: (project.works || []).map((work) => {
+      const voiceActorId = work.voice_actor?.id ?? null;
+      if (voiceActorId !== null && !voiceActorsById.has(voiceActorId)) {
+        const voiceActor = processVoiceActor(work.voice_actor);
+        voiceActorsById.set(voiceActor.id, {
+          id: voiceActor.id,
+          firstname: voiceActor.firstname,
+          lastname: voiceActor.lastname,
+          profile_picture: voiceActor.profile_picture,
+        });
+      }
+
+      return {
+        id: work.id,
+        actor_id: work.actor_id,
+        character_name: work.character_name,
+        note: work.note,
+        voice_actor_id: voiceActorId,
+      };
+    }),
+    studio_data: project.studio_data || null,
+  }));
+
+  return { dubbingProjects, voiceActors: [...voiceActorsById.values()] };
+}
+
 const SEASON_PAGE_DUBBING_PROJECTS_SELECT = `id,
   language,
   studio_data:studios(id, name, logo_url),
