@@ -330,6 +330,7 @@ async function cpuProfileSummary(profile, profileWebsiteDir) {
     const source = frame.source.replaceAll("\\", "/");
     return (
       source.startsWith("src/") ||
+      source.startsWith("server/") ||
       source.startsWith("../../packages/") ||
       source.startsWith("packages/")
     );
