@@ -1,12 +1,8 @@
 import { normalizeString } from "../utils/normalize";
 import { useSupabaseAdmin } from "../utils/db/client";
-interface SearchParams {
-  query: string;
-  limit?: number;
-}
 
 async function searchVoiceActors(
-  supabaseAdmin: any,
+  supabaseAdmin: ReturnType<typeof useSupabaseAdmin>,
   query: string,
   limit = 10,
   useAdminSearchProjection = false,
@@ -19,13 +15,13 @@ async function searchVoiceActors(
 
   const longestWord = words.reduce((a, b) => (a.length > b.length ? a : b), "");
 
-  const { data, error } = await supabaseAdmin
-    .from("voice_actors")
-    .select(
-      useAdminSearchProjection
-        ? "id, firstname, lastname, bio, nationality, date_of_birth, tmdb_id, wikidata_id, profile_picture"
-        : "*",
-    )
+  const voiceActorsQuery = supabaseAdmin.from("voice_actors");
+  const projectionQuery = useAdminSearchProjection
+    ? voiceActorsQuery.select(
+        "id, firstname, lastname, bio, nationality, date_of_birth, tmdb_id, wikidata_id, profile_picture",
+      )
+    : voiceActorsQuery.select("*");
+  const { data, error } = await projectionQuery
     .or(`firstname.ilike.%${longestWord}%,lastname.ilike.%${longestWord}%`)
     .limit(300);
 
@@ -33,30 +29,21 @@ async function searchVoiceActors(
 
   const lowerWords = words;
 
-  const matches = data.filter((actor: any) => {
+  const scored: Array<{ actor: (typeof data)[number]; score: number }> = [];
+  const primaryQuery = lowerWords[0] || "";
+
+  for (const actor of data) {
     const first = normalizeString(actor.firstname);
     const last = normalizeString(actor.lastname);
-    const fullName = `${first} ${last}`;
 
-    return lowerWords.every(
-      (word) =>
-        first.includes(word) || last.includes(word) || fullName.includes(word),
-    );
-  });
-
-  const scored = matches.map((actor: any) => {
-    const first = normalizeString(actor.firstname);
-    const last = normalizeString(actor.lastname);
+    const matches = lowerWords.every((word) => first.includes(word) || last.includes(word));
+    if (!matches) continue;
 
     let score = 0;
-    const primaryQuery = lowerWords[0] || "";
 
     if (first === primaryQuery || last === primaryQuery) {
       score += 100;
-    } else if (
-      first.startsWith(primaryQuery) ||
-      last.startsWith(primaryQuery)
-    ) {
+    } else if (first.startsWith(primaryQuery) || last.startsWith(primaryQuery)) {
       score += 50;
     } else {
       score += 10;
@@ -64,10 +51,10 @@ async function searchVoiceActors(
 
     score -= (first.length + last.length) * 0.1;
 
-    return { actor, score };
-  });
+    scored.push({ actor, score });
+  }
 
-  scored.sort((a: any, b: any) => {
+  scored.sort((a, b) => {
     if (b.score !== a.score) {
       return b.score - a.score;
     }
@@ -76,12 +63,12 @@ async function searchVoiceActors(
     return lastA.localeCompare(lastB);
   });
 
-  return scored.slice(0, limit).map((s: any) => s.actor);
+  return scored.slice(0, limit).map((item) => item.actor);
 }
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
-  const searchQuery = query.query as string | undefined;
+  const searchQuery = query.query;
   const limit = query.limit ? Number(query.limit) : 10;
 
   if (!searchQuery || typeof searchQuery !== "string") {

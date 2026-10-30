@@ -522,16 +522,26 @@ const isOriginalLanguage = computed(() => {
   return orig === dub || dub.startsWith(`${orig}-`) || orig.startsWith(`${dub}-`);
 });
 
+const displayLanguageCache = new Map<string, string>();
+
 const getDisplayLanguage = (langCode: string | undefined | null) => {
   if (!langCode) return t("details.notSpecified");
+  const cacheKey = `${locale.value || "en"}:${langCode}`;
+  const cachedName = displayLanguageCache.get(cacheKey);
+  if (cachedName !== undefined) return cachedName;
+
+  let displayName = langCode;
   try {
     const name = languageDisplayNames.value?.of(langCode);
-    return typeof name === "string" && name.length > 0
-      ? name.charAt(0).toUpperCase() + name.slice(1)
-      : langCode;
+    if (typeof name === "string" && name.length > 0) {
+      displayName = name.charAt(0).toUpperCase() + name.slice(1);
+    }
   } catch {
-    return langCode;
+    displayName = langCode;
   }
+
+  displayLanguageCache.set(cacheKey, displayName);
+  return displayName;
 };
 
 // Format cast and attach voice actors

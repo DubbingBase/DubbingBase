@@ -21,6 +21,7 @@ const sizes =
         voiceActorWorks: 500,
         uniqueMedia: 100,
       };
+const searchResultsPerSource = dataset === "large" ? 20 : 10;
 
 function makeCast(count, mediaType = "movie") {
   return Array.from({ length: count }, (_, index) => ({
@@ -93,7 +94,14 @@ const actorRoles = Array.from({ length: sizes.actorRoles }, (_, index) => {
 
 const dubbingProjects = Array.from({ length: sizes.dubbingProjects }, (_, index) => ({
   id: index + 1,
-  language: index % 2 === 0 ? "fr-FR" : "en-US",
+  language:
+    index % 41 === 0
+      ? "invalid_code"
+      : index % 37 === 0
+        ? null
+        : index % 2 === 0
+          ? "fr-FR"
+          : "en-US",
   studio_data: { id: 10_000 + index, name: `CI studio ${index}`, logo_url: null },
   works: [
     {
@@ -135,6 +143,25 @@ const voiceActor = {
   })),
 };
 
+const adminDubbingWorks = Array.from(
+  { length: dataset === "large" ? 2400 : 50 },
+  (_, index) => {
+    const actorIndex = Math.floor(index / 2);
+    const voiceActorId = 60_000 + actorIndex;
+    return {
+      id: index + 1,
+      actor_id: 300_000 + actorIndex,
+      voice_actor_id: voiceActorId,
+      voice_actor: {
+        id: voiceActorId,
+        firstname: `CI fixture voice actor ${actorIndex}`,
+        lastname: "Actor",
+        profile_picture: `regional-voice-actor-${actorIndex}.jpg`,
+      },
+    };
+  },
+);
+
 const encodedResponses = new Map();
 function addJsonResponse(key, value) {
   encodedResponses.set(key, JSON.stringify(value));
@@ -158,13 +185,28 @@ for (let index = 0; index < sizes.uniqueMedia; index += 1) {
   addJsonResponse(`tmdb:/3/${mediaType}/${mediaId}`, makeMedia(mediaId, mediaType));
 }
 
-const supabaseResponse = (path) => {
-  const table = path.replace(/^\/rest\/v1\//, "").split("?")[0];
+const supabaseResponse = (url) => {
+  const table = url.pathname.replace(/^\/rest\/v1\//, "").split("?")[0];
+  if (table === "dubbing_projects" && url.searchParams.get("select") === "id") {
+    return { value: { id: 1 }, single: true };
+  }
+  if (table === "work" && url.searchParams.has("dubbing_project_id")) {
+    return { value: adminDubbingWorks, single: false };
+  }
   if (table === "voice_actors") {
+    const query = new URLSearchParams(path.split("?")[1] ?? "");
+    if (query.has("voice_actor_name")) return { value: searchVoiceActors, single: false };
+    if (query.has("or")) return { value: searchVoiceActors, single: false };
     return { value: voiceActor, single: true };
   }
   if (table === "work") return { value: actorRoles, single: false };
-  if (table === "dubbing_projects") return { value: dubbingProjects, single: false };
+  if (table === "toy_metadata") return { value: searchToys, single: false };
+  if (table === "dubbing_projects") {
+    const query = new URLSearchParams(path.split("?")[1] ?? "");
+    return query.get("content_type") === "eq.advertisement"
+      ? { value: searchAdvertisements, single: false }
+      : { value: dubbingProjects, single: false };
+  }
   throw new Error(`Unexpected mocked Supabase table: ${table}`);
 };
 
@@ -177,17 +219,59 @@ globalThis.fetch = async (input, init = {}) => {
   let body;
 
   if (url.hostname === "api.themoviedb.org") {
-    key = `tmdb:${url.pathname}`;
-    body = encodedResponses.get(key);
+    key =
+      url.pathname === "/3/search/multi"
+        ? `tmdb:${url.pathname}?page=${url.searchParams.get("page")}`
+        : `tmdb:${url.pathname}`;
+    body =
+      url.pathname === "/3/search/multi"
+        ? JSON.stringify({
+            results: searchTmdbResults.slice(
+              Number(url.searchParams.get("page") ?? "1") === 1 ? 0 : searchResultsPerSource,
+              Number(url.searchParams.get("page") ?? "1") === 1
+                ? searchResultsPerSource
+                : searchResultsPerSource * 2,
+            ),
+          })
+        : encodedResponses.get(key);
     if (body === undefined) throw new Error(`Unexpected mocked TMDB request: ${url.pathname}`);
   } else if (url.hostname === "mock.supabase.co") {
-    const response = supabaseResponse(url.pathname);
+    if (url.pathname === "/auth/v1/user") {
+      key = "supabase:auth_user";
+      body = JSON.stringify({
+        id: "00000000-0000-4000-8000-000000000999",
+        email: "admin@example.test",
+        role: "authenticated",
+        aud: "authenticated",
+        app_metadata: { role: "admin" },
+        user_metadata: {},
+        created_at: "2020-01-01T00:00:00Z",
+      });
+      requestCounts.set(key, (requestCounts.get(key) ?? 0) + 1);
+      return new Response(body, {
+        status: 200,
+        headers: { "content-type": "application/json; charset=utf-8" },
+      });
+    }
+    const response = supabaseResponse(url);
     key = `supabase:${url.pathname.split("/").at(-1)}`;
     const inputHeaders = input instanceof Request ? input.headers : undefined;
     const acceptsSingle = new Headers(init.headers ?? inputHeaders)
       .get("accept")
       ?.includes("vnd.pgrst.object");
     body = JSON.stringify(response.single && !acceptsSingle ? [response.value] : response.value);
+  } else if (url.hostname === "id.twitch.tv" && url.pathname === "/oauth2/token") {
+    key = "igdb:token";
+    body = JSON.stringify({ access_token: "local-route-cpu-fixture", expires_in: 7_200 });
+  } else if (url.hostname === "api.igdb.com" && url.pathname === "/v4/games") {
+    key = "igdb:games";
+    body = JSON.stringify(searchGames);
+  } else if (url.hostname === "openlibrary.org" && url.pathname === "/search.json") {
+    key = "openlibrary:search";
+    body = JSON.stringify({ docs: searchBooks });
+  } else if (url.hostname === "itunes.apple.com" && url.pathname === "/search") {
+    key = "itunes:search";
+    body = JSON.stringify({ resultCount: searchPodcasts.length, results: searchPodcasts });
   } else if (url.hostname === "api4.thetvdb.com") {
     key = `tvdb:${url.pathname}`;
     body =

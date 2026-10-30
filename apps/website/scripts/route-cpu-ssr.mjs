@@ -20,11 +20,47 @@ const profileRequests = 50;
 const requireFromNuxt = createRequire(import.meta.resolve("nuxt"));
 const { TraceMap, originalPositionFor } = requireFromNuxt("@jridgewell/trace-mapping");
 
+const adminUser = {
+  id: "00000000-0000-4000-8000-000000000999",
+  email: "admin@example.test",
+  role: "authenticated",
+  aud: "authenticated",
+  app_metadata: { role: "admin" },
+  user_metadata: {},
+  created_at: "2020-01-01T00:00:00Z",
+};
+const adminTokenHeader = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString(
+  "base64url",
+);
+const adminTokenPayload = Buffer.from(
+  JSON.stringify({
+    sub: adminUser.id,
+    aud: "authenticated",
+    role: "authenticated",
+    exp: 4_102_444_800,
+    app_metadata: { role: "admin" },
+    user_metadata: {},
+  }),
+).toString("base64url");
+const adminSession = {
+  access_token: `${adminTokenHeader}.${adminTokenPayload}.c2ln`,
+  refresh_token: "local-route-cpu-fixture",
+  token_type: "bearer",
+  expires_in: 3600,
+  expires_at: 4_102_444_800,
+  user: adminUser,
+};
+const adminCookie = `sb-mock-auth-token=base64-${Buffer.from(JSON.stringify(adminSession)).toString("base64url")}`;
+
 const routes = [
   {
     name: "movie",
     path: "/movie/85",
     marker: "CI fixture movie 85",
+    expectedHtml: ["English", "French", "invalid_code", "Not specified"],
+    localeVariants: [
+      { path: "/fr/movie/85", expectedHtml: ["Anglais", "Français", "invalid_code", "Non spécifié"] },
+    ],
     expected: ["tmdb:/3/movie/85", "supabase:dubbing_projects"],
   },
   {
@@ -46,6 +82,14 @@ const routes = [
     marker: "CI fixture voice actor",
     expected: ["tmdb:/3/person/12001", "supabase:voice_actors"],
   },
+  {
+    name: "admin-dubbing-project",
+    path: "/api/admin/dubbing-project?content_id=85&content_type=movie&dubbing_language=fr-FR&projection=editor",
+    marker: "CI fixture voice actor",
+    kind: "api",
+    cookie: adminCookie,
+    expected: ["supabase:auth_user", "supabase:dubbing_projects", "supabase:work"],
+  },
 ];
 
 const profilePlugin = `
@@ -54,7 +98,7 @@ import inspector from "node:inspector";
 import { join } from "node:path";
 import { defineEventHandler, getQuery } from "h3";
 
-const pageRoutes = new Set(${JSON.stringify(routes.map((route) => route.path))});
+const pageRoutes = new Set(${JSON.stringify(routes.map((route) => route.path.split("?")[0]))});
 
 function post(session, method, params = {}) {
   return new Promise((resolve, reject) => {
@@ -252,8 +296,7 @@ function topUniqueApplicationCpuConsumers(frames, totalSampledMicros) {
       functionName,
       source,
       sampledMicros,
-      sampleSharePercent:
-        totalSampledMicros > 0 ? (sampledMicros / totalSampledMicros) * 100 : 0,
+      sampleSharePercent: totalSampledMicros > 0 ? (sampledMicros / totalSampledMicros) * 100 : 0,
     }));
 }
 
@@ -313,6 +356,7 @@ async function cpuProfileSummary(profile, profileWebsiteDir) {
     const source = frame.source.replaceAll("\\", "/");
     return (
       source.startsWith("src/") ||
+      source.startsWith("server/") ||
       source.startsWith("../../packages/") ||
       source.startsWith("packages/")
     );
@@ -440,11 +484,13 @@ async function postJson(baseUrl, path) {
 
 async function requestPage(baseUrl, route) {
   const id = randomUUID();
+  const headers = {
+    "accept-language": "fr-FR",
+    "x-route-cpu-request-id": id,
+  };
+  if (route.cookie) headers.cookie = route.cookie;
   const response = await fetch(`${baseUrl}${route.path}`, {
-    headers: {
-      "accept-language": "fr-FR",
-      "x-route-cpu-request-id": id,
-    },
+    headers,
     signal: AbortSignal.timeout(120_000),
   });
   const body = await response.arrayBuffer();
@@ -452,12 +498,26 @@ async function requestPage(baseUrl, route) {
     const excerpt = Buffer.from(body).toString("utf8").slice(0, 800);
     throw new Error(`${route.path} returned HTTP ${response.status}: ${excerpt}`);
   }
-  if (!response.headers.get("content-type")?.includes("text/html")) {
+  const expectedContentType = route.kind === "api" ? "application/json" : "text/html";
+  if (!response.headers.get("content-type")?.includes(expectedContentType)) {
     throw new Error(
-      `${route.path} returned ${response.headers.get("content-type")}, not SSR HTML.`,
+      `${route.path} returned ${response.headers.get("content-type")}, not ${expectedContentType}.`,
     );
   }
-  return { id, bytes: body.byteLength, html: Buffer.from(body).toString("utf8") };
+  const responseBody = Buffer.from(body);
+  return {
+    id,
+    bytes: body.byteLength,
+    hash: createHash("sha256").update(responseBody).digest("hex"),
+    html: responseBody.toString("utf8"),
+  };
+}
+
+function normalizedRenderedHtml(html) {
+  return html
+    .replaceAll(/\/_nuxt\/[^"'\s<>]+/g, "/_nuxt/[asset]")
+    .replaceAll(/http:\/\/127\.0\.0\.1:\d+/g, "http://127.0.0.1:[port]")
+    .replaceAll(/buildId:(\\?")[0-9a-f-]{36}(\\?")/g, 'buildId:"[build]"');
 }
 
 function hashRenderedHtml(html) {
@@ -517,7 +577,13 @@ function assertRouteDependencies(route, before, after) {
   }
 }
 
-function fixtureFor(dataset) {
+function fixtureFor(dataset, routeName) {
+  if (routeName === "admin-dubbing-project") {
+    return {
+      works: dataset === "large" ? 2400 : 50,
+      uniqueActors: dataset === "large" ? 1200 : 25,
+    };
+  }
   return {
     mediaCredits: dataset === "large" ? 1200 : 180,
     dubbingProjects: dataset === "large" ? 500 : 40,
@@ -525,23 +591,67 @@ function fixtureFor(dataset) {
     actorRoles: dataset === "large" ? 500 : 24,
     voiceActorWorks: dataset === "large" ? 500 : 24,
     uniqueVoiceActorMedia: dataset === "large" ? 100 : 12,
+    searchResultsPerSource,
   };
 }
 
-async function validateRoute(server, route) {
+async function validateRoute(server, route, dataset) {
   const before = await currentDependencies(server);
   const validation = await requestPage(server.baseUrl, route);
-  if (!validation.html.includes(route.marker) || !validation.html.includes("__NUXT_DATA__")) {
+  if (route.kind === "api") {
+    const response = JSON.parse(validation.html);
+    const fixture = fixtureFor(dataset, route.name);
+    const voiceActors = dubbingProjectVoiceActors(response);
+    if (
+      response.projectId !== 1 ||
+      !Array.isArray(response.works) ||
+      response.works.length !== fixture.works ||
+      voiceActors.length !== fixture.uniqueActors ||
+      !voiceActors[0]?.firstname?.startsWith(route.marker) ||
+      response.works.some((work) => work.editable !== false)
+    ) {
+      throw new Error(`${route.path} returned unexpected dubbing project assignments.`);
+    }
+    if (server.side === "head" && response.works.some((work) => "voice_actor" in work)) {
+      throw new Error(`${route.path} repeated voice actor records in each work row.`);
+    }
+  } else if (!validation.html.includes(route.marker) || !validation.html.includes("__NUXT_DATA__")) {
     throw new Error(`${route.path} did not SSR the expected fixture data.`);
   }
-  for (const marker of route.expectedHtml ?? []) {
-    if (!validation.html.includes(marker)) {
-      throw new Error(`${route.path} did not SSR the expected output marker ${marker}.`);
-    }
+  const after = await currentDependencies(server);
+  assertRouteDependencies(route, before, after);
+  if (route.kind === "api" && route.expected.some((key) => after[key] - (before[key] ?? 0) !== 1)) {
+    throw new Error(`${route.path} did not make exactly one call to each fixture dependency.`);
   }
-  assertRouteDependencies(route, before, await currentDependencies(server));
   await postJson(server.baseUrl, "/__route_cpu__/dependencies/reset");
-  return hashRenderedHtml(validation.html);
+  return validation;
+}
+
+function dubbingProjectPageData(body) {
+  const response = JSON.parse(body);
+  const voiceActors = new Map(
+    dubbingProjectVoiceActors(response).map((voiceActor) => [voiceActor.id, voiceActor]),
+  );
+  return {
+    projectId: response.projectId,
+    works: response.works.map((work) => ({
+      work_id: work.work_id,
+      actor_id: work.actor_id,
+      voice_actor_id: work.voice_actor_id,
+      editable: work.editable,
+      voice_actor: work.voice_actor ?? voiceActors.get(work.voice_actor_id) ?? null,
+    })),
+    voiceActors: [...voiceActors.values()],
+  };
+}
+
+function dubbingProjectVoiceActors(response) {
+  if (Array.isArray(response.voiceActors)) return response.voiceActors;
+  const voiceActors = new Map();
+  for (const work of response.works) {
+    if (work.voice_actor) voiceActors.set(work.voice_actor.id, work.voice_actor);
+  }
+  return [...voiceActors.values()];
 }
 
 async function warmServers(baseServer, headServer, route) {
@@ -566,13 +676,13 @@ async function captureProfile(server, route) {
   return profile;
 }
 
-function workloadFor(server, route, dataset, rounds, pairedDeltas, dependencies, profile) {
+function workloadFor(server, route, dataset, rounds, pairedDeltas, dependencies, profile, responseHash) {
   const samples = rounds.map((round) => round[server.side]);
   return {
     name: route.name,
     path: route.path,
     dataset,
-    fixture: fixtureFor(dataset),
+    fixture: fixtureFor(dataset, route.name),
     warmupRequests,
     measuredRounds,
     requestsPerRound,
@@ -583,7 +693,9 @@ function workloadFor(server, route, dataset, rounds, pairedDeltas, dependencies,
       system: summarize(samples.map((sample) => sample.systemMicrosPerRequest)),
       total: summarize(samples.map((sample) => sample.totalMicrosPerRequest)),
     },
-    htmlBytesPerRequest: summarize(samples.map((sample) => sample.htmlBytesPerRequest)),
+    responseBytesPerRequest: summarize(samples.map((sample) => sample.htmlBytesPerRequest)),
+    responseBodySha256: route.kind === "api" ? responseHash : undefined,
+    responseSemanticParity: route.name === "admin-dubbing-project" ? "regional-assignment-data" : undefined,
     upstreamRequests: dependencies,
     profile,
   };
@@ -592,28 +704,50 @@ function workloadFor(server, route, dataset, rounds, pairedDeltas, dependencies,
 async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
   const servers = [];
   try {
-    const baseServer = await startServer(baseWebsiteDir, dataset, "base");
-    servers.push(baseServer);
-    baseServer.side = "base";
-    const headServer = await startServer(headWebsiteDir, dataset, "head");
-    servers.push(headServer);
-    headServer.side = "head";
+    const startOrder = dataset === "large" ? ["head", "base"] : ["base", "head"];
+    const startedServers = new Map();
+    for (const side of startOrder) {
+      const server = await startServer(
+        side === "base" ? baseWebsiteDir : headWebsiteDir,
+        dataset,
+        side,
+      );
+      servers.push(server);
+      server.side = side;
+      startedServers.set(side, server);
+    }
+    const baseServer = startedServers.get("base");
+    const headServer = startedServers.get("head");
 
     const baseWorkloads = [];
     const headWorkloads = [];
     for (const route of routes) {
-      const baseHtmlHash = await validateRoute(baseServer, route);
-      const headHtmlHash = await validateRoute(headServer, route);
-      if (route.name === "show" && baseHtmlHash !== headHtmlHash) {
-        throw new Error("/show/1396 returned different SSR HTML for base and PR.");
+      const baseValidation = await validateRoute(baseServer, route, dataset);
+      const headValidation = await validateRoute(headServer, route, dataset);
+      if (route.name === "admin-dubbing-project") {
+        if (
+          JSON.stringify(dubbingProjectPageData(baseValidation.html)) !==
+          JSON.stringify(dubbingProjectPageData(headValidation.html))
+        ) {
+          throw new Error(`${route.path} changed the assignments consumed by its page.`);
+        }
+      } else if (route.kind === "api" && baseValidation.hash !== headValidation.hash) {
+        throw new Error(`${route.path} changed its response body in the CPU comparison.`);
       }
       await warmServers(baseServer, headServer, route);
 
       const rounds = [];
       for (let round = 0; round < measuredRounds; round += 1) {
-        const order = round % 2 === 0
-          ? [["base", baseServer], ["head", headServer]]
-          : [["head", headServer], ["base", baseServer]];
+        const order =
+          round % 2 === 0
+            ? [
+                ["base", baseServer],
+                ["head", headServer],
+              ]
+            : [
+                ["head", headServer],
+                ["base", baseServer],
+              ];
         const result = {};
         for (const [side, server] of order) {
           result[side] = await requestBatch(server, route, requestsPerRound);
@@ -627,8 +761,8 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
       let baseProfile;
       let headProfile;
       if (dataset === "large") {
-        baseProfile = await captureProfile(baseServer, route);
         headProfile = await captureProfile(headServer, route);
+        baseProfile = await captureProfile(baseServer, route);
       }
 
       baseWorkloads.push(
@@ -640,6 +774,7 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
           pairedDeltas,
           await currentDependencies(baseServer),
           baseProfile,
+          baseValidation.hash,
         ),
       );
       headWorkloads.push(
@@ -651,6 +786,7 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
           pairedDeltas,
           await currentDependencies(headServer),
           headProfile,
+          headValidation.hash,
         ),
       );
     }
@@ -672,7 +808,8 @@ async function measurePaired() {
   await assertIsolatedNetworkNamespace("route profiling");
   const baseWebsiteDir = process.env.ROUTE_CPU_BASE_WEBSITE_DIR;
   const headWebsiteDir = process.env.ROUTE_CPU_HEAD_WEBSITE_DIR ?? websiteDir;
-  if (!baseWebsiteDir) throw new Error("Set ROUTE_CPU_BASE_WEBSITE_DIR to the baseline website build.");
+  if (!baseWebsiteDir)
+    throw new Error("Set ROUTE_CPU_BASE_WEBSITE_DIR to the baseline website build.");
 
   await rm(join(profileRoot, "base"), { recursive: true, force: true });
   await rm(join(profileRoot, "head"), { recursive: true, force: true });
