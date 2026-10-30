@@ -557,13 +557,13 @@ interface WorkAndVoiceActor {
   work_id: number;
   actor_id: number | null;
   voice_actor_id: number | null;
-  voice_actor: VoiceActor | null;
   editable: boolean;
 }
 
 interface RegionalProjectResponse {
   projectId: number | null;
   works: WorkAndVoiceActor[];
+  voiceActors: VoiceActor[];
 }
 
 type ToastType = "success" | "error" | "info";
@@ -752,6 +752,7 @@ async function loadRegionalAssignments() {
           content_id: mediaId.value,
           content_type: mediaTypeParam.value,
           dubbing_language: dubbingLanguage.value,
+          projection: "editor",
         },
       },
     );
@@ -760,10 +761,8 @@ async function loadRegionalAssignments() {
       return;
 
     const loadedVoiceActors: Record<number, VoiceActor> = {};
-    for (const work of result.works) {
-      if (work.voice_actor) {
-        loadedVoiceActors[work.voice_actor.id] = work.voice_actor;
-      }
+    for (const voiceActor of result.voiceActors) {
+      loadedVoiceActors[voiceActor.id] = voiceActor;
     }
     loadedVoiceActorsById.value = loadedVoiceActors;
     const assignments = assignmentsForActors(

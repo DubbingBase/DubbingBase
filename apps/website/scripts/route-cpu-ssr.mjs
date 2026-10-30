@@ -57,12 +57,17 @@ const routes = [
     name: "movie",
     path: "/movie/85",
     marker: "CI fixture movie 85",
+    expectedHtml: ["English", "French", "invalid_code", "Not specified"],
+    localeVariants: [
+      { path: "/fr/movie/85", expectedHtml: ["Anglais", "Français", "invalid_code", "Non spécifié"] },
+    ],
     expected: ["tmdb:/3/movie/85", "supabase:dubbing_projects"],
   },
   {
     name: "show",
     path: "/show/1396",
     marker: "CI fixture show 1396",
+    expectedHtml: ["English", "French"],
     expected: ["tmdb:/3/tv/1396", "tmdb:/3/tv/1396/aggregate_credits", "supabase:dubbing_projects"],
   },
   {
@@ -78,24 +83,13 @@ const routes = [
     expected: ["tmdb:/3/person/12001", "supabase:voice_actors"],
   },
   {
-    name: "duplicate-voice-actors",
-    path: "/api/find_duplicate_voice_actors",
-    marker: "CI fixture duplicate actor",
+    name: "admin-dubbing-project",
+    path: "/api/admin/dubbing-project?content_id=85&content_type=movie&dubbing_language=fr-FR&projection=editor",
+    marker: "CI fixture voice actor",
     kind: "api",
     cookie: adminCookie,
-    expected: ["supabase:auth_user", "supabase:rpc:find_duplicate_voice_actors_rpc"],
+    expected: ["supabase:auth_user", "supabase:dubbing_projects", "supabase:work"],
   },
-];
-const duplicateActorFields = [
-  "id",
-  "firstname",
-  "lastname",
-  "bio",
-  "nationality",
-  "date_of_birth",
-  "tmdb_id",
-  "wikidata_id",
-  "profile_picture",
 ];
 
 const profilePlugin = `
@@ -302,8 +296,7 @@ function topUniqueApplicationCpuConsumers(frames, totalSampledMicros) {
       functionName,
       source,
       sampledMicros,
-      sampleSharePercent:
-        totalSampledMicros > 0 ? (sampledMicros / totalSampledMicros) * 100 : 0,
+      sampleSharePercent: totalSampledMicros > 0 ? (sampledMicros / totalSampledMicros) * 100 : 0,
     }));
 }
 
@@ -514,10 +507,25 @@ async function requestPage(baseUrl, route) {
   const responseBody = Buffer.from(body);
   return {
     id,
-    bytes: responseBody.byteLength,
+    bytes: body.byteLength,
     hash: createHash("sha256").update(responseBody).digest("hex"),
     html: responseBody.toString("utf8"),
   };
+}
+
+function normalizedRenderedHtml(html) {
+  return html
+    .replaceAll(/\/_nuxt\/[^"'\s<>]+/g, "/_nuxt/[asset]")
+    .replaceAll(/http:\/\/127\.0\.0\.1:\d+/g, "http://127.0.0.1:[port]")
+    .replaceAll(/buildId:(\\?")[0-9a-f-]{36}(\\?")/g, 'buildId:"[build]"');
+}
+
+function hashRenderedHtml(html) {
+  const normalizedHtml = html
+    .replaceAll(/\/_nuxt\/[^"'\s<>]+/g, "/_nuxt/[asset]")
+    .replaceAll(/http:\/\/127\.0\.0\.1:\d+/g, "http://127.0.0.1:[port]")
+    .replaceAll(/buildId:(\\?")[0-9a-f-]{36}(\\?")/g, 'buildId:"[build]"');
+  return createHash("sha256").update(normalizedHtml).digest("hex");
 }
 
 async function readRequestMetrics(metricsPath, ids) {
@@ -570,8 +578,11 @@ function assertRouteDependencies(route, before, after) {
 }
 
 function fixtureFor(dataset, routeName) {
-  if (routeName === "duplicate-voice-actors") {
-    return { groups: dataset === "large" ? 1200 : 50, actorsPerGroup: 3 };
+  if (routeName === "admin-dubbing-project") {
+    return {
+      works: dataset === "large" ? 2400 : 50,
+      uniqueActors: dataset === "large" ? 1200 : 25,
+    };
   }
   return {
     mediaCredits: dataset === "large" ? 1200 : 180,
@@ -580,6 +591,7 @@ function fixtureFor(dataset, routeName) {
     actorRoles: dataset === "large" ? 500 : 24,
     voiceActorWorks: dataset === "large" ? 500 : 24,
     uniqueVoiceActorMedia: dataset === "large" ? 100 : 12,
+    searchResultsPerSource,
   };
 }
 
@@ -589,36 +601,19 @@ async function validateRoute(server, route, dataset) {
   if (route.kind === "api") {
     const response = JSON.parse(validation.html);
     const fixture = fixtureFor(dataset, route.name);
+    const voiceActors = dubbingProjectVoiceActors(response);
     if (
-      !Array.isArray(response) ||
-      response.length !== fixture.groups ||
-      response.some(
-        (group) =>
-          !Array.isArray(group.actors) ||
-          group.actors.length !== fixture.actorsPerGroup,
-      ) ||
-      !response[0]?.actors[0]?.firstname?.startsWith(route.marker)
+      response.projectId !== 1 ||
+      !Array.isArray(response.works) ||
+      response.works.length !== fixture.works ||
+      voiceActors.length !== fixture.uniqueActors ||
+      !voiceActors[0]?.firstname?.startsWith(route.marker) ||
+      response.works.some((work) => work.editable !== false)
     ) {
-      throw new Error(`${route.path} returned unexpected duplicate actor data.`);
+      throw new Error(`${route.path} returned unexpected dubbing project assignments.`);
     }
-    for (const group of response) {
-      if (
-        server.side === "head" &&
-        JSON.stringify(Object.keys(group).sort()) !== JSON.stringify(["actors"])
-      ) {
-        throw new Error(`${route.path} returned fields unused by the duplicates page.`);
-      }
-      for (const actor of group.actors) {
-        if (duplicateActorFields.some((field) => !(field in actor))) {
-          throw new Error(`${route.path} omitted a duplicate actor field used by the page.`);
-        }
-        if (
-          server.side === "head" &&
-          JSON.stringify(Object.keys(actor).sort()) !== JSON.stringify([...duplicateActorFields].sort())
-        ) {
-          throw new Error(`${route.path} returned fields unused by the duplicates page.`);
-        }
-      }
+    if (server.side === "head" && response.works.some((work) => "voice_actor" in work)) {
+      throw new Error(`${route.path} repeated voice actor records in each work row.`);
     }
   } else if (!validation.html.includes(route.marker) || !validation.html.includes("__NUXT_DATA__")) {
     throw new Error(`${route.path} did not SSR the expected fixture data.`);
@@ -632,13 +627,31 @@ async function validateRoute(server, route, dataset) {
   return validation;
 }
 
-function duplicateActorPageData(body) {
+function dubbingProjectPageData(body) {
   const response = JSON.parse(body);
-  return response.map((group) => ({
-    actors: group.actors.map((actor) =>
-      Object.fromEntries(duplicateActorFields.map((field) => [field, actor[field]])),
-    ),
-  }));
+  const voiceActors = new Map(
+    dubbingProjectVoiceActors(response).map((voiceActor) => [voiceActor.id, voiceActor]),
+  );
+  return {
+    projectId: response.projectId,
+    works: response.works.map((work) => ({
+      work_id: work.work_id,
+      actor_id: work.actor_id,
+      voice_actor_id: work.voice_actor_id,
+      editable: work.editable,
+      voice_actor: work.voice_actor ?? voiceActors.get(work.voice_actor_id) ?? null,
+    })),
+    voiceActors: [...voiceActors.values()],
+  };
+}
+
+function dubbingProjectVoiceActors(response) {
+  if (Array.isArray(response.voiceActors)) return response.voiceActors;
+  const voiceActors = new Map();
+  for (const work of response.works) {
+    if (work.voice_actor) voiceActors.set(work.voice_actor.id, work.voice_actor);
+  }
+  return [...voiceActors.values()];
 }
 
 async function warmServers(baseServer, headServer, route) {
@@ -680,10 +693,9 @@ function workloadFor(server, route, dataset, rounds, pairedDeltas, dependencies,
       system: summarize(samples.map((sample) => sample.systemMicrosPerRequest)),
       total: summarize(samples.map((sample) => sample.totalMicrosPerRequest)),
     },
-    responseBytesPerRequest: summarize(samples.map((sample) => sample.responseBytesPerRequest)),
+    responseBytesPerRequest: summarize(samples.map((sample) => sample.htmlBytesPerRequest)),
     responseBodySha256: route.kind === "api" ? responseHash : undefined,
-    responseSemanticParity:
-      route.name === "duplicate-voice-actors" ? "duplicates-page-actor-fields" : undefined,
+    responseSemanticParity: route.name === "admin-dubbing-project" ? "regional-assignment-data" : undefined,
     upstreamRequests: dependencies,
     profile,
   };
@@ -692,24 +704,32 @@ function workloadFor(server, route, dataset, rounds, pairedDeltas, dependencies,
 async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
   const servers = [];
   try {
-    const baseServer = await startServer(baseWebsiteDir, dataset, "base");
-    servers.push(baseServer);
-    baseServer.side = "base";
-    const headServer = await startServer(headWebsiteDir, dataset, "head");
-    servers.push(headServer);
-    headServer.side = "head";
+    const startOrder = dataset === "large" ? ["head", "base"] : ["base", "head"];
+    const startedServers = new Map();
+    for (const side of startOrder) {
+      const server = await startServer(
+        side === "base" ? baseWebsiteDir : headWebsiteDir,
+        dataset,
+        side,
+      );
+      servers.push(server);
+      server.side = side;
+      startedServers.set(side, server);
+    }
+    const baseServer = startedServers.get("base");
+    const headServer = startedServers.get("head");
 
     const baseWorkloads = [];
     const headWorkloads = [];
     for (const route of routes) {
       const baseValidation = await validateRoute(baseServer, route, dataset);
       const headValidation = await validateRoute(headServer, route, dataset);
-      if (route.name === "duplicate-voice-actors") {
+      if (route.name === "admin-dubbing-project") {
         if (
-          JSON.stringify(duplicateActorPageData(baseValidation.html)) !==
-          JSON.stringify(duplicateActorPageData(headValidation.html))
+          JSON.stringify(dubbingProjectPageData(baseValidation.html)) !==
+          JSON.stringify(dubbingProjectPageData(headValidation.html))
         ) {
-          throw new Error(`${route.path} changed actor fields consumed by the duplicates page.`);
+          throw new Error(`${route.path} changed the assignments consumed by its page.`);
         }
       } else if (route.kind === "api" && baseValidation.hash !== headValidation.hash) {
         throw new Error(`${route.path} changed its response body in the CPU comparison.`);
@@ -718,9 +738,16 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
 
       const rounds = [];
       for (let round = 0; round < measuredRounds; round += 1) {
-        const order = round % 2 === 0
-          ? [["base", baseServer], ["head", headServer]]
-          : [["head", headServer], ["base", baseServer]];
+        const order =
+          round % 2 === 0
+            ? [
+                ["base", baseServer],
+                ["head", headServer],
+              ]
+            : [
+                ["head", headServer],
+                ["base", baseServer],
+              ];
         const result = {};
         for (const [side, server] of order) {
           result[side] = await requestBatch(server, route, requestsPerRound);
@@ -734,8 +761,8 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
       let baseProfile;
       let headProfile;
       if (dataset === "large") {
-        baseProfile = await captureProfile(baseServer, route);
         headProfile = await captureProfile(headServer, route);
+        baseProfile = await captureProfile(baseServer, route);
       }
 
       baseWorkloads.push(
@@ -781,7 +808,8 @@ async function measurePaired() {
   await assertIsolatedNetworkNamespace("route profiling");
   const baseWebsiteDir = process.env.ROUTE_CPU_BASE_WEBSITE_DIR;
   const headWebsiteDir = process.env.ROUTE_CPU_HEAD_WEBSITE_DIR ?? websiteDir;
-  if (!baseWebsiteDir) throw new Error("Set ROUTE_CPU_BASE_WEBSITE_DIR to the baseline website build.");
+  if (!baseWebsiteDir)
+    throw new Error("Set ROUTE_CPU_BASE_WEBSITE_DIR to the baseline website build.");
 
   await rm(join(profileRoot, "base"), { recursive: true, force: true });
   await rm(join(profileRoot, "head"), { recursive: true, force: true });
