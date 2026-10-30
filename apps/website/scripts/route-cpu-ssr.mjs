@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { copyFile, mkdir, mkdtemp, readFile, readlink, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
@@ -45,6 +45,24 @@ const routes = [
     marker: "CI fixture voice actor",
     expected: ["tmdb:/3/person/12001", "supabase:voice_actors"],
   },
+  {
+    name: "global-search",
+    path: "/api/search?query=fixture%20search",
+    marker: "CI fixture search",
+    kind: "api",
+    expected: [
+      "tmdb:/3/search/multi?page=1",
+      "tmdb:/3/search/multi?page=2",
+      "supabase:voice_actors_fts",
+      "supabase:voice_actors_ilike",
+      "supabase:dubbing_projects",
+      "supabase:toy_metadata",
+      "igdb:token",
+      "igdb:games",
+      "openlibrary:search",
+      "itunes:search",
+    ],
+  },
 ];
 
 const profilePlugin = `
@@ -53,7 +71,7 @@ import inspector from "node:inspector";
 import { join } from "node:path";
 import { defineEventHandler, getQuery } from "h3";
 
-const pageRoutes = new Set(${JSON.stringify(routes.map((route) => route.path))});
+const pageRoutes = new Set(${JSON.stringify(routes.map((route) => route.path.split("?")[0]))});
 
 function post(session, method, params = {}) {
   return new Promise((resolve, reject) => {
@@ -451,12 +469,14 @@ async function requestPage(baseUrl, route) {
     const excerpt = Buffer.from(body).toString("utf8").slice(0, 800);
     throw new Error(`${route.path} returned HTTP ${response.status}: ${excerpt}`);
   }
-  if (!response.headers.get("content-type")?.includes("text/html")) {
+  const expectedContentType = route.kind === "api" ? "application/json" : "text/html";
+  if (!response.headers.get("content-type")?.includes(expectedContentType)) {
     throw new Error(
-      `${route.path} returned ${response.headers.get("content-type")}, not SSR HTML.`,
+      `${route.path} returned ${response.headers.get("content-type")}, not ${expectedContentType}.`,
     );
   }
-  return { id, bytes: body.byteLength, html: Buffer.from(body).toString("utf8") };
+  const text = Buffer.from(body).toString("utf8");
+  return { id, bytes: body.byteLength, body: text, html: text };
 }
 
 async function readRequestMetrics(metricsPath, ids) {
@@ -509,6 +529,7 @@ function assertRouteDependencies(route, before, after) {
 }
 
 function fixtureFor(dataset) {
+  const searchResultsPerSource = dataset === "large" ? 20 : 10;
   return {
     mediaCredits: dataset === "large" ? 1200 : 180,
     dubbingProjects: dataset === "large" ? 500 : 40,
@@ -516,17 +537,31 @@ function fixtureFor(dataset) {
     actorRoles: dataset === "large" ? 500 : 24,
     voiceActorWorks: dataset === "large" ? 500 : 24,
     uniqueVoiceActorMedia: dataset === "large" ? 100 : 12,
+    searchResultsPerSource,
   };
 }
 
 async function validateRoute(server, route) {
   const before = await currentDependencies(server);
   const validation = await requestPage(server.baseUrl, route);
-  if (!validation.html.includes(route.marker) || !validation.html.includes("__NUXT_DATA__")) {
+  if (route.kind === "api") {
+    const results = JSON.parse(validation.body);
+    if (
+      !Array.isArray(results) ||
+      results.length < 50 ||
+      !results.some((result) => result.title?.startsWith(route.marker)) ||
+      results.some((result) => typeof result.score !== "number")
+    ) {
+      throw new Error(`${route.path} returned unexpected search fixture data.`);
+    }
+  } else if (!validation.html.includes(route.marker) || !validation.html.includes("__NUXT_DATA__")) {
     throw new Error(`${route.path} did not SSR the expected fixture data.`);
   }
   assertRouteDependencies(route, before, await currentDependencies(server));
   await postJson(server.baseUrl, "/__route_cpu__/dependencies/reset");
+  return route.kind === "api"
+    ? createHash("sha256").update(validation.body).digest("hex")
+    : undefined;
 }
 
 async function warmServers(baseServer, headServer, route) {
@@ -551,7 +586,7 @@ async function captureProfile(server, route) {
   return profile;
 }
 
-function workloadFor(server, route, dataset, rounds, pairedDeltas, dependencies, profile) {
+function workloadFor(server, route, dataset, rounds, pairedDeltas, dependencies, profile, responseHash) {
   const samples = rounds.map((round) => round[server.side]);
   return {
     name: route.name,
@@ -569,6 +604,7 @@ function workloadFor(server, route, dataset, rounds, pairedDeltas, dependencies,
       total: summarize(samples.map((sample) => sample.totalMicrosPerRequest)),
     },
     htmlBytesPerRequest: summarize(samples.map((sample) => sample.htmlBytesPerRequest)),
+    responseBodySha256: responseHash,
     upstreamRequests: dependencies,
     profile,
   };
@@ -587,8 +623,11 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
     const baseWorkloads = [];
     const headWorkloads = [];
     for (const route of routes) {
-      await validateRoute(baseServer, route);
-      await validateRoute(headServer, route);
+      const baseResponseHash = await validateRoute(baseServer, route);
+      const headResponseHash = await validateRoute(headServer, route);
+      if (route.kind === "api" && baseResponseHash !== headResponseHash) {
+        throw new Error(`${route.path} changed its response body in the CPU comparison.`);
+      }
       await warmServers(baseServer, headServer, route);
 
       const rounds = [];
@@ -622,6 +661,7 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
           pairedDeltas,
           await currentDependencies(baseServer),
           baseProfile,
+          baseResponseHash,
         ),
       );
       headWorkloads.push(
@@ -633,6 +673,7 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
           pairedDeltas,
           await currentDependencies(headServer),
           headProfile,
+          headResponseHash,
         ),
       );
     }

@@ -21,6 +21,7 @@ const sizes =
         voiceActorWorks: 500,
         uniqueMedia: 100,
       };
+const searchResultsPerSource = dataset === "large" ? 20 : 10;
 
 function makeCast(count, mediaType = "movie") {
   return Array.from({ length: count }, (_, index) => ({
@@ -135,6 +136,57 @@ const voiceActor = {
   })),
 };
 
+const searchTmdbResults = Array.from(
+  { length: searchResultsPerSource * 2 },
+  (_, index) => ({
+    id: 700_000 + index,
+    title: `CI fixture search movie ${index}`,
+    media_type: "movie",
+    popularity: index + 1,
+    vote_average: 7.5,
+    vote_count: index + 10,
+  }),
+);
+const searchVoiceActors = Array.from({ length: searchResultsPerSource }, (_, index) => ({
+  id: 800_000 + index,
+  firstname: `CI fixture search voice ${index}`,
+  lastname: "Actor",
+  voice_actor_name: `CI fixture search voice ${index} Actor`,
+  profile_picture: null,
+  popularity: index + 1,
+  vote_average: 0,
+  vote_count: index + 1,
+}));
+const searchGames = Array.from({ length: Math.min(searchResultsPerSource, 10) }, (_, index) => ({
+  id: 810_000 + index,
+  name: `CI fixture search game ${index}`,
+  rating: 75,
+  rating_count: index + 1,
+}));
+const searchBooks = Array.from({ length: searchResultsPerSource }, (_, index) => ({
+  key: `/works/OL${820_000 + index}W`,
+  title: `CI fixture search book ${index}`,
+  author_name: [`CI fixture author ${index}`],
+}));
+const searchPodcasts = Array.from({ length: searchResultsPerSource }, (_, index) => ({
+  collectionId: 830_000 + index,
+  collectionName: `CI fixture search podcast ${index}`,
+}));
+const searchAdvertisements = Array.from({ length: searchResultsPerSource }, (_, index) => ({
+  content_id: 840_000 + index,
+  studios: { name: `CI fixture studio ${index}` },
+}));
+const searchToys = Array.from({ length: searchResultsPerSource }, (_, index) => ({
+  content_id: 850_000 + index,
+  name: `CI fixture search toy ${index}`,
+  manufacturer: "CI fixture manufacturer",
+  product_line: null,
+  release_year: null,
+  cover_url: null,
+  description: null,
+  updated_at: null,
+}));
+
 const encodedResponses = new Map();
 function addJsonResponse(key, value) {
   encodedResponses.set(key, JSON.stringify(value));
@@ -161,10 +213,19 @@ for (let index = 0; index < sizes.uniqueMedia; index += 1) {
 const supabaseResponse = (path) => {
   const table = path.replace(/^\/rest\/v1\//, "").split("?")[0];
   if (table === "voice_actors") {
+    const query = new URLSearchParams(path.split("?")[1] ?? "");
+    if (query.has("voice_actor_name")) return { value: searchVoiceActors, single: false };
+    if (query.has("or")) return { value: searchVoiceActors, single: false };
     return { value: voiceActor, single: true };
   }
   if (table === "work") return { value: actorRoles, single: false };
-  if (table === "dubbing_projects") return { value: dubbingProjects, single: false };
+  if (table === "toy_metadata") return { value: searchToys, single: false };
+  if (table === "dubbing_projects") {
+    const query = new URLSearchParams(path.split("?")[1] ?? "");
+    return query.get("content_type") === "eq.advertisement"
+      ? { value: searchAdvertisements, single: false }
+      : { value: dubbingProjects, single: false };
+  }
   throw new Error(`Unexpected mocked Supabase table: ${table}`);
 };
 
@@ -177,17 +238,41 @@ globalThis.fetch = async (input, init = {}) => {
   let body;
 
   if (url.hostname === "api.themoviedb.org") {
-    key = `tmdb:${url.pathname}`;
-    body = encodedResponses.get(key);
+    key = url.pathname === "/3/search/multi"
+      ? `tmdb:${url.pathname}?page=${url.searchParams.get("page")}`
+      : `tmdb:${url.pathname}`;
+    body = url.pathname === "/3/search/multi"
+      ? JSON.stringify({ results: searchTmdbResults.slice(
+          Number(url.searchParams.get("page") ?? "1") === 1 ? 0 : searchResultsPerSource,
+          Number(url.searchParams.get("page") ?? "1") === 1
+            ? searchResultsPerSource
+            : searchResultsPerSource * 2,
+        ) })
+      : encodedResponses.get(key);
     if (body === undefined) throw new Error(`Unexpected mocked TMDB request: ${url.pathname}`);
   } else if (url.hostname === "mock.supabase.co") {
-    const response = supabaseResponse(url.pathname);
-    key = `supabase:${url.pathname.split("/").at(-1)}`;
+    const response = supabaseResponse(`${url.pathname}${url.search}`);
+    const table = url.pathname.split("/").at(-1);
+    key = table === "voice_actors"
+      ? `supabase:voice_actors_${url.searchParams.has("voice_actor_name") ? "fts" : "ilike"}`
+      : `supabase:${table}`;
     const inputHeaders = input instanceof Request ? input.headers : undefined;
     const acceptsSingle = new Headers(init.headers ?? inputHeaders)
       .get("accept")
       ?.includes("vnd.pgrst.object");
     body = JSON.stringify(response.single && !acceptsSingle ? [response.value] : response.value);
+  } else if (url.hostname === "id.twitch.tv" && url.pathname === "/oauth2/token") {
+    key = "igdb:token";
+    body = JSON.stringify({ access_token: "local-route-cpu-fixture", expires_in: 7_200 });
+  } else if (url.hostname === "api.igdb.com" && url.pathname === "/v4/games") {
+    key = "igdb:games";
+    body = JSON.stringify(searchGames);
+  } else if (url.hostname === "openlibrary.org" && url.pathname === "/search.json") {
+    key = "openlibrary:search";
+    body = JSON.stringify({ docs: searchBooks });
+  } else if (url.hostname === "itunes.apple.com" && url.pathname === "/search") {
+    key = "itunes:search";
+    body = JSON.stringify({ resultCount: searchPodcasts.length, results: searchPodcasts });
   } else if (url.hostname === "api4.thetvdb.com") {
     key = `tvdb:${url.pathname}`;
     body =
