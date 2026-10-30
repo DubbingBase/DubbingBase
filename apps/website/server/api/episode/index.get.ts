@@ -1,6 +1,9 @@
 import { useCache, useTmdbClient } from "../../utils";
 import { MediaService } from "../../utils/services/media";
-import { getDubbingProjectsForMediaEndpoint } from "../../utils/db/queries";
+import {
+  getDubbingProjectsForMediaEndpoint,
+  getEpisodePageDubbingProjectData,
+} from "../../utils/db/queries";
 import { parseEpisodeQuery, withMediaServiceTimeout } from "../../utils/media-request";
 import { withTimeout } from "../../utils/with-timeout";
 import type { CharacterProfilePicture } from "../../../src/utils/media-cast";
@@ -17,6 +20,7 @@ const tvdbCharacterCacheNamespace = createCacheNamespace<CachedTvdbCharacterData
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const { id, seasonNumber, episodeNumber } = parseEpisodeQuery(query);
+  const episodePageProjection = query.projection === "episode-page";
   const acceptLanguage = getHeader(event, "accept-language") || undefined;
   const cache = useCache(event);
   const tmdbClient = useTmdbClient();
@@ -29,7 +33,10 @@ export default defineEventHandler(async (event) => {
         id,
         seasonNumber,
         episodeNumber,
-        { projection: query.projection === "media-page" ? "media-page" : undefined },
+        {
+          projection:
+            query.projection === "media-page" || episodePageProjection ? "media-page" : undefined,
+        },
       );
       // Fetch character profile pictures from cache for the parent TV show if available
       const language = acceptLanguage ? (acceptLanguage.split(",")[0] || "en").trim() : "default";
@@ -53,10 +60,18 @@ export default defineEventHandler(async (event) => {
     }, "TMDB episode request");
 
     const dbDataPromise = withTimeout(
-      getDubbingProjectsForMediaEndpoint(id, "tv", getQuery(event).projection),
+      Promise.resolve().then(async () => {
+        const dbData = episodePageProjection
+          ? await getEpisodePageDubbingProjectData(id)
+          : {
+              dubbingProjects: await getDubbingProjectsForMediaEndpoint(id, "tv", query.projection),
+              voiceActors: [],
+            };
+        return { ...dbData, voteData: {} };
+      }),
       10_000,
       "Supabase dubbing projects query",
-    ).then((dubbingProjects) => ({ dubbingProjects, voteData: {} }));
+    );
 
     const [apiData, dbData] = await Promise.all([apiDataPromise, dbDataPromise]);
 
@@ -70,6 +85,7 @@ export default defineEventHandler(async (event) => {
     const responseData = {
       episode: apiData.episode,
       dubbingProjects: dbData.dubbingProjects,
+      ...(episodePageProjection ? { voiceActors: dbData.voiceActors } : {}),
       characterProfilePictures: apiData.characterProfilePictures,
       votes: dbData.voteData,
     };

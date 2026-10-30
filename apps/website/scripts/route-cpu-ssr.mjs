@@ -71,6 +71,12 @@ const routes = [
     expected: ["tmdb:/3/tv/1396", "tmdb:/3/tv/1396/aggregate_credits", "supabase:dubbing_projects"],
   },
   {
+    name: "episode",
+    path: "/show/1397/season/1/episode/1",
+    marker: "CI fixture episode cast 0",
+    expected: ["tmdb:/3/tv/1397/season/1/episode/1", "supabase:dubbing_projects"],
+  },
+  {
     name: "actor",
     path: "/actor/6384",
     marker: "CI fixture actor",
@@ -513,21 +519,6 @@ async function requestPage(baseUrl, route) {
   };
 }
 
-function normalizedRenderedHtml(html) {
-  return html
-    .replaceAll(/\/_nuxt\/[^"'\s<>]+/g, "/_nuxt/[asset]")
-    .replaceAll(/http:\/\/127\.0\.0\.1:\d+/g, "http://127.0.0.1:[port]")
-    .replaceAll(/buildId:(\\?")[0-9a-f-]{36}(\\?")/g, 'buildId:"[build]"');
-}
-
-function hashRenderedHtml(html) {
-  const normalizedHtml = html
-    .replaceAll(/\/_nuxt\/[^"'\s<>]+/g, "/_nuxt/[asset]")
-    .replaceAll(/http:\/\/127\.0\.0\.1:\d+/g, "http://127.0.0.1:[port]")
-    .replaceAll(/buildId:(\\?")[0-9a-f-]{36}(\\?")/g, 'buildId:"[build]"');
-  return createHash("sha256").update(normalizedHtml).digest("hex");
-}
-
 async function readRequestMetrics(metricsPath, ids) {
   const deadline = Date.now() + 5_000;
   while (Date.now() < deadline) {
@@ -578,6 +569,16 @@ function assertRouteDependencies(route, before, after) {
 }
 
 function fixtureFor(dataset, routeName) {
+  if (routeName === "episode") {
+    const episodeProjects = dataset === "large" ? 80 : 12;
+    const worksPerEpisodeProject = dataset === "large" ? 40 : 12;
+    return {
+      episodeCast: dataset === "large" ? 500 : 120,
+      episodeDubbingProjects: episodeProjects,
+      episodeWorks: episodeProjects * worksPerEpisodeProject,
+      episodeUniqueVoiceActors: Math.min(episodeProjects * worksPerEpisodeProject, 500),
+    };
+  }
   if (routeName === "admin-dubbing-project") {
     return {
       works: dataset === "large" ? 2400 : 50,
@@ -591,7 +592,7 @@ function fixtureFor(dataset, routeName) {
     actorRoles: dataset === "large" ? 500 : 24,
     voiceActorWorks: dataset === "large" ? 500 : 24,
     uniqueVoiceActorMedia: dataset === "large" ? 100 : 12,
-    searchResultsPerSource,
+    searchResultsPerSource: dataset === "large" ? 20 : 10,
   };
 }
 
@@ -615,6 +616,15 @@ async function validateRoute(server, route, dataset) {
     if (server.side === "head" && response.works.some((work) => "voice_actor" in work)) {
       throw new Error(`${route.path} repeated voice actor records in each work row.`);
     }
+  } else if (route.name === "episode") {
+    const renderedHtml = validation.html.replace(/<script\b[\s\S]*?<\/script>/gi, "");
+    if (
+      !renderedHtml.includes(route.marker) ||
+      !/href="[^"]*\/actor\/200000"/.test(renderedHtml) ||
+      !/href="[^"]*\/voice-actor\/70\d{3}"/.test(renderedHtml)
+    ) {
+      throw new Error(`${route.path} did not render the expected episode cast and actor links.`);
+    }
   } else if (!validation.html.includes(route.marker) || !validation.html.includes("__NUXT_DATA__")) {
     throw new Error(`${route.path} did not SSR the expected fixture data.`);
   }
@@ -625,6 +635,14 @@ async function validateRoute(server, route, dataset) {
   }
   await postJson(server.baseUrl, "/__route_cpu__/dependencies/reset");
   return validation;
+}
+
+function episodeCastLinks(html) {
+  const renderedHtml = html.replace(/<script\b[\s\S]*?<\/script>/gi, "");
+  return {
+    actors: [...renderedHtml.matchAll(/href="[^"]*\/actor\/(\d+)"/g)].map((match) => match[1]),
+    voiceActors: [...renderedHtml.matchAll(/href="[^"]*\/voice-actor\/(\d+)"/g)].map((match) => match[1]),
+  };
 }
 
 function dubbingProjectPageData(body) {
@@ -693,9 +711,14 @@ function workloadFor(server, route, dataset, rounds, pairedDeltas, dependencies,
       system: summarize(samples.map((sample) => sample.systemMicrosPerRequest)),
       total: summarize(samples.map((sample) => sample.totalMicrosPerRequest)),
     },
-    responseBytesPerRequest: summarize(samples.map((sample) => sample.htmlBytesPerRequest)),
+    responseBytesPerRequest: summarize(samples.map((sample) => sample.responseBytesPerRequest)),
     responseBodySha256: route.kind === "api" ? responseHash : undefined,
-    responseSemanticParity: route.name === "admin-dubbing-project" ? "regional-assignment-data" : undefined,
+    responseSemanticParity:
+      route.name === "admin-dubbing-project"
+        ? "regional-assignment-data"
+        : route.name === "episode"
+          ? "episode-cast-links"
+          : undefined,
     upstreamRequests: dependencies,
     profile,
   };
@@ -731,6 +754,12 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
         ) {
           throw new Error(`${route.path} changed the assignments consumed by its page.`);
         }
+      } else if (
+        route.name === "episode" &&
+        JSON.stringify(episodeCastLinks(baseValidation.html)) !==
+          JSON.stringify(episodeCastLinks(headValidation.html))
+      ) {
+        throw new Error(`${route.path} changed the rendered episode cast links.`);
       } else if (route.kind === "api" && baseValidation.hash !== headValidation.hash) {
         throw new Error(`${route.path} changed its response body in the CPU comparison.`);
       }

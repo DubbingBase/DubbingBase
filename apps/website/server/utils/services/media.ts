@@ -3,7 +3,7 @@ import { TMDBClient } from "../api/tmdb";
 import { TVDBClient } from "../api/tvdb";
 import { processVoiceActor } from "../urls/supabase";
 import { processMedia, cleanCharacterName } from "../urls/tmdb";
-import { mediaPageMovieCredits } from "../media-page-credits";
+import { mediaPageAggregateCredits, mediaPageMovieCredits } from "../media-page-credits";
 import { useCache, useIgdbClient, useOpenLibraryClient } from "../index";
 import { buildIgdbImageUrl } from "../api/igdb";
 import { createCacheNamespace } from "../cache";
@@ -83,7 +83,10 @@ function omitUnusedEpisodeFields(media: unknown): unknown {
 
   const credits = { ...episode.credits };
   delete credits.crew;
-  return { ...episode, credits };
+  return {
+    ...episode,
+    credits: Array.isArray(credits.cast) ? mediaPageAggregateCredits(credits) : credits,
+  };
 }
 
 function projectSeasonForMediaPage(media: unknown): unknown {

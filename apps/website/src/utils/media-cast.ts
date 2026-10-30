@@ -14,6 +14,7 @@ export interface CharacterProfilePicture {
 export interface CastWorkReference {
   id: number;
   actor_id: number | string | null;
+  voice_actor_id?: number | null;
   character_name?: string | null;
   note?: string | null;
   voice_actor?: {

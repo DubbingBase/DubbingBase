@@ -275,7 +275,17 @@ describe("MediaService voice actor media indexing", () => {
             external_ids: { imdb_id: "tt123" },
             guest_stars: [{ id: 7, character: "Guest", profile_path: "/guest.jpg" }],
             credits: {
-              cast: [{ id: 8, character: "Lead", profile_path: "/lead.jpg" }],
+              cast: [
+                {
+                  id: 8,
+                  name: "Lead actor",
+                  character: "Lead",
+                  profile_path: "/lead.jpg",
+                  credit_id: "unused-credit",
+                  popularity: 17,
+                  roles: [{ character: "Lead", episode_count: 2, credit_id: "unused-role" }],
+                },
+              ],
               crew: [{ id: 9, job: "Director" }],
             },
           }),
@@ -292,8 +302,14 @@ describe("MediaService voice actor media indexing", () => {
     expect(result.media).not.toHaveProperty("external_ids");
     expect(result.media?.guest_stars).toEqual([]);
     expect(result.media?.credits).not.toHaveProperty("crew");
-    expect(result.media?.credits.cast).toMatchObject([
-      { id: 8, character: "Lead", profile_path: "https://image.tmdb.org/t/p/w500/lead.jpg" },
+    expect(result.media?.credits.cast).toEqual([
+      {
+        id: 8,
+        name: "Lead actor",
+        character: "Lead",
+        profile_path: "https://image.tmdb.org/t/p/w500/lead.jpg",
+        roles: [{ character: "Lead", episode_count: 2 }],
+      },
     ]);
   });
 
@@ -308,7 +324,14 @@ describe("MediaService voice actor media indexing", () => {
               external_ids: { imdb_id: "tt456" },
               guest_stars: [{ id: 7, character: "Guest", profile_path: "/guest.jpg" }],
               credits: {
-                cast: [{ id: 8, character: "Lead", profile_path: "/lead.jpg" }],
+                cast: [
+                  {
+                    id: 8,
+                    character: "Lead",
+                    profile_path: "/lead.jpg",
+                    credit_id: "full-credit",
+                  },
+                ],
                 crew: [{ id: 9, job: "Director" }],
               },
             }),
@@ -322,7 +345,7 @@ describe("MediaService voice actor media indexing", () => {
     expect(result.media).toHaveProperty("external_ids.imdb_id", "tt456");
     expect(result.media?.guest_stars).toHaveLength(1);
     expect(result.media?.credits.crew).toHaveLength(1);
-    expect(result.media?.credits.cast).toHaveLength(1);
+    expect(result.media?.credits.cast).toMatchObject([{ credit_id: "full-credit" }]);
   });
 
   it("skips loading and transforming a movie collection for compact media pages", async () => {
