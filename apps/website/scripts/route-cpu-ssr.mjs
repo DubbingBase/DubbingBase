@@ -57,6 +57,10 @@ const routes = [
     name: "movie",
     path: "/movie/85",
     marker: "CI fixture movie 85",
+    expectedHtml: ["English", "French", "invalid_code", "Not specified"],
+    localeVariants: [
+      { path: "/fr/movie/85", expectedHtml: ["Anglais", "Français", "invalid_code", "Non spécifié"] },
+    ],
     expected: ["tmdb:/3/movie/85", "supabase:dubbing_projects"],
   },
   {
@@ -508,6 +512,13 @@ async function requestPage(baseUrl, route) {
   };
 }
 
+function normalizedRenderedHtml(html) {
+  return html
+    .replaceAll(/\/_nuxt\/[^"'\s<>]+/g, "/_nuxt/[asset]")
+    .replaceAll(/http:\/\/127\.0\.0\.1:\d+/g, "http://127.0.0.1:[port]")
+    .replaceAll(/buildId:(\\?")[0-9a-f-]{36}(\\?")/g, 'buildId:"[build]"');
+}
+
 async function readRequestMetrics(metricsPath, ids) {
   const deadline = Date.now() + 5_000;
   while (Date.now() < deadline) {
@@ -684,12 +695,20 @@ function workloadFor(server, route, dataset, rounds, pairedDeltas, dependencies,
 async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
   const servers = [];
   try {
-    const baseServer = await startServer(baseWebsiteDir, dataset, "base");
-    servers.push(baseServer);
-    baseServer.side = "base";
-    const headServer = await startServer(headWebsiteDir, dataset, "head");
-    servers.push(headServer);
-    headServer.side = "head";
+    const startOrder = dataset === "large" ? ["head", "base"] : ["base", "head"];
+    const startedServers = new Map();
+    for (const side of startOrder) {
+      const server = await startServer(
+        side === "base" ? baseWebsiteDir : headWebsiteDir,
+        dataset,
+        side,
+      );
+      servers.push(server);
+      server.side = side;
+      startedServers.set(side, server);
+    }
+    const baseServer = startedServers.get("base");
+    const headServer = startedServers.get("head");
 
     const baseWorkloads = [];
     const headWorkloads = [];
@@ -733,8 +752,8 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
       let baseProfile;
       let headProfile;
       if (dataset === "large") {
-        baseProfile = await captureProfile(baseServer, route);
         headProfile = await captureProfile(headServer, route);
+        baseProfile = await captureProfile(baseServer, route);
       }
 
       baseWorkloads.push(

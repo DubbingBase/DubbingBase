@@ -94,7 +94,14 @@ const actorRoles = Array.from({ length: sizes.actorRoles }, (_, index) => {
 
 const dubbingProjects = Array.from({ length: sizes.dubbingProjects }, (_, index) => ({
   id: index + 1,
-  language: index % 2 === 0 ? "fr-FR" : "en-US",
+  language:
+    index % 41 === 0
+      ? "invalid_code"
+      : index % 37 === 0
+        ? null
+        : index % 2 === 0
+          ? "fr-FR"
+          : "en-US",
   studio_data: { id: 10_000 + index, name: `CI studio ${index}`, logo_url: null },
   works: [
     {
