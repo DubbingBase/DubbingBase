@@ -193,7 +193,14 @@ const totalReports = ref(0);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const updatingStatus = ref<Record<string, boolean>>({});
-const reportDateFormatter = new Intl.DateTimeFormat();
+const reportDateFormatter = new Intl.DateTimeFormat(undefined, {
+  year: "numeric",
+  month: "numeric",
+  day: "numeric",
+  hour: "numeric",
+  minute: "numeric",
+  second: "numeric",
+});
 
 const toast = ref({
   show: false,
