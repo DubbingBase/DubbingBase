@@ -20,7 +20,7 @@ if (
   throw new Error("Base and pull request reports use different or invalid paired workloads.");
 }
 
-const routeNames = ["movie", "show", "actor", "voice-actor", "admin-dubbing-project"];
+const routeNames = ["movie", "show", "episode", "actor", "voice-actor", "admin-dubbing-project"];
 const datasets = ["representative", "large"];
 const workflowRun =
   process.env.GITHUB_RUN_ID && process.env.GITHUB_REPOSITORY
@@ -161,7 +161,7 @@ for (const route of routeNames) {
     const interval = bootstrapMedianInterval(headDeltas, `${route}:${dataset}`);
     cpuComparisons.push({ interval });
     rows.push(
-      `| ${route} (${dataset}) | ${formatCpu(baseCpu)} | ${formatCpu(headCpu)} | ${formatDelta(baseCpu.median, headDeltas, interval)} | ${Math.round(base.htmlBytesPerRequest.median)} → ${Math.round(head.htmlBytesPerRequest.median)} | ${base.responseBodySha256 ?? "—"} |`,
+      `| ${route} (${dataset}) | ${formatCpu(baseCpu)} | ${formatCpu(headCpu)} | ${formatDelta(baseCpu.median, headDeltas, interval)} | ${Math.round(base.responseBytesPerRequest.median)} → ${Math.round(head.responseBytesPerRequest.median)} | ${base.responseBodySha256 ?? "—"} |`,
     );
   }
 }
