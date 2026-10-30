@@ -166,6 +166,12 @@ function formatTmdbCards(
   const media: CollectionItem = detail.movie || detail.serie || detail.episode || {};
   const cast = detail.aggregateCredits?.cast || media.credits?.cast || [];
   const works = project?.works || [];
+  const profilePicturesByName = new Map<string, CollectionItem>();
+  for (const picture of detail.characterProfilePictures || []) {
+    if (!picture.name) continue;
+    const name = normalized(picture.name);
+    if (!profilePicturesByName.has(name)) profilePicturesByName.set(name, picture);
+  }
   const worksByActorId = new Map<string, CollectionItem[]>();
   for (const work of works) {
     const actorId = String(work.actor_id);
@@ -184,9 +190,7 @@ function formatTmdbCards(
     for (const work of actorWorks) {
       matchedWorkIds.add(work.id);
       const characterName = actor.character || work?.character_name || null;
-      const characterPicture = (detail.characterProfilePictures || []).find(
-        (picture: CollectionItem) => normalized(picture.name) === normalized(characterName),
-      );
+      const characterPicture = profilePicturesByName.get(normalized(characterName));
       const voiceActor = work ? workVoiceActor(work) : null;
       cards.push({
         ...actor,
