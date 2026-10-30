@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { copyFile, mkdir, mkdtemp, readFile, readlink, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
@@ -31,6 +31,7 @@ const routes = [
     name: "show",
     path: "/show/1396",
     marker: "CI fixture show 1396",
+    expectedHtml: ["English", "French"],
     expected: ["tmdb:/3/tv/1396", "tmdb:/3/tv/1396/aggregate_credits", "supabase:dubbing_projects"],
   },
   {
@@ -525,8 +526,14 @@ async function validateRoute(server, route) {
   if (!validation.html.includes(route.marker) || !validation.html.includes("__NUXT_DATA__")) {
     throw new Error(`${route.path} did not SSR the expected fixture data.`);
   }
+  for (const marker of route.expectedHtml ?? []) {
+    if (!validation.html.includes(marker)) {
+      throw new Error(`${route.path} did not SSR the expected output marker ${marker}.`);
+    }
+  }
   assertRouteDependencies(route, before, await currentDependencies(server));
   await postJson(server.baseUrl, "/__route_cpu__/dependencies/reset");
+  return createHash("sha256").update(validation.html).digest("hex");
 }
 
 async function warmServers(baseServer, headServer, route) {
@@ -587,8 +594,11 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
     const baseWorkloads = [];
     const headWorkloads = [];
     for (const route of routes) {
-      await validateRoute(baseServer, route);
-      await validateRoute(headServer, route);
+      const baseHtmlHash = await validateRoute(baseServer, route);
+      const headHtmlHash = await validateRoute(headServer, route);
+      if (route.name === "show" && baseHtmlHash !== headHtmlHash) {
+        throw new Error("/show/1396 returned different SSR HTML for base and PR.");
+      }
       await warmServers(baseServer, headServer, route);
 
       const rounds = [];
