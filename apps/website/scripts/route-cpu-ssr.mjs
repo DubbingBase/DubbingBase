@@ -25,6 +25,7 @@ const routes = [
     name: "movie",
     path: "/movie/85",
     marker: "CI fixture movie 85",
+    expectedHtml: ["English", "French"],
     expected: ["tmdb:/3/movie/85", "supabase:dubbing_projects"],
   },
   {
@@ -524,6 +525,11 @@ async function validateRoute(server, route) {
   const validation = await requestPage(server.baseUrl, route);
   if (!validation.html.includes(route.marker) || !validation.html.includes("__NUXT_DATA__")) {
     throw new Error(`${route.path} did not SSR the expected fixture data.`);
+  }
+  for (const marker of route.expectedHtml ?? []) {
+    if (!validation.html.includes(marker)) {
+      throw new Error(`${route.path} did not SSR the expected output marker ${marker}.`);
+    }
   }
   assertRouteDependencies(route, before, await currentDependencies(server));
   await postJson(server.baseUrl, "/__route_cpu__/dependencies/reset");
