@@ -463,7 +463,8 @@ async function requestPage(baseUrl, route) {
 function normalizedRenderedHtml(html) {
   return html
     .replaceAll(/\/_nuxt\/[^"'\s<>]+/g, "/_nuxt/[asset]")
-    .replaceAll(/http:\/\/127\.0\.0\.1:\d+/g, "http://127.0.0.1:[port]");
+    .replaceAll(/http:\/\/127\.0\.0\.1:\d+/g, "http://127.0.0.1:[port]")
+    .replaceAll(/buildId:(\\?")[0-9a-f-]{36}(\\?")/g, 'buildId:"[build]"');
 }
 
 async function readRequestMetrics(metricsPath, ids) {
