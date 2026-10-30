@@ -6,9 +6,9 @@
   >
     <!-- Header -->
     <div
-      class="theme-surface-overlay p-6 rounded-2xl border theme-border flex justify-between items-center shadow-xl"
+      class="theme-surface-overlay p-6 rounded-2xl border theme-border flex flex-col gap-4 shadow-xl sm:flex-row sm:items-center sm:justify-between"
     >
-      <div>
+      <div class="min-w-0">
         <h3 class="text-xl font-bold theme-text flex items-center gap-2">
           <Gamepad2Icon class="w-6 h-6 theme-status-info-text" />
           {{
@@ -25,7 +25,7 @@
       </div>
       <NuxtLink
         :to="igdbGameId ? localePath(`/game/${igdbGameId}`) : localePath('/')"
-        class="text-xs font-semibold px-4 py-2.5 theme-surface-muted theme-hover-surface-muted theme-text-secondary theme-hover-text rounded-xl border theme-border transition-colors flex items-center space-x-2"
+        class="self-start text-xs font-semibold px-4 py-2.5 theme-surface-muted theme-hover-surface-muted theme-text-secondary theme-hover-text rounded-xl border theme-border transition-colors flex items-center space-x-2 sm:self-auto"
       >
         <span>{{
           igdbGameId ? $t("projectEditor.backToGame") : $t("projectEditor.backHome")
