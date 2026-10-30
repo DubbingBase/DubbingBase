@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { copyFile, mkdir, mkdtemp, readFile, readlink, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
@@ -19,6 +19,38 @@ const requestsPerRound = 20;
 const profileRequests = 50;
 const requireFromNuxt = createRequire(import.meta.resolve("nuxt"));
 const { TraceMap, originalPositionFor } = requireFromNuxt("@jridgewell/trace-mapping");
+
+const adminUser = {
+  id: "00000000-0000-4000-8000-000000000999",
+  email: "admin@example.test",
+  role: "authenticated",
+  aud: "authenticated",
+  app_metadata: { role: "admin" },
+  user_metadata: {},
+  created_at: "2020-01-01T00:00:00Z",
+};
+const adminTokenHeader = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString(
+  "base64url",
+);
+const adminTokenPayload = Buffer.from(
+  JSON.stringify({
+    sub: adminUser.id,
+    aud: "authenticated",
+    role: "authenticated",
+    exp: 4_102_444_800,
+    app_metadata: { role: "admin" },
+    user_metadata: {},
+  }),
+).toString("base64url");
+const adminSession = {
+  access_token: `${adminTokenHeader}.${adminTokenPayload}.c2ln`,
+  refresh_token: "local-route-cpu-fixture",
+  token_type: "bearer",
+  expires_in: 3600,
+  expires_at: 4_102_444_800,
+  user: adminUser,
+};
+const adminCookie = `sb-mock-auth-token=base64-${Buffer.from(JSON.stringify(adminSession)).toString("base64url")}`;
 
 const routes = [
   {
@@ -45,6 +77,25 @@ const routes = [
     marker: "CI fixture voice actor",
     expected: ["tmdb:/3/person/12001", "supabase:voice_actors"],
   },
+  {
+    name: "duplicate-voice-actors",
+    path: "/api/find_duplicate_voice_actors",
+    marker: "CI fixture duplicate actor",
+    kind: "api",
+    cookie: adminCookie,
+    expected: ["supabase:auth_user", "supabase:rpc:find_duplicate_voice_actors_rpc"],
+  },
+];
+const duplicateActorFields = [
+  "id",
+  "firstname",
+  "lastname",
+  "bio",
+  "nationality",
+  "date_of_birth",
+  "tmdb_id",
+  "wikidata_id",
+  "profile_picture",
 ];
 
 const profilePlugin = `
@@ -53,7 +104,7 @@ import inspector from "node:inspector";
 import { join } from "node:path";
 import { defineEventHandler, getQuery } from "h3";
 
-const pageRoutes = new Set(${JSON.stringify(routes.map((route) => route.path))});
+const pageRoutes = new Set(${JSON.stringify(routes.map((route) => route.path.split("?")[0]))});
 
 function post(session, method, params = {}) {
   return new Promise((resolve, reject) => {
@@ -312,6 +363,7 @@ async function cpuProfileSummary(profile, profileWebsiteDir) {
     const source = frame.source.replaceAll("\\", "/");
     return (
       source.startsWith("src/") ||
+      source.startsWith("server/") ||
       source.startsWith("../../packages/") ||
       source.startsWith("packages/")
     );
@@ -439,11 +491,13 @@ async function postJson(baseUrl, path) {
 
 async function requestPage(baseUrl, route) {
   const id = randomUUID();
+  const headers = {
+    "accept-language": "fr-FR",
+    "x-route-cpu-request-id": id,
+  };
+  if (route.cookie) headers.cookie = route.cookie;
   const response = await fetch(`${baseUrl}${route.path}`, {
-    headers: {
-      "accept-language": "fr-FR",
-      "x-route-cpu-request-id": id,
-    },
+    headers,
     signal: AbortSignal.timeout(120_000),
   });
   const body = await response.arrayBuffer();
@@ -451,12 +505,19 @@ async function requestPage(baseUrl, route) {
     const excerpt = Buffer.from(body).toString("utf8").slice(0, 800);
     throw new Error(`${route.path} returned HTTP ${response.status}: ${excerpt}`);
   }
-  if (!response.headers.get("content-type")?.includes("text/html")) {
+  const expectedContentType = route.kind === "api" ? "application/json" : "text/html";
+  if (!response.headers.get("content-type")?.includes(expectedContentType)) {
     throw new Error(
-      `${route.path} returned ${response.headers.get("content-type")}, not SSR HTML.`,
+      `${route.path} returned ${response.headers.get("content-type")}, not ${expectedContentType}.`,
     );
   }
-  return { id, bytes: body.byteLength, html: Buffer.from(body).toString("utf8") };
+  const responseBody = Buffer.from(body);
+  return {
+    id,
+    bytes: responseBody.byteLength,
+    hash: createHash("sha256").update(responseBody).digest("hex"),
+    html: responseBody.toString("utf8"),
+  };
 }
 
 async function readRequestMetrics(metricsPath, ids) {
@@ -490,7 +551,7 @@ async function requestBatch(server, route, count) {
     systemMicrosPerRequest: samples.reduce((total, row) => total + row.systemMicros, 0) / count,
     totalMicrosPerRequest:
       samples.reduce((total, row) => total + row.userMicros + row.systemMicros, 0) / count,
-    htmlBytesPerRequest: responseBytes / count,
+    responseBytesPerRequest: responseBytes / count,
   };
 }
 
@@ -508,7 +569,10 @@ function assertRouteDependencies(route, before, after) {
   }
 }
 
-function fixtureFor(dataset) {
+function fixtureFor(dataset, routeName) {
+  if (routeName === "duplicate-voice-actors") {
+    return { groups: dataset === "large" ? 1200 : 50, actorsPerGroup: 3 };
+  }
   return {
     mediaCredits: dataset === "large" ? 1200 : 180,
     dubbingProjects: dataset === "large" ? 500 : 40,
@@ -519,14 +583,62 @@ function fixtureFor(dataset) {
   };
 }
 
-async function validateRoute(server, route) {
+async function validateRoute(server, route, dataset) {
   const before = await currentDependencies(server);
   const validation = await requestPage(server.baseUrl, route);
-  if (!validation.html.includes(route.marker) || !validation.html.includes("__NUXT_DATA__")) {
+  if (route.kind === "api") {
+    const response = JSON.parse(validation.html);
+    const fixture = fixtureFor(dataset, route.name);
+    if (
+      !Array.isArray(response) ||
+      response.length !== fixture.groups ||
+      response.some(
+        (group) =>
+          !Array.isArray(group.actors) ||
+          group.actors.length !== fixture.actorsPerGroup,
+      ) ||
+      !response[0]?.actors[0]?.firstname?.startsWith(route.marker)
+    ) {
+      throw new Error(`${route.path} returned unexpected duplicate actor data.`);
+    }
+    for (const group of response) {
+      if (
+        server.side === "head" &&
+        JSON.stringify(Object.keys(group).sort()) !== JSON.stringify(["actors"])
+      ) {
+        throw new Error(`${route.path} returned fields unused by the duplicates page.`);
+      }
+      for (const actor of group.actors) {
+        if (duplicateActorFields.some((field) => !(field in actor))) {
+          throw new Error(`${route.path} omitted a duplicate actor field used by the page.`);
+        }
+        if (
+          server.side === "head" &&
+          JSON.stringify(Object.keys(actor).sort()) !== JSON.stringify([...duplicateActorFields].sort())
+        ) {
+          throw new Error(`${route.path} returned fields unused by the duplicates page.`);
+        }
+      }
+    }
+  } else if (!validation.html.includes(route.marker) || !validation.html.includes("__NUXT_DATA__")) {
     throw new Error(`${route.path} did not SSR the expected fixture data.`);
   }
-  assertRouteDependencies(route, before, await currentDependencies(server));
+  const after = await currentDependencies(server);
+  assertRouteDependencies(route, before, after);
+  if (route.kind === "api" && route.expected.some((key) => after[key] - (before[key] ?? 0) !== 1)) {
+    throw new Error(`${route.path} did not make exactly one call to each fixture dependency.`);
+  }
   await postJson(server.baseUrl, "/__route_cpu__/dependencies/reset");
+  return validation;
+}
+
+function duplicateActorPageData(body) {
+  const response = JSON.parse(body);
+  return response.map((group) => ({
+    actors: group.actors.map((actor) =>
+      Object.fromEntries(duplicateActorFields.map((field) => [field, actor[field]])),
+    ),
+  }));
 }
 
 async function warmServers(baseServer, headServer, route) {
@@ -551,13 +663,13 @@ async function captureProfile(server, route) {
   return profile;
 }
 
-function workloadFor(server, route, dataset, rounds, pairedDeltas, dependencies, profile) {
+function workloadFor(server, route, dataset, rounds, pairedDeltas, dependencies, profile, responseHash) {
   const samples = rounds.map((round) => round[server.side]);
   return {
     name: route.name,
     path: route.path,
     dataset,
-    fixture: fixtureFor(dataset),
+    fixture: fixtureFor(dataset, route.name),
     warmupRequests,
     measuredRounds,
     requestsPerRound,
@@ -568,7 +680,10 @@ function workloadFor(server, route, dataset, rounds, pairedDeltas, dependencies,
       system: summarize(samples.map((sample) => sample.systemMicrosPerRequest)),
       total: summarize(samples.map((sample) => sample.totalMicrosPerRequest)),
     },
-    htmlBytesPerRequest: summarize(samples.map((sample) => sample.htmlBytesPerRequest)),
+    responseBytesPerRequest: summarize(samples.map((sample) => sample.responseBytesPerRequest)),
+    responseBodySha256: route.kind === "api" ? responseHash : undefined,
+    responseSemanticParity:
+      route.name === "duplicate-voice-actors" ? "duplicates-page-actor-fields" : undefined,
     upstreamRequests: dependencies,
     profile,
   };
@@ -587,8 +702,18 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
     const baseWorkloads = [];
     const headWorkloads = [];
     for (const route of routes) {
-      await validateRoute(baseServer, route);
-      await validateRoute(headServer, route);
+      const baseValidation = await validateRoute(baseServer, route, dataset);
+      const headValidation = await validateRoute(headServer, route, dataset);
+      if (route.name === "duplicate-voice-actors") {
+        if (
+          JSON.stringify(duplicateActorPageData(baseValidation.html)) !==
+          JSON.stringify(duplicateActorPageData(headValidation.html))
+        ) {
+          throw new Error(`${route.path} changed actor fields consumed by the duplicates page.`);
+        }
+      } else if (route.kind === "api" && baseValidation.hash !== headValidation.hash) {
+        throw new Error(`${route.path} changed its response body in the CPU comparison.`);
+      }
       await warmServers(baseServer, headServer, route);
 
       const rounds = [];
@@ -622,6 +747,7 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
           pairedDeltas,
           await currentDependencies(baseServer),
           baseProfile,
+          baseValidation.hash,
         ),
       );
       headWorkloads.push(
@@ -633,6 +759,7 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
           pairedDeltas,
           await currentDependencies(headServer),
           headProfile,
+          headValidation.hash,
         ),
       );
     }

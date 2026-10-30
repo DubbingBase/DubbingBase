@@ -20,7 +20,7 @@ if (
   throw new Error("Base and pull request reports use different or invalid paired workloads.");
 }
 
-const routeNames = ["movie", "show", "actor", "voice-actor"];
+const routeNames = ["movie", "show", "actor", "voice-actor", "duplicate-voice-actors"];
 const datasets = ["representative", "large"];
 const workflowRun =
   process.env.GITHUB_RUN_ID && process.env.GITHUB_REPOSITORY
@@ -120,6 +120,18 @@ for (const route of routeNames) {
     sameFixture(base, head, route, dataset);
     const baseCpu = base.cpuMicrosPerRequest.total;
     const headCpu = head.cpuMicrosPerRequest.total;
+    const baseBytes = base.responseBytesPerRequest.median;
+    const headBytes = head.responseBytesPerRequest.median;
+    const responseHashMatch =
+      base.responseBodySha256 && head.responseBodySha256
+        ? base.responseBodySha256 === head.responseBodySha256
+        : undefined;
+    const projectedResponseParity =
+      base.responseSemanticParity === "duplicates-page-actor-fields" &&
+      head.responseSemanticParity === "duplicates-page-actor-fields";
+    if (responseHashMatch === false && !projectedResponseParity) {
+      throw new Error(`Base and PR API response hashes differ for ${route} ${dataset}.`);
+    }
     const baseDeltas = base.pairedCpuDeltaSamplesMicrosPerRequest;
     const headDeltas = head.pairedCpuDeltaSamplesMicrosPerRequest;
     if (
@@ -138,10 +150,15 @@ for (const route of routeNames) {
     ) {
       throw new Error(`Base and PR reports have invalid CPU medians for ${route} ${dataset}.`);
     }
+    const responseHash = responseHashMatch
+      ? `match: \`${base.responseBodySha256}\``
+      : projectedResponseParity
+        ? "projected actor fields match"
+        : "—";
     const interval = bootstrapMedianInterval(headDeltas, `${route}:${dataset}`);
     cpuComparisons.push({ interval });
     rows.push(
-      `| ${route} (${dataset}) | ${formatCpu(baseCpu)} | ${formatCpu(headCpu)} | ${formatDelta(baseCpu.median, headDeltas, interval)} |`,
+      `| ${route} (${dataset}) | ${formatCpu(baseCpu)} | ${formatCpu(headCpu)} | ${formatDelta(baseCpu.median, headDeltas, interval)} | ${Math.round(baseBytes).toLocaleString("en-US")} → ${Math.round(headBytes).toLocaleString("en-US")} | ${responseHash} |`,
     );
   }
 }
@@ -156,6 +173,7 @@ function isApplicationSource(source) {
   const normalized = source.replaceAll("\\", "/");
   return (
     normalized.startsWith("src/") ||
+    normalized.startsWith("server/") ||
     normalized.startsWith("../../packages/") ||
     normalized.startsWith("packages/")
   );
@@ -196,14 +214,14 @@ for (const route of routeNames) {
 const markdown = [
   "## Local route CPU comparison",
   "",
-  `Built Nuxt SSR · Node ${baseReport.runtime} · same runner · ${workflowRun}`,
+  `Built Nuxt/Nitro routes · Node ${baseReport.runtime} · same runner · ${workflowRun}`,
   "",
   "20 warmups; 20 alternating paired batches of 20 requests per route. Change is the median paired PR − base delta; interval is a deterministic 95% bootstrap.",
   "",
-  `**Result:** ${resultSummary} 🔴 more CPU · 🟢 less CPU · ⚪ unchanged median; markers show direction only. This PR changes CI benchmarking, not route code.`,
+  `**Result:** ${resultSummary} 🔴 more CPU · 🟢 less CPU · ⚪ unchanged median; markers show direction only. Synthetic Node/Nitro measurements do not represent production traffic or Cloudflare Worker CPU.`,
   "",
-  "| Route / workload | Base median CPU / request | PR median CPU / request | Paired change (95% bootstrap interval) |",
-  "| --- | ---: | ---: | ---: |",
+  "| Route / workload | Base median CPU / request | PR median CPU / request | Paired change (95% bootstrap interval) | Response bytes (base → PR) | API body SHA-256 |",
+  "| --- | ---: | ---: | ---: | ---: | --- |",
   ...rows,
   "",
   "### Top 10 app CPU consumers (large workload)",
