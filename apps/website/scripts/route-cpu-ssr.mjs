@@ -460,6 +460,11 @@ async function requestPage(baseUrl, route) {
   return { id, bytes: body.byteLength, html: Buffer.from(body).toString("utf8") };
 }
 
+function hashRenderedHtml(html) {
+  const normalizedHtml = html.replaceAll(/\/_nuxt\/[^"'\s<>]+/g, "/_nuxt/[asset]");
+  return createHash("sha256").update(normalizedHtml).digest("hex");
+}
+
 async function readRequestMetrics(metricsPath, ids) {
   const deadline = Date.now() + 5_000;
   while (Date.now() < deadline) {
@@ -533,7 +538,7 @@ async function validateRoute(server, route) {
   }
   assertRouteDependencies(route, before, await currentDependencies(server));
   await postJson(server.baseUrl, "/__route_cpu__/dependencies/reset");
-  return createHash("sha256").update(validation.html).digest("hex");
+  return hashRenderedHtml(validation.html);
 }
 
 async function warmServers(baseServer, headServer, route) {
