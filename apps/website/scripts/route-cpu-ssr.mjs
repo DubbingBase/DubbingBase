@@ -67,6 +67,7 @@ const routes = [
     name: "show",
     path: "/show/1396",
     marker: "CI fixture show 1396",
+    expectedHtml: ["English", "French"],
     expected: ["tmdb:/3/tv/1396", "tmdb:/3/tv/1396/aggregate_credits", "supabase:dubbing_projects"],
   },
   {
@@ -517,6 +518,14 @@ function normalizedRenderedHtml(html) {
     .replaceAll(/\/_nuxt\/[^"'\s<>]+/g, "/_nuxt/[asset]")
     .replaceAll(/http:\/\/127\.0\.0\.1:\d+/g, "http://127.0.0.1:[port]")
     .replaceAll(/buildId:(\\?")[0-9a-f-]{36}(\\?")/g, 'buildId:"[build]"');
+}
+
+function hashRenderedHtml(html) {
+  const normalizedHtml = html
+    .replaceAll(/\/_nuxt\/[^"'\s<>]+/g, "/_nuxt/[asset]")
+    .replaceAll(/http:\/\/127\.0\.0\.1:\d+/g, "http://127.0.0.1:[port]")
+    .replaceAll(/buildId:(\\?")[0-9a-f-]{36}(\\?")/g, 'buildId:"[build]"');
+  return createHash("sha256").update(normalizedHtml).digest("hex");
 }
 
 async function readRequestMetrics(metricsPath, ids) {
