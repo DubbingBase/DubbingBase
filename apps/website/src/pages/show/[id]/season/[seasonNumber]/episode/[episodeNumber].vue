@@ -402,6 +402,13 @@
       <p class="theme-text-secondary theme-text-muted mb-6">
         {{ $t("details.requestError") }}
       </p>
+      <button
+        type="button"
+        class="px-4 py-2 mb-4 theme-primary-bg font-semibold rounded-lg hover:opacity-90 transition-opacity"
+        @click="retryPageData"
+      >
+        {{ $t("common.retry") }}
+      </button>
       <NuxtLink
         :to="localePath(`/show/${showId}/season/${seasonNumber}`)"
         class="px-4 py-2 theme-primary-bg font-semibold rounded-lg hover:opacity-90 transition-opacity"
@@ -523,6 +530,7 @@ const {
   data: pageData,
   pending,
   error,
+  refresh: refreshPageData,
 } = useAsyncData(
   cacheKey,
   async () => {
@@ -547,6 +555,10 @@ const {
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
+
+function retryPageData(): void {
+  void refreshPageData();
+}
 
 const data = computed(() =>
   pageData.value?.requestKey === cacheKey.value ? pageData.value.response : undefined,
