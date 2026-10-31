@@ -3,9 +3,9 @@
     class="mt-20 border-t theme-border-subtle theme-border bg-white theme-bg pt-16 pb-8 theme-text-muted"
   >
     <div class="max-w-7xl mx-auto px-6">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+      <div class="grid grid-cols-1 gap-8 mb-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <!-- Brand -->
-        <div class="col-span-1 md:col-span-1">
+        <div>
           <NuxtLink
             :to="localePath('/')"
             class="text-2xl font-extrabold theme-text inline-block mb-4"
@@ -79,6 +79,45 @@
                 t("footer.studios")
               }}</NuxtLink>
             </li>
+            <li>
+              <NuxtLink :to="localePath('/search')" class="theme-hover-text transition">{{
+                t("footer.search")
+              }}</NuxtLink>
+            </li>
+          </ul>
+        </div>
+
+        <!-- More Media -->
+        <div>
+          <h3 class="theme-text font-semibold mb-4">
+            {{ t("footer.otherMedia") }}
+          </h3>
+          <ul class="space-y-3 text-sm">
+            <li>
+              <NuxtLink :to="localePath('/games')" class="theme-hover-text transition">{{
+                t("search.videoGame")
+              }}</NuxtLink>
+            </li>
+            <li>
+              <NuxtLink :to="localePath('/audiobooks')" class="theme-hover-text transition">{{
+                t("search.audiobook")
+              }}</NuxtLink>
+            </li>
+            <li>
+              <NuxtLink :to="localePath('/podcasts')" class="theme-hover-text transition">{{
+                t("search.podcast")
+              }}</NuxtLink>
+            </li>
+            <li>
+              <NuxtLink :to="localePath('/advertisements')" class="theme-hover-text transition">{{
+                t("search.advertisement")
+              }}</NuxtLink>
+            </li>
+            <li>
+              <NuxtLink :to="localePath('/toys')" class="theme-hover-text transition">{{
+                t("search.toy")
+              }}</NuxtLink>
+            </li>
           </ul>
         </div>
 
@@ -103,6 +142,30 @@
                 t("footer.leaderboard")
               }}</NuxtLink>
             </li>
+            <li>
+              <NuxtLink :to="localePath('/contribute')" class="theme-hover-text transition">{{
+                t("footer.contribute")
+              }}</NuxtLink>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Resources -->
+        <div>
+          <h3 class="theme-text font-semibold mb-4">
+            {{ t("footer.resources") }}
+          </h3>
+          <ul class="space-y-3 text-sm">
+            <li>
+              <NuxtLink :to="localePath('/about')" class="theme-hover-text transition">{{
+                t("footer.about")
+              }}</NuxtLink>
+            </li>
+            <li>
+              <NuxtLink :to="localePath('/terms-api')" class="theme-hover-text transition">{{
+                t("footer.apiTerms")
+              }}</NuxtLink>
+            </li>
           </ul>
         </div>
 
@@ -112,11 +175,6 @@
             {{ t("footer.legal") }}
           </h3>
           <ul class="space-y-3 text-sm">
-            <li>
-              <NuxtLink :to="localePath('/about')" class="theme-hover-text transition">{{
-                t("about.title")
-              }}</NuxtLink>
-            </li>
             <li>
               <NuxtLink :to="localePath('/legal')" class="theme-hover-text transition">{{
                 t("footer.legalNotice")
