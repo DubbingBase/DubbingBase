@@ -455,9 +455,9 @@ const dubbingProjectData = computed(() => {
     let hasVoiceActor = false;
     const voiceActorIds = new Set<number>();
     for (const work of project.works || []) {
-      const voiceActor = work.voice_actor;
-      if (voiceActor) hasVoiceActor = true;
-      if (voiceActor?.id) voiceActorIds.add(voiceActor.id);
+      const voiceActorId = work.voice_actor_id ?? work.voice_actor?.id;
+      if (voiceActorId !== undefined && voiceActorId !== null) hasVoiceActor = true;
+      if (voiceActorId) voiceActorIds.add(voiceActorId);
     }
 
     if (!hasVoiceActor) continue;
@@ -482,6 +482,9 @@ const dubbingProjectData = computed(() => {
   return { projects, projectVoiceActorCounts };
 });
 const dubbingProjects = computed(() => dubbingProjectData.value.projects);
+const voiceActorsById = computed(
+  () => new Map((data.value?.voiceActors || []).map((voiceActor) => [voiceActor.id, voiceActor])),
+);
 
 function projectVoiceActorCount(project: MediaDetailDubbingProject): number {
   return dubbingProjectData.value.projectVoiceActorCounts.get(project) ?? 0;
@@ -566,7 +569,10 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
     const cards = actorWorks.length > 0 ? actorWorks : [null];
 
     return cards.map((work) => {
-      const voiceActor = work?.voice_actor;
+      const voiceActor = work
+        ? (work.voice_actor_id ? voiceActorsById.value.get(work.voice_actor_id) : undefined) ||
+          work.voice_actor
+        : undefined;
       // Fallback character name from DB when TMDB returns no character
       const workCharacterName = work?.character_name || null;
 
@@ -583,15 +589,21 @@ const formattedCast = computed<DisplayCastActor[]>(() => {
 
   // Keep manually entered works visible even when TMDB no longer returns the
   // linked actor (or the work has no TMDB actor id).
-  const unmatchedCards = unmatchedWorks.map((work) => ({
-    id: `work-${work.id}`,
-    name: work.character_name || t("details.unknownCharacter"),
-    profile_path: null,
-    character: work.character_name || null,
-    voiceActor: work.voice_actor ? { ...work.voice_actor, note: work.note } : null,
-    characterImage: null,
-    workCharacterName: work.character_name || null,
-  }));
+  const unmatchedCards = unmatchedWorks.map((work) => {
+    const voiceActor = work.voice_actor_id
+      ? voiceActorsById.value.get(work.voice_actor_id)
+      : work.voice_actor;
+
+    return {
+      id: `work-${work.id}`,
+      name: work.character_name || t("details.unknownCharacter"),
+      profile_path: null,
+      character: work.character_name || null,
+      voiceActor: voiceActor ? { ...voiceActor, note: work.note } : null,
+      characterImage: null,
+      workCharacterName: work.character_name || null,
+    };
+  });
 
   return [...matchedCards, ...unmatchedCards];
 });

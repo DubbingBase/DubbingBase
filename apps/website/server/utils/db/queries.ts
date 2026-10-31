@@ -1,6 +1,6 @@
 import { useSupabaseAdmin } from "./client";
 import { processVoiceActor } from "../urls/supabase";
-import type { ToyDubbingProject } from "@app/shared-logic";
+import type { MediaDetailVoiceActor, ToyDubbingProject } from "@app/shared-logic";
 
 export async function getVoiceActorWithWork(id: number) {
   const supabase = useSupabaseAdmin();
@@ -91,6 +91,17 @@ const MEDIA_PAGE_DUBBING_PROJECTS_SELECT = `id,
     voice_actor:voice_actors(id, firstname, lastname, profile_picture, voice_actor_name)
   )`;
 
+const MEDIA_DETAIL_PAGE_DUBBING_PROJECTS_SELECT = `id,
+  language,
+  studio_data:studios(id, name, logo_url),
+  works:work(
+    id,
+    actor_id,
+    character_name,
+    note,
+    voice_actor:voice_actors(id, firstname, lastname, profile_picture)
+  )`;
+
 export async function getDubbingProjectsForMediaEndpoint(
   contentId: number,
   contentType: string,
@@ -150,6 +161,46 @@ export async function getAdvertisementPageDubbingProjects(contentId: number) {
       person: processVoiceActor(member.person),
     })),
   }));
+}
+
+export async function getMediaPageDubbingProjectData(contentId: number, contentType: string) {
+  const supabase = useSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("dubbing_projects")
+    .select(MEDIA_DETAIL_PAGE_DUBBING_PROJECTS_SELECT)
+    .eq("content_id", contentId)
+    .eq("content_type", contentType);
+
+  if (error) return { dubbingProjects: [], voiceActors: [] };
+
+  const voiceActorsById = new Map<number, MediaDetailVoiceActor>();
+  const dubbingProjects = (data || []).map((project) => ({
+    id: project.id,
+    language: project.language,
+    studio_data: project.studio_data || null,
+    works: (project.works || []).map((work) => {
+      const voiceActorId = work.voice_actor?.id ?? null;
+      if (voiceActorId !== null && !voiceActorsById.has(voiceActorId) && work.voice_actor) {
+        const voiceActor = processVoiceActor(work.voice_actor);
+        voiceActorsById.set(voiceActorId, {
+          id: voiceActorId,
+          firstname: work.voice_actor.firstname,
+          lastname: work.voice_actor.lastname,
+          profile_picture: voiceActor.profile_picture,
+        });
+      }
+
+      return {
+        id: work.id,
+        actor_id: work.actor_id,
+        character_name: work.character_name,
+        note: work.note,
+        voice_actor_id: voiceActorId,
+      };
+    }),
+  }));
+
+  return { dubbingProjects, voiceActors: [...voiceActorsById.values()] };
 }
 
 export async function getMediaPageDubbingProjects(contentId: number, contentType: string) {
