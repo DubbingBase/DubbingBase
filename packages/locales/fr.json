@@ -71,7 +71,8 @@
     "editImage": "Modifier l'image",
     "unlink": "Dissocier",
     "confirmUnlinkTitle": "Confirmer la dissociation",
-    "unlinkVoiceActor": "Dissocier le comédien"
+    "unlinkVoiceActor": "Dissocier le comédien",
+    "pagination": "Pagination"
   },
   "theme": {
     "light": "Clair",
@@ -496,40 +497,24 @@
       "saveStudioProfile": "Enregistrer le profil du studio",
       "studioSaved": "Studio enregistré avec succès",
       "failedToSave": "Échec de l'enregistrement du studio"
+    },
+    "spreadsheet": {
+      "previous": "Précédent",
+      "next": "Suivant",
+      "pageOf": "Page {page} sur {total}"
     }
   },
-  "contribute": {
-    "title": "Contribuer",
-    "description": "Aidez-nous à améliorer DubbingBase en contribuant à la base de données",
-    "bronzeContributor": "Contributeur Bronze",
-    "currentScore": "Score actuel",
-    "progressToSilver": "Progression vers Argent",
-    "readyToHelp": "Prêt à aider ?",
-    "readyToHelpDescription": "Commencez à contribuer pour gagner des points et débloquer des récompenses",
-    "startContributing": "Commencer à contribuer",
-    "noRecentActivities": "Aucune activité récente"
+  "footer": {
+    "search": "Recherche",
+    "otherMedia": "Autres médias",
+    "contribute": "Contribuer",
+    "resources": "Ressources",
+    "about": "À propos",
+    "apiTerms": "Conditions de l’API"
   },
-  "dubbing": {
-    "cast": "Distribution",
-    "technicalTeam": "Équipe technique"
-  },
-  "movie": {
-    "addDubbingProject": "Ajouter un projet de doublage"
-  },
-  "report": {
-    "title": "Signaler",
-    "description": "Signaler un problème avec ce contenu",
-    "button": "Signaler",
-    "reason": "Raison",
-    "selectReason": "Sélectionnez une raison",
-    "reasons": {
-      "copyright": "Violation du droit d'auteur",
-      "inappropriate": "Contenu inapproprié",
-      "error": "Information incorrecte",
-      "other": "Autre"
-    },
-    "details": "Détails",
-    "detailsPlaceholder": "Fournissez des détails supplémentaires sur le problème...",
-    "successMessage": "Signalement envoyé avec succès"
+  "browse": {
+    "title": "Explorer : {type}",
+    "description": "Découvrez les {type} avec leurs crédits de doublage sur DubbingBase.",
+    "empty": "Aucun élément de type {type} avec des crédits de doublage n’est encore répertorié."
   }
 }
