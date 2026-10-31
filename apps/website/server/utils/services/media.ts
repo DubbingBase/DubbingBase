@@ -619,7 +619,7 @@ export class MediaService {
     // 3. Construct compact enhancedWorks on the server (avoids sending massive raw cast lists)
     const enhancedWorks = [];
     const compactMediasMap = new Map<
-      number,
+      string,
       {
         id: number;
         title: string;
@@ -710,8 +710,8 @@ export class MediaService {
         popularity: fullMedia.popularity || 0,
       };
 
-      if (!compactMediasMap.has(fullMedia.id)) {
-        compactMediasMap.set(fullMedia.id, compactMedia);
+      if (!compactMediasMap.has(mediaKey)) {
+        compactMediasMap.set(mediaKey, compactMedia);
       }
 
       const searchText =
