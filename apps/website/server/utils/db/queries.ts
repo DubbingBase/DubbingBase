@@ -107,6 +107,10 @@ export async function getDubbingProjectsForMediaEndpoint(
   contentType: string,
   projection: unknown,
 ) {
+  if (projection === "media-summary") {
+    return await getMediaPageDubbingProjectSummaries(contentId, contentType);
+  }
+
   if (projection === "advertisement-page") {
     return await getAdvertisementPageDubbingProjects(contentId);
   }
@@ -203,13 +207,21 @@ export async function getMediaPageDubbingProjectData(contentId: number, contentT
   return { dubbingProjects, voiceActors: [...voiceActorsById.values()] };
 }
 
-export async function getMediaPageDubbingProjects(contentId: number, contentType: string) {
+export async function getMediaPageDubbingProjects(
+  contentId: number,
+  contentType: string,
+  projectId?: number,
+) {
   const supabase = useSupabaseAdmin();
-  const { data, error } = await supabase
+  let query = supabase
     .from("dubbing_projects")
     .select(MEDIA_PAGE_DUBBING_PROJECTS_SELECT)
     .eq("content_id", contentId)
     .eq("content_type", contentType);
+
+  if (projectId !== undefined) query = query.eq("id", projectId);
+
+  const { data, error } = await query;
 
   if (error) return [];
 
@@ -222,6 +234,47 @@ export async function getMediaPageDubbingProjects(contentId: number, contentType
     studio_data: project.studio_data || null,
     crew: [],
   }));
+}
+
+export async function getMediaPageDubbingProjectSummaries(contentId: number, contentType: string) {
+  const supabase = useSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("dubbing_projects")
+    .select(
+      `id,
+      language,
+      studio_data:studios(id, name, logo_url),
+      works:work(actor_id),
+      crew:dubbing_project_crew(
+        id,
+        job:jobs(name),
+        person:voice_actors(id, firstname, lastname)
+      )`,
+    )
+    .eq("content_id", contentId)
+    .eq("content_type", contentType);
+
+  if (error) return [];
+
+  return (data || []).map((project) => {
+    const voiceActorIds = new Set(
+      (project.works || []).flatMap((work) =>
+        typeof work.actor_id === "number" ? [work.actor_id] : [],
+      ),
+    );
+    return {
+      id: project.id,
+      language: project.language,
+      studio_data: project.studio_data || null,
+      has_voice_actor: voiceActorIds.size > 0,
+      voice_actor_count: voiceActorIds.size,
+      work_count: project.works?.length || 0,
+      crew: (project.crew || []).map((member) => ({
+        ...member,
+        person: processVoiceActor(member.person),
+      })),
+    };
+  });
 }
 
 const PODCAST_PAGE_DUBBING_PROJECTS_SELECT = `id,

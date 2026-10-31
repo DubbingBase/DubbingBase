@@ -28,8 +28,18 @@ export type DetailCollectionParams = {
 export type DetailCollectionProject = {
   id: number;
   language?: string | null;
+  has_voice_actor?: boolean;
+  voice_actor_count?: number;
+  work_count?: number;
+  studio_data?: { id: number; name: string; logo_url?: string | null } | null;
+  crew?: Array<{
+    id: number;
+    job?: { name: string } | null;
+    person?: { id: number; firstname?: string; lastname?: string } | null;
+  }>;
   works?: Array<{
     id: number;
+    voice_actor_id?: number | null;
     voice_actor?: { id: number } | null;
   }>;
 };

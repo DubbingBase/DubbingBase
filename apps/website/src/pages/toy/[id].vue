@@ -215,11 +215,10 @@ import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import ReportModal from "../../components/ReportModal.vue";
 import {
   fetchToyData,
-  formatMediaWorkCastCards,
-  paginateDetailCollection,
+  fetchDetailCollection,
   resolveDetailCollectionProject,
 } from "@app/shared-logic";
-import type { Toy, ToyDubbingProject } from "@app/shared-logic";
+import type { DetailCollectionProject, MediaWorkCastCard, Toy } from "@app/shared-logic";
 
 const route = useRoute();
 const { locale, t } = useI18n();
@@ -237,7 +236,7 @@ const currentUrl = computed(() => route.fullPath);
 
 const { data, pending } = await useAsyncData(
   `toy-${toyId.value}-${locale.value}`,
-  () => fetchToyData(toyId.value, locale.value, "media-page"),
+  () => fetchToyData(toyId.value, locale.value, "media-summary"),
   {
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
     watch: [toyId, locale],
@@ -245,18 +244,32 @@ const { data, pending } = await useAsyncData(
 );
 
 const toy = computed<Toy | null>(() => data.value?.toy || null);
-const dubbingProjects = computed<ToyDubbingProject[]>(() => data.value?.dubbingProjects || []);
+const dubbingProjects = computed<DetailCollectionProject[]>(
+  () => data.value?.dubbingProjects || [],
+);
 const activeDubProject = computed(() =>
   resolveDetailCollectionProject(dubbingProjects.value, route.query.dub),
 );
 const activeDubId = computed(() => activeDubProject.value?.id || 0);
 watch(activeDubId, () => void setCastPage(1));
 
-const completeCastItems = computed(() => formatMediaWorkCastCards(activeDubProject.value));
-const castTotal = computed(() => completeCastItems.value.length);
-const castItems = computed(() =>
-  paginateDetailCollection(completeCastItems.value, castPage.value, 12),
+const { data: castData } = await useAsyncData(
+  () => `toy-cast-${toyId.value}-${activeDubId.value}-${castPage.value}`,
+  () =>
+    activeDubId.value
+      ? fetchDetailCollection<MediaWorkCastCard>({
+          collection: "media-cast",
+          id: toyId.value,
+          type: "toy",
+          projectId: activeDubId.value,
+          page: castPage.value,
+          pageSize: 12,
+        })
+      : Promise.resolve(null),
+  { watch: [activeDubId, castPage] },
 );
+const castTotal = computed(() => castData.value?.pagination.totalItems || 0);
+const castItems = computed(() => castData.value?.data || []);
 
 const languageDisplayNames = computed(() => {
   try {

@@ -3,7 +3,7 @@ import type { AdvertisementResponse } from "../types";
 export async function fetchAdvertisementData(
   id: string | number,
   locale?: string,
-  options?: { projection?: "advertisement-page" },
+  options?: { projection?: "advertisement-page" | "media-summary" },
 ): Promise<AdvertisementResponse | null> {
   const headers: Record<string, string> = {};
   if (locale) {

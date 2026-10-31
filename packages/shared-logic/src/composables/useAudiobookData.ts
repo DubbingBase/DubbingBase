@@ -3,7 +3,7 @@ import type { AudiobookResponse } from "../types";
 export async function fetchAudiobookData(
   id: string | number,
   locale?: string,
-  options: { projection?: "media-page" } = {},
+  options: { projection?: "media-page" | "media-summary" } = {},
 ): Promise<AudiobookResponse | null> {
   const headers: Record<string, string> = {};
   if (locale) {
