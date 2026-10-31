@@ -501,6 +501,8 @@ async function startServer(serverWebsiteDir, dataset, side) {
       SUPABASE_SECRET_KEY: "local-route-cpu-fixture",
       TMDB_API_KEY: "local-route-cpu-fixture",
       TVDB_API_KEY: "local-route-cpu-fixture",
+      IGDB_CLIENT_ID: "local-route-cpu-fixture",
+      IGDB_CLIENT_SECRET: "local-route-cpu-fixture",
       NITRO_HOST: "127.0.0.1",
       NITRO_PORT: String(port),
     },
