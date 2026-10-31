@@ -25,7 +25,7 @@ export interface IgdbPopularityPrimitive {
   value: number;
 }
 
-function debugLog(message: string, data?: any) {
+function debugLog(message: string, data?: unknown) {
   console.log(`[IGDB] ${message}`, data ? JSON.stringify(data, null, 2) : "");
 }
 
@@ -62,8 +62,8 @@ export class IgdbClient {
 
   constructor(cache: SimpleCache) {
     const config = useRuntimeConfig();
-    this.clientId = (config.igdbClientId as string) || "";
-    this.clientSecret = (config.igdbClientSecret as string) || "";
+    this.clientId = config.igdbClientId || "";
+    this.clientSecret = config.igdbClientSecret || "";
     this.baseUrl = "https://api.igdb.com/v4";
     this.tokenUrl = "https://id.twitch.tv/oauth2/token";
     this.cache = cache;
@@ -204,7 +204,7 @@ export class IgdbClient {
         throw createMediaResponseError("IGDB", response);
       }
 
-      return (await response.json()) as T[];
+      return response.json();
     } catch (error: unknown) {
       if (
         error instanceof Error &&
@@ -250,14 +250,37 @@ export class IgdbClient {
   }
 
   async getGameCharacters(gameId: number): Promise<IgdbCharacter[]> {
-    return this.query<IgdbCharacter>(
-      "characters",
-      `fields id, name, description, species, gender,
-              mug_shot.image_id, mug_shot.url,
-              games;
-       where games = (${gameId});
-       limit 50;`,
-    );
+    const pageSize = 500;
+    const maxPages = 5;
+    const characters: IgdbCharacter[] = [];
+    const characterIds = new Set<number>();
+    let offset = 0;
+
+    for (let pageNumber = 0; pageNumber < maxPages; pageNumber++) {
+      if (pageNumber > 0) {
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      }
+      const page = await this.query<IgdbCharacter>(
+        "characters",
+        `fields id, name, description, species, gender,
+                mug_shot.image_id, mug_shot.url,
+                games;
+         where games = (${gameId});
+         sort id asc;
+         limit ${pageSize};
+         offset ${offset};`,
+      );
+      for (const character of page) {
+        if (!characterIds.has(character.id)) {
+          characterIds.add(character.id);
+          characters.push(character);
+        }
+      }
+      if (page.length < pageSize) return characters;
+      offset += pageSize;
+    }
+
+    throw new Error(`IGDB returned at least ${pageSize * maxPages} characters for game ${gameId}`);
   }
 
   async getTrendingGames(

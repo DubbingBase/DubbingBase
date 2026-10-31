@@ -1,5 +1,6 @@
 import { useIgdbClient, useTmdbClient } from "../utils";
 import { buildIgdbImageUrl } from "../utils/api/igdb";
+import { loadGameCharacterCatalog } from "../utils/game-characters";
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const mediaType = String(query.media_type ?? "");
@@ -13,26 +14,27 @@ export default defineEventHandler(async (event) => {
   }
 
   if (mediaType === "movie" || mediaType === "tv") {
-    const data = await useTmdbClient().fetchMediaCredits(
-      mediaType,
-      mediaId,
-      "fr-FR",
-    );
+    const data = await useTmdbClient().fetchMediaCredits(mediaType, mediaId, "fr-FR");
     return { cast: data.cast ?? [] };
   }
 
   if (mediaType === "video_game") {
     const igdbClient = useIgdbClient();
-    const characters = await igdbClient.getGameCharacters(mediaId);
+    const { characters } = await loadGameCharacterCatalog(event, mediaId, () =>
+      igdbClient.getGameCharacters(mediaId),
+    );
     return {
-      cast: characters.map((c: any) => ({
-        id: c.id,
-        name: c.name,
-        character: c.name,
-        profile_path: c.mug_shot?.image_id
-          ? buildIgdbImageUrl(c.mug_shot.image_id, "1080p")
+      cast: characters.map((character) => ({
+        id: character.identity_source === "local" ? null : character.igdb_character_id,
+        game_character_id: character.game_character_id,
+        identity_source: character.identity_source,
+        stable_id: character.stable_id,
+        name: character.name,
+        character: character.name,
+        profile_path: character.mug_shot?.image_id
+          ? buildIgdbImageUrl(character.mug_shot.image_id, "1080p")
           : null,
-        gender: c.gender ?? null,
+        gender: character.gender ?? null,
       })),
     };
   }

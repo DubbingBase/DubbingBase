@@ -438,6 +438,45 @@ describe("GET /api/detail-collections", () => {
     ]);
   });
 
+  it("matches local game characters by UUID and never by null provider IDs", () => {
+    const cards = formatGameDetailCastCards(
+      [
+        {
+          id: null,
+          name: "Alex",
+          game_character_id: "11111111-1111-4111-8111-111111111111",
+          igdb_character_id: null,
+        },
+        {
+          id: null,
+          name: "Alex",
+          game_character_id: "22222222-2222-4222-8222-222222222222",
+          igdb_character_id: null,
+        },
+      ],
+      {
+        works: [
+          {
+            id: 401,
+            game_character_id: "11111111-1111-4111-8111-111111111111",
+            actor_id: null,
+            character_id: null,
+          },
+          {
+            id: 402,
+            game_character_id: "22222222-2222-4222-8222-222222222222",
+            actor_id: null,
+            character_id: null,
+          },
+          { id: 403, actor_id: null, character_id: null, character_name: "Unassigned" },
+        ],
+      },
+    );
+
+    expect(cards.map(({ work_id }) => work_id)).toEqual([401, 402, 403]);
+    expect(cards.slice(0, 2).map(({ name }) => name)).toEqual(["Alex", "Alex"]);
+  });
+
   it("keeps studio project and roster filtering and pagination aligned with page projections", async () => {
     const projects = Array.from({ length: 16 }, (_, index) => ({
       id: index + 1,

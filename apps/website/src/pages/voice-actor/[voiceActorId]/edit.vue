@@ -646,10 +646,16 @@
             </p>
             <button
               v-for="castMember in linkWorkCast"
-              :key="castMember.id"
+              :key="
+                castMember.stable_id ||
+                castMember.game_character_id ||
+                castMember.id ||
+                castMember.name
+              "
               @click="
                 submitWorkLink({
                   actorId: castMember.id,
+                  gameCharacterId: castMember.game_character_id,
                   characterName: castMember.character || castMember.name,
                 })
               "
@@ -895,7 +901,9 @@ type MediaSearchItem = {
 };
 
 type InternalMediaCastMember = {
-  id: number;
+  id: number | null;
+  game_character_id?: string | null;
+  stable_id?: string;
   name: string;
   character?: string | null;
   profile_path?: string | null;
@@ -1391,6 +1399,8 @@ async function selectMediaItem(item: MediaSearchItem) {
         return;
       linkWorkCast.value = (credits.cast ?? []).map((castMember) => ({
         id: castMember.id,
+        game_character_id: castMember.game_character_id,
+        stable_id: castMember.stable_id,
         name: castMember.name,
         character: castMember.character ?? castMember.name,
         profile_path: castMember.profile_path ?? null,
@@ -1424,7 +1434,8 @@ watch(selectedMediaType, () => {
 });
 
 async function submitWorkLink(opts: {
-  actorId?: number;
+  actorId?: number | null;
+  gameCharacterId?: string | null;
   actorName?: string;
   characterName?: string;
 }) {
@@ -1436,6 +1447,7 @@ async function submitWorkLink(opts: {
       media_type: selectedMediaType.value,
       media_id: selectedMedia.value.id,
       actor_id: opts.actorId ?? 0,
+      game_character_id: opts.gameCharacterId ?? null,
       character_name: opts.characterName ?? "",
       performance: linkWorkPerformance.value,
       dubbing_language: dubbingLanguage.value,

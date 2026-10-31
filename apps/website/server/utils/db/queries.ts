@@ -262,6 +262,7 @@ const GAME_PAGE_DUBBING_PROJECTS_SELECT = `id,
     id,
     actor_id,
     character_id,
+    game_character_id,
     character_name,
     voice_actor:voice_actors(id, firstname, lastname, profile_picture)
   )`;

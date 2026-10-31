@@ -1,21 +1,10 @@
+import type { H3Event as H3EventType } from "h3";
 import { requireAdmin } from "../utils/auth";
 import { useSupabaseAdmin } from "../utils/db/client";
-import {
-  useIgdbClient,
-  useOpenLibraryClient,
-  usePodcastClient,
-  useTmdbClient,
-} from "../utils";
+import { useIgdbClient, useOpenLibraryClient, usePodcastClient, useTmdbClient } from "../utils";
 import { requireDubbingLanguage } from "../utils/dubbing-language";
 
-type MediaType =
-  | "movie"
-  | "tv"
-  | "video_game"
-  | "audiobook"
-  | "podcast"
-  | "advertisement"
-  | "toy";
+type MediaType = "movie" | "tv" | "video_game" | "audiobook" | "podcast" | "advertisement" | "toy";
 const MEDIA_TYPES: readonly MediaType[] = [
   "movie",
   "tv",
@@ -33,6 +22,7 @@ function projectSaveError(statusCode: number, message: string) {
 interface WorkExpectedValues {
   actor_id: number | null;
   character_id: number | null;
+  game_character_id?: string | null;
   character_name: string | null;
   voice_actor_id: number | null;
   performance: string | null;
@@ -47,6 +37,7 @@ interface CastSaveRow {
   expected?: WorkExpectedValues;
   actor_id?: number | null;
   character_id?: number | null;
+  game_character_id?: string | null;
   character_name?: string | null;
   voice_actor_id?: number | null;
   performance?: string | null;
@@ -78,10 +69,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function hasOnlyKeys(
-  value: Record<string, unknown>,
-  allowed: readonly string[],
-) {
+function hasOnlyKeys(value: Record<string, unknown>, allowed: readonly string[]) {
   return Object.keys(value).every((key) => allowed.includes(key));
 }
 
@@ -93,15 +81,16 @@ function isPositiveId(value: unknown): value is number {
   return typeof value === "number" && Number.isSafeInteger(value) && value > 0;
 }
 
-function isMediaContentId(
-  value: unknown,
-  mediaType: MediaType,
-): value is number {
-  if (
-    typeof value !== "number" ||
-    !Number.isSafeInteger(value) ||
-    value === 0
-  ) {
+function isOptionalUuid(value: unknown): value is string | null {
+  return (
+    value === null ||
+    (typeof value === "string" &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value))
+  );
+}
+
+function isMediaContentId(value: unknown, mediaType: MediaType): value is number {
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value === 0) {
     return false;
   }
   return value > 0 || mediaType === "advertisement" || mediaType === "toy";
@@ -120,9 +109,7 @@ function isOptionalText(value: unknown): value is string | null {
 }
 
 function isOptionalTimestamp(value: unknown): value is string | null {
-  return (
-    value === null || (isText(value) && Number.isFinite(Date.parse(value)))
-  );
+  return value === null || (isText(value) && Number.isFinite(Date.parse(value)));
 }
 
 function isExpectedValues(value: unknown): value is WorkExpectedValues {
@@ -131,6 +118,7 @@ function isExpectedValues(value: unknown): value is WorkExpectedValues {
     !hasOnlyKeys(value, [
       "actor_id",
       "character_id",
+      "game_character_id",
       "character_name",
       "voice_actor_id",
       "performance",
@@ -152,6 +140,7 @@ function isExpectedValues(value: unknown): value is WorkExpectedValues {
   return (
     isOptionalId(value.actor_id) &&
     isOptionalId(value.character_id) &&
+    (!("game_character_id" in value) || isOptionalUuid(value.game_character_id)) &&
     isOptionalText(value.character_name) &&
     isOptionalId(value.voice_actor_id) &&
     isOptionalText(value.performance) &&
@@ -170,6 +159,7 @@ function parseCastRow(value: unknown, contentType: MediaType): CastSaveRow {
       "expected",
       "actor_id",
       "character_id",
+      "game_character_id",
       "character_name",
       "voice_actor_id",
       "performance",
@@ -184,20 +174,19 @@ function parseCastRow(value: unknown, contentType: MediaType): CastSaveRow {
   if (
     (hasId && !isPositiveId(value.id)) ||
     (hasId &&
-      (!isOptionalTimestamp(value.expected_updated_at) ||
-        !isExpectedValues(value.expected))) ||
+      (!isOptionalTimestamp(value.expected_updated_at) || !isExpectedValues(value.expected))) ||
     (!hasId && ("expected_updated_at" in value || "expected" in value)) ||
     ("actor_id" in value && !isOptionalId(value.actor_id)) ||
     ("character_id" in value && !isOptionalId(value.character_id)) ||
+    ("game_character_id" in value && !isOptionalUuid(value.game_character_id)) ||
     ("voice_actor_id" in value && !isOptionalId(value.voice_actor_id)) ||
     ("character_name" in value && !isOptionalText(value.character_name)) ||
     ("performance" in value && !isOptionalText(value.performance)) ||
     ("note" in value && !isOptionalText(value.note)) ||
-    ("highlight" in value &&
-      value.highlight !== null &&
-      typeof value.highlight !== "boolean") ||
+    ("highlight" in value && value.highlight !== null && typeof value.highlight !== "boolean") ||
     ("actor_id" in value && contentType !== "movie" && contentType !== "tv") ||
-    ("character_id" in value && contentType !== "video_game")
+    ("character_id" in value && contentType !== "video_game") ||
+    ("game_character_id" in value && contentType !== "video_game")
   ) {
     throw projectSaveError(400, "Invalid or protected cast fields");
   }
@@ -210,10 +199,11 @@ function parseCastRow(value: unknown, contentType: MediaType): CastSaveRow {
     }
     if (isExpectedValues(value.expected)) row.expected = value.expected;
   }
-  if ("actor_id" in value && isOptionalId(value.actor_id))
-    row.actor_id = value.actor_id;
+  if ("actor_id" in value && isOptionalId(value.actor_id)) row.actor_id = value.actor_id;
   if ("character_id" in value && isOptionalId(value.character_id))
     row.character_id = value.character_id;
+  if ("game_character_id" in value && isOptionalUuid(value.game_character_id))
+    row.game_character_id = value.game_character_id;
   if ("voice_actor_id" in value && isOptionalId(value.voice_actor_id))
     row.voice_actor_id = value.voice_actor_id;
   if ("character_name" in value && isOptionalText(value.character_name))
@@ -221,10 +211,7 @@ function parseCastRow(value: unknown, contentType: MediaType): CastSaveRow {
   if ("performance" in value && isOptionalText(value.performance))
     row.performance = value.performance;
   if ("note" in value && isOptionalText(value.note)) row.note = value.note;
-  if (
-    "highlight" in value &&
-    (value.highlight === null || typeof value.highlight === "boolean")
-  ) {
+  if ("highlight" in value && (value.highlight === null || typeof value.highlight === "boolean")) {
     row.highlight = value.highlight;
   }
   return row;
@@ -275,11 +262,7 @@ function parseBody(value: unknown): ProjectSaveBody {
     !isMediaContentId(project.content_id, contentType) ||
     !isText(project.language) ||
     !isOptionalId(project.studio_id) ||
-    !(
-      project.status === "validated" ||
-      project.status === "pending" ||
-      project.status === "draft"
-    )
+    !(project.status === "validated" || project.status === "pending" || project.status === "draft")
   ) {
     throw projectSaveError(400, "Invalid project fields");
   }
@@ -319,10 +302,7 @@ function parseBody(value: unknown): ProjectSaveBody {
   const projectId = value.project_id;
   const expectedUpdatedAt = value.expected_updated_at;
   if (projectId === null && expectedUpdatedAt !== null) {
-    throw projectSaveError(
-      400,
-      "New projects cannot include an update version",
-    );
+    throw projectSaveError(400, "New projects cannot include an update version");
   }
   return {
     request_id: requestId,
@@ -344,7 +324,7 @@ function recordField(value: unknown, key: string): unknown {
   return isRecord(value) ? value[key] : undefined;
 }
 
-async function validateExternalReferences(body: ProjectSaveBody) {
+async function validateExternalReferences(body: ProjectSaveBody, event: H3EventType) {
   const { content_id: contentId, content_type: contentType } = body.project;
 
   if (contentType === "movie" || contentType === "tv") {
@@ -352,10 +332,7 @@ async function validateExternalReferences(body: ProjectSaveBody) {
       const tmdbClient = useTmdbClient();
       const media = await tmdbClient.fetchMediaDetails(contentId, contentType);
       if (recordField(media, "id") !== contentId) {
-        throw projectSaveError(
-          422,
-          "The selected media does not exist in TMDB",
-        );
+        throw projectSaveError(422, "The selected media does not exist in TMDB");
       }
       const credits =
         contentType === "tv"
@@ -368,23 +345,13 @@ async function validateExternalReferences(body: ProjectSaveBody) {
           : [],
       );
       for (const row of body.cast) {
-        if (
-          row.actor_id !== undefined &&
-          row.actor_id !== null &&
-          !actorIds.has(row.actor_id)
-        ) {
-          throw projectSaveError(
-            422,
-            "A selected actor does not belong to this media",
-          );
+        if (row.actor_id !== undefined && row.actor_id !== null && !actorIds.has(row.actor_id)) {
+          throw projectSaveError(422, "A selected actor does not belong to this media");
         }
       }
     } catch (error) {
-      if (error && typeof error === "object" && "statusCode" in error)
-        throw error;
-      const missing =
-        error instanceof Error &&
-        /(?:TMDB API error: 404|404)/.test(error.message);
+      if (error && typeof error === "object" && "statusCode" in error) throw error;
+      const missing = error instanceof Error && /(?:TMDB API error: 404|404)/.test(error.message);
       throw projectSaveError(
         missing ? 422 : 503,
         missing
@@ -393,77 +360,79 @@ async function validateExternalReferences(body: ProjectSaveBody) {
       );
     }
   } else if (contentType === "video_game") {
-    try {
-      const igdb = useIgdbClient();
-      const game = await igdb.getGame(contentId);
-      if (!game || game.id !== contentId) {
-        throw projectSaveError(422, "The selected game does not exist in IGDB");
+    const requestedLocalIds = [
+      ...new Set(
+        body.cast.flatMap((row) => (row.game_character_id ? [row.game_character_id] : [])),
+      ),
+    ];
+    if (requestedLocalIds.length > 0) {
+      const { data, error } = await useSupabaseAdmin(event)
+        .from("game_characters")
+        .select("id, igdb_character_id")
+        .eq("igdb_game_id", contentId)
+        .in("id", requestedLocalIds);
+      if (error) {
+        throw projectSaveError(503, "Local game characters could not be verified; try again");
       }
-      const requestedCharacterIds = body.cast.flatMap((row) =>
-        row.character_id === undefined || row.character_id === null
-          ? []
-          : [row.character_id],
+      if (data.length !== requestedLocalIds.length) {
+        throw projectSaveError(422, "A selected local character does not belong to this game");
+      }
+      const localCharacters = new Map(
+        data.map((character) => [character.id, character.igdb_character_id]),
       );
-      if (requestedCharacterIds.length > 0) {
-        const characters = await igdb.getGameCharacters(contentId);
-        const characterIds = new Set(
-          characters.map((character) => character.id),
-        );
-        if (
-          requestedCharacterIds.some(
-            (characterId) => !characterIds.has(characterId),
-          )
-        ) {
-          throw projectSaveError(
-            422,
-            "A selected character does not belong to this game",
-          );
+      for (const row of body.cast) {
+        if (!row.game_character_id || row.character_id == null) continue;
+        const confirmedCharacterId = localCharacters.get(row.game_character_id);
+        if (confirmedCharacterId !== row.character_id) {
+          throw projectSaveError(422, "The IGDB character does not match this local character");
         }
       }
-    } catch (error) {
-      if (error && typeof error === "object" && "statusCode" in error)
-        throw error;
-      throw projectSaveError(503, "IGDB could not verify this save; try again");
+    }
+
+    const requestedCharacterIds = body.cast.flatMap((row) =>
+      row.game_character_id || row.character_id === undefined || row.character_id === null
+        ? []
+        : [row.character_id],
+    );
+    if (requestedLocalIds.length === 0 || requestedCharacterIds.length > 0) {
+      try {
+        const igdb = useIgdbClient();
+        const game = await igdb.getGame(contentId);
+        if ((!game || game.id !== contentId) && requestedLocalIds.length === 0) {
+          throw projectSaveError(422, "The selected game does not exist in IGDB");
+        }
+        if (requestedCharacterIds.length > 0) {
+          const characters = await igdb.getGameCharacters(contentId);
+          const characterIds = new Set(characters.map((character) => character.id));
+          if (requestedCharacterIds.some((characterId) => !characterIds.has(characterId))) {
+            throw projectSaveError(422, "A selected character does not belong to this game");
+          }
+        }
+      } catch (error) {
+        if (error && typeof error === "object" && "statusCode" in error) throw error;
+        if (requestedLocalIds.length > 0 && requestedCharacterIds.length === 0) return;
+        throw projectSaveError(503, "IGDB could not verify this save; try again");
+      }
     }
   } else if (contentType === "audiobook") {
-    let book: Awaited<
-      ReturnType<ReturnType<typeof useOpenLibraryClient>["getBook"]>
-    >;
+    let book: Awaited<ReturnType<ReturnType<typeof useOpenLibraryClient>["getBook"]>>;
     try {
       book = await useOpenLibraryClient().getBook(contentId);
     } catch {
-      throw projectSaveError(
-        503,
-        "Open Library could not verify this save; try again",
-      );
+      throw projectSaveError(503, "Open Library could not verify this save; try again");
     }
     if (!book || book.id !== contentId) {
-      throw projectSaveError(
-        422,
-        "The selected audiobook does not exist in Open Library",
-      );
+      throw projectSaveError(422, "The selected audiobook does not exist in Open Library");
     }
   } else if (contentType === "podcast") {
-    let podcast: Awaited<
-      ReturnType<ReturnType<typeof usePodcastClient>["getPodcast"]>
-    >;
+    let podcast: Awaited<ReturnType<ReturnType<typeof usePodcastClient>["getPodcast"]>>;
     try {
       podcast = await usePodcastClient().getPodcast(contentId);
     } catch {
-      throw projectSaveError(
-        503,
-        "iTunes could not verify this save; try again",
-      );
+      throw projectSaveError(503, "iTunes could not verify this save; try again");
     }
-    if (
-      !podcast ||
-      podcast.id !== contentId ||
-      podcast.title === `Podcast #${contentId}`
-    ) {
-      throw projectSaveError(
-        422,
-        "The selected podcast does not exist in iTunes",
-      );
+    if (!podcast || podcast.id !== contentId || podcast.title === `Podcast #${contentId}`) {
+      throw projectSaveError(422, "The selected podcast does not exist in iTunes");
     }
   }
 }
@@ -471,7 +440,7 @@ async function validateExternalReferences(body: ProjectSaveBody) {
 export default defineEventHandler(async (event) => {
   const user = requireAdmin(event);
   const body = parseBody(await readBody(event));
-  await validateExternalReferences(body);
+  await validateExternalReferences(body, event);
 
   const supabase = event.context.supabaseAdmin || useSupabaseAdmin(event);
   const { data, error } = await supabase.rpc("save_dubbing_project_editor", {
@@ -489,16 +458,10 @@ export default defineEventHandler(async (event) => {
       throw projectSaveError(403, "Project save is not authorized");
     }
     if (["55000", "23505", "40001", "40P01"].includes(error.code)) {
-      throw projectSaveError(
-        409,
-        "Project data changed; reload before saving again",
-      );
+      throw projectSaveError(409, "Project data changed; reload before saving again");
     }
     if (["22023", "23503", "22P02", "22003"].includes(error.code)) {
-      throw projectSaveError(
-        422,
-        "Project, crew or cast references are invalid",
-      );
+      throw projectSaveError(422, "Project, crew or cast references are invalid");
     }
     console.error("Controlled project save failed", { code: error.code });
     throw projectSaveError(500, "Project save failed; no changes were saved");

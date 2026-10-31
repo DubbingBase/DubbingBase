@@ -192,9 +192,34 @@ describe("POST /api/link-voice-actor", () => {
       p_content_type: body.media_type,
       p_language: body.dubbing_language,
       p_actor_person_id: body.actor_id,
+      p_game_character_id: null,
       p_character_name: body.character_name,
       p_performance: body.performance,
     });
+  });
+
+  it("links a local game character by UUID without requiring an IGDB character record", async () => {
+    const { rpc } = createSupabaseMock();
+    const body = {
+      ...validBody(),
+      media_type: "video_game",
+      media_id: 70,
+      actor_id: 0,
+      game_character_id: "11111111-1111-4111-8111-111111111111",
+    };
+
+    const response = await post(body);
+
+    expect(response.status).toBe(200);
+    expect(routeMocks.getGame).not.toHaveBeenCalled();
+    expect(routeMocks.getGameCharacters).not.toHaveBeenCalled();
+    expect(rpc).toHaveBeenCalledWith(
+      "create_voice_actor_work_link",
+      expect.objectContaining({
+        p_actor_person_id: null,
+        p_game_character_id: body.game_character_id,
+      }),
+    );
   });
 
   it("rejects impersonation and protected fields before a mutation", async () => {

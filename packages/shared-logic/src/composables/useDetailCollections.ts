@@ -155,16 +155,30 @@ export function formatMediaWorkCastCards(project: unknown): MediaWorkCastCard[] 
 }
 
 export function formatGameDetailCastCards(
-  characters: readonly IgdbCharacter[],
+  characters: readonly (Omit<IgdbCharacter, "id"> & {
+    id: number | null;
+    stable_id?: string;
+    game_character_id?: string | null;
+    igdb_character_id?: number | null;
+  })[],
   project: unknown,
 ): GameDetailCastCard[] {
   const works = projectWorks(project);
   const worksByCharacterId = new Map<string, number[]>();
+  const worksByGameCharacterId = new Map<string, number[]>();
   for (let index = 0; index < works.length; index += 1) {
     const work = works[index];
     if (!work) continue;
 
-    for (const id of new Set([String(work.character_id), String(work.actor_id)])) {
+    const gameCharacterId = stringValue(work.game_character_id);
+    if (gameCharacterId) {
+      const workIndexes = worksByGameCharacterId.get(gameCharacterId);
+      if (workIndexes) workIndexes.push(index);
+      else worksByGameCharacterId.set(gameCharacterId, [index]);
+    }
+    for (const rawId of [work.character_id, work.actor_id]) {
+      if (rawId === null || rawId === undefined) continue;
+      const id = String(rawId);
       const workIndexes = worksByCharacterId.get(id);
       if (workIndexes) workIndexes.push(index);
       else worksByCharacterId.set(id, [index]);
@@ -173,21 +187,31 @@ export function formatGameDetailCastCards(
 
   const matchedWorkIds = new Set<unknown>();
   const cards = characters.flatMap((character) => {
-    const mappedCharacterId = 9_000_000_000 + Number(character.id);
-    const fallbackCharacterId =
-      Math.abs(
-        String(character.name || "")
-          .split("")
-          .reduce((hash, value) => (hash * 31 + value.charCodeAt(0)) | 0, 0),
-      ) + 8_000_000_000;
-    const characterIds = new Set([
-      String(character.id),
-      String(mappedCharacterId),
-      String(fallbackCharacterId),
-    ]);
+    const characterKey =
+      character.id ?? character.stable_id ?? character.game_character_id ?? "local-character";
     const matchingWorkIndexes = new Set<number>();
-    for (const id of characterIds) {
-      for (const index of worksByCharacterId.get(id) || []) matchingWorkIndexes.add(index);
+    if (character.game_character_id) {
+      for (const index of worksByGameCharacterId.get(character.game_character_id) || []) {
+        matchingWorkIndexes.add(index);
+      }
+    }
+    const providerId = character.igdb_character_id ?? character.id;
+    if (providerId !== null) {
+      const mappedCharacterId = 9_000_000_000 + Number(providerId);
+      const fallbackCharacterId =
+        Math.abs(
+          String(character.name || "")
+            .split("")
+            .reduce((hash, value) => (hash * 31 + value.charCodeAt(0)) | 0, 0),
+        ) + 8_000_000_000;
+      const characterIds = new Set([
+        String(providerId),
+        String(mappedCharacterId),
+        String(fallbackCharacterId),
+      ]);
+      for (const id of characterIds) {
+        for (const index of worksByCharacterId.get(id) || []) matchingWorkIndexes.add(index);
+      }
     }
     const matchingWorks: DetailRecord[] = [];
     for (const index of [...matchingWorkIndexes].sort((left, right) => left - right)) {
@@ -199,7 +223,7 @@ export function formatGameDetailCastCards(
     const cardsForCharacter = matchingWorks.length > 0 ? matchingWorks : [null];
     return cardsForCharacter.map((work) => ({
       ...character,
-      id: work ? `${character.id}-${String(work.id)}` : character.id,
+      id: work ? `${characterKey}-${String(work.id)}` : characterKey,
       name: character.name,
       ...(work && numberValue(work.id) !== undefined ? { work_id: numberValue(work.id) } : {}),
       voiceActor: work ? formatGameVoiceActor(work) : null,

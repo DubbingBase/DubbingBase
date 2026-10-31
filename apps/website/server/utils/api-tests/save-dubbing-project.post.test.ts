@@ -1,25 +1,13 @@
-import {
-  createApp,
-  createError,
-  defineEventHandler,
-  readBody,
-  toWebHandler,
-} from "h3";
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from "vitest";
+import { createApp, createError, defineEventHandler, readBody, toWebHandler } from "h3";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const routeMocks = vi.hoisted(() => ({
   requireAdmin: vi.fn(),
   useSupabaseAdmin: vi.fn(),
   fetchTmdb: vi.fn(),
   fetchTmdbCredits: vi.fn(),
+  getIgdbGame: vi.fn(),
+  getIgdbGameCharacters: vi.fn(),
 }));
 
 vi.mock("../auth", () => ({ requireAdmin: routeMocks.requireAdmin }));
@@ -31,7 +19,10 @@ vi.mock("../../utils", () => ({
     fetchMediaDetails: routeMocks.fetchTmdb,
     fetchMediaCredits: routeMocks.fetchTmdbCredits,
   }),
-  useIgdbClient: () => ({ getGame: vi.fn(), getGameCharacters: vi.fn() }),
+  useIgdbClient: () => ({
+    getGame: routeMocks.getIgdbGame,
+    getGameCharacters: routeMocks.getIgdbGameCharacters,
+  }),
   useOpenLibraryClient: () => ({ getBook: vi.fn() }),
   usePodcastClient: () => ({ getPodcast: vi.fn() }),
 }));
@@ -56,6 +47,8 @@ beforeEach(() => {
     credits: { cast: [{ id: 12 }] },
   });
   routeMocks.fetchTmdbCredits.mockResolvedValue({ cast: [{ id: 12 }] });
+  routeMocks.getIgdbGame.mockResolvedValue({ id: 42 });
+  routeMocks.getIgdbGameCharacters.mockResolvedValue([{ id: 7 }]);
 });
 afterAll(() => vi.unstubAllGlobals());
 
@@ -69,8 +62,29 @@ function createSupabaseMock(result: {
   error: { code: string } | null;
 }) {
   const rpc = vi.fn(async () => result);
-  routeMocks.useSupabaseAdmin.mockReturnValue({ rpc });
-  return { rpc };
+  const localCharacterQuery = {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    in: vi.fn(
+      async (): Promise<{
+        data: Array<{ id: string; igdb_character_id: number | null }>;
+        error: null;
+      }> => ({
+        data: [
+          {
+            id: "11111111-1111-4111-8111-111111111111",
+            igdb_character_id: null,
+          },
+        ],
+        error: null,
+      }),
+    ),
+  };
+  routeMocks.useSupabaseAdmin.mockReturnValue({
+    rpc,
+    from: vi.fn(() => localCharacterQuery),
+  });
+  return { rpc, localCharacterQuery };
 }
 
 async function post(body: unknown): Promise<Response> {
@@ -203,9 +217,228 @@ describe("POST /api/save-dubbing-project", () => {
 
     const response = await post(body);
 
-    expect(response.status).toBe(200);
+    expect(response.status, await response.clone().text()).toBe(200);
     expect(routeMocks.fetchTmdbCredits).toHaveBeenCalledWith("tv", 90);
     expect(rpc).toHaveBeenCalledOnce();
+  });
+
+  it("saves a local game identity when IGDB is unavailable", async () => {
+    const { rpc, localCharacterQuery } = createSupabaseMock({
+      data: [
+        {
+          project_id: 51,
+          updated_at: "2026-10-15T12:05:00",
+          audit_log_id: "f20d747e-c98e-43ea-9356-133fcbf0b496",
+          replayed: false,
+        },
+      ],
+      error: null,
+    });
+    routeMocks.getIgdbGame.mockRejectedValue(new Error("IGDB unavailable"));
+    const localId = "11111111-1111-4111-8111-111111111111";
+    const currentBody = validBody();
+    const body = {
+      ...currentBody,
+      project: {
+        ...currentBody.project,
+        content_type: "video_game",
+        content_id: 42,
+      },
+      cast: [
+        {
+          character_id: null,
+          character_name: "Local-only role",
+          game_character_id: localId,
+          voice_actor_id: 8,
+          performance: "dialogues",
+          note: null,
+          highlight: false,
+        },
+      ],
+    };
+
+    const response = await post(body);
+
+    expect(response.status).toBe(200);
+    expect(localCharacterQuery.in).toHaveBeenCalledWith("id", [localId]);
+    expect(routeMocks.getIgdbGame).not.toHaveBeenCalled();
+    expect(routeMocks.getIgdbGameCharacters).not.toHaveBeenCalled();
+    expect(rpc).toHaveBeenCalledWith(
+      "save_dubbing_project_editor",
+      expect.objectContaining({
+        p_cast: [
+          expect.objectContaining({
+            character_id: null,
+            game_character_id: localId,
+            character_name: "Local-only role",
+          }),
+        ],
+      }),
+    );
+  });
+
+  it("preserves an IGDB character credit when editing a video game project", async () => {
+    const { rpc } = createSupabaseMock({
+      data: [
+        {
+          project_id: 51,
+          updated_at: "2026-10-15T12:05:00",
+          audit_log_id: "f20d747e-c98e-43ea-9356-133fcbf0b496",
+          replayed: false,
+        },
+      ],
+      error: null,
+    });
+    const body = validBody();
+    body.project.content_id = 42;
+    body.project.content_type = "video_game";
+    body.cast = [
+      {
+        id: 27,
+        expected_updated_at: "2026-10-15T12:00:00.000Z",
+        expected: {
+          actor_id: null,
+          character_id: 7,
+          character_name: "IGDB Role",
+          game_character_id: null,
+          voice_actor_id: 8,
+          performance: "dialogues",
+          note: null,
+          highlight: false,
+          status: "validated",
+        },
+        character_id: 7,
+        character_name: "IGDB Role",
+        game_character_id: null,
+        voice_actor_id: 8,
+        performance: "dialogues",
+        note: null,
+        highlight: false,
+      },
+    ];
+
+    const response = await post(body);
+
+    expect(response.status, await response.clone().text()).toBe(200);
+    expect(routeMocks.getIgdbGame).toHaveBeenCalledWith(42);
+    expect(routeMocks.getIgdbGameCharacters).toHaveBeenCalledWith(42);
+    expect(rpc).toHaveBeenCalledWith(
+      "save_dubbing_project_editor",
+      expect.objectContaining({
+        p_cast: [
+          expect.objectContaining({
+            character_id: 7,
+            game_character_id: null,
+            character_name: "IGDB Role",
+          }),
+        ],
+      }),
+    );
+  });
+
+  it("rejects a preexisting IGDB id that does not match a selected local character", async () => {
+    const { rpc, localCharacterQuery } = createSupabaseMock({
+      data: null,
+      error: null,
+    });
+    localCharacterQuery.in.mockResolvedValue({
+      data: [
+        {
+          id: "11111111-1111-4111-8111-111111111111",
+          igdb_character_id: 7,
+        },
+      ],
+      error: null,
+    });
+    const currentBody = validBody();
+    const body = {
+      ...currentBody,
+      project: {
+        ...currentBody.project,
+        content_type: "video_game",
+        content_id: 42,
+      },
+      cast: [
+        {
+          id: 27,
+          expected_updated_at: "2026-10-15T12:00:00.000Z",
+          expected: {
+            actor_id: null,
+            character_id: 8,
+            character_name: "Legacy IGDB role",
+            game_character_id: null,
+            voice_actor_id: 8,
+            performance: "dialogues",
+            note: null,
+            highlight: false,
+            status: "validated",
+          },
+          character_id: 8,
+          character_name: "Local character",
+          game_character_id: "11111111-1111-4111-8111-111111111111",
+          voice_actor_id: 8,
+          performance: "dialogues",
+        },
+      ],
+    };
+
+    const response = await post(body);
+
+    expect(response.status).toBe(422);
+    expect(rpc).not.toHaveBeenCalled();
+    expect(routeMocks.getIgdbGameCharacters).not.toHaveBeenCalled();
+  });
+
+  it("accepts a selected local character with its confirmed IGDB mapping", async () => {
+    const { rpc, localCharacterQuery } = createSupabaseMock({
+      data: [
+        {
+          project_id: 51,
+          updated_at: "2026-10-15T12:05:00",
+          audit_log_id: "f20d747e-c98e-43ea-9356-133fcbf0b496",
+          replayed: false,
+        },
+      ],
+      error: null,
+    });
+    localCharacterQuery.in.mockResolvedValue({
+      data: [
+        {
+          id: "11111111-1111-4111-8111-111111111111",
+          igdb_character_id: 7,
+        },
+      ],
+      error: null,
+    });
+    const body = validBody();
+    body.project.content_type = "video_game";
+    body.project.content_id = 42;
+    body.cast = [
+      {
+        character_id: 7,
+        character_name: "Linked local character",
+        game_character_id: "11111111-1111-4111-8111-111111111111",
+        voice_actor_id: 8,
+        performance: "dialogues",
+      },
+    ];
+
+    const response = await post(body);
+
+    expect(response.status, await response.clone().text()).toBe(200);
+    expect(routeMocks.getIgdbGame).not.toHaveBeenCalled();
+    expect(routeMocks.getIgdbGameCharacters).not.toHaveBeenCalled();
+    expect(rpc).toHaveBeenCalledWith(
+      "save_dubbing_project_editor",
+      expect.objectContaining({
+        p_cast: [
+          expect.objectContaining({
+            character_id: 7,
+            game_character_id: "11111111-1111-4111-8111-111111111111",
+          }),
+        ],
+      }),
+    );
   });
 
   it("returns a conflict instead of success for a stale RPC result", async () => {
