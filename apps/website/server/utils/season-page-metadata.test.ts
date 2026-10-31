@@ -141,7 +141,9 @@ beforeEach(() => {
       id: 7,
       language: "fr-FR",
       studio_data: { id: 3, name: "Studio", logo_url: "https://example.com/logo.png" },
-      works: [{ voice_actor: { id: 5 } }],
+      has_voice_actor: true,
+      voice_actor_count: 1,
+      work_count: 1,
     },
   ]);
   routeMocks.cacheGetOrFetch.mockResolvedValue(null);
@@ -232,20 +234,19 @@ describe("GET /api/season parent metadata", () => {
         id: 7,
         language: "fr-FR",
         studio_data: { id: 3, name: "Studio", logo_url: "https://example.com/logo.png" },
-        works: [{ voice_actor: { id: 5 } }],
+        has_voice_actor: true,
+        voice_actor_count: 1,
+        work_count: 1,
       },
     ]);
     expect(routeMocks.getSeasonPageDubbingProjects).toHaveBeenCalledWith(42, "tv");
     expect(routeMocks.getDubbingProjectsForMediaEndpoint).not.toHaveBeenCalled();
     expect(routeMocks.getMediaPageDubbingProjects).not.toHaveBeenCalled();
     expect(routeMocks.getDubbingProjects).not.toHaveBeenCalled();
-    expect(routeMocks.getSeason).toHaveBeenCalledWith(
-      "season",
-      42,
-      2,
-      undefined,
-      { includeCredits: false, projection: "media-page" },
-    );
+    expect(routeMocks.getSeason).toHaveBeenCalledWith("season", 42, 2, undefined, {
+      includeCredits: false,
+      projection: "media-page",
+    });
     expect(responseBody).toMatchObject({ characterProfilePictures: [] });
     expect(routeMocks.cacheGetOrFetch).not.toHaveBeenCalled();
   });
@@ -253,7 +254,10 @@ describe("GET /api/season parent metadata", () => {
   it("keeps season credits and TVDB character pictures for the full projection", async () => {
     routeMocks.cacheGetOrFetch.mockResolvedValue([{ id: 10, name: "Character", image: null }]);
     const app = createApp();
-    app.use("/", defineEventHandler((event) => handler(event)));
+    app.use(
+      "/",
+      defineEventHandler((event) => handler(event)),
+    );
     const response = await toWebHandler(app)(
       new Request("http://localhost/?id=42&season_number=2"),
     );

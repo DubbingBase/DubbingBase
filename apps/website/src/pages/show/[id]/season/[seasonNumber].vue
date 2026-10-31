@@ -299,9 +299,7 @@
 import MediaDetailsLayout from "../../../../components/layout/MediaDetailsLayout.vue";
 import { useRoute, useRouter } from "vue-router";
 import type { Link as HeadLink } from "@unhead/vue";
-import type { DetailCollectionProject, MediaDetailDubbingProject } from "@app/shared-logic";
-
-import { fetchSeasonPageData } from "../../../../utils/season-data";
+import { fetchSeasonPageData, type SeasonPageDubbingProject } from "../../../../utils/season-data";
 import { computed, ref } from "vue";
 import { ClapperboardIcon, ExternalLinkIcon, StarIcon } from "lucide-vue-next";
 import ReportModal from "../../../../components/ReportModal.vue";
@@ -429,24 +427,10 @@ const currentSeasonData = computed(() => {
 const serie = computed(() => currentSeasonData.value?.serie);
 const serieName = computed(() => serie.value?.name || "");
 const season = computed(() => currentSeasonData.value?.season);
-const projectVoiceActorMetrics = computed(() => {
-  const actorCounts = new Map<number, number>();
-  const projects: MediaDetailDubbingProject[] = currentSeasonData.value?.dubbingProjects || [];
-  const visibleProjects = projects.filter((project) => {
-    let hasVoiceActor = false;
-    const actorIds = new Set<number>();
-
-    for (const work of project.works || []) {
-      if (work.voice_actor) {
-        hasVoiceActor = true;
-        if (work.voice_actor.id) actorIds.add(work.voice_actor.id);
-      }
-    }
-
-    actorCounts.set(project.id, actorIds.size);
-    return hasVoiceActor;
-  });
-
+const dubbingProjects = computed(() => {
+  const visibleProjects = (currentSeasonData.value?.dubbingProjects || []).filter(
+    (project) => project.has_voice_actor,
+  );
   const currentLocale = locale.value.toLowerCase();
   visibleProjects.sort((a, b) => {
     const aIsPref = a.language?.toLowerCase().startsWith(currentLocale) ? 1 : 0;
@@ -456,17 +440,14 @@ const projectVoiceActorMetrics = computed(() => {
       return bIsPref - aIsPref;
     }
 
-    const aWorks = a.works?.length || 0;
-    const bWorks = b.works?.length || 0;
-    return bWorks - aWorks;
+    return b.work_count - a.work_count;
   });
 
-  return { projects: visibleProjects, actorCounts };
+  return visibleProjects;
 });
-const dubbingProjects = computed(() => projectVoiceActorMetrics.value.projects);
 
-function projectVoiceActorCount(project: DetailCollectionProject): number {
-  return projectVoiceActorMetrics.value.actorCounts.get(project.id) || 0;
+function projectVoiceActorCount(project: SeasonPageDubbingProject): number {
+  return project.voice_actor_count;
 }
 
 const { page: episodesPage, setPage: setEpisodesPage } = useUrlPagination("episodesPage");
@@ -514,7 +495,7 @@ const activeDubId = computed(() => {
 
 const activeDubProject = computed(() => {
   return (
-    dubbingProjects.value.find((p: DetailCollectionProject) => p.id === activeDubId.value) ||
+    dubbingProjects.value.find((p: SeasonPageDubbingProject) => p.id === activeDubId.value) ||
     dubbingProjects.value[0]
   );
 });

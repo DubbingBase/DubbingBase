@@ -360,11 +360,27 @@ export async function getSeasonPageDubbingProjects(contentId: number, contentTyp
 
   if (error) return [];
 
-  return (data || []).map((project) => ({
-    ...project,
-    works: project.works || [],
-    studio_data: project.studio_data || null,
-  }));
+  return (data || []).map((project) => {
+    const works = project.works || [];
+    const voiceActorIds = new Set<number>();
+    let hasVoiceActor = false;
+
+    for (const work of works) {
+      if (work.voice_actor) {
+        hasVoiceActor = true;
+        if (work.voice_actor.id) voiceActorIds.add(work.voice_actor.id);
+      }
+    }
+
+    return {
+      id: project.id,
+      language: project.language,
+      studio_data: project.studio_data || null,
+      has_voice_actor: hasVoiceActor,
+      voice_actor_count: voiceActorIds.size,
+      work_count: works.length,
+    };
+  });
 }
 
 export async function getWorkVotes(
