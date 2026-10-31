@@ -71,7 +71,8 @@
     "editImage": "画像を編集",
     "unlink": "リンク解除",
     "confirmUnlinkTitle": "リンク解除の確認",
-    "unlinkVoiceActor": "声優のリンク解除"
+    "unlinkVoiceActor": "声優のリンク解除",
+    "pagination": "ページネーション"
   },
   "theme": {
     "light": "ライト",
@@ -496,40 +497,24 @@
       "saveStudioProfile": "スタジオプロフィールを保存",
       "studioSaved": "スタジオが正常に保存されました",
       "failedToSave": "スタジオの保存に失敗しました"
+    },
+    "spreadsheet": {
+      "previous": "前へ",
+      "next": "次へ",
+      "pageOf": "{page}ページ / {total}"
     }
   },
-  "contribute": {
-    "title": "貢献",
-    "description": "データベースに貢献してDubbingBaseの改善にご協力ください",
-    "bronzeContributor": "ブロンズ貢献者",
-    "currentScore": "現在のスコア",
-    "progressToSilver": "シルバーへの進捗",
-    "readyToHelp": "手伝いますか？",
-    "readyToHelpDescription": "貢献してポイントを獲得し、実績をアンロックしましょう",
-    "startContributing": "貢献を開始",
-    "noRecentActivities": "最近のアクティビティはありません"
+  "footer": {
+    "search": "検索",
+    "otherMedia": "その他のメディア",
+    "contribute": "情報を追加",
+    "resources": "リソース",
+    "about": "概要",
+    "apiTerms": "API利用規約"
   },
-  "dubbing": {
-    "cast": "キャスト",
-    "technicalTeam": "技術チーム"
-  },
-  "movie": {
-    "addDubbingProject": "吹き替えプロジェクトを追加"
-  },
-  "report": {
-    "title": "報告",
-    "description": "このコンテンツに関する問題を報告",
-    "button": "報告",
-    "reason": "理由",
-    "selectReason": "理由を選択",
-    "reasons": {
-      "copyright": "著作権侵害",
-      "inappropriate": "不適切なコンテンツ",
-      "error": "不正な情報",
-      "other": "その他"
-    },
-    "details": "詳細",
-    "detailsPlaceholder": "問題についての追加の詳細を提供してください...",
-    "successMessage": "報告が正常に送信されました"
+  "browse": {
+    "title": "{type}を探す",
+    "description": "DubbingBaseで{type}の吹き替え情報を探せます。",
+    "empty": "吹き替え情報のある{type}はまだ登録されていません。"
   }
 }
