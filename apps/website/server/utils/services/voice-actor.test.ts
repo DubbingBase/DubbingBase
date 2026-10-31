@@ -13,7 +13,12 @@ describe("applyExtractedCredits", () => {
 
   it("persists a batch with one transactional RPC", async () => {
     rpc.mockResolvedValue({
-      data: { new_voice_actors: 1, credits_added: 2 },
+      data: {
+        new_voice_actors: 1,
+        credits_added: 2,
+        credits_overlapped: 3,
+        credits_mismatched: 1,
+      },
       error: null,
     });
 
@@ -27,7 +32,12 @@ describe("applyExtractedCredits", () => {
         },
         { firstname: "Second", lastname: "Actor", actorId: 8 },
       ]),
-    ).resolves.toEqual({ newVoiceActors: 1, creditsAdded: 2 });
+    ).resolves.toEqual({
+      newVoiceActors: 1,
+      creditsAdded: 2,
+      creditsOverlapped: 3,
+      creditsMismatched: 1,
+    });
 
     expect(rpc).toHaveBeenCalledTimes(1);
     expect(rpc).toHaveBeenCalledWith("apply_extracted_credits", {
@@ -59,6 +69,8 @@ describe("applyExtractedCredits", () => {
     await expect(applyExtractedCredits(42, "movie", "fr-FR", [])).resolves.toEqual({
       newVoiceActors: 0,
       creditsAdded: 0,
+      creditsOverlapped: 0,
+      creditsMismatched: 0,
     });
     expect(rpc).not.toHaveBeenCalled();
   });
