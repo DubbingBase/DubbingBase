@@ -28,13 +28,7 @@
     "privacy": "Política de privacidad",
     "terms": "Términos de servicio",
     "contact": "Contáctenos",
-    "rights": "Todos los derechos reservados.",
-    "search": "Buscar",
-    "otherMedia": "Más medios",
-    "contribute": "Colaborar",
-    "resources": "Recursos",
-    "about": "Acerca de",
-    "apiTerms": "Condiciones de la API"
+    "rights": "Todos los derechos reservados."
   },
   "nav": {
     "home": "Inicio",
@@ -1418,7 +1412,8 @@
   "series": {
     "notFound": "Serie no encontrada",
     "heroDescription": "Descubre las series de televisión más populares del momento."
-  },
+  }
+,
   "browse": {
     "title": "Explorar {type}",
     "description": "Descubre {type} con créditos de doblaje en DubbingBase.",
