@@ -271,7 +271,9 @@ export default defineNuxtConfig({
     client: true,
   },
   sitemap: {
-    zeroRuntime: true,
+    // Dynamic public entities must be fetched when the sitemap is requested,
+    // not during builds where production data may not be reachable.
+    zeroRuntime: false,
     sources: ["/api/__sitemap__/urls"],
     chunks: 40_000,
     exclude: [
