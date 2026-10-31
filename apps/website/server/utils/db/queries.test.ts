@@ -13,7 +13,7 @@ import {
   getDubbingProjects,
   getDubbingProjectsForMediaEndpoint,
   getAdvertisementPageDubbingProjects,
-  getMediaPageDubbingProjects,
+  getMediaPageDubbingProjectData,
   getEpisodePageDubbingProjectData,
   getGamePageDubbingProjects,
   getSeasonPageDubbingProjects,
@@ -46,7 +46,7 @@ describe("dubbing project detail queries", () => {
     queryMocks.selectedColumns.length = 0;
   });
 
-  it("uses a compact projection for media pages while preserving cast and studio data", async () => {
+  it("deduplicates media-page voice actors and omits unused work fields", async () => {
     const rows = [
       {
         id: 17,
@@ -71,32 +71,69 @@ describe("dubbing project detail queries", () => {
               voice_actor_name: "Voice Actor",
             },
           },
+          {
+            id: 13,
+            actor_id: 45,
+            character_name: "Second Character",
+            performance: "Unused role label",
+            note: null,
+            voice_actor: {
+              id: 5,
+              firstname: "Voice",
+              lastname: "Actor",
+              profile_picture: "https://example.com/voice-actor.png",
+              voice_actor_name: "Voice Actor",
+            },
+          },
         ],
       },
     ];
     queryMocks.useSupabaseAdmin.mockReturnValue(createSupabaseMock(rows));
 
-    const projects = await getMediaPageDubbingProjects(1, "tv");
+    const result = await getMediaPageDubbingProjectData(1, "tv");
 
-    expect(projects).toEqual([
-      {
-        ...rows[0],
-        crew: [],
-      },
-    ]);
+    expect(result).toEqual({
+      dubbingProjects: [
+        {
+          id: 17,
+          language: "fr-FR",
+          studio_data: {
+            id: 3,
+            name: "Studio",
+            logo_url: "https://example.com/studio.png",
+          },
+          works: [
+            {
+              id: 12,
+              actor_id: 44,
+              character_name: "Character",
+              note: "Note",
+              voice_actor_id: 5,
+            },
+            {
+              id: 13,
+              actor_id: 45,
+              character_name: "Second Character",
+              note: null,
+              voice_actor_id: 5,
+            },
+          ],
+        },
+      ],
+      voiceActors: [
+        {
+          id: 5,
+          firstname: "Voice",
+          lastname: "Actor",
+          profile_picture: "https://example.com/voice-actor.png",
+        },
+      ],
+    });
     expect(queryMocks.selectedColumns[0]).not.toContain("*");
     expect(queryMocks.selectedColumns[0]).toContain("voice_actor:voice_actors");
     expect(queryMocks.selectedColumns[0]).toContain("studio_data:studios");
-    expect(projects[0]?.studio_data).toMatchObject({
-      id: 3,
-      name: "Studio",
-      logo_url: "https://example.com/studio.png",
-    });
-    expect(projects[0]?.works[0]?.voice_actor).toMatchObject({
-      id: 5,
-      voice_actor_name: "Voice Actor",
-      profile_picture: "https://example.com/voice-actor.png",
-    });
+    expect(queryMocks.selectedColumns[0]).not.toContain("performance");
+    expect(queryMocks.selectedColumns[0]).not.toContain("voice_actor_name");
   });
 
   it("returns unique voice actors separately for episode page work rows", async () => {
@@ -339,7 +376,7 @@ describe("dubbing project detail queries", () => {
   it("selects compact fields only for the explicit media-page projection", async () => {
     queryMocks.useSupabaseAdmin.mockReturnValue(createSupabaseMock([]));
 
-    await getDubbingProjectsForMediaEndpoint(1, "movie", "media-page");
+    await expect(getDubbingProjectsForMediaEndpoint(1, "movie", "media-page")).resolves.toEqual([]);
 
     expect(queryMocks.selectedColumns[0]).not.toContain("*");
     expect(queryMocks.selectedColumns[0]).toContain("studio_data:studios");

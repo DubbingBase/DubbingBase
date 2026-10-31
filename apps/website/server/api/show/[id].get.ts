@@ -1,7 +1,10 @@
 import type { H3Event } from "h3";
 import { useTmdbClient } from "../../utils";
 import { MediaService } from "../../utils/services/media";
-import { getDubbingProjectsForMediaEndpoint } from "../../utils/db/queries";
+import {
+  getDubbingProjectsForMediaEndpoint,
+  getMediaPageDubbingProjectData,
+} from "../../utils/db/queries";
 import { processMedia } from "../../utils/urls/tmdb";
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
@@ -75,9 +78,18 @@ export async function fetchShowData(event: H3Event, showId: number) {
       };
     });
 
-  const dbDataPromise = getDubbingProjectsForMediaEndpoint(showId, "tv", projection);
+  const dbDataPromise =
+    projection === "media-page"
+      ? getMediaPageDubbingProjectData(showId, "tv")
+      : getDubbingProjectsForMediaEndpoint(showId, "tv", projection);
 
-  const [apiData, dubbingProjects] = await Promise.all([apiDataPromise, dbDataPromise]);
+  const [apiData, dubbingProjectData] = await Promise.all([apiDataPromise, dbDataPromise]);
+  const dubbingProjects = Array.isArray(dubbingProjectData)
+    ? dubbingProjectData
+    : dubbingProjectData.dubbingProjects;
+  const voiceActors = Array.isArray(dubbingProjectData)
+    ? undefined
+    : dubbingProjectData.voiceActors;
 
   const { serieWithImageUrls, aggregateCredits, characterProfilePictures, tvdbId } = apiData;
 
@@ -132,8 +144,8 @@ export async function fetchShowData(event: H3Event, showId: number) {
     characterProfilePictures,
     dubbingProjects,
     tvdbId,
+    ...(voiceActors === undefined ? {} : { voiceActors }),
   };
-
   return baseData;
 }
 

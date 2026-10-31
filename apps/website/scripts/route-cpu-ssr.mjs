@@ -57,7 +57,7 @@ const routes = [
     name: "movie",
     path: "/movie/85",
     marker: "CI fixture movie 85",
-    expectedHtml: ["English", "French", "invalid_code", "Not specified"],
+    expectedHtml: ["English", "French", "invalid_code", "Not specified", "CI Voice 2 Actor"],
     localeVariants: [
       {
         path: "/fr/movie/85",
@@ -70,7 +70,7 @@ const routes = [
     name: "show",
     path: "/show/1396",
     marker: "CI fixture show 1396",
-    expectedHtml: ["English", "French"],
+    expectedHtml: ["English", "French", "CI Voice 2 Actor"],
     expected: ["tmdb:/3/tv/1396", "tmdb:/3/tv/1396/aggregate_credits", "supabase:dubbing_projects"],
   },
   {
