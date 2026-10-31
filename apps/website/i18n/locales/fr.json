@@ -28,7 +28,13 @@
     "privacy": "Politique de confidentialité",
     "terms": "Conditions d'utilisation",
     "contact": "Nous contacter",
-    "rights": "Tous droits réservés."
+    "rights": "Tous droits réservés.",
+    "search": "Recherche",
+    "otherMedia": "Autres médias",
+    "contribute": "Contribuer",
+    "resources": "Ressources",
+    "about": "À propos",
+    "apiTerms": "Conditions de l’API"
   },
   "nav": {
     "home": "Accueil",
@@ -1412,5 +1418,10 @@
   "series": {
     "notFound": "Série introuvable",
     "heroDescription": "Découvrez les séries télévisées les plus populaires du moment."
+  },
+  "browse": {
+    "title": "Explorer : {type}",
+    "description": "Découvrez les {type} avec leurs crédits de doublage sur DubbingBase.",
+    "empty": "Aucun élément de type {type} avec des crédits de doublage n’est encore répertorié."
   }
 }
