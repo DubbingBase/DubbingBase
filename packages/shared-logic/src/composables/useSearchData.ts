@@ -40,7 +40,7 @@ export async function fetchSearchData(query: string): Promise<SearchResult[]> {
 
   try {
     const data = await $fetch<SearchResult[]>("/api/search", {
-      params: { query: trimmedQuery },
+      params: { query: trimmedQuery, projection: "search-page" },
     });
     return data || [];
   } catch (e) {
