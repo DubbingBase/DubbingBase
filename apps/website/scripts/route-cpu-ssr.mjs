@@ -503,6 +503,8 @@ async function startServer(serverWebsiteDir, dataset, side) {
       TVDB_API_KEY: "local-route-cpu-fixture",
       IGDB_CLIENT_ID: "local-route-cpu-fixture",
       IGDB_CLIENT_SECRET: "local-route-cpu-fixture",
+      NUXT_IGDB_CLIENT_ID: "local-route-cpu-fixture",
+      NUXT_IGDB_CLIENT_SECRET: "local-route-cpu-fixture",
       NITRO_HOST: "127.0.0.1",
       NITRO_PORT: String(port),
     },
@@ -719,7 +721,9 @@ async function validateRoute(server, route, dataset) {
         response[0]?.name !== route.marker ||
         !response[0]?.cover?.url
       ) {
-        throw new Error(`${route.path} returned unexpected trending game data.`);
+        throw new Error(
+          `${route.path} returned unexpected trending game data: ${JSON.stringify(response).slice(0, 300)}`,
+        );
       }
       if (
         server.side === "head" &&
