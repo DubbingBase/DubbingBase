@@ -70,6 +70,7 @@ function processIgdbGame(
 function processIgdbCharacter(char: IgdbCharacter, pageProjection: boolean) {
   const mugShot = char.mug_shot
     ? {
+        ...(pageProjection ? {} : char.mug_shot),
         image_id: char.mug_shot.image_id,
         url: buildIgdbImageUrl(char.mug_shot.image_id, "1080p"),
       }
