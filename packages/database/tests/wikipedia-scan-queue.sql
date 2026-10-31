@@ -17,6 +17,11 @@ DECLARE
   v_populated_scan_id bigint;
   v_populated_extract_id bigint;
 BEGIN
+  IF to_regprocedure('public.enqueue_media_fetch(bigint,text,integer,integer,text,boolean,text,text,uuid)') IS NOT NULL
+    OR to_regprocedure('public.enqueue_media_extract(bigint,text,text,bigint,jsonb,integer,integer,boolean,text,text,uuid)') IS NOT NULL THEN
+    RAISE EXCEPTION 'Legacy queue enqueue overloads were retained';
+  END IF;
+
   IF has_function_privilege('anon','public.get_ready_media_queues()','EXECUTE')
     OR has_function_privilege('authenticated','public.get_ready_media_queues()','EXECUTE')
     OR NOT has_function_privilege('service_role','public.get_ready_media_queues()','EXECUTE') THEN

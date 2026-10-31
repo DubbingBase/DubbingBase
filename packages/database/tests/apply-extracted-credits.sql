@@ -34,6 +34,19 @@ BEGIN
 
   v_replay := public.apply_extracted_credits(
     991234567, 'movie', 'fr-FR',
+    jsonb_build_array(jsonb_build_object(
+      'firstname', 'Bulk', 'lastname', 'Fixture', 'actor_id', v_actor_id,
+      'character_id', NULL, 'character_name', NULL
+    ))
+  );
+  IF v_replay->>'credits_added' <> '0' OR v_replay->>'credits_overlapped' <> '1'
+    OR v_replay->>'credits_mismatched' <> '0'
+    OR (SELECT performance FROM public.work WHERE id = v_work_id) <> 'voice' THEN
+    RAISE EXCEPTION 'An absent extracted performance was counted as a mismatch or overwrote the saved value';
+  END IF;
+
+  v_replay := public.apply_extracted_credits(
+    991234567, 'movie', 'fr-FR',
     jsonb_build_array(
       jsonb_build_object(
         'firstname', 'Bulk', 'lastname', 'Fixture', 'actor_id', v_actor_id,

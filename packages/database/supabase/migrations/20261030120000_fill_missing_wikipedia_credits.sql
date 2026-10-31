@@ -1,4 +1,5 @@
 -- Let Wikipedia extraction add missing credits to existing projects while preserving saved work rows.
+DROP FUNCTION IF EXISTS public.enqueue_media_fetch(bigint, text, integer, integer, text, boolean, text, text, uuid);
 CREATE OR REPLACE FUNCTION public.enqueue_media_fetch(
   p_tmdb_id bigint,
   p_media_type text,
@@ -57,6 +58,7 @@ BEGIN
 END;
 $$;
 
+DROP FUNCTION IF EXISTS public.enqueue_media_extract(bigint, text, text, bigint, jsonb, integer, integer, boolean, text, text, uuid);
 CREATE OR REPLACE FUNCTION public.enqueue_media_extract(
   p_tmdb_id bigint, p_media_type text, p_language text, p_page_id bigint,
   p_section_indexes jsonb, p_season_number integer DEFAULT NULL,
@@ -213,6 +215,7 @@ BEGIN
       (item.value->>'actor_id')::bigint AS actor_id,
       NULLIF(item.value->>'character_id', '')::bigint AS character_id,
       NULLIF(item.value->>'character_name', '') AS character_name,
+      NULLIF(item.value->>'performance', '') AS incoming_performance,
       COALESCE(NULLIF(item.value->>'performance', ''), 'dialogues') AS performance,
       item.ordinal,
       public.work_role_identity_key(NULLIF(item.value->>'character_id', '')::bigint,
@@ -271,7 +274,7 @@ BEGIN
     count(*) FILTER (
       WHERE existing.id IS NOT NULL
         AND (
-          (resolved.performance IS NOT NULL AND existing.performance IS DISTINCT FROM resolved.performance)
+          (resolved.incoming_performance IS NOT NULL AND existing.performance IS DISTINCT FROM resolved.incoming_performance)
           OR (resolved.character_id IS NOT NULL AND existing.character_id IS DISTINCT FROM resolved.character_id)
           OR (resolved.character_name IS NOT NULL AND lower(btrim(existing.character_name)) IS DISTINCT FROM lower(btrim(resolved.character_name)))
         )
