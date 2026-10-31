@@ -4,8 +4,8 @@
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
 > 85 routes | 27 models | 200 components | 114 lib files | 75 env vars | 15 middleware | 46% test coverage
-> **Token savings:** this file is ~19,300 tokens. Without it, AI exploration would cost ~172,100 tokens. **Saves ~152,900 tokens per conversation.**
-> **Last scanned:** 2026-10-31 18:38 — re-run after significant changes
+> **Token savings:** this file is ~19,300 tokens. Without it, AI exploration would cost ~172,100 tokens. **Saves ~152,800 tokens per conversation.**
+> **Last scanned:** 2026-10-31 18:53 — re-run after significant changes
 
 ---
 
@@ -772,6 +772,8 @@
   - _...10 more_
 - `e2e/helpers/mock-api.ts`
   - function waitForVueHydration: (page) => Promise<void>
+  - function mockSeasonPageResponse: (season) => void
+  - function mockEpisodePageResponse: (episode) => void
   - function setupMockApi: (page, options) => void
   - interface MockApiOptions
 - `packages/og-image/src/index.ts`
@@ -973,10 +975,10 @@
 - `apps/website/server/utils/urls/tmdb.ts` — imported by **10** files
 - `apps/website/server/utils/dubbing-language.ts` — imported by **10** files
 - `apps/website/server/utils/db/queries.ts` — imported by **9** files
-- `e2e/helpers/mock-api.ts` — imported by **9** files
 - `packages/shared-logic/src/types/index.ts` — imported by **9** files
 - `apps/website/server/utils/cache/http.ts` — imported by **8** files
 - `apps/website/server/utils/cache/constants.ts` — imported by **8** files
+- `e2e/helpers/mock-api.ts` — imported by **8** files
 - `apps/website/server/utils/background.ts` — imported by **7** files
 - `apps/website/server/utils/services/media.ts` — imported by **7** files
 - `apps/website/server/utils/cache/wikipedia.ts` — imported by **5** files

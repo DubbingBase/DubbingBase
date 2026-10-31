@@ -272,6 +272,8 @@
   - _...10 more_
 - `e2e/helpers/mock-api.ts`
   - function waitForVueHydration: (page) => Promise<void>
+  - function mockSeasonPageResponse: (season) => void
+  - function mockEpisodePageResponse: (episode) => void
   - function setupMockApi: (page, options) => void
   - interface MockApiOptions
 - `packages/og-image/src/index.ts`
