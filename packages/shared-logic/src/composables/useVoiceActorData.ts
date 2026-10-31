@@ -2,35 +2,43 @@ export async function fetchVoiceActorData(
   id: string | number,
   lang?: string,
 ): Promise<VoiceActorDataPayload | null> {
-  try {
-    const voiceActorResponse = await $fetch<any>(
-      `/api/voice-actor/${id}`,
-      lang ? { query: { lang } } : undefined,
-    );
+  const voiceActorResponse = await $fetch<VoiceActorDataPayload>(
+    `/api/voice-actor/${id}`,
+    lang ? { query: { lang } } : undefined,
+  );
 
-    if (!voiceActorResponse || !voiceActorResponse.voiceActor) {
-      console.error("voiceActorResponse is null");
-      return null;
-    }
-
-    return {
-      voiceActor: voiceActorResponse.voiceActor,
-      enhancedWorks: voiceActorResponse.enhancedWorks || [],
-      medias: voiceActorResponse.medias || [],
-      characterProfilePictures:
-        voiceActorResponse.characterProfilePictures || [],
-      potentialWikipediaUrl: voiceActorResponse.potentialWikipediaUrl || null,
-      profilePicture: voiceActorResponse.voiceActor.profile_picture || null,
-      backdropPath: voiceActorResponse.backdropPath || null,
-    };
-  } catch (e) {
-    console.error("fetchVoiceActorData error:", e);
-    return null;
+  if (!voiceActorResponse || !voiceActorResponse.voiceActor) {
+    throw new Error("Voice actor response is missing the voice actor record");
   }
+
+  return {
+    voiceActor: voiceActorResponse.voiceActor,
+    enhancedWorks: voiceActorResponse.enhancedWorks || [],
+    medias: voiceActorResponse.medias || [],
+    characterProfilePictures: voiceActorResponse.characterProfilePictures || [],
+    potentialWikipediaUrl: voiceActorResponse.potentialWikipediaUrl || null,
+    profilePicture: voiceActorResponse.voiceActor.profile_picture || null,
+    backdropPath: voiceActorResponse.backdropPath || null,
+  };
 }
 
 import { ref, shallowRef, computed, watch, unref, type MaybeRef } from "vue";
 import type { MovieModel, SerieModel, PersonData, Actor } from "../types";
+
+type VoiceActorCastMember = {
+  id: number;
+  name?: string;
+  character?: string;
+  profile_path?: string | null;
+};
+
+type VoiceActorMedia = (MovieModel | SerieModel) & {
+  title?: string;
+  name?: string;
+  release_date?: string;
+  first_air_date?: string;
+  credits?: { cast?: VoiceActorCastMember[] };
+};
 
 export type VoiceActorResponse = {
   voiceActor: {
@@ -67,7 +75,7 @@ export type VoiceActorResponse = {
     }[];
   };
   enhancedWorks?: EnhancedWorkItem[];
-  medias: (MovieModel | SerieModel)[];
+  medias: VoiceActorMedia[];
   potentialWikipediaUrl?: string | null;
   characterProfilePictures?: Array<{
     work_id?: number;
@@ -80,7 +88,7 @@ export type VoiceActorResponse = {
 };
 
 export type EnhancedWorkItem = {
-  media: MovieModel | SerieModel;
+  media: VoiceActorMedia;
   work: {
     id: number;
     actor_id: number;
@@ -122,9 +130,7 @@ export type VoiceActorDataPayload = {
   voiceActor?: VoiceActorResponse["voiceActor"];
   enhancedWorks?: EnhancedWorkItem[];
   medias: VoiceActorResponse["medias"];
-  characterProfilePictures: NonNullable<
-    VoiceActorResponse["characterProfilePictures"]
-  >;
+  characterProfilePictures: NonNullable<VoiceActorResponse["characterProfilePictures"]>;
   potentialWikipediaUrl: string | null;
   profilePicture?: string | null;
   backdropPath?: string | null;
@@ -134,25 +140,17 @@ export function useVoiceActorData(
   initialData?: MaybeRef<VoiceActorDataPayload | null | undefined>,
 ) {
   const initial = unref(initialData);
-  const voiceActor = shallowRef<VoiceActorResponse["voiceActor"] | undefined>(
-    initial?.voiceActor,
-  );
-  const enhancedWorksRef = shallowRef<EnhancedWorkItem[]>(
-    initial?.enhancedWorks || [],
-  );
+  const voiceActor = shallowRef<VoiceActorResponse["voiceActor"] | undefined>(initial?.voiceActor);
+  const enhancedWorksRef = shallowRef<EnhancedWorkItem[]>(initial?.enhancedWorks || []);
   const medias = shallowRef<VoiceActorResponse["medias"]>(initial?.medias || []);
   const characterProfilePictures = shallowRef<
     NonNullable<VoiceActorResponse["characterProfilePictures"]>
   >(initial?.characterProfilePictures || []);
-  const profilePicture = ref<string | null | undefined>(
-    initial?.profilePicture,
-  );
+  const profilePicture = ref<string | null | undefined>(initial?.profilePicture);
   const backdropPath = ref<string | null | undefined>(initial?.backdropPath);
   const loading = ref<boolean>(!initial);
   const searchQuery = ref("");
-  const potentialWikipediaUrl = ref<string | null>(
-    initial?.potentialWikipediaUrl || null,
-  );
+  const potentialWikipediaUrl = ref<string | null>(initial?.potentialWikipediaUrl || null);
 
   watch(
     () => unref(initialData),
@@ -207,12 +205,15 @@ export function useVoiceActorData(
       return [];
     }
 
-    const mediaMap = new Map<number, any>();
+    const mediaMap = new Map<number, VoiceActorMedia>();
     for (const m of medias.value) {
       if (m && m.id) mediaMap.set(m.id, m);
     }
 
-    const charPicMap = new Map<string, any>();
+    const charPicMap = new Map<
+      string,
+      NonNullable<VoiceActorResponse["characterProfilePictures"]>[number]
+    >();
     for (const cp of characterProfilePictures.value) {
       const mediaId = cp.movieId || cp.showId;
       if (mediaId && cp.name) {
@@ -228,12 +229,7 @@ export function useVoiceActorData(
         const media = mediaMap.get(contentId);
         if (!media) return null;
 
-        let actor: any;
-        if (media.credits?.cast) {
-          actor = media.credits.cast.find(
-            (cast: { id: number }) => cast.id === work.actor_id,
-          );
-        }
+        const actor = media.credits?.cast?.find((cast) => cast.id === work.actor_id);
 
         if (!actor) return null;
 
@@ -253,15 +249,9 @@ export function useVoiceActorData(
           actor: actorToPersonData(actor),
         };
 
-        const sortDate =
-          (media as { release_date?: string }).release_date ||
-          (media as { first_air_date?: string }).first_air_date ||
-          "9999-12-31";
+        const sortDate = media.release_date || media.first_air_date || "9999-12-31";
 
-        const titleStr =
-          (media as { title?: string }).title ||
-          (media as { name?: string }).name ||
-          "";
+        const titleStr = media.title || media.name || "";
         const searchText =
           `${titleStr} ${character || ""} ${actor.name || ""} ${work.performance || ""}`.toLowerCase();
 
@@ -295,11 +285,7 @@ export function useVoiceActorData(
         return item.searchText.includes(query);
       }
 
-      const title = (
-        (item.media as { title?: string }).title ||
-        (item.media as { name?: string }).name ||
-        ""
-      ).toLowerCase();
+      const title = (item.media.title || item.media.name || "").toLowerCase();
       const character = (item.data.character || "").toLowerCase();
       const actorName = (item.data.actor?.name || "").toLowerCase();
       const performance = (item.work.performance || "").toLowerCase();

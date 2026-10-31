@@ -715,7 +715,7 @@ function getMediaLink(contentType?: string | null, mediaId?: number | string) {
   return `/movie/${mediaId}`;
 }
 
-const voiceActorDataRequest = useAsyncData(
+const voiceActorDataRequest = await useAsyncData(
   `voice-actor-${voiceActorId}-${locale.value}`,
   () => {
     const tmdbLanguage = APP_LOCALES.find((l) => l.code === locale.value)?.language || "en-US";
@@ -725,7 +725,8 @@ const voiceActorDataRequest = useAsyncData(
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
-const { data, pending } = voiceActorDataRequest;
+const { data, pending, error } = voiceActorDataRequest;
+if (import.meta.server && error.value) throw error.value;
 
 const voiceActorData = useVoiceActorData(data);
 const { voiceActor, profilePicture, backdropPath, loading, searchQuery, filteredEnhancedWork } =
@@ -843,7 +844,6 @@ useHead({
       }),
     },
     { property: "og:logo", content: computed(() => new URL("/logo.png", siteUrl).href) },
-    { property: "og:url", content: pageUrl },
     { property: "og:image", content: ogImageUrl },
     {
       property: "og:image:width",

@@ -486,7 +486,10 @@ const languageDisplayNames = computed(() => {
 });
 const pageUrl = computed(() => new URL(localePath(`/show/${showId.value}`), siteUrl).href);
 
-const { currentData: data, pending } = useShowPageData(showId, locale);
+const showPageRequest = useShowPageData(showId, locale);
+await showPageRequest;
+const { currentData: data, pending, error } = showPageRequest;
+if (import.meta.server && error.value) throw error.value;
 
 const serie = computed(() => {
   const show = data.value?.serie;
@@ -570,7 +573,13 @@ const posterUrl = computed(() => {
 
 const activeDubId = computed(() => {
   if (route.query.dub) {
-    return Number(route.query.dub);
+    const requestedId = Number(route.query.dub);
+    if (
+      Number.isSafeInteger(requestedId) &&
+      dubbingProjects.value.some((project) => project.id === requestedId)
+    ) {
+      return requestedId;
+    }
   }
   return dubbingProjects.value[0]?.id || null;
 });
@@ -808,10 +817,6 @@ useHead({
           {
             property: "og:type",
             content: "video.tv_show",
-          },
-          {
-            property: "og:url",
-            content: pageUrl,
           },
           {
             property: "og:image",

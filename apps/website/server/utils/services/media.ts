@@ -283,7 +283,15 @@ export class MediaService {
       .eq("id", voiceActorId)
       .single();
 
-    if (vaError || !voiceActor) throw new Error("Voice actor not found");
+    if (vaError?.code === "PGRST116") {
+      throw createError({ statusCode: 404, statusMessage: "Voice actor not found" });
+    }
+    if (vaError) {
+      throw createError({ statusCode: 500, statusMessage: "Failed to fetch voice actor" });
+    }
+    if (!voiceActor) {
+      throw createError({ statusCode: 404, statusMessage: "Voice actor not found" });
+    }
 
     const voiceActorWithImages = processVoiceActor(voiceActor);
     const workItems = voiceActor.work || [];

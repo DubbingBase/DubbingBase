@@ -352,7 +352,6 @@ useHead({
       }),
     },
     { property: "og:type", content: "website" },
-    { property: "og:url", content: pageUrl },
     {
       property: "og:image",
       content: computed(() => siteAssetUrl("/android-chrome-512x512.png")),

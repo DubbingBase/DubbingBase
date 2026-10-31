@@ -12,33 +12,14 @@ export default defineEventHandler(async (event): Promise<ToyResponse> => {
     throw createError({ statusCode: 400, message: "Missing id parameter" });
   }
 
-  const toyId = parseInt(id, 10);
-  if (isNaN(toyId)) {
-    throw createError({ statusCode: 400, message: "Invalid id parameter" });
+  const toyId = Number(id);
+  if (!Number.isSafeInteger(toyId) || toyId === 0) {
+    throw createError({ statusCode: 404, statusMessage: "Toy not found" });
   }
   const toyClient = useToyClient();
   const projection = getQuery(event).projection;
-  const [apiData, dbData] = await Promise.all([
-    (async () => {
-      try {
-        const toy = await toyClient.getToy(toyId);
-        return {
-          failed: false,
-          toy,
-        };
-      } catch (err) {
-        console.error(`Failed to fetch toy ${toyId}:`, err);
-        return {
-          failed: true,
-          toy: {
-            id: toyId,
-            name: `Jouet Connecté #${toyId}`,
-            manufacturer: "Fabricant",
-            media_type: "toy" as const,
-          },
-        };
-      }
-    })(),
+  const [toy, dbData] = await Promise.all([
+    toyClient.getToy(toyId),
 
     // DB: dubbing projects
     projection === "media-page"
@@ -46,7 +27,7 @@ export default defineEventHandler(async (event): Promise<ToyResponse> => {
       : getDubbingProjects(toyId, "toy"),
   ]);
 
-  const { toy } = apiData;
+  if (!toy) throw createError({ statusCode: 404, statusMessage: "Toy not found" });
   const dubbingProjects = dbData;
 
   const isProcessed = dubbingProjects.length > 0;

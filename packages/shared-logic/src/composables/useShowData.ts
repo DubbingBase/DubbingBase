@@ -10,18 +10,12 @@ export async function fetchShowData(
     headers["Accept-Language"] = locale;
   }
 
-  try {
-    const data = await $fetch<ShowDetailResponse>(`/api/show/${id}`, {
-      headers,
-      ...(options.projection ? { query: { projection: options.projection } } : {}),
-    });
-    if (!data || !data.serie) {
-      console.error("fetchShowData: Response is null or missing serie property");
-      return null;
-    }
-    return data;
-  } catch (e) {
-    console.error("fetchShowData error:", e);
-    return null;
+  const data = await $fetch<ShowDetailResponse>(`/api/show/${id}`, {
+    headers,
+    ...(options.projection ? { query: { projection: options.projection } } : {}),
+  });
+  if (!data || !data.serie) {
+    throw new Error("Show response is missing the show record");
   }
+  return data;
 }

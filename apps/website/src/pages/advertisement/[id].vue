@@ -258,13 +258,14 @@ const { page: castPage, setPage: setCastPage } = useUrlPagination("castPage");
 const currentUrl = computed(() => route.fullPath);
 
 // Instant Hydration Data Fetching
-const { data, pending } = await useAsyncData(
+const { data, pending, error } = await useAsyncData(
   `ad-${adId.value}-${locale.value}`,
   () => fetchAdvertisementData(adId.value, locale.value, { projection: "advertisement-page" }),
   {
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
+if (import.meta.server && error.value) throw error.value;
 
 const advertisement = computed<Advertisement | null>(() => data.value?.advertisement || null);
 const dubbingProjects = computed(() => data.value?.dubbingProjects || []);
@@ -274,7 +275,9 @@ const activeDubProject = computed(() =>
 );
 const activeDubId = computed(() => activeDubProject.value?.id || 0);
 
-watch(activeDubId, () => void setCastPage(1));
+watch(activeDubId, (dub, previousDub) => {
+  if (previousDub > 0 && dub > 0 && dub !== previousDub) void setCastPage(1);
+});
 
 const posterUrl = computed(() => {
   return advertisement.value?.poster_url || null;

@@ -507,6 +507,7 @@ const {
   data: pageData,
   pending,
   error,
+  refresh: refreshEpisodeData,
 } = useAsyncData(
   cacheKey,
   async () => {
@@ -521,9 +522,20 @@ const {
   },
   {
     lazy: true,
+    dedupe: "defer",
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
+
+if (import.meta.server) {
+  const requestEvent = useRequestEvent();
+  onServerPrefetch(async () => {
+    await refreshEpisodeData();
+    if (error.value && requestEvent) {
+      setResponseStatus(requestEvent, error.value.statusCode ?? 500);
+    }
+  });
+}
 
 const data = computed(() =>
   pageData.value?.requestKey === cacheKey.value ? pageData.value.response : undefined,
@@ -603,7 +615,13 @@ const posterUrl = computed(() => {
 
 const activeDubId = computed(() => {
   if (route.query.dub) {
-    return Number(route.query.dub);
+    const requestedId = Number(route.query.dub);
+    if (
+      Number.isSafeInteger(requestedId) &&
+      dubbingProjects.value.some((project) => project.id === requestedId)
+    ) {
+      return requestedId;
+    }
   }
   return dubbingProjects.value[0]?.id || null;
 });
@@ -649,8 +667,17 @@ const formatDate = (dateStr: string) => {
 const searchQuery = ref("");
 const debouncedSearch = refDebounced(searchQuery, 150);
 
-watch([debouncedSearch, activeDubId], () => {
-  void setCastPage(1);
+watch([debouncedSearch, activeDubId], ([search, dub], [previousSearch, previousDub]) => {
+  if (
+    search !== previousSearch ||
+    (typeof previousDub === "number" &&
+      previousDub > 0 &&
+      typeof dub === "number" &&
+      dub > 0 &&
+      dub !== previousDub)
+  ) {
+    void setCastPage(1);
+  }
 });
 
 type EpisodeDisplayCastActor = DisplayCastActor & {
@@ -826,10 +853,6 @@ useHead({
     {
       property: "og:type",
       content: "video.episode",
-    },
-    {
-      property: "og:url",
-      content: pageUrl,
     },
     {
       property: "og:image",

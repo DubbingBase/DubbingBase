@@ -10,18 +10,12 @@ export async function fetchToyData(
     headers["Accept-Language"] = locale;
   }
 
-  try {
-    const data = await $fetch<ToyResponse>(`/api/toy/${id}`, {
-      headers,
-      ...(projection ? { query: { projection } } : {}),
-    });
-    if (!data || !data.toy) {
-      console.error("fetchToyData: Response is null or missing toy property");
-      return null;
-    }
-    return data;
-  } catch (e) {
-    console.error("fetchToyData error:", e);
-    return null;
+  const data = await $fetch<ToyResponse>(`/api/toy/${id}`, {
+    headers,
+    ...(projection ? { query: { projection } } : {}),
+  });
+  if (!data || !data.toy) {
+    throw new Error("Toy response is missing the toy record");
   }
+  return data;
 }

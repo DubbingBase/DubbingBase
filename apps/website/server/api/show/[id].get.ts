@@ -7,6 +7,7 @@ import { useSupabaseAdmin } from "../../utils/db/client";
 import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 import { scheduleBackgroundTask } from "../../utils/background";
 import { mediaPageAggregateCredits } from "../../utils/media-page-credits";
+import { withMediaServiceTimeout } from "../../utils/media-request";
 export async function fetchShowData(event: H3Event, showId: number) {
   const acceptLanguage = getHeader(event, "accept-language") || undefined;
   const projection = getQuery(event).projection;
@@ -23,57 +24,28 @@ export async function fetchShowData(event: H3Event, showId: number) {
     });
 
   // ── Parallel: TMDB + DB ──────────────────────────────────────────
-  const apiDataPromise = mediaService
-    .getMediaWithVoiceActors("tv", showId)
-    .then(async (result) => {
-      const { characters: characterProfilePictures, tvdbId } =
-        await mediaService.getCharacterProfilePictures("tv", showId, result.media);
+  const apiDataPromise = withMediaServiceTimeout(
+    () => mediaService.getMediaWithVoiceActors("tv", showId),
+    "TMDB show",
+  ).then(async (result) => {
+    const { characters: characterProfilePictures, tvdbId } =
+      await mediaService.getCharacterProfilePictures("tv", showId, result.media);
 
-      const aggregateCredits = result.media.aggregate_credits || (await aggregateCreditsPromise);
+    const aggregateCredits = result.media.aggregate_credits || (await aggregateCreditsPromise);
 
-      const creditsWithImages = processMedia({
-        credits:
-          projection === "media-page"
-            ? mediaPageAggregateCredits(aggregateCredits)
-            : aggregateCredits,
-      });
-      return {
-        serieWithImageUrls: result.media,
-        aggregateCredits: creditsWithImages.credits,
-        characterProfilePictures,
-        tvdbId,
-      };
-    })
-    .catch((err) => {
-      if (err instanceof Error && err.message === "TMDB API error: 404") {
-        return {
-          serieWithImageUrls: null,
-          aggregateCredits: { cast: [] },
-          characterProfilePictures: [],
-          tvdbId: null,
-        };
-      }
-
-      console.error(`Failed to fetch TMDB show ${showId}, using mock:`, err);
-      const mockSerie = {
-        id: showId,
-        title: "Information indisponible (Timeout)",
-        name: "Information indisponible (Timeout)",
-        poster_path: null,
-        backdrop_path: null,
-        overview: "Ce contenu n'a pas pu être chargé car les serveurs TMDB sont inaccessibles.",
-        credits: { cast: [] },
-        release_date: "1970-01-01",
-        first_air_date: "1970-01-01",
-        external_ids: {},
-      };
-      return {
-        serieWithImageUrls: processMedia(mockSerie),
-        aggregateCredits: { cast: [] },
-        characterProfilePictures: [],
-        tvdbId: null,
-      };
+    const creditsWithImages = processMedia({
+      credits:
+        projection === "media-page"
+          ? mediaPageAggregateCredits(aggregateCredits)
+          : aggregateCredits,
     });
+    return {
+      serieWithImageUrls: result.media,
+      aggregateCredits: creditsWithImages.credits,
+      characterProfilePictures,
+      tvdbId,
+    };
+  });
 
   const dbDataPromise = getDubbingProjectsForMediaEndpoint(showId, "tv", projection);
 
@@ -143,9 +115,9 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: "Missing id parameter" });
   }
 
-  const showId = parseInt(id, 10);
-  if (isNaN(showId)) {
-    throw createError({ statusCode: 400, message: "Invalid id parameter" });
+  const showId = Number(id);
+  if (!Number.isSafeInteger(showId) || showId < 1) {
+    throw createError({ statusCode: 404, statusMessage: "Show not found" });
   }
 
   return await fetchShowData(event, showId);

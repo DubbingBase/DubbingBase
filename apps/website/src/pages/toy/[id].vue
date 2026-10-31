@@ -235,7 +235,7 @@ const isReportModalOpen = ref(false);
 const { page: castPage, setPage: setCastPage } = useUrlPagination("castPage");
 const currentUrl = computed(() => route.fullPath);
 
-const { data, pending } = await useAsyncData(
+const { data, pending, error } = await useAsyncData(
   `toy-${toyId.value}-${locale.value}`,
   () => fetchToyData(toyId.value, locale.value, "media-page"),
   {
@@ -243,6 +243,7 @@ const { data, pending } = await useAsyncData(
     watch: [toyId, locale],
   },
 );
+if (import.meta.server && error.value) throw error.value;
 
 const toy = computed<Toy | null>(() => data.value?.toy || null);
 const dubbingProjects = computed<ToyDubbingProject[]>(() => data.value?.dubbingProjects || []);
@@ -250,7 +251,9 @@ const activeDubProject = computed(() =>
   resolveDetailCollectionProject(dubbingProjects.value, route.query.dub),
 );
 const activeDubId = computed(() => activeDubProject.value?.id || 0);
-watch(activeDubId, () => void setCastPage(1));
+watch(activeDubId, (dub, previousDub) => {
+  if (previousDub > 0 && dub > 0 && dub !== previousDub) void setCastPage(1);
+});
 
 const completeCastItems = computed(() => formatMediaWorkCastCards(activeDubProject.value));
 const castTotal = computed(() => completeCastItems.value.length);
