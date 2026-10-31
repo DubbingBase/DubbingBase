@@ -34,6 +34,75 @@ export async function waitForVueHydration(page: Page): Promise<void> {
   });
 }
 
+export function mockSeasonPageResponse(season: typeof MOCK_SEASON) {
+  return {
+    ...season,
+    dubbingProjects: season.dubbingProjects.map((project) => {
+      const works = project.works || project.work || [];
+      const voiceActorIds = new Set(
+        works.flatMap((work) => {
+          const id = work.voice_actor?.id || work.voice_actors?.id || work.voice_actor_id;
+          return id ? [id] : [];
+        }),
+      );
+      return {
+        id: project.id,
+        language: project.language,
+        studio_data: project.studio_data || project.studios || null,
+        has_voice_actor: voiceActorIds.size > 0,
+        voice_actor_count: voiceActorIds.size,
+        work_count: works.length,
+      };
+    }),
+  };
+}
+
+export function mockEpisodePageResponse(episode: typeof MOCK_EPISODE) {
+  const dubbingProjects = episode.dubbingProjects.map((project) => {
+    const works = project.works || project.work || [];
+    return {
+      id: project.id,
+      language: project.language,
+      studio_data: project.studio_data || project.studios || null,
+      workCount: works.length,
+      voiceActorCount: new Set(
+        works.flatMap((work) => {
+          const id = work.voice_actor?.id || work.voice_actors?.id || work.voice_actor_id;
+          return id ? [id] : [];
+        }),
+      ).size,
+      works: works.map((work) => {
+        const actor = work.voice_actor || work.voice_actors;
+        return {
+          id: work.id,
+          actor_id: work.actor_id,
+          character_name: work.character_name,
+          note: work.note,
+          voice_actor_id: actor?.id || work.voice_actor_id || null,
+        };
+      }),
+    };
+  });
+  const voiceActors = new Map<
+    number,
+    { id: number; firstname?: string; lastname?: string; profile_picture?: string | null }
+  >();
+  for (const project of episode.dubbingProjects) {
+    for (const work of project.works || project.work || []) {
+      const actor = work.voice_actor || work.voice_actors;
+      if (actor?.id) voiceActors.set(actor.id, actor);
+    }
+  }
+  const activeProject = dubbingProjects[0];
+  return {
+    ...episode,
+    dubbingProjects: dubbingProjects.map(({ works: _works, ...project }) => project),
+    voiceActors: Array.from(voiceActors.values()),
+    activeProjectId: activeProject?.id ?? null,
+    activeProjectWorks: activeProject?.works ?? [],
+  };
+}
+
 export async function setupMockApi(page: Page, options: MockApiOptions = {}) {
   const errors: string[] = [];
 
@@ -109,6 +178,47 @@ export async function setupMockApi(page: Page, options: MockApiOptions = {}) {
         work_count: project.works.length,
         crew: [],
       }));
+    const mediaCastResponse = (
+      works: Array<{
+        id: number;
+        voice_actor_id?: number;
+        character_name?: string;
+        performance?: string;
+        note?: string;
+        voice_actor?: {
+          id?: number;
+          firstname?: string;
+          lastname?: string;
+          profile_picture?: string | null;
+        };
+      }>,
+    ) => {
+      const data = works.map((work) => ({
+        work_id: work.id,
+        voice_actor_id: work.voice_actor?.id || work.voice_actor_id,
+        firstname: work.voice_actor?.firstname || "",
+        lastname: work.voice_actor?.lastname || "",
+        character_name: work.character_name || "",
+        performance: work.performance || "",
+        note: work.note || "",
+        profile_picture: work.voice_actor?.profile_picture || null,
+      }));
+      const query = (url.searchParams.get("query") || "").toLowerCase();
+      const filtered = query
+        ? data.filter((item) =>
+            `${item.firstname} ${item.lastname} ${item.character_name} ${item.performance}`
+              .toLowerCase()
+              .includes(query),
+          )
+        : data;
+      const pageSize = Math.min(Number(url.searchParams.get("pageSize")) || 12, 48);
+      const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+      const page = Math.min(Number(url.searchParams.get("page")) || 1, totalPages);
+      return {
+        data: filtered.slice((page - 1) * pageSize, page * pageSize),
+        pagination: { page, pageSize, totalItems: filtered.length, totalPages },
+      };
+    };
 
     // 1. Voice Actor Detail
     if (path.startsWith("/api/voice-actor/")) {
@@ -230,6 +340,23 @@ export async function setupMockApi(page: Page, options: MockApiOptions = {}) {
         status: 200,
         contentType: "application/json",
         body: JSON.stringify(response),
+      });
+    }
+
+    if (path === "/api/detail-collections" && url.searchParams.get("collection") === "media-cast") {
+      const type = url.searchParams.get("type");
+      const projectId = Number(url.searchParams.get("projectId"));
+      const projects =
+        type === "audiobook"
+          ? (options.audiobook || MOCK_AUDIOBOOK).dubbingProjects
+          : type === "podcast"
+            ? (options.podcast || MOCK_PODCAST).dubbingProjects
+            : [];
+      const project = projects.find((item: { id: number }) => item.id === projectId) || projects[0];
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(mediaCastResponse(project?.works || [])),
       });
     }
 
