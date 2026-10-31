@@ -28,13 +28,7 @@
     "privacy": "プライバシーポリシー",
     "terms": "利用規約",
     "contact": "お問い合わせ",
-    "rights": "全著作権所有。",
-    "search": "検索",
-    "otherMedia": "その他のメディア",
-    "contribute": "情報を追加",
-    "resources": "リソース",
-    "about": "概要",
-    "apiTerms": "API利用規約"
+    "rights": "全著作権所有。"
   },
   "nav": {
     "home": "ホーム",
@@ -1418,7 +1412,8 @@
   "series": {
     "notFound": "シリーズが見つかりません",
     "heroDescription": "今最も人気のテレビシリーズを発見しましょう。"
-  },
+  }
+,
   "browse": {
     "title": "{type}を探す",
     "description": "DubbingBaseで{type}の吹き替え情報を探せます。",
