@@ -3,8 +3,8 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 89 routes | 27 models | 200 components | 113 lib files | 75 env vars | 15 middleware | 46% test coverage
-> **Token savings:** this file is ~19,200 tokens. Without it, AI exploration would cost ~173,900 tokens. **Saves ~154,700 tokens per conversation.**
+> 89 routes | 27 models | 200 components | 114 lib files | 75 env vars | 15 middleware | 46% test coverage
+> **Token savings:** this file is ~19,300 tokens. Without it, AI exploration would cost ~174,200 tokens. **Saves ~154,900 tokens per conversation.**
 > **Last scanned:** 2026-10-31 14:13 — re-run after significant changes
 
 ---
@@ -594,7 +594,7 @@
   - function getDubbingProjects: (contentId, contentType) => void
   - function getDubbingProjectsForMediaEndpoint: (contentId, contentType, projection) => void
   - function getAdvertisementPageDubbingProjects: (contentId) => void
-  - _...9 more_
+  - _...10 more_
 - `apps/website/server/utils/dubbing-language.ts` — function requireDubbingLanguage: (value) => DubbingLanguage
 - `apps/website/server/utils/dubbing-region-detection.ts` — function detectDubbingRegionFromWikitext: ({...}, sections, }) => DubbingEvidence, type DubbingEvidence
 - `apps/website/server/utils/error-message.ts` — function getErrorMessage: (error) => string
@@ -717,6 +717,7 @@
 - `apps/website/src/composables/useShowPageData.ts` — function useShowPageData: (showId, locale) => void
 - `apps/website/src/composables/useTheme.ts` — function useTheme: () => void
 - `apps/website/src/composables/useUrlPagination.ts` — function readUrlPage: (value) => number, function useUrlPagination: (queryKey) => void
+- `apps/website/src/composables/useVoiceActorPageData.ts` — function fetchVoiceActorPageData: (id, lang?) => Promise<VoiceActorPageDataPayload | null>
 - `apps/website/src/composables/useVoiceActorProfileRecord.ts` — function useVoiceActorProfileRecord: () => void
 - `apps/website/src/lib/media-editor-routes.ts` — function getMediaEditorRoute: ({...}, mediaId, projectId }) => string | null
 - `apps/website/src/lib/mediaQueue.ts` — function enqueueMedia: (params) => Promise<void>
@@ -750,11 +751,12 @@
 - `apps/website/src/utils/search-routes.ts` — function getSearchResultRoute: (result, "id" | "media_type">) => string, type SearchFilter
 - `apps/website/src/utils/season-data.ts`
   - function fetchSeasonPageData: (showId, seasonNumber, locale?) => Promise<SeasonPageDataResponse>
-  - function fetchEpisodePageData: (showId, seasonNumber, episodeNumber, locale?) => Promise<EpisodePageDataResponse>
+  - function fetchEpisodePageData: (showId, seasonNumber, episodeNumber, locale?, projectId?) => Promise<EpisodePageDataResponse>
+  - function fetchEpisodeProjectWorks: (showId, projectId, locale?) => Promise<EpisodePageProjectWorksResponse>
   - interface SeasonPageDubbingProject
   - interface EpisodePageDubbingProject
   - interface EpisodePageVoiceActor
-  - interface EpisodePageDataResponse
+  - _...2 more_
 - `apps/website/src/utils/show-character-pictures.ts`
   - function indexCharacterPictures: (pictures) => CharacterPictureIndex
   - function findCharacterImage: (index, namesToTry) => void
