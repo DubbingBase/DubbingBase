@@ -126,7 +126,7 @@ const routes = [
   },
   {
     name: "trending-games",
-    path: "/api/trending/games?lang=fr-FR",
+    path: "/api/trending/games?lang=fr-FR&projection=card",
     marker: "CI fixture trending game 0",
     kind: "api",
     semanticParity: "homepage-trending-game-cards",
