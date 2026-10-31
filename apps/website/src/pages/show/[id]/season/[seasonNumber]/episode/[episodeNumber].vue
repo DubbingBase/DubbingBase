@@ -513,11 +513,18 @@ const {
   cacheKey,
   async () => {
     const requestKey = cacheKey.value;
+    const requestedProjectId =
+      typeof route.query.dub === "string" &&
+      Number.isSafeInteger(Number(route.query.dub)) &&
+      Number(route.query.dub) > 0
+        ? Number(route.query.dub)
+        : undefined;
     const response = await fetchEpisodePageData(
       showId.value,
       seasonNumber.value,
       episodeNumber.value,
       locale.value,
+      requestedProjectId,
     );
     return { requestKey, response };
   },
@@ -593,7 +600,10 @@ const voiceActorsById = computed(() => {
   const activeData = activeProjectId.value
     ? projectDataById.value.get(activeProjectId.value)
     : undefined;
-  return new Map((activeData?.voiceActors || []).map((voiceActor) => [voiceActor.id, voiceActor]));
+  const voiceActors =
+    activeData?.voiceActors ||
+    (activeProjectId.value === data.value?.activeProjectId ? data.value.voiceActors : []);
+  return new Map(voiceActors.map((voiceActor) => [voiceActor.id, voiceActor]));
 });
 
 watch([data, activeProjectId], async ([response, projectId]) => {
@@ -651,8 +661,12 @@ type EpisodeDisplayCastActor = DisplayCastActor & {
 const formattedCast = computed<DisplayCastActor[]>(() => {
   const cast: CastActorReference[] =
     data.value?.aggregateCredits?.cast || episode.value?.credits?.cast || [];
+  const activeData = activeProjectId.value
+    ? projectDataById.value.get(activeProjectId.value)
+    : undefined;
   const works: CastWorkReference[] = activeProjectId.value
-    ? projectDataById.value.get(activeProjectId.value)?.works || []
+    ? activeData?.works ||
+      (activeProjectId.value === data.value?.activeProjectId ? data.value.activeProjectWorks : [])
     : [];
   const { matches, unmatchedWorks } = matchCastWorks(cast, works);
   const matchedCards = matches.flatMap(({ actor, works: actorWorks }) =>

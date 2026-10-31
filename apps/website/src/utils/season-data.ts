@@ -103,6 +103,7 @@ export async function fetchEpisodePageData(
   seasonNumber: string | number,
   episodeNumber: string | number,
   locale?: string,
+  projectId?: number,
 ): Promise<EpisodePageDataResponse> {
   const headers: Record<string, string> = {};
   if (locale) headers["Accept-Language"] = locale;
@@ -115,6 +116,7 @@ export async function fetchEpisodePageData(
       season_number: seasonNumber,
       episode_number: episodeNumber,
       projection: "episode-page",
+      dub: projectId,
     },
   });
 }
