@@ -71,7 +71,8 @@
     "editImage": "Edit Image",
     "unlink": "Unlink",
     "confirmUnlinkTitle": "Confirm Unlink",
-    "unlinkVoiceActor": "Unlink Voice Actor",
+    "unlinkVoiceActor": "Unlink Voice Actor"
+  ,
     "pagination": "Pagination"
   },
   "theme": {
@@ -180,9 +181,9 @@
     "movies": "Movies",
     "series": "Series",
     "episodes": "Episodes",
-    "fetchWikipedia": "Fetch from Wikipedia",
-    "wikipediaUrl": "Wikipedia URL",
-    "enterWikipediaUrlDesc": "Enter a Wikipedia URL to fetch the voice actor's biography, name, and profile picture. You can also manually fill the details below."
+  "fetchWikipedia": "Fetch from Wikipedia",
+  "wikipediaUrl": "Wikipedia URL",
+  "enterWikipediaUrlDesc": "Enter a Wikipedia URL to fetch the voice actor's biography, name, and profile picture. You can also manually fill the details below."
   },
   "actor": {
     "title": "Actor",
@@ -497,13 +498,15 @@
       "saveStudioProfile": "Save Studio Profile",
       "studioSaved": "Studio saved successfully",
       "failedToSave": "Failed to save studio"
-    },
+    }
+  ,
     "spreadsheet": {
       "previous": "Previous",
       "next": "Next",
       "pageOf": "Page {page} of {total}"
     }
-  },
+  }
+,
   "footer": {
     "search": "Search",
     "otherMedia": "More Media",
@@ -511,7 +514,8 @@
     "resources": "Resources",
     "about": "About",
     "apiTerms": "API Terms"
-  },
+  }
+,
   "browse": {
     "title": "Browse {type}",
     "description": "Explore {type} with dubbing credits in DubbingBase.",
