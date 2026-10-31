@@ -3,9 +3,9 @@
     class="mt-20 border-t theme-border-subtle theme-border bg-white theme-bg pt-16 pb-8 theme-text-muted"
   >
     <div class="max-w-7xl mx-auto px-6">
-      <div class="grid grid-cols-1 gap-8 mb-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div class="grid grid-cols-1 gap-8 mb-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
         <!-- Brand -->
-        <div>
+        <div class="sm:col-span-2 lg:col-span-1 xl:col-span-2">
           <NuxtLink
             :to="localePath('/')"
             class="text-2xl font-extrabold theme-text inline-block mb-4"
@@ -54,11 +54,11 @@
         </div>
 
         <!-- Explore -->
-        <div>
+        <div class="sm:col-span-2 lg:col-span-2 xl:col-span-2">
           <h3 class="theme-text font-semibold mb-4">
             {{ t("footer.explore") }}
           </h3>
-          <ul class="space-y-3 text-sm">
+          <ul class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
             <li>
               <NuxtLink :to="localePath('/movies')" class="theme-hover-text transition">{{
                 t("footer.movies")
@@ -84,15 +84,6 @@
                 t("footer.search")
               }}</NuxtLink>
             </li>
-          </ul>
-        </div>
-
-        <!-- More Media -->
-        <div>
-          <h3 class="theme-text font-semibold mb-4">
-            {{ t("footer.otherMedia") }}
-          </h3>
-          <ul class="space-y-3 text-sm">
             <li>
               <NuxtLink :to="localePath('/games')" class="theme-hover-text transition">{{
                 t("search.videoGame")
