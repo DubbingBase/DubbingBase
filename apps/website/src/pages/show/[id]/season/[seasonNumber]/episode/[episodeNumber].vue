@@ -438,7 +438,9 @@ import {
 import ReportModal from "../../../../../../components/ReportModal.vue";
 import {
   fetchEpisodePageData,
+  fetchEpisodeProjectWorks,
   type EpisodePageDubbingProject,
+  type EpisodePageProjectWorksResponse,
 } from "../../../../../../utils/season-data";
 import {
   type CastActorReference,
@@ -535,52 +537,24 @@ const characterPictureIndex = computed(() =>
   indexCharacterPictures(characterProfilePictures.value),
 );
 const episode = computed(() => data.value?.episode);
-const voiceActorsById = computed(
-  () => new Map((data.value?.voiceActors || []).map((voiceActor) => [voiceActor.id, voiceActor])),
-);
-const requestError = computed(() => Boolean(error.value && error.value.statusCode !== 404));
-const projectVoiceActorMetrics = computed(() => {
-  const visibleProjects: EpisodePageDubbingProject[] = [];
-  const actorCounts = new Map<number, number>();
-
-  for (const project of data.value?.dubbingProjects || []) {
-    let hasVoiceActor = false;
-    const actorIds = new Set<number>();
-
-    for (const work of project.works || []) {
-      const voiceActorId = work.voice_actor_id ?? work.voice_actor?.id;
-      if (voiceActorId !== undefined && voiceActorId !== null) {
-        hasVoiceActor = true;
-        actorIds.add(voiceActorId);
-      }
-    }
-
-    actorCounts.set(project.id, actorIds.size);
-    if (hasVoiceActor) visibleProjects.push(project);
+const projectDataById = ref(new Map<number, EpisodePageProjectWorksResponse>());
+watch(data, (response) => {
+  projectDataById.value.clear();
+  if (response?.activeProjectId !== null && response?.activeProjectId !== undefined) {
+    projectDataById.value.set(response.activeProjectId, {
+      projectId: response.activeProjectId,
+      works: response.activeProjectWorks,
+      voiceActors: response.voiceActors,
+    });
   }
-
-  const currentLocale = locale.value.toLowerCase();
-  visibleProjects.sort((a, b) => {
-    const aIsPref = a.language?.toLowerCase().startsWith(currentLocale) ? 1 : 0;
-    const bIsPref = b.language?.toLowerCase().startsWith(currentLocale) ? 1 : 0;
-
-    if (aIsPref !== bIsPref) {
-      return bIsPref - aIsPref;
-    }
-
-    const aWorks = a.works?.length || 0;
-    const bWorks = b.works?.length || 0;
-    return bWorks - aWorks;
-  });
-
-  return { projects: visibleProjects, actorCounts };
 });
+const requestError = computed(() => Boolean(error.value && error.value.statusCode !== 404));
 const dubbingProjects = computed<EpisodePageDubbingProject[]>(
-  () => projectVoiceActorMetrics.value.projects,
+  () => data.value?.dubbingProjects || [],
 );
 
 function projectVoiceActorCount(project: EpisodePageDubbingProject): number {
-  return projectVoiceActorMetrics.value.actorCounts.get(project.id) || 0;
+  return project.voiceActorCount;
 }
 const title = computed(() => {
   if (!episode.value) return t("search.tv");
@@ -613,6 +587,21 @@ const activeDubProject = computed(() => {
     dubbingProjects.value.find((project) => project.id === activeDubId.value) ||
     dubbingProjects.value[0]
   );
+});
+const activeProjectId = computed(() => activeDubProject.value?.id ?? null);
+const voiceActorsById = computed(() => {
+  const activeData = activeProjectId.value
+    ? projectDataById.value.get(activeProjectId.value)
+    : undefined;
+  return new Map((activeData?.voiceActors || []).map((voiceActor) => [voiceActor.id, voiceActor]));
+});
+
+watch([data, activeProjectId], async ([response, projectId]) => {
+  if (!response || projectId === null || projectDataById.value.has(projectId)) return;
+  const projectData = await fetchEpisodeProjectWorks(showId.value, projectId, locale.value).catch(
+    () => ({ projectId, works: [], voiceActors: [] }),
+  );
+  projectDataById.value.set(projectId, projectData);
 });
 
 const isOriginalLanguage = computed(() => {
@@ -662,7 +651,9 @@ type EpisodeDisplayCastActor = DisplayCastActor & {
 const formattedCast = computed<DisplayCastActor[]>(() => {
   const cast: CastActorReference[] =
     data.value?.aggregateCredits?.cast || episode.value?.credits?.cast || [];
-  const works: CastWorkReference[] = activeDubProject.value?.works || [];
+  const works: CastWorkReference[] = activeProjectId.value
+    ? projectDataById.value.get(activeProjectId.value)?.works || []
+    : [];
   const { matches, unmatchedWorks } = matchCastWorks(cast, works);
   const matchedCards = matches.flatMap(({ actor, works: actorWorks }) =>
     actorWorks.map((work) => {

@@ -46,7 +46,8 @@ export interface EpisodePageDubbingProject {
   id: number;
   language?: string | null;
   studio_data?: { id: number; name: string; logo_url?: string | null } | null;
-  works?: CastWorkReference[];
+  workCount: number;
+  voiceActorCount: number;
 }
 
 export interface EpisodePageVoiceActor {
@@ -66,8 +67,16 @@ export interface EpisodePageDataResponse {
   aggregateCredits?: { cast?: CastActorReference[] };
   dubbingProjects: EpisodePageDubbingProject[];
   voiceActors: EpisodePageVoiceActor[];
+  activeProjectId: number | null;
+  activeProjectWorks: CastWorkReference[];
   characterProfilePictures: CharacterProfilePicture[];
   votes: Record<number, unknown>;
+}
+
+export interface EpisodePageProjectWorksResponse {
+  projectId: number;
+  works: CastWorkReference[];
+  voiceActors: EpisodePageVoiceActor[];
 }
 
 export async function fetchSeasonPageData(
@@ -107,5 +116,20 @@ export async function fetchEpisodePageData(
       episode_number: episodeNumber,
       projection: "episode-page",
     },
+  });
+}
+
+export async function fetchEpisodeProjectWorks(
+  showId: string | number,
+  projectId: number,
+  locale?: string,
+): Promise<EpisodePageProjectWorksResponse> {
+  const headers: Record<string, string> = {};
+  if (locale) headers["Accept-Language"] = locale;
+
+  return await $fetch<EpisodePageProjectWorksResponse>("/api/episode", {
+    headers,
+    timeout: 20_000,
+    query: { id: showId, projection: "episode-project", project_id: projectId },
   });
 }

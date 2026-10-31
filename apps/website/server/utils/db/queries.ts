@@ -349,7 +349,11 @@ const EPISODE_PAGE_DUBBING_PROJECTS_SELECT = `id,
     voice_actor:voice_actors(id, firstname, lastname, profile_picture)
   )`;
 
-export async function getEpisodePageDubbingProjectData(contentId: number) {
+export async function getEpisodePageDubbingProjectData(
+  contentId: number,
+  preferredProjectId?: number,
+  locale?: string,
+) {
   const supabase = useSupabaseAdmin();
   const { data, error } = await supabase
     .from("dubbing_projects")
@@ -357,7 +361,9 @@ export async function getEpisodePageDubbingProjectData(contentId: number) {
     .eq("content_id", contentId)
     .eq("content_type", "tv");
 
-  if (error) return { dubbingProjects: [], voiceActors: [] };
+  if (error) {
+    return { dubbingProjects: [], activeProjectId: null, activeProjectWorks: [], voiceActors: [] };
+  }
 
   const voiceActorsById = new Map<
     number,
@@ -368,7 +374,7 @@ export async function getEpisodePageDubbingProjectData(contentId: number) {
       profile_picture?: string | null;
     }
   >();
-  const dubbingProjects = (data || []).map((project) => ({
+  const projectsWithWorks = (data || []).map((project) => ({
     ...project,
     works: (project.works || []).map((work) => {
       const voiceActorId = work.voice_actor?.id ?? null;
@@ -393,7 +399,86 @@ export async function getEpisodePageDubbingProjectData(contentId: number) {
     studio_data: project.studio_data || null,
   }));
 
-  return { dubbingProjects, voiceActors: [...voiceActorsById.values()] };
+  const visibleProjects = projectsWithWorks
+    .map((project) => ({
+      id: project.id,
+      language: project.language,
+      studio_data: project.studio_data,
+      workCount: project.works.length,
+      voiceActorCount: new Set(
+        project.works.map((work) => work.voice_actor_id).filter((id): id is number => id !== null),
+      ).size,
+      works: project.works,
+    }))
+    .filter((project) => project.voiceActorCount > 0)
+    .sort((a, b) => {
+      const aPreferred = a.language?.toLowerCase().startsWith(locale?.toLowerCase() ?? "") ? 1 : 0;
+      const bPreferred = b.language?.toLowerCase().startsWith(locale?.toLowerCase() ?? "") ? 1 : 0;
+      return bPreferred - aPreferred || b.workCount - a.workCount;
+    });
+  const activeProject =
+    visibleProjects.find((project) => project.id === preferredProjectId) || visibleProjects[0];
+
+  return {
+    dubbingProjects: visibleProjects.map(({ works: _works, ...project }) => project),
+    activeProjectId: activeProject?.id ?? null,
+    activeProjectWorks: activeProject?.works ?? [],
+    voiceActors: activeProject
+      ? [
+          ...new Set(
+            activeProject.works.map((work) => work.voice_actor_id).filter((id) => id !== null),
+          ),
+        ]
+          .map((id) => voiceActorsById.get(id))
+          .filter((actor) => actor !== undefined)
+      : [],
+  };
+}
+
+export async function getEpisodePageProjectWorks(contentId: number, projectId: number) {
+  const supabase = useSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("dubbing_projects")
+    .select(
+      "id, works:work(id, actor_id, character_name, note, voice_actor:voice_actors(id, firstname, lastname, profile_picture))",
+    )
+    .eq("id", projectId)
+    .eq("content_id", contentId)
+    .eq("content_type", "tv")
+    .maybeSingle();
+
+  if (error || !data) return { projectId, works: [], voiceActors: [] };
+
+  const voiceActorsById = new Map<
+    number,
+    {
+      id: number;
+      firstname?: string | null;
+      lastname?: string | null;
+      profile_picture?: string | null;
+    }
+  >();
+  const works = (data.works || []).map((work) => {
+    const voiceActorId = work.voice_actor?.id ?? null;
+    if (voiceActorId !== null && work.voice_actor && !voiceActorsById.has(voiceActorId)) {
+      const voiceActor = processVoiceActor(work.voice_actor);
+      voiceActorsById.set(voiceActorId, {
+        id: voiceActor.id,
+        firstname: voiceActor.firstname,
+        lastname: voiceActor.lastname,
+        profile_picture: voiceActor.profile_picture,
+      });
+    }
+    return {
+      id: work.id,
+      actor_id: work.actor_id,
+      character_name: work.character_name,
+      note: work.note,
+      voice_actor_id: voiceActorId,
+    };
+  });
+
+  return { projectId, works, voiceActors: [...voiceActorsById.values()] };
 }
 
 const SEASON_PAGE_DUBBING_PROJECTS_SELECT = `id,
