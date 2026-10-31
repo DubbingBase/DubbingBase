@@ -125,6 +125,20 @@ const routes = [
     expected: ["tmdb:/3/trending/tv/day"],
   },
   {
+    name: "trending-games",
+    path: "/api/trending/games?lang=fr-FR",
+    marker: "CI fixture trending game 0",
+    kind: "api",
+    semanticParity: "homepage-trending-game-cards",
+    expected: ["igdb:token", "igdb:popularity_primitives", "igdb:games", "igdb:game_localizations"],
+  },
+  {
+    name: "game",
+    path: "/game/85",
+    marker: "CI fixture game 85",
+    expected: ["igdb:games", "igdb:characters", "supabase:dubbing_projects"],
+  },
+  {
     name: "admin-dubbing-project",
     path: "/api/admin/dubbing-project?content_id=85&content_type=movie&dubbing_language=fr-FR&projection=editor",
     marker: "CI fixture voice actor",
@@ -628,6 +642,14 @@ function assertRouteDependencies(route, before, after) {
 
 function fixtureFor(dataset, routeName) {
   if (routeName === "trending-shows") return { results: 20 };
+  if (routeName === "trending-games") return { games: 20 };
+  if (routeName === "game") {
+    return {
+      artworks: dataset === "large" ? 100 : 24,
+      screenshots: dataset === "large" ? 100 : 24,
+      characters: dataset === "large" ? 50 : 24,
+    };
+  }
   if (routeName === "season" || routeName === "season-api") {
     return {
       projects: dataset === "large" ? 80 : 12,
@@ -684,7 +706,26 @@ async function validateRoute(server, route, dataset) {
           Object.hasOwn(results[0], field),
         )
       ) {
-        throw new Error(`${route.path} included unused full TMDB show fields in its card projection.`);
+        throw new Error(
+          `${route.path} included unused full TMDB show fields in its card projection.`,
+        );
+      }
+    } else if (route.name === "trending-games") {
+      if (
+        !Array.isArray(response) ||
+        response.length !== fixture.games ||
+        response[0]?.name !== route.marker ||
+        !response[0]?.cover?.url
+      ) {
+        throw new Error(`${route.path} returned unexpected trending game data.`);
+      }
+      if (
+        server.side === "head" &&
+        ["summary", "rating", "rating_count", "genres", "platforms"].some((field) =>
+          Object.hasOwn(response[0], field),
+        )
+      ) {
+        throw new Error(`${route.path} included unused IGDB fields in its card projection.`);
       }
     } else if (route.name === "season-api") {
       const projects = response.dubbingProjects;
@@ -728,6 +769,10 @@ async function validateRoute(server, route, dataset) {
     ) {
       throw new Error(`${route.path} did not render the expected episode cast and actor links.`);
     }
+  } else if (route.name === "game") {
+    if (!validation.html.includes(route.marker) || !validation.html.includes("__NUXT_DATA__")) {
+      throw new Error(`${route.path} did not SSR the expected IGDB fixture data.`);
+    }
   } else if (
     !validation.html.includes(route.marker) ||
     !validation.html.includes("__NUXT_DATA__")
@@ -760,6 +805,21 @@ function trendingShowCardData(body) {
     title,
     poster_path,
   }));
+}
+
+function trendingGameCardData(body) {
+  return JSON.parse(body).map(({ id, name, cover }) => ({
+    id,
+    name,
+    cover: cover ? { image_id: cover.image_id, url: cover.url } : undefined,
+  }));
+}
+
+function gamePageMarkup(body) {
+  return body
+    .replace(/<script\b[\s\S]*?<\/script>/gi, "")
+    .replace(/<style\b[\s\S]*?<\/style>/gi, "")
+    .replace(/<link\b[^>]*>/gi, "");
 }
 
 function dubbingProjectPageData(body) {
@@ -887,7 +947,9 @@ function workloadFor(
         ? "regional-assignment-data"
         : route.name === "episode"
           ? "episode-cast-links"
-          : undefined),
+          : route.name === "game"
+            ? "game-page-rendered-markup"
+            : undefined),
     upstreamRequests: dependencies,
     profile,
   };
@@ -944,9 +1006,21 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
       ) {
         throw new Error(`${route.path} changed fields consumed by homepage trending show cards.`);
       } else if (
+        route.name === "trending-games" &&
+        JSON.stringify(trendingGameCardData(baseValidation.html)) !==
+          JSON.stringify(trendingGameCardData(headValidation.html))
+      ) {
+        throw new Error(`${route.path} changed fields consumed by homepage trending game cards.`);
+      } else if (
+        route.name === "game" &&
+        gamePageMarkup(baseValidation.html) !== gamePageMarkup(headValidation.html)
+      ) {
+        throw new Error(`${route.path} changed server-rendered game page markup.`);
+      } else if (
         route.kind === "api" &&
         route.name !== "season-api" &&
         route.name !== "trending-shows" &&
+        route.name !== "trending-games" &&
         baseValidation.hash !== headValidation.hash
       ) {
         throw new Error(`${route.path} changed its response body in the CPU comparison.`);

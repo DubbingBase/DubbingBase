@@ -218,10 +218,21 @@ export class IgdbClient {
     }
   }
 
-  async getGame(id: number): Promise<IgdbGame | null> {
+  async getGame(id: number, pageProjection = false): Promise<IgdbGame | null> {
+    const pageFields = `id, name, slug, summary, rating, first_release_date,
+       cover.image_id, cover.url,
+       artworks.image_id, artworks.url,
+       screenshots.image_id, screenshots.url,
+       genres.id, genres.name,
+       platforms.id, platforms.name,
+       involved_companies.id, involved_companies.company.id, involved_companies.company.name,
+       involved_companies.developer, involved_companies.publisher;`;
     const results = await this.query<IgdbGame>(
       "games",
-      `fields id, name, slug, summary, rating, rating_count, first_release_date,
+      pageProjection
+        ? `fields ${pageFields}
+       where id = ${id};`
+        : `fields id, name, slug, summary, rating, rating_count, first_release_date,
        cover.image_id, cover.url,
        artworks.image_id, artworks.url,
        screenshots.image_id, screenshots.url,
@@ -249,10 +260,14 @@ export class IgdbClient {
     return results;
   }
 
-  async getGameCharacters(gameId: number): Promise<IgdbCharacter[]> {
+  async getGameCharacters(gameId: number, pageProjection = false): Promise<IgdbCharacter[]> {
     return this.query<IgdbCharacter>(
       "characters",
-      `fields id, name, description, species, gender,
+      pageProjection
+        ? `fields id, name, mug_shot.image_id, mug_shot.url;
+       where games = (${gameId});
+       limit 50;`
+        : `fields id, name, description, species, gender,
               mug_shot.image_id, mug_shot.url,
               games;
        where games = (${gameId});

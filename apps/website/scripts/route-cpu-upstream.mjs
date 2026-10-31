@@ -218,6 +218,86 @@ const trendingShows = Array.from({ length: 20 }, (_, index) => ({
   })),
 }));
 
+const trendingGameCount = 20;
+const trendingPopularity = Array.from({ length: trendingGameCount * 2 }, (_, index) => ({
+  game_id: 900_000 + Math.floor(index / 2),
+  popularity_type: index % 2 === 0 ? 1 : 2,
+  value: 100 - Math.floor(index / 2),
+}));
+const trendingGames = Array.from({ length: trendingGameCount }, (_, index) => ({
+  id: 900_000 + index,
+  name: `CI fixture trending game ${index}`,
+  summary: "Deterministic synthetic game summary. ".repeat(24),
+  rating: 82.5,
+  rating_count: 12_000,
+  first_release_date: 1_600_000_000,
+  cover: { image_id: `trending-game-cover-${index}` },
+  genres: Array.from({ length: 8 }, (_, genreIndex) => ({ name: `Genre ${genreIndex}` })),
+  platforms: Array.from({ length: 12 }, (_, platformIndex) => ({
+    name: `Platform ${platformIndex}`,
+    slug: `platform-${platformIndex}`,
+  })),
+}));
+const trendingGameLocalizations = trendingGames.map((game) => ({
+  game: game.id,
+  name: game.name,
+  region: { identifier: "fr-FR" },
+}));
+const igdbGameArtCount = dataset === "large" ? 100 : 24;
+const igdbGame = {
+  id: 85,
+  name: "CI fixture game 85",
+  slug: "ci-fixture-game-85",
+  summary: "Deterministic IGDB game summary. ".repeat(24),
+  rating: 82.5,
+  rating_count: 12_000,
+  first_release_date: 1_600_000_000,
+  cover: { image_id: "game-cover-85" },
+  artworks: Array.from({ length: igdbGameArtCount }, (_, index) => ({
+    image_id: `game-artwork-${index}-${"unused-image-metadata-".repeat(5)}`,
+  })),
+  screenshots: Array.from({ length: igdbGameArtCount }, (_, index) => ({
+    image_id: `game-screenshot-${index}-${"unused-image-metadata-".repeat(5)}`,
+  })),
+  genres: Array.from({ length: 8 }, (_, index) => ({ id: index + 1, name: `Game genre ${index}` })),
+  platforms: Array.from({ length: 12 }, (_, index) => ({
+    id: index + 1,
+    name: `Game platform ${index}`,
+    slug: `game-platform-${index}`,
+  })),
+  involved_companies: Array.from({ length: 8 }, (_, index) => ({
+    company: { id: index + 1, name: `Game company ${index}` },
+    developer: index % 2 === 0,
+    publisher: index % 3 === 0,
+  })),
+  external_games: Array.from({ length: 20 }, (_, index) => ({
+    id: index + 1,
+    uid: `external-game-${index}`,
+    category: index,
+  })),
+  websites: Array.from({ length: 20 }, (_, index) => ({
+    url: `https://example.test/game-${index}`,
+    category: index,
+  })),
+};
+const gameCharacters = Array.from({ length: dataset === "large" ? 50 : 24 }, (_, index) => ({
+  id: 990_000 + index,
+  name: `CI fixture game character ${index}`,
+  description: "Deterministic synthetic character description. ".repeat(32),
+  species: { id: index + 1, name: `Species ${index}` },
+  gender: index % 3,
+  mug_shot: { image_id: `game-character-${index}` },
+  games: Array.from({ length: 20 }, (_, gameIndex) => 900_000 + gameIndex),
+}));
+const gameDubbingProjects = [
+  {
+    id: 1,
+    language: "fr-FR",
+    studio_data: { id: 1, name: "CI game studio", logo_url: null },
+    works: [],
+  },
+];
+
 const adminDubbingWorks = Array.from({ length: dataset === "large" ? 2400 : 50 }, (_, index) => {
   const actorIndex = Math.floor(index / 2);
   const voiceActorId = 60_000 + actorIndex;
@@ -309,6 +389,9 @@ const supabaseResponse = (url) => {
   if (table === "toy_metadata") return { value: searchToys, single: false };
   if (table === "dubbing_projects") {
     const query = url.searchParams;
+    if (query.get("content_type") === "eq.video_game") {
+      return { value: gameDubbingProjects, single: false };
+    }
     if (query.get("content_type") === "eq.advertisement") {
       return { value: searchAdvertisements, single: false };
     }
@@ -330,6 +413,12 @@ globalThis.__routeCpuUpstreamRequests = requestCounts;
 
 globalThis.fetch = async (input, init = {}) => {
   const url = new URL(typeof input === "string" || input instanceof URL ? input : input.url);
+  const requestBody =
+    typeof init.body === "string"
+      ? init.body
+      : input instanceof Request
+        ? await input.clone().text()
+        : "";
   let key;
   let body;
 
@@ -378,9 +467,24 @@ globalThis.fetch = async (input, init = {}) => {
   } else if (url.hostname === "id.twitch.tv" && url.pathname === "/oauth2/token") {
     key = "igdb:token";
     body = JSON.stringify({ access_token: "local-route-cpu-fixture", expires_in: 7_200 });
+  } else if (url.hostname === "api.igdb.com" && url.pathname === "/v4/popularity_primitives") {
+    key = "igdb:popularity_primitives";
+    body = JSON.stringify(trendingPopularity);
+  } else if (url.hostname === "api.igdb.com" && url.pathname === "/v4/game_localizations") {
+    key = "igdb:game_localizations";
+    body = JSON.stringify(trendingGameLocalizations);
   } else if (url.hostname === "api.igdb.com" && url.pathname === "/v4/games") {
     key = "igdb:games";
-    body = JSON.stringify(searchGames);
+    body = JSON.stringify(
+      requestBody.includes("where id = 85")
+        ? [igdbGame]
+        : requestBody.includes("where id = (")
+          ? trendingGames
+          : searchGames,
+    );
+  } else if (url.hostname === "api.igdb.com" && url.pathname === "/v4/characters") {
+    key = "igdb:characters";
+    body = JSON.stringify(gameCharacters);
   } else if (url.hostname === "openlibrary.org" && url.pathname === "/search.json") {
     key = "openlibrary:search";
     body = JSON.stringify({ docs: searchBooks });

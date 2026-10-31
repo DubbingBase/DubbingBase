@@ -494,7 +494,7 @@ const gamesData = useHomeSection(
   "games",
   () =>
     $fetch<HomeDataPayload["trendingGames"]>("/api/trending/games", {
-      params: { lang: trendingLanguage.value },
+      params: { lang: trendingLanguage.value, projection: "card" },
     }),
   () => [],
 );
