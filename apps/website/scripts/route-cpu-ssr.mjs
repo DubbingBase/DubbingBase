@@ -121,6 +121,7 @@ const routes = [
     path: "/api/trending/shows?lang=fr-FR&projection=card",
     marker: "CI fixture trending show 0",
     kind: "api",
+    semanticParity: "homepage-trending-show-cards",
     expected: ["tmdb:/3/trending/tv/day"],
   },
   {
@@ -752,6 +753,15 @@ function episodeCastLinks(html) {
   };
 }
 
+function trendingShowCardData(body) {
+  return JSON.parse(body).results.map(({ id, name, title, poster_path }) => ({
+    id,
+    name,
+    title,
+    poster_path,
+  }));
+}
+
 function dubbingProjectPageData(body) {
   const response = JSON.parse(body);
   const voiceActors = new Map(
@@ -928,8 +938,15 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
           `${route.path} changed season page data while compacting its project summary.`,
         );
       } else if (
+        route.name === "trending-shows" &&
+        JSON.stringify(trendingShowCardData(baseValidation.html)) !==
+          JSON.stringify(trendingShowCardData(headValidation.html))
+      ) {
+        throw new Error(`${route.path} changed fields consumed by homepage trending show cards.`);
+      } else if (
         route.kind === "api" &&
         route.name !== "season-api" &&
+        route.name !== "trending-shows" &&
         baseValidation.hash !== headValidation.hash
       ) {
         throw new Error(`${route.path} changed its response body in the CPU comparison.`);
