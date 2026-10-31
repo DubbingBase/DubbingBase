@@ -34,6 +34,8 @@ export default defineEventHandler(async (event) => {
 
     return {
       ...baseData,
+      workCount: baseData.voiceActor.work.length,
+      voiceActor: { ...baseData.voiceActor, work: [] },
       enhancedWorks: baseData.enhancedWorks.map(({ media, ...work }) => ({
         ...work,
         media_id: media.id,

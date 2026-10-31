@@ -12,12 +12,15 @@ type VoiceActorPageWorkItem = Omit<EnhancedWorkItem, "media"> & {
 type VoiceActorPageResponse = Omit<VoiceActorResponse, "enhancedWorks"> & {
   enhancedWorks?: VoiceActorPageWorkItem[];
   backdropPath?: string | null;
+  workCount: number;
 };
+
+type VoiceActorPageDataPayload = VoiceActorDataPayload & { workCount: number };
 
 export async function fetchVoiceActorPageData(
   id: string | number,
   lang?: string,
-): Promise<VoiceActorDataPayload | null> {
+): Promise<VoiceActorPageDataPayload | null> {
   try {
     const response = await $fetch<VoiceActorPageResponse>(`/api/voice-actor/${id}`, {
       query: {
@@ -33,13 +36,22 @@ export async function fetchVoiceActorPageData(
       mediaByKey.set(`${media.media_type}:${media.id}`, media);
     }
 
-    const enhancedWorks = (response.enhancedWorks ?? []).flatMap((work) => {
+    const enhancedWorks: EnhancedWorkItem[] = [];
+    for (const work of response.enhancedWorks ?? []) {
       const media = mediaByKey.get(`${work.media_type}:${work.media_id}`);
-      return media ? [{ ...work, media }] : [];
-    });
+      if (!media) continue;
+      enhancedWorks.push({
+        work: work.work,
+        media,
+        data: work.data,
+        sortDate: work.sortDate,
+        searchText: work.searchText,
+      });
+    }
 
     return {
       voiceActor: response.voiceActor,
+      workCount: response.workCount,
       enhancedWorks,
       medias: response.medias,
       characterProfilePictures: response.characterProfilePictures ?? [],

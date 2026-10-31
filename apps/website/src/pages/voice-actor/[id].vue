@@ -798,7 +798,7 @@ const voiceActorPageTitle = computed(() =>
 );
 const actorDescription = computed(() => {
   if (!actorName.value) return t("seo.voiceActorDescriptionFallback");
-  const workCount = voiceActor.value?.work?.length || 0;
+  const workCount = data.value?.workCount ?? voiceActor.value?.work?.length ?? 0;
   const desc = t("seo.voiceActorDescription", {
     name: actorName.value,
     workCount,
