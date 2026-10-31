@@ -1256,6 +1256,66 @@ export default defineEventHandler(async (event) => {
 
   const url = getRequestURL(event);
   const path = url.pathname;
+  const projectVoiceActorPage = (
+    data: typeof MOCK_VOICE_ACTOR | typeof MOCK_VOICE_ACTOR_WITH_UNRESOLVED_WORK,
+  ) => ({
+    ...data,
+    workCount: data.voiceActor.work.length,
+    voiceActor: { ...data.voiceActor, work: [] },
+    enhancedWorks: data.enhancedWorks.map(({ media, ...work }) => ({
+      ...work,
+      media_id: media.id,
+      media_type: "movie",
+    })),
+    medias: data.enhancedWorks.map(({ media }) => ({ ...media, media_type: "movie" })),
+  });
+  const summarizeProjects = (
+    projects: Array<{
+      id: number;
+      language: string;
+      studio_data?: { id: number; name: string; logo_url?: string | null } | null;
+      works: Array<{ voice_actor?: { id: number } | null }>;
+    }>,
+  ) =>
+    projects.map((project) => {
+      const works = project.works || [];
+      const voiceActorIds = new Set(
+        works.flatMap((work) => (work.voice_actor?.id ? [work.voice_actor.id] : [])),
+      );
+      return {
+        id: project.id,
+        language: project.language,
+        studio_data: project.studio_data || null,
+        has_voice_actor: voiceActorIds.size > 0,
+        voice_actor_count: voiceActorIds.size,
+        work_count: works.length,
+      };
+    });
+  const seasonProjects = summarizeProjects(MOCK_SHOW.dubbingProjects);
+  const episodePage = {
+    ...MOCK_EPISODE,
+    dubbingProjects: MOCK_SHOW.dubbingProjects.map((project) => ({
+      id: project.id,
+      language: project.language,
+      studio_data: project.studio_data || null,
+      workCount: project.works.length,
+      voiceActorCount: new Set(
+        project.works.flatMap((work) => (work.voice_actor?.id ? [work.voice_actor.id] : [])),
+      ).size,
+    })),
+    voiceActors: MOCK_SHOW.dubbingProjects.flatMap((project) =>
+      project.works.flatMap((work) => (work.voice_actor ? [work.voice_actor] : [])),
+    ),
+    activeProjectId: MOCK_SHOW.dubbingProjects[0]?.id ?? null,
+    activeProjectWorks:
+      MOCK_SHOW.dubbingProjects[0]?.works.map((work) => ({
+        id: work.id,
+        actor_id: work.actor_id,
+        character_name: work.character_name,
+        note: work.note,
+        voice_actor_id: work.voice_actor?.id ?? null,
+      })) ?? [],
+  };
 
   if (path === "/api/e2e/media-requests") {
     if (event.method === "DELETE") e2eMediaRequestPaths.length = 0;
@@ -1343,19 +1403,63 @@ export default defineEventHandler(async (event) => {
 
   // 1. Voice Actor Detail
   if (path.startsWith("/api/voice-actor/")) {
-    const response =
+    const data =
       path === "/api/voice-actor/999" ? MOCK_VOICE_ACTOR_WITH_UNRESOLVED_WORK : MOCK_VOICE_ACTOR;
+    const response =
+      url.searchParams.get("projection") === "page" ? projectVoiceActorPage(data) : data;
     return send(event, JSON.stringify(response), "application/json");
   }
 
   // 2. Movie Detail
   if (path.startsWith("/api/movie/")) {
-    return send(event, JSON.stringify(MOCK_MOVIE), "application/json");
+    const response =
+      url.searchParams.get("projection") === "media-page"
+        ? {
+            ...MOCK_MOVIE,
+            voiceActors: MOCK_MOVIE.dubbingProjects.flatMap((project) =>
+              project.works.flatMap((work) => (work.voice_actor ? [work.voice_actor] : [])),
+            ),
+            dubbingProjects: MOCK_MOVIE.dubbingProjects.map((project) => ({
+              id: project.id,
+              language: project.language,
+              studio_data: project.studio_data || null,
+              works: project.works.map((work) => ({
+                id: work.id,
+                actor_id: work.actor_id,
+                character_name: work.character_name,
+                note: work.note,
+                voice_actor_id: work.voice_actor?.id ?? null,
+              })),
+            })),
+          }
+        : MOCK_MOVIE;
+    return send(event, JSON.stringify(response), "application/json");
   }
 
   // 3. TV Show Detail
   if (path.startsWith("/api/show/")) {
-    return send(event, JSON.stringify(MOCK_SHOW), "application/json");
+    const response =
+      url.searchParams.get("projection") === "media-page"
+        ? {
+            ...MOCK_SHOW,
+            voiceActors: MOCK_SHOW.dubbingProjects.flatMap((project) =>
+              project.works.flatMap((work) => (work.voice_actor ? [work.voice_actor] : [])),
+            ),
+            dubbingProjects: MOCK_SHOW.dubbingProjects.map((project) => ({
+              id: project.id,
+              language: project.language,
+              studio_data: project.studio_data || null,
+              works: project.works.map((work) => ({
+                id: work.id,
+                actor_id: work.actor_id,
+                character_name: work.character_name,
+                note: work.note,
+                voice_actor_id: work.voice_actor?.id ?? null,
+              })),
+            })),
+          }
+        : MOCK_SHOW;
+    return send(event, JSON.stringify(response), "application/json");
   }
 
   if (path === "/api/season") {
@@ -1390,7 +1494,11 @@ export default defineEventHandler(async (event) => {
       season_number: seasonNumber,
       name: seasonNumber === 0 ? "Specials" : MOCK_SEASON.season.name,
     };
-    return send(event, JSON.stringify({ ...MOCK_SEASON, season }), "application/json");
+    const response =
+      url.searchParams.get("projection") === "media-page"
+        ? { ...MOCK_SEASON, season, dubbingProjects: seasonProjects }
+        : { ...MOCK_SEASON, season };
+    return send(event, JSON.stringify(response), "application/json");
   }
 
   if (path === "/api/episode") {
@@ -1405,7 +1513,13 @@ export default defineEventHandler(async (event) => {
         "application/json",
       );
     }
-    return send(event, JSON.stringify(MOCK_EPISODE), "application/json");
+    return send(
+      event,
+      JSON.stringify(
+        url.searchParams.get("projection") === "episode-page" ? episodePage : MOCK_EPISODE,
+      ),
+      "application/json",
+    );
   }
 
   // 4. Video Game Detail
@@ -1436,12 +1550,20 @@ export default defineEventHandler(async (event) => {
         "application/json",
       );
     }
-    return send(event, JSON.stringify(MOCK_AUDIOBOOK), "application/json");
+    const response =
+      url.searchParams.get("projection") === "media-summary"
+        ? { ...MOCK_AUDIOBOOK, dubbingProjects: summarizeProjects(MOCK_AUDIOBOOK.dubbingProjects) }
+        : MOCK_AUDIOBOOK;
+    return send(event, JSON.stringify(response), "application/json");
   }
 
   // 6. Podcast Detail
   if (path.startsWith("/api/podcast/")) {
-    return send(event, JSON.stringify(MOCK_PODCAST), "application/json");
+    const response =
+      url.searchParams.get("projection") === "media-summary"
+        ? { ...MOCK_PODCAST, dubbingProjects: summarizeProjects(MOCK_PODCAST.dubbingProjects) }
+        : MOCK_PODCAST;
+    return send(event, JSON.stringify(response), "application/json");
   }
 
   // 7. Original Actor Detail

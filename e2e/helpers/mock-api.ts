@@ -15,17 +15,17 @@ import {
 } from "../fixtures/mock-data";
 
 export interface MockApiOptions {
-  voiceActor?: any;
-  movie?: any;
-  show?: any;
+  voiceActor?: typeof MOCK_VOICE_ACTOR;
+  movie?: typeof MOCK_MOVIE;
+  show?: typeof MOCK_SHOW;
   season?: typeof MOCK_SEASON;
   episode?: typeof MOCK_EPISODE;
-  game?: any;
-  audiobook?: any;
-  podcast?: any;
-  actor?: any;
-  studio?: any;
-  searchResults?: any[];
+  game?: typeof MOCK_GAME;
+  audiobook?: typeof MOCK_AUDIOBOOK;
+  podcast?: typeof MOCK_PODCAST;
+  actor?: typeof MOCK_ACTOR;
+  studio?: typeof MOCK_STUDIO;
+  searchResults?: typeof MOCK_SEARCH_RESULTS;
 }
 
 export async function waitForVueHydration(page: Page): Promise<void> {
@@ -41,10 +41,7 @@ export async function setupMockApi(page: Page, options: MockApiOptions = {}) {
   page.on("pageerror", (err) => {
     // Ignore harmless known warnings/aborts
     const message = err.message || "";
-    if (
-      !message.includes("ResizeObserver loop") &&
-      !message.includes("posthog")
-    ) {
+    if (!message.includes("ResizeObserver loop") && !message.includes("posthog")) {
       errors.push(message);
     }
   });
@@ -54,51 +51,147 @@ export async function setupMockApi(page: Page, options: MockApiOptions = {}) {
     const url = new URL(route.request().url());
     const path = url.pathname;
 
+    const pageVoiceActor = (data: typeof MOCK_VOICE_ACTOR) => ({
+      ...data,
+      workCount: data.voiceActor.work.length,
+      voiceActor: { ...data.voiceActor, work: [] },
+      enhancedWorks: data.enhancedWorks.map(({ media, ...work }) => ({
+        ...work,
+        media_id: media.id,
+        media_type: media.media_type || "movie",
+      })),
+      medias: data.enhancedWorks.map(({ media }) => ({
+        ...media,
+        media_type: media.media_type || "movie",
+      })),
+    });
+
+    const pageProjects = (projects: typeof MOCK_MOVIE.dubbingProjects) => {
+      const voiceActors = new Map<
+        number,
+        NonNullable<(typeof projects)[number]["works"][number]["voice_actor"]>
+      >();
+      const dubbingProjects = projects.map((project) => ({
+        id: project.id,
+        language: project.language,
+        studio_data: project.studio_data || project.studios || null,
+        works: (project.works || []).map((work) => {
+          const actor = work.voice_actor;
+          if (actor?.id) voiceActors.set(actor.id, actor);
+          return {
+            id: work.id,
+            actor_id: work.actor_id,
+            character_name: work.character_name,
+            note: work.note,
+            voice_actor_id: actor?.id ?? work.voice_actor_id ?? null,
+          };
+        }),
+      }));
+      return { dubbingProjects, voiceActors: Array.from(voiceActors.values()) };
+    };
+    const mediaSummaries = (
+      projects: Array<{
+        id: number;
+        language: string;
+        studio_data?: { id: number; name: string; logo_url?: string | null } | null;
+        studios?: { id: number; name: string; logo_url?: string | null } | null;
+        works: Array<{ voice_actor?: { id: number } | null }>;
+      }>,
+    ) =>
+      projects.map((project) => ({
+        id: project.id,
+        language: project.language,
+        studio_data: project.studio_data || project.studios || null,
+        has_voice_actor: project.works.some((work) => Boolean(work.voice_actor?.id)),
+        voice_actor_count: new Set(
+          project.works.flatMap((work) => (work.voice_actor?.id ? [work.voice_actor.id] : [])),
+        ).size,
+        work_count: project.works.length,
+        crew: [],
+      }));
+
     // 1. Voice Actor Detail
     if (path.startsWith("/api/voice-actor/")) {
       const vaData = options.voiceActor || MOCK_VOICE_ACTOR;
+      const response =
+        url.searchParams.get("projection") === "page" ? pageVoiceActor(vaData) : vaData;
       return route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify(vaData),
+        body: JSON.stringify(response),
       });
     }
 
     // 2. Movie Detail
     if (path.startsWith("/api/movie/")) {
       const movieData = options.movie || MOCK_MOVIE;
+      const response =
+        url.searchParams.get("projection") === "media-page"
+          ? { ...movieData, ...pageProjects(MOCK_MOVIE.dubbingProjects) }
+          : movieData;
       return route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify(movieData),
+        body: JSON.stringify(response),
       });
     }
 
     // 3. Show / Series Detail
     if (path.startsWith("/api/show/")) {
       const showData = options.show || MOCK_SHOW;
+      const response =
+        url.searchParams.get("projection") === "media-page"
+          ? { ...showData, ...pageProjects(MOCK_SHOW.dubbingProjects) }
+          : showData;
       return route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify(showData),
+        body: JSON.stringify(response),
       });
     }
 
     if (path === "/api/season") {
       const seasonData = options.season || MOCK_SEASON;
+      const projects = mediaSummaries(MOCK_SHOW.dubbingProjects);
       return route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify(seasonData),
+        body: JSON.stringify(
+          url.searchParams.get("projection") === "media-page"
+            ? { ...seasonData, dubbingProjects: projects }
+            : seasonData,
+        ),
       });
     }
 
     if (path === "/api/episode") {
       const episodeData = options.episode || MOCK_EPISODE;
+      const pageData = pageProjects(MOCK_SHOW.dubbingProjects);
+      const active = pageData.dubbingProjects[0];
       return route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify(episodeData),
+        body: JSON.stringify(
+          url.searchParams.get("projection") === "episode-page"
+            ? {
+                ...episodeData,
+                dubbingProjects: active
+                  ? [
+                      {
+                        id: active.id,
+                        language: active.language,
+                        studio_data: active.studio_data,
+                        workCount: active.works.length,
+                        voiceActorCount: pageData.voiceActors.length,
+                      },
+                    ]
+                  : [],
+                voiceActors: pageData.voiceActors,
+                activeProjectId: active?.id ?? null,
+                activeProjectWorks: active?.works ?? [],
+              }
+            : episodeData,
+        ),
       });
     }
 
@@ -115,20 +208,28 @@ export async function setupMockApi(page: Page, options: MockApiOptions = {}) {
     // 5. Audiobook Detail
     if (path.startsWith("/api/audiobook/")) {
       const audiobookData = options.audiobook || MOCK_AUDIOBOOK;
+      const response =
+        url.searchParams.get("projection") === "media-summary"
+          ? { ...audiobookData, dubbingProjects: mediaSummaries(audiobookData.dubbingProjects) }
+          : audiobookData;
       return route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify(audiobookData),
+        body: JSON.stringify(response),
       });
     }
 
     // 6. Podcast Detail
     if (path.startsWith("/api/podcast/")) {
       const podcastData = options.podcast || MOCK_PODCAST;
+      const response =
+        url.searchParams.get("projection") === "media-summary"
+          ? { ...podcastData, dubbingProjects: mediaSummaries(podcastData.dubbingProjects) }
+          : podcastData;
       return route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify(podcastData),
+        body: JSON.stringify(response),
       });
     }
 
