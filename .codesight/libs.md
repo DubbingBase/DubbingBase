@@ -90,7 +90,7 @@
   - function getDubbingProjects: (contentId, contentType) => void
   - function getDubbingProjectsForMediaEndpoint: (contentId, contentType, projection) => void
   - function getAdvertisementPageDubbingProjects: (contentId) => void
-  - _...8 more_
+  - _...9 more_
 - `apps/website/server/utils/dubbing-language.ts` — function requireDubbingLanguage: (value) => DubbingLanguage
 - `apps/website/server/utils/dubbing-region-detection.ts` — function detectDubbingRegionFromWikitext: ({...}, sections, }) => DubbingEvidence, type DubbingEvidence
 - `apps/website/server/utils/error-message.ts` — function getErrorMessage: (error) => string

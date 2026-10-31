@@ -280,7 +280,7 @@ fk: actor_id, request_id, target_user_id, voice_actor_id, expected_link_id, resu
 Read and edit these files when adding columns, creating migrations, or changing relations:
 
 - `apps/website/server/utils/db/client.ts` — imported by **68** files
-- `apps/website/server/utils/db/queries.ts` — imported by **10** files
+- `apps/website/server/utils/db/queries.ts` — imported by **8** files
 
 ---
 _Back to [overview.md](./overview.md)_
