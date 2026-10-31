@@ -71,7 +71,8 @@
     "editImage": "Editar imagen",
     "unlink": "Desvincular",
     "confirmUnlinkTitle": "Confirmar desvinculación",
-    "unlinkVoiceActor": "Desvincular actor de doblaje",
+    "unlinkVoiceActor": "Desvincular actor de doblaje"
+  ,
     "pagination": "Paginación"
   },
   "theme": {
@@ -240,7 +241,7 @@
       "works": "Roles"
     }
   },
-  "details": {
+"details": {
     "modify": "Modificar",
     "dubbing": "Doblaje ({lang})",
     "synopsis": "Sinopsis",
@@ -497,13 +498,49 @@
       "saveStudioProfile": "Guardar perfil del estudio",
       "studioSaved": "Estudio guardado exitosamente",
       "failedToSave": "Error al guardar el estudio"
-    },
+    }
+  ,
     "spreadsheet": {
       "previous": "Anterior",
       "next": "Siguiente",
       "pageOf": "Página {page} de {total}"
     }
   },
+  "contribute": {
+    "title": "Contribuir",
+    "description": "Ayúdenos a mejorar DubbingBase contribuyendo a la base de datos",
+    "bronzeContributor": "Contribuidor de bronce",
+    "currentScore": "Puntuación actual",
+    "progressToSilver": "Progreso hacia plata",
+    "readyToHelp": "¿Listo para ayudar?",
+    "readyToHelpDescription": "Comience a contribuir para ganar puntos y desbloquear logros",
+    "startContributing": "Comenzar a contribuir",
+    "noRecentActivities": "No hay actividades recientes"
+  },
+  "dubbing": {
+    "cast": "Reparto",
+    "technicalTeam": "Equipo técnico"
+  },
+  "movie": {
+    "addDubbingProject": "Agregar proyecto de doblaje"
+  },
+  "report": {
+    "title": "Reportar",
+    "description": "Reportar un problema con este contenido",
+    "button": "Reportar",
+    "reason": "Razón",
+    "selectReason": "Seleccione una razón",
+    "reasons": {
+      "copyright": "Infracción de derechos de autor",
+      "inappropriate": "Contenido inapropiado",
+      "error": "Información incorrecta",
+      "other": "Otro"
+    },
+    "details": "Detalles",
+    "detailsPlaceholder": "Proporcione detalles adicionales sobre el problema...",
+    "successMessage": "Reporte enviado exitosamente"
+  }
+,
   "footer": {
     "search": "Buscar",
     "otherMedia": "Más medios",
@@ -511,7 +548,8 @@
     "resources": "Recursos",
     "about": "Acerca de",
     "apiTerms": "Condiciones de la API"
-  },
+  }
+,
   "browse": {
     "title": "Explorar {type}",
     "description": "Descubre {type} con créditos de doblaje en DubbingBase.",
