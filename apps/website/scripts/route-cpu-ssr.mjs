@@ -361,8 +361,8 @@ async function cpuProfileSummary(profile, profileWebsiteDir) {
   const applicationFrames = mappedFrames.filter((frame) => {
     const source = frame.source.replaceAll("\\", "/");
     return (
-      source.startsWith("src/") ||
       source.startsWith("server/") ||
+      source.startsWith("src/") ||
       source.startsWith("../../packages/") ||
       source.startsWith("packages/")
     );
