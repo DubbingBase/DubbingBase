@@ -3,13 +3,13 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 
 const mocks = vi.hoisted(() => ({ rpc: vi.fn(), requireAdmin: vi.fn() }));
 
-vi.mock("../utils/auth", () => ({
+vi.mock("../auth", () => ({
   requireAdmin: mocks.requireAdmin,
 }));
-vi.mock("../utils/db/client", () => ({
+vi.mock("../db/client", () => ({
   useSupabaseAdmin: () => ({ rpc: mocks.rpc }),
 }));
-vi.mock("../utils/urls/supabase", () => ({
+vi.mock("../urls/supabase", () => ({
   buildSupabaseImageUrl: (path: string | null) => (path ? `https://images.example/${path}` : null),
 }));
 
@@ -18,7 +18,7 @@ let handler: EventHandler;
 beforeAll(async () => {
   vi.stubGlobal("createError", createError);
   vi.stubGlobal("defineEventHandler", defineEventHandler);
-  handler = (await import("./find_duplicate_voice_actors.get")).default;
+  handler = (await import("../../api/find_duplicate_voice_actors.get")).default;
 });
 
 beforeEach(() => vi.clearAllMocks());

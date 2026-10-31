@@ -4,7 +4,7 @@ import { flushPromises } from "@vue/test-utils";
 import { createSSRApp, nextTick, ref } from "vue";
 import { renderToString } from "vue/server-renderer";
 import { useNuxtApp } from "#app";
-import Play from "./play.vue";
+import Play from "../../../../src/pages/contribute/task/play.vue";
 
 const mocks = vi.hoisted(() => ({ fetch: vi.fn(), navigate: vi.fn() }));
 const user = ref<{ id: string } | null>({ id: "user-1" });
