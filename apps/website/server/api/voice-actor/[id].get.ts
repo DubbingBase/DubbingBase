@@ -15,25 +15,31 @@ export default defineEventHandler(async (event) => {
   // header: titles must match the page language. Allowlisted to the 4
   // canonical tags so cache keys stay collapsed; header is the fallback.
   const query = getQuery(event);
+  const pageProjection = query.projection === "page";
   const rawLang = typeof query.lang === "string" ? query.lang.trim() : "";
   const canonicalLangs = APP_LOCALES.map((l) => l.language);
   const shortToCanonical: Record<string, string> = Object.fromEntries(
     APP_LOCALES.map((l) => [l.code, l.language]),
   );
   const headerLang =
-    (getHeader(event, "accept-language") || "fr-FR").split(",")[0]?.trim() ||
-    "fr-FR";
+    (getHeader(event, "accept-language") || "fr-FR").split(",")[0]?.trim() || "fr-FR";
   const acceptLanguage = canonicalLangs.includes(rawLang)
     ? rawLang
     : shortToCanonical[rawLang] || headerLang;
   try {
     const tmdbClient = useTmdbClient();
     const mediaService = new MediaService(tmdbClient, acceptLanguage);
-    const baseData = await mediaService.getVoiceActorWithWorkAndMedia(
-      voiceActorId,
-      acceptLanguage,
-    );
-    return baseData;
+    const baseData = await mediaService.getVoiceActorWithWorkAndMedia(voiceActorId, acceptLanguage);
+    if (!pageProjection) return baseData;
+
+    return {
+      ...baseData,
+      enhancedWorks: baseData.enhancedWorks.map(({ media, ...work }) => ({
+        ...work,
+        media_id: media.id,
+        media_type: media.media_type,
+      })),
+    };
   } catch (error) {
     console.error("Error fetching voice actor:", error);
     throw createError({

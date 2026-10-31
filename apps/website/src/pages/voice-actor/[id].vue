@@ -643,11 +643,11 @@ import {
 } from "../../utils/voice-actor-og-image";
 import {
   useVoiceActorData,
-  fetchVoiceActorData,
   paginateVoiceActorWorks,
   type VoiceActorWorkGroup,
   APP_LOCALES,
 } from "@app/shared-logic";
+import { fetchVoiceActorPageData } from "../../composables/useVoiceActorPageData";
 import { useRouter, useRoute } from "vue-router";
 import {
   Clapperboard as ClapperboardIcon,
@@ -719,7 +719,7 @@ const voiceActorDataRequest = useAsyncData(
   `voice-actor-${voiceActorId}-${locale.value}`,
   () => {
     const tmdbLanguage = APP_LOCALES.find((l) => l.code === locale.value)?.language || "en-US";
-    return fetchVoiceActorData(voiceActorId, tmdbLanguage);
+    return fetchVoiceActorPageData(voiceActorId, tmdbLanguage);
   },
   {
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
