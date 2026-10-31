@@ -361,9 +361,7 @@ export async function getEpisodePageDubbingProjectData(
     .eq("content_id", contentId)
     .eq("content_type", "tv");
 
-  if (error) {
-    return { dubbingProjects: [], activeProjectId: null, activeProjectWorks: [], voiceActors: [] };
-  }
+  if (error) throw new Error("Failed to load episode dubbing projects");
 
   const voiceActorsById = new Map<
     number,
@@ -447,7 +445,8 @@ export async function getEpisodePageProjectWorks(contentId: number, projectId: n
     .eq("content_type", "tv")
     .maybeSingle();
 
-  if (error || !data) return { projectId, works: [], voiceActors: [] };
+  if (error) throw new Error("Failed to load episode project works");
+  if (!data) return { projectId, works: [], voiceActors: [] };
 
   const voiceActorsById = new Map<
     number,

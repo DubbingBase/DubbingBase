@@ -185,7 +185,21 @@
         </div>
 
         <!-- Voice Cast -->
-        <section v-if="castTotal > 0">
+        <section
+          v-if="activeProjectError"
+          role="alert"
+          class="theme-surface border theme-border-subtle theme-border rounded-xl p-6 text-center"
+        >
+          <p class="theme-text-secondary mb-4">{{ $t("details.requestError") }}</p>
+          <button
+            type="button"
+            class="px-4 py-2 theme-primary-bg font-semibold rounded-lg hover:opacity-90 transition-opacity"
+            @click="retryActiveProjectWorks"
+          >
+            {{ $t("common.retry") }}
+          </button>
+        </section>
+        <section v-else-if="castTotal > 0">
           <div class="flex flex-col mb-6 gap-2">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
               <div>
@@ -545,8 +559,10 @@ const characterPictureIndex = computed(() =>
 );
 const episode = computed(() => data.value?.episode);
 const projectDataById = ref(new Map<number, EpisodePageProjectWorksResponse>());
+const projectDataErrors = ref(new Set<number>());
 watch(data, (response) => {
   projectDataById.value.clear();
+  projectDataErrors.value.clear();
   if (response?.activeProjectId !== null && response?.activeProjectId !== undefined) {
     projectDataById.value.set(response.activeProjectId, {
       projectId: response.activeProjectId,
@@ -606,13 +622,31 @@ const voiceActorsById = computed(() => {
   return new Map(voiceActors.map((voiceActor) => [voiceActor.id, voiceActor]));
 });
 
-watch([data, activeProjectId], async ([response, projectId]) => {
+async function loadProjectWorks(projectId: number): Promise<void> {
+  if (projectDataById.value.has(projectId)) return;
+  projectDataErrors.value.delete(projectId);
+  try {
+    const projectData = await fetchEpisodeProjectWorks(showId.value, projectId, locale.value);
+    projectDataById.value.set(projectId, projectData);
+  } catch (error) {
+    console.error("Failed to load episode project works:", error);
+    projectDataErrors.value.add(projectId);
+  }
+}
+
+watch([data, activeProjectId], ([response, projectId]) => {
   if (!response || projectId === null || projectDataById.value.has(projectId)) return;
-  const projectData = await fetchEpisodeProjectWorks(showId.value, projectId, locale.value).catch(
-    () => ({ projectId, works: [], voiceActors: [] }),
-  );
-  projectDataById.value.set(projectId, projectData);
+  void loadProjectWorks(projectId);
 });
+const activeProjectError = computed(
+  () => activeProjectId.value !== null && projectDataErrors.value.has(activeProjectId.value),
+);
+
+function retryActiveProjectWorks(): void {
+  const projectId = activeProjectId.value;
+  if (projectId === null) return;
+  void loadProjectWorks(projectId);
+}
 
 const isOriginalLanguage = computed(() => {
   const orig = (
