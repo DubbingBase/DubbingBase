@@ -16,7 +16,11 @@ interface GamePageDubbingProject {
         } | null;
       }[]
     | null;
-  studio_data?: { id: number; name: string | null; logo_url: string | null } | null;
+  studio_data?: {
+    id: number;
+    name: string | null;
+    logo_url: string | null;
+  } | null;
 }
 
 interface GamePageData {
@@ -35,18 +39,12 @@ export async function fetchGameData(
     headers["Accept-Language"] = locale;
   }
 
-  try {
-    const data = await $fetch<GamePageData>(`/api/game/${id}`, {
-      headers,
-      ...(projection ? { query: { projection } } : {}),
-    });
-    if (!data || !data.game) {
-      console.error("fetchGameData: Response is null or missing game property");
-      return null;
-    }
-    return data;
-  } catch (e) {
-    console.error("fetchGameData error:", e);
-    return null;
+  const data = await $fetch<GamePageData>(`/api/game/${id}`, {
+    headers,
+    ...(projection ? { query: { projection } } : {}),
+  });
+  if (!data || !data.game) {
+    throw new Error("Game response is missing the game record");
   }
+  return data;
 }

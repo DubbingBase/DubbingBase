@@ -4,6 +4,7 @@ import { getDubbingProjects, getGamePageDubbingProjects } from "../../utils/db/q
 import { useSupabaseAdmin } from "../../utils/db/client";
 import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 import { scheduleBackgroundTask } from "../../utils/background";
+import { withMediaServiceTimeout } from "../../utils/media-request";
 import type { IgdbGame, IgdbCharacter } from "@app/shared-logic";
 
 function processIgdbGame(game: IgdbGame): IgdbGame & { media_type: "video_game" } {
@@ -46,32 +47,24 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: "Missing id parameter" });
   }
 
-  const gameId = parseInt(id, 10);
-  if (isNaN(gameId)) {
-    throw createError({ statusCode: 400, message: "Invalid id parameter" });
+  const gameId = Number(id);
+  if (!Number.isSafeInteger(gameId) || gameId < 1) {
+    throw createError({ statusCode: 404, statusMessage: "Game not found" });
   }
   const igdbClient = useIgdbClient();
 
-  let game: (IgdbGame & { media_type: "video_game" }) | null = null;
-  let characters: ReturnType<typeof processIgdbCharacter>[] = [];
-
-  try {
-    const [igdbGame, igdbCharacters] = await Promise.all([
-      igdbClient.getGame(gameId),
-      igdbClient.getGameCharacters(gameId),
-    ]);
-    game = igdbGame ? processIgdbGame(igdbGame) : null;
-    characters = igdbCharacters.map(processIgdbCharacter);
-  } catch (err) {
-    console.error(`Failed to fetch IGDB game ${gameId}:`, err);
-    game = {
-      id: gameId,
-      name: "Information indisponible (Timeout)",
-      summary: "Ce contenu n'a pas pu être chargé.",
-      media_type: "video_game",
-      cover: undefined,
-    };
+  const igdbGame = await withMediaServiceTimeout(() => igdbClient.getGame(gameId), "IGDB game");
+  if (!igdbGame) {
+    throw createError({ statusCode: 404, statusMessage: "Game not found" });
   }
+  const game = processIgdbGame(igdbGame);
+  const characters = await igdbClient
+    .getGameCharacters(gameId)
+    .then((results) => results.map(processIgdbCharacter))
+    .catch((error: unknown) => {
+      console.error(`Failed to fetch IGDB game characters ${gameId}:`, error);
+      return [];
+    });
 
   const metadata = { game, characters };
 

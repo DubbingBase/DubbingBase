@@ -4,9 +4,7 @@
     <PersonDetailsLayout
       v-else-if="actor"
       :name="actor.name"
-      :profile-url="
-        actor.profile_path ? resolveImageUrl(actor.profile_path) : null
-      "
+      :profile-url="actor.profile_path ? resolveImageUrl(actor.profile_path) : null"
       :loading="loading"
     >
       <template #metadata>
@@ -56,9 +54,7 @@
             stroke-linecap="round"
             stroke-linejoin="round"
           >
-            <path
-              d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"
-            />
+            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
             <line x1="4" y1="22" x2="4" y2="15" />
           </svg>
           {{ t("report.button", "Signaler cette fiche") }}
@@ -199,9 +195,7 @@
                 <div
                   class="theme-input border theme-border-subtle theme-border rounded-2xl p-4 shadow-sm transition-colors theme-hover-border block group"
                 >
-                  <div
-                    class="flex flex-col sm:grid sm:grid-cols-3 gap-4 h-full"
-                  >
+                  <div class="flex flex-col sm:grid sm:grid-cols-3 gap-4 h-full">
                     <a
                       data-actor-nav
                       :href="
@@ -216,9 +210,7 @@
                       >
                         <img
                           v-if="item.poster_path"
-                          :src="
-                            getActorImageSrc(resolveImageUrl(item.poster_path))
-                          "
+                          :src="getActorImageSrc(resolveImageUrl(item.poster_path))"
                           :alt="item.title || item.name || ''"
                           class="w-full h-full object-cover transition-transform duration-300"
                           loading="lazy"
@@ -239,9 +231,7 @@
                             aria-hidden="true"
                             class="w-6 h-6 sm:w-8 sm:h-8 opacity-20"
                           >
-                            <path
-                              d="M4 11h16v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"
-                            />
+                            <path d="M4 11h16v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" />
                             <path d="m4 11 2-7" />
                             <path d="m10 11 2-7" />
                             <path d="m16 11 2-7" />
@@ -273,11 +263,7 @@
                     <a
                       v-if="item.voice_actors?.[0]"
                       data-actor-nav
-                      :href="
-                        actorLocalePath(
-                          `/voice-actor/${item.voice_actors[0].id}`,
-                        )
-                      "
+                      :href="actorLocalePath(`/voice-actor/${item.voice_actors[0].id}`)"
                       class="flex flex-row sm:flex-col min-w-0 gap-4 sm:gap-0 items-center sm:items-start border-t theme-border-subtle theme-border sm:border-t-0 pt-3 sm:pt-0 hover:opacity-80 transition-opacity cursor-pointer"
                     >
                       <div
@@ -285,11 +271,7 @@
                       >
                         <img
                           v-if="item.voice_actors[0].profile_picture"
-                          :src="
-                            getActorImageSrc(
-                              item.voice_actors[0].profile_picture,
-                            )
-                          "
+                          :src="getActorImageSrc(item.voice_actors[0].profile_picture)"
                           :alt="`${item.voice_actors[0].firstname} ${item.voice_actors[0].lastname}`"
                           class="w-full h-full object-cover"
                           loading="lazy"
@@ -347,9 +329,7 @@
                           class="text-[10px] theme-text-muted font-semibold uppercase tracking-wider mb-0.5"
                           >{{ $t("details.voicedBy") }}</span
                         >
-                        <span
-                          class="font-medium text-sm theme-text-muted italic"
-                        >
+                        <span class="font-medium text-sm theme-text-muted italic">
                           {{ $t("details.unknownCharacter") }}
                         </span>
                       </div>
@@ -445,16 +425,13 @@ function getActorImageSrc(src: string | null | undefined): string {
 
 const id = String(route.params.id);
 const siteUrl = useSiteConfig().url;
-const pageUrl = computed(
-  () => new URL(actorLocalePath(`/actor/${id}`), siteUrl).href,
-);
+const pageUrl = computed(() => new URL(actorLocalePath(`/actor/${id}`), siteUrl).href);
 const currentUrl = computed(() => new URL(route.fullPath, siteUrl).href);
-const { page: voicesPage, setPage: setVoicesPage } =
-  useUrlPagination("voicesPage");
+const { page: voicesPage, setPage: setVoicesPage } = useUrlPagination("voicesPage");
 const { page: filmographyPage, setPage: setFilmographyPageUrl } =
   useUrlPagination("filmographyPage");
 
-const { data: initialData } = await useAsyncData(
+const { data: initialData, error } = await useAsyncData(
   `actor-${id}`,
   () =>
     fetchActorData(id, {
@@ -465,6 +442,7 @@ const { data: initialData } = await useAsyncData(
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
+if (import.meta.server && error.value) throw error.value;
 
 if (import.meta.server) prepareActorSsrData(initialData.value);
 
@@ -514,9 +492,7 @@ const voiceActorItems = filteredUniqueVoiceActorsByLanguage;
 const voiceActorsTotal = computed(() => voiceActorItems.value.length);
 const filmographyItems = enhancedFilmography;
 const filmographyTotal = computed(() =>
-  filmographyComplete.value
-    ? filteredCredits.value.length
-    : filmographyCount.value,
+  filmographyComplete.value ? filteredCredits.value.length : filmographyCount.value,
 );
 
 function navigateActorCard(event: MouseEvent): void {
@@ -539,16 +515,12 @@ function navigateActorCard(event: MouseEvent): void {
   if (destination.origin !== window.location.origin) return;
 
   event.preventDefault();
-  void router.push(
-    `${destination.pathname}${destination.search}${destination.hash}`,
-  );
+  void router.push(`${destination.pathname}${destination.search}${destination.hash}`);
 }
 
 useHead({
   titleTemplate: null,
-  title: computed(() =>
-    actor.value?.name ? actor.value.name : t("search.actor", "Acteur"),
-  ),
+  title: computed(() => (actor.value?.name ? actor.value.name : t("search.actor", "Acteur"))),
   meta: [
     {
       name: "description",
@@ -558,10 +530,7 @@ useHead({
           actor.value?.biography ||
           (name
             ? t("seo.actorDescription", { name })
-            : t(
-                "seo.actorDescriptionFallback",
-                "Discover filmography and voice actors.",
-              ));
+            : t("seo.actorDescriptionFallback", "Discover filmography and voice actors."));
         return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
       }),
     },
@@ -574,9 +543,7 @@ useHead({
     },
     {
       property: "og:title",
-      content: computed(() =>
-        actor.value?.name ? actor.value.name : t("search.actor", "Acteur"),
-      ),
+      content: computed(() => (actor.value?.name ? actor.value.name : t("search.actor", "Acteur"))),
     },
     {
       property: "og:description",
@@ -586,10 +553,7 @@ useHead({
           actor.value?.biography ||
           (name
             ? t("seo.actorDescription", { name })
-            : t(
-                "seo.actorDescriptionFallback",
-                "Discover filmography and voice actors.",
-              ));
+            : t("seo.actorDescriptionFallback", "Discover filmography and voice actors."));
         return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
       }),
     },
@@ -611,9 +575,7 @@ useHead({
     },
     {
       name: "twitter:title",
-      content: computed(() =>
-        actor.value?.name ? actor.value.name : t("search.actor", "Acteur"),
-      ),
+      content: computed(() => (actor.value?.name ? actor.value.name : t("search.actor", "Acteur"))),
     },
     {
       name: "twitter:description",
@@ -623,10 +585,7 @@ useHead({
           actor.value?.biography ||
           (name
             ? t("seo.actorDescription", { name })
-            : t(
-                "seo.actorDescriptionFallback",
-                "Discover filmography and voice actors.",
-              ));
+            : t("seo.actorDescriptionFallback", "Discover filmography and voice actors."));
         return desc.length > 160 ? desc.substring(0, 157) + "..." : desc;
       }),
     },
@@ -653,23 +612,15 @@ useHead({
           "@type": "Person",
           url: pageUrl.value,
           name: name || t("search.actor", "Acteur"),
-          image: actor.value?.profile_path
-            ? resolveImageUrl(actor.value.profile_path)
-            : "",
+          image: actor.value?.profile_path ? resolveImageUrl(actor.value.profile_path) : "",
           description:
             actor.value?.biography ||
             (name
               ? t("seo.actorDescription", { name })
-              : t(
-                  "seo.actorDescriptionFallback",
-                  "Discover filmography and voice actors.",
-                )),
+              : t("seo.actorDescriptionFallback", "Discover filmography and voice actors.")),
         });
         // HTML-escape the serialized JSON to prevent script-breaking sequences
-        return json
-          .replace(/</g, "\\u003c")
-          .replace(/>/g, "\\u003e")
-          .replace(/&/g, "\\u0026");
+        return json.replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026");
       }),
     },
   ],

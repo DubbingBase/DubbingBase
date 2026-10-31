@@ -10,18 +10,12 @@ export async function fetchPodcastData(
     headers["Accept-Language"] = locale;
   }
 
-  try {
-    const data = await $fetch<PodcastResponse>(`/api/podcast/${id}`, {
-      headers,
-      ...(options.projection ? { query: { projection: options.projection } } : {}),
-    });
-    if (!data || !data.podcast) {
-      console.error("fetchPodcastData: Response is null or missing podcast property");
-      return null;
-    }
-    return data;
-  } catch (e) {
-    console.error("fetchPodcastData error:", e);
-    return null;
+  const data = await $fetch<PodcastResponse>(`/api/podcast/${id}`, {
+    headers,
+    ...(options.projection ? { query: { projection: options.projection } } : {}),
+  });
+  if (!data || !data.podcast) {
+    throw new Error("Podcast response is missing the podcast record");
   }
+  return data;
 }

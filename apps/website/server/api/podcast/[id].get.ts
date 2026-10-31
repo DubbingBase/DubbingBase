@@ -4,6 +4,7 @@ import { useSupabaseAdmin } from "../../utils/db/client";
 import { sendDiscordAdminNotification } from "../../utils/notifications/discord";
 import { scheduleBackgroundTask } from "../../utils/background";
 import type { PodcastResponse } from "@app/shared-logic";
+import { withMediaServiceTimeout } from "../../utils/media-request";
 
 export default defineEventHandler(async (event): Promise<PodcastResponse> => {
   const id = getRouterParam(event, "id");
@@ -12,37 +13,19 @@ export default defineEventHandler(async (event): Promise<PodcastResponse> => {
     throw createError({ statusCode: 400, message: "Missing id parameter" });
   }
 
-  const podcastId = parseInt(id, 10);
-  if (isNaN(podcastId)) {
-    throw createError({ statusCode: 400, message: "Invalid id parameter" });
+  const podcastId = Number(id);
+  if (!Number.isSafeInteger(podcastId) || podcastId < 1) {
+    throw createError({ statusCode: 404, statusMessage: "Podcast not found" });
   }
   const podcastClient = usePodcastClient();
-  const [apiData, dbData] = await Promise.all([
-    (async () => {
-      try {
-        const podcast = await podcastClient.getPodcast(podcastId);
-        return {
-          failed: false,
-          podcast,
-        };
-      } catch (err) {
-        console.error(`Failed to fetch podcast ${podcastId}:`, err);
-        return {
-          failed: true,
-          podcast: {
-            id: podcastId,
-            title: `Fiction Audio #${podcastId}`,
-            media_type: "podcast" as const,
-          },
-        };
-      }
-    })(),
+  const [podcast, dbData] = await Promise.all([
+    withMediaServiceTimeout(() => podcastClient.getPodcast(podcastId), "iTunes podcast"),
 
     // DB: dubbing projects
     getDubbingProjectsForMediaEndpoint(podcastId, "podcast", getQuery(event).projection),
   ]);
 
-  const { podcast } = apiData;
+  if (!podcast) throw createError({ statusCode: 404, statusMessage: "Podcast not found" });
   const dubbingProjects = dbData;
 
   const isProcessed = dubbingProjects.length > 0;

@@ -179,11 +179,12 @@ export class OpenLibraryClient {
 
       if (!res.ok) {
         // If not found as OL work and is valid ISBN (10 or 13 digits), try ISBN endpoint
-        if (id > 100000000) {
+        if (res.status === 404 && id > 100000000) {
           const book = await this.getBookByIsbn(id);
           return book;
         }
-        return null;
+        if (res.status === 404) return null;
+        throw new Error(`OpenLibrary API error: ${res.status}`);
       }
 
       const data: OpenLibraryWorkResponse = await res.json();
@@ -243,7 +244,7 @@ export class OpenLibraryClient {
       return book;
     } catch (err) {
       console.error(`Failed to fetch OpenLibrary book ${id}:`, err);
-      return null;
+      throw err;
     }
   }
 
@@ -258,7 +259,10 @@ export class OpenLibraryClient {
         signal: AbortSignal.timeout(8000),
       });
 
-      if (!res.ok) return null;
+      if (!res.ok) {
+        if (res.status === 404) return null;
+        throw new Error(`OpenLibrary API error: ${res.status}`);
+      }
 
       const data: {
         title?: string;
@@ -309,7 +313,7 @@ export class OpenLibraryClient {
       return book;
     } catch (err) {
       console.error(`Failed to fetch OpenLibrary book by ISBN ${isbn}:`, err);
-      return null;
+      throw err;
     }
   }
 }

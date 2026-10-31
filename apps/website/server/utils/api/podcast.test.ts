@@ -40,4 +40,16 @@ describe("Podcast persistence policy", () => {
     expect(get).not.toHaveBeenCalled();
     expect(put).not.toHaveBeenCalled();
   });
+
+  it("returns missing podcasts as null and preserves iTunes failures", async () => {
+    vi.stubGlobal(
+      "fetch",
+      async () => new Response(JSON.stringify({ resultCount: 0, results: [] })),
+    );
+    const client = new PodcastClient();
+    await expect(client.getPodcast(42)).resolves.toBeNull();
+
+    vi.stubGlobal("fetch", async () => new Response("", { status: 503 }));
+    await expect(client.getPodcast(42)).rejects.toMatchObject({ statusCode: 503 });
+  });
 });

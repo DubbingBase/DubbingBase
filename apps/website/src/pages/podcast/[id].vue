@@ -283,13 +283,14 @@ const currentUrl = computed(() => route.fullPath);
 const { page: castPage, setPage: setCastPage } = useUrlPagination("castPage");
 
 // Instant Hydration Data Fetching
-const { data, pending } = await useAsyncData(
+const { data, pending, error } = await useAsyncData(
   `podcast-${podcastId.value}-${locale.value}`,
   () => fetchPodcastData(podcastId.value, locale.value, { projection: "podcast-page" }),
   {
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
+if (import.meta.server && error.value) throw error.value;
 
 const podcast = computed<Podcast | null>(() => data.value?.podcast || null);
 const dubbingProjects = computed(() => {
@@ -339,8 +340,17 @@ const coverUrl = computed(() => {
 const castSearchQuery = ref("");
 const debouncedCastSearch = refDebounced(castSearchQuery, 150);
 
-watch([debouncedCastSearch, activeDubId], () => {
-  void setCastPage(1);
+watch([debouncedCastSearch, activeDubId], ([search, dub], [previousSearch, previousDub]) => {
+  if (
+    search !== previousSearch ||
+    (typeof previousDub === "number" &&
+      previousDub > 0 &&
+      typeof dub === "number" &&
+      dub > 0 &&
+      dub !== previousDub)
+  ) {
+    void setCastPage(1);
+  }
 });
 
 const completeCastItems = computed(() => formatMediaWorkCastCards(activeDubProject.value));

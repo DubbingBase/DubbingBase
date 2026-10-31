@@ -438,13 +438,14 @@ const languageDisplayNames = computed(() => {
 
 const cacheKey = `movie-${movieId}-${locale.value}`;
 
-const { data, pending } = useAsyncData(
+const { data, pending, error } = await useAsyncData(
   cacheKey,
   () => fetchMovieData(movieId, locale.value, { projection: "media-page" }),
   {
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
+if (import.meta.server && error.value) throw error.value;
 
 const movie = computed(() => data.value?.movie);
 const dubbingProjectData = computed(() => {
@@ -503,7 +504,13 @@ const posterUrl = computed(() => {
 
 const activeDubId = computed(() => {
   if (route.query.dub) {
-    return Number(route.query.dub);
+    const requestedId = Number(route.query.dub);
+    if (
+      Number.isSafeInteger(requestedId) &&
+      dubbingProjects.value.some((project) => project.id === requestedId)
+    ) {
+      return requestedId;
+    }
   }
   return dubbingProjects.value[0]?.id || null;
 });
@@ -603,7 +610,18 @@ const debouncedSearch = refDebounced(searchInput, 150);
 watch(debouncedSearch, (val) => {
   searchQuery.value = val;
 });
-watch([searchQuery, activeDubId], () => void setCastPage(1));
+watch([searchQuery, activeDubId], ([search, dub], [previousSearch, previousDub]) => {
+  if (
+    search !== previousSearch ||
+    (typeof previousDub === "number" &&
+      previousDub > 0 &&
+      typeof dub === "number" &&
+      dub > 0 &&
+      dub !== previousDub)
+  ) {
+    void setCastPage(1);
+  }
+});
 
 const filteredCast = computed(() => {
   const cast = formattedCast.value;

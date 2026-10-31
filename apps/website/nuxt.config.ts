@@ -272,5 +272,22 @@ export default defineNuxtConfig({
   },
   sitemap: {
     zeroRuntime: true,
+    sources: ["/api/__sitemap__/urls"],
+    chunks: 40_000,
+    exclude: [
+      "/admin",
+      "/admin/**",
+      "/advertisement/new",
+      "/game/prepare-game-request",
+      "/login",
+      "/podcast/new",
+      "/profile",
+      "/profile/**",
+      "/register",
+      "/search",
+      "/toy/new",
+      "/voice-actor/new",
+      "/**/projects/**",
+    ],
   },
 });

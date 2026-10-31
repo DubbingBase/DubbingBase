@@ -169,13 +169,20 @@ async function requestRouteData(
   handler: (event: H3Event) => Promise<unknown>,
   search = "",
 ): Promise<unknown> {
+  const response = await requestRouteResponse(handler, search);
+  return await response.json();
+}
+
+async function requestRouteResponse(
+  handler: (event: H3Event) => Promise<unknown>,
+  search = "",
+): Promise<Response> {
   const app = createApp();
   app.use(
     "/",
     defineEventHandler((event) => handler(event)),
   );
-  const response = await toWebHandler(app)(new Request(`http://localhost/${search}`));
-  return await response.json();
+  return await toWebHandler(app)(new Request(`http://localhost/${search}`));
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -239,6 +246,26 @@ describe("movie and show detail API payload compatibility", () => {
       undefined,
     );
     expect(apiMocks.getDubbingProjects).toHaveBeenCalledWith(123, "movie");
+  });
+
+  it("returns 404 for a missing movie and a gateway error for TMDB failures", async () => {
+    apiMocks.getMediaWithVoiceActors.mockRejectedValueOnce(new Error("TMDB API error: 404"));
+    const missing = await requestRouteResponse((event) => fetchMovieData(event, 123));
+    expect(missing.status).toBe(404);
+
+    apiMocks.getMediaWithVoiceActors.mockRejectedValueOnce(new Error("TMDB API error: 503"));
+    const upstreamFailure = await requestRouteResponse((event) => fetchMovieData(event, 123));
+    expect(upstreamFailure.status).toBe(502);
+  });
+
+  it("returns 404 for a missing show and a gateway error for TMDB failures", async () => {
+    apiMocks.getMediaWithVoiceActors.mockRejectedValueOnce(new Error("TMDB API error: 404"));
+    const missing = await requestRouteResponse((event) => fetchShowData(event, 123));
+    expect(missing.status).toBe(404);
+
+    apiMocks.getMediaWithVoiceActors.mockRejectedValueOnce(new Error("TMDB API error: 503"));
+    const upstreamFailure = await requestRouteResponse((event) => fetchShowData(event, 123));
+    expect(upstreamFailure.status).toBe(502);
   });
 
   it("keeps page cast, studio and voice-actor rendering fields in the compact movie response", async () => {

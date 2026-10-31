@@ -761,6 +761,57 @@ export const MOCK_SHOW = {
       ],
       crew: [],
     },
+    {
+      id: 139602,
+      content_id: 1396,
+      content_type: "tv",
+      language: "es-ES",
+      studios: { id: 11, name: "Estudio Español", logo_url: null },
+      studio_data: { id: 11, name: "Estudio Español", logo_url: null },
+      work: [
+        {
+          id: 1396003,
+          actor_id: 17419,
+          voice_actor_id: 26,
+          character_name: "Walter White",
+          performance: "dialogues",
+          voice_actor: {
+            id: 26,
+            firstname: "Carlos",
+            lastname: "López",
+            profile_picture: null,
+          },
+          voice_actors: {
+            id: 26,
+            firstname: "Carlos",
+            lastname: "López",
+            profile_picture: null,
+          },
+        },
+      ],
+      works: [
+        {
+          id: 1396003,
+          actor_id: 17419,
+          voice_actor_id: 26,
+          character_name: "Walter White",
+          performance: "dialogues",
+          voice_actor: {
+            id: 26,
+            firstname: "Carlos",
+            lastname: "López",
+            profile_picture: null,
+          },
+          voice_actors: {
+            id: 26,
+            firstname: "Carlos",
+            lastname: "López",
+            profile_picture: null,
+          },
+        },
+      ],
+      crew: [],
+    },
   ],
 };
 
@@ -1262,6 +1313,17 @@ export default defineEventHandler(async (event) => {
     return send(event, JSON.stringify(e2eMediaRequestPaths), "application/json");
   }
 
+  if (path === "/api/__sitemap__/urls") {
+    return send(
+      event,
+      JSON.stringify([
+        { loc: "/movie/85", _i18nTransform: true },
+        { loc: "/toy/-10", _i18nTransform: true },
+      ]),
+      "application/json",
+    );
+  }
+
   if (path === "/api/season" || path === "/api/episode") {
     e2eMediaRequestPaths.push(path);
   }
@@ -1350,6 +1412,18 @@ export default defineEventHandler(async (event) => {
 
   // 2. Movie Detail
   if (path.startsWith("/api/movie/")) {
+    if (path === "/api/movie/404000" || path === "/api/movie/503000") {
+      const status = path.endsWith("404000") ? 404 : 503;
+      setResponseStatus(event, status);
+      return send(
+        event,
+        JSON.stringify({
+          statusCode: status,
+          statusMessage: "Mock movie response",
+        }),
+        "application/json",
+      );
+    }
     return send(event, JSON.stringify(MOCK_MOVIE), "application/json");
   }
 
@@ -1366,6 +1440,18 @@ export default defineEventHandler(async (event) => {
         JSON.stringify({
           statusCode: 404,
           statusMessage: "Mock season not found",
+        }),
+        "application/json",
+      );
+    }
+
+    if (url.searchParams.get("season_number") === "503") {
+      setResponseStatus(event, 503);
+      return send(
+        event,
+        JSON.stringify({
+          statusCode: 503,
+          statusMessage: "Mock season unavailable",
         }),
         "application/json",
       );
@@ -1401,6 +1487,17 @@ export default defineEventHandler(async (event) => {
         JSON.stringify({
           statusCode: 404,
           statusMessage: "Mock episode not found",
+        }),
+        "application/json",
+      );
+    }
+    if (url.searchParams.get("episode_number") === "503") {
+      setResponseStatus(event, 503);
+      return send(
+        event,
+        JSON.stringify({
+          statusCode: 503,
+          statusMessage: "Mock episode unavailable",
         }),
         "application/json",
       );

@@ -10,18 +10,12 @@ export async function fetchMovieData(
     headers["Accept-Language"] = locale;
   }
 
-  try {
-    const data = await $fetch<MovieDetailResponse>(`/api/movie/${id}`, {
-      headers,
-      ...(options.projection ? { query: { projection: options.projection } } : {}),
-    });
-    if (!data || !data.movie) {
-      console.error("fetchMovieData: Response is null or missing movie property");
-      return null;
-    }
-    return data;
-  } catch (e) {
-    console.error("fetchMovieData error:", e);
-    return null;
+  const data = await $fetch<MovieDetailResponse>(`/api/movie/${id}`, {
+    headers,
+    ...(options.projection ? { query: { projection: options.projection } } : {}),
+  });
+  if (!data || !data.movie) {
+    throw new Error("Movie response is missing the movie record");
   }
+  return data;
 }
