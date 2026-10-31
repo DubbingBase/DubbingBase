@@ -8,7 +8,7 @@
 
 ## Scale
 
-89 API routes · 27 database models · 200 UI components · 113 library files · 15 middleware layers · 74 environment variables
+89 API routes · 27 database models · 200 UI components · 113 library files · 15 middleware layers · 75 environment variables
 
 ## Subsystems
 
@@ -114,7 +114,7 @@ Changes to these files have the widest blast radius across the codebase:
 - `DISCORD_WEBHOOK_EXTRACT_URL` — `apps/website/server/utils/notifications/discord.ts`
 - `DISCORD_WEBHOOK_URL` — `apps/website/server/utils/notifications/discord.ts`
 - `DISCORD_WEBHOOK_URL_1` — `apps/website/server/utils/notifications/discord.ts`
-- _...37 more_
+- _...38 more_
 
 ---
 _Back to [index.md](./index.md) · Generated 2026-10-31_

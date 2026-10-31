@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 89 routes | 27 models | 200 components | 113 lib files | 74 env vars | 15 middleware | 46% test coverage
-> **Token savings:** this file is ~19,200 tokens. Without it, AI exploration would cost ~173,800 tokens. **Saves ~154,600 tokens per conversation.**
-> **Last scanned:** 2026-10-31 09:26 — re-run after significant changes
+> 89 routes | 27 models | 200 components | 113 lib files | 75 env vars | 15 middleware | 46% test coverage
+> **Token savings:** this file is ~19,300 tokens. Without it, AI exploration would cost ~173,900 tokens. **Saves ~154,700 tokens per conversation.**
+> **Last scanned:** 2026-10-31 09:27 — re-run after significant changes
 
 ---
 
@@ -749,8 +749,9 @@
 - `apps/website/src/utils/posthog-prefetch-manifest.ts` — function deferPosthogPrefetch: (manifest, ClientManifestEntry>) => void, interface ClientManifestEntry
 - `apps/website/src/utils/search-routes.ts` — function getSearchResultRoute: (result, "id" | "media_type">) => string, type SearchFilter
 - `apps/website/src/utils/season-data.ts`
-  - function fetchSeasonPageData: (showId, seasonNumber, locale?) => Promise<SeasonDataResponse>
+  - function fetchSeasonPageData: (showId, seasonNumber, locale?) => Promise<SeasonPageDataResponse>
   - function fetchEpisodePageData: (showId, seasonNumber, episodeNumber, locale?) => Promise<EpisodePageDataResponse>
+  - interface SeasonPageDubbingProject
   - interface EpisodePageDubbingProject
   - interface EpisodePageVoiceActor
   - interface EpisodePageDataResponse
@@ -916,6 +917,7 @@
 - `ROUTE_CPU_METRICS_ROOT` (has default) — apps/website/scripts/route-cpu-ssr.mjs
 - `ROUTE_CPU_PROFILE_DIR` **required** — apps/website/scripts/route-cpu-ssr.mjs
 - `ROUTE_CPU_PROFILE_ROOT` (has default) — apps/website/scripts/route-cpu-ssr.mjs
+- `ROUTE_CPU_ROUTES` **required** — apps/website/scripts/route-cpu-ssr.mjs
 - `SUPABASE_PUBLISHABLE_KEY` **required** — .env.example
 - `SUPABASE_SECRET_KEY` **required** — .env.example
 - `SUPABASE_URL` (has default) — .env.example

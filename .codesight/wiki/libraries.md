@@ -21,11 +21,11 @@
 - `apps/website/server/utils/llm.ts` — areAllLlmQuotasExhausted, getLlmQuotaCache, llmGenerate, llmGenerateObject, llmVision, llmVisionObject
 - `apps/website/server/utils/notifications/discord.ts` — normalizeDiscordUrl, buildDiscordEmbed, sendDiscordAdminNotification, DiscordWebhookOptions, QueueName, DiscordNotificationCategory
 - `apps/website/src/composables/useContribute.ts` — fetchRandomTask, useContribute, ContributionTask, ContributionCategory, ClaimedCategory, ContributionClaim
+- `apps/website/src/utils/season-data.ts` — fetchSeasonPageData, fetchEpisodePageData, SeasonPageDubbingProject, EpisodePageDubbingProject, EpisodePageVoiceActor, EpisodePageDataResponse
 - `apps/website/server/utils/cache/constants.ts` — hashCacheValue, buildCacheKey, SimpleKeyValidator, CacheKeyInput, CACHE_SCHEMA_VERSION
 - `apps/website/server/utils/prepare-payload.ts` — validatePrepareGamePayload, prepareGameFromPayload, validatePrepareMediaPayload, PrepareGameInput, PrepareMediaInput
 - `apps/website/server/utils/retryable-request.ts` — isRetryableMediaRequestError, isRetryableMediaRequestStatus, createMediaResponseError, fetchMediaRequest, RetryableMediaRequestError
 - `apps/website/server/utils/services/wiki-extraction-batching.ts` — buildWikipediaExtractionBatches, deduplicateExtractedCredits, WikipediaExtractionSection, WikipediaExtractionBatch, MAX_WIKIPEDIA_EXTRACTION_PROMPT_CHARS
-- `apps/website/src/utils/season-data.ts` — fetchSeasonPageData, fetchEpisodePageData, EpisodePageDubbingProject, EpisodePageVoiceActor, EpisodePageDataResponse
 - `apps/website/server/utils/api/igdb.ts` — buildIgdbImageUrl, IgdbClient, IgdbTrendingGamesResult, IgdbPopularityPrimitive
 - `apps/website/server/utils/pagination.ts` — parsePagination, paginateArray, PaginationOptions, ParsedPagination
 - `apps/website/server/utils/services/voice-actor.ts` — applyExtractedCredits, upsertStudio, ExtractedCredit, AppliedExtractedCredits

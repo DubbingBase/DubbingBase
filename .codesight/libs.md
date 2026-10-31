@@ -245,8 +245,9 @@
 - `apps/website/src/utils/posthog-prefetch-manifest.ts` — function deferPosthogPrefetch: (manifest, ClientManifestEntry>) => void, interface ClientManifestEntry
 - `apps/website/src/utils/search-routes.ts` — function getSearchResultRoute: (result, "id" | "media_type">) => string, type SearchFilter
 - `apps/website/src/utils/season-data.ts`
-  - function fetchSeasonPageData: (showId, seasonNumber, locale?) => Promise<SeasonDataResponse>
+  - function fetchSeasonPageData: (showId, seasonNumber, locale?) => Promise<SeasonPageDataResponse>
   - function fetchEpisodePageData: (showId, seasonNumber, episodeNumber, locale?) => Promise<EpisodePageDataResponse>
+  - interface SeasonPageDubbingProject
   - interface EpisodePageDubbingProject
   - interface EpisodePageVoiceActor
   - interface EpisodePageDataResponse
