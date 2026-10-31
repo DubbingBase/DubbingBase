@@ -127,6 +127,34 @@ const dubbingProjects = Array.from({ length: sizes.dubbingProjects }, (_, index)
   ],
 }));
 
+const mediaCastWorksPerProject = dataset === "large" ? 40 : 15;
+const mediaCastProjects = Array.from(
+  { length: dataset === "large" ? 80 : 12 },
+  (_, projectIndex) => ({
+    id: projectIndex + 1,
+    language: projectIndex % 2 === 0 ? "fr-FR" : "en-US",
+    studio_data: {
+      id: 30_000 + projectIndex,
+      name: `CI audiobook studio ${projectIndex}`,
+      logo_url: null,
+    },
+    works: Array.from({ length: mediaCastWorksPerProject }, (_, workIndex) => ({
+      id: projectIndex * mediaCastWorksPerProject + workIndex + 1,
+      actor_id: 210_000 + (workIndex % 100),
+      character_name: `CI audiobook character ${projectIndex}-${workIndex}`,
+      performance: `CI audiobook performance ${projectIndex}-${workIndex}`,
+      note: `CI audiobook work note ${projectIndex}-${workIndex} `.repeat(16),
+      voice_actor: {
+        id: 80_000 + (workIndex % 100),
+        firstname: `CI fixture audiobook voice actor ${workIndex}`,
+        lastname: "Actor",
+        profile_picture: `audiobook-voice-actor-${workIndex}.jpg`,
+        voice_actor_name: `CI fixture audiobook voice actor ${workIndex} Actor`,
+      },
+    })),
+  }),
+);
+
 const episodeDubbingProjects = Array.from(
   { length: sizes.episodeDubbingProjects },
   (_, projectIndex) => ({
@@ -392,6 +420,12 @@ const supabaseResponse = (url) => {
     if (query.get("content_type") === "eq.video_game") {
       return { value: gameDubbingProjects, single: false };
     }
+    if (query.get("content_id") === "eq.1397" && query.get("content_type") === "eq.audiobook") {
+      return {
+        value: query.get("id") === "eq.1" ? [mediaCastProjects[0]] : mediaCastProjects,
+        single: false,
+      };
+    }
     if (query.get("content_type") === "eq.advertisement") {
       return { value: searchAdvertisements, single: false };
     }
@@ -488,6 +522,12 @@ globalThis.fetch = async (input, init = {}) => {
   } else if (url.hostname === "openlibrary.org" && url.pathname === "/search.json") {
     key = "openlibrary:search";
     body = JSON.stringify({ docs: searchBooks });
+  } else if (url.hostname === "openlibrary.org" && url.pathname === "/works/OL1397W.json") {
+    key = "openlibrary:/works/OL1397W.json";
+    body = JSON.stringify({
+      title: "CI fixture audiobook 1397",
+      description: "Synthetic audiobook fixture.",
+    });
   } else if (url.hostname === "itunes.apple.com" && url.pathname === "/search") {
     key = "itunes:search";
     body = JSON.stringify({ resultCount: searchPodcasts.length, results: searchPodcasts });

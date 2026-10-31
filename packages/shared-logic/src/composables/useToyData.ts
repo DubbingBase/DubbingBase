@@ -3,7 +3,7 @@ import type { ToyResponse } from "../types";
 export async function fetchToyData(
   id: string | number,
   locale?: string,
-  projection?: "media-page",
+  projection?: "media-page" | "media-summary",
 ): Promise<ToyResponse | null> {
   const headers: Record<string, string> = {};
   if (locale) {

@@ -13,6 +13,11 @@ import {
   type PaginatedResponse,
 } from "@app/shared-logic";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { getMediaPageDubbingProjects } from "../utils/db/queries";
+
+vi.mock("../utils/db/queries", () => ({
+  getMediaPageDubbingProjects: vi.fn(),
+}));
 
 let handler: typeof import("../api/detail-collections.get").default;
 
@@ -288,33 +293,51 @@ describe("GET /api/detail-collections", () => {
   it.each(["audiobook", "podcast", "advertisement", "toy"])(
     "keeps %s cast projections identical for project selection, search, and pagination",
     async (type) => {
-      const projects = [
+      const projects: Awaited<ReturnType<typeof getMediaPageDubbingProjects>> = [
         {
           id: 1,
+          language: "fr-FR",
+          studio_data: null,
+          crew: [],
           works: [
             {
               id: 101,
+              actor_id: 10,
               character_name: "Mika",
+              performance: null,
+              note: null,
               voice_actor: { id: 10, firstname: "Mika", lastname: "Sato" },
             },
           ],
         },
         {
           id: 2,
+          language: "fr-FR",
+          studio_data: null,
+          crew: [],
           works: [
             {
               id: 201,
+              actor_id: 11,
               character_name: "Hana",
+              performance: null,
+              note: null,
               voice_actor: { id: 11, firstname: "Mika", lastname: "Sato" },
             },
             {
               id: 202,
+              actor_id: 12,
               character_name: "Mika's Echo",
+              performance: null,
+              note: null,
               voice_actor: { id: 12, firstname: "Kei", lastname: "Ito" },
             },
             {
               id: 203,
+              actor_id: 13,
               character_name: "Other",
+              performance: null,
+              note: null,
               voice_actor: { id: 13, firstname: "Ren", lastname: "Aki" },
             },
           ],
@@ -327,6 +350,9 @@ describe("GET /api/detail-collections", () => {
         1,
       );
       const paths: string[] = [];
+      vi.mocked(getMediaPageDubbingProjects).mockImplementation(async (_id, _type, projectId) =>
+        projects.filter((candidate) => candidate.id === projectId),
+      );
       const response = await requestCollection(
         new URLSearchParams({
           collection: "media-cast",
@@ -344,7 +370,8 @@ describe("GET /api/detail-collections", () => {
       );
       const body: PaginatedResponse<{ work_id: number }> = await response.json();
 
-      expect(paths).toEqual([`/api/${type}/77`]);
+      expect(paths).toEqual([]);
+      expect(getMediaPageDubbingProjects).toHaveBeenCalledWith(77, type, 2);
       expect(body.pagination).toMatchObject({
         page: 2,
         pageSize: 1,

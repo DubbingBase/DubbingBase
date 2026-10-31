@@ -117,6 +117,14 @@ const routes = [
     expected: ["tmdb:/3/person/12001", "supabase:voice_actors"],
   },
   {
+    name: "media-cast-audiobook",
+    path: "/api/detail-collections?collection=media-cast&id=1397&type=audiobook&projectId=1&page=1&pageSize=12",
+    marker: "CI fixture audiobook voice actor 0",
+    kind: "api",
+    semanticParity: "media-cast-page",
+    expected: ["supabase:dubbing_projects"],
+  },
+  {
     name: "trending-shows",
     path: "/api/trending/shows?lang=fr-FR&projection=card",
     marker: "CI fixture trending show 0",
@@ -654,6 +662,9 @@ function fixtureFor(dataset, routeName) {
       characters: dataset === "large" ? 50 : 24,
     };
   }
+  if (routeName === "media-cast-audiobook") {
+    return { works: dataset === "large" ? 40 : 15 };
+  }
   if (routeName === "season" || routeName === "season-api") {
     return {
       projects: dataset === "large" ? 80 : 12,
@@ -749,6 +760,15 @@ async function validateRoute(server, route, dataset) {
       }
       if (server.side === "head" && projects.some((project) => Object.hasOwn(project, "works"))) {
         throw new Error(`${route.path} sent per-work rows in the season page projection.`);
+      }
+    } else if (route.name === "media-cast-audiobook") {
+      if (
+        !Array.isArray(response.data) ||
+        response.data.length !== Math.min(12, fixture.works) ||
+        response.data[0]?.firstname !== route.marker ||
+        response.pagination?.totalItems !== fixture.works
+      ) {
+        throw new Error(`${route.path} returned unexpected paginated audiobook cast data.`);
       }
     } else {
       const voiceActors = dubbingProjectVoiceActors(response);
@@ -897,6 +917,34 @@ function seasonPageData(body) {
   };
 }
 
+function mediaCastPageData(body) {
+  const response = JSON.parse(body);
+  return {
+    data: response.data.map(
+      ({
+        work_id,
+        voice_actor_id,
+        firstname,
+        lastname,
+        character_name,
+        performance,
+        note,
+        profile_picture,
+      }) => ({
+        work_id,
+        voice_actor_id,
+        firstname,
+        lastname,
+        character_name,
+        performance,
+        note,
+        profile_picture,
+      }),
+    ),
+    pagination: response.pagination,
+  };
+}
+
 async function warmServers(baseServer, headServer, route) {
   for (let request = 0; request < warmupRequests; request += 1) {
     const order = request % 2 === 0 ? [baseServer, headServer] : [headServer, baseServer];
@@ -1006,6 +1054,12 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
           `${route.path} changed season page data while compacting its project summary.`,
         );
       } else if (
+        route.name === "media-cast-audiobook" &&
+        JSON.stringify(mediaCastPageData(baseValidation.html)) !==
+          JSON.stringify(mediaCastPageData(headValidation.html))
+      ) {
+        throw new Error(`${route.path} changed visible audiobook cast cards or pagination.`);
+      } else if (
         route.name === "trending-shows" &&
         JSON.stringify(trendingShowCardData(baseValidation.html)) !==
           JSON.stringify(trendingShowCardData(headValidation.html))
@@ -1025,6 +1079,7 @@ async function measurePairedDataset(dataset, baseWebsiteDir, headWebsiteDir) {
       } else if (
         route.kind === "api" &&
         route.name !== "season-api" &&
+        route.name !== "media-cast-audiobook" &&
         route.name !== "trending-shows" &&
         route.name !== "trending-games" &&
         baseValidation.hash !== headValidation.hash

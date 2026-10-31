@@ -316,9 +316,7 @@
 <script setup lang="ts">
 import {
   displayDubbingLanguage,
-  filterDetailCollectionItems,
-  formatMediaWorkCastCards,
-  paginateDetailCollection,
+  fetchDetailCollection,
   resolveDetailCollectionProject,
 } from "@app/shared-logic";
 import { ref, computed, watch } from "vue";
@@ -329,7 +327,7 @@ import MediaSkeleton from "../../components/MediaSkeleton.vue";
 import MediaDetailsLayout from "../../components/layout/MediaDetailsLayout.vue";
 import ReportModal from "../../components/ReportModal.vue";
 import { fetchAudiobookData } from "@app/shared-logic";
-import type { Audiobook, DetailCollectionProject } from "@app/shared-logic";
+import type { Audiobook, DetailCollectionProject, MediaWorkCastCard } from "@app/shared-logic";
 import { ExternalLink as ExternalLinkIcon, Search as SearchIcon } from "lucide-vue-next";
 
 const route = useRoute();
@@ -354,7 +352,7 @@ const { page: castPage, setPage: setCastPage } = useUrlPagination("castPage");
 // Instant Hydration Data Fetching
 const { data, pending } = await useAsyncData(
   `audiobook-${audiobookId.value}-${locale.value}`,
-  () => fetchAudiobookData(audiobookId.value, locale.value, { projection: "media-page" }),
+  () => fetchAudiobookData(audiobookId.value, locale.value, { projection: "media-summary" }),
   {
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
@@ -362,15 +360,18 @@ const { data, pending } = await useAsyncData(
 
 const audiobook = computed<Audiobook | null>(() => data.value?.audiobook || null);
 const dubbingProjects = computed(() => {
-  return (data.value?.dubbingProjects || []).filter((p: DetailCollectionProject) =>
-    (p.works || []).some((w) => w.voice_actor),
+  return (data.value?.dubbingProjects || []).filter(
+    (p: DetailCollectionProject) =>
+      p.has_voice_actor || (p.works || []).some((w) => w.voice_actor || w.voice_actor_id),
   );
 });
 
 function projectVoiceActorCount(project: DetailCollectionProject): number {
+  if (project.voice_actor_count !== undefined) return project.voice_actor_count;
   const ids = new Set<number>();
   for (const w of project.works || []) {
-    if (w.voice_actor?.id) ids.add(w.voice_actor.id);
+    const id = w.voice_actor?.id || w.voice_actor_id;
+    if (id) ids.add(id);
   }
   return ids.size;
 }
@@ -404,14 +405,25 @@ watch([debouncedSearch, activeDubId], () => {
   void setCastPage(1);
 });
 
-const completeCastItems = computed(() => formatMediaWorkCastCards(activeDubProject.value));
-const filteredCastItems = computed(() =>
-  filterDetailCollectionItems(completeCastItems.value, debouncedSearch.value),
+const { data: castData } = await useAsyncData(
+  () =>
+    `audiobook-cast-${audiobookId.value}-${activeDubId.value}-${castPage.value}-${debouncedSearch.value}`,
+  () =>
+    activeDubId.value
+      ? fetchDetailCollection<MediaWorkCastCard>({
+          collection: "media-cast",
+          id: audiobookId.value,
+          type: "audiobook",
+          projectId: activeDubId.value,
+          page: castPage.value,
+          pageSize: 12,
+          query: debouncedSearch.value,
+        })
+      : Promise.resolve(null),
+  { watch: [activeDubId, castPage, debouncedSearch] },
 );
-const castTotal = computed(() => filteredCastItems.value.length);
-const castItems = computed(() =>
-  paginateDetailCollection(filteredCastItems.value, castPage.value, 12),
-);
+const castTotal = computed(() => castData.value?.pagination.totalItems || 0);
+const castItems = computed(() => castData.value?.data || []);
 
 // SEO Meta
 useHead({
