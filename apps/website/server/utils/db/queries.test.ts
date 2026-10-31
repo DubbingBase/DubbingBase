@@ -136,7 +136,7 @@ describe("dubbing project detail queries", () => {
     expect(queryMocks.selectedColumns[0]).not.toContain("voice_actor_name");
   });
 
-  it("returns unique voice actors separately for episode page work rows", async () => {
+  it("returns project summaries and selected episode works with unique voice actors", async () => {
     queryMocks.useSupabaseAdmin.mockReturnValue(
       createSupabaseMock([
         {
@@ -189,29 +189,32 @@ describe("dubbing project detail queries", () => {
         id: 17,
         language: "fr-FR",
         studio_data: { id: 3, name: "Studio", logo_url: null },
-        works: [
-          {
-            id: 12,
-            actor_id: 44,
-            character_name: "Character",
-            note: "First note",
-            voice_actor_id: 5,
-          },
-          {
-            id: 13,
-            actor_id: 45,
-            character_name: "Second character",
-            note: null,
-            voice_actor_id: 5,
-          },
-          {
-            id: 14,
-            actor_id: null,
-            character_name: "Unassigned",
-            note: null,
-            voice_actor_id: null,
-          },
-        ],
+        workCount: 3,
+        voiceActorCount: 1,
+      },
+    ]);
+    expect(result.activeProjectId).toBe(17);
+    expect(result.activeProjectWorks).toEqual([
+      {
+        id: 12,
+        actor_id: 44,
+        character_name: "Character",
+        note: "First note",
+        voice_actor_id: 5,
+      },
+      {
+        id: 13,
+        actor_id: 45,
+        character_name: "Second character",
+        note: null,
+        voice_actor_id: 5,
+      },
+      {
+        id: 14,
+        actor_id: null,
+        character_name: "Unassigned",
+        note: null,
+        voice_actor_id: null,
       },
     ]);
     expect(result.voiceActors).toHaveLength(1);

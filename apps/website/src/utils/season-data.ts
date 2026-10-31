@@ -46,7 +46,8 @@ export interface EpisodePageDubbingProject {
   id: number;
   language?: string | null;
   studio_data?: { id: number; name: string; logo_url?: string | null } | null;
-  works?: CastWorkReference[];
+  workCount: number;
+  voiceActorCount: number;
 }
 
 export interface EpisodePageVoiceActor {
@@ -66,8 +67,16 @@ export interface EpisodePageDataResponse {
   aggregateCredits?: { cast?: CastActorReference[] };
   dubbingProjects: EpisodePageDubbingProject[];
   voiceActors: EpisodePageVoiceActor[];
+  activeProjectId: number | null;
+  activeProjectWorks: CastWorkReference[];
   characterProfilePictures: CharacterProfilePicture[];
   votes: Record<number, unknown>;
+}
+
+export interface EpisodePageProjectWorksResponse {
+  projectId: number;
+  works: CastWorkReference[];
+  voiceActors: EpisodePageVoiceActor[];
 }
 
 export async function fetchSeasonPageData(
@@ -94,6 +103,7 @@ export async function fetchEpisodePageData(
   seasonNumber: string | number,
   episodeNumber: string | number,
   locale?: string,
+  projectId?: number,
 ): Promise<EpisodePageDataResponse> {
   const headers: Record<string, string> = {};
   if (locale) headers["Accept-Language"] = locale;
@@ -106,6 +116,22 @@ export async function fetchEpisodePageData(
       season_number: seasonNumber,
       episode_number: episodeNumber,
       projection: "episode-page",
+      dub: projectId,
     },
+  });
+}
+
+export async function fetchEpisodeProjectWorks(
+  showId: string | number,
+  projectId: number,
+  locale?: string,
+): Promise<EpisodePageProjectWorksResponse> {
+  const headers: Record<string, string> = {};
+  if (locale) headers["Accept-Language"] = locale;
+
+  return await $fetch<EpisodePageProjectWorksResponse>("/api/episode", {
+    headers,
+    timeout: 20_000,
+    query: { id: showId, projection: "episode-project", project_id: projectId },
   });
 }

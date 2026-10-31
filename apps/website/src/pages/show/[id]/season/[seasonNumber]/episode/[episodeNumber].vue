@@ -185,7 +185,21 @@
         </div>
 
         <!-- Voice Cast -->
-        <section v-if="castTotal > 0">
+        <section
+          v-if="activeProjectError"
+          role="alert"
+          class="theme-surface border theme-border-subtle theme-border rounded-xl p-6 text-center"
+        >
+          <p class="theme-text-secondary mb-4">{{ $t("details.requestError") }}</p>
+          <button
+            type="button"
+            class="px-4 py-2 theme-primary-bg font-semibold rounded-lg hover:opacity-90 transition-opacity"
+            @click="retryActiveProjectWorks"
+          >
+            {{ $t("common.retry") }}
+          </button>
+        </section>
+        <section v-else-if="castTotal > 0">
           <div class="flex flex-col mb-6 gap-2">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
               <div>
@@ -388,6 +402,13 @@
       <p class="theme-text-secondary theme-text-muted mb-6">
         {{ $t("details.requestError") }}
       </p>
+      <button
+        type="button"
+        class="px-4 py-2 mb-4 theme-primary-bg font-semibold rounded-lg hover:opacity-90 transition-opacity"
+        @click="retryPageData"
+      >
+        {{ $t("common.retry") }}
+      </button>
       <NuxtLink
         :to="localePath(`/show/${showId}/season/${seasonNumber}`)"
         class="px-4 py-2 theme-primary-bg font-semibold rounded-lg hover:opacity-90 transition-opacity"
@@ -438,7 +459,9 @@ import {
 import ReportModal from "../../../../../../components/ReportModal.vue";
 import {
   fetchEpisodePageData,
+  fetchEpisodeProjectWorks,
   type EpisodePageDubbingProject,
+  type EpisodePageProjectWorksResponse,
 } from "../../../../../../utils/season-data";
 import {
   type CastActorReference,
@@ -507,15 +530,23 @@ const {
   data: pageData,
   pending,
   error,
+  refresh: refreshPageData,
 } = useAsyncData(
   cacheKey,
   async () => {
     const requestKey = cacheKey.value;
+    const requestedProjectId =
+      typeof route.query.dub === "string" &&
+      Number.isSafeInteger(Number(route.query.dub)) &&
+      Number(route.query.dub) > 0
+        ? Number(route.query.dub)
+        : undefined;
     const response = await fetchEpisodePageData(
       showId.value,
       seasonNumber.value,
       episodeNumber.value,
       locale.value,
+      requestedProjectId,
     );
     return { requestKey, response };
   },
@@ -524,6 +555,10 @@ const {
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
+
+function retryPageData(): void {
+  void refreshPageData();
+}
 
 const data = computed(() =>
   pageData.value?.requestKey === cacheKey.value ? pageData.value.response : undefined,
@@ -535,52 +570,26 @@ const characterPictureIndex = computed(() =>
   indexCharacterPictures(characterProfilePictures.value),
 );
 const episode = computed(() => data.value?.episode);
-const voiceActorsById = computed(
-  () => new Map((data.value?.voiceActors || []).map((voiceActor) => [voiceActor.id, voiceActor])),
-);
-const requestError = computed(() => Boolean(error.value && error.value.statusCode !== 404));
-const projectVoiceActorMetrics = computed(() => {
-  const visibleProjects: EpisodePageDubbingProject[] = [];
-  const actorCounts = new Map<number, number>();
-
-  for (const project of data.value?.dubbingProjects || []) {
-    let hasVoiceActor = false;
-    const actorIds = new Set<number>();
-
-    for (const work of project.works || []) {
-      const voiceActorId = work.voice_actor_id ?? work.voice_actor?.id;
-      if (voiceActorId !== undefined && voiceActorId !== null) {
-        hasVoiceActor = true;
-        actorIds.add(voiceActorId);
-      }
-    }
-
-    actorCounts.set(project.id, actorIds.size);
-    if (hasVoiceActor) visibleProjects.push(project);
+const projectDataById = ref(new Map<number, EpisodePageProjectWorksResponse>());
+const projectDataErrors = ref(new Set<number>());
+watch(data, (response) => {
+  projectDataById.value.clear();
+  projectDataErrors.value.clear();
+  if (response?.activeProjectId !== null && response?.activeProjectId !== undefined) {
+    projectDataById.value.set(response.activeProjectId, {
+      projectId: response.activeProjectId,
+      works: response.activeProjectWorks,
+      voiceActors: response.voiceActors,
+    });
   }
-
-  const currentLocale = locale.value.toLowerCase();
-  visibleProjects.sort((a, b) => {
-    const aIsPref = a.language?.toLowerCase().startsWith(currentLocale) ? 1 : 0;
-    const bIsPref = b.language?.toLowerCase().startsWith(currentLocale) ? 1 : 0;
-
-    if (aIsPref !== bIsPref) {
-      return bIsPref - aIsPref;
-    }
-
-    const aWorks = a.works?.length || 0;
-    const bWorks = b.works?.length || 0;
-    return bWorks - aWorks;
-  });
-
-  return { projects: visibleProjects, actorCounts };
 });
+const requestError = computed(() => Boolean(error.value && error.value.statusCode !== 404));
 const dubbingProjects = computed<EpisodePageDubbingProject[]>(
-  () => projectVoiceActorMetrics.value.projects,
+  () => data.value?.dubbingProjects || [],
 );
 
 function projectVoiceActorCount(project: EpisodePageDubbingProject): number {
-  return projectVoiceActorMetrics.value.actorCounts.get(project.id) || 0;
+  return project.voiceActorCount;
 }
 const title = computed(() => {
   if (!episode.value) return t("search.tv");
@@ -614,6 +623,42 @@ const activeDubProject = computed(() => {
     dubbingProjects.value[0]
   );
 });
+const activeProjectId = computed(() => activeDubProject.value?.id ?? null);
+const voiceActorsById = computed(() => {
+  const activeData = activeProjectId.value
+    ? projectDataById.value.get(activeProjectId.value)
+    : undefined;
+  const voiceActors =
+    activeData?.voiceActors ||
+    (activeProjectId.value === data.value?.activeProjectId ? data.value.voiceActors : []);
+  return new Map(voiceActors.map((voiceActor) => [voiceActor.id, voiceActor]));
+});
+
+async function loadProjectWorks(projectId: number): Promise<void> {
+  if (projectDataById.value.has(projectId)) return;
+  projectDataErrors.value.delete(projectId);
+  try {
+    const projectData = await fetchEpisodeProjectWorks(showId.value, projectId, locale.value);
+    projectDataById.value.set(projectId, projectData);
+  } catch (error) {
+    console.error("Failed to load episode project works:", error);
+    projectDataErrors.value.add(projectId);
+  }
+}
+
+watch([data, activeProjectId], ([response, projectId]) => {
+  if (!response || projectId === null || projectDataById.value.has(projectId)) return;
+  void loadProjectWorks(projectId);
+});
+const activeProjectError = computed(
+  () => activeProjectId.value !== null && projectDataErrors.value.has(activeProjectId.value),
+);
+
+function retryActiveProjectWorks(): void {
+  const projectId = activeProjectId.value;
+  if (projectId === null) return;
+  void loadProjectWorks(projectId);
+}
 
 const isOriginalLanguage = computed(() => {
   const orig = (
@@ -662,7 +707,13 @@ type EpisodeDisplayCastActor = DisplayCastActor & {
 const formattedCast = computed<DisplayCastActor[]>(() => {
   const cast: CastActorReference[] =
     data.value?.aggregateCredits?.cast || episode.value?.credits?.cast || [];
-  const works: CastWorkReference[] = activeDubProject.value?.works || [];
+  const activeData = activeProjectId.value
+    ? projectDataById.value.get(activeProjectId.value)
+    : undefined;
+  const works: CastWorkReference[] = activeProjectId.value
+    ? activeData?.works ||
+      (activeProjectId.value === data.value?.activeProjectId ? data.value.activeProjectWorks : [])
+    : [];
   const { matches, unmatchedWorks } = matchCastWorks(cast, works);
   const matchedCards = matches.flatMap(({ actor, works: actorWorks }) =>
     actorWorks.map((work) => {
