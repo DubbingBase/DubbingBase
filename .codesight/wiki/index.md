@@ -25,7 +25,6 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 - [Extract-credits-from-image.post](./extract-credits-from-image.post.md)
 - [Extract-voice-actor-info.post](./extract-voice-actor-info.post.md)
 - [Find_duplicate_voice_actors.get](./find_duplicate_voice_actors.get.md)
-- [Find_duplicate_voice_actors.get.test](./find_duplicate_voice_actors.get.test.md)
 - [Games.get](./games.get.md)
 - [Generate-social-content.post](./generate-social-content.post.md)
 - [Get-dubbing-project.get](./get-dubbing-project.get.md)
@@ -69,9 +68,7 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 - [Submit-task.post](./submit-task.post.md)
 - [Submit-user-report.post](./submit-user-report.post.md)
 - [Top-contributors.get](./top-contributors.get.md)
-- [Top-contributors.get.test](./top-contributors.get.test.md)
 - [Top-voice-actors.get](./top-voice-actors.get.md)
-- [Top-voice-actors.get.test](./top-voice-actors.get.test.md)
 - [Update-review-status.post](./update-review-status.post.md)
 - [Update-user-profile.post](./update-user-profile.post.md)
 - [Update-voice-actor.post](./update-voice-actor.post.md)
@@ -79,13 +76,12 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 - [Update_voice_actor_link.post](./update_voice_actor_link.post.md)
 - [Upload-profile-picture.post](./upload-profile-picture.post.md)
 - [Voice-actors.get](./voice-actors.get.md)
-- [Voice-actors.get.test](./voice-actors.get.test.md)
 - [Ui](./ui.md)
 - [Libraries](./libraries.md)
 
 ## Quick Stats
 
-- Routes: **89**
+- Routes: **85**
 - Models: **27**
 - Components: **200**
 - Env vars: **50** required, **25** with defaults
@@ -115,4 +111,4 @@ These exist in your codebase but are **not** reflected in wiki articles:
 When in doubt, search the source. The wiki is a starting point, not a complete inventory.
 
 ---
-_Last compiled: 2026-10-31 · 75 articles · [codesight](https://github.com/Houseofmvps/codesight)_
+_Last compiled: 2026-10-31 · 71 articles · [codesight](https://github.com/Houseofmvps/codesight)_

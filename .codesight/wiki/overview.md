@@ -8,7 +8,7 @@
 
 ## Scale
 
-89 API routes · 27 database models · 200 UI components · 114 library files · 15 middleware layers · 75 environment variables
+85 API routes · 27 database models · 200 UI components · 114 library files · 15 middleware layers · 75 environment variables
 
 ## Subsystems
 
@@ -27,7 +27,6 @@
 - **[Extract-credits-from-image.post](./extract-credits-from-image.post.md)** — 1 routes — touches: upload
 - **[Extract-voice-actor-info.post](./extract-voice-actor-info.post.md)** — 1 routes — touches: auth
 - **[Find_duplicate_voice_actors.get](./find_duplicate_voice_actors.get.md)** — 1 routes — touches: auth
-- **[Find_duplicate_voice_actors.get.test](./find_duplicate_voice_actors.get.test.md)** — 1 routes — touches: auth
 - **[Games.get](./games.get.md)** — 1 routes — touches: cache
 - **[Generate-social-content.post](./generate-social-content.post.md)** — 1 routes — touches: auth, email
 - **[Get-dubbing-project.get](./get-dubbing-project.get.md)** — 1 routes
@@ -71,9 +70,7 @@
 - **[Submit-task.post](./submit-task.post.md)** — 1 routes — touches: auth, db, upload
 - **[Submit-user-report.post](./submit-user-report.post.md)** — 1 routes — touches: db
 - **[Top-contributors.get](./top-contributors.get.md)** — 1 routes
-- **[Top-contributors.get.test](./top-contributors.get.test.md)** — 1 routes
 - **[Top-voice-actors.get](./top-voice-actors.get.md)** — 1 routes
-- **[Top-voice-actors.get.test](./top-voice-actors.get.test.md)** — 1 routes
 - **[Update-review-status.post](./update-review-status.post.md)** — 1 routes — touches: auth
 - **[Update-user-profile.post](./update-user-profile.post.md)** — 1 routes
 - **[Update-voice-actor.post](./update-voice-actor.post.md)** — 1 routes — touches: auth, upload
@@ -81,7 +78,6 @@
 - **[Update_voice_actor_link.post](./update_voice_actor_link.post.md)** — 1 routes — touches: auth
 - **[Upload-profile-picture.post](./upload-profile-picture.post.md)** — 1 routes — touches: db, upload
 - **[Voice-actors.get](./voice-actors.get.md)** — 1 routes
-- **[Voice-actors.get.test](./voice-actors.get.test.md)** — 1 routes
 
 **Database:** unknown, 27 models — see [database.md](./database.md)
 

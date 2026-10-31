@@ -30,7 +30,6 @@
 - POST:/api/submit-task
 - GET:/api/top-contributors
 - GET:/api/top-voice-actors
-- GET:/api/trending/voice-actors
 - POST:/api/update-review-status
 - POST:/api/update-voice-actor
 - POST:/api/update_voice_actor_link

@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 89 routes | 27 models | 200 components | 114 lib files | 75 env vars | 15 middleware | 46% test coverage
-> **Token savings:** this file is ~19,300 tokens. Without it, AI exploration would cost ~174,200 tokens. **Saves ~154,900 tokens per conversation.**
-> **Last scanned:** 2026-10-31 15:12 — re-run after significant changes
+> 85 routes | 27 models | 200 components | 114 lib files | 75 env vars | 15 middleware | 46% test coverage
+> **Token savings:** this file is ~19,300 tokens. Without it, AI exploration would cost ~172,100 tokens. **Saves ~152,900 tokens per conversation.**
+> **Last scanned:** 2026-10-31 18:13 — re-run after significant changes
 
 ---
 
@@ -35,7 +35,6 @@
 - `GET` `/api/episode/index` [cache]
 - `POST` `/api/extract-credits-from-image` [upload]
 - `POST` `/api/extract-voice-actor-info` [auth] ✓
-- `ALL` `/api/find_duplicate_voice_actors.get.test` [auth]
 - `GET` `/api/find_duplicate_voice_actors` [auth] ✓
 - `GET` `/api/game/:id` params(id) [queue]
 - `POST` `/api/generate-social-content` [auth, email]
@@ -82,17 +81,14 @@
 - `GET` `/api/show/:id` params(id) [queue]
 - `POST` `/api/submit-task` [auth, db, upload] ✓
 - `POST` `/api/submit-user-report` [db]
-- `ALL` `/api/top-contributors.get.test`
 - `GET` `/api/top-contributors` ✓
-- `ALL` `/api/top-voice-actors.get.test`
 - `GET` `/api/top-voice-actors` ✓
 - `GET` `/api/toy/:id` params(id) [queue]
 - `GET` `/api/toy-metadata/:id` params(id)
 - `GET` `/api/trending/games` [cache]
 - `GET` `/api/trending/movies` [cache]
 - `GET` `/api/trending/shows` [cache]
-- `ALL` `/api/trending/voice-actors.get.test`
-- `GET` `/api/trending/voice-actors` ✓
+- `GET` `/api/trending/voice-actors`
 - `POST` `/api/update-review-status` [auth] ✓
 - `POST` `/api/update-user-profile`
 - `POST` `/api/update-voice-actor` [auth, upload] ✓
@@ -1035,7 +1031,6 @@
 - POST:/api/submit-task
 - GET:/api/top-contributors
 - GET:/api/top-voice-actors
-- GET:/api/trending/voice-actors
 - POST:/api/update-review-status
 - POST:/api/update-voice-actor
 - POST:/api/update_voice_actor_link
