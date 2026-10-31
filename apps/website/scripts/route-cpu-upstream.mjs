@@ -201,6 +201,23 @@ const voiceActor = {
   })),
 };
 
+const trendingShows = Array.from({ length: 20 }, (_, index) => ({
+  ...makeMedia(800_000 + index, "tv"),
+  name: `CI fixture trending show ${index}`,
+  original_name: `CI original trending show ${index}`,
+  adult: false,
+  origin_country: ["FR", "BE"],
+  original_language: "fr",
+  genre_ids: [18, 35, 80],
+  vote_count: 1200 + index,
+  production_companies: Array.from({ length: 8 }, (_, companyIndex) => ({
+    id: companyIndex + 1,
+    name: `CI production company ${companyIndex}`,
+    logo_path: `/company-${companyIndex}.jpg`,
+    origin_country: "FR",
+  })),
+}));
+
 const adminDubbingWorks = Array.from({ length: dataset === "large" ? 2400 : 50 }, (_, index) => {
   const actorIndex = Math.floor(index / 2);
   const voiceActorId = 60_000 + actorIndex;
@@ -266,6 +283,7 @@ addJsonResponse("tmdb:/3/person/12001", {
   movie_credits: { cast: makeCast(20, "movie") },
   tv_credits: { cast: makeCast(20, "tv") },
 });
+addJsonResponse("tmdb:/3/trending/tv/day", { page: 1, results: trendingShows });
 
 for (let index = 0; index < sizes.uniqueMedia; index += 1) {
   const mediaType = index % 2 === 0 ? "movie" : "tv";

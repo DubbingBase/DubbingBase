@@ -117,6 +117,13 @@ const routes = [
     expected: ["tmdb:/3/person/12001", "supabase:voice_actors"],
   },
   {
+    name: "trending-shows",
+    path: "/api/trending/shows?lang=fr-FR&projection=card",
+    marker: "CI fixture trending show 0",
+    kind: "api",
+    expected: ["tmdb:/3/trending/tv/day"],
+  },
+  {
     name: "admin-dubbing-project",
     path: "/api/admin/dubbing-project?content_id=85&content_type=movie&dubbing_language=fr-FR&projection=editor",
     marker: "CI fixture voice actor",
@@ -619,6 +626,7 @@ function assertRouteDependencies(route, before, after) {
 }
 
 function fixtureFor(dataset, routeName) {
+  if (routeName === "trending-shows") return { results: 20 };
   if (routeName === "season" || routeName === "season-api") {
     return {
       projects: dataset === "large" ? 80 : 12,
@@ -659,7 +667,25 @@ async function validateRoute(server, route, dataset) {
   if (route.kind === "api") {
     const response = JSON.parse(validation.html);
     const fixture = fixtureFor(dataset, route.name);
-    if (route.name === "season-api") {
+    if (route.name === "trending-shows") {
+      const results = response.results;
+      if (
+        !Array.isArray(results) ||
+        results.length !== fixture.results ||
+        results[0]?.name !== route.marker ||
+        !results[0]?.poster_path
+      ) {
+        throw new Error(`${route.path} returned unexpected trending show data.`);
+      }
+      if (
+        server.side === "head" &&
+        ["overview", "backdrop_path", "original_name", "adult"].some((field) =>
+          Object.hasOwn(results[0], field),
+        )
+      ) {
+        throw new Error(`${route.path} included unused full TMDB show fields in its card projection.`);
+      }
+    } else if (route.name === "season-api") {
       const projects = response.dubbingProjects;
       if (
         response.season?.name !== route.marker ||
