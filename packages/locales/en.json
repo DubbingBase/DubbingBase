@@ -1,12 +1,41 @@
 {
   "app": {
-    "title": "DubbingBase"
+    "title": "DubbingBase",
+    "description": "Explore dubbing credits, voice actors, and studios."
   },
   "nav": {
     "home": "Home",
     "profile": "Profile",
     "login": "Login",
     "admin": "Administration"
+  },
+  "footer": {
+    "explore": "Explore",
+    "movies": "Movies",
+    "series": "Series",
+    "voiceActors": "Voice Actors",
+    "studios": "Studios",
+    "search": "Search",
+    "otherMedia": "More Media",
+    "community": "Community",
+    "guidelines": "Guidelines",
+    "discussions": "Discussions",
+    "leaderboard": "Leaderboard",
+    "contribute": "Contribute",
+    "resources": "Resources",
+    "about": "About",
+    "apiTerms": "API Terms",
+    "legal": "Legal",
+    "legalNotice": "Legal Notice",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "contact": "Contact",
+    "rights": "All rights reserved."
+  },
+  "browse": {
+    "title": "Browse {type}",
+    "description": "Explore {type} with dubbing credits in DubbingBase.",
+    "empty": "No {type} with dubbing credits are listed yet."
   },
   "newVoiceActorsAdded": "new voice actor added | new voice actors added",
   "navigation": {
@@ -19,6 +48,7 @@
   },
   "common": {
     "actions": "Actions",
+    "pagination": "Pagination",
     "loading": "Loading...",
     "error": "Error",
     "subscribe": "Subscribe",
@@ -417,6 +447,11 @@
     "successMessage": "Report submitted successfully"
   },
   "admin": {
+    "spreadsheet": {
+      "next": "Next",
+      "previous": "Previous",
+      "pageOf": "Page {page} of {total}"
+    },
     "queue": {
       "title": "Media Queue",
       "description": "Manage pending media processing requests",

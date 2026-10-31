@@ -1,12 +1,41 @@
 {
   "app": {
-    "title": "DubbingBase"
+    "title": "DubbingBase",
+    "description": "Explora créditos de doblaje, actores de voz y estudios."
   },
   "nav": {
     "home": "Inicio",
     "profile": "Perfil",
     "login": "Iniciar sesión",
     "admin": "Administración"
+  },
+  "footer": {
+    "explore": "Explorar",
+    "movies": "Películas",
+    "series": "Series",
+    "voiceActors": "Actores de doblaje",
+    "studios": "Estudios",
+    "search": "Buscar",
+    "otherMedia": "Más medios",
+    "community": "Comunidad",
+    "guidelines": "Directrices",
+    "discussions": "Debates",
+    "leaderboard": "Clasificación",
+    "contribute": "Colaborar",
+    "resources": "Recursos",
+    "about": "Acerca de",
+    "apiTerms": "Condiciones de la API",
+    "legal": "Legal",
+    "legalNotice": "Aviso legal",
+    "privacy": "Política de privacidad",
+    "terms": "Términos del servicio",
+    "contact": "Contacto",
+    "rights": "Todos los derechos reservados."
+  },
+  "browse": {
+    "title": "Explorar {type}",
+    "description": "Descubre {type} con créditos de doblaje en DubbingBase.",
+    "empty": "Aún no hay {type} con créditos de doblaje."
   },
   "newVoiceActorsAdded": "nuevo actor de doblaje añadido | nuevos actores de doblaje añadidos",
   "navigation": {
@@ -19,6 +48,7 @@
   },
   "common": {
     "actions": "Acciones",
+    "pagination": "Paginación",
     "loading": "Cargando...",
     "error": "Error",
     "subscribe": "Suscribirse",
@@ -417,6 +447,11 @@
     "successMessage": "Reporte enviado exitosamente"
   },
   "admin": {
+    "spreadsheet": {
+      "next": "Siguiente",
+      "previous": "Anterior",
+      "pageOf": "Página {page} de {total}"
+    },
     "queue": {
       "title": "Cola de Medios",
       "description": "Gestionar solicitudes de procesamiento de medios pendientes",

@@ -1,4 +1,6 @@
 import { defineEventHandler, getRequestURL, send, setResponseStatus } from "h3";
+import { formatMediaWorkCastCards } from "@app/shared-logic";
+import { paginateArray } from "../utils/pagination";
 
 const e2eMediaRequestPaths: string[] = [];
 
@@ -1320,6 +1322,33 @@ export default defineEventHandler(async (event) => {
   if (path === "/api/e2e/media-requests") {
     if (event.method === "DELETE") e2eMediaRequestPaths.length = 0;
     return send(event, JSON.stringify(e2eMediaRequestPaths), "application/json");
+  }
+
+  if (path === "/api/detail-collections" && url.searchParams.get("collection") === "media-cast") {
+    const type = url.searchParams.get("type");
+    const projectId = Number(url.searchParams.get("projectId"));
+    const projects =
+      type === "audiobook"
+        ? MOCK_AUDIOBOOK.dubbingProjects
+        : type === "podcast"
+          ? MOCK_PODCAST.dubbingProjects
+          : [];
+    const project = projects.find((item) => item.id === projectId) || projects[0];
+    const query = (url.searchParams.get("query") || "").trim().toLocaleLowerCase();
+    const items = formatMediaWorkCastCards(project).filter((item) =>
+      `${item.firstname} ${item.lastname} ${item.character_name} ${item.performance}`
+        .toLocaleLowerCase()
+        .includes(query),
+    );
+    const result = paginateArray(items, {
+      page: url.searchParams.get("page"),
+      pageSize: url.searchParams.get("pageSize"),
+    });
+    return send(
+      event,
+      JSON.stringify({ data: result.items, pagination: result.pagination }),
+      "application/json",
+    );
   }
 
   if (path === "/api/season" || path === "/api/episode") {

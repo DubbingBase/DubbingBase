@@ -1,12 +1,41 @@
 {
   "app": {
-    "title": "DubbingBase"
+    "title": "DubbingBase",
+    "description": "Découvrez les crédits de doublage, les comédiens et les studios."
   },
   "nav": {
     "home": "Accueil",
     "profile": "Profil",
     "login": "Connexion",
     "admin": "Administration"
+  },
+  "footer": {
+    "explore": "Explorer",
+    "movies": "Films",
+    "series": "Séries",
+    "voiceActors": "Comédiens de doublage",
+    "studios": "Studios",
+    "search": "Recherche",
+    "otherMedia": "Autres médias",
+    "community": "Communauté",
+    "guidelines": "Règles",
+    "discussions": "Discussions",
+    "leaderboard": "Classement",
+    "contribute": "Contribuer",
+    "resources": "Ressources",
+    "about": "À propos",
+    "apiTerms": "Conditions de l’API",
+    "legal": "Mentions légales",
+    "legalNotice": "Mentions légales",
+    "privacy": "Politique de confidentialité",
+    "terms": "Conditions d’utilisation",
+    "contact": "Contact",
+    "rights": "Tous droits réservés."
+  },
+  "browse": {
+    "title": "Explorer : {type}",
+    "description": "Découvrez les {type} avec leurs crédits de doublage sur DubbingBase.",
+    "empty": "Aucun élément de type {type} avec des crédits de doublage n’est encore répertorié."
   },
   "newVoiceActorsAdded": "nouveau comédien ajouté | nouveaux comédiens ajoutés",
   "navigation": {
@@ -19,6 +48,7 @@
   },
   "common": {
     "actions": "Actions",
+    "pagination": "Pagination",
     "loading": "Chargement...",
     "error": "Erreur",
     "subscribe": "S'abonner",
@@ -417,6 +447,11 @@
     "successMessage": "Signalement envoyé avec succès"
   },
   "admin": {
+    "spreadsheet": {
+      "next": "Suivant",
+      "previous": "Précédent",
+      "pageOf": "Page {page} sur {total}"
+    },
     "queue": {
       "title": "File d'attente Médias",
       "description": "Gérez les demandes de médias en attente de traitement",

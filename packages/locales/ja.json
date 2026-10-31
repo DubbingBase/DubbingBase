@@ -1,12 +1,41 @@
 {
   "app": {
-    "title": "DubbingBase"
+    "title": "DubbingBase",
+    "description": "吹き替え作品、声優、スタジオを探せます。"
   },
   "nav": {
     "home": "ホーム",
     "profile": "プロフィール",
     "login": "ログイン",
     "admin": "管理"
+  },
+  "footer": {
+    "explore": "コンテンツを探す",
+    "movies": "映画",
+    "series": "シリーズ",
+    "voiceActors": "声優",
+    "studios": "スタジオ",
+    "search": "検索",
+    "otherMedia": "その他のメディア",
+    "community": "コミュニティ",
+    "guidelines": "ガイドライン",
+    "discussions": "ディスカッション",
+    "leaderboard": "ランキング",
+    "contribute": "情報を追加",
+    "resources": "リソース",
+    "about": "概要",
+    "apiTerms": "API利用規約",
+    "legal": "法的情報",
+    "legalNotice": "法的通知",
+    "privacy": "プライバシーポリシー",
+    "terms": "利用規約",
+    "contact": "お問い合わせ",
+    "rights": "All rights reserved."
+  },
+  "browse": {
+    "title": "{type}を探す",
+    "description": "DubbingBaseで{type}の吹き替え情報を探せます。",
+    "empty": "吹き替え情報のある{type}はまだ登録されていません。"
   },
   "newVoiceActorsAdded": "新しい声優が追加されました",
   "navigation": {
@@ -19,6 +48,7 @@
   },
   "common": {
     "actions": "アクション",
+    "pagination": "ページネーション",
     "loading": "読み込み中...",
     "error": "エラー",
     "subscribe": "購読",
@@ -417,6 +447,11 @@
     "successMessage": "報告が正常に送信されました"
   },
   "admin": {
+    "spreadsheet": {
+      "next": "次へ",
+      "previous": "前へ",
+      "pageOf": "{page}ページ / {total}"
+    },
     "queue": {
       "title": "メディアキュー",
       "description": "保留中のメディア処理リクエストを管理",
