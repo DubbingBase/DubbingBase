@@ -15,7 +15,7 @@ import {
 } from "../utils";
 import { useSupabaseAdmin } from "../utils/db/client";
 import { buildIgdbImageUrl } from "../utils/api/igdb";
-import { paginateArray } from "../utils/pagination";
+import { parsePagination } from "../utils/pagination";
 
 const MEDIA_CATEGORIES = {
   game: { contentType: "video_game", path: "/game" },
@@ -136,29 +136,26 @@ export default defineEventHandler(async (event): Promise<PaginatedResponse<Catal
     throw createError({ statusCode: 400, message: "Invalid media type" });
   }
 
-  const supabase = useSupabaseAdmin(event);
-  const contentIds = new Set<number>();
-  const batchSize = 500;
+  const requestedPagination = parsePagination(getQuery(event));
+  const { data, error } = await useSupabaseAdmin(event).rpc("page_media_catalog", {
+    p_content_type: MEDIA_CATEGORIES[category].contentType,
+    p_page: requestedPagination.page,
+    p_page_size: requestedPagination.pageSize,
+  });
 
-  for (let offset = 0; ; offset += batchSize) {
-    const { data, error } = await supabase
-      .from("dubbing_projects")
-      .select("id, content_id, created_at")
-      .eq("content_type", MEDIA_CATEGORIES[category].contentType)
-      .order("created_at", { ascending: false })
-      .order("id", { ascending: false })
-      .range(offset, offset + batchSize - 1);
-
-    if (error) {
-      console.error(`[media-catalog] Failed to load ${category} IDs:`, error);
-      throw createError({ statusCode: 500, message: "Failed to load media catalog" });
-    }
-
-    for (const row of data || []) contentIds.add(row.content_id);
-    if (!data || data.length < batchSize) break;
+  if (error || !data?.[0]) {
+    console.error(`[media-catalog] Failed to load ${category} IDs:`, error);
+    throw createError({ statusCode: 500, message: "Failed to load media catalog" });
   }
 
-  const { items, pagination } = paginateArray([...contentIds], getQuery(event));
+  const page = data[0];
+  const { content_ids: items, page: currentPage, page_size: pageSize } = page;
+  const pagination = {
+    page: currentPage,
+    pageSize,
+    totalItems: page.total_items,
+    totalPages: page.total_pages,
+  };
   const catalogItems =
     category === "game"
       ? await resolveGameCatalogItems(items)
