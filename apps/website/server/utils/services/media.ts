@@ -23,7 +23,8 @@ interface WikidataClaimsResponse {
 }
 
 interface TmdbCredit {
-  backdrop_path?: string;
+  id: number;
+  backdrop_path?: string | null;
   popularity?: number;
 }
 
@@ -149,8 +150,26 @@ function isMediaContentType(value: string | null | undefined): value is MediaCon
 function isTmdbCredit(value: unknown): value is TmdbCredit {
   if (!isRecord(value)) return false;
   return (
-    (value.backdrop_path === undefined || typeof value.backdrop_path === "string") &&
+    typeof value.id === "number" &&
+    (value.backdrop_path === undefined ||
+      value.backdrop_path === null ||
+      typeof value.backdrop_path === "string") &&
     (value.popularity === undefined || typeof value.popularity === "number")
+  );
+}
+
+function isTmdbPageCastMember(value: unknown): value is Record<string, unknown> & {
+  id: number;
+} {
+  return (
+    isRecord(value) &&
+    typeof value.id === "number" &&
+    (value.character === undefined ||
+      value.character === null ||
+      typeof value.character === "string") &&
+    (value.profile_path === undefined ||
+      value.profile_path === null ||
+      typeof value.profile_path === "string")
   );
 }
 
@@ -180,50 +199,66 @@ export const VOICE_ACTOR_PAGE_TMDB_MEDIA_NAMESPACE =
 export const VOICE_ACTOR_PAGE_TMDB_BACKDROP_NAMESPACE =
   createCacheNamespace<VoiceActorPageTmdbBackdropCacheValue>();
 
+function isVoiceActorPageTmdbMedia(
+  value: unknown,
+  contentId: number,
+): value is Record<string, unknown> & {
+  id: number;
+  credits: Record<string, unknown> & { cast: unknown[] };
+} {
+  return (
+    isRecord(value) &&
+    value.id === contentId &&
+    isRecord(value.credits) &&
+    Array.isArray(value.credits.cast) &&
+    value.credits.cast.every(isTmdbPageCastMember)
+  );
+}
+
 function projectVoiceActorPageMedia(
   media: unknown,
   contentId: number,
   relevantActorIds: ReadonlySet<number>,
-): VoiceActorPageMedia {
-  const value = isRecord(media) ? media : {};
-  const credits = isRecord(value.credits) ? value.credits : {};
+): VoiceActorPageMedia | null {
+  if (!isVoiceActorPageTmdbMedia(media, contentId)) return null;
+
+  const value = media;
+  const credits = value.credits;
   const cast: TmdbCastMember[] = [];
 
-  if (Array.isArray(credits.cast)) {
-    for (const credit of credits.cast) {
-      if (
-        !isRecord(credit) ||
-        typeof credit.id !== "number" ||
-        !relevantActorIds.has(credit.id) ||
-        (credit.character !== undefined &&
-          credit.character !== null &&
-          typeof credit.character !== "string") ||
-        (credit.profile_path !== undefined &&
-          credit.profile_path !== null &&
-          typeof credit.profile_path !== "string")
-      ) {
-        continue;
-      }
-
-      cast.push({
-        id: credit.id,
-        ...(typeof credit.name === "string" ? { name: credit.name } : {}),
-        ...(typeof credit.character === "string"
-          ? { character: cleanCharacterName(credit.character) }
-          : credit.character === null
-            ? { character: null }
-            : {}),
-        ...(typeof credit.profile_path === "string"
-          ? { profile_path: buildTmdbImageUrl(credit.profile_path) }
-          : credit.profile_path === null
-            ? { profile_path: null }
-            : {}),
-      });
+  for (const credit of credits.cast) {
+    if (
+      !isRecord(credit) ||
+      typeof credit.id !== "number" ||
+      !relevantActorIds.has(credit.id) ||
+      (credit.character !== undefined &&
+        credit.character !== null &&
+        typeof credit.character !== "string") ||
+      (credit.profile_path !== undefined &&
+        credit.profile_path !== null &&
+        typeof credit.profile_path !== "string")
+    ) {
+      continue;
     }
+
+    cast.push({
+      id: credit.id,
+      ...(typeof credit.name === "string" ? { name: credit.name } : {}),
+      ...(typeof credit.character === "string"
+        ? { character: cleanCharacterName(credit.character) }
+        : credit.character === null
+          ? { character: null }
+          : {}),
+      ...(typeof credit.profile_path === "string"
+        ? { profile_path: buildTmdbImageUrl(credit.profile_path) }
+        : credit.profile_path === null
+          ? { profile_path: null }
+          : {}),
+    });
   }
 
   return {
-    id: typeof value.id === "number" ? value.id : contentId,
+    id: value.id,
     ...(typeof value.title === "string" ? { title: value.title } : {}),
     ...(typeof value.name === "string" ? { name: value.name } : {}),
     poster_path: buildTmdbImageUrl(
@@ -246,12 +281,16 @@ function projectVoiceActorPageMedia(
 }
 
 function tmdbCastCredits(value: unknown): TmdbCredit[] {
-  if (!isRecord(value) || !Array.isArray(value.cast)) return [];
-  return value.cast.filter(isTmdbCredit);
+  if (!isRecord(value) || !Array.isArray(value.cast) || !value.cast.every(isTmdbCredit)) {
+    throw new Error("Incomplete TMDB person credits response");
+  }
+  return value.cast;
 }
 
 function voiceActorBackdropPath(personData: unknown): string | null {
-  if (!isRecord(personData)) return null;
+  if (!isRecord(personData)) {
+    throw new Error("Incomplete TMDB person response");
+  }
   const allCredits = [
     ...tmdbCastCredits(personData.movie_credits),
     ...tmdbCastCredits(personData.tv_credits),
@@ -418,7 +457,7 @@ export class MediaService {
                 const personData = await this.tmdbClient.get(
                   `person/${tmdbPersonId}`,
                   { append_to_response: "movie_credits,tv_credits" },
-                  language,
+                  tmdbLanguage,
                 );
                 return { backdropPath: voiceActorBackdropPath(personData) };
               },
@@ -448,7 +487,7 @@ export class MediaService {
         const tmdbMedia = await this.tmdbClient.getMediaWithCredits(
           tmdbType,
           contentId,
-          language || this.acceptLanguage,
+          tmdbLanguage,
           { includeExternalIds: false },
         );
         return projectVoiceActorPageMedia(tmdbMedia, contentId, relevantActorIds);
