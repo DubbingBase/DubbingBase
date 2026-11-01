@@ -253,6 +253,20 @@
             {{ $t("voiceActor.noWorksFound") }}
           </div>
 
+          <div v-if="pageWorksLoading" class="theme-text-muted text-center py-4" aria-live="polite">
+            {{ $t("common.loading") }}
+          </div>
+          <div v-else-if="pageWorksError" class="theme-text-muted text-center py-4" role="alert">
+            {{ $t("common.error") }}
+            <button
+              type="button"
+              class="ml-2 theme-primary-text theme-hover-primary-text underline"
+              @click="retryPageWorks"
+            >
+              {{ $t("common.retry") }}
+            </button>
+          </div>
+
           <template v-if="displayMode === 'list'">
             <PaginatedResponsiveGrid
               :key="`${searchQuery}|${activeTab}|${sortMode}`"
@@ -437,7 +451,7 @@
             </PaginatedResponsiveGrid>
           </template>
           <template v-else>
-            <div class="space-y-10">
+            <div v-if="!pageWorksLoading && !pageWorksError" class="space-y-10">
               <div
                 v-for="group in groupedWorks"
                 :key="group.key"
@@ -643,11 +657,15 @@ import {
 } from "../../utils/voice-actor-og-image";
 import {
   useVoiceActorData,
-  paginateVoiceActorWorks,
-  type VoiceActorWorkGroup,
+  groupVoiceActorWorks,
+  type EnhancedWorkItem,
   APP_LOCALES,
 } from "@app/shared-logic";
-import { fetchVoiceActorPageData } from "../../composables/useVoiceActorPageData";
+import {
+  fetchVoiceActorPageData,
+  fetchVoiceActorPageWorks,
+  type VoiceActorPageWorkIndexItem,
+} from "../../composables/useVoiceActorPageData";
 import { useRouter, useRoute } from "vue-router";
 import {
   Clapperboard as ClapperboardIcon,
@@ -663,7 +681,7 @@ import {
   Smile as SmileIcon,
 } from "lucide-vue-next";
 import ReportModal from "../../components/ReportModal.vue";
-import { computed, ref, watch } from "vue";
+import { computed, ref, shallowRef, watch } from "vue";
 import { refDebounced } from "@vueuse/core";
 
 const isReportModalOpen = ref(false);
@@ -673,6 +691,11 @@ const router = useRouter();
 
 const route = useRoute();
 const voiceActorId = Number(route.params.id);
+const { page: worksPage, setPage: setWorksPage } = useUrlPagination("worksPage");
+const displayMode = ref<"grouped" | "list">("grouped");
+const sortMode = ref<"newest" | "oldest">("newest");
+const activeTab = ref<string>("all");
+const VOICE_ACTOR_WORKS_PAGE_SIZE = 12;
 const siteUrl = useSiteConfig().url;
 const currentUrl = computed(() => new URL(route.fullPath, siteUrl).href);
 const { locale, t, te } = useI18n();
@@ -719,17 +742,26 @@ const voiceActorDataRequest = useAsyncData(
   `voice-actor-${voiceActorId}-${locale.value}`,
   () => {
     const tmdbLanguage = APP_LOCALES.find((l) => l.code === locale.value)?.language || "en-US";
-    return fetchVoiceActorPageData(voiceActorId, tmdbLanguage);
+    return fetchVoiceActorPageData(voiceActorId, tmdbLanguage, worksPage.value);
   },
   {
     getCachedData: (key, nuxtApp) => getHydrationCachedData(key, nuxtApp),
   },
 );
-const { data, pending } = voiceActorDataRequest;
+const { data, pending, refresh: refreshVoiceActorPageData } = voiceActorDataRequest;
 
 const voiceActorData = useVoiceActorData(data);
-const { voiceActor, profilePicture, backdropPath, loading, searchQuery, filteredEnhancedWork } =
-  voiceActorData;
+const { voiceActor, profilePicture, backdropPath, loading, searchQuery } = voiceActorData;
+const workIndex = shallowRef<VoiceActorPageWorkIndexItem[]>(data.value?.workIndex ?? []);
+const workDetailsById = shallowRef(
+  new Map(data.value?.enhancedWorks?.map((work) => [work.work.id, work])),
+);
+const pageWorksLoading = ref(false);
+const pageWorksError = ref(false);
+const pageWorksRetryNonce = ref(0);
+const retryPageWorks = () => {
+  pageWorksRetryNonce.value += 1;
+};
 
 const searchInput = ref("");
 const debouncedSearch = refDebounced(searchInput, 150);
@@ -757,8 +789,10 @@ function syncVoiceActorData(newData: typeof data.value): void {
   if (!newData) return;
 
   voiceActorData.voiceActor.value = newData.voiceActor;
+  workIndex.value = newData.workIndex;
   if (newData.enhancedWorks) {
     voiceActorData.enhancedWorks.value = newData.enhancedWorks;
+    workDetailsById.value = new Map(newData.enhancedWorks.map((work) => [work.work.id, work]));
   }
   voiceActorData.medias.value = newData.medias;
   voiceActorData.characterProfilePictures.value = newData.characterProfilePictures;
@@ -771,6 +805,104 @@ function syncVoiceActorData(newData: typeof data.value): void {
 watch(data, syncVoiceActorData, { immediate: true });
 await voiceActorDataRequest;
 syncVoiceActorData(data.value);
+
+const filteredWorks = computed(() => {
+  const query = searchQuery.value.toLowerCase().trim();
+  return workIndex.value
+    .filter((item) => {
+      const matchesSearch = !query || item.searchText.includes(query);
+      const matchesCategory =
+        activeTab.value === "all" ||
+        normalizeContentType(item.work.dubbing_projects?.content_type) === activeTab.value;
+      return matchesSearch && matchesCategory;
+    })
+    .sort((left, right) => {
+      const dateOrder = left.sortDate.localeCompare(right.sortDate);
+      return sortMode.value === "oldest" ? dateOrder : -dateOrder;
+    });
+});
+
+const worksTotal = computed(() => filteredWorks.value.length);
+const pageCount = computed(() =>
+  Math.max(1, Math.ceil(worksTotal.value / VOICE_ACTOR_WORKS_PAGE_SIZE)),
+);
+const currentWorksPage = computed(() => Math.min(Math.max(1, worksPage.value), pageCount.value));
+const pageWorkIndex = computed(() => {
+  const start = (currentWorksPage.value - 1) * VOICE_ACTOR_WORKS_PAGE_SIZE;
+  return filteredWorks.value.slice(start, start + VOICE_ACTOR_WORKS_PAGE_SIZE);
+});
+const pageWorkIds = computed(() => pageWorkIndex.value.map((item) => item.work.id));
+const worksItems = computed(() =>
+  pageWorkIds.value
+    .map((id) => workDetailsById.value.get(id))
+    .filter((item): item is NonNullable<typeof item> => item !== undefined),
+);
+const groupedWorks = computed(() => {
+  const countsByActor = new Map(
+    groupVoiceActorWorks(filteredWorks.value).map((group) => [group.key, group.worksCount]),
+  );
+  return groupVoiceActorWorks(worksItems.value).map((group) => ({
+    ...group,
+    worksCount: countsByActor.get(group.key) ?? group.worksCount,
+  }));
+});
+
+watch(
+  () => ({ ids: pageWorkIds.value, retryNonce: pageWorksRetryNonce.value }),
+  async ({ ids }, _previousValue, onCleanup) => {
+    const visibleDetails = new Map<number, EnhancedWorkItem>();
+    for (const id of ids) {
+      const details = workDetailsById.value.get(id);
+      if (details) visibleDetails.set(id, details);
+    }
+    if (visibleDetails.size !== workDetailsById.value.size) {
+      workDetailsById.value = visibleDetails;
+    }
+
+    const missingIds = ids.filter((id) => !workDetailsById.value.has(id));
+    if (missingIds.length === 0) {
+      pageWorksLoading.value = false;
+      pageWorksError.value = false;
+      return;
+    }
+
+    const controller = new AbortController();
+    onCleanup(() => controller.abort());
+    pageWorksLoading.value = true;
+    pageWorksError.value = false;
+    const tmdbLanguage =
+      APP_LOCALES.find((item) => item.code === locale.value)?.language || "en-US";
+    const details = await fetchVoiceActorPageWorks(
+      voiceActorId,
+      missingIds,
+      data.value?.pageMediaCacheSignature ?? null,
+      tmdbLanguage,
+      controller.signal,
+    );
+    if (controller.signal.aborted) return;
+    if (!details) {
+      pageWorksError.value = true;
+    } else if (details.removedWorkIds.length > 0) {
+      await refreshVoiceActorPageData();
+      syncVoiceActorData(data.value);
+      const removedIds = new Set(details.removedWorkIds);
+      workIndex.value = workIndex.value.filter((item) => !removedIds.has(item.work.id));
+      return;
+    } else {
+      const detailIds = new Set(details.enhancedWorks.map((item) => item.work.id));
+      if (missingIds.some((id) => !detailIds.has(id))) {
+        pageWorksError.value = true;
+        pageWorksLoading.value = false;
+        return;
+      }
+      const nextDetails = new Map(workDetailsById.value);
+      for (const item of details.enhancedWorks) nextDetails.set(item.work.id, item);
+      workDetailsById.value = nextDetails;
+    }
+    pageWorksLoading.value = false;
+  },
+  { immediate: true },
+);
 
 const actorName = computed(() => {
   if (!voiceActor.value) return "";
@@ -893,50 +1025,13 @@ useHead({
   ],
 });
 
-const displayMode = ref<"grouped" | "list">("grouped");
-const sortMode = ref<"newest" | "oldest">("newest");
-const activeTab = ref<string>("all");
-const { page: worksPage, setPage: setWorksPage } = useUrlPagination("worksPage");
-
-const filteredWorks = computed(() => {
-  const works = filteredEnhancedWork.value.filter((item) => {
-    return (
-      activeTab.value === "all" ||
-      normalizeContentType(item.work.dubbing_projects?.content_type) === activeTab.value
-    );
-  });
-
-  return [...works].sort((left, right) => {
-    const dateOrder = left.sortDate.localeCompare(right.sortDate);
-    return sortMode.value === "oldest" ? dateOrder : -dateOrder;
-  });
-});
-type VoiceActorWorkItem = (typeof filteredWorks.value)[number];
-type VoiceActorCollectionItem = VoiceActorWorkItem | VoiceActorWorkGroup<VoiceActorWorkItem>;
+type VoiceActorWorkItem = EnhancedWorkItem;
 
 function getMediaTitle(media: VoiceActorWorkItem["media"]): string {
   if ("title" in media && media.title) return media.title;
   if ("name" in media && media.name) return media.name;
   return "";
 }
-
-function isVoiceActorWorkGroup(
-  item: VoiceActorCollectionItem,
-): item is VoiceActorWorkGroup<VoiceActorWorkItem> {
-  return "works" in item;
-}
-
-const worksPageData = computed(() =>
-  paginateVoiceActorWorks(filteredWorks.value, displayMode.value, worksPage.value, 12),
-);
-const worksItems = computed(() =>
-  worksPageData.value.data.filter(
-    (item): item is VoiceActorWorkItem => !isVoiceActorWorkGroup(item),
-  ),
-);
-const groupedWorks = computed(() => worksPageData.value.data.filter(isVoiceActorWorkGroup));
-const worksTotal = computed(() => worksPageData.value.pagination.totalItems);
-const currentWorksPage = computed(() => worksPageData.value.pagination.page);
 
 const CATEGORY_TABS_CONFIG = [
   { id: "all", labelKey: "search.all", icon: LayersIcon },
@@ -970,8 +1065,11 @@ const CATEGORY_TABS_CONFIG = [
 ] as const;
 
 const categoryTabs = computed(() => {
-  const allWorks = voiceActorData.enhancedWork.value || [];
-  const searchFiltered = filteredEnhancedWork.value || [];
+  const allWorks = workIndex.value;
+  const searchFiltered = allWorks.filter((item) => {
+    const query = searchQuery.value.toLowerCase().trim();
+    return !query || item.searchText.includes(query);
+  });
 
   const totalCounts: Record<string, number> = {
     all: allWorks.length,
@@ -1027,7 +1125,9 @@ watch(categoryTabs, (tabs) => {
 
 const workedStudios = computed(() => {
   const studiosMap = new Map<number, { id: number; name: string; logo_url: string | null }>();
-  for (const item of filteredEnhancedWork.value) {
+  const query = searchQuery.value.toLowerCase().trim();
+  for (const item of workIndex.value) {
+    if (query && !item.searchText.includes(query)) continue;
     const studio = item.work.dubbing_projects?.studios;
     if (studio && !studiosMap.has(studio.id)) {
       studiosMap.set(studio.id, studio);

@@ -202,8 +202,11 @@ interface VoiceActorPageTmdbBackdropCacheValue {
 
 export const VOICE_ACTOR_PAGE_TMDB_MEDIA_NAMESPACE =
   createCacheNamespace<VoiceActorPageTmdbMediaCacheValue>();
+const VOICE_ACTOR_PAGE_TMDB_MEDIA_CACHE_READ_NAMESPACE =
+  createCacheNamespace<VoiceActorPageTmdbMediaCacheValue>();
 export const VOICE_ACTOR_PAGE_TMDB_BACKDROP_NAMESPACE =
   createCacheNamespace<VoiceActorPageTmdbBackdropCacheValue>();
+const TMDB_MEDIA_CACHE_MISS = Symbol("tmdb-media-cache-miss");
 
 function projectVoiceActorPageMedia(
   media: unknown,
@@ -380,17 +383,24 @@ export class MediaService {
   async getVoiceActorWithWorkAndMedia(
     voiceActorId: number,
     language?: string,
-    options: { includePotentialWikipediaUrl?: boolean } = {},
+    options: {
+      includePotentialWikipediaUrl?: boolean;
+      includeBackdrop?: boolean;
+      workIds?: number[];
+      pageMediaCacheSignature?: string;
+      includePageMediaCacheSignature?: boolean;
+    } = {},
   ) {
     const supabase = useSupabaseAdmin();
 
-    const { data: voiceActor, error: vaError } = await supabase
+    let voiceActorQuery = supabase
       .from("voice_actors")
       .select(
         "*, work(id, actor_id, performance, note, character_name, dubbing_projects(content_id, content_type, studios(id, name, logo_url)))",
       )
-      .eq("id", voiceActorId)
-      .single();
+      .eq("id", voiceActorId);
+    if (options.workIds) voiceActorQuery = voiceActorQuery.in("work.id", options.workIds);
+    const { data: voiceActor, error: vaError } = await voiceActorQuery.single();
 
     if (vaError || !voiceActor) throw new Error("Voice actor not found");
 
@@ -425,40 +435,43 @@ export class MediaService {
 
     // Independent tail work (backdrop person credits, Wikipedia fallback)
     // starts now so it overlaps the media fan-out instead of running after it.
-    const tmdbPersonPromise = tmdbPersonId
-      ? (async () => {
-          const cache = useCache();
-          const cacheKey = buildCacheKey({
-            provider: "tmdb",
-            resource: "voice-actor-page-backdrop",
-            id: tmdbPersonId,
-            language: tmdbLanguage,
-          });
-          let fetchedFromTmdb = false;
+    const tmdbPersonPromise =
+      options.includeBackdrop === false
+        ? null
+        : tmdbPersonId
+          ? (async () => {
+              const cache = useCache();
+              const cacheKey = buildCacheKey({
+                provider: "tmdb",
+                resource: "voice-actor-page-backdrop",
+                id: tmdbPersonId,
+                language: tmdbLanguage,
+              });
+              let fetchedFromTmdb = false;
 
-          try {
-            const person = await cache.getOrFetch(
-              VOICE_ACTOR_PAGE_TMDB_BACKDROP_NAMESPACE,
-              cacheKey,
-              async () => {
-                fetchedFromTmdb = true;
-                const personData = await this.tmdbClient.get(
-                  `person/${tmdbPersonId}`,
-                  { append_to_response: "movie_credits,tv_credits" },
-                  tmdbLanguage,
+              try {
+                const person = await cache.getOrFetch(
+                  VOICE_ACTOR_PAGE_TMDB_BACKDROP_NAMESPACE,
+                  cacheKey,
+                  async () => {
+                    fetchedFromTmdb = true;
+                    const personData = await this.tmdbClient.get(
+                      `person/${tmdbPersonId}`,
+                      { append_to_response: "movie_credits,tv_credits" },
+                      tmdbLanguage,
+                    );
+                    return { backdropPath: voiceActorBackdropPath(personData) };
+                  },
+                  { cachePolicy: "read-only" },
                 );
-                return { backdropPath: voiceActorBackdropPath(personData) };
-              },
-              { cachePolicy: "read-only" },
-            );
-            if (fetchedFromTmdb) await cache.set(cacheKey, person, "STABLE");
-            return person;
-          } catch (e) {
-            console.error("Failed to compute voice actor backdrop:", e);
-            return null;
-          }
-        })()
-      : null;
+                if (fetchedFromTmdb) await cache.set(cacheKey, person, "STABLE");
+                return person;
+              } catch (e) {
+                console.error("Failed to compute voice actor backdrop:", e);
+                return null;
+              }
+            })()
+          : null;
     const wikipediaPromise =
       options.includePotentialWikipediaUrl !== false &&
       !voiceActor.tmdb_id &&
@@ -742,10 +755,11 @@ export class MediaService {
     const otherTargets = uniqueTargets.filter(
       (target) => target.contentType !== "movie" && target.contentType !== "tv",
     );
+    let pageMediaCacheSignature: string | null = null;
 
     if (tmdbTargets.length > 0) {
       const cache = useCache();
-      const targetSignature = hashCacheValue(
+      const currentTargetSignature = hashCacheValue(
         JSON.stringify({
           targets: tmdbTargets
             .map(({ contentType, contentId }) => `${contentType}:${contentId}`)
@@ -753,49 +767,83 @@ export class MediaService {
           actorIds: Array.from(relevantActorIds).sort((a, b) => a - b),
         }),
       );
-      const cacheKey = buildCacheKey({
-        provider: "tmdb",
-        resource: "voice-actor-page-media",
-        id: voiceActorId,
-        language: tmdbLanguage,
-        params: { targetSignature },
-      });
-      let fetchedFromTmdb = false;
-      const cachedTmdbMedia = await cache.getOrFetch(
-        VOICE_ACTOR_PAGE_TMDB_MEDIA_NAMESPACE,
-        cacheKey,
-        async () => {
-          fetchedFromTmdb = true;
-          const medias: Record<string, VoiceActorPageMedia> = {};
-          let complete = true;
-          let nextIndex = 0;
+      pageMediaCacheSignature = currentTargetSignature;
 
-          await Promise.all(
-            Array.from({ length: Math.min(CONCURRENCY, tmdbTargets.length) }, async () => {
-              while (true) {
-                const idx = nextIndex++;
-                if (idx >= tmdbTargets.length) return;
-                const target = tmdbTargets[idx];
-                if (!target) return;
+      const makeCacheKey = (targetSignature: string) =>
+        buildCacheKey({
+          provider: "tmdb",
+          resource: "voice-actor-page-media",
+          id: voiceActorId,
+          language: tmdbLanguage,
+          params: { targetSignature },
+        });
 
-                const projection = await fetchTmdbMedia(target);
-                if (projection) {
-                  medias[`${target.contentType}:${target.contentId}`] = projection.media;
-                  if (!projection.complete) complete = false;
-                } else {
-                  complete = false;
-                }
+      const fetchBatch = async () => {
+        const medias: Record<string, VoiceActorPageMedia> = {};
+        let complete = true;
+        let nextIndex = 0;
+
+        await Promise.all(
+          Array.from({ length: Math.min(CONCURRENCY, tmdbTargets.length) }, async () => {
+            while (true) {
+              const idx = nextIndex++;
+              if (idx >= tmdbTargets.length) return;
+              const target = tmdbTargets[idx];
+              if (!target) return;
+
+              const projection = await fetchTmdbMedia(target);
+              if (projection) {
+                medias[`${target.contentType}:${target.contentId}`] = projection.media;
+                if (!projection.complete) complete = false;
+              } else {
+                complete = false;
               }
-            }),
+            }
+          }),
+        );
+
+        return { complete, medias };
+      };
+
+      const getOrFetchBatch = async (targetSignature: string) => {
+        const cacheKey = makeCacheKey(targetSignature);
+        let fetchedFromTmdb = false;
+        const value = await cache.getOrFetch(
+          VOICE_ACTOR_PAGE_TMDB_MEDIA_NAMESPACE,
+          cacheKey,
+          async () => {
+            fetchedFromTmdb = true;
+            return fetchBatch();
+          },
+          { cachePolicy: "read-only" },
+        );
+        if (fetchedFromTmdb && value.complete) {
+          await cache.set(cacheKey, value, "STABLE");
+        }
+        return value;
+      };
+
+      let cachedTmdbMedia: VoiceActorPageTmdbMediaCacheValue;
+      if (
+        options.pageMediaCacheSignature &&
+        options.pageMediaCacheSignature !== currentTargetSignature
+      ) {
+        const fullCacheKey = makeCacheKey(options.pageMediaCacheSignature);
+        try {
+          cachedTmdbMedia = await cache.getOrFetch(
+            VOICE_ACTOR_PAGE_TMDB_MEDIA_CACHE_READ_NAMESPACE,
+            fullCacheKey,
+            async () => {
+              throw TMDB_MEDIA_CACHE_MISS;
+            },
+            { cachePolicy: "read-only" },
           );
-
-          return { complete, medias };
-        },
-        { cachePolicy: "read-only" },
-      );
-
-      if (fetchedFromTmdb && cachedTmdbMedia.complete) {
-        await cache.set(cacheKey, cachedTmdbMedia, "STABLE");
+        } catch (error) {
+          if (error !== TMDB_MEDIA_CACHE_MISS) throw error;
+          cachedTmdbMedia = await getOrFetchBatch(currentTargetSignature);
+        }
+      } else {
+        cachedTmdbMedia = await getOrFetchBatch(currentTargetSignature);
       }
 
       for (const [key, media] of Object.entries(cachedTmdbMedia.medias)) {
@@ -945,7 +993,9 @@ export class MediaService {
     // (person fetch already ran concurrently with the media fan-out above)
     let backdropPath: string | null = null;
     try {
-      if (tmdbPersonId) {
+      if (options.includeBackdrop === false) {
+        backdropPath = null;
+      } else if (tmdbPersonId) {
         const personBackdrop = await tmdbPersonPromise;
         backdropPath = personBackdrop?.backdropPath ?? null;
       } else {
@@ -969,6 +1019,7 @@ export class MediaService {
       characterProfilePictures: new Array<CharacterProfilePicture>(),
       potentialWikipediaUrl,
       backdropPath,
+      ...(options.includePageMediaCacheSignature ? { pageMediaCacheSignature } : {}),
     };
   }
 
