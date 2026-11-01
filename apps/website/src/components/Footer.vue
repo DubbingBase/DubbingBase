@@ -58,7 +58,7 @@
           <h3 class="theme-text font-semibold mb-4">
             {{ t("footer.explore") }}
           </h3>
-          <ul class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+          <ul class="grid grid-flow-col grid-cols-2 grid-rows-5 gap-x-6 gap-y-3 text-sm">
             <li>
               <NuxtLink :to="localePath('/movies')" class="theme-hover-text transition">{{
                 t("footer.movies")
@@ -67,21 +67,6 @@
             <li>
               <NuxtLink :to="localePath('/series')" class="theme-hover-text transition">{{
                 t("footer.series")
-              }}</NuxtLink>
-            </li>
-            <li>
-              <NuxtLink :to="localePath('/voice-actors')" class="theme-hover-text transition">{{
-                t("footer.voiceActors")
-              }}</NuxtLink>
-            </li>
-            <li>
-              <NuxtLink :to="localePath('/studios')" class="theme-hover-text transition">{{
-                t("footer.studios")
-              }}</NuxtLink>
-            </li>
-            <li>
-              <NuxtLink :to="localePath('/search')" class="theme-hover-text transition">{{
-                t("footer.search")
               }}</NuxtLink>
             </li>
             <li>
@@ -107,6 +92,21 @@
             <li>
               <NuxtLink :to="localePath('/toys')" class="theme-hover-text transition">{{
                 t("search.toy")
+              }}</NuxtLink>
+            </li>
+            <li>
+              <NuxtLink :to="localePath('/voice-actors')" class="theme-hover-text transition">{{
+                t("footer.voiceActors")
+              }}</NuxtLink>
+            </li>
+            <li>
+              <NuxtLink :to="localePath('/studios')" class="theme-hover-text transition">{{
+                t("footer.studios")
+              }}</NuxtLink>
+            </li>
+            <li>
+              <NuxtLink :to="localePath('/search')" class="theme-hover-text transition">{{
+                t("footer.search")
               }}</NuxtLink>
             </li>
           </ul>
