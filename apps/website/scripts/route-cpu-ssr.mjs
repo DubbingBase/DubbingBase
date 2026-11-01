@@ -845,7 +845,8 @@ function gamePageMarkup(body) {
   return body
     .replace(/<script\b[\s\S]*?<\/script>/gi, "")
     .replace(/<style\b[\s\S]*?<\/style>/gi, "")
-    .replace(/<link\b[^>]*>/gi, "");
+    .replace(/<link\b[^>]*>/gi, "")
+    .replace(/<footer\b[\s\S]*?<\/footer>/gi, "");
 }
 
 function dubbingProjectPageData(body) {
