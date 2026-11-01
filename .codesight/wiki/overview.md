@@ -8,7 +8,7 @@
 
 ## Scale
 
-85 API routes · 27 database models · 200 UI components · 114 library files · 15 middleware layers · 75 environment variables
+86 API routes · 27 database models · 206 UI components · 114 library files · 15 middleware layers · 75 environment variables
 
 ## Subsystems
 
@@ -49,6 +49,7 @@
 - **[List-voice-actors.get](./list-voice-actors.get.md)** — 1 routes
 - **[List_users.get](./list_users.get.md)** — 1 routes — touches: auth
 - **[Manage-subscription.post](./manage-subscription.post.md)** — 1 routes — touches: db
+- **[Media-catalog.get](./media-catalog.get.md)** — 1 routes
 - **[Media-queue.post](./media-queue.post.md)** — 1 routes — touches: auth, queue
 - **[Merge_voice_actor_duplicates.post](./merge_voice_actor_duplicates.post.md)** — 1 routes — touches: auth
 - **[Movies.get](./movies.get.md)** — 1 routes — touches: cache
@@ -81,7 +82,7 @@
 
 **Database:** unknown, 27 models — see [database.md](./database.md)
 
-**UI:** 200 components (vue) — see [ui.md](./ui.md)
+**UI:** 206 components (vue) — see [ui.md](./ui.md)
 
 **Libraries:** 114 files — see [libraries.md](./libraries.md)
 
@@ -89,12 +90,12 @@
 
 Changes to these files have the widest blast radius across the codebase:
 
-- `apps/website/server/utils/db/client.ts` — imported by **68** files
+- `apps/website/server/utils/db/client.ts` — imported by **69** files
 - `apps/website/server/utils/auth.ts` — imported by **40** files
 - `apps/website/server/utils/index.ts` — imported by **25** files
 - `apps/website/server/utils/cache/index.ts` — imported by **19** files
 - `apps/website/server/utils/notifications/discord.ts` — imported by **12** files
-- `apps/website/server/utils/urls/supabase.ts` — imported by **11** files
+- `apps/website/server/utils/api/igdb.ts` — imported by **12** files
 
 ## Required Environment Variables
 
@@ -113,4 +114,4 @@ Changes to these files have the widest blast radius across the codebase:
 - _...38 more_
 
 ---
-_Back to [index.md](./index.md) · Generated 2026-10-31_
+_Back to [index.md](./index.md) · Generated 2026-11-01_

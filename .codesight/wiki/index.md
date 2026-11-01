@@ -1,6 +1,6 @@
 # dubbing-base-monorepo — Wiki
 
-_Generated 2026-10-31 — re-run `npx codesight --wiki` if the codebase has changed._
+_Generated 2026-11-01 — re-run `npx codesight --wiki` if the codebase has changed._
 
 Structural map compiled from source code via AST. No LLM — deterministic, 200ms.
 
@@ -47,6 +47,7 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 - [List-voice-actors.get](./list-voice-actors.get.md)
 - [List_users.get](./list_users.get.md)
 - [Manage-subscription.post](./manage-subscription.post.md)
+- [Media-catalog.get](./media-catalog.get.md)
 - [Media-queue.post](./media-queue.post.md)
 - [Merge_voice_actor_duplicates.post](./merge_voice_actor_duplicates.post.md)
 - [Movies.get](./movies.get.md)
@@ -81,9 +82,9 @@ Structural map compiled from source code via AST. No LLM — deterministic, 200m
 
 ## Quick Stats
 
-- Routes: **85**
+- Routes: **86**
 - Models: **27**
-- Components: **200**
+- Components: **206**
 - Env vars: **50** required, **25** with defaults
 
 ## How to Use
@@ -111,4 +112,4 @@ These exist in your codebase but are **not** reflected in wiki articles:
 When in doubt, search the source. The wiki is a starting point, not a complete inventory.
 
 ---
-_Last compiled: 2026-10-31 · 71 articles · [codesight](https://github.com/Houseofmvps/codesight)_
+_Last compiled: 2026-11-01 · 72 articles · [codesight](https://github.com/Houseofmvps/codesight)_

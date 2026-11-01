@@ -3,9 +3,9 @@
 > **Stack:** nuxt | none | vue | typescript
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
-> 85 routes | 27 models | 200 components | 114 lib files | 75 env vars | 15 middleware | 46% test coverage
-> **Token savings:** this file is ~19,300 tokens. Without it, AI exploration would cost ~172,100 tokens. **Saves ~152,800 tokens per conversation.**
-> **Last scanned:** 2026-10-31 18:53 — re-run after significant changes
+> 86 routes | 27 models | 206 components | 114 lib files | 75 env vars | 15 middleware | 46% test coverage
+> **Token savings:** this file is ~19,400 tokens. Without it, AI exploration would cost ~174,600 tokens. **Saves ~155,200 tokens per conversation.**
+> **Last scanned:** 2026-11-01 16:35 — re-run after significant changes
 
 ---
 
@@ -57,6 +57,7 @@
 - `GET` `/api/list-voice-actors`
 - `GET` `/api/list_users` [auth]
 - `POST` `/api/manage-subscription` [db]
+- `GET` `/api/media-catalog`
 - `POST` `/api/media-queue` [auth, queue] ✓
 - `POST` `/api/merge_voice_actor_duplicates` [auth]
 - `GET` `/api/movie/:id` params(id) [queue]
@@ -400,6 +401,7 @@
 - **HeaderPreferences** [client] — `apps/website/src/components/HeaderPreferences.vue`
 - **HomeBelowFoldSections** [client] — `apps/website/src/components/HomeBelowFoldSections.vue`
 - **LanguageBanner** [client] — `apps/website/src/components/LanguageBanner.vue`
+- **MediaCatalogPage** [client] — props: type — `apps/website/src/components/MediaCatalogPage.vue`
 - **MediaSkeleton** [client] — `apps/website/src/components/MediaSkeleton.vue`
 - **PaginatedResponsiveGrid** [client] — props: items, pageSize, totalItems, page, gridClass, itemKey — `apps/website/src/components/PaginatedResponsiveGrid.vue`
 - **PaginationControls** [client] — props: page, totalItems, pageSize — `apps/website/src/components/PaginationControls.vue`
@@ -447,15 +449,18 @@
 - **new** [client] — `apps/website/src/pages/advertisement/[adId]/projects/new.vue`
 - **[id]** [client] — `apps/website/src/pages/advertisement/[id].vue`
 - **new** [client] — `apps/website/src/pages/advertisement/new.vue`
+- **advertisements** [client] — `apps/website/src/pages/advertisements.vue`
 - **edit** [client] — `apps/website/src/pages/audiobook/[audiobookId]/projects/[projectId]/edit.vue`
 - **new** [client] — `apps/website/src/pages/audiobook/[audiobookId]/projects/new.vue`
 - **[id]** [client] — `apps/website/src/pages/audiobook/[id].vue`
+- **audiobooks** [client] — `apps/website/src/pages/audiobooks.vue`
 - **index** [client] — `apps/website/src/pages/contribute/index.vue`
 - **play** [client] — `apps/website/src/pages/contribute/task/play.vue`
 - **discussions** [client] — `apps/website/src/pages/discussions.vue`
 - **edit** [client] — `apps/website/src/pages/game/[gameId]/projects/[projectId]/edit.vue`
 - **new** [client] — `apps/website/src/pages/game/[gameId]/projects/new.vue`
 - **[id]** [client] — `apps/website/src/pages/game/[id].vue`
+- **games** [client] — `apps/website/src/pages/games.vue`
 - **guidelines** [client] — `apps/website/src/pages/guidelines.vue`
 - **index** [client] — `apps/website/src/pages/index.vue`
 - **leaderboard** [client] — `apps/website/src/pages/leaderboard.vue`
@@ -469,6 +474,7 @@
 - **edit** [client] — `apps/website/src/pages/podcast/[podcastId]/projects/[projectId]/edit.vue`
 - **new** [client] — `apps/website/src/pages/podcast/[podcastId]/projects/new.vue`
 - **new** [client] — `apps/website/src/pages/podcast/new.vue`
+- **podcasts** [client] — `apps/website/src/pages/podcasts.vue`
 - **privacy** [client] — `apps/website/src/pages/privacy.vue`
 - **api-key** [client] — `apps/website/src/pages/profile/api-key.vue`
 - **index** [client] — `apps/website/src/pages/profile/index.vue`
@@ -491,6 +497,7 @@
 - **edit** [client] — `apps/website/src/pages/toy/[toyId]/projects/[projectId]/edit.vue`
 - **new** [client] — `apps/website/src/pages/toy/[toyId]/projects/new.vue`
 - **new** [client] — `apps/website/src/pages/toy/new.vue`
+- **toys** [client] — `apps/website/src/pages/toys.vue`
 - **[id]** [client] — `apps/website/src/pages/voice-actor/[id].vue`
 - **edit** [client] — `apps/website/src/pages/voice-actor/[voiceActorId]/edit.vue`
 - **new** [client] — `apps/website/src/pages/voice-actor/new.vue`
@@ -965,13 +972,13 @@
 
 ## Most Imported Files (change these carefully)
 
-- `apps/website/server/utils/db/client.ts` — imported by **68** files
+- `apps/website/server/utils/db/client.ts` — imported by **69** files
 - `apps/website/server/utils/auth.ts` — imported by **40** files
 - `apps/website/server/utils/index.ts` — imported by **25** files
 - `apps/website/server/utils/cache/index.ts` — imported by **19** files
 - `apps/website/server/utils/notifications/discord.ts` — imported by **12** files
+- `apps/website/server/utils/api/igdb.ts` — imported by **12** files
 - `apps/website/server/utils/urls/supabase.ts` — imported by **11** files
-- `apps/website/server/utils/api/igdb.ts` — imported by **11** files
 - `apps/website/server/utils/urls/tmdb.ts` — imported by **10** files
 - `apps/website/server/utils/dubbing-language.ts` — imported by **10** files
 - `apps/website/server/utils/db/queries.ts` — imported by **9** files
@@ -984,17 +991,17 @@
 - `apps/website/server/utils/cache/wikipedia.ts` — imported by **5** files
 - `apps/website/server/utils/dubbing-region-detection.ts` — imported by **5** files
 - `apps/website/server/utils/error-message.ts` — imported by **5** files
-- `apps/website/server/utils/with-timeout.ts` — imported by **4** files
+- `apps/website/server/utils/pagination.ts` — imported by **4** files
 
 ## Import Map (who imports what)
 
-- `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +63 more
+- `apps/website/server/utils/db/client.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +64 more
 - `apps/website/server/utils/auth.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/admin/queue/clear.post.ts`, `apps/website/server/api/admin/queue/item.delete.ts`, `apps/website/server/api/admin/queue/reprocess-legacy-wiki-check-reviews.post.ts` +35 more
 - `apps/website/server/utils/index.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/career-grid.get.ts`, `apps/website/server/api/episode/index.get.ts` +20 more
 - `apps/website/server/utils/cache/index.ts` ← `apps/website/server/api/episode/index.get.ts`, `apps/website/server/api/season/index.get.ts`, `apps/website/server/utils/api/igdb.test.ts`, `apps/website/server/utils/api/igdb.ts`, `apps/website/server/utils/api/openlibrary.test.ts` +14 more
 - `apps/website/server/utils/notifications/discord.ts` ← `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/media-queue.post.ts`, `apps/website/server/api/movie/[id].get.ts` +7 more
+- `apps/website/server/utils/api/igdb.ts` ← `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/internal-media-credits.get.ts`, `apps/website/server/api/internal-media-metadata.get.ts`, `apps/website/server/api/media-catalog.get.ts`, `apps/website/server/api/search/index.get.ts` +7 more
 - `apps/website/server/utils/urls/supabase.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/dashboard-stats.get.ts`, `apps/website/server/api/find_duplicate_voice_actors.get.ts`, `apps/website/server/api/list-voice-actors.get.ts`, `apps/website/server/api/recent-voice-actors.get.ts` +6 more
-- `apps/website/server/utils/api/igdb.ts` ← `apps/website/server/api/game/[id].get.ts`, `apps/website/server/api/internal-media-credits.get.ts`, `apps/website/server/api/internal-media-metadata.get.ts`, `apps/website/server/api/search/index.get.ts`, `apps/website/server/api/trending/games.get.ts` +6 more
 - `apps/website/server/utils/urls/tmdb.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/movie/[id].get.ts`, `apps/website/server/api/notify-subscribers.post.ts`, `apps/website/server/api/prepare-trending-media.post.ts`, `apps/website/server/api/search/index.get.ts` +5 more
 - `apps/website/server/utils/dubbing-language.ts` ← `apps/website/server/api/admin/dubbing-project.get.ts`, `apps/website/server/api/admin/dubbing-project.post.ts`, `apps/website/server/api/internal-media-create.post.ts`, `apps/website/server/api/link-voice-actor.post.ts`, `apps/website/server/api/media-queue.post.ts` +5 more
 - `apps/website/server/utils/db/queries.ts` ← `apps/website/server/api/actor/[id].get.ts`, `apps/website/server/api/advertisement/[id].get.ts`, `apps/website/server/api/audiobook/[id].get.ts`, `apps/website/server/api/detail-collections.get.ts`, `apps/website/server/api/game/[id].get.ts` +4 more
