@@ -730,20 +730,26 @@ test.describe("Media Detail Pages", () => {
     );
   });
 
-  test("publishes localized public entity URLs in sitemap XML", async ({ page }) => {
-    const indexResponse = await page.request.get("http://localhost:3050/sitemap.xml");
-    expect(indexResponse.status()).toBe(200);
-    expect(indexResponse.headers()["content-type"]).toContain("xml");
-    expect(await indexResponse.text()).toContain("/__sitemap__/fr-FR.xml");
+  test("configures localized general sitemap routes without app route discovery", async ({
+    page,
+  }) => {
+    const response = await page.request.get("http://localhost:3050/__sitemap__/debug.json");
+    expect(response.status()).toBe(200);
+    const config = await response.text();
 
-    const frenchResponse = await page.request.get("http://localhost:3050/__sitemap__/fr-FR.xml");
-    expect(frenchResponse.status()).toBe(200);
-    const xml = await frenchResponse.text();
-    expect(xml).toContain("https://dubbingbase.com/fr/movie/85");
-    expect(xml).toContain("https://dubbingbase.com/fr/toy/-10");
-    expect(xml).not.toMatch(/\?(?:[^<]*&amp;)?dub=/);
-    expect(xml).not.toMatch(/\/(?:admin|login|profile|register|search|new|edit)(?:\/|<)/);
-    expect(xml).not.toContain("prepare-game-request");
+    for (const locale of ["en-US", "fr-FR", "es-ES", "ja-JP"]) {
+      expect(config).toContain(`"${locale}"`);
+    }
+    for (const route of ["/about", "/movies", "/voice-actors"]) {
+      expect(config).toContain(`"loc": "${route}"`);
+    }
+    expect(config).toContain('"_i18nTransform": true');
+    expect(config).toContain('"excludeAppSources": true');
+    expect(config).not.toMatch(
+      /\/(?:actor|advertisement|audiobook|game|movie|podcast|show|studio|toy|voice-actor)\/[^"\\]*/,
+    );
+    expect(config).not.toMatch(/\/(?:admin|login|profile|register|search)(?:\/|"|\\)/);
+    expect(config).not.toMatch(/\?(?:[^"\\]*&amp;)?dub=/);
   });
 
   test("uses SSR 404 and 5xx responses for missing versus unavailable media", async ({ page }) => {

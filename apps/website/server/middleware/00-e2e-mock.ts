@@ -1313,17 +1313,6 @@ export default defineEventHandler(async (event) => {
     return send(event, JSON.stringify(e2eMediaRequestPaths), "application/json");
   }
 
-  if (path === "/api/__sitemap__/urls") {
-    return send(
-      event,
-      JSON.stringify([
-        { loc: "/movie/85", _i18nTransform: true },
-        { loc: "/toy/-10", _i18nTransform: true },
-      ]),
-      "application/json",
-    );
-  }
-
   if (path === "/api/season" || path === "/api/episode") {
     e2eMediaRequestPaths.push(path);
   }

@@ -13,6 +13,22 @@ const supabaseUrl = env("SUPABASE_URL") ?? env("PUBLIC_SUPABASE_URL");
 const supabasePublishableKey = env("SUPABASE_PUBLISHABLE_KEY");
 const siteUrl = env("SITE_URL") ?? "https://dubbingbase.com";
 const ABOUT_PRERENDER_ROUTES = new Set(["/about", "/fr/about", "/es/about", "/ja/about"]);
+const PUBLIC_SITEMAP_ROUTES = [
+  "/",
+  "/about",
+  "/contribute",
+  "/discussions",
+  "/guidelines",
+  "/leaderboard",
+  "/legal",
+  "/movies",
+  "/privacy",
+  "/series",
+  "/studios",
+  "/terms",
+  "/terms-api",
+  "/voice-actors",
+];
 
 function stripAboutClientRuntime(html: string): string {
   return (
@@ -271,25 +287,10 @@ export default defineNuxtConfig({
     client: true,
   },
   sitemap: {
-    // Dynamic public entities must be fetched when the sitemap is requested,
-    // not during builds where production data may not be reachable.
-    zeroRuntime: false,
-    sources: ["/api/__sitemap__/urls"],
-    chunks: 40_000,
-    exclude: [
-      "/admin",
-      "/admin/**",
-      "/advertisement/new",
-      "/game/prepare-game-request",
-      "/login",
-      "/podcast/new",
-      "/profile",
-      "/profile/**",
-      "/register",
-      "/search",
-      "/toy/new",
-      "/voice-actor/new",
-      "/**/projects/**",
-    ],
+    // Use an explicit public-route allow-list so automatic page discovery
+    // cannot add individual database-record pages to the sitemap.
+    zeroRuntime: true,
+    excludeAppSources: true,
+    urls: PUBLIC_SITEMAP_ROUTES.map((loc) => ({ loc, _i18nTransform: true })),
   },
 });
