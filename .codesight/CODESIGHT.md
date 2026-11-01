@@ -4,8 +4,8 @@
 > **Monorepo:** @app/mobile, @app/website, @app/supabase, @app/locales, @app/og-image, @app/shared-logic
 
 > 86 routes | 27 models | 206 components | 114 lib files | 75 env vars | 15 middleware | 46% test coverage
-> **Token savings:** this file is ~19,400 tokens. Without it, AI exploration would cost ~174,600 tokens. **Saves ~155,200 tokens per conversation.**
-> **Last scanned:** 2026-11-01 16:35 — re-run after significant changes
+> **Token savings:** this file is ~19,500 tokens. Without it, AI exploration would cost ~174,600 tokens. **Saves ~155,100 tokens per conversation.**
+> **Last scanned:** 2026-11-01 19:21 — re-run after significant changes
 
 ---
 
@@ -670,6 +670,8 @@
   - _...4 more_
 - `apps/website/server/utils/services/media.ts`
   - class MediaService
+  - const VOICE_ACTOR_PAGE_TMDB_MEDIA_NAMESPACE
+  - const VOICE_ACTOR_PAGE_TMDB_BACKDROP_NAMESPACE
   - const WIKIPEDIA_ACTOR_URL_NAMESPACE
   - const MEDIA_TVDB_CHARACTERS_NAMESPACE
 - `apps/website/server/utils/services/voice-actor.ts`

@@ -163,6 +163,8 @@
   - _...4 more_
 - `apps/website/server/utils/services/media.ts`
   - class MediaService
+  - const VOICE_ACTOR_PAGE_TMDB_MEDIA_NAMESPACE
+  - const VOICE_ACTOR_PAGE_TMDB_BACKDROP_NAMESPACE
   - const WIKIPEDIA_ACTOR_URL_NAMESPACE
   - const MEDIA_TVDB_CHARACTERS_NAMESPACE
 - `apps/website/server/utils/services/voice-actor.ts`
